@@ -41,6 +41,7 @@ import spack.environment as ev
 import spack.schema.projections
 import spack.store
 from spack.config import validate
+from spack.error import SpackError
 from spack.filesystem_view import YamlFilesystemView, view_func_parser
 from spack.util import spack_yaml as s_yaml
 
@@ -48,7 +49,9 @@ description = "project packages to a compact naming scheme on the filesystem"
 section = "environments"
 level = "short"
 
-actions_link = ["symlink", "add", "soft", "hardlink", "hard", "copy", "relocate"]
+actions_link_specs = ["symlink", "add", "soft", "hardlink", "hard", "copy", "relocate"]
+actions_link_all = ["env-symlink"]
+actions_link = actions_link_specs + actions_link_all
 actions_remove = ["remove", "rm"]
 actions_status = ["statlink", "status", "check"]
 
@@ -110,6 +113,10 @@ def setup_parser(sp):
             aliases=["add", "soft"],
             help="add package files to a filesystem view via symbolic links",
         ),
+        "env-symlink": ssp.add_parser(
+            "env-symlink",
+            help="add all packages in an environment to a view",
+        ),
         "hardlink": ssp.add_parser(
             "hardlink",
             aliases=["hard"],
@@ -134,7 +141,7 @@ def setup_parser(sp):
     for cmd, act in file_system_view_actions.items():
         act.add_argument("path", nargs=1, help="path to file system view directory")
 
-        if cmd in ("symlink", "hardlink", "copy"):
+        if cmd in ("symlink", "hardlink", "copy", "env-symlink"):
             # invalid for remove/statlink, for those commands the view needs to
             # already know its own projections.
             act.add_argument(
@@ -164,11 +171,17 @@ def setup_parser(sp):
             so["nargs"] = "*"
             act.add_argument("specs", **so)
 
-        else:
+        elif cmd in ("symlink", "hardlink", "copy"):
             # without all option, spec is required
             so = specs_opts.copy()
             so["nargs"] = "+"
             act.add_argument("specs", **so)
+
+        elif cmd == "env-symlink":
+            pass
+
+        else:
+            raise SpackError(f"Unexpected command: {cmd}")
 
     for cmd in ["symlink", "hardlink", "copy"]:
         act = file_system_view_actions[cmd]
@@ -213,10 +226,16 @@ def view(parser, args):
         if len(specs) == 0:
             tty.warn("Found no specs in %s" % path)
 
-    elif args.action in actions_link:
+    elif args.action in actions_link_specs:
         # only link commands need to disambiguate specs
         env = ev.active_environment()
         specs = [spack.cmd.disambiguate_spec(s, env) for s in specs]
+
+    elif args.action == "env-symlink":
+        env = ev.active_environment()
+        if not env:
+            tty.die("View creation requires specs unless you are in an environment")
+        specs = env.concrete_roots()
 
     elif args.action in actions_status:
         # no specs implies all
