@@ -134,29 +134,29 @@ class Amdlibflame(CMakePackage, LibflameBase):
 class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
     def cmake_args(self):
         spec = self.spec
-        args = [self.define("LIBAOCLUTILS_INCLUDE_PATH", self.spec["aocl-utils"].prefix.include)]
-        aocl_utils_lib_path = self.spec["aocl-utils"].libs
+        args = [self.define("LIBAOCLUTILS_INCLUDE_PATH", spec["aocl-utils"].prefix.include)]
+        aocl_utils_lib_path = spec["aocl-utils"].libs
         args.append("-DLIBAOCLUTILS_LIBRARY_PATH={0}".format(aocl_utils_lib_path))
         # From 3.2 version, amd optimized flags are encapsulated under:
         # ENABLE_AMD_AOCC_FLAGS for AOCC compiler
         # ENABLE_AMD_FLAGS for all other compilers
-        if "@3.2:" in self.spec:
-            if "%aocc" in self.spec:
+        if spec.satisfies("@3.2:"):
+            if spec.satisfies("%aocc"):
                 args.append(self.define("ENABLE_AMD_AOCC_FLAGS", True))
             else:
                 args.append(self.define("ENABLE_AMD_FLAGS", True))
 
-        if "@3.0.1: +ilp64" in self.spec:
+        if spec.satisfies("@3.0.1: +ilp64"):
             args.append(self.define("ENABLE_ILP64", True))
 
-        if "@4.1.0: +enable-aocl-blas" in self.spec:
+        if spec.satisfies("@4.1.0: +enable-aocl-blas"):
             args.append(self.define("ENABLE_AOCL_BLAS", True))
-            args.append("-DAOCL_ROOT:PATH={0}".format(self.spec["blas"].prefix))
+            args.append("-DAOCL_ROOT:PATH={0}".format(spec["blas"].prefix))
 
         if spec.variants["vectorization"].value == "auto":
-            if "avx512" in self.spec.target:
+            if spec.satisfies("target=avx512"):
                 args.append("-DLF_ISA_CONFIG=avx512")
-            elif "avx2" in self.spec.target:
+            elif spec.satisfies("target=avx2"):
                 args.append("-DLF_ISA_CONFIG=avx2")
             else:
                 args.append("-DLF_ISA_CONFIG=none")
@@ -187,40 +187,39 @@ class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
         # From 3.2 version, amd optimized flags are encapsulated under:
         # enable-amd-aocc-flags for AOCC compiler
         # enable-amd-flags for all other compilers
-
-        if "@3.2:" in self.spec:
-            if "%aocc" in self.spec:
+        if spec.satisfies("@3.2: "):
+            if spec.satisfies("%aocc"):
                 args.append("--enable-amd-aocc-flags")
             else:
                 args.append("--enable-amd-flags")
 
-        if "@:3.1" in self.spec:
+        if spec.satisfies("@:3.1"):
             args.append("--enable-external-lapack-interfaces")
 
-        if "@3.1" in self.spec:
+        if spec.satisfies("@3.1"):
             args.append("--enable-blas-ext-gemmt")
 
-        if "@3.1 %aocc" in self.spec:
+        if spec.satisfies("@3.1 %aocc"):
             args.append("--enable-void-return-complex")
 
-        if "@3.0:3.1 %aocc" in self.spec:
+        if spec.satisfies("@3.0:3.1 %aocc"):
             """To enabled Fortran to C calling convention for
             complex types when compiling with aocc flang"""
             args.append("--enable-f2c-dotc")
 
-        if "@3.0.1: +ilp64" in self.spec:
+        if spec.satisfies("@3.0.1: +ilp64"):
             args.append("--enable-ilp64")
 
-        if "@4.1:" in self.spec:
-            args.append("CFLAGS=-I{0}".format(self.spec["aocl-utils"].prefix.include))
-            aocl_utils_lib_path = self.spec["aocl-utils"].libs
+        if spec.satisfies("@4.1:"):
+            args.append("CFLAGS=-I{0}".format(spec["aocl-utils"].prefix.include))
+            aocl_utils_lib_path = spec["aocl-utils"].libs
             args.append("LIBAOCLUTILS_LIBRARY_PATH={0}".format(aocl_utils_lib_path))
 
         return args
 
     @when("@4.1:")
     def build(self, pkg, spec, prefix):
-        aocl_utils_lib_path = self.spec["aocl-utils"].libs
+        aocl_utils_lib_path = spec["aocl-utils"].libs
         make("all", "LIBAOCLUTILS_LIBRARY_PATH={0}".format(aocl_utils_lib_path))
 
     @run_after("build")
