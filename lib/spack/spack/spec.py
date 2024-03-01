@@ -3476,8 +3476,14 @@ class Spec:
         pkg_variants = pkg_cls.variants
         # reserved names are variants that may be set on any package
         # but are not necessarily recorded by the package's class
+        propagate = []
+
+        for name, variant in spec.variants.items():
+            if variant.propagate:
+                propagate.append(name)
+
         not_existing = set(spec.variants) - (
-            set(pkg_variants) | set(spack.directives.reserved_names)
+            set(pkg_variants) | set(spack.directives.reserved_names) | set(propagate)
         )
         if not_existing:
             raise vt.UnknownVariantError(spec, not_existing)
