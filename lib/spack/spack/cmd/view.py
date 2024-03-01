@@ -114,8 +114,7 @@ def setup_parser(sp):
             help="add package files to a filesystem view via symbolic links",
         ),
         "env-symlink": ssp.add_parser(
-            "env-symlink",
-            help="add all packages in an environment to a view",
+            "env-symlink", help="add all packages in an environment to a view"
         ),
         "hardlink": ssp.add_parser(
             "hardlink",
