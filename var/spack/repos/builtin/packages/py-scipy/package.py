@@ -64,7 +64,7 @@ class PyScipy(PythonPackage):
     depends_on("py-meson-python@0.11:", when="@1.10:", type="build")
     depends_on("py-meson-python@0.9:", when="@1.9.2:", type="build")
     depends_on("py-meson-python@0.8.1:", when="@1.9.1:", type="build")
-    depends_on("py-meson-python@0.7:", when="@1.9.0:", type="build")
+    depends_on("py-meson-python@0.7:", when="@1.9:", type="build")
     depends_on("py-cython@0.29.35:", when="@1.12:", type="build")
     depends_on("py-cython@0.29.35:2", when="@1.11:", type="build")
     depends_on("py-cython@0.29.32:2", when="@1.9.2:", type="build")
