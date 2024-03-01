@@ -45,6 +45,7 @@ _versions = [
     ("10.0.1", "beab968d1857e2cb4c2907e8cc6dcd7fb0ee6e9a37bbfaa014fc008b2bb268cc"),
 ]
 
+
 class PyClangFormat(PythonPackage):
     """A standalone package for the clang-format utility."""
 
