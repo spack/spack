@@ -85,14 +85,15 @@ class PyNumpy(PythonPackage):
     # Required to use --config-settings
     depends_on("py-pip@23.1:", when="@1.26:", type="build")
 
-    depends_on("py-cython@0.29.34:3.0", when="@1.26:", type="build")
+    # Build dependencies (do not include upper bound unless known issues)
+    depends_on("py-cython@0.29.34:", when="@1.26:", type="build")
     depends_on("py-cython@0.29.34:2", when="@1.25", type="build")
     depends_on("py-cython@0.29.30:2", when="@1.22.4:1.24", type="build")
     depends_on("py-cython@0.29.24:2", when="@1.21.2:1.22.3", type="build")
     depends_on("py-cython@0.29.21:2", when="@1.19.1:1.21.1", type="build")
     depends_on("py-cython@0.29.14:2", when="@1.18.1:1.19.0", type="build")
     depends_on("py-cython@0.29.13:2", when="@1.18.0", type="build")
-    depends_on("py-meson-python@0.15", when="@1.26.4:", type="build")
+    depends_on("py-meson-python@0.15:", when="@1.26.4:", type="build")
 
     depends_on("blas")
     depends_on("lapack")
