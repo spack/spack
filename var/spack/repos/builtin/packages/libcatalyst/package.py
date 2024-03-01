@@ -28,7 +28,7 @@ class Libcatalyst(CMakePackage):
     variant("conduit", default=False, description="Use external Conduit for Catalyst")
     variant("fortran", default=False, description="Enable Fortran wrapping")
     variant("python", default=False, description="Enable Python wrapping")
-    
+
     depends_on("mpi", when="+mpi")
     depends_on("conduit", when="+conduit")
     depends_on("cmake@3.26:", type="build")
