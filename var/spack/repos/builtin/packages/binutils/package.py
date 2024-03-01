@@ -127,6 +127,8 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
     # https://sourceware.org/bugzilla/show_bug.cgi?id=27482
     patch("parallel-build-2.36.patch", when="@2.36")
 
+    patch("macos-2.42.patch", when="@2.42 platform=darwin")
+
     # compression libs for debug symbols.
     # pkg-config is used to find zstd in gas/configure
     depends_on("pkgconfig", type="build")
@@ -154,8 +156,11 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
 
     with when("platform=darwin"):
         conflicts("+gold", msg="Binutils cannot build linkers on macOS")
+        # 2.41 doesn't seem to have any problems.
         conflicts(
-            "libs=shared", when="@2.37:2.40", msg="https://github.com/spack/spack/issues/35817"
+            "libs=shared",
+            when="@2.37:2.40,2.42:",
+            msg="https://github.com/spack/spack/issues/35817",
         )
 
     conflicts(
@@ -169,8 +174,6 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
     # "unable to initialize decompress status for section .debug_info"
     # when compiling with debug symbols on gcc.
     conflicts("+gas", "~ld", msg="Assembler not always compatible with system ld")
-
-    requires("@:2.41", when="platform=darwin", msg="Binutils 2.42 does not compile on macOS")
 
     @classmethod
     def determine_version(cls, exe):

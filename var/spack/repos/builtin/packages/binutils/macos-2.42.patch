@@ -1,0 +1,28 @@
+diff --git a/gold/output.cc b/gold/output.cc
+index ead67f20363..98b2f25c18b 100644
+--- a/gold/output.cc
++++ b/gold/output.cc
+@@ -29,7 +29,9 @@
+ #include <unistd.h>
+ #include <sys/stat.h>
+ #include <algorithm>
++#ifndef __APPLE__
+ #include <uchar.h>
++#endif
+ 
+ #ifdef HAVE_SYS_MMAN_H
+ #include <sys/mman.h>
+diff --git a/gold/stringpool.cc b/gold/stringpool.cc
+index d8f38cfabc1..e04909edad1 100644
+--- a/gold/stringpool.cc
++++ b/gold/stringpool.cc
+@@ -25,7 +25,9 @@
+ #include <cstring>
+ #include <algorithm>
+ #include <vector>
++#ifndef __APPLE__
+ #include <uchar.h>
++#endif
+ 
+ #include "output.h"
+ #include "parameters.h"
