@@ -170,6 +170,8 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
     # when compiling with debug symbols on gcc.
     conflicts("+gas", "~ld", msg="Assembler not always compatible with system ld")
 
+    requires("@:2.41", when="platform=darwin", msg="Binutils 2.42 does not compile on macOS")
+
     @classmethod
     def determine_version(cls, exe):
         output = Executable(exe)("--version", output=str, error=str)
