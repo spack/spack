@@ -62,6 +62,5 @@ class PyNumba(PythonPackage):
     conflicts("^llvm@6.0.0")
 
     def setup_build_environment(self, env):
-        # No way to disable TBB before v0.51.
-        if "+tbb" not in self.spec and self.spec.satisfies("@0.51:"):
+        if self.spec.satisfies("~tbb"):
             env.set("NUMBA_DISABLE_TBB", "yes")
