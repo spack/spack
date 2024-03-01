@@ -69,6 +69,7 @@ class CBlosc2(CMakePackage):
             self.define("BUILD_TESTS", self.run_tests),
             self.define("BUILD_BENCHMARKS", self.run_tests),
             self.define("BUILD_EXAMPLES", self.run_tests),
+            self.define("BUILD_FUZZERS", self.run_tests),
         ]
 
         return args

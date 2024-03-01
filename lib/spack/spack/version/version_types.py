@@ -695,26 +695,35 @@ class ClosedOpenRange:
     def overlaps(self, other: Union["ClosedOpenRange", ConcreteVersion, "VersionList"]) -> bool:
         return self.intersects(other)
 
-    def union(self, other: Union["ClosedOpenRange", ConcreteVersion, "VersionList"]):
+    def _union_if_not_disjoint(
+        self, other: Union["ClosedOpenRange", ConcreteVersion]
+    ) -> Optional["ClosedOpenRange"]:
+        """Same as union, but returns None when the union is not connected. This function is not
+        implemented for version lists as right-hand side, as that makes little sense."""
         if isinstance(other, StandardVersion):
-            return self if self.lo <= other < self.hi else VersionList([self, other])
+            return self if self.lo <= other < self.hi else None
 
         if isinstance(other, GitVersion):
-            return self if self.lo <= other.ref_version < self.hi else VersionList([self, other])
+            return self if self.lo <= other.ref_version < self.hi else None
 
         if isinstance(other, ClosedOpenRange):
             # Notice <= cause we want union(1:2, 3:4) = 1:4.
-            if self.lo <= other.hi and other.lo <= self.hi:
-                return ClosedOpenRange(min(self.lo, other.lo), max(self.hi, other.hi))
+            return (
+                ClosedOpenRange(min(self.lo, other.lo), max(self.hi, other.hi))
+                if self.lo <= other.hi and other.lo <= self.hi
+                else None
+            )
 
-            return VersionList([self, other])
+        raise TypeError(f"Unexpected type {type(other)}")
 
+    def union(self, other: Union["ClosedOpenRange", ConcreteVersion, "VersionList"]):
         if isinstance(other, VersionList):
             v = other.copy()
             v.add(self)
             return v
 
-        raise ValueError(f"Unexpected type {type(other)}")
+        result = self._union_if_not_disjoint(other)
+        return result if result is not None else VersionList([self, other])
 
     def intersection(self, other: Union["ClosedOpenRange", ConcreteVersion]):
         # range - version -> singleton or nothing.
@@ -732,19 +741,20 @@ class VersionList:
 
     def __init__(self, vlist=None):
         self.versions: List[StandardVersion, GitVersion, ClosedOpenRange] = []
-        if vlist is not None:
-            if isinstance(vlist, str):
-                vlist = from_string(vlist)
-                if isinstance(vlist, VersionList):
-                    self.versions = vlist.versions
-                else:
-                    self.versions = [vlist]
+        if vlist is None:
+            pass
+        elif isinstance(vlist, str):
+            vlist = from_string(vlist)
+            if isinstance(vlist, VersionList):
+                self.versions = vlist.versions
             else:
-                for v in vlist:
-                    self.add(ver(v))
+                self.versions = [vlist]
+        else:
+            for v in vlist:
+                self.add(ver(v))
 
-    def add(self, item):
-        if isinstance(item, ConcreteVersion):
+    def add(self, item: Union[StandardVersion, GitVersion, ClosedOpenRange, "VersionList"]):
+        if isinstance(item, (StandardVersion, GitVersion)):
             i = bisect_left(self, item)
             # Only insert when prev and next are not intersected.
             if (i == 0 or not item.intersects(self[i - 1])) and (
@@ -755,16 +765,22 @@ class VersionList:
         elif isinstance(item, ClosedOpenRange):
             i = bisect_left(self, item)
 
-            # Note: can span multiple concrete versions to the left,
-            # For instance insert 1.2: into [1.2, hash=1.2, 1.3]
-            # would bisect to i = 1.
-            while i > 0 and item.intersects(self[i - 1]):
-                item = item.union(self[i - 1])
+            # Note: can span multiple concrete versions to the left (as well as to the right).
+            # For instance insert 1.2: into [1.2, hash=1.2, 1.3, 1.4:1.5]
+            # would bisect at i = 1 and merge i = 0 too.
+            while i > 0:
+                union = item._union_if_not_disjoint(self[i - 1])
+                if union is None:  # disjoint
+                    break
+                item = union
                 del self.versions[i - 1]
                 i -= 1
 
-            while i < len(self) and item.intersects(self[i]):
-                item = item.union(self[i])
+            while i < len(self):
+                union = item._union_if_not_disjoint(self[i])
+                if union is None:
+                    break
+                item = union
                 del self.versions[i]
 
             self.versions.insert(i, item)
