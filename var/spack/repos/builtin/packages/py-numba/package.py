@@ -55,8 +55,7 @@ class PyNumba(PythonPackage):
     depends_on("py-llvmlite@0.31", when="@0.48", type=("build", "run"))
     depends_on("py-importlib-metadata", when="@0.56:^python@:3.8", type=("build", "run"))
 
-    with when("+tbb"):
-        depends_on("tbb")
+    depends_on("tbb", when="+tbb")
 
     # Version 6.0.0 of llvm had a hidden symbol which breaks numba at runtime.
     # See https://reviews.llvm.org/D44140
