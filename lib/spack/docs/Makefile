@@ -59,6 +59,7 @@ upload:
 apidoc:
 	sphinx-apidoc -f -T -o . ../spack
 	sphinx-apidoc -f -T -o . ../llnl
+        ./nosearch-api-docs  # set :nosearch: at top of each file
 
 help:
 	@echo "Please use \`make <target>' where <target> is one of"

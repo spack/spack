@@ -1,0 +1,6 @@
+#!/bin/sh
+
+# Set :nosearch: at top of each api doc file
+for filename in {spack,llnl}.*.rst; do
+    $(echo ":nosearch:"; cat $filename) > $filename
+done
