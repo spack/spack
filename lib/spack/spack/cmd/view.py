@@ -193,7 +193,6 @@ def setup_parser(sp):
 def view(parser, args):
     "Produce a view of a set of packages."
 
-    specs = spack.cmd.parse_specs(args.specs)
     path = args.path[0]
 
     if args.action in actions_link and args.projection_file:
@@ -206,7 +205,7 @@ def view(parser, args):
         ordered_projections = {}
 
     # What method are we using for this view
-    if args.action in actions_link:
+    if args.action in actions_link_specs:
         link_fn = view_func_parser(args.action)
     else:
         link_fn = view_func_parser("symlink")
