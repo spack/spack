@@ -2237,6 +2237,9 @@ class PackageInstaller:
             # include downgrading the write to a read lock
             self._cleanup_task(pkg)
 
+            # Run post install in db hooks
+            spack.hooks.post_install_in_db(pkg.spec)
+
         # Cleanup, which includes releasing all of the read locks
         self._cleanup_all_tasks()
 

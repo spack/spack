@@ -13,6 +13,7 @@ Currently the following hooks are supported:
 
     * pre_install(spec)
     * post_install(spec, explicit)
+    * post_install_in_db(spec)
     * pre_uninstall(spec)
     * post_uninstall(spec)
 
@@ -70,6 +71,7 @@ class _HookRunner:
 # pre/post install and run by the install subprocess
 pre_install = _HookRunner("pre_install")
 post_install = _HookRunner("post_install")
+post_install_in_db = _HookRunner("post_install_in_db")
 
 pre_uninstall = _HookRunner("pre_uninstall")
 post_uninstall = _HookRunner("post_uninstall")
