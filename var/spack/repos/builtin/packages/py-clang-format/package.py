@@ -59,7 +59,9 @@ class PyClangFormat(PythonPackage):
         version(ver, sha256=sha256)
         depends_on("llvm@={} +clang".format(ver), when="@={}".format(ver), type="build")
 
-    patch("use_local_llvm.patch")
+    patch("use_local_llvm_10_0_1.patch", when="@:13.0.0")
+    patch("use_local_llvm_13_0_1.patch", when="@13.0.1:15.0.6")
+    patch("use_local_llvm_15_0_7.patch", when="@15.0.7:")
 
     # From pyproject.toml
     depends_on("py-setuptools@42:", type="build")
