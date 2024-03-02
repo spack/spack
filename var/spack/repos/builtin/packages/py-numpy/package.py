@@ -22,6 +22,7 @@ class PyNumpy(PythonPackage):
     license("BSD-3-Clause")
 
     version("main", branch="main")
+    version("1.26.4", sha256="2a02aba9ed12e4ac4eb3ea9421c420301a0c6460d9830d74a9df87efa4912010")
     version("1.26.3", sha256="697df43e2b6310ecc9d95f05d5ef20eacc09c7c4ecc9da3f235d39e71b7da1e4")
     version("1.26.2", sha256="f65738447676ab5777f11e6bbbdb8ce11b785e105f690bc45966574816b6d3ea")
     version("1.26.1", sha256="c8c6c72d4a9f831f328efb1312642a1cafafaa88981d9ab76368d50d07d93cbe")
@@ -72,6 +73,7 @@ class PyNumpy(PythonPackage):
     version("1.17.4", sha256="f58913e9227400f1395c7b800503ebfdb0772f1c33ff8cb4d6451c06cabdf316")
     version("1.17.3", sha256="a0678793096205a4d784bd99f32803ba8100f639cf3b932dc63b21621390ea7e")
 
+    # Based on PyPI wheel availability
     depends_on("python@3.9:3.12", when="@1.26:", type=("build", "link", "run"))
     depends_on("python@3.9:3.11", when="@1.25", type=("build", "link", "run"))
     depends_on("python@3.8:3.11", when="@1.23.2:1.24", type=("build", "link", "run"))
@@ -80,26 +82,19 @@ class PyNumpy(PythonPackage):
     depends_on("python@:3.9", when="@1.19.3:1.21.1", type=("build", "link", "run"))
     depends_on("python@:3.8", when="@1.17.3:1.19.2", type=("build", "link", "run"))
 
-    depends_on("py-cython@0.29.34:3", when="@1.26:", type="build")
+    # Required to use --config-settings
+    depends_on("py-pip@23.1:", when="@1.26:", type="build")
+
+    # Build dependencies (do not include upper bound unless known issues)
+    depends_on("py-cython@0.29.34:", when="@1.26:", type="build")
     depends_on("py-cython@0.29.34:2", when="@1.25", type="build")
     depends_on("py-cython@0.29.30:2", when="@1.22.4:1.24", type="build")
     depends_on("py-cython@0.29.24:2", when="@1.21.2:1.22.3", type="build")
     depends_on("py-cython@0.29.21:2", when="@1.19.1:1.21.1", type="build")
     depends_on("py-cython@0.29.14:2", when="@1.18.1:1.19.0", type="build")
     depends_on("py-cython@0.29.13:2", when="@1.18.0", type="build")
-    depends_on("py-pyproject-metadata@0.7.1:", when="@1.26:", type="build")
-    depends_on("py-tomli@1:", when="@1.26: ^python@:3.10", type="build")
-    depends_on("py-setuptools@60:", when="@1.26: ^python@3.12:", type="build")
-    # https://github.com/spack/spack/pull/32078
-    depends_on("py-setuptools@:63", when="@:1.25", type=("build", "run"))
-    depends_on("py-setuptools@:59", when="@:1.22.1", type=("build", "run"))
-    depends_on("py-colorama", when="@1.26: platform=windows", type="build")
+    depends_on("py-meson-python@0.15:", when="@1.26.4:", type="build")
 
-    # Required to use --config-settings
-    depends_on("py-pip@23.1:", when="@1.26:", type="build")
-    # meson is vendored, ninja and pkgconfig are not
-    depends_on("ninja@1.8.2:", when="@1.26:", type="build")
-    depends_on("pkgconfig", when="@1.26:", type="build")
     depends_on("blas")
     depends_on("lapack")
 
@@ -107,6 +102,16 @@ class PyNumpy(PythonPackage):
     depends_on("py-pytest", type="test")
     depends_on("py-hypothesis", when="@1.19:", type="test")
     depends_on("py-typing-extensions@4.2:", when="@1.23:", type="test")
+
+    # Historical dependencies
+    depends_on("py-pyproject-metadata@0.7.1:", when="@1.26.0:1.26.3", type="build")
+    depends_on("py-tomli@1:", when="@1.26.0:1.26.3 ^python@:3.10", type="build")
+    depends_on("py-setuptools@60:", when="@1.26.0:1.26.3 ^python@3.12:", type="build")
+    depends_on("py-setuptools@:63", when="@:1.25", type=("build", "run"))
+    depends_on("py-setuptools@:59", when="@:1.22.1", type=("build", "run"))
+    depends_on("py-colorama", when="@1.26.0:1.26.3 platform=windows", type="build")
+    depends_on("ninja@1.8.2:", when="@1.26.0:1.26.3", type="build")
+    depends_on("pkgconfig", when="@1.26.0:1.26.3", type="build")
 
     # Add Fujitsu Fortran compiler
     patch("add_fj_compiler.patch", when="@1.19.3:1.19.5%fj")
