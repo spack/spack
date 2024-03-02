@@ -63,10 +63,11 @@ class SpackHTTPDefaultErrorHandler(urllib.request.HTTPDefaultErrorHandler):
 def ssl_context():
     """context for configuring ssl during urllib HTTPS operations"""
     # custom certs will be a location, so expand env variables, paths etc
-    certs = spack.util.path.canonicalize_path(spack.config.get("config:custom_certs"))
+    certs = spack.util.path.substitute_path_variables(spack.config.get("config:custom_certs"))
     if os.path.isfile(certs):
         return ssl.create_default_context(cafile=certs)
     else:
+        tty.die("Failed to find certs")
         return ssl.create_default_context()
 
 
