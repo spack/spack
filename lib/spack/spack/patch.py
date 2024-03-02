@@ -195,6 +195,7 @@ class FilePatch(Patch):
         """
         if self._sha256 is None and self.path is not None:
             self._sha256 = checksum(hashlib.sha256, self.path)
+        assert isinstance(self._sha256, str)
         return self._sha256
 
     @sha256.setter
