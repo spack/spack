@@ -226,6 +226,8 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
 
     # Undocumented dependencies
     depends_on("py-requests", type=("build", "run"))
+    # tensorflow/tools/pip_package/build_pip_package.sh
+    depends_on("patchelf", when="@2.13: platform=linux", type="build")
     # https://github.com/tensorflow/tensorflow/issues/60179#issuecomment-1491238631
     depends_on("coreutils", when="@2.13: platform=darwin", type="build")
 
