@@ -16,7 +16,7 @@ class Abacus(MakefilePackage, CMakePackage, CudaPackage, ROCmPackage):
     for large-scale electronic-structure simulations
     from first principles"""
 
-    maintainers("bitllion", "yizeyi18", )
+    maintainers("yizeyi18", "QuantumMisaka", "caic99")
 
     build_system("cmake", conditional("makefile", when="@:2.3.4"), default="cmake")
 
