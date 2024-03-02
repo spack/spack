@@ -285,7 +285,7 @@ class UrlPatch(Patch):
         if self._stage:
             return self._stage
 
-        fetch_digest = self.archive_sha256 or self.sha256 or ""
+        fetch_digest = self.archive_sha256 or self.sha256
 
         # Two checksums, one for compressed file, one for its contents
         if self.archive_sha256 and self.sha256:
