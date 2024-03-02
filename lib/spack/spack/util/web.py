@@ -67,7 +67,6 @@ def ssl_context():
     if os.path.isfile(certs):
         return ssl.create_default_context(cafile=certs)
     else:
-        tty.die("Failed to find certs")
         return ssl.create_default_context()
 
 
