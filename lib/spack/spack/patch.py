@@ -64,13 +64,10 @@ class Patch:
     it is the dependent's fullname.
     """
 
+    sha256: str
+
     def __init__(
-        self,
-        pkg: "spack.package_base.PackageBase",
-        path_or_url: str,
-        level: int,
-        working_dir: str,
-        sha256: Optional[str] = None,
+        self, pkg: "spack.package_base.PackageBase", path_or_url: str, level: int, working_dir: str
     ) -> None:
         """Initialize a new Patch instance.
 
@@ -79,8 +76,6 @@ class Patch:
             path_or_url: the relative path or URL to a patch file
             level: patch level
             working_dir: relative path *within* the stage to change to
-            sha256: sha256 sum of the patch, used to verify the patch
-                (only required for URL patches)
         """
         # validate level (must be an integer >= 0)
         if not isinstance(level, int) or not level >= 0:
@@ -92,7 +87,6 @@ class Patch:
         self.path: Optional[str] = None  # must be set before apply()
         self.level = level
         self.working_dir = working_dir
-        self.sha256 = sha256
 
     def apply(self, stage: spack.stage.Stage) -> None:
         """Apply a patch to source in a stage.
@@ -144,6 +138,8 @@ class Patch:
 class FilePatch(Patch):
     """Describes a patch that is retrieved from a file in the repository."""
 
+    _sha256: str
+
     def __init__(
         self,
         pkg: "spack.package_base.PackageBase",
@@ -151,7 +147,6 @@ class FilePatch(Patch):
         level: int,
         working_dir: str,
         ordering_key: Optional[Tuple[str, int]] = None,
-        sha256: Optional[str] = None,
     ) -> None:
         """Initialize a new FilePatch instance.
 
@@ -161,8 +156,6 @@ class FilePatch(Patch):
             level: level to pass to patch command
             working_dir: path within the source directory where patch should be applied
             ordering_key: key used to ensure patches are applied in a consistent order
-            sha256: sha256 sum of the patch, used to verify the patch
-                (only required for URL patches)
         """
         self.relative_path = relative_path
 
@@ -191,11 +184,10 @@ class FilePatch(Patch):
 
         super().__init__(pkg, abs_path, level, working_dir)
         self.path = abs_path
-        self._sha256 = sha256
         self.ordering_key = ordering_key
 
     @property
-    def sha256(self) -> Optional[str]:
+    def sha256(self) -> str:
         """Get the patch checksum.
 
         Returns:
@@ -206,7 +198,7 @@ class FilePatch(Patch):
         return self._sha256
 
     @sha256.setter
-    def sha256(self, value: Optional[str]) -> None:
+    def sha256(self, value: str) -> None:
         """Set the patch checksum.
 
         Args:
@@ -247,7 +239,6 @@ class UrlPatch(Patch):
             working_dir: path within the source directory where patch should be applied
             ordering_key: key used to ensure patches are applied in a consistent order
             sha256: sha256 sum of the patch, used to verify the patch
-                (only required for URL patches)
             archive_sha256: sha256 sum of the *archive*, if the patch is compressed
                 (only required for compressed URL patches)
         """
@@ -258,16 +249,16 @@ class UrlPatch(Patch):
 
         self.ordering_key = ordering_key
 
-        self.archive_sha256 = archive_sha256
-        if allowed_archive(self.url) and not self.archive_sha256:
+        if allowed_archive(self.url) and not archive_sha256:
             raise PatchDirectiveError(
                 "Compressed patches require 'archive_sha256' "
                 "and patch 'sha256' attributes: %s" % self.url
             )
+        self.archive_sha256 = archive_sha256
 
-        self.sha256 = sha256
-        if not self.sha256:
+        if not sha256:
             raise PatchDirectiveError("URL patches require a sha256 checksum")
+        self.sha256 = sha256
 
     def apply(self, stage: spack.stage.Stage) -> None:
         """Apply a patch to source in a stage.
