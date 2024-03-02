@@ -29,54 +29,52 @@ class PyZfit(PythonPackage):
     depends_on("python@3.9:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
 
-    runtype = (
-        "run",
-        "build",
-    )  # TODO: remove "build" once fixed in spack that tests need "run", not "build"
 
-    # TODO: reactivate once TF 2.15 is ready https://github.com/spack/spack/pull/41069
-    # depends_on("py-tensorflow@2.15", type=("run"), when="@0.18")
-    # depends_on("py-tensorflow-probability@0.23", type=("run"), when="@0.18")
+    with default_args(type=("build", "run")):  # TODO: remove "build" once fixed in spack that tests need "run", not "build"
 
-    depends_on("py-tensorflow@2.13", type=runtype, when="@0.15:0.17")
-    depends_on("py-tensorflow-probability@0.21", type=runtype, when="@0.15:0.17")
+        # TODO: reactivate once TF 2.15 is ready https://github.com/spack/spack/pull/41069
+        # depends_on("py-tensorflow@2.15", type=("run"), when="@0.18")
+        # depends_on("py-tensorflow-probability@0.23", type=("run"), when="@0.18")
 
-    depends_on("py-tensorflow@2.12:2.13", type=runtype, when="@0.15:0.16")
-    depends_on("py-tensorflow-probability@0.20:0.21", type=runtype, when="@0.15:0.16")
+        depends_on("py-tensorflow@2.13", when="@0.15:0.17")
+        depends_on("py-tensorflow-probability@0.21", when="@0.15:0.17")
 
-    depends_on("py-tensorflow@2.0:2.12", type=runtype, when="@0.14")
-    depends_on("py-tensorflow-probability@0.20", type=runtype, when="@0.14")
+        depends_on("py-tensorflow@2.12:2.13", when="@0.15:0.16")
+        depends_on("py-tensorflow-probability@0.20:0.21", when="@0.15:0.16")
 
-    variant("nlopt", default=False, description="Enable nlopt support")
+        depends_on("py-tensorflow@2.0:2.12", when="@0.14")
+        depends_on("py-tensorflow-probability@0.20", when="@0.14")
 
-    with when("+nlopt"):
-        depends_on("nlopt@2.7.1: +python", type=runtype)
+        variant("nlopt", default=False, description="Enable nlopt support")
 
-    variant("hs3", default=True, description="Enable serialization support")
-    with when("+hs3"):
-        depends_on("py-asdf", type=runtype)
+        with when("+nlopt"):
+            depends_on("nlopt@2.7.1: +python")
 
-    depends_on("py-boost-histogram", type=runtype)
-    depends_on("py-colorama", type=runtype)
-    depends_on("py-colored", type=runtype)
-    depends_on("py-colorlog", type=runtype)
-    depends_on("py-deprecated", type=runtype)
-    depends_on("py-dill", type=runtype)
-    depends_on("py-dotmap", type=runtype)
-    depends_on("py-frozendict", type=runtype)
-    depends_on("py-hist", type=runtype)
-    depends_on("py-iminuit@2.3:", type=runtype)
-    depends_on("py-jacobi", type=runtype)
-    depends_on("py-numdifftools", type=runtype)
-    depends_on("py-numpy@1.16:", type=runtype)
-    depends_on("py-ordered-set", type=runtype)
-    depends_on("py-pandas", type=runtype)
-    depends_on("py-pydantic@1", type=runtype)
-    depends_on("py-pyyaml", type=runtype)
-    depends_on("py-scipy@1.2:", type=runtype)
-    depends_on("py-tabulate", type=runtype)
-    depends_on("py-texttable", type=runtype)
-    depends_on("py-uhi", type=runtype)
-    depends_on("py-uproot@4:", type=runtype)
-    depends_on("py-xxhash", type=runtype)
-    depends_on("py-zfit-interface", type=runtype)
+        variant("hs3", default=True, description="Enable serialization support")
+        with when("+hs3"):
+            depends_on("py-asdf")
+
+        depends_on("py-boost-histogram")
+        depends_on("py-colorama")
+        depends_on("py-colored")
+        depends_on("py-colorlog")
+        depends_on("py-deprecated")
+        depends_on("py-dill")
+        depends_on("py-dotmap")
+        depends_on("py-frozendict")
+        depends_on("py-hist")
+        depends_on("py-iminuit@2.3:")
+        depends_on("py-jacobi")
+        depends_on("py-numdifftools")
+        depends_on("py-numpy@1.16:")
+        depends_on("py-ordered-set")
+        depends_on("py-pandas")
+        depends_on("py-pydantic@1")
+        depends_on("py-pyyaml")
+        depends_on("py-scipy@1.2:")
+        depends_on("py-tabulate")
+        depends_on("py-texttable")
+        depends_on("py-uhi")
+        depends_on("py-uproot@4:")
+        depends_on("py-xxhash")
+        depends_on("py-zfit-interface")
