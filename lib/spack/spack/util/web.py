@@ -64,9 +64,12 @@ def ssl_context():
     """context for configuring ssl during urllib HTTPS operations"""
     # custom certs will be a location, so expand env variables, paths etc
     certs = spack.util.path.substitute_path_variables(spack.config.get("config:custom_certs"))
+    tty.debug("Looking for custom SSL certs")
     if os.path.isfile(certs):
+        tty.debug("Custom SSL certs found at {}".format(certs))
         return ssl.create_default_context(cafile=certs)
     else:
+        tty.debug("Custom SSL certs not found")
         return ssl.create_default_context()
 
 
