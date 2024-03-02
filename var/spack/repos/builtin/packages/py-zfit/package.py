@@ -29,8 +29,12 @@ class PyZfit(PythonPackage):
     depends_on("python@3.9:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
 
+    variant("nlopt", default=False, description="Enable nlopt support")
+    variant("hs3", default=True, description="Enable serialization support")
 
-    with default_args(type=("build", "run")):  # TODO: remove "build" once fixed in spack that tests need "run", not "build"
+    with default_args(
+        type=("build", "run")
+    ):  # TODO: remove "build" once fixed in spack that tests need "run", not "build"
 
         # TODO: reactivate once TF 2.15 is ready https://github.com/spack/spack/pull/41069
         # depends_on("py-tensorflow@2.15", type=("run"), when="@0.18")
@@ -45,12 +49,9 @@ class PyZfit(PythonPackage):
         depends_on("py-tensorflow@2.0:2.12", when="@0.14")
         depends_on("py-tensorflow-probability@0.20", when="@0.14")
 
-        variant("nlopt", default=False, description="Enable nlopt support")
-
         with when("+nlopt"):
             depends_on("nlopt@2.7.1: +python")
 
-        variant("hs3", default=True, description="Enable serialization support")
         with when("+hs3"):
             depends_on("py-asdf")
 
