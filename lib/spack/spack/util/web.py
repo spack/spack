@@ -60,16 +60,21 @@ class SpackHTTPDefaultErrorHandler(urllib.request.HTTPDefaultErrorHandler):
         raise DetailedHTTPError(req, code, msg, hdrs, fp)
 
 
-def ssl_context():
+def ssl_cert_handler():
     """context for configuring ssl during urllib HTTPS operations"""
-    # custom certs will be a location, so expand env variables, paths etc
-    certs = spack.util.path.canonicalize_path(spack.config.get("config:custom_certs"))
-    tty.debug("Looking for custom SSL certs")
-    if os.path.isfile(certs):
-        tty.debug("Custom SSL certs found at {}".format(certs))
-        return ssl.create_default_context(cafile=certs)
+    custom_cert_var = spack.config.get("config:custom_certs")
+    if custom_cert_var:
+        # custom certs will be a location, so expand env variables, paths etc
+        certs = spack.util.path.canonicalize_path(custom_cert_var)
+        tty.debug("Looking for custom SSL certs")
+        if os.path.isfile(certs):
+            tty.debug("Custom SSL certs found at {}".format(certs))
+            return ssl.create_default_context(cafile=certs)
+        else:
+            tty.debug("Custom SSL certs not found")
+            return ssl.create_default_context()
     else:
-        tty.debug("Custom SSL certs not found")
+        tty.debug("config:custom_certs not in configuration. Default certs will be used.")
         return ssl.create_default_context()
 
 
@@ -79,7 +84,7 @@ def _urlopen():
     error_handler = SpackHTTPDefaultErrorHandler()
 
     # One opener with HTTPS ssl enabled
-    with_ssl = build_opener(s3, gcs, HTTPSHandler(context=ssl_context()), error_handler)
+    with_ssl = build_opener(s3, gcs, HTTPSHandler(context=ssl_cert_handler()), error_handler)
 
     # One opener with HTTPS ssl disabled
     without_ssl = build_opener(
