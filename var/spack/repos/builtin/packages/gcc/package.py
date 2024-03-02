@@ -95,6 +95,53 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     version("4.6.4", sha256="35af16afa0b67af9b8eb15cafb76d2bc5f568540552522f5dc2c88dd45d977e8")
     version("4.5.4", sha256="eef3f0456db8c3d992cbb51d5d32558190bc14f3bc19383dd93acc27acc6befc")
 
+    # Newlib version table
+    newlib_shasum = {
+        "3.0.0.20180831": "3ad3664f227357df15ff34e954bfd9f501009a647667cd307bf0658aefd6eb5b",
+        "3.3.0": "58dd9e3eaedf519360d92d84205c3deef0b3fc286685d1c562e245914ef72c66",
+        "4.1.0": "f296e372f51324224d387cc116dc37a6bd397198756746f93a2b02e9a5d40154",
+        "4.2.0.20211231": "c3a0e8b63bc3bef1aeee4ca3906b53b3b86c8d139867607369cb2915ffc54435",
+        "4.3.0.20230120": "83a62a99af59e38eb9b0c58ed092ee24d700fff43a22c03e433955113ef35150",
+    }
+
+    # AMDGCN build requires LLVM utilities
+    amdgcn_llvm_src_ver = {
+        "@10.1.0": "9.0.1",
+        "@10.2.0": "9.0.1",
+        "@10.3.0": "9.0.1",
+        "@10.4.0": "9.0.1",
+        "@10.5.0": "9.0.1",
+        "@11.1.0": "9.0.1",
+        "@11.2.0": "9.0.1",
+        "@11.3.0": "9.0.1",
+        "@11.4.0": "9.0.1",
+        "@12.1.0": "13.0.1",
+        "@12.2.0": "13.0.1",
+        "@12.3.0": "13.0.1",
+        "@13.1.0": "13.0.1",
+        "@13.2.0": "13.0.1",
+        "@master": "13.0.1",
+    }
+
+    # AMDGCN build requires a Newlib version contemporaneous with GCC
+    amdgcn_newlib_ver = {
+        "@10.1.0": "3.3.0",  # GCC: 2020-05-07, Newlib: 2020-01-22
+        "@10.2.0": "3.3.0",  # GCC: 2020-07-23, Newlib: 2020-01-22
+        "@10.3.0": "4.1.0",  # GCC: 2021-04-08, Newlib: 2020-12-18
+        "@10.4.0": "4.2.0.20211231",  # GCC: 2022-06-28, Newlib: 2021-12-31
+        "@10.5.0": "4.3.0.20230120",  # GCC: 2023-07-26, Newlib: 2023-01-20
+        "@11.1.0": "4.1.0",  # GCC: 2021-04-27, Newlib: 2020-12-18
+        "@11.2.0": "4.1.0",  # GCC: 2021-07-28, Newlib: 2020-12-18
+        "@11.3.0": "4.2.0.20211231",  # GCC: 2022-04-21, Newlib: 2021-12-31
+        "@11.4.0": "4.3.0.20230120",  # GCC: 2023-05-29, Newlib: 2023-01-20
+        "@12.1.0": "4.2.0.20211231",  # GCC: 2022-05-06, Newlib: 2021-12-31
+        "@12.2.0": "4.2.0.20211231",  # GCC: 2022-08-19, Newlib: 2021-12-31
+        "@12.3.0": "4.3.0.20230120",  # GCC: 2023-05-08, Newlib: 2023-01-20
+        "@13.1.0": "4.3.0.20230120",  # GCC: 2023-04-26, Newlib: 2023-01-20
+        "@13.2.0": "4.3.0.20230120",  # GCC: 2023-07-27, Newlib: 2023-01-20
+        "@master": "4.3.0.20230120",  # Newest version of Newlib
+    }
+
     # We specifically do not add 'all' variant here because:
     # (i) Ada, D, Go, Jit, and Objective-C++ are not default languages.
     # In that respect, the name 'all' is rather misleading.
@@ -133,6 +180,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     )
     variant("strip", default=False, description="Strip executables to reduce installation size")
     variant("nvptx", default=False, description="Target nvptx offloading to NVIDIA GPUs")
+    variant("amdgcn", default=False, description="Target amdgcn offloading to AMD GPUs")
     variant("bootstrap", default=True, description="Enable 3-stage bootstrap")
     variant(
         "graphite", default=False, description="Enable Graphite loop optimizations (requires ISL)"
@@ -300,12 +348,24 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
                 msg="'gcc@12: languages=d' requires '%gcc@9:' with the D language support",
             )
 
+    # GPU offload backend supported by limited languages
+    with when("+nvptx") or when("+amdgcn"):
+        conflicts("languages=ada")
+        conflicts("languages=brig")
+        conflicts("languages=go")
+        conflicts("languages=java")
+        conflicts("languages=jit")
+        conflicts("languages=objc")
+        conflicts("languages=obj-c++")
+        conflicts("languages=d")
+
     with when("+nvptx"):
         depends_on("cuda")
+        nvptx_newlib_ver = "3.0.0.20180831"
         resource(
             name="newlib",
-            url="ftp://sourceware.org/pub/newlib/newlib-3.0.0.20180831.tar.gz",
-            sha256="3ad3664f227357df15ff34e954bfd9f501009a647667cd307bf0658aefd6eb5b",
+            url="ftp://sourceware.org/pub/newlib/newlib-{0}.tar.gz".format(nvptx_newlib_ver),
+            sha256=newlib_shasum[nvptx_newlib_ver],
             destination="newlibsource",
             fetch_options=timeout,
         )
@@ -317,17 +377,32 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
             git="https://github.com/MentorEmbedded/nvptx-tools",
             commit="d0524fbdc86dfca068db5a21cc78ac255b335be5",
         )
-        # NVPTX offloading supported in 7 and later by limited languages
+        # NVPTX offloading supported in 7 and later
         conflicts("@:6", msg="NVPTX only supported in gcc 7 and above")
-        conflicts("languages=ada")
-        conflicts("languages=brig")
-        conflicts("languages=go")
-        conflicts("languages=java")
-        conflicts("languages=jit")
-        conflicts("languages=objc")
-        conflicts("languages=obj-c++")
-        conflicts("languages=d")
         # NVPTX build disables bootstrap
+        conflicts("+bootstrap")
+
+    with when("+amdgcn"):
+        # Set up LLVM versions
+        for k, v in amdgcn_llvm_src_ver.items():
+            depends_on(
+                f"llvm@{v} ~clang +lld ~gold ~llvm_dylib ~polly targets=amdgpu",
+                type=("build", "link"),
+                when=k,
+            )
+        # Set up Newlib versions
+        for k, v in amdgcn_newlib_ver.items():
+            with when(k):
+                resource(
+                    name="newlib",
+                    url="ftp://sourceware.org/pub/newlib/newlib-{0}.tar.gz".format(v),
+                    sha256=newlib_shasum[v],
+                    destination="newlibsource",
+                    fetch_options=timeout,
+                )
+        # AMDGCN offloading supported in 10 and later
+        conflicts("@:9", msg="AMDGCN only supported in gcc 10 and above")
+        # AMDGCN build disables bootstrap
         conflicts("+bootstrap")
 
     # Binutils can't build ld on macOS
@@ -818,15 +893,27 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
                 ]
             )
 
-        # nvptx-none offloading for host compiler
+        # GPU offload targets
+        offload_targets = []
+        if spec.satisfies("+nvptx"):
+            offload_targets.append("nvptx-none")
+        if spec.satisfies("+amdgcn"):
+            offload_targets.append("amdgcn-amdhsa")
+        if offload_targets:
+            options.extend(
+                [
+                    "--enable-offload-targets={0}".format(",".join(offload_targets)),
+                    "--disable-bootstrap",
+                    "--disable-multilib",
+                ]
+            )
+
+        # arguments for nvptx-none offloading
         if spec.satisfies("+nvptx"):
             options.extend(
                 [
-                    "--enable-offload-targets=nvptx-none",
                     "--with-cuda-driver-include={0}".format(spec["cuda"].prefix.include),
                     "--with-cuda-driver-lib={0}".format(spec["cuda"].libs.directories[0]),
-                    "--disable-bootstrap",
-                    "--disable-multilib",
                 ]
             )
 
@@ -860,6 +947,13 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
 
         return options
 
+    # Common code for nvptx and amdgcn to link newlib source directory
+    def link_newlib(self):
+        pattern = join_path(self.stage.source_path, "newlibsource", "*")
+        files = glob.glob(pattern)
+        if files:
+            symlink(join_path(files[0], "newlib"), "newlib")
+
     # run configure/make/make(install) for the nvptx-none target
     # before running the host compiler phases
     @run_before("configure")
@@ -888,11 +982,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
             make()
             make("install")
 
-        pattern = join_path(self.stage.source_path, "newlibsource", "*")
-        files = glob.glob(pattern)
-
-        if files:
-            symlink(join_path(files[0], "newlib"), "newlib")
+        self.link_newlib()
 
         # self.build_directory = 'spack-build-nvptx'
         with working_dir("spack-build-nvptx", create=True):
@@ -912,6 +1002,85 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
             configure(*options)
             make()
             make("install")
+
+    # run configure/make/make(install) for the amdgcn-amdhsa target
+    # before running the host compiler phases
+    # See https://gcc.gnu.org/wiki/Offloading#For_AMD_GCN:
+    @run_before("configure")
+    def amdgcn_install(self):
+        spec = self.spec
+        prefix = self.prefix
+
+        if not spec.satisfies("+amdgcn"):
+            return
+
+        # config.guess returns the host triple, e.g. "x86_64-pc-linux-gnu"
+        guess = Executable("./config.guess")
+        targetguess = guess(output=str).rstrip("\n")
+
+        options = getattr(self, "configure_flag_args", [])
+        options += [f"--prefix={prefix}"]
+
+        # Copy LLVM utils
+        llvm_bin_path = join_path(spec["llvm"].prefix, "bin")
+        llvm_util_path = join_path(prefix, "amdgcn-amdhsa", "bin")
+        mkdirp(llvm_util_path)
+        copy(
+            "{0}".format(join_path(llvm_bin_path, "llvm-ar")),
+            "{0}".format(join_path(llvm_util_path, "ar")),
+        )
+        copy(
+            "{0}".format(join_path(llvm_bin_path, "llvm-ar")),
+            "{0}".format(join_path(llvm_util_path, "ranlib")),
+        )
+        copy(
+            "{0}".format(join_path(llvm_bin_path, "llvm-mc")),
+            "{0}".format(join_path(llvm_util_path, "as")),
+        )
+        copy(
+            "{0}".format(join_path(llvm_bin_path, "llvm-nm")),
+            "{0}".format(join_path(llvm_util_path, "nm")),
+        )
+        copy(
+            "{0}".format(join_path(llvm_bin_path, "lld")),
+            "{0}".format(join_path(llvm_util_path, "ld")),
+        )
+
+        self.link_newlib()
+
+        # self.build_directory = 'spack-build-amdgcn'
+        with working_dir("spack-build-amdgcn", create=True):
+            options = [
+                "--prefix={0}".format(prefix),
+                "--enable-languages={0}".format(",".join(spec.variants["languages"].value)),
+                "--with-mpfr={0}".format(spec["mpfr"].prefix),
+                "--with-gmp={0}".format(spec["gmp"].prefix),
+                "--target=amdgcn-amdhsa",
+                "--with-build-time-tools={0}".format(llvm_util_path),
+                "--enable-as-accelerator-for={0}".format(targetguess),
+                "--disable-sjlj-exceptions",
+                "--disable-libquadmath",
+            ]
+
+            configure = Executable("../configure")
+            configure(*options)
+            make()
+            make("install")
+
+    # Symlink amdgcn-amdhsa-ar and amdgcn-amdhsa-ranlib
+    # See https://gcc.gnu.org/install/specific.html#amdgcn-x-amdhsa
+    @run_after("install")
+    def link_amdgcn(self):
+        spec = self.spec
+        if not spec.satisfies("+amdgcn"):
+            return
+
+        prefix = self.prefix
+        llvm_util_path = join_path(prefix, "amdgcn-amdhsa", "bin")
+        symlink(join_path(llvm_util_path, "ar"), join_path(prefix, "bin", "amdgcn-amdhsa-ar"))
+        symlink(
+            join_path(llvm_util_path, "ranlib"), join_path(prefix, "bin", "amdgcn-amdhsa-ranlib")
+        )
 
     @property
     def build_targets(self):
@@ -935,6 +1104,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     def write_rpath_specs(self):
         """Generate a spec file so the linker adds a rpath to the libs
         the compiler used to build the executable.
+        For an offload-enabled build, libgomp will also be rpath-ed.
 
         .. caution::
 
@@ -947,13 +1117,16 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         Structure the specs file so that users can define a custom spec file
         to suppress the spack-linked rpaths to facilitate rpath adjustment
         for relocatable binaries. The custom spec file
-        :file:`{norpath}.spec` will have a single
-        line followed by two blanks lines::
+        :file:`{norpath}.spec` will have the following lines::
 
             *link_libgcc_rpath:
 
 
+            *link_libgomp_rpath:
 
+
+
+        Note that two blank lines are needed after each non-blank line.
         It can be passed to the GCC linker using the argument
         ``--specs=norpath.spec`` to disable the automatic rpath and restore
         the behavior of ``LD_RUN_PATH``."""
@@ -998,6 +1171,33 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
             out.write("\n")
         set_install_permissions(specs_file)
         tty.info("Wrote new spec file to {0}".format(specs_file))
+
+        # Do the same thing for offload-enabled builds
+        if self.spec.satisfies("+nvptx") or self.spec.satisfies("+amdgcn"):
+            libgomp_dir = ""
+            for dir in ["lib", "lib64"]:
+                libdir = join_path(self.prefix, dir)
+                if glob.glob(join_path(libdir, "libgomp." + dso_suffix)):
+                    libgomp_dir = libdir
+            if not libgomp_dir:
+                # Cannot find libgomp
+                tty.warn("libgomp library not found in lib/lib64")
+                return
+
+            libgomp_spec_file = join_path(libgomp_dir, "libgomp.spec")
+            copy(libgomp_spec_file, libgomp_spec_file + ".orig")
+            with open(libgomp_spec_file, "r+") as f:
+                lines = f.readlines()
+                f.seek(0)
+                for line in lines:
+                    if line.startswith("*link_gomp:"):
+                        f.write(line.strip("\n") + " %(link_libgomp_rpath)\n\n")
+                    else:
+                        f.write(line)
+                f.write("*link_libgomp_rpath:\n")
+                f.write("-rpath " + libgomp_dir + "\n\n")
+            set_install_permissions(libgomp_spec_file)
+            tty.info(f"Wrote new libgomp spec file to {libgomp_spec_file}")
 
     def setup_run_environment(self, env):
         # Search prefix directory for possibly modified compiler names
