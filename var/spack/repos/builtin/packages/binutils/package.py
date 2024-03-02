@@ -127,8 +127,6 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
     # https://sourceware.org/bugzilla/show_bug.cgi?id=27482
     patch("parallel-build-2.36.patch", when="@2.36")
 
-    patch("macos-2.42.patch", when="@2.42 platform=darwin")
-
     # compression libs for debug symbols.
     # pkg-config is used to find zstd in gas/configure
     depends_on("pkgconfig", type="build")
