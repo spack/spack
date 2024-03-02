@@ -131,7 +131,7 @@ class Abacus(MakefilePackage, CMakePackage, CudaPackage, ROCmPackage):
         depends_on("elpa+openmp", when="+elpa")
         depends_on("openblas threads=openmp", when="^openblas")
 
-
+    requires("%clang" or "%rocmcc", when="+rocm", msg="build with rocm requires rocm compiler")
 
     build_directory = "source"
 
@@ -231,4 +231,9 @@ class CMakeBuilder(cmake.CMakeBuilder):
 
         if spec.satisfies("+rocm"):
             args += [ self.define("COMMIT_INFO", False), ]
+            args += [ self.define("ROCM_PATH", spec["hip"].prefix) ]
+            # build all c++ part with rocm compiler. cpu and gpu parts can be seperately build, but not done.
+            #args += [ self.define("CMAKE_CXX_COMPILER", join_path(spec["llvm-amdgpu"].prefix.bin,"clang++")) ]
+            # only work for dcu toolkit 23.10 environment, not sure if any other version needs
+            args += [ self.define("HIP_CXX_COMPILER", join_path(spec["llvm-amdgpu"].prefix.bin,"clang++")) ]
         return args
