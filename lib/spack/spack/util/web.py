@@ -27,8 +27,8 @@ from llnl.util.filesystem import mkdirp, rename, working_dir
 
 import spack.config
 import spack.error
-import spack.util.url as url_util
 import spack.util.path
+import spack.util.url as url_util
 
 from .executable import CommandNotFoundError, which
 from .gcs import GCSBlob, GCSBucket, GCSHandler
@@ -59,6 +59,7 @@ class SpackHTTPDefaultErrorHandler(urllib.request.HTTPDefaultErrorHandler):
     def http_error_default(self, req, fp, code, msg, hdrs):
         raise DetailedHTTPError(req, code, msg, hdrs, fp)
 
+
 def ssl_context():
     """context for configuring ssl during urllib HTTPS operations"""
     # custom certs will be a location, so expand env variables, paths etc
@@ -68,15 +69,14 @@ def ssl_context():
     else:
         return ssl.create_default_context()
 
+
 def _urlopen():
     s3 = UrllibS3Handler()
     gcs = GCSHandler()
     error_handler = SpackHTTPDefaultErrorHandler()
 
     # One opener with HTTPS ssl enabled
-    with_ssl = build_opener(
-        s3, gcs, HTTPSHandler(context=ssl_context()), error_handler
-    )
+    with_ssl = build_opener(s3, gcs, HTTPSHandler(context=ssl_context()), error_handler)
 
     # One opener with HTTPS ssl disabled
     without_ssl = build_opener(
