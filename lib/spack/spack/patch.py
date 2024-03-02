@@ -138,7 +138,7 @@ class Patch:
 class FilePatch(Patch):
     """Describes a patch that is retrieved from a file in the repository."""
 
-    _sha256: str
+    _sha256: Optional[str] = None
 
     def __init__(
         self,
