@@ -39,6 +39,7 @@ class Duckdb(MakefilePackage):
     variant("cli", default=True, description="Compile with command line client")
     variant("icu", default=False, description="Compile with bundled ICU library")
     variant("ninjabuild", default=True, description="Use GEN=ninja to build")
+    variant("openssl", default=False, description="Compile with bundled OpenSSL library")
 
     # Extensions
     variant("excel", default=True, description="Include Excel formatting extension in build")
@@ -88,7 +89,7 @@ class Duckdb(MakefilePackage):
 
         v = self.spec.version
         if v < Version("0.10.0"):
-            # Prior to version 0.10.0 we don't have DUCKDB_NORMALIZED_VERSION to consider
+            # Prior to version 0.10.0, this was sufficient
             filter_file(
                 r'(message\(STATUS "git hash \$\{GIT_COMMIT_HASH\}, version \$\{DUCKDB_VERSION\}"\))',
                 'set(DUCKDB_VERSION "v{0}")\n\\1'.format(self.spec.version),
@@ -97,12 +98,16 @@ class Duckdb(MakefilePackage):
         else:
             # Override the fallback values that are set when GIT_COMMIT_HASH doesn't work
             for i, n in enumerate(["MAJOR", "MINOR", "PATCH"]):
-                filter_file("set\(DUCKDB_{0}_VERSION 0\)".format(n),
-                            "set(DUCKDB_{0}_VERSION {1})".format(n, v[i]),
-                            "CMakeLists.txt")
-            # We still need to manually set DUCKDB_NORMALIZED_VERSION to get some helper scripts to work
+                filter_file(
+                    r"set\(DUCKDB_{0}_VERSION 0\)".format(n),
+                    "set(DUCKDB_{0}_VERSION {1})".format(n, v[i]),
+                    "CMakeLists.txt"
+                )
+            # Need to manually set DUCKDB_NORMALIZED_VERSION for helper scripts
             filter_file(
-                r'(message\(STATUS "git hash \$\{GIT_COMMIT_HASH\}, version \$\{DUCKDB_VERSION\}, extension folder \$\{DUCKDB_NORMALIZED_VERSION\}"\))',
+                r'(message\(STATUS "git hash \$\{GIT_COMMIT_HASH\}, '\
+                    r'version \$\{DUCKDB_VERSION\}, '\
+                    r'extension folder \$\{DUCKDB_NORMALIZED_VERSION\}"\))',
                 'set(DUCKDB_NORMALIZED_VERSION "${DUCKDB_VERSION}")\n\\1',
                 "CMakeLists.txt",
             )
