@@ -44,8 +44,7 @@ class Imagemagick(AutotoolsPackage):
     depends_on("ghostscript", when="+ghostscript")
     depends_on("ghostscript-fonts", when="+ghostscript")
 
-    # TODO: are these actually required?
-    depends_on("libsm", when="platform=linux")
+    depends_on("libsm", when="@:7.1.0-60 platform=linux")
     depends_on("libtool", when="platform=linux")
 
     def configure_args(self):
