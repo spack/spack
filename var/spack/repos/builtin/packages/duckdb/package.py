@@ -29,33 +29,49 @@ class Duckdb(MakefilePackage):
 
     depends_on("python@3:")
     depends_on("cmake")
+    depends_on("gmake")
+    depends_on("ninja", when="+ninjabuild")
+    depends_on("openssl", when="+httpfs")
+    depends_on("icu4c", when="~icu")
 
+    # Build Options
     variant("autocomplete", default=True, description="Include autocomplete for CLI in build")
-    variant("icu", default=True, description="Compile with bundled ICU library")
-    variant("json", default=True, description="Include JSON support in build")
-    variant("httpfs", default=True, description="Include HTTPFS (& S3) support in build")
+    variant("cli", default=True, description="Compile with command line client")
+    variant("icu", default=False, description="Compile with bundled ICU library")
+    variant("ninjabuild", default=True, description="Use GEN=ninja to build")
+
+    # Extensions
     variant("excel", default=True, description="Include Excel formatting extension in build")
-    variant("openssl", default=True, description="Compile with bundled OpenSSl library")
-    variant("odbc", default=False, description="Build with ODBC driver (may not work)")
-    variant("jdbc", default=False, description="Build JDBC driver (may not work)")
-    variant("inet", default=True, description="Include INET (ip address) support in build")
     variant("fts", default=True, description="Include FTS (full text search) support in build")
+    variant("httpfs", default=True, description="Include HTTPFS (& S3) support in build")
+    variant("inet", default=True, description="Include INET (ip address) support in build")
+    variant("json", default=True, description="Include JSON support in build")
     variant("parquet", default=True, description="Include parquent support in build")
 
+    # APIs
+    variant("jdbc", default=False, description="Build JDBC driver (may not work)")
+    variant("odbc", default=False, description="Build with ODBC driver (may not work)")
+    variant("python", default=False, description="Build with Python driver (may not work)")
+
     def edit(self, spec, prefix):
-        extensions = [
+        if "+ninjabuild" in spec:
+            env["GEN"] = "ninja"
+        variant_flags = [
             "autocomplete",
-            "icu",
-            "json",
-            "httpfs",
+            "cli",
             "excel",
-            "openssl",
-            "odbc",
-            "jdbc",
             "fts",
+            "httpfs",
+            "icu",
+            "inet",
+            "jdbc",
+            "json",
+            "odbc",
+            "openssl",
             "parquet",
+            "python",
         ]
-        for flag in extensions:
+        for flag in variant_flags:
             make_flag = "BUILD_" + flag.upper()
             if "+" + flag in spec:
                 env[make_flag] = "1"
@@ -69,11 +85,27 @@ class Duckdb(MakefilePackage):
         # DuckDB pulls its version from a git tag, which it can't find in the tarball
         # and thus defaults to something arbitrary and breaks extensions.
         # We use the Spack version to inject it in the right place during the build
-        filter_file(
-            r'(message\(STATUS "git hash \$\{GIT_COMMIT_HASH\}, version \$\{DUCKDB_VERSION\}"\))',
-            'set(DUCKDB_VERSION "v{0}")\n\\1'.format(self.spec.version),
-            "CMakeLists.txt",
-        )
+
+        v = self.spec.version
+        if v < Version("0.10.0"):
+            # Prior to version 0.10.0 we don't have DUCKDB_NORMALIZED_VERSION to consider
+            filter_file(
+                r'(message\(STATUS "git hash \$\{GIT_COMMIT_HASH\}, version \$\{DUCKDB_VERSION\}"\))',
+                'set(DUCKDB_VERSION "v{0}")\n\\1'.format(self.spec.version),
+                "CMakeLists.txt",
+            )
+        else:
+            # Override the fallback values that are set when GIT_COMMIT_HASH doesn't work
+            for i, n in enumerate(["MAJOR", "MINOR", "PATCH"]):
+                filter_file("set\(DUCKDB_{0}_VERSION 0\)".format(n),
+                            "set(DUCKDB_{0}_VERSION {1})".format(n, v[i]),
+                            "CMakeLists.txt")
+            # We still need to manually set DUCKDB_NORMALIZED_VERSION to get some helper scripts to work
+            filter_file(
+                r'(message\(STATUS "git hash \$\{GIT_COMMIT_HASH\}, version \$\{DUCKDB_VERSION\}, extension folder \$\{DUCKDB_NORMALIZED_VERSION\}"\))',
+                'set(DUCKDB_NORMALIZED_VERSION "${DUCKDB_VERSION}")\n\\1',
+                "CMakeLists.txt",
+            )
 
     def install(self, spec, prefix):
         mkdir(prefix.bin)
