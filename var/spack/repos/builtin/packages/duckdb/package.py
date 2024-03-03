@@ -111,7 +111,7 @@ class Duckdb(MakefilePackage):
                 r' extension folder \$\{DUCKDB_NORMALIZED_VERSION\}"\))',
                 'set(DUCKDB_VERSION "v${DUCKDB_MAJOR_VERSION}.${DUCKDB_MINOR_VERSION}.${DUCKDB_PATCH_VERSION}")'
                 '\nset(DUCKDB_NORMALIZED_VERSION "${DUCKDB_VERSION}")'
-                '\n\\1',
+                "\n\\1",
                 "CMakeLists.txt",
             )
 
