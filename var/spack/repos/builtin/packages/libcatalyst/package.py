@@ -26,6 +26,8 @@ class Libcatalyst(CMakePackage):
 
     variant("mpi", default=False, description="Enable MPI support")
     variant("conduit", default=False, description="Use external Conduit for Catalyst")
+    variant("fortran", default=False, description="Enable Fortran wrapping")
+    variant("python", default=False, description="Enable Python wrapping")
 
     depends_on("mpi", when="+mpi")
     depends_on("conduit", when="+conduit")
@@ -37,6 +39,8 @@ class Libcatalyst(CMakePackage):
             "-DCATALYST_BUILD_TESTING=OFF",
             self.define_from_variant("CATALYST_USE_MPI", "mpi"),
             self.define_from_variant("CATALYST_WITH_EXTERNAL_CONDUIT", "conduit"),
+            self.define_from_variant("CATALYST_WRAP_FORTRAN", "fortran"),
+            self.define_from_variant("CATALYST_WRAP_PYTHON", "python"),
         ]
 
         return args
