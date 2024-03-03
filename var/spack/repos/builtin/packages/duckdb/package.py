@@ -105,8 +105,8 @@ class Duckdb(MakefilePackage):
                 )
             # Need to manually set DUCKDB_NORMALIZED_VERSION for helper scripts
             filter_file(
-                r'(message\(STATUS "git hash \$\{GIT_COMMIT_HASH\}, '\
-                r"version \$\{DUCKDB_VERSION\}, "\
+                r'(message\(STATUS "git hash \$\{GIT_COMMIT_HASH\}, '
+                r"version \$\{DUCKDB_VERSION\}, "
                 r'extension folder \$\{DUCKDB_NORMALIZED_VERSION\}"\))',
                 'set(DUCKDB_NORMALIZED_VERSION "${DUCKDB_VERSION}")\n\\1',
                 "CMakeLists.txt",
