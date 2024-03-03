@@ -28,22 +28,21 @@ class PyZfit(PythonPackage):
 
     depends_on("python@3.8:3.11", type=("build", "run"))
     depends_on("py-setuptools", type="build")
+    depends_on("py-setuptools-scm-git-archive", type="build")
+    depends_on("py-setuptools-scm@3.4:", type="build")
 
     variant("nlopt", default=False, description="Enable nlopt support")
     variant("hs3", default=True, description="Enable serialization support")
 
-    with default_args(
-        type=("build", "run")
-    ):  # TODO: remove "build" once fixed in spack that tests need "run", not "build"
+    # TODO: remove "build" once fixed in spack that tests need "run", not "build"
+    with default_args(type=("build", "run")):
 
         # TODO: reactivate once TF 2.15 is ready https://github.com/spack/spack/pull/41069
         # depends_on("py-tensorflow@2.15", type=("run"), when="@0.18")
         # depends_on("py-tensorflow-probability@0.23", type=("run"), when="@0.18")
 
         depends_on("py-tensorflow@2.13", when="@0.15:0.17")
-        depends_on("py-tensorflow-probability@0.21", when="@0.15:0.17")
-
-        depends_on("py-tensorflow@2.12:2.13", when="@0.15:0.16")
+        depends_on("py-tensorflow-probability@0.21", when="@0.16:0.17")
         depends_on("py-tensorflow-probability@0.20:0.21", when="@0.15:0.16")
 
         depends_on("py-tensorflow@2.0:2.12", when="@0.14")
@@ -55,6 +54,8 @@ class PyZfit(PythonPackage):
         with when("+hs3"):
             depends_on("py-asdf")
 
+        depends_on("py-attrs", when="@0.15:18.0")
+        depends_os("py-typing-extensions", when="^python@:3.8")
         depends_on("py-boost-histogram")
         depends_on("py-colorama")
         depends_on("py-colored")
