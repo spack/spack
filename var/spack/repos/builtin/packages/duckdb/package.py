@@ -91,7 +91,8 @@ class Duckdb(MakefilePackage):
         if v < Version("0.10.0"):
             # Prior to version 0.10.0, this was sufficient
             filter_file(
-                r'(message\(STATUS "git hash \$\{GIT_COMMIT_HASH\}, version \$\{DUCKDB_VERSION\}"\))',
+                r'(message\(STATUS "git hash \$\{GIT_COMMIT_HASH\}, '
+                r'version \$\{DUCKDB_VERSION\}"\))',
                 'set(DUCKDB_VERSION "v{0}")\n\\1'.format(self.spec.version),
                 "CMakeLists.txt",
             )
