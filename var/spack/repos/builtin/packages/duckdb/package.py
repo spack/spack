@@ -100,7 +100,7 @@ class Duckdb(MakefilePackage):
             # Override the fallback values that are set when GIT_COMMIT_HASH doesn't work
             for i, n in enumerate(["MAJOR", "MINOR", "PATCH"]):
                 filter_file(
-                    r"set\(DUCKDB_{0}_VERSION 0\)".format(n),
+                    r"set\(DUCKDB_{0}_VERSION \d+\)".format(n),
                     "set(DUCKDB_{0}_VERSION {1})".format(n, v[i]),
                     "CMakeLists.txt",
                 )
