@@ -55,7 +55,7 @@ class PyZfit(PythonPackage):
             depends_on("py-asdf")
 
         depends_on("py-attrs", when="@0.15:18.0")
-        depends_os("py-typing-extensions", when="^python@:3.8")
+        depends_on("py-typing-extensions", when="^python@:3.8")
         depends_on("py-boost-histogram")
         depends_on("py-colorama")
         depends_on("py-colored")
