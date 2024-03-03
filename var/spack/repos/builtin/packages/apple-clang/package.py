@@ -92,5 +92,5 @@ class AppleClang(BundlePackage):
             "llvm-openmp",
             when="+openmp %apple-clang ",
             type="link",
-            description="If any package uses %gcc, it depends on gcc-runtime",
+            description="If any package uses %apple-clang +openmp, it depends on llvm-openmp",
         )
