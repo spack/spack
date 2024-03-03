@@ -70,7 +70,7 @@ class PyZfit(PythonPackage):
         depends_on("py-numpy@1.16:")
         depends_on("py-ordered-set")
         depends_on("py-pandas")
-        depends_on("py-pydantic@1")
+        depends_on("py-pydantic@:1")
         depends_on("py-pyyaml")
         depends_on("py-scipy@1.2:")
         depends_on("py-tabulate")
