@@ -952,7 +952,7 @@ function, as shown in the example below:
      ^mpi: "{name}-{version}/{^mpi.name}-{^mpi.version}-{compiler.name}-{compiler.version}"
      all: "{name}-{version}/{compiler.name}-{compiler.version}"
 
-Projections also will permit environment variable and spack configuration variable
+Projections also permit environment and spack configuration variable
 expansions as shown below:
 
 .. code-block:: yaml
