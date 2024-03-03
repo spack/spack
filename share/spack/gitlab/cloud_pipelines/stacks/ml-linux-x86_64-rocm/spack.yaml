@@ -38,7 +38,7 @@ spack:
     - mxnet
 
     # PyTorch
-    # Does not yet support Spack-install ROCm
+    # Does not yet support Spack-installed ROCm
     # - py-botorch
     # - py-efficientnet-pytorch
     # - py-gpytorch
@@ -75,12 +75,13 @@ spack:
     - py-tensorboardx
 
     # TensorFlow
-    - py-tensorflow
-    - py-tensorflow-datasets
-    - py-tensorflow-estimator
-    - py-tensorflow-hub
-    - py-tensorflow-metadata
-    - py-tensorflow-probability
+    # Does not yet support Spack-installed ROCm
+    # - py-tensorflow
+    # - py-tensorflow-datasets
+    # - py-tensorflow-estimator
+    # - py-tensorflow-hub
+    # - py-tensorflow-metadata
+    # - py-tensorflow-probability
 
     # XGBoost
     - py-xgboost
