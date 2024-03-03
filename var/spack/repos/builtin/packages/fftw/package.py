@@ -27,7 +27,6 @@ class FftwBase(AutotoolsPackage):
     variant("mpi", default=True, description="Activate MPI support")
 
     depends_on("mpi", when="+mpi")
-    depends_on("llvm-openmp", when="%apple-clang +openmp")
 
     # https://github.com/FFTW/fftw3/commit/902d0982522cdf6f0acd60f01f59203824e8e6f3
     conflicts("%gcc@8.0:8", when="@3.3.7")

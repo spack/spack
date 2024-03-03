@@ -68,6 +68,9 @@ TransformFunction = Callable[["spack.spec.Spec", List[AspFunction]], List[AspFun
 #: Enable the addition of a runtime node
 WITH_RUNTIME = sys.platform != "win32"
 
+#: Package placeholder for global rules
+PACKAGE_PLACEHOLDER = "XXX"
+
 #: Data class that contain configuration on what a
 #: clingo solve should output.
 #:
@@ -1705,7 +1708,7 @@ class SpackSolverSetup:
                     continue
 
                 # validate variant value only if spec not concrete
-                if not spec.concrete:
+                if not spec.concrete and spec.name != PACKAGE_PLACEHOLDER:
                     reserved_names = spack.directives.reserved_names
                     if not spec.virtual and vname not in reserved_names:
                         pkg_cls = self.pkg_class(spec.name)
@@ -2433,8 +2436,6 @@ class SpackSolverSetup:
         """Define the constraints to be imposed on the runtimes"""
         recorder = RuntimePropertyRecorder(self)
         for compiler in self.possible_compilers:
-            if compiler.name != "gcc":
-                continue
             try:
                 compiler_cls = spack.repo.PATH.get_pkg_class(compiler.name)
             except spack.repo.UnknownPackageError:
@@ -2874,23 +2875,22 @@ class RuntimePropertyRecorder:
         if dependency_spec.versions != vn.any_version:
             self._setup.version_constraints.add((dependency_spec.name, dependency_spec.versions))
 
-        placeholder = "XXX"
         node_variable = "node(ID, Package)"
-        when_spec.name = placeholder
+        when_spec.name = PACKAGE_PLACEHOLDER
 
         body_clauses = self._setup.spec_clauses(when_spec, body=True)
         body_str = (
             f"  {f',{os.linesep}  '.join(str(x) for x in body_clauses)},\n"
             f"  not external({node_variable}),\n"
             f"  not runtime(Package)"
-        ).replace(f'"{placeholder}"', f"{node_variable}")
+        ).replace(f'"{PACKAGE_PLACEHOLDER}"', f"{node_variable}")
         head_clauses = self._setup.spec_clauses(dependency_spec, body=False)
 
         runtime_pkg = dependency_spec.name
         main_rule = (
             f"% {description}\n"
             f'1 {{ attr("depends_on", {node_variable}, node(0..X-1, "{runtime_pkg}"), "{type}") :'
-            f' max_dupes("gcc-runtime", X)}} 1:-\n'
+            f' max_dupes("{runtime_pkg}", X)}} 1:-\n'
             f"{body_str}.\n\n"
         )
         self.rules.append(main_rule)

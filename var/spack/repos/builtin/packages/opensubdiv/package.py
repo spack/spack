@@ -42,7 +42,6 @@ class Opensubdiv(CMakePackage, CudaPackage):
     depends_on("libxxf86vm")
     depends_on("libxcursor")
     depends_on("libxinerama")
-    depends_on("llvm-openmp", when="+openmp")
 
     def cmake_args(self):
         spec = self.spec

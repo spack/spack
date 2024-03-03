@@ -49,7 +49,6 @@ class PyPennylaneLightning(CMakePackage, PythonExtension):
     depends_on("blas", when="+blas")
     depends_on("kokkos@:4.0.01", when="@:0.31+kokkos")
     depends_on("kokkos-kernels@:4.0.01", when="@:0.31+kokkos")
-    depends_on("llvm-openmp", when="+openmp %apple-clang")
 
     depends_on("python@3.8:", type=("build", "run"), when="@:0.31")
     depends_on("python@3.9:", type=("build", "run"), when="@0.32:")
