@@ -55,7 +55,6 @@ class Blaspp(CMakePackage, CudaPackage, ROCmPackage):
 
     depends_on("cmake@3.15.0:", type="build")
     depends_on("blas")
-    depends_on("llvm-openmp", when="%apple-clang +openmp")
     depends_on("rocblas", when="+rocm")
     depends_on("intel-oneapi-mkl", when="+sycl")
     depends_on("intel-oneapi-mkl threads=openmp", when="+sycl")

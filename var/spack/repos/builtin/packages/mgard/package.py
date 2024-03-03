@@ -56,8 +56,6 @@ class Mgard(CMakePackage, CudaPackage):
     depends_on("cmake@3.19:", type="build")
     depends_on("nvcomp@2.2.0:", when="@2022-11-18:+cuda")
     depends_on("nvcomp@2.0.2", when="@:2021-11-12+cuda")
-    with when("+openmp"):
-        depends_on("llvm-openmp", when="%apple-clang")
 
     conflicts("cuda_arch=none", when="+cuda")
     conflicts(

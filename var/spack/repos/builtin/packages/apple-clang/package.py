@@ -74,3 +74,23 @@ class AppleClang(BundlePackage):
         msg = "apple-clang is expected to be an external spec"
         assert self.spec.concrete and self.spec.external, msg
         return self.spec.extra_attributes["compilers"].get("cxx", None)
+
+    @classmethod
+    def runtime_constraints(cls, *, spec, pkg):
+        """Callback function to inject runtime-related rules into the solver.
+
+        Rule-injection is obtained through method calls of the ``pkg`` argument.
+
+        Documentation for this function is temporary. When the API will be in its final state,
+        we'll document the behavior at https://spack.readthedocs.io/en/latest/
+
+        Args:
+            compiler: compiler object (node attribute) currently considered
+            pkg: object used to forward information to the solver
+        """
+        pkg("*").depends_on(
+            "llvm-openmp",
+            when="+openmp %apple-clang ",
+            type="link",
+            description="If any package uses %apple-clang +openmp, it depends on llvm-openmp",
+        )
