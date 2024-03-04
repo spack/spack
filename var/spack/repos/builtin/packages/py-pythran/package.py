@@ -68,7 +68,7 @@ class PyPythran(PythonPackage):
     # https://github.com/serge-sans-paille/pythran/issues/1937
     conflicts("%apple-clang@13:", when="@:0.10")
     # https://github.com/serge-sans-paille/pythran/issues/2101
-    conflicts("python@3.11:", when="@:0.12.1")
+    conflicts("^python@3.11:", when="@:0.12.1")
 
     @property
     def headers(self):
