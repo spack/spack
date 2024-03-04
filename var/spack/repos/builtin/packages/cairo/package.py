@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class Cairo(AutotoolsPackage):
 
     homepage = "https://www.cairographics.org/"
     url = "https://www.cairographics.org/releases/cairo-1.16.0.tar.xz"
+
+    license("LGPL-2.1-or-later OR MPL-1.1", checked_by="tgamblin")
 
     version(
         "1.17.4",

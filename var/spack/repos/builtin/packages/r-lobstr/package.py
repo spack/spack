@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class RLobstr(RPackage):
     obj_size() for computing object sizes."""
 
     cran = "lobstr"
+
+    license("MIT")
 
     version("1.1.2", sha256="9bc533ed7e8f816097a03acfbca33308c9940ba26d02674f4ba06311cf3a1718")
     version("1.1.1", sha256="b8c9ce00095bd4f304b4883ef71da24572022f0632a18c3e1ba317814e70716e")

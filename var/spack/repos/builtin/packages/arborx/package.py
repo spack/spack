@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,7 +20,10 @@ class Arborx(CMakePackage, CudaPackage, ROCmPackage):
 
     test_requires_compiler = True
 
+    license("BSD-3-Clause")
+
     version("master", branch="master")
+    version("1.5", sha256="c26f23c17e749ccf3e2d353a68969aa54d31b8e720dbfdbc2cef16c5d8477e9e")
     version("1.4.1", sha256="2ca828ef6615859654b233a7df17017e7cfd904982b80026ec7409eb46b77a95")
     version("1.4", sha256="803a1018a6305cf3fea161172b3ada49537f59261279d91c2abbcce9492ee7af")
     version("1.3", sha256="3f1e17f029a460ab99f8396e2772cec908eefc4bf3868c8828907624a2d0ce5d")
@@ -68,6 +71,7 @@ class Arborx(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("kokkos@3.4.00:", when="@1.2~trilinos")
     depends_on("kokkos@3.6.00:", when="@1.3~trilinos")
     depends_on("kokkos@3.7.01:", when="@1.4:~trilinos")
+    depends_on("kokkos@4.0.00:", when="@1.5:~trilinos")
     for backend in kokkos_backends:
         depends_on("kokkos+%s" % backend.lower(), when="~trilinos+%s" % backend.lower())
 
@@ -92,6 +96,7 @@ class Arborx(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("trilinos@13.4.0:", when="@1.3+trilinos")
     depends_on("trilinos@14.0.0:", when="@1.4:+trilinos")
     patch("trilinos14.0-kokkos-major-version.patch", when="@1.4+trilinos ^trilinos@14.0.0")
+    patch("0001-update-major-version-required-for-rocm-6.0.patch", when="+rocm ^hip@6.0:")
     conflicts("~serial", when="+trilinos")
     conflicts("+cuda", when="+trilinos")
 
@@ -139,9 +144,11 @@ class Arborx(CMakePackage, CudaPackage, ROCmPackage):
             f"-DCMAKE_CXX_COMPILER={os.environ['CXX']}",
             self.define(
                 "Kokkos_ROOT",
-                self.spec["kokkos"].prefix
-                if "~trilinos" in self.spec
-                else self.spec["trilinos"].prefix,
+                (
+                    self.spec["kokkos"].prefix
+                    if "~trilinos" in self.spec
+                    else self.spec["trilinos"].prefix
+                ),
             ),
         ]
         cmake = which(self.spec["cmake"].prefix.bin.cmake)

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class Tomcat(Package):
 
     homepage = "https://tomcat.apache.org/"
     url = "https://archive.apache.org/dist/tomcat/tomcat-9/v9.0.30/bin/apache-tomcat-9.0.30.tar.gz"
+
+    license("Apache-2.0")
 
     version("9.0.30", sha256="43a9b268671bbd3aace427637fbf577e742b521901e111342321ae901478100b")
     version("9.0.29", sha256="1bf634413326ec96972fc1c3ac6666e8e4cab49ad3fc9f5e3228b85208d9c4b0")

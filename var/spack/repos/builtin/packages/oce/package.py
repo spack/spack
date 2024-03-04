@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -35,7 +35,7 @@ class Oce(Package):
 
     with when("+tbb"):
         depends_on("tbb")
-        depends_on("intel-tbb@:2020 build_system=makefile", when="^intel-tbb")
+        depends_on("intel-tbb@:2020 build_system=makefile", when="^[virtuals=tbb] intel-tbb")
         conflicts("^intel-oneapi-tbb@2021.1:")
 
     # There is a bug in OCE which appears with Clang (version?) or GCC 6.0

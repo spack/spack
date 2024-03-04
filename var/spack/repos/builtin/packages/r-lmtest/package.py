@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class RLmtest(RPackage):
     parametric models are provided."""
 
     cran = "lmtest"
+
+    license("GPL-2.0-only OR GPL-3.0-only")
 
     version("0.9-40", sha256="64400d4d6cc635316531042971f1783539686e9015c76f5741c07304fa14d997")
     version("0.9-39", sha256="71f8d67cbe559b33fe02910a3e98cddc60c9dcc421c64f7878c647218f07d488")

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class Openexr(CMakePackage, AutotoolsPackage):
 
     homepage = "https://www.openexr.com/"
     url = "https://github.com/AcademySoftwareFoundation/openexr/archive/refs/tags/v3.1.5.tar.gz"
+
+    license("BSD-3-Clause")
 
     # New versions should come from github now
     version("3.2.0", sha256="b1b200606640547fceff0d3ebe01ac05c4a7ae2a131be7e9b3e5b9f491ef35b3")
@@ -82,6 +84,17 @@ class Openexr(CMakePackage, AutotoolsPackage):
 
     with when("build_system=cmake"):
         depends_on("cmake@3.12:", type="build")
+
+    @property
+    def libs(self):
+        # Override because libs have different case than Spack package name
+        name = "libOpenEXR*"
+        # We expect libraries to be in either lib64 or lib directory
+        for root in (self.prefix.lib64, self.prefix.lib):
+            liblist = find_libraries(name, root=root, shared=True, recursive=False)
+            if liblist:
+                break
+        return liblist
 
 
 class CMakeBuilder(CMakeBuilder):

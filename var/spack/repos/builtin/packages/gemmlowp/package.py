@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,8 @@ class Gemmlowp(Package):
 
     homepage = "https://github.com/google/gemmlowp"
     git = "https://github.com/google/gemmlowp.git"
+
+    license("Apache-2.0")
 
     version("a6f29d9ac", commit="a6f29d8ac48d63293f845f2253eccbf86bc28321")
 

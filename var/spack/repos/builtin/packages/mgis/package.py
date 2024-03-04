@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,6 +21,8 @@ class Mgis(CMakePackage):
     url = "https://github.com/thelfer/MFrontGenericInterfaceSupport/archive/MFrontGenericInterfaceSupport-1.2.tar.gz"
     git = "https://github.com/thelfer/MFrontGenericInterfaceSupport.git"
     maintainers("thelfer")
+
+    license("LGPL-3.0-only")
 
     # development branches
     version("master", branch="master")

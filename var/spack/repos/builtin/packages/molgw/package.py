@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -24,6 +24,8 @@ class Molgw(MakefilePackage):
 
     maintainers("bruneval")
 
+    license("GPL-3.0-only")
+
     version("3.2", sha256="a3f9a99db52d95ce03bc3636b5999e6d92b503ec2f4afca33d030480c3e10242")
 
     variant("openmp", default=False, description="Build with OpenMP support")
@@ -38,11 +40,13 @@ class Molgw(MakefilePackage):
     depends_on("mpi", when="+scalapack")
 
     # enforce scalapack-capable mkl when asking +scalapack (and using intel-oneapi-mkl)
-    depends_on("intel-oneapi-mkl+cluster", when="+scalapack ^intel-oneapi-mkl")
+    depends_on(
+        "intel-oneapi-mkl+cluster", when="+scalapack ^[virtuals=scalapack] intel-oneapi-mkl"
+    )
     # enforce threaded mkl when asking +openmp (and using intel-oneapi-mkl)
-    depends_on("intel-oneapi-mkl threads=openmp", when="+openmp ^intel-oneapi-mkl")
+    depends_on("intel-oneapi-mkl threads=openmp", when="+openmp ^[virtuals=blas] intel-oneapi-mkl")
     # enforce threaded openblas when asking +openmp (and using openblas)
-    depends_on("openblas threads=openmp", when="+openmp ^openblas")
+    depends_on("openblas threads=openmp", when="+openmp ^[virtuals=blas] openblas")
 
     def _get_mkl_ld_flags(self, spec):
         mklroot = str(getenv("MKLROOT"))

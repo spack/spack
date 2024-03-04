@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,6 +21,8 @@ class Ncurses(AutotoolsPackage, GNUMirrorPackage):
     gnu_mirror_path = "ncurses/ncurses-6.1.tar.gz"
 
     executables = [r"^ncursesw?(?:\d+(?:\.\d+)*)?-config$"]
+
+    license("X11")
 
     version("6.4", sha256="6931283d9ac87c5073f30b6290c4c75f21632bb4fc3603ac8100812bed248159")
     version("6.3", sha256="97fc51ac2b085d4cde31ef4d2c3122c21abc217e9090a43a30fc5ec21684e059")
@@ -49,7 +51,9 @@ class Ncurses(AutotoolsPackage, GNUMirrorPackage):
 
     depends_on("pkgconfig", type="build")
 
-    patch("patch_gcc_5.txt", when="@6.0%gcc@5.0:")
+    # avoid disallowed const_cast from T* to void* and use reinterpret_cast
+    # Ref: https://lists.gnu.org/archive/html/bug-ncurses/2014-08/msg00008.html
+    patch("0001-Fix-errors-in-type-conversion.patch", when="@:5")
     patch("sed_pgi.patch", when="@:6.0")
     patch("nvhpc_fix_preprocessor_flag.patch", when="@6.0:6.2%nvhpc")
 
@@ -101,6 +105,16 @@ class Ncurses(AutotoolsPackage, GNUMirrorPackage):
             flags.append(self.compiler.cc_pic_flag)
         elif name == "cxxflags":
             flags.append(self.compiler.cxx_pic_flag)
+
+        # ncurses@:6.0 fails in definition of macro 'mouse_trafo' without -P
+        if self.spec.satisfies("@:6.0 %gcc@5.0:"):
+            if name == "cppflags":
+                flags.append("-P")
+
+        # ncurses@:6.0 uses dynamic exception specifications not allowed in c++17
+        if self.spec.satisfies("@:5"):
+            if name == "cxxflags":
+                flags.append(self.compiler.cxx14_flag)
 
         return (flags, None, None)
 

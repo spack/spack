@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -201,7 +201,8 @@ class Scorep(AutotoolsPackage):
             config_args.append("--with-mpi=openmpi")
 
         if spec.satisfies("^binutils"):
-            config_args.append("--with-libbfd=%s" % spec["binutils"].prefix)
+            config_args.append("--with-libbfd-lib=%s" % spec["binutils"].prefix.lib)
+            config_args.append("--with-libbfd-include=%s" % spec["binutils"].prefix.include)
 
         config_args.extend(
             [

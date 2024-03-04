@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class Bcache(MakefilePackage):
 
     homepage = "https://bcache.evilpiepirate.org/"
     url = "https://github.com/g2p/bcache-tools/archive/v1.0.8.tar.gz"
+
+    license("GPL-2.0-only")
 
     version("1.0.8", sha256="d56923936f37287efc57a46315679102ef2c86cd0be5874590320acd48c1201c")
     version("1.0.7", sha256="64d76d1085afba8c3d5037beb67bf9d69ee163f357016e267bf328c0b1807abd")

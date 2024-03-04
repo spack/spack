@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class Postgis(AutotoolsPackage):
 
     homepage = "https://postgis.net/"
     url = "https://download.osgeo.org/postgis/source/postgis-2.5.3.tar.gz"
+
+    license("GPL-2.0-or-later")
 
     version("3.0.1", sha256="5a5432f95150d9bae9215c6d1c7bb354e060482a7c379daa9b8384e1d03e6353")
     version("3.0.0", sha256="c06fd2cd5cea0119106ffe17a7235d893c2bbe6f4b63c8617c767630973ba594")

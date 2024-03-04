@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -23,13 +23,16 @@ class Fides(CMakePackage):
 
     # Certain CMake versions have been found to break for our use cases
     depends_on("cmake@3.14.1:3.14,3.18.2:", type="build")
-
     depends_on("mpi", when="+mpi")
     depends_on("adios2")
-    # Type check failures when using 32 bit IDs and ADIOS2 with ZFP in older
-    # versions of Fides
-    depends_on("adios2~zfp", when="@:1.1 ^vtk-m ~64bitids")
-    depends_on("vtk-m")
+    # adios2::Mode::ReadRandomAccess requires adios2 2.8.0.
+    # older adios2 supported in https://gitlab.kitware.com/vtk/fides/-/merge_requests/146
+    depends_on("adios2@2.8:", when="@1.2")
+    depends_on("adios2@2.7:2.8", when="@1.1")
+
+    depends_on("vtk-m@1.9:")
+    # vtk-m 2.0 has a breaking change in cmake target name
+    depends_on("vtk-m@:1.9", when="@:1.1")
 
     # Fix missing implicit includes
     @when("%gcc@7:")

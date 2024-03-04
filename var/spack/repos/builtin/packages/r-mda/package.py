@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class RMda(RPackage):
     regression splines (MARS), BRUTO."""
 
     cran = "mda"
+
+    license("GPL-2.0-only")
 
     version("0.5-3", sha256="bda6409c17f385fae97da458cc742334e7b47aab8217a975b7551e2e18d38463")
     version("0.5-2", sha256="344f2053215ddf535d1554b4539e9b09067dac878887cc3eb995cef421fc00c3")

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class Simulationio(CMakePackage):
     git = "https://github.com/eschnett/SimulationIO.git"
 
     maintainers("eschnett")
+
+    license("LGPL-3.0-only")
 
     version("master", branch="master")
     version("9.0.3", sha256="d07192fb69ae0d43364dc5807ce788c6cf1f8fbaa46f83028311b6935fd76aa8")

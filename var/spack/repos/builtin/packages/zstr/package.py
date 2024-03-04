@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class Zstr(Package):
     url = "https://github.com/mateidavid/zstr/archive/v1.0.4.tar.gz"
 
     maintainers("bvanessen")
+
+    license("MIT")
 
     version("1.0.7", sha256="8d2ddae68ff7bd0a6fce6150a8f52ad9ce1bed2c4056c8846f4dec4f2dc60819")
     version("1.0.4", sha256="a594a3a9c192a6d9e93f9585910d41f7ee6791eb7c454d40c922656324b3058e")

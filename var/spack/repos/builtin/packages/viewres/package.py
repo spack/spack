@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class Viewres(AutotoolsPackage, XorgPackage):
 
     homepage = "https://cgit.freedesktop.org/xorg/app/viewres"
     xorg_mirror_path = "app/viewres-1.0.4.tar.gz"
+
+    license("X11")
 
     version("1.0.7", sha256="5dd63ee19575dd1d40360242ecc1ff96e222d9b80a2b7b8b89e6d1e0f2367d78")
     version("1.0.6", sha256="2c9f1892dbb5563b704fd06f45cd9d263d8176027033d8438c79a2ceddac200f")

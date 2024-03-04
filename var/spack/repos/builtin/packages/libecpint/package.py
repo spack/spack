@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class Libecpint(CMakePackage):
     homepage = "https://github.com/robashaw/libecpint"
     url = "https://github.com/robashaw/libecpint/archive/v1.0.4.tar.gz"
     git = "https://github.com/robashaw/libecpint"
+
+    license("MIT")
 
     version("master", branch="master")
     version("1.0.5", sha256="3ad5ff342b1bc870f5992c296e8bd8aa590c21a9b14333958c601f8916d6f532")

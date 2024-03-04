@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class Pnfft(AutotoolsPackage):
     url = (
         "https://www-user.tu-chemnitz.de/~potts/workgroup/pippig/software/pnfft-1.0.7-alpha.tar.gz"
     )
+
+    license("GPL-3.0-or-later")
 
     version(
         "1.0.7-alpha", sha256="fda558ff57ee3119754363bb6e6739338680d2d6860fe7dc42009d85562bd67a"

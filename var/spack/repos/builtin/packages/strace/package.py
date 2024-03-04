@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,8 @@ class Strace(AutotoolsPackage):
     url = "https://github.com/strace/strace/releases/download/v5.2/strace-5.2.tar.xz"
 
     maintainers("michaelkuhn")
+
+    license("BSD-3-Clause")
 
     version("5.19", sha256="aa3dc1c8e60e4f6ff3d396514aa247f3c7bf719d8a8dc4dd4fa793be786beca3")
     version("5.17", sha256="5fb298dbd1331fd1e1bc94c5c32395860d376101b87c6cd3d1ba9f9aa15c161f")

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class Fullock(AutotoolsPackage):
 
     homepage = "https://antpick.ax/"
     url = "https://github.com/yahoojapan/fullock/archive/v1.0.36.tar.gz"
+
+    license("MIT")
 
     version("1.0.50", sha256="7222976883289376c1b88fd30ecd3ab2f055316103b97df4aa71192954072848")
     version("1.0.39", sha256="0089d4446e3102b5de39e3d18c1b7e5c9567deb77a4e60963e15b5c1b23a594d")

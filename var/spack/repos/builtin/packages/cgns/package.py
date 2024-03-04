@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,6 +6,8 @@
 import sys
 
 from spack.package import *
+
+is_windows = sys.platform == "win32"
 
 
 class Cgns(CMakePackage):
@@ -19,6 +21,8 @@ class Cgns(CMakePackage):
     maintainers("gsjaardema")
 
     parallel = False
+
+    license("Zlib")
 
     version("develop", branch="develop")
     version("master", branch="master")
@@ -91,7 +95,7 @@ class Cgns(CMakePackage):
             ]
         )
 
-        if "+mpi" in spec:
+        if "+mpi" in spec and not is_windows:
             options.extend(
                 [
                     "-DCMAKE_C_COMPILER=%s" % spec["mpi"].mpicc,

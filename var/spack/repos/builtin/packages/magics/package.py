@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,8 @@ class Magics(CMakePackage):
     homepage = "https://software.ecmwf.int/wiki/display/MAGP/Magics"
     url = "https://confluence.ecmwf.int/download/attachments/3473464/Magics-4.2.4-Source.tar.gz?api=v2"
     list_url = "https://software.ecmwf.int/wiki/display/MAGP/Releases"
+
+    license("Apache-2.0")
 
     # The policy on which minor releases remain available and which get deleted
     # after a newer version becomes available is unclear.

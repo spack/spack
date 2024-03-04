@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -85,7 +85,7 @@ class R(AutotoolsPackage):
     depends_on("xz")
     depends_on("which", type=("build", "run"))
     depends_on("zlib-api")
-    depends_on("zlib@1.2.5:", when="^zlib")
+    depends_on("zlib@1.2.5:", when="^[virtuals=zlib-api] zlib")
     depends_on("texinfo", type="build")
 
     with when("+X"):
@@ -107,6 +107,10 @@ class R(AutotoolsPackage):
     # Until the Fujitsu compiler resolves this problem,
     # temporary fix to lower the optimization level.
     patch("change_optflags_tmp.patch", when="%fj@4.1.0")
+
+    # Make R use a symlink to which in Sys.which, otherwise an absolute path
+    # gets stored as compressed byte code, which is not relocatable
+    patch("relocate-which.patch")
 
     build_directory = "spack-build"
 

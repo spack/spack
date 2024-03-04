@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class Talloc(AutotoolsPackage):
 
     homepage = "https://talloc.samba.org"
     url = "https://www.samba.org/ftp/talloc/talloc-2.1.9.tar.gz"
+
+    license("LGPL-3.0-or-later")
 
     version("2.4.0", sha256="6df36862c42466ef88f360444513870ef46934f9016c84383cc4008a7d0c46ba")
     version("2.3.1", sha256="ef4822d2fdafd2be8e0cabc3ec3c806ae29b8268e932c5e9a4cd5585f37f9f77")

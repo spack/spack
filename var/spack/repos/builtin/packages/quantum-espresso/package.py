@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,7 +22,11 @@ class QuantumEspresso(CMakePackage, Package):
 
     build_system(conditional("cmake", when="@6.8:"), "generic", default="cmake")
 
+    license("GPL-2.0-only")
+
     version("develop", branch="develop")
+    version("7.3.1", sha256="2c58b8fadfe4177de5a8b69eba447db5e623420b070dea6fd26c1533b081d844")
+    version("7.3", sha256="edc2a0f3315c69966df4f82ec86ab9f682187bc9430ef6d2bacad5f27f08972c")
     version("7.2", sha256="b348a4a7348b66a73545d9ca317a2645755c98d343c1cfe8def475ad030808c0")
     version("7.1", sha256="d56dea096635808843bd5a9be2dee3d1f60407c01dbeeda03f8256a3bcfc4eb6")
     version("7.0", sha256="85beceb1aaa1678a49e774c085866d4612d9d64108e0ac49b23152c8622880ee")
@@ -70,13 +74,13 @@ class QuantumEspresso(CMakePackage, Package):
     # Need OpenMP threaded FFTW and BLAS libraries when configured
     # with OpenMP support
     with when("+openmp"):
-        depends_on("fftw+openmp", when="^fftw")
-        depends_on("amdfftw+openmp", when="^amdfftw")
-        depends_on("openblas threads=openmp", when="^openblas")
-        depends_on("amdblis threads=openmp", when="^amdblis")
-        depends_on("intel-mkl threads=openmp", when="^intel-mkl")
-        depends_on("armpl-gcc threads=openmp", when="^armpl-gcc")
-        depends_on("acfl threads=openmp", when="^acfl")
+        depends_on("fftw+openmp", when="^[virtuals=fftw-api] fftw")
+        depends_on("amdfftw+openmp", when="^[virtuals=fftw-api] amdfftw")
+        depends_on("openblas threads=openmp", when="^[virtuals=blas] openblas")
+        depends_on("amdblis threads=openmp", when="^[virtuals=blas] amdblis")
+        depends_on("intel-mkl threads=openmp", when="^[virtuals=blas] intel-mkl")
+        depends_on("armpl-gcc threads=openmp", when="^[virtuals=blas] armpl-gcc")
+        depends_on("acfl threads=openmp", when="^[virtuals=blas] acfl")
 
     # Add Cuda Fortran support
     # depends on NVHPC compiler, not directly on CUDA toolkit
@@ -102,6 +106,9 @@ class QuantumEspresso(CMakePackage, Package):
     with when("+nvtx~cuda"):
         depends_on("cuda")
 
+    # CLOCK variant to display program time in seconds
+    variant("clock", default=False, description="Display program time in seconds")
+
     # Apply upstream patches by default. Variant useful for 3rd party
     # patches which are incompatible with upstream patches
     desc = "Apply recommended upstream patches. May need to be set "
@@ -124,7 +131,7 @@ class QuantumEspresso(CMakePackage, Package):
         # CMake builds only support elpa without openmp
         depends_on("elpa~openmp", when="build_system=cmake")
         with when("build_system=generic"):
-            depends_on("elpa+openmp", when="+openmp")
+            depends_on("elpa", when="+openmp")
             depends_on("elpa~openmp", when="~openmp")
         # Elpa is formally supported by @:5.4.0, but QE configure searches
         # for it in the wrong folders (or tries to download it within
@@ -424,6 +431,7 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
             self.define_from_variant("QE_ENABLE_LIBXC", "libxc"),
             self.define_from_variant("QE_ENABLE_CUDA", "cuda"),
             self.define_from_variant("QE_ENABLE_PROFILE_NVTX", "nvtx"),
+            self.define_from_variant("QE_CLOCK_SECONDS", "clock"),
             self.define_from_variant("QE_ENABLE_MPI_GPU_AWARE", "mpigpu"),
         ]
 

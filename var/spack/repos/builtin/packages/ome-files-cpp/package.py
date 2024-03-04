@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,6 +18,8 @@ class OmeFilesCpp(CMakePackage):
     git = "https://gitlab.com/codelibre/ome/ome-files-cpp.git"
 
     maintainers("omsai")
+
+    license("BSD-2-Clause")
 
     version("master", branch="master")
     version("0.6.0", sha256="e0baf3eeb2ea639f426292a36b58adcaa42ce61a4a0f15f34690602f3f5d47c1")

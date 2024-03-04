@@ -71,7 +71,7 @@
     "almalinux:9": {
       "bootstrap": {
         "template": "container/almalinux_9.dockerfile",
-        "image": "quay.io/almalinux/almalinux:9"
+        "image": "quay.io/almalinuxorg/almalinux:9"
       },
       "os_package_manager": "dnf_epel",
       "build": "spack/almalinux9",
@@ -79,13 +79,13 @@
         "develop": "latest"
       },
       "final": {
-        "image": "quay.io/almalinux/almalinux:9"
+        "image": "quay.io/almalinuxorg/almalinux:9"
       }
     },
     "almalinux:8": {
       "bootstrap": {
         "template": "container/almalinux_8.dockerfile",
-        "image": "quay.io/almalinux/almalinux:8"
+        "image": "quay.io/almalinuxorg/almalinux:8"
       },
       "os_package_manager": "dnf_epel",
       "build": "spack/almalinux8",
@@ -93,7 +93,7 @@
         "develop": "latest"
       },
       "final": {
-        "image": "quay.io/almalinux/almalinux:8"
+        "image": "quay.io/almalinuxorg/almalinux:8"
       }
     },
     "centos:stream": {

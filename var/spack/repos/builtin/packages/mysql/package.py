@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -203,7 +203,7 @@ class Mysql(CMakePackage):
         copy(dtrace, dtrace_copy)
         filter_file(
             "^#!/usr/bin/python",
-            "#!/usr/bin/env {0}".format(os.path.basename(self.spec["python"].command)),
+            "#!/usr/bin/env {0}".format(os.path.basename(str(self.spec["python"].command))),
             dtrace_copy,
         )
         # To have our own copy of dtrace in PATH, we need to

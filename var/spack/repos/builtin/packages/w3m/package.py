@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -24,6 +24,8 @@ class W3m(AutotoolsPackage):
     homepage = "http://w3m.sourceforge.net/index.en.html"
     url = "https://downloads.sourceforge.net/project/w3m/w3m/w3m-0.5.3/w3m-0.5.3.tar.gz"
     maintainers("ronin_gw")
+
+    license("MIT")
 
     version("0.5.3", sha256="e994d263f2fd2c22febfbe45103526e00145a7674a0fda79c822b97c2770a9e3")
 

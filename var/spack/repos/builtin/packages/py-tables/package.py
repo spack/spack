@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class PyTables(PythonPackage):
     homepage = "https://www.pytables.org/"
     pypi = "tables/tables-3.6.1.tar.gz"
     git = "https://github.com/PyTables/PyTables.git"
+
+    license("BSD-3-Clause")
 
     version("master", branch="master")
     version("3.9.0", sha256="27c9ca14c359d875caf945a6a527c12690e017650402dd17d8eb8b6caf6687d5")

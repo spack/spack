@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,6 +18,8 @@ class Wannier90(MakefilePackage):
     homepage = "http://wannier.org"
     url = "https://github.com/wannier-developers/wannier90/archive/v3.1.0.tar.gz"
     git = "https://github.com/wannier-developers/wannier90.git"
+
+    license("GPL-2.0-or-later")
 
     version("develop", branch="develop")
     version("3.1.0", sha256="40651a9832eb93dec20a8360dd535262c261c34e13c41b6755fa6915c936b254")

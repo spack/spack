@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -29,8 +29,8 @@ def test_true_directives_exist(mock_packages):
     cls = spack.repo.PATH.get_pkg_class("when-directives-true")
 
     assert cls.dependencies
-    assert spack.spec.Spec() in cls.dependencies["extendee"]
-    assert spack.spec.Spec() in cls.dependencies["b"]
+    assert "extendee" in cls.dependencies[spack.spec.Spec()]
+    assert "b" in cls.dependencies[spack.spec.Spec()]
 
     assert cls.resources
     assert spack.spec.Spec() in cls.resources
@@ -43,10 +43,10 @@ def test_constraints_from_context(mock_packages):
     pkg_cls = spack.repo.PATH.get_pkg_class("with-constraint-met")
 
     assert pkg_cls.dependencies
-    assert spack.spec.Spec("@1.0") in pkg_cls.dependencies["b"]
+    assert "b" in pkg_cls.dependencies[spack.spec.Spec("@1.0")]
 
     assert pkg_cls.conflicts
-    assert (spack.spec.Spec("+foo@1.0"), None) in pkg_cls.conflicts["%gcc"]
+    assert (spack.spec.Spec("%gcc"), None) in pkg_cls.conflicts[spack.spec.Spec("+foo@1.0")]
 
 
 @pytest.mark.regression("26656")
@@ -54,7 +54,7 @@ def test_constraints_from_context_are_merged(mock_packages):
     pkg_cls = spack.repo.PATH.get_pkg_class("with-constraint-met")
 
     assert pkg_cls.dependencies
-    assert spack.spec.Spec("@0.14:15 ^b@3.8:4.0") in pkg_cls.dependencies["c"]
+    assert "c" in pkg_cls.dependencies[spack.spec.Spec("@0.14:15 ^b@3.8:4.0")]
 
 
 @pytest.mark.regression("27754")
@@ -101,7 +101,7 @@ def test_license_directive(config, mock_packages, package_name, expected_license
 
 def test_duplicate_exact_range_license():
     package = namedtuple("package", ["licenses", "name"])
-    package.licenses = {spack.directives.make_when_spec("+foo"): "Apache-2.0"}
+    package.licenses = {spack.spec.Spec("+foo"): "Apache-2.0"}
     package.name = "test_package"
 
     msg = (
@@ -115,7 +115,7 @@ def test_duplicate_exact_range_license():
 
 def test_overlapping_duplicate_licenses():
     package = namedtuple("package", ["licenses", "name"])
-    package.licenses = {spack.directives.make_when_spec("+foo"): "Apache-2.0"}
+    package.licenses = {spack.spec.Spec("+foo"): "Apache-2.0"}
     package.name = "test_package"
 
     msg = (

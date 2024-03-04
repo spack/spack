@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,8 @@ class PyFuro(PythonPackage):
 
     homepage = "https://github.com/pradyunsg/furo"
     pypi = "furo/furo-2023.5.20.tar.gz"
+
+    license("MIT")
 
     version("2023.9.10", sha256="5707530a476d2a63b8cad83b4f961f3739a69f4b058bcf38a03a39fa537195b2")
     version("2023.5.20", sha256="40e09fa17c6f4b22419d122e933089226dcdb59747b5b6c79363089827dea16f")

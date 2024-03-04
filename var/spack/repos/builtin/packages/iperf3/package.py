@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,5 +13,7 @@ class Iperf3(AutotoolsPackage):
 
     homepage = "https://software.es.net/iperf/"
     url = "https://github.com/esnet/iperf/archive/3.6.tar.gz"
+
+    license("BSD-3-Clause-LBNL")
 
     version("3.6", sha256="1ad23f70a8eb4b892a3cbb247cafa956e0f5c7d8b8601b1d9c8031c2a806f23f")

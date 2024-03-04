@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class Care(CMakePackage, CudaPackage, ROCmPackage):
     homepage = "https://github.com/LLNL/CARE"
     git = "https://github.com/LLNL/CARE.git"
     tags = ["radiuss"]
+
+    license("GPL-2.0-or-later")
 
     version("develop", branch="develop", submodules="True")
     version("master", branch="main", submodules="True")

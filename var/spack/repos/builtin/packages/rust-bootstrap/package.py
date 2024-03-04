@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,6 +21,17 @@ class RustBootstrap(Package):
     # should update these binary releases as bootstrapping requirements are
     # modified by new releases of Rust.
     rust_releases = {
+        "1.75.0": {
+            "darwin": {
+                "x86_64": "ad066e4dec7ae5948c4e7afe68e250c336a5ab3d655570bb119b3eba9cf22851",
+                "aarch64": "878ecf81e059507dd2ab256f59629a4fb00171035d2a2f5638cb582d999373b1",
+            },
+            "linux": {
+                "x86_64": "473978b6f8ff216389f9e89315211c6b683cf95a966196e7914b46e8cf0d74f6",
+                "aarch64": "30828cd904fcfb47f1ac43627c7033c903889ea4aca538f53dcafbb3744a9a73",
+                "powerpc64le": "2599cdfea5860b4efbceb7bca69845a96ac1c96aa50cf8261151e82280b397a0",
+            },
+        },
         "1.73.0": {
             "darwin": {
                 "x86_64": "ece9646bb153d4bc0f7f1443989de0cbcd8989a7d0bf3b7fb9956e1223954f0c",
@@ -115,4 +126,5 @@ class RustBootstrap(Package):
 
     def install(self, spec, prefix):
         install_script = Executable("./install.sh")
-        install_script(f"--prefix={prefix}")
+        install_args = [f"--prefix={prefix}", "--without=rust-docs"]
+        install_script(" ".join(install_args))

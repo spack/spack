@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,6 +21,8 @@ class Ruby(AutotoolsPackage, NMakePackage):
     list_url = "https://cache.ruby-lang.org/pub/ruby/"
     list_depth = 1
     tags = ["windows"]
+
+    license("Ruby AND BSD-2-Clause AND MIT", checked_by="tgamblin")
 
     version("3.1.0", sha256="50a0504c6edcb4d61ce6b8cfdbddaa95707195fab0ecd7b5e92654b2a9412854")
     version("3.0.2", sha256="5085dee0ad9f06996a8acec7ebea4a8735e6fac22f22e2d98c3f2bc3bef7e6f1")

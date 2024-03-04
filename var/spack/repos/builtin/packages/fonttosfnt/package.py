@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,8 @@ class Fonttosfnt(AutotoolsPackage, XorgPackage):
 
     homepage = "https://cgit.freedesktop.org/xorg/app/fonttosfnt"
     xorg_mirror_path = "app/fonttosfnt-1.0.4.tar.gz"
+
+    license("MIT")
 
     version("1.2.2", sha256="8111317c38f63aff08c717595e65381af7ebfc54ccc23511c2042ef1cd86c648")
     version("1.0.4", sha256="3873636be5b3b8e4160070e8f9a7a9221b5bd5efbf740d7abaa9092e10732673")

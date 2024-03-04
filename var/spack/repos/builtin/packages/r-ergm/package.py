@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,8 @@ class RErgm(RPackage):
     Krivitsky, Hunter, Morris, and Klumb (2021) <arXiv:2106.04997>."""
 
     cran = "ergm"
+
+    license("GPL-3.0-only")
 
     version("4.4.0", sha256="2db152cc7fdd71d6f0065603405f30bf5e206591da39b8f542178ec6d6126173")
     version("4.3.1", sha256="3ff63c81ea4061ac0c79247fcd2e614494624f7f1df57a4634927e7e90800ed3")

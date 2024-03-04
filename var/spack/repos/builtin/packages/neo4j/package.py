@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,6 +18,8 @@ class Neo4j(MavenPackage):
 
     homepage = "https://neo4j.com/"
     url = "https://github.com/neo4j/neo4j/archive/4.0.3.tar.gz"
+
+    license("GPL-3.0-or-later")
 
     version("4.0.3", sha256="19d79052657665dd661bbe906b3552b88108bf379d39fa007b883fff718cabee")
     version("4.0.1", sha256="3f91f566e49000119c6a71d6127e73cfccdee37b68133a067b2ee05932c26dba")

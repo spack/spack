@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class RRhdf5filters(RPackage):
     Provides a collection of compression filters for use with HDF5 datasets."""
 
     bioc = "rhdf5filters"
+
+    license("BSD-2-Clause")
 
     version("1.12.0", commit="4deabdef71c0349c4eaf7e5604cb7f389809f006")
     version("1.10.0", commit="6131538e2c5896dca0af33882bc2da961d79e49a")

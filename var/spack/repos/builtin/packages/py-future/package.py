@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class PyFuture(PythonPackage):
     homepage = "https://python-future.org/"
     pypi = "future/future-0.18.2.tar.gz"
     git = "https://github.com/PythonCharmers/python-future.git"
+
+    license("MIT")
 
     version("0.18.3", sha256="34a17436ed1e96697a86f9de3d15a3b0be01d8bc8de9c1dffd59fb8234ed5307")
     version("0.18.2", sha256="b1bead90b70cf6ec3f0710ae53a525360fa360d306a86583adc6bf83a4db537d")

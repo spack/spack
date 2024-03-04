@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class Med(CMakePackage):
     url = "https://files.salome-platform.org/Salome/other/med-3.2.0.tar.gz"
 
     maintainers("likask")
+
+    license("LGPL-3.0-only")
 
     # 4.1.0 does not compile in static mode
     version("4.1.0", sha256="847db5d6fbc9ce6924cb4aea86362812c9a5ef6b9684377e4dd6879627651fce")

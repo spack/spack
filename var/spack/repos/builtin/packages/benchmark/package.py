@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class Benchmark(CMakePackage):
     homepage = "https://github.com/google/benchmark"
     url = "https://github.com/google/benchmark/archive/v1.6.0.tar.gz"
     git = "https://github.com/google/benchmark.git"
+
+    license("Apache-2.0")
 
     # first properly installed CMake config packages in
     # 1.2.0 release: https://github.com/google/benchmark/issues/363
@@ -42,14 +44,24 @@ class Benchmark(CMakePackage):
         description="The build type to build",
         values=("Debug", "Release", "RelWithDebInfo", "MinSizeRel", "Coverage"),
     )
+    variant(
+        "performance_counters",
+        default=True,
+        when="@1.5.4:",
+        description="Enable performance counters provided by libpfm",
+    )
 
     depends_on("cmake@2.8.11:", type="build", when="@:1.1.0")
     depends_on("cmake@2.8.12:", type="build", when="@1.2.0:1.4")
     depends_on("cmake@3.5.1:", type="build", when="@1.5.0:")
+    depends_on("libpfm4", type=("build", "link"), when="+performance_counters")
 
     def cmake_args(self):
         # No need for testing for the install
-        args = ["-DBENCHMARK_ENABLE_TESTING=OFF"]
+        args = [
+            self.define("BENCHMARK_ENABLE_TESTING", False),
+            self.define_from_variant("BENCHMARK_ENABLE_LIBPFM", "performance_counters"),
+        ]
         return args
 
     def patch(self):

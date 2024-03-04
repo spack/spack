@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class Minisign(CMakePackage):
     url = "https://github.com/jedisct1/minisign/archive/0.7.tar.gz"
 
     maintainers("alalazo")
+
+    license("ISC")
 
     version("0.11", sha256="74c2c78a1cd51a43a6c98f46a4eabefbc8668074ca9aa14115544276b663fc55")
     version("0.9", sha256="caa4b3dd314e065c6f387b2713f7603673e39a8a0b1a76f96ef6c9a5b845da0f")

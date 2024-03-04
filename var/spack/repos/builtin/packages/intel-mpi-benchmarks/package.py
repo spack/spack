@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,6 +20,8 @@ class IntelMpiBenchmarks(MakefilePackage):
     homepage = "https://software.intel.com/en-us/articles/intel-mpi-benchmarks"
     url = "https://github.com/intel/mpi-benchmarks/archive/IMB-v2021.3.tar.gz"
     maintainers("carsonwoods")
+
+    license("BSD-3-Clause")
 
     version("2021.7", sha256="acee02cc719a74e6853194576cb7e6bf1fdc74f8971578e1b2141306c3c19477")
     version("2021.6", sha256="57d1bcc0027f8fc7bffe323ab70cc9d3f1d7482d456c47b4a9e7c4337089bd54")

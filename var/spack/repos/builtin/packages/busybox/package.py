@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class Busybox(MakefilePackage):
 
     homepage = "https://busybox.net"
     url = "https://busybox.net/downloads/busybox-1.31.0.tar.bz2"
+
+    license("GPL-2.0-only")
 
     version("1.36.0", sha256="542750c8af7cb2630e201780b4f99f3dcceeb06f505b479ec68241c1e6af61a5")
     version("1.31.1", sha256="d0f940a72f648943c1f2211e0e3117387c31d765137d92bd8284a3fb9752a998")

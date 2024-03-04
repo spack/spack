@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,7 +9,7 @@ from spack.package import *
 class Spglib(CMakePackage):
     """C library for finding and handling crystal symmetries."""
 
-    homepage = "https://atztogo.github.io/spglib/"
+    homepage = "https://spglib.readthedocs.io/"
     url = "https://github.com/spglib/spglib/archive/v2.0.2.tar.gz"
 
     maintainers("RMeli")
@@ -18,6 +18,10 @@ class Spglib(CMakePackage):
     # patch by Krishnendu Ghosh
     patch("fix_cpp.patch", when="@:1.10.3")
 
+    license("BSD-3-Clause")
+
+    version("2.3.0", sha256="c05eb869018efe2efe5dcb2654cda19c5dd4c07434874205fa542f7766f7548e")
+    version("2.2.0", sha256="ac929e20ec9d4621411e2cdec59b1442e02506c1e546005bbe2c7f781e9bd49a")
     version("2.1.0", sha256="31bca273a1bc54e1cff4058eebe7c0a35d5f9b489579e84667d8e005c73dcc13")
     version("2.0.2", sha256="10e44a35099a0a5d0fc6ee0cdb39d472c23cb98b1f5167c0e2b08f6069f3db1e")
     version("2.0.1", sha256="d7407c0d67174a0c5e41a82ed62948c43fcaf1b5529f97238d7fadd1123ffe22")
@@ -49,6 +53,10 @@ class Spglib(CMakePackage):
 
     variant("openmp", default=True, description="Build with OpenMP support", when="@1.16.2:")
     variant("fortran", default=True, description="Build Fortran interface", when="@1.16.4:")
+    variant("tests", default=False, description="Build with tests", when="@2.1.0:")
+
+    depends_on("cmake@3.15:", type="build", when="@2.1.0:")
+    depends_on("cmake@3.24:", type="build", when="+tests")
 
     @property
     def libs(self):
@@ -59,4 +67,5 @@ class Spglib(CMakePackage):
         return [
             self.define_from_variant(pfx + "USE_OMP", "openmp"),
             self.define_from_variant(pfx + "WITH_Fortran", "fortran"),
+            self.define_from_variant(pfx + "WITH_TESTS", "tests"),
         ]

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class Libmnl(AutotoolsPackage):
 
     homepage = "https://github.com/threatstack/libmnl"
     url = "https://github.com/threatstack/libmnl/archive/libmnl-1.0.3.tar.gz"
+
+    license("LGPL-2.1-or-later")
 
     version("1.0.3", sha256="14405da1bb3a679c24e0fe1f2845d47359ed2de8055e588df4b6b19cab68e901")
     version("1.0.2", sha256="2caec4716aceb245130f4e42f8c118b92618e37db8bb94e2799aff42b95c269f")

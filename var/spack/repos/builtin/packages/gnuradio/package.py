@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,6 +21,8 @@ class Gnuradio(CMakePackage):
     url = "https://github.com/gnuradio/gnuradio/archive/v3.8.2.0.tar.gz"
 
     maintainers("aweits")
+
+    license("GPL-3.0-or-later")
 
     version("3.8.2.0", sha256="ddda12b55e3e1d925eefb24afb9d604bca7c9bbe0a431707aa48a2eed53eec2f")
 
@@ -59,10 +61,7 @@ class Gnuradio(CMakePackage):
     extends("python")
 
     def cmake_args(self):
-        args = []
-        args.append("-DPYTHON_EXECUTABLE={0}".format(self.spec["python"].command.path))
-        args.append("-DENABLE_INTERNAL_VOLK=OFF")
-        return args
+        return ["-DENABLE_INTERNAL_VOLK=OFF"]
 
     def setup_dependent_build_environment(self, env, dependent_spec):
         env.prepend_path("XDG_DATA_DIRS", self.prefix.share)

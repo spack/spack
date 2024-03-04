@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class Fleur(Package):
 
     homepage = "https://www.flapw.de/MaX-5.1"
     git = "https://iffgit.fz-juelich.de/fleur/fleur.git"
+
+    license("MIT")
 
     version("develop", branch="develop")
     version("5.1", tag="MaX-R5.1", commit="a482abd9511b16412c2222e2ac1b1a303acd454b")

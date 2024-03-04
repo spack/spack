@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class Libnfnetlink(AutotoolsPackage):
 
     homepage = "https://netfilter.org"
     url = "https://github.com/Distrotech/libnfnetlink/archive/libnfnetlink-1.0.1.tar.gz"
+
+    license("GPL-2.0-only")
 
     version("1.0.1", sha256="11dd8a1045b03d47c878535eeb6b9eb34db295d21903a4dfd2c2cc63f45e675b")
     version("1.0.0", sha256="1d43456e51d5ff2e8bc84b68d8acad3bb15603cfaa806ba9693eea4f2aa1abeb")

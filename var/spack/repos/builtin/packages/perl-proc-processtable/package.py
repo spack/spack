@@ -1,6 +1,5 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
-# Copyright 2023 EMBL-European Bioinformatics Institute
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -14,6 +13,8 @@ class PerlProcProcesstable(PerlPackage):
     url = "https://cpan.metacpan.org/authors/id/J/JW/JWB/Proc-ProcessTable-0.636.tar.gz"
 
     maintainers("EbiArnie")
+
+    license("Artistic-2.0")
 
     version("0.636", sha256="944224ffb00fc1ef35069633770a0afda8623b5c7532d1e4ab48a9df394890fd")
 

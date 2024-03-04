@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class Mosquitto(CMakePackage):
     homepage = "https://mosquitto.org"
     git = "https://github.com/eclipse/mosquitto"
     url = "https://mosquitto.org/files/source/mosquitto-2.0.14.tar.gz"
+
+    license("EPL-1.0 OR EPL-2.0")
 
     version("2.0.14", sha256="d0dde8fdb12caf6e2426b4f28081919a2fce3448773bdb8af0d3cd5fe5776925")
     version("1.6.15", sha256="5ff2271512f745bf1a451072cd3768a5daed71e90c5179fae12b049d6c02aa0f")

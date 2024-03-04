@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,8 @@ class Fxdiv(CMakePackage):
 
     homepage = "https://github.com/Maratyszcza/FXdiv"
     git = "https://github.com/Maratyszcza/FXdiv.git"
+
+    license("MIT")
 
     version("master", branch="master")
     version("2020-04-17", commit="b408327ac2a15ec3e43352421954f5b1967701d1")  # py-torch@1.6:1.9

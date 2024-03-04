@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -28,6 +28,8 @@ class Wayland(MesonPackage, AutotoolsPackage):
     )
 
     variant("doc", default=False, description="Build documentation")
+
+    license("MIT")
 
     version("1.22.0", sha256="bbca9c906a8fb8992409ebf51812f19e2a784b2c169d4b784cdd753b4bb448ef")
     version("1.21.0", sha256="53b7fa67142e653820030ec049971bcb5e84ac99e05cba5bcb9cb55f43fae4b3")

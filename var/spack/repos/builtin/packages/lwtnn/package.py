@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class Lwtnn(CMakePackage):
     url = "https://github.com/lwtnn/lwtnn/archive/refs/tags/v2.12.1.tar.gz"
 
     maintainers("haralmha")
+
+    license("MIT")
 
     version("2.13", sha256="d5c1cede00f9d9cc0a25f070f744999453aec477dae6ef02701c11543c5b9553")
     version("2.12.1", sha256="b820e698d4ed60737e646ca87a42354e8ac548403348b7f2940e8fda1c0f8203")

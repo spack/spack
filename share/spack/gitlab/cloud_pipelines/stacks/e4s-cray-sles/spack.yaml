@@ -29,7 +29,7 @@ spack:
     cuda:
       version: [11.7.0]
     elfutils:
-      variants: +bzip2 ~nls +xz
+      variants: ~nls
       require: "%gcc"
     hdf5:
       variants: +fortran +hl +shared
@@ -147,7 +147,6 @@ spack:
   # HOLDING THESE BACK UNTIL CRAY SLES CAPACITY IS EXPANDED AT UO
   # - alquimia
   # - amrex
-  # - archer
   # - axom
   # - bricks
   # - dealii

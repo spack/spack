@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class Dcmtk(CMakePackage):
 
     homepage = "https://dicom.offis.de"
     url = "https://github.com/DCMTK/dcmtk/archive/DCMTK-3.6.3.tar.gz"
+
+    license("BSD-3-Clause")
 
     version("3.6.7", sha256="17705dcdb2047d1266bb4e92dbf4aa6d4967819e8e3e94f39b7df697661b4860")
     version("3.6.6", sha256="117097da6d50ddbad0e48bb1e6cdc61468e82ba1d32001dd8e2366b445133a8c")

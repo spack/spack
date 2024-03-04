@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class Libbeagle(AutotoolsPackage, CudaPackage):
 
     homepage = "https://github.com/beagle-dev/beagle-lib"
     url = "https://github.com/beagle-dev/beagle-lib/archive/v3.1.2.tar.gz"
+
+    license("LGPL-3.0-or-later")
 
     version("3.1.2", sha256="dd872b484a3a9f0bce369465e60ccf4e4c0cd7bd5ce41499415366019f236275")
     version(

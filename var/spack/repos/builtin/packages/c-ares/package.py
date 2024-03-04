@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class CAres(CMakePackage):
     homepage = "https://c-ares.haxx.se"
     url = "https://github.com/c-ares/c-ares/archive/cares-1_15_0.tar.gz"
     git = "https://github.com/c-ares/c-ares.git"
+
+    license("MIT")
 
     version("master", branch="master")
     version("1.15.0", sha256="7deb7872cbd876c29036d5f37e30c4cbc3cc068d59d8b749ef85bb0736649f04")

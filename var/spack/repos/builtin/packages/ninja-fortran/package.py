@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class NinjaFortran(Package):
 
     homepage = "https://github.com/Kitware/ninja"
     url = "https://github.com/Kitware/ninja/archive/v1.9.0.g99df1.kitware.dyndep-1.jobserver-1.tar.gz"
+
+    license("Apache-2.0")
 
     # Each version is a fork off of a specific commit of ninja
     # Hashes don't sort properly, so added "artificial" tweak-level version

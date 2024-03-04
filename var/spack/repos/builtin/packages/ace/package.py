@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class Ace(MakefilePackage):
 
     homepage = "https://www.dre.vanderbilt.edu/~schmidt/ACE.html"
     url = "https://download.dre.vanderbilt.edu/previous_versions/ACE-6.5.1.tar.gz"
+
+    license("DOC")
 
     version("7.1.0", sha256="d78d9f3f2dee6ccb46a8c296367369349054fd475dff3c5b36e2dff3dee0bf8f")
     version("6.5.12", sha256="de96c68a6262d6b9ba76b5057c02c7e6964c070b1328a63bf70259e9530a7996")

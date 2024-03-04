@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -27,7 +27,7 @@ class GribUtil(CMakePackage):
     depends_on("libpng")
     depends_on("zlib-api")
     depends_on("w3emc +extradeps", when="@1.2.4:")
-    depends_on("w3emc precision=4,d", when="^w3emc@2.10:")
+    requires("^w3emc precision=4,d", when="^w3emc@2.10:")
     depends_on("w3nco", when="@:1.2.3")
     depends_on("g2")
     depends_on("bacio")

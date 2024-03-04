@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,6 +18,8 @@ class Idg(CMakePackage):
     url = "https://git.astron.nl/RD/idg/-/archive/1.2.0/idg-1.2.0.tar.gz"
 
     maintainers("pelahi")
+
+    license("GPL-3.0-or-later")
 
     version("1.2.0", commit="ccf8951283c12547326800adae99440c70177449")
     version("1.0.0", commit="3322756fb8b6e3bb1fe5293f3e07e40623ff8486")

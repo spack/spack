@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class RPurrr(RPackage):
     A complete and consistent functional programming toolkit for R."""
 
     cran = "purrr"
+
+    license("MIT")
 
     version("1.0.1", sha256="0a7911be3539355a4c40d136f2602befcaaad5a3f7222078500bfb969a6f2ba2")
     version("0.3.5", sha256="a2386cd7e78a043cb9c14703023fff15ab1c879bf648816879d2c0c4a554fcef")

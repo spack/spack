@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,12 @@ class PyTensorboard(PythonPackage):
     url = "https://files.pythonhosted.org/packages/py3/t/tensorboard/tensorboard-2.9.1-py3-none-any.whl"
     list_url = "https://pypi.org/simple/tensorboard/"
 
+    # Requires tensorflow
+    skip_modules = ["tensorboard.summary._tf"]
+
     maintainers("aweits")
+
+    license("Apache-2.0")
 
     version(
         "2.14.1",
@@ -135,8 +140,8 @@ class PyTensorboard(PythonPackage):
     depends_on("py-grpcio@1.23.3:", type=("build", "run"), when="@2.2")
     depends_on("py-google-auth@1.6.3:2", type=("build", "run"), when="@2.7:")
     depends_on("py-google-auth@1.6.3:1", type=("build", "run"), when="@:2.6")
-    depends_on("py-google-auth-oauthlib@0.5:1.0", type=("build", "run"), when="@2.13:")
-    depends_on("py-google-auth-oauthlib@0.4.1:0.4", type=("build", "run"), when="@:2.12")
+    depends_on("py-google-auth-oauthlib@0.5:1.0", type=("build", "run"), when="@2.12.1:")
+    depends_on("py-google-auth-oauthlib@0.4.1:0.4", type=("build", "run"), when="@:2.12.0")
     depends_on("py-markdown@2.6.8:", type=("build", "run"))
     depends_on("py-numpy@1.12.0:", type=("build", "run"))
     depends_on("py-protobuf@3.19.6:", type=("build", "run"), when="@2.12:")

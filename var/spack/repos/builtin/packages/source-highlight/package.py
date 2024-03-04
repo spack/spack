@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class SourceHighlight(AutotoolsPackage, GNUMirrorPackage):
     homepage = "https://www.gnu.org/software/src-highlite/"
     gnu_mirror_path = "src-highlite/source-highlight-3.1.8.tar.gz"
     git = "https://git.savannah.gnu.org/git/src-highlite.git"
+
+    license("GPL-3.0-or-later")
 
     version("master", branch="master")
     version("3.1.9", sha256="3a7fd28378cb5416f8de2c9e77196ec915145d44e30ff4e0ee8beb3fe6211c91")

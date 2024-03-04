@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -26,6 +26,10 @@ class SingularityBase(MakefilePackage):
     depends_on("git", when="@develop")  # mconfig uses it for version info
     depends_on("shadow", type="run", when="@3.3:")
     depends_on("cryptsetup", type=("build", "run"), when="@3.4:")
+    depends_on("libfuse", type=("build", "run"), when="@4.0:")
+    depends_on("autoconf", type="build", when="@4.0:")
+    depends_on("automake", type="build", when="@4.0:")
+    depends_on("libtool", type="build", when="@4.0:")
 
     conflicts("platform=darwin", msg="singularity requires a Linux VM on Windows & Mac")
 
@@ -197,9 +201,15 @@ class Singularityce(SingularityBase):
     url = "https://github.com/sylabs/singularity/releases/download/v3.9.1/singularity-ce-3.9.1.tar.gz"
     git = "https://github.com/sylabs/singularity.git"
 
+    license("Apache-2.0")
+
     maintainers("alalazo")
     version("master", branch="master")
 
+    version("4.1.0", sha256="119667f18e76a750b7d4f8612d7878c18a824ee171852795019aa68875244813")
+    version("4.0.3", sha256="b3789c9113edcac62032ce67cd1815cab74da6c33c96da20e523ffb54cdcedf3")
+    version("3.11.5", sha256="5acfbb4a109d9c63a25c230e263f07c1e83f6c726007fbcd97a533f03d33a86a")
+    version("3.11.4", sha256="751dbea64ec16fd7e7af1e36953134c778c404909f9d27ba89006644160b2fde")
     version("3.11.3", sha256="a77ede063fd115f85f98f82d2e30459b5565db7d098665497bcd684bf8edaec9")
     version("3.10.3", sha256="f87d8e212ce209c5212d6faf253b97a24b5d0b6e6b17b5e58b316cdda27a332f")
     version("3.10.2", sha256="b4f279856ea4bf28a1f34f89320c02b545d6e57d4143679920e1ac4267f540e1")

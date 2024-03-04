@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class Xwidgets(CMakePackage):
     git = "https://github.com/jupyter-xeus/xwidgets.git"
 
     maintainers("tomstitt")
+
+    license("BSD-3-Clause")
 
     version("master", branch="master")
     version("0.25.0", sha256="7b6d36999e3b926c40389167c48b33f234a075365f089f89571b33a160421d8e")

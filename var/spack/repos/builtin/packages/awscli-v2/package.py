@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -29,3 +29,11 @@ class AwscliV2(PythonPackage):
     depends_on("py-python-dateutil@2.1:2", type=("build", "run"))
     depends_on("py-jmespath@0.7.1:1.0", type=("build", "run"))
     depends_on("py-urllib3@1.25.4:1.26", type=("build", "run"))
+
+    variant("examples", default=True, description="Install code examples")
+
+    @run_after("install")
+    @when("~examples")
+    def post_install(self):
+        examples_dir = join_path(python_purelib, "awscli", "examples")
+        remove_directory_contents(examples_dir)

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class RKnitr(RPackage):
     Literate Programming techniques."""
 
     cran = "knitr"
+
+    license("GPL-2.0-or-later")
 
     version("1.42", sha256="9344f1a0089e4da101def54aee38d7cfe3b2022d75c560141d8cc22ac65130f3")
     version("1.40", sha256="9b8f95ff367a0e52f024bda30315ec7cdd6a5b82371a1aaed95ab4eea78535bc")

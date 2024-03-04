@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class PyLxml(PythonPackage):
     homepage = "https://lxml.de/"
     pypi = "lxml/lxml-4.6.1.tar.gz"
     git = "https://github.com/lxml/lxml"
+
+    license("BSD-3-Clause")
 
     version("4.9.2", sha256="2455cfaeb7ac70338b3257f41e21f0724f4b5b0c0e7702da67ee6c3640835b67")
     version("4.9.1", sha256="fe749b052bb7233fe5d072fcb549221a8cb1a16725c47c37e42b0b9cb3ff2c3f")

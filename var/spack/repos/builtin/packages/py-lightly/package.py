@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,11 @@ class PyLightly(PythonPackage):
 
     maintainers("adamjstewart")
 
+    license("MIT")
+
+    version("1.5.0", sha256="db49e2bafe3bc70df7f3248ad08bef4948e957c1bc5cde3769ec2b190b51eedb")
+    version("1.4.26", sha256="7bbcf0a358f23659eb4089043c559c4584ef339266b1c0a9a2598c3100f2f3b8")
+    version("1.4.25", sha256="c16449ee5788a7ac98dd78c1fa32702a426c718519d79522d726469d6ca119a0")
     version("1.4.18", sha256="41794f6815db178b031236793b379e5573e074fdf730506872b73766396a6bdf")
     version("1.4.17", sha256="1533ddf28c8a08b3eafd404964d03f9a62fe76405fcf8dc7206ca4093725285e")
     version("1.4.16", sha256="9bd2af53e144e4f9823409cd33b39651f579ed671ff242a1445640c9df504d92")
@@ -36,6 +41,8 @@ class PyLightly(PythonPackage):
 
     # setup.py
     depends_on("py-setuptools@21:", when="@1.4.2:", type="build")
+    depends_on("py-setuptools@21:", when="@1.4.8,1.4.15:1.4.25", type=("build", "run"))
+    depends_on("py-setuptools@21:65.5.1", when="@:1.4.1", type=("build", "run"))
 
     # requirements/base.txt
     depends_on("py-certifi@14.05.14:", type=("build", "run"))
@@ -46,12 +53,8 @@ class PyLightly(PythonPackage):
     depends_on("py-requests@2.23:", type=("build", "run"))
     depends_on("py-six@1.10:", type=("build", "run"))
     depends_on("py-tqdm@4.44:", type=("build", "run"))
-    depends_on("py-urllib3@1.15.1:", type=("build", "run"))
-
-    # requirements/openapi.txt
-    depends_on("py-python-dateutil@2.5.3:", when="@1.4.8:", type=("build", "run"))
-    depends_on("py-setuptools@21:", when="@1.4.15:", type=("build", "run"))
     depends_on("py-urllib3@1.25.3:", when="@1.4.8:", type=("build", "run"))
+    depends_on("py-urllib3@1.15.1:", type=("build", "run"))
     depends_on("py-pydantic@1.10.5:1", when="@1.4.8:", type=("build", "run"))
     depends_on("py-aenum@3.1.11:", when="@1.4.8:", type=("build", "run"))
 
@@ -65,6 +68,5 @@ class PyLightly(PythonPackage):
     # https://github.com/lightly-ai/lightly/issues/1153
     depends_on("py-torch+distributed", when="@:1.4.4", type=("build", "run"))
 
-    # Historical dependencies
-    depends_on("py-setuptools@21:", when="@1.4.8", type=("build", "run"))
-    depends_on("py-setuptools@21:65.5.1", when="@:1.4.1", type=("build", "run"))
+    # https://github.com/microsoft/torchgeo/issues/1824
+    conflicts("py-timm@:0.9.8", when="@1.4.26")

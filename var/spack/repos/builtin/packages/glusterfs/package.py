@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class Glusterfs(AutotoolsPackage):
     url = "https://download.gluster.org/pub/gluster/glusterfs/7/7.3/glusterfs-7.3.tar.gz"
     list_url = "https://download.gluster.org/pub/gluster/glusterfs/"
     list_depth = 2
+
+    license("LGPL-3.0-or-later")
 
     version("7.3", sha256="2401cc7c3f5488f6fc5ea09ce2ab30c918612f592571fb3de6124f8482ad4954")
     version("7.2", sha256="8e43614967b90d64495fbe2c52230dd72572ce219507fb48bc317b1c228a06e1")

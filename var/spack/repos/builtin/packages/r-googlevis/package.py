@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,8 @@ class RGooglevis(RPackage):
     to Google."""
 
     cran = "googleVis"
+
+    license("CC-BY-SA-4.0")
 
     version("0.7.1", sha256="335931059ea8645f824b01a06d30fafb4e38b47cd610a5eee20628801767f218")
     version("0.7.0", sha256="5f1636024e678f9973e3ce605b46f46ea9cdffd58b98e315b495e66f34eb02e9")

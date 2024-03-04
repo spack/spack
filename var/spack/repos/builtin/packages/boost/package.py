@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -26,8 +26,11 @@ class Boost(Package):
     list_depth = 1
     maintainers("hainest")
 
+    license("BSL-1.0")
+
     version("develop", branch="develop", submodules=True)
     version("1.83.0", sha256="6478edfe2f3305127cffe8caf73ea0176c53769f4bf1585be237eb30798c3b8e")
+    version("1.84.0", sha256="cc4b893acf645c9d4b698e9a0f08ca8846aa5d6c68275c14c3e7949c24109454")
     version("1.82.0", sha256="a6e1ab9b0860e6a2881dd7b21fe9f737a095e5f33a3a874afc6a345228597ee6")
     version("1.81.0", sha256="71feeed900fbccca04a3b4f2f84a7c217186f28a940ed8b7ed4725986baf99fa")
     version("1.80.0", sha256="1e19565d82e43bc59209a168f5ac899d3ba471d55c7610c677d4ccf2c9c500c0")
@@ -169,7 +172,7 @@ class Boost(Package):
 
     variant(
         "cxxstd",
-        default="98",
+        default="11",
         values=(
             "98",
             "11",
@@ -185,6 +188,10 @@ class Boost(Package):
         multi=False,
         description="Use the specified C++ standard when building.",
     )
+
+    # 1.84.0 dropped support for 98/03
+    conflicts("cxxstd=98", when="@1.84.0:")
+
     variant("debug", default=False, description="Switch to the debug version of Boost")
     variant("shared", default=True, description="Additionally build shared libraries")
     variant(
@@ -306,6 +313,9 @@ class Boost(Package):
 
     # Patch to workaround compiler bug
     patch("nvhpc-find_address.patch", when="@1.75.0:1.76%nvhpc")
+
+    # Patch to workaround gcc-8.3 compiler issue https://github.com/boostorg/mpl/issues/44
+    patch("boost_gcc83_cpp17_fix.patch", when="@1.69:%gcc@8.3")
 
     # Fix for version comparison on newer Clang on darwin
     # See: https://github.com/boostorg/build/issues/440

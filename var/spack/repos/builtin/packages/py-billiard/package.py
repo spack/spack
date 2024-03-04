@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,6 +10,8 @@ class PyBilliard(PythonPackage):
     """Python multiprocessing fork with improvements and bugfixes"""
 
     pypi = "billiard/billiard-3.5.0.5.tar.gz"
+
+    license("BSD-3-Clause")
 
     version("3.6.4.0", sha256="299de5a8da28a783d51b197d496bef4f1595dd023a93a4f59dde1886ae905547")
     version("3.6.3.0", sha256="d91725ce6425f33a97dfa72fb6bfef0e47d4652acd98a032bd1a7fbf06d5fa6a")

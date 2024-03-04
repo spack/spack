@@ -1,12 +1,14 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Schema for packages.yaml configuration files.
 
 .. literalinclude:: _spack_root/lib/spack/spack/schema/packages.py
-   :lines: 13-
+   :lines: 14-
 """
+from typing import Any, Dict
+
 import spack.schema.environment
 
 permissions = {
@@ -54,6 +56,24 @@ requirements = {
     ]
 }
 
+prefer_and_conflict = {
+    "type": "array",
+    "items": {
+        "oneOf": [
+            {
+                "type": "object",
+                "additionalProperties": False,
+                "properties": {
+                    "spec": {"type": "string"},
+                    "message": {"type": "string"},
+                    "when": {"type": "string"},
+                },
+            },
+            {"type": "string"},
+        ]
+    },
+}
+
 permissions = {
     "type": "object",
     "additionalProperties": False,
@@ -73,7 +93,7 @@ package_attributes = {
 REQUIREMENT_URL = "https://spack.readthedocs.io/en/latest/packages_yaml.html#package-requirements"
 
 #: Properties for inclusion in other schemas
-properties = {
+properties: Dict[str, Any] = {
     "packages": {
         "type": "object",
         "default": {},
@@ -85,6 +105,8 @@ properties = {
                 "additionalProperties": False,
                 "properties": {
                     "require": requirements,
+                    "prefer": prefer_and_conflict,
+                    "conflict": prefer_and_conflict,
                     "version": {},  # Here only to warn users on ignored properties
                     "target": {
                         "type": "array",
@@ -133,6 +155,8 @@ properties = {
                 "additionalProperties": False,
                 "properties": {
                     "require": requirements,
+                    "prefer": prefer_and_conflict,
+                    "conflict": prefer_and_conflict,
                     "version": {
                         "type": "array",
                         "default": [],
@@ -185,7 +209,6 @@ properties = {
         },
     }
 }
-
 
 #: Full schema with metadata
 schema = {

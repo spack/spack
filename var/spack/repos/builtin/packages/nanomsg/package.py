@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class Nanomsg(CMakePackage):
 
     homepage = "https://nanomsg.org/"
     url = "https://github.com/nanomsg/nanomsg/archive/1.0.0.tar.gz"
+
+    license("MIT")
 
     version("1.2", sha256="6ef7282e833df6a364f3617692ef21e59d5c4878acea4f2d7d36e21c8858de67")
     version("1.1.5", sha256="218b31ae1534ab897cb5c419973603de9ca1a5f54df2e724ab4a188eb416df5a")

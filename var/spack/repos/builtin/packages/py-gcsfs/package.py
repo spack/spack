@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,8 @@ class PyGcsfs(PythonPackage):
 
     homepage = "https://github.com/fsspec/gcsfs"
     pypi = "gcsfs/gcsfs-2023.1.0.tar.gz"
+
+    license("BSD-3-Clause")
 
     version("2023.1.0", sha256="0a7b7ca8c1affa126a14ba35d7b7dff81c49e2aaceedda9732c7f159a4837a26")
 

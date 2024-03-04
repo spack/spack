@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,8 @@ class PyMemray(PythonPackage):
 
     homepage = "https://github.com/bloomberg/memray"
     pypi = "memray/memray-1.1.0.tar.gz"
+
+    license("Apache-2.0")
 
     version("1.1.0", sha256="876e46e0cd42394be48b33f81314bc946f4eb023b04bf1def084c25ccf1d2bb6")
 

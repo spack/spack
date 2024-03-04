@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class Htop(AutotoolsPackage):
     homepage = "https://github.com/htop-dev/htop/"
     url = "https://github.com/htop-dev/htop/archive/refs/tags/3.2.1.tar.gz"
     maintainers("sethrj")
+
+    license("GPL-2.0-or-later")
 
     version("3.2.2", sha256="3829c742a835a0426db41bb039d1b976420c21ec65e93b35cd9bfd2d57f44ac8")
     version("3.2.1", sha256="b5ffac1949a8daaabcffa659c0964360b5008782aae4dfa7702d2323cfb4f438")

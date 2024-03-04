@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,6 +18,8 @@ class ImprovedRdock(MakefilePackage):
 
     homepage = "https://github.com/clinfo/improved_rDock"
     git = "https://github.com/clinfo/improved_rDock.git"
+
+    license("LGPL-3.0-or-later")
 
     version("main", branch="main")
 

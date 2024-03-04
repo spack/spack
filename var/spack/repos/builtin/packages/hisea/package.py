@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class Hisea(MakefilePackage):
     among others."""
 
     homepage = "https://doi.org/10.1186/s12859-017-1953-9"
+
+    license("GPL-3.0-only")
 
     version(
         "2017.12.26",

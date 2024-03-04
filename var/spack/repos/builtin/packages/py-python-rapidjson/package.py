@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,8 @@ class PyPythonRapidjson(PythonPackage):
 
     homepage = "https://github.com/python-rapidjson/python-rapidjson"
     pypi = "python-rapidjson/python-rapidjson-0.9.1.tar.gz"
+
+    license("MIT")
 
     version("1.10", sha256="acfecbf5edb91ec72a20a125de7f56b8c2f6161eff4c65382c8ee6a2484d3540")
     version("1.9", sha256="be7d351c7112dac608133a23f60e95395668d0981a07f4037f63e0e88afcf01a")

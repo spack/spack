@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,8 @@ class Xwd(AutotoolsPackage, XorgPackage):
 
     homepage = "https://cgit.freedesktop.org/xorg/app/xwd"
     xorg_mirror_path = "app/xwd-1.0.6.tar.gz"
+
+    license("custom")
 
     version("1.0.8", sha256="066d10a1b66a47efd7caa7d7aa670c0c26ff90c8408f0e30b4dfb29dcb39d4c4")
     version("1.0.7", sha256="1c5e86806234a96a29c90be1872128293c6def5ba69ecb70e161efe325e2ba03")

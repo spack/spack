@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,6 +19,8 @@ class RStringi(RPackage):
     locales and platforms."""
 
     cran = "stringi"
+
+    license("custom")
 
     version("1.7.12", sha256="efe8ac2900001f986a75db5641fbb24587a6d23de274a6a85c39dfa58921e009")
     version("1.7.8", sha256="538918b1cd6ed1d8a2dd5ab146ba800a088e99f93c52dcd82615b6e127478b1c")

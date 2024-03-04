@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class Kubernetes(Package):
     url = "https://github.com/kubernetes/kubernetes/archive/refs/tags/v1.27.0.tar.gz"
 
     maintainers("alecbcs")
+
+    license("Apache-2.0")
 
     version("1.27.2", sha256="c6fcfddd38f877ce49c49318973496f9a16672e83a29874a921242950cd1c5d2")
     version("1.27.1", sha256="3a3f7c6b8cf1d9f03aa67ba2f04669772b1205b89826859f1636062d5f8bec3f")

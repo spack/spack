@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class Armadillo(CMakePackage):
 
     homepage = "http://arma.sourceforge.net/"
     url = "http://sourceforge.net/projects/arma/files/armadillo-8.100.1.tar.xz"
+
+    license("Apache-2.0")
 
     version("12.4.0", sha256="9905282781ced3f99769b0e45a705ecb50192ca1622300707b3302ea167dc883")
     version("12.2.0", sha256="b0dce042297e865add3351dad77f78c2c7638d6632f58357b015e50edcbd2186")

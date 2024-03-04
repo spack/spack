@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,8 @@ class SpanLite(CMakePackage):
     homepage = "https://github.com/martinmoene/span-lite"
     url = "https://github.com/martinmoene/span-lite/archive/v0.10.3.tar.gz"
     git = "https://github.com/martinmoene/span-lite"
+
+    license("BSL-1.0")
 
     version("0.10.3", sha256="04ac8148760369f11d4cdbc7969d66cb3d372357b6b5c7744841a60551ccb50b")
     version("0.9.2", sha256="7562802aac9b78e0140c3d59933cf4dc5825c0712c63daad2f7fff8c67e62eb4")

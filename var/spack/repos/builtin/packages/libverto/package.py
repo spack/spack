@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class Libverto(AutotoolsPackage):
 
     homepage = "https://github.com/latchset/libverto/"
     url = "https://github.com/latchset/libverto/archive/0.3.1.tar.gz"
+
+    license("MIT")
 
     version("0.3.2", sha256="b1005607e58961bf74945b87f36b8bdb94266a692685998b09a63190e3994dc1")
     version("0.3.1", sha256="02c7e679577ae7608ed35fe740bec2ef8c58142344cef247f2797ef788d41adc")

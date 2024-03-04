@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class Freeglut(CMakePackage, SourceforgePackage):
 
     homepage = "http://freeglut.sourceforge.net/"
     sourceforge_mirror_path = "freeglut/freeglut-3.2.1.tar.gz"
+
+    license("MIT")
 
     version("3.2.2", sha256="c5944a082df0bba96b5756dddb1f75d0cd72ce27b5395c6c1dde85c2ff297a50")
     version("3.2.1", sha256="d4000e02102acaf259998c870e25214739d1f16f67f99cb35e4f46841399da68")

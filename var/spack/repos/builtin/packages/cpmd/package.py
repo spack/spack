@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class Cpmd(MakefilePackage):
 
     homepage = "https://www.cpmd.org/wordpress/"
     url = "https://github.com/CPMD-code/CPMD/archive/refs/tags/4.3.tar.gz"
+
+    license("MIT")
 
     version("4.3", sha256="e0290f9da0d255f90a612e60662b14a97ca53003f89073c6af84fa7bc8739f65")
 

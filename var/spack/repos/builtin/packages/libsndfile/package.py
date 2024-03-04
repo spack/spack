@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class Libsndfile(AutotoolsPackage):
 
     homepage = "http://www.mega-nerd.com/libsndfile/"
     url = "http://www.mega-nerd.com/libsndfile/files/libsndfile-1.0.28.tar.gz"
+
+    license("LGPL-2.1-or-later")
 
     version("1.0.28", sha256="1ff33929f042fa333aed1e8923aa628c3ee9e1eb85512686c55092d1e5a9dfa9")
 

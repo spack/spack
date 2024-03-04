@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -49,6 +49,8 @@ class Frontistr(FrontistrBase):
     git = "https://gitlab.com/FrontISTR-Commons/FrontISTR.git"
 
     maintainers("hiroshi.okuda", "kgoto", "morita", "inagaki", "michioga")
+
+    license("MIT")
 
     version("5.3", tag="v5.3", commit="5db1d80452b951905658da828285c2fd0537603c")
     version("5.2", tag="v5.2", commit="c66bdc397de319ca59a0565b3f3b1a3b33f0c50c")

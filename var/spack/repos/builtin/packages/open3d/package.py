@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class Open3d(CMakePackage, CudaPackage):
     homepage = "http://www.open3d.org/"
     url = "https://github.com/isl-org/Open3D/archive/refs/tags/v0.13.0.tar.gz"
     git = "https://github.com/isl-org/Open3D.git"
+
+    license("MIT")
 
     version(
         "0.13.0", tag="v0.13.0", commit="c3f9de224e13838a72da0e5565a7ba51038b0f11", submodules=True
@@ -68,7 +70,7 @@ class Open3d(CMakePackage, CudaPackage):
         )
 
     def cmake_args(self):
-        args = [
+        return [
             self.define("BUILD_UNIT_TESTS", self.run_tests),
             self.define_from_variant("BUILD_PYTHON_MODULE", "python"),
             self.define_from_variant("BUILD_CUDA_MODULE", "cuda"),
@@ -92,11 +94,6 @@ class Open3d(CMakePackage, CudaPackage):
             # self.define('USE_SYSTEM_TINYGLTF', True),
             # self.define('USE_SYSTEM_TINYOBJLOADER', True),
         ]
-
-        if "+python" in self.spec:
-            args.append(self.define("PYTHON_EXECUTABLE", self.spec["python"].command.path))
-
-        return args
 
     def check(self):
         with working_dir(self.build_directory):

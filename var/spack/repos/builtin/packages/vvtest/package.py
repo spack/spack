@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,8 @@ class Vvtest(Package):
     url = "https://github.com/rrdrake/vvtest/archive/1.0.0.tar.gz"
     git = "https://github.com/rrdrake/vvtest.git"
     maintainers("mrmundt", "rrdrake")
+
+    license("Unlicense")
 
     version("1.2.0", sha256="d6b2432a2e6c43fb0d87ffc0eaa34a74d2268a732f7709ebdcf1344fbcaee154")
     version("1.1.0", sha256="674585f12d393ab9745a5ab26f59cb0f0e213f9c597b37467125979b5955ca79")

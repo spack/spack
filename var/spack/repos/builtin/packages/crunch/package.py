@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class Crunch(CMakePackage):
     # maintainer of GDAL and includes several additional commits to add a CMake build system and
     # fix compilation bugs. If these commits are ever merged into upstream, we can switch to that.
     git = "https://github.com/rouault/crunch.git"
+
+    license("Zlib")
 
     # No stable releases since 2012
     version("master", branch="build_fixes")

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class RGgmap(RPackage):
     geolocation and routing."""
 
     cran = "ggmap"
+
+    license("GPL-2.0-only")
 
     version("3.0.2", sha256="ba5fe3975fd4ca1a5fbda4910c9705ac2edacec75c658177edaf87f1c55cdcae")
     version("3.0.1", sha256="fc824b547f1fd0b52b6fbd18a82fe6f29f97b1f592e2c61baf4686ddfd47e35d")

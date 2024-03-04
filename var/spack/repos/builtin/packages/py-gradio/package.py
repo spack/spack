@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,8 @@ class PyGradio(PythonPackage):
 
     homepage = "https://github.com/gradio-app/gradio"
     pypi = "gradio/gradio-3.36.1.tar.gz"
+
+    license("Apache-2.0")
 
     version("3.36.1", sha256="1d821cee15da066c24c197248ba9aaed5f5e59505d17754561c2f96f90e73a89")
 

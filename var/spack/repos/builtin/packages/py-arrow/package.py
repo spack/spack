@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,8 @@ class PyArrow(PythonPackage):
 
     homepage = "https://arrow.readthedocs.io/en/latest/"
     pypi = "arrow/arrow-0.16.0.tar.gz"
+
+    license("Apache-2.0")
 
     version("1.2.3", sha256="3934b30ca1b9f292376d9db15b19446088d12ec58629bc3f0da28fd55fb633a1")
     version("1.2.2", sha256="05caf1fd3d9a11a1135b2b6f09887421153b94558e5ef4d090b567b47173ac2b")

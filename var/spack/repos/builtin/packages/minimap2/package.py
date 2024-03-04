@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,8 +13,13 @@ class Minimap2(PythonPackage):
 
     homepage = "https://github.com/lh3/minimap2"
     url = "https://github.com/lh3/minimap2/releases/download/v2.2/minimap2-2.2.tar.bz2"
+    git = "https://github.com/lh3/minimap2.git"
+
+    license("MIT")
 
     version("2.26", sha256="6a588efbd273bff4f4808d5190957c50272833d2daeb4407ccf4c1b78143624c")
+    version("2.24", sha256="9dd4c31ff082182948944bcdad6d328f64f09295d10547d72eba24189880a615")
+    version("2.17", sha256="b68ac8882d33cc63e9e3246775062aeb159b6990ff7f38099172c3fe6f8a2742")
     version("2.14", sha256="9088b785bb0c33488ca3a27c8994648ce21a8be54cb117f5ecee26343facd03b")
     version("2.10", sha256="52b36f726ec00bfca4a2ffc23036d1a2b5f96f0aae5a92fd826be6680c481c20")
     version("2.2", sha256="7e8683aa74c4454a8cfe3821f405c4439082e24c152b4b834fdb56a117ecaed9")
@@ -24,6 +29,9 @@ class Minimap2(PythonPackage):
     depends_on("py-setuptools", type="build")
     depends_on("py-cython", type="build")
 
+    variant("jstools", default=False, description="Include Javascript tools (paftools)")
+    depends_on("k8", type="run", when="+jstools")
+
     @run_after("install")
     def install_minimap2(self):
         make_arg = []
@@ -32,3 +40,4 @@ class Minimap2(PythonPackage):
         make(*make_arg)
         mkdirp(prefix.bin)
         install("minimap2", prefix.bin)
+        install("misc/*.js", prefix.bin)

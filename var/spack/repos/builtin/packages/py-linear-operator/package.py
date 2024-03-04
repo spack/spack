@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class PyLinearOperator(PythonPackage):
     pypi = "linear_operator/linear_operator-0.1.1.tar.gz"
 
     maintainers("meyersbs")
+
+    license("MIT")
 
     version("0.4.0", sha256="7c57c9f8f258c9785c0db4dd7625f4dd03a340313d7314cba0b633644909f5c6")
     version("0.3.0", sha256="84bf572631a7e1576de6920d81600ca0fedcf6bda2f29dbaf440d6e72ce6abab")

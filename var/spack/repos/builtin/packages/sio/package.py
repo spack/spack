@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,8 @@ class Sio(CMakePackage):
     git = "https://github.com/iLCSoft/SIO.git"
 
     maintainers("vvolkl", "tmadlener", "jmcarcell")
+
+    license("BSD-3-Clause")
 
     version("master", branch="master")
     version("0.2", sha256="416c93402e7314b7aadedba8e7f9e0d4b0b4f4e34ce26285b04cebb505ecfab2")

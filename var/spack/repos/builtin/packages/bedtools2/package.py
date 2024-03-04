@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,9 @@ class Bedtools2(Package):
     homepage = "https://github.com/arq5x/bedtools2"
     url = "https://github.com/arq5x/bedtools2/archive/v2.30.0.tar.gz"
 
+    license("MIT")
+
+    version("2.31.1", sha256="79a1ba318d309f4e74bfa74258b73ef578dccb1045e270998d7fe9da9f43a50e")
     version("2.31.0", sha256="183cf9a96aabc50ef4bd557a53fd01557a123c05a0dc87651371878f357439ec")
     version("2.30.0", sha256="c575861ec746322961cd15d8c0b532bb2a19333f1cf167bbff73230a7d67302f")
     version("2.29.2", sha256="bc2f36b5d4fc9890c69f607d54da873032628462e88c545dd633d2c787a544a5")
@@ -29,7 +32,7 @@ class Bedtools2(Package):
     depends_on("xz", when="@2.29:")
     depends_on("python", type="build")
 
-    patch("bedtools-gcc13.patch", level=1, when="@2.27:%gcc@13:")
+    patch("bedtools-gcc13.patch", level=1, when="@2.27:2.31.0%gcc@13:")
 
     def install(self, spec, prefix):
         make("prefix=%s" % prefix, "install")

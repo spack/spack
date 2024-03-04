@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,8 @@ class RJomo(RPackage):
     with the substantive model."""
 
     cran = "jomo"
+
+    license("GPL-2.0-only")
 
     version("2.7-6", sha256="3ffa2a5521d4969fe77b23cd3ab201afdf8db3f8f708b1276c33083c01d7e2da")
     version("2.7-4", sha256="2d25bc248dc1b931e6c19636197cd6f58fb00f5e1102ed3c04084c71d03d93fd")

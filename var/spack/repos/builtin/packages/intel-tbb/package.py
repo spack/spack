@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -29,6 +29,8 @@ class IntelTbb(CMakePackage, MakefilePackage):
 
     # Note: when adding new versions, please check and update the
     # patches, filters and url_for_version() below as needed.
+
+    license("Apache-2.0")
 
     version("master", branch="master")
     version("2021.9.0", sha256="1ce48f34dada7837f510735ff1172f6e2c261b09460e3bf773b49791d247d24e")

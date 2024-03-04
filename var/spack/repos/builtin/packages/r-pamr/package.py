@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class RPamr(RPackage):
     Some functions for sample classification in microarrays."""
 
     cran = "pamr"
+
+    license("GPL-2.0-only")
 
     version("1.56.1", sha256="d0e527f2336ee4beee91eefb2a8f0dfa96413d9b5a5841d6fc7ff821e67c9779")
     version("1.55", sha256="ed910194937a6097ec79234d84777856fd520b111a7c79f7c86dc607169cc3c3")

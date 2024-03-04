@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class RSp(RPackage):
     methods for retrieving coordinates, for subsetting, print, summary, etc."""
 
     cran = "sp"
+
+    license("GPL-2.0-or-later")
 
     version("1.6-0", sha256="f5977fbe80e7dee8e95d41fe0ef9d87c2c984422bb529ea5211fd38a13f9fcda")
     version("1.5-1", sha256="69b9eab481d389bbb736d2adcf50c180aca248c3ffc4ebda8ffe2accc5f229df")

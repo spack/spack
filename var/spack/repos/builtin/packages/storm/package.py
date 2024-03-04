@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,8 @@ class Storm(Package):
     url = "https://archive.apache.org/dist/storm/apache-storm-2.2.0/apache-storm-2.2.0.tar.gz"
     list_url = "https://archive.apache.org/dist/storm/"
     list_depth = 1
+
+    license("CC-BY-4.0")
 
     version("2.3.0", sha256="49c2255b26633c6fd96399c520339e459fcda29a0e7e6d0c8775cefcff6c3636")
     version("2.2.0", sha256="f621163f349a8e85130bc3d2fbb34e3b08f9c039ccac5474f3724e47a3a38675")

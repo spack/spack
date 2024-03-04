@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class Cpuinfo(CMakePackage):
     homepage = "https://github.com/pytorch/cpuinfo"
     git = "https://github.com/pytorch/cpuinfo.git"
     tags = ["windows"]
+
+    license("BSD-2-Clause")
 
     version("main", branch="main")
     version("2022-08-19", commit="8ec7bd91ad0470e61cf38f618cc1f270dede599c")  # py-torch@1.13

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -55,7 +55,6 @@ class Openwsman(CMakePackage):
                 arg.extend([define("BUILD_PYTHON", False), define("BUILD_PYTHON3", True)])
             else:
                 arg.extend([define("BUILD_PYTHON", True), define("BUILD_PYTHON3", False)])
-            arg.append(define("PYTHON_EXECUTABLE", spec["python"].command.path))
         else:
             arg.extend([define("BUILD_PYTHON", False), define("BUILD_PYTHON3", False)])
         return arg

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class PyPythonPptx(PythonPackage):
     pypi = "python-pptx/python-pptx-0.6.21.tar.gz"
 
     maintainers("LydDeb")
+
+    license("MIT")
 
     version("0.6.23", sha256="587497ff28e779ab18dbb074f6d4052893c85dedc95ed75df319364f331fedee")
     version("0.6.21", sha256="7798a2aaf89563565b3c7120c0acfe9aff775db0db3580544e3bf4840c2e378f")

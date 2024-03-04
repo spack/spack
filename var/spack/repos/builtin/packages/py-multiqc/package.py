@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class PyMultiqc(PythonPackage):
 
     homepage = "https://multiqc.info"
     pypi = "multiqc/multiqc-1.0.tar.gz"
+
+    license("GPL-3.0-only")
 
     version("1.15", sha256="ce5359a12226cf4ce372c6fdad142cfe2ae7501ffa97ac7aab544ced4db5ea3c")
     version("1.14", sha256="dcbba405f0c9521ed2bbd7e8f7a9200643047311c9619878b81d167300149362")

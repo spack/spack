@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,6 +10,8 @@ class Nyancat(MakefilePackage):
 
     homepage = "https://nyancat.dakko.us/"
     url = "https://github.com/klange/nyancat/archive/1.5.1.tar.gz"
+
+    license("NCSA")
 
     version("1.5.2", sha256="88cdcaa9c7134503dd0364a97fa860da3381a09cb555c3aae9918360827c2032")
     version("1.5.1", sha256="c948c769d230b4e41385173540ae8ab1f36176de689b6e2d6ed3500e9179b50a")

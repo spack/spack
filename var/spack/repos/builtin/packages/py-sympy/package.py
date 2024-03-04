@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,9 @@ class PySympy(PythonPackage):
 
     pypi = "sympy/sympy-0.7.6.tar.gz"
 
+    license("BSD-3-Clause")
+
+    version("1.12", sha256="ebf595c8dac3e0fdc4152c51878b498396ec7f30e7a914d6071e674d49420fb8")
     version("1.11.1", sha256="e32380dce63cb7c0108ed525570092fd45168bdae2faa17e528221ef72e88658")
     version("1.8", sha256="1ca588a9f6ce6a323c5592f9635159c2093572826668a1022c75c75bdf0297cb")
     version("1.7.1", sha256="a3de9261e97535b83bb8607b0da2c7d03126650fafea2b2789657b229c246b2e")

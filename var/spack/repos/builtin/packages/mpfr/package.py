@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,11 @@ class Mpfr(AutotoolsPackage, GNUMirrorPackage):
     homepage = "https://www.mpfr.org/"
     gnu_mirror_path = "mpfr/mpfr-4.0.2.tar.bz2"
 
+    maintainers("cessenat")
+
+    license("LGPL-3.0-or-later")
+
+    version("4.2.1", sha256="b9df93635b20e4089c29623b19420c4ac848a1b29df1cfd59f26cab0d2666aa0")
     version("4.2.0", sha256="691db39178e36fc460c046591e4b0f2a52c8f2b3ee6d750cc2eab25f1eaa999d")
     version("4.1.1", sha256="85fdf11614cc08e3545386d6b9c8c9035e3db1e506211a45f4e108117fe3c951")
     version("4.1.0", sha256="feced2d430dd5a97805fa289fed3fc8ff2b094c02d05287fd6133e7f1f0ec926")

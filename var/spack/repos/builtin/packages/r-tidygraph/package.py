@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,8 @@ class RTidygraph(RPackage):
     common graph algorithms."""
 
     cran = "tidygraph"
+
+    license("MIT")
 
     version("1.2.3", sha256="b09c06b12583ae57edd1ec01e61a0e1b7a4b82358361fb28a6046dbece475687")
     version("1.2.2", sha256="d555cad6b5b56bd2edaa29950a0fd15942e972db21561bfd5cd64fd9a8936470")

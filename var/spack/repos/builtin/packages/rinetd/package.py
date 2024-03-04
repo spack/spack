@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class Rinetd(AutotoolsPackage):
 
     homepage = "https://github.com/samhocevar/rinetd"
     url = "https://github.com/samhocevar/rinetd/archive/v0.70.tar.gz"
+
+    license("GPL-2.0-only")
 
     version("0.73", sha256="62d3e5800299bb3940aea847ffd7662722deb5d4b85625fcfe8f7ebbc0424c80")
     version("0.70", sha256="e69538e9d1fdc1ba5cc24733a52c571568e9cad0876c09144aa1eaa71e13fba5")

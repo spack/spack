@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,6 +18,8 @@ class PyNumpyQuaternion(PythonPackage):
 
     homepage = "https://github.com/moble/quaternion"
     pypi = "numpy-quaternion/numpy-quaternion-2021.11.4.15.26.3.tar.gz"
+
+    license("MIT")
 
     version(
         "2021.11.4.15.26.3",

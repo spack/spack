@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class Zabbix(AutotoolsPackage):
 
     homepage = "https://www.zabbix.com"
     url = "https://github.com/zabbix/zabbix/archive/5.0.3.tar.gz"
+
+    license("GPL-2.0-or-later")
 
     version("5.0.3", sha256="d579c5fa4e9065e8041396ace24d7132521ef5054ce30dfd9d151cbb7f0694ec")
     version("4.0.24", sha256="c7e4962d745277d67797d90e124555ce27d198822a7e65c55d86aee45d3e93fc")

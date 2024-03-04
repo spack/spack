@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class QtQuicktimeline(QtPackage):
 
     url = QtPackage.get_url(__qualname__)
     list_url = QtPackage.get_list_url(__qualname__)
+
+    license("BSD-3-Clause")
 
     version("6.6.1", sha256="fe77555566bd6bb0ef0cb67b6ad09e225399fba3d2ec388de84e8a6200c0e2fc")
     version("6.6.0", sha256="06b94443da3f81153f04dca0cce781481462310d51f97d5550f81322a7a88cd0")

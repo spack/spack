@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -26,6 +26,8 @@ class Butterflypack(CMakePackage):
     git = "https://github.com/liuyangzhuan/ButterflyPACK.git"
     url = "https://github.com/liuyangzhuan/ButterflyPACK/archive/v2.2.0.tar.gz"
     maintainers("liuyangzhuan")
+
+    license("BSD-3-Clause-LBNL")
 
     version("master", branch="master")
     version("2.4.0", sha256="12d04e7101b2c8292b5c62d9f42b5cd1e8a3c5af639d2665596e3e4255fd0804")

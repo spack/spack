@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,6 +19,8 @@ class PyNumcodecs(PythonPackage):
     # 'numcodecs.tests' excluded from 'import_modules' because it requires
     # an additional dependency on 'pytest'
     import_modules = ["numcodecs"]
+
+    license("MIT")
 
     version("master", branch="master", submodules=True)
     version("0.11.0", sha256="6c058b321de84a1729299b0eae4d652b2e48ea1ca7f9df0da65cb13470e635eb")

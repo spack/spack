@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class Libabigail(AutotoolsPackage):
     homepage = "https://sourceware.org/libabigail"
     url = "https://mirrors.kernel.org/sourceware/libabigail/libabigail-2.0.tar.gz"
     git = "https://sourceware.org/git/libabigail.git"
+
+    license("Apache-2.0 WITH LLVM-exception")
 
     version("master", branch="master")
     version("2.0", sha256="3704ae97a56bf076ca08fb5dea6b21db998fbbf14c4f9de12824b78db53b6fda")

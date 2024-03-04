@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class PyPythonUtils(PythonPackage):
 
     homepage = "https://github.com/WoLpH/python-utils"
     pypi = "python-utils/python-utils-2.4.0.tar.gz"
+
+    license("BSD-3-Clause")
 
     version("3.5.2", sha256="68198854fc276bc4b2403b261703c218e01ef564dcb072a7096ed9ea7aa5130c")
     version("2.7.1", sha256="88595bfa054975534a2f813b6c8deb96b44f3b6fad00a927fd062fe65550fadf")

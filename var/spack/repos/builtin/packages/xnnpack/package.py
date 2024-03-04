@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class Xnnpack(CMakePackage):
 
     homepage = "https://github.com/google/XNNPACK"
     git = "https://github.com/google/XNNPACK.git"
+
+    license("BSD-3-Clause")
 
     version("master", branch="master")
     version("2022-02-16", commit="ae108ef49aa5623b896fc93d4298c49d1750d9ba")  # py-torch@1.12

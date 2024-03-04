@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class PyPythonLspServer(PythonPackage):
     pypi = "python-lsp-server/python-lsp-server-1.6.0.tar.gz"
 
     maintainers("alecbcs")
+
+    license("MIT")
 
     version("1.7.1", sha256="67473bb301f35434b5fa8b21fc5ed5fac27dc8a8446ccec8bae456af52a0aef6")
     version("1.7.0", sha256="401ce78ea2e98cadd02d94962eb32c92879caabc8055b9a2f36d7ef44acc5435")

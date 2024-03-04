@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,7 +20,11 @@ class Gmsh(CMakePackage):
     url = "https://gmsh.info/src/gmsh-4.4.1-source.tgz"
     git = "https://gitlab.onelab.info/gmsh/gmsh.git"
 
+    license("GPL-2.0-or-later")
+
     version("master", branch="master")
+    version("4.12.2", sha256="13e09d9ca8102e5c40171d6ee150c668742b98c3a6ca57f837f7b64e1e2af48f")
+    version("4.12.0", sha256="2a6007872ba85abd9901914826f6986a2437ab7104f564ccefa1b7a3de742c17")
     version("4.10.3", sha256="a87d59ccea596d493d375b0d6bc380079a5e5a4baebf0d3383018b0cd6bd8e33")
     version("4.8.4", sha256="760dbdc072eaa3c82d066c5ba3b06eacdd3304eb2a97373fe4ada9509f0b6ace")
     version("4.7.1", sha256="c984c295116c757ed165d77149bd5fdd1068cbd7835e9bcd077358b503891c6a")
@@ -105,6 +109,7 @@ class Gmsh(CMakePackage):
     conflicts("+slepc", when="~petsc")
     conflicts("+oce", when="+opencascade")
     conflicts("+oce", when="^gmsh@4.10:4.10.3")
+    conflicts("+oce", when="@4.10.3:")
     conflicts("+metis", when="+external", msg="External Metis cannot build with GMSH")
 
     def flag_handler(self, name, flags):

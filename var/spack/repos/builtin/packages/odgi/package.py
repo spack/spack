@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -41,8 +41,4 @@ class Odgi(CMakePackage):
     # >>> Dependencies list ends here
 
     def cmake_args(self):
-        args = [
-            "-DCMAKE_CXX_STANDARD_REQUIRED:BOOL=ON",
-            "-DPYTHON_EXECUTABLE:FILEPATH={0}".format(self.spec["python"].command),
-        ]
-        return args
+        return ["-DCMAKE_CXX_STANDARD_REQUIRED:BOOL=ON"]

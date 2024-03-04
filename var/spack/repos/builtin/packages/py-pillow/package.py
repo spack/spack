@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -106,6 +106,8 @@ class PyPillow(PyPillowBase):
 
     homepage = "https://python-pillow.org/"
     pypi = "Pillow/Pillow-7.2.0.tar.gz"
+
+    license("HPND")
 
     version("10.0.0", sha256="9c82b5b3e043c7af0d95792d0d20ccf68f61a1fec6b3530e718b688422727396")
     version("9.5.0", sha256="bf548479d336726d7a0eceb6e767e179fbde37833ae42794602631a070d630f1")

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class XapianCore(AutotoolsPackage):
 
     homepage = "https://xapian.org"
     url = "https://oligarchy.co.uk/xapian/1.4.19/xapian-core-1.4.19.tar.xz"
+
+    license("GPL-2.0-or-later")
 
     version("1.4.19", sha256="1fca48fca6cc3526cc4ba93dd194fe9c1326857b78edcfb37e68d086d714a9c3")
     version("1.4.11", sha256="9f16b2f3e2351a24034d7636f73566ab74c3f0729e9e0492934e956b25c5bc07")

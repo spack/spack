@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class Xkill(AutotoolsPackage, XorgPackage):
 
     homepage = "https://cgit.freedesktop.org/xorg/app/xkill"
     xorg_mirror_path = "app/xkill-1.0.4.tar.gz"
+
+    license("MIT")
 
     version("1.0.6", sha256="3b35a2f4b67dda1e98b6541488cd7f7343eb6e3dbe613aeff3d5a5a4c4c64b58")
     version("1.0.5", sha256="98fab8a8af78d5aae4e1f284b580c60e3d25ed2a72daa4dbce419b28d8adaf8a")

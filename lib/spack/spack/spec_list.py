@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -107,6 +107,20 @@ class SpecList:
         self._constraints = None
         self._specs = None
 
+    def replace(self, idx: int, spec: str):
+        """Replace the existing spec at the index with the new one.
+
+        Args:
+            idx: index of the spec to replace in the speclist
+            spec: new spec
+        """
+        self.yaml_list[idx] = spec
+
+        # invalidate cache variables when we change the list
+        self._expanded_list = None
+        self._constraints = None
+        self._specs = None
+
     def extend(self, other, copy_reference=True):
         self.yaml_list.extend(other.yaml_list)
         self._expanded_list = None
@@ -148,6 +162,7 @@ class SpecList:
                 if isinstance(item, str) and item.startswith("$"):
                     # replace the reference and apply the sigil if needed
                     name, sigil = self._parse_reference(item)
+
                     referent = [
                         _sigilify(item, sigil) for item in self._reference[name].specs_as_yaml_list
                     ]

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,8 @@ class Libseccomp(AutotoolsPackage):
 
     homepage = "https://github.com/seccomp/libseccomp"
     url = "https://github.com/seccomp/libseccomp/releases/download/v2.5.3/libseccomp-2.5.3.tar.gz"
+
+    license("LGPL-2.1-or-later")
 
     version("2.5.4", sha256="d82902400405cf0068574ef3dc1fe5f5926207543ba1ae6f8e7a1576351dcbdb")
     version("2.5.3", sha256="59065c8733364725e9721ba48c3a99bbc52af921daf48df4b1e012fbc7b10a76")

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,6 +18,8 @@ class Pocl(CMakePackage):
     homepage = "http://portablecl.org"
     url = "https://github.com/pocl/pocl/archive/v1.1.tar.gz"
     git = "https://github.com/pocl/pocl.git"
+
+    license("MIT")
 
     version("master", branch="master")
     version("3.0", sha256="a3fd3889ef7854b90b8e4c7899c5de48b7494bf770e39fba5ad268a5cbcc719d")

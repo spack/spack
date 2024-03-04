@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class Openlibm(MakefilePackage):
     url = "https://github.com/JuliaMath/openlibm/archive/refs/tags/v0.8.0.tar.gz"
 
     maintainers("haampie")
+
+    license("MIT AND BSD-2-Clause AND ISC AND LGPL-2.1-or-later")
 
     version("0.8.1", sha256="ba8a282ecd92d0033f5656bb20dfc6ea3fb83f90ba69291ac8f7beba42dcffcf")
     version("0.8.0", sha256="03620768df4ca526a63dd675c6de95a5c9d167ff59555ce57a61c6bf49e400ee")

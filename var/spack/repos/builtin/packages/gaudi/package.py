@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,7 @@ class Gaudi(CMakePackage):
     tags = ["hep"]
 
     version("master", branch="master")
+    version("37.2", sha256="9b866caab46e182de98b59eddbde80d6fa0e670fe4a35906f1518b04bd99b2d2")
     version("37.1", sha256="1d7038fd5dfb5f2517ce57623cf8090549ffe2ea8f0171d534e5c1ca20bd009a")
     version("37.0", sha256="823f3821a4f498ddd2dd123fbb8a3787b361ddfd818f4ab13572076fc9afdfe4")
     version("36.14", sha256="b11e0afcb797d61a305856dfe8079d48d74c6b6867ceccc0a83aab5978c9ba5f")
@@ -55,6 +56,12 @@ class Gaudi(CMakePackage):
     patch("link_target_fixes.patch", when="@33.0:34")
     patch("link_target_fixes32.patch", when="@:32.2")
     patch("fmt_fix.patch", when="@36.6:36.12 ^fmt@10:")
+    # fix issues with catch2 3.1 and above
+    patch(
+        "https://gitlab.cern.ch/gaudi/Gaudi/-/commit/110f2189f386c3a23150ccdfdc47c1858fc7098e.diff",
+        sha256="b05f6b7c1efb8c3af291c8d81fd1627e58af7c5f9a78a0098c6e3bfd7ec80c15",
+        when="@37.1 ^catch2@3.1:",
+    )
 
     # These dependencies are needed for a minimal Gaudi build
     depends_on("aida")

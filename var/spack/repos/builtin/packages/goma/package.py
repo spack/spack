@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class Goma(CMakePackage):
     git = "https://github.com/goma/goma.git"
 
     maintainers("wortiz")
+
+    license("GPL-2.0-or-later")
 
     version("7.4.3", commit="bb0cf8030f9e8d61066d052ea6fad67fe49651f8")
     version("7.3.0", commit="415f442953e2171afae1f8ad55868052c6f511ce")

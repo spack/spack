@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class Libyogrt(AutotoolsPackage):
 
     homepage = "https://github.com/LLNL/libyogrt"
     url = "https://github.com/LLNL/libyogrt/releases/download/1.21/libyogrt-1.21.tar.gz"
+
+    license("LGPL-2.1-or-later")
 
     version("1.33", sha256="797d20c49cdc4f6beae8660b4f41ba7ac13f7e93a0344b47f0bdc64f780d1398")
     version("1.27", sha256="c57ce60770b61aa20bc83fe34ff52b5e444964338df3786f282d0d9bcdd26138")

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -328,12 +328,6 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     # see https://trilinos.org/pipermail/trilinos-users/2015-March/004731.html
     # and https://trilinos.org/pipermail/trilinos-users/2015-March/004802.html
     conflicts("+superlu-dist", when="+complex+amesos2")
-    # https://github.com/trilinos/Trilinos/issues/2994
-    conflicts(
-        "+shared",
-        when="+stk platform=darwin",
-        msg="Cannot build Trilinos with STK as a shared library on Darwin.",
-    )
     conflicts("+adios2", when="@:12.14.1")
     conflicts("cxxstd=11", when="@13.2:")
     conflicts("cxxstd=14", when="@14:")
@@ -406,10 +400,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("binder@1.3:", when="@15: +python", type="build")
     depends_on("blas")
     depends_on("boost+graph+math+exception+stacktrace", when="+boost")
-    # Need to revisit the requirement of STK
-    depends_on("boost+graph+math+exception+stacktrace", when="+stk")
-
-    #
+    depends_on("boost+graph+math+exception+stacktrace", when="@:14.0.0 +stk")
     depends_on("cgns", when="+exodus")
     depends_on("cmake@3.23:", type="build", when="@14.0.0:")
     depends_on("hdf5+hl", when="+hdf5")
@@ -489,6 +480,11 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     # workaround an NVCC bug with c++14 (https://github.com/trilinos/Trilinos/issues/6954)
     # avoid calling deprecated functions with CUDA-11
     patch("fix_cxx14_cuda11.patch", when="@13.0.0:13.0.1 cxxstd=14 ^cuda@11:")
+    patch(
+        "0001-use-the-gcnArchName-inplace-of-gcnArch-as-gcnArch-is.patch",
+        when="@15.0.0 ^hip@6.0 +rocm",
+    )
+
     # Allow building with +teko gotype=long
     patch(
         "https://github.com/trilinos/Trilinos/commit/b17f20a0b91e0b9fc5b1b0af3c8a34e2a4874f3f.patch?full_index=1",
@@ -644,9 +640,11 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
             options.append(
                 define(
                     "Trilinos_CXX11_FLAGS",
-                    self.compiler.cxx14_flag
-                    if spec.variants["cxxstd"].value == "14"
-                    else self.compiler.cxx11_flag,
+                    (
+                        self.compiler.cxx14_flag
+                        if spec.variants["cxxstd"].value == "14"
+                        else self.compiler.cxx11_flag
+                    ),
                 )
             )
 
@@ -807,6 +805,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
             ("HDF5", "hdf5", "hdf5"),
             ("HYPRE", "hypre", "hypre"),
             ("MUMPS", "mumps", "mumps"),
+            ("AMD", "suite-sparse", "suite-sparse"),
             ("UMFPACK", "suite-sparse", "suite-sparse"),
             ("SuperLU", "superlu", "superlu"),
             ("SuperLUDist", "superlu-dist", "superlu-dist"),

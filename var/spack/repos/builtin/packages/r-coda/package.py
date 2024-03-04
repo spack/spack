@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class RCoda(RPackage):
     convergence to the equilibrium distribution of the Markov chain."""
 
     cran = "coda"
+
+    license("GPL-2.0-or-later")
 
     version("0.19-4", sha256="422d3cfd34797a3631e9c4812431940599c0ca4bb9937797bed07b7b1d6fe58f")
     version("0.19-3", sha256="d3df1fc848bcf1af8fae13d61eeab60e99a3d4b4db384bec4326f909f502c5d6")

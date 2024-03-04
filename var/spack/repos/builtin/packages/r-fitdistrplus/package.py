@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,6 +21,8 @@ class RFitdistrplus(RPackage):
     (2002). Statistical inference. Pacific Grove."""
 
     cran = "fitdistrplus"
+
+    license("GPL-2.0-or-later")
 
     version("1.1-11", sha256="26274f2b710b2417a8bca314d400abf320d4ccf0387ad082743056699501b53d")
     version("1.1-8", sha256="f3c72310f40773b3839a9506c3cb781d044e09b94f2f38d332bb24e5f9960f5a")

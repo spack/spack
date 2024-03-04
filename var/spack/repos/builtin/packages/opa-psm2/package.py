@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class OpaPsm2(MakefilePackage, CudaPackage):
     url = "https://github.com/cornelisnetworks/opa-psm2/archive/PSM2_10.3-8.tar.gz"
 
     maintainers("jack-morrison")
+
+    license("BSD-3-Clause")
 
     version("11.2.230", sha256="e56262ed9ced4a8b53540cc6370d7ec9733bd5c791a9c05251010c1bbb60c75c")
     version("11.2.228", sha256="e302afc8cd054409616d59b69e4d7f140278dc3815ae07f0fc14080fd860bd5c")

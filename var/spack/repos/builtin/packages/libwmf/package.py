@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,8 @@ class Libwmf(AutotoolsPackage):
     maintainers("benkirk")
 
     parallel = False
+
+    license("LGPL-2.0-or-later")
 
     version("0.2.12", sha256="464ff63605d7eaf61a4a12dbd420f7a41a4d854675d8caf37729f5bc744820e2")
     version("0.2.11", sha256="e2a2664afd5abc71a42be7ad3c200f64de2b8889bf088eac1d32e205ce843803")

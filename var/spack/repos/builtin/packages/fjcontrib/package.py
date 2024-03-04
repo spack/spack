@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class Fjcontrib(AutotoolsPackage):
     url = "https://fastjet.hepforge.org/contrib/downloads/fjcontrib-1.044.tar.gz"
 
     tags = ["hep"]
+
+    license("GPL-2.0-or-later")
 
     version("1.052", sha256="bde63c28cbdf992bedea4ddedfc3cd52c9fec241a767cc455dd4ad10e8210c39")
     version("1.051", sha256="76a2ec612c768db3eb6bbaf686d02b05ddb64dde477d185e20df563b52308473")

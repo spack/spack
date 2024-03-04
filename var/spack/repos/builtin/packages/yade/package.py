@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class Yade(CMakePackage):
     url = "https://gitlab.com/yade-dev/trunk/-/archive/2023.02a/trunk-2023.02a.tar.gz"
 
     maintainers("lmagdanello")
+
+    license("GPL-2.0-only")
 
     version("2023.02a", sha256="f76b5a0aa7f202716efa94cd730e4bc442ffcb40a99caaf6e579ab8695efb0c1")
     version("2022.01a", sha256="3b76185b706aba6113d1e932c5b883cd772e8d8c6b4e5230a01f3370e2b6904c")

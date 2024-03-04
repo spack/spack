@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class RHtmlwidgets(RPackage):
     applications."""
 
     cran = "htmlwidgets"
+
+    license("MIT")
 
     version("1.6.2", sha256="7fda1672a4c0fbc203c790677b6ee7c40d2c2d72be4f6772f75288fc712b10bc")
     version("1.5.4", sha256="1a3fc60f40717de7f1716b754fd1c31a132e489a2560a278636ee78eba46ffc1")

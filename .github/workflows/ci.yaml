@@ -40,7 +40,7 @@ jobs:
         with:
           fetch-depth: 0
             # For pull requests it's not necessary to checkout the code
-      - uses: dorny/paths-filter@4512585405083f25c027a35db413c2b3b9006d50
+      - uses: dorny/paths-filter@ebc4d7e9ebcb0b1eb21480bb8f43113e996ac77a
         id: filter
         with:
           # See https://github.com/dorny/paths-filter/issues/56 for the syntax used below

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class PyNestAsyncio(PythonPackage):
 
     homepage = "https://github.com/erdewit/nest_asyncio"
     pypi = "nest-asyncio/nest_asyncio-1.4.0.tar.gz"
+
+    license("BSD-2-Clause")
 
     version("1.5.6", sha256="d267cc1ff794403f7df692964d1d2a3fa9418ffea2a3f6859a439ff482fef290")
     version("1.5.5", sha256="e442291cd942698be619823a17a86a5759eabe1f8613084790de189fe9e16d65")

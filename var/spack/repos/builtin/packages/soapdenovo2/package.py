@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,6 +18,8 @@ class Soapdenovo2(MakefilePackage):
     homepage = "https://github.com/aquaskyline/SOAPdenovo2"
     url = "https://github.com/aquaskyline/SOAPdenovo2/archive/r240.tar.gz"
     maintainers("snehring")
+
+    license("GPL-3.0-only")
 
     version("242", sha256="a0043ceb41bc17a1c3fd2b8abe4f9029a60ad3edceb2b15af3c2cfabd36aa11b")
     version("240", sha256="cc9e9f216072c0bbcace5efdead947e1c3f41f09baec5508c7b90f933a090909")

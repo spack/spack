@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class Pixman(AutotoolsPackage):
 
     homepage = "http://www.pixman.org"
     url = "https://cairographics.org/releases/pixman-0.32.6.tar.gz"
+
+    license("MIT")
 
     version("0.42.2", sha256="ea1480efada2fd948bc75366f7c349e1c96d3297d09a3fe62626e38e234a625e")
     version("0.42.0", sha256="07f74c8d95e4a43eb2b08578b37f40b7937e6c5b48597b3a0bb2c13a53f46c13")

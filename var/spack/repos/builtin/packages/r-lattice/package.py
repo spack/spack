@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class RLattice(RPackage):
     handle most nonstandard requirements. See ?Lattice for an introduction."""
 
     cran = "lattice"
+
+    license("GPL-2.0-or-later")
 
     version("0.21-8", sha256="8ad3d6974262e6cab6cc8fec38aa279b5b2f2524adf6f3eab56f68302b60c329")
     version("0.20-45", sha256="22388d92bdb7d3959da84d7308d9026dd8226ef07580783729e8ad2f7d7507ad")

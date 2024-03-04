@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class Libidn2(AutotoolsPackage, GNUMirrorPackage):
     homepage = "https://gitlab.com/libidn/libidn2"
     # URL must remain http:// so Spack can bootstrap curl
     gnu_mirror_path = "libidn/libidn2-2.0.5.tar.gz"
+
+    license("GPL-2.0-or-later OR LGPL-3.0-or-later")
 
     version("2.3.4", sha256="93caba72b4e051d1f8d4f5a076ab63c99b77faee019b72b9783b267986dbb45f")
     version("2.3.3", sha256="f3ac987522c00d33d44b323cae424e2cffcb4c63c6aa6cd1376edacbf1c36eb0")

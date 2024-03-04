@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class PyImportlibMetadata(PythonPackage):
     homepage = "https://importlib-metadata.readthedocs.io/"
     pypi = "importlib_metadata/importlib_metadata-1.2.0.tar.gz"
     git = "https://github.com/python/importlib_metadata"
+
+    license("Apache-2.0")
 
     version("6.6.0", sha256="92501cdf9cc66ebd3e612f1b4f0c0765dfa42f0fa38ffb319b6bd84dd675d705")
     version("5.1.0", sha256="d5059f9f1e8e41f80e9c56c2ee58811450c31984dfa625329ffd7c0dad88a73b")

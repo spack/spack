@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class ScineCore(CMakePackage):
     homepage = "https://scine.ethz.ch/"
     url = "https://github.com/qcscine/core/archive/refs/tags/4.0.2.tar.gz"
     git = "https://github.com/qcscine/core.git"
+
+    license("BSD-3-Clause")
 
     version("master", branch="master")
     version("4.0.2", sha256="7181c6f93d71def22f1e0e5767afc7587c04b49abc03516f6926394868e7adc6")

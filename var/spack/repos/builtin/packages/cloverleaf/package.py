@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,6 +18,8 @@ class Cloverleaf(MakefilePackage):
     git = "https://github.com/UK-MAC/CloverLeaf.git"
 
     tags = ["proxy-app"]
+
+    license("LGPL-3.0-or-later")
 
     version("master", branch="master", submodules=True)
     version("1.1", sha256="de87f7ee6b917e6b3d243ccbbe620370c62df890e3ef7bdbab46569b57be132f")

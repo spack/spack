@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -23,6 +23,9 @@ class BigdftChess(AutotoolsPackage, CudaPackage):
     variant("openmp", default=True, description="Enable OpenMP support")
     variant("scalapack", default=True, description="Enable SCALAPACK support")
     variant("ntpoly", default=False, description="Option to use NTPoly")
+    variant(
+        "shared", default=True, description="Build shared libraries"
+    )  # Not default in bigdft, but is typically the default expectation
     # variant('minpack', default=False,  description='Give the link-line for MINPACK')
 
     depends_on("autoconf", type="build")
@@ -40,8 +43,8 @@ class BigdftChess(AutotoolsPackage, CudaPackage):
     # depends_on('netlib-minpack', when='+minpack')
 
     for vers in ["1.9.0", "1.9.1", "1.9.2", "develop"]:
-        depends_on("bigdft-futile@{0}".format(vers), when="@{0}".format(vers))
-        depends_on("bigdft-atlab@{0}".format(vers), when="@{0}".format(vers))
+        depends_on(f"bigdft-futile@{vers}", when=f"@{vers}")
+        depends_on(f"bigdft-atlab@{vers}", when=f"@{vers}")
 
     configure_directory = "chess"
 
@@ -50,7 +53,7 @@ class BigdftChess(AutotoolsPackage, CudaPackage):
         prefix = self.prefix
 
         python_version = spec["python"].version.up_to(2)
-        pyyaml = join_path(spec["py-pyyaml"].prefix.lib, "python{0}".format(python_version))
+        pyyaml = join_path(spec["py-pyyaml"].prefix.lib, f"python{python_version}")
 
         openmp_flag = []
         if "+openmp" in spec:
@@ -63,23 +66,25 @@ class BigdftChess(AutotoolsPackage, CudaPackage):
         linalg.append(spec["blas"].libs.ld_flags)
 
         args = [
-            "FCFLAGS=%s" % " ".join(openmp_flag),
-            "LDFLAGS=%s" % " ".join(linalg),
-            "--with-ext-linalg=%s" % " ".join(linalg),
-            "--with-pyyaml-path=%s" % pyyaml,
-            "--with-futile-libs=%s" % spec["bigdft-futile"].libs.ld_flags,
-            "--with-futile-incs=%s" % spec["bigdft-futile"].headers.include_flags,
-            "--with-moduledir=%s" % prefix.include,
-            "--prefix=%s" % prefix,
+            f"FCFLAGS={' '.join(openmp_flag)}",
+            f"LDFLAGS={' '.join(linalg)}",
+            f"--with-ext-linalg={' '.join(linalg)}",
+            f"--with-pyyaml-path={pyyaml}",
+            f"--with-futile-libs={spec['bigdft-futile'].libs.ld_flags}",
+            f"--with-futile-incs={spec['bigdft-futile'].headers.include_flags}",
+            f"--with-moduledir={prefix.include}",
+            f"--prefix={prefix}",
             "--without-etsf-io",
         ]
+        if spec.satisfies("+shared"):
+            args.append("--enable-dynamic-libraries")
 
         if "+mpi" in spec:
-            args.append("CC=%s" % spec["mpi"].mpicc)
-            args.append("CXX=%s" % spec["mpi"].mpicxx)
-            args.append("FC=%s" % spec["mpi"].mpifc)
-            args.append("F90=%s" % spec["mpi"].mpifc)
-            args.append("F77=%s" % spec["mpi"].mpif77)
+            args.append(f"CC={spec['mpi'].mpicc}")
+            args.append(f"CXX={spec['mpi'].mpicxx}")
+            args.append(f"FC={spec['mpi'].mpifc}")
+            args.append(f"F90={spec['mpi'].mpifc}")
+            args.append(f"F77={spec['mpi'].mpif77}")
         else:
             args.append("--disable-mpi")
 
@@ -88,12 +93,12 @@ class BigdftChess(AutotoolsPackage, CudaPackage):
         else:
             args.append("--without-openmp")
 
-        args.append("--with-atlab-libs=%s" % spec["bigdft-atlab"].prefix.lib)
+        args.append(f"--with-atlab-libs={spec['bigdft-atlab'].prefix.lib}")
 
         if "+cuda" in spec:
             args.append("--enable-cuda-gpu")
-            args.append("--with-cuda-path=%s" % spec["cuda"].prefix)
-            args.append("--with-cuda-libs=%s" % spec["cuda"].libs.link_flags)
+            args.append(f"--with-cuda-path={spec['cuda'].prefix}")
+            args.append(f"--with-cuda-libs={spec['cuda'].libs.link_flags}")
 
         if "+minpack" in spec:
             args.append("--with-minpack")

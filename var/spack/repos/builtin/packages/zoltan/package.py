@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,6 +22,8 @@ class Zoltan(AutotoolsPackage):
 
     homepage = "https://sandialabs.github.io/Zoltan/"
     url = "https://github.com/sandialabs/Zoltan/archive/v3.83.tar.gz"
+
+    license("Unlicense")
 
     version("3.901", sha256="030c22d9f7532d3076e40cba1f03a63b2ee961d8cc9a35149af4a3684922a910")
     version("3.83", sha256="17320a9f08e47f30f6f3846a74d15bfea6f3c1b937ca93c0ab759ca02c40e56c")

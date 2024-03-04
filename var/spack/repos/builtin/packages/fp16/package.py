@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class Fp16(CMakePackage):
 
     homepage = "https://github.com/Maratyszcza/FP16/"
     git = "https://github.com/Maratyszcza/FP16.git"
+
+    license("MIT")
 
     version("master", branch="master")
     version("2020-05-14", commit="4dfe081cf6bcd15db339cf2680b9281b8451eeb3")  # py-torch@1.5:

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -30,6 +30,7 @@ import re
 import shutil
 import urllib.error
 import urllib.parse
+from pathlib import PurePath
 from typing import List, Optional
 
 import llnl.url
@@ -37,13 +38,14 @@ import llnl.util
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
 from llnl.string import comma_and, quote
-from llnl.util.filesystem import get_single_file, mkdirp, temp_cwd, temp_rename, working_dir
+from llnl.util.filesystem import get_single_file, mkdirp, temp_cwd, working_dir
 from llnl.util.symlink import symlink
 
 import spack.config
 import spack.error
 import spack.oci.opener
 import spack.url
+import spack.util.archive
 import spack.util.crypto as crypto
 import spack.util.git
 import spack.util.url as url_util
@@ -600,29 +602,21 @@ class VCSFetchStrategy(FetchStrategy):
         tty.debug("Source fetched with %s is already expanded." % self.url_attr)
 
     @_needs_stage
-    def archive(self, destination, **kwargs):
+    def archive(self, destination, *, exclude: Optional[str] = None):
         assert llnl.url.extension_from_path(destination) == "tar.gz"
         assert self.stage.source_path.startswith(self.stage.path)
+        # We need to prepend this dir name to every entry of the tarfile
+        top_level_dir = PurePath(self.stage.srcdir or os.path.basename(self.stage.source_path))
 
-        tar = which("tar", required=True)
-
-        patterns = kwargs.get("exclude", None)
-        if patterns is not None:
-            if isinstance(patterns, str):
-                patterns = [patterns]
-            for p in patterns:
-                tar.add_default_arg("--exclude=%s" % p)
-
-        with working_dir(self.stage.path):
-            if self.stage.srcdir:
-                # Here we create an archive with the default repository name.
-                # The 'tar' command has options for changing the name of a
-                # directory that is included in the archive, but they differ
-                # based on OS, so we temporarily rename the repo
-                with temp_rename(self.stage.source_path, self.stage.srcdir):
-                    tar("-czf", destination, self.stage.srcdir)
-            else:
-                tar("-czf", destination, os.path.basename(self.stage.source_path))
+        with working_dir(self.stage.source_path), spack.util.archive.gzip_compressed_tarfile(
+            destination
+        ) as (tar, _, _):
+            spack.util.archive.reproducible_tarfile_from_prefix(
+                tar=tar,
+                prefix=".",
+                skip=lambda entry: entry.name == exclude,
+                path_to_name=lambda path: (top_level_dir / PurePath(path)).as_posix(),
+            )
 
     def __str__(self):
         return "VCS: %s" % self.url
@@ -703,7 +697,6 @@ class GoFetchStrategy(VCSFetchStrategy):
 
 @fetcher
 class GitFetchStrategy(VCSFetchStrategy):
-
     """
     Fetch strategy that gets source code from a git repository.
     Use like this in a package:
@@ -936,9 +929,12 @@ class GitFetchStrategy(VCSFetchStrategy):
         git_commands = []
         submodules = self.submodules
         if callable(submodules):
-            submodules = list(submodules(self.package))
-            git_commands.append(["submodule", "init", "--"] + submodules)
-            git_commands.append(["submodule", "update", "--recursive"])
+            submodules = submodules(self.package)
+            if submodules:
+                if isinstance(submodules, str):
+                    submodules = [submodules]
+                git_commands.append(["submodule", "init", "--"] + submodules)
+                git_commands.append(["submodule", "update", "--recursive"])
         elif submodules:
             git_commands.append(["submodule", "update", "--init", "--recursive"])
 
@@ -1095,7 +1091,6 @@ class CvsFetchStrategy(VCSFetchStrategy):
 
 @fetcher
 class SvnFetchStrategy(VCSFetchStrategy):
-
     """Fetch strategy that gets source code from a subversion repository.
        Use like this in a package:
 
@@ -1190,7 +1185,6 @@ class SvnFetchStrategy(VCSFetchStrategy):
 
 @fetcher
 class HgFetchStrategy(VCSFetchStrategy):
-
     """
     Fetch strategy that gets source code from a Mercurial repository.
     Use like this in a package:

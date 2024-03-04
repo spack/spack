@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class Taskflow(CMakePackage):
     homepage = "https://github.com/taskflow/taskflow"
     url = "https://github.com/taskflow/taskflow/archive/v2.7.0.tar.gz"
     git = "https://github.com/taskflow/taskflow.git"
+
+    license("MIT")
 
     version("master", branch="master")
     version("3.6.0", sha256="5a1cd9cf89f93a97fcace58fd73ed2fc8ee2053bcb43e047acb6bc121c3edf4c")

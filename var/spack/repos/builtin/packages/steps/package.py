@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class Steps(CMakePackage):
     git = "https://github.com/CNS-OIST/STEPS.git"
 
     maintainers("tristan0x")
+
+    license("GPL-3.0-or-later")
 
     version("develop", branch="master", submodules=True)
     version("4.1.1", submodules=True)
@@ -83,7 +85,6 @@ class Steps(CMakePackage):
     def cmake_args(self):
         args = [
             self.define("BLAS_LIBRARIES", self.spec["blas"].libs.joined(";")),
-            self.define("PYTHON_EXECUTABLE", self.spec["python"].command),
             self.define("STEPS_INSTALL_PYTHON_DEPS", False),
             self.define_from_variant("BUILD_STOCHASTIC_TESTS", "stochtests"),
             self.define_from_variant("BUILD_TESTING", "codechecks"),

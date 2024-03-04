@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,6 +10,8 @@ class PyCelery(PythonPackage):
     """Celery - Distributed Task Queue."""
 
     pypi = "celery/celery-4.2.1.tar.gz"
+
+    license("BSD-3-Clause")
 
     version("5.2.3", sha256="e2cd41667ad97d4f6a2f4672d1c6a6ebada194c619253058b5f23704aaadaa82")
     version("5.0.0", sha256="313930fddde703d8e37029a304bf91429cd11aeef63c57de6daca9d958e1f255")

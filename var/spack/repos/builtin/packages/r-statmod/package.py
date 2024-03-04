@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,6 +18,8 @@ class RStatmod(RPackage):
     secure convergence algorithm."""
 
     cran = "statmod"
+
+    license("GPL-2.0-only OR GPL-3.0-only")
 
     version("1.5.0", sha256="d61c3ef9b09d55b42e038f8d767fa483ebbdec2a9c7172b1b0ccda0ae0016ec9")
     version("1.4.37", sha256="90d2c8a79e0cb291f2685686436bcf4c5b9abd2efb84759a8553d1b1adb76913")

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class Pcl(CMakePackage):
 
     homepage = "https://pointclouds.org/"
     url = "https://github.com/PointCloudLibrary/pcl/releases/download/pcl-1.11.1/source.tar.gz"
+
+    license("BSD-3-Clause")
 
     version("1.13.1", sha256="be4d499c066203a3c296e2f7e823d6209be5983415f2279310ed1c9abb361d30")
     version("1.13.0", sha256="bd110789f6a7416ed1c58da302afbdb80f8d297a9e23cc02fd78ab78b4762698")

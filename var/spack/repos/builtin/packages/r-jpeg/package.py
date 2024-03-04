@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class RJpeg(RPackage):
     and in-memory raw vectors."""
 
     cran = "jpeg"
+
+    license("GPL-2.0-only OR GPL-3.0-only")
 
     version("0.1-10", sha256="c8d9f609c3088f91ec4853d6cc0e66511038a465811dea79ca6a0c09519178ca")
     version("0.1-9", sha256="01a175442ec209b838a56a66a3908193aca6f040d537da7838d9368e46913072")

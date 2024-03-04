@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class Librsb(AutotoolsPackage):
     homepage = "http://librsb.sourceforge.net/"
     url = "http://download.sourceforge.net/librsb/librsb-1.3.0.1.tar.gz"
     list_url = "https://sourceforge.net/projects/librsb/files/"
+
+    license("LGPL-3.0-only")
 
     version("1.3.0.1", sha256="3fc024a410f94aca2a7139ae79f4d713b11fa83304293630c363786874c17db4")
     version("1.3.0.0", sha256="2ac8725d1f988f57df9383ae6b0bb2ed221ec935187d31ebb62ea95ee868a790")

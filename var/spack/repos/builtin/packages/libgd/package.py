@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -38,6 +38,13 @@ class Libgd(AutotoolsPackage):
     depends_on("libtiff")
     depends_on("fontconfig")
     depends_on("libx11")
+
+    # add missing '#include <limits.h>' in gd_gd2.c, which uses the constant 'INT_MAX'
+    patch(
+        "https://github.com/libgd/libgd/commit/c9b601a658a79e6ea2aad29fbf60ca6e24ccef1e.patch?full_index=1",
+        sha256="1dc3a72491427acbae2cd0c6d3b08c0814ffa2f9fee91269b8b46429cabb773d",
+        when="@2.2.4",
+    )
 
     def patch(self):
         p = self.spec["jpeg"].libs.search_flags

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class PyPythonDotenv(PythonPackage):
     pypi = "python-dotenv/python-dotenv-0.19.2.tar.gz"
 
     maintainers("jcpunk")
+
+    license("BSD-3-Clause")
 
     version("0.19.2", sha256="a5de49a31e953b45ff2d2fd434bbc2670e8db5273606c1e737cc6b93eff3655f")
 

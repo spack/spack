@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,6 +18,8 @@ class Solr(Package):
     list_depth = 1
 
     depends_on("java", type="run")
+
+    license("CC-BY-2.5")
 
     version("8.11.2", sha256="54d6ebd392942f0798a60d50a910e26794b2c344ee97c2d9b50e678a7066d3a6")
     version("8.6.0", sha256="4519ccdb531619df770f1065db6adcedc052c7aa94b42806d541966550956aa5")

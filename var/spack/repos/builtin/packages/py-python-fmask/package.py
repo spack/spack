@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class PyPythonFmask(PythonPackage):
 
     homepage = "https://www.pythonfmask.org/en/latest/"
     url = "https://github.com/ubarsc/python-fmask/releases/download/pythonfmask-0.5.8/python-fmask-0.5.8.tar.gz"
+
+    license("GPL-3.0-only")
 
     version("0.5.8", sha256="d55f54d3fecde818374017fdbe0ad173c893ef74c79ba2a7bc1890b7ec416c2f")
     version("0.5.7", sha256="da9dad1b977a50599d068dedaed007100b20322a79ca5d78f702712647c2c3f3")

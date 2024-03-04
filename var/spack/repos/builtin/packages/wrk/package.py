@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class Wrk(MakefilePackage):
 
     homepage = "https://github.com/wg/wrk"
     url = "https://github.com/wg/wrk/archive/4.1.0.tar.gz"
+
+    license("Apache-2.0")
 
     version("4.1.0", sha256="6fa1020494de8c337913fd139d7aa1acb9a020de6f7eb9190753aa4b1e74271e")
     version("4.0.2", sha256="a4a6ad6727733023771163e7250189a9a23e6253b5e5025191baa6092d5a26fb")

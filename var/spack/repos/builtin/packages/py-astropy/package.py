@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,8 @@ class PyAstropy(PythonPackage):
     homepage = "https://astropy.org/"
     pypi = "astropy/astropy-4.0.1.post1.tar.gz"
     git = "https://github.com/astropy/astropy.git"
+
+    license("BSD-3-Clause")
 
     version("5.1", sha256="1db1b2c7eddfc773ca66fa33bd07b25d5b9c3b5eee2b934e0ca277fa5b1b7b7e")
     version(

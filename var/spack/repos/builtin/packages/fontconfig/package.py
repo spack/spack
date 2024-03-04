@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,8 @@ class Fontconfig(AutotoolsPackage):
 
     homepage = "https://www.freedesktop.org/wiki/Software/fontconfig/"
     url = "https://www.freedesktop.org/software/fontconfig/release/fontconfig-2.12.3.tar.gz"
+
+    license("MIT")
 
     version("2.14.2", sha256="3ba2dd92158718acec5caaf1a716043b5aa055c27b081d914af3ccb40dce8a55")
     version("2.13.94", sha256="246d1640a7e54fba697b28e4445f4d9eb63dda1b511d19986249368ee7191882")

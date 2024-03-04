@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -522,6 +522,23 @@ def specfile_for(default_mock_concretization):
                 Token(TokenType.UNQUALIFIED_PACKAGE_NAME, value="openmpi"),
             ],
             "^[virtuals=mpi] openmpi",
+        ),
+        # Allow merging attributes, if deptypes match
+        (
+            "^[virtuals=mpi] openmpi+foo ^[virtuals=lapack] openmpi+bar",
+            [
+                Token(TokenType.START_EDGE_PROPERTIES, value="^["),
+                Token(TokenType.KEY_VALUE_PAIR, value="virtuals=mpi"),
+                Token(TokenType.END_EDGE_PROPERTIES, value="]"),
+                Token(TokenType.UNQUALIFIED_PACKAGE_NAME, value="openmpi"),
+                Token(TokenType.BOOL_VARIANT, value="+foo"),
+                Token(TokenType.START_EDGE_PROPERTIES, value="^["),
+                Token(TokenType.KEY_VALUE_PAIR, value="virtuals=lapack"),
+                Token(TokenType.END_EDGE_PROPERTIES, value="]"),
+                Token(TokenType.UNQUALIFIED_PACKAGE_NAME, value="openmpi"),
+                Token(TokenType.BOOL_VARIANT, value="+bar"),
+            ],
+            "^[virtuals=lapack,mpi] openmpi+bar+foo",
         ),
         (
             "^[deptypes=link,build] zlib",

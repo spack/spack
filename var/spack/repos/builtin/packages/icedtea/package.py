@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,8 @@ class Icedtea(AutotoolsPackage):
 
     homepage = "https://openjdk.java.net/projects/icedtea/"
     url = "https://icedtea.wildebeest.org/download/source/icedtea-3.4.0.tar.gz"
+
+    license("GPL-2.0-or-later")
 
     version("3.9.0", sha256="84a63bc59f4e101ce8fa183060a59c7e8cbe270945310e90c92b8609a9b8bc88")
     version("3.8.0", sha256="ef1a9110294d0a905833f1db30da0c8a88bd2bde8d92ddb711d72ec763cd25b0")

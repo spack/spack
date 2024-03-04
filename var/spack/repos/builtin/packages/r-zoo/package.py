@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,8 @@ class RZoo(RPackage):
     methods to extend standard generics."""
 
     cran = "zoo"
+
+    license("GPL-2.0-only OR GPL-3.0-only")
 
     version("1.8-12", sha256="e6c3862668f9e3422bced3b6fba485c76a1e91b48f5d6153822d6a61863b2fb8")
     version("1.8-11", sha256="848e50f875afe06f13422e32160082b0725159a8be98234ef358480e57029ca5")

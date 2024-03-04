@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class Libjpeg(AutotoolsPackage):
 
     homepage = "http://www.ijg.org"
     url = "https://www.ijg.org/files/jpegsrc.v9d.tar.gz"
+
+    license("BitTorrent-1.0")
 
     version("9e", sha256="4077d6a6a75aeb01884f708919d25934c93305e49f7e3f36db9129320e6f4f3d")
     version("9d", sha256="6c434a3be59f8f62425b2e3c077e785c9ce30ee5874ea1c270e843f273ba71ee")

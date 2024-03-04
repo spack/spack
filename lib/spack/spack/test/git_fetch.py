@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -363,3 +363,30 @@ def test_gitsubmodules_delete(
         assert not os.path.isdir(file_path)
         file_path = os.path.join(s.package.stage.source_path, "third_party/submodule1")
         assert not os.path.isdir(file_path)
+
+
+@pytest.mark.disable_clean_stage_check
+def test_gitsubmodules_falsey(
+    mock_git_repository, default_mock_concretization, mutable_mock_repo, monkeypatch
+):
+    """
+    Test GitFetchStrategy behavior when callable submodules returns Falsey
+    """
+
+    def submodules_callback(package):
+        return False
+
+    type_of_test = "tag-branch"
+    t = mock_git_repository.checks[type_of_test]
+
+    # Construct the package under test
+    s = default_mock_concretization("git-test")
+    args = copy.copy(t.args)
+    args["submodules"] = submodules_callback
+    monkeypatch.setitem(s.package.versions, Version("git"), args)
+    s.package.do_stage()
+    with working_dir(s.package.stage.source_path):
+        file_path = os.path.join(s.package.stage.source_path, "third_party/submodule0/r0_file_0")
+        assert not os.path.isfile(file_path)
+        file_path = os.path.join(s.package.stage.source_path, "third_party/submodule1/r0_file_1")
+        assert not os.path.isfile(file_path)

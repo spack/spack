@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,8 @@ class Bbmap(Package, SourceforgePackage):
 
     homepage = "https://sourceforge.net/projects/bbmap/"
     sourceforge_mirror_path = "bbmap/BBMap_38.63.tar.gz"
+
+    license("BSD-3-Clause-LBNL")
 
     version("39.01", sha256="98608da50130c47f3abd095b889cc87f60beeb8b96169b664bc9d849abe093e6")
     version("38.63", sha256="089064104526c8d696164aefa067f935b888bc71ef95527c72a98c17ee90a01f")

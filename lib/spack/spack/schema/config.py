@@ -1,19 +1,20 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Schema for config.yaml configuration file.
 
 .. literalinclude:: _spack_root/lib/spack/spack/schema/config.py
-   :lines: 13-
+   :lines: 17-
 """
+from typing import Any, Dict
 
 from llnl.util.lang import union_dicts
 
 import spack.schema.projections
 
 #: Properties for inclusion in other schemas
-properties = {
+properties: Dict[str, Any] = {
     "config": {
         "type": "object",
         "default": {},

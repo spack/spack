@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class Libmbim(AutotoolsPackage):
 
     homepage = "https://github.com/linux-mobile-broadband/libmbim/"
     url = "https://github.com/linux-mobile-broadband/libmbim/archive/1.20.4.tar.gz"
+
+    license("GPL-2.0-or-later AND LGPL-2.1-or-later")
 
     version("1.20.4", sha256="edb56afb862a7756dc097086d8fa791c93332f6f1daf27759eff6ddc99a0f50d")
     version("1.18.0", sha256="47003bfdf78bf32009a1d917f30c063079fa5bd4afc739d6d8ec356070b270df")

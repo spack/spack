@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class Cppunit(AutotoolsPackage):
     homepage = "https://wiki.freedesktop.org/www/Software/cppunit/"
     url = "https://dev-www.libreoffice.org/src/cppunit-1.13.2.tar.gz"
     git = "https://anongit.freedesktop.org/git/libreoffice/cppunit.git"
+
+    license("LGPL-2.1-or-later")
 
     version("master", branch="master")
     version("1.15_20220904", commit="78e64f0edb4f3271a6ddbcdf9cba05138597bfca")

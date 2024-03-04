@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class Chemfiles(CMakePackage):
     url = "https://github.com/chemfiles/chemfiles/archive/refs/tags/0.10.3.tar.gz"
 
     maintainers("RMeli")
+
+    license("BSD-3-Clause")
 
     version("0.10.4", sha256="b8232ddaae2953538274982838aa6c2df87d300f7e2f80e92c171581e06325ba")
     version("0.10.3", sha256="5f53d87a668a85bebf04e0e8ace0f1db984573de1c54891ba7d37d31cced0408")

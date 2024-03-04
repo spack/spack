@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -35,8 +35,6 @@ class Mpt(BundlePackage):
         return find_libraries(libraries, root=self.prefix, shared=True, recursive=True)
 
     def setup_dependent_build_environment(self, env, dependent_spec):
-        self.setup_run_environment(env)
-
         # use the Spack compiler wrappers under MPI
         env.set("MPICC_CC", spack_cc)
         env.set("MPICXX_CXX", spack_cxx)

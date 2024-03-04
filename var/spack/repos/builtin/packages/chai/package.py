@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,6 +18,8 @@ class Chai(CachedCMakePackage, CudaPackage, ROCmPackage):
     tags = ["ecp", "e4s", "radiuss"]
 
     maintainers("davidbeckingsale")
+
+    license("BSD-3-Clause")
 
     version("develop", branch="develop", submodules=False)
     version("main", branch="main", submodules=False)
@@ -60,6 +62,11 @@ class Chai(CachedCMakePackage, CudaPackage, ROCmPackage):
     version("1.0", tag="v1.0", commit="501a098ad879dc8deb4a74fcfe8c08c283a10627", submodules=True)
 
     variant("enable_pick", default=False, description="Enable pick method")
+    variant(
+        "separable_compilation",
+        default=True,
+        description="Build with CUDA_SEPARABLE_COMPILATION flag on ",
+    )
     variant("shared", default=True, description="Build Shared Libs")
     variant("raja", default=False, description="Build plugin for RAJA")
     variant("benchmarks", default=False, description="Build benchmarks.")
@@ -153,8 +160,9 @@ class Chai(CachedCMakePackage, CudaPackage, ROCmPackage):
 
         if "+cuda" in spec:
             entries.append(cmake_cache_option("ENABLE_CUDA", True))
-            entries.append(cmake_cache_option("CMAKE_CUDA_SEPARABLE_COMPILATION", True))
-            entries.append(cmake_cache_option("CUDA_SEPARABLE_COMPILATION", True))
+            if "+separable_compilation" in spec:
+                entries.append(cmake_cache_option("CMAKE_CUDA_SEPARABLE_COMPILATION", True))
+                entries.append(cmake_cache_option("CUDA_SEPARABLE_COMPILATION", True))
 
             if not spec.satisfies("cuda_arch=none"):
                 cuda_arch = spec.variants["cuda_arch"].value

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class LmSensors(MakefilePackage):
     homepage = "https://github.com/groeck/lm-sensors/"
     url = "https://github.com/groeck/lm-sensors/archive/V3-4-0.tar.gz"
     maintainers("G-Ragghianti")
+
+    license("LGPL-2.1-or-later AND GPL-2.0-or-later")
 
     version("3-6-0", sha256="0591f9fa0339f0d15e75326d0365871c2d4e2ed8aa1ff759b3a55d3734b7d197")
     version("3-5-0", sha256="f671c1d63a4cd8581b3a4a775fd7864a740b15ad046fe92038bcff5c5134d7e0")

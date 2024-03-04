@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -191,7 +191,7 @@ def test_view_files_not_ignored(
     pkg.do_install()
     pkg.assert_installed(spec.prefix)
 
-    install("view-dir-file")  # Arbitrary package to add noise
+    install("view-file")  # Arbitrary package to add noise
 
     viewpath = str(tmpdir.mkdir("view_{0}".format(cmd)))
 
@@ -205,7 +205,7 @@ def test_view_files_not_ignored(
         prefix_in_view = viewpath
         args = []
 
-    view(cmd, *(args + [viewpath, "view-not-ignored", "view-dir-file"]))
+    view(cmd, *(args + [viewpath, "view-not-ignored", "view-file"]))
     pkg.assert_installed(prefix_in_view)
 
     view("remove", viewpath, "view-not-ignored")

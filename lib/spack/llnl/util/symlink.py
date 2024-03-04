@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -189,6 +189,7 @@ def _windows_can_symlink() -> bool:
     import llnl.util.filesystem as fs
 
     fs.touchp(fpath)
+    fs.mkdirp(dpath)
 
     try:
         os.symlink(dpath, dlink)

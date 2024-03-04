@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class Nss(MakefilePackage):
 
     homepage = "https://developer.mozilla.org/en-US/docs/Mozilla/Projects/NSS"
     url = "https://ftp.mozilla.org/pub/security/nss/releases/NSS_3_67_RTM/src/nss-3.67.tar.gz"
+
+    license("MPL-2.0")
 
     version("3.87", sha256="68a1894496d3d158babc75f8a5dda3f55b7c1560573936e3b101a10fa4ac152d")
     version("3.75", sha256="fd571507827284644f4dd522a032acda2286835f6683ed22a1c2d3878cc58582")

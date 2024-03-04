@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,10 +19,16 @@ class KokkosKernels(CMakePackage, CudaPackage):
 
     maintainers("lucbv", "srajama1", "brian-kelley")
 
+    license("Apache-2.0 WITH LLVM-exception")
+
     # generate checksum for each release tarball with the following command
     # openssl sha256 kokkos-kernels-x.y.z.tar.gz
     version("develop", branch="develop")
     version("master", branch="master")
+    version("4.2.01", sha256="058052b3a40f5d4e447b7ded5c480f1b0d4aa78373b0bc7e43804d0447c34ca8")
+    version("4.2.00", sha256="c65df9a101dbbef2d8fd43c60c9ea85f2046bb3535fa1ad16e7c661ddd60401e")
+    version("4.1.00", sha256="d6a4108444ea226e43bf6a9c0dfc557f223a72b1142bf81aa78dd60e16ac2d56")
+    version("4.0.01", sha256="3f493fcb0244b26858ceb911be64092fbf7785616ad62c81abde0ea1ce86688a")
     version("4.0.00", sha256="750079d0be1282d18ecd280e130ca303044ac399f1e5864488284b92f5ce0a86")
     version("3.7.01", sha256="b2060f5894bdaf7f7d4793b90444fac260460cfa80595afcbcb955518864b446")
     version("3.7.00", sha256="51bc6db3995392065656848e2b152cfd1c3a95a951ab18a3934278113d59f32b")
@@ -41,6 +47,10 @@ class KokkosKernels(CMakePackage, CudaPackage):
     depends_on("kokkos")
     depends_on("kokkos@master", when="@master")
     depends_on("kokkos@develop", when="@develop")
+    depends_on("kokkos@4.2.01", when="@4.2.01")
+    depends_on("kokkos@4.2.00", when="@4.2.00")
+    depends_on("kokkos@4.1.00", when="@4.1.00")
+    depends_on("kokkos@4.0.01", when="@4.0.01")
     depends_on("kokkos@4.0.00", when="@4.0.00")
     depends_on("kokkos@3.7.01", when="@3.7.01")
     depends_on("kokkos@3.7.00", when="@3.7.00")

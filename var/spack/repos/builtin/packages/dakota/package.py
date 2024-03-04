@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -40,6 +40,8 @@ class Dakota(CMakePackage):
     git = "https://github.com/snl-dakota/dakota.git"
     url = "https://dakota.sandia.gov/sites/default/files/distributions/public/dakota-6.12-release-public.src.tar.gz"
 
+    license("LGPL-2.1-or-later")
+
     version(
         "6.18",
         tag="v6.18.0",
@@ -64,6 +66,7 @@ class Dakota(CMakePackage):
     depends_on("perl-data-dumper", type="build", when="@6.12:")
     depends_on("boost@:1.68.0", when="@:6.12")
     depends_on("boost@1.69.0:", when="@6.18:")
+    depends_on("boost +filesystem +program_options +regex +serialization +system")
 
     # TODO: replace this with an explicit list of components of Boost,
     # for instance depends_on('boost +filesystem')

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,8 @@ class Ntpoly(CMakePackage):
 
     homepage = "https://william-dawson.github.io/NTPoly/"
     url = "https://github.com/william-dawson/NTPoly/archive/ntpoly-v2.3.1.tar.gz"
+
+    license("MIT")
 
     version("2.3.1", sha256="af8c7690321607fbdee9671b9cb3acbed945148014e0541435858cf82bfd887e")
 

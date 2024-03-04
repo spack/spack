@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,8 @@ class HwProbe(MakefilePackage):
 
     homepage = "https://github.com/linuxhw/hw-probe"
     url = "https://github.com/linuxhw/hw-probe/archive/1.5.tar.gz"
+
+    license("LGPL-2.1-or-later OR BSD-4-Clause")
 
     version("1.5", sha256="8bb7d6ff272c1412e26fcfd86e9df5c3e34e1584552404b930c281b8498b25ea")
     version("1.4", sha256="90f3ea83bf641348b209e4a2a910f65d836ae7828c0be0f660236ea413bc46bb")

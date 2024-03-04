@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class Augustus(MakefilePackage):
 
     homepage = "https://bioinf.uni-greifswald.de/augustus/"
     url = "https://github.com/Gaius-Augustus/Augustus/archive/v3.3.4.tar.gz"
+
+    license("Artistic-1.0")
 
     # Releases have moved to github
     version("3.5.0", sha256="5ed6ce6106303b800c5e91d37a250baff43b20824657b853ae04d11ad8bdd686")

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -117,3 +117,14 @@ class IntelOneapiDal(IntelOneApiLibraryPackage):
     @property
     def component_dir(self):
         return "dal"
+
+    @property
+    def headers(self):
+        # This should match the directories added to CPATH by
+        # env/vars.sh for the component
+        if self.v2_layout:
+            dirs = [self.component_prefix.include, self.component_prefix.include.dal]
+        else:
+            dirs = [self.component_prefix.include]
+
+        return self.header_directories(dirs)

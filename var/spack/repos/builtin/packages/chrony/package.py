@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class Chrony(AutotoolsPackage):
 
     homepage = "https://chrony.tuxfamily.org/"
     url = "https://github.com/mlichvar/chrony/archive/3.5.1.tar.gz"
+
+    license("GPL-2.0-or-later")
 
     version("3.5.1", sha256="881085b944a14853402e1c5cff4de5d815ff104ec6e12eea51c12e42f32f71bd")
     version("3.5", sha256="145a270fe4df42931f175e37dd3771a7e714122ae361921a4b93082e648a08c5")

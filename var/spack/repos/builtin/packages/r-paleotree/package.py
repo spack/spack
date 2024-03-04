@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class RPaleotree(RPackage):
     phylogenies containing extinct (i.e. fossil) lineages"""
 
     cran = "paleotree"
+
+    license("CC0-1.0")
 
     version("3.4.5", sha256="c4dceb3352b74730643aa9f62ceb7f020ce6763614ba334723aadf0eb003d125")
     version("3.4.4", sha256="8809c3395e6904669db8c7cc3b54dd5c3c76948c8568d310cf02e4a5dbc678e4")

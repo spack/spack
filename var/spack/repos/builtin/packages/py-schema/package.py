@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,8 @@ class PySchema(PythonPackage):
 
     homepage = "https://github.com/keleshev/schema"
     pypi = "schema/schema-0.7.5.tar.gz"
+
+    license("MIT")
 
     version("0.7.5", sha256="f06717112c61895cabc4707752b88716e8420a8819d71404501e114f91043197")
 

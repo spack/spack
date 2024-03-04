@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class Flcl(CMakePackage):
     url = "https://github.com/kokkos/kokkos-fortran-interop/releases/download/0.5.0/flcl-0.5.0.tar.gz"
 
     maintainers("womeld", "agaspar")
+
+    license("BSD-3-Clause")
 
     version("develop", branch="develop")
     version("0.99.0", sha256="edb8310154e5e5cf315dad63cd59f13b2537e0ba698869ce9757b04e38047464")

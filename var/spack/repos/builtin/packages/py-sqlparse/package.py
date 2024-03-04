@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,8 @@ class PySqlparse(PythonPackage):
 
     homepage = "https://github.com/andialbrecht/sqlparse"
     url = "https://github.com/andialbrecht/sqlparse/archive/0.3.1.tar.gz"
+
+    license("BSD-3-Clause")
 
     version("0.4.1", sha256="f75cdec98a4cc8296890279d744e1ae8618bb14dbad77e3d0637f0d7bb5d6535")
     version("0.3.1", sha256="344b539482b75c244ac69fbb160d0f4d63a288a392475c8418ca692c594561f9")

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class OpenIsns(AutotoolsPackage):
 
     homepage = "https://github.com/open-iscsi/open-isns"
     url = "https://github.com/open-iscsi/open-isns/archive/v0.100.tar.gz"
+
+    license("LGPL-2.1-or-later")
 
     version("0.100", sha256="b011edbb0f31690aaca902a8ecf4e1f17b01d6c9e9afc51909d26b0993b4328f")
     version("0.99", sha256="a8febecf888d5a38abfa2fcb290194d993b1a7f5bea0cb61f5cf2e9f9e5273c2")

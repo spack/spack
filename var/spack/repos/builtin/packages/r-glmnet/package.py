@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,8 @@ class RGlmnet(RPackage):
     described in the paper linked to via the URL below."""
 
     cran = "glmnet"
+
+    license("GPL-2.0-only")
 
     version("4.1-7", sha256="b3a0b606d99df0256eb68e6ebd271e071b246900a4379641af2e7d548c70eaa8")
     version("4.1-4", sha256="f6b0f70a0b3d81ff91c2b94f795a2a32e90dd458270f1a29e49e085dd65000f9")

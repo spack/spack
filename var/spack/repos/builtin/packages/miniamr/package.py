@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,8 @@ class Miniamr(MakefilePackage):
     url = "https://github.com/Mantevo/miniAMR/archive/v1.4.0.tar.gz"
 
     tags = ["proxy-app", "ecp-proxy-app"]
+
+    license("LGPL-3.0-only")
 
     version("master", branch="master")
     version("1.6.6", sha256="a7f79fae49e433ef8350cbd34cbf57c486089cf7ac0d1f1f3b23c820d3e5bb9f")

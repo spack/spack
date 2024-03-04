@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class LlvmOpenmp(CMakePackage):
 
     homepage = "https://openmp.llvm.org/"
     url = "https://github.com/llvm/llvm-project/releases/download/llvmorg-14.0.6/openmp-14.0.6.src.tar.xz"
+
+    license("Apache-2.0")
 
     version("16.0.0", sha256="e30f69c6533157ec4399193ac6b158807610815accfbed98695d72074e4bedd0")
     version("14.0.6", sha256="4f731ff202add030d9d68d4c6daabd91d3aeed9812e6a5b4968815cfdff0eb1f")

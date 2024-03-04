@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class Help2man(AutotoolsPackage, GNUMirrorPackage):
 
     homepage = "https://www.gnu.org/software/help2man/"
     gnu_mirror_path = "help2man/help2man-1.47.11.tar.xz"
+
+    license("GPL-3.0-or-later")
 
     version("1.49.3", sha256="4d7e4fdef2eca6afe07a2682151cea78781e0a4e8f9622142d9f70c083a2fd4f")
     version("1.47.16", sha256="3ef8580c5b86e32ca092ce8de43df204f5e6f714b0cd32bc6237e6cd0f34a8f4")

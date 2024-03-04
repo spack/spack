@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,8 @@ class PyPartd(PythonPackage):
 
     homepage = "https://github.com/dask/partd/"
     pypi = "partd/partd-0.3.8.tar.gz"
+
+    license("BSD-3-Clause")
 
     version("1.4.0", sha256="aa0ff35dbbcc807ae374db56332f4c1b39b46f67bf2975f5151e0b4186aed0d5")
     version("1.1.0", sha256="6e258bf0810701407ad1410d63d1a15cfd7b773fd9efe555dac6bb82cc8832b0")

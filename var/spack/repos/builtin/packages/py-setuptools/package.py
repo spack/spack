@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,9 @@ class PySetuptools(Package, PythonExtension):
     list_url = "https://pypi.org/simple/setuptools/"
 
     tags = ["build-tools"]
+
+    # Requires railroad
+    skip_modules = ["setuptools._vendor", "pkg_resources._vendor"]
 
     version(
         "68.0.0",

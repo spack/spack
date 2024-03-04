@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class Leptonica(CMakePackage):
 
     homepage = "http://www.leptonica.org/"
     url = "https://github.com/DanBloomberg/leptonica/archive/1.80.0.tar.gz"
+
+    license("custom")
 
     version("1.83.1", sha256="4289d0a4224b614010072253531c0455a33a4d7c7a0017fe7825ed382290c0da")
     version("1.81.0", sha256="70ebc04ff8b9684205bd1d01843c635a8521255b74813bf7cce9a33368f7952c")

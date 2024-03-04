@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,7 +20,11 @@ class PyTesorter(PythonPackage):
 
     maintainers("snehring")
 
+    license("GPL-3.0-or-later")
+
     version("1.4.6", sha256="c6952c98fa78d0084742fd6c7d2d1204d36db103c3cbeb19e52093cd9d311523")
+
+    depends_on("py-setuptools", type="build")
 
     depends_on("py-biopython", type=("build", "run"))
     depends_on("py-xopen", type=("build", "run"))

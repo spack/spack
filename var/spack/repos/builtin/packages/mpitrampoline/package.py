@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class Mpitrampoline(CMakePackage):
     git = "https://github.com/eschnett/MPItrampoline.git"
 
     maintainers("eschnett")
+
+    license("MIT")
 
     version("develop", branch="main")
     version("5.3.1", sha256="8671370750587f212f059138abc6dcaa5a1079d3dbd9189dc21bf353611159eb")
@@ -88,7 +90,6 @@ class Mpitrampoline(CMakePackage):
         env.set("MPIF90", join_path(self.prefix.bin, "mpifc"))
 
     def setup_dependent_build_environment(self, env, dependent_spec):
-        self.setup_run_environment(env)
         # Use the Spack compiler wrappers under MPI
         env.set("MPITRAMPOLINE_CC", spack_cc)
         env.set("MPITRAMPOLINE_CXX", spack_cxx)

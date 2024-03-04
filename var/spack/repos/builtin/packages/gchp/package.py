@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class Gchp(CMakePackage):
     url = "https://github.com/geoschem/GCHP/archive/13.4.0.tar.gz"
     git = "https://github.com/geoschem/GCHP.git"
     maintainers("lizziel", "laestrada")
+
+    license("MIT")
 
     version("13.4.0", commit="d8c6d4d8db1c5b0ba54d4893185d999a619afc58", submodules=True)
     version("13.3.4", commit="efb2346381648ffff04ce441d5d61d7fec0c53fe", submodules=True)

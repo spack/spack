@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,6 +22,7 @@ class Geant4(CMakePackage):
 
     maintainers("drbenmorgan")
 
+    version("11.2.1", sha256="76c9093b01128ee2b45a6f4020a1bcb64d2a8141386dea4674b5ae28bcd23293")
     version("11.2.0", sha256="9ff544739b243a24dac8f29a4e7aab4274fc0124fd4e1c4972018213dc6991ee")
     version("11.1.3", sha256="5d9a05d4ccf8b975649eab1d615fc1b8dce5937e01ab9e795bffd04149240db6")
     version("11.1.2", sha256="e9df8ad18c445d9213f028fd9537e174d6badb59d94bab4eeae32f665beb89af")
@@ -61,7 +62,7 @@ class Geant4(CMakePackage):
     )
 
     variant("threads", default=True, description="Build with multithreading")
-    variant("vecgeom", default=False, description="Enable vecgeom support", when="@10.3:")
+    variant("vecgeom", default=False, description="Enable vecgeom support", when="@10.4:")
     variant("opengl", default=False, description="Optional OpenGL support")
     variant("x11", default=False, description="Optional X11 support")
     variant("motif", default=False, description="Optional motif support")
@@ -121,7 +122,6 @@ class Geant4(CMakePackage):
         depends_on("vecgeom@1.1.5", when="@10.6.0:10.6")
         depends_on("vecgeom@1.1.0", when="@10.5.0:10.5")
         depends_on("vecgeom@0.5.2", when="@10.4.0:10.4")
-        depends_on("vecgeom@0.3rc", when="@10.3.0:10.3")
 
     def std_when(values):
         for v in values:

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,8 @@ class Mbedtls(MakefilePackage):
     homepage = "https://tls.mbed.org"
     url = "https://github.com/ARMmbed/mbedtls/archive/mbedtls-2.2.1.tar.gz"
     maintainers("haampie")
+
+    license("Apache-2.0 OR GPL-2.0-or-later")
 
     # version 3.x
     version("3.3.0", sha256="a22ff38512697b9cd8472faa2ea2d35e320657f6d268def3a64765548b81c3ec")

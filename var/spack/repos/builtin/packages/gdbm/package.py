@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class Gdbm(AutotoolsPackage, GNUMirrorPackage):
 
     homepage = "https://www.gnu.org.ua/software/gdbm/gdbm.html"
     gnu_mirror_path = "gdbm/gdbm-1.13.tar.gz"
+
+    license("GPL-3.0-or-later")
 
     version("1.23", sha256="74b1081d21fff13ae4bd7c16e5d6e504a4c26f7cde1dca0d963a484174bbcacd")
     version("1.22", sha256="f366c823a6724af313b6bbe975b2809f9a157e5f6a43612a72949138d161d762")

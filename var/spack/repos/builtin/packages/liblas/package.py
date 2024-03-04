@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class Liblas(CMakePackage):
 
     homepage = "https://liblas.org/"
     url = "https://download.osgeo.org/liblas/libLAS-1.8.1.tar.bz2"
+
+    license("BSD-3-Clause")
 
     version("1.8.1", sha256="9adb4a98c63b461ed2bc82e214ae522cbd809cff578f28511122efe6c7ea4e76")
 

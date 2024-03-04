@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,6 +18,8 @@ class Veccore(CMakePackage):
     git = "https://github.com/root-project/veccore.git"
 
     maintainers("drbenmorgan", "sethrj")
+
+    license("Apache-2.0")
 
     version("master", branch="master")
     version("0.8.1", sha256="7d7983947c2c6faa55c908b3a968f19f96f4d5c909447c536de30c34b439e008")

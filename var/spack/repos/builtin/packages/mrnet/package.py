@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class Mrnet(AutotoolsPackage):
     url = "https://ftp.cs.wisc.edu/pub/paradyn/mrnet/mrnet_5.0.1.tar.gz"
     git = "https://github.com/dyninst/mrnet.git"
     list_url = "http://ftp.cs.wisc.edu/paradyn/mrnet"
+
+    license("LGPL-2.1-or-later")
 
     version("master", branch="master")
     version("5.0.1-4", commit="2c5632aa27188de6866abc49bf1de70fb6b27af9")

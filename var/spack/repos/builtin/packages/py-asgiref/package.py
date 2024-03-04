@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,8 @@ class PyAsgiref(PythonPackage):
 
     homepage = "https://asgi.readthedocs.io/en/latest/"
     url = "https://github.com/django/asgiref/archive/3.2.7.tar.gz"
+
+    license("BSD-3-Clause")
 
     version("3.5.2", sha256="62f04f81110898e471a7d5b37f88c923c2864d43fa6abb66a95980becb1a2ba4")
     version("3.5.0", sha256="2f8abc20f7248433085eda803936d98992f1343ddb022065779f37c5da0181d0")

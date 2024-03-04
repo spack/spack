@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,10 @@ class PyPytest(PythonPackage):
     pypi = "pytest/pytest-5.2.1.tar.gz"
     git = "https://github.com/pytest-dev/pytest"
 
+    license("MIT")
+
+    version("8.0.0", sha256="249b1b0864530ba251b7438274c4d251c58d868edaaec8762893ad4a0d71c36c")
+    version("7.4.4", sha256="2cf0005922c6ace4a3e2ec8b4080eb0d9753fdc93107415332f50ce9e7994280")
     version("7.3.2", sha256="ee990a3cc55ba808b80795a79944756f315c67c12b56abd3ac993a7b8c17030b")
     version("7.2.1", sha256="d45e0952f3727241918b8fd0f376f5ff6b301cc0777c6f9a556935c92d8a7d42")
     version("7.1.3", sha256="4f365fec2dff9c1162f834d9f18af1ba13062db0c708bf7b946f8a5c76180c39")
@@ -36,6 +40,7 @@ class PyPytest(PythonPackage):
     version("3.0.2", sha256="64d8937626dd2a4bc15ef0edd307d26636a72a3f3f9664c424d78e40efb1e339")
 
     # python_requires
+    depends_on("python@3.8:", when="@8:", type=("build", "run"))
     depends_on("python@3.7:", when="@7.1:", type=("build", "run"))
     # see https://github.com/pytest-dev/pytest/releases/tag/7.3.2
     depends_on("python@:3.11", when="@:7.3.1", type=("build", "run"))
@@ -53,7 +58,8 @@ class PyPytest(PythonPackage):
     # install_requires
     depends_on("py-iniconfig", when="@6.0:", type=("build", "run"))
     depends_on("py-packaging", when="@4.6:", type=("build", "run"))
-    depends_on("py-pluggy@0.12:1", when="@6.2:", type=("build", "run"))
+    depends_on("py-pluggy@1.3:1", when="@8:", type=("build", "run"))
+    depends_on("py-pluggy@0.12:1", when="@6.2:7", type=("build", "run"))
     depends_on("py-pluggy@0.12:0", when="@4.6:6.1", type=("build", "run"))
     depends_on("py-pluggy@0.9.0:0.9,0.11:0", when="@4.5.0:4.5", type=("build", "run"))
     depends_on("py-pluggy@0.11:", when="@4.4.2:4.4", type=("build", "run"))

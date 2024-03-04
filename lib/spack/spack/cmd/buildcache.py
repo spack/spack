@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,13 +7,14 @@ import copy
 import glob
 import hashlib
 import json
+import multiprocessing
 import multiprocessing.pool
 import os
 import shutil
 import sys
 import tempfile
 import urllib.request
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple, Union
 
 import llnl.util.tty as tty
 from llnl.string import plural
@@ -326,8 +327,30 @@ def _progress(i: int, total: int):
     return ""
 
 
-def _make_pool():
-    return multiprocessing.pool.Pool(determine_number_of_jobs(parallel=True))
+class NoPool:
+    def map(self, func, args):
+        return [func(a) for a in args]
+
+    def starmap(self, func, args):
+        return [func(*a) for a in args]
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *args):
+        pass
+
+
+MaybePool = Union[multiprocessing.pool.Pool, NoPool]
+
+
+def _make_pool() -> MaybePool:
+    """Can't use threading because it's unsafe, and can't use spawned processes because of globals.
+    That leaves only forking"""
+    if multiprocessing.get_start_method() == "fork":
+        return multiprocessing.pool.Pool(determine_number_of_jobs(parallel=True))
+    else:
+        return NoPool()
 
 
 def push_fn(args):
@@ -571,6 +594,15 @@ def _put_manifest(
     base_manifest, base_config = base_images[architecture]
     env = _retrieve_env_dict_from_config(base_config)
 
+    # If the base image uses `vnd.docker.distribution.manifest.v2+json`, then we use that too.
+    # This is because Singularity / Apptainer is very strict about not mixing them.
+    base_manifest_mediaType = base_manifest.get(
+        "mediaType", "application/vnd.oci.image.manifest.v1+json"
+    )
+    use_docker_format = (
+        base_manifest_mediaType == "application/vnd.docker.distribution.manifest.v2+json"
+    )
+
     spack.user_environment.environment_modifications_for_specs(*specs).apply_modifications(env)
 
     # Create an oci.image.config file
@@ -602,8 +634,8 @@ def _put_manifest(
     # Upload the config file
     upload_blob_with_retry(image_ref, file=config_file, digest=config_file_checksum)
 
-    oci_manifest = {
-        "mediaType": "application/vnd.oci.image.manifest.v1+json",
+    manifest = {
+        "mediaType": base_manifest_mediaType,
         "schemaVersion": 2,
         "config": {
             "mediaType": base_manifest["config"]["mediaType"],
@@ -614,7 +646,11 @@ def _put_manifest(
             *(layer for layer in base_manifest["layers"]),
             *(
                 {
-                    "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+                    "mediaType": (
+                        "application/vnd.docker.image.rootfs.diff.tar.gzip"
+                        if use_docker_format
+                        else "application/vnd.oci.image.layer.v1.tar+gzip"
+                    ),
                     "digest": str(checksums[s.dag_hash()].compressed_digest),
                     "size": checksums[s.dag_hash()].size,
                 }
@@ -623,11 +659,11 @@ def _put_manifest(
         ],
     }
 
-    if annotations:
-        oci_manifest["annotations"] = annotations
+    if not use_docker_format and annotations:
+        manifest["annotations"] = annotations
 
     # Finally upload the manifest
-    upload_manifest_with_retry(image_ref, oci_manifest=oci_manifest)
+    upload_manifest_with_retry(image_ref, manifest=manifest)
 
     # delete the config file
     os.unlink(config_file)
@@ -663,7 +699,7 @@ def _push_oci(
     base_image: Optional[ImageReference],
     installed_specs_with_deps: List[Spec],
     tmpdir: str,
-    pool: multiprocessing.pool.Pool,
+    pool: MaybePool,
     force: bool = False,
 ) -> Tuple[List[str], Dict[str, Tuple[dict, dict]], Dict[str, spack.oci.oci.Blob]]:
     """Push specs to an OCI registry
@@ -779,11 +815,10 @@ def _config_from_tag(image_ref: ImageReference, tag: str) -> Optional[dict]:
     return config if "spec" in config else None
 
 
-def _update_index_oci(
-    image_ref: ImageReference, tmpdir: str, pool: multiprocessing.pool.Pool
-) -> None:
-    response = spack.oci.opener.urlopen(urllib.request.Request(url=image_ref.tags_url()))
-    spack.oci.opener.ensure_status(response, 200)
+def _update_index_oci(image_ref: ImageReference, tmpdir: str, pool: MaybePool) -> None:
+    request = urllib.request.Request(url=image_ref.tags_url())
+    response = spack.oci.opener.urlopen(request)
+    spack.oci.opener.ensure_status(request, response, 200)
     tags = json.load(response)["tags"]
 
     # Fetch all image config files in parallel

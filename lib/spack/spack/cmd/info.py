@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -474,13 +474,7 @@ def print_virtuals(pkg, args):
     color.cprint("")
     color.cprint(section_title("Virtual Packages: "))
     if pkg.provided:
-        inverse_map = {}
-        for spec, whens in pkg.provided.items():
-            for when in whens:
-                if when not in inverse_map:
-                    inverse_map[when] = set()
-                inverse_map[when].add(spec)
-        for when, specs in reversed(sorted(inverse_map.items())):
+        for when, specs in reversed(sorted(pkg.provided.items())):
             line = "    %s provides %s" % (
                 when.colorized(),
                 ", ".join(s.colorized() for s in specs),

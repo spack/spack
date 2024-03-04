@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class Libunwind(AutotoolsPackage):
     url = "http://download.savannah.gnu.org/releases/libunwind/libunwind-1.1.tar.gz"
     git = "https://github.com/libunwind/libunwind"
     maintainers("mwkrentel")
+
+    license("MIT")
 
     version("master", branch="master")
     version("1.6-stable", branch="v1.6-stable")

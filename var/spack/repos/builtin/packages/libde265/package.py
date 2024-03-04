@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,8 @@ class Libde265(CMakePackage):
     url = "https://github.com/strukturag/libde265/archive/refs/tags/v1.0.9.tar.gz"
 
     maintainers("benkirk")
+
+    license("LGPL-3.0-or-later")
 
     version("1.0.9", sha256="153554f407718a75f1e0ae197d35b43147ce282118a54f894554dbe27c32163d")
 

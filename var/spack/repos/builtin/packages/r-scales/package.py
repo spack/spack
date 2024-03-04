@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class RScales(RPackage):
     automatically determining breaks and labels for axes and legends."""
 
     cran = "scales"
+
+    license("MIT")
 
     version("1.2.1", sha256="59453e6dbdafee93dfb101e4d86048a62a12898134259d3ef02d65aeec57ed08")
     version("1.2.0", sha256="185d50240e6b3e84d36ec7fbca6aef7a85db7c8c1b0dde51d4af28d363ce02df")

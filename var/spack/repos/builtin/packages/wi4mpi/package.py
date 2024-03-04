@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class Wi4mpi(CMakePackage):
     homepage = "https://github.com/cea-hpc/wi4mpi"
     url = "https://github.com/cea-hpc/wi4mpi/archive/v3.4.1.tar.gz"
     maintainers("adrien-cotte", "marcjoos-cea")
+
+    license("CECILL-B")
 
     version("3.6.4", sha256="be1732a1aed1e2946873951a344b572f11f2a55cd06c634580a9398b5877e22a")
     version("3.6.3", sha256="c327babc892cc3c2bdddfacf3011e6fcb7e00a04e814de31f5e707cba3199c5c")

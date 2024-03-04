@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class PyPennylane(PythonPackage):
     url = "https://github.com/PennyLaneAI/pennylane/archive/refs/tags/v0.32.0.tar.gz"
 
     maintainers("mlxd", "AmintorDusko", "marcodelapierre")
+
+    license("Apache-2.0")
 
     version("master", branch="master")
     version("0.32.0", sha256="8a2206268d7cae0a59f9067b6075175eec93f4843519b371f02716c49a22e750")

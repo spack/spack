@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,6 +21,8 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
     tags = ["radiuss", "e4s"]
 
     maintainers("davidbeckingsale")
+
+    license("MIT")
 
     version("develop", branch="develop", submodules=False)
     version("main", branch="main", submodules=False)
@@ -177,8 +179,9 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
     depends_on("cmake@3.9:", when="+cuda", type="build")
     depends_on("cmake@3.14:", when="@2022.03.0:", type="build")
 
-    depends_on("blt@0.5.2:", type="build", when="@2022.10.0:")
-    depends_on("blt@0.5.0:", type="build", when="@2022.03.0:")
+    depends_on("blt", type="build")
+    depends_on("blt@0.5.2:0.5.3", type="build", when="@2022.10.0")
+    depends_on("blt@0.5.0:0.5.3", type="build", when="@2022.03.0:2022.03.1")
     depends_on("blt@0.4.1", type="build", when="@6.0.0")
     depends_on("blt@0.4.0:", type="build", when="@4.1.3:5.0.1")
     depends_on("blt@0.3.6:", type="build", when="@:4.1.2")
@@ -192,6 +195,7 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
     depends_on("camp@main", when="@develop")
     depends_on("camp+openmp", when="+openmp")
     depends_on("camp~cuda", when="~cuda")
+    depends_on("camp~rocm", when="~rocm")
 
     with when("@5.0.0:"):
         with when("+cuda"):
@@ -310,9 +314,7 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
         if spec.satisfies("@5.0.0:"):
             entries.append(cmake_cache_path("camp_DIR", spec["camp"].prefix))
         entries.append(cmake_cache_option("{}ENABLE_NUMA".format(option_prefix), "+numa" in spec))
-        entries.append(
-            cmake_cache_option("{}ENABLE_OPENMP".format(option_prefix), "+openmp" in spec)
-        )
+        entries.append(cmake_cache_option("ENABLE_OPENMP", "+openmp" in spec))
         entries.append(cmake_cache_option("ENABLE_BENCHMARKS", "tests=benchmarks" in spec))
         entries.append(
             cmake_cache_option("{}ENABLE_EXAMPLES".format(option_prefix), "+examples" in spec)

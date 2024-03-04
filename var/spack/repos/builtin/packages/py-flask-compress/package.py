@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class PyFlaskCompress(PythonPackage):
 
     homepage = "https://github.com/libwilliam/flask-compress"
     pypi = "Flask-Compress/Flask-Compress-1.4.0.tar.gz"
+
+    license("MIT")
 
     version("1.4.0", sha256="468693f4ddd11ac6a41bca4eb5f94b071b763256d54136f77957cfee635badb3")
 

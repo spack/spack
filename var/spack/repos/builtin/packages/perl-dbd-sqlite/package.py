@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,8 @@ class PerlDbdSqlite(PerlPackage):
 
     homepage = "https://metacpan.org/pod/DBD::SQLite"
     url = "https://cpan.metacpan.org/authors/id/I/IS/ISHIGAKI/DBD-SQLite-1.58.tar.gz"
+
+    license("GPL-1.0-or-later OR Artistic-1.0-Perl")
 
     version("1.72", sha256="5ca41e61eb52b52bd862a3088b912a75fe70910ac789b9a9983e0a449e94f551")
     version("1.59_01", sha256="b6f331e4054688572c2010e72c355f7ba3f30d86051e50d9925d34d9df1001e2")

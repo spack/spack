@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class Grafana(Package):
 
     homepage = "https://grafana.com"
     url = "https://github.com/grafana/grafana/archive/v6.7.3.tar.gz"
+
+    license("AGPL-3.0-only")
 
     version("6.7.3", sha256="2477b70bfc8770ab844ee683f72b5efe8a47324b9779663d8e5259ffb9ddb8d8")
     version("6.7.2", sha256="dc81cdb77c1c0ae99ae3302a0ef8b3d577f4a717208a90df65da8fcb282122fc")

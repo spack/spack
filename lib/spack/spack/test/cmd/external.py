@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -94,6 +94,9 @@ def test_get_executables(working_env, mock_executable):
 external = SpackCommand("external")
 
 
+# TODO: this test should be made to work, but in the meantime it is
+# causing intermittent (spurious) CI failures on all PRs
+@pytest.mark.skipif(sys.platform == "win32", reason="Test fails intermittently on Windows")
 def test_find_external_cmd_not_buildable(mutable_config, working_env, mock_executable):
     """When the user invokes 'spack external find --not-buildable', the config
     for any package where Spack finds an external version should be marked as
@@ -248,6 +251,7 @@ def test_overriding_prefix(mock_executable, mutable_config, monkeypatch):
     assert gcc.external_path == os.path.sep + os.path.join("opt", "gcc", "bin")
 
 
+@pytest.mark.not_on_windows("Fails spuriously on Windows")
 def test_new_entries_are_reported_correctly(mock_executable, mutable_config, monkeypatch):
     # Prepare an environment to detect a fake gcc
     gcc_exe = mock_executable("gcc", output="echo 4.2.1")

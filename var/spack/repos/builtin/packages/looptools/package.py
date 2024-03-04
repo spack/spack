@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class Looptools(AutotoolsPackage):
 
     homepage = "http://www.feynarts.de/looptools/"
     url = "http://www.feynarts.de/looptools/LoopTools-2.15.tar.gz"
+
+    license("LGPL-3.0-or-later")
 
     version("2.16", sha256="412731a5950f10e2ea3877ceec8655ae18ca856610364e4b6616a8a25d592f2c")
     version("2.15", sha256="a065ffdc4fe6882aa3bb926134ba8ec875d6c0a633c3d4aa5f70db26542713f2")

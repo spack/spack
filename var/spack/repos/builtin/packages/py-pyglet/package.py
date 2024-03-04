@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class PyPyglet(PythonPackage):
 
     homepage = "https://github.com/pyglet/pyglet"
     pypi = "pyglet/pyglet-2.0.9.zip"
+
+    license("BSD-3-Clause")
 
     version("2.0.10", sha256="242beb1b3bd67c5bebdfe5ba11ec56b696ad86b50c6e7f2a317f8d783256b9c9")
     version("2.0.9", sha256="a0922e42f2d258505678e2f4a355c5476c1a6352c3f3a37754042ddb7e7cf72f")

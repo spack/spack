@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,8 @@ class Chatterbug(MakefilePackage):
 
     homepage = "https://chatterbug.readthedocs.io"
     git = "https://github.com/LLNL/chatterbug.git"
+
+    license("MIT")
 
     version("develop", branch="master")
     version("1.0", tag="v1.0", commit="ee1b13c634943dbe32ac22f5e2154b00eab8c574")

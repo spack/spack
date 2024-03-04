@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class RLog4r(RPackage):
     equivalent to log4j and its related variants."""
 
     cran = "log4r"
+
+    license("Artistic-2.0")
 
     version("0.4.3", sha256="dfe3d49d35a8d8f3ad63f156d18e860540a01bd0af0e343cbab3e31a2cf5904c")
     version("0.4.2", sha256="924a020565dcd05a2bc8283285fcae60f6b58b35e1be7c55acc0c703c7edfe34")

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class RCountrycode(RPackage):
     coding schemes, and assigns region descriptors."""
 
     cran = "countrycode"
+
+    license("GPL-3.0-only")
 
     version("1.4.0", sha256="99dfe7652c1e631b9e0f8fac0b0163e7a3fdde8476498555d553e0d1c5fdccc4")
     version("1.3.0", sha256="34361416e771ece1d56dc56f79416c8b7f9591885773becae270684d095bc70f")

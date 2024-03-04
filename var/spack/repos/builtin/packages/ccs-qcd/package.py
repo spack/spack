@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -34,6 +34,8 @@ class CcsQcd(MakefilePackage):
     git = "https://github.com/fiber-miniapp/ccs-qcd.git"
 
     tags = ["hep"]
+
+    license("BSD-3-Clause")
 
     version("master", branch="master")
     version("1.2.1", commit="d7c6b6923f35a824e997ba8db5bd12dc20dda45c")

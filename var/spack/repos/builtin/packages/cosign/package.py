@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,8 @@ class Cosign(Package):
     homepage = "https://github.com/sigstore/cosign"
     url = "https://github.com/sigstore/cosign/archive/refs/tags/v1.3.1.tar.gz"
     git = "https://github.com/sigstore/cosign.git"
+
+    license("Apache-2.0")
 
     version("main", branch="main")
     version("1.3.1", sha256="7f7e0af52ee8d795440e66dcc1a7a25783e22d30935f4f957779628b348f38af")

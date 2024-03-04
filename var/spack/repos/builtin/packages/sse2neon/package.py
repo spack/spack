@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class Sse2neon(Package):
     homepage = "https://github.com/DLTcollab/sse2neon"
     git = "https://github.com/DLTcollab/sse2neon.git"
     url = "https://github.com/DLTcollab/sse2neon/archive/refs/tags/v1.6.0.tar.gz"
+
+    license("MIT")
 
     version("master", branch="master")
     version("1.6.0", sha256="06f4693219deccb91b457135d836fc514a1c0a57e9fa66b143982901d2d19677")

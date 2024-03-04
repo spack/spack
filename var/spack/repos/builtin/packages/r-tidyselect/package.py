@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class RTidyselect(RPackage):
     consistent with other 'tidyverse' interfaces for selection."""
 
     cran = "tidyselect"
+
+    license("MIT")
 
     version("1.2.0", sha256="538d26b727e37d618e2efd3b00836048f103112a03e6994bf07a02392e269e3b")
     version("1.1.2", sha256="0389a3b15417954a30d6d692f6ebdd3d0f318cb94a5c9b05365df2f4ea1d8270")

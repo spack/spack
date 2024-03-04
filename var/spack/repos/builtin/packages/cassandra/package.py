@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class Cassandra(Package):
 
     homepage = "https://github.com/apache/cassandra"
     url = "https://archive.apache.org/dist/cassandra/4.0.1/apache-cassandra-4.0.1-bin.tar.gz"
+
+    license("Apache-2.0")
 
     version("4.0.1", sha256="ed7022e30d9b77d9ce1072f8de95ab01ef7c5c6ed30f304e413dd5a3f92a52f8")
     version("3.11.11", sha256="a5639af781005410995a96f512d505c1def7b70cf5bbbec52e7cd5ff31b6cea3")

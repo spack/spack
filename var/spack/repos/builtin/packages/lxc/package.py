@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class Lxc(AutotoolsPackage):
 
     homepage = "https://linuxcontainers.org/lxc/"
     url = "https://github.com/lxc/lxc/archive/lxc-4.0.2.tar.gz"
+
+    license("LGPL-2.1-or-later")
 
     version("4.0.2", sha256="89a9f1c6c9c0c43ffc4ec4d281381d60dcf698af1578effa491be97885ab282a")
     version("4.0.1", sha256="5b17c48db24d93f8a687bf4557358e252126c50a66f5756b3e0ea2cf04a60d05")

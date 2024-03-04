@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class Screen(AutotoolsPackage, GNUMirrorPackage):
 
     homepage = "https://www.gnu.org/software/screen/"
     gnu_mirror_path = "screen/screen-4.3.1.tar.gz"
+
+    license("GPL-3.0-or-later")
 
     version("4.9.1", sha256="26cef3e3c42571c0d484ad6faf110c5c15091fbf872b06fa7aa4766c7405ac69")
     version("4.9.0", sha256="f9335281bb4d1538ed078df78a20c2f39d3af9a4e91c57d084271e0289c730f4")

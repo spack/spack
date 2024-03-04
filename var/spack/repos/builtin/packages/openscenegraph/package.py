@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,8 @@ class Openscenegraph(CMakePackage):
     url = "https://github.com/openscenegraph/OpenSceneGraph/archive/OpenSceneGraph-3.6.4.tar.gz"
 
     maintainers("aumuell")
+
+    license("LGPL-2.1-or-later")
 
     version("master", branch="master")
     version("stable", branch="OpenSceneGraph-3.6")
@@ -72,8 +74,7 @@ class Openscenegraph(CMakePackage):
     depends_on("poppler+glib", when="+pdf")
     depends_on("librsvg", when="+svg")
 
-    depends_on("ffmpeg@:4", when="+ffmpeg")
-    depends_on("ffmpeg+avresample", when="^ffmpeg@:4")
+    depends_on("ffmpeg@:4 +avresample", when="+ffmpeg")
     # https://github.com/openscenegraph/OpenSceneGraph/issues/167
     depends_on("ffmpeg@:2", when="@:3.4.0+ffmpeg")
 

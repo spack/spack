@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,6 +18,8 @@ class Ensmallen(CMakePackage):
 
     homepage = "https://ensmallen.org"
     url = "https://github.com/mlpack/ensmallen/archive/refs/tags/2.19.1.tar.gz"
+
+    license("BSD-3-Clause")
 
     version("2.19.1", sha256="f36ad7f08b0688d2a8152e1c73dd437c56ed7a5af5facf65db6ffd977b275b2e")
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -50,22 +50,46 @@ class Upcxx(Package, CudaPackage, ROCmPackage):
 
     tags = ["e4s", "ecp"]
 
+    license("BSD-3-Clause-LBNL")
+
     version("develop", branch="develop")
     version("master", branch="master")
 
+    version("2023.9.0", sha256="6bad2976b4bfc0263b497daa967f448159c3c2259827c8376bc96c9bf9171a83")
     version("2023.3.0", sha256="382af3c093decdb51f0533e19efb4cc7536b6617067b2dd89431e323704a1009")
     version("2022.9.0", sha256="dbf15fd9ba38bfe2491f556b55640343d6303048a117c4e84877ceddb64e4c7c")
     version("2022.3.0", sha256="72bccfc9dfab5c2351ee964232b3754957ecfdbe6b4de640e1b1387d45019496")
-    version("2021.9.0", sha256="9299e17602bcc8c05542cdc339897a9c2dba5b5c3838d6ef2df7a02250f42177")
-    version("2021.3.0", sha256="3433714cd4162ffd8aad9a727c12dbf1c207b7d6664879fc41259a4b351595b7")
+    version(
+        "2021.9.0",
+        deprecated=True,
+        sha256="9299e17602bcc8c05542cdc339897a9c2dba5b5c3838d6ef2df7a02250f42177",
+    )
+    version(
+        "2021.3.0",
+        deprecated=True,
+        sha256="3433714cd4162ffd8aad9a727c12dbf1c207b7d6664879fc41259a4b351595b7",
+    )
     version(
         "2020.11.0",
+        deprecated=True,
         sha256="f6f212760a485a9f346ca11bb4751e7095bbe748b8e5b2389ff9238e9e321317",
         url="https://bitbucket.org/berkeleylab/upcxx/downloads/upcxx-2020.11.0-memory_kinds_prototype.tar.gz",
     )
-    version("2020.10.0", sha256="623e074b512bf8cad770a04040272e1cc660d2749760398b311f9bcc9d381a37")
-    version("2020.3.2", sha256="978adc315d21089c739d5efda764b77fc9a2a7c5860f169fe5cd2ca1d840620f")
-    version("2020.3.0", sha256="01be35bef4c0cfd24e9b3d50c88866521b9cac3ad4cbb5b1fc97aea55078810f")
+    version(
+        "2020.10.0",
+        deprecated=True,
+        sha256="623e074b512bf8cad770a04040272e1cc660d2749760398b311f9bcc9d381a37",
+    )
+    version(
+        "2020.3.2",
+        deprecated=True,
+        sha256="978adc315d21089c739d5efda764b77fc9a2a7c5860f169fe5cd2ca1d840620f",
+    )
+    version(
+        "2020.3.0",
+        deprecated=True,
+        sha256="01be35bef4c0cfd24e9b3d50c88866521b9cac3ad4cbb5b1fc97aea55078810f",
+    )
     # Do NOT add older versions here.
     # UPC++ releases over 2 years old are not supported.
 
@@ -78,12 +102,18 @@ class Upcxx(Package, CudaPackage, ROCmPackage):
         + "NOTE: Requires CUDA Driver library be present on the build system",
         when="@2019.3.0:",
     )
+    conflicts(
+        "+cuda", when="@:2019.2", msg="UPC++ version 2019.3.0 or newer required for CUDA support"
+    )
 
     variant(
         "rocm",
         default=False,
         description="Enables UPC++ support for the ROCm/HIP memory kind on AMD GPUs",
         when="@2022.3.0:",
+    )
+    conflicts(
+        "+rocm", when="@:2022.2", msg="UPC++ version 2022.3.0 or newer required for ROCm support"
     )
 
     variant(
@@ -102,8 +132,7 @@ class Upcxx(Package, CudaPackage, ROCmPackage):
     conflicts(
         "cross=none",
         when=is_CrayXC(),
-        msg="cross=none is unacceptable on Cray XC."
-        + 'Please specify an appropriate "cross" value',
+        msg='cross=none is unacceptable on Cray XC. Please specify an appropriate "cross" value',
     )
 
     # UPC++ always relies on GASNet-EX.

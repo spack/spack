@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,6 +19,8 @@ class PyIpython(PythonPackage):
     # out of "import_modules" to ensure that import tests pass.
     # for py-ipython@8: "IPython.kernel" was removed
     skip_modules = ["IPython.kernel"]
+
+    license("BSD-3-Clause")
 
     version("8.14.0", sha256="1d197b907b6ba441b692c48cf2a3a2de280dc0ac91a3405b39349a50272ca0a1")
     version("8.11.0", sha256="735cede4099dbc903ee540307b9171fbfef4aa75cfcacc5a273b2cda2f02be04")

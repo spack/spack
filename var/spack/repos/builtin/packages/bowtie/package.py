@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class Bowtie(MakefilePackage):
 
     homepage = "https://sourceforge.net/projects/bowtie-bio/"
     url = "https://github.com/BenLangmead/bowtie/archive/v1.2.0.tar.gz"
+
+    license("Artistic-2.0")
 
     version("1.3.1", sha256="147d9fe9652f7c5f351bfc0eb012e06981986fb43bd6bdfe88a95c02eabc6573")
     version("1.3.0", sha256="d7c2d982a67884909f284a0ff150b56b20127cd7a1ced461c3c4c03e6a6374c5")

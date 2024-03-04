@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class Openvkl(CMakePackage):
     git = "https://www.github.com/OpenVKL/openvkl.git"
 
     # maintainers("github_user1", "github_user2")
+
+    license("Apache-2.0")
 
     version("2.0.0", sha256="469c3fba254c4fcdd84f8a9763d2e1aaa496dc123b5a9d467cc0a561e284c4e6")
     version("1.3.2", sha256="7704736566bf17497a3e51c067bd575316895fda96eccc682dae4aac7fb07b28")

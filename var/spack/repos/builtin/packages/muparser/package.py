@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,8 @@ class Muparser(Package):
 
     homepage = "https://beltoforion.de/en/muparser/"
     url = "https://github.com/beltoforion/muparser/archive/v2.2.5.tar.gz"
+
+    license("BSD-2-Clause")
 
     version("2.3.4", sha256="0c3fa54a3ebf36dda0ed3e7cd5451c964afbb15102bdbcba08aafb359a290121")
     version("2.2.6.1", sha256="d2562853d972b6ddb07af47ce8a1cdeeb8bb3fa9e8da308746de391db67897b3")

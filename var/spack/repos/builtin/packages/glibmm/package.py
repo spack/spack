@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,8 @@ class Glibmm(AutotoolsPackage):
 
     homepage = "https://gitlab.gnome.org/GNOME/glibmm"
     url = "https://download-fallback.gnome.org/sources/glibmm/2.70/glibmm-2.70.0.tar.xz"
+
+    license("LGPL-2.1-or-later")
 
     # version('2.70.0', sha256='8008fd8aeddcc867a3f97f113de625f6e96ef98cf7860379813a9c0feffdb520')
     version("2.19.3", sha256="23958368535c19188b1241c4615dcf1f35e80e0922a04236bb9247dcd8fe0a2b")

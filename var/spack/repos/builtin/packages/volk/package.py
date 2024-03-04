@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -26,6 +26,8 @@ class Volk(CMakePackage):
     url = "https://github.com/gnuradio/volk/archive/v2.3.0.tar.gz"
 
     maintainers("aweits")
+
+    license("GPL-3.0-or-later")
 
     version("2.3.0", sha256="f42c928f561b128acfe4adb21227e4a62a3f6ab8103592fc3233765ff326d5fc")
 

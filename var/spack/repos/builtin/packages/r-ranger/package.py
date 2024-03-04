@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,8 @@ class RRanger(RPackage):
     (R package 'Matrix') can be directly analyzed."""
 
     cran = "ranger"
+
+    license("GPL-3.0-only")
 
     version("0.15.1", sha256="4d65d9ee7c5f2704a0e303a27222c02aa53e49f3c28dc0b4451371e37ada2b2e")
     version("0.14.1", sha256="5d99401d555da1cfb11c70e59d1bb545ce48720073a06a2a32eb396f622dee1b")

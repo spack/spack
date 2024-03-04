@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -24,6 +24,8 @@ class LuaLuafilesystem(LuaPackage):
     def url_for_version(self, version):
         url = "https://github.com/lunarmodules/luafilesystem/archive/refs/tags/v{0}.tar.gz"
         return url.format(version.underscored)
+
+    license("MIT")
 
     version("1.8.0", sha256="16d17c788b8093f2047325343f5e9b74cccb1ea96001e45914a58bbae8932495")
     version("1.7.0-2", sha256="23b4883aeb4fb90b2d0f338659f33a631f9df7a7e67c54115775a77d4ac3cc59")

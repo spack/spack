@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,8 @@ class PyBuild(PythonPackage):
 
     homepage = "https://github.com/pypa/build"
     pypi = "build/build-0.7.0.tar.gz"
+
+    license("MIT")
 
     version("1.0.3", sha256="538aab1b64f9828977f84bc63ae570b060a8ed1be419e7870b8b4fc5e6ea553b")
     version("1.0.0", sha256="49a60f212df4d9925727c2118e1cbe3abf30b393eff7d0e7287d2170eb36844d")

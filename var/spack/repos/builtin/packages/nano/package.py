@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class Nano(AutotoolsPackage):
     url = "https://www.nano-editor.org/dist/v6/nano-6.3.tar.xz"
     list_url = "https://www.nano-editor.org/dist/"
     list_depth = 1
+
+    license("GPL-3.0-or-later")
 
     # 7.x
     version("7.2", sha256="86f3442768bd2873cec693f83cdf80b4b444ad3cc14760b74361474fc87a4526")

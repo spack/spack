@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,10 @@ class Libxaw3d(AutotoolsPackage, XorgPackage):
 
     homepage = "https://cgit.freedesktop.org/xorg/lib/libXaw3d"
     xorg_mirror_path = "lib/libXaw3d-1.6.2.tar.gz"
+
+    license("MIT")
+
+    maintainers("wdconinc")
 
     version("1.6.4", sha256="09fecfdab9d7d5953567883e2074eb231bc7a122a06e5055f9c119090f1f76a7")
     version("1.6.2", sha256="847dab01aeac1448916e3b4edb4425594b3ac2896562d9c7141aa4ac6c898ba9")

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,8 @@ class PyHatchJupyterBuilder(PythonPackage):
 
     homepage = "https://github.com/jupyterlab/hatch-jupyter-builder"
     pypi = "hatch_jupyter_builder/hatch_jupyter_builder-0.8.3.tar.gz"
+
+    license("BSD-3-Clause")
 
     version("0.8.3", sha256="0dbd14a8aef6636764f88a8fd1fcc9a91921e5c50356e6aab251782f264ae960")
 

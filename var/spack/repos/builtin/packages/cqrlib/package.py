@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class Cqrlib(MakefilePackage):
     url = (
         "https://downloads.sourceforge.net/project/cqrlib/cqrlib/CQRlib-1.1.2/CQRlib-1.1.2.tar.gz"
     )
+
+    license("LGPL-2.1-or-later")
 
     version("1.1.2", sha256="af3cf2402974579f3c6efc6a6174a5da52786db4bfee9d38d504d93bc42410fd")
 

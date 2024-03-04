@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class Pcre2(AutotoolsPackage):
 
     homepage = "https://www.pcre.org"
     url = "https://github.com/PCRE2Project/pcre2/releases/download/pcre2-10.39/pcre2-10.39.tar.bz2"
+
+    license("BSD-3-Clause")
 
     version("10.42", sha256="8d36cd8cb6ea2a4c2bb358ff6411b0c788633a2a45dabbf1aeb4b701d1b5e840")
     version("10.41", sha256="0f78cebd3e28e346475fb92e95fe9999945b4cbaad5f3b42aca47b887fb53308")

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,8 +19,11 @@ class Postgresql(AutotoolsPackage):
     list_url = "http://ftp.postgresql.org/pub/source"
     list_depth = 1
 
+    license("PostgreSQL")
+
     version("15.2", sha256="99a2171fc3d6b5b5f56b757a7a3cb85d509a38e4273805def23941ed2b8468c7")
     version("14.0", sha256="ee2ad79126a7375e9102c4db77c4acae6ae6ffe3e082403b88826d96d927a122")
+    version("13.1", sha256="12345c83b89aa29808568977f5200d6da00f88a035517f925293355432ffe61f")
     version("12.2", sha256="ad1dcc4c4fc500786b745635a9e1eba950195ce20b8913f50345bb7d5369b5de")
     version("11.2", sha256="2676b9ce09c21978032070b6794696e0aa5a476e3d21d60afc036dc0a9c09405")
     version("11.1", sha256="90815e812874831e9a4bf6e1136bf73bc2c5a0464ef142e2dfea40cda206db08")

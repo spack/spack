@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class PyRequests(PythonPackage):
     homepage = "https://requests.readthedocs.io"
     pypi = "requests/requests-2.24.0.tar.gz"
     git = "https://github.com/psf/requests"
+
+    license("Apache-2.0")
 
     version("2.31.0", sha256="942c5a758f98d790eaed1a29cb6eefc7ffb0d1cf7af05c3d2791656dbd6ad1e1")
     version("2.28.2", sha256="98b1b2782e3c6c4904938b84c0eb932721069dfdb9134313beff7c83c2df24bf")

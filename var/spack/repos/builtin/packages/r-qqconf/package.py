@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class RQqconf(RPackage):
     significance of sample deviation from a reference distribution."""
 
     cran = "qqconf"
+
+    license("GPL-3.0-only")
 
     version("1.3.2", sha256="9405d627adf9447a003e14dac43701ea3e03ee73244038aa4a6e3dd324dd8ea3")
     version("1.3.0", sha256="1c42ab81403568f3ad53217cc85190dad7c2fae957bfd0f0f30d57be0a065087")

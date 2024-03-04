@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,6 +20,8 @@ class Trf(AutotoolsPackage):
 
     homepage = "https://tandem.bu.edu/trf/trf.html"
     url = "https://github.com/Benson-Genomics-Lab/TRF/archive/refs/tags/v4.09.1.tar.gz"
+
+    license("AGPL-3.0-only")
 
     version("4.09.1", sha256="516015b625473350c3d1c9b83cac86baea620c8418498ab64c0a67029c3fb28a")
     version("4.09", sha256="9332155384bef82f6c7c449c038d27f1a14b984b2e93000bfcf125f4d44d6aca")

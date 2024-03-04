@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class RdmaCore(CMakePackage):
     url = "https://github.com/linux-rdma/rdma-core/releases/download/v17.1/rdma-core-17.1.tar.gz"
     libraries = ["librdmacm.so"]
     keep_werror = "all"
+
+    license("GPL-2.0-only OR BSD-2-Clause")
 
     version("49.0", sha256="953546ad2b179f9ce68dc21eb1eb26003098ea1bf0f87a4baed45bcea134b2b4")
     version("47.1", sha256="5d92058473b90be231c17220ce456837cb6da9975de498bd63b9660baa25afd6")
@@ -105,11 +107,4 @@ class RdmaCore(CMakePackage):
         if self.spec.satisfies("~man_pages"):
             cmake_args.append("-DNO_MAN_PAGES=1")
 
-        if self.spec.satisfies("@:39.0"):
-            cmake_args.extend(
-                [
-                    self.define("PYTHON_LIBRARY", self.spec["python"].libs[0]),
-                    self.define("PYTHON_INCLUDE_DIR", self.spec["python"].headers.directories[0]),
-                ]
-            )
         return cmake_args
