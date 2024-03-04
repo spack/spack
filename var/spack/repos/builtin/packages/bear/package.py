@@ -36,7 +36,8 @@ class Bear(CMakePackage):
     depends_on("grpc +shared", when="@3.0.0:")
     depends_on("nlohmann-json", when="@3.0.0:")
     depends_on("spdlog +fmt_external", when="@3.0.0:")
-    depends_on("cmake@2.8:", type="build")
+    depends_on("cmake@2.8:", when="@2.0.4:", type="build")
+    depends_on("cmake@3.12:", when="@3.0.0:", type="build")
     depends_on("python", type="build")
     depends_on("googletest", type="test", when="@3:")
 
