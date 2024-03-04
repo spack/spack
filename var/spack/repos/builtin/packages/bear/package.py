@@ -41,6 +41,8 @@ class Bear(CMakePackage):
     depends_on("python", type="build")
     depends_on("googletest", type="test", when="@3:")
 
+    conflicts("@3:", when="%gcc@:8.9", msg="Bear requires GCC with full std::filesystem support")
+
     patch("rpath-handling-3.0.20.patch", when="@3.0.20:")
 
     def cmake_args(self):
