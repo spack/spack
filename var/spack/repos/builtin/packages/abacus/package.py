@@ -199,8 +199,13 @@ class Abacus(MakefilePackage, CMakePackage, CudaPackage, ROCmPackage):
         when="@:3.5.4",
         msg="abacus spack package supports openblas/mkl as blas/lapack provider",
     )
+    # Here should be [virtual=blas,lapack] netlab-lapack~external-blas, 
+    # as netlab-lapack~external-blas mey serve as only virtual lapack or even 
+    # virtual blas.
+    # netlab-lapack+external-blas do NOT contain libblas.so and not detectable 
+    # for abacus CMake script.
     conflicts(
-        "[virtual=blas,lapack] netlab-lapack~external-blas",
+        "netlab-lapack~external-blas",
         when="@:3.5.4",
         msg="abacus spack package supports openblas/mkl as blas/lapack provider",
     )
@@ -295,15 +300,15 @@ class CMakeBuilder(cmake.CMakeBuilder):
         # scalapack = spec["scalapack"] if spec.satisfies("+lcao") else ""
         if blas.name in ["intel-mkl", "intel-parallel-studio", "intel-oneapi-mkl"]:
             args += [self.define("MKLROOT", spec["mkl"].prefix)]
-        # else:
-        #    args.extend(
-        #        [
-        #            self.define("LAPACK_FOUND", True),
-        #            self.define(
-        #                "LAPACK_LIBRARY", lapack.libs
-        #            ),  # blas implementation other than openblas not supported
-        #        ]
-        #    )
+        elif spec.satisfies("@:3.5.4"):
+            args.extend(
+                [
+                    self.define("LAPACK_FOUND", True),
+                    self.define(
+                        "LAPACK_LIBRARY", lapack.libs
+                    ),  # must be single lib with both blas&lapack routines
+               ]
+            )
 
         # avoid misdirecting to global visible elpa from apt, dnf, etc.
         if spec.satisfies("+elpa"):
