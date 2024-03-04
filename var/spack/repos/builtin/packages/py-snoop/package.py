@@ -10,9 +10,7 @@ class PySnoop(PythonPackage):
     to be a more featureful and refined version of PySnooper. It also includes
     its own version of icecream and some other nifty stuff."""
 
-    homepage = "https://pypi.org/project/snoop/"
-    url = "https://pypi.org/packages/source/s/snoop/snoop-0.4.3.tar.gz"
-    list_url = "https://pypi.org/simple/snoop/"
+    pypi = "snoop/snoop-0.4.3.tar.gz"
 
     license("MIT", checked_by="jmlapre")
 
