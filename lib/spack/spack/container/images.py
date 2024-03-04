@@ -50,7 +50,7 @@ def build_info(image, spack_version):
     if not build_image:
         return None, None
 
-    return build_image, build_tag
+    return build_image, spack_version
 
 
 def os_package_manager_for(image):
