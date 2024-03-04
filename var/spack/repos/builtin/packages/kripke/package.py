@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,8 @@ class Kripke(CMakePackage, CudaPackage, ROCmPackage):
     tags = ["proxy-app"]
 
     maintainers("vsrana01")
+
+    license("BSD-3-Clause")
 
     version("develop", branch="develop", submodules=False)
     version(
@@ -51,6 +53,7 @@ class Kripke(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("mpi", when="+mpi")
     depends_on("blt", type="build")
     depends_on("caliper", when="+caliper")
+    depends_on("adiak@0.4:", when="+caliper")
     depends_on("chai~examples+raja")
     depends_on("raja~exercises~examples")
     depends_on("umpire~examples")

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,6 +19,8 @@ class Socat(AutotoolsPackage):
     url = "http://www.dest-unreach.org/socat/download/socat-1.7.4.4.tar.bz2"
 
     maintainers("michaelkuhn")
+
+    license("GPL-2.0-only WITH OpenSSL-Exception")
 
     version("1.7.4.4", sha256="fbd42bd2f0e54a3af6d01bdf15385384ab82dbc0e4f1a5e153b3e0be1b6380ac")
 

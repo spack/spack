@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,8 @@ class PyGriddataformats(PythonPackage):
     pypi = "GridDataFormats/GridDataFormats-0.5.0.tar.gz"
 
     maintainers("RMeli")
+
+    license("LGPL-3.0-only")
 
     version("1.0.1", sha256="ad2c9ab7d672a6d8c426de7d083eee4f3e2b0bd59391675d30683c768ab83cc4")
 

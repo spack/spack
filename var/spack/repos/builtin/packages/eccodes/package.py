@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -45,9 +45,16 @@ class Eccodes(CMakePackage):
     git = "https://github.com/ecmwf/eccodes.git"
     list_url = "https://confluence.ecmwf.int/display/ECC/Releases"
 
-    maintainers("skosukhin")
+    maintainers("skosukhin", "victoria-cherkas", "dominichofer", "climbfuji")
+
+    license("Apache-2.0")
 
     version("develop", branch="develop")
+    version("2.34.0", sha256="3cd208c8ddad132789662cf8f67a9405514bfefcacac403c0d8c84507f303aba")
+    version("2.33.0", sha256="bdcec8ce63654ec6803400c507f01220a9aa403a45fa6b5bdff7fdcc44fd7daf")
+    version("2.32.1", sha256="ad2ac1bf36577b1d35c4a771b4d174a06f522a1e5ef6c1f5e53a795fb624863e")
+    version("2.32.0", sha256="b57e8eeb0eba0c05d66fda5527c4ffa84b5ab35c46bcbc9a2227142973ccb8e6")
+    version("2.31.0", sha256="808ecd2c11fbf2c3f9fc7a36f8c2965b343f3151011b58a1d6e7cc2e6b3cac5d")
     version("2.25.0", sha256="8975131aac54d406e5457706fd4e6ba46a8cc9c7dd817a41f2aa64ce1193c04e")
     version("2.24.2", sha256="c60ad0fd89e11918ace0d84c01489f21222b11d6cad3ff7495856a0add610403")
     version("2.23.0", sha256="cbdc8532537e9682f1a93ddb03440416b66906a4cc25dec3cbd73940d194bf0c")
@@ -70,7 +77,7 @@ class Eccodes(CMakePackage):
     )
     variant("png", default=False, description="Enable PNG support for decoding/encoding")
     variant(
-        "aec", default=False, description="Enable Adaptive Entropy Coding for decoding/encoding"
+        "aec", default=True, description="Enable Adaptive Entropy Coding for decoding/encoding"
     )
     variant("pthreads", default=False, description="Enable POSIX threads")
     variant("openmp", default=False, description="Enable OpenMP threads")
@@ -106,6 +113,7 @@ class Eccodes(CMakePackage):
     depends_on("cmake@3.12:", when="@2.19:", type="build")
 
     depends_on("ecbuild", type="build", when="@develop")
+    depends_on("ecbuild@3.7:", type="build", when="@2.25:")
 
     conflicts("+openmp", when="+pthreads", msg="Cannot enable both POSIX threads and OMP")
 
@@ -345,9 +353,6 @@ class Eccodes(CMakePackage):
         if "+aec" in self.spec:
             # Prevent overriding by environment variables AEC_DIR and AEC_PATH:
             args.append(self.define("AEC_DIR", self.spec["libaec"].prefix))
-
-        if "+memfs" in self.spec:
-            args.append(self.define("PYTHON_EXECUTABLE", python.path))
 
         return args
 

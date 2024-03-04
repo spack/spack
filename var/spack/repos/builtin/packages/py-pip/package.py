@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,9 +15,14 @@ class PyPip(Package, PythonExtension):
     url = "https://files.pythonhosted.org/packages/py3/p/pip/pip-20.2-py3-none-any.whl"
     list_url = "https://pypi.org/simple/pip/"
 
+    # Requires railroad
+    skip_modules = ["pip._vendor"]
+
     tags = ["build-tools"]
 
     maintainers("adamjstewart", "pradyunsg")
+
+    license("MIT")
 
     version(
         "23.1.2",

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -218,7 +218,7 @@ class IntelPackage(Package):
             "+inspector": " intel-inspector",
             "+itac": " intel-itac intel-ta intel-tc" " intel-trace-analyzer intel-trace-collector",
             # Trace Analyzer and Collector
-            "+vtune": " intel-vtune"
+            "+vtune": " intel-vtune",
             # VTune, ..-profiler since 2020, ..-amplifier before
         }.items():
             if variant in self.spec:

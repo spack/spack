@@ -10,49 +10,15 @@ spack:
       require: '%gcc target=x86_64_v3'
       providers:
         blas: [openblas]
-        mpi: [mpich]
       variants: +mpi
-    binutils:
-      variants: +ld +gold +headers +libiberty ~nls
-    elfutils:
-      variants: +bzip2 ~nls +xz
-    hdf5:
-      variants: +fortran +hl +shared
-    libfabric:
-      variants: fabrics=sockets,tcp,udp,rxm
-    libunwind:
-      variants: +pic +xz
-    openblas:
-      variants: threads=openmp
-    trilinos:
-      variants: +amesos +amesos2 +anasazi +aztec +belos +boost +epetra +epetraext
-        +ifpack +ifpack2 +intrepid +intrepid2 +isorropia +kokkos +ml +minitensor +muelu
-        +nox +piro +phalanx +rol +rythmos +sacado +stk +shards +shylu +stokhos +stratimikos
-        +teko +tempus +tpetra +trilinoscouplings +zoltan +zoltan2 +superlu-dist gotype=long_long
-    xz:
-      variants: +pic
-    mesa:
-      version: [21.3.8]
+    tbb:
+      require: intel-tbb
     mpi:
       require: mpich
     mpich:
       require: '~wrapperrpath ~hwloc'
-    ncurses:
-      require: '@6.3 +termlib'
-    tbb:
-      require: intel-tbb
-    boost:
-      version: [1.79.0]
-      variants: +atomic +chrono +container +date_time +exception +filesystem +graph
-        +iostreams +locale +log +math +mpi +multithreaded +program_options +random
-        +regex +serialization +shared +signals +stacktrace +system +test +thread +timer
-        cxxstd=17 visibility=global
-    libffi:
-      require: "@3.4.4"
-    vtk-m:
-      require: "+examples"
-    cuda:
-      version: [11.8.0]
+    openblas:
+      variants: threads=openmp
     paraview:
       # Don't build GUI support or GLX rendering for HPC/container deployments
       require: "@5.11 ~qt+osmesa"
@@ -61,181 +27,181 @@ spack:
     comgr:
       buildable: false
       externals:
-      - spec: comgr@5.4.3
-        prefix: /opt/rocm-5.4.3/
+      - spec: comgr@5.7.1
+        prefix: /opt/rocm-5.7.1/
     hip-rocclr:
       buildable: false
       externals:
-      - spec: hip-rocclr@5.4.3
-        prefix: /opt/rocm-5.4.3/hip
+      - spec: hip-rocclr@5.7.1
+        prefix: /opt/rocm-5.7.1/hip
     hipblas:
       buildable: false
       externals:
-      - spec: hipblas@5.4.3
-        prefix: /opt/rocm-5.4.3/
+      - spec: hipblas@5.7.1
+        prefix: /opt/rocm-5.7.1/
     hipcub:
       buildable: false
       externals:
-      - spec: hipcub@5.4.3
-        prefix: /opt/rocm-5.4.3/
+      - spec: hipcub@5.7.1
+        prefix: /opt/rocm-5.7.1/
     hipfft:
       buildable: false
       externals:
-      - spec: hipfft@5.4.3
-        prefix: /opt/rocm-5.4.3/
+      - spec: hipfft@5.7.1
+        prefix: /opt/rocm-5.7.1/
     hipsparse:
       buildable: false
       externals:
-      - spec: hipsparse@5.4.3
-        prefix: /opt/rocm-5.4.3/
+      - spec: hipsparse@5.7.1
+        prefix: /opt/rocm-5.7.1/
     miopen-hip:
       buildable: false
       externals:
-      - spec: hip-rocclr@5.4.3
-        prefix: /opt/rocm-5.4.3/
+      - spec: miopen-hip@5.7.1
+        prefix: /opt/rocm-5.7.1/
     miopengemm:
       buildable: false
       externals:
-      - spec: miopengemm@5.4.3
-        prefix: /opt/rocm-5.4.3/
+      - spec: miopengemm@5.7.1
+        prefix: /opt/rocm-5.7.1/
     rccl:
       buildable: false
       externals:
-      - spec: rccl@5.4.3
-        prefix: /opt/rocm-5.4.3/
+      - spec: rccl@5.7.1
+        prefix: /opt/rocm-5.7.1/
     rocblas:
       buildable: false
       externals:
-      - spec: rocblas@5.4.3
-        prefix: /opt/rocm-5.4.3/
+      - spec: rocblas@5.7.1
+        prefix: /opt/rocm-5.7.1/
     rocfft:
       buildable: false
       externals:
-      - spec: rocfft@5.4.3
-        prefix: /opt/rocm-5.4.3/
+      - spec: rocfft@5.7.1
+        prefix: /opt/rocm-5.7.1/
     rocm-clang-ocl:
       buildable: false
       externals:
-      - spec: rocm-clang-ocl@5.4.3
-        prefix: /opt/rocm-5.4.3/
+      - spec: rocm-clang-ocl@5.7.1
+        prefix: /opt/rocm-5.7.1/
     rocm-cmake:
       buildable: false
       externals:
-      - spec: rocm-cmake@5.4.3
-        prefix: /opt/rocm-5.4.3/
+      - spec: rocm-cmake@5.7.1
+        prefix: /opt/rocm-5.7.1/
     rocm-dbgapi:
       buildable: false
       externals:
-      - spec: rocm-dbgapi@5.4.3
-        prefix: /opt/rocm-5.4.3/
+      - spec: rocm-dbgapi@5.7.1
+        prefix: /opt/rocm-5.7.1/
     rocm-debug-agent:
       buildable: false
       externals:
-      - spec: rocm-debug-agent@5.4.3
-        prefix: /opt/rocm-5.4.3/
+      - spec: rocm-debug-agent@5.7.1
+        prefix: /opt/rocm-5.7.1/
     rocm-device-libs:
       buildable: false
       externals:
-      - spec: rocm-device-libs@5.4.3
-        prefix: /opt/rocm-5.4.3/
+      - spec: rocm-device-libs@5.7.1
+        prefix: /opt/rocm-5.7.1/
     rocm-gdb:
       buildable: false
       externals:
-      - spec: rocm-gdb@5.4.3
-        prefix: /opt/rocm-5.4.3/
+      - spec: rocm-gdb@5.7.1
+        prefix: /opt/rocm-5.7.1/
     rocm-opencl:
       buildable: false
       externals:
-      - spec: rocm-opencl@5.4.3
-        prefix: /opt/rocm-5.4.3/opencl
+      - spec: rocm-opencl@5.7.1
+        prefix: /opt/rocm-5.7.1/opencl
     rocm-smi-lib:
       buildable: false
       externals:
-      - spec: rocm-smi-lib@5.4.3
-        prefix: /opt/rocm-5.4.3/
+      - spec: rocm-smi-lib@5.7.1
+        prefix: /opt/rocm-5.7.1/
     hip:
       buildable: false
       externals:
-      - spec: hip@5.4.3
-        prefix: /opt/rocm-5.4.3
+      - spec: hip@5.7.1
+        prefix: /opt/rocm-5.7.1
         extra_attributes:
           compilers:
-            c: /opt/rocm-5.4.3/llvm/bin/clang++
-            c++: /opt/rocm-5.4.3/llvm/bin/clang++
-            hip: /opt/rocm-5.4.3/hip/bin/hipcc
+            c: /opt/rocm-5.7.1/llvm/bin/clang++
+            c++: /opt/rocm-5.7.1/llvm/bin/clang++
+            hip: /opt/rocm-5.7.1/hip/bin/hipcc
     hipify-clang:
       buildable: false
       externals:
-      - spec: hipify-clang@5.4.3
-        prefix: /opt/rocm-5.4.3
+      - spec: hipify-clang@5.7.1
+        prefix: /opt/rocm-5.7.1
     llvm-amdgpu:
       buildable: false
       externals:
-      - spec: llvm-amdgpu@5.4.3
-        prefix: /opt/rocm-5.4.3/llvm
+      - spec: llvm-amdgpu@5.7.1
+        prefix: /opt/rocm-5.7.1/llvm
         extra_attributes:
           compilers:
-            c: /opt/rocm-5.4.3/llvm/bin/clang++
-            cxx: /opt/rocm-5.4.3/llvm/bin/clang++
+            c: /opt/rocm-5.7.1/llvm/bin/clang++
+            cxx: /opt/rocm-5.7.1/llvm/bin/clang++
     hsakmt-roct:
       buildable: false
       externals:
-      - spec: hsakmt-roct@5.4.3
-        prefix: /opt/rocm-5.4.3/
+      - spec: hsakmt-roct@5.7.1
+        prefix: /opt/rocm-5.7.1/
     hsa-rocr-dev:
       buildable: false
       externals:
-      - spec: hsa-rocr-dev@5.4.3
-        prefix: /opt/rocm-5.4.3/
+      - spec: hsa-rocr-dev@5.7.1
+        prefix: /opt/rocm-5.7.1/
         extra_atributes:
           compilers:
-            c: /opt/rocm-5.4.3/llvm/bin/clang++
-            cxx: /opt/rocm-5.4.3/llvm/bin/clang++
+            c: /opt/rocm-5.7.1/llvm/bin/clang++
+            cxx: /opt/rocm-5.7.1/llvm/bin/clang++
     roctracer-dev-api:
       buildable: false
       externals:
-      - spec: roctracer-dev-api@5.4.3
-        prefix: /opt/rocm-5.4.3
+      - spec: roctracer-dev-api@5.7.1
+        prefix: /opt/rocm-5.7.1
     roctracer-dev:
       buildable: false
       externals:
       - spec: roctracer-dev@4.5.3
-        prefix: /opt/rocm-5.4.3
+        prefix: /opt/rocm-5.7.1
     rocprim:
       buildable: false
       externals:
-      - spec: rocprim@5.4.3
-        prefix: /opt/rocm-5.4.3
+      - spec: rocprim@5.7.1
+        prefix: /opt/rocm-5.7.1
     rocrand:
       buildable: false
       externals:
-      - spec: rocrand@5.4.3
-        prefix: /opt/rocm-5.4.3
+      - spec: rocrand@5.7.1
+        prefix: /opt/rocm-5.7.1
     hipsolver:
       buildable: false
       externals:
-      - spec: hipsolver@5.4.3
-        prefix: /opt/rocm-5.4.3
+      - spec: hipsolver@5.7.1
+        prefix: /opt/rocm-5.7.1
     rocsolver:
       buildable: false
       externals:
-      - spec: rocsolver@5.4.3
-        prefix: /opt/rocm-5.4.3
+      - spec: rocsolver@5.7.1
+        prefix: /opt/rocm-5.7.1
     rocsparse:
       buildable: false
       externals:
-      - spec: rocsparse@5.4.3
-        prefix: /opt/rocm-5.4.3
+      - spec: rocsparse@5.7.1
+        prefix: /opt/rocm-5.7.1
     rocthrust:
       buildable: false
       externals:
-      - spec: rocthrust@5.4.3
-        prefix: /opt/rocm-5.4.3
+      - spec: rocthrust@5.7.1
+        prefix: /opt/rocm-5.7.1
     rocprofiler-dev:
       buildable: false
       externals:
-      - spec: rocprofiler-dev@5.4.3
-        prefix: /opt/rocm-5.4.3
+      - spec: rocprofiler-dev@5.7.1
+        prefix: /opt/rocm-5.7.1
 
   specs:
   # ROCM NOARCH
@@ -262,7 +228,7 @@ spack:
   - mfem +rocm amdgpu_target=gfx908
   - petsc +rocm amdgpu_target=gfx908
   - raja ~openmp +rocm amdgpu_target=gfx908
-  - slate +rocm amdgpu_target=gfx908
+  # - slate +rocm amdgpu_target=gfx908          # slate: hip/device_gescale_row_col.hip.cc:58:49: error: use of overloaded operator '*' is ambiguous (with operand types 'HIP_vector_type<double, 2>' and 'const HIP_vector_type<double, 2>')
   - slepc +rocm amdgpu_target=gfx908 ^petsc +rocm amdgpu_target=gfx908
   - strumpack ~slate +rocm amdgpu_target=gfx908
   - sundials +rocm amdgpu_target=gfx908
@@ -303,7 +269,7 @@ spack:
   - mfem +rocm amdgpu_target=gfx90a
   - petsc +rocm amdgpu_target=gfx90a
   - raja ~openmp +rocm amdgpu_target=gfx90a
-  - slate +rocm amdgpu_target=gfx90a
+  # - slate +rocm amdgpu_target=gfx90a          # slate: hip/device_gescale_row_col.hip.cc:58:49: error: use of overloaded operator '*' is ambiguous (with operand types 'HIP_vector_type<double, 2>' and 'const HIP_vector_type<double, 2>')
   - slepc +rocm amdgpu_target=gfx90a ^petsc +rocm amdgpu_target=gfx90a
   - strumpack ~slate +rocm amdgpu_target=gfx90a
   - sundials +rocm amdgpu_target=gfx90a
@@ -327,7 +293,7 @@ spack:
   ci:
     pipeline-gen:
     - build-job:
-        image: "ghcr.io/spack/ubuntu20.04-runner-amd64-gcc-11.4-rocm5.4.3:2023.08.01"
+        image: ecpe4s/ubuntu22.04-runner-amd64-gcc-11.4-rocm5.7.1:2024.03.01
 
   cdash:
     build-group: E4S ROCm External

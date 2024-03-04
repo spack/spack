@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class Moosefs(AutotoolsPackage):
 
     homepage = "https://github.com/moosefs/moosefs"
     url = "https://github.com/moosefs/moosefs/archive/v3.0.109.tar.gz"
+
+    license("GPL-2.0-only")
 
     version("3.0.109", sha256="413349d254f75ea9b9c974a12f67225c7cbec389f8a39a68db569c0d0f6f4ef3")
     version("3.0.108", sha256="344c4b7875603fc0b091e5c80f4a5b2eda780a3d050de2ef38232e55e56b054a")

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,9 +7,7 @@ import collections.abc
 get_job_name = lambda needs_entry: (
     needs_entry.get("job")
     if (isinstance(needs_entry, collections.abc.Mapping) and needs_entry.get("artifacts", True))
-    else needs_entry
-    if isinstance(needs_entry, str)
-    else None
+    else needs_entry if isinstance(needs_entry, str) else None
 )
 
 

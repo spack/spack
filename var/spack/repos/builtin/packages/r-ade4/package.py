@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,6 +18,8 @@ class RAde4(RPackage):
     described in Dray and Dufour (2007) <doi:10.18637/jss.v022.i04>."""
 
     cran = "ade4"
+
+    license("GPL-2.0-or-later")
 
     version("1.7-22", sha256="007df54e83a2a6cb8d6da8006f0aace011e7eaa7744dc5f8230ac2c002b393b4")
     version("1.7-20", sha256="ddc75788b55902f17dabda209eb67c378aa0233767697e00fa3f8fc85e4bad7b")
