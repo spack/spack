@@ -130,6 +130,8 @@ class Abacus(MakefilePackage, CMakePackage, CudaPackage, ROCmPackage):
         depends_on("fftw+openmp", when="^fftw")
         depends_on("elpa+openmp", when="+elpa")
         depends_on("openblas threads=openmp", when="^openblas")
+    with when("~openmp"):
+        depends_on("elpa~openmp", when="+elpa")
 
     requires("%clang" or "%rocmcc", when="+rocm", msg="build with rocm requires rocm compiler")
 
