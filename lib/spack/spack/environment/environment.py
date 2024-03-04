@@ -626,14 +626,13 @@ class ViewDescriptor:
             new: If a string, create a FilesystemView rooted at that path. Default None. This
                 should only be used to regenerate the view, and cannot be used to access specs.
         """
-        root = new if new else self._current_root
-        if not root:
+        path = new if new else self._current_root
+        if not path:
             # This can only be hit if we write a future bug
             raise SpackEnvironmentViewError(
-                "Attempting to get nonexistent view from environment. "
-                f"View root is at {self.root}"
+                f"Attempting to get nonexistent view from environment. View root is at {self.root}"
             )
-        return self._view(root)
+        return self._view(path)
 
     def _view(self, root: str) -> SimpleFilesystemView:
         """Returns a view object for a given root dir."""
@@ -678,7 +677,9 @@ class ViewDescriptor:
 
         # Filter selected, installed specs
         with spack.store.STORE.db.read_transaction():
-            return [s for s in specs if s in self and s.installed]
+            result = [s for s in specs if s in self and s.installed]
+
+        return self._exclude_duplicate_runtimes(result)
 
     def regenerate(self, concrete_roots: List[Spec]) -> None:
         specs = self.specs_for_view(concrete_roots)
@@ -764,6 +765,26 @@ class ViewDescriptor:
                 msg = "Failed to remove old view at %s\n" % old_root
                 msg += str(e)
                 tty.warn(msg)
+
+    def _exclude_duplicate_runtimes(self, nodes):
+        all_runtimes = spack.repo.PATH.packages_with_tags("runtime")
+        runtimes_by_name = {}
+        for s in nodes:
+            if s.name not in all_runtimes:
+                continue
+            runtimes_by_name.setdefault(s.name, []).append(s)
+
+        runtimes_excluded_from_view = []
+        for name, runtime_duplicates in runtimes_by_name.items():
+            if len(runtime_duplicates) == 1:
+                continue
+            runtime_duplicates.sort(key=lambda x: x.version)
+            runtimes_excluded_from_view.extend(runtime_duplicates[:-1])
+
+        if not runtimes_excluded_from_view:
+            return nodes
+
+        return [x for x in nodes if x not in runtimes_excluded_from_view]
 
 
 def _create_environment(path):
