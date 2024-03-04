@@ -768,15 +768,13 @@ class ViewDescriptor:
 
     def _exclude_duplicate_runtimes(self, nodes):
         all_runtimes = spack.repo.PATH.packages_with_tags("runtime")
-        result, runtimes_by_name = [], {}
+        runtimes_by_name = {}
         for s in nodes:
             if s.name not in all_runtimes:
-                result.append(s)
                 continue
             current_runtime = runtimes_by_name.get(s.name, s)
-            runtimes_by_name[s.name] = max(current_runtime, s)
-        result.extend(runtimes_by_name.values())
-        return result
+            runtimes_by_name[s.name] = max(current_runtime, s, key=lambda x: x.version)
+        return [x for x in nodes if x.name not in all_runtimes or runtimes_by_name[x.name] == x]
 
 
 def _create_environment(path):
