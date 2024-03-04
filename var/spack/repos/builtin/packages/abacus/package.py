@@ -27,7 +27,7 @@ class Abacus(MakefilePackage, CMakePackage, CudaPackage, ROCmPackage):
     license("LGPL-3.0-or-later")
 
     version("develop", branch="develop")
-    version("3.5.4444sha256="ab7cbdd07a951da116cc4fe4dfa23e7ac41dda9f35c35d16c267920f267f4722")
+    version("3.5.4", sha256="ab7cbdd07a951da116cc4fe4dfa23e7ac41dda9f35c35d16c267920f267f4722")
     version("3.5.3", sha256="f56066473dbd562f170f40809738076c0862321499ae7fcbd71508581f9ba7bf")
     version("3.5.2", sha256="b4823db244bc68cfa2cff0b4d33140051f56925b19c411f136ce27fb8e1ed3be")
     version("3.5.1", sha256="0867b74ef866033d0120f8b1040fdae8f1dc72a113ffdac6b472b2c8bf1eaf0e")
@@ -179,6 +179,37 @@ class Abacus(MakefilePackage, CMakePackage, CudaPackage, ROCmPackage):
 
     requires("%clang" or "%rocmcc", when="+rocm", msg="build with rocm requires rocm compiler")
 
+    conflicts(
+        "blis",
+        when="@:3.5.4",
+        msg="abacus spack package supports openblas/mkl as blas/lapack provider",
+    )
+    conflicts(
+        "libflame",
+        when="@:3.5.4",
+        msg="abacus spack package supports openblas/mkl as blas/lapack provider",
+    )
+    conflicts(
+        "amdblis",
+        when="@:3.5.4",
+        msg="abacus spack package supports openblas/mkl as blas/lapack provider",
+    )
+    conflicts(
+        "amdlibflame",
+        when="@:3.5.4",
+        msg="abacus spack package supports openblas/mkl as blas/lapack provider",
+    )
+    conflicts(
+        "[virtual=blas,lapack] netlab-lapack~external-blas",
+        when="@:3.5.4",
+        msg="abacus spack package supports openblas/mkl as blas/lapack provider",
+    )
+    conflicts(
+        "netlab-xblas",
+        when="@:3.5.4",
+        msg="abacus spack package supports openblas/mkl as blas/lapack provider",
+    )
+
 
 class MakefileBuilder(makefile.MakefileBuilder):
     build_directory = "source"
@@ -259,20 +290,20 @@ class CMakeBuilder(cmake.CMakeBuilder):
         ]
 
         blas = spec["blas"]
-        lapack = spec["lapack"]
+        # lapack = spec["lapack"]
         # fftw = spec["fftw-api"]
         # scalapack = spec["scalapack"] if spec.satisfies("+lcao") else ""
         if blas.name in ["intel-mkl", "intel-parallel-studio", "intel-oneapi-mkl"]:
             args += [self.define("MKLROOT", spec["mkl"].prefix)]
-        else:
-            args.extend(
-                [
-                    self.define("LAPACK_FOUND", True),
-                    self.define(
-                        "LAPACK_LIBRARY", lapack.libs
-                    ),  # blas implementation other than openblas not supported
-                ]
-            )
+        # else:
+        #    args.extend(
+        #        [
+        #            self.define("LAPACK_FOUND", True),
+        #            self.define(
+        #                "LAPACK_LIBRARY", lapack.libs
+        #            ),  # blas implementation other than openblas not supported
+        #        ]
+        #    )
 
         # avoid misdirecting to global visible elpa from apt, dnf, etc.
         if spec.satisfies("+elpa"):
