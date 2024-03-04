@@ -205,12 +205,12 @@ class Abacus(MakefilePackage, CMakePackage, CudaPackage, ROCmPackage):
     # netlab-lapack+external-blas do NOT contain libblas.so and not detectable
     # for abacus CMake script.
     conflicts(
-        "netlab-lapack~external-blas",
+        "netlib-lapack~external-blas",
         when="@:3.5.4",
         msg="abacus spack package supports openblas/mkl as blas/lapack provider",
     )
     conflicts(
-        "netlab-xblas",
+        "netlib-xblas",
         when="@:3.5.4",
         msg="abacus spack package supports openblas/mkl as blas/lapack provider",
     )
