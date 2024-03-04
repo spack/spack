@@ -10,9 +10,7 @@ class PyCheapRepr(PythonPackage):
     and an easy API for registering your own. It's an improvement of the
     standard library module reprlib (repr in Python 2)."""
 
-    homepage = "https://pypi.org/project/cheap-repr/"
-    url = "https://pypi.org/packages/source/c/cheap-repr/cheap_repr-0.5.1.tar.gz"
-    list_url = "https://pypi.org/simple/cheap-repr/"
+    pypi = "cheap-repr/cheap_repr-0.5.1.tar.gz"
 
     license("MIT", checked_by="jmlapre")
 
