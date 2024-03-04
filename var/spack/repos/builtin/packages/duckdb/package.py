@@ -62,7 +62,8 @@ class Duckdb(MakefilePackage):
     variant("cli", default=True, description="Compile with command line client")
     variant("icu", default=False, description="Compile with bundled ICU library")
     variant("ninjabuild", default=True, description="Use GEN=ninja to build")
-    variant("openssl", 
+    variant(
+        "openssl", 
         default=False, 
         description="Compile with bundled OpenSSL library", 
         when="@:0.9.2",
