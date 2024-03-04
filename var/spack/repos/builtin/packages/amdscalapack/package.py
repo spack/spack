@@ -22,7 +22,7 @@ class Amdscalapack(ScalapackBase):
     LICENSING INFORMATION: By downloading, installing and using this software,
     you agree to the terms and conditions of the AMD AOCL-ScaLAPACK license
     agreement.  You may obtain a copy of this license agreement from
-    https://www.amd.com/en/developer/aocl/scalapack/eula/scalapack-libraries-4-1-eula.html
+    https://www.amd.com/en/developer/aocl/scalapack/eula/scalapack-libraries-4-2-eula.html
     https://www.amd.com/en/developer/aocl/scalapack/eula/scalapack-libraries-eula.html
     """
 
@@ -33,7 +33,11 @@ class Amdscalapack(ScalapackBase):
     maintainers("amd-toolchain-support")
 
     license("BSD-3-Clause-Open-MPI")
-
+    version(
+        "4.2",
+        sha256="c6e9a846c05cdc05252b0b5f264164329812800bf13f9d97c77114dc138e6ccb",
+        preferred=True,
+    )
     version("4.1", sha256="b2e51c3604e5869d1faaef2e52c92071fcb3de1345aebb2ea172206622067ad9")
     version("4.0", sha256="f02913b5984597b22cdb9a36198ed61039a1bf130308e778dc31b2a7eb88b33b")
     version("3.2", sha256="9e00979bb1be39d627bdacb01774bc043029840d542fafc934d16fec3e3b0892")
@@ -45,6 +49,13 @@ class Amdscalapack(ScalapackBase):
 
     conflicts("+ilp64", when="@:3.0", msg="ILP64 is supported from 3.1 onwards")
     requires("target=x86_64:", msg="AMD scalapack available only on x86_64")
+
+    patch("clang-hollerith.patch", when="%clang@16:")
+
+    def patch(self):
+        # Flang-New gets confused and thinks it finds Hollerith constants
+        if self.spec.satisfies("%clang@16:"):
+            filter_file("-cpp", "", "CMakeLists.txt")
 
     def url_for_version(self, version):
         vers = "https://github.com/amd/{0}/archive/{1}.tar.gz"
@@ -59,15 +70,15 @@ class Amdscalapack(ScalapackBase):
         spec = self.spec
 
         if not (
-            spec.satisfies(r"%aocc@3.2:4.1")
+            spec.satisfies(r"%aocc@3.2:4.2")
             or spec.satisfies(r"%gcc@12.2:13.1")
-            or spec.satisfies(r"%clang@15:16")
+            or spec.satisfies(r"%clang@15:17")
         ):
             tty.warn(
-                "AOCL has been tested to work with the following compilers\
-                    versions - gcc@12.2:13.1, aocc@3.2:4.1, and clang@15:16\
-                    see the following aocl userguide for details: \
-                    https://www.amd.com/content/dam/amd/en/documents/developer/version-4-1-documents/aocl/aocl-4-1-user-guide.pdf"
+                "AOCL has been tested to work with the following compilers "
+                "versions - gcc@12.2:13.1, aocc@3.2:4.2, and clang@15:17 "
+                "see the following aocl userguide for details: "
+                "https://www.amd.com/content/dam/amd/en/documents/developer/version-4-2-documents/aocl/aocl-4-2-user-guide.pdf"
             )
 
         if spec.satisfies("%gcc@10:"):
@@ -109,3 +120,7 @@ class Amdscalapack(ScalapackBase):
         )
 
         return args
+
+    def setup_dependent_run_environment(self, env, dependent_spec):
+        if self.spec.external:
+            env.prepend_path("LD_LIBRARY_PATH", self.prefix.lib)
