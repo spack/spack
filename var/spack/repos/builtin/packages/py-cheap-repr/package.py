@@ -19,4 +19,4 @@ class PyCheapRepr(PythonPackage):
     version("0.5.1", sha256="31ec63b9d8394aa23d746c8376c8307f75f9fca0b983566b8bcf13cc661fe6dd")
 
     depends_on("py-setuptools", type="build")
-    depends_on("py-setuptools-scm", type="build")
+    depends_on("py-setuptools-scm+toml", type="build")
