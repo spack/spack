@@ -952,6 +952,17 @@ function, as shown in the example below:
      ^mpi: "{name}-{version}/{^mpi.name}-{^mpi.version}-{compiler.name}-{compiler.version}"
      all: "{name}-{version}/{compiler.name}-{compiler.version}"
 
+Projections also permit environment and spack configuration variable
+expansions as shown below:
+
+.. code-block:: yaml
+
+   projections:
+     all: "{name}-{version}/{compiler.name}-{compiler.version}/$date/$SYSTEM_ENV_VARIBLE"
+
+where ``$date`` is the spack configuration variable that will expand with the ``YYYY-MM-DD``
+format and ``$SYSTEM_ENV_VARIABLE`` is an environment variable defined in the shell.
+
 The entries in the projections configuration file must all be either
 specs or the keyword ``all``. For each spec, the projection used will
 be the first non-``all`` entry that the spec satisfies, or ``all`` if
