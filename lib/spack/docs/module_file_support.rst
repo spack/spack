@@ -273,9 +273,21 @@ builtin support through the ``depends_on`` function, the latter simply uses a ``
 statement. Both module systems (at least in newer versions) do reference counting, so that if a
 module is loaded by two different modules, it will only be unloaded after the others are.
 
-The ``autoload`` key accepts the values ``none``, ``direct``, and ``all``. To disable it, use
-``none``, and to enable, it's best to stick to ``direct``, which only autoloads the direct link and
-run type dependencies, relying on recursive autoloading to load the rest.
+The ``autoload`` key accepts the values:
+
+  * ``none``: no autoloading
+  * ``run``: autoload direct *run* type dependencies
+  * ``direct``: autoload direct *link and run* type dependencies
+  * ``all``: autoload all dependencies
+
+In case of ``run`` and ``direct``, a ``module load`` triggers a recursive load.
+
+The ``direct`` option is most correct: there are cases where pure link dependencies need to set
+variables for themselves, or need to have variables of their own dependencies set.
+
+In practice however, ``run`` is often sufficient, and may make ``module load`` snappier.
+
+The ``all`` option is discouraged and seldomly used.
 
 A common complaint about autoloading is the large number of modules that are visible to the user.
 Spack has a solution for this as well: ``hide_implicits: true``. This ensures that only those
@@ -297,11 +309,11 @@ Environment Modules requires version 4.7 or higher.
             tcl:
               hide_implicits: true
               all:
-                autoload: direct
+                autoload: direct # or `run`
             lmod:
               hide_implicits: true
               all:
-                autoload: direct
+                autoload: direct # or `run`
 
 .. _anonymous_specs:
 
