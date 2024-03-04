@@ -22,7 +22,7 @@ class Abacus(MakefilePackage, CMakePackage, CudaPackage, ROCmPackage):
 
     homepage = "http://abacus.ustc.edu.cn/"
     git = "https://github.com/deepmodeling/abacus-develop.git"
-    url = "https://github.com/abacusmodeling/abacus-develop/archive/refs/tags/v2.2.1.tar.gz"
+    url = "https://github.com/deepmodeling/abacus-develop/archive/refs/tags/v2.2.1.tar.gz"
 
     license("LGPL-3.0-or-later")
 
