@@ -87,7 +87,7 @@ class Duckdb(MakefilePackage):
         # We use the Spack version to inject it in the right place during the build
 
         v = self.spec.version
-        if v < Version("0.10.0"):
+        if not self.spec.satisfies("@0.10.0:"):
             # Prior to version 0.10.0, this was sufficient
             filter_file(
                 r'(message\(STATUS "git hash \$\{GIT_COMMIT_HASH\}, '
