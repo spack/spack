@@ -199,10 +199,10 @@ class Abacus(MakefilePackage, CMakePackage, CudaPackage, ROCmPackage):
         when="@:3.5.4",
         msg="abacus spack package supports openblas/mkl as blas/lapack provider",
     )
-    # Here should be [virtual=blas,lapack] netlab-lapack~external-blas, 
-    # as netlab-lapack~external-blas mey serve as only virtual lapack or even 
+    # Here should be [virtual=blas,lapack] netlab-lapack~external-blas,
+    # as netlab-lapack~external-blas mey serve as only virtual lapack or even
     # virtual blas.
-    # netlab-lapack+external-blas do NOT contain libblas.so and not detectable 
+    # netlab-lapack+external-blas do NOT contain libblas.so and not detectable
     # for abacus CMake script.
     conflicts(
         "netlab-lapack~external-blas",
@@ -307,7 +307,7 @@ class CMakeBuilder(cmake.CMakeBuilder):
                     self.define(
                         "LAPACK_LIBRARY", lapack.libs
                     ),  # must be single lib with both blas&lapack routines
-               ]
+                ]
             )
 
         # avoid misdirecting to global visible elpa from apt, dnf, etc.
