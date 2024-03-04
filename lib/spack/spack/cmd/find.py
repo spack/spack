@@ -140,6 +140,12 @@ def setup_parser(subparser):
     subparser.add_argument(
         "--only-deprecated", action="store_true", help="show only deprecated packages"
     )
+    subparser.add_argument(
+        "--local", action="store_true", help="Only show packages from the local database"
+    )
+    subparser.add_argument(
+        "--upstream", action="store_true", help="Only show packages from upstreams"
+    )
 
     subparser.add_argument("--start-date", help="earliest date of installation [YYYY-MM-DD]")
     subparser.add_argument("--end-date", help="latest date of installation [YYYY-MM-DD]")
@@ -166,7 +172,13 @@ def query_arguments(args):
     if args.implicit:
         explicit = False
 
-    q_args = {"installed": installed, "known": known, "explicit": explicit}
+    q_args = {
+        "installed": installed,
+        "known": known,
+        "explicit": explicit,
+        "local": not args.upstream,
+        "upstream": not args.local,
+    }
 
     # Time window of installation
     for attribute in ("start_date", "end_date"):

@@ -1621,15 +1621,26 @@ class Database:
     query_local.__doc__ += _QUERY_DOCSTRING
 
     def query(self, *args, **kwargs):
-        """Query the Spack database including all upstream databases."""
-        upstream_results = []
-        for upstream_db in self.upstream_dbs:
-            # queries for upstream DBs need to *not* lock - we may not
-            # have permissions to do this and the upstream DBs won't know about
-            # us anyway (so e.g. they should never uninstall specs)
-            upstream_results.extend(upstream_db._query(*args, **kwargs) or [])
+        """Query the Spack database including all upstream databases.
 
-        local_results = set(self.query_local(*args, **kwargs))
+        Additional Arguments:
+            local (bool): Include results from the local database (default True)
+            upstream (bool): Include results from the configured upstreams (default True)
+        """
+        local = kwargs.pop("local", True)
+        upstream = kwargs.pop("upstream", True)
+
+        upstream_results = []
+        if upstream:
+            for upstream_db in self.upstream_dbs:
+                # queries for upstream DBs need to *not* lock - we may not
+                # have permissions to do this and the upstream DBs won't know about
+                # us anyway (so e.g. they should never uninstall specs)
+                upstream_results.extend(upstream_db._query(*args, **kwargs) or [])
+
+        local_results = []
+        if local:
+            local_results = set(self.query_local(*args, **kwargs))
 
         results = list(local_results) + list(x for x in upstream_results if x not in local_results)
 
