@@ -41,8 +41,11 @@ class Bear(CMakePackage):
     depends_on("python", type="build")
     depends_on("googletest", type="test", when="@3:")
 
+    # specific version constraints
     conflicts("@3.0.0", when="%apple-clang@15", msg="Problems with nlohmann-json integration")
     conflicts("@3.0.0", when="%clang@13.0.1", msg="Problems with std::optional")
+
+    # general version constraints
     conflicts("@3:", when="%gcc@:8.9", msg="Bear requires GCC with full std::filesystem support")
 
     patch("rpath-handling-3.0.20.patch", when="@3.0.20:")
