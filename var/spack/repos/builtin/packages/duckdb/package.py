@@ -27,9 +27,9 @@ class Duckdb(MakefilePackage):
     version("0.7.1", sha256="67f840f861e5ffbe137d65a8543642d016f900b89dd035492d562ad11acf0e1e")
 
     depends_on("python@3:")
-    depends_on("cmake")
-    depends_on("gmake")
-    depends_on("ninja", when="+ninjabuild")
+    depends_on("cmake", type="build")
+    depends_on("gmake", type="build")
+    depends_on("ninja", when="+ninjabuild", type="build")
     depends_on("openssl", when="+httpfs")
     depends_on("icu4c", when="~icu")
 
