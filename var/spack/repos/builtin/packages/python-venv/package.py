@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import shutil
+
+import llnl.util.filesystem as fs
 
 from spack.package import *
 
@@ -18,19 +21,30 @@ class PythonVenv(Package):
 
     version("1.0")
 
-    depends_on("python", type=("build", "run"))
+    extends("python")
 
     def install(self, spec, prefix):
         # Create a virtual environment
         spec["python"].command("-m", "venv", "--without-pip", prefix)
 
-        # Prefer `spack env activate` over `source activate` as it applies all required environment
-        # variable changes. The activate scripts are removed also because they contain an absolute
-        # path to python-venv's bin dir, which is incorrect in environment views.
-        bindir = self.bindir
-        for p in os.listdir(bindir):
-            if p.startswith("activate") or p.startswith("Activate"):
-                os.unlink(os.path.join(bindir, p))
+    def add_files_to_view(self, view, merge_map: Dict[str, str], skip_if_exists=True):
+        for src, dst in merge_map.items():
+            if skip_if_exists and os.path.lexists(dst):
+                continue
+
+            name = os.path.basename(dst)
+
+            # Replace the VIRTUAL_ENV variable in the activate scripts after copying
+            if name.lower().startswith("activate"):
+                shutil.copy(src, dst)
+                fs.filter_file(
+                    self.spec.prefix,
+                    os.path.abspath(view.get_projection_for_spec(self.spec)),
+                    dst,
+                    string=True,
+                )
+            else:
+                view.link(src, dst)
 
     @property
     def bindir(self):

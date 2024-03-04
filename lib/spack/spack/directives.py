@@ -680,7 +680,7 @@ def extends(spec, when=None, type=("build", "run"), patches=None):
 
         # When extending python, also add a dependency on python-venv. This is done so that
         # Spack environment views are Python virtual environments.
-        if spec_obj.name == "python":
+        if spec_obj.name == "python" and not pkg.name == "python-venv":
             _depends_on(pkg, "python-venv", when=when, type=("build", "run"))
 
         # TODO: the values of the extendees dictionary are not used. Remove in next refactor.
