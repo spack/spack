@@ -2287,8 +2287,7 @@ class SpackSolverSetup:
         self.possible_virtuals = node_counter.possible_virtuals()
         self.pkgs = node_counter.possible_dependencies()
 
-        runtimes = spack.repo.PATH.packages_with_tags("runtime")
-        self.pkgs.update(set(runtimes))
+        self.pkgs.update(spack.repo.PATH.packages_with_tags("runtime"))
 
         # Fail if we already know an unreachable node is requested
         for spec in specs:
