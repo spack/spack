@@ -15,7 +15,7 @@ class PythonVenv(Package):
 
     version("1.0")
 
-    depends_on("python", type=("build", "run"))
+    extends("python")
 
     def install(self, spec, prefix):
         pass
