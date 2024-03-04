@@ -53,9 +53,9 @@ class Duckdb(MakefilePackage):
     variant("odbc", default=False, description="Build with ODBC driver (may not work)")
     variant("python", default=False, description="Build with Python driver (may not work)")
 
-    def setup_build_environment(self, spec, prefix):
-        if "+ninjabuild" in spec:
-            env["GEN"] = "ninja"
+    def setup_build_environment(self, env):
+        if "+ninjabuild" in self.spec:
+            env.set("GEN", "ninja")
         variant_flags = [
             "autocomplete",
             "cli",
@@ -73,10 +73,10 @@ class Duckdb(MakefilePackage):
         ]
         for flag in variant_flags:
             make_flag = "BUILD_" + flag.upper()
-            if "+" + flag in spec:
-                env[make_flag] = "1"
-            elif "~" + flag in spec:
-                env[make_flag] = "0"
+            if "+" + flag in self.spec:
+                env.set(make_flag, "1")
+            elif "~" + flag in self.spec:
+                env.set(make_flag, "0")
 
     def url_for_version(self, version):
         return "https://github.com/duckdb/duckdb/archive/refs/tags/v{0}.tar.gz".format(version)
