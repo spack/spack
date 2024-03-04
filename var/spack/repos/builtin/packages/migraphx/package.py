@@ -90,6 +90,9 @@ class Migraphx(CMakePackage):
     for ver in ["5.7.0", "5.7.1"]:
         depends_on(f"composable-kernel@{ver}", when=f"@{ver}")
 
+    for ver in ["6.0.0", "6.0.2"]:
+        depends_on(f"rocmlir@{ver}", when=f"@{ver}")
+
     for ck_version, ck_commit in [
         ("6.0.0", "70eefcf4f263aa5c25f3c9ff0db8f6f199ef0fb9"),
         ("6.0.2", "70eefcf4f263aa5c25f3c9ff0db8f6f199ef0fb9"),
