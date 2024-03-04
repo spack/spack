@@ -260,8 +260,8 @@ class CMakeBuilder(cmake.CMakeBuilder):
 
         blas = spec["blas"]
         lapack = spec["lapack"]
-        #fftw = spec["fftw-api"]
-        #scalapack = spec["scalapack"] if spec.satisfies("+lcao") else ""
+        # fftw = spec["fftw-api"]
+        # scalapack = spec["scalapack"] if spec.satisfies("+lcao") else ""
         if blas.name in ["intel-mkl", "intel-parallel-studio", "intel-oneapi-mkl"]:
             args += [self.define("MKLROOT", spec["mkl"].prefix)]
         else:
@@ -285,9 +285,9 @@ class CMakeBuilder(cmake.CMakeBuilder):
             args += [self.define("ROCM_PATH", spec["hip"].prefix)]
             # build all c++ part with rocm compiler.
             # cpu and gpu parts can be seperately build, but not done.
-            # args += [ 
+            # args += [
             #     self.define(
-            #         "CMAKE_CXX_COMPILER", 
+            #         "CMAKE_CXX_COMPILER",
             #         join_path(spec["llvm-amdgpu"].prefix.bin,"clang++")
             #         )
             #     ]
