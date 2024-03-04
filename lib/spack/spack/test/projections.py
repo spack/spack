@@ -11,7 +11,7 @@ import spack.spec
 
 
 def test_projection_expansion(mock_packages):
-    """test that env variables and spack config variables are expanded in projections"""
+    """Test that env variables and spack config variables are expanded in projections"""
     os.environ["FOO_ENV_VAR"] = "test-string"
     projections = {"all": "{name}-{version}/$FOO_ENV_VAR/$date"}
     spec = spack.spec.Spec("fake@1.0")
