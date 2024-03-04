@@ -17,7 +17,7 @@ class PySnoop(PythonPackage):
     version("0.4.3", sha256="2e0930bb19ff0dbdaa6f5933f88e89ed5984210ea9f9de0e1d8231fa5c1c1f25")
 
     depends_on("py-setuptools", type="build")
-    depends_on("py-setuptools-scm", type="build")
+    depends_on("py-setuptools-scm+toml", type="build")
     depends_on("py-six", type=("build", "run"))
     depends_on("py-cheap-repr@0.4.0:", type=("build", "run"))
     depends_on("py-executing", type=("build", "run"))
