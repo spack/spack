@@ -224,27 +224,29 @@ def view(parser, args):
         if len(specs) == 0:
             tty.warn("Found no specs in %s" % path)
 
-    elif args.action in actions_link_specs:
-        # only link commands need to disambiguate specs
-        env = ev.active_environment()
-        specs = [spack.cmd.disambiguate_spec(s, env) for s in specs]
-
     elif args.action == "env-symlink":
         env = ev.active_environment()
         if not env:
             tty.die("View creation requires specs unless you are in an environment")
         specs = env.concrete_roots()
 
-    elif args.action in actions_status:
-        # no specs implies all
-        if len(specs) == 0:
-            specs = view.get_all_specs()
-        else:
-            specs = disambiguate_in_view(specs, view)
-
     else:
-        # status and remove can map a partial spec to packages in view
-        specs = disambiguate_in_view(specs, view)
+        specs = spack.cmd.parse_specs(args.specs)
+        if args.action in actions_link_specs:
+            # only link commands need to disambiguate specs
+            env = ev.active_environment()
+            specs = [spack.cmd.disambiguate_spec(s, env) for s in specs]
+
+        elif args.action in actions_status:
+            # no specs implies all
+            if len(specs) == 0:
+                specs = view.get_all_specs()
+            else:
+                specs = disambiguate_in_view(specs, view)
+
+        else:
+            # status and remove can map a partial spec to packages in view
+            specs = disambiguate_in_view(specs, view)
 
     with_dependencies = args.dependencies.lower() in ["true", "yes"]
 
