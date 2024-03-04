@@ -121,6 +121,7 @@ class Dbcsr(CMakePackage, CudaPackage, ROCmPackage):
     generator("ninja")
     depends_on("ninja@1.10:", type="build")
 
+    # Add '-Kopenmp' option for Fujitsu compiler to avoid errors
     patch("fjfrt_mod.patch", when="%fj")
 
     def cmake_args(self):
