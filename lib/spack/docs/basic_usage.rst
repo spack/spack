@@ -968,9 +968,9 @@ We'll learn more about Spack's spec syntax in :ref:`a later section <sec-specs>`
 Python packages and virtual environments
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Spack can be used to install a large number of Python extensions, which are
-typically named like ``py-*``. They are installed and used like any other package.
-To give and example:
+Spack can install a large number of Python packages. Their names are
+typically prefixed with ``py-``. Installing and using them is no
+different from any other package:
 
 .. code-block:: console
 
