@@ -59,17 +59,61 @@ class Abacus(MakefilePackage, CMakePackage, CudaPackage, ROCmPackage):
     version("3.0.2", sha256="b0c3aad9cac18d0ca73c78c69326031407af6a4bfcc953b3a27506c298bc59a3")
     version("3.0.1", sha256="812941146c31ab53c9a7695abbca6bfb36ae55878e38f8d0f13a17f3d9c36dc0")
     version("3.0.0", sha256="1c1299f53788beb2f6b6180d8484d584b6f293c81cea25f45b9632dd608ba4f9")
-    version("2.3.5", sha256="81c44be76c820b59a8b95f2b398c772160068a5e323f319e33704ff87dbefc5e",deprecated=True)
-    version("2.3.4", sha256="16b817311c8055cf055021d895642fbb913585f08ec96f9aff3e0ef20148ec0e",deprecated=True)
-    version("2.3.3", sha256="a1246c4a6de385826cae15d9a446e862331eb189a592622b1014c7b49504c908",deprecated=True)
-    version("2.3.2", sha256="edcaae88e51360548bbdf1bcbd5048bec0d309b4fe11d8d11d5425afc001e9a1",deprecated=True)
-    version("2.3.1", sha256="e9522469f499bcb1c57ec05e9866403e4142c97762d7662b4b638f7493bf5122",deprecated=True)
-    version("2.3.0", sha256="c5a803a1a596983681d65aff46762f2f6b82b5f50449a53d0ec7dad368d35842",deprecated=True)
-    version("2.2.4", sha256="1f3923d32c392fd2564d137b076134aebdc461dc3148c535a00f9b10a615157a",deprecated=True)
-    version("2.2.3", sha256="88dbf6a3bdd907df3e097637ec8e51fde13e2f5e0b44f3667443195481320edf",deprecated=True)
-    version("2.2.2", sha256="4a7cf2ec6e43dd5c53d5f877a941367074f4714d93c1977a719782957916169e",deprecated=True)
-    version("2.2.1", sha256="14feca1d8d1ce025d3f263b85ebfbebc1a1efff704b6490e95b07603c55c1d63",deprecated=True)
-    version("2.2.0", sha256="09d4a2508d903121d29813a85791eeb3a905acbe1c5664b8a88903f8eda64b8f",deprecated=True)
+    version(
+        "2.3.5",
+        sha256="81c44be76c820b59a8b95f2b398c772160068a5e323f319e33704ff87dbefc5e",
+        deprecated=True,
+    )
+    version(
+        "2.3.4",
+        sha256="16b817311c8055cf055021d895642fbb913585f08ec96f9aff3e0ef20148ec0e",
+        deprecated=True,
+    )
+    version(
+        "2.3.3",
+        sha256="a1246c4a6de385826cae15d9a446e862331eb189a592622b1014c7b49504c908",
+        deprecated=True,
+    )
+    version(
+        "2.3.2",
+        sha256="edcaae88e51360548bbdf1bcbd5048bec0d309b4fe11d8d11d5425afc001e9a1",
+        deprecated=True,
+    )
+    version(
+        "2.3.1",
+        sha256="e9522469f499bcb1c57ec05e9866403e4142c97762d7662b4b638f7493bf5122",
+        deprecated=True,
+    )
+    version(
+        "2.3.0",
+        sha256="c5a803a1a596983681d65aff46762f2f6b82b5f50449a53d0ec7dad368d35842",
+        deprecated=True,
+    )
+    version(
+        "2.2.4",
+        sha256="1f3923d32c392fd2564d137b076134aebdc461dc3148c535a00f9b10a615157a",
+        deprecated=True,
+    )
+    version(
+        "2.2.3",
+        sha256="88dbf6a3bdd907df3e097637ec8e51fde13e2f5e0b44f3667443195481320edf",
+        deprecated=True,
+    )
+    version(
+        "2.2.2",
+        sha256="4a7cf2ec6e43dd5c53d5f877a941367074f4714d93c1977a719782957916169e",
+        deprecated=True,
+    )
+    version(
+        "2.2.1",
+        sha256="14feca1d8d1ce025d3f263b85ebfbebc1a1efff704b6490e95b07603c55c1d63",
+        deprecated=True,
+    )
+    version(
+        "2.2.0",
+        sha256="09d4a2508d903121d29813a85791eeb3a905acbe1c5664b8a88903f8eda64b8f",
+        deprecated=True,
+    )
 
     variant("mpi", default=True, description="Enable MPI support")
     variant("openmp", default=True, description="Enable OpenMP support")
@@ -77,7 +121,7 @@ class Abacus(MakefilePackage, CMakePackage, CudaPackage, ROCmPackage):
         "lcao",
         default=True,
         description="Enable Linear Combinition of Atomic Orbital calculation",
-        when="+mpi"
+        when="+mpi",
     )
     variant("libxc", default=True, description="Support additional functionals via libxc")
     variant(
@@ -88,23 +132,20 @@ class Abacus(MakefilePackage, CMakePackage, CudaPackage, ROCmPackage):
     )
     variant("mathlib", default=False, description="Enable ABACUS's builtin libm")
     variant(
-        "tests", 
-        default=False, 
-        description="Build ABACUS unit tests",
-        when="build_system=cmake"
+        "tests", default=False, description="Build ABACUS unit tests", when="build_system=cmake"
     )
     variant(
-        "benchmarks", 
-        default=False, 
+        "benchmarks",
+        default=False,
         description="Enable ABACUS's builtin benchmark tests",
-        when="+tests"
+        when="+tests",
     )
     variant("rocm", default=False, description="(Experimental)Enable rocm support")
     # TODO: Add support for
-    # LibRI(https://github.com/abacusmodeling/LibRI), 
-    # LibComm(https://github.com/abacusmodeling/LibComm), 
-    # Libnpy(https://github.com/llohse/libnpy/), 
-    # DeePKS(https://github.com/deepmodeling/deepks-kit), 
+    # LibRI(https://github.com/abacusmodeling/LibRI),
+    # LibComm(https://github.com/abacusmodeling/LibComm),
+    # Libnpy(https://github.com/llohse/libnpy/),
+    # DeePKS(https://github.com/deepmodeling/deepks-kit),
     # DeePMD(https://github.com/deepmodeling/deepmd-kit),
     # LibPAW-interface(https://github.com/wenfei-li/libpaw_interface),
     # At 2024-1-30, none of above have a spack package.
@@ -194,48 +235,55 @@ NP      = 14\n"
     def install(self, spec, prefix):
         install_tree("bin", prefix.bin)
 
+
 class CMakeBuilder(cmake.CMakeBuilder):
     def cmake_args(self):
         spec = self.spec
         args = []
         args += [
-            self.define_from_variant("ENABLE_MPI"        , "mpi" ),
-            self.define_from_variant("USE_OPENMP"        , "openmp"),
-            self.define_from_variant("USE_ELPA"          , "elpa"),
-            self.define_from_variant("USE_ABACUS_LIBM"   , "mathlib"),
-            self.define_from_variant("ENABLE_LCAO"       , "lcao"),
-            self.define_from_variant("ENABLE_LIBXC"      , "libxc"),
+            self.define_from_variant("ENABLE_MPI", "mpi"),
+            self.define_from_variant("USE_OPENMP", "openmp"),
+            self.define_from_variant("USE_ELPA", "elpa"),
+            self.define_from_variant("USE_ABACUS_LIBM", "mathlib"),
+            self.define_from_variant("ENABLE_LCAO", "lcao"),
+            self.define_from_variant("ENABLE_LIBXC", "libxc"),
             self.define_from_variant("ENABLE_GOOGLEBENCH", "benchmarks"),
-            self.define_from_variant("BUILD_TESTING"     , "tests"),
-            self.define_from_variant("USE_ROCM"          , "rocm"),
-            self.define_from_variant("USE_CUDA"          , "cuda"),
+            self.define_from_variant("BUILD_TESTING", "tests"),
+            self.define_from_variant("USE_ROCM", "rocm"),
+            self.define_from_variant("USE_CUDA", "cuda"),
         ]
 
         blas = spec["blas"]
-        lapack= spec["lapack"]
+        lapack = spec["lapack"]
         fftw = spec["fftw-api"]
         scalapack = spec["scalapack"] if spec.satisfies("+lcao") else ""
         if blas.name in ["intel-mkl", "intel-parallel-studio", "intel-oneapi-mkl"]:
-            args += [self.define("MKLROOT", spec["mkl"].prefix),]
+            args += [self.define("MKLROOT", spec["mkl"].prefix)]
         else:
             args.extend(
                 [
                     self.define("LAPACK_FOUND", True),
-                    self.define("LAPACK_LIBRARY", lapack.libs),# blas implementation other than openblas not supported
+                    self.define(
+                        "LAPACK_LIBRARY", lapack.libs
+                    ),  # blas implementation other than openblas not supported
                 ]
             )
 
         # avoid misdirecting to global visible elpa from apt, dnf, etc.
         if spec.satisfies("+elpa"):
-            elpa=spec["elpa"]
+            elpa = spec["elpa"]
             elpa_include = elpa.headers.directories[0]
-            args += [ self.define("ELPA_INCLUDE_DIRS", elpa_include), ]
+            args += [self.define("ELPA_INCLUDE_DIRS", elpa_include)]
 
         if spec.satisfies("+rocm"):
-            args += [ self.define("COMMIT_INFO", False), ]
-            args += [ self.define("ROCM_PATH", spec["hip"].prefix) ]
+            args += [self.define("COMMIT_INFO", False)]
+            args += [self.define("ROCM_PATH", spec["hip"].prefix)]
             # build all c++ part with rocm compiler. cpu and gpu parts can be seperately build, but not done.
-            #args += [ self.define("CMAKE_CXX_COMPILER", join_path(spec["llvm-amdgpu"].prefix.bin,"clang++")) ]
+            # args += [ self.define("CMAKE_CXX_COMPILER", join_path(spec["llvm-amdgpu"].prefix.bin,"clang++")) ]
             # only work for dcu toolkit 23.10 environment, not sure if any other version needs
-            args += [ self.define("HIP_CXX_COMPILER", join_path(spec["llvm-amdgpu"].prefix.bin,"clang++")) ]
+            args += [
+                self.define(
+                    "HIP_CXX_COMPILER", join_path(spec["llvm-amdgpu"].prefix.bin, "clang++")
+                )
+            ]
         return args
