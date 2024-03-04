@@ -15,8 +15,7 @@ class Duckdb(MakefilePackage):
     git = "https://github.com/duckdb/duckdb.git"
 
     license("MIT")
-    maintainers("glentner")
-    maintainers("teaguesterling")
+    maintainers("glentner", "teaguesterling")
 
     version("master", branch="master")
     version("0.10.0", sha256="5a925b8607d00a97c1a3ffe6df05c0a62a4df063abd022ada82ac1e917792013")
