@@ -180,37 +180,34 @@ class Abacus(MakefilePackage, CMakePackage, CudaPackage, ROCmPackage):
     requires("%clang" or "%rocmcc", when="+rocm", msg="build with rocm requires rocm compiler")
 
     conflicts(
-        "blis",
+        "^blis",
         when="@:3.5.4",
         msg="abacus spack package supports openblas/mkl as blas/lapack provider",
     )
     conflicts(
-        "libflame",
+        "^libflame",
         when="@:3.5.4",
         msg="abacus spack package supports openblas/mkl as blas/lapack provider",
     )
     conflicts(
-        "amdblis",
+        "^amdblis",
         when="@:3.5.4",
         msg="abacus spack package supports openblas/mkl as blas/lapack provider",
     )
     conflicts(
-        "amdlibflame",
+        "^amdlibflame",
         when="@:3.5.4",
         msg="abacus spack package supports openblas/mkl as blas/lapack provider",
     )
-    # Here should be [virtual=blas,lapack] netlab-lapack~external-blas,
-    # as netlab-lapack~external-blas mey serve as only virtual lapack or even
-    # virtual blas.
     # netlab-lapack+external-blas do NOT contain libblas.so and not detectable
     # for abacus CMake script.
     conflicts(
-        "netlib-lapack~external-blas",
+        "^[virtuals=lapack] netlib-lapack~external-blas",
         when="@:3.5.4",
         msg="abacus spack package supports openblas/mkl as blas/lapack provider",
     )
     conflicts(
-        "netlib-xblas",
+        "^netlib-xblas",
         when="@:3.5.4",
         msg="abacus spack package supports openblas/mkl as blas/lapack provider",
     )
@@ -295,7 +292,7 @@ class CMakeBuilder(cmake.CMakeBuilder):
         ]
 
         blas = spec["blas"]
-        # lapack = spec["lapack"]
+        lapack = spec["lapack"]
         # fftw = spec["fftw-api"]
         # scalapack = spec["scalapack"] if spec.satisfies("+lcao") else ""
         if blas.name in ["intel-mkl", "intel-parallel-studio", "intel-oneapi-mkl"]:
