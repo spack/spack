@@ -752,13 +752,13 @@ class RepoPath:
         Args:
             full: if True the package names in the output are fully-qualified
         """
-        r = set()
-        for repo in self.repos:
-            current = repo.packages_with_tags(*tags)
-            if full:
-                current = [f"{repo.namespace}.{x}" for x in current]
-            r |= set(current)
-        return sorted(r)
+        return sorted(
+            {
+                f"{repo.namespace}.{pkg}" if full else pkg
+                for repo in self.repos
+                for pkg in repo.packages_with_tags(*tags)
+            }
+        )
 
     def all_package_classes(self):
         for name in self.all_package_names():
