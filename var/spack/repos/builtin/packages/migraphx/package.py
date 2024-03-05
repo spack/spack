@@ -46,9 +46,19 @@ class Migraphx(CMakePackage):
     patch("0003-restrict-python-2.7-usage.patch", when="@5.2.0:5.4")
     patch("0004-restrict-python2.7-usage-for-5.5.0.patch", when="@5.5.0")
     patch("0005-Adding-half-include-directory-path-migraphx.patch", when="@5.6.0:5.7")
-    patch("0006-add-option-to-turn-off-ck.patch", when="@5.7:")
+    patch("0006-add-option-to-turn-off-ck.patch", when="@5.7")
+    patch(
+        "https://github.com/ROCm/AMDMIGraphX/commit/728bea3489c97c9e1ddda0a0ae527ffd2d70cb97.patch?full_index=1",
+        sha256="3a8afd32208aa4f59fb31f898d243287771ebd409c7af7a4a785c586081e3711",
+        when="@6.0:",
+    )
+
+    patch(
+        "https://github.com/ROCm/AMDMIGraphX/commit/624f8ef549522f64fdddad7f49a2afe1890b0b79.patch?full_index=1",
+        sha256="410d0fd49f5f65089cd4f540c530c85896708b4fd94c67d15c2c279158aea85d",
+        when="@6.0:",
+    )
     patch("0003-add-half-include-directory-migraphx-6.0.patch", when="@6.0:")
-    patch("0007-composable-kernel-include-path.patch", when="@6.0:")
 
     depends_on("cmake@3.5:", type="build")
     depends_on("protobuf", type="link")
@@ -87,22 +97,8 @@ class Migraphx(CMakePackage):
         depends_on(f"rocblas@{ver}", when=f"@{ver}")
         depends_on(f"miopen-hip@{ver}", when=f"@{ver}")
 
-    for ver in ["5.7.0", "5.7.1"]:
-        depends_on(f"composable-kernel@{ver}", when=f"@{ver}")
-
     for ver in ["6.0.0", "6.0.2"]:
         depends_on(f"rocmlir@{ver}", when=f"@{ver}")
-
-    for ck_version, ck_commit in [
-        ("6.0.0", "70eefcf4f263aa5c25f3c9ff0db8f6f199ef0fb9"),
-        ("6.0.2", "70eefcf4f263aa5c25f3c9ff0db8f6f199ef0fb9"),
-    ]:
-        resource(
-            name="composable-kernel",
-            git="https://github.com/ROCm/composable_kernel.git",
-            commit=ck_commit,
-            when="@" + ck_version,
-        )
 
     @property
     def cmake_python_hints(self):
