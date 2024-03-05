@@ -228,6 +228,7 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
     depends_on("camp", when="@5.0.0:")
     depends_on("camp+openmp", when="+openmp")
     depends_on("camp~cuda", when="~cuda")
+    depends_on("camp~rocm", when="~rocm")
 
     depends_on("sqlite", when="+sqlite_experimental")
     depends_on("mpi", when="+mpi")

@@ -171,7 +171,7 @@ def polite_path(components: Iterable[str]):
 @memoized
 def _polite_antipattern():
     # A regex of all the characters we don't want in a filename
-    return re.compile(r"[^A-Za-z0-9_.-]")
+    return re.compile(r"[^A-Za-z0-9_+.-]")
 
 
 def polite_filename(filename: str) -> str:
@@ -920,27 +920,33 @@ def get_filetype(path_name):
     return output.strip()
 
 
-@system_path_filter
-def is_nonsymlink_exe_with_shebang(path):
-    """
-    Returns whether the path is an executable script with a shebang.
-    Return False when the path is a *symlink* to an executable script.
-    """
+def has_shebang(path):
+    """Returns whether a path has a shebang line. Returns False if the file cannot be opened."""
     try:
-        st = os.lstat(path)
-        # Should not be a symlink
-        if stat.S_ISLNK(st.st_mode):
-            return False
-
-        # Should be executable
-        if not st.st_mode & (stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH):
-            return False
-
-        # Should start with a shebang
         with open(path, "rb") as f:
             return f.read(2) == b"#!"
-    except (IOError, OSError):
+    except OSError:
         return False
+
+
+@system_path_filter
+def is_nonsymlink_exe_with_shebang(path):
+    """Returns whether the path is an executable regular file with a shebang. Returns False too
+    when the path is a symlink to a script, and also when the file cannot be opened."""
+    try:
+        st = os.lstat(path)
+    except OSError:
+        return False
+
+    # Should not be a symlink
+    if stat.S_ISLNK(st.st_mode):
+        return False
+
+    # Should be executable
+    if not st.st_mode & (stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH):
+        return False
+
+    return has_shebang(path)
 
 
 @system_path_filter(arg_slice=slice(1))
@@ -1232,6 +1238,47 @@ def get_single_file(directory):
     if len(fnames) != 1:
         raise ValueError("Expected exactly 1 file, got {0}".format(str(len(fnames))))
     return fnames[0]
+
+
+@system_path_filter
+def windows_sfn(path: os.PathLike):
+    """Returns 8.3 Filename (SFN) representation of
+    path
+
+    8.3 Filenames (SFN or short filename) is a file
+    naming convention used prior to Win95 that Windows
+    still (and will continue to) support. This convention
+    caps filenames at 8 characters, and most importantly
+    does not allow for spaces in addition to other specifications.
+    The scheme is generally the same as a normal Windows
+    file scheme, but all spaces are removed and the filename
+    is capped at 6 characters. The remaining characters are
+    replaced with ~N where N is the number file in a directory
+    that a given file represents i.e. Program Files and Program Files (x86)
+    would be PROGRA~1 and PROGRA~2 respectively.
+    Further, all file/directory names are all caps (although modern Windows
+    is case insensitive in practice).
+    Conversion is accomplished by fileapi.h GetShortPathNameW
+
+    Returns paths in 8.3 Filename form
+
+    Note: this method is a no-op on Linux
+
+    Args:
+        path: Path to be transformed into SFN (8.3 filename) format
+    """
+    # This should not be run-able on linux/macos
+    if sys.platform != "win32":
+        return path
+    path = str(path)
+    import ctypes
+
+    k32 = ctypes.WinDLL("kernel32", use_last_error=True)
+    # stub Windows types TCHAR[LENGTH]
+    TCHAR_arr = ctypes.c_wchar * len(path)
+    ret_str = TCHAR_arr()
+    k32.GetShortPathNameW(path, ret_str, len(path))
+    return ret_str.value
 
 
 @contextmanager

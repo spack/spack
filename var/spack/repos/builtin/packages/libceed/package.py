@@ -36,10 +36,9 @@ class Libceed(MakefilePackage, CudaPackage, ROCmPackage):
     variant("libxsmm", default=False, description="Enable LIBXSMM backend", when="@0.3:")
     variant("magma", default=False, description="Enable MAGMA backend", when="@0.6:")
 
-    conflicts("+rocm", when="@:0.6")
+    conflicts("+rocm", when="@:0.7")
 
     with when("+rocm"):
-        depends_on("hip@3.8.0", when="@0.7:0.7.99")
         depends_on("hip@3.8.0:", when="@0.8:")
         depends_on("hipblas@3.8.0:", when="@0.8:")
 

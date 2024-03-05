@@ -153,7 +153,8 @@ class Visit(CMakePackage):
 
     # VisIt uses Silo's 'ghost zone' data structures, which are only available
     # in v4.10+ releases: https://wci.llnl.gov/simulation/computer-codes/silo/releases/release-notes-4.10
-    depends_on("silo@4.10: +shared", when="+silo")
+    # Silo versions < 4.11 do not build successfully with Spack
+    depends_on("silo@4.11: +shared", when="+silo")
     depends_on("silo+hdf5", when="+silo+hdf5")
     depends_on("silo~hdf5", when="+silo~hdf5")
     depends_on("silo+mpi", when="+silo+mpi")

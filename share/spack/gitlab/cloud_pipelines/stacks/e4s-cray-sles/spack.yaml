@@ -147,7 +147,6 @@ spack:
   # HOLDING THESE BACK UNTIL CRAY SLES CAPACITY IS EXPANDED AT UO
   # - alquimia
   # - amrex
-  # - archer
   # - axom
   # - bricks
   # - dealii

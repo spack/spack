@@ -663,10 +663,8 @@ class ViewDescriptor:
         return True
 
     def specs_for_view(self, concrete_roots: List[Spec]) -> List[Spec]:
-        """
-        From the list of concretized user specs in the environment, flatten
-        the dags, and filter selected, installed specs, remove duplicates on dag hash.
-        """
+        """Flatten the DAGs of the concrete roots, keep only unique, selected, and installed specs
+        in topological order from root to leaf."""
         if self.link == "all":
             deptype = dt.LINK | dt.RUN
         elif self.link == "run":
@@ -674,7 +672,9 @@ class ViewDescriptor:
         else:
             deptype = dt.NONE
 
-        specs = traverse.traverse_nodes(concrete_roots, deptype=deptype, key=traverse.by_dag_hash)
+        specs = traverse.traverse_nodes(
+            concrete_roots, order="topo", deptype=deptype, key=traverse.by_dag_hash
+        )
 
         # Filter selected, installed specs
         with spack.store.STORE.db.read_transaction():
@@ -871,9 +871,55 @@ class Environment:
             else:
                 self.spec_lists[name] = user_specs
 
+    def _process_view(self, env_view: Optional[Union[bool, str, Dict]]):
+        """Process view option(s), which can be boolean, string, or None.
+
+        A boolean environment view option takes precedence over any that may
+        be included. So ``view: True`` results in the default view only. And
+        ``view: False`` means the environment will have no view.
+
+        Args:
+            env_view: view option provided in the manifest or configuration
+        """
+
+        def add_view(name, values):
+            """Add the view with the name and the string or dict values."""
+            if isinstance(values, str):
+                self.views[name] = ViewDescriptor(self.path, values)
+            elif isinstance(values, dict):
+                self.views[name] = ViewDescriptor.from_dict(self.path, values)
+            else:
+                tty.error(f"Cannot add view named {name} for {type(values)} values {values}")
+
+        # If the configuration specifies 'view: False' then we are done
+        # processing views. If this is called with the environment's view
+        # view (versus an included view), then there are to be NO views.
+        if env_view is False:
+            return
+
+        # If the configuration specifies 'view: True' then only the default
+        # view will be created for the environment and we are done processing
+        # views.
+        if env_view is True:
+            add_view(default_view_name, self.view_path_default)
+            return
+
+        # Otherwise, the configuration has a subdirectory or dictionary.
+        if isinstance(env_view, str):
+            add_view(default_view_name, env_view)
+        elif env_view:
+            for name, values in env_view.items():
+                add_view(name, values)
+
+        # If we reach this point without an explicit view option then we
+        # provide the default view.
+        if self.views == dict():
+            self.views[default_view_name] = ViewDescriptor(self.path, self.view_path_default)
+
     def _construct_state_from_manifest(self):
         """Set up user specs and views from the manifest file."""
         self.spec_lists = collections.OrderedDict()
+        self.views = {}
 
         for item in spack.config.get("definitions", []):
             self._process_definition(item)
@@ -885,20 +931,7 @@ class Environment:
         )
         self.spec_lists[user_speclist_name] = user_specs
 
-        enable_view = env_configuration.get("view")
-        # enable_view can be boolean, string, or None
-        if enable_view is True or enable_view is None:
-            self.views = {default_view_name: ViewDescriptor(self.path, self.view_path_default)}
-        elif isinstance(enable_view, str):
-            self.views = {default_view_name: ViewDescriptor(self.path, enable_view)}
-        elif enable_view:
-            path = self.path
-            self.views = dict(
-                (name, ViewDescriptor.from_dict(path, values))
-                for name, values in enable_view.items()
-            )
-        else:
-            self.views = {}
+        self._process_view(spack.config.get("view", True))
 
     @property
     def user_specs(self):
@@ -1451,44 +1484,6 @@ class Environment:
             for abstract, h in zip(self.concretized_user_specs, self.concretized_order)
         ]
         return results
-
-    def concretize_and_add(self, user_spec, concrete_spec=None, tests=False):
-        """Concretize and add a single spec to the environment.
-
-        Concretize the provided ``user_spec`` and add it along with the
-        concretized result to the environment. If the given ``user_spec`` was
-        already present in the environment, this does not add a duplicate.
-        The concretized spec will be added unless the ``user_spec`` was
-        already present and an associated concrete spec was already present.
-
-        Args:
-            concrete_spec: if provided, then it is assumed that it is the
-                result of concretizing the provided ``user_spec``
-        """
-        if self.unify is True:
-            msg = (
-                "cannot install a single spec in an environment that is "
-                "configured to be concretized together. Run instead:\n\n"
-                "    $ spack add <spec>\n"
-                "    $ spack install\n"
-            )
-            raise SpackEnvironmentError(msg)
-
-        spec = Spec(user_spec)
-
-        if self.add(spec):
-            concrete = concrete_spec or spec.concretized(tests=tests)
-            self._add_concrete_spec(spec, concrete)
-        else:
-            # spec might be in the user_specs, but not installed.
-            # TODO: Redo name-based comparison for old style envs
-            spec = next(s for s in self.user_specs if s.satisfies(user_spec))
-            concrete = self.specs_by_hash.get(spec.dag_hash())
-            if not concrete:
-                concrete = spec.concretized(tests=tests)
-                self._add_concrete_spec(spec, concrete)
-
-        return concrete
 
     @property
     def default_view(self):
@@ -2057,7 +2052,6 @@ class Environment:
 
         if regenerate:
             self.regenerate_views()
-            spack.hooks.post_env_write(self)
 
         self.new_specs.clear()
 
