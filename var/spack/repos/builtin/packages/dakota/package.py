@@ -43,6 +43,12 @@ class Dakota(CMakePackage):
     license("LGPL-2.1-or-later")
 
     version(
+        "6.19.0",
+        tag="v6.19.0",
+        commit="603f448b916a8f629d258922e26e7e40dcaaf8ce",
+        submodules=submodules,
+    )
+    version(
         "6.18",
         tag="v6.18.0",
         commit="f6cb33b517bb304795e1e14d3673fe289df2ec9b",
@@ -81,7 +87,7 @@ class Dakota(CMakePackage):
 
         args = [
             self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
-            self.define_from_variant("DAKOTA_PYTHON", "python")
+            self.define_from_variant("DAKOTA_PYTHON", "python"),
         ]
 
         if "+mpi" in spec:
