@@ -9,6 +9,7 @@ on:
     branches:
       - develop
       - releases/**
+      - features/compilers-as-deps
 
 concurrency:
   group: ci-${{github.ref}}-${{github.event.pull_request.number || github.run_number}}

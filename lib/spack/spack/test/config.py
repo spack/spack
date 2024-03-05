@@ -1271,7 +1271,10 @@ def test_user_config_path_is_overridable(working_env):
 
 def test_user_config_path_is_default_when_env_var_is_empty(working_env):
     os.environ["SPACK_USER_CONFIG_PATH"] = ""
-    assert os.path.expanduser("~%s.spack" % os.sep) == spack.paths._get_user_config_path()
+    assert (
+        os.path.expanduser("~%s.spack-compilers-as-deps" % os.sep)
+        == spack.paths._get_user_config_path()
+    )
 
 
 def test_default_install_tree(monkeypatch, default_config):
@@ -1312,7 +1315,10 @@ def test_user_cache_path_is_overridable(working_env):
 
 def test_user_cache_path_is_default_when_env_var_is_empty(working_env):
     os.environ["SPACK_USER_CACHE_PATH"] = ""
-    assert os.path.expanduser("~%s.spack" % os.sep) == spack.paths._get_user_cache_path()
+    assert (
+        os.path.expanduser("~%s.spack-compilers-as-deps" % os.sep)
+        == spack.paths._get_user_cache_path()
+    )
 
 
 github_url = "https://github.com/fake/fake/{0}/develop"
