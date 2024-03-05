@@ -226,9 +226,10 @@ class UrlPatch(Patch):
         pkg: "spack.package_base.PackageBase",
         url: str,
         level: int = 1,
+        *,
         working_dir: str = ".",
+        sha256: str,  # This is required for UrlPatch
         ordering_key: Optional[Tuple[str, int]] = None,
-        sha256: Optional[str] = None,
         archive_sha256: Optional[str] = None,
     ) -> None:
         """Initialize a new UrlPatch instance.
@@ -348,7 +349,7 @@ def from_dict(
             pkg_cls,
             dictionary["url"],
             dictionary["level"],
-            dictionary["working_dir"],
+            working_dir=dictionary["working_dir"],
             sha256=dictionary["sha256"],
             archive_sha256=dictionary.get("archive_sha256"),
         )
