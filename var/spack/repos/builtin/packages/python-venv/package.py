@@ -25,7 +25,7 @@ class PythonVenv(Package):
 
     def install(self, spec, prefix):
         # Create a virtual environment
-        spec["python"].command("-m", "venv", "--without-pip", prefix)
+        python("-m", "venv", "--without-pip", prefix)
 
     def add_files_to_view(self, view, merge_map: Dict[str, str], skip_if_exists=True):
         for src, dst in merge_map.items():
