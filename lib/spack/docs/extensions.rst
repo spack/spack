@@ -124,7 +124,7 @@ Spack can be made aware of extensions that are installed as part of a python pac
 .. code-block:: console
 
   my-package/
-  ├── lib
+  ├── src
   │   ├── my_package
   │   │   └── __init__.py
   │   └── spack-scripting/  # the spack extensions

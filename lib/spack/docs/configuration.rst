@@ -213,7 +213,7 @@ Spack can be made aware of configuration scopes that are installed as part of a 
 .. code-block:: console
 
   my-package/
-  ├── lib
+  ├── src
   │   ├── my_package
   │   │   ├── __init__.py
   │   │   └── spack/
