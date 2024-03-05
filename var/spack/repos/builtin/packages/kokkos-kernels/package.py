@@ -136,19 +136,23 @@ class KokkosKernels(CMakePackage, CudaPackage):
 
     tpls = {
         # variant name   #deflt   #spack name   #root var name #docstring
-        "blas": (False, "blas", "BLAS", "Link to system BLAS"),
-        "lapack": (False, "lapack", "LAPACK", "Link to system LAPACK"),
-        "mkl": (False, "mkl", "MKL", "Link to system MKL"),
-        "cublas": (False, "cuda", None, "Link to CUDA BLAS library"),
-        "cusparse": (False, "cuda", None, "Link to CUDA sparse library"),
-        "superlu": (False, "superlu", "SUPERLU", "Link to SuperLU library"),
-        "cblas": (False, "cblas", "CBLAS", "Link to CBLAS library"),
-        "lapacke": (False, "clapack", "LAPACKE", "Link to LAPACKE library"),
+        "blas": (False, "blas", "BLAS", "@3.0.00:", "Link to system BLAS"),
+        "lapack": (False, "lapack", "LAPACK", "@3.0.00:", "Link to system LAPACK"),
+        "mkl": (False, "mkl", "MKL", "@3.0.00:", "Link to system MKL"),
+        "cublas": (False, "cuda", None, "@3.0.00:", "Link to CUDA BLAS library"),
+        "cusparse": (False, "cuda", None, "@3.0.00:", "Link to CUDA sparse library"),
+        "superlu": (False, "superlu", "SUPERLU", "@3.1.00:", "Link to SuperLU library"),
+        "cblas": (False, "cblas", "CBLAS", "@3.1.00:", "Link to CBLAS library"),
+        "lapacke": (False, "clapack", "LAPACKE", "@3.1.00:", "Link to LAPACKE library"),
+        "rocblas": (False, "rocblas", "ROCBLAS", "@3.6.00:", "Link to AMD BLAS library"),
+        "rocsparse": (False, "rocsparse", "ROCSPARSE", "@3.6.00:", "Link to AMD sparse library"),
     }
+        # "cusolver": (False, "cuda", None, "@4.3.00:", "Link to CUDA solver library"),
+        # "rocsolver": (False, "rocsolver", "ROCSOLVER", "@4.3.00:", "Link to AMD solver library"),
 
     for tpl in tpls:
-        deflt_bool, spackname, rootname, descr = tpls[tpl]
-        variant(tpl, default=deflt_bool, description=descr)
+        deflt_bool, spackname, rootname, condition, descr = tpls[tpl]
+        variant(tpl, default=deflt_bool, when="%s" % condition, description=descr)
         depends_on(spackname, when="+%s" % tpl)
 
     variant("shared", default=True, description="Build shared libraries")
