@@ -255,10 +255,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     conflicts("+slepc", when="~petsc")
     conflicts("+pumi", when="~mpi")
     conflicts("timer=mpi", when="~mpi")
-    conflicts("~lapack", when="+mumps")
-    conflicts("~metis", when="+mumps")
-    conflicts("~mpi", when="+mumps")
-    conflicts("mfem~openmp ^mumps+openmp")
+    conflicts("+mumps", when="~mpi")
 
     # See https://github.com/mfem/mfem/issues/2957
     conflicts("^mpich@4:", when="@:4.3+mpi")
@@ -1111,6 +1108,17 @@ class Mfem(Package, CudaPackage, ROCmPackage):
             options += [
                 "HIOP_OPT=%s" % hiop_hdrs.cpp_flags,
                 "HIOP_LIB=%s" % ld_flags_from_library_list(hiop_libs),
+            ]
+
+        if "+mumps" in spec:
+            mumps = spec["mumps"]
+            mumps_opt = ["-I%s" % mumps.prefix.include]
+            if "+openmp" in mumps:
+                if not self.spec.satisfies("%apple-clang"):
+                    mumps_opt += [xcompiler + self.compiler.openmp_flag]
+            options += [
+                "MUMPS_OPT=%s" % " ".join(mumps_opt),
+                "MUMPS_LIB=%s" % ld_flags_from_library_list(mumps.libs),
             ]
 
         make("config", *options, parallel=False)
