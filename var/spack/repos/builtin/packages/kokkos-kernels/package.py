@@ -147,6 +147,8 @@ class KokkosKernels(CMakePackage, CudaPackage):
         "rocblas": (False, "rocblas", "ROCBLAS", "@3.6.00:", "Link to AMD BLAS library"),
         "rocsparse": (False, "rocsparse", "ROCSPARSE", "@3.6.00:", "Link to AMD sparse library"),
     }
+        # "cusolver": (False, "cuda", None, "@4.3.00:", "Link to CUDA solver library"),
+        # "rocsolver": (False, "rocsolver", "ROCSOLVER", "@4.3.00:", "Link to AMD solver library"),
 
     for tpl in tpls:
         deflt_bool, spackname, rootname, condition, descr = tpls[tpl]
