@@ -785,7 +785,7 @@ def config_paths_from_entry_points() -> List[Tuple[str, str]]:
         if callable(hook):
             config_path = hook()
             if config_path and os.path.exists(config_path):
-                config_paths.append(("plugin-%s" % entry_point.name, config_path))
+                config_paths.append(("plugin-%s" % entry_point.name, str(config_path)))
     return config_paths
 
 

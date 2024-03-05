@@ -12,6 +12,7 @@ import os
 import re
 import sys
 import types
+from pathlib import Path
 from typing import List
 
 import llnl.util.lang
@@ -157,8 +158,8 @@ def extension_paths_from_entry_points() -> List[str]:
         hook = entry_point.load()
         if callable(hook):
             paths = hook() or []
-            if isinstance(paths, str):
-                extension_paths.append(paths)
+            if isinstance(paths, (Path, str)):
+                extension_paths.append(str(paths))
             else:
                 extension_paths.extend(paths)
     return extension_paths
