@@ -703,11 +703,14 @@ def patch(
 
         patch: spack.patch.Patch
         if "://" in url_or_filename:
+            if sha256 is None:
+                raise ValueError("patch() with a url requires a sha256")
+
             patch = spack.patch.UrlPatch(
                 pkg,
                 url_or_filename,
                 level,
-                working_dir,
+                working_dir=working_dir,
                 ordering_key=ordering_key,
                 sha256=sha256,
                 archive_sha256=archive_sha256,
