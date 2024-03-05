@@ -353,9 +353,9 @@ spack:
   - py-torch ~rocm +cuda cuda_arch=80
   - py-torch ~rocm +cuda cuda_arch=90
   - py-tensorflow ~rocm ~cuda
-  - py-tensorflow ~rocm +cuda cuda_arch=75
-  - py-tensorflow ~rocm +cuda cuda_arch=80
-  - py-tensorflow ~rocm +cuda cuda_arch=90
+  # - py-tensorflow ~rocm +cuda cuda_arch=75 # py-tensorflow: /usr/lib/gcc/aarch64-linux-gnu/11/include/arm_neon.h(1270): error:identifier "__builtin_aarch64_raddhnv2di" is undefined
+  # - py-tensorflow ~rocm +cuda cuda_arch=80 # py-tensorflow: /usr/lib/gcc/aarch64-linux-gnu/11/include/arm_neon.h(1270): error:identifier "__builtin_aarch64_raddhnv2di" is undefined
+  # - py-tensorflow ~rocm +cuda cuda_arch=90 # py-tensorflow: /usr/lib/gcc/aarch64-linux-gnu/11/include/arm_neon.h(1270): error:identifier "__builtin_aarch64_raddhnv2di" is undefined
 
 
   ci:

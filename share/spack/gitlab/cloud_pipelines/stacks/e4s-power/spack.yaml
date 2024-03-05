@@ -258,10 +258,10 @@ spack:
   # - trilinos +cuda cuda_arch=70           # trilinos: https://github.com/trilinos/Trilinos/issues/11630
   # - upcxx +cuda cuda_arch=70              # upcxx: needs NVIDIA driver
 
-  - py-torch ~rocm ~cuda 
-  - py-torch ~rocm +cuda cuda_arch=70
-  - py-tensorflow ~rocm ~cuda
-  - py-tensorflow ~rocm +cuda cuda_arch=70
+  # - py-torch ~rocm ~cuda                  # py-torch: error
+  # - py-torch ~rocm +cuda cuda_arch=70     # py-torch: error
+  # - py-tensorflow ~rocm ~cuda             # py-tensorboard-data-server: https://github.com/spack/spack/issues/42669
+  # - py-tensorflow ~rocm +cuda cuda_arch=70 # py-tensorboard-data-server: https://github.com/spack/spack/issues/42669
 
   ci:
     pipeline-gen:

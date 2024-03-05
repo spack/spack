@@ -324,10 +324,10 @@ spack:
   # - lbann ~cuda +rocm amdgpu_target=gfx90a    # aluminum: https://github.com/spack/spack/issues/38807
   # - papi +rocm amdgpu_target=gfx90a           # papi: https://github.com/spack/spack/issues/27898
 
-  - py-torch ~cuda +rocm amdgpu_target=gfx908
-  - py-torch ~cuda +rocm amdgpu_target=gfx90a
-  - py-tensorflow ~cuda +rocm amdgpu_target=gfx908
-  - py-tensorflow ~cuda +rocm amdgpu_target=gfx90a
+  # - py-torch ~cuda +rocm amdgpu_target=gfx908 # py-torch: /usr/bin/ld: cannot find -lgloo_hip
+  # - py-torch ~cuda +rocm amdgpu_target=gfx90a # py-torch: /usr/bin/ld: cannot find -lgloo_hip
+  # - py-tensorflow ~cuda +rocm amdgpu_target=gfx908 # py-tensorflow@2.7.4-rocm-enhanced: Error in fail: ROCm Configuration Error: Invalid AMDGPU target:
+  # - py-tensorflow ~cuda +rocm amdgpu_target=gfx90a # py-tensorflow@2.7.4-rocm-enhanced: Error in fail: ROCm Configuration Error: Invalid AMDGPU target:
 
   ci:
     pipeline-gen:
