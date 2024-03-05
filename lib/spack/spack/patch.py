@@ -9,7 +9,7 @@ import os
 import os.path
 import pathlib
 import sys
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Dict, Optional, Tuple, Type
 
 import llnl.util.filesystem
 from llnl.url import allowed_archive
@@ -511,7 +511,7 @@ class PatchCache:
 
     @staticmethod
     def _index_patches(
-        pkg_class: "spack.package_base.PackageBase", repository: "spack.repo.RepoPath"
+        pkg_class: Type["spack.package_base.PackageBase"], repository: "spack.repo.RepoPath"
     ) -> Dict[Any, Any]:
         """Patch index for a specific patch.
 
