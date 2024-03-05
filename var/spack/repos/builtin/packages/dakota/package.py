@@ -79,10 +79,10 @@ class Dakota(CMakePackage):
     def cmake_args(self):
         spec = self.spec
 
-        args = [self.define_from_variant("BUILD_SHARED_LIBS", "shared")]
-
-        if self.spec.satisfies("~python"):
-            args.append(self.define("DAKOTA_PYTHON", False))
+        args = [
+            self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
+            self.define_from_variant("DAKOTA_PYTHON", "python")
+        ]
 
         if "+mpi" in spec:
             args.extend(
