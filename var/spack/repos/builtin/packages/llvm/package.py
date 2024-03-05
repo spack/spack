@@ -37,6 +37,8 @@ class Llvm(CMakePackage, CudaPackage):
     license("Apache-2.0")
 
     version("main", branch="main")
+    version("17.0.6", sha256="81494d32e6f12ea6f73d6d25424dbd2364646011bb8f7e345ca870750aa27de1")
+    version("17.0.5", sha256="432c1eda3d1c9379cd52a9bee8e0ea6f7b204bff5075895f963fd8e575aa4fb8")
     version("17.0.4", sha256="46200b79f52a02fe26d0a43fd856ab6ceff49ab2a0b7c240ac4b700a6ada700c")
     version("17.0.3", sha256="1e3d9d04fb5fbd8d0080042ad72c7e2a5c68788b014b186647a604dbbdd625d2")
     version("17.0.2", sha256="dcba3eb486973dce45b6edfe618f3f29b703ae7e6ef9df65182fb50fb6fe4235")
@@ -781,13 +783,11 @@ class Llvm(CMakePackage, CudaPackage):
         define = self.define
         from_variant = self.define_from_variant
 
-        python = spec["python"]
         cmake_args = [
             define("LLVM_REQUIRES_RTTI", True),
             define("LLVM_ENABLE_RTTI", True),
             define("LLVM_ENABLE_LIBXML2", False),
             define("CLANG_DEFAULT_OPENMP_RUNTIME", "libomp"),
-            define("PYTHON_EXECUTABLE", python.command.path),
             define("LIBOMP_USE_HWLOC", True),
             define("LIBOMP_HWLOC_INSTALL_DIR", spec["hwloc"].prefix),
             from_variant("LLVM_ENABLE_ZSTD", "zstd"),
@@ -810,11 +810,6 @@ class Llvm(CMakePackage, CudaPackage):
         shlib_symbol_version = spec.variants.get("shlib_symbol_version", None)
         if shlib_symbol_version is not None and shlib_symbol_version.value != "none":
             cmake_args.append(define("LLVM_SHLIB_SYMBOL_VERSION", shlib_symbol_version.value))
-
-        if python.version >= Version("3"):
-            cmake_args.append(define("Python3_EXECUTABLE", python.command.path))
-        else:
-            cmake_args.append(define("Python2_EXECUTABLE", python.command.path))
 
         projects = []
         runtimes = []
@@ -847,6 +842,12 @@ class Llvm(CMakePackage, CudaPackage):
             )
 
         cmake_args.append(from_variant("LIBOMPTARGET_ENABLE_DEBUG", "libomptarget_debug"))
+
+        if spec.satisfies("@14:"):
+            # The hsa-rocr-dev package may be pulled in through hwloc, which can lead to cmake
+            # finding libhsa and enabling the AMDGPU plugin. Since we don't support this yet,
+            # disable explicitly. See commit a05a0c3c2f8eefc80d84b7a87a23a4452d4a3087.
+            cmake_args.append(define("LIBOMPTARGET_BUILD_AMDGPU_PLUGIN", False))
 
         if "+lldb" in spec:
             projects.append("lldb")
@@ -968,9 +969,9 @@ class Llvm(CMakePackage, CudaPackage):
                     "openmp",
                 ]
                 runtimes.sort(
-                    key=lambda x: runtimes_order.index(x)
-                    if x in runtimes_order
-                    else len(runtimes_order)
+                    key=lambda x: (
+                        runtimes_order.index(x) if x in runtimes_order else len(runtimes_order)
+                    )
                 )
             cmake_args.extend(
                 [

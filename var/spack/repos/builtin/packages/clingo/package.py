@@ -29,6 +29,9 @@ class Clingo(CMakePackage):
 
     version("master", branch="master", submodules=True)
     version("spack", commit="2a025667090d71b2c9dce60fe924feb6bde8f667", submodules=True)
+
+    version("5.7.1", sha256="544b76779676075bb4f557f05a015cbdbfbd0df4b2cc925ad976e86870154d81")
+    version("5.7.0", sha256="ed5401bda54315184697fd69ff0f15389c62779e812058a5f296ba587ed9c10b")
     version("5.6.2", sha256="81eb7b14977ac57c97c905bd570f30be2859eabc7fe534da3cdc65eaca44f5be")
     version("5.5.2", sha256="a2a0a590485e26dce18860ac002576232d70accc5bfcb11c0c22e66beb23baa6")
     version("5.5.1", sha256="b9cf2ba2001f8241b8b1d369b6f353e628582e2a00f13566e51c03c4dd61f67e")
@@ -92,22 +95,6 @@ class Clingo(CMakePackage):
             )
 
     @property
-    def cmake_python_hints(self):
-        """Return standard CMake defines to ensure that the
-        current spec is the one found by CMake find_package(Python, ...)
-        """
-        python = self.spec["python"]
-        return [
-            self.define("Python_EXECUTABLE", python.command.path),
-            self.define("Python_INCLUDE_DIR", python.headers.directories[0]),
-            self.define("Python_LIBRARIES", python.libs[0]),
-            # XCode command line tools on macOS has no python-config executable, and
-            # CMake assumes you have python 2 if it does not find a python-config,
-            # so we set the version explicitly so that it's passed to FindPython.
-            self.define("CLINGO_PYTHON_VERSION", python.version.up_to(2)),
-        ]
-
-    @property
     def cmake_py_shared(self):
         return self.define("CLINGO_BUILD_PY_SHARED", "ON")
 
@@ -127,8 +114,6 @@ class Clingo(CMakePackage):
                 "-DPYCLINGO_USE_INSTALL_PREFIX=ON",
                 self.cmake_py_shared,
             ]
-            if self.spec["cmake"].satisfies("@3.16.0:"):
-                args += self.cmake_python_hints
         else:
             args += ["-DCLINGO_BUILD_WITH_PYTHON=OFF"]
 

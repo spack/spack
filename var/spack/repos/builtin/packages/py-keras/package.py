@@ -19,6 +19,9 @@ class PyKeras(PythonPackage):
     git = "https://github.com/keras-team/keras.git"
     pypi = "keras/keras-3.0.0.tar.gz"
 
+    version("3.0.5", sha256="df3d3795e12c3f6035e811c43c13f1eb41e37241796a0fea120ede4ebe1c4496")
+    version("3.0.4", sha256="ff2204792582e3889c51c77722cc6e8258dbb1ece7db192f5a9bcd1887cf3385")
+    version("3.0.3", sha256="1e455a82be63b7fb4f699e26bd1e04b7dbcbf66fa3a799117afca9ab067b5d61")
     version("3.0.2", sha256="526b6c053cdd880a33467c5bfd5c460a5bdc0c58869c2683171c2dec2ad3c2d0")
     version("3.0.1", sha256="d993721510fa654582132192193f69b1b3165418a6e00a73c3edce615b3cc672")
     version("3.0.0", sha256="82a9fa4b32a049b38151d11188ed15d74f21f853f163e78da0950dce1f244ccc")
@@ -63,6 +66,7 @@ class PyKeras(PythonPackage):
     depends_on("py-namex", type=("build", "run"), when="@3:")
     depends_on("py-h5py", type=("build", "run"))
     depends_on("py-dm-tree", type=("build", "run"), when="@3:")
+    depends_on("py-ml-dtypes", type=("build", "run"), when="@3.0.5:")
 
     # requirements-common.txt
     depends_on("py-scipy", type=("build", "run"))
@@ -75,12 +79,15 @@ class PyKeras(PythonPackage):
     # depends_on("py-tensorflow@2.16.0", type=("build", "run"), when="@3.0 backend=tensorflow")
 
     # requirements-jax-cuda.txt
+    depends_on("py-jax@0.4.23", type=("build", "run"), when="@3.0.5: backend=jax")
     depends_on("py-jax", type=("build", "run"), when="@3: backend=jax")
 
     # requirements-torch-cuda.txt
-    depends_on("py-torch@2.1.1", type=("build", "run"), when="@3.0.1: backend=torch")
+    depends_on("py-torch@2.1.2", type=("build", "run"), when="@3.0.3: backend=torch")
+    depends_on("py-torch@2.1.1", type=("build", "run"), when="@3.0.1:3.0.2 backend=torch")
     depends_on("py-torch@2.1.0", type=("build", "run"), when="@3.0.0 backend=torch")
-    depends_on("py-torchvision@0.16.1", type=("build", "run"), when="@3.0.1: backend=torch")
+    depends_on("py-torchvision@0.16.2", type=("build", "run"), when="@3.0.3: backend=torch")
+    depends_on("py-torchvision@0.16.1", type=("build", "run"), when="@3.0.1:3.0.2 backend=torch")
     depends_on("py-torchvision@0.16.0", type=("build", "run"), when="@3.0.0 backend=torch")
 
     # Historical dependencies

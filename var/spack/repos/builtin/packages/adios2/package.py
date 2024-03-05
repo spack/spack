@@ -120,9 +120,11 @@ class Adios2(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("cuda", when="+cuda ~kokkos")
 
     # Kokkos support
-    depends_on("kokkos@3.7: +cuda +wrapper", when="+kokkos +cuda")
-    depends_on("kokkos@3.7: +rocm", when="+kokkos +rocm")
-    depends_on("kokkos@3.7: +sycl", when="+kokkos +sycl")
+    with when("+kokkos"):
+        depends_on("kokkos@3.7:")
+        depends_on("kokkos +cuda +wrapper", when="+cuda")
+        depends_on("kokkos +rocm", when="+rocm")
+        depends_on("kokkos +sycl", when="+sycl")
 
     # Propagate CUDA target to kokkos for +cuda
     for cuda_arch in CudaPackage.cuda_arch_values:
@@ -291,10 +293,6 @@ class Adios2(CMakePackage, CudaPackage, ROCmPackage):
 
         if "%fj" in spec:
             args.extend(["-DCMAKE_Fortran_SUBMODULE_EXT=.smod", "-DCMAKE_Fortran_SUBMODULE_SEP=."])
-
-        if "+python" in spec or self.run_tests:
-            args.append(f"-DPYTHON_EXECUTABLE:FILEPATH={spec['python'].command.path}")
-            args.append(f"-DPython_EXECUTABLE:FILEPATH={spec['python'].command.path}")
 
         # hip support
         if "+cuda" in spec:

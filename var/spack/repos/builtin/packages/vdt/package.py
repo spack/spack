@@ -46,10 +46,7 @@ class Vdt(CMakePackage):
         elif spec.satisfies("target=ppc64le:"):
             disable_features.add("fma")
 
-        args = [
-            self.define_from_variant("PRELOAD"),
-            self.define("PYTHON_EXECUTABLE", spec["python"].command),
-        ]
+        args = [self.define_from_variant("PRELOAD")]
         for f in ["sse", "avx", "avx2", "fma", "neon"]:
             args.append(
                 self.define(f.upper(), f not in disable_features and f in self.spec.target)

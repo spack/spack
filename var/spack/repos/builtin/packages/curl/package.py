@@ -8,6 +8,8 @@ import os
 import re
 import sys
 
+from llnl.util.filesystem import windows_sfn
+
 from spack.build_systems.autotools import AutotoolsBuilder
 from spack.build_systems.nmake import NMakeBuilder
 from spack.package import *
@@ -28,6 +30,7 @@ class Curl(NMakePackage, AutotoolsPackage):
 
     license("curl")
 
+    version("8.6.0", sha256="b4785f2d8877fa92c0e45d7155cf8cc6750dbda961f4b1a45bcbec990cf2fa9b")
     version("8.4.0", sha256="e5250581a9c032b1b6ed3cf2f9c114c811fc41881069e9892d115cc73f9e88c6")
 
     # Deprecated versions due to CVEs
@@ -469,7 +472,8 @@ class NMakeBuilder(NMakeBuilder):
         # The trailing path seperator is REQUIRED for cURL to install
         # otherwise cURLs build system will interpret the path as a file
         # and the install will fail with ambiguous errors
-        args.append("WITH_PREFIX=%s" % self.prefix + "\\")
+        inst_prefix = self.prefix + "\\"
+        args.append(f"WITH_PREFIX={windows_sfn(inst_prefix)}")
         return args
 
     def install(self, pkg, spec, prefix):
@@ -484,6 +488,7 @@ class NMakeBuilder(NMakeBuilder):
         env["CC"] = ""
         env["CXX"] = ""
         winbuild_dir = os.path.join(self.stage.source_path, "winbuild")
+        winbuild_dir = windows_sfn(winbuild_dir)
         with working_dir(winbuild_dir):
             nmake("/f", "Makefile.vc", *self.nmake_args(), ignore_quotes=True)
         with working_dir(os.path.join(self.stage.source_path, "builds")):

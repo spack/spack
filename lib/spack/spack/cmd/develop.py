@@ -8,6 +8,7 @@ import shutil
 import llnl.util.tty as tty
 
 import spack.cmd
+import spack.config
 import spack.spec
 import spack.util.path
 import spack.version
@@ -21,6 +22,7 @@ level = "long"
 
 def setup_parser(subparser):
     subparser.add_argument("-p", "--path", help="source location of package")
+    subparser.add_argument("-b", "--build-directory", help="build directory for the package")
 
     clone_group = subparser.add_mutually_exclusive_group()
     clone_group.add_argument(
@@ -151,4 +153,11 @@ def develop(parser, args):
     env = spack.cmd.require_active_env(cmd_name="develop")
     tty.debug("Updating develop config for {0} transactionally".format(env.name))
     with env.write_transaction():
+        if args.build_directory is not None:
+            spack.config.add(
+                "packages:{}:package_attributes:build_directory:{}".format(
+                    spec.name, args.build_directory
+                ),
+                env.scope_name,
+            )
         _update_config(spec, path)

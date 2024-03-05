@@ -33,7 +33,7 @@ jobs:
         ./share/spack/qa/validate_last_exit.ps1
         coverage combine -a
         coverage xml
-    - uses: codecov/codecov-action@eaaf4bedf32dbdc6b720b63067d99c4d77d6047d
+    - uses: codecov/codecov-action@54bcd8715eee62d40e33596ef5e8f0f48dbbccab
       with:
         flags: unittests,windows
   unit-tests-cmd:
@@ -57,7 +57,7 @@ jobs:
         ./share/spack/qa/validate_last_exit.ps1
         coverage combine -a
         coverage xml
-    - uses: codecov/codecov-action@eaaf4bedf32dbdc6b720b63067d99c4d77d6047d
+    - uses: codecov/codecov-action@54bcd8715eee62d40e33596ef5e8f0f48dbbccab
       with:
         flags: unittests,windows
   build-abseil:

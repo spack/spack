@@ -314,6 +314,9 @@ class Boost(Package):
     # Patch to workaround compiler bug
     patch("nvhpc-find_address.patch", when="@1.75.0:1.76%nvhpc")
 
+    # Patch to workaround gcc-8.3 compiler issue https://github.com/boostorg/mpl/issues/44
+    patch("boost_gcc83_cpp17_fix.patch", when="@1.69:%gcc@8.3")
+
     # Fix for version comparison on newer Clang on darwin
     # See: https://github.com/boostorg/build/issues/440
     # See: https://github.com/macports/macports-ports/pull/6726

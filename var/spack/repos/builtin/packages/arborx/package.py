@@ -96,6 +96,7 @@ class Arborx(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("trilinos@13.4.0:", when="@1.3+trilinos")
     depends_on("trilinos@14.0.0:", when="@1.4:+trilinos")
     patch("trilinos14.0-kokkos-major-version.patch", when="@1.4+trilinos ^trilinos@14.0.0")
+    patch("0001-update-major-version-required-for-rocm-6.0.patch", when="+rocm ^hip@6.0:")
     conflicts("~serial", when="+trilinos")
     conflicts("+cuda", when="+trilinos")
 
@@ -143,9 +144,11 @@ class Arborx(CMakePackage, CudaPackage, ROCmPackage):
             f"-DCMAKE_CXX_COMPILER={os.environ['CXX']}",
             self.define(
                 "Kokkos_ROOT",
-                self.spec["kokkos"].prefix
-                if "~trilinos" in self.spec
-                else self.spec["trilinos"].prefix,
+                (
+                    self.spec["kokkos"].prefix
+                    if "~trilinos" in self.spec
+                    else self.spec["trilinos"].prefix
+                ),
             ),
         ]
         cmake = which(self.spec["cmake"].prefix.bin.cmake)

@@ -93,7 +93,7 @@ class Flecsi(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("legion+shared", when="backend=legion @:1")
     depends_on("legion+hdf5", when="backend=legion +hdf5 @:1")
     depends_on("legion build_type=Debug", when="backend=legion +debug_backend")
-    depends_on("legion@cr", when="backend=legion @:1")
+    depends_on("legion@master", when="backend=legion @:1")
     depends_on("hpx@1.4.1 cxxstd=17 malloc=system max_cpu_count=128", when="backend=hpx @:1")
     depends_on("hpx build_type=Debug", when="backend=hpx +debug_backend")
     depends_on("googletest@1.8.1+gmock", when="@:1")
@@ -102,7 +102,7 @@ class Flecsi(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("llvm", when="+flecstan @:1")
     depends_on("pfunit@3.0:3", when="@:1")
     depends_on("py-gcovr", when="+coverage @:1")
-    depends_on("openmpi+legacylaunchers", when="+unit_tests ^openmpi")
+    depends_on("openmpi+legacylaunchers", when="+unit_tests ^[virtuals=mpi] openmpi")
 
     # FleCSI@2.x
     depends_on("cmake@3.15:", when="@2.0:")
@@ -113,7 +113,7 @@ class Flecsi(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("kokkos +cuda +cuda_constexpr +cuda_lambda", when="+kokkos +cuda @2.0:")
     depends_on("kokkos +rocm", when="+kokkos +rocm @2.0:")
     depends_on("kokkos +openmp", when="+kokkos +openmp @2.0:")
-    depends_on("legion@cr", when="backend=legion @2.0:")
+    depends_on("legion@master", when="backend=legion @2.0:")
     depends_on("legion+shared", when="backend=legion +shared @2.0:")
     depends_on("legion+hdf5", when="backend=legion +hdf5 @2.0:")
     depends_on("legion+kokkos", when="backend=legion +kokkos @2.0:")
@@ -123,8 +123,8 @@ class Flecsi(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("hdf5@1.10.7:", when="backend=legion +hdf5 @2.0:")
     depends_on("hpx@1.9.1: cxxstd=17 malloc=system", when="backend=hpx @2.0:")
     depends_on("mpi", when="@2.0:")
-    depends_on("mpich@3.4.1:", when="@2.0: ^mpich")
-    depends_on("openmpi@4.1.0:", when="@2.0: ^openmpi")
+    depends_on("mpich@3.4.1:", when="@2.0: ^[virtuals=mpi] mpich")
+    depends_on("openmpi@4.1.0:", when="@2.0: ^[virtuals=mpi] openmpi")
 
     # FleCSI 2.2+ documentation dependencies
     depends_on("py-sphinx", when="+doc")

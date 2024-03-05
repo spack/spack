@@ -3,16 +3,17 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Schema for bootstrap.yaml configuration file."""
+from typing import Any, Dict
 
 #: Schema of a single source
-_source_schema = {
+_source_schema: Dict[str, Any] = {
     "type": "object",
     "properties": {"name": {"type": "string"}, "metadata": {"type": "string"}},
     "additionalProperties": False,
     "required": ["name", "metadata"],
 }
 
-properties = {
+properties: Dict[str, Any] = {
     "bootstrap": {
         "type": "object",
         "properties": {

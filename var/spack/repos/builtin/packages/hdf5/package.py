@@ -88,7 +88,9 @@ class Hdf5(CMakePackage):
     variant("hl", default=False, description="Enable the high-level library")
     variant("cxx", default=False, description="Enable C++ support")
     variant("map", when="@1.14:", default=False, description="Enable MAP API support")
-    variant("subfiling", when="@1.14:", default=False, description="Enable Subfiling VFD support")
+    variant(
+        "subfiling", when="@1.14: +mpi", default=False, description="Enable Subfiling VFD support"
+    )
     variant("fortran", default=False, description="Enable Fortran support")
     variant("java", when="@1.10:", default=False, description="Enable Java support")
     variant("threadsafe", default=False, description="Enable thread-safe capabilities")
@@ -293,9 +295,13 @@ class Hdf5(CMakePackage):
                 cmake_flags.append(self.compiler.cc_pic_flag)
             if spec.satisfies("@1.8.21 %oneapi@2023.0.0"):
                 cmake_flags.append("-Wno-error=int-conversion")
+            if spec.satisfies("%apple-clang@15:"):
+                cmake_flags.append("-Wl,-ld_classic")
         elif name == "cxxflags":
             if spec.satisfies("@:1.8.12+cxx~shared"):
                 cmake_flags.append(self.compiler.cxx_pic_flag)
+            if spec.satisfies("%apple-clang@15:"):
+                cmake_flags.append("-Wl,-ld_classic")
         elif name == "fflags":
             if spec.satisfies("%cce+fortran"):
                 # Cray compiler generates module files with uppercase names by
