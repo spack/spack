@@ -50,10 +50,7 @@ def build_info(image, spack_version):
     if not build_image:
         return None, None
 
-    # Translate version from git to docker if necessary
-    build_tag = image_data["build_tags"].get(spack_version, spack_version)
-
-    return build_image, build_tag
+    return build_image, spack_version
 
 
 def os_package_manager_for(image):
