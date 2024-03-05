@@ -81,6 +81,8 @@ class ComposableKernel(CMakePackage):
             args.append(self.define_from_variant("GPU_TARGETS", "amdgpu_target"))
         if self.spec.satisfies("@5.6.0:"):
             args.append(self.define("INSTANCES_ONLY", "ON"))
+            args.append(self.define("CK_BUILD_JIT_LIB", "ON"))
+            args.append(self.define("CMAKE_POSITION_INDEPENDENT_CODE", "ON"))
         if self.spec.satisfies("@:5.7"):
             args.append(self.define("CMAKE_CXX_FLAGS", "-O3"))
         return args
