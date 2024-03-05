@@ -26,7 +26,7 @@ from spack.util.executable import which, which_string
 
 
 def apply_patch(
-    stage: spack.stage.Stage, patch_path: str, level: int = 1, working_dir: str = "."
+    stage: "spack.stage.Stage", patch_path: str, level: int = 1, working_dir: str = "."
 ) -> None:
     """Apply the patch at patch_path to code in the stage.
 
@@ -88,7 +88,7 @@ class Patch:
         self.level = level
         self.working_dir = working_dir
 
-    def apply(self, stage: spack.stage.Stage) -> None:
+    def apply(self, stage: "spack.stage.Stage") -> None:
         """Apply a patch to source in a stage.
 
         Args:
@@ -247,7 +247,7 @@ class UrlPatch(Patch):
         super().__init__(pkg, url, level, working_dir)
 
         self.url = url
-        self._stage: Optional[spack.stage.Stage] = None
+        self._stage: Optional["spack.stage.Stage"] = None
 
         self.ordering_key = ordering_key
 
@@ -262,7 +262,7 @@ class UrlPatch(Patch):
             raise PatchDirectiveError("URL patches require a sha256 checksum")
         self.sha256 = sha256
 
-    def apply(self, stage: spack.stage.Stage) -> None:
+    def apply(self, stage: "spack.stage.Stage") -> None:
         """Apply a patch to source in a stage.
 
         Args:
@@ -278,7 +278,7 @@ class UrlPatch(Patch):
         return super().apply(stage)
 
     @property
-    def stage(self) -> spack.stage.Stage:
+    def stage(self) -> "spack.stage.Stage":
         """The stage in which to download (and unpack) the URL patch.
 
         Returns:
