@@ -351,7 +351,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
         depends_on(
             f"slepc+rocm amdgpu_target={gfx}", when=f"+rocm+slepc amdgpu_target={gfx} ^petsc+rocm"
         )
-    depends_on("mumps@5.1.1:+metis", when="+mumps")
+    depends_on("mumps@5.1.1:", when="+mumps")
     depends_on("mpfr", when="+mpfr")
     depends_on("netcdf-c@4.1.3:", when="+netcdf")
     depends_on("unwind", when="+libunwind")
