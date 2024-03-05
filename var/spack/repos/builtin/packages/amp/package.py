@@ -6,7 +6,7 @@ from spack.package import *
 from spack.pkg.builtin.boost import Boost
 
 
-class Amp(CMakePackage):
+class Amp(CMakePackage, CudaPackage, ROCmPackage):
     """The Advanced Multi-Physics (AMP) package.
 
     The Advanced Multi-Physics (AMP) package is an open source parallel
@@ -15,60 +15,129 @@ class Amp(CMakePackage):
     """
 
     homepage = "https://bitbucket.org/AdvancedMultiPhysics/amp"
-    hg = homepage
+    git = "https://bitbucket.org/AdvancedMultiPhysics/amp.git"
 
-    version("develop")
+    version("develop", branch="master")
+    version(
+        "2.0.0", tag="2.0.0", commit="3c735a0c8a028857940736b1d0bdd1ee2954d326", preferred=True
+    )
 
-    variant("boost", default=True, description="Build with support for Boost")
-    variant("hdf5", default=True, description="Build with support for HDF5")
-    variant("hypre", default=True, description="Build with support for hypre")
-    variant("libmesh", default=True, description="Build with libmesh support")
-    variant("mpi", default=True, description="Build with MPI support")
-    variant("netcdf", default=True, description="Build with NetCDF support")
-    variant("petsc", default=True, description="Build with Petsc support")
-    variant("shared", default=True, description="Build shared libraries")
-    variant("silo", default=True, description="Build with support for Silo")
-    variant("sundials", default=True, description="Build with support for Sundials")
-    variant("trilinos", default=True, description="Build with support for Trilinos")
-    variant("zlib", default=True, description="Build with support for zlib")
+    variant("boost", default=False, description="Build with support for Boost")
+    variant("hdf5", default=False, description="Build with support for HDF5")
+    variant("hypre", default=False, description="Build with support for hypre")
+    variant("kokkos", default=False, description="Build with support for Kokkos")
+    variant("libmesh", default=False, description="Build with libmesh support")
+    variant("mpi", default=False, description="Build with MPI support")
+    variant("netcdf", default=False, description="Build with NetCDF support")
+    variant("petsc", default=False, description="Build with Petsc support")
+    variant("shared", default=False, description="Build shared libraries")
+    variant("silo", default=False, description="Build with support for Silo")
+    variant("sundials", default=False, description="Build with support for Sundials")
+    variant("trilinos", default=False, description="Build with support for Trilinos")
+    variant("umpire", default=False, description="Build with support for UMPIRE")
+    variant("zlib", default=False, description="Build with support for zlib")
 
-    # Everything should be compiled position independent (-fpic)
+    depends_on("git", type="build")
+
     depends_on("blas")
     depends_on("lapack")
 
-    # TODO: replace this with an explicit list of components of Boost,
-    # for instance depends_on('boost +filesystem')
-    # See https://github.com/spack/spack/pull/22303 for reference
-    depends_on(Boost.with_default_variants, when="+boost")
+    depends_on("boost", when="+boost")
     depends_on("hdf5", when="+hdf5")
     depends_on("hypre", when="+hypre")
+    depends_on("kokkos", when="+kokkos")
     depends_on("libmesh", when="+libmesh")
     depends_on("netcdf-c", when="+netcdf")
     depends_on("petsc", when="+petsc")
     depends_on("silo", when="+silo")
-    depends_on("sundials", when="+sundials")
-    depends_on("trilinos", when="+trilinos")
+    depends_on("sundials@2.6.2", when="+sundials")
+    depends_on(
+        "trilinos@13.4.1 +epetra+epetraext+thyra+tpetra+ml+amesos+ifpack+ifpack2+belos+nox+stratimikos cxxstd=17 gotype=int",
+        when="+trilinos",
+    )
+    depends_on("umpire", when="+umpire")
     depends_on("zlib-api", when="+zlib")
+
+    depends_on("trilinos +kokkos", when="+trilinos+kokkos")
+    depends_on("trilinos +mpi", when="+trilinos+mpi")
+
+    depends_on("kokkos+cuda+cuda_constexpr", when="+kokkos+cuda")
+    depends_on("hypre+cuda+unified-memory", when="+hypre+cuda")
+    depends_on("petsc+cuda", when="+petsc+cuda")
+
+    for _flag in list(CudaPackage.cuda_arch_values):
+        depends_on("hypre cuda_arch=" + _flag, when="+hypre+cuda cuda_arch=" + _flag)
+        depends_on("petsc cuda_arch=" + _flag, when="+petsc+cuda cuda_arch=" + _flag)
+        depends_on("kokkos cuda_arch=" + _flag, when="+kokkos+cuda cuda_arch=" + _flag)
 
     # MPI related dependencies
     depends_on("mpi", when="+mpi")
+
+    resource(
+        name="tpl-builder",
+        git="https://bitbucket.org/AdvancedMultiPhysics/tpl-builder.git",
+        tag="1.0.0",
+        commit="b68100657186dcfd236e955eb6c2079a88aa4854",
+        destination=".",
+        when="@2.0.0:",
+    )
+
+    def setup_build_environment(self, env):
+        if "^kokkos-nvcc-wrapper" in self.spec:
+            # undo nvcc wrapper changes
+            env.set("MPICH_CXX", spack_cxx)
+            env.set("OMPI_CXX", spack_cxx)
+            env.set("MPICXX_CXX", spack_cxx)
+
+    def patch(self):
+        build_ver = 1
+        short_hash = ""
+        long_hash = ""
+        if self.spec.satisfies("@develop"):
+            major_ver = "0"
+            minor_ver = "0"
+        else:
+            major_ver = self.spec.version[0]
+            minor_ver = self.spec.version[1]
+        
+        version_file = join_path(self.stage.source_path, "src", "AMP_Version.cmake")
+        with open(version_file, "w") as f:
+            print(f"# generated by Spack package", file=f)
+            print(f"set(AMP_MAJOR_VERSION {major_ver})", file=f)
+            print(f"set(AMP_MINOR_VERSION {minor_ver})", file=f)
+            print(f"set(AMP_BUILD_VERSION {build_ver})", file=f)
+            print(f"set(AMP_SHORT_HASH_VERSION \"{short_hash}\")", file=f)
+            print(f"set(AMP_LONG_HASH_VERSION  \"{long_hash}\")", file=f)
+
 
     def cmake_args(self):
         spec = self.spec
 
         options = [
-            self.define("TPL_URL", "https://bitbucket.org/AdvancedMultiPhysics/tpl-builder"),
-            self.define(
-                "AMP_DATA_URL",
-                "https://bitbucket.org/AdvancedMultiPhysics/amp/downloads/AMP-Data.tar.gz",
-            ),
-            self.define("AMP_ENABLE_TESTS", "OFF"),
+            self.define("TPL_SOURCE_DIR", join_path(self.stage.source_path, "tpl-builder")),
+            self.define("AMP_ENABLE_TESTS", False),
             self.define("AMP_ENABLE_EXAMPLES", "OFF"),
-            self.define("AMP_ENABLE_CXX11", "ON"),
-            self.define("CXX_STD", "11"),
+            self.define("CXX_STD", "17"),
             self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
-            self.define("USE_MPI", "0"),
+            self.define_from_variant("USE_MPI", "mpi"),
+            self.define_from_variant("MPI_COMPILER", "mpi"),
         ]
+
+        if "+cuda" in spec:
+            cuda_arch = self.spec.variants["cuda_arch"].value
+            if cuda_arch[0] != "none":
+                options.extend(
+                    [
+                        self.define("USE_CUDA", True),
+                        self.define(
+                            "CMAKE_CUDA_COMPILER", join_path(spec["cuda"].prefix.bin, "nvcc")
+                        ),
+                        self.define("CMAKE_CUDA_ARCHITECTURES", cuda_arch),
+                        self.define(
+                            "CMAKE_CUDA_FLAGS", "-extended-lambda --expt-relaxed-constexpr"
+                        ),
+                    ]
+                )
 
         if "+mpi" in spec:
             options.extend(
@@ -76,7 +145,6 @@ class Amp(CMakePackage):
                     self.define("CMAKE_C_COMPILER", spec["mpi"].mpicc),
                     self.define("CMAKE_CXX_COMPILER", spec["mpi"].mpicxx),
                     self.define("CMAKE_Fortran_COMPILER", spec["mpi"].mpifc),
-                    self.define("MPI_COMPILER", "1"),
                     self.define("MPIEXEC", spec["mpi"].prefix.bin),
                 ]
             )
@@ -91,9 +159,13 @@ class Amp(CMakePackage):
 
         tpl_list = ["LAPACK"]
         blas, lapack = spec["blas"].libs, spec["lapack"].libs
+        if "^intel-mkl" in self.spec:
+            options.append(self.define("TPL_LAPACK_INSTALL_DIR", spec["lapack"].prefix.mkl))
+        else:
+            options.append(self.define("TPL_LAPACK_INSTALL_DIR", spec["lapack"].prefix))
+
         options.extend(
             [
-                self.define("TPL_LAPACK_INSTALL_DIR", spec["lapack"].prefix),
                 self.define("TPL_BLAS_LIBRARY_NAMES", ";".join(blas.names)),
                 self.define("TPL_BLAS_LIBRARY_DIRS", ";".join(blas.directories)),
                 self.define("TPL_LAPACK_LIBRARY_NAMES", ";".join(lapack.names)),
@@ -109,11 +181,13 @@ class Amp(CMakePackage):
             "boost",
             "hdf5",
             "hypre",
+            "kokkos",
             "libmesh",
             "petsc",
             "silo",
             "sundials",
             "trilinos",
+            "umpire",
         ):
             if "+" + vname in spec:
                 tpl_list.append(vname.upper())
