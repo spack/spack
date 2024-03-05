@@ -368,7 +368,7 @@ class Gdal(CMakePackage, AutotoolsPackage, PythonExtension):
     # depends_on('tiledb', when='+tiledb')
     depends_on("libwebp", when="+webp")
     depends_on("xerces-c@3.1:", when="+xercesc")
-    depends_on("zstd", when="+zstd") # TODO only true if internal libtiff is used?
+    depends_on("zstd", when="+zstd")  # TODO only true if internal libtiff is used?
 
     # Language bindings
     # FIXME: Allow packages to extend multiple packages
