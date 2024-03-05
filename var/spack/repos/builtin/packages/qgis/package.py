@@ -111,6 +111,7 @@ class Qgis(CMakePackage):
     depends_on("expat@1.95:")
     depends_on("gdal@2.1.0: +python", type=("build", "link", "run"))
     depends_on("gdal@3.2.0: +python", type=("build", "link", "run"), when="@3.28:")
+    depends_on("gdal+zstd", when="+zstd")
     depends_on("geos@3.4.0:")
     depends_on("libspatialindex")
     depends_on("libspatialite@4.2.0:")

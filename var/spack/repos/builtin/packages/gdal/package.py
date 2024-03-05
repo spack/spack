@@ -264,6 +264,7 @@ class Gdal(CMakePackage, AutotoolsPackage, PythonExtension):
     depends_on("zlib-api")
     depends_on("libtiff@4:", when="@3:")
     depends_on("libtiff@3.6.0:")  # 3.9.0+ needed to pass testsuite
+    depends_on("libtiff+zstd", when="+zstd")
     depends_on("libgeotiff@1.5:", when="@3:")
     depends_on("libgeotiff@1.2.1:1.5", when="@2.4.1:2")
     depends_on("libgeotiff@1.2.1:1.4", when="@:2.4.0")
@@ -367,7 +368,7 @@ class Gdal(CMakePackage, AutotoolsPackage, PythonExtension):
     # depends_on('tiledb', when='+tiledb')
     depends_on("libwebp", when="+webp")
     depends_on("xerces-c@3.1:", when="+xercesc")
-    depends_on("zstd", when="+zstd")
+    depends_on("zstd", when="+zstd") # TODO only true if internal libtiff is used?
 
     # Language bindings
     # FIXME: Allow packages to extend multiple packages
