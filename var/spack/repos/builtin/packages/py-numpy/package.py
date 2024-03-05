@@ -138,7 +138,7 @@ class PyNumpy(PythonPackage):
 
     # Patch to fix AVX512 build flags on Intel Classic Compiler
     # See https://github.com/spack/spack/issues/42204
-    # Numpy before 1.26 did not use meson, so the patch does not work for those
+    # Numpy before 1.26 did not use meson, so the patch does not work for older versions
     with when("%intel"):
         patch(
             "https://github.com/numpy/numpy/commit/953cc2dfc0f0e063a01778d1392c931d9031c469.patch?full_index=1",
