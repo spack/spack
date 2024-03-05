@@ -7,7 +7,7 @@ from spack.package import *
 
 
 class PerlDataPredicate(PerlPackage):
-    """"""
+    """Predicate objects for Perl. A predicate object is an object that encapsulates conditions."""
 
     homepage = "https://metacpan.org/pod/Data::Predicate"
     url = "https://cpan.metacpan.org/authors/id/A/AY/AYATES/data/Data-Predicate-2.1.1.tar.gz"
