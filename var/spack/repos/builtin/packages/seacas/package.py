@@ -189,7 +189,7 @@ class Seacas(CMakePackage):
     # See https://github.com/sandialabs/seacas/issues/438
     patch(
         "https://github.com/sandialabs/seacas/commit/29a9ebeccb5a656b4b334fa6af904689da9ffddc.diff?full_index=1",
-        sha256="aedb1fe0af81686f9ed6d511d9b2a3bd52e574eb0ed6363d3f4851280cacde2c",
+        sha256="d088208511fb0a087e2bf70ae70676e59bfefe8d8f5b24bd53b829566f5147d2",
         when="@:2023-10-24",
     )
 
