@@ -660,6 +660,7 @@ def patch(
     level: int = 1,
     when: WhenType = None,
     working_dir: str = ".",
+    reverse: bool = False,
     sha256: Optional[str] = None,
     archive_sha256: Optional[str] = None,
 ) -> Patcher:
@@ -673,10 +674,10 @@ def patch(
         level: patch level (as in the patch shell command)
         when: optional anonymous spec that specifies when to apply the patch
         working_dir: dir to change to before applying
+        reverse: reverse the patch
         sha256: sha256 sum of the patch, used to verify the patch (only required for URL patches)
         archive_sha256: sha256 sum of the *archive*, if the patch is compressed (only required for
             compressed URL patches)
-
     """
 
     def _execute_patch(pkg_or_dep: Union["spack.package_base.PackageBase", Dependency]):
@@ -711,13 +712,14 @@ def patch(
                 url_or_filename,
                 level,
                 working_dir=working_dir,
+                reverse=reverse,
                 ordering_key=ordering_key,
                 sha256=sha256,
                 archive_sha256=archive_sha256,
             )
         else:
             patch = spack.patch.FilePatch(
-                pkg, url_or_filename, level, working_dir, ordering_key=ordering_key
+                pkg, url_or_filename, level, working_dir, reverse, ordering_key=ordering_key
             )
 
         cur_patches.append(patch)
