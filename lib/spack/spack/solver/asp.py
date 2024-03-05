@@ -1786,6 +1786,11 @@ class SpackSolverSetup:
                 dep = dspec.spec
 
                 if spec.concrete:
+                    # GCC runtime is solved again by clingo, even on concrete specs, to give
+                    # the possibility to reuse specs built against a different runtime.
+                    if dep.name == "gcc-runtime":
+                        continue
+
                     # We know dependencies are real for concrete specs. For abstract
                     # specs they just mean the dep is somehow in the DAG.
                     for dtype in dt.ALL_FLAGS:
