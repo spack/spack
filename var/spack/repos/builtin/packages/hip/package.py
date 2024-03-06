@@ -199,8 +199,8 @@ class Hip(CMakePackage):
         )
 
 
-    # For avx build, the start address of values_ buffer in KernelParameters is not
-    # correct as it is computed based on 16-byte alignment.
+        # For avx build, the start address of values_ buffer in KernelParameters is not
+        # correct as it is computed based on 16-byte alignment.
         patch(
             "https://github.com/ROCm/clr/commit/c4f773db0b4ccbbeed4e3d6c0f6bff299c2aa3f0.patch?full_index=1",
             sha256="5bb9b0e08888830ccf3a0a658529fe25f4ee62b5b8890f349bf2cc914236eb2f",
