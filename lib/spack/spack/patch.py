@@ -371,7 +371,8 @@ def from_dict(
             dictionary["url"],
             dictionary["level"],
             working_dir=dictionary["working_dir"],
-            reverse=dictionary["reverse"],
+            # Added recently, fallback required for backwards compatibility
+            reverse=dictionary.get("reverse", False),
             sha256=dictionary["sha256"],
             archive_sha256=dictionary.get("archive_sha256"),
         )
@@ -382,7 +383,8 @@ def from_dict(
             dictionary["relative_path"],
             dictionary["level"],
             dictionary["working_dir"],
-            dictionary["reverse"],
+            # Added recently, fallback required for backwards compatibility
+            dictionary.get("reverse", False),
         )
 
         # If the patch in the repo changes, we cannot get it back, so we
