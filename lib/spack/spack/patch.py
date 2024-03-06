@@ -371,7 +371,7 @@ def from_dict(
             dictionary["url"],
             dictionary["level"],
             working_dir=dictionary["working_dir"],
-            # Added recently, fallback required for backwards compatibility
+            # Added in v0.22, fallback required for backwards compatibility
             reverse=dictionary.get("reverse", False),
             sha256=dictionary["sha256"],
             archive_sha256=dictionary.get("archive_sha256"),
@@ -383,7 +383,7 @@ def from_dict(
             dictionary["relative_path"],
             dictionary["level"],
             dictionary["working_dir"],
-            # Added recently, fallback required for backwards compatibility
+            # Added in v0.22, fallback required for backwards compatibility
             dictionary.get("reverse", False),
         )
 
