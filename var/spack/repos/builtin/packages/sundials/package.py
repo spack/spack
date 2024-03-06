@@ -85,7 +85,7 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
         values=("99", "11", "14", "17"),
     )
 
-    # Logging
+    # Logging (default=0 when "@6.2.0:6.7.0", default=2 when "@7.0.0:")
     variant(
         "logging-level",
         default="2",
