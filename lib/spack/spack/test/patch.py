@@ -474,6 +474,19 @@ def test_patch_no_file():
         patch.apply("")
 
 
+def test_patch_no_url():
+    # Give it the attributes we need to construct the error message
+    FakePackage = collections.namedtuple("FakePackage", ["name", "namespace", "fullname"])
+    fp = FakePackage("fake-package", "test", "fake-package")
+    url = url_util.path_to_file_url("foo.tgz")
+    match = "Compressed patches require 'archive_sha256' and patch 'sha256' attributes: file://"
+    with pytest.raises(spack.patch.PatchDirectiveError, match=match):
+        spack.patch.UrlPatch(fp, url, sha256="", archive_sha256="")
+    match = "URL patches require a sha256 checksum"
+    with pytest.raises(spack.patch.PatchDirectiveError, match=match):
+        spack.patch.UrlPatch(fp, url, sha256="", archive_sha256="abc")
+
+
 @pytest.mark.parametrize("level", [-1, 0.0, "1"])
 def test_invalid_level(level):
     # Give it the attributes we need to construct the error message
@@ -481,3 +494,40 @@ def test_invalid_level(level):
     fp = FakePackage("fake-package", "test")
     with pytest.raises(ValueError, match="Patch level needs to be a non-negative integer."):
         spack.patch.Patch(fp, "nonexistent_file", level, "")
+
+def test_equality():
+    FakePackage = collections.namedtuple("FakePackage", ["name", "namespace", "fullname"])
+    fp = FakePackage("fake-package", "test", "fake-package")
+    patch1 = spack.patch.UrlPatch(fp, "nonexistent_url1", sha256="abc")
+    patch2 = spack.patch.UrlPatch(fp, "nonexistent_url2", sha256="def")
+    assert patch1 == patch1
+    assert patch1 != patch2
+    assert patch1 != "not a patch"
+
+
+def test_sha256_setter(mock_patch_stage, config):
+    path = os.path.join(data_path, "foo.patch")
+    s = Spec("patch").concretized()
+    patch = spack.patch.FilePatch(s.package, path, level=1, working_dir=".")
+    patch.sha256 = "abc"
+
+
+def test_invalid_from_dict(mock_packages, config):
+    dictionary = {}
+    with pytest.raises(ValueError, match="Invalid patch dictionary:"):
+        spack.patch.from_dict(dictionary)
+
+    dictionary = {"owner": "patch"}
+    with pytest.raises(ValueError, match="Invalid patch dictionary:"):
+        spack.patch.from_dict(dictionary)
+
+    dictionary = {
+        "owner": "patch",
+        "relative_path": "foo.patch",
+        "level": 1,
+        "working_dir": ".",
+        "reverse": False,
+        "sha256": bar_sha256,
+    }
+    with pytest.raises(spack.fetch_strategy.ChecksumError, match="sha256 checksum failed for"):
+        spack.patch.from_dict(dictionary)
