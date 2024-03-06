@@ -10,6 +10,8 @@ import sys
 import tempfile
 from typing import Dict, List, Set
 
+import archspec.cpu
+
 import spack.compiler
 import spack.operating_systems.windows_os
 import spack.platforms
@@ -186,6 +188,9 @@ class Msvc(Compiler):
         # get current platform architecture and format for vcvars argument
         arch = spack.platforms.real_host().default.lower()
         arch = arch.replace("-", "_")
+        if str(archspec.cpu.host().family) == "x86_64":
+            arch = "amd64"
+
         self.vcvars_call = VCVarsInvocation(vcvars_script_path, arch, self.msvc_version)
         env_cmds.append(self.vcvars_call)
         # Below is a check for a valid fortran path
