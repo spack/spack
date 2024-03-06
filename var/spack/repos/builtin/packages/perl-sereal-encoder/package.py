@@ -35,11 +35,3 @@ class PerlSerealEncoder(PerlPackage):
         env.set("USE_UNALIGNED", "1")
         env.set("NO_ASM", "0")
         env.set("ZSTD_DISABLE_ASM", "0")
-
-    def test_use(self):
-        """Test 'use module'"""
-        options = ["-we", 'use strict; use Sereal::Encoder; print("OK\n")']
-
-        perl = self.spec["perl"].command
-        out = perl(*options, output=str.split, error=str.split)
-        assert "OK" in out

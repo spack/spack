@@ -4,12 +4,15 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import inspect
 import os
+from typing import Iterable
 
+import llnl.util.lang as lang
 from llnl.util.filesystem import filter_file
 
 import spack.builder
 import spack.package_base
 from spack.directives import build_system, extends
+from spack.install_test import SkipTest, test_part
 from spack.util.executable import Executable
 
 from ._checks import BaseBuilder, execute_build_time_tests
@@ -27,6 +30,29 @@ class PerlPackage(spack.package_base.PackageBase):
     build_system("perl")
 
     extends("perl", when="build_system=perl")
+
+    @lang.classproperty
+    def use_modules(cls) -> Iterable[str]:
+        """The list of installed perl modules."""
+        if cls.homepage is not None and "metacpan.org" in cls.homepage:
+            return [os.path.basename(cls.homepage)]
+        return []
+
+    def test_use(self):
+        """Test 'use module'"""
+        if not self.use_modules:
+            raise SkipTest("Test requires use_modules package property.")
+
+        perl = self.spec["perl"].command
+        for module in self.use_modules:
+            with test_part(
+                self,
+                f"test_use-{module}",
+                purpose=f"checking use of {module}",
+            ):
+                options = ["-we", f'use strict; use {module}; print("OK\n")']
+                out = perl(*options, output=str.split, error=str.split)
+                assert "OK" in out
 
 
 @spack.builder.builder("perl")
@@ -52,7 +78,7 @@ class PerlBuilder(BaseBuilder):
     phases = ("configure", "build", "install")
 
     #: Names associated with package methods in the old build-system format
-    legacy_methods = ("configure_args", "check")
+    legacy_methods = ("configure_args", "check", "test_use")
 
     #: Names associated with package attributes in the old build-system format
     legacy_attributes = ()

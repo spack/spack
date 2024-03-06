@@ -18,3 +18,5 @@ class PerlBignum(PerlPackage):
     depends_on("perl-math-bigrat", type=("build", "run"))
     depends_on("perl-math-bigint", type=("build", "run"))
     depends_on("perl-extutils-makemaker", type=("build"))
+
+    use_modules = ["Math::BigFloat", "Math::BigInt", "Math::BigRat"]

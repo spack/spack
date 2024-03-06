@@ -17,11 +17,3 @@ class PerlStringCrc32(PerlPackage):
     license("CC0-1.0 OR SSLeay")
 
     version("2.100", sha256="9706093b2d068b6715d35b4c58f51558e37960083202129fbb00a57e19a74713")
-
-    def test_use(self):
-        """Test 'use module'"""
-        options = ["-we", 'use strict; use String::CRC32; print("OK\n")']
-
-        perl = self.spec["perl"].command
-        out = perl(*options, output=str.split, error=str.split)
-        assert "OK" in out

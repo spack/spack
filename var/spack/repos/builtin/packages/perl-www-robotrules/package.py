@@ -15,3 +15,5 @@ class PerlWwwRobotrules(PerlPackage):
     version("6.02", sha256="46b502e7a288d559429891eeb5d979461dd3ecc6a5c491ead85d165b6e03a51e")
 
     depends_on("perl-uri", type=("build", "run"))
+
+    use_modules = ["WWW::RobotRules"]

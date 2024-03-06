@@ -23,11 +23,3 @@ class PerlDbdOracle(PerlPackage):
 
     def setup_build_environment(self, env):
         env.set("ORACLE_HOME", self.spec["oracle-instant-client"].prefix)
-
-    def test_use(self):
-        """Test 'use module'"""
-        options = ["-we", 'use strict; use DBD::Oracle; print("OK\n")']
-
-        perl = self.spec["perl"].command
-        out = perl(*options, output=str.split, error=str.split)
-        assert "OK" in out
