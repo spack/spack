@@ -90,7 +90,6 @@ def test_url_patch(mock_patch_stage, filename, sha256, archive_sha256, config):
     # Make a patch object
     url = url_util.path_to_file_url(filename)
     s = Spec("patch").concretized()
-    patch = spack.patch.UrlPatch(s.package, url, sha256=sha256, archive_sha256=archive_sha256)
 
     # make a stage
     with Stage(url) as stage:  # TODO: url isn't used; maybe refactor Stage
@@ -106,6 +105,8 @@ first line
 second line
 """
                 )
+            # save it for later comparison
+            shutil.copyfile("foo.txt", "foo-original.txt")
             # write the expected result of patching.
             with open("foo-expected.txt", "w") as f:
                 f.write(
@@ -116,6 +117,7 @@ third line
 """
                 )
         # apply the patch and compare files
+        patch = spack.patch.UrlPatch(s.package, url, sha256=sha256, archive_sha256=archive_sha256)
         with patch.stage:
             patch.stage.create()
             patch.stage.fetch()
@@ -125,51 +127,15 @@ third line
         with working_dir(stage.source_path):
             assert filecmp.cmp("foo.txt", "foo-expected.txt")
 
-
-@pytest.mark.not_on_windows("Line ending conflict on Windows")
-def test_reverse_patch(mock_patch_stage, config):
-    s = Spec("patch").concretized()
-
-    # make a stage
-    with Stage(".") as stage:  # TODO: url isn't used; maybe refactor Stage
-        stage.mirror_path = mock_patch_stage
-
-        mkdirp(stage.source_path)
-        with working_dir(stage.source_path):
-            # write a file to be patched
-            with open("foo.txt", "w") as f:
-                f.write(
-                    """\
-first line
-second line
-"""
-                )
-
-            # save it for later comparison
-            shutil.copyfile("foo.txt", "foo-original.txt")
-
-            # write the expected result of patching.
-            with open("foo-expected.txt", "w") as f:
-                f.write(
-                    """\
-zeroth line
-first line
-third line
-"""
-                )
-
-        # apply the forward patch and compare files
-        path = os.path.join(data_path, "foo.patch")
-        patch = spack.patch.FilePatch(s.package, path, level=1, working_dir=".")
-        patch.apply(stage)
-
-        with working_dir(stage.source_path):
-            assert filecmp.cmp("foo.txt", "foo-expected.txt")
-
-        # apply the reverse patch and compare files
-        path = os.path.join(data_path, "foo-reverse.patch")
-        patch = spack.patch.FilePatch(s.package, path, level=1, working_dir=".")
-        patch.apply(stage)
+        # apply the patch in reverse and compare files
+        patch = spack.patch.UrlPatch(
+            s.package, url, sha256=sha256, archive_sha256=archive_sha256, reverse=True
+        )
+        with patch.stage:
+            patch.stage.create()
+            patch.stage.fetch()
+            patch.stage.expand_archive()
+            patch.apply(stage)
 
         with working_dir(stage.source_path):
             assert filecmp.cmp("foo.txt", "foo-original.txt")
