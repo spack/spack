@@ -176,7 +176,7 @@ class KokkosKernels(CMakePackage, CudaPackage):
         for tpl in self.tpls:
             on_flag = "+%s" % tpl
             off_flag = "~%s" % tpl
-            dflt, spackname, rootname, descr = self.tpls[tpl]
+            dflt, spackname, rootname, condition, descr = self.tpls[tpl]
             if on_flag in self.spec:
                 options.append("-DKokkosKernels_ENABLE_TPL_%s=ON" % tpl.upper())
                 if rootname:
