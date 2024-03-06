@@ -210,7 +210,6 @@ class RocmOpenmpExtras(Package):
         depends_on(f"hsa-rocr-dev@{ver}", when=f"@{ver}")
         depends_on(f"llvm-amdgpu@{ver}", when=f"@{ver}")
 
-
         tag = "rocm-"
 
         resource(
