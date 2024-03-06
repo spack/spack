@@ -441,7 +441,7 @@ def test_patch_no_file():
         patch.apply("")
 
 
-def test_patch_no_url():
+def test_patch_no_sha256():
     # Give it the attributes we need to construct the error message
     FakePackage = collections.namedtuple("FakePackage", ["name", "namespace", "fullname"])
     fp = FakePackage("fake-package", "test", "fake-package")
