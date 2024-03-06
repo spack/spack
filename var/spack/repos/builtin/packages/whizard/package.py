@@ -86,6 +86,10 @@ class Whizard(AutotoolsPackage):
     depends_on("libtool", type="build")
     depends_on("pkgconfig", type="build")
 
+    # Patch to fix the build with pythia8 8.310 before 3.1.4
+    # Extracted from https://gitlab.tp.nt.uni-siegen.de/whizard/public/-/commit/8794c645fdb99f4552e07242223e78fea3cfee05.diff
+    patch("pythia8310.patch", when="@3:3.1.3 ^pythia8@8.310:")
+
     conflicts(
         "%gcc@:5.0",
         msg="gfortran needs to support Fortran 2008. For more detailed information see https://whizard.hepforge.org/compilers.html",
