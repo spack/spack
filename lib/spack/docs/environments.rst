@@ -416,6 +416,23 @@ that git clone if ``foo`` is in the environment.
 Further development on ``foo`` can be tested by reinstalling the environment,
 and eventually committed and pushed to the upstream git repo.
 
+If the package being developed supports out-of-source builds then users can use the
+``--build_directory`` flag to control the location and name of the build directory. 
+This is a shortcut to set the ``package_attributes:build_directory`` in the
+``packages`` configuration (see :ref:`assigning-package-attributes`).
+The supplied location will become the build-directory for that package in all future builds.
+
+.. warning::
+   Potential pitfalls of setting the build directory
+    Spack does not check for out-of-source build compatibility with the packages and
+    so the onerous of making sure the package supports out-of-source builds is on
+    the user.
+    For example, most ``autotool`` and ``makefile`` packages do not support out-of-source builds
+    while all ``CMake`` packages do.
+    Understanding these nuances are on the software developers and we strongly encourage
+    developers to only redirect the build directory if they understand their package's
+    build-system.
+
 ^^^^^^^
 Loading
 ^^^^^^^
@@ -934,6 +951,17 @@ function, as shown in the example below:
      zlib: "{name}-{version}"
      ^mpi: "{name}-{version}/{^mpi.name}-{^mpi.version}-{compiler.name}-{compiler.version}"
      all: "{name}-{version}/{compiler.name}-{compiler.version}"
+
+Projections also permit environment and spack configuration variable
+expansions as shown below:
+
+.. code-block:: yaml
+
+   projections:
+     all: "{name}-{version}/{compiler.name}-{compiler.version}/$date/$SYSTEM_ENV_VARIBLE"
+
+where ``$date`` is the spack configuration variable that will expand with the ``YYYY-MM-DD``
+format and ``$SYSTEM_ENV_VARIABLE`` is an environment variable defined in the shell.
 
 The entries in the projections configuration file must all be either
 specs or the keyword ``all``. For each spec, the projection used will

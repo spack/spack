@@ -34,7 +34,7 @@ import collections.abc
 import functools
 import os.path
 import re
-from typing import Any, Callable, List, Optional, Set, Tuple, Union
+from typing import TYPE_CHECKING, Any, Callable, List, Optional, Set, Tuple, Union
 
 import llnl.util.lang
 import llnl.util.tty.color
@@ -56,6 +56,9 @@ from spack.version import (
     VersionError,
     VersionLookupError,
 )
+
+if TYPE_CHECKING:
+    import spack.package_base
 
 __all__ = [
     "DirectiveError",
@@ -349,6 +352,7 @@ class DirectiveMeta(type):
         return _decorator
 
 
+SubmoduleCallback = Callable[["spack.package_base.PackageBase"], Union[str, List[str], bool]]
 directive = DirectiveMeta.directive
 
 
@@ -380,7 +384,7 @@ def version(
     tag: Optional[str] = None,
     branch: Optional[str] = None,
     get_full_repo: Optional[bool] = None,
-    submodules: Optional[bool] = None,
+    submodules: Union[SubmoduleCallback, Optional[bool]] = None,
     submodules_delete: Optional[bool] = None,
     # other version control
     svn: Optional[str] = None,
@@ -699,11 +703,14 @@ def patch(
 
         patch: spack.patch.Patch
         if "://" in url_or_filename:
+            if sha256 is None:
+                raise ValueError("patch() with a url requires a sha256")
+
             patch = spack.patch.UrlPatch(
                 pkg,
                 url_or_filename,
                 level,
-                working_dir,
+                working_dir=working_dir,
                 ordering_key=ordering_key,
                 sha256=sha256,
                 archive_sha256=archive_sha256,
