@@ -34,7 +34,7 @@ class PerlPackage(spack.package_base.PackageBase):
     @lang.classproperty
     def use_modules(cls) -> Iterable[str]:
         """The list of installed perl modules."""
-        if cls.homepage is not None and "metacpan.org" in cls.homepage:
+        if cls.homepage is not None and "metacpan.org/pod" in cls.homepage:
             return [os.path.basename(cls.homepage)]
         return []
 
