@@ -358,6 +358,8 @@ class CMakeBuilder(BaseBuilder, cmake.CMakeBuilder):
         due to incorrectly using hdf5 target names
         https://github.com/spack/spack/pull/42878
         """
+        if sys.platform == "win32":
+            return
 
         pkgconfig_file = find(self.prefix, "netcdf.pc", recursive=True)
         cmakeconfig_file = find(self.prefix, "netCDFTargets.cmake", recursive=True)
