@@ -12,6 +12,7 @@ import os
 import re
 import sys
 import traceback
+import warnings
 from datetime import datetime, timedelta
 from typing import Any, Callable, Iterable, List, Tuple
 
@@ -841,6 +842,48 @@ class Singleton:
 
     def __repr__(self):
         return repr(self.instance)
+
+
+def get_entry_points(*, group: str):
+    """Wrapper for ``importlib.metadata.entry_points``
+
+    Adapted from https://github.com/HypothesisWorks/hypothesis/blob/0a90ed6edf56319149956c7321d4110078a5c228/hypothesis-python/src/hypothesis/entry_points.py
+
+    Args:
+        group (str): the group of entry points to select
+
+    Returns:
+        EntryPoints for ``group``
+
+    """
+
+    try:
+        try:
+            from importlib import metadata as importlib_metadata  # type: ignore  # novermin
+        except ImportError:
+            import importlib_metadata  # type: ignore  # mypy thinks this is a redefinition
+        try:
+            entry_points = importlib_metadata.entry_points(group=group)
+        except TypeError:
+            # Prior to Python 3.10, entry_points accepted no parameters and always
+            # returned a dictionary of entry points, keyed by group.  See
+            # https://docs.python.org/3/library/importlib.metadata.html#entry-points
+            entry_points = importlib_metadata.entry_points().get(group, [])
+        yield from entry_points
+    except ImportError:
+        # But if we're not on Python >= 3.8 and the importlib_metadata backport
+        # is not installed, we fall back to pkg_resources anyway.
+        try:
+            import pkg_resources  # type: ignore
+        except ImportError:
+            warnings.warn(
+                "Under Python <= 3.7, Spack requires either the importlib_metadata "
+                "or setuptools package in order to load extensions via entrypoints.",
+                ImportWarning,
+            )
+            yield from ()
+        else:
+            yield from pkg_resources.iter_entry_points(group)
 
 
 def load_module_from_file(module_name, module_path):
