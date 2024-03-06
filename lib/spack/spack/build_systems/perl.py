@@ -6,8 +6,7 @@ import inspect
 import os
 from typing import Iterable
 
-import llnl.util.lang as lang
-from llnl.util.filesystem import filter_file
+from llnl.util.filesystem import filter_file, find
 
 import spack.builder
 import spack.package_base
@@ -31,11 +30,24 @@ class PerlPackage(spack.package_base.PackageBase):
 
     extends("perl", when="build_system=perl")
 
-    @lang.classproperty
-    def use_modules(cls) -> Iterable[str]:
-        """The list of installed perl modules."""
-        if cls.homepage is not None and "metacpan.org/pod" in cls.homepage:
-            return [os.path.basename(cls.homepage)]
+    @property
+    def use_modules(self) -> Iterable[str]:
+        """Names of the package's perl modules."""
+        module_files = find(self.prefix.lib, ["*.pm"], recursive=True)
+        # Drop the extension and library path
+        modules = [os.path.splitext(m)[0].replace(self.prefix.lib, "") for m in module_files]
+        # Drop the perl subdirectory as well
+        return ["::".join(m.split(os.sep)[2:]) for m in modules]
+
+    @property
+    def skip_modules(self) -> Iterable[str]:
+        """Names of modules that should be skipped when running tests.
+
+        These are a subset of use_modules.
+
+        Returns:
+            List of strings of module names.
+        """
         return []
 
     def test_use(self):
@@ -45,6 +57,9 @@ class PerlPackage(spack.package_base.PackageBase):
 
         perl = self.spec["perl"].command
         for module in self.use_modules:
+            if module in self.skip_modules:
+                continue
+
             with test_part(self, f"test_use-{module}", purpose=f"checking use of {module}"):
                 options = ["-we", f'use strict; use {module}; print("OK\n")']
                 out = perl(*options, output=str.split, error=str.split)
