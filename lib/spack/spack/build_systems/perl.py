@@ -45,11 +45,7 @@ class PerlPackage(spack.package_base.PackageBase):
 
         perl = self.spec["perl"].command
         for module in self.use_modules:
-            with test_part(
-                self,
-                f"test_use-{module}",
-                purpose=f"checking use of {module}",
-            ):
+            with test_part(self, f"test_use-{module}", purpose=f"checking use of {module}"):
                 options = ["-we", f'use strict; use {module}; print("OK\n")']
                 out = perl(*options, output=str.split, error=str.split)
                 assert "OK" in out
