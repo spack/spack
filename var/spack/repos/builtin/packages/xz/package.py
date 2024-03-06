@@ -54,9 +54,6 @@ class Xz(MSBuildPackage, AutotoolsPackage, SourceforgePackage):
     # NVHPC has problems with unions that contain pointers that are not the first members:
     patch("nvhpc_union_ptr.patch", when="@5.4.0:%nvhpc")
 
-    # xz-5.2.7/src/liblzma/common/common.h:56 uses attribute __symver__ instead of
-    # __asm__(.symver) for newer GCC releases.
-    conflicts("%intel", when="@5.2.7", msg="icc does not support attribute __symver__")
     conflicts("platform=windows", when="+pic")  # no pic on Windows
     # prior to 5.2.3, build system is for MinGW only, not currently supported by Spack
     conflicts("platform=windows", when="@:5.2.3")
@@ -96,8 +93,9 @@ class AutotoolsBuilder(AutotoolsBuilder):
 
         # NVHPC compiler cannot handle the 'linux' symbol versioning introduced in xz@5.2.7. It
         # became impossible to switch to the 'generic' one in xz@5.2.9 (see method
-        # override_symbol_versions below).
-        if self.spec.satisfies("@5.2.7:5.2.8%nvhpc"):
+        # override_symbol_versions below). The respective workaround for Intel is implemented
+        # upstream starting xz@5.2.8:
+        if any(self.spec.satisfies(s) for s in ["@5.2.7:5.2.8%nvhpc", "@5.2.7%intel"]):
             args.append("--enable-symbol-versions=generic")
 
         return args
