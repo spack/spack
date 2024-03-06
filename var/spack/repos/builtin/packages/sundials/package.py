@@ -98,12 +98,12 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
         when="@6.2.0:",
     )
 
-    # MPI logging
+    # MPI logging (option removed in 7.0)
     variant(
         "logging-mpi",
         default="OFF",
         description="enable MPI support in the logger",
-        when="@6.2.0:",
+        when="@6.2.0:6.7.0",
     )
 
     # Real type
@@ -166,10 +166,11 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
     variant("examples", default=True, description="Enable examples")
     variant("examples-install", default=True, description="Install examples")
 
-    # Generic (std-c) math libraries (UNIX only)
+    # Generic (std-c) math libraries (UNIX only) (option removed in 7.0)
     variant(
         "generic-math",
         default=True,
+        when="@:6.7.0",
         description="Use generic (std-c) math libraries on unix systems",
     )
 
