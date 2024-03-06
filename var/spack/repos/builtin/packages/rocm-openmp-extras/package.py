@@ -183,16 +183,7 @@ class RocmOpenmpExtras(Package):
     depends_on("libdrm", when="@5.7:6.0")
     depends_on("numactl", when="@5.7:6.0")
 
-    for ver in [
-        "5.5.0",
-        "5.5.1",
-        "5.6.0",
-        "5.6.1",
-        "5.7.0",
-        "5.7.1",
-        "6.0.0",
-        "6.0.2",
-    ]:
+    for ver in ["5.5.0", "5.5.1", "5.6.0", "5.6.1", "5.7.0", "5.7.1", "6.0.0", "6.0.2"]:
         depends_on(f"rocm-core@{ver}", when=f"@{ver}")
 
     for ver in [
