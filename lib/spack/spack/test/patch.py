@@ -6,6 +6,7 @@
 import collections
 import filecmp
 import os
+import shutil
 import sys
 
 import pytest
@@ -123,6 +124,54 @@ third line
 
         with working_dir(stage.source_path):
             assert filecmp.cmp("foo.txt", "foo-expected.txt")
+
+
+def test_reverse_patch(mock_patch_stage, config):
+    s = Spec("patch").concretized()
+
+    # make a stage
+    with Stage(".") as stage:  # TODO: url isn't used; maybe refactor Stage
+        stage.mirror_path = mock_patch_stage
+
+        mkdirp(stage.source_path)
+        with working_dir(stage.source_path):
+            # write a file to be patched
+            with open("foo.txt", "w") as f:
+                f.write(
+                    """\
+first line
+second line
+"""
+                )
+
+            # save it for later comparison
+            shutil.copyfile("foo.txt", "foo-original.txt")
+
+            # write the expected result of patching.
+            with open("foo-expected.txt", "w") as f:
+                f.write(
+                    """\
+zeroth line
+first line
+third line
+"""
+                )
+
+        # apply the forward patch and compare files
+        path = os.path.join(data_path, "foo.patch")
+        patch = spack.patch.FilePatch(s.package, path, level=1, working_dir=".")
+        patch.apply(stage)
+
+        with working_dir(stage.source_path):
+            assert filecmp.cmp("foo.txt", "foo-expected.txt")
+
+        # apply the reverse patch and compare files
+        path = os.path.join(data_path, "foo-reverse.patch")
+        patch = spack.patch.FilePatch(s.package, path, level=1, working_dir=".")
+        patch.apply(stage)
+
+        with working_dir(stage.source_path):
+            assert filecmp.cmp("foo.txt", "foo-original.txt")
 
 
 def test_patch_in_spec(mock_packages, config):
