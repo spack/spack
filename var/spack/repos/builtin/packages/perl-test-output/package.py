@@ -11,6 +11,7 @@ class PerlTestOutput(PerlPackage):
 
     homepage = "https://github.com/briandfoy/test-output"
     url = "https://github.com/briandfoy/test-output/archive/release-1.033.tar.gz"
+    use_modules = ["Test::Output"]
 
     license("Artistic-2.0")
 
