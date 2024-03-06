@@ -126,6 +126,7 @@ third line
             assert filecmp.cmp("foo.txt", "foo-expected.txt")
 
 
+@pytest.mark.not_on_windows("Line ending conflict on Windows")
 def test_reverse_patch(mock_patch_stage, config):
     s = Spec("patch").concretized()
 
