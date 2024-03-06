@@ -221,6 +221,7 @@ def test_test_list_all(mock_packages):
         [
             "fail-test-audit",
             "mpich",
+            "perl-extension",
             "printing-package",
             "py-extension1",
             "py-extension2",
