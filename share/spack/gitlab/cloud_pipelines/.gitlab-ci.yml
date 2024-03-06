@@ -82,6 +82,8 @@ default:
     PIPELINE_MIRROR_TEMPLATE: "single-src-protected-mirrors.yaml.in"
     # TODO: We can remove this when we drop the "deprecated" stack
     PUSH_BUILDCACHE_DEPRECATED: "${PROTECTED_MIRROR_PUSH_DOMAIN}/${CI_COMMIT_REF_NAME}/${SPACK_CI_STACK_NAME}"
+    SPACK_MAPPING_SERVER_URL: "http://localhost"
+    SPACK_MAPPING_SERVER_PORT: "23456"
 
   rules:
     - if: $SPACK_CI_DISABLE_STACKS =~ /.+/ && $SPACK_CI_STACK_NAME =~ $SPACK_CI_DISABLE_STACKS
@@ -139,6 +141,7 @@ default:
     - nproc || true
     - cat /proc/loadavg || true
     - cat /proc/meminfo | grep 'MemTotal\|MemFree' || true
+    - python ${SPACK_ROOT}/share/spack/gitlab/cloud_pipelines/scripts/server/dynamic-mapping-server.py
     - . "./share/spack/setup-env.sh"
     - spack --version
     - cd share/spack/gitlab/cloud_pipelines/stacks/${SPACK_CI_STACK_NAME}

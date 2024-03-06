@@ -9,6 +9,10 @@ ci:
   broken-specs-url: "https://dummy.io" # s3://spack-binaries/broken-specs"
 
   pipeline-gen:
+  - dynamic-mapping:
+      mode: batch
+      url: "env::SPACK_MAPPING_SERVER_URL"
+      port: "env::SPACK_MAPPING_SERVER_PORT"
   - build-job:
       before_script-:
       - - cat /proc/loadavg || true

@@ -6,6 +6,7 @@
 import base64
 import codecs
 import copy
+import io
 import json
 import os
 import re
@@ -501,9 +502,20 @@ class SpackCI:
             if name not in ["any", "build"]:
                 jobs[name] = self.__init_job("")
 
-    def __init_job(self, spec):
+    def __init_job(self, release_spec):
         """Initialize job object"""
-        return {"spec": spec, "attributes": {}}
+        job_object = {"spec": release_spec, "attributes": {}}
+        if release_spec:
+            job_vars = job_object["attributes"].setdefault("variables", {})
+            job_vars["SPACK_JOB_SPEC_DAG_HASH"] = release_spec.dag_hash()
+            job_vars["SPACK_JOB_SPEC_PKG_NAME"] = release_spec.name
+            job_vars["SPACK_JOB_SPEC_PKG_VERSION"] = release_spec.format("{version}")
+            job_vars["SPACK_JOB_SPEC_COMPILER_NAME"] = release_spec.format("{compiler.name}")
+            job_vars["SPACK_JOB_SPEC_COMPILER_VERSION"] = release_spec.format("{compiler.version}")
+            job_vars["SPACK_JOB_SPEC_ARCH"] = release_spec.format("{architecture}")
+            job_vars["SPACK_JOB_SPEC_VARIANTS"] = release_spec.format("{variants}")
+
+        return job_object
 
     def __is_named(self, section):
         """Check if a pipeline-gen configuration section is for a named job,
@@ -596,6 +608,7 @@ class SpackCI:
         for section in reversed(pipeline_gen):
             name = self.__is_named(section)
             has_submapping = "submapping" in section
+            has_dynmapping = "dynamic-mapping" in section
             section = cfg.InternalConfigScope._process_dict_keyname_overrides(section)
 
             if name:
@@ -637,6 +650,74 @@ class SpackCI:
                     if job["spec"]:
                         job["attributes"] = self.__apply_submapping(
                             job["attributes"], job["spec"], section
+                        )
+            elif has_dynmapping:
+                # Unpack in indent script
+                mode = section["dynamic-mapping"].get("mode", "batch")
+                url = section["dynamic-mapping"].get("url", "http://localhost")
+                port = section["dynamic-mapping"].get("port")
+                headers = section["dynamic-mapping"].get("headers", {})
+
+                if url.startswith("env::"):
+                    url = os.environ.get(url.lstrip("env::"))
+
+                if port.startswith("env::"):
+                    port = os.environ.get(port.lstrip("env::"))
+
+                if port:
+                    url += f":{port}"
+
+                url += "/v1/kube-requests"
+                print("Dynamic Mapping URL: ", url)
+
+                def job_payload(job):
+                    job_vars = job["attributes"].get("variables")
+                    return {
+                        "hash": job_vars.get("SPACK_JOB_SPEC_DAG_HASH", ""),
+                        "arch": job_vars.get("SPACK_JOB_SPEC_ARCH", ""),
+                        "package": {
+                            "name": job_vars.get("SPACK_JOB_SPEC_PKG_NAME", ""),
+                            "version": job_vars.get("SPACK_JOB_SPEC_PKG_VERSION", ""),
+                            "variants": job_vars.get("SPACK_JOB_SPEC_VARIANTS", ""),
+                        },
+                        "compiler": {
+                            "name": job_vars.get("SPACK_JOB_SPEC_COMPILER_NAME", ""),
+                            "version": job_vars.get("SPACK_JOB_SPEC_COMPILER_VERSION", ""),
+                        },
+                    }
+
+                opener = build_opener(HTTPHandler)
+                # TODO: timeout, retry policy, etc. need to be implemented here
+                if mode == "batch":
+                    data = []
+                    for job in jobs.values():
+                        if job["spec"]:
+                            data.append(job_payload(job))
+
+                    # TODO: allow setting message size limits
+                    data = json.dumps(data).encode("utf-8")
+                    request = Request(url, data=data, headers=headers, method="POST")
+
+                    response = opener.open(request)
+                    mappings = json.loads(response.read().decode("utf-8"))
+                    for sha, job in jobs.items():
+                        if not job["spec"]:
+                            continue
+                        job["attributes"] = spack.config.merge_yaml(
+                            job.get("attributes", {}), mappings.get(sha, {})
+                        )
+                else:
+                    # TODO: Parallel request option
+                    for job in jobs.values():
+                        if not job["spec"]:
+                            continue
+
+                        sha = job["spec"].dag_hash()
+                        data = [job_payload(job)]
+                        data = json.dumps(data).encode("utf-8")
+                        mapping = request = Request(url, data=data, headers=headers, method="POST")
+                        job["attributes"] = spack.config.merge_yaml(
+                            job.get("attributes", {}), mapping.get(sha, {})
                         )
 
         for _, job in jobs.items():
@@ -1038,15 +1119,6 @@ def generate_gitlab_ci_yaml(
 
             job_name = get_job_name(release_spec, build_group)
 
-            job_vars = job_object.setdefault("variables", {})
-            job_vars["SPACK_JOB_SPEC_DAG_HASH"] = release_spec_dag_hash
-            job_vars["SPACK_JOB_SPEC_PKG_NAME"] = release_spec.name
-            job_vars["SPACK_JOB_SPEC_PKG_VERSION"] = release_spec.format("{version}")
-            job_vars["SPACK_JOB_SPEC_COMPILER_NAME"] = release_spec.format("{compiler.name}")
-            job_vars["SPACK_JOB_SPEC_COMPILER_VERSION"] = release_spec.format("{compiler.version}")
-            job_vars["SPACK_JOB_SPEC_ARCH"] = release_spec.format("{architecture}")
-            job_vars["SPACK_JOB_SPEC_VARIANTS"] = release_spec.format("{variants}")
-
             job_object["needs"] = []
             if spec_label in dependencies:
                 if enable_artifacts_buildcache:
@@ -1124,6 +1196,7 @@ def generate_gitlab_ci_yaml(
 
             # Let downstream jobs know whether the spec needed rebuilding, regardless
             # whether DAG pruning was enabled or not.
+            job_vars = job_object["variables"]
             job_vars["SPACK_SPEC_NEEDS_REBUILD"] = str(rebuild_spec)
 
             if cdash_handler:
