@@ -87,7 +87,7 @@ def _urlopen():
 urlopen = lang.Singleton(_urlopen)
 
 #: User-Agent used in Request objects
-SPACK_USER_AGENT = "Spackbot/{0}".format(spack.spack_version)
+SPACK_USER_AGENT = "Spack/{0}".format(spack.spack_version)
 
 
 # Also, HTMLParseError is deprecated and never raised.
