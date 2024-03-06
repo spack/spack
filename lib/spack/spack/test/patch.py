@@ -496,6 +496,7 @@ def test_invalid_level(level):
     with pytest.raises(ValueError, match="Patch level needs to be a non-negative integer."):
         spack.patch.Patch(fp, "nonexistent_file", level, "")
 
+
 def test_equality():
     FakePackage = collections.namedtuple("FakePackage", ["name", "namespace", "fullname"])
     fp = FakePackage("fake-package", "test", "fake-package")
