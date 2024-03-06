@@ -198,7 +198,6 @@ class Hip(CMakePackage):
             when=f"@{d_version}",
         )
 
-
         # For avx build, the start address of values_ buffer in KernelParameters is not
         # correct as it is computed based on 16-byte alignment.
         patch(
