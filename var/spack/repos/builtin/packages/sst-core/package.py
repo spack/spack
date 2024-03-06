@@ -54,10 +54,7 @@ class SstCore(AutotoolsPackage):
     )
     variant("hdf5", default=False, description="Build support for HDF5 statistic output")
     variant("zlib", default=False, description="Build support for ZLIB compression")
-    # Starting with 0bc4832f3f87aa78d1efd3e15743eb059dc03250.  It should be
-    # optional, but ncurses appearing as a transitive dependency during
-    # concretization leads to a false positive header find during configure
-    # time that eventually leads to a linker failure.
+    # Starting with 0bc4832f3f87aa78d1efd3e15743eb059dc03250 and then 14.0.0.
     variant(
         "curses",
         default=True,
