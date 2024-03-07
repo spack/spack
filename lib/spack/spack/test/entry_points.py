@@ -8,9 +8,10 @@ import sys
 
 import pytest
 
+import llnl.util.lang
+
 import spack.config
 import spack.extensions
-import llnl.util.lang
 
 
 class MockConfigEntryPoint:
