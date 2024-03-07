@@ -29,7 +29,7 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
     # See https://spdx.org/licenses/ for a list.
     license("Apache-2.0")
 
-    version("main", branch="main")
+    version("1.34.0", branch="main")
 
     version("1.33.0", sha256="c7dfe691a043b6a5dcbea6fe7607ca030014f1a8019744c4c99f67caa8829ba3")
     version("1.32.0", sha256="a359032b4355774e250fb2796887b3bbf58d010c468faba97f7b471bc6bab57d")
@@ -71,6 +71,26 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
         "unset",
     )
 
+    # TODO: revise this list of mappings, probably need more logic for cce, see upc++
+    compiler_map = {
+        "aocc": "clang",
+        "apple-clang": "clang",
+        "arm": "clang",
+        "clang": "clang",
+        "cce": "cray-prgenv-cray",
+        "cray-prgenv-cray": "cray",
+        "cray-prgenv-gnu": "gnu",
+        "cray-prgenv-intel": "intel",
+        "cray-prgenv-pgi": "pgi",
+        "dpcpp" : "intel",
+        "gcc": "gnu",
+        "intel": "intel",
+        "oneapi": "intel",
+        "pgi": "pgi",
+        "rocmcc": "clang",
+        "unset": "unset",
+    }
+
     # TODO: add other package dependencies
     package_module_dict = {
         "curl": "curl",
@@ -107,6 +127,9 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
     )
 
     variant("check", default=False, description="Run make check after installing the package")
+
+    variant("chpldoc", when="@1.34:" , default=False, description="Build chpldoc in addition to chpl")
+    variant("chpldoc", when="@main", default=False, description="Build chpldoc in addition to chpl")
 
     variant(
         "comm",
@@ -373,6 +396,8 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
 
     conflicts("rocm", when="cuda", msg="Chapel must be built with either CUDA or ROCm, not both")
 
+    conflicts("chpldoc", when="@:1.34.0", msg="chpldoc has no effect and is installed by default on versions prior to 1.34.0")
+
     with when("llvm=none"):
         conflicts("cuda", msg="Cuda support requires building with LLVM")
         conflicts("rocm", msg="ROCm support requires building with LLVM")
@@ -383,7 +408,7 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
     # Add dependencies
 
     # TODO: Make conditional on +chpldoc variant once removed from install target
-    depends_on("doxygen@1.8.17:")
+    depends_on("doxygen@1.8.17:", when="+chpldoc")
 
     for opt, dep in package_module_dict.items():
         depends_on(dep, when="package_modules={0}".format(opt), type=("run", "build", "link"))
@@ -416,6 +441,19 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
     def configure(self, spec, prefix):
         configure("--prefix={0}".format(prefix))
 
+    def build(self, spec, prefix):
+        make()
+        if spec.variants["chpldoc"].value:
+            make("chpldoc")
+
+    def setup_chpl_compilers(self, env):
+        if self.compiler_map.get(self.spec.compiler.name) is None:
+            raise InstallError(
+                "Chapel did not recognize the {0} compiler".format(self.spec.compiler.name)
+            )
+        env.set("CHPL_HOST_COMPILER", self.compiler_map[self.spec.compiler.name])
+        env.set("CHPL_TARGET_COMPILER", self.compiler_map[self.spec.compiler.name])
+
     def setup_chpl_comm(self, env, spec):
         env.set("CHPL_COMM", spec.variants["comm"].value)
         if spec.variants["comm_substrate"].value != "none":
@@ -440,6 +478,8 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
         for v in self.spec.variants.keys():
             self.setup_if_not_unset(env, "CHPL_" + v.upper(), self.spec.variants[v].value)
         self.setup_chpl_llvm(env)
+        self.setup_chpl_compilers(env)
+
         # TODO: a function to set defaults for things where we removed variants
         env.set("CHPL_LOCALE_MODEL", "flat")
 
@@ -527,8 +567,10 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
     def run_test_version(self):
         """Perform version checks on selected installed package binaries."""
         expected = f"version {self._output_version_long}"
+        exes = ["chpl"]
 
-        exes = ["chpl", "chpldoc"]
+        if self.spec.variants["chpldoc"].value:
+            exes.append("chpldoc")
 
         for exe in exes:
             reason = f"ensure version of {exe} is {self._output_version_long}"
@@ -564,6 +606,10 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
             self.run_local_make_check_with_gasnet()
         else:
             make("check")
+
+    def check(self):
+        path_put_first("PATH", [self.prefix.util])
+        make("test")
 
     def run_test_package_modules(self):
         """Test that the package modules are available"""
@@ -616,5 +662,6 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
                             self.run_local_make_check()
                     else:  # Not GPU
                         self.run_local_make_check()
-                    make("check-chpldoc")
+                    if self.spec.variants["chpldoc"].value:
+                        make("check-chpldoc")
         self.run_test_package_modules()
