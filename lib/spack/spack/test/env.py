@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,7 +6,6 @@
 import filecmp
 import os
 import pickle
-import sys
 
 import pytest
 
@@ -14,11 +13,14 @@ import llnl.util.filesystem as fs
 
 import spack.environment as ev
 import spack.spec
-from spack.environment.environment import SpackEnvironmentViewError, _error_on_nonempty_view_dir
-
-pytestmark = pytest.mark.skipif(
-    sys.platform == "win32", reason="Envs are not supported on windows"
+from spack.environment.environment import (
+    EnvironmentManifestFile,
+    SpackEnvironmentViewError,
+    _error_on_nonempty_view_dir,
 )
+from spack.spec_list import UndefinedReferenceError
+
+pytestmark = pytest.mark.not_on_windows("Envs are not supported on windows")
 
 
 class TestDirectoryInitialization:
@@ -106,6 +108,12 @@ def test_env_change_spec_in_definition(tmp_path, mock_packages, config, mutable_
     e.change_existing_spec(spack.spec.Spec("mpileaks@2.2"), list_name="desired_specs")
     e.write()
 
+    # Ensure changed specs are in memory
+    assert any(x.intersects("mpileaks@2.2%gcc") for x in e.user_specs)
+    assert not any(x.intersects("mpileaks@2.1%gcc") for x in e.user_specs)
+
+    # Now make sure the changes can be read from the modified config
+    e = ev.read("test")
     assert any(x.intersects("mpileaks@2.2%gcc") for x in e.user_specs)
     assert not any(x.intersects("mpileaks@2.1%gcc") for x in e.user_specs)
 
@@ -551,3 +559,257 @@ spack:
     with spack.config.override("concretizer:unify", unify_in_config):
         with ev.Environment(manifest.parent) as e:
             assert e.unify == unify_in_config
+
+
+@pytest.mark.parametrize(
+    "spec_str,expected_raise,expected_spec",
+    [
+        # vendorsb vendors "b" only when @=1.1
+        ("vendorsb", False, "vendorsb@=1.0"),
+        ("vendorsb@=1.1", True, None),
+    ],
+)
+def test_conflicts_with_packages_that_are_not_dependencies(
+    spec_str, expected_raise, expected_spec, tmp_path, mock_packages, config
+):
+    """Tests that we cannot concretize two specs together, if one conflicts with the other,
+    even though they don't have a dependency relation.
+    """
+    if spack.config.get("config:concretizer") == "original":
+        pytest.xfail("Known failure of the original concretizer")
+
+    manifest = tmp_path / "spack.yaml"
+    manifest.write_text(
+        f"""\
+spack:
+  specs:
+  - {spec_str}
+  - b
+  concretizer:
+    unify: true
+"""
+    )
+    with ev.Environment(manifest.parent) as e:
+        if expected_raise:
+            with pytest.raises(spack.solver.asp.UnsatisfiableSpecError):
+                e.concretize()
+        else:
+            e.concretize()
+            assert any(s.satisfies(expected_spec) for s in e.concrete_roots())
+
+
+@pytest.mark.regression("39455")
+@pytest.mark.only_clingo("Known failure of the original concretizer")
+@pytest.mark.parametrize(
+    "possible_mpi_spec,unify", [("mpich", False), ("mpich", True), ("zmpi", False), ("zmpi", True)]
+)
+def test_requires_on_virtual_and_potential_providers(
+    possible_mpi_spec, unify, tmp_path, mock_packages, config
+):
+    """Tests that in an environment we can add packages explicitly, even though they provide
+    a virtual package, and we require the provider of the same virtual to be another package,
+    if they are added explicitly by their name.
+    """
+    manifest = tmp_path / "spack.yaml"
+    manifest.write_text(
+        f"""\
+    spack:
+      specs:
+      - {possible_mpi_spec}
+      - mpich2
+      - mpileaks
+      packages:
+        mpi:
+          require: mpich2
+      concretizer:
+        unify: {unify}
+    """
+    )
+    with ev.Environment(manifest.parent) as e:
+        e.concretize()
+        assert e.matching_spec(possible_mpi_spec)
+        assert e.matching_spec("mpich2")
+
+        mpileaks = e.matching_spec("mpileaks")
+        assert mpileaks.satisfies("^mpich2")
+        assert mpileaks["mpi"].satisfies("mpich2")
+        assert not mpileaks.satisfies(f"^{possible_mpi_spec}")
+
+
+@pytest.mark.regression("39387")
+@pytest.mark.parametrize(
+    "spec_str", ["mpileaks +opt", "mpileaks  +opt   ~shared", "mpileaks  ~shared   +opt"]
+)
+def test_manifest_file_removal_works_if_spec_is_not_normalized(tmp_path, spec_str):
+    """Tests that we can remove a spec from a manifest file even if its string
+    representation is not normalized.
+    """
+    manifest = tmp_path / "spack.yaml"
+    manifest.write_text(
+        f"""\
+spack:
+  specs:
+  - {spec_str}
+"""
+    )
+    s = spack.spec.Spec(spec_str)
+    spack_yaml = EnvironmentManifestFile(tmp_path)
+    # Doing a round trip str -> Spec -> str normalizes the representation
+    spack_yaml.remove_user_spec(str(s))
+    spack_yaml.flush()
+
+    assert spec_str not in manifest.read_text()
+
+
+@pytest.mark.regression("39387")
+@pytest.mark.parametrize(
+    "duplicate_specs,expected_number",
+    [
+        # Swap variants, versions, etc. add spaces
+        (["foo +bar ~baz", "foo ~baz    +bar"], 3),
+        (["foo @1.0 ~baz %gcc", "foo ~baz @1.0%gcc"], 3),
+        # Item 1 and 3 are exactly the same
+        (["zlib +shared", "zlib      +shared", "zlib +shared"], 4),
+    ],
+)
+def test_removing_spec_from_manifest_with_exact_duplicates(
+    duplicate_specs, expected_number, tmp_path
+):
+    """Tests that we can remove exact duplicates from a manifest file.
+
+    Note that we can't get in a state with duplicates using only CLI, but this might happen
+    on user edited spack.yaml files.
+    """
+    manifest = tmp_path / "spack.yaml"
+    manifest.write_text(
+        f"""\
+    spack:
+      specs: [{", ".join(duplicate_specs)} , "zlib"]
+    """
+    )
+
+    with ev.Environment(tmp_path) as env:
+        assert len(env.user_specs) == expected_number
+        env.remove(duplicate_specs[0])
+        env.write()
+
+    assert "+shared" not in manifest.read_text()
+    assert "zlib" in manifest.read_text()
+    with ev.Environment(tmp_path) as env:
+        assert len(env.user_specs) == 1
+
+
+@pytest.mark.regression("35298")
+@pytest.mark.only_clingo("Propagation not supported in the original concretizer")
+def test_variant_propagation_with_unify_false(tmp_path, mock_packages, config):
+    """Spack distributes concretizations to different processes, when unify:false is selected and
+    the number of roots is 2 or more. When that happens, the specs to be concretized need to be
+    properly reconstructed on the worker process, if variant propagation was requested.
+    """
+    manifest = tmp_path / "spack.yaml"
+    manifest.write_text(
+        """
+    spack:
+      specs:
+      - parent-foo ++foo
+      - c
+      concretizer:
+        unify: false
+    """
+    )
+    with ev.Environment(tmp_path) as env:
+        env.concretize()
+
+    root = env.matching_spec("parent-foo")
+    for node in root.traverse():
+        assert node.satisfies("+foo")
+
+
+def test_env_with_include_defs(mutable_mock_env_path, mock_packages):
+    """Test environment with included definitions file."""
+    env_path = mutable_mock_env_path
+    env_path.mkdir()
+    defs_file = env_path / "definitions.yaml"
+    defs_file.write_text(
+        """definitions:
+- core_specs: [libdwarf, libelf]
+- compilers: ['%gcc']
+"""
+    )
+
+    spack_yaml = env_path / ev.manifest_name
+    spack_yaml.write_text(
+        f"""spack:
+  include:
+  - file://{defs_file}
+
+  definitions:
+  - my_packages: [zlib]
+
+  specs:
+  - matrix:
+    - [$core_specs]
+    - [$compilers]
+  - $my_packages
+"""
+    )
+
+    e = ev.Environment(env_path)
+    with e:
+        e.concretize()
+
+
+def test_env_with_include_def_missing(mutable_mock_env_path, mock_packages):
+    """Test environment with included definitions file that is missing a definition."""
+    env_path = mutable_mock_env_path
+    env_path.mkdir()
+    filename = "missing-def.yaml"
+    defs_file = env_path / filename
+    defs_file.write_text("definitions:\n- my_compilers: ['%gcc']\n")
+
+    spack_yaml = env_path / ev.manifest_name
+    spack_yaml.write_text(
+        f"""spack:
+  include:
+  - file://{defs_file}
+
+  specs:
+  - matrix:
+    - [$core_specs]
+    - [$my_compilers]
+"""
+    )
+
+    e = ev.Environment(env_path)
+    with e:
+        with pytest.raises(UndefinedReferenceError, match=r"which does not appear"):
+            e.concretize()
+
+
+@pytest.mark.regression("41292")
+def test_deconcretize_then_concretize_does_not_error(mutable_mock_env_path, mock_packages):
+    """Tests that, after having deconcretized a spec, we can reconcretize an environment which
+    has 2 or more user specs mapping to the same concrete spec.
+    """
+    mutable_mock_env_path.mkdir()
+    spack_yaml = mutable_mock_env_path / ev.manifest_name
+    spack_yaml.write_text(
+        """spack:
+      specs:
+      # These two specs concretize to the same hash
+      - c
+      - c@1.0
+      # Spec used to trigger the bug
+      - a
+      concretizer:
+        unify: true
+    """
+    )
+    e = ev.Environment(mutable_mock_env_path)
+    with e:
+        e.concretize()
+        e.deconcretize(spack.spec.Spec("a"), concrete=False)
+        e.concretize()
+    assert len(e.concrete_roots()) == 3
+    all_root_hashes = set(x.dag_hash() for x in e.concrete_roots())
+    assert len(all_root_hashes) == 2

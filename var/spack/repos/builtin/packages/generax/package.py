@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,8 @@ class Generax(CMakePackage):
 
     maintainers("snehring")
 
+    license("AGPL-3.0-or-later")
+
     version("master", branch="master", submodules=True)
     version("dev", branch="dev", submodules=True)
     version("2.0.4", commit="e4fab40f407bdd3b588d3d69a449f8c1be56f9fa", submodules=True)
@@ -27,7 +29,7 @@ class Generax(CMakePackage):
     depends_on("bison")
     depends_on("flex")
 
-    variant("mpi", default=False)
+    variant("mpi", default=False, description="Build with MPI support")
 
     build_directory = "build"
 

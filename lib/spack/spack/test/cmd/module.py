@@ -1,11 +1,10 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os.path
 import re
-import sys
 
 import pytest
 
@@ -16,7 +15,7 @@ import spack.store
 
 module = spack.main.SpackCommand("module")
 
-pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="does not run on windows")
+pytestmark = pytest.mark.not_on_windows("does not run on windows")
 
 
 #: make sure module files are generated for all the tests here

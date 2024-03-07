@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,11 +12,11 @@ import llnl.util.tty as tty
 from llnl.util.tty.colify import colify
 
 import spack.cmd
-import spack.cmd.common.arguments as arguments
 import spack.paths
 import spack.repo
 import spack.util.executable as exe
 import spack.util.package_hash as ph
+from spack.cmd.common import arguments
 
 description = "query packages associated with particular git revisions"
 section = "developer"
@@ -143,7 +143,7 @@ def pkg_source(args):
         tty.die("spack pkg source requires exactly one spec")
 
     spec = specs[0]
-    filename = spack.repo.path.filename_for_package_name(spec.name)
+    filename = spack.repo.PATH.filename_for_package_name(spec.name)
 
     # regular source dump -- just get the package and print its contents
     if args.canonical:
@@ -184,7 +184,7 @@ def pkg_grep(args, unknown_args):
     grouper = lambda e: e[0] // 500
 
     # set up iterator and save the first group to ensure we don't end up with a group of size 1
-    groups = itertools.groupby(enumerate(spack.repo.path.all_package_paths()), grouper)
+    groups = itertools.groupby(enumerate(spack.repo.PATH.all_package_paths()), grouper)
     if not groups:
         return 0  # no packages to search
 

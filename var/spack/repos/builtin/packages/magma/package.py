@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -23,6 +23,7 @@ class Magma(CMakePackage, CudaPackage, ROCmPackage):
     test_requires_compiler = True
 
     version("master", branch="master")
+    version("2.7.2", sha256="729bc1a70e518a7422fe7a3a54537a4741035a77be3349f66eac5c362576d560")
     version("2.7.1", sha256="d9c8711c047a38cae16efde74bee2eb3333217fd2711e1e9b8606cbbb4ae1a50")
     version("2.7.0", sha256="fda1cbc4607e77cacd8feb1c0f633c5826ba200a018f647f1c5436975b39fd18")
     version("2.6.2", sha256="75b554dab00903e2d10b972c913e50e7f88cbc62f3ae432b5a086c7e4eda0a71")
@@ -77,6 +78,7 @@ class Magma(CMakePackage, CudaPackage, ROCmPackage):
     patch("magma-2.5.0.patch", when="@2.5.0")
     patch("magma-2.5.0-cmake.patch", when="@2.5.0")
     patch("cmake-W.patch", when="@2.5.0:%nvhpc")
+    patch("0001-fix-magma-build-error-with-rocm-6.0.0.patch", when="@2.7.2 ^hip@6.0 + rocm")
 
     @run_before("cmake")
     def generate_gpu_config(self):
@@ -145,7 +147,7 @@ class Magma(CMakePackage, CudaPackage, ROCmPackage):
         if "+rocm" in spec:
             options.append(define("MAGMA_ENABLE_HIP", True))
             options.append(define("CMAKE_CXX_COMPILER", spec["hip"].hipcc))
-            # See https://github.com/ROCmSoftwarePlatform/rocFFT/issues/322
+            # See https://github.com/ROCm/rocFFT/issues/322
             if spec.satisfies("^cmake@3.21.0:3.21.2"):
                 options.append(define("__skip_rocmclang", True))
         else:

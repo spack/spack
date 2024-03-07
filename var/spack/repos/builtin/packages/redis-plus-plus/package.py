@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -26,6 +26,8 @@ class RedisPlusPlus(CMakePackage):
     )
     variant("test", default=False, description="Builds test suite")
     variant("tls", default=False, description="Builds with TLS support")
+
+    license("Apache-2.0")
 
     version("1.3.8", sha256="ad521b4a24d1591a1564f945ba6370875b501210222e324f398065251df41641")
     version("1.3.6", sha256="87dcadca50c6f0403cde47eb1f79af7ac8dd5a19c3cad2bb54ba5a34f9173a3e")

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class Mercurial(PythonPackage):
 
     homepage = "https://www.mercurial-scm.org"
     url = "https://www.mercurial-scm.org/release/mercurial-5.3.tar.gz"
+
+    license("GPL-2.0-or-later")
 
     version("6.4.5", sha256="b0b4b00b8b2639c8be387394796f0425beb339314df7e72937f8ddd2a41b1b8a")
     version("6.3.3", sha256="13c97ff589c7605e80a488f336852ce1d538c5d4143cfb33be69bdaddd9157bd")

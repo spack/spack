@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ import spack.container
 @pytest.mark.parametrize(
     "image,spack_version,expected",
     [
-        ("ubuntu:18.04", "develop", ("spack/ubuntu-bionic", "latest")),
+        ("ubuntu:18.04", "develop", ("spack/ubuntu-bionic", "develop")),
         ("ubuntu:18.04", "0.14.0", ("spack/ubuntu-bionic", "0.14.0")),
     ],
 )

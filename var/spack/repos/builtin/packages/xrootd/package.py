@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,8 @@ class Xrootd(CMakePackage):
     list_url = "https://xrootd.slac.stanford.edu/dload.html"
 
     maintainers("gartung", "greenc-FNAL", "marcmengel", "vitodb", "wdconinc")
+
+    license("LGPL-3.0-only")
 
     version("5.6.1", sha256="9afc48ab0fb3ba69611b1edc1b682a185d49b45caf197323eecd1146d705370c")
     version("5.6.0", sha256="cda0d32d29f94220be9b6627a80386eb33fac2dcc25c8104569eaa4ea3563009")
@@ -102,13 +104,13 @@ class Xrootd(CMakePackage):
     conflicts("cxxstd=20", when="@5.0:5.5.2")
     conflicts("cxxstd=17", when="@5 ~client_only")
     conflicts("cxxstd=20", when="@5 ~client_only")
-    conflicts("scitokens-cpp", when="@:5.5.2 +client_only")
+    conflicts("^scitokens-cpp", when="@:5.5.2 +client_only")
 
     depends_on("bzip2")
     depends_on("cmake@2.6:", type="build", when="@3.1.0:")
     depends_on("cmake@3.16:", type="build", when="@5.6:")
-    conflicts("cmake@:3.0", when="@5.0.0")
-    conflicts("cmake@:3.15.99", when="@5.5.4:5.5")
+    conflicts("^cmake@:3.0", when="@5.0.0")
+    conflicts("^cmake@:3.15.99", when="@5.5.4:5.5")
     depends_on("davix", when="+davix")
     depends_on("libxml2", when="+http")
     depends_on("uuid", when="@4.11.0:")
@@ -119,12 +121,12 @@ class Xrootd(CMakePackage):
     depends_on("py-pip", type="build", when="@5.6: +python")
     depends_on("readline", when="+readline")
     depends_on("xz")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("curl")
     depends_on("krb5", when="+krb5")
     depends_on("json-c")
     depends_on("scitokens-cpp", when="+scitokens-cpp")
-    conflicts("openssl@3:", when="@:5.3.99")
+    conflicts("^openssl@3:", when="@:5.3.99")
 
     extends("python", when="+python")
 
@@ -201,12 +203,7 @@ class Xrootd(CMakePackage):
         ]
         # see https://github.com/spack/spack/pull/11581
         if "+python" in self.spec:
-            options.extend(
-                [
-                    define("PYTHON_EXECUTABLE", spec["python"].command.path),
-                    define("XRD_PYTHON_REQ_VERSION", spec["python"].version.up_to(2)),
-                ]
-            )
+            options.append(define("XRD_PYTHON_REQ_VERSION", spec["python"].version.up_to(2)))
 
         if "+scitokens-cpp" in self.spec:
             options.append("-DSCITOKENS_CPP_DIR=%s" % spec["scitokens-cpp"].prefix)

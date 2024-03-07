@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,12 +10,13 @@ import spack.util.environment
 
 from .cray import Cray
 from .darwin import Darwin
+from .freebsd import FreeBSD
 from .linux import Linux
 from .test import Test
 from .windows import Windows
 
 #: List of all the platform classes known to Spack
-platforms = [Cray, Darwin, Linux, Windows, Test]
+platforms = [Cray, Darwin, Linux, Windows, FreeBSD, Test]
 
 
 @llnl.util.lang.memoized

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,6 +20,8 @@ class Zstd(CMakePackage, MakefilePackage):
     git = "https://github.com/facebook/zstd.git"
 
     maintainers("haampie")
+
+    license("BSD-3-Clause OR GPL-2.0-or-later")
 
     version("develop", branch="dev")
     version("1.5.5", sha256="98e9c3d949d1b924e28e01eccb7deed865eefebf25c2f21c702e5cd5b63b85e1")
@@ -53,7 +55,7 @@ class Zstd(CMakePackage, MakefilePackage):
         description="Enable support for additional compression methods in programs",
     )
 
-    depends_on("zlib", when="compression=zlib")
+    depends_on("zlib-api", when="compression=zlib")
     depends_on("lz4", when="compression=lz4")
     depends_on("xz", when="compression=lzma")
 

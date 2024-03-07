@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,7 @@ class Memsurfer(PythonPackage):
     git = "https://github.com/LLNL/MemSurfer.git"
     maintainers("bhatiaharsh")
 
-    version("1.0", tag="v1.0", submodules=True)
+    version("1.0", tag="v1.0", commit="93d114016cd3ef48950bc53cca0a6e9f70589361", submodules=True)
     version("master", branch="master", submodules=True)
     version("develop", branch="develop", submodules=True)
 

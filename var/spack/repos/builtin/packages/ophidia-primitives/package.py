@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -23,7 +23,7 @@ class OphidiaPrimitives(AutotoolsPackage):
     depends_on("boost@1.79.0")
     depends_on("mysql")
     depends_on("libmatheval")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("gsl")
 
     def autoreconf(self, spec, prefix):

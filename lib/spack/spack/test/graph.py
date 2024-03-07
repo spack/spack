@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -24,7 +24,7 @@ def test_static_graph_mpileaks(config, mock_packages):
     assert '  "libelf" [label="libelf"]\n' in dot
     assert '  "libdwarf" [label="libdwarf"]\n' in dot
 
-    mpi_providers = spack.repo.path.providers_for("mpi")
+    mpi_providers = spack.repo.PATH.providers_for("mpi")
     for spec in mpi_providers:
         assert ('"mpileaks" -> "%s"' % spec.name) in dot
         assert ('"callpath" -> "%s"' % spec.name) in dot

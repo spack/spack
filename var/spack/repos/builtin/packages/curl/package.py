@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,6 +7,8 @@ import glob
 import os
 import re
 import sys
+
+from llnl.util.filesystem import windows_sfn
 
 from spack.build_systems.autotools import AutotoolsBuilder
 from spack.build_systems.nmake import NMakeBuilder
@@ -26,11 +28,28 @@ class Curl(NMakePackage, AutotoolsPackage):
 
     maintainers("alecbcs")
 
-    version("8.1.2", sha256="b54974d32fd610acace92e3df1f643144015ac65847f0a041fdc17db6f43f243")
-    version("8.0.1", sha256="9b6b1e96b748d04b968786b6bdf407aa5c75ab53a3d37c1c8c81cdb736555ccf")
-    version("7.88.1", sha256="8224b45cce12abde039c12dc0711b7ea85b104b9ad534d6e4c5b4e188a61c907")
+    license("curl")
+
+    version("8.6.0", sha256="b4785f2d8877fa92c0e45d7155cf8cc6750dbda961f4b1a45bcbec990cf2fa9b")
+    version("8.4.0", sha256="e5250581a9c032b1b6ed3cf2f9c114c811fc41881069e9892d115cc73f9e88c6")
 
     # Deprecated versions due to CVEs
+    # CVE-2023-38545
+    version(
+        "8.1.2",
+        sha256="b54974d32fd610acace92e3df1f643144015ac65847f0a041fdc17db6f43f243",
+        deprecated=True,
+    )
+    version(
+        "8.0.1",
+        sha256="9b6b1e96b748d04b968786b6bdf407aa5c75ab53a3d37c1c8c81cdb736555ccf",
+        deprecated=True,
+    )
+    version(
+        "7.88.1",
+        sha256="8224b45cce12abde039c12dc0711b7ea85b104b9ad534d6e4c5b4e188a61c907",
+        deprecated=True,
+    )
     # https://nvd.nist.gov/vuln/detail/CVE-2022-43551
     version(
         "7.87.0",
@@ -286,11 +305,12 @@ class Curl(NMakePackage, AutotoolsPackage):
         depends_on("openssl@:1", when="@:7.76")
 
     depends_on("libidn2", when="+libidn2")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("nghttp2", when="+nghttp2")
     depends_on("libssh2", when="+libssh2")
     depends_on("libssh", when="+libssh")
     depends_on("krb5", when="+gssapi")
+    depends_on("rtmpdump", when="+librtmp")
 
     # https://github.com/curl/curl/pull/9054
     patch("easy-lock-sched-header.patch", when="@7.84.0")
@@ -330,13 +350,19 @@ class Curl(NMakePackage, AutotoolsPackage):
     def command(self):
         return Executable(self.prefix.bin.join("curl-config"))
 
+    def flag_handler(self, name, flags):
+        build_system_flags = []
+        if name == "cflags" and self.spec.compiler.name in ["intel", "oneapi"]:
+            build_system_flags = ["-we147"]
+        return flags, None, build_system_flags
+
 
 class AutotoolsBuilder(AutotoolsBuilder):
     def configure_args(self):
         spec = self.spec
 
         args = [
-            "--with-zlib=" + spec["zlib"].prefix,
+            "--with-zlib=" + spec["zlib-api"].prefix,
             # Prevent unintentional linking against system libraries: we could
             # add variants for these in the future
             "--without-brotli",
@@ -425,7 +451,7 @@ class NMakeBuilder(NMakeBuilder):
         mode = "dll" if "libs=dll" in self.spec else "static"
         args.append("mode=%s" % mode)
         args.append("WITH_ZLIB=%s" % mode)
-        args.append("ZLIB_PATH=%s" % self.spec["zlib"].prefix)
+        args.append("ZLIB_PATH=%s" % self.spec["zlib-api"].prefix)
         if "+libssh" in self.spec:
             args.append("WITH_SSH=%s" % mode)
         if "+libssh2" in self.spec:
@@ -446,7 +472,8 @@ class NMakeBuilder(NMakeBuilder):
         # The trailing path seperator is REQUIRED for cURL to install
         # otherwise cURLs build system will interpret the path as a file
         # and the install will fail with ambiguous errors
-        args.append("WITH_PREFIX=%s" % self.prefix + "\\")
+        inst_prefix = self.prefix + "\\"
+        args.append(f"WITH_PREFIX={windows_sfn(inst_prefix)}")
         return args
 
     def install(self, pkg, spec, prefix):
@@ -461,6 +488,7 @@ class NMakeBuilder(NMakeBuilder):
         env["CC"] = ""
         env["CXX"] = ""
         winbuild_dir = os.path.join(self.stage.source_path, "winbuild")
+        winbuild_dir = windows_sfn(winbuild_dir)
         with working_dir(winbuild_dir):
             nmake("/f", "Makefile.vc", *self.nmake_args(), ignore_quotes=True)
         with working_dir(os.path.join(self.stage.source_path, "builds")):

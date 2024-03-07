@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,12 +17,16 @@ class Blt(Package):
 
     maintainers("white238", "davidbeckingsale")
 
+    license("BSD-3-Clause")
+
     version("develop", branch="develop")
     version("main", branch="main")
     # Note: 0.4.0+ contains a breaking change to BLT created targets
     #  if you export targets this could cause problems in downstream
     #  projects if not handled properly. More info here:
     #  https://llnl-blt.readthedocs.io/en/develop/tutorial/exporting_targets.html
+    version("0.6.1", sha256="205540b704b8da5a967475be9e8f2d1a5e77009b950e7fbf01c0edabc4315906")
+    version("0.6.0", sha256="ede355e85f7b11d7c8442b51e4f7871c152093818606e00b1e1cf30f67ebdb23")
     version("0.5.3", sha256="75d17caac98e78432ce25371c50d45ad3e7053820976bc5ed210bbef998f1732")
     version("0.5.2", sha256="95b924cfbb2bddd9b1a92e96603b2fd485a19721d59ddf8ff50baefc1714d7ea")
     version("0.5.1", sha256="ff7e87eefc48704a0721b66174612b945955adaa0a56aa69dd0473074fa4badf")

@@ -1,4 +1,4 @@
-.. Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -142,7 +142,7 @@ Reputational Key
 ----------------
 
 The Reputational Key is the public facing key used to sign complete groups of
-development and release packages. Only one key pair exsits in this class of
+development and release packages. Only one key pair exists in this class of
 keys. In contrast to the Intermediate CI Key the Reputational Key *should* be
 used to verify package integrity. At the end of develop and release pipeline a
 final pipeline job pulls down all signed package metadata built by the pipeline,
@@ -217,13 +217,7 @@ file would live in the ``build_cache`` directory of a binary mirror::
     "binary_cache_checksum": {
       "hash_algorithm": "sha256",
       "hash": "4f1e46452c35a5e61bcacca205bae1bfcd60a83a399af201a29c95b7cc3e1423"
-     },
-
-    "buildinfo": {
-      "relative_prefix":
-      "linux-ubuntu18.04-haswell/gcc-7.5.0/zlib-1.2.12-llv2ysfdxnppzjrt5ldybb5c52qbmoow",
-      "relative_rpaths": false
-    }
+     }
   }
 
   -----BEGIN PGP SIGNATURE-----
@@ -278,7 +272,7 @@ Internal Implementation
 
 The technical implementation of the pipeline signing process includes components
 defined in Amazon Web Services, the Kubernetes cluster, at affilicated
-institutions, and the GitLab/GitLab Runner deployment. We present the techincal
+institutions, and the GitLab/GitLab Runner deployment. We present the technical
 implementation in two interdependent sections. The first addresses how secrets
 are managed through the lifecycle of a develop or release pipeline. The second
 section describes how Gitlab Runner and pipelines are configured and managed to
@@ -301,7 +295,7 @@ infrastructure.
 -----------------------
 
 Multiple intermediate CI signing keys exist, one Intermediate CI Key for jobs
-run in AWS, and one key for each affiliated institution (e.g. Univerity of
+run in AWS, and one key for each affiliated institution (e.g. University of
 Oregon). Here we describe how the Intermediate CI Key is managed in AWS:
 
 The Intermediate CI Key (including the Signing Intermediate CI Private Key is
@@ -311,7 +305,7 @@ contains an ASCII-armored export of just the *public* components of the
 Reputational Key. This secret also contains the *public* components of each of
 the affiliated institutions' Intermediate CI Key. These are potentially needed
 to verify dependent packages which may have been found in the public mirror or
-built by a protected job running on an affiliated institution's infrastrcuture
+built by a protected job running on an affiliated institution's infrastructure
 in an earlier stage of the pipeline.
 
 Procedurally the ``spack-intermediate-ci-signing-key`` secret is used in

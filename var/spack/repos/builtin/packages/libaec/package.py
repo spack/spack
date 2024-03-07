@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,6 +18,8 @@ class Libaec(CMakePackage):
     list_url = "https://gitlab.dkrz.de/k202009/libaec/tags"
 
     provides("szip")
+
+    license("BSD-2-Clause")
 
     version("1.0.6", sha256="abab8c237d85c982bb4d6bde9b03c1f3d611dcacbd58bca55afac2496d61d4be")
     version("1.0.5", sha256="7bf7be828dc3caefcc968e98a59b997b6b3b06e4123137e9e0b0988dc1be3b2f")

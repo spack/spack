@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,8 @@ class Opus(AutotoolsPackage):
 
     homepage = "https://opus-codec.org/"
     url = "http://downloads.xiph.org/releases/opus/opus-1.1.4.tar.gz"
+
+    license("BSD-3-Clause")
 
     version("1.3.1", sha256="65b58e1e25b2a114157014736a3d9dfeaad8d41be1c8179866f144a2fb44ff9d")
     version("1.1.4", sha256="9122b6b380081dd2665189f97bfd777f04f92dc3ab6698eea1dbb27ad59d8692")

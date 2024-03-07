@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,7 +6,6 @@ import os
 import os.path
 import re
 import shutil
-import sys
 
 import pytest
 
@@ -20,7 +19,7 @@ import spack.store
 import spack.tengine
 import spack.util.executable
 
-pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="Tests fail on Windows")
+pytestmark = pytest.mark.not_on_windows("Tests fail on Windows")
 
 
 def skip_unless_linux(f):
@@ -45,14 +44,6 @@ def text_in_bin(text, binary):
         if not pat.search(data):
             return False
         return True
-
-
-@pytest.fixture()
-def mock_patchelf(tmpdir, mock_executable):
-    def _factory(output):
-        return mock_executable("patchelf", output=output)
-
-    return _factory
 
 
 @pytest.fixture()

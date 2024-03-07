@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class PyLibclang(PythonPackage):
     homepage = "https://github.com/sighingnow/libclang"
 
     url = "https://github.com/sighingnow/libclang/archive/refs/tags/llvm-11.1.0.tar.gz"
+
+    license("Apache-2.0")
 
     version("16.0.0", sha256="a3eae57519209ed6fca4e76425f3159e54a08cbb2918d92a7a35640d4c28ec07")
     version("15.0.6.1", sha256="f8ac6e30868e9eb92bb1001920230381565f9a3cf415411d3b67bb2339640d81")

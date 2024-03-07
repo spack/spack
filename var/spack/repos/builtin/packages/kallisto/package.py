@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class Kallisto(CMakePackage):
     homepage = "https://pachterlab.github.io/kallisto"
     url = "https://github.com/pachterlab/kallisto/archive/v0.43.1.tar.gz"
 
+    license("BSD-2-Clause")
+
     version("0.48.0", sha256="1797ac4d1f0771e3f1f25dd7972bded735fcb43f853cf52184d3d9353a6269b0")
     version("0.46.2", sha256="c447ca8ddc40fcbd7d877d7c868bc8b72807aa8823a8a8d659e19bdd515baaf2")
     version("0.43.1", sha256="7baef1b3b67bcf81dc7c604db2ef30f5520b48d532bf28ec26331cb60ce69400")
@@ -20,7 +22,7 @@ class Kallisto(CMakePackage):
     # HDF5 support is optional beginning with version 0.46.2.
     variant("hdf5", when="@0.46.2:", default=False, description="Build with HDF5 support")
 
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("hdf5", when="@:0.43")
     depends_on("hdf5", when="+hdf5")
 

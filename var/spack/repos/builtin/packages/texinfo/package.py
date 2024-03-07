@@ -1,8 +1,9 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
 import re
 
 from spack.package import *
@@ -21,6 +22,8 @@ class Texinfo(AutotoolsPackage, GNUMirrorPackage):
     executables = ["^info$"]
 
     tags = ["build-tools"]
+
+    license("GPL-3.0-or-later")
 
     version("7.0.3", sha256="3cc5706fb086b895e1dc2b407aade9f95a3a233ff856273e2b659b089f117683")
     version("7.0", sha256="9261d4ee11cdf6b61895e213ffcd6b746a61a64fe38b9741a3aaa73125b35170")
@@ -69,6 +72,13 @@ class Texinfo(AutotoolsPackage, GNUMirrorPackage):
 
     @classmethod
     def determine_version(cls, exe):
+        # On CentOS and Ubuntu, the OS package info installs "info",
+        # which satisfies spack external find, but "makeinfo" comes
+        # from texinfo and may not be installed (and vice versa).
+        (texinfo_path, info_exe) = os.path.split(exe)
+        makeinfo_exe = os.path.join(texinfo_path, "makeinfo")
+        if not os.path.exists(makeinfo_exe):
+            return None
         output = Executable(exe)("--version", output=str, error=str)
         match = re.search(r"info \(GNU texinfo\)\s+(\S+)", output)
         return match.group(1) if match else None

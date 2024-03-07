@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -16,6 +16,8 @@ class RMockery(RPackage):
     'testthat' package."""
 
     cran = "mockery"
+
+    license("MIT")
 
     version("0.4.3", sha256="9fc9f1565c51e51b33634e9fc5328211559a561f095bc4d0fa8bd8b7533d476a")
     version("0.4.2", sha256="988e249c366ee7faf277de004084cf5ca24b5c8a8c6e3842f1b1362ce2f7ea9b")

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,8 @@ class PerlTestOutput(PerlPackage):
 
     homepage = "https://github.com/briandfoy/test-output"
     url = "https://github.com/briandfoy/test-output/archive/release-1.033.tar.gz"
+
+    license("Artistic-2.0")
 
     version("1.033", sha256="35f0a4ef2449fc78886b4c99e1c1d23f432c2fae98538a4489439eb17223bfc2")
     version("1.032", sha256="8b87e16b40199c9d62f07a821e1ff17a2701e42adffb281a649ed631823d5771")
