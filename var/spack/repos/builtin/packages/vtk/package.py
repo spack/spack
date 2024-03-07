@@ -133,8 +133,8 @@ class Vtk(CMakePackage):
     patch("vtk_proj_include_no_strict.patch", when="@9: platform=windows")
     # a patch with the same name is also applied to paraview
     # the two patches are the same but for the path to the files they patch
-    patch("vtk_alias_hdf5.patch", when="@9: platform=windows")
-    patch("vtk_findproj_config.patch", when="platform=windows")
+    patch("vtk_alias_hdf5.patch", when="@9:")
+    patch("vtk_findproj_config.patch")
     depends_on("libxt", when="^[virtuals=gl] glx platform=linux")
 
     # VTK will need Qt5OpenGL, and qt needs '-opengl' for that

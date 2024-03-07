@@ -367,7 +367,6 @@ class CMakeBuilder(BaseBuilder, cmake.CMakeBuilder):
             return
 
         pkgconfig_file = find(self.prefix, "netcdf.pc", recursive=True)
-        cmakeconfig_file = find(self.prefix, "netCDFTargets.cmake", recursive=True)
         ncconfig_file = find(self.prefix, "nc-config", recursive=True)
         settingsconfig_file = find(self.prefix, "libnetcdf.settings", recursive=True)
 
