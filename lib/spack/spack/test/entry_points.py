@@ -71,7 +71,6 @@ def mock_get_entry_points(tmp_path, monkeypatch):
     monkeypatch.setattr(llnl.util.lang, "get_entry_points", entry_points)
 
 
-@pytest.mark.skipif(sys.version_info[:2] < (3, 8), reason="Python>=3.8 required")
 def test_spack_entry_point_config(tmp_path, mock_get_entry_points):
     """Test config scope entry point"""
     config_paths = dict(spack.config.config_paths_from_entry_points())
