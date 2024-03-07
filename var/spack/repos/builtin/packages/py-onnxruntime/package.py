@@ -52,6 +52,8 @@ class PyOnnxruntime(CMakePackage, PythonExtension):
     depends_on("cudnn", when="+cuda")
     depends_on("iconv", type=("build", "link", "run"))
     depends_on("re2+shared")
+    # For old systems with and old version of git
+    depends_on("git")
 
     extends("python")
     # Adopted from CMS experiment's fork of onnxruntime
