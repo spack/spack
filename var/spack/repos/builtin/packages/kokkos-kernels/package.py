@@ -135,7 +135,7 @@ class KokkosKernels(CMakePackage, CudaPackage):
         variant(eti, default=deflt, description=eti, values=vals, multi=True)
 
     tpls = {
-        # variant name   #deflt   #spack name   #root var name #docstring
+        # variant name   #deflt   #spack name  #root var name  #supporting versions  #docstring
         "blas": (False, "blas", "BLAS", "@3.0.00:", "Link to system BLAS"),
         "lapack": (False, "lapack", "LAPACK", "@3.0.00:", "Link to system LAPACK"),
         "mkl": (False, "mkl", "MKL", "@3.0.00:", "Link to system MKL"),
@@ -150,7 +150,7 @@ class KokkosKernels(CMakePackage, CudaPackage):
 
     for tpl in tpls:
         deflt_bool, spackname, rootname, condition, descr = tpls[tpl]
-        variant(tpl, default=deflt_bool, when="%s" % condition, description=descr)
+        variant(tpl, default=deflt_bool, when=f'{condition}', description=descr)
         depends_on(spackname, when="+%s" % tpl)
 
     variant("shared", default=True, description="Build shared libraries")
