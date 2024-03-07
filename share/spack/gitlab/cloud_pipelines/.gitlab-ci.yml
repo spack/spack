@@ -808,10 +808,8 @@ deprecated-ci-build:
 # AWS ParallelCluster
 ########################################
 
-.aws-pcluster-generate-image:
-  image: { "name": "ghcr.io/spack/pcluster-amazonlinux-2:v2024-01-29", "entrypoint": [""] }
-
 .aws-pcluster-generate:
+  image: { "name": "ghcr.io/spack/pcluster-amazonlinux-2:v2024-01-29", "entrypoint": [""] }
   before_script:
     # Use gcc from pre-installed spack store
     - - . "./share/spack/setup-env.sh"
@@ -827,7 +825,7 @@ deprecated-ci-build:
     SPACK_CI_STACK_NAME: aws-pcluster-x86_64_v4
 
 aws-pcluster-generate-x86_64_v4:
-  extends: [ ".linux_x86_64_v4", ".aws-pcluster-x86_64_v4", ".generate-x86_64", ".tags-x86_64_v4", ".aws-pcluster-generate", ".aws-pcluster-generate-image" ]
+  extends: [ ".linux_x86_64_v4", ".aws-pcluster-x86_64_v4", ".generate-base", ".tags-x86_64_v4", ".aws-pcluster-generate"]
 
 aws-pcluster-build-x86_64_v4:
   extends: [ ".linux_x86_64_v4", ".aws-pcluster-x86_64_v4", ".build" ]
@@ -847,7 +845,7 @@ aws-pcluster-build-x86_64_v4:
 
 aws-pcluster-generate-neoverse_v1:
   # TODO: Use updated runner tags: https://github.com/spack/spack-infrastructure/pull/694/files
-  extends: [ ".linux_neoverse_v1", ".aws-pcluster-neoverse_v1", ".generate-neoverse_v1", ".aws-pcluster-generate", ".aws-pcluster-generate-image" ]
+  extends: [ ".linux_neoverse_v1", ".aws-pcluster-neoverse_v1", ".generate-neoverse_v1", ".aws-pcluster-generate"]
 
 aws-pcluster-build-neoverse_v1:
   extends: [  ".linux_neoverse_v1", ".aws-pcluster-neoverse_v1", ".build" ]
