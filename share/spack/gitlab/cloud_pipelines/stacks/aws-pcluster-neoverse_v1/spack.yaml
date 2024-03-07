@@ -34,7 +34,7 @@ spack:
           - spack arch
         # Use gcc from pre-installed spack store
         - - cp share/spack/gitlab/cloud_pipelines/configs/config.yaml etc/spack/
-          - /bin/bash "${SPACK_ROOT}/share/spack/gitlab/cloud_pipelines/stacks/aws-pcluster-neoverse_v1/setup-pcluster.sh"
+          - /bin/bash "${SPACK_ROOT}/share/spack/gitlab/cloud_pipelines/scripts/pcluster/setup-pcluster.sh"
           - rm etc/spack/config.yaml
     - signing-job:
         before_script:
