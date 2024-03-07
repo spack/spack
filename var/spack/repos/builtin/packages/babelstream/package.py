@@ -407,9 +407,7 @@ register_flag_optional(TARGET_PROCESSOR
                 target_device = (
                     "multicore"
                     if self.spec.variants["cpu_arch"].value != "none"
-                    else "gpu"
-                    if "cuda_arch" in self.spec.variants
-                    else None
+                    else "gpu" if "cuda_arch" in self.spec.variants else None
                 )
                 if self.spec.variants["cpu_arch"].value != "none":
                     # get the cpu architecture value from user
@@ -739,9 +737,9 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
 
             config["DOCONCURRENT_FLAG"] = "-h thread_do_concurrent -DCRAY_THREAD_DOCONCURRENT"
             config["ARRAY_FLAG"] = "-h autothread"
-            config[
-                "OPENMP_FLAG"
-            ] = pkg.compiler.openmp_flag  # if clang based it will be -fopenmp else -h omp
+            config["OPENMP_FLAG"] = (
+                 pkg.compiler.openmp_flag
+            )  # if clang based it will be -fopenmp else -h omp
             config["OPENACC_FLAG"] = "-h acc"  # for cpu only -h omp
 
         # ===================================
