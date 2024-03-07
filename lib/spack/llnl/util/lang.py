@@ -845,16 +845,16 @@ class Singleton:
 
 def get_entry_points(*, group: str):
     try:
-        from importlib import metadata as importlib_metadata  # type: ignore  # novermin
+        from importlib import metadata  # type: ignore  # novermin
     except ImportError:
         return
     try:
-        yield from importlib_metadata.entry_points(group=group)
+        yield from metadata.entry_points(group=group)
     except TypeError:
         # Prior to Python 3.10, entry_points accepted no parameters and always
         # returned a dictionary of entry points, keyed by group.  See
         # https://docs.python.org/3/library/importlib.metadata.html#entry-points
-        yield from importlib_metadata.entry_points().get(group, [])
+        yield from metadata.entry_points().get(group, [])
 
 
 def load_module_from_file(module_name, module_path):
