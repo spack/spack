@@ -76,8 +76,7 @@ class PyKeras(PythonPackage):
     depends_on("py-protobuf", type=("build", "run"), when="@3:")
 
     # requirements-tensorflow-cuda.txt
-    conflicts("backend=tensorflow", msg="Requires TensorFlow 2.16, not yet released")
-    # depends_on("py-tensorflow@2.16.0", type=("build", "run"), when="@3.0 backend=tensorflow")
+    depends_on("py-tensorflow@2.16.1", type=("build", "run"), when="@3.0 backend=tensorflow")
 
     # requirements-jax-cuda.txt
     depends_on("py-jax@0.4.23", type=("build", "run"), when="@3.0.5: backend=jax")
