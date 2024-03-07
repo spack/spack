@@ -150,7 +150,7 @@ class KokkosKernels(CMakePackage, CudaPackage):
 
     for tpl in tpls:
         deflt_bool, spackname, rootname, condition, descr = tpls[tpl]
-        variant(tpl, default=deflt_bool, when=f'{condition}', description=descr)
+        variant(tpl, default=deflt_bool, when=f"{condition}", description=descr)
         depends_on(spackname, when="+%s" % tpl)
 
     variant("shared", default=True, description="Build shared libraries")
