@@ -10,6 +10,7 @@ import pytest
 
 import spack.config
 import spack.extensions
+import llnl.util.lang
 
 
 class MockConfigEntryPoint:
@@ -64,15 +65,13 @@ def entry_points_factory(tmp_path):
 
 
 @pytest.fixture()
-def mock_entry_points(tmp_path, monkeypatch):
-    import importlib.metadata  # type: ignore # novermin
-
+def mock_get_entry_points(tmp_path, monkeypatch):
     entry_points = entry_points_factory(tmp_path)
-    monkeypatch.setattr(importlib.metadata, "entry_points", entry_points)
+    monkeypatch.setattr(llnl.util.lang, "get_entry_points", entry_points)
 
 
 @pytest.mark.skipif(sys.version_info[:2] < (3, 8), reason="Python>=3.8 required")
-def test_spack_entry_point_config(tmp_path, mock_entry_points):
+def test_spack_entry_point_config(tmp_path, mock_get_entry_points):
     """Test config scope entry point"""
     config_paths = dict(spack.config.config_paths_from_entry_points())
     config_path = config_paths.get("plugin-mypackage_config")
@@ -86,7 +85,7 @@ def test_spack_entry_point_config(tmp_path, mock_entry_points):
 
 
 @pytest.mark.skipif(sys.version_info[:2] < (3, 8), reason="Python>=3.8 required")
-def test_spack_entry_point_extension(tmp_path, mock_entry_points):
+def test_spack_entry_point_extension(tmp_path, mock_get_entry_points):
     """Test config scope entry point"""
     my_ext = tmp_path / "spack/spack-myext"
     extensions = spack.extensions.get_extension_paths()
@@ -101,3 +100,16 @@ def test_spack_entry_point_extension(tmp_path, mock_entry_points):
     assert os.path.samefile(root, my_ext)
     module = spack.extensions.get_module("spam")
     assert module is not None
+
+
+@pytest.mark.skipif(sys.version_info[:2] < (3, 8), reason="Python>=3.8 required")
+def test_llnl_util_lang_get_entry_points(tmp_path, monkeypatch):
+    import importlib.metadata  # type: ignore # novermin
+
+    monkeypatch.setattr(importlib.metadata, "entry_points", entry_points_factory(tmp_path))
+
+    entry_points = list(llnl.util.lang.get_entry_points(group="spack.config"))
+    assert isinstance(entry_points[0], MockConfigEntryPoint)
+
+    entry_points = list(llnl.util.lang.get_entry_points(group="spack.extensions"))
+    assert isinstance(entry_points[0], MockExtensionsEntryPoint)
