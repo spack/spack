@@ -54,6 +54,13 @@ class SstCore(AutotoolsPackage):
     )
     variant("hdf5", default=False, description="Build support for HDF5 statistic output")
     variant("zlib", default=False, description="Build support for ZLIB compression")
+    # Starting with 0bc4832f3f87aa78d1efd3e15743eb059dc03250 and then 14.0.0.
+    variant(
+        "curses",
+        default=True,
+        when="@develop,master",
+        description="Build support for interactive sst-info",
+    )
 
     variant("trackevents", default=False, description="Enable event and activity tracking")
     variant(
@@ -70,6 +77,7 @@ class SstCore(AutotoolsPackage):
     depends_on("hdf5", when="+hdf5")
     depends_on("zlib-api", when="+zlib")
     depends_on("gettext")
+    depends_on("ncurses", when="+curses")
 
     for version_name in ("master", "develop"):
         depends_on("autoconf@1.68:", type="build", when="@{}".format(version_name))
@@ -93,6 +101,8 @@ class SstCore(AutotoolsPackage):
             args.append("--with-hdf5=%s" % self.spec["hdf5"].prefix)
         if "+zlib" in self.spec:
             args.append("--with-zlib=%s" % self.spec["zlib-api"].prefix)
+        if "+curses" in self.spec:
+            args.append("--with-curses={}".format(self.spec["ncurses"].prefix))
 
         if "+pdes_mpi" in self.spec:
             args.append("--enable-mpi")
