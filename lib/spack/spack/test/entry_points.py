@@ -66,18 +66,8 @@ def entry_points_factory(tmp_path):
 @pytest.fixture()
 def mock_entry_points(tmp_path, monkeypatch):
     entry_points = entry_points_factory(tmp_path)
-    try:
-        try:
-            import importlib.metadata as importlib_metadata  # type: ignore # novermin
-        except ImportError:
-            import importlib_metadata
-        monkeypatch.setattr(importlib_metadata, "entry_points", entry_points)
-    except ImportError:
-        try:
-            import pkg_resources  # type: ignore
-        except ImportError:
-            return
-        monkeypatch.setattr(pkg_resources, "iter_entry_points", entry_points)
+    import importlib.metadata # type: ignore # novermin
+    monkeypatch.setattr(importlib.metadata, "entry_points", entry_points)
 
 
 @pytest.mark.skipif(sys.version_info[:2] < (3, 8), reason="Python>=3.8 required")
