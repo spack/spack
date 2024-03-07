@@ -520,17 +520,25 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
             env.prepend_path("LD_LIBRARY_PATH", self.spec["cuda"].prefix.lib64)
             env.set("CHPL_LOCALE_MODEL", "gpu")
             env.set("CHPL_GPU", "nvidia")
+            env.set("CHPL_TARGET_COMPILER", "llvm")
 
         if self.spec.variants["rocm"].value:
             env.set("CHPL_LOCALE_MODEL", "gpu")
             env.set("CHPL_GPU", "amd")
-            env.set("CHPL_GPU_ARCH", self.spec.variants["amdgpu_target"].value)
+            env.set("CHPL_TARGET_COMPILER", "llvm")
+            env.set("CHPL_HOST_COMPILER", "llvm")
+            env.set("CHPL_GPU_ARCH", self.spec.variants["amdgpu_target"].value[0])
             env.set(
                 "CHPL_LLVM_CONFIG",
                 "{0}/{1}".format(self.spec["llvm-amdgpu"].prefix, "bin/llvm-config"),
             )
             env.prepend_path("CPATH", self.spec["hip"].prefix.include)
-            env.set("CHPL_ROCM_PATH", self.spec["hip"].prefix.bin)
+            env.set("CHPL_ROCM_PATH", self.spec["llvm-amdgpu"].prefix)
+            env.prepend_path("LIBRARY_PATH", self.spec["hip"].prefix.lib)
+            env.prepend_path("LIBRARY_PATH", self.spec["hsa-rocr-dev"].prefix.lib)
+            env.prepend_path("LD_LIBRARY_PATH", self.spec["hip"].prefix.lib)
+            env.prepend_path("LD_LIBRARY_PATH", self.spec["hsa-rocr-dev"].prefix.lib)
+
 
         self.setup_chpl_comm(env, self.spec)
 
