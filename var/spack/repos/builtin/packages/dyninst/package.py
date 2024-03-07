@@ -22,6 +22,7 @@ class Dyninst(CMakePackage):
     license("LGPL-2.1-or-later")
 
     version("master", branch="master")
+    version("13.0.0", sha256="1bc48d26478b677a6c090c25586a447507bd1b4cf88d369bd61820005ce1be39")
     version("12.3.0", sha256="956b0378d2badb765a7e677c0b66c0b8b8cacca7631222bfe7a27b369abf7dd4")
     version("12.2.1", sha256="c304af3c6191e92acd27350fd9b7b02899767a0e38abb3a08a378abe01d1ef01")
     version("12.2.0", sha256="84c37efc1b220110af03f8fbb6ab295628b445c873b5115db91b64443e445a5d")
@@ -66,7 +67,8 @@ class Dyninst(CMakePackage):
     depends_on("boost@1.61.0:" + boost_libs, when="@10.1.0:")
     depends_on("boost@1.61.0:1.69" + boost_libs, when="@:10.0")
     depends_on("boost@1.67.0:" + boost_libs, when="@11.0.0:")
-    depends_on("boost@1.70.0:" + boost_libs, when="@12:")
+    depends_on("boost@1.70.0:" + boost_libs, when="@12:12.3.0")
+    depends_on("boost@1.71.0:" + boost_libs, when="@13:")
 
     depends_on("libiberty+pic")
 
@@ -83,12 +85,19 @@ class Dyninst(CMakePackage):
     # libdwarf before that.
     depends_on("libdwarf", when="@:9")
 
-    # findtbb.cmake in the dynist repo does not work with recent tbb
-    # package layout. Need to use tbb provided config instead.
-    conflicts("^intel-tbb@2021.1:")
-    conflicts("^intel-oneapi-tbb@2021.1:")
-    conflicts("^intel-parallel-studio", when="@12.0.0:")
-    depends_on("tbb@2018.6.0:", when="@10.0.0:")
+    with when("@:12.3.0"):
+        # findtbb.cmake in the dynist repo does not work with recent tbb
+        # package layout. Need to use tbb provided config instead.
+        conflicts("^intel-tbb@2021.1:")
+        conflicts("^intel-oneapi-tbb@2021.1:")
+        conflicts("^intel-parallel-studio")
+
+    depends_on("intel-tbb@2019.9:", when="@13.0.0:")
+    depends_on("tbb@2018.6.0:", when="@10.0.0:12.3.0")
+
+    with when("@13.0.0:"):
+        depends_on("cmake@3.14.0:", type="build")
+        conflicts("cmake@3.19.0")
 
     depends_on("cmake@3.4.0:", type="build", when="@10.1.0:")
     depends_on("cmake@3.0.0:", type="build", when="@10.0.0:10.0")
@@ -139,7 +148,7 @@ class Dyninst(CMakePackage):
 
         # Make sure Dyninst doesn't try to build its own dependencies
         # outside of Spack
-        if spec.satisfies("@10.2.0:"):
+        if spec.satisfies("@10.2.0:12.3.0"):
             args.append("-DSTERILE_BUILD=ON")
 
         return args
