@@ -389,8 +389,7 @@ class Compiler:
 
         # Put CXX first since it has the most linking issues
         # And because it has flags that affect linking
-        exe_paths = [x for x in [self.cxx, self.cc, self.fc, self.f77] if x]
-        link_dirs = self._get_compiler_link_paths(exe_paths)
+        link_dirs = self._get_compiler_link_paths()
 
         all_required_libs = list(self.required_libs) + Compiler._all_compiler_rpath_libraries
         return list(paths_containing_libs(link_dirs, all_required_libs))
@@ -403,43 +402,33 @@ class Compiler:
         # By default every compiler returns the empty list
         return []
 
-    def _get_compiler_link_paths(self, paths):
-        first_compiler = next((c for c in paths if c), None)
-        if not first_compiler:
-            return []
-        if not self.verbose_flag:
-            # In this case there is no mechanism to learn what link directories
-            # are used by the compiler
+    def _get_compiler_link_paths(self):
+        cc = self.cc if self.cc else self.cxx
+        if not cc or not self.verbose_flag:
+            # Cannot determine implicit link paths without a compiler / verbose flag
             return []
 
         # What flag types apply to first_compiler, in what order
-        flags = ["cppflags", "ldflags"]
-        if first_compiler == self.cc:
-            flags = ["cflags"] + flags
-        elif first_compiler == self.cxx:
-            flags = ["cxxflags"] + flags
+        if cc == self.cc:
+            flags = ["cflags", "cppflags", "ldflags"]
         else:
-            flags.append("fflags")
+            flags = ["cxxflags", "cppflags", "ldflags"]
 
         try:
             tmpdir = tempfile.mkdtemp(prefix="spack-implicit-link-info")
             fout = os.path.join(tmpdir, "output")
             fin = os.path.join(tmpdir, "main.c")
 
-            with open(fin, "w+") as csource:
+            with open(fin, "w") as csource:
                 csource.write(
-                    "int main(int argc, char* argv[]) { " "(void)argc; (void)argv; return 0; }\n"
+                    "int main(int argc, char* argv[]) { (void)argc; (void)argv; return 0; }\n"
                 )
-            compiler_exe = spack.util.executable.Executable(first_compiler)
+            cc_exe = spack.util.executable.Executable(cc)
             for flag_type in flags:
-                for flag in self.flags.get(flag_type, []):
-                    compiler_exe.add_default_arg(flag)
+                cc_exe.add_default_arg(*self.flags.get(flag_type, []))
 
-            output = ""
             with self.compiler_environment():
-                output = str(
-                    compiler_exe(self.verbose_flag, fin, "-o", fout, output=str, error=str)
-                )  # str for py2
+                output = cc_exe(self.verbose_flag, fin, "-o", fout, output=str, error=str)
             return _parse_non_system_link_dirs(output)
         except spack.util.executable.ProcessError as pe:
             tty.debug("ProcessError: Command exited with non-zero status: " + pe.long_message)
