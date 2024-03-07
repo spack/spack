@@ -21,10 +21,26 @@ class PyTensorboard(PythonPackage):
 
     license("Apache-2.0")
 
-    version("2.16.2", sha256="9f2b4e7dad86667615c0e5cd072f1ea8403fc032a299f0072d6f74855775cc45", expand=False)
-    version("2.16.1", sha256="928b62567911a8eeb2ebeb7482a9e4599b35f6713a6f2c56655259c18a139569", expand=False)
-    version("2.16.0", sha256="263b909a2009cb3a79daa6abe64c1785cc317c25a54e4db2fecb6429ffc54c58", expand=False)
-    version("2.15.2", sha256="a6f6443728064d962caea6d34653e220e34ef8df764cb06a8212c17e1a8f0622", expand=False)
+    version(
+        "2.16.2",
+        sha256="9f2b4e7dad86667615c0e5cd072f1ea8403fc032a299f0072d6f74855775cc45",
+        expand=False,
+    )
+    version(
+        "2.16.1",
+        sha256="928b62567911a8eeb2ebeb7482a9e4599b35f6713a6f2c56655259c18a139569",
+        expand=False,
+    )
+    version(
+        "2.16.0",
+        sha256="263b909a2009cb3a79daa6abe64c1785cc317c25a54e4db2fecb6429ffc54c58",
+        expand=False,
+    )
+    version(
+        "2.15.2",
+        sha256="a6f6443728064d962caea6d34653e220e34ef8df764cb06a8212c17e1a8f0622",
+        expand=False,
+    )
     version(
         "2.15.1",
         sha256="c46c1d1cf13a458c429868a78b2531d8ff5f682058d69ec0840b0bc7a38f1c0f",
