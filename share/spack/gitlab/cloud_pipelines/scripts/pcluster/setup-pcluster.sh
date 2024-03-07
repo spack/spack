@@ -89,7 +89,7 @@ install_compilers() {
         gcc_hash="bikooik6f3fyrkroarulsadbii43ggz5"
     fi
 
-    spack install --no-check-signature /${gcc_hash}
+    spack install /${gcc_hash}
     (
         spack load gcc
         spack compiler add --scope site
