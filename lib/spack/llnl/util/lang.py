@@ -847,7 +847,7 @@ def get_entry_points(*, group: str):
     try:
         from importlib import metadata as importlib_metadata  # type: ignore  # novermin
     except ImportError:
-        yield from ()
+        return
     try:
         yield from importlib_metadata.entry_points(group=group)
     except TypeError:
