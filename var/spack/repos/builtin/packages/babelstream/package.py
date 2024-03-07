@@ -407,7 +407,9 @@ register_flag_optional(TARGET_PROCESSOR
                 target_device = (
                     "multicore"
                     if self.spec.variants["cpu_arch"].value != "none"
-                    else "gpu" if "cuda_arch" in self.spec.variants else None
+                    else "gpu"
+                    if "cuda_arch" in self.spec.variants
+                    else None
                 )
                 if self.spec.variants["cpu_arch"].value != "none":
                     # get the cpu architecture value from user
@@ -550,11 +552,9 @@ register_flag_optional(TARGET_PROCESSOR
         # ===================================
         if "+hip" in self.spec:
             hip_comp = self.spec["hip"].prefix + "/bin/hipcc"
+            offload_arch = str(self.spec.variants["amdgpu_target"].value[0])
             args.append("-DCMAKE_CXX_COMPILER=" + hip_comp)
-            args.append(
-                f'-DCXX_EXTRA_FLAGS='
-                f'--offload-arch={str(self.spec.variants["amdgpu_target"].value[0])} -O3'
-            )
+            args.append(f"-DCXX_EXTRA_FLAGS=--offload-arch={offload_arch} -O3")
             if str(self.spec.variants["hip_mem_mode"].value) != "none":
                 args.append("-DMEM=" + self.spec.variants["hip_mem_mode"].value.upper())
 
@@ -739,9 +739,9 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
 
             config["DOCONCURRENT_FLAG"] = "-h thread_do_concurrent -DCRAY_THREAD_DOCONCURRENT"
             config["ARRAY_FLAG"] = "-h autothread"
-            config["OPENMP_FLAG"] = (
-                pkg.compiler.openmp_flag
-            )  # if clang based it will be -fopenmp else -h omp
+            config[
+                "OPENMP_FLAG"
+            ] = pkg.compiler.openmp_flag  # if clang based it will be -fopenmp else -h omp
             config["OPENACC_FLAG"] = "-h acc"  # for cpu only -h omp
 
         # ===================================
