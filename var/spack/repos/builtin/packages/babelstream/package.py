@@ -51,12 +51,37 @@ class Babelstream(CMakePackage, CudaPackage, ROCmPackage, MakefilePackage):
 
     # Some models need to have the programming model abstraction downloaded -
     # this variant enables a path to be provided.
-    variant("dir", values=str, default="none", description="Enable Directory support") 
-    variant("sycl2020_submodel", values=("usm", "acc"), when="+sycl2020", default="usm", description="SYCL2020 -> choose between usm and acc methods")
-    variant("std_submodel", values=("data", "indices","ranges"), when="+std", default="data", description="STD -> choose between data, indices and ranges models")
-    variant("sycl_opencl_path", values=str, when="+sycl", default="none", description="[ComputeCpp only] Path to OpenCL library, usually called libOpenCL.so")
+    variant("dir", values=str, default="none", description="Enable Directory support")
+    variant(
+        "sycl2020_submodel",
+        values=("usm", "acc"),
+        when="+sycl2020",
+        default="usm",
+        description="SYCL2020 -> choose between usm and acc methods",
+    )
+    variant(
+        "std_submodel",
+        values=("data", "indices", "ranges"),
+        when="+std",
+        default="data",
+        description="STD -> choose between data, indices and ranges models",
+    )
+    variant(
+        "sycl_opencl_path",
+        values=str,
+        when="+sycl",
+        default="none",
+        description="[ComputeCpp only] Path to OpenCL library, usually called libOpenCL.so",
+    )
 
-    sycl_compiler_implementations = ["oneapi-icpx","oneapi-clang","dpcpp","hipsycl","computecpp","none"]  # list them here, with the default first
+    sycl_compiler_implementations = [
+        "oneapi-icpx",
+        "oneapi-clang",
+        "dpcpp",
+        "hipsycl",
+        "computecpp",
+        "none",
+    ]  # list them here, with the default first
     sycl_compiler_implementations_description = "Compile using the specified SYCL compiler implementation\
            Supported values are \
            ONEAPI-ICPX  - icpx as a standalone compiler \
@@ -64,14 +89,37 @@ class Babelstream(CMakePackage, CudaPackage, ROCmPackage, MakefilePackage):
            DPCPP        - dpc++ as a standalone compiler (https://github.com/intel/llvm)\
            HIPSYCL      - hipSYCL compiler (https://github.com/illuhad/hipSYCL)s\
            COMPUTECPP   - ComputeCpp compiler (https://developer.codeplay.com/products/computecpp/ce/home)"
-    variant("sycl_compiler_implementation", values=sycl_compiler_implementations, default=sycl_compiler_implementations[0], when="+sycl", description=sycl_compiler_implementations_description)
-    variant("sycl_compiler_implementation", values=sycl_compiler_implementations, default=sycl_compiler_implementations[0], when="+sycl2020", description=sycl_compiler_implementations_description)
-    
-    
-    variant("thrust_submodel", values=("cuda", "rocm"), default="cuda", when="+thrust", description="Which THRUST implementation to use, supported options include option= \
+    variant(
+        "sycl_compiler_implementation",
+        values=sycl_compiler_implementations,
+        default=sycl_compiler_implementations[0],
+        when="+sycl",
+        description=sycl_compiler_implementations_description,
+    )
+    variant(
+        "sycl_compiler_implementation",
+        values=sycl_compiler_implementations,
+        default=sycl_compiler_implementations[0],
+        when="+sycl2020",
+        description=sycl_compiler_implementations_description,
+    )
+
+    variant(
+        "thrust_submodel",
+        values=("cuda", "rocm"),
+        default="cuda",
+        when="+thrust",
+        description="Which THRUST implementation to use, supported options include option= \
             - CUDA (via https://github.com/NVIDIA/thrust)\
-            - ROCM (via https://github.com/ROCmSoftwarePlatform/rocThrust)")
-    variant("thrust_backend", values=("cuda", "omp","tbb"), default="cuda", when="+thrust", description="Which THRUST implementation to use, supported options include option")
+            - ROCM (via https://github.com/ROCmSoftwarePlatform/rocThrust)",
+    )
+    variant(
+        "thrust_backend",
+        values=("cuda", "omp", "tbb"),
+        default="cuda",
+        when="+thrust",
+        description="Which THRUST implementation to use, supported options include option",
+    )
 
     # Kokkos conflict and variant
     conflicts(
@@ -80,7 +128,9 @@ class Babelstream(CMakePackage, CudaPackage, ROCmPackage, MakefilePackage):
     variant("kokkos", default=False, description="Enable KOKKOS support")
 
     # ACC conflict
-    variant("cpu_arch", values=str, default="none", description="Enable CPU Target for ACC and OMP")
+    variant(
+        "cpu_arch", values=str, default="none", description="Enable CPU Target for ACC and OMP"
+    )
 
     # STD conflicts
     conflicts("+std", when="%gcc@:10.1.0", msg="STD requires newer version of GCC")
@@ -93,11 +143,11 @@ class Babelstream(CMakePackage, CudaPackage, ROCmPackage, MakefilePackage):
     )
     variant(
         "cuda_memory_mode",
-        values=("default","managed","pagefault"),
+        values=("default", "managed", "pagefault"),
         default="default",
         when="+cuda",
         description="Enable MEM Target for CUDA",
-        )
+    )
 
     # Raja offload
     variant(
@@ -107,50 +157,55 @@ class Babelstream(CMakePackage, CudaPackage, ROCmPackage, MakefilePackage):
         when="+raja",
         description="Enable RAJA Target [CPU or NVIDIA] / Offload with custom settings for OpenMP",
     )
-    #std-* offload
+    # std-* offload
     variant(
         "std_offload",
-        values=("nvhpc","none"),
+        values=("nvhpc", "none"),
         default="none",
         when="+std",
-        description="Enable offloading support (via the non-standard `-stdpar`) for the new NVHPC SDK",
+        description="Enable offloading support (via the non-standard `-stdpar`)\
+                    for the new NVHPC SDK",
     )
     variant(
         "std_onedpl_backend",
-        values=("openmp","tbb","dpcpp","none"),
+        values=("openmp", "tbb", "dpcpp", "none"),
         default="none",
         when="+std",
         description="Implements policies using OpenMP,TBB or dpc++",
     )
     variant(
         "std_use_tbb",
-        values=(True,False),
+        values=(True, False),
         default=False,
         when="+std",
-        description="No-op if ONE_TBB_DIR is set. Link against an in-tree oneTBB via FetchContent_Declare, see top level CMakeLists.txt for details"
+        description="No-op if ONE_TBB_DIR is set. Link against an in-tree oneTBB\
+                    via FetchContent_Declare, see top level CMakeLists.txt for details",
     )
     variant(
         "std_use_onedpl",
-        values=(True,False),
+        values=(True, False),
         default=False,
         when="+std",
-        description="Link oneDPL which implements C++17 executor policies (via execution_policy_tag) for different backends"
+        description="Link oneDPL which implements C++17 executor policies\
+                    (via execution_policy_tag) for different backends",
     )
-    #hip memory mode
+    # hip memory mode
     variant(
         "hip_mem_mode",
-        values=("default","managed","pagefault"),
+        values=("default", "managed", "pagefault"),
         default="default",
         when="+hip",
         description="Enable MEM Target for HIP",
-        )
-    #tbb use vector
+    )
+    # tbb use vector
     variant(
         "tbb_use_vector",
-        values=(True,False),
+        values=(True, False),
         default=False,
         when="+tbb",
-        description="Whether to use std::vector<T> for storage or use aligned_alloc. C++ vectors are *zero* initialised where as aligned_alloc is uninitialised before first use."
+        description="Whether to use std::vector<T> for storage or use aligned_alloc. \
+                     C++ vectors are *zero* initialised where as aligned_alloc is \
+                     uninitialised before first use.",
     )
     # download raja from https://github.com/LLNL/RAJA
     conflicts(
@@ -161,7 +216,7 @@ class Babelstream(CMakePackage, CudaPackage, ROCmPackage, MakefilePackage):
     # Thrust Conflict
     depends_on("thrust", when="+thrust")
     depends_on("cuda", when="thrust_submodel=cuda")
-    depends_on("cuda", when="raja+cuda")
+    depends_on("cuda", when="+raja+cuda")
     depends_on("hip", when="+hip")
     depends_on("rocthrust", when="thrust_submodel=rocm")
     depends_on("intel-tbb", when="+std +std_use_tbb")
@@ -190,18 +245,18 @@ class Babelstream(CMakePackage, CudaPackage, ROCmPackage, MakefilePackage):
     # OpenCL Dependency
     variant(
         "ocl_backend",
-        values=("amd","cuda","intel","pocl","none"),
+        values=("amd", "cuda", "intel", "pocl", "none"),
         default="none",
         when="+ocl",
         description="Enable Backend Target for OpenCL",
-        )
+    )
     variant(
         "kokkos_backend",
-        values=("cuda","omp","none"),
+        values=("cuda", "omp", "none"),
         default="none",
         when="+kokkos",
         description="Enable Backend Target for kokkos",
-        )
+    )
     conflicts(
         "ocl_backend=none",
         when="+ocl",
@@ -222,7 +277,6 @@ class Babelstream(CMakePackage, CudaPackage, ROCmPackage, MakefilePackage):
 
     depends_on("opencl-c-headers", when="+ocl")
 
-
     with when("build_system=makefile"):
         implementation_vals = [
             "DoConcurrent",
@@ -239,7 +293,10 @@ class Babelstream(CMakePackage, CudaPackage, ROCmPackage, MakefilePackage):
             "Sequential",
         ]
         variant(
-            "foption", values=implementation_vals, default="Sequential", description="Implementation"
+            "foption",
+            values=implementation_vals,
+            default="Sequential",
+            description="Implementation",
         )
         # The fortran Makefile is inside the src/fortran so we need to address this
         build_directory = "src/fortran"
@@ -250,21 +307,40 @@ class Babelstream(CMakePackage, CudaPackage, ROCmPackage, MakefilePackage):
             "test", values=str, default="none", description="Test Variant for debugging purposes"
         )
 
+
 class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
     def cmake_args(self):
-        model_list = ["sycl","sycl2020","omp","cuda","ocl","tbb","acc","hip","thrust","raja","std","kokkos"]
+        model_list = [
+            "sycl",
+            "sycl2020",
+            "omp",
+            "cuda",
+            "ocl",
+            "tbb",
+            "acc",
+            "hip",
+            "thrust",
+            "raja",
+            "std",
+            "kokkos",
+        ]
         # convert spec to string to work on it
         spec_string = str(self.spec)
-        
+
         # take only the first portion of the spec until space
         spec_string_truncate = spec_string.split(" ", 1)[0]
-        truncated_model_list = find_model_flag(spec_string_truncate)  # Prints out ['cuda', 'thrust']
+        truncated_model_list = find_model_flag(
+            spec_string_truncate
+        )  # Prints out ['cuda', 'thrust']
         # Filter out elements from truncated_model_list list that are not in model_list list
         filtered_model_list = [item for item in truncated_model_list if item in model_list]
-        # for +acc and +thrust the CudaPackage appends +cuda variant too so we need to filter cuda from list
-        # e.g. we choose 'thrust' from the list of ['cuda', 'thrust']
+        # for +acc and +thrust the CudaPackage appends +cuda variant too so we need
+        # to filter cuda from list e.g. we choose 'thrust'
+        # from the list of ['cuda', 'thrust']
         if len(filtered_model_list) > 1:
-            filtered_model_list = [elem for elem in filtered_model_list if (elem != "cuda" and elem!="rocm")]
+            filtered_model_list = [
+                elem for elem in filtered_model_list if (elem != "cuda" and elem != "rocm")
+            ]
             if "std" in filtered_model_list[0]:
                 args = ["-DMODEL=" + "std-" + self.spec.variants["std_submodel"].value]
             else:
@@ -280,7 +356,7 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
                 args = ["-DMODEL=hip"]
             else:
                 args = ["-DMODEL=" + filtered_model_list[0]]
-        if (filtered_model_list[0] != "tbb" and filtered_model_list[0] != "thrust"):
+        if filtered_model_list[0] != "tbb" and filtered_model_list[0] != "thrust":
             args.append("-DCMAKE_CXX_COMPILER=" + spack_cxx)
         print(spec_string)
 
@@ -328,7 +404,11 @@ register_flag_optional(TARGET_PROCESSOR
         """
         if self.spec.satisfies("+acc~kokkos~raja"):
             if (self.spec.compiler.name == "nvhpc") or (self.spec.compiler.name == "pgi"):
-                target_device = "multicore" if self.spec.variants["cpu_arch"].value != "none" else "gpu" if "cuda_arch" in self.spec.variants else None
+                target_device = (
+                    "multicore"
+                    if self.spec.variants["cpu_arch"].value != "none"
+                    else "gpu" if "cuda_arch" in self.spec.variants else None
+                )
                 if self.spec.variants["cpu_arch"].value != "none":
                     # get the cpu architecture value from user
                     target_processor = self.spec.variants["cpu_arch"].value[0]
@@ -359,12 +439,13 @@ register_flag_optional(TARGET_PROCESSOR
             if self.spec.satisfies("+std_use_onedpl"):
                 # args.append("-DCXX_EXTRA_FLAGS=-ltbb")
                 # args.append("-DCXX_EXTRA_FLAGS=-loneDPL")
-                args.append("-DUSE_ONEDPL=" + self.spec.variants["std_onedpl_backend"].value.upper())
+                args.append(
+                    "-DUSE_ONEDPL=" + self.spec.variants["std_onedpl_backend"].value.upper()
+                )
             if self.spec.variants["std_offload"].value != "none":
                 # the architecture value is only number so append cc_ to the name
                 cuda_arch = "cc" + self.spec.variants["cuda_arch"].value[0]
                 args.append("-DNVHPC_OFFLOAD=" + cuda_arch)
-
 
         # ===================================
         #             CUDA
@@ -372,7 +453,7 @@ register_flag_optional(TARGET_PROCESSOR
         if self.spec.satisfies("+cuda~kokkos~acc~omp~thrust"):
             # Set up the cuda macros needed by the build
             cuda_arch_list = self.spec.variants["cuda_arch"].value
-            # "-DCUDA_ARCH" requires sm_ 
+            # "-DCUDA_ARCH" requires sm_
             # the architecture value is only number so append sm_ to the name
             cuda_arch = "sm_" + cuda_arch_list[0]
             args.append("-DCUDA_ARCH=" + cuda_arch)
@@ -394,12 +475,17 @@ register_flag_optional(TARGET_PROCESSOR
                 # the architecture value is only number so append cc_ to the name
                 cuda_arch = "cc" + self.spec.variants["cuda_arch"].value[0]
                 args.append("-DOFFLOAD=ON")
-                args.append("-DOFFLOAD_FLAGS=" + " -mp=gpu;"  + "-gpu=" + cuda_arch)
+                args.append("-DOFFLOAD_FLAGS=" + " -mp=gpu;" + "-gpu=" + cuda_arch)
             elif ("amdgpu_target" in self.spec.variants) and (
                 self.spec.variants["amdgpu_target"].value != "none"
             ):
                 args.append("-DOFFLOAD=ON")
-                args.append("-DOFFLOAD_FLAGS=" + self.pkg.compiler.openmp_flag +";--offload-arch=" + self.spec.variants["amdgpu_target"].value[0])
+                args.append(
+                    "-DOFFLOAD_FLAGS="
+                    + self.pkg.compiler.openmp_flag
+                    + ";--offload-arch="
+                    + self.spec.variants["amdgpu_target"].value[0]
+                )
             elif ("cpu_arch" in self.spec.variants) and (
                 self.spec.variants["cpu_arch"].value != "none"
             ):
@@ -411,17 +497,23 @@ register_flag_optional(TARGET_PROCESSOR
                 args.append("-DOFFLOAD_FLAGS=" + self.spec.variants["offload"].value)
             else:
                 args.append("-DOFFLOAD=" + "OFF")
-                args.append("-DCMAKE_CXX_FLAGS="+self.pkg.compiler.openmp_flag)
+                args.append("-DCMAKE_CXX_FLAGS=" + self.pkg.compiler.openmp_flag)
 
         # ===================================
         #            SYCL
         # ===================================
         if "+sycl" in self.spec:
             args.append("-DCXX_EXTRA_FLAGS=" + "-fsycl")
-            args.append("-DSYCL_COMPILER=" + self.spec.variants["sycl_compiler_implementation"].value.upper())
+            args.append(
+                "-DSYCL_COMPILER="
+                + self.spec.variants["sycl_compiler_implementation"].value.upper()
+            )
             if self.spec.variants["sycl_compiler_implementation"].value.upper() == "none":
                 args.append("-DSYCL_COMPILER_DIR=" + self.spec.variants["dir"].value)
-            if self.spec.variants["sycl_compiler_implementation"].value.upper() == "COMPUTECPP" and self.spec.variants["sycl_opencl_path"].value != "none":
+            if (
+                self.spec.variants["sycl_compiler_implementation"].value.upper() == "COMPUTECPP"
+                and self.spec.variants["sycl_opencl_path"].value != "none"
+            ):
                 args.append("-DOpenCL_LIBRARY=" + self.spec.variants["sycl_opencl_path"].value)
 
         # ===================================
@@ -436,13 +528,21 @@ register_flag_optional(TARGET_PROCESSOR
                 args.append("-DSYCL_COMPILER=ONEAPI-ICPX")
             else:
                 args.append(
-                    "-DSYCL_COMPILER=" + self.spec.variants["sycl_compiler_implementation"].value.upper()
+                    "-DSYCL_COMPILER="
+                    + self.spec.variants["sycl_compiler_implementation"].value.upper()
                 )
-                if self.spec.variants["sycl_compiler_implementation"].value.upper() != "ONEAPI-DPCPP":
+                if (
+                    self.spec.variants["sycl_compiler_implementation"].value.upper()
+                    != "ONEAPI-DPCPP"
+                ):
                     args.append(
-                        "-DSYCL_COMPILER_DIR=" + self.spec.variants["sycl_compiler_implementation"].value.upper()
+                        "-DSYCL_COMPILER_DIR="
+                        + self.spec.variants["sycl_compiler_implementation"].value.upper()
                     )
-                    if self.spec.variants["sycl_compiler_implementation"].value.upper() == "COMPUTE-CPP":
+                    if (
+                        self.spec.variants["sycl_compiler_implementation"].value.upper()
+                        == "COMPUTE-CPP"
+                    ):
                         args.append("-DOpenCL_LIBRARY=")
 
         # ===================================
@@ -451,8 +551,11 @@ register_flag_optional(TARGET_PROCESSOR
         if "+hip" in self.spec:
             hip_comp = self.spec["hip"].prefix + "/bin/hipcc"
             args.append("-DCMAKE_CXX_COMPILER=" + hip_comp)
-            args.append(f'-DCXX_EXTRA_FLAGS= --offload-arch={str(self.spec.variants["amdgpu_target"].value[0])} -O3')
-            if str(self.spec.variants["hip_mem_mode"].value)!="none":
+            args.append(
+                f'-DCXX_EXTRA_FLAGS='
+                f'--offload-arch={str(self.spec.variants["amdgpu_target"].value[0])} -O3'
+            )
+            if str(self.spec.variants["hip_mem_mode"].value) != "none":
                 args.append("-DMEM=" + self.spec.variants["hip_mem_mode"].value.upper())
 
         # ===================================
@@ -493,7 +596,7 @@ register_flag_optional(TARGET_PROCESSOR
         if "+raja" in self.spec:
             args.append("-DRAJA_IN_TREE=" + self.spec.variants["dir"].value)
             if "nvidia" in self.spec.variants["raja_offload"].value:
-                cuda_comp =  self.spec["cuda"].prefix + "/bin/nvcc"
+                cuda_comp = self.spec["cuda"].prefix + "/bin/nvcc"
                 args.append("-DCMAKE_CUDA_COMPILER=" + cuda_comp)
                 args.append("-DTARGET=NVIDIA")
                 cuda_arch = "cc" + self.spec.variants["cuda_arch"].value[0]
@@ -515,18 +618,16 @@ register_flag_optional(TARGET_PROCESSOR
                 args.append("-DCUDA_ARCH=" + self.spec.variants["cuda_arch"].value[0])
                 cuda_dir = self.spec["cuda"].prefix
                 cuda_comp = cuda_dir + "/bin/nvcc"
-                # args.append("-DCMAKE_CUDA_COMPILER=" + join_path(self.spec["cuda"].prefix.bin, "nvcc"))
                 args.append("-DCMAKE_CUDA_COMPILER=" + spack_cc)
                 # args.append("-DCMAKE_CUDA_COMPILER=" + spack_cxx)
-                args.append("-DCMAKE_CUDA_FLAGS=-ccbin " + spack_cc) 
+                args.append("-DCMAKE_CUDA_FLAGS=-ccbin " + spack_cc)
                 args.append("-DBACKEND=" + self.spec.variants["thrust_backend"].value.upper())
                 if self.spec.variants["flags"].value != "none":
                     args.append("-DCUDA_EXTRA_FLAGS=" + self.spec.variants["flags"].value)
             if "rocm" in self.spec.variants["thrust_submodel"].value:
-                args.append("-DCMAKE_CXX_COMPILER=" + self.spec["hip"].hipcc) 
+                args.append("-DCMAKE_CXX_COMPILER=" + self.spec["hip"].hipcc)
                 args.append("-DTHRUST_IMPL=" + self.spec.variants["thrust_submodel"].value.upper())
                 args.append("-SDK_DIR=" + self.spec["rocthrust"].prefix)
-
 
         # ===================================
         #             kokkos
@@ -588,21 +689,25 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
         # Dictionary mapping compiler names to unsupported options
         unsupported_options = {
             "arm": ["CUDA", "CUDAKernel", "OpenACC", "OpenACCArray"],
-            "aocc" : ["CUDA", "CUDAKernel"],
-            "cce" : ["CUDA", "CUDAKernel"],
-            "gcc" : ["CUDA","CUDAKernel"],
-            "nvhpc" :  ["OpenMPTaskloop"],
-            "oneapi": ["CUDA","CUDAKernel","OpenACC","OpenACCArray"],
-            "fj" : ["CUDA", "CUDAKernel", "OpenACC"]
+            "aocc": ["CUDA", "CUDAKernel"],
+            "cce": ["CUDA", "CUDAKernel"],
+            "gcc": ["CUDA", "CUDAKernel"],
+            "nvhpc": ["OpenMPTaskloop"],
+            "oneapi": ["CUDA", "CUDAKernel", "OpenACC", "OpenACCArray"],
+            "fj": ["CUDA", "CUDAKernel", "OpenACC"],
         }
 
         # Check if spec.compiler.name is in the unsupported_options dictionary
         unsupported_value = self.spec.variants["foption"].value
         compiler_name = spec.compiler.name
-        unsupported = any(unsupported_value in options for options in unsupported_options.get(compiler_name, []))
+        unsupported = any(
+            unsupported_value in options for options in unsupported_options.get(compiler_name, [])
+        )
 
         if unsupported:
-            raise InstallError(f"{unsupported_value} is not supported by the {compiler_name} compiler")
+            raise InstallError(
+                f"{unsupported_value} is not supported by the {compiler_name} compiler"
+            )
         # ===================================
         #               ARM
         # ===================================
@@ -615,23 +720,16 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
             config["OPENMP_FLAG"] = pkg.compiler.openmp_flag  # libomp.so required
             config["OPENACC_FLAG"] = "-fopenacc"
 
-
-
         # ===================================
         #               AMD
         # ===================================
         if spec.compiler.name == "aocc":
-            flags = (
-                "-std=f2018 "
-                + pkg.compiler.opt_flags[3]
-                + " -Wall -Wno-unused-variable"
-            )
+            flags = "-std=f2018 " + pkg.compiler.opt_flags[3] + " -Wall -Wno-unused-variable"
 
             config["DOCONCURRENT_FLAG"] = pkg.compiler.openmp_flag  # libomp.so required
             config["ARRAY_FLAG"] = pkg.compiler.openmp_flag  # libomp.so required
             config["OPENMP_FLAG"] = pkg.compiler.openmp_flag  # libomp.so required
             config["OPENACC_FLAG"] = "-fopenacc"
-
 
         # ===================================
         #               CRAY
@@ -641,11 +739,10 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
 
             config["DOCONCURRENT_FLAG"] = "-h thread_do_concurrent -DCRAY_THREAD_DOCONCURRENT"
             config["ARRAY_FLAG"] = "-h autothread"
-            config[
-                "OPENMP_FLAG"
-            ] = pkg.compiler.openmp_flag  # if clang based it will be -fopenmp else -h omp
+            config["OPENMP_FLAG"] = (
+                pkg.compiler.openmp_flag
+            )  # if clang based it will be -fopenmp else -h omp
             config["OPENACC_FLAG"] = "-h acc"  # for cpu only -h omp
-
 
         # ===================================
         #               GCC
@@ -661,7 +758,6 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
             config["OPENMP_FLAG"] = pkg.compiler.openmp_flag
             config["OPENACC_FLAG"] = "-fopenacc"
 
-
         # ===================================
         #               NVHPC
         # ===================================
@@ -676,8 +772,8 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
                 # the architecture value is only number so append sm_ to the name
                 cuda_arch = "cc" + cuda_arch_list[0]
             # config['MARCH'] = "neoverse-v1,neoverse-n1,icelake-server,znver3,cortex-a78ae"
-            GPUFLAG = " -gpu=" + cuda_arch        
-            flags += "-tp=" + str(spec.target)   
+            GPUFLAG = " -gpu=" + cuda_arch
+            flags += "-tp=" + str(spec.target)
             # this is to allow apples-to-apples comparison with DC in non-DC GPU impls
             # set exactly one of these pairs!
             # MANAGED = "-DUSE_MANAGED -gpu=managed"
@@ -707,7 +803,6 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
             config["OPENMP_FLAG"] = "-qopenmp" + (
                 "-fopenmp-targets=spir64 -DUSE_FLOAT=1" if config["FC"] == "ifx" else ""
             )
-
 
         # ===================================
         #               FJ
