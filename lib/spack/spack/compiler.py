@@ -334,6 +334,40 @@ class Compiler:
         # used for version checks for API, e.g. C++11 flag
         self._real_version = None
 
+    def __eq__(self, other):
+        return (
+            self.cc == other.cc
+            and self.cxx == other.cxx
+            and self.fc == other.fc
+            and self.f77 == other.f77
+            and self.spec == other.spec
+            and self.operating_system == other.operating_system
+            and self.target == other.target
+            and self.flags == other.flags
+            and self.modules == other.modules
+            and self.environment == other.environment
+            and self.extra_rpaths == other.extra_rpaths
+            and self.enable_implicit_rpaths == other.enable_implicit_rpaths
+        )
+
+    def __hash__(self):
+        return hash(
+            (
+                self.cc,
+                self.cxx,
+                self.fc,
+                self.f77,
+                self.spec,
+                self.operating_system,
+                self.target,
+                str(self.flags),
+                str(self.modules),
+                str(self.environment),
+                str(self.extra_rpaths),
+                self.enable_implicit_rpaths,
+            )
+        )
+
     def verify_executables(self):
         """Raise an error if any of the compiler executables is not valid.
 

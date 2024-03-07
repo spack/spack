@@ -208,7 +208,7 @@ def _compiler_config_from_external(config):
             "modules": config.get("modules", []),
             "environment": extra_attributes.get("environment", {}),
             "extra_rpaths": extra_attributes.get("extra_rpaths", []),
-            "implicit_rpaths": extra_attributes.get("implicit_rpaths", True),
+            "implicit_rpaths": extra_attributes.get("implicit_rpaths", None),
         }
     }
     return compiler_entry
@@ -315,7 +315,9 @@ def all_compilers_config(scope=None, init_config=True):
     """
     from_compilers_yaml = get_compiler_config(scope, init_config)
     from_packages_yaml = get_compiler_config_from_packages(scope)
-    return from_compilers_yaml + from_packages_yaml
+    result = from_compilers_yaml + from_packages_yaml
+    key = lambda c: _compiler_from_config_entry(c["compiler"])
+    return list(llnl.util.lang.dedupe(result, key=key))
 
 
 def all_compiler_specs(scope=None, init_config=True):
