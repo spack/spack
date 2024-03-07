@@ -48,6 +48,7 @@ class Ruby(AutotoolsPackage, NMakePackage):
             depends_on("tk", when="@:2.3")
             depends_on("readline", when="+readline")
             depends_on("zlib-api")
+            depends_on("libyaml", when="@3:")
             with when("+openssl"):
                 depends_on("openssl@:1")
                 depends_on("openssl@:1.0", when="@:2.3")
