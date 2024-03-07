@@ -532,8 +532,6 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
                 # Please specify the location where NCCL is installed
                 env.set("NCCL_INSTALL_PATH", spec["nccl"].prefix)
                 env.set("NCCL_HDR_PATH", spec["nccl"].prefix.include)
-                env.set("NCCL_HOME", spec["nccl"].prefix)
-                env.set("NCCL_LIBRARY_DIR", spec["nccl"].libs.directories[0])
             else:
                 env.unset("TF_NCCL_VERSION")
 
