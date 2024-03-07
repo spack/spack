@@ -12,7 +12,6 @@ import os
 import re
 import sys
 import traceback
-import warnings
 from datetime import datetime, timedelta
 from typing import Any, Callable, Iterable, List, Tuple
 
@@ -857,6 +856,7 @@ def get_entry_points(*, group: str):
 
     try:
         import importlib.metadata  # type: ignore  # novermin
+
         try:
             entry_points = importlib.metadata.entry_points(group=group)
         except TypeError:
