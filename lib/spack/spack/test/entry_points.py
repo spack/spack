@@ -84,7 +84,6 @@ def test_spack_entry_point_config(tmp_path, mock_get_entry_points):
     assert config.get("config:install_tree:root", scope="plugin-mypackage_config") == "/spam/opt"
 
 
-@pytest.mark.skipif(sys.version_info[:2] < (3, 8), reason="Python>=3.8 required")
 def test_spack_entry_point_extension(tmp_path, mock_get_entry_points):
     """Test config scope entry point"""
     my_ext = tmp_path / "spack/spack-myext"
