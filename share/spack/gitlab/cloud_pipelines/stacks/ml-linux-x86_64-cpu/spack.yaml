@@ -2,8 +2,10 @@ spack:
   view: false
   packages:
     all:
-      require: target=x86_64_v3
-      variants: ~cuda~rocm
+      require:
+      - target=x86_64_v3
+      - ~cuda
+      - ~rocm
     mpi:
       require: openmpi
 
