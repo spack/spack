@@ -538,8 +538,6 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
             env.prepend_path("LIBRARY_PATH", self.spec["hsa-rocr-dev"].prefix.lib)
             env.prepend_path("LD_LIBRARY_PATH", self.spec["hip"].prefix.lib)
             env.prepend_path("LD_LIBRARY_PATH", self.spec["hsa-rocr-dev"].prefix.lib)
-
-
         self.setup_chpl_comm(env, self.spec)
 
     def setup_build_environment(self, env):
