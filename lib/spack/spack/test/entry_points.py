@@ -65,8 +65,9 @@ def entry_points_factory(tmp_path):
 
 @pytest.fixture()
 def mock_entry_points(tmp_path, monkeypatch):
+    import importlib.metadata  # type: ignore # novermin
+
     entry_points = entry_points_factory(tmp_path)
-    import importlib.metadata # type: ignore # novermin
     monkeypatch.setattr(importlib.metadata, "entry_points", entry_points)
 
 
