@@ -816,7 +816,7 @@ deprecated-ci-build:
       - . "/etc/profile.d/modules.sh"
       - diff -q "/bootstrap/cloud_pipelines-config.yaml" "share/spack/gitlab/cloud_pipelines/configs/config.yaml" || echo "WARNING Install tree might have changed. You need to rebuild the pcluster-amazonlinux-2 container in spack/gitlab-runners."
       - cp "share/spack/gitlab/cloud_pipelines/configs/config.yaml" "etc/spack/"
-      - /bin/bash "${SPACK_ROOT}/share/spack/gitlab/cloud_pipelines/stacks/aws-pcluster-neoverse_v1/setup-pcluster.sh"
+      - /bin/bash "${SPACK_ROOT}/share/spack/gitlab/cloud_pipelines/scripts/pcluster/setup-pcluster.sh"
       - rm "etc/spack/config.yaml"
 
 # X86_64_V4 (one pipeline per target)
