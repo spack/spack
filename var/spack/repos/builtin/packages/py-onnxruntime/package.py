@@ -21,16 +21,26 @@ class PyOnnxruntime(CMakePackage, PythonExtension):
 
     license("MIT")
 
+    version("1.14.1", tag="v1.14.1", submodules=True)
+    version("1.13.1", tag="v1.13.1", submodules=True)
+    version("1.12.1", tag="v1.12.1", submodules=True)
+    version("1.11.1", tag="v1.11.1", submodules=True)
     version(
         "1.10.0", tag="v1.10.0", commit="0d9030e79888d1d5828730b254fedc53c7b640c1", submodules=True
     )
     version(
         "1.7.2", tag="v1.7.2", commit="5bc92dff16b0ddd5063b717fb8522ca2ad023cb0", submodules=True
     )
+    version("1.14.1", tag="v1.14.1", submodules=True)
+    version("1.13.1", tag="v1.13.1", submodules=True)
+    version("1.12.1", tag="v1.12.1", submodules=True)
+    version("1.11.1", tag="v1.11.1", submodules=True)
 
     variant("cuda", default=False, description="Build with CUDA support")
 
-    depends_on("cmake@3.1:", type="build")
+    depends_on("cmake@3.13:", type="build")
+    depends_on("cmake@3.18:", type="build", when="@1.9:")
+    depends_on("cmake@3.24:", type="build", when="@1.14:")
     depends_on("python", type=("build", "run"))
     depends_on("py-pip", type="build")
     depends_on("protobuf")
