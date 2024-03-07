@@ -22,7 +22,9 @@ class PyNvidiaModulus(PythonPackage):
 
     with default_args(type=("build", "run")):
         depends_on("py-torch@2.0.0:")
-        depends_on("py-numpy@1.22.4:1.24")
+        # Remove upper bound on numpy version
+        # https://github.com/NVIDIA/modulus/issues/383
+        depends_on("py-numpy@1.22.4:")
         depends_on("py-xarray@2023.1.0:")
         depends_on("py-zarr@2.14.2:")
         depends_on("py-fsspec@2023.1.0:")
