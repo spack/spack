@@ -82,7 +82,7 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
         "cray-prgenv-gnu": "gnu",
         "cray-prgenv-intel": "intel",
         "cray-prgenv-pgi": "pgi",
-        "dpcpp" : "intel",
+        "dpcpp": "intel",
         "gcc": "gnu",
         "intel": "intel",
         "oneapi": "intel",
@@ -128,8 +128,12 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
 
     variant("check", default=False, description="Run make check after installing the package")
 
-    variant("chpldoc", when="@1.34:" , default=False, description="Build chpldoc in addition to chpl")
-    variant("chpldoc", when="@main", default=False, description="Build chpldoc in addition to chpl")
+    variant(
+        "chpldoc", when="@1.34:", default=False, description="Build chpldoc in addition to chpl"
+    )
+    variant(
+        "chpldoc", when="@main", default=False, description="Build chpldoc in addition to chpl"
+    )
 
     variant(
         "comm",
@@ -396,7 +400,11 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
 
     conflicts("rocm", when="cuda", msg="Chapel must be built with either CUDA or ROCm, not both")
 
-    conflicts("chpldoc", when="@:1.34.0", msg="chpldoc has no effect and is installed by default on versions prior to 1.34.0")
+    conflicts(
+        "chpldoc",
+        when="@:1.34.0",
+        msg="chpldoc has no effect and is installed by default on versions prior to 1.34.0",
+    )
 
     with when("llvm=none"):
         conflicts("cuda", msg="Cuda support requires building with LLVM")
