@@ -738,7 +738,7 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
             config["DOCONCURRENT_FLAG"] = "-h thread_do_concurrent -DCRAY_THREAD_DOCONCURRENT"
             config["ARRAY_FLAG"] = "-h autothread"
             config["OPENMP_FLAG"] = (
-                 pkg.compiler.openmp_flag
+                pkg.compiler.openmp_flag
             )  # if clang based it will be -fopenmp else -h omp
             config["OPENACC_FLAG"] = "-h acc"  # for cpu only -h omp
 
