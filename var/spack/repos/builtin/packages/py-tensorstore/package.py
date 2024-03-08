@@ -16,6 +16,9 @@ class PyTensorstore(PythonPackage):
 
     version("0.1.54", sha256="e1a9dcb0be7c828f752375409537d4b39c658dd6c6a0873fe21a24a556ec0e2a")
 
+    # .bazelversion
+    depends_on("bazel@6.4.0", type="build")
+
     with default_args(type="build"):
         depends_on("py-setuptools@30.3:")
         depends_on("py-setuptools-scm")
@@ -24,3 +27,7 @@ class PyTensorstore(PythonPackage):
         depends_on("python@3.9:")
         depends_on("py-numpy@1.16:")
         depends_on("py-ml-dtypes@0.3.1:")
+
+    def patch(self):
+        # Trick bazelisk into using the Spack-installed copy of bazel
+        symlink(bazel.path, join_path("tools", "bazel"))
