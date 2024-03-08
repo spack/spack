@@ -512,6 +512,18 @@ class TestConcretize:
         assert spec.satisfies("~foo") and spec.satisfies("^dependency-foo-bar~foo")
         assert spec.satisfies("+bar") and not spec.satisfies("^dependency-foo-bar+bar")
 
+    @pytest.mark.only_clingo(
+        "Optional compiler propagation isn't deprecated for original concretizer"
+    )
+    def test_concretize_propagate_one_variant(self):
+        """Test that you can specify to propagate one variant and not all"""
+        spec = Spec("parent-foo-bar ++bar ~foo")
+        spec.concretize()
+
+        assert spec.satisfies("~foo") and not spec.satisfies("^dependency-foo-bar~foo")
+        assert spec.satisfies("+bar") and spec.satisfies("^dependency-foo-bar+bar")
+
+
     @pytest.mark.only_clingo("Original concretizer is allowed to forego variant propagation")
     def test_concretize_propagate_multivalue_variant(self):
         """Test that multivalue variants are propagating the specified value(s)
@@ -523,7 +535,6 @@ class TestConcretize:
         assert spec.satisfies("^b foo=baz,fee")
         assert not spec.satisfies("^a foo=bar")
         assert not spec.satisfies("^b foo=bar")
-
 
     @pytest.mark.only_clingo(
         "Optional compiler propagation isn't deprecated for original concretizer"
@@ -551,7 +562,6 @@ class TestConcretize:
         spec.concretize()
 
         # raises some kind of error
-
 
     @pytest.mark.only_clingo(
         "Optional compiler propagation isn't deprecated for original concretizer"
