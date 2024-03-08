@@ -6,6 +6,7 @@ import inspect
 import os
 from typing import Iterable
 
+from llnl.util.lang import memoized
 from llnl.util.filesystem import filter_file, find
 
 import spack.builder
@@ -31,13 +32,30 @@ class PerlPackage(spack.package_base.PackageBase):
     extends("perl", when="build_system=perl")
 
     @property
+    @memoized
+    def _platform_dir(self):
+        """Name of platform-specific module subdirectory."""
+        perl = self.spec["perl"].command
+        options = "-E", "use Config; say $Config{archname}"
+        out = perl(*options, output=str.split, error=str.split)
+        return out.strip()
+
+    @property
     def use_modules(self) -> Iterable[str]:
         """Names of the package's perl modules."""
         module_files = find(self.prefix.lib, ["*.pm"], recursive=True)
+
+        # Drop the platform directory, if present
+        if self._platform_dir:
+            platform_dir = self._platform_dir + os.sep
+            module_files = [m.replace(platform_dir, "") for m in module_files]
+
         # Drop the extension and library path
-        modules = [os.path.splitext(m)[0].replace(self.prefix.lib, "") for m in module_files]
+        prefix = self.prefix.lib + os.sep
+        modules = [os.path.splitext(m)[0].replace(prefix, "") for m in module_files]
+
         # Drop the perl subdirectory as well
-        return ["::".join(m.split(os.sep)[2:]) for m in modules]
+        return ["::".join(m.split(os.sep)[1:]) for m in modules]
 
     @property
     def skip_modules(self) -> Iterable[str]:
