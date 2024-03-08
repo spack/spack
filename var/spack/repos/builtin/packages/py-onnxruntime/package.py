@@ -113,33 +113,22 @@ class PyOnnxruntime(CMakePackage, PythonExtension):
             define("onnxruntime_BUILD_SHARED_LIB", True),
             define_from_variant("onnxruntime_USE_CUDA", "cuda"),
             define("onnxruntime_BUILD_CSHARP", False),
-            define("onnxruntime_USE_EIGEN_FOR_BLAS", True),
-            define("onnxruntime_USE_OPENBLAS", False),
-            define("onnxruntime_USE_MKLML", False),
-            define("onnxruntime_USE_NGRAPH", False),
-            define("onnxruntime_USE_OPENMP", False),
             define("onnxruntime_USE_TVM", False),
-            define("onnxruntime_USE_LLVM", False),
             define("onnxruntime_ENABLE_MICROSOFT_INTERNAL", False),
-            define("onnxruntime_USE_BRAINSLICE", False),
-            define("onnxruntime_USE_NUPHAR", False),
             define("onnxruntime_USE_TENSORRT", False),
             define("onnxruntime_CROSS_COMPILING", False),
             define("onnxruntime_USE_FULL_PROTOBUF", True),
             define("onnxruntime_DISABLE_CONTRIB_OPS", False),
-            define("onnxruntime_USE_PREINSTALLED_PROTOBUF", True),
-            define("onnxruntime_PREFER_SYSTEM_LIB", True),
         ]
 
         if self.spec.satisfies("+cuda"):
             args.extend(
                 (
-                    define("onnxruntime_CUDA_VERSION", str(self.spec["cuda"].version)),
                     define("onnxruntime_CUDA_HOME", self.spec["cuda"].prefix),
                     define("onnxruntime_CUDNN_HOME", self.spec["cudnn"].prefix),
                     define("CMAKE_CUDA_FLAGS", "-cudart shared"),
                     define("CMAKE_CUDA_RUNTIME_LIBRARY", "Shared"),
-                    define("DCMAKE_TRY_COMPILE_PLATFORM_VARIABLES", "CMAKE_CUDA_RUNTIME_LIBRARY"),
+                    define("CMAKE_TRY_COMPILE_PLATFORM_VARIABLES", "CMAKE_CUDA_RUNTIME_LIBRARY"),
                 )
             )
 
