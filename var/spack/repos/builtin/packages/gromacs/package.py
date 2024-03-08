@@ -282,7 +282,7 @@ class Gromacs(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("cmake@3.18.4:3", type="build", when="@main")
     depends_on("cmake@3.16.0:3", type="build", when="%fj")
     depends_on("pkgconfig", type="build")
-    
+
     depends_on("cuda", when="+cuda")
     with when("+rocm"):
         depends_on("sycl")
