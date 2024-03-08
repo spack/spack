@@ -61,9 +61,9 @@ class Mpich(AutotoolsPackage, CudaPackage, ROCmPackage):
     variant("wrapperrpath", default=True, description="Enable wrapper rpath")
     variant(
         "pmi",
-        default="pmi",
+        default="pmi1",
         description="""PMI interface.""",
-        values=("pmi", "pmi2", "pmix", "cray"),
+        values=("pmi1", "pmi2", "pmix", "cray"),
         multi=False,
     )
     variant(
@@ -386,7 +386,7 @@ supported, and netmod is ignored if device is ch3:sock.""",
                 variants.append("+argobots")
 
             if re.search(r"--with-pmi=simple", output):
-                variants.append("pmi=pmi")
+                variants.append("pmi=pmi1")
             elif re.search(r"--with-pmi=pmi2/simple", output):
                 variants.append("pmi=pmi2")
             elif re.search(r"--with-pmix", output):
@@ -551,7 +551,7 @@ supported, and netmod is ignored if device is ch3:sock.""",
         else:
             config_args.append("--with-slurm=no")
 
-        if "pmi=pmi" in spec:
+        if "pmi=pmi1" in spec:
             config_args.append("--with-pmi=simple")
         elif "pmi=pmi2" in spec:
             config_args.append("--with-pmi=pmi2/simple")
