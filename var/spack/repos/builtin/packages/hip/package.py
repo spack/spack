@@ -198,6 +198,21 @@ class Hip(CMakePackage):
             when=f"@{d_version}",
         )
 
+        # For avx build, the start address of values_ buffer in KernelParameters is not
+        # correct as it is computed based on 16-byte alignment.
+        patch(
+            "https://github.com/ROCm/clr/commit/c4f773db0b4ccbbeed4e3d6c0f6bff299c2aa3f0.patch?full_index=1",
+            sha256="5bb9b0e08888830ccf3a0a658529fe25f4ee62b5b8890f349bf2cc914236eb2f",
+            working_dir="clr",
+            when="@5.7:",
+        )
+        patch(
+            "https://github.com/ROCm/clr/commit/7868876db742fb4d44483892856a66d2993add03.patch?full_index=1",
+            sha256="7668b2a710baf4cb063e6b00280fb75c4c3e0511575e8298a9c7ae5143f60b33",
+            working_dir="clr",
+            when="@5.7:",
+        )
+
     # Add hipcc sources thru the below
     for d_version, d_shasum in [
         ("6.0.2", "d6209b14fccdd00d7231dec4b4f962aa23914b9dde389ba961370e8ba918bde5"),
@@ -262,7 +277,6 @@ class Hip(CMakePackage):
     patch("0014-Remove-compiler-rt-linkage-for-host-for-5.7.0.patch", when="@5.7.0:5.7")
     patch("0014-remove-compiler-rt-linkage-for-host.6.0.patch", when="@6.0:")
     patch("0015-reverting-operator-mixup-fix-for-slate.patch", when="@5.6:6.0")
-    patch("0017-Set-PARAMETERS_MIN_ALIGNMENT-to-the-native-alignment.patch", when="@5.7:6.0")
     patch("0018-reverting-hipMemoryType-with-memoryType.patch", when="@6.0")
 
     # See https://github.com/ROCm/HIP/pull/3206
