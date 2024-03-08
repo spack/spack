@@ -125,6 +125,7 @@ class Vtk(CMakePackage):
     patch("vtk_use_sqlite_name_vtk_expects.patch", when="@8.2")
     patch("vtk_proj_include_no_strict.patch", when="@9: platform=windows")
     patch("vtk_alias_hdf5.patch", when="@9: platform=windows")
+    patch("vtk_findproj_config.patch", when="platform=windows")
     with when("~osmesa"):
         depends_on("glx", when="platform=linux")
         depends_on("glx", when="platform=cray")
