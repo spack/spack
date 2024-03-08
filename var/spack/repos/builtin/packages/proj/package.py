@@ -132,7 +132,7 @@ class CMakeBuilder(BaseBuilder, cmake.CMakeBuilder):
         args = [
             self.define_from_variant("ENABLE_TIFF", "tiff"),
             self.define_from_variant("ENABLE_CURL", "curl"),
-            self.define_from_variant(f"{shared_arg}", "shared"),
+            self.define_from_variant(shared_arg, "shared"),
             self.define_from_variant("CMAKE_POSITION_INDEPENDENT_CODE", "pic"),
         ]
         if self.spec.satisfies("@6:") and self.pkg.run_tests:
