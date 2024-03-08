@@ -129,6 +129,8 @@ class SingularityBase(MakefilePackage):
         return join_path(self.spec.prefix.bin, self.perm_script())
 
     def _build_script(self, filename, variable_data):
+        with open(join_path(self.package_dir, self.perm_script_tmpl()), "w") as f_tmpl:
+            f_tmpl.write(SINGULARITY_SETUID_TEMPLATE)
         with open(filename, "w") as f:
             env = spack.tengine.make_environment(dirs=self.package_dir)
             t = env.get_template(self.perm_script_tmpl())
@@ -218,3 +220,17 @@ class Singularityce(SingularityBase):
     version("3.9.9", sha256="1381433d64138c08e93ffacdfb4844e82c2288f1e39a9d2c631a1c4021381f2a")
     version("3.9.1", sha256="1ba3bb1719a420f48e9b0a6afdb5011f6c786d0f107ef272528c632fff9fd153")
     version("3.8.0", sha256="5fa2c0e7ef2b814d8aa170826b833f91e5031a85d85cd1292a234e6c55da1be1")
+
+
+SINGULARITY_SETUID_TEMPLATE = """#!/bin/sh -eu
+
+{% for cf in chown_files %}
+chown root {{ prefix }}/{{ cf }}
+{% endfor %}
+
+{% for sf in setuid_files %}
+chmod 4555 {{ prefix }}/{{ sf }}
+{% endfor %}
+
+# end
+"""
