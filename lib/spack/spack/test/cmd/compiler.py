@@ -250,10 +250,10 @@ def test_compiler_list_empty(no_compilers_yaml, working_env, compilers_dir):
     assert compiler.returncode == 0
 
 
-def test_compilers_shows_packages_yaml(no_compilers_yaml, working_env, compilers_dir):
-    """Spack should see a single compiler defined from packages.yaml"""
-    gcc_entry = {
-        "externals": [
+@pytest.mark.parametrize(
+    "external,expected",
+    [
+        (
             {
                 "spec": "gcc@=7.7.7 os=foobar target=x86_64",
                 "prefix": "/path/to/fake",
@@ -267,20 +267,8 @@ def test_compilers_shows_packages_yaml(no_compilers_yaml, working_env, compilers
                     },
                     "flags": {"fflags": "-ffree-form"},
                 },
-            }
-        ]
-    }
-
-    packages = spack.config.get("packages")
-    packages["gcc"] = gcc_entry
-    spack.config.set("packages", packages)
-
-    out = compiler("list")
-    assert out.count("gcc foobar-x86_64") == 1
-    assert out.count("gcc@7.7.7") == 1
-
-    out = compiler("info", "gcc@7.7.7")
-    expected = """gcc@7.7.7:
+            },
+            """gcc@7.7.7:
 \tpaths:
 \t\tcc = /path/to/fake/gcc
 \t\tcxx = /path/to/fake/g++
@@ -290,23 +278,35 @@ def test_compilers_shows_packages_yaml(no_compilers_yaml, working_env, compilers
 \t\tfflags = ['-ffree-form']
 \tmodules  = ['gcc/7.7.7', 'foobar']
 \toperating system  = foobar
-"""
-
-    assert out == expected
-
-
-def test_compilers_shows_packages_yaml_minimal(no_compilers_yaml, working_env, compilers_dir):
-    """Spack should see a single compiler defined from packages.yaml"""
-    gcc_entry = {
-        "externals": [
+""",
+        ),
+        (
             {
                 "spec": "gcc@7.7.7",
-                "prefix": str(compilers_dir),
+                "prefix": "{prefix}",
                 "modules": ["gcc/7.7.7", "foobar"],
                 "extra_attributes": {"flags": {"fflags": "-ffree-form"}},
-            }
-        ]
-    }
+            },
+            """gcc@7.7.7:
+\tpaths:
+\t\tcc = {compilers_dir}{sep}gcc-8{suffix}
+\t\tcxx = {compilers_dir}{sep}g++-8{suffix}
+\t\tf77 = {compilers_dir}{sep}gfortran-8{suffix}
+\t\tfc = {compilers_dir}{sep}gfortran-8{suffix}
+\tflags:
+\t\tfflags = ['-ffree-form']
+\tmodules  = ['gcc/7.7.7', 'foobar']
+\toperating system  = debian6
+""",
+        ),
+    ],
+)
+def test_compilers_shows_packages_yaml(
+    external, expected, no_compilers_yaml, working_env, compilers_dir
+):
+    """Spack should see a single compiler defined from packages.yaml"""
+    external["prefix"] = external["prefix"].format(prefix=os.path.dirname(compilers_dir))
+    gcc_entry = {"externals": [external]}
 
     packages = spack.config.get("packages")
     packages["gcc"] = gcc_entry
@@ -315,19 +315,9 @@ def test_compilers_shows_packages_yaml_minimal(no_compilers_yaml, working_env, c
     out = compiler("list")
     assert out.count("gcc@7.7.7") == 1
 
-    suffix = ".bat" if sys.platform == "win32" else ""
-
     out = compiler("info", "gcc@7.7.7")
-    expected = f"""gcc@7.7.7:
-\tpaths:
-\t\tcc = {compilers_dir}{os.sep}gcc-8{suffix}
-\t\tcxx = {compilers_dir}{os.sep}g++-8{suffix}
-\t\tf77 = {compilers_dir}{os.sep}gfortran-8{suffix}
-\t\tfc = {compilers_dir}{os.sep}gfortran-8{suffix}
-\tflags:
-\t\tfflags = ['-ffree-form']
-\tmodules  = ['gcc/7.7.7', 'foobar']
-\toperating system  = debian6
-"""
-
-    assert out == expected
+    assert out == expected.format(
+        compilers_dir=str(compilers_dir),
+        sep=os.sep,
+        suffix=".bat" if sys.platform == "win32" else "",
+    )
