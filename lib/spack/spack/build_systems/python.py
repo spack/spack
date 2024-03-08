@@ -56,8 +56,6 @@ def _flatten_dict(dictionary: Mapping[str, object]) -> Iterable[str]:
 
 
 class PythonExtension(spack.package_base.PackageBase):
-    maintainers("adamjstewart")
-
     @property
     def import_modules(self) -> Iterable[str]:
         """Names of modules that the Python package provides.
