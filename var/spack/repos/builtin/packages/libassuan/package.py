@@ -2,15 +2,11 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-
 from spack.package import *
 
 
 class Libassuan(AutotoolsPackage):
-    """Libassuan is a small library implementing the so-called Assuan
-    protocol.
-    """
+    """Libassuan is a small library implementing the so-called Assuan protocol."""
 
     homepage = "https://gnupg.org/software/libassuan/index.html"
     url = "https://gnupg.org/ftp/gcrypt/libassuan/libassuan-2.4.5.tar.bz2"
@@ -19,6 +15,7 @@ class Libassuan(AutotoolsPackage):
 
     license("LGPL-2.1-or-later")
 
+    version("2.5.7", sha256="0103081ffc27838a2e50479153ca105e873d3d65d8a9593282e9c94c7e6afb76")
     version("2.5.6", sha256="e9fd27218d5394904e4e39788f9b1742711c3e6b41689a31aa3380bd5aa4f426")
     version("2.5.5", sha256="8e8c2fcc982f9ca67dcbb1d95e2dc746b1739a4668bc20b3a3c5be632edb34e4")
     version("2.5.4", sha256="c080ee96b3bd519edd696cfcebdecf19a3952189178db9887be713ccbcb5fbf0")
@@ -32,5 +29,5 @@ class Libassuan(AutotoolsPackage):
         return [
             "--enable-static",
             "--enable-shared",
-            "--with-libgpg-error-prefix=" + self.spec["libgpg-error"].prefix,
+            f"--with-libgpg-error-prefix={self.spec['libgpg-error'].prefix}",
         ]
