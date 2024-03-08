@@ -27,6 +27,7 @@ spack:
   - paraview_specs:
     - matrix:
       - - paraview +raytracing
+        - paraview@5.12.0
       - - +qt~osmesa # GUI Support w/ GLX Rendering
         - ~qt~osmesa # GLX Rendering
         - ~qt+osmesa # OSMesa Rendering
