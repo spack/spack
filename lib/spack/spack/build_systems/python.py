@@ -27,7 +27,7 @@ import spack.multimethod
 import spack.package_base
 import spack.spec
 import spack.store
-from spack.directives import build_system, depends_on, extends, maintainers
+from spack.directives import build_system, depends_on, extends
 from spack.error import NoHeadersError, NoLibrariesError
 from spack.install_test import test_part
 from spack.spec import Spec
@@ -56,8 +56,6 @@ def _flatten_dict(dictionary: Mapping[str, object]) -> Iterable[str]:
 
 
 class PythonExtension(spack.package_base.PackageBase):
-    maintainers("adamjstewart")
-
     @property
     def import_modules(self) -> Iterable[str]:
         """Names of modules that the Python package provides.
