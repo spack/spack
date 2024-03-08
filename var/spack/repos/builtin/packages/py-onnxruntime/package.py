@@ -32,7 +32,8 @@ class PyOnnxruntime(CMakePackage, PythonExtension):
     depends_on("cmake@3.26:", when="@1.17:", type="build")
     depends_on("cmake@3.1:", type="build")
     # Needs absl/strings/has_absl_stringify.h
-    depends_on("abseil-cpp@20240116.0:", when="@1.17:")
+    # cxxstd=20 may also work, but cxxstd=14 does not
+    depends_on("abseil-cpp@20240116.0: cxxstd=17", when="@1.17:")
 
     extends("python")
     depends_on("python", type=("build", "run"))
