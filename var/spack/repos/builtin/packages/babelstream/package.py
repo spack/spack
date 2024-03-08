@@ -616,9 +616,9 @@ register_flag_optional(TARGET_PROCESSOR
                 args.append("-DCUDA_ARCH=" + self.spec.variants["cuda_arch"].value[0])
                 cuda_dir = self.spec["cuda"].prefix
                 cuda_comp = cuda_dir + "/bin/nvcc"
-                args.append("-DCMAKE_CUDA_COMPILER=" + spack_cc)
+                args.append("-DCMAKE_CUDA_COMPILER=" + cuda_comp)
                 # args.append("-DCMAKE_CUDA_COMPILER=" + spack_cxx)
-                args.append("-DCMAKE_CUDA_FLAGS=-ccbin " + spack_cc)
+                # args.append("-DCMAKE_CUDA_FLAGS=-ccbin " + spack_cc)
                 args.append("-DBACKEND=" + self.spec.variants["thrust_backend"].value.upper())
                 if self.spec.variants["flags"].value != "none":
                     args.append("-DCUDA_EXTRA_FLAGS=" + self.spec.variants["flags"].value)
