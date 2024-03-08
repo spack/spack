@@ -30,6 +30,7 @@ class Yafyaml(CMakePackage):
 
     version("main", branch="main")
 
+    version("1.3.0", sha256="a3882210b2620485471e3337d995edc1e653b49d9caaa902a43293826a61a635")
     version("1.2.0", sha256="912a4248bbf2e2e84cf3e36f2ae8483bee6b32d2eaa4406dd2100ad660c9bfc6")
     version("1.1.0", sha256="f0be81afe643adc2452055e5485f09cdb509a8fdd5a4ec5547b0c31dd22b4830")
     version("1.0.7", sha256="54f5c87e86c12e872e615fbc9540610ae38053f844f1e75d1e753724fea85c64")
@@ -51,6 +52,13 @@ class Yafyaml(CMakePackage):
     depends_on("gftl-shared")
     depends_on("gftl")
     depends_on("cmake@3.12:", type="build")
+
+    # yafyaml only works with the Fujitsu compiler from 1.3.0 onwards
+    conflicts(
+        "%fj",
+        when="@:1.2.0",
+        msg="yaFyaml only works with the Fujitsu compiler from 1.3.0 onwards",
+    )
 
     variant(
         "build_type",

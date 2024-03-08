@@ -183,6 +183,9 @@ class RocmOpenmpExtras(Package):
     depends_on("libdrm", when="@5.7:6.0")
     depends_on("numactl", when="@5.7:6.0")
 
+    for ver in ["5.5.0", "5.5.1", "5.6.0", "5.6.1", "5.7.0", "5.7.1", "6.0.0", "6.0.2"]:
+        depends_on(f"rocm-core@{ver}", when=f"@{ver}")
+
     for ver in [
         "5.1.0",
         "5.1.3",
@@ -206,9 +209,6 @@ class RocmOpenmpExtras(Package):
         depends_on(f"comgr@{ver}", when=f"@{ver}")
         depends_on(f"hsa-rocr-dev@{ver}", when=f"@{ver}")
         depends_on(f"llvm-amdgpu@{ver}", when=f"@{ver}")
-
-    for ver in ["5.5.0", "5.5.1", "5.6.0", "5.6.1", "5.7.0", "5.7.1", "6.0.0", "6.0.2"]:
-        depends_on(f"rocm-core@{ver}", when=f"@{ver}")
 
         tag = "rocm-"
 
