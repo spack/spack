@@ -117,6 +117,9 @@ class Libint(AutotoolsPackage):
         env.set("CFLAGS", self.optflags)
         env.set("CXXFLAGS", self.optflags)
 
+        if self.spec.satisfies("%fj"):
+            env.set("LDFLAGS", "--linkfortran")
+
         # Change AR to xiar if we compile with Intel and we
         # find the executable
         if "%intel" in self.spec and which("xiar"):
@@ -238,11 +241,18 @@ class Libint(AutotoolsPackage):
     def install(self, spec, prefix):
         with working_dir(os.path.join(self.build_directory, "generated")):
             make("install")
+            if "+fortran" in self.spec:
+                mkdirp(prefix.include)
+                install(join_path("fortran", "*.mod"), prefix.include)
 
     def patch(self):
         # Use Fortran compiler to link the Fortran example, not the C++
         # compiler
         if "+fortran" in self.spec:
-            filter_file(
-                "$(CXX) $(CXXFLAGS)", "$(FC) $(FCFLAGS)", "export/fortran/Makefile", string=True
-            )
+            if not self.spec.satisfies("%fj"):
+                filter_file(
+                    "$(CXX) $(CXXFLAGS)",
+                    "$(FC) $(FCFLAGS)",
+                    "export/fortran/Makefile",
+                    string=True,
+                )
