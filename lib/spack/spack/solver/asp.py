@@ -1991,8 +1991,14 @@ class SpackSolverSetup:
                 if not spec.concrete:
                     reserved_names = spack.directives.reserved_names
                     if not spec.virtual and vname not in reserved_names:
-                        pkg_cls = self.pkg_class(spec.name)
-                        # if propagating variants don't do try
+                        pkg_cls = spack.repo.PATH.get_pkg_class(spec.name
+)
+                        if variant.propagate and vname not in pkg_cls.variants:
+                            clauses.append(
+                                f.variant_propagation_candidate(spec.name, vname, value, spec.name)
+                            )
+                            continue
+
                         try:
                             variant_def, _ = pkg_cls.variants[vname]
                         except KeyError:

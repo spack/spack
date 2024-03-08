@@ -524,20 +524,6 @@ class TestConcretize:
         assert not spec.satisfies("^a foo=bar")
         assert not spec.satisfies("^b foo=bar")
 
-<<<<<<< HEAD
-=======
-    @pytest.mark.only_clingo(
-        "Optional compiler propagation isn't deprecated for original concretizer"
-    )
-    def test_concretize_propagate_specified_variant(self):
-        """Test that only the specified variant is propagated to the dependencies"""
-        spec = Spec("splice-b++bar")
-        spec.concretize()
-
-        assert spec.satisfies("+bar") and spec.satisfies("^splice-a+bar")
-        assert spec.satisfies("+bar") and spec.satisfies("^splice-z+bar")
-        assert spec.satisfies("+foo") and not spec.satisfies("^splice-a+foo")
-        assert spec.satisfies("+foo") and not spec.satisfies("^splice-z+foo")
 
     @pytest.mark.only_clingo(
         "Optional compiler propagation isn't deprecated for original concretizer"
@@ -579,7 +565,6 @@ class TestConcretize:
         assert spec.satisfies("hdf5~mpi")
         assert not spec.satisfies("^mpich~mpi")
 
->>>>>>> cf51b59c2e (Add test)
     def test_no_matching_compiler_specs(self, mock_low_high_config):
         # only relevant when not building compilers as needed
         with spack.concretize.enable_compiler_existence_check():
