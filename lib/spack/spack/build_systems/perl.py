@@ -6,8 +6,8 @@ import inspect
 import os
 from typing import Iterable
 
-from llnl.util.lang import memoized
 from llnl.util.filesystem import filter_file, find
+from llnl.util.lang import memoized
 
 import spack.builder
 import spack.package_base
