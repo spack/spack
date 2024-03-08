@@ -116,3 +116,9 @@ class RocprofilerDev(CMakePackage):
             ),
             self.define("ROCM_ROOT_DIR", self.spec["hsakmt-roct"].prefix.include),
         ]
+
+    @run_after("install")
+    def post_install(self):
+        if self.spec.satisfies("@6.0:"):
+            install_tree(self.prefix.include.rocprofiler, self.prefix.rocprofiler.include)
+            install_tree(self.prefix.lib, self.prefix.rocprofiler.lib)
