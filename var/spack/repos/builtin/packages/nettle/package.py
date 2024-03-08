@@ -28,5 +28,8 @@ class Nettle(AutotoolsPackage, GNUMirrorPackage):
     depends_on("m4", type="build")
     depends_on("openssl")
 
+    # Nettle 3.7 started using OpenSSL EVP routines in examples/nettle-openssl.c
+    patch("openssl_1.0_compatibility.patch", when="@3.7:")
+
     def configure_args(self):
         return ["CFLAGS={0}".format(self.compiler.c99_flag)]
