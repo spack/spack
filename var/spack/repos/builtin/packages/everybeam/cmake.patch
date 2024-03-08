@@ -1,0 +1,11 @@
+--- a/CMakeLists.txt	2022-05-25 12:12:50.000000000 +0800
++++ b/CMakeLists.txt	2022-05-25 12:13:25.000000000 +0800
+@@ -60,7 +60,7 @@
+ include_directories("${CMAKE_SOURCE_DIR}/external/schaapcommon/include")
+ 
+ # Find and include HDF5
+-find_package(HDF5 COMPONENTS C CXX REQUIRED)
++find_package(HDF5 COMPONENTS C CXX HL REQUIRED)
+ add_definitions(${HDF5_DEFINITIONS})
+ include_directories(${HDF5_INCLUDE_DIR})
+

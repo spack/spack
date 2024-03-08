@@ -1,0 +1,11 @@
+--- a/cpp/hamaker/CMakeLists.txt.org	2022-05-30 10:30:45.000000000 +0800
++++ b/cpp/hamaker/CMakeLists.txt	2022-05-30 10:31:08.000000000 +0800
+@@ -8,7 +8,7 @@
+ add_library(hamaker SHARED
+   hamakerelementresponse.cc
+   hamakercoeff.cc)
+-target_link_libraries(hamaker PUBLIC ${HDF5_LIBRARIES})
++target_link_libraries(hamaker PUBLIC ${HDF5_LIBRARIES} ${HDF5_CXX_LIBRARIES} ${HDF5_HL_LIBRARIES})
+ string(TOLOWER ${CMAKE_PROJECT_NAME} projectname )
+ set_target_properties(hamaker PROPERTIES LIBRARY_OUTPUT_NAME "${projectname}-hamaker")
+
