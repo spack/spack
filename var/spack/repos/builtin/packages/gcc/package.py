@@ -487,6 +487,14 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         when="@9.5.0:10.4.0,11.1.0:11.2.0",
     )
 
+    # patch gcc12.3.0 ICE on aarch64
+    # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=111478
+    patch(
+        "https://github.com/gcc-mirror/gcc/commit/9d033155254ac6df5f47ab32896dbf336f991589.patch?full_index=1",
+        sha256="8b76fe575ef095b48ac45e8b56544c331663f840ce4b63abdb61510bf3647597",
+        when="@12.3.0 target=aarch64:",
+    )
+
     build_directory = "spack-build"
 
     @classproperty
