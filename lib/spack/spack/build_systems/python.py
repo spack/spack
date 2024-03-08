@@ -27,7 +27,7 @@ import spack.multimethod
 import spack.package_base
 import spack.spec
 import spack.store
-from spack.directives import build_system, depends_on, extends, maintainers
+from spack.directives import build_system, depends_on, extends
 from spack.error import NoHeadersError, NoLibrariesError
 from spack.install_test import test_part
 from spack.spec import Spec
