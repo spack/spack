@@ -29,7 +29,7 @@ class PyZfit(PythonPackage):
     depends_on("python@3.8:3.11", type=("build", "run"))
     depends_on("py-setuptools@42:", type="build")
     depends_on("py-setuptools-scm-git-archive", type="build")
-    depends_on("py-setuptools-scm@3.4:", type="build")
+    depends_on("py-setuptools-scm@3.4:+toml", type="build")
 
     variant("nlopt", default=False, description="Enable nlopt support")
     variant("hs3", default=True, description="Enable serialization support")
