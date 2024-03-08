@@ -28,7 +28,11 @@ class PyOnnxruntime(CMakePackage, PythonExtension):
 
     variant("cuda", default=False, description="Build with CUDA support")
 
+    # cmake/CMakeLists.txt
+    depends_on("cmake@3.26:", when="@1.17:", type="build")
     depends_on("cmake@3.1:", type="build")
+    # Needs absl/strings/has_absl_stringify.h
+    depends_on("abseil-cpp@20240116.0:", when="@1.17:")
 
     extends("python")
     depends_on("python", type=("build", "run"))
