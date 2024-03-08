@@ -14,9 +14,9 @@ class Magics(CMakePackage):
     software MAGICS. Although completely redesigned in C++, it is intended
     to be as backwards-compatible as possible with the Fortran interface."""
 
-    homepage = "https://software.ecmwf.int/wiki/display/MAGP/Magics"
+    homepage = "https://confluence.ecmwf.int/display/MAGP/Magics"
     url = "https://confluence.ecmwf.int/download/attachments/3473464/Magics-4.2.4-Source.tar.gz?api=v2"
-    list_url = "https://software.ecmwf.int/wiki/display/MAGP/Releases"
+    list_url = "https://confluence.ecmwf.int/display/MAGP/Releases"
 
     license("Apache-2.0")
 
@@ -87,7 +87,7 @@ class Magics(CMakePackage):
 
     # Even if netcdf is disabled and -DENABLE_NETCDF=OFF is set, building
     # magics still requires legacy netcdf-cxx
-    depends_on("netcdf-cxx", when="@4.1.0:4.3.1,4.15.3:")
+    conflicts("~netcdf", when="@4.1.0:4.3.1,4.15.3:")
 
     # Optional dependencies
     depends_on("netcdf-cxx", when="+netcdf")
