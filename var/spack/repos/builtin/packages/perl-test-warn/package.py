@@ -10,8 +10,27 @@ class PerlTestWarn(PerlPackage):
     """Perl extension to test methods for warnings"""
 
     homepage = "https://metacpan.org/pod/Test::Warn"
-    url = "http://search.cpan.org/CPAN/authors/id/C/CH/CHORNY/Test-Warn-0.30.tar.gz"
+    url = "https://cpan.metacpan.org/authors/id/B/BI/BIGJ/Test-Warn-0.37.tar.gz"
 
-    license("GPL-1.0-or-later OR Artistic-1.0-Perl")
+    maintainers("EbiArnie")
 
-    version("0.30", sha256="8197555b94189d919349a03f7058f83861f145af9bee59f505bfe47562144e41")
+    license("Artistic-1.0-Perl OR GPL-1.0-or-later")
+
+    version("0.37", sha256="98ca32e7f2f5ea89b8bfb9a0609977f3d153e242e2e51705126cb954f1a06b57")
+    version(
+        "0.30",
+        sha256="8197555b94189d919349a03f7058f83861f145af9bee59f505bfe47562144e41",
+        url="https://cpan.metacpan.org/authors/id/C/CH/CHORNY/Test-Warn-0.30.tar.gz",
+        deprecated=True,
+    )
+
+    depends_on("perl@5.6.0:", type=("build", "link", "run", "test"))
+    depends_on("perl-sub-uplevel@0.12:", type=("build", "run", "test"))
+
+    def test_use(self):
+        """Test 'use module'"""
+        options = ["-we", 'use strict; use Test::Warn; print("OK\n")']
+
+        perl = self.spec["perl"].command
+        out = perl(*options, output=str.split, error=str.split)
+        assert "OK" in out
