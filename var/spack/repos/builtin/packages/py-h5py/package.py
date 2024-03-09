@@ -55,7 +55,7 @@ class PyH5py(PythonPackage):
     depends_on("py-setuptools", type="build")
 
     # Build and runtime dependencies
-    depends-on("py-numpy@1.17.3:", type=("build", "run"), when="@3.9:")
+    depends_on("py-numpy@1.17.3:", type=("build", "run"), when="@3.9:")
     depends_on("py-numpy@1.19.3:", type=("build", "run"), when="@3:3.5 ^python@3.9.0:")
     depends_on("py-numpy@1.17.5:", type=("build", "run"), when="@3:3.5 ^python@3.8.0:3.8")
     depends_on("py-numpy@1.14.5:", type=("build", "run"), when="@3:")
