@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,6 +9,7 @@ import pytest
 
 import llnl.util.filesystem as fs
 
+import spack.config
 import spack.environment as ev
 import spack.spec
 from spack.main import SpackCommand
@@ -19,9 +20,9 @@ env = SpackCommand("env")
 pytestmark = pytest.mark.not_on_windows("does not run on windows")
 
 
-@pytest.mark.usefixtures("mutable_mock_env_path", "mock_packages", "mock_fetch", "config")
+@pytest.mark.usefixtures("mutable_mock_env_path", "mock_packages", "mock_fetch", "mutable_config")
 class TestDevelop:
-    def check_develop(self, env, spec, path=None):
+    def check_develop(self, env, spec, path=None, build_dir=None):
         path = path or spec.name
 
         # check in memory representation
@@ -31,15 +32,21 @@ class TestDevelop:
         assert dev_specs_entry["spec"] == str(spec)
 
         # check yaml representation
-        yaml = env.manifest[ev.TOP_LEVEL_KEY]
-        assert spec.name in yaml["develop"]
-        yaml_entry = yaml["develop"][spec.name]
+        dev_config = spack.config.get("develop", {})
+        assert spec.name in dev_config
+        yaml_entry = dev_config[spec.name]
         assert yaml_entry["spec"] == str(spec)
         if path == spec.name:
             # default paths aren't written out
             assert "path" not in yaml_entry
         else:
             assert yaml_entry["path"] == path
+
+        if build_dir is not None:
+            scope = env.scope_name
+            assert build_dir == spack.config.get(
+                "packages:{}:package_attributes:build_directory".format(spec.name), scope
+            )
 
     def test_develop_no_path_no_clone(self):
         env("create", "test")
@@ -72,6 +79,12 @@ class TestDevelop:
             develop()
             self.check_develop(e, spack.spec.Spec("mpich@=1.0"))
 
+    def test_develop_build_directory(self):
+        env("create", "test")
+        with ev.read("test") as e:
+            develop("-b", "test_build_dir", "mpich@1.0")
+            self.check_develop(e, spack.spec.Spec("mpich@=1.0"), None, "test_build_dir")
+
     def test_develop_twice(self):
         env("create", "test")
         with ev.read("test") as e:
@@ -102,7 +115,7 @@ class TestDevelop:
             self.check_develop(e, spack.spec.Spec("mpich@=2.0"))
             assert len(e.dev_specs) == 1
 
-    def test_develop_canonicalize_path(self, monkeypatch, config):
+    def test_develop_canonicalize_path(self, monkeypatch):
         env("create", "test")
         with ev.read("test") as e:
             path = "../$user"
@@ -119,7 +132,7 @@ class TestDevelop:
             # Check modifications actually worked
             assert spack.spec.Spec("mpich@1.0").concretized().satisfies("dev_path=%s" % abspath)
 
-    def test_develop_canonicalize_path_no_args(self, monkeypatch, config):
+    def test_develop_canonicalize_path_no_args(self, monkeypatch):
         env("create", "test")
         with ev.read("test") as e:
             path = "$user"

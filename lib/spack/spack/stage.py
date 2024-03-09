@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -199,9 +199,11 @@ def get_stage_root():
 def _mirror_roots():
     mirrors = spack.config.get("mirrors")
     return [
-        sup.substitute_path_variables(root)
-        if root.endswith(os.sep)
-        else sup.substitute_path_variables(root) + os.sep
+        (
+            sup.substitute_path_variables(root)
+            if root.endswith(os.sep)
+            else sup.substitute_path_variables(root) + os.sep
+        )
         for root in mirrors.values()
     ]
 
@@ -893,9 +895,9 @@ def interactive_version_filter(
     """
     # Find length of longest string in the list for padding
     version_filter = initial_verion_filter or VersionList([":"])
+    max_len = max(len(str(v)) for v in url_dict) if url_dict else 0
     sorted_and_filtered = [v for v in url_dict if v.satisfies(version_filter)]
     sorted_and_filtered.sort(reverse=True)
-    max_len = max(len(str(v)) for v in sorted_and_filtered)
     orig_url_dict = url_dict  # only copy when using editor to modify
     print_header = True
     VERSION_COLOR = spack.spec.VERSION_COLOR
@@ -903,21 +905,20 @@ def interactive_version_filter(
         if print_header:
             has_filter = version_filter != VersionList([":"])
             header = []
-            if not sorted_and_filtered:
-                header.append("No versions selected")
-            elif len(sorted_and_filtered) == len(orig_url_dict):
+            if len(orig_url_dict) > 0 and len(sorted_and_filtered) == len(orig_url_dict):
                 header.append(
                     f"Selected {llnl.string.plural(len(sorted_and_filtered), 'version')}"
                 )
             else:
                 header.append(
-                    f"Selected {len(sorted_and_filtered)} of {len(orig_url_dict)} versions"
+                    f"Selected {len(sorted_and_filtered)} of "
+                    f"{llnl.string.plural(len(orig_url_dict), 'version')}"
                 )
             if sorted_and_filtered and known_versions:
                 num_new = sum(1 for v in sorted_and_filtered if v not in known_versions)
                 header.append(f"{llnl.string.plural(num_new, 'new version')}")
             if has_filter:
-                header.append(colorize(f"Filtered by {VERSION_COLOR}{version_filter}@."))
+                header.append(colorize(f"Filtered by {VERSION_COLOR}@@{version_filter}@."))
 
             version_with_url = [
                 colorize(
@@ -1067,14 +1068,14 @@ def interactive_version_filter(
 
 
 def get_checksums_for_versions(
-    url_by_version: Dict[str, str],
+    url_by_version: Dict[StandardVersion, str],
     package_name: str,
     *,
     first_stage_function: Optional[Callable[[Stage, str], None]] = None,
     keep_stage: bool = False,
     concurrency: Optional[int] = None,
     fetch_options: Optional[Dict[str, str]] = None,
-) -> Dict[str, str]:
+) -> Dict[StandardVersion, str]:
     """Computes the checksums for each version passed in input, and returns the results.
 
     Archives are fetched according to the usl dictionary passed as input.

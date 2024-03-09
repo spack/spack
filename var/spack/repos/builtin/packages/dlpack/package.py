@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class Dlpack(Package):
     homepage = "https://github.com/dmlc/dlpack"
     git = "https://github.com/dmlc/dlpack.git"
     url = "https://github.com/dmlc/dlpack/archive/refs/tags/v0.5.tar.gz"
+
+    license("Apache-2.0")
 
     version("master", branch="master")
     version("0.5", sha256="9209ac194a175aaab4381313891fba047cb173b2bdd15ac934f83f567f9cd514")

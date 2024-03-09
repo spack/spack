@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,8 @@ class Hpx(CMakePackage, CudaPackage, ROCmPackage):
     url = "https://github.com/STEllAR-GROUP/hpx/archive/v0.0.0.tar.gz"
     git = "https://github.com/STEllAR-GROUP/hpx.git"
     maintainers("msimberg", "albestro", "teonnik", "hkaiser")
+
+    license("BSL-1.0")
 
     tags = ["e4s"]
 
@@ -103,11 +105,10 @@ class Hpx(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("boost +context", when="+generic_coroutines")
     for cxxstd in cxxstds:
         depends_on("boost cxxstd={0}".format(map_cxxstd(cxxstd)), when="cxxstd={0}".format(cxxstd))
-    depends_on("asio", when="@1.7:")
-    for cxxstd in cxxstds:
-        depends_on(
-            "asio cxxstd={0}".format(map_cxxstd(cxxstd)), when="cxxstd={0} ^asio".format(cxxstd)
-        )
+
+    with when("@1.7:"):
+        for cxxstd in cxxstds:
+            depends_on(f"asio cxxstd={map_cxxstd(cxxstd)}", when=f"cxxstd={cxxstd}")
 
     depends_on("gperftools", when="malloc=tcmalloc")
     depends_on("jemalloc", when="malloc=jemalloc")

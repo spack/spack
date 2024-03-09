@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,8 +6,9 @@
 """Schema for gitlab-ci.yaml configuration file.
 
 .. literalinclude:: ../spack/schema/gitlab_ci.py
-   :lines: 13-
+   :lines: 15-
 """
+from typing import Any, Dict
 
 from llnl.util.lang import union_dicts
 
@@ -35,7 +36,7 @@ runner_attributes_schema_items = {
 
 runner_selector_schema = {
     "type": "object",
-    "additionalProperties": False,
+    "additionalProperties": True,
     "required": ["tags"],
     "properties": runner_attributes_schema_items,
 }
@@ -112,7 +113,7 @@ gitlab_ci_properties = {
 }
 
 #: Properties for inclusion in other schemas
-properties = {"gitlab-ci": gitlab_ci_properties}
+properties: Dict[str, Any] = {"gitlab-ci": gitlab_ci_properties}
 
 #: Full schema with metadata
 schema = {

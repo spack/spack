@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class Hyperfine(Package):
     url = "https://github.com/sharkdp/hyperfine/archive/refs/tags/v1.12.0.tar.gz"
 
     maintainers("michaelkuhn")
+
+    license("Apache-2.0 AND MIT")
 
     version("1.17.0", sha256="3dcd86c12e96ab5808d5c9f3cec0fcc04192a87833ff009063c4a491d5487b58")
     version("1.16.1", sha256="ffb3298945cbe2c068ca1a074946d55b9add83c9df720eda2ed7f3d94d7e65d2")

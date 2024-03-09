@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class Routinator(Package):
     url = "https://github.com/NLnetLabs/routinator/archive/refs/tags/v0.11.2.tar.gz"
 
     maintainers("aweits")
+
+    license("BSD-3-Clause")
 
     version("0.12.1", sha256="8150fe544f89205bb2d65bca46388f055cf13971d3163fe17508bf231f9ab8bc")
     version(

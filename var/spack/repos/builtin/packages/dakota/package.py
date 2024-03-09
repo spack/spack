@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -40,6 +40,14 @@ class Dakota(CMakePackage):
     git = "https://github.com/snl-dakota/dakota.git"
     url = "https://dakota.sandia.gov/sites/default/files/distributions/public/dakota-6.12-release-public.src.tar.gz"
 
+    license("LGPL-2.1-or-later")
+
+    version(
+        "6.19.0",
+        tag="v6.19.0",
+        commit="603f448b916a8f629d258922e26e7e40dcaaf8ce",
+        submodules=submodules,
+    )
     version(
         "6.18",
         tag="v6.18.0",
@@ -52,6 +60,7 @@ class Dakota(CMakePackage):
 
     variant("shared", default=True, description="Enables the build of shared libraries")
     variant("mpi", default=True, description="Activates MPI support")
+    variant("python", default=True, description="Add Python dependency for dakota.interfacing API")
 
     # Generic 'lapack' provider won't work, dakota searches for
     # 'LAPACKConfig.cmake' or 'lapack-config.cmake' on the path
@@ -60,10 +69,11 @@ class Dakota(CMakePackage):
     depends_on("blas")
     depends_on("mpi", when="+mpi")
 
-    depends_on("python")
+    depends_on("python", when="+python")
     depends_on("perl-data-dumper", type="build", when="@6.12:")
     depends_on("boost@:1.68.0", when="@:6.12")
     depends_on("boost@1.69.0:", when="@6.18:")
+    depends_on("boost +filesystem +program_options +regex +serialization +system")
 
     # TODO: replace this with an explicit list of components of Boost,
     # for instance depends_on('boost +filesystem')
@@ -75,7 +85,10 @@ class Dakota(CMakePackage):
     def cmake_args(self):
         spec = self.spec
 
-        args = [self.define_from_variant("BUILD_SHARED_LIBS", "shared")]
+        args = [
+            self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
+            self.define_from_variant("DAKOTA_PYTHON", "python"),
+        ]
 
         if "+mpi" in spec:
             args.extend(

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -134,6 +134,10 @@ class Mirror:
         return isinstance(self._data, str) or self._data.get("source", True)
 
     @property
+    def signed(self) -> bool:
+        return isinstance(self._data, str) or self._data.get("signed", True)
+
+    @property
     def fetch_url(self):
         """Get the valid, canonicalized fetch URL"""
         return self.get_url("fetch")
@@ -146,7 +150,7 @@ class Mirror:
     def _update_connection_dict(self, current_data: dict, new_data: dict, top_level: bool):
         keys = ["url", "access_pair", "access_token", "profile", "endpoint_url"]
         if top_level:
-            keys += ["binary", "source"]
+            keys += ["binary", "source", "signed"]
         changed = False
         for key in keys:
             if key in new_data and current_data.get(key) != new_data[key]:

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,6 +22,9 @@ class Geant4(CMakePackage):
 
     maintainers("drbenmorgan")
 
+    version("11.2.1", sha256="76c9093b01128ee2b45a6f4020a1bcb64d2a8141386dea4674b5ae28bcd23293")
+    version("11.2.0", sha256="9ff544739b243a24dac8f29a4e7aab4274fc0124fd4e1c4972018213dc6991ee")
+    version("11.1.3", sha256="5d9a05d4ccf8b975649eab1d615fc1b8dce5937e01ab9e795bffd04149240db6")
     version("11.1.2", sha256="e9df8ad18c445d9213f028fd9537e174d6badb59d94bab4eeae32f665beb89af")
     version("11.1.1", sha256="c5878634da9ba6765ce35a469b2893044f4a6598aa948733da8436cdbfeef7d2")
     version("11.1.0", sha256="c4a23f2f502efeab56de43a4412b21f65c7ca1b0877b9bc1d7e845ee12edf70a")
@@ -43,6 +46,7 @@ class Geant4(CMakePackage):
     version("10.4.3", sha256="67f3bb6405a2c77e573936c2b933f5a4a33915aa379626a2eb3012009b91e1da")
     version("10.4.0", sha256="e919b9b0a88476e00c0b18ab65d40e6a714b55ee4778f66bac32a5396c22aa74")
     version("10.3.3", sha256="bcd36a453da44de9368d1d61b0144031a58e4b43a6d2d875e19085f2700a89d8")
+    version("10.0.4", sha256="97f3744366b00143d1eed52f8786823034bbe523f45998106f798af61d83f863")
 
     _cxxstd_values = (
         conditional("11", "14", when="@:10"),
@@ -58,7 +62,7 @@ class Geant4(CMakePackage):
     )
 
     variant("threads", default=True, description="Build with multithreading")
-    variant("vecgeom", default=False, description="Enable vecgeom support")
+    variant("vecgeom", default=False, description="Enable vecgeom support", when="@10.4:")
     variant("opengl", default=False, description="Optional OpenGL support")
     variant("x11", default=False, description="Optional X11 support")
     variant("motif", default=False, description="Optional motif support")
@@ -72,6 +76,7 @@ class Geant4(CMakePackage):
     depends_on("cmake@3.5:", type="build")
 
     for _vers in [
+        "10.0.4",
         "10.3.3",
         "10.4.0",
         "10.4.3",
@@ -85,8 +90,9 @@ class Geant4(CMakePackage):
         "10.7.2",
         "10.7.3",
         "10.7.4",
-        "11.0.0:11.0",
-        "11.1:",
+        "11.0",
+        "11.1",
+        "11.2:",
     ]:
         depends_on("geant4-data@" + _vers, type="run", when="@" + _vers)
 
@@ -104,17 +110,18 @@ class Geant4(CMakePackage):
     depends_on("clhep@2.4.6.0:", when="@11.1:")
     depends_on("clhep@2.4.5.1:", when="@11.0.0:")
     depends_on("clhep@2.4.4.0:", when="@10.7.0:")
-    depends_on("clhep@2.3.3.0:", when="@10.3.3:10.6")
+    depends_on("clhep@2.3.3.0:", when="@10.3:10.6")
+    depends_on("clhep@2.1.2.3", when="@:10.2")
 
     # Vecgeom specific versions for each Geant4 version
     with when("+vecgeom"):
-        depends_on("vecgeom@1.2.0:", when="@11.1:")
+        depends_on("vecgeom@1.2.6:", when="@11.2:")
+        depends_on("vecgeom@1.2.0:", when="@11.1")
         depends_on("vecgeom@1.1.18:1.1", when="@11.0.0:11.0")
         depends_on("vecgeom@1.1.8:1.1", when="@10.7.0:10.7")
         depends_on("vecgeom@1.1.5", when="@10.6.0:10.6")
         depends_on("vecgeom@1.1.0", when="@10.5.0:10.5")
         depends_on("vecgeom@0.5.2", when="@10.4.0:10.4")
-        depends_on("vecgeom@0.3rc", when="@10.3.0:10.3")
 
     def std_when(values):
         for v in values:
@@ -141,18 +148,23 @@ class Geant4(CMakePackage):
     depends_on("libx11", when="+x11")
     depends_on("libxmu", when="+x11")
     depends_on("motif", when="+motif")
-    depends_on("qt@5: +opengl", when="+qt")
+    with when("+qt"):
+        depends_on("qt@5: +opengl")
+        depends_on("qt@5.9:", when="@11.2:")
 
+    # As released, 10.0.4 has inconsistently capitalised filenames
+    # in the cmake files; this patch also enables cxxstd 14
+    patch("geant4-10.0.4.patch", when="@10.0.4")
     # As released, 10.03.03 has issues with respect to using external
     # CLHEP.
-    patch("CLHEP-10.03.03.patch", level=1, when="@10.3.3")
+    patch("CLHEP-10.03.03.patch", level=1, when="@10.3")
     # These patches can be applied independent of the cxxstd value?
-    patch("cxx17.patch", when="@:10.3 cxxstd=17")
+    patch("cxx17.patch", when="@10.3 cxxstd=17")
     patch("cxx17_geant4_10_0.patch", level=1, when="@10.4.0 cxxstd=17")
     patch("geant4-10.4.3-cxx17-removed-features.patch", level=1, when="@10.4.3 cxxstd=17")
 
     # See https://bugzilla-geant4.kek.jp/show_bug.cgi?id=2556
-    patch("package-cache.patch", level=1, when="@10.7.0:11.2.0^cmake@3.17:")
+    patch("package-cache.patch", level=1, when="@10.7.0:11.1.2^cmake@3.17:")
 
     # NVHPC: "thread-local declaration follows non-thread-local declaration"
     conflicts("%nvhpc", when="+threads")
@@ -230,8 +242,11 @@ class Geant4(CMakePackage):
         # Use the correct C++ standard option for the requested version
         if spec.version >= Version("11.0"):
             options.append(self.define_from_variant("CMAKE_CXX_STANDARD", "cxxstd"))
-        else:
+        elif spec.version >= Version("10.3"):
             options.append(self.define_from_variant("GEANT4_BUILD_CXXSTD", "cxxstd"))
+        else:
+            cxxstd = spec.variants["cxxstd"].value
+            options.append(self.define("GEANT4_BUILD_CXXSTD", f"c++{cxxstd}"))
 
         if spec.version >= Version("10.6"):
             # When building a downstream library/app outside of Spack, make

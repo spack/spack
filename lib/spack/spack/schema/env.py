@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,121 +6,46 @@
 """Schema for env.yaml configuration file.
 
 .. literalinclude:: _spack_root/lib/spack/spack/schema/env.py
-   :lines: 36-
+   :lines: 19-
 """
+from typing import Any, Dict
+
 from llnl.util.lang import union_dicts
 
 import spack.schema.gitlab_ci  # DEPRECATED
 import spack.schema.merged
-import spack.schema.packages
 import spack.schema.projections
+
+from .spec_list import spec_list_schema
 
 #: Top level key in a manifest file
 TOP_LEVEL_KEY = "spack"
 
-spec_list_schema = {
-    "type": "array",
-    "default": [],
-    "items": {
-        "anyOf": [
+properties: Dict[str, Any] = {
+    "spack": {
+        "type": "object",
+        "default": {},
+        "additionalProperties": False,
+        "properties": union_dicts(
+            # Include deprecated "gitlab-ci" section
+            spack.schema.gitlab_ci.properties,
+            # merged configuration scope schemas
+            spack.schema.merged.properties,
+            # extra environment schema properties
             {
-                "type": "object",
-                "additionalProperties": False,
-                "properties": {
-                    "matrix": {
-                        "type": "array",
-                        "items": {"type": "array", "items": {"type": "string"}},
-                    },
-                    "exclude": {"type": "array", "items": {"type": "string"}},
-                },
+                "include": {"type": "array", "default": [], "items": {"type": "string"}},
+                "specs": spec_list_schema,
             },
-            {"type": "string"},
-            {"type": "null"},
-        ]
-    },
+        ),
+    }
 }
-
-projections_scheme = spack.schema.projections.properties["projections"]
 
 schema = {
     "$schema": "http://json-schema.org/draft-07/schema#",
     "title": "Spack environment file schema",
     "type": "object",
     "additionalProperties": False,
-    "properties": {
-        "spack": {
-            "type": "object",
-            "default": {},
-            "additionalProperties": False,
-            "properties": union_dicts(
-                # Include deprecated "gitlab-ci" section
-                spack.schema.gitlab_ci.properties,
-                # merged configuration scope schemas
-                spack.schema.merged.properties,
-                # extra environment schema properties
-                {
-                    "include": {"type": "array", "default": [], "items": {"type": "string"}},
-                    "develop": {
-                        "type": "object",
-                        "default": {},
-                        "additionalProperties": False,
-                        "patternProperties": {
-                            r"\w[\w-]*": {
-                                "type": "object",
-                                "additionalProperties": False,
-                                "properties": {
-                                    "spec": {"type": "string"},
-                                    "path": {"type": "string"},
-                                },
-                            }
-                        },
-                    },
-                    "definitions": {
-                        "type": "array",
-                        "default": [],
-                        "items": {
-                            "type": "object",
-                            "properties": {"when": {"type": "string"}},
-                            "patternProperties": {r"^(?!when$)\w*": spec_list_schema},
-                        },
-                    },
-                    "specs": spec_list_schema,
-                    "view": {
-                        "anyOf": [
-                            {"type": "boolean"},
-                            {"type": "string"},
-                            {
-                                "type": "object",
-                                "patternProperties": {
-                                    r"\w+": {
-                                        "required": ["root"],
-                                        "additionalProperties": False,
-                                        "properties": {
-                                            "root": {"type": "string"},
-                                            "link": {
-                                                "type": "string",
-                                                "pattern": "(roots|all|run)",
-                                            },
-                                            "link_type": {"type": "string"},
-                                            "select": {
-                                                "type": "array",
-                                                "items": {"type": "string"},
-                                            },
-                                            "exclude": {
-                                                "type": "array",
-                                                "items": {"type": "string"},
-                                            },
-                                            "projections": projections_scheme,
-                                        },
-                                    }
-                                },
-                            },
-                        ]
-                    },
-                },
-            ),
-        }
-    },
+    "properties": properties,
 }
 
 

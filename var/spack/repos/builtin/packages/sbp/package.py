@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class Sbp(CMakePackage):
     git = "https://github.com/swift-nav/libsbp"
 
     maintainers("jayvdb")
+
+    license("MIT")
 
     version(
         "3.4.10", tag="v3.4.10", commit="d8ec454a3d7f1b2f8b8f515934612c184b8d5fa3", submodules=True

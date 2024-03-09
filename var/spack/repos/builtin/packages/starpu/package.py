@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -30,6 +30,9 @@ class Starpu(AutotoolsPackage):
 
     maintainers("nfurmento", "sthibaul")
 
+    version("1.4.4", sha256="054ca4d584400f2f8b794e6bd14c076a7a810c63ad5594d2c4133f50b8e59cb9")
+    version("1.4.3", sha256="848cce0a2fbaa75b104d9878da928e19b1c3bc9b978193081672ac882e63bbea")
+    version("1.4.2", sha256="6c1fce80593a96d599881c1e9697a10e2072195b1c4c64a99528192b6715ddd6")
     version("1.4.1", sha256="f023aa53da245a0f43944c3a13f63b4bfdf1324f3e66bf5cd367ce51e2044925")
     version("1.4.0", sha256="5058127761a0604606a852fd6d20b07040d5fbd9f798c5383e49f336b4eeaca1")
     version("1.3.11", sha256="580c6d98d49bacd2c666504c88890335d2689b6547d97f6a088d4ab4812df36e")

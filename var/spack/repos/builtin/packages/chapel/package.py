@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class Chapel(AutotoolsPackage):
 
     homepage = "https://chapel-lang.org/"
     url = "https://github.com/chapel-lang/chapel/releases/download/1.24.1/chapel-1.24.1.tar.gz"
+
+    license("Apache-2.0")
 
     version("1.24.1", sha256="f898f266fccaa34d937b38730a361d42efb20753ba43a95e5682816e008ce5e4")
     version("1.24.0", sha256="77c6087f3e0837268470915f2ad260d49cf7ac4adf16f5b44862ae624c1be801")

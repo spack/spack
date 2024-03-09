@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,10 @@ class PyTorchdata(PythonPackage):
 
     maintainers("adamjstewart")
 
+    license("BSD-3-Clause")
+
     version("main", branch="main")
+    version("0.7.1", sha256="ef9bbdcee759b53c3c9d99e76eb0a66da33d36bfb7f859a25a9b5e737a51fa23")
     version("0.7.0", sha256="0b444719c3abc67201ed0fea92ea9c4100e7f36551ba0d19a09446cc11154eb3")
     version("0.6.1", sha256="c596db251c5e6550db3f00e4308ee7112585cca4d6a1c82a433478fd86693257")
     version("0.6.0", sha256="048dea12ee96c0ea1525097959fee811d7b38c2ed05f44a90f35f8961895fb5b")
@@ -38,6 +41,7 @@ class PyTorchdata(PythonPackage):
 
     # https://github.com/pytorch/data#version-compatibility
     depends_on("py-torch@main", when="@main", type=("build", "run"))
+    depends_on("py-torch@2.1.1", when="@0.7.1", type=("build", "run"))
     depends_on("py-torch@2.1.0", when="@0.7.0", type=("build", "run"))
     depends_on("py-torch@2.0.1", when="@0.6.1", type=("build", "run"))
     depends_on("py-torch@2.0.0", when="@0.6.0", type=("build", "run"))

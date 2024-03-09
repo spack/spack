@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,10 @@ class Gperftools(AutotoolsPackage):
     url = "https://github.com/gperftools/gperftools/releases/download/gperftools-2.7/gperftools-2.7.tar.gz"
     maintainers("albestro", "eschnett", "msimberg", "teonnik")
 
+    license("BSD-3-Clause")
+
+    version("2.15", sha256="c69fef855628c81ef56f12e3c58f2b7ce1f326c0a1fe783e5cae0b88cbbe9a80")
+    version("2.14", sha256="6b561baf304b53d0a25311bd2e29bc993bed76b7c562380949e7cb5e3846b299")
     version("2.13", sha256="4882c5ece69f8691e51ffd6486df7d79dbf43b0c909d84d3c0883e30d27323e7")
     version("2.12", sha256="fb611b56871a3d9c92ab0cc41f9c807e8dfa81a54a4a9de7f30e838756b5c7c6")
     version("2.11", sha256="8ffda10e7c500fea23df182d7adddbf378a203c681515ad913c28a64b87e24dc")
@@ -39,6 +43,11 @@ class Gperftools(AutotoolsPackage):
     )
 
     depends_on("unwind", when="+libunwind")
+
+    # Linker error: src/base/dynamic_annotations.cc:46: undefined reference to
+    # `TCMallocGetenvSafe'
+    conflicts("target=ppc64:", when="@2.14")
+    conflicts("target=ppc64le:", when="@2.14")
 
     def configure_args(self):
         args = []

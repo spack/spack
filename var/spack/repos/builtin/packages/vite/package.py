@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class Vite(CMakePackage):
     homepage = "https://solverstack.gitlabpages.inria.fr/vite/"
     maintainers("trahay")
     git = "https://gitlab.inria.fr/solverstack/vite.git"
+
+    license("CECILL-2.0")
 
     version("master", branch="master")
 

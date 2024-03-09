@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,8 @@ class RFontawesome(RPackage):
     raster graphics are needed."""
 
     cran = "fontawesome"
+
+    license("MIT")
 
     version("0.5.1", sha256="f4ebbbe2ee8d2e2c0342b72095cfe668bd9800ea6c4bf7180300544bde7e566c")
     version("0.4.0", sha256="760a0bc5b50ddbce1160b123f3b3d76342167519d75641dc2c5b952fa8d4242f")

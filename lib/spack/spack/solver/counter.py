@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -117,7 +117,7 @@ class MinimalDuplicatesCounter(NoDuplicatesCounter):
         self._possible_dependencies = set(self._link_run) | set(self._total_build)
 
     def possible_packages_facts(self, gen, fn):
-        build_tools = set(spack.repo.PATH.packages_with_tags("build-tools"))
+        build_tools = spack.repo.PATH.packages_with_tags("build-tools")
         gen.h2("Packages with at most a single node")
         for package_name in sorted(self.possible_dependencies() - build_tools):
             gen.fact(fn.max_dupes(package_name, 1))
@@ -142,7 +142,7 @@ class MinimalDuplicatesCounter(NoDuplicatesCounter):
 
 class FullDuplicatesCounter(MinimalDuplicatesCounter):
     def possible_packages_facts(self, gen, fn):
-        build_tools = set(spack.repo.PATH.packages_with_tags("build-tools"))
+        build_tools = spack.repo.PATH.packages_with_tags("build-tools")
         counter = collections.Counter(
             list(self._link_run) + list(self._total_build) + list(self._direct_build)
         )
