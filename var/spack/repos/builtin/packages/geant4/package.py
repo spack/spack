@@ -266,7 +266,7 @@ class Geant4(CMakePackage):
 
         # Profiling
         options.append(self.define_from_variant("GEANT4_USE_TIMEMORY", "timemory"))
-    
+
         # Never install the data with geant4, but point to the dependent
         # geant4-data's install directory to correctly set up the
         # Geant4Config.cmake values for Geant4_DATASETS .
