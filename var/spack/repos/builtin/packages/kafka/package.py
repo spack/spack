@@ -21,6 +21,9 @@ class Kafka(Package):
     license("EPL-2.0")
 
     version(
+        "2.13-3.7.0", sha256="65f26e5937bbb76dfe78dfb416730dfa7e3378b27e13fd1e204f1a1099bfaf9c"
+    )
+    version(
         "2.13-3.5.1", sha256="f7b74d544023f2c0ec52a179de59975cb64e34ea03650d829328b407b560e4da"
     )
     version(

@@ -19,6 +19,7 @@ class OptionalLite(CMakePackage):
 
     license("BSL-1.0")
 
+    version("3.6.0", sha256="2be17fcfc764809612282c3e728cabc42afe703b9dc333cc87c48d882fcfc2c2")
     version("3.5.0", sha256="6077cee87e2812afd05a273645051e0b55397a25c220295ddc1d6f49d0cf5cc8")
     version("3.2.0", sha256="069c92f6404878588be761d609b917a111b0231633a91f7f908288fc77eb24c8")
     version("3.1.1", sha256="b61fe644b9f77d7cc1c555b3e40e973b135bf2c0350e5fa67bc6f379d9fc3158")
@@ -31,7 +32,7 @@ class OptionalLite(CMakePackage):
 
     def cmake_args(self):
         return [
-            "-DOPTIONAL_LITE_OPT_BUILD_TESTS=%s" % ("ON" if self.run_tests else "OFF"),
+            f"-DOPTIONAL_LITE_OPT_BUILD_TESTS={'ON' if self.run_tests else 'OFF'}",
             "-DOPTIONAL_LITE_OPT_BUILD_EXAMPLES=OFF",
         ]
 

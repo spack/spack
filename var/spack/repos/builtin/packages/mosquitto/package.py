@@ -16,6 +16,7 @@ class Mosquitto(CMakePackage):
 
     license("EPL-1.0 OR EPL-2.0")
 
+    version("2.0.18", sha256="d665fe7d0032881b1371a47f34169ee4edab67903b2cd2b4c083822823f4448a")
     version("2.0.14", sha256="d0dde8fdb12caf6e2426b4f28081919a2fce3448773bdb8af0d3cd5fe5776925")
     version("1.6.15", sha256="5ff2271512f745bf1a451072cd3768a5daed71e90c5179fae12b049d6c02aa0f")
     version("1.5.11", sha256="4a3b8a8f5505d27a7a966dd68bfd76f1e69feb51796d1b46b7271d1bb5a1a299")

@@ -16,6 +16,7 @@ class Fullock(AutotoolsPackage):
 
     license("MIT")
 
+    version("1.0.59", sha256="6e1758f52d438b365c439d3518cae47df5334fd73adbd781c932497d2aaaafca")
     version("1.0.50", sha256="7222976883289376c1b88fd30ecd3ab2f055316103b97df4aa71192954072848")
     version("1.0.39", sha256="0089d4446e3102b5de39e3d18c1b7e5c9567deb77a4e60963e15b5c1b23a594d")
     version("1.0.36", sha256="68d0dc9036c2c1871653b4626a594f57663973c159f083ec68647c60ddc919f7")

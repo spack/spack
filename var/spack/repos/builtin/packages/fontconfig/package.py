@@ -14,6 +14,7 @@ class Fontconfig(AutotoolsPackage):
 
     license("MIT")
 
+    version("2.15.0", sha256="f5f359d6332861bd497570848fcb42520964a9e83d5e3abe397b6b6db9bcaaf4")
     version("2.14.2", sha256="3ba2dd92158718acec5caaf1a716043b5aa055c27b081d914af3ccb40dce8a55")
     version("2.13.94", sha256="246d1640a7e54fba697b28e4445f4d9eb63dda1b511d19986249368ee7191882")
     version("2.13.93", sha256="0f302a18ee52dde0793fe38b266bf269dfe6e0c0ae140e30d72c6cca5dc08db5")
@@ -43,7 +44,7 @@ class Fontconfig(AutotoolsPackage):
     def configure_args(self):
         font_path = join_path(self.spec["font-util"].prefix, "share", "fonts")
 
-        return ["--enable-libxml2", "--disable-docs", "--with-default-fonts={0}".format(font_path)]
+        return ["--enable-libxml2", "--disable-docs", f"--with-default-fonts={font_path}"]
 
     @run_after("install")
     def system_fonts(self):

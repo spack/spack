@@ -16,6 +16,7 @@ class Busybox(MakefilePackage):
 
     license("GPL-2.0-only")
 
+    version("1.36.1", sha256="b8cc24c9574d809e7279c3be349795c5d5ceb6fdf19ca709f80cde50e47de314")
     version("1.36.0", sha256="542750c8af7cb2630e201780b4f99f3dcceeb06f505b479ec68241c1e6af61a5")
     version("1.31.1", sha256="d0f940a72f648943c1f2211e0e3117387c31d765137d92bd8284a3fb9752a998")
     version("1.31.0", sha256="0e4925392fd9f3743cc517e031b68b012b24a63b0cf6c1ff03cce7bb3846cc99")
@@ -24,8 +25,8 @@ class Busybox(MakefilePackage):
 
     def build(self, spec, prefix):
         make("defconfig")
-        make("CC={0}".format(spack_cc))
+        make(f"CC={spack_cc}")
 
     def install(self, spec, prefix):
-        make("install", "CC={0}".format(spack_cc))
+        make("install", f"CC={spack_cc}")
         install_tree(".", prefix)

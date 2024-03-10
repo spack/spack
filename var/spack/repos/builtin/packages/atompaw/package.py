@@ -21,6 +21,7 @@ class Atompaw(AutotoolsPackage):
 
     license("GPL-3.0-only")
 
+    version("4.2.0.3", sha256="9fd4f9b60e793eee10aead4296e89f0bd6e8612b729a15e2401bbd90e4e9dd2d")
     version("4.2.0.2", sha256="c16648611f5798b8e1781fb2229854c54fa63f085bd11440fdc4ecacbf0ad93e")
     version("4.2.0.1", sha256="d3476a5aa5f80f9430b81f28273c2c2a9b6e7d9c3d08c65544247bb76cd5a114")
     version("4.2.0.0", sha256="9ab4f4ab78a720fbcd95bbbc1403e8ff348d15570e7c694932a56be15985e93d")

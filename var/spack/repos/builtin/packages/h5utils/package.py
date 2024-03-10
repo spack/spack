@@ -15,6 +15,7 @@ class H5utils(AutotoolsPackage):
 
     license("GPL-2.0-only")
 
+    version("1.13.2", sha256="eea7855a8235facb7c454e61103098e55658da0ddf4b6de5b82a992e5f024351")
     version("1.13.1", sha256="c5a76f064d6daa3e65583dce2b61202510e67cf6590f076af9a8aa72511d7d65")
     version(
         "1.12.1",
@@ -44,7 +45,7 @@ class H5utils(AutotoolsPackage):
         args = []
 
         if "+vis5d" in spec:
-            args.append("--with-v5d={0}".format(spec["vis5d"].prefix))
+            args.append(f"--with-v5d={spec['vis5d'].prefix}")
         else:
             args.append("--without-v5d")
 
