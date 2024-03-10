@@ -101,7 +101,7 @@ class Geant4(CMakePackage):
     depends_on("zlib-api")
 
     depends_on("tbb", when="+tbb")
-    depends_on("timemory", when="+timemory")
+    depends_on("timemory@3.2:", when="+timemory")
     depends_on("vtk@8.2:", when="+vtk")
 
     # Python, with boost requirement dealt with in cxxstd section
