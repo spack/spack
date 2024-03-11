@@ -625,18 +625,6 @@ class CompilerSpec:
         else:
             raise TypeError("__init__ takes 1 or 2 arguments. (%d given)" % nargs)
 
-    def _add_versions(self, version_list):
-        # If it already has a non-trivial version list, this is an error
-        if self.versions and self.versions != vn.any_version:
-            # Note: This may be impossible to reach by the current parser
-            # Keeping it in case the implementation changes.
-            raise MultipleVersionError(
-                "A spec cannot contain multiple version signifiers. Use a version list instead."
-            )
-        self.versions = vn.VersionList()
-        for version in version_list:
-            self.versions.add(version)
-
     def _autospec(self, compiler_spec_like):
         if isinstance(compiler_spec_like, CompilerSpec):
             return compiler_spec_like
@@ -1544,20 +1532,6 @@ class Spec:
             result[key] = list(group)
         return result
 
-    #
-    # Private routines here are called by the parser when building a spec.
-    #
-    def _add_versions(self, version_list):
-        """Called by the parser to add an allowable version."""
-        # If it already has a non-trivial version list, this is an error
-        if self.versions and self.versions != vn.any_version:
-            raise MultipleVersionError(
-                "A spec cannot contain multiple version signifiers." " Use a version list instead."
-            )
-        self.versions = vn.VersionList()
-        for version in version_list:
-            self.versions.add(version)
-
     def _add_flag(self, name, value, propagate):
         """Called by the parser to add a known flag.
         Known flags currently include "arch"
@@ -1625,14 +1599,6 @@ class Spec:
                     )
                 else:
                     setattr(self.architecture, new_attr, new_value)
-
-    def _set_compiler(self, compiler):
-        """Called by the parser to set the compiler."""
-        if self.compiler:
-            raise DuplicateCompilerSpecError(
-                "Spec for '%s' cannot have two compilers." % self.name
-            )
-        self.compiler = compiler
 
     def _add_dependency(self, spec: "Spec", *, depflag: dt.DepFlag, virtuals: Tuple[str, ...]):
         """Called by the parser to add another spec as a dependency."""
