@@ -12,7 +12,9 @@ from spack.cmd import buildcache as bc
 def post_install_in_db(spec):
     pkg = spec.package
     # Package was installed from source
-    if not pkg.installed_from_binary_cache:
+    if pkg.installed_from_binary_cache:
+        return
+    # push
         hash = "/" + spec.dag_hash()
         # Iterate over all mirrors with autopush==True
         all_mirrors = spack.mirror.MirrorCollection(binary=True)
