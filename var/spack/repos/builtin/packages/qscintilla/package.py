@@ -134,7 +134,12 @@ class Qscintilla(QMakePackage):
             makefile.filter("$(INSTALL_ROOT)", "", string=True)
             make("install", "-C", "build/")
 
-    @run_after("install", when="+python")
-    def build_test(self):
-        python = self.spec["python"].command
-        python("-c", "import PyQt5.Qsci")
+    def test_python_import(self):
+        if "+python" in self.spec:
+            python = self.spec["python"].command
+            if "^py-pyqt5" in self.spec:
+                python("-c", "import PyQt5.Qsci")
+            if "^py-pyqt6" in self.spec:
+                python("-c", "import PyQt6.Qsci")
+        else:
+            print("qscintilla ins't built with python, skipping import test")
