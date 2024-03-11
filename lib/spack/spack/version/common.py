@@ -15,6 +15,13 @@ infinity_versions = ["stable", "trunk", "head", "master", "main", "develop"]
 
 iv_min_len = min(len(s) for s in infinity_versions)
 
+ALPHA = 0
+BETA = 1
+RC = 2
+FINAL = 3
+
+PRERELEASE_TO_STRING = ["a", "b", "rc"]
+
 
 def is_git_version(string: str) -> bool:
     return (

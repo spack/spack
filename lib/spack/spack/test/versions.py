@@ -213,9 +213,19 @@ def test_nums_and_patch():
     assert_ver_gt("=6.5p1", "=5.6p1")
 
 
-def test_rc_versions():
-    assert_ver_gt("=6.0.rc1", "=6.0")
-    assert_ver_lt("=6.0", "=6.0.rc1")
+def test_prereleases():
+    assert_ver_lt("=6.0a1", "=6.0a2")
+    assert_ver_lt("=6.0a2", "=6.0b1")
+    assert_ver_lt("=6.0b1", "=6.0b2")
+    assert_ver_lt("=6.0b2", "=6.0rc1")
+    assert_ver_lt("=6.0rc1", "=6.0rc2")
+    assert_ver_lt("=6.0rc2", "=6.0")
+
+    # if a / b / c are just suffixes w/o number, then they're just release components.
+    assert_ver_lt("=6.0", "=6.0a")
+    assert_ver_lt("=6.0a", "=6.0b")
+    assert_ver_lt("=6.0b", "=6.0rc")
+    assert_ver_lt("=6.0rc", "=6.0rc1.3.4")
 
 
 def test_alpha_beta():
@@ -275,6 +285,39 @@ def test_version_ranges():
 
     assert_ver_lt("1.2:1.4", "1.5:1.6")
     assert_ver_gt("1.5:1.6", "1.2:1.4")
+
+
+def test_version_range_with_prereleases():
+    # 1.2.1: means from the 1.2.1 release onwards
+    assert_does_not_satisfy("1.2.1a1", "1.2.1:")
+    assert_does_not_satisfy("1.2.1b2", "1.2.1:")
+    assert_does_not_satisfy("1.2.1rc3", "1.2.1:")
+
+    # Pre-releases of 1.2.1 are included in the 1.2.0: range
+    assert_satisfies("1.2.1a1", "1.2.0:")
+    assert_satisfies("1.2.1b1", "1.2.0:")
+    assert_satisfies("1.2.1rc3", "1.2.0:")
+
+    # In Spack 1.2 and 1.2.0 are distinct with 1.2 < 1.2.0. So a lowerbound on 1.2 includes
+    # pre-releases of 1.2.0 as well.
+    assert_satisfies("1.2.0a1", "1.2:")
+    assert_satisfies("1.2.0b2", "1.2:")
+    assert_satisfies("1.2.0rc3", "1.2:")
+
+    # An upperbound :1.1 does not include 1.2.0 pre-releases
+    assert_does_not_satisfy("1.2.0a1", ":1.1")
+    assert_does_not_satisfy("1.2.0b2", ":1.1")
+    assert_does_not_satisfy("1.2.0rc3", ":1.1")
+
+    assert_satisfies("1.2.0a1", ":1.2")
+    assert_satisfies("1.2.0b2", ":1.2")
+    assert_satisfies("1.2.0rc3", ":1.2")
+
+    # You can also construct ranges from prereleases
+    assert_satisfies("1.2.0a2:1.2.0b1", "1.2.0a1:1.2.0b2")
+    assert_satisfies("1.2.0", "1.2.0a1:")
+    assert_satisfies("=1.2.0", "1.2.0a1:")
+    assert_does_not_satisfy("=1.2.0", ":1.2.0rc345")
 
 
 def test_contains():
@@ -417,12 +460,12 @@ def test_basic_version_satisfaction():
     assert_satisfies("4.7.3", "4.7.3")
 
     assert_satisfies("4.7.3", "4.7")
-    assert_satisfies("4.7.3b2", "4.7")
-    assert_satisfies("4.7b6", "4.7")
+    assert_satisfies("4.7.3v2", "4.7")
+    assert_satisfies("4.7v6", "4.7")
 
     assert_satisfies("4.7.3", "4")
-    assert_satisfies("4.7.3b2", "4")
-    assert_satisfies("4.7b6", "4")
+    assert_satisfies("4.7.3v2", "4")
+    assert_satisfies("4.7v6", "4")
 
     assert_does_not_satisfy("4.8.0", "4.9")
     assert_does_not_satisfy("4.8", "4.9")
@@ -433,12 +476,12 @@ def test_basic_version_satisfaction_in_lists():
     assert_satisfies(["4.7.3"], ["4.7.3"])
 
     assert_satisfies(["4.7.3"], ["4.7"])
-    assert_satisfies(["4.7.3b2"], ["4.7"])
-    assert_satisfies(["4.7b6"], ["4.7"])
+    assert_satisfies(["4.7.3v2"], ["4.7"])
+    assert_satisfies(["4.7v6"], ["4.7"])
 
     assert_satisfies(["4.7.3"], ["4"])
-    assert_satisfies(["4.7.3b2"], ["4"])
-    assert_satisfies(["4.7b6"], ["4"])
+    assert_satisfies(["4.7.3v2"], ["4"])
+    assert_satisfies(["4.7v6"], ["4"])
 
     assert_does_not_satisfy(["4.8.0"], ["4.9"])
     assert_does_not_satisfy(["4.8"], ["4.9"])
@@ -550,7 +593,7 @@ def test_repr_and_str():
 
 def test_len():
     a = Version("1.2.3.4")
-    assert len(a) == len(a.version)
+    assert len(a) == len(a.version[0])
     assert len(a) == 4
     b = Version("2018.0")
     assert len(b) == 2

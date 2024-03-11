@@ -2158,7 +2158,7 @@ class SpackSolverSetup:
             if isinstance(v, vn.StandardVersion):
                 return [v]
             elif isinstance(v, vn.ClosedOpenRange):
-                return [v.lo, vn.prev_version(v.hi)]
+                return [v.lo, vn._prev_version(v.hi)]
             elif isinstance(v, vn.VersionList):
                 return sum((versions_for(e) for e in v), [])
             else:

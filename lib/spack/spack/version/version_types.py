@@ -11,7 +11,12 @@ from typing import List, Optional, Tuple, Union
 from spack.util.spack_yaml import syaml_dict
 
 from .common import (
+    ALPHA,
+    BETA,
     COMMIT_VERSION,
+    FINAL,
+    PRERELEASE_TO_STRING,
+    RC,
     EmptyRangeError,
     VersionLookupError,
     infinity_versions,
@@ -88,9 +93,28 @@ def parse_string_components(string: str) -> Tuple[tuple, tuple]:
         raise ValueError("Bad characters in version string: %s" % string)
 
     segments = SEGMENT_REGEX.findall(string)
-    version = tuple(int(m[0]) if m[0] else VersionStrComponent.from_string(m[1]) for m in segments)
     separators = tuple(m[2] for m in segments)
-    return version, separators
+
+    # split out alpha / beta / rc if necessary
+    prerelease: Tuple[int, ...]
+    if len(segments) >= 3 and segments[-2][1] in ("a", "b", "rc") and segments[-1][0]:
+        release = tuple(
+            int(m[0]) if m[0] else VersionStrComponent.from_string(m[1]) for m in segments[:-2]
+        )
+        qualifier, number = segments[-2][1], int(segments[-1][0])
+        if qualifier == "a":
+            prerelease = (ALPHA, number)
+        elif qualifier == "b":
+            prerelease = (BETA, number)
+        else:
+            prerelease = (RC, number)
+    else:
+        release = tuple(
+            int(m[0]) if m[0] else VersionStrComponent.from_string(m[1]) for m in segments
+        )
+        prerelease = (FINAL,)
+
+    return (release, prerelease), separators
 
 
 class ConcreteVersion:
@@ -102,7 +126,7 @@ class StandardVersion(ConcreteVersion):
 
     __slots__ = ["version", "string", "separators"]
 
-    def __init__(self, string: Optional[str], version: tuple, separators: tuple):
+    def __init__(self, string: Optional[str], version: Tuple[tuple, tuple], separators: tuple):
         self.string = string
         self.version = version
         self.separators = separators
@@ -113,11 +137,13 @@ class StandardVersion(ConcreteVersion):
 
     @staticmethod
     def typemin():
-        return StandardVersion("", (), ())
+        return StandardVersion("", ((), (ALPHA, 0)), ("",))
 
     @staticmethod
     def typemax():
-        return StandardVersion("infinity", (VersionStrComponent(len(infinity_versions)),), ())
+        return StandardVersion(
+            "infinity", ((VersionStrComponent(len(infinity_versions)),), (FINAL,)), ("",)
+        )
 
     def __bool__(self):
         return True
@@ -164,21 +190,23 @@ class StandardVersion(ConcreteVersion):
         return NotImplemented
 
     def __iter__(self):
-        return iter(self.version)
+        return iter(self.version[0])
 
     def __len__(self):
-        return len(self.version)
+        return len(self.version[0])
 
     def __getitem__(self, idx):
         cls = type(self)
 
+        release = self.version[0]
+
         if isinstance(idx, numbers.Integral):
-            return self.version[idx]
+            return release[idx]
 
         elif isinstance(idx, slice):
             string_arg = []
 
-            pairs = zip(self.version[idx], self.separators[idx])
+            pairs = zip(release[idx], self.separators[idx])
             for token, sep in pairs:
                 string_arg.append(str(token))
                 string_arg.append(str(sep))
@@ -257,7 +285,7 @@ class StandardVersion(ConcreteVersion):
     def isdevelop(self):
         """Triggers on the special case of the `@develop-like` version."""
         return any(
-            isinstance(p, VersionStrComponent) and isinstance(p.data, int) for p in self.version
+            isinstance(p, VersionStrComponent) and isinstance(p.data, int) for p in self.version[0]
         )
 
     @property
@@ -622,14 +650,14 @@ class ClosedOpenRange:
     def from_version_range(cls, lo: StandardVersion, hi: StandardVersion):
         """Construct ClosedOpenRange from lo:hi range."""
         try:
-            return ClosedOpenRange(lo, next_version(hi))
+            return ClosedOpenRange(lo, _next_version(hi))
         except EmptyRangeError as e:
             raise EmptyRangeError(f"{lo}:{hi} is an empty range") from e
 
     def __str__(self):
         # This simplifies 3.1:<3.2 to 3.1:3.1 to 3.1
         # 3:3 -> 3
-        hi_prev = prev_version(self.hi)
+        hi_prev = _prev_version(self.hi)
         if self.lo != StandardVersion.typemin() and self.lo == hi_prev:
             return str(self.lo)
         lhs = "" if self.lo == StandardVersion.typemin() else str(self.lo)
@@ -641,7 +669,7 @@ class ClosedOpenRange:
 
     def __hash__(self):
         # prev_version for backward compat.
-        return hash((self.lo, prev_version(self.hi)))
+        return hash((self.lo, _prev_version(self.hi)))
 
     def __eq__(self, other):
         if isinstance(other, StandardVersion):
@@ -823,7 +851,7 @@ class VersionList:
         v = self[0]
         if isinstance(v, ConcreteVersion):
             return v
-        if isinstance(v, ClosedOpenRange) and next_version(v.lo) == v.hi:
+        if isinstance(v, ClosedOpenRange) and _next_version(v.lo) == v.hi:
             return v.lo
         return None
 
@@ -994,7 +1022,7 @@ class VersionList:
         return str(self.versions)
 
 
-def next_str(s: str) -> str:
+def _next_str(s: str) -> str:
     """Produce the next string of A-Z and a-z characters"""
     return (
         (s + "A")
@@ -1003,7 +1031,7 @@ def next_str(s: str) -> str:
     )
 
 
-def prev_str(s: str) -> str:
+def _prev_str(s: str) -> str:
     """Produce the previous string of A-Z and a-z characters"""
     return (
         s[:-1]
@@ -1012,7 +1040,7 @@ def prev_str(s: str) -> str:
     )
 
 
-def next_version_str_component(v: VersionStrComponent) -> VersionStrComponent:
+def _next_version_str_component(v: VersionStrComponent) -> VersionStrComponent:
     """
     Produce the next VersionStrComponent, where
     masteq -> mastes
@@ -1025,14 +1053,14 @@ def next_version_str_component(v: VersionStrComponent) -> VersionStrComponent:
 
     # Find the next non-infinity string.
     while True:
-        data = next_str(data)
+        data = _next_str(data)
         if data not in infinity_versions:
             break
 
     return VersionStrComponent(data)
 
 
-def prev_version_str_component(v: VersionStrComponent) -> VersionStrComponent:
+def _prev_version_str_component(v: VersionStrComponent) -> VersionStrComponent:
     """
     Produce the previous VersionStrComponent, where
     mastes -> masteq
@@ -1045,47 +1073,52 @@ def prev_version_str_component(v: VersionStrComponent) -> VersionStrComponent:
 
     # Find the next string.
     while True:
-        data = prev_str(data)
+        data = _prev_str(data)
         if data not in infinity_versions:
             break
 
     return VersionStrComponent(data)
 
 
-def next_version(v: StandardVersion) -> StandardVersion:
-    if len(v.version) == 0:
-        nxt = VersionStrComponent("A")
-    elif isinstance(v.version[-1], VersionStrComponent):
-        nxt = next_version_str_component(v.version[-1])
+def _next_version(v: StandardVersion) -> StandardVersion:
+    release, prerelease = v.version
+    separators = v.separators
+    prerelease_type = prerelease[0]
+    if prerelease_type != FINAL:
+        prerelease = (prerelease_type, prerelease[1] + 1)
+    elif len(release) == 0:
+        release = (VersionStrComponent("A"),)
+        separators = ("",)
+    elif isinstance(release[-1], VersionStrComponent):
+        release = release[:-1] + (_next_version_str_component(release[-1]),)
     else:
-        nxt = v.version[-1] + 1
-
-    # Construct a string-version for printing
-    string_components = []
-    for part, sep in zip(v.version[:-1], v.separators):
-        string_components.append(str(part))
-        string_components.append(str(sep))
-    string_components.append(str(nxt))
-
-    return StandardVersion("".join(string_components), v.version[:-1] + (nxt,), v.separators)
+        release = release[:-1] + (release[-1] + 1,)
+    components = [""] * (2 * len(release))
+    components[::2] = release
+    components[1::2] = separators[: len(release)]
+    if prerelease_type != FINAL:
+        components.extend((PRERELEASE_TO_STRING[prerelease_type], prerelease[1]))
+    return StandardVersion("".join(str(c) for c in components), (release, prerelease), separators)
 
 
-def prev_version(v: StandardVersion) -> StandardVersion:
-    if len(v.version) == 0:
+def _prev_version(v: StandardVersion) -> StandardVersion:
+    release, prerelease = v.version
+    separators = v.separators
+    prerelease_type = prerelease[0]
+    if prerelease_type != FINAL:
+        prerelease = (prerelease_type, prerelease[1] - 1)
+    elif len(release) == 0:
         return v
-    elif isinstance(v.version[-1], VersionStrComponent):
-        prev = prev_version_str_component(v.version[-1])
+    elif isinstance(release[-1], VersionStrComponent):
+        release = release[:-1] + (_prev_version_str_component(release[-1]),)
     else:
-        prev = v.version[-1] - 1
-
-    # Construct a string-version for printing
-    string_components = []
-    for part, sep in zip(v.version[:-1], v.separators):
-        string_components.append(str(part))
-        string_components.append(str(sep))
-    string_components.append(str(prev))
-
-    return StandardVersion("".join(string_components), v.version[:-1] + (prev,), v.separators)
+        release = release[:-1] + (release[-1] - 1,)
+    components = [""] * (2 * len(release))
+    components[::2] = release
+    components[1::2] = separators[: len(release)]
+    if prerelease_type != FINAL:
+        components.extend((PRERELEASE_TO_STRING[prerelease_type], prerelease[1]))
+    return StandardVersion("".join(str(c) for c in components), (release, prerelease), separators)
 
 
 def Version(string: Union[str, int]) -> Union[GitVersion, StandardVersion]:
