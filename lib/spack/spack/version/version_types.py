@@ -316,6 +316,21 @@ class StandardVersion(ConcreteVersion):
             self.string.replace(".", "").replace("-", "").replace("_", "")
         )
 
+    @property
+    def major(self):
+        """Return the first version component."""
+        return self[0]
+
+    @property
+    def minor(self):
+        """Return the second version component."""
+        return self[1]
+
+    @property
+    def patch(self):
+        """Return the third version component."""
+        return self[2]
+
     def up_to(self, index):
         """The version up to the specified component.
 
