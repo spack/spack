@@ -17,4 +17,4 @@ class PerlMathSymbolic(PerlPackage):
     version("0.612", sha256="a9af979956c4c28683c535b5e5da3cde198c0cac2a11b3c9a129da218b3b9c08")
 
     depends_on("perl-module-build", type="build")
-    depends_on("perl-parse-recdescent")
+    depends_on("perl-parse-recdescent", type="run")
