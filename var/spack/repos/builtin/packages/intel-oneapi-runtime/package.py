@@ -38,12 +38,11 @@ class IntelOneapiRuntime(Package):
     provides("fortran-rt", "ifcore@5", when="%oneapi@2021:")
     provides("sycl")
 
-    def install(self, spec, prefix):
-        if spec.platform in ["linux", "cray", "freebsd"]:
-            libraries = get_elf_libraries(compiler=self.compiler, libraries=self.LIBRARIES)
-        else:
-            raise RuntimeError("Unsupported platform")
+    conflicts("platform=windows", msg="IntelOneAPI can only be installed on Linux, and FreeBSD")
+    conflicts("platform=darwin", msg="IntelOneAPI can only be installed on Linux, and FreeBSD")
 
+    def install(self, spec, prefix):
+        libraries = get_elf_libraries(compiler=self.compiler, libraries=self.LIBRARIES)
         mkdir(prefix.lib)
 
         if not libraries:
