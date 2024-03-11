@@ -10,7 +10,7 @@ config:
   source_cache: $user_cache_path/source
   misc_cache: $user_cache_path/cache
   verify_ssl: true
-  custom_certs: $SSL_CERT_FILE
+  ssl_certs: $SSL_CERT_FILE
   checksum: true
   dirty: false
   concretizer: {0}

@@ -146,7 +146,7 @@ tools like ``curl`` will use their ``--insecure`` options.  Disabling
 this can expose you to attacks.  Use at your own risk.
 
 --------------------
-``custom_certs``
+``ssl_certs``
 --------------------
 
 Path to custom certificats for SSL verification. The value can be a 
