@@ -42,7 +42,7 @@ class AoclUtils(CMakePackage):
         sha256="1294cdf275de44d3a22fea6fc4cd5bf66260d0a19abb2e488b898aaf632486bd",
         preferred=True,
     )
-    version("4.1", sha256="a2f271f5eef07da366dae421af3c89286ebb6239047a31a46451758d4a06bc85")
+    version("4.1", sha256="660746e7770dd195059ec25e124759b126ee9f060f43302d13354560ca76c02c")
 
     variant("doc", default=False, description="enable documentation")
     variant("tests", default=False, description="enable testing")
