@@ -25,7 +25,7 @@ class AoclUtils(CMakePackage):
     LICENSING INFORMATION: By downloading, installing and using this software,
     you agree to the terms and conditions of the AMD AOCL-Utils license
     agreement. You may obtain a copy of this license agreement from
-    https://www.amd.com/en/developer/aocl/utils/utils-eula/utils-eula-4-1.html
+    https://www.amd.com/content/dam/amd/en/documents/developer/version-4-2-eulas/utils-elua-4-2.pdf
     """
 
     _name = "aocl-utils"
@@ -37,30 +37,44 @@ class AoclUtils(CMakePackage):
 
     license("BSD-3-Clause")
 
+    version(
+        "4.2",
+        sha256="48ce7fae592f5c73a1c3d2c18752f43c939451ed5d3f7a154551f738af440d77",
+        preferred=True,
+    )
     version("4.1", sha256="a2f271f5eef07da366dae421af3c89286ebb6239047a31a46451758d4a06bc85")
 
     variant("doc", default=False, description="enable documentation")
     variant("tests", default=False, description="enable testing")
+    variant("shared", default=True, when="@4.2:", description="build shared library")
     variant("examples", default=False, description="enable examples")
 
     depends_on("doxygen", when="+doc")
 
+    @property
+    def libs(self):
+        """find aocl-utils libs function"""
+        shared = "+shared" in self.spec
+        return find_libraries("libaoclutils", root=self.prefix, recursive=True, shared=shared)
+
     def cmake_args(self):
+        spec = self.spec
         if not (
-            self.spec.satisfies(r"%aocc@3.2:4.1")
-            or self.spec.satisfies(r"%gcc@12.2:13.1")
-            or self.spec.satisfies(r"%clang@15:16")
+            spec.satisfies(r"%aocc@3.2:4.2")
+            or spec.satisfies(r"%gcc@12.2:13.1")
+            or spec.satisfies(r"%clang@15:17")
         ):
             tty.warn(
-                "AOCL has been tested to work with the following compilers\
-                    versions - gcc@12.2:13.1, aocc@3.2:4.1, and clang@15:16\
-                    see the following aocl userguide for details: \
-                    https://www.amd.com/content/dam/amd/en/documents/developer/version-4-1-documents/aocl/aocl-4-1-user-guide.pdf"
+                "AOCL has been tested to work with the following compilers "
+                "versions - gcc@12.2:13.1, aocc@3.2:4.2, and clang@15:17 "
+                "see the following aocl userguide for details: "
+                "https://www.amd.com/content/dam/amd/en/documents/developer/version-4-2-documents/aocl/aocl-4-2-user-guide.pdf"
             )
 
         args = []
         args.append(self.define_from_variant("ALCI_DOCS", "doc"))
         args.append(self.define_from_variant("ALCI_TESTS", "tests"))
+        args.append(self.define_from_variant("BUILD_SHARED_LIBS", "shared"))
         args.append(self.define_from_variant("ALCI_EXAMPLES", "examples"))
 
         return args

@@ -352,6 +352,8 @@ class Root(CMakePackage):
     depends_on("xrootd", when="+xrootd")
     depends_on("xrootd@:4", when="@:6.22.03 +xrootd")
 
+    depends_on("googletest", when="@6.28.00:", type="test")
+
     # ###################### Conflicts ######################
 
     # I was unable to build root with any Intel compiler

@@ -173,6 +173,7 @@ class Hpctoolkit(AutotoolsPackage, MesonPackage):
     depends_on("libunwind +pic libs=static", when="@:2023.08")
     depends_on("mbedtls+pic", when="@:2022.03")
     depends_on("xerces-c transcoder=iconv")
+    depends_on("xxhash@0.8.1:", when="@develop")
     depends_on("xz", type="link")
     depends_on("xz+pic libs=static", type="link", when="@:2023.08")
     depends_on("yaml-cpp@0.7.0: +shared", when="@2022.10:")
