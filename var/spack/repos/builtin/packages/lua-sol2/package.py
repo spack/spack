@@ -14,7 +14,6 @@ class LuaSol2(CMakePackage):
     git = "https://github.com/ThePhD/sol2.git"
 
     version("develop", branch="develop")
-    version("3.3.0", sha256="b82c5de030e18cb2bcbcefcd5f45afd526920c517a96413f0b59b4332d752a1e")
     version("3.2.3", sha256="f74158f92996f476786be9c9e83f8275129bb1da2a8d517d050421ac160a4b9e")
     version("3.2.2", sha256="141790dae0c1821dd2dbac3595433de49ba72545845efc3ec7d88de8b0a3b2da")
     version("3.2.1", sha256="b10f88dc1246f74a10348faef7d2c06e2784693307df74dcd87c4641cf6a6828")
