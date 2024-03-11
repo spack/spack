@@ -69,15 +69,15 @@ def urllib_ssl_cert_handler():
     if custom_cert_var:
         # custom certs will be a location, so expand env variables, paths etc
         certs = spack.util.path.canonicalize_path(custom_cert_var)
-        tty.debug("Looking for custom SSL certs")
+        tty.debug("URLLIB: Looking for custom SSL certs at {}".format(certs))
         if os.path.isfile(certs):
-            tty.debug("Custom SSL certs file found at {}".format(certs))
+            tty.debug("URLLIB: Custom SSL certs file found at {}".format(certs))
             return ssl.create_default_context(cafile=certs)
         elif os.path.isdir(certs):
-            tty.debug("Custom SSL certs directory found at {}".format(certs))
+            tty.debug("URLLIB: Custom SSL certs directory found at {}".format(certs))
             return ssl.create_default_context(capath=certs)
         else:
-            tty.debug("Custom SSL certs not found")
+            tty.debug("URLLIB: Custom SSL certs not found")
             return ssl.create_default_context()
     else:
         tty.debug(dbg_msg_no_ssl_cert_config)
@@ -86,47 +86,31 @@ def urllib_ssl_cert_handler():
 
 # curl requires different strategies for custom certs at runtime depending on if certs
 # are stored as a file or a directory
-def append_curl_env_for_ssl_cert_dir(curl):
+def append_curl_env_for_ssl_certs(curl):
     """
-    configure curl to use custom certs in a directory at run time
+    configure curl to use custom certs in a file at run time
     see: https://curl.se/docs/sslcerts.html item 4
     """
     custom_cert_var = spack.config.get("config:ssl_certs")
     if custom_cert_var:
-        tty.debug("Looking for custom SSL certs")
         # custom certs will be a location, so expand env variables, paths etc
         certs = spack.util.path.canonicalize_path(custom_cert_var)
-        if os.path.isdir(certs):
+        tty.debug("CURL: Looking for custom SSL certs file at {}".format(certs))
+        if os.path.isfile(certs):
             tty.debug(
-                "Configuring curl to use custome certs from {} by setting CURL_CA_BUNDLE".format(
+                "CURL: Configuring curl to use custome certs from {} by setting CURL_CA_BUNDLE".format(
                     certs
                 )
             )
             curl.add_default_env("CURL_CA_BUNDLE", certs)
         else:
-            tty.debug(dbg_msg_no_ssl_cert_config)
+            tty.debug(
+                "CURL config:ssl_certs resolves to {}. This is not a file so default certs will be used.".format(
+                    certs
+                )
+            )
     tty.debug(dbg_msg_no_ssl_cert_config)
-
-
-def curl_runtime_flag_for_ssl_file():
-    """
-    configure curl to use custom certs from a file at run time
-    see: https://curl.se/docs/sslcerts.html item 2
-    """
-    custom_cert_var = spack.config.get("config:ssl_certs")
-    if custom_cert_var:
-        # custom certs will be a location, so expand env variables, paths etc
-        certs = spack.util.path.canonicalize_path(custom_cert_var)
-        tty.debug("Looking for custom SSL certs")
-        if os.path.isfile(certs):
-            tty.debug("Custom SSL certs file found at {}".format(certs))
-            return ["--cafile", certs]
-        else:
-            tty.debug("config:ssl_certs does not resolve to a file for curl execution")
-            return None
-    else:
-        tty.debug(dbg_msg_no_ssl_cert_config)
-        return None
+    return curl
 
 
 def _urlopen():
@@ -293,7 +277,6 @@ def base_curl_fetch_args(url, timeout=0):
 
         * config:connect_timeout (int): connection timeout
         * config:verify_ssl (str): Perform SSL verification
-        * config:ssl_certs (str): If this resolve to a valid file append to curl call
 
     Arguments:
         url (str): URL whose contents will be fetched
@@ -311,10 +294,6 @@ def base_curl_fetch_args(url, timeout=0):
     ]
     if not spack.config.get("config:verify_ssl"):
         curl_args.append("-k")
-
-    ssl_cert_flags = curl_runtime_flag_for_ssl_file()
-    if ssl_cert_flags:
-        curl_args.extend(ssl_cert_flags)
 
     if sys.stdout.isatty() and tty.msg_enabled():
         curl_args.append("-#")  # status bar when using a tty
@@ -364,8 +343,7 @@ def _curl(curl=None):
         except CommandNotFoundError as exc:
             tty.error(str(exc))
             raise spack.error.FetchError("Missing required curl fetch method")
-    append_curl_env_for_ssl_cert_dir(curl)
-    return curl
+    return append_curl_env_for_ssl_certs(curl)
 
 
 def fetch_url_text(url, curl=None, dest_dir="."):
