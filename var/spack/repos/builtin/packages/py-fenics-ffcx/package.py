@@ -20,9 +20,15 @@ class PyFenicsFfcx(PythonPackage):
     version("0.7.0", sha256="7f3c3ca91d63ce7831d37799cc19d0551bdcd275bdfa4c099711679533dd1c71")
     version("0.6.0", sha256="076fad61d406afffd41019ae1abf6da3f76406c035c772abad2156127667980e")
     version(
-        "0.5.0.post0", sha256="039908c9998b51ba53e5deb3a97016062c262f0a4285218644304f7d3cd35882"
+        "0.5.0.post0",
+        sha256="039908c9998b51ba53e5deb3a97016062c262f0a4285218644304f7d3cd35882",
+        deprecated=True,
     )
-    version("0.4.2", sha256="3be6eef064d6ef907245db5b6cc15d4e603762e68b76e53e099935ca91ef1ee4")
+    version(
+        "0.4.2",
+        sha256="3be6eef064d6ef907245db5b6cc15d4e603762e68b76e53e099935ca91ef1ee4",
+        deprecated=True,
+    )
 
     depends_on("python@3.8:", when="@0.7:", type=("build", "run"))
     depends_on("py-setuptools@62:", when="@0.7:", type="build")

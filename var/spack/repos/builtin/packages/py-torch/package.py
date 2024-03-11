@@ -26,6 +26,7 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
     license("BSD-3-Clause")
 
     version("main", branch="main")
+    version("2.2.1", tag="v2.2.1", commit="6c8c5ad5eaf47a62fafbb4a2747198cbffbf1ff0")
     version("2.2.0", tag="v2.2.0", commit="8ac9b20d4b090c213799e81acf48a55ea8d437d6")
     version("2.1.2", tag="v2.1.2", commit="a8e7c98cb95ff97bb30a728c6b2a1ce6bff946eb")
     version("2.1.1", tag="v2.1.1", commit="4c55dc50355d5e923642c59ad2a23d6ad54711e7")
@@ -188,9 +189,8 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
     # depends_on("cpuinfo@2022-08-19", when="@1.13:2.0")
     # depends_on("cpuinfo@2020-12-17", when="@1.8:1.12")
     # depends_on("cpuinfo@2020-06-11", when="@1.6:1.7")
-    # https://github.com/shibatch/sleef/issues/474
-    # depends_on("sleef@3.5.1_2020-12-22", when="@1.8:")
-    # depends_on("sleef@3.4.0_2019-07-30", when="@1.6:1.7")
+    depends_on("sleef@3.5.1_2020-12-22", when="@1.8:")
+    depends_on("sleef@3.4.0_2019-07-30", when="@1.6:1.7")
     depends_on("fp16@2020-05-14", when="@1.6:")
     depends_on("pthreadpool@2023-08-29", when="@2.2:")
     depends_on("pthreadpool@2021-04-13", when="@1.9:2.1")
@@ -626,8 +626,7 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
             # env.set("USE_SYSTEM_LIBS", "ON")
             # https://github.com/pytorch/pytorch/issues/60329
             # env.set("USE_SYSTEM_CPUINFO", "ON")
-            # https://github.com/shibatch/sleef/issues/474
-            # env.set("USE_SYSTEM_SLEEF", "ON")
+            env.set("USE_SYSTEM_SLEEF", "ON")
             env.set("USE_SYSTEM_GLOO", "ON")
             env.set("USE_SYSTEM_FP16", "ON")
             env.set("USE_SYSTEM_PTHREADPOOL", "ON")

@@ -408,6 +408,10 @@ class Tau(Package):
     makefile_inc_test = join_path("include", "Makefile")
     cuda_test = join_path("examples", "gpu", "cuda", "dataElem_um")
     level_zero_test = join_path("examples", "gpu", "oneapi", "complex_mult")
+    rocm_test = join_path("examples", "gpu", "hip", "vectorAdd")
+    syscall_test = join_path("examples", "syscall")
+    ompt_test = join_path("examples", "openmp", "c++")
+    python_test = join_path("examples", "python")
 
     @run_after("install")
     def setup_build_tests(self):
@@ -422,6 +426,14 @@ class Tau(Package):
             self.cache_extra_test_sources(self.cuda_test)
         if "+level_zero" in self.spec:
             self.cache_extra_test_sources(self.level_zero_test)
+        if "+rocm" in self.spec:
+            self.cache_extra_test_sources(self.rocm_test)
+        if "+syscall" in self.spec:
+            self.cache_extra_test_sources(self.syscall_test)
+        if "+ompt" in self.spec:
+            self.cache_extra_test_sources(self.ompt_test)
+        if "+python" in self.spec:
+            self.cache_extra_test_sources(self.python_test)
 
     def _run_dyninst_test(self, test_dir):
         dyn_dir = join_path(test_dir, self.dyninst_test)
@@ -457,6 +469,7 @@ class Tau(Package):
         self, main_test_dir, test_dir, test_name, test_exe, tau_exec_flags=[], use_tau_exec=False
     ):
         inst_test_dir = join_path(main_test_dir, test_dir)
+        print(inst_test_dir)
         test_description = "Build {} test code".format(test_name)
         self.run_test("make", ["all"], [], 0, False, test_description, False, inst_test_dir)
         if "+mpi" in self.spec:
@@ -496,12 +509,44 @@ class Tau(Package):
             inst_test_dir,
         )
 
+    def _run_python_test(self, test_dir):
+        python_dir = join_path(test_dir, self.python_test)
+        flags = "serial"
+        if "+mpi" in self.spec:
+            flags = "mpi"
+        self.run_test(
+            "tau_python",
+            ["-T", flags, "firstprime.py"],
+            [],
+            0,
+            False,
+            "Pyhon example",
+            False,
+            python_dir,
+        )
+        self.run_test(
+            "pprof",
+            [],
+            [],
+            0,
+            False,
+            "Run pprof profile analysis tool on profile output",
+            False,
+            python_dir,
+        )
+
     def test(self):
         test_dir = self.test_suite.current_test_cache_dir
         # Run mm test program pulled from the build
-        self._run_tau_test(test_dir, self.matmult_test, "matrix multiplication", "matmult")
+        if "+ompt" in self.spec:
+            tau_exec_flags = ["-ompt"]
+            self._run_tau_test(test_dir, self.ompt_test, "OMPT example", "mandel", tau_exec_flags)
+        else:
+            self._run_tau_test(test_dir, self.matmult_test, "matrix multiplication", "matmult")
         if "+dyninst" in self.spec:
             self._run_dyninst_test(test_dir)
+        if "+python" in self.spec:
+            self._run_python_test(test_dir)
         if "+cuda" in self.spec:
             tau_exec_flags = ["-cupti"]
             self._run_tau_test(
@@ -519,6 +564,26 @@ class Tau(Package):
                 self.level_zero_test,
                 "Level Zero example",
                 "complex_mult.exe",
+                tau_exec_flags,
+                use_tau_exec=True,
+            )
+        if "+rocm" in self.spec and ("+rocprofiler" in self.spec or "+roctracer" in self.spec):
+            tau_exec_flags = ["-rocm"]
+            self._run_tau_test(
+                test_dir,
+                self.rocm_test,
+                "Rocm example",
+                "vectoradd_hip.exe",
+                tau_exec_flags,
+                use_tau_exec=True,
+            )
+        if "+syscall" in self.spec:
+            tau_exec_flags = ["-syscall"]
+            self._run_tau_test(
+                test_dir,
+                self.syscall_test,
+                "Syscall example",
+                "syscall_test",
                 tau_exec_flags,
                 use_tau_exec=True,
             )

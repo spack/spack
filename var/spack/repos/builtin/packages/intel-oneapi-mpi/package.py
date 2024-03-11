@@ -168,12 +168,6 @@ class IntelOneapiMpi(IntelOneApiLibraryPackage):
         env.set("I_MPI_ROOT", self.component_prefix)
 
     @property
-    def headers(self):
-        return self.header_directories(
-            [self.component_prefix.include, self.component_prefix.include.ilp64]
-        )
-
-    @property
     def libs(self):
         libs = []
         if "+ilp64" in self.spec:

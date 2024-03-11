@@ -13,9 +13,10 @@ spack:
       - "%oneapi"
       providers:
         blas: [openblas]
-        mpi: [mpich]
         tbb: [intel-tbb]
       variants: +mpi
+    gl:
+      require: osmesa
     elfutils:
       variants: ~nls
     gcc-runtime:
@@ -38,14 +39,10 @@ spack:
         +teko +tempus +tpetra +trilinoscouplings +zoltan +zoltan2 +superlu-dist gotype=long_long
     xz:
       variants: +pic
-    mesa:
-      version: [21.3.8]
     mpi:
       require: 'mpich@4:'
     mpich:
       require: '~wrapperrpath ~hwloc'
-    py-cryptography:
-      require: '@38.0.1'
     unzip:
       require: '%gcc'
     binutils:
@@ -63,8 +60,6 @@ spack:
       require: '%gcc'
     openssh:
       require: '%gcc'
-    libffi:
-      require: "@3.4.4"
     dyninst:
       require: "%gcc"
     bison:
@@ -108,6 +103,7 @@ spack:
   - hypre
   - kokkos +openmp
   - kokkos-kernels +openmp
+  - laghos
   - lammps
   - lbann
   - legion
@@ -193,9 +189,31 @@ spack:
   # - upcxx                                                   # upcxx: /opt/intel/oneapi/mpi/2021.10.0//libfabric/bin/fi_info: error while loading shared libraries: libfabric.so.1: cannot open shared object file: No such file or directory
   # --
   # - bricks ~cuda                                            # bricks: /opt/intel/oneapi/compiler/2024.0/bin/sycl-post-link: error while loading shared libraries: libonnxruntime.1.12.22.721.so: cannot open shared object file: No such file or directory
+  # - glvis ^llvm                                             # glvis: https://github.com/spack/spack/issues/42839
   # - pdt                                                     # pdt: pdbType.cc:193:21: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
   # - quantum-espresso                                        # quantum-espresso@7.2 /i3fqdx5: warning: <unknown>:0:0: loop not unroll-and-jammed: the optimizer was unable to perform the requested transformation; the transformation might be disabled or specified as part of an unsupported transformation ordering
   # - tau +mpi +python +syscall                               # pdt: pdbType.cc:193:21: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
+
+  # PYTHON PACKAGES
+  - opencv +python3
+  - py-jupyterlab
+  - py-notebook
+  - py-numpy
+  - py-openai
+  - py-pandas
+  - py-plotly
+  - py-pooch
+  - py-pytest
+  - py-scikit-learn
+  - py-scipy
+  - py-seaborn
+  - py-mpi4py
+  - py-numba
+  # - py-horovod      # error
+  # - py-jax          # error
+  # - py-matplotlib   # error
+  # - py-tensorflow   # error
+  # - py-torch        # error
 
   # GPU
   - amrex +sycl

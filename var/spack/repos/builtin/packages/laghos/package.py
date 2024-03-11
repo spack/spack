@@ -44,6 +44,13 @@ class Laghos(MakefilePackage):
     # Recommended mfem version for laghos v1.x is: ^mfem@3.3.1-laghos-v1.0
     depends_on("mfem@3.3.1-laghos-v1.0", when="@1.0,1.1")
 
+    # Replace MPI_Session
+    patch(
+        "https://github.com/CEED/Laghos/commit/c800883ab2741c8c3b99486e7d8ddd8e53a7cb95.patch?full_index=1",
+        sha256="e783a71c3cb36886eb539c0f7ac622883ed5caf7ccae597d545d48eaf051d15d",
+        when="@3.1 ^mfem@4.4:",
+    )
+
     @property
     def build_targets(self):
         targets = []

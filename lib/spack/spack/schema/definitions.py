@@ -10,7 +10,7 @@
 """
 from typing import Any, Dict
 
-import spack.schema
+from .spec_list import spec_list_schema
 
 #: Properties for inclusion in other schemas
 properties: Dict[str, Any] = {
@@ -20,7 +20,7 @@ properties: Dict[str, Any] = {
         "items": {
             "type": "object",
             "properties": {"when": {"type": "string"}},
-            "patternProperties": {r"^(?!when$)\w*": spack.schema.spec_list_schema},
+            "patternProperties": {r"^(?!when$)\w*": spec_list_schema},
         },
     }
 }
