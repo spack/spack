@@ -253,12 +253,27 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
     depends_on("curl", when="+gcp")
     # depends_on('computecpp', when='+opencl+computecpp')
     # depends_on('trisycl',    when='+opencl~computepp')
-    depends_on("cuda@:10.2", when="+cuda @:2.3")
-    depends_on("cuda@:11.4", when="+cuda @2.4:2.7")
-    # avoid problem fixed by commit a76f797b9cd4b9b15bec4c503b16236a804f676f
-    depends_on("cuda@:11.7.0", when="+cuda @:2.9")
-    depends_on("cudnn", when="+cuda")
-    depends_on("cudnn@:7", when="@:2.2 +cuda")
+    with when("+cuda"):
+        # https://www.tensorflow.org/install/source#gpu
+        depends_on("cuda@12.3:", when="@2.16:")
+        depends_on("cuda@12.2:", when="@2.15:")
+        depends_on("cuda@11.8:", when="@2.12:")
+        depends_on("cuda@11.2:", when="@2.5:")
+        depends_on("cuda@11.0:", when="@2.4:")
+        depends_on("cuda@10.1:", when="@2.1:")
+
+        depends_on("cuda@:11.7.0", when="@:2.9")
+        depends_on("cuda@:11.4", when="@2.4:2.7")
+        depends_on("cuda@:10.2", when="@:2.3")
+
+        depends_on("cudnn@8.9:", when="@2.15:")
+        depends_on("cudnn@8.7:", when="@2.14:")
+        depends_on("cudnn@8.6:", when="@2.12:")
+        depends_on("cudnn@8.1:", when="@2.5:")
+        depends_on("cudnn@8.0:", when="@2.4:")
+        depends_on("cudnn@7.6:", when="@2.1:")
+
+        depends_on("cudnn@:7", when="@:2.2")
     # depends_on('tensorrt', when='+tensorrt')
     depends_on("nccl", when="+nccl+cuda")
     depends_on("mpi", when="+mpi")
