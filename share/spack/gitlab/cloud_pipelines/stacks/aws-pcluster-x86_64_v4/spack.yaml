@@ -4,23 +4,11 @@ spack:
   definitions:
 
   - optimized_configs:
-    # - gromacs
-    # - lammps
-    # - mpas-model
-    # - openfoam
     - palace target=x86_64_v4
     - palace target=x86_64_v3
-    # - py-devito
-    # - quantum-espresso
-    # - wrf
-
-  - optimized_libs:
-    - mpich
-    - openmpi
 
   specs:
   - $optimized_configs
-  # - $optimized_libs
 
   ci:
     pipeline-gen:

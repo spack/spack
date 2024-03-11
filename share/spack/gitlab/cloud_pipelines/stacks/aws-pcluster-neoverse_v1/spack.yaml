@@ -5,22 +5,9 @@ spack:
   - optimized_configs:
     - gromacs target=neoverse_v1
     - gromacs target=neoverse_n1
-    # - lammps
-    # - mpas-model
-    # - openfoam
-    # Spack cannot read cflags="", re-enable when https://github.com/spack/spack/issues/39671 is fixed
-    # - palace
-    # - py-devito
-    # - quantum-espresso
-    # - wrf
-
-  - optimized_libs:
-    - mpich
-    - openmpi
 
   specs:
   - $optimized_configs
-  # - $optimized_libs
 
   ci:
     pipeline-gen:
