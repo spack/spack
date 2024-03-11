@@ -73,6 +73,7 @@ spack:
   - cabana
   - chai ~benchmarks ~tests
   - conduit
+  # - cp2k +mpi         # cp2k: Error: Type mismatch between actual argument at (1) and actual argument at (2) (LOGICAL(4)/COMPLEX(4)).
   - datatransferkit
   - flecsi
   - fortrilinos
