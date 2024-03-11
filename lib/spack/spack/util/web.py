@@ -60,7 +60,10 @@ class SpackHTTPDefaultErrorHandler(urllib.request.HTTPDefaultErrorHandler):
         raise DetailedHTTPError(req, code, msg, hdrs, fp)
 
 
-dbg_msg_no_ssl_cert_config = "config:ssl_certs not in configuration. Default cert configuation and environment will be used."
+dbg_msg_no_ssl_cert_config = (
+    "config:ssl_certs not in configuration. "
+    "Default cert configuation and environment will be used."
+)
 
 
 def urllib_ssl_cert_handler():
@@ -98,16 +101,15 @@ def append_curl_env_for_ssl_certs(curl):
         tty.debug("CURL: Looking for custom SSL certs file at {}".format(certs))
         if os.path.isfile(certs):
             tty.debug(
-                "CURL: Configuring curl to use custome certs from {} by setting CURL_CA_BUNDLE".format(
-                    certs
-                )
+                "CURL: Configuring curl to use custom"
+                " certs from {} by setting "
+                "CURL_CA_BUNDLE".format(certs)
             )
             curl.add_default_env("CURL_CA_BUNDLE", certs)
         else:
             tty.debug(
-                "CURL config:ssl_certs resolves to {}. This is not a file so default certs will be used.".format(
-                    certs
-                )
+                "CURL config:ssl_certs "
+                "resolves to {}. This is not a file so default certs will be used.".format(certs)
             )
     tty.debug(dbg_msg_no_ssl_cert_config)
     return curl
