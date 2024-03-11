@@ -69,6 +69,7 @@ class Geant4(CMakePackage):
     variant("qt", default=False, description="Enable Qt support")
     variant("python", default=False, description="Enable Python bindings", when="@10.6.2:11.0")
     variant("tbb", default=False, description="Use TBB as a tasking backend", when="@11:")
+    variant("timemory", default=False, description="Use TiMemory for profiling", when="@9.5:")
     variant("vtk", default=False, description="Enable VTK support", when="@11:")
 
     depends_on("cmake@3.16:", type="build", when="@11.0.0:")
@@ -100,6 +101,7 @@ class Geant4(CMakePackage):
     depends_on("zlib-api")
 
     depends_on("tbb", when="+tbb")
+    depends_on("timemory@3.2:", when="+timemory")
     depends_on("vtk@8.2:", when="+vtk")
 
     # Python, with boost requirement dealt with in cxxstd section
@@ -261,6 +263,9 @@ class Geant4(CMakePackage):
             # Locked at global-dynamic to allow use cases that load the
             # geant4 libs at application runtime
             options.append("-DGEANT4_BUILD_TLS_MODEL=global-dynamic")
+
+        # Profiling
+        options.append(self.define_from_variant("GEANT4_USE_TIMEMORY", "timemory"))
 
         # Never install the data with geant4, but point to the dependent
         # geant4-data's install directory to correctly set up the
