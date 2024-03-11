@@ -25,6 +25,7 @@ class PyPytestPylint(PythonPackage):
     depends_on("python@3.7:", type=("build", "run"))
 
     # install_requires
-    depends_on("py-pytest", type=("build", "run"))
-    depends_on("py-pylint", type=("build", "run"))
-    depends_on("py-tomli", type=("build", "run"))
+    depends_on("py-setuptools@68.0.0:", type=("build"))
+    depends_on("py-pytest@7.0.0:", type=("build", "run"))
+    depends_on("py-pylint@2.15.0:", type=("build", "run"))
+    depends_on("py-tomli@1.1.0:", type=("build", "run"))
