@@ -16,10 +16,10 @@ import spack.schema.gitlab_ci  # DEPRECATED
 import spack.schema.merged
 import spack.schema.projections
 
+from .spec_list import spec_list_schema
+
 #: Top level key in a manifest file
 TOP_LEVEL_KEY = "spack"
-
-projections_scheme = spack.schema.projections.properties["projections"]
 
 properties: Dict[str, Any] = {
     "spack": {
@@ -34,7 +34,7 @@ properties: Dict[str, Any] = {
             # extra environment schema properties
             {
                 "include": {"type": "array", "default": [], "items": {"type": "string"}},
-                "specs": spack.schema.spec_list_schema,
+                "specs": spec_list_schema,
             },
         ),
     }

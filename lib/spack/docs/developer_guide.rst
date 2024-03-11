@@ -357,91 +357,23 @@ If there is a hook that you would like and is missing, you can propose to add a 
 ``pre_install(spec)``
 """""""""""""""""""""
 
-A ``pre_install`` hook is run within an install subprocess, directly before
-the install starts. It expects a single argument of a spec, and is run in
-a multiprocessing subprocess. Note that if you see ``pre_install`` functions associated with packages these are not hooks
-as we have defined them here, but rather callback functions associated with
-a package install.
+A ``pre_install`` hook is run within the install subprocess, directly before the install starts.
+It expects a single argument of a spec.
 
 
-""""""""""""""""""""""
-``post_install(spec)``
-""""""""""""""""""""""
+"""""""""""""""""""""""""""""""""""""
+``post_install(spec, explicit=None)``
+"""""""""""""""""""""""""""""""""""""
 
-A ``post_install`` hook is run within an install subprocess, directly after
-the install finishes, but before the build stage is removed. If you
-write one of these hooks, you should expect it to accept a spec as the only
-argument. This is run in a multiprocessing subprocess. This ``post_install`` is
-also seen in packages, but in this context not related to the hooks described
-here.
+A ``post_install`` hook is run within the install subprocess, directly after the install finishes,
+but before the build stage is removed and the spec is registered in the database. It expects two
+arguments: spec and an optional boolean indicating whether this spec is being installed explicitly.
 
+""""""""""""""""""""""""""""""""""""""""""""""""""""
+``pre_uninstall(spec)`` and ``post_uninstall(spec)``
+""""""""""""""""""""""""""""""""""""""""""""""""""""
 
-""""""""""""""""""""""""""
-``on_install_start(spec)``
-""""""""""""""""""""""""""
-
-This hook is run at the beginning of ``lib/spack/spack/installer.py``,
-in the install function of a ``PackageInstaller``,
-and importantly is not part of a build process, but before it. This is when
-we have just newly grabbed the task, and are preparing to install. If you
-write a hook of this type, you should provide the spec to it.
-
-.. code-block:: python
-
-    def on_install_start(spec):
-        """On start of an install, we want to...
-        """
-        print('on_install_start')
-
-
-""""""""""""""""""""""""""""
-``on_install_success(spec)``
-""""""""""""""""""""""""""""
-
-This hook is run on a successful install, and is also run inside the build
-process, akin to ``post_install``. The main difference is that this hook
-is run outside of the context of the stage directory, meaning after the
-build stage has been removed and the user is alerted that the install was
-successful. If you need to write a hook that is run on success of a particular
-phase, you should use ``on_phase_success``.
-
-""""""""""""""""""""""""""""
-``on_install_failure(spec)``
-""""""""""""""""""""""""""""
-
-This hook is run given an install failure that happens outside of the build
-subprocess, but somewhere in ``installer.py`` when something else goes wrong.
-If you need to write a hook that is relevant to a failure within a build
-process, you would want to instead use ``on_phase_failure``.
-
-
-"""""""""""""""""""""""""""
-``on_install_cancel(spec)``
-"""""""""""""""""""""""""""
-
-The same, but triggered if a spec install is cancelled for any reason.
-
-
-"""""""""""""""""""""""""""""""""""""""""""""""
-``on_phase_success(pkg, phase_name, log_file)``
-"""""""""""""""""""""""""""""""""""""""""""""""
-
-This hook is run within the install subprocess, and specifically when a phase
-successfully finishes. Since we are interested in the package, the name of
-the phase, and any output from it, we require:
-
- - **pkg**: the package variable, which also has the attached spec at ``pkg.spec``
- - **phase_name**: the name of the phase that was successful (e.g., configure)
- - **log_file**: the path to the file with output, in case you need to inspect or otherwise interact with it.
-
-"""""""""""""""""""""""""""""""""""""""""""""
-``on_phase_error(pkg, phase_name, log_file)``
-"""""""""""""""""""""""""""""""""""""""""""""
-
-In the case of an error during a phase, we might want to trigger some event
-with a hook, and this is the purpose of this particular hook. Akin to
-``on_phase_success`` we require the same variables - the package that failed,
-the name of the phase, and the log file where we might find errors.
+These hooks are currently used for cleaning up module files after uninstall.
 
 
 ^^^^^^^^^^^^^^^^^^^^^^

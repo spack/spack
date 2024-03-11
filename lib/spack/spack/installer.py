@@ -1705,7 +1705,6 @@ class PackageInstaller:
         except spack.build_environment.StopPhase as e:
             # A StopPhase exception means that do_install was asked to
             # stop early from clients, and is not an error at this point
-            spack.hooks.on_install_failure(task.request.pkg.spec)
             pid = f"{self.pid}: " if tty.show_pid() else ""
             tty.debug(f"{pid}{str(e)}")
             tty.debug(f"Package stage directory: {pkg.stage.source_path}")
@@ -2011,7 +2010,6 @@ class PackageInstaller:
             if task is None:
                 continue
 
-            spack.hooks.on_install_start(task.request.pkg.spec)
             install_args = task.request.install_args
             keep_prefix = install_args.get("keep_prefix")
 
@@ -2037,9 +2035,6 @@ class PackageInstaller:
                     tty.warn(f"{pkg_id} does NOT actually have any uninstalled deps left")
                 dep_str = "dependencies" if task.priority > 1 else "dependency"
 
-                # Hook to indicate task failure, but without an exception
-                spack.hooks.on_install_failure(task.request.pkg.spec)
-
                 raise InstallError(
                     f"Cannot proceed with {pkg_id}: {task.priority} uninstalled "
                     f"{dep_str}: {','.join(task.uninstalled_deps)}",
@@ -2061,11 +2056,6 @@ class PackageInstaller:
                 term_status.clear()
                 tty.warn(f"{pkg_id} failed to install")
                 self._update_failed(task)
-
-                # Mark that the package failed
-                # TODO: this should also be for the task.pkg, but we don't
-                # model transitive yet.
-                spack.hooks.on_install_failure(task.request.pkg.spec)
 
                 if self.fail_fast:
                     raise InstallError(fail_fast_err, pkg=pkg)
@@ -2169,7 +2159,6 @@ class PackageInstaller:
                 tty.error(
                     f"Failed to install {pkg.name} due to " f"{exc.__class__.__name__}: {str(exc)}"
                 )
-                spack.hooks.on_install_cancel(task.request.pkg.spec)
                 raise
 
             except binary_distribution.NoChecksumException as exc:
@@ -2188,7 +2177,6 @@ class PackageInstaller:
 
             except (Exception, SystemExit) as exc:
                 self._update_failed(task, True, exc)
-                spack.hooks.on_install_failure(task.request.pkg.spec)
 
                 # Best effort installs suppress the exception and mark the
                 # package as a failure.
@@ -2372,9 +2360,6 @@ class BuildProcessInstaller:
         _print_timer(pre=self.pre, pkg_id=self.pkg_id, timer=self.timer)
         _print_installed_pkg(self.pkg.prefix)
 
-        # Send final status that install is successful
-        spack.hooks.on_install_success(self.pkg.spec)
-
         # preserve verbosity across runs
         return self.echo
 
@@ -2453,15 +2438,10 @@ class BuildProcessInstaller:
                         # Catch any errors to report to logging
                         self.timer.start(phase_fn.name)
                         phase_fn.execute()
-                        spack.hooks.on_phase_success(pkg, phase_fn.name, log_file)
                         self.timer.stop(phase_fn.name)
 
                 except BaseException:
                     combine_phase_logs(pkg.phase_log_files, pkg.log_path)
-                    spack.hooks.on_phase_error(pkg, phase_fn.name, log_file)
-
-                    # phase error indicates install error
-                    spack.hooks.on_install_failure(pkg.spec)
                     raise
 
                 # We assume loggers share echo True/False

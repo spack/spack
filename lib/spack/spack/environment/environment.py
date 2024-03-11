@@ -626,14 +626,13 @@ class ViewDescriptor:
             new: If a string, create a FilesystemView rooted at that path. Default None. This
                 should only be used to regenerate the view, and cannot be used to access specs.
         """
-        root = new if new else self._current_root
-        if not root:
+        path = new if new else self._current_root
+        if not path:
             # This can only be hit if we write a future bug
             raise SpackEnvironmentViewError(
-                "Attempting to get nonexistent view from environment. "
-                f"View root is at {self.root}"
+                f"Attempting to get nonexistent view from environment. View root is at {self.root}"
             )
-        return self._view(root)
+        return self._view(path)
 
     def _view(self, root: str) -> SimpleFilesystemView:
         """Returns a view object for a given root dir."""
@@ -678,7 +677,9 @@ class ViewDescriptor:
 
         # Filter selected, installed specs
         with spack.store.STORE.db.read_transaction():
-            return [s for s in specs if s in self and s.installed]
+            result = [s for s in specs if s in self and s.installed]
+
+        return self._exclude_duplicate_runtimes(result)
 
     def regenerate(self, concrete_roots: List[Spec]) -> None:
         specs = self.specs_for_view(concrete_roots)
@@ -764,6 +765,16 @@ class ViewDescriptor:
                 msg = "Failed to remove old view at %s\n" % old_root
                 msg += str(e)
                 tty.warn(msg)
+
+    def _exclude_duplicate_runtimes(self, nodes):
+        all_runtimes = spack.repo.PATH.packages_with_tags("runtime")
+        runtimes_by_name = {}
+        for s in nodes:
+            if s.name not in all_runtimes:
+                continue
+            current_runtime = runtimes_by_name.get(s.name, s)
+            runtimes_by_name[s.name] = max(current_runtime, s, key=lambda x: x.version)
+        return [x for x in nodes if x.name not in all_runtimes or runtimes_by_name[x.name] == x]
 
 
 def _create_environment(path):
@@ -1485,44 +1496,6 @@ class Environment:
         ]
         return results
 
-    def concretize_and_add(self, user_spec, concrete_spec=None, tests=False):
-        """Concretize and add a single spec to the environment.
-
-        Concretize the provided ``user_spec`` and add it along with the
-        concretized result to the environment. If the given ``user_spec`` was
-        already present in the environment, this does not add a duplicate.
-        The concretized spec will be added unless the ``user_spec`` was
-        already present and an associated concrete spec was already present.
-
-        Args:
-            concrete_spec: if provided, then it is assumed that it is the
-                result of concretizing the provided ``user_spec``
-        """
-        if self.unify is True:
-            msg = (
-                "cannot install a single spec in an environment that is "
-                "configured to be concretized together. Run instead:\n\n"
-                "    $ spack add <spec>\n"
-                "    $ spack install\n"
-            )
-            raise SpackEnvironmentError(msg)
-
-        spec = Spec(user_spec)
-
-        if self.add(spec):
-            concrete = concrete_spec or spec.concretized(tests=tests)
-            self._add_concrete_spec(spec, concrete)
-        else:
-            # spec might be in the user_specs, but not installed.
-            # TODO: Redo name-based comparison for old style envs
-            spec = next(s for s in self.user_specs if s.satisfies(user_spec))
-            concrete = self.specs_by_hash.get(spec.dag_hash())
-            if not concrete:
-                concrete = spec.concretized(tests=tests)
-                self._add_concrete_spec(spec, concrete)
-
-        return concrete
-
     @property
     def default_view(self):
         if not self.has_view(default_view_name):
@@ -2090,7 +2063,6 @@ class Environment:
 
         if regenerate:
             self.regenerate_views()
-            spack.hooks.post_env_write(self)
 
         self.new_specs.clear()
 
