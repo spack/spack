@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -40,11 +40,6 @@ def format_os_path(path: str, mode: int = Path.unix) -> str:
 def convert_to_posix_path(path: str) -> str:
     """Converts the input path to POSIX style."""
     return format_os_path(path, mode=Path.unix)
-
-
-def convert_to_windows_path(path: str) -> str:
-    """Converts the input path to Windows style."""
-    return format_os_path(path, mode=Path.windows)
 
 
 def convert_to_platform_path(path: str) -> str:

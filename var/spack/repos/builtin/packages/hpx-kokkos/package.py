@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class HpxKokkos(CMakePackage, CudaPackage, ROCmPackage):
     url = "https://github.com/STEllAR-GROUP/hpx-kokkos/archive/0.0.0.tar.gz"
     git = "https://github.com/STEllAR-GROUP/hpx-kokkos.git"
     maintainers("G-071", "msimberg")
+
+    license("BSL-1.0")
 
     version("master", branch="master")
     version("0.4.0", sha256="dafef55521cf4bf7ab28ebad546ea1d3fb83fac3a9932e292db4ab3666cd833f")

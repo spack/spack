@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class OclIcd(AutotoolsPackage):
     homepage = "https://github.com/OCL-dev/ocl-icd"
     url = "https://github.com/OCL-dev/ocl-icd/archive/v2.2.12.tar.gz"
     maintainers("lorddavidiii")
+
+    license("BSD-2-Clause")
 
     version("2.3.1", sha256="a32b67c2d52ffbaf490be9fc18b46428ab807ab11eff7664d7ff75e06cfafd6d")
     version("2.3.0", sha256="469f592ccd9b0547fb7212b17e1553b203d178634c20d3416640c0209e3ddd50")

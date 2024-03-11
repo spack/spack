@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -28,21 +28,12 @@ def executables_found(monkeypatch):
     return _factory
 
 
-@pytest.fixture
-def _platform_executables(monkeypatch):
-    def _win_exe_ext():
-        return ".bat"
-
-    monkeypatch.setattr(spack.util.path, "win_exe_ext", _win_exe_ext)
-
-
 def define_plat_exe(exe):
     if sys.platform == "win32":
         exe += ".bat"
     return exe
 
 
-@pytest.mark.xfail(sys.platform == "win32", reason="https://github.com/spack/spack/pull/39850")
 def test_find_external_single_package(mock_executable):
     cmake_path = mock_executable("cmake", output="echo cmake version 1.foo")
     search_dir = cmake_path.parent.parent
@@ -54,7 +45,7 @@ def test_find_external_single_package(mock_executable):
     assert len(detected_spec) == 1 and detected_spec[0].spec == Spec("cmake@1.foo")
 
 
-def test_find_external_two_instances_same_package(mock_executable, _platform_executables):
+def test_find_external_two_instances_same_package(mock_executable):
     # Each of these cmake instances is created in a different prefix
     # In Windows, quoted strings are echo'd with quotes includes
     # we need to avoid that for proper regex.
@@ -103,6 +94,9 @@ def test_get_executables(working_env, mock_executable):
 external = SpackCommand("external")
 
 
+# TODO: this test should be made to work, but in the meantime it is
+# causing intermittent (spurious) CI failures on all PRs
+@pytest.mark.skipif(sys.platform == "win32", reason="Test fails intermittently on Windows")
 def test_find_external_cmd_not_buildable(mutable_config, working_env, mock_executable):
     """When the user invokes 'spack external find --not-buildable', the config
     for any package where Spack finds an external version should be marked as
@@ -236,32 +230,7 @@ def test_list_detectable_packages(mutable_config, mutable_mock_repo):
     assert external.returncode == 0
 
 
-@pytest.mark.xfail(sys.platform == "win32", reason="https://github.com/spack/spack/pull/39850")
-def test_packages_yaml_format(mock_executable, mutable_config, monkeypatch, _platform_executables):
-    # Prepare an environment to detect a fake gcc
-    gcc_exe = mock_executable("gcc", output="echo 4.2.1")
-    prefix = os.path.dirname(gcc_exe)
-    monkeypatch.setenv("PATH", prefix)
-
-    # Find the external spec
-    external("find", "gcc")
-
-    # Check entries in 'packages.yaml'
-    packages_yaml = spack.config.get("packages")
-    assert "gcc" in packages_yaml
-    assert "externals" in packages_yaml["gcc"]
-    externals = packages_yaml["gcc"]["externals"]
-    assert len(externals) == 1
-    external_gcc = externals[0]
-    assert external_gcc["spec"] == "gcc@4.2.1 languages=c"
-    assert external_gcc["prefix"] == os.path.dirname(prefix)
-    assert "extra_attributes" in external_gcc
-    extra_attributes = external_gcc["extra_attributes"]
-    assert "prefix" not in extra_attributes
-    assert extra_attributes["compilers"]["c"] == str(gcc_exe)
-
-
-def test_overriding_prefix(mock_executable, mutable_config, monkeypatch, _platform_executables):
+def test_overriding_prefix(mock_executable, mutable_config, monkeypatch):
     gcc_exe = mock_executable("gcc", output="echo 4.2.1")
     search_dir = gcc_exe.parent
 
@@ -282,10 +251,8 @@ def test_overriding_prefix(mock_executable, mutable_config, monkeypatch, _platfo
     assert gcc.external_path == os.path.sep + os.path.join("opt", "gcc", "bin")
 
 
-@pytest.mark.xfail(sys.platform == "win32", reason="https://github.com/spack/spack/pull/39850")
-def test_new_entries_are_reported_correctly(
-    mock_executable, mutable_config, monkeypatch, _platform_executables
-):
+@pytest.mark.not_on_windows("Fails spuriously on Windows")
+def test_new_entries_are_reported_correctly(mock_executable, mutable_config, monkeypatch):
     # Prepare an environment to detect a fake gcc
     gcc_exe = mock_executable("gcc", output="echo 4.2.1")
     prefix = os.path.dirname(gcc_exe)

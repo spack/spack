@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -26,6 +26,7 @@ class Julia(MakefilePackage):
     maintainers("vchuravy", "haampie", "giordano")
 
     version("master", branch="master")
+    version("1.9.3", sha256="8d7dbd8c90e71179e53838cdbe24ff40779a90d7360e29766609ed90d982081d")
     version("1.9.2", sha256="015438875d591372b80b09d01ba899657a6517b7c72ed41222298fef9d4ad86b")
     version("1.9.0", sha256="48f4c8a7d5f33d0bc6ce24226df20ab49e385c2d0c3767ec8dfdb449602095b2")
     version("1.8.5", sha256="d31026cc6b275d14abce26fd9fd5b4552ac9d2ce8bde4291e494468af5743031")
@@ -59,6 +60,7 @@ class Julia(MakefilePackage):
     depends_on("libuv", when="@:1.7")
     depends_on("libuv-julia@1.42.0", when="@1.8.0:1.8.1")
     depends_on("libuv-julia@1.44.2", when="@1.8.2:")
+    depends_on("suite-sparse@5.4:5.10", when="@1.6:1.9")
 
     with when("@1.9.0:1.9"):
         # libssh2.so.1, libpcre2-8.so.0, mbedtls.so.14, mbedcrypto.so.7, mbedx509.so.1
@@ -123,24 +125,24 @@ class Julia(MakefilePackage):
         "llvm",
         when="^llvm@12.0.1",
         patches=patch(
-            "https://github.com/JuliaLang/llvm-project/compare/fed41342a82f5a3a9201819a82bf7a48313e296b...980d2f60a8524c5546397db9e8bbb7d6ea56c1b7.patch",
-            sha256="37f2f6193e1205ea49b9a56100a70b038b64abf402115f263c6132cdf0df80c3",
+            "https://raw.githubusercontent.com/spack/patches/master/julia/10cb42f80c2eaad3e9c87cb818b6676f1be26737bdf972c77392d71707386aa4.patch",
+            sha256="10cb42f80c2eaad3e9c87cb818b6676f1be26737bdf972c77392d71707386aa4",
         ),
     )
     depends_on(
         "llvm",
         when="^llvm@13.0.1",
         patches=patch(
-            "https://github.com/JuliaLang/llvm-project/compare/75e33f71c2dae584b13a7d1186ae0a038ba98838...2f4460bd46aa80d4fe0d80c3dabcb10379e8d61b.patch",
-            sha256="d9e7f0befeddddcba40eaed3895c4f4734980432b156c39d7a251bc44abb13ca",
+            "https://raw.githubusercontent.com/spack/patches/master/julia/45f72c59ae5cf45461e9cd8b224ca49b739d885c79b3786026433c6c22f83b5f.patch",
+            sha256="45f72c59ae5cf45461e9cd8b224ca49b739d885c79b3786026433c6c22f83b5f",
         ),
     )
     depends_on(
         "llvm",
         when="^llvm@14.0.6",
         patches=patch(
-            "https://github.com/JuliaLang/llvm-project/compare/f28c006a5895fc0e329fe15fead81e37457cb1d1...381043941d2c7a5157a011510b6d0386c171aae7.diff",
-            sha256="f3fd1803459bdaac0e26d0f3b1874b0e3f97e9411a9e98043d36f788ab4fd00e",
+            "https://raw.githubusercontent.com/spack/patches/master/julia/f3def26930832532bbcd861d41b31ae03db993bc2b3510f89ef831a30bd3e099.patch",
+            sha256="f3def26930832532bbcd861d41b31ae03db993bc2b3510f89ef831a30bd3e099",
         ),
     )
 
@@ -163,9 +165,12 @@ class Julia(MakefilePackage):
     )
 
     # patchelf 0.13 is required because the rpath patch uses --add-rpath
-    depends_on("patchelf@0.13:", type="build")
+    # patchelf 0.18 breaks (at least) libjulia-internal.so
+    depends_on("patchelf@0.13:0.17", type="build")
     depends_on("perl", type="build")
     depends_on("libwhich", type="build")
+    depends_on("which", type="build")  # for detecting 7z, lld, dsymutil
+    depends_on("python", type="build")
 
     depends_on("blas")  # note: for now openblas is fixed...
     depends_on("curl tls=mbedtls +nghttp2 +libssh2")
@@ -186,12 +191,19 @@ class Julia(MakefilePackage):
     depends_on("unwind")
     depends_on("utf8proc")
     depends_on("zlib-api")
-    depends_on("zlib +shared +pic +optimize", when="^zlib")
+    depends_on("zlib +shared +pic +optimize", when="^[virtuals=zlib-api] zlib")
 
     # Patches for julia
     patch("julia-1.6-system-libwhich-and-p7zip-symlink.patch", when="@1.6.0:1.6")
     patch("use-add-rpath.patch", when="@:1.8.0")
     patch("use-add-rpath-2.patch", when="@1.8.1:1.8")
+
+    # Fix the path to Spack llvm's lld and dsymutil
+    patch(
+        "https://github.com/JuliaLang/julia/commit/55c13d234c1523861b278f7989b1af105ef0e88f.patch?full_index=1",
+        sha256="00569f40e1845329060a714813e509677949e633a0e833c40a3c70dcf9269cc1",
+        when="@1.9:1.10",
+    )
 
     # Fix libstdc++ not being found (https://github.com/JuliaLang/julia/issues/47987)
     patch(

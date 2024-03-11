@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,13 +12,18 @@ class PyLibensemble(PythonPackage):
     """Library for managing ensemble-like collections of computations."""
 
     homepage = "https://libensemble.readthedocs.io"
-    pypi = "libensemble/libensemble-1.0.0.tar.gz"
+    pypi = "libensemble/libensemble-1.2.1.tar.gz"
     git = "https://github.com/Libensemble/libensemble.git"
     maintainers("shuds13", "jlnav")
 
     tags = ["e4s"]
 
+    license("BSD-3-Clause")
+
     version("develop", branch="develop")
+    version("1.2.1", sha256="b80e77548a1e2a71483352b3b00e22b47191e45ca5741324c2b0f20b05579a3d")
+    version("1.2.0", sha256="e1076e8eea7844d3799f92d136586eca4da34ec753bf41a8d1be04d7a45ec4c1")
+    version("1.1.0", sha256="3e3ddc4233272d3651e9d62c7bf420018930a4b9b135ef9ede01d5356235c1c6")
     version("1.0.0", sha256="b164e044f16f15b68fd565684ad8ce876c93aaeb84e5078f4ea2a29684b110ca")
     version("0.10.2", sha256="ef8dfe5d233dcae2636a3d6aa38f3c2ad0f42c65bd38f664e99b3e63b9f86622")
     version("0.10.1", sha256="56ae42ec9a28d3df8f46bdf7d016db9526200e9df2a28d849902e3c44fe5c1ba")
@@ -57,6 +62,7 @@ class PyLibensemble(PythonPackage):
     depends_on("py-psutil", when="@0.7.1:", type=("build", "run"))
     depends_on("py-setuptools", when="@0.10.2:", type="build")
     depends_on("py-setuptools", when="@:0.10.1", type=("build", "run"))
+    depends_on("py-pydantic@1.10:", when="@1.2.0:", type=("build", "run"))
     depends_on("py-pydantic@:1", when="@0.10:", type=("build", "run"))
     depends_on("py-tomli@1.2.1:", when="@1:", type=("build", "run"))
     depends_on("py-tomli", when="@0.10:", type=("build", "run"))

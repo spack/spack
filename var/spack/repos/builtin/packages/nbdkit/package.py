@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class Nbdkit(AutotoolsPackage):
 
     homepage = "https://github.com/libguestfs/nbdkit"
     url = "https://github.com/libguestfs/nbdkit/archive/v1.23.7.tar.gz"
+
+    license("Ruby")
 
     version("1.23.7", sha256="70909721f60f06abadfac8646b37f942ceeaf73ce88909ab48402175ae1b6391")
     version("1.23.6", sha256="5a62cbcc41143a90c204d4a48ebe13225f21776fbc4e8fe8ca59531bb1c751fc")

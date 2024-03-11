@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -444,12 +444,9 @@ class TestStage:
 
     @pytest.mark.disable_clean_stage_check
     def test_composite_stage_with_expand_resource(self, composite_stage_with_expanding_resource):
-        (
-            composite_stage,
-            root_stage,
-            resource_stage,
-            mock_resource,
-        ) = composite_stage_with_expanding_resource
+        (composite_stage, root_stage, resource_stage, mock_resource) = (
+            composite_stage_with_expanding_resource
+        )
 
         composite_stage.create()
         composite_stage.fetch()
@@ -474,12 +471,9 @@ class TestStage:
         directory.
         """
 
-        (
-            composite_stage,
-            root_stage,
-            resource_stage,
-            mock_resource,
-        ) = composite_stage_with_expanding_resource
+        (composite_stage, root_stage, resource_stage, mock_resource) = (
+            composite_stage_with_expanding_resource
+        )
 
         resource_stage.resource.placement = None
 

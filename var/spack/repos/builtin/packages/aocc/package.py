@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -34,6 +34,11 @@ class Aocc(Package):
     maintainers("amd-toolchain-support")
 
     version(
+        ver="4.2.0",
+        sha256="ed5a560ec745b24dc0685ccdcbde914843fb2f2dfbfce1ba592de4ffbce1ccab",
+        url="https://download.amd.com/developer/eula/aocc/aocc-4-2/aocc-compiler-4.2.0.tar",
+    )
+    version(
         ver="4.1.0",
         sha256="5b04bfdb751c68dfb9470b34235d76efa80a6b662a123c3375b255982cb52acd",
         url="https://download.amd.com/developer/eula/aocc/aocc-4-1/aocc-compiler-4.1.0.tar",
@@ -56,7 +61,6 @@ class Aocc(Package):
     depends_on("zlib-api")
     depends_on("ncurses")
     depends_on("libtool")
-    depends_on("texinfo")
 
     variant(
         "license-agreed",
@@ -91,3 +95,13 @@ class Aocc(Package):
     def install(self, spec, prefix):
         print("Installing AOCC Compiler ... ")
         install_tree(".", prefix)
+
+    @run_after("install")
+    def cfg_files(self):
+        # Add path to gcc/g++ such that clang/clang++ can always find a full gcc installation
+        # including libstdc++.so and header files.
+        if self.spec.satisfies("%gcc") and self.compiler.cxx is not None:
+            compiler_options = "--gcc-toolchain={}".format(self.compiler.prefix)
+            for compiler in ["clang", "clang++"]:
+                with open(join_path(self.prefix.bin, "{}.cfg".format(compiler)), "w") as f:
+                    f.write(compiler_options)

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,6 +21,12 @@ class IntelOneapiMpi(IntelOneApiLibraryPackage):
 
     homepage = "https://software.intel.com/content/www/us/en/develop/tools/oneapi/components/mpi-library.html"
 
+    version(
+        "2021.11.0",
+        url="https://registrationcenter-download.intel.com/akdlm//IRC_NAS/2c45ede0-623c-4c8e-9e09-bed27d70fa33/l_mpi_oneapi_p_2021.11.0.49513_offline.sh",
+        sha256="9a96caeb7abcf5aa08426216db38a2c7936462008b9825036266bc79cb0e30d8",
+        expand=False,
+    )
     version(
         "2021.10.0",
         url="https://registrationcenter-download.intel.com/akdlm/IRC_NAS/4f5871da-0533-4f62-b563-905edfb2e9b7/l_mpi_oneapi_p_2021.10.0.49374_offline.sh",
@@ -108,6 +114,14 @@ class IntelOneapiMpi(IntelOneApiLibraryPackage):
     provides("mpi@:3.1")
 
     @property
+    def mpiexec(self):
+        return self.component_prefix.bin.mpiexec
+
+    @property
+    def v2_layout_versions(self):
+        return "@2021.11:"
+
+    @property
     def component_dir(self):
         return "mpi"
 
@@ -154,13 +168,6 @@ class IntelOneapiMpi(IntelOneApiLibraryPackage):
         env.set("I_MPI_ROOT", self.component_prefix)
 
     @property
-    def headers(self):
-        headers = find_headers("*", self.component_prefix.include)
-        if "+ilp64" in self.spec:
-            headers += find_headers("*", self.component_prefix.include.ilp64)
-        return headers
-
-    @property
     def libs(self):
         libs = []
         if "+ilp64" in self.spec:
@@ -192,6 +199,13 @@ class IntelOneapiMpi(IntelOneApiLibraryPackage):
 
     @run_after("install")
     def fixup_prefix(self):
+        # The motivation was to provide a more standard layout so impi
+        # would be more likely to work as a virtual dependence.  It
+        # does not work for v2_layout because of a library conflict. I
+        # am not sure if this mechanism is useful so disabling for
+        # v2_layout rather than try to make it work.
+        if self.v2_layout:
+            return
         self.symlink_dir(self.component_prefix.include, self.prefix.include)
         self.symlink_dir(self.component_prefix.lib, self.prefix.lib)
         self.symlink_dir(self.component_prefix.lib.release, self.prefix.lib)

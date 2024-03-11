@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,6 +19,8 @@ class Libbsd(AutotoolsPackage):
         "https://mirrors.dotsrc.org/pub/mirrors/exherbo/libbsd-0.9.1.tar.xz",
     ]
 
+    license("BSD-3-Clause")
+
     version("0.11.7", sha256="9baa186059ebbf25c06308e9f991fda31f7183c0f24931826d83aa6abd8a0261")
     version("0.11.6", sha256="19b38f3172eaf693e6e1c68714636190c7e48851e45224d720b3b5bc0499b5df")
     version("0.11.5", sha256="1a9c952525635c1bb6770cb22e969b938d8e6a9d7912362b98ee8370599b0efd")
@@ -34,6 +36,8 @@ class Libbsd(AutotoolsPackage):
 
     patch("cdefs.h.patch", when="@0.8.6 %gcc@:4")
     patch("local-elf.h.patch", when="@:0.10 %intel")
+
+    conflicts("platform=freebsd")
 
     # https://gitlab.freedesktop.org/libbsd/libbsd/issues/1
     conflicts("platform=darwin")

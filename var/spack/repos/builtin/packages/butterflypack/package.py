@@ -1,7 +1,9 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+from platform import machine
 
 from spack.package import *
 
@@ -25,7 +27,10 @@ class Butterflypack(CMakePackage):
     url = "https://github.com/liuyangzhuan/ButterflyPACK/archive/v2.2.0.tar.gz"
     maintainers("liuyangzhuan")
 
+    license("BSD-3-Clause-LBNL")
+
     version("master", branch="master")
+    version("2.4.0", sha256="12d04e7101b2c8292b5c62d9f42b5cd1e8a3c5af639d2665596e3e4255fd0804")
     version("2.2.2", sha256="73f67073e4291877f1eee19483a8a7b3c761eaf79a75805d52105ceedead85ea")
     version("2.2.1", sha256="4cedc2896a6b368773ce4f9003aa2c0230baf56a4464a6b899a155e01406a232")
     version("2.2.0", sha256="1ce5b8461b3c4f488cee6396419e8a6f0a1bcf95254f24d7c27bfa53b391c30b")
@@ -74,7 +79,7 @@ class Butterflypack(CMakePackage):
         args.append("-Denable_openmp=%s" % ("ON" if "+openmp" in spec else "OFF"))
         if "%cce" in spec:
             # Assume the proper Cray CCE module (cce) is loaded:
-            craylibs_path = env["CRAYLIBS_" + env["MACHTYPE"].capitalize()]
+            craylibs_path = env["CRAYLIBS_" + machine().upper()]
             env.setdefault("LDFLAGS", "")
             env["LDFLAGS"] += " -Wl,-rpath," + craylibs_path
 

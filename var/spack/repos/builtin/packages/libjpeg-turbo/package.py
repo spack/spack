@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,9 +14,13 @@ class LibjpegTurbo(CMakePackage, AutotoolsPackage):
     transcoding.
     """
 
+    maintainers("AlexanderRichert-NOAA")
+
     # https://github.com/libjpeg-turbo/libjpeg-turbo/blob/master/BUILDING.md
     homepage = "https://libjpeg-turbo.org/"
     url = "https://github.com/libjpeg-turbo/libjpeg-turbo/archive/2.0.3.tar.gz"
+
+    license("BSD-3-Clause AND IJG AND Zlib")
 
     version("3.0.0", sha256="171dae5d73560bc94006a7c0c3281bd9bfde6a34f7e41e66f930a1a9162bd7df")
     version("2.1.5.1", sha256="61846251941e5791005fb7face196eec24541fce04f12570c308557529e92c75")
@@ -56,9 +60,33 @@ class LibjpegTurbo(CMakePackage, AutotoolsPackage):
         default="cmake",
     )
 
-    variant("shared", default=True, description="Build shared libs")
-    variant("static", default=True, description="Build static libs")
+    variant(
+        "libs",
+        default=("shared", "static"),
+        values=("shared", "static"),
+        multi=True,
+        description="Build shared libs, static libs, or both",
+    )
     variant("jpeg8", default=False, description="Emulate libjpeg v8 API/ABI")
+    variant(
+        "pic", default=True, description="Enable position independent code", when="libs=static"
+    )
+    variant(
+        "partial_decoder",
+        default=False,
+        description="add partial_decode_scale functionality required for rocAL",
+    )
+
+    patch(
+        "https://github.com/libjpeg-turbo/libjpeg-turbo/commit/09c71da06a6346dca132db66f26f959f7e4dd5ad.patch?full_index=1",
+        sha256="4d5bdfb5de5b04399144254ea383f5357ab7beb830b398aeb35b65f21dd6b4b0",
+        when="@2.0.6 +partial_decoder",
+    )
+    patch(
+        "https://github.com/libjpeg-turbo/libjpeg-turbo/commit/640d7ee1917fcd3b6a5271aa6cf4576bccc7c5fb.patch?full_index=1",
+        sha256="dc1ec567c2356b652100ecdc28713bbf25f544e46f7d2947f31a2395c362cc48",
+        when="@2.0.6 +partial_decoder",
+    )
 
     # Can use either of these. But in the current version of the package
     # only nasm is used. In order to use yasm an environmental variable
@@ -76,15 +104,17 @@ class LibjpegTurbo(CMakePackage, AutotoolsPackage):
 
     @property
     def libs(self):
-        return find_libraries("libjpeg*", root=self.prefix, recursive=True)
+        shared = self.spec.satisfies("libs=shared")
+        return find_libraries("libjpeg*", root=self.prefix, shared=shared, recursive=True)
 
 
 class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
     def cmake_args(self):
         args = [
-            self.define_from_variant("ENABLE_SHARED", "shared"),
-            self.define_from_variant("ENABLE_STATIC", "static"),
+            self.define("ENABLE_SHARED", self.spec.satisfies("libs=shared")),
+            self.define("ENABLE_STATIC", self.spec.satisfies("libs=static")),
             self.define_from_variant("WITH_JPEG8", "jpeg8"),
+            self.define_from_variant("CMAKE_POSITION_INDEPENDENT_CODE", "pic"),
         ]
 
         return args

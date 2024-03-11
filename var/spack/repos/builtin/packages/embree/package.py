@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,9 @@ class Embree(CMakePackage):
     url = "https://github.com/embree/embree/archive/v3.7.0.tar.gz"
     maintainers("aumuell")
 
+    license("Apache-2.0")
+
+    version("4.3.1", sha256="824edcbb7a8cd393c5bdb7a16738487b21ecc4e1d004ac9f761e934f97bb02a4")
     version("4.3.0", sha256="baf0a57a45837fc055ba828a139467bce0bc0c6a9a5f2dccb05163d012c12308")
     version("4.2.0", sha256="b0479ce688045d17aa63ce6223c84b1cdb5edbf00d7eda71c06b7e64e21f53a0")
     version("4.1.0", sha256="117efd87d6dddbf7b164edd94b0bc057da69d6422a25366283cded57ed94738b")
@@ -57,7 +60,6 @@ class Embree(CMakePackage):
             "-DEMBREE_TUTORIALS=OFF",
             "-DEMBREE_IGNORE_CMAKE_CXX_FLAGS=ON",
             self.define_from_variant("EMBREE_ISPC_SUPPORT", "ispc"),
-            self.define("EMBREE_TBB_ROOT", spec["tbb"].prefix),
         ]
 
         if spec.satisfies("target=x86_64:") or spec.satisfies("target=x86:"):

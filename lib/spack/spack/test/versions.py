@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -904,6 +904,13 @@ def test_version_list_normalization():
     assert ver("=1.0,ref=1.0,1.0:2.0") == ver(["1.0:2.0"])
     assert ver("=1.0,1.0:2.0,ref=1.0") == ver(["1.0:2.0"])
     assert ver("1.0:2.0,=1.0,ref=1.0") == ver(["1.0:2.0"])
+
+
+def test_version_list_connected_union_of_disjoint_ranges():
+    # Make sure that we also simplify lists of ranges if their intersection is empty, but their
+    # union is connected.
+    assert ver("1.0:2.0,2.1,2.2:3,4:6") == ver(["1.0:6"])
+    assert ver("1.0:1.2,1.3:2") == ver("1.0:1.5,1.6:2")
 
 
 @pytest.mark.parametrize("version", ["=1.2", "git.ref=1.2", "1.2"])

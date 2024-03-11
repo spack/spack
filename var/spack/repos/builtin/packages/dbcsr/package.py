@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class Dbcsr(CMakePackage, CudaPackage, ROCmPackage):
     list_url = "https://github.com/cp2k/dbcsr/releases"
 
     maintainers("dev-zero", "mtaillefumier")
+
+    license("GPL-2.0-or-later")
 
     version("develop", branch="develop")
     version("2.6.0", sha256="c67b02ff9abc7c1f529af446a9f01f3ef9e5b0574f220259128da8d5ca7e9dc6")
@@ -44,6 +46,7 @@ class Dbcsr(CMakePackage, CudaPackage, ROCmPackage):
             " with cuda_arch=35 for a K20x instead of a K40"
         ),
     )
+    variant("examples", default=True, description="Build examples")
 
     variant("opencl", default=False, description="Enable OpenCL backend")
     variant("mpi_f08", default=False, when="@2.6:", description="Use mpi F08 module")
@@ -66,6 +69,9 @@ class Dbcsr(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("hipblas", when="+rocm")
 
     depends_on("opencl", when="+opencl")
+
+    # All examples require MPI
+    conflicts("+examples", when="~mpi", msg="Examples require MPI")
 
     # We only support specific gpu archs for which we have parameter files
     # for optimal kernels. Note that we don't override the parent class arch
@@ -104,7 +110,7 @@ class Dbcsr(CMakePackage, CudaPackage, ROCmPackage):
         # to INTEGER(8)
         conflicts("^mpich@4.1:", when="@:2.5")
         conflicts("~mpi_f08", when="^mpich@4.1:")
-        depends_on("mpich+fortran", when="^mpich")
+        depends_on("mpich+fortran", when="^[virtuals=mpi] mpich")
 
     generator("ninja")
     depends_on("ninja@1.10:", type="build")
@@ -129,6 +135,7 @@ class Dbcsr(CMakePackage, CudaPackage, ROCmPackage):
             "-DLAPACK_FOUND=true",
             "-DLAPACK_LIBRARIES=%s" % (spec["lapack"].libs.joined(";")),
             self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
+            self.define_from_variant("WITH_EXAMPLES", "examples"),
         ]
 
         # Switch necessary as a result of a bug.

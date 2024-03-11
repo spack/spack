@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,8 @@ class PyLz4(PythonPackage):
 
     homepage = "https://github.com/python-lz4/python-lz4"
     pypi = "lz4/lz4-3.1.0.tar.gz"
+
+    license("BSD-3-Clause")
 
     version("4.0.2", sha256="083b7172c2938412ae37c3a090250bfdd9e4a6e855442594f86c3608ed12729b")
     version("3.1.3", sha256="081ef0a3b5941cb03127f314229a1c78bd70c9c220bb3f4dd80033e707feaa18")
