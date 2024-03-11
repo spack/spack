@@ -40,6 +40,9 @@ class Glew(CMakePackage):
     conflicts("^egl", when="gl=osmesa")
     conflicts("^egl", when="gl=other")
 
+    # https://github.com/spack/spack/issues/42839
+    depends_on("glu")
+
     depends_on("gl")
     depends_on("osmesa", when="gl=osmesa")
     depends_on("glx", when="gl=glx")
