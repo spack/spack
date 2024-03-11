@@ -98,36 +98,6 @@ def caller_locals():
         del stack
 
 
-def get_calling_module_name():
-    """Make sure that the caller is a class definition, and return the
-    enclosing module's name.
-    """
-    # Passing zero here skips line context for speed.
-    stack = inspect.stack(0)
-    try:
-        # Make sure locals contain __module__
-        caller_locals = stack[2][0].f_locals
-    finally:
-        del stack
-
-    if "__module__" not in caller_locals:
-        raise RuntimeError(
-            "Must invoke get_calling_module_name() " "from inside a class definition!"
-        )
-
-    module_name = caller_locals["__module__"]
-    base_name = module_name.split(".")[-1]
-    return base_name
-
-
-def attr_required(obj, attr_name):
-    """Ensure that a class has a required attribute."""
-    if not hasattr(obj, attr_name):
-        raise RequiredAttributeError(
-            "No required attribute '%s' in class '%s'" % (attr_name, obj.__class__.__name__)
-        )
-
-
 def attr_setdefault(obj, name, value):
     """Like dict.setdefault, but for objects."""
     if not hasattr(obj, name):
@@ -513,42 +483,6 @@ class HashableMap(collections.abc.MutableMapping):
         return clone
 
 
-def in_function(function_name):
-    """True if the caller was called from some function with
-    the supplied Name, False otherwise."""
-    stack = inspect.stack()
-    try:
-        for elt in stack[2:]:
-            if elt[3] == function_name:
-                return True
-        return False
-    finally:
-        del stack
-
-
-def check_kwargs(kwargs, fun):
-    """Helper for making functions with kwargs.  Checks whether the kwargs
-    are empty after all of them have been popped off.  If they're
-    not, raises an error describing which kwargs are invalid.
-
-    Example::
-
-       def foo(self, **kwargs):
-           x = kwargs.pop('x', None)
-           y = kwargs.pop('y', None)
-           z = kwargs.pop('z', None)
-           check_kwargs(kwargs, self.foo)
-
-       # This raises a TypeError:
-       foo(w='bad kwarg')
-    """
-    if kwargs:
-        raise TypeError(
-            "'%s' is an invalid keyword argument for function %s()."
-            % (next(iter(kwargs)), fun.__name__)
-        )
-
-
 def match_predicate(*args):
     """Utility function for making string matching predicates.
 
@@ -764,11 +698,6 @@ def pretty_seconds(seconds):
     return pretty_seconds_formatter(seconds)(seconds)
 
 
-class RequiredAttributeError(ValueError):
-    def __init__(self, message):
-        super().__init__(message)
-
-
 class ObjectWrapper:
     """Base class that wraps an object. Derived classes can add new behavior
     while staying undercover.
@@ -933,25 +862,6 @@ def uniq(sequence):
             uniq_list.append(element)
             last = element
     return uniq_list
-
-
-def star(func):
-    """Unpacks arguments for use with Multiprocessing mapping functions"""
-
-    def _wrapper(args):
-        return func(*args)
-
-    return _wrapper
-
-
-class Devnull:
-    """Null stream with less overhead than ``os.devnull``.
-
-    See https://stackoverflow.com/a/2929954.
-    """
-
-    def write(self, *_):
-        pass
 
 
 def elide_list(line_list, max_num=10):
