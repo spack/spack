@@ -22,6 +22,36 @@ class PyTensorboard(PythonPackage):
     license("Apache-2.0")
 
     version(
+        "2.16.2",
+        sha256="9f2b4e7dad86667615c0e5cd072f1ea8403fc032a299f0072d6f74855775cc45",
+        expand=False,
+    )
+    version(
+        "2.16.1",
+        sha256="928b62567911a8eeb2ebeb7482a9e4599b35f6713a6f2c56655259c18a139569",
+        expand=False,
+    )
+    version(
+        "2.16.0",
+        sha256="263b909a2009cb3a79daa6abe64c1785cc317c25a54e4db2fecb6429ffc54c58",
+        expand=False,
+    )
+    version(
+        "2.15.2",
+        sha256="a6f6443728064d962caea6d34653e220e34ef8df764cb06a8212c17e1a8f0622",
+        expand=False,
+    )
+    version(
+        "2.15.1",
+        sha256="c46c1d1cf13a458c429868a78b2531d8ff5f682058d69ec0840b0bc7a38f1c0f",
+        expand=False,
+    )
+    version(
+        "2.15.0",
+        sha256="c05b4d02a3a9fd4bd6c25265087d52b49b790a871ddf98f4fb32fe97cbbc7ad0",
+        expand=False,
+    )
+    version(
         "2.14.1",
         sha256="3db108fb58f023b6439880e177743c5f1e703e9eeb5fb7d597871f949f85fd58",
         expand=False,
@@ -138,22 +168,26 @@ class PyTensorboard(PythonPackage):
     depends_on("py-grpcio@1.48.2:", type=("build", "run"), when="@2.12:")
     depends_on("py-grpcio@1.24.3:", type=("build", "run"), when="@2.3:")
     depends_on("py-grpcio@1.23.3:", type=("build", "run"), when="@2.2")
-    depends_on("py-google-auth@1.6.3:2", type=("build", "run"), when="@2.7:")
-    depends_on("py-google-auth@1.6.3:1", type=("build", "run"), when="@:2.6")
-    depends_on("py-google-auth-oauthlib@0.5:1.0", type=("build", "run"), when="@2.12.1:")
-    depends_on("py-google-auth-oauthlib@0.4.1:0.4", type=("build", "run"), when="@:2.12.0")
     depends_on("py-markdown@2.6.8:", type=("build", "run"))
     depends_on("py-numpy@1.12.0:", type=("build", "run"))
-    depends_on("py-protobuf@3.19.6:", type=("build", "run"), when="@2.12:")
+    depends_on("py-protobuf@3.19.6:4.23,4.24.1:", type=("build", "run"), when="@2.15.2:")
+    depends_on("py-protobuf@3.19.6:4.23", type=("build", "run"), when="@2.12:2.15.1")
     depends_on("py-protobuf@3.9.2:3", type=("build", "run"), when="@2.11")
     depends_on("py-protobuf@3.9.2:3.19", type=("build", "run"), when="@2.9:2.10")
     depends_on("py-protobuf@3.6.0:3.19", type=("build", "run"), when="@:2.8")
-    depends_on("py-requests@2.21.0:2", type=("build", "run"))
     depends_on("py-setuptools@41.0.0:", type=("build", "run"))
     depends_on("py-six@1.10.0:", type=("build", "run"), when="@:2.4,2.14:")
     depends_on("py-tensorboard-data-server@0.7", type=("build", "run"), when="@2.12:")
     depends_on("py-tensorboard-data-server@0.6", type=("build", "run"), when="@2.5:2.11")
-    depends_on("py-tensorboard-plugin-wit@1.6.0:", type=("build", "run"), when="@:2.13")
     depends_on("py-werkzeug@1.0.1:", type=("build", "run"), when="@2.9:")
     depends_on("py-werkzeug@0.11.15:", type=("build", "run"))
+
+    # Historical dependencies
+    depends_on("py-google-auth@1.6.3:2", type=("build", "run"), when="@2.7:2.15")
+    depends_on("py-google-auth@1.6.3:1", type=("build", "run"), when="@:2.6")
+    depends_on("py-google-auth-oauthlib@0.5:1", type=("build", "run"), when="@2.15")
+    depends_on("py-google-auth-oauthlib@0.5:1.0", type=("build", "run"), when="@2.12.1:2.14")
+    depends_on("py-google-auth-oauthlib@0.4.1:0.4", type=("build", "run"), when="@:2.12.0")
+    depends_on("py-requests@2.21.0:2", type=("build", "run"), when="@:2.15")
+    depends_on("py-tensorboard-plugin-wit@1.6.0:", type=("build", "run"), when="@:2.13")
     depends_on("py-wheel@0.26:", type="build", when="@:2.13")
