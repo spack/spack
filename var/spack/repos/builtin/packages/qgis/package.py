@@ -19,6 +19,7 @@ class Qgis(CMakePackage):
 
     license("GPL-2.0-or-later")
 
+    # TODO version 3.36 isn't building right now.
     version("3.36.0", sha256="1b64bc92660bf07edc6b6478fc6a13656149e87d92eabe5c3db9493072506e2c")
     # Prefer latest LTR
     version(
