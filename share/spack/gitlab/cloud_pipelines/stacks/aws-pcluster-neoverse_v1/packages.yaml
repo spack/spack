@@ -11,10 +11,11 @@ packages:
           - "gromacs@2021.3 %arm ^fftw ^openmpi"
           - "gromacs@2021.3 %gcc ^armpl-gcc ^openmpi"
   libfabric:
-    buildable: false
+    buildable: true
     externals:
       - prefix: /opt/amazon/efa/
-        spec: libfabric@${LIBFABRIC_VERSION} fabrics=efa
+        spec: libfabric@${LIBFABRIC_VERSION}
+    require: ['fabrics=shm,efa']
   llvm:
     variants: ~lldb
   mpas-model:
@@ -37,7 +38,7 @@ packages:
   #   require:
   #     - one_of: ["palace cxxflags=\"-include cstdint\" ^fmt@9.1.0"]
   pmix:
-    require: "pmix@3"
+    require: "pmix@3:"
   quantum-espresso:
     require: "quantum-espresso@6.6 %gcc ^armpl-gcc"
   slurm:

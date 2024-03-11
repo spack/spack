@@ -31,10 +31,11 @@ packages:
           - "cflags=-std=c18 target=x86_64_v3"
           - '%gcc'
   libfabric:
-    buildable: false
+    buildable: true
     externals:
       - prefix: /opt/amazon/efa/
-        spec: libfabric@${LIBFABRIC_VERSION} fabrics=efa
+        spec: libfabric@${LIBFABRIC_VERSION}
+    require: ['fabrics=shm,efa']
   libunistring:
     require:
       - one_of:
@@ -72,8 +73,8 @@ packages:
   pmix:
     require:
       - one_of:
-          - "pmix@3 target=x86_64_v4"
-          - "pmix@3 target=x86_64_v3"
+          - "pmix@3: target=x86_64_v4"
+          - "pmix@3: target=x86_64_v3"
   quantum-espresso:
     require:
       - one_of:
