@@ -129,6 +129,8 @@ class DlaFuture(CMakePackage, CudaPackage, ROCmPackage):
         sha256="7f382c872d89f22da1ad499e85ffe9881cc7404c8465e42877a210a09382e2ea",
         when="@:0.3 %gcc@13:",
     )
+    # https://github.com/spack/spack/issues/41511
+    patch("hip_complex_operator_overloads.patch", when="+rocm")
 
     def cmake_args(self):
         spec = self.spec
