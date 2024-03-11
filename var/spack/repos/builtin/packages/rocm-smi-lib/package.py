@@ -56,7 +56,7 @@ class RocmSmiLib(CMakePackage):
         args = [
             self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
             self.define("CMAKE_INSTALL_LIBDIR", "lib"),
-            self.define("BUILD_TESTS", self.run_tests)
+            self.define("BUILD_TESTS", self.run_tests),
         ]
         return args
 
