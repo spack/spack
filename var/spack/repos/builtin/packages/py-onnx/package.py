@@ -21,6 +21,7 @@ class PyOnnx(PythonPackage):
 
     license("Apache-2.0")
 
+    version("1.15.0", sha256="b18461a7d38f286618ca2a6e78062a2a9c634ce498e631e708a8041b00094825")
     version("1.13.1", sha256="0bdcc25c2c1ce4a8750e4ffbd93ae945442e7fac6e51176f38e366b74a97dfd9")
     version("1.13.0", sha256="410b39950367857f97b65093681fe2495a2e23d63777a8aceaf96c56a16d166e")
     version("1.12.0", sha256="13b3e77d27523b9dbf4f30dfc9c959455859d5e34e921c44f712d69b8369eff9")
@@ -30,30 +31,31 @@ class PyOnnx(PythonPackage):
     version("1.6.0", sha256="3b88c3fe521151651a0403c4d131cb2e0311bd28b753ef692020a432a81ce345")
     version("1.5.0", sha256="1a584a4ef62a6db178c257fffb06a9d8e61b41c0a80bfd8bcd8a253d72c4b0b4")
 
+    # CMakeLists.txt
+    depends_on("cmake@3.1:", type="build")
+
+    # requirements.txt
+    depends_on("py-setuptools@61:", type="build")
     depends_on("py-setuptools", type="build")
-    depends_on("protobuf")
-    depends_on("py-protobuf+cpp", type=("build", "run"))
+    depends_on("py-protobuf@3.20.2:", type=("build", "run"), when="@1.15:")
+    depends_on("py-protobuf@3.20.2:3", type=("build", "run"), when="@1.13")
+    depends_on("py-protobuf@3.12.2:3.20.1", type=("build", "run"), when="@1.12")
+    depends_on("py-protobuf@3.12.2:", type=("build", "run"), when="@1.11")
+    # https://github.com/protocolbuffers/protobuf/issues/10051
+    # https://github.com/onnx/onnx/issues/4222
+    depends_on("py-protobuf@:3", type=("build", "run"), when="@1.10")
     # Protobuf version limit is due to removal of SetTotalBytesLimit in
     # https://github.com/protocolbuffers/protobuf/pull/8794, fixed in
     # https://github.com/onnx/onnx/pull/3112
-    depends_on("protobuf@:3.17", when="@:1.8")
-    depends_on("py-protobuf@:3.17", when="@:1.8", type=("build", "run"))
-    # https://github.com/protocolbuffers/protobuf/issues/10051
-    # https://github.com/onnx/onnx/issues/4222
-    depends_on("protobuf@:3", when="@1.10.1")
-    depends_on("py-protobuf@:3", type=("build", "run"), when="@1.10.1")
-    depends_on("protobuf@3.12.2:", when="@1.11.0")
-    depends_on("py-protobuf@3.12.2:", type=("build", "run"), when="@1.11.0")
-    depends_on("protobuf@3.12.2:3.20.1", when="@1.12.0")
-    depends_on("py-protobuf@3.12.2:3.20.1", type=("build", "run"), when="@1.12.0")
-    depends_on("protobuf@3.20.2:3", when="@1.13.0:")
-    depends_on("py-protobuf@3.20.2:3", type=("build", "run"), when="@1.13.0:")
+    depends_on("py-protobuf@:3.17", type=("build", "run"), when="@:1.8")
+    depends_on("py-protobuf+cpp", type=("build", "run"))
     depends_on("py-numpy", type=("build", "run"))
-    depends_on("py-numpy@1.16.6:", type=("build", "run"), when="@1.8.1:")
+    depends_on("py-numpy@1.16.6:", type=("build", "run"), when="@1.8.1:1.13")
+
+    # Historical dependencies
     depends_on("py-six", type=("build", "run"), when="@:1.8.1")
-    depends_on("py-typing-extensions@3.6.2.1:", type=("build", "run"))
-    depends_on("cmake@3.1:", type="build")
-    depends_on("py-pytest-runner", type="build")
+    depends_on("py-typing-extensions@3.6.2.1:", type=("build", "run"), when="@:1.13")
+    depends_on("py-pytest-runner", type="build", when="@:1.13")
 
     # 'python_out' does not recognize dllexport_decl.
     patch("remove_dllexport_decl.patch", when="@:1.6.0")
