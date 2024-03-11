@@ -68,6 +68,7 @@ spack:
   - chai ~benchmarks ~tests
   - charliecloud
   - conduit
+  - cp2k +mpi
   - datatransferkit
   - drishti
   - dxt-explorer
@@ -83,7 +84,7 @@ spack:
   - gmp
   - gotcha
   - gptune
-  - gromacs +cp2k ^cp2k build_system=cmake
+  - gromacs +cp2k ^cp2k +mpi build_system=cmake
   - h5bench
   - hdf5-vol-async
   - hdf5-vol-cache
@@ -218,6 +219,7 @@ spack:
   - arborx +cuda cuda_arch=70 ^kokkos +wrapper
   - caliper +cuda cuda_arch=70
   - chai ~benchmarks ~tests +cuda cuda_arch=70 ^umpire ~shared
+  # - cp2k +mpi +cuda cuda_arch=70 # dbcsr
   - ecp-data-vis-sdk ~rocm +adios2 ~ascent +hdf5 +vtkm +zfp ~paraview +cuda cuda_arch=70
   - exago +mpi +python +raja +hiop ~rocm +cuda cuda_arch=70 ~ipopt ^hiop@1.0.0 ~sparse +mpi +raja ~rocm +cuda cuda_arch=70 #^raja@0.14.0
   - flecsi +cuda cuda_arch=70
