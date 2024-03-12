@@ -35,7 +35,7 @@ class IntelOneapiCompilersClassic(Package):
         "2021.7.1": "2022.2.1",
         "2021.8.0": "2023.0.0",
         "2021.9.0": "2023.1.0",
-        "2021.10.0": "2023.2.0",
+        "2021.10.0": "2023.2.4",
         "2021.11.1": "2024.0.2",
     }.items():
         # prefer 2021.10.0 because it is the last one that has a C compiler
