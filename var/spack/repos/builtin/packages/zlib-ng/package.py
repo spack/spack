@@ -50,6 +50,10 @@ class ZlibNg(AutotoolsPackage, CMakePackage):
         patch("pr-1561.patch", when="build_system=autotools")  # drop bash dependency
         patch("pr-1562.patch")  # improve intrinsics detection
 
+    # fix building with NVHPC, see https://github.com/zlib-ng/zlib-ng/pull/1698
+    # (@2.1.0:2.1.3 need the same changes but in a different file)
+    patch("pr-1698.patch", when="@2.1.4:%nvhpc+opt")
+
     with when("build_system=cmake"):
         depends_on("cmake@3.5.1:", type="build")
         depends_on("cmake@3.14.0:", type="build", when="@2.1.0:")
