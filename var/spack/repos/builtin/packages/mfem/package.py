@@ -1116,7 +1116,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     def check_or_test(self):
         # Running 'make check' or 'make test' may fail if MFEM_MPIEXEC or
         # MFEM_MPIEXEC_NP are not set appropriately.
-        if not self.run_tests:
+        if not self.run_tests and ("+examples" in self.spec):
             # check we can build ex1 (~mpi) or ex1p (+mpi).
             make("-C", "examples", "ex1p" if ("+mpi" in self.spec) else "ex1", parallel=False)
             # make('check', parallel=False)
