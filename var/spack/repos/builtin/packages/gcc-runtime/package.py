@@ -35,7 +35,7 @@ class GccRuntime(Package):
         "asan",
         "atomic",
         "gcc_s",
-        "gfortran",
+        "libgfortran",
         "gomp",
         "hwasan",
         "itm",
@@ -48,10 +48,10 @@ class GccRuntime(Package):
     ]
 
     # libgfortran ABI
-    provides("fortran-rt", "gfortran")
-    provides("gfortran@3", when="%gcc@:6")
-    provides("gfortran@4", when="%gcc@7")
-    provides("gfortran@5", when="%gcc@8:")
+    provides("fortran-rt", "libgfortran")
+    provides("libgfortran@3", when="%gcc@:6")
+    provides("libgfortran@4", when="%gcc@7")
+    provides("libgfortran@5", when="%gcc@8:")
 
     def install(self, spec, prefix):
         if spec.platform in ["linux", "cray", "freebsd"]:

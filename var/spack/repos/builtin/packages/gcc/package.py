@@ -1156,11 +1156,11 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
             f"it depends on gcc-runtime@{str(compiler.version)}:",
         )
 
-        gfortran_str = "gfortran@5"
+        gfortran_str = "libgfortran@5"
         if compiler.spec.satisfies("gcc@:6"):
-            gfortran_str = "gfortran@3"
+            gfortran_str = "libgfortran@3"
         elif compiler.spec.satisfies("gcc@7"):
-            gfortran_str = "gfortran@4"
+            gfortran_str = "libgfortran@4"
 
         for fortran_virtual in ("fortran-rt", gfortran_str):
             pkg("*").depends_on(

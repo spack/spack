@@ -26,7 +26,7 @@ packages:
       flame: [libflame, amdlibflame]
       fortran-rt: [gcc-runtime, intel-oneapi-runtime]
       fuse: [libfuse]
-      gfortran: [gcc-runtime]
+      libgfortran: [gcc-runtime]
       gl: [glx, osmesa]
       glu: [mesa-glu, openglu]
       golang: [go, gcc]

@@ -2449,7 +2449,7 @@ class SpackSolverSetup:
 
     def add_runtime_virtuals(self):
         """Explicitly add the virtuals that might be attached dynamically by runtimes"""
-        for vpkg in ("fortran-rt", "ifcore", "gfortran"):
+        for vpkg in ("fortran-rt", "ifcore", "libgfortran"):
             self.possible_virtuals.add(vpkg)
             self.gen.fact(fn.possible_in_link_run(vpkg))
 
