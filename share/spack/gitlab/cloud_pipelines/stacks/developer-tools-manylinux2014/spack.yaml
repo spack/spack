@@ -54,6 +54,9 @@ spack:
     - gmake
     - ninja   # should be @kitware, can't be because of meson requirement
     - openssl certs=system     # must be this, system external does not work
+    - libtree
+    - patchelf
+
   - arch:
     - '%gcc target=x86_64_v3'
 
