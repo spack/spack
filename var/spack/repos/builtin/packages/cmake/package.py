@@ -385,6 +385,8 @@ class Cmake(Package):
     )
 
     # TIFF uses TiffConfig.cmake not tiffConfig.cmake
+    # this patch is in cmake 3.29.0
+    # https://gitlab.kitware.com/cmake/cmake/-/blob/v3.29.0-rc3/Modules/FindTIFF.cmake?ref_type=tags#L103
     patch("find_tiff_capital_first.patch", when="@3.28.0:3.28.3")
 
     # Revert the change that introduced a regression when parsing mpi link
