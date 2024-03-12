@@ -10,8 +10,10 @@ class PyNeurodamus(PythonPackage):
 
     homepage = "https://github.com/BlueBrain/neurodamus"
     git = "https://github.com/BlueBrain/neurodamus.git"
+    pypi = "neurodamus/neurodamus-3.1.1.tar.gz"
 
     version("develop", branch="main")
+    version("3.1.1", sha256="f6aa8817715b2302cb94cb84445cd4d64e953807882d0bbc24a7e931ec188e77")
     version("3.0.0", tag="3.0.0")
     version("3.0a1", tag="3.0.0-alpha")
     version("2.17.0", tag="2.17.0")
