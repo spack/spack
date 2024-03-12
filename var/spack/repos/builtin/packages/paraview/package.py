@@ -240,6 +240,7 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
     # but paraview uses C++11 by default. Use for 5.8+ until ParaView updates
     # its C++ standard level.
     depends_on("protobuf@3.4:3.21", when="@5.8:%gcc")
+    depends_on("protobuf@3.4:3.21", when="@5.8:%clang")
     depends_on("protobuf@3.4:3.21", when="@5.11:")
     depends_on("protobuf@3.4:3.21", when="@master")
     depends_on("libxml2")
