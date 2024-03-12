@@ -2115,6 +2115,7 @@ class TestConcretize:
             solver.driver.solve(setup, specs, reuse=[])
 
     @pytest.mark.regression("43141")
+    @pytest.mark.only_clingo("Use case not supported by the original concretizer")
     def test_clear_error_when_unknown_compiler_requested(self, mock_packages, config):
         """Tests that the solver can report a case where the compiler cannot be set"""
         with pytest.raises(
