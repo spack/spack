@@ -236,7 +236,8 @@ class StandardVersion(ConcreteVersion):
         return f'Version("{str(self)}")'
 
     def __hash__(self):
-        return hash(self.version)
+        # If this is a final release, do not hash the prerelease part.
+        return hash(self.version[0] if self.version[1][0] == FINAL else self.version)
 
     def __contains__(rhs, lhs):
         # We should probably get rid of `x in y` for versions, since
