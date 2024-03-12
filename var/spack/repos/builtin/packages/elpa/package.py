@@ -77,7 +77,11 @@ class Elpa(AutotoolsPackage, CudaPackage, ROCmPackage):
     )
     conflicts("+mpi", when="+rocm", msg="ROCm support and MPI are not yet compatible")
 
-    conflicts("+gpu_streams", when="+openmp", msg="GPU streams currently not supported in combination with OpenMP")
+    conflicts(
+        "+gpu_streams",
+        when="+openmp",
+        msg="GPU streams currently not supported in combination with OpenMP",
+    )
 
     def url_for_version(self, version):
         return "https://elpa.mpcdf.mpg.de/software/tarball-archive/Releases/{0}/elpa-{0}.tar.gz".format(
