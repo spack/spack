@@ -35,16 +35,16 @@ class PyPsyclone(PythonPackage):
     version("1.5.1", sha256="f053ad7316623b2a4002afc79607abda3b22306645e86f2312d9f3fe56d312dc")
 
     # Current dependencies
-    depends_on("py-configparser", type=("build", "run"))
-    depends_on("py-fparser@0.1.4:", type=("build", "run"), when="@2.5.0")
-    depends_on("py-jsonschema", type=("build", "run"), when="@2.5.0")
-    depends_on("py-pyparsing", type=("build", "run"))
     depends_on("py-setuptools", type="build")
+    depends_on("py-pyparsing", type=("build", "run"))
+    depends_on("py-fparser@0.1.4:", type=("build", "run"), when="@2.5.0")
+    depends_on("py-configparser", type=("build", "run"))
+    depends_on("py-jsonschema", type=("build", "run"), when="@2.5.0")
     depends_on("py-sympy", type=("build", "run"), when="@2.2.0:")
 
     # Historical dependencies
-    depends_on("py-jsonschema@3.0.2", type=("build", "run"), when="@2.1.0:2.4.0")
     depends_on("py-six", type=("build", "run"), when="@2.0.0:2.3.1")
+    depends_on("py-jsonschema@3.0.2", type=("build", "run"), when="@2.1.0:2.4.0")
 
     # Test cases fail without compatible versions of py-fparser:
     depends_on("py-fparser@0.1.3", type=("build", "run"), when="@2.4.0")
@@ -55,15 +55,15 @@ class PyPsyclone(PythonPackage):
     depends_on("py-fparser@0.0.12", type=("build", "run"), when="@2.0.0")
 
     # Dependencies only required for tests:
-    depends_on("py-flake8", type="test")
     depends_on("py-pep8", type="test")
+    depends_on("py-flake8", type="test")
     depends_on("py-pylint@:2", type="test")
-    depends_on("py-pytest", type="test")
     depends_on("py-pytest-cov", type="test")
-    depends_on("py-pytest-flakes", type="test")
     depends_on("py-pytest-pep8", type="test")
     depends_on("py-pytest-pylint", type="test")
+    depends_on("py-pytest-flakes", type="test")
     depends_on("py-pytest-xdist", type="test")
+    depends_on("py-pytest", type="test")
 
     # Test
     @run_after("install")
