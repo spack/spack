@@ -24,7 +24,8 @@ class PyTensorflowProbability(Package):
     license("Apache-2.0")
 
     # TODO: reactivate once TF 2.15 is ready https://github.com/spack/spack/pull/41069
-    # version("0.23.0", sha256="a00769550da9284acbd69e32a005507153ad39b0c190feca2bbbf6373366cc14")
+    version("0.24.0", sha256="3d75418cef09ea357ee879347133ab784fe4637a5ba251a8e06ef930dd970a3e")
+    version("0.23.0", sha256="a00769550da9284acbd69e32a005507153ad39b0c190feca2bbbf6373366cc14")
     version("0.22.1", sha256="9c1203b454aaeb48ac67dea862a411dba6b04f67c1e874e0e83bd1d7f13829a3")
     version("0.22.0", sha256="f9ce55b00c8069246d701c04eaafccde413355f6e76ccf9e549772ecfa0349a4")
     version("0.21.0", sha256="69b7510b38b2e48bcfb9ff570ef598d489e4f1bcbe13276f5dd91c878b8d56d1")
@@ -46,6 +47,7 @@ class PyTensorflowProbability(Package):
     depends_on("py-setuptools", type="build")
 
     # required_packages.py
+    depends_on("py-tf-keras", when="@0.24:", type=("build", "run"))
     depends_on("py-absl-py", when="@0.18:", type=("build", "run"))
     depends_on("py-six@1.10:", type=("build", "run"))
     depends_on("py-numpy@1.13.3:", type=("build", "run"))
