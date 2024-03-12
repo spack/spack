@@ -58,6 +58,8 @@ class ZlibNg(AutotoolsPackage, CMakePackage):
         depends_on("cmake@3.5.1:", type="build")
         depends_on("cmake@3.14.0:", type="build", when="@2.1.0:")
 
+    conflicts("%nvhpc@:20", msg="the compiler is too old and too broken")
+
     @property
     def libs(self):
         name = "libz" if self.spec.satisfies("+compat") else "libz-ng"
