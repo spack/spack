@@ -92,6 +92,7 @@ spack:
   - hypre
   - kokkos +openmp
   - kokkos-kernels +openmp
+  - laghos
   - lammps
   - lbann
   - legion
@@ -173,6 +174,7 @@ spack:
   # - bricks ~cuda                  # not respecting target=aarch64?
   # - dealii                        # slepc: make[1]: *** internal error: invalid --jobserver-auth string 'fifo:/tmp/GMfifo1313'.
   # - geopm                         # geopm: https://github.com/spack/spack/issues/38795
+  # - glvis                         # glvis: https://github.com/spack/spack/issues/42839
   # - libpressio +bitgrooming +bzip2 ~cuda ~cusz +fpzip +hdf5 +libdistributed +lua +openmp +python +sz +sz3 +unix +zfp # py-numcodecs@0.7.3: gcc: error: unrecognized command-line option '-mno-sse2'
   # - variorum                      # variorum: https://github.com/spack/spack/issues/38786
 

@@ -43,10 +43,6 @@ class Libevent(AutotoolsPackage):
     depends_on("openssl@:1.0", when="@:2.0+openssl")
     depends_on("openssl", when="+openssl")
 
-    depends_on("autoconf", type="build")
-    depends_on("automake", type="build")
-    depends_on("libtool", type="build")
-
     def url_for_version(self, version):
         if version >= Version("2.0.22"):
             url = "https://github.com/libevent/libevent/releases/download/release-{0}-stable/libevent-{0}-stable.tar.gz"
@@ -59,9 +55,6 @@ class Libevent(AutotoolsPackage):
     def libs(self):
         libs = find_libraries("libevent", root=self.prefix, shared=True, recursive=True)
         return LibraryList(libs)
-
-    def autoreconf(self, spec, prefix):
-        autoreconf("--force", "--install", "--symlink")
 
     def configure_args(self):
         spec = self.spec

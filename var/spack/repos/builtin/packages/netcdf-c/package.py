@@ -351,6 +351,24 @@ class CMakeBuilder(BaseBuilder, cmake.CMakeBuilder):
             base_cmake_args.append(self.define("NC_FIND_SHARED_LIBS", False))
         return base_cmake_args
 
+    @run_after("install")
+    def patch_hdf5_pkgconfigcmake(self):
+        """
+        Incorrect hdf5 library names are put in the package config and config.cmake files
+        due to incorrectly using hdf5 target names
+        https://github.com/spack/spack/pull/42878
+        """
+
+        pkgconfig_file = find(self.prefix, "netcdf.pc", recursive=True)
+        cmakeconfig_file = find(self.prefix, "netCDFTargets.cmake", recursive=True)
+        ncconfig_file = find(self.prefix, "nc-config", recursive=True)
+        settingsconfig_file = find(self.prefix, "libnetcdf.settings", recursive=True)
+
+        files = pkgconfig_file + cmakeconfig_file + ncconfig_file + settingsconfig_file
+
+        filter_file("hdf5-shared", "hdf5", *files, ignore_absent=True)
+        filter_file("hdf5_hl-shared", "hdf5_hl", *files, ignore_absent=True)
+
 
 class AutotoolsBuilder(BaseBuilder, autotools.AutotoolsBuilder):
     @property
