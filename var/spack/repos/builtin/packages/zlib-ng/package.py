@@ -89,4 +89,5 @@ class CMakeBuilder(cmake.CMakeBuilder):
         return [
             self.define_from_variant("ZLIB_COMPAT", "compat"),
             self.define_from_variant("WITH_OPTIM", "opt"),
+            self.define("ZLIB_ENABLE_TESTS", self.pkg.run_tests),
         ]
