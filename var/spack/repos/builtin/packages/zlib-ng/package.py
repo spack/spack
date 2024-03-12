@@ -67,6 +67,14 @@ class ZlibNg(AutotoolsPackage, CMakePackage):
 
 
 class AutotoolsBuilder(autotools.AutotoolsBuilder):
+
+    @run_before("configure")
+    def pretend_gcc(self):
+        # All nice things (PIC flags, symbol versioning) that happen to the compilers that are
+        # recognized as gcc (%gcc, %clang, %intel, %oneapi) we want for some other compilers too:
+        if self.spec.compiler.name in ["nvhpc"]:
+            filter_file(r"^gcc=0$", "gcc=1", join_path(self.configure_directory, "configure"))
+
     def configure_args(self):
         args = []
         if self.spec.satisfies("+compat"):
@@ -74,45 +82,6 @@ class AutotoolsBuilder(autotools.AutotoolsBuilder):
         if self.spec.satisfies("~opt"):
             args.append("--without-optimizations")
         return args
-
-    @run_after("configure")
-    def patch_makefiles(self):
-        # We need to fix the building with compilers that are not recognized as gcc. Note that a
-        # compiler is recognized as gcc if it has "gcc" or "clang" substring either in its
-        # executable name (including the path) or in the output generated with the `-v` flag (i.e
-        # '$CC -v 2>&1'). The latter is the reason why, for example, %intel and %oneapi are often
-        # recognized as gcc: they almost always contain "gcc" in the verbose output. Although we
-        # should not rely on the false positive results of the configure script but patch the
-        # makefile for all the aforementioned compilers, we try to be conservative for now and do
-        # the patching only for compilers that will fail to build the package otherwise.
-        if self.spec.compiler.name not in ["nvhpc"]:
-            return
-
-        root_makefile = join_path(self.build_directory, "Makefile")
-        arch_makefile = find(join_path(self.build_directory, "arch"), "Makefile", recursive=True)
-        all_makefiles = arch_makefile + [root_makefile]
-
-        with keep_modification_time(*all_makefiles):
-            if self.spec.satisfies("+opt"):
-                # The configure script checks whether the compiler supports the '-fno-lto' flag
-                # only if it is recognized as gcc. Otherwise, it assumes that the flag is
-                # supported, which is not always true:
-                filter_file(r"^(NOLTOFLAG *=).*$", r"\1", *arch_makefile)
-
-            # The configure script sets the PIC flag only if the compiler is recognized as gcc:
-            filter_file(
-                r"^(SFLAGS *=.*)$", r"\1 {0}".format(self.pkg.compiler.cc_pic_flag), *all_makefiles
-            )
-
-            # The configure script sets the library versioning flags only if the compiler is
-            # recognized as gcc:
-            if self.spec.platform in ["linux", "cray"]:
-                filter_file(
-                    r"^(LDSHAREDFLAGS *=.*)$",
-                    r"\1 -Wl,"
-                    r"-soname,$(LIBNAME1).so.$(VER1),--version-script,$(SRCDIR)/$(LIBNAME2).map",
-                    root_makefile,
-                )
 
 
 class CMakeBuilder(cmake.CMakeBuilder):
