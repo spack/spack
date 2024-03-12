@@ -32,6 +32,7 @@ class EcmwfAtlas(CMakePackage):
     version("0.31.0", sha256="fa4ff8665544b8e19f79d171c540a9ca8bfc4127f52a3c4d4d618a2fe23354d7")
 
     depends_on("ecbuild", type=("build"))
+    depends_on("ecbuild@3.4:", type=("build"), when="@0.36.0:")
     depends_on("eckit@:1.23", when="@:0.33")
     depends_on("eckit@1.24:", when="@0.34:")
     depends_on("boost cxxstd=14 visibility=hidden", when="@0.26.0:0.33.99", type=("build", "run"))
