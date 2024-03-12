@@ -24,11 +24,3 @@ class PerlGraphviz(PerlPackage):
     depends_on("perl-parse-recdescent@1.965001:", type=("build", "run", "test"))
     depends_on("perl-xml-twig@3.52:", type=("build", "run", "test"))
     depends_on("perl-xml-xpath@1.13:", type=("build", "run", "test"))
-
-    def test_use(self):
-        """Test 'use module'"""
-        options = ["-we", 'use strict; use GraphViz; print("OK\n")']
-
-        perl = self.spec["perl"].command
-        out = perl(*options, output=str.split, error=str.split)
-        assert "OK" in out
