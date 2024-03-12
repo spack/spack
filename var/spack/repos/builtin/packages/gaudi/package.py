@@ -63,6 +63,7 @@ class Gaudi(CMakePackage):
         when="@37.1 ^catch2@3.1:",
     )
 
+    patch("tbb.patch")
     # These dependencies are needed for a minimal Gaudi build
     depends_on("aida")
     depends_on("boost@1.67.0: +python")
