@@ -14,6 +14,7 @@ class Flatbuffers(CMakePackage):
 
     license("Apache-2.0")
 
+    version("24.3.7", sha256="bfff9d2150fcff88f844e8c608b02b2a0e94c92aea39b04c0624783464304784")
     version("2.0.6", sha256="e2dc24985a85b278dd06313481a9ca051d048f9474e0f199e372fea3ea4248c9")
     version("2.0.0", sha256="9ddb9031798f4f8754d00fca2f1a68ecf9d0f83dfac7239af1311e4fd9a565c4")
     version("1.12.0", sha256="62f2223fb9181d1d6338451375628975775f7522185266cd5296571ac152bc45")
@@ -61,9 +62,7 @@ class Flatbuffers(CMakePackage):
     def cmake_args(self):
         args = []
         args.append(self.define_from_variant("FLATBUFFERS_BUILD_SHAREDLIB", "shared"))
-        args.append(
-            "-DFLATBUFFERS_BUILD_FLATLIB={0}".format("ON" if "+shared" not in self.spec else "OFF")
-        )
+        args.append(f"-DFLATBUFFERS_BUILD_FLATLIB={'ON' if '+shared' not in self.spec else 'OFF'}")
         if "darwin" in self.spec.architecture:
             args.append("-DCMAKE_MACOSX_RPATH=ON")
         return args
