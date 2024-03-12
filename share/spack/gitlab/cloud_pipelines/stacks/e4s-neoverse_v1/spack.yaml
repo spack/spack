@@ -67,6 +67,7 @@ spack:
   - chai ~benchmarks ~tests
   - charliecloud
   - conduit
+  - cp2k +mpi
   - datatransferkit
   - dyninst
   - ecp-data-vis-sdk ~cuda ~rocm +adios2 +ascent +cinema +darshan +faodel +hdf5 +paraview +pnetcdf +sz +unifyfs +veloc ~visit +vtkm +zfp  # +visit: ?
@@ -81,7 +82,7 @@ spack:
   - gmp
   - gotcha
   - gptune ~mpispawn
-  - gromacs +cp2k ^cp2k+dlaf build_system=cmake
+  - gromacs +cp2k ^cp2k +mpi +dlaf build_system=cmake
   - h5bench
   - hdf5-vol-async
   - hdf5-vol-cache
@@ -214,6 +215,7 @@ spack:
   - cabana +cuda cuda_arch=75 ^kokkos +wrapper +cuda_lambda +cuda cuda_arch=75
   - caliper +cuda cuda_arch=75
   - chai ~benchmarks ~tests +cuda cuda_arch=75 ^umpire ~shared
+  # - cp2k +mpi +cuda cuda_arch=75 # cp2k: cp2k only supports cuda_arch ('35', '37', '60', '70', '80')
   - flecsi +cuda cuda_arch=75
   - ginkgo +cuda cuda_arch=75
   - gromacs +cuda cuda_arch=75
@@ -260,6 +262,7 @@ spack:
   - cabana +cuda cuda_arch=80 ^kokkos +wrapper +cuda_lambda +cuda cuda_arch=80
   - caliper +cuda cuda_arch=80
   - chai ~benchmarks ~tests +cuda cuda_arch=80 ^umpire ~shared
+  # - cp2k +mpi +cuda cuda_arch=80  # cp2k: Error: KeyError: 'Point environment variable LIBSMM_PATH to the absolute path of the libsmm.a file'
   - flecsi +cuda cuda_arch=80
   - ginkgo +cuda cuda_arch=80
   - gromacs +cuda cuda_arch=80
@@ -306,6 +309,7 @@ spack:
   - cabana +cuda cuda_arch=90  ^kokkos +wrapper +cuda_lambda +cuda cuda_arch=90
   - caliper +cuda cuda_arch=90
   - chai ~benchmarks ~tests +cuda cuda_arch=90 ^umpire ~shared
+  # - cp2k +mpi +cuda cuda_arch=90 # cp2k: cp2k only supports cuda_arch ('35', '37', '60', '70', '80')
   - flecsi +cuda cuda_arch=90
   - ginkgo +cuda cuda_arch=90
   - gromacs +cuda cuda_arch=90
