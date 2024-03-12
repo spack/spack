@@ -908,3 +908,71 @@ def test_find_first_file(tmpdir, bfs_depth):
 
     # Should find first dir
     assert os.path.samefile(fs.find_first(root, "a", bfs_depth=bfs_depth), os.path.join(root, "a"))
+
+
+@pytest.fixture
+def dir_structure_with_things_to_find(tmpdir):
+    """
+    <root>/
+        dir_one/
+            file_one
+        dir_two/
+        dir_three/
+            dir_four/
+                file_two
+            file_three
+        file_four
+    """
+    dir_one = tmpdir.join("dir_one").ensure(dir=True)
+    tmpdir.join("dir_two").ensure(dir=True)
+    dir_three = tmpdir.join("dir_three").ensure(dir=True)
+    dir_four = dir_three.join("dir_four").ensure(dir=True)
+
+    locations = {}
+    locations["file_one"] = str(dir_one.join("file_one").ensure())
+    locations["file_two"] = str(dir_four.join("file_two").ensure())
+    locations["file_three"] = str(dir_three.join("file_three").ensure())
+    locations["file_four"] = str(tmpdir.join("file_four").ensure())
+
+    return str(tmpdir), locations
+
+
+def test_find_max_depth(dir_structure_with_things_to_find):
+    root, locations = dir_structure_with_things_to_find
+
+    # Make sure the paths we use to verify are absolute
+    assert os.path.isabs(locations["file_one"])
+
+    assert set(fs.find_max_depth(root, "file_*", 0)) == {locations["file_four"]}
+    assert set(fs.find_max_depth(root, "file_*", 1)) == {
+        locations["file_one"],
+        locations["file_three"],
+        locations["file_four"],
+    }
+    assert set(fs.find_max_depth(root, "file_two", 2)) == {locations["file_two"]}
+    assert not set(fs.find_max_depth(root, "file_two", 1))
+    assert set(fs.find_max_depth(root, "file_two")) == {locations["file_two"]}
+    assert set(fs.find_max_depth(root, "file_*")) == set(locations.values())
+
+
+def test_find_max_depth_relative(dir_structure_with_things_to_find):
+    """find_max_depth should return absolute paths even if
+    the provided path is relative.
+    """
+    root, locations = dir_structure_with_things_to_find
+    with fs.working_dir(root):
+        assert set(fs.find_max_depth(".", "file_*", 0)) == {locations["file_four"]}
+        assert set(fs.find_max_depth(".", "file_two", 2)) == {locations["file_two"]}
+
+
+@pytest.mark.parametrize(
+    "recursive,max_depth", [(False, None), (False, 0), (False, -1), (False, 1)]
+)
+def test_max_depth_and_recursive_errors(tmpdir, recursive, max_depth):
+    root = str(tmpdir)
+    error_str = "cannot be set if recursive is False"
+    with pytest.raises(ValueError, match=error_str):
+        fs.find(root, ["some_file"], recursive=recursive, max_depth=max_depth)
+
+    with pytest.raises(ValueError, match=error_str):
+        fs.find_libraries(root, ["some_lib"], recursive=recursive, max_depth=max_depth)
