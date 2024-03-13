@@ -34,6 +34,7 @@ from llnl.util.filesystem import copy_tree, mkdirp, remove_linked_tree, touchp, 
 import spack.binary_distribution
 import spack.caches
 import spack.cmd.buildcache
+import spack.compiler
 import spack.compilers
 import spack.config
 import spack.database
@@ -269,10 +270,6 @@ def clean_test_environment():
     ev.deactivate()
 
 
-def _verify_executables_noop(*args):
-    return None
-
-
 def _host():
     """Mock archspec host so there is no inconsistency on the Windows platform
     This function cannot be local as it needs to be pickleable"""
@@ -298,9 +295,7 @@ def mock_compiler_executable_verification(request, monkeypatch):
 
     If a test is marked in that way this is a no-op."""
     if "enable_compiler_verification" not in request.keywords:
-        monkeypatch.setattr(
-            spack.compiler.Compiler, "verify_executables", _verify_executables_noop
-        )
+        monkeypatch.setattr(spack.compiler.Compiler, "verify_executables", _return_none)
 
 
 # Hooks to add command line options or set other custom behaviors.
@@ -934,26 +929,16 @@ def dirs_with_libfiles(tmpdir_factory):
     yield lib_to_dirs, all_dirs
 
 
-def _compiler_link_paths_noop(*args):
-    return []
+def _return_none(*args):
+    return None
 
 
 @pytest.fixture(scope="function", autouse=True)
 def disable_compiler_execution(monkeypatch, request):
-    """
-    This fixture can be disabled for tests of the compiler link path
-    functionality by::
-
-        @pytest.mark.enable_compiler_link_paths
-
-    If a test is marked in that way this is a no-op."""
-    if "enable_compiler_link_paths" not in request.keywords:
-        # Compiler.determine_implicit_rpaths actually runs the compiler. So
-        # replace that function with a noop that simulates finding no implicit
-        # RPATHs
-        monkeypatch.setattr(
-            spack.compiler.Compiler, "_get_compiler_link_paths", _compiler_link_paths_noop
-        )
+    """Disable compiler execution to determine implicit link paths and libc flavor and version.
+    To re-enable use `@pytest.mark.enable_compiler_execution`"""
+    if "enable_compiler_execution" not in request.keywords:
+        monkeypatch.setattr(spack.compiler.Compiler, "_compile_dummy_c_source", _return_none)
 
 
 @pytest.fixture(scope="function")
