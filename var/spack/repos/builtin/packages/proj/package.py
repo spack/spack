@@ -128,10 +128,11 @@ class BaseBuilder(metaclass=spack.builder.PhaseCallbacksMeta):
 
 class CMakeBuilder(BaseBuilder, cmake.CMakeBuilder):
     def cmake_args(self):
+        shared_arg = "BUILD_SHARED_LIBS" if self.spec.satisfies("@7:") else "BUILD_LIBPROJ_SHARED"
         args = [
             self.define_from_variant("ENABLE_TIFF", "tiff"),
             self.define_from_variant("ENABLE_CURL", "curl"),
-            self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
+            self.define_from_variant(shared_arg, "shared"),
             self.define_from_variant("CMAKE_POSITION_INDEPENDENT_CODE", "pic"),
         ]
         if self.spec.satisfies("@6:") and self.pkg.run_tests:

@@ -24,6 +24,7 @@ class Namd(MakefilePackage, CudaPackage):
     maintainers("jcphill")
 
     version("master", branch="master")
+    version("3.0b6", sha256="8b5fb1dc8d5b5666c6a45d20ee7e8c9d1f5c186578e2cf148b68ba421d43b850")
     version("3.0b3", sha256="20c32b6161f9c376536e3cb97c3bfe5367e1baaaace3c716ff79831fc2eb8199")
     version("2.15a2", sha256="8748cbaa93fc480f92fc263d9323e55bce6623fc693dbfd4a40f59b92669713e")
     version("2.15a1", branch="master", tag="release-2-15-alpha-1")
@@ -64,7 +65,7 @@ class Namd(MakefilePackage, CudaPackage):
     # Handle change in python-config for python@3.8:
     patch("namd-python38.patch", when="interface=python ^python@3.8:")
 
-    depends_on("charmpp@7.0.0:", when="@3.0b3")
+    depends_on("charmpp@7.0.0:", when="@3.0:")
     depends_on("charmpp@6.10.1:6", when="@2.14:2")
     depends_on("charmpp@6.8.2", when="@2.13")
     depends_on("charmpp@6.7.1", when="@2.12")

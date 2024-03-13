@@ -2,8 +2,11 @@ spack:
   view: false
   packages:
     all:
-      require: target=x86_64_v3
-      variants: ~cuda+rocm amdgpu_target=gfx90a
+      require:
+      - target=x86_64_v3
+      - ~cuda
+      - +rocm
+      - amdgpu_target=gfx90a
     gl:
       require: "osmesa"
     py-torch:
@@ -35,31 +38,30 @@ spack:
     - mxnet
 
     # PyTorch
-    # Does not yet support Spack-install ROCm
-    # - py-botorch
-    # - py-efficientnet-pytorch
-    # - py-gpytorch
-    # - py-kornia
-    # - py-lightning
-    # - py-pytorch-gradual-warmup-lr
-    # - py-pytorch-lightning
-    # - py-segmentation-models-pytorch
-    # - py-timm
-    # - py-torch
-    # - py-torch-cluster
-    # - py-torch-geometric
-    # - py-torch-nvidia-apex
-    # - py-torch-scatter
-    # - py-torch-sparse
-    # - py-torch-spline-conv
-    # - py-torchaudio
-    # - py-torchdata
-    # - py-torchfile
-    # - py-torchgeo
-    # - py-torchmetrics
-    # - py-torchtext
-    # - py-torchvision
-    # - py-vector-quantize-pytorch
+    - py-botorch
+    - py-efficientnet-pytorch
+    - py-gpytorch
+    - py-kornia
+    - py-lightning
+    - py-pytorch-gradual-warmup-lr
+    - py-pytorch-lightning
+    - py-segmentation-models-pytorch
+    - py-timm
+    - py-torch
+    - py-torch-cluster
+    - py-torch-geometric
+    - py-torch-nvidia-apex
+    - py-torch-scatter
+    - py-torch-sparse
+    - py-torch-spline-conv
+    - py-torchaudio
+    - py-torchdata
+    - py-torchfile
+    - py-torchgeo
+    - py-torchmetrics
+    - py-torchtext
+    - py-torchvision
+    - py-vector-quantize-pytorch
 
     # scikit-learn
     - py-scikit-learn
@@ -72,12 +74,13 @@ spack:
     - py-tensorboardx
 
     # TensorFlow
-    - py-tensorflow
-    - py-tensorflow-datasets
-    - py-tensorflow-estimator
-    - py-tensorflow-hub
-    - py-tensorflow-metadata
-    - py-tensorflow-probability
+    # Does not yet support Spack-installed ROCm
+    # - py-tensorflow
+    # - py-tensorflow-datasets
+    # - py-tensorflow-estimator
+    # - py-tensorflow-hub
+    # - py-tensorflow-metadata
+    # - py-tensorflow-probability
 
     # XGBoost
     - py-xgboost

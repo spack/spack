@@ -2,8 +2,11 @@ spack:
   view: false
   packages:
     all:
-      require: target=x86_64_v3
-      variants: ~rocm+cuda cuda_arch=80
+      require:
+      - target=x86_64_v3
+      - ~rocm
+      - +cuda
+      - cuda_arch=80
     llvm:
       # https://github.com/spack/spack/issues/27999
       require: ~cuda

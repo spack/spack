@@ -26,6 +26,11 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
     version("2.12.1", sha256="6bc4600cc0b88e9e40f1800096f5bddbbd3b6e5527a030dea631b87f2ae46b5b")
     version("2.12.0", sha256="c030cb1905bff1d2446615992aad8d8d85cbe90c4fb625cee458c63bf466bc8e")
     version("2.11.1", sha256="624ed1cc170cdcc19e8a15d8cdde989a9a1c6b0534c90b38a6b2f06fb2963e5f")
+    version(
+        "2.11.0-rocm-enhanced",
+        sha256="0c4ee8d83bc72215cbc1a5cd3e88cde1a9cf7304237d3e3d8d105ff09827d903",
+        url="https://github.com/ROCmSoftwarePlatform/tensorflow-upstream/archive/refs/tags/v2.11.0-rocm-enhanced.tar.gz",
+    )
     version("2.11.0", sha256="99c732b92b1b37fc243a559e02f9aef5671771e272758aa4aec7f34dc92dac48")
     version("2.10.1", sha256="622a92e22e6f3f4300ea43b3025a0b6122f1cc0e2d9233235e4c628c331a94a3")
     version("2.10.0", sha256="b5a1bb04c84b6fe1538377e5a1f649bb5d5f0b2e3625a3c526ff3a8af88633e8")
@@ -323,8 +328,8 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
     conflicts("platform=darwin target=aarch64:", when="@:2.4")
     # https://github.com/tensorflow/tensorflow/pull/39225
     conflicts("target=aarch64:", when="@:2.2")
-    conflicts("~rocm", when="@2.7.4-rocm-enhanced")
-    conflicts("+rocm", when="@:2.7.4-a,2.7.4.0:")
+    conflicts("~rocm", when="@2.7.4-rocm-enhanced,2.11.0-rocm-enhanced")
+    conflicts("+rocm", when="@:2.7.4-a,2.7.4.0:2.11.0-a,2.11.0.0:")
 
     # wheel 0.40 upgrades vendored packaging, trips over tensorflow-io-gcs-filesystem identifier
     conflicts("^py-wheel@0.40:", when="@2.11:2.13")
