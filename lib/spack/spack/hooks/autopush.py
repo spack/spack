@@ -5,39 +5,56 @@
 
 import argparse
 
+import spack.binary_distribution as bindist
 import spack.mirror
+import llnl.util.tty as tty
 from spack.cmd import buildcache as bc
 
 
+updated_mirrors = set()
+
+
 def post_install_in_db(spec):
-    pkg = spec.package
+    # Push package to all buildcaches with autopush==True
 
     # Do nothing if package was not installed from source
+    pkg = spec.package
     if pkg.installed_from_binary_cache:
         return
 
-    # Push package to all buildcaches with autopush==True
-    hash = "/" + spec.dag_hash()
     # Iterate over all mirrors with autopush==True
     all_mirrors = spack.mirror.MirrorCollection(binary=True)
     autopush_mirrors = [mirror for mirror in all_mirrors.values() if mirror.get_autopush()]
     for mirror in autopush_mirrors:
-        # Create and execute buildcache push command
-        bc_parser = argparse.ArgumentParser()
-        bc.setup_parser(bc_parser)
-        bc_flags = []
-        # The dependencies should already be in the buildcache
-        # No need to add them again (especially with --force)
-        bc_flags.append("--only=package")
-        # We want the pushed packages to be available right away
-        bc_flags.append("--update-index")
-        # We always want to push the package to the buildcache
-        # If it is already in the buildcache it must be corrupted,
-        # otherwise it would not have been compiled from source
-        bc_flags.append("--force")
-        # TODO remove install_args?
-        # if install_args["fail_fast"]:
-        #    bc_flags.append("--fail-fast")
-        bc_args = ["push"] + bc_flags + [mirror.name, hash]
-        push_args = bc_parser.parse_args(bc_args)
-        bc.push_fn(push_args)
+        # Push the package to a mirror
+        bindist.push_or_raise(
+            spec,
+            mirror.push_url,
+            bindist.PushOptions(
+                force=True,
+                regenerate_index=False,
+                unsigned=False,
+                key=None,
+            ),
+        )
+        # TODO: Why mirror.push_url does not work, but mirror.name does?
+        #       It fails in the update below, even though lookup() should accept both name and url
+        #       Does every mirror have a name?
+        # updated_mirrors.add(mirror.push_url)
+        updated_mirrors.add(mirror.name)
+        tty.msg(f"Pushed to mirror {mirror.name}")
+
+
+def on_install_done():
+    # Exit right away if there are no mirrors to update
+    if not updated_mirrors:
+        return
+
+    # Update index of all mirrors where a package was pushed
+    all_mirrors = spack.mirror.MirrorCollection(binary=True)
+    update_index_mirrors = [all_mirrors.lookup(mirror) for mirror in updated_mirrors]
+    for mirror in update_index_mirrors:
+        # Sanity check
+        if mirror.get_autopush():
+            bc.update_index(mirror)
+            tty.msg(f"Updated index of mirror {mirror.name}")
