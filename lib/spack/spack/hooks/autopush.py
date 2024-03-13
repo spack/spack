@@ -3,13 +3,11 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import argparse
+import llnl.util.tty as tty
 
 import spack.binary_distribution as bindist
 import spack.mirror
-import llnl.util.tty as tty
 from spack.cmd import buildcache as bc
-
 
 updated_mirrors = set()
 
@@ -30,12 +28,7 @@ def post_install_in_db(spec):
         bindist.push_or_raise(
             spec,
             mirror.push_url,
-            bindist.PushOptions(
-                force=True,
-                regenerate_index=False,
-                unsigned=False,
-                key=None,
-            ),
+            bindist.PushOptions(force=True, regenerate_index=False, unsigned=False, key=None),
         )
         # TODO: Why mirror.push_url does not work, but mirror.name does?
         #       It fails in the update below, even though lookup() should accept both name and url
