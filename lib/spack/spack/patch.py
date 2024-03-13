@@ -26,7 +26,11 @@ from spack.util.executable import which, which_string
 
 
 def apply_patch(
-    stage: "spack.stage.Stage", patch_path: str, level: int = 1, working_dir: str = "."
+    stage: "spack.stage.Stage",
+    patch_path: str,
+    level: int = 1,
+    working_dir: str = ".",
+    reverse: bool = False,
 ) -> None:
     """Apply the patch at patch_path to code in the stage.
 
@@ -35,6 +39,7 @@ def apply_patch(
         patch_path: filesystem location for the patch to apply
         level: patch level
         working_dir: relative path *within* the stage to change to
+        reverse: reverse the patch
     """
     git_utils_path = os.environ.get("PATH", "")
     if sys.platform == "win32":
@@ -45,6 +50,10 @@ def apply_patch(
             git_root = git_root / "usr" / "bin"
             git_utils_path = os.pathsep.join([str(git_root), git_utils_path])
 
+    args = ["-s", "-p", str(level), "-i", patch_path, "-d", working_dir]
+    if reverse:
+        args.append("-R")
+
     # TODO: Decouple Spack's patch support on Windows from Git
     # for Windows, and instead have Spack directly fetch, install, and
     # utilize that patch.
@@ -53,7 +62,7 @@ def apply_patch(
     # flag is passed.
     patch = which("patch", required=True, path=git_utils_path)
     with llnl.util.filesystem.working_dir(stage.source_path):
-        patch("-s", "-p", str(level), "-i", patch_path, "-d", working_dir)
+        patch(*args)
 
 
 class Patch:
@@ -67,7 +76,12 @@ class Patch:
     sha256: str
 
     def __init__(
-        self, pkg: "spack.package_base.PackageBase", path_or_url: str, level: int, working_dir: str
+        self,
+        pkg: "spack.package_base.PackageBase",
+        path_or_url: str,
+        level: int,
+        working_dir: str,
+        reverse: bool = False,
     ) -> None:
         """Initialize a new Patch instance.
 
@@ -76,6 +90,7 @@ class Patch:
             path_or_url: the relative path or URL to a patch file
             level: patch level
             working_dir: relative path *within* the stage to change to
+            reverse: reverse the patch
         """
         # validate level (must be an integer >= 0)
         if not isinstance(level, int) or not level >= 0:
@@ -87,6 +102,7 @@ class Patch:
         self.path: Optional[str] = None  # must be set before apply()
         self.level = level
         self.working_dir = working_dir
+        self.reverse = reverse
 
     def apply(self, stage: "spack.stage.Stage") -> None:
         """Apply a patch to source in a stage.
@@ -97,7 +113,7 @@ class Patch:
         if not self.path or not os.path.isfile(self.path):
             raise NoSuchPatchError(f"No such patch: {self.path}")
 
-        apply_patch(stage, self.path, self.level, self.working_dir)
+        apply_patch(stage, self.path, self.level, self.working_dir, self.reverse)
 
     # TODO: Use TypedDict once Spack supports Python 3.8+ only
     def to_dict(self) -> Dict[str, Any]:
@@ -111,6 +127,7 @@ class Patch:
             "sha256": self.sha256,
             "level": self.level,
             "working_dir": self.working_dir,
+            "reverse": self.reverse,
         }
 
     def __eq__(self, other: object) -> bool:
@@ -146,6 +163,7 @@ class FilePatch(Patch):
         relative_path: str,
         level: int,
         working_dir: str,
+        reverse: bool = False,
         ordering_key: Optional[Tuple[str, int]] = None,
     ) -> None:
         """Initialize a new FilePatch instance.
@@ -155,6 +173,7 @@ class FilePatch(Patch):
             relative_path: path to patch, relative to the repository directory for a package.
             level: level to pass to patch command
             working_dir: path within the source directory where patch should be applied
+            reverse: reverse the patch
             ordering_key: key used to ensure patches are applied in a consistent order
         """
         self.relative_path = relative_path
@@ -182,7 +201,7 @@ class FilePatch(Patch):
             msg += "package %s.%s does not exist." % (pkg.namespace, pkg.name)
             raise ValueError(msg)
 
-        super().__init__(pkg, abs_path, level, working_dir)
+        super().__init__(pkg, abs_path, level, working_dir, reverse)
         self.path = abs_path
         self.ordering_key = ordering_key
 
@@ -228,6 +247,7 @@ class UrlPatch(Patch):
         level: int = 1,
         *,
         working_dir: str = ".",
+        reverse: bool = False,
         sha256: str,  # This is required for UrlPatch
         ordering_key: Optional[Tuple[str, int]] = None,
         archive_sha256: Optional[str] = None,
@@ -239,12 +259,13 @@ class UrlPatch(Patch):
             url: URL where the patch can be fetched
             level: level to pass to patch command
             working_dir: path within the source directory where patch should be applied
+            reverse: reverse the patch
             ordering_key: key used to ensure patches are applied in a consistent order
             sha256: sha256 sum of the patch, used to verify the patch
             archive_sha256: sha256 sum of the *archive*, if the patch is compressed
                 (only required for compressed URL patches)
         """
-        super().__init__(pkg, url, level, working_dir)
+        super().__init__(pkg, url, level, working_dir, reverse)
 
         self.url = url
         self._stage: Optional["spack.stage.Stage"] = None
@@ -350,13 +371,20 @@ def from_dict(
             dictionary["url"],
             dictionary["level"],
             working_dir=dictionary["working_dir"],
+            # Added in v0.22, fallback required for backwards compatibility
+            reverse=dictionary.get("reverse", False),
             sha256=dictionary["sha256"],
             archive_sha256=dictionary.get("archive_sha256"),
         )
 
     elif "relative_path" in dictionary:
         patch = FilePatch(
-            pkg_cls, dictionary["relative_path"], dictionary["level"], dictionary["working_dir"]
+            pkg_cls,
+            dictionary["relative_path"],
+            dictionary["level"],
+            dictionary["working_dir"],
+            # Added in v0.22, fallback required for backwards compatibility
+            dictionary.get("reverse", False),
         )
 
         # If the patch in the repo changes, we cannot get it back, so we
