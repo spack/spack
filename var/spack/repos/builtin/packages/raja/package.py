@@ -14,8 +14,7 @@ from .blt import llnl_link_helpers
 # dependencies.
 def submodules(package):
     submodules = []
-    if "+desul" in package.spec:
-        submodules.append("tpl/desul")
+    submodules.append("tpl/desul")
     return submodules
 
 class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
