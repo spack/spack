@@ -9,6 +9,7 @@ from spack.package import *
 
 from .blt import llnl_link_helpers
 
+
 # Starting with 2022.03.0, the only submodule we want to fetch is tpl/desul
 # since there is no package for it. Other RAJA submodules are defined as
 # dependencies.
@@ -16,6 +17,7 @@ def submodules(package):
     submodules = []
     submodules.append("tpl/desul")
     return submodules
+
 
 class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
     """RAJA Parallel Framework."""
