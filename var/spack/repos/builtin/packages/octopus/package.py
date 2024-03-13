@@ -19,7 +19,7 @@ class Octopus(AutotoolsPackage, CudaPackage):
     url = "https://octopus-code.org/download/6.0/octopus-6.0.tar.gz"
     git = "https://gitlab.com/octopus-code/octopus"
 
-    maintainers("fangohr", "RemiLacroix-IDRIS")
+    maintainers("fangohr", "RemiLacroix-IDRIS", "iamashwin99")
 
     license("Apache-2.0")
 
