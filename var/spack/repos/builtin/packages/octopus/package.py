@@ -300,6 +300,12 @@ class Octopus(AutotoolsPackage, CudaPackage):
             args.append(f"{cxxflags} {gcc10_extra}")
             args.append(f"{cflags} {gcc10_extra}")
 
+        # Disable flags
+        #
+        # disable gdlib explicitly to avoid
+        # autotools picking gdlib up from the system
+        args.append("--disable-gdlib")
+
         return args
 
     @run_after("install")
