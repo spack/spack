@@ -250,9 +250,10 @@ Compiler configuration
 
 Spack has the ability to build packages with multiple compilers and
 compiler versions. Compilers can be made available to Spack by
-specifying them manually in ``compilers.yaml``, or automatically by
-running ``spack compiler find``, but for convenience Spack will
-automatically detect compilers the first time it needs them.
+specifying them manually in ``compilers.yaml`` or ``packages.yaml``,
+or automatically by running ``spack compiler find``, but for
+convenience Spack will automatically detect compilers the first time
+it needs them.
 
 .. _cmd-spack-compilers:
 
@@ -457,6 +458,48 @@ specification. The operations available to modify the environment are ``set``, `
          prepend_path: # Similar for append|remove_path
            LD_LIBRARY_PATH: /ld/paths/added/by/setvars/sh
 
+.. note::
+
+   Spack is in the process of moving compilers from a separate
+   attribute to be handled like all other packages. As part of this
+   process, the ``compilers.yaml`` section will eventually be replaced
+   by configuration in the ``packages.yaml`` section. This new
+   configuration is now available, although it is not yet the default
+   behavior.
+
+Compilers can also be configured as external packages in the
+``packages.yaml`` config file. Any external package for a compiler
+(e.g. ``gcc`` or ``llvm``) will be treated as a configured compiler
+assuming the paths to the compiler executables are determinable from
+the prefix.
+
+If the paths to the compiler executable are not determinable from the
+prefix, you can add them to the ``extra_attributes`` field. Similarly,
+all other fields from the compilers config can be added to the
+``extra_attributes`` field for an external representing a compiler.
+
+.. code-block:: yaml
+
+   packages:
+     gcc:
+       external:
+       - spec: gcc@12.2.0 arch=linux-rhel8-skylake
+         prefix: /usr
+         extra_attributes:
+           environment:
+             set:
+               GCC_ROOT: /usr
+       external:
+       - spec: llvm+clang@15.0.0 arch=linux-rhel8-skylake
+         prefix: /usr
+         extra_attributes:
+           paths:
+             cc: /usr/bin/clang-with-suffix
+             cxx: /usr/bin/clang++-with-extra-info
+             fc: /usr/bin/gfortran
+             f77: /usr/bin/gfortran
+           extra_rpaths:
+           - /usr/lib/llvm/
 
 ^^^^^^^^^^^^^^^^^^^^^^^
 Build Your Own Compiler
