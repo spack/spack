@@ -23,6 +23,7 @@ class Octopus(AutotoolsPackage, CudaPackage):
 
     license("Apache-2.0")
 
+    version("14.0", sha256="3cf6ef571ff97cc2c226016815d2ac4aa1e00ae3fb0cc693e0aff5620b80373e")
     version("13.0", sha256="b4d0fd496c31a9c4aa4677360e631765049373131e61f396b00048235057aeb1")
     version("12.2", sha256="e919e07703696eadb4ba59352d7a2678a9191b4586cb9da538661615e765a5a2")
     version("12.1", sha256="e2214e958f1e9631dbe6bf020c39f1fe4d71ab0b6118ea9bd8dc38f6d7a7959a")
@@ -104,7 +105,12 @@ class Octopus(AutotoolsPackage, CudaPackage):
         depends_on("arpack-ng+mpi", when="+arpack")
         depends_on("elpa+mpi", when="+elpa")
         depends_on("netcdf-c+mpi", when="+netcdf")  # Link dependency of NetCDF fortran lib
-        depends_on("berkeleygw@2.1+mpi", when="+berkeleygw")
+        with when("+berkeleygw"):
+            # From octopus@14:, upstream switched support from BerkeleyGW@2.1 to @3.0:
+            # see https://gitlab.com/octopus-code/octopus/-/merge_requests/2257
+            # BerkeleyGW 2.1 is the last supported version until octopus@14
+            depends_on("berkeleygw@3:+mpi", when="@14:")
+            depends_on("berkeleygw@2.1+mpi", when="@:13")
 
     with when("~mpi"):  # list all the serial dependencies
         depends_on("fftw@3:+openmp~mpi", when="@8:9")  # FFT library
@@ -114,7 +120,9 @@ class Octopus(AutotoolsPackage, CudaPackage):
         depends_on("arpack-ng~mpi", when="+arpack")
         depends_on("elpa~mpi", when="+elpa")
         depends_on("netcdf-c~~mpi", when="+netcdf")  # Link dependency of NetCDF fortran lib
-        depends_on("berkeleygw@2.1~mpi", when="+berkeleygw")
+        with when("+berkeleygw"):
+            depends_on("berkeleygw@3:~~mpi", when="@14:")
+            depends_on("berkeleygw@2.1~~mpi", when="@:13")
 
     depends_on("etsf-io", when="+etsf-io")
     depends_on("py-numpy", when="+python")
