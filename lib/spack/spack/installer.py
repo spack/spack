@@ -2254,6 +2254,9 @@ class PackageInstaller:
                 pkg=pkg,
             )
 
+        # Send final status that install is successful
+        spack.hooks.on_install_done()
+
 
 class BuildProcessInstaller:
     """This class implements the part installation that happens in the child process."""
