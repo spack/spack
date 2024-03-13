@@ -75,7 +75,6 @@ __all__ = [
     "resource",
     "build_system",
     "requires",
-    "language",
 ]
 
 #: These are variant names used by Spack internally; packages can't use them
@@ -93,6 +92,9 @@ DepType = Union[Tuple[str, ...], str]
 WhenType = Optional[Union["spack.spec.Spec", str, bool]]
 Patcher = Callable[[Union["spack.package_base.PackageBase", Dependency]], None]
 PatchesType = Optional[Union[Patcher, str, List[Union[Patcher, str]]]]
+
+
+SUPPORTED_LANGUAGES = ("fortran", "cxx")
 
 
 def _make_when_spec(value: WhenType) -> Optional["spack.spec.Spec"]:
@@ -586,6 +588,9 @@ def depends_on(
     @see The section "Dependency specs" in the Spack Packaging Guide.
 
     """
+    if spack.spec.Spec(spec).name in SUPPORTED_LANGUAGES:
+        assert type == "build", "languages must be of 'build' type"
+        return _language(lang_spec_str=spec, when=when)
 
     def _execute_depends_on(pkg: "spack.package_base.PackageBase"):
         _depends_on(pkg, spec, when=when, type=type, patches=patches)
@@ -1015,13 +1020,8 @@ def requires(*requirement_specs: str, policy="one_of", when=None, msg=None):
 
 
 @directive("languages")
-def language(lang: str, *, when: Optional[Union[str, bool]] = None):
-    """Declares a language used by this package.
-
-    Args:
-        lang: a language used by this package (e.g. 'fortran' or 'c')
-        when: condition under which the language is used
-    """
+def _language(lang_spec_str: str, *, when: Optional[Union[str, bool]] = None):
+    """Temporary implementation of language virtuals, until compilers are proper dependencies."""
 
     def _execute_languages(pkg: "spack.package_base.PackageBase"):
         when_spec = _make_when_spec(when)
@@ -1029,7 +1029,7 @@ def language(lang: str, *, when: Optional[Union[str, bool]] = None):
             return
 
         languages = pkg.languages.setdefault(when_spec, set())
-        languages.add(lang)
+        languages.add(lang_spec_str)
 
     return _execute_languages
 

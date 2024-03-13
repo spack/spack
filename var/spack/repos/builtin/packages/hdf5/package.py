@@ -33,9 +33,8 @@ class Hdf5(CMakePackage):
 
     license("custom")
 
-    language("c")
-    language("cxx", when="+cxx")
-    language("fortran", when="+fortran")
+    depends_on("cxx", type="build", when="+cxx")
+    depends_on("fortran", type="build", when="+fortran")
 
     # The 'develop' version is renamed so that we could uninstall (or patch) it
     # without affecting other develop version.
