@@ -317,6 +317,8 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
 
     patch("exodusII-netcdf4.9.0.patch", when="@5.10.0:5.10.2")
 
+    patch("kits_with_catalyst_5_12.patch", when="@5.12.0")
+
     generator("ninja", "make", default="ninja")
     # https://gitlab.kitware.com/paraview/paraview/-/issues/21223
     conflicts("generator=ninja", when="%xl")
