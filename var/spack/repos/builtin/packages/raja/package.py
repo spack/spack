@@ -9,6 +9,14 @@ from spack.package import *
 
 from .blt import llnl_link_helpers
 
+# Starting with 2022.03.0, the only submodule we want to fetch is tpl/desul
+# since there is no package for it. Other RAJA submodules are defined as
+# dependencies.
+def submodules(package):
+    submodules = []
+    if "+desul" in package.spec:
+        submodules.append("tpl/desul")
+    return submodules
 
 class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
     """RAJA Parallel Framework."""
@@ -21,43 +29,43 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
 
     license("BSD-3-Clause")
 
-    version("develop", branch="develop", submodules=False)
-    version("main", branch="main", submodules=False)
+    version("develop", branch="develop", submodules=submodules)
+    version("main", branch="main", submodules=submodules)
     version(
         "2024.02.0",
         tag="v2024.02.0",
         commit="82d1b926ada0fbb15a4a6e0adadc30c715cfda7b",
-        submodules=False,
+        submodules=submodules,
     )
     version(
         "2023.06.1",
         tag="v2023.06.1",
         commit="9b5f61edf3aa1e6fdbc9a4b30828c81504639963",
-        submodules=False,
+        submodules=submodules,
     )
     version(
         "2023.06.0",
         tag="v2023.06.0",
         commit="e330b2560747d5417cd7bd265fab3fb91d32ecbd",
-        submodules=False,
+        submodules=submodules,
     )
     version(
         "2022.10.5",
         tag="v2022.10.5",
         commit="3774f51339459bbbdb77055aa23f82919b6335b6",
-        submodules=False,
+        submodules=submodules,
     )
     version(
         "2022.10.4",
         tag="v2022.10.4",
         commit="c2a6b1740759ae3ae7c85b35e20dbffbe235355d",
-        submodules=False,
+        submodules=submodules,
     )
     version(
         "2022.03.0",
         tag="v2022.03.0",
         commit="4351fe6a50bd579511a625b017c9e054885e7fd2",
-        submodules=False,
+        submodules=submodules,
     )
     version(
         "0.14.0",
