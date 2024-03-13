@@ -120,6 +120,13 @@ class Ffmpeg(AutotoolsPackage):
 
     conflicts("%nvhpc")
 
+    # Solve build failure against vulkan headers 1.3.279
+    patch(
+        "https://git.ffmpeg.org/gitweb/ffmpeg.git/commitdiff_plain/fef22c87ada4",
+        sha256="856bdc2b6e2a7066cf683a235193b9025d4d73dd7686eda2fbcf83e7e65f8bf9",
+        when="@6.1.1",
+    )
+
     # Patch solving a build failure when vulkan is enabled
     patch(
         "https://git.ffmpeg.org/gitweb/ffmpeg.git/commitdiff_plain/eb0455d64690",
