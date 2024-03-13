@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class Dpcpp(CMakePackage):
 
     homepage = "https://intel.github.io/llvm-docs/"
     git = "https://github.com/intel/llvm.git"
+
+    license("Apache-2.0")
 
     version("develop", branch="sycl")
     version("2021.09", commit="bd68232bb96386bf7649345c0557ba520e73c02d")

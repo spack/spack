@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -102,7 +102,10 @@ class Target:
         if self.microarchitecture.vendor == "generic":
             return str(self)
 
-        return syaml.syaml_dict(self.microarchitecture.to_dict(return_list_of_items=True))
+        # Get rid of compiler flag information before turning the uarch into a dict
+        uarch_dict = self.microarchitecture.to_dict()
+        uarch_dict.pop("compilers", None)
+        return syaml.syaml_dict(uarch_dict.items())
 
     def __repr__(self):
         cls_name = self.__class__.__name__

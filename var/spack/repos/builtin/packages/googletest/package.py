@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ class Googletest(CMakePackage):
     """Google test framework for C++.  Also called gtest."""
 
     homepage = "https://github.com/google/googletest"
-    url = "https://github.com/google/googletest/archive/release-1.10.0.tar.gz"
+    url = "https://github.com/google/googletest/archive/refs/tags/v1.14.0.tar.gz"
     git = "https://github.com/google/googletest"
 
     maintainers("sethrj")
@@ -85,11 +85,11 @@ class Googletest(CMakePackage):
         while versions up to, and including, 1.8.0 are available only from
         `archive/release-<version>.tar.gz`
         """
-        if version.satisfies("@:1.8.0"):
+        if version <= Version("1.8.0"):
             return f"{self.git}/archive/release-{version}.tar.gz"
 
         tagname = f"release-{version}"
-        if version.satisfies("@1.13:"):
+        if version >= Version("1.13"):
             tagname = f"v{version}"
 
         return f"{self.git}/archive/refs/tags/{tagname}.tar.gz"

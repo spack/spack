@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,8 @@ class Signify(MakefilePackage):
 
     homepage = "https://github.com/aperezdc/signify"
     url = "https://github.com/aperezdc/signify/archive/v23.tar.gz"
+
+    license("ISC")
 
     version("31", sha256="8111af7424f4cc69dab5cd43a14ccd607ca2d171ac77dd3ae288264a53254e5f")
     version("23", sha256="1c690bf0e4283e0764a4a9dd784cb3debf4bb456b975b275dd1aaac7d5afe030")

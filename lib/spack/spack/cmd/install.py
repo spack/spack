@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -159,8 +159,8 @@ def setup_parser(subparser):
         "--no-check-signature",
         action="store_true",
         dest="unsigned",
-        default=False,
-        help="do not check signatures of binary packages",
+        default=None,
+        help="do not check signatures of binary packages (override mirror config)",
     )
     subparser.add_argument(
         "--show-log-on-error",
@@ -271,11 +271,11 @@ def require_user_confirmation_for_overwrite(concrete_specs, args):
 def _dump_log_on_error(e: spack.build_environment.InstallError):
     e.print_context()
     assert e.pkg, "Expected InstallError to include the associated package"
-    if not os.path.exists(e.pkg.build_log_path):
+    if not os.path.exists(e.pkg.log_path):
         tty.error("'spack install' created no log.")
     else:
         sys.stderr.write("Full build log:\n")
-        with open(e.pkg.build_log_path, errors="replace") as log:
+        with open(e.pkg.log_path, errors="replace") as log:
             shutil.copyfileobj(log, sys.stderr)
 
 

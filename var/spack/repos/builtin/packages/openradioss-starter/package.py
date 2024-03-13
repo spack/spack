@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,6 +22,8 @@ class OpenradiossStarter(CMakePackage):
 
     homepage = "https://www.openradioss.org/"
     git = "https://github.com/OpenRadioss/OpenRadioss.git"
+
+    license("AGPL-3.0-only")
 
     maintainers("kjrstory")
     version("main", branch="main")

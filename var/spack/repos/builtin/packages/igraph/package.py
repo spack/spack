@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,8 @@ class Igraph(CMakePackage, AutotoolsPackage):
 
     homepage = "https://igraph.org/"
     url = "https://github.com/igraph/igraph/releases/download/0.7.1/igraph-0.7.1.tar.gz"
+
+    license("GPL-2.0-or-later")
 
     version("0.10.6", sha256="99bf91ee90febeeb9a201f3e0c1d323c09214f0b5f37a4290dc3b63f52839d6d")
     version("0.7.1", sha256="d978030e27369bf698f3816ab70aa9141e9baf81c56cc4f55efbe5489b46b0df")

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,7 @@ from archspec.cpu import UnsupportedMicroarchitecture
 
 import llnl.util.tty as tty
 from llnl.util.lang import classproperty
+from llnl.util.symlink import readlink
 
 import spack.platforms
 import spack.util.executable
@@ -32,6 +33,8 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     keep_werror = "all"
 
     maintainers("michaelkuhn", "alalazo")
+
+    license("GPL-2.0-or-later AND LGPL-2.1-or-later")
 
     version("master", branch="master")
 
@@ -307,14 +310,10 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
             destination="newlibsource",
             fetch_options=timeout,
         )
-        # nvptx-tools does not seem to work as a dependency,
-        # but does fine when the source is inside the gcc build directory
-        # nvptx-tools doesn't have any releases, so grabbing the last commit
-        resource(
-            name="nvptx-tools",
-            git="https://github.com/MentorEmbedded/nvptx-tools",
-            commit="d0524fbdc86dfca068db5a21cc78ac255b335be5",
-        )
+
+        nvptx_tools_ver = "2023-09-13"
+        depends_on("nvptx-tools@" + nvptx_tools_ver, type="build")
+
         # NVPTX offloading supported in 7 and later by limited languages
         conflicts("@:6", msg="NVPTX only supported in gcc 7 and above")
         conflicts("languages=ada")
@@ -454,8 +453,8 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
 
     # Backport libsanitizer patch for glibc >= 2.36
     # https://reviews.llvm.org/D129471
-    patch("glibc-2.36-libsanitizer-gcc-5-9.patch", when="@5.1:5.5,6.1:6.5,7.1:7.5,8.1:8.5,9.1:9.5")
-    patch("glibc-2.36-libsanitizer-gcc-10-12.patch", when="@10.1:10.4,11.1:11.3,12.1.0")
+    patch("glibc-2.36-libsanitizer-gcc-5-9.patch", when="@5:9")
+    patch("glibc-2.36-libsanitizer-gcc-10-12.patch", when="@10:10.4,11:11.3,12.1.0")
 
     # Older versions do not compile with newer versions of glibc
     # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=81712
@@ -858,6 +857,28 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
 
         return options
 
+    # Copy nvptx-tools into the GCC install prefix
+    def copy_nvptx_tools(self):
+        nvptx_tools_bin_path = self.spec["nvptx-tools"].prefix.bin
+        gcc_bin_path = self.prefix.bin
+        mkdirp(gcc_bin_path)
+        copy_list = ["as", "ld", "nm", "run", "run-single"]
+        for file in copy_list:
+            fullname = f"nvptx-none-{file}"
+            copy(join_path(nvptx_tools_bin_path, fullname), join_path(gcc_bin_path, fullname))
+        link_list = ["ar", "ranlib"]
+        for file in link_list:
+            fullname = f"nvptx-none-{file}"
+            orig_target = readlink(join_path(nvptx_tools_bin_path, fullname))
+            symlink(orig_target, join_path(gcc_bin_path, fullname))
+        util_dir_path = join_path(self.prefix, "nvptx-none", "bin")
+        mkdirp(util_dir_path)
+        util_list = ["ar", "as", "ld", "nm", "ranlib"]
+        for file in util_list:
+            rel_target = join_path("..", "..", "bin", f"nvptx-none-{file}")
+            dest_link = join_path(util_dir_path, file)
+            symlink(rel_target, dest_link)
+
     # run configure/make/make(install) for the nvptx-none target
     # before running the host compiler phases
     @run_before("configure")
@@ -880,11 +901,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
             "--with-cuda-driver-lib={0}".format(spec["cuda"].libs.directories[0]),
         ]
 
-        with working_dir("nvptx-tools"):
-            configure = Executable("./configure")
-            configure(*options)
-            make()
-            make("install")
+        self.copy_nvptx_tools()
 
         pattern = join_path(self.stage.source_path, "newlibsource", "*")
         files = glob.glob(pattern)
@@ -1016,7 +1033,9 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
                     continue
 
                 abspath = os.path.join(bin_path, filename)
-                if os.path.islink(abspath):
+
+                # Skip broken symlinks (https://github.com/spack/spack/issues/41327)
+                if not os.path.exists(abspath):
                     continue
 
                 # Set the proper environment variable
@@ -1109,3 +1128,32 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
                         ),
                     ),
                 )
+
+    @classmethod
+    def runtime_constraints(cls, *, compiler, pkg):
+        """Callback function to inject runtime-related rules into the solver.
+
+        Rule-injection is obtained through method calls of the ``pkg`` argument.
+
+        Documentation for this function is temporary. When the API will be in its final state,
+        we'll document the behavior at https://spack.readthedocs.io/en/latest/
+
+        Args:
+            compiler: compiler object (node attribute) currently considered
+            pkg: object used to forward information to the solver
+        """
+        pkg("*").depends_on(
+            "gcc-runtime",
+            when="%gcc",
+            type="link",
+            description="If any package uses %gcc, it depends on gcc-runtime",
+        )
+        pkg("*").depends_on(
+            f"gcc-runtime@{str(compiler.version)}:",
+            when=f"%{str(compiler.spec)}",
+            type="link",
+            description=f"If any package uses %{str(compiler.spec)}, "
+            f"it depends on gcc-runtime@{str(compiler.version)}:",
+        )
+        # The version of gcc-runtime is the same as the %gcc used to "compile" it
+        pkg("gcc-runtime").requires(f"@={str(compiler.version)}", when=f"%{str(compiler.spec)}")

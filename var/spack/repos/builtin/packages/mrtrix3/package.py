@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class Mrtrix3(Package):
     homepage = "https://www.mrtrix.org/"
     url = "https://github.com/MRtrix3/mrtrix3/archive/refs/tags/3.0.3.tar.gz"
     git = "https://github.com/MRtrix3/mrtrix3.git"
+
+    license("MPL-2.0")
 
     version(
         "3.0.4",

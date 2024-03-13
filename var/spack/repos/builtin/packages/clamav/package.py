@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class Clamav(AutotoolsPackage):
 
     homepage = "https://www.clamav.net/"
     url = "https://www.clamav.net/downloads/production/clamav-0.101.2.tar.gz"
+
+    license("GPL-2.0-only")
 
     version("0.101.2", sha256="0a12ebdf6ff7a74c0bde2bdc2b55cae33449e6dd953ec90824a9e01291277634")
 

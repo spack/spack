@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,18 +13,8 @@ class FujitsuMpi(Package):
 
     homepage = "https://www.fujitsu.com/us/"
 
-    conflicts("%arm")
-    conflicts("%cce")
-    conflicts("%apple-clang")
-    conflicts("%clang")
-    conflicts("%gcc")
-    conflicts("%intel")
-    conflicts("%nag")
-    conflicts("%pgi")
-    conflicts("%xl")
-    conflicts("%xl_r")
-
     provides("mpi@3.1:")
+    requires("%fj")
 
     def install(self, spec, prefix):
         raise InstallError("Fujitsu MPI is not installable; it is vendor supplied")
@@ -50,9 +40,6 @@ class FujitsuMpi(Package):
         self.spec.mpicxx = self.prefix.bin.mpiFCC
         self.spec.mpif77 = self.prefix.bin.mpifrt
         self.spec.mpifc = self.prefix.bin.mpifrt
-
-    def setup_dependent_build_environment(self, env, dependent_spec):
-        self.setup_run_environment(env)
 
     def setup_run_environment(self, env):
         # Because MPI are both compilers and runtimes, we set up the compilers

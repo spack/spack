@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,8 @@ class Elfio(CMakePackage):
     url = "https://github.com/serge1/ELFIO/releases/download/Release_3.9/elfio-3.9.tar.gz"
 
     maintainers("haampie")
+
+    license("MIT")
 
     version("3.11", sha256="3307b104c205399786edbba203906de9517e36297709fe747faf9478d55fbb91")
     version("3.10", sha256="cdc6362ede2e0c8d1d6db15d7da4b526f461d9cfae6f6337369e416a8bc60234")

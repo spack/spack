@@ -1,4 +1,4 @@
-.. Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -153,7 +153,43 @@ keyring, and trusting all downloaded keys.
 List of popular build caches
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-* `Extreme-scale Scientific Software Stack (E4S) <https://e4s-project.github.io/>`_: `build cache <https://oaciss.uoregon.edu/e4s/inventory.html>`_
+* `Extreme-scale Scientific Software Stack (E4S) <https://e4s-project.github.io/>`_: `build cache <https://oaciss.uoregon.edu/e4s/inventory.html>`_'
+
+-------------------
+Build cache signing
+-------------------
+
+By default, Spack will add a cryptographic signature to each package pushed to
+a build cache, and verifies the signature when installing from a build cache.
+
+Keys for signing can be managed with the :ref:`spack gpg <cmd-spack-gpg>` command,
+as well as ``spack buildcache keys`` as mentioned above.
+
+You can disable signing when pushing with ``spack buildcache push --unsigned``,
+and disable verification when installing from any build cache with
+``spack install --no-check-signature``.
+
+Alternatively, signing and verification can be enabled or disabled on a per build cache
+basis:
+
+.. code-block:: console
+
+    $ spack mirror add --signed <name> <url>  # enable signing and verification
+    $ spack mirror add --unsigned <name> <url>  # disable signing and verification
+
+    $ spack mirror set --signed <name>  # enable signing and verification for an existing mirror
+    $ spack mirror set --unsigned <name>  # disable signing and verification for an existing mirror
+
+Or you can directly edit the ``mirrors.yaml`` configuration file:
+
+.. code-block:: yaml
+
+    mirrors:
+      <name>:
+        url: <url>
+        signed: false # disable signing and verification
+
+See also :ref:`mirrors`.
 
 ----------
 Relocation

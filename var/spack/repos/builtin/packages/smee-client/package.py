@@ -1,11 +1,10 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
 from spack.package import *
-from spack.util.executable import ProcessError
 
 
 class SmeeClient(Package):
@@ -35,7 +34,7 @@ class SmeeClient(Package):
         # Allow tsc to fail with typing "errors" which don't affect results
         output = npm("run", "build", output=str, error=str, fail_on_error=False)
         if npm.returncode not in (0, 2):
-            raise ProcessError(output)
+            raise InstallError(output)
 
     def install(self, spec, prefix):
         npm = which("npm", required=True)

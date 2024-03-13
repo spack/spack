@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,6 +18,9 @@ class Libsodium(AutotoolsPackage):
     url = "https://download.libsodium.org/libsodium/releases/libsodium-1.0.13.tar.gz"
     list_url = "https://download.libsodium.org/libsodium/releases/old"
 
+    license("ISC")
+
+    version("1.0.19", sha256="018d79fe0a045cca07331d37bd0cb57b2e838c51bc48fd837a1472e50068bbea")
     version("1.0.18", sha256="6f504490b342a4f8a4c4a02fc9b866cbef8622d5df4e5452b46be121e46636c1")
     version("1.0.17", sha256="0cc3dae33e642cc187b5ceb467e0ad0e1b51dcba577de1190e9ffa17766ac2b1")
     version("1.0.16", sha256="eeadc7e1e1bcef09680fb4837d448fbdf57224978f865ac1c16745868fbd0533")
@@ -35,7 +38,7 @@ class Libsodium(AutotoolsPackage):
             url += "old/unsupported/"
         elif version < Version("1.0.17"):
             url += "old/"
-        return url + "libsodium-{0}.tar.gz".format(version)
+        return url + f"libsodium-{version}.tar.gz"
 
     def patch(self):
         # Necessary on ppc64le / aarch64, because Spack tries to execute these scripts

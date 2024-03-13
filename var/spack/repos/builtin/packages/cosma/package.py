@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,13 +17,15 @@ class Cosma(CMakePackage):
     url = "https://github.com/eth-cscs/COSMA/archive/refs/tags/v2.6.6.tar.gz"
     git = "https://github.com/eth-cscs/COSMA.git"
 
+    license("BSD-3-Clause")
+
     # note: The default archives produced with github do not have the archives
     #       of the submodules.
     version("master", branch="master", submodules=False)
     version("2.6.6", sha256="1604be101e77192fbcc5551236bc87888d336e402f5409bbdd9dea900401cc37")
     version("2.6.5", sha256="10d9b7ecc1ce44ec5b9e0c0bf89278a63029912ec3ea99661be8576b553ececf")
     version("2.6.4", sha256="6d7bd5e3005874af9542a329c93e7ccd29ca1a5573dae27618fac2704fa2b6ab")
-    version("2.6.3", sha256="8ca96ca41458f1e9d0da70d524c5a03c677dba7238d23a578f852163b6d45ac9")
+    version("2.6.3", sha256="c2a3735ea8f860930bea6706d968497d72a1be0498c689b5bc4a951ffc2d1146")
     version("2.6.2", sha256="2debb5123cc35aeebc5fd2f8a46cfd6356d1e27618c9bb57129ecd09aa400940")
     version("2.6.1", sha256="69aa6634a030674f0d9be61e7b0bf0dc17acf0fc9e7a90b40e3179e2254c8d67")
     version("2.5.1", sha256="085b7787597374244bbb1eb89bc69bf58c35f6c85be805e881e1c0b25166c3ce")
@@ -39,7 +41,7 @@ class Cosma(CMakePackage):
     variant("cuda", default=False, description="Build with cuBLAS support")
     variant("rocm", default=False, description="Build with rocBLAS support")
     variant("scalapack", default=False, description="Build with ScaLAPACK API")
-    variant("shared", default=False, description="Build the shared library version")
+    variant("shared", default=True, description="Build the shared library version")
     variant("tests", default=False, description="Build tests")
     variant("apps", default=False, description="Build miniapp")
     variant("profiling", default=False, description="Enable profiling")
@@ -57,6 +59,8 @@ class Cosma(CMakePackage):
     depends_on("scalapack", when="+scalapack")
     depends_on("cuda", when="+cuda")
     depends_on("rocblas", when="+rocm")
+    depends_on("nccl", when="+nccl")
+    depends_on("rccl", when="+rccl")
 
     with when("@2.6.3:"):
         depends_on("tiled-mm@2.2:+cuda", when="+cuda")
@@ -74,6 +78,8 @@ class Cosma(CMakePackage):
         depends_on("semiprof", when="+profiling")
         depends_on("costa+profiling", when="+profiling")
 
+    patch("fj-ssl2.patch", when="^fujitsu-ssl2")
+
     def setup_build_environment(self, env):
         if "+cuda" in self.spec:
             env.set("CUDA_PATH", self.spec["cuda"].prefix)
@@ -87,6 +93,7 @@ class Cosma(CMakePackage):
             ("^cray-libsci", "CRAY_LIBSCI"),
             ("^netlib-lapack", "CUSTOM"),
             ("^openblas", "OPENBLAS"),
+            ("^fujitsu-ssl2", "SSL2"),
         ]
 
         if self.version >= Version("2.4.0"):

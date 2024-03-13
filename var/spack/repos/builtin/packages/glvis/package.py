@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -39,6 +39,8 @@ class Glvis(MakefilePackage):
     #
     # glvis does not need mfem+mpi but will build that by default, to just build
     # a serial mfem: `spack install glvis ^mfem~mpi~metis'
+
+    license("BSD-3-Clause")
 
     version("develop", branch="master")
 

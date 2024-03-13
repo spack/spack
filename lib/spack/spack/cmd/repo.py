@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -42,10 +42,7 @@ def setup_parser(subparser):
     # List
     list_parser = sp.add_parser("list", help=repo_list.__doc__)
     list_parser.add_argument(
-        "--scope",
-        action=arguments.ConfigScope,
-        default=lambda: spack.config.default_list_scope(),
-        help="configuration scope to read from",
+        "--scope", action=arguments.ConfigScope, help="configuration scope to read from"
     )
 
     # Add

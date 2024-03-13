@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,6 +20,8 @@ class Abacus(MakefilePackage):
     homepage = "http://abacus.ustc.edu.cn/"
     git = "https://github.com/abacusmodeling/abacus-develop.git"
     url = "https://github.com/abacusmodeling/abacus-develop/archive/refs/tags/v2.2.1.tar.gz"
+
+    license("LGPL-3.0-or-later")
 
     version("develop", branch="develop")
     version("2.2.3", sha256="88dbf6a3bdd907df3e097637ec8e51fde13e2f5e0b44f3667443195481320edf")

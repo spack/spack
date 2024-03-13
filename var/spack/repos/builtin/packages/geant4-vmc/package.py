@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,8 @@ class Geant4Vmc(CMakePackage):
     tags = ["hep"]
 
     maintainer = ["wdconinc"]
+
+    license("GPL-3.0-only")
 
     version("master", branch="master")
     version("6-1-p1", sha256="b3115cd891192ae6cb347737854ee01a22620498f005beb7644af12461ad8b9d")

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -27,7 +27,7 @@ class Openmm(CMakePackage, CudaPackage):
     install_targets = ["install", "PythonInstall"]
 
     depends_on("python@2.7:", type=("build", "run"))
-    depends_on("cmake@3.17:", type="build", when="@7.6.0:")
+    depends_on("cmake@3.17:", type="build", when="@7.5.1:")
     depends_on("cmake@3.1:", type="build")
     # https://github.com/openmm/openmm/issues/3317
     depends_on("doxygen@:1.9.1", type="build", when="@:7.6.0")
@@ -38,6 +38,15 @@ class Openmm(CMakePackage, CudaPackage):
     depends_on("py-numpy", type=("build", "run"))
     depends_on("cuda", when="+cuda", type=("build", "link", "run"))
     extends("python")
+
+    # Backport <https://github.com/openmm/openmm/pull/3154> to
+    # `openmm@7.5.1+cuda`, which is the version currently required by
+    # `py-alphafold`.
+    patch(
+        "https://github.com/openmm/openmm/pull/3154.patch?full_index=1",
+        sha256="90bc01b34cf998e90220669b3ed55cd3c42000ad364234033aac631ed754e9bd",
+        when="@7.5.1+cuda",
+    )
 
     def patch(self):
         install_string = 'set(PYTHON_SETUP_COMMAND "install ' '--prefix={0}")'.format(self.prefix)

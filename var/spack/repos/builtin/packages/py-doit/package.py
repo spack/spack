@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,8 @@ class PyDoit(PythonPackage):
 
     homepage = "http://pydoit.org/"
     pypi = "doit/doit-0.36.0.tar.gz"
+
+    license("MIT")
 
     version("0.36.0", sha256="71d07ccc9514cb22fe59d98999577665eaab57e16f644d04336ae0b4bae234bc")
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,6 +22,8 @@ class Geant4(CMakePackage):
 
     maintainers("drbenmorgan")
 
+    version("11.2.1", sha256="76c9093b01128ee2b45a6f4020a1bcb64d2a8141386dea4674b5ae28bcd23293")
+    version("11.2.0", sha256="9ff544739b243a24dac8f29a4e7aab4274fc0124fd4e1c4972018213dc6991ee")
     version("11.1.3", sha256="5d9a05d4ccf8b975649eab1d615fc1b8dce5937e01ab9e795bffd04149240db6")
     version("11.1.2", sha256="e9df8ad18c445d9213f028fd9537e174d6badb59d94bab4eeae32f665beb89af")
     version("11.1.1", sha256="c5878634da9ba6765ce35a469b2893044f4a6598aa948733da8436cdbfeef7d2")
@@ -60,13 +62,14 @@ class Geant4(CMakePackage):
     )
 
     variant("threads", default=True, description="Build with multithreading")
-    variant("vecgeom", default=False, description="Enable vecgeom support", when="@10.3:")
+    variant("vecgeom", default=False, description="Enable vecgeom support", when="@10.4:")
     variant("opengl", default=False, description="Optional OpenGL support")
     variant("x11", default=False, description="Optional X11 support")
     variant("motif", default=False, description="Optional motif support")
     variant("qt", default=False, description="Enable Qt support")
     variant("python", default=False, description="Enable Python bindings", when="@10.6.2:11.0")
     variant("tbb", default=False, description="Use TBB as a tasking backend", when="@11:")
+    variant("timemory", default=False, description="Use TiMemory for profiling", when="@9.5:")
     variant("vtk", default=False, description="Enable VTK support", when="@11:")
 
     depends_on("cmake@3.16:", type="build", when="@11.0.0:")
@@ -88,8 +91,9 @@ class Geant4(CMakePackage):
         "10.7.2",
         "10.7.3",
         "10.7.4",
-        "11.0.0:11.0",
-        "11.1:",
+        "11.0",
+        "11.1",
+        "11.2:",
     ]:
         depends_on("geant4-data@" + _vers, type="run", when="@" + _vers)
 
@@ -97,6 +101,7 @@ class Geant4(CMakePackage):
     depends_on("zlib-api")
 
     depends_on("tbb", when="+tbb")
+    depends_on("timemory@3.2:", when="+timemory")
     depends_on("vtk@8.2:", when="+vtk")
 
     # Python, with boost requirement dealt with in cxxstd section
@@ -112,13 +117,13 @@ class Geant4(CMakePackage):
 
     # Vecgeom specific versions for each Geant4 version
     with when("+vecgeom"):
-        depends_on("vecgeom@1.2.0:", when="@11.1:")
+        depends_on("vecgeom@1.2.6:", when="@11.2:")
+        depends_on("vecgeom@1.2.0:", when="@11.1")
         depends_on("vecgeom@1.1.18:1.1", when="@11.0.0:11.0")
         depends_on("vecgeom@1.1.8:1.1", when="@10.7.0:10.7")
         depends_on("vecgeom@1.1.5", when="@10.6.0:10.6")
         depends_on("vecgeom@1.1.0", when="@10.5.0:10.5")
         depends_on("vecgeom@0.5.2", when="@10.4.0:10.4")
-        depends_on("vecgeom@0.3rc", when="@10.3.0:10.3")
 
     def std_when(values):
         for v in values:
@@ -145,7 +150,9 @@ class Geant4(CMakePackage):
     depends_on("libx11", when="+x11")
     depends_on("libxmu", when="+x11")
     depends_on("motif", when="+motif")
-    depends_on("qt@5: +opengl", when="+qt")
+    with when("+qt"):
+        depends_on("qt@5: +opengl")
+        depends_on("qt@5.9:", when="@11.2:")
 
     # As released, 10.0.4 has inconsistently capitalised filenames
     # in the cmake files; this patch also enables cxxstd 14
@@ -256,6 +263,9 @@ class Geant4(CMakePackage):
             # Locked at global-dynamic to allow use cases that load the
             # geant4 libs at application runtime
             options.append("-DGEANT4_BUILD_TLS_MODEL=global-dynamic")
+
+        # Profiling
+        options.append(self.define_from_variant("GEANT4_USE_TIMEMORY", "timemory"))
 
         # Never install the data with geant4, but point to the dependent
         # geant4-data's install directory to correctly set up the

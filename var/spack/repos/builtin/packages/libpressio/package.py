@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -278,7 +278,6 @@ class Libpressio(CMakePackage, CudaPackage):
         if "+python" in self.spec:
             args.append("-DLIBPRESSIO_PYTHON_SITELIB={0}".format(python_platlib))
             args.append("-DBUILD_PYTHON_WRAPPER=ON")
-            args.append("-DPython3_EXECUTABLE={0}".format(self.spec["python"].command))
             if "+mpi" in self.spec:
                 args.append("-DLIBPRESSIO_HAS_MPI4PY=ON")
         if "+hdf5" in self.spec:

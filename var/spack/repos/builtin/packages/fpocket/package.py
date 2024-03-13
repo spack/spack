@@ -1,9 +1,10 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.build_systems import makefile
 from spack.package import *
 
 
@@ -14,6 +15,8 @@ class Fpocket(MakefilePackage):
     homepage = "https://github.com/Discngine/fpocket"
     url = "https://github.com/Discngine/fpocket/archive/refs/tags/4.1.tar.gz"
 
+    license("MIT")
+
     version("4.1", "1a2af2d3f2df42de67301996db3b93c7eaff0375f866443c0468dcf4b1750688")
 
     depends_on("netcdf-c")
@@ -21,7 +24,7 @@ class Fpocket(MakefilePackage):
     depends_on("qhull")
 
 
-class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
+class MakefileBuilder(makefile.MakefileBuilder):
     def setup_build_environment(self, env):
         if self.pkg.compiler.name == "gcc":
             env.set("CXX", "g++")

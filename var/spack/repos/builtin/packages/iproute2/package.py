@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class Iproute2(AutotoolsPackage):
     depends_on("bison", type="build")
     depends_on("flex", type="build")
     depends_on("libmnl")
+
+    license("GPL-2.0-or-later")
 
     version("5.11.0", sha256="16b79e6ce65d4d5fd425cef2fd92a58c403a93faeeed0e0a3202b36a8e857d1f")
     version("5.10.0", sha256="164f1de457eefbdadb98d82c309a0977542b34e7a2dfe81e497a0b93675cb3d2")

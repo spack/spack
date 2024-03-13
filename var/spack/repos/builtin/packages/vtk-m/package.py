@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -55,12 +55,6 @@ class VtkM(CMakePackage, CudaPackage, ROCmPackage):
 
     variant("doubleprecision", default=True, description="enable double precision")
     variant("logging", default=False, when="@1.3:", description="build logging support")
-    variant(
-        "ascent_types",
-        default=True,
-        when="~64bitids",
-        description="build support for ascent types",
-    )
     variant(
         "virtuals",
         default=False,
@@ -188,8 +182,10 @@ class VtkM(CMakePackage, CudaPackage, ROCmPackage):
                 self.define_from_variant("VTKm_INSTALL_EXAMPLES", "examples"),
                 self.define_from_variant("VTKm_NO_DEPRECATED_VIRTUAL", "virtuals"),
                 self.define_from_variant("VTKm_USE_64BIT_IDS", "64bitids"),
-                self.define_from_variant("VTKm_USE_DEFAULT_TYPES_FOR_ASCENT", "ascent_types"),
                 self.define_from_variant("VTKm_USE_DOUBLE_PRECISION", "doubleprecision"),
+                self.define(
+                    "VTKm_USE_DEFAULT_TYPES_FOR_ASCENT", "~64bitids +doubleprecision" in spec
+                ),
             ]
 
             if "+tbb" in spec:

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -26,8 +26,10 @@ class Abinit(AutotoolsPackage):
 
     homepage = "https://www.abinit.org/"
     url = "https://www.abinit.org/sites/default/files/packages/abinit-8.6.3.tar.gz"
+    license("Apache-2.0")
 
     maintainers("downloadico")
+    version("9.10.5", sha256="a9e0f0e058baa6088ea93d26ada369ccf0fe52dc9d4a865b1c38c20620148cd5")
     version("9.10.3", sha256="3f2a9aebbf1fee9855a09dd687f88d2317b8b8e04f97b2628ab96fb898dce49b")
     version("9.8.4", sha256="a086d5045f0093b432e6a044d5f71f7edf5a41a62d67b3677cb0751d330c564a")
     version("9.8.3", sha256="de823878aea2c20098f177524fbb4b60de9b1b5971b2e835ec244dfa3724589b")
@@ -162,7 +164,7 @@ class Abinit(AutotoolsPackage):
                 options.extend(
                     [
                         f"WANNIER90_CPPFLAGS=-I{spec['wannier90'].prefix.modules}",
-                        f"WANNIER90_LIBS=-L{spec['wannier90'].prefix.lib}"
+                        f"WANNIER90_LIBS=-L{spec['wannier90'].prefix.lib}",
                         "WANNIER90_LDFLAGS=-lwannier",
                     ]
                 )
@@ -179,10 +181,9 @@ class Abinit(AutotoolsPackage):
         if "+mpi" in spec:
             oapp(f"CC={spec['mpi'].mpicc}")
             oapp(f"CXX={spec['mpi'].mpicxx}")
+            oapp(f"FC={spec['mpi'].mpifc}")
             if spec.satisfies("@9.8:"):
                 oapp(f"F90={spec['mpi'].mpifc}")
-            else:
-                oapp(f"FC={spec['mpi'].mpifc}")
 
             # MPI version:
             # let the configure script auto-detect MPI support from mpi_prefix

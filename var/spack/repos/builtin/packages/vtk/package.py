@@ -1,9 +1,10 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+import glob
 import os
 
 from spack.package import *
@@ -20,6 +21,8 @@ class Vtk(CMakePackage):
     list_url = "https://www.vtk.org/download/"
 
     maintainers("chuckatkins", "danlipsa")
+
+    license("BSD-3-Clause")
 
     version("9.2.6", sha256="06fc8d49c4e56f498c40fcb38a563ed8d4ec31358d0101e8988f0bb4d539dd12")
     version("9.2.2", sha256="1c5b0a2be71fac96ff4831af69e350f7a0ea3168981f790c000709dcf9121075")
@@ -54,6 +57,7 @@ class Vtk(CMakePackage):
     variant("xdmf", default=False, description="Build XDMF file support")
     variant("ffmpeg", default=False, description="Build with FFMPEG support")
     variant("mpi", default=True, description="Enable MPI support")
+    variant("examples", default=False, description="Enable building & installing the VTK examples")
 
     patch("gcc.patch", when="@6.1.0")
     # patch to fix some missing stl includes
@@ -94,8 +98,9 @@ class Vtk(CMakePackage):
     # Broken downstream FindMPI
     patch("vtkm-findmpi-downstream.patch", when="@9.0.0")
 
-    # use internal FindHDF5
-    patch("internal_findHDF5.patch", when="@:8")
+    for plat in ["linux", "darwin", "freebsd", "cray"]:
+        # use internal FindHDF5
+        patch("internal_findHDF5.patch", when=f"@:8 platform={plat}")
 
     # Fix IOADIOS2 module to work with kits
     # https://gitlab.kitware.com/vtk/vtk/-/merge_requests/8653
@@ -114,6 +119,13 @@ class Vtk(CMakePackage):
     depends_on("gl@3.2:", when="+opengl2")
     depends_on("gl@1.2:", when="~opengl2")
 
+    depends_on("xz")
+    patch("vtk_find_liblzma.patch", when="@8.2")
+    patch("vtk_movie_link_ogg.patch", when="@8.2")
+    patch("vtk_use_sqlite_name_vtk_expects.patch", when="@8.2")
+    patch("vtk_proj_include_no_strict.patch", when="@9: platform=windows")
+    patch("vtk_alias_hdf5.patch", when="@9: platform=windows")
+    patch("vtk_findproj_config.patch", when="platform=windows")
     with when("~osmesa"):
         depends_on("glx", when="platform=linux")
         depends_on("glx", when="platform=cray")
@@ -151,21 +163,21 @@ class Vtk(CMakePackage):
     depends_on("lz4")
     depends_on("netcdf-c~mpi", when="~mpi")
     depends_on("netcdf-c+mpi", when="+mpi")
-    depends_on("netcdf-cxx")
+    depends_on("netcdf-cxx4", when="@:8.1.2")
     depends_on("libpng")
     depends_on("libtiff")
     depends_on("zlib-api")
     depends_on("eigen", when="@8.2.0:")
     depends_on("double-conversion", when="@8.2.0:")
     depends_on("sqlite", when="@8.2.0:")
-    depends_on("pugixml", when="@8.2.0:")
+    depends_on("pugixml", when="@8.3.0:")
     depends_on("libogg")
     depends_on("libtheora")
     depends_on("utf8cpp", when="@9:")
     depends_on("gl2ps", when="@8.1:")
     depends_on("gl2ps@1.4.1:", when="@9:")
     depends_on("proj@4", when="@8.2.0")
-    depends_on("proj@4:7", when="@9:")
+    depends_on("proj@4:", when="@9:")
     depends_on("cgns@4.1.1:+mpi", when="@9.1: +mpi")
     depends_on("cgns@4.1.1:~mpi", when="@9.1: ~mpi")
     with when("@9.1:"):
@@ -307,8 +319,6 @@ class Vtk(CMakePackage):
         # Enable/Disable wrappers for Python.
         if "+python" in spec:
             cmake_args.append("-DVTK_WRAP_PYTHON=ON")
-            if spec.satisfies("@:8"):
-                cmake_args.append("-DPYTHON_EXECUTABLE={0}".format(spec["python"].command.path))
             if "+mpi" in spec and spec.satisfies("@:8"):
                 cmake_args.append("-DVTK_USE_SYSTEM_MPI4PY:BOOL=ON")
             if spec.satisfies("@9.0.0: ^python@3:"):
@@ -471,5 +481,18 @@ class Vtk(CMakePackage):
                     "-DCMAKE_CXX_FLAGS={0}".format(compile_flags),
                 ]
             )
+        if spec.satisfies("@:8"):
+            vtk_example_arg = "BUILD_EXAMPLES"
+        else:
+            vtk_example_arg = "VTK_BUILD_EXAMPLES"
+        cmake_args.append(self.define_from_variant(f"{vtk_example_arg}", "examples"))
 
         return cmake_args
+
+    @when("+examples")
+    def install(self, spec, prefix):
+        super().install(spec, prefix)
+        with working_dir(self.build_directory):
+            examples = glob.glob("bin\\*.exe")
+            for example in examples:
+                install(example, prefix.bin)

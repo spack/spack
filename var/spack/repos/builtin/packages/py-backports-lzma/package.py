@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class PyBackportsLzma(PythonPackage):
 
     homepage = "https://github.com/peterjc/backports.lzma"
     url = "https://github.com/peterjc/backports.lzma/archive/backports.lzma.v0.0.14.tar.gz"
+
+    license("BSD-3-Clause")
 
     version("0.0.14", sha256="904854d152825b475ebf0f6074fa545474b4ef4eac833f2d9a565e2820dc3a2d")
     version("0.0.13", sha256="42c9d15fa16f691c07e3b325c90f7f9449811e9f7fc46bf4ad43c29bdbaf0b71")

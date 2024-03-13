@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -33,9 +33,16 @@ class Mapl(CMakePackage):
         "AlexanderRichert-NOAA",
     )
 
+    license("Apache-2.0")
+
     version("develop", branch="develop")
     version("main", branch="main")
 
+    version("2.43.0", sha256="1be99d64ca46001ac94f7db3607c345e144976dc34fe184e734e212bf3955d01")
+    version("2.42.4", sha256="f6b643cc45f2dc55df96a316c84d84ace341bb6e06f81f83b5de258d9978b3d4")
+    version("2.42.3", sha256="4ccac684dcbbca36cd7b30cb1515b52f05d7c06ca93399e60ccf42726d147018")
+    version("2.42.2", sha256="cc70be57942a3d7f7a53d4762cb972cebcb9ae1737be7e03f195e4d4eefbc68a")
+    version("2.42.1", sha256="78fdcc17f99f525feded05fc360f5b76e6f2c07057e0b16ce3177da2a534dc33")
     version("2.42.0", sha256="9b6c3434919c14ef79004db5f76cb3dd8ef375584227101c230a372bb0470fdd")
     version("2.41.2", sha256="73e1f0961f1b70e8159c0a2ce3499eb5158f3ca6d081f4c7826af7854ebfb44d")
     version("2.41.1", sha256="2b384bd4fbaac1bff4ef009922c436c4ab54832172a5cd4d312ea44e32c1ae7c")

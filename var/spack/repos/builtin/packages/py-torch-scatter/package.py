@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class PyTorchScatter(PythonPackage):
 
     homepage = "https://github.com/rusty1s/pytorch_scatter"
     url = "https://github.com/rusty1s/pytorch_scatter/archive/2.0.5.tar.gz"
+
+    license("MIT")
 
     version("2.0.5", sha256="e29b364beaa9c84a99e0e236be89ed19d4452d89010ff736184ddcce488b47f6")
 

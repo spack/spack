@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class PyTraits(PythonPackage):
     homepage = "https://docs.enthought.com/traits"
     pypi = "traits/traits-6.0.0.tar.gz"
     git = "https://github.com/enthought/traits.git"
+
+    license("CC-BY-3.0")
 
     version("6.4.2", sha256="5be7cc5fb7a99cba7e9014786373e3ad2f75efb445eeced094654bbaf3b0fa82")
     version("6.4.1", sha256="78bb2ccafd60aff606515aac46de64668a0a81cb5c54c650b9877a841aa9e812")

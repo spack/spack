@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -60,6 +60,7 @@ class Julia(MakefilePackage):
     depends_on("libuv", when="@:1.7")
     depends_on("libuv-julia@1.42.0", when="@1.8.0:1.8.1")
     depends_on("libuv-julia@1.44.2", when="@1.8.2:")
+    depends_on("suite-sparse@5.4:5.10", when="@1.6:1.9")
 
     with when("@1.9.0:1.9"):
         # libssh2.so.1, libpcre2-8.so.0, mbedtls.so.14, mbedcrypto.so.7, mbedx509.so.1
@@ -168,6 +169,7 @@ class Julia(MakefilePackage):
     depends_on("patchelf@0.13:0.17", type="build")
     depends_on("perl", type="build")
     depends_on("libwhich", type="build")
+    depends_on("which", type="build")  # for detecting 7z, lld, dsymutil
     depends_on("python", type="build")
 
     depends_on("blas")  # note: for now openblas is fixed...
@@ -189,12 +191,19 @@ class Julia(MakefilePackage):
     depends_on("unwind")
     depends_on("utf8proc")
     depends_on("zlib-api")
-    depends_on("zlib +shared +pic +optimize", when="^zlib")
+    depends_on("zlib +shared +pic +optimize", when="^[virtuals=zlib-api] zlib")
 
     # Patches for julia
     patch("julia-1.6-system-libwhich-and-p7zip-symlink.patch", when="@1.6.0:1.6")
     patch("use-add-rpath.patch", when="@:1.8.0")
     patch("use-add-rpath-2.patch", when="@1.8.1:1.8")
+
+    # Fix the path to Spack llvm's lld and dsymutil
+    patch(
+        "https://github.com/JuliaLang/julia/commit/55c13d234c1523861b278f7989b1af105ef0e88f.patch?full_index=1",
+        sha256="00569f40e1845329060a714813e509677949e633a0e833c40a3c70dcf9269cc1",
+        when="@1.9:1.10",
+    )
 
     # Fix libstdc++ not being found (https://github.com/JuliaLang/julia/issues/47987)
     patch(

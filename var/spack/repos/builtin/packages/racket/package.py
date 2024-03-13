@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class Racket(MakefilePackage):
     homepage = "https://www.racket-lang.org"
 
     maintainers("arjunguha", "elfprince13")
+
+    license("Apache-2.0 OR MIT")
 
     version("8.3", sha256="3b963cd29ae119e1acc2c6dc4781bd9f25027979589caaae3fdfc021aac2324b")
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class Autodiff(CMakePackage):
     git = "https://github.com/autodiff/autodiff.git"
 
     maintainers("wdconinc", "HadrienG2")
+
+    license("MIT")
 
     version("1.0.1", sha256="63f2c8aaf940fbb1d1e7098b1d6c08794da0194eec3faf773f3123dc7233838c")
     version("1.0.0", sha256="112c6f5740071786b3f212c96896abc2089a74bca16b57bb46ebf4cec79dca43")
