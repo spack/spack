@@ -813,3 +813,33 @@ def test_deconcretize_then_concretize_does_not_error(mutable_mock_env_path, mock
     assert len(e.concrete_roots()) == 3
     all_root_hashes = set(x.dag_hash() for x in e.concrete_roots())
     assert len(all_root_hashes) == 2
+
+
+@pytest.mark.parametrize(
+    "matrix_line", [("^zmpi", "^mpich"), ("~shared", "+shared"), ("shared=False", "+shared-libs")]
+)
+@pytest.mark.regression("40791")
+def test_stack_enforcement_is_strict(tmp_path, matrix_line, config, mock_packages):
+    """Ensure that constraints in matrices are applied strictly after expansion, to avoid
+    inconsistencies between abstract user specs and concrete specs.
+    """
+    manifest = tmp_path / "spack.yaml"
+    manifest.write_text(
+        f"""\
+spack:
+  definitions:
+    - packages: [libelf, mpileaks]
+    - install:
+        - matrix:
+            - [$packages]
+            - [{", ".join(item for item in matrix_line)}]
+  specs:
+    - $install
+  concretizer:
+    unify: false
+"""
+    )
+    # Here we raise different exceptions depending on whether we solve serially or not
+    with pytest.raises(Exception):
+        with ev.Environment(tmp_path) as e:
+            e.concretize()
