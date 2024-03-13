@@ -109,7 +109,7 @@ def _to_dict(compiler):
     return {"compiler": d}
 
 
-def get_compiler_config(scope=None, init_config=True):
+def get_compiler_config(scope=None, init_config=False):
     """Return the compiler configuration for the specified architecture."""
 
     config = spack.config.get("compilers", scope=scope) or []
@@ -118,6 +118,8 @@ def get_compiler_config(scope=None, init_config=True):
 
     merged_config = spack.config.get("compilers")
     if merged_config:
+        # Config is empty for this scope
+        # Do not init config because there is a non-empty scope
         return config
 
     _init_compiler_config(scope=scope)
@@ -234,14 +236,14 @@ def compiler_config_files():
     return config_files
 
 
-def add_compilers_to_config(compilers, scope=None, init_config=True):
+def add_compilers_to_config(compilers, scope=None):
     """Add compilers to the config for the specified architecture.
 
     Arguments:
         compilers: a list of Compiler objects.
         scope: configuration scope to modify.
     """
-    compiler_config = get_compiler_config(scope, init_config)
+    compiler_config = get_compiler_config(scope, init_config=False)
     for compiler in compilers:
         if not compiler.cc:
             tty.debug(f"{compiler.spec} does not have a C compiler")
@@ -290,7 +292,7 @@ def _remove_compiler_from_scope(compiler_spec, scope):
          True if one or more compiler entries were actually removed, False otherwise
     """
     assert scope is not None, "a specific scope is needed when calling this function"
-    compiler_config = get_compiler_config(scope)
+    compiler_config = get_compiler_config(scope, init_config=False)
     filtered_compiler_config = [
         compiler_entry
         for compiler_entry in compiler_config
@@ -313,8 +315,11 @@ def all_compilers_config(scope=None, init_config=True):
     """Return a set of specs for all the compiler versions currently
     available to build with.  These are instances of CompilerSpec.
     """
-    from_compilers_yaml = get_compiler_config(scope, init_config)
     from_packages_yaml = get_compiler_config_from_packages(scope)
+    if from_packages_yaml:
+        init_config = False
+    from_compilers_yaml = get_compiler_config(scope, init_config)
+
     result = from_compilers_yaml + from_packages_yaml
     key = lambda c: _compiler_from_config_entry(c["compiler"])
     return list(llnl.util.lang.dedupe(result, key=key))
