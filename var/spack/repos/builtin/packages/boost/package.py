@@ -156,7 +156,8 @@ class Boost(Package):
         "cxxstd",
         default="11",
         values=(
-            "98",
+            # 1.84.0 dropped support for 98/03
+            conditional("98", when="@:1.83.0"),
             "11",
             "14",
             # C++17 is not supported by Boost < 1.63.0.
@@ -171,9 +172,6 @@ class Boost(Package):
         description="Use the specified C++ standard when building.",
         is_library=False,
     )
-
-    # 1.84.0 dropped support for 98/03
-    conflicts("cxxstd=98", when="@1.84.0:")
 
     boost_variant(
         "debug",
