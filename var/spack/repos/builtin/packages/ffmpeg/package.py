@@ -131,14 +131,25 @@ class Ffmpeg(AutotoolsPackage):
     patch(
         "https://git.ffmpeg.org/gitweb/ffmpeg.git/commitdiff_plain/effadce6c756247ea8bae32dc13bb3e6f464f0eb",
         sha256="f070ac16be68b4d32b1b5b885d146eb36eb508daa928b6f0f78256c3482f9f0e",
-        when="@:6.0",
+        when="@6:6.0",
+    )
+    # Patch fixing a build failure with binutils 2.41.0, already in @5.1.4
+    patch(
+        "https://git.ffmpeg.org/gitweb/ffmpeg.git/commitdiff_plain/effadce6c756247ea8bae32dc13bb3e6f464f0eb",
+        sha256="f070ac16be68b4d32b1b5b885d146eb36eb508daa928b6f0f78256c3482f9f0e",
+        when="@:5.1.3",
     )
 
     # fix incompatibility with texinfo@7, especially @7.1:
     patch(
         "https://git.ffmpeg.org/gitweb/ffmpeg.git/commitdiff_plain/f01fdedb69e4accb1d1555106d8f682ff1f1ddc7",
         sha256="416751f41cfbf086c28b4bbf01ace4c08e5651e59911dca6240292bb1b5c6b53",
-        when="@5:6.0",
+        when="@6.0",
+    )
+    patch(
+        "https://git.ffmpeg.org/gitweb/ffmpeg.git/commitdiff_plain/f01fdedb69e4accb1d1555106d8f682ff1f1ddc7",
+        sha256="416751f41cfbf086c28b4bbf01ace4c08e5651e59911dca6240292bb1b5c6b53",
+        when="@5:5.1.3",
     )
 
     @property
