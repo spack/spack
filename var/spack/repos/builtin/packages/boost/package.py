@@ -784,3 +784,4 @@ class Boost(Package):
                 env.append_flags("CXXFLAGS", "-DBOOST_USE_UCONTEXT")
             elif context_impl == "winfib":
                 env.append_flags("CXXFLAGS", "-DBOOST_USE_WINFIB")
+        env.set("BOOST_ROOT", self.prefix)
