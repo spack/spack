@@ -22,6 +22,12 @@ class Camp(CMakePackage, CudaPackage, ROCmPackage):
 
     version("main", branch="main", submodules=False)
     version(
+        "2024.02.0",
+        tag="v2024.02.0",
+        commit="03c80a6c6ab4f97e76a52639563daec71435a277",
+        submodules=False,
+    )
+    version(
         "2023.06.0",
         tag="v2023.06.0",
         commit="ac34c25b722a06b138bc045d38bfa5e8fa3ec9c5",
@@ -43,7 +49,8 @@ class Camp(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("cub", when="+cuda")
 
     depends_on("blt", type="build")
-    depends_on("blt@0.5.0:0.5.3", type="build", when="@2022.03.0:")
+    depends_on("blt@0.6.0:", type="build", when="@2024.02.0:")
+    depends_on("blt@0.5.0:0.5.3", type="build", when="@2022.03.0:2023.06.0")
 
     patch("libstdc++-13-missing-header.patch", when="@:2022.10")
 

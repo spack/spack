@@ -24,6 +24,12 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
     version("develop", branch="develop", submodules=False)
     version("main", branch="main", submodules=False)
     version(
+        "2024.02.0",
+        tag="v2024.02.0",
+        commit="82d1b926ada0fbb15a4a6e0adadc30c715cfda7b",
+        submodules=False,
+    )
+    version(
         "2023.06.1",
         tag="v2023.06.1",
         commit="9b5f61edf3aa1e6fdbc9a4b30828c81504639963",
@@ -166,24 +172,25 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
     )
 
     depends_on("blt", type="build")
-    depends_on("blt@0.6.0:", type="build", when="@develop")
-    depends_on("blt@0.5.3:", type="build", when="@2023.06.0:")
-    depends_on("blt@0.5.2:", type="build", when="@2022.10.0:")
-    depends_on("blt@0.5.0:", type="build", when="@0.14.1:")
+    depends_on("blt@0.6.0:", type="build", when="@2024.02.0:")
+    depends_on("blt@0.5.3", type="build", when="@2023.06.0:2023.06.1")
+    depends_on("blt@0.5.2:0.5.3", type="build", when="@2022.10.5")
+    depends_on("blt@0.5.0:0.5.3", type="build", when="@0.14.1:2022.10.4")
     depends_on("blt@0.4.1", type="build", when="@0.14.0")
-    depends_on("blt@0.4.0:", type="build", when="@0.13.0")
-    depends_on("blt@0.3.6:", type="build", when="@:0.12.0")
+    depends_on("blt@0.4.0:0.4.1", type="build", when="@0.13.0")
+    depends_on("blt@0.3.6:0.4.1", type="build", when="@:0.12.0")
     conflicts("^blt@:0.3.6", when="+rocm")
 
-    depends_on("camp@main", type="build", when="@main")
-    depends_on("camp@main", type="build", when="@develop")
-    depends_on("camp@2023.06.0:", type="build", when="@2023.06.0:")
-    depends_on("camp@2022.10.1:", type="build", when="@2022.10.3:")
-    depends_on("camp@2022.10.0:", type="build", when="@2022.10.0:")
-    depends_on("camp@2022.03.2:2022.03", type="build", when="@2022.03.0:2022.03")
-    depends_on("camp@0.2.2:0.2.3", type="build", when="@0.14.0")
-    depends_on("camp@0.1.0", type="build", when="@0.10.0:0.13.0")
-    depends_on("camp+openmp", type="build", when="+openmp")
+    depends_on("camp+openmp", when="+openmp")
+    depends_on("camp@main", when="@develop")
+    depends_on("camp@main", when="@main")
+    depends_on("camp@2024.02.0:", type="build", when="@2024.02.0:")
+    depends_on("camp@2023.06.0", type="build", when="@2023.06.0:2023.06.1")
+    depends_on("camp@2022.10.1:2023.06.0", type="build", when="@2022.10.3:2022.10.5")
+    depends_on("camp@2022.10.0:2023.06.0", type="build", when="@2022.10.0:2022.10.2")
+    depends_on("camp@2022.03.2", type="build", when="@2022.03.0:2022.03.1")
+    depends_on("camp@0.2.2:0.2.3", when="@0.14.0")
+    depends_on("camp@0.1.0", when="@0.10.0:0.13.0")
 
     depends_on("cmake@3.23:", when="@2022.10.0:+rocm", type="build")
     depends_on("cmake@3.20:", when="@2022.10.0:", type="build")

@@ -24,7 +24,12 @@ class Chai(CachedCMakePackage, CudaPackage, ROCmPackage):
     license("BSD-3-Clause")
 
     version("develop", branch="develop", submodules=False)
-    version("main", branch="main", submodules=False)
+    version(
+        "2024.02.0",
+        tag="v2024.02.0",
+        commit="31773a2f0d30f3f64c82939f60fc4da32cf33261",
+        submodules=False,
+    )
     version(
         "2023.06.0",
         tag="v2023.06.0",
@@ -104,19 +109,20 @@ class Chai(CachedCMakePackage, CudaPackage, ROCmPackage):
     depends_on("cmake@3.9:", type="build", when="+cuda")
     depends_on("cmake@3.14:", type="build", when="@2022.03.0:")
 
-    depends_on("blt@0.5.3:", type="build", when="@2023.06.0:")
-    depends_on("blt@0.5.2:", type="build", when="@2022.10.0:")
-    depends_on("blt@0.5.0:", type="build", when="@2022.03.0:")
-    depends_on("blt@0.4.1:", type="build", when="@2.4.0:")
-    depends_on("blt@0.4.0:", type="build", when="@2.3.0")
-    depends_on("blt@0.3.6:", type="build", when="@:2.2.2")
+    depends_on("blt@0.6.1:", type="build", when="@develop")
+    depends_on("blt@0.5.3", type="build", when="@2023.06.0")
+    depends_on("blt@0.5.2:0.5.3", type="build", when="@2022.10.0")
+    depends_on("blt@0.5.0:0.5.3", type="build", when="@2022.03.0")
+    depends_on("blt@0.4.1:0.5.3", type="build", when="@2.4.0")
+    depends_on("blt@0.4.0:0.5.3", type="build", when="@2.3.0")
+    depends_on("blt@0.3.6:0.5.3", type="build", when="@:2.2.2")
     conflicts("^blt@:0.3.6", when="+rocm")
 
     depends_on("umpire")
-    depends_on("umpire@main", when="@main")
-    depends_on("umpire@2023.06.0:", when="@2023.06.0:")
-    depends_on("umpire@2022.10.0:", when="@2022.10.0:")
-    depends_on("umpire@2022.03.0:", when="@2022.03.0:")
+    depends_on("umpire@2024.02.0:", when="@2024.02.0:")
+    depends_on("umpire@2023.06.0", when="@2023.06.0")
+    depends_on("umpire@2022.10.0:2023.06.0", when="@2022.10.0")
+    depends_on("umpire@2022.03.0:2023.06.0", when="@2022.03.0")
     depends_on("umpire@6.0.0", when="@2.4.0")
     depends_on("umpire@4.1.2", when="@2.2.0:2.3.0")
 
@@ -135,16 +141,15 @@ class Chai(CachedCMakePackage, CudaPackage, ROCmPackage):
             )
 
     with when("+raja"):
-        depends_on("raja@main", when="@main")
-        depends_on("raja@2023.06.0:", when="@2023.06.0:")
-        depends_on("raja@2022.10.0:", when="@2022.10.0:")
-        depends_on("raja@2022.03.0:", when="@2022.03.0:")
-        depends_on("raja@0.14.0", when="@2.4.0")
-        depends_on("raja@0.13.0", when="@2.3.0")
-        depends_on("raja@0.12.0", when="@2.2.0:2.2.2")
-
         depends_on("raja~openmp", when="~openmp")
         depends_on("raja+openmp", when="+openmp")
+        depends_on("raja@2024.02.0:", when="@2024.02.0:")
+        depends_on("raja@2023.06.0", when="@2023.06.0")
+        depends_on("raja@2022.10.0:2023.06.0", when="@2022.10.0")
+        depends_on("raja@2022.03.0:2023.06.0", when="@2022.03.0")
+        depends_on("raja@0.12.0", when="@2.2.0:2.2.2")
+        depends_on("raja@0.13.0", when="@2.3.0")
+        depends_on("raja@0.14.0", when="@2.4.0")
 
         with when("+cuda"):
             depends_on("raja+cuda")
