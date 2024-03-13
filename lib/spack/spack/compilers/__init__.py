@@ -233,6 +233,9 @@ def compiler_config_files():
         compiler_config = config.get("compilers", scope=name)
         if compiler_config:
             config_files.append(config.get_config_filename(name, "compilers"))
+        compiler_config_from_packages = get_compiler_config_from_packages(scope=name)
+        if compiler_config_from_packages:
+            config_files.append(config.get_config_filename(name, "packages"))
     return config_files
 
 
