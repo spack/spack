@@ -182,9 +182,14 @@ class Boost(Package):
         is_library=False,
     )
 
+    # fmt: off
     boost_variant(
-        "shared", default=True, description="Additionally build shared libraries", is_library=False
+        "shared",
+        default=True,
+        description="Additionally build shared libraries",
+        is_library=False
     )
+    # fmt: on
 
     boost_variant(
         "multithreaded",
@@ -200,9 +205,14 @@ class Boost(Package):
         is_library=False,
     )
 
+    # fmt: off
     boost_variant(
-        "icu", default=False, description="Build with Unicode and ICU suport", is_library=False
+        "icu",
+        default=False,
+        description="Build with Unicode and ICU suport",
+        is_library=False
     )
+    # fmt: on
 
     boost_variant(
         "taggedlayout",
@@ -297,9 +307,14 @@ class Boost(Package):
         when="@1.47.0:",
         buildable="@1.47.0:",
     )
+    # fmt: off
     boost_variant(
-        "compute", description="Parallel/GPU-computing library", default=False, when="@1.61.0:"
+        "compute",
+        description="Parallel/GPU-computing library",
+        default=False,
+        when="@1.61.0:"
     )
+    # fmt: on
     boost_variant(
         "container",
         description="Standard library containers and extensions.",
@@ -367,9 +382,14 @@ class Boost(Package):
         when="@1.29.0:",
         buildable="@1.29.0:",
     )
+    # fmt: off
     boost_variant(
-        "describe", description="A C++14 reflection library.", default=False, when="@1.77.0:"
+        "describe",
+        description="A C++14 reflection library.",
+        default=False,
+        when="@1.77.0:"
     )
+    # fmt: on
     boost_variant(
         "dll",
         description="Library for comfortable work with DLL and DSO.",
@@ -516,7 +536,14 @@ class Boost(Package):
         when="@1.75.0:",
         buildable="@1.75.0:",
     )
-    boost_variant("lambda2", description="A C++14 lambda library.", default=False, when="@1.77.0:")
+    # fmt: off
+    boost_variant(
+        "lambda2",
+        description="A C++14 lambda library.",
+        default=False,
+        when="@1.77.0:"
+    )
+    # fmt: off
     boost_variant(
         "leaf",
         description="A lightweight error handling library for C++11.",
