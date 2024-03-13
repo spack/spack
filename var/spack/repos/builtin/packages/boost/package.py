@@ -305,6 +305,13 @@ class Boost(Package):
         when="@1.47.0:",
         buildable="@1.47.0:",
     )
+    boost_variant(
+        "cobalt",
+        description="C++20 coroutine primitives & utilities running atop Boost.Asio",
+        default=False,
+        when="@1.84.0:",
+        buildable="@1.84.0:",
+    )
     # fmt: off
     boost_variant(
         "compute",
