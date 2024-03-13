@@ -494,18 +494,28 @@ class Boost(Package):
         default=False,
         when="@1.61.0:",
     )
+    # fmt: off
     boost_variant(
-        "heap", description="Priority queue data structures.", default=False, when="@1.49.0:"
+        "heap",
+        description="Priority queue data structures.",
+        default=False,
+        when="@1.49.0:"
     )
+    # fmt: on
     boost_variant(
         "histogram",
         description="Fast multi-dimensional histogram with convenient interface for C++14",
         default=False,
         when="@1.70.0:",
     )
+    # fmt: off
     boost_variant(
-        "hof", description="Higher-order functions for C++", default=False, when="@1.67.0:"
+        "hof",
+        description="Higher-order functions for C++",
+        default=False,
+        when="@1.67.0:"
     )
+    # fmt: on
     boost_variant(
         "icl",
         description=(
@@ -900,15 +910,28 @@ class Boost(Package):
     boost_variant(
         "uuid", description="A universally unique identifier.", default=False, when="@1.42.0:"
     )
+    # fmt: off
+    boost_variant(
+        "uuid",
+        description="A universally unique identifier.",
+        default=False,
+        when="@1.42.0:"
+    )
+    # fmt: on
     boost_variant(
         "variant2",
         description="A never-valueless, strong guarantee implementation of std::variant.",
         default=False,
         when="@1.71.0:",
     )
+    # fmt: off
     boost_variant(
-        "vmd", description="Variadic Macro Data library.", default=False, when="@1.60.0:"
+        "vmd",
+        description="Variadic Macro Data library.",
+        default=False,
+        when="@1.60.0:"
     )
+    # fmt: on
     boost_variant(
         "wave",
         description=(
