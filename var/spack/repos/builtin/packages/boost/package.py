@@ -907,9 +907,15 @@ class Boost(Package):
         default=False,
         when="@1.56.0:",
     )
+    # fmt: off
     boost_variant(
-        "uuid", description="A universally unique identifier.", default=False, when="@1.42.0:"
+        "url",
+        description="URL parsing in C++11",
+        default=False,
+        when="@1.81.0:",
+        buildable="@1.81.0:"
     )
+    # fmt: on
     # fmt: off
     boost_variant(
         "uuid",
