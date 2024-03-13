@@ -237,16 +237,6 @@ def _get_mime_type():
         return file_command("-b", "-h", "--mime-type")
 
 
-@memoized
-def _get_mime_type_compressed():
-    """Same as _get_mime_type but attempts to check for
-    compression first
-    """
-    mime_uncompressed = _get_mime_type()
-    mime_uncompressed.add_default_arg("-Z")
-    return mime_uncompressed
-
-
 def mime_type(filename):
     """Returns the mime type and subtype of a file.
 
@@ -257,21 +247,6 @@ def mime_type(filename):
         Tuple containing the MIME type and subtype
     """
     output = _get_mime_type()(filename, output=str, error=str).strip()
-    tty.debug("==> " + output)
-    type, _, subtype = output.partition("/")
-    return type, subtype
-
-
-def compressed_mime_type(filename):
-    """Same as mime_type but checks for type that has been compressed
-
-    Args:
-        filename (str): file to be analyzed
-
-    Returns:
-        Tuple containing the MIME type and subtype
-    """
-    output = _get_mime_type_compressed()(filename, output=str, error=str).strip()
     tty.debug("==> " + output)
     type, _, subtype = output.partition("/")
     return type, subtype
@@ -306,13 +281,6 @@ def paths_containing_libs(paths, library_names):
             rpaths_to_include.append(path)
 
     return rpaths_to_include
-
-
-@system_path_filter
-def same_path(path1, path2):
-    norm1 = os.path.abspath(path1).rstrip(os.path.sep)
-    norm2 = os.path.abspath(path2).rstrip(os.path.sep)
-    return norm1 == norm2
 
 
 def filter_file(
@@ -909,17 +877,6 @@ def is_exe(path):
     return os.path.isfile(path) and os.access(path, os.X_OK)
 
 
-@system_path_filter
-def get_filetype(path_name):
-    """
-    Return the output of file path_name as a string to identify file type.
-    """
-    file = Executable("file")
-    file.add_default_env("LC_ALL", "C")
-    output = file("-b", "-h", "%s" % path_name, output=str, error=str)
-    return output.strip()
-
-
 def has_shebang(path):
     """Returns whether a path has a shebang line. Returns False if the file cannot be opened."""
     try:
@@ -1169,20 +1126,6 @@ def write_tmp_and_move(filename):
     shutil.move(tmp, filename)
 
 
-@contextmanager
-@system_path_filter
-def open_if_filename(str_or_file, mode="r"):
-    """Takes either a path or a file object, and opens it if it is a path.
-
-    If it's a file object, just yields the file object.
-    """
-    if isinstance(str_or_file, str):
-        with open(str_or_file, mode) as f:
-            yield f
-    else:
-        yield str_or_file
-
-
 @system_path_filter
 def touch(path):
     """Creates an empty file at the specified path."""
@@ -1293,19 +1236,6 @@ def temp_cwd():
             kwargs["ignore_errors"] = False
             kwargs["onerror"] = readonly_file_handler(ignore_errors=True)
         shutil.rmtree(tmp_dir, **kwargs)
-
-
-@contextmanager
-@system_path_filter
-def temp_rename(orig_path, temp_path):
-    same_path = os.path.realpath(orig_path) == os.path.realpath(temp_path)
-    if not same_path:
-        shutil.move(orig_path, temp_path)
-    try:
-        yield
-    finally:
-        if not same_path:
-            shutil.move(temp_path, orig_path)
 
 
 @system_path_filter
