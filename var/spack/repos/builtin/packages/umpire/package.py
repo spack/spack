@@ -141,7 +141,7 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
     # Some projects importing both camp and umpire targets end up with conflicts in BLT targets
     # import. This is not addressing the root cause, which will be addressed in BLT@5.4.0 and will
     # require adapting umpire build system.
-    patch("dual_blt_import_umpire_2022.10_2023.06.patch", when="@2022.10.0:")
+    patch("dual_blt_import_umpire_2022.10_2023.06.patch", when="@2022.10.0:2023.06.0")
     patch("export_includes.patch", when="@2022.10.0")
     patch("std-filesystem-pr784.patch", when="@2022.03.1 +rocm ^blt@0.5.2:")
     patch("camp_target_umpire_3.0.0.patch", when="@3.0.0")
