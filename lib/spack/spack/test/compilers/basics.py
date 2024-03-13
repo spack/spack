@@ -14,6 +14,7 @@ import spack.compiler
 import spack.compilers
 import spack.spec
 import spack.util.environment
+import spack.util.module_cmd
 from spack.compiler import Compiler
 from spack.util.executable import Executable, ProcessError
 
@@ -137,14 +138,6 @@ class MockCompiler(Compiler):
             environment={},
         )
 
-    def _get_compiler_link_paths(self):
-        # Mock os.path.isdir so the link paths don't have to exist
-        old_isdir = os.path.isdir
-        os.path.isdir = lambda x: True
-        ret = super()._get_compiler_link_paths()
-        os.path.isdir = old_isdir
-        return ret
-
     @property
     def name(self):
         return "mockcompiler"
@@ -162,34 +155,25 @@ class MockCompiler(Compiler):
     required_libs = ["libgfortran"]
 
 
-def test_implicit_rpaths(dirs_with_libfiles, monkeypatch):
+@pytest.mark.not_on_windows("Not supported on Windows (yet)")
+def test_implicit_rpaths(dirs_with_libfiles):
     lib_to_dirs, all_dirs = dirs_with_libfiles
-
-    def try_all_dirs(*args):
-        return all_dirs
-
-    monkeypatch.setattr(MockCompiler, "_get_compiler_link_paths", try_all_dirs)
-
-    expected_rpaths = set(lib_to_dirs["libstdc++"] + lib_to_dirs["libgfortran"])
-
     compiler = MockCompiler()
+    compiler._compile_c_source_output = "ld " + " ".join(f"-L{d}" for d in all_dirs)
     retrieved_rpaths = compiler.implicit_rpaths()
-    assert set(retrieved_rpaths) == expected_rpaths
+    assert set(retrieved_rpaths) == set(lib_to_dirs["libstdc++"] + lib_to_dirs["libgfortran"])
 
 
-no_flag_dirs = ["/path/to/first/lib", "/path/to/second/lib64"]
-no_flag_output = "ld -L%s -L%s" % tuple(no_flag_dirs)
-
-flag_dirs = ["/path/to/first/with/flag/lib", "/path/to/second/lib64"]
-flag_output = "ld -L%s -L%s" % tuple(flag_dirs)
+without_flag_output = "ld -L/path/to/first/lib -L/path/to/second/lib64"
+with_flag_output = "ld -L/path/to/first/with/flag/lib -L/path/to/second/lib64"
 
 
 def call_compiler(exe, *args, **kwargs):
     # This method can replace Executable.__call__ to emulate a compiler that
     # changes libraries depending on a flag.
     if "--correct-flag" in exe.exe:
-        return flag_output
-    return no_flag_output
+        return with_flag_output
+    return without_flag_output
 
 
 @pytest.mark.not_on_windows("Not supported on Windows (yet)")
@@ -203,8 +187,8 @@ def call_compiler(exe, *args, **kwargs):
         ("cc", "cppflags"),
     ],
 )
-@pytest.mark.enable_compiler_link_paths
-def test_get_compiler_link_paths(monkeypatch, exe, flagname):
+@pytest.mark.enable_compiler_execution
+def test_compile_dummy_c_source_adds_flags(monkeypatch, exe, flagname):
     # create fake compiler that emits mock verbose output
     compiler = MockCompiler()
     monkeypatch.setattr(Executable, "__call__", call_compiler)
@@ -221,40 +205,38 @@ def test_get_compiler_link_paths(monkeypatch, exe, flagname):
         assert False
 
     # Test without flags
-    assert compiler._get_compiler_link_paths() == no_flag_dirs
+    assert compiler._compile_dummy_c_source() == without_flag_output
 
     if flagname:
         # set flags and test
         compiler.flags = {flagname: ["--correct-flag"]}
-        assert compiler._get_compiler_link_paths() == flag_dirs
+        assert compiler._compile_dummy_c_source() == with_flag_output
 
 
-def test_get_compiler_link_paths_no_path():
+@pytest.mark.enable_compiler_execution
+def test_compile_dummy_c_source_no_path():
     compiler = MockCompiler()
     compiler.cc = None
     compiler.cxx = None
-    compiler.f77 = None
-    compiler.fc = None
-    assert compiler._get_compiler_link_paths() == []
+    assert compiler._compile_dummy_c_source() is None
 
 
-def test_get_compiler_link_paths_no_verbose_flag():
+@pytest.mark.enable_compiler_execution
+def test_compile_dummy_c_source_no_verbose_flag():
     compiler = MockCompiler()
     compiler._verbose_flag = None
-    assert compiler._get_compiler_link_paths() == []
+    assert compiler._compile_dummy_c_source() is None
 
 
 @pytest.mark.not_on_windows("Not supported on Windows (yet)")
-@pytest.mark.enable_compiler_link_paths
-def test_get_compiler_link_paths_load_env(working_env, monkeypatch, tmpdir):
+@pytest.mark.enable_compiler_execution
+def test_compile_dummy_c_source_load_env(working_env, monkeypatch, tmpdir):
     gcc = str(tmpdir.join("gcc"))
     with open(gcc, "w") as f:
         f.write(
-            """#!/bin/sh
+            f"""#!/bin/sh
 if [ "$ENV_SET" = "1" ] && [ "$MODULE_LOADED" = "1" ]; then
-  echo '"""
-            + no_flag_output
-            + """'
+  printf '{without_flag_output}'
 fi
 """
         )
@@ -274,7 +256,7 @@ fi
     compiler.environment = {"set": {"ENV_SET": "1"}}
     compiler.modules = ["turn_on"]
 
-    assert compiler._get_compiler_link_paths() == no_flag_dirs
+    assert compiler._compile_dummy_c_source() == without_flag_output
 
 
 # Get the desired flag from the specified compiler spec.

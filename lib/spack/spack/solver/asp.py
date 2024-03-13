@@ -566,6 +566,23 @@ def _spec_with_default_name(spec_str, name):
     return spec
 
 
+def _external_config_with_implictit_externals():
+    # Read packages.yaml and normalize it, so that it will not contain entries referring to
+    # virtual packages.
+    packages_yaml = _normalize_packages_yaml(spack.config.get("packages"))
+
+    # Add externals for libc from compilers on Linux
+    if spack.platforms.host().name != "linux":
+        return packages_yaml
+
+    for compiler in all_compilers_in_config():
+        libc = compiler.default_libc()
+        if libc:
+            entry = {"spec": f"{libc} %{compiler.spec}", "prefix": libc.external_path}
+            packages_yaml.setdefault(libc.name, {}).setdefault("externals", []).append(entry)
+    return packages_yaml
+
+
 class ErrorHandler:
     def __init__(self, model):
         self.model = model
@@ -1554,12 +1571,8 @@ class SpackSolverSetup:
                 requirement_weight += 1
 
     def external_packages(self):
-        """Facts on external packages, as read from packages.yaml"""
-        # Read packages.yaml and normalize it, so that it
-        # will not contain entries referring to virtual
-        # packages.
-        packages_yaml = spack.config.get("packages")
-        packages_yaml = _normalize_packages_yaml(packages_yaml)
+        """Facts on external packages, from packages.yaml and implicit externals."""
+        packages_yaml = _external_config_with_implictit_externals()
 
         self.gen.h1("External packages")
         for pkg_name, data in packages_yaml.items():
@@ -3184,12 +3197,8 @@ class SpecBuilder:
         self._specs[node].compiler_flags[flag_type] = []
 
     def external_spec_selected(self, node, idx):
-        """This means that the external spec and index idx
-        has been selected for this package.
-        """
-
-        packages_yaml = spack.config.get("packages")
-        packages_yaml = _normalize_packages_yaml(packages_yaml)
+        """This means that the external spec and index idx has been selected for this package."""
+        packages_yaml = _external_config_with_implictit_externals()
         spec_info = packages_yaml[node.pkg]["externals"][int(idx)]
         self._specs[node].external_path = spec_info.get("prefix", None)
         self._specs[node].external_modules = spack.spec.Spec._format_module_list(

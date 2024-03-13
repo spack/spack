@@ -35,6 +35,7 @@ packages:
       java: [openjdk, jdk, ibm-java]
       jpeg: [libjpeg-turbo, libjpeg]
       lapack: [openblas, amdlibflame]
+      libc: [glibc, musl]
       libgfortran: [ gcc-runtime ]
       libglx: [mesa+glx, mesa18+glx]
       libifcore: [ intel-oneapi-runtime ]
