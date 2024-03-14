@@ -34,3 +34,7 @@ class PyNumexpr(PythonPackage):
 
     # Historical dependencies
     depends_on("py-packaging", type=("build", "run"), when="@2.8.3")
+
+    # https://github.com/spack/spack/issues/43206
+    def setup_build_environment(self, env):
+        env.set("CC", spack_cxx)
