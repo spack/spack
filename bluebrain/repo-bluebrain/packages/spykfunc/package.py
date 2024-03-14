@@ -16,13 +16,14 @@ class Spykfunc(PythonPackage):
     submodules = True
 
     version("develop", branch="main")
+    version("0.18.7", tag="v0.18.7")
     version("0.18.6", tag="v0.18.6")
 
     depends_on("cmake", type="build")
     depends_on("ninja", type="build")
 
     depends_on("py-setuptools", type=("build", "run"), when="@:0.18")
-    depends_on("py-scikit-build-core+pyproject", type=("build", "run"), when="@0.19:")
+    depends_on("py-scikit-build-core+pyproject", type=("build", "run"), when="@0.18.7:")
     depends_on("py-setuptools-scm", type="build")
 
     depends_on("spark+hadoop@3.0.0:", type="run")
