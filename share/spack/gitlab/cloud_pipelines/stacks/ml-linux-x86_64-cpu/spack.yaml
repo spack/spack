@@ -21,7 +21,7 @@ spack:
     - py-jaxlib
 
     # Keras
-    # - py-keras backend=tensorflow
+    - py-keras backend=tensorflow
     - py-keras backend=jax
     - py-keras backend=torch
     - py-keras-applications
