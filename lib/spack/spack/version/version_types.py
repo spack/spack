@@ -270,7 +270,7 @@ class StandardVersion(ConcreteVersion):
         # null separators except the final one have to be converted to avoid concatenating ints
         # default to '.' as most common delimiter for versions
         separators = tuple(
-            '.' if s == "" and i != len(self.separators) - 1 else s
+            "." if s == "" and i != len(self.separators) - 1 else s
             for i, s in enumerate(self.separators)
         )
         return type(self)(None, numeric, separators)
