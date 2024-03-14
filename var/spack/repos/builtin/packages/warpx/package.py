@@ -254,7 +254,7 @@ class Warpx(CMakePackage):
     def _get_input_options(self, dim, post_install):
         spec = self.spec
         examples_dir = join_path(
-            self.install_test_root if post_install else self.stage.source_path,
+            install_test_root(self) if post_install else self.stage.source_path,
             self.examples_src_dir,
         )
         inputs_nD = {"1": "inputs_1d", "2": "inputs_2d", "3": "inputs_3d", "rz": "inputs_rz"}
@@ -289,7 +289,7 @@ class Warpx(CMakePackage):
     def copy_test_sources(self):
         """Copy the example input files after the package is installed to an
         install test subdirectory for use during `spack test run`."""
-        self.cache_extra_test_sources([self.examples_src_dir])
+        cache_extra_test_sources(self, [self.examples_src_dir])
 
     def test(self):
         """Perform smoke tests on the installed package."""
