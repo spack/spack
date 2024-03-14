@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import sys
 
 from spack.package import *
 
@@ -104,7 +105,25 @@ class PyPip(Package, PythonExtension):
             python_tag = "py2.py3"
         return url.format(python_tag, version)
 
+    def setup_build_environment(self, env):
+        """Specify where the user site-packages directory should be"""
+        if sys.platform == "win32":
+            env.set("PYTHONUSERBASE", self.spec.prefix)
+
     def install(self, spec, prefix):
+        # Pip must be bootstrapped on windows using ensurepip. When setting
+        # up the build environment, the PYTHONUSERBASE variable is injected
+        # into the environment, set to the spec prefix. Then, in conjunction
+        # with the --user flag, pip is intalled into the appropriate directory.
+        # Once bootstrapped, we can install the desired version of pip from
+        # the wheel.
+        if sys.platform == "win32":
+            python("-m", "ensurepip", "--user")
+            whl = self.stage.archive_file
+            upgrade_cmd = ["-m", "pip", "install", "--user", whl]
+            python(*upgrade_cmd)
+            return
+
         # To build and install pip from source, you need setuptools, wheel, and pip
         # already installed. We get around this by using a pre-built wheel to install
         # itself, see:
