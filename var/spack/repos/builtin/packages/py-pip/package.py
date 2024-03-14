@@ -114,7 +114,7 @@ class PyPip(Package, PythonExtension):
         # Pip must be bootstrapped on windows using ensurepip. When setting
         # up the build environment, the PYTHONUSERBASE variable is injected
         # into the environment, set to the spec prefix. Then, in conjunction
-        # with the --user flag, pip is intalled into the appropriate directory.
+        # with the --user flag, pip is installed into the appropriate directory.
         # Once bootstrapped, we can install the desired version of pip from
         # the wheel.
         if sys.platform == "win32":
