@@ -25,6 +25,7 @@ class PyKeras(PythonPackage):
     version("3.0.2", sha256="526b6c053cdd880a33467c5bfd5c460a5bdc0c58869c2683171c2dec2ad3c2d0")
     version("3.0.1", sha256="d993721510fa654582132192193f69b1b3165418a6e00a73c3edce615b3cc672")
     version("3.0.0", sha256="82a9fa4b32a049b38151d11188ed15d74f21f853f163e78da0950dce1f244ccc")
+    version("2.15.0", sha256="b281ce09226576e0593b8dab0d9e5d42c334e053ce6f4f154dc6cd745ab93d2f")
     version("2.14.0", sha256="a845d446b6ae626f61dde5ab2fa952530b6c17b4f9ed03e9362bd20172d00cca")
     version("2.13.1", sha256="b3591493cce75a69adef7b192cec6be222e76e2386d132cd4e34aa190b0ecbd5")
     version("2.12.0", sha256="6336cebb6b2b0a91f7efd3ff3a9db3a94f2abccf07a40323138afb80826aec62")
@@ -75,8 +76,7 @@ class PyKeras(PythonPackage):
     depends_on("py-protobuf", type=("build", "run"), when="@3:")
 
     # requirements-tensorflow-cuda.txt
-    conflicts("backend=tensorflow", msg="Requires TensorFlow 2.16, not yet released")
-    # depends_on("py-tensorflow@2.16.0", type=("build", "run"), when="@3.0 backend=tensorflow")
+    depends_on("py-tensorflow@2.16.1", type=("build", "run"), when="@3.0 backend=tensorflow")
 
     # requirements-jax-cuda.txt
     depends_on("py-jax@0.4.23", type=("build", "run"), when="@3.0.5: backend=jax")
@@ -98,7 +98,7 @@ class PyKeras(PythonPackage):
     depends_on("py-pydot", type=("build", "run"), when="@:2")
     depends_on("py-pyyaml", type=("build", "run"), when="@:2")
     depends_on("py-six", type=("build", "run"), when="@:2")
-    for minor_ver in range(6, 15):
+    for minor_ver in range(6, 16):
         depends_on(
             "py-tensorflow@2.{}".format(minor_ver),
             type=("build", "run"),

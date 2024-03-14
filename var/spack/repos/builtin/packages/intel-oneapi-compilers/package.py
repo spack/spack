@@ -43,6 +43,17 @@ versions = [
         },
     },
     {
+        "version": "2023.2.4",
+        "cpp": {
+            "url": "https://registrationcenter-download.intel.com/akdlm/IRC_NAS/b00a4b0e-bd21-41fa-ab34-19e8e2a77c5a/l_dpcpp-cpp-compiler_p_2023.2.4.24_offline.sh",
+            "sha256": "f143a764adba04a41e49ec405856ad781e5c3754812e90a7ffe06d08cd07f684",
+        },
+        "ftn": {
+            "url": "https://registrationcenter-download.intel.com/akdlm/IRC_NAS/5bfaa204-689d-4bf1-9656-e37e35ea3fc2/l_fortran-compiler_p_2023.2.4.31_offline.sh",
+            "sha256": "2f327d67cd207399b327df5b7c912baae800811d0180485ef5431f106686c94b",
+        },
+    },
+    {
         "version": "2023.2.3",
         "cpp": {
             "url": "https://registrationcenter-download.intel.com/akdlm/IRC_NAS/d85fbeee-44ec-480a-ba2f-13831bac75f7/l_dpcpp-cpp-compiler_p_2023.2.3.12_offline.sh",
