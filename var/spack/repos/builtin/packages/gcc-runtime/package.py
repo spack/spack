@@ -35,7 +35,7 @@ class GccRuntime(Package):
         "asan",
         "atomic",
         "gcc_s",
-        "libgfortran",
+        "gfortran",
         "gomp",
         "hwasan",
         "itm",
