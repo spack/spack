@@ -210,8 +210,6 @@ class RocmOpenmpExtras(Package):
         depends_on(f"hsa-rocr-dev@{ver}", when=f"@{ver}")
         depends_on(f"llvm-amdgpu@{ver}", when=f"@{ver}")
 
-        tag = "rocm-"
-
         resource(
             name="rocm-device-libs",
             url=f"{compute_url}/ROCm-Device-Libs/archive/rocm-{ver}.tar.gz",
@@ -224,7 +222,7 @@ class RocmOpenmpExtras(Package):
 
         resource(
             name="flang",
-            url=f"{tools_url}/flang/archive/{ver}.tar.gz",
+            url=f"{tools_url}/flang/archive/rocm-{ver}.tar.gz",
             sha256=versions_dict[ver]["flang"],
             expand=True,
             destination="rocm-openmp-extras",
@@ -234,7 +232,7 @@ class RocmOpenmpExtras(Package):
 
         resource(
             name="aomp-extras",
-            url=f"{tools_url}/aomp-extras/archive/{ver}.tar.gz",
+            url=f"{tools_url}/aomp-extras/archive/rocm-{ver}.tar.gz",
             sha256=versions_dict[ver]["extras"],
             expand=True,
             destination="rocm-openmp-extras",
