@@ -3536,8 +3536,16 @@ class Solver:
                 break
 
             # This means we cannot progress with solving the input
-            if not result.satisfiable or not result.specs:
-                break
+            result.raise_if_unsat()
+
+            if not result.specs:
+                # This is also a problem: no specs were solved for, which
+                # means we would be in a loop if we tried again
+                unsolved_str = Result.format_unsolved(result.unsolved_specs)
+                raise InternalConcretizerError(
+                    "Internal Spack error: a subset of input specs could not"
+                    f" be solved for.\n\t{unsolved_str}"
+                )
 
             input_specs = list(x for (x, y) in result.unsolved_specs)
             for spec in result.specs:
