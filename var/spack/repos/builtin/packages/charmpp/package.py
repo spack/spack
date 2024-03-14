@@ -198,31 +198,37 @@ class Charmpp(Package):
             ("cnl", "x86_64", "gni"): "gni-crayxc",
             ("cnl", "x86_64", "mpi"): "mpi-crayxc",
         }
-        
+
         if self.spec.satisfies("@6.10:"):
-            versions.update({
-                ("linux", "x86_64", "ucx"): "ucx-linux-x86_64", 
-                ("linux", "aarch64", "ucx"): "ucx-linux-arm8",
-            })
+            versions.update(
+                {
+                    ("linux", "x86_64", "ucx"): "ucx-linux-x86_64",
+                    ("linux", "aarch64", "ucx"): "ucx-linux-arm8",
+                }
+            )
 
         # Some versions were renamed/removed in 6.11
         if self.spec.version < Version("6.11.0"):
-            versions.update({
-                ("linux", "i386", "mpi"): "mpi-linux", 
-                ("linux", "i386", "multicore"): "multicore-linux", 
-                ("linux", "i386", "netlrts"): "netlrts-linux", 
-                ("linux", "i386", "uth"): "uth-linux", 
-                ("linux", "arm", "multicore"): "multicore-arm7",
-                ("linux", "aarch64", "multicore"): "multicore-arm8",
-            })
+            versions.update(
+                {
+                    ("linux", "i386", "mpi"): "mpi-linux",
+                    ("linux", "i386", "multicore"): "multicore-linux",
+                    ("linux", "i386", "netlrts"): "netlrts-linux",
+                    ("linux", "i386", "uth"): "uth-linux",
+                    ("linux", "arm", "multicore"): "multicore-arm7",
+                    ("linux", "aarch64", "multicore"): "multicore-arm8",
+                }
+            )
         else:
-            versions.update({
-                ("linux", "i386", "mpi"): "mpi-linux-i386", 
-                ("linux", "i386", "multicore"): "multicore-linux-i386", 
-                ("linux", "i386", "netlrts"): "netlrts-linux-i386",
-                ("linux", "arm", "multicore"): "multicore-linux-arm7",
-                ("linux", "aarch64", "multicore"): "multicore-linux-arm8",
-            })
+            versions.update(
+                {
+                    ("linux", "i386", "mpi"): "mpi-linux-i386",
+                    ("linux", "i386", "multicore"): "multicore-linux-i386",
+                    ("linux", "i386", "netlrts"): "netlrts-linux-i386",
+                    ("linux", "arm", "multicore"): "multicore-linux-arm7",
+                    ("linux", "aarch64", "multicore"): "multicore-linux-arm8",
+                }
+            )
 
         if self.spec.satisfies("@7:"):
             versions.update(
@@ -233,10 +239,12 @@ class Charmpp(Package):
             )
 
             if self.spec.satisfies("backend=ofi pmi=cray-pmi"):
-                versions.update({
-                    ("linux", "x86_64", "ofi"): "ofi-crayshasta", 
-                    ("linux", "aarch64", "ofi"): "ofi-crayshasta",
-                })
+                versions.update(
+                    {
+                        ("linux", "x86_64", "ofi"): "ofi-crayshasta",
+                        ("linux", "aarch64", "ofi"): "ofi-crayshasta",
+                    }
+                )
 
         if (plat, mach, comm) not in versions:
             raise InstallError(
