@@ -21,13 +21,17 @@ class PyLineProfiler(PythonPackage):
     version("2.1.2", sha256="efa66e9e3045aa7cb1dd4bf0106e07dec9f80bc781a993fbaf8162a36c20af5c")
     version("2.0", sha256="739f8ad0e4bcd0cb82e99afc09e00a0351234f6b3f0b1f7f0090a8a2fbbf8381")
 
+    # see pyproject.toml
     depends_on("python@2.5:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
+    depends_on("py-setuptools@68.2.2", type="build", when="@4.1.2:")
     depends_on("py-cython", type="build")
+    depends_on("py-cython@0.29.24:3.0.0a11", type="build", when="@4.0.3:")
+    depends_on("py-cython@3.0.3:", type="build", when="@4.1.2:")
     depends_on("py-ipython@0.13:", type=("build", "run"))
     depends_on("cmake", type="build", when="@3:")
     depends_on("ninja", type="build", when="@3:")
-    depends_on("scikit-build", type="build", when="@3:")
+    depends_on("scikit-build@0.9.0:", type="build", when="@3")
 
     patch("gettimeofday_py39.patch", when="@:2.1.2 ^python@3.9:")
 
