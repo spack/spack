@@ -201,7 +201,7 @@ def _parse_dynamic_linker(output: str):
                 return arg.split("=", 1)[1]
 
 
-def _libc_from_ldd(ldd: str) -> Optional[spack.spec.Spec]:
+def _libc_from_ldd(ldd: str) -> Optional["spack.spec.Spec"]:
     try:
         result = run([ldd, "--version"], stdout=PIPE, stderr=PIPE, check=False)
         stdout = result.stdout.decode("utf-8")
@@ -220,7 +220,7 @@ def _libc_from_ldd(ldd: str) -> Optional[spack.spec.Spec]:
         return None
 
 
-def _libc_from_dynamic_linker(dynamic_linker: str) -> Optional[spack.spec.Spec]:
+def _libc_from_dynamic_linker(dynamic_linker: str) -> Optional["spack.spec.Spec"]:
     if not os.path.exists(dynamic_linker):
         return None
 
@@ -499,7 +499,7 @@ class Compiler:
         all_required_libs = list(self.required_libs) + Compiler._all_compiler_rpath_libraries
         return list(paths_containing_libs(link_dirs, all_required_libs))
 
-    def default_libc(self) -> Optional[spack.spec.Spec]:
+    def default_libc(self) -> Optional["spack.spec.Spec"]:
         output = self._compile_c_source_verbose()
 
         if not output:
