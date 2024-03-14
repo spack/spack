@@ -485,7 +485,7 @@ class Compiler:
                 self._real_version = self.version
         return self._real_version
 
-    def implicit_rpaths(self):
+    def implicit_rpaths(self) -> List[str]:
         if self.enable_implicit_rpaths is False:
             return []
 
@@ -544,7 +544,7 @@ class Compiler:
             shutil.rmtree(tmpdir, ignore_errors=True)
 
     @property
-    def verbose_flag(self):
+    def verbose_flag(self) -> Optional[str]:
         """
         This property should be overridden in the compiler subclass if a
         verbose flag is available.
