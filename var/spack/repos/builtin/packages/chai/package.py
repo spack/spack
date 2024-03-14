@@ -82,7 +82,7 @@ class Chai(CachedCMakePackage, CudaPackage, ROCmPackage):
 
     # Patching Umpire for dual BLT targets import changed MPI target name in Umpire link interface
     # We propagate the patch here.
-    patch("change_mpi_target_name_umpire_patch.patch", when="@2022.10.0:")
+    patch("change_mpi_target_name_umpire_patch.patch", when="@2022.10.0:2023.06.0")
 
     variant("enable_pick", default=False, description="Enable pick method")
     variant(
