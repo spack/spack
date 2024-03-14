@@ -570,6 +570,14 @@ def add_concretizer_args(subparser):
         default=None,
         help="reuse installed dependencies only",
     )
+    subgroup.add_argument(
+        "--deprecated",
+        action=ConfigSetAction,
+        dest="config:deprecated",
+        const=True,
+        default=None,
+        help="allow concretizer to select deprecated versions",
+    )
 
 
 def add_connection_args(subparser, add_help):
