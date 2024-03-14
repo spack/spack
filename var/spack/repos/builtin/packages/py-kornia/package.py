@@ -13,6 +13,15 @@ class PyKornia(PythonPackage):
     pypi = "kornia/kornia-0.5.10.tar.gz"
 
     license("Apache-2.0")
+    maintainers(
+        "edgarriba",
+        "ducha-aiki",
+        "lferraz",
+        "shijianjian",
+        "cjpurackal",
+        "johnnv1",
+        "adamjstewart",
+    )
 
     version("0.7.2", sha256="f834ccd51188d071ed286a6727471c94344ea2a718903cc6f0e56a92f9c66ac5")
     version("0.7.1", sha256="65b54a50f70c1f88240b557fda3fdcc1ab866982a5d062e52213130f5a48465c")
