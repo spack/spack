@@ -46,10 +46,16 @@ class Sgpp(SConsPackage):
     # Fixes compilation with AVX512 and datadriven
     # Fixed in SGpp in PR https://github.com/SGpp/SGpp/pull/229
     patch("avx512_datadriven_compilation.patch", when="@:3.3.0+datadriven")
-    # Continue despite distutils deprecation warning!
-    # distutils will be removed in future SGpp versions. See
-    # https://github.com/SGpp/SGpp/issues/263 for associated issue!
+    # Purpose: The distutils deprectation warning in python 3.10/3.11 caused the sgpp build system 
+    # to complain about missing headers (due to a path check not working anymore)
+    # Note: Not a problem anymore for any version newer than 3.4.0 (and master) as distutils got
+    # removed completly since.
+    # The patch simply fixes this for older versions by squelching the warning! It contains the initial
+    # workaround for the deprecation issue before distutils got removed completely.
+    # See issue https://github.com/SGpp/SGpp/issues/263 and https://github.com/SGpp/SGpp/pull/266
     patch("disable_disutils_deprecation_warning.patch", when="@:3.4.0 ^python@3.10:3.11")
+    # SGpp does not contain aarch64 support as of yet. To make it work still, this patch adds simple
+    # build system support for it.
     patch("for_aarch64.patch", when="target=aarch64:")
 
     variant("python", default=True, description="Provide Python bindings for SGpp")
@@ -66,32 +72,30 @@ class Sgpp(SConsPackage):
     variant("mpi", default=False, description="Enables support for MPI-distributed operations")
 
     # Mandatory dependencies
-    depends_on("scons@3:", type=("build"))
-    depends_on("zlib-api", type=("link"))
+    depends_on("scons@3:", type="build")
+    depends_on("zlib-api", type="link")
     # Python dependencies
     extends("python", when="+python")
     depends_on("py-pip", when="+python", type="build")
     depends_on("py-wheel", when="+python", type="build")
-    depends_on("py-setuptools", type=("build"))
+    depends_on("py-setuptools", type="build")
     # Older SGpp releases (:3.4.0) do not support python 3.12 due to them using distutils
     depends_on("python@3.7:3.11", type=("build", "run"), when="@:3.4.0")
     # SGpp@master works with newer python versions (3.12:) as well
     depends_on("python@3.7:", type=("build", "run"))
     # Newest swig version 4.1 seems to cause problem -> limit to 3:4.0 for now
-    depends_on("swig@3:4.0", when="+python", type=("build"))
+    depends_on("swig@3:4.0", when="+python", type="build")
     depends_on("py-numpy@1.17:", when="+python", type=("build", "run"))
     depends_on("py-scipy@1.3:", when="+python", type=("build", "run"))
     # OpenCL dependency
     depends_on("opencl@1.1:", when="+opencl", type=("build", "run"))
     # MPI dependency
     depends_on("mpi", when="+mpi", type=("build", "run"))
-    # Testing requires boost test
-    depends_on("boost+test", type=("test"))
 
     # TODO: replace this with an explicit list of components of Boost,
     # for instance depends_on('boost +filesystem')
     # See https://github.com/spack/spack/pull/22303 for reference
-    depends_on(Boost.with_default_variants, type=("test"))
+    depends_on(Boost.with_default_variants, type="test")
 
     # Compiler with C++11 support is required
     conflicts("%gcc@:4.8.4", msg="Compiler with c++11 support is required!")
