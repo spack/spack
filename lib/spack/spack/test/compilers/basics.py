@@ -156,6 +156,7 @@ class MockCompiler(Compiler):
     required_libs = ["libgfortran"]
 
 
+@pytest.mark.not_on_windows("Not supported on Windows (yet)")
 def test_implicit_rpaths(dirs_with_libfiles):
     lib_to_dirs, all_dirs = dirs_with_libfiles
     compiler = MockCompiler()
