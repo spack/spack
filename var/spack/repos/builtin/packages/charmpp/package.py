@@ -59,7 +59,7 @@ class Charmpp(Package):
     patch("strictpass.patch", when="@:6.8.2")
 
     # Support Cray Shasta with ARM
-    patch("ofi-crayshasta-arm.patch", when="backend=ofi ^cray-mpich")
+    patch("ofi-crayshasta-arm.patch", when="backend=ofi pmi=cray-pmi target=aarch64:")
 
     # Build targets
     # "target" is reserved, so we have to use something else.
@@ -89,7 +89,7 @@ class Charmpp(Package):
     variant(
         "pmi",
         default="none",
-        values=("none", "simplepmi", "slurmpmi", "slurmpmi2", "pmix"),
+        values=("none", "simplepmi", "slurmpmi", "slurmpmi2", "pmix", "cray-pmi"),
         description="The ucx/ofi/gni backends need PMI to run!",
     )
 
@@ -127,6 +127,7 @@ class Charmpp(Package):
     depends_on("mpi", when="pmi=simplepmi")
     depends_on("mpi", when="pmi=slurmpmi")
     depends_on("mpi", when="pmi=slurmpmi2")
+    depends_on("cray-mpich", when="pmi=cray-pmi")
 
     # Git versions of Charm++ require automake and autoconf
     depends_on("automake", when="@develop")
@@ -199,7 +200,10 @@ class Charmpp(Package):
         }
         
         if self.spec.satisfies("@6.10:"):
-            versions.update({("linux", "x86_64", "ucx"): "ucx-linux-x86_64", ("linux", "aarch64", "ucx"): "ucx-linux-arm8"})
+            versions.update({
+                ("linux", "x86_64", "ucx"): "ucx-linux-x86_64", 
+                ("linux", "aarch64", "ucx"): "ucx-linux-arm8",
+            })
 
         # Some versions were renamed/removed in 6.11
         if self.spec.version < Version("6.11.0"):
@@ -228,7 +232,7 @@ class Charmpp(Package):
                 }
             )
 
-            if "^cray-mpich" in self.spec:
+            if self.spec.satisfies("backend=ofi pmi=cray-pmi"):
                 versions.update({
                     ("linux", "x86_64", "ofi"): "ofi-crayshasta", 
                     ("linux", "aarch64", "ofi"): "ofi-crayshasta",
