@@ -106,6 +106,11 @@ def append_curl_env_for_ssl_certs(curl):
                 "CURL_CA_BUNDLE".format(certs)
             )
             curl.add_default_env("CURL_CA_BUNDLE", certs)
+        elif os.path.isdir(certs):
+            tty.warn(
+                "CURL config:ssl_certs"
+                " is a directory but cURL only supports files. Default certs will be used instead."
+            )
         else:
             tty.debug(
                 "CURL config:ssl_certs "
