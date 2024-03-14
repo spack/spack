@@ -127,6 +127,18 @@ forward_tests:
     reports:
       junit: spack_tests/*/*.xml
 
+# Trigger spacktainer building
+build_spacktainers:
+  needs: []
+  rules:
+    # Don't bother with PRs, we only want this on merges and schedules
+    - if: $CI_EXTERNAL_PULL_REQUEST_IID
+      when: never
+    - when: always
+  trigger:
+    project: hpc/spacktainers
+    strategy: depend
+
 # PRs run as a different user, after merging on `develop`, we need to trigger the cleanup
 # project that always runs with the PR builder user
 clean_merged_prs:
