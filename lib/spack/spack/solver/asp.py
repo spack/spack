@@ -2448,9 +2448,6 @@ class SpackSolverSetup:
         """Define the constraints to be imposed on the runtimes"""
         recorder = RuntimePropertyRecorder(self)
         for compiler in self.possible_compilers:
-            if compiler.name not in ("gcc", "oneapi"):
-                continue
-
             compiler_with_different_cls_names = {"oneapi": "intel-oneapi-compilers"}
             compiler_cls_name = compiler_with_different_cls_names.get(compiler.name, compiler.name)
             try:
