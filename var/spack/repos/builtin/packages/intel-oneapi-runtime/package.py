@@ -51,3 +51,11 @@ class IntelOneapiRuntime(Package):
 
         for path, name in libraries:
             install(path, os.path.join(prefix.lib, name))
+
+    @property
+    def libs(self):
+        return LibraryList([])
+
+    @property
+    def headers(self):
+        return HeaderList([])
