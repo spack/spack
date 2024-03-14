@@ -25,6 +25,7 @@ class Musl(MakefilePackage):
 
     homepage = "https://www.musl-libc.org"
     url = "https://www.musl-libc.org/releases/musl-1.1.23.tar.gz"
+    tags = ["runtime"]
 
     license("MIT")
 

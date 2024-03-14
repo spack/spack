@@ -20,6 +20,7 @@ class Glibc(AutotoolsPackage, GNUMirrorPackage):
     maintainers("haampie")
 
     build_directory = "build"
+    tags = ["runtime"]
 
     license("LGPL-2.1-or-later")
 

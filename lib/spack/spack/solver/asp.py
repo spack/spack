@@ -2894,7 +2894,7 @@ class RuntimePropertyRecorder:
         main_rule = (
             f"% {description}\n"
             f'1 {{ attr("depends_on", {node_variable}, node(0..X-1, "{runtime_pkg}"), "{type}") :'
-            f' max_dupes("gcc-runtime", X)}} 1:-\n'
+            f' max_dupes("{runtime_pkg}", X)}} 1:-\n'
             f"{body_str}.\n\n"
         )
         self.rules.append(main_rule)
