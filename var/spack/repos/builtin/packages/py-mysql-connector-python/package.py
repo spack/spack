@@ -18,6 +18,7 @@ class PyMysqlConnectorPython(PythonPackage):
 
     license("Artistic-1.0-Perl")
 
+    version("8.3.0", sha256="968323a49d8100c5660a5f4d1f07a27982de07e6fe6cec21bcd55cfcacc9501e")
     version("8.0.13", sha256="d4c0834c583cdb90c0aeae90b1917d58355a4bf9b0266c16fd58874a5607f9d4")
 
     depends_on("py-setuptools", type=("build", "run"))

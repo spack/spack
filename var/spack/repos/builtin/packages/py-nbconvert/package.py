@@ -15,6 +15,7 @@ class PyNbconvert(PythonPackage):
 
     license("BSD-3-Clause")
 
+    version("7.16.0", sha256="813e6553796362489ae572e39ba1bff978536192fb518e10826b0e8cadf03ec8")
     version("7.14.1", sha256="20cba10e0448dc76b3bebfe1adf923663e3b98338daf77b97b42511ef5a88618")
     version("7.4.0", sha256="51b6c77b507b177b73f6729dba15676e42c4e92bcb00edc8cc982ee72e7d89d7")
     version("7.0.0", sha256="fd1e361da30e30e4c5a5ae89f7cae95ca2a4d4407389672473312249a7ba0060")

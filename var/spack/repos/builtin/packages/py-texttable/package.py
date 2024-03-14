@@ -15,6 +15,7 @@ class PyTexttable(PythonPackage):
 
     license("MIT")
 
+    version("1.7.0", sha256="2d2068fb55115807d3ac77a4ca68fa48803e84ebb0ee2340f858107a36522638")
     version("1.6.7", sha256="290348fb67f7746931bcdfd55ac7584ecd4e5b0846ab164333f0794b121760f2")
     version("1.6.6", sha256="e106b1204b788663283784fd6e5dfc23f1574b84e518e5d286c1a1e66dabd42c")
     version("1.6.5", sha256="fc3f763a89796ae03789a02343bd4e8fed9735935123b1bfb9537a5935852315")

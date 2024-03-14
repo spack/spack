@@ -17,6 +17,7 @@ class PyTypingExtensions(PythonPackage):
 
     license("0BSD")
 
+    version("4.9.0", sha256="23478f88c37f27d76ac8aee6c905017a143b0b1b886c3c9f66bc2fd94f9f5783")
     version("4.8.0", sha256="df8e4339e9cb77357558cbdbceca33c303714cf861d1eef15e1070055ae8b7ef")
     version("4.6.3", sha256="d91d5919357fe7f681a9f2b5b4cb2a5f1ef0a1e9f59c4d8ff0d3491e05c0ffd5")
     version("4.5.0", sha256="5cb5f4a79139d699607b3ef622a1dedafa84e115ab0024e0d9c044a9479ca7cb")

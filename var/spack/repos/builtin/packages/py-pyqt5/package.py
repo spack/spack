@@ -17,6 +17,7 @@ class PyPyqt5(SIPPackage):
 
     license("GPL-3.0-only")
 
+    version("5.15.10", sha256="dc41e8401a90dc3e2b692b411bd5492ab559ae27a27424eed4bd3915564ec4c0")
     version("5.15.9", sha256="dc41e8401a90dc3e2b692b411bd5492ab559ae27a27424eed4bd3915564ec4c0")
 
     # pyproject.toml

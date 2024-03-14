@@ -14,6 +14,7 @@ class PyDeepdiff(PythonPackage):
 
     license("MIT")
 
+    version("6.7.1", sha256="b367e6fa6caac1c9f500adc79ada1b5b1242c50d5f716a1a4362030197847d30")
     version("6.3.0", sha256="6a3bf1e7228ac5c71ca2ec43505ca0a743ff54ec77aa08d7db22de6bc7b2b644")
     version("5.6.0", sha256="e3f1c3a375c7ea5ca69dba6f7920f9368658318ff1d8a496293c79481f48e649")
 
