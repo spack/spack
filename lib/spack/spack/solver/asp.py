@@ -2881,11 +2881,13 @@ class RuntimePropertyRecorder:
     ) -> None:
         """Injects conditional dependencies on packages.
 
+        Conditional dependencies can be either "real" packages or virtual dependencies.
+
         Args:
             dependency_str: the dependency spec to inject
             when: anonymous condition to be met on a package to have the dependency
             type: dependency type
-            languages: languages needed by the package for the dependency to be needed
+            languages: languages needed by the package for the dependency to be considered
             description: human-readable description of the rule for adding the dependency
         """
         # TODO: The API for this function is not final, and is still subject to change. At
