@@ -22,7 +22,8 @@ class Mgard(CMakePackage, CudaPackage):
 
     license("Apache-2.0")
 
-    version("2023-03-31", commit="a8a04a86ff30f91d0b430a7c52960a12fa119589", preferred=True)
+    version("2023-12-09", commit="d61d8c06c49a72b2e582cc02de88b7b27e1275d2", preferred=True)
+    version("2023-03-31", commit="a8a04a86ff30f91d0b430a7c52960a12fa119589")
     version("2023-01-10", commit="3808bd8889a0f8e6647fc0251a3189bc4dfc920f")
     version("2022-11-18", commit="72dd230ed1af88f62ed3c0f662e2387a6e587748")
     version("2021-11-12", commit="3c05c80a45a51bb6cc5fb5fffe7b1b16787d3366")
