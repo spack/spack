@@ -49,8 +49,8 @@ class Sgpp(SConsPackage):
     # Continue despite distutils deprecation warning!
     # distutils will be removed in future SGpp versions. See
     # https://github.com/SGpp/SGpp/issues/263 for associated issue!
-    # TODO Once distutils is removed from SGpp, limit patch to @:3.4.0
-    patch("disable_disutils_deprecation_warning.patch", when="^python@3.10:3.11")
+    patch("disable_disutils_deprecation_warning.patch", when="@:3.4.0 ^python@3.10:3.11")
+    patch("for_aarch64.patch", when="target=aarch64:")
 
     variant("python", default=True, description="Provide Python bindings for SGpp")
     variant("optimization", default=True, description="Builds the optimization module of SGpp")
@@ -72,11 +72,13 @@ class Sgpp(SConsPackage):
     extends("python", when="+python")
     depends_on("py-pip", when="+python", type="build")
     depends_on("py-wheel", when="+python", type="build")
-    # TODO allow newer versions once distutils is removed from SGpp
-    depends_on("py-setuptools@:59", type=("build"))
-    # TODO allow newer versions once distutils is removed from SGpp
-    depends_on("python@3.7:3.11", type=("build", "run"))
-    depends_on("swig@3:", when="+python", type=("build"))
+    depends_on("py-setuptools", type=("build"))
+    # Older SGpp releases (:3.4.0) do not support python 3.12 due to them using distutils
+    depends_on("python@3.7:3.11", type=("build", "run"), when="@:3.4.0")
+    # SGpp@master works with newer python versions (3.12:) as well
+    depends_on("python@3.7:", type=("build", "run"))
+    # Newest swig version 4.1 seems to cause problem -> limit to 3:4.0 for now
+    depends_on("swig@3:4.0", when="+python", type=("build"))
     depends_on("py-numpy@1.17:", when="+python", type=("build", "run"))
     depends_on("py-scipy@1.3:", when="+python", type=("build", "run"))
     # OpenCL dependency
@@ -115,8 +117,6 @@ class Sgpp(SConsPackage):
     conflicts("+combigrid", when="@1.0.0:3.2.0~pde")
     conflicts("+combigrid", when="@1.0.0:3.2.0~solver")
     conflicts("+combigrid", when="@1.0.0:3.2.0~quadrature")
-
-    patch("for_aarch64.patch", when="target=aarch64:")
 
     def build_args(self, spec, prefix):
         # Testing parameters
@@ -177,6 +177,8 @@ class Sgpp(SConsPackage):
         else:
             self.args.append("CXX={0}".format(self.compiler.cxx))
 
+        # Parallel builds do not seem to work without this:
+        self.args.append("-j{0}".format(make_jobs))
         return self.args
 
     def install_args(self, spec, prefix):
