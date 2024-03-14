@@ -184,6 +184,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     variant("strumpack", default=False, description="Enable support for STRUMPACK")
     variant("suite-sparse", default=False, description="Enable serial, sparse direct solvers")
     variant("petsc", default=False, description="Enable PETSc solvers, preconditioners, etc.")
+    variant("mumps", default=False, description="Enable MUMPS solver.")
     variant("slepc", default=False, description="Enable SLEPc integration")
     variant("sundials", default=False, description="Enable Sundials time integrators")
     variant("pumi", default=False, description="Enable functionality based on PUMI")
@@ -254,6 +255,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     conflicts("+slepc", when="~petsc")
     conflicts("+pumi", when="~mpi")
     conflicts("timer=mpi", when="~mpi")
+    conflicts("+mumps", when="~mpi")
 
     # See https://github.com/mfem/mfem/issues/2957
     conflicts("^mpich@4:", when="@:4.3+mpi")
@@ -349,6 +351,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
         depends_on(
             f"slepc+rocm amdgpu_target={gfx}", when=f"+rocm+slepc amdgpu_target={gfx} ^petsc+rocm"
         )
+    depends_on("mumps@5.1.1:", when="+mumps")
     depends_on("mpfr", when="+mpfr")
     depends_on("netcdf-c@4.1.3:", when="+netcdf")
     depends_on("unwind", when="+libunwind")
@@ -614,6 +617,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
             "MFEM_MPIEXEC=%s" % mfem_mpiexec,
             "MFEM_MPIEXEC_NP=%s" % mfem_mpiexec_np,
             "MFEM_USE_EXCEPTIONS=%s" % yes_no("+exceptions"),
+            "MFEM_USE_MUMPS=%s" % yes_no("+mumps"),
         ]
 
         # Determine C++ standard to use:
@@ -1104,6 +1108,17 @@ class Mfem(Package, CudaPackage, ROCmPackage):
             options += [
                 "HIOP_OPT=%s" % hiop_hdrs.cpp_flags,
                 "HIOP_LIB=%s" % ld_flags_from_library_list(hiop_libs),
+            ]
+
+        if "+mumps" in spec:
+            mumps = spec["mumps"]
+            mumps_opt = ["-I%s" % mumps.prefix.include]
+            if "+openmp" in mumps:
+                if not self.spec.satisfies("%apple-clang"):
+                    mumps_opt += [xcompiler + self.compiler.openmp_flag]
+            options += [
+                "MUMPS_OPT=%s" % " ".join(mumps_opt),
+                "MUMPS_LIB=%s" % ld_flags_from_library_list(mumps.libs),
             ]
 
         make("config", *options, parallel=False)
