@@ -29,7 +29,7 @@ _versions = {
         "Linux-x86_64": (
             "e6a842f4eca9490575cdb68b6b1bb78d47b95a897de48dee292c431892e57d17",
             "https://developer.download.nvidia.com/compute/cuda/12.4.0/local_installers/cuda_12.4.0_550.54.14_linux.run",
-        ),
+        )
     },
     "12.3.0": {
         "Linux-aarch64": (
