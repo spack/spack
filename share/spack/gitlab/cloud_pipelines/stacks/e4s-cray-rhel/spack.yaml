@@ -41,6 +41,9 @@ spack:
       variants: fabrics=sockets,tcp,udp,rxm
     libunwind:
       variants: +pic +xz
+    mgard:
+      require:
+        - "@2023-01-10:"
     mpich:
       variants: ~wrapperrpath
     ncurses:
