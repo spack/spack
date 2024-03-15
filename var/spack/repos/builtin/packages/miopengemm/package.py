@@ -43,14 +43,7 @@ class Miopengemm(CMakePackage):
 
     depends_on("cmake@3:", type="build")
 
-    for ver in [
-        "5.3.0",
-        "5.3.3",
-        "5.4.0",
-        "5.4.3",
-        "5.5.0",
-        "5.5.1",
-    ]:
+    for ver in ["5.3.0", "5.3.3", "5.4.0", "5.4.3", "5.5.0", "5.5.1"]:
         depends_on(f"rocm-cmake@{ver}", type="build", when=f"@{ver}")
         depends_on(f"rocm-opencl@{ver}", when=f"@{ver}")
 
