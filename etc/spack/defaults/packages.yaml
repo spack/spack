@@ -34,6 +34,7 @@ packages:
       java: [openjdk, jdk, ibm-java]
       jpeg: [libjpeg-turbo, libjpeg]
       lapack: [openblas, amdlibflame]
+      libc: [glibc, musl]
       libglx: [mesa+glx, mesa18+glx]
       libllvm: [llvm]
       libosmesa: [mesa+osmesa, mesa18+osmesa]
