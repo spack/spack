@@ -9,7 +9,7 @@ from spack.package import *
 class PyKornia(PythonPackage):
     """Open Source Differentiable Computer Vision Library for PyTorch."""
 
-    homepage = "https://www.kornia.org/"
+    homepage = "http://www.kornia.org/"
     pypi = "kornia/kornia-0.5.10.tar.gz"
 
     license("Apache-2.0")

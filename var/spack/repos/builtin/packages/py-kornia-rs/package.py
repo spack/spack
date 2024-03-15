@@ -9,7 +9,7 @@ from spack.package import *
 class PyKorniaRs(PythonPackage):
     """Low level implementations for computer vision in Rust."""
 
-    homepage = "https://www.kornia.org/"
+    homepage = "http://www.kornia.org/"
     url = "https://github.com/kornia/kornia-rs/archive/refs/tags/v0.1.1.tar.gz"
 
     license("Apache-2.0")
