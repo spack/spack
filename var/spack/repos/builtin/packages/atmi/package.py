@@ -31,15 +31,7 @@ class Atmi(CMakePackage):
 
     depends_on("cmake@3:", type="build")
     depends_on("rsync")
-
-    for ver in [
-        "5.3.0",
-        "5.3.3",
-        "5.4.0",
-        "5.4.3",
-        "5.5.0",
-        "5.5.1",
-    ]:
+    for ver in ["5.3.0", "5.3.3", "5.4.0", "5.4.3", "5.5.0", "5.5.1"]:
         depends_on(f"comgr@{ver}", type="link", when=f"@{ver}")
         depends_on(f"hsa-rocr-dev@{ver}", type="link", when=f"@{ver}")
         depends_on("elf", type="link", when=f"@{ver}")
