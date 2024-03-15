@@ -57,6 +57,9 @@ class Namd(MakefilePackage, CudaPackage):
     variant("avxtiles", when="target=x86_64_v4:", default=False, description="Enable avxtiles")
     variant("single_node_gpu", default=False, description="Single node GPU")
 
+    # Disable parallel build
+    parallel = False
+
     # init_tcl_pointers() declaration and implementation are inconsistent
     # "src/colvarproxy_namd.C", line 482: error: inherited member is not
     # allowed
