@@ -65,10 +65,12 @@ class Amdlibflame(CMakePackage, LibflameBase):
     variant("ilp64", default=False, when="@3.0.1: ", description="Build with ILP64 support")
     variant(
         "enable-aocl-blas",
-        default=False,
-        when="@4.1.0:",
-        description="Enables tight coupling with AOCL-BLAS library in order to use AOCL-BLAS\
-                internal routines",
+        default=True,
+        when="@4.1:",
+        description=(
+            "Enables tight coupling with AOCL-BLAS library in order to use AOCL-BLAS "
+            "internal routines"
+        ),
     )
     variant(
         "vectorization",
@@ -101,6 +103,8 @@ class Amdlibflame(CMakePackage, LibflameBase):
 
     depends_on("python+pythoncmd", type="build")
     depends_on("gmake@4:", when="@3.0.1,3.1:", type="build")
+    requires("^amdblis", when="+enable-aocl-blas", msg="+enable-aocl-blas requires using amdblis")
+
     for vers in ["4.1", "4.2"]:
         with when(f"@{vers}"):
             depends_on(f"aocl-utils@{vers}")
@@ -149,9 +153,8 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
         if spec.satisfies("@3.0.1: +ilp64"):
             args.append(self.define("ENABLE_ILP64", True))
 
-        if spec.satisfies("@4.1.0: +enable-aocl-blas"):
-            args.append(self.define("ENABLE_AOCL_BLAS", True))
-            args.append("-DAOCL_ROOT:PATH={0}".format(spec["blas"].prefix))
+        if spec.satisfies("@4.2: +enable-aocl-blas"):
+            args.append("-DAOCL_ROOT:PATH={0}".format(self.spec["blas"].prefix))
 
         if spec.variants["vectorization"].value == "auto":
             if spec.satisfies("target=avx512"):

@@ -46,11 +46,31 @@ class Amdscalapack(ScalapackBase):
     version("2.2", sha256="2d64926864fc6d12157b86e3f88eb1a5205e7fc157bf67e7577d0f18b9a7484c")
 
     variant("ilp64", default=False, description="Build with ILP64 support")
+    variant(
+        "enable-aocl-blas-lapack",
+        default=True,
+        when="@4.1:",
+        description=(
+            "Enables tight coupling with AOCL BLAS/LAPACK library in order to use AOCL "
+            "internal routines"
+        ),
+    )
 
     conflicts("+ilp64", when="@:3.0", msg="ILP64 is supported from 3.1 onwards")
     requires("target=x86_64:", msg="AMD scalapack available only on x86_64")
 
     patch("clang-hollerith.patch", when="%clang@16:")
+
+    requires(
+        "^amdblis",
+        when="+enable-aocl-blas-lapack",
+        msg="+enable-aocl-blas-lapack requires using amdblis",
+    )
+    requires(
+        "^amdlibflame",
+        when="+enable-aocl-blas-lapack",
+        msg="+enable-aocl-blas-lapack requires using amdlibflame",
+    )
 
     def patch(self):
         # Flang-New gets confused and thinks it finds Hollerith constants
@@ -108,12 +128,9 @@ class Amdscalapack(ScalapackBase):
             c_flags.append("-Wno-incompatible-pointer-types")
             args.append(self.define("CMAKE_C_FLAGS", " ".join(c_flags)))
 
-        # link libflame library
-        args.extend(["-DLAPACK_LIBRARIES={0}".format(self.spec["lapack"].libs)])
-
         args.extend(
             [
-                "-DLAPACK_FOUND=true",
+                "-DUSE_OPTIMIZED_LAPACK_BLAS=true",
                 "-DCMAKE_C_COMPILER=%s" % spec["mpi"].mpicc,
                 "-DCMAKE_Fortran_COMPILER=%s" % spec["mpi"].mpifc,
             ]
