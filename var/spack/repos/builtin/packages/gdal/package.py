@@ -591,7 +591,7 @@ class CMakeBuilder(CMakeBuilder):
         args = [arg for arg in args if arg]
 
         return args
-    
+
     @run_after("install")
     @when("platform=darwin")
     def darwin_install_name(self):
