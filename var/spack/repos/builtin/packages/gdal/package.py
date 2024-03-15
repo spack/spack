@@ -591,6 +591,12 @@ class CMakeBuilder(CMakeBuilder):
         args = [arg for arg in args if arg]
 
         return args
+    
+    @run_after("install")
+    @when("platform=darwin")
+    def darwin_install_name(self):
+        # The shared library is not installed correctly on Darwin; fix this
+        fix_darwin_install_name(self.prefix.lib)
 
 
 class AutotoolsBuilder(AutotoolsBuilder):
