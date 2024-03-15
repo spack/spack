@@ -298,10 +298,7 @@ class Python(Package):
         depends_on("tcl@8.5.12:", when="@3.11: +tkinter")
         depends_on("tcl", when="+tkinter")
 
-        # macos sdk already defines and uses uuid.h
-        #  However it uses uuid types that are not defined in libuuid
-        if sys.platform != "darwin":
-            depends_on("uuid", when="+uuid")
+        depends_on("uuid", when="+uuid")
 
         depends_on("tix", when="+tix")
         depends_on("libxcrypt", when="+crypt")

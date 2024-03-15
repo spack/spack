@@ -24,6 +24,8 @@ class OsspUuid(AutotoolsPackage):
 
     provides("uuid")
 
+    conflicts("platform=darwin")
+
     @property
     def libs(self):
         return find_libraries("libuuid", self.prefix, recursive=True)
