@@ -405,13 +405,13 @@ class IntelOneapiCompilers(IntelOneApiPackage):
             f"it depends on intel-oneapi-runtime@{str(compiler.version)}:",
         )
 
-        for fortran_virtual in ("fortran-rt", "ifcore@5"):
+        for fortran_virtual in ("fortran-rt", "libifcore@5"):
             pkg("*").depends_on(
                 fortran_virtual,
                 when=f"%{str(compiler.spec)}",
                 languages=["fortran"],
                 type="link",
-                description=f"Add a dependency on 'ifcore' for nodes compiled with "
+                description=f"Add a dependency on 'libifcore' for nodes compiled with "
                 f"{str(compiler.spec)} and using the 'fortran' language",
             )
         # The version of gcc-runtime is the same as the %gcc used to "compile" it
