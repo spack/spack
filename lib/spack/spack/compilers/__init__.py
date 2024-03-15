@@ -167,7 +167,17 @@ def _compiler_config_from_external(config):
     prefix = config.get("prefix", None)
 
     compiler_class = class_for_compiler_name(compiler_spec.name)
-    paths = extra_attributes.get("paths", {})
+    paths = extra_attributes.get("compilers", {})
+
+    # compilers format has cc/fc/f77, externals format has "c/fortran"
+    if "c" in paths:
+        paths["cc"] = paths.pop("c")
+    if "fortran" in paths:
+        fc = paths.pop("fortran")
+        paths["fc"] = fc
+        if "f77" not in paths:
+            paths["f77"] = fc
+
     compiler_langs = ["cc", "cxx", "fc", "f77"]
     for lang in compiler_langs:
         if paths.setdefault(lang, None):

@@ -474,9 +474,14 @@ assuming the paths to the compiler executables are determinable from
 the prefix.
 
 If the paths to the compiler executable are not determinable from the
-prefix, you can add them to the ``extra_attributes`` field. Similarly,
-all other fields from the compilers config can be added to the
-``extra_attributes`` field for an external representing a compiler.
+prefix, you can add them to the ``extra_attributes`` field using the
+``compilers`` key. The ``compilers`` key accepts compilers for ``c``,
+``cxx``, ``fortran``, and ``f77``.
+
+For all other fields from the ``compilers`` config, they can be added
+to the ``extra_attributes`` field for an external representing a
+compiler. These fields are used as-is in the internal representation
+of the compiler config.
 
 .. code-block:: yaml
 
@@ -493,11 +498,10 @@ all other fields from the compilers config can be added to the
        - spec: llvm+clang@15.0.0 arch=linux-rhel8-skylake
          prefix: /usr
          extra_attributes:
-           paths:
-             cc: /usr/bin/clang-with-suffix
+           compilers:
+             c: /usr/bin/clang-with-suffix
              cxx: /usr/bin/clang++-with-extra-info
-             fc: /usr/bin/gfortran
-             f77: /usr/bin/gfortran
+             fortran: /usr/bin/gfortran
            extra_rpaths:
            - /usr/lib/llvm/
 

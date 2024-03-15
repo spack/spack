@@ -259,11 +259,10 @@ def test_compiler_list_empty(no_compilers_yaml, working_env, compilers_dir):
                 "prefix": "/path/to/fake",
                 "modules": ["gcc/7.7.7", "foobar"],
                 "extra_attributes": {
-                    "paths": {
-                        "cc": "/path/to/fake/gcc",
+                    "compilers": {
+                        "c": "/path/to/fake/gcc",
                         "cxx": "/path/to/fake/g++",
-                        "fc": "/path/to/fake/gfortran",
-                        "f77": "/path/to/fake/gfortran",
+                        "fortran": "/path/to/fake/gfortran",
                     },
                     "flags": {"fflags": "-ffree-form"},
                 },
