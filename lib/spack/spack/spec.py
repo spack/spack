@@ -186,11 +186,11 @@ class InstallStatus(enum.Enum):
     Options are artificially disjoint for display purposes
     """
 
-    installed = "@g{[+]}  "
-    upstream = "@g{[^]}  "
-    external = "@g{[e]}  "
-    absent = "@K{ - }  "
-    missing = "@r{[-]}  "
+    INSTALLED = "@g{[+]}"
+    UPSTREAM = "@g{[^]}"
+    EXTERNAL = "@g{[e]}"
+    ABSENT = "@K{ - }"
+    MISSING = "@r{[-]}"
 
 
 def colorize_spec(spec):
@@ -1487,7 +1487,7 @@ class Spec:
         if not deptypes_str and not virtuals_str:
             return ""
         result = f"{deptypes_str} {virtuals_str}".strip()
-        return f"[{result}]"
+        return f"[{result}] "
 
     def dependencies(
         self, name=None, deptype: Union[dt.DepTypes, dt.DepFlag] = dt.ALL
@@ -4290,8 +4290,7 @@ class Spec:
         return colorize_spec(self)
 
     def format(self, format_string=DEFAULT_FORMAT, **kwargs):
-        r"""Prints out particular pieces of a spec, depending on what is
-        in the format string.
+        r"""Prints out particular pieces of a spec, depending on what is in the format string.
 
         Using the ``{attribute}`` syntax, any field of the spec can be
         selected.  Those attributes can be recursive. For example,
@@ -4417,6 +4416,9 @@ class Spec:
             elif attribute == "spack_install":
                 write(morph(spec, spack.store.STORE.layout.root))
                 return
+            elif re.match(r"install_status", attribute):
+                write(self.install_status_symbol())
+                return
             elif re.match(r"hash(:\d)?", attribute):
                 col = "#"
                 if ":" in attribute:
@@ -4511,8 +4513,18 @@ class Spec:
                 "Format string terminated while reading attribute." "Missing terminating }."
             )
 
+        # remove leading whitespace from directives that add it for internal formatting.
+        # Arch, compiler flags, and variants add spaces for spec format correctness, but
+        # we don't really want them in formatted string output. We do want to preserve
+        # whitespace from the format string.
         formatted_spec = out.getvalue()
-        return formatted_spec.strip()
+        whitespace_attrs = [r"{arch=[^}]*}", r"{architecture}", r"{compiler_flags}", r"{variants}"]
+        if any(re.match(rx, format_string) for rx in whitespace_attrs):
+            formatted_spec = formatted_spec.lstrip()
+        if any(re.search(f"{rx}$", format_string) for rx in whitespace_attrs):
+            formatted_spec = formatted_spec.rstrip()
+
+        return formatted_spec
 
     def cformat(self, *args, **kwargs):
         """Same as format, but color defaults to auto instead of False."""
@@ -4562,7 +4574,7 @@ class Spec:
             self.traverse(root=False), key=lambda x: (x.name, x.abstract_hash)
         )
         sorted_dependencies = [
-            d.format("{edge_attributes} " + DEFAULT_FORMAT) for d in sorted_dependencies
+            d.format("{edge_attributes}" + DEFAULT_FORMAT) for d in sorted_dependencies
         ]
         spec_str = " ^".join(root_str + sorted_dependencies)
         return spec_str.strip()
@@ -4582,20 +4594,25 @@ class Spec:
     def install_status(self):
         """Helper for tree to print DB install status."""
         if not self.concrete:
-            return InstallStatus.absent
+            return InstallStatus.ABSENT
 
         if self.external:
-            return InstallStatus.external
+            return InstallStatus.EXTERNAL
 
         upstream, record = spack.store.STORE.db.query_by_spec_hash(self.dag_hash())
         if not record:
-            return InstallStatus.absent
+            return InstallStatus.ABSENT
         elif upstream and record.installed:
-            return InstallStatus.upstream
+            return InstallStatus.UPSTREAM
         elif record.installed:
-            return InstallStatus.installed
+            return InstallStatus.INSTALLED
         else:
-            return InstallStatus.missing
+            return InstallStatus.MISSING
+
+    def install_status_symbol(self):
+        """Get an install status symbol."""
+        status = self.install_status()
+        return clr.colorize(status.value)
 
     def _installed_explicitly(self):
         """Helper for tree to print DB install status."""
@@ -4621,7 +4638,7 @@ class Spec:
         show_types: bool = False,
         depth_first: bool = False,
         recurse_dependencies: bool = True,
-        status_fn: Optional[Callable[["Spec"], InstallStatus]] = None,
+        install_status: bool = False,
         prefix: Optional[Callable[["Spec"], str]] = None,
     ) -> str:
         """Prints out this spec and its dependencies, tree-formatted
@@ -4642,8 +4659,7 @@ class Spec:
             show_types: if True, show the (merged) dependency type of a node
             depth_first: if True, traverse the DAG depth first when representing it as a tree
             recurse_dependencies: if True, recurse on dependencies
-            status_fn: optional callable that takes a node as an argument and return its
-                installation status
+            install_status: if True, show installation status next to each spec
             prefix: optional callable that takes a node as an argument and return its
                 installation prefix
         """
@@ -4657,21 +4673,15 @@ class Spec:
         ):
             node = dep_spec.spec
 
+            if install_status:
+                out += node.format("{install_status}  ")
+
             if prefix is not None:
                 out += prefix(node)
             out += " " * indent
 
             if depth:
                 out += "%-4d" % d
-
-            if status_fn:
-                status = status_fn(node)
-                if status in list(InstallStatus):
-                    out += clr.colorize(status.value, color=color)
-                elif status:
-                    out += clr.colorize("@g{[+]}  ", color=color)
-                else:
-                    out += clr.colorize("@r{[-]}  ", color=color)
 
             if hashes:
                 out += clr.colorize("@K{%s}  ", color=color) % node.dag_hash(hashlen)
