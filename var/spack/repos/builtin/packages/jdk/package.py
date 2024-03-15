@@ -34,11 +34,10 @@ class Jdk(Package):
     # found in a link above. The build number can be deciphered from the URL.
     # Alternatively, run `bin/java -version` after extracting. Replace '+'
     # symbol in version with '_', otherwise it will be interpreted as a variant
-    version(
-        "14_36",
-        sha256="4639bbaecc9cc606f1a4b99fda1efcaefcbf57a7025b3828b095093a6c866afd",
-        url="https://download.oracle.com/otn-pub/java/jdk/14+36/076bab302c7b4508975440c56f6cc26a/jdk-14_linux-x64_bin.tar.gz",
-    )
+    version('14.0.1_openjdk',
+         sha256='22ce248e0bd69f23028625bede9d1b3080935b68d011eaaf9e241f84d6b9c4cc',
+         url='https://download.java.net/java/GA/jdk14.0.1/664493ef4a6946b186ff29eb326336a2/7/GPL/openjdk-14.0.1_linux-x64_bin.tar.gz'
+    ) # WARNING: This is the RedHat version of OpenJDK 14. It is not the Oracle version. The Oracle version is no longer available for download.
     version(
         "12.0.2_10",
         sha256="2dde6fda89a4ec6e6560ed464e917861c9e40bf576e7a64856dafc55abaaff51",
@@ -127,8 +126,9 @@ class Jdk(Package):
         output = Executable(exe)("-version", output=str, error=str)
 
         # Make sure this is actually Oracle JDK, not OpenJDK
-        if "openjdk" in output:
-            return None
+        # WARNING: Check disabled due to OpenJDK being installed
+        #if "openjdk" in output:
+        #    return None
 
         match = re.search(r"\(build (\S+)\)", output)
         return match.group(1).replace("+", "_") if match else None
