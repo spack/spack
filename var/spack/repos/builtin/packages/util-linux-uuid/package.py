@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack.package import *
+import sys
 
 
 class UtilLinuxUuid(AutotoolsPackage):
@@ -29,7 +30,8 @@ class UtilLinuxUuid(AutotoolsPackage):
 
     depends_on("pkgconfig", type="build")
 
-    provides("uuid", when="platform=linux")
+    if sys.platform not in ["darwin", "windows"]:
+        provides("uuid")
 
     def url_for_version(self, version):
         url = "https://www.kernel.org/pub/linux/utils/util-linux/v{0}/util-linux-{1}.tar.gz"

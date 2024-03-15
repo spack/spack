@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack.package import *
-
+import sys
 
 class OsspUuid(AutotoolsPackage):
     """OSSP uuid is a ISO-C:1999 application programming interface (API) and
@@ -22,9 +22,8 @@ class OsspUuid(AutotoolsPackage):
     depends_on("c", type="build")  # generated
     depends_on("cxx", type="build")  # generated
 
-    provides("uuid")
-
-    conflicts("platform=darwin")
+    if sys.platform not in ["darwin", "windows"]:
+        provides("uuid")
 
     @property
     def libs(self):
