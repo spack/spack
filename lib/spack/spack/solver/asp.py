@@ -2455,7 +2455,7 @@ class SpackSolverSetup:
             except spack.repo.UnknownPackageError:
                 continue
             if hasattr(compiler_cls, "runtime_constraints"):
-                compiler_cls.runtime_constraints(compiler=compiler, pkg=recorder)
+                compiler_cls.runtime_constraints(spec=compiler.spec, pkg=recorder)
 
         recorder.consume_facts()
 
