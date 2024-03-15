@@ -514,6 +514,9 @@ class Compiler:
 
         dynamic_linker = _parse_dynamic_linker(output)
 
+        if not dynamic_linker:
+            return None
+
         return _libc_from_dynamic_linker(dynamic_linker)
 
     @property
