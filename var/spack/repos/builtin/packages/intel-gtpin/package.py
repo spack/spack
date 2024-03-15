@@ -42,7 +42,7 @@ class IntelGtpin(Package):
         "4.0",
         sha256="fc12fb3aefdd4ae75b21ef9325e4058439dace52501200900895240c6ef3f0d8",
         url="https://downloadmirror.intel.com/816037/external-release-gtpin-4.0-linux.tar.xz",
-    }
+    )
 
     version(
         "3.7",
