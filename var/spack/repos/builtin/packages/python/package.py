@@ -297,9 +297,7 @@ class Python(Package):
         depends_on("tk", when="+tkinter")
         depends_on("tcl@8.5.12:", when="@3.11: +tkinter")
         depends_on("tcl", when="+tkinter")
-
         depends_on("uuid", when="+uuid")
-
         depends_on("tix", when="+tix")
         depends_on("libxcrypt", when="+crypt")
 
