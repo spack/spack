@@ -278,7 +278,14 @@ def _libc_from_dynamic_linker(dynamic_linker: str) -> Optional["spack.spec.Spec"
         # relative to the dynamic linker.
         ldd = os.path.join(prefix, "bin", "ldd")
         if not os.path.exists(ldd):
-            return None
+            # If `/lib64/ld.so` was not a symlink to `/usr/lib/ld.so` we can try to use /usr as
+            # prefix. This is the case on ubuntu 18.04 where /lib != /usr/lib.
+            if prefix != "/":
+                return None
+            prefix = "/usr"
+            ldd = os.path.join(prefix, "bin", "ldd")
+            if not os.path.exists(ldd):
+                return None
         maybe_spec = _libc_from_ldd(ldd)
         if not maybe_spec:
             return None
