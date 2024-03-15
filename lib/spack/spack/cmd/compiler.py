@@ -89,7 +89,7 @@ def compiler_find(args):
         paths, scope=None, mixed_toolchain=args.mixed_toolchain
     )
     if new_compilers:
-        spack.compilers.add_compilers_to_config(new_compilers, scope=args.scope, init_config=False)
+        spack.compilers.add_compilers_to_config(new_compilers, scope=args.scope)
         n = len(new_compilers)
         s = "s" if n > 1 else ""
 

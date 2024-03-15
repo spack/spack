@@ -147,7 +147,7 @@ def _add_compilers_if_missing() -> None:
             mixed_toolchain=sys.platform == "darwin"
         )
         if new_compilers:
-            spack.compilers.add_compilers_to_config(new_compilers, init_config=False)
+            spack.compilers.add_compilers_to_config(new_compilers)
 
 
 @contextlib.contextmanager
