@@ -496,7 +496,7 @@ class Compiler:
         if self.enable_implicit_rpaths is False:
             return []
 
-        output = self._compile_c_source_verbose()
+        output = self.compiler_verbose_output
 
         if not output:
             return []
@@ -507,7 +507,7 @@ class Compiler:
         return list(paths_containing_libs(link_dirs, all_required_libs))
 
     def default_libc(self) -> Optional["spack.spec.Spec"]:
-        output = self._compile_c_source_verbose()
+        output = self.compiler_verbose_output
 
         if not output:
             return None
@@ -527,7 +527,14 @@ class Compiler:
         # By default every compiler returns the empty list
         return []
 
-    def _compile_c_source_verbose(self) -> Optional[str]:
+    @property
+    def compiler_verbose_output(self) -> Optional[str]:
+        """Verbose output from compiling a dummy C source file. Output is cached."""
+        if not hasattr(self, "_compile_c_source_output"):
+            self._compile_c_source_output = self._compile_dummy_c_source()
+        return self._compile_c_source_output
+
+    def _compile_dummy_c_source(self) -> Optional[str]:
         cc = self.cc if self.cc else self.cxx
         if not cc or not self.verbose_flag:
             return None

@@ -933,7 +933,7 @@ def disable_compiler_execution(monkeypatch, request):
     """Disable compiler execution to determine implicit link paths and libc flavor and version.
     To re-enable use `@pytest.mark.enable_compiler_execution`"""
     if "enable_compiler_execution" not in request.keywords:
-        monkeypatch.setattr(spack.compiler.Compiler, "_compile_c_source_verbose", _return_none)
+        monkeypatch.setattr(spack.compiler.Compiler, "_compile_dummy_c_source", _return_none)
 
 
 @pytest.fixture(scope="function")

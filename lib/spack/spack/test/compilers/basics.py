@@ -160,7 +160,7 @@ class MockCompiler(Compiler):
 def test_implicit_rpaths(dirs_with_libfiles):
     lib_to_dirs, all_dirs = dirs_with_libfiles
     compiler = MockCompiler()
-    compiler._compile_c_source_verbose = lambda *args: "ld " + " ".join(f"-L{d}" for d in all_dirs)
+    compiler._compile_c_source_output = "ld " + " ".join(f"-L{d}" for d in all_dirs)
     retrieved_rpaths = compiler.implicit_rpaths()
     assert set(retrieved_rpaths) == set(lib_to_dirs["libstdc++"] + lib_to_dirs["libgfortran"])
 
@@ -189,7 +189,7 @@ def call_compiler(exe, *args, **kwargs):
     ],
 )
 @pytest.mark.enable_compiler_execution
-def test_compile_c_source_verbose_adds_flags(monkeypatch, exe, flagname):
+def test_compile_dummy_c_source_adds_flags(monkeypatch, exe, flagname):
     # create fake compiler that emits mock verbose output
     compiler = MockCompiler()
     monkeypatch.setattr(Executable, "__call__", call_compiler)
@@ -206,32 +206,32 @@ def test_compile_c_source_verbose_adds_flags(monkeypatch, exe, flagname):
         assert False
 
     # Test without flags
-    assert compiler._compile_c_source_verbose() == without_flag_output
+    assert compiler._compile_dummy_c_source() == without_flag_output
 
     if flagname:
         # set flags and test
         compiler.flags = {flagname: ["--correct-flag"]}
-        assert compiler._compile_c_source_verbose() == with_flag_output
+        assert compiler._compile_dummy_c_source() == with_flag_output
 
 
 @pytest.mark.enable_compiler_execution
-def test_compile_c_source_verbose_no_path():
+def test_compile_dummy_c_source_no_path():
     compiler = MockCompiler()
     compiler.cc = None
     compiler.cxx = None
-    assert compiler._compile_c_source_verbose() is None
+    assert compiler._compile_dummy_c_source() is None
 
 
 @pytest.mark.enable_compiler_execution
-def test_compile_c_source_verbose_no_verbose_flag():
+def test_compile_dummy_c_source_no_verbose_flag():
     compiler = MockCompiler()
     compiler._verbose_flag = None
-    assert compiler._compile_c_source_verbose() is None
+    assert compiler._compile_dummy_c_source() is None
 
 
 @pytest.mark.not_on_windows("Not supported on Windows (yet)")
 @pytest.mark.enable_compiler_execution
-def test_compile_c_source_verbose_load_env(working_env, monkeypatch, tmpdir):
+def test_compile_dummy_c_source_load_env(working_env, monkeypatch, tmpdir):
     gcc = str(tmpdir.join("gcc"))
     with open(gcc, "w") as f:
         f.write(
@@ -257,7 +257,7 @@ fi
     compiler.environment = {"set": {"ENV_SET": "1"}}
     compiler.modules = ["turn_on"]
 
-    assert compiler._compile_c_source_verbose() == without_flag_output
+    assert compiler._compile_dummy_c_source() == without_flag_output
 
 
 # Get the desired flag from the specified compiler spec.
