@@ -54,7 +54,7 @@ class PyZfit(PythonPackage):
         with when("+hs3"):
             depends_on("py-asdf")
 
-        depends_on("py-attrs", when="@0.15")
+        depends_on("py-attrs", when="@0.15:")
         depends_on("py-typing-extensions", when="^python@:3.8")
         depends_on("py-boost-histogram")
         depends_on("py-colorama")
