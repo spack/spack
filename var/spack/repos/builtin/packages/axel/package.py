@@ -14,6 +14,7 @@ class Axel(AutotoolsPackage):
 
     license("GPL-2.0-or-later WITH OpenSSL-Exception")
 
+    version("2.17.13", sha256="aedd5e0f22d6eda23eece483ce89be4adfdf1e16ba18d54fd6b743da9d49911b")
     version("2.17.10", sha256="c0d26eba6b94945cd98c5b69ca6df2744639d17bfd49047ef51a8a48f067de10")
     version("2.16.1", sha256="763066efc61e4f7be2eb59afa049bdbc520837e01c95a78f403e542ad82f2719")
 

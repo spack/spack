@@ -103,14 +103,13 @@ spack:
   - lammps
   - legion
   - libnrm
-  - libpressio +bitgrooming +bzip2 ~cuda ~cusz +fpzip +hdf5 +libdistributed
-    +lua +openmp +python +sz +sz3 +unix +zfp +json +remote +netcdf +mgard
+  #- libpressio +bitgrooming +bzip2 ~cuda ~cusz +fpzip +hdf5 +libdistributed +lua +openmp +python +sz +sz3 +unix +zfp +json +remote +netcdf +mgard # mgard: 
   - libquo
   - libunwind
   - mercury
   - metall
   - mfem
-  - mgard +serial +openmp +timing +unstructured ~cuda
+  # - mgard +serial +openmp +timing +unstructured ~cuda # mgard
   - mpark-variant
   - mpifileutils ~xattr
   - nccmp
@@ -118,7 +117,7 @@ spack:
   - netlib-scalapack
   - omega-h
   - openmpi
-  - openpmd-api
+  - openpmd-api ^adios2~mgard
   - papi
   - papyrus
   - pdt
