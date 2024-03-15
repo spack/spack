@@ -745,6 +745,8 @@ class Root(CMakePackage):
         # the following vars are copied from thisroot.sh; silence a cppyy warning
         env.set("CLING_STANDARD_PCH", "none")
         env.set("CPPYY_API_PATH", "none")
+        if "+vdt" in self.spec:
+            env.prepend_path("CPATH", self.spec["vdt"].prefix.include)
 
     def setup_dependent_build_environment(self, env, dependent_spec):
         env.set("ROOTSYS", self.prefix)
@@ -758,6 +760,8 @@ class Root(CMakePackage):
         if "platform=darwin" in self.spec:
             # Newer deployment targets cause fatal errors in rootcling
             env.unset("MACOSX_DEPLOYMENT_TARGET")
+        if "+vdt" in self.spec:
+            env.prepend_path("CPATH", self.spec["vdt"].prefix.include)
 
     def setup_dependent_run_environment(self, env, dependent_spec):
         env.set("ROOTSYS", self.prefix)
@@ -767,3 +771,5 @@ class Root(CMakePackage):
         env.prepend_path("ROOT_INCLUDE_PATH", dependent_spec.prefix.include)
         if "+rpath" not in self.spec:
             env.prepend_path("LD_LIBRARY_PATH", self.prefix.lib.root)
+        if "+vdt" in self.spec:
+            env.prepend_path("CPATH", self.spec["vdt"].prefix.include)
