@@ -236,7 +236,7 @@ def test_overriding_prefix(mock_executable, mutable_config, monkeypatch):
 
     @classmethod
     def _determine_variants(cls, exes, version_str):
-        return "languages=c", {"prefix": "/opt/gcc/bin", "compilers": {"c": exes[0]}}
+        return "languages=c", {"prefix": "/opt/gcc/bin", "paths": {"cc": exes[0]}}
 
     gcc_cls = spack.repo.PATH.get_pkg_class("gcc")
     monkeypatch.setattr(gcc_cls, "determine_variants", _determine_variants)

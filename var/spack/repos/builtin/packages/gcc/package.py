@@ -21,7 +21,7 @@ from spack.operating_systems.mac_os import macos_sdk_path, macos_version
 from spack.package import *
 
 
-class Gcc(AutotoolsPackage, GNUMirrorPackage):
+class Gcc(AutotoolsPackage, GNUMirrorPackage, CompilerPackage):
     """The GNU Compiler Collection includes front ends for C, C++, Objective-C,
     Fortran, Ada, and Go, as well as libraries for these languages."""
 
@@ -503,11 +503,21 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
 
     build_directory = "spack-build"
 
-    @classproperty
-    def executables(cls):
-        names = [r"gcc", r"[^\w]?g\+\+", r"gfortran", r"gdc", r"gccgo"]
-        suffixes = [r"", r"-mp-\d+\.\d", r"-\d+\.\d", r"-\d+", r"\d\d"]
-        return [r"".join(x) for x in itertools.product(names, suffixes)]
+    languages = ["c", "cxx", "fortran", "d", "go"]
+
+    @property
+    def supported_languages(self):
+        # This weirdness is because it could be called on an abstract spec
+        if "languages" not in self.spec.variants:
+            return self.languages
+        return [lang for lang in self.languages if lang in self.spec.variants["languages"].value]
+
+    c_names = ["gcc"]
+    cxx_names = ["g++"]
+    fortran_names = ["gfortran"]
+    d_names = ["gdc"]
+    go_names = ["gccgo"]
+    suffixes = [r"-mp-\d+(?:\.\d+)?", r"-\d+(?:\.\d+)?", r"\d\d"]
 
     @classmethod
     def filter_detected_exes(cls, prefix, exes_in_prefix):
@@ -537,70 +547,28 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
 
         return result
 
-    @classmethod
-    def determine_version(cls, exe):
-        try:
-            output = spack.compiler.get_compiler_version_output(exe, "--version")
-        except Exception:
-            output = ""
-        # Apple's gcc is actually apple clang, so skip it.
-        # Users can add it manually to compilers.yaml at their own risk.
-        if "Apple" in output:
-            return None
-
-        version_regex = re.compile(r"([\d\.]+)")
-        for vargs in ("-dumpfullversion", "-dumpversion"):
-            try:
-                output = spack.compiler.get_compiler_version_output(exe, vargs)
-                match = version_regex.search(output)
-                if match:
-                    return match.group(1)
-            except spack.util.executable.ProcessError:
-                pass
-            except Exception as e:
-                tty.debug(e)
-
-        return None
+    version_regex = r"(?<!clang version)\s?([0-9.]+)"
 
     @classmethod
     def determine_variants(cls, exes, version_str):
-        languages, compilers = set(), {}
-        # There are often at least two copies (not symlinks) of each compiler executable in the
-        # same directory: one with a canonical name, e.g. "gfortran", and another one with the
-        # target prefix, e.g. "x86_64-pc-linux-gnu-gfortran". There also might be a copy of "gcc"
-        # with the version suffix, e.g. "x86_64-pc-linux-gnu-gcc-6.3.0". To ensure the consistency
-        # of values in the "compilers" dictionary (i.e. we prefer all of them to reference copies
-        # with canonical names if possible), we iterate over the executables in the reversed sorted
-        # order:
-        for exe in sorted(exes, reverse=True):
-            basename = os.path.basename(exe)
-            if "g++" in basename:
-                languages.add("c++")
-                compilers["cxx"] = exe
-            elif "gfortran" in basename:
-                languages.add("fortran")
-                compilers["fortran"] = exe
-            elif "gcc" in basename:
-                languages.add("c")
-                compilers["c"] = exe
-            elif "gccgo" in basename:
-                languages.add("go")
-                compilers["go"] = exe
-            elif "gdc" in basename:
-                languages.add("d")
-                compilers["d"] = exe
+        paths = cls.determine_paths(exes=exes)
+
+        languages = set()
+        translation = {"cxx": "c++"}
+        for lang, path in paths.items():
+            languages.add(translation.get(lang, lang))
         variant_str = "languages={0}".format(",".join(languages))
-        return variant_str, {"compilers": compilers}
+        return variant_str, {"paths": paths}
 
     @classmethod
     def validate_detected_spec(cls, spec, extra_attributes):
         # For GCC 'compilers' is a mandatory attribute
-        msg = 'the extra attribute "compilers" must be set for ' 'the detected spec "{0}"'.format(
+        msg = 'the extra attribute "paths" must be set for ' 'the detected spec "{0}"'.format(
             spec
         )
-        assert "compilers" in extra_attributes, msg
+        assert "paths" in extra_attributes, msg
 
-        compilers = extra_attributes["compilers"]
+        paths = extra_attributes["paths"]
         for constraint, key in {
             "languages=c": "c",
             "languages=c++": "cxx",
@@ -609,14 +577,14 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         }.items():
             if spec.satisfies(constraint):
                 msg = "{0} not in {1}"
-                assert key in compilers, msg.format(key, spec)
+                assert key in paths, msg.format(key, spec)
 
     @property
     def cc(self):
         msg = "cannot retrieve C compiler [spec is not concrete]"
         assert self.spec.concrete, msg
         if self.spec.external:
-            return self.spec.extra_attributes["compilers"].get("c", None)
+            return self.spec.extra_attributes["paths"].get("c", None)
         result = None
         if "languages=c" in self.spec:
             result = str(self.spec.prefix.bin.gcc)
@@ -627,7 +595,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         msg = "cannot retrieve C++ compiler [spec is not concrete]"
         assert self.spec.concrete, msg
         if self.spec.external:
-            return self.spec.extra_attributes["compilers"].get("cxx", None)
+            return self.spec.extra_attributes["paths"].get("cxx", None)
         result = None
         if "languages=c++" in self.spec:
             result = os.path.join(self.spec.prefix.bin, "g++")
@@ -638,7 +606,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         msg = "cannot retrieve Fortran compiler [spec is not concrete]"
         assert self.spec.concrete, msg
         if self.spec.external:
-            return self.spec.extra_attributes["compilers"].get("fortran", None)
+            return self.spec.extra_attributes["paths"].get("fortran", None)
         result = None
         if "languages=fortran" in self.spec:
             result = str(self.spec.prefix.bin.gfortran)
@@ -1084,12 +1052,12 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
                 ),
             )
         elif len(candidate_specs) == 0:
-            return candidate_specs[0].extra_attributes["compilers"]["d"]
+            return candidate_specs[0].extra_attributes["paths"]["d"]
         else:
             # It is rather unlikely to end up here but let us try to resolve the ambiguity:
-            candidate_gdc = candidate_specs[0].extra_attributes["compilers"]["d"]
+            candidate_gdc = candidate_specs[0].extra_attributes["paths"]["d"]
             if all(
-                candidate_gdc == s.extra_attributes["compilers"]["d"] for s in candidate_specs[1:]
+                candidate_gdc == s.extra_attributes["paths"]["d"] for s in candidate_specs[1:]
             ):
                 # It does not matter which one we take if they are all the same:
                 return candidate_gdc
@@ -1101,8 +1069,8 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
                         error_nl,
                         error_nl.join(
                             "{0} (cc: {1})".format(
-                                s.extra_attributes["compilers"]["d"],
-                                s.extra_attributes["compilers"]["c"],
+                                s.extra_attributes["paths"]["d"],
+                                s.extra_attributes["paths"]["c"],
                             )
                             for s in candidate_specs
                         ),

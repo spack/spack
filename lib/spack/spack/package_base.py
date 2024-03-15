@@ -249,6 +249,7 @@ class DetectablePackageMeta(type):
                 specs = []
                 for version_str, objs in objs_by_version.items():
                     variants = cls.determine_variants(objs, version_str)
+
                     # Normalize output to list
                     if not isinstance(variants, list):
                         variants = [variants]

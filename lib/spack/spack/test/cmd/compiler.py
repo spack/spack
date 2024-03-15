@@ -261,7 +261,7 @@ def test_compiler_list_empty(no_compilers_yaml, working_env, compilers_dir):
     [
         (
             {
-                "spec": "gcc@=7.7.7 os=foobar target=x86_64",
+                "spec": "gcc@=7.7.7 languages=c,cxx,fortran os=foobar target=x86_64",
                 "prefix": "/path/to/fake",
                 "modules": ["gcc/7.7.7", "foobar"],
                 "extra_attributes": {

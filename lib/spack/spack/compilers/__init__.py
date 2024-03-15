@@ -174,20 +174,25 @@ def _compiler_config_from_external(config):
     prefix = config.get("prefix", None)
 
     compiler_class = class_for_compiler_name(compiler_spec.name)
-    paths = extra_attributes.get("paths", {})
-    compiler_langs = ["cc", "cxx", "fc", "f77"]
-    for lang in compiler_langs:
-        if paths.setdefault(lang, None):
-            continue
 
-        if not prefix:
-            continue
+    # Compute paths if needed first, then update with configured paths
+    # This gets priority correct between computed and configured paths
+    paths = {}
+    attribute_paths = extra_attributes.get("paths", {})
+    if prefix and not set(spec.package_class(spec).supported_languages).issubset(
+        set(attribute_paths.keys())
+    ):
+        paths = spec.package_class.determine_paths(prefix=prefix)
+    paths.update(attribute_paths)
 
-        # Check for files that satisfy the naming scheme for this compiler
-        bindir = os.path.join(prefix, "bin")
-        for f, regex in itertools.product(os.listdir(bindir), compiler_class.search_regexps(lang)):
-            if regex.match(f):
-                paths[lang] = os.path.join(bindir, f)
+    # compilers format has cc/fc/f77, externals format has "c/fortran"
+    if "c" in paths:
+        paths["cc"] = paths.pop("c")
+    if "fortran" in paths:
+        fc = paths.pop("fortran")
+        paths["fc"] = fc
+        if "f77" not in paths:
+            paths["f77"] = fc
 
     if all(v is None for v in paths.values()):
         return None
