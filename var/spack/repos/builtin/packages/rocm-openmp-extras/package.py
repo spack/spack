@@ -238,7 +238,6 @@ class RocmOpenmpExtras(Package):
 
     def patch(self):
         src = self.stage.source_path
-        aomp_extras = "{0}/rocm-openmp-extras/aomp-extras/aomp-device-libs"
         libomptarget = "{0}/rocm-openmp-extras/llvm-project/openmp/libomptarget"
         flang = "{0}/rocm-openmp-extras/flang/"
 
