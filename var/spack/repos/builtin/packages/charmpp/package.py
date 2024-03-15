@@ -414,4 +414,4 @@ class Charmpp(Package):
         self.spec.mpicxx = self.prefix.bin.ampicxx
         self.spec.mpifc = self.prefix.bin.ampif90
         self.spec.mpif77 = self.prefix.bin.ampif77
-        self.spec.charmarch = self.charmarch
+        self.spec.charmarch = self.charmarch + "-smp" if self.spec.satisfies("+smp") else ""
