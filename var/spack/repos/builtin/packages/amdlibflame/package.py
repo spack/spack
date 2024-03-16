@@ -150,6 +150,9 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
             else:
                 args.append(self.define("ENABLE_AMD_FLAGS", True))
 
+        if spec.satisfies("threads=none"):
+            args.append(self.define("ENABLE_MULTITHREADING", False))
+
         if spec.satisfies("@3.0.1: +ilp64"):
             args.append(self.define("ENABLE_ILP64", True))
 
