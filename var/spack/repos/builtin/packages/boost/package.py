@@ -8,6 +8,8 @@ import sys
 
 from spack.package import *
 
+_library_names = dict()
+
 
 class Boost(Package):
     """Boost provides free peer-reviewed portable C++ source
@@ -29,8 +31,8 @@ class Boost(Package):
     license("BSL-1.0")
 
     version("develop", branch="develop", submodules=True)
-    version("1.83.0", sha256="6478edfe2f3305127cffe8caf73ea0176c53769f4bf1585be237eb30798c3b8e")
     version("1.84.0", sha256="cc4b893acf645c9d4b698e9a0f08ca8846aa5d6c68275c14c3e7949c24109454")
+    version("1.83.0", sha256="6478edfe2f3305127cffe8caf73ea0176c53769f4bf1585be237eb30798c3b8e")
     version("1.82.0", sha256="a6e1ab9b0860e6a2881dd7b21fe9f737a095e5f33a3a874afc6a345228597ee6")
     version("1.81.0", sha256="71feeed900fbccca04a3b4f2f84a7c217186f28a940ed8b7ed4725986baf99fa")
     version("1.80.0", sha256="1e19565d82e43bc59209a168f5ac899d3ba471d55c7610c677d4ccf2c9c500c0")
@@ -78,6 +80,9 @@ class Boost(Package):
     version("1.40.0", sha256="36cf4a239b587067a4923fdf6e290525a14c3af29829524fa73f3dec6841530c")
     version("1.39.0", sha256="44785eae8c6cce61a29a8a51f9b737e57b34d66baa7c0bcd4af188832b8018fd")
 
+    # mpi/python are not installed by default because they pull in many
+    # dependencies and/or because there is a great deal of customization
+    # possible (and it would be difficult to choose sensible defaults)
     with_default_variants = "boost" + "".join(
         [
             "+atomic",
@@ -94,7 +99,6 @@ class Boost(Package):
             "+random",
             "+regex",
             "+serialization",
-            "+signals",
             "+system",
             "+test",
             "+thread",
@@ -103,78 +107,57 @@ class Boost(Package):
         ]
     )
 
-    # mpi/python are not installed by default because they pull in many
-    # dependencies and/or because there is a great deal of customization
-    # possible (and it would be difficult to choose sensible defaults)
-    #
-    # Boost.Container can be both header-only and compiled. '+container'
-    # indicates the compiled version which requires Extended Allocator
-    # support. The header-only library is installed when no variant is given.
-    all_libs = [
-        "atomic",
-        "chrono",
-        "container",
-        "context",
-        "contract",
-        "coroutine",
-        "date_time",
-        "exception",
-        "fiber",
-        "filesystem",
-        "graph",
-        "graph_parallel",
-        "iostreams",
-        "json",
-        "locale",
-        "log",
-        "math",
-        "mpi",
-        "nowide",
-        "program_options",
-        "python",
-        "random",
-        "regex",
-        "serialization",
-        "signals",
-        "stacktrace",
-        "system",
-        "test",
-        "thread",
-        "timer",
-        "type_erasure",
-        "wave",
-    ]
+    @staticmethod
+    def _boost_variant(name, is_library=True, buildable=None, **kwargs):
+        """
+        Create a spack.Variant, but with extra logic to handle
+        the cases when libraries should be compiled
 
-    for lib in all_libs:
-        variant(lib, default=False, description="Compile with {0} library".format(lib))
+        Args:
+         name (str): name of the variant
+
+         is_library (bool): True if `name` corresponds to a library
+
+         buildable (str): The version string indicating which versions
+                          for which the library should be compiled or `None`
+
+        kwargs (dict): The rest of the arguments forwarded on to the
+                       spack.Variant constructor
+        """
+        variant(name, **kwargs)
+        if is_library and buildable is not None:
+            _library_names[name] = buildable
+
+    def _libraries_to_build(self):
+        """
+        The set of libraries that need to be passed to b2 via --with-libraries to be compiled
+        """
+        return [
+            n
+            for n, version in _library_names.items()
+            if self.spec.satisfies("+{0:s} {1:s}".format(n, version))
+        ]
 
     @property
     def libs(self):
         query = self.spec.last_query.extra_parameters
         shared = "+shared" in self.spec
 
-        libnames = (
-            query if query else [lib for lib in self.all_libs if self.spec.satisfies("+%s" % lib)]
-        )
+        libnames = query if query else self._libraries_to_build()
         libnames += ["monitor"]
         libraries = ["libboost_*%s*" % lib for lib in libnames]
 
         return find_libraries(libraries, root=self.prefix, shared=shared, recursive=True)
 
-    variant(
-        "context-impl",
-        default="fcontext",
-        values=("fcontext", "ucontext", "winfib"),
-        multi=False,
-        description="Use the specified backend for boost-context",
-        when="@1.65.0: +context",
-    )
+    # staticmethod's aren't directly callable, except in very recent python 3.x
+    boost_variant = _boost_variant.__func__
 
-    variant(
+    boost_variant(
         "cxxstd",
         default="11",
         values=(
-            "98",
+            # 1.84.0 dropped support for 98/03
+            conditional("98", when="@:1.83.0"),
             "11",
             "14",
             # C++17 is not supported by Boost < 1.63.0.
@@ -187,44 +170,790 @@ class Boost(Package):
         ),
         multi=False,
         description="Use the specified C++ standard when building.",
+        is_library=False,
     )
 
-    # 1.84.0 dropped support for 98/03
-    conflicts("cxxstd=98", when="@1.84.0:")
+    boost_variant(
+        "debug",
+        default=False,
+        description="Switch to the debug version of Boost",
+        is_library=False,
+    )
 
-    variant("debug", default=False, description="Switch to the debug version of Boost")
-    variant("shared", default=True, description="Additionally build shared libraries")
-    variant(
-        "multithreaded", default=True, description="Build multi-threaded versions of libraries"
+    # fmt: off
+    boost_variant(
+        "shared",
+        default=True,
+        description="Additionally build shared libraries",
+        is_library=False
     )
-    variant(
-        "singlethreaded", default=False, description="Build single-threaded versions of libraries"
+    # fmt: on
+
+    boost_variant(
+        "multithreaded",
+        default=True,
+        description="Build multi-threaded versions of libraries",
+        is_library=False,
     )
-    variant("icu", default=False, description="Build with Unicode and ICU suport")
-    variant("taggedlayout", default=False, description="Augment library names with build options")
-    variant(
+
+    boost_variant(
+        "singlethreaded",
+        default=False,
+        description="Build single-threaded versions of libraries",
+        is_library=False,
+    )
+
+    # fmt: off
+    boost_variant(
+        "icu",
+        default=False,
+        description="Build with Unicode and ICU suport",
+        is_library=False
+    )
+    # fmt: on
+
+    boost_variant(
+        "taggedlayout",
+        default=False,
+        description="Augment library names with build options",
+        when="@1.40.0:",
+        is_library=False,
+    )
+
+    boost_variant(
         "versionedlayout",
         default=False,
         description="Augment library layout with versioned subdirs",
+        is_library=False,
     )
-    variant(
-        "clanglibcpp", default=False, description="Compile with clang libc++ instead of libstdc++"
+
+    boost_variant(
+        "clanglibcpp",
+        default=False,
+        description="Compile with clang libc++ instead of libstdc++",
+        when="@1.73.0:",
+        is_library=False,
     )
-    variant("numpy", default=False, description="Build the Boost NumPy library (requires +python)")
-    variant(
+
+    boost_variant(
+        "numpy",
+        default=False,
+        when="+python",
+        description="Build the Boost NumPy library",
+        is_library=False,
+    )
+
+    boost_variant(
         "pic",
         default=False,
-        description="Generate position-independent code (PIC), useful "
-        "for building static libraries",
+        description="Generate position-independent code (PIC), useful for building static"
+        " libraries",
+        is_library=False,
     )
 
     # https://boostorg.github.io/build/manual/develop/index.html#bbv2.builtin.features.visibility
-    variant(
+    boost_variant(
         "visibility",
         values=("global", "protected", "hidden"),
         default="hidden",
         multi=False,
-        description="Default symbol visibility in compiled libraries " "(1.69.0 or later)",
+        when="@1.69.0:",
+        description="Default symbol visibility in compiled libraries",
+        is_library=False,
+    )
+
+    boost_variant(
+        "algorithm",
+        description="A collection of useful generic algorithms.",
+        default=False,
+        when="@1.50.0:",
+    )
+    boost_variant(
+        "align",
+        description="Memory alignment functions, allocators, traits.",
+        default=False,
+        when="@1.56.0:",
+    )
+    boost_variant(
+        "atomic",
+        description="C++11-style atomic<>.",
+        default=False,
+        when="@1.53.0:",
+        buildable="@1.53.0:",
+    )
+    boost_variant(
+        "beast",
+        description="Portable HTTP, WebSocket, and network operations using only C++11 "
+        "and Boost.Asio",
+        default=False,
+        when="@1.66.0:",
+    )
+    boost_variant(
+        "callabletraits",
+        description=(
+            "A spiritual successor to Boost.FunctionTypes, Boost.CallableTraits is a"
+            " header-only C++11 library for the compile-time inspection and manipulation of"
+            " all 'callable' types. Additional support for C++17 features."
+        ),
+        default=False,
+        when="@1.66.0:",
+    )
+    boost_variant(
+        "chrono",
+        description="Useful time utilities. C++11.",
+        default=False,
+        when="@1.47.0:",
+        buildable="@1.47.0:",
+    )
+    boost_variant(
+        "cobalt",
+        description="C++20 coroutine primitives & utilities running atop Boost.Asio",
+        default=False,
+        when="@1.84.0:",
+        buildable="@1.84.0:",
+    )
+    # fmt: off
+    boost_variant(
+        "compute",
+        description="Parallel/GPU-computing library",
+        default=False,
+        when="@1.61.0:"
+    )
+    # fmt: on
+    boost_variant(
+        "container",
+        description="Standard library containers and extensions.",
+        default=False,
+        when="@1.48.0:",
+        buildable="@1.56.0:",
+    )
+    boost_variant(
+        "context",
+        description="(C++11) Context switching library.",
+        default=False,
+        when="@1.51.0:",
+        buildable="@1.51.0:",
+    )
+    boost_variant(
+        "context-impl",
+        default="fcontext",
+        values=("fcontext", "ucontext", "winfib"),
+        multi=False,
+        description="Use the specified backend for boost-context",
+        when="+context",
+    )
+    boost_variant(
+        "contract",
+        description=(
+            "Contract programming for C++. All contract programming features are supported:"
+            " Subcontracting, class invariants, postconditions (with old and return values),"
+            " preconditions, customizable actions on assertion failure (e.g., terminate or"
+            " throw), optional compilation and checking of assertions, etc."
+        ),
+        default=False,
+        when="@1.67.0:",
+        buildable="@1.67.0:",
+    )
+    boost_variant(
+        "convert",
+        description="An extendible and configurable type-conversion framework.",
+        default=False,
+        when="@1.59.0:",
+    )
+    boost_variant(
+        "core",
+        description="A collection of simple core utilities with minimal dependencies.",
+        default=False,
+        when="@1.56.0:",
+    )
+    boost_variant(
+        "coroutine",
+        description="Coroutine library.",
+        default=False,
+        when="@1.53.0:",
+        buildable="@1.54.0:",
+    )
+    boost_variant(
+        "coroutine2",
+        description="(C++11) Coroutine library.",
+        default=False,
+        when="@1.59.0:",
+        buildable="@1.59.0:1.64.0",
+    )
+    boost_variant(
+        "date_time",
+        description="A set of date-time libraries based on generic programming concepts.",
+        default=False,
+        when="@1.29.0:",
+        buildable="@1.29.0:",
+    )
+    # fmt: off
+    boost_variant(
+        "describe",
+        description="A C++14 reflection library.",
+        default=False,
+        when="@1.77.0:"
+    )
+    # fmt: on
+    boost_variant(
+        "dll",
+        description="Library for comfortable work with DLL and DSO.",
+        default=False,
+        when="@1.61.0:",
+    )
+    boost_variant(
+        "endian",
+        description=(
+            "Types and conversion functions for correct byte ordering and more regardless of"
+            " processor endianness."
+        ),
+        default=False,
+        when="@1.58.0:",
+    )
+    boost_variant(
+        "exception",
+        description=(
+            "The Boost Exception library supports transporting of arbitrary data in exception"
+            " objects, and transporting of exceptions between threads."
+        ),
+        default=False,
+        when="@1.36.0:",
+        buildable="@1.47.0:",
+    )
+    boost_variant(
+        "fiber",
+        description="(C++11) Userland threads library.",
+        default=False,
+        when="@1.62.0:",
+        buildable="@1.62.0:",
+    )
+    boost_variant(
+        "filesystem",
+        description=(
+            "The Boost Filesystem Library provides portable facilities to query and manipulate"
+            " paths, files, and directories."
+        ),
+        default=False,
+        when="@1.30.0:",
+        buildable="@1.30.0:",
+    )
+    boost_variant(
+        "functional_factory",
+        description="Function object templates for dynamic and static object creation",
+        default=False,
+        when="@1.43.0:",
+    )
+    boost_variant(
+        "functional_forward",
+        description="Adapters to allow generic function objects to accept arbitrary arguments",
+        default=False,
+        when="@1.43.0:",
+    )
+    boost_variant(
+        "functional_overloaded_function",
+        description="Overload different functions into a single function object.",
+        default=False,
+        when="@1.50.0:",
+    )
+    boost_variant(
+        "geometry",
+        description=(
+            "The Boost.Geometry library provides geometric algorithms, primitives and spatial"
+            " index."
+        ),
+        default=False,
+        when="@1.47.0:",
+    )
+    boost_variant(
+        "graph",
+        description=(
+            "The BGL graph interface and graph components are generic, in the same sense as"
+            " the Standard Template Library (STL)."
+        ),
+        default=False,
+        when="@1.18.0:",
+        buildable="@1.18.0:",
+    )
+    boost_variant(
+        "graph_parallel",
+        description=(
+            "The PBGL graph interface and graph components are generic, in the same sense as"
+            " the Standard Template Library (STL)."
+        ),
+        default=False,
+        when="@1.40.0:",
+        buildable="@1.40.0:",
+    )
+    boost_variant(
+        "hana",
+        description=(
+            "A modern C++ metaprogramming library. It provides high level algorithms to"
+            " manipulate heterogeneous sequences, allows writing type-level computations with"
+            " a natural syntax, provides tools to introspect user-defined types and much more."
+        ),
+        default=False,
+        when="@1.61.0:",
+    )
+    # fmt: off
+    boost_variant(
+        "heap",
+        description="Priority queue data structures.",
+        default=False,
+        when="@1.49.0:"
+    )
+    # fmt: on
+    boost_variant(
+        "histogram",
+        description="Fast multi-dimensional histogram with convenient interface for C++14",
+        default=False,
+        when="@1.70.0:",
+    )
+    # fmt: off
+    boost_variant(
+        "hof",
+        description="Higher-order functions for C++",
+        default=False,
+        when="@1.67.0:"
+    )
+    # fmt: on
+    boost_variant(
+        "icl",
+        description=(
+            "Interval Container Library, interval sets and maps and aggregation of associated"
+            " values"
+        ),
+        default=False,
+        when="@1.46.0:",
+    )
+    boost_variant(
+        "identity_type",
+        description=(
+            "Wrap types within round parenthesis so they can always be passed as macro"
+            " parameters."
+        ),
+        default=False,
+        when="@1.50.0:",
+    )
+    boost_variant(
+        "iostreams",
+        description=(
+            "Boost.IOStreams provides a framework for defining streams, stream buffers and i/o"
+            " filters."
+        ),
+        default=False,
+        when="@1.33.0:",
+        buildable="@1.33.0:",
+    )
+    boost_variant(
+        "json",
+        description="JSON parsing, serialization, and DOM in C++11",
+        default=False,
+        when="@1.75.0:",
+        buildable="@1.75.0:",
+    )
+    # fmt: off
+    boost_variant(
+        "lambda2",
+        description="A C++14 lambda library.",
+        default=False,
+        when="@1.77.0:"
+    )
+    # fmt: off
+    boost_variant(
+        "leaf",
+        description="A lightweight error handling library for C++11.",
+        default=False,
+        when="@1.75.0:",
+    )
+    boost_variant(
+        "local_function",
+        description=(
+            "Program functions locally, within other functions, directly within the scope"
+            " where they are needed."
+        ),
+        default=False,
+        when="@1.50.0:",
+    )
+    boost_variant(
+        "locale",
+        description="Provide localization and Unicode handling tools for C++.",
+        default=False,
+        when="@1.48.0:",
+        buildable="@1.48.0:",
+    )
+    boost_variant(
+        "lockfree", description="Lockfree data structures.", default=False, when="@1.53.0:"
+    )
+    boost_variant(
+        "log", description="Logging library.", default=False, when="@1.54.0:", buildable="@1.54.0:"
+    )
+    boost_variant(
+        "math",
+        description=(
+            "Boost.Math includes several contributions in the domain of mathematics: The"
+            " Greatest Common Divisor and Least Common Multiple library provides run-time and"
+            " compile-time evaluation of the greatest common divisor (GCD) or least common"
+            " multiple (LCM) of two integers. The Special Functions library currently provides"
+            " eight templated special functions, in namespace boost. The Complex Number"
+            " Inverse Trigonometric Functions are the inverses of trigonometric functions"
+            " currently present in the C++ standard. Quaternions are a relative of complex"
+            " numbers often used to parameterise rotations in three dimentional space."
+            " Octonions, like quaternions, are a relative of complex numbers."
+        ),
+        default=False,
+        when="@1.23.0:",
+        buildable="@1.23.0:",
+    )
+    boost_variant(
+        "meta_state_machine",
+        description=("A very high-performance library for expressive UML2 finite state machines."),
+        default=False,
+        when="@1.44.0:",
+    )
+    boost_variant(
+        "metaparse",
+        description=(
+            "A library for generating compile time parsers parsing embedded DSL code as part"
+            " of the C++ compilation process"
+        ),
+        default=False,
+        when="@1.61.0:",
+        buildable="@1.61.0:1.65.1",
+    )
+    boost_variant(
+        "move",
+        description="Portable move semantics for C++03 and C++11 compilers.",
+        default=False,
+        when="@1.48.0:",
+    )
+    boost_variant(
+        "mp11", description="A C++11 metaprogramming library.", default=False, when="@1.66.0:"
+    )
+    boost_variant(
+        "mpi",
+        description=(
+            "Message Passing Interface library, for use in distributed-memory parallel"
+            " application programming."
+        ),
+        default=False,
+        when="@1.35.0:",
+        buildable="@1.35.0:",
+    )
+    boost_variant(
+        "multiprecision",
+        description=(
+            "Extended precision arithmetic types for floating point, integer andrational"
+            " arithmetic."
+        ),
+        default=False,
+        when="@1.53.0:",
+    )
+    boost_variant(
+        "nowide",
+        description="Standard library functions with UTF-8 API on Windows.",
+        default=False,
+        when="@1.73.0:",
+        buildable="@1.73.0:",
+    )
+    boost_variant(
+        "odeint",
+        description="Solving ordinary differential equations.",
+        default=False,
+        when="@1.53.0:",
+    )
+    boost_variant(
+        "outcome",
+        description=(
+            "A deterministic failure handling library partially simulating lightweight"
+            " exceptions."
+        ),
+        default=False,
+        when="@1.70.0:",
+    )
+    boost_variant(
+        "parameter_python_bindings",
+        description="Boost.Parameter Library Python bindings.",
+        default=False,
+        when="@1.69.0:",
+    )
+    boost_variant(
+        "pfr",
+        description="Basic reflection for user defined types.",
+        default=False,
+        when="@1.75.0:",
+    )
+    boost_variant(
+        "phoenix",
+        description="Define small unnamed function objects at the actual call site, and more.",
+        default=False,
+        when="@1.47.0:",
+    )
+    boost_variant(
+        "polycollection",
+        description="Fast containers of polymorphic objects.",
+        default=False,
+        when="@1.65.0:",
+    )
+    boost_variant(
+        "polygon",
+        description=(
+            "Voronoi diagram construction and booleans/clipping, resizing/offsetting and more"
+            " for planar polygons with integral coordinates."
+        ),
+        default=False,
+        when="@1.44.0:",
+    )
+    boost_variant(
+        "predef",
+        description=(
+            "This library defines a set of compiler, architecture, operating system, library,"
+            " and other version numbers from the information it can gather of C, C++,"
+            " Objective C, and Objective C++ predefined macros or those defined in generally"
+            " available headers."
+        ),
+        default=False,
+        when="@1.55.0:",
+    )
+    boost_variant(
+        "process",
+        description="Library to create processes in a portable way.",
+        default=False,
+        when="@1.64.0:",
+    )
+    boost_variant(
+        "program_options",
+        description=(
+            "The program_options library allows program developers to obtain program options,"
+            " that is (name, value) pairs from the user, via conventional methods such as"
+            " command line and config file."
+        ),
+        default=False,
+        when="@1.32.0:",
+        buildable="@1.32.0:",
+    )
+    boost_variant(
+        "property_map",
+        description="Parallel extensions to Property Map for use with Parallel Graph.",
+        default=False,
+        when="@1.77.0:",
+    )
+    boost_variant(
+        "property_tree",
+        description="A tree data structure especially suited to storing configuration data.",
+        default=False,
+        when="@1.41.0:",
+    )
+    boost_variant(
+        "python",
+        description=(
+            "The Boost Python Library is a framework for interfacing Python and C++. It allows"
+            " you to quickly and seamlessly expose C++ classes functions and objects to"
+            " Python, and vice-versa, using no special tools -- just your C++ compiler."
+        ),
+        default=False,
+        when="@1.19.0:",
+        buildable="@1.19.0:",
+    )
+    boost_variant(
+        "qvm",
+        description="Generic C++ library for working with Quaternions Vectors and Matrices.",
+        default=False,
+        when="@1.62.0:",
+    )
+    boost_variant(
+        "random",
+        description="A complete system for random number generation.",
+        default=False,
+        when="@1.15.0:",
+        buildable="@1.43.0:",
+    )
+    boost_variant(
+        "ratio",
+        description="Compile time rational arithmetic. C++11.",
+        default=False,
+        when="@1.47.0:",
+    )
+    boost_variant(
+        "regex",
+        description="Regular expression library.",
+        default=False,
+        when="@1.18.0:",
+        buildable="@1.18.0:",
+    )
+    boost_variant(
+        "safe_numerics",
+        description="Guaranteed Correct Integer Arithmetic",
+        default=False,
+        when="@1.69.0:",
+    )
+    boost_variant(
+        "serialization",
+        description="Serialization for persistence and marshalling.",
+        default=False,
+        when="@1.32.0:",
+        buildable="@1.32.0:",
+    )
+    boost_variant(
+        "signals",
+        description="REMOVED",
+        default=False,
+        when="@1.29.0:1.68.0",
+        buildable="@1.29.0:1.68.0",
+    )
+    boost_variant(
+        "signals2",
+        description="Managed signals & slots callback implementation (thread-safe version 2).",
+        default=False,
+        when="@1.39.0:",
+    )
+    boost_variant(
+        "sort",
+        description="High-performance templated sort functions.",
+        default=False,
+        when="@1.58.0:",
+    )
+    boost_variant(
+        "spirit_classic",
+        description=(
+            "LL parser framework represents parsers directly as EBNF grammars in inlined C++."
+        ),
+        default=False,
+        when="@1.69.0:",
+    )
+    boost_variant(
+        "spirit_repository",
+        description=(
+            "The Spirit repository is a community effort collecting different reusable"
+            " components (primitives, directives, grammars, etc.) for Qi parsers and Karma"
+            " generators."
+        ),
+        default=False,
+        when="@1.69.0:",
+    )
+    boost_variant(
+        "stacktrace",
+        description="Gather, store, copy and print backtraces.",
+        default=False,
+        when="@1.65.0:",
+        buildable="@1.65.0:",
+    )
+    boost_variant(
+        "static_string",
+        description="A fixed capacity dynamically sized string.",
+        default=False,
+        when="@1.73.0:",
+    )
+    boost_variant(
+        "stl_interfaces",
+        description=(
+            "C++14 and later CRTP templates for defining iterators, views, and containers."
+        ),
+        default=False,
+        when="@1.74.0:",
+    )
+    boost_variant(
+        "string_ref", description="String view templates.", default=False, when="@1.71.0:"
+    )
+    boost_variant(
+        "system",
+        description="Extensible error reporting.",
+        default=False,
+        when="@1.35.0:",
+        buildable="@1.35.0:",
+    )
+    boost_variant(
+        "test",
+        description=(
+            "Support for simple program testing, full unit testing, and for program execution"
+            " monitoring."
+        ),
+        default=False,
+        when="@1.21.0:",
+        buildable="@1.21.0:",
+    )
+    boost_variant(
+        "thread",
+        description="Portable C++ multi-threading. C++03, C++11, C++14, C++17.",
+        default=False,
+        when="@1.25.0:",
+        buildable="@1.25.0:",
+    )
+    boost_variant(
+        "throwexception",
+        description="A common infrastructure for throwing exceptions from Boost libraries.",
+        default=False,
+        when="@1.56.0:",
+    )
+    boost_variant(
+        "timer",
+        description="Event timer, progress timer, and progress display classes.",
+        default=False,
+        when="@1.9.0:",
+        buildable="@1.48.0:",
+    )
+    boost_variant(
+        "tti", description="Type Traits Introspection library.", default=False, when="@1.54.0:"
+    )
+    boost_variant(
+        "type_erasure",
+        description="Runtime polymorphism based on concepts.",
+        default=False,
+        when="@1.54.0:",
+        buildable="@1.60.0:",
+    )
+    boost_variant(
+        "type_index",
+        description="Runtime/Compile time copyable type info.",
+        default=False,
+        when="@1.56.0:",
+    )
+    # fmt: off
+    boost_variant(
+        "url",
+        description="URL parsing in C++11",
+        default=False,
+        when="@1.81.0:",
+        buildable="@1.81.0:"
+    )
+    # fmt: on
+    # fmt: off
+    boost_variant(
+        "uuid",
+        description="A universally unique identifier.",
+        default=False,
+        when="@1.42.0:"
+    )
+    # fmt: on
+    boost_variant(
+        "variant2",
+        description="A never-valueless, strong guarantee implementation of std::variant.",
+        default=False,
+        when="@1.71.0:",
+    )
+    # fmt: off
+    boost_variant(
+        "vmd",
+        description="Variadic Macro Data library.",
+        default=False,
+        when="@1.60.0:"
+    )
+    # fmt: on
+    boost_variant(
+        "wave",
+        description=(
+            "The Boost.Wave library is a Standards conformant, and highly configurable"
+            " implementation of the mandated C99/C++ preprocessor functionality packed behind"
+            " an easy to use iterator interface."
+        ),
+        default=False,
+        when="@1.33.0:",
+        buildable="@1.33.0:",
+    )
+    boost_variant(
+        "yap",
+        description="An expression template library for C++14 and later.",
+        default=False,
+        when="@1.68.0:",
     )
 
     # Unicode support
@@ -251,11 +980,8 @@ class Boost(Package):
     conflicts("context-impl=winfib", when="@:1.65.0")
 
     # Coroutine, Context, Fiber, etc., are not straightforward.
-    conflicts("+context", when="@:1.50")  # Context since 1.51.0.
     conflicts("cxxstd=98", when="+context")  # Context requires >=C++11.
-    conflicts("+coroutine", when="@:1.52")  # Context since 1.53.0.
     conflicts("~context", when="+coroutine")  # Coroutine requires Context.
-    conflicts("+fiber", when="@:1.61")  # Fiber since 1.62.0.
     conflicts("cxxstd=98", when="+fiber")  # Fiber requires >=C++11.
     conflicts("~context", when="+fiber")  # Fiber requires Context.
 
@@ -271,9 +997,6 @@ class Boost(Package):
 
     # boost-python in 1.72.0 broken with cxxstd=98
     conflicts("cxxstd=98", when="+mpi+python @1.72.0")
-
-    # Container's Extended Allocators were not added until 1.56.0
-    conflicts("+container", when="@:1.55")
 
     # Boost.System till 1.76 (included) was relying on mutex, which was not
     # detected correctly on Darwin platform when using GCC
@@ -663,44 +1386,11 @@ class Boost(Package):
             force_symlink("/usr/bin/libtool", join_path(newdir, "libtool"))
             env["PATH"] = newdir + ":" + env["PATH"]
 
-        with_libs = list()
-        for lib in Boost.all_libs:
-            if "+{0}".format(lib) in spec:
-                with_libs.append(lib)
-
-        # Remove libraries that the release version does not support
-        if spec.satisfies("@1.69.0:") and "signals" in with_libs:
-            with_libs.remove("signals")
-        if not spec.satisfies("@1.54.0:") and "log" in with_libs:
-            with_libs.remove("log")
-        if not spec.satisfies("@1.53.0:") and "atomic" in with_libs:
-            with_libs.remove("atomic")
-        if not spec.satisfies("@1.48.0:") and "locale" in with_libs:
-            with_libs.remove("locale")
-        if not spec.satisfies("@1.47.0:") and "chrono" in with_libs:
-            with_libs.remove("chrono")
-        if not spec.satisfies("@1.43.0:") and "random" in with_libs:
-            with_libs.remove("random")
-        if not spec.satisfies("@1.39.0:") and "exception" in with_libs:
-            with_libs.remove("exception")
-        if "+graph" in spec and "+mpi" in spec:
-            with_libs.append("graph_parallel")
-
-        if not with_libs:
-            # if no libraries are specified for compilation, then you dont have
-            # to configure/build anything, just copy over to the prefix
-            # directory.
-            src = join_path(self.stage.source_path, "boost")
-            mkdirp(join_path(prefix, "include"))
-            dst = join_path(prefix, "include", "boost")
-            install_tree(src, dst)
-            return
-
         # to make Boost find the user-config.jam
         env["BOOST_BUILD_PATH"] = self.stage.source_path
 
         bootstrap_options = ["--prefix=%s" % prefix]
-        self.determine_bootstrap_options(spec, with_libs, bootstrap_options)
+        self.determine_bootstrap_options(spec, self._libraries_to_build(), bootstrap_options)
 
         if self.spec.satisfies("platform=windows"):
             bootstrap = Executable("cmd.exe")
