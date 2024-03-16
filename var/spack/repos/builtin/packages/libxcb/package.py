@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import sys
+
 from spack.package import *
 
 
@@ -24,17 +26,24 @@ class Libxcb(AutotoolsPackage):
     version("1.14", sha256="a55ed6db98d43469801262d81dc2572ed124edc3db31059d4e9916eb9f844c34")
     version("1.13", sha256="0bb3cfd46dbd90066bf4d7de3cad73ec1024c7325a4a0cbf5f4a0d4fa91155fb")
 
+    variant(
+        "use_spack_interpreter",
+        default=False,
+        description="Use the interpreter running spack to configure",
+    )
+
     depends_on("libpthread-stubs")
     depends_on("libxau@0.99.2:")
     depends_on("libxdmcp")
 
     # libxcb 1.X requires xcb-proto >= 1.X
-    depends_on("xcb-proto")
+    depends_on("xcb-proto +use_spack_interpreter", when="+use_spack_interpreter")
+    depends_on("xcb-proto ~use_spack_interpreter", when="~use_spack_interpreter")
     depends_on("xcb-proto@1.15:", when="@1.15")
     depends_on("xcb-proto@1.14:", when="@1.14")
     depends_on("xcb-proto@1.13:", when="@1.13")
 
-    depends_on("python", type="build")
+    depends_on("python", type="build", when="~use_spack_interpreter")
     depends_on("pkgconfig", type="build")
     depends_on("util-macros", type="build")
 
@@ -46,8 +55,17 @@ class Libxcb(AutotoolsPackage):
 
         return url.format(version)
 
+    @when("+use_spack_interpreter")
+    def setup_build_environment(self, env):
+        env.set("PYTHON", sys.executable)
+
     def configure_args(self):
         config_args = []
+
+        # use spack interpreter to avoid dependency cycles
+        if self.spec.satisfies("+use_spack_interpreter"):
+            config_args.append(f"--with-python_prefix={self.prefix}")
+            config_args.append(f"--with-python_exec_prefix={self.prefix}")
 
         # -Werror flags are not properly interpreted by the NVIDIA compiler
         if self.spec.satisfies("%nvhpc@:20.11"):
