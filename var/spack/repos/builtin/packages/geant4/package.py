@@ -20,7 +20,7 @@ class Geant4(CMakePackage):
 
     executables = ["^geant4-config$"]
 
-    maintainers("drbenmorgan")
+    maintainers("drbenmorgan", "sethrj")
 
     version("11.2.1", sha256="76c9093b01128ee2b45a6f4020a1bcb64d2a8141386dea4674b5ae28bcd23293")
     version("11.2.0", sha256="9ff544739b243a24dac8f29a4e7aab4274fc0124fd4e1c4972018213dc6991ee")
@@ -265,7 +265,7 @@ class Geant4(CMakePackage):
         if "+threads" in spec:
             # Locked at global-dynamic to allow use cases that load the
             # geant4 libs at application runtime
-            options.append("-DGEANT4_BUILD_TLS_MODEL=global-dynamic")
+            options.append(self.define("GEANT4_BUILD_TLS_MODEL", "global-dynamic"))
 
         # Profiling
         options.append(self.define_from_variant("GEANT4_USE_TIMEMORY", "timemory"))
@@ -283,9 +283,9 @@ class Geant4(CMakePackage):
 
         # Visualization options
         if "platform=darwin" not in spec:
-            if "+x11" in spec and "+opengl" in spec:
+            if "+x11 +opengl" in spec:
                 options.append(self.define("GEANT4_USE_OPENGL_X11", True))
-            if "+motif" in spec and "+opengl" in spec:
+            if "+motif +opengl" in spec:
                 options.append(self.define("GEANT4_USE_XM", True))
             if "+x11" in spec:
                 options.append(self.define("GEANT4_USE_RAYTRACER_X11", True))
