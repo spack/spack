@@ -62,7 +62,7 @@ class Pdt(AutotoolsPackage):
             options.append("-pgCC")
         elif self.compiler.name == "gcc":
             options.append("-GNU")
-        elif self.compiler.name == "clang" or self.compiler.name == "apple-clang":
+        elif self.compiler.name in ["clang", "apple-clang", "aocc"]:
             options.append("-clang")
         elif self.compiler.name == "cce":
             options.append("-CC")

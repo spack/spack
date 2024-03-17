@@ -16,10 +16,12 @@ class Botan(MakefilePackage):
 
     license("BSD-2-Clause")
 
+    version("3.3.0", sha256="368f11f426f1205aedb9e9e32368a16535dc11bd60351066e6f6664ec36b85b9")
     version("3.2.0", sha256="049c847835fcf6ef3a9e206b33de05dd38999c325e247482772a5598d9e5ece3")
     version("3.1.1", sha256="30c84fe919936a98fef5331f246c62aa2c0e4d2085b2d4511207f6a20afa3a6b")
     version("3.1.0", sha256="4e18e755a8bbc6bf96fac916fbf072ecd06740c72a72017c27162e4c0b4725fe")
     version("3.0.0", sha256="5da552e00fa1c047a90c22eb5f0247ec27e7432b68b78e10a7ce0955269ccad7")
+    version("2.19.4", sha256="5a3a88ef6433e97bcab0efa1ed60c6197e4ada9d9d30bc1c47437bf89b97f276")
     version("2.19.3", sha256="dae047f399c5a47f087db5d3d9d9e8f11ae4985d14c928d71da1aff801802d55")
     version("2.19.2", sha256="3af5f17615c6b5cd8b832d269fb6cb4d54ec64f9eb09ddbf1add5093941b4d75")
     version("2.19.1", sha256="e26e00cfefda64082afdd540d3c537924f645d6a674afed2cd171005deff5560")

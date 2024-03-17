@@ -51,7 +51,7 @@ jobs:
           on_develop: false
 
     steps:
-    - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # @v2
+    - uses: actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633 # @v2
       with:
         fetch-depth: 0
     - uses: actions/setup-python@0a5c61591373683505ea898e09a3ea4f39ef2b9c # @v2
@@ -91,14 +91,14 @@ jobs:
           UNIT_TEST_COVERAGE: ${{ matrix.python-version == '3.11' }}
       run: |
           share/spack/qa/run-unit-tests
-    - uses: codecov/codecov-action@e0b68c6749509c5f83f984dd99a76a1c1a231044
+    - uses: codecov/codecov-action@54bcd8715eee62d40e33596ef5e8f0f48dbbccab
       with:
         flags: unittests,linux,${{ matrix.concretizer }}
   # Test shell integration
   shell:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # @v2
+    - uses: actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633 # @v2
       with:
         fetch-depth: 0
     - uses: actions/setup-python@0a5c61591373683505ea898e09a3ea4f39ef2b9c # @v2
@@ -122,7 +122,7 @@ jobs:
           COVERAGE: true
       run: |
           share/spack/qa/run-shell-tests
-    - uses: codecov/codecov-action@e0b68c6749509c5f83f984dd99a76a1c1a231044
+    - uses: codecov/codecov-action@54bcd8715eee62d40e33596ef5e8f0f48dbbccab
       with:
         flags: shelltests,linux
 
@@ -137,7 +137,7 @@ jobs:
           dnf install -y \
               bzip2 curl file gcc-c++ gcc gcc-gfortran git gnupg2 gzip \
               make patch tcl unzip which xz
-    - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # @v2
+    - uses: actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633 # @v2
     - name: Setup repo and non-root user
       run: |
           git --version
@@ -156,7 +156,7 @@ jobs:
   clingo-cffi:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # @v2
+    - uses: actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633 # @v2
       with:
         fetch-depth: 0
     - uses: actions/setup-python@0a5c61591373683505ea898e09a3ea4f39ef2b9c # @v2
@@ -181,7 +181,7 @@ jobs:
           SPACK_TEST_SOLVER: clingo
       run: |
           share/spack/qa/run-unit-tests
-    - uses: codecov/codecov-action@e0b68c6749509c5f83f984dd99a76a1c1a231044 # @v2.1.0
+    - uses: codecov/codecov-action@54bcd8715eee62d40e33596ef5e8f0f48dbbccab # @v2.1.0
       with:
         flags: unittests,linux,clingo
   # Run unit tests on MacOS
@@ -191,7 +191,7 @@ jobs:
       matrix:
         python-version: ["3.11"]
     steps:
-    - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # @v2
+    - uses: actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633 # @v2
       with:
         fetch-depth: 0
     - uses: actions/setup-python@0a5c61591373683505ea898e09a3ea4f39ef2b9c # @v2
@@ -216,6 +216,6 @@ jobs:
         $(which spack) solve zlib
         common_args=(--dist loadfile --tx '4*popen//python=./bin/spack-tmpconfig python -u ./bin/spack python' -x)
         $(which spack) unit-test --verbose --cov --cov-config=pyproject.toml --cov-report=xml:coverage.xml "${common_args[@]}"
-    - uses: codecov/codecov-action@e0b68c6749509c5f83f984dd99a76a1c1a231044
+    - uses: codecov/codecov-action@54bcd8715eee62d40e33596ef5e8f0f48dbbccab
       with:
         flags: unittests,macos

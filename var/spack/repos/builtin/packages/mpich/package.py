@@ -63,7 +63,7 @@ class Mpich(AutotoolsPackage, CudaPackage, ROCmPackage):
         "pmi",
         default="pmi",
         description="""PMI interface.""",
-        values=("off", "pmi", "pmi2", "pmix", "cray"),
+        values=("pmi", "pmi2", "pmix", "cray"),
         multi=False,
     )
     variant(
@@ -116,10 +116,15 @@ supported, and netmod is ignored if device is ch3:sock.""",
         when="@3.4:",
         multi=False,
     )
-    depends_on("yaksa", when="@4.0: device=ch4 datatype-engine=auto")
-    depends_on("yaksa", when="@4.0: device=ch4 datatype-engine=yaksa")
-    depends_on("yaksa+cuda", when="+cuda ^yaksa")
-    depends_on("yaksa+rocm", when="+rocm ^yaksa")
+    for _yaksa_cond in (
+        "@4.0: device=ch4 datatype-engine=auto",
+        "@4.0: device=ch4 datatype-engine=yaksa",
+    ):
+        with when(_yaksa_cond):
+            depends_on("yaksa")
+            depends_on("yaksa+cuda", when="+cuda")
+            depends_on("yaksa+rocm", when="+rocm")
+
     conflicts("datatype-engine=yaksa", when="device=ch3")
     conflicts("datatype-engine=yaksa", when="device=ch3:sock")
 
@@ -380,8 +385,6 @@ supported, and netmod is ignored if device is ch3:sock.""",
             if re.search(r"--with-thread-package=argobots", output):
                 variants.append("+argobots")
 
-            if re.search(r"--with-pmi=no", output):
-                variants.append("pmi=off")
             elif re.search(r"--with-pmi=simple", output):
                 variants.append("pmi=pmi")
             elif re.search(r"--with-pmi=pmi2/simple", output):
@@ -452,8 +455,6 @@ supported, and netmod is ignored if device is ch3:sock.""",
             env.set("MPIF90", join_path(self.prefix.bin, "mpif90"))
 
     def setup_dependent_build_environment(self, env, dependent_spec):
-        self.setup_run_environment(env)
-
         env.set("MPICH_CC", spack_cc)
         env.set("MPICH_CXX", spack_cxx)
         env.set("MPICH_F77", spack_f77)
@@ -615,7 +616,6 @@ supported, and netmod is ignored if device is ch3:sock.""",
 
         if "+vci" in spec:
             config_args.append("--enable-thread-cs=per-vci")
-            config_args.append("--with-ch4-max-vcis=default")
 
         if "datatype-engine=yaksa" in spec:
             config_args.append("--with-datatype-engine=yaksa")

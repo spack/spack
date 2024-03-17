@@ -34,7 +34,7 @@ import collections.abc
 import functools
 import os.path
 import re
-from typing import Any, Callable, List, Optional, Set, Tuple, Union
+from typing import TYPE_CHECKING, Any, Callable, List, Optional, Set, Tuple, Union
 
 import llnl.util.lang
 import llnl.util.tty.color
@@ -56,6 +56,9 @@ from spack.version import (
     VersionError,
     VersionLookupError,
 )
+
+if TYPE_CHECKING:
+    import spack.package_base
 
 __all__ = [
     "DirectiveError",
@@ -349,6 +352,7 @@ class DirectiveMeta(type):
         return _decorator
 
 
+SubmoduleCallback = Callable[["spack.package_base.PackageBase"], Union[str, List[str], bool]]
 directive = DirectiveMeta.directive
 
 
@@ -380,7 +384,7 @@ def version(
     tag: Optional[str] = None,
     branch: Optional[str] = None,
     get_full_repo: Optional[bool] = None,
-    submodules: Optional[bool] = None,
+    submodules: Union[SubmoduleCallback, Optional[bool]] = None,
     submodules_delete: Optional[bool] = None,
     # other version control
     svn: Optional[str] = None,
@@ -656,6 +660,7 @@ def patch(
     level: int = 1,
     when: WhenType = None,
     working_dir: str = ".",
+    reverse: bool = False,
     sha256: Optional[str] = None,
     archive_sha256: Optional[str] = None,
 ) -> Patcher:
@@ -669,10 +674,10 @@ def patch(
         level: patch level (as in the patch shell command)
         when: optional anonymous spec that specifies when to apply the patch
         working_dir: dir to change to before applying
+        reverse: reverse the patch
         sha256: sha256 sum of the patch, used to verify the patch (only required for URL patches)
         archive_sha256: sha256 sum of the *archive*, if the patch is compressed (only required for
             compressed URL patches)
-
     """
 
     def _execute_patch(pkg_or_dep: Union["spack.package_base.PackageBase", Dependency]):
@@ -699,18 +704,22 @@ def patch(
 
         patch: spack.patch.Patch
         if "://" in url_or_filename:
+            if sha256 is None:
+                raise ValueError("patch() with a url requires a sha256")
+
             patch = spack.patch.UrlPatch(
                 pkg,
                 url_or_filename,
                 level,
-                working_dir,
+                working_dir=working_dir,
+                reverse=reverse,
                 ordering_key=ordering_key,
                 sha256=sha256,
                 archive_sha256=archive_sha256,
             )
         else:
             patch = spack.patch.FilePatch(
-                pkg, url_or_filename, level, working_dir, ordering_key=ordering_key
+                pkg, url_or_filename, level, working_dir, reverse, ordering_key=ordering_key
             )
 
         cur_patches.append(patch)

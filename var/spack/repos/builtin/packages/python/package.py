@@ -8,10 +8,11 @@ import json
 import os
 import platform
 import re
+import stat
 import subprocess
 import sys
 from shutil import copy
-from typing import Dict, List
+from typing import Dict, List, Tuple
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import is_nonsymlink_exe_with_shebang, path_contains_subdirectory
@@ -32,7 +33,7 @@ class Python(Package):
     list_depth = 1
     tags = ["windows", "build-tools"]
 
-    maintainers("adamjstewart", "skosukhin", "scheibelp")
+    maintainers("skosukhin", "scheibelp")
 
     phases = ["configure", "build", "install"]
 
@@ -1265,42 +1266,49 @@ print(json.dumps(config))
         module.python_purelib = join_path(dependent_spec.prefix, self.purelib)
 
     def add_files_to_view(self, view, merge_map, skip_if_exists=True):
+        # The goal is to copy the `python` executable, so that its search paths are relative to the
+        # view instead of the install prefix. This is an obsolete way of creating something that
+        # resembles a virtual environnent. Also we copy scripts with shebang lines. Finally we need
+        # to re-target symlinks pointing to copied files.
         bin_dir = self.spec.prefix.bin if sys.platform != "win32" else self.spec.prefix
+        copied_files: Dict[Tuple[int, int], str] = {}  # File identifier -> source
+        delayed_links: List[Tuple[str, str]] = []  # List of symlinks from merge map
         for src, dst in merge_map.items():
+            if skip_if_exists and os.path.lexists(dst):
+                continue
+
+            # Files not in the bin dir are linked the default way.
             if not path_contains_subdirectory(src, bin_dir):
                 view.link(src, dst, spec=self.spec)
-            elif not os.path.islink(src):
-                copy(src, dst)
-                if is_nonsymlink_exe_with_shebang(src):
-                    filter_file(
-                        self.spec.prefix,
-                        os.path.abspath(view.get_projection_for_spec(self.spec)),
-                        dst,
-                        backup=False,
-                    )
-            else:
-                # orig_link_target = os.path.realpath(src) is insufficient when
-                # the spack install tree is located at a symlink or a
-                # descendent of a symlink. What we need here is the real
-                # relative path from the python prefix to src
-                # TODO: generalize this logic in the link_tree object
-                #    add a method to resolve a link relative to the link_tree
-                #    object root.
-                realpath_src = os.path.realpath(src)
-                realpath_prefix = os.path.realpath(self.spec.prefix)
-                realpath_rel = os.path.relpath(realpath_src, realpath_prefix)
-                orig_link_target = os.path.join(self.spec.prefix, realpath_rel)
+                continue
 
-                new_link_target = os.path.abspath(merge_map[orig_link_target])
-                view.link(new_link_target, dst, spec=self.spec)
+            s = os.lstat(src)
 
-    def remove_files_from_view(self, view, merge_map):
-        bin_dir = self.spec.prefix.bin if sys.platform != "win32" else self.spec.prefix
-        for src, dst in merge_map.items():
-            if not path_contains_subdirectory(src, bin_dir):
-                view.remove_file(src, dst)
+            # Symlink is delayed because we may need to re-target if its target is copied in view
+            if stat.S_ISLNK(s.st_mode):
+                delayed_links.append((src, dst))
+                continue
+
+            # Anything that's not a symlink gets copied. Scripts with shebangs are immediately
+            # updated when necessary.
+            copied_files[(s.st_dev, s.st_ino)] = dst
+            copy(src, dst)
+            if is_nonsymlink_exe_with_shebang(src):
+                filter_file(
+                    self.spec.prefix, os.path.abspath(view.get_projection_for_spec(self.spec)), dst
+                )
+
+        # Finally re-target the symlinks that point to copied files.
+        for src, dst in delayed_links:
+            try:
+                s = os.stat(src)
+                target = copied_files[(s.st_dev, s.st_ino)]
+            except (OSError, KeyError):
+                target = None
+            if target:
+                os.symlink(os.path.relpath(target, os.path.dirname(dst)), dst)
             else:
-                os.remove(dst)
+                view.link(src, dst, spec=self.spec)
 
     def test_hello_world(self):
         """run simple hello world program"""

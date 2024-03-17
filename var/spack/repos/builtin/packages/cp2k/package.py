@@ -271,8 +271,9 @@ class Cp2k(MakefilePackage, CMakePackage, CudaPackage, ROCmPackage):
         depends_on("cmake@3.22:", type="build")
 
         # DBCSR as external dependency
-        depends_on("dbcsr@2.6:")
+        depends_on("dbcsr@2.6: ~examples")
         depends_on("dbcsr+openmp", when="+openmp")
+        depends_on("dbcsr+mpi", when="+mpi")
         depends_on("dbcsr+cuda", when="+cuda")
         depends_on("dbcsr+rocm", when="+rocm")
 
@@ -339,6 +340,11 @@ class Cp2k(MakefilePackage, CMakePackage, CudaPackage, ROCmPackage):
     patch("backport_avoid_null_9.1.patch", when="@9.1 %aocc@:4.0")
     patch("cmake-fixes-2023.2.patch", when="@2023.2 build_system=cmake")
 
+    # Allow compilation with build_type=RelWithDebInfo and build_type=MinSizeRel
+    # after NDEBUG support was dropped in https://github.com/cp2k/cp2k/pull/3172
+    # The patch applies https://github.com/cp2k/cp2k/pull/3251 to version 2024.1
+    patch("cmake-relwithdebinfo-2024.1.patch", when="@2024.1 build_system=cmake")
+
     # Patch for an undefined constant due to incompatible changes in ELPA
     @when("@9.1:2022.2 +elpa")
     def patch(self):
@@ -378,7 +384,7 @@ class MakefileBuilder(makefile.MakefileBuilder):
         }
 
         dflags = ["-DNDEBUG"] if spec.satisfies("@:2023.2") else []
-        if spec["fftw-api"].name in ("intel-mkl", "intel-parallel-studio", "intel-oneapi-mkl"):
+        if fftw.name in ("intel-mkl", "intel-parallel-studio", "intel-oneapi-mkl"):
             cppflags = ["-D__FFTW3_MKL", "-I{0}".format(fftw_header_dir)]
         else:
             cppflags = ["-D__FFTW3", "-I{0}".format(fftw_header_dir)]
@@ -882,7 +888,8 @@ class MakefileBuilder(makefile.MakefileBuilder):
             content += " " + self.spec["lapack"].libs.ld_flags
             content += " " + self.spec["fftw-api"].libs.ld_flags
 
-            if (self.spec["fftw-api"].name == "fftw") and ("+openmp" in self.spec["fftw"]):
+            fftw = self.spec["fftw-api"]
+            if fftw.name in ["fftw", "amdfftw"] and fftw.satisfies("+openmp"):
                 content += " -lfftw3_omp"
 
             content += "\n"
