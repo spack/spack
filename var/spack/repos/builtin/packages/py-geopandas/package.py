@@ -41,7 +41,7 @@ class PyGeopandas(PythonPackage):
     depends_on("python@3.8:", type=("build", "run"), when="@0.11:")
     depends_on("python@3.9:", type=("build", "run"), when="@0.14:")
     depends_on("py-setuptools", type="build")
-    depends_on("py-setuptools@61.0.0:", type="build")
+    depends_on("py-setuptools@61.0.0:", type="build", when="@0.14:")
     depends_on("py-pandas", type=("build", "run"))
     depends_on("py-pandas@0.23.0:", type=("build", "run"), when="@0.6:")
     depends_on("py-pandas@0.24.0:", type=("build", "run"), when="@0.9:")
