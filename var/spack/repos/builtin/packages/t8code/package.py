@@ -16,7 +16,7 @@ class T8code(AutotoolsPackage):
     homepage = "https://github.com/DLR-AMR/t8code"
     url = "https://github.com/DLR-AMR/t8code/releases/download/v1.4.1/t8-1.4.1.tar.gz"
 
-    maintainers = ["Davknapp", "melven"]
+    maintainers("Davknapp", "melven")
 
     license("GPL-2.0-or-later")
 

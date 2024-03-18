@@ -24,10 +24,11 @@ class Rpp(CMakePackage):
             url = "https://github.com/GPUOpen-ProfessionalCompute-Libraries/rpp/archive/{0}.tar.gz"
         return url.format(version)
 
-    maintainers = ["srekolam", "afzpatel"]
     tags = ["rocm"]
 
+    maintainers("srekolam", "afzpatel")
     license("MIT")
+
     version("6.0.2", sha256="2686eb4099233db4444fcd2f77af9b00d38d829f05de2403bed37b1b28f2653c")
     version("6.0.0", sha256="3626a648bc773520f5cd5ca15f494de6e74b422baf32491750ce0737c3367f15")
     version("5.7.1", sha256="36fff5f1c52d969c3e2e0c75b879471f731770f193c9644aa6ab993fb8fa4bbf")
