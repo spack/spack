@@ -421,7 +421,7 @@ The tarballs for some packages cannot be automatically downloaded by
 Spack.  This could be for a number of reasons:
 
 #. The author requires users to manually accept a license agreement
-   before downloading (``jdk`` and ``galahad``).
+   before downloading (``galahad``).
 
 #. The software is proprietary and cannot be downloaded on the open
    Internet.
