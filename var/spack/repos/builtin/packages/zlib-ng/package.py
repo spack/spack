@@ -36,6 +36,7 @@ class ZlibNg(AutotoolsPackage, CMakePackage):
 
     variant("compat", default=True, description="Enable compatibility API")
     variant("opt", default=True, description="Enable optimizations")
+    variant("new_strategies", default=True, description="Enable new deflate strategies")
 
     provides("zlib-api", when="+compat")
 
@@ -67,6 +68,8 @@ class AutotoolsBuilder(autotools.AutotoolsBuilder):
             args.append("--zlib-compat")
         if self.spec.satisfies("~opt"):
             args.append("--without-optimizations")
+        if self.spec.satisfies("~new_strategies"):
+            args.append("--without-new-strategies")
         return args
 
 
@@ -75,4 +78,5 @@ class CMakeBuilder(cmake.CMakeBuilder):
         return [
             self.define_from_variant("ZLIB_COMPAT", "compat"),
             self.define_from_variant("WITH_OPTIM", "opt"),
+            self.define_from_variant("WITH_NEW_STRATEGIES", "new_strategies"),
         ]
