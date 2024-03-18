@@ -37,9 +37,8 @@ class PyZfit(PythonPackage):
     # TODO: remove "build" once fixed in spack that tests need "run", not "build"
     with default_args(type=("build", "run")):
 
-        # TODO: reactivate once TF 2.15 is ready https://github.com/spack/spack/pull/41069
-        # depends_on("py-tensorflow@2.15", type=("run"), when="@0.18")
-        # depends_on("py-tensorflow-probability@0.23", type=("run"), when="@0.18")
+        depends_on("py-tensorflow@2.15", type=("run"), when="@0.18")
+        depends_on("py-tensorflow-probability@0.23", type=("run"), when="@0.18")
 
         depends_on("py-tensorflow@2.13", when="@0.15:0.17")
         depends_on("py-tensorflow-probability@0.21", when="@0.16:0.17")
