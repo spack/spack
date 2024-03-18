@@ -50,7 +50,7 @@ class Heyoka(CMakePackage):
     depends_on("llvm@13:17")
     depends_on("boost@1.69: +serialization")
     depends_on("fmt@9:10")
-    depends_on("spdlog +fmt_external")
+    depends_on("spdlog")
     depends_on("intel-tbb@2021.4.0:")
 
     # Optional dependencies
