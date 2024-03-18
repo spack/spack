@@ -80,6 +80,8 @@ class Openscenegraph(CMakePackage):
         # https://github.com/openscenegraph/OpenSceneGraph/issues/167
         depends_on("ffmpeg@:2", when="@:3.4.0")
 
+    # patch submitted for inclusion in OpenSceneGraph for extending compatibility
+    # with ffmpeg from versions up to 4 to versions 5 & 6
     patch(
         "https://github.com/openscenegraph/OpenSceneGraph/pull/1281/commits/759620a3b7b787c960a7e414ba26ab5497817d40.patch?full_index=1",
         sha256="b8f588d1fba9361127a7d5127e0720a4d64f44ef021515d1d67d77dcacdef8fd",
