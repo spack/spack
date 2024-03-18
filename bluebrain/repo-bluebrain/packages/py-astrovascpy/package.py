@@ -14,9 +14,11 @@ class PyAstrovascpy(PythonPackage):
 
     homepage = "https://github.com/BlueBrain/AstroVascPy"
     git = "https://github.com/BlueBrain/AstroVascPy.git"
+    pypi = "AstroVascPy/AstroVascPy-0.1.5.tar.gz"
 
     maintainers("tristan0x")
 
+    version("0.1.5", sha256="9f444775f464de740590f8acd880caae87ca1ffdf7d524490d6b8ce21bb4d5af")
     version("0.1.2", tag="0.1.2")
 
     variant("vtk", default=False, description="add VTK support (mainly for visualization)")
@@ -31,6 +33,7 @@ class PyAstrovascpy(PythonPackage):
     depends_on("py-h5py+mpi", type=("build", "run"))
     depends_on("py-libsonata", type=("build", "run"))
     depends_on("py-matplotlib", type=("build", "run"))
+    depends_on("py-mpi4py", type=("build", "run"))
     depends_on("py-morphio", type=("build", "run"))
     depends_on("py-networkx", type=("build", "run"))
     depends_on("py-numpy", type=("build", "run"))
