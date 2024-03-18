@@ -95,6 +95,13 @@ class LlvmAmdgpu(CMakePackage):
     patch("001-Add-i1-mul-patterns.patch", when="@5.6")
     patch("001-Add-i1-mul-patterns-5.7.patch", when="@5.7")
 
+    # fixes the libamdhip64.so not found in some ROCm math lib tests
+    patch(
+        "https://github.com/ROCm/llvm-project/commit/444d1d12bbc0269fed5451fb1a9110a049679ca5.patch?full_index=1",
+        sha256="b4774ca19b030890d7b276d12c446400ccf8bc3aa724c7f2e9a73531a7400d69",
+        when="@6.0",
+    )
+
     conflicts("^cmake@3.19.0")
 
     root_cmakelists_dir = "llvm"
