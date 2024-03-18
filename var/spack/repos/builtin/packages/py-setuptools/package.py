@@ -21,17 +21,17 @@ class PySetuptools(Package, PythonExtension):
 
     version(
         "69.2.0",
-        sha256="0ff4183f8f42cd8fa3acea16c45205521a4ef28f73c6391d8a25e92893134f2e",
+        sha256="c21c49fb1042386df081cb5d86759792ab89efca84cf114889191cd09aacc80c",
         expand=False,
     )
     version(
         "69.1.1",
-        sha256="5c0806c7d9af348e6dd3777b4f4dbb42c7ad85b190104837488eab9a7c945cf8",
+        sha256="02fa291a0471b3a18b2b2481ed902af520c69e8ae0919c13da936542754b4c56",
         expand=False,
     )
     version(
         "69.0.3",
-        sha256="be1af57fc409f93647f2e8e4573a142ed38724b8cdd389706a867bb4efcf1e78",
+        sha256="385eb4edd9c9d5c17540511303e39a147ce2fc04bc55289c322b9e5904fe2c05",
         expand=False,
     )
     version(
