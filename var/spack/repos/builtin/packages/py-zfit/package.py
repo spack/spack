@@ -18,6 +18,8 @@ class PyZfit(PythonPackage):
     maintainers("jonas-eschle")
     license("BSD-3-Clause", checked_by="jonas-eschle")
 
+    tags = ["likelihood", "statistics", "inference", "fitting", "hep"]
+
     version("0.18.2", sha256="099b111e135937966b4c6342c7738731f112aea33e1b9f4a9785d2eac9e530f1")
     version("0.18.1", sha256="fbc6b3a636d8dc74fb2e69dfec5855f534c4583ec18efac9e9107ad45b18eb43")
     version("0.18.0", sha256="21d9479480f74945c67707b715780693bd4e94062c551bf41fe04a2eddb47fab")
