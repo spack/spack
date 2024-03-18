@@ -89,7 +89,6 @@ class Likwid(Package):
     depends_on("hwloc", when="@5.2.0:")
     depends_on("rocprofiler-dev", when="@5.3: +rocm")
     depends_on("rocm-core", when="@5.3: +rocm")
-    depends_on("rocm-smi", when="@5.3: +rocm")
     depends_on("rocm-smi-lib", when="@5.3: +rocm")
 
     # TODO: check
