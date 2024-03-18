@@ -401,6 +401,19 @@ spack:
   # - cp2k +mpi +rocm amdgpu_target=gfx908 # cp2k: Error: KeyError: 'No spec with name rocm in... "-L{}".format(spec["rocm"].libs.directories[0]),
   # - cp2k +mpi +rocm amdgpu_target=gfx90a # cp2k: Error: KeyError: 'No spec with name rocm in... "-L{}".format(spec["rocm"].libs.directories[0]),
 
+  - py-torch ~rocm ~cuda 
+  - py-torch ~rocm +cuda cuda_arch=75
+  - py-torch ~rocm +cuda cuda_arch=80
+  - py-torch ~rocm +cuda cuda_arch=90
+  - py-torch ~cuda +rocm amdgpu_target=gfx908
+  - py-torch ~cuda +rocm amdgpu_target=gfx90a
+  - py-tensorflow ~rocm ~cuda
+  - py-tensorflow ~rocm +cuda cuda_arch=75
+  - py-tensorflow ~rocm +cuda cuda_arch=80
+  - py-tensorflow ~rocm +cuda cuda_arch=90
+  - py-tensorflow ~cuda +rocm amdgpu_target=gfx908
+  - py-tensorflow ~cuda +rocm amdgpu_target=gfx90a
+
   ci:
     pipeline-gen:
     - build-job:
