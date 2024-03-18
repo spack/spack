@@ -76,6 +76,11 @@ class PyJax(PythonPackage):
     depends_on("py-scipy@1.2.1:", type=("build", "run"))
     depends_on("py-importlib-metadata@4.6:", when="@0.4.11: ^python@:3.9", type=("build", "run"))
 
+    # See jax/_src/lib/__init__.py
+    # https://github.com/google/jax/commit/8be057de1f50756fe7522f7e98b2f30fad56f7e4
+    for v in ["0.4.25", "0.4.23", "0.4.16", "0.4.3", "0.3.23"]:
+        depends_on(f"py-jaxlib@:{v}", when=f"@{v}", type=("build", "run"))
+
     # See _minimum_jaxlib_version in jax/version.py
     depends_on("py-jaxlib@0.4.20:", when="@0.4.25:", type=("build", "run"))
     depends_on("py-jaxlib@0.4.19:", when="@0.4.21:", type=("build", "run"))

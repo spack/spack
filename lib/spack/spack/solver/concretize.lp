@@ -1172,11 +1172,13 @@ attr("node_compiler_version_satisfies", PackageNode, Compiler, Constraint)
 
 % If the compiler version was set from the command line,
 % respect it verbatim
-:- attr("node_compiler_version_set", PackageNode, Compiler, Version),
-   not attr("node_compiler_version", PackageNode, Compiler, Version).
+error(100, "Cannot set the required compiler: {2}%{0}@{1}", Compiler, Version, Package)
+  :- attr("node_compiler_version_set", node(X, Package), Compiler, Version),
+     not attr("node_compiler_version", node(X, Package), Compiler, Version).
 
-:- attr("node_compiler_set", PackageNode, Compiler),
-   not attr("node_compiler_version", PackageNode, Compiler, _).
+error(100, "Cannot set the required compiler: {1}%{0}", Compiler, Package)
+  :- attr("node_compiler_set", node(X, Package), Compiler),
+     not attr("node_compiler_version", node(X, Package), Compiler, _).
 
 % Cannot select a compiler if it is not supported on the OS
 % Compilers that are explicitly marked as allowed

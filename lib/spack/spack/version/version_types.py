@@ -740,7 +740,7 @@ class VersionList:
     """Sorted, non-redundant list of Version and ClosedOpenRange elements."""
 
     def __init__(self, vlist=None):
-        self.versions: List[StandardVersion, GitVersion, ClosedOpenRange] = []
+        self.versions: List[Union[StandardVersion, GitVersion, ClosedOpenRange]] = []
         if vlist is None:
             pass
         elif isinstance(vlist, str):
@@ -814,16 +814,20 @@ class VersionList:
 
     def lowest(self) -> Optional[StandardVersion]:
         """Get the lowest version in the list."""
-        return None if not self else self[0]
+        return next((v for v in self.versions if isinstance(v, StandardVersion)), None)
 
     def highest(self) -> Optional[StandardVersion]:
         """Get the highest version in the list."""
-        return None if not self else self[-1]
+        return next((v for v in reversed(self.versions) if isinstance(v, StandardVersion)), None)
 
     def highest_numeric(self) -> Optional[StandardVersion]:
         """Get the highest numeric version in the list."""
-        numeric_versions = list(filter(lambda v: str(v) not in infinity_versions, self.versions))
-        return None if not any(numeric_versions) else numeric_versions[-1]
+        numeric = (
+            v
+            for v in reversed(self.versions)
+            if isinstance(v, StandardVersion) and not v.isdevelop()
+        )
+        return next(numeric, None)
 
     def preferred(self) -> Optional[StandardVersion]:
         """Get the preferred (latest) version in the list."""

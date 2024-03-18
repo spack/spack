@@ -25,6 +25,7 @@ class PyJaxlib(PythonPackage, CudaPackage):
     version("0.4.21", sha256="8d57f66d00b9c0b824b1eff84adda5b765a412b3f316ef7c773632d1edbf9477")
     version("0.4.20", sha256="058410d2bc12f7562c7b01e0c8cd587cb68059c12f78bc945055e5ddc445f5fd")
     version("0.4.19", sha256="51242b217a1f82474e42d24f09ed5dedff951eeb4579c6e49e706d1adfd6949d")
+    version("0.4.16", sha256="85c8bc050abe0a2cf62e8cfc7edb4904dd3807924b5714ec6277f291c576b5ca")
     version("0.4.14", sha256="9f309476a8f6337717b059b8d10b5859b4134c30cf8f1220bb70379b5e2744a4")
     version("0.4.11", sha256="bdfc45f33970beba5caf28d061668a4863f05994deea26791db50ea605fc2e36")
     version("0.4.7", sha256="0578d5dd5035b5225cadb6a62ca5f93dd76b70292268502fc01a0fd9ca7001d0")
@@ -94,7 +95,7 @@ class PyJaxlib(PythonPackage, CudaPackage):
     )
 
     # https://github.com/google/jax/issues/19992
-    conflicts("@0.4.24:", when="target=ppc64le:")
+    conflicts("@0.4.16:", when="target=ppc64le:")
 
     def patch(self):
         self.tmp_path = tempfile.mkdtemp(prefix="spack")

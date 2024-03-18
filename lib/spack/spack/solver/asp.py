@@ -823,11 +823,12 @@ class PyclingoDriver:
             print("Statistics:")
             pprint.pprint(self.control.statistics)
 
-        if result.unsolved_specs and setup.concretize_everything:
+        if result.satisfiable and result.unsolved_specs and setup.concretize_everything:
             unsolved_str = Result.format_unsolved(result.unsolved_specs)
             raise InternalConcretizerError(
                 "Internal Spack error: the solver completed but produced specs"
-                f" that do not satisfy the request.\n\t{unsolved_str}"
+                " that do not satisfy the request. Please report a bug at "
+                f"https://github.com/spack/spack/issues\n\t{unsolved_str}"
             )
 
         return result, timer, self.control.statistics
@@ -1786,6 +1787,11 @@ class SpackSolverSetup:
                 dep = dspec.spec
 
                 if spec.concrete:
+                    # GCC runtime is solved again by clingo, even on concrete specs, to give
+                    # the possibility to reuse specs built against a different runtime.
+                    if dep.name == "gcc-runtime":
+                        continue
+
                     # We know dependencies are real for concrete specs. For abstract
                     # specs they just mean the dep is somehow in the DAG.
                     for dtype in dt.ALL_FLAGS:
@@ -2287,8 +2293,7 @@ class SpackSolverSetup:
         self.possible_virtuals = node_counter.possible_virtuals()
         self.pkgs = node_counter.possible_dependencies()
 
-        runtimes = spack.repo.PATH.packages_with_tags("runtime")
-        self.pkgs.update(set(runtimes))
+        self.pkgs.update(spack.repo.PATH.packages_with_tags("runtime"))
 
         # Fail if we already know an unreachable node is requested
         for spec in specs:

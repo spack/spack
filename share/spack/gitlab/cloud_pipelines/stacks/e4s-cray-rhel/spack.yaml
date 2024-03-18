@@ -41,6 +41,9 @@ spack:
       variants: fabrics=sockets,tcp,udp,rxm
     libunwind:
       variants: +pic +xz
+    mgard:
+      require:
+        - "@2023-01-10:"
     mpich:
       variants: ~wrapperrpath
     ncurses:
@@ -81,6 +84,7 @@ spack:
   - chai ~benchmarks ~tests
   - charliecloud
   - conduit
+  # - cp2k +mpi         # libxsmm: ftn-78 ftn: ERROR in command linel; The -f option has an invalid argument, "tree-vectorize".
   - datatransferkit
   - flecsi
   - flit
@@ -102,14 +106,13 @@ spack:
   - lammps
   - legion
   - libnrm
-  - libpressio +bitgrooming +bzip2 ~cuda ~cusz +fpzip +hdf5 +libdistributed
-    +lua +openmp +python +sz +sz3 +unix +zfp +json +remote +netcdf +mgard
+  #- libpressio +bitgrooming +bzip2 ~cuda ~cusz +fpzip +hdf5 +libdistributed +lua +openmp +python +sz +sz3 +unix +zfp +json +remote +netcdf +mgard # mgard: 
   - libquo
   - libunwind
   - mercury
   - metall
   - mfem
-  - mgard +serial +openmp +timing +unstructured ~cuda
+  # - mgard +serial +openmp +timing +unstructured ~cuda # mgard
   - mpark-variant
   - mpifileutils ~xattr
   - nccmp
@@ -117,7 +120,7 @@ spack:
   - netlib-scalapack
   - omega-h
   - openmpi
-  - openpmd-api
+  - openpmd-api ^adios2~mgard
   - papi
   - papyrus
   - pdt

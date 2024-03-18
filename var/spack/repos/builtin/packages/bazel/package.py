@@ -101,7 +101,7 @@ class Bazel(Package):
     patch("cppcompileaction-0.3.2.patch", when="@:6 +nodepfail")
 
     # https://github.com/bazelbuild/bazel/issues/17956
-    patch("apple-clang-14.0.3.patch", when="@:5.4.0,6.0:6.1.1")
+    patch("apple-clang-14.0.3.patch", when="@:4.2.3,5:6.1.1")
 
     # https://github.com/bazelbuild/bazel/issues/17958
     patch(
