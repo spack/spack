@@ -46,12 +46,8 @@ class Sgpp(SConsPackage):
     # Fixes compilation with AVX512 and datadriven
     # Fixed in SGpp in PR https://github.com/SGpp/SGpp/pull/229
     patch("avx512_datadriven_compilation.patch", when="@:3.3.0+datadriven")
-    # Purpose: The distutils deprecation warning in python 3.10/3.11 caused the sgpp build system
+    # The distutils deprecation warning in python 3.10/3.11 caused the sgpp build system
     # to complain about missing headers (due to a path check not working anymore)
-    # Note: Not a problem anymore for any version newer than 3.4.0 (and master) as distutils got
-    # removed completly since.
-    # The patch simply fixes this for older versions by squelching the warning! It contains the
-    # initial workaround for the deprecation issue before distutils got removed completely.
     # See issue https://github.com/SGpp/SGpp/issues/263 and https://github.com/SGpp/SGpp/pull/266
     patch("disable_disutils_deprecation_warning.patch", when="@:3.4.0 ^python@3.10:3.11")
     # SGpp does not contain aarch64 support as of yet. To make it work still, this patch adds
