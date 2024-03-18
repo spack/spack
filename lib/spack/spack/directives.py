@@ -921,9 +921,9 @@ def maintainers(*names: str):
     """
 
     def _execute_maintainer(pkg):
-        maintainers_from_base = getattr(pkg, "maintainers", [])
-        # Here it is essential to copy, otherwise we might add to an empty list in the parent
-        pkg.maintainers = list(sorted(set(maintainers_from_base + list(names))))
+        maintainers = set(getattr(pkg, "maintainers", []))
+        maintainers.update(names)
+        pkg.maintainers = sorted(maintainers)
 
     return _execute_maintainer
 

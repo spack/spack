@@ -323,7 +323,7 @@ class Msvc(Compiler):
         fc_path[fc_ver] = fc
         if os.getenv("ONEAPI_ROOT"):
             try:
-                sps = spack.operating_systems.windows_os.WindowsOs.compiler_search_paths
+                sps = spack.operating_systems.windows_os.WindowsOs().compiler_search_paths
             except AttributeError:
                 raise SpackError("Windows compiler search paths not established")
             clp = spack.util.executable.which_string("cl", path=sps)
