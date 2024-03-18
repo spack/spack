@@ -63,6 +63,8 @@ class Mgard(CMakePackage, CudaPackage):
         "~cuda", when="@2021-11-12", msg="without cuda MGARD@2021-11-12 has undefined symbols"
     )
     conflicts("%gcc@:7", when="@2022-11-18:", msg="requires std::optional and other c++17 things")
+    conflicts("protobuf@3.22:", when="target=ppc64le", msg="GCC 9.4 segfault in CI")
+    conflicts("protobuf@3.22:", when="+cuda target=aarch64:", msg="nvcc fails on ARM SIMD headers")
 
     def flag_handler(self, name, flags):
         if name == "cxxflags":
