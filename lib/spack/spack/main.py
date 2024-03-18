@@ -17,6 +17,7 @@ import os.path
 import pstats
 import re
 import shlex
+import shutil
 import signal
 import subprocess as sp
 import sys
@@ -122,6 +123,40 @@ def add_all_commands(parser):
         parser.add_command(cmd)
 
 
+def get_git_folder_exists():
+    """Check if the .git directory exists in the Spack installation.
+
+    Returns:
+        (bool) True if the .git directory exists, False otherwise.
+    """
+    git_path = os.path.join(spack.paths.prefix, ".git")
+    return os.path.exists(git_path)
+
+
+def get_git_has_untracked_files():
+    """Check if the Spack git repo has untracked files.
+
+    Returns:
+        (bool) True if there are untracked files, False otherwise.
+    """
+    git = spack.util.git.git()
+    if not git:
+        return False
+
+    git(
+        "-C",
+        spack.paths.prefix,
+        "diff-index",
+        "--quiet",
+        "HEAD",
+        "--",
+        output=str,
+        error=os.devnull,
+        fail_on_error=False,
+    )
+    return git.returncode != 0
+
+
 def get_spack_commit():
     """Get the Spack git commit sha.
 
@@ -152,6 +187,77 @@ def get_spack_commit():
     return match.group(0) if match else None
 
 
+def attempt_git_folder_repair():
+    """Attempt to repair the .git folder in the Spack installation.
+
+    Returns:
+        (bool) True if the repair was successful, False otherwise.
+    """
+
+    tty.warn(".git folder is missing in the Spack installation.")
+    tty.warn("Attempting repair (this may take several minutes)...")
+    major, minor, patch = re.match(r"(\d+)\.(\d+)\.(\d+)", spack.spack_version).groups()
+    tag = f"v{major}.{minor}.{patch}"
+
+    git = spack.util.git.git()
+    if not git:
+        tty.die("git is not available. Please install git and try again.")
+        return False
+    git("-C", spack.paths.prefix, "init", output=sys.stdout, error=sys.stderr, fail_on_error=False)
+    if git.returncode != 0:
+        shutil.rmtree(os.path.join(spack.paths.prefix, ".git"))
+        tty.die("Failed to initialize git repository in the Spack installation.")
+        return False
+    git(
+        "-C",
+        spack.paths.prefix,
+        "remote",
+        "add",
+        "origin",
+        "https://github.com/spack/spack.git",
+        output=sys.stdout,
+        error=sys.stderr,
+        fail_on_error=False,
+    )
+    if git.returncode != 0:
+        shutil.rmtree(os.path.join(spack.paths.prefix, ".git"))
+        tty.die("Failed to add remote origin.")
+        return False
+    git(
+        "-C", spack.paths.prefix, "fetch", output=sys.stdout, error=sys.stderr, fail_on_error=False
+    )
+    if git.returncode != 0:
+        shutil.rmtree(os.path.join(spack.paths.prefix, ".git"))
+        tty.die("Failed to fetch from remote origin.")
+        return False
+    git(
+        "-C",
+        spack.paths.prefix,
+        "checkout",
+        f"refs/tags/{tag}",
+        output=sys.stdout,
+        error=sys.stderr,
+        fail_on_error=False,
+    )
+    if git.returncode != 0:
+        shutil.rmtree(os.path.join(spack.paths.prefix, ".git"))
+        tty.die(
+            f"""
+            Failed to checkout tag {tag}.
+            Automatic repairs are only possible on tagged versions.
+            Restore the .git folder manually or reinstall Spack.
+        """
+        )
+        return False
+    tty.warn(
+        f"""
+        Successfully repaired .git folder in the Spack installation.
+        Automatically detected tag {tag}.
+    """
+    )
+    return True
+
+
 def get_version():
     """Get a descriptive version of this instance of Spack.
 
@@ -165,6 +271,88 @@ def get_version():
         version += " ({0})".format(commit)
 
     return version
+
+
+def get_newer_version():
+    """Get the latest tag from the Spack git repository if it is newer than the current version.
+
+    Returns:
+        (str) the latest tag if available, otherwise None
+    """
+
+    if not get_git_folder_exists():
+        return None
+
+    git = spack.util.git.git()
+    if not git:
+        return None
+
+    git("-C", spack.paths.prefix, "fetch", "--tags", output=os.devnull, error=os.devnull)
+
+    if git.returncode != 0:
+        tty.warn("Failed to fetch tags from the Spack git repository: {0}".format(git.returncode))
+        return None
+
+    git = spack.util.git.git()
+
+    if not git:
+        return None
+
+    tags = git(
+        "-C",
+        spack.paths.prefix,
+        "--no-pager",
+        "tag",
+        output=str,
+        error=os.devnull,
+        fail_on_error=False,
+    )
+    if git.returncode != 0:
+        tty.warn("Failed to get tags from the Spack git repository: {0}".format(git.returncode))
+        return None
+
+    tags = tags.split("\n")
+
+    cur_major, cur_minor, cur_patch = re.match(
+        r"(\d+)\.(\d+)\.(\d+)", spack.spack_version
+    ).groups()
+
+    latest_tag = None
+    for tag in tags:
+        if not re.match(r"^v\d+\.\d+\.\d+$", tag):
+            continue
+        major, minor, patch = re.match(r"v(\d+)\.(\d+)\.(\d+)", tag).groups()
+        if (
+            int(major) > int(cur_major)
+            or (int(major) == int(cur_major) and int(minor) > int(cur_minor))
+            or (
+                int(major) == int(cur_major)
+                and int(minor) == int(cur_minor)
+                and int(patch) > int(cur_patch)
+            )
+        ):
+            cur_major, cur_minor, cur_patch = major, minor, patch
+            latest_tag = tag
+            continue
+
+    return latest_tag
+
+
+def perform_git_checks():
+    """Perform checks for the Spack git repository.
+
+    Returns:
+        (int) 0 if the checks pass, 1 otherwise
+    """
+
+    if not get_git_folder_exists() and not attempt_git_folder_repair():
+        return 1
+    if get_git_has_untracked_files():
+        tty.warn("Untracked files found in the Spack git repository. This is not recommended.")
+    newer_version = get_newer_version()
+    if newer_version is not None:
+        tty.warn(f"Newer version of Spack available: {newer_version}. Please consider upgrading.")
+    return 0
 
 
 def index_commands():
@@ -932,9 +1120,15 @@ def _main(argv=None):
     # main() is tricky to get right, so be careful where you put things.
     #
     # Things in this first part of `main()` should *not* require any
-    # configuration. This doesn't include much -- setting up th parser,
+    # configuration. This doesn't include much -- setting up the parser,
     # restoring some key environment variables, very simple CLI options, etc.
     # ------------------------------------------------------------------------
+
+    # We want the git warnings to ALWAYS be shown before anything else can happen
+    status = perform_git_checks()
+    if status != 0:
+        return status
+    del status
 
     # Create a parser with a simple positional argument first.  We'll
     # lazily load the subcommand(s) we need later. This allows us to
