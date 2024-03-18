@@ -487,6 +487,20 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         when="@9.5.0:10.4.0,11.1.0:11.2.0",
     )
 
+    # patch ICE on aarch64 in tree-vect-slp, cf: https://gcc.gnu.org/bugzilla/show_bug.cgi?id=111478
+    # patch taken from releases/gcc-12 branch
+    patch(
+        "https://github.com/gcc-mirror/gcc/commit/9d033155254ac6df5f47ab32896dbf336f991589.patch?full_index=1",
+        sha256="8b76fe575ef095b48ac45e8b56544c331663f840ce4b63abdb61510bf3647597",
+        when="@12.3.0 target=aarch64:",
+    )
+    # patch taken from releases/gcc-13 branch
+    patch(
+        "https://github.com/gcc-mirror/gcc/commit/7c67939ec384425a3d7383dfb4fb39aa7e9ad20a.patch?full_index=1",
+        sha256="f0826d7a9c9808af40f3434918f24ad942f1c6a6daec73f11cf52c544cf5fc01",
+        when="@13.2.0 target=aarch64:",
+    )
+
     build_directory = "spack-build"
 
     @classproperty
