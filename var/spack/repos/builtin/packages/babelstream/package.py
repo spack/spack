@@ -699,9 +699,10 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
         unsupported_value = self.spec.variants["foption"].value
         compiler_name = spec.compiler.name
         unsupported = any(
-            unsupported_value in options for options in unsupported_options.get(compiler_name, [])
+            unsupported_value in options 
+            for options in unsupported_options.get(compiler_name, []) 
+            if options == unsupported_value
         )
-
         if unsupported:
             raise InstallError(
                 f"{unsupported_value} is not supported by the {compiler_name} compiler"
