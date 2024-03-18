@@ -107,10 +107,7 @@ class Hip(CMakePackage):
         # ref https://github.com/ROCm/HIP/pull/2202
         depends_on("numactl", when="@3.7.0:")
 
-        for ver in [
-            "6.0.0",
-            "6.0.2",
-        ]:
+        for ver in ["6.0.0", "6.0.2"]:
             depends_on("hipcc", when=f"@{ver}")
 
     # roc-obj-ls requirements
