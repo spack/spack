@@ -30,6 +30,7 @@ class PyRdflib(PythonPackage):
     version("5.0.0", sha256="78149dd49d385efec3b3adfbd61c87afaf1281c30d3fcaf1b323b34f603fb155")
 
     depends_on("python@3.7:3", when="@6.3:", type=("build", "run"))
+    depends_on("python@3.8.1:3", when="@7:", type=("build", "run"))
     depends_on("py-poetry-core@1.4:", when="@6.3:", type="build")
 
     depends_on("py-isodate@0.6", when="@6.3:", type=("build", "run"))
