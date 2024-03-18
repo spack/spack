@@ -597,7 +597,7 @@ register_flag_optional(TARGET_PROCESSOR
                 cuda_comp = self.spec["cuda"].prefix + "/bin/nvcc"
                 args.append("-DCMAKE_CUDA_COMPILER=" + cuda_comp)
                 args.append("-DTARGET=NVIDIA")
-                cuda_arch = "cc" + self.spec.variants["cuda_arch"].value[0]
+                cuda_arch = "sm_" + self.spec.variants["cuda_arch"].value[0]
                 args.append("-DCUDA_ARCH=" + cuda_arch)
                 args.append("-DENABLE_CUDA=ON")
                 args.append("DCUDA_TOOLKIT_ROOT_DIR=" + self.spec["cuda"].prefix)
@@ -699,8 +699,8 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
         unsupported_value = self.spec.variants["foption"].value
         compiler_name = spec.compiler.name
         unsupported = any(
-            unsupported_value in options 
-            for options in unsupported_options.get(compiler_name, []) 
+            unsupported_value in options
+            for options in unsupported_options.get(compiler_name, [])
             if options == unsupported_value
         )
         if unsupported:
