@@ -65,6 +65,8 @@ class Mgard(CMakePackage, CudaPackage):
     conflicts("%gcc@:7", when="@2022-11-18:", msg="requires std::optional and other c++17 things")
     conflicts("protobuf@3.22:", when="target=ppc64le", msg="GCC 9.4 segfault in CI")
     conflicts("protobuf@3.22:", when="+cuda target=aarch64:", msg="nvcc fails on ARM SIMD headers")
+    # https://github.com/abseil/abseil-cpp/issues/1629
+    conflicts("abseil-cpp@20240116.1", when="+cuda", msg="triggers nvcc parser bug")
 
     def flag_handler(self, name, flags):
         if name == "cxxflags":
