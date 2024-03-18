@@ -7,7 +7,7 @@ from spack.package import *
 
 
 class CigPythia(AutotoolsPackage):
-    """This is the Computational Infrastructure for Geodynamics (CIG) fork of 
+    """This is the Computational Infrastructure for Geodynamics (CIG) fork of
     Pythia/Pyre originally written by Michael Aivazis (California Institute of
     Technology).
 
