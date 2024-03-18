@@ -16,6 +16,7 @@ class Scorep(AutotoolsPackage):
     url = "https://perftools.pages.jsc.fz-juelich.de/cicd/scorep/tags/scorep-7.1/scorep-7.1.tar.gz"
     maintainers("wrwilliams")
 
+    version("8.4", sha256="7bbde9a0721d27cc6205baf13c1626833bcfbabb1f33b325a2d67976290f7f8a")
     version("8.3", sha256="76c914e6319221c059234597a3bc53da788ed679179ac99c147284dcefb1574a")
     # version 8.2 was immediately superseded before it hit Spack
     version("8.1", sha256="3a40b481fce610871ddf6bdfb88a6d06b9e5eb38c6080faac6d5e44990060a37")
