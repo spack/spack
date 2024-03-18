@@ -40,7 +40,8 @@ class Gnutls(AutotoolsPackage):
     conflicts("+guile", when="platform=darwin")
 
     # newer versions of clang are not compatible with gnutls <= 3.7
-    conflicts("%clang@15:", when="@:3.7")
+    conflicts("%clang@16:", when="@:3.7")
+    conflicts("%apple-clang@15:", when="@:3.7")
 
     # Note that version 3.3.9 of gnutls doesn't support nettle 3.0.
     depends_on("nettle@3.4.1:", when="@3.6.7.1:")
