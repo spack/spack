@@ -154,6 +154,7 @@ class Apex(CMakePackage):
         args.append(self.define_from_variant(prefix + "_LM_SENSORS", "lmsensors"))
         args.append(self.define_from_variant(prefix + "_TCMALLOC", "gperftools"))
         args.append(self.define_from_variant(prefix + "_JEMALLOC", "jemalloc"))
+        args.append(self.define_from_variant(prefix + "_KOKKOS", "kokkos"))
         args.append(self.define_from_variant(test_prefix + "BUILD_TESTS", "tests"))
         args.append(self.define_from_variant(test_prefix + "BUILD_EXAMPLES", "examples"))
 
