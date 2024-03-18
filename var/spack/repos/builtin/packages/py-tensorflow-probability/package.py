@@ -65,7 +65,8 @@ class PyTensorflowProbability(Package):
     with when("+py-tensorflow"):
         # TODO(0.24): requires tf-keras on Spack
         # depends_on("py-tf-keras", when="@0.24:", type=("build", "run"))
-        # depends_on("py-tensorflow@2.15", when="@0.23", type=("build", "run"))
+        # depends_on("py-tensorflow@2.16", when="@0.24", type=("build", "run"))
+        depends_on("py-tensorflow@2.15", when="@0.23", type=("build", "run"))
         depends_on("py-tensorflow@2.14:2", when="@0.22", type=("build", "run"))
         depends_on("py-tensorflow@2.13:2", when="@0.21", type=("build", "run"))
         depends_on("py-tensorflow@2.12:2", when="@0.20", type=("build", "run"))
@@ -73,11 +74,11 @@ class PyTensorflowProbability(Package):
 
     # jaxlib is not required, as it's already a dependency of py-jax
     variant("py-jax", default=False, description="Build with JAX support")
-    with when("+py-jax"):  # TODO: reactivate once the JAX package is available with newer versions
-        # depends_on("py-jax@0.4.20:0.4", when="@0.23", type=("build", "run"))
-        # depends_on("py-jax@0.4.16:0.4", when="@0.22", type=("build", "run"))
-        # depends_on("py-jax@0.4.14:0.4", when="@0.21", type=("build", "run"))
-        # depends_on("py-jax@0.4.8:0.4", when="@0.20", type=("build", "run"))
+    with when("+py-jax"):
+        depends_on("py-jax@0.4.20:0.4", when="@0.23", type=("build", "run"))
+        depends_on("py-jax@0.4.16:0.4", when="@0.22", type=("build", "run"))
+        depends_on("py-jax@0.4.14:0.4", when="@0.21", type=("build", "run"))
+        depends_on("py-jax@0.4.8:0.4", when="@0.20", type=("build", "run"))
         depends_on("py-jax@0.3.25:3", when="@0.19", type=("build", "run"))
 
     depends_on(
