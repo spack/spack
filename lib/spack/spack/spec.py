@@ -122,7 +122,16 @@ __all__ = [
 ]
 
 
-SPEC_FORMAT_RE = re.compile(r"(?<!\\){([^}]+)(?<!\\)}")
+SPEC_FORMAT_RE = re.compile(
+    r"(?<!\\){"  # non-escaped open brace {
+    r"(?:"  # one of
+    r"([%@/]|arch=)?"  # optional sigil (to print sigil in color)
+    r"|"  # or
+    r"(?:^([^}]+)\.)?"  # optional ^depname. (to get attr from dependency)
+    r")"  # end one of
+    r"([^}]*)"  # attribute to format
+    r"(?<!\\)}"  # non-escaped close brace }
+)
 
 #: Valid pattern for an identifier in Spack
 
@@ -4387,22 +4396,15 @@ class Spec:
             return clr.colorize(f, color=color)
 
         def write_attribute(match_object):
-            attribute = match_object.group(1).lower()
+            sig, dep, attribute = match_object.groups()
+            attribute = attribute.lower()
 
-            sig = ""
-            if attribute.startswith(("@", "%", "/")):
-                # color sigils that are inside braces
-                sig = attribute[0]
-                attribute = attribute[1:]
-            elif attribute.startswith("arch="):
+            if sig == "arch=":
                 sig = " arch="  # include space as separator
-                attribute = attribute[5:]
+            elif not sig:
+                sig = ""
 
-            current = self
-            if attribute.startswith("^"):
-                attribute = attribute[1:]
-                dep, attribute = attribute.split(".", 1)
-                current = self[dep]
+            current = self if dep is None else self[dep]
 
             if attribute == "":
                 raise SpecFormatStringError("Format string attributes must be non-empty")
