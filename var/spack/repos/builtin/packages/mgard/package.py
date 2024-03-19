@@ -49,7 +49,7 @@ class Mgard(CMakePackage, CudaPackage):
     depends_on("zlib-api")
     depends_on("pkgconfig", type=("build",), when="@2022-11-18:")
     depends_on("zstd")
-    depends_on("protobuf@:3.21.12", when="@2022-11-18:")
+    depends_on("protobuf@3.4:", when="@2022-11-18:")
     depends_on("libarchive", when="@2021-11-12:")
     depends_on("tclap", when="@2021-11-12")
     depends_on("yaml-cpp", when="@2021-11-12:")
@@ -64,6 +64,10 @@ class Mgard(CMakePackage, CudaPackage):
         "~cuda", when="@2021-11-12", msg="without cuda MGARD@2021-11-12 has undefined symbols"
     )
     conflicts("%gcc@:7", when="@2022-11-18:", msg="requires std::optional and other c++17 things")
+    conflicts("protobuf@3.22:", when="target=ppc64le", msg="GCC 9.4 segfault in CI")
+    conflicts("protobuf@3.22:", when="+cuda target=aarch64:", msg="nvcc fails on ARM SIMD headers")
+    # https://github.com/abseil/abseil-cpp/issues/1629
+    conflicts("abseil-cpp@20240116.1", when="+cuda", msg="triggers nvcc parser bug")
 
     def flag_handler(self, name, flags):
         if name == "cxxflags":
