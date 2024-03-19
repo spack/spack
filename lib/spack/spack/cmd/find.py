@@ -144,7 +144,7 @@ def setup_parser(subparser):
         "--install-tree",
         action="store",
         default="all",
-        help="Install trees to query. 'all' (default), 'local', 'upstream', or upstream name"
+        help="Install trees to query. 'all' (default), 'local', 'upstream', or upstream name",
     )
 
     subparser.add_argument("--start-date", help="earliest date of installation [YYYY-MM-DD]")

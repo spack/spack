@@ -90,6 +90,7 @@ def test_query_arguments():
     q_args = query_arguments(args)
     assert q_args["explicit"] is False
 
+
 @pytest.mark.db
 @pytest.mark.usefixtures("database", "mock_display")
 def test_tag1(parser, specs):
