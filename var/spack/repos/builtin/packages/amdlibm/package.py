@@ -8,6 +8,7 @@ import os
 from llnl.util import tty
 
 from spack.package import *
+from spack.util.cpus import determine_number_of_jobs
 
 
 class Amdlibm(SConsPackage):
@@ -65,7 +66,7 @@ class Amdlibm(SConsPackage):
 
     def build_args(self, spec, prefix):
         """Setting build arguments for amdlibm"""
-        args = ["--prefix={0}".format(prefix)]
+        args = [f"-j{determine_number_of_jobs(parallel=True)}", f"--prefix={prefix}"]
 
         if self.spec.satisfies("@4.1: "):
             args.append("--aocl_utils_install_path={0}".format(self.spec["aocl-utils"].prefix))
