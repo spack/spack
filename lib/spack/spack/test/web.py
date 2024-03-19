@@ -6,6 +6,7 @@ import collections
 import email.message
 import os
 import pickle
+import ssl
 import urllib.request
 
 import pytest
@@ -363,3 +364,64 @@ def test_detailed_http_error_pickle(tmpdir):
     assert deserialized.reason == "Not Found"
     assert str(deserialized.info()) == str(headers)
     assert str(deserialized) == str(error)
+
+
+@pytest.mark.parametrize(
+    "cert_path,cert_creator",
+    [
+        pytest.param(
+            lambda base_path: os.path.join(base_path, "mock_cert.crt"),
+            lambda cert_path: open(cert_path, "w").close(),
+            id="cert_file",
+        ),
+        pytest.param(
+            lambda base_path: os.path.join(base_path, "mock_cert"),
+            lambda cert_path: os.mkdir(cert_path),
+            id="cert_directory",
+        ),
+    ],
+)
+def test_ssl_urllib(cert_path, cert_creator, tmpdir, mutable_config):
+    spack.config.set("config:verify_ssl", True)
+    spack.config.set("config:url_fetch_method", "urllib")
+    with tmpdir.as_cwd():
+        mock_cert = cert_path(tmpdir.strpath)
+        cert_creator(mock_cert)
+        assert os.path.isfile(mock_cert) or os.path.isdir(mock_cert)
+        spack.config.set("config:ssl_certs", mock_cert)
+
+        # ideally we would use web.urlopen  and monkeypatch something inside
+        # could potentiall at an attribute instead via PEP232?
+        # a challenge is that everything is cascading functions in our design
+        # so it is not easy to monkeypatch an inspect
+        ssl_context = spack.util.web.urllib_ssl_cert_handler()
+        assert ssl_context.verify_mode == ssl.CERT_REQUIRED
+        # this test is always passing which is not great. haven't found a SSLContext
+        # function or accessible attribute that I can test to trigger a failure
+        assert ssl_context.cert_store_stats()
+
+
+@pytest.mark.parametrize("cert_exists", [True, False], ids=["exists", "missing"])
+def test_ssl_curl_cert_file(cert_exists, tmpdir, mutable_config):
+    """
+    Assure that if a valid cert file is specified curl executes
+    with CURL_CA_BUNDLE in the env
+    """
+    spack.config.set("config:verify_ssl", True)
+    spack.config.set("config:url_fetch_method", "curl")
+    with tmpdir.as_cwd():
+        mock_cert = str(tmpdir.join("mock_cert.crt"))
+        spack.config.set("config:ssl_certs", mock_cert)
+        if cert_exists:
+            open(mock_cert, "w").close()
+            assert os.path.isfile(mock_cert)
+        curl = spack.util.web._curl()
+
+        # arbitrary call to query the run env
+        dump_env = {}
+        curl("--help", _dump_env=dump_env)
+
+        if cert_exists:
+            assert dump_env["CURL_CA_BUNDLE"] == mock_cert
+        else:
+            assert "CURL_CA_BUNDLE" not in dump_env
