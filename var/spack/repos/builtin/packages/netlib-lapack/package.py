@@ -1,4 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,8 +18,6 @@ class NetlibLapack(CMakePackage):
     homepage = "https://www.netlib.org/lapack/"
     url = "https://www.netlib.org/lapack/lapack-3.5.0.tgz"
     tags = ["windows"]
-
-    license("BSD-3-Clause-Open-MPI")
 
     version(
         "3.11.0",
@@ -82,6 +80,7 @@ class NetlibLapack(CMakePackage):
 
     variant("shared", default=True, description="Build shared library version")
     variant("external-blas", default=False, description="Build lapack with an external blas")
+    variant("index64", default=False, description="Build lapack with index-64 integers")
 
     variant("lapacke", default=True, description="Activates the build of the LAPACKE C interface")
     variant("xblas", default=False, description="Builds extended precision routines using XBLAS")
@@ -183,6 +182,7 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
     def cmake_args(self):
         args = [
             self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
+            self.define_from_variant("BUILD_INDEX64", "index64"),
             self.define_from_variant("LAPACKE", "lapacke"),
             self.define_from_variant("LAPACKE_WITH_TMG", "lapacke"),
             self.define("CBLAS", self.spec.satisfies("@3.6.0:")),
