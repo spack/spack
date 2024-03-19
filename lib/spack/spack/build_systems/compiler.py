@@ -73,7 +73,7 @@ class CompilerPackage(spack.package_base.PackageBase):
             output = spack.compiler.get_compiler_version_output(exe, cls.version_argument)
             match = re.search(cls.version_regex, output)
             if match:
-                return match.group(1)
+                return ".".join(match.groups())
         except spack.util.executable.ProcessError:
             pass
         except Exception as e:
