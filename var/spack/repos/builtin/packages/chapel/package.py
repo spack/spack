@@ -16,7 +16,7 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
 
     homepage = "https://chapel-lang.org/"
 
-    url = "https://github.com/chapel-lang/chapel/archive/refs/tags/1.33.0.tar.gz"
+    url = "https://github.com/chapel-lang/chapel/archive/refs/tags/2.0.0.tar.gz"
     git = "https://github.com/chapel-lang/chapel.git"
 
     test_requires_compiler = True
@@ -29,12 +29,11 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
     # See https://spdx.org/licenses/ for a list.
     license("Apache-2.0")
 
-    version("1.34.0", branch="main")
+    version("2.1.0", branch="main")
 
+    version("2.0.0", sha256="a8cab99fd034c7b7229be8d4626ec95cf02072646fb148c74b4f48c460c6059c")
     version("1.33.0", sha256="c7dfe691a043b6a5dcbea6fe7607ca030014f1a8019744c4c99f67caa8829ba3")
     version("1.32.0", sha256="a359032b4355774e250fb2796887b3bbf58d010c468faba97f7b471bc6bab57d")
-    version("1.31.0", sha256="bf9a63f7e5d1f247e8680c9a07aeb330cbbf199777a282408100a87dda95918f")
-    version("1.30.0", sha256="d7d82f64f405b8c03e2ce6353d16aba5a261d3f0c63dc3bb64ea3841cfa597b9")
 
     compilers = (
         "allinea",
@@ -402,8 +401,14 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
 
     conflicts(
         "chpldoc",
-        when="@:1.34.0",
-        msg="chpldoc has no effect and is installed by default on versions prior to 1.34.0",
+        when="@:2.0.0",
+        msg="chpldoc has no effect and is installed by default on versions prior to 2.0.0",
+    )
+
+    conflicts(
+        "^python@3.12:",
+        when="@:2.1.0",
+        msg="Chapel versions prior to 2.1.0 may produce SyntaxWarnings with Python >= 3.12",
     )
 
     with when("llvm=none"):
@@ -566,7 +571,7 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
     @llnl.util.lang.memoized
     def _output_version_long(self):
         if str(self.spec.version).lower() == "main":
-            return "1.34.0"
+            return "2.1.0"
         spec_vers_str = str(self.spec.version.up_to(3))
         return spec_vers_str
 
@@ -574,7 +579,7 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
     @llnl.util.lang.memoized
     def _output_version_short(self):
         if str(self.spec.version).lower() == "main":
-            return "1.34"
+            return "2.1"
         spec_vers_str = str(self.spec.version.up_to(2))
         return spec_vers_str
 
