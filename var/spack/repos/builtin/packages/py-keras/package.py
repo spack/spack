@@ -19,6 +19,9 @@ class PyKeras(PythonPackage):
     git = "https://github.com/keras-team/keras.git"
     pypi = "keras/keras-3.0.0.tar.gz"
 
+    maintainers("adamjstewart")
+    license("Apache-2.0")
+
     version("3.1.0", sha256="cac46e053f0493da313e7c9b16379a532b1a38f9f19c7a5fe4578759f4c6aa4d")
     version("3.0.5", sha256="df3d3795e12c3f6035e811c43c13f1eb41e37241796a0fea120ede4ebe1c4496")
     version("3.0.4", sha256="ff2204792582e3889c51c77722cc6e8258dbb1ece7db192f5a9bcd1887cf3385")
