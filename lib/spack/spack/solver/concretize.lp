@@ -80,6 +80,7 @@ unification_set(SetID, VirtualNode)
 
 
 #defined multiple_unification_sets/1.
+#defined runtime/1.
 
 %----
 % Rules to break symmetry and speed-up searches
@@ -1522,9 +1523,10 @@ opt_criterion(25, "version badness").
 #minimize{ 0@225: #true }.
 #minimize{ 0@25: #true }.
 #minimize{
-    Weight@25+Priority,PackageNode
-    : version_weight(PackageNode, Weight),
-      build_priority(PackageNode, Priority)
+    Weight@25+Priority,node(X, Package)
+    : version_weight(node(X, Package), Weight),
+      build_priority(node(X, Package), Priority),
+      not runtime(Package)
 }.
 
 % Try to use all the default values of variants
@@ -1566,6 +1568,16 @@ opt_criterion(5, "non-preferred targets").
     Weight@5+Priority,PackageNode
     : node_target_weight(PackageNode, Weight),
       build_priority(PackageNode, Priority)
+}.
+
+% Choose more recent versions for runtimes
+opt_criterion(2, "version badness (runtimes)").
+#minimize{ 0@202: #true }.
+#minimize{ 0@2: #true }.
+#minimize{
+    Weight@2,node(X, Package)
+    : version_weight(node(X, Package), Weight),
+      runtime(Package)
 }.
 
 % Choose more recent versions for nodes
