@@ -1496,7 +1496,7 @@ opt_criterion(40, "compiler mismatches that are not from CLI").
 #minimize{
     1@40+Priority,PackageNode,DependencyNode
     : compiler_mismatch(PackageNode, DependencyNode),
-      build_priority(PackageNode, Priority)
+      build_priority(DependencyNode, Priority)
 }.
 
 opt_criterion(39, "compiler mismatches that are not from CLI").
@@ -1505,7 +1505,7 @@ opt_criterion(39, "compiler mismatches that are not from CLI").
 #minimize{
     1@39+Priority,PackageNode,DependencyNode
     : compiler_mismatch_required(PackageNode, DependencyNode),
-      build_priority(PackageNode, Priority)
+      build_priority(DependencyNode, Priority)
 }.
 
 opt_criterion(30, "non-preferred OS's").
@@ -1554,9 +1554,9 @@ opt_criterion(10, "target mismatches").
 #minimize{ 0@210: #true }.
 #minimize{ 0@10: #true }.
 #minimize{
-    1@10+Priority,PackageNode,Dependency
-    : node_target_mismatch(PackageNode, Dependency),
-      build_priority(PackageNode, Priority)
+    1@10+Priority,PackageNode,DependencyNode
+    : node_target_mismatch(PackageNode, DependencyNode),
+      build_priority(DependencyNode, Priority)
 }.
 
 opt_criterion(5, "non-preferred targets").
