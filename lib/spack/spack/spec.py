@@ -2947,14 +2947,6 @@ class Spec:
     def _new_concretize(self, tests=False):
         import spack.solver.asp
 
-        self.replace_hash()
-
-        for node in self.traverse():
-            if not node.name:
-                raise spack.error.SpecError(
-                    f"Spec {node} has no name; cannot concretize an anonymous spec"
-                )
-
         if self._concrete:
             return
 
@@ -2965,19 +2957,15 @@ class Spec:
 
         # take the best answer
         opt, i, answer = min(result.answers)
-        name = self.name
-        # TODO: Consolidate this code with similar code in solve.py
-        if self.virtual:
-            providers = [spec.name for spec in answer.values() if spec.package.provides(name)]
-            name = providers[0]
 
-        node = spack.solver.asp.SpecBuilder.make_node(pkg=name)
-        assert (
-            node in answer
-        ), f"cannot find {name} in the list of specs {','.join([n.pkg for n in answer.keys()])}"
+        for output in answer.values():
+            if output.satisfies(self):
+                self._dup(output)
+                return
 
-        concretized = answer[node]
-        self._dup(concretized)
+        raise RuntimeError(
+            f"cannot match {self} in the list of specs {','.join([n.pkg for n in answer.keys()])}"
+        )
 
     def concretize(self, tests=False):
         """Concretize the current spec.

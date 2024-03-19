@@ -179,7 +179,7 @@ def test_force_uninstall_and_reinstall_by_hash(mutable_database):
     assert len(mpi_specs) == 3
 
     # Now, REINSTALL the spec and make sure everything still holds
-    install("--fake", "/%s" % dag_hash[:7])
+    install("--fake", f"/{dag_hash[:7]}")
 
     validate_callpath_spec(True)
 

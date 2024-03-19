@@ -288,17 +288,26 @@ def extend_flag_list(flag_list, new_flags):
 def check_packages_exist(specs):
     """Ensure all packages mentioned in specs exist."""
     repo = spack.repo.PATH
-    for spec in specs:
-        for s in spec.traverse():
-            try:
-                check_passed = repo.repo_for_pkg(s).exists(s.name) or repo.is_virtual(s.name)
-            except Exception as e:
-                msg = "Cannot find package: {0}".format(str(e))
-                check_passed = False
-                tty.debug(msg)
+    for s in traverse.traverse_nodes(specs):
+        try:
+            check_passed = repo.repo_for_pkg(s).exists(s.name) or repo.is_virtual(s.name)
+        except Exception as e:
+            check_passed = False
+            tty.debug(f"Cannot find package: {e}")
 
-            if not check_passed:
-                raise spack.repo.UnknownPackageError(str(s.fullname))
+        if not check_passed:
+            raise spack.repo.UnknownPackageError(str(s.fullname))
+
+
+def _check_input_and_extract_concrete_specs(specs):
+    reusable = []
+    for s in traverse.traverse_nodes(specs):
+        if s.virtual:
+            continue
+        if s.concrete:
+            reusable.append(s)
+        spack.spec.Spec.ensure_valid_variants(s)
+    return reusable
 
 
 class Result:
@@ -460,20 +469,16 @@ class Result:
         self._concrete_specs_by_input = {}
         best = min(self.answers)
         opt, _, answer = best
-        for input_spec in self.abstract_specs:
-            node = SpecBuilder.make_node(pkg=input_spec.name)
-            if input_spec.virtual:
-                providers = [
-                    spec.name for spec in answer.values() if spec.package.provides(input_spec.name)
-                ]
-                node = SpecBuilder.make_node(pkg=providers[0])
-            candidate = answer.get(node)
 
-            if candidate and candidate.satisfies(input_spec):
-                self._concrete_specs.append(answer[node])
-                self._concrete_specs_by_input[input_spec] = answer[node]
+        # todo: solver should give a unique matching
+        for input in self.abstract_specs:
+            for output in answer.values():
+                if output.satisfies(input):
+                    self._concrete_specs.append(output)
+                    self._concrete_specs_by_input[input] = output
+                    break
             else:
-                self._unsolved_specs.append((input_spec, candidate))
+                self._unsolved_specs.append((input, None))
 
     @staticmethod
     def format_unsolved(unsolved_specs):
@@ -2264,10 +2269,9 @@ class SpackSolverSetup:
 
     def define_concrete_input_specs(self, specs, possible):
         # any concrete specs in the input spec list
-        for input_spec in specs:
-            for spec in input_spec.traverse():
-                if spec.concrete:
-                    self.register_concrete_spec(spec, possible)
+        for spec in traverse.traverse_nodes(specs):
+            if spec.concrete:
+                self.register_concrete_spec(spec, possible)
 
     def setup(
         self,
@@ -2287,7 +2291,10 @@ class SpackSolverSetup:
             reuse: list of concrete specs that can be reused
             allow_deprecated: if True adds deprecated versions into the solve
         """
+        specs = [s.lookup_hash() for s in specs]
         check_packages_exist(specs)
+        reuse = reuse or []
+        reuse.extend(_check_input_and_extract_concrete_specs(specs))
 
         node_counter = _create_counter(specs, tests=self.tests)
         self.possible_virtuals = node_counter.possible_virtuals()
@@ -2303,7 +2310,7 @@ class SpackSolverSetup:
             if missing_deps:
                 raise spack.spec.InvalidDependencyError(spec.name, missing_deps)
 
-        for node in spack.traverse.traverse_nodes(specs):
+        for node in traverse.traverse_nodes(specs):
             if node.namespace is not None:
                 self.explicitly_required_namespaces[node.name] = node.namespace
 
@@ -3363,18 +3370,6 @@ class Solver:
         # by setting them directly as properties.
         self.reuse = spack.config.get("concretizer:reuse", False)
 
-    @staticmethod
-    def _check_input_and_extract_concrete_specs(specs):
-        reusable = []
-        for root in specs:
-            for s in root.traverse():
-                if s.virtual:
-                    continue
-                if s.concrete:
-                    reusable.append(s)
-                spack.spec.Spec.ensure_valid_variants(s)
-        return reusable
-
     def _reusable_specs(self, specs):
         reusable_specs = []
         if self.reuse:
@@ -3431,13 +3426,14 @@ class Solver:
           allow_deprecated (bool): allow deprecated version in the solve
         """
         # Check upfront that the variants are admissible
-        specs = [s.lookup_hash() for s in specs]
-        reusable_specs = self._check_input_and_extract_concrete_specs(specs)
-        reusable_specs.extend(self._reusable_specs(specs))
         setup = SpackSolverSetup(tests=tests)
         output = OutputConfiguration(timers=timers, stats=stats, out=out, setup_only=setup_only)
         result, _, _ = self.driver.solve(
-            setup, specs, reuse=reusable_specs, output=output, allow_deprecated=allow_deprecated
+            setup,
+            specs,
+            reuse=self._reusable_specs(specs),
+            output=output,
+            allow_deprecated=allow_deprecated,
         )
         return result
 
@@ -3460,9 +3456,7 @@ class Solver:
             tests (bool): add test dependencies to the solve
             allow_deprecated (bool): allow deprecated version in the solve
         """
-        specs = [s.lookup_hash() for s in specs]
-        reusable_specs = self._check_input_and_extract_concrete_specs(specs)
-        reusable_specs.extend(self._reusable_specs(specs))
+        reusable_specs = self._reusable_specs(specs)
         setup = SpackSolverSetup(tests=tests)
 
         # Tell clingo that we don't have to solve all the inputs at once
