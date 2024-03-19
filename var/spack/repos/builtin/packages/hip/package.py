@@ -461,8 +461,7 @@ class Hip(CMakePackage):
         self.setup_dependent_build_environment(env, dependent_spec)
 
     def setup_dependent_package(self, module, dependent_spec):
-        if self.spec.satisfies("@:5.7"):
-            self.spec.hipcc = join_path(self.prefix.bin, "hipcc")
+        self.spec.hipcc = join_path(self.prefix.bin, "hipcc")
 
     def patch(self):
         if self.spec.satisfies("@5.2:5.4 +rocm"):
