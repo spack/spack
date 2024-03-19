@@ -826,7 +826,7 @@ class PyclingoDriver:
         if result.satisfiable and result.unsolved_specs and setup.concretize_everything:
             tty.error(
                 "resolved spec does not satisfy input spec, which may be caused by a bug in the "
-                " solver. Please open an issue at https://github.com/spack/spack/issues\n\t"
+                "solver. Please open an issue at https://github.com/spack/spack/issues\n\t"
                 f"{Result.format_unsolved(result.unsolved_specs)}"
             )
 
