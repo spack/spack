@@ -29,7 +29,7 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
     # See https://spdx.org/licenses/ for a list.
     license("Apache-2.0")
 
-    version("2.1.0", branch="main")
+    version("main", branch="main")
 
     version("2.0.0", sha256="a8cab99fd034c7b7229be8d4626ec95cf02072646fb148c74b4f48c460c6059c")
     version("1.33.0", sha256="c7dfe691a043b6a5dcbea6fe7607ca030014f1a8019744c4c99f67caa8829ba3")
@@ -401,7 +401,7 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
 
     conflicts(
         "chpldoc",
-        when="@:2.0.0",
+        when="@:1.9.9",
         msg="chpldoc has no effect and is installed by default on versions prior to 2.0.0",
     )
 
