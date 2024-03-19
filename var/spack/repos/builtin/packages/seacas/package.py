@@ -367,9 +367,8 @@ class Seacas(CMakePackage):
                 [define("TPL_ENABLE_METIS", False), define("TPL_ENABLE_ParMETIS", False)]
             )
 
-        if "+pamgen" in self.spec:
-            options.append(from_variant(f"{project_name_base}_ENABLE_Pamgen", "pamgen"))
-            options.append(from_variant("TPL_ENABLE_Pamgen", "pamgen"))
+        options.append(from_variant(f"{project_name_base}_ENABLE_Pamgen", "pamgen"))
+        options.append(from_variant("TPL_ENABLE_Pamgen", "pamgen"))
 
         options.append(from_variant("TPL_ENABLE_Matio", "matio"))
         if "+matio" in spec:
