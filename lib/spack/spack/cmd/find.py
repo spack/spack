@@ -141,10 +141,10 @@ def setup_parser(subparser):
         "--only-deprecated", action="store_true", help="show only deprecated packages"
     )
     subparser.add_argument(
-        "--local", action="store_true", help="Only show packages from the local database"
-    )
-    subparser.add_argument(
-        "--upstream", action="store_true", help="Only show packages from upstreams"
+        "--install-tree",
+        action="store",
+        default="all",
+        help="Install trees to query. 'all' (default), 'local', 'upstream', or upstream name"
     )
 
     subparser.add_argument("--start-date", help="earliest date of installation [YYYY-MM-DD]")
@@ -176,8 +176,7 @@ def query_arguments(args):
         "installed": installed,
         "known": known,
         "explicit": explicit,
-        "local": not args.upstream,
-        "upstream": not args.local,
+        "install_tree": args.install_tree,
     }
 
     # Time window of installation

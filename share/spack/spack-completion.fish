@@ -1709,7 +1709,7 @@ complete -c spack -n '__fish_spack_using_command fetch' -s D -l dependencies -f 
 complete -c spack -n '__fish_spack_using_command fetch' -s D -l dependencies -d 'also fetch all dependencies'
 
 # spack find
-set -g __fish_spack_optspecs_spack_find h/help format= H/hashes json d/deps p/paths groups no-groups l/long L/very-long t/tag= N/namespaces c/show-concretized f/show-flags show-full-compiler x/explicit X/implicit u/unknown m/missing v/variants loaded M/only-missing deprecated only-deprecated local upstream start-date= end-date=
+set -g __fish_spack_optspecs_spack_find h/help format= H/hashes json d/deps p/paths groups no-groups l/long L/very-long t/tag= N/namespaces c/show-concretized f/show-flags show-full-compiler x/explicit X/implicit u/unknown m/missing v/variants loaded M/only-missing deprecated only-deprecated install-tree= start-date= end-date=
 complete -c spack -n '__fish_spack_using_command_pos_remainder 0 find' -f -a '(__fish_spack_installed_specs)'
 complete -c spack -n '__fish_spack_using_command find' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command find' -s h -l help -d 'show this help message and exit'
@@ -1759,10 +1759,8 @@ complete -c spack -n '__fish_spack_using_command find' -l deprecated -f -a depre
 complete -c spack -n '__fish_spack_using_command find' -l deprecated -d 'show deprecated packages as well as installed specs'
 complete -c spack -n '__fish_spack_using_command find' -l only-deprecated -f -a only_deprecated
 complete -c spack -n '__fish_spack_using_command find' -l only-deprecated -d 'show only deprecated packages'
-complete -c spack -n '__fish_spack_using_command find' -l local -f -a local
-complete -c spack -n '__fish_spack_using_command find' -l local -d 'Only show packages from the local database'
-complete -c spack -n '__fish_spack_using_command find' -l upstream -f -a upstream
-complete -c spack -n '__fish_spack_using_command find' -l upstream -d 'Only show packages from upstreams'
+complete -c spack -n '__fish_spack_using_command find' -l install-tree -r -f -a install_tree
+complete -c spack -n '__fish_spack_using_command find' -l install-tree -r -d 'Install trees to query. \'all\' (default), \'local\', \'upstream\', or upstream name'
 complete -c spack -n '__fish_spack_using_command find' -l start-date -r -f -a start_date
 complete -c spack -n '__fish_spack_using_command find' -l start-date -r -d 'earliest date of installation [YYYY-MM-DD]'
 complete -c spack -n '__fish_spack_using_command find' -l end-date -r -f -a end_date

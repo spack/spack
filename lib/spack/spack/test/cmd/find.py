@@ -64,7 +64,7 @@ def test_query_arguments():
         implicit=False,
         start_date="2018-02-23",
         end_date=None,
-        local=None,
+        install_tree="all",
         upstream=None,
     )
 
@@ -77,7 +77,7 @@ def test_query_arguments():
     assert q_args["explicit"] is any
     assert "start_date" in q_args
     assert "end_date" not in q_args
-    assert q_args["local"] is True
+    assert q_args["local"] == "all"
     assert q_args["upstream"] is True
 
     # Check that explicit works correctly
@@ -89,18 +89,6 @@ def test_query_arguments():
     args.implicit = True
     q_args = query_arguments(args)
     assert q_args["explicit"] is False
-
-    # Check that local/upstream work correctly
-    args.local = True
-    q_args = query_arguments(args)
-    assert q_args["upstream"] is False
-
-    args.upstream = True
-    args.local = False
-    q_args = query_arguments(args)
-    assert q_args["local"] is False
-    assert q_args["upstream"] is True
-
 
 @pytest.mark.db
 @pytest.mark.usefixtures("database", "mock_display")
