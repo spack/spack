@@ -16,6 +16,5 @@ class PyPycm(PythonPackage):
 
     version("4.0", sha256="839e217eeb9a093be633ea746c5ca8b7ab6591d978762face892473c9f28959d")
 
-    depends_on("python", type=("build", "run"))
     depends_on("py-art@1.8:", type=("build", "run"))
     depends_on("py-numpy@1.9.0:", type=("build", "run"))
