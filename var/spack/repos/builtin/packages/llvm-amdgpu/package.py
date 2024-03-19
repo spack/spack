@@ -49,8 +49,7 @@ class LlvmAmdgpu(CMakePackage):
         "rocm-device-libs",
         default=True,
         description=(
-            "Build ROCm device libs as external LLVM project instead of a "
-            "standalone spack package."
+            "Build ROCm device libs as external LLVM project instead of a " "standalone spack package."
         ),
     )
     variant(
@@ -60,9 +59,7 @@ class LlvmAmdgpu(CMakePackage):
         "components in a single shared library",
     )
     variant(
-        "link_llvm_dylib",
-        default=False,
-        description="Link LLVM tools against the LLVM shared library",
+        "link_llvm_dylib", default=False, description="Link LLVM tools against the LLVM shared library"
     )
 
     provides("libllvm@14", when="@5:5.2")

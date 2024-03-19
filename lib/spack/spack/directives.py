@@ -49,13 +49,7 @@ import spack.variant
 from spack.dependency import Dependency
 from spack.fetch_strategy import from_kwargs
 from spack.resource import Resource
-from spack.version import (
-    GitVersion,
-    Version,
-    VersionChecksumError,
-    VersionError,
-    VersionLookupError,
-)
+from spack.version import GitVersion, Version, VersionChecksumError, VersionError, VersionLookupError
 
 if TYPE_CHECKING:
     import spack.package_base
@@ -174,9 +168,7 @@ class DirectiveMeta(type):
         # Move things to be executed from module scope (where they
         # are collected first) to class scope
         if DirectiveMeta._directives_to_be_executed:
-            attr_dict["_directives_to_be_executed"].extend(
-                DirectiveMeta._directives_to_be_executed
-            )
+            attr_dict["_directives_to_be_executed"].extend(DirectiveMeta._directives_to_be_executed)
             DirectiveMeta._directives_to_be_executed = []
 
         return super(DirectiveMeta, cls).__new__(cls, name, bases, attr_dict)
@@ -873,9 +865,7 @@ def resource(**kwargs):
 
         # Check if the path is relative
         if os.path.isabs(destination):
-            message = (
-                "The destination keyword of a resource directive " "can't be an absolute path.\n"
-            )
+            message = "The destination keyword of a resource directive " "can't be an absolute path.\n"
             message += "\tdestination : '{dest}\n'".format(dest=destination)
             raise RuntimeError(message)
 

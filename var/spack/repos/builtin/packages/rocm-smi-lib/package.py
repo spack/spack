@@ -64,9 +64,7 @@ class RocmSmiLib(CMakePackage):
     def determine_version(cls, lib):
         match = re.search(r"lib\S*\.so\.\d+\.\d+\.(\d)(\d\d)(\d\d)", lib)
         if match:
-            return "{0}.{1}.{2}".format(
-                int(match.group(1)), int(match.group(2)), int(match.group(3))
-            )
+            return "{0}.{1}.{2}".format(int(match.group(1)), int(match.group(2)), int(match.group(3)))
         return None
 
     @run_after("install")

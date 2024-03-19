@@ -235,7 +235,9 @@ class PySetuptools(Package, PythonExtension):
     depends_on("py-pip", type="build")
 
     def url_for_version(self, version):
-        url = "https://files.pythonhosted.org/packages/{0}/s/setuptools/setuptools-{1}-{0}-none-any.whl"
+        url = (
+            "https://files.pythonhosted.org/packages/{0}/s/setuptools/setuptools-{1}-{0}-none-any.whl"
+        )
 
         if version >= Version("45.1.0"):
             python_tag = "py3"

@@ -53,8 +53,7 @@ class Nlcglib(CMakePackage, CudaPackage, ROCmPackage):
 
     for arch in CudaPackage.cuda_arch_values:
         depends_on(
-            f"kokkos+cuda+cuda_lambda+wrapper cuda_arch={arch}",
-            when=f"%gcc +cuda cuda_arch={arch}",
+            f"kokkos+cuda+cuda_lambda+wrapper cuda_arch={arch}", when=f"%gcc +cuda cuda_arch={arch}"
         )
         depends_on(f"kokkos+cuda cuda_arch={arch}", when=f"+cuda cuda_arch={arch}")
 
@@ -100,8 +99,6 @@ class Nlcglib(CMakePackage, CudaPackage, ROCmPackage):
             options.append(self.define("CMAKE_CXX_COMPILER", self.spec["hip"].hipcc))
             archs = ",".join(self.spec.variants["amdgpu_target"].value)
             options.append("-DHIP_HCC_FLAGS=--amdgpu-target={0}".format(archs))
-            options.append(
-                "-DCMAKE_CXX_FLAGS=--amdgpu-target={0} --offload-arch={0}".format(archs)
-            )
+            options.append("-DCMAKE_CXX_FLAGS=--amdgpu-target={0} --offload-arch={0}".format(archs))
 
         return options

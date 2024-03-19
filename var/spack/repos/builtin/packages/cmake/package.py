@@ -201,14 +201,10 @@ class Cmake(Package):
     # the build.
     variant("ownlibs", default=True, description="Use CMake-provided third-party libraries")
     variant(
-        "doc",
-        default=False,
-        description="Enables the generation of html and man page documentation",
+        "doc", default=False, description="Enables the generation of html and man page documentation"
     )
     variant(
-        "ncurses",
-        default=sys.platform != "win32",
-        description="Enables the build of the ncurses gui",
+        "ncurses", default=sys.platform != "win32", description="Enables the build of the ncurses gui"
     )
 
     # See https://gitlab.kitware.com/cmake/cmake/-/issues/21135
@@ -347,9 +343,7 @@ class Cmake(Package):
             args.append("--prefix={0}".format(self.prefix))
 
             jobs = spack.build_environment.get_effective_jobs(
-                make_jobs,
-                parallel=self.parallel,
-                supports_jobserver=self.generator.supports_jobserver,
+                make_jobs, parallel=self.parallel, supports_jobserver=self.generator.supports_jobserver
             )
             if jobs is not None:
                 args.append("--parallel={0}".format(jobs))

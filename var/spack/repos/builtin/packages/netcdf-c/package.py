@@ -533,9 +533,7 @@ class AutotoolsBuilder(BaseBuilder, autotools.AutotoolsBuilder):
         lib_search_dirs.extend(d for libs in extra_libs for d in libs.directories)
         # Remove duplicates and system prefixes:
         lib_search_dirs = filter_system_paths(dedupe(lib_search_dirs))
-        config_args.append(
-            "LDFLAGS={0}".format(" ".join("-L{0}".format(d) for d in lib_search_dirs))
-        )
+        config_args.append("LDFLAGS={0}".format(" ".join("-L{0}".format(d) for d in lib_search_dirs)))
 
         extra_lib_names = [n for libs in extra_libs for n in libs.names]
         # Remove duplicates in the reversed order:

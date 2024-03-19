@@ -52,9 +52,7 @@ class Rpp(CMakePackage):
     variant("hip", default=True, description="Use HIP as backend")
     variant("cpu", default=False, description="Use CPU as backend")
     variant(
-        "add_tests",
-        default=False,
-        description="add utilities folder which contains rpp unit tests",
+        "add_tests", default=False, description="add utilities folder which contains rpp unit tests"
     )
 
     patch("0001-include-half-openmp-through-spack-package.patch", when="@:5.7")
@@ -72,10 +70,7 @@ class Rpp(CMakePackage):
             )
         if self.spec.satisfies("+opencl"):
             filter_file(
-                "${ROCM_PATH}",
-                self.spec["rocm-opencl"].prefix,
-                "cmake/FindOpenCL.cmake",
-                string=True,
+                "${ROCM_PATH}", self.spec["rocm-opencl"].prefix, "cmake/FindOpenCL.cmake", string=True
             )
         if self.spec.satisfies("+add_tests"):
             filter_file(
@@ -146,9 +141,7 @@ class Rpp(CMakePackage):
             args.append(self.define("BACKEND", "HIP"))
             args.append(self.define("HIP_PATH", spec["hip"].prefix))
             args.append(
-                self.define(
-                    "COMPILER_FOR_HIP", "{0}/bin/clang++".format(spec["llvm-amdgpu"].prefix)
-                )
+                self.define("COMPILER_FOR_HIP", "{0}/bin/clang++".format(spec["llvm-amdgpu"].prefix))
             )
         return args
 
