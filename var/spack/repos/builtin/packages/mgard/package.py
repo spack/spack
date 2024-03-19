@@ -73,6 +73,8 @@ class Mgard(CMakePackage, CudaPackage):
         if name == "cxxflags":
             if self.spec.satisfies("@2020-10-01 %oneapi@2023:"):
                 flags.append("-Wno-error=c++11-narrowing")
+            if self.spec.satisfies("@2020-10-01 %apple-clang@15:"):
+                flags.append("-Wno-error=c++11-narrowing")
         return (flags, None, None)
 
     def cmake_args(self):
