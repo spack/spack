@@ -366,6 +366,15 @@ def test_detailed_http_error_pickle(tmpdir):
     assert str(deserialized) == str(error)
 
 
+@pytest.fixture()
+def ssl_scrubbed_env(mutable_config, monkeypatch):
+    """clear out environment variables that could give false positives for SSL Cert tests"""
+    monkeypatch.delenv("SSL_CERT_FILE", raising=False)
+    monkeypatch.delenv("SSL_CERT_DIR", raising=False)
+    monkeypatch.delenv("CURL_CA_BUNDLE", raising=False)
+    spack.config.set("config:verify_ssl", True)
+
+
 @pytest.mark.parametrize(
     "cert_path,cert_creator",
     [
@@ -381,33 +390,41 @@ def test_detailed_http_error_pickle(tmpdir):
         ),
     ],
 )
-def test_ssl_urllib(cert_path, cert_creator, tmpdir, mutable_config):
-    spack.config.set("config:verify_ssl", True)
+def test_ssl_urllib(
+    cert_path, cert_creator, tmpdir, ssl_scrubbed_env, mutable_config, monkeypatch
+):
+    """
+    create a proposed cert type and then verify that they exist inside ssl's checks
+    """
     spack.config.set("config:url_fetch_method", "urllib")
+
+    def mock_verify_locations(self, cafile, capath, cadata):
+        """overwrite ssl's verification to simply check for valid file/path"""
+        assert cafile or capath
+        if cafile:
+            assert os.path.isfile(cafile)
+        if capath:
+            assert os.path.isdir(capath)
+
+    monkeypatch.setattr(ssl.SSLContext, "load_verify_locations", mock_verify_locations)
+
     with tmpdir.as_cwd():
         mock_cert = cert_path(tmpdir.strpath)
         cert_creator(mock_cert)
-        assert os.path.isfile(mock_cert) or os.path.isdir(mock_cert)
         spack.config.set("config:ssl_certs", mock_cert)
 
-        # ideally we would use web.urlopen  and monkeypatch something inside
-        # could potentiall at an attribute instead via PEP232?
-        # a challenge is that everything is cascading functions in our design
-        # so it is not easy to monkeypatch an inspect
+        assert mock_cert == spack.config.get("config:ssl_certs", None)
+
         ssl_context = spack.util.web.urllib_ssl_cert_handler()
         assert ssl_context.verify_mode == ssl.CERT_REQUIRED
-        # this test is always passing which is not great. haven't found a SSLContext
-        # function or accessible attribute that I can test to trigger a failure
-        assert ssl_context.cert_store_stats()
 
 
 @pytest.mark.parametrize("cert_exists", [True, False], ids=["exists", "missing"])
-def test_ssl_curl_cert_file(cert_exists, tmpdir, mutable_config):
+def test_ssl_curl_cert_file(cert_exists, tmpdir, ssl_scrubbed_env, mutable_config, monkeypatch):
     """
     Assure that if a valid cert file is specified curl executes
     with CURL_CA_BUNDLE in the env
     """
-    spack.config.set("config:verify_ssl", True)
     spack.config.set("config:url_fetch_method", "curl")
     with tmpdir.as_cwd():
         mock_cert = str(tmpdir.join("mock_cert.crt"))
@@ -419,7 +436,7 @@ def test_ssl_curl_cert_file(cert_exists, tmpdir, mutable_config):
 
         # arbitrary call to query the run env
         dump_env = {}
-        curl("--help", _dump_env=dump_env)
+        curl("--help", output=str, _dump_env=dump_env)
 
         if cert_exists:
             assert dump_env["CURL_CA_BUNDLE"] == mock_cert
