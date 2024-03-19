@@ -28,12 +28,7 @@ class PyJupyterServer(PythonPackage):
     version("1.9.0", sha256="7d19006380f6217458a9db309b54e3dab87ced6c06329c61823907bef2a6f51b")
     version("1.6.1", sha256="242ddd0b644f10e030f917019b47c381e0f2d2b950164af45cbd791d572198ac")
 
-    variant(
-        "typescript",
-        default=False,
-        description="Build the typescript code",
-        when="@:1",
-    )
+    variant("typescript", default=False, description="Build the typescript code", when="@:1")
 
     # https://github.com/spack/spack/issues/41899
     patch("no_npm_node.patch", when="@:1 ~typescript")
