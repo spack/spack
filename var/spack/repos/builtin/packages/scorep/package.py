@@ -144,6 +144,8 @@ class Scorep(AutotoolsPackage):
     # does not work on macOS
     # https://github.com/spack/spack/issues/1609
     conflicts("platform=darwin")
+    # Score-P first has support for ROCm 6.x as of v8.4
+    conflicts("hip@6.0:", when="@1.0:8.3+hip")
 
     def find_libpath(self, libname, root):
         libs = find_libraries(libname, root, shared=True, recursive=True)
