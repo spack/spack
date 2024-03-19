@@ -22,7 +22,7 @@ import spack.stage
 import spack.util.executable
 import spack.util.url as url_util
 from spack.resource import Resource
-from spack.stage import DIYStage, ResourceStage, Stage, StageComposite
+from spack.stage import DevelopStage, DIYStage, ResourceStage, Stage, StageComposite
 from spack.util.path import canonicalize_path
 
 # The following values are used for common fetch and stage mocking fixtures:
@@ -145,7 +145,7 @@ def check_destroy(stage, stage_name):
     assert not os.path.exists(stage_path)
 
     # tmp stage needs to remove tmp dir too.
-    if not stage.managed_by_spack:
+    if not isinstance(stage, DIYStage):
         target = os.path.realpath(stage_path)
         assert not os.path.exists(target)
 
@@ -855,6 +855,73 @@ class TestStage:
         assert os.path.isfile(readmefn)
         with open(readmefn) as _file:
             _file.read() == _readme_contents
+
+
+def _create_files_from_tree(base, tree):
+    for name, content in tree.items():
+        sub_base = os.path.join(base, name)
+        if isinstance(content, dict):
+            os.mkdir(sub_base)
+            _create_files_from_tree(sub_base, content)
+        else:
+            assert (content is None) or (isinstance(content, str))
+            with open(sub_base, "w") as f:
+                if content:
+                    f.write(content)
+
+
+def _create_tree_from_dir_recursive(path):
+    if os.path.islink(path):
+        return os.readlink(path)
+    elif os.path.isdir(path):
+        tree = {}
+        for name in os.listdir(path):
+            sub_path = os.path.join(path, name)
+            tree[name] = _create_tree_from_dir_recursive(sub_path)
+        return tree
+    else:
+        with open(path, "r") as f:
+            content = f.read() or None
+        return content
+
+
+@pytest.fixture
+def develop_path(tmpdir):
+    dir_structure = {"a1": {"b1": None, "b2": "b1content"}, "a2": None}
+    srcdir = str(tmpdir.join("test-src"))
+    os.mkdir(srcdir)
+    _create_files_from_tree(srcdir, dir_structure)
+    yield dir_structure, srcdir
+
+
+class TestDevelopStage:
+    def test_sanity_check_develop_path(self, develop_path):
+        _, srcdir = develop_path
+        with open(os.path.join(srcdir, "a1", "b2")) as f:
+            assert f.read() == "b1content"
+
+        assert os.path.exists(os.path.join(srcdir, "a2"))
+
+    def test_develop_stage(self, develop_path, tmp_build_stage_dir):
+        """Check that (a) develop stages update the given
+        `dev_path` with a symlink that points to the stage dir and
+        (b) that destroying the stage does not destroy `dev_path`
+        """
+        devtree, srcdir = develop_path
+        stage = DevelopStage("test-stage", srcdir, reference_link="link-to-stage")
+        stage.create()
+        srctree1 = _create_tree_from_dir_recursive(stage.source_path)
+        assert os.path.samefile(srctree1["link-to-stage"], stage.path)
+        del srctree1["link-to-stage"]
+        assert srctree1 == devtree
+
+        stage.destroy()
+        # Make sure destroying the stage doesn't change anything
+        # about the path
+        assert not os.path.exists(stage.path)
+        srctree2 = _create_tree_from_dir_recursive(srcdir)
+        del srctree2["link-to-stage"]  # Note the symlink persists but is broken
+        assert srctree2 == devtree
 
 
 def test_stage_create_replace_path(tmp_build_stage_dir):

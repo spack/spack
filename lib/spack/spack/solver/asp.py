@@ -823,11 +823,12 @@ class PyclingoDriver:
             print("Statistics:")
             pprint.pprint(self.control.statistics)
 
-        if result.unsolved_specs and setup.concretize_everything:
+        if result.satisfiable and result.unsolved_specs and setup.concretize_everything:
             unsolved_str = Result.format_unsolved(result.unsolved_specs)
             raise InternalConcretizerError(
                 "Internal Spack error: the solver completed but produced specs"
-                f" that do not satisfy the request.\n\t{unsolved_str}"
+                " that do not satisfy the request. Please report a bug at "
+                f"https://github.com/spack/spack/issues\n\t{unsolved_str}"
             )
 
         return result, timer, self.control.statistics
