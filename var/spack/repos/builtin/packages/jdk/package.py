@@ -31,7 +31,7 @@ class Jdk(Package):
     )
 
     provides("java@21", when="@21")
-    provides("java@17", when="@1.7")
+    provides("java@17", when="@17")
 
     requires("target=x86_64:", msg="binaries only availble for x86_64")
     # requires("platform=linux")  # bug in concretizer
