@@ -108,7 +108,7 @@ class AoclSparse(CMakePackage):
         if spec.satisfies("@3.0:"):
             args.append(self.define_from_variant("BUILD_ILP64", "ilp64"))
 
-        if self.spec.satisfies("@4.0:"):
+        if self.spec.satisfies("@4.1:"):
             args.append(f"-DAOCL_BLIS_LIB={self.spec['amdblis'].libs}")
             args.append(
                 "-DAOCL_BLIS_INCLUDE_DIR={0}/blis".format(self.spec["amdblis"].prefix.include)
