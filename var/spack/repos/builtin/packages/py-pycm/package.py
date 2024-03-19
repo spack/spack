@@ -18,3 +18,4 @@ class PyPycm(PythonPackage):
 
     depends_on("py-art@1.8:", type=("build", "run"))
     depends_on("py-numpy@1.9.0:", type=("build", "run"))
+    depends_on("py-setuptools", type="build")
