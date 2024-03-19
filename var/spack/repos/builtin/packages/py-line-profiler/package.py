@@ -26,7 +26,7 @@ class PyLineProfiler(PythonPackage):
     depends_on("py-setuptools", type="build")
     depends_on("py-setuptools@68.2.2", type="build", when="@4.1.2:")
     depends_on("py-cython", type="build")
-    depends_on("py-cython@0.29.24:3.0.0a11", type="build", when="@4.0.3:")
+    depends_on("py-cython@0.29.24:2", type="build", when="@4.0.3:")
     depends_on("py-cython@3.0.3:", type="build", when="@4.1.2:")
     depends_on("py-ipython@0.13:", type=("build", "run"))
     depends_on("cmake", type="build", when="@3:")
