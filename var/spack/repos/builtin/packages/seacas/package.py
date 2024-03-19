@@ -239,7 +239,7 @@ class Seacas(CMakePackage):
             ]
         )
         if "~shared" in self.spec:
-            options.append(self.define("Seacas_EXTRA_LINK_FLAGS", "z;dl"))
+            options.append(self.define(f"{project_name_base}_EXTRA_LINK_FLAGS", "z;dl"))
         options.append(from_variant("TPL_ENABLE_MPI", "mpi"))
         if "+mpi" in spec and not is_windows:
             options.extend(
@@ -368,7 +368,8 @@ class Seacas(CMakePackage):
             )
 
         if "+pamgen" in self.spec:
-            options.extend(["-DSeacas_ENABLE_Pamgen:BOOL=ON", "-DTPL_ENABLE_Pamgen:BOOL=ON"])
+            options.append(from_variant(f"{project_name_base}_ENABLE_Pamgen", "pamgen"))
+            options.append(from_variant("TPL_ENABLE_Pamgen", "pamgen"))
 
         options.append(from_variant("TPL_ENABLE_Matio", "matio"))
         if "+matio" in spec:
