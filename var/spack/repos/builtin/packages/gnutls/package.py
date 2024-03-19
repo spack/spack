@@ -39,7 +39,7 @@ class Gnutls(AutotoolsPackage):
     # gnutls+guile is currently broken on MacOS.  See Issue #11668
     conflicts("+guile", when="platform=darwin")
 
-    # newer versions of clang are not compatible with gnutls <= 3.7
+    # -Wimplicit-int is an error in newer clang
     conflicts("%clang@16:", when="@:3.7")
     conflicts("%apple-clang@15:", when="@:3.7")
 
