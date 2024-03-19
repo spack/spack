@@ -1727,7 +1727,7 @@ class TestConcretize:
         [
             (["libelf", "libelf@0.8.10"], 1),
             (["libdwarf%gcc", "libelf%clang"], 2),
-            (["libdwarf%gcc", "libdwarf%clang"], 4),
+            (["libdwarf%gcc", "libdwarf%clang"], 3),
             (["libdwarf^libelf@0.8.12", "libdwarf^libelf@0.8.13"], 4),
             (["hdf5", "zmpi"], 3),
             (["hdf5", "mpich"], 2),
