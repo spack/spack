@@ -25,13 +25,16 @@ class PyPostcactus(PythonPackage):
     depends_on("py-future", type=("build", "run"))
     depends_on("py-matplotlib", type=("build", "run"))
     depends_on("py-tables", type=("build", "run"))
-    # recommended README.md
-    depends_on("py-jupyter", type=("build", "run"))
-    depends_on("py-sphinx", type=("build", "run"))
-    depends_on("vtk", type=("build", "run"))
+    depends_on("py-jupyter", type=("build", "run"), when="+jupyter")
+    depends_on("vtk", type=("build", "run"), when="+vtk")
+
+    # Variants for the optional requirements in README.md
+    variant("jupyter", default=False, description="Support for jupyter")
+    variant("vtk", default=False, description="VTK for 3D plots")
 
     def patch(self):
-        # comment out "setuptools.build_meta" because of pip error
+        # Commenting out build-backend in order to ignore a ModuleNotFoundError
+        # for setuptools.build-meta
         filter_file("^build-backend", "# build-backend", "PostCactus/pyproject.toml")
 
     build_directory = "PostCactus"
