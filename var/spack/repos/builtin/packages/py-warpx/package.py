@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -24,6 +24,8 @@ class PyWarpx(PythonPackage):
     maintainers("ax3l", "dpgrote", "RemiLehe")
 
     tags = ["e4s", "ecp"]
+
+    license("BSD-3-Clause-LBNL")
 
     # NOTE: if you update the versions here, also see warpx
     version("develop", branch="development")

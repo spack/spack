@@ -1,10 +1,11 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import argparse
 import os
+import shlex
 import shutil
 import sys
 import tempfile
@@ -19,7 +20,6 @@ from llnl.util.tty.color import colorize
 import spack.cmd
 import spack.cmd.common
 import spack.cmd.common.arguments
-import spack.cmd.common.arguments as arguments
 import spack.cmd.install
 import spack.cmd.modules
 import spack.cmd.uninstall
@@ -30,6 +30,7 @@ import spack.environment.shell
 import spack.schema.env
 import spack.spec
 import spack.tengine
+from spack.cmd.common import arguments
 from spack.util.environment import EnvironmentModifications
 
 description = "manage virtual environments"
@@ -51,6 +52,104 @@ subcommands = [
     "revert",
     "depfile",
 ]
+
+
+#
+# env create
+#
+def env_create_setup_parser(subparser):
+    """create a new environment"""
+    subparser.add_argument(
+        "env_name",
+        metavar="env",
+        help=(
+            "name of managed environment or directory of the anonymous env "
+            "(when using --dir/-d) to activate"
+        ),
+    )
+    subparser.add_argument(
+        "-d", "--dir", action="store_true", help="create an environment in a specific directory"
+    )
+    subparser.add_argument(
+        "--keep-relative",
+        action="store_true",
+        help="copy relative develop paths verbatim into the new environment"
+        " when initializing from envfile",
+    )
+    view_opts = subparser.add_mutually_exclusive_group()
+    view_opts.add_argument(
+        "--without-view", action="store_true", help="do not maintain a view for this environment"
+    )
+    view_opts.add_argument(
+        "--with-view",
+        help="specify that this environment should maintain a view at the"
+        " specified path (by default the view is maintained in the"
+        " environment directory)",
+    )
+    subparser.add_argument(
+        "envfile",
+        nargs="?",
+        default=None,
+        help="either a lockfile (must end with '.json' or '.lock') or a manifest file",
+    )
+
+
+def env_create(args):
+    if args.with_view:
+        # Expand relative paths provided on the command line to the current working directory
+        # This way we interpret `spack env create --with-view ./view --dir ./env` as
+        # a view in $PWD/view, not $PWD/env/view. This is different from specifying a relative
+        # path in the manifest, which is resolved relative to the manifest file's location.
+        with_view = os.path.abspath(args.with_view)
+    elif args.without_view:
+        with_view = False
+    else:
+        # Note that 'None' means unspecified, in which case the Environment
+        # object could choose to enable a view by default. False means that
+        # the environment should not include a view.
+        with_view = None
+
+    env = _env_create(
+        args.env_name,
+        init_file=args.envfile,
+        dir=args.dir,
+        with_view=with_view,
+        keep_relative=args.keep_relative,
+    )
+
+    # Generate views, only really useful for environments created from spack.lock files.
+    env.regenerate_views()
+
+
+def _env_create(name_or_path, *, init_file=None, dir=False, with_view=None, keep_relative=False):
+    """Create a new environment, with an optional yaml description.
+
+    Arguments:
+        name_or_path (str): name of the environment to create, or path to it
+        init_file (str or file): optional initialization file -- can be
+            a JSON lockfile (*.lock, *.json) or YAML manifest file
+        dir (bool): if True, create an environment in a directory instead
+            of a named environment
+        keep_relative (bool): if True, develop paths are copied verbatim into
+            the new environment file, otherwise they may be made absolute if the
+            new environment is in a different location
+    """
+    if not dir:
+        env = ev.create(
+            name_or_path, init_file=init_file, with_view=with_view, keep_relative=keep_relative
+        )
+        tty.msg("Created environment '%s' in %s" % (name_or_path, env.path))
+        tty.msg("You can activate this environment with:")
+        tty.msg("  spack env activate %s" % (name_or_path))
+        return env
+
+    env = ev.create_in_dir(
+        name_or_path, init_file=init_file, with_view=with_view, keep_relative=keep_relative
+    )
+    tty.msg("Created environment in %s" % env.path)
+    tty.msg("You can activate this environment with:")
+    tty.msg("  spack env activate %s" % env.path)
+    return env
 
 
 #
@@ -117,22 +216,46 @@ def env_activate_setup_parser(subparser):
         help="decorate the command line prompt when activating",
     )
 
-    env_options = subparser.add_mutually_exclusive_group()
-    env_options.add_argument(
+    subparser.add_argument(
         "--temp",
         action="store_true",
         default=False,
         help="create and activate an environment in a temporary directory",
     )
-    env_options.add_argument(
-        "-d", "--dir", default=None, help="activate the environment in this directory"
+    subparser.add_argument(
+        "--create",
+        action="store_true",
+        default=False,
+        help="create and activate the environment if it doesn't exist",
     )
-    env_options.add_argument(
-        metavar="env",
-        dest="activate_env",
+    subparser.add_argument(
+        "--envfile",
         nargs="?",
         default=None,
-        help="name of environment to activate",
+        help="either a lockfile (must end with '.json' or '.lock') or a manifest file",
+    )
+    subparser.add_argument(
+        "--keep-relative",
+        action="store_true",
+        help="copy relative develop paths verbatim into the new environment"
+        " when initializing from envfile",
+    )
+    subparser.add_argument(
+        "-d",
+        "--dir",
+        default=False,
+        action="store_true",
+        help="activate environment based on the directory supplied",
+    )
+    subparser.add_argument(
+        metavar="env",
+        dest="env_name",
+        nargs="?",
+        default=None,
+        help=(
+            "name of managed environment or directory of the anonymous env"
+            " (when using --dir/-d) to activate"
+        ),
     )
 
 
@@ -144,10 +267,14 @@ def create_temp_env_directory():
     return tempfile.mkdtemp(prefix="spack-")
 
 
-def env_activate(args):
-    if not args.activate_env and not args.dir and not args.temp:
-        tty.die("spack env activate requires an environment name, directory, or --temp")
+def _tty_info(msg):
+    """tty.info like function that prints the equivalent printf statement for eval."""
+    decorated = f'{colorize("@*b{==>}")} {msg}\n'
+    executor = "echo" if sys.platform == "win32" else "printf"
+    print(f"{executor} {shlex.quote(decorated)};")
 
+
+def env_activate(args):
     if not args.shell:
         spack.cmd.common.shell_init_instructions(
             "spack env activate", "    eval `spack env activate {sh_arg} [...]`"
@@ -158,27 +285,54 @@ def env_activate(args):
     if args.env or args.no_env or args.env_dir:
         tty.die("Calling spack env activate with --env, --env-dir and --no-env is ambiguous")
 
-    env_name_or_dir = args.activate_env or args.dir
+    # special parser error handling relative to the --temp flag
+    temp_conflicts = iter([args.keep_relative, args.dir, args.env_name, args.with_view])
+    if args.temp and any(temp_conflicts):
+        tty.die(
+            "spack env activate --temp cannot be combined with managed environments, --with-view,"
+            " --keep-relative, or --dir."
+        )
+
+    # When executing `spack env activate` without further arguments, activate
+    # the default environment. It's created when it doesn't exist yet.
+    if not args.env_name and not args.temp:
+        short_name = "default"
+        if not ev.exists(short_name):
+            ev.create(short_name)
+            action = "Created and activated"
+        else:
+            action = "Activated"
+        env_path = ev.root(short_name)
+        _tty_info(f"{action} default environment in {env_path}")
 
     # Temporary environment
-    if args.temp:
+    elif args.temp:
         env = create_temp_env_directory()
         env_path = os.path.abspath(env)
         short_name = os.path.basename(env_path)
         ev.create_in_dir(env).write(regenerate=False)
+        _tty_info(f"Created and activated temporary environment in {env_path}")
 
     # Managed environment
-    elif ev.exists(env_name_or_dir) and not args.dir:
-        env_path = ev.root(env_name_or_dir)
-        short_name = env_name_or_dir
+    elif ev.exists(args.env_name) and not args.dir:
+        env_path = ev.root(args.env_name)
+        short_name = args.env_name
 
     # Environment directory
-    elif ev.is_env_dir(env_name_or_dir):
-        env_path = os.path.abspath(env_name_or_dir)
+    elif ev.is_env_dir(args.env_name):
+        env_path = os.path.abspath(args.env_name)
         short_name = os.path.basename(env_path)
 
+    # create if user requested, and then recall recursively
+    elif args.create:
+        tty.set_msg_enabled(False)
+        env_create(args)
+        tty.set_msg_enabled(True)
+        env_activate(args)
+        return
+
     else:
-        tty.die("No such environment: '%s'" % env_name_or_dir)
+        tty.die("No such environment: '%s'" % args.env_name)
 
     env_prompt = "[%s]" % short_name
 
@@ -274,97 +428,6 @@ def env_deactivate(args):
 
 
 #
-# env create
-#
-def env_create_setup_parser(subparser):
-    """create a new environment"""
-    subparser.add_argument("create_env", metavar="env", help="name of environment to create")
-    subparser.add_argument(
-        "-d", "--dir", action="store_true", help="create an environment in a specific directory"
-    )
-    subparser.add_argument(
-        "--keep-relative",
-        action="store_true",
-        help="copy relative develop paths verbatim into the new environment"
-        " when initializing from envfile",
-    )
-    view_opts = subparser.add_mutually_exclusive_group()
-    view_opts.add_argument(
-        "--without-view", action="store_true", help="do not maintain a view for this environment"
-    )
-    view_opts.add_argument(
-        "--with-view",
-        help="specify that this environment should maintain a view at the"
-        " specified path (by default the view is maintained in the"
-        " environment directory)",
-    )
-    subparser.add_argument(
-        "envfile",
-        nargs="?",
-        default=None,
-        help="either a lockfile (must end with '.json' or '.lock') or a manifest file",
-    )
-
-
-def env_create(args):
-    if args.with_view:
-        # Expand relative paths provided on the command line to the current working directory
-        # This way we interpret `spack env create --with-view ./view --dir ./env` as
-        # a view in $PWD/view, not $PWD/env/view. This is different from specifying a relative
-        # path in the manifest, which is resolved relative to the manifest file's location.
-        with_view = os.path.abspath(args.with_view)
-    elif args.without_view:
-        with_view = False
-    else:
-        # Note that 'None' means unspecified, in which case the Environment
-        # object could choose to enable a view by default. False means that
-        # the environment should not include a view.
-        with_view = None
-
-    env = _env_create(
-        args.create_env,
-        init_file=args.envfile,
-        dir=args.dir,
-        with_view=with_view,
-        keep_relative=args.keep_relative,
-    )
-
-    # Generate views, only really useful for environments created from spack.lock files.
-    env.regenerate_views()
-
-
-def _env_create(name_or_path, *, init_file=None, dir=False, with_view=None, keep_relative=False):
-    """Create a new environment, with an optional yaml description.
-
-    Arguments:
-        name_or_path (str): name of the environment to create, or path to it
-        init_file (str or file): optional initialization file -- can be
-            a JSON lockfile (*.lock, *.json) or YAML manifest file
-        dir (bool): if True, create an environment in a directory instead
-            of a named environment
-        keep_relative (bool): if True, develop paths are copied verbatim into
-            the new environment file, otherwise they may be made absolute if the
-            new environment is in a different location
-    """
-    if not dir:
-        env = ev.create(
-            name_or_path, init_file=init_file, with_view=with_view, keep_relative=keep_relative
-        )
-        tty.msg("Created environment '%s' in %s" % (name_or_path, env.path))
-        tty.msg("You can activate this environment with:")
-        tty.msg("  spack env activate %s" % (name_or_path))
-        return env
-
-    env = ev.create_in_dir(
-        name_or_path, init_file=init_file, with_view=with_view, keep_relative=keep_relative
-    )
-    tty.msg("Created environment in %s" % env.path)
-    tty.msg("You can activate this environment with:")
-    tty.msg("  spack env activate %s" % env.path)
-    return env
-
-
-#
 # env remove
 #
 def env_remove_setup_parser(subparser):
@@ -385,7 +448,7 @@ def env_remove(args):
         try:
             env = ev.read(env_name)
             read_envs.append(env)
-        except spack.config.ConfigFormatError:
+        except (spack.config.ConfigFormatError, ev.SpackEnvironmentConfigError):
             bad_envs.append(env_name)
 
     if not args.yes_to_all:
@@ -553,8 +616,8 @@ def env_update_setup_parser(subparser):
 def env_update(args):
     manifest_file = ev.manifest_file(args.update_env)
     backup_file = manifest_file + ".bkp"
-    needs_update = not ev.is_latest_format(manifest_file)
 
+    needs_update = not ev.is_latest_format(manifest_file)
     if not needs_update:
         tty.msg('No update needed for the environment "{0}"'.format(args.update_env))
         return

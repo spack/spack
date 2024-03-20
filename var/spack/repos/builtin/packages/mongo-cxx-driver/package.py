@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class MongoCxxDriver(CMakePackage):
     homepage = "http://www.mongocxx.org"
     url = "https://github.com/mongodb/mongo-cxx-driver/releases/download/r3.7.0/mongo-cxx-driver-r3.7.0.tar.gz"
     git = "https://github.com/mongodb/mongo-cxx-driver"
+
+    license("Apache-2.0")
 
     version("3.7.0", sha256="fb2da11178db728f63147fe4b0c7509eb49b1b02c5cb55f9bee5f927e451a0c7")
     version("3.6.7", sha256="2c58005d4fe46f1973352fba821f7bb37e818cefc922377ce979a9fd1bff38ac")

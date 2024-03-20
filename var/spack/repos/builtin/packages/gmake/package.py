@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,8 @@ class Gmake(Package, GNUMirrorPackage):
     homepage = "https://www.gnu.org/software/make/"
     gnu_mirror_path = "make/make-4.2.1.tar.gz"
     maintainers("haampie")
+
+    license("GPL-3.0-only")
 
     # Stable releases
     version("4.4.1", sha256="dd16fb1d67bfab79a72f5e8390735c49e3e8e70b4945a15ab1f81ddb78658fb3")
@@ -67,6 +69,8 @@ class Gmake(Package, GNUMirrorPackage):
         return [
             "--with-guile" if self.spec.satisfies("+guile") else "--without-guile",
             "--disable-nls",
+            # configure needs make to enable dependency tracking, disable explicitly
+            "--disable-dependency-tracking",
         ]
 
     def install(self, spec, prefix):

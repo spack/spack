@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class PyNvidiaDali(PythonPackage):
 
     homepage = "https://developer.nvidia.com/dali"
     url = "https://developer.download.nvidia.com/compute/redist/"
+
+    skip_version_audit = ["platform=darwin"]
 
     maintainers("thomas-bouvier")
 
@@ -170,20 +172,20 @@ class PyNvidiaDali(PythonPackage):
         )
 
     cuda120_versions = (
-        "1.27.0-cuda120",
-        "1.26.0-cuda120",
-        "1.25.0-cuda120",
-        "1.24.0-cuda120",
-        "1.23.0-cuda120",
-        "1.22.0-cuda120",
+        "@1.27.0-cuda120",
+        "@1.26.0-cuda120",
+        "@1.25.0-cuda120",
+        "@1.24.0-cuda120",
+        "@1.23.0-cuda120",
+        "@1.22.0-cuda120",
     )
     cuda110_versions = (
-        "1.27.0-cuda110",
-        "1.26.0-cuda110",
-        "1.25.0-cuda110",
-        "1.24.0-cuda110",
-        "1.23.0-cuda110",
-        "1.22.0-cuda110",
+        "@1.27.0-cuda110",
+        "@1.26.0-cuda110",
+        "@1.25.0-cuda110",
+        "@1.24.0-cuda110",
+        "@1.23.0-cuda110",
+        "@1.22.0-cuda110",
     )
 
     for v in cuda120_versions:

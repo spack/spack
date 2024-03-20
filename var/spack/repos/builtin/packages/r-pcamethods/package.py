@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,6 +20,8 @@ class RPcamethods(RPackage):
     Golm, Germany."""
 
     bioc = "pcaMethods"
+
+    license("GPL-2.0-or-later")
 
     version("1.92.0", commit="ecbbc5b96b8fa79342611af8f798dd43c36d6699")
     version("1.90.0", commit="52474bc6d125122e89834328a1a780988349756f")

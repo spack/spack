@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,6 +18,8 @@ class Libiberty(AutotoolsPackage, GNUMirrorPackage):
     homepage = "https://www.gnu.org/software/binutils/"
     gnu_mirror_path = "binutils/binutils-2.31.1.tar.xz"
     maintainers("mwkrentel")
+
+    license("LGPL-2.0-or-later")
 
     version("2.41", sha256="ae9a5789e23459e59606e6714723f2d3ffc31c03174191ef0d015bdf06007450")
     version("2.40", sha256="0f8a4c272d7f17f369ded10a4aca28b8e304828e95526da482b0ccc4dfc9d8e1")

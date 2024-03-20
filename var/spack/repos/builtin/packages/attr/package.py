@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,8 @@ class Attr(AutotoolsPackage):
 
     homepage = "https://savannah.nongnu.org/projects/attr"
     url = "http://download.savannah.gnu.org/releases/attr/attr-2.4.47.src.tar.gz"
+
+    license("LGPL-2.1-or-later")
 
     version("2.4.48", sha256="5ead72b358ec709ed00bbf7a9eaef1654baad937c001c044fe8b74c57f5324e7")
     version("2.4.47", sha256="25772f653ac5b2e3ceeb89df50e4688891e21f723c460636548971652af0a859")

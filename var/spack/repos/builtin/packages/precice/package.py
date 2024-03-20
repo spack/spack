@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,7 +20,11 @@ class Precice(CMakePackage):
 
     tags = ["e4s"]
 
+    license("LGPL-3.0-or-later")
+
     version("develop", branch="develop")
+    version("3.0.0", sha256="efe6cf505d9305af89c6da1fdba246199a75a1c63a6a22103773ed95341879ba")
+    version("2.5.1", sha256="a5a37d3430eac395e885eb9cbbed9d0980a15e96c3e44763a3769fa7301e3b3a")
     version("2.5.0", sha256="76ec6ee0d1a66f6f3d3d2d11f03cfc5aa7ef4d9e5deb9b7a4b4455ec7f796c00")
     version("2.4.0", sha256="762e603fbcaa96c4fb0b378b7cb6789d09da0cf6193325603e5eeb13e4c7601c")
     version("2.3.0", sha256="57bab08e8b986f5faa364689d470940dbd9c138e5cfa7b861793e7db56b89da3")
@@ -83,6 +87,7 @@ class Precice(CMakePackage):
     depends_on("eigen@3.2:")
     depends_on("eigen@:3.3.7", type="build", when="@:1.5")  # bug in prettyprint
     depends_on("libxml2")
+    depends_on("libxml2@:2.11.99", type="build", when="@:2.5.0")
     depends_on("mpi", when="+mpi")
     depends_on("petsc@3.6:", when="+petsc")
     depends_on("petsc@3.12:", when="+petsc@2.1.0:")
@@ -170,7 +175,8 @@ class Precice(CMakePackage):
             cmake_args.extend(["-DPETSC_DIR=%s" % spec["petsc"].prefix, "-DPETSC_ARCH=."])
 
         # Python
-        if "+python" in spec:
+        if "@:2.3 +python" in spec:
+            # 2.4.0 and higher use find_package(Python3).
             python_library = spec["python"].libs[0]
             python_include = spec["python"].headers.directories[0]
             numpy_include = join_path(

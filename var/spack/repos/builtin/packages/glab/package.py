@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,10 @@ class Glab(Package):
 
     maintainers("alecbcs")
 
+    license("MIT")
+
+    version("1.36.0", sha256="8d6c759ebfe9c6942fcdb7055a4a5c7209a3b22beb25947f906c9aef3bc067e8")
+    version("1.35.0", sha256="7ed31c7a9b425fc15922f83c5dd8634a2758262a4f25f92583378655fcad6303")
     version("1.33.0", sha256="447a9b76acb5377642a4975908f610a3082026c176329c7c8cfed1461d2e1570")
     version("1.31.0", sha256="5648e88e7d6cc993227f5a4e80238af189bed09c7aed1eb12be7408e9a042747")
     version("1.30.0", sha256="d3c1a9ba723d94a0be10fc343717cf7b61732644f5c42922f1c8d81047164b99")

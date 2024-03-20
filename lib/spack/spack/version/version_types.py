@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -193,12 +193,15 @@ class StandardVersion(ConcreteVersion):
         message = "{cls.__name__} indices must be integers"
         raise TypeError(message.format(cls=cls))
 
+    def _stringify(self):
+        string = ""
+        for index in range(len(self.version)):
+            string += str(self.version[index])
+            string += str(self.separators[index])
+        return string
+
     def __str__(self):
-        return (
-            self.string
-            if isinstance(self.string, str)
-            else ".".join((str(c) for c in self.version))
-        )
+        return self.string or self._stringify()
 
     def __repr__(self) -> str:
         # Print indirect repr through Version(...)
@@ -256,6 +259,21 @@ class StandardVersion(ConcreteVersion):
         return any(
             isinstance(p, VersionStrComponent) and isinstance(p.data, int) for p in self.version
         )
+
+    @property
+    def force_numeric(self):
+        """Replaces all non-numeric components of the version with 0
+
+        This can be used to pass Spack versions to libraries that have stricter version schema.
+        """
+        numeric = tuple(0 if isinstance(v, VersionStrComponent) else v for v in self.version)
+        # null separators except the final one have to be converted to avoid concatenating ints
+        # default to '.' as most common delimiter for versions
+        separators = tuple(
+            "." if s == "" and i != len(self.separators) - 1 else s
+            for i, s in enumerate(self.separators)
+        )
+        return type(self)(None, numeric, separators)
 
     @property
     def dotted(self):
@@ -695,26 +713,35 @@ class ClosedOpenRange:
     def overlaps(self, other: Union["ClosedOpenRange", ConcreteVersion, "VersionList"]) -> bool:
         return self.intersects(other)
 
-    def union(self, other: Union["ClosedOpenRange", ConcreteVersion, "VersionList"]):
+    def _union_if_not_disjoint(
+        self, other: Union["ClosedOpenRange", ConcreteVersion]
+    ) -> Optional["ClosedOpenRange"]:
+        """Same as union, but returns None when the union is not connected. This function is not
+        implemented for version lists as right-hand side, as that makes little sense."""
         if isinstance(other, StandardVersion):
-            return self if self.lo <= other < self.hi else VersionList([self, other])
+            return self if self.lo <= other < self.hi else None
 
         if isinstance(other, GitVersion):
-            return self if self.lo <= other.ref_version < self.hi else VersionList([self, other])
+            return self if self.lo <= other.ref_version < self.hi else None
 
         if isinstance(other, ClosedOpenRange):
             # Notice <= cause we want union(1:2, 3:4) = 1:4.
-            if self.lo <= other.hi and other.lo <= self.hi:
-                return ClosedOpenRange(min(self.lo, other.lo), max(self.hi, other.hi))
+            return (
+                ClosedOpenRange(min(self.lo, other.lo), max(self.hi, other.hi))
+                if self.lo <= other.hi and other.lo <= self.hi
+                else None
+            )
 
-            return VersionList([self, other])
+        raise TypeError(f"Unexpected type {type(other)}")
 
+    def union(self, other: Union["ClosedOpenRange", ConcreteVersion, "VersionList"]):
         if isinstance(other, VersionList):
             v = other.copy()
             v.add(self)
             return v
 
-        raise ValueError(f"Unexpected type {type(other)}")
+        result = self._union_if_not_disjoint(other)
+        return result if result is not None else VersionList([self, other])
 
     def intersection(self, other: Union["ClosedOpenRange", ConcreteVersion]):
         # range - version -> singleton or nothing.
@@ -731,20 +758,21 @@ class VersionList:
     """Sorted, non-redundant list of Version and ClosedOpenRange elements."""
 
     def __init__(self, vlist=None):
-        self.versions: List[StandardVersion, GitVersion, ClosedOpenRange] = []
-        if vlist is not None:
-            if isinstance(vlist, str):
-                vlist = from_string(vlist)
-                if isinstance(vlist, VersionList):
-                    self.versions = vlist.versions
-                else:
-                    self.versions = [vlist]
+        self.versions: List[Union[StandardVersion, GitVersion, ClosedOpenRange]] = []
+        if vlist is None:
+            pass
+        elif isinstance(vlist, str):
+            vlist = from_string(vlist)
+            if isinstance(vlist, VersionList):
+                self.versions = vlist.versions
             else:
-                for v in vlist:
-                    self.add(ver(v))
+                self.versions = [vlist]
+        else:
+            for v in vlist:
+                self.add(ver(v))
 
-    def add(self, item):
-        if isinstance(item, ConcreteVersion):
+    def add(self, item: Union[StandardVersion, GitVersion, ClosedOpenRange, "VersionList"]):
+        if isinstance(item, (StandardVersion, GitVersion)):
             i = bisect_left(self, item)
             # Only insert when prev and next are not intersected.
             if (i == 0 or not item.intersects(self[i - 1])) and (
@@ -755,16 +783,22 @@ class VersionList:
         elif isinstance(item, ClosedOpenRange):
             i = bisect_left(self, item)
 
-            # Note: can span multiple concrete versions to the left,
-            # For instance insert 1.2: into [1.2, hash=1.2, 1.3]
-            # would bisect to i = 1.
-            while i > 0 and item.intersects(self[i - 1]):
-                item = item.union(self[i - 1])
+            # Note: can span multiple concrete versions to the left (as well as to the right).
+            # For instance insert 1.2: into [1.2, hash=1.2, 1.3, 1.4:1.5]
+            # would bisect at i = 1 and merge i = 0 too.
+            while i > 0:
+                union = item._union_if_not_disjoint(self[i - 1])
+                if union is None:  # disjoint
+                    break
+                item = union
                 del self.versions[i - 1]
                 i -= 1
 
-            while i < len(self) and item.intersects(self[i]):
-                item = item.union(self[i])
+            while i < len(self):
+                union = item._union_if_not_disjoint(self[i])
+                if union is None:
+                    break
+                item = union
                 del self.versions[i]
 
             self.versions.insert(i, item)
@@ -798,16 +832,20 @@ class VersionList:
 
     def lowest(self) -> Optional[StandardVersion]:
         """Get the lowest version in the list."""
-        return None if not self else self[0]
+        return next((v for v in self.versions if isinstance(v, StandardVersion)), None)
 
     def highest(self) -> Optional[StandardVersion]:
         """Get the highest version in the list."""
-        return None if not self else self[-1]
+        return next((v for v in reversed(self.versions) if isinstance(v, StandardVersion)), None)
 
     def highest_numeric(self) -> Optional[StandardVersion]:
         """Get the highest numeric version in the list."""
-        numeric_versions = list(filter(lambda v: str(v) not in infinity_versions, self.versions))
-        return None if not any(numeric_versions) else numeric_versions[-1]
+        numeric = (
+            v
+            for v in reversed(self.versions)
+            if isinstance(v, StandardVersion) and not v.isdevelop()
+        )
+        return next(numeric, None)
 
     def preferred(self) -> Optional[StandardVersion]:
         """Get the preferred (latest) version in the list."""

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -46,7 +46,22 @@ from spack.error import SpackError
 from spack.reporters import CDash, CDashConfiguration
 from spack.reporters.cdash import build_stamp as cdash_build_stamp
 
-JOB_RETRY_CONDITIONS = ["always"]
+# See https://docs.gitlab.com/ee/ci/yaml/#retry for descriptions of conditions
+JOB_RETRY_CONDITIONS = [
+    # "always",
+    "unknown_failure",
+    "script_failure",
+    "api_failure",
+    "stuck_or_timeout_failure",
+    "runner_system_failure",
+    "runner_unsupported",
+    "stale_schedule",
+    # "job_execution_timeout",
+    "archived_failure",
+    "unmet_prerequisites",
+    "scheduler_failure",
+    "data_integrity_failure",
+]
 
 TEMP_STORAGE_MIRROR_NAME = "ci_temporary_mirror"
 SPACK_RESERVED_TAGS = ["public", "protected", "notary"]
@@ -1238,6 +1253,7 @@ def generate_gitlab_ci_yaml(
                 op=lambda cmd: cmd.replace("mirror_prefix", temp_storage_url_prefix),
             )
 
+            cleanup_job["dependencies"] = []
             output_object["cleanup"] = cleanup_job
 
         if (
@@ -1261,6 +1277,7 @@ def generate_gitlab_ci_yaml(
                 if buildcache_destination
                 else remote_mirror_override or remote_mirror_url
             )
+            signing_job["dependencies"] = []
 
             output_object["sign-pkgs"] = signing_job
 
@@ -1281,6 +1298,7 @@ def generate_gitlab_ci_yaml(
             final_job["when"] = "always"
             final_job["retry"] = service_job_retries
             final_job["interruptible"] = True
+            final_job["dependencies"] = []
 
             output_object["rebuild-index"] = final_job
 

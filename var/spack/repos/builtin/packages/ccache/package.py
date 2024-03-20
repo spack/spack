@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,6 +20,8 @@ class Ccache(CMakePackage):
     tags = ["build-tools"]
 
     executables = ["^ccache$"]
+
+    license("GPL-3.0-or-later")
 
     version("4.8.2", sha256="75eef15b8b9da48db9c91e1d0ff58b3645fc70c0e4ca2ef1b6825a12f21f217d")
     version("4.8.1", sha256="869903c1891beb8bee87f1ec94d8a0dad18c2add4072c456acbc85cdfc23ca63")
@@ -71,6 +73,8 @@ class Ccache(CMakePackage):
     conflicts("%gcc@:5", when="@4.4:")
     conflicts("%clang@:7", when="@4.7:")
     conflicts("%clang@:4", when="@4.4:")
+
+    patch("fix-gcc-12.patch", when="%gcc@12")
 
     def cmake_args(self):
         return [

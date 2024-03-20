@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -28,8 +28,11 @@ class Gromacs(CMakePackage, CudaPackage):
     git = "https://gitlab.com/gromacs/gromacs.git"
     maintainers("danielahlin", "eirrgang", "junghans")
 
+    license("BSD-2-Clause")
+
     version("main", branch="main")
     version("master", branch="main", deprecated=True)
+    version("2023.4", sha256="e5d6c4d9e7ccacfaccb0888619bd21b5ea8911f82b410e68d6db5d40f695f231")
     version("2023.3", sha256="4ec8f8d0c7af76b13f8fd16db8e2c120e749de439ae9554d9f653f812d78d1cb")
     version("2023.2", sha256="bce1480727e4b2bb900413b75d99a3266f3507877da4f5b2d491df798f9fcdae")
     version("2023.1", sha256="eef2bb4a6cb6314cf9da47f26df2a0d27af4bf7b3099723d43601073ab0a42f4")
@@ -90,9 +93,26 @@ class Gromacs(CMakePackage, CudaPackage):
         default=False,
         description="Produces a double precision version of the executables",
     )
-    variant("cufftmp", default=False, when="+cuda+mpi", description="Enable Multi GPU FFT support")
+    variant(
+        "cufftmp",
+        default=False,
+        when="@2022: +cuda+mpi",
+        description="Enable multi-GPU FFT support with cuFFTMp",
+    )
+    variant(
+        "heffte",
+        default=False,
+        when="@2021: +sycl+mpi",
+        description="Enable multi-GPU FFT support with HeFFTe",
+    )
     variant("opencl", default=False, description="Enable OpenCL support")
-    variant("sycl", default=False, description="Enable SYCL support")
+    variant("sycl", default=False, when="@2021:", description="Enable SYCL support")
+    variant(
+        "intel-data-center-gpu-max",
+        default=False,
+        when="@2022: +sycl",
+        description="Enable support for Intel Data Center GPU Max",
+    )
     variant("nosuffix", default=False, description="Disable default suffixes")
     variant(
         "build_type",
@@ -107,6 +127,18 @@ class Gromacs(CMakePackage, CudaPackage):
             "RelWithAssert",
             "Profile",
         ),
+    )
+    variant(
+        "nblib",
+        default=True,
+        when="@2021:",
+        description="Build and install the NB-LIB C++ API for GROMACS",
+    )
+    variant(
+        "gmxapi",
+        default=True,
+        when="@2019:",
+        description="Build and install the gmxlib python API for GROMACS",
     )
     variant(
         "mdrun_only",
@@ -241,6 +273,8 @@ class Gromacs(CMakePackage, CudaPackage):
     depends_on("cmake@3.16.3:3", type="build", when="@2022:")
     depends_on("cmake@3.18.4:3", type="build", when="@main")
     depends_on("cmake@3.16.0:3", type="build", when="%fj")
+    depends_on("pkgconfig", type="build")
+
     depends_on("cuda", when="+cuda")
     depends_on("sycl", when="+sycl")
     depends_on("lapack")
@@ -254,6 +288,7 @@ class Gromacs(CMakePackage, CudaPackage):
     depends_on("cp2k@8.1:", when="+cp2k")
 
     depends_on("nvhpc", when="+cufftmp")
+    depends_on("heffte", when="+heffte")
 
     requires(
         "%intel",
@@ -262,6 +297,11 @@ class Gromacs(CMakePackage, CudaPackage):
         when="+intel_provided_gcc",
         msg="Only attempt to find gcc libs for Intel compiler if Intel compiler is used.",
     )
+
+    # If the Intel suite is used for Lapack, it must be used for fftw and vice-versa
+    for _intel_pkg in INTEL_MATH_LIBRARIES:
+        requires(f"^[virtuals=fftw-api] {_intel_pkg}", when=f"^[virtuals=lapack]   {_intel_pkg}")
+        requires(f"^[virtuals=lapack]   {_intel_pkg}", when=f"^[virtuals=fftw-api] {_intel_pkg}")
 
     patch("gmxDetectCpu-cmake-3.14.patch", when="@2018:2019.3^cmake@3.14.0:")
     patch("gmxDetectSimd-cmake-3.14.patch", when="@5.0:2017^cmake@3.14.0:")
@@ -511,6 +551,19 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
                 + f'/{self.spec["nvhpc"].version}/math_libs'
             )
 
+        if "+heffte" in self.spec:
+            options.append("-DGMX_USE_HEFFTE=on")
+            options.append(f'-DHeffte_ROOT={self.spec["heffte"].prefix}')
+
+        if "+intel-data-center-gpu-max" in self.spec:
+            options.append("-DGMX_GPU_NB_CLUSTER_SIZE=8")
+            options.append("-DGMX_GPU_NB_NUM_CLUSTER_PER_CELL_X=1")
+
+        if "~nblib" in self.spec:
+            options.append("-DGMX_INSTALL_NBLIB_API=OFF")
+        if "~gmxapi" in self.spec:
+            options.append("-DGMXAPI=OFF")
+
         # Activate SIMD based on properties of the target
         target = self.spec.target
         if target >= "zen4":
@@ -594,7 +647,7 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
                 "-DGMX_OPENMP_MAX_THREADS=%s" % self.spec.variants["openmp_max_threads"].value
             )
 
-        if "^mkl" in self.spec:
+        if self.spec["lapack"].name in INTEL_MATH_LIBRARIES:
             # fftw-api@3 is provided by intel-mkl or intel-parllel-studio
             # we use the mkl interface of gromacs
             options.append("-DGMX_FFT_LIBRARY=mkl")

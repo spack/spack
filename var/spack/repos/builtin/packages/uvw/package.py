@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class Uvw(CMakePackage):
 
     homepage = "https://github.com/skypjack/uvw"
     url = "https://github.com/skypjack/uvw/archive/v1.14.0_libuv-v1.26.tar.gz"
+
+    license("MIT")
 
     version("1.14.0", sha256="ef13977c1f87d5659887f6a75d37b7088f2dafbdf0aaff00358240071c70382e")
     version("1.13.0", sha256="cc9944e5a2cdeb19bb74c61c3c02816c5a02b4339f3ad16e979bb7c8640e22c0")

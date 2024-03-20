@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -72,9 +72,7 @@ class NaluWind(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("trilinos@13.4.1+exodus+zoltan+stk", when="@=2.0.0")
     depends_on("hypre@2.29.0:", when="@2.0.0:+hypre")
     depends_on(
-        "trilinos@13:"
-        "+exodus+tpetra+zoltan+stk+boost"
-        "~superlu-dist~superlu+hdf5+shards~hypre+gtest"
+        "trilinos@13:+exodus+tpetra+zoltan+stk~superlu-dist~superlu+hdf5+shards~hypre+gtest"
     )
     depends_on("trilinos~cuda~wrapper", when="~cuda")
     # Cannot build Trilinos as a shared library with STK on Darwin

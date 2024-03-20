@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -826,7 +826,6 @@ class NoValidVersionError(spack.error.SpackError):
 
 
 class InsufficientArchitectureInfoError(spack.error.SpackError):
-
     """Raised when details on architecture cannot be collected from the
     system"""
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class PyPlotly(PythonPackage):
     pypi = "plotly/plotly-2.2.0.tar.gz"
 
     maintainers("meyersbs")
+
+    license("MIT")
 
     version("5.14.1", sha256="bcac86d7fcba3eff7260c1eddc36ca34dae2aded10a0709808446565e0e53b93")
     version("5.2.2", sha256="809f0674a7991daaf4f287964d617d24e9fa44463acd5a5352ebd874cfd98b07")

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,8 @@ class PyCloudpickle(PythonPackage):
 
     homepage = "https://github.com/cloudpipe/cloudpickle"
     pypi = "cloudpickle/cloudpickle-0.5.2.tar.gz"
+
+    license("BSD-3-Clause")
 
     version("2.2.0", sha256="3f4219469c55453cfe4737e564b67c2a149109dabf7f242478948b895f61106f")
     version("1.6.0", sha256="9bc994f9e9447593bd0a45371f0e7ac7333710fcf64a4eb9834bf149f4ef2f32")

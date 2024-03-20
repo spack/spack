@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -330,8 +330,11 @@ def which_string(*args, **kwargs):
         for candidate_item in candidate_items:
             for directory in search_paths:
                 exe = directory / candidate_item
-                if exe.is_file() and os.access(str(exe), os.X_OK):
-                    return str(exe)
+                try:
+                    if exe.is_file() and os.access(str(exe), os.X_OK):
+                        return str(exe)
+                except OSError:
+                    pass
 
     if required:
         raise CommandNotFoundError("spack requires '%s'. Make sure it is in your path." % args[0])

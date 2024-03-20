@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,6 +6,7 @@
 import collections
 import datetime
 import errno
+import functools
 import inspect
 import itertools
 import json
@@ -43,6 +44,7 @@ import spack.package_prefs
 import spack.paths
 import spack.platforms
 import spack.repo
+import spack.solver.asp
 import spack.stage
 import spack.store
 import spack.subprocess_context
@@ -566,8 +568,8 @@ def mock_repo_path():
 def _pkg_install_fn(pkg, spec, prefix):
     # sanity_check_prefix requires something in the install directory
     mkdirp(prefix.bin)
-    if not os.path.exists(spec.package.build_log_path):
-        touchp(spec.package.build_log_path)
+    if not os.path.exists(spec.package.install_log_path):
+        touchp(spec.package.install_log_path)
 
 
 @pytest.fixture
@@ -629,7 +631,7 @@ def platform_config():
     spack.config.add_default_platform_scope(spack.platforms.real_host().name)
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture
 def default_config():
     """Isolates the default configuration from the user configs.
 
@@ -713,19 +715,16 @@ def configuration_dir(tmpdir_factory, linux_os):
     t.write(content)
     yield tmpdir
 
-    # Once done, cleanup the directory
-    shutil.rmtree(str(tmpdir))
-
 
 def _create_mock_configuration_scopes(configuration_dir):
     """Create the configuration scopes used in `config` and `mutable_config`."""
-    scopes = [spack.config.InternalConfigScope("_builtin", spack.config.CONFIG_DEFAULTS)]
-    scopes += [
-        spack.config.ConfigScope(name, str(configuration_dir.join(name)))
-        for name in ["site", "system", "user"]
+    return [
+        spack.config.InternalConfigScope("_builtin", spack.config.CONFIG_DEFAULTS),
+        spack.config.ConfigScope("site", str(configuration_dir.join("site"))),
+        spack.config.ConfigScope("system", str(configuration_dir.join("system"))),
+        spack.config.ConfigScope("user", str(configuration_dir.join("user"))),
+        spack.config.InternalConfigScope("command_line"),
     ]
-    scopes += [spack.config.InternalConfigScope("command_line")]
-    return scopes
 
 
 @pytest.fixture(scope="session")
@@ -802,13 +801,13 @@ def mock_low_high_config(tmpdir):
 def _populate(mock_db):
     r"""Populate a mock database with packages.
 
-    Here is what the mock DB looks like:
+    Here is what the mock DB looks like (explicit roots at top):
 
-    o  mpileaks     o  mpileaks'    o  mpileaks''
-    |\              |\              |\
-    | o  callpath   | o  callpath'  | o  callpath''
-    |/|             |/|             |/|
-    o |  mpich      o |  mpich2     o |  zmpi
+    o  mpileaks     o  mpileaks'    o  mpileaks''     o externaltest     o trivial-smoke-test
+    |\              |\              |\                |
+    | o  callpath   | o  callpath'  | o  callpath''   o externaltool
+    |/|             |/|             |/|               |
+    o |  mpich      o |  mpich2     o |  zmpi         o externalvirtual
       |               |             o |  fake
       |               |               |
       |               |______________/
@@ -1852,7 +1851,7 @@ def binary_with_rpaths(prefix_tmpdir):
     paths are encoded with `$ORIGIN` prepended.
     """
 
-    def _factory(rpaths, message="Hello world!"):
+    def _factory(rpaths, message="Hello world!", dynamic_linker="/lib64/ld-linux.so.2"):
         source = prefix_tmpdir.join("main.c")
         source.write(
             """
@@ -1868,10 +1867,10 @@ def binary_with_rpaths(prefix_tmpdir):
         executable = source.dirpath("main.x")
         # Encode relative RPATHs using `$ORIGIN` as the root prefix
         rpaths = [x if os.path.isabs(x) else os.path.join("$ORIGIN", x) for x in rpaths]
-        rpath_str = ":".join(rpaths)
         opts = [
             "-Wl,--disable-new-dtags",
-            "-Wl,-rpath={0}".format(rpath_str),
+            f"-Wl,-rpath={':'.join(rpaths)}",
+            f"-Wl,--dynamic-linker,{dynamic_linker}",
             str(source),
             "-o",
             str(executable),
@@ -1953,17 +1952,37 @@ def pytest_runtest_setup(item):
 
 @pytest.fixture(scope="function")
 def disable_parallel_buildcache_push(monkeypatch):
-    class MockPool:
-        def map(self, func, args):
-            return [func(a) for a in args]
+    """Disable process pools in tests."""
+    monkeypatch.setattr(spack.cmd.buildcache, "_make_pool", spack.cmd.buildcache.NoPool)
 
-        def starmap(self, func, args):
-            return [func(*a) for a in args]
 
-        def __enter__(self):
-            return self
+def _root_path(x, y, *, path):
+    return path
 
-        def __exit__(self, *args):
-            pass
 
-    monkeypatch.setattr(spack.cmd.buildcache, "_make_pool", MockPool)
+@pytest.fixture
+def mock_modules_root(tmp_path, monkeypatch):
+    """Sets the modules root to a temporary directory, to avoid polluting configuration scopes."""
+    fn = functools.partial(_root_path, path=str(tmp_path))
+    monkeypatch.setattr(spack.modules.common, "root_path", fn)
+
+
+def create_test_repo(tmpdir, pkg_name_content_tuples):
+    repo_path = str(tmpdir)
+    repo_yaml = tmpdir.join("repo.yaml")
+    with open(str(repo_yaml), "w") as f:
+        f.write(
+            """\
+repo:
+  namespace: testcfgrequirements
+"""
+        )
+
+    packages_dir = tmpdir.join("packages")
+    for pkg_name, pkg_str in pkg_name_content_tuples:
+        pkg_dir = packages_dir.ensure(pkg_name, dir=True)
+        pkg_file = pkg_dir.join("package.py")
+        with open(str(pkg_file), "w") as f:
+            f.write(pkg_str)
+
+    return spack.repo.Repo(repo_path)

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,6 +20,8 @@ class Exawind(CMakePackage, CudaPackage, ROCmPackage):
     # to avoid cloning the mesh submodule
     version("master", branch="main", submodules=True)
     version("1.0.0", tag="v1.0.0", submodules=True)
+    license("Apache-2.0")
+
 
     variant("openfast", default=False, description="Enable OpenFAST integration")
     variant("hypre", default=True, description="Enable hypre solver")

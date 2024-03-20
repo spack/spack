@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class Guile(AutotoolsPackage, GNUMirrorPackage):
 
     homepage = "https://www.gnu.org/software/guile/"
     gnu_mirror_path = "guile/guile-2.2.0.tar.gz"
+
+    license("LGPL-3.0-or-later AND GPL-3.0-or-later")
 
     version("2.2.6", sha256="08c0e7487777740b61cdd97949b69e8a5e2997d8c2fe6c7e175819eb18444506")
     version("2.2.5", sha256="c3c7a2f6ae0d8321a240c7ebc532a1d47af8c63214157a73789e2b2305b4c927")

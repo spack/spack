@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,6 +18,8 @@ class Freetype(AutotoolsPackage, CMakePackage):
     url = "https://download.savannah.gnu.org/releases/freetype/freetype-2.10.1.tar.gz"
 
     maintainers("michaelkuhn")
+
+    license("FTL OR GPL-2.0-or-later")
 
     version("2.11.1", sha256="f8db94d307e9c54961b39a1cc799a67d46681480696ed72ecf78d4473770f09b")
     version("2.11.0", sha256="a45c6b403413abd5706f3582f04c8339d26397c4304b78fa552f2215df64101f")

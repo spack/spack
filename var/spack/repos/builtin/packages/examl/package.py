@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,8 @@ class Examl(MakefilePackage):
     url = "https://github.com/stamatak/ExaML/archive/v3.0.22.tar.gz"
 
     maintainers("robqiao")
+
+    license("GPL-3.0-only")
 
     version("3.0.22", sha256="802e673b0c2ea83fdbe6b060048d83f22b6978933a04be64fb9b4334fe318ca3")
     version("3.0.21", sha256="6c7e6c5d7bf4ab5cfbac5cc0d577885272a803c142e06b531693a6a589102e2e")

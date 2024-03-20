@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,6 +18,8 @@ class Libtheora(AutotoolsPackage, MSBuildPackage):
     homepage = "https://www.theora.org"
     url = "http://downloads.xiph.org/releases/theora/libtheora-1.1.1.tar.xz"
     git = "https://gitlab.xiph.org/xiph/theora.git"
+
+    license("BSD-3-Clause")
 
     version("master", branch="master")
     version("stable", branch="theora-1.1")

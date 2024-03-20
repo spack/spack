@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -27,6 +27,8 @@ class Octave(AutotoolsPackage, GNUMirrorPackage):
     maintainers("mtmiller")
 
     extendable = True
+
+    license("GPL-3.0-or-later")
 
     version("8.2.0", sha256="57d17f918a940d38ca3348211e110b34d735a322a87db71c177c4692a49a9c84")
     version("8.1.0", sha256="8052074d17b0ef643d037de8ab389672c752bb201ee9cea4dfa69858fb6a213f")
@@ -167,7 +169,7 @@ class Octave(AutotoolsPackage, GNUMirrorPackage):
         config_args = []
 
         # Required dependencies
-        if "^mkl" in spec and "gfortran" in self.compiler.fc:
+        if spec["lapack"].name in INTEL_MATH_LIBRARIES and "gfortran" in self.compiler.fc:
             mkl_re = re.compile(r"(mkl_)intel(_i?lp64\b)")
             config_args.extend(
                 [

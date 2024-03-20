@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,10 +17,13 @@ class Ucx(AutotoolsPackage, CudaPackage):
 
     maintainers("hppritcha")
 
+    license("BSD-3-Clause")
+
     # Current
-    version("1.14.1", sha256="baa0634cafb269a3112f626eb226bcd2ca8c9fcf0fec3b8e2a3553baad5f77aa")
+    version("1.15.0", sha256="4b202087076bc1c98f9249144f0c277a8ea88ad4ca6f404f94baa9cb3aebda6d")
 
     # Still supported
+    version("1.14.1", sha256="baa0634cafb269a3112f626eb226bcd2ca8c9fcf0fec3b8e2a3553baad5f77aa")
     version("1.14.0", sha256="9bd95e2059de5dece9dddd049aacfca3d21bfca025748a6a0b1be4486e28afdd")
     version("1.13.1", sha256="efc37829b68e131d2acc82a3fd4334bfd611156a756837ffeb650ab9a9dd3828")
     version("1.13.0", sha256="8a3881f21fe2788113789f5bae1c8174e931f7542de0a934322a96ef354e5e3d")
@@ -134,6 +137,7 @@ class Ucx(AutotoolsPackage, CudaPackage):
     depends_on("rdma-core", when="+verbs")
     depends_on("xpmem", when="+xpmem")
     depends_on("hip", when="+rocm")
+    depends_on("hsa-rocr-dev", when="+rocm")
 
     conflicts("+gdrcopy", when="~cuda", msg="gdrcopy currently requires cuda support")
     conflicts("+rocm", when="+gdrcopy", msg="gdrcopy > 2.0 does not support rocm")

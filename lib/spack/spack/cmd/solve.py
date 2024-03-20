@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,12 +12,12 @@ import llnl.util.tty.color as color
 
 import spack
 import spack.cmd
-import spack.cmd.common.arguments as arguments
 import spack.config
 import spack.environment
 import spack.hash_types as ht
 import spack.package_base
 import spack.solver.asp as asp
+from spack.cmd.common import arguments
 
 description = "concretize a specs using an ASP solver"
 section = "developer"
@@ -127,10 +127,7 @@ def _process_result(result, show, required_format, kwargs):
         print()
 
     if result.unsolved_specs and "solutions" in show:
-        tty.msg("Unsolved specs")
-        for spec in result.unsolved_specs:
-            print(spec)
-        print()
+        tty.msg(asp.Result.format_unsolved(result.unsolved_specs))
 
 
 def solve(parser, args):

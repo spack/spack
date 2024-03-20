@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,8 @@ class Popt(AutotoolsPackage):
 
     homepage = "https://launchpad.net/popt"
     url = "https://launchpad.net/popt/head/1.16/+download/popt-1.16.tar.gz"
+
+    license("MIT")
 
     version("1.16", sha256="e728ed296fe9f069a0e005003c3d6b2dde3d9cad453422a10d6558616d304cc8")
 
