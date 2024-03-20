@@ -160,6 +160,8 @@ class Elpa(AutotoolsPackage, CudaPackage, ROCmPackage):
         cuda_flag = "nvidia-gpu"
         if "+cuda" in spec:
             prefix = spec["cuda"].prefix
+            # Can't yet be changed to the new option --enable-nvidia-gpu-kernels
+            # https://github.com/marekandreas/elpa/issues/55
             options.append(f"--enable-{cuda_flag}")
             options.append("--with-cuda-path={0}".format(prefix))
             options.append("--with-cuda-sdk-path={0}".format(prefix))
@@ -177,6 +179,8 @@ class Elpa(AutotoolsPackage, CudaPackage, ROCmPackage):
             options.append(f"--disable-{cuda_flag}" + kernels)
 
         if "+rocm" in spec:
+            # Can't yet be changed to the new option --enable-amd-gpu-kernels
+            # https://github.com/marekandreas/elpa/issues/55
             options.append("--enable-amd-gpu")
             options.append("CXX={0}".format(self.spec["hip"].hipcc))
 
