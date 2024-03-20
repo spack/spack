@@ -28,8 +28,8 @@ class PyPythonLspServer(PythonPackage):
     depends_on("py-setuptools-scm@3.4.3:+toml", type="build")
 
     depends_on("py-docstring-to-markdown", type=("build", "run"))
-    depends_on("py-importlib-metadata@3.8.3:", type=("build", "run"), when="@1.8.0:")
-    depends_on("py-jedi@0.17.2:0.18", type=("build", "run"))
+    depends_on("py-importlib-metadata@3.8.3:", type=("build", "run"), when="@1.8.0: ^python@:3.9")
+    depends_on("py-jedi@0.17.2:0.18", type=("build", "run"), when="@:1.7")
     depends_on("py-jedi@0.17.2:0.19", type=("build", "run"), when="@1.8.0:")
     depends_on("py-pluggy@1.0.0:", type=("build", "run"))
     depends_on("py-python-lsp-jsonrpc@1.0.0:1", type=("build", "run"))
