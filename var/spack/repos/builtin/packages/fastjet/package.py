@@ -25,6 +25,7 @@ class Fastjet(AutotoolsPackage):
 
     license("GPL-2.0-only")
 
+    version("3.4.2", sha256="b3d33155b55ce43f420cd6d99b525acf7bdc2593a7bb7ea898a9ddb3d8ca38e3")
     version("3.4.1", sha256="05608c6ff213f06dd9de723813d6b4dccd51e661ac13098f74bfc9eeaf1cb5aa")
     version("3.4.0", sha256="ee07c8747c8ead86d88de4a9e4e8d1e9e7d7614973f5631ba8297f7a02478b91")
     version("3.3.4", sha256="432b51401e1335697c9248519ce3737809808fc1f6d1644bfae948716dddfc03")
@@ -75,7 +76,7 @@ class Fastjet(AutotoolsPackage):
     patch(
         "https://gitlab.cern.ch/sft/lcgcmake/-/raw/23c82f269b8e5df0190e20b7fbe06db16b24d667/externals/patches/fastjet-3.4.1.patch",
         sha256="1c7eed1d825f2013116778366a2d27b850c46a2848389174f78829fa24cd1c45",
-        when="@3.4: +atlas",
+        when="@3.4:3.4.1 +atlas",
         level=0,
     )
 
