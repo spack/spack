@@ -1,0 +1,22 @@
+diff --git a/src/pythia8/Pythia8Wrap.cpp b/src/pythia8/Pythia8Wrap.cpp
+index 5b12195816608de38d1e484eee3e85e4a18e9163..1f84fcf67ac45bc2946cf5ed88ad4a3249c0ad56 100644
+--- a/src/pythia8/Pythia8Wrap.cpp
++++ b/src/pythia8/Pythia8Wrap.cpp
+@@ -29,10 +29,17 @@ extern "C" {
+   }
+ #endif
+ 
++#if PYTHIA_VERSION_INTEGER > 8309
++  bool pythia8_set_rndm_engine_ptr (Pythia* pythia, void* rndm) {
++    auto whizard_rndm = std::make_shared<WhizardRndm> (rndm);
++    return pythia->setRndmEnginePtr (whizard_rndm);
++  }
++#else
+   bool pythia8_set_rndm_engine_ptr (Pythia* pythia, void* rndm) {
+     WhizardRndm* whizard_rndm = new WhizardRndm (rndm);
+     return pythia->setRndmEnginePtr (whizard_rndm);
+   }
++#endif
+ 
+   bool pythia8_read_string (Pythia* pythia, const char* str) {
+     return pythia->readString (string (str));
