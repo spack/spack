@@ -76,7 +76,7 @@ class Fastjet(AutotoolsPackage):
     patch(
         "https://gitlab.cern.ch/sft/lcgcmake/-/raw/23c82f269b8e5df0190e20b7fbe06db16b24d667/externals/patches/fastjet-3.4.1.patch",
         sha256="1c7eed1d825f2013116778366a2d27b850c46a2848389174f78829fa24cd1c45",
-        when="@3.4: +atlas",
+        when="@3.4:3.4.1 +atlas",
         level=0,
     )
 
