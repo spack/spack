@@ -65,7 +65,6 @@ def test_query_arguments():
         start_date="2018-02-23",
         end_date=None,
         install_tree="all",
-        upstream=None,
     )
 
     q_args = query_arguments(args)
@@ -78,7 +77,6 @@ def test_query_arguments():
     assert "start_date" in q_args
     assert "end_date" not in q_args
     assert q_args["install_tree"] == "all"
-    assert q_args["upstream"] is True
 
     # Check that explicit works correctly
     args.explicit = True
