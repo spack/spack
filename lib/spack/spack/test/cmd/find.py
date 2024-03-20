@@ -77,7 +77,7 @@ def test_query_arguments():
     assert q_args["explicit"] is any
     assert "start_date" in q_args
     assert "end_date" not in q_args
-    assert q_args["local"] == "all"
+    assert q_args["install_tree"] == "all"
     assert q_args["upstream"] is True
 
     # Check that explicit works correctly
