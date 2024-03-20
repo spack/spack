@@ -220,7 +220,7 @@ class Seacas(CMakePackage):
 
         options.extend(
             [
-                define(project_name_base + "_ENABLE_TESTS", from_variant("tests")),
+                from_variant(project_name_base + "_ENABLE_TESTS", "tests"),
                 define(project_name_base + "_ENABLE_CXX11", True),
                 define(project_name_base + "_ENABLE_Kokkos", False),
                 define(project_name_base + "_HIDE_DEPRECATED_CODE", False),
