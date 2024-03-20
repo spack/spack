@@ -22,6 +22,5 @@ class PyPythonLspJsonrpc(PythonPackage):
     depends_on("py-setuptools", type="build")
     depends_on("py-setuptools@61.2.0:", type="build", when="@1.1.0:")
     depends_on("py-setuptools-scm@3.4.3:+toml", type="build", when="@1.1.0:")
-    depends_on("py-wheel", type="build", when="@1.1.0:")
 
     depends_on("py-ujson@3.0.0:", type=("build", "run"))
