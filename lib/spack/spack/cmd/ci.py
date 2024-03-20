@@ -100,6 +100,13 @@ def setup_parser(subparser):
         "generate jobs for specs even when they are up-to-date on the mirror",
     )
     generate.add_argument(
+        "--prune-externals",
+        action="store_false",
+        default=True,
+        help="prune external specs from the pipeline\n\n"
+        "do not generate jobs for specs that are marked as external",
+    )
+    generate.add_argument(
         "--check-index-only",
         action="store_true",
         dest="index_only",
@@ -114,11 +121,12 @@ def setup_parser(subparser):
     )
     generate.add_argument(
         "--artifacts-root",
-        default=None,
+        default="jobs_scratch_dir",
         help="path to the root of the artifacts directory\n\n"
-        "if provided, concrete environment files (spack.yaml, spack.lock) will be generated under "
-        "this directory. their location will be passed to generated child jobs through the "
-        "SPACK_CONCRETE_ENVIRONMENT_PATH variable",
+        "The spack ci module assumes it will normally be run from within your project "
+        "directory, wherever that is checked to run your ci.  The artifacts root directory "
+        "should specifiy a name that can safely be used for artifacts within your project "
+        "directory.",
     )
     generate.set_defaults(func=ci_generate)
 
@@ -203,41 +211,7 @@ def ci_generate(args):
             "The flag --buildcache-destination is deprecated and will be removed in Spack 0.23"
         )
 
-    output_file = args.output_file
-    copy_yaml_to = args.copy_to
-    run_optimizer = args.optimize
-    use_dependencies = args.dependencies
-    prune_dag = args.prune_dag
-    index_only = args.index_only
-    artifacts_root = args.artifacts_root
-    buildcache_destination = args.buildcache_destination
-
-    if not output_file:
-        output_file = os.path.abspath(".gitlab-ci.yml")
-    else:
-        output_file_path = os.path.abspath(output_file)
-        gen_ci_dir = os.path.dirname(output_file_path)
-        if not os.path.exists(gen_ci_dir):
-            os.makedirs(gen_ci_dir)
-
-    # Generate the jobs
-    spack_ci.generate_gitlab_ci_yaml(
-        env,
-        True,
-        output_file,
-        prune_dag=prune_dag,
-        check_index_only=index_only,
-        run_optimizer=run_optimizer,
-        use_dependencies=use_dependencies,
-        artifacts_root=artifacts_root,
-        remote_mirror_override=buildcache_destination,
-    )
-
-    if copy_yaml_to:
-        copy_to_dir = os.path.dirname(copy_yaml_to)
-        if not os.path.exists(copy_to_dir):
-            os.makedirs(copy_to_dir)
-        shutil.copyfile(output_file, copy_yaml_to)
+    spack_ci.generate_pipeline(env, args)
 
 
 def ci_reindex(args):

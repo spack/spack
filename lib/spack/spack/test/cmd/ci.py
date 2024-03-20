@@ -86,7 +86,7 @@ testjob:
         yield repo_path
 
 
-def test_specs_staging(config, tmpdir):
+def test_pipeline_dag(config, tmpdir):
     """Make sure we achieve the best possible staging for the following
 spec DAG::
 
@@ -114,32 +114,57 @@ and then 'd', 'b', and 'a' to be put in the next three stages, respectively.
     with repo.use_repositories(builder.root):
         spec_a = Spec("a").concretized()
 
-        spec_a_label = ci._spec_deps_key(spec_a)
-        spec_b_label = ci._spec_deps_key(spec_a["b"])
-        spec_c_label = ci._spec_deps_key(spec_a["c"])
-        spec_d_label = ci._spec_deps_key(spec_a["d"])
-        spec_e_label = ci._spec_deps_key(spec_a["e"])
-        spec_f_label = ci._spec_deps_key(spec_a["f"])
-        spec_g_label = ci._spec_deps_key(spec_a["g"])
+        key_a = ci.common.PipelineDag.key(spec_a)
+        key_b = ci.common.PipelineDag.key(spec_a["b"])
+        key_c = ci.common.PipelineDag.key(spec_a["c"])
+        key_d = ci.common.PipelineDag.key(spec_a["d"])
+        key_e = ci.common.PipelineDag.key(spec_a["e"])
+        key_f = ci.common.PipelineDag.key(spec_a["f"])
+        key_g = ci.common.PipelineDag.key(spec_a["g"])
 
-        spec_labels, dependencies, stages = ci.stage_spec_jobs([spec_a])
+        pipeline = ci.common.PipelineDag([spec_a])
 
-        assert len(stages) == 4
+        expected_bottom_up_traversal = {
+            key_a: 3,
+            key_b: 2,
+            key_c: 0,
+            key_d: 1,
+            key_e: 0,
+            key_f: 0,
+            key_g: 0,
+        }
 
-        assert len(stages[0]) == 4
-        assert spec_c_label in stages[0]
-        assert spec_e_label in stages[0]
-        assert spec_f_label in stages[0]
-        assert spec_g_label in stages[0]
+        for stage, (key, _) in pipeline.traverse(top_down=False):
+            assert expected_bottom_up_traversal[key] == stage
 
-        assert len(stages[1]) == 1
-        assert spec_d_label in stages[1]
+        expected_top_down_traversal = {
+            key_a: 0,
+            key_b: 1,
+            key_c: 1,
+            key_d: 2,
+            key_e: 2,
+            key_f: 3,
+            key_g: 3,
+        }
 
-        assert len(stages[2]) == 1
-        assert spec_b_label in stages[2]
+        for stage, (key, _) in pipeline.traverse(top_down=True):
+            assert expected_top_down_traversal[key] == stage
 
-        assert len(stages[3]) == 1
-        assert spec_a_label in stages[3]
+        pipeline.prune(key_d)
+        b_children = pipeline.nodes[key_b].children
+        assert len(b_children) == 3
+        assert all([k in b_children for k in [key_e, key_f, key_g]])
+
+        a_deps_direct = pipeline.get_dependencies(pipeline.nodes[key_a])
+        assert all([s in a_deps_direct for s in [spec_a["b"], spec_a["c"]]])
+
+        a_deps_transitive = pipeline.get_dependencies(pipeline.nodes[key_a], transitive=True)
+        assert all(
+            [
+                s in a_deps_transitive
+                for s in [spec_a["b"], spec_a["c"], spec_a["e"], spec_a["f"], spec_a["g"]]
+            ]
+        )
 
 
 def test_ci_generate_with_env(
@@ -255,7 +280,7 @@ spack:
 """
         )
 
-    expect_out = "Environment does not have `ci` a configuration"
+    expect_out = "Environment yaml must have `ci` config section in order to generate a pipeline"
 
     with tmpdir.as_cwd():
         env_cmd("create", "test", "./spack.yaml")
@@ -546,7 +571,10 @@ spack:
             assert "variables" in yaml_contents
             pipeline_vars = yaml_contents["variables"]
             assert "SPACK_PIPELINE_TYPE" in pipeline_vars
-            assert pipeline_vars["SPACK_PIPELINE_TYPE"] == "spack_pull_request"
+            assert (
+                ci.common.PipelineType[pipeline_vars["SPACK_PIPELINE_TYPE"]]
+                == ci.common.PipelineType.PULL_REQUEST
+            )
 
 
 def test_ci_generate_with_external_pkg(
@@ -1151,7 +1179,11 @@ spack:
                 assert yaml_contents["workflow"]["rules"] == [{"when": "always"}]
 
             outputfile_not_pruned = str(tmpdir.join("unpruned_pipeline.yml"))
-            ci_cmd("generate", "--no-prune-dag", "--output-file", outputfile_not_pruned)
+            genout = ci_cmd(
+                "generate", "--no-prune-dag", "--output-file", outputfile_not_pruned, output=str
+            )
+            print("spack ci generate --no-prune-dag ...:")
+            print(genout)
 
             # Test the --no-prune-dag option of spack ci generate
             with open(outputfile_not_pruned) as f:
@@ -1988,7 +2020,7 @@ spack:
 
             ci_cmd("generate", "--output-file", pipeline_path, "--artifacts-root", artifacts_root)
 
-            job_name = ci.get_job_name(job_spec)
+            job_name = ci.generators.gitlab.get_job_name(job_spec)
 
             repro_file = os.path.join(working_dir.strpath, "repro.json")
             repro_details = {
@@ -2089,116 +2121,6 @@ def test_cmd_first_line():
     assert spack.cmd.first_line(doc) == first
 
 
-legacy_spack_yaml_contents = """
-spack:
-  definitions:
-    - old-gcc-pkgs:
-      - archive-files
-      - callpath
-      # specify ^openblas-with-lapack to ensure that builtin.mock repo flake8
-      # package (which can also provide lapack) is not chosen, as it violates
-      # a package-level check which requires exactly one fetch strategy (this
-      # is apparently not an issue for other tests that use it).
-      - hypre@0.2.15 ^openblas-with-lapack
-  specs:
-    - matrix:
-      - [$old-gcc-pkgs]
-  mirrors:
-    test-mirror: file:///some/fake/mirror
-  {0}:
-    match_behavior: first
-    mappings:
-      - match:
-          - arch=test-debian6-core2
-        runner-attributes:
-          tags:
-            - donotcare
-          image: donotcare
-      - match:
-          - arch=test-debian6-m1
-        runner-attributes:
-          tags:
-            - donotcare
-          image: donotcare
-    service-job-attributes:
-      image: donotcare
-      tags: [donotcare]
-  cdash:
-    build-group: Not important
-    url: https://my.fake.cdash
-    project: Not used
-    site: Nothing
-"""
-
-
-@pytest.mark.regression("36409")
-def test_gitlab_ci_deprecated(
-    tmpdir,
-    mutable_mock_env_path,
-    install_mockery,
-    mock_packages,
-    monkeypatch,
-    ci_base_environment,
-    mock_binary_index,
-):
-    mirror_url = "file:///some/fake/mirror"
-    filename = str(tmpdir.join("spack.yaml"))
-    with open(filename, "w") as f:
-        f.write(legacy_spack_yaml_contents.format("gitlab-ci"))
-
-    with tmpdir.as_cwd():
-        env_cmd("create", "test", "./spack.yaml")
-        outputfile = "generated-pipeline.yaml"
-
-        with ev.read("test"):
-            ci_cmd("generate", "--output-file", outputfile)
-
-        with open(outputfile) as f:
-            contents = f.read()
-            yaml_contents = syaml.load(contents)
-
-            assert "stages" in yaml_contents
-            assert len(yaml_contents["stages"]) == 5
-            assert yaml_contents["stages"][0] == "stage-0"
-            assert yaml_contents["stages"][4] == "stage-rebuild-index"
-
-            assert "rebuild-index" in yaml_contents
-            rebuild_job = yaml_contents["rebuild-index"]
-            expected = "spack buildcache update-index --keys {0}".format(mirror_url)
-            assert rebuild_job["script"][0] == expected
-
-            assert "variables" in yaml_contents
-            assert "SPACK_ARTIFACTS_ROOT" in yaml_contents["variables"]
-            artifacts_root = yaml_contents["variables"]["SPACK_ARTIFACTS_ROOT"]
-            assert artifacts_root == "jobs_scratch_dir"
-
-
-@pytest.mark.regression("36045")
-def test_gitlab_ci_update(
-    tmpdir,
-    mutable_mock_env_path,
-    install_mockery,
-    mock_packages,
-    monkeypatch,
-    ci_base_environment,
-    mock_binary_index,
-):
-    filename = str(tmpdir.join("spack.yaml"))
-    with open(filename, "w") as f:
-        f.write(legacy_spack_yaml_contents.format("ci"))
-
-    with tmpdir.as_cwd():
-        env_cmd("update", "-y", ".")
-
-        with open("spack.yaml") as f:
-            contents = f.read()
-            yaml_contents = syaml.load(contents)
-
-            ci_root = yaml_contents["spack"]["ci"]
-
-            assert "pipeline-gen" in ci_root
-
-
 def test_gitlab_config_scopes(
     tmpdir, working_env, mutable_mock_env_path, mock_packages, ci_base_environment
 ):
@@ -2294,3 +2216,39 @@ spack:
                 assert "script" in reindex_job
                 reindex_step = reindex_job["script"][0]
                 assert "file:///push/binaries/here" in reindex_step
+
+
+def test_ci_generate_unknown_generator(
+    tmpdir, mutable_mock_env_path, install_mockery, mock_packages, ci_base_environment
+):
+    """Ensure unrecognized ci targets are detected and the user
+    sees an intelligible and actionable message"""
+    filename = str(tmpdir.join("spack.yaml"))
+    with open(filename, "w") as f:
+        f.write(
+            """\
+spack:
+  specs:
+    - archive-files
+  mirrors:
+    some-mirror: file:///this/is/a/source/mirror
+    buildcache-destination: file:///push/binaries/here
+  ci:
+    target: unknown
+    pipeline-gen:
+    - submapping:
+      - match:
+          - archive-files
+        build-job:
+          tags:
+            - donotcare
+          image: donotcare
+"""
+        )
+
+    with tmpdir.as_cwd():
+        env_cmd("create", "test", "./spack.yaml")
+        with ev.read("test"):
+            out = ci_cmd("generate", fail_on_error=False)
+            expected = "Error: Spack CI module cannot generate a pipeline for format unknown"
+            assert expected in out

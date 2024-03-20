@@ -137,7 +137,7 @@ core_shared_properties = union_dicts(
         "rebuild-index": {"type": "boolean"},
         "broken-specs-url": {"type": "string"},
         "broken-tests-packages": {"type": "array", "items": {"type": "string"}},
-        "target": {"type": "string", "enum": ["gitlab"], "default": "gitlab"},
+        "target": {"type": "string"},
     }
 )
 
@@ -183,21 +183,3 @@ schema = {
     "additionalProperties": False,
     "properties": properties,
 }
-
-
-def update(data):
-    import llnl.util.tty as tty
-
-    import spack.ci
-    import spack.environment as ev
-
-    # Warn if deprecated section is still in the environment
-    ci_env = ev.active_environment()
-    if ci_env:
-        env_config = ci_env.manifest[ev.TOP_LEVEL_KEY]
-        if "gitlab-ci" in env_config:
-            tty.die("Error: `gitlab-ci` section detected with `ci`, these are not compatible")
-
-    # Detect if the ci section is using the new pipeline-gen
-    # If it is, assume it has already been converted
-    return spack.ci.translate_deprecated_config(data)
