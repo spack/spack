@@ -193,12 +193,15 @@ class StandardVersion(ConcreteVersion):
         message = "{cls.__name__} indices must be integers"
         raise TypeError(message.format(cls=cls))
 
+    def _stringify(self):
+        string = ""
+        for index in range(len(self.version)):
+            string += str(self.version[index])
+            string += str(self.separators[index])
+        return string
+
     def __str__(self):
-        return (
-            self.string
-            if isinstance(self.string, str)
-            else ".".join((str(c) for c in self.version))
-        )
+        return self.string or self._stringify()
 
     def __repr__(self) -> str:
         # Print indirect repr through Version(...)
@@ -256,6 +259,21 @@ class StandardVersion(ConcreteVersion):
         return any(
             isinstance(p, VersionStrComponent) and isinstance(p.data, int) for p in self.version
         )
+
+    @property
+    def force_numeric(self):
+        """Replaces all non-numeric components of the version with 0
+
+        This can be used to pass Spack versions to libraries that have stricter version schema.
+        """
+        numeric = tuple(0 if isinstance(v, VersionStrComponent) else v for v in self.version)
+        # null separators except the final one have to be converted to avoid concatenating ints
+        # default to '.' as most common delimiter for versions
+        separators = tuple(
+            "." if s == "" and i != len(self.separators) - 1 else s
+            for i, s in enumerate(self.separators)
+        )
+        return type(self)(None, numeric, separators)
 
     @property
     def dotted(self):
