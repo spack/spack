@@ -24,6 +24,7 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
     executables = ["^chpl$", "^chpldoc$"]
 
     # A list of GitHub accounts to notify when the package is updated.
+    # TODO: add chapel-project github account
     maintainers("arezaii")
 
     # See https://spdx.org/licenses/ for a list.
@@ -32,6 +33,7 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
     version("main", branch="main")
 
     version("2.0.0", sha256="a8cab99fd034c7b7229be8d4626ec95cf02072646fb148c74b4f48c460c6059c")
+    # Chapel version 1.33 is the final 1.x release
     version("1.33.0", sha256="c7dfe691a043b6a5dcbea6fe7607ca030014f1a8019744c4c99f67caa8829ba3")
     version("1.32.0", sha256="a359032b4355774e250fb2796887b3bbf58d010c468faba97f7b471bc6bab57d")
 
@@ -125,11 +127,14 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
         multi=False,
     )
 
-    variant("check", default=False, description="Run make check after installing the package")
+    # TODO: delete, running checks after install isn't a variant of chapel
+    # variant("check", default=False, description="Run make check after installing the package")
 
+    # TODO: refactor this somehow, this is a separate documentation tool, not a variant of chapel
     variant(
-        "chpldoc", when="@1.34:", default=False, description="Build chpldoc in addition to chpl"
+        "chpldoc", when="@2.0.0:", default=False, description="Build chpldoc in addition to chpl"
     )
+    # TODO: do we need this? is main not included in the rule above @2.0.0: ?
     variant(
         "chpldoc", when="@main", default=False, description="Build chpldoc in addition to chpl"
     )
@@ -150,6 +155,7 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
         multi=False,
     )
 
+    # TODO: remove this, it's not a variant of chapel we expect in the field
     variant(
         "developer",
         values=(True, False),
@@ -260,12 +266,13 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
         values=("bundled", "none", "spack", "system"),
     )
 
-    variant(
-        "module_tests",
-        default=False,
-        description="Run self-tests on selected modules after installing the package "
-        "(may add several minutes to install time)",
-    )
+    # TODO: delete, executing module_tests is not a property of a chapel install
+    # variant(
+    #     "module_tests",
+    #     default=False,
+    #     description="Run self-tests on selected modules after installing the package "
+    #     "(may add several minutes to install time)",
+    # )
 
     variant(
         "package_modules",
@@ -583,7 +590,7 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
         spec_vers_str = str(self.spec.version.up_to(2))
         return spec_vers_str
 
-    def run_test_version(self):
+    def test_version(self):
         """Perform version checks on selected installed package binaries."""
         expected = f"version {self._output_version_long}"
         exes = ["chpl"]
@@ -606,81 +613,177 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
                     output = prog("--version", output=str.split, error=str.split)
                     assert expected in output
 
-    def run_local_make_check_with_gasnet(self):
-        """Setup env to run self-test after installing the package with gasnet"""
-        with set_env(
-            GASNET_SPAWNFN="L",
-            GASNET_QUIET="yes",
-            GASNET_ROUTE_OUTPUT="0",
-            QT_AFFINITY="no",
-            CHPL_QTHREAD_ENABLE_OVERSUBSCRIPTION="1",
-            CHPL_RT_MASTERIP="127.0.0.1",
-            CHPL_RT_WORKERIP="127.0.0.0",
-            CHPL_LAUNCHER="",
-        ):
-            make("check")
+    # def run_local_make_check_with_gasnet(self):
+    #     """Setup env to run self-test after installing the package with gasnet"""
+    #     with set_env(
+    #         GASNET_SPAWNFN="L",
+    #         GASNET_QUIET="yes",
+    #         GASNET_ROUTE_OUTPUT="0",
+    #         QT_AFFINITY="no",
+    #         CHPL_QTHREAD_ENABLE_OVERSUBSCRIPTION="1",
+    #         CHPL_RT_MASTERIP="127.0.0.1",
+    #         CHPL_RT_WORKERIP="127.0.0.0",
+    #         CHPL_LAUNCHER="",
+    #     ):
+    #         make("check")
 
-    def run_local_make_check(self):
-        if self.spec.variants["comm"].value != "none":
-            self.run_local_make_check_with_gasnet()
-        else:
-            make("check")
+    # def run_local_make_check(self):
+    #     if self.spec.variants["comm"].value != "none":
+    #         self.run_local_make_check_with_gasnet()
+    #     else:
+    #         make("check")
 
-    def check(self):
-        path_put_first("PATH", [self.prefix.util])
-        make("test")
+    # def check(self):
+        # path_put_first("PATH", [join_path(self.prefix.share, "chapel", self._output_version_short, "util")])
+        # make("test")
+        # self.run_local_make_check()
+        # with working_dir(self.test_suite.current_test_cache_dir):
+        #     res = subprocess.run(["util/start_test"])
+        #     assert res.returncode == 0
+            # tests_to_run = []
+            # with test_part(self, "test_package_modules", purpose="test package modules"):
+                    # if "yaml" in self.get_package_modules:
+                    #     tests_to_run.append("test/library/packages/Yaml/writeAndParse.chpl")
+                    # if "zmq" in self.get_package_modules:
+                    #     tests_to_run.append("test/library/packages/ZMQ/weather.chpl")
+                    # if "ssl" in self.get_package_modules:
+                    #     tests_to_run.append("test/library/packages/Crypto/")
+                    # # TODO: These tests fail with llvm, unable to find C variable CURLPAUSE_CONT
+                    # if (
+                    #     "curl" in self.get_package_modules
+                    #     and self.spec.variants["llvm"].value == "none"
+                    # ):
+                    #     with set_env(CHPL_NIGHTLY_TEST_CONFIG_NAME="networking-packages"):
+                    #         print("Running package module test for package 'curl'")
+                    #         res = subprocess.run(
+                    #             ["util/start_test", "test/library/packages/Curl/"]
+                    #         )
+                    #         assert res.returncode == 0
+                    #         print("Running package module test for package 'url'")
+                    #         res = subprocess.run(["util/start_test", "test/library/packages/URL/"])
+                    #         assert res.returncode == 0
+                    # if "hdf5" in self.get_package_modules:
+                    #     tests_to_run.append("test/library/packages/HDF5/")
+                    # if "protobuf" in self.get_package_modules:
+                    #     tests_to_run.append("test/library/packages/ProtobufProtocolSupport/")
+                    # print("Running package module tests for packages...")
+                    # tests_to_run.insert(0, "util/start_test")
 
-    def run_test_package_modules(self):
-        """Test that the package modules are available"""
-        if not self.spec.variants["module_tests"].value:
-            print("Skipping module tests as module_tests variant is not set")
-            return
-        tests_to_run = []
-        with working_dir(self.stage.source_path):
-            with set_env(CHPL_HOME=self.stage.source_path):
-                with test_part(self, "test_package_modules", purpose="test package modules"):
-                    if "yaml" in self.get_package_modules:
-                        tests_to_run.append("test/library/packages/Yaml/writeAndParse.chpl")
-                    if "zmq" in self.get_package_modules:
-                        tests_to_run.append("test/library/packages/ZMQ/weather.chpl")
-                    if "ssl" in self.get_package_modules:
-                        tests_to_run.append("test/library/packages/Crypto/")
-                    # TODO: These tests fail with llvm, unable to find C variable CURLPAUSE_CONT
-                    if (
-                        "curl" in self.get_package_modules
-                        and self.spec.variants["llvm"].value == "none"
-                    ):
-                        with set_env(CHPL_NIGHTLY_TEST_CONFIG_NAME="networking-packages"):
-                            print("Running package module test for package 'curl'")
-                            res = subprocess.run(
-                                ["util/start_test", "test/library/packages/Curl/"]
-                            )
-                            assert res.returncode == 0
-                            print("Running package module test for package 'url'")
-                            res = subprocess.run(["util/start_test", "test/library/packages/URL/"])
-                            assert res.returncode == 0
-                    if "hdf5" in self.get_package_modules:
-                        tests_to_run.append("test/library/packages/HDF5/")
-                    if "protobuf" in self.get_package_modules:
-                        tests_to_run.append("test/library/packages/ProtobufProtocolSupport/")
-                    print("Running package module tests for packages...")
-                    tests_to_run.insert(0, "util/start_test")
-                    res = subprocess.run([t for t in tests_to_run])
+    def test_hello(self):
+        """Run the hello world test"""
+        with working_dir(self.test_suite.current_test_cache_dir):
+            with set_env(CHPL_CHECK_HOME=self.test_suite.current_test_cache_dir):
+                with test_part(self, "test_hello", purpose="test hello world"):
+                    if self.spec.variants["comm"].value != "none":
+                        with set_env(
+                            GASNET_SPAWNFN="L",
+                            GASNET_QUIET="yes",
+                            GASNET_ROUTE_OUTPUT="0",
+                            QT_AFFINITY="no",
+                            CHPL_QTHREAD_ENABLE_OVERSUBSCRIPTION="1",
+                            CHPL_RT_MASTERIP="127.0.0.1",
+                            CHPL_RT_WORKERIP="127.0.0.0",
+                        ):
+                            res = subprocess.run(["util/test/checkChplInstall"])
+                    else:
+                        res = subprocess.run(["util/test/checkChplInstall"])
                     assert res.returncode == 0
 
+    # TODO: This is a pain because the checkChplDoc script doesn't have the same
+    # support for CHPL_CHECK_HOME and chpldoc is finicky about chpl_home
+    def test_chpldoc(self):
+        """Run the chpldoc test"""
+        if not self.spec.variants["chpldoc"].value:
+            print("Skipping chpldoc test as chpldoc variant is not set")
+            return
+        with working_dir(self.test_suite.current_test_cache_dir):
+            with set_env(CHPL_HOME=self.test_suite.current_test_cache_dir):
+                with test_part(self, "test_chpldoc", purpose="test chpldoc"):
+                    res = subprocess.run(["util/test/checkChplDoc"])
+                    assert res.returncode == 0
+
+
+
+    # TODO: In order to run these tests, there's a lot of infrastructure to copy
+    # from the Chapel test suite.
+    # def test_package_modules(self):
+    #     """Test that the package modules are available"""
+    #     # if not self.spec.variants["module_tests"].value:
+    #     #     print("Skipping module tests as module_tests variant is not set")
+    #     #     return
+    #     tests_to_run = []
+    #     with working_dir(self.test_suite.current_test_cache_dir):
+    #         with set_env(CHPL_HOME=join_path(self.spec.prefix.share, "chapel", self._output_version_short)):
+    #             with test_part(self, "test_package_modules", purpose="test package modules"):
+    #                 if "yaml" in self.get_package_modules:
+    #                     tests_to_run.append("test/library/packages/Yaml/writeAndParse.chpl")
+    #                 if "zmq" in self.get_package_modules:
+    #                     tests_to_run.append("test/library/packages/ZMQ/weather.chpl")
+    #                 if "ssl" in self.get_package_modules:
+    #                     tests_to_run.append("test/library/packages/Crypto/")
+    #                 # TODO: These tests fail with llvm, unable to find C variable CURLPAUSE_CONT
+    #                 if (
+    #                     "curl" in self.get_package_modules
+    #                     and self.spec.variants["llvm"].value == "none"
+    #                 ):
+    #                     with set_env(CHPL_NIGHTLY_TEST_CONFIG_NAME="networking-packages"):
+    #                         print("Running package module test for package 'curl'")
+    #                         res = subprocess.run(
+    #                             ["util/start_test", "test/library/packages/Curl/"]
+    #                         )
+    #                         assert res.returncode == 0
+    #                         print("Running package module test for package 'url'")
+    #                         res = subprocess.run(["util/start_test", "test/library/packages/URL/"])
+    #                         assert res.returncode == 0
+    #                 if "hdf5" in self.get_package_modules:
+    #                     tests_to_run.append("test/library/packages/HDF5/")
+    #                 if "protobuf" in self.get_package_modules:
+    #                     tests_to_run.append("test/library/packages/ProtobufProtocolSupport/")
+    #                 if len(tests_to_run) > 0:
+    #                     with set_env(CHPL_HOME=self.test_suite.current_test_cache_dir):
+    #                         compiler = join_path(self.spec.prefix.bin,'chpl')
+    #                         print("Running package module tests for packages...")
+    #                         print(f" command to run: util/start_test --compiler {compiler}")
+    #                         tests_to_run.insert(0, "util/start_test")
+    #                         tests_to_run.insert(1, "--compiler")
+    #                         tests_to_run.insert(2, compiler)
+    #                         res = subprocess.run([t for t in tests_to_run])
+    #                         assert res.returncode == 0
+
     @run_after("install")
-    def self_check(self):
-        """Run the self-check after installing the package"""
-        path_put_first("PATH", [self.prefix.bin])
-        self.run_test_version()
-        if self.spec.variants["check"].value:
-            with set_env(CHPL_HOME=self.stage.source_path):
-                with working_dir(self.stage.source_path):
-                    if self.spec.variants["cuda"].value or self.spec.variants["rocm"].value:
-                        with set_env(COMP_FLAGS="--no-checks --no-compiler-driver"):
-                            self.run_local_make_check()
-                    else:  # Not GPU
-                        self.run_local_make_check()
-                    if self.spec.variants["chpldoc"].value:
-                        make("check-chpldoc")
-        self.run_test_package_modules()
+    def copy_test_files(self):
+        """Copy test files to the install directory"""
+        test_files = ["test/release/examples",
+                      "util/start_test",
+                      "util/test",
+                      "util/chplenv",
+                      "util/config",
+                      "test/library/packages/Curl",
+                      "test/library/packages/URL/",
+                      "test/library/packages/ProtobufProtocolSupport/",
+                      "test/library/packages/Crypto/",
+                      "test/library/packages/Yaml/",
+                      "test/library/packages/ZMQ/",
+                      "test/library/packages/HDF5/",
+                      "chplconfig",
+                      "make",
+                      "third-party/chpl-venv/",
+                     ]
+        cache_extra_test_sources(self, test_files)
+
+    # @run_after("install")
+    # @on_package_attributes(run_tests=True)
+    # def self_check(self):
+    #     """Run the self-check after installing the package"""
+    #     path_put_first("PATH", [self.prefix.bin])
+    #     self.test_version()
+    #     with set_env(CHPL_HOME=self.stage.source_path):
+    #         with working_dir(self.stage.source_path):
+    #             if self.spec.variants["cuda"].value or self.spec.variants["rocm"].value:
+    #                 with set_env(COMP_FLAGS="--no-checks --no-compiler-driver"):
+    #                     self.run_local_make_check()
+    #             else:  # Not GPU
+    #                 self.run_local_make_check()
+    #             if self.spec.variants["chpldoc"].value:
+    #                 make("check-chpldoc")
+    #     self.test_package_modules()
