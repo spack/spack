@@ -208,7 +208,103 @@ def _mirror_roots():
     ]
 
 
-class Stage:
+class LockableStagingDir:
+    """A directory whose lifetime can be managed with a context
+    manager (but persists if the user requests it). Instances can have
+    a specified name and if they do, then for all instances that have
+    the same name, only one can enter the context manager at a time.
+    """
+
+    def __init__(self, name, path, keep, lock):
+        # TODO: This uses a protected member of tempfile, but seemed the only
+        # TODO: way to get a temporary name.  It won't be the same as the
+        # TODO: temporary stage area in _stage_root.
+        self.name = name
+        if name is None:
+            self.name = stage_prefix + next(tempfile._get_candidate_names())
+
+        # Use the provided path or construct an optionally named stage path.
+        if path is not None:
+            self.path = path
+        else:
+            self.path = os.path.join(get_stage_root(), self.name)
+
+        # Flag to decide whether to delete the stage folder on exit or not
+        self.keep = keep
+
+        # File lock for the stage directory.  We use one file for all
+        # stage locks. See spack.database.Database.prefix_locker.lock for
+        # details on this approach.
+        self._lock = None
+        self._use_locks = lock
+
+        # When stages are reused, we need to know whether to re-create
+        # it.  This marks whether it has been created/destroyed.
+        self.created = False
+
+    def _get_lock(self):
+        if not self._lock:
+            sha1 = hashlib.sha1(self.name.encode("utf-8")).digest()
+            lock_id = prefix_bits(sha1, bit_length(sys.maxsize))
+            stage_lock_path = os.path.join(get_stage_root(), ".lock")
+            self._lock = spack.util.lock.Lock(
+                stage_lock_path, start=lock_id, length=1, desc=self.name
+            )
+        return self._lock
+
+    def __enter__(self):
+        """
+        Entering a stage context will create the stage directory
+
+        Returns:
+            self
+        """
+        if self._use_locks:
+            self._get_lock().acquire_write(timeout=60)
+        self.create()
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        """
+        Exiting from a stage context will delete the stage directory unless:
+        - it was explicitly requested not to do so
+        - an exception has been raised
+
+        Args:
+            exc_type: exception type
+            exc_val: exception value
+            exc_tb: exception traceback
+
+        Returns:
+            Boolean
+        """
+        # Delete when there are no exceptions, unless asked to keep.
+        if exc_type is None and not self.keep:
+            self.destroy()
+
+        if self._use_locks:
+            self._get_lock().release_write()
+
+    def create(self):
+        """
+        Ensures the top-level (config:build_stage) directory exists.
+        """
+        # User has full permissions and group has only read permissions
+        if not os.path.exists(self.path):
+            mkdirp(self.path, mode=stat.S_IRWXU | stat.S_IRGRP | stat.S_IXGRP)
+        elif not os.path.isdir(self.path):
+            os.remove(self.path)
+            mkdirp(self.path, mode=stat.S_IRWXU | stat.S_IRGRP | stat.S_IXGRP)
+
+        # Make sure we can actually do something with the stage we made.
+        ensure_access(self.path)
+        self.created = True
+
+    def destroy(self):
+        raise NotImplementedError(f"{self.__class__.__name__} is abstract")
+
+
+class Stage(LockableStagingDir):
     """Manages a temporary stage directory for building.
 
     A Stage object is a context manager that handles a directory where
@@ -251,7 +347,8 @@ class Stage:
     """
 
     #: Most staging is managed by Spack. DIYStage is one exception.
-    managed_by_spack = True
+    needs_fetching = True
+    requires_patch_success = True
 
     def __init__(
         self,
@@ -297,6 +394,8 @@ class Stage:
               The search function that provides the fetch strategy
               instance.
         """
+        super().__init__(name, path, keep, lock)
+
         # TODO: fetch/stage coupling needs to be reworked -- the logic
         # TODO: here is convoluted and not modular enough.
         if isinstance(url_or_fetch_strategy, str):
@@ -314,71 +413,7 @@ class Stage:
 
         self.srcdir = None
 
-        # TODO: This uses a protected member of tempfile, but seemed the only
-        # TODO: way to get a temporary name.  It won't be the same as the
-        # TODO: temporary stage area in _stage_root.
-        self.name = name
-        if name is None:
-            self.name = stage_prefix + next(tempfile._get_candidate_names())
         self.mirror_paths = mirror_paths
-
-        # Use the provided path or construct an optionally named stage path.
-        if path is not None:
-            self.path = path
-        else:
-            self.path = os.path.join(get_stage_root(), self.name)
-
-        # Flag to decide whether to delete the stage folder on exit or not
-        self.keep = keep
-
-        # File lock for the stage directory.  We use one file for all
-        # stage locks. See spack.database.Database.prefix_locker.lock for
-        # details on this approach.
-        self._lock = None
-        if lock:
-            sha1 = hashlib.sha1(self.name.encode("utf-8")).digest()
-            lock_id = prefix_bits(sha1, bit_length(sys.maxsize))
-            stage_lock_path = os.path.join(get_stage_root(), ".lock")
-            self._lock = spack.util.lock.Lock(
-                stage_lock_path, start=lock_id, length=1, desc=self.name
-            )
-
-        # When stages are reused, we need to know whether to re-create
-        # it.  This marks whether it has been created/destroyed.
-        self.created = False
-
-    def __enter__(self):
-        """
-        Entering a stage context will create the stage directory
-
-        Returns:
-            self
-        """
-        if self._lock is not None:
-            self._lock.acquire_write(timeout=60)
-        self.create()
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        """
-        Exiting from a stage context will delete the stage directory unless:
-        - it was explicitly requested not to do so
-        - an exception has been raised
-
-        Args:
-            exc_type: exception type
-            exc_val: exception value
-            exc_tb: exception traceback
-
-        Returns:
-            Boolean
-        """
-        # Delete when there are no exceptions, unless asked to keep.
-        if exc_type is None and not self.keep:
-            self.destroy()
-
-        if self._lock is not None:
-            self._lock.release_write()
 
     @property
     def expected_archive_files(self):
@@ -631,21 +666,6 @@ class Stage:
         """
         self.fetcher.reset()
 
-    def create(self):
-        """
-        Ensures the top-level (config:build_stage) directory exists.
-        """
-        # User has full permissions and group has only read permissions
-        if not os.path.exists(self.path):
-            mkdirp(self.path, mode=stat.S_IRWXU | stat.S_IRGRP | stat.S_IXGRP)
-        elif not os.path.isdir(self.path):
-            os.remove(self.path)
-            mkdirp(self.path, mode=stat.S_IRWXU | stat.S_IRGRP | stat.S_IXGRP)
-
-        # Make sure we can actually do something with the stage we made.
-        ensure_access(self.path)
-        self.created = True
-
     def destroy(self):
         """Removes this stage directory."""
         remove_linked_tree(self.path)
@@ -752,7 +772,8 @@ class StageComposite(pattern.Composite):
                 "cache_mirror",
                 "steal_source",
                 "disable_mirrors",
-                "managed_by_spack",
+                "needs_fetching",
+                "requires_patch_success",
             ]
         )
 
@@ -808,8 +829,8 @@ class DIYStage:
     directory naming convention.
     """
 
-    """DIY staging is, by definition, not managed by Spack."""
-    managed_by_spack = False
+    needs_fetching = False
+    requires_patch_success = False
 
     def __init__(self, path):
         if path is None:
@@ -855,6 +876,65 @@ class DIYStage:
 
     def cache_local(self):
         tty.debug("Sources for DIY stages are not cached")
+
+
+class DevelopStage(LockableStagingDir):
+    needs_fetching = False
+    requires_patch_success = False
+
+    def __init__(self, name, dev_path, reference_link):
+        super().__init__(name=name, path=None, keep=False, lock=True)
+        self.dev_path = dev_path
+        self.source_path = dev_path
+
+        # The path of a link that will point to this stage
+        if os.path.isabs(reference_link):
+            link_path = reference_link
+        else:
+            link_path = os.path.join(self.source_path, reference_link)
+        if not os.path.isdir(os.path.dirname(link_path)):
+            raise StageError(f"The directory containing {link_path} must exist")
+        self.reference_link = link_path
+
+    @property
+    def archive_file(self):
+        return None
+
+    def fetch(self, *args, **kwargs):
+        tty.debug("No fetching needed for develop stage.")
+
+    def check(self):
+        tty.debug("No checksum needed for develop stage.")
+
+    def expand_archive(self):
+        tty.debug("No expansion needed for develop stage.")
+
+    @property
+    def expanded(self):
+        """Returns True since the source_path must exist."""
+        return True
+
+    def create(self):
+        super().create()
+        try:
+            llnl.util.symlink.symlink(self.path, self.reference_link)
+        except (llnl.util.symlink.AlreadyExistsError, FileExistsError):
+            pass
+
+    def destroy(self):
+        # Destroy all files, but do not follow symlinks
+        try:
+            shutil.rmtree(self.path)
+        except FileNotFoundError:
+            pass
+        self.created = False
+
+    def restage(self):
+        self.destroy()
+        self.create()
+
+    def cache_local(self):
+        tty.debug("Sources for Develop stages are not cached")
 
 
 def ensure_access(file):

@@ -14,6 +14,8 @@ class LibjpegTurbo(CMakePackage, AutotoolsPackage):
     transcoding.
     """
 
+    maintainers("AlexanderRichert-NOAA")
+
     # https://github.com/libjpeg-turbo/libjpeg-turbo/blob/master/BUILDING.md
     homepage = "https://libjpeg-turbo.org/"
     url = "https://github.com/libjpeg-turbo/libjpeg-turbo/archive/2.0.3.tar.gz"
@@ -58,9 +60,17 @@ class LibjpegTurbo(CMakePackage, AutotoolsPackage):
         default="cmake",
     )
 
-    variant("shared", default=True, description="Build shared libs")
-    variant("static", default=True, description="Build static libs")
+    variant(
+        "libs",
+        default=("shared", "static"),
+        values=("shared", "static"),
+        multi=True,
+        description="Build shared libs, static libs, or both",
+    )
     variant("jpeg8", default=False, description="Emulate libjpeg v8 API/ABI")
+    variant(
+        "pic", default=True, description="Enable position independent code", when="libs=static"
+    )
     variant(
         "partial_decoder",
         default=False,
@@ -94,15 +104,17 @@ class LibjpegTurbo(CMakePackage, AutotoolsPackage):
 
     @property
     def libs(self):
-        return find_libraries("libjpeg*", root=self.prefix, recursive=True)
+        shared = self.spec.satisfies("libs=shared")
+        return find_libraries("libjpeg*", root=self.prefix, shared=shared, recursive=True)
 
 
 class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
     def cmake_args(self):
         args = [
-            self.define_from_variant("ENABLE_SHARED", "shared"),
-            self.define_from_variant("ENABLE_STATIC", "static"),
+            self.define("ENABLE_SHARED", self.spec.satisfies("libs=shared")),
+            self.define("ENABLE_STATIC", self.spec.satisfies("libs=static")),
             self.define_from_variant("WITH_JPEG8", "jpeg8"),
+            self.define_from_variant("CMAKE_POSITION_INDEPENDENT_CODE", "pic"),
         ]
 
         return args

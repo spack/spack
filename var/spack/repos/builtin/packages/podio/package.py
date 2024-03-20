@@ -175,6 +175,7 @@ class Podio(CMakePackage):
     depends_on("sio", type=("build", "link"), when="+sio")
     depends_on("catch2@3.0.1:", type=("test"), when="@0.13:0.16.5")
     depends_on("catch2@3.1:", type=("test"), when="@0.16.6:")
+    depends_on("py-graphviz", type=("run"), when="@0.16.3:")
     depends_on("py-tabulate", type=("run", "test"), when="@0.16.6:")
 
     conflicts("+sio", when="@:0.12", msg="sio support requires at least podio@0.13")

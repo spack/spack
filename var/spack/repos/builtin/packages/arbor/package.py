@@ -13,8 +13,8 @@ class Arbor(CMakePackage, CudaPackage):
     homepage = "https://arbor-sim.org"
     git = "https://github.com/arbor-sim/arbor.git"
     url = "https://github.com/arbor-sim/arbor/releases/download/v0.8.1/arbor-v0.8.1-full.tar.gz"
-    maintainers = ["thorstenhater", "brenthuisman"]
 
+    maintainers("thorstenhater", "brenthuisman")
     license("BSD-3-Clause")
 
     version("master", branch="master")
