@@ -59,11 +59,39 @@ class Zstd(CMakePackage, MakefilePackage):
     depends_on("lz4", when="compression=lz4")
     depends_on("xz", when="compression=lzma")
 
-    # +programs builds vendored xxhash, which uses unsupported builtins
-    # (last tested: nvhpc@22.3)
-    conflicts("+programs %nvhpc")
-
     build_system("cmake", "makefile", default="makefile")
+
+    def flag_handler(self, name, flags):
+        if name == "cppflags":
+            if self.spec.satisfies("@1.5.1:%nvhpc"):
+                # Starting version 1.5.1 (see https://github.com/facebook/zstd/pull/2893),
+                # object 'huf_decompress_amd64.o' is empty if ZSTD_ENABLE_ASM_X86_64_BMI2 is set to
+                # 0. The value of the macro depends on whether the compiler defines __GNUC__
+                # (see portability_macros.h). The problem is that NVHPC C (up to version 23.5, at
+                # least) defines __GNUC__ when compiling a source file written in C (i.e.
+                # huf_decompress.c) but not when compiling a source file written in assembly (i.e.
+                # huf_decompress_amd64.S). This leads to undefined references to the functions
+                # implemented in the assembly file. To make the value of
+                # ZSTD_ENABLE_ASM_X86_64_BMI2 consistent in both translation units, we define the
+                # following macro. Most probably, this leads to the performance degradation but at
+                # least we can get the library without undefined symbols when compiling it with
+                # NVHPC. Note that we can achieve the same result with the MakefileBuilder by
+                # calling make with an extra argument 'ZSTD_NO_ASM=1'. However, there seem to be no
+                # special cmake argument for that, which we could use in the CMakeBuilder, and
+                # using the generic CMAKE_C_FLAGS might lead to unwanted side effects, which we do
+                # not want to discover.
+                flags.append("-DZSTD_DISABLE_ASM")
+            if self.spec.satisfies("@1.5.1:%nvhpc@:22.7"):
+                # Starting version 1.5.1 (see https://github.com/facebook/zstd/pull/2914),
+                # the vendored xxHash tries to make use of the Clang __builtin_rotateleft32 and
+                # __builtin_rotateleft64 builtins. The problem is that NVHPC 22.7 and older
+                # erroneously report that the builtins are supported (i.e.
+                # __has_builtin(__builtin_rotateleft32) and __has_builtin(__builtin_rotateleft32)
+                # are evaluated to 1). This leads to undefined references to the functions. To
+                # circumvent the problem, we define the following macro. Note that the newer
+                # versions of the compiler correctly report that the builtins are not supported.
+                flags.append("-DNO_CLANG_BUILTIN")
+        return flags, None, None
 
 
 class CMakeBuilder(CMakeBuilder):
@@ -73,8 +101,7 @@ class CMakeBuilder(CMakeBuilder):
 
     def cmake_args(self):
         spec = self.spec
-        args = []
-        args.append(self.define_from_variant("ZSTD_BUILD_PROGRAMS", "programs"))
+        args = [self.define_from_variant("ZSTD_BUILD_PROGRAMS", "programs")]
         args.extend(
             [
                 self.define("ZSTD_BUILD_STATIC", self.spec.satisfies("libs=static")),
@@ -97,8 +124,8 @@ class MakefileBuilder(MakefileBuilder):
     def install(self, pkg, spec, prefix):
         args = ["VERBOSE=1", "PREFIX=" + prefix]
 
-        # Tested %nvhpc@22.3. No support for -MP
-        if "%nvhpc" in self.spec:
+        # Tested %nvhpc@23.5. No support for -MP
+        if self.spec.satisfies("@1.4.7:%nvhpc"):
             args.append("DEPFLAGS=-MT $@ -MMD -MF")
         # library targets
         lib_args = ["-C", "lib"] + args + ["install-pc", "install-includes"]
