@@ -28,10 +28,10 @@ class PyJupyterServer(PythonPackage):
     version("1.9.0", sha256="7d19006380f6217458a9db309b54e3dab87ced6c06329c61823907bef2a6f51b")
     version("1.6.1", sha256="242ddd0b644f10e030f917019b47c381e0f2d2b950164af45cbd791d572198ac")
 
-    variant("typescript", default=False, description="Build the typescript code", when="@:1")
+    variant("typescript", default=False, description="Build the typescript code", when="@1.10.2:1")
 
     # https://github.com/spack/spack/issues/41899
-    patch("no_npm_node.patch", when="@:1 ~typescript")
+    patch("no_npm_node.patch", when="@1.10.2:1 ~typescript")
 
     depends_on("python@3.8:", when="@2:", type=("build", "run"))
     depends_on("py-hatchling@1.11:", when="@2:", type="build")
@@ -42,6 +42,8 @@ class PyJupyterServer(PythonPackage):
         depends_on("py-jupyter-packaging@0.9:0", when="@1.6.2:", type="build")
         depends_on("py-pre-commit", when="@1.16:", type="build")
         depends_on("py-setuptools", type="build")
+
+    with when("@1.10.2:1"):
         depends_on("npm", type="build", when="+typescript")
 
     depends_on("py-anyio@3.1.0:", when="@2.2.1:", type=("build", "run"))
