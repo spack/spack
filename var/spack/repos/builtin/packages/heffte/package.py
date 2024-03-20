@@ -64,7 +64,7 @@ class Heffte(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("mpi", type=("build", "run"))
 
     depends_on("fftw@3.3.8:", when="+fftw", type=("build", "run"))
-    depends_on("intel-mkl@2018.0.128:", when="+mkl", type=("build", "run"))
+    depends_on("intel-oneapi-mkl", when="+mkl", type=("build", "run"))
     depends_on("cuda@8.0:", when="+cuda", type=("build", "run"))
     depends_on("hip@3.8.0:", when="+rocm", type=("build", "run"))
     depends_on("rocfft@3.8.0:", when="+rocm", type=("build", "run"))
