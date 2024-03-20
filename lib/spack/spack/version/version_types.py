@@ -236,8 +236,8 @@ class StandardVersion(ConcreteVersion):
         return f'Version("{str(self)}")'
 
     def __hash__(self):
-        # If this is a final release, do not hash the prerelease part.
-        return hash(self.version[0] if self.version[1][0] == FINAL else self.version)
+        # If this is a final release, do not hash the prerelease part for backward compat.
+        return hash(self.version if self.is_prerelease() else self.version[0])
 
     def __contains__(rhs, lhs):
         # We should probably get rid of `x in y` for versions, since
@@ -288,6 +288,9 @@ class StandardVersion(ConcreteVersion):
         return any(
             isinstance(p, VersionStrComponent) and isinstance(p.data, int) for p in self.version[0]
         )
+
+    def is_prerelease(self) -> bool:
+        return self.version[1][0] != FINAL
 
     @property
     def force_numeric(self):
@@ -619,6 +622,9 @@ class GitVersion(ConcreteVersion):
 
     def isdevelop(self):
         return self.ref_version.isdevelop()
+
+    def is_prerelease(self) -> bool:
+        return self.ref_version.is_prerelease()
 
     @property
     def dotted(self) -> StandardVersion:

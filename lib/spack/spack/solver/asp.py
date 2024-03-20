@@ -541,6 +541,7 @@ def _concretization_version_order(version_info: Tuple[GitOrStandardVersion, dict
         info.get("preferred", False),
         not info.get("deprecated", False),
         not version.isdevelop(),
+        not version.is_prerelease(),
         version,
     )
 
