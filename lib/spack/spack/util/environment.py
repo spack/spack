@@ -469,6 +469,16 @@ class EnvironmentModifications:
 
         return Trace(filename=filename, lineno=lineno, context=current_context)
 
+    def restore(self, name, **kwargs):
+        """Stores a request to restore a possibly cleared environment variable to its
+        current value if that variable is currently set.
+
+        Args:
+            name: name of the environment variable to be restored
+        """
+        if name in os.environ:
+            self.set(name, os.environ[name])
+
     @system_env_normalize
     def set(self, name: str, value: str, *, force: bool = False, raw: bool = False):
         """Stores a request to set an environment variable.
