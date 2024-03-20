@@ -160,10 +160,15 @@ class Cray(Platform):
         system, as the Cray compiler wrappers and other components of the Cray
         programming environment are irrelevant without module support.
         """
-        craype_type, craype_version = cls.craype_type_and_version()
-        if craype_type == "EX" and craype_version >= spack.version.Version("21.10"):
+        if "opt/cray" not in os.environ.get("MODULEPATH", ""):
             return False
-        return "opt/cray" in os.environ.get("MODULEPATH", "")
+
+        craype_type, craype_version = cls.craype_type_and_version()
+        if craype_type == "XC":
+            return True
+        if craype_type == "EX" and craype_version < spack.version.Version("21.10"):
+            return True
+        return False
 
     def _default_target_from_env(self):
         """Set and return the default CrayPE target loaded in a clean login
