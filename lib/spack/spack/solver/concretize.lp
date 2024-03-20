@@ -1011,16 +1011,6 @@ node_os_weight(PackageNode, Weight)
     attr("node_os", PackageNode, OS),
     os(OS, Weight).
 
-% match semantics for OS's
-node_os_match(PackageNode, DependencyNode) :-
-   depends_on(PackageNode, DependencyNode),
-   attr("node_os", PackageNode, OS),
-   attr("node_os", DependencyNode, OS).
-
-node_os_mismatch(PackageNode, DependencyNode) :-
-   depends_on(PackageNode, DependencyNode),
-   not node_os_match(PackageNode, DependencyNode).
-
 % every OS is compatible with itself. We can use `os_compatible` to declare
 os_compatible(OS, OS) :- os(OS).
 
@@ -1506,16 +1496,6 @@ opt_criterion(39, "compiler mismatches that are not from CLI").
 #minimize{
     1@39+Priority,PackageNode,DependencyNode
     : compiler_mismatch_required(PackageNode, DependencyNode),
-      build_priority(PackageNode, Priority)
-}.
-
-% Try to minimize the number of compiler mismatches in the DAG.
-opt_criterion(35, "OS mismatches").
-#minimize{ 0@235: #true }.
-#minimize{ 0@35: #true }.
-#minimize{
-    1@35+Priority,PackageNode,DependencyNode
-    : node_os_mismatch(PackageNode, DependencyNode),
       build_priority(PackageNode, Priority)
 }.
 
