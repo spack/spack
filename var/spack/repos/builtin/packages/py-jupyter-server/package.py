@@ -43,9 +43,7 @@ class PyJupyterServer(PythonPackage):
         depends_on("py-pre-commit", when="@1.16:", type="build")
         depends_on("py-setuptools", type="build")
 
-    with when("@1.10.2:1"):
-        depends_on("npm", type="build", when="+typescript")
-
+    depends_on("npm", type="build", when="+typescript")
     depends_on("py-anyio@3.1.0:", when="@2.2.1:", type=("build", "run"))
     depends_on("py-anyio@3.1.0:3", when="@:2.2.0", type=("build", "run"))
     depends_on("py-argon2-cffi", type=("build", "run"))
