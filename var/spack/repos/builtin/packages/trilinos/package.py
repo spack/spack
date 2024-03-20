@@ -373,11 +373,6 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
         when="platform=windows",
         msg="Only static builds are supported on Windows currently.",
     )
-    conflicts(
-        "+mpi",
-        when="platform=windows",
-        msg="Only serial builds are supported on Windows currently.",
-    )
 
     # ###################### Dependencies ##########################
 
@@ -430,8 +425,10 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("strumpack+shared", when="+strumpack")
     depends_on("suite-sparse", when="+suite-sparse")
     depends_on("superlu-dist", when="+superlu-dist")
-    depends_on("superlu@4.3 +pic", when="+superlu")
-    depends_on("swig", when="@:14 +python")
+    depends_on("superlu@4.3 +pic", when="@:13 +superlu")
+    depends_on("superlu@5.2.2 +pic", when="@14: +superlu")
+    if sys.platform != "win32":
+        depends_on("swig", when="@:14 +python")
     depends_on("zlib-api", when="+zoltan")
 
     # Trilinos' Tribits config system is limited which makes it very tricky to
@@ -843,7 +840,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
 
         # MPI settings
         options.append(define_tpl_enable("MPI"))
-        if "+mpi" in spec:
+        if "+mpi" in spec and sys.platform != "win32":
             # Force Trilinos to use the MPI wrappers instead of raw compilers
             # to propagate library link flags for linkers that require fully
             # resolved symbols in shared libs (such as macOS and some newer
