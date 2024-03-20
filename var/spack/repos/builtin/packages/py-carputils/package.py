@@ -19,6 +19,7 @@ class PyCarputils(PythonPackage):
 
     version("master", branch="master")
     # Version to use with openCARP releases
+    version("oc15.0", commit="50e2580b3f75711388eb55982a9b43871c3201f3")
     version("oc13.0", commit="216c3802c2ac2d14c739164dcd57f2e59aa2ede3")
     version("oc12.0", commit="4d7a1f0c604a2ad232e70cf9aa3a8daff5ffb195")
     version("oc11.0", commit="a02f9b846c6e852b7315b20e925d55c355f239b8")

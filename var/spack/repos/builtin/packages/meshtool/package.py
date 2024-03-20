@@ -16,6 +16,7 @@ class Meshtool(MakefilePackage):
 
     version("master", branch="master", preferred=True)
     # Version to use with openCARP releases
+    version("oc15.0", commit="867431d")
     version("oc13.0", commit="867431d6bde35ad41104f611aa57130ef58cfb79")
     version("oc12.0", commit="867431d6bde35ad41104f611aa57130ef58cfb79")
     version("oc11.0", commit="867431d6bde35ad41104f611aa57130ef58cfb79")
