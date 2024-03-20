@@ -135,7 +135,7 @@ class Seacas(CMakePackage):
     # meaningfully linked against as a shared library
     variant("shared", default=True, description="Enables the build of shared libraries")
     variant("mpi", default=True, description="Enables MPI parallelism.")
-
+    variant("tests", default=True, description="Enable the SEACAS tests to build")
     variant(
         "thread_safe", default=False, description="Enable thread-safe exodus and IOSS libraries"
     )
@@ -146,19 +146,24 @@ class Seacas(CMakePackage):
     variant("faodel", default=False, description="Enable Faodel")
     variant("matio", default=True, description="Compile with matio (MatLab) support")
     variant("metis", default=False, description="Compile with METIS and ParMETIS")
+    variant("pamgen", default=False, description="Compile with pamgen")
     variant("x11", default=True, description="Compile with X11")
-
+    variant("zlib", default=False, description="Compile with zlib")
     # ###################### Dependencies ##########################
     depends_on("cmake@3.22:", when="@2023-10-24:", type="build")
     depends_on("cmake@3.17:", when="@:2023-05-30", type="build")
     depends_on("mpi", when="+mpi")
-
+    depends_on("zlib-api", when="+zlib")
+    depends_on("trilinos~exodus+mpi+pamgen", when="+mpi+pamgen")
+    depends_on("trilinos~exodus~mpi+pamgen", when="~mpi+pamgen")
     # Always depends on netcdf-c
     depends_on("netcdf-c@4.8.0:+mpi+parallel-netcdf", when="+mpi")
     depends_on("netcdf-c@4.8.0:~mpi", when="~mpi")
     depends_on("hdf5+hl~mpi", when="~mpi")
+    depends_on("hdf5+hl+mpi", when="+mpi")
 
-    depends_on("fmt@10.1.0", when="@2023-10-24:")
+    depends_on("fmt@10.2.1:", when="@2024-03-11:")
+    depends_on("fmt@10.1.0:", when="@2023-10-24:2023-11-27")
     depends_on("fmt@9.1.0", when="@2022-10-14:2023-05-30")
     depends_on("fmt@8.1.0:9", when="@2022-03-04:2022-05-16")
 
@@ -215,7 +220,7 @@ class Seacas(CMakePackage):
 
         options.extend(
             [
-                define(project_name_base + "_ENABLE_TESTS", True),
+                from_variant(project_name_base + "_ENABLE_TESTS", "tests"),
                 define(project_name_base + "_ENABLE_CXX11", True),
                 define(project_name_base + "_ENABLE_Kokkos", False),
                 define(project_name_base + "_HIDE_DEPRECATED_CODE", False),
@@ -233,7 +238,8 @@ class Seacas(CMakePackage):
                 define(project_name_base + "_ENABLE_SEACAS", True),
             ]
         )
-
+        if "~shared" in self.spec:
+            options.append(self.define(f"{project_name_base}_EXTRA_LINK_FLAGS", "z;dl"))
         options.append(from_variant("TPL_ENABLE_MPI", "mpi"))
         if "+mpi" in spec and not is_windows:
             options.extend(
@@ -360,6 +366,9 @@ class Seacas(CMakePackage):
             options.extend(
                 [define("TPL_ENABLE_METIS", False), define("TPL_ENABLE_ParMETIS", False)]
             )
+
+        options.append(from_variant(f"{project_name_base}_ENABLE_Pamgen", "pamgen"))
+        options.append(from_variant("TPL_ENABLE_Pamgen", "pamgen"))
 
         options.append(from_variant("TPL_ENABLE_Matio", "matio"))
         if "+matio" in spec:
