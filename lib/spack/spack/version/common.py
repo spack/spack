@@ -20,7 +20,8 @@ BETA = 1
 RC = 2
 FINAL = 3
 
-PRERELEASE_TO_STRING = ["a", "b", "rc"]
+PRERELEASE_TO_STRING = ["alpha", "beta", "rc"]
+STRING_TO_PRERELEASE = {"alpha": ALPHA, "beta": BETA, "rc": RC, "final": FINAL}
 
 
 def is_git_version(string: str) -> bool:

@@ -12,11 +12,10 @@ from spack.util.spack_yaml import syaml_dict
 
 from .common import (
     ALPHA,
-    BETA,
     COMMIT_VERSION,
     FINAL,
     PRERELEASE_TO_STRING,
-    RC,
+    STRING_TO_PRERELEASE,
     EmptyRangeError,
     VersionLookupError,
     infinity_versions,
@@ -94,25 +93,23 @@ def parse_string_components(string: str) -> Tuple[tuple, tuple]:
 
     segments = SEGMENT_REGEX.findall(string)
     separators = tuple(m[2] for m in segments)
-
-    # split out alpha / beta / rc if necessary
     prerelease: Tuple[int, ...]
-    if len(segments) >= 3 and segments[-2][1] in ("a", "b", "rc") and segments[-1][0]:
-        release = tuple(
-            int(m[0]) if m[0] else VersionStrComponent.from_string(m[1]) for m in segments[:-2]
-        )
-        qualifier, number = segments[-2][1], int(segments[-1][0])
-        if qualifier == "a":
-            prerelease = (ALPHA, number)
-        elif qualifier == "b":
-            prerelease = (BETA, number)
-        else:
-            prerelease = (RC, number)
+
+    # <version>(alpha|beta|rc)<number>
+    if len(segments) >= 3 and segments[-2][1] in STRING_TO_PRERELEASE and segments[-1][0]:
+        prerelease = (STRING_TO_PRERELEASE[segments[-2][1]], int(segments[-1][0]))
+        segments = segments[:-2]
+
+    # <version>(alpha|beta|rc)
+    elif len(segments) >= 2 and segments[-1][1] in STRING_TO_PRERELEASE:
+        prerelease = (STRING_TO_PRERELEASE[segments[-1][1]],)
+        segments = segments[:-1]
+
+    # <version>
     else:
-        release = tuple(
-            int(m[0]) if m[0] else VersionStrComponent.from_string(m[1]) for m in segments
-        )
         prerelease = (FINAL,)
+
+    release = tuple(int(m[0]) if m[0] else VersionStrComponent.from_string(m[1]) for m in segments)
 
     return (release, prerelease), separators
 
@@ -137,7 +134,7 @@ class StandardVersion(ConcreteVersion):
 
     @staticmethod
     def typemin():
-        return StandardVersion("", ((), (ALPHA, 0)), ("",))
+        return StandardVersion("", ((), (ALPHA,)), ("",))
 
     @staticmethod
     def typemax():
@@ -1092,7 +1089,7 @@ def _next_version(v: StandardVersion) -> StandardVersion:
     separators = v.separators
     prerelease_type = prerelease[0]
     if prerelease_type != FINAL:
-        prerelease = (prerelease_type, prerelease[1] + 1)
+        prerelease = (prerelease_type, prerelease[1] + 1 if len(prerelease) > 1 else 0)
     elif len(release) == 0:
         release = (VersionStrComponent("A"),)
         separators = ("",)
@@ -1109,11 +1106,15 @@ def _next_version(v: StandardVersion) -> StandardVersion:
 
 
 def _prev_version(v: StandardVersion) -> StandardVersion:
+    # this function does not deal with underflow, because it's always called as
+    # _prev_version(_next_version(v)).
     release, prerelease = v.version
     separators = v.separators
     prerelease_type = prerelease[0]
     if prerelease_type != FINAL:
-        prerelease = (prerelease_type, prerelease[1] - 1)
+        prerelease = (
+            (prerelease_type,) if prerelease[1] == 0 else (prerelease_type, prerelease[1] - 1)
+        )
     elif len(release) == 0:
         return v
     elif isinstance(release[-1], VersionStrComponent):
@@ -1124,7 +1125,7 @@ def _prev_version(v: StandardVersion) -> StandardVersion:
     components[::2] = release
     components[1::2] = separators[: len(release)]
     if prerelease_type != FINAL:
-        components.extend((PRERELEASE_TO_STRING[prerelease_type], prerelease[1]))
+        components.extend((PRERELEASE_TO_STRING[prerelease_type], *prerelease[1:]))
     return StandardVersion("".join(str(c) for c in components), (release, prerelease), separators)
 
 

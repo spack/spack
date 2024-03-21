@@ -2621,7 +2621,7 @@ def test_concretization_version_order():
         (Version("1.0"), {}),
         (Version("2.0"), {"deprecated": True}),
         (Version("1.1"), {}),
-        (Version("1.1a1"), {}),
+        (Version("1.1alpha1"), {}),
         (Version("0.9"), {"preferred": True}),
     ]
     result = [
@@ -2634,7 +2634,7 @@ def test_concretization_version_order():
         Version("0.9"),  # preferred
         Version("1.1"),  # latest non-deprecated final version
         Version("1.0"),  # latest non-deprecated final version
-        Version("1.1a1"),  # prereleases
+        Version("1.1alpha1"),  # prereleases
         Version("develop"),  # likely development version
         Version("2.0"),  # deprecated
     ]

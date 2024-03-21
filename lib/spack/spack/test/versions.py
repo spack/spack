@@ -214,21 +214,23 @@ def test_nums_and_patch():
 
 
 def test_prereleases():
-    assert_ver_lt("=6.0a1", "=6.0a2")
-    assert_ver_lt("=6.0a2", "=6.0b1")
-    assert_ver_lt("=6.0b1", "=6.0b2")
-    assert_ver_lt("=6.0b2", "=6.0rc1")
+    # pre-releases are special: they are less than final releases
+    assert_ver_lt("=6.0alpha", "=6.0alpha0")
+    assert_ver_lt("=6.0alpha0", "=6.0alpha1")
+    assert_ver_lt("=6.0alpha1", "=6.0alpha2")
+    assert_ver_lt("=6.0alpha2", "=6.0beta")
+    assert_ver_lt("=6.0beta", "=6.0beta0")
+    assert_ver_lt("=6.0beta0", "=6.0beta1")
+    assert_ver_lt("=6.0beta1", "=6.0beta2")
+    assert_ver_lt("=6.0beta2", "=6.0rc")
+    assert_ver_lt("=6.0rc", "=6.0rc0")
+    assert_ver_lt("=6.0rc0", "=6.0rc1")
     assert_ver_lt("=6.0rc1", "=6.0rc2")
     assert_ver_lt("=6.0rc2", "=6.0")
 
-    # if a / b / c are just suffixes w/o number, then they're just release components.
-    assert_ver_lt("=6.0", "=6.0a")
-    assert_ver_lt("=6.0a", "=6.0b")
-    assert_ver_lt("=6.0b", "=6.0rc")
-    assert_ver_lt("=6.0rc", "=6.0rc1.3.4")
-
 
 def test_alpha_beta():
+    # these are not pre-releases, but ordinary string components.
     assert_ver_gt("=10b2", "=10a1")
     assert_ver_lt("=10a2", "=10b2")
 
@@ -289,34 +291,34 @@ def test_version_ranges():
 
 def test_version_range_with_prereleases():
     # 1.2.1: means from the 1.2.1 release onwards
-    assert_does_not_satisfy("1.2.1a1", "1.2.1:")
-    assert_does_not_satisfy("1.2.1b2", "1.2.1:")
+    assert_does_not_satisfy("1.2.1alpha1", "1.2.1:")
+    assert_does_not_satisfy("1.2.1beta2", "1.2.1:")
     assert_does_not_satisfy("1.2.1rc3", "1.2.1:")
 
     # Pre-releases of 1.2.1 are included in the 1.2.0: range
-    assert_satisfies("1.2.1a1", "1.2.0:")
-    assert_satisfies("1.2.1b1", "1.2.0:")
+    assert_satisfies("1.2.1alpha1", "1.2.0:")
+    assert_satisfies("1.2.1beta1", "1.2.0:")
     assert_satisfies("1.2.1rc3", "1.2.0:")
 
     # In Spack 1.2 and 1.2.0 are distinct with 1.2 < 1.2.0. So a lowerbound on 1.2 includes
     # pre-releases of 1.2.0 as well.
-    assert_satisfies("1.2.0a1", "1.2:")
-    assert_satisfies("1.2.0b2", "1.2:")
+    assert_satisfies("1.2.0alpha1", "1.2:")
+    assert_satisfies("1.2.0beta2", "1.2:")
     assert_satisfies("1.2.0rc3", "1.2:")
 
     # An upperbound :1.1 does not include 1.2.0 pre-releases
-    assert_does_not_satisfy("1.2.0a1", ":1.1")
-    assert_does_not_satisfy("1.2.0b2", ":1.1")
+    assert_does_not_satisfy("1.2.0alpha1", ":1.1")
+    assert_does_not_satisfy("1.2.0beta2", ":1.1")
     assert_does_not_satisfy("1.2.0rc3", ":1.1")
 
-    assert_satisfies("1.2.0a1", ":1.2")
-    assert_satisfies("1.2.0b2", ":1.2")
+    assert_satisfies("1.2.0alpha1", ":1.2")
+    assert_satisfies("1.2.0beta2", ":1.2")
     assert_satisfies("1.2.0rc3", ":1.2")
 
     # You can also construct ranges from prereleases
-    assert_satisfies("1.2.0a2:1.2.0b1", "1.2.0a1:1.2.0b2")
-    assert_satisfies("1.2.0", "1.2.0a1:")
-    assert_satisfies("=1.2.0", "1.2.0a1:")
+    assert_satisfies("1.2.0alpha2:1.2.0beta1", "1.2.0alpha1:1.2.0beta2")
+    assert_satisfies("1.2.0", "1.2.0alpha1:")
+    assert_satisfies("=1.2.0", "1.2.0alpha1:")
     assert_does_not_satisfy("=1.2.0", ":1.2.0rc345")
 
 
