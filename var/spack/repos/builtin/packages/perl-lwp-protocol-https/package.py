@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,8 @@ class PerlLwpProtocolHttps(PerlPackage):
 
     homepage = "https://metacpan.org/pod/LWP::Protocol::https"
     url = "http://search.cpan.org/CPAN/authors/id/G/GA/GAAS/LWP-Protocol-https-6.04.tar.gz"
+
+    license("GPL-1.0-or-later OR Artistic-1.0-Perl")
 
     version("6.04", sha256="1ef67750ee363525cf729b59afde805ac4dc80eaf8d36ca01082a4d78a7af629")
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class PyRsatoolbox(PythonPackage):
     homepage = "https://github.com/rsagroup/rsatoolbox"
     pypi = "rsatoolbox/rsatoolbox-0.0.3.tar.gz"
     git = "https://github.com/rsagroup/rsatoolbox.git"
+
+    license("MIT")
 
     version("main", branch="main")
     version("0.1.2", sha256="2d091cbaa33373bf9da4df5ca8d127f0e427431a3db726076090ab2d54fe1213")

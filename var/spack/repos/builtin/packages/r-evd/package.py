@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,8 @@ class REvd(RPackage):
     threshold models."""
 
     cran = "evd"
+
+    license("GPL-3.0-only")
 
     version("2.3-6.1", sha256="662c592d3f5c5693dbf1c673d1137c4a60a347e330b71be1f3933f201d2c8971")
     version("2.3-6", sha256="8edb8bc4f06d246c4343fd923bb5d5df99724d6db8821bfd996220343a834cb6")

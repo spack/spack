@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -310,19 +310,15 @@ class OCIAuthHandler(urllib.request.BaseHandler):
         # Login failed, avoid infinite recursion where we go back and
         # forth between auth server and registry
         if hasattr(req, "login_attempted"):
-            raise urllib.error.HTTPError(
-                req.full_url, code, f"Failed to login to {req.full_url}: {msg}", headers, fp
+            raise spack.util.web.DetailedHTTPError(
+                req, code, f"Failed to login: {msg}", headers, fp
             )
 
         # On 401 Unauthorized, parse the WWW-Authenticate header
         # to determine what authentication is required
         if "WWW-Authenticate" not in headers:
-            raise urllib.error.HTTPError(
-                req.full_url,
-                code,
-                "Cannot login to registry, missing WWW-Authenticate header",
-                headers,
-                fp,
+            raise spack.util.web.DetailedHTTPError(
+                req, code, "Cannot login to registry, missing WWW-Authenticate header", headers, fp
             )
 
         header_value = headers["WWW-Authenticate"]
@@ -330,8 +326,8 @@ class OCIAuthHandler(urllib.request.BaseHandler):
         try:
             challenge = get_bearer_challenge(parse_www_authenticate(header_value))
         except ValueError as e:
-            raise urllib.error.HTTPError(
-                req.full_url,
+            raise spack.util.web.DetailedHTTPError(
+                req,
                 code,
                 f"Cannot login to registry, malformed WWW-Authenticate header: {header_value}",
                 headers,
@@ -340,8 +336,8 @@ class OCIAuthHandler(urllib.request.BaseHandler):
 
         # If there is no bearer challenge, we can't handle it
         if not challenge:
-            raise urllib.error.HTTPError(
-                req.full_url,
+            raise spack.util.web.DetailedHTTPError(
+                req,
                 code,
                 f"Cannot login to registry, unsupported authentication scheme: {header_value}",
                 headers,
@@ -356,8 +352,8 @@ class OCIAuthHandler(urllib.request.BaseHandler):
                 timeout=req.timeout,
             )
         except ValueError as e:
-            raise urllib.error.HTTPError(
-                req.full_url,
+            raise spack.util.web.DetailedHTTPError(
+                req,
                 code,
                 f"Cannot login to registry, failed to obtain bearer token: {e}",
                 headers,
@@ -412,13 +408,13 @@ def create_opener():
     return opener
 
 
-def ensure_status(response: HTTPResponse, status: int):
+def ensure_status(request: urllib.request.Request, response: HTTPResponse, status: int):
     """Raise an error if the response status is not the expected one."""
     if response.status == status:
         return
 
-    raise urllib.error.HTTPError(
-        response.geturl(), response.status, response.reason, response.info(), None
+    raise spack.util.web.DetailedHTTPError(
+        request, response.status, response.reason, response.info(), None
     )
 
 

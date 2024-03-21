@@ -1,4 +1,4 @@
-% Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+% Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 % Spack Project Developers. See the top-level COPYRIGHT file for details.
 %
 % SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -44,6 +44,9 @@
 % Nodes in the "root" unification set cannot depend on non-root nodes if the dependency is "link" or "run"
 :- attr("depends_on", node(min_dupe_id, Package), node(ID, _), "link"), ID != min_dupe_id, unification_set("root", node(min_dupe_id, Package)), internal_error("link dependency out of the root unification set").
 :- attr("depends_on", node(min_dupe_id, Package), node(ID, _), "run"),  ID != min_dupe_id, unification_set("root", node(min_dupe_id, Package)), internal_error("run dependency out of the root unification set").
+
+% Namespaces are statically assigned by a package fact
+attr("namespace", node(ID, Package), Namespace) :- attr("node", node(ID, Package)), pkg_fact(Package, namespace(Namespace)).
 
 % Rules on "unification sets", i.e. on sets of nodes allowing a single configuration of any given package
 unify(SetID, PackageName) :- unification_set(SetID, node(_, PackageName)).
@@ -695,6 +698,26 @@ requirement_group_satisfied(node(ID, Package), X) :-
   activate_requirement(node(ID, Package), X),
   requirement_group(Package, X).
 
+% Do not impose requirements, if the conditional requirement is not active
+do_not_impose(EffectID, node(ID, Package)) :-
+  trigger_condition_holds(TriggerID, node(ID, Package)),
+  pkg_fact(Package, condition_trigger(ConditionID, TriggerID)),
+  pkg_fact(Package, condition_effect(ConditionID, EffectID)),
+  requirement_group_member(ConditionID , Package, RequirementID),
+  not activate_requirement(node(ID, Package), RequirementID).
+
+% When we have a required provider, we need to ensure that the provider/2 facts respect
+% the requirement. This is particularly important for packages that could provide multiple
+% virtuals independently
+required_provider(Provider, Virtual)
+  :- requirement_group_member(ConditionID, Virtual, RequirementID),
+     condition_holds(ConditionID, _),
+     virtual(Virtual),
+     pkg_fact(Virtual, condition_effect(ConditionID, EffectID)),
+     imposed_constraint(EffectID, "node", Provider).
+
+:- provider(node(Y, Package), node(X, Virtual)), required_provider(Provider, Virtual), Package != Provider.
+
 % TODO: the following two choice rules allow the solver to add compiler
 % flags if their only source is from a requirement. This is overly-specific
 % and should use a more-generic approach like in https://github.com/spack/spack/pull/37180
@@ -988,16 +1011,6 @@ node_os_weight(PackageNode, Weight)
     attr("node_os", PackageNode, OS),
     os(OS, Weight).
 
-% match semantics for OS's
-node_os_match(PackageNode, DependencyNode) :-
-   depends_on(PackageNode, DependencyNode),
-   attr("node_os", PackageNode, OS),
-   attr("node_os", DependencyNode, OS).
-
-node_os_mismatch(PackageNode, DependencyNode) :-
-   depends_on(PackageNode, DependencyNode),
-   not node_os_match(PackageNode, DependencyNode).
-
 % every OS is compatible with itself. We can use `os_compatible` to declare
 os_compatible(OS, OS) :- os(OS).
 
@@ -1149,11 +1162,13 @@ attr("node_compiler_version_satisfies", PackageNode, Compiler, Constraint)
 
 % If the compiler version was set from the command line,
 % respect it verbatim
-:- attr("node_compiler_version_set", PackageNode, Compiler, Version),
-   not attr("node_compiler_version", PackageNode, Compiler, Version).
+error(100, "Cannot set the required compiler: {2}%{0}@{1}", Compiler, Version, Package)
+  :- attr("node_compiler_version_set", node(X, Package), Compiler, Version),
+     not attr("node_compiler_version", node(X, Package), Compiler, Version).
 
-:- attr("node_compiler_set", PackageNode, Compiler),
-   not attr("node_compiler_version", PackageNode, Compiler, _).
+error(100, "Cannot set the required compiler: {1}%{0}", Compiler, Package)
+  :- attr("node_compiler_set", node(X, Package), Compiler),
+     not attr("node_compiler_version", node(X, Package), Compiler, _).
 
 % Cannot select a compiler if it is not supported on the OS
 % Compilers that are explicitly marked as allowed
@@ -1481,16 +1496,6 @@ opt_criterion(39, "compiler mismatches that are not from CLI").
 #minimize{
     1@39+Priority,PackageNode,DependencyNode
     : compiler_mismatch_required(PackageNode, DependencyNode),
-      build_priority(PackageNode, Priority)
-}.
-
-% Try to minimize the number of compiler mismatches in the DAG.
-opt_criterion(35, "OS mismatches").
-#minimize{ 0@235: #true }.
-#minimize{ 0@35: #true }.
-#minimize{
-    1@35+Priority,PackageNode,DependencyNode
-    : node_os_mismatch(PackageNode, DependencyNode),
       build_priority(PackageNode, Priority)
 }.
 

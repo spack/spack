@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -25,7 +25,7 @@ import sys
 import traceback
 import types
 import uuid
-from typing import Any, Dict, List, Tuple, Union
+from typing import Any, Dict, List, Set, Tuple, Union
 
 import llnl.path
 import llnl.util.filesystem as fs
@@ -490,7 +490,7 @@ class TagIndexer(Indexer):
         self.index = spack.tag.TagIndex.from_json(stream, self.repository)
 
     def update(self, pkg_fullname):
-        self.index.update_package(pkg_fullname)
+        self.index.update_package(pkg_fullname.split(".")[-1])
 
     def write(self, stream):
         self.index.to_json(stream)
@@ -746,19 +746,17 @@ class RepoPath:
         for name in self.all_package_names():
             yield self.package_path(name)
 
-    def packages_with_tags(self, *tags, full=False):
-        """Returns a list of packages matching any of the tags in input.
+    def packages_with_tags(self, *tags: str, full: bool = False) -> Set[str]:
+        """Returns a set of packages matching any of the tags in input.
 
         Args:
             full: if True the package names in the output are fully-qualified
         """
-        r = set()
-        for repo in self.repos:
-            current = repo.packages_with_tags(*tags)
-            if full:
-                current = [f"{repo.namespace}.{x}" for x in current]
-            r |= set(current)
-        return sorted(r)
+        return {
+            f"{repo.namespace}.{pkg}" if full else pkg
+            for repo in self.repos
+            for pkg in repo.packages_with_tags(*tags)
+        }
 
     def all_package_classes(self):
         for name in self.all_package_names():
@@ -1169,15 +1167,10 @@ class Repo:
         for name in self.all_package_names():
             yield self.package_path(name)
 
-    def packages_with_tags(self, *tags):
+    def packages_with_tags(self, *tags: str) -> Set[str]:
         v = set(self.all_package_names())
-        index = self.tag_index
-
-        for t in tags:
-            t = t.lower()
-            v &= set(index[t])
-
-        return sorted(v)
+        v.intersection_update(*(self.tag_index[tag.lower()] for tag in tags))
+        return v
 
     def all_package_classes(self):
         """Iterator over all package *classes* in the repository.

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class Beatnik(CMakePackage, CudaPackage, ROCmPackage):
     git = "https://github.com/CUP-ECS/beatnik.git"
 
     maintainers("patrickb314", "JStewart28")
+
+    license("BSD-3-Clause")
 
     version("1.0", commit="ae31ef9cb44678d5ace77994b45b0778defa3d2f")
     version("develop", branch="develop")

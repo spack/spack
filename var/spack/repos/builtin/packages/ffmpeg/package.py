@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class Ffmpeg(AutotoolsPackage):
     url = "https://ffmpeg.org/releases/ffmpeg-4.1.1.tar.bz2"
 
     maintainers("xjrc")
+
+    license("GPL-2.0-or-later AND LGPL-2.1-or-later")
 
     version("6.0", sha256="47d062731c9f66a78380e35a19aac77cebceccd1c7cc309b9c82343ffc430c3d")
     version("5.1.3", sha256="5d5bef6a11f0c500588f9870ec965a30acc0d54d8b1e535da6554a32902d236d")
@@ -123,7 +125,7 @@ class Ffmpeg(AutotoolsPackage):
     # Patch fixing a build failure with binutils 2.41.0
     patch(
         "https://git.ffmpeg.org/gitweb/ffmpeg.git/commitdiff_plain/effadce6c756247ea8bae32dc13bb3e6f464f0eb",
-        sha256="d1ea47c29968507fee772234bc734d29958b62ab92400801ef28559b538a9168",
+        sha256="f070ac16be68b4d32b1b5b885d146eb36eb508daa928b6f0f78256c3482f9f0e",
         when="@:6.0",
     )
 

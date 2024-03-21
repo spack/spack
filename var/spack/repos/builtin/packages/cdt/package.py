@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class Cdt(CMakePackage):
     url = "https://github.com/artem-ogre/CDT/archive/refs/tags/1.3.0.tar.gz"
 
     maintainers("jcortial-safran")
+
+    license("MPL-2.0-no-copyleft-exception")
 
     version("1.4.0", sha256="cb5a95a39b417f5a4d170c7ebe97232d0ed36ea64069339b14964dd52dea95ab")
     version("1.3.6", sha256="15881e4c451f3b7cceade9b11884b3813ff674dff3edae4fb7c440634f8d4c33")

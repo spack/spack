@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class PyTomopy(PythonPackage):
     homepage = "https://tomopy.readthedocs.io/en/latest/index.html"
     url = "https://github.com/tomopy/tomopy/archive/1.0.0.tar.gz"
     git = "https://github.com/tomopy/tomopy.git"
+
+    license("BSD-3-Clause")
 
     version("master", branch="master")
     version("1.11.0", sha256="4e5691c2b083753692ba4376ce301578037071c83fc61a6ae9e5bc9e6fcd3d1f")

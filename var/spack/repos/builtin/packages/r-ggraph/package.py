@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,8 @@ class RGgraph(RPackage):
     layer."""
 
     cran = "ggraph"
+
+    license("MIT")
 
     version("2.1.0", sha256="686fdb22dc4f613273fb755ec42399a208b4d10348eecd1a217afd4612245c1f")
     version("2.0.6", sha256="7b0ac90d834a3ce5641b4bca159d59d09607ddaab592908361b75cffb648d40a")

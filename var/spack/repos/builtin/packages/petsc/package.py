@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,7 +21,8 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     tags = ["e4s"]
 
     version("main", branch="main")
-
+    version("3.20.4", sha256="b0d03a5595ee0a5696dd6683321e1dbfe9fea85238d3016a847b3d0bcdcfb3d9")
+    version("3.20.3", sha256="75a94fb44df0512f51ad093fa784e56b61f51b7ead5956fbe49185c203f8c245")
     version("3.20.2", sha256="2a2d08b5f0e3d0198dae2c42ce1fd036f25c153ef2bb4a2d320ca141ac7cd30b")
     version("3.20.1", sha256="3d54f13000c9c8ceb13ca4f24f93d838319019d29e6de5244551a3ec22704f32")
     version("3.20.0", sha256="c152ccb12cb2353369d27a65470d4044a0c67e0b69814368249976f5bb232bd4")
@@ -172,6 +173,10 @@ class Petsc(Package, CudaPackage, ROCmPackage):
         )
         patch("hip-5.6.0-for-3.18.diff", when="@3.18:3.19 ^hipsparse@5.6.0")
         patch("hip-5.7-plus-for-3.18.diff", when="@3.18:3.19 ^hipsparse@5.7:")
+        patch(
+            "0001-Handle-the-hipsparse-api-changes-for-rocm-6.0.patch",
+            when="@3.20.2:3.20.4 ^hipsparse@6.0",
+        )
 
     # 3.8.0 has a build issue with MKL - so list this conflict explicitly
     conflicts("^intel-mkl", when="@3.8.0")

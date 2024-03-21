@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class Libthai(AutotoolsPackage):
 
     homepage = "https://linux.thai.net"
     url = "https://github.com/tlwg/libthai/releases/download/v0.1.28/libthai-0.1.28.tar.xz"
+
+    license("LGPL-2.1-or-later")
 
     version("0.1.29", sha256="fc80cc7dcb50e11302b417cebd24f2d30a8b987292e77e003267b9100d0f4bcd")
     version("0.1.28", sha256="ffe0a17b4b5aa11b153c15986800eca19f6c93a4025ffa5cf2cab2dcdf1ae911")

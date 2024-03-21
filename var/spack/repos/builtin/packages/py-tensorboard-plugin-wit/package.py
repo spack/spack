@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,6 +22,8 @@ class PyTensorboardPluginWit(PythonPackage):
     url = "https://pypi.io/packages/py3/t/tensorboard_plugin_wit/tensorboard_plugin_wit-1.8.0-py3-none-any.whl"
 
     maintainers("aweits")
+
+    license("Apache-2.0")
 
     version(
         "1.8.1",

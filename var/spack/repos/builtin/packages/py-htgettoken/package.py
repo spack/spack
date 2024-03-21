@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,6 +19,8 @@ class PyHtgettoken(PythonPackage):
     git = "https://github.com/fermitools/htgettoken.git"
 
     maintainers("wdconinc")
+
+    license("BSD-3-Clause")
 
     # The following versions refer to setuptools-buildable commits after 1.16;
     # they are special reproducible version numbers from `git describe`

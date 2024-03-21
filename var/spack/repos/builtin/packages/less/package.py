@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,8 @@ class Less(AutotoolsPackage):
     list_url = "https://www.greenwoodsoftware.com/less/download.html"
 
     depends_on("ncurses")
+
+    license("GPL-3.0-or-later OR BSD-2-Clause")
 
     version("643", sha256="3bb417c4b909dfcb0adafc371ab87f0b22e8b15f463ec299d156c495fc9aa196")
     version("590", sha256="69056021c365b16504cf5bd3864436a5e50cb2f98b76cd68b99b457064139375")

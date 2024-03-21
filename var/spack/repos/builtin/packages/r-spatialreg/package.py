@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -32,6 +32,8 @@ class RSpatialreg(RPackage):
     1.2-*, the functions will be made defunct in 'spdep'."""
 
     cran = "spatialreg"
+
+    license("GPL-2.0-only")
 
     version("1.2-8", sha256="150cb77ca09800d93af7de37440072d59ac7e41acb45ab42fc1c0e59edd7f9de")
     version("1.2-6", sha256="9b384117a31ab5fe830325b3eacbec5eb9d40bf0e9ca3c75ea15ca6b78fbd41d")

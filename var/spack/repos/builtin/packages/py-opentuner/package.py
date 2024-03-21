@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class PyOpentuner(PythonPackage):
     git = "https://github.com/jansel/opentuner.git"
 
     maintainers("matthiasdiener")
+
+    license("MIT")
 
     version("0.8.7", commit="070c5cef6d933eb760a2f9cd5cd08c95f27aee75")
     version("0.8.2", commit="8e720a2094e7964d7a1225e58aca40b0e78bff7d")

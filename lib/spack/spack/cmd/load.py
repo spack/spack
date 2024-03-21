@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -98,15 +98,15 @@ def load(parser, args):
         spack.cmd.display_specs(results)
         return
 
+    constraint_specs = spack.cmd.parse_specs(args.constraint)
     specs = [
-        spack.cmd.disambiguate_spec(spec, env, first=args.load_first)
-        for spec in spack.cmd.parse_specs(args.constraint)
+        spack.cmd.disambiguate_spec(spec, env, first=args.load_first) for spec in constraint_specs
     ]
 
     if not args.shell:
-        specs_str = " ".join(args.constraint) or "SPECS"
+        specs_str = " ".join(str(s) for s in constraint_specs) or "SPECS"
         spack.cmd.common.shell_init_instructions(
-            "spack load", "    eval `spack load {sh_arg} %s`" % specs_str
+            "spack load", f"    eval `spack load {{sh_arg}} {specs_str}`"
         )
         return 1
 

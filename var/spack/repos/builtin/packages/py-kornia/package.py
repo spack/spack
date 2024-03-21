@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,9 @@ class PyKornia(PythonPackage):
     homepage = "https://www.kornia.org/"
     pypi = "kornia/kornia-0.5.10.tar.gz"
 
+    license("Apache-2.0")
+
+    version("0.7.1", sha256="65b54a50f70c1f88240b557fda3fdcc1ab866982a5d062e52213130f5a48465c")
     version("0.7.0", sha256="72cba6a0965a15caf10a664647654412effb7c0b9afcf40e458bc005f976ffac")
     version("0.6.12", sha256="e30bd3d830226f7a159dff1f7757c6200e8f27d1333f06e9d2f98bdb33ce18d3")
     version("0.6.11", sha256="ba77198f2c2e4044c87e4503ff277aadbfc0db20495da5a5289663f380b4be32")

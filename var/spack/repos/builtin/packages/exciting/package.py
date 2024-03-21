@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,6 +18,8 @@ class Exciting(MakefilePackage):
     homepage = "https://exciting-code.org/"
     url = "https://exciting.wdfiles.com/local--files/nitrogen-14/exciting.nitrogen-14.tar.gz"
     git = "https://github.com/exciting/exciting.git"
+
+    license("LGPL-2.1-or-later")
 
     version("oxygen", branch="oxygen_release", preferred=True)
     version("14", sha256="a7feaffdc23881d6c0737d2f79f94d9bf073e85ea358a57196d7f7618a0a3eff")

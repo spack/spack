@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class Revbayes(CMakePackage):
     homepage = "https://revbayes.github.io"
     url = "https://github.com/revbayes/revbayes/archive/1.1.0.tar.gz"
     git = "https://github.com/revbayes/revbayes.git"
+
+    license("GPL-3.0-only")
 
     version("develop", branch="development")
     version(

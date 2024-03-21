@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,8 @@ class Vigra(CMakePackage):
     url = (
         "https://github.com/ukoethe/vigra/releases/download/Version-1-11-1/vigra-1.11.1-src.tar.gz"
     )
+
+    license("MIT")
 
     version("master", branch="master")
     version("1.11.1", sha256="a5564e1083f6af6a885431c1ee718bad77d11f117198b277557f8558fa461aaf")

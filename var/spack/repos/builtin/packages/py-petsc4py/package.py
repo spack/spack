@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,8 @@ class PyPetsc4py(PythonPackage):
     git = "https://gitlab.com/petsc/petsc.git"
 
     maintainers("balay")
+
+    license("BSD-2-Clause")
 
     version("main", branch="main")
     version("3.20.2", sha256="d3f24aa6612ded3e9b9ae11d5533f319d1df1705bea6d81385fea023d01175c9")

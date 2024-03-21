@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class PySimplejson(PythonPackage):
 
     homepage = "https://github.com/simplejson/simplejson"
     pypi = "simplejson/simplejson-3.10.0.tar.gz"
+
+    license("AFL-2.1")
 
     version("3.19.1", sha256="6277f60848a7d8319d27d2be767a7546bc965535b28070e310b3a9af90604a4c")
     version("3.18.0", sha256="58a429d2c2fa80834115b923ff689622de8f214cf0dc4afa9f59e824b444ab31")

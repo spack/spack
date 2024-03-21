@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class Libpam(AutotoolsPackage):
 
     homepage = "https://github.com/google/google-authenticator-libpam"
     url = "https://github.com/google/google-authenticator-libpam/archive/1.09.tar.gz"
+
+    license("Apache-2.0")
 
     version("1.09", sha256="ab1d7983413dc2f11de2efa903e5c326af8cb9ea37765dacb39949417f7cd037")
     version("1.08", sha256="6f6d7530261ba9e2ece84214f1445857d488b7851c28a58356b49f2d9fd36290")

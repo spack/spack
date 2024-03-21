@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class PyGtdbtk(PythonPackage):
 
     homepage = "https://github.com/Ecogenomics/GTDBTk"
     pypi = "gtdbtk/gtdbtk-2.1.0.tar.gz"
+
+    license("GPL-3.0-only")
 
     version("2.3.2", sha256="80efd31e10007d835f56a3d6fdf039a59db3b6ba4be26b234692da5e688aa99f")
     version("2.3.0", sha256="4f237a03657be4540ac653c276fe31c002b6923af0411316719a9541d6e97d4b")
