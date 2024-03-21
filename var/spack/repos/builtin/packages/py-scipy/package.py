@@ -10,7 +10,7 @@ class PyScipy(PythonPackage):
     """Fundamental algorithms for scientific computing in Python."""
 
     homepage = "https://www.scipy.org/"
-    pypi = "scipy/scipy-1.12.0.tar.gz"
+    pypi = "scipy/scipy-1.10.1.tar.gz"
     git = "https://github.com/scipy/scipy.git"
 
     maintainers("adamjstewart", "rgommers")
@@ -18,7 +18,6 @@ class PyScipy(PythonPackage):
     license("BSD-3-Clause")
 
     version("main", branch="main")
-    version("1.12.0", sha256="4bf5abab8a36d20193c698b0f1fc282c1d083c94723902c447e5d2f1780936a3")
     version("1.11.4", sha256="90a2b78e7f5733b9de748f589f09225013685f9b218275257f8a8168ededaeaa")
     version("1.11.3", sha256="bba4d955f54edd61899776bad459bf7326e14b9fa1c552181f0479cc60a568cd")
     version("1.11.2", sha256="b29318a5e39bd200ca4381d80b065cdf3076c7d7281c5e36569e99273867f61d")
@@ -51,8 +50,7 @@ class PyScipy(PythonPackage):
     version("1.3.2", sha256="a03939b431994289f39373c57bbe452974a7da724ae7f9620a1beee575434da4")
 
     # Based on wheel availability on PyPI
-    depends_on("python@3.9:3.12", when="@1.12:", type=("build", "link", "run"))
-    depends_on("python@3.9:3.11", when="@1.11", type=("build", "link", "run"))
+    depends_on("python@3.9:3.11", when="@1.11:", type=("build", "link", "run"))
     depends_on("python@3.8:3.11", when="@1.9.2:1.10", type=("build", "link", "run"))
     depends_on("python@3.8:3.10", when="@1.8:1.9.1", type=("build", "link", "run"))
     depends_on("python@:3.10", when="@1.7.2:1.7", type=("build", "link", "run"))
