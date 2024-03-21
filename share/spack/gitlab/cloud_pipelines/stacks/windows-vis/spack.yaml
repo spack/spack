@@ -12,9 +12,7 @@ spack:
   - $spack/share/spack/gitlab/cloud_pipelines/configs
 
   specs:
-  # VTK 8.2 is required to avoid link issues in newer versions on windows
-  #- vtk@8.2
-  - bzip2
+  - vtk
 
   cdash:
     build-group: Windows Visualization (Kitware)
