@@ -29,9 +29,11 @@ class Dorado(CMakePackage, CudaPackage):
     depends_on("zstd")
     depends_on("libdeflate")
     depends_on("zlib-api")
-    depends_on("%gcc@11:12")
 
     patch("cmake-htslib.patch")
+
+    conflicts("%gcc@:10", msg="Dorado requires either gcc version 11 or 12")
+    conflicts("%gcc@13:", msg="Dorado requires either gcc version 11 or 12")
 
     def setup_build_environment(self, env):
         env.prepend_path("LD_LIBRARY_PATH", self.spec["libdeflate"].prefix.lib64)
