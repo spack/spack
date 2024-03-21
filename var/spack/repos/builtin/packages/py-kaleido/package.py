@@ -28,7 +28,7 @@ class PyKaleido(PythonPackage):
     elif (arch == "x86_64" or arch == "x64") and os == "Darwin":  # 64-bit x86 MacOS
         version(
             "0.2.1-darwin-x86_64",
-            sha256="aa21cf1bf1c78f8fa50a9f7d45e1003c387bd3d6fe0a767cfbbf344b95bdc3a8",
+            sha256="ca6f73e7ff00aaebf2843f73f1d3bacde1930ef5041093fe76b83a15785049a7",
             url="https://files.pythonhosted.org/packages/e0/f7/0ccaa596ec341963adbb4f839774c36d5659e75a0812d946732b927d480e/kaleido-0.2.1-py2.py3-none-macosx_10_11_x86_64.whl",
             expand=False,
         )
