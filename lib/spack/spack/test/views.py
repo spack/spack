@@ -12,7 +12,6 @@ from spack.filesystem_view import SimpleFilesystemView, YamlFilesystemView
 from spack.spec import Spec
 
 
-@pytest.mark.not_on_windows("Not supported on Windows (yet)")
 def test_remove_extensions_ordered(install_mockery, mock_fetch, tmpdir):
     view_dir = str(tmpdir.join("view"))
     layout = DirectoryLayout(view_dir)
