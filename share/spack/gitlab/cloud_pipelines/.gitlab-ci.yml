@@ -927,8 +927,6 @@ windows-vis-generate:
 
 windows-vis-build:
   extends: [ ".build", ".windows-vis"]
-  before_script:
-    - certutil -generateSSTFromWU roots.sst && certutil -addstore -f root roots.sst && del roots.sst
   trigger:
     include:
       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
