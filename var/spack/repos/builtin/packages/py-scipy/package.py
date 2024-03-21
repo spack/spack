@@ -51,8 +51,8 @@ class PyScipy(PythonPackage):
     version("1.3.2", sha256="a03939b431994289f39373c57bbe452974a7da724ae7f9620a1beee575434da4")
 
     # Based on wheel availability on PyPI
-    depends_on("python@3.9:3.12", when="@1.11:", type=("build", "link", "run"))
-    depends_on("python@3.8:3.11", when="@1.9.2:1.10", type=("build", "link", "run"))
+    depends_on("python@3.9:3.12", when="@1.11.2:", type=("build", "link", "run"))
+    depends_on("python@3.8:3.11", when="@1.9.2:1.11.1", type=("build", "link", "run"))
     depends_on("python@3.8:3.10", when="@1.8:1.9.1", type=("build", "link", "run"))
     depends_on("python@:3.10", when="@1.7.2:1.7", type=("build", "link", "run"))
     depends_on("python@:3.9", when="@1.5.4:1.7.1", type=("build", "link", "run"))
