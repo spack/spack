@@ -1472,8 +1472,10 @@ complete -c spack -n '__fish_spack_using_command_pos 0 env' -f -a deactivate -d 
 complete -c spack -n '__fish_spack_using_command_pos 0 env' -f -a create -d 'create a new environment'
 complete -c spack -n '__fish_spack_using_command_pos 0 env' -f -a remove -d 'remove an existing environment'
 complete -c spack -n '__fish_spack_using_command_pos 0 env' -f -a rm -d 'remove an existing environment'
-complete -c spack -n '__fish_spack_using_command_pos 0 env' -f -a list -d 'list available environments'
-complete -c spack -n '__fish_spack_using_command_pos 0 env' -f -a ls -d 'list available environments'
+complete -c spack -n '__fish_spack_using_command_pos 0 env' -f -a rename -d 'rename an existing environment'
+complete -c spack -n '__fish_spack_using_command_pos 0 env' -f -a mv -d 'rename an existing environment'
+complete -c spack -n '__fish_spack_using_command_pos 0 env' -f -a list -d 'list managed environments'
+complete -c spack -n '__fish_spack_using_command_pos 0 env' -f -a ls -d 'list managed environments'
 complete -c spack -n '__fish_spack_using_command_pos 0 env' -f -a status -d 'print whether there is an active environment'
 complete -c spack -n '__fish_spack_using_command_pos 0 env' -f -a st -d 'print whether there is an active environment'
 complete -c spack -n '__fish_spack_using_command_pos 0 env' -f -a loads -d 'list modules for an installed environment \'(see spack module loads)\''
@@ -1560,6 +1562,26 @@ complete -c spack -n '__fish_spack_using_command env rm' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command env rm' -s h -l help -d 'show this help message and exit'
 complete -c spack -n '__fish_spack_using_command env rm' -s y -l yes-to-all -f -a yes_to_all
 complete -c spack -n '__fish_spack_using_command env rm' -s y -l yes-to-all -d 'assume "yes" is the answer to every confirmation request'
+
+# spack env rename
+set -g __fish_spack_optspecs_spack_env_rename h/help d/dir f/force
+
+complete -c spack -n '__fish_spack_using_command env rename' -s h -l help -f -a help
+complete -c spack -n '__fish_spack_using_command env rename' -s h -l help -d 'show this help message and exit'
+complete -c spack -n '__fish_spack_using_command env rename' -s d -l dir -f -a dir
+complete -c spack -n '__fish_spack_using_command env rename' -s d -l dir -d 'the specified arguments correspond to directory paths'
+complete -c spack -n '__fish_spack_using_command env rename' -s f -l force -f -a force
+complete -c spack -n '__fish_spack_using_command env rename' -s f -l force -d 'allow overwriting of an existing environment'
+
+# spack env mv
+set -g __fish_spack_optspecs_spack_env_mv h/help d/dir f/force
+
+complete -c spack -n '__fish_spack_using_command env mv' -s h -l help -f -a help
+complete -c spack -n '__fish_spack_using_command env mv' -s h -l help -d 'show this help message and exit'
+complete -c spack -n '__fish_spack_using_command env mv' -s d -l dir -f -a dir
+complete -c spack -n '__fish_spack_using_command env mv' -s d -l dir -d 'the specified arguments correspond to directory paths'
+complete -c spack -n '__fish_spack_using_command env mv' -s f -l force -f -a force
+complete -c spack -n '__fish_spack_using_command env mv' -s f -l force -d 'allow overwriting of an existing environment'
 
 # spack env list
 set -g __fish_spack_optspecs_spack_env_list h/help
