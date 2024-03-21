@@ -220,9 +220,8 @@ class StandardVersion(ConcreteVersion):
 
     def _stringify(self):
         string = ""
-        for index in range(len(self.version)):
-            string += str(self.version[index])
-            string += str(self.separators[index])
+        for component, separator in zip(self.version[0] + self.version[1], self.separators):
+            string += f"{component}{separator}"
         return string
 
     def __str__(self):
