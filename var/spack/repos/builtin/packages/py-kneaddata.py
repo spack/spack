@@ -7,7 +7,10 @@ from spack.package import *
 
 
 class PyKneaddata(PythonPackage):
-    """Quality control tool on metagenomic and metatranscriptomic sequencing data, especially data from microbiome experiments"""
+    """
+    Quality control tool on metagenomic and metatranscriptomic sequencing data,
+    especially data from microbiome experiments
+    """
 
     homepage = "https://github.com/biobakery/kneaddata"
     pypi = "kneaddata/kneaddata-0.12.0.tar.gz"
