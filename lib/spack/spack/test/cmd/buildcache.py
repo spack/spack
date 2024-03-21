@@ -235,6 +235,7 @@ def test_buildcache_sync(
         # Use mirror names to specify mirrors
         mirror("add", "src", src_mirror_url)
         mirror("add", "dest", dest_mirror_url)
+        mirror("add", "ignored", "file:///dummy/io")
 
         buildcache("sync", "src", "dest")
 
@@ -292,7 +293,10 @@ def test_buildcache_sync(
                 )
             json.dump(manifest, fd)
 
-        buildcache("sync", "--manifest-glob", manifest_file, "dest")
+        # Trigger the warning
+        output = buildcache("sync", "--manifest-glob", manifest_file, "dest", "ignored")
+
+        assert "Ignoring unused arguemnt: ignored" in output
 
         verify_mirror_contents()
         shutil.rmtree(dest_mirror_dir)
