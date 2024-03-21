@@ -7,7 +7,6 @@ import os
 
 from spack.package import *
 
-
 _versions = {
     "6.0.2": {
         "apt": (
