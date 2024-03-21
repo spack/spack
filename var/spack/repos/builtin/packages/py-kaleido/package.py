@@ -27,5 +27,5 @@ class PyKaleido(PythonPackage):
 
     # TODO: 32-bit systems, MacOS, Windows, and ARM
 
-    depends_on("python@:3.4")
+    depends_on("python@:3.4", type=("build", "run"))
     depends_on("py-setuptools", type="build")
