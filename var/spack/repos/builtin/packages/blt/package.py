@@ -38,39 +38,6 @@ def llnl_link_helpers(options, spec, compiler):
             if flags:
                 options.append(cmake_cache_string("BLT_EXE_LINKER_FLAGS", flags, description))
 
-            excluded_root = "/usr/tce/packages/gcc/gcc-4.9.3"
-            excluded_dirs = [
-                "{0}/lib64".format(excluded_root),
-                "{0}/lib64/gcc/powerpc64le-unknown-linux-gnu/4.9.3".format(excluded_root),
-                "{0}/lib64/gcc/x86_64-unknown-linux-gnu/4.9.3".format(excluded_root),
-                "{0}/gnu/lib64".format(excluded_root),
-                "{0}/gnu/lib64/gcc/powerpc64le-unknown-linux-gnu/4.9.3".format(excluded_root),
-            ]
-            # Ignore conflicting default gcc toolchain
-            options.append(
-                cmake_cache_string(
-                    "BLT_CMAKE_IMPLICIT_LINK_DIRECTORIES_EXCLUDE", ";".join(excluded_dirs)
-                )
-            )
-
-    compilers_using_toolchain = ["pgc++", "xlc++", "xlC_r", "icpc", "clang++", "icpx"]
-    if any(tc_comp in compiler.cxx for tc_comp in compilers_using_toolchain):
-        if spec_uses_toolchain(spec) or spec_uses_gccname(spec):
-            # Ignore conflicting default gcc toolchain
-            excluded_root = "/usr/tce/packages/gcc/gcc-4.9.3"
-            excluded_dirs = [
-                "{0}/lib64".format(excluded_root),
-                "{0}/lib64/gcc/powerpc64le-unknown-linux-gnu/4.9.3".format(excluded_root),
-                "{0}/lib64/gcc/x86_64-unknown-linux-gnu/4.9.3".format(excluded_root),
-                "{0}/gnu/lib64".format(excluded_root),
-                "{0}/gnu/lib64/gcc/powerpc64le-unknown-linux-gnu/4.9.3".format(excluded_root),
-            ]
-            options.append(
-                cmake_cache_string(
-                    "BLT_CMAKE_IMPLICIT_LINK_DIRECTORIES_EXCLUDE", ";".join(excluded_dirs)
-                )
-            )
-
     if "cce" in compiler.cxx:
         description = "Adds a missing rpath for libraries " "associated with the fortran compiler"
         # Here is where to find libs that work for fortran
