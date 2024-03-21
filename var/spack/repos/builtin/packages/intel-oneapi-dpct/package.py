@@ -39,25 +39,25 @@ class IntelOneapiDpct(IntelOneApiPackage):
     )
     version(
         "2023.0.0",
-        url="https://registrationcenter-download.intel.com/akdlm/irc_nas/19100/l_dpcpp-ct_p_2023.0.0.25483_offline.sh",
+        url="https://registrationcenter-download.intel.com/akdlm/IRC_NAS/19100/l_dpcpp-ct_p_2023.0.0.25483_offline.sh",
         sha256="81f392d16a10cbdb8e9d053f18566304a78e1be624280ad43ddbc0dfd767fc7f",
         expand=False,
     )
     version(
         "2022.2.1",
-        url="https://registrationcenter-download.intel.com/akdlm/irc_nas/18991/l_dpcpp-ct_p_2022.2.1.14994_offline.sh",
+        url="https://registrationcenter-download.intel.com/akdlm/IRC_NAS/18991/l_dpcpp-ct_p_2022.2.1.14994_offline.sh",
         sha256="ea2fbe36de70eb3c78c97133f81e0b2a2fbcfc9525e77125a183d7af446ef3e6",
         expand=False,
     )
     version(
         "2022.2.0",
-        url="https://registrationcenter-download.intel.com/akdlm/irc_nas/18908/l_dpcpp-ct_p_2022.2.0.8701_offline.sh",
+        url="https://registrationcenter-download.intel.com/akdlm/IRC_NAS/18908/l_dpcpp-ct_p_2022.2.0.8701_offline.sh",
         sha256="ca79b89ba4b97accb868578a1b7ba0e38dc5e4457d45c6c2552ba33d71b52128",
         expand=False,
     )
     version(
         "2022.1.0",
-        url="https://registrationcenter-download.intel.com/akdlm/irc_nas/18746/l_dpcpp-ct_p_2022.1.0.172_offline.sh",
+        url="https://registrationcenter-download.intel.com/akdlm/IRC_NAS/18746/l_dpcpp-ct_p_2022.1.0.172_offline.sh",
         sha256="ec42f4df3f9daf1af587b14b8b6644c773a0b270e03dd22ac9e2f49131e3e40c",
         expand=False,
     )
