@@ -14,6 +14,8 @@ class PyKaleido(PythonPackage):
 
     homepage = "https://github.com/plotly/Kaleido"
     pypi = "kaleido/kaleido-0.2.1-py2.py3-none-manylinux1_x86_64.whl"
+
+    maintainers("Pandapip1")
     
     if (arch == "x86_64" or arch == "x64") and os == "Linux": # 64-bit x86 Linux
         version(
@@ -26,3 +28,4 @@ class PyKaleido(PythonPackage):
     # TODO: 32-bit systems, MacOS, Windows, and ARM
 
     depends_on("python@:3.4")
+    depends_on("py-setuptools", type="build")
