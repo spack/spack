@@ -552,6 +552,11 @@ def test_formatted_strings():
         assert v.dotted.joined.string == "123b"
 
 
+def test_dotted_numeric_string():
+    assert Version("1a2b3").dotted_numeric_string == "1.0.2.0.3"
+    assert Version("1a2b3alpha4").dotted_numeric_string == "1.0.2.0.3.0.4"
+
+
 def test_up_to():
     v = Version("1.23-4_5b")
 

@@ -289,19 +289,15 @@ class StandardVersion(ConcreteVersion):
         return self.version[1][0] != FINAL
 
     @property
-    def force_numeric(self):
-        """Replaces all non-numeric components of the version with 0
+    def dotted_numeric_string(self) -> str:
+        """Replaces all non-numeric components of the version with 0.
 
         This can be used to pass Spack versions to libraries that have stricter version schema.
         """
-        numeric = tuple(0 if isinstance(v, VersionStrComponent) else v for v in self.version)
-        # null separators except the final one have to be converted to avoid concatenating ints
-        # default to '.' as most common delimiter for versions
-        separators = tuple(
-            "." if s == "" and i != len(self.separators) - 1 else s
-            for i, s in enumerate(self.separators)
-        )
-        return type(self)(None, numeric, separators)
+        numeric = tuple(0 if isinstance(v, VersionStrComponent) else v for v in self.version[0])
+        if self.is_prerelease():
+            numeric += (0, *self.version[1][1:])
+        return ".".join(str(v) for v in numeric)
 
     @property
     def dotted(self):
