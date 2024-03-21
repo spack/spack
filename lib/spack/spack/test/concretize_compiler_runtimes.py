@@ -24,9 +24,7 @@ def _concretize_with_reuse(*, root_str, reused_str):
     reused_spec = spack.spec.Spec(reused_str).concretized()
     setup = spack.solver.asp.SpackSolverSetup(tests=False)
     driver = spack.solver.asp.PyclingoDriver()
-    result, _, _ = driver.solve(
-        setup, [spack.spec.Spec(f"{root_str} ^{reused_str}")], reuse=[reused_spec]
-    )
+    result, _, _ = driver.solve(setup, [spack.spec.Spec(f"{root_str}")], reuse=[reused_spec])
     root = result.specs[0]
     return root, reused_spec
 
@@ -81,6 +79,19 @@ def test_external_nodes_do_not_have_runtimes(runtime_repo, mutable_config, tmp_p
         ("a%gcc@10.2.1", "b%gcc@4.8.0", {"a": "gcc-runtime@10.2.1", "b": "gcc-runtime@4.8.0"}, 2),
         # The root is compiled with an older compiler, thus we'll reuse the runtime from b
         ("a%gcc@4.8.0", "b%gcc@10.2.1", {"a": "gcc-runtime@10.2.1", "b": "gcc-runtime@10.2.1"}, 1),
+        # Same as before, but tests that we can reuse from a more generic target
+        (
+            "a%gcc@4.8.0",
+            "b%gcc@10.2.1 target=x86_64",
+            {"a": "gcc-runtime@10.2.1 target=x86_64", "b": "gcc-runtime@10.2.1 target=x86_64"},
+            1,
+        ),
+        (
+            "a%gcc@10.2.1",
+            "b%gcc@4.8.0 target=x86_64",
+            {"a": "gcc-runtime@10.2.1 target=x86_64", "b": "gcc-runtime@4.8.0 target=x86_64"},
+            2,
+        ),
     ],
 )
 def test_reusing_specs_with_gcc_runtime(root_str, reused_str, expected, nruntime, runtime_repo):
