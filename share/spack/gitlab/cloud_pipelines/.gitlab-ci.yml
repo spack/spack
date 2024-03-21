@@ -193,7 +193,7 @@ default:
     - python -m pip install --user boto3
     - . .\share\spack\setup-env.ps1
     - spack external find --not-buildable cmake ninja win-wdk win-sdk wgl msmpi
-    - certutil -generateSSTFromWU roots.sst -AND certutil -addstore -f root roots.sst -AND del roots.sst
+    - (certutil -generateSSTFromWU roots.sst) -AND (certutil -addstore -f root roots.sst) -AND (del roots.sst)
   tags: ["spack", "public", "medium", "x86_64-win"]
   image: "ghcr.io/jjnesbitt/windows-servercore21h2:sha-5c42cbb"
 
