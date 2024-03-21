@@ -4,8 +4,8 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import glob
 import os
-import sys
 import shutil
+import sys
 
 from spack.package import *
 
