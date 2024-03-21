@@ -577,14 +577,12 @@ class Axom(CachedCMakePackage, CudaPackage, ROCmPackage):
                 "src/axom/quest/examples/CMakeLists.txt",
             )
 
-
     @run_after("build")
     @on_package_attributes(run_tests=True)
     def build_test(self):
         with working_dir(self.build_directory):
             print("Running Axom Unit Tests...")
             make("test")
-
 
     @run_after("install")
     @on_package_attributes(run_tests=True)
@@ -621,4 +619,3 @@ class Axom(CachedCMakePackage, CudaPackage, ROCmPackage):
         print("Checking Axom installation...")
         self.check_install()
         raise Exception("except")
-
