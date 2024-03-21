@@ -1775,6 +1775,8 @@ class Spec:
         if not self.concrete:
             return False
 
+        #upstream, record = spack.store.STORE.db.query_by_spec_hash(self.dag_hash())
+        #return upstream and record.installed
         upstream, _ = spack.store.STORE.db.query_by_spec_hash(self.dag_hash())
         return upstream
 

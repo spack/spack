@@ -328,6 +328,7 @@ def test_uninstalled_upstream(install_upstream, mock_fetch):
             _, record = upstream_db.query_by_spec_hash(new_dependency.dag_hash())
             record.installed = False
 
+    with spack.store.use_store(store_root):
         assert not new_dependency.installed_upstream
 
         dependent.package.do_install()
