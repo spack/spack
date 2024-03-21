@@ -105,7 +105,6 @@ class Axom(CachedCMakePackage, CudaPackage, ROCmPackage):
 
     depends_on("blt", type="build")
     depends_on("blt@0.5.1:", type="build", when="@0.6.1:")
-    depends_on("blt@0.6.2:", type="build", when="@0.9:")
 
     depends_on("mpi", when="+mpi")
 
@@ -123,14 +122,12 @@ class Axom(CachedCMakePackage, CudaPackage, ROCmPackage):
     depends_on("scr~fortran", when="+scr~fortran")
 
     with when("+umpire"):
-        depends_on("umpire@2024.02.0:", when="@0.9:")
         depends_on("umpire@2022.03.0:", when="@0.7.0:")
         depends_on("umpire@6.0.0", when="@0.6.0")
         depends_on("umpire@5:5.0.1", when="@:0.5.0")
         depends_on("umpire +openmp", when="+openmp")
 
     with when("+raja"):
-        depends_on("raja@2024.02.0:", when="@0.9:")
         depends_on("raja@2022.03.0:", when="@0.7.0:")
         depends_on("raja@0.14.0", when="@0.6.0")
         depends_on("raja@:0.13.0", when="@:0.5.0")
@@ -465,7 +462,7 @@ class Axom(CachedCMakePackage, CudaPackage, ROCmPackage):
         entries.append(cmake_cache_path("CONDUIT_DIR", conduit_dir))
 
         # optional tpls
-        for dep in ("c2c", "mfem", "hdf5", "lua", "raja", "umpire"):
+        for dep in ("mfem", "hdf5", "lua", "raja", "umpire"):
             if "+%s" % dep in spec:
                 dep_dir = get_spec_path(spec, dep, path_replacements)
                 entries.append(cmake_cache_path("%s_DIR" % dep.upper(), dep_dir))
@@ -586,7 +583,7 @@ class Axom(CachedCMakePackage, CudaPackage, ROCmPackage):
     def build_test(self):
         with working_dir(self.build_directory):
             print("Running Axom Unit Tests...")
-            #make("test")
+            make("test")
 
 
     @run_after("install")
