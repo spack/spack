@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,8 +15,8 @@ class Dftbplus(CMakePackage, MakefilePackage):
     url = "https://github.com/dftbplus/dftbplus/releases/download/22.1/dftbplus-22.1.tar.xz"
     git = "https://github.com/dftbplus/dftbplus.git"
 
-    maintainers = ["HaoZeke", "aradi", "iamashwin99"]
-    generator = "Ninja"
+    maintainers("HaoZeke", "aradi", "iamashwin99")
+    generator("ninja")
 
     build_system(
         conditional("cmake", when="@20.1:"),
@@ -24,7 +24,11 @@ class Dftbplus(CMakePackage, MakefilePackage):
         default="cmake",
     )
 
+    license("CC-BY-SA-4.0")
+
     version("main", branch="main")
+    version("23.1", sha256="e2d0471c2fd3aaf174a9aac44fd8e7de2668d182201779626d6e62754adc4cf9")
+    version("22.2", sha256="0140f5f2e24d3071e5e7aede2ed6216a6f46d55216b0d69da17af917c62e98ed")
     version("22.1", sha256="02daca6f4c6372656598f3ba0311110c8e473c87c8d934d7bb276feaa4cc1c82")
     version("21.2", sha256="fbeb0e0ea93ab4dc4450f298ec712d2cf991f19f621badf57dae05f0e43b5906")
     version("21.1", sha256="8c1eb8a38f72c421e2ae20118a6db3a656fa84e8b180ef387e549a73ae77f970")

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,6 +21,8 @@ class Whizard(AutotoolsPackage):
     tags = ["hep"]
 
     maintainers("vvolkl")
+
+    license("GPL-2.0-or-later")
 
     version("master", branch="master")
     version("3.1.2", sha256="4f706f8ef02a580ae4dba867828691dfe0b3f9f9b8982b617af72eb8cd4c6fa3")
@@ -99,12 +101,21 @@ class Whizard(AutotoolsPackage):
     )
 
     def setup_build_environment(self, env):
+        # whizard uses some environment variables to detect dependencies at
+        # configure time if they are not installed to standard system prefixes
+        if self.spec.satisfies("+lcio"):
+            env.set("LCIO", self.spec["lcio"].prefix)
+        if self.spec.satisfies("hepmc=2"):
+            env.set("HEPMC_DIR", self.spec["hepmc"].prefix)
+        if self.spec.satisfies("hepmc=3"):
+            env.set("HEPMC_DIR", self.spec["hepmc3"].prefix)
+        if self.spec.satisfies("+openloops"):
+            env.set("OPENLOOPS_DIR", self.spec["openloops"].prefix)
+
         # whizard uses the compiler during runtime,
         # and seems incompatible with
         # filter_compiler_wrappers, thus the
         # actual compilers need to be used to build
-        if self.spec.satisfies("+lcio"):
-            env.set("LCIO", self.spec["lcio"].prefix)
         env.set("CC", self.compiler.cc)
         env.set("CXX", self.compiler.cxx)
         env.set("FC", self.compiler.fc)
@@ -112,30 +123,25 @@ class Whizard(AutotoolsPackage):
 
     def configure_args(self):
         spec = self.spec
+        enable_hepmc = "no" if "hepmc=off" in spec else "yes"
         args = [
-            "TIRPC_CFLAGS=-I%s" % spec["libtirpc"].prefix.include.tirpc,
-            f"TIRPC_LIBS= -L{spec['libtirpc'].prefix.lib} -ltirpc",
-            "--enable-hepmc=%s" % ("no" if "hepmc=off" in spec else "yes"),
-            "--enable-fastjet=%s" % ("yes" if "+fastjet" in spec else "no"),
-            "--enable-pythia8=%s" % ("yes" if "+pythia8" in spec else "no"),
-            "--enable-lcio=%s" % ("yes" if "+lcio" in spec else "no"),
-            "--enable-lhapdf=%s" % ("yes" if "+lhapdf" in spec else "no"),
-            "--enable-openloops=%s" % ("yes" if "+openloops" in spec else "no"),
+            f"TIRPC_CFLAGS=-I{spec['libtirpc'].prefix.include.tirpc}",
+            f"TIRPC_LIBS=-L{spec['libtirpc'].prefix.lib} -ltirpc",
+            f"--enable-hepmc={enable_hepmc}",
             # todo: hoppet
             # todo: recola
             # todo: looptools
             # todo: gosam
             # todo: pythia6
         ]
+        args.extend(self.enable_or_disable("fastjet"))
+        args.extend(self.enable_or_disable("pythia8"))
+        args.extend(self.enable_or_disable("lcio"))
+        args.extend(self.enable_or_disable("lhapdf"))
+        args.extend(self.enable_or_disable("openloops"))
 
         if "+openloops" in spec:
-            args.append("--with-openloops=%s" % spec["openloops"].prefix)
-        if "+lcio" in spec:
-            args.append("--with-lcio=%s" % spec["lcio"].prefix)
-        if "hepmc=3" in spec:
-            args.append("--with-hepmc=%s" % spec["hepmc3"].prefix)
-        if "hepmc=2" in spec:
-            args.append("--with-hepmc=%s" % spec["hepmc"].prefix)
+            args.append(f"--with-openloops={spec['openloops'].prefix}")
         if "+openmp" not in spec:
             args.append("--disable-openmp")
         return args

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -27,9 +27,11 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
     maintainers("danlipsa", "vicentebolea", "kwryankrattiger")
     tags = ["e4s"]
 
+    license("Apache-2.0")
+
     version("master", branch="master", submodules=True)
     version(
-        "5.12.0-RC1", sha256="892eda2ae72831bbadd846be465d496ada35739779229c604cddd56e018a1aea"
+        "5.12.0-RC3", sha256="6aaa46ff295126707294482e6ba24bd0ec0d68cf6bb5f56f145f8bcc53fc3f70"
     )
     version(
         "5.11.2",
@@ -291,8 +293,6 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
     # Fix IOADIOS2 module to work with kits
     # https://gitlab.kitware.com/vtk/vtk/-/merge_requests/8653
     patch("vtk-adios2-module-no-kit.patch", when="@5.8:5.11")
-    # https://gitlab.kitware.com/vtk/vtk/-/merge_requests/8653
-    patch("vtk-adios2-module-no-kit-5.12.patch", when="@5.12:")
 
     # Patch for paraview 5.9.0%xl_r
     # https://gitlab.kitware.com/vtk/vtk/-/merge_requests/7591
@@ -311,7 +311,7 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
 
     # Fix VTK to remove deprecated ADIOS2 functions
     # https://gitlab.kitware.com/vtk/vtk/-/merge_requests/10113
-    patch("adios2-remove-deprecated-functions.patch", when="@5.10: ^adios2@2.9:")
+    patch("adios2-remove-deprecated-functions.patch", when="@5.10:5.11 ^adios2@2.9:")
 
     patch("exodusII-netcdf4.9.0.patch", when="@:5.10.2")
 
@@ -537,7 +537,6 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
             cmake_args.extend(
                 [
                     "-DPARAVIEW_%s_PYTHON:BOOL=ON" % py_use_opt,
-                    "-DPYTHON_EXECUTABLE:FILEPATH=%s" % spec["python"].command.path,
                     "-D%s_PYTHON_VERSION:STRING=%d" % (py_ver_opt, py_ver_val),
                 ]
             )

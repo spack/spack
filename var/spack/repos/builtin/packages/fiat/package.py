@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class Fiat(CMakePackage):
     url = "https://github.com/ecmwf-ifs/fiat/archive/1.0.0.tar.gz"
 
     maintainers("climbfuji")
+
+    license("Apache-2.0")
 
     version("main", branch="main", no_cache=True)
     version("1.2.0", sha256="758147410a4a3c493290b87443b4091660b915fcf29f7c4d565c5168ac67745f")

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,8 @@ class Onnx(CMakePackage):
     homepage = "https://github.com/onnx/onnx"
     url = "https://github.com/onnx/onnx/archive/refs/tags/v1.9.0.tar.gz"
     git = "https://github.com/onnx/onnx.git"
+
+    license("Apache-2.0")
 
     version("master", branch="master")
     version(

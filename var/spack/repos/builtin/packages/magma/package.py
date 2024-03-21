@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -78,6 +78,7 @@ class Magma(CMakePackage, CudaPackage, ROCmPackage):
     patch("magma-2.5.0.patch", when="@2.5.0")
     patch("magma-2.5.0-cmake.patch", when="@2.5.0")
     patch("cmake-W.patch", when="@2.5.0:%nvhpc")
+    patch("0001-fix-magma-build-error-with-rocm-6.0.0.patch", when="@2.7.2 ^hip@6.0 + rocm")
 
     @run_before("cmake")
     def generate_gpu_config(self):
@@ -146,7 +147,7 @@ class Magma(CMakePackage, CudaPackage, ROCmPackage):
         if "+rocm" in spec:
             options.append(define("MAGMA_ENABLE_HIP", True))
             options.append(define("CMAKE_CXX_COMPILER", spec["hip"].hipcc))
-            # See https://github.com/ROCmSoftwarePlatform/rocFFT/issues/322
+            # See https://github.com/ROCm/rocFFT/issues/322
             if spec.satisfies("^cmake@3.21.0:3.21.2"):
                 options.append(define("__skip_rocmclang", True))
         else:

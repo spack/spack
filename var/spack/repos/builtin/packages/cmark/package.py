@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class Cmark(CMakePackage):
 
     homepage = "https://commonmark.org/"
     url = "https://github.com/commonmark/cmark/archive/0.29.0.tar.gz"
+
+    license("BSD-2-Clause")
 
     version("0.29.0", sha256="2558ace3cbeff85610de3bda32858f722b359acdadf0c4691851865bb84924a6")
     version("0.28.3", sha256="acc98685d3c1b515ff787ac7c994188dadaf28a2d700c10c1221da4199bae1fc")

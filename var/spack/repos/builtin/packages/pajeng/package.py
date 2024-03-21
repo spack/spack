@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,6 +19,8 @@ class Pajeng(CMakePackage):
     url = "https://github.com/schnorr/pajeng/archive/1.3.6.tar.gz"
 
     maintainers("viniciusvgp", "schnorr")
+
+    license("GPL-3.0-only")
 
     version("develop", git="https://github.com/schnorr/pajeng.git")
     version("1.3.6", sha256="1a2722bfaeb0c6437fb9e8efc2592edbf14ba01172f97e01c7839ffea8b9d0b3")

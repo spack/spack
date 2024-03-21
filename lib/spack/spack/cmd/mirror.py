@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -28,7 +28,7 @@ level = "long"
 
 
 def setup_parser(subparser):
-    arguments.add_common_arguments(subparser, ["no_checksum", "deprecated"])
+    arguments.add_common_arguments(subparser, ["no_checksum"])
 
     sp = subparser.add_subparsers(metavar="SUBCOMMAND", dest="mirror_command")
 
@@ -72,6 +72,7 @@ def setup_parser(subparser):
         " retrieve all versions of each package",
     )
     arguments.add_common_arguments(create_parser, ["specs"])
+    arguments.add_concretizer_args(create_parser)
 
     # Destroy
     destroy_parser = sp.add_parser("destroy", help=mirror_destroy.__doc__)
@@ -106,6 +107,23 @@ def setup_parser(subparser):
             "specify the mirror type: for both binary "
             "and source use `--type binary --type source` (default)"
         ),
+    )
+    add_parser_signed = add_parser.add_mutually_exclusive_group(required=False)
+    add_parser_signed.add_argument(
+        "--unsigned",
+        help="do not require signing and signature verification when pushing and installing from "
+        "this build cache",
+        action="store_false",
+        default=None,
+        dest="signed",
+    )
+    add_parser_signed.add_argument(
+        "--signed",
+        help="require signing and signature verification when pushing and installing from this "
+        "build cache",
+        action="store_true",
+        default=None,
+        dest="signed",
     )
     arguments.add_connection_args(add_parser, False)
     # Remove
@@ -157,6 +175,23 @@ def setup_parser(subparser):
         ),
     )
     set_parser.add_argument("--url", help="url of mirror directory from 'spack mirror create'")
+    set_parser_unsigned = set_parser.add_mutually_exclusive_group(required=False)
+    set_parser_unsigned.add_argument(
+        "--unsigned",
+        help="do not require signing and signature verification when pushing and installing from "
+        "this build cache",
+        action="store_false",
+        default=None,
+        dest="signed",
+    )
+    set_parser_unsigned.add_argument(
+        "--signed",
+        help="require signing and signature verification when pushing and installing from this "
+        "build cache",
+        action="store_true",
+        default=None,
+        dest="signed",
+    )
     set_parser.add_argument(
         "--scope",
         action=arguments.ConfigScope,
@@ -168,10 +203,7 @@ def setup_parser(subparser):
     # List
     list_parser = sp.add_parser("list", help=mirror_list.__doc__)
     list_parser.add_argument(
-        "--scope",
-        action=arguments.ConfigScope,
-        default=lambda: spack.config.default_list_scope(),
-        help="configuration scope to read from",
+        "--scope", action=arguments.ConfigScope, help="configuration scope to read from"
     )
 
 
@@ -186,6 +218,7 @@ def mirror_add(args):
         or args.type
         or args.oci_username
         or args.oci_password
+        or args.signed is not None
     ):
         connection = {"url": args.url}
         if args.s3_access_key_id and args.s3_access_key_secret:
@@ -201,6 +234,8 @@ def mirror_add(args):
         if args.type:
             connection["binary"] = "binary" in args.type
             connection["source"] = "source" in args.type
+        if args.signed is not None:
+            connection["signed"] = args.signed
         mirror = spack.mirror.Mirror(connection, name=args.name)
     else:
         mirror = spack.mirror.Mirror(args.url, name=args.name)
@@ -233,6 +268,8 @@ def _configure_mirror(args):
         changes["endpoint_url"] = args.s3_endpoint_url
     if args.oci_username and args.oci_password:
         changes["access_pair"] = [args.oci_username, args.oci_password]
+    if getattr(args, "signed", None) is not None:
+        changes["signed"] = args.signed
 
     # argparse cannot distinguish between --binary and --no-binary when same dest :(
     # notice that set-url does not have these args, so getattr
@@ -512,8 +549,5 @@ def mirror(parser, args):
 
     if args.no_checksum:
         spack.config.set("config:checksum", False, scope="command_line")
-
-    if args.deprecated:
-        spack.config.set("config:deprecated", True, scope="command_line")
 
     action[args.mirror_command](args)

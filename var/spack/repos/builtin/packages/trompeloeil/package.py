@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class Trompeloeil(CMakePackage):
     homepage = "https://github.com/rollbear/trompeloeil"
     url = "https://github.com/rollbear/trompeloeil/archive/v43.tar.gz"
     git = "https://github.com/rollbear/trompeloeil.git"
+
+    license("BSL-1.0")
 
     version("master", branch="master")
     version("45", sha256="124b0aa45d84415193719376b6557fc1f1180cbfebf4dc4f7ca247cb404d6bd8")

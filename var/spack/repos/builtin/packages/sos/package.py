@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class Sos(AutotoolsPackage):
 
     # notify when the package is updated.
     maintainers("rscohn2")
+
+    license("GPL-2.0-or-later")
 
     version("1.5.2", sha256="c9df8c6ab43890e5d8970467c188ae2fad736845875ca4c370ff047dbb37d017")
     version("1.5.1", sha256="0a6303dcbdd713ef2d83c617c1eb821227603c98cb9816c53585fd993da8a984")

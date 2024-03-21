@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -26,6 +26,7 @@ class AwsOfiNccl(AutotoolsPackage):
     depends_on("cuda")
     depends_on("nccl")
     depends_on("mpi")
+    depends_on("hwloc")
     depends_on("autoconf", type="build")
     depends_on("automake", type="build")
     depends_on("libtool", type="build")
@@ -52,6 +53,7 @@ class AwsOfiNccl(AutotoolsPackage):
                 "--with-cuda={0}".format(spec["cuda"].prefix),
                 "--with-nccl={0}".format(spec["nccl"].prefix),
                 "--with-mpi={0}".format(spec["mpi"].prefix),
+                "--with-hwloc={0}".format(spec["hwloc"].prefix),
             ]
         )
 
