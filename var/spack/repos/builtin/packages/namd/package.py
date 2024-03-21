@@ -57,9 +57,6 @@ class Namd(MakefilePackage, CudaPackage):
     variant("avxtiles", when="target=x86_64_v4:", default=False, description="Enable avxtiles")
     variant("single_node_gpu", default=False, description="Single node GPU")
 
-    # Disable parallel build
-    parallel = False
-
     # init_tcl_pointers() declaration and implementation are inconsistent
     # "src/colvarproxy_namd.C", line 482: error: inherited member is not
     # allowed
@@ -291,6 +288,13 @@ class Namd(MakefilePackage, CudaPackage):
                 "CHARM = $(CHARMBASE)",
                 join_path(self.build_directory, "Make.config"),
             )
+
+    @when("@3.0b3")
+    def build(self, spec, prefix):
+        # Disable parallel build
+        # https://github.com/spack/spack/pull/43215
+        with working_dir(self.build_directory):
+            make(parallel=False)
 
     def install(self, spec, prefix):
         with working_dir(self.build_directory):
