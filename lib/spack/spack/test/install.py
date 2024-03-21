@@ -314,26 +314,25 @@ def test_installed_upstream(install_upstream, mock_fetch):
 
 def test_uninstalled_upstream(install_upstream, mock_fetch):
     """A dependency has a record in an upstream DB, but it is not
-       actually installed in that upstream.
+    actually installed in that upstream.
     """
     store_root, _, upstream_db = install_upstream("dependency-install")
     with spack.store.use_store(store_root):
-        dependency = spack.spec.Spec("dependency-install").concretized()
         dependent = spack.spec.Spec("dependent-install").concretized()
 
-        new_dependency = dependent["dependency-install"]
-        assert new_dependency.installed_upstream
+        dependency = dependent["dependency-install"]
+        assert dependency.installed_upstream
 
         with upstream_db.write_transaction():
-            _, record = upstream_db.query_by_spec_hash(new_dependency.dag_hash())
+            _, record = upstream_db.query_by_spec_hash(dependency.dag_hash())
             record.installed = False
 
     with spack.store.use_store(store_root):
-        assert not new_dependency.installed_upstream
+        assert not dependency.installed_upstream
 
         dependent.package.do_install()
 
-        assert os.path.exists(new_dependency.prefix)
+        assert os.path.exists(dependency.prefix)
 
 
 @pytest.mark.disable_clean_stage_check
