@@ -29,6 +29,7 @@ class Dorado(CMakePackage, CudaPackage):
     depends_on("zstd")
     depends_on("libdeflate")
     depends_on("zlib-api")
+    depends_on("%gcc@11:12")
 
     patch("cmake-htslib.patch")
 
