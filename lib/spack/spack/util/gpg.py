@@ -7,6 +7,7 @@ import errno
 import functools
 import os
 import re
+import sys
 
 import spack.error
 import spack.paths
@@ -372,6 +373,9 @@ def _socket_dir(gpgconf):
     # If there is no suitable gpgconf, don't even bother trying to
     # pre-create a user run dir.
     if not gpgconf:
+        return None
+
+    if sys.platform == "win32":
         return None
 
     result = None
