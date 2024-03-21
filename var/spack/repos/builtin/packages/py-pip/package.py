@@ -2,7 +2,7 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
+import glob
 import os
 import sys
 
@@ -133,6 +133,10 @@ class PyPip(Package, PythonExtension):
         python(*args)
 
     def setup_dependent_package(self, module, dependent_spec):
+        if sys.platform == "win32":
+            pypath = os.environ.get("PYTHONPATH", "").split(os.pathsep)
+            pypath = set(glob.glob(f"{self.spec.prefix}/*/site-packages") + pypath)
+            os.environ["PYTHONPATH"] = os.pathsep.join(pypath).strip(os.pathsep)
         pip = dependent_spec["python"].command
         pip.add_default_arg("-m", "pip")
         setattr(module, "pip", pip)
