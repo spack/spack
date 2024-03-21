@@ -17,6 +17,8 @@ class PyKneaddata(PythonPackage):
 
     version("0.12.0", sha256="b211bf973ea50cc89dd5935761ca3b101d422cfb62b215aae08f5ed92a624a58")
 
+    maintainers("Pandapip1")
+
     depends_on("py-setuptools", type="build")
     depends_on("trimmomatic@0.33", type=("build", "run"))
     depends_on("bowtie2@2.2:", type=("build", "run"))
