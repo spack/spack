@@ -1,0 +1,20 @@
+ci:
+  pipeline-gen:
+  - build-job:
+      after_script::
+      - Write-Output "Done"
+
+      before_script::
+      - python -m pip install --user boto3
+      - . .\share\spack\setup-env.ps1
+      - spack.ps1 compiler find
+      - spack.ps1 external find --not-buildable cmake ninja win-wdk win-sdk wgl msmpi
+
+      script::
+      - spack.ps1 env activate --without-view ${SPACK_CONCRETE_ENV_DIR}
+      - spack.ps1 config add "config:install_tree:projections:${SPACK_JOB_SPEC_PKG_NAME}:'morepadding/{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}'"
+      - mkdir ${SPACK_ARTIFACTS_ROOT}/user_data
+      - spack.ps1 --backtrace ci rebuild | Tee-Object -FilePath "${env:SPACK_ARTIFACTS_ROOT}/user_data/pipeline_out.txt" 2>&1 | Tee-Object -FilePath "${env:SPACK_ARTIFACTS_ROOT}/user_data/pipeline_err.txt"
+      image: "ghcr.io/jjnesbitt/windows-servercore21h2:sha-5c42cbb"
+  - signing-job-remove:
+      script:: [no-signing-on-windows]

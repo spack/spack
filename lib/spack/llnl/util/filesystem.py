@@ -191,11 +191,20 @@ def getuid():
     if sys.platform == "win32":
         import ctypes
 
+        # If not admin, use the string name of the login as a unique ID
         if ctypes.windll.shell32.IsUserAnAdmin() == 0:
-            return 1
+            return os.getlogin()
         return 0
     else:
         return os.getuid()
+
+
+def msdos_escape_parens(cmd):
+    """MS-DOS interprets parens as grouping parameters even in a quoted string"""
+    if sys.platform == "win32":
+        return cmd.replace("(", "^(").replace(")", "^)")
+    else:
+        return cmd
 
 
 @system_path_filter

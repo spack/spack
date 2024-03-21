@@ -1,6 +1,7 @@
 stages: [ "generate", "build", "publish" ]
 
 variables:
+  SPACK_CI_ENABLE_STACKS: /^(windows-vis|build_systems)$/
   SPACK_DISABLE_LOCAL_CONFIG: "1"
   SPACK_USER_CACHE_PATH: "${CI_PROJECT_DIR}/tmp/_user_cache/"
   # PR_MIRROR_FETCH_DOMAIN: "https://binaries-prs.spack.io"
@@ -64,6 +65,11 @@ default:
     SPACK_TARGET_PLATFORM: "linux"
     SPACK_TARGET_ARCH: "ppc64le"
 
+.win64-msvc2019:
+  variables:
+    SPACK_TARGET_PLATFORM: "win64"
+    SPACK_TARGET_ARCH: "x86_64"
+
 ########################################
 # Job templates
 ########################################
@@ -72,6 +78,8 @@ default:
     PIPELINE_MIRROR_TEMPLATE: "single-src-protected-mirrors.yaml.in"
     # TODO: We can remove this when we drop the "deprecated" stack
     PUSH_BUILDCACHE_DEPRECATED: "${PROTECTED_MIRROR_PUSH_DOMAIN}/${CI_COMMIT_REF_NAME}/${SPACK_CI_STACK_NAME}"
+    SPACK_CI_CONFIG_ROOT: "${CI_PROJECT_DIR}/share/spack/gitlab/cloud_pipelines/configs"
+    SPACK_CI_SCRIPTS_ROOT: "${CI_PROJECT_DIR}/share/spack/gitlab/cloud_pipelines/scripts"
 
   rules:
     - if: $SPACK_CI_DISABLE_STACKS =~ /.+/ && $SPACK_CI_STACK_NAME =~ $SPACK_CI_DISABLE_STACKS
@@ -111,7 +119,8 @@ default:
         SPACK_PIPELINE_TYPE: "spack_pull_request"
         # TODO: We can remove this when we drop the "deprecated" stack
         PUSH_BUILDCACHE_DEPRECATED: "${PR_MIRROR_PUSH_DOMAIN}/${CI_COMMIT_REF_NAME}/${SPACK_CI_STACK_NAME}"
-        SPACK_PRUNE_UNTOUCHED: "True"
+        # SPACK_PRUNE_UNTOUCHED: "True"
+        SPACK_PRUNE_UNTOUCHED: "False"
         SPACK_PRUNE_UNTOUCHED_DEPENDENT_DEPTH: "1"
         # TODO: Change sync script to include target in branch name.  Then we could
         # TODO: have multiple types of "PR" pipeline here.  It would be better if we could
@@ -124,49 +133,23 @@ default:
 .generate-common:
   stage: generate
   script:
-    - uname -a || true
-    - grep -E 'vendor|model name' /proc/cpuinfo 2>/dev/null | sort -u || head -n10 /proc/cpuinfo 2>/dev/null || true
-    - nproc || true
-    - cat /proc/loadavg || true
-    - cat /proc/meminfo | grep 'MemTotal\|MemFree' || true
-    - . "./share/spack/setup-env.sh"
     - spack --version
-    - cd share/spack/gitlab/cloud_pipelines/stacks/${SPACK_CI_STACK_NAME}
-    - spack env activate --without-view .
-    - export SPACK_CI_CONFIG_ROOT="${SPACK_ROOT}/share/spack/gitlab/cloud_pipelines/configs"
+    - spack env activate --without-view share/spack/gitlab/cloud_pipelines/stacks/${SPACK_CI_STACK_NAME}
     - spack
-      --config-scope "${SPACK_CI_CONFIG_ROOT}"
-      --config-scope "${SPACK_CI_CONFIG_ROOT}/${SPACK_TARGET_PLATFORM}"
-      --config-scope "${SPACK_CI_CONFIG_ROOT}/${SPACK_TARGET_PLATFORM}/${SPACK_TARGET_ARCH}"
-      ${CI_STACK_CONFIG_SCOPES}
       compiler find
-    - spack
-      --config-scope "${SPACK_CI_CONFIG_ROOT}"
-      --config-scope "${SPACK_CI_CONFIG_ROOT}/${SPACK_TARGET_PLATFORM}"
-      --config-scope "${SPACK_CI_CONFIG_ROOT}/${SPACK_TARGET_PLATFORM}/${SPACK_TARGET_ARCH}"
-      ${CI_STACK_CONFIG_SCOPES}
-      audit configs
-    - spack python -c "import os,sys; print(os.path.expandvars(sys.stdin.read()))"
-      < "${SPACK_CI_CONFIG_ROOT}/${PIPELINE_MIRROR_TEMPLATE}" > "${SPACK_CI_CONFIG_ROOT}/mirrors.yaml"
+      # - spack
+      #   audit configs
+    - python ${SPACK_CI_SCRIPTS_ROOT}/common/expand_vars.py
+      "${SPACK_CI_CONFIG_ROOT}/${PIPELINE_MIRROR_TEMPLATE}"
+      "${SPACK_CI_CONFIG_ROOT}/mirrors.yaml"
     - spack config add -f "${SPACK_CI_CONFIG_ROOT}/mirrors.yaml"
-    - mkdir -p "${CI_PROJECT_DIR}/jobs_scratch_dir"
+    - mkdir "${CI_PROJECT_DIR}/jobs_scratch_dir"
     - spack
-      --config-scope "${SPACK_CI_CONFIG_ROOT}"
-      --config-scope "${SPACK_CI_CONFIG_ROOT}/${SPACK_TARGET_PLATFORM}"
-      --config-scope "${SPACK_CI_CONFIG_ROOT}/${SPACK_TARGET_PLATFORM}/${SPACK_TARGET_ARCH}"
-      ${CI_STACK_CONFIG_SCOPES}
       config blame > "${CI_PROJECT_DIR}/jobs_scratch_dir/spack.yaml.blame"
     - spack -v  --color=always
-      --config-scope "${SPACK_CI_CONFIG_ROOT}"
-      --config-scope "${SPACK_CI_CONFIG_ROOT}/${SPACK_TARGET_PLATFORM}"
-      --config-scope "${SPACK_CI_CONFIG_ROOT}/${SPACK_TARGET_PLATFORM}/${SPACK_TARGET_ARCH}"
-      ${CI_STACK_CONFIG_SCOPES}
       ci generate --check-index-only
       --artifacts-root "${CI_PROJECT_DIR}/jobs_scratch_dir"
       --output-file "${CI_PROJECT_DIR}/jobs_scratch_dir/cloud-ci-pipeline.yml"
-  after_script:
-    - cat /proc/loadavg || true
-    - cat /proc/meminfo | grep 'MemTotal\|MemFree' || true
   artifacts:
     paths:
       - "${CI_PROJECT_DIR}/jobs_scratch_dir"
@@ -186,6 +169,16 @@ default:
 # Generate without tags for cases using external runners
 .generate-base:
   extends: [ ".base-job", ".generate-common" ]
+  before_script:
+    - uname -a || true
+    - grep -E 'vendor|model name' /proc/cpuinfo 2>/dev/null | sort -u || head -n10 /proc/cpuinfo 2>/dev/null || true
+    - nproc || true
+    - cat /proc/loadavg || true
+    - cat /proc/meminfo | grep 'MemTotal\|MemFree' || true
+    - . "./share/spack/setup-env.sh"
+  after_script:
+    - cat /proc/loadavg || true
+    - cat /proc/meminfo | grep 'MemTotal\|MemFree' || true
 
 .generate-x86_64:
   extends: [ ".generate-base" ]
@@ -202,6 +195,15 @@ default:
 .generate-neoverse-v2:
   extends: [ ".generate-base" ]
   tags: ["spack", "public", "medium", "neoverse_v2"]
+
+.generate-win64:
+  extends: [ ".base-job", ".generate-common" ]
+  before_script:
+    - python -m pip install --user boto3
+    - . .\share\spack\setup-env.ps1
+    - spack external find --not-buildable cmake ninja win-wdk win-sdk wgl msmpi
+  tags: ["spack", "public", "medium", "x86_64-win"]
+  image: "ghcr.io/jjnesbitt/windows-servercore21h2:sha-5c42cbb"
 
 .generate-deprecated:
   extends: [ ".base-job" ]
@@ -918,3 +920,25 @@ e4s-cray-sles-build:
   needs:
     - artifacts: True
       job: e4s-cray-sles-generate
+
+#######################################
+# Windows Visualization Tools
+#######################################
+.windows-vis:
+  extends: [".win64-msvc2019"]
+  variables:
+    SPACK_CI_STACK_NAME: windows-vis
+
+windows-vis-generate:
+  extends: [ ".generate-win64", ".windows-vis" ]
+
+windows-vis-build:
+  extends: [ ".build", ".windows-vis"]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: windows-vis-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: windows-vis-generate

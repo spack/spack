@@ -6,6 +6,7 @@
 import json
 import os
 import shutil
+import sys
 from urllib.parse import urlparse, urlunparse
 
 import llnl.util.filesystem as fs
@@ -36,6 +37,10 @@ INSTALL_FAIL_CODE = 1
 
 def deindent(desc):
     return desc.replace("    ", "")
+
+
+def encode_path(path: str) -> str:
+    return path.encode("unicode-escape").decode()
 
 
 def setup_parser(subparser):
@@ -555,66 +560,27 @@ def ci_rebuild(args):
     if not config["verify_ssl"]:
         spack_cmd.append("-k")
 
-    install_args = []
+    install_args = ['--use-buildcache="package:never,dependencies:only"']
 
     can_verify = spack_ci.can_verify_binaries()
     verify_binaries = can_verify and spack_is_pr_pipeline is False
     if not verify_binaries:
         install_args.append("--no-check-signature")
 
-    slash_hash = "/{}".format(job_spec.dag_hash())
-
-    # Arguments when installing dependencies from cache
-    deps_install_args = install_args
+    slash_hash = '"/{}"'.format(job_spec.dag_hash())
 
     # Arguments when installing the root from sources
-    root_install_args = install_args + [
-        "--keep-stage",
-        "--only=package",
-        "--use-buildcache=package:never,dependencies:only",
-    ]
+    deps_install_args = install_args + ["--only=dependencies"]
+    root_install_args = install_args + ["--keep-stage", "--only=package"]
     if cdash_handler:
         # Add additional arguments to `spack install` for CDash reporting.
         root_install_args.extend(cdash_handler.args())
     root_install_args.append(slash_hash)
 
-    # ["x", "y"] -> "'x' 'y'"
-    args_to_string = lambda args: " ".join("'{}'".format(arg) for arg in args)
-
     commands = [
         # apparently there's a race when spack bootstraps? do it up front once
-        [SPACK_COMMAND, "-e", env.path, "bootstrap", "now"],
-        [
-            SPACK_COMMAND,
-            "-e",
-            env.path,
-            "env",
-            "depfile",
-            "-o",
-            "Makefile",
-            "--use-buildcache=package:never,dependencies:only",
-            slash_hash,  # limit to spec we're building
-        ],
-        [
-            # --output-sync requires GNU make 4.x.
-            # Old make errors when you pass it a flag it doesn't recognize,
-            # but it doesn't error or warn when you set unrecognized flags in
-            # this variable.
-            "export",
-            "GNUMAKEFLAGS=--output-sync=recurse",
-        ],
-        [
-            MAKE_COMMAND,
-            "SPACK={}".format(args_to_string(spack_cmd)),
-            "SPACK_COLOR=always",
-            "SPACK_INSTALL_FLAGS={}".format(args_to_string(deps_install_args)),
-            "-j$(nproc)",
-            "install-deps/{}".format(
-                spack.environment.depfile.MakefileSpec(job_spec).safe_format(
-                    "{name}-{version}-{hash}"
-                )
-            ),
-        ],
+        [SPACK_COMMAND, "-e", encode_path(env.path), "bootstrap", "now"],
+        spack_cmd + ["install"] + deps_install_args,
         spack_cmd + ["install"] + root_install_args,
     ]
 

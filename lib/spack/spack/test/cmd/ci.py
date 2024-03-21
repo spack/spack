@@ -41,7 +41,7 @@ install_cmd = spack.main.SpackCommand("install")
 uninstall_cmd = spack.main.SpackCommand("uninstall")
 buildcache_cmd = spack.main.SpackCommand("buildcache")
 
-pytestmark = [pytest.mark.not_on_windows("does not run on windows"), pytest.mark.maybeslow]
+pytestmark = [pytest.mark.maybeslow]
 
 
 @pytest.fixture()
