@@ -5,6 +5,7 @@
 import glob
 import os
 import sys
+import shutil
 
 from spack.package import *
 
@@ -122,6 +123,13 @@ class PyPip(Package, PythonExtension):
             whl = self.stage.archive_file
             upgrade_cmd = ["-m", "pip", "install", "--user", whl]
             python(*upgrade_cmd)
+            # Need to fix the directory name to "Lib" in order for the python package to correctly
+            # set the PYTHONPATH variable so the pip is usable because this is the structure that
+            # other python packages are installed with.
+            # TODO (smillie) Does this need to be protected in a try/except?
+            orig_pydir = glob.glob(os.path.join(self.spec.prefix, "Python3*"))[0]
+            new_pydir = os.path.join(self.spec.prefix, "Lib")
+            shutil.move(orig_pydir, new_pydir)
             return
 
         # To build and install pip from source, you need setuptools, wheel, and pip
@@ -133,10 +141,6 @@ class PyPip(Package, PythonExtension):
         python(*args)
 
     def setup_dependent_package(self, module, dependent_spec):
-        if sys.platform == "win32":
-            pypath = os.environ.get("PYTHONPATH", "").split(os.pathsep)
-            pypath = set(glob.glob(f"{self.spec.prefix}/*/site-packages") + pypath)
-            os.environ["PYTHONPATH"] = os.pathsep.join(pypath).strip(os.pathsep)
         pip = dependent_spec["python"].command
         pip.add_default_arg("-m", "pip")
         setattr(module, "pip", pip)
