@@ -601,7 +601,7 @@ class Axom(CachedCMakePackage, CudaPackage, ROCmPackage):
         example_build_dir = join_path(example_src_dir, "build")
         print("Checking using-with-cmake example...")
         with working_dir(example_build_dir, create=True):
-            cmake_args = ["-C ../host-config.cmake", "-D AXOM_DIR={0}".format(install_prefix), example_src_dir]
+            cmake_args = ["-C ../host-config.cmake", example_src_dir]
             cmake(*cmake_args)
             make()
             example = Executable("./example")
