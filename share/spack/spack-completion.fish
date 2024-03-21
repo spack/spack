@@ -2958,12 +2958,14 @@ complete -c spack -n '__fish_spack_using_command uninstall' -l origin -r -f -a o
 complete -c spack -n '__fish_spack_using_command uninstall' -l origin -r -d 'only remove DB records with the specified origin'
 
 # spack unit-test
-set -g __fish_spack_optspecs_spack_unit_test h/help H/pytest-help l/list L/list-long N/list-names extension= s/ k/= showlocals
+set -g __fish_spack_optspecs_spack_unit_test h/help H/pytest-help n/numprocesses= l/list L/list-long N/list-names extension= s/ k/= showlocals
 complete -c spack -n '__fish_spack_using_command_pos_remainder 0 unit-test' -f -a '(__fish_spack_unit_tests)'
 complete -c spack -n '__fish_spack_using_command unit-test' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command unit-test' -s h -l help -d 'show this help message and exit'
 complete -c spack -n '__fish_spack_using_command unit-test' -s H -l pytest-help -f -a pytest_help
 complete -c spack -n '__fish_spack_using_command unit-test' -s H -l pytest-help -d 'show full pytest help, with advanced options'
+complete -c spack -n '__fish_spack_using_command unit-test' -s n -l numprocesses -r -f -a numprocesses
+complete -c spack -n '__fish_spack_using_command unit-test' -s n -l numprocesses -r -d 'run tests in parallel up to this wide, default 1 for sequential'
 complete -c spack -n '__fish_spack_using_command unit-test' -s l -l list -f -a list
 complete -c spack -n '__fish_spack_using_command unit-test' -s l -l list -d 'list test filenames'
 complete -c spack -n '__fish_spack_using_command unit-test' -s L -l list-long -f -a list
