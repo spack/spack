@@ -19,6 +19,10 @@ class PyKeras(PythonPackage):
     git = "https://github.com/keras-team/keras.git"
     pypi = "keras/keras-3.0.0.tar.gz"
 
+    maintainers("adamjstewart")
+    license("Apache-2.0")
+
+    version("3.1.0", sha256="cac46e053f0493da313e7c9b16379a532b1a38f9f19c7a5fe4578759f4c6aa4d")
     version("3.0.5", sha256="df3d3795e12c3f6035e811c43c13f1eb41e37241796a0fea120ede4ebe1c4496")
     version("3.0.4", sha256="ff2204792582e3889c51c77722cc6e8258dbb1ece7db192f5a9bcd1887cf3385")
     version("3.0.3", sha256="1e455a82be63b7fb4f699e26bd1e04b7dbcbf66fa3a799117afca9ab067b5d61")
@@ -76,17 +80,19 @@ class PyKeras(PythonPackage):
     depends_on("py-protobuf", type=("build", "run"), when="@3:")
 
     # requirements-tensorflow-cuda.txt
-    depends_on("py-tensorflow@2.16.1", type=("build", "run"), when="@3.0 backend=tensorflow")
+    depends_on("py-tensorflow@2.16.1", type=("build", "run"), when="@3.0: backend=tensorflow")
 
     # requirements-jax-cuda.txt
     depends_on("py-jax@0.4.23", type=("build", "run"), when="@3.0.5: backend=jax")
     depends_on("py-jax", type=("build", "run"), when="@3: backend=jax")
 
     # requirements-torch-cuda.txt
-    depends_on("py-torch@2.1.2", type=("build", "run"), when="@3.0.3: backend=torch")
+    depends_on("py-torch@2.2.1", type=("build", "run"), when="@3.1.0: backend=torch")
+    depends_on("py-torch@2.1.2", type=("build", "run"), when="@3.0.3:3.0.5 backend=torch")
     depends_on("py-torch@2.1.1", type=("build", "run"), when="@3.0.1:3.0.2 backend=torch")
     depends_on("py-torch@2.1.0", type=("build", "run"), when="@3.0.0 backend=torch")
-    depends_on("py-torchvision@0.16.2", type=("build", "run"), when="@3.0.3: backend=torch")
+    depends_on("py-torchvision@0.17.1", type=("build", "run"), when="@3.1.0: backend=torch")
+    depends_on("py-torchvision@0.16.2", type=("build", "run"), when="@3.0.3:3.0.5 backend=torch")
     depends_on("py-torchvision@0.16.1", type=("build", "run"), when="@3.0.1:3.0.2 backend=torch")
     depends_on("py-torchvision@0.16.0", type=("build", "run"), when="@3.0.0 backend=torch")
 
