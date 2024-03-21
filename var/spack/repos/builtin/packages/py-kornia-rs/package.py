@@ -31,4 +31,5 @@ class PyKorniaRs(PythonPackage):
     depends_on("py-maturin@1.3.2:", type="build")
 
     def setup_build_environment(self, env):
-        env.set("RUST_BACKTRACE", 1)
+        env.set("RUST_BACKTRACE", "full")
+        env.set("CARGO_PROFILE_RELEASE_BUILD_OVERRIDE_DEBUG", "true")
