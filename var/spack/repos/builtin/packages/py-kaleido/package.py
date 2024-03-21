@@ -3,19 +3,26 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import platform
+
 from spack.package import *
 
+arch, os = platform.machine(), platform.system()
 
 class PyKaleido(PythonPackage):
     """Static image export for web-based visualization libraries with zero dependencies"""
 
-    homepage = "https://github.com/wdecoster/nanostat"
-    url = "https://github.com/plotly/Kaleido/archive/refs/tags/v0.2.1.tar.gz"
+    homepage = "https://github.com/plotly/Kaleido"
+    pypi = "kaleido/kaleido-0.2.1-py2.py3-none-manylinux1_x86_64.whl"
+    
+    if (arch == "x86_64" or arch == "x64") and os == "Linux": # 64-bit x86 Linux
+        version(
+            "0.2.1-linux-x86_64",
+            sha256="aa21cf1bf1c78f8fa50a9f7d45e1003c387bd3d6fe0a767cfbbf344b95bdc3a8",
+            url="https://files.pythonhosted.org/packages/ae/b3/a0f0f4faac229b0011d8c4a7ee6da7c2dca0b6fd08039c95920846f23ca4/kaleido-0.2.1-py2.py3-none-manylinux1_x86_64.whl",
+            expand=False
+        )
 
-    maintainers("Pandapip1")
+    # TODO: 32-bit systems, MacOS, Windows, and ARM
 
-    version("0.2.1", sha256="fdb673a9759835d4f455990fc1ff8919bd100a0d34f2d3de7bd5eeb2162b57ec")
-
-    depends_on("py-setuptools", type="build")
-
-    build_directory = join_path("repos", "kaleido", "py")
+    depends_on("python@:3.4")
