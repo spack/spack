@@ -37,7 +37,7 @@ class PyCarputils(PythonPackage):
     depends_on("py-scipy@1.5.0:", type=("build", "run"))
     depends_on("py-matplotlib@3.0.0:", type=("build", "run"))
     depends_on("py-pandas", type=("build", "run"))
-    depends_on("py-tables@3.6.1:", type=("build", "run"))
+    depends_on("py-tables@3.8.0:", type=("build", "run"))
     depends_on("py-six@1.12.0:", type=("build", "run"))
     depends_on("py-pydoe@0.3.8", type=("build", "run"))
     depends_on("py-ruamel-yaml@0.17.4:", type=("build", "run"))
