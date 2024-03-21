@@ -1291,6 +1291,9 @@ class TestConcretize:
     def test_reuse_installed_packages_when_package_def_changes(
         self, context, mutable_database, repo_with_changing_recipe
     ):
+        # test applies only with reuse turned off in concretizer
+        spack.config.set("concretizer:reuse", False)
+
         # Install a spec
         root = Spec("root").concretized()
         dependency = root["changing"].copy()
@@ -2022,7 +2025,11 @@ class TestConcretize:
 
         # install python external
         python = Spec("python").concretized()
-        monkeypatch.setattr(spack.store.STORE.db, "query", lambda x: [python])
+
+        def query(*args, **kwargs):
+            return [python]
+
+        monkeypatch.setattr(spack.store.STORE.db, "query", query)
 
         # ensure that we can't be faking this by getting it from config
         external_conf.pop("python")
