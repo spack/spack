@@ -3,7 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import platform, sys
+import platform
+import sys
 
 from spack.package import *
 
