@@ -156,6 +156,7 @@ class Podio(CMakePackage):
     )
     variant("sio", default=False, description="Build the SIO I/O backend")
     variant("rntuple", default=False, description="Build the RNTuple backend")
+    variant("rpath", default=False, description="Set RPATH for PODIO libraries")
 
     # cpack config throws an error on some systems
     patch("cpack.patch", when="@:0.10.0")
@@ -185,6 +186,7 @@ class Podio(CMakePackage):
         args = [
             self.define_from_variant("ENABLE_SIO", "sio"),
             self.define_from_variant("ENABLE_RNTUPLE", "rntuple"),
+            self.define_from_variant("PODIO_SET_RPATH", "rpath"),
             self.define("CMAKE_CXX_STANDARD", self.spec.variants["cxxstd"].value),
             self.define("BUILD_TESTING", self.run_tests),
         ]
