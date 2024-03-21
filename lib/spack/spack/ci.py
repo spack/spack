@@ -1945,7 +1945,7 @@ def reproduce_ci_job(url, work_dir, autostart, gpg_url, runtime):
     entrypoint = shell if IS_WINDOWS else entry_path
     script = entry_path if IS_WINDOWS else ""
     exec_cmd = "&" if IS_WINDOWS else "exec"
-    cmd_args = "($args -Join ' ')"
+    cmd_args = "($args -Join ' ')" if IS_WINDOWS else "$@"
     no_exit = "-NoExit" if IS_WINDOWS else ""
 
     inst_list = []
