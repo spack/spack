@@ -598,6 +598,13 @@ def test_repr_and_str():
     check_repr_and_str("R2016a.2-3_4")
 
 
+@pytest.mark.parametrize("version_str", ["1.2string3", "1.2-3xyz_4-alpha.5"])
+def test_stringify_version(version_str):
+    v = Version(version_str)
+    v.string = None
+    assert str(v) == version_str
+
+
 def test_len():
     a = Version("1.2.3.4")
     assert len(a) == len(a.version[0])

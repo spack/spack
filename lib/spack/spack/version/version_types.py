@@ -118,6 +118,18 @@ class ConcreteVersion:
     pass
 
 
+def _stringify_version(versions: Tuple[tuple, tuple], separators: tuple) -> str:
+    release, prerelease = versions
+    string = ""
+    for i in range(len(release)):
+        string += f"{release[i]}{separators[i]}"
+    if prerelease[0] != FINAL:
+        string += f"{PRERELEASE_TO_STRING[prerelease[0]]}{separators[len(release)]}"
+        if len(prerelease) > 1:
+            string += str(prerelease[1])
+    return string
+
+
 class StandardVersion(ConcreteVersion):
     """Class to represent versions"""
 
@@ -218,14 +230,8 @@ class StandardVersion(ConcreteVersion):
         message = "{cls.__name__} indices must be integers"
         raise TypeError(message.format(cls=cls))
 
-    def _stringify(self):
-        string = ""
-        for component, separator in zip(self.version[0] + self.version[1], self.separators):
-            string += f"{component}{separator}"
-        return string
-
     def __str__(self):
-        return self.string or self._stringify()
+        return self.string or _stringify_version(self.version, self.separators)
 
     def __repr__(self) -> str:
         # Print indirect repr through Version(...)
