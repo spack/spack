@@ -5,6 +5,7 @@
 
 from spack.package import *
 
+
 class PyKneaddata(PythonPackage):
     """Quality control tool on metagenomic and metatranscriptomic sequencing data, especially data from microbiome experiments"""
 
@@ -21,7 +22,7 @@ class PyKneaddata(PythonPackage):
 
     variant("bam", default=True, description="Enable support for input files in BAM format")
     depends_on("samtools", when="+bam", type=("build", "run"))
-    
+
     variant("trf", default=True, description="Enable support for Tandem Repeats Finder")
     depends_on("trf", when="+trf", type=("build", "run"))
 
