@@ -2041,6 +2041,8 @@ def process_command(name, commands, repro_dir, run=True, exit_on_failure=True):
         commands = [commands]
 
     def compose_command_err_handling(args):
+        if not IS_WINDOWS:
+            args = [f'"{arg}"' for arg in args]
         arg_str = " ".join(args)
         result = arg_str + "\n"
         # ErrorActionPreference will handle PWSH commandlets (Spack calls),
