@@ -328,6 +328,8 @@ def test_uninstalled_upstream(install_upstream, mock_fetch):
             record.installed = False
 
     with spack.store.use_store(store_root):
+        # Re-read the Database so in-memory state reflects updated
+        # upstream
         assert not dependency.installed_upstream
 
         dependent.package.do_install()
