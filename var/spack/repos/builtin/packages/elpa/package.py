@@ -48,7 +48,7 @@ class Elpa(AutotoolsPackage, CudaPackage, ROCmPackage):
 
     variant("openmp", default=True, description="Activates OpenMP support")
     variant("mpi", default=True, description="Activates MPI support")
-    variant("gpu_streams", default=True, description="Enable GPU streams support")
+    variant("gpu_streams", default=True, description="Activates GPU streams support")
 
     patch("fujitsu.patch", when="%fj")
 
