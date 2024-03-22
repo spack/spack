@@ -568,19 +568,19 @@ supported, and netmod is ignored if device is ch3:sock.""",
                 config_args.append("--with-pmi=pmi2")
             elif "pmi=pmix" in spec:
                 # use the PMIx client interface with an external PMIx library
-                config_args.append("--with-pmi=pmix --with-pmix={0}".format(spec["pmix"].prefix))
+                config_args.append("--with-pmi=pmix")
+                config_args.append(f"--with-pmix={spec['pmix'].prefix}")
             elif "pmi=cray" in spec:
-                # use PMI2 interface with Cray PMI library
-                config_args.append(
-                    "--with-pmi=pmi2 --with-pmi2={0}".format(spec["cray-pmi"].prefix)
-                )
+                # use PMI2 interface of the Cray PMI library
+                config_args.append("--with-pmi=pmi2")
+                config_args.append(f"--with-pmi2={spec['cray-pmi'].prefix}")
         else:
             if "pmi=pmi1" in spec:
                 config_args.append("--with-pmi=simple")
             elif "pmi=pmi2" in spec:
                 config_args.append("--with-pmi=pmi2/simple")
             elif "pmi=pmix" in spec:
-                config_args.append("--with-pmix={0}".format(spec["pmix"].prefix))
+                config_args.append(f"--with-pmix={spec['pmix'].prefix}")
             elif "pmi=cray" in spec:
                 config_args.append("--with-pmi=cray")
 
