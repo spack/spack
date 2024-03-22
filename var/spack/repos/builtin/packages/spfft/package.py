@@ -54,8 +54,9 @@ class Spfft(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("cmake@3.18:", type="build", when="@1.1.0:")
     depends_on("cmake@3.21:", type="build", when="@1.1.0: +rocm")
 
-    depends_on("cuda@:10", when="@:0.9.11 +cuda")
-    depends_on("cuda@:11", when="@1.1.0: +cuda")
+    depends_on("cuda@9:10", when="@:0.9.11 +cuda")
+    depends_on("cuda@9:", when="@0.9.12:1.0.6 +cuda")
+    depends_on("cuda@11:", when="@1.1.0: +cuda")
 
     # Workaround for compiler bug in ROCm 4.5+ added in SpFFT 1.0.6
     conflicts("+rocm", when="@:1.0.5")
