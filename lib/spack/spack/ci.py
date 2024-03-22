@@ -1940,13 +1940,7 @@ def reproduce_ci_job(url, work_dir, autostart, gpg_url, runtime):
             )
         ],
     ]
-    entry_path = os.path.join(mounted_workdir, f"entrypoint.{platform_script_ext}")
-    shell = "powershell.exe" if IS_WINDOWS else "bash"
-    entrypoint = shell if IS_WINDOWS else entry_path
-    exec_cmd = "&" if IS_WINDOWS else "exec"
-    cmd_args = "($args -Join ' ')" if IS_WINDOWS else "$@"
-    no_exit = "-NoExit" if IS_WINDOWS else ""
-
+    entry_script = os.path.join(mounted_workdir, f"entrypoint.{platform_script_ext}")
     inst_list = []
     # Finally, print out some instructions to reproduce the build
     if job_image:
@@ -1956,45 +1950,61 @@ def reproduce_ci_job(url, work_dir, autostart, gpg_url, runtime):
             if job_image
             else install_script
         )
-        entrypoint_script.extend(
-            [
-                ["echo", f"Re-run install script using:\n\t{install_mechanism}"],
-                # Allow interactive
-                [exec_cmd, cmd_args, no_exit],
-            ]
-        )
+        entrypoint_script.append(["echo", f"Re-run install script using:\n\t{install_mechanism}"])
+        # Allow interactive
+        if IS_WINDOWS:
+            entrypoint_script.extend(
+                ["&", "($args -Join ' ')", "-NoExit"]
+            )
+        else:
+            entrypoint_script.extend(
+                ["exec", "$@"]
+            )
+
         process_command(
             "entrypoint", entrypoint_script, work_dir, run=False, exit_on_failure=False
         )
 
         docker_command = [
-            [
-                runtime,
-                "run",
-                "-i",
-                "-t",
-                "--rm",
-                "--name",
-                "spack_reproducer",
-                "-v",
-                ":".join([work_dir, mounted_workdir, "Z"]),
-                "-v",
-                ":".join(
-                    [
-                        os.path.join(work_dir, "jobs_scratch_dir"),
-                        os.path.join(mount_as_dir, "jobs_scratch_dir"),
-                        "Z",
-                    ]
-                ),
-                "-v",
-                ":".join([os.path.join(work_dir, "spack"), mount_as_dir, "Z"]),
-                "--entrypoint",
-                entrypoint,
-                job_image,
-                entry_path if IS_WINDOWS else "",
-                shell,
-            ]
+            runtime,
+            "run",
+            "-i",
+            "-t",
+            "--rm",
+            "--name",
+            "spack_reproducer",
+            "-v",
+            ":".join([work_dir, mounted_workdir, "Z"]),
+            "-v",
+            ":".join(
+                [
+                    os.path.join(work_dir, "jobs_scratch_dir"),
+                    os.path.join(mount_as_dir, "jobs_scratch_dir"),
+                    "Z",
+                ]
+            ),
+            "-v",
+            ":".join([os.path.join(work_dir, "spack"), mount_as_dir, "Z"]),
+            "--entrypoint",
         ]
+        if IS_WINDOWS:
+            docker_command.extend(
+                [
+                    "powershell.exe",
+                    job_image,
+                    entry_script,
+                    "powershel.exe"
+                ]
+            )
+        else:
+            docker_command.extend(
+                [
+                    entry_script,
+                    job_image,
+                    "bash"
+                ]
+            )
+        docker_command = [docker_command]
         autostart = autostart and setup_result
         process_command("start", docker_command, work_dir, run=autostart)
 
