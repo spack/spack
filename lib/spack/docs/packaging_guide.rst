@@ -918,8 +918,8 @@ So, the contrived version ``1y0`` is identical to ``1.y.0``.
 Pre-release suffixes also contain string parts, but they are handled
 in a special way. For example ``1.2.3a1`` is parsed as a pre-release
 of the version ``1.2.3``. This allows Spack to order it before the
-actual release: ``1.2.3a1 < 1.2.3``. Spack supports alpha, beta and
-release candidate suffixes: ``1.2a1 < 1.2b1 < 1.2rc1 < 1.2``. Any
+actual release: ``1.2.3alpha1 < 1.2.3``. Spack supports alpha, beta and
+release candidate suffixes: ``1.2alpha1 < 1.2beta1 < 1.2rc1 < 1.2``. Any
 suffix not recognized as a pre-release is treated as an ordinary
 string component, so ``1.2 < 1.2-mysuffix``.
 
@@ -928,13 +928,13 @@ Finally, there are a few special string components that are considered
 ``head``, ``trunk``, and ``stable``. For example: ``1.2 < develop``.
 These are useful for specifying the most recent development version of
 a package (often a moving target like a git branch), without assigning
-a specific version number.
+a specific version number. Infinity versions are not automatically used when determining the latest version of a package unless explicitly required by another package or user.
 
 More formally, the order on versions is defined as follows. A version
 string is split into a list of components based on delimiters such as
 ``.`` and ``-`` and string boundaries. The components are split into
 the **release** and a possible **pre-release** (if the last component
-is numeric and the second to last is a string ``a``, ``b`` or ``rc``).
+is numeric and the second to last is a string ``alpha``, ``beta`` or ``rc``).
 The release components are ordered lexicographically, with comparsion
 between different types of components as follows:
 
