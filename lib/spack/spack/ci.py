@@ -1984,7 +1984,7 @@ def reproduce_ci_job(url, work_dir, autostart, gpg_url, runtime):
             "--entrypoint",
         ]
         if IS_WINDOWS:
-            docker_command.extend(["powershell.exe", job_image, entry_script, "powershel.exe"])
+            docker_command.extend(["powershell.exe", job_image, entry_script, "powershell.exe"])
         else:
             docker_command.extend([entry_script, job_image, "bash"])
         docker_command = [docker_command]
