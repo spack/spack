@@ -334,6 +334,9 @@ class Seissol(CMakePackage, CudaPackage, ROCmPackage):
 
         args.append(f"-DHOST_ARCH={hostarch}")
 
+        if "+python" in self.spec:
+            args.append(self.define("PYTHON_EXECUTABLE", self.spec["python"].command.path))
+
         return args
 
     def setup_run_environment(self, env):
