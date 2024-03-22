@@ -1624,7 +1624,7 @@ class Database:
         """Query the Spack database including all upstream databases.
 
         Additional Arguments:
-            install_tree (str): query 'all' (default), 'local', 'upstream', or named upstream
+            install_tree (str): query 'all' (default), 'local', 'upstream', or upstream path
         """
         install_tree = kwargs.pop("install_tree", "all")
         valid_trees = ["all", "upstream", "local", self.root] + [u.root for u in self.upstream_dbs]

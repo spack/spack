@@ -144,7 +144,7 @@ def setup_parser(subparser):
         "--install-tree",
         action="store",
         default="all",
-        help="Install trees to query. 'all' (default), 'local', 'upstream', or upstream name",
+        help="Install trees to query: 'all' (default), 'local', 'upstream', upstream name or path",
     )
 
     subparser.add_argument("--start-date", help="earliest date of installation [YYYY-MM-DD]")
@@ -176,8 +176,12 @@ def query_arguments(args):
         "installed": installed,
         "known": known,
         "explicit": explicit,
-        "install_tree": args.install_tree,
     }
+
+    install_tree = args.install_tree
+    upstreams = spack.config.get("upstreams", {})
+    if install_tree in upstreams.keys():
+        install_tree = upstreams[install_tree]["install_tree"]
 
     # Time window of installation
     for attribute in ("start_date", "end_date"):
