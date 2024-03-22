@@ -105,9 +105,8 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
         when="@1.10:1.11",
     )
     # py-torch has strict dependencies on old protobuf/py-protobuf versions that
-    # don't build with some of the compilers (e.g. intel) or cause problems with
-    # other packages that require newer versions of (py-)protobuf. Provide an
-    # option to use the internal/vendored protobuf instead of spack's.
+    # cause problems with other packages that require newer versions of protobuf.
+    # and py-protobuf --> provide an option to use the internal/vendored protobuf.
     variant("custom-protobuf", default=False, description="Use vendored protobuf")
 
     conflicts("+cuda+rocm")
