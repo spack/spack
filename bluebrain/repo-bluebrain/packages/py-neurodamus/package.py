@@ -56,7 +56,6 @@ class PyNeurodamus(PythonPackage):
     # Note: we depend on Neurodamus but let the user decide which one.
     # Note: avoid Neuron/py-mvdtool dependency due to Intel-GCC conflicts.
     depends_on("python@3.4:", type=("build", "run"))
-    depends_on("py-setuptools", type=("build", "run"))
     depends_on("py-h5py", type=("build", "run"))
     depends_on("py-numpy@1.24:", type=("build", "run"))
     depends_on("py-docopt", type=("build", "run"))
@@ -65,8 +64,21 @@ class PyNeurodamus(PythonPackage):
     depends_on("py-scipy", type=("build", "run"))
     depends_on("py-psutil", type=("build", "run"), when="@2.12.1:")
 
+    depends_on("py-setuptools", type=("build", "run"), when="@:3.1")
+    depends_on("py-hatchling", type="build", when="@3.2:")
+    depends_on("py-hatch-vcs", type="build", when="@3.2:")
+
+    @property
+    def datadir(self):
+        """Location of hoc and mod files"""
+        if self.spec.satisfies("@:3.1.1"):
+            return self.prefix.lib
+        return self.prefix.join(python_purelib).neurodamus.data
+
     @run_after("install")
     def install_files(self):
+        if self.spec.satisfies("@3.1.2:"):
+            return
         from llnl.util.filesystem import copy
 
         mkdirp(self.prefix.share)
@@ -80,7 +92,11 @@ class PyNeurodamus(PythonPackage):
 
     def setup_run_environment(self, env):
         PythonPackage.setup_run_environment(self, env)
-        env.set("NEURODAMUS_PYTHON", self.prefix.share)
+        env.set("NEURODAMUS_DATA", self.datadir)
+        if self.spec.satisfies("@:3.1.1"):
+            env.set("NEURODAMUS_PYTHON", self.prefix.share)
+        else:
+            env.set("NEURODAMUS_PYTHON", self.datadir)
 
     LATEST_STABLE = "develop"  # Use for neurodamus-models (updated below)
 

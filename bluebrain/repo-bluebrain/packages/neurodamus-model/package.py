@@ -100,31 +100,30 @@ class NeurodamusModel(SimModel):
         This routine simply adds the additional mods to existing dirs
         so that incremental builds can actually happen.
         """
-        core = spec["py-neurodamus"]
-        core_prefix = core.prefix
+        pydamus_data = spec["py-neurodamus"].package.datadir
 
         # If we shall build mods for coreneuron,
         # only bring from core those specified
         if spec.satisfies("+coreneuron"):
             shutil.copytree("mod", "mod_core", True)
             core_nrn_mods = set()
-            with open(core_prefix.lib.mod.join(_CORENRN_MODLIST_FNAME)) as core_mods:
+            with open(pydamus_data.mod.join(_CORENRN_MODLIST_FNAME)) as core_mods:
                 for aux_mod in core_mods:
-                    mod_fil = core_prefix.lib.mod.join(aux_mod.strip())
+                    mod_fil = pydamus_data.mod.join(aux_mod.strip())
                     if os.path.isfile(mod_fil):
                         shutil.copy(mod_fil, "mod_core")
                         core_nrn_mods.add(aux_mod.strip())
-            with working_dir(core_prefix.lib.mod):
+            with working_dir(pydamus_data.mod):
                 all_mods = set(f for f in os.listdir() if f.endswith(".mod"))
             with open(join_path("mod", "neuron_only_mods.txt"), "w") as blackl:
                 blackl.write("\n".join(all_mods - core_nrn_mods) + "\n")
 
-        copy_all(core_prefix.lib.hoc, "hoc", make_link)
-        copy_all(core_prefix.lib.mod, "mod", make_link)
-        if core.satisfies("@:3.0.0"):
+        copy_all(pydamus_data.hoc, "hoc", make_link)
+        copy_all(pydamus_data.mod, "mod", make_link)
+        if spec["py-neurodamus"].satisfies("@:3.0.0"):
             # Neurodamus model may not have python scripts
             mkdirp("python")
-            copy_all(core_prefix.lib.python, "python", make_link)
+            copy_all(pydamus_data.python, "python", make_link)
 
     def build(self, spec, prefix):
         """Build mod files from with nrnivmodl / nrnivmodl-core.
