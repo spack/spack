@@ -1953,13 +1953,9 @@ def reproduce_ci_job(url, work_dir, autostart, gpg_url, runtime):
         entrypoint_script.append(["echo", f"Re-run install script using:\n\t{install_mechanism}"])
         # Allow interactive
         if IS_WINDOWS:
-            entrypoint_script.extend(
-                ["&", "($args -Join ' ')", "-NoExit"]
-            )
+            entrypoint_script.extend(["&", "($args -Join ' ')", "-NoExit"])
         else:
-            entrypoint_script.extend(
-                ["exec", "$@"]
-            )
+            entrypoint_script.extend(["exec", "$@"])
 
         process_command(
             "entrypoint", entrypoint_script, work_dir, run=False, exit_on_failure=False
@@ -1988,22 +1984,9 @@ def reproduce_ci_job(url, work_dir, autostart, gpg_url, runtime):
             "--entrypoint",
         ]
         if IS_WINDOWS:
-            docker_command.extend(
-                [
-                    "powershell.exe",
-                    job_image,
-                    entry_script,
-                    "powershel.exe"
-                ]
-            )
+            docker_command.extend(["powershell.exe", job_image, entry_script, "powershel.exe"])
         else:
-            docker_command.extend(
-                [
-                    entry_script,
-                    job_image,
-                    "bash"
-                ]
-            )
+            docker_command.extend([entry_script, job_image, "bash"])
         docker_command = [docker_command]
         autostart = autostart and setup_result
         process_command("start", docker_command, work_dir, run=autostart)
