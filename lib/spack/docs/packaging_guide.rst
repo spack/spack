@@ -916,7 +916,7 @@ components do not have to be separated by dots or any other delimiter.
 So, the contrived version ``1y0`` is identical to ``1.y.0``.
 
 Pre-release suffixes also contain string parts, but they are handled
-in a special way. For example ``1.2.3a1`` is parsed as a pre-release
+in a special way. For example ``1.2.3alpha1`` is parsed as a pre-release
 of the version ``1.2.3``. This allows Spack to order it before the
 actual release: ``1.2.3alpha1 < 1.2.3``. Spack supports alpha, beta and
 release candidate suffixes: ``1.2alpha1 < 1.2beta1 < 1.2rc1 < 1.2``. Any
