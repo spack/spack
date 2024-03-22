@@ -148,6 +148,8 @@ def test_strip_compression_extension(archive_and_expected):
         assert stripped == "Foo.zip"
         stripped = llnl.url.strip_compression_extension(archive, "zip")
         assert stripped == "Foo"
+    elif extension == "whl":
+        assert stripped == "Foo.whl"
     elif (
         extension.lower() == "tar"
         or extension in llnl.url.CONTRACTION_MAP
