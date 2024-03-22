@@ -177,7 +177,9 @@ class Berkeleygw(MakefilePackage):
 
         if self.version < Version("3.1.0"):
             # np.int alias was removed from numpy
-            filter_file("astype\(np.int\)", "astype(int)", "testsuite/Si2-SAPO/analyze_dotproduct.py")
+            filter_file(
+                "astype\(np.int\)", "astype(int)", "testsuite/Si2-SAPO/analyze_dotproduct.py"
+            )
 
     def build(self, spec, prefix):
         buildopts = []
