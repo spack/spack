@@ -157,6 +157,10 @@ def _system_gunzip(archive_file: str) -> str:
     return destination_abspath
 
 
+def _do_nothing(archive_file: str) -> str:
+    pass
+
+
 def _unzip(archive_file: str) -> str:
     """Returns path to extracted zip archive. Extract Zipfile, searching for unzip system
     executable. If unavailable, search for 'tar' executable on system and use instead.
@@ -297,6 +301,7 @@ def decompressor_for_nix(extension: str) -> Callable[[str], str]:
         "bz2": _bunzip2,
         "Z": _system_unZ,  # no builtin support for .Z files
         "xz": _lzma_decomp,
+        "whl": _do_nothing,
     }
 
     return extension_to_decompressor.get(extension, _system_untar)
@@ -333,6 +338,7 @@ def decompressor_for_win(extension: str) -> Callable[[str], str]:
         # detected
         "Z": _system_unZ,
         "xz": _lzma_decomp,
+        "whl": _do_nothing,
     }
 
     decompressor = extension_to_decompressor.get(extension)
