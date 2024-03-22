@@ -39,7 +39,6 @@ class PyNetworkit(PythonPackage):
     depends_on("libnetworkit@7.1", type=("build", "link"), when="@7.1")
     depends_on("libnetworkit@7.0", type=("build", "link"), when="@7.0")
     depends_on("libnetworkit@6.1", type=("build", "link"), when="@6.1")
-    depends_on("llvm-openmp", when="%apple-clang")
     depends_on("ninja", type="build")
     depends_on("py-cython", type="build")
     depends_on("py-numpy", type=("build", "run"))

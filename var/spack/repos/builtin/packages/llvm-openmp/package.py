@@ -24,6 +24,8 @@ class LlvmOpenmp(CMakePackage):
     homepage = "https://openmp.llvm.org/"
     url = "https://github.com/llvm/llvm-project/releases/download/llvmorg-14.0.6/openmp-14.0.6.src.tar.xz"
 
+    tags = ["runtime"]
+
     license("Apache-2.0")
 
     version("18.1.0", sha256="ef1cef885d463e4becf5e132a9175a540c6f4487334c0e86274a374ce7d0a092")
