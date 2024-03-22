@@ -28,7 +28,7 @@ class Orc(CMakePackage):
     depends_on("snappy@1.1.7:")
     depends_on("lz4@1.7.5:")
 
-    patch("thirdparty.patch", when="@1.6")
+    patch("thirdparty-1.6.patch", when="@1.6")
 
     def cmake_args(self):
         args = []
