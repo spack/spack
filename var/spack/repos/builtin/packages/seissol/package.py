@@ -143,7 +143,7 @@ class Seissol(CMakePackage, CudaPackage, ROCmPackage):
 
     variant(
         "gemm_tools",
-        default="LIBXSMM,PSpaMM",
+        default=("LIBXSMM", "PSpaMM"),
         description="gemm toolkit(s) for the (CPU) code generator",
         values=("LIBXSMM", "MKL", "OpenBLAS", "BLIS", "PSpaMM", "Eigen", "LIBXSMM_JIT"),
         multi=True,
@@ -294,9 +294,11 @@ class Seissol(CMakePackage, CudaPackage, ROCmPackage):
         if self.spec.target.family == "aarch64":
             hostarch = "neon"
         if self.spec.target.family == "x86_64":
-            hostarch = "wsm"
+            # pure x86_64v1 doesn't support anything above SSE3
+            hostarch = "noarch"
         if self.spec.target.family == "x86_64_v2":
-            hostarch = "snb"
+            # AVX is only required for x86_64v3 and upwards
+            hostarch = "wsm"
         if self.spec.target.family == "x86_64_v3":
             hostarch = "hsw"
         if self.spec.target.family == "x86_64_v4":
