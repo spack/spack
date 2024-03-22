@@ -50,7 +50,7 @@ class PyScipy(PythonPackage):
     version("1.3.2", sha256="a03939b431994289f39373c57bbe452974a7da724ae7f9620a1beee575434da4")
 
     # Based on wheel availability on PyPI
-    depends_on("python@3.9:3.11", when="@1.11:", type=("build", "link", "run"))
+    depends_on("python@3.9:3.12", when="@1.11:", type=("build", "link", "run"))
     depends_on("python@3.8:3.11", when="@1.9.2:1.10", type=("build", "link", "run"))
     depends_on("python@3.8:3.10", when="@1.8:1.9.1", type=("build", "link", "run"))
     depends_on("python@:3.10", when="@1.7.2:1.7", type=("build", "link", "run"))
@@ -90,8 +90,7 @@ class PyScipy(PythonPackage):
     depends_on("py-setuptools@:59", when="@1.8", type="build")
     depends_on("py-setuptools@:57", when="@1.7", type="build")
     depends_on("py-setuptools@:51.0.0", when="@1.6", type="build")
-    depends_on("py-numpy@1.22.4:2", when="@1.12:", type=("build", "link", "run"))
-    depends_on("py-numpy@1.21.6:1.27", when="@1.11", type=("build", "link", "run"))
+    depends_on("py-numpy@1.21.6:1.27", when="@1.11:", type=("build", "link", "run"))
     depends_on("py-numpy@1.19.5:1.26", when="@1.10", type=("build", "link", "run"))
     depends_on("py-numpy@1.18.5:1.25", when="@1.9", type=("build", "link", "run"))
     depends_on("py-numpy@1.17.3:1.24", when="@1.8", type=("build", "link", "run"))
@@ -121,7 +120,7 @@ class PyScipy(PythonPackage):
     )
 
     # https://github.com/scipy/scipy/issues/19831
-    conflicts("openblas@0.3.26:", when="@:1.12")
+    conflicts("^openblas@0.3.26:", when="@:1.12")
 
     # https://github.com/scipy/scipy/issues/19352
     conflicts("^py-cython@3.0.3")
