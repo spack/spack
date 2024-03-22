@@ -23,12 +23,7 @@ properties: Dict[str, Any] = {
                     {
                         "type": "object",
                         "properties": {
-                            "strategy": {
-                                "oneOf": [
-                                    {"type": "boolean"},
-                                    {"type": "string", "enum": ["dependencies"]},
-                                ]
-                            },
+                            "roots": {"type": "boolean"},
                             "include": LIST_OF_SPECS,
                             "exclude": LIST_OF_SPECS,
                             "from": {
