@@ -210,16 +210,10 @@ def test_from_list_url(mock_packages, config, spec, url, digest, _fetch_method):
 @pytest.mark.parametrize(
     "requested_version,tarball,digest",
     [
-        # This version is in the web data path (test/data/web/4.html), but not in the
+        # These versions are in the web data path (test/data/web/4.html), but not in the
         # url-list-test package. We expect Spack to generate a URL with the new version.
         ("=4.5.0", "foo-4.5.0.tar.gz", None),
-        # This version is in web data path and not in the package file, BUT the 2.0.0b2
-        # version in the package file satisfies 2.0.0, so Spack will use the known version.
-        # TODO: this is *probably* not what the user wants, but it's here as an example
-        # TODO: for that reason. We can't express "exactly 2.0.0" right now, and we don't
-        # TODO: have special cases that would make 2.0.0b2 less than 2.0.0. We should
-        # TODO: probably revisit this in our versioning scheme.
-        ("2.0.0", "foo-2.0.0b2.tar.gz", "000000000000000000000000000200b2"),
+        ("=2.0.0", "foo-2.0.0.tar.gz", None),
     ],
 )
 @pytest.mark.only_clingo("Original concretizer doesn't resolve concrete versions to known ones")
@@ -228,7 +222,7 @@ def test_new_version_from_list_url(
 ):
     """Test non-specific URLs from the url-list-test package."""
     with spack.config.override("config:url_fetch_method", _fetch_method):
-        s = Spec("url-list-test @%s" % requested_version).concretized()
+        s = Spec(f"url-list-test @{requested_version}").concretized()
         fetch_strategy = fs.from_list_url(s.package)
 
         assert isinstance(fetch_strategy, fs.URLFetchStrategy)

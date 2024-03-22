@@ -2613,3 +2613,28 @@ def test_reusable_externals_different_spec(mock_packages, tmpdir):
         {"mpich": {"externals": [{"spec": "mpich@4.1 +debug", "prefix": tmpdir.strpath}]}},
         local=False,
     )
+
+
+def test_concretization_version_order():
+    versions = [
+        (Version("develop"), {}),
+        (Version("1.0"), {}),
+        (Version("2.0"), {"deprecated": True}),
+        (Version("1.1"), {}),
+        (Version("1.1alpha1"), {}),
+        (Version("0.9"), {"preferred": True}),
+    ]
+    result = [
+        v
+        for v, _ in sorted(
+            versions, key=spack.solver.asp._concretization_version_order, reverse=True
+        )
+    ]
+    assert result == [
+        Version("0.9"),  # preferred
+        Version("1.1"),  # latest non-deprecated final version
+        Version("1.0"),  # latest non-deprecated final version
+        Version("1.1alpha1"),  # prereleases
+        Version("develop"),  # likely development version
+        Version("2.0"),  # deprecated
+    ]
