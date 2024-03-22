@@ -29,7 +29,9 @@ ext_archive = {}
 ]
 # Spack does not use Python native handling for tarballs or zip
 # Don't test tarballs or zip in native test
-native_archive_list = [key for key in ext_archive.keys() if "tar" not in key and "zip" not in key]
+native_archive_list = [
+    key for key in ext_archive.keys() if "tar" not in key and "zip" not in key and "whl" not in key
+]
 
 
 @pytest.fixture
