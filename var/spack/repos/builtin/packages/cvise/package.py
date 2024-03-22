@@ -17,6 +17,7 @@ class Cvise(CMakePackage):
     license("NCSA")
 
     version("master", branch="master")
+    version("2.10.0", tag="v2.10.0", commit="c8606497e354ddab273745cf823823bdd3e86bd8")
     version("2.7.0", tag="v2.7.0", commit="d9e4a50514d9931b2a1293755a7e96e0f9520032")
 
     variant("pytest", default=False, description="Add py-pytest as dependency")
