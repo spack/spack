@@ -48,6 +48,7 @@ class Elpa(AutotoolsPackage, CudaPackage, ROCmPackage):
 
     variant("openmp", default=True, description="Activates OpenMP support")
     variant("mpi", default=True, description="Activates MPI support")
+    variant("gpu_streams", default=True, description="Activates GPU streams support")
 
     patch("fujitsu.patch", when="%fj")
 
@@ -75,6 +76,12 @@ class Elpa(AutotoolsPackage, CudaPackage, ROCmPackage):
         msg="ELPA-2021.05.001+ requires GCC-8+ for OpenMP support",
     )
     conflicts("+mpi", when="+rocm", msg="ROCm support and MPI are not yet compatible")
+
+    conflicts(
+        "+gpu_streams",
+        when="+openmp",
+        msg="GPU streams currently not supported in combination with OpenMP",
+    )
 
     def url_for_version(self, version):
         return "https://elpa.mpcdf.mpg.de/software/tarball-archive/Releases/{0}/elpa-{0}.tar.gz".format(
@@ -115,6 +122,9 @@ class Elpa(AutotoolsPackage, CudaPackage, ROCmPackage):
 
         options += self.with_or_without("mpi")
 
+        # New options use the "-kernels" suffix
+        kernels = "-kernels" if spec.satisfies("@2023.11:") else ""
+
         # TODO: --disable-sse-assembly, --enable-sparc64, --enable-neon-arch64
         # Don't include vsx; as of 2022.05 it fails (reported upstream).
         # Altivec SSE intrinsics are used anyway.
@@ -122,7 +132,7 @@ class Elpa(AutotoolsPackage, CudaPackage, ROCmPackage):
 
         for feature in simd_features:
             msg = "--enable-{0}" if feature in spec.target else "--disable-{0}"
-            options.append(msg.format(feature))
+            options.append(msg.format(feature + kernels))
 
         if spec.target.family != "x86_64":
             options.append("--disable-sse-assembly")
@@ -133,7 +143,7 @@ class Elpa(AutotoolsPackage, CudaPackage, ROCmPackage):
 
         # If no features are found, enable the generic ones
         if not any(f in spec.target for f in simd_features):
-            options.append("--enable-generic")
+            options.append("--enable-generic" + kernels)
 
         if self.compiler.name == "gcc":
             options.extend(["CFLAGS=-O3", "FCFLAGS=-O3 -ffree-line-length-none"])
@@ -150,9 +160,14 @@ class Elpa(AutotoolsPackage, CudaPackage, ROCmPackage):
         cuda_flag = "nvidia-gpu"
         if "+cuda" in spec:
             prefix = spec["cuda"].prefix
-            options.append("--enable-{0}".format(cuda_flag))
+            # Can't yet be changed to the new option --enable-nvidia-gpu-kernels
+            # https://github.com/marekandreas/elpa/issues/55
+            options.append(f"--enable-{cuda_flag}")
             options.append("--with-cuda-path={0}".format(prefix))
             options.append("--with-cuda-sdk-path={0}".format(prefix))
+
+            if spec.satisfies("+gpu_streams"):
+                options.append("--enable-gpu-streams=nvidia")
 
             cuda_arch = spec.variants["cuda_arch"].value[0]
 
@@ -161,13 +176,19 @@ class Elpa(AutotoolsPackage, CudaPackage, ROCmPackage):
                     "--with-{0}-compute-capability=sm_{1}".format(cuda_flag.upper(), cuda_arch)
                 )
         else:
-            options.append("--disable-{0}".format(cuda_flag))
+            options.append(f"--disable-{cuda_flag}" + kernels)
 
         if "+rocm" in spec:
+            # Can't yet be changed to the new option --enable-amd-gpu-kernels
+            # https://github.com/marekandreas/elpa/issues/55
             options.append("--enable-amd-gpu")
             options.append("CXX={0}".format(self.spec["hip"].hipcc))
+
+            if spec.satisfies("+gpu_streams"):
+                options.append("--enable-gpu-streams=amd")
+
         elif "@2021.05.001:" in self.spec:
-            options.append("--disable-amd-gpu")
+            options.append("--disable-amd-gpu" + kernels)
 
         options += self.enable_or_disable("openmp")
 
