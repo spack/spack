@@ -1,0 +1,36 @@
+diff -ur a/src/scripts/configure.ac b/src/scripts/configure.ac
+--- a/src/scripts/configure.ac	2020-08-05 13:13:21.000000000 +0800
++++ b/src/scripts/configure.ac	2022-11-09 17:00:27.000000000 +0800
+@@ -2542,29 +2542,9 @@
+ fi
+ fi
+ 
+-#### test if Python headers are installed ####
+-PYTHON_VERSION=`python -V 2>&1 | awk {'print $2'} | awk -F. {'print $1"."$2'}`
+-cat > $t <<EOT
+-#include "python${PYTHON_VERSION}/Python.h"
+-#include "python${PYTHON_VERSION}/compile.h"
+-#include "python${PYTHON_VERSION}/eval.h"
+-#include "python${PYTHON_VERSION}/node.h"
+-
+-int main() {
+-    Py_Initialize();
+-    PyEval_InitThreads();
+-    struct _node* programNode = PyParser_SimpleParseString("return 1\n",Py_file_input);
+-    PyCodeObject *program = PyNode_Compile(programNode, "");
+-}
+-EOT
+-test_link "whether Python is installed" "yes" "no" "-lpython$PYTHON_VERSION -lpthread -lutil -ldl"
+-AC_DEFINE_UNQUOTED(CMK_HAS_PYTHON, $pass, [whether Python is installed])
+-AC_DEFINE_UNQUOTED(CMK_PYTHON_VERSION, ${PYTHON_VERSION}, [Python version])
+-if test $pass -eq 1
+-then
+-	add_flag "CMK_BUILD_PYTHON=$PYTHON_VERSION" "python"
+-	add_make_flag "CMK_BUILD_PYTHON:=$PYTHON_VERSION" 'python'
+-fi
++#### no pythons permitted on the premises ####
++AC_DEFINE_UNQUOTED(CMK_HAS_PYTHON, 0, [whether Python is installed])
++AC_DEFINE_UNQUOTED(CMK_PYTHON_VERSION, , [Python version])
+ 
+ ## Cray specific test
+ if test "$CMK_BUILD_CRAY" = "1"

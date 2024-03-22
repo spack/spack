@@ -58,6 +58,12 @@ class Charmpp(Package):
     # Ignore compiler warnings while configuring
     patch("strictpass.patch", when="@:6.8.2")
 
+    # Update v6.10.2 with shasta targets (backport from 7.0.0).
+    patch("shasta.patch.1", when="@:6.10.2")
+
+    # Remove PythonCCS (relies on Python 2 API)
+    patch("deserpenticate.patch")
+
     # Build targets
     # "target" is reserved, so we have to use something else.
     variant(
@@ -115,6 +121,8 @@ class Charmpp(Package):
     depends_on("slurm@:17-11-9-2", when="pmi=slurmpmi")
     depends_on("slurm@17-11-9-2:", when="pmi=slurmpmi2")
 
+    depends_on("libfabric", when="backend=ofi")
+
     # FIXME : As of now spack's OpenMPI recipe does not have a PMIx variant
     # But if users have external installs of OpenMPI with PMIx support, this
     # will allow them to build charm++ with it.
@@ -123,6 +131,8 @@ class Charmpp(Package):
     depends_on("mpi", when="pmi=simplepmi")
     depends_on("mpi", when="pmi=slurmpmi")
     depends_on("mpi", when="pmi=slurmpmi2")
+    # If pmi is not specified, simplepmi will be used for ofi.
+    depends_on("mpi", when="backend=ofi")
 
     # Git versions of Charm++ require automake and autoconf
     depends_on("automake", when="@develop")
@@ -150,8 +160,14 @@ class Charmpp(Package):
     @property
     def charmarch(self):
         plat = sys.platform
+        platplat = platform.platform()
+        specplat = self.spec.platform
 
-        if plat.startswith("linux"):
+        if "shasta" in platplat and self.spec.satisfies("@6.8.2:"):
+            plat = "shasta"
+        elif specplat.startswith("cray"):
+            plat = "cnl"
+        elif plat.startswith("linux"):
             plat = "linux"
         elif plat.startswith("win"):
             plat = "win"
@@ -226,6 +242,10 @@ class Charmpp(Package):
 
         return versions[(plat, mach, comm)]
 
+    def setup_build_environment(self, env):
+        if ("backend=ofi") in self.spec:
+            env.set("LIBFABRIC", self.spec["libfabric"].prefix)
+
     # FIXME: backend=mpi also provides mpi, but spack does not support
     # depends_on("mpi") and provides("mpi") in the same package currently.
     # for b in ['multicore', 'netlrts', 'verbs', 'gni', 'ofi', 'pami',
@@ -276,10 +296,13 @@ class Charmpp(Package):
         # We assume that Spack's compiler wrappers make this work. If
         # not, then we need to query the compiler vendor from Spack
         # here.
-        options = [os.path.basename(self.compiler.cc)]
+        if spec.satisfies("@6.8.2:") and "shasta" in platform.platform():
+            options = []
+        else:
+            options = [os.path.basename(self.compiler.cc)]
 
-        if "@:6.8.2 %aocc" not in spec:
-            options.append(os.path.basename(self.compiler.fc))
+            if "@:6.8.2 %aocc" not in spec:
+                options.append(os.path.basename(self.compiler.fc))
 
         options.append("-j%d" % make_jobs)
         options.append("--destination=%s" % builddir)
