@@ -26,6 +26,7 @@ class AwsOfiNccl(AutotoolsPackage):
     depends_on("cuda")
     depends_on("nccl")
     depends_on("mpi")
+    depends_on("hwloc")
     depends_on("autoconf", type="build")
     depends_on("automake", type="build")
     depends_on("libtool", type="build")
@@ -52,6 +53,7 @@ class AwsOfiNccl(AutotoolsPackage):
                 "--with-cuda={0}".format(spec["cuda"].prefix),
                 "--with-nccl={0}".format(spec["nccl"].prefix),
                 "--with-mpi={0}".format(spec["mpi"].prefix),
+                "--with-hwloc={0}".format(spec["hwloc"].prefix),
             ]
         )
 
