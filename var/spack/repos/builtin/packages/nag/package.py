@@ -17,6 +17,7 @@ class Nag(Package):
     homepage = "https://www.nag.com/nagware/np.asp"
     maintainers("skosukhin")
 
+    version("7.2.7200", sha256="3c2179e073d6cf2aadaeaf9a6a5f3b7f1fdcfb85b99c6fb593445b28ddd44880")
     version("7.1.7125", sha256="738ed9ed943ebeb05d337cfdc603b9c88b8642b3d0cafea8d2872f36201adb37")
     version(
         "7.1.7101",
