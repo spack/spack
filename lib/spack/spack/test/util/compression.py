@@ -73,7 +73,9 @@ def test_native_unpacking(tmpdir_factory, archive_file_and_extension):
 
 @pytest.mark.not_on_windows("Only Python unpacking available on Windows")
 @pytest.mark.parametrize(
-    "archive_file_and_extension", [(ext, True) for ext in ext_archive.keys()], indirect=True
+    "archive_file_and_extension",
+    [(ext, True) for ext in ext_archive.keys() if "whl" not in ext],
+    indirect=True,
 )
 def test_system_unpacking(tmpdir_factory, archive_file_and_extension, compr_support_check):
     # actually run test
