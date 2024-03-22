@@ -108,7 +108,7 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
     # don't build with some of the compilers (e.g. intel) or cause problems with
     # other packages that require newer versions of (py-)protobuf. Provide an
     # option to use the internal/vendored protobuf instead of spack's.
-    variant("custom-protobuf", default=False, description="Use vendored protobuf/py-protobuf")
+    variant("custom-protobuf", default=False, description="Use vendored protobuf")
 
     conflicts("+cuda+rocm")
     conflicts("+tensorpipe", when="+rocm ^hip@:5.1", msg="TensorPipe not supported until ROCm 5.2")
