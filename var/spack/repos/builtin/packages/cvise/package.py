@@ -34,3 +34,7 @@ class Cvise(CMakePackage):
 
     depends_on("py-pytest", when="+pytest", type=("build", "run"))
     depends_on("colordiff", when="+colordiff", type=("build", "run"))
+
+    # LLVM depends on but doesn't provide terminfo CMake targets and C-Vise
+    # fails during configuration
+    conflicts("ncurses +termlib")
