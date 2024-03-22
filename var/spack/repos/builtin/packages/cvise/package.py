@@ -34,3 +34,8 @@ class Cvise(CMakePackage):
 
     depends_on("py-pytest", when="+pytest", type=("build", "run"))
     depends_on("colordiff", when="+colordiff", type=("build", "run"))
+
+    # C-Vise doesn't directly depend on ncurses, but LLVM does. However, LLVM
+    # doesn't provide correctly export terminfo CMake targets that it depends on
+    # and C-Vise fails during configuration with ncurses +termlib.
+    depends_on("ncurses ~termlib", when="^llvm +lldb")
