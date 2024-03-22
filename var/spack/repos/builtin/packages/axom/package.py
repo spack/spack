@@ -615,7 +615,5 @@ class Axom(CachedCMakePackage, CudaPackage, ROCmPackage):
             example = Executable("./example")
             example()
 
-    def test(self):
-        print("Checking Axom installation...")
+    def test_install(self):
         self.check_install()
-        raise Exception("except")
