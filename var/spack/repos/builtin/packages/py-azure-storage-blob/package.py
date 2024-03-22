@@ -11,11 +11,13 @@ class PyAzureStorageBlob(PythonPackage):
     """Microsoft Azure Blob Storage Client Library for Python"""
 
     homepage = "https://github.com/Azure/azure-storage-python"
-    pypi = "azure-storage-blob/azure-storage-blob-12.9.0.zip"
+    pypi = "azure-storage-blob/azure-storage-blob-12.19.0.tar.gz"
     maintainers("marcusboden")
 
     license("MIT")
 
+    version("12.19.0", sha256="26c0a4320a34a3c2a1b74528ba6812ebcb632a04cd67b1c7377232c4b01a5897")
+    version("12.18.3", sha256="d8ced0deee3367fa3d4f3d1a03cd9edadf4440c0a371f503d623fa6c807554ee")
     version("12.17.0", sha256="c14b785a17050b30fc326a315bdae6bc4a078855f4f94a4c303ad74a48dc8c63")
     version("12.16.0", sha256="43b45f19a518a5c6895632f263b3825ebc23574f25cc84b66e1630a6160e466f")
     version("12.15.0", sha256="f8b8d582492740ab16744455408342fb8e4c8897b64a8a3fc31743844722c2f2")
@@ -26,10 +28,9 @@ class PyAzureStorageBlob(PythonPackage):
     version("12.10.0", sha256="3c7dc2c93e7ff2a731acd66a36a1f0a6266072b4154deba4894dab891285ea3a")
     version("12.9.0", sha256="cff66a115c73c90e496c8c8b3026898a3ce64100840276e9245434e28a864225")
 
-    # https://github.com/Azure/azure-sdk-for-python/blob/azure-storage-blob_12.17.0/sdk/storage/azure-storage-blob/setup.py
+    # https://github.com/Azure/azure-sdk-for-python/blob/azure-storage-blob_12.19.0/sdk/storage/azure-storage-blob/setup.py
 
     depends_on("py-setuptools", type="build")
-
     depends_on("py-azure-core@1.28:1", type=("build", "run"), when="@12.17:")
     depends_on("py-azure-core@1.26:1", type=("build", "run"), when="@12.15:")
     depends_on("py-azure-core@1.24.2:1", type=("build", "run"), when="@12.14:")
@@ -40,7 +41,13 @@ class PyAzureStorageBlob(PythonPackage):
     depends_on("py-typing-extensions@4.3:", type=("build", "run"), when="@12.17:")
     depends_on("py-typing-extensions@4.0.1:", type=("build", "run"), when="@12.15:")
     depends_on("py-isodate@0.6.1:", type=("build", "run"), when="@12.15:")
+    depends_on("py-msrest@0.7.1:", type=("build", "run"), when="@12.14")
+    depends_on("py-msrest@0.6.21:", type=("build", "run"), when="@:12.13")
 
-    with when("@:12.14"):
-        depends_on("py-msrest@0.7.1:", type=("build", "run"), when="@12.14:")
-        depends_on("py-msrest@0.6.21:", type=("build", "run"))
+    def url_for_version(self, version):
+        if version < Version("12.18"):
+            return "https://pypi.io/packages/source/a/azure-storage-blob/azure-storage-blob-{0}.zip".format(
+                version
+            )
+
+        return super().url_for_version(version)

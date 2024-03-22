@@ -31,7 +31,7 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
 
     version("master", branch="master", submodules=True)
     version(
-        "5.12.0-RC2", sha256="5f43b1affee928a807b373024aefc8947f444247f9f4c3965bd52a836b95566b"
+        "5.12.0-RC3", sha256="6aaa46ff295126707294482e6ba24bd0ec0d68cf6bb5f56f145f8bcc53fc3f70"
     )
     version(
         "5.11.2",

@@ -906,6 +906,13 @@ def test_version_list_normalization():
     assert ver("1.0:2.0,=1.0,ref=1.0") == ver(["1.0:2.0"])
 
 
+def test_version_list_connected_union_of_disjoint_ranges():
+    # Make sure that we also simplify lists of ranges if their intersection is empty, but their
+    # union is connected.
+    assert ver("1.0:2.0,2.1,2.2:3,4:6") == ver(["1.0:6"])
+    assert ver("1.0:1.2,1.3:2") == ver("1.0:1.5,1.6:2")
+
+
 @pytest.mark.parametrize("version", ["=1.2", "git.ref=1.2", "1.2"])
 def test_version_comparison_with_list_fails(version):
     vlist = VersionList(["=1.3"])

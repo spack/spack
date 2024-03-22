@@ -237,16 +237,6 @@ def _get_mime_type():
         return file_command("-b", "-h", "--mime-type")
 
 
-@memoized
-def _get_mime_type_compressed():
-    """Same as _get_mime_type but attempts to check for
-    compression first
-    """
-    mime_uncompressed = _get_mime_type()
-    mime_uncompressed.add_default_arg("-Z")
-    return mime_uncompressed
-
-
 def mime_type(filename):
     """Returns the mime type and subtype of a file.
 
@@ -257,21 +247,6 @@ def mime_type(filename):
         Tuple containing the MIME type and subtype
     """
     output = _get_mime_type()(filename, output=str, error=str).strip()
-    tty.debug("==> " + output)
-    type, _, subtype = output.partition("/")
-    return type, subtype
-
-
-def compressed_mime_type(filename):
-    """Same as mime_type but checks for type that has been compressed
-
-    Args:
-        filename (str): file to be analyzed
-
-    Returns:
-        Tuple containing the MIME type and subtype
-    """
-    output = _get_mime_type_compressed()(filename, output=str, error=str).strip()
     tty.debug("==> " + output)
     type, _, subtype = output.partition("/")
     return type, subtype
@@ -306,13 +281,6 @@ def paths_containing_libs(paths, library_names):
             rpaths_to_include.append(path)
 
     return rpaths_to_include
-
-
-@system_path_filter
-def same_path(path1, path2):
-    norm1 = os.path.abspath(path1).rstrip(os.path.sep)
-    norm2 = os.path.abspath(path2).rstrip(os.path.sep)
-    return norm1 == norm2
 
 
 def filter_file(
@@ -909,17 +877,6 @@ def is_exe(path):
     return os.path.isfile(path) and os.access(path, os.X_OK)
 
 
-@system_path_filter
-def get_filetype(path_name):
-    """
-    Return the output of file path_name as a string to identify file type.
-    """
-    file = Executable("file")
-    file.add_default_env("LC_ALL", "C")
-    output = file("-b", "-h", "%s" % path_name, output=str, error=str)
-    return output.strip()
-
-
 def has_shebang(path):
     """Returns whether a path has a shebang line. Returns False if the file cannot be opened."""
     try:
@@ -1169,20 +1126,6 @@ def write_tmp_and_move(filename):
     shutil.move(tmp, filename)
 
 
-@contextmanager
-@system_path_filter
-def open_if_filename(str_or_file, mode="r"):
-    """Takes either a path or a file object, and opens it if it is a path.
-
-    If it's a file object, just yields the file object.
-    """
-    if isinstance(str_or_file, str):
-        with open(str_or_file, mode) as f:
-            yield f
-    else:
-        yield str_or_file
-
-
 @system_path_filter
 def touch(path):
     """Creates an empty file at the specified path."""
@@ -1240,6 +1183,47 @@ def get_single_file(directory):
     return fnames[0]
 
 
+@system_path_filter
+def windows_sfn(path: os.PathLike):
+    """Returns 8.3 Filename (SFN) representation of
+    path
+
+    8.3 Filenames (SFN or short filename) is a file
+    naming convention used prior to Win95 that Windows
+    still (and will continue to) support. This convention
+    caps filenames at 8 characters, and most importantly
+    does not allow for spaces in addition to other specifications.
+    The scheme is generally the same as a normal Windows
+    file scheme, but all spaces are removed and the filename
+    is capped at 6 characters. The remaining characters are
+    replaced with ~N where N is the number file in a directory
+    that a given file represents i.e. Program Files and Program Files (x86)
+    would be PROGRA~1 and PROGRA~2 respectively.
+    Further, all file/directory names are all caps (although modern Windows
+    is case insensitive in practice).
+    Conversion is accomplished by fileapi.h GetShortPathNameW
+
+    Returns paths in 8.3 Filename form
+
+    Note: this method is a no-op on Linux
+
+    Args:
+        path: Path to be transformed into SFN (8.3 filename) format
+    """
+    # This should not be run-able on linux/macos
+    if sys.platform != "win32":
+        return path
+    path = str(path)
+    import ctypes
+
+    k32 = ctypes.WinDLL("kernel32", use_last_error=True)
+    # stub Windows types TCHAR[LENGTH]
+    TCHAR_arr = ctypes.c_wchar * len(path)
+    ret_str = TCHAR_arr()
+    k32.GetShortPathNameW(path, ret_str, len(path))
+    return ret_str.value
+
+
 @contextmanager
 def temp_cwd():
     tmp_dir = tempfile.mkdtemp()
@@ -1252,19 +1236,6 @@ def temp_cwd():
             kwargs["ignore_errors"] = False
             kwargs["onerror"] = readonly_file_handler(ignore_errors=True)
         shutil.rmtree(tmp_dir, **kwargs)
-
-
-@contextmanager
-@system_path_filter
-def temp_rename(orig_path, temp_path):
-    same_path = os.path.realpath(orig_path) == os.path.realpath(temp_path)
-    if not same_path:
-        shutil.move(orig_path, temp_path)
-    try:
-        yield
-    finally:
-        if not same_path:
-            shutil.move(temp_path, orig_path)
 
 
 @system_path_filter

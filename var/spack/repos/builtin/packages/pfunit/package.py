@@ -19,6 +19,7 @@ class Pfunit(CMakePackage):
 
     maintainers("mathomp4", "tclune")
 
+    version("4.9.0", sha256="caea019f623d4e02dd3e8442cee88e6087b4c431a2628e9ec2de55b527b51ab6")
     version("4.8.0", sha256="b5c66ab949fd23bee5c3b4d93069254f7ea40decb8d21f622fd6aa45ee68ef10")
     version("4.7.4", sha256="ac850e33ea99c283f503f75293bf238b4b601885d7adba333066e6185dad5c04")
     version("4.7.3", sha256="247239298b55e847417b7830183d7fc62cca93dc92c8ec7c0067784b7ce34544")
@@ -124,6 +125,11 @@ class Pfunit(CMakePackage):
     )
 
     conflicts("%gcc@:8.3.9", when="@4.0.0:", msg="pFUnit requires GCC 8.4.0 or newer")
+
+    # pfunit only works with the Fujitsu compiler from 4.9.0 onwards
+    conflicts(
+        "%fj", when="@:4.8.0", msg="pfunit only works with the Fujitsu compiler from 4.9.0 onwards"
+    )
 
     patch("mpi-test.patch", when="+use_comm_world")
 

@@ -19,7 +19,7 @@ level = "long"
 
 
 def setup_parser(subparser):
-    arguments.add_common_arguments(subparser, ["no_checksum", "deprecated", "specs"])
+    arguments.add_common_arguments(subparser, ["no_checksum", "specs"])
     arguments.add_concretizer_args(subparser)
 
 
@@ -32,9 +32,6 @@ def patch(parser, args):
 
     if args.no_checksum:
         spack.config.set("config:checksum", False, scope="command_line")
-
-    if args.deprecated:
-        spack.config.set("config:deprecated", True, scope="command_line")
 
     specs = spack.cmd.parse_specs(args.specs, concretize=False)
     for spec in specs:

@@ -110,4 +110,7 @@ class RoctracerDev(CMakePackage, ROCmPackage):
         ]
         if self.spec.satisfies("@:5.4.0"):
             args.append(self.define("ROCPROFILER_PATH", self.spec["rocprofiler-dev"].prefix))
+        if self.spec.satisfies("@6.0:"):
+            args.append("-DCMAKE_INSTALL_LIBDIR=lib")
+
         return args

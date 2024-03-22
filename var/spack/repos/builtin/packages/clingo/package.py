@@ -75,7 +75,7 @@ class Clingo(CMakePackage):
     patch("python38.patch", when="@5.3:5.4.0")
     patch("size-t.patch", when="%msvc")
     patch("vs2022.patch", when="%msvc@19.30:")
-    patch("clingo_msc_1938_native_handle.patch", when="%msvc@19.38:")
+    patch("clingo_msc_1938_native_handle.patch", when="@:5.7.0 %msvc@19.38:")
 
     # TODO: Simplify this after Spack 0.21 release. The old concretizer has problems with
     # py-setuptools ^python@3.6, so we only apply the distutils -> setuptools patch for Python 3.12

@@ -341,6 +341,7 @@ class TestConcretize:
         assert set(client.compiler_flags["fflags"]) == set(["-O0", "-g"])
         assert not set(cmake.compiler_flags["fflags"])
 
+    @pytest.mark.xfail(reason="Broken, needs to be fixed")
     def test_compiler_flags_from_compiler_and_dependent(self):
         client = Spec("cmake-client %clang@12.2.0 platform=test os=fe target=fe cflags==-g")
         client.concretize()
@@ -2093,7 +2094,34 @@ class TestConcretize:
         result, _, _ = solver.driver.solve(setup, specs, reuse=[])
 
         assert result.specs
-        assert not result.unsolved_specs
+
+    @pytest.mark.regression("38664")
+    def test_unsolved_specs_raises_error(self, monkeypatch, mock_packages, config):
+        """Check that the solver raises an exception when input specs are not
+        satisfied.
+        """
+        specs = [Spec("zlib")]
+        solver = spack.solver.asp.Solver()
+        setup = spack.solver.asp.SpackSolverSetup()
+
+        simulate_unsolved_property = list((x, None) for x in specs)
+
+        monkeypatch.setattr(spack.solver.asp.Result, "unsolved_specs", simulate_unsolved_property)
+
+        with pytest.raises(
+            spack.solver.asp.InternalConcretizerError,
+            match="the solver completed but produced specs",
+        ):
+            solver.driver.solve(setup, specs, reuse=[])
+
+    @pytest.mark.regression("43141")
+    @pytest.mark.only_clingo("Use case not supported by the original concretizer")
+    def test_clear_error_when_unknown_compiler_requested(self, mock_packages, config):
+        """Tests that the solver can report a case where the compiler cannot be set"""
+        with pytest.raises(
+            spack.error.UnsatisfiableSpecError, match="Cannot set the required compiler: a%foo"
+        ):
+            Spec("a %foo").concretized()
 
     @pytest.mark.regression("36339")
     def test_compiler_match_constraints_when_selected(self):

@@ -42,11 +42,6 @@ def convert_to_posix_path(path: str) -> str:
     return format_os_path(path, mode=Path.unix)
 
 
-def convert_to_windows_path(path: str) -> str:
-    """Converts the input path to Windows style."""
-    return format_os_path(path, mode=Path.windows)
-
-
 def convert_to_platform_path(path: str) -> str:
     """Converts the input path to the current platform's native style."""
     return format_os_path(path, mode=Path.platform_path)

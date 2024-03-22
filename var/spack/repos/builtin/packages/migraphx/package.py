@@ -45,8 +45,20 @@ class Migraphx(CMakePackage):
     patch("0002-restrict-python-2.7-usage.patch", when="@:5.1")
     patch("0003-restrict-python-2.7-usage.patch", when="@5.2.0:5.4")
     patch("0004-restrict-python2.7-usage-for-5.5.0.patch", when="@5.5.0")
-    patch("0005-Adding-half-include-directory-path-migraphx.patch", when="@5.6.0:")
+    patch("0005-Adding-half-include-directory-path-migraphx.patch", when="@5.6.0:5.7")
     patch("0006-add-option-to-turn-off-ck.patch", when="@5.7")
+    patch(
+        "https://github.com/ROCm/AMDMIGraphX/commit/728bea3489c97c9e1ddda0a0ae527ffd2d70cb97.patch?full_index=1",
+        sha256="3a8afd32208aa4f59fb31f898d243287771ebd409c7af7a4a785c586081e3711",
+        when="@6.0:",
+    )
+
+    patch(
+        "https://github.com/ROCm/AMDMIGraphX/commit/624f8ef549522f64fdddad7f49a2afe1890b0b79.patch?full_index=1",
+        sha256="410d0fd49f5f65089cd4f540c530c85896708b4fd94c67d15c2c279158aea85d",
+        when="@6.0:",
+    )
+    patch("0003-add-half-include-directory-migraphx-6.0.patch", when="@6.0:")
 
     depends_on("cmake@3.5:", type="build")
     depends_on("protobuf", type="link")
@@ -85,8 +97,8 @@ class Migraphx(CMakePackage):
         depends_on(f"rocblas@{ver}", when=f"@{ver}")
         depends_on(f"miopen-hip@{ver}", when=f"@{ver}")
 
-    for ver in ["5.7.0", "5.7.1", "6.0.0", "6.0.2"]:
-        depends_on(f"composable-kernel@{ver}", when=f"@{ver}")
+    for ver in ["6.0.0", "6.0.2"]:
+        depends_on(f"rocmlir@{ver}", when=f"@{ver}")
 
     @property
     def cmake_python_hints(self):
@@ -119,8 +131,11 @@ class Migraphx(CMakePackage):
         if "@5.5.0:" in self.spec:
             args.append(self.define("CMAKE_CXX_FLAGS", "-I{0}".format(abspath)))
             args.append(self.define("MIGRAPHX_ENABLE_PYTHON", "OFF"))
-        if "@5.7" in self.spec:
+        if "@5.7:" in self.spec:
             args.append(self.define("MIGRAPHX_USE_COMPOSABLEKERNEL", "OFF"))
+            args.append(
+                self.define("GPU_TARGETS", "gfx906;gfx908;gfx90a;gfx1030;gfx1100;gfx1101;gfx1102")
+            )
         return args
 
     def test(self):

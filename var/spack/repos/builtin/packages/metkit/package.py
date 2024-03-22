@@ -11,6 +11,7 @@ class Metkit(CMakePackage):
     implementing the MARS language and associated processing and semantics."""
 
     homepage = "https://github.com/ecmwf/metkit"
+    git = "https://github.com/ecmwf/metkit.git"
     url = "https://github.com/ecmwf/metkit/archive/refs/tags/1.7.0.tar.gz"
 
     maintainers("skosukhin", "victoria-cherkas", "dominichofer")
@@ -32,6 +33,7 @@ class Metkit(CMakePackage):
 
     depends_on("eckit@1.16:")
     depends_on("eckit@1.21:", when="@1.10:")
+    depends_on("eckit@:1.21", when="@:1.10")
 
     depends_on("eccodes@2.5:", when="+grib")
     depends_on("eccodes@2.27:", when="@1.10.2: +grib")

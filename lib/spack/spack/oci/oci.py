@@ -161,7 +161,7 @@ def upload_blob(
 
 def upload_manifest(
     ref: ImageReference,
-    oci_manifest: dict,
+    manifest: dict,
     tag: bool = True,
     _urlopen: spack.oci.opener.MaybeOpen = None,
 ):
@@ -169,7 +169,7 @@ def upload_manifest(
 
     Args:
         ref: The image reference.
-        oci_manifest: The OCI manifest or index.
+        manifest: The manifest or index.
         tag: When true, use the tag, otherwise use the digest,
             this is relevant for multi-arch images, where the
             tag is an index, referencing the manifests by digest.
@@ -179,7 +179,7 @@ def upload_manifest(
     """
     _urlopen = _urlopen or spack.oci.opener.urlopen
 
-    data = json.dumps(oci_manifest, separators=(",", ":")).encode()
+    data = json.dumps(manifest, separators=(",", ":")).encode()
     digest = Digest.from_sha256(hashlib.sha256(data).hexdigest())
     size = len(data)
 
@@ -190,7 +190,7 @@ def upload_manifest(
         url=ref.manifest_url(),
         method="PUT",
         data=data,
-        headers={"Content-Type": oci_manifest["mediaType"]},
+        headers={"Content-Type": manifest["mediaType"]},
     )
 
     response = _urlopen(request)

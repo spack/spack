@@ -594,6 +594,15 @@ def _put_manifest(
     base_manifest, base_config = base_images[architecture]
     env = _retrieve_env_dict_from_config(base_config)
 
+    # If the base image uses `vnd.docker.distribution.manifest.v2+json`, then we use that too.
+    # This is because Singularity / Apptainer is very strict about not mixing them.
+    base_manifest_mediaType = base_manifest.get(
+        "mediaType", "application/vnd.oci.image.manifest.v1+json"
+    )
+    use_docker_format = (
+        base_manifest_mediaType == "application/vnd.docker.distribution.manifest.v2+json"
+    )
+
     spack.user_environment.environment_modifications_for_specs(*specs).apply_modifications(env)
 
     # Create an oci.image.config file
@@ -625,8 +634,8 @@ def _put_manifest(
     # Upload the config file
     upload_blob_with_retry(image_ref, file=config_file, digest=config_file_checksum)
 
-    oci_manifest = {
-        "mediaType": "application/vnd.oci.image.manifest.v1+json",
+    manifest = {
+        "mediaType": base_manifest_mediaType,
         "schemaVersion": 2,
         "config": {
             "mediaType": base_manifest["config"]["mediaType"],
@@ -637,7 +646,11 @@ def _put_manifest(
             *(layer for layer in base_manifest["layers"]),
             *(
                 {
-                    "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+                    "mediaType": (
+                        "application/vnd.docker.image.rootfs.diff.tar.gzip"
+                        if use_docker_format
+                        else "application/vnd.oci.image.layer.v1.tar+gzip"
+                    ),
                     "digest": str(checksums[s.dag_hash()].compressed_digest),
                     "size": checksums[s.dag_hash()].size,
                 }
@@ -646,11 +659,11 @@ def _put_manifest(
         ],
     }
 
-    if annotations:
-        oci_manifest["annotations"] = annotations
+    if not use_docker_format and annotations:
+        manifest["annotations"] = annotations
 
     # Finally upload the manifest
-    upload_manifest_with_retry(image_ref, oci_manifest=oci_manifest)
+    upload_manifest_with_retry(image_ref, manifest=manifest)
 
     # delete the config file
     os.unlink(config_file)

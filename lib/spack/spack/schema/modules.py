@@ -34,7 +34,7 @@ array_of_strings = {"type": "array", "default": [], "items": {"type": "string"}}
 
 dictionary_of_strings = {"type": "object", "patternProperties": {r"\w[\w-]*": {"type": "string"}}}
 
-dependency_selection = {"type": "string", "enum": ["none", "direct", "all"]}
+dependency_selection = {"type": "string", "enum": ["none", "run", "direct", "all"]}
 
 module_file_configuration = {
     "type": "object",

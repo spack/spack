@@ -137,6 +137,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     variant("minitensor", default=False, description="Compile with MiniTensor")
     variant("muelu", default=True, description="Compile with Muelu")
     variant("nox", default=False, description="Compile with NOX")
+    variant("pamgen", default=False, description="Compile with Pamgen")
     variant("panzer", default=False, description="Compile with Panzer")
     variant("piro", default=False, description="Compile with Piro")
     variant("phalanx", default=False, description="Compile with Phalanx")
@@ -673,7 +674,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
                 define_trilinos_enable("ML"),
                 define_trilinos_enable("MueLu"),
                 define_trilinos_enable("NOX"),
-                define_trilinos_enable("Pamgen", False),
+                define_trilinos_enable("Pamgen"),
                 define_trilinos_enable("Panzer"),
                 define_trilinos_enable("Pike", False),
                 define_trilinos_enable("Piro"),

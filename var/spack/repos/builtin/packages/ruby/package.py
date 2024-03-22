@@ -24,6 +24,7 @@ class Ruby(AutotoolsPackage, NMakePackage):
 
     license("Ruby AND BSD-2-Clause AND MIT", checked_by="tgamblin")
 
+    version("3.3.0", sha256="96518814d9832bece92a85415a819d4893b307db5921ae1f0f751a9a89a56b7d")
     version("3.1.0", sha256="50a0504c6edcb4d61ce6b8cfdbddaa95707195fab0ecd7b5e92654b2a9412854")
     version("3.0.2", sha256="5085dee0ad9f06996a8acec7ebea4a8735e6fac22f22e2d98c3f2bc3bef7e6f1")
     version("3.0.1", sha256="369825db2199f6aeef16b408df6a04ebaddb664fb9af0ec8c686b0ce7ab77727")
@@ -47,6 +48,7 @@ class Ruby(AutotoolsPackage, NMakePackage):
             depends_on("tk", when="@:2.3")
             depends_on("readline", when="+readline")
             depends_on("zlib-api")
+            depends_on("libyaml", when="@3:")
             with when("+openssl"):
                 depends_on("openssl@:1")
                 depends_on("openssl@:1.0", when="@:2.3")

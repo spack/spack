@@ -68,7 +68,8 @@ class Papi(AutotoolsPackage, ROCmPackage):
     depends_on("cuda", when="+nvml")
     depends_on("hsa-rocr-dev", when="+rocm")
     depends_on("rocprofiler-dev", when="+rocm")
-    depends_on("llvm-amdgpu +openmp", when="+rocm")
+    depends_on("llvm-amdgpu", when="+rocm")
+    depends_on("rocm-openmp-extras", when="+rocm")
     depends_on("rocm-smi-lib", when="+rocm_smi")
 
     conflicts("%gcc@8:", when="@5.3.0", msg="Requires GCC version less than 8.0")

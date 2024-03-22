@@ -18,6 +18,7 @@ import spack.config
 import spack.cray_manifest as cray_manifest
 import spack.detection
 import spack.error
+import spack.repo
 import spack.util.environment
 from spack.cmd.common import arguments
 
@@ -152,9 +153,9 @@ def external_find(args):
 def packages_to_search_for(
     *, names: Optional[List[str]], tags: List[str], exclude: Optional[List[str]]
 ):
-    result = []
-    for current_tag in tags:
-        result.extend(spack.repo.PATH.packages_with_tags(current_tag, full=True))
+    result = list(
+        {pkg for tag in tags for pkg in spack.repo.PATH.packages_with_tags(tag, full=True)}
+    )
 
     if names:
         # Match both fully qualified and unqualified

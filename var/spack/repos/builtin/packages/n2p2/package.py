@@ -71,11 +71,13 @@ class N2p2(MakefilePackage):
 
     def build(self, spec, prefix):
         with working_dir("src"):
-            make()
-            make("lammps-nnp")
-            make("pynnp")
+            # Add --no-print-directory flag to avoid issues when variables set
+            # to value of shell function with cd cmd used as target (see #43192)
+            make("--no-print-directory")
+            make("--no-print-directory", "lammps-nnp")
+            make("--no-print-directory", "pynnp")
             if "+doc" in self.spec:
-                make("doc")
+                make("--no-print-directory", "doc")
 
     def install(self, spec, prefix):
         install_tree("bin", prefix.bin)
