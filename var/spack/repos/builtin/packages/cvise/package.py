@@ -23,7 +23,8 @@ class Cvise(CMakePackage):
     variant("pytest", default=False, description="Add py-pytest as dependency")
     variant("colordiff", default=False, description="Add colordiff support")
 
-    depends_on("cmake", type="build")
+    depends_on("cmake@2.8.12:", type="build")
+    depends_on("cmake@3.14:", when="@2.9:", type="build")
     depends_on("flex", type=("build", "run"))
     depends_on("llvm@9.0.0:", type=("build", "run"))
     depends_on("python@3.6:", type=("build", "run"))
