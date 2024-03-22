@@ -2613,3 +2613,74 @@ def test_reusable_externals_different_spec(mock_packages, tmpdir):
         {"mpich": {"externals": [{"spec": "mpich@4.1 +debug", "prefix": tmpdir.strpath}]}},
         local=False,
     )
+
+
+@pytest.mark.only_clingo("Original concretizer cannot reuse specs")
+@pytest.mark.parametrize(
+    "roots,reuse_yaml,expected,not_expected,expected_length",
+    [
+        (
+            ["mpileaks"],
+            {"roots": True, "include": ["^mpich"]},
+            ["^mpich"],
+            ["^mpich2", "^zmpi"],
+            2,
+        ),
+        (
+            ["mpileaks"],
+            {"roots": True, "include": ["externaltest"]},
+            ["externaltest"],
+            ["^mpich", "^mpich2", "^zmpi"],
+            1,
+        ),
+    ],
+)
+@pytest.mark.usefixtures("database", "mock_store")
+@pytest.mark.not_on_windows("Expected length is different on Windows")
+def test_filtering_reused_specs(
+    roots, reuse_yaml, expected, not_expected, expected_length, mutable_config
+):
+    """Tests that we can select which specs are to be reused, using constraints as filters"""
+    mutable_config.set("concretizer:reuse", reuse_yaml)
+    selector = spack.solver.asp.ReusableSpecsSelector(mutable_config)
+    specs = selector.reusable_specs(roots)
+
+    assert len(specs) == expected_length
+
+    for constraint in expected:
+        assert all(x.satisfies(constraint) for x in specs)
+
+    for constraint in not_expected:
+        assert all(not x.satisfies(constraint) for x in specs)
+
+
+@pytest.mark.usefixtures("database", "mock_store")
+@pytest.mark.parametrize(
+    "reuse_yaml,expected_length",
+    [({"from": [{"type": "local"}]}, 17), ({"from": [{"type": "mirror"}]}, 0)],
+)
+@pytest.mark.not_on_windows("Expected length is different on Windows")
+def test_selecting_reused_sources(reuse_yaml, expected_length, mutable_config):
+    """Tests that we can turn on/off sources of reusable specs"""
+    mutable_config.set("concretizer:reuse", reuse_yaml)
+    selector = spack.solver.asp.ReusableSpecsSelector(mutable_config)
+    specs = selector.reusable_specs(["mpileaks"])
+    assert len(specs) == expected_length
+
+
+@pytest.mark.parametrize(
+    "specs,include,exclude,expected",
+    [
+        # "foo" discarded by include rules (everything compiled with GCC)
+        (["cmake@3.27.9 %gcc", "foo %clang"], ["%gcc"], [], ["cmake@3.27.9 %gcc"]),
+        # "cmake" discarded by exclude rules (everything compiled with GCC but cmake)
+        (["cmake@3.27.9 %gcc", "foo %gcc"], ["%gcc"], ["cmake"], ["foo %gcc"]),
+    ],
+)
+def test_spec_filters(specs, include, exclude, expected):
+    specs = [Spec(x) for x in specs]
+    expected = [Spec(x) for x in expected]
+    f = spack.solver.asp.SpecFilter(
+        factory=lambda: specs, is_usable=lambda x: True, include=include, exclude=exclude
+    )
+    assert f.selected_specs() == expected
