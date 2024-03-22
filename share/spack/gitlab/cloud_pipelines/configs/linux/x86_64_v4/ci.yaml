@@ -1,8 +1,5 @@
 ci:
   pipeline-gen:
-  - any-job:
-      variables:
-        SPACK_TARGET_ARCH: icelake
   - build-job:
       before_script:
       - - curl -LfsS "https://github.com/JuliaBinaryWrappers/GNUMake_jll.jl/releases/download/GNUMake-v4.3.0+1/GNUMake.v4.3.0.x86_64-linux-gnu.tar.gz" -o gmake.tar.gz
