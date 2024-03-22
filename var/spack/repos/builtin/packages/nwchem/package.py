@@ -133,8 +133,8 @@ class Nwchem(Package):
             args.extend(["FFTW3_INCLUDE={0}".format(spec["fftw-api"].prefix.include)])
 
         if spec.satisfies("+libxc"):
-            args.extend([f"LIBXC_LIB={0}".format(spec["libxc"].libs.ld_flags)])
-            args.extend([f"LIBXC_INCLUDE={0}".format(spec["libxc"].prefix.include)])
+            args.extend(["LIBXC_LIB={0}".format(spec["libxc"].libs.ld_flags)])
+            args.extend(["LIBXC_INCLUDE={0}".format(spec["libxc"].prefix.include)])
 
         if spec.satisfies("+elpa"):
             elpa = spec["elpa"]
