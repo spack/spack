@@ -33,7 +33,7 @@ In the former case ("single value") it allows Spack to:
 In case a finer control over which specs are reused is needed, then the value of this attribute can be
 an object, with the following keys:
 
-1. ``strategy``: takes the same values as above (``true``, ``false``, and ``dependencies``)
+1. ``roots``: if ``true`` root specs are reused, if ``false`` only dependencies of root specs are reused
 2. ``from``: list of sources from which reused specs are taken
 
 Each source in ``from`` is itself an object:
@@ -56,7 +56,7 @@ For instance, the following configuration:
 
    concretizer:
      reuse:
-       strategy: true
+       roots: true
        from:
        - type: local
          include:
@@ -73,7 +73,7 @@ To reduce the boilerplate in configuration files, default values for the ``inclu
 
    concretizer:
      reuse:
-       strategy: true
+       roots: true
        include:
        - "%gcc"
        from:

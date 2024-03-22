@@ -2831,14 +2831,14 @@ def test_concretization_version_order():
     [
         (
             ["mpileaks"],
-            {"strategy": True, "include": ["^mpich"]},
+            {"roots": True, "include": ["^mpich"]},
             ["^mpich"],
             ["^mpich2", "^zmpi"],
             2,
         ),
         (
             ["mpileaks"],
-            {"strategy": True, "include": ["externaltest"]},
+            {"roots": True, "include": ["externaltest"]},
             ["externaltest"],
             ["^mpich", "^mpich2", "^zmpi"],
             1,

@@ -3676,16 +3676,27 @@ def _specs_from_mirror():
         return []
 
 
+class ReuseStrategy(enum.Enum):
+    ROOTS = enum.auto()
+    DEPENDENCIES = enum.auto()
+    NONE = enum.auto()
+
+
 class ReusableSpecsSelector:
     """Selects specs that can be reused during concretization."""
 
     def __init__(self, configuration: spack.config.Configuration) -> None:
         self.configuration = configuration
         self.store = spack.store.create(configuration)
+        self.reuse_strategy = ReuseStrategy.ROOTS
 
-        self.reuse_strategy = self.configuration.get("concretizer:reuse", False)
+        reuse_yaml = self.configuration.get("concretizer:reuse", False)
         self.reuse_sources = []
-        if not isinstance(self.reuse_strategy, typing.Mapping):
+        if not isinstance(reuse_yaml, typing.Mapping):
+            if reuse_yaml is False:
+                self.reuse_strategy = ReuseStrategy.NONE
+            if reuse_yaml == "dependencies":
+                self.reuse_strategy = ReuseStrategy.DEPENDENCIES
             self.reuse_sources.extend(
                 [
                     SpecFilter.from_store(
@@ -3697,8 +3708,11 @@ class ReusableSpecsSelector:
                 ]
             )
         else:
-            reuse_yaml = self.reuse_strategy
-            self.reuse_strategy = reuse_yaml.get("strategy", True)
+            roots = reuse_yaml.get("roots", True)
+            if roots is True:
+                self.reuse_strategy = ReuseStrategy.ROOTS
+            else:
+                self.reuse_strategy = ReuseStrategy.DEPENDENCIES
             default_include = reuse_yaml.get("include", [])
             default_exclude = reuse_yaml.get("exclude", [])
             default_sources = [{"type": "local"}, {"type": "mirror"}]
@@ -3717,7 +3731,7 @@ class ReusableSpecsSelector:
                     )
 
     def reusable_specs(self, specs: List[spack.spec.Spec]) -> List[spack.spec.Spec]:
-        if self.reuse_strategy is False:
+        if self.reuse_strategy == ReuseStrategy.NONE:
             return []
 
         result = []
@@ -3725,7 +3739,7 @@ class ReusableSpecsSelector:
             result.extend(reuse_source.selected_specs())
 
         # If we only want to reuse dependencies, remove the root specs
-        if self.reuse_strategy == "dependencies":
+        if self.reuse_strategy == ReuseStrategy.DEPENDENCIES:
             result = [spec for spec in result if not any(root in spec for root in specs)]
 
         return result
