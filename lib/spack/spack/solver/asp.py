@@ -541,6 +541,7 @@ def _concretization_version_order(version_info: Tuple[GitOrStandardVersion, dict
         info.get("preferred", False),
         not info.get("deprecated", False),
         not version.isdevelop(),
+        not version.is_prerelease(),
         version,
     )
 
@@ -823,11 +824,12 @@ class PyclingoDriver:
             print("Statistics:")
             pprint.pprint(self.control.statistics)
 
-        if result.unsolved_specs and setup.concretize_everything:
+        if result.satisfiable and result.unsolved_specs and setup.concretize_everything:
             unsolved_str = Result.format_unsolved(result.unsolved_specs)
             raise InternalConcretizerError(
                 "Internal Spack error: the solver completed but produced specs"
-                f" that do not satisfy the request.\n\t{unsolved_str}"
+                " that do not satisfy the request. Please report a bug at "
+                f"https://github.com/spack/spack/issues\n\t{unsolved_str}"
             )
 
         return result, timer, self.control.statistics
@@ -2157,7 +2159,7 @@ class SpackSolverSetup:
             if isinstance(v, vn.StandardVersion):
                 return [v]
             elif isinstance(v, vn.ClosedOpenRange):
-                return [v.lo, vn.prev_version(v.hi)]
+                return [v.lo, vn._prev_version(v.hi)]
             elif isinstance(v, vn.VersionList):
                 return sum((versions_for(e) for e in v), [])
             else:

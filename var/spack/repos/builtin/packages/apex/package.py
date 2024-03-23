@@ -18,6 +18,7 @@ class Apex(CMakePackage):
 
     version("develop", branch="develop")
     version("master", branch="master")
+    version("2.6.5", sha256="2ba29a1198c904ac209fc6bc02962304a1416443b249f34ef96889aff39644ce")
     version("2.6.4", sha256="281a673f447762a488577beaa60e48d88cb6354f220457cf8f05c1de2e1fce70")
     version("2.6.3", sha256="7fef12937d3bd1271a01abe44cb931b1d63823fb5c74287a332f3012ed7297d5")
     version("2.6.2", sha256="0c3ec26631db7925f50cf4e8920a778b57d11913f239a0eb964081f925129725")
@@ -124,6 +125,11 @@ class Apex(CMakePackage):
     # https://github.com/UO-OACISS/apex/pull/177#issuecomment-1726322959
     conflicts("+openmp", when="%gcc")
 
+    # Up to 2.6.3 Kokkos support is always enabled. In 2.6.4 and 2.6.5 there is
+    # a CMake option to disable Kokkos support but it doesn't work:
+    # https://github.com/UO-OACISS/apex/issues/180.
+    conflicts("~kokkos", when="@:2.6.5")
+
     # Patches
 
     # This patch ensures that the missing dependency_tree.hpp header is
@@ -153,6 +159,7 @@ class Apex(CMakePackage):
         args.append(self.define_from_variant(prefix + "_LM_SENSORS", "lmsensors"))
         args.append(self.define_from_variant(prefix + "_TCMALLOC", "gperftools"))
         args.append(self.define_from_variant(prefix + "_JEMALLOC", "jemalloc"))
+        args.append(self.define_from_variant(prefix + "_KOKKOS", "kokkos"))
         args.append(self.define_from_variant(test_prefix + "BUILD_TESTS", "tests"))
         args.append(self.define_from_variant(test_prefix + "BUILD_EXAMPLES", "examples"))
 

@@ -20,6 +20,7 @@ class Harfbuzz(MesonPackage, AutotoolsPackage):
 
     license("MIT")
 
+    version("8.3.0", sha256="109501eaeb8bde3eadb25fab4164e993fbace29c3d775bcaa1c1e58e2f15f847")
     version("7.3.0", sha256="20770789749ac9ba846df33983dbda22db836c70d9f5d050cb9aa5347094a8fb")
     version("7.2.0", sha256="fc5560c807eae0efd5f95b5aa4c65800c7a8eed6642008a6b1e7e3ffff7873cc")
     version("6.0.0", sha256="1d1010a1751d076d5291e433c138502a794d679a7498d1268ee21e2d4a140eb4")
@@ -131,8 +132,8 @@ class MesonBuilder(spack.build_systems.meson.MesonBuilder, SetupEnvironment):
         return [
             # disable building of gtk-doc files following #9885 and #9771
             "-Ddocs=disabled",
-            "-Dgraphite2={0}".format(graphite2),
-            "-Dcoretext={0}".format(coretext),
+            f"-Dgraphite2={graphite2}",
+            f"-Dcoretext={coretext}",
         ]
 
 
@@ -143,10 +144,10 @@ class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder, SetupEnvi
         # disable building of gtk-doc files following #9771
         args.append("--disable-gtk-doc-html")
         true = which("true")
-        args.append("GTKDOC_CHECK={0}".format(true))
-        args.append("GTKDOC_CHECK_PATH={0}".format(true))
-        args.append("GTKDOC_MKPDF={0}".format(true))
-        args.append("GTKDOC_REBASE={0}".format(true))
+        args.append(f"GTKDOC_CHECK={true}")
+        args.append(f"GTKDOC_CHECK_PATH={true}")
+        args.append(f"GTKDOC_MKPDF={true}")
+        args.append(f"GTKDOC_REBASE={true}")
         args.extend(self.with_or_without("graphite2"))
         args.extend(self.with_or_without("coretext"))
 
