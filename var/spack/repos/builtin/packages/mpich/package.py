@@ -137,6 +137,9 @@ supported, and netmod is ignored if device is ch3:sock.""",
     )
     depends_on("hcoll", when="+hcoll")
 
+    variant("xpmem", default=False, when="@3.4:", description="Enable XPMEM support")
+    depends_on("xpmem", when="+xpmem")
+
     # Todo: cuda can be a conditional variant, but it does not seem to work when
     # overriding the variant from CudaPackage.
     conflicts("+cuda", when="@:3.3")
@@ -626,6 +629,9 @@ supported, and netmod is ignored if device is ch3:sock.""",
 
         if "+hcoll" in spec:
             config_args.append("--with-hcoll=" + spec["hcoll"].prefix)
+
+        if "+xpmem" in spec:
+            config_args.append("--with-xpmem=" + spec["xpmem"].prefix)
 
         return config_args
 
