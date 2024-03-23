@@ -23,10 +23,11 @@ class PyLineProfiler(PythonPackage):
 
     # see pyproject.toml
     depends_on("python@2.5:", type=("build", "run"))
+    depends_on("python@:3.10", type=("build", "run"), when="@:3")
     depends_on("py-setuptools", type="build")
     depends_on("py-setuptools@68.2.2", type="build", when="@4.1.2:")
     depends_on("py-cython", type="build")
-    depends_on("py-cython@0.29.24:2", type="build", when="@4.0.3:4.1.1")
+    depends_on("py-cython@0.29.24:2", type="build", when=":4.1.1")
     depends_on("py-cython@3.0.3:", type="build", when="@4.1.2:")
     depends_on("py-ipython@0.13:", type=("build", "run"))
     depends_on("cmake", type="build", when="@3")
