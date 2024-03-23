@@ -26,6 +26,8 @@ class Julia(MakefilePackage):
     maintainers("vchuravy", "haampie", "giordano")
 
     version("master", branch="master")
+    version("1.10.2", sha256="e3d20c02975da054aeb18d32ed84c5d760d54d2563e45e25017684a5a105d185")
+    version("1.10.1", sha256="698dc594fce302c465135b32d158aadbea3122ece516a2ae5f39b68035ebc719")
     version("1.9.3", sha256="8d7dbd8c90e71179e53838cdbe24ff40779a90d7360e29766609ed90d982081d")
     version("1.9.2", sha256="015438875d591372b80b09d01ba899657a6517b7c72ed41222298fef9d4ad86b")
     version("1.9.0", sha256="48f4c8a7d5f33d0bc6ce24226df20ab49e385c2d0c3767ec8dfdb449602095b2")
@@ -61,6 +63,11 @@ class Julia(MakefilePackage):
     depends_on("libuv-julia@1.42.0", when="@1.8.0:1.8.1")
     depends_on("libuv-julia@1.44.2", when="@1.8.2:")
     depends_on("suite-sparse@5.4:5.10", when="@1.6:1.9")
+    depends_on("suite-sparse@7:", when="@1.10:")
+
+    with when("@1.10:"):
+        # from https://github.com/JuliaLang/julia/blob/v1.10.2/doc/src/devdocs/build/build.md
+        depends_on("llvm@15.0.7 +lld shlib_symbol_version=JL_LLVM_15.0")
 
     with when("@1.9.0:1.9"):
         # libssh2.so.1, libpcre2-8.so.0, mbedtls.so.14, mbedcrypto.so.7, mbedx509.so.1
