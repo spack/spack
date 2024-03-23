@@ -415,7 +415,9 @@ class Hip(CMakePackage):
             env.set("HIP_DEVICE_LIB_PATH", paths["bitcode"])
 
             # Just the prefix of hip (used in hipcc)
-            env.set("HIP_PATH", paths["hip-path"])
+            # Deprecated in 5.1.0 and breaks hipcc in 5.5.1+
+            if self.spec.satisfies("@:5.4"):
+                env.set("HIP_PATH", paths["hip-path"])
 
             # Used in comgr and seems necessary when using the JIT compiler, e.g.
             # hiprtcCreateProgram:
