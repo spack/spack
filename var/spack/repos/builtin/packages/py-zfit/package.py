@@ -28,7 +28,7 @@ class PyZfit(PythonPackage):
     version("0.15.5", sha256="00a1138429e8a7f830c9e229b9c0bcd6071b95dadd8c87eb81191079fb679225")
     version("0.14.1", sha256="66d1e349403f1d6c6350138d0f2b422046bcbdfb34fd95453dadae29a8b0c98a")
 
-    depends_on("python@3.8:3.11", type=("build", "run"))
+    depends_on("python@3.9:3.11", type=("build", "run"))
     depends_on("py-setuptools@42:", type="build")
     depends_on("py-setuptools-scm-git-archive", type="build")
     depends_on("py-setuptools-scm@3.4:+toml", type="build")
