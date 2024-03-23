@@ -63,7 +63,7 @@ class Julia(MakefilePackage):
     depends_on("libuv-julia@1.42.0", when="@1.8.0:1.8.1")
     depends_on("libuv-julia@1.44.2", when="@1.8.2:")
     depends_on("suite-sparse@5.4:5.10", when="@1.6:1.9")
-    depends_on("suite-sparse@7:", when="@1.10:")
+    depends_on("suite-sparse@7.2.1", when="@1.10")
 
     with when("@1.10:"):
         # from https://github.com/JuliaLang/julia/blob/v1.10.2/doc/src/devdocs/build/build.md
