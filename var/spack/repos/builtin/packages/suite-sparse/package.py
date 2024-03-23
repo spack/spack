@@ -3,10 +3,12 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import spack.build_systems.cmake
+import spack.build_systems.generic
 from spack.package import *
 
 
-class SuiteSparse(Package):
+class SuiteSparse(Package, CMakePackage, CudaPackage):
     """
     SuiteSparse is a suite of sparse matrix algorithms
     """
@@ -17,6 +19,7 @@ class SuiteSparse(Package):
 
     license("Apache-2.0")
 
+    version("7.4.0", sha256="f9a5cc2316a967198463198f7bf10fb8c4332de6189b0e405419a7092bc921b7")
     version("5.13.0", sha256="59c6ca2959623f0c69226cf9afb9a018d12a37fab3a8869db5f6d7f83b6b147d")
     version("5.12.0", sha256="5fb0064a3398111976f30c5908a8c0b40df44c6dd8f0cc4bfa7b9e45d8c647de")
     version("5.11.0", sha256="fdd957ed06019465f7de73ce931afaf5d40e96e14ae57d91f60868b8c123c4c8")
@@ -44,8 +47,7 @@ class SuiteSparse(Package):
         default=True,
         description="Build position independent code (required to link with shared libraries)",
     )
-    variant("cuda", default=False, description="Build with CUDA")
-    variant("openmp", default=False, description="Build with OpenMP")
+    variant("openmp", default=True, description="Build with OpenMP")
     variant(
         "graphblas",
         default=False,
@@ -57,9 +59,14 @@ class SuiteSparse(Package):
     # Support for TBB has been removed in version 5.11
     variant("tbb", default=False, description="Build with Intel TBB", when="@4.5.3:5.10")
 
+    build_system(
+        conditional("generic", when="@:7.3"), conditional("cmake", when="@7.4:"), default="cmake"
+    )
+
     depends_on("blas")
     depends_on("lapack")
-    depends_on("cuda", when="+cuda")
+
+    depends_on("cuda@11.2:", when="@5.11: +cuda")
 
     depends_on("mpfr@4.0.0:", when="@5.8.0:")
     depends_on("gmp", when="@5.8.0:")
@@ -93,6 +100,12 @@ class SuiteSparse(Package):
     # Tested only with 5.9.0, previous versions probably work too
     patch("fix_cuda11.patch", when="@5.9.0:5.10.0+cuda ^cuda@11:")
 
+    patch(
+        "https://raw.githubusercontent.com/JuliaPackaging/Yggdrasil/dc31f1d5925725e35cf2afba1ca2fe34c95e8e7e/S/SuiteSparse/SuiteSparse%407/bundled/patches/blas_suffix.patch",
+        sha256="7db20e54c407232b9e4c1e9cb1d41a3bf3484aae1cdfe8dd4819584ab7438d92",
+        when="@7.4.0",
+    )
+
     conflicts(
         "%gcc@:4.8", when="@5.2.0:", msg="gcc version must be at least 4.9 for suite-sparse@5.2.0:"
     )
@@ -103,6 +116,36 @@ class SuiteSparse(Package):
                 flags.append(self.compiler.openmp_flag)
         return (flags, None, None)
 
+    @property
+    def libs(self):
+        """Export the libraries of SuiteSparse.
+        Sample usage: spec['suite-sparse'].libs.ld_flags
+                      spec['suite-sparse:klu,btf'].libs.ld_flags
+        """
+        # Component libraries, ordered by dependency. Any missing components?
+        all_comps = [
+            "klu",
+            "btf",
+            "umfpack",
+            "cholmod",
+            "colamd",
+            "amd",
+            "camd",
+            "ccolamd",
+            "cxsparse",
+            "ldl",
+            "rbio",
+            "spqr",
+            "suitesparseconfig",
+        ]
+        query_parameters = self.spec.last_query.extra_parameters
+        comps = all_comps if not query_parameters else query_parameters
+        return find_libraries(
+            ["lib" + c for c in comps], root=self.prefix.lib, shared=True, recursive=False
+        )
+
+
+class GenericBuilder(spack.build_systems.generic.GenericBuilder):
     def symbol_suffix_blas(self, spec, args):
         """When using BLAS with a special symbol suffix we use defines to
         replace blas symbols, e.g. dgemm_ becomes dgemm_64_ when
@@ -148,15 +191,15 @@ class SuiteSparse(Package):
         for symbol in symbols:
             args.append("CFLAGS+=-D{0}={1}{2}".format(symbol, symbol, suffix))
 
-    def install(self, spec, prefix):
+    def install(self, pkg, spec, prefix):
         # The build system of SuiteSparse is quite old-fashioned.
         # It's basically a plain Makefile which include an header
         # (SuiteSparse_config/SuiteSparse_config.mk)with a lot of convoluted
         # logic in it. Any kind of customization will need to go through
         # filtering of that file
 
-        cc_pic_flag = self.compiler.cc_pic_flag if "+pic" in spec else ""
-        f77_pic_flag = self.compiler.f77_pic_flag if "+pic" in spec else ""
+        cc_pic_flag = pkg.compiler.cc_pic_flag if "+pic" in spec else ""
+        f77_pic_flag = pkg.compiler.f77_pic_flag if "+pic" in spec else ""
 
         make_args = [
             # By default, the Makefile uses the Intel compilers if
@@ -169,7 +212,7 @@ class SuiteSparse(Package):
             # [SuiteSparse/SuiteSparse_config/SuiteSparse_config.mk] for more.
             "CUDA=no",
             "CUDA_PATH=%s" % (spec["cuda"].prefix if "+cuda" in spec else ""),
-            "CFOPENMP=%s" % (self.compiler.openmp_flag if "+openmp" in spec else ""),
+            "CFOPENMP=%s" % (pkg.compiler.openmp_flag if "+openmp" in spec else ""),
             "CFLAGS=-O3 %s" % cc_pic_flag,
             # Both FFLAGS and F77FLAGS are used in SuiteSparse makefiles;
             # FFLAGS is used in CHOLMOD, F77FLAGS is used in AMD and UMFPACK.
@@ -193,7 +236,7 @@ class SuiteSparse(Package):
         # not an issue because c11 or newer is their default. However, for some
         # compilers (e.g. xlc) the c11 flag is necessary.
         if spec.satisfies("@5.4:5.7.1") and ("%xl" in spec or "%xl_r" in spec):
-            make_args += ["CFLAGS+=%s" % self.compiler.c11_flag]
+            make_args += ["CFLAGS+=%s" % pkg.compiler.c11_flag]
 
         # 64bit blas in UMFPACK:
         if (
@@ -271,30 +314,46 @@ class SuiteSparse(Package):
         if "+pic platform=darwin" in self.spec:
             fix_darwin_install_name(self.spec.prefix.lib)
 
-    @property
-    def libs(self):
-        """Export the libraries of SuiteSparse.
-        Sample usage: spec['suite-sparse'].libs.ld_flags
-                      spec['suite-sparse:klu,btf'].libs.ld_flags
-        """
-        # Component libraries, ordered by dependency. Any missing components?
-        all_comps = [
-            "klu",
-            "btf",
-            "umfpack",
-            "cholmod",
-            "colamd",
+
+class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
+    def cmake_args(self):
+        projects = [
+            "suitesparse_config",
+            "mongoose",
             "amd",
+            "btf",
             "camd",
             "ccolamd",
+            "colamd",
+            "cholmod",
             "cxsparse",
             "ldl",
+            "klu",
+            "umfpack",
+            "paru",
             "rbio",
             "spqr",
-            "suitesparseconfig",
+            "spex",
         ]
-        query_parameters = self.spec.last_query.extra_parameters
-        comps = all_comps if not query_parameters else query_parameters
-        return find_libraries(
-            ["lib" + c for c in comps], root=self.prefix.lib, shared=True, recursive=False
-        )
+        if "+graphblas" in self.spec:
+            projects.extend(["graphblas", "lagraph"])
+
+        blas = self.spec["blas"]
+        ilp64 = blas.satisfies("+ilp64")
+
+        args = [
+            self.define("SUITESPARSE_USE_STRICT", True),
+            self.define_from_variant("SUITESPARSE_USE_CUDA", "cuda"),
+            self.define_from_variant("SUITESPARSE_USE_OPENMP", "openmp"),
+            self.define("SUITESPARSE_ENABLE_PROJECTS", projects),
+            self.define("SUITESPARSE_USE_64BIT_BLAS", ilp64),
+            self.define("BLAS_LIBRARIES", blas.libs),
+            self.define("LAPACK_LIBRARIES", self.spec["lapack"].libs),
+        ]
+
+        if blas.name == "openblas" and "symbol_suffix" in blas.variants:
+            suffix = blas.variants["symbol_suffix"].value
+            if suffix != "none":
+                args.append(self.define("BLAS64_SUFFIX", suffix))
+
+        return args
