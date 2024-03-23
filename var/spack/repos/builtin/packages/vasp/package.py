@@ -248,7 +248,11 @@ class Vasp(MakefilePackage):
         if "^amdfftw" in spec:
             spack_env.set("AMDFFTW_ROOT", spec["fftw-api"].prefix)
         else:
-            spack_env.set("FFTW", spec["fftw-api"].libs.ld_flags)
+            if "@5.4.4" in spec:
+                spack_env.set("FFTW", spec["fftw-api"].prefix)
+            else:
+                spack_env.set("FFTW", spec["fftw-api"].libs.ld_flags)
+
         spack_env.set("MPI_INC", spec["mpi"].prefix.include)
 
         if "%nvhpc" in spec:
