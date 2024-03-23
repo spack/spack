@@ -155,7 +155,6 @@ class SuiteSparse(Package):
         for symbol in symbols:
             args.append("CFLAGS+=-D{0}={1}{2}".format(symbol, symbol, suffix))
 
-
     def install(self, spec, prefix):
         # The build system of SuiteSparse is quite old-fashioned.
         # It's basically a plain Makefile which include an header
@@ -237,10 +236,10 @@ class SuiteSparse(Package):
                 "CMAKE_OPTIONS=-DCMAKE_INSTALL_PREFIX=%s" % prefix
                 + " -DCMAKE_LIBRARY_PATH=%s" % prefix.lib
                 + " -DBLA_VENDOR=OpenBLAS"
-                + " -DBLAS_INCLUDE_DIRS=%s" % (spec["blas"].prefix.include)      # for versions 7.4.0 and later
-                + " -DLAPACK_INCLUDE_DIRS=%s" % (spec["lapack"].prefix.include)  # for versions 7.4.0 and later
-                + " -DBLAS_LIBRARIES=%s" % (spec["blas"].prefix.include)         # for versions 7.3.1 and before
-                + " -DLAPACK_LIBRARIES=%s" % (spec["lapack"].prefix.include)     # for versions 7.3.1 and before
+                + " -DBLAS_INCLUDE_DIRS=%s" % (spec["blas"].prefix.include)      # for >= v7.4.0
+                + " -DLAPACK_INCLUDE_DIRS=%s" % (spec["lapack"].prefix.include)  # for >= v7.4.0
+                + " -DBLAS_LIBRARIES=%s" % (spec["blas"].prefix.include)         # for <= v7.3.1
+                + " -DLAPACK_LIBRARIES=%s" % (spec["lapack"].prefix.include)     # for <= v7.3.1
             ]
 
         if spec.satisfies("%gcc platform=darwin"):
@@ -274,7 +273,7 @@ class SuiteSparse(Package):
 
         # Finally make and install
         make("-C", "SuiteSparse_config", *make_args)
-        #make("-C", "SuiteSparse_config", "config", *make_args)
+#       make("-C", "SuiteSparse_config", "config", *make_args)
         for target in targets:
             make("-C", target, "library", *make_args)
             make("-C", target, "install", *make_args)
