@@ -136,11 +136,11 @@ def upload_blob(
         # Otherwise, do another PUT request.
         spack.oci.opener.ensure_status(request, response, 202)
         assert "Location" in response.headers
+        location = response.headers["Location"]
+        assert location
 
         # Can be absolute or relative, joining handles both
-        upload_url = with_query_param(
-            ref.endpoint(response.headers["Location"]), "digest", str(digest)
-        )
+        upload_url = with_query_param(ref.endpoint(location), "digest", str(digest))
         f.seek(0)
 
         request = Request(
