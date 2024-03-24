@@ -1,0 +1,16 @@
+--- nettle-3.9.1.orig/examples/nettle-openssl.c	2023-06-01 20:40:36.000000000 +0200
++++ nettle-3.9.1/examples/nettle-openssl.c	2024-03-08 16:18:49.643424081 +0100
+@@ -40,6 +40,12 @@
+ 
+ #if WITH_OPENSSL
+ 
++/* OpenSSL 1.0 compatibility; see https://wiki.openssl.org/index.php/EVP_Message_Digests */
++#if OPENSSL_VERSION_NUMBER < 0x10100000L
++#  define EVP_MD_CTX_new   EVP_MD_CTX_create
++#  define EVP_MD_CTX_free  EVP_MD_CTX_destroy
++#endif
++
+ /* No ancient ssleay compatibility */
+ #define NCOMPAT
+ #define OPENSSL_DISABLE_OLD_DES_SUPPORT
+
