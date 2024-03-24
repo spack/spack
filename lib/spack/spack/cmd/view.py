@@ -65,9 +65,10 @@ def disambiguate_in_view(specs, view):
             tty.die("Spec matches no installed packages.")
 
         matching_in_view = [ms for ms in matching_specs if ms in view_specs]
-        spack.cmd.ensure_single_spec_or_die("Spec", matching_in_view)
-
-        return matching_in_view[0] if matching_in_view else matching_specs[0]
+        if not matching_in_view:
+            return matching_specs[0]
+        else:
+            return spack.cmd.get_single_spec_or_maybe_die("spec", matching_in_view)
 
     # make function always return a list to keep consistency between py2/3
     return list(map(squash, map(spack.store.STORE.db.query, specs)))
