@@ -11,6 +11,8 @@ class PyCelery(PythonPackage):
 
     pypi = "celery/celery-5.3.6.tar.gz"
 
+    license("BSD-3-Clause")
+    
     version("5.3.6", sha256="870cc71d737c0200c397290d730344cc991d13a057534353d124c9380267aab9")
     version("5.2.3", sha256="e2cd41667ad97d4f6a2f4672d1c6a6ebada194c619253058b5f23704aaadaa82")
     version("5.0.0", sha256="313930fddde703d8e37029a304bf91429cd11aeef63c57de6daca9d958e1f255")
@@ -69,6 +71,7 @@ class PyCelery(PythonPackage):
     depends_on("py-pytz@2021.3:", type=("build", "run"), when="@5.2.3:5.2.99")
     depends_on("py-billiard@3.6.3.0:3.6.3.99", type=("build", "run"), when="@:5.0.99")
     depends_on("py-billiard@3.6.4.0:3.99", type=("build", "run"), when="@5.1.0:5.2.99")
+    depends_on("py-billiard@4.2.0:5.0", type=("build", "run"), when="@5.3.0:")
     depends_on("py-kombu@4.6.11", when="@4.3.0:4", type=("build", "run"))
     depends_on("py-kombu@5.0.0:", when="@5.0.0:5.0.99", type=("build", "run"))
     depends_on("py-kombu@5.1.0:", when="@5.1.0:5.1.99", type=("build", "run"))
