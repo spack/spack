@@ -13,6 +13,10 @@ class PyNilearn(PythonPackage):
     pypi = "nilearn/nilearn-0.7.1.tar.gz"
     git = "https://github.com/nilearn/nilearn"
 
+    maintainers("ChristopherChristofi")
+
+    license("BSD")
+
     version("0.10.3", sha256="77819331314c4ca5c15c07634f69f855fafdf9add051b1882e3a600ad52757d8")
     version("0.10.1", sha256="928a364e7ed77d15d02b7f227197ea7c78f44f2fe780feb555d6d7cf9232f846")
     version("0.10.0", sha256="cc7f1068e038076527ead1bd363436f88f5e8d21e8bb57b323b30b926fc7553a")
