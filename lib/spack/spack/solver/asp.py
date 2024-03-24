@@ -541,6 +541,7 @@ def _concretization_version_order(version_info: Tuple[GitOrStandardVersion, dict
         info.get("preferred", False),
         not info.get("deprecated", False),
         not version.isdevelop(),
+        not version.is_prerelease(),
         version,
     )
 
@@ -2158,7 +2159,7 @@ class SpackSolverSetup:
             if isinstance(v, vn.StandardVersion):
                 return [v]
             elif isinstance(v, vn.ClosedOpenRange):
-                return [v.lo, vn.prev_version(v.hi)]
+                return [v.lo, vn._prev_version(v.hi)]
             elif isinstance(v, vn.VersionList):
                 return sum((versions_for(e) for e in v), [])
             else:

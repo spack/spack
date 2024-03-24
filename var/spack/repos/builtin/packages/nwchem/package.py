@@ -55,7 +55,7 @@ class Nwchem(Package):
     # https://github.com/nwchemgit/nwchem/commit/376f86f96eb982e83f10514e9dcd994564f973b4
     # https://github.com/nwchemgit/nwchem/commit/c89fc9d1eca6689bce12564a63fdea95d962a123
     # Prior versions of NWChem, including 7.0.2, were not able to link with FFTW
-    patch("fftw_splans.patch", when="@7.2.0 +fftw3")
+    patch("fftw_splans.patch", when="@7.2.0:7.2.2 +fftw3")
 
     depends_on("blas")
     depends_on("lapack")
@@ -133,8 +133,8 @@ class Nwchem(Package):
             args.extend(["FFTW3_INCLUDE={0}".format(spec["fftw-api"].prefix.include)])
 
         if spec.satisfies("+libxc"):
-            args.extend([f"LIBXC_LIB={0}".format(spec["libxc"].libs.ld_flags)])
-            args.extend([f"LIBXC_INCLUDE={0}".format(spec["libxc"].prefix.include)])
+            args.extend(["LIBXC_LIB={0}".format(spec["libxc"].libs.ld_flags)])
+            args.extend(["LIBXC_INCLUDE={0}".format(spec["libxc"].prefix.include)])
 
         if spec.satisfies("+elpa"):
             elpa = spec["elpa"]
