@@ -20,8 +20,11 @@ class Glibc(AutotoolsPackage, GNUMirrorPackage):
     maintainers("haampie")
 
     build_directory = "build"
+    tags = ["runtime"]
 
     license("LGPL-2.1-or-later")
+
+    provides("libc")
 
     version("master", branch="master")
     version("2.38", sha256="16e51e0455e288f03380b436e41d5927c60945abd86d0c9852b84be57dd6ed5e")

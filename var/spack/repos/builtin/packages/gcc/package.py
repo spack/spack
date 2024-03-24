@@ -1169,5 +1169,13 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
             description=f"If any package uses %{str(compiler.spec)}, "
             f"it depends on gcc-runtime@{str(compiler.version)}:",
         )
+
+        libc = compiler.default_libc()
+
+        if libc:
+            pkg("*").depends_on(
+                str(libc), when=f"%{str(compiler.spec)}", type="link", description="Add libc"
+            )
+
         # The version of gcc-runtime is the same as the %gcc used to "compile" it
         pkg("gcc-runtime").requires(f"@={str(compiler.version)}", when=f"%{str(compiler.spec)}")
