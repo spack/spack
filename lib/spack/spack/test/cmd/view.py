@@ -65,7 +65,7 @@ def test_view_projections(
     viewpath = str(tmpdir.mkdir("view_{0}".format(cmd)))
     view_projection = {"projections": {"all": "{name}-{version}"}}
     projection_file = create_projection_file(tmpdir, view_projection)
-    view(cmd, viewpath, "--projection-file={0}".format(projection_file), "libdwarf")
+    view(cmd, "--projection-file={0}".format(projection_file), viewpath, "libdwarf")
 
     package_prefix = os.path.join(viewpath, "libdwarf-20130207/libdwarf")
     assert os.path.exists(package_prefix)
@@ -87,7 +87,7 @@ def test_view_multiple_projections(
     )
 
     projection_file = create_projection_file(tmpdir, view_projection)
-    view("add", viewpath, "--projection-file={0}".format(projection_file), "libdwarf", "extendee")
+    view("add", "--projection-file={0}".format(projection_file), viewpath, "libdwarf", "extendee")
 
     libdwarf_prefix = os.path.join(viewpath, "libdwarf-20130207/libdwarf")
     extendee_prefix = os.path.join(viewpath, "extendee-gcc/bin")
@@ -107,7 +107,7 @@ def test_view_multiple_projections_all_first(
     )
 
     projection_file = create_projection_file(tmpdir, view_projection)
-    view("add", viewpath, "--projection-file={0}".format(projection_file), "libdwarf", "extendee")
+    view("add", "--projection-file={0}".format(projection_file), viewpath, "libdwarf", "extendee")
 
     libdwarf_prefix = os.path.join(viewpath, "libdwarf-20130207/libdwarf")
     extendee_prefix = os.path.join(viewpath, "extendee-gcc/bin")
@@ -169,7 +169,7 @@ def test_view_extension_conflict_ignored(
     install("extension1@2.0")
     viewpath = str(tmpdir.mkdir("view"))
     view("symlink", viewpath, "extension1@1.0")
-    view("symlink", viewpath, "-i", "extension1@2.0")
+    view("symlink", "-i", viewpath, "extension1@2.0")
     with open(os.path.join(viewpath, "bin", "extension1"), "r") as fin:
         assert fin.read() == "1.0"
 

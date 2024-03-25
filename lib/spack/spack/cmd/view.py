@@ -41,6 +41,7 @@ import spack.environment as ev
 import spack.schema.projections
 import spack.store
 from spack.config import validate
+from spack.error import SpackError
 from spack.filesystem_view import YamlFilesystemView, view_func_parser
 from spack.util import spack_yaml as s_yaml
 
@@ -159,16 +160,16 @@ def setup_parser(sp):
             grp.add_argument("specs", **so)
             grp.add_argument("-a", "--all", action="store_true", help="act on all specs in view")
 
-        elif cmd == "statlink":
+        elif cmd in ("statlink", "symlink", "hardlink", "copy"):
+            # view-creation commands do not need to mention specs
+            # if an environment is active. status commands default
+            # to inspecting all specs in the view if none are provided
             so = specs_opts.copy()
             so["nargs"] = "*"
             act.add_argument("specs", **so)
 
         else:
-            # without all option, spec is required
-            so = specs_opts.copy()
-            so["nargs"] = "+"
-            act.add_argument("specs", **so)
+            raise SpackError(f"Unexpected command: {cmd}")
 
     for cmd in ["symlink", "hardlink", "copy"]:
         act = file_system_view_actions[cmd]
@@ -216,7 +217,12 @@ def view(parser, args):
     elif args.action in actions_link:
         # only link commands need to disambiguate specs
         env = ev.active_environment()
-        specs = [spack.cmd.disambiguate_spec(s, env) for s in specs]
+        if len(specs) == 0:
+            if not env:
+                tty.die("View creation requires specs unless you are in an environment")
+            specs = env.concrete_roots()
+        else:
+            specs = [spack.cmd.disambiguate_spec(s, env) for s in specs]
 
     elif args.action in actions_status:
         # no specs implies all
