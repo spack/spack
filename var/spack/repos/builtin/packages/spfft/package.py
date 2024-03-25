@@ -62,9 +62,8 @@ class Spfft(CMakePackage, CudaPackage, ROCmPackage):
     conflicts("+rocm", when="@:1.0.5")
 
     with when("+rocm"):
-        depends_on("hip +rocm ~cuda")
         depends_on("rocfft")
-        depends_on("hipfft +rocm ~cuda")
+        depends_on("hipfft")
         # hip 6.0 requires v1.1.0 and later
         conflicts("^hip@6.0.0:", when="@:1.0.6 +rocm")
 
