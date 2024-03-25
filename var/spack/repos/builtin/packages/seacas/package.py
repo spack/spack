@@ -238,7 +238,7 @@ class Seacas(CMakePackage):
                 define(project_name_base + "_ENABLE_SEACAS", True),
             ]
         )
-        if "~shared" in self.spec:
+        if "~shared" in self.spec and not is_windows:
             options.append(self.define(f"{project_name_base}_EXTRA_LINK_FLAGS", "z;dl"))
         options.append(from_variant("TPL_ENABLE_MPI", "mpi"))
         if "+mpi" in spec and not is_windows:
