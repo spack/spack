@@ -5,8 +5,8 @@ ci:
       - Write-Output "Done"
 
       before_script::
-      - choco install file
       - (certutil -generateSSTFromWU roots.sst) -AND (certutil -addstore -f root roots.sst) -AND (del roots.sst)
+      - choco install file
       - python -m pip install --user boto3
       - . .\share\spack\setup-env.ps1
       - spack.ps1 compiler find
