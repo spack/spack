@@ -22,6 +22,7 @@ class PyKeras(PythonPackage):
     maintainers("adamjstewart")
     license("Apache-2.0")
 
+    version("3.1.1", sha256="55558ea228dc38e7667874fd2e83eaf7faeb026e2e8615b36a8616830f7e303b")
     version("3.1.0", sha256="cac46e053f0493da313e7c9b16379a532b1a38f9f19c7a5fe4578759f4c6aa4d")
     version("3.0.5", sha256="df3d3795e12c3f6035e811c43c13f1eb41e37241796a0fea120ede4ebe1c4496")
     version("3.0.4", sha256="ff2204792582e3889c51c77722cc6e8258dbb1ece7db192f5a9bcd1887cf3385")
@@ -70,7 +71,7 @@ class PyKeras(PythonPackage):
     depends_on("py-rich", type=("build", "run"), when="@3:")
     depends_on("py-namex", type=("build", "run"), when="@3:")
     depends_on("py-h5py", type=("build", "run"))
-    depends_on("py-dm-tree", type=("build", "run"), when="@3:")
+    depends_on("py-optree", type=("build", "run"), when="@3.1:")
     depends_on("py-ml-dtypes", type=("build", "run"), when="@3.0.5:")
 
     # requirements-common.txt
@@ -100,6 +101,7 @@ class PyKeras(PythonPackage):
     depends_on("bazel", type="build", when="@2.5:2")
     depends_on("protobuf", type="build", when="@2.5:2")
     depends_on("pil", type=("build", "run"), when="@:2")
+    depends_on("py-dm-tree", type=("build", "run"), when="@3.0")
     depends_on("py-portpicker", type=("build", "run"), when="@2.10:2")
     depends_on("py-pydot", type=("build", "run"), when="@:2")
     depends_on("py-pyyaml", type=("build", "run"), when="@:2")
