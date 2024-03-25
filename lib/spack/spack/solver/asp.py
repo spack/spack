@@ -3369,7 +3369,7 @@ def _is_reusable(spec: spack.spec.Spec, packages, local: bool) -> bool:
         return False
 
     if not spec.external:
-        return True
+        return _has_runtime_dependencies(spec)
 
     # Cray external manifest externals are always reusable
     if local:
@@ -3392,6 +3392,19 @@ def _is_reusable(spec: spack.spec.Spec, packages, local: bool) -> bool:
                 return True
 
     return False
+
+
+def _has_runtime_dependencies(spec: spack.spec.Spec) -> bool:
+    if not WITH_RUNTIME:
+        return True
+
+    if spec.satisfies("%gcc") and not spec.satisfies("^gcc-runtime"):
+        return False
+
+    if spec.satisfies("%oneapi") and not spec.satisfies("^intel-oneapi-runtime"):
+        return False
+
+    return True
 
 
 class Solver:
