@@ -159,6 +159,14 @@ error(100, multiple_values_error, Attribute, Package)
      2 { attr(Attribute, node(ID, Package), Value) }.
 
 %-----------------------------------------------------------------------------
+% Languages used
+%-----------------------------------------------------------------------------
+
+attr("language", node(X, Package), Language) :-
+  condition_holds(ConditionID, node(X, Package)),
+  pkg_fact(Package,language(ConditionID, Language)).
+
+%-----------------------------------------------------------------------------
 % Version semantics
 %-----------------------------------------------------------------------------
 

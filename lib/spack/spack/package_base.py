@@ -567,6 +567,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     provided_together: Dict["spack.spec.Spec", List[Set[str]]]
     patches: Dict["spack.spec.Spec", List["spack.patch.Patch"]]
     variants: Dict[str, Tuple["spack.variant.Variant", "spack.spec.Spec"]]
+    languages: Dict["spack.spec.Spec", Set[str]]
 
     #: By default, packages are not virtual
     #: Virtual packages override this attribute
