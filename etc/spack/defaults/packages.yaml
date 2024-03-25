@@ -32,7 +32,7 @@ packages:
       go-or-gccgo-bootstrap: [go-bootstrap, gcc]
       iconv: [libiconv]
       ipp: [intel-oneapi-ipp]
-      java: [openjdk, jdk, ibm-java]
+      java: [openjdk, ibm-java]
       jpeg: [libjpeg-turbo, libjpeg]
       lapack: [openblas, amdlibflame]
       libgfortran: [ gcc-runtime ]
