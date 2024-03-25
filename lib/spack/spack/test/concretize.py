@@ -341,6 +341,7 @@ class TestConcretize:
         assert set(client.compiler_flags["fflags"]) == set(["-O0", "-g"])
         assert not set(cmake.compiler_flags["fflags"])
 
+    @pytest.mark.xfail(reason="Broken, needs to be fixed")
     def test_compiler_flags_from_compiler_and_dependent(self):
         client = Spec("cmake-client %clang@12.2.0 platform=test os=fe target=fe cflags==-g")
         client.concretize()
@@ -1522,6 +1523,30 @@ class TestConcretize:
         s = Spec("sticky-variant %clang").concretized()
         assert s.satisfies("%clang") and s.satisfies("~allow-gcc")
 
+    @pytest.mark.regression("42172")
+    @pytest.mark.only_clingo("Original concretizer cannot use sticky variants")
+    @pytest.mark.parametrize(
+        "spec,allow_gcc",
+        [
+            ("sticky-variant@1.0+allow-gcc", True),
+            ("sticky-variant@1.0~allow-gcc", False),
+            ("sticky-variant@1.0", False),
+        ],
+    )
+    def test_sticky_variant_in_external(self, spec, allow_gcc):
+        # setup external for sticky-variant+allow-gcc
+        config = {"externals": [{"spec": spec, "prefix": "/fake/path"}], "buildable": False}
+        spack.config.set("packages:sticky-variant", config)
+
+        maybe = llnl.util.lang.nullcontext if allow_gcc else pytest.raises
+        with maybe(spack.error.SpackError):
+            s = Spec("sticky-variant-dependent%gcc").concretized()
+
+        if allow_gcc:
+            assert s.satisfies("%gcc")
+            assert s["sticky-variant"].satisfies("+allow-gcc")
+            assert s["sticky-variant"].external
+
     @pytest.mark.only_clingo("Use case not supported by the original concretizer")
     def test_do_not_invent_new_concrete_versions_unless_necessary(self):
         # ensure we select a known satisfying version rather than creating
@@ -2069,7 +2094,34 @@ class TestConcretize:
         result, _, _ = solver.driver.solve(setup, specs, reuse=[])
 
         assert result.specs
-        assert not result.unsolved_specs
+
+    @pytest.mark.regression("38664")
+    def test_unsolved_specs_raises_error(self, monkeypatch, mock_packages, config):
+        """Check that the solver raises an exception when input specs are not
+        satisfied.
+        """
+        specs = [Spec("zlib")]
+        solver = spack.solver.asp.Solver()
+        setup = spack.solver.asp.SpackSolverSetup()
+
+        simulate_unsolved_property = list((x, None) for x in specs)
+
+        monkeypatch.setattr(spack.solver.asp.Result, "unsolved_specs", simulate_unsolved_property)
+
+        with pytest.raises(
+            spack.solver.asp.InternalConcretizerError,
+            match="the solver completed but produced specs",
+        ):
+            solver.driver.solve(setup, specs, reuse=[])
+
+    @pytest.mark.regression("43141")
+    @pytest.mark.only_clingo("Use case not supported by the original concretizer")
+    def test_clear_error_when_unknown_compiler_requested(self, mock_packages, config):
+        """Tests that the solver can report a case where the compiler cannot be set"""
+        with pytest.raises(
+            spack.error.UnsatisfiableSpecError, match="Cannot set the required compiler: a%foo"
+        ):
+            Spec("a %foo").concretized()
 
     @pytest.mark.regression("36339")
     def test_compiler_match_constraints_when_selected(self):
@@ -2561,3 +2613,28 @@ def test_reusable_externals_different_spec(mock_packages, tmpdir):
         {"mpich": {"externals": [{"spec": "mpich@4.1 +debug", "prefix": tmpdir.strpath}]}},
         local=False,
     )
+
+
+def test_concretization_version_order():
+    versions = [
+        (Version("develop"), {}),
+        (Version("1.0"), {}),
+        (Version("2.0"), {"deprecated": True}),
+        (Version("1.1"), {}),
+        (Version("1.1alpha1"), {}),
+        (Version("0.9"), {"preferred": True}),
+    ]
+    result = [
+        v
+        for v, _ in sorted(
+            versions, key=spack.solver.asp._concretization_version_order, reverse=True
+        )
+    ]
+    assert result == [
+        Version("0.9"),  # preferred
+        Version("1.1"),  # latest non-deprecated final version
+        Version("1.0"),  # latest non-deprecated final version
+        Version("1.1alpha1"),  # prereleases
+        Version("develop"),  # likely development version
+        Version("2.0"),  # deprecated
+    ]

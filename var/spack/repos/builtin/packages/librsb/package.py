@@ -16,6 +16,7 @@ class Librsb(AutotoolsPackage):
 
     license("LGPL-3.0-only")
 
+    version("1.3.0.2", sha256="18c6fc443fa1cfd2a8110f7d4b88d5bbcb493b9e85b3a62014b8bb57a848e04f")
     version("1.3.0.1", sha256="3fc024a410f94aca2a7139ae79f4d713b11fa83304293630c363786874c17db4")
     version("1.3.0.0", sha256="2ac8725d1f988f57df9383ae6b0bb2ed221ec935187d31ebb62ea95ee868a790")
     version("1.2.0.11", sha256="0686be29bbe277e227c6021de6bd0564e4fc83f996b787886437d28048057bc8")
@@ -48,8 +49,8 @@ class Librsb(AutotoolsPackage):
             "--enable-openmp",
             "--with-zlib",
             "--enable-fortran-module-install",
-            "CPPFLAGS={0}".format(self.spec["zlib-api"].headers.include_flags),
-            "LDFLAGS={0}".format(self.spec["zlib-api"].libs.search_flags),
+            f"CPPFLAGS={self.spec['zlib-api'].headers.include_flags}",
+            f"LDFLAGS={self.spec['zlib-api'].libs.search_flags}",
         ]
         if "+asan" in self.spec:
             args.append("CFLAGS=-O0 -ggdb -fsanitize=address -fno-omit-frame-pointer")

@@ -26,6 +26,7 @@ class Memkind(AutotoolsPackage):
 
     license("BSD-3-Clause")
 
+    version("1.14.0", sha256="ab366b20b5a87ea655483631fc762ba6eb59eb6c3a08652e643f1ee3f06a6a12")
     version("1.13.0", sha256="3f0d919b61fdd4d2ebce14e0b7dbb856e2144138778940107c13549523f3bdc0")
     version("1.12.0", sha256="b0781d493dec0da0089884fd54bcfdde03311019c56f90505ed0b884100bfbad")
     version("1.10.1", sha256="c203615d964a0bb151756ad8a5c9565391ee77d79c1f8b59d2ea8ff87989b294")
@@ -49,7 +50,7 @@ class Memkind(AutotoolsPackage):
 
     def patch(self):
         with open("VERSION", "w") as version_file:
-            version_file.write("{0}\n".format(self.version))
+            version_file.write(f"{self.version}\n")
         # Remove `-Werror`
         filter_file(r" -Werror ", " ", "Makefile.am", "configure.ac")
 

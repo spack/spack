@@ -75,14 +75,14 @@ class Scr(CMakePackage):
 
     # SCR legacy is anything 2.x.x or earlier
     # SCR components is anything 3.x.x or later
-    depends_on("axl@0.7.1", when="@3.0.1:")
-    depends_on("er@0.2.0", when="@3.0.1:")
-    depends_on("kvtree@1.3.0", when="@3.0.1:")
-    depends_on("rankstr@0.1.0", when="@3.0.1:")
-    depends_on("redset@0.2.0", when="@3.0.1:")
-    depends_on("shuffile@0.2.0", when="@3.0.1:")
-    depends_on("spath@0.2.0 +mpi", when="@3.0.1:")
-    depends_on("dtcmp@1.1.4", when="@3.0.1:")
+    depends_on("axl@0.7.1", when="@3.0.1")
+    depends_on("er@0.2.0", when="@3.0.1")
+    depends_on("kvtree@1.3.0", when="@3.0.1")
+    depends_on("rankstr@0.1.0", when="@3.0.1")
+    depends_on("redset@0.2.0", when="@3.0.1")
+    depends_on("shuffile@0.2.0", when="@3.0.1")
+    depends_on("spath@0.2.0 +mpi", when="@3.0.1")
+    depends_on("dtcmp@1.1.4", when="@3.0.1")
 
     depends_on("axl@0.6.0", when="@3.0.0")
     depends_on("er@0.2.0", when="@3.0.0")

@@ -9,6 +9,8 @@ import pathlib
 import platform
 import subprocess
 
+from llnl.util import tty
+
 from spack.error import SpackError
 from spack.util import windows_registry as winreg
 from spack.version import Version
@@ -83,11 +85,50 @@ class WindowsOs(OperatingSystem):
                     os.path.join(str(os.getenv("ONEAPI_ROOT")), "compiler", "*", "windows", "bin")
                 )
             )
+
         # Second strategy: Find MSVC via the registry
-        msft = winreg.WindowsRegistryView(
-            "SOFTWARE\\WOW6432Node\\Microsoft", winreg.HKEY.HKEY_LOCAL_MACHINE
-        )
-        vs_entries = msft.find_subkeys(r"VisualStudio_.*")
+        def try_query_registry(retry=False):
+            winreg_report_error = lambda e: tty.debug(
+                'Windows registry query on "SOFTWARE\\WOW6432Node\\Microsoft"'
+                f"under HKEY_LOCAL_MACHINE: {str(e)}"
+            )
+            try:
+                # Registry interactions are subject to race conditions, etc and can generally
+                # be flakey, do this in a catch block to prevent reg issues from interfering
+                # with compiler detection
+                msft = winreg.WindowsRegistryView(
+                    "SOFTWARE\\WOW6432Node\\Microsoft", winreg.HKEY.HKEY_LOCAL_MACHINE
+                )
+                return msft.find_subkeys(r"VisualStudio_.*", recursive=False)
+            except OSError as e:
+                # OSErrors propagated into caller by Spack's registry module are expected
+                # and indicate a known issue with the registry query
+                # i.e. user does not have permissions or the key/value
+                # doesn't exist
+                winreg_report_error(e)
+                return []
+            except winreg.InvalidRegistryOperation as e:
+                # Other errors raised by the Spack's reg module indicate
+                # an unexpected error type, and are handled specifically
+                # as the underlying cause is difficult/impossible to determine
+                # without manually exploring the registry
+                # These errors can also be spurious (race conditions)
+                # and may resolve on re-execution of the query
+                # or are permanent (specific types of permission issues)
+                # but the registry raises the same exception for all types of
+                # atypical errors
+                if retry:
+                    winreg_report_error(e)
+                return []
+
+        vs_entries = try_query_registry()
+        if not vs_entries:
+            # Occasional spurious race conditions can arise when reading the MS reg
+            # typically these race conditions resolve immediately and we can safely
+            # retry the reg query without waiting
+            # Note: Winreg does not support locking
+            vs_entries = try_query_registry(retry=True)
+
         vs_paths = []
 
         def clean_vs_path(path):
@@ -99,11 +140,8 @@ class WindowsOs(OperatingSystem):
                 val = entry.get_subkey("Capabilities").get_value("ApplicationDescription").value
                 vs_paths.append(clean_vs_path(val))
             except FileNotFoundError as e:
-                if hasattr(e, "winerror"):
-                    if e.winerror == 2:
-                        pass
-                    else:
-                        raise
+                if hasattr(e, "winerror") and e.winerror == 2:
+                    pass
                 else:
                     raise
 

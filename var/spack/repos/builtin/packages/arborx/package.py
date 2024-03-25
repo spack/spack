@@ -144,9 +144,11 @@ class Arborx(CMakePackage, CudaPackage, ROCmPackage):
             f"-DCMAKE_CXX_COMPILER={os.environ['CXX']}",
             self.define(
                 "Kokkos_ROOT",
-                self.spec["kokkos"].prefix
-                if "~trilinos" in self.spec
-                else self.spec["trilinos"].prefix,
+                (
+                    self.spec["kokkos"].prefix
+                    if "~trilinos" in self.spec
+                    else self.spec["trilinos"].prefix
+                ),
             ),
         ]
         cmake = which(self.spec["cmake"].prefix.bin.cmake)

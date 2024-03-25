@@ -135,16 +135,18 @@ class Mumps(Package):
                 [
                     "IMETIS = -I%s" % self.spec["parmetis"].prefix.include,
                     (
-                        "LMETIS = -L%s -l%s -L%s -l%s"
-                        % (
-                            self.spec["parmetis"].prefix.lib,
-                            "parmetis",
-                            self.spec["metis"].prefix.lib,
-                            "metis",
+                        (
+                            "LMETIS = -L%s -l%s -L%s -l%s"
+                            % (
+                                self.spec["parmetis"].prefix.lib,
+                                "parmetis",
+                                self.spec["metis"].prefix.lib,
+                                "metis",
+                            )
                         )
-                    )
-                    if not shared
-                    else "LMETIS =",
+                        if not shared
+                        else "LMETIS ="
+                    ),
                 ]
             )
 
@@ -153,9 +155,11 @@ class Mumps(Package):
             makefile_conf.extend(
                 [
                     "IMETIS = -I%s" % self.spec["metis"].prefix.include,
-                    ("LMETIS = -L%s -l%s" % (self.spec["metis"].prefix.lib, "metis"))
-                    if not shared
-                    else "LMETIS =",
+                    (
+                        ("LMETIS = -L%s -l%s" % (self.spec["metis"].prefix.lib, "metis"))
+                        if not shared
+                        else "LMETIS ="
+                    ),
                 ]
             )
 

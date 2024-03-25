@@ -36,6 +36,9 @@ ALL: DepFlag = BUILD | LINK | RUN | TEST
 #: Default dependency type if none is specified
 DEFAULT: DepFlag = BUILD | LINK
 
+#: A flag with no dependency types set
+NONE: DepFlag = 0
+
 #: An iterator of all flag components
 ALL_FLAGS: Tuple[DepFlag, DepFlag, DepFlag, DepFlag] = (BUILD, LINK, RUN, TEST)
 

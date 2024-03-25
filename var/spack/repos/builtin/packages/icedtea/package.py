@@ -37,7 +37,7 @@ class Icedtea(AutotoolsPackage):
     depends_on("pkgconfig", type="build")
     depends_on("gmake", type="build")
     depends_on("cups")
-    depends_on("jdk", type="build")
+    depends_on("java", type="build")
     # X11 deps required for building even when headless
     depends_on("libx11", when="~X", type="build")
     depends_on("xproto", when="~X", type="build")

@@ -13,4 +13,8 @@ class Freexl(AutotoolsPackage):
     homepage = "https://www.gaia-gis.it"
     url = "http://www.gaia-gis.it/gaia-sins/freexl-1.0.5.tar.gz"
 
+    version("2.0.0", sha256="176705f1de58ab7c1eebbf5c6de46ab76fcd8b856508dbd28f5648f7c6e1a7f0")
+    version("1.0.6", sha256="3de8b57a3d130cb2881ea52d3aa9ce1feedb1b57b7daa4eb37f751404f90fc22")
     version("1.0.5", sha256="3dc9b150d218b0e280a3d6a41d93c1e45f4d7155829d75f1e5bf3e0b0de6750d")
+
+    depends_on("minizip", when="@2:")

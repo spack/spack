@@ -45,6 +45,7 @@ class DlaFuture(CMakePackage, CudaPackage, ROCmPackage):
     )
 
     depends_on("cmake@3.22:", type="build")
+    depends_on("pkgconfig", type="build")
     depends_on("doxygen", type="build", when="+doc")
     depends_on("mpi")
 
@@ -128,6 +129,8 @@ class DlaFuture(CMakePackage, CudaPackage, ROCmPackage):
         sha256="7f382c872d89f22da1ad499e85ffe9881cc7404c8465e42877a210a09382e2ea",
         when="@:0.3 %gcc@13:",
     )
+    # https://github.com/spack/spack/issues/41511
+    patch("hip_complex_operator_overloads.patch", when="+rocm")
 
     def cmake_args(self):
         spec = self.spec
@@ -169,9 +172,11 @@ class DlaFuture(CMakePackage, CudaPackage, ROCmPackage):
                 ]
             elif mkl_provider == "intel-mkl":
                 args += [
-                    self.define("DLAF_WITH_MKL", True)
-                    if spec.version <= Version("0.3")
-                    else self.define("DLAF_WITH_MKL_LEGACY", True),
+                    (
+                        self.define("DLAF_WITH_MKL", True)
+                        if spec.version <= Version("0.3")
+                        else self.define("DLAF_WITH_MKL_LEGACY", True)
+                    ),
                     self.define("MKL_LAPACK_TARGET", f"mkl::mkl_intel_32bit_{mkl_threads}_dyn"),
                 ]
 

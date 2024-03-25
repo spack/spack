@@ -49,3 +49,7 @@ class KimApi(CMakePackage):
             filter_file(
                 "-std=gnu", "", "examples/simulators/simulator-model-example/CMakeLists.txt"
             )
+
+    def cmake_args(self):
+        args = [self.define("CMAKE_INSTALL_SYSCONFDIR", self.prefix.etc)]
+        return args

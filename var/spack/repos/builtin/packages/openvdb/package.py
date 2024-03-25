@@ -10,7 +10,6 @@ from spack.package import *
 
 
 class Openvdb(CMakePackage):
-
     """OpenVDB - a sparse volume data format."""
 
     homepage = "https://github.com/AcademySoftwareFoundation/openvdb"

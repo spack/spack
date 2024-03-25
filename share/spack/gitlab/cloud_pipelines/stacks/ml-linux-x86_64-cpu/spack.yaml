@@ -2,8 +2,10 @@ spack:
   view: false
   packages:
     all:
-      require: target=x86_64_v3
-      variants: ~cuda~rocm
+      require:
+      - target=x86_64_v3
+      - ~cuda
+      - ~rocm
     mpi:
       require: openmpi
 
@@ -19,7 +21,7 @@ spack:
     - py-jaxlib
 
     # Keras
-    # - py-keras backend=tensorflow
+    - py-keras backend=tensorflow
     - py-keras backend=jax
     - py-keras backend=torch
     - py-keras-applications
@@ -82,7 +84,7 @@ spack:
     pipeline-gen:
     - build-job:
         image:
-          name: ghcr.io/spack/linux-ubuntu22.04-x86_64_v2:v2023-07-01
+          name: ghcr.io/spack/linux-ubuntu22.04-x86_64_v2:v2024-01-29
           entrypoint: ['']
 
   cdash:

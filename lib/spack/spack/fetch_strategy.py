@@ -697,7 +697,6 @@ class GoFetchStrategy(VCSFetchStrategy):
 
 @fetcher
 class GitFetchStrategy(VCSFetchStrategy):
-
     """
     Fetch strategy that gets source code from a git repository.
     Use like this in a package:
@@ -930,9 +929,12 @@ class GitFetchStrategy(VCSFetchStrategy):
         git_commands = []
         submodules = self.submodules
         if callable(submodules):
-            submodules = list(submodules(self.package))
-            git_commands.append(["submodule", "init", "--"] + submodules)
-            git_commands.append(["submodule", "update", "--recursive"])
+            submodules = submodules(self.package)
+            if submodules:
+                if isinstance(submodules, str):
+                    submodules = [submodules]
+                git_commands.append(["submodule", "init", "--"] + submodules)
+                git_commands.append(["submodule", "update", "--recursive"])
         elif submodules:
             git_commands.append(["submodule", "update", "--init", "--recursive"])
 
@@ -1089,7 +1091,6 @@ class CvsFetchStrategy(VCSFetchStrategy):
 
 @fetcher
 class SvnFetchStrategy(VCSFetchStrategy):
-
     """Fetch strategy that gets source code from a subversion repository.
        Use like this in a package:
 
@@ -1184,7 +1185,6 @@ class SvnFetchStrategy(VCSFetchStrategy):
 
 @fetcher
 class HgFetchStrategy(VCSFetchStrategy):
-
     """
     Fetch strategy that gets source code from a Mercurial repository.
     Use like this in a package:

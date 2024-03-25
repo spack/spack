@@ -33,19 +33,19 @@ class Autoconf(AutotoolsPackage, GNUMirrorPackage):
     # Apply long-time released and already in-use upstream patches to fix test cases:
     # tests/foreign.at (Libtool): Be tolerant of 'quote' replacing the older `quote'
     patch(
-        "http://mirrors.mit.edu/gentoo-portage/sys-devel/autoconf/files/autoconf-2.69-fix-libtool-test.patch",
+        "https://mirrors.mit.edu/gentoo-portage/dev-build/autoconf/files/autoconf-2.69-fix-libtool-test.patch",
         sha256="7793209b33013dc0f81208718c68440c5aae80e7a1c4b8d336e382525af791a7",
         when="@2.69",
     )
     # Fix bin/autoscan.in for current perl releases (reported already in January 2013)
     patch(
-        "http://mirrors.mit.edu/gentoo-portage/sys-devel/autoconf/files/autoconf-2.69-perl-5.26.patch",
+        "https://mirrors.mit.edu/gentoo-portage/dev-build/autoconf/files/autoconf-2.69-perl-5.26.patch",
         sha256="35c449281546376449766f92d49fc121ca50e330e60fefcfc9be2af3253082c2",
         when="@2.62:2.69 ^perl@5.17:",
     )
     # Fix bin/autoheader.in for current perl relases not having "." in @INC:
     patch(
-        "http://mirrors.mit.edu/gentoo-portage/sys-devel/autoconf/files/autoconf-2.69-perl-5.26-2.patch",
+        "https://mirrors.mit.edu/gentoo-portage/dev-build/autoconf/files/autoconf-2.69-perl-5.26-2.patch",
         sha256="a49dd5bac3b62daa0ff688ab4d508d71dbd2f4f8d7e2a02321926346161bf3ee",
         when="@2.62:2.69 ^perl@5.17:",
     )

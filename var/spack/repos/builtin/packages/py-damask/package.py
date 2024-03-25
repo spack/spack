@@ -15,8 +15,11 @@ class PyDamask(PythonPackage):
 
     maintainers("MarDiehl")
 
-    license("AGPL-3.0-only")
+    license("AGPL-3.0-or-later")
 
+    version(
+        "3.0.0-beta", sha256="1e25e409ac559fc437d1887c6ca930677a732db89a3a32499d545dd75e93925c"
+    )
     version(
         "3.0.0-alpha8", sha256="f62c38123213d1c1fe2eb8910b0ffbdc1cac56273c2520f3b64a553363190b9d"
     )

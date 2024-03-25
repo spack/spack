@@ -523,6 +523,23 @@ def specfile_for(default_mock_concretization):
             ],
             "^[virtuals=mpi] openmpi",
         ),
+        # Allow merging attributes, if deptypes match
+        (
+            "^[virtuals=mpi] openmpi+foo ^[virtuals=lapack] openmpi+bar",
+            [
+                Token(TokenType.START_EDGE_PROPERTIES, value="^["),
+                Token(TokenType.KEY_VALUE_PAIR, value="virtuals=mpi"),
+                Token(TokenType.END_EDGE_PROPERTIES, value="]"),
+                Token(TokenType.UNQUALIFIED_PACKAGE_NAME, value="openmpi"),
+                Token(TokenType.BOOL_VARIANT, value="+foo"),
+                Token(TokenType.START_EDGE_PROPERTIES, value="^["),
+                Token(TokenType.KEY_VALUE_PAIR, value="virtuals=lapack"),
+                Token(TokenType.END_EDGE_PROPERTIES, value="]"),
+                Token(TokenType.UNQUALIFIED_PACKAGE_NAME, value="openmpi"),
+                Token(TokenType.BOOL_VARIANT, value="+bar"),
+            ],
+            "^[virtuals=lapack,mpi] openmpi+bar+foo",
+        ),
         (
             "^[deptypes=link,build] zlib",
             [

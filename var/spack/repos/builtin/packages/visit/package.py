@@ -153,7 +153,8 @@ class Visit(CMakePackage):
 
     # VisIt uses Silo's 'ghost zone' data structures, which are only available
     # in v4.10+ releases: https://wci.llnl.gov/simulation/computer-codes/silo/releases/release-notes-4.10
-    depends_on("silo@4.10: +shared", when="+silo")
+    # Silo versions < 4.11 do not build successfully with Spack
+    depends_on("silo@4.11: +shared", when="+silo")
     depends_on("silo+hdf5", when="+silo+hdf5")
     depends_on("silo~hdf5", when="+silo~hdf5")
     depends_on("silo+mpi", when="+silo+mpi")
@@ -355,23 +356,23 @@ class Visit(CMakePackage):
             args.append(self.define("VISIT_VTKH_DIR", spec["vtk-h"].prefix))
 
         if "@3.3.3: +vtkm" in spec:
+            lib_dirs = [spec["libx11"].prefix.lib]
+            if self.spec.satisfies("^vtkm+rocm"):
+                lib_dirs.append(spec["hip"].prefix.lib)
             args.append(self.define("VISIT_VTKM_DIR", spec["vtk-m"].prefix))
             args.append(
                 self.define(
-                    "CMAKE_EXE_LINKER_FLAGS",
-                    "-L%s/lib -L%s/lib" % (spec["hip"].prefix, spec["libx11"].prefix),
+                    "CMAKE_EXE_LINKER_FLAGS", "".join("-L%s " % s for s in lib_dirs).strip()
                 )
             )
             args.append(
                 self.define(
-                    "CMAKE_MODULE_LINKER_FLAGS",
-                    "-L%s/lib -L%s/lib" % (spec["hip"].prefix, spec["libx11"].prefix),
+                    "CMAKE_MODULE_LINKER_FLAGS", "".join("-L%s " % s for s in lib_dirs).strip()
                 )
             )
             args.append(
                 self.define(
-                    "CMAKE_SHARED_LINKER_FLAGS",
-                    "-L%s/lib -L%s/lib" % (spec["hip"].prefix, spec["libx11"].prefix),
+                    "CMAKE_SHARED_LINKER_FLAGS", "".join("-L%s " % s for s in lib_dirs).strip()
                 )
             )
 

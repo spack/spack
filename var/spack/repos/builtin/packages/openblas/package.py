@@ -71,6 +71,11 @@ class Openblas(CMakePackage, MakefilePackage):
     variant("pic", default=True, description="Build position independent code")
     variant("shared", default=True, description="Build shared libraries")
     variant(
+        "dynamic_dispatch",
+        default=True,
+        description="Enable runtime cpu detection for best kernel selection",
+    )
+    variant(
         "consistent_fpcsr",
         default=False,
         description="Synchronize FP CSR between threads (x86/x86_64 only)",
@@ -239,6 +244,12 @@ class Openblas(CMakePackage, MakefilePackage):
         when="%clang",
         msg="OpenBLAS @:0.2.19 does not support OpenMP with clang!",
     )
+    # See https://github.com/OpenMathLib/OpenBLAS/issues/2826#issuecomment-688399162
+    conflicts(
+        "+dynamic_dispatch",
+        when="platform=windows",
+        msg="Visual Studio does not support OpenBLAS dynamic dispatch features",
+    )
 
     depends_on("perl", type="build")
 
@@ -333,6 +344,16 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
         # Get our build microarchitecture
         microarch = self.spec.target
 
+        # We need to detect whether the target supports SVE before the magic for
+        # loop below which would change the value of `microarch`.
+        has_sve = (
+            self.spec.satisfies("@0.3.19:")
+            and microarch.family == "aarch64"
+            and "sve" in microarch
+            # Exclude A64FX, which has its own special handling in OpenBLAS.
+            and microarch.name != "a64fx"
+        )
+
         # List of arguments returned by this function
         args = []
 
@@ -368,7 +389,14 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
                 arch_name = openblas_arch_map.get(arch_name, arch_name)
                 args.append("ARCH=" + arch_name)
 
-        if microarch.vendor == "generic" and microarch.name != "riscv64":
+        if has_sve:
+            # Check this before testing the value of `microarch`, which may have
+            # been altered by the magic for loop above.  If SVE is available
+            # (but target isn't A64FX which is treated specially below), use the
+            # `ARMV8SVE` OpenBLAS target.
+            args.append("TARGET=ARMV8SVE")
+
+        elif microarch.vendor == "generic" and microarch.name != "riscv64":
             # User requested a generic platform, or we couldn't find a good
             # match for the requested one. Allow OpenBLAS to determine
             # an optimized kernel at run time, including older CPUs, while
@@ -435,6 +463,9 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
 
         # Add target and architecture flags
         make_defs += self._microarch_target_args()
+
+        if self.spec.satisfies("+dynamic_dispatch"):
+            make_defs += ["DYNAMIC_ARCH=1"]
 
         # Fortran-free compilation
         if "~fortran" in self.spec:
@@ -545,6 +576,8 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
 class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
     def cmake_args(self):
         cmake_defs = [self.define("TARGET", "GENERIC")]
+        if self.spec.satisfies("+dynamic_dispatch"):
+            cmake_defs += [self.define("DYNAMIC_ARCH", "ON")]
         if self.spec.satisfies("platform=windows"):
             cmake_defs += [
                 self.define("DYNAMIC_ARCH", "OFF"),

@@ -55,6 +55,9 @@ class PyLlvmlite(PythonPackage):
     depends_on("llvm@7.0:7.1,8.0", when="@0.29:0.32")
     depends_on("binutils", type="build")
 
+    # TODO: investigate
+    conflicts("%apple-clang@15:")
+
     def setup_build_environment(self, env):
         if self.spec.satisfies("%fj"):
             env.set("CXX_FLTO_FLAGS", "{0}".format(self.compiler.cxx_pic_flag))

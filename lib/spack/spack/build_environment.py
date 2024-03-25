@@ -555,58 +555,55 @@ def set_package_py_globals(pkg, context: Context = Context.BUILD):
     """
     module = ModuleChangePropagator(pkg)
 
-    m = module
-
     if context == Context.BUILD:
-        jobs = determine_number_of_jobs(parallel=pkg.parallel)
-        m.make_jobs = jobs
+        module.std_cmake_args = spack.build_systems.cmake.CMakeBuilder.std_args(pkg)
+        module.std_meson_args = spack.build_systems.meson.MesonBuilder.std_args(pkg)
+        module.std_pip_args = spack.build_systems.python.PythonPipBuilder.std_args(pkg)
 
-        # TODO: make these build deps that can be installed if not found.
-        m.make = MakeExecutable("make", jobs)
-        m.gmake = MakeExecutable("gmake", jobs)
-        m.ninja = MakeExecutable("ninja", jobs, supports_jobserver=False)
-        # TODO: johnwparent: add package or builder support to define these build tools
-        # for now there is no entrypoint for builders to define these on their
-        # own
-        if sys.platform == "win32":
-            m.nmake = Executable("nmake")
-            m.msbuild = Executable("msbuild")
-            # analog to configure for win32
-            m.cscript = Executable("cscript")
+    jobs = determine_number_of_jobs(parallel=pkg.parallel)
+    module.make_jobs = jobs
 
-        # Find the configure script in the archive path
-        # Don't use which for this; we want to find it in the current dir.
-        m.configure = Executable("./configure")
+    # TODO: make these build deps that can be installed if not found.
+    module.make = MakeExecutable("make", jobs)
+    module.gmake = MakeExecutable("gmake", jobs)
+    module.ninja = MakeExecutable("ninja", jobs, supports_jobserver=False)
+    # TODO: johnwparent: add package or builder support to define these build tools
+    # for now there is no entrypoint for builders to define these on their
+    # own
+    if sys.platform == "win32":
+        module.nmake = Executable("nmake")
+        module.msbuild = Executable("msbuild")
+        # analog to configure for win32
+        module.cscript = Executable("cscript")
 
-        # Standard CMake arguments
-        m.std_cmake_args = spack.build_systems.cmake.CMakeBuilder.std_args(pkg)
-        m.std_meson_args = spack.build_systems.meson.MesonBuilder.std_args(pkg)
-        m.std_pip_args = spack.build_systems.python.PythonPipBuilder.std_args(pkg)
+    # Find the configure script in the archive path
+    # Don't use which for this; we want to find it in the current dir.
+    module.configure = Executable("./configure")
 
     # Put spack compiler paths in module scope. (Some packages use it
     # in setup_run_environment etc, so don't put it context == build)
     link_dir = spack.paths.build_env_path
-    m.spack_cc = os.path.join(link_dir, pkg.compiler.link_paths["cc"])
-    m.spack_cxx = os.path.join(link_dir, pkg.compiler.link_paths["cxx"])
-    m.spack_f77 = os.path.join(link_dir, pkg.compiler.link_paths["f77"])
-    m.spack_fc = os.path.join(link_dir, pkg.compiler.link_paths["fc"])
+    module.spack_cc = os.path.join(link_dir, pkg.compiler.link_paths["cc"])
+    module.spack_cxx = os.path.join(link_dir, pkg.compiler.link_paths["cxx"])
+    module.spack_f77 = os.path.join(link_dir, pkg.compiler.link_paths["f77"])
+    module.spack_fc = os.path.join(link_dir, pkg.compiler.link_paths["fc"])
 
     # Useful directories within the prefix are encapsulated in
     # a Prefix object.
-    m.prefix = pkg.prefix
+    module.prefix = pkg.prefix
 
     # Platform-specific library suffix.
-    m.dso_suffix = dso_suffix
+    module.dso_suffix = dso_suffix
 
     def static_to_shared_library(static_lib, shared_lib=None, **kwargs):
-        compiler_path = kwargs.get("compiler", m.spack_cc)
+        compiler_path = kwargs.get("compiler", module.spack_cc)
         compiler = Executable(compiler_path)
 
         return _static_to_shared_library(
             pkg.spec.architecture, compiler, static_lib, shared_lib, **kwargs
         )
 
-    m.static_to_shared_library = static_to_shared_library
+    module.static_to_shared_library = static_to_shared_library
 
     module.propagate_changes_to_mro()
 
@@ -975,8 +972,8 @@ class SetupContext:
         self.should_set_package_py_globals = (
             self.should_setup_dependent_build_env | self.should_setup_run_env | UseMode.ROOT
         )
-        # In a build context, the root and direct build deps need build-specific globals set.
-        self.needs_build_context = UseMode.ROOT | UseMode.BUILDTIME_DIRECT
+        # In a build context, the root needs build-specific globals set.
+        self.needs_build_context = UseMode.ROOT
 
     def set_all_package_py_globals(self):
         """Set the globals in modules of package.py files."""
