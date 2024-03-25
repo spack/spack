@@ -357,10 +357,8 @@ def strip_version_suffixes(path_or_url: str) -> str:
         r"i[36]86",
         r"ppc64(le)?",
         r"armv?(7l|6l|64)?",
-        # PyPI
-        r"[._-]py[23].*\.whl",
-        r"[._-]cp[23].*\.whl",
-        r"[._-]win.*\.exe",
+        # PyPI wheels
+        r"-(?:py|cp)[23].*",
     ]
 
     for regex in suffix_regexes:
