@@ -1760,7 +1760,7 @@ complete -c spack -n '__fish_spack_using_command find' -l deprecated -d 'show de
 complete -c spack -n '__fish_spack_using_command find' -l only-deprecated -f -a only_deprecated
 complete -c spack -n '__fish_spack_using_command find' -l only-deprecated -d 'show only deprecated packages'
 complete -c spack -n '__fish_spack_using_command find' -l install-tree -r -f -a install_tree
-complete -c spack -n '__fish_spack_using_command find' -l install-tree -r -d 'Install trees to query. \'all\' (default), \'local\', \'upstream\', or upstream name'
+complete -c spack -n '__fish_spack_using_command find' -l install-tree -r -d 'Install trees to query: \'all\' (default), \'local\', \'upstream\', upstream name or path'
 complete -c spack -n '__fish_spack_using_command find' -l start-date -r -f -a start_date
 complete -c spack -n '__fish_spack_using_command find' -l start-date -r -d 'earliest date of installation [YYYY-MM-DD]'
 complete -c spack -n '__fish_spack_using_command find' -l end-date -r -f -a end_date
