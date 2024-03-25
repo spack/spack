@@ -172,11 +172,7 @@ def query_arguments(args):
     if args.implicit:
         explicit = False
 
-    q_args = {
-        "installed": installed,
-        "known": known,
-        "explicit": explicit,
-    }
+    q_args = {"installed": installed, "known": known, "explicit": explicit}
 
     install_tree = args.install_tree
     upstreams = spack.config.get("upstreams", {})
