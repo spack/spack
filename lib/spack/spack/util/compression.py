@@ -241,7 +241,7 @@ def _py_unzip(archive_file: str) -> str:
     if archive_file_no_ext == archive_file:
         archive_file = archive_file_no_ext + "-input"
         shutil.move(archive_file_no_ext, archive_file)
-    zipfile.open(archive_file).extractall()
+    zipfile.ZipFile(archive_file).extractall()
     return outfile
 
 
