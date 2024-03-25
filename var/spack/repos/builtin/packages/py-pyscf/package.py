@@ -12,12 +12,13 @@ class PyPyscf(PythonPackage):
     by Python."""
 
     homepage = "https://pyscf.org"
-    pypi = "pyscf/pyscf-2.2.0.tar.gz"
+    pypi = "pyscf/pyscf-2.5.0.tar.gz"
 
     maintainers("naromero77")
 
     license("Apache-2.0")
 
+    version("2.5.0", sha256="9596603c914fb3fba853607e96366fa541012faffd59a4ea052f0122dcea5343")
     version("2.4.0", sha256="af0597c481851b5448e7055c3160aef28dc12a1e0b35dda8279555c0780c0d45")
     version("2.3.0", sha256="71781de62c25924fd4e93ffeb0451ec0d0b3646fe426c75023f4f519f0f35d85")
     version("2.2.1", sha256="4ff6851351caadc5dfa543b6b2c5fbd926ded87e3cc39faa0054e1e5090ed69a")
@@ -37,8 +38,10 @@ class PyPyscf(PythonPackage):
     depends_on("py-numpy@1.8.0:", type=("build", "run"))
     depends_on("py-numpy@1.13.0:", type=("build", "run"), when="@2:")
     conflicts("^py-numpy@1.16:1.17", when="@2:")
-    depends_on("py-scipy@0.12:", type=("build", "run"))
-    depends_on("py-scipy@0.19:", type=("build", "run"), when="@2.1:")
+    depends_on("py-scipy@0.12:1.10", type=("build", "run"), when="@:2.0")
+    depends_on("py-scipy@0.19:1.10", type=("build", "run"), when="@2.1:2.2")
+    # https://github.com/pyscf/pyscf/issues/1783
+    depends_on("py-scipy@0.19:", type=("build", "run"), when="@2.3:")
     conflicts("^py-scipy@1.5.0:1.5.1", when="@2:")
     depends_on("py-h5py@2.3.0:", type=("build", "run"))
     depends_on("py-h5py@2.7.0:", type=("build", "run"), when="@2:")
