@@ -711,7 +711,9 @@ def configuration_dir(tmpdir_factory, linux_os):
     t.write(content)
 
     compilers_yaml = test_config.join("compilers.yaml")
-    content = "".join(compilers_yaml.read()).format(linux_os)
+    content = "".join(compilers_yaml.read()).format(
+        linux_os=linux_os, target=str(archspec.cpu.host().family)
+    )
     t = tmpdir.join("site", "compilers.yaml")
     t.write(content)
     yield tmpdir
