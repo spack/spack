@@ -42,6 +42,14 @@ except ImportError:
 
 
 try:
+    import zipfile  # noqa
+
+    ZIPFILE_SUPPORTED = True
+except ImportError:
+    ZIPFILE_SUPPORTED = False
+
+
+try:
     import tarfile  # noqa
 
     TARFILE_SUPPORTED = True
@@ -209,6 +217,35 @@ def _do_nothing(archive_file: str) -> None:
 
 
 def _unzip(archive_file: str) -> str:
+    """Returns path to extracted zip archive.
+
+    Args:
+        archive_file: absolute path of the file to be decompressed
+    """
+    try:
+        return _system_unzip(archive_file)
+    except Exception:
+        return _py_unzip(archive_file)
+
+
+def _py_unzip(archive_file: str) -> str:
+    """Returns path to extracted zip archive. Extract Zipfile via Python
+    `zipfile` module.
+
+    Args:
+        archive_file: absolute path of the file to be decompressed
+    """
+    assert ZIPFILE_SUPPORTED
+    archive_file_no_ext = llnl.url.strip_extension(archive_file)
+    outfile = os.path.basename(archive_file_no_ext)
+    if archive_file_no_ext == archive_file:
+        archive_file = archive_file_no_ext + "-input"
+        shutil.move(archive_file_no_ext, archive_file)
+    zipfile.open(archive_file).extractall()
+    return outfile
+
+
+def _system_unzip(archive_file: str) -> str:
     """Returns path to extracted zip archive. Extract Zipfile, searching for unzip system
     executable. If unavailable, search for 'tar' executable on system and use instead.
 
