@@ -2813,7 +2813,15 @@ spack:
 
 
 @pytest.mark.regression("18338")
-def test_newline_in_commented_sequence_is_not_an_issue(tmpdir):
+def test_newline_in_commented_sequence_is_not_an_issue(tmpdir, working_env):
+    # Fake a "module" command
+    fake_bin = tmpdir.mkdir("fake_bin")
+    fake_module = os.path.join(fake_bin, "module")
+    with open(fake_module, "w") as f:
+        f.write("#!/bin/bash\ntrue")
+    fs.set_executable(fake_module)
+    os.environ["PATH"] = str(fake_bin) + ":" + os.environ["PATH"]
+
     spack_yaml = """
 spack:
   specs:
