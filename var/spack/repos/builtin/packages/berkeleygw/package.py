@@ -17,6 +17,12 @@ class Berkeleygw(MakefilePackage):
     maintainers("migueldiascosta")
 
     version(
+        "4.0",
+        sha256="1a85b03b83b339056f65124bfa96832ca61152236d9bb1cb372e3040fc686a49",
+        url="https://app.box.com/shared/static/22edl07muvhfnd900tnctsjjftbtcqc4.gz",
+        expand=False,
+    )
+    version(
         "3.1.0",
         sha256="7e890a5faa5a6bb601aa665c73903b3af30df7bdd13ee09362b69793bbefa6d2",
         url="https://app.box.com/shared/static/2bik75lrs85zt281ydbup2xa7i5594gy.gz",
@@ -148,17 +154,32 @@ class Berkeleygw(MakefilePackage):
             si_epm_tests.append("Si_hdf5")
         for test in si_epm_tests:
             filter_file(
+                "Precision : 5e-12",
+                "Precision : 6e-12",
+                join_path("testsuite", "Si-EPM", test + ".test"),
+            )
+            filter_file(
                 "Precision : 6e-15",
                 "Precision : 7e-15",
                 join_path("testsuite", "Si-EPM", test + ".test"),
             )
-        for test in ["Si_subspace", "Si_subspace_cplx", "Si_subspace_cplx_spin"]:
+
+        si_epm_subspace_tests = ["Si_subspace", "Si_subspace_cplx_spin"]
+        if self.version < Version("4.0"):
+            si_epm_subspace_tests.append("Si_subspace_cplx")
+        for test in si_epm_subspace_tests:
             filter_file(
                 "Precision : 6e-15",
                 "Precision : 7e-15",
                 join_path("testsuite", "Si-EPM_subspace", test + ".test"),
             )
         filter_file("Precision : 8e-15", "Precision : 9e-15", "testsuite/GaAs-EPM/GaAs.test")
+
+        if self.version < Version("3.1.0"):
+            # np.int alias was removed from numpy
+            filter_file(
+                r"astype\(np.int\)", "astype(int)", "testsuite/Si2-SAPO/analyze_dotproduct.py"
+            )
 
     def build(self, spec, prefix):
         buildopts = []
