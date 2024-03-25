@@ -446,7 +446,7 @@ class Boost(Package):
 
     def flag_handler(self, name, flags):
         if name == "cxxflags":
-            if self.spec.satisfies("@1.79.0 %oneapi"):
+            if self.spec.satisfies("@:1.79.0") and self.spec.compiler.name in ["oneapi", "aocc", "clang"]:
                 flags.append("-Wno-error=enum-constexpr-conversion")
         return (flags, None, None)
 
