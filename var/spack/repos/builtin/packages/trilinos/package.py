@@ -318,6 +318,8 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     conflicts("+strumpack", when="@:13.0")
     # Can only use one type of SuperLU
     conflicts("+superlu-dist", when="+superlu")
+    conflicts("+amesos", when="+superlu")
+    conflicts("+ifpack", when="+superlu")
     # For Trilinos v11 we need to force SuperLUDist=OFF, since only the
     # deprecated SuperLUDist v3.3 together with an Amesos patch is working.
     conflicts("+superlu-dist", when="@11.4.1:11.14.3")
@@ -431,7 +433,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("strumpack+shared", when="+strumpack")
     depends_on("suite-sparse", when="+suite-sparse")
     depends_on("superlu-dist", when="+superlu-dist")
-    depends_on("superlu@4.3 +pic", when="+superlu")
+    depends_on("superlu@5.2.2 +pic", when="+superlu")
     depends_on("swig", when="@:14 +python")
     depends_on("zlib-api", when="+zoltan")
 
