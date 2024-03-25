@@ -1,0 +1,100 @@
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
+#
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import os
+import pathlib
+
+import pytest
+
+import spack.build_systems.generic
+import spack.config
+import spack.error
+import spack.package_base
+import spack.repo
+import spack.util.spack_yaml as syaml
+import spack.version
+from spack.solver.asp import InternalConcretizerError, UnsatisfiableSpecError
+from spack.spec import Spec
+from spack.test.conftest import create_test_repo
+from spack.util.url import path_to_file_url
+
+pytestmark = [
+    pytest.mark.only_clingo("Original concretizer does not support configuration requirements"),
+]
+
+
+_pkgx = (
+    "x",
+    """\
+class X(Package):
+    version("1.1")
+    version("1.0")
+
+    depends_on('y cflags="--std=c++11"')
+""",
+)
+
+
+_pkgy = (
+    "y",
+    """\
+class Y(Package):
+    version("2.1")
+    version("2.0")
+""",
+)
+
+
+@pytest.fixture
+def _create_test_repo(tmpdir, mutable_config):
+    yield create_test_repo(tmpdir, [_pkgx, _pkgy])
+
+
+@pytest.fixture
+def test_repo(_create_test_repo, monkeypatch, mock_stage):
+    with spack.repo.use_repositories(_create_test_repo) as mock_repo_path:
+        yield mock_repo_path
+
+
+def update_concretize_scope(conf_str, section):
+    conf = syaml.load_config(conf_str)
+    spack.config.set(section, conf[section], scope="concretize")
+
+
+def test_mix_spec_and_requirements(concretize_scope, test_repo):
+    conf_str = """\
+packages:
+  y:
+    require: cflags="-O2"
+"""
+    update_concretize_scope(conf_str, "packages")
+
+    s1 = Spec('y cflags="-Wall"').concretized()
+    assert s1.satisfies('cflags="-Wall -O2"')
+
+
+def test_mix_spec_and_dependent(concretize_scope, test_repo):
+    s1 = Spec('x ^y cflags="-Wall"').concretized()
+    assert s1["y"].satisfies('cflags="-Wall --std=c++11"')
+
+
+def test_mix_spec_and_compiler_cfg(concretize_scope, test_repo):
+    conf_str = """\
+compilers::
+- compiler:
+    spec: gcc@12-fake
+    paths:
+      cc: /usr/bin/fake-gcc
+      cxx: /usr/bin/fake-g++
+      f77: null
+      fc: null
+    flags:
+      cflags: "-Wall"
+    operating_system: debian6
+    modules: []
+"""
+    update_concretize_scope(conf_str, "compilers")
+
+    s1 = Spec('y %gcc@12-fake cflags="-O2"').concretized()
+    assert s1.satisfies('cflags="-Wall -O2"')
