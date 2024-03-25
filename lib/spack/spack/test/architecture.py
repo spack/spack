@@ -10,6 +10,7 @@ import pytest
 
 import llnl.util.filesystem as fs
 
+import spack.compilers
 import spack.concretize
 import spack.operating_systems
 import spack.platforms
@@ -123,19 +124,27 @@ def test_arch_spec_container_semantic(item, architecture_str):
 @pytest.mark.parametrize(
     "compiler_spec,target_name,expected_flags",
     [
-        # Check compilers with version numbers from a single toolchain
+        # Homogeneous compilers
         ("gcc@4.7.2", "ivybridge", "-march=core-avx-i -mtune=core-avx-i"),
-        # Check mixed toolchains
-        ("clang@8.0.0", "broadwell", ""),
         ("clang@3.5", "x86_64", "-march=x86-64 -mtune=generic"),
-        # Check Apple's Clang compilers
         ("apple-clang@9.1.0", "x86_64", "-march=x86-64"),
+        # Mixed toolchain
+        ("clang@8.0.0", "broadwell", ""),
     ],
 )
 @pytest.mark.filterwarnings("ignore:microarchitecture specific")
-def test_optimization_flags(compiler_spec, target_name, expected_flags, config):
+def test_optimization_flags(compiler_spec, target_name, expected_flags, compiler_factory):
     target = spack.target.Target(target_name)
-    compiler = spack.compilers.compilers_for_spec(compiler_spec).pop()
+    compiler_dict = compiler_factory(spec=compiler_spec, operating_system="")["compiler"]
+    if compiler_spec == "clang@8.0.0":
+        compiler_dict["paths"] = {
+            "cc": "/path/to/clang-8",
+            "cxx": "/path/to/clang++-8",
+            "f77": "/path/to/gfortran-9",
+            "fc": "/path/to/gfortran-9",
+        }
+    compiler = spack.compilers.compiler_from_dict(compiler_dict)
+
     opt_flags = target.optimization_flags(compiler)
     assert opt_flags == expected_flags
 

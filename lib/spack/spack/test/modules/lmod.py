@@ -103,14 +103,19 @@ class TestLmod:
         else:
             assert repetitions == 1
 
-    def test_compilers_provided_different_name(self, factory, module_configuration):
-        module_configuration("complex_hierarchy")
-        module, spec = factory("intel-oneapi-compilers%clang@3.3")
+    def test_compilers_provided_different_name(
+        self, factory, module_configuration, compiler_factory
+    ):
+        with spack.config.override(
+            "compilers", [compiler_factory(spec="clang@3.3", operating_system="debian6")]
+        ):
+            module_configuration("complex_hierarchy")
+            module, spec = factory("intel-oneapi-compilers%clang@3.3")
 
-        provides = module.conf.provides
+            provides = module.conf.provides
 
-        assert "compiler" in provides
-        assert provides["compiler"] == spack.spec.CompilerSpec("oneapi@=3.0")
+            assert "compiler" in provides
+            assert provides["compiler"] == spack.spec.CompilerSpec("oneapi@=3.0")
 
     def test_simple_case(self, modulefile_content, module_configuration):
         """Tests the generation of a simple Lua module file."""

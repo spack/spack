@@ -238,57 +238,17 @@ class Changing(Package):
 
 
 @pytest.fixture()
-def clang12_with_flags():
-    return {
-        "compiler": {
-            "spec": "clang@12.2.0",
-            "operating_system": "redhat6",
-            "paths": {"cc": "/path/to/clang", "cxx": "/path/to/clang++", "f77": None, "fc": None},
-            "flags": {"cflags": "-O3", "cxxflags": "-O3"},
-            "modules": [],
-            "target": str(archspec.cpu.host().family),
-        }
-    }
+def clang12_with_flags(compiler_factory):
+    c = compiler_factory(spec="clang@12.2.0", operating_system="redhat6")
+    c["compiler"]["flags"] = {"cflags": "-O3", "cxxflags": "-O3"}
+    return c
 
 
 @pytest.fixture()
-def gcc11_with_flags():
-    return {
-        "compiler": {
-            "spec": "gcc@11.1.0",
-            "operating_system": "redhat6",
-            "paths": {"cc": "/path/to/gcc", "cxx": "/path/to/g++", "f77": None, "fc": None},
-            "flags": {"cflags": "-O0 -g", "cxxflags": "-O0 -g", "fflags": "-O0 -g"},
-            "modules": [],
-            "target": str(archspec.cpu.host().family),
-        }
-    }
-
-
-@pytest.fixture()
-def gcc10_1_0():
-    return {
-        "compiler": {
-            "spec": "gcc@10.1.0",
-            "operating_system": "redhat6",
-            "paths": {"cc": "/path/to/gcc", "cxx": "/path/to/g++", "f77": None, "fc": None},
-            "modules": [],
-            "target": str(archspec.cpu.host().family),
-        }
-    }
-
-
-@pytest.fixture()
-def gcc10_2_1():
-    return {
-        "compiler": {
-            "spec": "gcc@10.2.1",
-            "operating_system": "redhat6",
-            "paths": {"cc": "/path/to/gcc", "cxx": "/path/to/g++", "f77": None, "fc": None},
-            "modules": [],
-            "target": str(archspec.cpu.host().family),
-        }
-    }
+def gcc11_with_flags(compiler_factory):
+    c = compiler_factory(spec="gcc@11.1.0", operating_system="redhat6")
+    c["compiler"]["flags"] = {"cflags": "-O0 -g", "cxxflags": "-O0 -g", "fflags": "-O0 -g"}
+    return c
 
 
 # This must use the mutable_config fixture because the test
@@ -476,15 +436,19 @@ class TestConcretize:
             assert "%clang" in dep
 
     @pytest.mark.only_clingo("Fixing the parser broke this test for the original concretizer")
-    def test_architecture_deep_inheritance(self, mock_targets):
+    def test_architecture_deep_inheritance(self, mock_targets, compiler_factory):
         """Make sure that indirect dependencies receive architecture
         information from the root even when partial architecture information
         is provided by an intermediate dependency.
         """
-        spec_str = "mpileaks %gcc@4.5.0 os=CNL target=nocona" " ^dyninst os=CNL ^callpath os=CNL"
-        spec = Spec(spec_str).concretized()
-        for s in spec.traverse(root=False):
-            assert s.architecture.target == spec.architecture.target
+        cnl_compiler = compiler_factory(spec="gcc@4.5.0", operating_system="CNL")
+        # CNL compiler has no target attribute, and this is essential to make detection pass
+        del cnl_compiler["compiler"]["target"]
+        with spack.config.override("compilers", [cnl_compiler]):
+            spec_str = "mpileaks %gcc@4.5.0 os=CNL target=nocona ^dyninst os=CNL ^callpath os=CNL"
+            spec = Spec(spec_str).concretized()
+            for s in spec.traverse(root=False):
+                assert s.architecture.target == spec.architecture.target
 
     def test_compiler_flags_from_user_are_grouped(self):
         spec = Spec('a%gcc cflags="-O -foo-flag foo-val" platform=test')
@@ -1222,12 +1186,14 @@ class TestConcretize:
 
     @pytest.mark.regression("20019")
     @pytest.mark.only_clingo("Use case not supported by the original concretizer")
-    def test_compiler_match_is_preferred_to_newer_version(self, gcc10_1_0):
+    def test_compiler_match_is_preferred_to_newer_version(self, compiler_factory):
         # This spec depends on openblas. Openblas has a conflict
         # that doesn't allow newer versions with gcc@4.4.0. Check
         # that an old version of openblas is selected, rather than
         # a different compiler for just that node.
-        with spack.config.override("compilers", [gcc10_1_0]):
+        with spack.config.override(
+            "compilers", [compiler_factory(spec="gcc@10.1.0", operating_system="redhat6")]
+        ):
             spec_str = "simple-inheritance+openblas %gcc@10.1.0 os=redhat6"
             s = Spec(spec_str).concretized()
             assert "openblas@0.2.15" in s
@@ -1457,10 +1423,12 @@ class TestConcretize:
         ],
     )
     def test_os_selection_when_multiple_choices_are_possible(
-        self, spec_str, expected_os, gcc10_2_1
+        self, spec_str, expected_os, compiler_factory
     ):
         # GCC 10.2.1 is defined both for debian and for redhat
-        with spack.config.override("compilers", [gcc10_2_1]):
+        with spack.config.override(
+            "compilers", [compiler_factory(spec="gcc@10.2.1", operating_system="redhat6")]
+        ):
             s = Spec(spec_str).concretized()
             for node in s.traverse():
                 assert node.satisfies(expected_os)

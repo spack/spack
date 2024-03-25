@@ -22,6 +22,7 @@ import xml.etree.ElementTree
 import py
 import pytest
 
+import archspec.cpu
 import archspec.cpu.microarchitecture
 import archspec.cpu.schema
 
@@ -1986,3 +1987,21 @@ repo:
             f.write(pkg_str)
 
     return spack.repo.Repo(repo_path)
+
+
+@pytest.fixture()
+def compiler_factory():
+    """Factory for a compiler dict, taking a spec and an OS as arguments."""
+
+    def _factory(*, spec, operating_system):
+        return {
+            "compiler": {
+                "spec": spec,
+                "operating_system": operating_system,
+                "paths": {"cc": "/path/to/cc", "cxx": "/path/to/cxx", "f77": None, "fc": None},
+                "modules": [],
+                "target": str(archspec.cpu.host().family),
+            }
+        }
+
+    return _factory
