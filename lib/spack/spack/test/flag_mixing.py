@@ -2,9 +2,6 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import os
-import pathlib
-
 import pytest
 
 import spack.build_systems.generic
@@ -14,13 +11,11 @@ import spack.package_base
 import spack.repo
 import spack.util.spack_yaml as syaml
 import spack.version
-from spack.solver.asp import InternalConcretizerError, UnsatisfiableSpecError
 from spack.spec import Spec
 from spack.test.conftest import create_test_repo
-from spack.util.url import path_to_file_url
 
 pytestmark = [
-    pytest.mark.only_clingo("Original concretizer does not support configuration requirements"),
+    pytest.mark.only_clingo("Original concretizer does not support configuration requirements")
 ]
 
 
