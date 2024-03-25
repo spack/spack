@@ -13,7 +13,7 @@ class PyFzTdRecipe(PythonPackage):
     homepage = "https://bbpteam.epfl.ch/documentation/projects/fz-td-recipe"
     git = "ssh://git@bbpgitlab.epfl.ch/hpc/circuit-building/fz-td-recipe.git"
 
-    version("develop", branch="master")
+    version("develop", branch="main")
     version("0.1.2", tag="fz-td-recipe-v0.1.2")
     version("0.1.1", tag="fz-td-recipe-v0.1.1")
     version("0.1.0", tag="fz-td-recipe-v0.1.0")

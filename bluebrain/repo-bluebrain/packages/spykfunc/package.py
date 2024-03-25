@@ -31,7 +31,8 @@ class Spykfunc(PythonPackage):
 
     depends_on("py-docopt", type=("build", "run"))
     depends_on("py-future", type=("build", "run"))
-    depends_on("py-fz-td-recipe", type=("build", "run"))
+    depends_on("py-fz-td-recipe@0.1", type=("build", "run"), when="@0.18")
+    depends_on("py-fz-td-recipe@0.2:", type=("build", "run"), when="@0.19:")
     # h5py needed for morphologies before, and to supplement libSONATA due
     # to missing API functionality
     depends_on("py-h5py", type=("build", "run"))
