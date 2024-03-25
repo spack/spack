@@ -15,7 +15,8 @@ class PyNibabel(PythonPackage):
 
     maintainers("ChristopherChristofi")
 
-    license("MIT")
+    # As detailed: https://nipy.org/nibabel/legal.html
+    license("MIT AND BSD-3-Clause AND PSF-2.0 AND PDDL-1.0")
 
     version("5.2.1", sha256="b6c80b2e728e4bc2b65f1142d9b8d2287a9102a8bf8477e115ef0d8334559975")
     version("5.1.0", sha256="ce73ca5e957209e7219a223cb71f77235c9df2acf4d3f27f861ba38e9481ac53")
