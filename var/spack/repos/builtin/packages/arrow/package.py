@@ -50,8 +50,7 @@ class Arrow(CMakePackage, CudaPackage):
     depends_on("ninja", type="build")
     depends_on("openssl", when="+gandiva @6.0.0:")
     depends_on("openssl", when="@4.0.0:")
-    # arrow+orc needs getSoftwareVersion from orc, which was added in orc@1.6.11
-    depends_on("orc@1.6.13:", when="+orc")
+    depends_on("orc@1.6.11:", when="+orc")
     depends_on("protobuf", when="+gandiva")
     depends_on("py-numpy", when="+python")
     depends_on("python", when="+python")
