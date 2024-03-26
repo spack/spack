@@ -73,16 +73,6 @@ compilers:
     modules: []
     target: {target}
 - compiler:
-    spec: gcc@4.4.0-special
-    operating_system: redhat6
-    paths:
-      cc: /path/to/gcc
-      cxx: /path/to/g++
-      f77: /path/to/gfortran
-      fc: /path/to/gfortran
-    modules: []
-    target: {target}
-- compiler:
     spec: clang@12.0.0
     operating_system: {linux_os.name}{linux_os.version}
     paths:
@@ -100,15 +90,5 @@ compilers:
       cxx: /path/to/g++
       f77: None
       fc: None
-    modules: []
-    target: {target}
-- compiler:
-    spec: gcc@10foo
-    operating_system: redhat6
-    paths:
-      cc: /path/to/gcc
-      cxx: /path/to/g++
-      f77: /path/to/gfortran
-      fc: /path/to/gfortran
     modules: []
     target: {target}

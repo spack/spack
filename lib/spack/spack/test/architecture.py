@@ -15,7 +15,7 @@ import spack.concretize
 import spack.operating_systems
 import spack.platforms
 import spack.target
-from spack.spec import ArchSpec, CompilerSpec, Spec
+from spack.spec import ArchSpec, Spec
 
 
 @pytest.fixture(scope="module")
@@ -150,34 +150,34 @@ def test_optimization_flags(compiler_spec, target_name, expected_flags, compiler
 
 
 @pytest.mark.parametrize(
-    "compiler,real_version,target_str,expected_flags",
+    "compiler_str,real_version,target_str,expected_flags",
     [
-        (CompilerSpec("gcc@=9.2.0"), None, "haswell", "-march=haswell -mtune=haswell"),
+        ("gcc@=9.2.0", None, "haswell", "-march=haswell -mtune=haswell"),
         # Check that custom string versions are accepted
-        (
-            CompilerSpec("gcc@=10foo"),
-            "9.2.0",
-            "icelake",
-            "-march=icelake-client -mtune=icelake-client",
-        ),
+        ("gcc@=10foo", "9.2.0", "icelake", "-march=icelake-client -mtune=icelake-client"),
         # Check that we run version detection (4.4.0 doesn't support icelake)
-        (
-            CompilerSpec("gcc@=4.4.0-special"),
-            "9.2.0",
-            "icelake",
-            "-march=icelake-client -mtune=icelake-client",
-        ),
+        ("gcc@=4.4.0-special", "9.2.0", "icelake", "-march=icelake-client -mtune=icelake-client"),
         # Check that the special case for Apple's clang is treated correctly
         # i.e. it won't try to detect the version again
-        (CompilerSpec("apple-clang@=9.1.0"), None, "x86_64", "-march=x86-64"),
+        ("apple-clang@=9.1.0", None, "x86_64", "-march=x86-64"),
     ],
 )
 def test_optimization_flags_with_custom_versions(
-    compiler, real_version, target_str, expected_flags, monkeypatch, config
+    compiler_str,
+    real_version,
+    target_str,
+    expected_flags,
+    monkeypatch,
+    mutable_config,
+    compiler_factory,
 ):
     target = spack.target.Target(target_str)
+    compiler_dict = compiler_factory(spec=compiler_str, operating_system="redhat6")
+    mutable_config.set("compilers", [compiler_dict])
     if real_version:
         monkeypatch.setattr(spack.compiler.Compiler, "get_real_version", lambda x: real_version)
+    compiler = spack.compilers.compiler_from_dict(compiler_dict["compiler"])
+
     opt_flags = target.optimization_flags(compiler)
     assert opt_flags == expected_flags
 

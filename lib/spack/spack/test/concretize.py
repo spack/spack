@@ -1222,7 +1222,10 @@ class TestConcretize:
 
     @pytest.mark.regression("20055")
     @pytest.mark.only_clingo("Use case not supported by the original concretizer")
-    def test_custom_compiler_version(self):
+    def test_custom_compiler_version(self, mutable_config, compiler_factory):
+        mutable_config.set(
+            "compilers", [compiler_factory(spec="gcc@10foo", operating_system="redhat6")]
+        )
         s = Spec("a %gcc@10foo os=redhat6").concretized()
         assert "%gcc@10foo" in s
 
