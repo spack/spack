@@ -55,7 +55,7 @@ class NeurodamusModel(SimModel):
     # However don't depend on it at runtime just yet, we still want to use
     # use neurodamus-py from GCC stack for compatibility with other Python
     # libs (bglibpy)
-    depends_on("py-neurodamus@develop", type=("build", "run"), when="@develop")
+    depends_on("py-neurodamus@3.1", type=("build", "run"), when="@develop")
 
     # Note: We dont request link to MPI so that mpicc can do what is best
     # and dont rpath it so we stay dynamic.
