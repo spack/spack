@@ -3,10 +3,12 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import sys
+
+from spack.operating_systems.mac_os import macos_version
 from spack.package import *
 
-# TODO: Add support for a C++11 enabled installation that filters out the
-# TODO: "C++11-Disabled" flag (but only if the spec compiler supports C++11).
+is_windows = sys.platform == "win32"
 
 
 class Exodusii(CMakePackage):
@@ -15,15 +17,52 @@ class Exodusii(CMakePackage):
     (problem definition), postprocessing (results visualization), and
     data transfer between codes.  An Exodus II data file is a random
     access, machine independent, binary file that is written and read
-    via C, C++, or Fortran API routines.
+    via C, C++, or Fortran API routines.  This package *only* installs
+    the C and optionally Fortran library for exodus.  If you want the full
+    suite of exodus-releated tools including the IOSS library, install
+    the seacas package instead of this package.
     """
 
-    homepage = "https://github.com/gsjaardema/seacas"
-    git = "https://github.com/gsjaardema/seacas.git"
-    url = "https://github.com/gsjaardema/seacas/archive/refs/tags/v2021-04-05.zip"
+    homepage = "https://sandialabs.github.io/seacas/"
+    git = "https://github.com/sandialabs/seacas.git"
+    url = "https://github.com/sandialabs/seacas/archive/v2019-08-20.tar.gz"
+    maintainers("gsjaardema")
 
-    license("X11")
+    license("BSD-3-Clause")
 
+    version("master", branch="master")
+    version(
+        "2024-03-11", sha256="b849d958b34e77300aaf331f29c3e6fe417fd82600850a82e674a9b7ba4045ff"
+    )
+    version(
+        "2023-11-27", sha256="fea1c0a6959d46af7478c9c16aac64e76c6dc358da38e2fe8793c15c1cffa8fc"
+    )
+    version(
+        "2023-10-24",
+        sha256="f93bf0327329c302ed3feb6adf2e3968f01ec325084a457b2c2dbbf6c4f751a2",
+        deprecated=True,
+    )
+    version(
+        "2023-05-30", sha256="3dd982841854466820a3902163ad1cf1b3fbab65ed7542456d328f2d1a5373c1"
+    )
+    version(
+        "2022-10-14", sha256="cde91e7561d2352045d669a25bdf46a604d85ed1ea7f3f5028004455e4ce9d56"
+    )
+    version(
+        "2022-05-16", sha256="22ff67045d730a2c7d5394c9034e44a2033cc82a461574f93d899e9aa713d4ae"
+    )
+    version(
+        "2022-03-04", sha256="a934a473e1fdfbc8dbb55058358551a02e03a60e5cdbf2b28b8ecd3d9500bfa5"
+    )
+    version(
+        "2022-02-16", sha256="a6accb9924f0f357f63a01485c3eaaf5ceb6a22dfda73fc9bfb17d7e2f565098"
+    )
+    version(
+        "2022-01-27", sha256="beff12583814dcaf75cf8f1a78bb183c1dcc8937bc18d5206672e3a692db05e0"
+    )
+    version(
+        "2021-10-11", sha256="f8a6dac813c0937fed4a5377123aa61d47eb459ba87ddf368d02ebe10c2c3a0d"
+    )
     version(
         "2021-04-05", sha256="f40d318674753287b8b28d2b4e5cca872cd772d4c7383af4a8f3eeb48fcc7ec0"
     )
@@ -55,61 +94,88 @@ class Exodusii(CMakePackage):
         "2019-10-14", sha256="f143d90e8a7516d25979d1416e580dea638332db723f26ae94a712dfe4052e8f"
     )
     version("2016-08-09", commit="2ffeb1bd39454ad5aa230e12969ce976f3d1c92b")
-    version("master", branch="master")
 
+    patch("Fix-ioss-tpl.patch", when="@2021-10-11:")
+
+    # Build options
+    variant("fortran", default=False, description="Compile with Fortran support")
+    variant("shared", default=True, description="Enables the build of shared libraries")
     variant("mpi", default=True, description="Enables MPI parallelism.")
-    variant("fortran", default=False, description="Build Fortran wrapper libraries.")
+    variant(
+        "thread_safe", default=False, description="Enable thread-safe exodus library"
+    )
 
-    depends_on("cmake@2.8.11:", type="build")
+    depends_on("cmake@3.22:", when="@2023-10-24:", type="build")
+    depends_on("cmake@3.17:", when="@:2023-05-30", type="build")
     depends_on("mpi", when="+mpi")
 
-    # https://github.com/gsjaardema/seacas/blob/master/NetCDF-Mapping.md
-    depends_on("netcdf-c@4.6.1:+mpi", when="+mpi")
-    depends_on("netcdf-c@4.6.1:~mpi", when="~mpi")
+    # Always depends on netcdf-c
+    depends_on("netcdf-c@4.8.0:+mpi+parallel-netcdf", when="+mpi")
+    depends_on("netcdf-c@4.8.0:~mpi", when="~mpi")
+    depends_on("hdf5+hl~mpi", when="~mpi")
+    depends_on("hdf5+hl+mpi", when="+mpi")
 
-    depends_on("python@2.7:")
+    depends_on("python@3.0:")
+    conflicts("+shared", when="platform=windows")
+
+    def setup_run_environment(self, env):
+        env.prepend_path("PYTHONPATH", self.prefix.lib)
 
     def cmake_args(self):
         spec = self.spec
+        from_variant = self.define_from_variant
+        define = self.define
 
-        cc_path = spec["mpi"].mpicc if "+mpi" in spec else self.compiler.cc
-        cxx_path = spec["mpi"].mpicxx if "+mpi" in spec else self.compiler.cxx
+        if self.spec.satisfies("@2022-10-14:"):
+            project_name_base = "Seacas"
+        else:
+            project_name_base = "SEACASProj"
 
-        options = [
-            # General Flags #
-            "-DSEACASProj_ENABLE_SEACASExodus=ON",
-            "-DSEACASProj_ENABLE_TESTS=ON",
-            "-DBUILD_SHARED_LIBS:BOOL=ON",
-            "-DTPL_ENABLE_Netcdf:BOOL=ON",
-            "-DHDF5_NO_SYSTEM_PATHS=ON",
-            "-DSEACASProj_SKIP_FORTRANCINTERFACE_VERIFY_TEST:BOOL=ON",
-            "-DSEACASProj_ENABLE_CXX11:BOOL=OFF",
-            "-DSEACASProj_ENABLE_Zoltan:BOOL=OFF",
-            "-DNetCDF_DIR:PATH={0}".format(spec["netcdf-c"].prefix),
-            # MPI Flags #
-            "-DTPL_ENABLE_MPI={0}".format("ON" if "+mpi" in spec else "OFF"),
-            "-DCMAKE_C_COMPILER={0}".format(cc_path),
-            "-DCMAKE_CXX_COMPILER={0}".format(cxx_path),
-        ]
-        if "+fortran" in spec:
-            fc_path = spec["mpi"].mpifc if "+mpi" in spec else self.compiler.f90
+        options = []
+
+        # #################### Base Settings #######################
+        # Only want to enable the Exodus library.  If want anything else, use the seacas package.
+        options.extend(
+            [
+                define(project_name_base + "_ENABLE_ALL_PACKAGES", False),
+                define(project_name_base + "_ENABLE_ALL_OPTIONAL_PACKAGES", False),
+                define(project_name_base + "_ENABLE_SECONDARY_TESTED_CODE", False),
+                define(project_name_base + "_ENABLE_SEACASExodus", True),
+                from_variant(project_name_base + "_ENABLE_SEACASExodus_for", "fortran"),
+                from_variant(project_name_base + "_ENABLE_SEACASExoIIv2for32", "fortran"),
+
+                define(project_name_base + "_HIDE_DEPRECATED_CODE", False),
+                from_variant("CMAKE_INSTALL_RPATH_USE_LINK_PATH", "shared"),
+                from_variant("BUILD_SHARED_LIBS", "shared"),
+                from_variant("SEACASExodus_ENABLE_THREADSAFE", "thread_safe"),
+                from_variant("TPL_ENABLE_Pthread", "thread_safe"),
+                from_variant(project_name_base + "_ENABLE_Fortran", "fortran"),
+            ]
+        )
+        if "~shared" in self.spec:
+            options.append(self.define(project_name_base + "_EXTRA_LINK_FLAGS", "z;dl"))
+        options.append(from_variant("TPL_ENABLE_MPI", "mpi"))
+        if "+mpi" in spec and not is_windows:
             options.extend(
                 [
-                    "-DSEACASProj_ENABLE_Fortran:BOOL=ON",
-                    "-DCMAKE_Fortran_COMPILER={0}".format(fc_path),
-                    "-DSEACASProj_ENABLE_SEACASExodus_for:BOOL=ON",
-                    "-DSEACASProj_ENABLE_SEACASExoIIv2for32:BOOL=ON",
+                    define("CMAKE_C_COMPILER", spec["mpi"].mpicc),
+                    define("CMAKE_CXX_COMPILER", spec["mpi"].mpicxx),
+                    define("CMAKE_Fortran_COMPILER", spec["mpi"].mpifc),
+                    define("MPI_BASE_DIR", spec["mpi"].prefix),
                 ]
             )
-        # Python #
-        # Handle v2016 separately because of older tribits
-        if spec.satisfies("@:2016-08-09"):
-            options.append(
-                "-DPYTHON_EXECUTABLE={0}".format(
-                    join_path(self.spec["python"].prefix.bin, "python")
-                )
-            )
+
+        # ##################### Dependencies ##########################
+        # Always need NetCDF-C
+        options.extend(
+            [define("TPL_ENABLE_Netcdf", True), define("NetCDF_ROOT", spec["netcdf-c"].prefix)]
+        )
+
+        # ################# RPath Handling ######################
+        if sys.platform == "darwin" and macos_version() >= Version("10.12"):
+            # use @rpath on Sierra due to limit of dynamic loader
+            options.append(define("CMAKE_MACOSX_RPATH", True))
         else:
-            options.append("-DPython_ROOT={0}".format(spec["python"].prefix))
+            options.append(define("CMAKE_INSTALL_NAME_DIR", self.prefix.lib))
 
         return options
