@@ -69,35 +69,6 @@ packages:
     assert s1.satisfies('cflags="-a -c"')
 
 
-def test_flag_order_and_grouping(concretize_scope, test_repo):
-    """Flags should be grouped on a per-source basis, the order
-    should match the original order they were listed in for the
-    source.
-    """
-    conf_str = """\
-packages:
-  y:
-    require: cflags="-c"
-"""
-    update_concretize_scope(conf_str, "packages")
-
-    # Now check order and grouping w/multiple flags from spec
-    s2 = Spec('y cflags="-a -b"').concretized()
-    assert s2.satisfies('cflags="-a -b -c"')
-    assert s2.compiler_flags["cflags"] == ["-c", "-a", "-b"]
-
-    conf_str = """\
-packages:
-  y:
-    require: cflags="-c -d"
-"""
-    update_concretize_scope(conf_str, "packages")
-
-    s3 = Spec('y cflags="-a -b -e"').concretized()
-    assert s3.satisfies('cflags="-a -b -c -d -e"')
-    assert s3.compiler_flags["cflags"] == ["-c", "-d", "-a", "-b", "-e"]
-
-
 def test_mix_spec_and_dependent(concretize_scope, test_repo):
     s1 = Spec('x ^y cflags="-Wall"').concretized()
     assert s1["y"].satisfies('cflags="-Wall --std=c++11"')
@@ -122,3 +93,52 @@ compilers::
 
     s1 = Spec('y %gcc@12-fake cflags="-O2"').concretized()
     assert s1.satisfies('cflags="-Wall -O2"')
+
+
+def test_flag_order_and_grouping(concretize_scope, test_repo):
+    """Flags should be grouped on a per-source basis, the order
+    should match the original order they were listed in for the
+    source.
+    """
+    conf_str = """\
+packages:
+  y:
+    require: cflags="-c"
+"""
+    update_concretize_scope(conf_str, "packages")
+
+    # Now check order and grouping w/multiple flags from spec
+    s2 = Spec('y cflags="-a -b"').concretized()
+    assert s2.satisfies('cflags="-a -b -c"')
+    assert s2.compiler_flags["cflags"] == ["-c", "-a", "-b"]
+
+    conf_str = """\
+packages:
+  y:
+    require: cflags="-x5 -y5"
+"""
+    update_concretize_scope(conf_str, "packages")
+
+    s3 = Spec('y cflags="-x4 -y6"').concretized()
+    assert s3.satisfies('cflags="-x5 -y5 -x4 -y6"')
+    assert s3.compiler_flags["cflags"] == ["-x5", "-y5", "-x4", "-y6"]
+
+    conf_str = """\
+compilers::
+- compiler:
+    spec: gcc@12-fake
+    paths:
+      cc: /usr/bin/fake-gcc
+      cxx: /usr/bin/fake-g++
+      f77: null
+      fc: null
+    flags:
+      cflags: "-x3 -y7"
+    operating_system: debian6
+    modules: []
+"""
+    update_concretize_scope(conf_str, "compilers")
+
+    s3 = Spec('y cflags="-x4 -y6"').concretized()
+    assert s3.satisfies('cflags="-x3 -x4 -x5 -y5 -y6 -y7"')
+    assert s3.compiler_flags["cflags"] == ["-x3", "-y7", "-x5", "-y5", "-x4", "-y6"]
