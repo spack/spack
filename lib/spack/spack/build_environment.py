@@ -789,7 +789,7 @@ def setup_package(pkg, dirty, context: Context = Context.BUILD):
         for mod in ["cray-mpich", "cray-libsci"]:
             module("unload", mod)
 
-    if target.module_name:
+    if target and target.module_name:
         load_module(target.module_name)
 
     load_external_modules(pkg)

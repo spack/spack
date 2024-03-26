@@ -21,6 +21,7 @@ import xml.etree.ElementTree
 import py
 import pytest
 
+import archspec.cpu
 import archspec.cpu.microarchitecture
 import archspec.cpu.schema
 
@@ -708,7 +709,9 @@ def configuration_dir(tmpdir_factory, linux_os):
     t.write(content)
 
     compilers_yaml = test_config.join("compilers.yaml")
-    content = "".join(compilers_yaml.read()).format(linux_os)
+    content = "".join(compilers_yaml.read()).format(
+        linux_os=linux_os, target=str(archspec.cpu.host().family)
+    )
     t = tmpdir.join("site", "compilers.yaml")
     t.write(content)
     yield tmpdir
@@ -1952,3 +1955,48 @@ def pytest_runtest_setup(item):
 def disable_parallel_buildcache_push(monkeypatch):
     """Disable process pools in tests."""
     monkeypatch.setattr(spack.cmd.buildcache, "_make_pool", spack.cmd.buildcache.NoPool)
+
+
+def create_test_repo(tmpdir, pkg_name_content_tuples):
+    repo_path = str(tmpdir)
+    repo_yaml = tmpdir.join("repo.yaml")
+    with open(str(repo_yaml), "w") as f:
+        f.write(
+            """\
+repo:
+  namespace: testcfgrequirements
+"""
+        )
+
+    packages_dir = tmpdir.join("packages")
+    for pkg_name, pkg_str in pkg_name_content_tuples:
+        pkg_dir = packages_dir.ensure(pkg_name, dir=True)
+        pkg_file = pkg_dir.join("package.py")
+        with open(str(pkg_file), "w") as f:
+            f.write(pkg_str)
+
+    return spack.repo.Repo(repo_path)
+
+
+@pytest.fixture()
+def compiler_factory():
+    """Factory for a compiler dict, taking a spec and an OS as arguments."""
+
+    def _factory(*, spec, operating_system):
+        return {
+            "compiler": {
+                "spec": spec,
+                "operating_system": operating_system,
+                "paths": {"cc": "/path/to/cc", "cxx": "/path/to/cxx", "f77": None, "fc": None},
+                "modules": [],
+                "target": str(archspec.cpu.host().family),
+            }
+        }
+
+    return _factory
+
+
+@pytest.fixture()
+def host_architecture_str():
+    """Returns the broad architecture family (x86_64, aarch64, etc.)"""
+    return str(archspec.cpu.host().family)
