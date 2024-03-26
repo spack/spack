@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import errno
+import json
 import os
 import shutil
 
@@ -234,10 +235,71 @@ def test_buildcache_sync(
         # Use mirror names to specify mirrors
         mirror("add", "src", src_mirror_url)
         mirror("add", "dest", dest_mirror_url)
+        mirror("add", "ignored", "file:///dummy/io")
 
         buildcache("sync", "src", "dest")
 
         verify_mirror_contents()
+        shutil.rmtree(dest_mirror_dir)
+
+        def manifest_insert(manifest, spec, dest_url):
+            manifest[spec.dag_hash()] = [
+                {
+                    "src": spack.util.url.join(
+                        src_mirror_url,
+                        spack.binary_distribution.build_cache_relative_path(),
+                        spack.binary_distribution.tarball_name(spec, ".spec.json"),
+                    ),
+                    "dest": spack.util.url.join(
+                        dest_url,
+                        spack.binary_distribution.build_cache_relative_path(),
+                        spack.binary_distribution.tarball_name(spec, ".spec.json"),
+                    ),
+                },
+                {
+                    "src": spack.util.url.join(
+                        src_mirror_url,
+                        spack.binary_distribution.build_cache_relative_path(),
+                        spack.binary_distribution.tarball_path_name(spec, ".spack"),
+                    ),
+                    "dest": spack.util.url.join(
+                        dest_url,
+                        spack.binary_distribution.build_cache_relative_path(),
+                        spack.binary_distribution.tarball_path_name(spec, ".spack"),
+                    ),
+                },
+            ]
+
+        manifest_file = os.path.join(tmpdir.strpath, "manifest_dest.json")
+        with open(manifest_file, "w") as fd:
+            test_env = ev.active_environment()
+
+            manifest = {}
+            for spec in test_env.specs_by_hash.values():
+                manifest_insert(manifest, spec, dest_mirror_url)
+            json.dump(manifest, fd)
+
+        buildcache("sync", "--manifest-glob", manifest_file)
+
+        verify_mirror_contents()
+        shutil.rmtree(dest_mirror_dir)
+
+        manifest_file = os.path.join(tmpdir.strpath, "manifest_bad_dest.json")
+        with open(manifest_file, "w") as fd:
+            manifest = {}
+            for spec in test_env.specs_by_hash.values():
+                manifest_insert(
+                    manifest, spec, spack.util.url.join(dest_mirror_url, "invalid_path")
+                )
+            json.dump(manifest, fd)
+
+        # Trigger the warning
+        output = buildcache("sync", "--manifest-glob", manifest_file, "dest", "ignored")
+
+        assert "Ignoring unused arguemnt: ignored" in output
+
+        verify_mirror_contents()
+        shutil.rmtree(dest_mirror_dir)
 
 
 def test_buildcache_create_install(

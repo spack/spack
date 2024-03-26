@@ -861,7 +861,7 @@ set -g __fish_spack_optspecs_spack_buildcache_sync h/help manifest-glob=
 complete -c spack -n '__fish_spack_using_command buildcache sync' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command buildcache sync' -s h -l help -d 'show this help message and exit'
 complete -c spack -n '__fish_spack_using_command buildcache sync' -l manifest-glob -r -f -a manifest_glob
-complete -c spack -n '__fish_spack_using_command buildcache sync' -l manifest-glob -r -d 'a quoted glob pattern identifying copy manifest files'
+complete -c spack -n '__fish_spack_using_command buildcache sync' -l manifest-glob -r -d 'a quoted glob pattern identifying CI rebuild manifest files'
 
 # spack buildcache update-index
 set -g __fish_spack_optspecs_spack_buildcache_update_index h/help k/keys

@@ -275,23 +275,37 @@ def setup_parser(subparser: argparse.ArgumentParser):
 
     # Sync buildcache entries from one mirror to another
     sync = subparsers.add_parser("sync", help=sync_fn.__doc__)
-    sync.add_argument(
-        "--manifest-glob", help="a quoted glob pattern identifying copy manifest files"
+
+    sync_manifest_source = sync.add_argument_group(
+        "Manifest Source",
+        "Specify a list of build cache objects to sync using manifest file(s)."
+        'This option takes the place of the "source mirror" for synchronization'
+        'and optionally takes a "destination mirror" ',
     )
-    sync.add_argument(
+    sync_manifest_source.add_argument(
+        "--manifest-glob", help="a quoted glob pattern identifying CI rebuild manifest files"
+    )
+    sync_source_mirror = sync.add_argument_group(
+        "Named Source",
+        "Specify a single registered source mirror to synchronize from. This option requires"
+        "the specification of a destination mirror.",
+    )
+    sync_source_mirror.add_argument(
         "src_mirror",
         metavar="source mirror",
-        type=arguments.mirror_name_or_url,
         nargs="?",
+        type=arguments.mirror_name_or_url,
         help="source mirror name, path, or URL",
     )
+
     sync.add_argument(
         "dest_mirror",
         metavar="destination mirror",
-        type=arguments.mirror_name_or_url,
         nargs="?",
+        type=arguments.mirror_name_or_url,
         help="destination mirror name, path, or URL",
     )
+
     sync.set_defaults(func=sync_fn)
 
     # Update buildcache index without copying any additional packages
@@ -1070,7 +1084,17 @@ def sync_fn(args):
     requires an active environment in order to know which specs to sync
     """
     if args.manifest_glob:
-        manifest_copy(glob.glob(args.manifest_glob))
+        # Passing the args.src_mirror here because it is not possible to
+        # have the destination be required when specifying a named source
+        # mirror and optional for the --manifest-glob argument. In the case
+        # of manifest glob sync, the source mirror positional argument is the
+        # destination mirror if it is specified. If there are two mirrors
+        # specified, the second is ignored and the first is the override
+        # destination.
+        if args.dest_mirror:
+            tty.warn(f"Ignoring unused arguemnt: {args.dest_mirror.name}")
+
+        manifest_copy(glob.glob(args.manifest_glob), args.src_mirror)
         return 0
 
     if args.src_mirror is None or args.dest_mirror is None:
@@ -1121,7 +1145,7 @@ def sync_fn(args):
         shutil.rmtree(tmpdir)
 
 
-def manifest_copy(manifest_file_list):
+def manifest_copy(manifest_file_list, dest_mirror=None):
     """Read manifest files containing information about specific specs to copy
     from source to destination, remove duplicates since any binary packge for
     a given hash should be the same as any other, and copy all files specified
@@ -1135,10 +1159,17 @@ def manifest_copy(manifest_file_list):
                 # Last duplicate hash wins
                 deduped_manifest[spec_hash] = copy_list
 
+    build_cache_dir = bindist.build_cache_relative_path()
     for spec_hash, copy_list in deduped_manifest.items():
         for copy_file in copy_list:
-            tty.debug("copying {0} to {1}".format(copy_file["src"], copy_file["dest"]))
-            copy_buildcache_file(copy_file["src"], copy_file["dest"])
+            dest = copy_file["dest"]
+            if dest_mirror:
+                src_relative_path = os.path.join(
+                    build_cache_dir, copy_file["src"].rsplit(build_cache_dir, 1)[1].lstrip("/")
+                )
+                dest = url_util.join(dest_mirror.push_url, src_relative_path)
+            tty.debug("copying {0} to {1}".format(copy_file["src"], dest))
+            copy_buildcache_file(copy_file["src"], dest)
 
 
 def update_index(mirror: spack.mirror.Mirror, update_keys=False):

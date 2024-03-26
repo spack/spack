@@ -204,7 +204,6 @@ class Icon(AutotoolsPackage):
             args.append("--disable-gpu")
 
         if self.compiler.name == "gcc":
-
             flags["CFLAGS"].append("-g")
             flags["ICON_CFLAGS"].append("-O3")
             flags["ICON_BUNDLED_CFLAGS"].append("-O2")
@@ -217,7 +216,6 @@ class Icon(AutotoolsPackage):
                 )
 
         elif self.compiler.name in ["intel", "oneapi"]:
-
             args.append("--enable-intel-consistency")
 
             flags["CFLAGS"].extend(["-g", "-ftz", "-fma", "-ip", "-qno-opt-dynamic-align"])
@@ -254,7 +252,6 @@ class Icon(AutotoolsPackage):
                 flags["ICON_ECRAD_FCFLAGS"].extend(["-qno-opt-dynamic-align", "-no-fma", "-fpe0"])
 
         elif self.compiler.name == "nvhpc":
-
             flags["CFLAGS"].extend(["-g", "-O2"])
             flags["FCFLAGS"].extend(
                 ["-g", "-O2", "-Mrecursive", "-Mallocatable=03", "-Mstack_arrays"]
