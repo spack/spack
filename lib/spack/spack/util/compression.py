@@ -53,6 +53,160 @@ try:
     import tarfile  # noqa
 
     TARFILE_SUPPORTED = True
+
+    # https://github.com/python/cpython/blob/v3.12.2/Lib/tarfile.py#L719
+    # -----------------------------
+    # extraction filters (PEP 706)
+    # -----------------------------
+
+    class FilterError(tarfile.TarError):
+        pass
+
+    class AbsolutePathError(FilterError):
+        def __init__(self, tarinfo):
+            self.tarinfo = tarinfo
+            super().__init__(f"member {tarinfo.name!r} has an absolute path")
+
+    class OutsideDestinationError(FilterError):
+        def __init__(self, tarinfo, path):
+            self.tarinfo = tarinfo
+            self._path = path
+            super().__init__(
+                f"{tarinfo.name!r} would be extracted to {path!r}, "
+                + "which is outside the destination"
+            )
+
+    class SpecialFileError(FilterError):
+        def __init__(self, tarinfo):
+            self.tarinfo = tarinfo
+            super().__init__(f"{tarinfo.name!r} is a special file")
+
+    class AbsoluteLinkError(FilterError):
+        def __init__(self, tarinfo):
+            self.tarinfo = tarinfo
+            super().__init__(f"{tarinfo.name!r} is a link to an absolute path")
+
+    class LinkOutsideDestinationError(FilterError):
+        def __init__(self, tarinfo, path):
+            self.tarinfo = tarinfo
+            self._path = path
+            super().__init__(
+                f"{tarinfo.name!r} would link to {path!r}, " + "which is outside the destination"
+            )
+
+    def _get_filtered_attrs(member, dest_path, for_data=True):
+        new_attrs = {}
+        name = member.name
+        dest_path = os.path.realpath(dest_path)
+        # Strip leading / (tar's directory separator) from filenames.
+        # Include os.sep (target OS directory separator) as well.
+        if name.startswith(("/", os.sep)):
+            name = new_attrs["name"] = member.path.lstrip("/" + os.sep)
+        if os.path.isabs(name):
+            # Path is absolute even after stripping.
+            # For example, 'C:/foo' on Windows.
+            raise AbsolutePathError(member)
+        # Ensure we stay in the destination
+        target_path = os.path.realpath(os.path.join(dest_path, name))
+        if os.path.commonpath([target_path, dest_path]) != dest_path:
+            raise OutsideDestinationError(member, target_path)
+        # Limit permissions (no high bits, and go-w)
+        mode = member.mode
+        if mode is not None:
+            # Strip high bits & group/other write bits
+            mode = mode & 0o755
+            if for_data:
+                # For data, handle permissions & file types
+                if member.isreg() or member.islnk():
+                    if not mode & 0o100:
+                        # Clear executable bits if not executable by user
+                        mode &= ~0o111
+                    # Ensure owner can read & write
+                    mode |= 0o600
+                elif member.isdir() or member.issym():
+                    # Ignore mode for directories & symlinks
+                    mode = None
+                else:
+                    # Reject special files
+                    raise SpecialFileError(member)
+            if mode != member.mode:
+                new_attrs["mode"] = mode
+        if for_data:
+            # Ignore ownership for 'data'
+            if member.uid is not None:
+                new_attrs["uid"] = None
+            if member.gid is not None:
+                new_attrs["gid"] = None
+            if member.uname is not None:
+                new_attrs["uname"] = None
+            if member.gname is not None:
+                new_attrs["gname"] = None
+            # Check link destination for 'data'
+            if member.islnk() or member.issym():
+                if os.path.isabs(member.linkname):
+                    raise AbsoluteLinkError(member)
+                if member.issym():
+                    target_path = os.path.join(dest_path, os.path.dirname(name), member.linkname)
+                else:
+                    target_path = os.path.join(dest_path, member.linkname)
+                target_path = os.path.realpath(target_path)
+                if os.path.commonpath([target_path, dest_path]) != dest_path:
+                    raise LinkOutsideDestinationError(member, target_path)
+        return new_attrs
+
+    # Sentinel for replace() defaults, meaning "don't change the attribute"
+    _KEEP = object()
+
+    # https://github.com/python/cpython/blob/v3.12.2/Lib/tarfile.py#L926
+
+    def replace(
+        member,
+        *,
+        name=_KEEP,
+        mtime=_KEEP,
+        mode=_KEEP,
+        linkname=_KEEP,
+        uid=_KEEP,
+        gid=_KEEP,
+        uname=_KEEP,
+        gname=_KEEP,
+        deep=True,
+        _KEEP=_KEEP,
+    ):
+        """Return a deep copy of self with the given attributes replaced."""
+        import copy
+
+        if deep:
+            result = copy.deepcopy(member)
+        else:
+            result = copy.copy(member)
+        if name is not _KEEP:
+            result.name = name
+        if mtime is not _KEEP:
+            result.mtime = mtime
+        if mode is not _KEEP:
+            result.mode = mode
+        if linkname is not _KEEP:
+            result.linkname = linkname
+        if uid is not _KEEP:
+            result.uid = uid
+        if gid is not _KEEP:
+            result.gid = gid
+        if uname is not _KEEP:
+            result.uname = uname
+        if gname is not _KEEP:
+            result.gname = gname
+        return result
+
+    # python@:3.11 does not support data_filter, use tar_filter instead
+    def tar_filter(member, dest_path):
+        new_attrs = _get_filtered_attrs(member, dest_path, False)
+        if new_attrs:
+            return replace(member, **new_attrs, deep=False)
+        return member
+
+    _data_filter = getattr(tarfile, "data_filter", tar_filter)
+
 except ImportError:
     TARFILE_SUPPORTED = False
 
@@ -88,7 +242,8 @@ def _py_untar(archive_file: str, remove_archive_file: bool = False) -> str:
         archive_file = archive_file_no_ext + "-input"
         shutil.move(archive_file_no_ext, archive_file)
     f_tar = tarfile.open(archive_file)
-    f_tar.extractall()
+    f_members = [_data_filter(member=m, dest_path=outfile) for m in f_tar.getmembers()]
+    f_tar.extractall(members=f_members)
     f_tar.close()
     if remove_archive_file:
         # remove input file to prevent two stage
