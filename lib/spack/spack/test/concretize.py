@@ -526,6 +526,18 @@ class TestConcretize:
         assert spec.satisfies("~foo") and spec.satisfies("^dependency-foo-bar~foo")
         assert spec.satisfies("+bar") and not spec.satisfies("^dependency-foo-bar+bar")
 
+    @pytest.mark.only_clingo(
+        "Optional compiler propagation isn't deprecated for original concretizer"
+    )
+    def test_concretize_propagate_one_variant(self):
+        """Test that you can specify to propagate one variant and not all"""
+        spec = Spec("parent-foo-bar ++bar ~foo")
+        spec.concretize()
+
+        assert spec.satisfies("~foo") and not spec.satisfies("^dependency-foo-bar~foo")
+        assert spec.satisfies("+bar") and spec.satisfies("^dependency-foo-bar+bar")
+
+
     @pytest.mark.only_clingo("Original concretizer is allowed to forego variant propagation")
     def test_concretize_propagate_multivalue_variant(self):
         """Test that multivalue variants are propagating the specified value(s)
@@ -537,6 +549,45 @@ class TestConcretize:
         assert spec.satisfies("^b foo=baz,fee")
         assert not spec.satisfies("^a foo=bar")
         assert not spec.satisfies("^b foo=bar")
+
+    @pytest.mark.only_clingo(
+        "Optional compiler propagation isn't deprecated for original concretizer"
+    )
+    def test_concretize_propagate_variant_not_in_source(self):
+        """Test that variant is still propagated even if the source pkg
+        doesn't have the variant"""
+
+        spec = Spec("callpath++debug")
+        spec.concretize()
+
+        assert spec.satisfies("^mpich+debug")
+        assert not spec.satisfies("callpath+debug")
+        assert not spec.satisfies("^dyninst+debug")
+
+
+    @pytest.mark.only_clingo(
+        "Optional compiler propagation isn't deprecated for original concretizer"
+    )
+    def test_concretize_propagate_variant_not_in_source_or_dependencies(self):
+        """Test propagating a variant that is not in the source package
+        or in any of the dependents fails"""
+
+        spec = Spec("callpath++shared")
+        spec.concretize()
+
+        # raises some kind of error
+
+    @pytest.mark.only_clingo(
+        "Optional compiler propagation isn't deprecated for original concretizer"
+    )
+    def test_concretize_propagate_variant_in_source_not_dependencies(self):
+        """Does a thing"""
+
+        spec = Spec("hdf5~~mpi")
+        spec.concretize()
+
+        assert spec.satisfies("hdf5~mpi")
+        assert not spec.satisfies("^mpich~mpi")
 
     def test_no_matching_compiler_specs(self, mock_low_high_config):
         # only relevant when not building compilers as needed
