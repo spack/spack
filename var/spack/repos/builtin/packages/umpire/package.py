@@ -214,7 +214,7 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
     depends_on("cmake@3.8:", type="build")
 
     depends_on("blt", type="build")
-    depends_on("blt@0.6.0:", type="build", when="@2024.02.0:")
+    depends_on("blt@0.6.1:", type="build", when="@2024.02.0:")
     depends_on("blt@0.5.3", type="build", when="@2023.06.0")
     depends_on("blt@0.5.2:0.5.3", type="build", when="@2022.10.0")
     depends_on("blt@0.5.0:0.5.3", type="build", when="@2022.03.0:2022.03.1")
