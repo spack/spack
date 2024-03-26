@@ -34,7 +34,12 @@ properties: Dict[str, Any] = {
                     "strategy": {"type": "string", "enum": ["none", "minimal", "full"]}
                 },
             },
-            "os_compatible": {"type": "object"},
+            "os_compatible": {
+                "type": "object",
+                "additionalProperties": {
+                    "type": "array"
+                },
+            },
         },
     }
 }

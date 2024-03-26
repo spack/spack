@@ -1886,8 +1886,7 @@ class TestConcretize:
             "test-{os}-{target}".format(os=mock_os, target=str(s.architecture.target))
         )
         reusable_specs = [other_os]
-        print(s.os, mock_os, type(s.os))
-        overrides = {"concretizer": {"reuse": True, "os_compatible": {s.os: mock_os}}}
+        overrides = {"concretizer": {"reuse": True, "os_compatible": {s.os: [mock_os]}}}
         custom_scope = spack.config.InternalConfigScope("concretize_override", overrides)
         with spack.config.override(custom_scope):
             solver = spack.solver.asp.Solver()
