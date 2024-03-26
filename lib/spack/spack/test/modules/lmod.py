@@ -7,6 +7,8 @@ import os
 
 import pytest
 
+import archspec.cpu
+
 import spack.environment as ev
 import spack.main
 import spack.modules.lmod
@@ -144,6 +146,9 @@ class TestLmod:
 
         assert len([x for x in content if "depends_on(" in x]) == 5
 
+    @pytest.mark.skipif(
+        str(archspec.cpu.host().family) != "x86_64", reason="test data is specific for x86_64"
+    )
     def test_alter_environment(self, modulefile_content, module_configuration):
         """Tests modifications to run-time environment."""
 
@@ -215,6 +220,9 @@ class TestLmod:
 
         assert len([x for x in content if 'setenv("FOO", "{{name}}, {name}, {{}}, {}")' in x]) == 1
 
+    @pytest.mark.skipif(
+        str(archspec.cpu.host().family) != "x86_64", reason="test data is specific for x86_64"
+    )
     def test_help_message(self, modulefile_content, module_configuration):
         """Tests the generation of module help message."""
 
@@ -338,14 +346,16 @@ class TestLmod:
 
         assert "Override successful!" in content
 
-    def test_override_template_in_modules_yaml(self, modulefile_content, module_configuration):
+    def test_override_template_in_modules_yaml(
+        self, modulefile_content, module_configuration, host_architecture_str
+    ):
         """Tests overriding a template from `modules.yaml`"""
         module_configuration("override_template")
 
         content = modulefile_content("override-module-templates")
         assert "Override even better!" in content
 
-        content = modulefile_content("mpileaks target=x86_64")
+        content = modulefile_content(f"mpileaks target={host_architecture_str}")
         assert "Override even better!" in content
 
     @pytest.mark.usefixtures("config")
