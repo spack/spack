@@ -1956,7 +1956,7 @@ _spack_uninstall() {
 _spack_unit_test() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -H --pytest-help -l --list -L --list-long -N --list-names --extension -s -k --showlocals"
+        SPACK_COMPREPLY="-h --help -H --pytest-help -n --numprocesses -l --list -L --list-long -N --list-names --extension -s -k --showlocals"
     else
         _unit_tests
     fi

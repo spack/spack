@@ -499,6 +499,26 @@ class Openmpi(AutotoolsPackage, CudaPackage):
     variant("lustre", default=False, description="Lustre filesystem library support")
     variant("romio", default=True, when="@:5", description="Enable ROMIO support")
     variant("romio", default=False, when="@5:", description="Enable ROMIO support")
+    variant(
+        "romio-filesystem",
+        description="Add the filesystem to romio",
+        values=disjoint_sets(
+            (
+                "daos",
+                "nfs",
+                "ufs",
+                "pvfs2",
+                "testfs",
+                "xfs",
+                "panfs",
+                "lustre",
+                "gpfs",
+                "ime",
+                "quobytefs",
+            )
+        ).with_non_feature_values("none"),
+    )
+
     variant("rsh", default=True, description="Enable rsh (openssh) process lifecycle management")
     variant(
         "orterunprefix",
@@ -1035,8 +1055,13 @@ class Openmpi(AutotoolsPackage, CudaPackage):
         elif spec.satisfies("@1.7.4:"):
             config_args.extend(["--disable-java", "--disable-mpi-java"])
 
+        # Romio
         if "~romio" in spec:
             config_args.append("--disable-io-romio")
+
+        if not spec.satisfies("romio-filesystem=none"):
+            args = "+".join(spec.variants["romio-filesystem"].value)
+            config_args.append(f"--with-io-romio-flags=--with-file-system={args}")
 
         if "+gpfs" in spec:
             config_args.append("--with-gpfs")

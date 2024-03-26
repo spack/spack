@@ -289,6 +289,13 @@ class Namd(MakefilePackage, CudaPackage):
                 join_path(self.build_directory, "Make.config"),
             )
 
+    @when("@3.0b3")
+    def build(self, spec, prefix):
+        # Disable parallel build
+        # https://github.com/spack/spack/pull/43215
+        with working_dir(self.build_directory):
+            make(parallel=False)
+
     def install(self, spec, prefix):
         with working_dir(self.build_directory):
             mkdirp(prefix.bin)

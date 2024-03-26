@@ -1144,7 +1144,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
                 )
 
     @classmethod
-    def runtime_constraints(cls, *, compiler, pkg):
+    def runtime_constraints(cls, *, spec, pkg):
         """Callback function to inject runtime-related rules into the solver.
 
         Rule-injection is obtained through method calls of the ``pkg`` argument.
@@ -1153,7 +1153,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         we'll document the behavior at https://spack.readthedocs.io/en/latest/
 
         Args:
-            compiler: compiler object (node attribute) currently considered
+            spec: spec that will inject runtime dependencies
             pkg: object used to forward information to the solver
         """
         pkg("*").depends_on(
@@ -1163,11 +1163,27 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
             description="If any package uses %gcc, it depends on gcc-runtime",
         )
         pkg("*").depends_on(
-            f"gcc-runtime@{str(compiler.version)}:",
-            when=f"%{str(compiler.spec)}",
+            f"gcc-runtime@{str(spec.version)}:",
+            when=f"%{str(spec)}",
             type="link",
-            description=f"If any package uses %{str(compiler.spec)}, "
-            f"it depends on gcc-runtime@{str(compiler.version)}:",
+            description=f"If any package uses %{str(spec)}, "
+            f"it depends on gcc-runtime@{str(spec.version)}:",
         )
+
+        gfortran_str = "libgfortran@5"
+        if spec.satisfies("gcc@:6"):
+            gfortran_str = "libgfortran@3"
+        elif spec.satisfies("gcc@7"):
+            gfortran_str = "libgfortran@4"
+
+        for fortran_virtual in ("fortran-rt", gfortran_str):
+            pkg("*").depends_on(
+                fortran_virtual,
+                when=f"%{str(spec)}",
+                languages=["fortran"],
+                type="link",
+                description=f"Add a dependency on '{gfortran_str}' for nodes compiled with "
+                f"{str(spec)} and using the 'fortran' language",
+            )
         # The version of gcc-runtime is the same as the %gcc used to "compile" it
-        pkg("gcc-runtime").requires(f"@={str(compiler.version)}", when=f"%{str(compiler.spec)}")
+        pkg("gcc-runtime").requires(f"@={str(spec.version)}", when=f"%{str(spec)}")
