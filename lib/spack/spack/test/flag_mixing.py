@@ -26,7 +26,9 @@ class X(Package):
     version("1.1")
     version("1.0")
 
-    depends_on('y cflags="--std=c++11"')
+    variant("activatemultiflag", default=False)
+    depends_on('y cflags="-d1"', when="~activatemultiflag")
+    depends_on('y cflags="-d1 -d2"', when="+activatemultiflag")
 """,
 )
 
@@ -70,8 +72,8 @@ packages:
 
 
 def test_mix_spec_and_dependent(concretize_scope, test_repo):
-    s1 = Spec('x ^y cflags="-Wall"').concretized()
-    assert s1["y"].satisfies('cflags="-Wall --std=c++11"')
+    s1 = Spec('x ^y cflags="-a"').concretized()
+    assert s1["y"].satisfies('cflags="-a -d1"')
 
 
 def test_mix_spec_and_compiler_cfg(concretize_scope, test_repo):
@@ -141,3 +143,7 @@ compilers::
     s3 = Spec('y cflags="-x7 -x4"').concretized()
     assert s3.satisfies('cflags="-x3 -x4 -x5 -x6 -x7 -x8"')
     assert s3.compiler_flags["cflags"] == ["-x3", "-x8", "-x5", "-x6", "-x7", "-x4"]
+
+    s4 = Spec('x+activatemultiflag ^y cflags="-x7 -x4"').concretized()
+    assert s4["y"].satisfies('cflags="-x3 -x4 -x5 -x6 -x7 -x8 -d1 -d2"')
+    assert s4["y"].compiler_flags["cflags"] == ["-x3", "-x8", "-d1", "-d2", "-x5", "-x6", "-x7", "-x4"]
