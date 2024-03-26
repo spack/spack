@@ -54,7 +54,6 @@ spack:
     - spatial-index
     - spykfunc
     - steps
-    - steps@5
     - synapsetool
     - touchdetector
     - unit-test-translator

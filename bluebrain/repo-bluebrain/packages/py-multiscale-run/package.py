@@ -42,7 +42,7 @@ class PyMultiscaleRun(PythonPackage):
     depends_on("py-pyyaml", type=("build", "run"))
     depends_on("py-scipy", type=("build", "run"))
     depends_on("py-tqdm", type=("build", "run"))
-    depends_on("steps@5.0.0b", type=("build", "run"))
+    depends_on("steps@5", type=("build", "run"))
 
     depends_on("py-pytest", type="test")
 
