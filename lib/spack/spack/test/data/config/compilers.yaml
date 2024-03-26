@@ -30,19 +30,6 @@ compilers:
     modules: []
     target: {target}
 - compiler:
-    spec: clang@3.5
-    operating_system: redhat6
-    paths:
-      cc: /path/to/clang35
-      cxx: /path/to/clang++35
-      f77: None
-      fc: None
-    flags:
-      cflags: -O3
-      cxxflags: -O3
-    modules: []
-    target: {target}
-- compiler:
     spec: clang@12.0.0
     operating_system: {linux_os.name}{linux_os.version}
     paths:
