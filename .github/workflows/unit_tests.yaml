@@ -94,7 +94,7 @@ jobs:
     - uses: codecov/codecov-action@54bcd8715eee62d40e33596ef5e8f0f48dbbccab
       with:
         flags: unittests,linux,${{ matrix.concretizer }}
-        token: ${{ vars.CODECOV_TOKEN }}
+        token: ${{ secrets.CODECOV_TOKEN }}
   # Test shell integration
   shell:
     runs-on: ubuntu-latest
@@ -126,7 +126,7 @@ jobs:
     - uses: codecov/codecov-action@54bcd8715eee62d40e33596ef5e8f0f48dbbccab
       with:
         flags: shelltests,linux
-        token: ${{ vars.CODECOV_TOKEN }}
+        token: ${{ secrets.CODECOV_TOKEN }}
 
   # Test RHEL8 UBI with platform Python. This job is run
   # only on PRs modifying core Spack
@@ -186,7 +186,7 @@ jobs:
     - uses: codecov/codecov-action@54bcd8715eee62d40e33596ef5e8f0f48dbbccab # @v2.1.0
       with:
         flags: unittests,linux,clingo
-        token: ${{ vars.CODECOV_TOKEN }}
+        token: ${{ secrets.CODECOV_TOKEN }}
   # Run unit tests on MacOS
   macos:
     runs-on: ${{ matrix.os }}
@@ -223,4 +223,4 @@ jobs:
     - uses: codecov/codecov-action@54bcd8715eee62d40e33596ef5e8f0f48dbbccab
       with:
         flags: unittests,macos
-        token: ${{ vars.CODECOV_TOKEN }}
+        token: ${{ secrets.CODECOV_TOKEN }}
