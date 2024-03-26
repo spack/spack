@@ -263,16 +263,10 @@ class CachedCMakeBuilder(CMakeBuilder):
             cuda_flags = []
             archs = spec.variants["cuda_arch"].value
             if archs[0] != "none":
-                arch_str = ";".join(archs)
-                entries.append(
-                    cmake_cache_string("CMAKE_CUDA_ARCHITECTURES", "{0}".format(arch_str))
-                )
-                # TODO: Additional definitions that may not be needed anymore
-                # This is an imperfect merge of the radiuss way and the "spack"
-                # way: radiuss used to define only the first arch in the list,
-                # even for CMAKE_CUDA_ARCHITECTURE. What do we want?
-                cuda_flags.append("-arch sm_{0}".format(archs[0]))
-                entries.append(cmake_cache_string("CUDA_ARCH", "sm_{0}".format(archs[0])))
+                entries.append(cmake_cache_string("CMAKE_CUDA_ARCHITECTURES", ";".join(archs)))
+                # Additional definitions that may not be needed anymore
+                cuda_flags = cuda_flags(archs)
+                entries.append(cmake_cache_string("CUDA_ARCH", " ".join(cuda_flags)))
             if spec_uses_toolchain(spec):
                 cuda_flags.append("-Xcompiler {}".format(spec_uses_toolchain(spec)[0]))
             entries.append(cmake_cache_string("CMAKE_CUDA_FLAGS", " ".join(cuda_flags)))
