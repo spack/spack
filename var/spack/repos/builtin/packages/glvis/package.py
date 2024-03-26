@@ -154,6 +154,8 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
             "CONFIG_MK={0}".format(self.spec["mfem"].package.config_mk),
         ]
 
+        result.append("CPPFLAGS=-DGLEW_NO_GLU")
+
         if self.spec.satisfies("@4.0:"):
             # Spack will inject the necessary include dirs and link paths via
             # its compiler wrapper, so we can skip them:
