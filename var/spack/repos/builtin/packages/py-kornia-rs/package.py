@@ -36,6 +36,9 @@ class PyKorniaRs(PythonPackage):
     # Required to build pyo3
     depends_on("cmake", type="build")
 
+    # Required to build turbojpeg-sys
+    depends_on("nasm", type="build")
+
     def setup_build_environment(self, env):
         env.set("RUST_BACKTRACE", "full")
         env.set("CARGO_PROFILE_RELEASE_BUILD_OVERRIDE_DEBUG", "true")
