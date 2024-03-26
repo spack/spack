@@ -146,4 +146,13 @@ compilers::
 
     s4 = Spec('x+activatemultiflag ^y cflags="-x7 -x4"').concretized()
     assert s4["y"].satisfies('cflags="-x3 -x4 -x5 -x6 -x7 -x8 -d1 -d2"')
-    assert s4["y"].compiler_flags["cflags"] == ["-x3", "-x8", "-d1", "-d2", "-x5", "-x6", "-x7", "-x4"]
+    assert s4["y"].compiler_flags["cflags"] == [
+        "-x3",
+        "-x8",
+        "-d1",
+        "-d2",
+        "-x5",
+        "-x6",
+        "-x7",
+        "-x4",
+    ]
