@@ -112,16 +112,16 @@ def _to_dict(compiler):
 def get_compiler_config(scope=None, init_config=True):
     """Return the compiler configuration for the specified architecture."""
 
-    config = spack.config.get("compilers", scope=scope) or []
+    config = spack.config.CONFIG.get("compilers", scope=scope) or []
     if config or not init_config:
         return config
 
-    merged_config = spack.config.get("compilers")
+    merged_config = spack.config.CONFIG.get("compilers")
     if merged_config:
         return config
 
     _init_compiler_config(scope=scope)
-    config = spack.config.get("compilers", scope=scope)
+    config = spack.config.CONFIG.get("compilers", scope=scope)
     return config
 
 
