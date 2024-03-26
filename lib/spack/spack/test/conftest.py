@@ -2007,3 +2007,9 @@ def compiler_factory():
         }
 
     return _factory
+
+
+@pytest.fixture()
+def host_architecture_str():
+    """Returns the broad architecture family (x86_64, aarch64, etc.)"""
+    return str(archspec.cpu.host().family)
