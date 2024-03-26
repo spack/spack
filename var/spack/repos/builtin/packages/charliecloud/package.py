@@ -152,5 +152,7 @@ class Charliecloud(AutotoolsPackage):
         if "+squashfuse" in self.spec:
             squashfuse_prefix = "{0}".format(self.spec["squashfuse"].prefix)
             args.append("--with-libsquashfuse={0}".format(squashfuse_prefix))
+            fuse_include = self.spec["fuse"].prefix.include.fuse3
+            args.append("CFLAGS=-I{0}".format(fuse_include))
 
         return args
