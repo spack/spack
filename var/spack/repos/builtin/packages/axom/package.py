@@ -3,7 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import glob
 import os
+import shutil
 import socket
 from os.path import join as pjoin
 
@@ -574,3 +576,44 @@ class Axom(CachedCMakePackage, CudaPackage, ROCmPackage):
                 'PROPERTIES LINKER_LANGUAGE CXX \n LINK_FLAGS "-fopenmp"',
                 "src/axom/quest/examples/CMakeLists.txt",
             )
+
+    @run_after("build")
+    @on_package_attributes(run_tests=True)
+    def build_test(self):
+        with working_dir(self.build_directory):
+            print("Running Axom Unit Tests...")
+            make("test")
+
+    @run_after("install")
+    @on_package_attributes(run_tests=True)
+    def check_install(self):
+        """
+        Checks the spack install of axom using axom's
+        using-with-cmake example
+        """
+
+        print("Checking Axom installation...")
+        spec = self.spec
+        install_prefix = spec.prefix
+        example_src_dir = join_path(install_prefix, "examples", "axom", "using-with-cmake")
+        example_build_dir = join_path(example_src_dir, "build")
+        print("Checking using-with-cmake example...")
+        with working_dir(example_build_dir, create=True):
+            cmake_args = ["-C ../host-config.cmake", example_src_dir]
+            cmake(*cmake_args)
+            make()
+            example = Executable("./example")
+            example()
+        print("Checking using-with-make example...")
+        example_src_dir = join_path(install_prefix, "examples", "axom", "using-with-make")
+        example_build_dir = join_path(example_src_dir, "build")
+        example_files = glob.glob(join_path(example_src_dir, "*"))
+        with working_dir(example_build_dir, create=True):
+            for example_file in example_files:
+                shutil.copy(example_file, ".")
+            make("AXOM_DIR={0}".format(install_prefix))
+            example = Executable("./example")
+            example()
+
+    def test_install(self):
+        self.check_install()
