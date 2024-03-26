@@ -11,6 +11,8 @@ import sys
 import py
 import pytest
 
+import archspec.cpu
+
 import llnl.util.filesystem as fs
 import llnl.util.lock as ulk
 import llnl.util.tty as tty
@@ -528,6 +530,10 @@ def test_update_tasks_for_compiler_packages_as_compiler(mock_packages, config, m
     assert installer.build_pq[0][1].compiler
 
 
+@pytest.mark.skipif(
+    str(archspec.cpu.host().family) != "x86_64",
+    reason="OneAPI compiler is not supported on other architectures",
+)
 def test_bootstrapping_compilers_with_different_names_from_spec(
     install_mockery, mutable_config, mock_fetch, archspec_host_is_spack_test_host
 ):
