@@ -154,6 +154,7 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
             "CONFIG_MK={0}".format(self.spec["mfem"].package.config_mk),
         ]
 
+        # https://github.com/spack/spack/issues/42839
         result.append("CPPFLAGS=-DGLEW_NO_GLU")
 
         if self.spec.satisfies("@4.0:"):
