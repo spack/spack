@@ -979,6 +979,10 @@ class SpackSolverSetup:
             if any(dv == declared for dv in self.declared_versions[pkg_name]):
                 return
 
+        tty.debug(
+            f"[SETUP]: {pkg_name}: adding declared version ({version}, {weight}, {origin})",
+            level=2,
+        )
         self.possible_versions[pkg_name].add(version)
         self.declared_versions[pkg_name].append(declared)
 
@@ -993,6 +997,10 @@ class SpackSolverSetup:
                 result = versions[0] if len(versions) == 1 else None
             return result
 
+        def have(version, weight):
+            dvs = self.declared_versions[pkg_name]
+            return any([dv.version == version and dv.weight == weight for dv in dvs])
+
         indices = [-1, -1, -1]
         last_vers = [None, None, None]
         preferred_version = preferred()
@@ -1005,6 +1013,9 @@ class SpackSolverSetup:
 
             penalty = 1000000000 if version != preferred_version else 0
             weight = 1000000 * indices[0] + 1000 * indices[1] + indices[2] + penalty
+
+            while have(version, weight):
+                weight += 1
 
             self._add_declared_version(pkg_name, version, weight, provenance)
 
