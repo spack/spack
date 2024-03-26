@@ -358,6 +358,8 @@ class CMakeBuilder(BaseBuilder, cmake.CMakeBuilder):
         due to incorrectly using hdf5 target names
         https://github.com/spack/spack/pull/42878
         """
+        if sys.platform == "win32":
+            return
 
         pkgconfig_file = find(self.prefix, "netcdf.pc", recursive=True)
         cmakeconfig_file = find(self.prefix, "netCDFTargets.cmake", recursive=True)
@@ -365,9 +367,9 @@ class CMakeBuilder(BaseBuilder, cmake.CMakeBuilder):
         settingsconfig_file = find(self.prefix, "libnetcdf.settings", recursive=True)
 
         files = pkgconfig_file + cmakeconfig_file + ncconfig_file + settingsconfig_file
-
-        filter_file("hdf5-shared", "hdf5", *files, ignore_absent=True)
-        filter_file("hdf5_hl-shared", "hdf5_hl", *files, ignore_absent=True)
+        config = "shared" if self.spec.satisfies("+shared") else "static"
+        filter_file(f"hdf5-{config}", "hdf5", *files, ignore_absent=True)
+        filter_file(f"hdf5_hl-{config}", "hdf5_hl", *files, ignore_absent=True)
 
 
 class AutotoolsBuilder(BaseBuilder, autotools.AutotoolsBuilder):

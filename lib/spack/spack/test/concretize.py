@@ -2114,6 +2114,15 @@ class TestConcretize:
         ):
             solver.driver.solve(setup, specs, reuse=[])
 
+    @pytest.mark.regression("43141")
+    @pytest.mark.only_clingo("Use case not supported by the original concretizer")
+    def test_clear_error_when_unknown_compiler_requested(self, mock_packages, config):
+        """Tests that the solver can report a case where the compiler cannot be set"""
+        with pytest.raises(
+            spack.error.UnsatisfiableSpecError, match="Cannot set the required compiler: a%foo"
+        ):
+            Spec("a %foo").concretized()
+
     @pytest.mark.regression("36339")
     def test_compiler_match_constraints_when_selected(self):
         """Test that, when multiple compilers with the same name are in the configuration
@@ -2604,3 +2613,28 @@ def test_reusable_externals_different_spec(mock_packages, tmpdir):
         {"mpich": {"externals": [{"spec": "mpich@4.1 +debug", "prefix": tmpdir.strpath}]}},
         local=False,
     )
+
+
+def test_concretization_version_order():
+    versions = [
+        (Version("develop"), {}),
+        (Version("1.0"), {}),
+        (Version("2.0"), {"deprecated": True}),
+        (Version("1.1"), {}),
+        (Version("1.1alpha1"), {}),
+        (Version("0.9"), {"preferred": True}),
+    ]
+    result = [
+        v
+        for v, _ in sorted(
+            versions, key=spack.solver.asp._concretization_version_order, reverse=True
+        )
+    ]
+    assert result == [
+        Version("0.9"),  # preferred
+        Version("1.1"),  # latest non-deprecated final version
+        Version("1.0"),  # latest non-deprecated final version
+        Version("1.1alpha1"),  # prereleases
+        Version("develop"),  # likely development version
+        Version("2.0"),  # deprecated
+    ]
