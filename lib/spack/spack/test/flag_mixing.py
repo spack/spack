@@ -107,7 +107,6 @@ packages:
 """
     update_concretize_scope(conf_str, "packages")
 
-    # Now check order and grouping w/multiple flags from spec
     s2 = Spec('y cflags="-a -b"').concretized()
     assert s2.satisfies('cflags="-a -b -c"')
     assert s2.compiler_flags["cflags"] == ["-c", "-a", "-b"]
