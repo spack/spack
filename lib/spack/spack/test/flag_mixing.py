@@ -140,13 +140,13 @@ compilers::
 """
     update_concretize_scope(conf_str, "compilers")
 
-    s3 = Spec('y cflags="-x7 -x4"').concretized()
-    assert s3.satisfies('cflags="-x3 -x4 -x5 -x6 -x7 -x8"')
-    assert s3.compiler_flags["cflags"] == ["-x3", "-x8", "-x5", "-x6", "-x7", "-x4"]
+    s4 = Spec('y cflags="-x7 -x4"').concretized()
+    assert s4.satisfies('cflags="-x3 -x4 -x5 -x6 -x7 -x8"')
+    assert s4.compiler_flags["cflags"] == ["-x3", "-x8", "-x5", "-x6", "-x7", "-x4"]
 
-    s4 = Spec('x+activatemultiflag ^y cflags="-x7 -x4"').concretized()
-    assert s4["y"].satisfies('cflags="-x3 -x4 -x5 -x6 -x7 -x8 -d1 -d2"')
-    assert s4["y"].compiler_flags["cflags"] == [
+    s5 = Spec('x+activatemultiflag ^y cflags="-x7 -x4"').concretized()
+    assert s5["y"].satisfies('cflags="-x3 -x4 -x5 -x6 -x7 -x8 -d1 -d2"')
+    assert s5["y"].compiler_flags["cflags"] == [
         "-x3",
         "-x8",
         "-d1",
