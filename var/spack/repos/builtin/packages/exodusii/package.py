@@ -101,9 +101,7 @@ class Exodusii(CMakePackage):
     variant("fortran", default=False, description="Compile with Fortran support")
     variant("shared", default=True, description="Enables the build of shared libraries")
     variant("mpi", default=True, description="Enables MPI parallelism.")
-    variant(
-        "thread_safe", default=False, description="Enable thread-safe exodus library"
-    )
+    variant("thread_safe", default=False, description="Enable thread-safe exodus library")
 
     depends_on("cmake@3.22:", when="@2023-10-24:", type="build")
     depends_on("cmake@3.17:", when="@:2023-05-30", type="build")
@@ -143,7 +141,6 @@ class Exodusii(CMakePackage):
                 define(project_name_base + "_ENABLE_SEACASExodus", True),
                 from_variant(project_name_base + "_ENABLE_SEACASExodus_for", "fortran"),
                 from_variant(project_name_base + "_ENABLE_SEACASExoIIv2for32", "fortran"),
-
                 define(project_name_base + "_HIDE_DEPRECATED_CODE", False),
                 from_variant("CMAKE_INSTALL_RPATH_USE_LINK_PATH", "shared"),
                 from_variant("BUILD_SHARED_LIBS", "shared"),
