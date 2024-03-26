@@ -61,12 +61,41 @@ def test_mix_spec_and_requirements(concretize_scope, test_repo):
     conf_str = """\
 packages:
   y:
-    require: cflags="-O2"
+    require: cflags="-c"
 """
     update_concretize_scope(conf_str, "packages")
 
-    s1 = Spec('y cflags="-Wall"').concretized()
-    assert s1.satisfies('cflags="-Wall -O2"')
+    s1 = Spec('y cflags="-a"').concretized()
+    assert s1.satisfies('cflags="-a -c"')
+
+
+def test_flag_order_and_grouping(concretize_scope, test_repo):
+    """Flags should be grouped on a per-source basis, the order
+    should match the original order they were listed in for the
+    source.
+    """
+    conf_str = """\
+packages:
+  y:
+    require: cflags="-c"
+"""
+    update_concretize_scope(conf_str, "packages")
+
+    # Now check order and grouping w/multiple flags from spec
+    s2 = Spec('y cflags="-a -b"').concretized()
+    assert s2.satisfies('cflags="-a -b -c"')
+    assert s2.compiler_flags["cflags"] == ["-c", "-a", "-b"]
+
+    conf_str = """\
+packages:
+  y:
+    require: cflags="-c -d"
+"""
+    update_concretize_scope(conf_str, "packages")
+
+    s3 = Spec('y cflags="-a -b -e"').concretized()
+    assert s3.satisfies('cflags="-a -b -c -d -e"')
+    assert s3.compiler_flags["cflags"] == ["-c", "-d", "-a", "-b", "-e"]
 
 
 def test_mix_spec_and_dependent(concretize_scope, test_repo):
