@@ -53,25 +53,25 @@ class OpenradiossStarter(CMakePackage):
     @property
     def compiler_name(self):
         compiler_mapping = {
-            "aocc": "64_AOCC",
-            "intel": "64_intel",
-            "oneapi": "64_intel",
-            "gcc": "64_gf",
-            "arm": "a64_gf",
+            "aocc": "linux64_AOCC",
+            "intel": "linux64_intel",
+            "oneapi": "linux64_intel",
+            "gcc": "linux64_gf",
+            "arm": "linuxa64",
         }
         compiler_name = compiler_mapping[self.spec.compiler.name]
         return compiler_name
 
     def cmake_args(self):
         args = [
-            "-DCMAKE_Fortran_COMPILER={0}".format(spack_fc),
-            "-DCMAKE_C_COMPILER={0}".format(spack_cc),
-            "-DCMAKE_CPP_COMPILER={0}".format(spack_cxx),
-            "-DCMAKE_CXX_COMPILER={0}".format(spack_cxx),
+            f"-DCMAKE_Fortran_COMPILER={spack_fc}",
+            f"-DCMAKE_C_COMPILER={spack_cc}",
+            f"-DCMAKE_CPP_COMPILER={spack_cxx}",
+            f"-DCMAKE_CXX_COMPILER={spack_cxx}",
             "-Dsanitize=0",
         ]
 
-        args.append("-Darch=linux" + self.compiler_name)
+        args.append(f"-Darch={self.compiler_name}")
 
         if "+sp" in self.spec:
             args.append("-Dprecision=sp")
@@ -88,12 +88,14 @@ class OpenradiossStarter(CMakePackage):
         else:
             args.append("-Dstatic_link=0")
 
+        args.append(f"-DEXEC_NAME=starter_{self.compiler_name}")
+
         return args
 
     def install(self, spec, prefix):
         mkdirp(join_path(prefix, "exec"))
 
-        exec_file = "starter_linux" + self.compiler_name
+        exec_file = f"starter_{self.compiler_name}"
 
         install(
             join_path(self.stage.source_path, "starter", exec_file),
