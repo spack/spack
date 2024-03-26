@@ -518,6 +518,30 @@ developer-tools-build:
     - artifacts: True
       job: developer-tools-generate
 
+###########################################
+# Build tests for different developer tools
+# manylinux2014
+###########################################
+.developer-tools-manylinux2014:
+  extends: [ ".linux_x86_64_v3" ]
+  variables:
+    SPACK_CI_STACK_NAME: developer-tools-manylinux2014
+
+developer-tools-manylinux2014-generate:
+  extends: [ ".developer-tools-manylinux2014", ".generate-x86_64"]
+  image:  ecpe4s/manylinux2014:2024.03.11
+
+developer-tools-manylinux2014-build:
+  extends: [ ".developer-tools-manylinux2014", ".build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: developer-tools-manylinux2014-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: developer-tools-manylinux2014-generate
+
 #########################################
 # RADIUSS
 #########################################
