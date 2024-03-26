@@ -856,6 +856,7 @@ spack:
     assert any(x.satisfies("mpileaks@2.2") for x in e._get_environment_specs())
 
 
+@pytest.mark.only_clingo("original concretizer does not support requirements")
 def test_config_change_existing(mutable_mock_env_path, tmp_path, mock_packages, mutable_config):
     """Test ``config change`` with config in the ``spack.yaml`` as well as an
     included file scope.
@@ -931,6 +932,7 @@ spack:
         spack.spec.Spec("bowtie@1.2.2").concretized()
 
 
+@pytest.mark.only_clingo("original concretizer does not support requirements")
 def test_config_change_new(mutable_mock_env_path, tmp_path, mock_packages, mutable_config):
     spack_yaml = tmp_path / ev.manifest_name
     spack_yaml.write_text(

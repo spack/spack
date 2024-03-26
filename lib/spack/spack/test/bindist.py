@@ -19,6 +19,8 @@ from pathlib import Path, PurePath
 import py
 import pytest
 
+import archspec.cpu
+
 from llnl.util.filesystem import join_path, visit_directory_tree
 
 import spack.binary_distribution as bindist
@@ -573,11 +575,20 @@ def test_update_sbang(tmpdir, test_mirror):
         uninstall_cmd("-y", "/%s" % new_spec.dag_hash())
 
 
-def test_install_legacy_buildcache_layout(install_mockery_mutable_config):
+@pytest.mark.skipif(
+    str(archspec.cpu.host().family) != "x86_64",
+    reason="test data uses gcc 4.5.0 which does not support aarch64",
+)
+def test_install_legacy_buildcache_layout(
+    mutable_config, compiler_factory, install_mockery_mutable_config
+):
     """Legacy buildcache layout involved a nested archive structure
     where the .spack file contained a repeated spec.json and another
     compressed archive file containing the install tree.  This test
     makes sure we can still read that layout."""
+    mutable_config.set(
+        "compilers", [compiler_factory(spec="gcc@4.5.0", operating_system="debian6")]
+    )
     legacy_layout_dir = os.path.join(test_path, "data", "mirrors", "legacy_layout")
     mirror_url = "file://{0}".format(legacy_layout_dir)
     filename = (

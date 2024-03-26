@@ -47,7 +47,7 @@ def enable_runtimes():
 
 
 def test_correct_gcc_runtime_is_injected_as_dependency(runtime_repo):
-    s = spack.spec.Spec("a%gcc@10.2.1 ^b%gcc@4.5.0").concretized()
+    s = spack.spec.Spec("a%gcc@10.2.1 ^b%gcc@4.8.0").concretized()
     a, b = s["a"], s["b"]
 
     # Both a and b should depend on the same gcc-runtime directly
@@ -78,9 +78,9 @@ def test_external_nodes_do_not_have_runtimes(runtime_repo, mutable_config, tmp_p
     "root_str,reused_str,expected,nruntime",
     [
         # The reused runtime is older than we need, thus we'll add a more recent one for a
-        ("a%gcc@10.2.1", "b%gcc@4.5.0", {"a": "gcc-runtime@10.2.1", "b": "gcc-runtime@4.5.0"}, 2),
+        ("a%gcc@10.2.1", "b%gcc@4.8.0", {"a": "gcc-runtime@10.2.1", "b": "gcc-runtime@4.8.0"}, 2),
         # The root is compiled with an older compiler, thus we'll reuse the runtime from b
-        ("a%gcc@4.5.0", "b%gcc@10.2.1", {"a": "gcc-runtime@10.2.1", "b": "gcc-runtime@10.2.1"}, 1),
+        ("a%gcc@4.8.0", "b%gcc@10.2.1", {"a": "gcc-runtime@10.2.1", "b": "gcc-runtime@10.2.1"}, 1),
     ],
 )
 def test_reusing_specs_with_gcc_runtime(root_str, reused_str, expected, nruntime, runtime_repo):
@@ -104,8 +104,8 @@ def test_reusing_specs_with_gcc_runtime(root_str, reused_str, expected, nruntime
     [
         # Ensure that, whether we have multiple runtimes in the DAG or not,
         # we always link only the latest version
-        ("a%gcc@10.2.1", "b%gcc@4.5.0", ["gcc-runtime@10.2.1"], ["gcc-runtime@4.5.0"]),
-        ("a%gcc@4.5.0", "b%gcc@10.2.1", ["gcc-runtime@10.2.1"], ["gcc-runtime@4.5.0"]),
+        ("a%gcc@10.2.1", "b%gcc@4.8.0", ["gcc-runtime@10.2.1"], ["gcc-runtime@4.8.0"]),
+        ("a%gcc@4.8.0", "b%gcc@10.2.1", ["gcc-runtime@10.2.1"], ["gcc-runtime@4.8.0"]),
     ],
 )
 def test_views_can_handle_duplicate_runtime_nodes(

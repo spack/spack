@@ -9,6 +9,8 @@ import os
 import py.path
 import pytest
 
+import archspec.cpu
+
 import llnl.util.filesystem as fs
 
 import spack.build_systems.autotools
@@ -209,6 +211,9 @@ class TestAutotoolsPackage:
             assert "gnuconfig version of config.guess" not in f.read()
 
     @pytest.mark.disable_clean_stage_check
+    @pytest.mark.skipif(
+        str(archspec.cpu.host().family) != "x86_64", reason="test data is specific for x86_64"
+    )
     def test_autotools_gnuconfig_replacement_no_gnuconfig(self, mutable_database, monkeypatch):
         """
         Tests whether a useful error message is shown when patch_config_files is
