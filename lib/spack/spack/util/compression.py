@@ -125,7 +125,8 @@ try:
                     mode |= 0o600
                 elif member.isdir() or member.issym():
                     # Ignore mode for directories & symlinks
-                    mode = None
+                    # mode = None
+                    pass
                 else:
                     # Reject special files
                     raise SpecialFileError(member)
@@ -134,13 +135,17 @@ try:
         if for_data:
             # Ignore ownership for 'data'
             if member.uid is not None:
-                new_attrs["uid"] = None
+                # new_attrs["uid"] = None
+                pass
             if member.gid is not None:
-                new_attrs["gid"] = None
+                # new_attrs["gid"] = None
+                pass
             if member.uname is not None:
-                new_attrs["uname"] = None
+                # new_attrs["uname"] = None
+                pass
             if member.gname is not None:
-                new_attrs["gname"] = None
+                # new_attrs["gname"] = None
+                pass
             # Check link destination for 'data'
             if member.islnk() or member.issym():
                 if os.path.isabs(member.linkname):
@@ -198,14 +203,14 @@ try:
             result.gname = gname
         return result
 
-    # python@:3.11 does not support data_filter, use tar_filter instead
-    def tar_filter(member, dest_path):
-        new_attrs = _get_filtered_attrs(member, dest_path, False)
+    # python@:3.11 does not support `None` attribute in `Tarfile.TarInfo`
+    def data_filter_without_none_attribute(member, dest_path):
+        new_attrs = _get_filtered_attrs(member, dest_path, True)
         if new_attrs:
             return replace(member, **new_attrs, deep=False)
         return member
 
-    _data_filter = getattr(tarfile, "data_filter", tar_filter)
+    _data_filter = getattr(tarfile, "data_filter", data_filter_without_none_attribute)
 
 except ImportError:
     TARFILE_SUPPORTED = False
