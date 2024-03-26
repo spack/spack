@@ -1882,7 +1882,9 @@ class TestConcretize:
         s = root_spec.concretized()
         other_os = s.copy()
         mock_os = "ubuntu2204"
-        other_os.architecture = spack.spec.ArchSpec("test-{os}-x86_64".format(os=mock_os))
+        other_os.architecture = spack.spec.ArchSpec(
+            "test-{os}-{target}".format(os=mock_os, target=str(s.architecture.target))
+        )
         reusable_specs = [other_os]
         print(s.os, mock_os, type(s.os))
         overrides = {"concretizer": {"reuse": True, "os_compatible": {s.os: mock_os}}}
