@@ -61,4 +61,8 @@ class PkgConfig(AutotoolsPackage):
             # the cycle by using the internal glib.
             config_args.append("--with-internal-glib")
 
+        if "oneapi" in self.spec.compiler.name:
+            # Avoid treating int-conversion warning as error with oneapi.
+            config_args.append("CFLAGS=-Wno-error=int-conversion")
+
         return config_args
