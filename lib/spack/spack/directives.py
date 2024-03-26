@@ -94,6 +94,9 @@ Patcher = Callable[[Union["spack.package_base.PackageBase", Dependency]], None]
 PatchesType = Optional[Union[Patcher, str, List[Union[Patcher, str]]]]
 
 
+SUPPORTED_LANGUAGES = ("fortran", "cxx")
+
+
 def _make_when_spec(value: WhenType) -> Optional["spack.spec.Spec"]:
     """Create a ``Spec`` that indicates when a directive should be applied.
 
@@ -585,6 +588,9 @@ def depends_on(
     @see The section "Dependency specs" in the Spack Packaging Guide.
 
     """
+    if spack.spec.Spec(spec).name in SUPPORTED_LANGUAGES:
+        assert type == "build", "languages must be of 'build' type"
+        return _language(lang_spec_str=spec, when=when)
 
     def _execute_depends_on(pkg: "spack.package_base.PackageBase"):
         _depends_on(pkg, spec, when=when, type=type, patches=patches)
@@ -660,6 +666,7 @@ def patch(
     level: int = 1,
     when: WhenType = None,
     working_dir: str = ".",
+    reverse: bool = False,
     sha256: Optional[str] = None,
     archive_sha256: Optional[str] = None,
 ) -> Patcher:
@@ -673,10 +680,10 @@ def patch(
         level: patch level (as in the patch shell command)
         when: optional anonymous spec that specifies when to apply the patch
         working_dir: dir to change to before applying
+        reverse: reverse the patch
         sha256: sha256 sum of the patch, used to verify the patch (only required for URL patches)
         archive_sha256: sha256 sum of the *archive*, if the patch is compressed (only required for
             compressed URL patches)
-
     """
 
     def _execute_patch(pkg_or_dep: Union["spack.package_base.PackageBase", Dependency]):
@@ -711,13 +718,14 @@ def patch(
                 url_or_filename,
                 level,
                 working_dir=working_dir,
+                reverse=reverse,
                 ordering_key=ordering_key,
                 sha256=sha256,
                 archive_sha256=archive_sha256,
             )
         else:
             patch = spack.patch.FilePatch(
-                pkg, url_or_filename, level, working_dir, ordering_key=ordering_key
+                pkg, url_or_filename, level, working_dir, reverse, ordering_key=ordering_key
             )
 
         cur_patches.append(patch)
@@ -919,9 +927,9 @@ def maintainers(*names: str):
     """
 
     def _execute_maintainer(pkg):
-        maintainers_from_base = getattr(pkg, "maintainers", [])
-        # Here it is essential to copy, otherwise we might add to an empty list in the parent
-        pkg.maintainers = list(sorted(set(maintainers_from_base + list(names))))
+        maintainers = set(getattr(pkg, "maintainers", []))
+        maintainers.update(names)
+        pkg.maintainers = sorted(maintainers)
 
     return _execute_maintainer
 
@@ -965,7 +973,6 @@ def license(
         checked_by: string or list of strings indicating which github user checked the
             license (if any).
         when: A spec specifying when the license applies.
-            when: A spec specifying when the license applies.
     """
 
     return lambda pkg: _execute_license(pkg, license_identifier, when)
@@ -1010,6 +1017,21 @@ def requires(*requirement_specs: str, policy="one_of", when=None, msg=None):
         requirement_list.append((requirements, policy, msg_with_name))
 
     return _execute_requires
+
+
+@directive("languages")
+def _language(lang_spec_str: str, *, when: Optional[Union[str, bool]] = None):
+    """Temporary implementation of language virtuals, until compilers are proper dependencies."""
+
+    def _execute_languages(pkg: "spack.package_base.PackageBase"):
+        when_spec = _make_when_spec(when)
+        if not when_spec:
+            return
+
+        languages = pkg.languages.setdefault(when_spec, set())
+        languages.add(lang_spec_str)
+
+    return _execute_languages
 
 
 class DirectiveError(spack.error.SpackError):

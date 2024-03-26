@@ -15,7 +15,7 @@ import spack.compilers
 import spack.spec
 import spack.util.environment
 from spack.compiler import Compiler
-from spack.util.executable import ProcessError
+from spack.util.executable import Executable, ProcessError
 
 
 @pytest.fixture()
@@ -62,10 +62,16 @@ def test_multiple_conflicting_compiler_definitions(mutable_config):
     assert cmp.f77 == "f77"
 
 
-def test_get_compiler_duplicates(config):
+def test_get_compiler_duplicates(mutable_config, compiler_factory):
     # In this case there is only one instance of the specified compiler in
     # the test configuration (so it is not actually a duplicate), but the
     # method behaves the same.
+    cnl_compiler = compiler_factory(spec="gcc@4.5.0", operating_system="CNL")
+    # CNL compiler has no target attribute, and this is essential to make detection pass
+    del cnl_compiler["compiler"]["target"]
+    mutable_config.set(
+        "compilers", [compiler_factory(spec="gcc@4.5.0", operating_system="SuSE11"), cnl_compiler]
+    )
     cfg_file_to_duplicates = spack.compilers.get_compiler_duplicates(
         "gcc@4.5.0", spack.spec.ArchSpec("cray-CNL-xeon")
     )
@@ -73,13 +79,6 @@ def test_get_compiler_duplicates(config):
     assert len(cfg_file_to_duplicates) == 1
     cfg_file, duplicates = next(iter(cfg_file_to_duplicates.items()))
     assert len(duplicates) == 1
-
-
-def test_all_compilers(config):
-    all_compilers = spack.compilers.all_compilers()
-    filtered = [x for x in all_compilers if str(x.spec) == "clang@=3.3"]
-    filtered = [x for x in filtered if x.operating_system == "SuSE11"]
-    assert len(filtered) == 1
 
 
 @pytest.mark.parametrize(
@@ -138,11 +137,11 @@ class MockCompiler(Compiler):
             environment={},
         )
 
-    def _get_compiler_link_paths(self, paths):
+    def _get_compiler_link_paths(self):
         # Mock os.path.isdir so the link paths don't have to exist
         old_isdir = os.path.isdir
         os.path.isdir = lambda x: True
-        ret = super()._get_compiler_link_paths(paths)
+        ret = super()._get_compiler_link_paths()
         os.path.isdir = old_isdir
         return ret
 
@@ -197,37 +196,37 @@ def call_compiler(exe, *args, **kwargs):
 @pytest.mark.parametrize(
     "exe,flagname",
     [
-        ("cxx", ""),
         ("cxx", "cxxflags"),
         ("cxx", "cppflags"),
         ("cxx", "ldflags"),
-        ("cc", ""),
         ("cc", "cflags"),
         ("cc", "cppflags"),
-        ("fc", ""),
-        ("fc", "fflags"),
-        ("f77", "fflags"),
-        ("f77", "cppflags"),
     ],
 )
 @pytest.mark.enable_compiler_link_paths
 def test_get_compiler_link_paths(monkeypatch, exe, flagname):
     # create fake compiler that emits mock verbose output
     compiler = MockCompiler()
-    monkeypatch.setattr(spack.util.executable.Executable, "__call__", call_compiler)
+    monkeypatch.setattr(Executable, "__call__", call_compiler)
 
-    # Grab executable path to test
-    paths = [getattr(compiler, exe)]
+    if exe == "cxx":
+        compiler.cc = None
+        compiler.fc = None
+        compiler.f77 = None
+    elif exe == "cc":
+        compiler.cxx = None
+        compiler.fc = None
+        compiler.f77 = None
+    else:
+        assert False
 
     # Test without flags
-    dirs = compiler._get_compiler_link_paths(paths)
-    assert dirs == no_flag_dirs
+    assert compiler._get_compiler_link_paths() == no_flag_dirs
 
     if flagname:
         # set flags and test
-        setattr(compiler, "flags", {flagname: ["--correct-flag"]})
-        dirs = compiler._get_compiler_link_paths(paths)
-        assert dirs == flag_dirs
+        compiler.flags = {flagname: ["--correct-flag"]}
+        assert compiler._get_compiler_link_paths() == flag_dirs
 
 
 def test_get_compiler_link_paths_no_path():
@@ -236,17 +235,13 @@ def test_get_compiler_link_paths_no_path():
     compiler.cxx = None
     compiler.f77 = None
     compiler.fc = None
-
-    dirs = compiler._get_compiler_link_paths([compiler.cxx])
-    assert dirs == []
+    assert compiler._get_compiler_link_paths() == []
 
 
 def test_get_compiler_link_paths_no_verbose_flag():
     compiler = MockCompiler()
     compiler._verbose_flag = None
-
-    dirs = compiler._get_compiler_link_paths([compiler.cxx])
-    assert dirs == []
+    assert compiler._get_compiler_link_paths() == []
 
 
 @pytest.mark.not_on_windows("Not supported on Windows (yet)")
@@ -275,11 +270,11 @@ fi
     monkeypatch.setattr(spack.util.module_cmd, "module", module)
 
     compiler = MockCompiler()
+    compiler.cc = gcc
     compiler.environment = {"set": {"ENV_SET": "1"}}
     compiler.modules = ["turn_on"]
 
-    dirs = compiler._get_compiler_link_paths([gcc])
-    assert dirs == no_flag_dirs
+    assert compiler._get_compiler_link_paths() == no_flag_dirs
 
 
 # Get the desired flag from the specified compiler spec.
@@ -658,7 +653,25 @@ def test_xl_r_flags():
     "compiler_spec,expected_result",
     [("gcc@4.7.2", False), ("clang@3.3", False), ("clang@8.0.0", True)],
 )
-def test_detecting_mixed_toolchains(compiler_spec, expected_result, config):
+def test_detecting_mixed_toolchains(
+    compiler_spec, expected_result, mutable_config, compiler_factory
+):
+    mixed_c = compiler_factory(spec="clang@8.0.0", operating_system="debian6")
+    mixed_c["compiler"]["paths"] = {
+        "cc": "/path/to/clang-8",
+        "cxx": "/path/to/clang++-8",
+        "f77": "/path/to/gfortran-9",
+        "fc": "/path/to/gfortran-9",
+    }
+    mutable_config.set(
+        "compilers",
+        [
+            compiler_factory(spec="gcc@4.7.2", operating_system="debian6"),
+            compiler_factory(spec="clang@3.3", operating_system="debian6"),
+            mixed_c,
+        ],
+    )
+
     compiler = spack.compilers.compilers_for_spec(compiler_spec).pop()
     assert spack.compilers.is_mixed_toolchain(compiler) is expected_result
 
@@ -824,7 +837,7 @@ fi
     def _call(*args, **kwargs):
         raise ProcessError("Failed intentionally")
 
-    monkeypatch.setattr(spack.util.executable.Executable, "__call__", _call)
+    monkeypatch.setattr(Executable, "__call__", _call)
 
     # Run and no change to environment
     compilers = spack.compilers.get_compilers([compiler_dict])

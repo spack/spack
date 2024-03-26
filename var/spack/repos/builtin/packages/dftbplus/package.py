@@ -15,8 +15,8 @@ class Dftbplus(CMakePackage, MakefilePackage):
     url = "https://github.com/dftbplus/dftbplus/releases/download/22.1/dftbplus-22.1.tar.xz"
     git = "https://github.com/dftbplus/dftbplus.git"
 
-    maintainers = ["HaoZeke", "aradi", "iamashwin99"]
-    generator = "Ninja"
+    maintainers("HaoZeke", "aradi", "iamashwin99")
+    generator("ninja")
 
     build_system(
         conditional("cmake", when="@20.1:"),
