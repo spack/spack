@@ -29,6 +29,7 @@ class PyKorniaRs(PythonPackage):
     build_directory = "py-kornia"
 
     depends_on("py-maturin@1.3.2:", type="build")
+    depends_on("rust+dev", type="build")
 
     def setup_build_environment(self, env):
         env.set("RUST_BACKTRACE", "full")
