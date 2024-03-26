@@ -30,18 +30,14 @@ class PyKorniaRs(PythonPackage):
 
     depends_on("py-maturin@1.3.2:", type="build")
 
-    # Required to build rav1e
+    # rav1e needs rustdoc
     depends_on("rust+dev", type="build")
 
-    # Required to build pyo3
+    # pyo3 needs cmake
     depends_on("cmake", type="build")
 
-    # Required to build turbojpeg-sys
+    # turbojpeg-sys needs an assembly compiler
     depends_on("nasm", type="build")
 
-    # Required to build dlpack-rs
+    # dlpack-rs needs libclang
     depends_on("llvm+clang")
-
-    def setup_build_environment(self, env):
-        env.set("RUST_BACKTRACE", "full")
-        env.set("CARGO_PROFILE_RELEASE_BUILD_OVERRIDE_DEBUG", "true")
