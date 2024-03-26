@@ -36,6 +36,7 @@ jobs:
     - uses: codecov/codecov-action@54bcd8715eee62d40e33596ef5e8f0f48dbbccab
       with:
         flags: unittests,windows
+        token: ${{ secrets.CODECOV_TOKEN }}
   unit-tests-cmd:
     runs-on: windows-latest
     steps:
@@ -60,6 +61,7 @@ jobs:
     - uses: codecov/codecov-action@54bcd8715eee62d40e33596ef5e8f0f48dbbccab
       with:
         flags: unittests,windows
+        token: ${{ secrets.CODECOV_TOKEN }}
   build-abseil:
     runs-on: windows-latest
     steps:

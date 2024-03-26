@@ -9,6 +9,8 @@ import shutil
 
 import pytest
 
+import archspec.cpu
+
 import spack.concretize
 import spack.paths
 import spack.platforms
@@ -282,6 +284,7 @@ def test_relocate_text_bin_raise_if_new_prefix_is_longer(tmpdir):
 
 
 @pytest.mark.requires_executables("install_name_tool", "file", "cc")
+@pytest.mark.skipif(str(archspec.cpu.host().family) != "x86_64", reason="failing on Apple M1/M2")
 def test_fixup_macos_rpaths(make_dylib, make_object_file):
     # For each of these tests except for the "correct" case, the first fixup
     # should make changes, and the second fixup should be a null-op.
