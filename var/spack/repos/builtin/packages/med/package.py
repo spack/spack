@@ -16,14 +16,32 @@ class Med(CMakePackage):
 
     license("LGPL-3.0-only")
 
+    version(
+        "5.0.0",
+        sha256="267e76d0c67ec51c10e3199484ec1508baa8d5ed845c628adf660529dce7a3d4",
+        url="https://files.salome-platform.org/Salome/medfile/med-5.0.0.tar.bz2",
+    )
+    version(
+        "4.1.1",
+        sha256="a082b705d1aafe95d3a231d12c57f0b71df554c253e190acca8d26fc775fb1e6",
+        url="https://files.salome-platform.org/Salome/medfile/med-4.1.1.tar.gz",
+    )
     # 4.1.0 does not compile in static mode
-    version("4.1.0", sha256="847db5d6fbc9ce6924cb4aea86362812c9a5ef6b9684377e4dd6879627651fce")
+    version(
+        "4.1.0",
+        sha256="847db5d6fbc9ce6924cb4aea86362812c9a5ef6b9684377e4dd6879627651fce",
+        deprecated=True,
+    )
     version(
         "4.0.0",
         sha256="a474e90b5882ce69c5e9f66f6359c53b8b73eb448c5f631fa96e8cd2c14df004",
-        preferred=True,
+        deprecated=True,
     )
-    version("3.2.0", sha256="d52e9a1bdd10f31aa154c34a5799b48d4266dc6b4a5ee05a9ceda525f2c6c138")
+    version(
+        "3.2.0",
+        sha256="d52e9a1bdd10f31aa154c34a5799b48d4266dc6b4a5ee05a9ceda525f2c6c138",
+        deprecated=True,
+    )
 
     variant("api23", default=True, description="Enable API2.3")
     variant("mpi", default=True, description="Enable MPI")
@@ -31,19 +49,22 @@ class Med(CMakePackage):
     variant("fortran", default=False, description="Enable Fortran support")
 
     depends_on("mpi", when="+mpi")
+
     depends_on("hdf5@:1.8.22+mpi", when="@3.2.0+mpi")
-    depends_on("hdf5@1.10.2:1.10.7+mpi", when="@4.0.0:+mpi")
+    depends_on("hdf5@1.10.2:1.10.7+mpi", when="@4+mpi")
     depends_on("hdf5@:1.8.22~mpi", when="@3.2.0~mpi")
-    depends_on("hdf5@1.10.2:1.10.7~mpi", when="@4.0.0:~mpi")
+    depends_on("hdf5@1.10.2:1.10.7~mpi", when="@4~mpi")
     # the "TARGET hdf5" patch below only works with HDF5 shared library builds
-    depends_on("hdf5+shared", when="@4.0.0:4.1.99")
+    depends_on("hdf5+shared", when="@4")
+    depends_on("hdf5@1.12.1:1.12+mpi", when="@5:+mpi")
+    depends_on("hdf5@1.12.1:1.12~mpi", when="@5:~mpi")
 
     conflicts("@4.1.0", when="~shared", msg="Link error when static")
 
     # C++11 requires a space between literal and identifier
     patch("add_space.patch", when="@3.2.0")
     # fix problem where CMake "could not find TARGET hdf5"
-    patch("med-4.1.0-hdf5-target.patch", when="@4.0.0:4.1.99")
+    patch("med-4.1.0-hdf5-target.patch", when="@4.0.0:4.1.0")
 
     def patch(self):
         # resembles FindSalomeHDF5.patch as in salome-configuration
