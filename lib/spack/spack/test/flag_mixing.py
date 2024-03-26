@@ -114,13 +114,13 @@ packages:
     conf_str = """\
 packages:
   y:
-    require: cflags="-x5 -y5"
+    require: cflags="-x5 -x6"
 """
     update_concretize_scope(conf_str, "packages")
 
-    s3 = Spec('y cflags="-x4 -y6"').concretized()
-    assert s3.satisfies('cflags="-x5 -y5 -x4 -y6"')
-    assert s3.compiler_flags["cflags"] == ["-x5", "-y5", "-x4", "-y6"]
+    s3 = Spec('y cflags="-x7 -x4"').concretized()
+    assert s3.satisfies('cflags="-x4 -x5 -x6 -x7"')
+    assert s3.compiler_flags["cflags"] == ["-x5", "-x6", "-x7", "-x4"]
 
     conf_str = """\
 compilers::
@@ -132,12 +132,12 @@ compilers::
       f77: null
       fc: null
     flags:
-      cflags: "-x3 -y7"
+      cflags: "-x3 -x8"
     operating_system: debian6
     modules: []
 """
     update_concretize_scope(conf_str, "compilers")
 
-    s3 = Spec('y cflags="-x4 -y6"').concretized()
-    assert s3.satisfies('cflags="-x3 -x4 -x5 -y5 -y6 -y7"')
-    assert s3.compiler_flags["cflags"] == ["-x3", "-y7", "-x5", "-y5", "-x4", "-y6"]
+    s3 = Spec('y cflags="-x7 -x4"').concretized()
+    assert s3.satisfies('cflags="-x3 -x4 -x5 -x6 -x7 -x8"')
+    assert s3.compiler_flags["cflags"] == ["-x3", "-x8", "-x5", "-x6", "-x7", "-x4"]
