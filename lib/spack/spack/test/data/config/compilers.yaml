@@ -20,16 +20,6 @@ compilers:
     modules: []
     target: {target}
 - compiler:
-    spec: gcc@4.4.0
-    operating_system: redhat6
-    paths:
-      cc: /path/to/gcc440
-      cxx: /path/to/g++440
-      f77: /path/to/gfortran440
-      fc: /path/to/gfortran440
-    modules: []
-    target: {target}
-- compiler:
     spec: clang@12.0.0
     operating_system: {linux_os.name}{linux_os.version}
     paths:
