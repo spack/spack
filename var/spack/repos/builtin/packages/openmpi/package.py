@@ -443,6 +443,7 @@ class Openmpi(AutotoolsPackage, CudaPackage):
                 "ofi",
                 "fca",
                 "hcoll",
+                "ucc",
                 "xpmem",
                 "cma",
                 "knem",
@@ -498,6 +499,26 @@ class Openmpi(AutotoolsPackage, CudaPackage):
     variant("lustre", default=False, description="Lustre filesystem library support")
     variant("romio", default=True, when="@:5", description="Enable ROMIO support")
     variant("romio", default=False, when="@5:", description="Enable ROMIO support")
+    variant(
+        "romio-filesystem",
+        description="Add the filesystem to romio",
+        values=disjoint_sets(
+            (
+                "daos",
+                "nfs",
+                "ufs",
+                "pvfs2",
+                "testfs",
+                "xfs",
+                "panfs",
+                "lustre",
+                "gpfs",
+                "ime",
+                "quobytefs",
+            )
+        ).with_non_feature_values("none"),
+    )
+
     variant("rsh", default=True, description="Enable rsh (openssh) process lifecycle management")
     variant(
         "orterunprefix",
@@ -573,6 +594,7 @@ class Openmpi(AutotoolsPackage, CudaPackage):
     depends_on("libfabric", when="fabrics=ofi")
     depends_on("fca", when="fabrics=fca")
     depends_on("hcoll", when="fabrics=hcoll")
+    depends_on("ucc", when="fabrics=ucc")
     depends_on("xpmem", when="fabrics=xpmem")
     depends_on("knem", when="fabrics=knem")
 
@@ -585,7 +607,7 @@ class Openmpi(AutotoolsPackage, CudaPackage):
     with when("~internal-pmix"):
         depends_on("pmix@1", when="@2")
         depends_on("pmix@3.2:", when="@4:")
-        depends_on("pmix@4.2:", when="@5:")
+        depends_on("pmix@4.2.4:", when="@5:")
 
         # pmix@4.2.3 contains a breaking change, compat fixed in openmpi@4.1.6
         # See https://www.mail-archive.com/announce@lists.open-mpi.org//msg00158.html
@@ -614,6 +636,8 @@ class Openmpi(AutotoolsPackage, CudaPackage):
     conflicts("fabrics=fca", when="@:1.4,5:")
     # hcoll support was added in 1.7.3:
     conflicts("fabrics=hcoll", when="@:1.7.2")
+    # ucc support was added in 4.1.4:
+    conflicts("fabrics=ucc", when="@:4.1.3")
     # xpmem support was added in 1.7
     conflicts("fabrics=xpmem", when="@:1.6")
     # cma support was added in 1.7
@@ -820,8 +844,6 @@ class Openmpi(AutotoolsPackage, CudaPackage):
         env.set("MPIF90", join_path(self.prefix.bin, "mpif90"))
 
     def setup_dependent_build_environment(self, env, dependent_spec):
-        self.setup_run_environment(env)
-
         # Use the spack compiler wrappers under MPI
         env.set("OMPI_CC", spack_cc)
         env.set("OMPI_CXX", spack_cxx)
@@ -906,6 +928,11 @@ class Openmpi(AutotoolsPackage, CudaPackage):
         if not activated:
             return "--without-hcoll"
         return "--with-hcoll={0}".format(self.spec["hcoll"].prefix)
+
+    def with_or_without_ucc(self, activated):
+        if not activated:
+            return "--without-ucc"
+        return "--with-ucc={0}".format(self.spec["ucc"].prefix)
 
     def with_or_without_xpmem(self, activated):
         if not activated:
@@ -1028,8 +1055,13 @@ class Openmpi(AutotoolsPackage, CudaPackage):
         elif spec.satisfies("@1.7.4:"):
             config_args.extend(["--disable-java", "--disable-mpi-java"])
 
+        # Romio
         if "~romio" in spec:
             config_args.append("--disable-io-romio")
+
+        if not spec.satisfies("romio-filesystem=none"):
+            args = "+".join(spec.variants["romio-filesystem"].value)
+            config_args.append(f"--with-io-romio-flags=--with-file-system={args}")
 
         if "+gpfs" in spec:
             config_args.append("--with-gpfs")

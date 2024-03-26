@@ -24,6 +24,7 @@ class Enzyme(CMakePackage):
     root_cmakelists_dir = "enzyme"
 
     version("main", branch="main")
+    version("0.0.100", sha256="fbc53ec02adc0303ff200d7699afface2d9fbc7350664e6c6d4c527ef11c2e82")
     version("0.0.81", sha256="4c17d0c28f0572a3ab97a60f1e56bbc045ed5dd64c2daac53ae34371ca5e8b34")
     version("0.0.69", sha256="144d964187551700fdf0a4807961ceab1480d4e4cd0bb0fc7bbfab48fe053aa2")
     version("0.0.48", sha256="f5af62448dd2a8a316e59342ff445003581bc154f06b9b4d7a5a2c7259cf5769")
@@ -36,7 +37,8 @@ class Enzyme(CMakePackage):
     depends_on("llvm@7:14", when="@0.0.32:0.0.47")
     depends_on("llvm@7:14", when="@0.0.48:0.0.68")
     depends_on("llvm@9:16", when="@0.0.69:0.0.79")
-    depends_on("llvm@11:16", when="@0.0.80:")
+    depends_on("llvm@11:16", when="@0.0.80:0.0.99")
+    depends_on("llvm@11:19", when="@0.0.100:")
     depends_on("cmake@3.13:", type="build")
 
     def cmake_args(self):

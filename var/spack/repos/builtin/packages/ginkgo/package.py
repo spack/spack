@@ -47,7 +47,8 @@ class Ginkgo(CMakePackage, CudaPackage, ROCmPackage):
     variant("sycl", default=False, description="Enable SYCL backend")
     variant("develtools", default=False, description="Compile with develtools enabled")
     variant("hwloc", default=False, description="Enable HWLOC support")
-    variant("mpi", default=False, description="Enable MPI support")
+    variant("sde", default=False, description="Enable PAPI SDE support", when="@1.7.0:")
+    variant("mpi", default=False, description="Enable MPI support", when="@1.5.0:")
 
     depends_on("cmake@3.9:", type="build", when="@:1.3.0")
     depends_on("cmake@3.13:", type="build", when="@1.4.0:1.6.0")
@@ -68,6 +69,8 @@ class Ginkgo(CMakePackage, CudaPackage, ROCmPackage):
     # setup for rocthrust, this needs to also be added here.
     depends_on("rocprim", when="+rocm")
     depends_on("hwloc@2.1:", when="+hwloc")
+    # TODO: replace with the next PAPI version when available (>7.0.1.0)
+    depends_on("papi@master+sde", when="+sde")
 
     depends_on("googletest", type="test")
     depends_on("numactl", type="test", when="+hwloc")
@@ -78,7 +81,6 @@ class Ginkgo(CMakePackage, CudaPackage, ROCmPackage):
 
     conflicts("%gcc@:5.2.9")
     conflicts("+rocm", when="@:1.1.1")
-    conflicts("+mpi", when="@:1.4.0")
 
     # ROCm 4.1.0 breaks platform settings which breaks Ginkgo's HIP support.
     conflicts("^hip@4.1.0:", when="@:1.3.0")
@@ -97,6 +99,9 @@ class Ginkgo(CMakePackage, CudaPackage, ROCmPackage):
     conflicts(
         "+sycl", when="@:1.4.0", msg="For SYCL support, please use Ginkgo version 1.4.0 and newer."
     )
+
+    # Probably fixed in NVIDIA/cccl#1528 which hopefully comes with the next CUDA release
+    conflicts("^cuda@12.4.0", when="+cuda", msg="CCCL 2.3 bug causes build failure.")
 
     # https://github.com/ginkgo-project/ginkgo/pull/1524
     patch("ginkgo-sycl-pr1524.patch", when="@1.7.0 +sycl %oneapi@2024:")
@@ -151,6 +156,7 @@ class Ginkgo(CMakePackage, CudaPackage, ROCmPackage):
             from_variant("BUILD_SHARED_LIBS", "shared"),
             from_variant("GINKGO_JACOBI_FULL_OPTIMIZATIONS", "full_optimizations"),
             from_variant("GINKGO_BUILD_HWLOC", "hwloc"),
+            from_variant("GINKGO_WITH_PAPI_SDE", "sde"),
             from_variant("GINKGO_DEVEL_TOOLS", "develtools"),
             # As we are not exposing benchmarks, examples, tests nor doc
             # as part of the installation, disable building them altogether.

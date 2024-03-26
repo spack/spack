@@ -33,7 +33,7 @@ class Python(Package):
     list_depth = 1
     tags = ["windows", "build-tools"]
 
-    maintainers("adamjstewart", "skosukhin", "scheibelp")
+    maintainers("skosukhin", "scheibelp")
 
     phases = ["configure", "build", "install"]
 
@@ -1306,7 +1306,7 @@ print(json.dumps(config))
             except (OSError, KeyError):
                 target = None
             if target:
-                os.symlink(target, dst)
+                os.symlink(os.path.relpath(target, os.path.dirname(dst)), dst)
             else:
                 view.link(src, dst, spec=self.spec)
 
