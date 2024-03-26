@@ -36,4 +36,3 @@ class Dpcpp(spack.compilers.oneapi.Oneapi):
     @property
     def is_clang_based(self):
         return True
-

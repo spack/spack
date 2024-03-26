@@ -79,4 +79,3 @@ class Rocmcc(spack.compilers.clang.Clang):
     @property
     def is_clang_based(self):
         return True
-
