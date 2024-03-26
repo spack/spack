@@ -108,49 +108,19 @@ class LuaImplPackage(MakefilePackage):
             make("build")
             make("install")
 
-    def append_paths(self, paths, cpaths, path):
-        paths.append(os.path.join(path, "?.lua"))
-        paths.append(os.path.join(path, "?", "init.lua"))
-        cpaths.append(os.path.join(path, "?.so"))
-
-    def _setup_dependent_env_helper(self, env, dependent_spec):
-        lua_paths = []
-        for d in dependent_spec.traverse(deptype=("build", "run")):
-            if d.package.extends(self.spec):
-                lua_paths.append(os.path.join(d.prefix, self.lua_lib_dir))
-                lua_paths.append(os.path.join(d.prefix, self.lua_lib64_dir))
-                lua_paths.append(os.path.join(d.prefix, self.lua_share_dir))
-
-        lua_patterns = []
-        lua_cpatterns = []
-        for p in lua_paths:
-            if os.path.isdir(p):
-                self.append_paths(lua_patterns, lua_cpatterns, p)
-
-        # Always add this package's paths
-        for p in (
-            os.path.join(self.spec.prefix, self.lua_lib_dir),
-            os.path.join(self.spec.prefix, self.lua_lib64_dir),
-            os.path.join(self.spec.prefix, self.lua_share_dir),
-        ):
-            self.append_paths(lua_patterns, lua_cpatterns, p)
-
-        return lua_patterns, lua_cpatterns
-
-    def setup_dependent_build_environment(self, env, dependent_spec):
-        lua_patterns, lua_cpatterns = self._setup_dependent_env_helper(env, dependent_spec)
-
-        env.prepend_path("LUA_PATH", ";".join(lua_patterns), separator=";")
-        env.prepend_path("LUA_CPATH", ";".join(lua_cpatterns), separator=";")
-
     def setup_dependent_run_environment(self, env, dependent_spec):
-        # For run time environment set only the path for dependent_spec and
-        # prepend it to LUAPATH
-        lua_patterns, lua_cpatterns = self._setup_dependent_env_helper(env, dependent_spec)
+        # Prepend directories of the dependent to LUA_PATH and LUA_CPATH if the dependent extends
+        # lua and the dirs exist
+        if not dependent_spec.package.extends(self.spec):
+            return
 
-        if dependent_spec.package.extends(self.spec):
-            env.prepend_path("LUA_PATH", ";".join(lua_patterns), separator=";")
-            env.prepend_path("LUA_CPATH", ";".join(lua_cpatterns), separator=";")
+        for dir in (self.lua_lib_dir, self.lua_lib64_dir, self.lua_share_dir):
+            abs_dir = os.path.join(dependent_spec.prefix, dir)
+            if not os.path.isdir(abs_dir):
+                continue
+            env.prepend_path("LUA_PATH", os.path.join(abs_dir, "?.lua"), separator=";")
+            env.prepend_path("LUA_PATH", os.path.join(abs_dir, "?", "init.lua"), separator=";")
+            env.prepend_path("LUA_CPATH", os.path.join(abs_dir, "?.so"), separator=";")
 
     def setup_run_environment(self, env):
         env.prepend_path(
