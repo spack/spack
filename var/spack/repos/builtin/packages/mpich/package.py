@@ -63,7 +63,7 @@ class Mpich(AutotoolsPackage, CudaPackage, ROCmPackage):
         "pmi",
         default="pmi",
         description="""PMI interface.""",
-        values=("off", "pmi", "pmi2", "pmix", "cray"),
+        values=("pmi", "pmi2", "pmix", "cray"),
         multi=False,
     )
     variant(
@@ -136,6 +136,9 @@ supported, and netmod is ignored if device is ch3:sock.""",
         when="@3.3: device=ch4 netmod=ucx",
     )
     depends_on("hcoll", when="+hcoll")
+
+    variant("xpmem", default=False, when="@3.4:", description="Enable XPMEM support")
+    depends_on("xpmem", when="+xpmem")
 
     # Todo: cuda can be a conditional variant, but it does not seem to work when
     # overriding the variant from CudaPackage.
@@ -385,8 +388,6 @@ supported, and netmod is ignored if device is ch3:sock.""",
             if re.search(r"--with-thread-package=argobots", output):
                 variants.append("+argobots")
 
-            if re.search(r"--with-pmi=no", output):
-                variants.append("pmi=off")
             elif re.search(r"--with-pmi=simple", output):
                 variants.append("pmi=pmi")
             elif re.search(r"--with-pmi=pmi2/simple", output):
@@ -457,8 +458,6 @@ supported, and netmod is ignored if device is ch3:sock.""",
             env.set("MPIF90", join_path(self.prefix.bin, "mpif90"))
 
     def setup_dependent_build_environment(self, env, dependent_spec):
-        self.setup_run_environment(env)
-
         env.set("MPICH_CC", spack_cc)
         env.set("MPICH_CXX", spack_cxx)
         env.set("MPICH_F77", spack_f77)
@@ -630,6 +629,9 @@ supported, and netmod is ignored if device is ch3:sock.""",
 
         if "+hcoll" in spec:
             config_args.append("--with-hcoll=" + spec["hcoll"].prefix)
+
+        if "+xpmem" in spec:
+            config_args.append("--with-xpmem=" + spec["xpmem"].prefix)
 
         return config_args
 

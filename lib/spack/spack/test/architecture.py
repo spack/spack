@@ -8,13 +8,16 @@ import sys
 
 import pytest
 
+import archspec.cpu
+
 import llnl.util.filesystem as fs
 
+import spack.compilers
 import spack.concretize
 import spack.operating_systems
 import spack.platforms
 import spack.target
-from spack.spec import ArchSpec, CompilerSpec, Spec
+from spack.spec import ArchSpec, Spec
 
 
 @pytest.fixture(scope="module")
@@ -123,52 +126,60 @@ def test_arch_spec_container_semantic(item, architecture_str):
 @pytest.mark.parametrize(
     "compiler_spec,target_name,expected_flags",
     [
-        # Check compilers with version numbers from a single toolchain
+        # Homogeneous compilers
         ("gcc@4.7.2", "ivybridge", "-march=core-avx-i -mtune=core-avx-i"),
-        # Check mixed toolchains
-        ("clang@8.0.0", "broadwell", ""),
         ("clang@3.5", "x86_64", "-march=x86-64 -mtune=generic"),
-        # Check Apple's Clang compilers
         ("apple-clang@9.1.0", "x86_64", "-march=x86-64"),
+        # Mixed toolchain
+        ("clang@8.0.0", "broadwell", ""),
     ],
 )
 @pytest.mark.filterwarnings("ignore:microarchitecture specific")
-def test_optimization_flags(compiler_spec, target_name, expected_flags, config):
+def test_optimization_flags(compiler_spec, target_name, expected_flags, compiler_factory):
     target = spack.target.Target(target_name)
-    compiler = spack.compilers.compilers_for_spec(compiler_spec).pop()
+    compiler_dict = compiler_factory(spec=compiler_spec, operating_system="")["compiler"]
+    if compiler_spec == "clang@8.0.0":
+        compiler_dict["paths"] = {
+            "cc": "/path/to/clang-8",
+            "cxx": "/path/to/clang++-8",
+            "f77": "/path/to/gfortran-9",
+            "fc": "/path/to/gfortran-9",
+        }
+    compiler = spack.compilers.compiler_from_dict(compiler_dict)
+
     opt_flags = target.optimization_flags(compiler)
     assert opt_flags == expected_flags
 
 
 @pytest.mark.parametrize(
-    "compiler,real_version,target_str,expected_flags",
+    "compiler_str,real_version,target_str,expected_flags",
     [
-        (CompilerSpec("gcc@=9.2.0"), None, "haswell", "-march=haswell -mtune=haswell"),
+        ("gcc@=9.2.0", None, "haswell", "-march=haswell -mtune=haswell"),
         # Check that custom string versions are accepted
-        (
-            CompilerSpec("gcc@=10foo"),
-            "9.2.0",
-            "icelake",
-            "-march=icelake-client -mtune=icelake-client",
-        ),
+        ("gcc@=10foo", "9.2.0", "icelake", "-march=icelake-client -mtune=icelake-client"),
         # Check that we run version detection (4.4.0 doesn't support icelake)
-        (
-            CompilerSpec("gcc@=4.4.0-special"),
-            "9.2.0",
-            "icelake",
-            "-march=icelake-client -mtune=icelake-client",
-        ),
+        ("gcc@=4.4.0-special", "9.2.0", "icelake", "-march=icelake-client -mtune=icelake-client"),
         # Check that the special case for Apple's clang is treated correctly
         # i.e. it won't try to detect the version again
-        (CompilerSpec("apple-clang@=9.1.0"), None, "x86_64", "-march=x86-64"),
+        ("apple-clang@=9.1.0", None, "x86_64", "-march=x86-64"),
     ],
 )
 def test_optimization_flags_with_custom_versions(
-    compiler, real_version, target_str, expected_flags, monkeypatch, config
+    compiler_str,
+    real_version,
+    target_str,
+    expected_flags,
+    monkeypatch,
+    mutable_config,
+    compiler_factory,
 ):
     target = spack.target.Target(target_str)
+    compiler_dict = compiler_factory(spec=compiler_str, operating_system="redhat6")
+    mutable_config.set("compilers", [compiler_dict])
     if real_version:
         monkeypatch.setattr(spack.compiler.Compiler, "get_real_version", lambda x: real_version)
+    compiler = spack.compilers.compiler_from_dict(compiler_dict["compiler"])
+
     opt_flags = target.optimization_flags(compiler)
     assert opt_flags == expected_flags
 
@@ -203,9 +214,10 @@ def test_satisfy_strict_constraint_when_not_concrete(architecture_tuple, constra
 )
 @pytest.mark.usefixtures("mock_packages", "config")
 @pytest.mark.only_clingo("Fixing the parser broke this test for the original concretizer.")
+@pytest.mark.skipif(
+    str(archspec.cpu.host().family) != "x86_64", reason="tests are for x86_64 uarch ranges"
+)
 def test_concretize_target_ranges(root_target_range, dep_target_range, result, monkeypatch):
-    # Monkeypatch so that all concretization is done as if the machine is core2
-    monkeypatch.setattr(spack.platforms.test.Test, "default", "core2")
     spec = Spec(f"a %gcc@10 foobar=bar target={root_target_range} ^b target={dep_target_range}")
     with spack.concretize.disable_compiler_existence_check():
         spec.concretize()

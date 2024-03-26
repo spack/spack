@@ -69,7 +69,7 @@ class MSBuildBuilder(BaseBuilder):
     @property
     def build_directory(self):
         """Return the directory containing the MSBuild solution or vcxproj."""
-        return self.pkg.stage.source_path
+        return fs.windows_sfn(self.pkg.stage.source_path)
 
     @property
     def toolchain_version(self):

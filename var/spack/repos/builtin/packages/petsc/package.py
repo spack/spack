@@ -234,6 +234,10 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     depends_on("lapack")
     depends_on("mpi", when="+mpi")
     depends_on("cuda", when="+cuda")
+    # Fixed in https://gitlab.com/petsc/petsc/-/merge_requests/7354
+    conflicts(
+        "^cuda@12.4:", when="@:3.20.5 +cuda", msg="Deprecation in CCCL 2.3 causes build failure."
+    )
     depends_on("hip", when="+rocm")
 
     with when("+rocm"):

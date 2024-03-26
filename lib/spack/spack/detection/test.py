@@ -9,8 +9,6 @@ import pathlib
 import tempfile
 from typing import Any, Deque, Dict, Generator, List, NamedTuple, Tuple
 
-import jinja2
-
 from llnl.util import filesystem
 
 import spack.repo
@@ -85,6 +83,8 @@ class Runner:
             self.tmpdir.cleanup()
 
     def _create_executable_scripts(self, mock_executables: MockExecutables) -> List[pathlib.Path]:
+        import jinja2
+
         relative_paths = mock_executables.executables
         script = mock_executables.script
         script_template = jinja2.Template("#!/bin/bash\n{{ script }}\n")

@@ -27,6 +27,8 @@ class Legion(CMakePackage, ROCmPackage):
 
     maintainers("pmccormick", "streichler", "elliottslaughter")
     tags = ["e4s"]
+    version("23.12.0", tag="legion-23.12.0", commit="8fea67ee694a5d9fb27232a7976af189d6c98456")
+    version("23.09.0", tag="legion-23.09.0", commit="7304dfcf9b69005dd3e65e9ef7d5bd49122f9b49")
     version("23.06.0", tag="legion-23.06.0", commit="7b5ff2fb9974511c28aec8d97b942f26105b5f6d")
     version("23.03.0", tag="legion-23.03.0", commit="12f6051c9d75229d00ac0b31d6be1ff2014f7e6a")
     version("22.12.0", tag="legion-22.12.0", commit="9ed6f4d6b579c4f17e0298462e89548a4f0ed6e5")
@@ -39,7 +41,6 @@ class Legion(CMakePackage, ROCmPackage):
     version("21.03.0", tag="legion-21.03.0", commit="0cf9ddd60c227c219c8973ed0580ddc5887c9fb2")
     version("stable", branch="stable")
     version("master", branch="master")
-    version("cr", branch="control_replication")
 
     depends_on("cmake@3.16:", type="build")
     # TODO: Need to spec version of MPI v3 for use of the low-level MPI transport
@@ -74,7 +75,7 @@ class Legion(CMakePackage, ROCmPackage):
 
     # https://github.com/spack/spack/issues/37232#issuecomment-1553376552
     patch("hip-offload-arch.patch", when="@23.03.0 +rocm")
-    patch("update-hip-path-legion-23.06.0.patch", when="@23.06.0 ^hip@6.0 +rocm")
+    patch("update-hip-path-legion-23.06.0.patch", when="@23.06.0:23.12.0 ^hip@6.0 +rocm")
 
     def patch(self):
         if "network=gasnet conduit=ofi-slingshot11 ^cray-mpich+wrappers" in self.spec:

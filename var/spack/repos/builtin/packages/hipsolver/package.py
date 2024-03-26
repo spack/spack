@@ -46,26 +46,6 @@ class Hipsolver(CMakePackage, CudaPackage, ROCmPackage):
         version("5.2.0", sha256="96927410e0a2cc0f50172604ef6437e15d2cf4b62d22b2035f13aae21f43dc82")
         version("5.1.3", sha256="96faa799a2db8078b72f9c3b5c199179875a7c20dc1064371b22a6a63397c145")
         version("5.1.0", sha256="697ba2b2814e7ac6f79680e6455b4b5e0def1bee2014b6940f47be7d13c0ae74")
-    version(
-        "5.0.2",
-        sha256="cabeada451686ed7904a452c5f8fd3776721507db1c06f426cd8d7189ff4a441",
-        deprecated=True,
-    )
-    version(
-        "5.0.0",
-        sha256="c59a5783dbbcb6a601c0e73d85d4a64d6d2c8f46009c01cb2b9886323f11e02b",
-        deprecated=True,
-    )
-    version(
-        "4.5.2",
-        sha256="9807bf1da0da25940b546cf5d5d6064d46d837907e354e10c6eeb2ef7c296a93",
-        deprecated=True,
-    )
-    version(
-        "4.5.0",
-        sha256="ee1176e977736a6e6fcba507fe6f56fcb3cefd6ba741cceb28464ea8bc476cd8",
-        deprecated=True,
-    )
 
     # default to an 'auto' variant until amdgpu_targets can be given a better default than 'none'
     amdgpu_targets = ROCmPackage.amdgpu_targets
@@ -99,10 +79,6 @@ class Hipsolver(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("hip +cuda", when="+cuda")
 
     for ver in [
-        "4.5.0",
-        "4.5.2",
-        "5.0.0",
-        "5.0.2",
         "5.1.0",
         "5.1.3",
         "5.2.0",
@@ -123,16 +99,12 @@ class Hipsolver(CMakePackage, CudaPackage, ROCmPackage):
         "master",
         "develop",
     ]:
-        depends_on("rocblas@" + ver, when="+rocm @" + ver)
-        depends_on("rocsolver@" + ver, when="+rocm @" + ver)
+        depends_on(f"rocblas@{ver}", when=f"+rocm @{ver}")
+        depends_on(f"rocsolver@{ver}", when=f"+rocm @{ver}")
 
     for tgt in ROCmPackage.amdgpu_targets:
-        depends_on(
-            "rocblas amdgpu_target={0}".format(tgt), when="+rocm amdgpu_target={0}".format(tgt)
-        )
-        depends_on(
-            "rocsolver amdgpu_target={0}".format(tgt), when="+rocm amdgpu_target={0}".format(tgt)
-        )
+        depends_on(f"rocblas amdgpu_target={tgt}", when=f"+rocm amdgpu_target={tgt}")
+        depends_on(f"rocsolver amdgpu_target={tgt}", when=f"+rocm amdgpu_target={tgt}")
 
     depends_on("googletest@1.10.0:", type="test")
     depends_on("netlib-lapack@3.7.1:", type="test")
