@@ -88,10 +88,9 @@ class Steps(CMakePackage):
     depends_on("py-scipy", type=("build", "test", "run"))
     depends_on("python", type=("build", "test", "run"))
     depends_on("random123", when="~bundle")
-    depends_on("sundials@:2+int64", when="@:5~bundle")
-    depends_on("sundials@:6+int64", when="@develop~bundle")
+    depends_on("sundials@:2.99.99+int64", when="~bundle")
 
-    patch("for_aarch64.patch", when="@:4 target=aarch64:")
+    patch("for_aarch64.patch", when="target=aarch64:")
 
     def patch(self):
         # easylogging is a terrible library that requires compilation by

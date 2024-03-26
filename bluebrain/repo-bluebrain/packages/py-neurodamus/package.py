@@ -12,9 +12,6 @@ class PyNeurodamus(PythonPackage):
     git = "https://github.com/BlueBrain/neurodamus.git"
 
     version("develop", branch="main")
-    
-    version("3.1",branch="new_conductance_source")
-    
     version("3.0.0", tag="3.0.0")
     version("3.0a1", tag="3.0.0-alpha")
     version("2.17.0", tag="2.17.0")
@@ -75,9 +72,7 @@ class PyNeurodamus(PythonPackage):
             copy(script, self.prefix.share)
         install_tree("core/hoc", self.prefix.lib.hoc)
         install_tree("core/mod", self.prefix.lib.mod)
-        # Conditionally install the Python tree for versions less than or equal to 3.0.0
-        if self.spec.satisfies("@:3.0.0"):
-            install_tree("core/python", self.prefix.lib.python)
+        install_tree("core/python", self.prefix.lib.python)
 
     def setup_run_environment(self, env):
         PythonPackage.setup_run_environment(self, env)

@@ -13,7 +13,7 @@ class CircuitBuild(PythonPackage):
     git = "ssh://git@bbpgitlab.epfl.ch/nse/circuit-build.git"
 
     version("develop", branch="main")
-    version("5.2.0", tag="circuit-build-v5.2.0")
+    version("5.1.2", tag="circuit-build-v5.1.2")
 
     depends_on("python@3.9:", type=("build", "run"))
     depends_on("py-setuptools", type=("build", "run"))

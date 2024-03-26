@@ -207,7 +207,6 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     patch("xlf_fix-dup-petscfecreate.patch", when="@3.11.0")
     patch("disable-DEPRECATED_ENUM.diff", when="@3.14.1 +cuda")
     patch("revert-3.18.0-ver-format-for-dealii.patch", when="@3.18.0")
-    patch("build-system-arm64.diff", when="@3.20.1 target=aarch64:")
 
     depends_on("diffutils", type="build")
     # not listed as a "build" dependency - so that slepc build gets the same dependency

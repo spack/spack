@@ -14,7 +14,6 @@ class NeurodamusNeocortex(NeurodamusModel):
     homepage = "https://bbpgitlab.epfl.ch/hpc/sim/models/neocortex"
     git = "ssh://git@bbpgitlab.epfl.ch/hpc/sim/models/neocortex.git"
 
-
     variant("v5", default=True, description="Enable support for previous v5 circuits")
     variant(
         "plasticity",
@@ -30,6 +29,7 @@ class NeurodamusNeocortex(NeurodamusModel):
     mech_name = "neocortex"
 
     version("develop", branch="main", submodules=True, get_full_repo=True)
+
     # IMPORTANT: Register new versions only using version_from_model_*
     # Final version name is combined e.g. "1.0-3.0.1"
     version_from_model_ndpy_dep("1.15")

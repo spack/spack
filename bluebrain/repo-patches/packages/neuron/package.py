@@ -75,10 +75,6 @@ class Neuron(BuiltinNeuron):
     depends_on("nmodl", when="+coreneuron")
     depends_on("libsonata-report", when="+report+coreneuron")
 
-    # lazy users do not want to load a compiler module to compile things, and we need a
-    # more modern linker
-    depends_on("binutils", type="run")
-
     def cmake_args(self):
         args = super().cmake_args()
         spec = self.spec

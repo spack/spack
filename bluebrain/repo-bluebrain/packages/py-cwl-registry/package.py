@@ -10,14 +10,13 @@ class PyCwlRegistry(PythonPackage):
     git = "ssh://git@bbpgitlab.epfl.ch/nse/cwl-registry.git"
 
     version("develop", branch="main")
-    version("1.2.0", tag="cwl-registry-v1.2.0")
+    version("1.1.0", tag="cwl-registry-v1.1.0")
 
     depends_on("python@3.10:", type=("build", "run"))
 
     depends_on("py-setuptools", type=("build", "run"))
 
-    # Bring in line with Spykfunc to load both module simultaneously (added `+dataset@3`)
-    depends_on("py-pyarrow+dataset+parquet@3.0.0:", type=("build", "run"))
+    depends_on("py-pyarrow+parquet", type=("build", "run"))
     depends_on("py-click@8.0.0:", type=("build", "run"))
     depends_on("py-voxcell", type=("build", "run"))
     depends_on("py-numpy", type=("build", "run"))
@@ -26,6 +25,8 @@ class PyCwlRegistry(PythonPackage):
     depends_on("py-lxml", type=("build", "run"))
 
     depends_on("py-libsonata", type=("build", "run"))
+    depends_on("py-nexusforge@0.8.1:", type=("build", "run"))
+    depends_on("py-bba-data-push@3.0.0:", type=("build", "run"))
     depends_on("py-cwl-luigi@0.3.1:0", type=("build", "run"))
     depends_on("py-entity-management@1.2.41:", type=("build", "run"))
     depends_on("py-fz-td-recipe", type=("build", "run"))
