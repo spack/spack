@@ -47,3 +47,4 @@ jobs:
       if: ${{ inputs.with_coverage == 'true' }}
       with:
         flags: unittests,audits
+        token: ${{ vars.CODECOV_TOKEN }}
