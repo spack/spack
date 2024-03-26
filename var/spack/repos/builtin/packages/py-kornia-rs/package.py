@@ -39,6 +39,9 @@ class PyKorniaRs(PythonPackage):
     # Required to build turbojpeg-sys
     depends_on("nasm", type="build")
 
+    # Required to build dlpack-rs
+    depends_on("llvm+clang")
+
     def setup_build_environment(self, env):
         env.set("RUST_BACKTRACE", "full")
         env.set("CARGO_PROFILE_RELEASE_BUILD_OVERRIDE_DEBUG", "true")
