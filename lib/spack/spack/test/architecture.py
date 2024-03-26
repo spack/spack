@@ -8,6 +8,8 @@ import sys
 
 import pytest
 
+import archspec.cpu
+
 import llnl.util.filesystem as fs
 
 import spack.compilers
@@ -212,9 +214,10 @@ def test_satisfy_strict_constraint_when_not_concrete(architecture_tuple, constra
 )
 @pytest.mark.usefixtures("mock_packages", "config")
 @pytest.mark.only_clingo("Fixing the parser broke this test for the original concretizer.")
+@pytest.mark.skipif(
+    str(archspec.cpu.host().family) != "x86_64", reason="tests are for x86_64 uarch ranges"
+)
 def test_concretize_target_ranges(root_target_range, dep_target_range, result, monkeypatch):
-    # Monkeypatch so that all concretization is done as if the machine is core2
-    monkeypatch.setattr(spack.platforms.test.Test, "default", "core2")
     spec = Spec(f"a %gcc@10 foobar=bar target={root_target_range} ^b target={dep_target_range}")
     with spack.concretize.disable_compiler_existence_check():
         spec.concretize()
