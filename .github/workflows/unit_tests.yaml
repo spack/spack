@@ -186,9 +186,10 @@ jobs:
         flags: unittests,linux,clingo
   # Run unit tests on MacOS
   macos:
-    runs-on: macos-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
+        os: [macos-latest, macos-14]
         python-version: ["3.11"]
     steps:
     - uses: actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633 # @v2
