@@ -15,6 +15,10 @@ from spack.version import Version
 class AppleClang(spack.compilers.clang.Clang):
     openmp_flag = "-Xpreprocessor -fopenmp"
 
+    @property
+    def is_clang_based(self):
+        return True
+
     @classmethod
     @llnl.util.lang.memoized
     def extract_version_from_output(cls, output):

@@ -32,3 +32,8 @@ class Dpcpp(spack.compilers.oneapi.Oneapi):
         "f77": os.path.join("oneapi", "ifx"),
         "fc": os.path.join("oneapi", "ifx"),
     }
+
+    @property
+    def is_clang_based(self):
+        return True
+

@@ -160,6 +160,10 @@ class Clang(Compiler):
     def fc_pic_flag(self):
         return "-fPIC"
 
+    @property
+    def is_clang_based(self):
+        return True
+
     required_libs = ["libclang"]
 
     @classmethod

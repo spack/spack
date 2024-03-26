@@ -90,5 +90,9 @@ class Nvhpc(Compiler):
     @property
     def stdcxx_libs(self):
         return ("-c++libs",)
+ 
+    @property
+    def is_clang_based(self):
+        return True
 
     required_libs = ["libnvc", "libnvf"]

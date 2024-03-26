@@ -75,3 +75,8 @@ class Rocmcc(spack.compilers.clang.Clang):
     @property
     def stdcxx_libs(self):
         return ("-lstdc++",)
+
+    @property
+    def is_clang_based(self):
+        return True
+
