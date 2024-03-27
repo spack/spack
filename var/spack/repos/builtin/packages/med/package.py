@@ -48,6 +48,7 @@ class Med(CMakePackage):
     variant("shared", default=False, description="Builds a shared version of the library")
     variant("fortran", default=False, description="Enable Fortran support")
     variant("doc", default=False, description="Install documentation")
+    variant("python", default=False, description="Build Python bindings")
 
     depends_on("mpi", when="+mpi")
 
@@ -62,7 +63,11 @@ class Med(CMakePackage):
 
     depends_on("doxygen", when="+doc")
 
+    depends_on("swig", when="+python")
+    depends_on("python", when="+python")
+
     conflicts("@4.1.0", when="~shared", msg="Link error when static")
+    conflicts("~shared", when="+python", msg="Python bindings require shared libraries")
 
     # C++11 requires a space between literal and identifier
     patch("add_space.patch", when="@3.2.0")
@@ -85,7 +90,7 @@ class Med(CMakePackage):
         options = [
             self.define("HDF5_ROOT_DIR", spec["hdf5"].prefix),
             self.define("MEDFILE_BUILD_TESTS", self.run_tests),
-            self.define("MEDFILE_BUILD_PYTHON", False),
+            self.define_from_variant("MEDFILE_BUILD_PYTHON", "python"),
             self.define_from_variant("MEDFILE_INSTALL_DOC", "doc"),
         ]
         if "~fortran" in spec:
