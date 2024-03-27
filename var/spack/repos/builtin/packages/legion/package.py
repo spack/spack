@@ -27,6 +27,7 @@ class Legion(CMakePackage, ROCmPackage):
 
     maintainers("pmccormick", "streichler", "elliottslaughter")
     tags = ["e4s"]
+    version("24.03.0", tag="legion-24.03.0", commit="c61071541218747e35767317f6f89b83f374f264")
     version("23.12.0", tag="legion-23.12.0", commit="8fea67ee694a5d9fb27232a7976af189d6c98456")
     version("23.09.0", tag="legion-23.09.0", commit="7304dfcf9b69005dd3e65e9ef7d5bd49122f9b49")
     version("23.06.0", tag="legion-23.06.0", commit="7b5ff2fb9974511c28aec8d97b942f26105b5f6d")
@@ -55,6 +56,9 @@ class Legion(CMakePackage, ROCmPackage):
     depends_on("cuda@10.0:11.9", when="+cuda @21.03.0:23.03.0")
     depends_on("cuda@10.0:12.2", when="+cuda_unsupported_compiler")
     depends_on("cuda@10.0:12.2", when="+cuda")
+    depends_on("hip@3.0:5.7", when="+rocm @23.03.0:23.12.0")
+    depends_on("hip@4.0:6.0", when="+rocm @24.03.0:")
+    depends_on("hip@4.0:6.0", when="+rocm @stable")
     depends_on("hdf5", when="+hdf5")
     depends_on("hwloc", when="+hwloc")
 
@@ -75,7 +79,6 @@ class Legion(CMakePackage, ROCmPackage):
 
     # https://github.com/spack/spack/issues/37232#issuecomment-1553376552
     patch("hip-offload-arch.patch", when="@23.03.0 +rocm")
-    patch("update-hip-path-legion-23.06.0.patch", when="@23.06.0:23.12.0 ^hip@6.0 +rocm")
 
     def patch(self):
         if "network=gasnet conduit=ofi-slingshot11 ^cray-mpich+wrappers" in self.spec:
@@ -350,11 +353,10 @@ class Legion(CMakePackage, ROCmPackage):
             options.append(from_variant("Legion_HIP_TARGET", "hip_target"))
             options.append(from_variant("Legion_HIP_ARCH", "amdgpu_target"))
             options.append(from_variant("Legion_HIJACK_HIP", "hip_hijack"))
-            options.append(self.define("HIP_PATH", "{0}/hip".format(spec["hip"].prefix)))
-            if "^hip@:5.7" in spec:
+            if "@23.03.0:23.12.0" in spec:
                 options.append(self.define("HIP_PATH", "{0}/hip".format(spec["hip"].prefix)))
-            elif "^hip@6.0:" in spec:
-                options.append(self.define("HIP_PATH", "{0}".format(spec["hip"].prefix)))
+            else:
+                options.append(self.define("ROCM_PATH", "{0}".format(spec["hip"].prefix)))
 
         if "+fortran" in spec:
             # default is off.
