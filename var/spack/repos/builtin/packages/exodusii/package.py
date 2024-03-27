@@ -25,43 +25,41 @@ class Exodusii(CMakePackage):
 
     homepage = "https://sandialabs.github.io/seacas/"
     git = "https://github.com/sandialabs/seacas.git"
-    url = "https://github.com/sandialabs/seacas/archive/v2019-08-20.tar.gz"
+    url = "https://github.com/sandialabs/seacas/archive/refs/tags/v2019-08-20.zip"
     maintainers("gsjaardema")
 
     license("BSD-3-Clause")
 
     version("master", branch="master")
     version(
-        "2024-03-11", sha256="b849d958b34e77300aaf331f29c3e6fe417fd82600850a82e674a9b7ba4045ff"
+        "2024-03-11", sha256="5d417aa652e4ec8d66e27714c63b8cb5a7f878fb7b2ec55f629636fcff7c0f00"
     )
     version(
-        "2023-11-27", sha256="fea1c0a6959d46af7478c9c16aac64e76c6dc358da38e2fe8793c15c1cffa8fc"
+        "2023-11-27", sha256="00c444b2def2c9cf5694bee5bb0284ce289e83f7c84ac28c6701c746cfde9a4c"
     )
     version(
-        "2023-10-24",
-        sha256="f93bf0327329c302ed3feb6adf2e3968f01ec325084a457b2c2dbbf6c4f751a2",
-        deprecated=True,
+        "2023-05-30", sha256="d2cbd43596ed3ad77186f865fe8aa81a2efe389ff345b24622ac76c16614b532"
     )
     version(
-        "2023-05-30", sha256="3dd982841854466820a3902163ad1cf1b3fbab65ed7542456d328f2d1a5373c1"
+        "2022-10-14", sha256="a96f29de3b69e7e3f5f344396c8cf791fe277dab0217fc0b90b02e38e75bbdc1"
     )
     version(
-        "2022-10-14", sha256="cde91e7561d2352045d669a25bdf46a604d85ed1ea7f3f5028004455e4ce9d56"
+        "2022-08-01", sha256="c12a677ba2178cf5161d63fef3b1da4d3888622199cea3e611f59649085681dc"
     )
     version(
-        "2022-05-16", sha256="22ff67045d730a2c7d5394c9034e44a2033cc82a461574f93d899e9aa713d4ae"
+        "2022-05-16", sha256="80f6b0dee91766ab207a366b8eea546cc1afa33cea24deebaa6583f283d80fab"
     )
     version(
-        "2022-03-04", sha256="a934a473e1fdfbc8dbb55058358551a02e03a60e5cdbf2b28b8ecd3d9500bfa5"
+        "2022-03-04", sha256="b2e09f0f64d75634b7d3f9844c2cea7acbc877c4ceebb6b91e8e494bb3653166"
     )
     version(
-        "2022-02-16", sha256="a6accb9924f0f357f63a01485c3eaaf5ceb6a22dfda73fc9bfb17d7e2f565098"
+        "2022-02-16", sha256="e1907f6831d9a0dd2c65879ca5746b9a0ef57d7ccce0036d55c0c6c5628ac981"
     )
     version(
-        "2022-01-27", sha256="beff12583814dcaf75cf8f1a78bb183c1dcc8937bc18d5206672e3a692db05e0"
+        "2022-01-27", sha256="d21c14b9b30f773cef8e2029773f3cc35da021eebe9060298231f95021eb814f"
     )
     version(
-        "2021-10-11", sha256="f8a6dac813c0937fed4a5377123aa61d47eb459ba87ddf368d02ebe10c2c3a0d"
+        "2021-10-11", sha256="5c04d252e1c4a10b037aa352b89487e581ec6b52bdb46e9e85f101bbdcd9c388"
     )
     version(
         "2021-04-05", sha256="f40d318674753287b8b28d2b4e5cca872cd772d4c7383af4a8f3eeb48fcc7ec0"
