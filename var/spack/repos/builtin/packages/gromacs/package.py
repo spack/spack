@@ -32,6 +32,7 @@ class Gromacs(CMakePackage, CudaPackage, ROCmPackage):
 
     version("main", branch="main")
     version("master", branch="main", deprecated=True)
+    version("2024.1", sha256="937d8f12a36fffbf2af7add71adbb5aa5c5537892d46c9a76afbecab1aa0aac7")
     version("2024", sha256="04d226d52066a8bc3a42e00d6213de737b4ec292e26703065924ff01956801e2")
     version("2023.4", sha256="e5d6c4d9e7ccacfaccb0888619bd21b5ea8911f82b410e68d6db5d40f695f231")
     version("2023.3", sha256="4ec8f8d0c7af76b13f8fd16db8e2c120e749de439ae9554d9f653f812d78d1cb")
@@ -107,13 +108,20 @@ class Gromacs(CMakePackage, CudaPackage, ROCmPackage):
         when="@2021: +sycl+mpi",
         description="Enable multi-GPU FFT support with HeFFTe",
     )
+    variant(
+        "rocfft",
+        default=False,
+        when="@2022: +sycl +rocm",
+        description="Enable GPU FFT support with rocFFT",
+    )
+
     variant("opencl", default=False, description="Enable OpenCL support")
     variant("sycl", default=False, when="@2021:", description="Enable SYCL support")
     variant(
         "sycl",
         default=True,
-        when="@2021: +rocm",
-        description="Enable SYCL support when using ROCm",
+        when="@2022: +rocm",
+        description="Enable ROCm support when using SYCL",
     )
     variant(
         "intel-data-center-gpu-max",
@@ -287,7 +295,7 @@ class Gromacs(CMakePackage, CudaPackage, ROCmPackage):
     with when("+rocm"):
         depends_on("sycl")
         depends_on("hip")
-        depends_on("rocfft")
+        depends_on("rocfft", when="+rocfft")
 
     depends_on("lapack")
     depends_on("blas")
@@ -456,7 +464,6 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
         gmx_cc = spack_cc
         gmx_cxx = spack_cxx
         if "+rocm" in self.spec:
-            # The ROCm version requires the ROCm LLVM installation
             gmx_cc = os.path.join(self.spec["llvm"].prefix.bin, "clang")
             gmx_cxx = os.path.join(self.spec["llvm"].prefix.bin, "clang++")
             if not fs.is_exe(gmx_cc) or not fs.is_exe(gmx_cxx):
@@ -549,23 +556,33 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
                 options.append("-DGMX_GPU:STRING=CUDA")
             elif "+opencl" in self.spec:
                 options.append("-DGMX_GPU:STRING=OpenCL")
-            elif "+sycl" in self.spec or "+rocm" in self.spec:
-                options.append("-DGMX_GPU:STRING=SYCL")
-                if "+rocm" in self.spec:
-                    options.append("-DGMX_SYCL_HIPSYCL:BOOL=ON")
-                    hipsycl_dir = os.path.join(self.spec["sycl"].prefix.lib, "cmake/hipSYCL/")
-                    options.append(f"-Dhipsycl_DIR:STRING={hipsycl_dir}")
-                    rocm_archs = ",".join(self.spec.variants["amdgpu_target"].value)
-                    options.append(f"-DHIPSYCL_TARGETS:STRING=hip:{rocm_archs}")
             else:
                 options.append("-DGMX_GPU:STRING=OFF")
         else:
-            if "+cuda" in self.spec or "+opencl" in self.spec:
+            if "+cuda" in self.spec:
                 options.append("-DGMX_GPU:BOOL=ON")
-                if "+opencl" in self.spec:
-                    options.append("-DGMX_USE_OPENCL=ON")
+            elif "+opencl" in self.spec:
+                options.append("-DGMX_GPU:BOOL=ON")
+                options.append("-DGMX_USE_OPENCL=ON")
             else:
                 options.append("-DGMX_GPU:BOOL=OFF")
+
+        if "+sycl" in self.spec:
+            options.append("-DGMX_GPU:STRING=SYCL")
+            if "+rocm" in self.spec:
+                rocm_archs = ",".join(self.spec.variants["amdgpu_target"].value)
+                if self.pkg.version >= Version("2022") and self.pkg.version <= Version("2023"):
+                    options.append("-DGMX_SYCL_HIPSYCL:BOOL=ON")
+                    hipsycl_dir = os.path.join(self.spec["sycl"].prefix.lib, "cmake/hipSYCL/")
+                    options.append(f"-Dhipsycl_DIR:STRING={hipsycl_dir}")
+                    options.append(f"-DHIPSYCL_TARGETS:STRING=hip:{rocm_archs}")
+                elif self.pkg.version >= Version("2024") and self.spec["sycl"].version <= Version(
+                    "23.10.0"
+                ):
+                    options.append("-DGMX_SYCL:BOOL=ACPP")
+                    hipsycl_dir = os.path.join(self.spec["sycl"].prefix.lib, "cmake/AdaptiveCpp/")
+                    options.append(f"-Dacpp_DIR:STRING={hipsycl_dir}")
+                    options.append(f"-DACPP_TARGETS:STRING=hip:{rocm_archs}")
 
         if "+cuda" in self.spec:
             options.append("-DCUDA_TOOLKIT_ROOT_DIR:STRING=" + self.spec["cuda"].prefix)
@@ -592,6 +609,10 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
         if "+heffte" in self.spec:
             options.append("-DGMX_USE_HEFFTE=on")
             options.append(f'-DHeffte_ROOT={self.spec["heffte"].prefix}')
+            if "+rocm" in self.spec:
+                options.append("-DHeffte_ENABLE_ROCM:BOOL=ON")
+                rocm_path = os.path.split(self.spec["hip"].prefix[:-1])[0]
+                options.append(f"-DHeffte_ROCM_ROOT={rocm_path}")
 
         if "+intel-data-center-gpu-max" in self.spec:
             options.append("-DGMX_GPU_NB_CLUSTER_SIZE=8")
@@ -719,7 +740,7 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
                     "-DFFTWF_INCLUDE_DIR={0}".format(self.spec["acfl"].headers.directories[0])
                 )
                 options.append("-DFFTWF_LIBRARY={0}".format(self.spec["acfl"].libs.joined(";")))
-            elif self.pkg.version >= Version("2023") and "+rocm" in self.spec:
+            elif "+rocfft" in self.spec:
                 # Use ROCm FFT library
                 options.append("-DGMX_GPU_FFT_LIBRARY=rocFFT")
 
