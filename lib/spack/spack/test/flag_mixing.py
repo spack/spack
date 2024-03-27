@@ -115,9 +115,6 @@ compilers::
 """
     update_concretize_scope(conf_str, "compilers")
 
-    out = solve('--show=asp', 'y %gcc@12-fake')
-    import pdb; pdb.set_trace()
-
     s1 = Spec('y %gcc@12-fake cflags="-O2"').concretized()
     assert s1.satisfies('cflags="-Wall -O2"')
 
