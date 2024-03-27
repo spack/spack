@@ -282,6 +282,7 @@ class Qt(Package):
         "intel": ("icc",),
         "apple-clang": ("clang-libc++", "clang"),
         "clang": ("clang-libc++", "clang"),
+        "aocc": ("clang-libc++", "clang"),
         "fj": ("clang",),
         "gcc": ("g++",),
     }
