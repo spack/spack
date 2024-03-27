@@ -231,6 +231,8 @@ class SuiteSparse(Package):
             make_args += [
                 "CMAKE_OPTIONS=-DCMAKE_INSTALL_PREFIX=%s" % prefix
                 + " -DCMAKE_LIBRARY_PATH=%s" % prefix.lib
+                + " -DBLAS_INCLUDE_DIRS=%s" % spec["blas"].prefix.include
+                + " -DLAPACK_INCLUDE_DIRS=%s" % spec["lapack"].prefix.include
             ]
 
         if spec.satisfies("%gcc platform=darwin"):
@@ -262,10 +264,7 @@ class SuiteSparse(Package):
             targets.append("SLIP_LU")
 
         # Finally make and install
-        if spec.satisfies("@6:"):
-            make("-C", "SuiteSparse_config", *make_args)
-        else:
-            make("-C", "SuiteSparse_config", "config", *make_args)
+        make("-C", "SuiteSparse_config", "config", *make_args)
         for target in targets:
             make("-C", target, "library", *make_args)
             make("-C", target, "install", *make_args)
