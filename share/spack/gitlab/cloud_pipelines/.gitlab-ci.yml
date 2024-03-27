@@ -190,12 +190,11 @@ default:
 .generate-win64:
   extends: [ ".base-job", ".generate-common" ]
   before_script:
-    - (certutil -generateSSTFromWU roots.sst) -AND (certutil -addstore -f root roots.sst) -AND (del roots.sst)
     - python -m pip install --user boto3
     - . .\share\spack\setup-env.ps1
     - spack external find --not-buildable cmake ninja win-wdk win-sdk wgl msmpi
   tags: ["spack", "public", "medium", "x86_64-win"]
-  image: "ghcr.io/jjnesbitt/windows-servercore21h2:sha-5c42cbb"
+  image: "ghcr.io/johnwparent/windows-server21h2:sha-8084f61"
 
 .generate-deprecated:
   extends: [ ".base-job" ]
