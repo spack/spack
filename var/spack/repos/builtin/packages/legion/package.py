@@ -355,7 +355,7 @@ class Legion(CMakePackage, ROCmPackage):
             if "@23.03.0:23.12.0" in spec:
                 options.append(self.define("HIP_PATH", f"{spec['hip'].prefix}/hip"))
             else:
-                options.append(self.define("ROCM_PATH", spec['hip'].prefix))
+                options.append(self.define("ROCM_PATH", spec["hip"].prefix))
 
         if "+fortran" in spec:
             # default is off.
