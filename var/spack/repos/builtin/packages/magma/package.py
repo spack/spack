@@ -152,6 +152,7 @@ class Magma(CMakePackage, CudaPackage, ROCmPackage):
             # See https://github.com/ROCm/rocFFT/issues/322
             if spec.satisfies("^cmake@3.21.0:3.21.2"):
                 options.append(define("__skip_rocmclang", True))
+            #options.append(define("ROCM_CORE", spec["rocm-core"].prefix))
         else:
             options.append(define("MAGMA_ENABLE_CUDA", True))
 
