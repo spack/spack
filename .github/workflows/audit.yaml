@@ -22,8 +22,8 @@ jobs:
       matrix:
         operating_system: ["ubuntu-latest", "macos-latest"]
     steps:
-    - uses: actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633 # @v2
-    - uses: actions/setup-python@0a5c61591373683505ea898e09a3ea4f39ef2b9c # @v2
+    - uses: actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633
+    - uses: actions/setup-python@0a5c61591373683505ea898e09a3ea4f39ef2b9c
       with:
         python-version: ${{inputs.python_version}}
     - name: Install Python packages
@@ -43,7 +43,7 @@ jobs:
           . share/spack/setup-env.sh
           $(which spack) audit packages
           $(which spack) audit externals
-    - uses: codecov/codecov-action@54bcd8715eee62d40e33596ef5e8f0f48dbbccab # @v2.1.0
+    - uses: codecov/codecov-action@54bcd8715eee62d40e33596ef5e8f0f48dbbccab
       if: ${{ inputs.with_coverage == 'true' }}
       with:
         flags: unittests,audits
