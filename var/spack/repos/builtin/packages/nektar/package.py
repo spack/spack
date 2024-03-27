@@ -129,6 +129,7 @@ class Nektar(CMakePackage):
     def cmake_args(self):
         def hasfeature(feature):
             return True if feature in self.spec else False
+
         args = [
             self.define_from_variant("NEKTAR_BUILD_DEMOS", "demos"),
             self.define_from_variant("NEKTAR_BUILD_PYTHON", "python"),
@@ -156,7 +157,7 @@ class Nektar(CMakePackage):
             self.define_from_variant("NEKTAR_USE_SCOTCH", "scotch"),
             self.define("NEKTAR_USE_THREAD_SAFETY", True),
             self.define("NEKTAR_USE_MKL", hasfeature("^intel-oneapi-mkl")),
-            self.define("NEKTAR_USE_OPENBLAS", hasfeature("^openblas"))
+            self.define("NEKTAR_USE_OPENBLAS", hasfeature("^openblas")),
         ]
         return args
 
