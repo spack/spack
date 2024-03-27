@@ -54,11 +54,10 @@ class Legion(CMakePackage, ROCmPackage):
     depends_on("mpi", when="conduit=mpi")
     depends_on("cuda@10.0:11.9", when="+cuda_unsupported_compiler @21.03.0:23.03.0")
     depends_on("cuda@10.0:11.9", when="+cuda @21.03.0:23.03.0")
-    depends_on("cuda@10.0:12.2", when="+cuda_unsupported_compiler")
-    depends_on("cuda@10.0:12.2", when="+cuda")
-    depends_on("hip@3.0:5.7", when="+rocm @23.03.0:23.12.0")
-    depends_on("hip@4.0:6.0", when="+rocm @24.03.0:")
-    depends_on("hip@4.0:6.0", when="+rocm @stable")
+    depends_on("cuda@10.0:", when="+cuda_unsupported_compiler")
+    depends_on("cuda@10.0:", when="+cuda")
+    depends_on("hip@5.1:5.7", when="+rocm @23.03.0:23.12.0")
+    depends_on("hip@5.1:", when="+rocm")
     depends_on("hdf5", when="+hdf5")
     depends_on("hwloc", when="+hwloc")
 
@@ -66,12 +65,12 @@ class Legion(CMakePackage, ROCmPackage):
     cuda_arch_list = CudaPackage.cuda_arch_values
     for nvarch in cuda_arch_list:
         depends_on(
-            "kokkos@3.3.01:+cuda+cuda_lambda+wrapper cuda_arch={0}".format(nvarch),
-            when="%gcc+kokkos+cuda cuda_arch={0}".format(nvarch),
+            f"kokkos@3.3.01:+cuda+cuda_lambda+wrapper cuda_arch={nvarch}",
+            when=f"%gcc+kokkos+cuda cuda_arch={nvarch}",
         )
         depends_on(
-            "kokkos@3.3.01:+cuda+cuda_lambda~wrapper cuda_arch={0}".format(nvarch),
-            when="%clang+kokkos+cuda cuda_arch={0}".format(nvarch),
+            f"kokkos@3.3.01:+cuda+cuda_lambda~wrapper cuda_arch={nvarch}",
+            when=f"%clang+kokkos+cuda cuda_arch={nvarch}",
         )
 
     depends_on("kokkos@3.3.01:~cuda", when="+kokkos~cuda")
@@ -107,8 +106,8 @@ class Legion(CMakePackage, ROCmPackage):
 
     for arch in ROCmPackage.amdgpu_targets:
         depends_on(
-            "kokkos@3.3.01:+rocm amdgpu_target={0}".format(arch),
-            when="+rocm amdgpu_target={0}".format(arch),
+            f"kokkos@3.3.01:+rocm amdgpu_target={arch}",
+            when=f"+rocm amdgpu_target={arch}",
         )
 
     depends_on("kokkos@3.3.01:+rocm", when="+kokkos+rocm")
@@ -354,9 +353,9 @@ class Legion(CMakePackage, ROCmPackage):
             options.append(from_variant("Legion_HIP_ARCH", "amdgpu_target"))
             options.append(from_variant("Legion_HIJACK_HIP", "hip_hijack"))
             if "@23.03.0:23.12.0" in spec:
-                options.append(self.define("HIP_PATH", "{0}/hip".format(spec["hip"].prefix)))
+                options.append(self.define("HIP_PATH", f"{spec['hip'].prefix}/hip"))
             else:
-                options.append(self.define("ROCM_PATH", "{0}".format(spec["hip"].prefix)))
+                options.append(self.define("ROCM_PATH", spec['hip'].prefix))
 
         if "+fortran" in spec:
             # default is off.
@@ -462,21 +461,21 @@ class Legion(CMakePackage, ROCmPackage):
         exe = "local_function_tasks"
 
         cmake_args = [
-            "-DCMAKE_C_COMPILER={0}".format(self.compiler.cc),
-            "-DCMAKE_CXX_COMPILER={0}".format(self.compiler.cxx),
-            "-DLegion_DIR={0}".format(join_path(self.prefix, "share", "Legion", "cmake")),
+            f"-DCMAKE_C_COMPILER={self.compiler.cc}",
+            f"-DCMAKE_CXX_COMPILER={self.compiler.cxx}",
+            f"-DLegion_DIR={join_path(self.prefix, 'share', 'Legion', 'cmake')}",
         ]
 
         self.run_test(
             "cmake",
             options=cmake_args,
-            purpose="test: generate makefile for {0} example".format(exe),
+            purpose=f"test: generate makefile for {exe} example",
             work_dir=test_dir,
         )
 
-        self.run_test("make", purpose="test: build {0} example".format(exe), work_dir=test_dir)
+        self.run_test("make", purpose=f"test: build {exe} example", work_dir=test_dir)
 
-        self.run_test(exe, purpose="test: run {0} example".format(exe), work_dir=test_dir)
+        self.run_test(exe, purpose=f"test: run {exe} example", work_dir=test_dir)
 
     def test(self):
         self.run_local_function_tasks_test()
