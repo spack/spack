@@ -159,7 +159,7 @@ jobs:
           brew install cmake bison@2.7 tree
       - name: Checkout
         uses: actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633
-      - uses: actions/setup-python@0a5c61591373683505ea898e09a3ea4f39ef2b9c # @v2
+      - uses: actions/setup-python@0a5c61591373683505ea898e09a3ea4f39ef2b9c
         with:
           python-version: "3.12"
       - name: Bootstrap clingo

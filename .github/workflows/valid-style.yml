@@ -69,7 +69,7 @@ jobs:
           dnf install -y \
               bzip2 curl file gcc-c++ gcc gcc-gfortran git gnupg2 gzip \
               make patch tcl unzip which xz
-      - uses: actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633 # @v2
+      - uses: actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633
       - name: Setup repo and non-root user
         run: |
           git --version
