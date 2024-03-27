@@ -185,4 +185,5 @@ class Gmsh(CMakePackage):
         return options
 
     def setup_run_environment(self, env):
-        env.prepend_path("PYTHONPATH", self.prefix.lib)
+        sitedir = ancestor(find_first(self.prefix, "gmsh.py"))
+        env.prepend_path("PYTHONPATH", sitedir)
