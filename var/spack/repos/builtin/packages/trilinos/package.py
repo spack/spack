@@ -293,6 +293,10 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
         conflicts("~ifpack")
         conflicts("~aztec")
 
+    with when("+tempus"):
+        conflicts("~nox")
+        conflicts("~thyra")
+
     # Known requirements from tribits dependencies
     conflicts("~thyra", when="+stratimikos")
     conflicts("+adelus", when="~kokkos")
@@ -303,7 +307,6 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     conflicts("+minitensor", when="~boost")
     conflicts("+phalanx", when="~sacado")
     conflicts("+stokhos", when="~kokkos")
-    conflicts("+tempus", when="~nox")
     conflicts("+piro", when="@15: ~teko")
 
     # Only allow DTK with Trilinos 12.14, 12.18
