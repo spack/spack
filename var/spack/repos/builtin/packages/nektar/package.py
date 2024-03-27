@@ -103,7 +103,8 @@ class Nektar(CMakePackage):
     depends_on("tinyxml", when="+tinyxml")
     depends_on("lapack")
     depends_on(
-        "boost@1.74.0: +thread +iostreams +filesystem +system +program_options +regex +pic +python +numpy",
+        "boost@1.74.0: +thread +iostreams +filesystem +system +program_options +regex +pic"
+        "+python +numpy",
         when="+python",
     )
     depends_on(
