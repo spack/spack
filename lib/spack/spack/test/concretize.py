@@ -1876,6 +1876,25 @@ class TestConcretize:
         assert concrete_spec.satisfies("%{}".format(s.compiler))
         assert concrete_spec.satisfies("os={}".format(s.architecture.os))
 
+    @pytest.mark.only_clingo("Use case not supported by the original concretizer")
+    def test_reuse_succeeds_with_config_compatible_os(self):
+        root_spec = Spec("b")
+        s = root_spec.concretized()
+        other_os = s.copy()
+        mock_os = "ubuntu2204"
+        other_os.architecture = spack.spec.ArchSpec(
+            "test-{os}-{target}".format(os=mock_os, target=str(s.architecture.target))
+        )
+        reusable_specs = [other_os]
+        overrides = {"concretizer": {"reuse": True, "os_compatible": {s.os: [mock_os]}}}
+        custom_scope = spack.config.InternalConfigScope("concretize_override", overrides)
+        with spack.config.override(custom_scope):
+            solver = spack.solver.asp.Solver()
+            setup = spack.solver.asp.SpackSolverSetup()
+            result, _, _ = solver.driver.solve(setup, [root_spec], reuse=reusable_specs)
+        concrete_spec = result.specs[0]
+        assert concrete_spec.satisfies("os={}".format(other_os.architecture.os))
+
     def test_git_hash_assigned_version_is_preferred(self):
         hash = "a" * 40
         s = Spec("develop-branch-version@%s=develop" % hash)

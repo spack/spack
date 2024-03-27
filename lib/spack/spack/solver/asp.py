@@ -1050,6 +1050,15 @@ class SpackSolverSetup:
                 self.gen.fact(fn.pkg_fact(pkg.name, fn.language(condition_id, language)))
         self.gen.newline()
 
+    def config_compatible_os(self):
+        """Facts about compatible os's specified in configs"""
+        self.gen.h2("Compatible OS from concretizer config file")
+        os_data = spack.config.get("concretizer:os_compatible", {})
+        for recent, reusable in os_data.items():
+            for old in reusable:
+                self.gen.fact(fn.os_compatible(recent, old))
+                self.gen.newline()
+
     def compiler_facts(self):
         """Facts about available compilers."""
 
@@ -2358,6 +2367,7 @@ class SpackSolverSetup:
         self.gen.newline()
 
         self.gen.h1("General Constraints")
+        self.config_compatible_os()
         self.compiler_facts()
 
         # architecture defaults
