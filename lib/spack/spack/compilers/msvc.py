@@ -199,7 +199,7 @@ class Msvc(Compiler):
         # for a fortran compiler
         if paths[2]:
             # If this found, it sets all the vars
-            oneapi_root = os.getenv("ONEAPI_ROOT")
+            oneapi_root = os.path.join(self.cc, "../../..")
             oneapi_root_setvars = os.path.join(oneapi_root, "setvars.bat")
             oneapi_version_setvars = os.path.join(
                 oneapi_root, "compiler", str(self.ifx_version), "env", "vars.bat"
