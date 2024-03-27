@@ -65,28 +65,40 @@ class WindowsOs(OperatingSystem):
         root = os.environ.get("ProgramFiles(x86)") or os.environ.get("ProgramFiles")
         if not root:
             return []
-        try:
-            extra_args = {"encoding": "mbcs", "errors": "strict"}
-            paths = subprocess.check_output(  # type: ignore[call-overload] # novermin
-                [
-                    os.path.join(root, "Microsoft Visual Studio", "Installer", "vswhere.exe"),
-                    "-prerelease",
-                    "-requires",
-                    "Microsoft.VisualStudio.Component.VC.Tools.x86.x64",
-                    "-property",
-                    "installationPath",
-                    "-products",
-                    "*",
-                ],
-                **extra_args,
-            )
-        except (subprocess.CalledProcessError, OSError, UnicodeDecodeError):
-            return []
-        # vswhere prints nothing at all when no instance matches, so drop empty lines
-        # rather than reporting a single empty (i.e. relative) install root.
-        valid_entries = filter(str.strip, paths.splitlines())
-        # return nicely cleaned list of valid vs entries
-        return [line.strip() for line in valid_entries]
+
+        def get_vs_component_paths(component: str) -> List[str]:
+            try:
+                extra_args = {"encoding": "mbcs", "errors": "strict"}
+                paths = subprocess.check_output(  # type: ignore[call-overload] # novermin
+                    [
+                        os.path.join(root, "Microsoft Visual Studio", "Installer", "vswhere.exe"),
+                        "-prerelease",
+                        "-requires",
+                        component,
+                        "-property",
+                        "installationPath",
+                        "-products",
+                        "*",
+                    ],
+                    **extra_args,
+                )
+            except (subprocess.CalledProcessError, OSError, UnicodeDecodeError):
+                return []
+            # vswhere prints nothing at all when no instance matches, so drop empty lines
+            # rather than reporting a single empty (i.e. relative) install root.
+            valid_entries = filter(str.strip, paths.splitlines())
+            # return nicely cleaned list of valid vs entries
+            return [line.strip() for line in valid_entries]
+
+        components = [
+            "Microsoft.VisualStudio.Component.VC.Tools.x86.x64",
+            "Microsoft.VisualStudio.Component.VC.Tools.ARM",
+            "Microsoft.VisualStudio.Component.VC.Tools.ARM64",
+        ]
+        vs_install_paths = []
+        for component in components:
+            vs_install_paths.extend(get_vs_component_paths(component))
+        return vs_install_paths
 
     def _registry_install_paths(self) -> List[str]:
         """Visual Studio install roots recorded in the Windows registry.
@@ -175,7 +187,7 @@ class WindowsOs(OperatingSystem):
         """
         _compiler_search_paths = []
         for p in self.msvc_paths:
-            _compiler_search_paths.extend(glob.glob(os.path.join(p, "*", "bin", "Hostx64", "x64")))
+            _compiler_search_paths.extend(glob.glob(os.path.join(p, "*", "bin", "*", "*")))
         oneapi_root = self.oneapi_root
         if oneapi_root:
             _compiler_search_paths.extend(
