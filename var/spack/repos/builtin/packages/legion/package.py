@@ -25,6 +25,8 @@ class Legion(CMakePackage, ROCmPackage):
     homepage = "https://legion.stanford.edu/"
     git = "https://github.com/StanfordLegion/legion.git"
 
+    license("Apache-2.0")
+
     maintainers("pmccormick", "streichler", "elliottslaughter")
     tags = ["e4s"]
     version("24.03.0", tag="legion-24.03.0", commit="c61071541218747e35767317f6f89b83f374f264")
