@@ -9,8 +9,6 @@ import shutil
 
 import pytest
 
-import archspec.cpu
-
 import spack.concretize
 import spack.paths
 import spack.platforms
@@ -284,8 +282,15 @@ def test_relocate_text_bin_raise_if_new_prefix_is_longer(tmpdir):
 
 
 @pytest.mark.requires_executables("install_name_tool", "file", "cc")
-@pytest.mark.skipif(str(archspec.cpu.host().family) != "x86_64", reason="failing on Apple M1/M2")
 def test_fixup_macos_rpaths(make_dylib, make_object_file):
+    compiler_cls = spack.repo.PATH.get_pkg_class("apple-clang")
+    compiler_version = compiler_cls.determine_version("cc")
+    try:
+        # See https://forums.swift.org/t/xcode-ships-llvm-15-but-swift-builds-llvm-16/67377
+        xcode_major_version = int(compiler_version.split(".")[0])
+    except IndexError:
+        pytest.xfail("cannot determine the major version of XCode")
+
     # For each of these tests except for the "correct" case, the first fixup
     # should make changes, and the second fixup should be a null-op.
     fixup_rpath = spack.relocate.fixup_macos_rpath
@@ -296,7 +301,9 @@ def test_fixup_macos_rpaths(make_dylib, make_object_file):
 
     # Non-relocatable library id and duplicate rpaths
     (root, filename) = make_dylib("abs", duplicate_rpaths)
-    assert fixup_rpath(root, filename)
+    # XCode 15 ships a new linker that takes care of deduplication
+    if xcode_major_version < 15:
+        assert fixup_rpath(root, filename)
     assert not fixup_rpath(root, filename)
 
     # Hardcoded but relocatable library id (but we do NOT relocate)
@@ -305,7 +312,9 @@ def test_fixup_macos_rpaths(make_dylib, make_object_file):
 
     # Library id uses rpath but there are extra duplicate rpaths
     (root, filename) = make_dylib("rpath", duplicate_rpaths)
-    assert fixup_rpath(root, filename)
+    # XCode 15 ships a new linker that takes care of deduplication
+    if xcode_major_version < 15:
+        assert fixup_rpath(root, filename)
     assert not fixup_rpath(root, filename)
 
     # Shared library was constructed with relocatable id from the get-go
@@ -328,7 +337,9 @@ def test_fixup_macos_rpaths(make_dylib, make_object_file):
     # Duplicate nonexistent rpath will need *two* passes
     (root, filename) = make_dylib("rpath", bad_rpath * 2)
     assert fixup_rpath(root, filename)
-    assert fixup_rpath(root, filename)
+    # XCode 15 ships a new linker that takes care of deduplication
+    if xcode_major_version < 15:
+        assert fixup_rpath(root, filename)
     assert not fixup_rpath(root, filename)
 
     # Test on an object file, which *also* has type 'application/x-mach-binary'
