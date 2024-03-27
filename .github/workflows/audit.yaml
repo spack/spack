@@ -48,3 +48,4 @@ jobs:
       with:
         flags: unittests,audits
         token: ${{ secrets.CODECOV_TOKEN }}
+        verbose: true
