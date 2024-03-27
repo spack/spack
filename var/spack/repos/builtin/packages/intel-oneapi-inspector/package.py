@@ -25,12 +25,6 @@ class IntelOneapiInspector(IntelOneApiLibraryPackageWithSdk):
     homepage = "https://software.intel.com/content/www/us/en/develop/tools/oneapi/components/inspector.html"
 
     version(
-        "2024.1.0",
-        url="https://registrationcenter-download.intel.com/akdlm//IRC_NAS/5ef5524c-482a-4bc8-87de-81521be7a53c/l_inspector_oneapi_p_2024.1.0.154_offline.sh",
-        sha256="d50c9c3ea32258122003809f754dc4a3bf457b22767ef547d07580702a743951",
-        expand=False,
-    )
-    version(
         "2024.0.0",
         url="https://registrationcenter-download.intel.com/akdlm//IRC_NAS/44ae6846-719c-49bd-b196-b16ce5835a1e/l_inspector_oneapi_p_2024.0.0.49433_offline.sh",
         sha256="2b281c3a704a242aa3372284960ea8ed5ed1ba293cc2f70c2f873db3300c80a3",
