@@ -47,6 +47,7 @@ class Med(CMakePackage):
     variant("mpi", default=True, description="Enable MPI")
     variant("shared", default=False, description="Builds a shared version of the library")
     variant("fortran", default=False, description="Enable Fortran support")
+    variant("doc", default=False, description="Install documentation")
 
     depends_on("mpi", when="+mpi")
 
@@ -58,6 +59,8 @@ class Med(CMakePackage):
     depends_on("hdf5+shared", when="@4")
     depends_on("hdf5@1.12.1:1.12+mpi", when="@5:+mpi")
     depends_on("hdf5@1.12.1:1.12~mpi", when="@5:~mpi")
+
+    depends_on("doxygen", when="+doc")
 
     conflicts("@4.1.0", when="~shared", msg="Link error when static")
 
@@ -83,7 +86,7 @@ class Med(CMakePackage):
             self.define("HDF5_ROOT_DIR", spec["hdf5"].prefix),
             self.define("MEDFILE_BUILD_TESTS", self.run_tests),
             self.define("MEDFILE_BUILD_PYTHON", False),
-            self.define("MEDFILE_INSTALL_DOC", False),
+            self.define_from_variant("MEDFILE_INSTALL_DOC", "doc"),
         ]
         if "~fortran" in spec:
             options.append("-DCMAKE_Fortran_COMPILER=")
