@@ -17,7 +17,7 @@ class PyLibsonata(PythonPackage):
 
     maintainers("tristan0x")
 
-    version("develop", branch="master", get_full_repo=True)
+    version("master", branch="master")
     version("0.1.25", sha256="b332efa718123ee265263e1583a5998eaa945a13b8a22903873764cf1d8173fa")
 
     depends_on("cmake@3.3:", type="build")
