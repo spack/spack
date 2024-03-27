@@ -797,6 +797,8 @@ class PyclingoDriver:
 
             # build specs from spec attributes in the model
             spec_attrs = [(name, tuple(rest)) for name, *rest in extract_args(best_model, "attr")]
+            r1 = list((x, y) for (x, y) in spec_attrs if "flag" in x)
+            import pdb; pdb.set_trace()
             answers = builder.build_specs(spec_attrs)
 
             # add best spec to the results
