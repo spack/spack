@@ -76,7 +76,7 @@ class WindowsOs(OperatingSystem):
 
     @property
     def msvc_paths(self):
-        return [os.path.join(path, "VC", "Tools", "MSVC") for path in self.vs_install_paths]
+        return [os.path.join(component_path, "VC", "Tools", "MSVC") for path in self.vs_install_paths for component_path in path]
 
     @property
     def oneapi_root(self):
