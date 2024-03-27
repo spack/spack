@@ -986,7 +986,7 @@ class SpackSolverSetup:
         self.possible_versions[pkg_name].add(version)
         self.declared_versions[pkg_name].append(declared)
 
-    def _weight_declared_versions(self, pkg_name, versions, provenance):
+    def _weight_declared_versions(self, pkg_name, versions, provenance, preferred_penalty=True):
         def preferred():
             pkg_cls = self.pkg_class(pkg_name)
             versions = pkg_cls.versions
@@ -1008,12 +1008,17 @@ class SpackSolverSetup:
             vers = str(version.dotted).split(".")[:3]
             offset = [0 if x == y else 1 for x, y in zip(last_vers, vers)]
             indices = [x + y for x, y in itertools.zip_longest(indices, offset, fillvalue=0)]
-            if offset[0] != 0 or (len(offset) > 1 and offset[1] != 0):
-                indices[2] = 0
 
-            penalty = 1000000000 if version != preferred_version else 0
+            try:
+                ind = offset.index(1)
+                indices[ind + 1 :] = [0] * (len(indices) - ind)
+            except ValueError:
+                pass
+
+            penalty = 1000000000 if preferred_penalty and version != preferred_version else 0
             weight = 1000000 * indices[0] + 1000 * indices[1] + indices[2] + penalty
-
+            # Given the weighting algorithm it is possible to have multiple
+            # versions with the same weight so resolve that here.
             while have(version, weight):
                 weight += 1
 
@@ -1952,7 +1957,10 @@ class SpackSolverSetup:
                     version_defs.extend(matches)
 
             self._weight_declared_versions(
-                pkg_name, llnl.util.lang.dedupe(version_defs), Provenance.PACKAGE_PY
+                pkg_name,
+                llnl.util.lang.dedupe(version_defs),
+                Provenance.PACKAGES_YAML,
+                preferred_penalty=False,
             )
 
     def define_ad_hoc_versions_from_specs(
@@ -3065,12 +3073,11 @@ class RuntimePropertyRecorder:
             if not s.versions.concrete:
                 continue
 
+            # TBD: Is this (still) needed?
             if not hasattr(s, "version"):
                 raise Exception(f"{s} has no version")
 
-            self._setup._add_declared_version(
-                s.name, s.version, 0, Provenance.RUNTIME.PACKAGE_REQUIREMENT
-            )
+            self._setup._add_declared_version(s.name, s.version, 0, Provenance.RUNTIME)
 
         self.runtime_conditions.add((imposed_spec, when_spec))
         self.reset()
