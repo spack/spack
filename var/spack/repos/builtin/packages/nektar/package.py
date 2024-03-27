@@ -127,38 +127,38 @@ class Nektar(CMakePackage):
     conflicts("+hdf5", when="~mpi", msg="Nektar's hdf5 output is for parallel builds only")
 
     def cmake_args(self):
-        args = []
-
         def hasfeature(feature):
-            return "ON" if feature in self.spec else "OFF"
-
-        args.append("-DNEKTAR_BUILD_DEMOS=%s" % hasfeature("+demos"))
-        args.append("-DNEKTAR_BUILD_PYTHON=%s" % hasfeature("+python"))
-        args.append("-DNEKTAR_BUILD_SOLVERS=ON")
-        args.append("-DNEKTAR_BUILD_UTILITIES=ON")
-        args.append("-DNEKTAR_ERROR_ON_WARNINGS=OFF")
-        args.append("-DNEKTAR_SOLVER_ACOUSTIC=%s" % hasfeature("+acoustic_solver"))
-        args.append("-DNEKTAR_SOLVER_ADR=%s" % hasfeature("+adr_solver"))
-        args.append("-DNEKTAR_SOLVER_CARDIAC_EP=%s" % hasfeature("+cardiac_solver"))
-        args.append("-DNEKTAR_SOLVER_COMPRESSIBLE_FLOW=%s" % hasfeature("+compflow_solver"))
-        args.append("-DNEKTAR_SOLVER_DIFFUSION=%s" % hasfeature("+diff_solver"))
-        args.append("-DNEKTAR_SOLVER_DUMMY=%s" % hasfeature("+dummy_solver"))
-        args.append("-DNEKTAR_SOLVER_ELASTICITY=%s" % hasfeature("+elasticity_solver"))
-        args.append("-DNEKTAR_SOLVER_IMAGE_WARPING=%s" % hasfeature("+imgwarp_solver"))
-        args.append("-DNEKTAR_SOLVER_INCNAVIERSTOKES=%s" % hasfeature("+ins_solver"))
-        args.append("-DNEKTAR_SOLVER_MMF=%s" % hasfeature("+mmf_solver"))
-        args.append("-DNEKTAR_SOLVER_PULSEWAVE=%s" % hasfeature("+pulsewave_solver"))
-        args.append("-DNEKTAR_SOLVER_SHALLOW_WATER=%s" % hasfeature("+shwater_solver"))
-        args.append("-DNEKTAR_SOLVER_VORTEXWAVE=%s" % hasfeature("+vortexwave_solver"))
-        args.append("-DNEKTAR_USE_ARPACK=%s" % hasfeature("+arpack"))
-        args.append("-DNEKTAR_USE_FFTW=%s" % hasfeature("+fftw"))
-        args.append("-DNEKTAR_USE_HDF5=%s" % hasfeature("+hdf5"))
-        args.append("-DNEKTAR_USE_MKL=%s" % hasfeature("^intel-oneapi-mkl"))
-        args.append("-DNEKTAR_USE_MPI=%s" % hasfeature("+mpi"))
-        args.append("-DNEKTAR_USE_OPENBLAS=%s" % hasfeature("^openblas"))
-        args.append("-DNEKTAR_USE_PETSC=OFF")
-        args.append("-DNEKTAR_USE_SCOTCH=%s" % hasfeature("+scotch"))
-        args.append("-DNEKTAR_USE_THREAD_SAFETY=ON")
+            return True if feature in self.spec else False
+        args = 
+        [
+            self.define_from_variant("NEKTAR_BUILD_DEMOS", "demos"),
+            self.define_from_variant("NEKTAR_BUILD_PYTHON", "python"),
+            self.define("NEKTAR_BUILD_SOLVERS", True),
+            self.define("NEKTAR_BUILD_UTILITIES", True),
+            self.define("NEKTAR_ERROR_ON_WARNINGS", False),
+            self.define_from_variant("NEKTAR_SOLVER_ACOUSTIC", "acoustic_solver"),
+            self.define_from_variant("NEKTAR_SOLVER_ADR", "adr_solver"),
+            self.define_from_variant("NEKTAR_SOLVER_CARDIAC_EP", "cardiac_solver"),
+            self.define_from_variant("NEKTAR_SOLVER_COMPRESSIBLE_FLOW", "compflow_solver"),
+            self.define_from_variant("NEKTAR_SOLVER_DIFFUSION", "diff_solver"),
+            self.define_from_variant("NEKTAR_SOLVER_DUMMY", "dummy_solver"),
+            self.define_from_variant("NEKTAR_SOLVER_ELASTICITY", "elasticity_solver"),
+            self.define_from_variant("NEKTAR_SOLVER_IMAGE_WARPING", "imgwarp_solver"),
+            self.define_from_variant("NEKTAR_SOLVER_INCNAVIERSTOKES", "ins_solver"),
+            self.define_from_variant("NEKTAR_SOLVER_MMF", "mmf_solver"),
+            self.define_from_variant("NEKTAR_SOLVER_PULSEWAVE", "pulsewave_solver"),
+            self.define_from_variant("NEKTAR_SOLVER_SHALLOW_WATER", "shwater_solver"),
+            self.define_from_variant("NEKTAR_SOLVER_VORTEXWAVE", "vortexwave_solver"),
+            self.define_from_variant("NEKTAR_USE_ARPACK", "arpack"),
+            self.define_from_variant("NEKTAR_USE_FFTW", "fftw"),
+            self.define_from_variant("NEKTAR_USE_HDF5", "hdf5"),
+            self.define_from_variant("NEKTAR_USE_MPI", "mpi"),
+            self.define("NEKTAR_USE_PETSC", False),
+            self.define_from_variant("NEKTAR_USE_SCOTCH", "scotch"),
+            self.define("NEKTAR_USE_THREAD_SAFETY", True),
+            self.define("NEKTAR_USE_MKL", hasfeature("^intel-oneapi-mkl")),
+            self.define("NEKTAR_USE_OPENBLAS", hasfeature("^openblas"))
+        ]
         return args
 
     def install(self, spec, prefix):
