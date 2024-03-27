@@ -76,6 +76,10 @@ def test_mix_spec_and_dependent(concretize_scope, test_repo):
     assert s1["y"].satisfies('cflags="-a -d1"')
 
 
+from spack.main import SpackCommand
+solve = SpackCommand("solve")
+
+
 def test_mix_spec_and_compiler_cfg(concretize_scope, test_repo):
     conf_str = """\
 compilers::
@@ -92,6 +96,9 @@ compilers::
     modules: []
 """
     update_concretize_scope(conf_str, "compilers")
+
+    out = solve('--show=asp', 'y %gcc@12-fake')
+    import pdb; pdb.set_trace()
 
     s1 = Spec('y %gcc@12-fake cflags="-O2"').concretized()
     assert s1.satisfies('cflags="-Wall -O2"')

@@ -1070,8 +1070,9 @@ class SpackSolverSetup:
                 self.gen.fact(fn.compiler_target(compiler_id, compiler.target))
 
             for flag_type, flags in compiler.flags.items():
+                flag_group = ' '.join(flags)
                 for flag in flags:
-                    self.gen.fact(fn.compiler_flag(compiler_id, flag_type, flag))
+                    self.gen.fact(fn.compiler_flag(compiler_id, flag_type, flag, flag_group))
 
             self.gen.newline()
 
@@ -1613,6 +1614,7 @@ class SpackSolverSetup:
         for i, preferred in enumerate(package_targets):
             self.gen.fact(fn.target_weight(str(preferred.architecture.target), i))
 
+    # TODO: this isn't called anywhere so it seems it could be removed
     def flag_defaults(self):
         self.gen.h2("Compiler flag defaults")
 
@@ -1770,8 +1772,9 @@ class SpackSolverSetup:
 
         # compiler flags
         for flag_type, flags in spec.compiler_flags.items():
+            flag_group = ' '.join(flags)
             for flag in flags:
-                clauses.append(f.node_flag(spec.name, flag_type, flag))
+                clauses.append(f.node_flag(spec.name, flag_type, flag, flag_group))
                 clauses.append(f.node_flag_source(spec.name, flag_type, spec.name))
                 if not spec.concrete and flag.propagate is True:
                     clauses.append(f.node_flag_propagate(spec.name, flag_type))
@@ -3104,7 +3107,7 @@ class SpecBuilder:
     def node_flag_compiler_default(self, node):
         self._flag_compiler_defaults.add(node)
 
-    def node_flag(self, node, flag_type, flag):
+    def node_flag(self, node, flag_type, flag, flag_group):
         self._specs[node].compiler_flags.add_flag(flag_type, flag, False)
 
     def node_flag_source(self, node, flag_type, source):
@@ -3251,6 +3254,10 @@ class SpecBuilder:
                 continue
 
             action = getattr(self, name, None)
+
+            #if "node_flag" in name:
+            #    import pdb; pdb.set_trace()
+            #    print(str(args))
 
             # print out unknown actions so we can display them for debugging
             if not action:

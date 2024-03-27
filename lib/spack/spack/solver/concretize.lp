@@ -28,7 +28,7 @@
 :- attr("node_compiler_version", PackageNode, _, _), not attr("node", PackageNode).
 :- attr("variant_value", PackageNode, _, _), not attr("node", PackageNode).
 :- attr("node_flag_compiler_default", PackageNode), not attr("node", PackageNode).
-:- attr("node_flag", PackageNode, _, _), not attr("node", PackageNode).
+:- attr("node_flag", PackageNode, _, _, _), not attr("node", PackageNode).
 :- attr("no_flags", PackageNode, _), not attr("node", PackageNode).
 :- attr("external_spec_selected", PackageNode, _), not attr("node", PackageNode).
 :- attr("depends_on", ParentNode, _, _), not attr("node", ParentNode).
@@ -423,8 +423,8 @@ virtual_condition_holds(node(Y, A2), Virtual)
 % we cannot have additional flag values when we are working with concrete specs
 :- attr("node", node(ID, Package)),
    attr("hash", node(ID, Package), Hash),
-   attr("node_flag", node(ID, Package), FlagType, Flag),
-   not imposed_constraint(Hash, "node_flag", Package, FlagType, Flag),
+   attr("node_flag", node(ID, Package), FlagType, Flag, _),
+   not imposed_constraint(Hash, "node_flag", Package, FlagType, Flag, _),
    internal_error("imposed hash without imposing all flag values").
 
 #defined condition/2.
@@ -730,11 +730,11 @@ required_provider(Provider, Virtual)
 % flags if their only source is from a requirement. This is overly-specific
 % and should use a more-generic approach like in https://github.com/spack/spack/pull/37180
 
-{ attr("node_flag", node(ID, Package), FlagType, FlagValue) } :-
+{ attr("node_flag", node(ID, Package), FlagType, FlagValue, FlagGroup) } :-
   requirement_group_member(ConditionID, Package, RequirementID),
   activate_requirement(node(ID, Package), RequirementID),
   pkg_fact(Package, condition_effect(ConditionID, EffectID)),
-  imposed_constraint(EffectID, "node_flag_set", Package, FlagType, FlagValue).
+  imposed_constraint(EffectID, "node_flag_set", Package, FlagType, FlagValue, FlagGroup).
 
 { attr("node_flag_source", node(NodeID1, Package1), FlagType, node(NodeID2, Package2)) } :-
   requirement_group_member(ConditionID, Package1, RequirementID),
@@ -1238,7 +1238,7 @@ error(100, "Compiler {1}@{2} requested for {0} cannot be found. Set install_miss
 % propagate flags when compiler match
 can_inherit_flags(PackageNode, DependencyNode, FlagType)
   :- same_compiler(PackageNode, DependencyNode),
-     not attr("node_flag_set", DependencyNode, FlagType, _),
+     not attr("node_flag_set", DependencyNode, FlagType, _, _),
      flag_type(FlagType).
 
 same_compiler(PackageNode, DependencyNode)
@@ -1247,13 +1247,13 @@ same_compiler(PackageNode, DependencyNode)
      node_compiler(DependencyNode, CompilerID),
      compiler_id(CompilerID).
 
-node_flag_inherited(DependencyNode, FlagType, Flag)
-  :- attr("node_flag_set", PackageNode, FlagType, Flag),
+node_flag_inherited(DependencyNode, FlagType, Flag, FlagGroup)
+  :- attr("node_flag_set", PackageNode, FlagType, Flag, FlagGroup),
      can_inherit_flags(PackageNode, DependencyNode, FlagType),
      attr("node_flag_propagate", PackageNode, FlagType).
 
 % Ensure propagation
-:- node_flag_inherited(PackageNode, FlagType, Flag),
+:- node_flag_inherited(PackageNode, FlagType, Flag, _),
    can_inherit_flags(PackageNode, DependencyNode, FlagType),
    attr("node_flag_propagate", PackageNode, FlagType).
 
@@ -1268,16 +1268,16 @@ error(100, "{0} and {1} cannot both propagate compiler flags '{2}' to {3}", Sour
 
 % remember where flags came from
 attr("node_flag_source", PackageNode, FlagType, PackageNode)
-  :- attr("node_flag_set", PackageNode, FlagType, _).
+  :- attr("node_flag_set", PackageNode, FlagType, _, _).
 
 attr("node_flag_source", DependencyNode, FlagType, Q)
   :- attr("node_flag_source", PackageNode, FlagType, Q),
-     node_flag_inherited(DependencyNode, FlagType, _),
+     node_flag_inherited(DependencyNode, FlagType, _, _),
      attr("node_flag_propagate", PackageNode, FlagType).
 
 % compiler flags from compilers.yaml are put on nodes if compiler matches
-attr("node_flag", PackageNode, FlagType, Flag)
-  :- compiler_flag(CompilerID, FlagType, Flag),
+attr("node_flag", PackageNode, FlagType, Flag, FlagGroup)
+  :- compiler_flag(CompilerID, FlagType, Flag, FlagGroup),
      node_compiler(PackageNode, CompilerID),
      flag_type(FlagType),
      compiler_id(CompilerID),
@@ -1285,8 +1285,8 @@ attr("node_flag", PackageNode, FlagType, Flag)
      compiler_version(CompilerID, Version).
 
 attr("node_flag_compiler_default", PackageNode)
-  :- not attr("node_flag_set", PackageNode, FlagType, _),
-     compiler_flag(CompilerID, FlagType, Flag),
+  :- not attr("node_flag_set", PackageNode, FlagType, _, _),
+     compiler_flag(CompilerID, FlagType, Flag, _),
      node_compiler(PackageNode, CompilerID),
      flag_type(FlagType),
      compiler_id(CompilerID),
@@ -1294,16 +1294,16 @@ attr("node_flag_compiler_default", PackageNode)
      compiler_version(CompilerID, Version).
 
 % if a flag is set to something or inherited, it's included
-attr("node_flag", PackageNode, FlagType, Flag) :- attr("node_flag_set", PackageNode, FlagType, Flag).
-attr("node_flag", PackageNode, FlagType, Flag) :- node_flag_inherited(PackageNode, FlagType, Flag).
+attr("node_flag", PackageNode, FlagType, Flag, FlagGroup) :- attr("node_flag_set", PackageNode, FlagType, Flag, FlagGroup).
+attr("node_flag", PackageNode, FlagType, Flag, FlagGroup) :- node_flag_inherited(PackageNode, FlagType, Flag, FlagGroup).
 
 % if no node flags are set for a type, there are no flags.
 attr("no_flags", PackageNode, FlagType)
-  :- not attr("node_flag", PackageNode, FlagType, _),
+  :- not attr("node_flag", PackageNode, FlagType, _, _),
      attr("node", PackageNode),
      flag_type(FlagType).
 
-#defined compiler_flag/3.
+#defined compiler_flag/4.
 
 
 %-----------------------------------------------------------------------------
