@@ -18,6 +18,7 @@ class ZlibNg(AutotoolsPackage, CMakePackage):
 
     license("Zlib")
 
+    version("2.1.6", sha256="a5d504c0d52e2e2721e7e7d86988dec2e290d723ced2307145dedd06aeb6fef2")
     version("2.1.5", sha256="3f6576971397b379d4205ae5451ff5a68edf6c103b2f03c4188ed7075fbb5f04")
     version("2.1.4", sha256="a0293475e6a44a3f6c045229fe50f69dc0eebc62a42405a51f19d46a5541e77a")
     version(
@@ -35,6 +36,12 @@ class ZlibNg(AutotoolsPackage, CMakePackage):
 
     variant("compat", default=True, description="Enable compatibility API")
     variant("opt", default=True, description="Enable optimizations")
+    variant("shared", default=True, description="Build shared library")
+    variant("pic", default=True, description="Enable position-independent code (PIC)")
+
+    conflicts("+shared~pic")
+
+    variant("new_strategies", default=True, description="Enable new deflate strategies")
 
     provides("zlib-api", when="+compat")
 
@@ -56,7 +63,14 @@ class ZlibNg(AutotoolsPackage, CMakePackage):
     @property
     def libs(self):
         name = "libz" if self.spec.satisfies("+compat") else "libz-ng"
-        return find_libraries(name, root=self.prefix, recursive=True, shared=True)
+        return find_libraries(
+            name, root=self.prefix, recursive=True, shared=self.spec.satisfies("+shared")
+        )
+
+    def flag_handler(self, name, flags):
+        if name == "cflags" and self.spec.satisfies("+pic build_system=autotools"):
+            flags.append(self.compiler.cc_pic_flag)
+        return (flags, None, None)
 
 
 class AutotoolsBuilder(autotools.AutotoolsBuilder):
@@ -66,6 +80,10 @@ class AutotoolsBuilder(autotools.AutotoolsBuilder):
             args.append("--zlib-compat")
         if self.spec.satisfies("~opt"):
             args.append("--without-optimizations")
+        if self.spec.satisfies("~shared"):
+            args.append("--static")
+        if self.spec.satisfies("~new_strategies"):
+            args.append("--without-new-strategies")
         return args
 
 
@@ -74,4 +92,7 @@ class CMakeBuilder(cmake.CMakeBuilder):
         return [
             self.define_from_variant("ZLIB_COMPAT", "compat"),
             self.define_from_variant("WITH_OPTIM", "opt"),
+            self.define("BUILD_SHARED_LIBS", self.spec.satisfies("+shared")),
+            self.define_from_variant("CMAKE_POSITION_INDEPENDENT_CODE", "pic"),
+            self.define_from_variant("WITH_NEW_STRATEGIES", "new_strategies"),
         ]

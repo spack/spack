@@ -734,18 +734,6 @@ class TestSpecSemantics:
             with pytest.raises(SpecFormatStringError):
                 spec.format(fmt_str)
 
-    @pytest.mark.regression("9908")
-    def test_spec_flags_maintain_order(self):
-        # Spack was assembling flags in a manner that could result in
-        # different orderings for repeated concretizations of the same
-        # spec and config
-        spec_str = "libelf %gcc@11.1.0 os=redhat6"
-        for _ in range(3):
-            s = Spec(spec_str).concretized()
-            assert all(
-                s.compiler_flags[x] == ["-O0", "-g"] for x in ("cflags", "cxxflags", "fflags")
-            )
-
     def test_combination_of_wildcard_or_none(self):
         # Test that using 'none' and another value raises
         with pytest.raises(spack.variant.InvalidVariantValueCombinationError):

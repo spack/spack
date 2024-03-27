@@ -83,6 +83,7 @@ class Gaudi(CMakePackage):
     depends_on("python", type=("build", "run"))
     depends_on("py-networkx", type=("build", "run"))
     depends_on("py-six", type=("build", "run"))
+    depends_on("py-pyyaml", type=("build", "run", "test"))
     depends_on("range-v3")
     depends_on("root +python +root7 +ssl +tbb +threads")
     depends_on("zlib-api")

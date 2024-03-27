@@ -22,20 +22,28 @@ class NvplLapack(Package):
 
     license("UNKNOWN")
 
-    version("0.1.0", sha256="7054f775b18916ee662c94ad7682ace53debbe8ee36fa926000fe412961edb0b")
+    version("0.2.0", sha256="7054f775b18916ee662c94ad7682ace53debbe8ee36fa926000fe412961edb0b")
 
     provides("lapack")
 
     variant("ilp64", default=False, description="Force 64-bit Fortran native integers")
+
+    threadings = ("openmp", "none")
     variant(
         "threads",
         default="none",
         description="Multithreading support",
-        values=("openmp", "none"),
+        values=threadings,
         multi=False,
     )
 
     requires("target=armv8.2a:", msg="Any CPU with Arm-v8.2a+ microarch")
+
+    # propagate variants for depends_on("nvpl-blas")
+    depends_on("nvpl-blas +ilp64", when="+ilp64")
+    depends_on("nvpl-blas ~ilp64", when="~ilp64")
+    for threads in threadings:
+        depends_on(f"nvpl-blas threads={threads}", when=f"threads={threads}")
 
     conflicts("%gcc@:7")
     conflicts("%clang@:13")

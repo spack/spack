@@ -116,7 +116,7 @@ class Xyce(CMakePackage):
     depends_on("trilinos@13.5.0:14.4", when="@7.6.0:7.7.0")
     depends_on("trilinos@12.12.1:13.4", when="@7.5")
     depends_on("trilinos@12.12.1", when="@:7.4")
-    depends_on("trilinos gotype=all cxxstd=11", when="^trilinos@:12.15")
+    requires("^trilinos gotype=all cxxstd=11", when="^trilinos@:12.15")
     # pymi requires Kokkos/KokkosKernels >= 3.3, Trilinos 13.2 onward
     depends_on("trilinos@13.2.0:", when="+pymi")
 
@@ -133,26 +133,24 @@ class Xyce(CMakePackage):
     with when("+pymi_static_tpls"):
         # BLAS
         depends_on("blas")
-        depends_on("openblas~shared", when="^openblas")
-        depends_on("netlib-lapack~shared", when="^netlib-lapack~external-blas")
-
-        depends_on("armpl-gcc~shared", when="^armpl-gcc")
-        depends_on("atlas~shared", when="^atlas")
+        depends_on("openblas~shared", when="^[virtuals=blas] openblas")
+        depends_on("netlib-lapack~shared", when="^[virtuals=blas] netlib-lapack~external-blas")
+        depends_on("armpl-gcc~shared", when="^[virtuals=blas] armpl-gcc")
+        depends_on("atlas~shared", when="^[virtuals=blas] atlas")
         depends_on("blis libs=static", when="^[virtuals=blas] blis+cblas")
         depends_on("blis libs=static", when="^[virtuals=blas] blis+blas")
-        depends_on("clblast~shared", when="^clblast+netlib")
-        depends_on("intel-mkl~shared", when="^intel-mkl")
-        depends_on("intel-oneapi-mkl~shared", when="^intel-oneapi-mkl")
-        depends_on("intel-parallel-studio~shared", when="^intel-parallel-studio+mkl")
-        depends_on("veclibfort~shared", when="^veclibfort")
+        depends_on("clblast~shared", when="^[virtuals=blas] clblast+netlib")
+        depends_on("intel-mkl~shared", when="^[virtuals=blas] intel-mkl")
+        depends_on("intel-oneapi-mkl~shared", when="^[virtuals=blas] intel-oneapi-mkl")
+        depends_on(
+            "intel-parallel-studio~shared", when="^[virtuals=blas] intel-parallel-studio+mkl"
+        )
+        depends_on("veclibfort~shared", when="^[virtuals=blas] veclibfort")
         conflicts("^essl", msg="essl not supported with +pymi_static_tpls")
         conflicts("^flexiblas", msg="flexiblas not supported with +pymi_static_tpls")
         conflicts("^nvhpc", msg="nvhpc not supported with +pymi_static_tpls")
         conflicts("^cray-libsci", msg="cray-libsci not supported with +pymi_static_tpls")
         # netlib-xblas+plain_blas is always static
-
-        # HDF5
-        depends_on("hdf5~shared", when="^hdf5")
 
     # fix MPI issue
     patch(

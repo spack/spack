@@ -13,8 +13,11 @@ class PyMne(PythonPackage):
     pypi = "mne/mne-0.23.4.tar.gz"
     git = "https://github.com/mne-tools/mne-python.git"
 
+    maintainers("ChristopherChristofi")
+
     license("BSD-3-Clause")
 
+    version("1.6.1", sha256="e4f5683d01cef675eddad788bdb6b44cc015dff0fb1ddfca3c4105edfb757ef8")
     version("1.4.2", sha256="dd2bf35a90d951bef15ff3a651045b0373eff26018a821667109c727d55c7d63")
     version("1.4.0", sha256="7834f5b79c2c9885ca601bbddd8db3c2b2f37c34443fc0caf0447751f6c37a2a")
     version("1.3.1", sha256="0d0626d3187dd0ee6f8740d054660a1b5fce4c879f814b745b13c5a587baf32b")
@@ -33,14 +36,17 @@ class PyMne(PythonPackage):
     depends_on("py-setuptools-scm@6.2:", when="@1.4:", type="build")
 
     # requirements_base.txt with versions specified in README.rst (marked with *)
+    depends_on("py-numpy@1.21.2:", when="@1.6.1:", type=("build", "run"))
     depends_on("py-numpy@1.20.2:", when="@1.4:", type=("build", "run"))  # *
     depends_on("py-numpy@1.18.1:", when="@1:", type=("build", "run"))  # *
     depends_on("py-numpy@1.15.4:", when="@0.23:", type=("build", "run"))
     depends_on("py-numpy@1.11.3:", type=("build", "run"))
+    depends_on("py-scipy@1.7.1:", when="@1.6.1:", type=("build", "run"))
     depends_on("py-scipy@1.6.3:", when="@1.4:", type=("build", "run"))
     depends_on("py-scipy@1.4.1:", when="@1:", type=("build", "run"))  # *
     depends_on("py-scipy@1.1.0:", when="@0.23:", type=("build", "run"))
     depends_on("py-scipy@0.17.1:", type=("build", "run"))
+    depends_on("py-matplotlib@3.5:", when="@1.6.1:", type=("build", "run"))
     depends_on("py-matplotlib@3.4:", when="@1:", type=("build", "run"))  # *
     depends_on("py-matplotlib@3.1:", when="@1:", type=("build", "run"))  # *
     depends_on("py-tqdm", when="@1:", type=("build", "run"))
@@ -48,7 +54,11 @@ class PyMne(PythonPackage):
     depends_on("py-decorator", when="@1:", type=("build", "run"))
     depends_on("py-packaging", when="@1:", type=("build", "run"))
     depends_on("py-jinja2", when="@1:", type=("build", "run"))
+    depends_on(
+        "py-importlib-resources@5.10.2:", when="@1.6.1: ^python@:3.9", type=("build", "run")
+    )
     depends_on("py-importlib-resources@5.10.2:", when="@1.4: ^python@:3.8", type=("build", "run"))
+    depends_on("py-lazy-loader@0.3:", when="@1.6.1:", type=("build", "run"))
 
     with when("+hdf5"):
         depends_on("py-h5io", type=("build", "run"))

@@ -541,7 +541,7 @@ To resolve this problem, please try the following:
         if os.path.exists(self.configure_abs_path):
             return
 
-        # Else try to regenerate it, which reuquires a few build dependencies
+        # Else try to regenerate it, which requires a few build dependencies
         ensure_build_dependencies_or_raise(
             spec=spec,
             dependencies=["autoconf", "automake", "libtool"],

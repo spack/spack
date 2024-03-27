@@ -98,7 +98,7 @@ class Caliper(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("adiak@0.1:0", when="@2.2: +adiak")
 
     depends_on("papi@5.3:5", when="@:2.2 +papi")
-    depends_on("papi@5.3:6", when="@2.3: +papi")
+    depends_on("papi@5.3:", when="@2.3: +papi")
 
     depends_on("libpfm4@4.8:4", when="+libpfm")
 

@@ -26,7 +26,7 @@ class Gdrcopy(MakefilePackage, CudaPackage):
     version("1.3", sha256="f11cdfe389b685f6636b80b4a3312dc014a385ad7220179c1318c60e2e28af3a")
 
     # Don't call ldconfig: https://github.com/NVIDIA/gdrcopy/pull/229
-    patch("ldconfig.patch", when="@2.0:")
+    patch("ldconfig.patch", when="@2.0:2.3")
 
     depends_on("check")
     requires("+cuda")

@@ -7,6 +7,8 @@ import sys
 
 from spack.package import *
 
+is_windows = sys.platform == "win32"
+
 
 class Cgns(CMakePackage):
     """The CFD General Notation System (CGNS) provides a general, portable,
@@ -93,7 +95,7 @@ class Cgns(CMakePackage):
             ]
         )
 
-        if "+mpi" in spec:
+        if "+mpi" in spec and not is_windows:
             options.extend(
                 [
                     "-DCMAKE_C_COMPILER=%s" % spec["mpi"].mpicc,

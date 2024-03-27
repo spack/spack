@@ -13,12 +13,13 @@ class ComposableKernel(CMakePackage):
 
     homepage = "https://github.com/ROCm/composable_kernel"
     git = "https://github.com/ROCm/composable_kernel.git"
-    url = "https://github.com/ROCm/composable_kernel/archive/refs/tags/rocm-5.7.1.tar.gz"
+    url = "https://github.com/ROCm/composable_kernel/archive/refs/tags/rocm-6.0.2.tar.gz"
     maintainers("srekolam", "afzpatel")
 
     license("MIT")
 
     version("master", branch="develop")
+    version("6.0.2", sha256="f648a99388045948b7d5fbf8eb8da6a1803c79008b54d406830b7f9119e1dcf6")
     version("6.0.0", sha256="a8f736f2f2a8afa4cddd06301205be27774d85f545429049b4a2bbbe6fcd67df")
     version("5.7.1", sha256="75f66e023c2e31948e91fa26366eaeac72d871fc2e5188361d4465179f13876e")
     version("5.7.0", sha256="d9624dbaef04e0138f9f73596c49b4fe9ded69974bae7236354baa32649bf21a")
@@ -49,6 +50,7 @@ class ComposableKernel(CMakePackage):
 
     for ver in [
         "master",
+        "6.0.2",
         "6.0.0",
         "5.7.1",
         "5.7.0",
@@ -73,15 +75,16 @@ class ComposableKernel(CMakePackage):
                 "CMAKE_CXX_COMPILER", "{0}/bin/clang++".format(spec["llvm-amdgpu"].prefix)
             ),
             self.define("CMAKE_C_COMPILER", "{0}/bin/clang".format(spec["llvm-amdgpu"].prefix)),
-            self.define("HIP_PATH", spec["hip"].prefix),
-            self.define("HIP_ROOT_DIR", "{0}".format(spec["hip"].prefix)),
-            self.define("CMAKE_CXX_FLAGS", "-O3"),
             self.define("CMAKE_BUILD_TYPE", "Release"),
         ]
         if "auto" not in self.spec.variants["amdgpu_target"]:
-            args.append(self.define_from_variant("AMDGPU_TARGETS", "amdgpu_target"))
+            args.append(self.define_from_variant("GPU_TARGETS", "amdgpu_target"))
         if self.spec.satisfies("@5.6.0:"):
             args.append(self.define("INSTANCES_ONLY", "ON"))
+            args.append(self.define("CK_BUILD_JIT_LIB", "ON"))
+            args.append(self.define("CMAKE_POSITION_INDEPENDENT_CODE", "ON"))
+        if self.spec.satisfies("@:5.7"):
+            args.append(self.define("CMAKE_CXX_FLAGS", "-O3"))
         return args
 
     def build(self, spec, prefix):

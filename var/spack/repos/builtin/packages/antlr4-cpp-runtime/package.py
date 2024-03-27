@@ -27,6 +27,8 @@ class Antlr4CppRuntime(CMakePackage):
     )
 
     depends_on("libuuid", type=["build", "link"], when="@:4.10.1")
+    depends_on("git", type=["build"])
+    depends_on("pkgconfig", type=["build"])
 
     def cmake_args(self):
         args = [

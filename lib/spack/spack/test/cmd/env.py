@@ -856,6 +856,7 @@ spack:
     assert any(x.satisfies("mpileaks@2.2") for x in e._get_environment_specs())
 
 
+@pytest.mark.only_clingo("original concretizer does not support requirements")
 def test_config_change_existing(mutable_mock_env_path, tmp_path, mock_packages, mutable_config):
     """Test ``config change`` with config in the ``spack.yaml`` as well as an
     included file scope.
@@ -931,6 +932,7 @@ spack:
         spack.spec.Spec("bowtie@1.2.2").concretized()
 
 
+@pytest.mark.only_clingo("original concretizer does not support requirements")
 def test_config_change_new(mutable_mock_env_path, tmp_path, mock_packages, mutable_config):
     spack_yaml = tmp_path / ev.manifest_name
     spack_yaml.write_text(
@@ -2729,15 +2731,6 @@ def test_concretize_user_specs_together():
 
     assert all("mpich2" in spec for _, spec in e.concretized_specs())
     assert all("mpich" not in spec for _, spec in e.concretized_specs())
-
-
-def test_cant_install_single_spec_when_concretizing_together():
-    e = ev.create("coconcretization")
-    e.unify = True
-
-    with pytest.raises(ev.SpackEnvironmentError, match=r"cannot install"):
-        e.concretize_and_add("zlib")
-        e.install_all()
 
 
 def test_duplicate_packages_raise_when_concretizing_together():

@@ -25,6 +25,12 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
 
     # Most recent tagged snapshot is the preferred version when profiling.
     version(
+        "1.0.3", tag="v1.0.3", commit="6161396d9b562c39e7e6fe686ab46a2ec7927482", submodules=True
+    )
+    version(
+        "1.0.2", tag="v1.0.2", commit="2378fde5cc371047227c396ddaaf58b6453f928c", submodules=True
+    )
+    version(
         "1.0.1", tag="v1.0.1", commit="c5e156c6f27d046f590dc35114980e3f9c573ca6", submodules=True
     )
     version(

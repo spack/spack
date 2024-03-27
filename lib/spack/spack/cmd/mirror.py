@@ -28,7 +28,7 @@ level = "long"
 
 
 def setup_parser(subparser):
-    arguments.add_common_arguments(subparser, ["no_checksum", "deprecated"])
+    arguments.add_common_arguments(subparser, ["no_checksum"])
 
     sp = subparser.add_subparsers(metavar="SUBCOMMAND", dest="mirror_command")
 
@@ -72,6 +72,7 @@ def setup_parser(subparser):
         " retrieve all versions of each package",
     )
     arguments.add_common_arguments(create_parser, ["specs"])
+    arguments.add_concretizer_args(create_parser)
 
     # Destroy
     destroy_parser = sp.add_parser("destroy", help=mirror_destroy.__doc__)
@@ -548,8 +549,5 @@ def mirror(parser, args):
 
     if args.no_checksum:
         spack.config.set("config:checksum", False, scope="command_line")
-
-    if args.deprecated:
-        spack.config.set("config:deprecated", True, scope="command_line")
 
     action[args.mirror_command](args)

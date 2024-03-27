@@ -16,6 +16,7 @@ class CandleBenchmarks(Package):
 
     license("MIT")
 
+    version("0.5.1", sha256="3d8c4f5a8304ee238e93e88e871a8b4d47d6b377159c048ac6d3ed01b6ffc245")
     version("0.1", sha256="767f74f43ee3a5d4e0f26750f2a96b8433e25a9cd4f2d29938ac8acf263ab58d")
     version("0.0", sha256="faa0d24355071de0e375d72ed1a39dcf30006602210cf8cf09db568b5d0b679f")
 
