@@ -264,7 +264,10 @@ class SuiteSparse(Package):
             targets.append("SLIP_LU")
 
         # Finally make and install
-        make("-C", "SuiteSparse_config", "config", *make_args)
+        if spec.satisfies("@6:"):
+            make("-C", "SuiteSparse_config", *make_args)
+        else:
+            make("-C", "SuiteSparse_config", "config", *make_args)
         for target in targets:
             make("-C", target, "library", *make_args)
             make("-C", target, "install", *make_args)
