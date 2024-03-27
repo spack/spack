@@ -1055,7 +1055,7 @@ class SpackSolverSetup:
         self.gen.h2("Compatible OS from concretizer config file")
         os_data = spack.config.get("concretizer:os_compatible", {})
         for recent, reusable in os_data.items():
-            for old in reusable: 
+            for old in reusable:
                 self.gen.fact(fn.os_compatible(recent, old))
                 self.gen.newline()
 
