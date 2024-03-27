@@ -237,6 +237,20 @@ class Changing(Package):
         yield _changing_pkg
 
 
+@pytest.fixture()
+def clang12_with_flags(compiler_factory):
+    c = compiler_factory(spec="clang@12.2.0", operating_system="redhat6")
+    c["compiler"]["flags"] = {"cflags": "-O3", "cxxflags": "-O3"}
+    return c
+
+
+@pytest.fixture()
+def gcc11_with_flags(compiler_factory):
+    c = compiler_factory(spec="gcc@11.1.0", operating_system="redhat6")
+    c["compiler"]["flags"] = {"cflags": "-O0 -g", "cxxflags": "-O0 -g", "fflags": "-O0 -g"}
+    return c
+
+
 # This must use the mutable_config fixture because the test
 # adjusting_default_target_based_on_compiler uses the current_host fixture,
 # which changes the config.
@@ -329,17 +343,33 @@ class TestConcretize:
         assert Spec("builtin.mock.multi-provider-mpi@1.10.0") in providers
         assert Spec("builtin.mock.multi-provider-mpi@1.8.8") in providers
 
-    def test_different_compilers_get_different_flags(self):
+    def test_different_compilers_get_different_flags(
+        self, mutable_config, clang12_with_flags, gcc11_with_flags
+    ):
+        """Tests that nodes get the flags of the associated compiler."""
+        mutable_config.set("compilers", [clang12_with_flags, gcc11_with_flags])
         client = Spec(
             "cmake-client %gcc@11.1.0 platform=test os=fe target=fe"
-            + " ^cmake %clang@12.2.0 platform=test os=fe target=fe"
-        )
-        client.concretize()
+            " ^cmake %clang@12.2.0 platform=test os=fe target=fe"
+        ).concretized()
         cmake = client["cmake"]
-        assert set(client.compiler_flags["cflags"]) == set(["-O0", "-g"])
-        assert set(cmake.compiler_flags["cflags"]) == set(["-O3"])
-        assert set(client.compiler_flags["fflags"]) == set(["-O0", "-g"])
+        assert set(client.compiler_flags["cflags"]) == {"-O0", "-g"}
+        assert set(cmake.compiler_flags["cflags"]) == {"-O3"}
+        assert set(client.compiler_flags["fflags"]) == {"-O0", "-g"}
         assert not set(cmake.compiler_flags["fflags"])
+
+    @pytest.mark.regression("9908")
+    def test_spec_flags_maintain_order(self, mutable_config, gcc11_with_flags):
+        """Tests that Spack assembles flags in a consistent way (i.e. with the same ordering),
+        for successive concretizations.
+        """
+        mutable_config.set("compilers", [gcc11_with_flags])
+        spec_str = "libelf %gcc@11.1.0 os=redhat6"
+        for _ in range(3):
+            s = Spec(spec_str).concretized()
+            assert all(
+                s.compiler_flags[x] == ["-O0", "-g"] for x in ("cflags", "cxxflags", "fflags")
+            )
 
     @pytest.mark.xfail(reason="Broken, needs to be fixed")
     def test_compiler_flags_from_compiler_and_dependent(self):
@@ -349,7 +379,8 @@ class TestConcretize:
         for spec in [client, cmake]:
             assert spec.compiler_flags["cflags"] == ["-O3", "-g"]
 
-    def test_compiler_flags_differ_identical_compilers(self):
+    def test_compiler_flags_differ_identical_compilers(self, mutable_config, clang12_with_flags):
+        mutable_config.set("compilers", [clang12_with_flags])
         # Correct arch to use test compiler that has flags
         spec = Spec("a %clang@12.2.0 platform=test os=fe target=fe")
 
@@ -404,25 +435,20 @@ class TestConcretize:
         for dep in spec.traverse():
             assert "%clang" in dep
 
-    def test_architecture_inheritance(self):
-        """test_architecture_inheritance is likely to fail with an
-        UnavailableCompilerVersionError if the architecture is concretized
-        incorrectly.
-        """
-        spec = Spec("cmake-client %gcc@11.1.0 os=fe ^ cmake")
-        spec.concretize()
-        assert spec["cmake"].architecture == spec.architecture
-
     @pytest.mark.only_clingo("Fixing the parser broke this test for the original concretizer")
-    def test_architecture_deep_inheritance(self, mock_targets):
+    def test_architecture_deep_inheritance(self, mock_targets, compiler_factory):
         """Make sure that indirect dependencies receive architecture
         information from the root even when partial architecture information
         is provided by an intermediate dependency.
         """
-        spec_str = "mpileaks %gcc@4.5.0 os=CNL target=nocona" " ^dyninst os=CNL ^callpath os=CNL"
-        spec = Spec(spec_str).concretized()
-        for s in spec.traverse(root=False):
-            assert s.architecture.target == spec.architecture.target
+        cnl_compiler = compiler_factory(spec="gcc@4.5.0", operating_system="CNL")
+        # CNL compiler has no target attribute, and this is essential to make detection pass
+        del cnl_compiler["compiler"]["target"]
+        with spack.config.override("compilers", [cnl_compiler]):
+            spec_str = "mpileaks %gcc@4.5.0 os=CNL target=nocona ^dyninst os=CNL ^callpath os=CNL"
+            spec = Spec(spec_str).concretized()
+            for s in spec.traverse(root=False):
+                assert s.architecture.target == spec.architecture.target
 
     def test_compiler_flags_from_user_are_grouped(self):
         spec = Spec('a%gcc cflags="-O -foo-flag foo-val" platform=test')
@@ -857,9 +883,12 @@ class TestConcretize:
         ],
     )
     @pytest.mark.only_clingo("Original concretizer cannot work around conflicts")
-    def test_compiler_conflicts_in_package_py(self, spec_str, expected_str):
-        s = Spec(spec_str).concretized()
-        assert s.satisfies(expected_str)
+    def test_compiler_conflicts_in_package_py(
+        self, spec_str, expected_str, clang12_with_flags, gcc11_with_flags
+    ):
+        with spack.config.override("compilers", [clang12_with_flags, gcc11_with_flags]):
+            s = Spec(spec_str).concretized()
+            assert s.satisfies(expected_str)
 
     @pytest.mark.parametrize(
         "spec_str,expected,unexpected",
@@ -1157,16 +1186,18 @@ class TestConcretize:
 
     @pytest.mark.regression("20019")
     @pytest.mark.only_clingo("Use case not supported by the original concretizer")
-    def test_compiler_match_is_preferred_to_newer_version(self):
+    def test_compiler_match_is_preferred_to_newer_version(self, compiler_factory):
         # This spec depends on openblas. Openblas has a conflict
         # that doesn't allow newer versions with gcc@4.4.0. Check
         # that an old version of openblas is selected, rather than
         # a different compiler for just that node.
-        spec_str = "simple-inheritance+openblas %gcc@10.1.0 os=redhat6"
-        s = Spec(spec_str).concretized()
-
-        assert "openblas@0.2.15" in s
-        assert s["openblas"].satisfies("%gcc@10.1.0")
+        with spack.config.override(
+            "compilers", [compiler_factory(spec="gcc@10.1.0", operating_system="redhat6")]
+        ):
+            spec_str = "simple-inheritance+openblas %gcc@10.1.0 os=redhat6"
+            s = Spec(spec_str).concretized()
+            assert "openblas@0.2.15" in s
+            assert s["openblas"].satisfies("%gcc@10.1.0")
 
     @pytest.mark.regression("19981")
     def test_target_ranges_in_conflicts(self):
@@ -1191,7 +1222,10 @@ class TestConcretize:
 
     @pytest.mark.regression("20055")
     @pytest.mark.only_clingo("Use case not supported by the original concretizer")
-    def test_custom_compiler_version(self):
+    def test_custom_compiler_version(self, mutable_config, compiler_factory):
+        mutable_config.set(
+            "compilers", [compiler_factory(spec="gcc@10foo", operating_system="redhat6")]
+        )
         s = Spec("a %gcc@10foo os=redhat6").concretized()
         assert "%gcc@10foo" in s
 
@@ -1391,11 +1425,16 @@ class TestConcretize:
             ("mpileaks%gcc@10.2.1 platform=test os=redhat6", "os=redhat6"),
         ],
     )
-    def test_os_selection_when_multiple_choices_are_possible(self, spec_str, expected_os):
-        s = Spec(spec_str).concretized()
-
-        for node in s.traverse():
-            assert node.satisfies(expected_os)
+    def test_os_selection_when_multiple_choices_are_possible(
+        self, spec_str, expected_os, compiler_factory
+    ):
+        # GCC 10.2.1 is defined both for debian and for redhat
+        with spack.config.override(
+            "compilers", [compiler_factory(spec="gcc@10.2.1", operating_system="redhat6")]
+        ):
+            s = Spec(spec_str).concretized()
+            for node in s.traverse():
+                assert node.satisfies(expected_os)
 
     @pytest.mark.regression("22718")
     @pytest.mark.parametrize(
