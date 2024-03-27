@@ -75,6 +75,8 @@
 #    does not like its directory structure.
 #
 
+import os
+
 import spack.variant
 from spack.directives import conflicts, depends_on, variant
 from spack.package_base import PackageBase
@@ -153,6 +155,32 @@ class ROCmPackage(PackageBase):
     def hip_flags(amdgpu_target):
         archs = ",".join(amdgpu_target)
         return "--amdgpu-target={0}".format(archs)
+
+    # ASAN
+    @staticmethod
+    def asan_on(env, llvm_path):
+        env.set("CC", llvm_path + "/bin/clang")
+        env.set("CXX", llvm_path + "/bin/clang++")
+        env.set("ASAN_OPTIONS", "detect_leaks=0")
+
+        for root, dirs, files in os.walk(llvm_path):
+            if "libclang_rt.asan-x86_64.so" in files:
+                asan_lib_path = root
+        env.prepend_path("LD_LIBRARY_PATH", asan_lib_path)
+        SET_DWARF_VERSION_4 = ""
+        try:
+            # This will throw an error if imported on a non-Linux platform.
+            import distro
+
+            distname = distro.id()
+        except ImportError:
+            distname = "unknown"
+        if "rhel" in distname or "sles" in distname:
+            SET_DWARF_VERSION_4 = "-gdwarf-5"
+
+        env.set("CFLAGS", "-fsanitize=address -shared-libasan -g " + SET_DWARF_VERSION_4)
+        env.set("CXXFLAGS", "-fsanitize=address -shared-libasan -g " + SET_DWARF_VERSION_4)
+        env.set("LDFLAGS", "-Wl,--enable-new-dtags -fuse-ld=lld  -fsanitize=address -g -Wl,")
 
     # HIP version vs Architecture
 

@@ -57,6 +57,7 @@ class Hipblas(CMakePackage, CudaPackage, ROCmPackage):
         sticky=True,
     )
     variant("rocm", default=True, description="Enable ROCm support")
+    variant("asan", default=False, description="Build with address-sanitizer enabled or disabled")
     conflicts("+cuda +rocm", msg="CUDA and ROCm support are mutually exclusive")
     conflicts("~cuda ~rocm", msg="CUDA or ROCm support is required")
 
@@ -113,6 +114,10 @@ class Hipblas(CMakePackage, CudaPackage, ROCmPackage):
         else:
             ver = None
         return ver
+
+    def setup_build_environment(self, env):
+        if self.spec.satisfies("+asan"):
+            self.asan_on(env, self.spec["llvm-amdgpu"].prefix)
 
     def cmake_args(self):
         args = [

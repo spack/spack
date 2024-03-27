@@ -127,5 +127,7 @@ class HsaRocrDev(CMakePackage):
             args.append("-DCMAKE_INSTALL_LIBDIR=lib")
         if self.spec.satisfies("@6.0:"):
             args.append(self.define("ROCM_PATCH_VERSION", "60000"))
+        if self.spec.satisfies("@5.7.0:"):
+            args.append(self.define_from_variant("ADDRESS_SANITIZER", "asan"))
 
         return args

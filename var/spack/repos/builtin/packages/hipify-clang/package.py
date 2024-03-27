@@ -39,6 +39,8 @@ class HipifyClang(CMakePackage):
         version("5.1.3", sha256="6354b08b8ab2f4c481398fb768652bae00bb78c4cec7a11d5f6c7e4cb831ddf1")
         version("5.1.0", sha256="ba792294cbdcc880e0f02e38ee352dff8d4a2c183430e13d1c5ed176bd46cfc5")
 
+    variant("asan", default=False, description="Build with address-sanitizer enabled or disabled")
+
     # the patch was added to install the targets in the correct directory structure
     # this will fix the issue https://github.com/spack/spack/issues/30711
 
@@ -80,4 +82,6 @@ class HipifyClang(CMakePackage):
         args = []
         if self.spec.satisfies("@5.5"):
             args.append(self.define("SWDEV_375013", "ON"))
+        if self.spec.satisfies("@5.7.0:"):
+            args.append(self.define_from_variant("ADDRESS_SANITIZER", "asan"))
         return args

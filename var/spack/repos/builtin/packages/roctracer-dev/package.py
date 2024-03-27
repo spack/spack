@@ -41,6 +41,8 @@ class RoctracerDev(CMakePackage, ROCmPackage):
         version("5.1.3", sha256="45f19875c15eb609b993788b47fd9c773b4216074749d7744f3a671be17ef33c")
         version("5.1.0", sha256="58b535f5d6772258190e4adcc23f37c916f775057a91b960e1f2ee1f40ed5aac")
 
+    variant("asan", default=False, description="Build with address-sanitizer enabled or disabled")
+
     depends_on("cmake@3:", type="build")
     depends_on("python@3:", type="build")
     depends_on("py-cppheaderparser", type="build")
@@ -100,6 +102,10 @@ class RoctracerDev(CMakePackage, ROCmPackage):
                 "gen_ostream_ops.py",
                 "hsaap.py",
             )
+
+    def setup_build_environment(self, env):
+        if self.spec.satisfies("+asan"):
+            self.asan_on(env, self.spec["llvm-amdgpu"].prefix)
 
     def cmake_args(self):
         args = [
