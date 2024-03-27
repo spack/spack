@@ -18,6 +18,7 @@ jobs:
   prechecks:
     needs: [ changes ]
     uses: ./.github/workflows/valid-style.yml
+    secrets: inherit
     with:
       with_coverage: ${{ needs.changes.outputs.core }}
   all-prechecks:
@@ -70,14 +71,17 @@ jobs:
     if: ${{ github.repository == 'spack/spack' && needs.changes.outputs.bootstrap == 'true' }}
     needs: [ prechecks, changes ]
     uses: ./.github/workflows/bootstrap.yml
+    secrets: inherit
   unit-tests:
     if: ${{ github.repository == 'spack/spack' && needs.changes.outputs.core == 'true' }}
     needs: [ prechecks, changes ]
     uses: ./.github/workflows/unit_tests.yaml
+    secrets: inherit
   windows:
     if: ${{ github.repository == 'spack/spack' && needs.changes.outputs.core == 'true' }}
     needs: [ prechecks ]
     uses: ./.github/workflows/windows_python.yml
+    secrets: inherit
   all:
     needs: [ windows, unit-tests, bootstrap ]
     runs-on: ubuntu-latest
