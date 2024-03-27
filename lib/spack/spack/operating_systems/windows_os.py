@@ -46,25 +46,32 @@ class WindowsOs(OperatingSystem):
     def vs_install_paths(self):
         vs_install_paths = []
         root = os.environ.get("ProgramFiles(x86)") or os.environ.get("ProgramFiles")
-        if root:
+        def get_vs_component_paths(component):
+            extra_args = {"encoding": "mbcs", "errors": "strict"}
             try:
-                extra_args = {"encoding": "mbcs", "errors": "strict"}
-                paths = subprocess.check_output(  # type: ignore[call-overload] # novermin
-                    [
-                        os.path.join(root, "Microsoft Visual Studio", "Installer", "vswhere.exe"),
-                        "-prerelease",
-                        "-requires",
-                        "Microsoft.VisualStudio.Component.VC.Tools.x86.x64",
-                        "-property",
-                        "installationPath",
-                        "-products",
-                        "*",
-                    ],
-                    **extra_args,
-                ).strip()
-                vs_install_paths = paths.split("\n")
+                return subprocess.check_output(  # type: ignore[call-overload] # novermin
+                        [
+                            os.path.join(root, "Microsoft Visual Studio", "Installer", "vswhere.exe"),
+                            "-prerelease",
+                            "-requires",
+                            component,
+                            "-property",
+                            "installationPath",
+                            "-products",
+                            "*",
+                        ],
+                        **extra_args,
+                    ).strip()
             except (subprocess.CalledProcessError, OSError, UnicodeDecodeError):
                 pass
+
+        if root:
+            x86_64_paths = get_vs_component_paths("Microsoft.VisualStudio.Component.VC.Tools.x86.x64")
+            arm_paths = get_vs_component_paths("Microsoft.VisualStudio.Component.VC.Tools.ARM")
+            arm64_paths = get_vs_component_paths("Microsoft.VisualStudio.Component.VC.Tools.ARM64")
+            vs_component_paths = [x86_64_paths, arm_paths, arm64_paths]
+            vs_install_paths = [component_path.split("\n") for component_path in vs_component_paths if component_path]
+
         return vs_install_paths
 
     @property
@@ -84,7 +91,7 @@ class WindowsOs(OperatingSystem):
         # First Strategy: Find MSVC directories using vswhere
         _compiler_search_paths = []
         for p in self.msvc_paths:
-            _compiler_search_paths.extend(glob.glob(os.path.join(p, "*", "bin", "Hostx64", "x64")))
+            _compiler_search_paths.extend(glob.glob(os.path.join(p, "*", "bin", "*", "*")))
         oneapi_root = self.oneapi_root
         if oneapi_root:
             _compiler_search_paths.extend(
