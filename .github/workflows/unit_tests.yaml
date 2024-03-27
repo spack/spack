@@ -95,6 +95,7 @@ jobs:
       with:
         flags: unittests,linux,${{ matrix.concretizer }}
         token: ${{ secrets.CODECOV_TOKEN }}
+        verbose: true
   # Test shell integration
   shell:
     runs-on: ubuntu-latest
@@ -127,6 +128,7 @@ jobs:
       with:
         flags: shelltests,linux
         token: ${{ secrets.CODECOV_TOKEN }}
+        verbose: true
 
   # Test RHEL8 UBI with platform Python. This job is run
   # only on PRs modifying core Spack
@@ -187,6 +189,7 @@ jobs:
       with:
         flags: unittests,linux,clingo
         token: ${{ secrets.CODECOV_TOKEN }}
+        verbose: true
   # Run unit tests on MacOS
   macos:
     runs-on: ${{ matrix.os }}
@@ -224,3 +227,4 @@ jobs:
       with:
         flags: unittests,macos
         token: ${{ secrets.CODECOV_TOKEN }}
+        verbose: true

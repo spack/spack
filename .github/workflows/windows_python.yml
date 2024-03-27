@@ -37,6 +37,7 @@ jobs:
       with:
         flags: unittests,windows
         token: ${{ secrets.CODECOV_TOKEN }}
+        verbose: true
   unit-tests-cmd:
     runs-on: windows-latest
     steps:
@@ -62,6 +63,7 @@ jobs:
       with:
         flags: unittests,windows
         token: ${{ secrets.CODECOV_TOKEN }}
+        verbose: true
   build-abseil:
     runs-on: windows-latest
     steps:
