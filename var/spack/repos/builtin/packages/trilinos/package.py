@@ -244,6 +244,9 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
         conflicts("@:12 gotype=long")
     with when("+piro"):
         conflicts("~stratimikos")
+        conflicts("~thyra")
+        conflicts("~tpetra")
+        conflicts("@15: ~teko")
         conflicts("~nox")
 
     # Tpetra stack
@@ -307,7 +310,6 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     conflicts("+minitensor", when="~boost")
     conflicts("+phalanx", when="~sacado")
     conflicts("+stokhos", when="~kokkos")
-    conflicts("+piro", when="@15: ~teko")
 
     # Only allow DTK with Trilinos 12.14, 12.18
     conflicts("+dtk", when="~boost")
