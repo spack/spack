@@ -147,7 +147,7 @@ class Exodusii(CMakePackage):
                 from_variant(project_name_base + "_ENABLE_Fortran", "fortran"),
             ]
         )
-        if "~shared" in self.spec:
+        if "~shared" in self.spec and not is_windows:
             options.append(self.define(project_name_base + "_EXTRA_LINK_FLAGS", "z;dl"))
         options.append(from_variant("TPL_ENABLE_MPI", "mpi"))
         if "+mpi" in spec and not is_windows:
