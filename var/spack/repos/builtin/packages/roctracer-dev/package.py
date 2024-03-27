@@ -120,3 +120,9 @@ class RoctracerDev(CMakePackage, ROCmPackage):
             args.append("-DCMAKE_INSTALL_LIBDIR=lib")
 
         return args
+
+    @run_after("install")
+    def post_install(self):
+        if self.spec.satisfies("@6.0:"):
+            install_tree(self.prefix.include.roctracer, self.prefix.roctracer.include)
+            install_tree(self.prefix.lib, self.prefix.roctracer.lib)
