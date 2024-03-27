@@ -260,15 +260,16 @@ class CachedCMakeBuilder(CMakeBuilder):
             # Include the deprecated CUDA_TOOLKIT_ROOT_DIR for supporting BLT packages
             entries.append(cmake_cache_path("CUDA_TOOLKIT_ROOT_DIR", cudatoolkitdir))
 
+            # CUDA_FLAGS
             cuda_flags = []
-            archs = spec.variants["cuda_arch"].value
-            if archs[0] != "none":
-                entries.append(cmake_cache_string("CMAKE_CUDA_ARCHITECTURES", ";".join(archs)))
-                # Additional definitions that may not be needed anymore
-                cuda_flags = cuda_flags(archs)
-                entries.append(cmake_cache_string("CUDA_ARCH", " ".join(cuda_flags)))
+
+            if not spec.satisfies("cuda_arch=none"):
+                cuda_archs = ";".join(spec.variants["cuda_arch"].value)
+                entries.append(cmake_cache_string("CMAKE_CUDA_ARCHITECTURES", cuda_archs))
+
             if spec_uses_toolchain(spec):
                 cuda_flags.append("-Xcompiler {}".format(spec_uses_toolchain(spec)[0]))
+
             entries.append(cmake_cache_string("CMAKE_CUDA_FLAGS", " ".join(cuda_flags)))
 
         if "+rocm" in spec:
