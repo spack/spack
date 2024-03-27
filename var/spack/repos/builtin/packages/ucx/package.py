@@ -161,9 +161,7 @@ class Ucx(AutotoolsPackage, CudaPackage):
             )
 
             if self.spec.satisfies("^hip@6:"):
-                filter_file(
-                    "HIP_PLATFORM_HCC", "HIP_PLATFORM_AMD", "configure", string=True
-                )
+                filter_file("HIP_PLATFORM_HCC", "HIP_PLATFORM_AMD", "configure", string=True)
 
     @when("@1.9-dev")
     def autoreconf(self, spec, prefix):
