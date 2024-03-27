@@ -105,10 +105,7 @@ class Legion(CMakePackage, ROCmPackage):
     )
 
     for arch in ROCmPackage.amdgpu_targets:
-        depends_on(
-            f"kokkos@3.3.01:+rocm amdgpu_target={arch}",
-            when=f"+rocm amdgpu_target={arch}",
-        )
+        depends_on(f"kokkos@3.3.01:+rocm amdgpu_target={arch}", when=f"+rocm amdgpu_target={arch}")
 
     depends_on("kokkos@3.3.01:+rocm", when="+kokkos+rocm")
 
