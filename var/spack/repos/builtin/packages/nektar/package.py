@@ -3,9 +3,12 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.package import *
 import os
+
 import llnl.util.filesystem as fs
+
+from spack.package import *
+
 
 class Nektar(CMakePackage):
     """Nektar++: Spectral/hp Element Framework"""
@@ -25,20 +28,72 @@ class Nektar(CMakePackage):
     variant("scotch", default=False, description="Builds with scotch partitioning support")
     variant("demos", default=False, description="Build demonstration codes")
     variant("python", default=True, description="Enable python support")
-    #Solver variants
-    variant("acoustic_solver", default=False, description="Builds an executable associated with the Acoustic solver")
-    variant("adr_solver", default=False, description="Builds an executable associated with the ADR solver")
-    variant("cardiac_solver", default=False, description="Builds an executable associated with the Cardiac electrophysiology solver")
-    variant("compflow_solver", default=False, description="Builds an executable associated with the CompressibleFlow solver")
-    variant("diff_solver", default=False, description="Builds an executable associated with the Diffusion solver")
-    variant("dummy_solver", default=False, description="Builds an executable associated with the Dummy solver")
-    variant("elasticity_solver", default=False, description="Builds an executable associated with the Elasticity solver")
-    variant("imgwarp_solver", default=False, description="Builds an executable associated with the Image Warping solver")
-    variant("ins_solver", default=False, description="Builds an executable associated with the Incompressible Navier Stokes solver")
-    variant("mmf_solver", default=False, description="Builds an executable associated with the MMF solver")
-    variant("pulsewave_solver", default=False, description="Builds an executable associated with the Pulse Wave solver")
-    variant("shwater_solver", default=False, description="Builds an executable associated with the Shallow Water solver")
-    variant("vortexwave_solver", default=False, description="Builds an executable associated with the Vortex Wave solver")
+    # Solver variants
+    variant(
+        "acoustic_solver",
+        default=False,
+        description="Builds an executable associated with the Acoustic solver",
+    )
+    variant(
+        "adr_solver",
+        default=False,
+        description="Builds an executable associated with the ADR solver",
+    )
+    variant(
+        "cardiac_solver",
+        default=False,
+        description="Builds an executable associated with the Cardiac electrophysiology solver",
+    )
+    variant(
+        "compflow_solver",
+        default=False,
+        description="Builds an executable associated with the CompressibleFlow solver",
+    )
+    variant(
+        "diff_solver",
+        default=False,
+        description="Builds an executable associated with the Diffusion solver",
+    )
+    variant(
+        "dummy_solver",
+        default=False,
+        description="Builds an executable associated with the Dummy solver",
+    )
+    variant(
+        "elasticity_solver",
+        default=False,
+        description="Builds an executable associated with the Elasticity solver",
+    )
+    variant(
+        "imgwarp_solver",
+        default=False,
+        description="Builds an executable associated with the Image Warping solver",
+    )
+    variant(
+        "ins_solver",
+        default=False,
+        description="Builds an executable associated with the Incompressible Navier Stokes solver",
+    )
+    variant(
+        "mmf_solver",
+        default=False,
+        description="Builds an executable associated with the MMF solver",
+    )
+    variant(
+        "pulsewave_solver",
+        default=False,
+        description="Builds an executable associated with the Pulse Wave solver",
+    )
+    variant(
+        "shwater_solver",
+        default=False,
+        description="Builds an executable associated with the Shallow Water solver",
+    )
+    variant(
+        "vortexwave_solver",
+        default=False,
+        description="Builds an executable associated with the Vortex Wave solver",
+    )
 
     depends_on("cmake@2.8.8:", type="build", when="~hdf5")
     depends_on("cmake@3.2:", type="build", when="+hdf5")
@@ -106,18 +161,22 @@ class Nektar(CMakePackage):
         return args
 
     def install(self, spec, prefix):
-            super(Nektar, self).install(spec, prefix)
-            if "+python" in spec:
-                python = which("python")
-                with fs.working_dir(self.build_directory):
-                    python("setup.py", "install", "--prefix", prefix)
+        super(Nektar, self).install(spec, prefix)
+        if "+python" in spec:
+            python = which("python")
+            with fs.working_dir(self.build_directory):
+                python("setup.py", "install", "--prefix", prefix)
 
     def setup_run_environment(self, env):
         env.append_path(
             "CMAKE_PREFIX_PATH",
-            os.path.join(self.spec.prefix, os.path.join("lib64", os.path.join("nektar++", "cmake"))),
+            os.path.join(
+                self.spec.prefix, os.path.join("lib64", os.path.join("nektar++", "cmake"))
+            ),
         )
-        env.append_path("PYTHONPATH", os.path.abspath(os.path.join(self.spec.prefix, "build_tree")))
+        env.append_path(
+            "PYTHONPATH", os.path.abspath(os.path.join(self.spec.prefix, "build_tree"))
+        )
 
     def setup_dependent_run_environment(self, env, dependent_spec):
         self.setup_run_environment(env)
