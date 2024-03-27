@@ -178,6 +178,7 @@ def query_arguments(args):
     upstreams = spack.config.get("upstreams", {})
     if install_tree in upstreams.keys():
         install_tree = upstreams[install_tree]["install_tree"]
+    q_args["install_tree"] = install_tree
 
     # Time window of installation
     for attribute in ("start_date", "end_date"):
