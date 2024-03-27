@@ -129,8 +129,7 @@ class Nektar(CMakePackage):
     def cmake_args(self):
         def hasfeature(feature):
             return True if feature in self.spec else False
-        args = 
-        [
+        args = [
             self.define_from_variant("NEKTAR_BUILD_DEMOS", "demos"),
             self.define_from_variant("NEKTAR_BUILD_PYTHON", "python"),
             self.define("NEKTAR_BUILD_SOLVERS", True),
