@@ -231,9 +231,9 @@ class SuiteSparse(Package):
             make_args += [
                 "CMAKE_OPTIONS=-DCMAKE_INSTALL_PREFIX=%s" % prefix
                 + " -DCMAKE_LIBRARY_PATH=%s" % prefix.lib
+                + " -DBLAS_DIR=%s" % spec["blas"].prefix
+                + " -DLAPACK_DIR=%s" % spec["lapack"].prefix
             ]
-            make_args += ["BLAS_ROOT=%s" % spec["blas"].prefix]
-            make_args += ["LAPACK_ROOT=%s" % spec["lapack"].prefix]
 
         if spec.satisfies("%gcc platform=darwin"):
             make_args += ["LDLIBS=-lm"]
