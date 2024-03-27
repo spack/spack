@@ -73,7 +73,7 @@ class OpenradiossEngine(CMakePackage):
             "-Dsanitize=0",
         ]
 
-        args.append(f"-Drach={self.compiler_name}")
+        args.append(f"-Darch={self.compiler_name}")
 
         if "+sp" in self.spec:
             args.append("-Dprecision=sp")
