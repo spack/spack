@@ -48,9 +48,9 @@ class AmdAocl(BundlePackage):
         with when(f"@={vers}"):
             depends_on(f"amdblis@={vers}")
             depends_on(f"amdfftw@={vers}")
-            depends_on(f"amdlibflame@={vers}")
+            depends_on(f"amdlibflame@={vers} +enable-aocl-blas")
             depends_on(f"amdlibm@={vers}")
-            depends_on(f"amdscalapack@={vers}")
+            depends_on(f"amdscalapack@={vers} +enable-aocl-blas-lapack")
             depends_on(f"aocl-sparse@={vers}")
             if Version(vers) >= Version("4.2"):
                 depends_on(f"aocl-compression@={vers}")
