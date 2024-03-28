@@ -7,7 +7,7 @@ import os
 import subprocess
 
 from spack.package import *
-from spack.util.environment import path_put_first, set_env
+from spack.util.environment import set_env
 
 
 class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
@@ -639,17 +639,17 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
             return subprocess.run(["util/test/checkChplInstall"])
 
     def test_hello(self):
-            """Run the hello world test"""
-            with working_dir(self.test_suite.current_test_cache_dir):
-                with set_env(CHPL_CHECK_HOME=self.test_suite.current_test_cache_dir):
-                    with test_part(self, "test_hello", purpose="test hello world"):
-                        if self.spec.variants["cuda"].value or self.spec.variants["rocm"].value:
-                            with set_env(COMP_FLAGS="--no-checks --no-compiler-driver"):
-                                res = self.check_chpl_install()
-                                assert res and res.returncode == 0
-                        else:
+        """Run the hello world test"""
+        with working_dir(self.test_suite.current_test_cache_dir):
+            with set_env(CHPL_CHECK_HOME=self.test_suite.current_test_cache_dir):
+                with test_part(self, "test_hello", purpose="test hello world"):
+                    if self.spec.variants["cuda"].value or self.spec.variants["rocm"].value:
+                        with set_env(COMP_FLAGS="--no-checks --no-compiler-driver"):
                             res = self.check_chpl_install()
                             assert res and res.returncode == 0
+                    else:
+                        res = self.check_chpl_install()
+                        assert res and res.returncode == 0
 
     # TODO: This is a pain because the checkChplDoc script doesn't have the same
     # support for CHPL_CHECK_HOME and chpldoc is finicky about CHPL_HOME
@@ -674,7 +674,8 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
     #     #     return
     #     tests_to_run = []
     #     with working_dir(self.test_suite.current_test_cache_dir):
-    #         with set_env(CHPL_HOME=join_path(self.spec.prefix.share, "chapel", self._output_version_short)):
+    #         with set_env(CHPL_HOME=join_path(self.spec.prefix.share,
+    #                      "chapel", self._output_version_short)):
     #             with test_part(self, "test_package_modules", purpose="test package modules"):
     #                 if "yaml" in self.get_package_modules:
     #                     tests_to_run.append("test/library/packages/Yaml/writeAndParse.chpl")
@@ -694,7 +695,8 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
     #                         )
     #                         assert res.returncode == 0
     #                         print("Running package module test for package 'url'")
-    #                         res = subprocess.run(["util/start_test", "test/library/packages/URL/"])
+    #                         res = subprocess.run(["util/start_test",
+    #                                               "test/library/packages/URL/"])
     #                         assert res.returncode == 0
     #                 if "hdf5" in self.get_package_modules:
     #                     tests_to_run.append("test/library/packages/HDF5/")
@@ -714,22 +716,23 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
     @run_after("install")
     def copy_test_files(self):
         """Copy test files to the install directory"""
-        test_files = ["test/release/examples",
-                      "util/start_test",
-                      "util/test",
-                      "util/chplenv",
-                      "util/config",
-                    #   "test/library/packages/Curl",
-                    #   "test/library/packages/URL/",
-                    #   "test/library/packages/ProtobufProtocolSupport/",
-                    #   "test/library/packages/Crypto/",
-                    #   "test/library/packages/Yaml/",
-                    #   "test/library/packages/ZMQ/",
-                    #   "test/library/packages/HDF5/",
-                      "chplconfig",
-                      "make",
-                      "third-party/chpl-venv/",
-                     ]
+        test_files = [
+            "test/release/examples",
+            "util/start_test",
+            "util/test",
+            "util/chplenv",
+            "util/config",
+            #   "test/library/packages/Curl",
+            #   "test/library/packages/URL/",
+            #   "test/library/packages/ProtobufProtocolSupport/",
+            #   "test/library/packages/Crypto/",
+            #   "test/library/packages/Yaml/",
+            #   "test/library/packages/ZMQ/",
+            #   "test/library/packages/HDF5/",
+            "chplconfig",
+            "make",
+            "third-party/chpl-venv/",
+        ]
         cache_extra_test_sources(self, test_files)
 
     # @run_after("install")
