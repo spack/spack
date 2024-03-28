@@ -3053,7 +3053,7 @@ spack:
 
     with ev.read("test") as e:
         concretize()
-        mpileaks_spec, = e.all_matching_specs("mpileaks")
+        (mpileaks_spec,) = e.all_matching_specs("mpileaks")
         assert not os.path.exists(mpileaks_spec.package.stage.path)
         install()
         assert os.path.exists(mpileaks_spec.package.stage.path)
