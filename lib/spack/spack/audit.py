@@ -838,7 +838,8 @@ def _issues_in_depends_on_directive(pkgs, error_cls):
                             error_msg = (
                                 f"variant {str(e).strip()} does not exist in package {dep_name}"
                             )
-                        error_msg += f" in package '{dep_name}'"
+                        else:
+                            error_msg = f" in package '{dep_name}'"
 
                         errors.append(
                             error_cls(summary=summary, details=[error_msg, f"in {filename}"])
