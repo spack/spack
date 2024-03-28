@@ -15,6 +15,7 @@ class PyTorchaudio(PythonPackage):
     submodules = True
 
     license("BSD-2-Clause")
+    maintainers("adamjstewart")
 
     version("main", branch="main")
     version("2.2.2", tag="v2.2.2", commit="cefdb369247668e1dba74de503d4d996124b6b11")
