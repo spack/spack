@@ -56,9 +56,15 @@ class ZlibNg(AutotoolsPackage, CMakePackage):
         patch("pr-1561.patch", when="build_system=autotools")  # drop bash dependency
         patch("pr-1562.patch")  # improve intrinsics detection
 
+    # fix building with NVHPC, see https://github.com/zlib-ng/zlib-ng/pull/1698
+    # (@2.1.0:2.1.3 need the same changes but in a different file)
+    patch("pr-1698.patch", when="@2.1.4:%nvhpc+opt")
+
     with when("build_system=cmake"):
         depends_on("cmake@3.5.1:", type="build")
         depends_on("cmake@3.14.0:", type="build", when="@2.1.0:")
+
+    conflicts("%nvhpc@:20", msg="the compiler is too old and too broken")
 
     @property
     def libs(self):
@@ -74,6 +80,14 @@ class ZlibNg(AutotoolsPackage, CMakePackage):
 
 
 class AutotoolsBuilder(autotools.AutotoolsBuilder):
+
+    @run_before("configure")
+    def pretend_gcc(self):
+        # All nice things (PIC flags, symbol versioning) that happen to the compilers that are
+        # recognized as gcc (%gcc, %clang, %intel, %oneapi) we want for some other compilers too:
+        if self.spec.compiler.name in ["nvhpc"]:
+            filter_file(r"^gcc=0$", "gcc=1", join_path(self.configure_directory, "configure"))
+
     def configure_args(self):
         args = []
         if self.spec.satisfies("+compat"):
@@ -95,4 +109,5 @@ class CMakeBuilder(cmake.CMakeBuilder):
             self.define("BUILD_SHARED_LIBS", self.spec.satisfies("+shared")),
             self.define_from_variant("CMAKE_POSITION_INDEPENDENT_CODE", "pic"),
             self.define_from_variant("WITH_NEW_STRATEGIES", "new_strategies"),
+            self.define("ZLIB_ENABLE_TESTS", self.pkg.run_tests),
         ]
