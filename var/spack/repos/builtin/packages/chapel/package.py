@@ -616,6 +616,8 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
         # it's not likely users are going to want to wait 30 minutes or maybe some
         # number of hours for the tests to run. So we're going to skip this for now
         # and just rely on minimal hello world and version number tests.
+        # We can't just run make check here because chpl isn't yet installed
+        # and we need it to be in the PATH for make check to work
         pass
 
     def check_chpl_install_gasnet(self):
