@@ -19,9 +19,7 @@ class Dftbplus(CMakePackage, MakefilePackage):
     generator("ninja")
 
     build_system(
-        conditional("cmake", when="@20.1:"),
-        conditional("makefile", when="@:19.1"),
-        default="cmake",
+        conditional("cmake", when="@20.1:"), conditional("makefile", when="@:19.1"), default="cmake"
     )
 
     license("CC-BY-SA-4.0")
@@ -66,9 +64,7 @@ class Dftbplus(CMakePackage, MakefilePackage):
         when="+mpi",
     )
     variant(
-        "gpu",
-        default=False,
-        description="Use the MAGMA library " "for GPU accelerated computation",
+        "gpu", default=False, description="Use the MAGMA library " "for GPU accelerated computation"
     )
     variant(
         "mbd",
@@ -78,9 +74,7 @@ class Dftbplus(CMakePackage, MakefilePackage):
     )
     variant("mpi", default=False, description="Whether DFTB+ should support MPI-parallelism.")
     variant(
-        "openmp",
-        default=True,
-        description="Whether OpenMP thread parallisation should be enabled.",
+        "openmp", default=True, description="Whether OpenMP thread parallisation should be enabled."
     )
     variant(
         "plumed",
@@ -183,13 +177,9 @@ class Dftbplus(CMakePackage, MakefilePackage):
             mconfig.filter("WITH_GPU := .*", "WITH_GPU := 1")
 
         if "+mpi" in self.spec:
-            march.filter(
-                "SCALAPACKDIR = .*", "SCALAPACKDIR = {0}".format(spec["scalapack"].prefix)
-            )
+            march.filter("SCALAPACKDIR = .*", "SCALAPACKDIR = {0}".format(spec["scalapack"].prefix))
 
-            march.filter(
-                "LIB_LAPACK = -l.*", "LIB_LAPACK = {0}".format(spec["blas"].libs.ld_flags)
-            )
+            march.filter("LIB_LAPACK = -l.*", "LIB_LAPACK = {0}".format(spec["blas"].libs.ld_flags))
 
             march.filter("mpifort", "{0}".format(spec["mpi"].mpifc))
 
@@ -201,20 +191,15 @@ class Dftbplus(CMakePackage, MakefilePackage):
                 has_pexsi = "+enable_pexsi" in spec["elsi"]
 
                 mconfig.filter(
-                    "WITH_PEXSI := .*",
-                    "WITH_PEXSI := {0}".format("1" if has_pexsi is True else "0"),
+                    "WITH_PEXSI := .*", "WITH_PEXSI := {0}".format("1" if has_pexsi is True else "0")
                 )
 
-                march.filter(
-                    "ELSIINCDIR .*", "ELSIINCDIR = {0}".format(spec["elsi"].prefix.include)
-                )
+                march.filter("ELSIINCDIR .*", "ELSIINCDIR = {0}".format(spec["elsi"].prefix.include))
 
                 march.filter("ELSIDIR .*", "ELSIDIR = {0}".format(spec["elsi"].prefix))
 
         else:
-            march.filter(
-                "LIB_LAPACK += -l.*", "LIB_LAPACK += {0}".format(spec["blas"].libs.ld_flags)
-            )
+            march.filter("LIB_LAPACK += -l.*", "LIB_LAPACK += {0}".format(spec["blas"].libs.ld_flags))
 
         if "+sockets" in self.spec:
             mconfig.filter("WITH_SOCKETS := .*", "WITH_SOCKETS := 1")

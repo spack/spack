@@ -54,9 +54,7 @@ class Arbor(CMakePackage, CudaPackage):
     variant("doc", default=False, description="Build documentation.")
     variant("mpi", default=False, description="Enable MPI support")
     variant("python", default=True, description="Enable Python frontend support")
-    variant(
-        "vectorize", default=False, description="Enable vectorization of computational kernels"
-    )
+    variant("vectorize", default=False, description="Enable vectorization of computational kernels")
     variant(
         "gpu_rng",
         default=False,

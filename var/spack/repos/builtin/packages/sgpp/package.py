@@ -62,9 +62,7 @@ class Sgpp(SConsPackage):
     variant("misc", default=False, description="Builds the misc module of SGpp")
     variant("combigrid", default=False, description="Builds the combigrid module of SGpp")
     variant("solver", default=True, description="Builds the solver module of SGpp")
-    variant(
-        "opencl", default=False, description="Enables support for OpenCL accelerated operations"
-    )
+    variant("opencl", default=False, description="Enables support for OpenCL accelerated operations")
     variant("mpi", default=False, description="Enables support for MPI-distributed operations")
 
     # Mandatory dependencies
