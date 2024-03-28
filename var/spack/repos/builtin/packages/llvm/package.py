@@ -8,6 +8,7 @@ import re
 import sys
 
 import llnl.util.tty as tty
+from llnl.util.filesystem import find_headers
 
 import spack.build_environment
 import spack.util.executable
@@ -760,6 +761,55 @@ class Llvm(CMakePackage, CudaPackage):
             return (None, flags, None)
         return (flags, None, None)
 
+    def find_binutils_header_dir(self):
+        """Ensure necessary header file 'plugin-api.h' from binutils is present.
+        This can be missing if binutils is an external."""
+        if not self.spec["binutils"].external:
+            return self.spec["binutils"].prefix.include
+        else:
+            header_file = "plugin-api.h"
+            found = False
+            search_dir = self.spec["binutils"].prefix.include
+            match_dir = find_headers(header_file, search_dir).directories
+            if match_dir:
+                found = True
+                return match_dir
+            if not found:
+                raise RuntimeError(
+                    'Spack cannot find binutils header file "' + header_file + '"'
+                    " on your system. Please install them using your package manager"
+                    " (e.g., `apt install binutils-dev` or `yum install binutils-devel`) "
+                    " then run `spack external find binutils`,"
+                    " or use a Spack-built binutils package."
+                )
+
+    def find_libc_header_dir(self):
+        """Ensure necessary header files from libc are present."""
+        arch_target = self.spec.target.family.name
+        arch_platform = "linux" if self.spec.platform == "cray" else self.spec.platform
+        arch_abi = "gnu"  # TODO: generalize to all possible options
+        arch_triple = arch_target + "-" + arch_platform + "-" + arch_abi
+        header_path = "sys"
+        header_file = "cdefs.h"
+        found = False
+        search_dirs = [
+            "/include",
+            "/usr/include",
+            "/usr/" + arch_triple + "/include",
+            "/usr/local/include",
+        ]
+        for search_dir in search_dirs:
+            match_dir = find_headers(header_file, search_dir + "/" + header_path).directories
+            if match_dir:
+                found = True
+                return match_dir
+        if not found:
+            raise RuntimeError(
+                'Spack cannot find libc header file "' + header_file + '"'
+                " on your system. Please install them using your package manager"
+                " (e.g., `apt install libc6-dev` or `yum install glibc-headers`)."
+            )
+
     def setup_build_environment(self, env):
         """When using %clang, add only its ld.lld-$ver and/or ld.lld to our PATH"""
         if self.compiler.name in ["clang", "apple-clang"]:
@@ -813,6 +863,10 @@ class Llvm(CMakePackage, CudaPackage):
         shlib_symbol_version = spec.variants.get("shlib_symbol_version", None)
         if shlib_symbol_version is not None and shlib_symbol_version.value != "none":
             cmake_args.append(define("LLVM_SHLIB_SYMBOL_VERSION", shlib_symbol_version.value))
+
+        cmake_args.append(
+            define("CMAKE_CXX_STANDARD_INCLUDE_DIRECTORIES", self.find_libc_header_dir())
+        )
 
         projects = []
         runtimes = []
@@ -877,7 +931,7 @@ class Llvm(CMakePackage, CudaPackage):
             cmake_args.append(define("LLVM_ENABLE_TERMINFO", False))
 
         if "+gold" in spec:
-            cmake_args.append(define("LLVM_BINUTILS_INCDIR", spec["binutils"].prefix.include))
+            cmake_args.append(define("LLVM_BINUTILS_INCDIR", self.find_binutils_header_dir()))
 
         if "+clang" in spec:
             projects.append("clang")
