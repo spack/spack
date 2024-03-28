@@ -3,8 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import sys
-
 from spack.package import *
 
 
@@ -20,8 +18,8 @@ class Steps(CMakePackage):
     submodules = True
 
     version("develop", branch="master")
-    version("5.0.1")
-    version("4.1.1")
+    version("5.0.1", tag="5.0.1", commit="1f2eb8193edc1c75e0877fe37e39452b399242c9")
+    version("4.1.1", tag="4.1.1", commit="fdb6d9e02a69dae698f66013117fc3f08f808f45")
 
     variant("blender", default=False, description="Build stepsblender package")
     variant(
@@ -30,11 +28,6 @@ class Steps(CMakePackage):
         description="Perform additional code checks like code formatting or static analysis",
     )
     variant("lapack", default=False, description="Use new BDSystem/Lapack code for E-Field solver")
-    variant(
-        "native",
-        default=False if sys.platform == "darwin" else True,
-        description="Generate non-portable arch-specific code",
-    )
     variant("distmesh", default=True, description="Add solvers based on distributed mesh")
     variant("petsc", default=True, description="Use PETSc library for parallel E-Field solver")
     variant("mpi", default=True, description="Use MPI for parallel solvers")
@@ -91,8 +84,6 @@ class Steps(CMakePackage):
     depends_on("sundials@:2+int64", when="@:5~bundle")
     depends_on("sundials@:6+int64", when="@develop~bundle")
 
-    patch("for_aarch64.patch", when="@:4 target=aarch64:")
-
     def patch(self):
         # easylogging requires compilation by
         # its dependents: splice in disabling all errors
@@ -118,7 +109,6 @@ class Steps(CMakePackage):
             self.define_from_variant("STEPS_USE_LIKWID_PROFILING", "likwid"),
             self.define_from_variant("STEPS_USE_STEPSBLENDER", "blender"),
             self.define_from_variant("STEPS_USE_VESICLE_SOLVER", "vesicle"),
-            self.define_from_variant("TARGET_NATIVE_ARCH", "native"),
             self.define_from_variant("USE_BDSYSTEM_LAPACK", "lapack"),
             self.define_from_variant("USE_MPI", "mpi"),
             self.define_from_variant("USE_PETSC", "petsc"),
