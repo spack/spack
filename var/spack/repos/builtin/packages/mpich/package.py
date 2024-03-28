@@ -388,7 +388,7 @@ supported, and netmod is ignored if device is ch3:sock.""",
             if re.search(r"--with-thread-package=argobots", output):
                 variants.append("+argobots")
 
-            elif re.search(r"--with-pmi=simple", output):
+            if re.search(r"--with-pmi=simple", output):
                 variants.append("pmi=pmi")
             elif re.search(r"--with-pmi=pmi2/simple", output):
                 variants.append("pmi=pmi2")
@@ -554,9 +554,7 @@ supported, and netmod is ignored if device is ch3:sock.""",
         else:
             config_args.append("--with-slurm=no")
 
-        if "pmi=off" in spec:
-            config_args.append("--with-pmi=no")
-        elif "pmi=pmi" in spec:
+        if "pmi=pmi" in spec:
             config_args.append("--with-pmi=simple")
         elif "pmi=pmi2" in spec:
             config_args.append("--with-pmi=pmi2/simple")
