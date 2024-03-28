@@ -25,6 +25,8 @@ class Legion(CMakePackage, ROCmPackage):
     homepage = "https://legion.stanford.edu/"
     git = "https://github.com/StanfordLegion/legion.git"
 
+    license("Apache-2.0")
+
     maintainers("pmccormick", "streichler", "elliottslaughter")
     tags = ["e4s"]
     version("24.03.0", tag="legion-24.03.0", commit="c61071541218747e35767317f6f89b83f374f264")
@@ -277,6 +279,9 @@ class Legion(CMakePackage, ROCmPackage):
         default=1024,
         description="Maximum number of nodes supported by Legion.",
     )
+    variant("prof", default=False, description="Install Rust Legion prof")
+
+    depends_on("rust@1.74:", type="build", when="+prof")
 
     def cmake_args(self):
         spec = self.spec
@@ -437,6 +442,19 @@ class Legion(CMakePackage, ROCmPackage):
         # CPU architecture in favor of Spack-provided compiler flags
         options.append("-DBUILD_MARCH:STRING=")
         return options
+
+    def build(self, spec, prefix):
+        super().build(spec, prefix)
+        if spec.satisfies("+prof"):
+            with working_dir(join_path(self.stage.source_path, "tools", "legion_prof_rs")):
+                cargo = which("cargo")
+                cargo("install", "--root", "out", "--path", ".", "--all-features", "--locked")
+
+    def install(self, spec, prefix):
+        super().install(spec, prefix)
+        if spec.satisfies("+prof"):
+            with working_dir(join_path(self.stage.source_path, "tools", "legion_prof_rs")):
+                install_tree("out", prefix)
 
     @run_after("install")
     def cache_test_sources(self):
