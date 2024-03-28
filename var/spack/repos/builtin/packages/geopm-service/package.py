@@ -9,14 +9,8 @@ from spack.package import *
 
 
 class GeopmService(AutotoolsPackage):
-    """The Global Extensible Open Power Manager (GEOPM) is a framework for
-    exploring power and energy optimizations targeting heterogeneous platforms.
-    The GEOPM package provides many built-in features. A simple use case is
-    reading hardware counters and setting hardware controls with platform
-    independent syntax using a command line tool on a particular compute node.
-    An advanced use case is dynamically coordinating hardware settings across
-    all compute nodes used by a distributed application is response to the
-    application's behavior and requests from the resource manager.
+    """The Global Extensible Open Power Manager (GEOPM) Service provides a
+    user interface for accessing hardware telemetry and settings securely.
 
     Note: GEOPM interfaces with hardware using Model Specific Registers (MSRs).
     For proper usage make sure MSRs are made available via the msr or
@@ -35,11 +29,7 @@ class GeopmService(AutotoolsPackage):
 
     variant("debug", default=False, description="Enable debug")
     variant("docs", default=True, description="Create man pages with Sphinx")
-    variant(
-        "systemd",
-        default=False,
-        description="Enable use of systemd (systemd development libraries required)",
-    )
+    variant("systemd", default=True, description="Enable use of systemd/DBus")
     variant("liburing", default=True, description="Enables the use of liburing for batch I/O")
     variant(
         "libcap", default=True, description="Enables the use of libcap to do capabilities checks"
@@ -64,9 +54,9 @@ class GeopmService(AutotoolsPackage):
     conflicts("platform=darwin", msg="Darwin is not supported")
     conflicts("platform=windows", msg="Windows is not supported")
 
-    conflicts("target=aarch64:", msg="Only available on x86_64")
-    conflicts("target=ppc64:", msg="Only available on x86_64")
-    conflicts("target=ppc64le:", msg="Only available on x86_64")
+    conflicts("target=aarch64:", msg="Only available on x86_64", when="@3.0.1")
+    conflicts("target=ppc64:", msg="Only available on x86_64", when="@3.0.1")
+    conflicts("target=ppc64le:", msg="Only available on x86_64", when="@3.0.1")
 
     patch("0001-Support-NVML-via-CUDA-installation.patch", when="+nvml")
 
@@ -78,7 +68,7 @@ class GeopmService(AutotoolsPackage):
     # Docs dependencies
     depends_on("doxygen", type="build", when="+docs")
     depends_on("py-docstring-parser@0.13.0:", type="build", when="+docs")
-    depends_on("py-sphinx@4.5:", type="build", when="+docs")
+    depends_on("py-sphinx", type="build", when="+docs")
     depends_on("py-sphinx-rtd-theme@1:", type="build", when="+docs")
     depends_on("py-sphinxemoji@0.2.0:", type="build", when="+docs")
     depends_on("py-sphinx-tabs@3.3.1:", type="build", when="+docs")
@@ -95,6 +85,7 @@ class GeopmService(AutotoolsPackage):
     # Other dependencies
     depends_on("bash-completion")
     depends_on("unzip")
+    depends_on("systemd", when="+systemd")
     depends_on("libcap", when="+libcap")
     depends_on("liburing", when="+liburing")
     depends_on("oneapi-level-zero", when="+levelzero")
@@ -132,10 +123,16 @@ class GeopmService(AutotoolsPackage):
         args += self.enable_or_disable("nvml")
         if "+nvml" in self.spec:
             args += [
-                "--with-nvml=" + join_path(self.spec["cuda"].prefix, "targets", "x86_64-linux")
+                "--with-nvml="
+                + join_path(
+                    self.spec["cuda"].prefix, "targets", f"{self.spec.target.family}-linux"
+                )
             ]
 
         args += self.enable_or_disable("rawmsr")
+        with when("@develop"):
+            if self.spec.target.family != "x86_64":
+                args += ["--disable-cpuid"]
         return args
 
     def setup_run_environment(self, env):
