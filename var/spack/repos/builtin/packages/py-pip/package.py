@@ -2,8 +2,10 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
+import glob
 import os
+import shutil
+import sys
 
 from spack.package import *
 
@@ -52,7 +54,32 @@ class PyPip(Package, PythonExtension):
             python_tag = "py2.py3"
         return url.format(python_tag, version)
 
+    def setup_build_environment(self, env):
+        """Specify where the user site-packages directory should be"""
+        if sys.platform == "win32":
+            env.set("PYTHONUSERBASE", self.spec.prefix)
+
     def install(self, spec, prefix):
+        # Pip must be bootstrapped on windows using ensurepip. When setting
+        # up the build environment, the PYTHONUSERBASE variable is injected
+        # into the environment, set to the spec prefix. Then, in conjunction
+        # with the --user flag, pip is installed into the appropriate directory.
+        # Once bootstrapped, we can install the desired version of pip from
+        # the wheel.
+        if sys.platform == "win32":
+            python("-m", "ensurepip", "--user")
+            whl = self.stage.archive_file
+            upgrade_cmd = ["-m", "pip", "install", "--user", whl]
+            python(*upgrade_cmd)
+            # Need to fix the directory name to "Lib" in order for the python package to correctly
+            # set the PYTHONPATH variable so the pip is usable because this is the structure that
+            # other python packages are installed with.
+            # TODO (smillie) Does this need to be protected in a try/except?
+            orig_pydir = glob.glob(os.path.join(self.spec.prefix, "Python3*"))[0]
+            new_pydir = os.path.join(self.spec.prefix, "Lib")
+            shutil.move(orig_pydir, new_pydir)
+            return
+
         # To build and install pip from source, you need setuptools, wheel, and pip
         # already installed. We get around this by using a pre-built wheel to install
         # itself, see:
