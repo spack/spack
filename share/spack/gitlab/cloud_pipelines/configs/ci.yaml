@@ -27,12 +27,12 @@ ci:
       - - spack config blame mirrors
         - spack --color=always --backtrace ci rebuild --tests > >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_out.txt) 2> >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_err.txt >&2)
       after_script:
-      - - ./bin/spack python ${CI_PROJECT_DIR}/share/spack/gitlab/cloud_pipelines/scripts/common/aggregate_package_logs.spack.py
-          --prefix /home/software/spack:${CI_PROJECT_DIR}/opt/spack
-          --log install_times.json
-          ${SPACK_ARTIFACTS_ROOT}/user_data/install_times.json
       - - cat /proc/loadavg || true
         - cat /proc/meminfo | grep 'MemTotal\|MemFree' || true
+      - - time python ${CI_PROJECT_DIR}/share/spack/gitlab/cloud_pipelines/scripts/common/aggregate_package_logs.spack.py
+          --prefix /home/software/spack:${CI_PROJECT_DIR}/opt/spack
+          --log install_times.json
+          ${SPACK_ARTIFACTS_ROOT}/user_data/install_times.json || true
       variables:
         CI_JOB_SIZE: "default"
         CI_GPG_KEY_ROOT: /mnt/key
