@@ -798,6 +798,7 @@ class CompilerFlag(str):
     def __new__(cls, value, **kwargs):
         obj = str.__new__(cls, value)
         obj.propagate = kwargs.pop("propagate", False)
+        obj.flag_group = kwargs.pop("flag_group", value)
         return obj
 
 
@@ -870,7 +871,7 @@ class FlagMap(lang.HashableMap):
             clone[name] = compiler_flag
         return clone
 
-    def add_flag(self, flag_type, value, propagation):
+    def add_flag(self, flag_type, value, propagation, flag_group):
         """Stores the flag's value in CompilerFlag and adds it
         to the FlagMap
 
@@ -880,8 +881,10 @@ class FlagMap(lang.HashableMap):
                 corresponding list
             propagation (bool): if ``True`` the flag value will be passed to
                 the packages' dependencies. If``False`` it will not be passed
+            flag_group (str): wherever this flag came from, all the other
+                flags that came along with it
         """
-        flag = CompilerFlag(value, propagate=propagation)
+        flag = CompilerFlag(value, propagate=propagation, flag_group=flag_group)
 
         if flag_type not in self:
             self[flag_type] = [flag]
