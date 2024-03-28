@@ -58,7 +58,6 @@ class Dsqss(CMakePackage):
         copy(join_path(test01, "std.toml"), ".")
 
         # prepare
-        python = self.spec["python"].command
         opts = [self.spec.prefix.bin.dla_pre, "std.toml"]
         with test_part(self, "test_dla_pre", purpose="prepare dla"):
             python(*opts)
