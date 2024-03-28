@@ -2274,11 +2274,15 @@ class BuildProcessInstaller:
         # whether to install source code with the packag
         self.install_source = install_args.get("install_source", False)
 
+        is_develop = pkg.spec.is_develop
         # whether to keep the build stage after installation
-        self.keep_stage = install_args.get("keep_stage", False)
-
+        # Note: user commands do not have an explicit choice to disable
+        # keeping stages (i.e., we have a --keep-stage option, but not
+        # a --destroy-stage option), so we can override a default choice
+        # to destroy
+        self.keep_stage = is_develop or install_args.get("keep_stage", False)
         # whether to restage
-        self.restage = install_args.get("restage", False)
+        self.restage = (not is_develop) or install_args.get("restage", False)
 
         # whether to skip the patch phase
         self.skip_patch = install_args.get("skip_patch", False)
@@ -2311,15 +2315,9 @@ class BuildProcessInstaller:
         """Main entry point from ``build_process`` to kick off install in child."""
 
         stage = self.pkg.stage
-        is_develop = self.pkg.spec.is_develop
+        stage.keep = self.keep_stage
 
-        # Note: user commands do not have an explicit choice to disable
-        # keeping stages (i.e., we have a --keep-stage option, but not
-        # a --destroy-stage option), so we can override a default choice
-        # to destroy
-        stage.keep = self.keep_stage or is_develop
-
-        if self.restage and (not is_develop):
+        if self.restage:
             stage.destroy()
 
         with stage:
