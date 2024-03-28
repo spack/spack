@@ -206,7 +206,7 @@ class Dealii(CMakePackage, CudaPackage):
     depends_on("slepc~arpack", when="+slepc+petsc+mpi+int64")
     depends_on("sundials@:3~pthread", when="@9.0:9.2+sundials")
     depends_on("sundials@5:5.8", when="@9.3:9.3.3+sundials")
-    depends_on("sundials@5:", when="@9.3.4:+sundials")
+    depends_on("sundials@5:6.7", when="@9.3.4:+sundials")
     depends_on("taskflow@3.4:", when="@9.6:+taskflow")
     depends_on("trilinos gotype=int", when="+trilinos@12.18.1:")
     # TODO: next line fixes concretization with trilinos and adol-c

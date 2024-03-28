@@ -288,8 +288,8 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     depends_on("sundials@2.7.0:+mpi+hypre", when="@3.3.2:+sundials+mpi")
     depends_on("sundials@5.0.0:5", when="@4.0.1-xsdk:4.4+sundials~mpi")
     depends_on("sundials@5.0.0:5+mpi+hypre", when="@4.0.1-xsdk:4.4+sundials+mpi")
-    depends_on("sundials@5.0.0:", when="@4.5.0:+sundials~mpi")
-    depends_on("sundials@5.0.0:+mpi+hypre", when="@4.5.0:+sundials+mpi")
+    depends_on("sundials@5.0.0:6.7.0", when="@4.5.0:+sundials~mpi")
+    depends_on("sundials@5.0.0:6.7.0+mpi+hypre", when="@4.5.0:+sundials+mpi")
     for sm_ in CudaPackage.cuda_arch_values:
         depends_on(
             "sundials@5.4.0:+cuda cuda_arch={0}".format(sm_),
