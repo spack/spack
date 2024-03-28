@@ -42,9 +42,7 @@ class DoubleBatchedFftLibrary(CMakePackage):
     def cmake_args(self):
         cxx_compiler = os.path.basename(self.compiler.cxx)
         if self.spec.satisfies("+sycl") and cxx_compiler not in ["icpx"]:
-            raise InstallError(
-                "The Double-Batched FFT Library requires the oneapi C++ Compiler"
-            )
+            raise InstallError("The Double-Batched FFT Library requires the oneapi C++ Compiler")
 
         return [
             self.define_from_variant("BUILD_SHARED_LIBS", "shared"),

@@ -212,9 +212,7 @@ versions = [
 
 @IntelOneApiPackage.update_description
 class IntelOneapiCompilers(IntelOneApiPackage):
-    """Intel oneAPI Compilers. Includes: icc, icpc, ifort, icx, icpx, and ifx.
-
-    """
+    """Intel oneAPI Compilers. Includes: icc, icpc, ifort, icx, icpx, and ifx."""
 
     maintainers("rscohn2")
 
