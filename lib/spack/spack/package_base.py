@@ -64,7 +64,7 @@ from spack.install_test import (
     install_test_root,
 )
 from spack.installer import InstallError, PackageInstaller
-from spack.stage import DevelopStage, ResourceStage, Stage, StageComposite, compute_stage_name
+from spack.stage import DIYStage, ResourceStage, Stage, StageComposite, compute_stage_name
 from spack.util.executable import ProcessError, which
 from spack.util.package_hash import package_hash
 from spack.version import GitVersion, StandardVersion
@@ -1076,12 +1076,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         # If it's a dev package (not transitively), use a DIY stage object
         dev_path_var = self.spec.variants.get("dev_path", None)
         if dev_path_var:
-            dev_path = dev_path_var.value
-            link_format = spack.config.get("config:develop_stage_link")
-            if not link_format:
-                link_format = "build-{arch}-{hash:7}"
-            stage_link = self.spec.format_path(link_format)
-            return DevelopStage(compute_stage_name(self.spec), dev_path, stage_link)
+            return DIYStage(dev_path_var.value)
 
         # To fetch the current version
         source_stage = self._make_root_stage(self.fetcher)
@@ -1413,7 +1408,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
             return
 
         checksum = spack.config.get("config:checksum")
-        fetch = self.stage.needs_fetching
+        fetch = self.stage.managed_by_spack
         if (
             checksum
             and fetch
@@ -1486,6 +1481,9 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         if self.has_code:
             self.do_fetch(mirror_only)
             self.stage.expand_archive()
+
+            if not os.listdir(self.stage.path):
+                raise spack.error.FetchError("Archive was empty for %s" % self.name)
         else:
             # Support for post-install hooks requires a stage.source_path
             fsys.mkdirp(self.stage.source_path)
@@ -1519,7 +1517,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         # If we encounter an archive that failed to patch, restage it
         # so that we can apply all the patches again.
         if os.path.isfile(bad_file):
-            if self.stage.requires_patch_success:
+            if self.stage.managed_by_spack:
                 tty.debug("Patching failed last time. Restaging.")
                 self.stage.restage()
             else:
@@ -1540,8 +1538,6 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
             tty.msg("No patches needed for {0}".format(self.name))
             return
 
-        errors = []
-
         # Apply all the patches for specs that match this one
         patched = False
         for patch in patches:
@@ -1551,16 +1547,12 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
                 tty.msg("Applied patch {0}".format(patch.path_or_url))
                 patched = True
             except spack.error.SpackError as e:
+                tty.debug(e)
+
                 # Touch bad file if anything goes wrong.
+                tty.msg("Patch %s failed." % patch.path_or_url)
                 fsys.touch(bad_file)
-                error_msg = f"Patch {patch.path_or_url} failed."
-                if self.stage.requires_patch_success:
-                    tty.msg(error_msg)
-                    raise
-                else:
-                    tty.debug(error_msg)
-                    tty.debug(e)
-                    errors.append(e)
+                raise
 
         if has_patch_fun:
             try:
@@ -1578,29 +1570,24 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
                     # printed a message for each patch.
                     tty.msg("No patches needed for {0}".format(self.name))
             except spack.error.SpackError as e:
+                tty.debug(e)
+
                 # Touch bad file if anything goes wrong.
+                tty.msg("patch() function failed for {0}".format(self.name))
                 fsys.touch(bad_file)
-                error_msg = f"patch() function failed for {self.name}"
-                if self.stage.requires_patch_success:
-                    tty.msg(error_msg)
-                    raise
-                else:
-                    tty.debug(error_msg)
-                    tty.debug(e)
-                    errors.append(e)
+                raise
 
-        if not errors:
-            # Get rid of any old failed file -- patches have either succeeded
-            # or are not needed.  This is mostly defensive -- it's needed
-            # if we didn't restage
-            if os.path.isfile(bad_file):
-                os.remove(bad_file)
+        # Get rid of any old failed file -- patches have either succeeded
+        # or are not needed.  This is mostly defensive -- it's needed
+        # if the restage() method doesn't clean *everything* (e.g., for a repo)
+        if os.path.isfile(bad_file):
+            os.remove(bad_file)
 
-            # touch good or no patches file so that we skip next time.
-            if patched:
-                fsys.touch(good_file)
-            else:
-                fsys.touch(no_patches_file)
+        # touch good or no patches file so that we skip next time.
+        if patched:
+            fsys.touch(good_file)
+        else:
+            fsys.touch(no_patches_file)
 
     @classmethod
     def all_patches(cls):

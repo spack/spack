@@ -268,7 +268,7 @@ def trigger_bad_patch(pkg):
 
 
 def test_patch_failure_develop_spec_exits_gracefully(
-    mock_packages, config, install_mockery, mock_fetch, tmpdir, mock_stage
+    mock_packages, config, install_mockery, mock_fetch, tmpdir
 ):
     """
     ensure that a failing patch does not trigger exceptions

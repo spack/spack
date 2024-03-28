@@ -14,7 +14,6 @@ import spack.environment as ev
 import spack.spec
 from spack.main import SpackCommand
 
-add = SpackCommand("add")
 develop = SpackCommand("develop")
 env = SpackCommand("env")
 
@@ -193,16 +192,14 @@ def test_develop_full_git_repo(
     finally:
         spec.package.do_clean()
 
-    # Now use "spack develop": look at the resulting dev_path and make
+    # Now use "spack develop": look at the resulting stage directory and make
     # sure the git repo pulled includes the full branch history (or rather,
     # more than just one commit).
     env("create", "test")
-    with ev.read("test") as e:
-        add("git-test-commit")
+    with ev.read("test"):
         develop("git-test-commit@1.2")
 
-        e.concretize()
-        spec = e.all_specs()[0]
-        develop_dir = spec.variants["dev_path"].value
-        commits = _git_commit_list(develop_dir)
+        location = SpackCommand("location")
+        develop_stage_dir = location("git-test-commit").strip()
+        commits = _git_commit_list(develop_stage_dir)
         assert len(commits) > 1

@@ -63,7 +63,6 @@ properties: Dict[str, Any] = {
                 "oneOf": [{"type": "string"}, {"type": "array", "items": {"type": "string"}}]
             },
             "stage_name": {"type": "string"},
-            "develop_stage_link": {"type": "string"},
             "test_stage": {"type": "string"},
             "extensions": {"type": "array", "items": {"type": "string"}},
             "template_dirs": {"type": "array", "items": {"type": "string"}},
