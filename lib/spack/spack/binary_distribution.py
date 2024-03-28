@@ -17,7 +17,6 @@ import sys
 import tarfile
 import tempfile
 import time
-import traceback
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -109,10 +108,6 @@ class FetchCacheError(Exception):
             err = errors[0]
             self.message = "{0}: {1}".format(err.__class__.__name__, str(err))
         super().__init__(self.message)
-
-
-class ListMirrorSpecsError(spack.error.SpackError):
-    """Raised when unable to retrieve list of specs from the mirror"""
 
 
 class BinaryCacheIndex:
@@ -541,83 +536,6 @@ def binary_index_location():
 BINARY_INDEX: BinaryCacheIndex = llnl.util.lang.Singleton(BinaryCacheIndex)  # type: ignore
 
 
-class NoOverwriteException(spack.error.SpackError):
-    """Raised when a file would be overwritten"""
-
-    def __init__(self, file_path):
-        super().__init__(f"Refusing to overwrite the following file: {file_path}")
-
-
-class NoGpgException(spack.error.SpackError):
-    """
-    Raised when gpg2 is not in PATH
-    """
-
-    def __init__(self, msg):
-        super().__init__(msg)
-
-
-class NoKeyException(spack.error.SpackError):
-    """
-    Raised when gpg has no default key added.
-    """
-
-    def __init__(self, msg):
-        super().__init__(msg)
-
-
-class PickKeyException(spack.error.SpackError):
-    """
-    Raised when multiple keys can be used to sign.
-    """
-
-    def __init__(self, keys):
-        err_msg = "Multiple keys available for signing\n%s\n" % keys
-        err_msg += "Use spack buildcache create -k <key hash> to pick a key."
-        super().__init__(err_msg)
-
-
-class NoVerifyException(spack.error.SpackError):
-    """
-    Raised if file fails signature verification.
-    """
-
-    pass
-
-
-class NoChecksumException(spack.error.SpackError):
-    """
-    Raised if file fails checksum verification.
-    """
-
-    def __init__(self, path, size, contents, algorithm, expected, computed):
-        super().__init__(
-            f"{algorithm} checksum failed for {path}",
-            f"Expected {expected} but got {computed}. "
-            f"File size = {size} bytes. Contents = {contents!r}",
-        )
-
-
-class NewLayoutException(spack.error.SpackError):
-    """
-    Raised if directory layout is different from buildcache.
-    """
-
-    def __init__(self, msg):
-        super().__init__(msg)
-
-
-class InvalidMetadataFile(spack.error.SpackError):
-    pass
-
-
-class UnsignedPackageException(spack.error.SpackError):
-    """
-    Raised if installation of unsigned package is attempted without
-    the use of ``--no-check-signature``.
-    """
-
-
 def compute_hash(data):
     if isinstance(data, str):
         data = data.encode("utf-8")
@@ -992,15 +910,10 @@ def _specs_from_cache_fallback(cache_prefix):
             if entry.endswith("spec.json") or entry.endswith("spec.json.sig")
         ]
         read_fn = url_read_method
-    except KeyError as inst:
-        msg = "No packages at {0}: {1}".format(cache_prefix, inst)
-        tty.warn(msg)
     except Exception as err:
-        # If we got some kind of S3 (access denied or other connection
-        # error), the first non boto-specific class in the exception
-        # hierarchy is Exception.  Just print a warning and return
-        msg = "Encountered problem listing packages at {0}: {1}".format(cache_prefix, err)
-        tty.warn(msg)
+        # If we got some kind of S3 (access denied or other connection error), the first non
+        # boto-specific class in the exception is Exception.  Just print a warning and return
+        tty.warn(f"Encountered problem listing packages at {cache_prefix}: {err}")
 
     return file_list, read_fn
 
@@ -1047,11 +960,10 @@ def generate_package_index(cache_prefix, concurrency=32):
     """
     try:
         file_list, read_fn = _spec_files_from_cache(cache_prefix)
-    except ListMirrorSpecsError as err:
-        tty.error("Unable to generate package index, {0}".format(err))
-        return
+    except ListMirrorSpecsError as e:
+        raise GenerateIndexError(f"Unable to generate package index: {e}") from e
 
-    tty.debug("Retrieving spec descriptor files from {0} to build index".format(cache_prefix))
+    tty.debug(f"Retrieving spec descriptor files from {cache_prefix} to build index")
 
     tmpdir = tempfile.mkdtemp()
 
@@ -1061,27 +973,22 @@ def generate_package_index(cache_prefix, concurrency=32):
 
     try:
         _read_specs_and_push_index(file_list, read_fn, cache_prefix, db, db_root_dir, concurrency)
-    except Exception as err:
-        msg = "Encountered problem pushing package index to {0}: {1}".format(cache_prefix, err)
-        tty.warn(msg)
-        tty.debug("\n" + traceback.format_exc())
+    except Exception as e:
+        raise GenerateIndexError(
+            f"Encountered problem pushing package index to {cache_prefix}: {e}"
+        ) from e
     finally:
-        shutil.rmtree(tmpdir)
+        shutil.rmtree(tmpdir, ignore_errors=True)
 
 
 def generate_key_index(key_prefix, tmpdir=None):
     """Create the key index page.
 
-    Creates (or replaces) the "index.json" page at the location given in
-    key_prefix.  This page contains an entry for each key (.pub) under
-    key_prefix.
+    Creates (or replaces) the "index.json" page at the location given in key_prefix.  This page
+    contains an entry for each key (.pub) under key_prefix.
     """
 
-    tty.debug(
-        " ".join(
-            ("Retrieving key.pub files from", url_util.format(key_prefix), "to build key index")
-        )
-    )
+    tty.debug(f"Retrieving key.pub files from {url_util.format(key_prefix)} to build key index")
 
     try:
         fingerprints = (
@@ -1089,17 +996,8 @@ def generate_key_index(key_prefix, tmpdir=None):
             for entry in web_util.list_url(key_prefix, recursive=False)
             if entry.endswith(".pub")
         )
-    except KeyError as inst:
-        msg = "No keys at {0}: {1}".format(key_prefix, inst)
-        tty.warn(msg)
-        return
-    except Exception as err:
-        # If we got some kind of S3 (access denied or other connection
-        # error), the first non boto-specific class in the exception
-        # hierarchy is Exception.  Just print a warning and return
-        msg = "Encountered problem listing keys at {0}: {1}".format(key_prefix, err)
-        tty.warn(msg)
-        return
+    except Exception as e:
+        raise CannotListKeys(f"Encountered problem listing keys at {key_prefix}: {e}") from e
 
     remove_tmpdir = False
 
@@ -1124,12 +1022,13 @@ def generate_key_index(key_prefix, tmpdir=None):
                 keep_original=False,
                 extra_args={"ContentType": "application/json"},
             )
-        except Exception as err:
-            msg = "Encountered problem pushing key index to {0}: {1}".format(key_prefix, err)
-            tty.warn(msg)
+        except Exception as e:
+            raise GenerateIndexError(
+                f"Encountered problem pushing key index to {key_prefix}: {e}"
+            ) from e
         finally:
             if remove_tmpdir:
-                shutil.rmtree(tmpdir)
+                shutil.rmtree(tmpdir, ignore_errors=True)
 
 
 def tarfile_of_spec_prefix(tar: tarfile.TarFile, prefix: str) -> None:
@@ -1200,7 +1099,8 @@ def push_or_raise(spec: Spec, out_url: str, options: PushOptions):
     used at the mirror (following <tarball_directory_name>).
 
     This method raises :py:class:`NoOverwriteException` when ``force=False`` and the tarball or
-    spec.json file already exist in the buildcache.
+    spec.json file already exist in the buildcache. It raises :py:class:`PushToBuildCacheError`
+    when the tarball or spec.json file cannot be pushed to the buildcache.
     """
     if not spec.concrete:
         raise ValueError("spec must be concrete to build tarball")
@@ -1278,13 +1178,18 @@ def _build_tarball_in_stage_dir(spec: Spec, out_url: str, stage_dir: str, option
         key = select_signing_key(options.key)
         sign_specfile(key, options.force, specfile_path)
 
-    # push tarball and signed spec json to remote mirror
-    web_util.push_to_url(spackfile_path, remote_spackfile_path, keep_original=False)
-    web_util.push_to_url(
-        signed_specfile_path if not options.unsigned else specfile_path,
-        remote_signed_specfile_path if not options.unsigned else remote_specfile_path,
-        keep_original=False,
-    )
+    try:
+        # push tarball and signed spec json to remote mirror
+        web_util.push_to_url(spackfile_path, remote_spackfile_path, keep_original=False)
+        web_util.push_to_url(
+            signed_specfile_path if not options.unsigned else specfile_path,
+            remote_signed_specfile_path if not options.unsigned else remote_specfile_path,
+            keep_original=False,
+        )
+    except Exception as e:
+        raise PushToBuildCacheError(
+            f"Encountered problem pushing binary {remote_spackfile_path}: {e}"
+        ) from e
 
     # push the key to the build cache's _pgp directory so it can be
     # imported
@@ -1295,8 +1200,6 @@ def _build_tarball_in_stage_dir(spec: Spec, out_url: str, stage_dir: str, option
     # found
     if options.regenerate_index:
         generate_package_index(url_util.join(out_url, os.path.relpath(cache_prefix, stage_dir)))
-
-    return None
 
 
 class NotInstalledError(spack.error.SpackError):
@@ -1350,28 +1253,6 @@ def specs_to_be_packaged(
             deps = []
 
     return [s for s in itertools.chain(roots, deps) if not s.external]
-
-
-def push(spec: Spec, mirror_url: str, options: PushOptions):
-    """Create and push binary package for a single spec to the specified
-    mirror url.
-
-    Args:
-        spec: Spec to package and push
-        mirror_url: Desired destination url for binary package
-        options:
-
-    Returns:
-        True if package was pushed, False otherwise.
-
-    """
-    try:
-        push_or_raise(spec, mirror_url, options)
-    except NoOverwriteException as e:
-        warnings.warn(str(e))
-        return False
-
-    return True
 
 
 def try_verify(specfile_path):
@@ -2706,3 +2587,96 @@ class OCIIndexFetcher:
             raise FetchIndexError(f"Remote index {url_manifest} is invalid")
 
         return FetchIndexResult(etag=None, hash=index_digest.digest, data=result, fresh=False)
+
+
+class NoOverwriteException(spack.error.SpackError):
+    """Raised when a file would be overwritten"""
+
+    def __init__(self, file_path):
+        super().__init__(f"Refusing to overwrite the following file: {file_path}")
+
+
+class NoGpgException(spack.error.SpackError):
+    """
+    Raised when gpg2 is not in PATH
+    """
+
+    def __init__(self, msg):
+        super().__init__(msg)
+
+
+class NoKeyException(spack.error.SpackError):
+    """
+    Raised when gpg has no default key added.
+    """
+
+    def __init__(self, msg):
+        super().__init__(msg)
+
+
+class PickKeyException(spack.error.SpackError):
+    """
+    Raised when multiple keys can be used to sign.
+    """
+
+    def __init__(self, keys):
+        err_msg = "Multiple keys available for signing\n%s\n" % keys
+        err_msg += "Use spack buildcache create -k <key hash> to pick a key."
+        super().__init__(err_msg)
+
+
+class NoVerifyException(spack.error.SpackError):
+    """
+    Raised if file fails signature verification.
+    """
+
+    pass
+
+
+class NoChecksumException(spack.error.SpackError):
+    """
+    Raised if file fails checksum verification.
+    """
+
+    def __init__(self, path, size, contents, algorithm, expected, computed):
+        super().__init__(
+            f"{algorithm} checksum failed for {path}",
+            f"Expected {expected} but got {computed}. "
+            f"File size = {size} bytes. Contents = {contents!r}",
+        )
+
+
+class NewLayoutException(spack.error.SpackError):
+    """
+    Raised if directory layout is different from buildcache.
+    """
+
+    def __init__(self, msg):
+        super().__init__(msg)
+
+
+class InvalidMetadataFile(spack.error.SpackError):
+    pass
+
+
+class UnsignedPackageException(spack.error.SpackError):
+    """
+    Raised if installation of unsigned package is attempted without
+    the use of ``--no-check-signature``.
+    """
+
+
+class ListMirrorSpecsError(spack.error.SpackError):
+    """Raised when unable to retrieve list of specs from the mirror"""
+
+
+class GenerateIndexError(spack.error.SpackError):
+    """Raised when unable to generate key or package index for mirror"""
+
+
+class CannotListKeys(GenerateIndexError):
+    """Raised when unable to list keys when generating key index"""
+
+
+class PushToBuildCacheError(spack.error.SpackError):
+    """Raised when unable to push objects to binary mirror"""

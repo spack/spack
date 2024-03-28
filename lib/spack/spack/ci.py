@@ -1463,45 +1463,39 @@ def can_verify_binaries():
     return len(gpg_util.public_keys()) >= 1
 
 
-def _push_mirror_contents(input_spec, sign_binaries, mirror_url):
+def _push_to_build_cache(spec: spack.spec.Spec, sign_binaries: bool, mirror_url: str) -> None:
     """Unchecked version of the public API, for easier mocking"""
-    unsigned = not sign_binaries
-    tty.debug(f"Creating buildcache ({'unsigned' if unsigned else 'signed'})")
-    push_url = spack.mirror.Mirror.from_url(mirror_url).push_url
-    return bindist.push(input_spec, push_url, bindist.PushOptions(force=True, unsigned=unsigned))
+    bindist.push_or_raise(
+        spec,
+        spack.mirror.Mirror.from_url(mirror_url).push_url,
+        bindist.PushOptions(force=True, unsigned=not sign_binaries),
+    )
 
 
-def push_mirror_contents(input_spec: spack.spec.Spec, mirror_url, sign_binaries):
+def push_to_build_cache(spec: spack.spec.Spec, mirror_url: str, sign_binaries: bool) -> bool:
     """Push one or more binary packages to the mirror.
 
     Arguments:
 
-        input_spec(spack.spec.Spec): Installed spec to push
-        mirror_url (str): Base url of target mirror
-        sign_binaries (bool): If True, spack will attempt to sign binary
-            package before pushing.
+        spec: Installed spec to push
+        mirror_url: URL of target mirror
+        sign_binaries: If True, spack will attempt to sign binary package before pushing.
     """
+    tty.debug(f"Pushing to build cache ({'signed' if sign_binaries else 'unsigned'})")
     try:
-        return _push_mirror_contents(input_spec, sign_binaries, mirror_url)
-    except Exception as inst:
-        # If the mirror we're pushing to is on S3 and there's some
-        # permissions problem, for example, we can't just target
-        # that exception type here, since users of the
-        # `spack ci rebuild' may not need or want any dependency
-        # on boto3.  So we use the first non-boto exception type
-        # in the heirarchy:
-        #     boto3.exceptions.S3UploadFailedError
-        #     boto3.exceptions.Boto3Error
-        #     Exception
-        #     BaseException
-        #     object
-        err_msg = f"Error msg: {inst}"
-        if any(x in err_msg for x in ["Access Denied", "InvalidAccessKeyId"]):
-            tty.msg(f"Permission problem writing to {mirror_url}")
-            tty.msg(err_msg)
+        _push_to_build_cache(spec, sign_binaries, mirror_url)
+        return True
+    except bindist.PushToBuildCacheError as e:
+        tty.error(str(e))
+        return False
+    except Exception as e:
+        # TODO (zackgalbreath): write an adapter for boto3 exceptions so we can catch a specific
+        # exception instead of parsing str(e)...
+        msg = str(e)
+        if any(x in msg for x in ["Access Denied", "InvalidAccessKeyId"]):
+            tty.error(f"Permission problem writing to {mirror_url}: {msg}")
             return False
-        else:
-            raise inst
+        raise
 
 
 def remove_other_mirrors(mirrors_to_keep, scope=None):
@@ -2124,7 +2118,7 @@ def create_buildcache(
     for mirror_url in destination_mirror_urls:
         results.append(
             PushResult(
-                success=push_mirror_contents(input_spec, mirror_url, sign_binaries), url=mirror_url
+                success=push_to_build_cache(input_spec, mirror_url, sign_binaries), url=mirror_url
             )
         )
 

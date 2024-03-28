@@ -448,7 +448,7 @@ def test_ci_process_command_fail(repro_dir, monkeypatch):
 def test_ci_create_buildcache(tmpdir, working_env, config, mock_packages, monkeypatch):
     """Test that create_buildcache returns a list of objects with the correct
     keys and types."""
-    monkeypatch.setattr(spack.ci, "push_mirror_contents", lambda a, b, c: True)
+    monkeypatch.setattr(spack.ci, "_push_to_build_cache", lambda a, b, c: True)
 
     results = ci.create_buildcache(
         None, destination_mirror_urls=["file:///fake-url-one", "file:///fake-url-two"]

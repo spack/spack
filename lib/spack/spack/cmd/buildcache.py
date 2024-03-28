@@ -1196,14 +1196,18 @@ def update_index(mirror: spack.mirror.Mirror, update_keys=False):
             url, bindist.build_cache_relative_path(), bindist.build_cache_keys_relative_path()
         )
 
-        bindist.generate_key_index(keys_url)
+        try:
+            bindist.generate_key_index(keys_url)
+        except bindist.CannotListKeys as e:
+            # Do not error out if listing keys went wrong. This usually means that the _gpg path
+            # does not exist. TODO: distinguish between this and other errors.
+            tty.warn(f"did not update the key index: {e}")
 
 
 def update_index_fn(args):
     """update a buildcache index"""
-    update_index(args.mirror, update_keys=args.keys)
+    return update_index(args.mirror, update_keys=args.keys)
 
 
 def buildcache(parser, args):
-    if args.func:
-        args.func(args)
+    return args.func(args)
