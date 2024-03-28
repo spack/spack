@@ -539,6 +539,10 @@ class Llvm(CMakePackage, CudaPackage):
     # avoid build failed with Fujitsu compiler
     patch("llvm13-fujitsu.patch", when="@13 %fj")
 
+    # avoid build failed with Fujitsu compiler since llvm17
+    patch("llvm17-fujitsu.patch", when="@17: %fj")
+    patch("llvm17-18-thread.patch", when="@17:18 %fj")
+
     # patch for missing hwloc.h include for libompd
     # see https://reviews.llvm.org/D123888
     patch(
@@ -986,6 +990,16 @@ class Llvm(CMakePackage, CudaPackage):
             )
 
         return cmake_args
+
+    @run_after("cmake")
+    def change_makefile(self):
+        # Avoid Fujitsu compiler Clang Mode options when building LLVM
+        if self.spec.satisfies("%fj"):
+            filter_file(
+                r"-DCMAKE_C_COMPILER=",
+                "-DCMAKE_CXX_FLAGS= -DCMAKE_C_COMPILER=",
+                join_path(self.build_directory, "build.ninja"),
+            )
 
     @run_after("install")
     def post_install(self):
