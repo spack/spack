@@ -9,6 +9,7 @@ import shlex
 import shutil
 import sys
 import tempfile
+from pathlib import Path
 from typing import Optional
 
 import llnl.string as string
@@ -44,6 +45,7 @@ subcommands = [
     "deactivate",
     "create",
     ["remove", "rm"],
+    ["rename", "mv"],
     ["list", "ls"],
     ["status", "st"],
     "loads",
@@ -473,10 +475,81 @@ def env_remove(args):
 
 
 #
+# env rename
+#
+def env_rename_setup_parser(subparser):
+    """rename an existing environment"""
+    subparser.add_argument(
+        "mv_from", metavar="from", help="name (or path) of existing environment"
+    )
+    subparser.add_argument(
+        "mv_to", metavar="to", help="new name (or path) for existing environment"
+    )
+    subparser.add_argument(
+        "-d",
+        "--dir",
+        action="store_true",
+        help="the specified arguments correspond to directory paths",
+    )
+    subparser.add_argument(
+        "-f", "--force", action="store_true", help="allow overwriting of an existing environment"
+    )
+
+
+def env_rename(args):
+    """Rename an environment.
+
+    This renames a managed environment or moves an anonymous environment.
+    """
+
+    # Directory option has been specified
+    if args.dir:
+        if not ev.is_env_dir(args.mv_from):
+            tty.die("The specified path does not correspond to a valid spack environment")
+        from_path = Path(args.mv_from)
+        if not args.force:
+            if ev.is_env_dir(args.mv_to):
+                tty.die(
+                    "The new path corresponds to an existing environment;"
+                    " specify the --force flag to overwrite it."
+                )
+            if Path(args.mv_to).exists():
+                tty.die("The new path already exists; specify the --force flag to overwrite it.")
+        to_path = Path(args.mv_to)
+
+    # Name option being used
+    elif ev.exists(args.mv_from):
+        from_path = ev.environment.environment_dir_from_name(args.mv_from)
+        if not args.force and ev.exists(args.mv_to):
+            tty.die(
+                "The new name corresponds to an existing environment;"
+                " specify the --force flag to overwrite it."
+            )
+        to_path = ev.environment.root(args.mv_to)
+
+    # Neither
+    else:
+        tty.die("The specified name does not correspond to a managed spack environment")
+
+    # Guard against renaming from or to an active environment
+    active_env = ev.active_environment()
+    if active_env:
+        from_env = ev.Environment(from_path)
+        if from_env.path == active_env.path:
+            tty.die("Cannot rename active environment")
+        if to_path == active_env.path:
+            tty.die(f"{args.mv_to} is an active environment")
+
+    shutil.rmtree(to_path, ignore_errors=True)
+    fs.rename(from_path, to_path)
+    tty.msg(f"Successfully renamed environment {args.mv_from} to {args.mv_to}")
+
+
+#
 # env list
 #
 def env_list_setup_parser(subparser):
-    """list available environments"""
+    """list managed environments"""
 
 
 def env_list(args):

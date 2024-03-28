@@ -1032,7 +1032,7 @@ _spack_env() {
     then
         SPACK_COMPREPLY="-h --help"
     else
-        SPACK_COMPREPLY="activate deactivate create remove rm list ls status st loads view update revert depfile"
+        SPACK_COMPREPLY="activate deactivate create remove rm rename mv list ls status st loads view update revert depfile"
     fi
 }
 
@@ -1073,6 +1073,24 @@ _spack_env_rm() {
         SPACK_COMPREPLY="-h --help -y --yes-to-all"
     else
         _environments
+    fi
+}
+
+_spack_env_rename() {
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help -d --dir -f --force"
+    else
+        SPACK_COMPREPLY=""
+    fi
+}
+
+_spack_env_mv() {
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help -d --dir -f --force"
+    else
+        SPACK_COMPREPLY=""
     fi
 }
 
