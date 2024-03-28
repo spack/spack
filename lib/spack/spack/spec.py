@@ -1410,7 +1410,7 @@ class Spec:
 
     @property
     def is_develop(self):
-        return bool(self.spec.variants.get("dev_path", False))
+        return bool(self.variants.get("dev_path", False))
 
     def clear_dependencies(self):
         """Trim the dependencies of this spec."""

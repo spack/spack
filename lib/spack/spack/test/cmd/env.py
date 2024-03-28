@@ -3040,6 +3040,25 @@ spack:
                     assert spec.prefix in contents
 
 
+def test_install_develop_keep_stage(
+    environment_from_manifest, install_mockery, mock_fetch, monkeypatch
+):
+    environment_from_manifest(
+        """
+spack:
+  specs:
+  - mpileaks
+"""
+    )
+
+    with ev.read("test") as e:
+        concretize()
+        mpileaks_spec, = e.all_matching_specs("mpileaks")
+        assert not os.path.exists(mpileaks_spec.package.stage.path)
+        install()
+        assert os.path.exists(mpileaks_spec.package.stage.path)
+
+
 @pytest.mark.regression("24148")
 def test_virtual_spec_concretize_together(tmpdir):
     # An environment should permit to concretize "mpi"
