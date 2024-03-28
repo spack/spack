@@ -20,6 +20,12 @@ class IntelOneapiDpct(IntelOneApiPackage):
     homepage = "https://www.intel.com/content/www/us/en/developer/tools/oneapi/dpc-compatibility-tool.html#gs.2p8km6"
 
     version(
+        "2024.1.0",
+        url="https://registrationcenter-download.intel.com/akdlm/IRC_NAS/997fe522-cedf-46da-a54d-be4f22992fa1/l_dpcpp-ct_p_2024.1.0.378_offline.sh",
+        sha256="f4855ef768b9067476f0e216140c65777e301c9b32be45d9e644d54b6dc21e1b",
+        expand=False,
+    )
+    version(
         "2024.0.0",
         url="https://registrationcenter-download.intel.com/akdlm//IRC_NAS/6633bc4b-5356-471a-9aae-d5e63e7acd95/l_dpcpp-ct_p_2024.0.0.49394_offline.sh",
         sha256="5fdba92edf24084187d98f083f9a6e17ee6b33ad8a736d6c9cdd3dbd4e0eab8a",
