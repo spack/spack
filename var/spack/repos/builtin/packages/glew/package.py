@@ -57,15 +57,12 @@ class Glew(CMakePackage):
             self.define("BUILD_UTILS", True),
             self.define("GLEW_REGAL", False),
             self.define("GLEW_EGL", "gl=egl" in spec),
-            self.define("OpenGL_GL_PREFERENCE", "LEGACY"),
             self.define("OPENGL_INCLUDE_DIR", spec["gl"].headers.directories[0]),
             self.define("OPENGL_gl_LIBRARY", spec["gl"].libs[0]),
             self.define("OPENGL_opengl_LIBRARY", "IGNORE"),
             self.define("OPENGL_glx_LIBRARY", "IGNORE"),
             self.define("OPENGL_glu_LIBRARY", "IGNORE"),
             self.define("GLEW_OSMESA", "gl=osmesa" in spec),
-            self.define("GLEW_X11", "gl=glx" in spec),
-            self.define("CMAKE_DISABLE_FIND_PACKAGE_X11", "gl=glx" not in spec),
         ]
         if "gl=egl" in spec:
             args.append(
