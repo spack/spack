@@ -13,9 +13,9 @@ class Magma(CMakePackage, CudaPackage, ROCmPackage):
     current "Multicore+GPU" systems.
     """
 
-    homepage = "https://icl.cs.utk.edu/magma/"
+    homepage = "https://icl.utk.edu/magma/"
     git = "https://bitbucket.org/icl/magma"
-    url = "https://icl.cs.utk.edu/projectsfiles/magma/downloads/magma-2.2.0.tar.gz"
+    url = "https://icl.utk.edu/projectsfiles/magma/downloads/magma-2.2.0.tar.gz"
     maintainers("stomov", "luszczek", "G-Ragghianti")
 
     tags = ["e4s"]
