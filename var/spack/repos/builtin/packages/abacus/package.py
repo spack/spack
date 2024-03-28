@@ -157,16 +157,16 @@ class Abacus(MakefilePackage, CMakePackage, CudaPackage, ROCmPackage):
     with when("+mpi"):
         depends_on("mpi", type=("build", "link", "run"))
     with when("+libxc"):
-        depends_on("libxc")
+        depends_on("libxc", type=("build", "link"))
     with when("+lcao"):
-        depends_on("cereal")
-        depends_on("scalapack")
+        depends_on("cereal", type=("build"))
+        depends_on("scalapack", type=("link"))
     with when("+elpa"):
-        depends_on("elpa")
+        depends_on("elpa", type=("build", "link"))
     with when("+tests"):
-        depends_on("googletest")
+        depends_on("googletest", type="test")
     with when("+benchmarks"):
-        depends_on("benchmark")
+        depends_on("benchmark", type="test")
     with when("+openmp"):
         depends_on("fftw+openmp", when="^[virtuals=fftw-api] fftw")
         depends_on("elpa+openmp", when="+elpa")
