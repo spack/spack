@@ -60,6 +60,7 @@ class Proj(CMakePackage, AutotoolsPackage):
     variant("curl", default=True, description="Enable curl support")
     variant("shared", default=True, description="Enable shared libraries")
     variant("pic", default=False, description="Enable position-independent code (PIC)")
+    variant("projsync", default=False, description="Build projsync utility", when="+curl")
 
     # https://github.com/OSGeo/PROJ#distribution-files-and-format
     # https://github.com/OSGeo/PROJ-data
@@ -95,6 +96,10 @@ class Proj(CMakePackage, AutotoolsPackage):
         depends_on("cmake@3.9:", when="@6:", type="build")
         depends_on("cmake@3.5:", when="@5", type="build")
         depends_on("cmake@2.6:", when="@:4", type="build")
+        # tiff does not set TIFF_INCLUDE_DIR tested by proj
+        # version 9.2 contains this patch:
+        # https://github.com/OSGeo/PROJ/blob/9.2/src/lib_proj.cmake#L458
+        patch("tiff_target.patch", when="@8.1:9.1.1+tiff")
 
     with when("build_system=autotools"):
         depends_on("pkgconfig@0.9:", when="@6:", type="build")
@@ -133,6 +138,7 @@ class CMakeBuilder(BaseBuilder, cmake.CMakeBuilder):
             self.define_from_variant("ENABLE_TIFF", "tiff"),
             self.define_from_variant("ENABLE_CURL", "curl"),
             self.define_from_variant(shared_arg, "shared"),
+            self.define_from_variant("BUILD_PROJSYNC", "projsync"),
             self.define_from_variant("CMAKE_POSITION_INDEPENDENT_CODE", "pic"),
         ]
         if self.spec.satisfies("@6:") and self.pkg.run_tests:
