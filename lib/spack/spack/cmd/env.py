@@ -92,6 +92,9 @@ def env_create_setup_parser(subparser):
         default=None,
         help="either a lockfile (must end with '.json' or '.lock') or a manifest file",
     )
+    subparser.add_argument(
+        "--include-concrete", action="append", help="name of old environment to copy specs from"
+    )
 
 
 def env_create(args):
@@ -115,13 +118,22 @@ def env_create(args):
         dir=args.dir,
         with_view=with_view,
         keep_relative=args.keep_relative,
+        include_concrete=args.include_concrete,
     )
 
     # Generate views, only really useful for environments created from spack.lock files.
     env.regenerate_views()
 
 
-def _env_create(name_or_path, *, init_file=None, dir=False, with_view=None, keep_relative=False):
+def _env_create(
+    name_or_path,
+    *,
+    init_file=None,
+    dir=False,
+    with_view=None,
+    keep_relative=False,
+    include_concrete=None,
+):
     """Create a new environment, with an optional yaml description.
 
     Arguments:
@@ -133,10 +145,15 @@ def _env_create(name_or_path, *, init_file=None, dir=False, with_view=None, keep
         keep_relative (bool): if True, develop paths are copied verbatim into
             the new environment file, otherwise they may be made absolute if the
             new environment is in a different location
+        include_concrete (list): list of the included concrete environments
     """
     if not dir:
         env = ev.create(
-            name_or_path, init_file=init_file, with_view=with_view, keep_relative=keep_relative
+            name_or_path,
+            init_file=init_file,
+            with_view=with_view,
+            keep_relative=keep_relative,
+            include_concrete=include_concrete,
         )
         tty.msg("Created environment '%s' in %s" % (name_or_path, env.path))
         tty.msg("You can activate this environment with:")
@@ -144,7 +161,11 @@ def _env_create(name_or_path, *, init_file=None, dir=False, with_view=None, keep
         return env
 
     env = ev.create_in_dir(
-        name_or_path, init_file=init_file, with_view=with_view, keep_relative=keep_relative
+        name_or_path,
+        init_file=init_file,
+        with_view=with_view,
+        keep_relative=keep_relative,
+        include_concrete=include_concrete,
     )
     tty.msg("Created environment in %s" % env.path)
     tty.msg("You can activate this environment with:")
@@ -434,6 +455,12 @@ def env_remove_setup_parser(subparser):
     """remove an existing environment"""
     subparser.add_argument("rm_env", metavar="env", nargs="+", help="environment(s) to remove")
     arguments.add_common_arguments(subparser, ["yes_to_all"])
+    subparser.add_argument(
+        "-f",
+        "--force",
+        action="store_true",
+        help="remove the environment even if it is included in another environment",
+    )
 
 
 def env_remove(args):
@@ -443,13 +470,34 @@ def env_remove(args):
     and manifests embedded in repositories should be removed manually.
     """
     read_envs = []
+    valid_envs = []
     bad_envs = []
-    for env_name in args.rm_env:
+    invalid_envs = []
+
+    for env_name in ev.all_environment_names():
         try:
             env = ev.read(env_name)
-            read_envs.append(env)
+            valid_envs.append(env_name)
+
+            if env_name in args.rm_env:
+                read_envs.append(env)
         except (spack.config.ConfigFormatError, ev.SpackEnvironmentConfigError):
-            bad_envs.append(env_name)
+            invalid_envs.append(env_name)
+
+            if env_name in args.rm_env:
+                bad_envs.append(env_name)
+
+        # Check if env is linked to another before trying to remove
+        for name in valid_envs:
+            # don't check if environment is included to itself
+            if name == env_name:
+                continue
+            environ = ev.Environment(ev.root(name))
+            if ev.root(env_name) in environ.include_concrete:
+                if args.force:
+                    tty.warn(f'Environment "{env_name}" is being used by environment "{name}"')
+                else:
+                    tty.die(f'Environment "{env_name}" is being used by environment "{name}"')
 
     if not args.yes_to_all:
         environments = string.plural(len(args.rm_env), "environment", show_n=False)

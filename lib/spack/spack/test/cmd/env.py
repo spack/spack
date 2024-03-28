@@ -60,6 +60,27 @@ module = SpackCommand("module")
 sep = os.sep
 
 
+def setup_combined_multiple_env():
+    env("create", "test1")
+    test1 = ev.read("test1")
+    with test1:
+        add("zlib")
+    test1.concretize()
+    test1.write()
+
+    env("create", "test2")
+    test2 = ev.read("test2")
+    with test2:
+        add("libelf")
+    test2.concretize()
+    test2.write()
+
+    env("create", "--include-concrete", "test1", "--include-concrete", "test2", "combined_env")
+    combined = ev.read("combined_env")
+
+    return test1, test2, combined
+
+
 @pytest.fixture()
 def environment_from_manifest(tmp_path):
     """Returns a new environment named 'test' from the content of a manifest file."""
@@ -248,6 +269,29 @@ def test_env_install_single_spec(install_mockery, mock_fetch):
     assert e.specs_by_hash[e.concretized_order[0]].name == "cmake-client"
 
 
+@pytest.mark.parametrize("unify", [True, False, "when_possible"])
+def test_env_install_include_concrete_env(unify, install_mockery, mock_fetch):
+    test1, test2, combined = setup_combined_multiple_env()
+
+    combined.concretize()
+    combined.write()
+
+    combined.unify = unify
+
+    with combined:
+        install()
+
+    test1_roots = test1.concretized_order
+    test2_roots = test2.concretized_order
+    combined_included_roots = combined.included_concretized_order
+
+    for spec in combined.all_specs():
+        assert spec.installed
+
+    assert test1_roots == combined_included_roots[test1.path]
+    assert test2_roots == combined_included_roots[test2.path]
+
+
 def test_env_roots_marked_explicit(install_mockery, mock_fetch):
     install = SpackCommand("install")
     install("dependent-install")
@@ -434,6 +478,41 @@ def test_remove_command():
         assert "mpileaks@" not in find()
         # now the lockfile is regenerated and it's gone.
         assert "mpileaks@" not in find("--show-concretized")
+
+
+def test_bad_remove_included_env():
+    env("create", "test")
+    test = ev.read("test")
+
+    with test:
+        add("mpileaks")
+
+    test.concretize()
+    test.write()
+
+    env("create", "--include-concrete", "test", "combined_env")
+
+    with pytest.raises(SpackCommandError):
+        env("remove", "test")
+
+
+def test_force_remove_included_env():
+    env("create", "test")
+    test = ev.read("test")
+
+    with test:
+        add("mpileaks")
+
+    test.concretize()
+    test.write()
+
+    env("create", "--include-concrete", "test", "combined_env")
+
+    rm_output = env("remove", "-f", "-y", "test")
+    list_output = env("list")
+
+    assert '"test" is being used by environment "combined_env"' in rm_output
+    assert "test" not in list_output
 
 
 def test_environment_status(capsys, tmpdir):
@@ -1515,6 +1594,198 @@ def test_env_without_view_install(tmpdir, mock_stage, mock_fetch, install_mocker
     # After enabling the view, the specs should be linked into the environment
     # view dir
     check_mpileaks_and_deps_in_view(view_dir)
+
+
+@pytest.mark.parametrize("env_name", [True, False])
+def test_env_include_concrete_env_yaml(env_name):
+    env("create", "test")
+    test = ev.read("test")
+
+    with test:
+        add("mpileaks")
+    test.concretize()
+    test.write()
+
+    environ = "test" if env_name else test.path
+
+    env("create", "--include-concrete", environ, "combined_env")
+
+    combined = ev.read("combined_env")
+    combined_yaml = combined.manifest["spack"]
+
+    assert "include_concrete" in combined_yaml
+    assert test.path in combined_yaml["include_concrete"]
+
+
+def test_env_bad_include_concrete_env():
+    with pytest.raises(ev.SpackEnvironmentError):
+        env("create", "--include-concrete", "nonexistant_env", "combined_env")
+
+
+def test_env_not_concrete_include_concrete_env():
+    env("create", "test")
+    test = ev.read("test")
+
+    with test:
+        add("mpileaks")
+
+    with pytest.raises(ev.SpackEnvironmentError):
+        env("create", "--include-concrete", "test", "combined_env")
+
+
+def test_env_multiple_include_concrete_envs():
+    test1, test2, combined = setup_combined_multiple_env()
+
+    combined_yaml = combined.manifest["spack"]
+
+    assert test1.path in combined_yaml["include_concrete"][0]
+    assert test2.path in combined_yaml["include_concrete"][1]
+
+    # No local specs in the combined env
+    assert not combined_yaml["specs"]
+
+
+def test_env_include_concrete_envs_lockfile():
+    test1, test2, combined = setup_combined_multiple_env()
+
+    combined_yaml = combined.manifest["spack"]
+
+    assert "include_concrete" in combined_yaml
+    assert test1.path in combined_yaml["include_concrete"]
+
+    with open(combined.lock_path) as f:
+        lockfile_as_dict = combined._read_lockfile(f)
+
+    assert set(
+        entry["hash"] for entry in lockfile_as_dict["include_concrete"][test1.path]["roots"]
+    ) == set(test1.specs_by_hash)
+    assert set(
+        entry["hash"] for entry in lockfile_as_dict["include_concrete"][test2.path]["roots"]
+    ) == set(test2.specs_by_hash)
+
+
+def test_env_include_concrete_add_env():
+    test1, test2, combined = setup_combined_multiple_env()
+
+    # crete new env & crecretize
+    env("create", "new")
+    new_env = ev.read("new")
+    with new_env:
+        add("mpileaks")
+
+    new_env.concretize()
+    new_env.write()
+
+    # add new env to combined
+    combined.include_concrete.append(new_env.path)
+
+    # assert thing haven't changed yet
+    with open(combined.lock_path) as f:
+        lockfile_as_dict = combined._read_lockfile(f)
+
+    assert new_env.path not in lockfile_as_dict["include_concrete"].keys()
+
+    # concretize combined env with new env
+    combined.concretize()
+    combined.write()
+
+    # assert changes
+    with open(combined.lock_path) as f:
+        lockfile_as_dict = combined._read_lockfile(f)
+
+    assert new_env.path in lockfile_as_dict["include_concrete"].keys()
+
+
+def test_env_include_concrete_remove_env():
+    test1, test2, combined = setup_combined_multiple_env()
+
+    # remove test2 from combined
+    combined.include_concrete = [test1.path]
+
+    # assert test2 is still in combined's lockfile
+    with open(combined.lock_path) as f:
+        lockfile_as_dict = combined._read_lockfile(f)
+
+    assert test2.path in lockfile_as_dict["include_concrete"].keys()
+
+    # reconcretize combined
+    combined.concretize()
+    combined.write()
+
+    # assert test2 is not in combined's lockfile
+    with open(combined.lock_path) as f:
+        lockfile_as_dict = combined._read_lockfile(f)
+
+    assert test2.path not in lockfile_as_dict["include_concrete"].keys()
+
+
+@pytest.mark.parametrize("unify", [True, False, "when_possible"])
+def test_env_include_concrete_env_reconcretized(unify):
+    """Double check to make sure that concrete_specs for the local specs is empty
+    after recocnretizing.
+    """
+    _, _, combined = setup_combined_multiple_env()
+
+    combined.unify = unify
+
+    with open(combined.lock_path) as f:
+        lockfile_as_dict = combined._read_lockfile(f)
+
+    assert not lockfile_as_dict["roots"]
+    assert not lockfile_as_dict["concrete_specs"]
+
+    combined.concretize()
+    combined.write()
+
+    with open(combined.lock_path) as f:
+        lockfile_as_dict = combined._read_lockfile(f)
+
+    assert not lockfile_as_dict["roots"]
+    assert not lockfile_as_dict["concrete_specs"]
+
+
+def test_concretize_include_concrete_env():
+    test1, _, combined = setup_combined_multiple_env()
+
+    with test1:
+        add("mpileaks")
+    test1.concretize()
+    test1.write()
+
+    assert Spec("mpileaks") in test1.concretized_user_specs
+    assert Spec("mpileaks") not in combined.included_concretized_user_specs[test1.path]
+
+    combined.concretize()
+    combined.write()
+
+    assert Spec("mpileaks") in combined.included_concretized_user_specs[test1.path]
+
+
+def test_concretize_include_concrete_env_in_another_env():
+    env("create", "test1")
+    test1 = ev.read("test1")
+    with test1:
+        add("zlib")
+    test1.concretize()
+    test1.write()
+
+    env("create", "--include-concrete", "test1", "test2")
+    test2 = ev.read("test2")
+    with test2:
+        add("libelf")
+    test2.concretize()
+    test2.write()
+
+    env("create", "--include-concrete", "test2", "test3")
+    test3 = ev.read("test3")
+
+    with open(test3.lock_path) as f:
+        lockfile_as_dict = test3._read_lockfile(f)
+
+    assert test2.path in lockfile_as_dict["include_concrete"]
+    assert test1.path in lockfile_as_dict["include_concrete"][test2.path]["include_concrete"]
+
+    assert Spec("zlib") in test3.included_concretized_user_specs[test1.path]
 
 
 def test_env_config_view_default(
