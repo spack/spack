@@ -754,6 +754,12 @@ class PyclingoDriver:
         self.control.load(os.path.join(parent_dir, "display.lp"))
         if not setup.concretize_everything:
             self.control.load(os.path.join(parent_dir, "when_possible.lp"))
+
+        for spec in specs:
+            if self._compiler_flags_has_propagation(spec):
+                self.control.load(os.path.join(parent_dir, "propagation.lp"))
+                break
+
         timer.stop("load")
 
         # Grounding is the first step in the solve -- it turns our facts
@@ -833,6 +839,13 @@ class PyclingoDriver:
             )
 
         return result, timer, self.control.statistics
+
+    def _compiler_flags_has_propagation(self, spec):
+        for dep in spec.traverse():
+            for _, flag_vals in dep.compiler_flags.items():
+                if any(val.propagate for val in flag_vals):
+                    return True
+        return False
 
 
 class ConcreteSpecsByHash(collections.abc.Mapping):
@@ -1783,7 +1796,9 @@ class SpackSolverSetup:
                 clauses.append(f.node_flag(spec.name, flag_type, flag))
                 clauses.append(f.node_flag_source(spec.name, flag_type, spec.name))
                 if not spec.concrete and flag.propagate is True:
-                    clauses.append(f.node_flag_propagate(spec.name, flag_type))
+                    clauses.append(
+                        f.node_flag_propagation_candidate(spec.name, flag_type, flag, spec.name)
+                    )
 
         # dependencies
         if spec.concrete:
@@ -2598,7 +2613,7 @@ class _Head:
     node_compiler_version = fn.attr("node_compiler_version_set")
     node_flag = fn.attr("node_flag_set")
     node_flag_source = fn.attr("node_flag_source")
-    node_flag_propagate = fn.attr("node_flag_propagate")
+    node_flag_propagation_candidate = fn.attr("node_flag_propagation_candidate")
     variant_propagation_candidate = fn.attr("variant_propagation_candidate")
 
 
@@ -2615,7 +2630,7 @@ class _Body:
     node_compiler_version = fn.attr("node_compiler_version")
     node_flag = fn.attr("node_flag")
     node_flag_source = fn.attr("node_flag_source")
-    node_flag_propagate = fn.attr("node_flag_propagate")
+    node_flag_propagation_candidate = fn.attr("node_flag_propagation_candidate")
     variant_propagation_candidate = fn.attr("variant_propagation_candidate")
 
 
