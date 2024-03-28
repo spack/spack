@@ -315,6 +315,7 @@ def test_default_flags():
     supported_flag_test("f77_rpath_arg", "-Wl,-rpath,")
     supported_flag_test("fc_rpath_arg", "-Wl,-rpath,")
     supported_flag_test("linker_arg", "-Wl,")
+    supported_flag_test("is_clang_based", False)
     unsupported_flag_test("openmp_flag")
     unsupported_flag_test("cxx11_flag")
     unsupported_flag_test("cxx14_flag")
@@ -343,6 +344,7 @@ def test_arm_flags():
     supported_flag_test("f77_pic_flag", "-fPIC", "arm@1.0")
     supported_flag_test("fc_pic_flag", "-fPIC", "arm@1.0")
     supported_flag_test("opt_flags", ["-O", "-O0", "-O1", "-O2", "-O3", "-Ofast"], "arm@1.0")
+    supported_flag_test("is_clang_based", True, "arm@1.0")
 
 
 def test_cce_flags():
@@ -371,6 +373,9 @@ def test_cce_flags():
     supported_flag_test("fc_pic_flag", "-fPIC", "cce@9.1.0")
     supported_flag_test("stdcxx_libs", (), "cce@1.0")
     supported_flag_test("debug_flags", ["-g", "-G0", "-G1", "-G2", "-Gfast"], "cce@1.0")
+    supported_flag_test("is_clang_based", True, "cce@9.0.1")
+    supported_flag_test("is_clang_based", False, "cce@9.0.1-classic")
+    supported_flag_test("is_clang_based", False, "cce@1.0")
 
 
 def test_apple_clang_flags():
@@ -389,6 +394,7 @@ def test_apple_clang_flags():
     supported_flag_test("cxx_pic_flag", "-fPIC", "apple-clang@2.0.0")
     supported_flag_test("f77_pic_flag", "-fPIC", "apple-clang@2.0.0")
     supported_flag_test("fc_pic_flag", "-fPIC", "apple-clang@2.0.0")
+    supported_flag_test("is_clang_based", True, "apple-clang@2.0.0")
 
 
 def test_clang_flags():
@@ -428,6 +434,7 @@ def test_clang_flags():
         ["-O0", "-O1", "-O2", "-O3", "-Ofast", "-Os", "-Oz", "-Og", "-O", "-O4"],
         "clang@3.3",
     )
+    supported_flag_test("is_clang_based", True, "clang@3.3")
 
 
 def test_aocc_flags():
@@ -467,6 +474,7 @@ def test_aocc_flags():
     supported_flag_test("cflags", flg, "aocc@3.0.0")
     supported_flag_test("cxxflags", flg, "aocc@3.0.0")
     supported_flag_test("fflags", flg, "aocc@3.0.0")
+    supported_flag_test("is_clang_based", True, "aocc@3.0.0")
 
 
 def test_fj_flags():
@@ -483,6 +491,7 @@ def test_fj_flags():
     supported_flag_test("fc_pic_flag", "-KPIC", "fj@4.0.0")
     supported_flag_test("opt_flags", ["-O0", "-O1", "-O2", "-O3", "-Ofast"], "fj@4.0.0")
     supported_flag_test("debug_flags", "-g", "fj@4.0.0")
+    supported_flag_test("is_clang_based", False, "fj@4.0.0")
 
 
 def test_gcc_flags():
@@ -514,6 +523,7 @@ def test_gcc_flags():
     supported_flag_test(
         "opt_flags", ["-O", "-O0", "-O1", "-O2", "-O3", "-Os", "-Ofast", "-Og"], "gcc@4.0"
     )
+    supported_flag_test("is_clang_based", False, "gcc@4.0")
 
 
 def test_intel_flags():
@@ -538,6 +548,7 @@ def test_intel_flags():
     supported_flag_test(
         "opt_flags", ["-O", "-O0", "-O1", "-O2", "-O3", "-Ofast", "-Os"], "intel@=1.0"
     )
+    supported_flag_test("is_clang_based", False, "intel@=1.0")
 
 
 def test_oneapi_flags():
@@ -557,6 +568,7 @@ def test_oneapi_flags():
     supported_flag_test(
         "opt_flags", ["-O", "-O0", "-O1", "-O2", "-O3", "-Ofast", "-Os"], "oneapi@=2020.8.0.0827"
     )
+    supported_flag_test("is_clang_based", True, "oneapi@=2020.8.0.0827")
 
 
 def test_nag_flags():
@@ -573,6 +585,7 @@ def test_nag_flags():
     supported_flag_test("linker_arg", "-Wl,-Wl,,", "nag@=1.0")
     supported_flag_test("debug_flags", ["-g", "-gline", "-g90"], "nag@=1.0")
     supported_flag_test("opt_flags", ["-O", "-O0", "-O1", "-O2", "-O3", "-O4"], "nag@=1.0")
+    supported_flag_test("is_clang_based", False, "nag@=1.0")
 
 
 def test_nvhpc_flags():
@@ -589,6 +602,7 @@ def test_nvhpc_flags():
     supported_flag_test("debug_flags", ["-g", "-gopt"], "nvhpc@=20.9")
     supported_flag_test("opt_flags", ["-O", "-O0", "-O1", "-O2", "-O3", "-O4"], "nvhpc@=20.9")
     supported_flag_test("stdcxx_libs", ("-c++libs",), "nvhpc@=20.9")
+    supported_flag_test("is_clang_based", True, "nvhpc@=20.9")
 
 
 def test_pgi_flags():
@@ -605,6 +619,7 @@ def test_pgi_flags():
     supported_flag_test("stdcxx_libs", ("-pgc++libs",), "pgi@=1.0")
     supported_flag_test("debug_flags", ["-g", "-gopt"], "pgi@=1.0")
     supported_flag_test("opt_flags", ["-O", "-O0", "-O1", "-O2", "-O3", "-O4"], "pgi@=1.0")
+    supported_flag_test("is_clang_based", False, "pgi@=1.0")
 
 
 def test_xl_flags():
@@ -626,6 +641,7 @@ def test_xl_flags():
     supported_flag_test(
         "opt_flags", ["-O", "-O0", "-O1", "-O2", "-O3", "-O4", "-O5", "-Ofast"], "xl@=1.0"
     )
+    supported_flag_test("is_clang_based", False, "xl@=1.0")
 
 
 def test_xl_r_flags():
@@ -647,6 +663,7 @@ def test_xl_r_flags():
     supported_flag_test(
         "opt_flags", ["-O", "-O0", "-O1", "-O2", "-O3", "-O4", "-O5", "-Ofast"], "xl@=1.0"
     )
+    supported_flag_test("is_clang_based", False, "xl_r@=1.0")
 
 
 @pytest.mark.parametrize(

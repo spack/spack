@@ -581,6 +581,10 @@ class Compiler:
         the can be symlinks, wrappers, or filenames instead of absolute paths."""
         raise NotImplementedError("prefix is not implemented for this compiler")
 
+    @property
+    def is_clang_based(self):
+        return False
+
     #
     # Compiler classes have methods for querying the version of
     # specific compiler executables.  This is used when discovering compilers.

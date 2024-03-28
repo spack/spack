@@ -4194,17 +4194,19 @@ environment variables or pass to the build system. Manual flag passing
 is likely to interfere with the ``env_flags`` and
 ``build_system_flags`` methods.
 
-In rare circumstances such as compiling and running small unit tests, a
-package developer may need to know what are the appropriate compiler
+In rare circumstances such as compiling and running small unit tests,
+a package developer may need to know what are the appropriate compiler
 flags to enable features like ``OpenMP``, ``c++11``, ``c++14`` and
-alike. To that end the compiler classes in ``spack`` implement the
-following **properties**: ``openmp_flag``, ``cxx98_flag``, ``cxx11_flag``,
-``cxx14_flag``, and ``cxx17_flag``, which can be accessed in a package by
-``self.compiler.cxx11_flag`` and alike. Note that the implementation is
-such that if a given compiler version does not support this feature, an
-error will be produced. Therefore package developers can also use these
-properties to assert that a compiler supports the requested feature. This
-is handy when a package supports additional variants like
+alike, or whether a compiler is Clang-based. To that end, the compiler
+classes in ``spack`` implement the following **properties**:
+``openmp_flag``, ``cxx98_flag``, ``cxx11_flag``, ``cxx14_flag``,
+``cxx17_flag``, and ``is_clang_based``, which can be accessed in a
+package by ``self.compiler.cxx11_flag`` and alike. Note that the
+implementation is such that if a given compiler version does not
+support this feature, an error will be produced. Therefore package
+developers can also use these properties to assert that a compiler
+supports the requested feature. This is handy when a package supports
+additional variants like
 
 .. code-block:: python
 

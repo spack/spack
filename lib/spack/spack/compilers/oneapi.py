@@ -130,6 +130,10 @@ class Oneapi(Compiler):
     def stdcxx_libs(self):
         return ("-cxxlib",)
 
+    @property
+    def is_clang_based(self):
+        return True
+
     def setup_custom_environment(self, pkg, env):
         # workaround bug in icpx driver where it requires sycl-post-link is on the PATH
         # It is located in the same directory as the driver. Error message:
