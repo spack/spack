@@ -231,8 +231,12 @@ class SuiteSparse(Package):
             make_args += [
                 "CMAKE_OPTIONS=-DCMAKE_INSTALL_PREFIX=%s" % prefix
                 + " -DCMAKE_LIBRARY_PATH=%s" % prefix.lib
-                + " -DBLAS_DIR=%s" % spec["blas"].prefix
-                + " -DLAPACK_DIR=%s" % spec["lapack"].prefix
+                + " -DBLAS_ROOT=%s" % spec["blas"].prefix
+                + " -DLAPACK_ROOT=%s" % spec["lapack"].prefix
+                # Prevent picking up system packages / frameworks
+                + " -DCMAKE_FIND_USE_PACKAGE_REGISTRY=FALSE"
+                + " -DCMAKE_FIND_USE_SYSTEM_PACKAGE_REGISTRY=FALSE"
+                + " -DCMAKE_FIND_USE_CMAKE_SYSTEM_PATH=FALSE"
             ]
 
         if spec.satisfies("%gcc platform=darwin"):
