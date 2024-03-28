@@ -14,7 +14,7 @@ import time
 import xml.sax.saxutils
 from typing import Dict, Optional
 from urllib.parse import urlencode
-from urllib.request import HTTPHandler, Request, build_opener
+from urllib.request import HTTPSHandler, Request, build_opener
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import working_dir
@@ -27,6 +27,7 @@ import spack.util.git
 from spack.error import SpackError
 from spack.util.crypto import checksum
 from spack.util.log_parse import parse_log_events
+from spack.util.web import urllib_ssl_cert_handler
 
 from .base import Reporter
 from .extract import extract_test_parts
@@ -427,7 +428,7 @@ class CDash(Reporter):
         # Compute md5 checksum for the contents of this file.
         md5sum = checksum(hashlib.md5, filename, block_size=8192)
 
-        opener = build_opener(HTTPHandler)
+        opener = build_opener(HTTPSHandler(context=urllib_ssl_cert_handler()))
         with open(filename, "rb") as f:
             params_dict = {
                 "build": self.buildname,

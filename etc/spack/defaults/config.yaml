@@ -101,6 +101,12 @@ config:
   verify_ssl: true
 
 
+  # This is where custom certs for proxy/firewall are stored.
+  # It can be a path or environment variable. To match ssl env configuration
+  # the default is the environment variable SSL_CERT_FILE
+  ssl_certs: $SSL_CERT_FILE
+
+
   # Suppress gpg warnings from binary package verification
   # Only suppresses warnings, gpg failure will still fail the install
   # Potential rationale to set True: users have already explicitly trusted the
