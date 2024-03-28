@@ -14,13 +14,31 @@ class PyPytestCov(PythonPackage):
 
     license("MIT")
 
-    version("4.0.0", sha256="996b79efde6433cdbd0088872dbc5fb3ed7fe1578b68cdbba634f14bb8dd0470")
-    version("3.0.0", sha256="e7f0f5b1617d2210a2cabc266dfe2f4c75a8d32fb89eafb7ad9d06f6d076d470")
-    version("2.8.1", sha256="cc6742d8bac45070217169f5f72ceee1e0e55b0221f54bcf24845972d3a47f2b")
-    version("2.3.1", sha256="fa0a212283cdf52e2eecc24dd6459bb7687cc29adb60cb84258fab73be8dda0f")
+    version(
+        "4.0.0",
+        sha256="2feb1b751d66a8bd934e5edfa2e961d11309dc37b73b0eabe73b5945fee20f6b",
+        url="https://pypi.org/packages/fe/1f/9ec0ddd33bd2b37d6ec50bb39155bca4fe7085fa78b3b434c05459a860e3/pytest_cov-4.0.0-py3-none-any.whl",
+    )
+    version(
+        "3.0.0",
+        sha256="578d5d15ac4a25e5f961c938b85a05b09fdaae9deef3bb6de9a6e766622ca7a6",
+        url="https://pypi.org/packages/20/49/b3e0edec68d81846f519c602ac38af9db86e1e71275528b3e814ae236063/pytest_cov-3.0.0-py3-none-any.whl",
+    )
+    version(
+        "2.8.1",
+        sha256="cdbdef4f870408ebdbfeb44e63e07eb18bb4619fae852f6e760645fa36172626",
+        url="https://pypi.org/packages/b9/54/3673ee8be482f81527678ac894276223b9814bb7262e4f730469bb7bf70e/pytest_cov-2.8.1-py2.py3-none-any.whl",
+    )
+    version(
+        "2.3.1",
+        sha256="09f34ed04d5ea1a6dc7e5bc08435eaca9a2b55086c50f5cc0a3229b4001bc5f0",
+        url="https://pypi.org/packages/67/94/93dd3288f9a6accfc25e4c636aa912824a2e66d08a464d6f62421da8742f/pytest_cov-2.3.1-py2.py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-pytest@4.6:", when="@3:", type=("build", "run"))
-    depends_on("py-pytest@3.6:", type=("build", "run"))
-    depends_on("py-coverage@5.2.1: +toml", when="@3:", type=("build", "run"))
-    depends_on("py-coverage@4.4:", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-coverage@5.2.1:+toml", when="@2.12:2.12.0,3:")
+        depends_on("py-coverage@4.4:", when="@2.6:2.10")
+        depends_on("py-coverage@3.7.1:", when="@2.1:2.5")
+        depends_on("py-pytest@4.6:", when="@2.10:")
+        depends_on("py-pytest@3.6:", when="@2.6.1:2.9")
+        depends_on("py-pytest@2.6:", when="@2.1:2.5")

@@ -14,29 +14,47 @@ class PyBluepyemodel(PythonPackage):
 
     license("Apache-2.0")
 
-    version("0.0.64", sha256="14fec4f77fb79295ce7cfe1711cd32f66e5d3e0ebc8da9404491ab7f59da1e71")
-    version("0.0.59", sha256="5e8869522d82e719f9775c2d95cfe953cedc66bc44355765a6f406289baf6791")
-    version("0.0.58", sha256="327de9d2c49e7ff83cc77850873293299d4eacf95b3cf33716e5a8501685f08c")
-    version("0.0.57", sha256="0b91e39e5066ab4a996bd932577b49648169e549c5f05bb3f93e345b4b186093")
-    version("0.0.46", sha256="ad4c125e491f3337fcc341a4f389b8a616d883ce50fd77d9fb0ea6e13be5da61")
+    version(
+        "0.0.64",
+        sha256="af0a66cefaba9e99b57801a559004821da649e9d6234fff45732445f19da6f97",
+        url="https://pypi.org/packages/d1/aa/3924d6aa0dc282ed599ce5f3fef2da264bdcfcdb594cb6f2f418830bcb62/bluepyemodel-0.0.64-py3-none-any.whl",
+    )
+    version(
+        "0.0.59",
+        sha256="e587acab723ceaa4ef8d085a93b6495c06519f979d6f63be56acd02e234af199",
+        url="https://pypi.org/packages/3f/8f/d0d3df827abec72f66a61d2ffbab9f7e9cfd0c5cc450e8e1b81156a5b24d/bluepyemodel-0.0.59-py3-none-any.whl",
+    )
+    version(
+        "0.0.58",
+        sha256="8c1676e239b39a4bad18e4fa6cad340c1c5ce66b8413b11e1e6f81ec707329c5",
+        url="https://pypi.org/packages/2d/2f/14fea76becd5c70ca999886fdcb557aa4f28382e6684b49fa9aa527b39c0/bluepyemodel-0.0.58-py3-none-any.whl",
+    )
+    version(
+        "0.0.57",
+        sha256="67de314a37f2e2336c8c8b5e6d8656e68a60345eb4bcab96f66c5e5b25f260d7",
+        url="https://pypi.org/packages/fd/56/1b7ae8e37ffc70a732886db87b702a8109a06022229df676c44d51dfd742/bluepyemodel-0.0.57-py3-none-any.whl",
+    )
+    version(
+        "0.0.46",
+        sha256="01adf7b5b0dc867faa0d0f3874a1d83d493e07fddc4cfd8ea45b379f30896bc3",
+        url="https://pypi.org/packages/f5/c4/ac4bcb42c16f3f737fb2e3d27ed66dfdb727ae7dfa0921f5d880ef646728/bluepyemodel-0.0.46-py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-setuptools-scm", type="build")
-
-    depends_on("py-numpy", type=("build", "run"))
-    depends_on("py-scipy", type=("build", "run"))
-    depends_on("py-pandas", type=("build", "run"))
-    depends_on("py-ipyparallel@6.3:", type=("build", "run"))
-    depends_on("py-tqdm", type=("build", "run"))
-    depends_on("py-pyyaml", type=("build", "run"))
-    depends_on("py-gitpython", type=("build", "run"))
-    depends_on("py-bluepyopt@1.12.12:", type=("build", "run"))
-    depends_on("py-bluepyefe@2.2.0:", type=("build", "run"))
-    depends_on("py-neurom@3.0:3", type=("build", "run"))
-    depends_on("py-efel@3.1:", type=("build", "run"))
-    depends_on("py-configparser", type=("build", "run"))
-    depends_on("py-morph-tool@2.8:", type=("build", "run"))
-    depends_on("py-fasteners@0.16:", type=("build", "run"))
-    depends_on("neuron+python@8.0:", type=("build", "run"))
-    depends_on("py-jinja2@3.0.3", when="@0.0.11:", type=("build", "run"))
-    depends_on("py-currentscape@0.0.11:", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-bluepyefe@2.2:")
+        depends_on("py-bluepyopt@1.12.12:", when="@:0.0.76")
+        depends_on("py-configparser")
+        depends_on("py-currentscape@1:")
+        depends_on("py-efel@3.1:")
+        depends_on("py-fasteners@0.16:")
+        depends_on("py-gitpython")
+        depends_on("py-ipyparallel@6.3:")
+        depends_on("py-jinja2@3.0.3:3.0", when="@:0.0.71")
+        depends_on("py-morph-tool@2.8:")
+        depends_on("py-neurom@3:")
+        depends_on("py-neuron@8.0.0:")
+        depends_on("py-numpy")
+        depends_on("py-pandas")
+        depends_on("py-pyyaml")
+        depends_on("py-scipy")
+        depends_on("py-tqdm")

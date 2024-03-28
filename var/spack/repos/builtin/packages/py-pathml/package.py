@@ -14,23 +14,28 @@ class PyPathml(PythonPackage):
 
     license("GPL-2.0-or-later")
 
-    version("2.1.0", sha256="462bb2f16452dddad310c30f62678a1336ce492263355fd6722c07ee4840ea6a")
+    version(
+        "2.1.0",
+        sha256="953848b9c56d01624e20a060cd0a78631304882e1401a11467524deb2cce8863",
+        url="https://pypi.org/packages/3f/ae/01734cac44cdadda95d4cbd817dfd15667f23c8daec7aa892171c9a4b3d2/pathml-2.1.0-py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools@42:", type="build")
-    depends_on("py-numpy@1.16.4:", type=("build", "run"))
-    depends_on("py-pandas", type=("build", "run"))
-    depends_on("py-scipy", type=("build", "run"))
-    depends_on("py-pydicom", type=("build", "run"))
-    depends_on("py-statsmodels", type=("build", "run"))
-    depends_on("py-openslide-python", type=("build", "run"))
-    depends_on("py-matplotlib", type=("build", "run"))
-    depends_on("py-scikit-image", type=("build", "run"))
-    depends_on("py-scikit-learn", type=("build", "run"))
-    depends_on("py-dask +distributed", type=("build", "run"))
-    depends_on("py-anndata@0.7.6:", type=("build", "run"))
-    depends_on("py-scanpy", type=("build", "run"))
-    depends_on("py-torch", type=("build", "run"))
-    depends_on("opencv+python3", type=("build", "run"))
-    depends_on("py-python-bioformats@4.0.0:", type=("build", "run"))
-    depends_on("py-loguru", type=("build", "run"))
-    depends_on("py-h5py", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-anndata@0.7.6:", when="@:1.0.dev,1.0.2:")
+        depends_on("py-dask+distributed", when="@:1.0.dev,1.0.2:")
+        depends_on("py-h5py", when="@:1.0.dev,1.0.2:")
+        depends_on("py-loguru", when="@2.1:")
+        depends_on("py-matplotlib", when="@:1.0.dev,1.0.2:")
+        depends_on("py-numpy@1.16.4:", when="@:1.0.dev,1.0.2:")
+        depends_on("py-opencv-contrib-python", when="@:1.0.dev,1.0.2:")
+        depends_on("py-openslide-python", when="@:1.0.dev,1.0.2:")
+        depends_on("py-pandas", when="@:1.0.dev,1.0.2:")
+        depends_on("py-pip", when="@:1.0.dev,1.0.2:")
+        depends_on("py-pydicom", when="@:1.0.dev,1.0.2:")
+        depends_on("py-python-bioformats@4.0.0:", when="@2:")
+        depends_on("py-scanpy", when="@:1.0.dev,1.0.2:")
+        depends_on("py-scikit-image")
+        depends_on("py-scikit-learn", when="@:1.0.dev,1.0.2:")
+        depends_on("py-scipy", when="@:1.0.dev,1.0.2:")
+        depends_on("py-statsmodels", when="@:1.0.dev,1.0.2:")
+        depends_on("py-torch", when="@:1.0.dev,1.0.2:")

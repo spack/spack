@@ -14,10 +14,13 @@ class PyMffpy(PythonPackage):
 
     license("Apache-2.0")
 
-    version("0.6.3", sha256="fceaf59f5fccb26b6e8a0363579d27e53db547493af353737a24983d95dc012d")
+    version(
+        "0.6.3",
+        sha256="e10cbdaeb56c5c743c28ddae8b1e694bcc36c3fdba01f6f9210fea717caf8efb",
+        url="https://pypi.org/packages/05/bf/9f59c5c9ad675efe44240e205c730fa4b9d363d5235646dd58a06fd099e4/mffpy-0.6.3-py3-none-any.whl",
+    )
 
-    depends_on("python@3.6:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
-    depends_on("py-pytz@2019.2:", type=("build", "run"))
-    depends_on("py-numpy@1.15.1:", type=("build", "run"))
-    depends_on("py-deprecated@1.2.12:", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-deprecated@1.2.12:", when="@0.6.3:")
+        depends_on("py-numpy@1.15.1:", when="@0.5.5:")
+        depends_on("py-pytz@2019.2:", when="@0.5.5:")

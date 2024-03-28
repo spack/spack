@@ -14,18 +14,43 @@ class PyPy(PythonPackage):
 
     license("MIT")
 
-    version("1.11.0", sha256="51c75c4126074b472f746a24399ad32f6053d1b34b68d2fa41e558e6f4a98719")
-    version("1.9.0", sha256="9ca6883ce56b4e8da7e79ac18787889fa5206c79dcc67fb065376cd2fe03f342")
-    version("1.8.2", sha256="f3b3a4c36512a4c4f024041ab51866f11761cc169670204b235f6b20523d4e6b")
-    version("1.8.0", sha256="dc639b046a6e2cff5bbe40194ad65936d6ba360b52b3c3fe1d08a82dd50b5e53")
-    version("1.5.4", sha256="3fd59af7435864e1a243790d322d763925431213b6b8529c6ca71081ace3bbf7")
-    version("1.5.3", sha256="29c9fab495d7528e80ba1e343b958684f4ace687327e6f789a94bf3d1915f881")
-    version("1.4.33", sha256="1f9a981438f2acc20470b301a07a496375641f902320f70e31916fe3377385a9")
-    version("1.4.31", sha256="a6501963c725fc2554dabfece8ae9a8fb5e149c0ac0a42fd2b02c5c1c57fc114")
-
-    depends_on("python@2.7:2.8,3.4:", type=("build", "run"))
-    depends_on("python@2.7:2.8,3.5:", type=("build", "run"), when="@1.11.0:")
-
-    depends_on("py-setuptools", type="build")
-    depends_on("py-setuptools-scm", type="build")
-    depends_on("py-setuptools-scm+toml", type="build", when="@1.11.0:")
+    version(
+        "1.11.0",
+        sha256="607c53218732647dff4acdfcd50cb62615cedf612e72d1724fb1a0cc6405b378",
+        url="https://pypi.org/packages/f6/f0/10642828a8dfb741e5f3fbaac830550a518a775c7fff6f04a007259b0548/py-1.11.0-py2.py3-none-any.whl",
+    )
+    version(
+        "1.9.0",
+        sha256="366389d1db726cd2fcfc79732e75410e5fe4d31db13692115529d34069a043c2",
+        url="https://pypi.org/packages/68/0f/41a43535b52a81e4f29e420a151032d26f08b62206840c48d14b70e53376/py-1.9.0-py2.py3-none-any.whl",
+    )
+    version(
+        "1.8.2",
+        sha256="a673fa23d7000440cc885c17dbd34fafcb7d7a6e230b29f6766400de36a33c44",
+        url="https://pypi.org/packages/ae/12/76710702ccf77dab01246ecb55fbe43175131c0738d0be29f3de50d31071/py-1.8.2-py2.py3-none-any.whl",
+    )
+    version(
+        "1.8.0",
+        sha256="64f65755aee5b381cea27766a3a147c3f15b9b6b9ac88676de66ba2ae36793fa",
+        url="https://pypi.org/packages/76/bc/394ad449851729244a97857ee14d7cba61ddb268dce3db538ba2f2ba1f0f/py-1.8.0-py2.py3-none-any.whl",
+    )
+    version(
+        "1.5.4",
+        sha256="e31fb2767eb657cbde86c454f02e99cb846d3cd9d61b318525140214fdc0e98e",
+        url="https://pypi.org/packages/f3/bd/83369ff2dee18f22f27d16b78dd651e8939825af5f8b0b83c38729069962/py-1.5.4-py2.py3-none-any.whl",
+    )
+    version(
+        "1.5.3",
+        sha256="983f77f3331356039fdd792e9220b7b8ee1aa6bd2b25f567a963ff1de5a64f6a",
+        url="https://pypi.org/packages/67/a5/f77982214dd4c8fd104b066f249adea2c49e25e8703d284382eb5e9ab35a/py-1.5.3-py2.py3-none-any.whl",
+    )
+    version(
+        "1.4.33",
+        sha256="81b5e37db3cc1052de438375605fb5d3b3e97f950f415f9143f04697c684d7eb",
+        url="https://pypi.org/packages/92/8b/ac214296ed28a05efd36e8b55a7820eda62d7028ecf10e5a98afb1982e93/py-1.4.33-py2.py3-none-any.whl",
+    )
+    version(
+        "1.4.31",
+        sha256="4a3e4f3000c123835ac39cab5ccc510642153bc47bc1f13e2bbb53039540ae69",
+        url="https://pypi.org/packages/19/f2/4b71181a49a4673a12c8f5075b8744c5feb0ed9eba352dd22512d2c04d47/py-1.4.31-py2.py3-none-any.whl",
+    )

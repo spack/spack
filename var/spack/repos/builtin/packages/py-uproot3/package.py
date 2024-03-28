@@ -19,12 +19,14 @@ class PyUproot3(PythonPackage):
     homepage = "https://github.com/scikit-hep/uproot3"
     pypi = "uproot3/uproot3-3.14.4.tar.gz"
 
-    version("3.14.4", sha256="4396746ba5ef9071bb0a9da53294e4613a7f4548218940f86496e79d682d20eb")
+    version(
+        "3.14.4",
+        sha256="d0b513aed4af17278d582a4879eff7037efe0752c7e2154683ac4c4f083c30c0",
+        url="https://pypi.org/packages/9c/69/d893c6eba0dd0d8f82d841d4b85b6e63c52a1b472aec7cf7ae0efedf5a92/uproot3-3.14.4-py3-none-any.whl",
+    )
 
-    depends_on("python@2.7:2.9,3.5:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
-    depends_on("py-pytest-runner", type="build")
-    depends_on("py-numpy@1.13.1:", type=("build", "run"))
-    depends_on("py-awkward0", type=("build", "run"))
-    depends_on("py-uproot3-methods", type=("build", "run"))
-    depends_on("py-cachetools", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-awkward0")
+        depends_on("py-cachetools")
+        depends_on("py-numpy@1.13.1:")
+        depends_on("py-uproot3-methods", when="@3.14.1:")

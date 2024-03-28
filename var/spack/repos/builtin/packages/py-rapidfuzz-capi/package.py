@@ -18,6 +18,8 @@ class PyRapidfuzzCapi(PythonPackage):
 
     license("MIT")
 
-    version("1.0.5", sha256="b3af179874b28364ba1b7850e37d0d353de9cf5b844e3569c023b74da3a9c68e")
-
-    depends_on("py-setuptools", type="build")
+    version(
+        "1.0.5",
+        sha256="c557114d1f30adbb6918973b9e46fd3923d957f6f734079bd90881095e0e1252",
+        url="https://pypi.org/packages/ea/ff/76d9cf0a7566d34c520cb6632ad856bd71cffef4c28d99728cc3b59545fc/rapidfuzz_capi-1.0.5-py3-none-any.whl",
+    )

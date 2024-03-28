@@ -15,9 +15,11 @@ class PyIsaRwval(PythonPackage):
     homepage = "https://github.com/ISA-tools/isa-rwval"
     pypi = "isa-rwval/isa-rwval-0.10.10.tar.gz"
 
-    version("0.10.10", sha256="3e9fcf37d5e5ff7e92cf28069ecd95d1e62a4025c2d667519da382e5c2258e51")
+    version(
+        "0.10.10",
+        sha256="772b336ff24f501483a09bc8158571ef61fdb1122a7e911c524455f7030dde47",
+        url="https://pypi.org/packages/7c/8a/8393799b83529a7d791e2bc909f5081883c3431bce18c84feee771fa3f4b/isa_rwval-0.10.10-py2.py3-none-any.whl",
+    )
 
-    depends_on("python@3.6:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
-
-    depends_on("py-networkx@2.5", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-networkx@2.5:2.5.0", when="@0.10.10:")

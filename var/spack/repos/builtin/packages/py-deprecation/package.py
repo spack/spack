@@ -15,8 +15,16 @@ class PyDeprecation(PythonPackage):
 
     license("Apache-2.0")
 
-    version("2.1.0", sha256="72b3bde64e5d778694b0cf68178aed03d15e15477116add3fb773e581f9518ff")
-    version("2.0.7", sha256="c0392f676a6146f0238db5744d73e786a43510d54033f80994ef2f4c9df192ed")
+    version(
+        "2.1.0",
+        sha256="a10811591210e1fb0e768a8c25517cabeabcba6f0bf96564f8ff45189f90b14a",
+        url="https://pypi.org/packages/02/c3/253a89ee03fc9b9682f1541728eb66db7db22148cd94f89ab22528cd1e1b/deprecation-2.1.0-py2.py3-none-any.whl",
+    )
+    version(
+        "2.0.7",
+        sha256="dc9b4f252b7aca8165ce2764a71da92a653b5ffbf7a389461d7a640f6536ecb2",
+        url="https://pypi.org/packages/b9/2a/d5084a8781398cea745c01237b95d9762c382697c63760a95cc6a814ad3a/deprecation-2.0.7-py2.py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-packaging", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-packaging", when="@2.0.1:")

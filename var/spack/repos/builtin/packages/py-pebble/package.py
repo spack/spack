@@ -15,7 +15,8 @@ class PyPebble(PythonPackage):
 
     license("LGPL-3.0-only")
 
-    version("5.0.3", sha256="bdcfd9ea7e0aedb895b204177c19e6d6543d9962f4e3402ebab2175004863da8")
-
-    depends_on("python@3.6:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
+    version(
+        "5.0.3",
+        sha256="8274aa0959f387b368ede47666129cbe5d123f276a1bd9cafe77e020194b2141",
+        url="https://pypi.org/packages/3d/e4/51d112fbc10e51a37519635c757a1a6a8a3058ee91bf89632ab720a8cfac/Pebble-5.0.3-py3-none-any.whl",
+    )

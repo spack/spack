@@ -14,9 +14,11 @@ class PyPythonXmpToolkit(PythonPackage):
 
     license("BSD-3-Clause")
 
-    version("2.0.1", sha256="f8d912946ff9fd46ed5c7c355aa5d4ea193328b3f200909ef32d9a28a1419a38")
+    version(
+        "2.0.1",
+        sha256="ad7869810687b594d21901ed101906ae4291b270ce09af5ea6886be49202e186",
+        url="https://pypi.org/packages/8d/be/1f64e6e9c4e6b6b4689ec9bbc2e3804ac70227c5e3040a86c9afc21402bb/python_xmp_toolkit-2.0.1-py3-none-any.whl",
+    )
 
-    depends_on("python@2.6:2.7,3.3:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
-    depends_on("py-pytz", type=("build", "run"))
-    depends_on("exempi@2.2.0:", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-pytz", when="@2.0.1:")

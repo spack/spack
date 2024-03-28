@@ -16,9 +16,13 @@ class PyGraphqlRelay(PythonPackage):
 
     license("MIT")
 
-    version("2.0.1", sha256="870b6b5304123a38a0b215a79eace021acce5a466bf40cd39fa18cb8528afabb")
+    version(
+        "2.0.1",
+        sha256="ac514cb86db9a43014d7e73511d521137ac12cf0101b2eaa5f0a3da2e10d913d",
+        url="https://pypi.org/packages/94/48/6022ea2e89cb936c3b933a0409c6e29bf8a68c050fe87d97f98aff6e5e9e/graphql_relay-2.0.1-py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-graphql-core@2.2:2", type=("build", "run"), when="@2")
-    depends_on("py-six@1.12:", type=("build", "run"), when="@2")
-    depends_on("py-promise@2.2:2", type=("build", "run"), when="@2")
+    with default_args(type="run"):
+        depends_on("py-graphql-core@2.2:2", when="@2")
+        depends_on("py-promise@2.2:", when="@2")
+        depends_on("py-six@1.12:", when="@2")

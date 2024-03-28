@@ -17,18 +17,25 @@ class PyGtdbtk(PythonPackage):
 
     license("GPL-3.0-only")
 
-    version("2.3.2", sha256="80efd31e10007d835f56a3d6fdf039a59db3b6ba4be26b234692da5e688aa99f")
-    version("2.3.0", sha256="4f237a03657be4540ac653c276fe31c002b6923af0411316719a9541d6e97d4b")
-    version("2.1.0", sha256="980885141f13502afdf05e720871427e3de4fe27f4f3f97e74af6fed87eb50a7")
+    version(
+        "2.3.2",
+        sha256="b84a0fa3ca482024f0966aced7e3eccc1fa596c10eea364328ec8ee6089e761a",
+        url="https://pypi.org/packages/34/25/c0306cf86abfa667f94f0d7591b251977b7f7af57ce613217873398bc0e5/gtdbtk-2.3.2-py3-none-any.whl",
+    )
+    version(
+        "2.3.0",
+        sha256="69d8ff2d00e8903f8e945b2d5def335d3610a8b953cffeaba0b9490adb8bf4c9",
+        url="https://pypi.org/packages/4e/be/72ff9d9e718e08898e8f9817ae91d06c8364b288d3c082026ddab01ba4e0/gtdbtk-2.3.0-py3-none-any.whl",
+    )
+    version(
+        "2.1.0",
+        sha256="6fcf963519fb2fe7c3287f58d017fad7a4a9f1641d026442d52c9daf024213ee",
+        url="https://pypi.org/packages/b8/78/853a62dd98c99a31191df3f6d130834cad0ae00c5159d32cb9667af48943/gtdbtk-2.1.0-py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type=("build"))
-    depends_on("py-dendropy@4.1.0:", type=("build", "run"))
-    depends_on("py-numpy@1.9.0:", type=("build", "run"))
-    depends_on("py-tqdm@4.35.0:", type=("build", "run"))
-    depends_on("py-pydantic@1.9.2:1", type=("build", "run"), when="@2.3.0:")
-    depends_on("prodigal@2.6.2:", type=("build", "run"))
-    depends_on("hmmer@3.1b2:", type=("build", "run"))
-    depends_on("pplacer@1.1alpha:", type=("build", "run"))
-    depends_on("fastani@1.32:", type=("build", "run"))
-    depends_on("fasttree@2.1.9:", type=("build", "run"))
-    depends_on("mash@2.2:", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-dendropy@4.1:", when="@1.2:")
+        depends_on("py-numpy@1.9:", when="@1.2:")
+        depends_on("py-pydantic@1.9.2:1", when="@2.3.2:")
+        depends_on("py-pydantic", when="@2.2.1:2.3.0")
+        depends_on("py-tqdm@4.35:", when="@1.6:")

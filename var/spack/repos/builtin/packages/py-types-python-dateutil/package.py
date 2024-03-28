@@ -12,7 +12,13 @@ class PyTypesPythonDateutil(PythonPackage):
     homepage = "https://github.com/python/typeshed"
     pypi = "types-python-dateutil/types-python-dateutil-2.8.19.tar.gz"
 
-    version("2.8.19.14", sha256="1f4f10ac98bb8b16ade9dbee3518d9ace017821d94b057a425b069f834737f4b")
-    version("2.8.19", sha256="bfd3eb39c7253aea4ba23b10f69b017d30b013662bb4be4ab48b20bbd763f309")
-
-    depends_on("py-setuptools", type="build")
+    version(
+        "2.8.19.14",
+        sha256="f977b8de27787639986b4e28963263fd0e5158942b3ecef91b9335c130cb1ce9",
+        url="https://pypi.org/packages/1c/af/5af2e2a02bc464c1c7818c260606343020b96c0d5b64f637d9e91aee24fe/types_python_dateutil-2.8.19.14-py3-none-any.whl",
+    )
+    version(
+        "2.8.19",
+        sha256="6284df1e4783d8fc6e587f0317a81333856b872a6669a282f8a325342bce7fa8",
+        url="https://pypi.org/packages/e9/02/232ffb54d392a41b538eb060ce0a92817366c475f6f49af2d76b89812fac/types_python_dateutil-2.8.19-py3-none-any.whl",
+    )

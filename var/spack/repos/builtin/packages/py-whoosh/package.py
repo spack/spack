@@ -14,6 +14,8 @@ class PyWhoosh(PythonPackage):
 
     license("BSD-2-Clause-FreeBSD")
 
-    version("2.7.4", sha256="7ca5633dbfa9e0e0fa400d3151a8a0c4bec53bd2ecedc0a67705b17565c31a83")
-
-    depends_on("py-setuptools", type="build")
+    version(
+        "2.7.4",
+        sha256="aa39c3c3426e3fd107dcb4bde64ca1e276a65a889d9085a6e4b54ba82420a852",
+        url="https://pypi.org/packages/ba/19/24d0f1f454a2c1eb689ca28d2f178db81e5024f42d82729a4ff6771155cf/Whoosh-2.7.4-py2.py3-none-any.whl",
+    )

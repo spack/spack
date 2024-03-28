@@ -14,10 +14,8 @@ class PyPylabSdk(PythonPackage):
 
     license("MIT")
 
-    version("1.3.2", sha256="ea53e97fec45ea15f65bd53da6b25dc16a9accf3a7f5decbaa970592d760148d")
-
-    depends_on("python@3:", type=("build", "run"))
-
-    depends_on("py-setuptools", type="build")
-
-    depends_on("py-requests", type=("build", "run"))
+    version(
+        "1.3.2",
+        sha256="a6784769f3cb4626f732ff22f0ad88a470c4ab294e1c52f82f5167bc27f9be46",
+        url="https://pypi.org/packages/ed/67/9a73c2b0144314da579e8c61ab8beaff55905d68caed86e5de2460505329/pylab_sdk-1.3.2-py3-none-any.whl",
+    )

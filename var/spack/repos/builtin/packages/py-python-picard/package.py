@@ -14,12 +14,12 @@ class PyPythonPicard(PythonPackage):
 
     license("BSD-3-Clause")
 
-    version("0.6", sha256="dad377c9a50f9850f85841eba0ffb58ad557885ca93364bb73153f33210b52e2")
+    version(
+        "0.6",
+        sha256="26c7928f7aba69011f1236bf35388a420088018350e840d2608031c5f338e0f7",
+        url="https://pypi.org/packages/c6/39/23ee91bfcf542a0554dd69991f6a695102322e631174e6e65d309c17b370/python_picard-0.6-py3-none-any.whl",
+    )
 
-    depends_on("python@3.6:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
-    depends_on("py-numpy@1.8:", type=("build", "run"))
-    depends_on("py-matplotlib@1.3:", type=("build", "run"))
-    depends_on("py-scipy@0.16:", type=("build", "run"))
-    depends_on("py-numexpr@2.0:", type=("build", "run"))
-    depends_on("py-scikit-learn@0.23:", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-numexpr", when="@0.4:")
+        depends_on("py-numpy", when="@0.6:")

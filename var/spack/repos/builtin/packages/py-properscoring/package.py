@@ -14,8 +14,8 @@ class PyProperscoring(PythonPackage):
 
     license("Apache-2.0")
 
-    version("0.1", sha256="b0cc4963cc218b728d6c5f77b3259c8f835ae00e32e82678cdf6936049b93961")
-
-    depends_on("py-setuptools", type="build")
-    depends_on("py-numpy", type=("build", "run"))
-    depends_on("py-scipy", type=("build", "run"))
+    version(
+        "0.1",
+        sha256="f84d5b06c13549d0171ce52ad7b45c6f5726ac44b733d24af5c60654cbb821dc",
+        url="https://pypi.org/packages/0a/ff/51706ba1a029d0f2df0322543793d3bf1383de9dc567d23886144cb21bef/properscoring-0.1-py2.py3-none-any.whl",
+    )

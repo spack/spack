@@ -20,13 +20,14 @@ class PyFenicsUflLegacy(PythonPackage):
 
     license("LGPL-3.0-or-later")
 
-    version("main", branch="main")
-    version("2022.3.0", sha256="2d0f4c88fe151d631e1d389faf61f58bbbe649fd08106e756fd5d6c53213660a")
+    version(
+        "2022.3.0",
+        sha256="c909fcb4e837dd755b13541b274fe4c5e4147ce26c31e9dd209db36c3010f18f",
+        url="https://pypi.org/packages/c4/ea/8de7b587715fb690ef872687eee8b9d39630af010adbd449d55053ac38ad/fenics_ufl_legacy-2022.3.0-py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools@58:", type="build")
-    depends_on("py-numpy", type=("build", "run"))
-
-    depends_on("py-pytest", type="test")
+    with default_args(type="run"):
+        depends_on("py-numpy")
 
     @run_after("install")
     @on_package_attributes(run_tests=True)

@@ -15,7 +15,11 @@ class PyAzureCliNspkg(PythonPackage):
 
     license("MIT")
 
-    version("3.0.4", sha256="1bde56090f548c6435bd3093995cf88e4c445fb040604df8b5b5f70780d79181")
+    version(
+        "3.0.4",
+        sha256="34ff69dfed9180aa945bca2c0b7e5603d84e92b28c531efe4beae51a7230791d",
+        url="https://pypi.org/packages/fe/1f/babf85745bc6b1ab770e38a330edd651dde61dd662174adb562d4452d9be/azure_cli_nspkg-3.0.4-py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-azure-nspkg@2.0.0:", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-azure-nspkg@2:", when="@3:3.0.0,3.0.2:")

@@ -16,7 +16,11 @@ class PyGraphqlWs(PythonPackage):
 
     license("MIT")
 
-    version("0.4.4", sha256="2ad38db70f37964f54d7eb3e2ede86dbe3f2a1ed7ea0a9f9a3b8b17162a22852")
+    version(
+        "0.4.4",
+        sha256="b6f4c9f6968feba80762354068a2a36538a48ac72e4253971be43e0cba020506",
+        url="https://pypi.org/packages/97/19/fd64b7972099032bfa88358ad41e95c3348a73661a23727ba2981d43d2af/graphql_ws-0.4.4-py2.py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-graphql-core@2", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-graphql-core@2", when="@0.4:")

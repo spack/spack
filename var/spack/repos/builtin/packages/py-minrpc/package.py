@@ -14,7 +14,8 @@ class PyMinrpc(PythonPackage):
 
     license("GPL-3.0-only")
 
-    version("0.0.11", sha256="bed53160f2774fdae7bd3d0fb5d1c77d17395394ec28a9e95a5859f486b54893")
-
-    depends_on("python@2.7:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
+    version(
+        "0.0.11",
+        sha256="f8f2d0398a63c052a0a303f009d26a8eca9b984be3210579a1dcd6819977c8cd",
+        url="https://pypi.org/packages/bb/b0/96a29e109c65646fd87c126a2d9eaa2d37924ee8c793aa277d251fbba668/minrpc-0.0.11-py2.py3-none-any.whl",
+    )

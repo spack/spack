@@ -14,14 +14,29 @@ class PyLoguru(PythonPackage):
 
     license("MIT")
 
-    version("0.6.0", sha256="066bd06758d0a513e9836fd9c6b5a75bfb3fd36841f4b996bc60b547a309d41c")
-    version("0.3.0", sha256="f2a0fa92f334d37a13351aa36ab18e8039649a3741836b4b6d8b8bce7e8457ac")
-    version("0.2.5", sha256="68297d9f23064c2f4764bb5d0c5c767f3ed7f9fc1218244841878f5fc7c94add")
+    version(
+        "0.6.0",
+        sha256="4e2414d534a2ab57573365b3e6d0234dfb1d84b68b7f3b948e6fb743860a77c3",
+        url="https://pypi.org/packages/fe/21/e1d1da2586865a159fc73b611f36bdd50b6c4043cb6132d3d5e972988028/loguru-0.6.0-py3-none-any.whl",
+    )
+    version(
+        "0.3.0",
+        sha256="85408b9552adb9a795af102221c7517f35c8b56ffe7b43d98d37e883283854de",
+        url="https://pypi.org/packages/4a/59/9deeeba62ecfcb771c0e76d63fab565e2c229e1e418d0c410d9313fa7a4c/loguru-0.3.0-py3-none-any.whl",
+    )
+    version(
+        "0.2.5",
+        sha256="ebac59630946721fd6207264679b267a8bdc290b086226067d6aad86830e3123",
+        url="https://pypi.org/packages/c4/2d/2861600f1abed3c85e157c78308d3b1de974ad64d67de852a79da9ae7205/loguru-0.2.5-py3-none-any.whl",
+    )
 
-    depends_on("python@3.5:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
-    depends_on("py-aiocontextvars@0.2.0:", when="^python@3.6:", type=("build", "run"))
-    depends_on("py-colorama@0.3.4:", when="platform=windows", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-ansimarkup@1.4:", when="@:0.2")
+        depends_on("py-better-exceptions-fork@0.2.1.post6:", when="@:0.2")
+        depends_on("py-colorama@0.3.4:", when="@0.3: platform=windows")
+        depends_on("py-colorama@0.3.4:", when="@0.2.3:0.2")
+        depends_on("py-win32-setctime", when="@0.3: platform=windows")
+
     # Missing dependency required for windows
     # depends_on('py-win32-setctime@1.0.0:',
     #            when='platform=windows',

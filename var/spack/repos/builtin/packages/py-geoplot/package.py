@@ -17,15 +17,18 @@ class PyGeoplot(PythonPackage):
 
     maintainers("adamjstewart")
 
-    version("0.4.1", sha256="eb073436c5a1cb7f97caa217cdb109e6cad4f3774e657757005e3f0f5a3183ca")
+    version(
+        "0.4.1",
+        sha256="3b7e6deefc397f5f9025f2cb625c57ad7826d7bc6a68270a853914a733e5cee2",
+        url="https://pypi.org/packages/e1/8f/46133752e1f02e70501939e739b81cbc85c79d7398c963b8a25a3178bffe/geoplot-0.4.1-py3-none-any.whl",
+    )
 
-    depends_on("python@3.6.0:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
-    depends_on("py-matplotlib", type=("build", "run"))
-    depends_on("py-seaborn", type=("build", "run"))
-    depends_on("py-pandas", type=("build", "run"))
-    depends_on("py-geopandas", type=("build", "run"))
-    depends_on("py-cartopy", type=("build", "run"))
-    depends_on("py-descartes", type=("build", "run"))
-    depends_on("py-mapclassify@2.1:", type=("build", "run"))
-    depends_on("py-contextily@1.0.0:", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-cartopy", when="@0.2.1:0.2.2,0.3:")
+        depends_on("py-contextily@1.0.0:", when="@0.4.1:")
+        depends_on("py-descartes", when="@0.3:0.4.1")
+        depends_on("py-geopandas", when="@0.2.1:0.2.2,0.3:0.4.3")
+        depends_on("py-mapclassify@2.1:", when="@0.4.1:")
+        depends_on("py-matplotlib", when="@0.2.1:0.2.2,0.3:0.4")
+        depends_on("py-pandas", when="@0.2.1:0.2.2,0.3:")
+        depends_on("py-seaborn", when="@0.2.1:0.2.2,0.3:")

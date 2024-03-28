@@ -14,25 +14,27 @@ class PyNvidiaModulus(PythonPackage):
 
     license("Apache-2.0")
 
-    version("0.5.0", sha256="ff2c7d47227b8cba59b075cac89599f8c1ec7cde60fd2db6e6874d0143828832")
+    version(
+        "0.5.0",
+        sha256="d1714e8d4c7161c3c3dbbaae5a91f60d7e5b25b6378bdd263771596a1db81da6",
+        url="https://pypi.org/packages/16/ed/8eecb92101ba6e6c9d7624fc619d4a5a8e1c685083bd0185a1562606a155/nvidia_modulus-0.5.0-py3-none-any.whl",
+    )
 
-    with default_args(type="build"):
-        depends_on("py-setuptools")
-        depends_on("py-setuptools-scm")
-
-    with default_args(type=("build", "run")):
-        depends_on("py-torch@2.0.0:")
-        # Remove upper bound on numpy version
-        # https://github.com/NVIDIA/modulus/issues/383
-        depends_on("py-numpy@1.22.4:")
-        depends_on("py-xarray@2023.1.0:")
-        depends_on("py-zarr@2.14.2:")
-        depends_on("py-fsspec@2023.1.0:")
-        depends_on("py-s3fs@2023.5.0:")
-        depends_on("py-nvidia-dali@1.16.0:")
-        depends_on("py-setuptools@67.6.0:")
-        depends_on("py-certifi@2023.7.22:")
-        depends_on("py-pytz@2023.3:")
-        depends_on("py-treelib@1.2.5:")
-        depends_on("py-tqdm@4.60.0:")
-        depends_on("py-nvtx@0.2.8:")
+    with default_args(type="run"):
+        depends_on("py-certifi@2023.7:", when="@0.2.1:")
+        depends_on("py-fsspec@2023:", when="@0.3:")
+        depends_on("py-h5py@3.7:", when="@:0.2")
+        depends_on("py-netcdf4@1.6.3:", when="@:0.2")
+        depends_on("py-numpy@1.22.4:1.24", when="@0.3:")
+        depends_on("py-nvidia-dali-cuda110@1:")
+        depends_on("py-nvtx@0.2.8:", when="@0.5:")
+        depends_on("py-pytest@6.0.0:", when="@:0.2")
+        depends_on("py-pytz@2023.3:", when="@0.4:")
+        depends_on("py-ruamel-yaml@0.17.22:", when="@0.2")
+        depends_on("py-s3fs@2023.5:", when="@0.2:")
+        depends_on("py-setuptools@67.6:")
+        depends_on("py-torch@2:", when="@0.3:")
+        depends_on("py-tqdm@4.60:", when="@0.5:")
+        depends_on("py-treelib@1.2.5:", when="@0.5:")
+        depends_on("py-xarray@2023:", when="@0.2:")
+        depends_on("py-zarr@2.14.2:", when="@0.2:")

@@ -12,15 +12,13 @@ class PyDatabricksCli(PythonPackage):
     homepage = "https://pypi.org/project/databricks-cli/"
     pypi = "databricks-cli/databricks-cli-0.17.4.tar.gz"
 
-    version("0.17.4", sha256="bc0c4dd082f033cb6d7978cacaca5261698efe3a4c70f52f98762c38db925ce0")
-    version("0.14.3", sha256="bdf89a3917a3f8f8b99163e38d40e66dc478c7408954747f145cd09816b05e2c")
-
-    depends_on("python@3.6:", type=("build", "run"))
-    depends_on("py-setuptools", type=("build", "run"))
-
-    depends_on("py-click@7.0:", type=("build", "run"))
-    depends_on("py-pyjwt@1.7.0:", type=("build", "run"))
-    depends_on("py-oauthlib@3.1.0:", type=("build", "run"))
-    depends_on("py-requests@2.17.3:", type=("build", "run"))
-    depends_on("py-tabulate@0.7.7:", type=("build", "run"))
-    depends_on("py-six@1.10.0:", type=("build", "run"))
+    version(
+        "0.17.4",
+        sha256="bbd57bc21c88ac6d1f8f0b250db986e500490c4d3cb69664229384632eaeed81",
+        url="https://pypi.org/packages/58/7d/4bd6e5dc4420fb5dbb5ae895c1d9934fc0c9e77d9c5dc010725195f093a7/databricks_cli-0.17.4-py2-none-any.whl",
+    )
+    version(
+        "0.14.3",
+        sha256="2c628fd9963f30e51646fceab16d64310e4d1f149028117de077259ee383e3ea",
+        url="https://pypi.org/packages/a9/44/fc98bde2037fbd1880731a88e2b15f4c8a6d91f88b55ea9c50bf76de8e12/databricks_cli-0.14.3-py2-none-any.whl",
+    )

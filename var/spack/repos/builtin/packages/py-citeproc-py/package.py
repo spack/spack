@@ -14,9 +14,11 @@ class PyCiteprocPy(PythonPackage):
 
     license("BSD-2-Clause-FreeBSD")
 
-    version("0.6.0", sha256="d9e3a224f936fe2e5033b5d9ffdacab769cedb61d96c4e0cf2f0b488f1d24b4e")
+    version(
+        "0.6.0",
+        sha256="ca4c7a5158d6f68cb00a89bb47d9aa0eec7b89b18e574eb08a061b011b602bbe",
+        url="https://pypi.org/packages/23/e8/5e42b253c40d1087a4ef341d78d88b7a9beb46e6ab9cec19c75e4e3cba78/citeproc_py-0.6.0-py3-none-any.whl",
+    )
 
-    depends_on("python@3.6:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
-    depends_on("py-rnc2rng@2.6.1,2.6.3:", type="build")
-    depends_on("py-lxml", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-lxml", when="@0.5.1:")

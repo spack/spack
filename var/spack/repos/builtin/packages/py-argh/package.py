@@ -20,6 +20,8 @@ class PyArgh(PythonPackage):
 
     maintainers("dorton21")
 
-    version("0.26.2", sha256="e9535b8c84dc9571a48999094fda7f33e63c3f1b74f3e5f3ac0105a58405bb65")
-
-    depends_on("py-setuptools", type="build")
+    version(
+        "0.26.2",
+        sha256="a9b3aaa1904eeb78e32394cd46c6f37ac0fb4af6dc488daa58971bdc7d7fcaf3",
+        url="https://pypi.org/packages/06/1c/e667a7126f0b84aaa1c56844337bf0ac12445d1beb9c8a6199a7314944bf/argh-0.26.2-py2.py3-none-any.whl",
+    )

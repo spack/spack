@@ -19,7 +19,8 @@ class PyParam(PythonPackage):
 
     license("BSD-3-Clause")
 
-    version("1.12.0", sha256="35d0281c8e3beb6dd469f46ff0b917752a54bed94d1b0c567346c76d0ff59c4a")
-
-    depends_on("python@2.7:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
+    version(
+        "1.12.0",
+        sha256="401929e5b9252c00001d91745c0af1e48d9ca6cda07d2d7b2de9c8fbf2c8e5e7",
+        url="https://pypi.org/packages/e4/1b/a65e2e882f264ee7aac3c37a72003950a7d16ac7df40356017a798aebb60/param-1.12.0-py2.py3-none-any.whl",
+    )

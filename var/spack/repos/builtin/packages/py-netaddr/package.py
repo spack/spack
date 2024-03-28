@@ -16,7 +16,8 @@ class PyNetaddr(PythonPackage):
 
     license("BSD-3-Clause")
 
-    version("0.8.0", sha256="d6cc57c7a07b1d9d2e917aa8b36ae8ce61c35ba3fcd1b83ca31c5a0ee2b5a243")
-
-    depends_on("python@2.7:2.8,3.5:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
+    version(
+        "0.8.0",
+        sha256="9666d0232c32d2656e5e5f8d735f58fd6c7457ce52fc21c98d45f2af78f990ac",
+        url="https://pypi.org/packages/ff/cd/9cdfea8fc45c56680b798db6a55fa60a22e2d3d3ccf54fc729d083b50ce4/netaddr-0.8.0-py2.py3-none-any.whl",
+    )

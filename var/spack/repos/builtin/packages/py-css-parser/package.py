@@ -16,6 +16,8 @@ class PyCssParser(PythonPackage):
 
     license("LGPL-3.0-or-later")
 
-    version("1.0.9", sha256="196db822cef22745af6a58d180cf8206949ced58b48f5f3ee98f1de1627495bb")
-
-    depends_on("py-setuptools", type="build")
+    version(
+        "1.0.9",
+        sha256="e18f66961103b61df25aa6df0dc808ab61c23e65ae6c1a8c149fe71911190495",
+        url="https://pypi.org/packages/9e/42/3842eec3be1ab4278b263dd79f9190b610b72e9ff8b13680de09884be9b9/css_parser-1.0.9-py2.py3-none-any.whl",
+    )

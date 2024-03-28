@@ -23,9 +23,13 @@ class PySeriate(PythonPackage):
 
     license("Apache-2.0")
 
-    version("1.1.2", sha256="5e031e865398fbe24aebdbb4a2e0015447aec50478830850f29d38660fd266e3")
+    version(
+        "1.1.2",
+        sha256="f813ae54214dec4ab689cade548cdedeae28fce19fec598f5f3c3415787b4dc1",
+        url="https://pypi.org/packages/6a/dd/c2343154d01e0062d464ec083488417134ca9b891d067822a1e770a57c98/seriate-1.1.2-py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-numpy@1.0:", type=("build", "run"))
-    depends_on("py-packaging@16.0:", type=("build", "run"))
-    depends_on("py-or-tools", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-numpy")
+        depends_on("py-ortools@6.7.4973:7", when="@1.0.1:")
+        depends_on("py-packaging@16:", when="@1.0.1:")

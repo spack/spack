@@ -15,7 +15,13 @@ class PyBackportsAbc(PythonPackage):
 
     license("PSF-2.0")
 
-    version("0.5", sha256="ca1872b55cc9e19ce7288670d360104d5aac88ff1d0a0e7ad6e97267705611f9")
-    version("0.4", sha256="2b5c4e91e37ba8bcd3fb8fecc8530f941578fc2c911497da3f09bf5fec6a6705")
-
-    depends_on("py-setuptools", type="build")
+    version(
+        "0.5",
+        sha256="52089f97fe7a9aa0d3277b220c1d730a85aefd64e1b2664696fe35317c5470a7",
+        url="https://pypi.org/packages/7d/56/6f3ac1b816d0cd8994e83d0c4e55bc64567532f7dc543378bd87f81cebc7/backports_abc-0.5-py2.py3-none-any.whl",
+    )
+    version(
+        "0.4",
+        sha256="c64508e766dfe09a94a442c12b57c6e098a402921ecb340a4ec57c7e10fd464c",
+        url="https://pypi.org/packages/f5/5e/57e1afdc63d8c37496b2f6d9cb0ddfc4a3d55c949074debeab7594c19b54/backports_abc-0.4-py2.py3-none-any.whl",
+    )

@@ -18,7 +18,8 @@ class PyExtensionHelpers(PythonPackage):
 
     license("BSD-3-Clause")
 
-    version("0.1", sha256="ac8a6fe91c6d98986a51a9f08ca0c7945f8fd70d95b662ced4040ae5eb973882")
-
-    depends_on("python@3.6:", type=("build", "run"))
-    depends_on("py-setuptools@30.3:", type="build")
+    version(
+        "0.1",
+        sha256="f641ec85823dfe623013981c11dbb07c158d10afd5bc8a11e6cf3aa1d764aca9",
+        url="https://pypi.org/packages/7e/45/83c124b7dbfefcf0ccb3b6672e199e3e17c04a9a34f3a34618ca64e16da7/extension_helpers-0.1-py2.py3-none-any.whl",
+    )

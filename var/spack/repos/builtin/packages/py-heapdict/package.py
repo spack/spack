@@ -12,8 +12,13 @@ class PyHeapdict(PythonPackage):
     homepage = "http://stutzbachenterprises.com/"
     pypi = "HeapDict/HeapDict-1.0.1.tar.gz"
 
-    version("1.0.1", sha256="8495f57b3e03d8e46d5f1b2cc62ca881aca392fd5cc048dc0aa2e1a6d23ecdb6")
-    version("1.0.0", sha256="40c9e3680616cfdf942f77429a3a9e0a76f31ce965d62f4ffbe63a83a5ef1b5a")
-
-    depends_on("python@2.6:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
+    version(
+        "1.0.1",
+        sha256="6065f90933ab1bb7e50db403b90cab653c853690c5992e69294c2de2b253fc92",
+        url="https://pypi.org/packages/b6/9d/cd4777dbcf3bef9d9627e0fe4bc43d2e294b1baeb01d0422399d5e9de319/HeapDict-1.0.1-py3-none-any.whl",
+    )
+    version(
+        "1.0.0",
+        sha256="f7e4858afe3465d4693280c5ebd542d4e105eca98210d68ea8594fd501e81807",
+        url="https://pypi.org/packages/ac/aa/867f3493599247eebb239588b030d7928fe6474d4454c45770aa78951164/HeapDict-1.0.0-py3-none-any.whl",
+    )

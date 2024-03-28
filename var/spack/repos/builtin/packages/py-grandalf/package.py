@@ -15,10 +15,17 @@ class PyGrandalf(PythonPackage):
 
     license("EPL-1.0")
 
-    version("0.7", sha256="b3112299fe0a9123c088a16bf2f1b541d0d91199b77170a9739b569bd16a828e")
-    version("0.6", sha256="928db4b90f7aff01e252a833951086b20d5958c00083411193c794de7bf59df2")
+    version(
+        "0.7",
+        sha256="0ba234b8962420a093af39de82e89b22e9152d54b05d2fa30953ce39fa52aea3",
+        url="https://pypi.org/packages/8d/5c/badfda0c15bbae6401f5a48ed2adb6e75902ae796bf5f69385948255e9c1/grandalf-0.7-py3-none-any.whl",
+    )
+    version(
+        "0.6",
+        sha256="357946e2fd35fc92c327cf3c091acc5aef93e0c74c60fed0a727d827ab3b1272",
+        url="https://pypi.org/packages/54/f4/a0b6a4c6d616d0a838b2dd0bc7bf74d73e8e8cdc880bab7fdb5fdc3d0e06/grandalf-0.6-py3-none-any.whl",
+    )
 
-    depends_on("python@3:", type=("build", "run"))
-    depends_on("py-pyparsing", type=("build", "run"))
-    depends_on("py-pytest-runner", type="build")
-    depends_on("py-setuptools", type="build")
+    with default_args(type="run"):
+        depends_on("py-future", when="@:0.6")
+        depends_on("py-pyparsing")

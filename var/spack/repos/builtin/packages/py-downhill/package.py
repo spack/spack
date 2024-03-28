@@ -14,8 +14,8 @@ class PyDownhill(PythonPackage):
 
     license("MIT")
 
-    version("0.4.0", sha256="074ad91deb06c05108c67d982ef71ffffb6ede2c77201abc69e332649f823b42")
-
-    depends_on("py-setuptools", type="build")
-    depends_on("py-theano", type=("build", "run"))
-    depends_on("py-click", type=("build", "run"))
+    version(
+        "0.4.0",
+        sha256="29e3dbf4db13021734c5bbef0eef230a17c49dfd4155a41016b712f909868f1b",
+        url="https://pypi.org/packages/32/07/fb2b465371d80d5686328640f31ad403193fe91d527cca538ff1834880b1/downhill-0.4.0-py2.py3-none-any.whl",
+    )

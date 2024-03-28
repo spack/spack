@@ -14,18 +14,19 @@ class PyFury(PythonPackage):
 
     license("BSD-3-Clause")
 
-    version("0.7.1", sha256="bc7bdbdf1632f317f40c717c2f34a6b8424ce5abda3ebda31a058c0b725a316a")
+    version(
+        "0.7.1",
+        sha256="02f09bcc78261136b2264a32df641ee3f71456d73578bc5dfdcf9deab3931e25",
+        url="https://pypi.org/packages/2d/90/2012ea88843452a5848fe700ff1fca2bd8eb6efa27e88666a712751ac144/fury-0.7.1-py3-none-any.whl",
+    )
 
-    depends_on("python@2.7:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
-    depends_on("py-numpy@1.7.1:", type=("build", "run"))
-    depends_on("py-scipy@1.2:", type=("build", "run"))  # from requirements/default.txt
-    depends_on("vtk+python@8.1.2:8,9.0.1:", type=("build", "run"))
-    depends_on("pil@5.4.1:", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-numpy@1.7.1:", when="@:0.8")
+        depends_on("py-pillow@5.4.1:", when="@0.5:")
+        depends_on("py-scipy@0.9:", when="@:0.8")
+        depends_on("py-vtk@8.1.2:8,9.0.1:", when="@0.6:0.7")
 
-    depends_on("py-coverage", type="test")
-    depends_on("py-flake8", type="test")
-    depends_on("py-pytest", type="test")
+    # from requirements/default.txt
 
     @run_after("install")
     @on_package_attributes(run_tests=True)

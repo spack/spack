@@ -16,11 +16,20 @@ class PyRdt(PythonPackage):
 
     license("MIT")
 
-    version("0.6.1", sha256="ee2ac0d3479b254f99f35a709a24ffd5f2c899de6ea71f1ee844c6113febba71")
+    version(
+        "0.6.1",
+        sha256="e1c9d4c2733deb95ae1fd97848661f963ef57b79f3d1ed9fabc6bc0715029965",
+        url="https://pypi.org/packages/0b/0e/1b3a505ada571f07a9c4ead7eb2f2130722056e968e5fb2c8bcb370c9f88/rdt-0.6.1-py2.py3-none-any.whl",
+    )
 
-    depends_on("python@3.6:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
-    depends_on("py-numpy@1.20:1", type=("build", "run"))
-    depends_on("py-pandas@1.1.3:1.1.4", type=("build", "run"))
-    depends_on("py-scipy@1.5.4:1", type=("build", "run"))
-    depends_on("py-psutil@5.7:5", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("python@:3.11", when="@1.3:")
+        depends_on("python@:3.9", when="@0.6.1:1.2,1.3.0.dev:1.3.0.dev0")
+        depends_on("python@:3.8", when="@0.2.4:0.6.0")
+        depends_on("py-numpy@1.20.0:1", when="@1.3: ^python@:3.9")
+        depends_on("py-numpy@1.20.0:1", when="@0.6.1:1.2,1.3.0.dev:1.3.0.dev0")
+        depends_on("py-pandas@1.1.3:1.1.4", when="@0.6.1")
+        depends_on("py-psutil@5.7:", when="@0.5.1:1.7")
+        depends_on("py-scikit-learn@0.24.0:0", when="@0.6.2,0.6.3.dev:0.6.3.dev2")
+        depends_on("py-scipy@1.5.4:", when="@1.3: ^python@:3.9")
+        depends_on("py-scipy@1.5.4:", when="@0.6.1:0.6.3")

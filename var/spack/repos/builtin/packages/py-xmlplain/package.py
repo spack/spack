@@ -16,7 +16,12 @@ class PyXmlplain(PythonPackage):
 
     license("Unlicense")
 
-    version("1.6.0", sha256="a9ccfa8ab36e4df1b0580458312501b7ae7625bad3c4fcc1b8c124aad775d8e3")
+    version(
+        "1.6.0",
+        sha256="243c2b64febf7a13716987a4476e34833faf3f037e2533a5b94a2c19ff555c65",
+        url="https://pypi.org/packages/9b/4f/0c7ef1c5cb5358577c81599a1779590741ad0e828a52087ca1dd40792b9f/xmlplain-1.6.0-py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-pyyaml", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-ordereddict")
+        depends_on("py-pyyaml")

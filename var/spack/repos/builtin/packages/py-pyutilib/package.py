@@ -19,19 +19,52 @@ class PyPyutilib(PythonPackage):
 
     license("BSD-3-Clause")
 
-    version("6.0.0", sha256="b758419b42f9f512330644ebf05d54a1d3c5671268c344204e02f32713342de5")
-    version("5.6.2", sha256="3f9f500cf1f15a92e7eb0b3c3ca2af537a2a9e61fe70ad6be4d2d08d9e47764f")
-    version("5.6.1", sha256="0d0d57921877dc292dd9de39596fabc83b5d072adf10a90c979f678662ddb752")
-    version("5.6", sha256="ea1e263652d8199322759e169e4a40fc23964c49e82ae1470ab83a613a6e6b25")
-    version("5.5.1", sha256="0e9070551abc82a90b977f9bf875a91ceebfdfa5d7327028ece60324ef66f3ab")
-    version("5.5", sha256="442f5abbd2a61c6f51698e0450cddbb4fc10047f350a939218f0c4b92a90f8ef")
-    version("5.4.1", sha256="7d6bf66d3ebaf8769e9395748f618a13a7e02cc88a62f8be8889f40816502b14")
-    version("5.4", sha256="c778e89a22d882ebf0096eca3abc4cc312f6e1fa1b7869b416710a2f467cb4d6")
-    version("5.3.5", sha256="8b9c2be34f80da0ae18ecc2e46ac7467d35b2e9f33411e7331c6edddea108906")
-    version("5.3.4", sha256="475c97bf1213add6b7fefaa3f05affef3613e6aecc9fcb3cc0693304671b73c3")
-    version("5.3.3", sha256="318f4d60c9552493fe81a4b2e0418d2cf43aaab68e6d23e2c9a68ef010c9cf21")
+    version(
+        "6.0.0",
+        sha256="f1f82d05ad8c42baeef915c8d3d97c0a3cbed6c506c857ab0ab7694dea50ebd8",
+        url="https://pypi.org/packages/e1/e7/c3e5994b4e5c90280b5c14ffef409875ec5436d1d0d9f8585794993a7d77/PyUtilib-6.0.0-py2.py3-none-any.whl",
+    )
+    version(
+        "5.6.2",
+        sha256="387f543848309c95b0f705986046422f0628ec186eb791398761754594d8dff4",
+        url="https://pypi.org/packages/a1/69/1e8d3ff9c41827e56798a242534afd7657622e0ed74b9ae97c10608951b7/PyUtilib-5.6.2-py2.py3-none-any.whl",
+    )
+    version(
+        "5.6",
+        sha256="a2a7d440b80b97a2143640fd6cef3fd119ccfb087d462d63b7e6ebd5d9b175cc",
+        url="https://pypi.org/packages/39/c7/ae10126705ee353979205a44f86532b8ca02f2774da077b913dd676e76d3/PyUtilib-5.6-py2.py3-none-any.whl",
+    )
+    version(
+        "5.5.1",
+        sha256="3caa1abe21fd6593cf10de582e8710dd34107811b6eddbaa96c62587c14bf682",
+        url="https://pypi.org/packages/95/7c/14f46f157efce7b7a6fc47fcffe0f3ec0437b8432f39385d3dc6a9c91166/PyUtilib-5.5.1-py2.py3-none-any.whl",
+    )
+    version(
+        "5.5",
+        sha256="9219d166ff966546eb87970190ac099718ddcc770f31c6cc650915fc5b040e64",
+        url="https://pypi.org/packages/4a/eb/30038587f3a76c162bdeb5f6320dffd28ba45f45bbac95beceeab0ec503c/PyUtilib-5.5-py2.py3-none-any.whl",
+    )
+    version(
+        "5.4.1",
+        sha256="1ca1ddf6aed05d764ae2b17a69a30ee996cd1d7e18ebf849d3107ceedd519ea7",
+        url="https://pypi.org/packages/ca/4b/9efe65bad50a3024b6b46c23579a4dadb056ccd113a4d810b9315e1f67be/PyUtilib-5.4.1-py2.py3-none-any.whl",
+    )
+    version(
+        "5.4",
+        sha256="f554e6dfd626ba9ff6ef998a5140c467a0d5641b9a3b9e19158514bb7e093fde",
+        url="https://pypi.org/packages/16/45/f378686bf18fd893df03a256471fde9699a0463f8ba1b8bdb3709833a7bf/PyUtilib-5.4-py2.py3-none-any.whl",
+    )
+    version(
+        "5.3.5",
+        sha256="2dcf04c8018367794c4cd74f2433dba6d1605b8f47c147e5dfd33554d619fc29",
+        url="https://pypi.org/packages/d0/0b/fa2c4c5b5a64b80c53381351202cdbd273bbea83899e46e2074e8ca66743/PyUtilib-5.3.5-py2.py3-none-any.whl",
+    )
+    version(
+        "5.3.3",
+        sha256="2bd15dd0494c696026334b018044b261d2c2099893f51ea82d4ff735f8aea838",
+        url="https://pypi.org/packages/7e/f6/eb1038339c6a4ff52085bb4aebec008b747e60202133a9328c315572e305/PyUtilib-5.3.3-py2.py3-none-any.whl",
+    )
 
-    depends_on("python@2.7:2,3.4:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
-    depends_on("py-nose", type=("build", "run"))
-    depends_on("py-six", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-nose", when="@5.4:5.4.0,5.5:5.5.0,5.6:5.6.0,5.6.4:")
+        depends_on("py-six", when="@5.4:5.4.0,5.5:5.5.0,5.6:5.6.0,5.6.4:")

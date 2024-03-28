@@ -15,11 +15,13 @@ class PyPydanticTes(PythonPackage):
 
     license("MIT")
 
-    version("0.1.5", sha256="557cc77bdbeae86a6bd155af2d0aeaa5050cd9e3f7d9b17b817f14dd814a7423")
+    version(
+        "0.1.5",
+        sha256="7acf9b206ed3351a15731937976957d560194858ff2f316ea6039e1cb694663a",
+        url="https://pypi.org/packages/e9/d0/cfd25f895c611dc07c2d17926edfedbed65938a04fd32b013a101fe9b8b1/pydantic_tes-0.1.5-py2.py3-none-any.whl",
+    )
 
-    depends_on("python@3.6:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
-
-    depends_on("py-pydantic", type=("build", "run"))
-    depends_on("py-requests", type=("build", "run"))
-    depends_on("py-typing-extensions", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-pydantic")
+        depends_on("py-requests")
+        depends_on("py-typing-extensions")

@@ -17,6 +17,8 @@ class PyAltgraph(PythonPackage):
 
     license("MIT")
 
-    version("0.16.1", sha256="ddf5320017147ba7b810198e0b6619bd7b5563aa034da388cea8546b877f9b0c")
-
-    depends_on("py-setuptools", type="build")
+    version(
+        "0.16.1",
+        sha256="d6814989f242b2b43025cba7161fc1b8fb487a62cd49c49245d6fd01c18ac997",
+        url="https://pypi.org/packages/0a/cc/646187eac4b797069e2e6b736f14cdef85dbe405c9bfc7803ef36e4f62ef/altgraph-0.16.1-py2.py3-none-any.whl",
+    )

@@ -15,6 +15,8 @@ class PyFastaindex(PythonPackage):
 
     license("GPL-3.0-or-later")
 
-    version("0.11rc7", sha256="c130a2146bb178ea4f9d228e0d360787046ab4cb0ab53b5b43711dd57e31aff7")
-
-    depends_on("py-setuptools", type="build")
+    version(
+        "0.11-rc7",
+        sha256="2f7fa2c86c39b11a9a8c545ed1cd9d9bc16faa3758dfdebe800766ab41e04132",
+        url="https://pypi.org/packages/ee/24/2da46550b77abc0a546deb81a8a43df403a0ae224ed052081eea0fc4a57d/FastaIndex-0.11rc7-py2-none-any.whl",
+    )

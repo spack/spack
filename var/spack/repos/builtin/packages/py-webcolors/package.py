@@ -14,7 +14,8 @@ class PyWebcolors(PythonPackage):
 
     license("BSD-3-Clause")
 
-    version("1.11.1", sha256="76f360636957d1c976db7466bc71dcb713bb95ac8911944dffc55c01cb516de6")
-
-    depends_on("python@3.5:", type=("build", "run"))
-    depends_on("py-setuptools", type=("build"))
+    version(
+        "1.11.1",
+        sha256="b8cd5d865a25c51ff1218f0c90d0c0781fc64312a49b746b320cf50de1648f6e",
+        url="https://pypi.org/packages/12/05/3350559de9714b202e443a9e6312937341bd5f79f4e4f625744295e7dd17/webcolors-1.11.1-py3-none-any.whl",
+    )

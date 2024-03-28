@@ -14,7 +14,8 @@ class PyArt(PythonPackage):
 
     license("MIT")
 
-    version("6.1", sha256="6ab3031e3b7710039e73497b0e750cadfe04d4c1279ce3a123500dbafb9e1b64")
-
-    depends_on("python@3.5:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
+    version(
+        "6.1",
+        sha256="159819c418001467f8d79616fa0814277deac97c8a363d1eb3e7c0a31526bfc3",
+        url="https://pypi.org/packages/fc/53/d8792ac2ebb494db0e0ba3ad3f0a9ee71144a5ced266441166f7d038a37e/art-6.1-py3-none-any.whl",
+    )

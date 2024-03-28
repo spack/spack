@@ -14,6 +14,11 @@ class PyPygmentsPytest(PythonPackage):
 
     license("MIT")
 
-    version("1.2.0", sha256="fc48e2fffd6d3c047a61c1db8b88ab069983f50e733fe70a7846098eb28bc955")
+    version(
+        "1.2.0",
+        sha256="b40b23c32cfed8825b2551448b9327905343600f07ba0824ebf5be2b05c88d32",
+        url="https://pypi.org/packages/6e/86/1704b81d451c1707acd8bd596a632f1bcc6fbe183c83dfc45a4b35ebc0b7/pygments_pytest-1.2.0-py2.py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
+    with default_args(type="run"):
+        depends_on("py-pygments")

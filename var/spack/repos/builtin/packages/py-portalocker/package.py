@@ -14,8 +14,16 @@ class PyPortalocker(PythonPackage):
 
     license("BSD-3-Clause")
 
-    version("2.5.1", sha256="ae8e9cc2660da04bf41fa1a0eef7e300bb5e4a5869adfb1a6d8551632b559b2b")
-    version("1.6.0", sha256="4013e6d17123560178a5ba28cb6fdf13fd3079dee18571ff824e05b7abc97b94")
+    version(
+        "2.5.1",
+        sha256="400bae275366e7b840d4baad0654c6ec5994e07c40c423d78e9e1340279b8352",
+        url="https://pypi.org/packages/a9/0a/21422dc681e3e59ce5ec4051015de4c2074bd0e6759099c018471f3dc4e3/portalocker-2.5.1-py2.py3-none-any.whl",
+    )
+    version(
+        "1.6.0",
+        sha256="094bd1e4b2bccdfcb586fe4ccf0f3229cb08f6ec66418bef541c69103265c3ed",
+        url="https://pypi.org/packages/64/03/9abfb3374d67838daf24f1a388528714bec1debb1d13749f0abd7fb07cfb/portalocker-1.6.0-py2.py3-none-any.whl",
+    )
 
-    depends_on("python@3.5:", when="@2:", type=("build", "run"))
-    depends_on("py-setuptools@38.3.0:", type="build")
+    with default_args(type="run"):
+        depends_on("py-pywin32@226:", when="@2.4: platform=windows")

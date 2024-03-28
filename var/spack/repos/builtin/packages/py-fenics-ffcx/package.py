@@ -16,46 +16,45 @@ class PyFenicsFfcx(PythonPackage):
 
     license("LGPL-3.0-or-later")
 
-    version("main", branch="main")
-    version("0.7.0", sha256="7f3c3ca91d63ce7831d37799cc19d0551bdcd275bdfa4c099711679533dd1c71")
-    version("0.6.0", sha256="076fad61d406afffd41019ae1abf6da3f76406c035c772abad2156127667980e")
+    version(
+        "0.7.0",
+        sha256="638232b92d289a28d9722959ec3ecd88a771d6ae856a4129b17206cbfe91401a",
+        url="https://pypi.org/packages/88/d2/341aa6c6f3345bcc0320c0dcde63bbbe41bc7bbd27a808aeed2e797fb167/fenics_ffcx-0.7.0-py3-none-any.whl",
+    )
+    version(
+        "0.6.0",
+        sha256="07afc04553e0822955a1eff85e1e1c73fa697ac79bc96c132353cb6a6d9ba9c6",
+        url="https://pypi.org/packages/76/5f/a3b446ddfd8cd19098dbad83514ed0657852b74f34aee512fc7c5e8ec7c1/fenics_ffcx-0.6.0-py3-none-any.whl",
+    )
     version(
         "0.5.0.post0",
-        sha256="039908c9998b51ba53e5deb3a97016062c262f0a4285218644304f7d3cd35882",
-        deprecated=True,
+        sha256="bc080e2529526c8448507ef51d9fd5119f30139b86049ab66a5d2097cd5a6282",
+        url="https://pypi.org/packages/23/a6/d5de266501eb487949d57b2005a396f792bc3793398ce876326c771a0144/fenics_ffcx-0.5.0.post0-py3-none-any.whl",
     )
     version(
         "0.4.2",
-        sha256="3be6eef064d6ef907245db5b6cc15d4e603762e68b76e53e099935ca91ef1ee4",
-        deprecated=True,
+        sha256="c83b6c52af80e14e09e7f77fe7c52a97d4186dd523a9f3629afffb0b991fe503",
+        url="https://pypi.org/packages/6c/12/c2b66b33a55f36ee17685aea5198a346a34a71acc3a6eafada7f66163a64/fenics_ffcx-0.4.2-py3-none-any.whl",
     )
 
-    depends_on("python@3.8:", when="@0.7:", type=("build", "run"))
-    depends_on("py-setuptools@62:", when="@0.7:", type="build")
+    with default_args(type="run"):
+        depends_on("py-cffi")
+        depends_on("py-fenics-basix@0.7:", when="@0.7:")
+        depends_on("py-fenics-basix@0.6", when="@0.6")
+        depends_on("py-fenics-basix@0.5", when="@0.5")
+        depends_on("py-fenics-basix@0.4.2:0.4", when="@0.4.2:0.4")
+        depends_on("py-fenics-ufl@2023.2:", when="@0.7:")
+        depends_on("py-fenics-ufl@2023:2023.1", when="@0.6")
+        depends_on("py-fenics-ufl@2022.2:2022", when="@0.5")
+        depends_on("py-fenics-ufl@2022:2022.1", when="@:0.4")
+        depends_on("py-numpy")
+        depends_on("py-setuptools", when="@0.5:")
+
     # Runtime dependency on pkg_resources from setuptools at 0.6.0
-    depends_on("py-setuptools@58:", when="@0.4.2:0.6", type=("build", "run"))
 
     # CFFI is required at runtime for JIT support
-    depends_on("py-cffi", type=("build", "run"))
     # py-numpy>=1.21 required because FFCx uses NumPy typing (version
     # requirement not properly set in the FFCx pyproject.toml file)
-    depends_on("py-numpy@1.21:", type=("build", "run"))
-
-    depends_on("py-fenics-ufl@main", type=("build", "run"), when="@main")
-    depends_on("py-fenics-ufl@2023.3.0:", type=("build", "run"), when="@0.8")
-    depends_on("py-fenics-ufl@2023.2.0", type=("build", "run"), when="@0.7")
-    depends_on("py-fenics-ufl@2023.1", type=("build", "run"), when="@0.6")
-    depends_on("py-fenics-ufl@2022.2.0", type=("build", "run"), when="@0.5.0:0.5")
-    depends_on("py-fenics-ufl@2022.1.0", type=("build", "run"), when="@0.4.2")
-
-    depends_on("py-fenics-basix@main", type=("build", "run"), when="@main")
-    depends_on("py-fenics-basix@0.7", type=("build", "run"), when="@0.7")
-    depends_on("py-fenics-basix@0.6.0:0.6", type=("build", "run"), when="@0.6.0:0.6")
-    depends_on("py-fenics-basix@0.5.1:0.5", type=("build", "run"), when="@0.5.0:0.5")
-    depends_on("py-fenics-basix@0.4.2", type=("build", "run"), when="@0.4.2")
-
-    depends_on("py-pytest@6:", type="test")
-    depends_on("py-sympy", type="test")
 
     @run_after("install")
     @on_package_attributes(run_tests=True)

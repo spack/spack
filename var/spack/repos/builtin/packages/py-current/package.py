@@ -14,6 +14,8 @@ class PyCurrent(PythonPackage):
 
     license("Condor-1.1")
 
-    version("0.3.1", sha256="207613dc19a6cc8e1a756f26e416733c8f82a70e4ae81103d22f483aae6492a8")
-
-    depends_on("py-setuptools", type="build")
+    version(
+        "0.3.1",
+        sha256="5b1e2ddabd3de44be215b66abc840061787d9e82a6f1d332e3cf23786652f12a",
+        url="https://pypi.org/packages/79/c3/40a7568d3ab53b70d40b5a169b425932b8c84dd6244d5ede629a329fa322/current-0.3.1-py2.py3-none-any.whl",
+    )

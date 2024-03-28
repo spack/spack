@@ -12,7 +12,13 @@ class PyAppnope(PythonPackage):
     homepage = "https://github.com/minrk/appnope"
     pypi = "appnope/appnope-0.1.0.tar.gz"
 
-    version("0.1.3", sha256="02bd91c4de869fbb1e1c50aafc4098827a7a54ab2f39d9dcba6c9547ed920e24")
-    version("0.1.0", sha256="8b995ffe925347a2138d7ac0fe77155e4311a0ea6d6da4f5128fe4b3cbe5ed71")
-
-    depends_on("py-setuptools", type="build")
+    version(
+        "0.1.3",
+        sha256="265a455292d0bd8a72453494fa24df5a11eb18373a60c7c0430889f22548605e",
+        url="https://pypi.org/packages/41/4a/381783f26df413dde4c70c734163d88ca0550a1361cb74a1c68f47550619/appnope-0.1.3-py2.py3-none-any.whl",
+    )
+    version(
+        "0.1.0",
+        sha256="5b26757dc6f79a3b7dc9fab95359328d5747fcb2409d331ea66d0272b90ab2a0",
+        url="https://pypi.org/packages/87/a9/7985e6a53402f294c8f0e8eff3151a83f1fb901fa92909bb3ff29b4d22af/appnope-0.1.0-py2.py3-none-any.whl",
+    )

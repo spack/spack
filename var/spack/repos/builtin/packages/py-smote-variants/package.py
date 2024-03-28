@@ -13,23 +13,24 @@ class PySmoteVariants(PythonPackage):
     homepage = "https://github.com/analyticalmindsltd/smote_variants"
     pypi = "smote_variants/smote_variants-0.7.3.tar.gz"
 
-    version("0.7.3", sha256="69497c764f101a76e8a3d4a9c80176704375c7aa5e26914f19222b59fb03b890")
+    version(
+        "0.7.3",
+        sha256="51425df3ae21f941f050def8363c02ead350941a74c0f17d072a7108c254b95c",
+        url="https://pypi.org/packages/ee/94/9e7a507de0628dc8b9eedc38535472d0a086cbda86d2e85d126f9dd889a1/smote_variants-0.7.3-py3-none-any.whl",
+    )
 
-    depends_on("python@3.5:", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-joblib", when="@0.1.1:")
+        depends_on("py-keras", when="@0.1.5:")
+        depends_on("py-metric-learn", when="@0.5:")
+        depends_on("py-minisom")
+        depends_on("py-mkl", when="@0.3.10:")
+        depends_on("py-numpy", when="@:0.1.2,0.7.3:")
+        depends_on("py-pandas", when="@:0.1.2,0.2.6:")
+        depends_on("py-scikit-learn", when="@0.2.1:")
+        depends_on("py-scipy", when="@:0.1.2,0.2.1:")
+        depends_on("py-seaborn", when="@0.6:")
+        depends_on("py-statistics")
+        depends_on("py-tensorflow", when="@0.1.5:")
 
-    depends_on("py-wheel@0.33.4:", type="build")
-    depends_on("py-setuptools@41.0.1:", type="build")
-    depends_on("py-pytest-runner", type="build")
-
-    depends_on("py-numpy", type=("build", "run"))
-    depends_on("py-scipy", type=("build", "run"))
-    depends_on("py-scikit-learn", type=("build", "run"))
-    depends_on("py-joblib", type=("build", "run"))
-    depends_on("py-minisom", type=("build", "run"))
-    depends_on("py-tensorflow", type=("build", "run"))
-    depends_on("py-keras", type=("build", "run"))
-    depends_on("py-pandas", type=("build", "run"))
-    depends_on("mkl")
-    depends_on("py-metric-learn", type=("build", "run"))
-    depends_on("py-seaborn", type=("build", "run"))
     # Not including statistics, because is only needed for python 2

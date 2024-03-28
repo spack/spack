@@ -12,6 +12,8 @@ class PyParsedatetime(PythonPackage):
     homepage = "https://github.com/bear/parsedatetime"
     pypi = "parsedatetime/parsedatetime-2.5.tar.gz"
 
-    version("2.5", sha256="d2e9ddb1e463de871d32088a3f3cea3dc8282b1b2800e081bd0ef86900451667")
-
-    depends_on("py-setuptools", type="build")
+    version(
+        "2.5",
+        sha256="3b835fc54e472c17ef447be37458b400e3fefdf14bb1ffdedb5d2c853acf4ba1",
+        url="https://pypi.org/packages/4e/26/7612745a21452f6d822c0868ff7168dd8cf592645b2a553a177e1de43901/parsedatetime-2.5-py2-none-any.whl",
+    )

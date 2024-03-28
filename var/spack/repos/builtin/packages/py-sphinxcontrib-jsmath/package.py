@@ -20,7 +20,8 @@ class PySphinxcontribJsmath(PythonPackage):
 
     license("BSD-2-Clause")
 
-    version("1.0.1", sha256="a9925e4a4587247ed2191a22df5f6970656cb8ca2bd6284309578f2153e0c4b8")
-
-    depends_on("python@3.5:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
+    version(
+        "1.0.1",
+        sha256="2ec2eaebfb78f3f2078e73666b1415417a116cc848b72e5172e596c871103178",
+        url="https://pypi.org/packages/c2/42/4c8646762ee83602e3fb3fbe774c2fac12f317deb0b5dbeeedd2d3ba4b77/sphinxcontrib_jsmath-1.0.1-py2.py3-none-any.whl",
+    )

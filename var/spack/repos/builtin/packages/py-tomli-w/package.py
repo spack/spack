@@ -14,7 +14,8 @@ class PyTomliW(PythonPackage):
 
     license("MIT")
 
-    version("1.0.0", sha256="f463434305e0336248cac9c2dc8076b707d8a12d019dd349f5c1e382dd1ae1b9")
-
-    depends_on("python@3.7:", type=("build", "run"))
-    depends_on("py-flit-core@3.2.0:3", type="build")
+    version(
+        "1.0.0",
+        sha256="9f2a07e8be30a0729e533ec968016807069991ae2fd921a78d42f429ae5f4463",
+        url="https://pypi.org/packages/bb/01/1da9c66ecb20f31ed5aa5316a957e0b1a5e786a0d9689616ece4ceaf1321/tomli_w-1.0.0-py3-none-any.whl",
+    )

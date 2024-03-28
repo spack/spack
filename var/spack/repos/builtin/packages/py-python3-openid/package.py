@@ -15,6 +15,11 @@ class PyPython3Openid(PythonPackage):
 
     license("Apache-2.0")
 
-    version("3.2.0", sha256="33fbf6928f401e0b790151ed2b5290b02545e8775f982485205a066f874aaeaf")
+    version(
+        "3.2.0",
+        sha256="6626f771e0417486701e0b4daff762e7212e820ca5b29fcc0d05f6f8736dfa6b",
+        url="https://pypi.org/packages/e0/a5/c6ba13860bdf5525f1ab01e01cc667578d6f1efc8a1dba355700fb04c29b/python3_openid-3.2.0-py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
+    with default_args(type="run"):
+        depends_on("py-defusedxml", when="@3.1:")

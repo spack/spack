@@ -13,6 +13,8 @@ class PyAzureCommon(PythonPackage):
     homepage = "https://github.com/Azure/azure-sdk-for-python"
     pypi = "azure-common/azure-common-1.1.25.zip"
 
-    version("1.1.25", sha256="ce0f1013e6d0e9faebaf3188cc069f4892fc60a6ec552e3f817c1a2f92835054")
-
-    depends_on("py-setuptools", type="build")
+    version(
+        "1.1.25",
+        sha256="fd02e4256dc9cdd2d4422bc795bdca2ef302f7a86148b154fbf4ea1f09da400a",
+        url="https://pypi.org/packages/e5/4d/d000fc3c5af601d00d55750b71da5c231fcb128f42ac95b208ed1091c2c1/azure_common-1.1.25-py2.py3-none-any.whl",
+    )

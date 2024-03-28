@@ -13,7 +13,8 @@ class PyAzureStorageNspkg(PythonPackage):
     homepage = "https://github.com/Azure/azure-storage-python"
     pypi = "azure-storage-nspkg/azure-storage-nspkg-3.1.0.tar.gz"
 
-    version("3.1.0", sha256="6f3bbe8652d5f542767d8433e7f96b8df7f518774055ac7c92ed7ca85f653811")
-
-    depends_on("py-setuptools", type="build")
-    depends_on("py-azure-nspkg@2.0.0:", type=("build", "run"))
+    version(
+        "3.1.0",
+        sha256="7da3bd6c73b8c464a57f53ae9af8328490d2267c66430d8a7621997e52a9703e",
+        url="https://pypi.org/packages/ba/f6/054ace7b01c6c21b3b95a83c3997f7d6539d939a2c08c4f27f779128a030/azure_storage_nspkg-3.1.0-py2.py3-none-any.whl",
+    )

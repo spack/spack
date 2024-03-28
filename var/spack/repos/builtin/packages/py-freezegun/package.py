@@ -15,8 +15,8 @@ class PyFreezegun(PythonPackage):
 
     license("Apache-2.0")
 
-    version("0.3.12", sha256="2a4d9c8cd3c04a201e20c313caf8b6338f1cfa4cda43f46a94cc4a9fd13ea5e7")
-
-    depends_on("py-setuptools", type="build")
-    depends_on("py-six", type=("build", "run"))
-    depends_on("py-python-dateutil@2:", type=("build", "run"))
+    version(
+        "0.3.12",
+        sha256="edfdf5bc6040969e6ed2e36eafe277963bdc8b7c01daeda96c5c8594576c9390",
+        url="https://pypi.org/packages/81/98/801900ea24536928a99e40a815812c1bc7d7f833d53ec53f216d8330db7d/freezegun-0.3.12-py2.py3-none-any.whl",
+    )

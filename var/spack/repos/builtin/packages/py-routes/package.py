@@ -15,9 +15,12 @@ class PyRoutes(PythonPackage):
 
     license("MIT")
 
-    version("2.5.1", sha256="b6346459a15f0cbab01a45a90c3d25caf980d4733d628b4cc1952b865125d053")
+    version(
+        "2.5.1",
+        sha256="fab5a042a3a87778eb271d053ca2723cadf43c95b471532a191a48539cb606ea",
+        url="https://pypi.org/packages/9b/d4/d3c7d029de6287ff7bd048e628920d4336b4f8d82cfc00ff078bdbb212a3/Routes-2.5.1-py2.py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-
-    depends_on("py-six", type=("build", "run"))
-    depends_on("py-repoze-lru@0.3:", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-repoze-lru@0.3:", when="@2.4:")
+        depends_on("py-six", when="@2.4:")

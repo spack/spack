@@ -14,8 +14,11 @@ class PyPacificaUploader(PythonPackage):
 
     license("LGPL-3.0-only")
 
-    version("0.3.1", sha256="adda18b28f01f0b1e6fbaf927fec9b8cf07c86f1b74185bed2a624e8a4597578")
+    version(
+        "0.3.1",
+        sha256="ed473819bdcd3d667a5eacfa10cc38112b929aadb0f89625b75b8374857ec3d9",
+        url="https://pypi.org/packages/b1/89/28e3cb1889444c1026e3bfb6548395b8eea15003d7e45b11e0601dac0ad8/pacifica_uploader-0.3.1-py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-setuptools-scm", type="build")
-    depends_on("py-requests", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-requests")

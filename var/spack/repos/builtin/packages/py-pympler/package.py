@@ -16,7 +16,8 @@ class PyPympler(PythonPackage):
 
     license("Apache-2.0")
 
-    version("1.0.1", sha256="993f1a3599ca3f4fcd7160c7545ad06310c9e12f70174ae7ae8d4e25f6c5d3fa")
-
-    depends_on("python@3.6:3.10", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
+    version(
+        "1.0.1",
+        sha256="d260dda9ae781e1eab6ea15bacb84015849833ba5555f141d2d9b7b7473b307d",
+        url="https://pypi.org/packages/2c/42/41e1469ed0b37b9c8532cb8074bea179f7d85ee7e82a59b5b6c289ed6045/Pympler-1.0.1-py3-none-any.whl",
+    )

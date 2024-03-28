@@ -13,6 +13,8 @@ class PyAzureNspkg(PythonPackage):
     homepage = "hhttps://github.com/Azure/azure-sdk-for-python"
     pypi = "azure-nspkg/azure-nspkg-3.0.2.zip"
 
-    version("3.0.2", sha256="e7d3cea6af63e667d87ba1ca4f8cd7cb4dfca678e4c55fc1cedb320760e39dd0")
-
-    depends_on("py-setuptools", type="build")
+    version(
+        "3.0.2",
+        sha256="1d0bbb2157cf57b1bef6c8c8e5b41133957364456c43b0a43599890023cca0a8",
+        url="https://pypi.org/packages/c2/95/af354f2f415d250dafe26a5d94230558aa8cf733a9dcbf0d26cd61f5a9b8/azure_nspkg-3.0.2-py2-none-any.whl",
+    )

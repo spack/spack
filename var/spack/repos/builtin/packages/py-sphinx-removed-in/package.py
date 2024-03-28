@@ -14,7 +14,11 @@ class PySphinxRemovedIn(PythonPackage):
 
     maintainers("LydDeb")
 
-    version("0.2.1", sha256="0588239cb534cd97b1d3900d0444311c119e45296a9f73f1ea81ea81a2cd3db1")
+    version(
+        "0.2.1",
+        sha256="434b1a1c28b12021de4c84fc2fbb7168fdf1f56a410a42bf8d0af938d0855ad1",
+        url="https://pypi.org/packages/c0/2e/a69508232549ca59cdb34494232f33684558d121f4bcca5ade5c5221dc19/sphinx_removed_in-0.2.1-py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-sphinx", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-sphinx", when="@0.2:")

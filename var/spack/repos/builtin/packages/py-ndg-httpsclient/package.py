@@ -14,10 +14,13 @@ class PyNdgHttpsclient(PythonPackage):
     homepage = "https://github.com/cedadev/ndg_httpsclient/"
     pypi = "ndg_httpsclient/ndg_httpsclient-0.5.1.tar.gz"
 
-    version("0.5.1", sha256="d72faed0376ab039736c2ba12e30695e2788c4aa569c9c3e3d72131de2592210")
-    version("0.5.0", sha256="c009f5430790936b3a97eaf9f968516664d97e146ab2bda991f0caadb7cc088b")
-
-    depends_on("python@2.7:2.8,3.4:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
-    depends_on("py-pyopenssl", type=("build", "run"))
-    depends_on("py-pyasn1@0.1.1:", type=("build", "run"))
+    version(
+        "0.5.1",
+        sha256="d2c7225f6a1c6cf698af4ebc962da70178a99bcde24ee6d1961c4f3338130d57",
+        url="https://pypi.org/packages/bf/b2/26470fde7ff55169df8e071fb42cb1f83e22bd952520ab2b5c5a5edc2acd/ndg_httpsclient-0.5.1-py2-none-any.whl",
+    )
+    version(
+        "0.5.0",
+        sha256="683b7a17e8b093e422562e8b089a3ad5d87e00f8f8765aac128791ab9140eef3",
+        url="https://pypi.org/packages/4b/a1/73ba15c5e56be36f184b0eabf7ea0873ea54022238313757e55781e8a2ad/ndg_httpsclient-0.5.0-py2-none-any.whl",
+    )

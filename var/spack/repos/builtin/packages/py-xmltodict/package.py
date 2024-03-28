@@ -15,7 +15,8 @@ class PyXmltodict(PythonPackage):
 
     license("MIT")
 
-    version("0.12.0", sha256="50d8c638ed7ecb88d90561beedbf720c9b4e851a9fa6c47ebd64e99d166d8a21")
-
-    depends_on("py-setuptools", type="build")
-    depends_on("python@2.7:2.8,3.4:", type=("build", "run"))
+    version(
+        "0.12.0",
+        sha256="8bbcb45cc982f48b2ca8fe7e7827c5d792f217ecf1792626f808bf41c3b86051",
+        url="https://pypi.org/packages/28/fd/30d5c1d3ac29ce229f6bdc40bbc20b28f716e8b363140c26eff19122d8a5/xmltodict-0.12.0-py2.py3-none-any.whl",
+    )

@@ -19,9 +19,13 @@ class PyBiopandas(PythonPackage):
 
     license("BSD-3-Clause")
 
-    version("0.2.5", branch="v0.2.5")
+    version(
+        "0.2.5",
+        sha256="cd4672321106a0c8d40ec91047623dae51699f38b96d928ee6f33baca1a61f4f",
+        url="https://pypi.org/packages/67/7d/e116656ca9b9790b18e41a00036f4a646a893dc0a9d5344c91af7d55b4ef/biopandas-0.2.5-py2.py3-none-any.whl",
+    )
 
-    depends_on("python@3.5:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
-    depends_on("py-pandas@0.24.2:", type=("build", "run"))
-    depends_on("py-numpy@1.16.2:", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-numpy@1.16.2:", when="@0.2.5:")
+        depends_on("py-pandas@0.24.2:", when="@0.2.5:")
+        depends_on("py-setuptools", when="@0.2.5:")

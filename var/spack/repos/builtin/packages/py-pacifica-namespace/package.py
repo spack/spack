@@ -14,7 +14,8 @@ class PyPacificaNamespace(PythonPackage):
 
     license("LGPL-3.0-only")
 
-    version("0.0.2", sha256="a8f59aea1203a1557f7f57887b61e92f8450c74a8522798c5ddecf8fffb0b224")
-
-    depends_on("py-setuptools", type="build")
-    depends_on("py-setuptools-scm", type="build")
+    version(
+        "0.0.2",
+        sha256="6b1d9992a839cf84ef8f5568cd323d16dc420aed7a61257e76717980ecea3b1b",
+        url="https://pypi.org/packages/28/3b/2282a452b35cdbc21796de63d7dd7bdf63bb8e878e2835989e8cf23b6a42/pacifica_namespace-0.0.2-py3-none-any.whl",
+    )

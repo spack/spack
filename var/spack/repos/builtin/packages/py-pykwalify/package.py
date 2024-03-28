@@ -16,13 +16,20 @@ class PyPykwalify(PythonPackage):
 
     license("MIT")
 
-    version("1.7.0", sha256="7e8b39c5a3a10bc176682b3bd9a7422c39ca247482df198b402e8015defcceb2")
-    version("1.6.1", sha256="191fd3f457f23c0aa8538c3a5c0249f70eeb1046e88d0eaaef928e09c44dff8d")
+    version(
+        "1.7.0",
+        sha256="428733907fe5c458fbea5de63a755f938edccd622c7a1d0b597806141976f00e",
+        url="https://pypi.org/packages/36/9f/612de8ca540bd24d604f544248c4c46e9db76f6ea5eb75fb4244da6ebbf0/pykwalify-1.7.0-py2.py3-none-any.whl",
+    )
+    version(
+        "1.6.1",
+        sha256="0959032cf185c168256a623b80ff3d2ca57d704f78ca286b4155ebcd9fae9d49",
+        url="https://pypi.org/packages/ce/d2/550d30b645425fd11e503d6e04fc19e91719941faf0e4e08a58d278b6345/pykwalify-1.6.1-py2.py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-docopt@0.6.2:", type=("build", "run"))
-    depends_on("py-ruamel-yaml@0.11.0:", type=("build", "run"))
-    depends_on("py-python-dateutil@2.4.2:", type=("build", "run"))
-    depends_on("py-pyyaml@3.11:", type=("build", "run"), when="@1.6.1")
+    with default_args(type="run"):
+        depends_on("py-docopt@0.6.2:", when="@1.7:")
+        depends_on("py-python-dateutil@2.4.2:", when="@1.7")
+        depends_on("py-pyyaml@3.11:", when="@1.7")
 
     conflicts("^py-ruamel-yaml@0.16.0:", when="@1.6.1")

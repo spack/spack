@@ -15,7 +15,8 @@ class PyBoto(PythonPackage):
 
     license("MIT")
 
-    version("2.49.0", sha256="3dbefd4f4542f85a323d4f54601f31ed4d362fc87945245f32e4a85029513314")
-
-    depends_on("python@2.6:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
+    version(
+        "2.49.0",
+        sha256="147758d41ae7240dc989f0039f27da8ca0d53734be0eb869ef16e3adcfa462e8",
+        url="https://pypi.org/packages/23/10/c0b78c27298029e4454a472a1919bde20cb182dab1662cec7f2ca1dcc523/boto-2.49.0-py2.py3-none-any.whl",
+    )

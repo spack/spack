@@ -15,15 +15,25 @@ class PyStackData(PythonPackage):
 
     license("MIT")
 
-    version("0.6.2", sha256="32d2dd0376772d01b6cb9fc996f3c8b57a357089dec328ed4b6553d037eaf815")
-    version("0.5.0", sha256="715c8855fbf5c43587b141e46cc9d9339cc0d1f8d6e0f98ed0d01c6cb974e29f")
-    version("0.2.0", sha256="45692d41bd633a9503a5195552df22b583caf16f0b27c4e58c98d88c8b648e12")
+    version(
+        "0.6.2",
+        sha256="cbb2a53eb64e5785878201a97ed7c7b94883f48b87bfb0bbe8b623c74679e4a8",
+        url="https://pypi.org/packages/6a/81/aa96c25c27f78cdc444fec27d80f4c05194c591465e491a1358d8a035bc1/stack_data-0.6.2-py3-none-any.whl",
+    )
+    version(
+        "0.5.0",
+        sha256="66d2ebd3d7f29047612ead465b6cae5371006a71f45037c7e2507d01367bce3b",
+        url="https://pypi.org/packages/9d/ad/22b5d86e421b2786aeb166cf51d519ce5a2a8878c7542d3e58e75aac02b5/stack_data-0.5.0-py3-none-any.whl",
+    )
+    version(
+        "0.2.0",
+        sha256="999762f9c3132308789affa03e9271bbbe947bf78311851f4d485d8402ed858e",
+        url="https://pypi.org/packages/6b/25/9a454b432df53ffbbb4f03198c3347f393c34f4de07fb652563bdbdf91e8/stack_data-0.2.0-py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools@44:", type="build")
-    depends_on("py-setuptools-scm+toml@3.4.3:", type="build")
-
-    depends_on("py-executing@1.2:", when="@0.6:", type=("build", "run"))
-    depends_on("py-executing", type=("build", "run"))
-    depends_on("py-asttokens@2.1:", when="@0.6:", type=("build", "run"))
-    depends_on("py-asttokens", type=("build", "run"))
-    depends_on("py-pure-eval", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-asttokens@2.1:", when="@0.6:")
+        depends_on("py-asttokens", when="@0.0.7:0.5")
+        depends_on("py-executing@1.2:", when="@0.6:")
+        depends_on("py-executing", when="@0.0.7:0.5")
+        depends_on("py-pure-eval", when="@0.0.7:")

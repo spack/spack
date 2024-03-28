@@ -22,20 +22,28 @@ class PyScikitOptimize(PythonPackage):
 
     license("BSD-3-Clause")
 
-    version("master", branch="master")
-    version("0.9.0", sha256="77d8c9e64947fc9f5cc05bbc6aed7b8a9907871ae26fe11997fd67be90f26008")
-    version("0.5.2", sha256="1d7657a4b8ef9aa6d81e49b369c677c584e83269f11710557741d3b3f8fa0a75")
-    variant("plots", default=True, description="Build with plot support from py-matplotlib")
+    version(
+        "0.9.0",
+        sha256="5a439a18232381fad4bda78e914b616416720708e67f123498d14bd2842d861a",
+        url="https://pypi.org/packages/55/f6/2d9efbd86126c40fe0f8a47611a9e2480b493b6f0ce9751bdf0240cfa091/scikit_optimize-0.9.0-py2.py3-none-any.whl",
+    )
+    version(
+        "0.5.2",
+        sha256="a2304413f7b66b27dfaed64271c370e5e2c926fbc1cbecdb67fe47cd847f9d5c",
+        url="https://pypi.org/packages/f4/44/60f82c97d1caa98752c7da2c1681cab5c7a390a0fdd3a55fac672b321cac/scikit_optimize-0.5.2-py2.py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-numpy", type=("build", "run"))
-    depends_on("py-numpy@1.13.3:", when="@0.9:", type=("build", "run"))
-    depends_on("py-scipy@0.14:", type=("build", "run"))
-    depends_on("py-scipy@0.19.1:", when="@0.9:", type=("build", "run"))
-    depends_on("py-scikit-learn@0.19.1:", type=("build", "run"))
-    depends_on("py-scikit-learn@0.20:", when="@0.9:", type=("build", "run"))
-    depends_on("py-pyaml@16.9:", when="@0.9:", type=("build", "run"))
-    depends_on("py-joblib@0.11:", when="@0.9:", type=("build", "run"))
+    variant("plots", default=False)
 
-    depends_on("py-matplotlib", when="+plots")
-    depends_on("py-matplotlib@2:", when="@0.9:+plots")
+    with default_args(type="run"):
+        depends_on("py-joblib@0.11:", when="@0.7.3:")
+        depends_on("py-matplotlib@2.0.0:", when="@0.7.3:+plots")
+        depends_on("py-matplotlib", when="@0.5.2:0.7.2+plots")
+        depends_on("py-matplotlib", when="@:0.5.1")
+        depends_on("py-numpy@1.13.3:", when="@0.8.0:0.9")
+        depends_on("py-numpy", when="@:0.7.2")
+        depends_on("py-pyaml@16:", when="@0.7.3:")
+        depends_on("py-scikit-learn@0.20.0:", when="@0.8.0:0.9")
+        depends_on("py-scikit-learn@0.19.1:", when="@0.5:0.8.dev")
+        depends_on("py-scipy@0.19.1:", when="@0.8.0:0.9")
+        depends_on("py-scipy@0.14:", when="@0.5:0.7.2")

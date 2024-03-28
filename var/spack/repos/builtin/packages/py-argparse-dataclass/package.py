@@ -15,6 +15,8 @@ class PyArgparseDataclass(PythonPackage):
 
     license("MIT")
 
-    version("2.0.0", sha256="09ab641c914a2f12882337b9c3e5086196dbf2ee6bf0ef67895c74002cc9297f")
-
-    depends_on("py-setuptools", type="build")
+    version(
+        "2.0.0",
+        sha256="3ffc8852a88d9d98d1364b4441a712491320afb91fb56049afd8a51d74bb52d2",
+        url="https://pypi.org/packages/b3/66/e6c0a808950ba5a4042e2fcedd577fc7401536c7db063de4d7c36be06f84/argparse_dataclass-2.0.0-py3-none-any.whl",
+    )

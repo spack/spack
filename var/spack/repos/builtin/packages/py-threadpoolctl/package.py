@@ -17,11 +17,18 @@ class PyThreadpoolctl(PythonPackage):
 
     license("BSD-3-Clause")
 
-    version("3.1.0", sha256="a335baacfaa4400ae1f0d8e3a58d6674d2f8828e3716bb2802c44955ad391380")
-    version("3.0.0", sha256="d03115321233d0be715f0d3a5ad1d6c065fe425ddc2d671ca8e45e9fd5d7a52a")
-    version("2.0.0", sha256="48b3e3e9ee079d6b5295c65cbe255b36a3026afc6dde3fb49c085cd0c004bbcf")
-
-    depends_on("python@3.5:", type=("build", "run"))
-    depends_on("python@3.6:", when="@3.0.0:", type=("build", "run"))
-    depends_on("py-flit", when="@:3.0.0", type="build")
-    depends_on("py-flit-core", when="@3.1.0:", type="build")
+    version(
+        "3.1.0",
+        sha256="8b99adda265feb6773280df41eece7b2e6561b772d21ffd52e372f999024907b",
+        url="https://pypi.org/packages/61/cf/6e354304bcb9c6413c4e02a747b600061c21d38ba51e7e544ac7bc66aecc/threadpoolctl-3.1.0-py3-none-any.whl",
+    )
+    version(
+        "3.0.0",
+        sha256="4fade5b3b48ae4b1c30f200b28f39180371104fccc642e039e0f2435ec8cc211",
+        url="https://pypi.org/packages/ff/fe/8aaca2a0db7fd80f0b2cf8a16a034d3eea8102d58ff9331d2aaf1f06766a/threadpoolctl-3.0.0-py3-none-any.whl",
+    )
+    version(
+        "2.0.0",
+        sha256="72eed211bb25feecc3244c5c26b015579777a466589e9b854c66f18d6deaeee1",
+        url="https://pypi.org/packages/db/09/cab2f398e28e9f183714afde872b2ce23629f5833e467b151f18e1e08908/threadpoolctl-2.0.0-py3-none-any.whl",
+    )

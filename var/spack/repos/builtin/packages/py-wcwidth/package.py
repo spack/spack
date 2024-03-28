@@ -14,8 +14,18 @@ class PyWcwidth(PythonPackage):
 
     license("MIT")
 
-    version("0.2.7", sha256="1b6d30a98ddd5ce9bbdb33658191fd2423fc9da203fe3ef1855407dcb7ee4e26")
-    version("0.2.5", sha256="c4d647b99872929fdb7bdcaa4fbe7f01413ed3d98077df798530e5b04f116c83")
-    version("0.1.7", sha256="3df37372226d6e63e1b1e1eda15c594bca98a22d33a23832a90998faa96bc65e")
-
-    depends_on("py-setuptools", type="build")
+    version(
+        "0.2.7",
+        sha256="fabf3e32999d9b0dab7d19d845149f326f04fe29bac67709ee071dbd92640a36",
+        url="https://pypi.org/packages/91/c3/3b3a1db90a21ddff1dbfb412d0ce00881d7820b01dfa47faf09d317ce51f/wcwidth-0.2.7-py2.py3-none-any.whl",
+    )
+    version(
+        "0.2.5",
+        sha256="beb4802a9cebb9144e99086eff703a642a13d6a0052920003a230f3294bbe784",
+        url="https://pypi.org/packages/59/7c/e39aca596badaf1b78e8f547c807b04dae603a433d3e7a7e04d67f2ef3e5/wcwidth-0.2.5-py2.py3-none-any.whl",
+    )
+    version(
+        "0.1.7",
+        sha256="f4ebe71925af7b40a864553f761ed559b43544f8f71746c2d756c7fe788ade7c",
+        url="https://pypi.org/packages/7e/9f/526a6947247599b084ee5232e4f9190a38f398d7300d866af3ab571a5bfe/wcwidth-0.1.7-py2.py3-none-any.whl",
+    )

@@ -12,8 +12,10 @@ class PyAffine(PythonPackage):
     homepage = "https://github.com/sgillies/affine"
     url = "https://github.com/sgillies/affine/archive/2.1.0.zip"
 
-    depends_on("py-setuptools", type="build")
+    version(
+        "2.1.0",
+        sha256="ed8bc4b217ec051c07c2733bc60229a0dfd00d88bbe0b94db992e65a0d876bc4",
+        url="https://pypi.org/packages/c9/24/71214ac2b93db5b64775821ed32dd6f9da451d51dbb83cb0b66fa38acac7/affine-2.1.0-py3-none-any.whl",
+    )
 
     license("BSD-3-Clause")
-
-    version("2.1.0", sha256="b67b7dee9a9865185a931758a3e347ad8583d0ac985895b90985a477ccfa4745")

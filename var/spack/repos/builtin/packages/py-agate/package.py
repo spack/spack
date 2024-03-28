@@ -16,13 +16,8 @@ class PyAgate(PythonPackage):
 
     license("MIT")
 
-    version("1.6.1", sha256="c93aaa500b439d71e4a5cf088d0006d2ce2c76f1950960c8843114e5f361dfd3")
-
-    depends_on("py-setuptools", type="build")
-    depends_on("py-six@1.9.0:", type=("build", "run"))
-    depends_on("py-pytimeparse@1.1.5:", type=("build", "run"))
-    depends_on("py-parsedatetime@2.1:", type=("build", "run"))
-    depends_on("py-babel@2.0:", type=("build", "run"))
-    depends_on("py-isodate@0.5.4:", type=("build", "run"))
-    depends_on("py-python-slugify@1.2.1:", type=("build", "run"))
-    depends_on("py-leather@0.3.2:", type=("build", "run"))
+    version(
+        "1.6.1",
+        sha256="48d6f80b35611c1ba25a642cbc5b90fcbdeeb2a54711c4a8d062ee2809334d1c",
+        url="https://pypi.org/packages/92/77/ef675f16486884ff7f77f3cb87aafa3429c6bb869d4d73ee23bf4675e384/agate-1.6.1-py2.py3-none-any.whl",
+    )

@@ -14,7 +14,11 @@ class PyJsonpatch(PythonPackage):
 
     license("BSD-3-Clause")
 
-    version("1.23", sha256="49f29cab70e9068db3b1dc6b656cbe2ee4edf7dfe9bf5a0055f17a4b6804a4b9")
+    version(
+        "1.23",
+        sha256="8bf92fa26bc42c346c03bd4517722a8e4f429225dbe775ac774b2c70d95dbd33",
+        url="https://pypi.org/packages/a0/e6/d50d526ae2218b765ddbdb2dda14d65e19f501ce07410b375bc43ad20b7a/jsonpatch-1.23-py2.py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-jsonpointer@1.9", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-jsonpointer@1.9:", when="@1.20:1.24,1.26:")

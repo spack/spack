@@ -15,6 +15,8 @@ class PyCalver(PythonPackage):
 
     license("Apache-2.0")
 
-    version("2022.6.26", sha256="e05493a3b17517ef1748fbe610da11f10485faa7c416b9d33fd4a52d74894f8b")
-
-    depends_on("py-setuptools", type="build")
+    version(
+        "2022.6.26",
+        sha256="a1d7fcdd67797afc52ee36ffb8c8adf6643173864306547bfd1380cbce6310a0",
+        url="https://pypi.org/packages/f7/39/e421c06f42ca00fa9cf8929c2466e58a837e8e97b8ab3ff4f4ff9a15e33e/calver-2022.6.26-py3-none-any.whl",
+    )

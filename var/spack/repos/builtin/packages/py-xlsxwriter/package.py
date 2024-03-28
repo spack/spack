@@ -14,10 +14,28 @@ class PyXlsxwriter(PythonPackage):
 
     license("BSD-2-Clause")
 
-    version("3.1.7", sha256="353042efb0f8551ce72baa087e98228f3394fcb380e8b96313edf1eec8d50823")
-    version("3.0.3", sha256="e89f4a1d2fa2c9ea15cde77de95cd3fd8b0345d0efb3964623f395c8c4988b7f")
-    version("1.4.3", sha256="641db6e7b4f4982fd407a3f372f45b878766098250d26963e95e50121168cbe2")
-    version("1.2.2", sha256="5a5e2195a4672d17db79839bbdf1006a521adb57eaceea1c335ae4b3d19f088f")
-    version("1.0.2", sha256="a26bbbafff88abffce592ffd5dfaa4c9f08dc44ef4afbf45c70d3e270325f856")
-
-    depends_on("py-setuptools", type="build")
+    version(
+        "3.1.7",
+        sha256="8c730c4beb468696c4160aa1d6d168fb4c1a20dd972b212cd8cc1e74ddeab1b6",
+        url="https://pypi.org/packages/51/ba/f6982db11e17b43da310a2169dcfbda166e8c509d8358ec8310219ca9732/XlsxWriter-3.1.7-py3-none-any.whl",
+    )
+    version(
+        "3.0.3",
+        sha256="df0aefe5137478d206847eccf9f114715e42aaea077e6a48d0e8a2152e983010",
+        url="https://pypi.org/packages/ef/95/30f6ee57f10232e2055a85c3e4c8db7d38ab5f1349b6cdced85cb8acd5e6/XlsxWriter-3.0.3-py3-none-any.whl",
+    )
+    version(
+        "1.4.3",
+        sha256="1a7fac99687020e76aa7dd0d7de4b9b576547ed748e5cd91a99d52a6df54ca16",
+        url="https://pypi.org/packages/2c/ce/74fd8d638a5b82ea0c6f08a5978f741c2655a38c3d6e82f73a0f084377e6/XlsxWriter-1.4.3-py2.py3-none-any.whl",
+    )
+    version(
+        "1.2.2",
+        sha256="00e9c337589ec67a69f1220f47409146ab1affd8eb1e8eaad23f35685bd23e47",
+        url="https://pypi.org/packages/25/88/a38f35b00ce4dd166a20e1a0a25e438e19e332e680df52af4aeac0df0f03/XlsxWriter-1.2.2-py2.py3-none-any.whl",
+    )
+    version(
+        "1.0.2",
+        sha256="279220b1c58cef2d35b8fd99030945a740a4fde65c0c8598b34177f7e2cd8ffc",
+        url="https://pypi.org/packages/c7/86/748cb5f6ef5ff2d95a7f189ef1c5124f9badc1d1293dbc214c128595e57e/XlsxWriter-1.0.2-py2.py3-none-any.whl",
+    )

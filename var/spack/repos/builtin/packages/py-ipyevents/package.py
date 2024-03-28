@@ -14,10 +14,11 @@ class PyIpyevents(PythonPackage):
 
     license("BSD-3-Clause")
 
-    version("2.0.1", sha256="23eb2afab13d9056397f120a88051dd3beb067b698d08b33adffc9e077f019cb")
+    version(
+        "2.0.1",
+        sha256="9f255fdab40e7598b1143ace90153c5f4e52be15dc6f1b94f575a043a5970c17",
+        url="https://pypi.org/packages/45/9c/b2ae585af6f6b436df3924f45fada2a36e3a083cc4b01f50d9a291e0ca92/ipyevents-2.0.1-py2.py3-none-any.whl",
+    )
 
-    depends_on("python@3.6:", type=("build", "run"))
-    depends_on("py-setuptools@40.8:", type="build")
-    depends_on("py-jupyter-packaging@0.7", type="build")
-    depends_on("py-jupyterlab@3.0:3", type="build")
-    depends_on("py-ipywidgets@7.6:", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-ipywidgets@7.6.0:", when="@0.9:")

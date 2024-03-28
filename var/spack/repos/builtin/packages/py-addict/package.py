@@ -16,6 +16,8 @@ class PyAddict(PythonPackage):
 
     license("MIT")
 
-    version("2.2.1", sha256="398bba9e7fa25e2ce144c5c4b8ec6208e89b9445869403dfa88ab66ec110fa12")
-
-    depends_on("py-setuptools", type="build")
+    version(
+        "2.2.1",
+        sha256="1948c2a5d93ba6026eb91aef2c971234aaf72488a9c07ab8a7950f82ae30eea7",
+        url="https://pypi.org/packages/14/6f/beb258220417c1a0fe11e842f2e012a1be7eeeaa72a1d10ba17a804da367/addict-2.2.1-py3-none-any.whl",
+    )

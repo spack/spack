@@ -14,7 +14,8 @@ class PyJsonGet(PythonPackage):
 
     license("MIT")
 
-    version("1.1.1", sha256="0d436f1f2dc8c51ab0249d964bb7f176d724131f76c14adf6fc4687e68ec37ab")
-
-    depends_on("python@3.5:", type=("build", "run"))
-    depends_on("py-setuptools", type=("build"))
+    version(
+        "1.1.1",
+        sha256="884854fb225aa72e2a975dc545704f93e1f87f9377108c27fa27b0c0cca92374",
+        url="https://pypi.org/packages/fe/f6/a8fe09ed8b3db17ceb41ae21e54923256402c3fca90d8874fe9216721ae9/json_get-1.1.1-py3-none-any.whl",
+    )

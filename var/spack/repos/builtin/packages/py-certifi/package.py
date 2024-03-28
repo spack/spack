@@ -16,19 +16,63 @@ class PyCertifi(PythonPackage):
 
     license("MPL-2.0")
 
-    version("2023.7.22", sha256="539cc1d13202e33ca466e88b2807e29f4c13049d6d87031a3c110744495cb082")
-    version("2023.5.7", sha256="0f0d56dc5a6ad56fd4ba36484d6cc34451e1c6548c61daad8c320169f91eddc7")
-    version("2022.12.7", sha256="35824b4c3a97115964b408844d64aa14db1cc518f6562e8d7261699d1350a9e3")
-    version("2022.9.14", sha256="36973885b9542e6bd01dea287b2b4b3b21236307c56324fcc3f1160f2d655ed5")
-    version("2021.10.8", sha256="78884e7c1d4b00ce3cea67b44566851c4343c120abd683433ce934a68ea58872")
-    version("2020.6.20", sha256="5930595817496dd21bb8dc35dad090f1c2cd0adfaf21204bf6732ca5d8ee34d3")
     version(
-        "2020.4.5.1", sha256="51fcb31174be6e6664c5f69e3e1691a2d72a1a12e90f872cbdb1567eb47b6519"
+        "2023.7.22",
+        sha256="92d6037539857d8206b8f6ae472e8b77db8058fec5937a1ef3f54304089edbb9",
+        url="https://pypi.org/packages/4c/dd/2234eab22353ffc7d94e8d13177aaa050113286e93e7b40eae01fbf7c3d9/certifi-2023.7.22-py3-none-any.whl",
     )
-    version("2019.9.11", sha256="e4f3620cfea4f83eedc95b24abd9cd56f3c4b146dd0177e83a21b4eb49e21e50")
-    version("2019.6.16", sha256="945e3ba63a0b9f577b1395204e13c3a231f9bc0223888be653286534e5873695")
-    version("2019.3.9", sha256="b26104d6835d1f5e49452a26eb2ff87fe7090b89dfcaee5ea2212697e1e1d7ae")
-    version("2017.4.17", sha256="f7527ebf7461582ce95f7a9e03dd141ce810d40590834f4ec20cddd54234c10a")
-    version("2017.1.23", sha256="81877fb7ac126e9215dfb15bfef7115fdc30e798e0013065158eed0707fd99ce")
-
-    depends_on("py-setuptools", type="build")
+    version(
+        "2023.5.7",
+        sha256="c6c2e98f5c7869efca1f8916fed228dd91539f9f1b444c314c06eef02980c716",
+        url="https://pypi.org/packages/9d/19/59961b522e6757f0c9097e4493fa906031b95b3ebe9360b2c3083561a6b4/certifi-2023.5.7-py3-none-any.whl",
+    )
+    version(
+        "2022.12.7",
+        sha256="4ad3232f5e926d6718ec31cfc1fcadfde020920e278684144551c91769c7bc18",
+        url="https://pypi.org/packages/71/4c/3db2b8021bd6f2f0ceb0e088d6b2d49147671f25832fb17970e9b583d742/certifi-2022.12.7-py3-none-any.whl",
+    )
+    version(
+        "2022.9.14",
+        sha256="e232343de1ab72c2aa521b625c80f699e356830fd0e2c620b465b304b17b0516",
+        url="https://pypi.org/packages/6a/34/cd29f4dd8a23ce45f2b8ce9631ff2d4205fb74eddb412a3dc4fd1e4aa800/certifi-2022.9.14-py3-none-any.whl",
+    )
+    version(
+        "2021.10.8",
+        sha256="d62a0163eb4c2344ac042ab2bdf75399a71a2d8c7d47eac2e2ee91b9d6339569",
+        url="https://pypi.org/packages/37/45/946c02767aabb873146011e665728b680884cd8fe70dde973c640e45b775/certifi-2021.10.8-py2.py3-none-any.whl",
+    )
+    version(
+        "2020.6.20",
+        sha256="8fc0819f1f30ba15bdb34cceffb9ef04d99f420f68eb75d901e9560b8749fc41",
+        url="https://pypi.org/packages/5e/c4/6c4fe722df5343c33226f0b4e0bb042e4dc13483228b4718baf286f86d87/certifi-2020.6.20-py2.py3-none-any.whl",
+    )
+    version(
+        "2020.4.5.1",
+        sha256="1d987a998c75633c40847cc966fcf5904906c920a7f17ef374f5aa4282abd304",
+        url="https://pypi.org/packages/57/2b/26e37a4b034800c960a00c4e1b3d9ca5d7014e983e6e729e33ea2f36426c/certifi-2020.4.5.1-py2.py3-none-any.whl",
+    )
+    version(
+        "2019.9.11",
+        sha256="fd7c7c74727ddcf00e9acd26bba8da604ffec95bf1c2144e67aff7a8b50e6cef",
+        url="https://pypi.org/packages/18/b0/8146a4f8dd402f60744fa380bc73ca47303cccf8b9190fd16a827281eac2/certifi-2019.9.11-py2.py3-none-any.whl",
+    )
+    version(
+        "2019.6.16",
+        sha256="046832c04d4e752f37383b628bc601a7ea7211496b4638f6514d0e5b9acc4939",
+        url="https://pypi.org/packages/69/1b/b853c7a9d4f6a6d00749e94eb6f3a041e342a885b87340b79c1ef73e3a78/certifi-2019.6.16-py2.py3-none-any.whl",
+    )
+    version(
+        "2019.3.9",
+        sha256="59b7658e26ca9c7339e00f8f4636cdfe59d34fa37b9b04f6f9e9926b3cece1a5",
+        url="https://pypi.org/packages/60/75/f692a584e85b7eaba0e03827b3d51f45f571c2e793dd731e598828d380aa/certifi-2019.3.9-py2.py3-none-any.whl",
+    )
+    version(
+        "2017.4.17",
+        sha256="f4318671072f030a33c7ca6acaef720ddd50ff124d1388e50c1bda4cbd6d7010",
+        url="https://pypi.org/packages/eb/01/c1f58987b777d6c4ec535b4e004a4a07bfc9db06f0c7533367ca6da8f2a6/certifi-2017.4.17-py2.py3-none-any.whl",
+    )
+    version(
+        "2017.1.23",
+        sha256="f74a224a9860fd5a2e9757230a7ea3eba82d6d46914780abc18e70c8b58d4bf8",
+        url="https://pypi.org/packages/21/f7/7bb6b1c5ba1db21515950bc16b22cd7ef7d27024100f326a19921efd2ce0/certifi-2017.1.23-py2.py3-none-any.whl",
+    )

@@ -17,13 +17,17 @@ class PyRasterstats(PythonPackage):
 
     license("BSD-3-Clause")
 
-    version("0.17.0", sha256="27975ebc0a402865dd9e92ad4ecf0dd62678e320735cc81e104c730e6d001298")
+    version(
+        "0.17.0",
+        sha256="b003bf9888c22d416d3af08deb288f7ea0e406a2c593ebc0386cbf96786e5195",
+        url="https://pypi.org/packages/fd/f2/fb998f425aab6f3d2fbb574880349714c8756bd3a025186d9e8fe1aee8aa/rasterstats-0.17.0-py3-none-any.whl",
+    )
 
-    depends_on("py-affine@:2", type=("build", "run"))
-    depends_on("py-shapely", type=("build", "run"))
-    depends_on("py-numpy@1.9:", type=("build", "run"))
-    depends_on("py-rasterio@1.0:", type=("build", "run"))
-    depends_on("py-cligj@0.4:", type=("build", "run"))
-    depends_on("py-fiona", type=("build", "run"))
-    depends_on("py-simplejson", type=("build", "run"))
-    depends_on("py-setuptools", type=("build"))
+    with default_args(type="run"):
+        depends_on("py-affine", when="@0.14:0.18")
+        depends_on("py-cligj@0.4:", when="@0.10.3:")
+        depends_on("py-fiona", when="@0.10.3:0.17.0,0.19:")
+        depends_on("py-numpy@1.9:", when="@0.10.3:")
+        depends_on("py-rasterio@1.0.0:", when="@0.13:")
+        depends_on("py-shapely", when="@0.10.3:")
+        depends_on("py-simplejson", when="@0.11:")
