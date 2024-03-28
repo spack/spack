@@ -31,6 +31,7 @@ class Spectre(CMakePackage):
     license("MIT")
 
     version("develop", branch="develop")
+    version("2024.03.19", sha256="42a25c8827b56268d9826239cde521491be19318d83785b35cd0265a9f6a1f7c")
     version(
         "2024.02.05", sha256="cf5c4da473d665d0cac0a32562b1b8e8c0f1a77eebca8c3171e52cdf3056fdb3"
     )
