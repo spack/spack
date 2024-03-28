@@ -1,31 +1,74 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from spack.package import *
+from spack.pkg.builtin.boost import Boost
+
 
 class Metall(CMakePackage):
-    """An allocator for persistent memory"""
+    """A Persistent Memory Allocator For Data-Centric Analytics"""
 
     homepage = "https://github.com/LLNL/metall"
-    git      = "https://github.com/LLNL/metall.git"
-    url      = "https://github.com/LLNL/metall/archive/v0.2.tar.gz"
+    git = "https://github.com/LLNL/metall.git"
+    url = "https://github.com/LLNL/metall/archive/refs/tags/v0.20.tar.gz"
 
-    maintainers = ['KIwabuchi', 'rogerpearce', 'mayagokhale']
+    maintainers("KIwabuchi", "rogerpearce", "mayagokhale")
 
-    version('master', branch='master')
-    version('develop', branch='develop')
+    tags = ["e4s"]
 
-    version('0.7', sha256='17430758a0d2821d1220b03c2635f44739400bad1ffe308fd3da6e38ae875ced')
-    version('0.6', sha256='123234c7214b666ed51db255c3e2acf98c2cd91bdf1cd0a254bdb893c2148afa')
-    version('0.5', sha256='7d710dc3d5270c799d3506566e5c3c45b94d6f87fb5e05bbaecdca04e42f2966')
-    version('0.4', sha256='6309dab9cffba3bfc957f23e5a287de00966237baafea759866b2961d8db34ea')
-    version('0.3', sha256='abecdd245eae69088e001cc0c641e8f560b554a726a515eebd7b7f7fb43361e5')
-    version('0.2', sha256='35cdf3505d2f8d0282a0d5c60b69a0ec5ec6d77ac3facce7549eb874df27be1d')
+    license("MIT")
 
-    depends_on('boost@1.64:', type=('build', 'link'))
+    version("master", branch="master")
+    version("develop", branch="develop")
+
+    version("0.25", sha256="223cb54543b62a62fdbbe6274b02ddcc14b29806e344ee7e2fd3f055c2374295")
+    version("0.24", sha256="872de2a1b76d44e6876c0b672c0cc518c6f334959e4a229f2f18cc7e01edf477")
+    version("0.23.1", sha256="25e8fbc424e66d09e0faf60029288e4612685675bfd947cc142bd9d6d0645ac4")
+    version("0.23", sha256="17987922a3eb23a6b904498858db94aca12859d5dbcd8483704619ae93353340")
+    version("0.22", sha256="e937fcb667902b2a578eaad65a44aa4107f63cdede135ead5ef48bb889ed13ad")
+    version("0.21", sha256="feaff7a935f98d3cc1e2b21f6eae40edc674a5bd0133306afd3851148aaed026")
+    version("0.20", sha256="cafe54c682004a66a059f54e2d7128ea7622e9941ea492297d04c260675e9af4")
+    version("0.19", sha256="541f428d4a7e629e1e60754f9d5f5e84fe973d421b2647f5ed2ec25b977ddd56")
+    version("0.18", sha256="cd1fee376d0523d43e43b92c43731d45a2c4324278a071a5f626f400afecef24")
+    version("0.17", sha256="8de6ec2a430a141a2ad465ccd40ba9d0eb0c57d9f2f2de657fe837a73c466e61")
+    version("0.16", sha256="190fa6936cbbfad1844659eb1fcfd1ad8c5880f60e76e223e33c506d371ea3a3")
+    version("0.15", sha256="a1ea475ce1297b0c4cdf450544dc60ecf1b0a30c548b08ba77ccda5585df7248")
+    version("0.14", sha256="386a6db0cfd3b3693cf8b0de323dcb60d43777aa5c871b744c9e8c19a572a917")
+    version("0.13", sha256="959d37d0a7e7e5b4d5e6c0334aaaeef1b463e855fa8e807042f662c993ed60b1")
+    version("0.12", sha256="b757b354b355e866bd6d42da53b0160442f3b7f663a19ba113da1ffc1a76176e")
+    version("0.11", sha256="7cfa6a7eaaeb7fd11ecfbe43a172a36c8cde200601d6cd3b309d7a0acf752f3c")
+    version("0.10", sha256="58b4b5507d4db5baca315b1bed2b728981755d755b91ef63bd0b6dfaf320f46b")
+    version("0.9", sha256="2d7bd9ea2f1e04136050f210884445a9e3dcb96c992cf42ff9ea4b392f85f927")
+
+    depends_on("cmake@3.10:", type="build")
+    depends_on("boost@1.75:", type=("build", "link"))
+
+    # googletest is required only for test
+    # GCC is also required only for test (Metall is a header-only library)
+    # Hint: Use 'spack install --test=root metall' or 'spack install --test=all metall'
+    # to run test (adds a call to 'make test' to the build)
+    depends_on("googletest %gcc@8.1.0:", type=("test"))
+
+    # TODO: replace this with an explicit list of components of Boost,
+    # for instance depends_on('boost +filesystem')
+    # See https://github.com/spack/spack/pull/22303 for reference
+    depends_on(Boost.with_default_variants, type=("build", "link"))
 
     def cmake_args(self):
-        args = []
-        args.append('-DINSTALL_HEADER_ONLY=ON')
-        return args
+        if self.run_tests:
+            args = ["-DBUILD_TEST=ON", "-DSKIP_DOWNLOAD_GTEST=ON"]
+            return args
+        else:
+            args = ["-DINSTALL_HEADER_ONLY=ON"]
+            return args
+
+    def setup_build_environment(self, env):
+        # Configure the directories for test
+        if self.run_tests:
+            env.set("METALL_TEST_DIR", join_path(self.build_directory, "build_test"))
+
+    # 'spack load metall' sets METALL_ROOT environmental variable
+    def setup_run_environment(self, env):
+        env.set("METALL_ROOT", self.prefix)

@@ -1,9 +1,9 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class DmlcCore(CMakePackage):
@@ -12,26 +12,26 @@ class DmlcCore(CMakePackage):
     distributed machine learning libraries."""
 
     homepage = "https://github.com/dmlc/dmlc-core"
-    git      = "https://github.com/dmlc/dmlc-core.git"
+    git = "https://github.com/dmlc/dmlc-core.git"
 
-    version('master')
-    version('20170508', commit='a6c5701219e635fea808d264aefc5b03c3aec314')
+    license("Apache-2.0")
 
-    variant('openmp', default=False, description='Enable OpenMP support')
+    version("master")
+    version("20170508", commit="a6c5701219e635fea808d264aefc5b03c3aec314")
 
-    patch('cmake.patch')
+    variant("openmp", default=False, description="Enable OpenMP support")
+
+    patch("cmake.patch")
 
     def patch(self):
-        filter_file('export CC = gcc', '', 'make/config.mk', string=True)
-        filter_file('export CXX = g++', '', 'make/config.mk', string=True)
-        filter_file('export MPICXX = mpicxx', '',
-                    'make/config.mk', string=True)
-        filter_file(r'^USE_OPENMP\s*=.*',
-                    'USE_OPENMP=%s' % ('1' if '+openmp' in self.spec else '0'),
-                    'make/config.mk')
+        filter_file("export CC = gcc", "", "make/config.mk", string=True)
+        filter_file("export CXX = g++", "", "make/config.mk", string=True)
+        filter_file("export MPICXX = mpicxx", "", "make/config.mk", string=True)
+        filter_file(
+            r"^USE_OPENMP\s*=.*",
+            "USE_OPENMP=%s" % ("1" if "+openmp" in self.spec else "0"),
+            "make/config.mk",
+        )
 
     def cmake_args(self):
-        spec = self.spec
-        return [
-            '-DUSE_OPENMP=%s' % ('ON' if '+openmp' in spec else 'OFF'),
-        ]
+        return [self.define_from_variant("USE_OPENMP", "openmp")]

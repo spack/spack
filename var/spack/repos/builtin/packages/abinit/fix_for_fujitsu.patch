@@ -1,0 +1,386 @@
+diff -uprN spack-src.org/configure spack-src/configure
+--- spack-src.org/configure	2021-03-11 13:52:52.000000000 +0900
++++ spack-src/configure	2021-03-11 14:14:36.000000000 +0900
+@@ -14183,7 +14183,10 @@ $as_echo "#define FC_OPEN64 1" >>confdef
+ 
+ 
+     fc_info_string=`${FC} -V 2>/dev/null | head -n 1`
+-  abi_result=`echo "${fc_info_string}" | grep '^Fujitsu Fortran'`
++    if test "${fc_info_string}" = ""; then
++      fc_info_string=`${FC} -V 2>&1 | head -n 1`
++    fi
++  abi_result=`echo "${fc_info_string}" | grep 'Fujitsu Fortran'`
+   if test "${abi_result}" = ""; then
+     abi_result="no"
+     fc_info_string=""
+@@ -14194,9 +14197,17 @@ $as_echo "#define FC_OPEN64 1" >>confdef
+ $as_echo "#define FC_FUJITSU 1" >>confdefs.h
+ 
+     abi_fc_vendor="fujitsu"
+-    abi_fc_version=`echo "${abi_result}" | sed -e 's/.*Driver //;s/ .*//'`
++    abi_fc_version=`echo "${abi_result}" | sed -e 's/.*Driver //'`
+     if test "${abi_fc_version}" = "${abi_result}"; then
+       abi_fc_version="unknown"
++    else
++      abi_fc_version=`echo "${abi_result}" | sed -e 's/.*Driver //;s/ .*//'`
++    fi
++    if test "${abi_fc_version}" = "unknown"; then
++      abi_fc_version=`echo "${abi_result}" | sed -e 's/.*Compiler //;s/ .*//'`
++      if test "${abi_fc_version}" = "${abi_result}"; then
++        abi_fc_version="unknown"
++      fi
+     fi
+     abi_result="yes"
+   fi
+@@ -14655,6 +14666,7 @@ $as_echo "$as_me:${as_lineno-$LINENO}: $
+ # gfortran 4.3 outputs lines setting COLLECT_GCC_OPTIONS, COMPILER_PATH,
+ # LIBRARY_PATH; skip all such settings.
+ ac_fc_v_output=`eval $ac_link 5>&1 2>&1 |
++  sed -r "s/(\-L)(\/[^ ]+)+(\/bin\/\.\.\/lib64\/nofjobj)//g" |
+   sed '/^Driving:/d; /^Configured with:/d;
+       '"/^[_$as_cr_Letters][_$as_cr_alnum]*=/d"`
+ $as_echo "$ac_fc_v_output" >&5
+@@ -16392,15 +16404,29 @@ $as_echo_n "checking which fc hints to a
+       ;;
+     fujitsu)
+       abi_fc_vendor_hnt="fujitsu"
+-      abi_fc_version_hnt="default"
+       abi_sys_spec_hnt="default"
+-      FCFLAGS_FIXEDFORM='-Fixed -X7'
+-      FCFLAGS_FREEFORM='-Free -X9'
+-      FCFLAGS_MODDIR='-M $(abinit_moddir)'
+-      FCFLAGS_HINTS='-Am -Ee -Ep'
+-      abi_fc_wrap='yes'
+-      FCFLAGS_OPENMP='--openmp'
+-      FCFLAGS_PIC='-K PIC'
++      case "${abi_fc_version}" in
++        4.[0-9]*)
++          abi_fc_version_hnt="4.x"
++          FCFLAGS_FIXEDFORM='-Fixed -X7'
++          FCFLAGS_FREEFORM='-Free -X9'
++          FCFLAGS_MODDIR='-M $(abinit_moddir)'
++          FCFLAGS_HINTS=''
++          abi_fc_wrap='no'
++          FCFLAGS_OPENMP='-Kopenmp'
++          FCFLAGS_PIC='-K PIC'
++          ;;
++        *)
++          abi_fc_version_hnt="default"
++          FCFLAGS_FIXEDFORM='-Fixed -X7'
++          FCFLAGS_FREEFORM='-Free -X9'
++          FCFLAGS_MODDIR='-M $(abinit_moddir)'
++          FCFLAGS_HINTS='-Am -Ee -Ep'
++          abi_fc_wrap='yes'
++          FCFLAGS_OPENMP='--openmp'
++          FCFLAGS_PIC='-K PIC'
++          ;;
++      esac   # [case: abi_fc_version, indent: 2, item: True]
+       ;;
+     pathscale)
+       abi_fc_vendor_hnt="pathscale"
+@@ -18085,22 +18111,43 @@ $as_echo_n "checking which fc optimizati
+       ;;
+     fujitsu)
+       abi_fc_vendor_opt="fujitsu"
+-      abi_fc_version_opt="default"
+       abi_cpu_spec_opt="default"
+-      case "${enable_optim}" in
+-        aggressive)
+-          enable_optim_opt="aggressive"
+-          FCFLAGS_OPTIM="-Of -X9 -Ps -Wv,-md"
+-          ;;
+-        safe)
+-          enable_optim_opt="safe"
+-          FCFLAGS_OPTIM="-Of -X9 -Ps -Wv,-md"
++      case "${abi_fc_version}" in
++        4.[0-9]*)
++          abi_fc_version_opt="4.x"
++          case "${enable_optim}" in
++            aggressive)
++              enable_optim_opt="aggressive"
++              FCFLAGS_OPTIM="-Kfast -Koptmsg=2 -Nlst=t"
++              ;;
++            safe)
++              enable_optim_opt="safe"
++              FCFLAGS_OPTIM="-O2 -Koptmsg=2 -Nlst=t"
++              ;;
++            standard)
++              enable_optim_opt="standard"
++              FCFLAGS_OPTIM="-O2 -Koptmsg=2 -Nlst=t"
++              ;;
++          esac   # [case: enable_optim, indent: 4, item: True]
+           ;;
+-        standard)
+-          enable_optim_opt="standard"
+-          FCFLAGS_OPTIM="-Of -X9 -Ps -Wv,-md"
++        *)
++          abi_fc_version_opt="default"
++          case "${enable_optim}" in
++            aggressive)
++              enable_optim_opt="aggressive"
++              FCFLAGS_OPTIM="-Of -X9 -Ps -Wv,-md"
++              ;;
++            safe)
++              enable_optim_opt="safe"
++              FCFLAGS_OPTIM="-Of -X9 -Ps -Wv,-md"
++              ;;
++            standard)
++              enable_optim_opt="standard"
++              FCFLAGS_OPTIM="-Of -X9 -Ps -Wv,-md"
++              ;;
++          esac   # [case: enable_optim, indent: 4, item: True]
+           ;;
+-      esac   # [case: enable_optim, indent: 2, item: True]
++      esac   # [case: abi_fc_version, indent: 2, item: True]
+       ;;
+     pathscale)
+       abi_fc_vendor_opt="pathscale"
+diff -uprN spack-src.org/src/43_wvl_wrappers/m_abi2big.F90 spack-src/src/43_wvl_wrappers/m_abi2big.F90
+--- spack-src.org/src/43_wvl_wrappers/m_abi2big.F90	2021-03-11 13:52:54.000000000 +0900
++++ spack-src/src/43_wvl_wrappers/m_abi2big.F90	2021-03-11 14:06:53.000000000 +0900
+@@ -1333,10 +1333,10 @@ subroutine wvl_setngfft(me_wvl, mgfft, n
+ 
+ !Arguments ------------------------------------
+ !scalars
+- integer, intent(out) :: mgfft, nfft
++ integer, intent(inout) :: mgfft, nfft
+  integer, intent(in)  :: n1i, n2i, n3i,n3d, nproc_wvl, me_wvl
+ !arrays
+- integer, intent(out) :: ngfft(18)
++ integer, intent(inout) :: ngfft(18)
+ 
+ !Local variables-------------------------------
+ !scalars
+diff -uprN spack-src.org/src/43_wvl_wrappers/m_wvl_denspot.F90 spack-src/src/43_wvl_wrappers/m_wvl_denspot.F90
+--- spack-src.org/src/43_wvl_wrappers/m_wvl_denspot.F90	2021-03-11 13:52:54.000000000 +0900
++++ spack-src/src/43_wvl_wrappers/m_wvl_denspot.F90	2021-03-11 14:06:53.000000000 +0900
+@@ -96,7 +96,7 @@ subroutine wvl_denspot_set(den,gth_param
+   real(dp), intent(in) :: rprimd(3, 3)
+   real(dp), intent(in) :: wvl_frmult,wvl_crmult
+   real(dp), intent(inout)  :: xred(3,natom)
+-  type(wvl_denspot_type), intent(out) :: den
++  type(wvl_denspot_type), intent(inout) :: den
+   type(wvl_internal_type),intent(in)  :: wvl
+   type(pseudopotential_gth_type),intent(in)::gth_params
+ 
+diff -uprN spack-src.org/src/43_wvl_wrappers/m_wvl_wfs.F90 spack-src/src/43_wvl_wrappers/m_wvl_wfs.F90
+--- spack-src.org/src/43_wvl_wrappers/m_wvl_wfs.F90	2021-03-11 13:52:54.000000000 +0900
++++ spack-src/src/43_wvl_wrappers/m_wvl_wfs.F90	2021-03-11 14:06:53.000000000 +0900
+@@ -103,7 +103,7 @@ subroutine wvl_wfs_set(alphadiis, spinma
+  integer, intent(in) :: natom, nkpt, nsppol, nspinor, nband, nwfshist,me,nproc
+  real(dp), intent(in) :: spinmagntarget, wvl_crmult, wvl_frmult, alphadiis
+  type(pseudopotential_type),intent(in) :: psps
+- type(wvl_wf_type),intent(out) :: wfs
++ type(wvl_wf_type),intent(inout) :: wfs
+  type(wvl_internal_type), intent(in) :: wvl
+ !arrays
+  real(dp), intent(in) :: kpt(3,nkpt)
+diff -uprN spack-src.org/src/52_fft_mpi_noabirule/m_fftw3.F90 spack-src/src/52_fft_mpi_noabirule/m_fftw3.F90
+--- spack-src.org/src/52_fft_mpi_noabirule/m_fftw3.F90	2021-03-11 13:52:52.000000000 +0900
++++ spack-src/src/52_fft_mpi_noabirule/m_fftw3.F90	2021-03-11 14:06:53.000000000 +0900
+@@ -4588,7 +4588,7 @@ subroutine fftw3_mpiback_wf(cplexwf,ndat
+  integer,intent(in) :: cplexwf,ndat,n1,n2,n3,nd1,nd2,nd3proc
+  integer,intent(in) :: max1,max2,max3,m1,m2,m3,md1,md2proc,md3,comm_fft
+  real(dp),intent(in) :: zf(2,md1,md3,md2proc,ndat)
+- real(dp),intent(out) :: zr(2,nd1,nd2,nd3proc,ndat)
++ real(dp),intent(inout) :: zr(2,nd1,nd2,nd3proc,ndat)
+ 
+ #ifdef HAVE_FFT_FFTW3
+ !Local variables-------------------------------
+@@ -4954,7 +4954,7 @@ subroutine fftw3_mpiforw_wf(cplexwf,ndat
+  integer,intent(in) :: max1,max2,max3,m1,m2,m3,md1,md2proc,md3,comm_fft
+ !arrays
+  real(dp),intent(inout) :: zr(2,nd1,nd2,nd3proc,ndat)
+- real(dp),intent(out) :: zf(2,md1,md3,md2proc,ndat)
++ real(dp),intent(inout) :: zf(2,md1,md3,md2proc,ndat)
+ 
+ !Local variables-------------------------------
+ !scalars
+@@ -5311,7 +5311,7 @@ subroutine fftw3_mpiback(cplex,ndat,n1,n
+ ! real space input
+  integer,intent(in) :: cplex,ndat,n1,n2,n3,nd1,nd2,nd3,nd1eff,nd2proc,nd3proc,option,comm_fft
+  real(dp),intent(in) :: zf(2,nd1,nd3,nd2proc,ndat)
+- real(dp),intent(out) :: zr(2,nd1eff,nd2,nd3proc,ndat)
++ real(dp),intent(inout) :: zr(2,nd1eff,nd2,nd3proc,ndat)
+ 
+ !Local variables-------------------------------
+ !scalaras
+@@ -5621,7 +5621,7 @@ subroutine fftw3_mpiforw(cplex,ndat,n1,n
+  integer,intent(in) :: ndat,n1,n2,n3,nd1,nd2,nd3,nd1eff,nd2proc,nd3proc,option
+ !arrays
+  real(dp),intent(in) :: zr(2,nd1eff,nd2,nd3proc,ndat)
+- real(dp),intent(out) :: zf(2,nd1,nd3,nd2proc,ndat)
++ real(dp),intent(inout) :: zf(2,nd1,nd3,nd2proc,ndat)
+ 
+ !Local variables-------------------------------
+ !scalars
+@@ -6839,7 +6839,7 @@ subroutine fftw3_mpiback_manywf(cplexwf,
+  integer,intent(in) :: cplexwf,ndat,n1,n2,n3,nd1,nd2,nd3proc
+  integer,intent(in) :: max1,max2,max3,m1,m2,m3,md1,md2proc,md3,comm_fft
+  real(dp),intent(in) :: zf(2,md1,md3,md2proc,ndat)
+- real(dp),intent(out) :: zr(2,nd1,nd2,nd3proc,ndat)
++ real(dp),intent(inout) :: zr(2,nd1,nd2,nd3proc,ndat)
+ 
+ #ifdef HAVE_FFT_FFTW3
+ !Local variables-------------------------------
+@@ -7202,7 +7202,7 @@ subroutine fftw3_mpiforw_manywf(cplexwf,
+  integer,intent(in) :: max1,max2,max3,m1,m2,m3,md1,md2proc,md3,comm_fft
+ !arrays
+  real(dp),intent(inout) :: zr(2,nd1,nd2,nd3proc,ndat)
+- real(dp),intent(out) :: zf(2,md1,md3,md2proc,ndat)
++ real(dp),intent(inout) :: zf(2,md1,md3,md2proc,ndat)
+ 
+ !Local variables-------------------------------
+ !scalars
+diff -uprN spack-src.org/src/62_poisson/m_psolver.F90 spack-src/src/62_poisson/m_psolver.F90
+--- spack-src.org/src/62_poisson/m_psolver.F90	2021-03-11 13:52:55.000000000 +0900
++++ spack-src/src/62_poisson/m_psolver.F90	2021-03-11 14:06:53.000000000 +0900
+@@ -118,7 +118,7 @@ subroutine psolver_rhohxc(enhartr, enxc,
+   integer,intent(in)            :: usexcnhat,usepaw,xclevel
+   real(dp),intent(in)           :: rprimd(3,3)
+   real(dp), intent(in)          :: xc_denpos
+-  real(dp), intent(out)         :: enxc, envxc, enhartr, vxcavg
++  real(dp), intent(inout)       :: enxc, envxc, enhartr, vxcavg
+   type(mpi_type), intent(in) :: mpi_enreg
+   type(wvl_internal_type), intent(in) :: wvl
+   type(wvl_denspot_type), intent(inout) :: wvl_den
+@@ -128,8 +128,8 @@ subroutine psolver_rhohxc(enhartr, enxc,
+   real(dp),intent(in) :: xccc3d(n3xccc)
+   real(dp),intent(in) :: nhat(nfft,nspden*nhatdim)
+   real(dp),intent(inout) :: rhor(nfft, nspden)
+-  real(dp),intent(out)   :: vhartr(nfft)
+-  real(dp),intent(out)   :: vxc(nfft, nspden)
++  real(dp),intent(inout) :: vhartr(nfft)
++  real(dp),intent(inout) :: vxc(nfft, nspden)
+ 
+   !Local variables-------------------------------
+ #if defined HAVE_BIGDFT
+@@ -577,12 +577,12 @@ subroutine psolver_hartree(enhartr, hgri
+   !Arguments ------------------------------------
+   !scalars
+   integer, intent(in)           :: nfft, nspden, icoulomb, usewvl, mpi_comm, me, nproc, nscforder
+-  real(dp), intent(out)         :: enhartr
++  real(dp), intent(inout)       :: enhartr
+   !arrays
+   integer, intent(in)    :: ngfft(3)
+   real(dp),intent(in)    :: hgrid(3)
+   real(dp),intent(in)    :: rhor(nfft,nspden)
+-  real(dp),intent(out)   :: vhartr(nfft)
++  real(dp),intent(inout) :: vhartr(nfft)
+ 
+   !Local variables-------------------------------
+ #if defined HAVE_BIGDFT
+diff -uprN spack-src.org/src/62_wvl_wfs/m_wvl_psi.F90 spack-src/src/62_wvl_wfs/m_wvl_psi.F90
+--- spack-src.org/src/62_wvl_wfs/m_wvl_psi.F90	2021-03-11 13:52:54.000000000 +0900
++++ spack-src/src/62_wvl_wfs/m_wvl_psi.F90	2021-03-11 14:06:53.000000000 +0900
+@@ -248,16 +248,16 @@ subroutine wvl_psitohpsi(alphamix,eexctX
+ !scalars
+  integer, intent(in) :: me, nproc, itrp, iter, iscf, natom, nfft, nspden
+  real(dp), intent(in) :: alphamix
+- real(dp), intent(out) :: rpnrm
++ real(dp), intent(inout) :: rpnrm
+  logical, intent(in) :: scf
+  logical, intent(in) :: wvlbigdft
+  type(wvl_data), intent(inout) :: wvl
+  real(dp), intent(inout) :: eexctX,eSIC_DC,ehart,eexcu,vexcu, ekin_sum, epot_sum, eproj_sum
+- real(dp), dimension(6), intent(out) :: xcstr
++ real(dp), dimension(6), intent(inout) :: xcstr
+  real(dp), intent(inout) :: xcart(3, natom)
+ !arrays
+- real(dp),intent(out), optional :: vxc(nfft,nspden)
+- real(dp),intent(out), optional :: vtrial(nfft,nspden)
++ real(dp),intent(inout), optional :: vxc(nfft,nspden)
++ real(dp),intent(inout), optional :: vtrial(nfft,nspden)
+ 
+ !Local variables-------------------------------
+ !scalars
+@@ -482,7 +482,7 @@ subroutine wvl_tail_corrections(dtset, e
+ 
+ !Arguments ------------------------------------
+ !scalars
+- real(dp),intent(out) :: etotal
++ real(dp),intent(inout) :: etotal
+  type(MPI_type),intent(in) :: mpi_enreg
+  type(dataset_type),intent(in) :: dtset
+  type(energies_type),intent(inout) :: energies
+diff -uprN spack-src.org/src/67_common/m_mklocl_realspace.F90 spack-src/src/67_common/m_mklocl_realspace.F90
+--- spack-src.org/src/67_common/m_mklocl_realspace.F90	2021-03-11 13:52:53.000000000 +0900
++++ spack-src/src/67_common/m_mklocl_realspace.F90	2021-03-11 14:06:53.000000000 +0900
+@@ -1703,7 +1703,7 @@ subroutine local_forces_wvl(iproc,natom,
+ !arrays
+  real(dp),intent(in) :: rxyz(3,natom)
+  real(dp),dimension(*),intent(in) :: rho,pot
+- real(dp),intent(out) :: floc(3,natom)
++ real(dp),intent(inout) :: floc(3,natom)
+ 
+ !Local variables -------------------------
+ #if defined HAVE_BIGDFT
+diff -uprN spack-src.org/src/67_common/mkcore_wvl.F90 spack-src/src/67_common/mkcore_wvl.F90
+--- spack-src.org/src/67_common/mkcore_wvl.F90	2021-03-11 13:52:53.000000000 +0900
++++ spack-src/src/67_common/mkcore_wvl.F90	2021-03-11 14:06:53.000000000 +0900
+@@ -138,7 +138,7 @@ subroutine mkcore_wvl(atindx1,corstr,grx
+  integer,intent(in) :: atindx1(natom),nattyp(ntypat)
+  real(dp),intent(in) :: rprimd(3,3),xccc1d(n1xccc,6,ntypat),xcccrc(ntypat),xred(3,natom)
+  real(dp),intent(in),target :: vxc(nfft,nspden)
+- real(dp),intent(out) :: corstr(6),grxc(3,natom)
++ real(dp),intent(inout) :: corstr(6),grxc(3,natom)
+  real(dp),intent(inout) :: xccc3d(n3xccc)
+  type(pawrad_type),intent(in) :: pawrad(:)
+  type(pawtab_type),intent(in) :: pawtab(:)
+@@ -587,8 +587,8 @@ subroutine mkcore_wvl_old(atindx1,corstr
+  real(dp),intent(in) :: psppar(0:4,0:6,ntypat),rprimd(3,3)
+  real(dp),intent(in)::xred(3,natom)
+  real(dp),intent(in)::vxc(nfft,nspden)
+- real(dp),intent(out)::xccc3d(n3xccc)
+- real(dp),intent(out) :: corstr(6),dyfrx2(3,3,natom),grxc(3,natom)
++ real(dp),intent(inout)::xccc3d(n3xccc)
++ real(dp),intent(inout) :: corstr(6),dyfrx2(3,3,natom),grxc(3,natom)
+  type(pawtab_type),intent(in) :: pawtab(ntypat)
+  type(pawrad_type),intent(in) :: pawrad(ntypat)
+ 
+diff -uprN spack-src.org/src/98_main/abinit.F90 spack-src/src/98_main/abinit.F90
+--- spack-src.org/src/98_main/abinit.F90	2021-03-11 13:52:55.000000000 +0900
++++ spack-src/src/98_main/abinit.F90	2021-03-11 14:06:53.000000000 +0900
+@@ -261,7 +261,7 @@ program abinit
+    open(unit=ab_out,file=filnam(2),form='formatted',status='new', action="write", iomsg=message, iostat=ios)
+ #endif
+    ABI_CHECK(ios == 0, message)
+-   rewind (unit=ab_out)
++!   rewind (unit=ab_out)
+    codename='ABINIT'//repeat(' ',18)
+    call herald(codename,abinit_version,ab_out)
+    call herald(codename,abinit_version,std_out)
+diff -ru spack-src.org/config/specs/corelibs.conf spack-src/config/specs/corelibs.conf
+--- spack-src.org/config/specs/corelibs.conf	2021-10-14 11:14:26.000000000 +0900
++++ spack-src/config/specs/corelibs.conf	2021-10-14 11:19:29.000000000 +0900
+@@ -242,7 +242,7 @@
+ dependencies = gpu
+ 
+ [68_rsprc]
+-dependencies = bigdft
++dependencies = bigdft netcdf
+ 
+ [69_wfdesc]
+ abirules = no
+diff -ru spack-src.org/src/68_rsprc/Makefile.am spack-src/src/68_rsprc/Makefile.am
+--- spack-src.org/src/68_rsprc/Makefile.am	2021-10-14 11:15:36.000000000 +0900
++++ spack-src/src/68_rsprc/Makefile.am	2021-10-14 11:20:13.000000000 +0900
+@@ -36,6 +36,7 @@
+ 	@src_53_ffts_incs@ \
+ 	@src_incs_incs@ \
+ 	@lib_bigdft_incs@ \
++	@lib_netcdf_incs@ \
+ 	@fallbacks_incs@ \
+ 	@abi_extra_incs@ \
+ 	@fc_mod_incs@
+diff -u spack-src/src/68_rsprc/Makefile.in.org spack-src/src/68_rsprc/Makefile.am
+--- spack-src/src/68_rsprc/Makefile.in.org      2021-11-05 14:40:10.000000000 +0900
++++ spack-src/src/68_rsprc/Makefile.in  2021-11-05 14:43:22.000000000 +0900
+@@ -845,6 +845,7 @@
+ 	@src_53_ffts_incs@ \
+ 	@src_incs_incs@ \
+ 	@lib_bigdft_incs@ \
++	@lib_netcdf_incs@ \
+ 	@fallbacks_incs@ \
+ 	@abi_extra_incs@ \
+ 	@fc_mod_incs@

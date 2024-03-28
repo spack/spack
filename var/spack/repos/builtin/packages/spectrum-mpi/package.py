@@ -1,26 +1,31 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
 import re
 
+from spack.package import *
 
-class SpectrumMpi(Package):
+
+class SpectrumMpi(BundlePackage):
     """IBM MPI implementation from Spectrum MPI."""
 
     has_code = False
 
-    homepage = "http://www-03.ibm.com/systems/spectrum-computing/products/mpi"
+    homepage = "https://www-03.ibm.com/systems/spectrum-computing/products/mpi"
 
-    provides('mpi')
+    # https://www.ibm.com/docs/en/smpi/10.4
+    version("10.4")
 
-    executables = ['^ompi_info$']
+    provides("mpi")
+
+    executables = ["^ompi_info$"]
 
     @classmethod
     def determine_version(cls, exe):
         output = Executable(exe)(output=str, error=str)
-        match = re.search(r'Spectrum MPI: (\S+)', output)
+        match = re.search(r"Spectrum MPI: (\S+)", output)
         if not match:
             return None
         version = match.group(1)
@@ -29,27 +34,19 @@ class SpectrumMpi(Package):
     @classmethod
     def determine_variants(cls, exes, version):
         compiler_suites = {
-            'xl': {'cc': 'mpixlc',
-                   'cxx': 'mpixlC',
-                   'f77': 'mpixlf',
-                   'fc': 'mpixlf'},
-            'pgi': {'cc': 'mpipgicc',
-                    'cxx': 'mpipgic++',
-                    'f77': 'mpipgifort',
-                    'fc': 'mpipgifort'},
-            'default': {'cc': 'mpicc',
-                        'cxx': 'mpicxx',
-                        'f77': 'mpif77',
-                        'fc': 'mpif90'}}
+            "xl": {"cc": "mpixlc", "cxx": "mpixlC", "f77": "mpixlf", "fc": "mpixlf"},
+            "pgi": {"cc": "mpipgicc", "cxx": "mpipgic++", "f77": "mpipgifort", "fc": "mpipgifort"},
+            "default": {"cc": "mpicc", "cxx": "mpicxx", "f77": "mpif77", "fc": "mpif90"},
+        }
 
         def get_host_compiler(exe):
             output = Executable(exe)("--showme", output=str, error=str)
-            match = re.search(r'^(\S+)', output)
+            match = re.search(r"^(\S+)", output)
             return match.group(1) if match else None
 
         def get_spack_compiler_spec(compilers_found):
             # check using cc for now, as everyone should have that defined.
-            path = os.path.dirname(compilers_found['cc'])
+            path = os.path.dirname(compilers_found["cc"])
             spack_compilers = spack.compilers.find_compilers([path])
             actual_compiler = None
             # check if the compiler actually matches the one we want
@@ -59,13 +56,21 @@ class SpectrumMpi(Package):
                     break
             return actual_compiler.spec if actual_compiler else None
 
+        def get_opal_prefix(exe):
+            output = Executable(exe)(output=str, error=str)
+            match = re.search(r"Prefix: (\S+)", output)
+            if not match:
+                return None
+            opal_prefix = match.group(1)
+            return opal_prefix
+
         results = []
         for exe in exes:
             dirname = os.path.dirname(exe)
             siblings = os.listdir(dirname)
             compilers_found = {}
             for compiler_suite in compiler_suites.values():
-                for (compiler_class, compiler_name) in compiler_suite.items():
+                for compiler_class, compiler_name in compiler_suite.items():
                     if compiler_name in siblings:
                         # Get the real name of the compiler
                         full_exe = os.path.join(dirname, compiler_name)
@@ -79,78 +84,83 @@ class SpectrumMpi(Package):
                 if compiler_spec:
                     variant = "%" + str(compiler_spec)
                 else:
-                    variant = ''
+                    variant = ""
                 # Use this variant when you need to define the
                 # compilers explicitly
                 #
                 # results.append((variant, {'compilers': compilers_found}))
                 #
                 # Otherwise, use this simpler attribute
-                results.append(variant)
             else:
-                results.append('')
+                variant = ""
+            opal_prefix = get_opal_prefix(exe)
+            if opal_prefix:
+                extra_attributes = {"opal_prefix": opal_prefix}
+                results.append((variant, extra_attributes))
+            else:
+                results.append(variant)
         return results
-
-    def install(self, spec, prefix):
-        raise InstallError('IBM MPI is not installable; it is vendor supplied')
 
     def setup_dependent_package(self, module, dependent_spec):
         # get the compiler names
-        if '%xl' in dependent_spec or '%xl_r' in dependent_spec:
-            self.spec.mpicc = os.path.join(self.prefix.bin, 'mpixlc')
-            self.spec.mpicxx = os.path.join(self.prefix.bin, 'mpixlC')
-            self.spec.mpif77 = os.path.join(self.prefix.bin, 'mpixlf')
-            self.spec.mpifc = os.path.join(self.prefix.bin, 'mpixlf')
-        elif '%pgi' in dependent_spec:
-            self.spec.mpicc = os.path.join(self.prefix.bin, 'mpipgicc')
-            self.spec.mpicxx = os.path.join(self.prefix.bin, 'mpipgic++')
-            self.spec.mpif77 = os.path.join(self.prefix.bin, 'mpipgifort')
-            self.spec.mpifc = os.path.join(self.prefix.bin, 'mpipgifort')
+        if "%xl" in dependent_spec or "%xl_r" in dependent_spec:
+            self.spec.mpicc = os.path.join(self.prefix.bin, "mpixlc")
+            self.spec.mpicxx = os.path.join(self.prefix.bin, "mpixlC")
+            self.spec.mpif77 = os.path.join(self.prefix.bin, "mpixlf")
+            self.spec.mpifc = os.path.join(self.prefix.bin, "mpixlf")
+        elif "%pgi" in dependent_spec:
+            self.spec.mpicc = os.path.join(self.prefix.bin, "mpipgicc")
+            self.spec.mpicxx = os.path.join(self.prefix.bin, "mpipgic++")
+            self.spec.mpif77 = os.path.join(self.prefix.bin, "mpipgifort")
+            self.spec.mpifc = os.path.join(self.prefix.bin, "mpipgifort")
         else:
-            self.spec.mpicc = os.path.join(self.prefix.bin, 'mpicc')
-            self.spec.mpicxx = os.path.join(self.prefix.bin, 'mpicxx')
-            self.spec.mpif77 = os.path.join(self.prefix.bin, 'mpif77')
-            self.spec.mpifc = os.path.join(self.prefix.bin, 'mpif90')
+            self.spec.mpicc = os.path.join(self.prefix.bin, "mpicc")
+            self.spec.mpicxx = os.path.join(self.prefix.bin, "mpicxx")
+            self.spec.mpif77 = os.path.join(self.prefix.bin, "mpif77")
+            self.spec.mpifc = os.path.join(self.prefix.bin, "mpif90")
 
     def setup_dependent_build_environment(self, env, dependent_spec):
-        if '%xl' in dependent_spec or '%xl_r' in dependent_spec:
-            env.set('MPICC', os.path.join(self.prefix.bin, 'mpixlc'))
-            env.set('MPICXX', os.path.join(self.prefix.bin, 'mpixlC'))
-            env.set('MPIF77', os.path.join(self.prefix.bin, 'mpixlf'))
-            env.set('MPIF90', os.path.join(self.prefix.bin, 'mpixlf'))
-        elif '%pgi' in dependent_spec:
-            env.set('MPICC', os.path.join(self.prefix.bin, 'mpipgicc'))
-            env.set('MPICXX', os.path.join(self.prefix.bin, 'mpipgic++'))
-            env.set('MPIF77', os.path.join(self.prefix.bin, 'mpipgifort'))
-            env.set('MPIF90', os.path.join(self.prefix.bin, 'mpipgifort'))
+        if "%xl" in dependent_spec or "%xl_r" in dependent_spec:
+            env.set("MPICC", os.path.join(self.prefix.bin, "mpixlc"))
+            env.set("MPICXX", os.path.join(self.prefix.bin, "mpixlC"))
+            env.set("MPIF77", os.path.join(self.prefix.bin, "mpixlf"))
+            env.set("MPIF90", os.path.join(self.prefix.bin, "mpixlf"))
+        elif "%pgi" in dependent_spec:
+            env.set("MPICC", os.path.join(self.prefix.bin, "mpipgicc"))
+            env.set("MPICXX", os.path.join(self.prefix.bin, "mpipgic++"))
+            env.set("MPIF77", os.path.join(self.prefix.bin, "mpipgifort"))
+            env.set("MPIF90", os.path.join(self.prefix.bin, "mpipgifort"))
         else:
-            env.set('MPICC', os.path.join(self.prefix.bin, 'mpicc'))
-            env.set('MPICXX', os.path.join(self.prefix.bin, 'mpic++'))
-            env.set('MPIF77', os.path.join(self.prefix.bin, 'mpif77'))
-            env.set('MPIF90', os.path.join(self.prefix.bin, 'mpif90'))
+            env.set("MPICC", os.path.join(self.prefix.bin, "mpicc"))
+            env.set("MPICXX", os.path.join(self.prefix.bin, "mpic++"))
+            env.set("MPIF77", os.path.join(self.prefix.bin, "mpif77"))
+            env.set("MPIF90", os.path.join(self.prefix.bin, "mpif90"))
 
-        env.set('OMPI_CC', spack_cc)
-        env.set('OMPI_CXX', spack_cxx)
-        env.set('OMPI_FC', spack_fc)
-        env.set('OMPI_F77', spack_f77)
+        env.set("OMPI_CC", spack_cc)
+        env.set("OMPI_CXX", spack_cxx)
+        env.set("OMPI_FC", spack_fc)
+        env.set("OMPI_F77", spack_f77)
 
-        env.prepend_path('LD_LIBRARY_PATH', self.prefix.lib)
+        env.prepend_path("LD_LIBRARY_PATH", self.prefix.lib)
 
     def setup_run_environment(self, env):
         # Because MPI functions as a compiler we need to setup the compilers
         # in the run environment, like any compiler
-        if '%xl' in self.spec or '%xl_r' in self.spec:
-            env.set('MPICC', os.path.join(self.prefix.bin, 'mpixlc'))
-            env.set('MPICXX', os.path.join(self.prefix.bin, 'mpixlC'))
-            env.set('MPIF77', os.path.join(self.prefix.bin, 'mpixlf'))
-            env.set('MPIF90', os.path.join(self.prefix.bin, 'mpixlf'))
-        elif '%pgi' in self.spec:
-            env.set('MPICC', os.path.join(self.prefix.bin, 'mpipgicc'))
-            env.set('MPICXX', os.path.join(self.prefix.bin, 'mpipgic++'))
-            env.set('MPIF77', os.path.join(self.prefix.bin, 'mpipgifort'))
-            env.set('MPIF90', os.path.join(self.prefix.bin, 'mpipgifort'))
+        if "%xl" in self.spec or "%xl_r" in self.spec:
+            env.set("MPICC", os.path.join(self.prefix.bin, "mpixlc"))
+            env.set("MPICXX", os.path.join(self.prefix.bin, "mpixlC"))
+            env.set("MPIF77", os.path.join(self.prefix.bin, "mpixlf"))
+            env.set("MPIF90", os.path.join(self.prefix.bin, "mpixlf"))
+        elif "%pgi" in self.spec:
+            env.set("MPICC", os.path.join(self.prefix.bin, "mpipgicc"))
+            env.set("MPICXX", os.path.join(self.prefix.bin, "mpipgic++"))
+            env.set("MPIF77", os.path.join(self.prefix.bin, "mpipgifort"))
+            env.set("MPIF90", os.path.join(self.prefix.bin, "mpipgifort"))
         else:
-            env.set('MPICC', os.path.join(self.prefix.bin, 'mpicc'))
-            env.set('MPICXX', os.path.join(self.prefix.bin, 'mpic++'))
-            env.set('MPIF77', os.path.join(self.prefix.bin, 'mpif77'))
-            env.set('MPIF90', os.path.join(self.prefix.bin, 'mpif90'))
+            env.set("MPICC", os.path.join(self.prefix.bin, "mpicc"))
+            env.set("MPICXX", os.path.join(self.prefix.bin, "mpic++"))
+            env.set("MPIF77", os.path.join(self.prefix.bin, "mpif77"))
+            env.set("MPIF90", os.path.join(self.prefix.bin, "mpif90"))
+
+        env.set("OPAL_PREFIX", self.spec.extra_attributes.get("opal_prefix", self.prefix))
+        env.set("MPI_ROOT", self.spec.extra_attributes.get("opal_prefix", self.prefix))

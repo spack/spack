@@ -1,0 +1,53 @@
+diff -u a/Xspec/src/XSFunctions/sumdem.cxx b/Xspec/src/XSFunctions/sumdem.cxx
+--- a/Xspec/src/XSFunctions/sumdem.cxx	2019-05-17 14:35:25.000000000 -0500
++++ b/Xspec/src/XSFunctions/sumdem.cxx	2022-02-16 10:42:36.946827375 -0600
+@@ -14,7 +14,7 @@
+ 			RealArray& fluxArray, RealArray& fluxErrArray);
+ 
+ 
+-void sumdem(int itype, int swtch, float* ear, int ne, float* abun,
++extern "C" void sumdem(int itype, int swtch, float* ear, int ne, float* abun,
+             float dens, float z, int ninputt, float* inputt, float* dem,
+             int ifl, bool qtherm, float velocity, float* photar, float* photer,
+ 	    int* status);
+diff -u a/Xspec/src/XSFunctions/xsmaug.cxx b/Xspec/src/XSFunctions/xsmaug.cxx
+--- a/Xspec/src/XSFunctions/xsmaug.cxx	2019-05-17 14:35:25.000000000 -0500
++++ b/Xspec/src/XSFunctions/xsmaug.cxx	2022-02-16 10:42:28.949802306 -0600
+@@ -49,10 +49,10 @@
+ //      REAL ear(0:*), abun(*), inputt(*), dem(*), photar(*)
+ //      REAL dens, z
+ 
+-void sumdem_(int& itype, int& flag, float* ear, int& ne,
+-                    float* abun, float& dens, float& z, int& ninputt,
+-                    float* inputt, float* dem, int& ifl, int& qtherm,
+-                    float& velocity, float* photar, int& status);
++void sumdem(int itype, int flag, float* ear, int ne,
++                    float* abun, float dens, float z, int ninputt,
++                    float* inputt, float* dem, int ifl, bool qtherm,
++                    float velocity, float* photar, float* photer, int* status);
+ }
+ 
+ /*---------------------------------------------------------------------------*/
+@@ -325,7 +325,7 @@
+   const double MIN2RAD =  3437.75;
+   int    i, ie, iel; 
+   int    mesh2, meshpt;
+-  int    itype, mode, no_el, status;
++  int    itype, mode, no_el, status=0;
+   double angfac, da, ei, evol, inner, H0, L0, outer, q0, z, zfac;
+   double a1, a2, Ab_shell, ei_shell,  h1, h2,  r1, r2, rcutoff, t1, t2,  w1, w2, w12;
+   double elden, norm;
+@@ -487,10 +487,10 @@
+       static float ONE(1.);
+       static int one(1);
+       float fz (z);
+-      static int NOT(0);
++      static bool NOT(false);
+       static float ZERO(0.0);
+-      sumdem_(itype, mode, fear, ne, abund, ONE , fz, one, kT_shell, dem, ifl, 
+-                NOT, ZERO, phoshell, status);
++      sumdem(itype, mode, fear, ne, abund, ONE , fz, one, kT_shell, dem, ifl, 
++                NOT, ZERO, phoshell, 0, &status);
+ 
+       /* ADD THE SHELL CONTRIBUTION TO THE OUTPUT SPECTRUM, 
+        * CORRECTING IT FOR <angfac>, DISTANCE AND REDSHIFT, 

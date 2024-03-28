@@ -1,18 +1,31 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RRstantools(RPackage):
-    """rstantools: Tools for Developing R Packages Interfacing with 'Stan'"""
+    """Tools for Developing R Packages Interfacing with 'Stan'.
 
-    homepage = "http://discourse.mc-stan.org/"
-    url      = "https://cloud.r-project.org/src/contrib/rstantools_1.5.1.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/rstantools"
+    Provides various tools for developers of R packages interfacing with 'Stan'
+    <https://mc-stan.org>, including functions to set up the required  package
+    structure, S3 generics and default methods to unify function naming  across
+    'Stan'-based R packages, and vignettes with recommendations for
+    developers."""
 
-    version('1.5.1', sha256='5cab16c132c12e84bd08e18cd6ef25ba39d67a04ce61015fc4490659c7cfb485')
+    cran = "rstantools"
 
-    depends_on('pandoc', type='build')
+    license("GPL-3.0-or-later")
+
+    version("2.3.1", sha256="82d4f2e884ffc894463bd37765606d5a9bef2ee631758840ec58636acdca6975")
+    version("2.2.0", sha256="cb810baeb90c67668361b666c6862df9917aff6aaec63d2c3a485f28407c4eb7")
+    version("2.1.1", sha256="c95b15de8ec577eeb24bb5206e7b685d882f88b5e6902efda924b7217f463d2d")
+    version("1.5.1", sha256="5cab16c132c12e84bd08e18cd6ef25ba39d67a04ce61015fc4490659c7cfb485")
+
+    depends_on("r+X", type=("build", "run"))
+    depends_on("r-desc", type=("build", "run"), when="@2.1.1:")
+    depends_on("r-rcpp@0.12.16:", type=("build", "run"), when="@2.1.1:")
+    depends_on("r-rcppparallel@5.0.1:", type=("build", "run"), when="@2.1.1:")
+    depends_on("pandoc", type="build")

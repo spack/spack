@@ -1,9 +1,11 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+import tempfile
+
+from spack.package import *
 
 
 class PyTensorflowEstimator(Package):
@@ -11,71 +13,87 @@ class PyTensorflowEstimator(Package):
     simplifies machine learning programming."""
 
     homepage = "https://github.com/tensorflow/estimator"
-    url      = "https://github.com/tensorflow/estimator/archive/v2.2.0.tar.gz"
+    url = "https://github.com/tensorflow/estimator/archive/v2.2.0.tar.gz"
 
-    maintainers = ['aweits']
+    maintainers("aweits")
 
-    version('2.3.0', sha256='75403e7de7e8ec30ec0781ede56ed84cbe5e90daad64a9c242cd489c8fe63a17')
-    version('2.2.0', sha256='2d68cb6e6442e7dcbfa2e092aa25bdcb0eda420536a829b85d732854a4c85d46')
-    version('2.1', sha256='1d74c8181b981748976fa33ad97d3434c3cf2b7e29a0b00861365fe8329dbc4e')
-    version('2.0.0', sha256='6f4bdf1ab219e1f1cba25d2af097dc820f56479f12a839853d97422fe4d8b465')
-    version('1.13.0', sha256='a787b150ff436636df723e507019c72a5d6486cfe506886279d380166953f12f')
+    license("Apache-2.0")
 
-    extends('python')
+    version("2.14.0", sha256="622797bf5311f239c2b123364fa360868ae97d16b678413e5e0633241f7d7d5c")
+    version("2.13.0", sha256="4175e9276a1eb8b5e4e876d228e4605871832e7bd8517965d6a47f1481af2c3e")
+    version("2.12.0", sha256="86c75e830c6ba762d0e3cf04c160096930fb12a992e69b3f24674b9f58902063")
+    version("2.11.0", sha256="922f9187de79e8e7f7d7a5b2d6d3aabc81bbbd6ba5f12a4f52967dd302214a43")
+    version("2.10", sha256="60df309377cf4e584ca20198f9639beb685d50616395f50770fc0999092d6d85")
+    version("2.9.0", sha256="62d7b5a574d9c995542f6cb485ff1c18ad115afd9ec6d63437b2aab227c35ef6")
+    version("2.8.0", sha256="58a2c3562ca6491c257e9a4d9bd8825667883257edcdb452181efa691c586b17")
+    version("2.7.0", sha256="e5164e802638d3cf110ecc17912be9d514a9d3354ec48e77200b9403dcc15965")
+    version("2.6.0", sha256="947705c60c50da0b4a8ceec1bc058aaf6bf567a7efdcd50d5173ebf6bafcf30f")
+    version("2.5.0", sha256="66661f30ea05d57377c45267ca770935fb8c54f85b7901f0a7deb91766fe9f45")
+    version("2.4.0", sha256="e6ea12014c3d8c89a81ace95f8f8b7c39ffcd3e4e4626709e4aee0010eefd962")
+    version("2.3.0", sha256="75403e7de7e8ec30ec0781ede56ed84cbe5e90daad64a9c242cd489c8fe63a17")
+    version("2.2.0", sha256="2d68cb6e6442e7dcbfa2e092aa25bdcb0eda420536a829b85d732854a4c85d46")
 
-    depends_on('py-tensorflow@2.3.0:',  when='@2.3.0')
-    depends_on('py-tensorflow@2.2.0',  when='@2.2.0')
-    depends_on('py-tensorflow@2.1.0:2.1.999',  when='@2.1')
-    depends_on('py-tensorflow@2.0.0:2.0.999',  when='@2.0.0')
-    depends_on('py-tensorflow@1.13.1', when='@1.13.0')
+    extends("python")
 
-    depends_on('py-absl-py@0.7.0:', type=('build', 'run'), when='@1.12.1,1.14:')
-    depends_on('py-numpy@1.16.0:1.18',  type=('build', 'run'), when='@1.13.2,1.15:')
-    depends_on('py-six@1.12.0:', type=('build', 'run'), when='@2.1:')
-    depends_on('py-keras-preprocessing@1.1.1:1.999', type=('build', 'run'), when='@2.3:')
+    # tensorflow_estimator/tools/pip_package/setup.py
+    depends_on("python@3.7:", when="@2.9:", type=("build", "run"))
 
-    depends_on('bazel@0.19.0:', type='build')
-    depends_on('py-funcsigs@1.0.2:', type=('build', 'run'))
+    for ver in ["2.14", "2.13", "2.12", "2.11", "2.10", "2.9", "2.8", "2.7", "2.6"]:
+        depends_on("py-keras@" + ver, when="@" + ver, type=("build", "run"))
+
+    for ver in [
+        "2.14",
+        "2.13",
+        "2.12",
+        "2.11",
+        "2.10",
+        "2.9",
+        "2.8",
+        "2.7",
+        "2.6",
+        "2.5",
+        "2.4",
+        "2.3",
+        "2.2",
+    ]:
+        depends_on("py-tensorflow@" + ver, when="@" + ver, type=("build", "run"))
+
+    depends_on("bazel@0.19.0:", type="build")
+    depends_on("py-pip", type="build")
+    depends_on("py-wheel", type="build")
 
     def install(self, spec, prefix):
-        tmp_path = join_path(env.get('SPACK_TMPDIR', '/tmp/spack'),
-                             'tf-estimator',
-                             self.module.site_packages_dir[1:])
-        mkdirp(tmp_path)
-        env['TEST_TMPDIR'] = tmp_path
-        env['HOME'] = tmp_path
+        self.tmp_path = tempfile.mkdtemp(prefix="spack")
+        env["TEST_TMPDIR"] = self.tmp_path
+        env["HOME"] = self.tmp_path
 
         args = [
             # Don't allow user or system .bazelrc to override build settings
-            '--nohome_rc',
-            '--nosystem_rc',
+            "--nohome_rc",
+            "--nosystem_rc",
             # Bazel does not work properly on NFS, switch to /tmp
-            '--output_user_root=' + tmp_path,
-            'build',
+            "--output_user_root=" + self.tmp_path,
+            "build",
             # Spack logs don't handle colored output well
-            '--color=no',
-            '--jobs={0}'.format(make_jobs),
+            "--color=no",
+            "--jobs={0}".format(make_jobs),
             # Enable verbose output for failures
-            '--verbose_failures',
-            # Show (formatted) subcommands being executed
-            '--subcommands=pretty_print',
-            # Ask bazel to explain what it's up to
-            # Needs a filename as argument
-            '--explain=explainlogfile.txt',
-            # Increase verbosity of explanation,
-            '--verbose_explanations',
+            "--verbose_failures",
+            "--spawn_strategy=local",
             # bazel uses system PYTHONPATH instead of spack paths
-            '--action_env', 'PYTHONPATH={0}'.format(env['PYTHONPATH']),
-            '//tensorflow_estimator/tools/pip_package:build_pip_package',
+            "--action_env",
+            "PYTHONPATH={0}".format(env["PYTHONPATH"]),
+            "//tensorflow_estimator/tools/pip_package:build_pip_package",
         ]
 
         bazel(*args)
 
-        build_pip_package = Executable(join_path(
-            'bazel-bin/tensorflow_estimator/tools',
-            'pip_package/build_pip_package'))
-        buildpath = join_path(self.stage.source_path, 'spack-build')
-        build_pip_package('--src', buildpath)
+        build_pip_package = Executable(
+            join_path("bazel-bin/tensorflow_estimator/tools", "pip_package/build_pip_package")
+        )
+        buildpath = join_path(self.stage.source_path, "spack-build")
+        build_pip_package("--src", buildpath)
         with working_dir(buildpath):
-            setup_py('install', '--prefix={0}'.format(prefix),
-                     '--single-version-externally-managed', '--root=/')
+            args = std_pip_args + ["--prefix=" + prefix, "."]
+            pip(*args)
+        remove_linked_tree(self.tmp_path)

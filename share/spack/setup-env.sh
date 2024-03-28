@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -41,16 +41,16 @@
 
 # prevent infinite recursion when spack shells out (e.g., on cray for modules)
 if [ -n "${_sp_initializing:-}" ]; then
-    exit 0
+    return 0
 fi
 export _sp_initializing=true
 
 
 _spack_shell_wrapper() {
-    # Store LD_LIBRARY_PATH variables from spack shell function
+    # Store DYLD_* variables from spack shell function
     # This is necessary because MacOS System Integrity Protection clears
     # variables that affect dyld on process start.
-    for var in LD_LIBRARY_PATH DYLD_LIBRARY_PATH DYLD_FALLBACK_LIBRARY_PATH; do
+    for var in DYLD_LIBRARY_PATH DYLD_FALLBACK_LIBRARY_PATH; do
         eval "if [ -n \"\${${var}-}\" ]; then export SPACK_$var=\${${var}}; fi"
     done
 
@@ -98,7 +98,7 @@ _spack_shell_wrapper() {
             if [ "$_sp_arg" = "-h" ] || [ "$_sp_arg" = "--help" ]; then
                 command spack cd -h
             else
-                LOC="$(spack location $_sp_arg "$@")"
+                LOC="$(SPACK_COLOR="${SPACK_COLOR:-always}" spack location $_sp_arg "$@")"
                 if [ -d "$LOC" ] ; then
                     cd "$LOC"
                 else
@@ -126,8 +126,7 @@ _spack_shell_wrapper() {
                         # Space needed here to differentiate between `-h`
                         # argument and environments with "-h" in the name.
                         # Also see: https://www.gnu.org/software/bash/manual/html_node/Shell-Parameter-Expansion.html#Shell-Parameter-Expansion
-                        if [ -z ${1+x} ] || \
-                           [ "${_a#* --sh}" != "$_a" ] || \
+                        if [ "${_a#* --sh}" != "$_a" ] || \
                            [ "${_a#* --csh}" != "$_a" ] || \
                            [ "${_a#* -h}" != "$_a" ] || \
                            [ "${_a#* --help}" != "$_a" ];
@@ -136,7 +135,8 @@ _spack_shell_wrapper() {
                             command spack env activate "$@"
                         else
                             # Actual call to activate: source the output.
-                            eval $(command spack $_sp_flags env activate --sh "$@")
+                            stdout="$(SPACK_COLOR="${SPACK_COLOR:-always}" command spack $_sp_flags env activate --sh "$@")" || return
+                            eval "$stdout"
                         fi
                         ;;
                     deactivate)
@@ -157,7 +157,8 @@ _spack_shell_wrapper() {
                             command spack env deactivate -h
                         else
                             # No args: source the output of the command.
-                            eval $(command spack $_sp_flags env deactivate --sh)
+                            stdout="$(SPACK_COLOR="${SPACK_COLOR:-always}" command spack $_sp_flags env deactivate --sh)" || return
+                            eval "$stdout"
                         fi
                         ;;
                     *)
@@ -178,13 +179,14 @@ _spack_shell_wrapper() {
             if [ "${_a#* --sh}" != "$_a" ] || \
                 [ "${_a#* --csh}" != "$_a" ] || \
                 [ "${_a#* -h}" != "$_a" ] || \
+                [ "${_a#* --list}" != "$_a" ] || \
                 [ "${_a#* --help}" != "$_a" ];
             then
                 # Args contain --sh, --csh, or -h/--help: just execute.
                 command spack $_sp_flags $_sp_subcommand "$@"
             else
-                eval $(command spack $_sp_flags $_sp_subcommand --sh "$@" || \
-                    echo "return 1")  # return 1 if spack command fails
+                stdout="$(SPACK_COLOR="${SPACK_COLOR:-always}" command spack $_sp_flags $_sp_subcommand --sh "$@")" || return
+                eval "$stdout"
             fi
             ;;
         *)
@@ -212,9 +214,9 @@ _spack_pathadd() {
     # Do the actual prepending here.
     eval "_pa_oldvalue=\${${_pa_varname}:-}"
 
-    _pa_canonical=":$_pa_oldvalue:"
+    _pa_canonical="$_pa_oldvalue:"
     if [ -d "$_pa_new_path" ] && \
-       [ "${_pa_canonical#*:${_pa_new_path}:}" = "${_pa_canonical}" ];
+       [ "${_pa_canonical#$_pa_new_path:}" = "$_pa_canonical" ];
     then
         if [ -n "$_pa_oldvalue" ]; then
             eval "export $_pa_varname=\"$_pa_new_path:$_pa_oldvalue\""
@@ -276,8 +278,13 @@ fi
 #
 # We send cd output to /dev/null to avoid because a lot of users set up
 # their shell so that cd prints things out to the tty.
-_sp_share_dir="$(cd "$(dirname $_sp_source_file)" > /dev/null && pwd)"
-_sp_prefix="$(cd "$(dirname $(dirname $_sp_share_dir))" > /dev/null && pwd)"
+if [ "$_sp_shell" = zsh ]; then
+    _sp_share_dir="${_sp_source_file:A:h}"
+    _sp_prefix="${_sp_share_dir:h:h}"
+else
+    _sp_share_dir="$(cd "$(dirname $_sp_source_file)" > /dev/null && pwd)"
+    _sp_prefix="$(cd "$(dirname $(dirname $_sp_share_dir))" > /dev/null && pwd)"
+fi
 if [ -x "$_sp_prefix/bin/spack" ]; then
     export SPACK_ROOT="${_sp_prefix}"
 else
@@ -303,13 +310,8 @@ _spack_pathadd PATH "${_sp_prefix%/}/bin"
 # Check whether a function of the given name is defined
 #
 _spack_fn_exists() {
-	LANG= type $1 2>&1 | grep -q 'function'
+    LANG= type $1 2>&1 | grep -q 'function'
 }
-
-need_module="no"
-if ! _spack_fn_exists use && ! _spack_fn_exists module; then
-	need_module="yes"
-fi;
 
 # Define the spack shell function with some informative no-ops, so when users
 # run `which spack`, they see the path to spack and where the function is from.
@@ -326,52 +328,68 @@ if [ "$_sp_shell" = bash ]; then
     export -f _spack_shell_wrapper
 fi
 
-#
-# make available environment-modules
-#
-if [ "${need_module}" = "yes" ]; then
-    eval `spack --print-shell-vars sh,modules`
-
-    # _sp_module_prefix is set by spack --print-sh-vars
-    if [ "${_sp_module_prefix}" != "not_installed" ]; then
-        # activate it!
-        # environment-modules@4: has a bin directory inside its prefix
-        _sp_module_bin="${_sp_module_prefix}/bin"
-        if [ ! -d "${_sp_module_bin}" ]; then
-            # environment-modules@3 has a nested bin directory
-            _sp_module_bin="${_sp_module_prefix}/Modules/bin"
-        fi
-
-        # _sp_module_bin and _sp_shell are evaluated here; the quoted
-        # eval statement and $* are deferred.
-        _sp_cmd="module() { eval \`${_sp_module_bin}/modulecmd ${_sp_shell} \$*\`; }"
-        eval "$_sp_cmd"
-        _spack_pathadd PATH "${_sp_module_bin}"
-    fi;
-else
-    eval `spack --print-shell-vars sh`
-fi;
-
-
-#
-# set module system roots
-#
-_sp_multi_pathadd() {
-    local IFS=':'
-    if [ "$_sp_shell" = zsh ]; then
-        emulate -L sh
+# Identify and lock the python interpreter
+for cmd in "${SPACK_PYTHON:-}" python3 python python2; do
+    if command -v > /dev/null "$cmd"; then
+        export SPACK_PYTHON="$(command -v "$cmd")"
+        break
     fi
-    for pth in $2; do
-        for systype in ${_sp_compatible_sys_types}; do
-            _spack_pathadd "$1" "${pth}/${systype}"
+done
+
+if [ -z "${SPACK_SKIP_MODULES+x}" ]; then
+    need_module="no"
+    if ! _spack_fn_exists use && ! _spack_fn_exists module; then
+        need_module="yes"
+    fi;
+
+    #
+    # make available environment-modules
+    #
+    if [ "${need_module}" = "yes" ]; then
+        eval `spack --print-shell-vars sh,modules`
+
+        # _sp_module_prefix is set by spack --print-sh-vars
+        if [ "${_sp_module_prefix}" != "not_installed" ]; then
+            # activate it!
+            # environment-modules@4: has a bin directory inside its prefix
+            _sp_module_bin="${_sp_module_prefix}/bin"
+            if [ ! -d "${_sp_module_bin}" ]; then
+                # environment-modules@3 has a nested bin directory
+                _sp_module_bin="${_sp_module_prefix}/Modules/bin"
+            fi
+
+            # _sp_module_bin and _sp_shell are evaluated here; the quoted
+            # eval statement and $* are deferred.
+            _sp_cmd="module() { eval \`${_sp_module_bin}/modulecmd ${_sp_shell} \$*\`; }"
+            eval "$_sp_cmd"
+            _spack_pathadd PATH "${_sp_module_bin}"
+        fi;
+    else
+        stdout="$(command spack --print-shell-vars sh)" || return
+        eval "$stdout"
+    fi;
+
+
+    #
+    # set module system roots
+    #
+    _sp_multi_pathadd() {
+        local IFS=':'
+        if [ "$_sp_shell" = zsh ]; then
+            emulate -L sh
+        fi
+        for pth in $2; do
+            for systype in ${_sp_compatible_sys_types}; do
+                _spack_pathadd "$1" "${pth}/${systype}"
+            done
         done
-    done
-}
-_sp_multi_pathadd MODULEPATH "$_sp_tcl_roots"
+    }
+    _sp_multi_pathadd MODULEPATH "$_sp_tcl_roots"
+fi
 
 # Add programmable tab completion for Bash
 #
-if [ "$_sp_shell" = bash ]; then
+if test "$_sp_shell" = bash || test -n "${ZSH_VERSION:-}"; then
     source $_sp_share_dir/spack-completion.bash
 fi
 

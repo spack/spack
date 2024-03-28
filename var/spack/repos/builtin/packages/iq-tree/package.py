@@ -1,53 +1,65 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack import *
+from spack.package import *
 
 
 class IqTree(CMakePackage):
     """IQ-TREE Efficient software for phylogenomic inference"""
 
     homepage = "http://www.iqtree.org"
-    git      = "https://github.com/Cibiv/IQ-TREE.git"
-    url      = "https://github.com/Cibiv/IQ-TREE/archive/v1.6.12.tar.gz"
+    git = "https://github.com/iqtree/iqtree2.git"
+    url = "https://github.com/Cibiv/IQ-TREE/archive/v1.6.12.tar.gz"
 
-    version('2.0.6',    tag='v2.0.6', submodules=True)
-    version('1.6.12',   sha256='9614092de7a157de82c9cc402b19cc8bfa0cb0ffc93b91817875c2b4bb46a284') 
+    license("GPL-2.0-or-later")
 
-    variant('openmp', default=True, description='Enable OpenMP support.')
-    variant('mpi',    default=False, description='Enable MPI support.')                                                                                                   
-    variant('lsd2',   default=True,  description='Axctivate Least Squares Dating.')
+    version(
+        "2.2.2.7",
+        tag="v2.2.2.7",
+        commit="bd3468c7af6572ea29002dfdba377804f8f56c26",
+        submodules=True,
+    )
+    version(
+        "2.1.3", tag="v2.1.3", commit="3d31be9e56b05ffbc5f8488fc8285597b433c99f", submodules=True
+    )
+    version(
+        "2.0.6", tag="v2.0.6", commit="219e88407ac915a209a29808a81084bf0d5f1a84", submodules=True
+    )
+    version("1.6.12", sha256="9614092de7a157de82c9cc402b19cc8bfa0cb0ffc93b91817875c2b4bb46a284")
 
-    maintainers = ['ilbiondo']
+    variant("openmp", default=True, description="Enable OpenMP support.")
+    variant("mpi", default=False, description="Enable MPI support.")
+    variant("lsd2", default=True, description="Activate Least Squares Dating.")
+
+    maintainers("ilbiondo")
 
     # Depends on Eigen3 and zlib
 
-    depends_on("boost")
+    depends_on("boost+container+math+exception")
     depends_on("eigen")
-    depends_on("zlib")
-    depends_on('mpi', when='+mpi')
+    depends_on("zlib-api")
+    depends_on("mpi", when="+mpi")
 
     def cmake_args(self):
-
         spec = self.spec
         args = []
         iqflags = []
 
-        if '+lsd2' in spec:
-            args.append('-DUSE_LSD2=ON')
+        if "+lsd2" in spec:
+            args.append("-DUSE_LSD2=ON")
 
-        if '+openmp' in spec:
-            iqflags.append('omp')
+        if "+openmp" in spec:
+            iqflags.append("omp")
 
-        if '+mpi' in spec:
-            iqflags.append('mpi')
+        if "+mpi" in spec:
+            iqflags.append("mpi")
 
         if not iqflags:
-            iqflags.append('single')
+            iqflags.append("single")
 
-        args.append('-DIQTREE_FLAGS=' + ",".join(iqflags))
+        args.append("-DIQTREE_FLAGS=" + ",".join(iqflags))
 
         return args

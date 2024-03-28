@@ -1,24 +1,28 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import sys
 import os
+import re
+import sys
 
+import spack.build_environment
 import spack.config
-import spack.util.prefix as prefix
+import spack.error
+import spack.spec
 import spack.util.environment as environment
-import spack.build_environment as build_env
+from spack import traverse
+from spack.context import Context
 
 #: Environment variable name Spack uses to track individually loaded packages
-spack_loaded_hashes_var = 'SPACK_LOADED_HASHES'
+spack_loaded_hashes_var = "SPACK_LOADED_HASHES"
 
 
 def prefix_inspections(platform):
     """Get list of prefix inspections for platform
 
     Arguments:
-        platform (string): the name of the platform to consider. The platform
+        platform (str): the name of the platform to consider. The platform
             determines what environment variables Spack will use for some
             inspections.
 
@@ -26,27 +30,24 @@ def prefix_inspections(platform):
         A dictionary mapping subdirectory names to lists of environment
             variables to modify with that directory if it exists.
     """
-    inspections = spack.config.get('modules:prefix_inspections', None)
-    if inspections is not None:
+    inspections = spack.config.get("modules:prefix_inspections")
+    if isinstance(inspections, dict):
         return inspections
 
     inspections = {
-        'bin': ['PATH'],
-        'lib': ['LD_LIBRARY_PATH', 'LIBRARY_PATH'],
-        'lib64': ['LD_LIBRARY_PATH', 'LIBRARY_PATH'],
-        'man': ['MANPATH'],
-        'share/man': ['MANPATH'],
-        'share/aclocal': ['ACLOCAL_PATH'],
-        'include': ['CPATH'],
-        'lib/pkgconfig': ['PKG_CONFIG_PATH'],
-        'lib64/pkgconfig': ['PKG_CONFIG_PATH'],
-        'share/pkgconfig': ['PKG_CONFIG_PATH'],
-        '': ['CMAKE_PREFIX_PATH']
+        "bin": ["PATH"],
+        "man": ["MANPATH"],
+        "share/man": ["MANPATH"],
+        "share/aclocal": ["ACLOCAL_PATH"],
+        "lib/pkgconfig": ["PKG_CONFIG_PATH"],
+        "lib64/pkgconfig": ["PKG_CONFIG_PATH"],
+        "share/pkgconfig": ["PKG_CONFIG_PATH"],
+        "": ["CMAKE_PREFIX_PATH"],
     }
 
-    if platform == 'darwin':
-        for subdir in ('lib', 'lib64'):
-            inspections[subdir].append('DYLD_FALLBACK_LIBRARY_PATH')
+    if platform == "darwin":
+        inspections["lib"] = ["DYLD_FALLBACK_LIBRARY_PATH"]
+        inspections["lib64"] = ["DYLD_FALLBACK_LIBRARY_PATH"]
 
     return inspections
 
@@ -65,33 +66,55 @@ def unconditional_environment_modifications(view):
     return env
 
 
-def environment_modifications_for_spec(spec, view=None):
+def project_env_mods(
+    *specs: spack.spec.Spec, view, env: environment.EnvironmentModifications
+) -> None:
+    """Given a list of environment modifications, project paths changes to the view."""
+    prefix_to_prefix = {s.prefix: view.get_projection_for_spec(s) for s in specs if not s.external}
+    # Avoid empty regex if all external
+    if not prefix_to_prefix:
+        return
+    prefix_regex = re.compile("|".join(re.escape(p) for p in prefix_to_prefix.keys()))
+    for mod in env.env_modifications:
+        if isinstance(mod, environment.NameValueModifier):
+            mod.value = prefix_regex.sub(lambda m: prefix_to_prefix[m.group(0)], mod.value)
+
+
+def environment_modifications_for_specs(
+    *specs: spack.spec.Spec, view=None, set_package_py_globals: bool = True
+):
     """List of environment (shell) modifications to be processed for spec.
 
     This list is specific to the location of the spec or its projection in
-    the view."""
-    spec = spec.copy()
-    if view and not spec.external:
-        spec.prefix = prefix.Prefix(view.view().get_projection_for_spec(spec))
+    the view.
 
-    # generic environment modifications determined by inspecting the spec
-    # prefix
-    env = environment.inspect_path(
-        spec.prefix,
-        prefix_inspections(spec.platform),
-        exclude=environment.is_system_path
+    Args:
+        specs: spec(s) for which to list the environment modifications
+        view: view associated with the spec passed as first argument
+        set_package_py_globals: whether or not to set the global variables in the
+            package.py files (this may be problematic when using buildcaches that have
+            been built on a different but compatible OS)
+    """
+    env = environment.EnvironmentModifications()
+    topo_ordered = list(
+        traverse.traverse_nodes(specs, root=True, deptype=("run", "link"), order="topo")
     )
 
-    # Let the extendee/dependency modify their extensions/dependents
-    # before asking for package-specific modifications
-    env.extend(
-        build_env.modifications_from_dependencies(
-            spec, context='run'
+    # Static environment changes (prefix inspections)
+    for s in reversed(topo_ordered):
+        static = environment.inspect_path(
+            s.prefix, prefix_inspections(s.platform), exclude=environment.is_system_path
         )
-    )
+        env.extend(static)
 
-    # Package specific modifications
-    build_env.set_module_variables_for_package(spec.package)
-    spec.package.setup_run_environment(env)
+    # Dynamic environment changes (setup_run_environment etc)
+    setup_context = spack.build_environment.SetupContext(*specs, context=Context.RUN)
+    if set_package_py_globals:
+        setup_context.set_all_package_py_globals()
+    env.extend(setup_context.get_env_modifications())
+
+    # Apply view projections if any.
+    if view:
+        project_env_mods(*topo_ordered, view=view, env=env)
 
     return env

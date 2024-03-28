@@ -1,3 +1,1359 @@
+# v0.21.0 (2023-11-11)
+
+`v0.21.0` is a major feature release.
+
+## Features in this release
+
+1. **Better error messages with condition chaining**
+
+   In v0.18, we added better error messages that could tell you what problem happened,
+   but they couldn't tell you *why* it happened. `0.21` adds *condition chaining* to the
+   solver, and Spack can now trace back through the conditions that led to an error and
+   build a tree of causes potential causes and where they came from. For example:
+
+   ```console
+   $ spack solve hdf5 ^cmake@3.0.1
+   ==> Error: concretization failed for the following reasons:
+
+      1. Cannot satisfy 'cmake@3.0.1'
+      2. Cannot satisfy 'cmake@3.0.1'
+           required because hdf5 ^cmake@3.0.1 requested from CLI
+      3. Cannot satisfy 'cmake@3.18:' and 'cmake@3.0.1
+           required because hdf5 ^cmake@3.0.1 requested from CLI
+           required because hdf5 depends on cmake@3.18: when @1.13:
+             required because hdf5 ^cmake@3.0.1 requested from CLI
+      4. Cannot satisfy 'cmake@3.12:' and 'cmake@3.0.1
+           required because hdf5 depends on cmake@3.12:
+             required because hdf5 ^cmake@3.0.1 requested from CLI
+           required because hdf5 ^cmake@3.0.1 requested from CLI
+   ```
+
+   More details in #40173.
+
+2. **OCI build caches**
+
+   You can now use an arbitrary [OCI](https://opencontainers.org) registry as a build
+   cache:
+
+   ```console
+   $ spack mirror add my_registry oci://user/image # Dockerhub
+   $ spack mirror add my_registry oci://ghcr.io/haampie/spack-test # GHCR
+   $ spack mirror set --push --oci-username ... --oci-password ... my_registry  # set login creds
+   $ spack buildcache push my_registry [specs...]
+   ```
+
+   And you can optionally add a base image to get *runnable* images:
+
+   ```console
+   $ spack buildcache push --base-image ubuntu:23.04 my_registry python
+   Pushed ... as [image]:python-3.11.2-65txfcpqbmpawclvtasuog4yzmxwaoia.spack
+
+   $ docker run --rm -it [image]:python-3.11.2-65txfcpqbmpawclvtasuog4yzmxwaoia.spack
+   ```
+
+   This creates a container image from the Spack installations on the host system,
+   without the need to run `spack install` from a `Dockerfile` or `sif` file. It also
+   addresses the inconvenience of losing binaries of dependencies when `RUN spack
+   install` fails inside `docker build`.
+
+   Further, the container image layers and build cache tarballs are the same files. This
+   means that `spack install` and `docker pull` use the exact same underlying binaries.
+   If you previously used `spack install` inside of `docker build`, this feature helps
+   you save storage by a factor two.
+
+   More details in #38358.
+
+3. **Multiple versions of build dependencies**
+
+   Increasingly, complex package builds require multiple versions of some build
+   dependencies. For example, Python packages frequently require very specific versions
+   of `setuptools`, `cython`, and sometimes different physics packages require different
+   versions of Python to build. The concretizer enforced that every solve was *unified*,
+   i.e., that there only be one version of every package. The concretizer now supports
+   "duplicate" nodes for *build dependencies*, but enforces unification through
+   transitive link and run dependencies. This will allow it to better resolve complex
+   dependency graphs in ecosystems like Python, and it also gets us very close to
+   modeling compilers as proper dependencies.
+
+   This change required a major overhaul of the concretizer, as well as a number of
+   performance optimizations. See #38447, #39621.
+
+4. **Cherry-picking virtual dependencies**
+
+   You can now select only a subset of virtual dependencies from a spec that may provide
+   more. For example, if you want `mpich` to be your `mpi` provider, you can be explicit
+   by writing:
+
+   ```
+   hdf5 ^[virtuals=mpi] mpich
+   ```
+
+   Or, if you want to use, e.g., `intel-parallel-studio` for `blas` along with an external
+   `lapack` like `openblas`, you could write:
+
+   ```
+   strumpack ^[virtuals=mpi] intel-parallel-studio+mkl ^[virtuals=lapack] openblas
+   ```
+
+   The `virtuals=mpi` is an edge attribute, and dependency edges in Spack graphs now
+   track which virtuals they satisfied. More details in #17229 and #35322.
+
+   Note for packaging: in Spack 0.21 `spec.satisfies("^virtual")` is true if and only if
+   the package specifies `depends_on("virtual")`. This is different from Spack 0.20,
+   where depending on a provider implied depending on the virtual provided. See #41002
+   for an example where `^mkl` was being used to test for several `mkl` providers in a
+   package that did not depend on `mkl`.
+
+5. **License directive**
+
+   Spack packages can now have license metadata, with the new `license()` directive:
+
+   ```python
+       license("Apache-2.0")
+   ```
+
+   Licenses use [SPDX identifiers](https://spdx.org/licenses), and you can use SPDX
+   expressions to combine them:
+
+   ```python
+       license("Apache-2.0 OR MIT")
+   ```
+
+   Like other directives in Spack, it's conditional, so you can handle complex cases like
+   Spack itself:
+
+   ```python
+      license("LGPL-2.1", when="@:0.11")
+      license("Apache-2.0 OR MIT", when="@0.12:")
+   ```
+
+   More details in #39346, #40598.
+
+6. **`spack deconcretize` command**
+
+   We are getting close to having a `spack update` command for environments, but we're
+   not quite there yet. This is the next best thing. `spack deconcretize` gives you
+   control over what you want to update in an already concrete environment. If you have
+   an environment built with, say, `meson`, and you want to update your `meson` version,
+   you can run:
+
+   ```console
+   spack deconcretize meson
+   ```
+
+   and have everything that depends on `meson` rebuilt the next time you run `spack
+   concretize`. In a future Spack version, we'll handle all of this in a single command,
+   but for now you can use this to drop bits of your lockfile and resolve your
+   dependencies again. More in #38803.
+
+7. **UI Improvements**
+
+   The venerable `spack info` command was looking shabby compared to the rest of Spack's
+   UI, so we reworked it to have a bit more flair. `spack info` now makes much better
+   use of terminal space and shows variants, their values, and their descriptions much
+   more clearly. Conditional variants are grouped separately so you can more easily
+   understand how packages are structured. More in #40998.
+
+   `spack checksum` now allows you to filter versions from your editor, or by version
+   range. It also notifies you about potential download URL changes. See #40403.
+
+8. **Environments can include definitions**
+
+   Spack did not previously support using `include:` with The
+   [definitions](https://spack.readthedocs.io/en/latest/environments.html#spec-list-references)
+   section of an environment, but now it does. You can use this to curate lists of specs
+   and more easily reuse them across environments. See #33960.
+
+9. **Aliases**
+
+   You can now add aliases to Spack commands in `config.yaml`, e.g. this might enshrine
+   your favorite args to `spack find` as `spack f`:
+
+   ```yaml
+   config:
+     aliases:
+       f: find -lv
+   ```
+
+   See #17229.
+
+10. **Improved autoloading of modules**
+
+    Spack 0.20 was the first release to enable autoloading of direct dependencies in
+    module files.
+
+    The downside of this was that `module avail` and `module load` tab completion would
+    show users too many modules to choose from, and many users disabled generating
+    modules for dependencies through `exclude_implicits: true`. Further, it was
+    necessary to keep hashes in module names to avoid file name clashes.
+
+    In this release, you can start using `hide_implicits: true` instead, which exposes
+    only explicitly installed packages to the user, while still autoloading
+    dependencies. On top of that, you can safely use `hash_length: 0`, as this config
+    now only applies to the modules exposed to the user -- you don't have to worry about
+    file name clashes for hidden dependencies.
+
+   Note: for `tcl` this feature requires Modules 4.7 or higher
+
+11. **Updated container labeling**
+
+    Nightly Docker images from the `develop` branch will now be tagged as `:develop` and
+    `:nightly`. The `:latest` tag is no longer associated with `:develop`, but with the
+    latest stable release. Releases will be tagged with `:{major}`, `:{major}.{minor}`
+    and `:{major}.{minor}.{patch}`. `ubuntu:18.04` has also been removed from the list of
+    generated Docker images, as it is no longer supported. See #40593.
+
+## Other new commands and directives
+
+* `spack env activate` without arguments now loads a `default` environment that you do
+  not have to create (#40756).
+* `spack find -H` / `--hashes`: a new shortcut for piping `spack find` output to
+  other commands (#38663)
+* Add `spack checksum --verify`, fix `--add` (#38458)
+* New `default_args` context manager factors out common args for directives (#39964)
+* `spack compiler find --[no]-mixed-toolchain` lets you easily mix `clang` and
+  `gfortran` on Linux (#40902)
+
+## Performance improvements
+
+* `spack external find` execution is now much faster (#39843)
+* `spack location -i` now much faster on success (#40898)
+* Drop redundant rpaths post install (#38976)
+* ASP-based solver: avoid cycles in clingo using hidden directive (#40720)
+* Fix multiple quadratic complexity issues in environments (#38771)
+
+## Other new features of note
+
+* archspec: update to v0.2.2, support for Sapphire Rapids, Power10, Neoverse V2 (#40917)
+* Propagate variants across nodes that don't have that variant (#38512)
+* Implement fish completion (#29549)
+* Can now distinguish between source/binary mirror; don't ping mirror.spack.io as much (#34523)
+* Improve status reporting on install (add [n/total] display) (#37903)
+
+## Windows
+
+This release has the best Windows support of any Spack release yet, with numerous
+improvements and much larger swaths of tests passing:
+
+* MSVC and SDK improvements (#37711, #37930, #38500, #39823, #39180)
+* Windows external finding: update default paths; treat .bat as executable on Windows (#39850)
+* Windows decompression: fix removal of intermediate file (#38958)
+* Windows: executable/path handling (#37762)
+* Windows build systems: use ninja and enable tests (#33589)
+* Windows testing (#36970, #36972, #36973, #36840, #36977, #36792, #36834, #34696, #36971)
+* Windows PowerShell support (#39118, #37951)
+* Windows symlinking and libraries (#39933, #38599, #34701, #38578, #34701)
+
+## Notable refactors
+* User-specified flags take precedence over others in Spack compiler wrappers (#37376)
+* Improve setup of build, run, and test environments (#35737, #40916)
+* `make` is no longer a required system dependency of Spack (#40380)
+* Support Python 3.12 (#40404, #40155, #40153)
+* docs: Replace package list with packages.spack.io (#40251)
+* Drop Python 2 constructs in Spack (#38720, #38718, #38703)
+
+## Binary cache and stack updates
+* e4s arm stack: duplicate and target neoverse v1 (#40369)
+* Add macOS ML CI stacks (#36586)
+* E4S Cray CI Stack (#37837)
+* e4s cray: expand spec list (#38947)
+* e4s cray sles ci: expand spec list (#39081)
+
+## Removals, deprecations, and syntax changes
+* ASP: targets, compilers and providers soft-preferences are only global (#31261)
+* Parser: fix ambiguity with whitespace in version ranges (#40344)
+* Module file generation is disabled by default; you'll need to enable it to use it (#37258)
+* Remove deprecated "extra_instructions" option for containers (#40365)
+* Stand-alone test feature deprecation postponed to v0.22 (#40600)
+* buildcache push: make `--allow-root` the default and deprecate the option (#38878)
+
+## Notable Bugfixes
+* Bugfix: propagation of multivalued variants (#39833)
+* Allow `/` in git versions (#39398)
+* Fetch & patch: actually acquire stage lock, and many more issues (#38903)
+* Environment/depfile: better escaping of targets with Git versions (#37560)
+* Prevent "spack external find" to error out on wrong permissions (#38755)
+* lmod: allow core compiler to be specified with a version range (#37789)
+
+## Spack community stats
+
+* 7,469 total packages, 303 new since `v0.20.0`
+    * 150 new Python packages
+    * 34 new R packages
+* 353 people contributed to this release
+    * 336 committers to packages
+    * 65 committers to core
+
+
+# v0.20.3 (2023-10-31)
+
+## Bugfixes
+
+- Fix a bug where `spack mirror set-url` would drop configured connection info (reverts #34210)
+- Fix a minor issue with package hash computation for Python 3.12 (#40328)
+
+
+# v0.20.2 (2023-10-03)
+
+## Features in this release
+
+Spack now supports Python 3.12 (#40155)
+
+## Bugfixes
+
+- Improve escaping in Tcl module files (#38375)
+- Make repo cache work on repositories with zero mtime (#39214)
+- Ignore errors for newer, incompatible buildcache version (#40279)
+- Print an error when git is required, but missing (#40254)
+- Ensure missing build dependencies get installed when using `spack install --overwrite` (#40252)
+- Fix an issue where Spack freezes when the build process unexpectedly exits (#39015)
+- Fix a bug where installation failures cause an unrelated `NameError` to be thrown (#39017)
+- Fix an issue where Spack package versions would be incorrectly derived from git tags (#39414)
+- Fix a bug triggered when file locking fails internally (#39188)
+- Prevent "spack external find" to error out when a directory cannot be accessed (#38755)
+- Fix multiple performance regressions in environments (#38771)
+- Add more ignored modules to `pyproject.toml` for `mypy` (#38769)
+
+
+# v0.20.1 (2023-07-10)
+
+## Spack Bugfixes
+
+- Spec removed from an environment where not actually removed if `--force` was not given (#37877)
+- Speed-up module file generation (#37739)
+- Hotfix for a few recipes that treat CMake as a link dependency (#35816)
+- Fix re-running stand-alone test a second time, which was getting a trailing spurious failure (#37840)
+- Fixed reading JSON manifest on Cray, reporting non-concrete specs (#37909)
+- Fixed a few bugs when generating Dockerfiles from Spack (#37766,#37769)
+- Fixed a few long-standing bugs when generating module files (#36678,#38347,#38465,#38455)
+- Fixed issues with building Python extensions using an external Python (#38186)
+- Fixed compiler removal from command line (#38057)
+- Show external status as [e] (#33792)
+- Backported `archspec` fixes (#37793)
+- Improved a few error messages (#37791)
+
+
+# v0.20.0 (2023-05-21)
+
+`v0.20.0` is a major feature release.
+
+## Features in this release
+
+1. **`requires()` directive and enhanced package requirements**
+
+   We've added some more enhancements to requirements in Spack (#36286).
+
+   There is a new `requires()` directive for packages. `requires()` is the opposite of
+   `conflicts()`. You can use it to impose constraints on this package when certain
+   conditions are met:
+
+   ```python
+   requires(
+       "%apple-clang",
+       when="platform=darwin",
+       msg="This package builds only with clang on macOS"
+   )
+   ```
+
+   More on this in [the docs](
+     https://spack.rtfd.io/en/latest/packaging_guide.html#conflicts-and-requirements).
+
+   You can also now add a `when:` clause to `requires:` in your `packages.yaml`
+   configuration or in an environment:
+
+   ```yaml
+   packages:
+     openmpi:
+       require:
+       - any_of: ["%gcc"]
+         when: "@:4.1.4"
+         message: "Only OpenMPI 4.1.5 and up can build with fancy compilers"
+   ```
+
+   More details can be found [here](
+     https://spack.readthedocs.io/en/latest/build_settings.html#package-requirements)
+
+2. **Exact versions**
+
+   Spack did not previously have a way to distinguish a version if it was a prefix of
+   some other version. For example, `@3.2` would match `3.2`, `3.2.1`, `3.2.2`, etc. You
+   can now match *exactly* `3.2` with `@=3.2`. This is useful, for example, if you need
+   to patch *only* the `3.2` version of a package. The new syntax is described in [the docs](
+     https://spack.readthedocs.io/en/latest/basic_usage.html#version-specifier).
+
+   Generally, when writing packages, you should prefer to use ranges like `@3.2` over
+   the specific versions, as this allows the concretizer more leeway when selecting
+   versions of dependencies. More details and recommendations are in the [packaging guide](
+     https://spack.readthedocs.io/en/latest/packaging_guide.html#ranges-versus-specific-versions).
+
+   See #36273 for full details on the version refactor.
+
+3. **New testing interface**
+
+   Writing package tests is now much simpler with a new [test interface](
+     https://spack.readthedocs.io/en/latest/packaging_guide.html#stand-alone-tests).
+
+   Writing a test is now as easy as adding a method that starts with `test_`:
+
+   ```python
+   class MyPackage(Package):
+       ...
+
+       def test_always_fails(self):
+           """use assert to always fail"""
+           assert False
+
+       def test_example(self):
+           """run installed example"""
+           example = which(self.prefix.bin.example)
+           example()
+    ```
+
+    You can use Python's native `assert` statement to implement your checks -- no more
+    need to fiddle with `run_test` or other test framework methods. Spack will
+    introspect the class and run `test_*` methods when you run `spack test`,
+
+4. **More stable concretization**
+
+   * Now, `spack concretize` will *only* concretize the new portions of the environment
+     and will not change existing parts of an environment unless you specify `--force`.
+     This has always been true for `unify:false`, but not for `unify:true` and
+     `unify:when_possible` environments. Now it is true for all of them (#37438, #37681).
+
+   * The concretizer has a new `--reuse-deps` argument that *only* reuses dependencies.
+     That is, it will always treat the *roots* of your environment as it would with
+     `--fresh`. This allows you to upgrade just the roots of your environment while
+     keeping everything else stable (#30990).
+
+5. **Weekly develop snapshot releases**
+
+   Since last year, we have maintained a buildcache of `develop` at
+   https://binaries.spack.io/develop, but the cache can grow to contain so many builds
+   as to be unwieldy. When we get a stable `develop` build, we snapshot the release and
+   add a corresponding tag the Spack repository. So, you can use a stack from a specific
+   day. There are now tags in the spack repository like:
+
+   * `develop-2023-05-14`
+   * `develop-2023-05-18`
+
+   that correspond to build caches like:
+
+   * https://binaries.spack.io/develop-2023-05-14/e4s
+   * https://binaries.spack.io/develop-2023-05-18/e4s
+
+   We plan to store these snapshot releases weekly.
+
+6. **Specs in buildcaches can be referenced by hash.**
+
+   * Previously, you could run `spack buildcache list` and see the hashes in
+     buildcaches, but referring to them by hash would fail.
+   * You can now run commands like `spack spec` and `spack install` and refer to
+     buildcache hashes directly, e.g. `spack install /abc123` (#35042)
+
+7. **New package and buildcache index websites**
+
+   Our public websites for searching packages have been completely revamped and updated.
+   You can check them out here:
+
+   * *Package Index*: https://packages.spack.io
+   * *Buildcache Index*: https://cache.spack.io
+
+   Both are searchable and more interactive than before. Currently major releases are
+   shown; UI for browsing `develop` snapshots is coming soon.
+
+8. **Default CMake and Meson build types are now Release**
+
+   Spack has historically defaulted to building with optimization and debugging, but
+   packages like `llvm` can be enormous with debug turned on. Our default build type for
+   all Spack packages is now `Release` (#36679, #37436). This has a number of benefits:
+
+   * much smaller binaries;
+   * higher default optimization level; and
+   * defining `NDEBUG` disables assertions, which may lead to further speedups.
+
+   You can still get the old behavior back through requirements and package preferences.
+
+## Other new commands and directives
+
+* `spack checksum` can automatically add new versions to package (#24532)
+* new command: `spack pkg grep` to easily search package files (#34388)
+* New `maintainers` directive (#35083)
+* Add `spack buildcache push` (alias to `buildcache create`) (#34861)
+* Allow using `-j` to control the parallelism of concretization (#37608)
+* Add `--exclude` option to 'spack external find' (#35013)
+
+## Other new features of note
+
+* editing: add higher-precedence `SPACK_EDITOR` environment variable
+* Many YAML formatting improvements from updating `ruamel.yaml` to the latest version
+  supporting Python 3.6. (#31091, #24885, #37008).
+* Requirements and preferences should not define (non-git) versions (#37687, #37747)
+* Environments now store spack version/commit in `spack.lock` (#32801)
+* User can specify the name of the `packages` subdirectory in repositories (#36643)
+* Add container images supporting RHEL alternatives (#36713)
+* make version(...) kwargs explicit (#36998)
+
+## Notable refactors
+
+* buildcache create: reproducible tarballs (#35623)
+* Bootstrap most of Spack dependencies using environments (#34029)
+* Split `satisfies(..., strict=True/False)` into two functions (#35681)
+* spack install: simplify behavior when inside environments (#35206)
+
+## Binary cache and stack updates
+
+* Major simplification of CI boilerplate in stacks (#34272, #36045)
+* Many improvements to our CI pipeline's reliability
+
+## Removals, Deprecations, and disablements
+* Module file generation is disabled by default; you'll need to enable it to use it (#37258)
+* Support for Python 2 was deprecated in `v0.19.0` and has been removed. `v0.20.0` only
+  supports Python 3.6 and higher.
+* Deprecated target names are no longer recognized by Spack. Use generic names instead:
+  * `graviton` is now `cortex_a72`
+  * `graviton2` is now `neoverse_n1`
+  * `graviton3` is now `neoverse_v1`
+* `blacklist` and `whitelist` in module configuration were deprecated in `v0.19.0` and are
+  removed in this release. Use `exclude` and `include` instead.
+* The `ignore=` parameter of the `extends()` directive has been removed. It was not used by
+  any builtin packages and is no longer needed to avoid conflicts in environment views (#35588).
+* Support for the old YAML buildcache format has been removed. It was deprecated in `v0.19.0` (#34347).
+* `spack find --bootstrap` has been removed. It was deprecated in `v0.19.0`. Use `spack
+  --bootstrap find` instead (#33964).
+* `spack bootstrap trust` and `spack bootstrap untrust` are now removed, having been
+  deprecated in `v0.19.0`. Use `spack bootstrap enable` and `spack bootstrap disable`.
+* The `--mirror-name`, `--mirror-url`, and `--directory` options to buildcache and
+  mirror commands were deprecated in `v0.19.0` and have now been removed. They have been
+  replaced by positional arguments (#37457).
+* Deprecate `env:` as top level environment key (#37424)
+* deprecate buildcache create --rel, buildcache install --allow-root (#37285)
+* Support for very old perl-like spec format strings (e.g., `$_$@$%@+$+$=`) has been
+  removed (#37425). This was deprecated in in `v0.15` (#10556).
+
+## Notable Bugfixes
+
+* bugfix: don't fetch package metadata for unknown concrete specs (#36990)
+* Improve package source code context display on error  (#37655)
+* Relax environment manifest filename requirements and lockfile identification criteria (#37413)
+* `installer.py`: drop build edges of installed packages by default (#36707)
+* Bugfix: package requirements with git commits (#35057, #36347)
+* Package requirements: allow single specs in requirement lists (#36258)
+* conditional variant values: allow boolean (#33939)
+* spack uninstall: follow run/link edges on --dependents (#34058)
+
+## Spack community stats
+
+* 7,179 total packages, 499 new since `v0.19.0`
+    * 329 new Python packages
+    * 31 new R packages
+* 336 people contributed to this release
+    * 317 committers to packages
+    * 62 committers to core
+
+
+# v0.19.1 (2023-02-07)
+
+### Spack Bugfixes
+
+* `buildcache create`: make "file exists" less verbose (#35019)
+* `spack mirror create`: don't change paths to urls (#34992)
+* Improve error message for requirements (#33988)
+* uninstall: fix accidental cubic complexity (#34005)
+* scons: fix signature for `install_args` (#34481)
+* Fix `combine_phase_logs` text encoding issues (#34657)
+* Use a module-like object to propagate changes in the MRO, when setting build env (#34059)
+* PackageBase should not define builder legacy attributes (#33942)
+* Forward lookup of the "run_tests" attribute (#34531)
+* Bugfix for timers (#33917, #33900)
+* Fix path handling in prefix inspections (#35318)
+* Fix libtool filter for Fujitsu compilers (#34916)
+* Bug fix for duplicate rpath errors on macOS when creating build caches (#34375)
+* FileCache: delete the new cache file on exception (#34623)
+* Propagate exceptions from Spack python console (#34547)
+* Tests: Fix a bug/typo in a `config_values.py` fixture (#33886)
+* Various CI fixes (#33953, #34560, #34560, #34828)
+* Docs: remove monitors and analyzers, typos (#34358, #33926)
+* bump release version for tutorial command (#33859)
+
+
+# v0.19.0 (2022-11-11)
+
+`v0.19.0` is a major feature release.
+
+## Major features in this release
+
+1. **Package requirements**
+
+   Spack's traditional [package preferences](
+     https://spack.readthedocs.io/en/latest/build_settings.html#package-preferences)
+   are soft, but we've added hard requriements to `packages.yaml` and `spack.yaml`
+   (#32528, #32369). Package requirements use the same syntax as specs:
+
+   ```yaml
+   packages:
+     libfabric:
+       require: "@1.13.2"
+     mpich:
+       require:
+       - one_of: ["+cuda", "+rocm"]
+   ```
+
+   More details in [the docs](
+     https://spack.readthedocs.io/en/latest/build_settings.html#package-requirements).
+
+2. **Environment UI Improvements**
+
+   * Fewer surprising modifications to `spack.yaml` (#33711):
+
+     * `spack install` in an environment will no longer add to the `specs:` list; you'll
+       need to either use `spack add <spec>` or `spack install --add <spec>`.
+
+     * Similarly, `spack uninstall` will not remove from your environment's `specs:`
+       list; you'll need to use `spack remove` or `spack uninstall --remove`.
+
+     This will make it easier to manage an environment, as there is clear separation
+     between the stack to be installed (`spack.yaml`/`spack.lock`) and which parts of
+     it should be installed (`spack install` / `spack uninstall`).
+
+   * `concretizer:unify:true` is now the default mode for new environments (#31787)
+
+     We see more users creating `unify:true` environments now. Users who need
+     `unify:false` can add it to their environment to get the old behavior. This will
+     concretize every spec in the environment independently.
+
+   * Include environment configuration from URLs (#29026, [docs](
+       https://spack.readthedocs.io/en/latest/environments.html#included-configurations))
+
+     You can now include configuration in your environment directly from a URL:
+
+     ```yaml
+     spack:
+       include:
+       - https://github.com/path/to/raw/config/compilers.yaml
+     ```
+
+4. **Multiple Build Systems**
+
+   An increasing number of packages in the ecosystem need the ability to support
+   multiple build systems (#30738, [docs](
+     https://spack.readthedocs.io/en/latest/packaging_guide.html#multiple-build-systems)),
+   either across versions, across platforms, or within the same version of the software.
+   This has been hard to support through multiple inheritance, as methods from different
+   build system superclasses would conflict. `package.py` files can now define separate
+   builder classes with installation logic for different build systems, e.g.:
+
+   ```python
+   class ArpackNg(CMakePackage, AutotoolsPackage):
+
+       build_system(
+           conditional("cmake", when="@0.64:"),
+           conditional("autotools", when="@:0.63"),
+           default="cmake",
+       )
+
+   class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
+       def cmake_args(self):
+           pass
+
+   class Autotoolsbuilder(spack.build_systems.autotools.AutotoolsBuilder):
+       def configure_args(self):
+           pass
+   ```
+
+5. **Compiler and variant propagation**
+
+   Currently, compiler flags and variants are inconsistent: compiler flags set for a
+   package are inherited by its dependencies, while variants are not. We should have
+   these be consistent by allowing for inheritance to be enabled or disabled for both
+   variants and compiler flags.
+
+   Example syntax:
+   - `package ++variant`:
+         enabled variant that will be propagated to dependencies
+   - `package +variant`:
+         enabled variant that will NOT be propagated to dependencies
+   - `package ~~variant`:
+         disabled variant that will be propagated to dependencies
+   - `package ~variant`:
+         disabled variant that will NOT be propagated to dependencies
+   - `package cflags==-g`:
+         `cflags` will be propagated to dependencies
+   - `package cflags=-g`:
+         `cflags` will NOT be propagated to dependencies
+
+   Syntax for non-boolan variants is similar to compiler flags. More in the docs for
+   [variants](
+     https://spack.readthedocs.io/en/latest/basic_usage.html#variants) and [compiler flags](
+     https://spack.readthedocs.io/en/latest/basic_usage.html#compiler-flags).
+
+6. **Enhancements to git version specifiers**
+
+   * `v0.18.0` added the ability to use git commits as versions. You can now use the
+     `git.` prefix to specify git tags or branches as versions. All of these are valid git
+     versions in `v0.19` (#31200):
+
+     ```console
+     foo@abcdef1234abcdef1234abcdef1234abcdef1234      # raw commit
+     foo@git.abcdef1234abcdef1234abcdef1234abcdef1234  # commit with git prefix
+     foo@git.develop                                   # the develop branch
+     foo@git.0.19                                      # use the 0.19 tag
+     ```
+
+   * `v0.19` also gives you more control over how Spack interprets git versions, in case
+     Spack cannot detect the version from the git repository. You can suffix a git
+     version with `=<version>` to force Spack to concretize it as a particular version
+     (#30998, #31914, #32257):
+
+     ```console
+     # use mybranch, but treat it as version 3.2 for version comparison
+     foo@git.mybranch=3.2
+
+     # use the given commit, but treat it as develop for version comparison
+     foo@git.abcdef1234abcdef1234abcdef1234abcdef1234=develop
+     ```
+
+     More in [the docs](
+       https://spack.readthedocs.io/en/latest/basic_usage.html#version-specifier)
+
+7. **Changes to Cray EX Support**
+
+   Cray machines have historically had their own "platform" within Spack, because we
+   needed to go through the module system to leverage compilers and MPI installations on
+   these machines. The Cray EX programming environment now provides standalone `craycc`
+   executables and proper `mpicc` wrappers, so Spack can treat EX machines like Linux
+   with extra packages (#29392).
+
+   We expect this to greatly reduce bugs, as external packages and compilers can now be
+   used by prefix instead of through modules. We will also no longer be subject to
+   reproducibility issues when modules change from Cray PE release to release and from
+   site to site. This also simplifies dealing with the underlying Linux OS on cray
+   systems, as Spack will properly model the machine's OS as either SuSE or RHEL.
+
+8. **Improvements to tests and testing in CI**
+
+   * `spack ci generate --tests` will generate a `.gitlab-ci.yml` file that not only does
+     builds but also runs tests for built packages (#27877). Public GitHub pipelines now
+     also run tests in CI.
+
+   * `spack test run --explicit` will only run tests for packages that are explicitly
+     installed, instead of all packages.
+
+9. **Experimental binding link model**
+
+   You can add a new option to `config.yaml` to make Spack embed absolute paths to
+   needed shared libraries in ELF executables and shared libraries on Linux (#31948, [docs](
+     https://spack.readthedocs.io/en/latest/config_yaml.html#shared-linking-bind)):
+
+   ```yaml
+   config:
+     shared_linking:
+       type: rpath
+       bind: true
+   ```
+
+   This can improve launch time at scale for parallel applications, and it can make
+   installations less susceptible to environment variables like `LD_LIBRARY_PATH`, even
+   especially when dealing with external libraries that use `RUNPATH`. You can think of
+   this as a faster, even higher-precedence version of `RPATH`.
+
+## Other new features of note
+
+* `spack spec` prints dependencies more legibly. Dependencies in the output now appear
+  at the *earliest* level of indentation possible (#33406)
+* You can override `package.py` attributes like `url`, directly in `packages.yaml`
+  (#33275, [docs](
+    https://spack.readthedocs.io/en/latest/build_settings.html#assigning-package-attributes))
+* There are a number of new architecture-related format strings you can use in Spack
+  configuration files to specify paths (#29810, [docs](
+    https://spack.readthedocs.io/en/latest/configuration.html#config-file-variables))
+* Spack now supports bootstrapping Clingo on Windows (#33400)
+* There is now support for an `RPATH`-like library model on Windows (#31930)
+
+## Performance Improvements
+
+* Major performance improvements for installation from binary caches (#27610, #33628,
+  #33636, #33608, #33590, #33496)
+* Test suite can now be parallelized using `xdist` (used in GitHub Actions) (#32361)
+* Reduce lock contention for parallel builds in environments (#31643)
+
+## New binary caches and stacks
+
+* We now build nearly all of E4S with `oneapi` in our buildcache (#31781, #31804,
+  #31804, #31803, #31840, #31991, #32117, #32107, #32239)
+* Added 3 new machine learning-centric stacks to binary cache: `x86_64_v3`, CUDA, ROCm
+  (#31592, #33463)
+
+## Removals and Deprecations
+
+* Support for Python 3.5 is dropped (#31908). Only Python 2.7 and 3.6+ are officially
+  supported.
+
+* This is the last Spack release that will support Python 2 (#32615). Spack `v0.19`
+  will emit a deprecation warning if you run it with Python 2, and Python 2 support will
+  soon be removed from the `develop` branch.
+
+* `LD_LIBRARY_PATH` is no longer set by default by `spack load` or module loads.
+
+  Setting `LD_LIBRARY_PATH` in Spack environments/modules can cause binaries from
+  outside of Spack to crash, and Spack's own builds use `RPATH` and do not need
+  `LD_LIBRARY_PATH` set in order to run. If you still want the old behavior, you
+  can run these commands to configure Spack to set `LD_LIBRARY_PATH`:
+
+  ```console
+  spack config add modules:prefix_inspections:lib64:[LD_LIBRARY_PATH]
+  spack config add modules:prefix_inspections:lib:[LD_LIBRARY_PATH]
+  ```
+
+* The `spack:concretization:[together|separately]` has been removed after being
+  deprecated in `v0.18`. Use `concretizer:unify:[true|false]`.
+* `config:module_roots` is no longer supported after being deprecated in `v0.18`. Use
+  configuration in module sets instead (#28659, [docs](
+    https://spack.readthedocs.io/en/latest/module_file_support.html)).
+* `spack activate` and `spack deactivate` are no longer supported, having been
+  deprecated in `v0.18`. Use an environment with a view instead of
+  activating/deactivating ([docs](
+    https://spack.readthedocs.io/en/latest/environments.html#configuration-in-spack-yaml)).
+* The old YAML format for buildcaches is now deprecated (#33707). If you are using an
+  old buildcache with YAML metadata you will need to regenerate it with JSON metadata.
+* `spack bootstrap trust` and `spack bootstrap untrust` are deprecated in favor of
+  `spack bootstrap enable` and `spack bootstrap disable` and will be removed in `v0.20`.
+  (#33600)
+* The `graviton2` architecture has been renamed to `neoverse_n1`, and `graviton3`
+  is now `neoverse_v1`. Buildcaches using the old architecture names will need to be rebuilt.
+* The terms `blacklist` and `whitelist` have been replaced with `include` and `exclude`
+  in all configuration files (#31569). You can use `spack config update` to
+  automatically fix your configuration files.
+
+## Notable Bugfixes
+
+* Permission setting on installation now handles effective uid properly (#19980)
+* `buildable:true` for an MPI implementation now overrides `buildable:false` for `mpi` (#18269)
+* Improved error messages when attempting to use an unconfigured compiler (#32084)
+* Do not punish explicitly requested compiler mismatches in the solver (#30074)
+* `spack stage`: add missing --fresh and --reuse (#31626)
+* Fixes for adding build system executables like `cmake` to package scope (#31739)
+* Bugfix for binary relocation with aliased strings produced by newer `binutils` (#32253)
+
+## Spack community stats
+
+* 6,751 total packages, 335 new since `v0.18.0`
+    * 141 new Python packages
+    * 89 new R packages
+* 303 people contributed to this release
+    * 287 committers to packages
+    * 57 committers to core
+
+
+# v0.18.1 (2022-07-19)
+
+### Spack Bugfixes
+* Fix several bugs related to bootstrapping (#30834,#31042,#31180)
+* Fix a regression that was causing spec hashes to differ between
+  Python 2 and Python 3 (#31092)
+* Fixed compiler flags for oneAPI and DPC++ (#30856)
+* Fixed several issues related to concretization (#31142,#31153,#31170,#31226)
+* Improved support for Cray manifest file and `spack external find` (#31144,#31201,#31173,#31186)
+* Assign a version to openSUSE Tumbleweed according to the GLIBC version
+  in the system (#19895)
+* Improved Dockerfile generation for `spack containerize` (#29741,#31321)
+* Fixed a few bugs related to concurrent execution of commands (#31509,#31493,#31477)
+
+### Package updates
+* WarpX: add v22.06, fixed libs property (#30866,#31102)
+* openPMD: add v0.14.5, update recipe for @develop (#29484,#31023)
+
+# v0.18.0 (2022-05-28)
+
+`v0.18.0` is a major feature release.
+
+## Major features in this release
+
+1. **Concretizer now reuses by default**
+
+   `spack install --reuse` was introduced in `v0.17.0`, and `--reuse`
+   is now the default concretization mode. Spack will try hard to
+   resolve dependencies using installed packages or binaries (#30396).
+
+   To avoid reuse and to use the latest package configurations, (the
+   old default), you can use `spack install --fresh`, or add
+   configuration like this to your environment or `concretizer.yaml`:
+
+   ```yaml
+   concretizer:
+       reuse: false
+   ```
+
+2. **Finer-grained hashes**
+
+   Spack hashes now include `link`, `run`, *and* `build` dependencies,
+   as well as a canonical hash of package recipes. Previously, hashes
+   only included `link` and `run` dependencies (though `build`
+   dependencies were stored by environments). We coarsened the hash to
+   reduce churn in user installations, but the new default concretizer
+   behavior mitigates this concern and gets us reuse *and* provenance.
+   You will be able to see the build dependencies of new installations
+   with `spack find`. Old installations will not change and their
+   hashes will not be affected. (#28156, #28504, #30717, #30861)
+
+3. **Improved error messages**
+
+   Error handling with the new concretizer is now done with
+   optimization criteria rather than with unsatisfiable cores, and
+   Spack reports many more details about conflicting constraints.
+   (#30669)
+
+4. **Unify environments when possible**
+
+   Environments have thus far supported `concretization: together` or
+   `concretization: separately`. These have been replaced by a new
+   preference in `concretizer.yaml`:
+
+   ```yaml
+   concretizer:
+       unify: [true|false|when_possible]
+   ```
+
+   `concretizer:unify:when_possible` will *try* to resolve a fully
+   unified environment, but if it cannot, it will create multiple
+   configurations of some packages where it has to. For large
+   environments that previously had to be concretized separately, this
+   can result in a huge speedup (40-50x). (#28941)
+
+5. **Automatically find externals on Cray machines**
+
+   Spack can now automatically discover installed packages in the Cray
+   Programming Environment by running `spack external find` (or `spack
+   external read-cray-manifest` to *only* query the PE). Packages from
+   the PE (e.g., `cray-mpich` are added to the database with full
+   dependency information, and compilers from the PE are added to
+   `compilers.yaml`. Available with the June 2022 release of the Cray
+   Programming Environment. (#24894, #30428)
+
+6. **New binary format and hardened signing**
+
+   Spack now has an updated binary format, with improvements for
+   security. The new format has a detached signature file, and Spack
+   verifies the signature before untarring or decompressing the binary
+   package. The previous format embedded the signature in a `tar`
+   file, which required the client to run `tar` *before* verifying
+   (#30750). Spack can still install from build caches using the old
+   format, but we encourage users to switch to the new format going
+   forward.
+
+   Production GitLab pipelines have been hardened to securely sign
+   binaries. There is now a separate signing stage so that signing
+   keys are never exposed to build system code, and signing keys are
+   ephemeral and only live as long as the signing pipeline stage.
+   (#30753)
+
+7. **Bootstrap mirror generation**
+
+   The `spack bootstrap mirror` command can automatically create a
+   mirror for bootstrapping the concretizer and other needed
+   dependencies in an air-gapped environment. (#28556)
+
+8. **Nascent Windows support**
+
+   Spack now has initial support for Windows. Spack core has been
+   refactored to run in the Windows environment, and a small number of
+   packages can now build for Windows. More details are
+   [in the documentation](https://spack.rtfd.io/en/latest/getting_started.html#spack-on-windows)
+   (#27021, #28385, many more)
+
+9. **Makefile generation**
+
+   `spack env depfile` can be used to generate a `Makefile` from an
+   environment, which can be used to build packages the environment
+   in parallel on a single node. e.g.:
+
+   ```console
+   spack -e myenv env depfile > Makefile
+   make
+   ```
+
+   Spack propagates `gmake` jobserver information to builds so that
+   their jobs can share cores. (#30039, #30254, #30302, #30526)
+
+10. **New variant features**
+
+    In addition to being conditional themselves, variants can now have
+    [conditional *values*](https://spack.readthedocs.io/en/latest/packaging_guide.html#conditional-possible-values)
+    that are only possible for certain configurations of a package. (#29530)
+
+    Variants can be
+    [declared "sticky"](https://spack.readthedocs.io/en/latest/packaging_guide.html#sticky-variants),
+    which prevents them from being enabled or disabled by the
+    concretizer. Sticky variants must be set explicitly by users
+    on the command line or in `packages.yaml`. (#28630)
+
+* Allow conditional possible values in variants
+* Add a "sticky" property to variants
+
+
+## Other new features of note
+
+* Environment views can optionally link only `run` dependencies
+  with `link:run` (#29336)
+* `spack external find --all` finds library-only packages in
+  addition to build dependencies (#28005)
+* Customizable `config:license_dir` option (#30135)
+* `spack external find --path PATH` takes a custom search path (#30479)
+* `spack spec` has a new `--format` argument like `spack find` (#27908)
+* `spack concretize --quiet` skips printing concretized specs (#30272)
+* `spack info` now has cleaner output and displays test info (#22097)
+* Package-level submodule option for git commit versions (#30085, #30037)
+* Using `/hash` syntax to refer to concrete specs in an environment
+  now works even if `/hash` is not installed. (#30276)
+
+## Major internal refactors
+
+* full hash (see above)
+* new develop versioning scheme `0.19.0-dev0`
+* Allow for multiple dependencies/dependents from the same package (#28673)
+* Splice differing virtual packages (#27919)
+
+## Performance Improvements
+
+* Concretization of large environments with `unify: when_possible` is
+  much faster than concretizing separately (#28941, see above)
+* Single-pass view generation algorithm is 2.6x faster (#29443)
+
+## Archspec improvements
+
+* `oneapi` and `dpcpp` flag support (#30783)
+* better support for `M1` and `a64fx` (#30683)
+
+## Removals and Deprecations
+
+* Spack no longer supports Python `2.6` (#27256)
+* Removed deprecated `--run-tests` option of `spack install`;
+  use `spack test` (#30461)
+* Removed deprecated `spack flake8`; use `spack style` (#27290)
+
+* Deprecate `spack:concretization` config option; use
+  `concretizer:unify` (#30038)
+* Deprecate top-level module configuration; use module sets (#28659)
+* `spack activate` and `spack deactivate` are deprecated in favor of
+  environments; will be removed in `0.19.0` (#29430; see also `link:run`
+  in #29336 above)
+
+## Notable Bugfixes
+
+* Fix bug that broke locks with many parallel builds (#27846)
+* Many bugfixes and consistency improvements for the new concretizer
+  and `--reuse` (#30357, #30092, #29835, #29933, #28605, #29694, #28848)
+
+## Packages
+
+* `CMakePackage` uses `CMAKE_INSTALL_RPATH_USE_LINK_PATH` (#29703)
+* Refactored `lua` support: `lua-lang` virtual supports both
+  `lua` and `luajit` via new `LuaPackage` build system(#28854)
+* PythonPackage: now installs packages with `pip` (#27798)
+* Python: improve site_packages_dir handling (#28346)
+* Extends: support spec, not just package name (#27754)
+* `find_libraries`: search for both .so and .dylib on macOS (#28924)
+* Use stable URLs and `?full_index=1` for all github patches (#29239)
+
+## Spack community stats
+
+* 6,416 total packages, 458 new since `v0.17.0`
+    * 219 new Python packages
+    * 60 new R packages
+* 377 people contributed to this release
+    * 337 committers to packages
+    * 85 committers to core
+
+# v0.17.3 (2022-07-14)
+
+### Spack bugfixes
+
+* Fix missing chgrp on symlinks in package installations (#30743)
+* Allow having non-existing upstreams (#30744, #30746)
+* Fix `spack stage` with custom paths (#30448)
+* Fix failing call for `spack buildcache save-specfile` (#30637)
+* Fix globbing in compiler wrapper (#30699)
+
+# v0.17.2 (2022-04-13)
+
+### Spack bugfixes
+* Fix --reuse with upstreams set in an environment (#29680)
+* config add: fix parsing of validator error to infer type from oneOf (#29475)
+* Fix spack -C command_line_scope used in conjunction with other flags (#28418)
+* Use Spec.constrain to construct spec lists for stacks (#28783)
+* Fix bug occurring when searching for inherited patches in packages (#29574)
+* Fixed a few bugs when manipulating symlinks (#28318, #29515, #29636)
+* Fixed a few minor bugs affecting command prompt, terminal title and argument completion (#28279, #28278, #28939, #29405, #29070, #29402)
+* Fixed a few bugs affecting the spack ci command (#29518, #29419)
+* Fix handling of Intel compiler environment (#29439)
+* Fix a few edge cases when reindexing the DB (#28764)
+* Remove "Known issues" from documentation (#29664)
+* Other miscellaneous bugfixes (0b72e070583fc5bcd016f5adc8a84c99f2b7805f, #28403, #29261)
+
+# v0.17.1 (2021-12-23)
+
+### Spack Bugfixes
+* Allow locks to work under high contention (#27846)
+* Improve errors messages from clingo (#27707 #27970)
+* Respect package permissions for sbang (#25764)
+* Fix --enable-locks behavior (#24675)
+* Fix log-format reporter ignoring install errors (#25961)
+* Fix overloaded argparse keys (#27379)
+* Allow style commands to run with targets other than "develop" (#27472)
+* Log lock messages to debug level, instead of verbose level (#27408)
+* Handle invalid unicode while logging (#21447)
+* spack audit: fix API calls to variants (#27713)
+* Provide meaningful message for empty environment installs (#28031)
+* Added opensuse leap containers to spack containerize (#27837)
+* Revert "patches: make re-applied patches idempotent" (#27625)
+* MANPATH can use system defaults (#21682)
+* Add "setdefault" subcommand to `spack module tcl` (#14686)
+* Regenerate views when specs already installed (#28113)
+
+### Package bugfixes
+* Fix external package detection for OpenMPI (#27255)
+* Update the UPC++ package to 2021.9.0 (#26996)
+* Added py-vermin v1.3.2 (#28072)
+
+# v0.17.0 (2021-11-05)
+
+`v0.17.0` is a major feature release.
+
+## Major features in this release
+
+1. **New concretizer is now default**
+   The new concretizer introduced as an experimental feature in `v0.16.0`
+   is now the default (#25502). The new concretizer is based on the
+   [clingo](https://github.com/potassco/clingo) logic programming system,
+   and it enables us to do much higher quality and faster dependency solving
+   The old concretizer is still available via the `concretizer: original`
+   setting, but it is deprecated and will be removed in `v0.18.0`.
+
+2. **Binary Bootstrapping**
+   To make it easier to use the new concretizer and binary packages,
+   Spack now bootstraps `clingo` and `GnuPG` from public binaries. If it
+   is not able to bootstrap them from binaries, it installs them from
+   source code. With these changes, you should still be able to clone Spack
+   and start using it almost immediately. (#21446, #22354, #22489, #22606,
+   #22720, #22720, #23677, #23946, #24003, #25138, #25607, #25964, #26029,
+   #26399, #26599).
+
+3. **Reuse existing packages (experimental)**
+   The most wanted feature from our
+   [2020 user survey](https://spack.io/spack-user-survey-2020/) and
+   the most wanted Spack feature of all time (#25310). `spack install`,
+   `spack spec`, and `spack concretize` now have a `--reuse` option, which
+   causes Spack to minimize the number of rebuilds it does. The `--reuse`
+   option will try to find existing installations and binary packages locally
+   and in registered mirrors, and will prefer to use them over building new
+   versions. This will allow users to build from source *far* less than in
+   prior versions of Spack. This feature will continue to be improved, with
+   configuration options and better CLI expected in `v0.17.1`. It will become
+   the *default* concretization mode in `v0.18.0`.
+
+4. **Better error messages**
+   We have improved the error messages generated by the new concretizer by
+   using *unsatisfiable cores*. Spack will now print a summary of the types
+   of constraints that were violated to make a spec unsatisfiable (#26719).
+
+5. **Conditional variants**
+   Variants can now have a `when="<spec>"` clause, allowing them to be
+   conditional based on the version or other attributes of a package (#24858).
+
+6. **Git commit versions**
+   In an environment and on the command-line, you can now provide a full,
+   40-character git commit as a version for any package with a top-level
+   `git` URL.  e.g., `spack install hdf5@45bb27f58240a8da7ebb4efc821a1a964d7712a8`.
+   Spack will compare the commit to tags in the git repository to understand
+   what versions it is ahead of or behind.
+
+7. **Override local config and cache directories**
+   You can now set `SPACK_DISABLE_LOCAL_CONFIG` to disable the `~/.spack` and
+   `/etc/spack` configuration scopes. `SPACK_USER_CACHE_PATH` allows you to
+   move caches out of `~/.spack`, as well (#27022, #26735). This addresses
+   common problems where users could not isolate CI environments from local
+   configuration.
+
+8. **Improvements to Spack Containerize**
+   For added reproducibility, you can now pin the Spack version used by
+   `spack containerize` (#21910). The container build will only build
+   with the Spack version pinned at build recipe creation instead of the
+   latest Spack version.
+
+9. **New commands for dealing with tags**
+   The `spack tags` command allows you to list tags on packages (#26136), and you
+   can list tests and filter tags with `spack test list` (#26842).
+
+## Other new features of note
+
+* Copy and relocate environment views as stand-alone installations (#24832)
+* `spack diff` command can diff two installed specs (#22283, #25169)
+* `spack -c <config>` can set one-off config parameters on CLI (#22251)
+* `spack load --list` is an alias for `spack find --loaded` (#27184)
+* `spack gpg` can export private key with `--secret` (#22557)
+* `spack style` automatically bootstraps dependencies (#24819)
+* `spack style --fix` automatically invokes `isort` (#24071)
+* build dependencies can be installed from build caches with `--include-build-deps` (#19955)
+* `spack audit` command for checking package constraints (#23053)
+* Spack can now fetch from `CVS` repositories (yep, really) (#23212)
+* `spack monitor` lets you upload analysis about installations to a
+  [spack monitor server](https://github.com/spack/spack-monitor) (#23804, #24321,
+  #23777, #25928))
+* `spack python --path` shows which `python` Spack is using (#22006)
+* `spack env activate --temp` can create temporary environments (#25388)
+* `--preferred` and `--latest` options for `spack checksum` (#25830)
+* `cc` is now pure posix and runs on Alpine (#26259)
+* `SPACK_PYTHON` environment variable sets which `python` spack uses (#21222)
+* `SPACK_SKIP_MODULES` lets you source `setup-env.sh` faster if you don't need modules (#24545)
+
+## Major internal refactors
+
+* `spec.yaml` files are now `spec.json`, yielding a large speed improvement (#22845)
+* Splicing allows Spack specs to store mixed build provenance (#20262)
+* More extensive hooks API for installations (#21930)
+* New internal API for getting the active environment (#25439)
+
+## Performance Improvements
+
+* Parallelize separate concretization in environments; Previously 55 min E4S solve
+    now takes 2.5 min (#26264)
+* Drastically improve YamlFilesystemView file removal performance via batching (#24355)
+* Speed up spec comparison (#21618)
+* Speed up environment activation (#25633)
+
+## Archspec improvements
+* support for new generic `x86_64_v2`, `x86_64_v3`, `x86_64_v4` targets
+    (see [archspec#31](https://github.com/archspec/archspec-json/pull/31))
+* `spack arch --generic` lets you get the best generic architecture for
+    your node (#27061)
+* added support for aocc (#20124), `arm` compiler on `graviton2` (#24904)
+    and on `a64fx` (#24524),
+
+## Infrastructure, buildcaches, and services
+
+* Add support for GCS Bucket Mirrors (#26382)
+* Add `spackbot` to help package maintainers with notifications. See
+  [spack.github.io/spackbot](https://spack.github.io/spackbot/)
+* Reproducible pipeline builds with `spack ci rebuild` (#22887)
+* Removed redundant concretizations from GitLab pipeline generation (#26622)
+* Spack CI no longer generates jobs for unbuilt specs (#20435)
+* Every pull request pipeline has its own buildcache (#25529)
+* `--no-add` installs only specified specs and only if already present in… (#22657)
+* Add environment-aware `spack buildcache sync` command (#25470)
+* Binary cache installation speedups and improvements (#19690, #20768)
+
+## Deprecations and Removals
+
+* `spack setup` was deprecated in v0.16.0, and has now been removed.
+  Use `spack develop` and `spack dev-build`.
+* Remove unused `--dependencies` flag from `spack load` (#25731)
+* Remove stubs for `spack module [refresh|find|rm|loads]`, all of which
+  were deprecated in 2018.
+
+## Notable Bugfixes
+
+* Deactivate previous env before activating new one (#25409)
+* Many fixes to error codes from `spack install` (#21319, #27012, #25314)
+* config add: infer type based on JSON schema validation errors (#27035)
+* `spack config edit` now works even if `spack.yaml` is broken (#24689)
+
+## Packages
+
+* Allow non-empty version ranges like `1.1.0:1.1` (#26402)
+* Remove `.99`'s from many version ranges (#26422)
+* Python: use platform-specific site packages dir (#25998)
+* `CachedCMakePackage` for using *.cmake initial config files (#19316)
+* `lua-lang` allows swapping `lua` and `luajit` (#22492)
+* Better support for `ld.gold` and `ld.lld` (#25626)
+* build times are now stored as metadata in `$prefix/.spack` (#21179)
+* post-install tests can be reused in smoke tests (#20298)
+* Packages can use `pypi` attribute to infer `homepage`/`url`/`list_url` (#17587)
+* Use gnuconfig package for `config.guess` file replacement (#26035)
+* patches: make re-applied patches idempotent (#26784)
+
+## Spack community stats
+
+* 5969 total packages, 920 new since `v0.16.0`
+    * 358 new Python packages, 175 new R packages
+* 513 people contributed to this release
+    * 490 committers to packages
+    * 105 committers to core
+* Lots of GPU updates:
+    * ~77 CUDA-related commits
+    * ~66 AMD-related updates
+    * ~27 OneAPI-related commits
+    * 30 commits from AMD toolchain support
+* `spack test` usage in packages is increasing
+    * 1669 packages with tests (mostly generic python tests)
+    * 93 packages with their own tests
+
+
+# v0.16.3 (2021-09-21)
+
+* clang/llvm: fix version detection (#19978)
+* Fix use of quotes in Python build system (#22279)
+* Cray: fix extracting paths from module files (#23472)
+* Use AWS CloudFront for source mirror (#23978)
+* Ensure all roots of an installed environment are marked explicit in db (#24277)
+* Fix fetching for Python 3.8 and 3.9 (#24686)
+* locks: only open lockfiles once instead of for every lock held (#24794)
+* Remove the EOL centos:6 docker image
+
+# v0.16.2 (2021-05-22)
+
+* Major performance improvement for `spack load` and other commands. (#23661)
+* `spack fetch` is now environment-aware. (#19166)
+* Numerous fixes for the new, `clingo`-based concretizer. (#23016, #23307,
+  #23090, #22896, #22534, #20644, #20537, #21148)
+* Supoprt for automatically bootstrapping `clingo` from source. (#20652, #20657
+  #21364, #21446, #21913, #22354, #22444, #22460, #22489, #22610, #22631)
+* Python 3.10 support: `collections.abc` (#20441)
+* Fix import issues by using `__import__` instead of Spack package importe.
+  (#23288, #23290)
+* Bugfixes and `--source-dir` argument for `spack location`. (#22755, #22348,
+  #22321)
+* Better support for externals in shared prefixes. (#22653)
+* `spack build-env` now prefers specs defined in the active environment.
+  (#21642)
+* Remove erroneous warnings about quotes in `from_sourcing_files`. (#22767)
+* Fix clearing cache of `InternalConfigScope`. (#22609)
+* Bugfix for active when pkg is already active error. (#22587)
+* Make `SingleFileScope` able to repopulate the cache after clearing it.
+  (#22559)
+* Channelflow: Fix the package. (#22483)
+* More descriptive error message for bugs in `package.py` (#21811)
+* Use package-supplied `autogen.sh`. (#20319)
+* Respect `-k/verify-ssl-false` in `_existing_url` method. (#21864)
+
+
+# v0.16.1 (2021-02-22)
+
+This minor release includes a new feature and associated fixes:
+* intel-oneapi support through new packages (#20411, #20686, #20693, #20717,
+  #20732, #20808, #21377, #21448)
+
+This release also contains bug fixes/enhancements for:
+* HIP/ROCm support (#19715, #20095)
+* concretization (#19988, #20020, #20082, #20086, #20099, #20102, #20128,
+  #20182, #20193, #20194, #20196, #20203, #20247, #20259, #20307, #20362,
+  #20383, #20423, #20473, #20506, #20507, #20604, #20638, #20649, #20677,
+  #20680, #20790)
+* environment install reporting fix (#20004)
+* avoid import in ABI compatibility info (#20236)
+* restore ability of dev-build to skip patches (#20351)
+* spack find -d spec grouping (#20028)
+* spack smoke test support (#19987, #20298)
+* macOS fixes (#20038, #21662)
+* abstract spec comparisons (#20341)
+* continuous integration (#17563)
+* performance improvements for binary relocation (#19690, #20768)
+* additional sanity checks for variants in builtin packages (#20373)
+* do not pollute auto-generated configuration files with empty lists or
+  dicts (#20526)
+
+plus assorted documentation (#20021, #20174) and package bug fixes/enhancements
+(#19617, #19933, #19986, #20006, #20097, #20198, #20794, #20906, #21411).
+
+
 # v0.16.0 (2020-11-18)
 
 `v0.16.0` is a major feature release.

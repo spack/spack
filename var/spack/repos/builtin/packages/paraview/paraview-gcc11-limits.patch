@@ -1,0 +1,49 @@
+Index: ParaView-v5.9.1/VTK/Common/Core/vtkGenericDataArrayLookupHelper.h
+===================================================================
+--- ParaView-v5.9.1.orig/VTK/Common/Core/vtkGenericDataArrayLookupHelper.h
++++ ParaView-v5.9.1/VTK/Common/Core/vtkGenericDataArrayLookupHelper.h
+@@ -25,6 +25,7 @@
+ #include "vtkIdList.h"
+ #include <algorithm>
+ #include <cmath>
++#include <limits>
+ #include <unordered_map>
+ #include <vector>
+ 
+Index: ParaView-v5.9.1/VTK/Rendering/Core/vtkColorTransferFunction.cxx
+===================================================================
+--- ParaView-v5.9.1.orig/VTK/Rendering/Core/vtkColorTransferFunction.cxx
++++ ParaView-v5.9.1/VTK/Rendering/Core/vtkColorTransferFunction.cxx
+@@ -21,6 +21,7 @@
+ #include <algorithm>
+ #include <cmath>
+ #include <iterator>
++#include <limits>
+ #include <set>
+ #include <vector>
+ 
+Index: ParaView-v5.9.1/VTK/Common/DataModel/vtkPiecewiseFunction.cxx
+===================================================================
+--- ParaView-v5.9.1.orig/VTK/Common/DataModel/vtkPiecewiseFunction.cxx
++++ ParaView-v5.9.1/VTK/Common/DataModel/vtkPiecewiseFunction.cxx
+@@ -22,6 +22,7 @@
+ #include <cassert>
+ #include <cmath>
+ #include <iterator>
++#include <limits>
+ #include <set>
+ #include <vector>
+ 
+Index: ParaView-v5.9.1/VTK/Filters/HyperTree/vtkHyperTreeGridThreshold.cxx
+===================================================================
+--- ParaView-v5.9.1.orig/VTK/Filters/HyperTree/vtkHyperTreeGridThreshold.cxx
++++ ParaView-v5.9.1/VTK/Filters/HyperTree/vtkHyperTreeGridThreshold.cxx
+@@ -27,6 +27,7 @@
+ #include "vtkHyperTreeGridNonOrientedCursor.h"
+ 
+ #include <cmath>
++#include <limits>
+ 
+ vtkStandardNewMacro(vtkHyperTreeGridThreshold);
+ 
+

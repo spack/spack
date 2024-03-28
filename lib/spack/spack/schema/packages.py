@@ -1,197 +1,233 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Schema for packages.yaml configuration files.
 
 .. literalinclude:: _spack_root/lib/spack/spack/schema/packages.py
-   :lines: 13-
+   :lines: 14-
 """
+from typing import Any, Dict
 
+import spack.schema.environment
 
-def deprecate_paths_and_modules(instance, deprecated_properties):
-    """Function to produce warning/error messages if "paths" and "modules" are
-    found in "packages.yaml"
-
-    Args:
-        instance: instance of the configuration file
-        deprecated_properties: deprecated properties in instance
-
-    Returns:
-        Warning/Error message to be printed
-    """
-    import copy
-    import os.path
-    import llnl.util.tty
-    import spack.util.spack_yaml as syaml
-    # Copy the instance to remove default attributes that are not related
-    # to the part that needs to be reported
-    instance_copy = copy.copy(instance)
-
-    # Check if this configuration comes from an environment or not
-    absolute_path = instance_copy._end_mark.name
-    command_to_suggest = '$ spack config update packages'
-    if os.path.basename(absolute_path) == 'spack.yaml':
-        command_to_suggest = '$ spack env update <environment>'
-
-    # Retrieve the relevant part of the configuration as YAML
-    keys_to_be_removed = [
-        x for x in instance_copy if x not in deprecated_properties
-    ]
-    for key in keys_to_be_removed:
-        instance_copy.pop(key)
-    yaml_as_str = syaml.dump_config(instance_copy, blame=True)
-
-    if llnl.util.tty.is_debug():
-        msg = 'OUTDATED CONFIGURATION FILE [file={0}]\n{1}'
-        llnl.util.tty.debug(msg.format(absolute_path, yaml_as_str))
-
-    msg = ('detected deprecated properties in {0}\nActivate the debug '
-           'flag to have more information on the deprecated parts or '
-           'run:\n\n\t{2}\n\nto update the file to the new format\n')
-    return msg.format(
-        absolute_path, yaml_as_str, command_to_suggest
-    )
-
-
-#: Properties for inclusion in other schemas
-properties = {
-    'packages': {
-        'type': 'object',
-        'default': {},
-        'additionalProperties': False,
-        'patternProperties': {
-            r'\w[\w-]*': {  # package name
-                'type': 'object',
-                'default': {},
-                'additionalProperties': False,
-                'properties': {
-                    'version': {
-                        'type': 'array',
-                        'default': [],
-                        # version strings
-                        'items': {'anyOf': [{'type': 'string'},
-                                            {'type': 'number'}]}},
-                    'target': {
-                        'type': 'array',
-                        'default': [],
-                        # target names
-                        'items': {'type': 'string'},
-                    },
-                    'compiler': {
-                        'type': 'array',
-                        'default': [],
-                        'items': {'type': 'string'}},  # compiler specs
-                    'buildable': {
-                        'type':  'boolean',
-                        'default': True,
-                    },
-                    'permissions': {
-                        'type': 'object',
-                        'additionalProperties': False,
-                        'properties': {
-                            'read': {
-                                'type':  'string',
-                                'enum': ['user', 'group', 'world'],
-                            },
-                            'write': {
-                                'type':  'string',
-                                'enum': ['user', 'group', 'world'],
-                            },
-                            'group': {
-                                'type':  'string',
-                            },
-                        },
-                    },
-                    'providers': {
-                        'type':  'object',
-                        'default': {},
-                        'additionalProperties': False,
-                        'patternProperties': {
-                            r'\w[\w-]*': {
-                                'type': 'array',
-                                'default': [],
-                                'items': {'type': 'string'}, }, }, },
-                    'variants': {
-                        'oneOf': [
-                            {'type': 'string'},
-                            {'type': 'array',
-                             'items': {'type': 'string'}}],
-                    },
-                    'externals': {
-                        'type': 'array',
-                        'items': {
-                            'type': 'object',
-                            'properties': {
-                                'spec': {'type': 'string'},
-                                'prefix': {'type': 'string'},
-                                'modules': {'type': 'array',
-                                            'items': {'type': 'string'}},
-                                'extra_attributes': {'type': 'object'}
-                            },
-                            'additionalProperties': True,
-                            'required': ['spec']
-                        }
-                    },
-                    # Deprecated properties, will trigger an error with a
-                    # message telling how to update.
-                    'paths': {'type': 'object'},
-                    'modules': {'type': 'object'},
-                },
-                'deprecatedProperties': {
-                    'properties': ['modules', 'paths'],
-                    'message': deprecate_paths_and_modules,
-                    'error': False
-                }
-            },
-        },
+permissions = {
+    "type": "object",
+    "additionalProperties": False,
+    "properties": {
+        "read": {"type": "string", "enum": ["user", "group", "world"]},
+        "write": {"type": "string", "enum": ["user", "group", "world"]},
+        "group": {"type": "string"},
     },
 }
 
+variants = {"oneOf": [{"type": "string"}, {"type": "array", "items": {"type": "string"}}]}
+
+requirements = {
+    "oneOf": [
+        # 'require' can be a list of requirement_groups.
+        # each requirement group is a list of one or more
+        # specs. Either at least one or exactly one spec
+        # in the group must be satisfied (depending on
+        # whether you use "any_of" or "one_of",
+        # repectively)
+        {
+            "type": "array",
+            "items": {
+                "oneOf": [
+                    {
+                        "type": "object",
+                        "additionalProperties": False,
+                        "properties": {
+                            "one_of": {"type": "array", "items": {"type": "string"}},
+                            "any_of": {"type": "array", "items": {"type": "string"}},
+                            "spec": {"type": "string"},
+                            "message": {"type": "string"},
+                            "when": {"type": "string"},
+                        },
+                    },
+                    {"type": "string"},
+                ]
+            },
+        },
+        # Shorthand for a single requirement group with
+        # one member
+        {"type": "string"},
+    ]
+}
+
+prefer_and_conflict = {
+    "type": "array",
+    "items": {
+        "oneOf": [
+            {
+                "type": "object",
+                "additionalProperties": False,
+                "properties": {
+                    "spec": {"type": "string"},
+                    "message": {"type": "string"},
+                    "when": {"type": "string"},
+                },
+            },
+            {"type": "string"},
+        ]
+    },
+}
+
+permissions = {
+    "type": "object",
+    "additionalProperties": False,
+    "properties": {
+        "read": {"type": "string", "enum": ["user", "group", "world"]},
+        "write": {"type": "string", "enum": ["user", "group", "world"]},
+        "group": {"type": "string"},
+    },
+}
+
+package_attributes = {
+    "type": "object",
+    "additionalProperties": False,
+    "patternProperties": {r"\w+": {}},
+}
+
+REQUIREMENT_URL = "https://spack.readthedocs.io/en/latest/packages_yaml.html#package-requirements"
+
+#: Properties for inclusion in other schemas
+properties: Dict[str, Any] = {
+    "packages": {
+        "type": "object",
+        "default": {},
+        "additionalProperties": False,
+        "properties": {
+            "all": {  # package name
+                "type": "object",
+                "default": {},
+                "additionalProperties": False,
+                "properties": {
+                    "require": requirements,
+                    "prefer": prefer_and_conflict,
+                    "conflict": prefer_and_conflict,
+                    "version": {},  # Here only to warn users on ignored properties
+                    "target": {
+                        "type": "array",
+                        "default": [],
+                        # target names
+                        "items": {"type": "string"},
+                    },
+                    "compiler": {
+                        "type": "array",
+                        "default": [],
+                        "items": {"type": "string"},
+                    },  # compiler specs
+                    "buildable": {"type": "boolean", "default": True},
+                    "permissions": permissions,
+                    # If 'get_full_repo' is promoted to a Package-level
+                    # attribute, it could be useful to set it here
+                    "package_attributes": package_attributes,
+                    "providers": {
+                        "type": "object",
+                        "default": {},
+                        "additionalProperties": False,
+                        "patternProperties": {
+                            r"\w[\w-]*": {
+                                "type": "array",
+                                "default": [],
+                                "items": {"type": "string"},
+                            }
+                        },
+                    },
+                    "variants": variants,
+                },
+                "deprecatedProperties": {
+                    "properties": ["version"],
+                    "message": "setting version preferences in the 'all' section of packages.yaml "
+                    "is deprecated and will be removed in v0.22\n\n\tThese preferences "
+                    "will be ignored by Spack. You can set them only in package-specific sections "
+                    "of the same file.\n",
+                    "error": False,
+                },
+            }
+        },
+        "patternProperties": {
+            r"(?!^all$)(^\w[\w-]*)": {  # package name
+                "type": "object",
+                "default": {},
+                "additionalProperties": False,
+                "properties": {
+                    "require": requirements,
+                    "prefer": prefer_and_conflict,
+                    "conflict": prefer_and_conflict,
+                    "version": {
+                        "type": "array",
+                        "default": [],
+                        # version strings
+                        "items": {"anyOf": [{"type": "string"}, {"type": "number"}]},
+                    },
+                    "target": {},  # Here only to warn users on ignored properties
+                    "compiler": {},  # Here only to warn users on ignored properties
+                    "buildable": {"type": "boolean", "default": True},
+                    "permissions": permissions,
+                    # If 'get_full_repo' is promoted to a Package-level
+                    # attribute, it could be useful to set it here
+                    "package_attributes": package_attributes,
+                    "providers": {},  # Here only to warn users on ignored properties
+                    "variants": variants,
+                    "externals": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "spec": {"type": "string"},
+                                "prefix": {"type": "string"},
+                                "modules": {"type": "array", "items": {"type": "string"}},
+                                "extra_attributes": {
+                                    "type": "object",
+                                    "additionalProperties": True,
+                                    "properties": {
+                                        "environment": spack.schema.environment.definition
+                                    },
+                                },
+                            },
+                            "additionalProperties": True,
+                            "required": ["spec"],
+                        },
+                    },
+                },
+                "deprecatedProperties": {
+                    "properties": ["target", "compiler", "providers"],
+                    "message": "setting 'compiler:', 'target:' or 'provider:' preferences in "
+                    "a package-specific section of packages.yaml is deprecated, and will be "
+                    "removed in v0.22.\n\n\tThese preferences will be ignored by Spack, and "
+                    "can be set only in the 'all' section of the same file. "
+                    "You can run:\n\n\t\t$ spack audit configs\n\n\tto get better diagnostics, "
+                    "including files:lines where the deprecated attributes are used.\n\n"
+                    "\tUse requirements to enforce conditions on specific packages: "
+                    f"{REQUIREMENT_URL}\n",
+                    "error": False,
+                },
+            }
+        },
+    }
+}
 
 #: Full schema with metadata
 schema = {
-    '$schema': 'http://json-schema.org/schema#',
-    'title': 'Spack package configuration file schema',
-    'type': 'object',
-    'additionalProperties': False,
-    'properties': properties,
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Spack package configuration file schema",
+    "type": "object",
+    "additionalProperties": False,
+    "properties": properties,
 }
 
 
 def update(data):
-    """Update the data in place to remove deprecated properties.
-
-    Args:
-        data (dict): dictionary to be updated
-
-    Returns:
-        True if data was changed, False otherwise
-    """
     changed = False
-    for cfg_object in data.values():
-        externals = []
-
-        # If we don't have these deprecated attributes, continue
-        if not any(x in cfg_object for x in ('paths', 'modules')):
+    for key in data:
+        version = data[key].get("version")
+        if not version or all(isinstance(v, str) for v in version):
             continue
 
-        # If we arrive here we need to make some changes i.e.
-        # we need to remove and eventually convert some attributes
+        data[key]["version"] = [str(v) for v in version]
         changed = True
-        paths = cfg_object.pop('paths', {})
-        for spec, prefix in paths.items():
-            externals.append({
-                'spec': str(spec),
-                'prefix': str(prefix)
-            })
-        modules = cfg_object.pop('modules', {})
-        for spec, module in modules.items():
-            externals.append({
-                'spec': str(spec),
-                'modules': [str(module)]
-            })
-        if externals:
-            cfg_object['externals'] = externals
 
     return changed

@@ -1,12 +1,15 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import os.path
+import os
+
+import spack.build_systems.lua
+from spack.package import *
 
 
-class LuaLuafilesystem(Package):
+class LuaLuafilesystem(LuaPackage):
     """LuaFileSystem is a Lua library developed to complement the set of
     functions related to file systems offered by the standard Lua distribution.
 
@@ -16,33 +19,30 @@ class LuaLuafilesystem(Package):
     LuaFileSystem is free software and uses the same license as Lua 5.1
     """
 
-    homepage = 'http://keplerproject.github.io/luafilesystem'
-    url = 'https://github.com/keplerproject/luafilesystem/archive/v1_6_3.tar.gz'
+    homepage = "https://lunarmodules.github.io/luafilesystem/"
 
-    version('1_7_0_2', sha256='23b4883aeb4fb90b2d0f338659f33a631f9df7a7e67c54115775a77d4ac3cc59')
-    version('1_6_3', sha256='11c7b1fc2e560c0a521246b84e6257138d97dddde5a19e405714dbabcb9436ca')
+    def url_for_version(self, version):
+        url = "https://github.com/lunarmodules/luafilesystem/archive/refs/tags/v{0}.tar.gz"
+        return url.format(version.underscored)
 
-    # The version constraint here comes from this post:
-    #
-    # https://www.perforce.com/blog/git-beyond-basics-using-shallow-clones
-    #
-    # where it is claimed that full shallow clone support was added @1.9
-    depends_on('git@1.9.0:', type='build')
-    extends('lua')
+    license("MIT")
 
-    @property
-    def rockspec(self):
-        version = self.spec.version
-        semver = version[0:3]
-        tweak_level = version[3] if len(version) > 3 else 1
-        fmt = os.path.join(
-            self.stage.source_path,
-            'rockspecs',
-            'luafilesystem-{semver.dotted}-{tweak_level}.rockspec'
-        )
-        return fmt.format(
-            version=version, semver=semver, tweak_level=tweak_level
-        )
+    version("1.8.0", sha256="16d17c788b8093f2047325343f5e9b74cccb1ea96001e45914a58bbae8932495")
+    version("1.7.0-2", sha256="23b4883aeb4fb90b2d0f338659f33a631f9df7a7e67c54115775a77d4ac3cc59")
+    version("1.6.3", sha256="11c7b1fc2e560c0a521246b84e6257138d97dddde5a19e405714dbabcb9436ca")
 
-    def install(self, spec, prefix):
-        luarocks('--tree=' + prefix, 'make', self.rockspec)
+    depends_on("lua-lang@:5.3", when="@:1.7")
+
+
+class LuaBuilder(spack.build_systems.lua.LuaBuilder):
+    def install(self, pkg, spec, prefix):
+        rocks_args = self.luarocks_args()
+        if spec.satisfies("@:1.7.0-2"):
+            rock = "rockspecs/luafilesystem-{0}.rockspec".format(self.spec.version)
+            if not os.path.isfile(rock):
+                rock = "rockspecs/luafilesystem-{0}-1.rockspec".format(self.spec.version)
+            if not os.path.isfile(rock):
+                # fall back on default luarocks behavior for finding rockspec
+                rock = ""
+            rocks_args.append(rock)
+        self.pkg.luarocks("--tree=" + prefix, "make", *rocks_args)

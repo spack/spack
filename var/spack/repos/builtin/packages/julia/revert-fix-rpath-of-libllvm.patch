@@ -1,0 +1,31 @@
+From 34b177cef31f8e6cd9e5251f7b0a8ea07a0fa328 Mon Sep 17 00:00:00 2001
+From: Harmen Stoppels <harmenstoppels@gmail.com>
+Date: Sat, 26 Mar 2022 10:51:55 +0100
+Subject: [PATCH] Revert "Merge pull request #42788 from
+ JuliaLang/vc/freebsd_fix"
+
+This reverts commit 57f6f27e07258c8dccd06b405259ebfe448c16e7, reversing
+changes made to 13310eb4f0e40b8b2e7d77749fbf262f8029cf0f.
+---
+ Makefile | 5 -----
+ 1 file changed, 5 deletions(-)
+
+diff --git a/Makefile b/Makefile
+index ec308a74f6..7cbb77ea06 100644
+--- a/Makefile
++++ b/Makefile
+@@ -369,11 +369,6 @@ ifeq ($(BUNDLE_DEBUG_LIBS),1)
+ endif
+ endif
+ 
+-	# Set rpath for LLVM.so which is `$ORIGIN/../lib` moving from `../lib` to `../lib/julia`.  We only need to do this for Linux/FreeBSD
+-ifneq (,$(findstring $(OS),Linux FreeBSD))
+-	$(PATCHELF) --set-rpath '$$ORIGIN:$$ORIGIN/$(reverse_private_libdir_rel)' $(DESTDIR)$(private_libdir)/libLLVM.$(SHLIB_EXT)
+-endif
+-
+ 
+ ifneq ($(LOADER_BUILD_DEP_LIBS),$(LOADER_INSTALL_DEP_LIBS))
+ 	# Next, overwrite relative path to libjulia-internal in our loader if $$(LOADER_BUILD_DEP_LIBS) != $$(LOADER_INSTALL_DEP_LIBS)
+-- 
+2.25.1
+

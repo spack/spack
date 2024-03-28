@@ -1,0 +1,25 @@
+From 3193c8f2596711c1feb8e655ec391050e0e78ed0 Mon Sep 17 00:00:00 2001
+From: Harmen Stoppels <harmenstoppels@gmail.com>
+Date: Mon, 23 May 2022 16:58:23 +0200
+Subject: [PATCH] Guard GCC-specific macros with _COMPILER_GCC_
+
+---
+ src/julia_internal.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/julia_internal.h b/src/julia_internal.h
+index fbded19..32d038b 100644
+--- a/src/julia_internal.h
++++ b/src/julia_internal.h
+@@ -392,7 +392,7 @@ jl_svec_t *jl_perm_symsvec(size_t n, ...);
+ 
+ // this sizeof(__VA_ARGS__) trick can't be computed until C11, but that only matters to Clang in some situations
+ #if !defined(__clang_analyzer__) && !(defined(JL_ASAN_ENABLED) || defined(JL_TSAN_ENABLED))
+-#ifdef __GNUC__
++#ifdef _COMPILER_GCC_
+ #define jl_perm_symsvec(n, ...) \
+     (jl_perm_symsvec)(__extension__({                                         \
+             static_assert(                                                    \
+-- 
+2.25.1
+

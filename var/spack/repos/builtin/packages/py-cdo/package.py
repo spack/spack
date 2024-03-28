@@ -1,22 +1,28 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class PyCdo(PythonPackage):
     """The cdo package provides an interface to the Climate Data
     Operators from Python."""
 
-    homepage = "https://pypi.python.org/pypi/cdo"
-    url      = "https://pypi.io/packages/source/c/cdo/cdo-1.3.2.tar.gz"
+    pypi = "cdo/cdo-1.3.2.tar.gz"
 
-    version('1.3.2', sha256='9f78879d90d14134f2320565016d0d371b7dfe7ec71110fd313868ec1db34aee')
+    maintainers("Try2Code", "skosukhin")
 
-    depends_on('cdo')
+    version("1.5.6", sha256="fec1a75382f01b3c9c368e8f143d98b12323e06975663f87d9b60c739ae1d335")
 
-    depends_on('py-setuptools', type='build')
-    depends_on('py-scipy', type=('build', 'run'))
-    depends_on('py-netcdf4', type=('build', 'run'))
+    depends_on("python@2.7:", type=("build", "run"))
+
+    depends_on("py-setuptools", type="build")
+    depends_on("cdo+netcdf", type="run")
+    depends_on("py-netcdf4", type=("build", "run"))
+    depends_on("py-xarray", type=("build", "run"))
+    depends_on("py-six", type=("build", "run"))
+
+    def setup_run_environment(self, env):
+        env.set("CDO", self.spec["cdo"].prefix.bin.cdo)

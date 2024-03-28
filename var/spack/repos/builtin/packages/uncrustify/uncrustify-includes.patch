@@ -1,0 +1,26 @@
+diff -Naur spack-src/src/output.cpp spack-src.patched/src/output.cpp
+--- spack-src/src/output.cpp	2021-11-23 17:28:36.000000000 +0100
++++ spack-src.patched/src/output.cpp	2021-11-23 18:26:42.000000000 +0100
+@@ -20,9 +20,7 @@
+ #include <regex>
+ #include <set>
+
+-#ifdef WIN32
+ #include <map>                    // to get std::map
+-#endif // WIN32
+
+
+ constexpr static auto LCURRENT = LOUTPUT;
+diff -Naur spack-src/src/tokenize.cpp spack-src.patched/src/tokenize.cpp
+--- spack-src/src/tokenize.cpp	2021-11-23 17:28:36.000000000 +0100
++++ spack-src.patched/src/tokenize.cpp	2021-11-23 18:26:30.000000000 +0100
+@@ -17,9 +17,7 @@
+
+ #include <regex>
+
+-#ifdef WIN32
+ #include <stack>            // to get std::stack
+-#endif // WIN32
+
+
+ #define LE_COUNT(x)    cpd.le_counts[static_cast<size_t>(LE_ ## x)]

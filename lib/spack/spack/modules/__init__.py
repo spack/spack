@@ -1,23 +1,21 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 """This package contains code for creating environment modules, which can
-include TCL non-hierarchical modules, LUA hierarchical modules, and others.
+include Tcl non-hierarchical modules, Lua hierarchical modules, and others.
 """
 
-from __future__ import absolute_import
+from typing import Dict, Type
 
-from .tcl import TclModulefileWriter
+from .common import BaseModuleFileWriter, disable_modules
 from .lmod import LmodModulefileWriter
+from .tcl import TclModulefileWriter
 
-__all__ = [
-    'TclModulefileWriter',
-    'LmodModulefileWriter'
-]
+__all__ = ["TclModulefileWriter", "LmodModulefileWriter", "disable_modules"]
 
-module_types = {
-    'tcl': TclModulefileWriter,
-    'lmod': LmodModulefileWriter
+module_types: Dict[str, Type[BaseModuleFileWriter]] = {
+    "tcl": TclModulefileWriter,
+    "lmod": LmodModulefileWriter,
 }

@@ -1,9 +1,9 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 # See also: AspellDictPackage
@@ -16,7 +16,10 @@ class Aspell(AutotoolsPackage, GNUMirrorPackage):
 
     extendable = True  # support activating dictionaries
 
-    version('0.60.6.1', sha256='f52583a83a63633701c5f71db3dc40aab87b7f76b29723aeb27941eff42df6e1')
+    license("LGPL-2.1-or-later")
 
-    patch('fix_cpp.patch')
-    patch('issue-519.patch', when='@:0.60.6.1')
+    version("0.60.8", sha256="f9b77e515334a751b2e60daab5db23499e26c9209f5e7b7443b05235ad0226f2")
+    version("0.60.6.1", sha256="f52583a83a63633701c5f71db3dc40aab87b7f76b29723aeb27941eff42df6e1")
+
+    patch("fix_cpp.patch")
+    patch("issue-519.patch", when="@:0.60.6.1")

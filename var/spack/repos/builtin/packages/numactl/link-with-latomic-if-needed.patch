@@ -1,0 +1,53 @@
+From e0de0d9e981ddb53bdeb4a4b9dc43046c9ff4ff9 Mon Sep 17 00:00:00 2001
+From: Fabrice Fontaine <fontaine.fabrice@gmail.com>
+Date: Thu, 6 May 2021 23:08:36 +0200
+Subject: [PATCH 304/304] link with -latomic if needed
+
+numactl unconditionally uses __atomic_fetch_and but some architectures
+(e.g. sparc) needs to link with -latomic to be able to use it. So check
+if -latomic is needed and update numa.pc accordingly
+
+Signed-off-by: Fabrice Fontaine <fontaine.fabrice@gmail.com>
+---
+ Makefile.am  | 1 +
+ configure.ac | 2 ++
+ numa.pc.in   | 1 +
+ 3 files changed, 4 insertions(+)
+
+diff --git a/Makefile.am b/Makefile.am
+index 44d0d76..34f6815 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -151,6 +151,7 @@ SED_PROCESS = \
+         -e 's,@exec_prefix\@,$(exec_prefix),g' \
+         -e 's,@libdir\@,$(libdir),g' \
+         -e 's,@includedir\@,$(includedir),g' \
++        -e 's,@LIBS\@,$(LIBS),g' \
+         < $< > $@ || rm $@
+ 
+ %.pc: %.pc.in Makefile
+diff --git a/configure.ac b/configure.ac
+index 659a765..e3b0eb3 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -24,6 +24,8 @@ AM_CONDITIONAL([HAVE_TREE_VECTORIZE], [test x"${tree_vectorize}" = x"true"])
+ 
+ AC_CONFIG_FILES([Makefile])
+ 
++AC_SEARCH_LIBS([__atomic_fetch_and_1], [atomic])
++
+ # GCC tries to be "helpful" and only issue a warning for unrecognized
+ # attributes.  So we compile the test with Werror, so that if the
+ # attribute is not recognized the compilation fails
+diff --git a/numa.pc.in b/numa.pc.in
+index 8a0f202..cc04d50 100644
+--- a/numa.pc.in
++++ b/numa.pc.in
+@@ -8,3 +8,4 @@ Description: NUMA policy library
+ Version: @VERSION@
+ Cflags: -I${includedir}
+ Libs: -L${libdir} -lnuma
++Libs.Private: @LIBS@
+-- 
+2.30.1
+

@@ -1,37 +1,39 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Henson(CMakePackage):
     """Cooperative multitasking for in situ processing."""
 
     homepage = "https://github.com/henson-insitu/henson"
-    git      = "https://github.com/henson-insitu/henson.git"
+    git = "https://github.com/henson-insitu/henson.git"
 
-    version('master', branch='master')
+    license("BSD-3-Clause-LBNL")
 
-    depends_on('mpi')
+    version("master", branch="master")
 
-    variant('python', default=False, description='Build Python bindings')
-    extends('python', when='+python')
-    variant('mpi-wrappers', default=False, description='Build MPI wrappers (PMPI)')
+    maintainers("mrzv")
 
-    conflicts('^openmpi', when='+mpi-wrappers')
+    depends_on("mpi")
+
+    variant("python", default=False, description="Build Python bindings")
+    extends("python", when="+python")
+    depends_on("py-mpi4py", when="+python", type=("build", "run"))
+    variant("mpi-wrappers", default=False, description="Build MPI wrappers (PMPI)")
+
+    variant("boost", default=False, description="Use Boost for coroutine support")
+    depends_on("boost+context", when="+boost", type=("build", "run"))
+    conflicts("~boost", when="target=aarch64:")
+
+    conflicts("^openmpi", when="+mpi-wrappers")
 
     def cmake_args(self):
-        args = []
-        if '+python' in self.spec:
-            args += ['-Dpython=on']
-        else:
-            args += ['-Dpython=off']
-
-        if '+mpi-wrappers' in self.spec:
-            args += ['-Dmpi-wrappers=on']
-        else:
-            args += ['-Dmpi-wrappers=off']
-
-        return args
+        return [
+            self.define_from_variant("python", "python"),
+            self.define_from_variant("mpi-wrappers", "mpi-wrappers"),
+            self.define_from_variant("use_boost", "boost"),
+        ]

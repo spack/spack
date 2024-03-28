@@ -1,34 +1,47 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+import os
+import re
+from typing import List
+
+import llnl.util.lang
 
 import spack.compiler
 
 
 class Nag(spack.compiler.Compiler):
     # Subclasses use possible names of C compiler
-    cc_names = []
+    cc_names: List[str] = []
 
     # Subclasses use possible names of C++ compiler
-    cxx_names = []
+    cxx_names: List[str] = []
 
     # Subclasses use possible names of Fortran 77 compiler
-    f77_names = ['nagfor']
+    f77_names = ["nagfor"]
 
     # Subclasses use possible names of Fortran 90 compiler
-    fc_names = ['nagfor']
+    fc_names = ["nagfor"]
 
     # Named wrapper links within build_env_path
     # Use default wrappers for C and C++, in case provided in compilers.yaml
     link_paths = {
-        'cc': 'cc',
-        'cxx': 'c++',
-        'f77': 'nag/nagfor',
-        'fc': 'nag/nagfor'}
+        "cc": "cc",
+        "cxx": "c++",
+        "f77": os.path.join("nag", "nagfor"),
+        "fc": os.path.join("nag", "nagfor"),
+    }
 
-    version_argument = '-V'
-    version_regex = r'NAG Fortran Compiler Release ([0-9.]+)'
+    version_argument = "-V"
+
+    @classmethod
+    @llnl.util.lang.memoized
+    def extract_version_from_output(cls, output):
+        match = re.search(r"NAG Fortran Compiler Release (\d+).(\d+)\(.*\) Build (\d+)", output)
+        if match:
+            return ".".join(match.groups())
 
     @property
     def verbose_flag(self):
@@ -66,11 +79,11 @@ class Nag(spack.compiler.Compiler):
 
     @property
     def debug_flags(self):
-        return ['-g', '-gline', '-g90']
+        return ["-g", "-gline", "-g90"]
 
     @property
     def opt_flags(self):
-        return ['-O', '-O0', '-O1', '-O2', '-O3', '-O4']
+        return ["-O", "-O0", "-O1", "-O2", "-O3", "-O4"]
 
     @property
     def cxx11_flag(self):
@@ -91,12 +104,22 @@ class Nag(spack.compiler.Compiler):
     # options with '-Wl,-Wl,,'
     @property
     def f77_rpath_arg(self):
-        return '-Wl,-Wl,,-rpath,,'
+        return "-Wl,-Wl,,-rpath,,"
 
     @property
     def fc_rpath_arg(self):
-        return '-Wl,-Wl,,-rpath,,'
+        return "-Wl,-Wl,,-rpath,,"
 
     @property
     def linker_arg(self):
-        return '-Wl,-Wl,,'
+        return "-Wl,-Wl,,"
+
+    @property
+    def disable_new_dtags(self):
+        # Disable RPATH/RUNPATH forcing for NAG/GCC mixed toolchains:
+        return ""
+
+    @property
+    def enable_new_dtags(self):
+        # Disable RPATH/RUNPATH forcing for NAG/GCC mixed toolchains:
+        return ""

@@ -1,101 +1,250 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+import os
+
+from spack.package import *
 
 
-class Gasnet(AutotoolsPackage):
-    """GASNet is a language-independent, low-level networking layer
-       that provides network-independent, high-performance communication
-       primitives tailored for implementing parallel global address space
-       SPMD languages and libraries such as UPC, Co-Array Fortran, SHMEM,
-       Cray Chapel, and Titanium.
+class Gasnet(Package, CudaPackage, ROCmPackage):
+    """GASNet is a language-independent, networking middleware layer that
+    provides network-independent, high-performance communication primitives
+    including Remote Memory Access (RMA) and Active Messages (AM). It has been
+    used to implement parallel programming models and libraries such as UPC,
+    UPC++, Co-Array Fortran, Legion, Chapel, and many others. The interface is
+    primarily intended as a compilation target and for use by runtime library
+    writers (as opposed to end users), and the primary goals are high
+    performance, interface portability, and expressiveness.
+
+    ***NOTICE***: The GASNet library built by this Spack package is ONLY intended for
+    unit-testing purposes, and is generally UNSUITABLE FOR PRODUCTION USE.
+    The RECOMMENDED way to build GASNet is as an embedded library as configured
+    by the higher-level client runtime package (UPC++, Legion, etc), including
+    system-specific configuration.
     """
+
     homepage = "https://gasnet.lbl.gov"
-    url      = "https://gasnet.lbl.gov/EX/GASNet-2020.3.0.tar.gz"
+    url = "https://gasnet.lbl.gov/EX/GASNet-2021.3.0.tar.gz"
+    git = "https://bitbucket.org/berkeleylab/gasnet.git"
 
-    version('2020.3.0', sha256='019eb2d2284856e6fabe6c8c0061c874f10e95fa0265245f227fd3497f1bb274')
-    version('2019.9.0', sha256='117f5fdb16e53d0fa8a47a1e28cccab1d8020ed4f6e50163d985dc90226aaa2c')
-    version('2019.6.0', sha256='839ba115bfb48083c66b4c1c27703d73063b75d2f1e0501d5eab2ad7f0f776c8')
-    version('2019.3.2', sha256='9e2175047879f1e8c7c4b0a9db3c2cd20c978371cd7f209cf669d402119b6fdb')
-    version('2019.3.0', sha256='97fe19bb5ab32d14a96d2dd19d0f03048f68bb20ca83abe0c00cdab40e86eba5')
-    version('1.32.0', sha256='42e4774b3bbc7c142f77c41b6ce86b594f579073f46c31f47f424c7e31ee1511')
-    version('1.30.0', sha256='b5d8c98c53174a98a41efb4ec9dedb62c0a9e8fa111bb6460cd4493beb80d497')
-    version('1.28.2', sha256='7903fd8ebdd03bcda20a66e3fcedef2f8b384324591aa91b8370f3360f6384eb')
-    version('1.28.0', sha256='a7999fbaa1f220c2eb9657279c7e7cccd1b21865d5383c9a5685cfe05a0702bc')
-    version('1.24.0', sha256='76b4d897d5e2261ef83d0885c192e8ac039e32cb2464f11eb64eb3f9f2df38c0')
+    maintainers("PHHargrove", "bonachea")
 
-    variant('mpi', default=True, description="Support MPI")
-    variant('ibv', default=False, description="Support InfiniBand")
-    variant('udp', default=False, description="Support UDP")
-    variant('aligned-segments', default=False,
-            description="Requirement to achieve aligned VM segments")
-    variant('pshm', default=True,
-            description="Support inter-process shared memory support")
-    variant('segment-mmap-max', default='16GB',
-            description="Upper bound for mmap-based GASNet segments")
+    tags = ["e4s", "ecp"]
 
-    conflicts('+aligned-segments', when='+pshm')
+    version("develop", branch="develop")
+    version("main", branch="stable")
+    version("master", branch="master")
 
-    depends_on('mpi', when='+mpi')
+    version("2023.9.0", sha256="2d9f15a794e10683579ce494cd458b0dd97e2d3327c4d17e1fea79bd95576ce6")
+    version("2023.3.0", sha256="e1fa783d38a503cf2efa7662be591ca5c2bb98d19ac72a9bc6da457329a9a14f")
+    version("2022.9.2", sha256="2352d52f395a9aa14cc57d82957d9f1ebd928d0a0021fd26c5f1382a06cd6f1d")
+    version("2022.9.0", sha256="6873ff4ad8ebee49da4378f2d78095a6ccc31333d6ae4cd739b9f772af11f936")
+    version("2022.3.0", sha256="91b59aa84c0680c807e00d3d1d8fa7c33c1aed50b86d1616f93e499620a9ba09")
+    version(
+        "2021.9.0",
+        deprecated=True,
+        sha256="1b6ff6cdad5ecf76b92032ef9507e8a0876c9fc3ee0ab008de847c1fad0359ee",
+    )
+    version(
+        "2021.3.0",
+        deprecated=True,
+        sha256="8a40fb3fa8bacc3922cd4d45217816fcb60100357ab97fb622a245567ea31747",
+    )
+    version(
+        "2020.10.0",
+        deprecated=True,
+        sha256="ed17baf7fce90499b539857ee37b3eea961aa475cffbde77e4c607a34ece06a0",
+    )
+    version(
+        "2020.3.0",
+        deprecated=True,
+        sha256="019eb2d2284856e6fabe6c8c0061c874f10e95fa0265245f227fd3497f1bb274",
+    )
+    version(
+        "2019.9.0",
+        deprecated=True,
+        sha256="117f5fdb16e53d0fa8a47a1e28cccab1d8020ed4f6e50163d985dc90226aaa2c",
+    )
+    # Do NOT add older versions here.
+    # GASNet-EX releases over 2 years old are not supported.
 
-    def url_for_version(self, version):
-        url = "https://gasnet.lbl.gov/"
-        if version >= Version('2019'):
-            url += "EX/GASNet-{0}.tar.gz".format(version)
-        else:
-            url += "download/GASNet-{0}.tar.gz".format(version)
+    # The optional network backends:
+    variant(
+        "conduits",
+        values=any_combination_of("smp", "mpi", "ibv", "udp", "ofi", "ucx").with_default("smp"),
+        description="The hardware-dependent network backends to enable.\n"
+        + "(smp) = SMP conduit for single-node operation ;\n"
+        + "(ibv) = Native InfiniBand verbs conduit ;\n"
+        + "(ofi) = OFI conduit over libfabric, for HPE Cray Slingshot and Intel Omni-Path ;\n"
+        + "(udp) = Portable UDP conduit, for Ethernet networks ;\n"
+        + "(mpi) = Low-performance/portable MPI conduit ;\n"
+        + "(ucx) = EXPERIMENTAL UCX conduit for Mellanox IB/RoCE ConnectX-5+ ;\n"
+        + "For detailed recommendations, consult https://gasnet.lbl.gov",
+    )
 
-        return url
+    variant("debug", default=False, description="Enable library debugging mode")
 
-    def configure_args(self):
-        args = [
-            # TODO: factor IB suport out into architecture description.
-            '--enable-par',
-            '--enable-mpi-compat',
-            '--enable-segment-fast',
-            '--disable-parsync',
-            '--with-segment-mmap-max=%s '
-            % (self.spec.variants['segment-mmap-max'].value),
-            # for consumers with shared libs
-            "CC=%s %s" % (spack_cc, self.compiler.cc_pic_flag),
-            "CXX=%s %s" % (spack_cxx, self.compiler.cxx_pic_flag),
-        ]
+    variant(
+        "cuda",
+        default=False,
+        description="Enables support for the CUDA memory kind in some conduits.\n"
+        + "NOTE: Requires CUDA Driver library be present on the build system",
+        when="@2020.11:",
+    )
+    conflicts(
+        "+cuda",
+        when="@:2020.10",
+        msg="GASNet version 2020.11.0 or newer required for CUDA support",
+    )
 
-        if '+aligned-segments' in self.spec:
-            args.append('--enable-aligned-segments')
-        else:
-            args.append('--disable-aligned-segments')
+    variant(
+        "rocm",
+        default=False,
+        description="Enables support for the ROCm/HIP memory kind in some conduits",
+        when="@2021.9:",
+    )
+    conflicts(
+        "+rocm", when="@:2021.8", msg="GASNet version 2021.9.0 or newer required for ROCm support"
+    )
 
-        if '+pshm' in self.spec:
-            args.append('--enable-pshm')
-        else:
-            args.append('--disable-pshm')
+    variant(
+        "level_zero",
+        default=False,
+        description="Enables *experimental* support for the Level Zero "
+        + "memory kind on Intel GPUs in some conduits",
+        when="@2023.9.0:",
+    )
 
-        if '+mpi' in self.spec:
-            args.extend(['--enable-mpi',
-                         '--disable-udp',
-                         '--disable-ibv',
-                         '--disable-seq',
-                         'MPI_CC=%s %s'
-                        % (self.spec['mpi'].mpicc, self.compiler.cc_pic_flag)])
+    depends_on("mpi", when="conduits=mpi")
 
-        if '+ibv' in self.spec:
-            args.extend(['--enable-ibv',
-                         '--with-ibv-max-hcas=1',
-                         '--enable-pthreads',
-                         '--disable-udp',
-                         '--disable-mpi',
-                         '--disable-seq',
-                         '--disable-smp',
-                         '--disable-portals'])
+    depends_on("autoconf@2.69", type="build", when="@master:")
+    depends_on("automake@1.16:", type="build", when="@master:")
 
-        if '+udp' in self.spec:
-            args.extend(['--enable-udp',
-                         '--disable-ibv',
-                         '--disable-mpi',
-                         '--disable-seq'])
+    conflicts("^hip@:4.4.0", when="+rocm")
 
-        return args
+    depends_on("oneapi-level-zero@1.8.0:", when="+level_zero")
+
+    def install(self, spec, prefix):
+        if spec.satisfies("@master:"):
+            bootstrapsh = Executable("./Bootstrap")
+            bootstrapsh()
+            # Record git-describe when fetched from git:
+            try:
+                git = which("git")
+                git("describe", "--long", "--always", output="version.git")
+            except spack.util.executable.ProcessError:
+                spack.main.send_warning_to_tty("Omitting version stamp due to git error")
+
+        # The GASNet-EX library has a highly multi-dimensional configure space,
+        # to accomodate the varying behavioral requirements of each client runtime.
+        # The library's ABI/link compatibility is strongly dependent on these
+        # client-specific build-time settings, and that variability is deliberately NOT
+        # encoded in the variants of this package. The recommended way to build/deploy
+        # GASNet is as an EMBEDDED library within the build of the client package
+        # (eg. Berkeley UPC, UPC++, Legion, etc), some of which provide build-time
+        # selection of the GASNet library sources. This spack package provides
+        # the GASNet-EX sources, for use by appropriate client packages.
+        install_tree(".", prefix + "/src")
+
+        # Library build is provided for unit-testing purposes only (see notice above)
+        if "conduits=none" not in spec:
+            options = ["--prefix=%s" % prefix]
+
+            if "+debug" in spec:
+                options.append("--enable-debug")
+
+            if "+cuda" in spec:
+                options.append("--enable-kind-cuda-uva")
+
+            if "+rocm" in spec:
+                options.append("--enable-kind-hip")
+
+            if "+level_zero" in spec:
+                options.append("--enable-kind-ze")
+                options.append("--with-ze-home=" + spec["oneapi-level-zero"].prefix)
+
+            if "conduits=mpi" in spec:
+                options.append("--enable-mpi-compat")
+            else:
+                options.append("--disable-mpi-compat")
+
+            options.append("--disable-auto-conduit-detect")
+            for c in spec.variants["conduits"].value:
+                options.append("--enable-" + c)
+
+            options.append("--enable-rpath")
+
+            configure(*options)
+            make()
+            make("install")
+
+            for c in spec.variants["conduits"].value:
+                testdir = join_path(self.prefix.tests, c)
+                mkdirp(testdir)
+                make("-C", c + "-conduit", "testgasnet-par")
+                install(c + "-conduit/testgasnet", testdir)
+            make("-C", c + "-conduit", "testtools-par")
+            install(c + "-conduit/testtools", self.prefix.tests)
+
+    @run_after("install")
+    @on_package_attributes(run_tests=True)
+    def check_install(self):
+        if "conduits=smp" in self.spec:
+            make("-C", "smp-conduit", "run-tests")
+        self.test_testtools()
+
+    def _setup_test_env(self):
+        """Set up key stand-alone test environment variables."""
+        os.environ["GASNET_VERBOSEENV"] = "1"  # include diagnostic info
+
+        # The following are not technically relevant to test_testtools
+        os.environ["GASNET_SPAWN_VERBOSE"] = "1"  # include spawning diagnostics
+        if "GASNET_SSH_SERVERS" not in os.environ:
+            os.environ["GASNET_SSH_SERVERS"] = "localhost " * 4
+
+    def test_testtools(self):
+        """run testtools and check output"""
+        if "conduits=none" in self.spec:
+            raise SkipTest("Test requires conduit libraries")
+
+        testtools_path = join_path(self.prefix.tests, "testtools")
+        assert os.path.exists(testtools_path), "Test requires testtools"
+
+        self._setup_test_env()
+        testtools = which(testtools_path, required=True)
+        out = testtools(output=str.split, error=str.split)
+        assert "Done." in out
+
+    def test_testgasnet(self):
+        """run testgasnet and check output"""
+        if "conduits=none" in self.spec:
+            raise SkipTest("Test requires conduit libraries")
+
+        self._setup_test_env()
+        ranks = "4"
+        spawner = {
+            "smp": ["env", "GASNET_PSHM_NODES=" + ranks],
+            "mpi": [join_path(self.prefix.bin, "gasnetrun_mpi"), "-n", ranks],
+            "ibv": [join_path(self.prefix.bin, "gasnetrun_ibv"), "-n", ranks],
+            "ofi": [join_path(self.prefix.bin, "gasnetrun_ofi"), "-n", ranks],
+            "ucx": [join_path(self.prefix.bin, "gasnetrun_ucx"), "-n", ranks],
+            "udp": [join_path(self.prefix.bin, "amudprun"), "-spawn", "L", "-np", ranks],
+        }
+
+        expected = "done."
+        for c in self.spec.variants["conduits"].value:
+            os.environ["GASNET_SUPERNODE_MAXSIZE"] = "0" if (c == "smp") else "1"
+            test = join_path(self.prefix.tests, c, "testgasnet")
+
+            with test_part(
+                self,
+                "test_testgasnet_{0}".format(c),
+                purpose="run {0}-conduit/testgasnet".format(c),
+            ):
+                exe = which(spawner[c][0], required=True)
+
+                args = spawner[c][1:] + [test]
+                out = exe(*args, output=str.split, error=str.split)
+                assert expected in out

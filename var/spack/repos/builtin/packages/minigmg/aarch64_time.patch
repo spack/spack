@@ -1,0 +1,21 @@
+diff --git a/timer.aarch64.c b/timer.aarch64.c
+new file mode 100644
+index 0000000..ca47633
+--- /dev/null
++++ b/timer.aarch64.c
+@@ -0,0 +1,15 @@
++//------------------------------------------------------------------------------------------------------------------------------
++// Samuel Williams
++// SWWilliams@lbl.gov
++// Lawrence Berkeley National Lab
++//------------------------------------------------------------------------------------------------------------------------------
++#include <stdint.h>
++
++
++uint64_t CycleTime(){
++  uint64_t val;
++    asm volatile("mrs %0, cntvct_el0" : "=r" (val));
++
++  return val;
++}
++

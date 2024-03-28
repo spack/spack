@@ -1,4 +1,4 @@
-.. Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,7 +9,7 @@
 Custom Build Systems
 --------------------
 
-While the build systems listed above should meet your needs for the
+While the built-in build systems should meet your needs for the
 vast majority of packages, some packages provide custom build scripts.
 This guide is intended for the following use cases:
 
@@ -31,7 +31,7 @@ installation. Both of these packages require custom build systems.
 Base class
 ^^^^^^^^^^
 
-If your package does not belong to any of the aforementioned build
+If your package does not belong to any of the built-in build
 systems that Spack already supports, you should inherit from the
 ``Package`` base class. ``Package`` is a simple base class with a
 single phase: ``install``. If your package is simple, you may be able
@@ -57,13 +57,13 @@ If you look at the ``perl`` package, you'll see:
 
 .. code-block:: python
 
-   phases = ['configure', 'build', 'install']
+   phases = ["configure", "build", "install"]
 
 Similarly, ``cmake`` defines:
 
 .. code-block:: python
 
-   phases = ['bootstrap', 'build', 'install']
+   phases = ["bootstrap", "build", "install"]
 
 If we look at the ``cmake`` example, this tells Spack's ``PackageBase``
 class to run the ``bootstrap``, ``build``, and ``install`` functions
@@ -78,7 +78,7 @@ If we look at ``perl``, we see that it defines a ``configure`` method:
 .. code-block:: python
 
    def configure(self, spec, prefix):
-       configure = Executable('./Configure')
+       configure = Executable("./Configure")
        configure(*self.configure_args())
 
 There is also a corresponding ``configure_args`` function that handles
@@ -92,7 +92,7 @@ phases are pretty simple:
        make()
 
    def install(self, spec, prefix):
-       make('install')
+       make("install")
 
 The ``cmake`` package looks very similar, but with a ``bootstrap``
 function instead of ``configure``:
@@ -100,14 +100,14 @@ function instead of ``configure``:
 .. code-block:: python
 
    def bootstrap(self, spec, prefix):
-       bootstrap = Executable('./bootstrap')
+       bootstrap = Executable("./bootstrap")
        bootstrap(*self.bootstrap_args())
 
    def build(self, spec, prefix):
        make()
 
    def install(self, spec, prefix):
-       make('install')
+       make("install")
 
 Again, there is a ``boostrap_args`` function that determines the
 correct bootstrap flags to use.
@@ -128,16 +128,16 @@ before or after a particular phase. For example, in ``perl``, we see:
 
 .. code-block:: python
 
-   @run_after('install')
+   @run_after("install")
    def install_cpanm(self):
        spec = self.spec
 
-       if '+cpanm' in spec:
-           with working_dir(join_path('cpanm', 'cpanm')):
-               perl = spec['perl'].command
-               perl('Makefile.PL')
+       if spec.satisfies("+cpanm"):
+           with working_dir(join_path("cpanm", "cpanm")):
+               perl = spec["perl"].command
+               perl("Makefile.PL")
                make()
-               make('install')
+               make("install")
 
 This extra step automatically installs ``cpanm`` in addition to the
 base Perl installation.
@@ -168,25 +168,20 @@ if and only if this flag is set, we would use the following line:
 Testing
 ^^^^^^^
 
-Let's put everything together and add unit tests to our package.
+Let's put everything together and add unit tests to be optionally run
+during the installation of our package.
 In the ``perl`` package, we can see:
 
 .. code-block:: python
 
-   @run_after('build')
+   @run_after("build")
    @on_package_attributes(run_tests=True)
    def test(self):
-       make('test')
+       make("test")
 
 As you can guess, this runs ``make test`` *after* building the package,
 if and only if testing is requested. Again, this is not specific to
 custom build systems, it can be added to existing build systems as well.
-
-Ideally, every package in Spack will have some sort of test to ensure
-that it was built correctly. It is up to the package authors to make
-sure this happens. If you are adding a package for some software and
-the developers list commands to test the installation, please add these
-tests to your ``package.py``.
 
 .. warning::
 
@@ -194,7 +189,7 @@ tests to your ``package.py``.
 
    .. code-block:: python
 
-      @run_after('install')
+      @run_after("install")
       @on_package_attributes(run_tests=True)
 
    works as expected. However, if you reverse the ordering:
@@ -202,8 +197,17 @@ tests to your ``package.py``.
    .. code-block:: python
 
       @on_package_attributes(run_tests=True)
-      @run_after('install')
+      @run_after("install")
 
    the tests will always be run regardless of whether or not
    ``--test=root`` is requested. See https://github.com/spack/spack/issues/3833
    for more information
+
+Ideally, every package in Spack will have some sort of test to ensure
+that it was built correctly. It is up to the package authors to make
+sure this happens. If you are adding a package for some software and
+the developers list commands to test the installation, please add these
+tests to your ``package.py``.
+
+For more information on other forms of package testing, refer to
+:ref:`Checking an installation <checking_an_installation>`.

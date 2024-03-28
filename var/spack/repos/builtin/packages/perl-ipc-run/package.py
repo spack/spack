@@ -1,9 +1,9 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class PerlIpcRun(PerlPackage):
@@ -13,9 +13,16 @@ class PerlIpcRun(PerlPackage):
     supported and may be mixed."""
 
     homepage = "https://metacpan.org/pod/IPC::Run"
-    url      = "https://cpan.metacpan.org/authors/id/T/TO/TODDR/IPC-Run-20180523.0.tar.gz"
+    url = "https://cpan.metacpan.org/authors/id/T/TO/TODDR/IPC-Run-20180523.0.tar.gz"
 
-    version('20180523.0', sha256='3850d7edf8a4671391c6e99bb770698e1c45da55b323b31c76310913349b6c2f')
+    license("GPL-1.0-or-later OR Artistic-1.0-Perl")
 
-    depends_on('perl-io-tty', type=('build', 'run'))
-    depends_on('perl-readonly', type='build')
+    version(
+        "20220807.0", sha256="277d781dbbc98af18e979c7ef36f222513d7361742c52507c3348b265f6f5e69"
+    )
+    version(
+        "20180523.0", sha256="3850d7edf8a4671391c6e99bb770698e1c45da55b323b31c76310913349b6c2f"
+    )
+
+    depends_on("perl-io-tty", type=("build", "run"))
+    depends_on("perl-readonly", type="build")

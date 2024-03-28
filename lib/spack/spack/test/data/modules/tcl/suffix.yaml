@@ -1,6 +1,8 @@
 enable:
   - tcl
 tcl:
+  all:
+    autoload: none
   mpileaks:
     suffixes:
       '+opt': baz

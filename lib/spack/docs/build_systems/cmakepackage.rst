@@ -1,13 +1,13 @@
-.. Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 .. _cmakepackage:
 
-------------
-CMakePackage
-------------
+-----
+CMake
+-----
 
 Like Autotools, CMake is a widely-used build-script generator. Designed
 by Kitware, CMake is the most popular build system for new C, C++, and
@@ -21,7 +21,7 @@ whereas Autotools is Unix-only.
 Phases
 ^^^^^^
 
-The ``CMakePackage`` base class comes with the following phases:
+The ``CMakeBuilder`` and ``CMakePackage`` base classes come with the following phases:
 
 #. ``cmake`` - generate the Makefile
 #. ``build`` - build the package
@@ -82,7 +82,7 @@ class already contains:
 
 .. code-block:: python
 
-   depends_on('cmake', type='build')
+   depends_on("cmake", type="build")
 
 
 If you need to specify a particular version requirement, you can
@@ -90,7 +90,7 @@ override this in your package:
 
 .. code-block:: python
 
-   depends_on('cmake@2.8.12:', type='build')
+   depends_on("cmake@2.8.12:", type="build")
 
 
 ^^^^^^^^^^^^^^^^^^^
@@ -130,20 +130,113 @@ Adding flags to cmake
 To add additional flags to the ``cmake`` call, simply override the
 ``cmake_args`` function. The following example defines values for the flags
 ``WHATEVER``, ``ENABLE_BROKEN_FEATURE``, ``DETECT_HDF5``, and ``THREADS`` with
-and without the :py:meth:`~.CMakePackage.define` and
-:py:meth:`~.CMakePackage.define_from_variant` helper functions:
+and without the :meth:`~spack.build_systems.cmake.CMakeBuilder.define` and
+:meth:`~spack.build_systems.cmake.CMakeBuilder.define_from_variant` helper functions:
 
 .. code-block:: python
 
    def cmake_args(self):
        args = [
-           '-DWHATEVER:STRING=somevalue',
-           self.define('ENABLE_BROKEN_FEATURE', False),
-           self.define_from_variant('DETECT_HDF5', 'hdf5'),
-           self.define_from_variant('THREADS'), # True if +threads
+           "-DWHATEVER:STRING=somevalue",
+           self.define("ENABLE_BROKEN_FEATURE", False),
+           self.define_from_variant("DETECT_HDF5", "hdf5"),
+           self.define_from_variant("THREADS"), # True if +threads
        ]
 
        return args
+
+Spack supports CMake defines from conditional variants too. Whenever the condition on
+the variant is not met, ``define_from_variant()`` will simply return an empty string,
+and CMake simply ignores the empty command line argument. For example the following
+
+.. code-block:: python
+
+   variant("example", default=True, when="@2.0:")
+
+   def cmake_args(self):
+      return [self.define_from_variant("EXAMPLE", "example")]
+
+will generate ``'cmake' '-DEXAMPLE=ON' ...`` when `@2.0: +example` is met, but will
+result in ``'cmake' '' ...`` when the spec version is below ``2.0``.
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+CMake arguments provided by Spack
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The following default arguments are controlled by Spack:
+
+
+``CMAKE_INSTALL_PREFIX``
+------------------------
+
+Is set to the the package's install directory.
+
+
+``CMAKE_PREFIX_PATH``
+---------------------
+
+CMake finds dependencies through calls to ``find_package()``, ``find_program()``,
+``find_library()``, ``find_file()``, and ``find_path()``, which use a list of search
+paths from ``CMAKE_PREFIX_PATH``. Spack sets this variable to a list of prefixes of the
+spec's transitive dependencies.
+
+For troubleshooting cases where CMake fails to find a dependency, add the
+``--debug-find`` flag to ``cmake_args``.
+
+``CMAKE_BUILD_TYPE``
+--------------------
+
+Every CMake-based package accepts a ``-DCMAKE_BUILD_TYPE`` flag to
+dictate which level of optimization to use. In order to ensure
+uniformity across packages, the ``CMakePackage`` base class adds
+a variant to control this:
+
+.. code-block:: python
+
+   variant("build_type", default="RelWithDebInfo",
+           description="CMake build type",
+           values=("Debug", "Release", "RelWithDebInfo", "MinSizeRel"))
+
+However, not every CMake package accepts all four of these options.
+Grep the ``CMakeLists.txt`` file to see if the default values are
+missing or replaced. For example, the
+`dealii <https://github.com/spack/spack/blob/develop/var/spack/repos/builtin/packages/dealii/package.py>`_
+package overrides the default variant with:
+
+.. code-block:: python
+
+   variant("build_type", default="DebugRelease",
+           description="The build type to build",
+           values=("Debug", "Release", "DebugRelease"))
+
+For more information on ``CMAKE_BUILD_TYPE``, see:
+https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html
+
+
+``CMAKE_INSTALL_RPATH`` and ``CMAKE_INSTALL_RPATH_USE_LINK_PATH=ON``
+--------------------------------------------------------------------
+
+CMake uses different RPATHs during the build and after installation, so that executables
+can locate the libraries they're linked to during the build, and installed executables
+do not have RPATHs to build directories. In Spack, we have to make sure that RPATHs are
+set properly after installation.
+
+Spack sets ``CMAKE_INSTALL_RPATH`` to a list of ``<prefix>/lib`` or ``<prefix>/lib64``
+directories of the spec's link-type dependencies. Apart from that, it sets
+``-DCMAKE_INSTALL_RPATH_USE_LINK_PATH=ON``, which should add RPATHs for directories of
+linked libraries not in the directories covered by ``CMAKE_INSTALL_RPATH``.
+
+Usually it's enough to set only ``-DCMAKE_INSTALL_RPATH_USE_LINK_PATH=ON``, but the
+reason to provide both options is that packages may dynamically open shared libraries,
+which CMake cannot detect. In those cases, the RPATHs from ``CMAKE_INSTALL_RPATH`` are
+used as search paths.
+
+.. note::
+
+   Some packages provide stub libraries, which contain an interface for linking without
+   an implementation. When using such libraries, it's best to override the option
+   ``-DCMAKE_INSTALL_RPATH_USE_LINK_PATH=OFF`` in ``cmake_args``, so that stub libraries
+   are not used at runtime.
 
 
 ^^^^^^^^^^
@@ -157,7 +250,7 @@ generator is Ninja. To switch to the Ninja generator, simply add:
 
 .. code-block:: python
 
-   generator = 'Ninja'
+   generator("ninja")
 
 
 ``CMakePackage`` defaults to "Unix Makefiles". If you switch to the
@@ -165,7 +258,7 @@ Ninja generator, make sure to add:
 
 .. code-block:: python
 
-   depends_on('ninja', type='build')
+   depends_on("ninja", type="build")
 
 to the package as well. Aside from that, you shouldn't need to do
 anything else. Spack will automatically detect that you are using
@@ -182,36 +275,6 @@ generators, but it should be simple to add support for alternative
 generators. For more information on CMake generators, see:
 https://cmake.org/cmake/help/latest/manual/cmake-generators.7.html
 
-^^^^^^^^^^^^^^^^
-CMAKE_BUILD_TYPE
-^^^^^^^^^^^^^^^^
-
-Every CMake-based package accepts a ``-DCMAKE_BUILD_TYPE`` flag to
-dictate which level of optimization to use. In order to ensure
-uniformity across packages, the ``CMakePackage`` base class adds
-a variant to control this:
-
-.. code-block:: python
-
-   variant('build_type', default='RelWithDebInfo',
-           description='CMake build type',
-           values=('Debug', 'Release', 'RelWithDebInfo', 'MinSizeRel'))
-
-However, not every CMake package accepts all four of these options.
-Grep the ``CMakeLists.txt`` file to see if the default values are
-missing or replaced. For example, the
-`dealii <https://github.com/spack/spack/blob/develop/var/spack/repos/builtin/packages/dealii/package.py>`_
-package overrides the default variant with:
-
-.. code-block:: python
-
-   variant('build_type', default='DebugRelease',
-           description='The build type to build',
-           values=('Debug', 'Release', 'DebugRelease'))
-
-For more information on ``CMAKE_BUILD_TYPE``, see:
-https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html
-
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 CMakeLists.txt in a sub-directory
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -225,7 +288,7 @@ like so:
 
 .. code-block:: python
 
-   root_cmakelists_dir = 'src'
+   root_cmakelists_dir = "src"
 
 
 Note that this path is relative to the root of the extracted tarball,
@@ -241,7 +304,7 @@ different sub-directory, simply override ``build_directory`` like so:
 
 .. code-block:: python
 
-   build_directory = 'my-build'
+   build_directory = "my-build"
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 Build and install targets
@@ -261,8 +324,8 @@ library or build the documentation, you can add these like so:
 
 .. code-block:: python
 
-   build_targets = ['all', 'docs']
-   install_targets = ['install', 'docs']
+   build_targets = ["all", "docs"]
+   install_targets = ["install", "docs"]
 
 ^^^^^^^
 Testing

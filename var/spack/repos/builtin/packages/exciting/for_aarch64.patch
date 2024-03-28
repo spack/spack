@@ -1,0 +1,12 @@
+--- spack-src/external/FoX/config/config.guess.bak	2019-03-20 20:13:07.000000000 +0900
++++ spack-src/external/FoX/config/config.guess	2020-12-22 09:36:28.448022150 +0900
+@@ -832,6 +832,9 @@
+     arm*:Linux:*:*)
+ 	echo ${UNAME_MACHINE}-unknown-linux-gnu
+ 	exit ;;
++    aarch64:Linux:*:*)
++	echo ${UNAME_MACHINE}-unknown-linux-gnu
++        exit ;;
+     avr32*:Linux:*:*)
+ 	echo ${UNAME_MACHINE}-unknown-linux-gnu
+ 	exit ;;

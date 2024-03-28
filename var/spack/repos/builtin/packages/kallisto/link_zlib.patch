@@ -1,0 +1,10 @@
+--- a/src/CMakeLists.txt	2017-03-20 05:38:35.000000000 -0500
++++ b/src/CMakeLists.txt	2022-07-17 12:56:04.456804708 -0500
+@@ -32,6 +32,7 @@
+ 
+ if ( ZLIB_FOUND )
+     include_directories( ${ZLIB_INCLUDE_DIRS} )
++    target_link_libraries(kallisto kallisto_core ${ZLIB_LIBRARIES})
+ else()
+     message(FATAL_ERROR "zlib not found. Required for to output files" )
+ endif( ZLIB_FOUND )

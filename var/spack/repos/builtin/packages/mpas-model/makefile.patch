@@ -1,0 +1,13 @@
+--- spack-src/Makefile.org	2021-01-06 10:11:15.852202444 +0900
++++ spack-src/Makefile	2021-01-06 10:35:16.191769328 +0900
+@@ -459,8 +459,10 @@
+ # Keep open the possibility of shared libraries in future with, e.g., .so suffix
+ #
+ ifneq ($(wildcard $(PIO_LIB)/libpio\.*), )
++ifneq ($(wildcard $(PIO_LIB)/libpio\.*),$(PIO_LIB)/libpio.settings)
+ 	LIBS += -lpio
+ endif
++endif
+ ifneq ($(wildcard $(PIO_LIB)/libpiof\.*), )
+ 	LIBS += -lpiof
+ endif

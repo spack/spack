@@ -1,0 +1,96 @@
+#!/bin/bash
+set -euo pipefail
+[[ -n "${TMPCONFIG_DEBUG:=}" ]] && set -x
+DIR="$(cd -P "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+mkdir -p "${XDG_RUNTIME_DIR:=/tmp}/spack-tests"
+export TMPDIR="${XDG_RUNTIME_DIR}"
+export TMP_DIR="$(mktemp -d -t spack-test-XXXXX)"
+clean_up() {
+    [[ -n "$TMPCONFIG_DEBUG" ]] && printf "cleaning up: $TMP_DIR\n"
+    rm -rf "$TMP_DIR"
+}
+trap clean_up EXIT
+trap clean_up ERR
+
+[[ -n "$TMPCONFIG_DEBUG" ]] && printf "Redirecting TMP_DIR and spack directories to $TMP_DIR\n"
+
+export BOOTSTRAP="${SPACK_USER_CACHE_PATH:=$HOME/.spack}/bootstrap"
+export SPACK_USER_CACHE_PATH="$TMP_DIR/user_cache"
+mkdir -p "$SPACK_USER_CACHE_PATH"
+
+private_bootstrap="$SPACK_USER_CACHE_PATH/bootstrap"
+use_spack=''
+use_bwrap=''
+# argument handling
+while (($# >= 1)) ; do
+    case "$1" in
+        -b) # privatize bootstrap too, useful for CI but not always cheap
+            shift
+            export BOOTSTRAP="$private_bootstrap"
+            ;;
+        -B) # use specified bootstrap dir
+            export BOOTSTRAP="$2"
+            shift 2
+            ;;
+        -s) # run spack directly with remaining args
+            shift
+            use_spack=1
+            ;;
+        --contain=bwrap)
+            if bwrap --help 2>&1 > /dev/null ; then
+                use_bwrap=1
+            else
+                echo Bubblewrap containment requested, but no bwrap command found
+                exit 1
+            fi
+            shift
+            ;;
+        --)
+            shift
+            break
+            ;;
+        *)
+            break
+            ;;
+    esac
+done
+typeset -a CMD
+if [[ -n "$use_spack" ]] ; then
+    CMD=("$DIR/spack" "$@")
+else
+    CMD=("$@")
+fi
+
+mkdir -p "$BOOTSTRAP"
+
+export SPACK_SYSTEM_CONFIG_PATH="$TMP_DIR/sys_conf"
+export SPACK_USER_CONFIG_PATH="$TMP_DIR/user_conf"
+mkdir -p "$SPACK_USER_CONFIG_PATH"
+cat >"$SPACK_USER_CONFIG_PATH/config.yaml" <<EOF
+config:
+  install_tree:
+    root: $TMP_DIR/install
+  misc_cache: $$user_cache_path/cache
+  source_cache: $$user_cache_path/source
+  environments_root: $TMP_DIR/envs
+EOF
+cat >"$SPACK_USER_CONFIG_PATH/bootstrap.yaml" <<EOF
+bootstrap:
+  root: $BOOTSTRAP
+EOF
+
+if [[ -n "$use_bwrap" ]] ; then
+    CMD=(
+        bwrap
+        --dev-bind / /
+        --ro-bind "$DIR/.." "$DIR/.." # do not touch spack root
+        --ro-bind $HOME/.spack $HOME/.spack # do not touch user config/cache dir
+        --bind "$TMP_DIR" "$TMP_DIR"
+        --bind "$BOOTSTRAP" "$BOOTSTRAP"
+        --die-with-parent
+        "${CMD[@]}"
+    )
+fi
+
+(( ${TMPCONFIG_DEBUG:=0} > 1)) && echo "Running: ${CMD[@]}"
+"${CMD[@]}"

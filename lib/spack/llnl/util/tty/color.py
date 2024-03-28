@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -59,50 +59,108 @@ The console can be reset later to plain text with '@.'.
 
 To output an @, use '@@'.  To output a } inside braces, use '}}'.
 """
-from __future__ import unicode_literals
 import re
 import sys
-
 from contextlib import contextmanager
-
-import six
 
 
 class ColorParseError(Exception):
     """Raised when a color format fails to parse."""
 
     def __init__(self, message):
-        super(ColorParseError, self).__init__(message)
+        super().__init__(message)
 
 
 # Text styles for ansi codes
-styles = {'*': '1',       # bold
-          '_': '4',       # underline
-          None: '0'}      # plain
+styles = {"*": "1", "_": "4", None: "0"}  # bold  # underline  # plain
 
 # Dim and bright ansi colors
-colors = {'k': 30, 'K': 90,  # black
-          'r': 31, 'R': 91,  # red
-          'g': 32, 'G': 92,  # green
-          'y': 33, 'Y': 93,  # yellow
-          'b': 34, 'B': 94,  # blue
-          'm': 35, 'M': 95,  # magenta
-          'c': 36, 'C': 96,  # cyan
-          'w': 37, 'W': 97}  # white
+colors = {
+    "k": 30,
+    "K": 90,  # black
+    "r": 31,
+    "R": 91,  # red
+    "g": 32,
+    "G": 92,  # green
+    "y": 33,
+    "Y": 93,  # yellow
+    "b": 34,
+    "B": 94,  # blue
+    "m": 35,
+    "M": 95,  # magenta
+    "c": 36,
+    "C": 96,  # cyan
+    "w": 37,
+    "W": 97,
+}  # white
 
 # Regex to be used for color formatting
-color_re = r'@(?:@|\.|([*_])?([a-zA-Z])?(?:{((?:[^}]|}})*)})?)'
+color_re = r"@(?:@|\.|([*_])?([a-zA-Z])?(?:{((?:[^}]|}})*)})?)"
 
 # Mapping from color arguments to values for tty.set_color
-color_when_values = {
-    'always': True,
-    'auto': None,
-    'never': False
-}
+color_when_values = {"always": True, "auto": None, "never": False}
 
 # Force color; None: Only color if stdout is a tty
 # True: Always colorize output, False: Never colorize output
 _force_color = None
+
+
+def try_enable_terminal_color_on_windows():
+    """Turns coloring in Windows terminal by enabling VTP in Windows consoles (CMD/PWSH/CONHOST)
+    Method based on the link below
+    https://learn.microsoft.com/en-us/windows/console/console-virtual-terminal-sequences#example-of-enabling-virtual-terminal-processing
+
+    Note: No-op on non windows platforms
+    """
+    if sys.platform == "win32":
+        import ctypes
+        import msvcrt
+        from ctypes import wintypes
+
+        try:
+            ENABLE_VIRTUAL_TERMINAL_PROCESSING = 0x0004
+            DISABLE_NEWLINE_AUTO_RETURN = 0x0008
+            kernel32 = ctypes.WinDLL("kernel32")
+
+            def _err_check(result, func, args):
+                if not result:
+                    raise ctypes.WinError(ctypes.get_last_error())
+                return args
+
+            kernel32.GetConsoleMode.errcheck = _err_check
+            kernel32.GetConsoleMode.argtypes = (
+                wintypes.HANDLE,  # hConsoleHandle, i.e. GetStdHandle output type
+                ctypes.POINTER(wintypes.DWORD),  # result of GetConsoleHandle
+            )
+            kernel32.SetConsoleMode.errcheck = _err_check
+            kernel32.SetConsoleMode.argtypes = (
+                wintypes.HANDLE,  # hConsoleHandle, i.e. GetStdHandle output type
+                wintypes.DWORD,  # result of GetConsoleHandle
+            )
+            # Use conout$ here to handle a redirectired stdout/get active console associated
+            # with spack
+            with open(r"\\.\CONOUT$", "w") as conout:
+                # Link above would use kernel32.GetStdHandle(-11) however this would not handle
+                # a redirected stdout appropriately, so we always refer to the current CONSOLE out
+                # which is defined as conout$ on Windows.
+                # linked example is follow more or less to the letter beyond this point
+                con_handle = msvcrt.get_osfhandle(conout.fileno())
+                dw_orig_mode = wintypes.DWORD()
+                kernel32.GetConsoleMode(con_handle, ctypes.byref(dw_orig_mode))
+                dw_new_mode_request = (
+                    ENABLE_VIRTUAL_TERMINAL_PROCESSING | DISABLE_NEWLINE_AUTO_RETURN
+                )
+                dw_new_mode = dw_new_mode_request | dw_orig_mode.value
+                kernel32.SetConsoleMode(con_handle, wintypes.DWORD(dw_new_mode))
+        except OSError:
+            # We failed to enable color support for associated console
+            # report and move on but spack will no longer attempt to
+            # color
+            global _force_color
+            _force_color = False
+            from . import debug
+
+            debug("Unable to support color on Windows terminal")
 
 
 def _color_when_value(when):
@@ -114,7 +172,7 @@ def _color_when_value(when):
     if when in color_when_values:
         return color_when_values[when]
     elif when not in color_when_values.values():
-        raise ValueError('Invalid color setting: %s' % when)
+        raise ValueError("Invalid color setting: %s" % when)
     return when
 
 
@@ -145,17 +203,26 @@ def color_when(value):
     set_color_when(old_value)
 
 
-class match_to_ansi(object):
-
-    def __init__(self, color=True):
+class match_to_ansi:
+    def __init__(self, color=True, enclose=False, zsh=False):
         self.color = _color_when_value(color)
+        self.enclose = enclose
+        self.zsh = zsh
 
     def escape(self, s):
         """Returns a TTY escape sequence for a color"""
         if self.color:
-            return "\033[%sm" % s
+            if self.zsh:
+                result = rf"\e[0;{s}m"
+            else:
+                result = f"\033[{s}m"
+
+            if self.enclose:
+                result = rf"\[{result}\]"
+
+            return result
         else:
-            return ''
+            return ""
 
     def __call__(self, match):
         """Convert a match object generated by ``color_re`` into an ansi
@@ -164,22 +231,22 @@ class match_to_ansi(object):
         style, color, text = match.groups()
         m = match.group(0)
 
-        if m == '@@':
-            return '@'
-        elif m == '@.':
+        if m == "@@":
+            return "@"
+        elif m == "@.":
             return self.escape(0)
-        elif m == '@':
-            raise ColorParseError("Incomplete color format: '%s' in %s"
-                                  % (m, match.string))
+        elif m == "@":
+            raise ColorParseError("Incomplete color format: '%s' in %s" % (m, match.string))
 
         string = styles[style]
         if color:
             if color not in colors:
-                raise ColorParseError("Invalid color specifier: '%s' in '%s'"
-                                      % (color, match.string))
-            string += ';' + str(colors[color])
+                raise ColorParseError(
+                    "Invalid color specifier: '%s' in '%s'" % (color, match.string)
+                )
+            string += ";" + str(colors[color])
 
-        colored_text = ''
+        colored_text = ""
         if text:
             colored_text = text + self.escape(0)
 
@@ -198,29 +265,33 @@ def colorize(string, **kwargs):
     Keyword Arguments:
         color (bool): If False, output will be plain text without control
             codes, for output to non-console devices.
+        enclose (bool): If True, enclose ansi color sequences with
+            square brackets to prevent misestimation of terminal width.
+        zsh (bool): If True, use zsh ansi codes instead of bash ones (for variables like PS1)
     """
-    color = _color_when_value(kwargs.get('color', get_color_when()))
-    string = re.sub(color_re, match_to_ansi(color), string)
-    string = string.replace('}}', '}')
+    color = _color_when_value(kwargs.get("color", get_color_when()))
+    zsh = kwargs.get("zsh", False)
+    string = re.sub(color_re, match_to_ansi(color, kwargs.get("enclose")), string, zsh)
+    string = string.replace("}}", "}")
     return string
 
 
 def clen(string):
     """Return the length of a string, excluding ansi color sequences."""
-    return len(re.sub(r'\033[^m]*m', '', string))
+    return len(re.sub(r"\033[^m]*m", "", string))
 
 
 def cextra(string):
     """Length of extra color characters in a string"""
-    return len(''.join(re.findall(r'\033[^m]*m', string)))
+    return len("".join(re.findall(r"\033[^m]*m", string)))
 
 
 def cwrite(string, stream=None, color=None):
     """Replace all color expressions in string with ANSI control
-       codes and write the result to the stream.  If color is
-       False, this will write plain text with no color.  If True,
-       then it will always write colored output.  If not supplied,
-       then it will be set based on stream.isatty().
+    codes and write the result to the stream.  If color is
+    False, this will write plain text with no color.  If True,
+    then it will always write colored output.  If not supplied,
+    then it will be set based on stream.isatty().
     """
     stream = sys.stdout if stream is None else stream
     if color is None:
@@ -250,21 +321,20 @@ def cescape(string):
     Returns:
         (str): the string with color codes escaped
     """
-    string = six.text_type(string)
-    string = string.replace('@', '@@')
-    string = string.replace('}', '}}')
+    string = str(string)
+    string = string.replace("@", "@@")
+    string = string.replace("}", "}}")
     return string
 
 
-class ColorStream(object):
-
+class ColorStream:
     def __init__(self, stream, color=None):
         self._stream = stream
         self._color = color
 
     def write(self, string, **kwargs):
-        raw = kwargs.get('raw', False)
-        raw_write = getattr(self._stream, 'write')
+        raw = kwargs.get("raw", False)
+        raw_write = getattr(self._stream, "write")
 
         color = self._color
         if self._color is None:
@@ -275,6 +345,6 @@ class ColorStream(object):
         raw_write(colorize(string, color=color))
 
     def writelines(self, sequence, **kwargs):
-        raw = kwargs.get('raw', False)
+        raw = kwargs.get("raw", False)
         for string in sequence:
             self.write(string, self.color, raw=raw)

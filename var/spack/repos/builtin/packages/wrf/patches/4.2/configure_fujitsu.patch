@@ -1,0 +1,52 @@
+--- spack-src/arch/configure.defaults.org	2021-10-26 13:21:41.000000000 +0900
++++ spack-src/arch/configure.defaults	2021-10-26 13:24:04.000000000 +0900
+@@ -2019,6 +2019,49 @@
+ RLFLAGS         =
+ CC_TOOLS        =      /usr/bin/gcc -Wall
+ 
++###########################################################
++#ARCH    Fujitsu FX1000/FX700 Linux aarch64 A64FX, mpifrt and mpifcc compilers #serial smpar dmpar dm+sm
++#
++DESCRIPTION     =       FUJITSU ($SFC/$SCC): FX1000/FX700 A64FX
++DMPARALLEL      =       # 1
++OMPCPP          =       # -D_OPENMP
++OMP             =       # -Kopenmp
++OMPCC           =       # -Kopenmp
++SFC             =       frt
++SCC             =       fcc
++CCOMP           =       fcc
++DM_FC           =       mpifrt
++DM_CC           =       mpifcc -DMPI2_SUPPORT -DMPI2_THREAD_SUPPORT
++FC              =       CONFIGURE_FC
++CC              =       CONFIGURE_CC
++LD              =       $(FC)
++RWORDSIZE       =       CONFIGURE_RWORDSIZE
++PROMOTION       =       -CcdRR$(RWORDSIZE)
++ARCH_LOCAL      =       -DNONSTANDARD_SYSTEM_SUBR  -DWRF_USE_CLM
++CFLAGS_LOCAL    =       -Kfast -DSUN -I/usr/include/tirpc
++LDFLAGS_LOCAL   =
++CPLUSPLUSLIB    =
++ESMF_LDFLAG     =       $(CPLUSPLUSLIB)
++FCOPTIM         =       -Kfast
++FCREDUCEDOPT    =       $(FCOPTIM)
++FCNOOPT         =       -O0
++FCDEBUG         =       # -g $(FCNOOPT)
++FORMAT_FIXED    =       -Fixed
++FORMAT_FREE     =       -Free
++FCSUFFIX        =
++BYTESWAPIO      =
++FCBASEOPTS_NO_G =       -Kautoobjstack,ocl -fw $(FORMAT_FREE) $(BYTESWAPIO) $(OMP)
++FCBASEOPTS      =       $(FCBASEOPTS_NO_G) $(FCDEBUG)
++MODULE_SRCH_FLAG =
++TRADFLAG        =      -traditional
++CPP             =      /lib/cpp -P
++AR              =      ar
++ARFLAGS         =      ru
++M4              =      m4
++RANLIB          =      ranlib
++RLFLAGS         =
++CC_TOOLS        =      /usr/bin/gcc -Wall
++
+ #insert new stanza before the Fujitsu block, keep Fujitsu at the end of the list
+ ###########################################################
+ #ARCH  NULL

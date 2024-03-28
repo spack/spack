@@ -1,0 +1,12 @@
+diff -Naur a/setup.py b/setup.py
+--- a/setup.py.orig	2021-09-29 21:28:23.000000000 -0400
++++ a/setup.py	2021-09-29 21:28:44.000000000 -0400
+@@ -1826,6 +1826,8 @@
+     def detect_tkinter(self):
+         # The _tkinter module.
+
++        return False
++
+         # Check whether --with-tcltk-includes and --with-tcltk-libs were
+         # configured or passed into the make target.  If so, use these values
+         # to build tkinter and bypass the searches for Tcl and TK in standard

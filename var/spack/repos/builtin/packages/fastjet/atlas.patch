@@ -1,0 +1,22 @@
+--- include/fastjet/GhostedAreaSpec.hh.orig	2020-06-03 13:15:12.952183980 +0200
++++ include/fastjet/GhostedAreaSpec.hh	2020-06-03 13:16:00.676275264 +0200
+@@ -232,7 +232,7 @@
+ 
+ 
+   std::vector<int> _random_checkpoint;
+-  static BasicRandom<double> _random_generator;
++  thread_local static BasicRandom<double> _random_generator;
+   //mutable BasicRandom<double> _random_generator;
+ 
+   static LimitedWarning _warn_fj2_placement_deprecated;
+--- src/GhostedAreaSpec.cc.orig	2020-06-04 11:37:41.196758510 +0200
++++ src/GhostedAreaSpec.cc	2020-06-04 11:38:07.499240761 +0200
+@@ -37,7 +37,7 @@
+ 
+ FASTJET_BEGIN_NAMESPACE      // defined in fastjet/internal/base.hh
+ 
+-BasicRandom<double> GhostedAreaSpec::_random_generator;
++thread_local BasicRandom<double> GhostedAreaSpec::_random_generator;
+ LimitedWarning GhostedAreaSpec::_warn_fj2_placement_deprecated;
+ 
+ /// explicit constructor

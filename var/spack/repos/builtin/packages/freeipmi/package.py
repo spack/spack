@@ -1,10 +1,11 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import llnl.util.tty as tty
+
+from spack.package import *
 
 
 class Freeipmi(AutotoolsPackage):
@@ -20,21 +21,27 @@ class Freeipmi(AutotoolsPackage):
     info."""
 
     homepage = "https://www.gnu.org/software/freeipmi/"
-    url      = "https://ftp.gnu.org/gnu/freeipmi/freeipmi-1.6.4.tar.gz"
+    url = "https://ftp.gnu.org/gnu/freeipmi/freeipmi-1.6.4.tar.gz"
 
-    version('1.6.4',
-            sha256='65dfbb95a30438ba247f01a58498862a37d2e71c8c950bcfcee459d079241a3c')
+    license("GPL-3.0-or-later")
 
-    depends_on('libgcrypt')
+    version("1.6.9", sha256="f25e1c35f3d0f1b5a99cc31ecc2353ca83ed46a15163842fba870127dc9c8206")
+    version("1.6.4", sha256="65dfbb95a30438ba247f01a58498862a37d2e71c8c950bcfcee459d079241a3c")
+
+    depends_on("libgcrypt")
 
     parallel = False
 
     def configure_args(self):
         # FIXME: If root checking of root installation is added fix this:
         # Discussed in issue  #4432
-        tty.warn("Requires 'root' for bmc-watchdog.service installation to"
-                 " /lib/systemd/system/ !")
+        tty.warn(
+            "Requires 'root' for bmc-watchdog.service installation to" " /lib/systemd/system/ !"
+        )
 
-        args = ['--prefix={0}'.format(prefix)]
+        args = [
+            "--prefix={0}".format(prefix),
+            "--with-systemdsystemunitdir=" + self.spec["freeipmi"].prefix.lib.systemd.system,
+        ]
 
         return args

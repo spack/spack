@@ -1,0 +1,52 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 1c77521..ac421ca 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -145,4 +145,4 @@ install(CODE "execute_process(COMMAND sh -c \"bash ${CMAKE_CURRENT_LIST_DIR}/cma
+ )
+ 
+ 
+-include(CPackConfig)
++#include(CPackConfig)
+diff --git a/cmake/postinst b/cmake/postinst
+index 7f1e249..0df6777 100644
+--- a/cmake/postinst
++++ b/cmake/postinst
+@@ -1,16 +1,16 @@
+ #!/bin/bash
+ 
+-INST_DIR="/usr/local/lib/opencarp"
++#INST_DIR="/usr/local/lib/opencarp"
+ 
+-if [ "$(uname -s)" == "Linux" ]; then
+-    echo $INST_DIR/lib > /etc/ld.so.conf.d/opencarp.conf
+-    ldconfig
+-fi
++#if [ "$(uname -s)" == "Linux" ]; then
++#    echo $INST_DIR/lib > /etc/ld.so.conf.d/opencarp.conf
++#    ldconfig
++#fi
+ 
+ # link binaries
+-ln -sf $INST_DIR/bin/* /usr/local/bin/
+-ln -sf $INST_DIR/lib/openmpi/bin/mpirun /usr/local/bin/mpirun
+-ln -sf $INST_DIR/lib/openmpi/bin/mpiexec /usr/local/bin/mpiexec
++#ln -sf $INST_DIR/bin/* /usr/local/bin/
++#ln -sf $INST_DIR/lib/openmpi/bin/mpirun /usr/local/bin/mpirun
++#ln -sf $INST_DIR/lib/openmpi/bin/mpiexec /usr/local/bin/mpiexec
+ 
+ # install carputils
+ if [ -d "$INST_DIR/share/carputils" ]; then
+diff --git a/simulator/build_info.py b/simulator/build_info.py
+index 7ef8aec..0b51aaa 100644
+--- a/simulator/build_info.py
++++ b/simulator/build_info.py
+@@ -168,7 +168,7 @@ TEMPLATE = """#ifndef __BUILD_INFO__
+ 
+ def generate():
+ 
+-    info = git()
++    info = git(os.path.dirname(os.path.abspath(__file__)))
+ 
+     # Get subrepo info
+     repo_versions = []

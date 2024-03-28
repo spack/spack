@@ -1,61 +1,59 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import os
-import hashlib
 import base64
-import sys
+import hashlib
+import os
+import stat
+from typing import Any, Dict
 
 import llnl.util.tty as tty
 
-import spack.util.spack_json as sjson
-import spack.util.file_permissions as fp
-import spack.store
 import spack.filesystem_view
+import spack.store
+import spack.util.file_permissions as fp
+import spack.util.spack_json as sjson
+from spack.package_base import spack_times_log
 
 
-def compute_hash(path):
-    with open(path, 'rb') as f:
-        sha1 = hashlib.sha1(f.read()).digest()
-        b32 = base64.b32encode(sha1)
+def compute_hash(path: str, block_size: int = 1048576) -> str:
+    # why is this not using spack.util.crypto.checksum...
+    hasher = hashlib.sha1()
+    with open(path, "rb") as file:
+        while True:
+            data = file.read(block_size)
+            if not data:
+                break
+            hasher.update(data)
+    return base64.b32encode(hasher.digest()).decode()
 
-        if sys.version_info[0] >= 3:
-            b32 = b32.decode()
 
-        return b32
+def create_manifest_entry(path: str) -> Dict[str, Any]:
+    try:
+        s = os.lstat(path)
+    except OSError:
+        return {}
 
+    data: Dict[str, Any] = {"mode": s.st_mode, "owner": s.st_uid, "group": s.st_gid}
 
-def create_manifest_entry(path):
-    data = {}
+    if stat.S_ISLNK(s.st_mode):
+        data["dest"] = os.readlink(path)
 
-    if os.path.exists(path):
-        stat = os.stat(path)
-
-        data['mode'] = stat.st_mode
-        data['owner'] = stat.st_uid
-        data['group'] = stat.st_gid
-
-        if os.path.islink(path):
-            data['type'] = 'link'
-            data['dest'] = os.readlink(path)
-
-        elif os.path.isdir(path):
-            data['type'] = 'dir'
-
-        else:
-            data['type'] = 'file'
-            data['hash'] = compute_hash(path)
-            data['time'] = stat.st_mtime
-            data['size'] = stat.st_size
+    elif stat.S_ISREG(s.st_mode):
+        data["hash"] = compute_hash(path)
+        data["time"] = s.st_mtime
+        data["size"] = s.st_size
 
     return data
 
 
 def write_manifest(spec):
-    manifest_file = os.path.join(spec.prefix,
-                                 spack.store.layout.metadata_dir,
-                                 spack.store.layout.manifest_file_name)
+    manifest_file = os.path.join(
+        spec.prefix,
+        spack.store.STORE.layout.metadata_dir,
+        spack.store.STORE.layout.manifest_file_name,
+    )
 
     if not os.path.exists(manifest_file):
         tty.debug("Writing manifest file: No manifest from binary")
@@ -67,7 +65,7 @@ def write_manifest(spec):
                 manifest[path] = create_manifest_entry(path)
         manifest[spec.prefix] = create_manifest_entry(spec.prefix)
 
-        with open(manifest_file, 'w') as f:
+        with open(manifest_file, "w") as f:
             sjson.dump(manifest, f)
 
         fp.set_permissions_by_spec(manifest_file, spec)
@@ -77,42 +75,32 @@ def check_entry(path, data):
     res = VerificationResults()
 
     if not data:
-        res.add_error(path, 'added')
+        res.add_error(path, "added")
         return res
 
-    stat = os.stat(path)
+    s = os.lstat(path)
 
     # Check for all entries
-    if stat.st_mode != data['mode']:
-        res.add_error(path, 'mode')
-    if stat.st_uid != data['owner']:
-        res.add_error(path, 'owner')
-    if stat.st_gid != data['group']:
-        res.add_error(path, 'group')
+    if s.st_uid != data["owner"]:
+        res.add_error(path, "owner")
+    if s.st_gid != data["group"]:
+        res.add_error(path, "group")
 
-    # Check for symlink targets  and listed as symlink
-    if os.path.islink(path):
-        if data['type'] != 'link':
-            res.add_error(path, 'type')
-        if os.readlink(path) != data.get('dest', ''):
-            res.add_error(path, 'link')
-
-    # Check directories are listed as directory
-    elif os.path.isdir(path):
-        if data['type'] != 'dir':
-            res.add_error(path, 'type')
-
-    else:
+    # In the past, `stat(...).st_mode` was stored
+    # instead of `lstat(...).st_mode`. So, ignore mode errors for symlinks.
+    if not stat.S_ISLNK(s.st_mode) and s.st_mode != data["mode"]:
+        res.add_error(path, "mode")
+    elif stat.S_ISLNK(s.st_mode) and os.readlink(path) != data.get("dest"):
+        res.add_error(path, "link")
+    elif stat.S_ISREG(s.st_mode):
         # Check file contents against hash and listed as file
         # Check mtime and size as well
-        if stat.st_size != data['size']:
-            res.add_error(path, 'size')
-        if stat.st_mtime != data['time']:
-            res.add_error(path, 'mtime')
-        if data['type'] != 'file':
-            res.add_error(path, 'type')
-        if compute_hash(path) != data.get('hash', ''):
-            res.add_error(path, 'hash')
+        if s.st_size != data["size"]:
+            res.add_error(path, "size")
+        if s.st_mtime != data["time"]:
+            res.add_error(path, "mtime")
+        if compute_hash(path) != data.get("hash"):
+            res.add_error(path, "hash")
 
     return res
 
@@ -121,22 +109,22 @@ def check_file_manifest(filename):
     dirname = os.path.dirname(filename)
 
     results = VerificationResults()
-    while spack.store.layout.metadata_dir not in os.listdir(dirname):
+    while spack.store.STORE.layout.metadata_dir not in os.listdir(dirname):
         if dirname == os.path.sep:
-            results.add_error(filename, 'not owned by any package')
+            results.add_error(filename, "not owned by any package")
             return results
         dirname = os.path.dirname(dirname)
 
-    manifest_file = os.path.join(dirname,
-                                 spack.store.layout.metadata_dir,
-                                 spack.store.layout.manifest_file_name)
+    manifest_file = os.path.join(
+        dirname, spack.store.STORE.layout.metadata_dir, spack.store.STORE.layout.manifest_file_name
+    )
 
     if not os.path.exists(manifest_file):
         results.add_error(filename, "manifest missing")
         return results
 
     try:
-        with open(manifest_file, 'r') as f:
+        with open(manifest_file, "r") as f:
             manifest = sjson.load(f)
     except Exception:
         results.add_error(filename, "manifest corrupted")
@@ -145,7 +133,7 @@ def check_file_manifest(filename):
     if filename in manifest:
         results += check_entry(filename, manifest[filename])
     else:
-        results.add_error(filename, 'not owned by any package')
+        results.add_error(filename, "not owned by any package")
     return results
 
 
@@ -153,56 +141,31 @@ def check_spec_manifest(spec):
     prefix = spec.prefix
 
     results = VerificationResults()
-    manifest_file = os.path.join(prefix,
-                                 spack.store.layout.metadata_dir,
-                                 spack.store.layout.manifest_file_name)
+    manifest_file = os.path.join(
+        prefix, spack.store.STORE.layout.metadata_dir, spack.store.STORE.layout.manifest_file_name
+    )
 
     if not os.path.exists(manifest_file):
         results.add_error(prefix, "manifest missing")
         return results
 
     try:
-        with open(manifest_file, 'r') as f:
+        with open(manifest_file, "r") as f:
             manifest = sjson.load(f)
     except Exception:
         results.add_error(prefix, "manifest corrupted")
         return results
 
-    # Get extensions active in spec
-    view = spack.filesystem_view.YamlFilesystemView(prefix,
-                                                    spack.store.layout)
-    active_exts = view.extensions_layout.extension_map(spec).values()
-    ext_file = ''
-    if active_exts:
-        # No point checking contents of this file as it is the only source of
-        # truth for that information.
-        ext_file = view.extensions_layout.extension_file_path(spec)
-
-    def is_extension_artifact(p):
-        if os.path.islink(p):
-            if any(os.readlink(p).startswith(e.prefix) for e in active_exts):
-                # This file is linked in by an extension. Belongs to extension
-                return True
-        elif os.path.isdir(p) and p not in manifest:
-            if all(is_extension_artifact(os.path.join(p, f))
-                   for f in os.listdir(p)):
-                return True
-        return False
-
     for root, dirs, files in os.walk(prefix):
         for entry in list(dirs + files):
             path = os.path.join(root, entry)
 
-            # Do not check links from prefix to active extension
-            # TODO: make this stricter for non-linux systems that use symlink
-            # permissions
-            # Do not check directories that only exist for extensions
-            if is_extension_artifact(path):
+            # Do not check manifest file. Can't store your own hash
+            if path == manifest_file:
                 continue
 
-            # Do not check manifest file. Can't store your own hash
-            # Nothing to check for ext_file
-            if path == manifest_file or path == ext_file:
+            # Do not check the install times log file.
+            if entry == spack_times_log:
                 continue
 
             data = manifest.pop(path, {})
@@ -211,12 +174,12 @@ def check_spec_manifest(spec):
     results += check_entry(prefix, manifest.pop(prefix, {}))
 
     for path in manifest:
-        results.add_error(path, 'deleted')
+        results.add_error(path, "deleted")
 
     return results
 
 
-class VerificationResults(object):
+class VerificationResults:
     def __init__(self):
         self.errors = {}
 
@@ -235,12 +198,12 @@ class VerificationResults(object):
         return sjson.dump(self.errors)
 
     def __str__(self):
-        res = ''
+        res = ""
         for path, fields in self.errors.items():
-            res += '%s verification failed with error(s):\n' % path
+            res += "%s verification failed with error(s):\n" % path
             for error in fields:
-                res += '    %s\n' % error
+                res += "    %s\n" % error
 
         if not res:
-            res += 'No Errors'
+            res += "No Errors"
         return res

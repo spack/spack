@@ -1,0 +1,23 @@
+diff -Naur a/tools/cpp/unix_cc_configure.bzl b/tools/cpp/unix_cc_configure.bzl
+--- a/tools/cpp/unix_cc_configure.bzl	1980-01-01 00:00:00.000000000 -0800
++++ b/tools/cpp/unix_cc_configure.bzl	2022-06-30 23:58:26.945067883 -0700
+@@ -419,10 +419,7 @@
+         bazel_linklibs,
+         False,
+     ), ":")
+-    gold_or_lld_linker_path = (
+-        _find_linker_path(repository_ctx, cc, "lld", is_clang) or
+-        _find_linker_path(repository_ctx, cc, "gold", is_clang)
+-    )
++    gold_or_lld_linker_path = None
+     cc_path = repository_ctx.path(cc)
+     if not str(cc_path).startswith(str(repository_ctx.path(".")) + "/"):
+         # cc is outside the repository, set -B
+@@ -530,7 +527,6 @@
+             "%{cxx_builtin_include_directories}": get_starlark_list(builtin_include_directories),
+             "%{compile_flags}": get_starlark_list(
+                 [
+-                    "-fstack-protector",
+                     # All warnings are enabled. Maybe enable -Werror as well?
+                     "-Wall",
+                     # Enable a few more warnings that aren't part of -Wall.

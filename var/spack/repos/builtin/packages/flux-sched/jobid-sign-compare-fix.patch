@@ -1,0 +1,13 @@
+diff --git a/resource/hlapi/bindings/c++/reapi_cli_impl.hpp b/resource/hlapi/bindings/c++/reapi_cli_impl.hpp
+index 0b01b341..e0a91458 100644
+--- a/resource/hlapi/bindings/c++/reapi_cli_impl.hpp
++++ b/resource/hlapi/bindings/c++/reapi_cli_impl.hpp
+@@ -594,7 +594,7 @@ int resource_query_t::remove_job (const uint64_t jobid)
+ {
+     int rc = -1;
+ 
+-    if (jobid > std::numeric_limits<int64_t>::max ()) {
++    if (jobid > (uint64_t) std::numeric_limits<int64_t>::max ()) {
+         errno = EOVERFLOW;
+         return rc;
+     }

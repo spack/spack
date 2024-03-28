@@ -1,9 +1,9 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class CommonsLang3(Package):
@@ -18,13 +18,16 @@ class CommonsLang3(Package):
     dedicated to help with building methods, such as hashCode, toString and
     equals."""
 
-    homepage = "http://commons.apache.org/proper/commons-lang/"
-    url      = "https://archive.apache.org/dist/commons/lang/binaries/commons-lang3-3.7-bin.tar.gz"
+    homepage = "https://commons.apache.org/proper/commons-lang/"
+    url = "https://archive.apache.org/dist/commons/lang/binaries/commons-lang3-3.7-bin.tar.gz"
 
-    version('3.7', sha256='94dc8289ce90b77b507d9257784d9a43b402786de40c164f6e3990e221a2a4d2')
+    license("Apache-2.0")
 
-    extends('jdk')
-    depends_on('java@7:', type='run')
+    version("3.12.0", sha256="33012465dfcb7f790aca333e09ebf105e2a5fb95c2c638b3df790d3efa908e28")
+    version("3.7", sha256="94dc8289ce90b77b507d9257784d9a43b402786de40c164f6e3990e221a2a4d2")
+
+    extends("openjdk")
+    depends_on("java@7:", type="run")
 
     def install(self, spec, prefix):
-        install('commons-lang3-{0}.jar'.format(self.version), prefix)
+        install("commons-lang3-{0}.jar".format(self.version), prefix)

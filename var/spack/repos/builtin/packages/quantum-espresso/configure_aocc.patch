@@ -1,0 +1,72 @@
+diff --git a/install/configure b/install/configure_aocc
+index 66337d1..d2c04af 100755
+--- a/install/configure
++++ b/install/configure_aocc
+@@ -3199,6 +3199,7 @@
+         ifort_version=`$mpif90 -V 2>&1 | grep "Intel(R)"`
+         pgf_version=`$mpif90 -V 2>&1 | grep "^pgf"`
+         nvfortran_version=`$mpif90 -V 2>&1 | grep "^nvfortran"`
++        aoccflang_version=`$mpif90 -v 2>&1 | grep "AMD clang version"`
+         gfortran_version=`$mpif90 -v 2>&1 | grep "gcc version"`
+         nagfor_version=`$mpif90 -v 2>&1 | grep "NAG Fortran"`
+         xlf_version=`$mpif90 -v 2>&1 | grep "xlf"`
+@@ -3215,6 +3216,12 @@ case "$arch" in
+                 version=`echo $nvfortran_version | cut -d ' ' -f2`
+                 echo "${ECHO_T}nvfortran $version"
+                 f90_in_mpif90="nvfortran"
++        elif test "$aoccflang_version" != ""
++        then
++                version=`echo $aoccflang_version | cut -d" " -f 5`
++                echo "${ECHO_T}mpif90 $version"
++                f90_in_mpif90="mpif90"
++                try_foxflags="-D__PGI"
+         elif test "$pgf_version" != ""
+         then
+                 version=`echo $pgf_version | cut -d ' ' -f2`
+@@ -3397,6 +3404,9 @@ ppc64-bg*:*xlf90_r )
+ ppc64-bg*:*xlf90 )
+         try_cc="bgxlc"
+         ;;
++*:mpif90 )
++        try_cc="mpicc $try_cc"
++        ;;
+ ppc64:*xlf* | ppc64le:*xlf* )
+         try_cc="xlc_r $try_cc"
+         ;;
+@@ -3779,6 +3789,10 @@ necsx:* )
+ ppc64le:* )
+         try_cflags="-O3"
+         ;;
++x86_64:* )
++        try_cflags=" -Mstack_arrays"
++        try_dflags="-D__OPENMP"
++        ;;
+ ppc64-bg:* )
+         try_cflags="-O3 -q32"
+         ;;
+@@ -3915,6 +3929,16 @@ crayxt*:cray* )
+         try_dflags="$try_dflags -D__CRAY"
+         have_cpp=0
+         ;;
++*:*mpif90 )
++        try_fflags="-Mstack_arrays"
++        try_fflags_openmp="-fopenmp"
++        try_f90flags=" \$(FFLAGS) -cpp -Mpreprocess -Mstack_arrays"
++        try_foxflags="-D__PGI"
++        try_fflags_noopt="-O0"
++        try_ldflags=""
++        try_ldflags_openmp="-fopenmp"
++        try_ldflags_static="-static"
++        ;;
+ crayxt*:pgf* )
+ # see comment above for pgf*
+ 	    try_fflags_nomain="-Mnomain"
+@@ -7815,7 +7839,7 @@ $as_echo "$as_me: WARNING: *** HDF5 version must be 1.8.16 or later" >&2;};
+              if test $with_hdf5_libs -eq 1; then
+                 hdf5_libs=$with_hdf5_libline
+              else
+-                hdf5_libs=`$with_hdf5_path/bin/h5pfc -show | awk -F'-L' '{$1=""; for (i=2; i<=NF;i++) $i="-L"$i; print $0}'`
++                hdf5_libs=`$with_hdf5_path/bin/h5pfc -show | awk -F'-L' '{$1=""; for (i=2; i<=NF;i++) $i="-L"$i; print $0}' | xargs`
+              fi
+          elif command -v h5pfc >/dev/null; then
+              if test $with_hdf5_libs -eq 1; then

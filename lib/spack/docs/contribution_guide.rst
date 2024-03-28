@@ -1,4 +1,4 @@
-.. Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -71,7 +71,7 @@ locally to speed up the review process.
    new release that is causing problems. If this is the case, please file an issue.
 
 
-We currently test against Python 2.6, 2.7, and 3.5-3.7 on both macOS and Linux and
+We currently test against Python 2.7 and 3.6-3.10 on both macOS and Linux and
 perform 3 types of tests:
 
 .. _cmd-spack-unit-test:
@@ -118,7 +118,7 @@ make another change, test that change, etc.  We use `pytest
 <http://pytest.org/>`_ as our tests framework, and these types of
 arguments are just passed to the ``pytest`` command underneath. See `the
 pytest docs
-<http://doc.pytest.org/en/latest/usage.html#specifying-tests-selecting-tests>`_
+<https://doc.pytest.org/en/latest/how-to/usage.html#specifying-which-tests-to-run>`_
 for more details on test selection syntax.
 
 ``spack unit-test`` has a few special options that can help you
@@ -147,7 +147,7 @@ you want to know about.  For example, to see just the tests in
 
 You can also combine any of these options with a ``pytest`` keyword
 search.  See the `pytest usage docs
-<https://docs.pytest.org/en/stable/usage.html#specifying-tests-selecting-tests>`_:
+<https://doc.pytest.org/en/latest/how-to/usage.html#specifying-which-tests-to-run>`_
 for more details on test selection syntax. For example, to see the names of all tests that have "spec"
 or "concretize" somewhere in their names:
 
@@ -179,24 +179,26 @@ how to write tests!
    run the unit tests yourself, we suggest you use ``spack unit-test``.
 
 ^^^^^^^^^^^^
-Flake8 Tests
+Style Tests
 ^^^^^^^^^^^^
 
 Spack uses `Flake8 <http://flake8.pycqa.org/en/latest/>`_ to test for
-`PEP 8 <https://www.python.org/dev/peps/pep-0008/>`_ conformance. PEP 8 is
+`PEP 8 <https://www.python.org/dev/peps/pep-0008/>`_ conformance and
+`mypy <https://mypy.readthedocs.io/en/stable/>` for type checking. PEP 8 is
 a series of style guides for Python that provide suggestions for everything
 from variable naming to indentation. In order to limit the number of PRs that
 were mostly style changes, we decided to enforce PEP 8 conformance. Your PR
-needs to comply with PEP 8 in order to be accepted.
+needs to comply with PEP 8 in order to be accepted, and if it modifies the
+spack library it needs to successfully type-check with mypy as well.
 
-Testing for PEP 8 compliance is easy. Simply run the ``spack flake8``
+Testing for compliance with spack's style is easy. Simply run the ``spack style``
 command:
 
 .. code-block:: console
 
-   $ spack flake8
+   $ spack style
 
-``spack flake8`` has a couple advantages over running ``flake8`` by hand:
+``spack style`` has a couple advantages over running the tools by hand:
 
 #. It only tests files that you have modified since branching off of
    ``develop``.
@@ -207,7 +209,9 @@ command:
    checks. For example, URLs are often longer than 80 characters, so we
    exempt them from line length checks. We also exempt lines that start
    with "homepage", "url", "version", "variant", "depends_on", and
-   "extends" in ``package.py`` files.
+   "extends" in ``package.py`` files.  This is now also possible when directly
+   running flake8 if you can use the ``spack`` formatter plugin included with
+   spack.
 
 More approved flake8 exemptions can be found
 `here <https://github.com/spack/spack/blob/develop/.flake8>`_.
@@ -240,36 +244,15 @@ However, if you aren't compliant with PEP 8, flake8 will complain:
 
 Most of the error messages are straightforward, but if you don't understand what
 they mean, just ask questions about them when you submit your PR. The line numbers
-will change if you add or delete lines, so simply run ``spack flake8`` again
+will change if you add or delete lines, so simply run ``spack style`` again
 to update them.
 
 .. tip::
 
    Try fixing flake8 errors in reverse order. This eliminates the need for
-   multiple runs of ``spack flake8`` just to re-compute line numbers and
+   multiple runs of ``spack style`` just to re-compute line numbers and
    makes it much easier to fix errors directly off of the CI output.
 
-.. warning::
-
-   Flake8 and ``pep8-naming`` require a number of dependencies in order
-   to run.  If you installed ``py-flake8`` and ``py-pep8-naming``, the
-   easiest way to ensure the right packages are on your ``PYTHONPATH`` is
-   to run::
-
-     spack activate py-flake8
-     spack activate pep8-naming
-
-   so that all of the dependencies are symlinked to a central
-   location. If you see an error message like:
-
-   .. code-block:: console
-
-      Traceback (most recent call last):
-        File: "/usr/bin/flake8", line 5, in <module>
-          from pkg_resources import load_entry_point
-      ImportError: No module named pkg_resources
-
-   that means Flake8 couldn't find setuptools in your ``PYTHONPATH``.
 
 ^^^^^^^^^^^^^^^^^^^
 Documentation Tests
@@ -305,13 +288,9 @@ All of these can be installed with Spack, e.g.
 
    .. code-block:: console
 
-      $ spack activate py-sphinx
-      $ spack activate py-sphinx-rtd-theme
-      $ spack activate py-sphinxcontrib-programoutput
+      $ spack load py-sphinx py-sphinx-rtd-theme py-sphinxcontrib-programoutput
 
-   so that all of the dependencies are symlinked into that Python's
-   tree.  Alternatively, you could arrange for their library
-   directories to be added to PYTHONPATH.  If you see an error message
+   so that all of the dependencies are added to PYTHONPATH.  If you see an error message
    like:
 
    .. code-block:: console
@@ -331,62 +310,11 @@ Once all of the dependencies are installed, you can try building the documentati
    $ make clean
    $ make
 
-If you see any warning or error messages, you will have to correct those before
-your PR is accepted.
-
-.. note::
-
-   There is also a ``run-doc-tests`` script in ``share/spack/qa``. The only
-   difference between running this script and running ``make`` by hand is that
-   the script will exit immediately if it encounters an error or warning. This
-   is necessary for CI. If you made a lot of documentation changes, it is
-   much quicker to run ``make`` by hand so that you can see all of the warnings
-   at once.
-
-If you are editing the documentation, you should obviously be running the
-documentation tests. But even if you are simply adding a new package, your
-changes could cause the documentation tests to fail:
-
-.. code-block:: console
-
-   package_list.rst:8745: WARNING: Block quote ends without a blank line; unexpected unindent.
-
-At first, this error message will mean nothing to you, since you didn't edit
-that file. Until you look at line 8745 of the file in question:
-
-.. code-block:: rst
-
-   Description:
-      NetCDF is a set of software libraries and self-describing, machine-
-     independent data formats that support the creation, access, and sharing
-     of array-oriented scientific data.
-
-Our documentation includes :ref:`a list of all Spack packages <package-list>`.
-If you add a new package, its docstring is added to this page. The problem in
-this case was that the docstring looked like:
-
-.. code-block:: python
-
-   class Netcdf(Package):
-       """
-       NetCDF is a set of software libraries and self-describing,
-       machine-independent data formats that support the creation,
-       access, and sharing of array-oriented scientific data.
-       """
-
-Docstrings cannot start with a newline character, or else Sphinx will complain.
-Instead, they should look like:
-
-.. code-block:: python
-
-   class Netcdf(Package):
-       """NetCDF is a set of software libraries and self-describing,
-       machine-independent data formats that support the creation,
-       access, and sharing of array-oriented scientific data."""
-
-Documentation changes can result in much more obfuscated warning messages.
-If you don't understand what they mean, feel free to ask when you submit
-your PR.
+If you see any warning or error messages, you will have to correct those before your PR
+is accepted. If you are editing the documentation, you should be running the
+documentation tests to make sure there are no errors. Documentation changes can result
+in some obfuscated warning messages. If you don't understand what they mean, feel free
+to ask when you submit your PR.
 
 --------
 Coverage

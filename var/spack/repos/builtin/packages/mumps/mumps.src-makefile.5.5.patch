@@ -1,0 +1,25 @@
+diff --git a/src/Makefile b/src/Makefile
+index 2562522..9dfa43e 100644
+--- a/src/Makefile
++++ b/src/Makefile
+@@ -215,7 +215,7 @@ $(libdir)/libmumps_common$(PLAT)$(LIBEXT_SHARED):      $(OBJS_COMMON_MOD) $(OBJS
+ 	$(FC) $(OPTL) -shared $^ -Wl,-soname,libmumps_common$(PLAT).so -L$(libdir) $(RPATH_OPT) $(LORDERINGS) $(LIBS) $(LIBOTHERS) -o $@ 
+ 
+ $(libdir)/lib$(ARITH)mumps$(PLAT)$(LIBEXT):    $(OBJS_MOD) $(OBJS_OTHER)
+-	$(AR)$@ $?
++	$(AR)$@ $? $(EXTRA_LIBS4MUMPS)
+ 	$(RANLIB) $@
+ 
+ $(libdir)/lib$(ARITH)mumps$(PLAT)$(LIBEXT_SHARED):    $(OBJS_MOD) $(OBJS_OTHER) $(libdir)/libmumps_common$(PLAT)$(LIBEXT_SHARED)
+@@ -434,9 +434,9 @@ $(OBJS_OTHER):$(OBJS_COMMON_MOD) $(OBJS_MOD)
+ 
+ .SUFFIXES: .c .F .o
+ .F.o:
+-	$(FC) $(OPTF) $(FPIC) -I. -I../include $(INCS) $(IORDERINGSF) $(ORDERINGSF) -c $*.F $(OUTF)$*.o
++	$(FC) $(OPTF) $(FC_PIC_FLAG) $(FPIC) -I. -I../include $(INCS) $(IORDERINGSF) $(ORDERINGSF) -c $*.F $(OUTF)$*.o
+ .c.o:
+-	$(CC) $(OPTC) $(FPIC) -I../include $(INCS) $(CDEFS) $(IORDERINGSC) $(ORDERINGSC) -c $*.c $(OUTC)$*.o
++	$(CC) $(OPTC) $(CC_PIC_FLAG) $(FPIC) -I../include $(INCS) $(CDEFS) $(IORDERINGSC) $(ORDERINGSC) -c $*.c $(OUTC)$*.o
+ 
+ $(ARITH)mumps_c.o:	mumps_c.c
+ 	$(CC) $(OPTC) $(FPIC) -I../include $(INCS) $(CDEFS) -DMUMPS_ARITH=MUMPS_ARITH_$(ARITH) \

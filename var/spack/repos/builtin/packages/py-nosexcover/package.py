@@ -1,9 +1,9 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class PyNosexcover(PythonPackage):
@@ -11,10 +11,10 @@ class PyNosexcover(PythonPackage):
     out an XML coverage report to a file named coverage.xml."""
 
     homepage = "https://github.com/cmheisel/nose-xcover"
-    url = "https://pypi.io/packages/source/n/nosexcover/nosexcover-1.0.11.tar.gz"
+    pypi = "nosexcover/nosexcover-1.0.11.tar.gz"
 
-    version('1.0.11', sha256='298c3c655da587f6cab8a666e9f4b150320032431062dea91353988d45c8b883')
+    version("1.0.11", sha256="298c3c655da587f6cab8a666e9f4b150320032431062dea91353988d45c8b883")
 
-    depends_on('py-setuptools', type='build')
-    depends_on('py-nose',        type=('build', 'run'))
-    depends_on('py-coverage@3.4:',        type=('build', 'run'))
+    depends_on("py-setuptools", type="build")
+    depends_on("py-nose", type=("build", "run"))
+    depends_on("py-coverage@3.4:", type=("build", "run"))

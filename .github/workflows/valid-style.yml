@@ -1,0 +1,89 @@
+name: style
+
+on:
+  workflow_call:
+    inputs:
+      with_coverage:
+        required: true
+        type: string
+
+concurrency:
+  group: style-${{github.ref}}-${{github.event.pull_request.number || github.run_number}}
+  cancel-in-progress: true
+
+
+jobs:
+  # Validate that the code can be run on all the Python versions
+  # supported by Spack
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633
+    - uses: actions/setup-python@82c7e631bb3cdc910f68e0081d67478d79c6982d
+      with:
+        python-version: '3.11'
+        cache: 'pip'
+    - name: Install Python Packages
+      run: |
+        pip install --upgrade pip setuptools
+        pip install -r .github/workflows/style/requirements.txt
+    - name: vermin (Spack's Core)
+      run: vermin --backport importlib --backport argparse --violations --backport typing -t=3.6- -vvv lib/spack/spack/ lib/spack/llnl/ bin/
+    - name: vermin (Repositories)
+      run: vermin --backport importlib --backport argparse --violations --backport typing -t=3.6- -vvv var/spack/repos
+  # Run style checks on the files that have been changed
+  style:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633
+      with:
+        fetch-depth: 0
+    - uses: actions/setup-python@82c7e631bb3cdc910f68e0081d67478d79c6982d
+      with:
+        python-version: '3.11'
+        cache: 'pip'
+    - name: Install Python packages
+      run: |
+        pip install --upgrade pip setuptools
+        pip install -r .github/workflows/style/requirements.txt
+    - name: Setup git configuration
+      run: |
+        # Need this for the git tests to succeed.
+        git --version
+        . .github/workflows/setup_git.sh
+    - name: Run style tests
+      run: |
+          share/spack/qa/run-style-tests
+  audit:
+    uses: ./.github/workflows/audit.yaml
+    secrets: inherit
+    with:
+      with_coverage: ${{ inputs.with_coverage }}
+      python_version: '3.11'
+  # Check that spack can bootstrap the development environment on Python 3.6 - RHEL8
+  bootstrap-dev-rhel8:
+    runs-on: ubuntu-latest
+    container: registry.access.redhat.com/ubi8/ubi
+    steps:
+      - name: Install dependencies
+        run: |
+          dnf install -y \
+              bzip2 curl file gcc-c++ gcc gcc-gfortran git gnupg2 gzip \
+              make patch tcl unzip which xz
+      - uses: actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633
+      - name: Setup repo and non-root user
+        run: |
+          git --version
+          git config --global --add safe.directory /__w/spack/spack
+          git fetch --unshallow
+          . .github/workflows/setup_git.sh
+          useradd spack-test
+          chown -R spack-test .
+      - name: Bootstrap Spack development environment
+        shell: runuser -u spack-test -- bash {0}
+        run: |
+          source share/spack/setup-env.sh
+          spack debug report
+          spack -d bootstrap now --dev
+          spack style -t black
+          spack unit-test -V

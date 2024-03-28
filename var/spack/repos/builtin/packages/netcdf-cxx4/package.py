@@ -1,79 +1,91 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
-class NetcdfCxx4(AutotoolsPackage):
+class NetcdfCxx4(CMakePackage):
     """NetCDF (network Common Data Form) is a set of software libraries and
     machine-independent data formats that support the creation, access, and
     sharing of array-oriented scientific data. This is the C++ distribution."""
 
     homepage = "https://www.unidata.ucar.edu/software/netcdf"
-    url      = "ftp://ftp.unidata.ucar.edu/pub/netcdf/netcdf-cxx4-4.3.1.tar.gz"
+    url = "ftp://ftp.unidata.ucar.edu/pub/netcdf/netcdf-cxx4-4.3.1.tar.gz"
 
-    maintainers = ['WardF']
+    maintainers("WardF")
 
-    version('4.3.1', sha256='6a1189a181eed043b5859e15d5c080c30d0e107406fbb212c8fb9814e90f3445')
-    version('4.3.0', sha256='e34fbc6aba243ec82c23e9ee99db2430555ada849c54c1f3ab081b0ddd0f5f30')
+    license("Apache-2.0")
 
-    # Usually the configure automatically inserts the pic flags, but we can
-    # force its usage with this variant.
-    variant('static', default=True, description='Enable building static libraries')
-    variant('shared', default=True, description='Enable shared library')
-    variant('pic', default=True, description='Produce position-independent code (for shared libs)')
-    variant('doxygen', default=True, description='Enable doxygen docs')
+    version("4.3.1", sha256="6a1189a181eed043b5859e15d5c080c30d0e107406fbb212c8fb9814e90f3445")
+    version("4.3.0", sha256="e34fbc6aba243ec82c23e9ee99db2430555ada849c54c1f3ab081b0ddd0f5f30")
 
-    depends_on('netcdf-c')
+    variant("shared", default=True, description="Enable shared library")
+    variant("pic", default=True, description="Produce position-independent code (for shared libs)")
+    variant("doc", default=False, description="Enable doxygen docs")
+    variant("tests", default=False, description="Enable CTest-based tests, dashboards.")
 
-    depends_on('automake', type='build')
-    depends_on('autoconf', type='build')
-    depends_on('libtool', type='build')
-    depends_on('m4', type='build')
-    depends_on('doxygen', when='+doxygen', type='build')
+    # If another cmake-built netcdf-c exists outside of spack  e.g., homebrew's libnetcdf,
+    # then cmake will choose that external netcdf-c.
+    # This approach ensures the config.cmake exists, and thus ensures the spack version is
+    #  found before the system's
+    depends_on("netcdf-c build_system=cmake")
+    depends_on("hdf5")
 
-    conflicts('~shared', when='~static')
+    # if we link against an mpi-aware hdf5 then this needs to also be mpi aware for tests
+    depends_on("mpi", when="+tests ^hdf5+mpi")
+    depends_on("doxygen", when="+doc", type="build")
 
-    force_autoreconf = True
+    filter_compiler_wrappers("ncxx4-config", relative_root="bin")
 
     def flag_handler(self, name, flags):
-        if name == 'cflags' and '+pic' in self.spec:
+        if name == "cflags" and "+pic" in self.spec:
             flags.append(self.compiler.cc_pic_flag)
-        elif name == 'cppflags':
-            flags.append('-I' + self.spec['netcdf-c'].prefix.include)
+        if name == "cxxflags" and "+pic" in self.spec:
+            flags.append(self.compiler.cxx_pic_flag)
 
-        return (None, None, flags)
+        return flags, None, None
 
     @property
     def libs(self):
-        shared = True
-        return find_libraries(
-            'libnetcdf_c++4', root=self.prefix, shared=shared, recursive=True
+        libraries = ["libnetcdf_c++4"]
+        shared = "+shared" in self.spec
+
+        libs = find_libraries(libraries, root=self.prefix, shared=shared, recursive=True)
+        if libs:
+            return libs
+
+        msg = "Unable to recursively locate {0} {1} libraries in {2}"
+        raise spack.error.NoLibrariesError(
+            msg.format("shared" if shared else "static", self.spec.name, self.spec.prefix)
         )
 
-    def configure_args(self):
-        config_args = []
+    def patch(self):
+        # An incorrect value is queried post find_package(HDF5)
+        # This looks to be resolved in master, but not any of the tag releases
+        # https://github.com/Unidata/netcdf-cxx4/issues/88
+        filter_file(
+            r"HDF5_C_LIBRARY_hdf5",
+            "HDF5_C_LIBRARIES",
+            join_path(self.stage.source_path, "CMakeLists.txt"),
+        )
 
-        if '+static' in self.spec:
-            config_args.append('--enable-static')
-        else:
-            config_args.append('--disable-static')
+        filter_file(
+            r"HDF5_C_LIBRARY_hdf5",
+            "HDF5_C_LIBRARIES",
+            join_path(self.stage.source_path, "cxx4", "CMakeLists.txt"),
+        )
 
-        if '+shared' in self.spec:
-            config_args.append('--enable-shared')
-        else:
-            config_args.append('--disable-shared')
+    def cmake_args(self):
+        args = [
+            self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
+            self.define_from_variant("ENABLE_DOXYGEN", "doc"),
+            self.define_from_variant("NCXX_ENABLE_TESTS", "tests"),
+        ]
 
-        if '+pic' in self.spec:
-            config_args.append('--with-pic')
-        else:
-            config_args.append('--without-pic')
+        return args
 
-        if '+doxygen' in self.spec:
-            config_args.append('--enable-doxygen')
-        else:
-            config_args.append('--disable-doxygen')
-
-        return config_args
+    def check(self):
+        with working_dir(self.build_directory):
+            make("test", parallel=False)

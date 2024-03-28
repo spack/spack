@@ -1,9 +1,9 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Autogen(AutotoolsPackage, GNUMirrorPackage):
@@ -17,14 +17,16 @@ class Autogen(AutotoolsPackage, GNUMirrorPackage):
     list_url = "https://ftp.gnu.org/gnu/autogen"
     list_depth = 1
 
-    version('5.18.12', sha256='805c20182f3cb0ebf1571d3b01972851c56fb34348dfdc38799fd0ec3b2badbe')
+    license("GPL-3.0-only")
 
-    variant('xml', default=True, description='Enable XML support')
+    version("5.18.12", sha256="805c20182f3cb0ebf1571d3b01972851c56fb34348dfdc38799fd0ec3b2badbe")
 
-    depends_on('pkgconfig', type='build')
+    variant("xml", default=True, description="Enable XML support")
 
-    depends_on('guile@1.8:2.0')
-    depends_on('libxml2', when='+xml')
+    depends_on("pkgconfig", type="build")
+
+    depends_on("guile@1.8:2.0")
+    depends_on("libxml2", when="+xml")
 
     def configure_args(self):
         spec = self.spec
@@ -32,12 +34,12 @@ class Autogen(AutotoolsPackage, GNUMirrorPackage):
         args = [
             # `make check` fails without this
             # Adding a gettext dependency does not help
-            '--disable-nls',
+            "--disable-nls"
         ]
 
-        if '+xml' in spec:
-            args.append('--with-libxml2={0}'.format(spec['libxml2'].prefix))
+        if "+xml" in spec:
+            args.append(f"--with-libxml2={spec['libxml2'].prefix}")
         else:
-            args.append('--without-libxml2')
+            args.append("--without-libxml2")
 
         return args

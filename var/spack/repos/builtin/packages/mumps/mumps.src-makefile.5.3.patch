@@ -1,0 +1,24 @@
+diff -Naur spack-src/src/Makefile spack-src.patched/src/Makefile
+--- spack-src/src/Makefile	2020-06-15 05:57:25.000000000 -0400
++++ spack-src.patched/src/Makefile	2021-01-08 14:43:28.655026604 -0500
+@@ -193,7 +193,7 @@
+ 	$(RANLIB) $@
+ 
+ $(libdir)/lib$(ARITH)mumps$(PLAT)$(LIBEXT):    $(OBJS_MOD) $(OBJS_OTHER)
+-	$(AR)$@ $?
++	$(AR)$@ $? $(EXTRA_LIBS4MUMPS)
+ 	$(RANLIB) $@
+ 
+ # Dependencies between modules:
+@@ -405,9 +405,9 @@
+ 
+ .SUFFIXES: .c .F .o
+ .F.o:
+-	$(FC) $(OPTF) -I. -I../include $(INCS) $(IORDERINGSF) $(ORDERINGSF) -c $*.F $(OUTF)$*.o
++	$(FC) $(OPTF) $(FC_PIC_FLAG) -I. -I../include $(INCS) $(IORDERINGSF) $(ORDERINGSF) -c $*.F $(OUTF)$*.o
+ .c.o:
+-	$(CC) $(OPTC) -I../include $(INCS) $(CDEFS) $(IORDERINGSC) $(ORDERINGSC) -c $*.c $(OUTC)$*.o
++	$(CC) $(OPTC) $(CC_PIC_FLAG) -I../include $(INCS) $(CDEFS) $(IORDERINGSC) $(ORDERINGSC) -c $*.c $(OUTC)$*.o
+ 
+ $(ARITH)mumps_c.o:	mumps_c.c
+ 	$(CC) $(OPTC) -I../include $(INCS) $(CDEFS) -DMUMPS_ARITH=MUMPS_ARITH_$(ARITH) \

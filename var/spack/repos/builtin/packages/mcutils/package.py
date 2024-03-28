@@ -1,36 +1,39 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Mcutils(MakefilePackage):
     """A collection of routines for classification and manipulation of
-       particle physics simulated HepMC event records."""
+    particle physics simulated HepMC event records."""
 
-    homepage = "https://bitbucket.org/andybuckley/mcutils"
-    url      = "https://bitbucket.org/andybuckley/mcutils/get/mcutils-1.3.4.tar.gz"
+    homepage = "https://gitlab.com/hepcedar/mcutils"
+    git = "https://gitlab.com/hepcedar/mcutils.git"
 
-    tags = ['hep']
+    tags = ["hep"]
 
-    version('1.3.4', sha256='0bf9795cc248871ab2b663d2eef647311eacaea4982997950096de68747e65a3')
-    version('1.3.3', sha256='bfb2f0e0e6de358928436f309f3f1b084d3d652073c440f262de878332116ecb')
-    version('1.3.2', sha256='e17d417e8d4f8d17a6879ea18dcd2cd76e161d37eae08b84893504d1b08f9708')
-    version('1.3.1', sha256='081263ee6844fccedad780e6a2fbaf1ad0073a6706bc4b34109050b72c2c4b27')
-    version('1.3.0', sha256='20a89ce536547dc8f56e7779a3ec8cfe9987edb1646009ecfc682ff1ddf0277b')
-    version('1.2.1', sha256='004325be41925d97e711ffe4311d9c8aa8e88873541bcc1a385d2e1ce1d17a96')
-    version('1.2.0', sha256='f9589d45bff06d8c8742d35d78d1ed570a0d181fd7ee5d6f97ab9e48f0ee32f4')
-    version('1.1.2', sha256='5a5781caf2d81c21f4b040a1d31975c354526bcf7c8c9067543f7303c8155844')
-    version('1.1.1', sha256='3e5c47d2264886613fc9423b020cf50dc7031a02b752da3a84f794c36ba7443a')
-    version('1.1.0', sha256='96fc2586430032ed4b378edb02150c5c9db405e1767dbf847ffe9ac043daf6e9')
-    version('1.0.3', sha256='b5bec5a4b2146b6987b351d632119c3b4c449c2ee53ae0ddc8cb1d3672907df5')
-    version('1.0.2', sha256='74e2c381f5f3719888b15a2e00075051bb2b84b3d73633d429818a77de66ca7c')
-    version('1.0.1', sha256='bb884a4cfb56b5139c08df0be554466e504e9c46096a858f904d659894a62131')
-    version('1.0.0', sha256='d08dea19fb42b1846e0a7134e2347648b037bf82b2d75086d018734bc2996b06')
+    license("GPL-3.0-or-later")
 
-    depends_on('heputils', when='@1.1.0:')
+    version("1.3.5", tag="mcutils-1.3.5", commit="d0e65bb7b6f80d6df50a71a25c54683b0db997a5")
+    version("1.3.4", tag="mcutils-1.3.4", commit="ddb527e5d03b8e4d13ae4e6d78fbcd7d35f7153b")
+    version("1.3.3", tag="mcutils-1.3.3", commit="638aabe930b05f8ecfe272bdd2f2a7ed65e5fc45")
+    version("1.3.2", tag="mcutils-1.3.2", commit="8228d443aa0877c067299d640704836e664dac51")
+    version("1.3.1", tag="mcutils-1.3.1")
+    version("1.3.1", tag="mcutils-1.3.0", commit="e04693bf5aaa38b9cbe76aec94a3ffd2d466f1f6")
+    version("1.2.1", tag="mcutils-1.2.1", commit="3799336668c19ed86c93c82c815da6397597763f")
+    version("1.2.0", tag="mcutils-1.2.0", commit="c1ef0a2a0b09c9df16450c7b64da543119e3740f")
+    version("1.1.2", tag="mcutils-1.1.2", commit="cf212f61bb398cae1e987ff7e4c5537c1480be8d")
+    version("1.1.1", tag="mcutils-1.1.1", commit="c42d9123439fbcee512c23f853c60d6491b47fa0")
+    version("1.1.0", tag="mcutils-1.1.0", commit="15af9f40d8667030d9a68e007ac7e348157397d5")
+    version("1.0.3", tag="mcutils-1.0.3", commit="73a8e06256460e943af2336f80115d84630f6dd5")
+    version("1.0.2", tag="mcutils-1.0.2", commit="15e2daad2bfe7543e43b35421fffd177519c516f")
+    version("1.0.1", tag="mcutils-1.0.1", commit="85bb1c9e2761a7c70bdd18955d6cccc120d9c523")
+    version("1.0.0", tag="mcutils-1.0.0", commit="7ae9d007493ce65f5eac432d0ea6f730512a0a8a")
+
+    depends_on("heputils", when="@1.1.0:")
 
     def install(self, spec, prefix):
-        make('install', 'PREFIX={0}'.format(prefix))
+        make("install", "PREFIX={0}".format(prefix))

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -253,7 +253,7 @@ function match_flag -d "checks all combinations of flags ocurring inside of a st
     set -l _a (string sub -s 2 (string trim "x$argv[1]"))
     set -l _b (string sub -s 2 (string trim "x$argv[2]"))
 
-    if test -z "$_a" || test -z "$_b"
+    if test -z "$_a"; or test -z "$_b"
         return 0
     end
 
@@ -320,6 +320,11 @@ function check_env_activate_flags -d "check spack env subcommand flags for -h, -
             return 0
         end
 
+        # looks for a single `--list`
+        if match_flag $_a "--list"
+            return 0
+        end
+
     end
 
     return 1
@@ -367,7 +372,14 @@ end
 
 
 function spack_runner -d "Runner function for the `spack` wrapper"
-
+    # Store DYLD_* variables from spack shell function
+    # This is necessary because MacOS System Integrity Protection clears
+    # variables that affect dyld on process start.
+    for var in DYLD_LIBRARY_PATH DYLD_FALLBACK_LIBRARY_PATH
+        if set -q $var
+            set -gx SPACK_$var $$var
+        end
+    end
 
     #
     # Accumulate initial flags for main spack command
@@ -383,7 +395,7 @@ function spack_runner -d "Runner function for the `spack` wrapper"
 
     if check_sp_flags $sp_flags
         command spack $sp_flags $__sp_remaining_args
-        return 0
+        return
     end
 
 
@@ -426,6 +438,7 @@ function spack_runner -d "Runner function for the `spack` wrapper"
             if test "x$sp_arg" = "x-h"; or test "x$sp_arg" = "x--help"
                 # nothing more needs to be done for `-h` or `--help`
                 command spack cd -h
+                return
             else
                 # extract location using the subcommand (fish `(...)`)
                 set -l LOC (command spack location $sp_arg $__sp_remaining_args)
@@ -433,13 +446,12 @@ function spack_runner -d "Runner function for the `spack` wrapper"
                 # test location and cd if exists:
                 if test -d "$LOC"
                     cd $LOC
+                    return
                 else
                     return 1
                 end
 
             end
-
-            return 0
 
 
         # CASE: spack subcommand is `env`. Here we get the spack runtime to
@@ -461,6 +473,7 @@ function spack_runner -d "Runner function for the `spack` wrapper"
             if test "x$sp_arg" = "x-h"; or test "x$sp_arg" = "x--help"
                 # nothing more needs to be done for `-h` or `--help`
                 command spack env -h
+                return
             else
                 switch $sp_arg
                     case "activate"
@@ -469,6 +482,7 @@ function spack_runner -d "Runner function for the `spack` wrapper"
                         if check_env_activate_flags $_a
                             # no args or args contain -h/--help, --sh, or --csh: just execute
                             command spack env activate $_a
+                            return
                         else
                             # actual call to activate: source the output
                             set -l sp_env_cmd "command spack $sp_flags env activate --fish $__sp_remaining_args"
@@ -477,6 +491,7 @@ function spack_runner -d "Runner function for the `spack` wrapper"
                             if test -n "$__sp_stderr"
                                 echo -s \n$__sp_stderr 1>&2  # current fish bug: handle stderr manually
                             end
+                            return $__sp_stat
                         end
 
                     case "deactivate"
@@ -485,6 +500,7 @@ function spack_runner -d "Runner function for the `spack` wrapper"
                         if check_env_deactivate_flags $_a
                             # just  execute the command if --sh, --csh, or --fish are provided
                             command spack env deactivate $_a
+                            return
 
                         # Test of further (unparsed arguments). Any other
                         # arguments are an error or help, so just run help
@@ -493,17 +509,18 @@ function spack_runner -d "Runner function for the `spack` wrapper"
                         # -> Notes: [1] (cf. EOF).
                         else if test -n "$__sp_remaining_args"
                             command spack env deactivate -h
+                            return
                         else
                             # no args: source the output of the command
                             set -l sp_env_cmd "command spack $sp_flags env deactivate --fish"
                             capture_all $sp_env_cmd __sp_stat __sp_stdout __sp_stderr
-                            eval $__sp_stdout
                             if test $__sp_stat -ne 0
                                 if test -n "$__sp_stderr"
                                     echo -s \n$__sp_stderr 1>&2  # current fish bug: handle stderr manually
                                 end
-                                return 1
+                                return $__sp_stat
                             end
+                            eval $__sp_stdout
                         end
 
                     case "*"
@@ -512,8 +529,10 @@ function spack_runner -d "Runner function for the `spack` wrapper"
                         # string input!)
                         if test -n "$__sp_remaining_args"
                             command spack env $sp_arg $__sp_remaining_args
+                            return
                         else
                             command spack env $sp_arg
+                            return
                         end
                 end
             end
@@ -531,17 +550,18 @@ function spack_runner -d "Runner function for the `spack` wrapper"
             if check_env_activate_flags $_a
                 # no args or args contain -h/--help, --sh, or --csh: just execute
                 command spack $sp_flags $sp_subcommand $__sp_remaining_args
+                return
             else
                 # actual call to activate: source the output
                 set -l sp_env_cmd "command spack $sp_flags $sp_subcommand --fish $__sp_remaining_args"
                 capture_all $sp_env_cmd __sp_stat __sp_stdout __sp_stderr
-                eval $__sp_stdout
                 if test $__sp_stat -ne 0
                     if test -n "$__sp_stderr"
                         echo -s \n$__sp_stderr 1>&2  # current fish bug: handle stderr manually
                     end
-                    return 1
+                    return $__sp_stat
                 end
+                eval $__sp_stdout
             end
 
 
@@ -549,10 +569,8 @@ function spack_runner -d "Runner function for the `spack` wrapper"
 
         case "*"
             command spack $argv
-
+            return
     end
-
-    return 0
 end
 
 
@@ -630,10 +648,10 @@ function spack_pathadd -d "Add path to specified variable (defaults to PATH)"
         # passed to regular expression matching (`string match -r`)
         set -l _a "$pa_oldvalue"
 
-        # skip path if it is already contained in the variable
+        # skip path if it is already the first in the variable
         # note spaces in regular expression: we're matching to a space delimited
         # list of paths
-        if not echo $_a | string match -q -r " *$pa_new_path *"
+        if not echo $_a | string match -q -r "^$pa_new_path *"
             if test -n "$pa_oldvalue"
                 set $pa_varname $pa_new_path $pa_oldvalue
             else
@@ -668,6 +686,19 @@ set -l sp_source_file (status -f)  # name of current file
 
 
 #
+# Identify and lock the python interpreter
+#
+for cmd in "$SPACK_PYTHON" python3 python python2
+    set -l _sp_python (command -v "$cmd")
+    if test $status -eq 0
+        set -x SPACK_PYTHON $_sp_python
+        break
+    end
+end
+
+
+
+#
 # Find root directory and add bin to path.
 #
 set -l sp_share_dir (realpath (dirname $sp_source_file))
@@ -686,73 +717,83 @@ set -xg _sp_shell "fish"
 
 
 
-#
-# Check whether we need environment-variables (module) <= `use` is not available
-#
-set -l need_module "no"
-if not functions -q use; and not functions -q module
-    set need_module "yes"
-end
-
-
-
-#
-# Make environment-modules available to shell
-#
-function sp_apply_shell_vars -d "applies expressions of the type `a='b'` as `set a b`"
-
-    # convert `a='b' to array variable `a b`
-    set -l expr_token (string trim -c "'" (string split "=" $argv))
-
-    # run set command to takes, converting lists of type `a:b:c` to array
-    # variables `a b c` by splitting around the `:` character
-    set -xg $expr_token[1] (string split ":" $expr_token[2])
-end
-
-
-if test "$need_module" = "yes"
-    set -l sp_shell_vars (command spack --print-shell-vars sh,modules)
-
-    for sp_var_expr in $sp_shell_vars
-        sp_apply_shell_vars $sp_var_expr
+if test -z "$SPACK_SKIP_MODULES"
+    #
+    # Check whether we need environment-variables (module) <= `use` is not available
+    #
+    set -l need_module "no"
+    if not functions -q use; and not functions -q module
+        set need_module "yes"
     end
 
-    # _sp_module_prefix is set by spack --print-sh-vars
-    if test "$_sp_module_prefix" != "not_installed"
-        set -xg MODULE_PREFIX $_sp_module_prefix
-        spack_pathadd PATH "$MODULE_PREFIX/bin"
+
+
+    #
+    # Make environment-modules available to shell
+    #
+    function sp_apply_shell_vars -d "applies expressions of the type `a='b'` as `set a b`"
+
+        # convert `a='b' to array variable `a b`
+        set -l expr_token (string trim -c "'" (string split "=" $argv))
+
+        # run set command to takes, converting lists of type `a:b:c` to array
+        # variables `a b c` by splitting around the `:` character
+        set -xg $expr_token[1] (string split ":" $expr_token[2])
     end
 
-else
 
-    set -l sp_shell_vars (command spack --print-shell-vars sh)
+    if test "$need_module" = "yes"
+        set -l sp_shell_vars (command spack --print-shell-vars sh,modules)
 
-    for sp_var_expr in $sp_shell_vars
-        sp_apply_shell_vars $sp_var_expr
+        for sp_var_expr in $sp_shell_vars
+            sp_apply_shell_vars $sp_var_expr
+        end
+
+        # _sp_module_prefix is set by spack --print-sh-vars
+        if test "$_sp_module_prefix" != "not_installed"
+            set -xg MODULE_PREFIX $_sp_module_prefix
+            spack_pathadd PATH "$MODULE_PREFIX/bin"
+        end
+
+    else
+
+        set -l sp_shell_vars (command spack --print-shell-vars sh)
+
+        for sp_var_expr in $sp_shell_vars
+            sp_apply_shell_vars $sp_var_expr
+        end
+
     end
 
+    if test "$need_module" = "yes"
+        function module -d "wrapper for the `module` command to point at Spack's modules instance" --inherit-variable MODULE_PREFIX
+            eval $MODULE_PREFIX/bin/modulecmd $SPACK_SHELL $argv
+        end
+    end
+
+
+
+    #
+    # set module system roots
+    #
+
+    # Search of MODULESPATHS by trying all possible compatible system types as
+    # module roots.
+    if test -z "$MODULEPATH"
+        set -gx MODULEPATH
+    end
+    sp_multi_pathadd MODULEPATH $_sp_tcl_roots
 end
 
-if test "$need_module" = "yes"
-    function module -d "wrapper for the `module` command to point at Spack's modules instance" --inherit-variable MODULE_PREFIX
-        eval $MODULE_PREFIX/bin/modulecmd $SPACK_SHELL $argv
-    end
-end
-
-
-
+# Add programmable tab completion for fish
 #
-# set module system roots
-#
+set -l fish_version (string split '.' $FISH_VERSION)
+if test $fish_version[1] -gt 3
+    or test $fish_version[1] -eq 3
+    and test $fish_version[2] -ge 2
 
-# Search of MODULESPATHS by trying all possible compatible system types as
-# module roots.
-if test -z "$MODULEPATH"
-    set -gx MODULEPATH
+    source $sp_share_dir/spack-completion.fish
 end
-sp_multi_pathadd MODULEPATH $_sp_tcl_roots
-
-
 
 #
 # NOTES

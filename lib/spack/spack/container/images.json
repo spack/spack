@@ -1,45 +1,178 @@
 {
   "images": {
-    "ubuntu:18.04": {
-      "os_package_manager": "apt",
-      "build": "spack/ubuntu-bionic",
-      "build_tags": {
-        "develop": "latest"
+    "alpine:3": {
+      "bootstrap": {
+        "template": "container/alpine_3.dockerfile"
+      },
+      "os_package_manager": "apk"
+    },
+    "amazonlinux:2": {
+      "bootstrap": {
+        "template": "container/amazonlinux_2.dockerfile"
+      },
+      "os_package_manager": "yum_amazon"
+    },
+    "fedora:38": {
+      "bootstrap": {
+        "template": "container/fedora_38.dockerfile",
+        "image": "docker.io/fedora:38"
+      },
+      "os_package_manager": "dnf",
+      "build": "spack/fedora38",
+      "final": {
+        "image": "docker.io/fedora:38"
       }
     },
-    "ubuntu:16.04": {
-      "os_package_manager": "apt",
-      "build": "spack/ubuntu-xenial",
-      "build_tags": {
-        "develop": "latest"
+    "fedora:37": {
+      "bootstrap": {
+        "template": "container/fedora_37.dockerfile",
+        "image": "docker.io/fedora:37"
+      },
+      "os_package_manager": "dnf",
+      "build": "spack/fedora37",
+      "final": {
+        "image": "docker.io/fedora:37"
+      }
+    },
+    "rockylinux:9": {
+      "bootstrap": {
+        "template": "container/rockylinux_9.dockerfile",
+        "image": "docker.io/rockylinux:9"
+      },
+      "os_package_manager": "dnf_epel",
+      "build": "spack/rockylinux9",
+      "final": {
+        "image": "docker.io/rockylinux:9"
+      }
+    },
+    "rockylinux:8": {
+      "bootstrap": {
+        "template": "container/rockylinux_8.dockerfile",
+        "image": "docker.io/rockylinux:8"
+      },
+      "os_package_manager": "dnf_epel",
+      "build": "spack/rockylinux8",
+      "final": {
+        "image": "docker.io/rockylinux:8"
+      }
+    },
+    "almalinux:9": {
+      "bootstrap": {
+        "template": "container/almalinux_9.dockerfile",
+        "image": "quay.io/almalinuxorg/almalinux:9"
+      },
+      "os_package_manager": "dnf_epel",
+      "build": "spack/almalinux9",
+      "final": {
+        "image": "quay.io/almalinuxorg/almalinux:9"
+      }
+    },
+    "almalinux:8": {
+      "bootstrap": {
+        "template": "container/almalinux_8.dockerfile",
+        "image": "quay.io/almalinuxorg/almalinux:8"
+      },
+      "os_package_manager": "dnf_epel",
+      "build": "spack/almalinux8",
+      "final": {
+        "image": "quay.io/almalinuxorg/almalinux:8"
+      }
+    },
+    "centos:stream": {
+      "bootstrap": {
+        "template": "container/centos_stream.dockerfile",
+        "image": "quay.io/centos/centos:stream"
+      },
+      "os_package_manager": "dnf_epel",
+      "build": "spack/centos-stream",
+      "final": {
+        "image": "quay.io/centos/centos:stream"
       }
     },
     "centos:7": {
+      "bootstrap": {
+        "template": "container/centos_7.dockerfile"
+      },
       "os_package_manager": "yum",
-      "environment": [],
-      "build": "spack/centos7",
-      "build_tags": {
-        "develop": "latest"
+      "build": "spack/centos7"
+    },
+    "opensuse/leap:15": {
+      "bootstrap": {
+        "template": "container/leap-15.dockerfile"
+      },
+      "os_package_manager": "zypper",
+      "build": "spack/leap15",
+      "final": {
+        "image": "opensuse/leap:latest"
       }
     },
-    "centos:6": {
-      "os_package_manager": "yum",
-      "build": "spack/centos6",
-      "build_tags": {
-        "develop": "latest"
-      }
+    "nvidia/cuda:11.2.1": {
+      "bootstrap": {
+        "template": "container/cuda_11_2_1.dockerfile",
+        "image": "nvidia/cuda:11.2.1-devel"
+      },
+      "final": {
+        "image": "nvidia/cuda:11.2.1-base"
+      },
+      "os_package_manager": "apt"
+    },
+    "ubuntu:22.04": {
+      "bootstrap": {
+        "template": "container/ubuntu_2204.dockerfile"
+      },
+      "os_package_manager": "apt",
+      "build": "spack/ubuntu-jammy"
+    },
+    "ubuntu:20.04": {
+      "bootstrap": {
+        "template": "container/ubuntu_2004.dockerfile"
+      },
+      "build": "spack/ubuntu-focal",
+      "os_package_manager": "apt"
+    },
+    "ubuntu:18.04": {
+      "bootstrap": {
+        "template": "container/ubuntu_1804.dockerfile"
+      },
+      "os_package_manager": "apt",
+      "build": "spack/ubuntu-bionic"
     }
   },
   "os_package_managers": {
+    "apk": {
+      "update": "apk update",
+      "install": "apk add --no-cache",
+      "clean": "true"
+    },
     "apt": {
       "update": "apt-get -yqq update && apt-get -yqq upgrade",
       "install": "apt-get -yqq install",
       "clean": "rm -rf /var/lib/apt/lists/*"
     },
+    "dnf": {
+      "update": "dnf update -y",
+      "install": "dnf install -y",
+      "clean": "rm -rf /var/cache/dnf && dnf clean all"
+    },
+    "dnf_epel": {
+      "update": "dnf update -y && dnf install -y epel-release && dnf update -y",
+      "install": "dnf install -y",
+      "clean": "rm -rf /var/cache/dnf && dnf clean all"
+    },
     "yum": {
       "update": "yum update -y && yum install -y epel-release && yum update -y",
       "install": "yum install -y",
       "clean": "rm -rf /var/cache/yum  && yum clean all"
+    },
+    "yum_amazon": {
+      "update": "yum update -y && amazon-linux-extras install epel -y",
+      "install": "yum install -y",
+      "clean": "rm -rf /var/cache/yum  && yum clean all"
+    },
+    "zypper": {
+      "update": "zypper update -y",
+      "install": "zypper install -y",
+      "clean": "rm -rf /var/cache/zypp  && zypper clean -a"
     }
   }
 }

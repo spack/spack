@@ -1,9 +1,9 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Glproto(AutotoolsPackage, XorgPackage):
@@ -15,7 +15,9 @@ class Glproto(AutotoolsPackage, XorgPackage):
     homepage = "https://www.x.org/wiki/"
     xorg_mirror_path = "proto/glproto-1.4.17.tar.gz"
 
-    version('1.4.17', sha256='9d8130fec2b98bd032db7730fa092dd9dec39f3de34f4bb03ceb43b9903dbc96')
+    license("SGI-B-1.1")
 
-    depends_on('pkgconfig', type='build')
-    depends_on('util-macros', type='build')
+    version("1.4.17", sha256="9d8130fec2b98bd032db7730fa092dd9dec39f3de34f4bb03ceb43b9903dbc96")
+
+    depends_on("pkgconfig", type="build")
+    depends_on("util-macros", type="build")

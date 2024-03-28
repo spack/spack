@@ -1,0 +1,84 @@
+diff --git a/core/src/HPX/Kokkos_HPX_Task.hpp b/core/src/HPX/Kokkos_HPX_Task.hpp
+index 7bb3ca5d0..ff50fdc5f 100644
+--- a/core/src/HPX/Kokkos_HPX_Task.hpp
++++ b/core/src/HPX/Kokkos_HPX_Task.hpp
+@@ -216,7 +216,7 @@ class TaskQueueSpecializationConstrained<
+     task_queue.scheduler = &scheduler;
+     Kokkos::Impl::dispatch_execute_task(&task_queue,
+                                         Kokkos::Experimental::HPX());
+-    Kokkos::Experimental::HPX().fence()"Kokkos::Impl::TaskQueueSpecializationConstrained::execute: fence after task execution";
++    Kokkos::Experimental::HPX().fence("Kokkos::Impl::TaskQueueSpecializationConstrained::execute: fence after task execution");
+   }
+ 
+   // Must provide task queue execution function
+diff --git a/core/src/Kokkos_HPX.hpp b/core/src/Kokkos_HPX.hpp
+index 236211864..3e8522e94 100644
+--- a/core/src/Kokkos_HPX.hpp
++++ b/core/src/Kokkos_HPX.hpp
+@@ -282,11 +282,11 @@ class HPX {
+     m_mode                      = other.m_mode;
+     m_independent_instance_data = other.m_independent_instance_data;
+     m_buffer                    = m_mode == instance_mode::independent
+-                   ? m_independent_instance_data->m_buffer
+-                   : m_global_instance_data.m_buffer;
+-    m_future = m_mode == instance_mode::independent
+-                   ? m_independent_instance_data->m_future
+-                   : m_global_instance_data.m_future;
++                                      ? m_independent_instance_data->m_buffer
++                                      : m_global_instance_data.m_buffer;
++    m_future                    = m_mode == instance_mode::independent
++                                      ? m_independent_instance_data->m_future
++                                      : m_global_instance_data.m_future;
+     return *this;
+   }
+ #else
+@@ -322,25 +322,36 @@ class HPX {
+         "Fence");
+   }
+   void impl_fence_instance(const std::string &name) const {
+-    Kokkos::Tools::Experimental::Impl::profile_fence_event(name, *this, [&]() {
+-      if (hpx::threads::get_self_ptr() == nullptr) {
+-        hpx::threads::run_as_hpx_thread([this]() { impl_get_future().wait(); });
+-      } else {
+-        impl_get_future().wait();
+-      }
+-    });
++    Kokkos::Tools::Experimental::Impl::profile_fence_event<
++        Kokkos::Experimental::HPX>(
++        name,
++        Kokkos::Tools::Experimental::Impl::DirectFenceIDHandle{
++            impl_instance_id()},
++        [&]() {
++          if (hpx::threads::get_self_ptr() == nullptr) {
++            hpx::threads::run_as_hpx_thread(
++                [this]() { impl_get_future().wait(); });
++          } else {
++            impl_get_future().wait();
++          }
++        });
+   }
+ 
+   void impl_fence_all_instances() const {
+-    impl_fence_instance(
++    impl_fence_all_instances(
+         "Kokkos::Experimental::HPX::impl_fence_all_instances: Unnamed Global "
+         "HPX Fence");
+   }
+-  void impl_fence_all_instances(const std::string &namename) const {
+-    Kokkos::Tools::Experimental::Impl::profile_fence_event(name, *this, [&]() {
+-      hpx::util::yield_while(
+-          []() { return m_active_parallel_region_count.load() != 0; });
+-    });
++  void impl_fence_all_instances(const std::string &name) const {
++    Kokkos::Tools::Experimental::Impl::profile_fence_event<
++        Kokkos::Experimental::HPX>(
++        name,
++        Kokkos::Tools::Experimental::SpecialSynchronizationCases::
++            GlobalDeviceSynchronization,
++        [&]() {
++          hpx::util::yield_while(
++              []() { return m_active_parallel_region_count.load() != 0; });
++        });
+   }
+ #endif
+ 

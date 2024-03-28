@@ -1,2 +1,4 @@
 mirrors:
-  spack-public: https://spack-llnl-mirror.s3-us-west-2.amazonaws.com/
+  spack-public:
+    binary: false
+    url: https://mirror.spack.io

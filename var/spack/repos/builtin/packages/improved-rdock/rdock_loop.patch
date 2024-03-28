@@ -1,0 +1,13 @@
+diff -u -r -N d/src/lib/RbtBaseMolecularFileSource.cxx y/src/lib/RbtBaseMolecularFileSource.cxx
+--- d/src/lib/RbtBaseMolecularFileSource.cxx	2020-10-19 09:50:06.000000000 +0900
++++ y/src/lib/RbtBaseMolecularFileSource.cxx	2020-10-19 09:35:16.000000000 +0900
+@@ -260,7 +260,8 @@
+   const RbtBondMap& bondMap = spAtom->GetBondMap();
+ 
+   //First remove all bonds from the atom
+-  for (RbtBondMapConstIter mapIter = bondMap.begin(); mapIter != bondMap.end(); mapIter++) {
++  RbtBondMapConstIter mapIter = bondMap.begin();
++  for (int i = 0; i < spAtom->GetNumBonds(); i++, mapIter++) {
+     RbtBondListIter bIter = Rbt::FindBond(m_bondList,Rbt::isBond_eq((*mapIter).first));
+     if (bIter != m_bondList.end()) {
+ #ifdef _DEBUG

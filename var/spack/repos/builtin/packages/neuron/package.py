@@ -1,187 +1,191 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import os
-from spack import *
+from spack.package import *
 
 
-class Neuron(Package):
+class Neuron(CMakePackage):
     """NEURON is a simulation environment for single and networks of neurons.
 
     NEURON is a simulation environment for modeling individual and networks of
     neurons. NEURON models individual neurons via the use of sections that are
     automatically subdivided into individual compartments, instead of
-    requiring the user to manually create compartments. The primary scripting
-    language is hoc but a Python interface is also available.
+    requiring the user to manually create compartments.
     """
 
     homepage = "https://www.neuron.yale.edu/"
-    url      = "http://www.neuron.yale.edu/ftp/neuron/versions/v7.5/nrn-7.5.tar.gz"
-    git      = "https://github.com/nrnhines/nrn.git"
+    url = "https://github.com/neuronsimulator/nrn/releases/download/8.2.3/nrn-full-src-package-8.2.3.tar.gz"
+    git = "https://github.com/neuronsimulator/nrn"
+    maintainers("pramodk", "nrnhines", "iomaganaris", "ohm314", "matz-e")
 
-    version('develop', branch='master')
-    version('7.5', sha256='67642216a969fdc844da1bd56643edeed5e9f9ab8c2a3049dcbcbcccba29c336')
-    version('7.4', sha256='1403ba16b2b329d2376f4bf007d96e6bf2992fa850f137f1068ad5b22b432de6')
-    version('7.3', sha256='71cff5962966c5cd5d685d90569598a17b4b579d342126b31e2d431128cc8832')
-    version('7.2', sha256='c777d73a58ff17a073e8ea25f140cb603b8b5f0df3c361388af7175e44d85b0e')
+    license("BSD-3-Clause")
 
-    variant('mpi',           default=True,  description='Enable MPI parallelism')
-    variant('python',        default=True,  description='Enable python')
-    variant('shared',        default=False, description='Build shared libraries')
-    variant('cross-compile', default=False, description='Build for cross-compile environment')
-    variant('multisend',     default=True,  description="Enable multi-send spike exchange")
-    variant('rx3d',          default=False, description="Enable cython translated 3-d rxd")
+    version("develop", branch="master", submodules="True")
 
-    depends_on('flex',       type='build')
-    depends_on('bison',      type='build')
-    depends_on('automake',   type='build')
-    depends_on('automake',   type='build')
-    depends_on('autoconf',   type='build')
-    depends_on('libtool',    type='build')
-    depends_on('pkgconfig',  type='build')
+    version(
+        "8.2.3", tag="8.2.3", commit="f0ed3701059aa53ce93387f3d73d13c45de6d87f", submodules="True"
+    )
+    version(
+        "8.1.0", tag="8.1.0", commit="047dd8240c2badadf5ea154b563b29369db1303f", submodules="True"
+    )
+    version(
+        "8.0.0", tag="8.0.0", commit="429d11ef34b1d860b3ddbfffc9f7960acb399b0c", submodules="True"
+    )
+    version(
+        "7.8.2", tag="7.8.2", commit="09b151ecb2b3984335c265932dc6ba3e4fcb318e", submodules="True"
+    )
 
-    depends_on('mpi',         when='+mpi')
-    depends_on('python@2.6:', when='+python')
-    depends_on('ncurses',     when='~cross-compile')
+    variant("backtrace", default=False, description="Enable printing backtraces on failure")
+    variant("interviews", default=False, description="Enable GUI with INTERVIEWS")
+    variant("legacy-unit", default=False, description="Enable legacy units")
+    variant("mpi", default=True, description="Enable MPI parallelism")
+    variant("python", default=True, description="Enable python")
+    variant("shared", default=True, description="Build shared library (CoreNEURON)")
+    variant("tests", default=False, description="Enable building tests")
+    variant("rx3d", default=False, description="Enable cython translated 3-d rxd.", when="+python")
 
-    conflicts('~shared', when='+python')
+    # variants from coreneuron support
+    variant("coreneuron", default=True, description="Enable CoreNEURON support")
+    variant(
+        "gpu", default=False, description="Enable GPU build (with NVHPC)", when="@9:+coreneuron"
+    )
+    variant(
+        "openmp", default=False, description="Enable CoreNEURON OpenMP support", when="+coreneuron"
+    )
+    variant(
+        "sympy",
+        default=False,
+        description="Use NMODL with SymPy to solve ODEs",
+        when="@9:+coreneuron",
+    )
+    variant("caliper", default=False, description="Add Caliper support")
 
-    filter_compiler_wrappers('*/bin/nrniv_makefile')
+    generator("ninja")
 
-    def get_neuron_archdir(self):
-        """Determine the architecture-specific neuron base directory.
+    depends_on("bison@3:", type="build")
+    depends_on("flex@2.6:", type="build")
+    depends_on("ninja", type="build")
 
-        Instead of recreating the logic of the neuron's configure
-        we dynamically find the architecture-specific directory by
-        looking for a specific binary.
-        """
-        file_list = find(self.prefix, '*/bin/nrniv_makefile')
-        # check needed as when initially evaluated the prefix is empty
-        if file_list:
-            neuron_archdir = os.path.dirname(os.path.dirname(file_list[0]))
+    depends_on("gettext")
+    depends_on("libdwarf", when="+backtrace")
+    depends_on("mpi", when="+mpi")
+    depends_on("ncurses")
+    depends_on("readline")
+
+    depends_on("python", when="+python")
+    depends_on("py-pytest", when="+python+tests")
+    depends_on("py-mpi4py", when="+mpi+python+tests")
+    depends_on("py-numpy", when="+python")
+    depends_on("py-cython", when="+rx3d", type="build")
+    depends_on("py-pytest-cov", when="+tests")
+
+    # next two needed after neuronsimulator/nrn#2235.
+    depends_on("py-pip", type="build")
+    depends_on("py-setuptools", type="build")
+    depends_on("py-packaging", type="run")
+
+    depends_on("boost", when="+coreneuron+tests")
+    depends_on("cuda", when="+coreneuron+gpu")
+    depends_on("py-sympy@1.3:", when="+coreneuron")
+
+    depends_on("caliper", when="+caliper")
+
+    gpu_compiler_message = "neuron+gpu needs %nvhpc"
+    requires("%nvhpc", when="+gpu", msg=gpu_compiler_message)
+
+    patch("patch-v782-git-cmake-avx512.patch", when="@7.8.2")
+
+    def cmake_args(self):
+        spec = self.spec
+        args = []
+        for variant in ["backtrace", "coreneuron", "interviews", "mpi", "python", "rx3d", "tests"]:
+            args.append(self.define_from_variant("NRN_ENABLE_" + variant.upper(), variant))
+
+        args.append(self.define_from_variant("CORENRN_ENABLE_SHARED", "shared"))
+
+        if spec.satisfies("@:8"):
+            args.append(self.define("NRN_ENABLE_BINARY_SPECIAL", "ON"))
+
+        if "+python" in spec:
+            args.append(self.define("PYTHON_EXECUTABLE", spec["python"].command.path))
+
+        if "+legacy-unit" in spec and spec.satisfies("@:8"):
+            args.append(self.define("NRN_DYNAMIC_UNITS_USE_LEGACY", "ON"))
+
+        if "+caliper" in spec:
+            args.append(self.define("NRN_ENABLE_PROFILING", "ON"))
+            args.append(self.define("NRN_PROFILER", "caliper"))
+
+        if spec.satisfies("+coreneuron"):
+            options = [
+                self.define("CORENRN_ENABLE_SPLAYTREE_QUEUING", "ON"),
+                self.define("CORENRN_ENABLE_TIMEOUT", "OFF"),
+                self.define_from_variant("CORENRN_ENABLE_OPENMP", "openmp"),
+                self.define_from_variant("CORENRN_ENABLE_LEGACY_UNITS", "legacy-unit"),
+                self.define_from_variant("CORENRN_ENABLE_UNIT_TESTS", "tests"),
+            ]
+
+            nmodl_options = "codegen --force"
+            if spec.satisfies("+sympy"):
+                nmodl_options += " sympy --analytic"
+            options.append(self.define("CORENRN_NMODL_FLAGS", nmodl_options))
+
+            if spec.satisfies("+gpu"):
+                nvcc = spec["cuda"].prefix.bin.nvcc
+                options.append(self.define("CMAKE_CUDA_COMPILER", nvcc))
+                options.append(self.define("CORENRN_ENABLE_GPU", True))
+
+            args.extend(options)
+
+        # Enable math optimisations to enable SIMD/vectorisation in release modes
+        if spec.satisfies("build_type=Release") or spec.satisfies("build_type=RelWithDebInfo"):
+            args.append(self.define("NRN_ENABLE_MATH_OPT", "ON"))
+
+        # add cpu arch specific optimisation flags to CMake so that they are passed
+        # to embedded Makefile that neuron has for compiling MOD files
+        compilation_flags = self.spec.architecture.target.optimization_flags(self.spec.compiler)
+        args.append(self.define("CMAKE_CXX_FLAGS", compilation_flags))
+
+        return args
+
+    @run_after("install")
+    def filter_compilers(self):
+        """run after install to avoid spack compiler wrappers
+        getting embded into nrnivmodl script"""
+
+        spec = self.spec
+
+        if "cray" in spec.architecture:
+            cc_compiler = "cc"
+            cxx_compiler = "CC"
+        elif spec.satisfies("+mpi"):
+            cc_compiler = spec["mpi"].mpicc
+            cxx_compiler = spec["mpi"].mpicxx
         else:
-            neuron_archdir = self.prefix
+            cc_compiler = self.compiler.cc
+            cxx_compiler = self.compiler.cxx
 
-        return neuron_archdir
+        kwargs = {"backup": False, "string": True}
+        nrnmech_makefile = join_path(self.prefix, "bin/nrnmech_makefile")
 
-    def patch(self):
-        # aclocal need complete include path (especially on os x)
-        pkgconf_inc = '-I %s/share/aclocal/' % (self.spec['pkgconfig'].prefix)
-        libtool_inc = '-I %s/share/aclocal/' % (self.spec['libtool'].prefix)
-        newpath = 'aclocal -I m4 %s %s' % (pkgconf_inc, libtool_inc)
-        filter_file(r'aclocal -I m4', r'%s' % newpath, "build.sh")
+        # assign_operator is changed to fix wheel support
+        assign_operator = "?=" if spec.satisfies("@:7") else "="
 
-    def get_arch_options(self, spec):
-        options = []
+        # replace compilers from makefile
+        compilers = [("CC", "cc_compiler"), ("CXX", "cxx_compiler")]
+        for compiler_var, compiler_env in compilers:
+            pattern = "(?:^|\\s){0}\\s*{1}.+".format(compiler_var, assign_operator)
+            replacement = "{0} = {1}".format(compiler_var, locals()[compiler_env])
+            filter_file(pattern, replacement, nrnmech_makefile)
 
-        if spec.satisfies('+cross-compile'):
-            options.extend(['cross_compiling=yes',
-                            '--without-memacs',
-                            '--without-nmodl'])
-
-        # on os-x disable building carbon 'click' utility
-        if 'darwin' in self.spec.architecture:
-            options.append('macdarwin=no')
-
-        return options
-
-    def get_python_options(self, spec):
-        options = []
-
-        if spec.satisfies('+python'):
-            python_exec = spec['python'].command.path
-            py_inc = spec['python'].headers.directories[0]
-            py_lib = spec['python'].prefix.lib
-
-            if not os.path.isdir(py_lib):
-                py_lib = spec['python'].prefix.lib64
-
-            options.extend(['--with-nrnpython=%s' % python_exec,
-                            '--disable-pysetup',
-                            'PYINCDIR=%s' % py_inc,
-                            'PYLIBDIR=%s' % py_lib])
-
-            if spec.satisfies('~cross-compile'):
-                options.append('PYTHON_BLD=%s' % python_exec)
-
-        else:
-            options.append('--without-nrnpython')
-
-        return options
-
-    def get_compiler_options(self, spec):
-        flags = '-O2 -g'
-
-        if self.spec.satisfies('%pgi'):
-            flags += ' ' + self.compiler.cc_pic_flag
-
-        return ['CFLAGS=%s' % flags,
-                'CXXFLAGS=%s' % flags]
-
-    def build_nmodl(self, spec, prefix):
-        # build components for front-end arch in cross compiling environment
-        options = ['--prefix=%s' % prefix,
-                   '--with-nmodl-only',
-                   '--without-x']
-
-        if 'cray' in self.spec.architecture:
-            flags = '-target-cpu=x86_64 -target-network=none'
-            options.extend(['CFLAGS=%s' % flags,
-                            'CXXFLAGS=%s' % flags])
-
-        configure = Executable(join_path(self.stage.source_path, 'configure'))
-        configure(*options)
-        make()
-        make('install')
-
-    def install(self, spec, prefix):
-
-        options = ['--prefix=%s' % prefix,
-                   '--without-iv',
-                   '--without-x',
-                   '--without-readline']
-
-        if spec.satisfies('+multisend'):
-            options.append('--with-multisend')
-
-        if spec.satisfies('~rx3d'):
-            options.append('--disable-rx3d')
-
-        if spec.satisfies('+mpi'):
-            options.extend(['MPICC=%s' % spec['mpi'].mpicc,
-                            'MPICXX=%s' % spec['mpi'].mpicxx,
-                            '--with-paranrn'])
-        else:
-            options.append('--without-paranrn')
-
-        if spec.satisfies('~shared'):
-            options.extend(['--disable-shared',
-                            'linux_nrnmech=no'])
-
-        options.extend(self.get_arch_options(spec))
-        options.extend(self.get_python_options(spec))
-        options.extend(self.get_compiler_options(spec))
-
-        build = Executable('./build.sh')
-        build()
-
-        with working_dir('build', create=True):
-            if spec.satisfies('+cross-compile'):
-                self.build_nmodl(spec, prefix)
-            srcpath = self.stage.source_path
-            configure = Executable(join_path(srcpath, 'configure'))
-            configure(*options)
-            make('VERBOSE=1')
-            make('install')
+        if spec.satisfies("@8:+coreneuron"):
+            nrnmakefile = join_path(self.prefix, "share/coreneuron/nrnivmodl_core_makefile")
+            filter_file("(?:^|\\s)CXX\\s*=.+", "CXX = {0}".format(cxx_compiler), nrnmakefile)
 
     def setup_run_environment(self, env):
-        neuron_archdir = self.get_neuron_archdir()
-        env.prepend_path('PATH', join_path(neuron_archdir, 'bin'))
-        env.prepend_path('LD_LIBRARY_PATH', join_path(neuron_archdir, 'lib'))
-
-    def setup_dependent_build_environment(self, env, dependent_spec):
-        neuron_archdir = self.get_neuron_archdir()
-        env.prepend_path('PATH', join_path(neuron_archdir, 'bin'))
-        env.prepend_path('LD_LIBRARY_PATH', join_path(neuron_archdir, 'lib'))
+        env.prepend_path("PATH", join_path(self.prefix, "bin"))
+        env.prepend_path("LD_LIBRARY_PATH", join_path(self.prefix, "lib"))
+        if self.spec.satisfies("+python"):
+            env.prepend_path("PYTHONPATH", self.spec.prefix.lib.python)

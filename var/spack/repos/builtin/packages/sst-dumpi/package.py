@@ -1,13 +1,9 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-#
-# Author: Samuel Knight <sknigh@sandia.gov>
-# Date: Feb 3, 2017
-#
-from spack import *
+from spack.package import *
 
 
 class SstDumpi(AutotoolsPackage):
@@ -19,13 +15,22 @@ class SstDumpi(AutotoolsPackage):
     """
 
     homepage = "http://sst.sandia.gov/about_dumpi.html"
-    url      = "https://github.com/sstsimulator/sst-dumpi/archive/6.1.0.tar.gz"
-    git      = "https://github.com/sstsimulator/sst-dumpi.git"
+    url = "https://github.com/sstsimulator/sst-dumpi/archive/refs/tags/v13.0.0_Final.tar.gz"
+    git = "https://github.com/sstsimulator/sst-dumpi.git"
 
-    version('master', branch='master')
-    version('6.1.0', sha256='d4f6afcff5ba67fcc3a29f461afbb59855053840f5f320552a77b4e14c687bb6')
+    maintainers("berquist", "jpkenny", "calewis")
 
-    depends_on('autoconf@1.68:', type='build')
-    depends_on('automake@1.11.1:', type='build')
-    depends_on('libtool@1.2.4:', type='build')
-    depends_on('m4', type='build')
+    license("BSD-3-Clause")
+
+    version("13.0.0", sha256="0eaa5cf5826c9fbba6cfeed42f52af67c5a7d45bc8cbb485c2a3867b7438229b")
+    version("12.1.0", sha256="b718658cbb0be957d28883f7cc914617bff97b3629fad7017cd62e14ed667d9d")
+    version("12.0.1", sha256="6e74e5f16ee26c83b17ecd5c272a61ec37977f07f531066533dd610805f9117b")
+    version("12.0.0", sha256="04989c900adb253262808e59897d9f9b8df5dbd497a03820c3340640055dcf4f")
+    version("11.1.0", sha256="58144b4b7543705ef648ca86ea4ebf3c739554ea8a472123aadc2967a8201cdd")
+
+    version("master", branch="master")
+
+    depends_on("autoconf@1.68:", type="build")
+    depends_on("automake@1.11.1:", type="build")
+    depends_on("libtool@1.2.4:", type="build")
+    depends_on("m4", type="build")

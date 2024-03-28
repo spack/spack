@@ -1,7 +1,10 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+
+from spack.package import *
 
 
 class PyAutograd(PythonPackage):
@@ -18,10 +21,12 @@ class PyAutograd(PythonPackage):
     examples directory."""
 
     homepage = "https://github.com/HIPS/autograd"
-    url      = "https://pypi.io/packages/source/a/autograd/autograd-1.3.tar.gz"
+    pypi = "autograd/autograd-1.3.tar.gz"
 
-    version('1.3', sha256='a15d147577e10de037de3740ca93bfa3b5a7cdfbc34cfb9105429c3580a33ec4')
+    license("MIT")
 
-    depends_on('py-setuptools', type='build')
-    depends_on('py-future@0.15.2:', type=('build', 'run'))
-    depends_on('py-numpy@1.12:', type=('build', 'run'))
+    version("1.3", sha256="a15d147577e10de037de3740ca93bfa3b5a7cdfbc34cfb9105429c3580a33ec4")
+
+    depends_on("py-setuptools", type="build")
+    depends_on("py-future@0.15.2:", type=("build", "run"))
+    depends_on("py-numpy@1.12:", type=("build", "run"))

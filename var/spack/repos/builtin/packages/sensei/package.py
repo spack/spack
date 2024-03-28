@@ -1,134 +1,161 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Sensei(CMakePackage):
     """SENSEI is a platform for scalable in-situ analysis and visualization.
-    Its design motto is 'Write once, run everywhere', this means that once
+    Its design motto is "Write once, run everywhere", this means that once
     the application is instrumented with SENSEI it can use existing and
     future analysis backends. Existing backends include: Paraview/Catalyst,
     Visit/Libsim, ADIOS, Python scripts, and so on."""
 
     homepage = "https://sensei-insitu.org"
-    url      = "https://gitlab.kitware.com/sensei/sensei/-/archive/v3.1.0/sensei-v3.1.0.tar.gz"
-    git      = "https://gitlab.kitware.com/sensei/sensei.git"
-    maintainers = ['sshudler']
+    url = "https://github.com/SENSEI-insitu/SENSEI/releases/download/v3.2.1/SENSEI-3.2.1.tar.gz"
+    git = "https://github.com/SENSEI-insitu/SENSEI.git"
+    maintainers("sshudler", "kwryankrattiger")
 
-    version('master', branch='master')
-    version('3.1.0', sha256='9a3e6d0d5bb6170ee666586435434da1708b3876fd448b9d41142571ed9da939')
-    version('3.0.0', sha256='0aabbea03ade9947c88fc0aa6d3cbaf3c8267e8504e384a041445678a95e58eb')
-    version('2.1.1', sha256='8a27ebf133fef00a59e4b29433762e6560bf20214072de7808836eb668bb5687')
-    version('2.1.0', sha256='b7af21a25523cf6cd8934d797471b75ca32881166625d71f24b5c8b6d727ca99')
-    version('2.0.0', sha256='df48eab035e1acdd8edf5159955c05306f9ca48117effacc4a6b77c3fb24f62b')
-    version('1.1.0', sha256='e5a4ba691573ff6c7b0d4793665e218ee5868ebcc0198915d1f16a4b7b92a368')
-    version('1.0.0', sha256='bdcb03c56b51f2795ec5a7e85a5abb01d473d192fac50f2a8bf2608cc3564ff8')
+    license("BSD-3-Clause-LBNL")
 
-    variant('sencore', default=True, description='Enables the SENSEI core library')
-    variant('catalyst', default=True, description='Build with ParaView-Catalyst support')
-    variant('libsim', default=False, description='Build with VisIt-Libsim support')
-    variant('vtkio', default=True, description='Enable adaptors to write to VTK XML format')
-    variant('adios', default=False, description='Enable ADIOS adaptors and endpoints')
-    variant('hdf5', default=False, description='Enables HDF5 adaptors and endpoints')
-    variant('python', default=False, description='Enable Python bindings')
-    variant('miniapps', default=True, description='Enable the parallel 3D and oscillators miniapps')
-    variant('cxxstd', default='11', values=('11', '14', '17'), multi=False, description='Use the specified C++ standard when building.')
+    version("develop", branch="develop")
+    version("5.0.0", sha256="3ef948d753d37dfddbbc2c993c823487d4ce40543d35abc008e90c75dfbfa16e")
+    version("4.1.0", sha256="e1154240c022069fee454c747d7c60e065d36b4d1dc71852b3cd527c22b531c1")
+    version("4.0.0", sha256="fc1538aa1051789dbdefbe18b7f251bc46e7a6ae1db3a940c123552e0318db8b")
+    version("3.2.2", sha256="d554b654880e899d97d572f02de87b0202faadaf899420ef871093b5bce320c0")
+    version("3.2.1", sha256="7438fb4b148e4d1eb888c619366d0d8639122ecbbf1767e19549d6ca0c8698ca")
+    version("3.2.0", sha256="fd1a69134d9f8151d85a7f84a67d6a648aef5580585b39f74a56367cff433c82")
+    version("3.1.0", sha256="813075e033904835afa74231a841ab46424d4567157ee7366f3b785357ffc0ea")
+    version("3.0.0", sha256="e9b4d7531bbe8848a7fb182f1d2706b397d18e1a580a51f79b4bf6793be195e5")
+    version("2.1.1", sha256="7e211b3d9ce8576d33dbb39ea367c971bb8863e1cf53b9c0e13f00b53bd16526")
+    version("2.1.0", sha256="3de667523d5a8e5576e29ff9528f7f341fcc799b55c9cd824dc61c7ca1a2a910")
+    version("2.0.0", sha256="e985778ebbf0b9a103d11e069e58f8975f98a63dc2861b7cde34ea12a23fee20")
+    version("1.1.0", sha256="769e0b5db50be25666c0d13176a7e4f89cbffe19cdc12349437d0efff615b200")
+    version("1.0.0", sha256="5b8609352048e048e065a7b99f615a602f84b3329085e40274341488ef1b9522")
+
+    variant("shared", default=True, description="Enables shared libraries")
+    variant("ascent", default=False, description="Build with ParaView-Catalyst support")
+    variant("catalyst", default=False, description="Build with ParaView-Catalyst support")
+    variant("libsim", default=False, description="Build with VisIt-Libsim support")
+    variant("vtkio", default=False, description="Enable adaptors to write to VTK XML format")
+    variant("adios2", default=False, description="Enable ADIOS2 adaptors and endpoints")
+    variant("hdf5", default=False, description="Enables HDF5 adaptors and endpoints", when="@3:")
+    variant(
+        "vtkm",
+        default=False,
+        description="Enable VTKm adaptors and endpoints",
+        when="@4: +catalyst",
+    )
+    variant("python", default=False, description="Enable Python bindings", when="@3:")
+    variant(
+        "miniapps", default=False, description="Enable the parallel 3D and oscillators miniapps"
+    )
 
     # All SENSEI versions up to 2.1.1 support only Python 2, so in this case
     # Paraview 6 cannot be used since it requires Python 3. Starting from
     # version 3, SENSEI supports Python 3.
-    depends_on("paraview@5.5.0:5.5.2+python+mpi+hdf5", when="@:2.1.1 +catalyst")
-    depends_on("paraview@5.6:+python3+mpi+hdf5", when="@3: +catalyst")
-    depends_on("visit", when="+libsim")
-    depends_on("vtk", when="+libsim")
-    depends_on("vtk", when="~libsim ~catalyst")
-    depends_on("adios", when="+adios")
-    depends_on("hdf5", when="+hdf5")
-    # SENSEI 3 supports Python 3, earlier versions upport only Python 2
-    depends_on("python@:2.7.16", when="@:2.1.1 +python", type=('build', 'run'))
-    depends_on("python@3:", when="@3: +python", type=('build', 'run'))
-    depends_on("py-numpy", when="+python", type=('build', 'run'))
-    depends_on("py-mpi4py", when="+python", type=('build', 'run'))
-    depends_on("swig", when="+python", type='build')
-    depends_on('cmake@3.6:', when="@3:", type='build')
+    depends_on("paraview+mpi", when="+catalyst")
+    depends_on("paraview+hdf5", when="+catalyst+hdf5")
+    depends_on("paraview+python", when="+catalyst+python")
 
-    # Can have either LibSim or Catalyst, but not both
-    conflicts('+libsim', when='+catalyst')
-    # hdf5 variant is available only for SENSEI 3
-    conflicts('+hdf5', when='@:2.1.1')
+    depends_on("paraview@5.5.0:5.5.2", when="@:2.1.1 +catalyst")
+    depends_on("paraview@5.6:5.7", when="@3:3.2.1 +catalyst")
+    depends_on("paraview@5.7:5.9", when="@3.2.2 +catalyst")
+    depends_on("paraview@5.7:5.10", when="@4:4 +catalyst")
+
+    # Visit Dep
+    depends_on("visit", when="+libsim")
+
+    # VTK Dep
+    depends_on("vtk@8:8", when="@:3 ~catalyst")
+    depends_on("vtk+python", when="@:3 ~catalyst+python")
+    depends_on("vtk@9:", when="@4: +vtkio ~catalyst")
+
+    # VTK-m
+    depends_on("paraview use_vtkm=on", when="+vtkm")
+
+    # ADIOS2
+    depends_on("adios2", when="+adios2")
+
+    # Ascent
+    depends_on("ascent", when="+ascent")
+
+    # HDF5
+    depends_on("hdf5", when="+hdf5")
+
+    depends_on("python@3:", when="+python", type=("build", "run"))
+    extends("python", when="+python")
+    depends_on("py-numpy", when="+python", type=("build", "run"))
+    depends_on("py-mpi4py", when="+python", type=("build", "run"))
+    depends_on("swig", when="+python", type="build")
+    depends_on("cmake@3.6:", when="@3:", type="build")
+    depends_on("pugixml")
+    depends_on("mpi")
+
+    depends_on("paraview use_vtkm=off", when="+catalyst+ascent ^ascent+vtkh")
+    depends_on("paraview use_vtkm=off", when="+catalyst+ascent ^ascent+fides")
+
+    # Can have either LibSim or Catalyst or Ascent, but not a combination
+    conflicts("+libsim", when="+catalyst")
+    conflicts("+ascent", when="+libsim")
+
+    # Patches
+    # https://github.com/SENSEI-insitu/SENSEI/pull/114
+    patch("adios2-remove-deprecated-functions.patch", when="@4:4.1 ^adios2@2.9:")
+    patch("libsim-add-missing-symbol-visibility-pr67.patch", when="@4.0.0")
+    patch("sensei-find-mpi-component-cxx-pr68.patch", when="@4.0.0")
+    patch("sensei-install-external-pugixml-pr69.patch", when="@4.0.0")
+    patch("sensei-version-detection-pr75.patch", when="@4.0.0")
+    patch(
+        "https://patch-diff.githubusercontent.com/raw/SENSEI-insitu/SENSEI/pull/88.patch?full_index=1",
+        sha256="6e5a190d4d3275c248b11b9258b79ddf2e5f0dc1b028b23dcdbdc13f9ea46813",
+        when="@4.0.0 +python ^swig@4.1:",
+    )
 
     def cmake_args(self):
         spec = self.spec
+        prefix = ""
+        if spec.satisfies("@5:"):
+            prefix = "SENSEI_"
 
         # -Ox flags are set by default in CMake based on the build type
         args = [
-            '-DCMAKE_CXX_STANDARD={0}'.format(spec.variants['cxxstd'].value),
-            '-DCMAKE_C_STANDARD=11',
-            '-DCMAKE_POSITION_INDEPENDENT_CODE=ON',
-            '-DENABLE_SENSEI:BOOL={0}'.format(
-                'ON' if '+sencore' in spec else 'OFF')
+            self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
+            self.define("SENSEI_USE_EXTERNAL_pugixml", True),
+            self.define(f"{prefix}ENABLE_SENSEI", True),
+            self.define("MPI_C_COMPILER", spec["mpi"].mpicc),
+            self.define("MPI_CXX_COMPILER", spec["mpi"].mpicxx),
+            # Don"t rely on MPI found in cray environment for cray systems.
+            # On non-cray systems this should be a no-op
+            self.define(f"{prefix}ENABLE_CRAY_MPICH", False),
+            self.define_from_variant(f"{prefix}ENABLE_ASCENT", "ascent"),
+            self.define_from_variant(f"{prefix}ENABLE_VTKM", "vtkm"),
+            self.define_from_variant(f"{prefix}ENABLE_CATALYST", "catalyst"),
+            self.define_from_variant(f"{prefix}ENABLE_LIBSIM", "libsim"),
+            self.define_from_variant(f"{prefix}ENABLE_VTK_IO", "vtkio"),
+            self.define_from_variant(f"{prefix}ENABLE_PYTHON", "python"),
+            self.define_from_variant(f"{prefix}ENABLE_ADIOS2", "adios2"),
+            self.define_from_variant(f"{prefix}ENABLE_HDF5", "hdf5"),
+            self.define_from_variant(f"{prefix}ENABLE_PARALLEL3D", "miniapps"),
+            self.define_from_variant(f"{prefix}ENABLE_OSCILLATORS", "miniapps"),
         ]
 
-        vtk_dir_needed = True
+        if "+adios2" in spec:
+            args.append(self.define("ADIOS2_DIR", spec["adios2"].prefix))
 
-        if '+catalyst' in spec:
-            args.extend([
-                '-DENABLE_CATALYST:BOOL=ON',
-                '-DENABLE_CATALYST_PYTHON:BOOL=ON',
-                '-DParaView_DIR:PATH={0}'.format(spec['paraview'].prefix)
-            ])
-            vtk_dir_needed = False
-        else:
-            args.append('-DENABLE_CATALYST:BOOL=OFF')
+        if "+ascent" in spec:
+            args.append(self.define("ASCENT_DIR", spec["ascent"].prefix))
 
-        if '+libsim' in spec:
-            args.extend([
-                '-DENABLE_LIBSIM:BOOL=ON',
-                '-DVISIT_DIR:PATH={0}'.format(spec['visit'].prefix),
-                '-DVTK_DIR:PATH={0}'.format(spec['vtk'].prefix)
-            ])
-            vtk_dir_needed = False
-        else:
-            args.append('-DENABLE_LIBSIM:BOOL=OFF')
+        if "+libsim" in spec:
+            # This is only for linux
+            # Visit install location may be different on other platforms
+            args.append("-DVISIT_DIR:PATH={0}/current/linux-x86_64".format(spec["visit"].prefix))
 
-        vtkio_switch = 'ON' if '+vtkio' in spec else 'OFF'
-        args.append('-DENABLE_VTK_IO:BOOL={0}'.format(vtkio_switch))
-
-        python_switch = 'OFF'
-        if '+python' in spec:
-            python_switch = 'ON'
-            python_path = spec['python'].command.path
-            args.append('-DPYTHON_EXECUTABLE:FILEPATH={0}'.format(python_path))
-            if spec.satisfies('@3:'):
-                args.append('-DSENSEI_PYTHON_VERSION=3')
-        args.append('-DENABLE_PYTHON:BOOL={0}'.format(python_switch))
-
-        if '+adios' in spec:
-            if spec.satisfies('@3:'):
-                args.append('-DENABLE_ADIOS1:BOOL=ON')
-            else:
-                args.append('-DENABLE_ADIOS:BOOL=ON')
-            args.append('-DADIOS_DIR:PATH={0}'.format(spec['adios'].prefix))
-        else:
-            args.append('-DENABLE_ADIOS:BOOL=OFF')
-
-        if '+hdf5' in spec:
-            args.extend([
-                '-DENABLE_HDF5:BOOL=ON',
-                '-DHDF5_DIR:PATH={0}'.format(spec['hdf5'].prefix)
-            ])
-
-        if vtk_dir_needed:
-            args.append('-DVTK_DIR:PATH={0}'.format(spec['vtk'].prefix))
-
-        args.extend([
-            '-DENABLE_PARALLEL3D:BOOL={0}'.format(
-                'ON' if '+miniapps' in spec else 'OFF'),
-            '-DENABLE_OSCILLATORS:BOOL={0}'.format(
-                'ON' if '+miniapps' in spec else 'OFF')
-        ])
+        if "+python" in spec:
+            if spec.satisfies("@3:"):
+                args.append(self.define("SENSEI_PYTHON_VERSION", 3))
+            args.append(self.define_from_variant(f"{prefix}ENABLE_CATALYST_PYTHON", "catalyst"))
 
         return args

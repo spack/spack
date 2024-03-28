@@ -1,0 +1,12 @@
+diff --git a/test/CMakeLists.txt b/test/CMakeLists.txt
+index 62ee104..e1dd0d5 100644
+--- a/test/CMakeLists.txt
++++ b/test/CMakeLists.txt
+@@ -42,6 +42,7 @@ find_package(HIP REQUIRED MODULE)
+ file(GLOB SOURCES "*.cpp")
+ 
+ set_source_files_properties(${SOURCES} PROPERTIES HIP_SOURCE_PROPERTY_FORMAT 1)
++set(CMAKE_HIP_ARCHITECTURES gfx900 gfx906 gfx908 gfx90a )
+ hip_add_executable(rocm-debug-agent-test ${SOURCES}
+   HIPCC_OPTIONS --amdgpu-target=gfx900 --amdgpu-target=gfx906
+                 --amdgpu-target=gfx908 --amdgpu-target=gfx90a

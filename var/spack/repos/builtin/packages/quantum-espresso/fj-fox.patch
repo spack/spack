@@ -1,0 +1,10 @@
+--- spack-src/install/extlibs_makefile.org	2021-01-22 10:11:00.527343202 +0900
++++ spack-src/install/extlibs_makefile	2021-01-22 10:15:24.319956918 +0900
+@@ -89,6 +89,7 @@
+         mkdir ../FoX; \
+ 	(gzip -dc ../archive/fox.tgz | (cd ../FoX; tar -xvf -)); \
+ 	cd ../FoX/fox/; export FC=$(F90); export FCFLAGS="$(FOX_FLAGS)"; \
++	sed -i 's/"-out " "-o "/"-o " "-out "/' configure; \
+ 	./configure --prefix=$(TOPDIR)/FoX ;\
+ 	$(MAKE) install; cd ../; rm -fr fox;fi
+ # ELPA

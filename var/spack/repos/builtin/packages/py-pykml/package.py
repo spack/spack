@@ -1,9 +1,9 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class PyPykml(PythonPackage):
@@ -12,11 +12,11 @@ class PyPykml(PythonPackage):
     XML documents.
     """
 
-    homepage = "https://pypi.org/project/pykml/"
-    url      = "https://pypi.io/packages/source/p/pykml/pykml-0.1.3.tar.gz"
+    pypi = "pykml/pykml-0.1.3.tar.gz"
 
-    version('0.1.3', sha256='e1a133e582f0b4652a6b00bac970b446d90580664e5a634a670731c990ff9f05')
+    license("BSD-3-Clause")
 
-    depends_on('py-setuptools', type='build')
-    depends_on('py-lxml@2.2.6:', type=('build', 'run'))
-    depends_on('py-nose', type='test')
+    version("0.2.0", sha256="44a1892e7c2a649c8ae9f8e2899ff76cae79ec6749ffb64d11140b4e87d0f957")
+
+    depends_on("py-setuptools", type="build")
+    depends_on("py-lxml@3.3.6:", type=("build", "run"))

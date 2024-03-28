@@ -1,13 +1,15 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RPlyr(RPackage):
-    """A set of tools that solves a common set of problems: you need to break a
+    """Tools for Splitting, Applying and Combining Data.
+
+    A set of tools that solves a common set of problems: you need to break a
     big problem down into manageable pieces, operate on each piece and then put
     all the pieces back together. For example, you might want to fit a model to
     each spatial location or time point in your study, summarise data by panels
@@ -15,11 +17,14 @@ class RPlyr(RPackage):
     development of 'plyr' has been generously supported by 'Becton
     Dickinson'."""
 
-    homepage = "http://had.co.nz/plyr"
-    url      = "https://cloud.r-project.org/src/contrib/plyr_1.8.4.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/plyr"
+    cran = "plyr"
 
-    version('1.8.4', sha256='60b522d75961007658c9806f8394db27989f1154727cb0bb970062c96ec9eac5')
+    license("MIT")
 
-    depends_on('r@3.1.0:', type=('build', 'run'))
-    depends_on('r-rcpp@0.11.0:', type=('build', 'run'))
+    version("1.8.8", sha256="a73211b4bbe13e4e5e764966a8dd90172c1cc311938dd464d142e1c7a701070c")
+    version("1.8.7", sha256="7d9fdaf1157035a49c3661da3bbaa7bfcf782aafe1b98f7b5a68b0520046e87f")
+    version("1.8.6", sha256="ea55d26f155443e9774769531daa5d4c20a0697bb53abd832e891b126c935287")
+    version("1.8.4", sha256="60b522d75961007658c9806f8394db27989f1154727cb0bb970062c96ec9eac5")
+
+    depends_on("r@3.1.0:", type=("build", "run"))
+    depends_on("r-rcpp@0.11.0:", type=("build", "run"))

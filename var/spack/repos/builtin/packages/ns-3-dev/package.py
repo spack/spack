@@ -1,52 +1,43 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+from spack.package import *
 
-from spack import *
 
-
-class Ns3Dev(WafPackage):
-    """
-    ns-3 is a discrete-event network simulator,
-    targeted primarily for research and educational use
-    """
+class Ns3Dev(CMakePackage):
+    """ns-3 is a discrete-event network simulator"""
 
     homepage = "https://www.nsnam.org/"
-    url      = "https://gitlab.com/nsnam/ns-3-dev/-/archive/ns-3.30.1/ns-3-dev-ns-3.30.1.tar.bz2"
+    url = "https://gitlab.com/nsnam/ns-3-dev/-/archive/ns-3.30.1/ns-3-dev-ns-3.30.1.tar.bz2"
 
-    maintainers = ['yee29']
+    maintainers("yee29")
 
-    version('3.30.1', sha256='e8b3849d83a224f42c0cd2b9e692ec961455aca23f36fb86fcf6bbed2b495a3d')
-    version('3.30',   sha256='53cefcad74fec6cc332368a05ed1f8c1a29f86295cb44b6b0509c6d2d18d90d0')
-    version('3.29',   sha256='0254341487891421e4c6040476c6634c4c2931d4f7c6b9617a6ae494c8ee6ffd')
-    version('3.28',   sha256='5295e1f6e2ee1ff8cd92d3937c8b3266e0d5926adffc42c7fb0ea9ce549a91b7')
-    version('3.27',   sha256='26233011654043822b8ede525a52f8532ed181997b609a606681a0d5c8d64a26')
+    license("GPL-2.0-or-later")
 
-    variant('helics', default=False, description="Enable Helics support in ns-3")
-    variant('boost', default=True, description="Compile with Boost libraries")
+    version("3.40", sha256="96526e7ae6cb746d02af0cad04f63daff926dad5d30a6fe0d3c7943989ba4e59")
+    version("3.37", sha256="d72defeeddbba14397cd4403565992d98cd7b7d9c680c22fee56022706878720")
 
-    # Build dependency
-    depends_on('helics', when='+helics')
-    depends_on('boost', when='+boost')
-    depends_on('pkgconfig', type='build')
+    variant("boost", default=True, description="Compile with Boost libraries")
 
-    resource(name='helics',
-             when='+helics',
-             git='https://github.com/GMLC-TDC/helics-ns3.git',
-             destination='contrib', placement='helics')
+    depends_on("gsl")
+    depends_on("harfbuzz")
+    depends_on("libxml2")
+    depends_on("sqlite")
 
-    def configure_args(self):
-        args = []
+    depends_on("boost", when="+boost")
 
-        if '+boost' in self.spec:
-            args.extend([
-                '--boost-includes={0}'.format(
-                    self.spec['boost'].prefix.include),
-                '--boost-libs={0}'.format(
-                    self.spec['boost'].prefix.lib)
-            ])
+    depends_on("ccache", type="run")
 
-        if '+helics' in self.spec:
-            args.append('--with-helics={0}'.format(self.spec['helics'].prefix))
-        return args
+    depends_on("pkgconfig", type="build")
+
+    def cmake_args(self):
+        return [
+            self.define("NS3_COLORED_OUTPUT", True),
+            self.define("NS3_GTK3", False),
+            self.define("NS3_MPI", False),
+            self.define("NS3_PYTHON_BINDINGS", False),
+            self.define("NS3_FAST_LINKERS", False),
+            self.define("NS3_SQLITE", True),
+            self.define("CCACHE", self.spec["ccache"].prefix.bin.ccache),
+        ]

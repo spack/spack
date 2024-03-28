@@ -1,9 +1,7 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-from __future__ import print_function
 
 import argparse
 from collections import defaultdict
@@ -11,7 +9,6 @@ from collections import defaultdict
 import llnl.util.tty as tty
 import llnl.util.tty.color as color
 from llnl.util.tty.colify import colify
-
 
 import spack.repo
 
@@ -23,34 +20,45 @@ level = "long"
 def setup_parser(subparser):
     maintained_group = subparser.add_mutually_exclusive_group()
     maintained_group.add_argument(
-        '--maintained', action='store_true', default=False,
-        help='show names of maintained packages')
+        "--maintained",
+        action="store_true",
+        default=False,
+        help="show names of maintained packages",
+    )
 
     maintained_group.add_argument(
-        '--unmaintained', action='store_true', default=False,
-        help='show names of unmaintained packages')
+        "--unmaintained",
+        action="store_true",
+        default=False,
+        help="show names of unmaintained packages",
+    )
 
     subparser.add_argument(
-        '-a', '--all', action='store_true', default=False,
-        help='show maintainers for all packages')
+        "-a", "--all", action="store_true", default=False, help="show maintainers for all packages"
+    )
 
     subparser.add_argument(
-        '--by-user', action='store_true', default=False,
-        help='show packages for users instead of users for packages')
+        "--by-user",
+        action="store_true",
+        default=False,
+        help="show packages for users instead of users for packages",
+    )
 
     # options for commands that take package arguments
     subparser.add_argument(
-        'package_or_user', nargs=argparse.REMAINDER,
-        help='names of packages or users to get info for')
+        "package_or_user",
+        nargs=argparse.REMAINDER,
+        help="names of packages or users to get info for",
+    )
 
 
 def packages_to_maintainers(package_names=None):
     if not package_names:
-        package_names = spack.repo.path.all_package_names()
+        package_names = spack.repo.PATH.all_package_names()
 
     pkg_to_users = defaultdict(lambda: set())
     for name in package_names:
-        cls = spack.repo.path.get_pkg_class(name)
+        cls = spack.repo.PATH.get_pkg_class(name)
         for user in cls.maintainers:
             pkg_to_users[name].add(user)
 
@@ -59,8 +67,8 @@ def packages_to_maintainers(package_names=None):
 
 def maintainers_to_packages(users=None):
     user_to_pkgs = defaultdict(lambda: [])
-    for name in spack.repo.path.all_package_names():
-        cls = spack.repo.path.get_pkg_class(name)
+    for name in spack.repo.PATH.all_package_names():
+        cls = spack.repo.PATH.get_pkg_class(name)
         for user in cls.maintainers:
             lower_users = [u.lower() for u in users]
             if not users or user.lower() in lower_users:
@@ -72,8 +80,8 @@ def maintainers_to_packages(users=None):
 def maintained_packages():
     maintained = []
     unmaintained = []
-    for name in spack.repo.path.all_package_names():
-        cls = spack.repo.path.get_pkg_class(name)
+    for name in spack.repo.PATH.all_package_names():
+        cls = spack.repo.PATH.get_pkg_class(name)
         if cls.maintainers:
             maintained.append(name)
         else:
@@ -106,20 +114,18 @@ def maintainers(parser, args):
         if args.by_user:
             maintainers = maintainers_to_packages(args.package_or_user)
             for user, packages in sorted(maintainers.items()):
-                color.cprint('@c{%s}: %s'
-                             % (user, ', '.join(sorted(packages))))
+                color.cprint("@c{%s}: %s" % (user, ", ".join(sorted(packages))))
             return 0 if maintainers else 1
 
         else:
             packages = packages_to_maintainers(args.package_or_user)
             for pkg, maintainers in sorted(packages.items()):
-                color.cprint('@c{%s}: %s'
-                             % (pkg, ', '.join(sorted(maintainers))))
+                color.cprint("@c{%s}: %s" % (pkg, ", ".join(sorted(maintainers))))
             return 0 if packages else 1
 
     if args.by_user:
         if not args.package_or_user:
-            tty.die('spack maintainers --by-user requires a user or --all')
+            tty.die("spack maintainers --by-user requires a user or --all")
 
         packages = union_values(maintainers_to_packages(args.package_or_user))
         colify(packages)
@@ -127,7 +133,7 @@ def maintainers(parser, args):
 
     else:
         if not args.package_or_user:
-            tty.die('spack maintainers requires a package or --all')
+            tty.die("spack maintainers requires a package or --all")
 
         users = union_values(packages_to_maintainers(args.package_or_user))
         colify(users)

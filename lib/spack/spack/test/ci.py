@@ -1,63 +1,43 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
+import itertools
 import os
+import subprocess
+
 import pytest
-from six.moves.urllib.error import URLError
+
+import llnl.util.filesystem as fs
 
 import spack.ci as ci
-import spack.main as spack_main
-import spack.config as cfg
-import spack.paths as spack_paths
-import spack.spec as spec
-import spack.util.web as web_util
-import spack.util.gpg
-
-import spack.ci_optimization as ci_opt
 import spack.ci_needs_workaround as cinw
+import spack.ci_optimization as ci_opt
+import spack.config
+import spack.environment as ev
+import spack.error
+import spack.paths as spack_paths
+import spack.util.git
+import spack.util.gpg
 import spack.util.spack_yaml as syaml
-import itertools as it
-import collections
-try:
-    # dynamically import to keep vermin from complaining
-    collections_abc = __import__('collections.abc')
-except ImportError:
-    collections_abc = collections
 
 
 @pytest.fixture
-def tmp_scope():
-    """Creates a temporary configuration scope"""
-    base_name = 'internal-testing-scope'
-    current_overrides = set(
-        x.name for x in
-        cfg.config.matching_scopes(r'^{0}'.format(base_name)))
-
-    num_overrides = 0
-    scope_name = base_name
-    while scope_name in current_overrides:
-        scope_name = '{0}{1}'.format(base_name, num_overrides)
-        num_overrides += 1
-
-    with cfg.override(cfg.InternalConfigScope(scope_name)):
-        yield scope_name
+def repro_dir(tmp_path):
+    result = tmp_path / "repro_dir"
+    result.mkdir()
+    with fs.working_dir(str(tmp_path)):
+        yield result
 
 
 def test_urlencode_string():
-    s = 'Spack Test Project'
-
-    s_enc = ci.url_encode_string(s)
-
-    assert(s_enc == 'Spack+Test+Project')
+    assert ci._url_encode_string("Spack Test Project") == "Spack+Test+Project"
 
 
-@pytest.mark.skipif(not spack.util.gpg.has_gpg(),
-                    reason='This test requires gpg')
+@pytest.mark.not_on_windows("Not supported on Windows (yet)")
 def test_import_signing_key(mock_gnupghome):
     signing_key_dir = spack_paths.mock_gpg_keys_path
-    signing_key_path = os.path.join(signing_key_dir, 'package-signing-key')
+    signing_key_path = os.path.join(signing_key_dir, "package-signing-key")
     with open(signing_key_path) as fd:
         signing_key = fd.read()
 
@@ -65,221 +45,284 @@ def test_import_signing_key(mock_gnupghome):
     ci.import_signing_key(signing_key)
 
 
-def test_configure_compilers(mutable_config):
+class FakeWebResponder:
+    def __init__(self, response_code=200, content_to_read=[]):
+        self._resp_code = response_code
+        self._content = content_to_read
+        self._read = [False for c in content_to_read]
 
-    def assert_missing(config):
-        assert('install_missing_compilers' not in config or
-               config['install_missing_compilers'] is False)
+    def open(self, request):
+        return self
 
-    def assert_present(config):
-        assert('install_missing_compilers' in config and
-               config['install_missing_compilers'] is True)
+    def getcode(self):
+        return self._resp_code
 
-    original_config = cfg.get('config')
-    assert_missing(original_config)
+    def read(self, length=None):
+        if len(self._content) <= 0:
+            return None
 
-    ci.configure_compilers('FIND_ANY', scope='site')
+        if not self._read[-1]:
+            return_content = self._content[-1]
+            if length:
+                self._read[-1] = True
+            else:
+                self._read.pop()
+                self._content.pop()
+            return return_content
 
-    second_config = cfg.get('config')
-    assert_missing(second_config)
-
-    ci.configure_compilers('INSTALL_MISSING')
-    last_config = cfg.get('config')
-    assert_present(last_config)
+        self._read.pop()
+        self._content.pop()
+        return None
 
 
-def test_get_concrete_specs(config, mock_packages):
-    root_spec = (
-        'eJztkk1uwyAQhfc5BbuuYjWObSKuUlURYP5aDBjjBPv0RU7iRI6qpKuqUtnxzZvRwHud'
-        'YxSt1oCMyuVoBdI5MN8paxDYZK/ZbkLYU3kqAuA0Dtz6BgGtTB8XdG87BCgzwXbwXArY'
-        'CxYQiLtqXxUTpLZxSjN/mWlwwxAQlJ7v8wpFtsvK1UXSOUyTjvRKB2Um7LBPhZD0l1md'
-        'xJ7VCATfszOiXGOR9np7vwDn7lCMS8SXQNf3RCtyBTVzzNTMUMXmfWrFeR+UngEAEncS'
-        'ASjKwZcid7ERNldthBxjX46mMD2PsJnlYXDs2rye3l+vroOkJJ54SXgZPklLRQmx61sm'
-        'cgKNVFRO0qlpf2pojq1Ro7OG56MY+Bgc1PkIo/WkaT8OVcrDYuvZkJdtBl/+XCZ+NQBJ'
-        'oKg1h6X/VdXRoyE2OWeH6lCXZdHGrauUZAWFw/YJ/0/39OefN3F4Kle3cXjYsF684ZqG'
-        'Tbap/uPwbRx+YPStIQ8bvgA7G6YE'
+def test_download_and_extract_artifacts(tmpdir, monkeypatch, working_env):
+    os.environ.update({"GITLAB_PRIVATE_TOKEN": "faketoken"})
+
+    url = "https://www.nosuchurlexists.itsfake/artifacts.zip"
+    working_dir = os.path.join(tmpdir.strpath, "repro")
+    test_artifacts_path = os.path.join(
+        spack_paths.test_path, "data", "ci", "gitlab", "artifacts.zip"
     )
 
-    dep_builds = 'diffutils;libiconv'
-    spec_map = ci.get_concrete_specs(root_spec, 'bzip2', dep_builds, 'NONE')
+    with open(test_artifacts_path, "rb") as fd:
+        fake_responder = FakeWebResponder(content_to_read=[fd.read()])
 
-    assert('root' in spec_map and 'deps' in spec_map)
+    monkeypatch.setattr(ci, "build_opener", lambda handler: fake_responder)
 
-    nonconc_root_spec = 'archive-files'
-    dep_builds = ''
-    spec_map = ci.get_concrete_specs(
-        nonconc_root_spec, 'archive-files', dep_builds, 'FIND_ANY')
+    ci.download_and_extract_artifacts(url, working_dir)
 
-    assert('root' in spec_map and 'deps' in spec_map)
-    assert('archive-files' in spec_map)
+    found_zip = fs.find(working_dir, "artifacts.zip")
+    assert len(found_zip) == 0
 
+    found_install = fs.find(working_dir, "install.sh")
+    assert len(found_install) == 1
 
-def test_register_cdash_build():
-    build_name = 'Some pkg'
-    base_url = 'http://cdash.fake.org'
-    project = 'spack'
-    site = 'spacktests'
-    track = 'Experimental'
-
-    with pytest.raises(URLError):
-        ci.register_cdash_build(build_name, base_url, project, site, track)
+    fake_responder._resp_code = 400
+    with pytest.raises(spack.error.SpackError):
+        ci.download_and_extract_artifacts(url, working_dir)
 
 
-def test_relate_cdash_builds(config, mock_packages):
-    root_spec = (
-        'eJztkk1uwyAQhfc5BbuuYjWObSKuUlURYP5aDBjjBPv0RU7iRI6qpKuqUtnxzZvRwHud'
-        'YxSt1oCMyuVoBdI5MN8paxDYZK/ZbkLYU3kqAuA0Dtz6BgGtTB8XdG87BCgzwXbwXArY'
-        'CxYQiLtqXxUTpLZxSjN/mWlwwxAQlJ7v8wpFtsvK1UXSOUyTjvRKB2Um7LBPhZD0l1md'
-        'xJ7VCATfszOiXGOR9np7vwDn7lCMS8SXQNf3RCtyBTVzzNTMUMXmfWrFeR+UngEAEncS'
-        'ASjKwZcid7ERNldthBxjX46mMD2PsJnlYXDs2rye3l+vroOkJJ54SXgZPklLRQmx61sm'
-        'cgKNVFRO0qlpf2pojq1Ro7OG56MY+Bgc1PkIo/WkaT8OVcrDYuvZkJdtBl/+XCZ+NQBJ'
-        'oKg1h6X/VdXRoyE2OWeH6lCXZdHGrauUZAWFw/YJ/0/39OefN3F4Kle3cXjYsF684ZqG'
-        'Tbap/uPwbRx+YPStIQ8bvgA7G6YE'
-    )
-
-    dep_builds = 'diffutils;libiconv'
-    spec_map = ci.get_concrete_specs(root_spec, 'bzip2', dep_builds, 'NONE')
-    cdash_api_url = 'http://cdash.fake.org'
-    job_build_id = '42'
-    cdash_project = 'spack'
-    cdashids_mirror_url = 'https://my.fake.mirror'
-
-    with pytest.raises(web_util.SpackWebError):
-        ci.relate_cdash_builds(spec_map, cdash_api_url, job_build_id,
-                               cdash_project, cdashids_mirror_url)
-
-    # Just make sure passing None for build id doesn't throw exceptions
-    ci.relate_cdash_builds(spec_map, cdash_api_url, None, cdash_project,
-                           cdashids_mirror_url)
+def test_ci_copy_stage_logs_to_artifacts_fail(tmpdir, default_mock_concretization, capfd):
+    """The copy will fail because the spec is not concrete so does not have
+    a package."""
+    log_dir = tmpdir.join("log_dir")
+    concrete_spec = default_mock_concretization("printing-package")
+    ci.copy_stage_logs_to_artifacts(concrete_spec, log_dir)
+    _, err = capfd.readouterr()
+    assert "Unable to copy files" in err
+    assert "No such file or directory" in err
 
 
-def test_read_write_cdash_ids(config, tmp_scope, tmpdir, mock_packages):
-    working_dir = tmpdir.join('working_dir')
-    mirror_dir = working_dir.join('mirror')
-    mirror_url = 'file://{0}'.format(mirror_dir.strpath)
+def test_ci_copy_test_logs_to_artifacts_fail(tmpdir, capfd):
+    log_dir = tmpdir.join("log_dir")
 
-    mirror_cmd = spack_main.SpackCommand('mirror')
-    mirror_cmd('add', '--scope', tmp_scope, 'test_mirror', mirror_url)
+    ci.copy_test_logs_to_artifacts("no-such-dir", log_dir)
+    _, err = capfd.readouterr()
+    assert "Cannot copy test logs" in err
 
-    mock_spec = spec.Spec('archive-files').concretized()
-    orig_cdashid = '42'
+    stage_dir = tmpdir.join("stage_dir").strpath
+    os.makedirs(stage_dir)
+    ci.copy_test_logs_to_artifacts(stage_dir, log_dir)
+    _, err = capfd.readouterr()
+    assert "Unable to copy files" in err
+    assert "No such file or directory" in err
 
-    ci.write_cdashid_to_mirror(orig_cdashid, mock_spec, mirror_url)
 
-    # Now read it back
-    read_cdashid = ci.read_cdashid_from_mirror(mock_spec, mirror_url)
+def test_setup_spack_repro_version(tmpdir, capfd, last_two_git_commits, monkeypatch):
+    c1, c2 = last_two_git_commits
+    repro_dir = os.path.join(tmpdir.strpath, "repro")
+    spack_dir = os.path.join(repro_dir, "spack")
+    os.makedirs(spack_dir)
 
-    assert(str(read_cdashid) == orig_cdashid)
+    prefix_save = spack.paths.prefix
+    monkeypatch.setattr(spack.paths, "prefix", "/garbage")
+
+    ret = ci.setup_spack_repro_version(repro_dir, c2, c1)
+    _, err = capfd.readouterr()
+
+    assert not ret
+    assert "Unable to find the path" in err
+
+    monkeypatch.setattr(spack.paths, "prefix", prefix_save)
+    monkeypatch.setattr(spack.util.git, "git", lambda: None)
+
+    ret = ci.setup_spack_repro_version(repro_dir, c2, c1)
+    out, err = capfd.readouterr()
+
+    assert not ret
+    assert "requires git" in err
+
+    class mock_git_cmd:
+        def __init__(self, *args, **kwargs):
+            self.returncode = 0
+            self.check = None
+
+        def __call__(self, *args, **kwargs):
+            if self.check:
+                self.returncode = self.check(*args, **kwargs)
+            else:
+                self.returncode = 0
+
+    git_cmd = mock_git_cmd()
+
+    monkeypatch.setattr(spack.util.git, "git", lambda: git_cmd)
+
+    git_cmd.check = lambda *a, **k: 1 if len(a) > 2 and a[2] == c2 else 0
+    ret = ci.setup_spack_repro_version(repro_dir, c2, c1)
+    _, err = capfd.readouterr()
+
+    assert not ret
+    assert "Missing commit: {0}".format(c2) in err
+
+    git_cmd.check = lambda *a, **k: 1 if len(a) > 2 and a[2] == c1 else 0
+    ret = ci.setup_spack_repro_version(repro_dir, c2, c1)
+    _, err = capfd.readouterr()
+
+    assert not ret
+    assert "Missing commit: {0}".format(c1) in err
+
+    git_cmd.check = lambda *a, **k: 1 if a[0] == "clone" else 0
+    ret = ci.setup_spack_repro_version(repro_dir, c2, c1)
+    _, err = capfd.readouterr()
+
+    assert not ret
+    assert "Unable to clone" in err
+
+    git_cmd.check = lambda *a, **k: 1 if a[0] == "checkout" else 0
+    ret = ci.setup_spack_repro_version(repro_dir, c2, c1)
+    _, err = capfd.readouterr()
+
+    assert not ret
+    assert "Unable to checkout" in err
+
+    git_cmd.check = lambda *a, **k: 1 if "merge" in a else 0
+    ret = ci.setup_spack_repro_version(repro_dir, c2, c1)
+    _, err = capfd.readouterr()
+
+    assert not ret
+    assert "Unable to merge {0}".format(c1) in err
+
+
+@pytest.mark.parametrize("obj, proto", [({}, [])])
+def test_ci_opt_argument_checking(obj, proto):
+    """Check that matches() and subkeys() return False when `proto` is not a dict."""
+    assert not ci_opt.matches(obj, proto)
+    assert not ci_opt.subkeys(obj, proto)
+
+
+@pytest.mark.parametrize("yaml", [{"extends": 1}])
+def test_ci_opt_add_extends_non_sequence(yaml):
+    """Check that add_extends() exits if 'extends' is not a sequence."""
+    yaml_copy = yaml.copy()
+    ci_opt.add_extends(yaml, None)
+    assert yaml == yaml_copy
 
 
 def test_ci_workarounds():
-    fake_root_spec = 'x' * 544
-    fake_spack_ref = 'x' * 40
+    fake_root_spec = "x" * 544
+    fake_spack_ref = "x" * 40
 
-    common_variables = {
-        'SPACK_COMPILER_ACTION': 'NONE',
-        'SPACK_IS_PR_PIPELINE': 'False',
-    }
+    common_variables = {"SPACK_IS_PR_PIPELINE": "False"}
 
     common_before_script = [
         'git clone "https://github.com/spack/spack"',
-        ' && '.join((
-            'pushd ./spack',
-            'git checkout "{ref}"'.format(ref=fake_spack_ref),
-            'popd')),
-        '. "./spack/share/spack/setup-env.sh"'
+        " && ".join(("pushd ./spack", 'git checkout "{ref}"'.format(ref=fake_spack_ref), "popd")),
+        '. "./spack/share/spack/setup-env.sh"',
     ]
 
-    def make_build_job(name, deps, stage, use_artifact_buildcache, optimize,
-                       use_dependencies):
+    def make_build_job(name, deps, stage, use_artifact_buildcache, optimize, use_dependencies):
         variables = common_variables.copy()
-        variables['SPACK_JOB_SPEC_PKG_NAME'] = name
+        variables["SPACK_JOB_SPEC_PKG_NAME"] = name
 
         result = {
-            'stage': stage,
-            'tags': ['tag-0', 'tag-1'],
-            'artifacts': {
-                'paths': [
-                    'jobs_scratch_dir',
-                    'cdash_report',
-                    name + '.spec.yaml',
-                    name + '.cdashid',
-                    name
-                ],
-                'when': 'always'
+            "stage": stage,
+            "tags": ["tag-0", "tag-1"],
+            "artifacts": {
+                "paths": ["jobs_scratch_dir", "cdash_report", name + ".spec.json", name],
+                "when": "always",
             },
-            'retry': {'max': 2, 'when': ['always']},
-            'after_script': ['rm -rf "./spack"'],
-            'script': ['spack ci rebuild'],
-            'image': {'name': 'spack/centos7', 'entrypoint': ['']}
+            "retry": {"max": 2, "when": ["always"]},
+            "after_script": ['rm -rf "./spack"'],
+            "script": ["spack ci rebuild"],
+            "image": {"name": "spack/centos7", "entrypoint": [""]},
         }
 
         if optimize:
-            result['extends'] = ['.c0', '.c1']
+            result["extends"] = [".c0", ".c1"]
         else:
-            variables['SPACK_ROOT_SPEC'] = fake_root_spec
-            result['before_script'] = common_before_script
+            variables["SPACK_ROOT_SPEC"] = fake_root_spec
+            result["before_script"] = common_before_script
 
-        result['variables'] = variables
+        result["variables"] = variables
 
         if use_dependencies:
-            result['dependencies'] = (
-                list(deps) if use_artifact_buildcache
-                else [])
+            result["dependencies"] = list(deps) if use_artifact_buildcache else []
         else:
-            result['needs'] = [
-                {'job': dep, 'artifacts': use_artifact_buildcache}
-                for dep in deps]
+            result["needs"] = [{"job": dep, "artifacts": use_artifact_buildcache} for dep in deps]
 
         return {name: result}
 
-    def make_rebuild_index_job(
-            use_artifact_buildcache, optimize, use_dependencies):
-
+    def make_rebuild_index_job(use_artifact_buildcache, optimize, use_dependencies):
         result = {
-            'stage': 'stage-rebuild-index',
-            'script': 'spack buildcache update-index -d s3://mirror',
-            'tags': ['tag-0', 'tag-1'],
-            'image': {'name': 'spack/centos7', 'entrypoint': ['']},
-            'after_script': ['rm -rf "./spack"'],
+            "stage": "stage-rebuild-index",
+            "script": "spack buildcache update-index s3://mirror",
+            "tags": ["tag-0", "tag-1"],
+            "image": {"name": "spack/centos7", "entrypoint": [""]},
+            "after_script": ['rm -rf "./spack"'],
         }
 
         if optimize:
-            result['extends'] = '.c0'
+            result["extends"] = ".c0"
         else:
-            result['before_script'] = common_before_script
+            result["before_script"] = common_before_script
 
-        return {'rebuild-index': result}
+        return {"rebuild-index": result}
 
     def make_factored_jobs(optimize):
-        return {
-            '.c0': {'before_script': common_before_script},
-            '.c1': {'variables': {'SPACK_ROOT_SPEC': fake_root_spec}}
-        } if optimize else {}
+        return (
+            {
+                ".c0": {"before_script": common_before_script},
+                ".c1": {"variables": {"SPACK_ROOT_SPEC": fake_root_spec}},
+            }
+            if optimize
+            else {}
+        )
 
     def make_stage_list(num_build_stages):
         return {
-            'stages': (
-                ['-'.join(('stage', str(i))) for i in range(num_build_stages)]
-                + ['stage-rebuild-index'])}
+            "stages": (
+                ["-".join(("stage", str(i))) for i in range(num_build_stages)]
+                + ["stage-rebuild-index"]
+            )
+        }
 
     def make_yaml_obj(use_artifact_buildcache, optimize, use_dependencies):
         result = {}
 
-        result.update(make_build_job(
-            'pkg-a', [], 'stage-0', use_artifact_buildcache, optimize,
-            use_dependencies))
+        result.update(
+            make_build_job(
+                "pkg-a", [], "stage-0", use_artifact_buildcache, optimize, use_dependencies
+            )
+        )
 
-        result.update(make_build_job(
-            'pkg-b', ['pkg-a'], 'stage-1', use_artifact_buildcache, optimize,
-            use_dependencies))
+        result.update(
+            make_build_job(
+                "pkg-b", ["pkg-a"], "stage-1", use_artifact_buildcache, optimize, use_dependencies
+            )
+        )
 
-        result.update(make_build_job(
-            'pkg-c', ['pkg-a', 'pkg-b'], 'stage-2', use_artifact_buildcache,
-            optimize, use_dependencies))
+        result.update(
+            make_build_job(
+                "pkg-c",
+                ["pkg-a", "pkg-b"],
+                "stage-2",
+                use_artifact_buildcache,
+                optimize,
+                use_dependencies,
+            )
+        )
 
-        result.update(make_rebuild_index_job(
-            use_artifact_buildcache, optimize, use_dependencies))
+        result.update(make_rebuild_index_job(use_artifact_buildcache, optimize, use_dependencies))
 
         result.update(make_factored_jobs(optimize))
 
@@ -293,20 +336,18 @@ def test_ci_workarounds():
     #     convert needs to dependencies: true or false
     for use_ab in (False, True):
         original = make_yaml_obj(
-            use_artifact_buildcache=use_ab,
-            optimize=False,
-            use_dependencies=False)
+            use_artifact_buildcache=use_ab, optimize=False, use_dependencies=False
+        )
 
-        for opt, deps in it.product(*(((False, True),) * 2)):
+        for opt, deps in itertools.product(*(((False, True),) * 2)):
             # neither optimizing nor converting needs->dependencies
             if not (opt or deps):
                 # therefore, nothing to test
                 continue
 
             predicted = make_yaml_obj(
-                use_artifact_buildcache=use_ab,
-                optimize=opt,
-                use_dependencies=deps)
+                use_artifact_buildcache=use_ab, optimize=opt, use_dependencies=deps
+            )
 
             actual = original.copy()
             if opt:
@@ -314,9 +355,214 @@ def test_ci_workarounds():
             if deps:
                 actual = cinw.needs_to_dependencies(actual)
 
-            predicted = syaml.dump_config(
-                ci_opt.sort_yaml_obj(predicted), default_flow_style=True)
-            actual = syaml.dump_config(
-                ci_opt.sort_yaml_obj(actual), default_flow_style=True)
+            predicted = syaml.dump_config(ci_opt.sort_yaml_obj(predicted), default_flow_style=True)
+            actual = syaml.dump_config(ci_opt.sort_yaml_obj(actual), default_flow_style=True)
 
-            assert(predicted == actual)
+            assert predicted == actual
+
+
+def test_get_spec_filter_list(mutable_mock_env_path, config, mutable_mock_repo):
+    """Test that given an active environment and list of touched pkgs,
+    we get the right list of possibly-changed env specs"""
+    e1 = ev.create("test")
+    e1.add("mpileaks")
+    e1.add("hypre")
+    e1.concretize()
+
+    """
+    Concretizing the above environment results in the following graphs:
+
+    mpileaks -> mpich (provides mpi virtual dep of mpileaks)
+             -> callpath -> dyninst -> libelf
+                                    -> libdwarf -> libelf
+                         -> mpich (provides mpi dep of callpath)
+
+    hypre -> openblas-with-lapack (provides lapack and blas virtual deps of hypre)
+    """
+
+    touched = ["libdwarf"]
+
+    # Make sure we return the correct set of possibly affected specs,
+    # given a dependent traversal depth and the fact that the touched
+    # package is libdwarf.  Passing traversal depth of None or something
+    # equal to or larger than the greatest depth in the graph are
+    # equivalent and result in traversal of all specs from the touched
+    # package to the root.  Passing negative traversal depth results in
+    # no spec traversals.  Passing any other number yields differing
+    # numbers of possibly affected specs.
+
+    full_set = set(["mpileaks", "mpich", "callpath", "dyninst", "libdwarf", "libelf"])
+    empty_set = set([])
+    depth_2_set = set(["mpich", "callpath", "dyninst", "libdwarf", "libelf"])
+    depth_1_set = set(["dyninst", "libdwarf", "libelf"])
+    depth_0_set = set(["libdwarf", "libelf"])
+
+    expectations = {
+        None: full_set,
+        3: full_set,
+        100: full_set,
+        -1: empty_set,
+        0: depth_0_set,
+        1: depth_1_set,
+        2: depth_2_set,
+    }
+
+    for key, val in expectations.items():
+        affected_specs = ci.get_spec_filter_list(e1, touched, dependent_traverse_depth=key)
+        affected_pkg_names = set([s.name for s in affected_specs])
+        print(f"{key}: {affected_pkg_names}")
+        assert affected_pkg_names == val
+
+
+@pytest.mark.regression("29947")
+def test_affected_specs_on_first_concretization(mutable_mock_env_path, mock_packages, config):
+    e = ev.create("first_concretization")
+    e.add("mpileaks~shared")
+    e.add("mpileaks+shared")
+    e.concretize()
+
+    affected_specs = spack.ci.get_spec_filter_list(e, ["callpath"])
+    mpileaks_specs = [s for s in affected_specs if s.name == "mpileaks"]
+    assert len(mpileaks_specs) == 2, e.all_specs()
+
+
+@pytest.mark.not_on_windows("Reliance on bash script not supported on Windows")
+def test_ci_process_command(repro_dir):
+    result = ci.process_command("help", commands=[], repro_dir=str(repro_dir))
+    help_sh = repro_dir / "help.sh"
+    assert help_sh.exists() and not result
+
+
+@pytest.mark.not_on_windows("Reliance on bash script not supported on Windows")
+def test_ci_process_command_fail(repro_dir, monkeypatch):
+    msg = "subprocess wait exception"
+
+    def _fail(self, args):
+        raise RuntimeError(msg)
+
+    monkeypatch.setattr(subprocess.Popen, "__init__", _fail)
+    with pytest.raises(RuntimeError, match=msg):
+        ci.process_command("help", [], str(repro_dir))
+
+
+def test_ci_create_buildcache(tmpdir, working_env, config, mock_packages, monkeypatch):
+    """Test that create_buildcache returns a list of objects with the correct
+    keys and types."""
+    monkeypatch.setattr(spack.ci, "_push_to_build_cache", lambda a, b, c: True)
+
+    results = ci.create_buildcache(
+        None, destination_mirror_urls=["file:///fake-url-one", "file:///fake-url-two"]
+    )
+
+    assert len(results) == 2
+    result1, result2 = results
+    assert result1.success
+    assert result1.url == "file:///fake-url-one"
+    assert result2.success
+    assert result2.url == "file:///fake-url-two"
+
+    results = ci.create_buildcache(None, destination_mirror_urls=["file:///fake-url-one"])
+
+    assert len(results) == 1
+    assert results[0].success
+    assert results[0].url == "file:///fake-url-one"
+
+
+def test_ci_run_standalone_tests_missing_requirements(
+    tmpdir, working_env, default_mock_concretization, capfd
+):
+    """This test case checks for failing prerequisite checks."""
+    ci.run_standalone_tests()
+    err = capfd.readouterr()[1]
+    assert "Job spec is required" in err
+
+    args = {"job_spec": default_mock_concretization("printing-package")}
+    ci.run_standalone_tests(**args)
+    err = capfd.readouterr()[1]
+    assert "Reproduction directory is required" in err
+
+
+@pytest.mark.not_on_windows("Reliance on bash script not supported on Windows")
+def test_ci_run_standalone_tests_not_installed_junit(
+    tmp_path, repro_dir, working_env, default_mock_concretization, mock_test_stage, capfd
+):
+    log_file = tmp_path / "junit.xml"
+    args = {
+        "log_file": str(log_file),
+        "job_spec": default_mock_concretization("printing-package"),
+        "repro_dir": str(repro_dir),
+        "fail_fast": True,
+    }
+
+    ci.run_standalone_tests(**args)
+    err = capfd.readouterr()[1]
+    assert "No installed packages" in err
+    assert os.path.getsize(log_file) > 0
+
+
+@pytest.mark.not_on_windows("Reliance on bash script not supported on Windows")
+def test_ci_run_standalone_tests_not_installed_cdash(
+    tmp_path, repro_dir, working_env, default_mock_concretization, mock_test_stage, capfd
+):
+    """Test run_standalone_tests with cdash and related options."""
+    log_file = tmp_path / "junit.xml"
+    args = {
+        "log_file": str(log_file),
+        "job_spec": default_mock_concretization("printing-package"),
+        "repro_dir": str(repro_dir),
+    }
+
+    # Cover when CDash handler provided (with the log file as well)
+    ci_cdash = {
+        "url": "file://fake",
+        "build-group": "fake-group",
+        "project": "ci-unit-testing",
+        "site": "fake-site",
+    }
+    os.environ["SPACK_CDASH_BUILD_NAME"] = "ci-test-build"
+    os.environ["SPACK_CDASH_BUILD_STAMP"] = "ci-test-build-stamp"
+    os.environ["CI_RUNNER_DESCRIPTION"] = "test-runner"
+    handler = ci.CDashHandler(ci_cdash)
+    args["cdash"] = handler
+    ci.run_standalone_tests(**args)
+    out = capfd.readouterr()[0]
+    # CDash *and* log file output means log file ignored
+    assert "xml option is ignored with CDash" in out
+
+    # copy test results (though none)
+    artifacts_dir = tmp_path / "artifacts"
+    artifacts_dir.mkdir()
+    handler.copy_test_results(str(tmp_path), str(artifacts_dir))
+    err = capfd.readouterr()[1]
+    assert "Unable to copy files" in err
+    assert "No such file or directory" in err
+
+
+def test_ci_skipped_report(tmpdir, mock_packages, config):
+    """Test explicit skipping of report as well as CI's 'package' arg."""
+    pkg = "trivial-smoke-test"
+    spec = spack.spec.Spec(pkg).concretized()
+    ci_cdash = {
+        "url": "file://fake",
+        "build-group": "fake-group",
+        "project": "ci-unit-testing",
+        "site": "fake-site",
+    }
+    os.environ["SPACK_CDASH_BUILD_NAME"] = "fake-test-build"
+    os.environ["SPACK_CDASH_BUILD_STAMP"] = "ci-test-build-stamp"
+    os.environ["CI_RUNNER_DESCRIPTION"] = "test-runner"
+    handler = ci.CDashHandler(ci_cdash)
+    reason = "Testing skip"
+    handler.report_skipped(spec, tmpdir.strpath, reason=reason)
+
+    reports = [name for name in tmpdir.listdir() if str(name).endswith("Testing.xml")]
+    assert len(reports) == 1
+    expected = f"Skipped {pkg} package"
+    with open(reports[0], "r") as f:
+        have = [0, 0]
+        for line in f:
+            if expected in line:
+                have[0] += 1
+            elif reason in line:
+                have[1] += 1
+        assert all(count == 1 for count in have)

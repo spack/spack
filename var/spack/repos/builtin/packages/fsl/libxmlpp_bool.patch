@@ -1,0 +1,30 @@
+diff -ru a/extras/src/libxmlpp/libxml++/io/istreamparserinputbuffer.cc b/extras/src/libxmlpp/libxml++/io/istreamparserinputbuffer.cc
+--- a/extras/src/libxmlpp/libxml++/io/istreamparserinputbuffer.cc	2019-05-20 12:50:12.000000000 +0000
++++ b/extras/src/libxmlpp/libxml++/io/istreamparserinputbuffer.cc	2021-10-31 22:29:47.465118993 +0000
+@@ -39,6 +39,6 @@
+ 
+   bool IStreamParserInputBuffer::do_close()
+   {
+-    return input_;
++    return static_cast<bool>(input_);
+   }
+ }
+diff -ru a/extras/src/libxmlpp/libxml++/io/ostreamoutputbuffer.cc b/extras/src/libxmlpp/libxml++/io/ostreamoutputbuffer.cc
+--- a/extras/src/libxmlpp/libxml++/io/ostreamoutputbuffer.cc	2019-05-20 12:50:12.000000000 +0000
++++ b/extras/src/libxmlpp/libxml++/io/ostreamoutputbuffer.cc	2021-10-31 22:31:47.656434780 +0000
+@@ -29,13 +29,13 @@
+     // here we rely on the ostream implicit conversion to boolean, to know if the stream can be used and/or if the write succeded.
+     if(output_)
+       output_.write(buffer, len);
+-    return output_;
++    return static_cast<bool>(output_);
+   }
+ 
+   bool OStreamOutputBuffer::do_close()
+   {
+     if(output_)
+         output_.flush();
+-    return output_;
++    return static_cast<bool>(output_);
+   }
+ }

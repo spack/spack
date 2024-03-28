@@ -1,0 +1,11 @@
+--- a/contrib/mom/Makefile.sub	2014-11-04 02:38:35.502520534 -0600
++++ b/contrib/mom/Makefile.sub	2021-02-08 14:51:57.131553432 -0600
+@@ -41,7 +41,7 @@
+   GROFF_COMMAND_PREFIX= \
+   GROFF_BIN_PATH="$(GROFF_BIN_PATH)" \
+   PDFMOM_BIN_PATH="$(top_builddir)/src/devices/gropdf" \
+-  $(PDFMOMBIN) $(FFLAG) $(TFLAG) $(KFLAG)
++  $(PERL) $(PDFMOMBIN) $(FFLAG) $(TFLAG) $(KFLAG)
+ 
+ MAN7=\
+   groff_mom.n

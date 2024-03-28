@@ -1,0 +1,11 @@
+--- spack-src/source/Krylov.c.bak	2016-03-27 15:53:28.000000000 +0900
++++ spack-src/source/Krylov.c	2021-01-28 15:31:32.660274698 +0900
+@@ -29,7 +29,7 @@
+ #ifdef nosse
+ #include "mimic_sse.h"
+ #else
+-#include <emmintrin.h>
++#include <sse2neon.h>
+ #endif
+ 
+ #ifdef kcomp

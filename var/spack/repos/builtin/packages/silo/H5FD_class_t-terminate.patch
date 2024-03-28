@@ -1,0 +1,14 @@
+diff --git a/src/hdf5_drv/H5FDsilo.c b/src/hdf5_drv/H5FDsilo.c
+index 840dfd0..0d09147 100644
+--- a/src/hdf5_drv/H5FDsilo.c
++++ b/src/hdf5_drv/H5FDsilo.c
+@@ -500,6 +500,9 @@ static const H5FD_class_t H5FD_silo_g = {
+     "silo",				        /*name			*/
+     MAXADDR,				        /*maxaddr		*/
+     H5F_CLOSE_WEAK,				/* fc_degree		*/
++#if HDF5_VERSION_GE(1,10,0)
++    0,                                          /* terminate            */
++#endif
+     H5FD_silo_sb_size,                          /*sb_size               */
+     H5FD_silo_sb_encode,                        /*sb_encode             */
+     H5FD_silo_sb_decode,                        /*sb_decode             */

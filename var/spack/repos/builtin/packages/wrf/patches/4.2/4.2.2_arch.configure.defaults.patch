@@ -1,0 +1,111 @@
+--- a/arch/configure.defaults	2021-01-15 17:21:58.000000000 +0000
++++ b/arch/configure.defaults	2023-01-27 21:07:58.233103595 +0000
+@@ -30,7 +30,7 @@
+ FORMAT_FREE     =       -w -f4
+ FCSUFFIX        =       
+ BYTESWAPIO      =       #-FIX_BYTE_SWAP_IF_NECESSARY_FOR_BIG_ENDIAN
+-FCBASEOPTS_NO_G =       -w -Wf'-M noflunf -M nozdiv' $(FORMAT_FREE) $(BYTESWAPIO)
++FCBASEOPTS_NO_G =       -w -Wf'-M noflunf -M nozdiv' $(FORMAT_FREE) $(BYTESWAPIO) $(FFLAGS)
+ FCBASEOPTS      =       $(FCBASEOPTS_NO_G) $(FCDEBUG)
+ MODULE_SRCH_FLAG =      -I/SX/usr/include/module/dwdadW64/
+ TRADFLAG        =      CONFIGURE_TRADFLAG
+@@ -75,7 +75,7 @@
+ FCSUFFIX        =       
+ FCCOMPAT        =       
+ BYTESWAPIO      =       -fconvert=big-endian -frecord-marker=4
+-FCBASEOPTS_NO_G =       -w $(FORMAT_FREE) $(BYTESWAPIO) $(FCCOMPAT)
++FCBASEOPTS_NO_G =       -w $(FORMAT_FREE) $(BYTESWAPIO) $(FCCOMPAT) $(FFLAGS)
+ FCBASEOPTS      =       $(FCBASEOPTS_NO_G) $(FCDEBUG)
+ MODULE_SRCH_FLAG =
+ TRADFLAG        =      CONFIGURE_TRADFLAG
+@@ -118,7 +118,7 @@
+ FORMAT_FREE     =       -ffree-form -ffree-line-length-huge
+ FCSUFFIX        =
+ BYTESWAPIO      =       -fendian=big
+-FCBASEOPTS_NO_G =       -Wno=101,139,155,158 $(FORMAT_FREE) $(BYTESWAPIO)
++FCBASEOPTS_NO_G =       -Wno=101,139,155,158 $(FORMAT_FREE) $(BYTESWAPIO) $(FFLAGS)
+ FCBASEOPTS      =       $(FCBASEOPTS_NO_G) $(FCDEBUG)
+ MODULE_SRCH_FLAG =     -fmod=$(WRF_SRC_ROOT_DIR)/main
+ TRADFLAG        =      CONFIGURE_TRADFLAG
+@@ -161,7 +161,7 @@
+ FORMAT_FREE     =       -Mfree
+ FCSUFFIX        =
+ BYTESWAPIO      =       -byteswapio
+-FCBASEOPTS_NO_G =       -w $(FORMAT_FREE) $(BYTESWAPIO) $(OMP) # -Kieee -pc 64 -Ktrap=fp
++FCBASEOPTS_NO_G =       -w $(FORMAT_FREE) $(BYTESWAPIO) $(OMP) $(FFLAGS) # -Kieee -pc 64 -Ktrap=fp
+ FCBASEOPTS      =       $(FCBASEOPTS_NO_G) $(FCDEBUG)
+ MODULE_SRCH_FLAG =     -module $(WRF_SRC_ROOT_DIR)/main
+ TRADFLAG        =      CONFIGURE_TRADFLAG
+@@ -204,7 +204,7 @@
+ FORMAT_FREE     =       -Mfree
+ FCSUFFIX        =
+ BYTESWAPIO      =       -byteswapio
+-FCBASEOPTS_NO_G =       -w $(FORMAT_FREE) $(BYTESWAPIO) $(OMP) # -Kieee -pc 64 -Ktrap=fp
++FCBASEOPTS_NO_G =       -w $(FORMAT_FREE) $(BYTESWAPIO) $(OMP) $(FFLAGS) # -Kieee -pc 64 -Ktrap=fp
+ FCBASEOPTS      =       $(FCBASEOPTS_NO_G) $(FCDEBUG)
+ MODULE_SRCH_FLAG =     -module $(WRF_SRC_ROOT_DIR)/main
+ TRADFLAG        =      CONFIGURE_TRADFLAG
+@@ -323,7 +323,7 @@
+ FCSUFFIX        =
+ BYTESWAPIO      =       -convert big_endian
+ RECORDLENGTH    =       -assume byterecl
+-FCBASEOPTS_NO_G =       -ip -fp-model precise -w -ftz -align all -fno-alias $(FORMAT_FREE) $(BYTESWAPIO) #-xHost -fp-model fast=2 -no-heap-arrays -no-prec-div -no-prec-sqrt -fno-common
++FCBASEOPTS_NO_G =       -ip -fp-model precise -w -ftz -align all -fno-alias $(FORMAT_FREE) $(BYTESWAPIO) $(FFLAGS) #-xHost -fp-model fast=2 -no-heap-arrays -no-prec-div -no-prec-sqrt -fno-common
+ FCBASEOPTS      =       $(FCBASEOPTS_NO_G) $(FCDEBUG)
+ MODULE_SRCH_FLAG =     
+ TRADFLAG        =      CONFIGURE_TRADFLAG
+@@ -370,7 +370,7 @@
+ FCSUFFIX        =
+ BYTESWAPIO      =       -convert big_endian
+ RECORDLENGTH    =       -assume byterecl
+-FCBASEOPTS_NO_G =       -w -qopenmp -auto -ftz -fno-alias -fp-model fast=1 -no-prec-div -no-prec-sqrt $(FORMAT_FREE) $(BYTESWAPIO) -auto -align array64byte #-vec-report6
++FCBASEOPTS_NO_G =       -w -qopenmp -auto -ftz -fno-alias -fp-model fast=1 -no-prec-div -no-prec-sqrt $(FORMAT_FREE) $(BYTESWAPIO) -auto -align array64byte $(FFLAGS) #-vec-report6
+ FCBASEOPTS      =       $(FCBASEOPTS_NO_G) $(FCDEBUG)
+ MODULE_SRCH_FLAG =     
+ TRADFLAG        =      CONFIGURE_TRADFLAG
+@@ -417,7 +417,7 @@
+ FCSUFFIX        =
+ BYTESWAPIO      =       -convert big_endian
+ RECORDLENGTH    =       -assume byterecl
+-FCBASEOPTS_NO_G =       -w $(OMP) -auto -ftz -fno-alias -fp-model fast=1 -no-prec-div -no-prec-sqrt $(FORMAT_FREE) $(BYTESWAPIO) -auto -align array64byte #-vec-report6
++FCBASEOPTS_NO_G =       -w $(OMP) -auto -ftz -fno-alias -fp-model fast=1 -no-prec-div -no-prec-sqrt $(FORMAT_FREE) $(BYTESWAPIO) -auto -align array64byte $(FFLAGS) #-vec-report6
+ FCBASEOPTS      =       $(FCBASEOPTS_NO_G) $(FCDEBUG)
+ MODULE_SRCH_FLAG =     
+ TRADFLAG        =      CONFIGURE_TRADFLAG
+@@ -488,7 +488,7 @@
+ FCSUFFIX        =
+ BYTESWAPIO      =       -convert big_endian
+ RECORDLENGTH    =       -assume byterecl
+-FCBASEOPTS_NO_G =       -ip -fp-model precise -w -ftz -align all -fno-alias $(FORMAT_FREE) $(BYTESWAPIO) #-xHost -fp-model fast=2 -no-heap-arrays -no-prec-div -no-prec-sqrt -fno-common
++FCBASEOPTS_NO_G =       -ip -fp-model precise -w -ftz -align all -fno-alias $(FORMAT_FREE) $(BYTESWAPIO) $(FFLAGS) #-xHost -fp-model fast=2 -no-heap-arrays -no-prec-div -no-prec-sqrt -fno-common
+ FCBASEOPTS      =       $(FCBASEOPTS_NO_G) $(FCDEBUG)
+ MODULE_SRCH_FLAG =     
+ TRADFLAG        =      CONFIGURE_TRADFLAG
+@@ -537,7 +537,7 @@
+ FCSUFFIX        =
+ BYTESWAPIO      =       -convert big_endian
+ RECORDLENGTH    =       -assume byterecl
+-FCBASEOPTS_NO_G =       -ip -fp-model precise -w -ftz -align all -fno-alias $(FORMAT_FREE) $(BYTESWAPIO) #-xHost -fp-model fast=2 -no-heap-arrays -no-prec-div -no-prec-sqrt -fno-common
++FCBASEOPTS_NO_G =       -ip -fp-model precise -w -ftz -align all -fno-alias $(FORMAT_FREE) $(BYTESWAPIO) $(FFLAGS) #-xHost -fp-model fast=2 -no-heap-arrays -no-prec-div -no-prec-sqrt -fno-common
+ FCBASEOPTS      =       $(FCBASEOPTS_NO_G) $(FCDEBUG)
+ MODULE_SRCH_FLAG =     
+ TRADFLAG        =      CONFIGURE_TRADFLAG
+@@ -616,7 +616,7 @@
+ FCSUFFIX        =
+ BYTESWAPIO      =       -convert big_endian
+ RECORDLENGTH    =       -assume byterecl
+-FCBASEOPTS_NO_G =       -ip -fp-model precise -w -ftz -align all -fno-alias $(FORMAT_FREE) $(BYTESWAPIO) #-xHost -fp-model fast=2 -no-heap-arrays -no-prec-div -no-prec-sqrt -fno-common
++FCBASEOPTS_NO_G =       -ip -fp-model precise -w -ftz -align all -fno-alias $(FORMAT_FREE) $(BYTESWAPIO) $(FFLAGS) #-xHost -fp-model fast=2 -no-heap-arrays -no-prec-div -no-prec-sqrt -fno-common
+ #FCBASEOPTS_NO_G =       -w -ftz -align all -fno-alias -IPF-fp-relaxed $(FORMAT_FREE) $(BYTESWAPIO)
+ FCBASEOPTS      =       $(FCBASEOPTS_NO_G) $(FCDEBUG)
+ LIB_LOCAL       =       -L/usr/lib -lmpi 
+@@ -1602,7 +1602,8 @@
+ 
+ LIB_EXTERNAL    = \
+                      ../external/io_netcdf/libwrfio_nf.a CONFIGURE_NETCDF_PATH/lib/libnetcdf.lib \
+-                     ../external/wavelet/libWavelet.a ../external/wavelet/lib_wavelet.a
++                     ../external/wavelet/libWavelet.a ../external/wavelet/lib_wavelet.a \
++                     CONFIGURE_NETCDFF_PATH/lib/libnetcdff.lib
+ ESMF_IO_LIB     =    ../external/esmf_time_f90/libesmf_time.a
+ LIB_BUNDLED     = \
+                      ../external/fftpack/fftpack5/libfftpack.a \

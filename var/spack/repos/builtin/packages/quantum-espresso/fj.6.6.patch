@@ -1,0 +1,23 @@
+--- spack-src/install/configure.org	2021-01-15 09:27:53.000000000 +0900
++++ spack-src/install/configure	2021-01-15 09:26:53.000000000 +0900
+@@ -3200,6 +3200,7 @@
+         nagfor_version=`$mpif90 -v 2>&1 | grep "NAG Fortran"`
+         xlf_version=`$mpif90 -v 2>&1 | grep "xlf"`
+         armflang_version=`$mpif90 -v 2>&1 | grep "Arm C/C++/Fortran Compiler version"`
++        frt_version=`$mpif90 -v 2>&1 | grep "Fujitsu Fortran Compiler"`
+         #
+         if test "$ifort_version" != ""
+         then
+@@ -3237,6 +3238,12 @@
+                 f90_minor_version=`echo $version | cut -d. -f2`
+                 f90_in_mpif90="armflang"
+                 try_foxflags="-D__PGI"
++        elif test "$frt_version" != ""
++        then
++                version=`echo $frt_version | cut -d" " -f 5`
++                echo "${ECHO_T}frt $version"
++                f90_in_mpif90="frt"
++                try_foxflags="-D__FUJITSU"
+         else
+                 echo "${ECHO_T}unknown, assuming gfortran"
+                 f90_in_mpif90="gfortran"

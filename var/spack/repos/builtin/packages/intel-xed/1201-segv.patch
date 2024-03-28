@@ -1,0 +1,18 @@
+Fix segfault due to uninitialized data when trying to decode some cases
+of data that aren't a valid instruction.
+
+https://github.com/intelxed/xed/commit/5c54699f78ba1e3ce7e0cc6dead0088a8dd09c56
+
+
+diff --git a/src/dec/xed-decoded-init.c b/src/dec/xed-decoded-init.c
+index b0d4db1..fc226d2 100644
+--- a/src/dec/xed-decoded-init.c
++++ b/src/dec/xed-decoded-init.c
+@@ -46,6 +46,7 @@ xed_decoded_inst_zero_keep_mode_from_operands(
+     xed_operand_values_init_keep_mode(p, operands);
+     p->_decoded_length = 0;
+     p->_inst = 0;
++    p->u.user_data = 0;
+ }
+ 
+ XED_DLL_EXPORT void

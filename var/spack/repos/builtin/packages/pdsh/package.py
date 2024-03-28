@@ -1,9 +1,9 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Pdsh(AutotoolsPackage):
@@ -12,18 +12,20 @@ class Pdsh(AutotoolsPackage):
     """
 
     homepage = "https://github.com/grondo/pdsh"
-    url      = "https://github.com/grondo/pdsh/archive/pdsh-2.31.tar.gz"
+    url = "https://github.com/grondo/pdsh/archive/pdsh-2.31.tar.gz"
 
-    version('2.31', sha256='0ee066ce395703285cf4f6cf00b54b7097d12457a4b1c146bc6f33d8ba73caa7')
+    license("GPL-2.0")
 
-    variant('ssh', default=True, description="Build with ssh module")
+    version("2.31", sha256="0ee066ce395703285cf4f6cf00b54b7097d12457a4b1c146bc6f33d8ba73caa7")
 
-    variant('static_modules', default=True, description="Build with static modules")
+    variant("ssh", default=True, description="Build with ssh module")
+
+    variant("static_modules", default=True, description="Build with static modules")
 
     def configure_args(self):
         args = []
-        if '+ssh' in self.spec:
-            args.append('--with-ssh')
-        if '+static_modules' in self.spec:
-            args.append('--enable-static-modules')
+        if "+ssh" in self.spec:
+            args.append("--with-ssh")
+        if "+static_modules" in self.spec:
+            args.append("--enable-static-modules")
         return args

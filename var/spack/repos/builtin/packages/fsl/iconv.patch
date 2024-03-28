@@ -1,0 +1,28 @@
+diff -ru a/src/flameo/Makefile b/src/flameo/Makefile
+--- a/src/flameo/Makefile	2018-10-02 08:46:58.000000000 -0500
++++ b/src/flameo/Makefile	2020-11-07 20:19:56.732547025 -0600
+@@ -6,9 +6,7 @@
+ USRLDFLAGS = -L${LIB_NEWMAT} -L${LIB_PROB} -L${LIB_ZLIB}
+ 
+ UNAME := $(shell uname)
+-ifeq (${UNAME},Darwin)
+-        LIBS = -liconv
+-endif
++LIBS = -liconv
+ 
+ LIBS += -lutils -lnewimage -lmiscmaths -lm -lnewmat -lNewNifti -lcifti -lxml++-2.6 -lxml2 -lboost_filesystem -lboost_system -lznz -lprob -lz 
+ 
+diff -ru a/src/melodic/Makefile b/src/melodic/Makefile
+--- a/src/melodic/Makefile	2020-03-30 08:51:19.000000000 -0500
++++ b/src/melodic/Makefile	2020-11-07 20:21:45.625518576 -0600
+@@ -11,9 +11,7 @@
+ USRLDFLAGS = -L${LIB_NEWMAT} -L${LIB_PROB} -L${LIB_GD} -L${LIB_GDC} -L${LIB_PNG} -L${LIB_ZLIB}
+ 
+ UNAME := $(shell uname)
+-ifeq (${UNAME},Darwin)
+-        LIBS = -liconv
+-endif
++LIBS = -liconv
+ 
+ LIBS += -lutils -lnewimage -lmiscplot -lmiscpic -lmiscmaths -lNewNifti -lcifti -lxml++-2.6 -lxml2 -lboost_filesystem -lboost_system -lznz -lnewmat -lprob -lm  -lgdc -lgd -lpng -lz
+ 

@@ -1,49 +1,132 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+import re
+
+from spack.package import *
 
 
-class Hipsparse(CMakePackage):
+class Hipsparse(CMakePackage, CudaPackage, ROCmPackage):
     """hipSPARSE is a SPARSE marshalling library, with
-       multiple supported backends"""
+    multiple supported backends"""
 
-    homepage = "https://github.com/ROCmSoftwarePlatform/hipSPARSE"
-    git      = "https://github.com/ROCmSoftwarePlatform/hipSPARSE.git"
-    url      = "https://github.com/ROCmSoftwarePlatform/hipSPARSE/archive/rocm-3.8.0.tar.gz"
+    homepage = "https://github.com/ROCm/hipSPARSE"
+    git = "https://github.com/ROCm/hipSPARSE.git"
+    url = "https://github.com/ROCm/hipSPARSE/archive/rocm-6.0.2.tar.gz"
+    tags = ["rocm"]
 
-    maintainers = ['srekolam', 'arjun-raj-kuppala']
+    maintainers("cgmb", "srekolam", "renjithravindrankannath", "haampie")
+    libraries = ["libhipsparse"]
 
-    version('3.9.0', sha256='ab0ea3dd9b68a126291ed5a35e50fc85d0aeb35fe862f5d9e544435e4262c435')
-    version('3.8.0', sha256='8874c100e9ba54587a6057c2a0e555a0903254a16e9e01c2385bae1b027f83b5')
-    version('3.7.0', sha256='a2f02d8fc6ad9a561f06dacde54ecafd30563c5c95f93819a5694e5b650dad7f')
-    version('3.5.0', sha256='fa16b2a307a5d9716066c2876febcbc1cef855bf0c96d235d2d8f2206a0fb69d')
+    license("MIT")
+    version("6.0.2", sha256="40c1d2493f87c686d9afd84a00321ad10ca0d0d80d6dcfeee8e51858dd1bd8c1")
+    version("6.0.0", sha256="718a5f03b6a579c0542a60d00f5688bec53a181b429b7ee8ce3c8b6c4a78d754")
+    version("5.7.1", sha256="16c3818260611226c3576d8d55ad8f51e0890d2473503edf2c9313250ae65ca7")
+    version("5.7.0", sha256="729b749b5340034639873a99e6091963374f6f0456c8f36d076c96f03fe43888")
+    version("5.6.1", sha256="d636d0c5d1e38cc0c09b1e95380199ec82bd465b94bd6661f0c8d9374d9b565d")
+    version("5.6.0", sha256="3a6931b744ebaa4469a4c50d059a008403e4dc2a4f04dd69c3c6d20916b4a491")
+    version("5.5.1", sha256="3d291e4fe2c611d555e54de66149b204fe7ac59f5dd00a9ad93bc6dca0528880")
+    version("5.5.0", sha256="8122c8f17d899385de83efb7ac0d8a4fabfcd2aa21bbed63e63ea7adf0d22df6")
+    version("5.4.3", sha256="b373eccd03679a13fab4e740fc780da25cbd598abca3a1e5e3613ae14954f9db")
+    version("5.4.0", sha256="47420d38483c8124813b744971e428a0352c83d9b62a5a50f74ffa8f9b785b20")
+    version("5.3.3", sha256="d96d0e47594ab12e8c380da2300704c105736a0771940d7d2fae666f2869e457")
+    version("5.3.0", sha256="691b32b916952ed9af008aa29f60cc190322b73cfc098bb2eda3ff68c89c7b35")
+    with default_args(deprecated=True):
+        version("5.2.3", sha256="f70d3deff13188adc4105ef3ead53510e4b54075b9ffcfe3d3355d90d4b6eadd")
+        version("5.2.1", sha256="7b8e4ff264285ae5aabb3c5c2b38bf28f90b2af44efb0398fcf13ffc24bc000a")
+        version("5.2.0", sha256="4fdab6ec953c6d2d000687c5979077deafd37208cd722554b5a6ede1e5ba170c")
+        version("5.1.3", sha256="6e6a0752654f0d391533df8cedf4b630a78ad34c99087741520c582963ce1602")
+        version("5.1.0", sha256="f41329534f2ff477a0db6b7f77a72bb062f117800970c122d676db8b207ce80b")
 
-    depends_on('cmake@3:', type='build')
-    depends_on('git', type='build')
+    # default to an 'auto' variant until amdgpu_targets can be given a better default than 'none'
+    amdgpu_targets = ROCmPackage.amdgpu_targets
+    variant(
+        "amdgpu_target",
+        description="AMD GPU architecture",
+        values=spack.variant.DisjointSetsOfValues(("auto",), ("none",), amdgpu_targets)
+        .with_default("auto")
+        .with_error(
+            "the values 'auto' and 'none' are mutually exclusive with any of the other values"
+        )
+        .with_non_feature_values("auto", "none"),
+        sticky=True,
+    )
+    variant("rocm", default=True, description="Enable ROCm support")
+    variant("asan", default=False, description="Build with address-sanitizer enabled or disabled")
+    conflicts("+cuda +rocm", msg="CUDA and ROCm support are mutually exclusive")
+    conflicts("~cuda ~rocm", msg="CUDA or ROCm support is required")
 
-    for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0']:
-        depends_on('rocm-cmake@' + ver, type='build', when='@' + ver)
-        depends_on('rocm-device-libs@' + ver, type='build', when='@' + ver)
-        depends_on('rocsparse@' + ver, type='build', when='@' + ver)
-        depends_on('hip@' + ver, when='@' + ver)
-        depends_on('comgr@' + ver, type='build', when='@' + ver)
-        depends_on('hsa-rocr-dev@' + ver, type='link', when='@' + ver)
-    for ver in ['3.8.0', '3.9.0']:
-        depends_on('rocprim@' + ver, type='link', when='@' + ver)
+    depends_on("hip +cuda", when="+cuda")
 
-    patch('e79985dccde22d826aceb3badfc643a3227979d2.patch', when='@3.5.0')
-    patch('530047af4a0f437dafc02f76b3a17e3b1536c7ec.patch', when='@3.5.0')
+    depends_on("cmake@3.5:", type="build")
+    depends_on("git", type="build")
+
+    for ver in [
+        "5.1.0",
+        "5.1.3",
+        "5.2.0",
+        "5.2.1",
+        "5.2.3",
+        "5.3.0",
+        "5.3.3",
+        "5.4.0",
+        "5.4.3",
+        "5.5.0",
+        "5.5.1",
+        "5.6.0",
+        "5.6.1",
+        "5.7.0",
+        "5.7.1",
+        "6.0.0",
+        "6.0.2",
+    ]:
+        depends_on(f"rocm-cmake@{ver}:", type="build", when=f"@{ver}")
+        depends_on(f"rocsparse@{ver}", when=f"+rocm @{ver}")
+
+    for tgt in ROCmPackage.amdgpu_targets:
+        depends_on(f"rocsparse amdgpu_target={tgt}", when=f"+rocm amdgpu_target={tgt}")
+
+    patch("0a90ddc4c33ed409a938513b9dbdca8bfad65e06.patch", when="@:5.4")
+
+    @classmethod
+    def determine_version(cls, lib):
+        match = re.search(r"lib\S*\.so\.\d+\.\d+\.(\d)(\d\d)(\d\d)", lib)
+        if match:
+            ver = "{0}.{1}.{2}".format(
+                int(match.group(1)), int(match.group(2)), int(match.group(3))
+            )
+        else:
+            ver = None
+        return ver
+
+    def setup_build_environment(self, env):
+        if self.spec.satisfies("+asan"):
+            self.asan_on(env, self.spec["llvm-amdgpu"].prefix)
 
     def cmake_args(self):
         args = [
-            '-DCMAKE_CXX_STANDARD=14',
-            '-DBUILD_CLIENTS_SAMPLES=OFF',
-            '-DBUILD_CLIENTS_TESTS=OFF',
+            self.define("CMAKE_CXX_STANDARD", "14"),
+            self.define("BUILD_CLIENTS_SAMPLES", "OFF"),
+            self.define("BUILD_CLIENTS_TESTS", "OFF"),
         ]
-        return args
 
-    def setup_build_environment(self, env):
-        env.set('CXX', self.spec['hip'].hipcc)
+        args.append(self.define_from_variant("BUILD_CUDA", "cuda"))
+
+        # FindHIP.cmake is still used for +cuda
+        if self.spec.satisfies("+cuda"):
+            if self.spec["hip"].satisfies("@:5.1"):
+                args.append(self.define("CMAKE_MODULE_PATH", self.spec["hip"].prefix.cmake))
+            else:
+                args.append(
+                    self.define("CMAKE_MODULE_PATH", self.spec["hip"].prefix.lib.cmake.hip)
+                )
+
+        if self.spec.satisfies("@5.2.0:"):
+            args.append(self.define("BUILD_FILE_REORG_BACKWARD_COMPATIBILITY", True))
+
+        if self.spec.satisfies("@5.3.0:"):
+            args.append("-DCMAKE_INSTALL_LIBDIR=lib")
+
+        return args

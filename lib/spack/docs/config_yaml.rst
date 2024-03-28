@@ -1,13 +1,13 @@
-.. Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 .. _config-yaml:
 
-==============
-Basic Settings
-==============
+============================
+Spack Settings (config.yaml)
+============================
 
 Spack's basic configuration options are set in ``config.yaml``.  You can
 see the default settings by looking at
@@ -19,9 +19,9 @@ see the default settings by looking at
 These settings can be overridden in ``etc/spack/config.yaml`` or
 ``~/.spack/config.yaml``.  See :ref:`configuration-scopes` for details.
 
---------------------
-``install_tree``
---------------------
+---------------------
+``install_tree:root``
+---------------------
 
 The location where Spack will install packages and their dependencies.
 Default is ``$spack/opt/spack``.
@@ -71,21 +71,6 @@ used to configure module names.
 .. warning:: Modifying the installation hash length or path scheme after
    packages have been installed will prevent Spack from being
    able to find the old installation directories.
-
---------------------
-``module_roots``
---------------------
-
-Controls where Spack installs generated module files.  You can customize
-the location for each type of module.  e.g.:
-
-.. code-block:: yaml
-
-   module_roots:
-     tcl:    $spack/share/spack/modules
-     lmod:   $spack/share/spack/lmod
-
-See :ref:`modules` for details.
 
 --------------------
 ``build_stage``
@@ -202,21 +187,23 @@ of builds.
 
 Unless overridden in a package or on the command line, Spack builds all
 packages in parallel. The default parallelism is equal to the number of
-cores on your machine, up to 16. Parallelism cannot exceed the number of
-cores available on the host. For a build system that uses Makefiles, this
-means running:
+cores available to the process, up to 16 (the default of ``build_jobs``).
+For a build system that uses Makefiles, this ``spack install`` runs:
 
 - ``make -j<build_jobs>``, when ``build_jobs`` is less than the number of
-  cores on the machine
+  cores available
 - ``make -j<ncores>``, when ``build_jobs`` is greater or equal to the
-  number of cores on the machine
+  number of cores available
 
 If you work on a shared login node or have a strict ulimit, it may be
 necessary to set the default to a lower value. By setting ``build_jobs``
 to 4, for example, commands like ``spack install`` will run ``make -j4``
-instead of hogging every core.
+instead of hogging every core. To build all software in serial,
+set ``build_jobs`` to 1.
 
-To build all software in serial, set ``build_jobs`` to 1.
+Note that specifying the number of jobs on the command line always takes
+priority, so that ``spack install -j<n>`` always runs `make -j<n>`, even
+when that exceeds the number of cores available.
 
 --------------------
 ``ccache``
@@ -235,11 +222,11 @@ and location. (See the *Configuration settings* section of ``man
 ccache`` to learn more about the default settings and how to change
 them). Please note that we currently disable ccache's ``hash_dir``
 feature to avoid an issue with the stage directory (see
-https://github.com/LLNL/spack/pull/3761#issuecomment-294352232).
+https://github.com/spack/spack/pull/3761#issuecomment-294352232).
 
-------------------
-``shared_linking``
-------------------
+-----------------------
+``shared_linking:type``
+-----------------------
 
 Control whether Spack embeds ``RPATH`` or ``RUNPATH`` attributes in ELF binaries
 so that they can find their dependencies. Has no effect on macOS.
@@ -257,3 +244,77 @@ and ld.so will ONLY search for dependencies in the ``RUNPATH`` of
 the loading object.
 
 DO NOT MIX the two options within the same install tree.
+
+-----------------------
+``shared_linking:bind``
+-----------------------
+
+This is an *experimental option* that controls whether Spack embeds absolute paths
+to needed shared libraries in ELF executables and shared libraries on Linux. Setting
+this option to ``true`` has two advantages:
+
+1. **Improved startup time**: when running an executable, the dynamic loader does not
+   have to perform a search for needed libraries, they are loaded directly.
+2. **Reliability**: libraries loaded at runtime are those that were linked to. This
+   minimizes the risk of accidentally picking up system libraries.
+
+In the current implementation, Spack sets the soname (shared object name) of
+libraries to their install path upon installation. This has two implications:
+
+1. binding does not apply to libraries installed *before* the option was enabled;
+2. toggling the option off does *not* prevent binding of libraries installed when
+   the option was still enabled.
+
+It is also worth noting that:
+
+1. Applications relying on ``dlopen(3)`` will continue to work, even when they open
+   a library by name. This is because ``RPATH``\s are retained in binaries also
+   when ``bind`` is enabled.
+2. ``LD_PRELOAD`` continues to work for the typical use case of overriding
+   symbols, such as preloading a library with a more efficient ``malloc``.
+   However, the preloaded library will be loaded *additionally to*, instead of
+   *in place of* another library with the same name --- this can be problematic
+   in very rare cases where libraries rely on a particular ``init`` or ``fini``
+   order.
+
+.. note::
+
+   In some cases packages provide *stub libraries* that only contain an interface
+   for linking, but lack an implementation for runtime. An example of this is
+   ``libcuda.so``, provided by the CUDA toolkit; it can be used to link against,
+   but the library needed at runtime is the one installed with the CUDA driver.
+   To avoid binding those libraries, they can be marked as non-bindable using
+   a property in the package:
+
+   .. code-block:: python
+
+      class Example(Package):
+         non_bindable_shared_objects = ["libinterface.so"]
+
+----------------------
+``install_status``
+----------------------
+
+When set to ``true``, Spack will show information about its current progress
+as well as the current and total package numbers. Progress is shown both
+in the terminal title and inline. Setting it to ``false`` will not show any
+progress information.
+
+To work properly, this requires your terminal to reset its title after
+Spack has finished its work, otherwise Spack's status information will
+remain in the terminal's title indefinitely. Most terminals should already
+be set up this way and clear Spack's status information.
+
+-----------
+``aliases``
+-----------
+
+Aliases can be used to define new Spack commands. They can be either shortcuts
+for longer commands or include specific arguments for convenience. For instance,
+if users want to use ``spack install``'s ``-v`` argument all the time, they can
+create a new alias called ``inst`` that will always call ``install -v``:
+
+.. code-block:: yaml
+
+   aliases:
+     inst: install -v

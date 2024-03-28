@@ -1,9 +1,9 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Pestpp(CMakePackage):
@@ -14,14 +14,15 @@ class Pestpp(CMakePackage):
     """
 
     homepage = "https://pesthomepage.org"
-    url      = "https://github.com/usgs/pestpp/archive/5.0.5.tar.gz"
+    url = "https://github.com/usgs/pestpp/archive/5.0.5.tar.gz"
 
-    version('5.0.5', sha256='b9695724758f69c1199371608b01419973bd1475b1788039a2fab6313f6ed67c')
+    version("5.2.3", sha256="6b86a7db863a034e730480046a4b7b4a8dc7cc798658a5404a961be379c05dc3")
+    version("5.0.5", sha256="b9695724758f69c1199371608b01419973bd1475b1788039a2fab6313f6ed67c")
 
-    variant('mpi', default=True, description='Enable MPI support')
+    variant("mpi", default=True, description="Enable MPI support")
 
-    depends_on('cmake@3.9:', type='build')
-    depends_on('mpi', type=('build', 'run'), when='+mpi')
+    depends_on("cmake@3.9:", type="build")
+    depends_on("mpi", type=("build", "run"), when="+mpi")
 
     def install(self, spec, prefix):
-        install_tree('bin', prefix.bin)
+        install_tree("bin", prefix.bin)

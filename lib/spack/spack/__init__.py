@@ -1,13 +1,22 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+#: PEP440 canonical <major>.<minor>.<micro>.<devN> string
+__version__ = "0.22.0.dev0"
+spack_version = __version__
 
-#: major, minor, patch version for Spack, in a tuple
-spack_version_info = (0, 16, 0)
 
-#: String containing Spack version joined with .'s
-spack_version = '.'.join(str(v) for v in spack_version_info)
+def __try_int(v):
+    try:
+        return int(v)
+    except ValueError:
+        return v
 
-__all__ = ['spack_version_info', 'spack_version']
+
+#: (major, minor, micro, dev release) tuple
+spack_version_info = tuple([__try_int(v) for v in __version__.split(".")])
+
+
+__all__ = ["spack_version_info", "spack_version"]

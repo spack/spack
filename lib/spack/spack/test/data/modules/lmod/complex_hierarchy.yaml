@@ -4,7 +4,7 @@ lmod:
   hash_length: 0
 
   core_compilers:
-    - 'clang@3.3'
+    - 'clang@12.0.0'
 
   core_specs:
     - 'mpich@3.0.1'
@@ -14,7 +14,10 @@ lmod:
     - blas
     - mpi
 
+  filter_hierarchy_specs:
+    'mpileaks@:2.1': [mpi]
+
   verbose: false
 
   all:
-    autoload: 'all'
+    autoload: all

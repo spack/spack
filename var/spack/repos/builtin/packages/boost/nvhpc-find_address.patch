@@ -1,0 +1,11 @@
+--- a/libs/atomic/src/find_address_sse2.cpp
++++ b/libs/atomic/src/find_address_sse2.cpp
+@@ -51,7 +51,7 @@
+     // a hypervisor blocks SSE4.1 detection), and there pand may have a better throughput. For example,
+     // Sandy Bridge can execute 3 pand instructions per cycle, but only one andps. For this reason
+     // we prefer to generate pand and not andps.
+-#if defined(__GNUC__)
++#if defined(__GNUC__) && !defined(__NVCOMPILER)
+     __asm__("pand %1, %0\n\t" : "+x" (mm1) : "x" (mm2));
+ #else
+     mm1 = _mm_and_si128(mm1, mm2);

@@ -1,0 +1,569 @@
+diff --git a/configure b/configure
+--- a/configure	2021-04-30 18:25:20.000000000 +0900
++++ b/configure	2021-10-14 16:05:13.000000000 +0900
+@@ -13019,6 +13019,30 @@
+ 
+   # Do some sanity checking of the arguments
+ 
++    cc_info_string=`${CC} --version 2>&1 | grep 'FCC'`
++  abi_result=$cc_info_string
++  if test "${abi_result}" = ""; then
++    abi_result="no"
++    cc_info_string=""
++    abi_cc_vendor="unknown"
++    abi_cc_version="unknown"
++  else
++
++$as_echo "#define CC_FUJITSU 1" >>confdefs.h
++
++    abi_cc_vendor="fujitsu"
++    abi_cc_version=`echo "${abi_result}" | sed -e 's/[^0-9]*\([0-9]\)/\1/' -e 's/ .*$//'`
++    if test "${abi_cc_version}" = "${abi_result}"; then
++      abi_cc_version="unknown"
++    fi
++    abi_result="yes"
++  fi
++
++  fi
++  if test "${abi_cc_vendor}" = "unknown"; then
++
++  # Do some sanity checking of the arguments
++
+     cc_info_string=`${CC} --version 2>/dev/null | head -n 1`
+   abi_result=`echo "${cc_info_string}" | grep '[Cc]lang'`
+   if test "${abi_result}" = ""; then
+@@ -13891,6 +13915,30 @@
+ 
+   # Do some sanity checking of the arguments
+ 
++    cxx_info_string=`${CXX} --version 2>&1|grep 'FCC'`
++  abi_result=$cxx_info_string
++  if test "${abi_result}" = ""; then
++    abi_result="no"
++    cxx_info_string=""
++    abi_cxx_vendor="unknown"
++    abi_cxx_version="unknown"
++  else
++
++$as_echo "#define CXX_FUJITSU 1" >>confdefs.h
++
++    abi_cxx_vendor="fujitsu"
++    abi_cxx_version=`echo "${abi_result}" | sed -e 's/[^0-9]*\([0-9]\)/\1/' -e 's/ .*$//'`
++    if test "${abi_cxx_version}" = "${abi_result}"; then
++      abi_cxx_version="unknown"
++    fi
++    abi_result="yes"
++  fi
++
++  fi
++  if test "${abi_cxx_vendor}" = "unknown"; then
++
++  # Do some sanity checking of the arguments
++
+     cxx_info_string=`${CXX} --version 2>/dev/null | head -n 1`
+   abi_result=`echo "${cxx_info_string}" | grep '[Cc]lang'`
+   if test "${abi_result}" = ""; then
+@@ -14697,6 +14745,32 @@
+   fi
+   echo "${fc_info_string}" >>"${tmp_fc_info_file}"
+ 
++  if test "${abi_fc_vendor}" = "unknown"; then
++
++  # Do some sanity checking of the arguments
++
++    fc_info_string=`${FC} --version 2>&1 | head -n 1 `
++  abi_result=`echo "${fc_info_string}" | grep 'FRT'`
++  if test "${abi_result}" = ""; then
++    abi_result="no"
++    fc_info_string=""
++    abi_fc_vendor="unknown"
++    abi_fc_version="unknown"
++  else
++
++$as_echo "#define FC_FUJITSU 1" >>confdefs.h
++
++    abi_fc_vendor="fujitsu"
++    abi_fc_version=`echo "${abi_result}" | sed -e 's/[^0-9]*\([0-9]\)/\1/' -e 's/ .*$//'`
++    if test "${abi_fc_version}" = "${abi_result}"; then
++      abi_fc_version="unknown"
++    fi
++    abi_result="yes"
++  fi
++
++  fi
++  echo "${fc_info_string}" >>"${tmp_fc_info_file}"
++
+  if test "${abi_fc_vendor}" = "unknown"; then
+ 
+   # Do some sanity checking of the arguments
+@@ -15049,6 +15123,7 @@
+ # gfortran 4.3 outputs lines setting COLLECT_GCC_OPTIONS, COMPILER_PATH,
+ # LIBRARY_PATH; skip all such settings.
+ ac_fc_v_output=`eval $ac_link 5>&1 2>&1 |
++  sed -r "s/(\-L)(\/[^ ]+)+(\/bin\/\.\.\/lib64\/nofjobj)//g" |
+   sed '/^Driving:/d; /^Configured with:/d;
+       '"/^[_$as_cr_Letters][_$as_cr_alnum]*=/d"`
+ $as_echo "$ac_fc_v_output" >&5
+@@ -15157,6 +15232,7 @@
+ # gfortran 4.3 outputs lines setting COLLECT_GCC_OPTIONS, COMPILER_PATH,
+ # LIBRARY_PATH; skip all such settings.
+ ac_fc_v_output=`eval $ac_link 5>&1 2>&1 |
++  sed -r "s/(\-L)(\/[^ ]+)+(\/bin\/\.\.\/lib64\/nofjobj)//g" |
+   sed '/^Driving:/d; /^Configured with:/d;
+       '"/^[_$as_cr_Letters][_$as_cr_alnum]*=/d"`
+ $as_echo "$ac_fc_v_output" >&5
+@@ -15982,6 +16058,13 @@
+       openmp='-qopenmp'
+       CFLAGS_PIC='-fPIC'
+       ;;
++    fujitsu)
++      abi_cc_vendor_hnt="fujitsu"
++      abi_cc_version_hnt="default"
++      abi_sys_spec_hnt="default"
++      CFLAGS_PIC='-fPIC'
++      CFLAGS_HINTS='-fopenmp'
++      ;;
+     llvm)
+       abi_cc_vendor_hnt="llvm"
+       abi_cc_version_hnt="default"
+@@ -16050,6 +16133,12 @@
+       CXX_LDFLAGS_HINTS='-static-libgcc -static-intel'
+       CXXFLAGS_PIC='-fPIC'
+       ;;
++    fujitsu)
++      abi_cxx_vendor_hnt="fujitsu"
++      abi_cxx_version_hnt="default"
++      abi_sys_spec_hnt="default"
++      CXXFLAGS_PIC='-fPIC'
++      ;;
+     llvm)
+       abi_cxx_vendor_hnt="llvm"
+       abi_cxx_version_hnt="default"
+@@ -16222,6 +16311,27 @@
+       FCFLAGS_HINTS='-Mextend'
+       FC_LDFLAGS_HINTS=''
+       ;;
++    fujitsu)
++      abi_fc_vendor_hnt="fujitsu"
++      abi_sys_spec_hnt="default"
++      FCFLAGS_FIXEDFORM='-Fixed -X7'
++      FCFLAGS_FREEFORM='-Free -X9'
++      FCFLAGS_MODDIR='-M ../mods'
++      FCFLAGS_PIC='-KPIC'
++      FC_LDFLAGS_HINTS=''
++      case "${abi_fc_version}" in
++         4.*)
++            abi_fc_version_hnt="4.x"
++            FCFLAGS_OPENMP='-Kopenmp'
++            FCFLAGS_HINTS=''
++            ;;
++         *)
++            abi_fc_version_hnt="default"
++            FCFLAGS_HINTS='-Am -Ee -Ep'
++            FCFLAGS_OPENMP='--openmp'
++            ;;
++      esac
++      ;;
+   esac   # [case: abi_fc_vendor, indent: 0, item: True]
+ 
+     { $as_echo "$as_me:${as_lineno-$LINENO}: result: ${abi_fc_vendor_hnt}/${abi_fc_version_hnt}/${abi_sys_spec_hnt}" >&5
+@@ -16878,6 +16988,25 @@
+           ;;
+       esac   # [case: abi_optim_flavor, indent: 2, item: True]
+       ;;
++    fujitsu)
++      abi_cc_vendor_opt="fujitsu"
++      abi_cc_version_opt="default"
++      abi_cpu_spec_opt="default"
++      case "${abi_optim_flavor}" in
++        safe)
++          abi_optim_flavor_opt="safe"
++          CFLAGS_OPTIM="-O2"
++          ;;
++        standard)
++          abi_optim_flavor_opt="standard"
++          CFLAGS_OPTIM="-O2"
++          ;;
++        aggressive)
++          abi_optim_flavor_opt="aggressive"
++          CFLAGS_OPTIM="-Kfast"
++          ;;
++      esac   # [case: abi_optim_flavor, indent: 2, item: True]
++      ;;
+     llvm)
+       abi_cc_vendor_opt="llvm"
+       abi_cc_version_opt="default"
+@@ -17031,6 +17160,25 @@
+           ;;
+       esac   # [case: abi_optim_flavor, indent: 2, item: True]
+       ;;
++    fujitsu)
++      abi_cxx_vendor_opt="fujitsu"
++      abi_cxx_version_opt="default"
++      abi_cpu_spec_opt="default"
++      case "${abi_optim_flavor}" in
++        safe)
++          abi_optim_flavor_opt="safe"
++          CXXFLAGS_OPTIM="-O2"
++          ;;
++        standard)
++          abi_optim_flavor_opt="standard"
++          CXXFLAGS_OPTIM="-O2"
++          ;;
++        aggressive)
++          abi_optim_flavor_opt="aggressive"
++          CXXFLAGS_OPTIM="-Kfast"
++          ;;
++      esac   # [case: abi_optim_flavor, indent: 2, item: True]
++      ;;
+     llvm)
+       abi_cxx_vendor_opt="llvm"
+       abi_cxx_version_opt="default"
+@@ -17302,6 +17450,46 @@
+           ;;
+       esac   # [case: abi_optim_flavor, indent: 2, item: True]
+       ;;
++    fujitsu)
++      abi_fc_vendor_opt="fujitsu"
++      abi_cpu_spec_opt="default"
++      case "${abi_fc_version}" in
++          4.*)
++	      abi_fc_version_opt="4.X"
++	      case "${abi_optim_flavor}" in
++		safe)
++		  abi_optim_flavor_opt="safe"
++		  FCFLAGS_OPTIM="-O2 -Koptmsg=2 -Nlst=t"
++		  ;;
++		standard)
++		  abi_optim_flavor_opt="standard"
++		  FCFLAGS_OPTIM="-O2 -Koptmsg=2 -Nlst=t"
++		  ;;
++		aggressive)
++		  abi_optim_flavor_opt="aggressive"
++		  FCFLAGS_OPTIM="-Kfast -Koptmsg=2 -Nlst=t"
++		  ;;
++	      esac
++	      ;;
++          *)
++	      abi_fc_version_opt="default"
++	      case "${abi_optim_flavor}" in
++		safe)
++		  abi_optim_flavor_opt="safe"
++		  FCFLAGS_OPTIM="-Of -X9 -Ps -Wv,-md"
++		  ;;
++		standard)
++		  abi_optim_flavor_opt="standard"
++		  FCFLAGS_OPTIM="-Of -X9 -Ps -Wv,-md"
++		  ;;
++		aggressive)
++		  abi_optim_flavor_opt="aggressive"
++		  FCFLAGS_OPTIM="-Of -X9 -Ps -Wv,-md"
++		  ;;
++	      esac
++	      ;;
++      esac
++      ;;
+   esac   # [case: abi_fc_vendor, indent: 0, item: True]
+ 
+     { $as_echo "$as_me:${as_lineno-$LINENO}: result: ${abi_fc_vendor_opt}/${abi_fc_version_opt}/${abi_cpu_spec_opt}" >&5
+index 3174381..ac7118f 100644
+diff --git a/shared/common/src/10_defs/defs_basis.F90 b/shared/common/src/10_defs/defs_basis.F90
+--- a/shared/common/src/10_defs/defs_basis.F90
++++ b/shared/common/src/10_defs/defs_basis.F90
+@@ -80,7 +80,7 @@ module defs_basis
+ ! do not trim input strings and use character(len=500) :: msg
+ 
+  integer, parameter :: fnlen=264     ! maximum length of file name variables
+- integer, parameter :: strlen=2000000 ! maximum length of input string
++ integer, parameter :: strlen=65000 ! maximum length of input string
+ 
+  ! The input file used to run the code, set by parsefile.
+  ! It will be added to the netcdf files in ntck_open_create
+diff --git a/shared/common/src/14_hidewrite/m_cppopts_dumper.F90 b/shared/common/src/14_hidewrite/m_cppopts_dumper.F90
+index 9bf19f4..79d94a9 100644
+--- a/shared/common/src/14_hidewrite/m_cppopts_dumper.F90
++++ b/shared/common/src/14_hidewrite/m_cppopts_dumper.F90
+@@ -89,6 +88,16 @@ subroutine dump_cpp_options(my_unit)
+     msg = ""
+   end if
+ #endif
++#if defined CC_FUJITSU
++  write(tmp,"(1x,a25)") "CC_FUJITSU"
++  msg = trim(msg)//trim(tmp)
++  msg_index = msg_index + 1
++  if ( mod(msg_index,3) == 0 ) then
++    msg = trim(msg)//ch10
++    write(my_unit,'(a)') msg
++    msg = ""
++  end if
++#endif
+ #if defined CC_GNU
+   write(tmp,"(1x,a25)") "CC_GNU"
+   msg = trim(msg)//trim(tmp)
+@@ -149,6 +158,16 @@ subroutine dump_cpp_options(my_unit)
+     msg = ""
+   end if
+ #endif
++#if defined CXX_FUJITSU
++  write(tmp,"(1x,a25)") "CXX_FUJITSU"
++  msg = trim(msg)//trim(tmp)
++  msg_index = msg_index + 1
++  if ( mod(msg_index,3) == 0 ) then
++    msg = trim(msg)//ch10
++    write(my_unit,'(a)') msg
++    msg = ""
++  end if
++#endif
+ #if defined CXX_GNU
+   write(tmp,"(1x,a25)") "CXX_GNU"
+   msg = trim(msg)//trim(tmp)
+@@ -259,6 +278,16 @@ subroutine dump_cpp_options(my_unit)
+     msg = ""
+   end if
+ #endif
++#if defined FC_FUJITSU
++  write(tmp,"(1x,a25)") "FC_FUJITSU"
++  msg = trim(msg)//trim(tmp)
++  msg_index = msg_index + 1
++  if ( mod(msg_index,3) == 0 ) then
++    msg = trim(msg)//ch10
++    write(my_unit,'(a)') msg
++    msg = ""
++  end if
++#endif
+ #if defined FC_GNU
+   write(tmp,"(1x,a25)") "FC_GNU"
+   msg = trim(msg)//trim(tmp)
+diff --git a/src/43_wvl_wrappers/m_wvl_denspot.F90 b/src/43_wvl_wrappers/m_wvl_denspot.F90
+index 18f8785..e06ac4a 100644
+--- a/src/43_wvl_wrappers/m_wvl_denspot.F90
++++ b/src/43_wvl_wrappers/m_wvl_denspot.F90
+@@ -88,7 +88,7 @@ subroutine wvl_denspot_set(den,gth_params,ixc,natom,nsppol,rprimd,wvl,&
+   real(dp), intent(in) :: rprimd(3, 3)
+   real(dp), intent(in) :: wvl_frmult,wvl_crmult
+   real(dp), intent(inout)  :: xred(3,natom)
+-  type(wvl_denspot_type), intent(out) :: den
++  type(wvl_denspot_type), intent(inout) :: den
+   type(wvl_internal_type),intent(in)  :: wvl
+   type(pseudopotential_gth_type),intent(in)::gth_params
+ 
+diff --git a/src/43_wvl_wrappers/m_wvl_wfs.F90 b/src/43_wvl_wrappers/m_wvl_wfs.F90
+index 4643fff..a1307da 100644
+--- a/src/43_wvl_wrappers/m_wvl_wfs.F90
++++ b/src/43_wvl_wrappers/m_wvl_wfs.F90
+@@ -96,7 +96,7 @@ subroutine wvl_wfs_set(alphadiis, spinmagntarget, kpt, me, natom, nband, nkpt, n
+  integer, intent(in) :: natom, nkpt, nsppol, nspinor, nband, nwfshist,me,nproc
+  real(dp), intent(in) :: spinmagntarget, wvl_crmult, wvl_frmult, alphadiis
+  type(pseudopotential_type),intent(in) :: psps
+- type(wvl_wf_type),intent(out) :: wfs
++ type(wvl_wf_type),intent(inout) :: wfs
+  type(wvl_internal_type), intent(in) :: wvl
+ !arrays
+  real(dp), intent(in) :: kpt(3,nkpt)
+diff --git a/src/52_fft_mpi_noabirule/m_fftw3.F90 b/src/52_fft_mpi_noabirule/m_fftw3.F90
+index bdeb0ce..8d4e0e3 100644
+--- a/src/52_fft_mpi_noabirule/m_fftw3.F90
++++ b/src/52_fft_mpi_noabirule/m_fftw3.F90
+@@ -4191,7 +4191,7 @@ subroutine fftw3_mpiback_wf(cplexwf,ndat,n1,n2,n3,nd1,nd2,nd3proc,&
+  integer,intent(in) :: cplexwf,ndat,n1,n2,n3,nd1,nd2,nd3proc
+  integer,intent(in) :: max1,max2,max3,m1,m2,m3,md1,md2proc,md3,comm_fft
+  real(dp),intent(in) :: zf(2,md1,md3,md2proc,ndat)
+- real(dp),intent(out) :: zr(2,nd1,nd2,nd3proc,ndat)
++ real(dp),intent(inout) :: zr(2,nd1,nd2,nd3proc,ndat)
+ 
+ #ifdef HAVE_FFTW3
+ !Local variables-------------------------------
+@@ -4548,7 +4548,7 @@ subroutine fftw3_mpiforw_wf(cplexwf,ndat,n1,n2,n3,nd1,nd2,nd3proc,&
+  integer,intent(in) :: max1,max2,max3,m1,m2,m3,md1,md2proc,md3,comm_fft
+ !arrays
+  real(dp),intent(inout) :: zr(2,nd1,nd2,nd3proc,ndat)
+- real(dp),intent(out) :: zf(2,md1,md3,md2proc,ndat)
++ real(dp),intent(inout) :: zf(2,md1,md3,md2proc,ndat)
+ 
+ !Local variables-------------------------------
+ !scalars
+@@ -4896,7 +4896,7 @@ subroutine fftw3_mpiback(cplex,ndat,n1,n2,n3,nd1,nd2,nd3,nd1eff,nd2proc,nd3proc,
+ ! real space input
+  integer,intent(in) :: cplex,ndat,n1,n2,n3,nd1,nd2,nd3,nd1eff,nd2proc,nd3proc,option,comm_fft
+  real(dp),intent(in) :: zf(2,nd1,nd3,nd2proc,ndat)
+- real(dp),intent(out) :: zr(2,nd1eff,nd2,nd3proc,ndat)
++ real(dp),intent(inout) :: zr(2,nd1eff,nd2,nd3proc,ndat)
+ 
+ !Local variables-------------------------------
+ !scalaras
+@@ -5197,7 +5197,7 @@ subroutine fftw3_mpiforw(cplex,ndat,n1,n2,n3,nd1,nd2,nd3,nd1eff,nd2proc,nd3proc,
+  integer,intent(in) :: ndat,n1,n2,n3,nd1,nd2,nd3,nd1eff,nd2proc,nd3proc,option
+ !arrays
+  real(dp),intent(in) :: zr(2,nd1eff,nd2,nd3proc,ndat)
+- real(dp),intent(out) :: zf(2,nd1,nd3,nd2proc,ndat)
++ real(dp),intent(inout) :: zf(2,nd1,nd3,nd2proc,ndat)
+ 
+ !Local variables-------------------------------
+ !scalars
+@@ -6379,7 +6379,7 @@ subroutine fftw3_mpiback_manywf(cplexwf,ndat,n1,n2,n3,nd1,nd2,nd3proc,&
+  integer,intent(in) :: cplexwf,ndat,n1,n2,n3,nd1,nd2,nd3proc
+  integer,intent(in) :: max1,max2,max3,m1,m2,m3,md1,md2proc,md3,comm_fft
+  real(dp),intent(in) :: zf(2,md1,md3,md2proc,ndat)
+- real(dp),intent(out) :: zr(2,nd1,nd2,nd3proc,ndat)
++ real(dp),intent(inout) :: zr(2,nd1,nd2,nd3proc,ndat)
+ 
+ #ifdef HAVE_FFTW3
+ !Local variables-------------------------------
+@@ -6733,7 +6733,7 @@ subroutine fftw3_mpiforw_manywf(cplexwf,ndat,n1,n2,n3,nd1,nd2,nd3proc,&
+  integer,intent(in) :: max1,max2,max3,m1,m2,m3,md1,md2proc,md3,comm_fft
+ !arrays
+  real(dp),intent(inout) :: zr(2,nd1,nd2,nd3proc,ndat)
+- real(dp),intent(out) :: zf(2,md1,md3,md2proc,ndat)
++ real(dp),intent(inout) :: zf(2,md1,md3,md2proc,ndat)
+ 
+ !Local variables-------------------------------
+ !scalars
+diff --git a/src/62_poisson/m_psolver.F90 b/src/62_poisson/m_psolver.F90
+index 1f4a20a..b4ba3cf 100644
+--- a/src/62_poisson/m_psolver.F90
++++ b/src/62_poisson/m_psolver.F90
+@@ -110,7 +110,7 @@ subroutine psolver_rhohxc(enhartr, enxc, envxc, icoulomb, ixc, &
+   integer,intent(in)            :: usexcnhat,usepaw,xclevel
+   real(dp),intent(in)           :: rprimd(3,3)
+   real(dp), intent(in)          :: xc_denpos
+-  real(dp), intent(out)         :: enxc, envxc, enhartr, vxcavg
++  real(dp), intent(inout)       :: enxc, envxc, enhartr, vxcavg
+   type(mpi_type), intent(in) :: mpi_enreg
+   type(wvl_internal_type), intent(in) :: wvl
+   type(wvl_denspot_type), intent(inout) :: wvl_den
+@@ -120,8 +120,8 @@ subroutine psolver_rhohxc(enhartr, enxc, envxc, icoulomb, ixc, &
+   real(dp),intent(in) :: xccc3d(n3xccc)
+   real(dp),intent(in) :: nhat(nfft,nspden*nhatdim)
+   real(dp),intent(inout) :: rhor(nfft, nspden)
+-  real(dp),intent(out)   :: vhartr(nfft)
+-  real(dp),intent(out)   :: vxc(nfft, nspden)
++  real(dp),intent(inout) :: vhartr(nfft)
++  real(dp),intent(inout) :: vxc(nfft, nspden)
+ 
+   !Local variables-------------------------------
+ #if defined HAVE_BIGDFT
+@@ -562,12 +562,12 @@ subroutine psolver_hartree(enhartr, hgrid, icoulomb, me, mpi_comm, nfft, ngfft,
+   !Arguments ------------------------------------
+   !scalars
+   integer, intent(in)           :: nfft, nspden, icoulomb, usewvl, mpi_comm, me, nproc, nscforder
+-  real(dp), intent(out)         :: enhartr
++  real(dp), intent(inout)       :: enhartr
+   !arrays
+   integer, intent(in)    :: ngfft(3)
+   real(dp),intent(in)    :: hgrid(3)
+   real(dp),intent(in)    :: rhor(nfft,nspden)
+-  real(dp),intent(out)   :: vhartr(nfft)
++  real(dp),intent(inout) :: vhartr(nfft)
+ 
+   !Local variables-------------------------------
+ #if defined HAVE_BIGDFT
+diff --git a/src/62_wvl_wfs/m_wvl_psi.F90 b/src/62_wvl_wfs/m_wvl_psi.F90
+index 7eb4b9c..bcb3b08 100644
+--- a/src/62_wvl_wfs/m_wvl_psi.F90
++++ b/src/62_wvl_wfs/m_wvl_psi.F90
+@@ -234,16 +234,16 @@ subroutine wvl_psitohpsi(alphamix,eexctX, eexcu, ehart, ekin_sum, epot_sum, epro
+ !scalars
+  integer, intent(in) :: me, nproc, itrp, iter, iscf, natom, nfft, nspden
+  real(dp), intent(in) :: alphamix
+- real(dp), intent(out) :: rpnrm
++ real(dp), intent(inout) :: rpnrm
+  logical, intent(in) :: scf
+  logical, intent(in) :: wvlbigdft
+  type(wvl_data), intent(inout) :: wvl
+  real(dp), intent(inout) :: eexctX,eSIC_DC,ehart,eexcu,vexcu, ekin_sum, epot_sum, eproj_sum
+- real(dp), dimension(6), intent(out) :: xcstr
++ real(dp), dimension(6), intent(inout) :: xcstr
+  real(dp), intent(inout) :: xcart(3, natom)
+ !arrays
+- real(dp),intent(out), optional :: vxc(nfft,nspden)
+- real(dp),intent(out), optional :: vtrial(nfft,nspden)
++ real(dp),intent(inout), optional :: vxc(nfft,nspden)
++ real(dp),intent(inout), optional :: vtrial(nfft,nspden)
+ 
+ !Local variables-------------------------------
+ !scalars
+@@ -454,7 +454,7 @@ subroutine wvl_tail_corrections(dtset, energies, etotal, mpi_enreg, psps, wvl, x
+ 
+ !Arguments ------------------------------------
+ !scalars
+- real(dp),intent(out) :: etotal
++ real(dp),intent(inout) :: etotal
+  type(MPI_type),intent(in) :: mpi_enreg
+  type(dataset_type),intent(in) :: dtset
+  type(energies_type),intent(inout) :: energies
+diff --git a/src/67_common/m_mklocl_realspace.F90 b/src/67_common/m_mklocl_realspace.F90
+index 423dd4d..ba43c6e 100644
+--- a/src/67_common/m_mklocl_realspace.F90
++++ b/src/67_common/m_mklocl_realspace.F90
+@@ -1622,7 +1622,7 @@ subroutine local_forces_wvl(iproc,natom,rxyz,hxh,hyh,hzh,n1,n2,n3,n3pi,i3s,n1i,n
+ !arrays
+  real(dp),intent(in) :: rxyz(3,natom)
+  real(dp),dimension(*),intent(in) :: rho,pot
+- real(dp),intent(out) :: floc(3,natom)
++ real(dp),intent(inout) :: floc(3,natom)
+ 
+ !Local variables -------------------------
+ #if defined HAVE_BIGDFT
+diff --git a/src/67_common/mkcore_wvl.F90 b/src/67_common/mkcore_wvl.F90
+index fc58fbc..6960e64 100644
+--- a/src/67_common/mkcore_wvl.F90
++++ b/src/67_common/mkcore_wvl.F90
+@@ -127,7 +127,7 @@ subroutine mkcore_wvl(atindx1,corstr,grxc,natom,nattyp,nfft,nspden,ntypat,n1xccc
+  integer,intent(in) :: atindx1(natom),nattyp(ntypat)
+  real(dp),intent(in) :: rprimd(3,3),xccc1d(n1xccc,6,ntypat),xcccrc(ntypat),xred(3,natom)
+  real(dp),intent(in),target :: vxc(nfft,nspden)
+- real(dp),intent(out) :: corstr(6),grxc(3,natom)
++ real(dp),intent(inout) :: corstr(6),grxc(3,natom)
+  real(dp),intent(inout) :: xccc3d(n3xccc)
+  type(pawrad_type),intent(in) :: pawrad(:)
+  type(pawtab_type),intent(in) :: pawtab(:)
+@@ -568,8 +568,8 @@ subroutine mkcore_wvl_old(atindx1,corstr,dyfrx2,geocode,grxc,h,natom,&
+  real(dp),intent(in) :: psppar(0:4,0:6,ntypat),rprimd(3,3)
+  real(dp),intent(in)::xred(3,natom)
+  real(dp),intent(in)::vxc(nfft,nspden)
+- real(dp),intent(out)::xccc3d(n3xccc)
+- real(dp),intent(out) :: corstr(6),dyfrx2(3,3,natom),grxc(3,natom)
++ real(dp),intent(inout)::xccc3d(n3xccc)
++ real(dp),intent(inout) :: corstr(6),dyfrx2(3,3,natom),grxc(3,natom)
+  type(pawtab_type),intent(in) :: pawtab(ntypat)
+  type(pawrad_type),intent(in) :: pawrad(ntypat)
+ 
+diff --git a/src/78_effpot/m_spmat_base.F90 b/src/78_effpot/m_spmat_base.F90
+index be4e8b9..0590a33 100644
+--- a/src/78_effpot/m_spmat_base.F90
++++ b/src/78_effpot/m_spmat_base.F90
+@@ -113,7 +113,7 @@ contains
+   subroutine base_mat2d_t_mv(self, x, b)
+     class(base_mat2d_t), intent(in) :: self
+     real(dp), intent(in) :: x(self%ncol)
+-    real(dp), intent(out) :: b(self%nrow)
++    real(dp), intent(inout) :: b(self%nrow)
+     ABI_UNUSED_A(x)
+     ABI_UNUSED_A(b)
+   end subroutine base_mat2d_t_mv
+diff --git a/src/78_effpot/m_spmat_csr.F90 b/src/78_effpot/m_spmat_csr.F90
+index 389abd3..d5904e7 100644
+--- a/src/78_effpot/m_spmat_csr.F90
++++ b/src/78_effpot/m_spmat_csr.F90
+@@ -201,7 +201,7 @@ contains
+   subroutine CSR_mat_t_mv(self, x, b)
+     class(CSR_mat_t), intent(in):: self
+     real(dp), intent(in) :: x(self%ncol)
+-    real(dp), intent(out) :: b(self%nrow)
++    real(dp), intent(inout) :: b(self%nrow)
+     integer::irow, i1, i2, i
+     b(:)=0.0d0
+     !$OMP PARALLEL DO private(i, i1, i2)
+diff --git a/src/78_effpot/m_spmat_dense.F90 b/src/78_effpot/m_spmat_dense.F90
+index c861e47..a53b46f 100644
+--- a/src/78_effpot/m_spmat_dense.F90
++++ b/src/78_effpot/m_spmat_dense.F90
+@@ -114,7 +114,7 @@ contains
+   subroutine dense_mat_t_mv(self, x, b)
+     class(dense_mat_t), intent(in) :: self
+     real(dp), intent(in) :: x(self%ncol)
+-    real(dp), intent(out) :: b(self%nrow)
++    real(dp), intent(inout) :: b(self%nrow)
+     call dgemv("N", self%nrow, self%ncol, 1.0d0,self%mat , 2,  x, 1, 0.0d0,  b, 1)
+   end subroutine dense_mat_t_mv
+ 

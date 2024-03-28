@@ -1,0 +1,66 @@
+--- CloverLeaf_ref/Makefile	2021-09-22 04:02:11.724415652 -0500
++++ CloverLeaf_ref/Makefile_aocc	2021-09-22 04:08:10.620607168 -0500
+@@ -31,6 +31,7 @@
+ # To select a OpenMP compiler option, do this in the shell before typing make:-
+ #
+ #  export COMPILER=INTEL       # to select the Intel flags
++#  export COMPILER=AOCC        # to select the AOCC flags
+ #  export COMPILER=SUN         # to select the Sun flags
+ #  export COMPILER=GNU         # to select the Gnu flags
+ #  export COMPILER=CRAY        # to select the Cray flags
+@@ -41,6 +42,7 @@
+ # or this works as well:-
+ #
+ # make COMPILER=INTEL
++# make COMPILER=AOCC
+ # make COMPILER=SUN
+ # make COMPILER=GNU
+ # make COMPILER=CRAY
+@@ -63,6 +65,7 @@
+ endif
+ 
+ OMP_INTEL     = -openmp
++OMP_AOCC      = -fopenmp
+ OMP_SUN       = -xopenmp=parallel -vpara
+ OMP_GNU       = -fopenmp
+ OMP_CRAY      =
+@@ -73,6 +76,7 @@
+ OMP=$(OMP_$(COMPILER))
+ 
+ FLAGS_INTEL     = -O3 -no-prec-div
++FLAGS_AOCC      = -O3 -funroll-loops
+ FLAGS_SUN       = -fast -xipo=2 -Xlistv4
+ FLAGS_GNU       = -O3 -march=native -funroll-loops
+ FLAGS_CRAY      = -em -ra -h acc_model=fast_addr:no_deep_copy:auto_async_all
+@@ -82,6 +86,7 @@
+ FLAGS_ARM      = -O3 -ffp-contract=fast -march=armv8.1-a -mcpu=native
+ 
+ CFLAGS_INTEL     = -O3 -no-prec-div -restrict -fno-alias
++CFLAGS_AOCC      = -O3 -funroll-loops
+ CFLAGS_SUN       = -fast -xipo=2
+ CFLAGS_GNU       = -O3 -march=native -funroll-loops
+ CFLAGS_CRAY      = -em -h list=a
+@@ -93,6 +98,7 @@
+ 
+ ifdef DEBUG
+   FLAGS_INTEL     = -O0 -g -debug all -check all -traceback -check noarg_temp_created
++  FLAGS_AOCC      = -O0 -g -O -Wall -Wextra -fsanitize=address
+   FLAGS_SUN       = -g -xopenmp=noopt -stackvar -u -fpover=yes -C -ftrap=common
+   FLAGS_GNU       = -O0 -g -O -Wall -Wextra -fbounds-check
+   FLAGS_CRAY      = -O0 -g -em -eD
+@@ -103,6 +109,7 @@
+   FLAGS_          = -O0 -g
+ 
+   CFLAGS_INTEL    = -O0 -g -debug all -traceback
++  CFLAGS_AOCC     = -O0 -g -Wall -Wextra -fsanitize=address
+   CFLAGS_SUN      = -g -O0 -xopenmp=noopt -stackvar -u -fpover=yes -C -ftrap=common
+   CFLAGS_GNU       = -O0 -g -O -Wall -Wextra -fbounds-check
+   CFLAGS_CRAY     = -O0 -g -em -eD
+@@ -115,6 +122,7 @@
+ 
+ ifdef IEEE
+   I3E_INTEL     = -fp-model strict -fp-model source -prec-div -prec-sqrt
++  I3E_AOCC      = -ffast-math
+   I3E_SUN       = -fsimple=0 -fns=no
+   I3E_GNU       = -ffloat-store
+   I3E_CRAY      = -hflex_mp=intolerant

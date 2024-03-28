@@ -1,15 +1,15 @@
-.. Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 .. _repositories:
 
-=============================
-Package Repositories
-=============================
+=================================
+Package Repositories (repos.yaml)
+=================================
 
-Spack comes with over 1,000 built-in package recipes in
+Spack comes with thousands of built-in package recipes in
 ``var/spack/repos/builtin/``.  This is a **package repository** -- a
 directory that Spack searches when it needs to find a package by name.
 You may need to maintain packages for restricted, proprietary or
@@ -17,7 +17,7 @@ experimental software separately from the built-in repository. Spack
 allows you to configure local repositories using either the
 ``repos.yaml`` or the ``spack repo`` command.
 
-A package repository a directory structured like this::
+A package repository is a directory structured like this::
 
   repo/
       repo.yaml
@@ -32,10 +32,15 @@ A package repository a directory structured like this::
           ...
 
 The top-level ``repo.yaml`` file contains configuration metadata for the
-repository, and the ``packages`` directory contains subdirectories for
-each package in the repository.  Each package directory contains a
-``package.py`` file and any patches or other files needed to build the
+repository. The packages subdirectory, typically ``packages``, contains
+subdirectories for each package in the repository.  Each package directory
+contains a ``package.py`` file and any patches or other files needed to build the
 package.
+
+The ``repo.yaml`` file may also contain a ``subdirectory`` key,
+which can modify the name of the subdirectory used for packages. As seen above,
+the default value is ``packages``. An empty string (``subdirectory: ''``) requires
+a flattened repo structure in which the package names are top-level subdirectories.
 
 Package repositories allow you to:
 
@@ -335,7 +340,7 @@ merged YAML from all configuration files, use ``spack config get repos``:
    - ~/myrepo
    - $spack/var/spack/repos/builtin
 
-mNote that, unlike ``spack repo list``, this does not include the
+Note that, unlike ``spack repo list``, this does not include the
 namespace, which is read from each repo's ``repo.yaml``.
 
 ^^^^^^^^^^^^^^^^^^^^^
@@ -372,6 +377,24 @@ You can supply a custom namespace with a second argument, e.g.:
   $ cat myrepo/repo.yaml
   repo:
     namespace: 'llnl.comp'
+
+You can also create repositories with custom structure with the ``-d/--subdirectory``
+argument, e.g.:
+
+.. code-block:: console
+
+  $ spack repo create -d applications myrepo apps
+  ==> Created repo with namespace 'apps'.
+  ==> To register it with Spack, run this command:
+    spack repo add ~/myrepo
+
+  $ ls myrepo
+  applications/  repo.yaml
+
+  $ cat myrepo/repo.yaml
+  repo:
+    namespace: apps
+    subdirectory: applications
 
 ^^^^^^^^^^^^^^^^^^
 ``spack repo add``

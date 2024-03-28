@@ -1,18 +1,20 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack import *
+from spack.package import *
 
 
 class Libvdwxc(AutotoolsPackage):
     """Portable C library of density functionals with van der Waals
-       interactions for density functional theory"""
+    interactions for density functional theory"""
 
     homepage = "https://libvdwxc.gitlab.io/libvdwxc/"
     url = "https://launchpad.net/libvdwxc/stable/0.4.0/+download/libvdwxc-0.4.0.tar.gz"
+
+    license("GPL-3.0-or-later")
 
     version("0.4.0", sha256="3524feb5bb2be86b4688f71653502146b181e66f3f75b8bdaf23dd1ae4a56b33")
 
@@ -31,9 +33,7 @@ class Libvdwxc(AutotoolsPackage):
         spec = self.spec
 
         args = [
-            "--{0}-pfft".format(
-                "with" if self.spec.satisfies("+pfft") else "without"
-            ),
+            "--{0}-pfft".format("with" if self.spec.satisfies("+pfft") else "without"),
             "MPICC=",  # make sure both variables are always unset
             "MPIFC=",  # otherwise the configure scripts complains
         ]

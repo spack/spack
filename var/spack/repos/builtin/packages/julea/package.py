@@ -1,9 +1,9 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Julea(MesonPackage):
@@ -14,31 +14,33 @@ class Julea(MesonPackage):
     already included."""
 
     homepage = "https://github.com/wr-hamburg/julea"
-    git      = "https://github.com/wr-hamburg/julea.git"
+    git = "https://github.com/wr-hamburg/julea.git"
 
-    tags        = ['HPC', 'I/O', 'storage']
-    maintainers = ['michaelkuhn']
+    tags = ["HPC", "I/O", "storage"]
+    maintainers("michaelkuhn")
 
-    version('master', branch='master')
+    license("LGPL-3.0-or-later")
 
-    variant('hdf5', default=True, description='Enable HDF5 support')
-    variant('leveldb', default=True, description='Enable LevelDB support')
-    variant('lmdb', default=True, description='Enable LMDB support')
-    variant('mariadb', default=True, description='Enable MariaDB support')
-    variant('mongodb', default=True, description='Enable MongoDB support')
-    variant('rocksdb', default=True, description='Enable RocksDB support')
-    variant('sqlite', default=True, description='Enable SQLite support')
+    version("master", branch="master")
 
-    depends_on('pkgconfig', type='build')
+    variant("hdf5", default=True, description="Enable HDF5 support")
+    variant("leveldb", default=True, description="Enable LevelDB support")
+    variant("lmdb", default=True, description="Enable LMDB support")
+    variant("mariadb", default=True, description="Enable MariaDB support")
+    variant("mongodb", default=True, description="Enable MongoDB support")
+    variant("rocksdb", default=True, description="Enable RocksDB support")
+    variant("sqlite", default=True, description="Enable SQLite support")
 
-    depends_on('glib')
-    depends_on('libbson')
+    depends_on("pkgconfig", type="build")
+
+    depends_on("glib")
+    depends_on("libbson")
     # depends_on('libfabric')
 
-    depends_on('hdf5@1.12.0:', when='+hdf5')
-    depends_on('leveldb', when='+leveldb')
-    depends_on('lmdb', when='+lmdb')
-    depends_on('mariadb-c-client', when='+mariadb')
-    depends_on('mongo-c-driver', when='+mongodb')
-    depends_on('rocksdb', when='+rocksdb')
-    depends_on('sqlite', when='+sqlite')
+    depends_on("hdf5@1.12.0:", when="+hdf5")
+    depends_on("leveldb", when="+leveldb")
+    depends_on("lmdb", when="+lmdb")
+    depends_on("mariadb-c-client", when="+mariadb")
+    depends_on("mongo-c-driver", when="+mongodb")
+    depends_on("rocksdb", when="+rocksdb")
+    depends_on("sqlite", when="+sqlite")

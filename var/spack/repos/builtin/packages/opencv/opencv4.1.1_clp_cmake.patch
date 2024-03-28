@@ -1,0 +1,14 @@
+diff -ru a/cmake/OpenCVFindLibsPerf.cmake b/cmake/OpenCVFindLibsPerf.cmake
+--- a/cmake/OpenCVFindLibsPerf.cmake	2021-10-09 10:48:26.000000000 -0500
++++ b/cmake/OpenCVFindLibsPerf.cmake	2021-11-19 19:10:47.895667720 -0600
+@@ -128,9 +128,7 @@
+     ocv_check_modules(CLP clp)
+     if(CLP_FOUND)
+       set(HAVE_CLP TRUE)
+-      if(NOT ${CLP_INCLUDE_DIRS} STREQUAL "")
+-        ocv_include_directories(${CLP_INCLUDE_DIRS})
+-      endif()
++      ocv_include_directories(${CLP_INCLUDE_DIRS})
+       list(APPEND OPENCV_LINKER_LIBS ${CLP_LIBRARIES})
+     endif()
+   endif()

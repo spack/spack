@@ -1,10 +1,13 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import os
+import sys
+
+from spack.build_environment import dso_suffix, stat_suffix
+from spack.package import *
 
 
 class Esmf(MakefilePackage):
@@ -12,72 +15,165 @@ class Esmf(MakefilePackage):
     software infrastructure for building and coupling weather, climate, and
     related Earth science applications. The ESMF defines an architecture for
     composing complex, coupled modeling systems and includes data structures
-    and utilities for developing individual models."""
+    and utilities for developing individual models.
+    The National Unified Operational Prediction Capability (NUOPC) Layer
+    defines a common model architecture to support interoperable ESMF components.
+    The NUOPC Layer is included with the ESMF package."""
 
-    homepage = "https://www.earthsystemcog.org/projects/esmf/"
-    url      = "http://www.earthsystemmodeling.org/esmf_releases/public/ESMF_7_1_0r/esmf_7_1_0r_src.tar.gz"
+    homepage = "https://earthsystemmodeling.org/"
+    url = "https://github.com/esmf-org/esmf/archive/v8.4.1.tar.gz"
+    git = "https://github.com/esmf-org/esmf.git"
 
-    version('7.1.0r', sha256='ae9a5edb8d40ae97a35cbd4bd00b77061f995c77c43d36334dbb95c18b00a889')
+    maintainers("climbfuji", "jedwards4b", "AlexanderRichert-NOAA", "theurich", "uturuncoglu")
 
-    variant('mpi',     default=True,  description='Build with MPI support')
-    variant('lapack',  default=True,  description='Build with LAPACK support')
-    variant('netcdf',  default=True,  description='Build with NetCDF support')
-    variant('pnetcdf', default=True,  description='Build with pNetCDF support')
-    variant('xerces',  default=True,  description='Build with Xerces support')
-    variant('pio',     default=True,  description='Enable ParallelIO support')
-    variant('debug',   default=False, description='Make a debuggable version of the library')
+    # Develop is a special name for spack and is always considered the newest version
+    version("develop", branch="develop")
+    # generate chksum with 'spack checksum esmf@x.y.z'
+    version("8.6.0", sha256="ed057eaddb158a3cce2afc0712b49353b7038b45b29aee86180f381457c0ebe7")
+    version("8.5.0", sha256="acd0b2641587007cc3ca318427f47b9cae5bfd2da8d2a16ea778f637107c29c4")
+    version("8.4.2", sha256="969304efa518c7859567fa6e65efd960df2b4f6d72dbf2c3f29e39e4ab5ae594")
+    version("8.4.1", sha256="1b54cee91aacaa9df400bd284614cbb0257e175f6f3ec9977a2d991ed8aa1af6")
+    version(
+        "8.4.0",
+        sha256="28531810bf1ae78646cda6494a53d455d194400f19dccd13d6361871de42ed0f",
+        deprecated=True,
+    )
+    version("8.3.1", sha256="6c39261e55dcdf9781cdfa344417b9606f7f961889d5ec626150f992f04f146d")
+    version(
+        "8.3.0",
+        sha256="0ff43ede83d1ac6beabd3d5e2a646f7574174b28a48d1b9f2c318a054ba268fd",
+        deprecated=True,
+    )
+    version("8.3.0b09", commit="5b7e546c4ba350bff9c9ebd00e5fa1c6315d17da", deprecated=True)
+    version("8.2.0", sha256="27866c31fdb63c58e78211de970470ca02d274f5d4d6d97e94284d63b1c1d9e4")
+    version("8.1.1", sha256="629690c7a488e84ac7252470349458d7aaa98b54c260f8b3911a2e2f3e713dd0")
+    version(
+        "8.1.0",
+        sha256="226219ec61cace89f4678eece93188155d7cbb50a13ec4c9c93174ef3d58d7c0",
+        deprecated=True,
+    )
+    version("8.0.1", sha256="13ce2ca0ae622548c00f7bb18317fb100235ca8b7ddbfac7e201a339e8eb05a3")
+    version(
+        "8.0.0",
+        sha256="4b7904fdc935710071c4aafb9370834d40c2ee06365a8b5845317be8f71bf51f",
+        deprecated=True,
+    )
+    version(
+        "7.1.0r",
+        sha256="e08f21544083dcbe162b472852e321f8df14f4f711f35508403d32df438367a7",
+        deprecated=True,
+    )
 
-    # Required dependencies
-    depends_on('zlib')
-    depends_on('libxml2')
+    variant("mpi", default=True, description="Build with MPI support")
+    variant("external-lapack", default=False, description="Build with external LAPACK library")
+    variant("netcdf", default=True, description="Build with NetCDF support")
+    variant("pnetcdf", default=False, description="Build with pNetCDF support")
+    variant("xerces", default=False, description="Build with Xerces support")
+    variant(
+        "external-parallelio",
+        default=True,
+        description="Build with external parallelio library",
+        when="@8.3.1:",
+    )
+    variant("debug", default=False, description="Build with debugging symbols and options enabled")
+    variant("shared", default=True, description="Build shared library")
+
+    # 'esmf_os', 'esmf_comm', 'esmf_pio' variants allow override values for their corresponding
+    # build environment variables. Documentation, including valid values, can be found at
+    # https://earthsystemmodeling.org/docs/release/latest/ESMF_usrdoc/node10.html#SECTION000105000000000000000
+    variant("esmf_os", default="auto", description="Override for ESMF_OS variable")
+    variant("esmf_comm", default="auto", description="Override for ESMF_COMM variable")
+    variant("esmf_pio", default="auto", description="Override for ESMF_PIO variable")
+    # Set the 'snapshot' variant any time a beta snapshot is used in order to obtain
+    # correct module name behavior for MAPL.
+    variant(
+        "snapshot",
+        default="none",
+        description="Named variant for snapshots versions (e.g., 'b09')",
+    )
 
     # Optional dependencies
-    depends_on('mpi', when='+mpi')
-    depends_on('lapack@3:', when='+lapack')
-    depends_on('netcdf-c@3.6:', when='+netcdf')
-    depends_on('netcdf-fortran@3.6:', when='+netcdf')
-    depends_on('parallel-netcdf@1.2.0:', when='+pnetcdf')
-    depends_on('xerces-c@3.1.0:', when='+xerces')
+    depends_on("mpi", when="+mpi")
+    depends_on("lapack@3:", when="+external-lapack")
+    depends_on("netcdf-c@3.6:", when="+netcdf")
+    depends_on("netcdf-fortran@3.6:", when="+netcdf")
+    depends_on("parallel-netcdf@1.2.0:", when="+pnetcdf")
+    depends_on("xerces-c@3.1.0:", when="+xerces")
+    depends_on("parallelio@2.5.7: +mpi", when="@8.3+external-parallelio+mpi")
+    depends_on("parallelio@2.5.7: ~mpi", when="@8.3+external-parallelio~mpi")
+    depends_on("parallelio@2.5.9: +mpi", when="@8.4+external-parallelio+mpi")
+    depends_on("parallelio@2.5.9: ~mpi", when="@8.4+external-parallelio~mpi")
+    depends_on("parallelio@2.5.10: +mpi", when="@8.5:+external-parallelio+mpi")
+    depends_on("parallelio@2.5.10: ~mpi", when="@8.5:+external-parallelio~mpi")
+    depends_on("cmake@3.5.2:", type="build", when="~external-parallelio")
 
     # Testing dependencies
-    depends_on('perl', type='test')
+    depends_on("perl", type="test")
+
+    conflicts("%aocc", when="@:8.3")
 
     # Make esmf build with newer intel versions
-    patch('intel.patch', when='@:7.0.99 %intel@17:')
+    patch("intel.patch", when="@:7.0 %intel@17:")
     # Make esmf build with newer gcc versions
     # https://sourceforge.net/p/esmf/esmf/ci/3706bf758012daebadef83d6575c477aeff9c89b/
-    patch('gcc.patch', when='@:7.0.99 %gcc@6:')
+    patch("gcc.patch", when="@:7.0 %gcc@6:")
 
     # Fix undefined reference errors with mvapich2
     # https://sourceforge.net/p/esmf/esmf/ci/34de0ccf556ba75d35c9687dae5d9f666a1b2a18/
-    patch('mvapich2.patch', when='@:7.0.99')
+    patch("mvapich2.patch", when="@:7.0")
+
+    # explicit type cast of variables from long to int
+    patch("longtoint.patch", when="@:8.3.2 %cce@14:")
+    patch("longtoint.patch", when="@:8.3.2 %oneapi@2022:")
 
     # Allow different directories for creation and
     # installation of dynamic libraries on OSX:
-    patch('darwin_dylib_install_name.patch', when='platform=darwin @:7.0.99')
+    patch("darwin_dylib_install_name.patch", when="platform=darwin @:7.0")
 
     # Missing include file for newer gcc compilers
     # https://trac.macports.org/ticket/57493
-    patch('cstddef.patch', when='@7.1.0r %gcc@8:')
+    patch("cstddef.patch", when="@7.1.0r %gcc@8:")
+
+    # Skip info print of ESMF_CPP due to permission denied errors
+    # https://github.com/spack/spack/issues/35957
+    patch("esmf_cpp_info.patch")
+
+    # This is strictly required on Cray systems that use
+    # the Cray compiler wrappers, where we need to swap
+    # out the spack compiler wrappers in esmf.mk with the
+    # Cray wrappers. It doesn't hurt/have any effect on
+    # other systems where the logic in setup_build_environment
+    # below sets the compilers to the MPI wrappers.
+    filter_compiler_wrappers("esmf.mk", relative_root="lib")
 
     # Make script from mvapich2.patch executable
-    @when('@:7.0.99')
-    @run_before('build')
+    @when("@:7.0")
+    @run_before("build")
     def chmod_scripts(self):
-        chmod = which('chmod')
-        chmod('+x', 'scripts/libs.mvapich2f90')
+        chmod = which("chmod")
+        chmod("+x", "scripts/libs.mvapich2f90")
 
     def url_for_version(self, version):
-        return "http://www.earthsystemmodeling.org/esmf_releases/public/ESMF_{0}/esmf_{0}_src.tar.gz".format(version.underscored)
+        if version < Version("8.0.0"):
+            # Older ESMF releases had a custom tag format ESMF_x_y_z
+            return "https://github.com/esmf-org/esmf/archive/ESMF_{0}.tar.gz".format(
+                version.underscored
+            )
+        else:
+            # Starting with ESMF 8.0.0 releases are in the form vx.y.z
+            return "https://github.com/esmf-org/esmf/archive/refs/tags/v{0}.tar.gz".format(
+                version.dotted
+            )
 
-    def edit(self, spec, prefix):
+    def setup_build_environment(self, env):
+        spec = self.spec
         # Installation instructions can be found at:
         # http://www.earthsystemmodeling.org/esmf_releases/last_built/ESMF_usrdoc/node9.html
 
         # Unset any environment variables that may influence the installation.
         for var in os.environ:
-            if var.startswith('ESMF_'):
-                os.environ.pop(var)
+            if var.startswith("ESMF_"):
+                env.unset(var)
 
         ######################################
         # Build and Installation Directories #
@@ -85,30 +181,26 @@ class Esmf(MakefilePackage):
 
         # The environment variable ESMF_DIR must be set to the full pathname
         # of the top level ESMF directory before building the framework.
-        os.environ['ESMF_DIR'] = os.getcwd()
+        env.set("ESMF_DIR", self.stage.source_path)
 
         # This variable specifies the prefix of the installation path used
         # with the install target.
-        os.environ['ESMF_INSTALL_PREFIX'] = prefix
+        env.set("ESMF_INSTALL_PREFIX", prefix)
 
         # Installation subdirectories default to:
         # bin/binO/Linux.gfortran.64.default.default
-        os.environ['ESMF_INSTALL_BINDIR'] = 'bin'
-        os.environ['ESMF_INSTALL_LIBDIR'] = 'lib'
-        os.environ['ESMF_INSTALL_MODDIR'] = 'include'
+        env.set("ESMF_INSTALL_BINDIR", "bin")
+        env.set("ESMF_INSTALL_LIBDIR", "lib")
+        env.set("ESMF_INSTALL_MODDIR", "include")
 
         # Allow compiler flags to carry through from compiler spec
-        os.environ['ESMF_CXXCOMPILEOPTS'] = \
-            ' '.join(spec.compiler_flags['cxxflags'])
-        os.environ['ESMF_F90COMPILEOPTS'] = \
-            ' '.join(spec.compiler_flags['fflags'])
+        env.set("ESMF_CXXCOMPILEOPTS", " ".join(spec.compiler_flags["cxxflags"]))
+        env.set("ESMF_F90COMPILEOPTS", " ".join(spec.compiler_flags["fflags"]))
         # ESMF will simply not build with Intel using backing GCC 8, in that
         # case you need to point to something older, below is commented but is
         # an example
-        # os.environ['ESMF_CXXCOMPILEOPTS'] = \
-        #     '-O2 -std=c++11 -gcc-name=/usr/bin/gcc'
-        # os.environ['ESMF_F90COMPILEOPTS'] = \
-        #     '-O2 -gcc-name=/usr/bin/gcc'
+        # env.set("ESMF_CXXCOMPILEOPTS", "-O2 -std=c++11 -gcc-name=/usr/bin/gcc")
+        # env.set("ESMF_F90COMPILEOPTS", "-O2 -gcc-name=/usr/bin/gcc")
 
         ############
         # Compiler #
@@ -116,38 +208,77 @@ class Esmf(MakefilePackage):
 
         # ESMF_COMPILER must be set to select which Fortran and
         # C++ compilers are being used to build the ESMF library.
-        if self.compiler.name == 'gcc':
-            os.environ['ESMF_COMPILER'] = 'gfortran'
-        elif self.compiler.name == 'intel':
-            os.environ['ESMF_COMPILER'] = 'intel'
-        elif self.compiler.name == 'clang':
-            os.environ['ESMF_COMPILER'] = 'gfortranclang'
-        elif self.compiler.name == 'nag':
-            os.environ['ESMF_COMPILER'] = 'nag'
-        elif self.compiler.name == 'pgi':
-            os.environ['ESMF_COMPILER'] = 'pgi'
+
+        if self.compiler.name == "gcc":
+            env.set("ESMF_COMPILER", "gfortran")
+            with self.compiler.compiler_environment():
+                gfortran_major_version = int(
+                    spack.compiler.get_compiler_version_output(
+                        self.compiler.fc, "-dumpversion"
+                    ).split(".")[0]
+                )
+        elif self.compiler.name == "intel" or self.compiler.name == "oneapi":
+            env.set("ESMF_COMPILER", "intel")
+        elif self.compiler.name in ["clang", "apple-clang"]:
+            env.set("ESMF_COMPILER", "gfortranclang")
+            with self.compiler.compiler_environment():
+                gfortran_major_version = int(
+                    spack.compiler.get_compiler_version_output(
+                        self.compiler.fc, "-dumpversion"
+                    ).split(".")[0]
+                )
+        elif self.compiler.name == "nag":
+            env.set("ESMF_COMPILER", "nag")
+        elif self.compiler.name == "pgi":
+            env.set("ESMF_COMPILER", "pgi")
+        elif self.compiler.name == "nvhpc":
+            env.set("ESMF_COMPILER", "nvhpc")
+        elif self.compiler.name == "cce":
+            env.set("ESMF_COMPILER", "cce")
+        elif self.compiler.name == "aocc":
+            env.set("ESMF_COMPILER", "aocc")
         else:
-            msg  = "The compiler you are building with, "
-            msg += "'{0}', is not supported by ESMF."
+            msg = "The compiler you are building with, "
+            msg += '"{0}", is not supported by ESMF.'
             raise InstallError(msg.format(self.compiler.name))
 
-        if '+mpi' in spec:
-            os.environ['ESMF_CXX'] = spec['mpi'].mpicxx
-            os.environ['ESMF_F90'] = spec['mpi'].mpifc
+        if "+mpi" in spec:
+            env.set("ESMF_CXX", spec["mpi"].mpicxx)
+            env.set("ESMF_C", spec["mpi"].mpicc)
+            env.set("ESMF_F90", spec["mpi"].mpifc)
         else:
-            os.environ['ESMF_CXX'] = os.environ['CXX']
-            os.environ['ESMF_F90'] = os.environ['FC']
+            env.set("ESMF_CXX", spack_cxx)
+            env.set("ESMF_C", spack_cc)
+            env.set("ESMF_F90", spack_fc)
 
         # This environment variable controls the build option.
-        if '+debug' in spec:
+        if "+debug" in spec:
             # Build a debuggable version of the library.
-            os.environ['ESMF_BOPT'] = 'g'
+            env.set("ESMF_BOPT", "g")
         else:
             # Build an optimized version of the library.
-            os.environ['ESMF_BOPT'] = 'O'
+            env.set("ESMF_BOPT", "O")
 
-        if self.spec.satisfies('%gcc@10:'):
-            os.environ['ESMF_F90COMPILEOPTS'] = '-fallow-argument-mismatch'
+        if (
+            self.compiler.name in ["gcc", "clang", "apple-clang"]
+            and gfortran_major_version >= 10
+            and (self.spec.satisfies("@:8.2.99") or self.spec.satisfies("@8.3.0b09"))
+        ):
+            env.set("ESMF_F90COMPILEOPTS", "-fallow-argument-mismatch")
+
+        #######
+        # OS  #
+        #######
+
+        # ESMF_OS must be set for Cray systems
+        # But spack no longer gives arch == cray
+        if self.compiler.name == "cce" or "^cray-mpich" in self.spec:
+            env.set("ESMF_OS", "Unicos")
+
+        # Allow override of ESMF_OS:
+        os_variant = spec.variants["esmf_os"].value
+        if os_variant != "auto":
+            env.set("ESMF_OS", os_variant)
 
         #######
         # MPI #
@@ -155,115 +286,145 @@ class Esmf(MakefilePackage):
 
         # ESMF_COMM must be set to indicate which MPI implementation
         # is used to build the ESMF library.
-        if '+mpi' in spec:
-            if 'platform=cray' in self.spec:
-                os.environ['ESMF_COMM'] = 'mpi'
-            elif '^mvapich2' in spec:
-                os.environ['ESMF_COMM'] = 'mvapich2'
-            elif '^mpich' in spec:
-                # esmf@7.0.1 does not include configs for mpich3,
-                # so we start with the configs for mpich2:
-                os.environ['ESMF_COMM'] = 'mpich2'
-                # The mpich 3 series split apart the Fortran and C bindings,
-                # so we link the Fortran libraries when building C programs:
-                os.environ['ESMF_CXXLINKLIBS'] = '-lmpifort'
-            elif '^openmpi' in spec:
-                os.environ['ESMF_COMM'] = 'openmpi'
-            elif '^intel-parallel-studio+mpi' in spec or '^intel-mpi' in spec:
-                os.environ['ESMF_COMM'] = 'intelmpi'
+        if "+mpi" in spec:
+            if "^cray-mpich" in self.spec:
+                env.set("ESMF_COMM", "mpi")
+                # https://github.com/jcsda/spack-stack/issues/517
+                if self.spec.satisfies("@:8.4.1"):
+                    env.set("ESMF_CXXLINKLIBS", "-lmpifort -lmpi")
+            elif "^mvapich2" in spec:
+                env.set("ESMF_COMM", "mvapich2")
+            elif "^mpich" in spec:
+                if self.spec.satisfies("@:8.2.99"):
+                    env.set("ESMF_COMM", "mpich3")
+                else:
+                    env.set("ESMF_COMM", "mpich")
+            elif "^openmpi" in spec or "^hpcx-mpi" in spec:
+                env.set("ESMF_COMM", "openmpi")
+            elif (
+                "^intel-parallel-studio+mpi" in spec
+                or "^intel-mpi" in spec
+                or "^intel-oneapi-mpi" in spec
+            ):
+                env.set("ESMF_COMM", "intelmpi")
+            elif "^mpt" in spec:
+                # MPT is the HPE (SGI) variant of mpich
+                env.set("ESMF_COMM", "mpt")
         else:
             # Force use of the single-processor MPI-bypass library.
-            os.environ['ESMF_COMM'] = 'mpiuni'
+            env.set("ESMF_COMM", "mpiuni")
+
+        # Allow override of ESMF_COMM:
+        comm_variant = spec.variants["esmf_comm"].value
+        if comm_variant != "auto":
+            env.set("ESMF_COMM", comm_variant)
 
         ##########
         # LAPACK #
         ##########
 
-        if '+lapack' in spec:
+        if "+external-lapack" in spec:
             # A system-dependent external LAPACK/BLAS installation is used
             # to satisfy the external dependencies of the LAPACK-dependent
             # ESMF code.
-            os.environ['ESMF_LAPACK'] = 'system'
+            env.set("ESMF_LAPACK", "system")
 
             # FIXME: determine whether or not we need to set this
             # Specifies the path where the LAPACK library is located.
-            # os.environ['ESMF_LAPACK_LIBPATH'] = spec['lapack'].prefix.lib
+            # env.set("ESMF_LAPACK_LIBPATH", spec["lapack"].prefix.lib)
 
             # Specifies the linker directive needed to link the LAPACK library
             # to the application.
-            os.environ['ESMF_LAPACK_LIBS'] = spec['lapack'].libs.link_flags  # noqa
+            env.set("ESMF_LAPACK_LIBS", spec["lapack"].libs.link_flags)  # noqa
         else:
-            # Disables LAPACK-dependent code.
-            os.environ['ESMF_LAPACK'] = 'OFF'
+            env.set("ESMF_LAPACK", "internal")
 
         ##########
         # NetCDF #
         ##########
 
-        if '+netcdf' in spec:
+        if "+netcdf" in spec:
             # ESMF provides the ability to read Grid and Mesh data in
             # NetCDF format.
-            if spec.satisfies('^netcdf-c@4.2:'):
-                # ESMF_NETCDF_LIBS will be set to "-lnetcdff -lnetcdf".
-                # This option is useful for systems which have the Fortran
-                # and C bindings archived in seperate library files.
-                os.environ['ESMF_NETCDF'] = 'split'
-            else:
-                # ESMF_NETCDF_LIBS will be set to "-lnetcdf".
-                # This option is useful when the Fortran and C bindings
-                # are archived together in the same library file.
-                os.environ['ESMF_NETCDF'] = 'standard'
-
-            # FIXME: determine whether or not we need to set these.
-            # ESMF_NETCDF_INCLUDE
-            # ESMF_NETCDF_LIBPATH
+            env.set("ESMF_NETCDF", "nc-config")
+            env.set("ESMF_NFCONFIG", "nf-config")
+            netcdfc = spec["netcdf-c"]
+            if netcdfc.satisfies("~shared"):
+                nc_config = which(os.path.join(netcdfc.prefix.bin, "nc-config"))
+                nc_flags = nc_config("--static", "--libs", output=str).strip()
+                env.set("ESMF_NETCDF_LIBS", nc_flags)
 
         ###################
         # Parallel-NetCDF #
         ###################
 
-        if '+pnetcdf' in spec:
+        if "+pnetcdf" in spec:
             # ESMF provides the ability to write Mesh weights
             # using Parallel-NetCDF.
 
             # When defined, enables the use of Parallel-NetCDF.
             # ESMF_PNETCDF_LIBS will be set to "-lpnetcdf".
-            os.environ['ESMF_PNETCDF'] = 'standard'
-
-            # FIXME: determine whether or not we need to set these.
-            # ESMF_PNETCDF_INCLUDE
-            # ESMF_PNETCDF_LIBPATH
+            env.set("ESMF_PNETCDF", "pnetcdf-config")
 
         ##############
         # ParallelIO #
         ##############
+        if "+external-parallelio" in spec:
+            env.set("ESMF_PIO", "external")
+            env.set("ESMF_PIO_LIBPATH", spec["parallelio"].prefix.lib)
+            env.set("ESMF_PIO_INCLUDE", spec["parallelio"].prefix.include)
 
-        if '+pio' in spec and '+mpi' in spec:
-            # ESMF provides the ability to read and write data in both binary
-            # and NetCDF formats through ParallelIO (PIO), a third-party IO
-            # software library that is integrated in the ESMF library.
-
-            # PIO-dependent features will be enabled and will use the
-            # PIO library that is included and built with ESMF.
-            os.environ['ESMF_PIO'] = 'internal'
-        else:
-            # Disables PIO-dependent code.
-            os.environ['ESMF_PIO'] = 'OFF'
+        # Allow override of ESMF_PIO:
+        pio_variant = spec.variants["esmf_pio"].value
+        if pio_variant != "auto":
+            env.set("ESMF_PIO", pio_variant)
 
         ##########
         # XERCES #
         ##########
 
-        if '+xerces' in spec:
+        if "+xerces" in spec:
             # ESMF provides the ability to read Attribute data in
             # XML file format via the XERCES C++ library.
 
             # ESMF_XERCES_LIBS will be set to "-lxerces-c".
-            os.environ['ESMF_XERCES'] = 'standard'
+            env.set("ESMF_XERCES", "standard")
 
             # FIXME: determine if the following are needed
             # ESMF_XERCES_INCLUDE
             # ESMF_XERCES_LIBPATH
 
+        #########################
+        # General build options #
+        #########################
+
+        # Static-only option:
+        if "~shared" in spec:
+            env.set("ESMF_SHARED_LIB_BUILD", "OFF")
+
+        # https://github.com/JCSDA/spack-stack/issues/956
+        if "+shared" in spec:
+            if sys.platform == "darwin":
+                env.set("ESMF_TRACE_LIB_BUILD", "OFF")
+
+    @run_after("install")
+    def post_install(self):
+        install_tree("cmake", self.prefix.cmake)
+        # Several applications using ESMF are affected by CMake
+        # capitalization issue. The following fix allows all apps
+        # to use as-is. Note that since the macOS file system is
+        # case-insensitive, this step is not allowed on macOS.
+        if sys.platform != "darwin":
+            for prefix in [dso_suffix, stat_suffix]:
+                library_path = os.path.join(self.prefix.lib, "libesmf.%s" % prefix)
+                if os.path.exists(library_path):
+                    os.symlink(library_path, os.path.join(self.prefix.lib, "libESMF.%s" % prefix))
+
     def check(self):
-        make('check', parallel=False)
+        make("check", parallel=False)
+
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        env.set("ESMFMKFILE", os.path.join(self.prefix.lib, "esmf.mk"))
+
+    def setup_run_environment(self, env):
+        env.set("ESMFMKFILE", os.path.join(self.prefix.lib, "esmf.mk"))

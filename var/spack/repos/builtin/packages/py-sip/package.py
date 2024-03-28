@@ -1,70 +1,96 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import os
 
+from spack.package import *
 
-class PySip(Package):
-    """SIP is a tool that makes it very easy to create Python bindings for C
-       and C++ libraries."""
 
-    homepage = "https://www.riverbankcomputing.com/software/sip/intro"
-    url      = "https://www.riverbankcomputing.com/static/Downloads/sip/4.19.18/sip-4.19.18.tar.gz"
-    list_url = "https://www.riverbankcomputing.com/software/sip/download"
-    hg       = "https://www.riverbankcomputing.com/hg/sip"
+class PySip(PythonPackage):
+    """A Python bindings generator for C/C++ libraries."""
 
-    version('develop', hg=hg)  # wasn't actually able to clone this
-    version('4.19.21', sha256='6af9979ab41590e8311b8cc94356718429ef96ba0e3592bdd630da01211200ae')
-    version('4.19.20', sha256='04cc2f87ac97e8718d8e1ef036e3ec26050ab44c21f9277618d5b67432fcbfd6')
-    version('4.19.19', sha256='5436b61a78f48c7e8078e93a6b59453ad33780f80c644e5f3af39f94be1ede44')
-    version('4.19.18', sha256='c0bd863800ed9b15dcad477c4017cdb73fa805c25908b0240564add74d697e1e')
-    version('4.19.15', sha256='2b5c0b2c0266b467b365c21376d50dde61a3236722ab87ff1e8dacec283eb610')
-    version('4.19.13', sha256='e353a7056599bf5fbd5d3ff9842a6ab2ea3cf4e0304a0f925ec5862907c0d15e')
+    homepage = "https://www.riverbankcomputing.com/software/sip"
+    pypi = "sip/sip-6.4.0.tar.gz"
 
-    variant('module', default='sip', description='Name of private SIP module',
-            values=str, multi=False)
+    license("GPL-2.0-or-later")
 
-    extends('python')
+    version("6.7.9", sha256="35d51fc10f599d3696abb50f29d068ad04763df7b77808c76b74597660f99b17")
+    version("6.6.2", sha256="0e3efac1c5dfd8e525ae57140927df26993e13f58b89d1577c314f4105bfd90d")
+    version("6.4.0", sha256="42ec368520b8da4a0987218510b1b520b4981e4405086c1be384733affc2bcb0")
+    version("5.5.0", sha256="5d024c419b30fea8a6de8c71a560c7ab0bc3c221fbfb14d55a5b865bd58eaac5")
+    version("4.19.25", sha256="3d36986f7327b7b966bb6eacf22bcf6e4d0a3d24e392276ef92af89988818062")
+    version("4.19.21", sha256="3bfd58e875a87471c00e008f25a01d8312885aa01efc4f688e5cac861c8676e4")
+    version("4.19.20", sha256="475f85277a6601c406ade508b6c935b9f2a170c16fd3ae9dd4cdee7a4f7f340d")
+    version("4.19.19", sha256="348cd6229b095a3090e851555814f5147bffcb601cec891f1038eb6b38c9d856")
+    version("4.19.18", sha256="e274a8b9424047c094a40a8e70fc5e596c191cb8820472846d7bf739e461b2e8")
+    version("4.19.15", sha256="02bff1ac89253e12cdf1406ad39f841d0e264b0d96a7de13dfe9e29740df2053")
+    version("4.19.13", sha256="92193fcf990503bf29f03e290efc4ee1812d556efc18acf5c8b88c090177a630")
 
-    depends_on('flex', type='build', when='@develop')
-    depends_on('bison', type='build', when='@develop')
+    variant(
+        "module",
+        default="sip",
+        when="@:4",
+        description="Name of private SIP module",
+        values=str,
+        multi=False,
+    )
 
-    # https://www.riverbankcomputing.com/static/Docs/sip/installation.html
-    phases = ['configure', 'build', 'install']
+    depends_on("py-ply", when="@6.6:", type=("build", "run"))
 
-    @run_before('configure')
-    def prepare(self):
-        if self.spec.satisfies('@develop'):
-            python('build.py', 'prepare')
+    with when("@5:"):
+        depends_on("python", type=("build", "link", "run"))
+        depends_on("py-packaging", type=("build", "run"))
+        depends_on("py-setuptools@30.3:", type=("build", "run"))
+        depends_on("py-tomli", when="@6.7: ^python@:3.10", type=("build", "run"))
+        depends_on("py-toml", when="@:6.6", type=("build", "run"))
 
-    def configure(self, spec, prefix):
-        args = [
-            '--sip-module={0}'.format(spec.variants['module'].value),
-            '--bindir={0}'.format(prefix.bin),
-            '--destdir={0}'.format(site_packages_dir),
-            '--incdir={0}'.format(python_include_dir),
-            '--sipdir={0}'.format(prefix.share.sip),
-            '--stubsdir={0}'.format(site_packages_dir),
-        ]
+    with when("@:4"):
+        # Requires distutils
+        depends_on("python@:3.11", type=("build", "link", "run"))
+        depends_on("flex", type="build")
+        depends_on("bison", type="build")
 
-        python('configure.py', *args)
+    def url_for_version(self, version):
+        if version < Version("5"):
+            url = "https://www.riverbankcomputing.com/hg/sip/archive/{0}.tar.gz"
+            return url.format(version.dotted)
+        return super().url_for_version(version)
 
-    def build(self, spec, prefix):
-        make()
-
+    @when("@:4")
     def install(self, spec, prefix):
-        make('install')
+        if not os.path.exists("configure.py"):
+            python("build.py", "prepare")
 
-    @run_after('install')
+        args = [
+            "--sip-module={0}".format(spec.variants["module"].value),
+            "--bindir={0}".format(prefix.bin),
+            "--destdir={0}".format(python_platlib),
+            "--incdir={0}".format(join_path(prefix, spec["python"].package.include)),
+            "--sipdir={0}".format(prefix.share.sip),
+            "--stubsdir={0}".format(python_platlib),
+        ]
+        python("configure.py", *args)
+        make()
+        make("install")
+
+    @run_after("install")
     def extend_path_setup(self):
-        # See github issue #14121 and PR #15297
-        module = self.spec.variants['module'].value
-        if module != 'sip':
-            module = module.split('.')[0]
-            with working_dir(site_packages_dir):
-                with open(os.path.join(module, '__init__.py'), 'w') as f:
-                    f.write('from pkgutil import extend_path\n')
-                    f.write('__path__ = extend_path(__path__, __name__)\n')
+        # https://github.com/spack/spack/issues/14121
+        # https://github.com/spack/spack/pull/15297
+        # Same code comes by default with py-pyqt5 and py-pyqt6
+        if self.spec.satisfies("@5:"):
+            return
+
+        module = self.spec.variants["module"].value
+        if module == "sip":
+            return
+
+        module = module.split(".")[0]
+        text = f"""
+# Support {module} sub-packages that have been created by setuptools.
+__path__ = __import__('pkgutil').extend_path(__path__, __name__)
+"""
+        with open(join_path(python_platlib, module, "__init__.py"), "w") as f:
+            f.write(text)

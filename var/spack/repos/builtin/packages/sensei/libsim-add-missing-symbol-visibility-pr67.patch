@@ -1,0 +1,33 @@
+From 431e4b59e50bef4609b5aa5b47719302c41f4fd8 Mon Sep 17 00:00:00 2001
+From: Chuck Atkins <chuck.atkins@kitware.com>
+Date: Wed, 18 May 2022 13:02:38 -0400
+Subject: [PATCH] libsim: Add missing symbol visibility for
+ LibsimImageProperties
+
+---
+ sensei/LibsimImageProperties.h | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/sensei/LibsimImageProperties.h b/sensei/LibsimImageProperties.h
+index 6a63580..c317fd7 100644
+--- a/sensei/LibsimImageProperties.h
++++ b/sensei/LibsimImageProperties.h
+@@ -1,12 +1,14 @@
+ #ifndef sensei_LibsimImageProperties_h
+ #define sensei_LibsimImageProperties_h
+ 
++#include "senseiConfig.h"
++
+ #include <string>
+ 
+ namespace sensei
+ {
+ 
+-class LibsimImageProperties
++class SENSEI_EXPORT LibsimImageProperties
+ {
+ public:
+     LibsimImageProperties();
+-- 
+2.36.1
+

@@ -1,97 +1,105 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack import *
+from spack.package import *
 
 
 class HipRocclr(CMakePackage):
     """Hip-ROCclr is a virtual device interface that compute runtimes interact
-       with to different backends such as ROCr or PAL This abstraction allows
-       runtimes to work on Windows as well as on Linux without much effort."""
+    with to different backends such as ROCr or PAL This abstraction allows
+    runtimes to work on Windows as well as on Linux without much effort."""
 
-    homepage = "https://github.com/ROCm-Developer-Tools/ROCclr"
+    homepage = "https://github.com/ROCm/ROCclr"
+    url = "https://github.com/ROCm/ROCclr/archive/rocm-5.6.1.tar.gz"
+    git = "https://github.com/ROCm/ROCclr.git"
+    tags = ["rocm"]
 
-    maintainers = ['srekolam', 'arjun-raj-kuppala']
+    phases = ["cmake", "build"]
 
-    def url_for_version(self, version):
-        # Fix up a typo in the 3.5.0 release.
-        if version == Version('3.5.0'):
-            return "https://github.com/ROCm-Developer-Tools/ROCclr/archive/roc-3.5.0.tar.gz"
+    maintainers("srekolam", "renjithravindrankannath")
 
-        url = "https://github.com/ROCm-Developer-Tools/ROCclr/archive/rocm-{0}.tar.gz"
-        return url.format(version)
+    license("MIT")
 
-    version('3.9.0', sha256='d248958672ae35ab7f9fbd83827ccf352e2756dfa7819f6b614ace2e1a9a064e')
-    version('3.8.0', sha256='10d8aa6f5af7b51813015da603c4e75edc863c3530793f6ed9769ca345c08ed6')
-    version('3.7.0', sha256='a49f464bb2eab6317e87e3cc249aba3b2517a34fbdfe50175f0437f69a219adc')
-    version('3.5.0', sha256='87c1ee9f02b8aa487b628c543f058198767c474cec3d21700596a73c028959e1')
+    version("master", branch="main")
+    version("5.6.1", sha256="cc9a99c7e4de3d9360c0a471b27d626e84a39c9e60e0aff1e8e1500d82391819")
+    version("5.6.0", sha256="864f87323e793e60b16905284fba381a7182b960dd4a37fb67420c174442c03c")
+    version("5.5.1", sha256="1375fc7723cfaa0ae22a78682186d4804188b0a54990bfd9c0b8eb421b85e37e")
+    version("5.5.0", sha256="efbae9a1ef2ab3de5ca44091e9bb78522e76759c43524c1349114f9596cc61d1")
+    version("5.4.3", sha256="71d9668619ab57ec8a4564d11860438c5aad5bd161a3e58fbc49555fbd59182d")
+    version("5.4.0", sha256="46a1579310b3ab9dc8948d0fb5bed4c6b312f158ca76967af7ab69e328d43138")
+    version("5.3.3", sha256="f8133a5934f9c53b253d324876d74f08a19e2f5b073bc94a62fe64b0d2183a18")
+    version("5.3.0", sha256="2bf14116b5e2270928265f5d417b3d0f0f2e13cbc8ec5eb8c80d4d4a58ff7e94")
+    with default_args(deprecated=True):
+        version("5.2.3", sha256="0493c414d4db1af8e1eb30a651d9512044644244488ebb13478c2138a7612998")
+        version("5.2.1", sha256="465ca9fa16869cd89dab8c2d66d9b9e3c14f744bbedaa1d215b0746d77a500ba")
+        version("5.2.0", sha256="37f5fce04348183bce2ece8bac1117f6ef7e710ca68371ff82ab08e93368bafb")
+        version("5.1.3", sha256="ddee63cdc6515c90bab89572b13e1627b145916cb8ede075ef8446cbb83f0a48")
+        version("5.1.0", sha256="f4f265604b534795a275af902b2c814f416434d9c9e16db81b3ed5d062187dfa")
 
-    depends_on('cmake@3:', type='build')
-    depends_on('mesa18~llvm@18.3: swr=none', type='link')
-    depends_on('libelf', type='link', when="@3.7.0:")
-    depends_on('numactl', type='link', when="@3.7.0:")
-    for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0']:
-        depends_on('hsakmt-roct@' + ver, type='build', when='@' + ver)
-        depends_on('hsa-rocr-dev@' + ver, type='build', when='@' + ver)
-        depends_on('comgr@' + ver, type='build', when='@' + ver)
+    depends_on("cmake@3:", type="build")
+    depends_on("gl@4.5:", type="link")
+    depends_on("numactl", type="link")
 
-    # See: https://github.com/ROCm-Developer-Tools/ROCclr/pull/16
-    # In 3.7.0 the find opengl things have changed slightly.
-    patch('opengl.patch', when='@3.5.0')
+    for ver in [
+        "5.1.0",
+        "5.1.3",
+        "5.2.0",
+        "5.2.1",
+        "5.2.3",
+        "5.3.0",
+        "5.3.3",
+        "5.4.0",
+        "5.4.3",
+        "5.5.0",
+        "5.5.1",
+        "5.6.0",
+        "5.6.1",
+        "master",
+    ]:
+        depends_on(f"hsakmt-roct@{ver}", when=f"@{ver}")
+        depends_on(f"hsa-rocr-dev@{ver}", when=f"@{ver}")
+        depends_on(f"comgr@{ver}", when=f"@{ver}")
 
-    resource(name='opencl-on-vdi',
-             url='https://github.com/RadeonOpenCompute/ROCm-OpenCL-Runtime/archive/roc-3.5.0.tar.gz',
-             sha256='511b617d5192f2d4893603c1a02402b2ac9556e9806ff09dd2a91d398abf39a0',
-             expand=True,
-             destination='',
-             placement='opencl-on-vdi',
-             when='@3.5.0')
+    # Add opencl sources thru the below
+    for d_version, d_shasum in [
+        ("5.6.1", "ec26049f7d93c95050c27ba65472736665ec7a40f25920a868616b2970f6b845"),
+        ("5.6.0", "52ab260d00d279c2a86c353901ffd88ee61b934ad89e9eb480f210656705f04e"),
+        ("5.5.1", "a8a62a7c6fc5398406d2203b8cb75621a24944688e545d917033d87de2724498"),
+        ("5.5.0", "0df9fa0b8aa0c8e6711d34eec0fdf1ed356adcd9625bc8f1ce9b3e72090f3e4f"),
+        ("5.4.3", "b0f8339c844a2e62773bd85cd1e7c5ecddfe71d7c8e8d604e1a1d60900c30873"),
+        ("5.4.0", "a294639478e76c75dac0e094b418f9bd309309b07faf6af126cdfad9aab3c5c7"),
+        ("5.3.3", "cab394e6ef16c35bab8de29a66b96a7dc0e7d1297aaacba3718fa1d369233c9f"),
+        ("5.3.0", "d251e2efe95dc12f536ce119b2587bed64bbda013969fa72be58062788044a9e"),
+        ("5.2.3", "932ea3cd268410010c0830d977a30ef9c14b8c37617d3572a062b5d4595e2b94"),
+        ("5.2.1", "eb4ff433f8894ca659802f81792646034f8088b47aca6ad999292bcb8d6381d5"),
+        ("5.2.0", "80f73387effdcd987a150978775a87049a976aa74f5770d4420847b004dd59f0"),
+        ("5.1.3", "44a7fac721abcd93470e1a7e466bdea0c668c253dee93e4f1ea9a72dbce4ba31"),
+        ("5.1.0", "362d81303048cf7ed5d2f69fb65ed65425bc3da4734fff83e3b8fbdda51b0927"),
+    ]:
+        resource(
+            name="opencl-on-vdi",
+            url=f"https://github.com/ROCm/ROCm-OpenCL-Runtime/archive/rocm-{d_version}.tar.gz",
+            sha256=d_shasum,
+            expand=True,
+            destination="",
+            placement="opencl-on-vdi",
+            when=f"@{d_version}",
+        )
 
-    resource(name='opencl-on-vdi',
-             url='https://github.com/RadeonOpenCompute/ROCm-OpenCL-Runtime/archive/rocm-3.7.0.tar.gz',
-             sha256='283e1dfe4c3d2e8af4d677ed3c20e975393cdb0856e3ccd77b9c7ed2a151650b',
-             expand=True,
-             destination='',
-             placement='opencl-on-vdi',
-             when='@3.7.0')
-
-    resource(name='opencl-on-vdi',
-             url='https://github.com/RadeonOpenCompute/ROCm-OpenCL-Runtime/archive/rocm-3.8.0.tar.gz',
-             sha256='7f75dd1abf3d771d554b0e7b0a7d915ab5f11a74962c92b013ee044a23c1270a',
-             expand=True,
-             destination='',
-             placement='opencl-on-vdi',
-             when='@3.8.0')
-    resource(name='opencl-on-vdi',
-             url='https://github.com/RadeonOpenCompute/ROCm-OpenCL-Runtime/archive/rocm-3.9.0.tar.gz',
-             sha256='286ff64304905384ce524cd8794c28aee216befd6c9267d4187a12e5a21e2daf',
-             expand=True,
-             destination='',
-             placement='opencl-on-vdi',
-             when='@3.9.0')
-
-    @run_after('install')
-    def deploy_missing_files(self):
-        if '@3.5.0' in self.spec:
-            # the amdrocclr_staticTargets.cmake file is generated but not
-            # installed and when we install it by hand, we have to fix the
-            # path to the static library libamdrocclr_static.a from build
-            # dir to prefix lib dir.
-            cmakefile = join_path(self.build_directory,
-                                  'amdrocclr_staticTargets.cmake')
-            filter_file(self.build_directory, self.prefix.lib, cmakefile)
-            install(cmakefile, self.prefix.lib)
-        else:
-            path = join_path(self.prefix.lib,
-                             'cmake/rocclr/ROCclrConfig.cmake')
-            filter_file(self.build_directory, self.prefix, path)
+    resource(
+        name="opencl-on-vdi",
+        git="https://github.com/ROCm/ROCm-OpenCL-Runtime.git",
+        destination="",
+        placement="opencl-on-vdi",
+        branch="main",
+        when="@master",
+    )
 
     def cmake_args(self):
-        args = [
-            '-DUSE_COMGR_LIBRARY=yes',
-            '-DOPENCL_DIR={0}/opencl-on-vdi'.format(self.stage.source_path)
+        return [
+            self.define("USE_COMGR_LIBRARY", "yes"),
+            self.define("OPENCL_DIR", join_path(self.stage.source_path, "opencl-on-vdi")),
         ]
-        return args

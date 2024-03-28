@@ -1,9 +1,9 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class PerlXmlTwig(PerlPackage):
@@ -23,10 +23,12 @@ class PerlXmlTwig(PerlPackage):
     that come with XML and XML::Parser."""
 
     homepage = "https://metacpan.org/pod/XML::Twig"
-    url      = "https://cpan.metacpan.org/authors/id/M/MI/MIROD/XML-Twig-3.52.tar.gz"
+    url = "https://cpan.metacpan.org/authors/id/M/MI/MIROD/XML-Twig-3.52.tar.gz"
 
-    version('3.52', sha256='fef75826c24f2b877d0a0d2645212fc4fb9756ed4d2711614ac15c497e8680ad')
+    license("GPL-1.0-or-later OR Artistic-1.0-Perl")
 
-    depends_on('perl-xml-parser', type=('build', 'run'))
+    version("3.52", sha256="fef75826c24f2b877d0a0d2645212fc4fb9756ed4d2711614ac15c497e8680ad")
 
-    patch('non_interactive.patch')
+    depends_on("perl-xml-parser", type=("build", "run"))
+
+    patch("non_interactive.patch")

@@ -1,9 +1,9 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class PyLmodule(PythonPackage):
@@ -13,13 +13,15 @@ class PyLmodule(PythonPackage):
     environment-modules to interact with module using the Module class."""
 
     homepage = "https://lmodule.readthedocs.io/en/latest/"
-    url      = "https://pypi.io/packages/source/l/lmodule/lmodule-0.1.0.tar.gz"
-    git      = "https://github.com/buildtesters/lmodule"
+    pypi = "lmodule/lmodule-0.1.0.tar.gz"
+    git = "https://github.com/buildtesters/lmodule"
 
-    maintainers = ['shahzebsiddiqui']
+    maintainers("shahzebsiddiqui")
 
-    version('0.1.0', sha256='cac8f3dad2df27b10e051b2c56ccbde1fcdd7044af594d13fd2e4144d3d46a29')
+    license("MIT")
 
-    depends_on('python@3.6.0:', type=('build', 'run'))
-    depends_on('py-setuptools', type='build')
-    depends_on('lmod@7.0:', type='run')
+    version("0.1.0", sha256="cac8f3dad2df27b10e051b2c56ccbde1fcdd7044af594d13fd2e4144d3d46a29")
+
+    depends_on("python@3.6.0:", type=("build", "run"))
+    depends_on("py-setuptools", type="build")
+    depends_on("lmod@7.0:", type="run")

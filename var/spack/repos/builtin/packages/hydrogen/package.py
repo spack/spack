@@ -1,192 +1,285 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
-from spack import *
+
+from spack.package import *
+
+# This limits the versions of lots of things pretty severely.
+#
+#   - Only v1.5.2 and newer are buildable.
+#   - CMake must be v3.22 or newer.
+#   - CUDA must be v11.0.0 or newer.
 
 
-class Hydrogen(CMakePackage, CudaPackage):
+class Hydrogen(CachedCMakePackage, CudaPackage, ROCmPackage):
     """Hydrogen: Distributed-memory dense and sparse-direct linear algebra
-       and optimization library. Based on the Elemental library."""
+    and optimization library. Based on the Elemental library."""
 
-    homepage = "http://libelemental.org"
-    url      = "https://github.com/LLNL/Elemental/archive/v1.0.1.tar.gz"
-    git      = "https://github.com/LLNL/Elemental.git"
+    homepage = "https://libelemental.org"
+    url = "https://github.com/LLNL/Elemental/archive/v1.5.1.tar.gz"
+    git = "https://github.com/LLNL/Elemental.git"
+    tags = ["ecp", "radiuss"]
 
-    maintainers = ['bvanessen']
+    maintainers("bvanessen")
 
-    version('develop', branch='hydrogen')
-    version('1.5.0', sha256='03dd487fb23b9fdbc715554a8ea48c3196a1021502e61b0172ef3fdfbee75180')
-    version('1.4.0', sha256='c13374ff4a6c4d1076e47ba8c8d91a7082588b9958d1ed89cffb12f1d2e1452e')
-    version('1.3.4', sha256='7979f6656f698f0bbad6798b39d4b569835b3013ff548d98089fce7c283c6741')
-    version('1.3.3', sha256='a51a1cfd40ac74d10923dfce35c2c04a3082477683f6b35e7b558ea9f4bb6d51')
-    version('1.3.2', sha256='50bc5e87955f8130003d04dfd9dcad63107e92b82704f8107baf95b0ccf98ed6')
-    version('1.3.1', sha256='a8b8521458e9e747f2b24af87c4c2749a06e500019c383e0cefb33e5df6aaa1d')
-    version('1.3.0', sha256='0f3006aa1d8235ecdd621e7344c99f56651c6836c2e1bc0cf006331b70126b36')
-    version('1.2.0',   sha256='8545975139582ee7bfe5d00f8d83a8697afc285bf7026b0761e9943355974806')
-    version('1.1.0-1', sha256='73ce05e4166853a186469269cb00a454de71e126b2019f95bbae703b65606808')
-    version('1.1.0', sha256='b4c12913acd01c72d31f4522266bfeb8df1d4d3b4aef02e07ccbc9a477894e71')
-    version('1.0.1', sha256='27cf76e1ef1d58bd8f9b1e34081a14a682b7ff082fb5d1da56713e5e0040e528')
-    version('1.0', sha256='d8a97de3133f2c6b6bb4b80d32b4a4cc25eb25e0df4f0cec0f8cb19bf34ece98')
+    license("GPL-2.0-or-later")
 
-    variant('shared', default=True,
-            description='Enables the build of shared libraries')
-    variant('openmp', default=True,
-            description='Make use of OpenMP within CPU-kernels')
-    variant('openmp_blas', default=False,
-            description='Use OpenMP for threading in the BLAS library')
-    variant('quad', default=False,
-            description='Enable quad precision')
-    variant('int64', default=False,
-            description='Use 64bit integers')
-    variant('int64_blas', default=False,
-            description='Use 64bit integers for BLAS.')
-    variant('scalapack', default=False,
-            description='Build with ScaLAPACK library')
-    variant('build_type', default='Release',
-            description='The build type to build',
-            values=('Debug', 'Release'))
-    variant('blas', default='openblas', values=('openblas', 'mkl', 'accelerate', 'essl'),
-            description='Enable the use of OpenBlas/MKL/Accelerate/ESSL')
-    variant('mpfr', default=False,
-            description='Support GNU MPFR\'s'
-            'arbitrary-precision floating-point arithmetic')
-    variant('cuda', default=False,
-            description='Builds with support for GPUs via CUDA and cuDNN')
-    variant('test', default=False,
-            description='Builds test suite')
-    variant('al', default=False,
-            description='Builds with Aluminum communication library')
-    variant('omp_taskloops', default=False,
-            description='Use OpenMP taskloops instead of parallel for loops.')
-    variant('half', default=False,
-            description='Builds with support for FP16 precision data types')
+    version("develop", branch="hydrogen")
+    version("1.5.3", sha256="faefbe738bd364d0e26ce9ad079a11c93a18c6f075719a365fd4fa5f1f7a989a")
+    version("1.5.2", sha256="a902cad3962471216cfa278ba0561c18751d415cd4d6b2417c02a43b0ab2ea33")
+    version("1.5.1", sha256="447da564278f98366906d561d9c8bc4d31678c56d761679c2ff3e59ee7a2895c")
+    # Older versions are no longer supported.
 
-    conflicts('~openmp', when='+omp_taskloops')
+    variant("shared", default=True, description="Enables the build of shared libraries.")
+    variant(
+        "build_type",
+        default="Release",
+        description="The build type to build",
+        values=("Debug", "Release"),
+    )
+    variant("int64", default=False, description="Use 64-bit integers")
+    variant("al", default=True, sticky=True, description="Use Aluminum communication library")
+    variant(
+        "cub", default=True, when="+cuda", description="Use CUB/hipCUB for GPU memory management"
+    )
+    variant(
+        "cub", default=True, when="+rocm", description="Use CUB/hipCUB for GPU memory management"
+    )
+    variant("half", default=False, description="Support for FP16 precision data types")
 
-    depends_on('cmake@3.17.0:', type='build')
-    depends_on('mpi')
-    depends_on('hwloc@1.11:')
+    # TODO: Add netlib-lapack. For GPU-enabled builds, typical
+    # workflows don't touch host BLAS/LAPACK all that often, and even
+    # less frequently in performance-critical regions.
+    variant(
+        "blas",
+        default="any",
+        values=("any", "openblas", "mkl", "accelerate", "essl", "libsci"),
+        description="Specify a host BLAS library preference",
+    )
+    variant("int64_blas", default=False, description="Use 64-bit integers for (host) BLAS.")
+
+    variant("openmp", default=True, description="Make use of OpenMP within CPU kernels")
+    variant(
+        "omp_taskloops",
+        when="+openmp",
+        default=False,
+        description="Use OpenMP taskloops instead of parallel for loops",
+    )
+
+    # Users should spec this on their own on the command line, no?
+    # This doesn't affect Hydrogen itself at all. Not one bit.
+    # variant(
+    #     "openmp_blas",
+    #     default=False,
+    #     description="Use OpenMP for threading in the BLAS library")
+
+    variant("test", default=False, description="Builds test suite")
+
+    conflicts("+cuda", when="+rocm", msg="CUDA and ROCm support are mutually exclusive")
+    conflicts("+half", when="+rocm", msg="FP16 support not implemented for ROCm.")
+
+    depends_on("cmake@3.22.0:", type="build", when="@1.5.2:")
+    depends_on("cmake@3.17.0:", type="build", when="@1.5.1")
+
+    depends_on("mpi")
+    depends_on("blas")
+    depends_on("lapack")
 
     # Note that #1712 forces us to enumerate the different blas variants
-    depends_on('openblas', when='blas=openblas')
-    depends_on('openblas +ilp64', when='blas=openblas +int64_blas')
-    depends_on('openblas threads=openmp', when='blas=openblas +openmp_blas')
+    # Note that this forces us to use OpenBLAS until #1712 is fixed
+    depends_on("openblas", when="blas=openblas")
+    depends_on("openblas +ilp64", when="blas=openblas +int64_blas")
+    depends_on("openblas@0.3.21:0.3.23", when="blas=openblas arch=ppc64le:")
 
-    depends_on('intel-mkl', when="blas=mkl")
-    depends_on('intel-mkl +ilp64', when="blas=mkl +int64_blas")
-    depends_on('intel-mkl threads=openmp', when='blas=mkl +openmp_blas')
+    depends_on("intel-mkl", when="blas=mkl")
+    depends_on("intel-mkl +ilp64", when="blas=mkl +int64_blas")
 
-    depends_on('veclibfort', when='blas=accelerate')
-    conflicts('blas=accelerate +openmp_blas')
+    # I don't think this is true...
+    depends_on("veclibfort", when="blas=accelerate")
 
-    depends_on('essl', when='blas=essl')
-    depends_on('essl -cuda', when='blas=essl -openmp_blas')
-    depends_on('essl +ilp64', when='blas=essl +int64_blas')
-    depends_on('essl threads=openmp', when='blas=essl +openmp_blas')
-    depends_on('netlib-lapack +external-blas', when='blas=essl')
+    depends_on("essl", when="blas=essl")
+    depends_on("essl +ilp64", when="blas=essl +int64_blas")
+
+    depends_on("netlib-lapack +external-blas", when="blas=essl")
+
+    depends_on("cray-libsci", when="blas=libsci")
 
     # Specify the correct version of Aluminum
-    depends_on('aluminum@:0.3.99', when='@:1.3.99 +al')
-    depends_on('aluminum@0.4:0.4.99', when='@1.4:1.4.99 +al')
-    depends_on('aluminum@0.5:', when='@:1.0,1.5.0: +al')
+    depends_on("aluminum@0.7.0:", when="@1.5.2: +al")
 
     # Add Aluminum variants
-    depends_on('aluminum +cuda +nccl +ht +cuda_rma', when='+al +cuda')
+    depends_on("aluminum +cuda +ht", when="+al +cuda")
+    depends_on("aluminum +rocm +ht", when="+al +rocm")
 
-    # Note that this forces us to use OpenBLAS until #1712 is fixed
-    depends_on('lapack', when='blas=openblas ~openmp_blas')
+    for arch in CudaPackage.cuda_arch_values:
+        depends_on("aluminum +cuda cuda_arch=%s" % arch, when="+al +cuda cuda_arch=%s" % arch)
 
-    depends_on('scalapack', when='+scalapack')
-    depends_on('gmp', when='+mpfr')
-    depends_on('mpc', when='+mpfr')
-    depends_on('mpfr', when='+mpfr')
+    # variants +rocm and amdgpu_targets are not automatically passed to
+    # dependencies, so do it manually.
+    for val in ROCmPackage.amdgpu_targets:
+        depends_on(
+            "aluminum +rocm amdgpu_target=%s" % val, when="+al +rocm amdgpu_target=%s" % val
+        )
 
-    depends_on('cuda', when='+cuda')
-    depends_on('cub', when='^cuda@:10.99')
-    depends_on('half', when='+half')
+    depends_on("cuda@11.0.0:", when="+cuda")
+    depends_on("hipcub +rocm", when="+rocm +cub")
+    depends_on("half", when="+half")
 
-    depends_on('llvm-openmp', when='%apple-clang +openmp')
+    depends_on("llvm-openmp", when="%apple-clang +openmp")
 
-    conflicts('@0:0.98', msg="Hydrogen did not exist before v0.99. " +
-              "Did you mean to use Elemental instead?")
-
-    generator = 'Ninja'
-    depends_on('ninja', type='build')
+    # Fixes https://github.com/spack/spack/issues/42286
+    # https://github.com/LLNL/Elemental/pull/177
+    patch("cmake-intel-mpi-escape-quotes-pr177.patch", when="@1.5.3")
 
     @property
     def libs(self):
-        shared = True if '+shared' in self.spec else False
-        return find_libraries(
-            'libEl', root=self.prefix, shared=shared, recursive=True
-        )
+        shared = True if "+shared" in self.spec else False
+        return find_libraries("libHydrogen", root=self.prefix, shared=shared, recursive=True)
 
     def cmake_args(self):
+        args = []
+        return args
+
+    def get_cuda_flags(self):
         spec = self.spec
+        args = []
+        if spec.satisfies("^cuda+allow-unsupported-compilers"):
+            args.append("-allow-unsupported-compiler")
 
-        enable_gpu_fp16 = ('+cuda' in spec and '+half' in spec)
+        if spec.satisfies("%clang"):
+            for flag in spec.compiler_flags["cxxflags"]:
+                if "gcc-toolchain" in flag:
+                    args.append("-Xcompiler={0}".format(flag))
+        return args
 
-        args = [
-            '-DCMAKE_INSTALL_MESSAGE:STRING=LAZY',
-            '-DBUILD_SHARED_LIBS:BOOL=%s'      % ('+shared' in spec),
-            '-DHydrogen_ENABLE_OPENMP:BOOL=%s'       % ('+openmp' in spec),
-            '-DHydrogen_ENABLE_QUADMATH:BOOL=%s'     % ('+quad' in spec),
-            '-DHydrogen_USE_64BIT_INTS:BOOL=%s'      % ('+int64' in spec),
-            '-DHydrogen_USE_64BIT_BLAS_INTS:BOOL=%s' % ('+int64_blas' in spec),
-            '-DHydrogen_ENABLE_MPC:BOOL=%s'        % ('+mpfr' in spec),
-            '-DHydrogen_GENERAL_LAPACK_FALLBACK=ON',
-            '-DHydrogen_ENABLE_ALUMINUM=%s' % ('+al' in spec),
-            '-DHydrogen_ENABLE_CUB=%s' % ('+cuda' in spec),
-            '-DHydrogen_ENABLE_CUDA=%s' % ('+cuda' in spec),
-            '-DHydrogen_ENABLE_TESTING=%s' % ('+test' in spec),
-            '-DHydrogen_ENABLE_HALF=%s' % ('+half' in spec),
-            '-DHydrogen_ENABLE_GPU_FP16=%s' % enable_gpu_fp16,
-        ]
+    def std_initconfig_entries(self):
+        entries = super(Hydrogen, self).std_initconfig_entries()
 
-        # Add support for OS X to find OpenMP (LLVM installed via brew)
-        if self.spec.satisfies('%clang +openmp platform=darwin'):
+        # CMAKE_PREFIX_PATH, in CMake types, is a "STRING", not a "PATH". :/
+        entries = [x for x in entries if "CMAKE_PREFIX_PATH" not in x]
+        cmake_prefix_path = os.environ["CMAKE_PREFIX_PATH"].replace(":", ";")
+        entries.append(cmake_cache_string("CMAKE_PREFIX_PATH", cmake_prefix_path))
+        # IDK why this is here, but it was in the original recipe. So, yeah.
+        entries.append(cmake_cache_string("CMAKE_INSTALL_MESSAGE", "LAZY"))
+        return entries
+
+    def initconfig_compiler_entries(self):
+        spec = self.spec
+        entries = super(Hydrogen, self).initconfig_compiler_entries()
+
+        # FIXME: Enforce this better in the actual CMake.
+        entries.append(cmake_cache_string("CMAKE_CXX_STANDARD", "17"))
+        entries.append(cmake_cache_option("BUILD_SHARED_LIBS", "+shared" in spec))
+        entries.append(cmake_cache_option("CMAKE_EXPORT_COMPILE_COMMANDS", True))
+
+        entries.append(cmake_cache_option("MPI_ASSUME_NO_BUILTIN_MPI", True))
+
+        if spec.satisfies("%clang +openmp platform=darwin") or spec.satisfies(
+            "%clang +omp_taskloops platform=darwin"
+        ):
             clang = self.compiler.cc
             clang_bin = os.path.dirname(clang)
             clang_root = os.path.dirname(clang_bin)
-            args.extend([
-                '-DOpenMP_DIR={0}'.format(clang_root)])
+            entries.append(cmake_cache_string("OpenMP_CXX_FLAGS", "-fopenmp=libomp"))
+            entries.append(cmake_cache_string("OpenMP_CXX_LIB_NAMES", "libomp"))
+            entries.append(
+                cmake_cache_string(
+                    "OpenMP_libomp_LIBRARY", "{0}/lib/libomp.dylib".format(clang_root)
+                )
+            )
 
-        if 'blas=openblas' in spec:
-            args.extend([
-                '-DHydrogen_USE_OpenBLAS:BOOL=%s' % ('blas=openblas' in spec),
-                '-DOpenBLAS_DIR:STRING={0}'.format(
-                    spec['openblas'].prefix)])
-        elif 'blas=mkl' in spec:
-            args.extend([
-                '-DHydrogen_USE_MKL:BOOL=%s' % ('blas=mkl' in spec)])
-        elif 'blas=accelerate' in spec:
-            args.extend(['-DHydrogen_USE_ACCELERATE:BOOL=TRUE'])
-        elif 'blas=essl' in spec:
-            args.extend([
-                '-DHydrogen_USE_ESSL:BOOL=%s' % ('blas=essl' in spec)])
+        return entries
 
-        if '+omp_taskloops' in spec:
-            args.extend([
-                '-DHydrogen_ENABLE_OMP_TASKLOOP:BOOL=%s' %
-                ('+omp_taskloops' in spec)])
+    def initconfig_hardware_entries(self):
+        spec = self.spec
+        entries = super(Hydrogen, self).initconfig_hardware_entries()
 
-        if '+al' in spec:
-            args.extend([
-                '-DHydrogen_ENABLE_ALUMINUM:BOOL=%s' % ('+al' in spec),
-                '-DALUMINUM_DIR={0}'.format(
-                    spec['aluminum'].prefix)])
+        entries.append(cmake_cache_option("Hydrogen_ENABLE_CUDA", "+cuda" in spec))
+        if spec.satisfies("+cuda"):
+            entries.append(cmake_cache_string("CMAKE_CUDA_STANDARD", "17"))
+            if not spec.satisfies("cuda_arch=none"):
+                archs = spec.variants["cuda_arch"].value
+                arch_str = ";".join(archs)
+                entries.append(cmake_cache_string("CMAKE_CUDA_ARCHITECTURES", arch_str))
 
-        return args
+            # FIXME: Should this use the "cuda_flags" function of the
+            # CudaPackage class or something? There might be other
+            # flags in play, and we need to be sure to get them all.
+            cuda_flags = self.get_cuda_flags()
+            if len(cuda_flags) > 0:
+                entries.append(cmake_cache_string("CMAKE_CUDA_FLAGS", " ".join(cuda_flags)))
+
+        entries.append(cmake_cache_option("Hydrogen_ENABLE_ROCM", "+rocm" in spec))
+        if spec.satisfies("+rocm"):
+            entries.append(cmake_cache_string("CMAKE_HIP_STANDARD", "17"))
+            if not spec.satisfies("amdgpu_target=none"):
+                archs = self.spec.variants["amdgpu_target"].value
+                arch_str = ";".join(archs)
+                entries.append(cmake_cache_string("CMAKE_HIP_ARCHITECTURES", arch_str))
+                entries.append(cmake_cache_string("AMDGPU_TARGETS", arch_str))
+                entries.append(cmake_cache_string("GPU_TARGETS", arch_str))
+            entries.append(cmake_cache_path("HIP_ROOT_DIR", spec["hip"].prefix))
+
+        return entries
+
+    def initconfig_package_entries(self):
+        spec = self.spec
+        entries = super(Hydrogen, self).initconfig_package_entries()
+
+        # Basic Hydrogen options
+        entries.append(cmake_cache_option("Hydrogen_ENABLE_TESTING", "+test" in spec))
+        entries.append(cmake_cache_option("Hydrogen_GENERAL_LAPACK_FALLBACK", True))
+        entries.append(cmake_cache_option("Hydrogen_USE_64BIT_INTS", "+int64" in spec))
+        entries.append(cmake_cache_option("Hydrogen_USE_64BIT_BLAS_INTS", "+int64_blas" in spec))
+
+        # Advanced dependency options
+        entries.append(cmake_cache_option("Hydrogen_ENABLE_ALUMINUM", "+al" in spec))
+        entries.append(cmake_cache_option("Hydrogen_ENABLE_CUB", "+cub" in spec))
+        entries.append(cmake_cache_option("Hydrogen_ENABLE_GPU_FP16", "+cuda +half" in spec))
+        entries.append(cmake_cache_option("Hydrogen_ENABLE_HALF", "+half" in spec))
+        entries.append(cmake_cache_option("Hydrogen_ENABLE_OPENMP", "+openmp" in spec))
+        entries.append(
+            cmake_cache_option("Hydrogen_ENABLE_OMP_TASKLOOP", "+omp_taskloops" in spec)
+        )
+
+        # Note that CUDA/ROCm are handled above.
+
+        if "blas=openblas" in spec:
+            entries.append(cmake_cache_option("Hydrogen_USE_OpenBLAS", "blas=openblas" in spec))
+            # CMAKE_PREFIX_PATH should handle this
+            entries.append(cmake_cache_string("OpenBLAS_DIR", spec["openblas"].prefix))
+        elif "blas=mkl" in spec or spec.satisfies("^intel-mkl"):
+            entries.append(cmake_cache_option("Hydrogen_USE_MKL", True))
+        elif "blas=essl" in spec or spec.satisfies("^essl"):
+            entries.append(cmake_cache_string("BLA_VENDOR", "IBMESSL"))
+            # IF IBM ESSL is used it needs help finding the proper LAPACK libraries
+            entries.append(
+                cmake_cache_string(
+                    "LAPACK_LIBRARIES",
+                    "%s;-llapack;-lblas"
+                    % ";".join("-l{0}".format(lib) for lib in self.spec["essl"].libs.names),
+                )
+            )
+            entries.append(
+                cmake_cache_string(
+                    "BLAS_LIBRARIES",
+                    "%s;-lblas"
+                    % ";".join("-l{0}".format(lib) for lib in self.spec["essl"].libs.names),
+                )
+            )
+        elif "blas=accelerate" in spec:
+            entries.append(cmake_cache_option("Hydrogen_USE_ACCELERATE", True))
+        elif spec.satisfies("^netlib-lapack"):
+            entries.append(cmake_cache_string("BLA_VENDOR", "Generic"))
+
+        return entries
 
     def setup_build_environment(self, env):
-        if self.spec.satisfies('%apple-clang +openmp'):
-            env.append_flags(
-                'CPPFLAGS', self.compiler.openmp_flag)
-            env.append_flags(
-                'CFLAGS', self.spec['llvm-openmp'].headers.include_flags)
-            env.append_flags(
-                'CXXFLAGS', self.spec['llvm-openmp'].headers.include_flags)
-            env.append_flags(
-                'LDFLAGS', self.spec['llvm-openmp'].libs.ld_flags)
+        if self.spec.satisfies("%apple-clang +openmp"):
+            env.append_flags("CPPFLAGS", self.compiler.openmp_flag)
+            env.append_flags("CFLAGS", self.spec["llvm-openmp"].headers.include_flags)
+            env.append_flags("CXXFLAGS", self.spec["llvm-openmp"].headers.include_flags)
+            env.append_flags("LDFLAGS", self.spec["llvm-openmp"].libs.ld_flags)

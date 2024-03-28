@@ -1,7 +1,10 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+
+from spack.package import *
 
 
 class PyLifelines(PythonPackage):
@@ -13,21 +16,23 @@ class PyLifelines(PythonPackage):
     parts of survival analysis."""
 
     homepage = "https://github.com/CamDavidsonPilon/lifelines"
-    url      = "https://pypi.io/packages/source/l/lifelines/lifelines-0.25.5.tar.gz"
+    pypi = "lifelines/lifelines-0.25.5.tar.gz"
 
-    version('0.25.5', sha256='f24260aa371829354440dfc2c1be8d59d9e841cce7a933230213cecd67787b89')
-    version('0.9.4', sha256='0f19a8b18ace80c231de60487b2b1a3de3eb418445c6a6d0d72c1110d860f676')
+    license("MIT")
 
-    depends_on('py-setuptools', type='build')
-    depends_on('py-numpy', type=('build', 'run'), when='@0.9.4')
-    depends_on('py-scipy', type=('build', 'run'), when='@0.9.4')
-    depends_on('py-pandas@0.18.0:', type=('build', 'run'), when='@0.9.4')
-    depends_on('python@3.6:', type=('build', 'run'), when='@0.25.5:')
-    depends_on('py-pandas@0.23.0:', type=('build', 'run'), when='@0.25.5:')
-    depends_on('py-scipy@1.2.0:', type=('build', 'run'), when='@0.25.5:')
-    depends_on('py-numpy@1.14:', type=('build', 'run'), when='@0.25.5:')
-    depends_on('py-pandas@0.23.0:', type=('build', 'run'), when='@0.25.5:')
-    depends_on('py-matplotlib@3.0:', type=('build', 'run'), when='@0.25.5:')
-    depends_on('py-autograd@1.3:', type=('build', 'run'), when='@0.25.5:')
-    depends_on('py-autograd-gamma@0.3:', type=('build', 'run'), when='@0.25.5:')
-    depends_on('py-patsy@0.5.0:', type=('build', 'run'), when='@0.25.5:')
+    version("0.25.5", sha256="f24260aa371829354440dfc2c1be8d59d9e841cce7a933230213cecd67787b89")
+    version("0.9.4", sha256="0f19a8b18ace80c231de60487b2b1a3de3eb418445c6a6d0d72c1110d860f676")
+
+    depends_on("py-setuptools", type="build")
+    depends_on("py-numpy", type=("build", "run"), when="@0.9.4")
+    depends_on("py-scipy", type=("build", "run"), when="@0.9.4")
+    depends_on("py-pandas@0.18.0:", type=("build", "run"), when="@0.9.4")
+    depends_on("python@3.6:", type=("build", "run"), when="@0.25.5:")
+    depends_on("py-pandas@0.23.0:", type=("build", "run"), when="@0.25.5:")
+    depends_on("py-scipy@1.2.0:", type=("build", "run"), when="@0.25.5:")
+    depends_on("py-numpy@1.14:", type=("build", "run"), when="@0.25.5:")
+    depends_on("py-pandas@0.23.0:", type=("build", "run"), when="@0.25.5:")
+    depends_on("py-matplotlib@3.0:", type=("build", "run"), when="@0.25.5:")
+    depends_on("py-autograd@1.3:", type=("build", "run"), when="@0.25.5:")
+    depends_on("py-autograd-gamma@0.3:", type=("build", "run"), when="@0.25.5:")
+    depends_on("py-patsy@0.5.0:", type=("build", "run"), when="@0.25.5:")

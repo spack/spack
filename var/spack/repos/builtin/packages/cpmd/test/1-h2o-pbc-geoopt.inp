@@ -1,0 +1,51 @@
+&INFO
+single water molecule with pbc.
+default geometry optimization
+&END
+
+&CPMD
+  OPTIMIZE GEOMETRY XYZ
+  HESSIAN UNITY
+  CONVERGENCE ORBITALS
+   1.0d-7  
+  CONVERGENCE GEOMETRY
+   3.0d-4
+  ODIIS
+   5
+  MAXSTEP
+   100 
+  MAXCPUTIME
+   1500
+
+  STRUCTURE BONDS ANGLES
+&END
+
+&DFT
+  FUNCTIONAL BLYP
+  GC-CUTOFF
+   1.0d-06
+&END
+
+&SYSTEM
+  SYMMETRY
+   1
+  CELL
+   20.0   1.0   1.0  0.0  0.0  0.0  
+  CUTOFF
+   70.0
+&END
+
+&ATOMS
+
+*O_MT_BLYP.psp KLEINMAN-BYLANDER
+   LMAX=P
+   1
+   10.0    10.0    10.0
+
+*H_CVB_BLYP.psp
+   LMAX=S
+    2
+    8.5     9.0    10.0
+   11.5     9.0    10.0
+
+&END

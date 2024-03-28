@@ -5,17 +5,15 @@
 """Types and functions to manage information
 on CPU microarchitectures.
 """
-# pylint: disable=useless-object-inheritance
 import functools
 import platform
 import re
 import warnings
 
-import six
-
 import archspec
 import archspec.cpu.alias
 import archspec.cpu.schema
+
 from .alias import FEATURE_ALIASES
 from .schema import LazyDictionary
 
@@ -27,7 +25,7 @@ def coerce_target_names(func):
 
     @functools.wraps(func)
     def _impl(self, other):
-        if isinstance(other, six.string_types):
+        if isinstance(other, str):
             if other not in TARGETS:
                 msg = '"{0}" is not a valid target name'
                 raise ValueError(msg.format(other))
@@ -38,7 +36,7 @@ def coerce_target_names(func):
     return _impl
 
 
-class Microarchitecture(object):
+class Microarchitecture:
     """Represents a specific CPU micro-architecture.
 
     Args:
@@ -50,7 +48,7 @@ class Microarchitecture(object):
             which has "broadwell" as a parent, supports running binaries
             optimized for "broadwell".
         vendor (str): vendor of the micro-architecture
-        features (list of str): supported CPU flags. Note that the semantic
+        features (set of str): supported CPU flags. Note that the semantic
             of the flags in this field might vary among architectures, if
             at all present. For instance x86_64 processors will list all
             the flags supported by a given CPU while Arm processors will
@@ -82,14 +80,18 @@ class Microarchitecture(object):
         self.features = features
         self.compilers = compilers
         self.generation = generation
+        # Cache the ancestor computation
+        self._ancestors = None
 
     @property
     def ancestors(self):
         """All the ancestors of this microarchitecture."""
-        value = self.parents[:]
-        for parent in self.parents:
-            value.extend(a for a in parent.ancestors if a not in value)
-        return value
+        if self._ancestors is None:
+            value = self.parents[:]
+            for parent in self.parents:
+                value.extend(a for a in parent.ancestors if a not in value)
+            self._ancestors = value
+        return self._ancestors
 
     def _to_set(self):
         """Returns a set of the nodes in this microarchitecture DAG."""
@@ -106,7 +108,7 @@ class Microarchitecture(object):
             self.name == other.name
             and self.vendor == other.vendor
             and self.features == other.features
-            and self.ancestors == other.ancestors
+            and self.parents == other.parents  # avoid ancestors here
             and self.compilers == other.compilers
             and self.generation == other.generation
         )
@@ -150,7 +152,7 @@ class Microarchitecture(object):
 
     def __contains__(self, feature):
         # Feature must be of a string type, so be defensive about that
-        if not isinstance(feature, six.string_types):
+        if not isinstance(feature, str):
             msg = "only objects of string types are accepted [got {0}]"
             raise TypeError(msg.format(str(type(feature))))
 
@@ -168,29 +170,39 @@ class Microarchitecture(object):
         """Returns the architecture family a given target belongs to"""
         roots = [x for x in [self] + self.ancestors if not x.ancestors]
         msg = "a target is expected to belong to just one architecture family"
-        msg += "[found {0}]".format(", ".join(str(x) for x in roots))
+        msg += f"[found {', '.join(str(x) for x in roots)}]"
         assert len(roots) == 1, msg
 
         return roots.pop()
 
-    def to_dict(self, return_list_of_items=False):
-        """Returns a dictionary representation of this object.
+    @property
+    def generic(self):
+        """Returns the best generic architecture that is compatible with self"""
+        generics = [x for x in [self] + self.ancestors if x.vendor == "generic"]
+        return max(generics, key=lambda x: len(x.ancestors))
 
-        Args:
-            return_list_of_items (bool): if True returns an ordered list of
-                items instead of the dictionary
-        """
-        list_of_items = [
-            ("name", str(self.name)),
-            ("vendor", str(self.vendor)),
-            ("features", sorted(str(x) for x in self.features)),
-            ("generation", self.generation),
-            ("parents", [str(x) for x in self.parents]),
-        ]
-        if return_list_of_items:
-            return list_of_items
+    def to_dict(self):
+        """Returns a dictionary representation of this object."""
+        return {
+            "name": str(self.name),
+            "vendor": str(self.vendor),
+            "features": sorted(str(x) for x in self.features),
+            "generation": self.generation,
+            "parents": [str(x) for x in self.parents],
+            "compilers": self.compilers,
+        }
 
-        return dict(list_of_items)
+    @staticmethod
+    def from_dict(data) -> "Microarchitecture":
+        """Construct a microarchitecture from a dictionary representation."""
+        return Microarchitecture(
+            name=data["name"],
+            parents=[TARGETS[x] for x in data["parents"]],
+            vendor=data["vendor"],
+            features=set(data["features"]),
+            compilers=data.get("compilers", {}),
+            generation=data.get("generation", 0),
+        )
 
     def optimization_flags(self, compiler, version):
         """Returns a string containing the optimization flags that needs
@@ -264,16 +276,13 @@ class Microarchitecture(object):
                 flags = flags_fmt.format(**compiler_entry)
                 return flags
 
-        msg = (
-            "cannot produce optimized binary for micro-architecture '{0}'"
-            " with {1}@{2} [supported compiler versions are {3}]"
-        )
-        msg = msg.format(
-            self.name,
-            compiler,
-            version,
-            ", ".join([x["versions"] for x in compiler_info]),
-        )
+        msg = "cannot produce optimized binary for micro-architecture '{0}' with {1}@{2}"
+        if compiler_info:
+            versions = [x["versions"] for x in compiler_info]
+            msg += f' [supported compiler versions are {", ".join(versions)}]'
+        else:
+            msg += " [no supported compiler versions]"
+        msg = msg.format(self.name, compiler, version)
         raise UnsupportedMicroarchitecture(msg)
 
 
@@ -283,9 +292,7 @@ def generic_microarchitecture(name):
     Args:
         name (str): name of the micro-architecture
     """
-    return Microarchitecture(
-        name, parents=[], vendor="generic", features=[], compilers={}
-    )
+    return Microarchitecture(name, parents=[], vendor="generic", features=[], compilers={})
 
 
 def version_components(version):
@@ -312,9 +319,6 @@ def _known_microarchitectures():
     """Returns a dictionary of the known micro-architectures. If the
     current host platform is unknown adds it too as a generic target.
     """
-    # pylint: disable=fixme
-    # TODO: Simplify this logic using object_pairs_hook to OrderedDict
-    # TODO: when we stop supporting python2.6
 
     def fill_target_from_dict(name, data, targets):
         """Recursively fills targets by adding the micro-architecture
@@ -342,9 +346,7 @@ def _known_microarchitectures():
         compilers = values.get("compilers", {})
         generation = values.get("generation", 0)
 
-        targets[name] = Microarchitecture(
-            name, parents, vendor, features, compilers, generation
-        )
+        targets[name] = Microarchitecture(name, parents, vendor, features, compilers, generation)
 
     known_targets = {}
     data = archspec.cpu.schema.TARGETS_JSON["microarchitectures"]

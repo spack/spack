@@ -1,0 +1,57 @@
+--- a/DALTON/include/cbiexc.h
++++ b/DALTON/include/cbiexc.h
+@@ -1,34 +1,25 @@
+ !
+ !     cbiexc.h - Control common block for abacus/abaexc.F
+ !
+-      LOGICAL         SKIP, CUT, DIPSTR, ROTSTR, ROTVEL, FNAC, EXCTRP,
+-CPFP
+-C     &        SUMRUL, OOTV
+-     &        SUMRUL, OOTV, MAGPRP,
+-Cend-PFP
+-CClark:7/1/2016
+-     &        STOPPW
+-      REAL*8          QMIN,QMAX,QSTEP
+-      REAL*8          VMIN,VMAX,VSTEP
+-      INTEGER         LQ,LVEL
+-CClark:end
+-      PARAMETER       (MAXPP = 200)
+-      CHARACTER*8     LABAPP
+-      COMMON /PPLBL / LABAPP(MAXPP), LABSYM(MAXPP)
+-      COMMON /CBIEXC/ THREXC,
+-CClark:7/1/2016
+-     &                QMIN,QMAX,QSTEP,
+-     &                VMIN,VMAX,VSTEP,
+-     &                LQ,LVEL,
+-CClark:end
+-     &                NEXCIT(8), MAXITE, MXNEXI, MXRM,
++      INTEGER, PARAMETER :: MAXPP = 200
++      LOGICAL     :: SKIP, CUT, DIPSTR, ROTSTR, ROTVEL, FNAC, EXCTRP,
++     &               SUMRUL, OOTV, MAGPRP, STOPPW
++      INTEGER     :: LQ, LVEL, NEXCIT(8), MAXITE, MXNEXI, MXRM, 
++     &               MXPHP, NABAPP, IPREXC, IPR1IN
++      REAL*8      :: QMIN, QMAX, QSTEP, VMIN, VMAX, VSTEP, QINP,
++     &               THREXC
++      CHARACTER*8 :: LABAPP(MAXPP)
++      INTEGER     :: LABSYM(MAXPP)
++!
++!
++      COMMON /PPLBL / LABAPP, LABSYM
++! LOGICAL
++      COMMON /CBIEXC/ SKIP, CUT, DIPSTR, ROTSTR, ROTVEL, FNAC,
++     &                EXCTRP, SUMRUL, OOTV, MAGPRP, STOPPW,
++! INTEGER             
++     &                LQ, LVEL, NEXCIT, MAXITE, MXNEXI, MXRM,
+      &                MXPHP, NABAPP, IPREXC, IPR1IN,
+-     &                SKIP, CUT, DIPSTR, ROTSTR, ROTVEL, FNAC, EXCTRP,
+-CPFP
+-C     &                SUMRUL, OOTV
+-     &                SUMRUL, OOTV, MAGPRP,
+-Cend-PFP
+-CClark:7/1/2016
+-     &                STOPPW
+-CClark:end
++! REAL
++     &                QINP, THREXC, QMIN, QMAX, QSTEP, VMIN, VMAX,
++     &                VSTEP
+ ! -- end of abaexc.h --

@@ -1,9 +1,9 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class PyGputil(PythonPackage):
@@ -11,14 +11,10 @@ class PyGputil(PythonPackage):
     using nvidia-smi."""
 
     homepage = "https://github.com/anderskm/gputil"
-    url      = "https://pypi.io/packages/source/G/GPUtil/GPUtil-1.4.0.tar.gz"
+    pypi = "GPUtil/GPUtil-1.4.0.tar.gz"
 
-    version('1.4.0', sha256='099e52c65e512cdfa8c8763fca67f5a5c2afb63469602d5dcb4d296b3661efb9')
+    license("MIT")
 
-    depends_on('py-setuptools', type='build')
-    depends_on('py-wheel', type='build')
+    version("1.4.0", sha256="099e52c65e512cdfa8c8763fca67f5a5c2afb63469602d5dcb4d296b3661efb9")
 
-    def install(self, spec, prefix):
-        # Override install to avoid
-        #   error: option --single-version-externally-managed not recognized
-        setup_py('install', '--root=/', '--prefix={0}'.format(prefix))
+    depends_on("py-setuptools", type="build")
