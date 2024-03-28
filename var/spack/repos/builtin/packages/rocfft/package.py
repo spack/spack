@@ -63,10 +63,7 @@ class Rocfft(CMakePackage):
     depends_on("boost@1.64.0: +program_options", type="test")
     depends_on("rocm-openmp-extras", type="test")
     depends_on("hiprand", type="test")
-
-    def check(self):
-        exe = join_path(self.build_directory, "clients", "staging", "rocfft-test")
-        self.run_test(exe, options="--gtest_filter=mix*:adhoc*")
+    depends_on("rocrand", type="test")
 
     for ver in [
         "5.1.0",
@@ -94,6 +91,12 @@ class Rocfft(CMakePackage):
     patch("0003-Fix-clients-fftw3-include-dirs-rocm-4.5.patch", when="@:5.1")
     # Patch to add install prefix header location for sqlite for 5.4
     patch("0004-fix-missing-sqlite-include-paths.patch", when="@5.4.0:5.5")
+    # Patch to fix the build issue when --test=root is enabled
+    # This adds  the include headers from the rocrand and fftw in the cmakelists.txt
+    # issue is seen from 5.7.0 onwards
+    patch(
+        "0005-Fix-clients-tests-include-rocrand-fftw-include-dir-rocm-6.0.0.patch", when="@5.7.0:"
+    )
 
     # Set LD_LIBRARY_PATH for executing the binaries from build directoryfix missing type
     # https://github.com/ROCm/rocFFT/pull/449)
@@ -105,6 +108,12 @@ class Rocfft(CMakePackage):
 
     def setup_build_environment(self, env):
         env.set("CXX", self.spec["hip"].hipcc)
+
+    @run_after("build")
+    @on_package_attributes(run_tests=True)
+    def check_build(self):
+        exe = Executable(join_path(self.build_directory, "clients", "staging", "rocfft-test"))
+        exe("--gtest_filter=mix*:adhoc*")
 
     @classmethod
     def determine_version(cls, lib):
