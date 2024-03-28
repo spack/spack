@@ -117,14 +117,15 @@ def test_exclude_specs(mock_packages, config):
 
 def test_exclude_specs_public_mirror(mock_packages, config):
     args = MockMirrorArgs(
-        specs=['no-redistribute-dependent'],
-        versions_per_spec='all',
+        specs=["no-redistribute-dependent"],
+        versions_per_spec="all",
         dependencies=True,
-        public=True)
+        public=True,
+    )
 
     mirror_specs = spack.cmd.mirror._determine_specs_to_mirror(args)
-    assert not any(s.name == 'no-redistribute' for s in mirror_specs)
-    assert any(s.name == 'no-redistribute-dependent' for s in mirror_specs)
+    assert not any(s.name == "no-redistribute" for s in mirror_specs)
+    assert any(s.name == "no-redistribute-dependent" for s in mirror_specs)
 
 
 def test_exclude_file(mock_packages, tmpdir, config):

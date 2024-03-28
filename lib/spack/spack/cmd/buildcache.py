@@ -133,9 +133,11 @@ def setup_parser(subparser: argparse.ArgumentParser):
         help="when pushing to an OCI registry, tag an image containing all root specs and their "
         "runtime dependencies",
     )
-    push.add_argument('--public', action='store_true',
-                        help="if this is a public mirror, avoid adding"
-                             " packages when licensing prohibits it")
+    push.add_argument(
+        "--public",
+        action="store_true",
+        help="if this is a public mirror, avoid adding" " packages when licensing prohibits it",
+    )
     arguments.add_common_arguments(push, ["specs", "jobs"])
     push.set_defaults(func=push_fn)
 
@@ -379,10 +381,11 @@ def _skip_no_redistribute_for_public(specs):
         else:
             removed_specs.append(spec)
     if removed_specs:
-        tty.debug("The following specs will not be added to the binary cache"
-                  " because their package.py file has marked them as"
-                  " 'redistribute_binary = False': {0}"
-                  .format(', '.join(s.name for s in removed_specs)))
+        tty.debug(
+            "The following specs will not be added to the binary cache"
+            " because their package.py file has marked them as"
+            " 'redistribute_binary = False': {0}".format(", ".join(s.name for s in removed_specs))
+        )
     return remaining_specs
 
 

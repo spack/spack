@@ -72,9 +72,10 @@ def setup_parser(subparser):
         " retrieve all versions of each package",
     )
     create_parser.add_argument(
-        '--public', action='store_true',
-        help="if this is a public mirror, avoid adding packages when"
-             " licensing prohibits it")
+        "--public",
+        action="store_true",
+        help="if this is a public mirror, avoid adding packages when" " licensing prohibits it",
+    )
     arguments.add_common_arguments(create_parser, ["specs"])
     arguments.add_concretizer_args(create_parser)
 
@@ -491,7 +492,7 @@ def mirror_create(args):
             path=path,
             skip_unstable_versions=args.skip_unstable_versions,
             selection_fn=not_excluded_fn(args),
-            args.public,
+            only_public=args.public,
         )
         return
 
@@ -500,13 +501,16 @@ def mirror_create(args):
             path=path,
             skip_unstable_versions=args.skip_unstable_versions,
             selection_fn=not_excluded_fn(args),
-            args.public,
+            only_public=args.public,
         )
         return
 
     mirror_specs = concrete_specs_from_user(args)
     create_mirror_for_individual_specs(
-        mirror_specs, path=path, skip_unstable_versions=args.skip_unstable_versions, only_public=args.public
+        mirror_specs,
+        path=path,
+        skip_unstable_versions=args.skip_unstable_versions,
+        only_public=args.public,
     )
 
 
@@ -516,9 +520,11 @@ def filter_private(mirror_specs):
         if spec.package.redistribute_source:
             public_specs.append(spec)
         else:
-            tty.debug("Skip adding {0} to mirror: the package.py file"
-                        " indicates that a public mirror should not contain"
-                        " it.".format(spec.name))
+            tty.debug(
+                "Skip adding {0} to mirror: the package.py file"
+                " indicates that a public mirror should not contain"
+                " it.".format(spec.name)
+            )
     return public_specs
 
 
@@ -537,10 +543,15 @@ def create_mirror_for_all_specs(path, skip_unstable_versions, selection_fn, only
     process_mirror_stats(*mirror_stats.stats())
 
 
-def create_mirror_for_all_specs_inside_environment(path, skip_unstable_versions, selection_fn, only_public):
+def create_mirror_for_all_specs_inside_environment(
+    path, skip_unstable_versions, selection_fn, only_public
+):
     mirror_specs = concrete_specs_from_environment(selection_fn=selection_fn)
     create_mirror_for_individual_specs(
-        mirror_specs, path=path, skip_unstable_versions=skip_unstable_versions, only_public=only_public
+        mirror_specs,
+        path=path,
+        skip_unstable_versions=skip_unstable_versions,
+        only_public=only_public,
     )
 
 

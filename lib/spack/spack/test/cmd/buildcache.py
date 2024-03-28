@@ -430,7 +430,7 @@ def test_push_and_install_with_mirror_marked_unsigned_does_not_require_extra_fla
 
 
 def test_skip_no_redistribute(mock_packages):
-    specs = list(Spec('no-redistribute-dependent').concretized().traverse())
+    specs = list(Spec("no-redistribute-dependent").concretized().traverse())
     filtered = spack.cmd.buildcache._skip_no_redistribute_for_public(specs)
-    assert not any(s.name == 'no-redistribute' for s in filtered)
-    assert any(s.name == 'no-redistribute-dependent' for s in filtered)
+    assert not any(s.name == "no-redistribute" for s in filtered)
+    assert any(s.name == "no-redistribute-dependent" for s in filtered)
