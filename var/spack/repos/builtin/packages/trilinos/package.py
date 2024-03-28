@@ -42,6 +42,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
 
     version("master", branch="master")
     version("develop", branch="develop")
+    version("15.1.1", sha256="2108d633d2208ed261d09b2d6b2fbae7a9cdc455dd963c9c94412d38d8aaefe4")
     version("15.0.0", sha256="5651f1f967217a807f2c418a73b7e649532824dbf2742fa517951d6cc11518fb")
     version("14.4.0", sha256="8e7d881cf6677aa062f7bfea8baa1e52e8956aa575d6a4f90f2b6f032632d4c6")
     version("14.2.0", sha256="c96606e5cd7fc9d25b9dc20719cd388658520d7cbbd2b4de77a118440d1e0ccb")
@@ -243,6 +244,9 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
         conflicts("@:12 gotype=long")
     with when("+piro"):
         conflicts("~stratimikos")
+        conflicts("~thyra")
+        conflicts("~tpetra")
+        conflicts("@15: ~teko")
         conflicts("~nox")
 
     # Tpetra stack
@@ -292,6 +296,10 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
         conflicts("~ifpack")
         conflicts("~aztec")
 
+    with when("+tempus"):
+        conflicts("~nox")
+        conflicts("~thyra")
+
     # Known requirements from tribits dependencies
     conflicts("~thyra", when="+stratimikos")
     conflicts("+adelus", when="~kokkos")
@@ -302,7 +310,6 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     conflicts("+minitensor", when="~boost")
     conflicts("+phalanx", when="~sacado")
     conflicts("+stokhos", when="~kokkos")
-    conflicts("+tempus", when="~nox")
 
     # Only allow DTK with Trilinos 12.14, 12.18
     conflicts("+dtk", when="~boost")
@@ -383,19 +390,21 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     # ###################### Dependencies ##########################
 
     # External Kokkos
-    depends_on("kokkos@4.1.00", when="@14.4.0: +kokkos")
+    depends_on("kokkos@4.2.01", when="@15.1.0: +kokkos")
+    depends_on("kokkos@4.1.00", when="@14.4.0:15.0.0 +kokkos")
+
     depends_on("kokkos +wrapper", when="trilinos@14.4.0: +kokkos +wrapper")
     depends_on("kokkos ~wrapper", when="trilinos@14.4.0: +kokkos ~wrapper")
 
     for a in CudaPackage.cuda_arch_values:
-        arch_str = "+cuda cuda_arch=" + a
-        kokkos_spec = "kokkos@4.1.00 " + arch_str
-        depends_on(kokkos_spec, when="@14.4.0 +kokkos " + arch_str)
+        arch_str = "+cuda cuda_arch={0}".format(a)
+        kokkos_spec = "kokkos {0}".format(arch_str)
+        depends_on(kokkos_spec, when="@14.4.0: +kokkos {0}".format(arch_str))
 
     for a in ROCmPackage.amdgpu_targets:
         arch_str = "+rocm amdgpu_target={0}".format(a)
-        kokkos_spec = "kokkos@4.1.00 {0}".format(arch_str)
-        depends_on(kokkos_spec, when="@14.4.0 +kokkos {0}".format(arch_str))
+        kokkos_spec = "kokkos {0}".format(arch_str)
+        depends_on(kokkos_spec, when="@14.4.0: +kokkos {0}".format(arch_str))
 
     depends_on("adios2", when="+adios2")
     depends_on("binder@1.3:", when="@15: +python", type="build")
