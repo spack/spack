@@ -16,7 +16,7 @@ class AwscliV2(PythonPackage):
 
     version("2.13.22", sha256="dd731a2ba5973f3219f24c8b332a223a29d959493c8a8e93746d65877d02afc1")
 
-    depends_on("python@3.8:", type=("build", "run"))
+    depends_on("python@3.8:3.11", type=("build", "run"))
     depends_on("py-flit-core@3.7.1:3.8.0", type=("build"))
     depends_on("py-colorama@0.2.5:0.4.6", type=("build", "run"))
     depends_on("py-docutils@0.10:0.19", type=("build", "run"))
