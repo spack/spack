@@ -240,9 +240,9 @@ The function ``my_package.get_extension_path`` in ``my_package/__init__.py`` mig
 
 .. _platform-scopes:
 
-------------------------
-Platform-specific Scopes
-------------------------
+-----------------------------------------
+Platform-, OS- and Target-specific Scopes
+-----------------------------------------
 
 For each scope above (excluding environment scopes), there can also be
 platform-specific settings.  For example, on most platforms, GCC is
@@ -253,23 +253,41 @@ configuration is set in
 precedence over settings in the ``defaults`` scope, but can still be
 overridden by settings in ``system``, ``system/darwin``, ``site``,
 ``site/darwin``, ``user``, ``user/darwin``, ``custom``, or
-``custom/darwin``. So, the full scope precedence is:
+``custom/darwin``.
+
+Following this pattern, the scope hierarchy can be further deepened by
+operating system-specific (e.g. `sonoma`, or `almalinux9`) and
+target-specific (e.g. `m1`, or `cascadelake`) scopes. The full scope
+hierarchy is therefore:
 
 #. ``defaults``
 #. ``defaults/<platform>``
+#. ``defaults/<platform>/<os>``
+#. ``defaults/<platform>/<os>/<target>``
 #. ``system``
 #. ``system/<platform>``
+#. ``system/<platform>/<os>``
+#. ``system/<platform>/<os>/<target>``
 #. ``site``
 #. ``site/<platform>``
+#. ``site/<platform>/<os>``
+#. ``site/<platform>/<os>/<target>``
 #. ``user``
 #. ``user/<platform>``
+#. ``user/<platform>/<os>``
+#. ``user/<platform>/<os>/<target>``
 #. ``custom``
 #. ``custom/<platform>``
+#. ``custom/<platform>/<os>``
+#. ``custom/<platform>/<os>/<target>``
+
+The system config scope has a ``<platform>`` section for sites at which
+``/etc`` is mounted on multiple heterogeneous machines.
 
 You can get the name to use for ``<platform>`` by running ``spack arch
---platform``. The system config scope has a ``<platform>`` section for
-sites at which ``/etc`` is mounted on multiple heterogeneous machines.
-
+--platform``.  Similarly, the names for ``<os>`` and ``<target>`` can be
+obtained with ``spack arch --operating-system``, and ``spack arch
+--target``, respectively.
 
 .. _config-scope-precedence:
 
@@ -285,7 +303,7 @@ lower-precedence settings. Completely ignoring higher-level configuration
 options is supported with the ``::`` notation for keys (see
 :ref:`config-overrides` below).
 
-There are also special notations for string concatenation and precendense override:
+There are also special notations for string concatenation and precedence override:
 
 * ``+:`` will force *prepending* strings or lists. For lists, this is the default behavior.
 * ``-:`` works similarly, but for *appending* values.
