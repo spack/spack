@@ -26,8 +26,8 @@ class Serenity(CMakePackage):
     depends_on("cmake@3.12:", type="build")
     depends_on("boost")
     depends_on("eigen@3:")
-    depends_on("googletest@1.8.1:", type="test")
-    depends_on("hdf5@1.10.1:")
+    depends_on("googletest@1.8.1:", type="build")
+    depends_on("hdf5+hl+cxx@1.10.1:1.12.2")
     depends_on("lapack", when="+lapack")
     depends_on("libecpint")
     depends_on("libxc@5.0.0")
@@ -48,20 +48,27 @@ class Serenity(CMakePackage):
             string=True,
         )
 
-        if self.run_tests:
-            filter_file(
-                "find_package(GTest 1.8.1 QUIET)",
-                "find_package(GTest REQUIRED)",
-                "cmake/ImportGTest.cmake",
-                string=True,
-            )
+        filter_file(
+            "find_package(GTest 1.8.1 QUIET)",
+            "find_package(GTest REQUIRED)",
+            "cmake/ImportGTest.cmake",
+            string=True,
+        )
 
-            filter_file(
-                "find_package(GMock 1.8.1 QUIET)",
-                "return()",
-                "cmake/ImportGTest.cmake",
-                string=True,
-            )
+        filter_file(
+            "find_package(GMock 1.8.1 QUIET)",
+            "add_library(GMock::GMock IMPORTED INTERFACE)\n"
+            "add_library(GMock::Main IMPORTED INTERFACE)",
+            "cmake/ImportGTest.cmake",
+            string=True,
+        )
+
+        filter_file(
+            r"^    (xc|xcfun|libint2-static)\s*$",
+            "",
+            "CMakeLists.txt",
+            start_at="# Add all targets to the build-tree export set",
+        )
 
         filter_file(
             "function(import_libecpint)",
@@ -114,6 +121,42 @@ class Serenity(CMakePackage):
             string=True,
         )
 
+        if self.spec["lapack"].libs.names[0].startswith("mkl"):
+            filter_file(
+                "# Find libraries",
+                "# Find libraries\n"
+                "list(APPEND CMAKE_FIND_LIBRARY_SUFFIXES .so .so.1 .so.2)"
+                "cmake/FindMKL.cmake",
+                string=True,
+            )
+
+            filter_file(
+                "find_library(MKL_CORE_LIBRARY NAMES libmkl_core.so libmkl_core.so.1 "
+                "PATHS ${MKL_ROOT}/${MKL_LIB_ARCH})",
+                "find_library(MKL_CORE_LIBRARY NAMES libmkl_core "
+                "PATHS ${MKL_ROOT}/${MKL_LIB_ARCH})",
+                "cmake/FindMKL.cmake",
+                string=True,
+            )
+
+            filter_file(
+                "find_library(MKL_AVX2_LIBRARY NAMES libmkl_avx2.so libmkl_avx2.so.1 "
+                "PATHS ${MKL_ROOT}/${MKL_LIB_ARCH})",
+                "find_library(MKL_AVX2_LIBRARY NAMES libmkl_avx2 "
+                "PATHS ${MKL_ROOT}/${MKL_LIB_ARCH})",
+                "cmake/FindMKL.cmake",
+                string=True,
+            )
+
+            filter_file(
+                "find_library(MKL_VML_AVX2_LIBRARY NAMES libmkl_vml_avx2.so libmkl_vml_avx2.so.1 "
+                "PATHS ${MKL_ROOT}/${MKL_LIB_ARCH})",
+                "find_library(MKL_VML_AVX2_LIBRARY NAMES libmkl_vml_avx2 "
+                "PATHS ${MKL_ROOT}/${MKL_LIB_ARCH})",
+                "cmake/FindMKL.cmake",
+                string=True,
+            )
+
     def cmake_args(self):
         return [
             self.define("SERENITY_BUILD_TESTS", self.run_tests),
@@ -136,4 +179,6 @@ class Serenity(CMakePackage):
             self.define("BOOST_INCLUDE_DIR", self.spec["boost"].headers.directories[0]),
             self.define("BOOST_NO_SYSTEM_PATHS", True),
             self.define("Boost_NO_BOOST_CMAKE", True),
+            self.define("HDF5_LIBRARY_DIR", self.spec["hdf5"].libs.directories[0]),
+            self.define("HDF5_INCLUDE_DIR", self.spec["hdf5"].headers.directories[0]),
         ]
