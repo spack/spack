@@ -254,7 +254,7 @@ def gcc11_with_flags(compiler_factory):
 # This must use the mutable_config fixture because the test
 # adjusting_default_target_based_on_compiler uses the current_host fixture,
 # which changes the config.
-@pytest.mark.usefixtures("mutable_config", "mock_packages")
+@pytest.mark.usefixtures("mutable_config", "mock_packages", "do_not_check_runtimes_on_reuse")
 class TestConcretize:
     def test_concretize(self, spec):
         check_concretize(spec)
@@ -1727,7 +1727,7 @@ class TestConcretize:
         [
             (["libelf", "libelf@0.8.10"], 1),
             (["libdwarf%gcc", "libelf%clang"], 2),
-            (["libdwarf%gcc", "libdwarf%clang"], 4),
+            (["libdwarf%gcc", "libdwarf%clang"], 3),
             (["libdwarf^libelf@0.8.12", "libdwarf^libelf@0.8.13"], 4),
             (["hdf5", "zmpi"], 3),
             (["hdf5", "mpich"], 2),
