@@ -107,6 +107,9 @@ class Hip(CMakePackage):
         # ref https://github.com/ROCm/HIP/pull/2202
         depends_on("numactl", when="@3.7.0:")
 
+        for ver in ["6.0.0", "6.0.2"]:
+            depends_on("hipcc", when=f"@{ver}")
+
     # roc-obj-ls requirements
     depends_on("perl-file-which")
     depends_on("perl-uri-encode")
@@ -215,8 +218,6 @@ class Hip(CMakePackage):
 
     # Add hipcc sources thru the below
     for d_version, d_shasum in [
-        ("6.0.2", "d6209b14fccdd00d7231dec4b4f962aa23914b9dde389ba961370e8ba918bde5"),
-        ("6.0.0", "e9cfaaecaf0e6ed363946439197f340c115e8e1189f96dbd716cf20245c29255"),
         ("5.7.1", "d47d27ef2b5de7f49cdfd8547832ac9b437a32e6fc6f0e9c1646f4b704c90aee"),
         ("5.7.0", "9f839bf7226e5e26f3150f8ba6eca507ab9a668e68b207736301b3bb9040c973"),
         ("5.6.1", "5800fac92b841ef6f52acda78d9bf86f83970bec0fb848a6265d239bdb7eb51a"),
@@ -502,6 +503,7 @@ class Hip(CMakePackage):
         if self.spec.satisfies("@5.6:"):
             with working_dir("clr/hipamd/bin"):
                 filter_file("^#!/usr/bin/perl", f"#!{perl}", "roc-obj-extract", "roc-obj-ls")
+        if self.spec.satisfies("@5.6:5.7"):
             with working_dir("hipcc/bin"):
                 filter_shebang("hipconfig")
 
@@ -510,7 +512,7 @@ class Hip(CMakePackage):
             if self.spec.satisfies("@:5.5"):
                 with working_dir("bin"):
                     filter_file(" -lnuma", f" -L{numactl} -lnuma", "hipcc")
-            elif self.spec.satisfies("@5.6:"):
+            elif self.spec.satisfies("@5.6:5.7"):
                 with working_dir("hipcc/src"):
                     filter_file(" -lnuma", f" -L{numactl} -lnuma", "hipBin_amd.h")
 
@@ -540,10 +542,13 @@ class Hip(CMakePackage):
         if "@5.6.0:" in self.spec:
             args.append(self.define("ROCCLR_PATH", self.stage.source_path + "/clr/rocclr"))
             args.append(self.define("AMD_OPENCL_PATH", self.stage.source_path + "/clr/opencl"))
-            args.append(self.define("HIPCC_BIN_DIR", self.stage.source_path + "/hipcc/bin")),
             args.append(self.define("CLR_BUILD_HIP", True)),
             args.append(self.define("CLR_BUILD_OCL", False)),
             args.append(self.define("HIP_LLVM_ROOT", self.spec["llvm-amdgpu"].prefix))
+        if "@5.6:5.7" in self.spec:
+            args.append(self.define("HIPCC_BIN_DIR", self.stage.source_path + "/hipcc/bin")),
+        if "@6.0:" in self.spec:
+            args.append(self.define("HIPCC_BIN_DIR", self.spec["hipcc"].prefix.bin)),
         return args
 
     test_src_dir_old = "samples"
