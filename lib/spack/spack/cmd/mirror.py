@@ -108,6 +108,11 @@ def setup_parser(subparser):
             "and source use `--type binary --type source` (default)"
         ),
     )
+    add_parser.add_argument(
+        "--autopush",
+        action="store_true",
+        help=("set mirror to push automatically after installation"),
+    )
     add_parser_signed = add_parser.add_mutually_exclusive_group(required=False)
     add_parser_signed.add_argument(
         "--unsigned",
@@ -218,6 +223,7 @@ def mirror_add(args):
         or args.type
         or args.oci_username
         or args.oci_password
+        or args.autopush
         or args.signed is not None
     ):
         connection = {"url": args.url}
@@ -234,6 +240,8 @@ def mirror_add(args):
         if args.type:
             connection["binary"] = "binary" in args.type
             connection["source"] = "source" in args.type
+        if args.autopush:
+            connection["autopush"] = args.autopush
         if args.signed is not None:
             connection["signed"] = args.signed
         mirror = spack.mirror.Mirror(connection, name=args.name)

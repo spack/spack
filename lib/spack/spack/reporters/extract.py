@@ -9,7 +9,7 @@ from datetime import datetime
 
 import llnl.util.tty as tty
 
-from spack.install_test import TestStatus
+from spack.test_status import TestStatus
 
 # The keys here represent the only recognized (ctest/cdash) status values
 completed = {
