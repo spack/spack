@@ -22,7 +22,6 @@ class Exawind(CMakePackage, CudaPackage, ROCmPackage):
     version("1.0.0", tag="v1.0.0", submodules=True)
     license("Apache-2.0")
 
-
     variant("openfast", default=False, description="Enable OpenFAST integration")
     variant("hypre", default=True, description="Enable hypre solver")
     variant("stk_simd", default=False, description="Enable SIMD in STK")
