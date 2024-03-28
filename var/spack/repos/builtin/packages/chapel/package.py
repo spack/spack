@@ -446,7 +446,7 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
 
     depends_on("gmp", when="gmp=spack", type=("build", "link", "run"))
 
-    depends_on("python@3.7")
+    depends_on("python@3.7:")
     depends_on("cmake@3.16:")
 
     def unset_chpl_env_vars(self, env):
