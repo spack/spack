@@ -277,8 +277,7 @@ NP      = 14\n"
 class CMakeBuilder(cmake.CMakeBuilder):
     def cmake_args(self):
         spec = self.spec
-        args = []
-        args += [
+        args = [
             self.define_from_variant("ENABLE_MPI", "mpi"),
             self.define_from_variant("USE_OPENMP", "openmp"),
             self.define_from_variant("USE_ELPA", "elpa"),
