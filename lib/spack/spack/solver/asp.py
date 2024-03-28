@@ -3179,6 +3179,7 @@ class SpecBuilder:
             if spec.compiler in compilers:
                 flagmap_from_compiler = compilers[spec.compiler].flags
 
+            flag_to_group = {}
             for flag_type in spec.compiler_flags.valid_compiler_flags():
                 from_compiler = flagmap_from_compiler.get(flag_type, [])
                 from_sources = []
@@ -3198,13 +3199,22 @@ class SpecBuilder:
 
                     # add flags from each source, lowest to highest precedence
                     for node in sorted_sources:
-                        all_src_flags = list()
                         per_pkg_sources = [self._specs[node]]
                         if node.pkg in cmd_specs:
                             per_pkg_sources.append(cmd_specs[node.pkg])
                         for source in per_pkg_sources:
-                            all_src_flags.extend(source.compiler_flags.get(flag_type, []))
-                        extend_flag_list(from_sources, all_src_flags)
+                            flags = source.compiler_flags.get(flag_type, [])
+                            for flag in flags:
+                                grp_flags = flag.flag_group.split()
+                                if flag in flag_to_group:
+                                    if flag_to_group[flag] != grp_flags:
+                                        import pdb; pdb.set_trace()
+                                        raise Exception()
+                                    continue
+                                for grp_flag in grp_flags:
+                                    flag_to_group[grp_flag] = grp_flags
+
+                                extend_flag_list(from_sources, grp_flags)
 
                 # compiler flags from compilers config are lowest precedence
                 ordered_compiler_flags = list(llnl.util.lang.dedupe(from_compiler + from_sources))

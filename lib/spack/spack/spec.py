@@ -882,6 +882,9 @@ class FlagMap(lang.HashableMap):
             propagation (bool): if ``True`` the flag value will be passed to
                 the packages' dependencies. If``False`` it will not be passed
         """
+        #if value == "-a" and not flag_group:
+        #    import pdb; pdb.set_trace()
+        #    print(str(flag_group))
         flag_group = flag_group or value
         flag = CompilerFlag(value, propagate=propagation, flag_group=flag_group)
 
@@ -1568,8 +1571,9 @@ class Spec:
         elif name in valid_flags:
             assert self.compiler_flags is not None
             flags_and_propagation = spack.compiler.tokenize_flags(value, propagate)
+            flag_group = " ".join(x for (x, y) in flags_and_propagation)
             for flag, propagation in flags_and_propagation:
-                self.compiler_flags.add_flag(name, flag, propagation)
+                self.compiler_flags.add_flag(name, flag, propagation, flag_group)
         else:
             # FIXME:
             # All other flags represent variants. 'foo=true' and 'foo=false'
