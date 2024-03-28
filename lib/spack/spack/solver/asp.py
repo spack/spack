@@ -1049,13 +1049,16 @@ class SpackSolverSetup:
                 list(sorted(group, reverse=True, key=lambda x: vn.ver(x.version)))
             )
 
-        for declared_version in most_to_least_preferred:
+        for idx, declared_version in enumerate(most_to_least_preferred):
             self.gen.fact(
                 fn.pkg_fact(
                     pkg.name,
                     fn.version_declared(
                         declared_version.version,
-                        declared_version.weight,
+                        # TBD: Why does using the calculated weight break
+                        # a number of tests (externals and included config)?
+                        # declared_version.weight,
+                        idx,
                         str(declared_version.origin),
                     ),
                 )
