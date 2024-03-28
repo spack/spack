@@ -216,7 +216,7 @@ class Abacus(MakefilePackage, CMakePackage, CudaPackage, ROCmPackage):
 class MakefileBuilder(makefile.MakefileBuilder):
     build_directory = "source"
 
-    def edit(self, spec, prefix):
+    def edit(self, pkg, spec, prefix):
         if "+openmp" in spec:
             inc_var = "_openmp-"
             system_var = "ELPA_LIB = -L${ELPA_LIB_DIR} -lelpa_openmp -Wl, -rpath=${ELPA_LIB_DIR}"
