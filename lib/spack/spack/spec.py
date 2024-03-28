@@ -882,9 +882,6 @@ class FlagMap(lang.HashableMap):
             propagation (bool): if ``True`` the flag value will be passed to
                 the packages' dependencies. If``False`` it will not be passed
         """
-        #if value == "-a" and not flag_group:
-        #    import pdb; pdb.set_trace()
-        #    print(str(flag_group))
         flag_group = flag_group or value
         flag = CompilerFlag(value, propagate=propagation, flag_group=flag_group)
 

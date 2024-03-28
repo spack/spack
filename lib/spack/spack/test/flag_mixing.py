@@ -11,12 +11,16 @@ import spack.package_base
 import spack.repo
 import spack.util.spack_yaml as syaml
 import spack.version
+from spack.main import SpackCommand
 from spack.spec import Spec
 from spack.test.conftest import create_test_repo
 
 pytestmark = [
     pytest.mark.only_clingo("Original concretizer does not support configuration requirements")
 ]
+
+
+solve = SpackCommand("solve")
 
 
 _pkgx = (
@@ -76,7 +80,7 @@ compilers::
 """
     update_concretize_scope(conf_str, "compilers")
 
-    s1 = Spec("y %gcc@12-fake").concretized()
+    Spec("y %gcc@12-fake").concretized()
 
 
 def test_mix_spec_and_requirements(concretize_scope, test_repo):
@@ -94,11 +98,6 @@ packages:
 def test_mix_spec_and_dependent(concretize_scope, test_repo):
     s1 = Spec('x ^y cflags="-a"').concretized()
     assert s1["y"].satisfies('cflags="-a -d1"')
-
-
-from spack.main import SpackCommand
-
-solve = SpackCommand("solve")
 
 
 def test_mix_spec_and_compiler_cfg(concretize_scope, test_repo):

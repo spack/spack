@@ -3208,7 +3208,6 @@ class SpecBuilder:
                                 grp_flags = flag.flag_group.split()
                                 if flag in flag_to_group:
                                     if flag_to_group[flag] != grp_flags:
-                                        import pdb; pdb.set_trace()
                                         raise Exception()
                                     continue
                                 for grp_flag in grp_flags:
