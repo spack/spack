@@ -132,6 +132,7 @@ class Ncl(Package):
 
     sanity_check_is_file = ["bin/ncl"]
 
+    @run_before("install")
     def patch(self):
         # Make configure scripts use Spack's tcsh
         files = ["Configure"] + glob.glob("config/*")
