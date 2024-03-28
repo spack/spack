@@ -1410,6 +1410,9 @@ class Spec:
 
     @property
     def is_develop(self):
+        """Return whether the Spec represents a user-developed package
+        in a Spack ``Environment`` (i.e. using `spack develop`).
+        """
         return bool(self.variants.get("dev_path", False))
 
     def clear_dependencies(self):
