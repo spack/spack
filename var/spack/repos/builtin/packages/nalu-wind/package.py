@@ -15,7 +15,7 @@ def _parse_float(val):
         return False
 
 
-class NaluWind(CMakePackage, CudaPackage):
+class NaluWind(CMakePackage, CudaPackage, ROCmPackage):
     """Nalu-Wind: Wind energy focused variant of Nalu."""
 
     homepage = "https://nalu-wind.readthedocs.io"
@@ -26,6 +26,7 @@ class NaluWind(CMakePackage, CudaPackage):
     tags = ["ecp", "ecp-apps"]
 
     version("master", branch="master")
+    version("2.0.0", tag="v2.0.0")
 
     variant("pic", default=True, description="Position independent code")
     variant(
@@ -45,12 +46,31 @@ class NaluWind(CMakePackage, CudaPackage):
     variant("hypre", default=True, description="Compile with Hypre support")
     variant("trilinos-solvers", default=True, description="Compile with Trilinos Solvers support")
     variant("catalyst", default=False, description="Compile with Catalyst support")
+    variant("shared", default=True, description="Build shared libraries")
     variant("fftw", default=False, description="Compile with FFTW support")
+    variant("fsi", default=False, description="Enable fluid-structure-interaction models")
     variant("boost", default=False, description="Enable Boost integration")
+    variant("gpu-aware-mpi", default=False, description="gpu-aware-mpi")
     variant("wind-utils", default=False, description="Build wind-utils")
+    variant("umpire", default=False, description="Enable Umpire")
+    conflicts(
+        "+shared",
+        when="+cuda",
+        msg="invalid device functions are generated with shared libs and cuda",
+    )
+    conflicts(
+        "+shared",
+        when="+rocm",
+        msg="invalid device functions are generated with shared libs and rocm",
+    )
+    conflicts("+cuda", when="+rocm")
+    conflicts("+rocm", when="+cuda")
 
     depends_on("mpi")
     depends_on("yaml-cpp@0.5.3:")
+    depends_on("openfast@4.0.0:+cxx+netcdf", when="+fsi")
+    depends_on("trilinos@13.4.1+exodus+zoltan+stk", when="@=2.0.0")
+    depends_on("hypre@2.29.0:", when="@2.0.0:+hypre")
     depends_on(
         "trilinos@13:+exodus+tpetra+zoltan+stk~superlu-dist~superlu+hdf5+shards~hypre+gtest"
     )
@@ -76,12 +96,42 @@ class NaluWind(CMakePackage, CudaPackage):
             "hypre@develop +mpi+cuda~int64~superlu-dist cuda_arch={0}".format(_arch),
             when="+hypre+cuda cuda_arch={0}".format(_arch),
         )
+    for _arch in ROCmPackage.amdgpu_targets:
+        depends_on(
+            "trilinos@13.4.0.2022.10.27: "
+            "~shared+exodus+tpetra+zoltan+stk~superlu-dist~superlu"
+            "+hdf5+shards~hypre+gtest+rocm amdgpu_target={0}".format(_arch),
+            when="+rocm amdgpu_target={0}".format(_arch),
+        )
+        depends_on(
+            "hypre+rocm amdgpu_target={0}".format(_arch),
+            when="+hypre+rocm amdgpu_target={0}".format(_arch),
+        )
+
     depends_on("trilinos-catalyst-ioss-adapter", when="+catalyst")
     depends_on("fftw+mpi", when="+fftw")
     depends_on("nccmp")
     # indirect dependency needed to make original concretizer work
     depends_on("netcdf-c+parallel-netcdf")
     depends_on("boost +filesystem +iostreams cxxstd=14", when="+boost")
+    supported_cxxstd = ["17"]
+    variant(
+        "cxxstd", default="17", values=supported_cxxstd, multi=False, description="cxx standard"
+    )
+    for std in supported_cxxstd:
+        depends_on("trilinos cxxstd=%s" % std, when="cxxstd=%s" % std)
+
+    def setup_build_environment(self, env):
+        if "~stk_simd" in self.spec:
+            env.append_flags("CXXFLAGS", "-DUSE_STK_SIMD_NONE")
+        if "+cuda" in self.spec:
+            env.set("CUDA_LAUNCH_BLOCKING", "1")
+            env.set("CUDA_MANAGED_FORCE_DEVICE_ALLOC", "1")
+            env.set("OMPI_CXX", self.spec["kokkos-nvcc-wrapper"].kokkos_cxx)
+            env.set("MPICH_CXX", self.spec["kokkos-nvcc-wrapper"].kokkos_cxx)
+            env.set("MPICXX_CXX", self.spec["kokkos-nvcc-wrapper"].kokkos_cxx)
+        if "+rocm" in self.spec:
+            env.append_flags("CXXFLAGS", "-fgpu-rdc")
 
     def cmake_args(self):
         spec = self.spec
@@ -95,22 +145,26 @@ class NaluWind(CMakePackage, CudaPackage):
             self.define_from_variant("ENABLE_CUDA", "cuda"),
             self.define_from_variant("ENABLE_WIND_UTILS", "wind-utils"),
             self.define_from_variant("ENABLE_BOOST", "boost"),
+            self.define_from_variant("CMAKE_CXX_STANDARD", "cxxstd"),
+            self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
+            self.define_from_variant("ENABLE_OPENFAST", "openfast"),
+            self.define_from_variant("ENABLE_TIOGA", "tioga"),
+            self.define_from_variant("ENABLE_HYPRE", "hypre"),
+            self.define_from_variant("ENABLE_TRILINOS_SOLVERS", "trilinos-solvers"),
+            self.define_from_variant("ENABLE_PARAVIEW_CATALYST", "catalyst"),
+            self.define_from_variant("ENABLE_FFTW", "fftw"),
+            self.define_from_variant("ENABLE_UMPIRE", "umpire"),
         ]
 
-        args.append(self.define_from_variant("ENABLE_OPENFAST", "openfast"))
         if "+openfast" in spec:
             args.append(self.define("OpenFAST_DIR", spec["openfast"].prefix))
 
-        args.append(self.define_from_variant("ENABLE_TIOGA", "tioga"))
         if "+tioga" in spec:
             args.append(self.define("TIOGA_DIR", spec["tioga"].prefix))
 
-        args.append(self.define_from_variant("ENABLE_HYPRE", "hypre"))
         if "+hypre" in spec:
             args.append(self.define("HYPRE_DIR", spec["hypre"].prefix))
 
-        args.append(self.define_from_variant("ENABLE_TRILINOS_SOLVERS", "trilinos-solvers"))
-        args.append(self.define_from_variant("ENABLE_PARAVIEW_CATALYST", "catalyst"))
         if "+catalyst" in spec:
             args.append(
                 self.define(
@@ -118,7 +172,6 @@ class NaluWind(CMakePackage, CudaPackage):
                 )
             )
 
-        args.append(self.define_from_variant("ENABLE_FFTW", "fftw"))
         if "+fftw" in spec:
             args.append(self.define("FFTW_DIR", spec["fftw"].prefix))
 
@@ -130,6 +183,15 @@ class NaluWind(CMakePackage, CudaPackage):
                     self.define("TEST_REL_TOL", spec.variants["rel_tol"].value),
                 ]
             )
+
+        if "+umpire" in spec:
+            args.append(self.define("UMPIRE_DIR", spec["umpire"].prefix))
+
+        if "+rocm" in spec:
+            args.append(self.define("CMAKE_CXX_COMPILER", spec["hip"].hipcc))
+            args.append(self.define("ENABLE_ROCM", True))
+            targets = spec.variants["amdgpu_target"].value
+            args.append(self.define("GPU_TARGETS", ";".join(str(x) for x in targets)))
 
         if "darwin" in spec.architecture:
             args.append(self.define("CMAKE_MACOSX_RPATH", "ON"))
