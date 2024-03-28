@@ -177,7 +177,7 @@ class Abacus(MakefilePackage, CMakePackage, CudaPackage, ROCmPackage):
     with when("~openmp"):
         depends_on("elpa~openmp", when="+elpa")
 
-    requires("%clang" or "%rocmcc", when="+rocm", msg="build with rocm requires rocm compiler")
+    requires("%clang", when="+rocm", msg="build with rocm requires rocm compiler")
 
     conflicts(
         "^blis",
