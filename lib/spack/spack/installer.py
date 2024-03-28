@@ -2282,7 +2282,7 @@ class BuildProcessInstaller:
         # to destroy
         self.keep_stage = is_develop or install_args.get("keep_stage", False)
         # whether to restage
-        self.restage = (not is_develop) or install_args.get("restage", False)
+        self.restage = (not is_develop) and install_args.get("restage", False)
 
         # whether to skip the patch phase
         self.skip_patch = install_args.get("skip_patch", False)
