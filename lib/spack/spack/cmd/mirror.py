@@ -72,9 +72,9 @@ def setup_parser(subparser):
         " retrieve all versions of each package",
     )
     create_parser.add_argument(
-        "--public",
+        "--private",
         action="store_true",
-        help="if this is a public mirror, avoid adding packages when" " licensing prohibits it",
+        help="if this is a private mirror, include packages that should normally not be distributed",
     )
     arguments.add_common_arguments(create_parser, ["specs"])
     arguments.add_concretizer_args(create_parser)
@@ -434,8 +434,8 @@ def versions_per_spec(args):
     return num_versions
 
 
-def create_mirror_for_individual_specs(mirror_specs, path, skip_unstable_versions, only_public):
-    if only_public:
+def create_mirror_for_individual_specs(mirror_specs, path, skip_unstable_versions, include_private):
+    if not include_private:
         mirror_specs = filter_private(mirror_specs)
     present, mirrored, error = spack.mirror.create(path, mirror_specs, skip_unstable_versions)
     tty.msg("Summary for mirror in {}".format(path))
@@ -492,7 +492,7 @@ def mirror_create(args):
             path=path,
             skip_unstable_versions=args.skip_unstable_versions,
             selection_fn=not_excluded_fn(args),
-            only_public=args.public,
+            include_private=args.private,
         )
         return
 
@@ -501,7 +501,7 @@ def mirror_create(args):
             path=path,
             skip_unstable_versions=args.skip_unstable_versions,
             selection_fn=not_excluded_fn(args),
-            only_public=args.public,
+            include_private=args.private,
         )
         return
 
@@ -510,7 +510,7 @@ def mirror_create(args):
         mirror_specs,
         path=path,
         skip_unstable_versions=args.skip_unstable_versions,
-        only_public=args.public,
+        include_private=args.private,
     )
 
 
@@ -528,9 +528,9 @@ def filter_private(mirror_specs):
     return public_specs
 
 
-def create_mirror_for_all_specs(path, skip_unstable_versions, selection_fn, only_public):
+def create_mirror_for_all_specs(path, skip_unstable_versions, selection_fn, include_private):
     mirror_specs = all_specs_with_all_versions(selection_fn=selection_fn)
-    if only_public:
+    if not include_private:
         mirror_specs = filter_private(mirror_specs)
     mirror_cache, mirror_stats = spack.mirror.mirror_cache_and_stats(
         path, skip_unstable_versions=skip_unstable_versions
@@ -544,14 +544,14 @@ def create_mirror_for_all_specs(path, skip_unstable_versions, selection_fn, only
 
 
 def create_mirror_for_all_specs_inside_environment(
-    path, skip_unstable_versions, selection_fn, only_public
+    path, skip_unstable_versions, selection_fn, include_private
 ):
     mirror_specs = concrete_specs_from_environment(selection_fn=selection_fn)
     create_mirror_for_individual_specs(
         mirror_specs,
         path=path,
         skip_unstable_versions=skip_unstable_versions,
-        only_public=only_public,
+        include_private=include_private,
     )
 
 

@@ -134,9 +134,9 @@ def setup_parser(subparser: argparse.ArgumentParser):
         "runtime dependencies",
     )
     push.add_argument(
-        "--public",
+        "--private",
         action="store_true",
-        help="if this is a public mirror, avoid adding" " packages when licensing prohibits it",
+        help="if this is a private mirror, include packages that should normally not be distributed",
     )
     arguments.add_common_arguments(push, ["specs", "jobs"])
     push.set_defaults(func=push_fn)
@@ -439,7 +439,7 @@ def push_fn(args):
         root="package" in args.things_to_install,
         dependencies="dependencies" in args.things_to_install,
     )
-    if args.public:
+    if not args.private:
         specs = _skip_no_redistribute_for_public(specs)
 
     # When pushing multiple specs, print the url once ahead of time, as well as how
