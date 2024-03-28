@@ -23,6 +23,7 @@ env = SpackCommand("env")
 pytestmark = pytest.mark.not_on_windows("does not run on windows")
 
 
+@pytest.mark.disable_clean_stage_check
 def test_dev_build_basics(tmpdir, install_mockery):
     spec = spack.spec.Spec(f"dev-build-test-install@0.0.0 dev_path={tmpdir}").concretized()
 
@@ -144,6 +145,7 @@ def test_dev_build_drop_in(tmpdir, mock_packages, monkeypatch, install_mockery, 
         assert "lib/spack/env" in output
 
 
+@pytest.mark.disable_clean_stage_check
 def test_dev_build_fails_already_installed(tmpdir, install_mockery):
     spec = spack.spec.Spec("dev-build-test-install@0.0.0 dev_path=%s" % tmpdir)
     spec.concretize()
@@ -184,6 +186,7 @@ def test_dev_build_fails_no_version(mock_packages):
     assert "dev-build spec must have a single, concrete version" in output
 
 
+@pytest.mark.disable_clean_stage_check
 def test_dev_build_env(tmpdir, install_mockery, mutable_mock_env_path):
     """Test Spack does dev builds for packages in develop section of env."""
     # setup dev-build-test-install package for dev build
@@ -220,6 +223,7 @@ spack:
         assert f.read() == spec.package.replacement_string
 
 
+@pytest.mark.disable_clean_stage_check
 def test_dev_build_env_with_vars(tmpdir, install_mockery, mutable_mock_env_path, monkeypatch):
     """Test Spack does dev builds for packages in develop section of env (path with variables)."""
     # setup dev-build-test-install package for dev build
@@ -292,6 +296,7 @@ spack:
                 install()
 
 
+@pytest.mark.disable_clean_stage_check
 def test_dev_build_multiple(tmpdir, install_mockery, mutable_mock_env_path, mock_fetch):
     """Test spack install with multiple developer builds
 
@@ -355,6 +360,7 @@ spack:
             assert f.read() == spec.package.replacement_string
 
 
+@pytest.mark.disable_clean_stage_check
 def test_dev_build_env_dependency(tmpdir, install_mockery, mock_fetch, mutable_mock_env_path):
     """
     Test non-root specs in an environment are properly marked for dev builds.
@@ -404,6 +410,7 @@ spack:
     assert spec.satisfies("^dev_path=*")
 
 
+@pytest.mark.disable_clean_stage_check
 @pytest.mark.parametrize("test_spec", ["dev-build-test-install", "dependent-of-dev-build"])
 def test_dev_build_rebuild_on_source_changes(
     test_spec, tmpdir, install_mockery, mutable_mock_env_path, mock_fetch
