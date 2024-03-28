@@ -206,9 +206,7 @@ def push_to_url(local_file_path, remote_path, keep_original=True, extra_args=Non
             os.remove(local_file_path)
 
     else:
-        raise NotImplementedError(
-            "Unrecognized URL scheme: {SCHEME}".format(SCHEME=remote_url.scheme)
-        )
+        raise NotImplementedError(f"Unrecognized URL scheme: {remote_url.scheme}")
 
 
 def base_curl_fetch_args(url, timeout=0):
@@ -535,7 +533,7 @@ def list_url(url, recursive=False):
     if local_path:
         if recursive:
             # convert backslash to forward slash as required for URLs
-            return [str(PurePosixPath(Path(p))) for p in list(_iter_local_prefix(local_path))]
+            return [str(PurePosixPath(Path(p))) for p in _iter_local_prefix(local_path)]
         return [
             subpath
             for subpath in os.listdir(local_path)

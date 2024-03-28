@@ -42,6 +42,7 @@ class Fmt(CMakePackage):
     version("3.0.2", sha256="51407b62a202b29d1a9c0eb5ecd4095d30031aea65407c42c25cb10cb5c59ad4")
     version("3.0.1", sha256="4c9af0dc919a8ae7022b44e1a03c435e42d65c866f44667d8d920d342b098550")
     version("3.0.0", sha256="1b050b66fa31b74f1d75a14f15e99e728ab79572f176a53b2f8ad7c201c30ceb")
+    version("master", branch="master")
 
     variant(
         "cxxstd",

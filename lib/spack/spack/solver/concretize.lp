@@ -159,6 +159,14 @@ error(100, multiple_values_error, Attribute, Package)
      2 { attr(Attribute, node(ID, Package), Value) }.
 
 %-----------------------------------------------------------------------------
+% Languages used
+%-----------------------------------------------------------------------------
+
+attr("language", node(X, Package), Language) :-
+  condition_holds(ConditionID, node(X, Package)),
+  pkg_fact(Package,language(ConditionID, Language)).
+
+%-----------------------------------------------------------------------------
 % Version semantics
 %-----------------------------------------------------------------------------
 
@@ -1011,16 +1019,6 @@ node_os_weight(PackageNode, Weight)
     attr("node_os", PackageNode, OS),
     os(OS, Weight).
 
-% match semantics for OS's
-node_os_match(PackageNode, DependencyNode) :-
-   depends_on(PackageNode, DependencyNode),
-   attr("node_os", PackageNode, OS),
-   attr("node_os", DependencyNode, OS).
-
-node_os_mismatch(PackageNode, DependencyNode) :-
-   depends_on(PackageNode, DependencyNode),
-   not node_os_match(PackageNode, DependencyNode).
-
 % every OS is compatible with itself. We can use `os_compatible` to declare
 os_compatible(OS, OS) :- os(OS).
 
@@ -1172,11 +1170,13 @@ attr("node_compiler_version_satisfies", PackageNode, Compiler, Constraint)
 
 % If the compiler version was set from the command line,
 % respect it verbatim
-:- attr("node_compiler_version_set", PackageNode, Compiler, Version),
-   not attr("node_compiler_version", PackageNode, Compiler, Version).
+error(100, "Cannot set the required compiler: {2}%{0}@{1}", Compiler, Version, Package)
+  :- attr("node_compiler_version_set", node(X, Package), Compiler, Version),
+     not attr("node_compiler_version", node(X, Package), Compiler, Version).
 
-:- attr("node_compiler_set", PackageNode, Compiler),
-   not attr("node_compiler_version", PackageNode, Compiler, _).
+error(100, "Cannot set the required compiler: {1}%{0}", Compiler, Package)
+  :- attr("node_compiler_set", node(X, Package), Compiler),
+     not attr("node_compiler_version", node(X, Package), Compiler, _).
 
 % Cannot select a compiler if it is not supported on the OS
 % Compilers that are explicitly marked as allowed
@@ -1186,7 +1186,8 @@ error(100, "{0} compiler '%{1}@{2}' incompatible with 'os={3}'", Package, Compil
      node_compiler(node(X, Package), CompilerID),
      compiler_name(CompilerID, Compiler),
      compiler_version(CompilerID, Version),
-     not compiler_os(CompilerID, OS),
+     compiler_os(CompilerID, CompilerOS),
+     not os_compatible(CompilerOS, OS),
      not allow_compiler(Compiler, Version),
      build(node(X, Package)).
 
@@ -1504,16 +1505,6 @@ opt_criterion(39, "compiler mismatches that are not from CLI").
 #minimize{
     1@39+Priority,PackageNode,DependencyNode
     : compiler_mismatch_required(PackageNode, DependencyNode),
-      build_priority(PackageNode, Priority)
-}.
-
-% Try to minimize the number of compiler mismatches in the DAG.
-opt_criterion(35, "OS mismatches").
-#minimize{ 0@235: #true }.
-#minimize{ 0@35: #true }.
-#minimize{
-    1@35+Priority,PackageNode,DependencyNode
-    : node_os_mismatch(PackageNode, DependencyNode),
       build_priority(PackageNode, Priority)
 }.
 

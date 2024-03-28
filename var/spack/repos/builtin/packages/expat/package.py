@@ -17,9 +17,19 @@ class Expat(AutotoolsPackage, CMakePackage):
 
     license("MIT")
 
-    version("2.6.1", sha256="4677d957c0c6cb2a3321101944574c24113b637c7ab1cf0659a27c5babc201fd")
-    version("2.6.0", sha256="ff60e6a6b6ce570ae012dc7b73169c7fdf4b6bf08c12ed0ec6f55736b78d85ba")
-    # deprecate all releases before 2.6.0 because of security issues
+    version("2.6.2", sha256="9c7c1b5dcbc3c237c500a8fb1493e14d9582146dd9b42aa8d3ffb856a3b927e0")
+    # deprecate all releases before 2.6.2 because of security issues
+    # CVE-2024-28757 (fixed in 2.6.2)
+    version(
+        "2.6.1",
+        sha256="4677d957c0c6cb2a3321101944574c24113b637c7ab1cf0659a27c5babc201fd",
+        deprecated=True,
+    )
+    version(
+        "2.6.0",
+        sha256="ff60e6a6b6ce570ae012dc7b73169c7fdf4b6bf08c12ed0ec6f55736b78d85ba",
+        deprecated=True,
+    )
     # CVE-2023-52425 (fixed in 2.6.0)
     # CVE-2023-52426 (fixed in 2.6.0)
     version(
