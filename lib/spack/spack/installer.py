@@ -2311,9 +2311,15 @@ class BuildProcessInstaller:
         """Main entry point from ``build_process`` to kick off install in child."""
 
         stage = self.pkg.stage
-        stage.keep = self.keep_stage
+        is_develop = self.pkg.spec.is_develop
 
-        if self.restage:
+        # Note: user commands do not have an explicit choice to disable
+        # keeping stages (i.e., we have a --keep-stage option, but not
+        # a --destroy-stage option), so we can override a default choice
+        # to destroy
+        stage.keep = self.keep_stage or is_develop
+
+        if self.restage and (not is_develop):
             stage.destroy()
 
         with stage:
