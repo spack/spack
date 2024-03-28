@@ -18,6 +18,7 @@ class PyJaxlib(PythonPackage, CudaPackage):
     buildtmp = ""
 
     license("Apache-2.0")
+    maintainers("adamjstewart")
 
     version("0.4.25", sha256="fc1197c401924942eb14185a61688d0c476e3e81ff71f9dc95e620b57c06eec8")
     version("0.4.24", sha256="c4e6963c2c36f634a9a1765e476a1ed4e6c4a7954465ebf72e29f344c28ddc28")
@@ -82,7 +83,7 @@ class PyJaxlib(PythonPackage, CudaPackage):
     )
 
     # https://github.com/google/jax/issues/19992
-    conflicts("@0.4.16:", when="target=ppc64le:")
+    conflicts("@0.4.16:0.4.25", when="target=ppc64le:")
 
     def patch(self):
         self.tmp_path = tempfile.mkdtemp(prefix="spack")
