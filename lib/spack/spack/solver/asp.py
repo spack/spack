@@ -3108,7 +3108,7 @@ class SpecBuilder:
         self._flag_compiler_defaults.add(node)
 
     def node_flag(self, node, flag_type, flag, flag_group):
-        self._specs[node].compiler_flags.add_flag(flag_type, flag, False)
+        self._specs[node].compiler_flags.add_flag(flag_type, flag, False, flag_group)
 
     def node_flag_source(self, node, flag_type, source):
         self._flag_sources[(node, flag_type)].add(source)
