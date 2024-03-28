@@ -85,7 +85,6 @@ class Onednn(CMakePackage):
             "tbb",
             "seq",
             conditional("threadpool", when="@1.4:"),
-            conditional("dpcpp", when="@2:"),
             conditional("sycl", when="@2:"),
         ),
         multi=False,
@@ -94,7 +93,7 @@ class Onednn(CMakePackage):
         "gpu_runtime",
         default="none",
         description="Runtime to use for GPU engines",
-        values=("ocl", "none", conditional("dpcpp", when="@2:"), conditional("sycl", when="@2:")),
+        values=("ocl", "none", conditional("sycl", when="@2:")),
         multi=False,
     )
     variant(

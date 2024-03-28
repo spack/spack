@@ -248,7 +248,7 @@ case "$command" in
         lang_flags=C
         debug_flags="-g"
         ;;
-    c++|CC|g++|clang++|armclang++|icpc|icpx|dpcpp|pgc++|nvc++|xlc++|xlc++_r|FCC|amdclang++|crayCC)
+    c++|CC|g++|clang++|armclang++|icpc|icpx|pgc++|nvc++|xlc++|xlc++_r|FCC|amdclang++|crayCC)
         command="$SPACK_CXX"
         language="C++"
         comp="CXX"
@@ -526,7 +526,7 @@ categorize_arguments() {
                     continue
                 fi
 
-                replaced="$after$stripped" 
+                replaced="$after$stripped"
 
                 # it matched, remove it
                 shift
@@ -913,4 +913,3 @@ fi
 # Execute the full command, preserving spaces with IFS set
 # to the alarm bell separator.
 IFS="$lsep"; exec $full_command_list
-
