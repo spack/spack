@@ -65,6 +65,7 @@ class Hiprand(CMakePackage, CudaPackage, ROCmPackage):
         values=("Release", "Debug", "RelWithDebInfo"),
         description="CMake build type",
     )
+    variant("asan", default=False, description="Build with address-sanitizer enabled or disabled")
 
     depends_on("cmake@3.10.2:", type="build")
 
@@ -106,6 +107,8 @@ class Hiprand(CMakePackage, CudaPackage, ROCmPackage):
 
     def setup_build_environment(self, env):
         env.set("CXX", self.spec["hip"].hipcc)
+        if self.spec.satisfies("+asan"):
+            self.asan_on(env, self.spec["llvm-amdgpu"].prefix)
 
     @classmethod
     def determine_version(cls, lib):
