@@ -51,6 +51,11 @@ class Intel(Compiler):
     required_libs = ["libirc", "libifcore", "libifcoremt", "libirng"]
 
     @property
+    def deprecated(self):
+        # change to True for error
+        return False, "The %intel toolchain has been deprecated, use %oneapi instead."
+
+    @property
     def debug_flags(self):
         return ["-debug", "-g", "-g0", "-g1", "-g2", "-g3"]
 
