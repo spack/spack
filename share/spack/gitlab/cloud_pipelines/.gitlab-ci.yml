@@ -529,7 +529,7 @@ developer-tools-build:
 
 developer-tools-manylinux2014-generate:
   extends: [ ".developer-tools-manylinux2014", ".generate-x86_64"]
-  image:  ecpe4s/manylinux2014:2024.03.11
+  image:  ecpe4s/manylinux2014:2024.03.28
 
 developer-tools-manylinux2014-build:
   extends: [ ".developer-tools-manylinux2014", ".build" ]
