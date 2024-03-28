@@ -14,8 +14,16 @@ class PySvgutils(PythonPackage):
 
     license("MIT")
 
-    version("0.3.4", sha256="9ef48f44cb1d460a7747dd02694200fda25eb9faf6dea392118def2695e0e053")
-    version("0.3.1", sha256="cd52474765fd460ad2389947f77589de96142f6f0ce3f61e08ccfabeac2ff8af")
+    version(
+        "0.3.4",
+        sha256="4d08524a08126553c1a9bf2639616cf31290adea6fd235a3eb67d77c748abc00",
+        url="https://pypi.org/packages/44/79/0367ebd8a2edfdc46332b90bce1fd183e25078ed1b0d446c6bf42ea7ba7a/svgutils-0.3.4-py3-none-any.whl",
+    )
+    version(
+        "0.3.1",
+        sha256="891bbc55c440b425f682ff5be3a9d55d6088b7bbf0db18824df5fb8f5058e59b",
+        url="https://pypi.org/packages/81/af/0da722445643004b4adf09c3cff72d4902048072bc7237ae09e42a220388/svgutils-0.3.1-py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-lxml", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-lxml", when="@0.1.4:0.1,0.3:")

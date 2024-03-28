@@ -13,7 +13,8 @@ class PyAsyncGenerator(PythonPackage):
 
     license("Apache-2.0")
 
-    version("1.10", sha256="6ebb3d106c12920aaae42ccb6f787ef5eefdcdd166ea3d628fa8476abe712144")
-
-    depends_on("py-setuptools", type="build")
-    depends_on("python@3.5:")
+    version(
+        "1.10",
+        sha256="01c7bf666359b4967d2cda0000cc2e4af16a0ae098cbffcb8472fb9e8ad6585b",
+        url="https://pypi.org/packages/71/52/39d20e03abd0ac9159c162ec24b93fbcaa111e8400308f2465432495ca2b/async_generator-1.10-py3-none-any.whl",
+    )

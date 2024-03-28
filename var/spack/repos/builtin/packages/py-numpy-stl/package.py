@@ -14,11 +14,17 @@ class PyNumpyStl(PythonPackage):
 
     license("BSD-3-Clause")
 
-    version("3.0.0", sha256="578b78eacb0529ac9aba2f17dcc363d58c7c3c5708710c18f8c1e9965f2e81ac")
-    version("2.10.1", sha256="f6b529b8a8112dfe456d4f7697c7aee0aca62be5a873879306afe4b26fca963c")
+    version(
+        "3.0.0",
+        sha256="44d56dec3b409b73f7126089ece859d0213d302e39c2375496e64f6dc574347c",
+        url="https://pypi.org/packages/02/ee/72e3df8eeedfb9cebc4c5c9038b3922084d0eaef1cc2b5ee81e555ee0451/numpy_stl-3.0.0-py3-none-any.whl",
+    )
+    version(
+        "2.10.1",
+        sha256="1c9f8209ba4fc9b5eb54740b375d6ab3c238ed3a1ce3f776d72e04f44c8b91fa",
+        url="https://pypi.org/packages/c9/5d/6cf10be944702c8b4c49ee339790ef1b575607cbc3b1e2b3e8f993135458/numpy_stl-2.10.1-py2-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-
-    depends_on("py-numpy", type=("build", "run"))
-    depends_on("py-python-utils@1.6.2:", when="@2.10.1", type=("build", "run"))
-    depends_on("py-python-utils@3.4.5:", when="@3:", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-numpy", when="@2.17:")
+        depends_on("py-python-utils@3.4.5:", when="@3:")

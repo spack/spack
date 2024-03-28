@@ -14,7 +14,8 @@ class PyPyspellchecker(PythonPackage):
 
     license("MIT")
 
-    version("0.6.2", sha256="af6a1d0393a175499475a873f31e52135f1efd5fc912c979101b795b3c2ee77f")
-
-    depends_on("python@3.0:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
+    version(
+        "0.6.2",
+        sha256="218759d4166fd49dee5c0473da99792d9274aca495ded0d9594a0bd75e2831ca",
+        url="https://pypi.org/packages/64/c7/435f49c0ac6bec031d1aba4daf94dc21dc08a9db329692cdb77faac51cea/pyspellchecker-0.6.2-py3-none-any.whl",
+    )

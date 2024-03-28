@@ -14,7 +14,8 @@ class PyPylev(PythonPackage):
 
     license("BSD-3-Clause")
 
-    version("1.4.0", sha256="9e77e941042ad3a4cc305dcdf2b2dec1aec2fbe3dd9015d2698ad02b173006d1")
-
-    depends_on("python@2.7,3.3:", type=("build", "run"))
-    depends_on("py-setuptools@42:", type="build")
+    version(
+        "1.4.0",
+        sha256="7b2e2aa7b00e05bb3f7650eb506fc89f474f70493271a35c242d9a92188ad3dd",
+        url="https://pypi.org/packages/04/78/95cfe72991d22994f0ec5a3b742b31c95a28344d33e06b69406b68398a29/pylev-1.4.0-py2.py3-none-any.whl",
+    )

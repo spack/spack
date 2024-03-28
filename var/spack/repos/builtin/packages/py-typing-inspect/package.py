@@ -14,8 +14,12 @@ class PyTypingInspect(PythonPackage):
 
     license("MIT")
 
-    version("0.8.0", sha256="8b1ff0c400943b6145df8119c41c244ca8207f1f10c9c057aeed1560e4806e3d")
+    version(
+        "0.8.0",
+        sha256="5fbf9c1e65d4fa01e701fe12a5bca6c6e08a4ffd5bc60bfac028253a447c5188",
+        url="https://pypi.org/packages/be/01/59b743dca816c4b6ca891b9e0f84d20513cd61bdbbaa8615de8f5aab68c1/typing_inspect-0.8.0-py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-mypy-extensions@0.3:", type=("build", "run"))
-    depends_on("py-typing-extensions@3.7.4:", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-mypy-extensions@0.3:", when="@0.3.1:")
+        depends_on("py-typing-extensions@3.7.4:", when="@0.5:")

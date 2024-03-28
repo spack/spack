@@ -14,10 +14,15 @@ class PyShtab(PythonPackage):
 
     license("Apache-2.0")
 
-    version("1.3.4", sha256="353f2a3a5178cd2df8eb746e7ab26a5039a9989e4386de8fd239d8c1653a8887")
-    version("1.3.3", sha256="1f7f263631acdf0a9e685bbf7126a0fa711c2d663db12441670b1cea3fa431d4")
+    version(
+        "1.3.4",
+        sha256="aa392d1cdfa9dfd047887bed1be0bd0c99cba77851848a36bc175093e582a462",
+        url="https://pypi.org/packages/e4/10/54846a1cd8c2291d2afd1f4c56ddcf090e36a9e014387ec655577f669983/shtab-1.3.4-py2.py3-none-any.whl",
+    )
+    version(
+        "1.3.3",
+        sha256="bfc0dbeccf1106af25e01a366ada3b8c4005da0c62130fafc7da24dfa4c54914",
+        url="https://pypi.org/packages/7a/b2/6a1669b94868e9b0856000d3daa8e60eba544668611e61a015799330b76a/shtab-1.3.3-py2.py3-none-any.whl",
+    )
 
     # setuptools and setuptools_scm imported in shtab/__init__.py
-    depends_on("python@2.7:2.8,3.2:", type=("build", "run"))
-    depends_on("py-setuptools@42:", type="build")
-    depends_on("py-setuptools-scm@3.4:+toml", type="build")

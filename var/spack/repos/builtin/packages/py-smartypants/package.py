@@ -16,6 +16,8 @@ class PySmartypants(PythonPackage):
 
     license("BSD-3-Clause")
 
-    version("2.0.1", sha256="b98191911ff3b4144ef8ad53e776a2d0ad24bd508a905c6ce523597c40022773")
-
-    depends_on("py-setuptools", type="build")
+    version(
+        "2.0.1",
+        sha256="8db97f7cbdf08d15b158a86037cd9e116b4cf37703d24e0419a0d64ca5808f0d",
+        url="https://pypi.org/packages/da/ed/1da76d11aa858ee23dac5b52d9ac2db7df02b89f7679d5d8970bcd44b59c/smartypants-2.0.1-py2.py3-none-any.whl",
+    )

@@ -14,7 +14,8 @@ class PyCheapRepr(PythonPackage):
 
     license("MIT", checked_by="jmlapre")
 
-    version("0.5.1", sha256="31ec63b9d8394aa23d746c8376c8307f75f9fca0b983566b8bcf13cc661fe6dd")
-
-    depends_on("py-setuptools", type="build")
-    depends_on("py-setuptools-scm+toml", type="build")
+    version(
+        "0.5.1",
+        sha256="30096998aeb49367a4a153988d7a99dce9dc59bbdd4b19740da6b4f3f97cf2ff",
+        url="https://pypi.org/packages/9c/77/0e46ad222a3f32f7b84583ea38ec2de117367c91b90e050858ee49c2935a/cheap_repr-0.5.1-py2.py3-none-any.whl",
+    )

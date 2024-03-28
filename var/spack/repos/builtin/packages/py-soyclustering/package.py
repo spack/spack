@@ -16,12 +16,14 @@ class PySoyclustering(PythonPackage):
 
     maintainers("meyersbs")
 
-    version("0.2.0", sha256="fce7ed92671b26846114bfd893107d8fdbc8297bd035a5b8ad2999d066f1fb43")
+    version(
+        "0.2.0",
+        sha256="e07a9025b85b7d0b6886b64854b57ef3934834756c2bf8a1b6aeff36348a63f1",
+        url="https://pypi.org/packages/56/da/383104eb15776319add42a216f377d76b4a6d0fe4b6b21fce507a8c27607/soyclustering-0.2.0-py3-none-any.whl",
+    )
+
+    with default_args(type="run"):
+        depends_on("py-numpy@1.3:", when="@0.0.4:")
 
     # From setup.py:
-    depends_on("py-setuptools", type="build")
-    depends_on("py-numpy@1.1:", type=("build", "run"))
     # From build errors:
-    depends_on("py-scipy", type=("build", "run"))
-    depends_on("py-scikit-learn", type=("build", "run"))
-    depends_on("py-matplotlib", type=("build", "run"))

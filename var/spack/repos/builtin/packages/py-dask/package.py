@@ -16,102 +16,150 @@ class PyDask(PythonPackage):
 
     license("BSD-3-Clause")
 
-    version("2023.4.1", sha256="9dc72ebb509f58f3fe518c12dd5a488c67123fdd66ccb0b968b34fd11e512153")
-    version("2022.10.2", sha256="42cb43f601709575fa46ce09e74bea83fdd464187024f56954e09d9b428ceaab")
-    version("2021.6.2", sha256="8588fcd1a42224b7cfcd2ebc8ad616734abb6b1a4517efd52d89c7dd66eb91f8")
-    version("2021.4.1", sha256="195e4eeb154222ea7a1c368119b5f321ee4ec9d78531471fe0145a527f744aa8")
-    version("2020.12.0", sha256="43e745afd4b464e6c0113131e430a16dce6ac42460b06e24d799093d098f7ab0")
-
-    variant("array", default=True, description="Install requirements for dask.array")
-    variant(
-        "bag", default=True, when="@:2021.3.0", description="Install requirements for dask.bag"
+    version(
+        "2023.4.1",
+        sha256="d541c0a228ef3afd0185e932e4f887d1c3f7e852f1b4c7c2c22f6455d17640de",
+        url="https://pypi.org/packages/54/25/480b2ae325f9be4bc99cbc77da0b757e285dabbeba3b82d43baa231e605b/dask-2023.4.1-py3-none-any.whl",
     )
-    variant("dataframe", default=True, description="Install requirements for dask.dataframe")
-    variant("distributed", default=True, description="Install requirements for dask.distributed")
-    variant("diagnostics", default=False, description="Install requirements for dask.diagnostics")
-    variant(
-        "delayed",
-        default=True,
-        when="@:2021.3.0",
-        description="Install requirements for dask.delayed (dask.imperative)",
+    version(
+        "2022.10.2",
+        sha256="928003a97b890a14c8a09a01f15320d261053bda530a8bf191d84f33db4a63b8",
+        url="https://pypi.org/packages/98/f1/2d9dcd8dd04544a2f1c02ca321aef84e57a712ec27842370084875c12b2a/dask-2022.10.2-py3-none-any.whl",
+    )
+    version(
+        "2021.6.2",
+        sha256="1f18d0815154b938a529ac3081c8952998d709319e57bbc484b42f0094217d43",
+        url="https://pypi.org/packages/02/36/5e18bf30a172efd676fb7d668cc14d2624c15a4417b6c047e1def79ee450/dask-2021.6.2-py3-none-any.whl",
+    )
+    version(
+        "2021.4.1",
+        sha256="344c342d699466c3f742019b7a33caf2472b751f38370b200ede7d2f354aa1e4",
+        url="https://pypi.org/packages/c3/23/42159cdb5c9edac174296c9976e175742513883f0f7bc132cfc2a2480fab/dask-2021.4.1-py3-none-any.whl",
+    )
+    version(
+        "2020.12.0",
+        sha256="5741db6e2426c001cecd374cba3bba8fea16a2da081089376ebcad9f8cf32aca",
+        url="https://pypi.org/packages/73/95/72275bf8edd695ba6db792f4f09088a0c1ebe6506cb9790ff90b90219016/dask-2020.12.0-py3-none-any.whl",
     )
 
-    depends_on("python@3.8:", type=("build", "run"), when="@2022.10.2:")
+    variant("array", default=False)
+    variant("bag", default=False)
+    variant("complete", default=False)
+    variant("dataframe", default=False)
+    variant("delayed", default=False)
+    variant("diagnostics", default=False)
+    variant("distributed", default=False)
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-setuptools@62.6:", type="build", when="@2023.4.1:")
-    depends_on("py-versioneer@0.28+toml", type="build", when="@2023.4.1:")
+    with default_args(type="run"):
+        depends_on("python@3.9:", when="@2023.5.1:")
+        depends_on(
+            "py-bokeh@2.4.2:2.4.2.0,2.4.3-rc1:2",
+            when="@2022.10.1:2022.10,2022.11.1:2023.3+diagnostics",
+        )
+        depends_on(
+            "py-bokeh@2.4.2:2.4.2.0,2.4.3-rc1:2",
+            when="@2022.10.1:2022.10,2022.11.1:2023.3+complete",
+        )
+        depends_on(
+            "py-bokeh@2.4.2:2.4.2.0,2.4.3-rc1:",
+            when="@2022.3:2022.10.0,2022.11:2022.11.0,2023.4:+diagnostics",
+        )
+        depends_on(
+            "py-bokeh@2.4.2:2.4.2.0,2.4.3-rc1:",
+            when="@2022.3:2022.10.0,2022.11:2022.11.0+complete",
+        )
+        depends_on("py-bokeh@1:2.0.0-rc2,2.0.1:", when="@2.26:2021.11+diagnostics")
+        depends_on("py-bokeh@1:2.0.0-rc2,2.0.1:", when="@2.26:2021.11+complete")
+        depends_on("py-click@8.0.0:", when="@2023.4.1:2023.10")
+        depends_on("py-click@7:", when="@2022.10.1:2023.4.0")
+        depends_on("py-cloudpickle@1.5:", when="@2023.4.1:")
+        depends_on("py-cloudpickle@1.1:", when="@2021.3.1:2023.4.0")
+        depends_on("py-cloudpickle@0.2.2:", when="@2.13:2021.3.0+delayed")
+        depends_on("py-cloudpickle@0.2.2:", when="@2.13:2021.3.0+bag")
+        depends_on("py-cloudpickle@0.2.2:", when="@2.13:2.17.0,2.17.2:2021.3.0+complete")
+        depends_on("py-distributed@2023.4.1:2023.4", when="@2023.4.1:2023.4+distributed")
+        depends_on("py-distributed@2022.10.2:2022.10", when="@2022.10.2:2022.10+distributed")
+        depends_on("py-distributed@2022.10.2:2022.10", when="@2022.10.2:2022.10+complete")
+        depends_on("py-distributed@2021.6.2:2021.6", when="@2021.6.2:2021.6+distributed")
+        depends_on("py-distributed@2021.6.2:2021.6", when="@2021.6.2:2021.6+complete")
+        depends_on("py-distributed@2021.4.1:", when="@2021.4.1:2021.4+distributed")
+        depends_on("py-distributed@2021.4.1:", when="@2021.4.1:2021.4+complete")
+        depends_on("py-distributed@2:", when="@2:2021.2+distributed")
+        depends_on("py-distributed@2:", when="@2:2.17.0,2.17.2:2021.2+complete")
+        depends_on("py-fsspec@2021.9:", when="@2023.4.1:")
+        depends_on("py-fsspec@0.6:", when="@2021.3.1:2023.4.0")
+        depends_on("py-fsspec@0.6:", when="@2.8:2021.3.0+dataframe")
+        depends_on("py-fsspec@0.6:", when="@2.8:2021.3.0+bag")
+        depends_on("py-fsspec@0.6:", when="@2.8:2.17.0,2.17.2:2021.3.0+complete")
+        depends_on("py-importlib-metadata@4.13:", when="@2024.3: ^python@:3.11")
+        depends_on("py-importlib-metadata@4.13:", when="@2023.3.2:2024.2")
+        depends_on("py-jinja2@2.10.3:", when="@2023.3:+diagnostics")
+        depends_on("py-jinja2@2.10.3:", when="@2023.3+complete")
+        depends_on("py-jinja2", when="@2021.8.1:2023.2+diagnostics")
+        depends_on("py-jinja2", when="@2021.8.1:2023.2+complete")
+        depends_on("py-lz4@4.3.2:", when="@2023.3.1:+complete")
+        depends_on("py-numpy@1.21.0:", when="@2023.2.1:+array")
+        depends_on("py-numpy@1.21.0:", when="@2023.2.1:2023.7+dataframe")
+        depends_on("py-numpy@1.21.0:", when="@2023.2.1:2023.3+complete")
+        depends_on("py-numpy@1.18.0:", when="@2021.8:2023.2.0+dataframe")
+        depends_on("py-numpy@1.18.0:", when="@2021.8:2023.2.0+complete")
+        depends_on("py-numpy@1.18.0:", when="@2021.8:2023.2.0+array")
+        depends_on("py-numpy@1.16.0:", when="@2021.3.1:2021.7+dataframe")
+        depends_on("py-numpy@1.16.0:", when="@2021.3.1:2021.7+complete")
+        depends_on("py-numpy@1.16.0:", when="@2021.3.1:2021.7+array")
+        depends_on("py-numpy@1.15.1:", when="@2020:2021.3.0+dataframe")
+        depends_on("py-numpy@1.15.1:", when="@2020:2021.3.0+complete")
+        depends_on("py-numpy@1.15.1:", when="@2020:2021.3.0+array")
+        depends_on("py-packaging@20:", when="@2021.7.1:")
+        depends_on("py-pandas@1.3.0:", when="@2023.2.1:+dataframe")
+        depends_on("py-pandas@1.3.0:", when="@2023.2.1:2023.3+complete")
+        depends_on("py-pandas@1.0.0:", when="@2021.8:2023.2.0+dataframe")
+        depends_on("py-pandas@1.0.0:", when="@2021.8:2023.2.0+complete")
+        depends_on("py-pandas@0.25.0:", when="@2020:2021.7+dataframe")
+        depends_on("py-pandas@0.25.0:", when="@2020:2021.7+complete")
+        depends_on("py-partd@1.2:", when="@2023.2.1:")
+        depends_on("py-partd@0.3.10:", when="@2021.3.1:2023.2.0")
+        depends_on("py-partd@0.3.10:", when="@2:2021.3.0+dataframe")
+        depends_on("py-partd@0.3.10:", when="@2:2021.3.0+bag")
+        depends_on("py-partd@0.3.10:", when="@2:2.17.0,2.17.2:2021.3.0+complete")
+        depends_on("py-pyarrow@7:", when="@2023.3.1:+complete")
+        depends_on("py-pyyaml@5.3.1:", when="@2022:")
+        depends_on("py-pyyaml", when="@2.17.1:2021")
+        depends_on("py-pyyaml", when="@2.7:2.17.0+complete")
+        depends_on("py-toolz@0.10:", when="@2023.4.1:")
+        depends_on("py-toolz@0.8.2:", when="@2021.3.1:2023.4.0")
+        depends_on("py-toolz@0.8.2:", when="@2.13:2021.3.0+delayed")
+        depends_on("py-toolz@0.8.2:", when="@2.13:2021.3.0+dataframe")
+        depends_on("py-toolz@0.8.2:", when="@2.13:2021.3.0+bag")
+        depends_on("py-toolz@0.8.2:", when="@2.13:2021.3.0+array")
+        depends_on("py-toolz@0.8.2:", when="@2.13:2.17.0,2.17.2:2021.3.0+complete")
+
+        # self-dependency
+        # depends_on("py-dask+array+dataframe+diagnostics+distributed", when="@2023.4:+complete")
 
     # Common requirements
-    depends_on("py-packaging@20:", type="build", when="@2022.10.2:")
-    depends_on("py-pyyaml", type=("build", "run"))
-    depends_on("py-pyyaml@5.3.1:", type=("build", "run"), when="@2022.10.2:")
-    depends_on("py-cloudpickle@1.1.1:", type=("build", "run"), when="@2021.3.1:")
-    depends_on("py-cloudpickle@1.5.0:", type=("build", "run"), when="@2023.4.1:")
-    depends_on("py-fsspec@0.6.0:", type=("build", "run"), when="@2021.3.1:")
-    depends_on("py-fsspec@2021.09.0:", type=("build", "run"), when="@2023.4.1:")
-    depends_on("py-toolz@0.8.2:", type=("build", "run"), when="@2021.3.1:")
-    depends_on("py-toolz@0.10.0:", type=("build", "run"), when="@2023.4.1:")
-    depends_on("py-partd@0.3.10:", type=("build", "run"), when="@2021.3.1:")
-    depends_on("py-partd@1.2.0:", type=("build", "run"), when="@2023.4.0:")
-    depends_on("py-click@7.0:", type=("build", "run"), when="@2022.10.2:")
-    depends_on("py-click@8.0:", type=("build", "run"), when="@2023.4.1:")
-    depends_on("py-importlib-metadata@4.13.0:", type=("build", "run"), when="@2023.4.0:")
 
     # Requirements for dask.array
-    depends_on("py-numpy@1.15.1:", type=("build", "run"), when="@2020.12.0: +array")
-    depends_on("py-numpy@1.16.0:", type=("build", "run"), when="@2021.3.1: +array")
-    depends_on("py-numpy@1.18.0:", type=("build", "run"), when="@2022.10.2: +array")
-    depends_on("py-numpy@1.21.0:", type=("build", "run"), when="@2023.4.0: +array")
     # The dependency on py-toolz is non-optional starting version 2021.3.1
-    depends_on("py-toolz@0.8.2:", type=("build", "run"), when="@:2021.3.0 +array")
 
     # Requirements for dask.bag
-    depends_on("py-cloudpickle@0.2.1:", type=("build", "run"), when="@0.8.2: +bag")
     # The dependency on py-cloudpickle is non-optional starting version 2021.3.1
-    depends_on("py-cloudpickle@0.2.2:", type=("build", "run"), when="@2.13.0:2021.3.0 +bag")
     # The dependency on py-fsspec is non-optional starting version 2021.3.1
-    depends_on("py-fsspec@0.6.0:", type=("build", "run"), when="@:2021.3.0 +bag")
     # The dependency on py-toolz is non-optional starting version 2021.3.1
-    depends_on("py-toolz@0.8.2:", type=("build", "run"), when="@:2021.3.0 +bag")
     # The dependency on py-partd is non-optional starting version 2021.3.1
-    depends_on("py-partd@0.3.10:", type=("build", "run"), when="@:2021.3.0 +bag")
 
     # Requirements for dask.dataframe
-    depends_on("py-numpy@1.15.1:", type=("build", "run"), when="@2020.12.0: +dataframe")
-    depends_on("py-numpy@1.16.0:", type=("build", "run"), when="@2021.3.1: +dataframe")
-    depends_on("py-numpy@1.18.0:", type=("build", "run"), when="@2022.10.2: +dataframe")
-    depends_on("py-numpy@1.21.0:", type=("build", "run"), when="@2023.4.0: +dataframe")
-    depends_on("py-pandas@0.25.0:", type=("build", "run"), when="@2020.12.0: +dataframe")
-    depends_on("py-pandas@1.0:", type=("build", "run"), when="@2022.10.2: +dataframe")
-    depends_on("py-pandas@1.3:", type=("build", "run"), when="@2023.4.0: +dataframe")
     # The dependency on py-toolz is non-optional starting version 2021.3.1
-    depends_on("py-toolz@0.8.2:", type=("build", "run"), when="@:2021.3.0 +dataframe")
     # The dependency on py-partd is non-optional starting version 2021.3.1
-    depends_on("py-partd@0.3.10:", type=("build", "run"), when="@:2021.3.0 +dataframe")
     # The dependency on py-fsspec is non-optional starting version 2021.3.1
-    depends_on("py-fsspec@0.6.0:", type=("build", "run"), when="@:2021.3.0 +dataframe")
 
     # Requirements for dask.distributed
-    depends_on(
-        "py-distributed@2020.12.0:2021.8.0", type=("build", "run"), when="@:2021.6.1 +distributed"
-    )
-    depends_on("py-distributed@2021.6.2", type=("build", "run"), when="@2021.6.2 +distributed")
-    depends_on("py-distributed@2022.10.2", type=("build", "run"), when="@2022.10.2 +distributed")
-    depends_on("py-distributed@2023.4.1", type=("build", "run"), when="@2023.4.1 +distributed")
 
     # Requirements for dask.diagnostics
-    depends_on("py-bokeh@1.0.0:1,2.0.1:", type=("build", "run"), when="+diagnostics")
-    depends_on("py-bokeh@2.4.2:2", type=("build", "run"), when="@2022.10.2:2023.3 +diagnostics")
-    depends_on("py-bokeh@2.4.2:", type=("build", "run"), when="@2023.4.0: +diagnostics")
-    depends_on("py-jinja2", type=("build", "run"), when="@2022.10.2: +diagnostics")
-    depends_on("py-jinja2@2.10.3:", type=("build", "run"), when="@2023.4.0: +diagnostics")
 
     # Requirements for dask.delayed
     # The dependency on py-cloudpickle is non-optional starting version 2021.3.1
-    depends_on("py-cloudpickle@0.2.2:", type=("build", "run"), when="@:2021.3.0 +delayed")
     # The dependency on py-toolz is non-optional starting version 2021.3.1
-    depends_on("py-toolz@0.8.2:", type=("build", "run"), when="@:2021.3.0 +delayed")
 
     @property
     def import_modules(self):

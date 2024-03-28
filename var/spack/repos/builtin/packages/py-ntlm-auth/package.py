@@ -14,7 +14,8 @@ class PyNtlmAuth(PythonPackage):
 
     license("MIT")
 
-    version("1.5.0", sha256="c9667d361dc09f6b3750283d503c689070ff7d89f2f6ff0d38088d5436ff8543")
-
-    depends_on("python@2.6:2.8,3.4:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
+    version(
+        "1.5.0",
+        sha256="f1527c581dbf149349134fc2d789d50af2a400e193206956fa0ab456ccc5a8ba",
+        url="https://pypi.org/packages/ff/84/97c550164b54942b0e908c31ef09d9469f3ba4cd7332a671e2125732f63b/ntlm_auth-1.5.0-py2.py3-none-any.whl",
+    )

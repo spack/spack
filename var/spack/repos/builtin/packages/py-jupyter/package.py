@@ -14,13 +14,10 @@ class PyJupyter(PythonPackage):
 
     license("BSD-3-Clause")
 
-    version("1.0.0", sha256="d9dc4b3318f310e34c82951ea5d6683f67bed7def4b259fafbfe4f1beb1d8e5f")
+    version(
+        "1.0.0",
+        sha256="5b290f93b98ffbc21c0c7e749f054b3267782166d72fa5e3ed1ed4eaf34a2b78",
+        url="https://pypi.org/packages/83/df/0f5dd132200728a86190397e1ea87cd76244e42d39ec5e88efd25b2abd7e/jupyter-1.0.0-py2.py3-none-any.whl",
+    )
 
     # pip silently replaces distutils with setuptools
-    depends_on("py-setuptools", type="build")
-    depends_on("py-notebook", type=("build", "run"))
-    depends_on("py-qtconsole", type=("build", "run"))
-    depends_on("py-jupyter-console", type=("build", "run"))
-    depends_on("py-nbconvert", type=("build", "run"))
-    depends_on("py-ipykernel", type=("build", "run"))
-    depends_on("py-ipywidgets", type=("build", "run"))

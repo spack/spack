@@ -14,6 +14,8 @@ class PyVcversioner(PythonPackage):
 
     license("ISC")
 
-    version("2.16.0.0", sha256="dae60c17a479781f44a4010701833f1829140b1eeccd258762a74974aa06e19b")
-
-    depends_on("py-setuptools", type="build")
+    version(
+        "2.16.0.0",
+        sha256="1b81bd26218944e6c86b03c7a840e058c697f014a03374296dc2f8969d1adf36",
+        url="https://pypi.org/packages/5a/6b/6f5da157648cadbaf83f625c395cd23ff6be3421268b7bf54523b8d9aaab/vcversioner-2.16.0.0-py2-none-any.whl",
+    )

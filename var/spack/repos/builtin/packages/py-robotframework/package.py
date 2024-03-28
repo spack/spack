@@ -14,7 +14,13 @@ class PyRobotframework(PythonPackage):
 
     license("Apache-2.0")
 
-    version("3.2.2", sha256="6b2bddcecb5d1c6198999e38aeaf4c0366542a5e7b5bd788c6a3a36b055d5ea2")
-    version("3.2.1", sha256="9805faa0990125ff2c9689b673448d5f47e78470e7a8e95af1606a775fa8379f")
-
-    depends_on("py-setuptools", type=("build", "run"))
+    version(
+        "3.2.2",
+        sha256="a0c325e79dc6dcdaba0398db8c3afefc337799b7b36b336f04b07be4fe4a9dd2",
+        url="https://pypi.org/packages/38/43/e03efaa547a3158f0745c5ea7f1eafebd69d46f2c9aece3a8ba21992adc9/robotframework-3.2.2-py2.py3-none-any.whl",
+    )
+    version(
+        "3.2.1",
+        sha256="34923415afd9491141630ad1d7146b638ee869f1c7f97c450c0da5ce79e1ac23",
+        url="https://pypi.org/packages/99/e0/57ed2b09192c36b5905a8cbfa98f0b15c42c34865ae21a1d1d33a50cb8be/robotframework-3.2.1-py2.py3-none-any.whl",
+    )

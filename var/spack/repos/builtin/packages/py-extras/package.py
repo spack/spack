@@ -15,6 +15,8 @@ class PyExtras(PythonPackage):
 
     license("MIT")
 
-    version("1.0.0", sha256="132e36de10b9c91d5d4cc620160a476e0468a88f16c9431817a6729611a81b4e")
-
-    depends_on("py-setuptools", type="build")
+    version(
+        "1.0.0",
+        sha256="f689f08df47e2decf76aa6208c081306e7bd472630eb1ec8a875c67de2366e87",
+        url="https://pypi.org/packages/03/e9/e915af1f97914cd0bc021e125fd1bfd4106de614a275e4b6866dd9a209ac/extras-1.0.0-py2.py3-none-any.whl",
+    )

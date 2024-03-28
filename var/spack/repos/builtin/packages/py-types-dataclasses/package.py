@@ -13,6 +13,8 @@ class PyTypesDataclasses(PythonPackage):
     homepage = "https://github.com/python/typeshed"
     pypi = "types-dataclasses/types-dataclasses-0.6.6.tar.gz"
 
-    version("0.6.6", sha256="4b5a2fcf8e568d5a1974cd69010e320e1af8251177ec968de7b9bb49aa49f7b9")
-
-    depends_on("py-setuptools", type="build")
+    version(
+        "0.6.6",
+        sha256="a0a1ab5324ba30363a15c9daa0f053ae4fff914812a1ebd8ad84a08e5349574d",
+        url="https://pypi.org/packages/31/85/23ab2bbc280266af5bf22ded4e070946d1694d1721ced90666b649eaa795/types_dataclasses-0.6.6-py3-none-any.whl",
+    )

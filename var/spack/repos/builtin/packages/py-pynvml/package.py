@@ -18,7 +18,8 @@ class PyPynvml(PythonPackage):
 
     license("Unlicense")
 
-    version("8.0.4", sha256="c8d4eadc648c7e12a3c9182a9750afd8481b76412f83747bcc01e2aa829cde5d")
-
-    depends_on("py-setuptools", type="build")
-    depends_on("python@3.6:", type=("build", "run"))
+    version(
+        "8.0.4",
+        sha256="00c1a54fd3462a0774ec08add0d9fbb5f051214a85f782ca7d55b85eb8d54e53",
+        url="https://pypi.org/packages/1b/1a/a25c143e1d2f873d67edf534b269d028dd3c20be69737cca56bf28911d02/pynvml-8.0.4-py3-none-any.whl",
+    )

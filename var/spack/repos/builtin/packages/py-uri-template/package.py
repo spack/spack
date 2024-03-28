@@ -14,6 +14,8 @@ class PyUriTemplate(PythonPackage):
 
     license("MIT")
 
-    version("1.2.0", sha256="934e4d09d108b70eb8a24410af8615294d09d279ce0e7cbcdaef1bd21f932b06")
-
-    depends_on("py-setuptools", type="build")
+    version(
+        "1.2.0",
+        sha256="f1699c77b73b925cf4937eae31ab282a86dc885c333f2e942513f08f691fc7db",
+        url="https://pypi.org/packages/c0/db/d4f9c75b43541f7235daf4d13eb43f4491f9d5f5df45ce41daeed3a903f6/uri_template-1.2.0-py3-none-any.whl",
+    )

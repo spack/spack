@@ -14,11 +14,14 @@ class PyQudida(PythonPackage):
     homepage = "https://github.com/arsenyinfo/qudida"
     pypi = "qudida/qudida-0.0.4.tar.gz"
 
-    version("0.0.4", sha256="db198e2887ab0c9aa0023e565afbff41dfb76b361f85fd5e13f780d75ba18cc8")
+    version(
+        "0.0.4",
+        sha256="4519714c40cd0f2e6c51e1735edae8f8b19f4efe1f33be13e9d644ca5f736dd6",
+        url="https://pypi.org/packages/f0/a1/a5f4bebaa31d109003909809d88aeb0d4b201463a9ea29308d9e4f9e7655/qudida-0.0.4-py3-none-any.whl",
+    )
 
-    depends_on("python@3.5:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
-    depends_on("py-numpy@0.18:", type=("build", "run"))
-    depends_on("py-scikit-learn@0.19.1:", type=("build", "run"))
-    depends_on("py-typing-extensions", type=("build", "run"))
-    depends_on("opencv@4.0.1:+python3", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-numpy", when="@0.0.4:")
+        depends_on("py-opencv-python-headless@4.0.1:", when="@0.0.4:")
+        depends_on("py-scikit-learn@0.19.1:", when="@0.0.4:")
+        depends_on("py-typing-extensions", when="@0.0.4:")

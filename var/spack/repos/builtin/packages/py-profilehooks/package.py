@@ -16,7 +16,8 @@ class PyProfilehooks(PythonPackage):
 
     license("MIT")
 
-    version("1.11.2", sha256="41a74c1abdc5eeaf7dec024e9e89627f70e158374d263a3098bef31a06d38ab2")
-
-    depends_on("python@2.7:2.8,3.5:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
+    version(
+        "1.11.2",
+        sha256="29627b3e9938d77e1237089278d22f103b8373b82f841651a4f322b0ae101665",
+        url="https://pypi.org/packages/26/25/5b748479b609ed0b134b013f6fff9a708ddf5194fa3f90edacfc738fa3f9/profilehooks-1.11.2-py2.py3-none-any.whl",
+    )

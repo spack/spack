@@ -12,11 +12,13 @@ class PyDictdiffer(PythonPackage):
     homepage = "https://github.com/inveniosoftware/dictdiffer"
     pypi = "dictdiffer/dictdiffer-0.8.1.tar.gz"
 
-    version("0.9.0", sha256="17bacf5fbfe613ccf1b6d512bd766e6b21fb798822a133aa86098b8ac9997578")
-    version("0.8.1", sha256="1adec0d67cdf6166bda96ae2934ddb5e54433998ceab63c984574d187cc563d2")
-
-    depends_on("python@2.7:2.8,3.4:", type=("build", "run"))
-    depends_on("py-setuptools", type="build", when="@0.9:")
-    depends_on("py-setuptools", type=("build", "run"), when="@:0.8")
-    depends_on("py-setuptools-scm@3.1.0:", type="build")
-    depends_on("py-pytest-runner@2.7:", type="build")
+    version(
+        "0.9.0",
+        sha256="442bfc693cfcadaf46674575d2eba1c53b42f5e404218ca2c2ff549f2df56595",
+        url="https://pypi.org/packages/47/ef/4cb333825d10317a36a1154341ba37e6e9c087bac99c1990ef07ffdb376f/dictdiffer-0.9.0-py2.py3-none-any.whl",
+    )
+    version(
+        "0.8.1",
+        sha256="d79d9a39e459fe33497c858470ca0d2e93cb96621751de06d631856adfd9c390",
+        url="https://pypi.org/packages/97/92/350b6b6ec39c5f87d98d04c91a50c498518716a05368e6dea88b5c69b590/dictdiffer-0.8.1-py2.py3-none-any.whl",
+    )

@@ -14,9 +14,8 @@ class PyBackportsCachedProperty(PythonPackage):
 
     license("MIT")
 
-    version("1.0.2", sha256="9306f9eed6ec55fd156ace6bc1094e2c86fae5fb2bf07b6a9c00745c656e75dd")
-
-    depends_on("python@3.6:", type=("build", "run"))
-
-    depends_on("py-setuptools@42:", type="build")
-    depends_on("py-setuptools-scm@3.4:+toml", type="build")
+    version(
+        "1.0.2",
+        sha256="baeb28e1cd619a3c9ab8941431fe34e8490861fb998c6c4590693d50171db0cc",
+        url="https://pypi.org/packages/eb/ae/69e52acdcf381b108b36d989ea58656de4a9ab8863aba6176d80d01041df/backports.cached_property-1.0.2-py3-none-any.whl",
+    )

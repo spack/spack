@@ -15,6 +15,8 @@ class PyTestfixtures(PythonPackage):
 
     license("MIT")
 
-    version("6.16.0", sha256="6b5bbca4f7d5692ca4566c60c0383b121d9f1cfecbc3de8442c499a63c264eb8")
-
-    depends_on("py-setuptools", type="build")
+    version(
+        "6.16.0",
+        sha256="017f1924f464189915e67162f530758537175ddd1461b211c666f0587ebc2939",
+        url="https://pypi.org/packages/2b/93/8e1da41ef50d4e13f3a16c586dd366556bf2c6840defc4b87ed9ab10b923/testfixtures-6.16.0-py2.py3-none-any.whl",
+    )

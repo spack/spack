@@ -14,8 +14,12 @@ class PyLightlyUtils(PythonPackage):
 
     license("MIT")
 
-    version("0.0.2", sha256="a351f3d600f0ab08d12f294725c6457ae000645cb0a1083d0845cb196ccfe698")
+    version(
+        "0.0.2",
+        sha256="57eaa99044bbdab428cc67cd336491096cd406c21b50f15ce51150c1a10843e9",
+        url="https://pypi.org/packages/62/11/ff55b3f54440e604a589ae1fe6950bc1bf49b5aca1842bf4b3ab0b6f65cd/lightly_utils-0.0.2-py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-numpy", type=("build", "run"))
-    depends_on("pil", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-numpy")
+        depends_on("py-pillow")

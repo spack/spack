@@ -15,7 +15,8 @@ class PyNtplib(PythonPackage):
 
     license("MIT")
 
-    version("0.4.0", sha256="899d8fb5f8c2555213aea95efca02934c7343df6ace9d7628a5176b176906267")
-
-    depends_on("python@2.7,3.6:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
+    version(
+        "0.4.0",
+        sha256="8d27375329ed7ff38755f7b6d4658b28edc147cadf40338a63a0da8133469d60",
+        url="https://pypi.org/packages/58/8c/41da70f6feaca807357206a376b6de2001b439c7f78f53473a914a6dbd1e/ntplib-0.4.0-py2.py3-none-any.whl",
+    )

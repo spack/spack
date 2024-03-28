@@ -17,9 +17,8 @@ class PyFlaskSocketio(PythonPackage):
     homepage = "https://flask-socketio.readthedocs.io"
     pypi = "Flask-SocketIO/Flask-SocketIO-2.9.6.tar.gz"
 
-    version("2.9.6", sha256="f49edfd3a44458fbb9f7a04a57069ffc0c37f000495194f943a25d370436bb69")
-
-    depends_on("py-setuptools", type="build")
-    depends_on("py-flask@0.9:", type=("build", "run"))
-    depends_on("py-python-socketio@1.6.1:", type=("build", "run"))
-    depends_on("py-werkzeug", type=("build", "run"))
+    version(
+        "2.9.6",
+        sha256="be85842328f7847f511cf8cd828739884403b86ab5b0d576dae4241dd920b415",
+        url="https://pypi.org/packages/cd/70/ae4a055477ecad475eec4990eb3474b152ff525ed10690afdcf180aee06c/Flask_SocketIO-2.9.6-py2.py3-none-any.whl",
+    )

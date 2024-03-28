@@ -15,7 +15,8 @@ class PyHtmlgen(PythonPackage):
 
     license("MIT")
 
-    version("1.2.2", sha256="9dc60e10511f0fd13014659514c6c333498c21779173deb585cd4964ea667770")
-
-    depends_on("python@2.7:2.8,3.4:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
+    version(
+        "1.2.2",
+        sha256="c375f7b18914fec8b8c25927d35d19cd0a42f1a193009272713d814731b53c73",
+        url="https://pypi.org/packages/bd/b6/a7a7d009485af769b3464423785a8a2690a9458fe703bd98a7c8c0fbff04/htmlgen-1.2.2-py3-none-any.whl",
+    )

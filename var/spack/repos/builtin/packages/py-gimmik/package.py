@@ -19,12 +19,22 @@ class PyGimmik(PythonPackage):
 
     license("BSD-3-Clause")
 
-    version("3.0", sha256="45c2da7acff3201b7796ba731e4be7f3b4f39469ff1f1bc0ddf4f19c4a6af010")
-    version("2.3", sha256="c019c85316bcf0d5e84de9b7d10127355dfe8037c0e37f1880a9819ce92b74e1")
-    version("2.2", sha256="9144640f94aab92f9c5dfcaf16885a79428ab97337cf503a4b2dddeb870f3cf0")
+    version(
+        "3.0",
+        sha256="370c998d127fac64b216e0b3bdc66d27c26b406cb99713f5d52d10eaae87bc1d",
+        url="https://pypi.org/packages/77/3a/4909f22d9240d998930c806b109d0b5e448910d63631afd924ffc95d4156/gimmik-3.0-py3-none-any.whl",
+    )
+    version(
+        "2.3",
+        sha256="ed4fac8dc39e47bd3090e1618bd909b9b1f83fad7234ab65c715d87b90d5c0c6",
+        url="https://pypi.org/packages/fb/76/95b9cf397804a9a9223fd34f531b77cb7a7b4261708fd524156929de9a2c/gimmik-2.3-py3-none-any.whl",
+    )
+    version(
+        "2.2",
+        sha256="87a49e02ba1e8d3db55d85ca25ac2604722c87f7252e165f7a9820d20f37908b",
+        url="https://pypi.org/packages/e9/0b/c11506535150ed2efbc9bd1e2c5a26c9bc5846f328583dda0c3b1ac6a175/gimmik-2.2-py3-none-any.whl",
+    )
 
-    depends_on("python@3.8", when="@:2.3", type=("build", "run"))
-    depends_on("python@3.9:", when="@3.0:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
-    depends_on("py-numpy@1.7:", type=("build", "run"))
-    depends_on("py-mako", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-mako", when="@2.2:")
+        depends_on("py-numpy@1.7:", when="@2.2:")

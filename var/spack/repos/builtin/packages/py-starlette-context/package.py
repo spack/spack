@@ -15,9 +15,11 @@ class PyStarletteContext(PythonPackage):
 
     license("MIT")
 
-    version("0.3.5", sha256="e6b9f905823860e9e36c013dbfcf770562f3b88bec21cb861fef2e0bd0615697")
+    version(
+        "0.3.5",
+        sha256="d9eeccaafd4fad13abe662295b802c8a58a7e11a0d33f933f001212472619086",
+        url="https://pypi.org/packages/6e/0d/613f99d2b8e5c40fdbcfd9c04241ad7fdb6b3fc4c706dbdcd9f0cadbdec9/starlette_context-0.3.5-py37-none-any.whl",
+    )
 
-    depends_on("python@3.7:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
-
-    depends_on("py-starlette", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-starlette", when="@0.2.3:")

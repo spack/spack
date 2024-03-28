@@ -15,7 +15,8 @@ class PyAsynctest(PythonPackage):
 
     license("Apache-2.0")
 
-    version("0.13.0", sha256="c27862842d15d83e6a34eb0b2866c323880eb3a75e4485b079ea11748fd77fac")
-
-    depends_on("python@3.5:", type=("build", "run"))
-    depends_on("py-setuptools@30.3:", type="build")
+    version(
+        "0.13.0",
+        sha256="5da6118a7e6d6b54d83a8f7197769d046922a44d2a99c21382f0a6e4fadae676",
+        url="https://pypi.org/packages/e8/b6/8d17e169d577ca7678b11cd0d3ceebb0a6089a7f4a2de4b945fe4b1c86db/asynctest-0.13.0-py3-none-any.whl",
+    )

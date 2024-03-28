@@ -26,42 +26,61 @@ class PyPybind11(CMakePackage, PythonExtension):
 
     maintainers("ax3l")
 
-    version("master", branch="master")
-    version("2.11.1", sha256="d475978da0cdc2d43b73f30910786759d593a9d8ee05b1b6846d1eb16c6d2e0c")
-    version("2.11.0", sha256="7af30a84c6810e721829c4646e31927af9d8861e085aa5dd37c3c8b8169fcda1")
-    version("2.10.4", sha256="832e2f309c57da9c1e6d4542dedd34b24e4192ecb4d62f6f4866a737454c9970")
-    version("2.10.1", sha256="111014b516b625083bef701df7880f78c2243835abdb263065b6b59b960b6bad")
-    version("2.10.0", sha256="eacf582fa8f696227988d08cfc46121770823839fe9e301a20fbce67e7cd70ec")
-    version("2.9.2", sha256="6bd528c4dbe2276635dc787b6b1f2e5316cf6b49ee3e150264e455a0d68d19c1")
-    version("2.9.1", sha256="c6160321dc98e6e1184cc791fbeadd2907bb4a0ce0e447f2ea4ff8ab56550913")
-    version("2.9.0", sha256="057fb68dafd972bc13afb855f3b0d8cf0fa1a78ef053e815d9af79be7ff567cb")
-    version("2.8.1", sha256="f1bcc07caa568eb312411dde5308b1e250bd0e1bc020fae855bf9f43209940cc")
-    version("2.8.0", sha256="9ca7770fc5453b10b00a4a2f99754d7a29af8952330be5f5602e7c2635fa3e79")
-    version("2.7.1", sha256="616d1c42e4cf14fa27b2a4ff759d7d7b33006fdc5ad8fd603bb2c22622f27020")
-    version("2.7.0", sha256="6cd73b3d0bf3daf415b5f9b87ca8817cc2e2b64c275d65f9500250f9fee1677e")
-    version("2.6.2", sha256="8ff2fff22df038f5cd02cea8af56622bc67f5b64534f1b83b9f133b8366acff2")
-    version("2.6.1", sha256="cdbe326d357f18b83d10322ba202d69f11b2f49e2d87ade0dc2be0c5c34f8e2a")
-    version("2.5.0", sha256="97504db65640570f32d3fdf701c25a340c8643037c3b69aec469c10c93dc8504")
-    version("2.4.3", sha256="1eed57bc6863190e35637290f97a20c81cfe4d9090ac0a24f3bbf08f265eb71d")
-    version("2.3.0", sha256="0f34838f2c8024a6765168227ba587b3687729ebf03dc912f88ff75c7aa9cfe8")
-    version("2.2.4", sha256="b69e83658513215b8d1443544d0549b7d231b9f201f6fc787a2b2218b408181e")
-    version("2.2.3", sha256="3a3b7b651afab1c5ba557f4c37d785a522b8030dfc765da26adc2ecd1de940ea")
-    version("2.2.2", sha256="b639a2b2cbf1c467849660801c4665ffc1a4d0a9e153ae1996ed6f21c492064e")
-    version("2.2.1", sha256="f8bd1509578b2a1e7407d52e6ee8afe64268909a1bbda620ca407318598927e7")
-    version("2.2.0", sha256="1b0fda17c650c493f5862902e90f426df6751da8c0b58c05983ab009951ed769")
-    version("2.1.1", sha256="f2c6874f1ea5b4ad4ffffe352413f7d2cd1a49f9050940805c2a082348621540")
-    version("2.1.0", sha256="2860f2b8d0c9f65f0698289a161385f59d099b7ead1bf64e8993c486f2b93ee0")
+    version(
+        "2.11.1",
+        sha256="33cdd02a6453380dd71cc70357ce388ad1ee8d32bd0e38fc22b273d050aa29b3",
+        url="https://pypi.org/packages/06/55/9f73c32dda93fa4f539fafa268f9504e83c489f460c380371d94296126cd/pybind11-2.11.1-py3-none-any.whl",
+    )
+    version(
+        "2.11.0",
+        sha256="307443ea89b73ce88f68fa48687d160c036622a54bc2a25aae9d5ea792bef268",
+        url="https://pypi.org/packages/6d/88/37445fde2baddf06e13753b722c4d82b60a9844784567a80a04e9b6c6c74/pybind11-2.11.0-py3-none-any.whl",
+    )
+    version(
+        "2.10.4",
+        sha256="ec9be0c45061c829648d7e8c98a7d041768b768c934acd15196e0f1943d9a818",
+        url="https://pypi.org/packages/52/ed/68e989fdac8f352cb6d506fac111ba1e1b74c0ef3660fadeeeeb765bc03c/pybind11-2.10.4-py3-none-any.whl",
+    )
+    version(
+        "2.10.3",
+        sha256="123e303f39ad5de97ddfa4f1f473cb85881a0a94ee5714eb3c37e2405371fc12",
+        url="https://pypi.org/packages/17/4e/9b2f39b5d0ae5f81541e03a98379462871ccfbadfa315d24b3d8854c6a9f/pybind11-2.10.3-py3-none-any.whl",
+    )
+    version(
+        "2.10.2",
+        sha256="51507b4bcb2ce078fcc548e5ba46e9461f9706333fb75ad4ec6ee3ac375a6766",
+        url="https://pypi.org/packages/fd/46/092d59dca8fb4a64592ba2752ae5688b9ea7591b924292d06db9cc5212a8/pybind11-2.10.2-py3-none-any.whl",
+    )
+    version(
+        "2.10.1",
+        sha256="ebf3eeac46859a2e10077ae45378ba3f33d999a9064697a3464fba1a4a04fc0a",
+        url="https://pypi.org/packages/1d/53/e6b27f3596278f9dd1d28ef1ddb344fd0cd5db98ef2179d69a2044e11897/pybind11-2.10.1-py3-none-any.whl",
+    )
+    version(
+        "2.10.0",
+        sha256="6bbc7a2f79689307f0d8d240172851955fc214b33e4cbd7fdbc9cd7176a09260",
+        url="https://pypi.org/packages/9a/7f/855560aa568e50bea6012ed535e6b8c436e99394f3e5a649d44d2e557242/pybind11-2.10.0-py3-none-any.whl",
+    )
+    version(
+        "2.9.2",
+        sha256="20f56674da31c96bca7569b91e60f2bd30d693f0728541412ec927574f7bc9df",
+        url="https://pypi.org/packages/fd/24/efc9e62aa1baa48622028c59ae2c70fa134801e8acbdf30e5b594fe5a360/pybind11-2.9.2-py2.py3-none-any.whl",
+    )
+    version(
+        "2.9.1",
+        sha256="b570d17ed34b0f8ff43f5647833db87353be9afca0c7d1d69e92706b10a9c961",
+        url="https://pypi.org/packages/11/88/98f65ae2e34cb52cda4ce16fd0839d482fbb5b690cb2f8b93d24aaa018fa/pybind11-2.9.1-py2.py3-none-any.whl",
+    )
+    version(
+        "2.9.0",
+        sha256="0c178c6e5806e8e58a7eec5a363d052bb9dac860a3ff64fbddb7226110644977",
+        url="https://pypi.org/packages/70/1e/c7995fc7a0b0ec24bdb20b38f738e4f242250842717efa869e3fc4ce22fe/pybind11-2.9.0-py2.py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools@42:", type="build")
-    depends_on("py-pytest", type="test")
-    depends_on("py-pip", type="build")
-    depends_on("py-wheel", type="build")
     extends("python")
 
     with when("build_system=cmake"):
         generator("ninja")
-        depends_on("cmake@3.13:", type="build")
-        depends_on("cmake@3.18:", type="build", when="@2.6.0:")
 
     # https://github.com/pybind/pybind11/#supported-compilers
     conflicts("%clang@:3.2")

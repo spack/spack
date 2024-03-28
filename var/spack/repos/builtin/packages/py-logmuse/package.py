@@ -14,6 +14,8 @@ class PyLogmuse(PythonPackage):
 
     license("BSD-2-Clause")
 
-    version("0.2.7", sha256="a4692c44ddfa912c3cb149ca4c7545f80119aa7485868fd1412e7c647e9a7e7e")
-
-    depends_on("py-setuptools", type="build")
+    version(
+        "0.2.7",
+        sha256="691fc43118feddeaf41b57cd8b8ed5c8e6071948e57a2b824b9c690712e858a8",
+        url="https://pypi.org/packages/2e/6e/283626ed8c887809144942055e4c409e7a28627e95f6a8295e5606c6d913/logmuse-0.2.7-py3-none-any.whl",
+    )

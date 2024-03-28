@@ -20,7 +20,8 @@ class PyDominate(PythonPackage):
 
     license("LGPL-3.0-or-later")
 
-    version("2.6.0", sha256="76ec2cde23700a6fc4fee098168b9dee43b99c2f1dd0ca6a711f683e8eb7e1e4")
-
-    depends_on("python@2.7:2,3.4:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
+    version(
+        "2.6.0",
+        sha256="84b5f71ed30021193cb0faa45d7776e1083f392cfe67a49f44e98cb2ed76c036",
+        url="https://pypi.org/packages/ef/a8/4354f8122c39e35516a2708746d89db5e339c867abbd8e0179bccee4b7f9/dominate-2.6.0-py2.py3-none-any.whl",
+    )

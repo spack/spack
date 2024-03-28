@@ -19,7 +19,8 @@ class PySerpent(PythonPackage):
 
     license("MIT")
 
-    version("1.40", sha256="10b34e7f8e3207ee6fb70dcdc9bce473851ee3daf0b47c58aec1b48032ac11ce")
-
-    depends_on("py-setuptools", type="build")
-    depends_on("python@3.2:", type=("build", "run"))
+    version(
+        "1.40",
+        sha256="14d531cedeed593e793bae4e14eb1463445e8b161cb24ddf795800a50973d3d3",
+        url="https://pypi.org/packages/48/fa/b8208cd568abdc3b99ac4d6a27a5a4d897d7304d93f0ffde32ba91f85d7c/serpent-1.40-py3-none-any.whl",
+    )

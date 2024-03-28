@@ -15,9 +15,17 @@ class PySphinxcontribProgramoutput(PythonPackage):
 
     license("BSD-2-Clause")
 
-    version("0.15", sha256="80dd5b4eab780a13ff2c23500cac3dbf0e04ef9976b409ef25a47c263ef8ab94")
-    version("0.10", sha256="fdee94fcebb0d8fddfccac5c4fa560f6177d5340c4349ee447c890bea8857094")
+    version(
+        "0.15",
+        sha256="8a15af67546c35404a02e0ad13c0a9ded0d587393fca5fa637a467bfee1222f0",
+        url="https://pypi.org/packages/34/22/c14806fa02f3a5dd9ebe21fcbd378555a7f0462689895c3fe4d61b9d1e1c/sphinxcontrib_programoutput-0.15-py2.py3-none-any.whl",
+    )
+    version(
+        "0.10",
+        sha256="9d665ece29627d87b7e3b678bbba4007f147de0ee27418c66b6128329b0c49ad",
+        url="https://pypi.org/packages/c2/70/addc3e19a10558d378ec59e5c00f7c5605ac4e5b09a4f6ef32b62ae0b53d/sphinxcontrib_programoutput-0.10-py2.py3-none-any.whl",
+    )
 
-    depends_on("python@2.7:2.8,3.5:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
-    depends_on("py-sphinx@1.7.0:", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-sphinx@1.7.0:", when="@0.15:")
+        depends_on("py-sphinx@1.3.5:", when="@0.10")

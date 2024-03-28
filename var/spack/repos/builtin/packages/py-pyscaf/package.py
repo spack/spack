@@ -14,7 +14,11 @@ class PyPyscaf(PythonPackage):
 
     license("GPL-3.0-only")
 
-    version("0.12a4", sha256="3ce3f6fe80bd058831b6a38a56d464ef10f3ebbdd6bc3dcb0d7f127c0b2c1b36")
+    version(
+        "0.12-alpha4",
+        sha256="8df880c5c0560fa1d2f76b509f964ed14baa0ed884b46616f28be5da4d538dac",
+        url="https://pypi.org/packages/29/e4/fdc8ffca0a993076d240bc95afcc26c73feaec6128dd3073d07aad3cbed9/pyScaf-0.12a4-py2-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-fastaindex", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-fastaindex", when="@0.12-alpha4:")

@@ -14,14 +14,18 @@ class PyAzureMgmtRedis(PythonPackage):
     pypi = "azure-mgmt-redis/azure-mgmt-redis-6.0.0.zip"
 
     # Release candidate needed for py-azure-cli
-    version("7.0.0rc1", sha256="d3cc259c507b79962495ed00d0a3432a45e4e90a0fb48b49e80d51cdc398dc20")
+    version(
+        "7.0.0-rc1",
+        sha256="c3e8b24b0f537eb987718dd35eacd4c45f5252d2f5a03dbd011c4c8d074c61ff",
+        url="https://pypi.org/packages/d0/94/5a266013edfb3010cdf8fa15e8dc64b966e15cfa9873ee043811ab75eda0/azure_mgmt_redis-7.0.0rc1-py2.py3-none-any.whl",
+    )
     version(
         "6.0.0",
-        sha256="db999e104edeee3a13a8ceb1881e15196fe03a02635e0e20855eb52c1e2ecca1",
-        preferred=True,
+        sha256="756fd080868fd057fdaa4b7663985d8ffebd941ad06a4d9786fe4470e65a2114",
+        url="https://pypi.org/packages/a1/7e/e958de2ef701104a35caabe4ad5d1588cd2d413271695924c586549d6a34/azure_mgmt_redis-6.0.0-py2.py3-none-any.whl",
     )
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-msrest@0.5.0:", type=("build", "run"))
-    depends_on("py-msrestazure@0.4.32:1", type=("build", "run"))
-    depends_on("py-azure-common@1.1:1", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-azure-common@1.1:", when="@5:")
+        depends_on("py-msrest@0.5:", when="@6:12")
+        depends_on("py-msrestazure@0.4.32:", when="@6:7")

@@ -14,6 +14,8 @@ class PyIncremental(PythonPackage):
 
     license("MIT")
 
-    version("21.3.0", sha256="02f5de5aff48f6b9f665d99d48bfc7ec03b6e3943210de7cfc88856d755d6f57")
-
-    depends_on("py-setuptools", type="build")
+    version(
+        "21.3.0",
+        sha256="92014aebc6a20b78a8084cdd5645eeaa7f74b8933f70fa3ada2cfbd1e3b54321",
+        url="https://pypi.org/packages/99/3b/4f80dd10cb716f3a9e22ae88f026d25c47cc3fdf82c2747f3d59c98e4ff1/incremental-21.3.0-py2.py3-none-any.whl",
+    )

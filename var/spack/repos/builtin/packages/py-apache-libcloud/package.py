@@ -14,6 +14,8 @@ class PyApacheLibcloud(PythonPackage):
 
     license("Apache-2.0")
 
-    version("1.2.1", sha256="b26b542c6c9785dd4e34892d87421ffa4c043335c1cba301a97a8d9748c423f2")
-
-    depends_on("py-setuptools", type="build")
+    version(
+        "1.2.1",
+        sha256="6506e51eefe24a0bc0e61699dae7f390e22105e14afc4ba18248748c66117419",
+        url="https://pypi.org/packages/2d/32/37c9a6373595e1f335872e0a3ea76420db9c3952e185daff851d209c3b5d/apache_libcloud-1.2.1-py2.py3-none-any.whl",
+    )

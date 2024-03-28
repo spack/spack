@@ -16,6 +16,8 @@ class PySubwordNmt(PythonPackage):
 
     license("MIT")
 
-    version("0.3.7", sha256="5c3eafe8d85d872a3bbde722b130fb25db19cc7942561936bfae26b6daf51ba0")
-
-    depends_on("py-setuptools", type="build")
+    version(
+        "0.3.7",
+        sha256="a2d92eed5dea55f2b1c9b21225a57b3ae7009ce8a1fa4d2e3f01ab11435c28c9",
+        url="https://pypi.org/packages/74/60/6600a7bc09e7ab38bc53a48a20d8cae49b837f93f5842a41fe513a694912/subword_nmt-0.3.7-py2.py3-none-any.whl",
+    )

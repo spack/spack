@@ -14,8 +14,12 @@ class PyDateutils(PythonPackage):
 
     license("0BSD")
 
-    version("0.6.12", sha256="03dd90bcb21541bd4eb4b013637e4f1b5f944881c46cc6e4b67a6059e370e3f1")
+    version(
+        "0.6.12",
+        sha256="f33b6ab430fa4166e7e9cb8b21ee9f6c9843c48df1a964466f52c79b2a8d53b3",
+        url="https://pypi.org/packages/1e/23/cbac954194e5132448cfec0148be1318baac99e68ed597b3d7ff4ae5c182/dateutils-0.6.12-py2.py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-python-dateutil", type=("build", "run"))
-    depends_on("py-pytz", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-python-dateutil", when="@0.6.9:")
+        depends_on("py-pytz", when="@0.6.9:")

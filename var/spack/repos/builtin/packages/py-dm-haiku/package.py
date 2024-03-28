@@ -15,31 +15,36 @@ class PyDmHaiku(PythonPackage):
 
     license("Apache-2.0")
 
-    version("0.0.12", sha256="ba0b3acf71433156737fe342c486da11727e5e6c9e054245f4f9b8f0b53eb608")
-    version("0.0.7", sha256="86c34af6952a305a4bbfda6b9925998577acc4aa2ad9333da3d6047f4f8ed7c1")
-    version("0.0.5", sha256="e986237e1f840aa3bd26217ecad84b611bf1456e2139f0f79ea71f9c6222d231")
+    version(
+        "0.0.12",
+        sha256="7448a43a6486bff95253f84e18eacc607d9c1256592573117a9d1d23e2780706",
+        url="https://pypi.org/packages/1c/c2/4a32e22bad1c5c675ac53701b099ce39c286970326512d3e9b06f8866f7d/dm_haiku-0.0.12-py3-none-any.whl",
+    )
+    version(
+        "0.0.7",
+        sha256="d06a2fededd436837f69c686511eddc9b887b0eaf76a921316289a7d7e9d80e3",
+        url="https://pypi.org/packages/4d/81/0d8e5822560045ddf4e723f2f8b1fd4f4c30773ed001b9102b77bf517cbb/dm_haiku-0.0.7-py3-none-any.whl",
+    )
+    version(
+        "0.0.5",
+        sha256="e2cb422f476eb686dfba670a1d2257d8c20d2f87006665a79b97e5de50fa8379",
+        url="https://pypi.org/packages/ae/5b/38871efe524b74798efb5f49c7daf85fbe30aa316e09a5ed7bd77ca43aff/dm_haiku-0.0.5-py3-none-any.whl",
+    )
 
-    variant("jax", default=False, description="Build with JAX support", when="@0.0.12:")
+    variant("jax", default=False)
 
-    # setup.py
-    depends_on("python@3.9:", when="@0.0.12:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
-
-    # requirements.txt
-    depends_on("py-absl-py@0.7.1:", type=("build", "run"))
-    depends_on("py-jmp@0.0.2:", type=("build", "run"))
-    depends_on("py-numpy@1.18.0:", type=("build", "run"))
-    depends_on("py-tabulate@0.8.9:", type=("build", "run"))
-    depends_on("py-flax@0.7.1:", when="@0.0.12:", type=("build", "run"))
-
-    # requirements-jax.txt
-    with when("+jax"):
-        depends_on("py-jax@0.4.24:", type=("build", "run"))
-        depends_on("py-jaxlib@0.4.24:", type=("build", "run"))
-
-    # Historical dependencies
-    depends_on("py-typing-extensions", when="^python@:3.7", type=("build", "run"))
-    depends_on("py-jax", when="@:0.0.7", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-absl-py@0.7.1:")
+        depends_on("py-flax@0.7.1:", when="@0.0.11:")
+        depends_on("py-jax@0.4.24:", when="@0.0.12:+jax")
+        depends_on("py-jax@0.3.5", when="@0.0.7+jax")
+        depends_on("py-jax@0.2.22", when="@0.0.5:0.0.5.0+jax")
+        depends_on("py-jaxlib@0.4.24:", when="@0.0.12:+jax")
+        depends_on("py-jaxlib@0.3.5", when="@0.0.7+jax")
+        depends_on("py-jaxlib@0.1.73", when="@0.0.5:0.0.5.0+jax")
+        depends_on("py-jmp@0.0.2:", when="@0.0.5:0.0.5.0,0.0.6:")
+        depends_on("py-numpy@1.18.0:")
+        depends_on("py-tabulate@0.8.9:", when="@0.0.4:")
 
     # AttributeError: module 'jax' has no attribute 'xla'
     conflicts("^py-jax@0.4.14:", when="@:0.0.7")

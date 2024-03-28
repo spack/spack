@@ -15,8 +15,11 @@ class PyAiosignal(PythonPackage):
 
     license("Apache-2.0")
 
-    version("1.2.0", sha256="78ed67db6c7b7ced4f98e495e572106d5c432a93e1ddd1bf475e1dc05f5b7df2")
+    version(
+        "1.2.0",
+        sha256="26e62109036cd181df6e6ad646f91f0dcfd05fe16d0cb924138ff2ab75d64e3a",
+        url="https://pypi.org/packages/3b/87/fe94898f2d44a93a35d5aa74671ed28094d80753a1113d68b799fab6dc22/aiosignal-1.2.0-py3-none-any.whl",
+    )
 
-    depends_on("python@3.6:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
-    depends_on("py-frozenlist@1.1.0:", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-frozenlist@1.1:", when="@1.1:")

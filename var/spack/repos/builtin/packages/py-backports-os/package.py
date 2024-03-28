@@ -14,7 +14,8 @@ class PyBackportsOs(PythonPackage):
 
     license("PSF-2.0")
 
-    version("0.1.1", sha256="b472c4933094306ca08ec90b2a8cbb50c34f1fb2767775169a1c1650b7b74630")
-
-    depends_on("py-setuptools", type="build")
-    depends_on("py-setuptools-scm", type="build")
+    version(
+        "0.1.1",
+        sha256="05b2801a021753d33e3402ac8857a3ba395eb7febbd7381fb27d880d07803061",
+        url="https://pypi.org/packages/2b/e0/e7f8afefb8219e6b686722923db073b5bd54e1336b5a8b32da66c2edd0e8/backports.os-0.1.1-py3-none-any.whl",
+    )

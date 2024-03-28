@@ -12,7 +12,11 @@ class PyQuerystringParser(PythonPackage):
     homepage = "https://pypi.org/project/querystring-parser/"
     pypi = "querystring-parser/querystring_parser-1.2.4.tar.gz"
 
-    version("1.2.4", sha256="644fce1cffe0530453b43a83a38094dbe422ccba8c9b2f2a1c00280e14ca8a62")
+    version(
+        "1.2.4",
+        sha256="d2fa90765eaf0de96c8b087872991a10238e89ba015ae59fedfed6bd61c242a0",
+        url="https://pypi.org/packages/88/6b/572b2590fd55114118bf08bde63c0a421dcc82d593700f3e2ad89908a8a9/querystring_parser-1.2.4-py2.py3-none-any.whl",
+    )
 
-    depends_on("py-six", type=("build", "run"))
-    depends_on("py-setuptools", type=("build"))
+    with default_args(type="run"):
+        depends_on("py-six", when="@1.2.4:")

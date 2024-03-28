@@ -14,8 +14,18 @@ class PyIpaddress(PythonPackage):
 
     license("PSF-2.0")
 
-    version("1.0.23", sha256="b7f8e0369580bb4a24d5ba1d7cc29660a4a6987763faf1d8a8046830e020e7e2")
-    version("1.0.22", sha256="b146c751ea45cad6188dd6cf2d9b757f6f4f8d6ffb96a023e6f2e26eea02a72c")
-    version("1.0.18", sha256="5d8534c8e185f2d8a1fda1ef73f2c8f4b23264e8e30063feeb9511d492a413e1")
-
-    depends_on("py-setuptools", type="build")
+    version(
+        "1.0.23",
+        sha256="6e0f4a39e66cb5bb9a137b00276a2eff74f93b71dcbdad6f10ff7df9d3557fcc",
+        url="https://pypi.org/packages/c2/f8/49697181b1651d8347d24c095ce46c7346c37335ddc7d255833e7cde674d/ipaddress-1.0.23-py2.py3-none-any.whl",
+    )
+    version(
+        "1.0.22",
+        sha256="64b28eec5e78e7510698f6d4da08800a5c575caa4a286c93d651c5d3ff7b6794",
+        url="https://pypi.org/packages/fc/d0/7fc3a811e011d4b388be48a0e381db8d990042df54aa4ef4599a31d39853/ipaddress-1.0.22-py2.py3-none-any.whl",
+    )
+    version(
+        "1.0.18",
+        sha256="d34cf15d95ce9a734560f7400a8bd2ac2606f378e2a1d0eadbf1c98707e7c74a",
+        url="https://pypi.org/packages/17/93/28f4dd560780dd70fe75ce7e2662869770dfac181f6bbb472179ea8da516/ipaddress-1.0.18-py2-none-any.whl",
+    )

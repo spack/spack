@@ -14,6 +14,8 @@ class PyScooby(PythonPackage):
 
     license("MIT")
 
-    version("0.5.7", sha256="ae2c2b6f5f5d10adf7aaab32409028f1e28d3ce833664bdd1e8c2072e8da169a")
-
-    depends_on("py-setuptools", type="build")
+    version(
+        "0.5.7",
+        sha256="bc5ebc6919965e8591623ad2c24fe91f40941e5e73038999ccf5de4a31439f68",
+        url="https://pypi.org/packages/1b/99/db6d34bdc3f060d631f524c2f0fc4b1919cd3bf734c905fc1b25eb847ac2/scooby-0.5.7-py3-none-any.whl",
+    )

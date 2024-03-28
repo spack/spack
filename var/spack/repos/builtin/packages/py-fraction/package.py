@@ -19,6 +19,8 @@ class PyFraction(PythonPackage):
 
     license("MIT")
 
-    version("2.2.0", sha256="2c1179f20c8b749622935fe04db1c7f2987f011f2376bdad84c2a39c8e3d0fdb")
-
-    depends_on("py-setuptools", type="build")
+    version(
+        "2.2.0",
+        sha256="f1b7f02a03cdbf3552172174191352dbe6c9cabe0c0841a4956a49db0ce1554a",
+        url="https://pypi.org/packages/58/e8/6a04edfad07782e51a7ce28b4e3240978c18b337f6d07d178e43398b8a4b/Fraction-2.2.0-py3-none-any.whl",
+    )

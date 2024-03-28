@@ -16,9 +16,16 @@ class PyKeyboard(PythonPackage):
 
     license("MIT")
 
-    version("0.13.5", sha256="63ed83305955939ca5c9a73755e5cc43e8242263f5ad5fd3bb7e0b032f3d308b")
+    version(
+        "0.13.5",
+        sha256="8e9c2422f1217e0bd84489b9ecd361027cc78415828f4fe4f88dd4acd587947b",
+        url="https://pypi.org/packages/55/88/287159903c5b3fc6d47b651c7ab65a54dcf9c9916de546188a7f62870d6d/keyboard-0.13.5-py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
+    with default_args(type="run"):
+        depends_on("py-pyobjc", when="@0.13.2: platform=darwin")
+        depends_on("py-pyobjc", when="@0.13:0.13.0")
+
     # depends_on('py-pyobjc', when='platform=darwin', type=('build', 'run'))
 
     # Until py-pyobjc can be created, specifying conflict with platform=darwin

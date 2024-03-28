@@ -14,46 +14,33 @@ class PyDaskMl(PythonPackage):
 
     license("BSD-3-Clause")
 
-    version("1.8.0", sha256="8fc4ac3ec1915e382fb8cae9ff1ec9b5ac1bee0b6f4c6975d6e6cb7191a4a815")
+    version(
+        "1.8.0",
+        sha256="7b3aa890f348465a5306a4f1e48491698c189af879fd1cf91e0f2adac1129118",
+        url="https://pypi.org/packages/06/97/cd1090baa8fcde28b0dda61a1fed2fa695dc2c2bb92b47bd5bce5d95f1c0/dask_ml-1.8.0-py3-none-any.whl",
+    )
 
-    variant("docs", default=False, description="Build HTML documentation")
-    variant("xgboost", default=False, description="Deploys XGBoost alongside Dask")
+    variant("docs", default=False)
+    variant("xgboost", default=False)
 
-    depends_on("python@3.6:", type=("build", "run"))
-
-    depends_on("py-setuptools", type="build")
-    depends_on("py-setuptools-scm", type="build")
-
-    depends_on("py-dask+array+dataframe@2.4.0:", type=("build", "run"))
-    depends_on("py-distributed@2.4.0:", type=("build", "run"))
-    depends_on("py-numba", type=("build", "run"))
-    depends_on("py-numpy@1.17.3:", type=("build", "run"))
-    depends_on("py-pandas@0.24.2:", type=("build", "run"))
-    depends_on("py-scikit-learn@0.23:", type=("build", "run"))
-    depends_on("py-scipy", type=("build", "run"))
-    depends_on("py-dask-glm@0.2.0:", type=("build", "run"))
-    depends_on("py-multipledispatch@0.4.9:", type=("build", "run"))
-    depends_on("py-packaging", type=("build", "run"))
-
-    depends_on("py-graphviz", type=("build", "run"), when="+docs")
-    depends_on("py-heapdict", type=("build", "run"), when="+docs")
-    depends_on("py-ipykernel", type=("build", "run"), when="+docs")
-    depends_on("py-ipython", type=("build", "run"), when="+docs")
-    depends_on("py-nbsphinx", type=("build", "run"), when="+docs")
-    depends_on("py-nose", type=("build", "run"), when="+docs")
-    depends_on("py-numpydoc", type=("build", "run"), when="+docs")
-    depends_on("py-sortedcontainers", type=("build", "run"), when="+docs")
-    depends_on("py-sphinx", type=("build", "run"), when="+docs")
-    depends_on("py-sphinx-rtd-theme", type=("build", "run"), when="+docs")
-    depends_on("py-sphinx-gallery", type=("build", "run"), when="+docs")
-    depends_on("py-testpath", type=("build", "run"), when="+docs")
-    depends_on("py-tornado", type=("build", "run"), when="+docs")
-    depends_on("py-zict", type=("build", "run"), when="+docs")
-    depends_on("py-dask-sphinx-theme@1.1.0:", type=("build", "run"), when="+docs")
-    depends_on("py-nbsphinx", type=("build", "run"), when="+docs")
-
-    depends_on("py-xgboost+dask", type=("build", "run"), when="+docs")
-    depends_on("py-xgboost+dask", type=("build", "run"), when="+xgboost")
+    with default_args(type="run"):
+        depends_on("py-dask@2.4:+array+dataframe", when="@1.2,1.5:")
+        depends_on("py-dask-glm@0.2:", when="@1.1:1.2,1.5:")
+        depends_on("py-dask-xgboost", when="@0.9,0.11:1.2,1.5:+xgboost")
+        depends_on("py-distributed@2.4:", when="@1.2,1.5:")
+        depends_on("py-multipledispatch@0.4.9:", when="@0.9,0.11:1.2,1.5:")
+        depends_on("py-nbsphinx", when="@0.9,0.11:1.2,1.5:+docs")
+        depends_on("py-numba", when="@0.9,0.11:1.2,1.5:1.8")
+        depends_on("py-numpy@1.17.3:", when="@1.2,1.5:1,2021.10")
+        depends_on("py-numpydoc", when="@0.9,0.11:1.2,1.5:+docs")
+        depends_on("py-packaging", when="@0.9,0.11:1.2,1.5:")
+        depends_on("py-pandas@0.24.2:", when="@1.7:")
+        depends_on("py-scikit-learn@0.23.0:", when="@1.5:1")
+        depends_on("py-scipy", when="@0.9,0.11:1.2,1.5:")
+        depends_on("py-sphinx", when="@0.9,0.11:1.2,1.5:+docs")
+        depends_on("py-sphinx-gallery", when="@0.9,0.11:1.2,1.5:+docs")
+        depends_on("py-sphinx-rtd-theme", when="@0.9,0.11:1.2,1.5:+docs")
+        depends_on("py-xgboost", when="@0.9,0.11:1.2,1.5:+xgboost")
 
     patch("xgboost_dependency.patch")
 

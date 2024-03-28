@@ -15,9 +15,8 @@ class PyPureEval(PythonPackage):
 
     license("MIT")
 
-    version("master", branch="master")
-    version("0.2.2", sha256="2b45320af6dfaa1750f543d714b6d1c520a1688dec6fd24d339063ce0aaa9ac3")
-
-    depends_on("python@3.5:", type=("build", "run"))
-    depends_on("py-setuptools@44:", type="build")
-    depends_on("py-setuptools-scm+toml@3.4.3:", type="build")
+    version(
+        "0.2.2",
+        sha256="01eaab343580944bc56080ebe0a674b39ec44a945e6d09ba7db3cb8cec289350",
+        url="https://pypi.org/packages/2b/27/77f9d5684e6bce929f5cfe18d6cfbe5133013c06cb2fbf5933670e60761d/pure_eval-0.2.2-py3-none-any.whl",
+    )

@@ -16,7 +16,8 @@ class PySpatialite(PythonPackage):
 
     license("MIT")
 
-    version("0.0.3", sha256="a0761f239a52f326b14ce41ba61b6614dfcc808b978a0bec4a37c1de9ad9071e")
-
-    depends_on("py-setuptools", type="build")
-    depends_on("libspatialite")
+    version(
+        "0.0.3",
+        sha256="3124f643688c8ba4e2ff200ef401cf7b57caa44db666cb78519784f98f662982",
+        url="https://pypi.org/packages/43/5d/ff0c1c7ca9b4d294029f9a2a2a2f668e8e33e7926135d7a86c35d855eb23/spatialite-0.0.3-py3-none-any.whl",
+    )

@@ -18,9 +18,10 @@ class PyPureSasl(PythonPackage):
 
     license("MIT")
 
-    version("0.6.2", sha256="53c1355f5da95e2b85b2cc9a6af435518edc20c81193faa0eea65fdc835138f4")
+    version(
+        "0.6.2",
+        sha256="edb33b1a46eb3c602c0166de0442c0fb41f5ac2bfccbde4775183b105ad89ab2",
+        url="https://pypi.org/packages/37/b2/ef1124540ee2c0b417be8d0f74667957e6aa084a3f26621aa67e2e77f3fb/pure_sasl-0.6.2-py2-none-any.whl",
+    )
 
-    variant("gssapi", default=True, description="build with kerberos/gssapi support")
-
-    depends_on("py-setuptools", type="build")
-    depends_on("py-kerberos@1.3.0:", type=("build", "run"), when="+gssapi")
+    variant("gssapi", default=False)

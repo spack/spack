@@ -13,8 +13,13 @@ class PyUnidecode(PythonPackage):
 
     license("GPL-2.0-or-later")
 
-    version("1.1.1", sha256="2b6aab710c2a1647e928e36d69c21e76b453cd455f4e2621000e54b2a9b8cce8")
-    version("0.04.21", sha256="280a6ab88e1f2eb5af79edff450021a0d3f0448952847cd79677e55e58bad051")
-
-    depends_on("python@2.7:2.8,3.4:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
+    version(
+        "1.1.1",
+        sha256="1d7a042116536098d05d599ef2b8616759f02985c85b4fef50c78a5aaf10822a",
+        url="https://pypi.org/packages/d0/42/d9edfed04228bacea2d824904cae367ee9efd05e6cce7ceaaedd0b0ad964/Unidecode-1.1.1-py2.py3-none-any.whl",
+    )
+    version(
+        "0.4.21",
+        sha256="61f807220eda0203a774a09f84b4304a3f93b5944110cc132af29ddb81366883",
+        url="https://pypi.org/packages/01/a1/9d7f3138ee3d79a1ab865a2cb38200ca778d85121db19fe264c76c981184/Unidecode-0.04.21-py2.py3-none-any.whl",
+    )

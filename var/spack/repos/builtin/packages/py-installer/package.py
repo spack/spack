@@ -17,8 +17,11 @@ class PyInstaller(Package, PythonExtension):
     )
     list_url = "https://pypi.org/simple/installer/"
 
-    version("0.7.0", sha256="05d1933f0a5ba7d8d6296bb6d5018e7c94fa473ceb10cf198a92ccea19c27b53")
-    version("0.6.0", sha256="ae7c62d1d6158b5c096419102ad0d01fdccebf857e784cee57f94165635fe038")
+    version(
+        "0.7.0",
+        sha256="05d1933f0a5ba7d8d6296bb6d5018e7c94fa473ceb10cf198a92ccea19c27b53",
+        url="https://pypi.org/packages/e5/ca/1172b6638d52f2d6caa2dd262ec4c811ba59eee96d54a7701930726bce18/installer-0.7.0-py3-none-any.whl",
+    )
 
     extends("python")
 

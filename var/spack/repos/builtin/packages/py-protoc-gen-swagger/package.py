@@ -14,7 +14,11 @@ class PyProtocGenSwagger(PythonPackage):
 
     license("Apache-2.0")
 
-    version("0.1.0", sha256="bf9593eec8e0cac31fef10bd558f2a69babbb2475c67291c1c2ca84763c73067")
+    version(
+        "0.1.0",
+        sha256="cdc043da538865f055a7f22b304a35085cef269dc33e2f3408b12d397e8d8b4b",
+        url="https://pypi.org/packages/7d/7f/d8f8d81a921f07e703cabf8a0b5bb6cbc26e3bce7614db905c3c7637315a/protoc_gen_swagger-0.1.0-py2.py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-protobuf@3:", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-protobuf@3.0.0:")

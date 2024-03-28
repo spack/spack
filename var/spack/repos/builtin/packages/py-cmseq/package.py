@@ -16,13 +16,16 @@ class PyCmseq(PythonPackage):
 
     license("MIT")
 
-    version("1.0.4", sha256="93038a6dba826e29a66df3ec8ab2b3e3872acac7af9df245e4a5a624584aca5c")
+    version(
+        "1.0.4",
+        sha256="7165869f81ad668a94dd1f1dd243aedb1bccc50f1547f67355737d9570954d73",
+        url="https://pypi.org/packages/5c/2f/0d4effb9b71f4b78ad4fc0d4e5d433cfb2a6bbf1b26ba2c4164be352b7c0/CMSeq-1.0.4-py3-none-any.whl",
+    )
 
-    depends_on("py-numpy", type=("build", "run"))
-    depends_on("py-scipy", type=("build", "run"))
-    depends_on("py-bcbio-gff", type=("build", "run"))
-    depends_on("samtools@1.2:", type=("build", "run"))
-    depends_on("py-pysam", type=("build", "run"))
-    depends_on("py-pandas", type=("build", "run"))
-    depends_on("py-biopython@:1.76", type=("build", "run"))
-    depends_on("py-setuptools@:57", type=("build"))
+    with default_args(type="run"):
+        depends_on("py-bcbio-gff", when="@1.0.2:")
+        depends_on("py-biopython", when="@1.0.2:")
+        depends_on("py-numpy", when="@1.0.2:")
+        depends_on("py-pandas", when="@1.0.2:")
+        depends_on("py-pysam", when="@1.0.2:")
+        depends_on("py-scipy", when="@1.0.2:")

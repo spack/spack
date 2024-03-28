@@ -13,8 +13,8 @@ class PyDasbus(PythonPackage):
     pypi = "dasbus/dasbus-1.7.tar.gz"
     license("LGPL-2.1-or-later")
 
-    version("1.7", sha256="a8850d841adfe8ee5f7bb9f82cf449ab9b4950dc0633897071718e0d0036b6f6")
-
-    depends_on("python@3.6:3", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
-    depends_on("py-pygobject", type=("build", "run"))
+    version(
+        "1.7",
+        sha256="0a9433e9e72c2c865fa2d5ef824ac4ef49b540cf57f6396e515c2f314e5c14cd",
+        url="https://pypi.org/packages/e1/b4/4d55b9359bc34d56b29b943b378331dd8aaea6db6d0543e5d97fed4b1af7/dasbus-1.7-py3-none-any.whl",
+    )

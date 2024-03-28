@@ -15,12 +15,15 @@ class PyDaskGlm(PythonPackage):
 
     license("BSD-3-Clause")
 
-    version("0.2.0", sha256="58b86cebf04fe5b9e58092e1c467e32e60d01e11b71fdc628baaa9fc6d1adee5")
+    version(
+        "0.2.0",
+        sha256="a116c36a830cc20660c0815c4c8d67239814931952e8695d784604cb4839ea51",
+        url="https://pypi.org/packages/cb/ee/36c6e0e7b51e08406e5c3bb036f35adb77bd0a89335437b2e6f03c948f1a/dask_glm-0.2.0-py2.py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-setuptools-scm", type="build")
-    depends_on("py-cloudpickle@0.2.2:", type=("build", "run"))
-    depends_on("py-dask+array", type=("build", "run"))
-    depends_on("py-multipledispatch@0.4.9:", type=("build", "run"))
-    depends_on("py-scipy@0.18.1:", type=("build", "run"))
-    depends_on("py-scikit-learn@0.18:", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-cloudpickle@0.2.2:")
+        depends_on("py-dask+array")
+        depends_on("py-multipledispatch@0.4.9:")
+        depends_on("py-scikit-learn@0.18:")
+        depends_on("py-scipy@0.18.1:")

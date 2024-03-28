@@ -14,6 +14,8 @@ class PyWaitress(PythonPackage):
 
     license("ZPL-2.1")
 
-    version("2.1.2", sha256="780a4082c5fbc0fde6a2fcfe5e26e6efc1e8f425730863c04085769781f51eba")
-
-    depends_on("py-setuptools@41:", type="build")
+    version(
+        "2.1.2",
+        sha256="7500c9625927c8ec60f54377d590f67b30c8e70ef4b8894214ac6e4cad233d2a",
+        url="https://pypi.org/packages/58/6a/b4b5c582e04e837e4422cab6ec9de7fc10ca7ad7f4e370bb89d280d39552/waitress-2.1.2-py3-none-any.whl",
+    )

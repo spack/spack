@@ -17,9 +17,12 @@ class PyPsmon(PythonPackage):
 
     license("MIT")
 
-    version("1.1.1", sha256="ecbd4e3a34b5f20ac5c62e4cd1e19f7384c6d72f2dd7d66c7b4bc36b529b8385")
+    version(
+        "1.1.1",
+        sha256="c8427569fa3e65ac23802e3746b811142a5811d3a99311350be63d9ae2be53b2",
+        url="https://pypi.org/packages/d6/2f/ef2a0518327e91de5a45ce5809783d40f790a96f33d0d3d207fe47a00626/psmon-1.1.1-py3-none-any.whl",
+    )
 
-    depends_on("python@3.6:", type=("build", "run"))
-    depends_on("py-poetry@0.12:", type="build")
-    depends_on("py-psutil@5.5:6.0", type=("build", "run"))
-    depends_on("py-loguru@0.2.5:0.3.0", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-loguru@0.2.5:0.2", when="@0.2:")
+        depends_on("py-psutil@5.5:")

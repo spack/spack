@@ -17,14 +17,24 @@ class PyCtgan(PythonPackage):
 
     license("MIT")
 
-    version("0.5.0", sha256="b8a5dbf21dab2d2e2690013f13feb0922f5bad13440b15bc031ce9d58c7fb988")
+    version(
+        "0.5.0",
+        sha256="aa53689bb16e1f64cde349d3151d11d8dadf1042d35365c307c89afc88458c7a",
+        url="https://pypi.org/packages/b4/ea/fba41f2b0ce20902257daa7263f3deed3c4e03a6c3e7b9f8018dd0574e4c/ctgan-0.5.0-py2.py3-none-any.whl",
+    )
 
-    depends_on("python@3.6:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
-    depends_on("py-packaging@20:21", type=("build", "run"))
-    depends_on("py-numpy@1.20:1", type=("build", "run"))
-    depends_on("py-pandas@1.1.3:1", type=("build", "run"))
-    depends_on("py-scikit-learn@0.24:1", type=("build", "run"))
-    depends_on("py-torch@1.8.0:1", type=("build", "run"))
-    depends_on("py-torchvision@0.9:0", type=("build", "run"))
-    depends_on("py-rdt@0.6.1:0.6", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("python@:3.11", when="@0.7.4:")
+        depends_on("python@:3.10", when="@0.7:0.7.3")
+        depends_on("python@:3.9", when="@0.5:0.6")
+        depends_on("python@:3.8", when="@0.2.2:0.4,0.5.0.dev:0.5.0.dev0")
+        depends_on("py-numpy@1.20.0:1", when="@0.7:0.9.0 ^python@:3.9")
+        depends_on("py-numpy@1.20.0:1", when="@0.5:0.6")
+        depends_on("py-packaging@20:21", when="@0.5:0.7.3")
+        depends_on("py-pandas@1.1.3:1", when="@0.7:0.7.1 ^python@:3.9")
+        depends_on("py-pandas@1.1.3:1", when="@0.5:0.6")
+        depends_on("py-rdt@0.6.1:0.6.1.0,0.6.2:0", when="@0.5:0.5.0")
+        depends_on("py-scikit-learn@0.24.0:", when="@0.5:0.6")
+        depends_on("py-torch@1.8:1", when="@0.7:0.7.2 ^python@:3.9")
+        depends_on("py-torch@1.8:1", when="@0.5:0.6")
+        depends_on("py-torchvision@0.9:", when="@0.5:0.6")

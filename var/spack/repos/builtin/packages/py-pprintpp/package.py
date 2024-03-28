@@ -12,6 +12,8 @@ class PyPprintpp(PythonPackage):
     homepage = "https://github.com/wolever/pprintpp"
     pypi = "pprintpp/pprintpp-0.4.0.tar.gz"
 
-    version("0.4.0", sha256="ea826108e2c7f49dc6d66c752973c3fc9749142a798d6b254e1e301cfdbc6403")
-
-    depends_on("py-setuptools", type="build")
+    version(
+        "0.4.0",
+        sha256="b6b4dcdd0c0c0d75e4d7b2f21a9e933e5b2ce62b26e1a54537f9651ae5a5c01d",
+        url="https://pypi.org/packages/4e/d1/e4ed95fdd3ef13b78630280d9e9e240aeb65cc7c544ec57106149c3942fb/pprintpp-0.4.0-py2.py3-none-any.whl",
+    )

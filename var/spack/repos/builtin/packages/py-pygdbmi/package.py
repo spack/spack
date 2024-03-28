@@ -14,7 +14,8 @@ class PyPygdbmi(PythonPackage):
 
     license("MIT")
 
-    version("0.9.0.3", sha256="5bdf2f072e8f2f6471f19f8dcd87d6425c5d8069d47c0a5ffe8d0eff48cb171e")
-
-    depends_on("python@3.5:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
+    version(
+        "0.9.0.3",
+        sha256="8fd98dd2e72d82667a4aa3cc34aedf951fe0e8f7e257cbdfc8e0fb7da250dc75",
+        url="https://pypi.org/packages/da/cf/50ab83925820b3575c66b4668e4a307dfd668027df66830269ae027e5e32/pygdbmi-0.9.0.3-py3-none-any.whl",
+    )

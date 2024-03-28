@@ -18,20 +18,23 @@ class PyOrbaxCheckpoint(PythonPackage):
 
     license("Apache-2.0")
 
-    version("0.5.3", sha256="1572904cbbfe8513927e0d80f80b730e0ef2f680332d3c2810d8443532938b45")
+    version(
+        "0.5.3",
+        sha256="82acdf18acb1e294396dd583634d3b1bd005bbb81f3de650740384c465d735c3",
+        url="https://pypi.org/packages/83/a2/0677f2ee06bdbf7b4e6be4ad931ffe58f2ea82d67bb2a277d9d7b3b1e352/orbax_checkpoint-0.5.3-py3-none-any.whl",
+    )
 
-    depends_on("py-flit-core@3.5:3", type="build")
-
-    with default_args(type=("build", "run")):
-        depends_on("python@3.9:")
-        depends_on("py-absl-py")
-        depends_on("py-etils+epath+epy")
-        depends_on("py-typing-extensions")
-        depends_on("py-msgpack")
-        depends_on("py-jax@0.4.9:")
-        depends_on("py-jaxlib")
-        depends_on("py-numpy")
-        depends_on("py-pyyaml")
-        depends_on("py-tensorstore@0.1.51:")
-        depends_on("py-nest-asyncio")
-        depends_on("py-protobuf")
+    with default_args(type="run"):
+        depends_on("python@3.9:", when="@0.2.4:")
+        depends_on("py-absl-py", when="@0.1:")
+        depends_on("py-etils+epath+epy", when="@0.2.7:")
+        depends_on("py-flax", when="@0.1:0.1.1")
+        depends_on("py-jax@0.4.9:", when="@0.2.3:")
+        depends_on("py-jaxlib", when="@0.1:")
+        depends_on("py-msgpack", when="@0.1.4:")
+        depends_on("py-nest-asyncio", when="@0.1.6:")
+        depends_on("py-numpy", when="@0.1:")
+        depends_on("py-protobuf", when="@0.2.7:")
+        depends_on("py-pyyaml", when="@0.1:")
+        depends_on("py-tensorstore@0.1.51:", when="@0.4.5:")
+        depends_on("py-typing-extensions", when="@0.1.4:")

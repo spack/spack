@@ -12,9 +12,17 @@ class PyMake(PythonPackage):
     homepage = "https://github.com/fholmer/make"
     git = "https://github.com/fholmer/make.git"
 
-    version("0.1.6.post2", commit="ce2ef5834837a35dba5f2bea8866b61c8907c83a")
-    version("0.1.6", commit="c6e2615d01d8d5f58181e39d0f594fe5baae3c5f")
+    version(
+        "0.1.6.post2",
+        sha256="307991f0d24668b7785a9abade301ba6c2d004460e90c59baf19b47c16b8ed39",
+        url="https://pypi.org/packages/71/8b/af4b541d2a6e1ea2021dc95f5fd75fc5679462e5b06b155eed65b25cc2eb/make-0.1.6.post2-py3-none-any.whl",
+    )
+    version(
+        "0.1.6",
+        sha256="b4dcd40dcb2cdd7de24dd9c32c57aff8ba7eb758400145376cdb07b4957a525d",
+        url="https://pypi.org/packages/1b/c3/c956ba456c4397714a6dbc0bb3acc180399e736390bc5d1491b70920ef58/make-0.1.6-py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-jinja2", type=("build", "run"))
-    depends_on("py-jinja2-time", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-jinja2")
+        depends_on("py-jinja2-time", when="@0.1.3:")

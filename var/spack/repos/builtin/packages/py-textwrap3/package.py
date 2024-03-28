@@ -12,6 +12,8 @@ class PyTextwrap3(PythonPackage):
     homepage = "https://github.com/jonathaneunice/textwrap3"
     pypi = "textwrap3/textwrap3-0.9.2.zip"
 
-    version("0.9.2", sha256="5008eeebdb236f6303dcd68f18b856d355f6197511d952ba74bc75e40e0c3414")
-
-    depends_on("py-setuptools", type="build")
+    version(
+        "0.9.2",
+        sha256="bf5f4c40faf2a9ff00a9e0791fed5da7415481054cef45bb4a3cfb1f69044ae0",
+        url="https://pypi.org/packages/77/9c/a53e561d496ee5866bbeea4d3a850b3b545ed854f8a21007c1e0d872e94d/textwrap3-0.9.2-py2.py3-none-any.whl",
+    )

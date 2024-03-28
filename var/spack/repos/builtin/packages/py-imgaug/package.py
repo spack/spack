@@ -17,16 +17,25 @@ class PyImgaug(PythonPackage):
 
     license("MIT")
 
-    version("0.4.0", sha256="46bab63ed38f8980630ff721a09ca2281b7dbd4d8c11258818b6ebcc69ea46c7")
-    version("0.3.0", sha256="e1354d41921f1b306b50c5141b4870f17e81b531cae2f5c3093da9dc4dcb3cf4")
+    version(
+        "0.4.0",
+        sha256="ce61e65b4eb7405fc62c1b0a79d2fa92fd47f763aaecb65152d29243592111f9",
+        url="https://pypi.org/packages/66/b1/af3142c4a85cba6da9f4ebb5ff4e21e2616309552caca5e8acefe9840622/imgaug-0.4.0-py2.py3-none-any.whl",
+    )
+    version(
+        "0.3.0",
+        sha256="99b8a38e137a76dd2780c4e86fa799ec4d0753cfc9088f9b51789f4a23fbe9d9",
+        url="https://pypi.org/packages/11/df/5a3bba95b4600d5ca7aff072082ef0d9837056dd28cc4e738e7ce88dd8f8/imgaug-0.3.0-py2.py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-imageio", type=("build", "run"))
-    depends_on("py-matplotlib", type=("build", "run"))
-    depends_on("py-numpy@1.15:", type=("build", "run"))
-    depends_on("py-scipy", type=("build", "run"))
-    depends_on("py-shapely", type=("build", "run"))
-    depends_on("py-six", type=("build", "run"))
-    depends_on("py-scikit-image@0.14.2:", type=("build", "run"))
-    depends_on("pil", type=("build", "run"))
-    depends_on("opencv+python3", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-imageio", when="@0.2.7:")
+        depends_on("py-matplotlib", when="@0.2.7:")
+        depends_on("py-numpy@1.15.0:", when="@0.2.8:")
+        depends_on("py-opencv-python", when="@0.2.8:0.2,0.4:")
+        depends_on("py-opencv-python-headless", when="@0.3")
+        depends_on("py-pillow", when="@0.2.7:")
+        depends_on("py-scikit-image@0.14.2:", when="@0.3:")
+        depends_on("py-scipy", when="@0.2.7:")
+        depends_on("py-shapely", when="@0.2.7:")
+        depends_on("py-six", when="@0.2.7:")

@@ -15,8 +15,11 @@ class PyPyquaternion(PythonPackage):
 
     license("MIT")
 
-    version("0.9.5", sha256="2d89d19259d62a8fbd25219eee7dacc1f6bb570becb70e1e883f622597c7d81d")
+    version(
+        "0.9.5",
+        sha256="bac5945d08b9a2f4106dc76206e40f353c7240fdf37a370e13b03113c135f59b",
+        url="https://pypi.org/packages/83/e3/339e1135d94c2db689fbf33603cbc8f2861ca15a1dce79963f796b3cc910/pyquaternion-0.9.5-py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type=("build", "run"))
-
-    depends_on("py-numpy", type="run")
+    with default_args(type="run"):
+        depends_on("py-numpy", when="@0.9.5:")

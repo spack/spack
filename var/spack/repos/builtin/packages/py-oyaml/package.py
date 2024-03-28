@@ -15,8 +15,11 @@ class PyOyaml(PythonPackage):
 
     license("MIT")
 
-    version("1.0", sha256="ed8fc096811f4763e1907dce29c35895d6d5936c4d0400fe843a91133d4744ed")
+    version(
+        "1.0",
+        sha256="3a378747b7fb2425533d1ce41962d6921cda075d46bb480a158d45242d156323",
+        url="https://pypi.org/packages/37/aa/111610d8bf5b1bb7a295a048fc648cec346347a8b0be5881defd2d1b4a52/oyaml-1.0-py2.py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-
-    depends_on("py-pyyaml", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-pyyaml")

@@ -12,6 +12,8 @@ class PyUrllib3SecureExtra(PythonPackage):
     homepage = "https://github.com/urllib3/urllib3-secure-extra"
     pypi = "urllib3-secure-extra/urllib3-secure-extra-0.1.0.tar.gz"
 
-    version("0.1.0", sha256="ee9409cbfeb4b8609047be4c32fb4317870c602767e53fd8a41005ebe6a41dff")
-
-    depends_on("py-flit-core@3.2:3", type="build")
+    version(
+        "0.1.0",
+        sha256="f7adcb108b4d12a4b26b99eb60e265d087f435052a76aefa396b6ee85e9a6ef9",
+        url="https://pypi.org/packages/90/cd/273b6978ace72ef1d3f35610206e44e4527d557500e3d7b39732f2b4dd3c/urllib3_secure_extra-0.1.0-py2.py3-none-any.whl",
+    )

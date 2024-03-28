@@ -14,9 +14,18 @@ class PyDefusedxml(PythonPackage):
 
     license("PSF-2.0")
 
-    version("0.7.1", sha256="1bb3032db185915b62d7c6209c5a8792be6a32ab2fedacc84e01b52c51aa3e69")
-    version("0.6.0", sha256="f684034d135af4c6cbb949b8a4d2ed61634515257a67299e5f940fbaa34377f5")
-    version("0.5.0", sha256="24d7f2f94f7f3cb6061acb215685e5125fbcdc40a857eff9de22518820b0a4f4")
-
-    depends_on("py-setuptools", type="build")
-    depends_on("python@2.7:2.8,3.5:", type=("build", "run"))
+    version(
+        "0.7.1",
+        sha256="a352e7e428770286cc899e2542b6cdaedb2b4953ff269a210103ec58f6198a61",
+        url="https://pypi.org/packages/07/6c/aa3f2f849e01cb6a001cd8554a88d4c77c5c1a31c95bdf1cf9301e6d9ef4/defusedxml-0.7.1-py2.py3-none-any.whl",
+    )
+    version(
+        "0.6.0",
+        sha256="6687150770438374ab581bb7a1b327a847dd9c5749e396102de3fad4e8a3ef93",
+        url="https://pypi.org/packages/06/74/9b387472866358ebc08732de3da6dc48e44b0aacd2ddaa5cb85ab7e986a2/defusedxml-0.6.0-py2.py3-none-any.whl",
+    )
+    version(
+        "0.5.0",
+        sha256="702a91ade2968a82beb0db1e0766a6a273f33d4616a6ce8cde475d8e09853b20",
+        url="https://pypi.org/packages/87/1c/17f3e3935a913dfe2a5ca85fa5ccbef366bfd82eb318b1f75dadbf0affca/defusedxml-0.5.0-py2.py3-none-any.whl",
+    )

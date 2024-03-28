@@ -16,9 +16,12 @@ class PyFlattenDict(PythonPackage):
 
     license("MIT")
 
-    version("0.3.0", sha256="0ccc43f15c7c84c5ef387ad19254f6769a32d170313a1bcbf4ce582089313d7e")
+    version(
+        "0.3.0",
+        sha256="96038f9a0a09dca205112ae890e1f2159cfdf2af173397b2aa93d1bb9d055890",
+        url="https://pypi.org/packages/9f/30/02e342a45b85c17cdf8238c7e9b612998fc59c7314e13fcd00fbb806dafb/flatten_dict-0.3.0-py2.py3-none-any.whl",
+    )
 
-    depends_on("python@2.7,3.5:3", type=("build", "run"))
-    depends_on("py-poetry@1:", type="build")
-    depends_on("py-six@1.12:1", type=("build", "run"))
-    depends_on("py-pathlib2@2.3:2", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-pathlib2@2.3:", when="@0.2:0.3")
+        depends_on("py-six@1.12:", when="@0.2:")

@@ -14,6 +14,8 @@ class PyFixtures(PythonPackage):
 
     license("Apache-2.0")
 
-    version("3.0.0", sha256="fcf0d60234f1544da717a9738325812de1f42c2fa085e2d9252d8fff5712b2ef")
-
-    depends_on("py-setuptools", type="build")
+    version(
+        "3.0.0",
+        sha256="2a551b0421101de112d9497fb5f6fd25e5019391c0fbec9bad591ecae981420d",
+        url="https://pypi.org/packages/a8/28/7eed6bf76792f418029a18d5b2ace87ce7562927cdd00f1cefe481cd148f/fixtures-3.0.0-py2.py3-none-any.whl",
+    )

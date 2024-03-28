@@ -15,8 +15,12 @@ class PySvgpathtools(PythonPackage):
 
     license("MIT")
 
-    version("1.3.3", sha256="e4b3784ae41b725fbce6a33a8981210967b16d0b557cb5d98c0ed0c81f0f89b9")
+    version(
+        "1.3.3",
+        sha256="7f7bdafe2c03b312178460104705e1d554d8cf36c898bec41bdce9fed3504746",
+        url="https://pypi.org/packages/71/96/cc91050f3b53c2cea0eda18f371d0584e7f43713ce606738384e8001a877/svgpathtools-1.3.3-py2.py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-numpy", type=("build", "run"))
-    depends_on("py-svgwrite", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-numpy", when="@1.3.2:")
+        depends_on("py-svgwrite", when="@1.3.2:")

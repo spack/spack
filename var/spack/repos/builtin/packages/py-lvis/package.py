@@ -13,21 +13,24 @@ class PyLvis(PythonPackage):
 
     pypi = "lvis/lvis-0.5.3.tar.gz"
 
-    version("0.5.3", sha256="55aeeb84174abea2ed0d6985a8e93aa9bdbb60c61c6db130c8269a275ef61a6e")
+    version(
+        "0.5.3",
+        sha256="4f07153330df342b3161fafb46641ce7c02864113a8ddf0d6ffab6b02407bef0",
+        url="https://pypi.org/packages/72/b6/1992240ab48310b5360bfdd1d53163f43bb97d90dc5dc723c67d41c38e78/lvis-0.5.3-py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-cycler@0.10:", type=("build", "run"))
-    depends_on("py-cython@0.29.12:", type=("build", "run"))
-    depends_on("py-kiwisolver@1.1:", type=("build", "run"))
-    depends_on("py-matplotlib@3.1.1:", type=("build", "run"))
-    depends_on("py-numpy@1.18.2:", type=("build", "run"))
-    depends_on("opencv@4.1.0.25:+python3", type=("build", "run"))
-    depends_on("py-pyparsing@2.4.0:", type=("build", "run"))
-    depends_on("py-python-dateutil@2.8:", type=("build", "run"))
-    depends_on("py-six@1.12:", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-cycler@0.10:", when="@0.5.3:")
+        depends_on("py-cython@0.29.12:", when="@0.5.3:")
+        depends_on("py-kiwisolver@1.1:", when="@0.5.3:")
+        depends_on("py-matplotlib@3.1.1:", when="@0.5.3:")
+        depends_on("py-numpy@1.18.2:", when="@0.5.3:")
+        depends_on("py-opencv-python@4.1:", when="@0.5.3:")
+        depends_on("py-pyparsing@2.4:", when="@0.5.3:")
+        depends_on("py-python-dateutil@2.8:", when="@0.5.3:")
+        depends_on("py-six@1.12:", when="@0.5.3:")
 
     # imported at lvis/lvis.py:15
-    depends_on("py-pycocotools", type=("build", "run"))
 
     def patch(self):
         os.rename(

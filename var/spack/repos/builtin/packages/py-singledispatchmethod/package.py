@@ -14,7 +14,8 @@ class PySingledispatchmethod(PythonPackage):
 
     license("MIT")
 
-    version("1.0", sha256="183a7fbeab53b9c9d182f8b8f9c2d7e109a7d40afaa30261d81dd8de68cd73bf")
-
-    depends_on("py-setuptools", type="build")
-    depends_on("py-setuptools-scm", type="build")
+    version(
+        "1.0",
+        sha256="ed4a794e701cbe415f0df32b71dbdb96d3a415701795bcfb5ee694f8c12418db",
+        url="https://pypi.org/packages/c4/ae/cb1b0901b332754245ce6ce900beef6e6c6a97b42e1e4eb78ab66379a6ba/singledispatchmethod-1.0-py2.py3-none-any.whl",
+    )

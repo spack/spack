@@ -12,7 +12,16 @@ class PyColorlog(PythonPackage):
     homepage = "https://github.com/borntyping/python-colorlog"
     pypi = "colorlog/colorlog-4.0.2.tar.gz"
 
-    version("4.0.2", sha256="3cf31b25cbc8f86ec01fef582ef3b840950dea414084ed19ab922c8b493f9b42")
-    version("3.1.4", sha256="418db638c9577f37f0fae4914074f395847a728158a011be2a193ac491b9779d")
+    version(
+        "4.0.2",
+        sha256="450f52ea2a2b6ebb308f034ea9a9b15cea51e65650593dca1da3eb792e4e4981",
+        url="https://pypi.org/packages/68/4d/892728b0c14547224f0ac40884e722a3d00cb54e7a146aea0b3186806c9e/colorlog-4.0.2-py2.py3-none-any.whl",
+    )
+    version(
+        "3.1.4",
+        sha256="8b234ebae1ba1237bc79c0d5f1f47b31a3f3e90c0b4c2b0ebdde63a174d3b97b",
+        url="https://pypi.org/packages/69/eb/58ae10d3c46a0195ffdd0e3943d255d0d5029d71e5457785ecd665bcf0f3/colorlog-3.1.4-py2.py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
+    with default_args(type="run"):
+        depends_on("py-colorama", when="@3.1.4: platform=windows")

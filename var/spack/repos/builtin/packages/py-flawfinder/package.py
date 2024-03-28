@@ -14,7 +14,8 @@ class PyFlawfinder(PythonPackage, SourceforgePackage):
 
     license("GPL-2.0+")
 
-    version("2.0.19", sha256="fe550981d370abfa0a29671346cc0b038229a9bd90b239eab0f01f12212df618")
-
-    depends_on("python@2.7:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
+    version(
+        "2.0.19",
+        sha256="f18f0021d9a2f3ffc1c1e32aa7bb1bb5ca1bad91b82b32157f44e5d0a1a23ad0",
+        url="https://pypi.org/packages/98/64/32f24ec56ea8603ccfc471549de2fb9957613fba75315e121108a9b80b51/flawfinder-2.0.19-py2.py3-none-any.whl",
+    )

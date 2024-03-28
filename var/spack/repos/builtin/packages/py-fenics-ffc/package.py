@@ -18,30 +18,22 @@ class PyFenicsFfc(PythonPackage):
     maintainers("emai-imcs")
 
     license("LGPL-3.0-or-later")
-    version("master", branch="master")
     version(
-        "2019.1.0.post0", sha256="306e1179630200a34202975a5369194939b3482eebfc34bc44ad74dab1f109e8"
+        "2019.1.0.post0",
+        sha256="54d7529ca6306f32e15e8e4a26f32a3d2ec68902262191148b32c92657a6851f",
+        url="https://pypi.org/packages/74/b6/0c3743a5b9fecaf3b7fe7b0c6526e7c635bd1bb6f9bc4a177bababc79131/fenics_ffc-2019.1.0.post0-py3-none-any.whl",
     )
-    version("2018.1.0", sha256="c5a6511693106d1cd2fc013148d0cd01cd1b99fc65dab461ca0b95851a9ea271")
     version(
-        "2017.2.0.post0", sha256="1969a5460cb866c478df64874ce213f81cb5c893b89f991a578e258b1a64fee5"
+        "2018.1.0",
+        sha256="d81df998e6aa244b40211727347cdaf621a26a9a9106ce301ac9b91b6fdd485a",
+        url="https://pypi.org/packages/01/d2/787ac08eaf2bb074d80269cea5d35d337892b8d4d879e02419a614f6c100/fenics_ffc-2018.1.0-py3-none-any.whl",
     )
-    version("2016.2.0", sha256="097c284780447ea7bb47d4d51956648a1efb2cb9047eb1382944421dde351ecb")
 
-    depends_on("py-setuptools", type=("build", "run"))
-    depends_on("py-numpy", type=("build", "run"))
-
-    for ver in ["2019.1.0.post0", "2018.1.0", "2017.2.0.post0", "2016.2.0"]:
-        if ver in ["2019.1.0.post0", "2017.2.0.post0"]:
-            ver = ver[: ver.rfind(".post")]
-        wver = "@" + ver
-        depends_on("py-fenics-fiat{0}".format(wver), type=("build", "run"), when=wver)
-        if Version(ver) < Version("2017.2.0"):
-            depends_on("py-fenics-instant{0}".format(wver), type=("build", "run"), when=wver)
-        else:
-            depends_on("py-fenics-dijitso{0}".format(wver), type=("build", "run"), when=wver)
-        depends_on("py-fenics-ufl{0}".format(wver), type=("build", "run"), when=wver)
-
-    depends_on("py-fenics-fiat@2019.1.0", type=("build", "run"), when="@master")
-    depends_on("py-fenics-dijitso@master", type=("build", "run"), when="@master")
-    depends_on("py-fenics-ufl-legacy@main", type=("build", "run"), when="@master")
+    with default_args(type="run"):
+        depends_on("py-fenics-dijitso@2019:", when="@2019:")
+        depends_on("py-fenics-dijitso@2018", when="@2018")
+        depends_on("py-fenics-fiat@2019:", when="@2019:")
+        depends_on("py-fenics-fiat@2018", when="@2018")
+        depends_on("py-fenics-ufl@2019", when="@2019:")
+        depends_on("py-fenics-ufl@2018", when="@2018")
+        depends_on("py-numpy", when="@2018:")
