@@ -283,7 +283,30 @@ class InMemoryOCIRegistry(DummyServer):
         # List all tags, exclude digests.
         tags = [_tag for _name, _tag in self.manifests.keys() if _name == name and ":" not in _tag]
         tags.sort()
-        return MockHTTPResponse.with_json(200, "OK", body={"tags": tags})
+
+        # Handle pagination as described in the distribution spec:
+        #     https://github.com/opencontainers/distribution-spec/blob/v1.0.1/spec.md#content-discovery
+        url = urllib.parse.urlparse(req.full_url)
+        query = urllib.parse.parse_qs(url.query)
+        n = int(query["n"][0]) if "n" in query else 3
+        last = query["last"][0] if "last" in query else None
+
+        index_of_first = 0
+        if last:
+            try:
+                index_of_first = tags.index(last) + 1
+            except ValueError:
+                return MockHTTPResponse(404, "Not found")
+
+        slice_end = index_of_first + n
+        returned_tags = tags[index_of_first:slice_end]
+
+        headers = None
+        if len(tags) > slice_end:
+            last_tag = returned_tags[-1]
+            headers = {"Link": f'</v2/{name}/tags/list?last={last_tag}&n={n}>; rel="next"'}
+
+        return MockHTTPResponse.with_json(200, "OK", headers=headers, body={"tags": returned_tags})
 
 
 class DummyServerUrllibHandler(urllib.request.BaseHandler):
