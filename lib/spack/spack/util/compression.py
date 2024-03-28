@@ -41,6 +41,223 @@ except ImportError:
     LZMA_SUPPORTED = False
 
 
+try:
+    import zipfile  # noqa
+
+    ZIPFILE_SUPPORTED = True
+except ImportError:
+    ZIPFILE_SUPPORTED = False
+
+
+try:
+    import tarfile  # noqa
+
+    TARFILE_SUPPORTED = True
+
+    # https://github.com/python/cpython/blob/v3.12.2/Lib/tarfile.py#L719
+    # -----------------------------
+    # extraction filters (PEP 706)
+    # -----------------------------
+
+    class FilterError(tarfile.TarError):
+        pass
+
+    class AbsolutePathError(FilterError):
+        def __init__(self, tarinfo):
+            self.tarinfo = tarinfo
+            super().__init__(f"member {tarinfo.name!r} has an absolute path")
+
+    class OutsideDestinationError(FilterError):
+        def __init__(self, tarinfo, path):
+            self.tarinfo = tarinfo
+            self._path = path
+            super().__init__(
+                f"{tarinfo.name!r} would be extracted to {path!r}, "
+                + "which is outside the destination"
+            )
+
+    class SpecialFileError(FilterError):
+        def __init__(self, tarinfo):
+            self.tarinfo = tarinfo
+            super().__init__(f"{tarinfo.name!r} is a special file")
+
+    class AbsoluteLinkError(FilterError):
+        def __init__(self, tarinfo):
+            self.tarinfo = tarinfo
+            super().__init__(f"{tarinfo.name!r} is a link to an absolute path")
+
+    class LinkOutsideDestinationError(FilterError):
+        def __init__(self, tarinfo, path):
+            self.tarinfo = tarinfo
+            self._path = path
+            super().__init__(
+                f"{tarinfo.name!r} would link to {path!r}, " + "which is outside the destination"
+            )
+
+    def _get_filtered_attrs(member, dest_path, for_data=True):
+        new_attrs = {}
+        name = member.name
+        dest_path = os.path.realpath(dest_path)
+        # Strip leading / (tar's directory separator) from filenames.
+        # Include os.sep (target OS directory separator) as well.
+        if name.startswith(("/", os.sep)):
+            name = new_attrs["name"] = member.path.lstrip("/" + os.sep)
+        if os.path.isabs(name):
+            # Path is absolute even after stripping.
+            # For example, 'C:/foo' on Windows.
+            raise AbsolutePathError(member)
+        # Ensure we stay in the destination
+        target_path = os.path.realpath(os.path.join(dest_path, name))
+        if os.path.commonpath([target_path, dest_path]) != dest_path:
+            raise OutsideDestinationError(member, target_path)
+        # Limit permissions (no high bits, and go-w)
+        mode = member.mode
+        if mode is not None:
+            # Strip high bits & group/other write bits
+            mode = mode & 0o755
+            if for_data:
+                # For data, handle permissions & file types
+                if member.isreg() or member.islnk():
+                    if not mode & 0o100:
+                        # Clear executable bits if not executable by user
+                        mode &= ~0o111
+                    # Ensure owner can read & write
+                    mode |= 0o600
+                elif member.isdir() or member.issym():
+                    # Ignore mode for directories & symlinks
+                    # mode = None
+                    pass
+                else:
+                    # Reject special files
+                    raise SpecialFileError(member)
+            if mode != member.mode:
+                new_attrs["mode"] = mode
+        if for_data:
+            # Ignore ownership for 'data'
+            if member.uid is not None:
+                # new_attrs["uid"] = None
+                pass
+            if member.gid is not None:
+                # new_attrs["gid"] = None
+                pass
+            if member.uname is not None:
+                # new_attrs["uname"] = None
+                pass
+            if member.gname is not None:
+                # new_attrs["gname"] = None
+                pass
+            # Check link destination for 'data'
+            if member.islnk() or member.issym():
+                if os.path.isabs(member.linkname):
+                    raise AbsoluteLinkError(member)
+                if member.issym():
+                    target_path = os.path.join(dest_path, os.path.dirname(name), member.linkname)
+                else:
+                    target_path = os.path.join(dest_path, member.linkname)
+                target_path = os.path.realpath(target_path)
+                if os.path.commonpath([target_path, dest_path]) != dest_path:
+                    raise LinkOutsideDestinationError(member, target_path)
+        return new_attrs
+
+    # Sentinel for replace() defaults, meaning "don't change the attribute"
+    _KEEP = object()
+
+    # https://github.com/python/cpython/blob/v3.12.2/Lib/tarfile.py#L926
+
+    def replace(
+        member,
+        *,
+        name=_KEEP,
+        mtime=_KEEP,
+        mode=_KEEP,
+        linkname=_KEEP,
+        uid=_KEEP,
+        gid=_KEEP,
+        uname=_KEEP,
+        gname=_KEEP,
+        deep=True,
+        _KEEP=_KEEP,
+    ):
+        """Return a deep copy of self with the given attributes replaced."""
+        import copy
+
+        if deep:
+            result = copy.deepcopy(member)
+        else:
+            result = copy.copy(member)
+        if name is not _KEEP:
+            result.name = name
+        if mtime is not _KEEP:
+            result.mtime = mtime
+        if mode is not _KEEP:
+            result.mode = mode
+        if linkname is not _KEEP:
+            result.linkname = linkname
+        if uid is not _KEEP:
+            result.uid = uid
+        if gid is not _KEEP:
+            result.gid = gid
+        if uname is not _KEEP:
+            result.uname = uname
+        if gname is not _KEEP:
+            result.gname = gname
+        return result
+
+    # python@:3.11 does not support `None` attribute in `Tarfile.TarInfo`
+    def data_filter_without_none_attribute(member, dest_path):
+        new_attrs = _get_filtered_attrs(member, dest_path, True)
+        if new_attrs:
+            return replace(member, **new_attrs, deep=False)
+        return member
+
+    _data_filter = getattr(tarfile, "data_filter", data_filter_without_none_attribute)
+
+except ImportError:
+    TARFILE_SUPPORTED = False
+
+
+def _untar(archive_file: str, remove_archive_file: bool = False) -> str:
+    """Returns path to unarchived tar file.
+
+    Args:
+        archive_file (str): absolute path to the archive to be extracted.
+        Can be one of .tar(.[gz|bz2|xz|Z]) or .(tgz|tbz|tbz2|txz).
+    """
+    try:
+        return _system_untar(archive_file, remove_archive_file)
+    except Exception:
+        return _py_untar(archive_file, remove_archive_file)
+
+
+def _py_untar(archive_file: str, remove_archive_file: bool = False) -> str:
+    """Returns path to unarchived tar file. Untars archive via python's
+       tarfile module.
+
+    Args:
+        archive_file (str): absolute path to the archive to be extracted.
+        Can be one of .tar(.[gz|bz2|xz|Z]) or .(tgz|tbz|tbz2|txz).
+    """
+    assert TARFILE_SUPPORTED
+    archive_file_no_ext = llnl.url.strip_extension(archive_file)
+    outfile = os.path.basename(archive_file_no_ext)
+    if archive_file_no_ext == archive_file:
+        # the archive file has no extension. Tar on windows cannot untar onto itself
+        # archive_file can be a tar file (which causes the problem on windows) but it can
+        # also have other extensions (on Unix) such as tgz, tbz2, ...
+        archive_file = archive_file_no_ext + "-input"
+        shutil.move(archive_file_no_ext, archive_file)
+    f_tar = tarfile.open(archive_file)
+    f_members = [_data_filter(member=m, dest_path=outfile) for m in f_tar.getmembers()]
+    f_tar.extractall(members=f_members)
+    f_tar.close()
+    if remove_archive_file:
+        # remove input file to prevent two stage
+        # extractions from being treated as exploding
+        # archives by the fetcher
+        os.remove(archive_file)
+    return outfile
+
+
 def _system_untar(archive_file: str, remove_archive_file: bool = False) -> str:
     """Returns path to unarchived tar file. Untars archive via system tar.
 
@@ -162,6 +379,36 @@ def _do_nothing(archive_file: str) -> None:
 
 
 def _unzip(archive_file: str) -> str:
+    """Returns path to extracted zip archive.
+
+    Args:
+        archive_file: absolute path of the file to be decompressed
+    """
+    try:
+        return _system_unzip(archive_file)
+    except Exception:
+        return _py_unzip(archive_file)
+
+
+def _py_unzip(archive_file: str) -> str:
+    """Returns path to extracted zip archive. Extract Zipfile via Python
+    `zipfile` module.
+
+    Args:
+        archive_file: absolute path of the file to be decompressed
+    """
+    assert ZIPFILE_SUPPORTED
+    archive_file_no_ext = llnl.url.strip_extension(archive_file)
+    outfile = os.path.basename(archive_file_no_ext)
+    if archive_file_no_ext == archive_file:
+        archive_file = archive_file_no_ext + "-input"
+        shutil.move(archive_file_no_ext, archive_file)
+    f_zip = zipfile.ZipFile(archive_file)
+    f_zip.extractall()
+    return outfile
+
+
+def _system_unzip(archive_file: str) -> str:
     """Returns path to extracted zip archive. Extract Zipfile, searching for unzip system
     executable. If unavailable, search for 'tar' executable on system and use instead.
 
@@ -169,7 +416,7 @@ def _unzip(archive_file: str) -> str:
         archive_file: absolute path of the file to be decompressed
     """
     if sys.platform == "win32":
-        return _system_untar(archive_file)
+        return _untar(archive_file)
     unzip = which("unzip", required=True)
     unzip.add_default_arg("-q")
     unzip(archive_file)
@@ -188,7 +435,8 @@ def _system_unZ(archive_file: str) -> str:
 
 def _lzma_decomp(archive_file):
     """Returns path to decompressed xz file. Decompress lzma compressed files. Prefer Python native
-    lzma module, but fall back on command line xz tooling to find available Python support."""
+    lzma module, but fall back on command line xz tooling to find available Python support.
+    """
     return _py_lzma(archive_file) if LZMA_SUPPORTED else _xz(archive_file)
 
 
@@ -211,7 +459,7 @@ def _win_compressed_tarball_handler(decompressor: Callable[[str], str]) -> Calla
         # record name of new archive so we can extract
         decomped_tarball = decompressor(archive_file)
         # run tar on newly decomped archive
-        outfile = _system_untar(decomped_tarball, remove_archive_file=True)
+        outfile = _untar(decomped_tarball, remove_archive_file=True)
         return outfile
 
     return unarchive
@@ -304,7 +552,7 @@ def decompressor_for_nix(extension: str) -> Callable[[str], Any]:
         "whl": _do_nothing,
     }
 
-    return extension_to_decompressor.get(extension, _system_untar)
+    return extension_to_decompressor.get(extension, _untar)
 
 
 def _determine_py_decomp_archive_strategy(extension: str) -> Optional[Callable[[str], Any]]:
@@ -332,7 +580,7 @@ def decompressor_for_win(extension: str) -> Callable[[str], Any]:
         # Windows native tar can handle .zip extensions, use standard unzip method
         "zip": _unzip,
         # if extension is standard tarball, invoke Windows native tar
-        "tar": _system_untar,
+        "tar": _untar,
         # Python does not have native support of any kind for .Z files. In these cases, we rely on
         # 7zip, which must be installed outside of Spack and added to the PATH or externally
         # detected
@@ -542,7 +790,8 @@ def extension_from_magic_numbers_by_stream(
 
 def _maybe_abbreviate_extension(path: str, extension: str) -> str:
     """If the file is a compressed tar archive, return the abbreviated extension t[xz|gz|bz2|bz]
-    instead of tar.[xz|gz|bz2|bz] if the file's original name also has an abbreviated extension."""
+    instead of tar.[xz|gz|bz2|bz] if the file's original name also has an abbreviated extension.
+    """
     if not extension.startswith("tar."):
         return extension
     abbr = f"t{extension[4:]}"
