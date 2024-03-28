@@ -94,6 +94,14 @@ class Fmt(CMakePackage):
         when="@10.0.0:10.1.1",
     )
 
+    # Fix 'variable "buffer" may not be initialized' compiler error
+    patch(
+        "fmt-no-variable-initialize_10.0.0.patch", when="@10.0.0:10.2.1%clang@12.0.1.ibm.gcc.8.3.1"
+    )
+    patch(
+        "fmt-no-variable-initialize_10.0.0.patch", when="@10.0.0:10.2.1%clang@14.0.5.ibm.gcc.8.3.1"
+    )
+
     def cmake_args(self):
         spec = self.spec
         args = []

@@ -69,7 +69,7 @@ spack:
   - butterflypack
   - cabana
   - caliper
-  - chai ~benchmarks ~tests
+  - chai
   - charliecloud
   - conduit
   - cp2k +mpi
@@ -78,7 +78,7 @@ spack:
   - drishti
   - dxt-explorer
   - dyninst
-  - ecp-data-vis-sdk ~cuda ~rocm +adios2 +ascent +cinema +darshan +faodel +hdf5 +paraview +pnetcdf +sz +unifyfs +veloc +visit +vtkm +zfp                                                                                       # adios2~cuda, ascent~cuda, darshan-runtime, darshan-util, faodel, hdf5, libcatalyst, parallel-netcdf, paraview~cuda, py-cinemasci, sz, unifyfs, veloc, visit, vtk-m, zfp
+  - ecp-data-vis-sdk ~cuda ~rocm +adios2 +ascent +cinema +darshan +faodel +hdf5 +paraview +pnetcdf +sz +unifyfs +veloc +visit +vtkm +zfp # adios2~cuda, ascent~cuda, darshan-runtime, darshan-util, faodel, hdf5, libcatalyst, parallel-netcdf, paraview~cuda, py-cinemasci, sz, unifyfs, veloc, visit, vtk-m, zfp
   - exaworks
   - flecsi
   - flit
@@ -222,7 +222,7 @@ spack:
   # - arborx +cuda cuda_arch=80 ^kokkos +wrapper
   # - cabana +cuda cuda_arch=80 ^kokkos +wrapper +cuda_lambda +cuda cuda_arch=80
   # - caliper +cuda cuda_arch=80
-  # - chai ~benchmarks ~tests +cuda cuda_arch=80 ^umpire ~shared
+  # - chai +cuda cuda_arch=80 ^umpire ~shared
   # - cusz +cuda cuda_arch=80
   # - dealii +cuda cuda_arch=80
   # - ecp-data-vis-sdk ~rocm +adios2 ~ascent +hdf5 +vtkm +zfp +paraview +cuda cuda_arch=80 # +ascent fails because fides fetch error
@@ -269,7 +269,7 @@ spack:
   # - arborx +cuda cuda_arch=90 ^kokkos +wrapper
   # - cabana +cuda cuda_arch=90 ^kokkos +wrapper +cuda_lambda +cuda cuda_arch=90
   # - caliper +cuda cuda_arch=90
-  # - chai ~benchmarks ~tests +cuda cuda_arch=90 ^umpire ~shared
+  # - chai +cuda cuda_arch=90 ^umpire ~shared
   # - cusz +cuda cuda_arch=90
   # - flecsi +cuda cuda_arch=90
   # - ginkgo +cuda cuda_arch=90
@@ -320,7 +320,7 @@ spack:
   # - arborx +rocm amdgpu_target=gfx908
   # - cabana +rocm amdgpu_target=gfx908
   # - caliper +rocm amdgpu_target=gfx908
-  # - chai ~benchmarks +rocm amdgpu_target=gfx908
+  # - chai +rocm amdgpu_target=gfx908
   # - ecp-data-vis-sdk +paraview +vtkm +rocm amdgpu_target=gfx908
   # - gasnet +rocm amdgpu_target=gfx908
   # - ginkgo +rocm amdgpu_target=gfx908
@@ -361,7 +361,7 @@ spack:
   # - arborx +rocm amdgpu_target=gfx90a
   # - cabana +rocm amdgpu_target=gfx90a
   # - caliper +rocm amdgpu_target=gfx90a
-  # - chai ~benchmarks +rocm amdgpu_target=gfx90a
+  # - chai +rocm amdgpu_target=gfx90a
   # - ecp-data-vis-sdk +paraview +vtkm +rocm amdgpu_target=gfx90a
   # - gasnet +rocm amdgpu_target=gfx90a
   # - ginkgo +rocm amdgpu_target=gfx90a

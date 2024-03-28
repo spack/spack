@@ -65,7 +65,7 @@ spack:
   - butterflypack
   - cabana
   - caliper
-  - chai ~benchmarks ~tests
+  - chai
   - charliecloud
   - conduit
   - cp2k +mpi
@@ -218,7 +218,7 @@ spack:
   - amrex +cuda cuda_arch=70
   - arborx +cuda cuda_arch=70 ^kokkos +wrapper
   - caliper +cuda cuda_arch=70
-  - chai ~benchmarks ~tests +cuda cuda_arch=70 ^umpire ~shared
+  - chai +cuda cuda_arch=70 ^umpire ~shared
   # - cp2k +mpi +cuda cuda_arch=70 # dbcsr
   - ecp-data-vis-sdk ~rocm +adios2 ~ascent +hdf5 +vtkm +zfp ~paraview +cuda cuda_arch=70
   - exago +mpi +python +raja +hiop ~rocm +cuda cuda_arch=70 ~ipopt ^hiop@1.0.0 ~sparse +mpi +raja ~rocm +cuda cuda_arch=70 #^raja@0.14.0
