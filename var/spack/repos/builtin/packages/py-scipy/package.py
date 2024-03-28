@@ -119,6 +119,9 @@ class PyScipy(PythonPackage):
         "when building with MSVC",
     )
 
+    # https://github.com/scipy/scipy/issues/19831
+    conflicts("^openblas@0.3.26:", when="@:1.12")
+
     # https://github.com/scipy/scipy/issues/19352
     conflicts("^py-cython@3.0.3")
 
