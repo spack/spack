@@ -17,6 +17,7 @@ class Gaudi(CMakePackage):
     tags = ["hep"]
 
     version("master", branch="master")
+    version("38.0", sha256="52f2733fa0af760c079b3438bb9c7e36b28ea704f78b0085458e1918c11e1653")
     version("37.2", sha256="9b866caab46e182de98b59eddbde80d6fa0e670fe4a35906f1518b04bd99b2d2")
     version("37.1", sha256="1d7038fd5dfb5f2517ce57623cf8090549ffe2ea8f0171d534e5c1ca20bd009a")
     version("37.0", sha256="823f3821a4f498ddd2dd123fbb8a3787b361ddfd818f4ab13572076fc9afdfe4")
@@ -43,6 +44,7 @@ class Gaudi(CMakePackage):
     variant("cppunit", default=False, description="Build with CppUnit unit testing")
     variant("docs", default=False, description="Build documentation with Doxygen")
     variant("examples", default=False, description="Build examples")
+    variant("gaudialg", default=False, description="Build GaudiAlg support", when="@37.0:")
     variant("gperftools", default=False, description="Build with Google PerfTools support")
     variant("heppdt", default=False, description="Build with HEP Particle Data Table support")
     variant("jemalloc", default=False, description="Build with jemalloc allocator support")
@@ -116,6 +118,7 @@ class Gaudi(CMakePackage):
             self.define("BUILD_TESTING", self.run_tests or self.spec.satisfies("+examples")),
             self.define_from_variant("GAUDI_USE_AIDA", "aida"),
             self.define_from_variant("GAUDI_USE_CPPUNIT", "cppunit"),
+            self.define_from_variant("GAUDI_ENABLE_GAUDIALG", "gaudialg"),
             self.define_from_variant("GAUDI_USE_GPERFTOOLS", "gperftools"),
             self.define_from_variant("GAUDI_USE_HEPPDT", "heppdt"),
             self.define_from_variant("GAUDI_USE_JEMALLOC", "jemalloc"),
