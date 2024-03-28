@@ -155,6 +155,8 @@ class KokkosKernels(CMakePackage, CudaPackage):
 
     variant("shared", default=True, description="Build shared libraries")
 
+    conflicts("cmake@3.28:")
+
     def cmake_args(self):
         spec = self.spec
         options = []
