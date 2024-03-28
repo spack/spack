@@ -13,9 +13,9 @@ class Magma(CMakePackage, CudaPackage, ROCmPackage):
     current "Multicore+GPU" systems.
     """
 
-    homepage = "https://icl.cs.utk.edu/magma/"
+    homepage = "https://icl.utk.edu/magma/"
     git = "https://bitbucket.org/icl/magma"
-    url = "https://icl.cs.utk.edu/projectsfiles/magma/downloads/magma-2.2.0.tar.gz"
+    url = "https://icl.utk.edu/projectsfiles/magma/downloads/magma-2.2.0.tar.gz"
     maintainers("stomov", "luszczek", "G-Ragghianti")
 
     tags = ["e4s"]
@@ -23,6 +23,7 @@ class Magma(CMakePackage, CudaPackage, ROCmPackage):
     test_requires_compiler = True
 
     version("master", branch="master")
+    version("2.8.0", sha256="f4e5e75350743fe57f49b615247da2cc875e5193cc90c11b43554a7c82cc4348")
     version("2.7.2", sha256="729bc1a70e518a7422fe7a3a54537a4741035a77be3349f66eac5c362576d560")
     version("2.7.1", sha256="d9c8711c047a38cae16efde74bee2eb3333217fd2711e1e9b8606cbbb4ae1a50")
     version("2.7.0", sha256="fda1cbc4607e77cacd8feb1c0f633c5826ba200a018f647f1c5436975b39fd18")
@@ -150,6 +151,7 @@ class Magma(CMakePackage, CudaPackage, ROCmPackage):
             # See https://github.com/ROCm/rocFFT/issues/322
             if spec.satisfies("^cmake@3.21.0:3.21.2"):
                 options.append(define("__skip_rocmclang", True))
+            options.append(define("ROCM_CORE", spec["rocm-core"].prefix))
         else:
             options.append(define("MAGMA_ENABLE_CUDA", True))
 
