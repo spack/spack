@@ -74,10 +74,19 @@ class Openscenegraph(CMakePackage):
     depends_on("poppler+glib", when="+pdf")
     depends_on("librsvg", when="+svg")
 
-    depends_on("ffmpeg@:4 +avresample", when="+ffmpeg")
-    # https://github.com/openscenegraph/OpenSceneGraph/issues/167
-    depends_on("ffmpeg@:2", when="@:3.4.0+ffmpeg")
+    with when("+ffmpeg"):
+        depends_on("ffmpeg")
+        requires("^ffmpeg +avresample", when="^ffmpeg@:4")
+        # https://github.com/openscenegraph/OpenSceneGraph/issues/167
+        depends_on("ffmpeg@:2", when="@:3.4.0")
 
+    # patch submitted for inclusion in OpenSceneGraph for extending compatibility
+    # with ffmpeg from versions up to 4 to versions 5 & 6
+    patch(
+        "https://github.com/openscenegraph/OpenSceneGraph/pull/1281/commits/759620a3b7b787c960a7e414ba26ab5497817d40.patch?full_index=1",
+        sha256="b8f588d1fba9361127a7d5127e0720a4d64f44ef021515d1d67d77dcacdef8fd",
+        when="@3.6:",
+    )
     patch("glibc-jasper.patch", when="@3.4%gcc")
     # from gentoo: https://raw.githubusercontent.com/gentoo/gentoo/9523b20c27d12dd72d1fd5ced3ba4995099925a2/dev-games/openscenegraph/files/openscenegraph-3.6.5-openexr3.patch
     patch("openscenegraph-3.6.5-openexr3.patch", when="@3.6:")
