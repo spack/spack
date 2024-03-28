@@ -58,7 +58,6 @@ def update_concretize_scope(conf_str, section):
     conf = syaml.load_config(conf_str)
     spack.config.set(section, conf[section], scope="concretize")
 
-
 def test_order1(concretize_scope, test_repo):
     conf_str = """\
 compilers::
@@ -76,8 +75,7 @@ compilers::
 """
     update_concretize_scope(conf_str, "compilers")
 
-    s1 = Spec("y %gcc@12-fake").concretized()
-
+    s1 = Spec('y %gcc@12-fake').concretized()
 
 def test_mix_spec_and_requirements(concretize_scope, test_repo):
     conf_str = """\
@@ -97,7 +95,6 @@ def test_mix_spec_and_dependent(concretize_scope, test_repo):
 
 
 from spack.main import SpackCommand
-
 solve = SpackCommand("solve")
 
 
