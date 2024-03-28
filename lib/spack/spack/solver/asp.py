@@ -1916,7 +1916,7 @@ class SpackSolverSetup:
                     x for x in package_py_versions if _is_checksummed_version(x)
                 ]
 
-            versions = []
+            versions: List[GitOrStandardVersion] = []
             for v, version_info in package_py_versions:
                 if version_info.get("deprecated", False):
                     self.deprecated_versions[pkg_name].add(v)
@@ -2320,9 +2320,14 @@ class SpackSolverSetup:
             # Declare as possible parts of specs that are not in package.py
             # - Add versions to possible versions
             # - Add OS to possible OS's
+            versions: Dict[str, List[GitOrStandardVersion]] = collections.defaultdict(list)
             for dep in spec.traverse():
-                self._add_declared_version(dep.name, dep.version, 0, Provenance.INSTALLED)
+                # self._add_declared_version(dep.name, dep.version, 0, Provenance.INSTALLED)
+                versions[dep.name].append(dep.version)
                 self.possible_oses.add(dep.os)
+
+            for name, dep_versions in versions.items():
+                self._weight_declared_versions(name, dep_versions, Provenance.INSTALLED)
 
     def define_concrete_input_specs(self, specs, possible):
         # any concrete specs in the input spec list
@@ -3016,15 +3021,21 @@ class RuntimePropertyRecorder:
         assert when_spec.compiler.concrete, f"{when} must have a concrete compiler"
 
         # Add versions to possible versions
+        possible_versions: Dict[str, List[spack.spec.Spec]] = collections.defaultdict(list)
         for s in (imposed_spec, when_spec):
             if not s.versions.concrete:
                 continue
 
-            # TBD: Is this (still) needed?
-            if not hasattr(s, "version"):
-                raise Exception(f"{s} has no version")
+            # # TBD: Is this (still) needed?
+            # if not hasattr(s, "version"):
+            #     raise Exception(f"{s} has no version")
 
-            self._setup._add_declared_version(s.name, s.version, 0, Provenance.RUNTIME)
+            # self._setup._add_declared_version(s.name, s.version, 0, Provenance.RUNTIME)
+
+            possible_versions[s.name].append(s.version)
+
+        for name, versions in possible_versions.items():
+            self._setup._weight_declared_versions(name, versions, Provenance.RUNTIME)
 
         self.runtime_conditions.add((imposed_spec, when_spec))
         self.reset()
