@@ -1070,7 +1070,7 @@ class SpackSolverSetup:
                 self.gen.fact(fn.compiler_target(compiler_id, compiler.target))
 
             for flag_type, flags in compiler.flags.items():
-                flag_group = ' '.join(flags)
+                flag_group = " ".join(flags)
                 for flag in flags:
                     self.gen.fact(fn.compiler_flag(compiler_id, flag_type, flag, flag_group))
 
@@ -1772,7 +1772,7 @@ class SpackSolverSetup:
 
         # compiler flags
         for flag_type, flags in spec.compiler_flags.items():
-            flag_group = ' '.join(flags)
+            flag_group = " ".join(flags)
             for flag in flags:
                 clauses.append(f.node_flag(spec.name, flag_type, flag, flag_group))
                 clauses.append(f.node_flag_source(spec.name, flag_type, spec.name))
@@ -3255,7 +3255,7 @@ class SpecBuilder:
 
             action = getattr(self, name, None)
 
-            #if "node_flag" in name:
+            # if "node_flag" in name:
             #    import pdb; pdb.set_trace()
             #    print(str(args))
 
