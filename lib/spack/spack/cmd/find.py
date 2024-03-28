@@ -140,6 +140,12 @@ def setup_parser(subparser):
     subparser.add_argument(
         "--only-deprecated", action="store_true", help="show only deprecated packages"
     )
+    subparser.add_argument(
+        "--install-tree",
+        action="store",
+        default="all",
+        help="Install trees to query: 'all' (default), 'local', 'upstream', upstream name or path",
+    )
 
     subparser.add_argument("--start-date", help="earliest date of installation [YYYY-MM-DD]")
     subparser.add_argument("--end-date", help="latest date of installation [YYYY-MM-DD]")
@@ -167,6 +173,12 @@ def query_arguments(args):
         explicit = False
 
     q_args = {"installed": installed, "known": known, "explicit": explicit}
+
+    install_tree = args.install_tree
+    upstreams = spack.config.get("upstreams", {})
+    if install_tree in upstreams.keys():
+        install_tree = upstreams[install_tree]["install_tree"]
+    q_args["install_tree"] = install_tree
 
     # Time window of installation
     for attribute in ("start_date", "end_date"):
