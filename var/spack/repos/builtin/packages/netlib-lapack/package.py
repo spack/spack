@@ -20,7 +20,7 @@ class NetlibLapack(CMakePackage):
     tags = ["windows"]
 
     license("BSD-3-Clause-Open-MPI")
-
+    
     version(
         "3.11.0",
         sha256="4b9ba79bfd4921ca820e83979db76ab3363155709444a787979e81c22285ffa9",
@@ -82,6 +82,7 @@ class NetlibLapack(CMakePackage):
 
     variant("shared", default=True, description="Build shared library version")
     variant("external-blas", default=False, description="Build lapack with an external blas")
+    variant("index64", default=False, description="Build lapack with index-64 integers")
 
     variant("lapacke", default=True, description="Activates the build of the LAPACKE C interface")
     variant("xblas", default=False, description="Builds extended precision routines using XBLAS")
@@ -183,6 +184,7 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
     def cmake_args(self):
         args = [
             self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
+            self.define_from_variant("BUILD_INDEX64", "index64"),
             self.define_from_variant("LAPACKE", "lapacke"),
             self.define_from_variant("LAPACKE_WITH_TMG", "lapacke"),
             self.define("CBLAS", self.spec.satisfies("@3.6.0:")),
