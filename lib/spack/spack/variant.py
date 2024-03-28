@@ -637,27 +637,38 @@ class VariantMap(lang.HashableMap):
             clone[name] = variant.copy()
         return clone
 
+    def ordered_variants(self):
+        """Iterate over variants with booleans first, followed by key-value variants.
+
+        Yields tuples of ``(variant, boolean)``, where ``boolean`` is True if
+        ``variant`` is a boolean variant.
+
+        """
+        # yield boolean variants first, but accumulate key-value variants
+        kv_variants = []
+        for name, variant in sorted(self.items()):
+            if isinstance(variant.value, bool):
+                yield variant, True
+            else:
+                kv_variants.append(variant)
+
+        for variant in kv_variants:
+            yield variant, False
+
     def __str__(self):
-        # print keys in order
-        sorted_keys = sorted(self.keys())
+        """Return a string with variants in order.
 
-        # Separate boolean variants from key-value pairs as they print
-        # differently. All booleans go first to avoid ' ~foo' strings that
-        # break spec reuse in zsh.
-        bool_keys = []
-        kv_keys = []
-        for key in sorted_keys:
-            bool_keys.append(key) if isinstance(self[key].value, bool) else kv_keys.append(key)
+        Boolean variants are first with no spaces separating them, and key-value
+        variants are second, separated by initial spaces.
 
+        """
         # add spaces before and after key/value variants.
         string = io.StringIO()
 
-        for key in bool_keys:
-            string.write(str(self[key]))
-
-        for key in kv_keys:
-            string.write(" ")
-            string.write(str(self[key]))
+        for variant, boolean in self.ordered_variants():
+            if not boolean:
+                string.write(" ")
+            string.write(str(variant))
 
         return string.getvalue()
 

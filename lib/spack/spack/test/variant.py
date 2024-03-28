@@ -671,6 +671,31 @@ class TestVariantMapTest:
         c["shared"] = BoolValuedVariant("shared", True)
         assert str(c) == "+shared feebar=foo foo=bar,baz foobar=fee"
 
+    def test_ordered_variants(self):
+        c = VariantMap(None)
+        c["foo"] = MultiValuedVariant("foo", "bar, baz")
+        c["foobar"] = SingleValuedVariant("foobar", "fee")
+        c["feebar"] = SingleValuedVariant("feebar", "foo")
+        c["shared"] = BoolValuedVariant("shared", True)
+
+        variants = iter(c.ordered_variants())
+
+        variant, boolean = next(variants)
+        assert variant.name == "shared"
+        assert boolean
+
+        variant, boolean = next(variants)
+        assert variant.name == "feebar"
+        assert not boolean
+
+        variant, boolean = next(variants)
+        assert variant.name == "foo"
+        assert not boolean
+
+        variant, boolean = next(variants)
+        assert variant.name == "foobar"
+        assert not boolean
+
 
 def test_disjoint_set_initialization_errors():
     # Constructing from non-disjoint sets should raise an exception

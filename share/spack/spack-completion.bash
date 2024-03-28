@@ -1817,7 +1817,7 @@ _spack_restage() {
 _spack_solve() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --show -l --long -L --very-long -N --namespaces -I --install-status --no-install-status -y --yaml -j --json -c --cover -t --types --timers --stats -U --fresh --reuse --reuse-deps --deprecated"
+        SPACK_COMPREPLY="-h --help --show -l --long -L --very-long -N --namespaces -I --install-status --no-install-status -d --debug-nondefaults -y --yaml -j --json -c --cover -t --types --timers --stats -U --fresh --reuse --reuse-deps --deprecated"
     else
         _all_packages
     fi
@@ -1826,7 +1826,7 @@ _spack_solve() {
 _spack_spec() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -l --long -L --very-long -N --namespaces -I --install-status --no-install-status -y --yaml -j --json --format -c --cover -t --types -U --fresh --reuse --reuse-deps --deprecated"
+        SPACK_COMPREPLY="-h --help -l --long -L --very-long -N --namespaces -I --install-status --no-install-status -d --debug-nondefaults -y --yaml -j --json --format -c --cover -t --types -U --fresh --reuse --reuse-deps --deprecated"
     else
         _all_packages
     fi

@@ -7,6 +7,10 @@ import pathlib
 
 import pytest
 
+import archspec.cpu
+
+import llnl.util.tty.color as clr
+
 import spack.directives
 import spack.error
 from spack.error import SpecError, UnsatisfiableSpecError
@@ -702,6 +706,32 @@ class TestSpecSemantics:
         for named_str, expected in other_segments:
             actual = spec.format(named_str)
             assert expected == actual
+
+    def test_spec_formatting_nondefaults(self, default_mock_concretization):
+        def nondefault_color(string):
+            return clr.colorize(f"{spack.spec.NONDEFAULT_COLOR}{{{string}}}")
+
+        def colorized_concretized(string):
+            return default_mock_concretization(string).tree(color=True, nondefaults=True)
+
+        assert nondefault_color("@=2.1") in colorized_concretized("multivalue-variant@2.1")
+        assert nondefault_color("foo=fee") in colorized_concretized("multivalue-variant foo=fee")
+        assert nondefault_color("~bvv") in colorized_concretized("a~bvv")
+        assert nondefault_color("zmpi") in colorized_concretized("callpath^zmpi")
+
+        print(colorized_concretized("zlib %gcc@10.1.0"))
+        assert nondefault_color("%gcc") in colorized_concretized("zlib %gcc@10.1.0")
+        assert nondefault_color("@=10.1.0") in colorized_concretized("zlib %gcc@10.1.0")
+
+        host = archspec.cpu.host()  # this is some uarch
+        family = host.family  # this is always a worse (nondefault) choice
+
+        # except if host == family, which could happen if we run on some new
+        # architecture where archspec data isn't fleshed out. Skip the last check if so.
+        if host != family:
+            assert nondefault_color(f"arch=test-debian6-{family}") in colorized_concretized(
+                f"zlib target={family}"
+            )
 
     def test_spec_formatting_escapes(self, default_mock_concretization):
         spec = default_mock_concretization("multivalue-variant cflags=-O2")
