@@ -75,8 +75,6 @@ for further documentation regarding the spec syntax, see:
 
 
 def spec(parser, args):
-    install_status_fn = spack.spec.Spec.install_status
-
     fmt = spack.spec.DISPLAY_FORMAT
     if args.namespaces:
         fmt = "{namespace}." + fmt
@@ -86,7 +84,7 @@ def spec(parser, args):
         "format": fmt,
         "hashlen": None if args.very_long else 7,
         "show_types": args.types,
-        "status_fn": install_status_fn if args.install_status else None,
+        "install_status": args.install_status,
     }
 
     # use a read transaction if we are getting install status for every
