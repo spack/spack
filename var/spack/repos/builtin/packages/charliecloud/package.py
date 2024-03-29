@@ -132,6 +132,7 @@ class Charliecloud(AutotoolsPackage):
 
     # Squashfuse support
     depends_on("squashfuse@0.1.105:", when="+squashfuse")
+    depends_on("squashfuse ^fuse@3:", when="+squashfuse")
     depends_on("squashfs", type="run", when="+squashfuse")
 
     def flag_handler(self, name, flags):
