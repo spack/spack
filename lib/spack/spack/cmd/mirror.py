@@ -329,11 +329,10 @@ def specs_from_text_file(filename, concretize=False):
     return spack.cmd.parse_specs(" ".join(specs_in_file), concretize=concretize)
 
 
-def concrete_specs_from_user(args, selection_fn=None):
+def concrete_specs_from_user(args):
     """Return the list of concrete specs that the user wants to mirror. The list
     is passed either from command line or from a text file.
     """
-    selection_fn = selection_fn or IncludeFilter(args)
     specs = concrete_specs_from_cli_or_file(args)
     specs = extend_with_additional_versions(specs, num_versions=versions_per_spec(args))
     if args.dependencies:
@@ -341,7 +340,6 @@ def concrete_specs_from_user(args, selection_fn=None):
     specs = filter_externals(specs)
     specs = list(set(specs))
     specs.sort(key=lambda s: (s.name, s.version))
-    specs, _ = lang.stable_partition(specs, predicate_fn=selection_fn)
     return specs
 
 
@@ -418,20 +416,18 @@ class IncludeFilter:
         return not any(x.satisfies(y) for y in self.exclude_specs)
 
 
-def concrete_specs_from_environment(selection_fn):
+def concrete_specs_from_environment():
     env = ev.active_environment()
     assert env, "an active environment is required"
     mirror_specs = env.all_specs()
     mirror_specs = filter_externals(mirror_specs)
-    mirror_specs, _ = lang.stable_partition(mirror_specs, predicate_fn=selection_fn)
     return mirror_specs
 
 
-def all_specs_with_all_versions(selection_fn):
+def all_specs_with_all_versions():
     specs = [spack.spec.Spec(n) for n in spack.repo.all_package_names()]
     mirror_specs = spack.mirror.get_all_versions(specs)
     mirror_specs.sort(key=lambda s: (s.name, s.version))
-    mirror_specs, _ = lang.stable_partition(mirror_specs, predicate_fn=selection_fn)
     return mirror_specs
 
 
@@ -450,12 +446,6 @@ def versions_per_spec(args):
                 " got '{0}'".format(args.versions_per_spec)
             )
     return num_versions
-
-
-def create_mirror_for_individual_specs(mirror_specs, path, skip_unstable_versions):
-    present, mirrored, error = spack.mirror.create(path, mirror_specs, skip_unstable_versions)
-    tty.msg("Summary for mirror in {}".format(path))
-    process_mirror_stats(present, mirrored, error)
 
 
 def process_mirror_stats(present, mirrored, error):
@@ -506,25 +496,20 @@ def mirror_create(args):
     include_fn = IncludeFilter(args)
 
     if args.all and not ev.active_environment():
-        create_mirror_for_all_specs(
-            path=path, skip_unstable_versions=args.skip_unstable_versions, selection_fn=include_fn
-        )
-        return
+        mirror_specs = all_specs_with_all_versions()
+        mirror_fn = create_mirror_for_all_specs
+    elif args.all and ev.active_environment():
+        mirror_specs = concrete_specs_from_environment()
+        mirror_fn = create_mirror_for_individual_specs
+    else:
+        mirror_specs = concrete_specs_from_user(args)
+        mirror_fn = create_mirror_for_individual_specs
 
-    if args.all and ev.active_environment():
-        create_mirror_for_all_specs_inside_environment(
-            path=path, skip_unstable_versions=args.skip_unstable_versions, selection_fn=include_fn
-        )
-        return
-
-    mirror_specs = concrete_specs_from_user(args, selection_fn=include_fn)
-    create_mirror_for_individual_specs(
-        mirror_specs, path=path, skip_unstable_versions=args.skip_unstable_versions
-    )
+    specs, _ = lang.stable_partition(mirror_specs, predicate_fn=include_fn)
+    mirror_fn(mirror_specs, path=path, skip_unstable_versions=args.skip_unstable_versions)
 
 
-def create_mirror_for_all_specs(path, skip_unstable_versions, selection_fn):
-    mirror_specs = all_specs_with_all_versions(selection_fn=selection_fn)
+def create_mirror_for_all_specs(mirror_specs, path, skip_unstable_versions):
     mirror_cache, mirror_stats = spack.mirror.mirror_cache_and_stats(
         path, skip_unstable_versions=skip_unstable_versions
     )
@@ -536,11 +521,10 @@ def create_mirror_for_all_specs(path, skip_unstable_versions, selection_fn):
     process_mirror_stats(*mirror_stats.stats())
 
 
-def create_mirror_for_all_specs_inside_environment(path, skip_unstable_versions, selection_fn):
-    mirror_specs = concrete_specs_from_environment(selection_fn=selection_fn)
-    create_mirror_for_individual_specs(
-        mirror_specs, path=path, skip_unstable_versions=skip_unstable_versions
-    )
+def create_mirror_for_individual_specs(mirror_specs, path, skip_unstable_versions):
+    present, mirrored, error = spack.mirror.create(path, mirror_specs, skip_unstable_versions)
+    tty.msg("Summary for mirror in {}".format(path))
+    process_mirror_stats(present, mirrored, error)
 
 
 def mirror_destroy(args):
