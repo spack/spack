@@ -14,6 +14,7 @@ import llnl.util.tty.color as clr
 
 import spack.binary_distribution as bindist
 import spack.ci as spack_ci
+import spack.cmd
 import spack.cmd.buildcache as buildcache
 import spack.config as cfg
 import spack.environment as ev
@@ -32,6 +33,7 @@ level = "long"
 SPACK_COMMAND = "spack"
 MAKE_COMMAND = "make"
 INSTALL_FAIL_CODE = 1
+FAILED_CREATE_BUILDCACHE_CODE = 100
 
 
 def deindent(desc):
@@ -705,11 +707,9 @@ def ci_rebuild(args):
                 cdash_handler.report_skipped(job_spec, reports_dir, reason=msg)
                 cdash_handler.copy_test_results(reports_dir, job_test_dir)
 
-    # If the install succeeded, create a buildcache entry for this job spec
-    # and push it to one or more mirrors.  If the install did not succeed,
-    # print out some instructions on how to reproduce this build failure
-    # outside of the pipeline environment.
     if install_exit_code == 0:
+        # If the install succeeded, push it to one or more mirrors. Failure to push to any mirror
+        # will result in a non-zero exit code. Pushing is best-effort.
         mirror_urls = [buildcache_mirror_url]
 
         # TODO: Remove this block in Spack 0.23
@@ -721,13 +721,12 @@ def ci_rebuild(args):
             destination_mirror_urls=mirror_urls,
             sign_binaries=spack_ci.can_sign_binaries(),
         ):
-            msg = tty.msg if result.success else tty.warn
-            msg(
-                "{} {} to {}".format(
-                    "Pushed" if result.success else "Failed to push",
-                    job_spec.format("{name}{@version}{/hash:7}", color=clr.get_color_when()),
-                    result.url,
-                )
+            if not result.success:
+                install_exit_code = FAILED_CREATE_BUILDCACHE_CODE
+            (tty.msg if result.success else tty.error)(
+                f'{"Pushed" if result.success else "Failed to push"} '
+                f'{job_spec.format("{name}{@version}{/hash:7}", color=clr.get_color_when())} '
+                f"to {result.url}"
             )
 
         # If this is a develop pipeline, check if the spec that we just built is
@@ -748,22 +747,22 @@ def ci_rebuild(args):
                     tty.warn(msg.format(broken_spec_path, err))
 
     else:
+        # If the install did not succeed, print out some instructions on how to reproduce this
+        # build failure outside of the pipeline environment.
         tty.debug("spack install exited non-zero, will not create buildcache")
 
         api_root_url = os.environ.get("CI_API_V4_URL")
         ci_project_id = os.environ.get("CI_PROJECT_ID")
         ci_job_id = os.environ.get("CI_JOB_ID")
 
-        repro_job_url = "{0}/projects/{1}/jobs/{2}/artifacts".format(
-            api_root_url, ci_project_id, ci_job_id
-        )
-
+        repro_job_url = f"{api_root_url}/projects/{ci_project_id}/jobs/{ci_job_id}/artifacts"
         # Control characters cause this to be printed in blue so it stands out
-        reproduce_msg = """
+        print(
+            f"""
 
 \033[34mTo reproduce this build locally, run:
 
-    spack ci reproduce-build {0} [--working-dir <dir>] [--autostart]
+    spack ci reproduce-build {repro_job_url} [--working-dir <dir>] [--autostart]
 
 If this project does not have public pipelines, you will need to first:
 
@@ -771,11 +770,8 @@ If this project does not have public pipelines, you will need to first:
 
 ... then follow the printed instructions.\033[0;0m
 
-""".format(
-            repro_job_url
+"""
         )
-
-        print(reproduce_msg)
 
     rebuild_timer.stop()
     try:

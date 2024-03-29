@@ -296,6 +296,11 @@ class QuantumEspresso(CMakePackage, Package):
 
     conflicts("@6.5:", when="+environ", msg="6.4.x is the latest QE series supported by Environ")
 
+    # 7.3 - a compile-time problem fixed in 7.3.1
+    patch_url = "https://gitlab.com/QEF/q-e/-/commit/b98ff7539e5731728d2d49ac01021a57f2594027.diff"
+    patch_checksum = "04c125d249d1f076abe04bc4de39bd3b44a41a78d6233b638a17bd96f91443d5"
+    patch(patch_url, sha256=patch_checksum, when="@=7.3+elpa build_system=cmake")
+
     # QE 7.1 fix post-processing install part 1/2
     # see: https://gitlab.com/QEF/q-e/-/merge_requests/2005
     patch_url = "https://gitlab.com/QEF/q-e/-/commit/4ca3afd4c6f27afcf3f42415a85a353a7be1bd37.diff"

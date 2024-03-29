@@ -7,6 +7,8 @@ import os
 
 import pytest
 
+import archspec.cpu
+
 import spack.modules.common
 import spack.modules.tcl
 import spack.spec
@@ -92,22 +94,29 @@ class TestTcl:
         assert len([x for x in content if "depends-on " in x]) == 2
         assert len([x for x in content if "module load " in x]) == 2
 
-    def test_prerequisites_direct(self, modulefile_content, module_configuration):
+    def test_prerequisites_direct(
+        self, modulefile_content, module_configuration, host_architecture_str
+    ):
         """Tests asking direct dependencies as prerequisites."""
 
         module_configuration("prerequisites_direct")
-        content = modulefile_content("mpileaks target=x86_64")
+        content = modulefile_content(f"mpileaks target={host_architecture_str}")
 
         assert len([x for x in content if "prereq" in x]) == 2
 
-    def test_prerequisites_all(self, modulefile_content, module_configuration):
+    def test_prerequisites_all(
+        self, modulefile_content, module_configuration, host_architecture_str
+    ):
         """Tests asking all dependencies as prerequisites."""
 
         module_configuration("prerequisites_all")
-        content = modulefile_content("mpileaks target=x86_64")
+        content = modulefile_content(f"mpileaks target={host_architecture_str}")
 
         assert len([x for x in content if "prereq" in x]) == 5
 
+    @pytest.mark.skipif(
+        str(archspec.cpu.host().family) != "x86_64", reason="test data is specific for x86_64"
+    )
     def test_alter_environment(self, modulefile_content, module_configuration):
         """Tests modifications to run-time environment."""
 
@@ -180,6 +189,9 @@ class TestTcl:
 
         assert len([x for x in content if "setenv FOO {{{name}}, {name}, {{}}, {}}" in x]) == 1
 
+    @pytest.mark.skipif(
+        str(archspec.cpu.host().family) != "x86_64", reason="test data is specific for x86_64"
+    )
     def test_help_message(self, modulefile_content, module_configuration):
         """Tests the generation of module help message."""
 
@@ -222,7 +234,7 @@ class TestTcl:
         )
         assert help_msg in "".join(content)
 
-    def test_exclude(self, modulefile_content, module_configuration):
+    def test_exclude(self, modulefile_content, module_configuration, host_architecture_str):
         """Tests excluding the generation of selected modules."""
 
         module_configuration("exclude")
@@ -234,9 +246,9 @@ class TestTcl:
         # and IOError on Python 2 or common bases like EnvironmentError
         # which are not officially documented
         with pytest.raises(Exception):
-            modulefile_content("callpath target=x86_64")
+            modulefile_content(f"callpath target={host_architecture_str}")
 
-        content = modulefile_content("zmpi target=x86_64")
+        content = modulefile_content(f"zmpi target={host_architecture_str}")
 
         assert len([x for x in content if "module load " in x]) == 1
 
@@ -406,14 +418,16 @@ class TestTcl:
 
         assert "Override successful!" in content
 
-    def test_override_template_in_modules_yaml(self, modulefile_content, module_configuration):
+    def test_override_template_in_modules_yaml(
+        self, modulefile_content, module_configuration, host_architecture_str
+    ):
         """Tests overriding a template from `modules.yaml`"""
         module_configuration("override_template")
 
         content = modulefile_content("override-module-templates")
         assert "Override even better!" in content
 
-        content = modulefile_content("mpileaks target=x86_64")
+        content = modulefile_content(f"mpileaks target={host_architecture_str}")
         assert "Override even better!" in content
 
     def test_extend_context(self, modulefile_content, module_configuration):
