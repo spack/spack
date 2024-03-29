@@ -74,7 +74,8 @@ def setup_parser(subparser):
     create_parser.add_argument(
         "--private",
         action="store_true",
-        help="if this is a private mirror, include packages that should normally not be distributed",
+        help="if this is a private mirror, include packages that should "
+        "normally not be distributed",
     )
     arguments.add_common_arguments(create_parser, ["specs"])
     arguments.add_concretizer_args(create_parser)
@@ -434,7 +435,9 @@ def versions_per_spec(args):
     return num_versions
 
 
-def create_mirror_for_individual_specs(mirror_specs, path, skip_unstable_versions, include_private):
+def create_mirror_for_individual_specs(
+    mirror_specs, path, skip_unstable_versions, include_private
+):
     if not include_private:
         mirror_specs = filter_private(mirror_specs)
     present, mirrored, error = spack.mirror.create(path, mirror_specs, skip_unstable_versions)

@@ -13,8 +13,7 @@ class NoRedistribute(Package):
     homepage = "http://www.example.com"
     url = "http://www.example.com/no-redistribute-1.0.tar.gz"
 
-    redistribute_source = False
-    redistribute_binary = False
+    redistribute(source=False, binary=False)
 
     version("1.0", "0123456789abcdef0123456789abcdef")
 

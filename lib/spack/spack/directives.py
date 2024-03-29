@@ -27,6 +27,7 @@ The available directives are:
   * ``variant``
   * ``version``
   * ``requires``
+  * ``redistribute``
 
 """
 import collections
@@ -75,6 +76,7 @@ __all__ = [
     "resource",
     "build_system",
     "requires",
+    "redistribute",
 ]
 
 #: These are variant names used by Spack internally; packages can't use them
@@ -596,6 +598,23 @@ def depends_on(
         _depends_on(pkg, spec, when=when, type=type, patches=patches)
 
     return _execute_depends_on
+
+
+@directive(dicts=())
+def redistribute(source=True, binary=True):
+    """Can be used inside a Package definition to declare that
+    the package source and/or compiled binaries should not be
+    redistributed.
+
+    By default, Packages allow source/binary distribution (i.e. in
+    mirrors).
+    """
+
+    def _execute_redistribute(pkg: "spack.package_base.PackageBase"):
+        pkg.redistribute_source = source
+        pkg.redistribute_binary = binary
+
+    return _execute_redistribute
 
 
 @directive(("extendees", "dependencies"))

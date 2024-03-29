@@ -136,7 +136,8 @@ def setup_parser(subparser: argparse.ArgumentParser):
     push.add_argument(
         "--private",
         action="store_true",
-        help="if this is a private mirror, include packages that should normally not be distributed",
+        help="if this is a private mirror, include packages that should "
+        "normally not be distributed",
     )
     arguments.add_common_arguments(push, ["specs", "jobs"])
     push.set_defaults(func=push_fn)
