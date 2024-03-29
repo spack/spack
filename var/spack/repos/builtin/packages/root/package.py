@@ -134,7 +134,7 @@ class Root(CMakePackage):
         patch(
             "https://github.com/root-project/root/pull/15044.patch?full_index=1",
             sha256="e68be5fe7b1ec873da134bd39c5c72730c4ca06d51b52eb436ae44fe81cd472d",
-            when="@:6.30.04 +x"
+            when="@:6.30.04 +x",
         )
 
     # ###################### Variants ##########################
