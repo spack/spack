@@ -20,7 +20,7 @@ compilers:
     modules: []
     target: {target}
 - compiler:
-    spec: clang@=12.0.0
+    spec: clang@=15.0.0
     operating_system: {linux_os.name}{linux_os.version}
     paths:
       cc: /path/to/clang
