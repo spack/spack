@@ -493,6 +493,11 @@ def mirror_create(args):
     # When no directory is provided, the source dir is used
     path = args.directory or spack.caches.fetch_cache_location()
 
+    mirror_specs, mirror_fn = _specs_and_action(args)
+    mirror_fn(mirror_specs, path=path, skip_unstable_versions=args.skip_unstable_versions)
+
+
+def _specs_and_action(args):
     include_fn = IncludeFilter(args)
 
     if args.all and not ev.active_environment():
@@ -505,8 +510,8 @@ def mirror_create(args):
         mirror_specs = concrete_specs_from_user(args)
         mirror_fn = create_mirror_for_individual_specs
 
-    specs, _ = lang.stable_partition(mirror_specs, predicate_fn=include_fn)
-    mirror_fn(mirror_specs, path=path, skip_unstable_versions=args.skip_unstable_versions)
+    mirror_specs, _ = lang.stable_partition(mirror_specs, predicate_fn=include_fn)
+    return mirror_specs, mirror_fn
 
 
 def create_mirror_for_all_specs(mirror_specs, path, skip_unstable_versions):
