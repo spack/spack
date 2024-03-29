@@ -1994,10 +1994,16 @@ def reproduce_ci_job(url, work_dir, autostart, gpg_url, runtime):
                 ]
             )
     else:
-        process_command("reproducer", entrypoint_script, work_dir, run=False)
+        autostart = autostart and setup_result
+        process_command("reproducer", entrypoint_script, work_dir, run=autostart)
 
         inst_list.append("\nOnce on the tagged runner:\n\n")
-        inst_list.extent(["    - Run the reproducer script", f"       $ {work_dir}/reproducer.py"])
+        inst_list.extent(
+            [
+                "    - Run the reproducer script",
+                f"       $ {work_dir}/reproducer.{platform_script_ext}",
+            ]
+        )
 
     if not setup_result:
         inst_list.append("\n    - Clone spack and acquire tested commit")
