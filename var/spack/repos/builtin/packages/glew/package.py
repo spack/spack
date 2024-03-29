@@ -75,3 +75,7 @@ class Glew(CMakePackage):
             args.append(self.define("OPENGL_egl_LIBRARY", "IGNORE"))
 
         return args
+
+    if sys.platform == "darwin":
+        def setup_build_environment(self, env):
+            env.prepend_path("LDFLAGS", "-framework OpenGL")
