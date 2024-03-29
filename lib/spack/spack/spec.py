@@ -1408,6 +1408,13 @@ class Spec:
     def external(self):
         return bool(self.external_path) or bool(self.external_modules)
 
+    @property
+    def is_develop(self):
+        """Return whether the Spec represents a user-developed package
+        in a Spack ``Environment`` (i.e. using `spack develop`).
+        """
+        return bool(self.variants.get("dev_path", False))
+
     def clear_dependencies(self):
         """Trim the dependencies of this spec."""
         self._dependencies.clear()

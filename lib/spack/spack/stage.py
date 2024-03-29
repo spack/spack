@@ -927,6 +927,10 @@ class DevelopStage(LockableStagingDir):
             shutil.rmtree(self.path)
         except FileNotFoundError:
             pass
+        try:
+            os.remove(self.reference_link)
+        except FileNotFoundError:
+            pass
         self.created = False
 
     def restage(self):

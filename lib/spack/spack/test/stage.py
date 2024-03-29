@@ -909,18 +909,20 @@ class TestDevelopStage:
         """
         devtree, srcdir = develop_path
         stage = DevelopStage("test-stage", srcdir, reference_link="link-to-stage")
+        assert not os.path.exists(stage.reference_link)
         stage.create()
+        assert os.path.exists(stage.reference_link)
         srctree1 = _create_tree_from_dir_recursive(stage.source_path)
         assert os.path.samefile(srctree1["link-to-stage"], stage.path)
         del srctree1["link-to-stage"]
         assert srctree1 == devtree
 
         stage.destroy()
+        assert not os.path.exists(stage.reference_link)
         # Make sure destroying the stage doesn't change anything
         # about the path
         assert not os.path.exists(stage.path)
         srctree2 = _create_tree_from_dir_recursive(srcdir)
-        del srctree2["link-to-stage"]  # Note the symlink persists but is broken
         assert srctree2 == devtree
 
 

@@ -3161,6 +3161,41 @@ spack:
                     assert spec.prefix in contents
 
 
+@pytest.mark.disable_clean_stage_check
+def test_install_develop_keep_stage(
+    environment_from_manifest, install_mockery, mock_fetch, monkeypatch, tmpdir
+):
+    """Develop a dependency of a package and make sure that the associated
+    stage for the package is retained after a successful install.
+    """
+    environment_from_manifest(
+        """
+spack:
+  specs:
+  - mpileaks
+"""
+    )
+
+    monkeypatch.setattr(spack.stage.DevelopStage, "destroy", _always_fail)
+
+    with ev.read("test") as e:
+        libelf_dev_path = tmpdir.ensure("libelf-test-dev-path", dir=True)
+        develop(f"--path={libelf_dev_path}", "libelf@0.8.13")
+        concretize()
+        (libelf_spec,) = e.all_matching_specs("libelf")
+        (mpileaks_spec,) = e.all_matching_specs("mpileaks")
+        assert not os.path.exists(libelf_spec.package.stage.path)
+        assert not os.path.exists(mpileaks_spec.package.stage.path)
+        install()
+        assert os.path.exists(libelf_spec.package.stage.path)
+        assert not os.path.exists(mpileaks_spec.package.stage.path)
+
+
+# Helper method for test_install_develop_keep_stage
+def _always_fail(cls, *args, **kwargs):
+    raise Exception("Restage or destruction of dev stage detected during install")
+
+
 @pytest.mark.regression("24148")
 def test_virtual_spec_concretize_together(tmpdir):
     # An environment should permit to concretize "mpi"
