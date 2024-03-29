@@ -134,6 +134,12 @@ class Charliecloud(AutotoolsPackage):
     depends_on("squashfuse@0.1.105:", when="+squashfuse")
     depends_on("squashfs", type="run", when="+squashfuse")
 
+    def flag_handler(self, name, flags):
+        if name == "cflags":
+            fuse_include = self.spec["fuse"].prefix.include.fuse3
+            flags.append(f"-I{fuse_include}")
+        return (None, None, flags)
+
     def autoreconf(self, spec, prefix):
         which("bash")("autogen.sh")
 
@@ -152,7 +158,5 @@ class Charliecloud(AutotoolsPackage):
         if "+squashfuse" in self.spec:
             squashfuse_prefix = "{0}".format(self.spec["squashfuse"].prefix)
             args.append("--with-libsquashfuse={0}".format(squashfuse_prefix))
-            fuse_include = self.spec["fuse"].prefix.include.fuse3
-            args.append("CFLAGS=-I{0}".format(fuse_include))
 
         return args
