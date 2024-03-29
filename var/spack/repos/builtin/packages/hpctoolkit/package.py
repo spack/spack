@@ -229,6 +229,9 @@ class Hpctoolkit(AutotoolsPackage, MesonPackage):
     depends_on("python@3.4:", type="build", when="@2020.03:2020.08")
     patch("python3.patch", when="@2020.03:2020.08")
 
+    # HIP header files require HIP_PLATFORM_AMD to be set for AMD GPUs
+    patch("define-hip-platform-as-amd.patch", when="^hip@6:")
+
     # Fix a bug where make would mistakenly overwrite hpcrun-fmt.h.
     # https://gitlab.com/hpctoolkit/hpctoolkit/-/merge_requests/751
     def patch(self):
