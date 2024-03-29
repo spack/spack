@@ -20,7 +20,7 @@ class Namd(MakefilePackage, CudaPackage):
     url = "file://{0}/NAMD_2.12_Source.tar.gz".format(os.getcwd())
     git = "https://charm.cs.illinois.edu/gerrit/namd.git"
     manual_download = True
-    redistribute_source = False
+    redistribute(source=False, binary=False)
 
     maintainers("jcphill")
 

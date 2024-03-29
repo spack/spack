@@ -390,7 +390,7 @@ class Nvhpc(Package):
 
     skip_version_audit = ["platform=darwin"]
 
-    redistribute_source = False
+    redistribute(source=False, binary=False)
 
     for ver, packages in _versions.items():
         key = "{0}-{1}".format(platform.system(), platform.machine())
