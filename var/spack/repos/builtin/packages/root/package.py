@@ -131,6 +131,12 @@ class Root(CMakePackage):
             sha256="559495f7bdd6b7674d3b1019da9b76e8b374f6dca3dbe72fb1320b0be2b00e53",
             when="@6.30:6.30.3 ~aqua",
         )
+        # Fix build issues with libAfterImage for macOS
+        patch(
+            "https://github.com/root-project/root/pull/15044.patch?full_index=1",
+            sha256="e68be5fe7b1ec873da134bd39c5c72730c4ca06d51b52eb436ae44fe81cd472d",
+            when="@:6.30.04 +x",
+        )
 
     # ###################### Variants ##########################
     # See README.md for specific notes about what ROOT configuration
