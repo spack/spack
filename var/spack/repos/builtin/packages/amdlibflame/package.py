@@ -79,6 +79,9 @@ class Amdlibflame(CMakePackage, LibflameBase):
         description="Use hardware vectorization support",
     )
 
+    variant("logging", default="False", description="Enable AOCL DTL Logging")
+    variant("tracing", default="False", description="Enable AOCL DTL Tracing")
+
     # Build system
     build_system(
         conditional("cmake", when="@4.2:"), conditional("autotools", when="@:4.1"), default="cmake"
@@ -214,6 +217,20 @@ class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
             args.append("CFLAGS=-I{0}".format(spec["aocl-utils"].prefix.include))
             aocl_utils_lib_path = spec["aocl-utils"].libs
             args.append("LIBAOCLUTILS_LIBRARY_PATH={0}".format(aocl_utils_lib_path))
+
+        if spec.satisfies("+tracing"):
+            filter_file(
+                "#define AOCL_DTL_TRACE_ENABLE       0",
+                "#define AOCL_DTL_TRACE_ENABLE       1",
+                f"{self.stage.source_path}/aocl_dtl/aocldtlcf.h",
+            )
+
+        if spec.satisfies("+logging"):
+            filter_file(
+                "#define AOCL_DTL_LOG_ENABLE         0",
+                "#define AOCL_DTL_LOG_ENABLE         1",
+                f"{self.stage.source_path}/aocl_dtl/aocldtlcf.h",
+            )
 
         return args
 
