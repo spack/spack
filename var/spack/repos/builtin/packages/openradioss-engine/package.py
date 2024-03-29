@@ -65,44 +65,33 @@ class OpenradiossEngine(CMakePackage):
 
     def cmake_args(self):
         args = [
-            "-Dmpi_os=0",
-            f"-DCMAKE_Fortran_COMPILER={spack_fc}",
-            f"-DCMAKE_C_COMPILER={spack_cc}",
-            f"-DCMAKE_CPP_COMPILER={spack_cxx}",
-            f"-DCMAKE_CXX_COMPILER={spack_cxx}",
-            "-Dsanitize=0",
+            self.define("mpi_os", False),
+            self.define("CMAKE_Fortran_COMPILER", spack_fc),
+            self.define("CMAKE_C_COMPILER", spack_cc),
+            self.define("CMAKE_CPP_COMPILER", spack_cxx),
+            self.define("CMAKE_CXX_COMPILER", spack_cxx),
+            self.define("sanitize", False),
+            self.define("arch", self.compiler_name),
+            self.define_from_variant("debug", "debug"),
+            self.define_from_variant("static_link", "static_link"),
         ]
 
-        args.append(f"-Darch={self.compiler_name}")
-
         if "+sp" in self.spec:
-            args.append("-Dprecision=sp")
+            args.append(self.define("precision", "sp"))
         else:
-            args.append("-Dprecision=dp")
+            args.append(self.define("precision", "dp"))
 
         if "+mpi" in self.spec:
-            args.append("-DMPI=ompi")
-            args.append(f'-Dmpi_root={self.spec["mpi"].prefix}')
-            args.append(f'-Dmpi_incdir={self.spec["mpi"].prefix.include}')
-            args.append(f'-Dmpi_libdir={self.spec["mpi"].prefix.lib}')
+            args.append(self.define("MPI", "ompi"))
+            args.append(self.define("mpi_root", self.spec["mpi"].prefix))
+            args.append(self.define("mpi_incdir", self.spec["mpi"].prefix.include))
+            args.append(self.define("mpi_libdir", self.spec["mpi"].prefix.lib))
         else:
-            args.append("-DMPI=smp")
+            args.append(self.define("MPI", "smp"))
 
-        if "+debug" in self.spec:
-            args.append("-Ddebug=1")
-        else:
-            args.append("-Ddebug=0")
-
-        if "+static_link" in self.spec:
-            args.append("-Dstatic_link=1")
-        else:
-            args.append("-Dstatic_link=0")
-
-        exec_file = f"-DEXEC_NAME=engine_{self.compiler_name}"
-        if "+mpi" in self.spec:
-            exec_file = exec_file + "_ompi"
-
-        args.append(exec_file)
+        exec_file = f"engine_{self.compiler_name}"
+        exec_file += "_ompi" if "+mpi" in self.spec else ""
+        args.append(self.define("EXEC_NAME", exec_file))
 
         return args
 
@@ -110,8 +99,7 @@ class OpenradiossEngine(CMakePackage):
         mkdirp(join_path(prefix, "exec"))
 
         exec_file = f"engine_{self.compiler_name}"
-        if "+mpi" in spec:
-            exec_file = exec_file + "_ompi"
+        exec_file += "_ompi" if "+mpi" in self.spec else ""
 
         install(
             join_path(self.stage.source_path, "engine", exec_file),

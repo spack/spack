@@ -64,31 +64,21 @@ class OpenradiossStarter(CMakePackage):
 
     def cmake_args(self):
         args = [
-            f"-DCMAKE_Fortran_COMPILER={spack_fc}",
-            f"-DCMAKE_C_COMPILER={spack_cc}",
-            f"-DCMAKE_CPP_COMPILER={spack_cxx}",
-            f"-DCMAKE_CXX_COMPILER={spack_cxx}",
-            "-Dsanitize=0",
+            self.define("CMAKE_Fortran_COMPILER", spack_fc),
+            self.define("CMAKE_C_COMPILER", spack_cc),
+            self.define("CMAKE_CPP_COMPILER", spack_cxx),
+            self.define("CMAKE_CXX_COMPILER", spack_cxx),
+            self.define("santize", False),
+            self.define("arch", self.compiler_name),
+            self.define("EXEC_NAME", f"starter_{self.compiler_name}"),
+            self.define_from_variant("debug", "debug"),
+            self.define_from_variant("static_link", "static_link"),
         ]
 
-        args.append(f"-Darch={self.compiler_name}")
-
         if "+sp" in self.spec:
-            args.append("-Dprecision=sp")
+            args.append(self.define("precision", "sp"))
         else:
-            args.append("-Dprecision=dp")
-
-        if "+debug" in self.spec:
-            args.append("-Ddebug=1")
-        else:
-            args.append("-Ddebug=0")
-
-        if "+static_link" in self.spec:
-            args.append("-Dstatic_link=1")
-        else:
-            args.append("-Dstatic_link=0")
-
-        args.append(f"-DEXEC_NAME=starter_{self.compiler_name}")
+            args.append(self.define("precision", "dp"))
 
         return args
 
