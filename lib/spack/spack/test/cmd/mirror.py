@@ -88,7 +88,7 @@ class MockMirrorArgs:
         exclude_file=None,
         exclude_specs=None,
         directory=None,
-        public=False,
+        private=False,
     ):
         self.specs = specs or []
         self.all = all
@@ -97,7 +97,7 @@ class MockMirrorArgs:
         self.dependencies = dependencies
         self.exclude_file = exclude_file
         self.exclude_specs = exclude_specs
-        self.public = public
+        self.private = private
         self.directory = directory
 
 
@@ -120,10 +120,11 @@ def test_exclude_specs_public_mirror(mock_packages, config):
         specs=["no-redistribute-dependent"],
         versions_per_spec="all",
         dependencies=True,
-        public=True,
+        private=False,
     )
 
-    mirror_specs = spack.cmd.mirror._determine_specs_to_mirror(args)
+    include_fn = spack.cmd.mirror.IncludeFilter(args)
+    mirror_specs = spack.cmd.mirror.concrete_specs_from_user(args, selection_fn=include_fn)
     assert not any(s.name == "no-redistribute" for s in mirror_specs)
     assert any(s.name == "no-redistribute-dependent" for s in mirror_specs)
 
