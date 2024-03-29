@@ -279,8 +279,9 @@ class TestMirrorCreate:
     @pytest.mark.regression("31736", "31985")
     def test_all_specs_with_all_versions_dont_concretize(self):
         args = MockMirrorArgs(exclude_file=None, exclude_specs=None)
+        include_fn = spack.cmd.mirror.IncludeFilter(args)
         specs = spack.cmd.mirror.all_specs_with_all_versions(
-            selection_fn=spack.cmd.mirror.not_excluded_fn(args)
+            selection_fn=include_fn
         )
         assert all(not s.concrete for s in specs)
 

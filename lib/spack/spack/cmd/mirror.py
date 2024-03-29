@@ -329,10 +329,11 @@ def specs_from_text_file(filename, concretize=False):
     return spack.cmd.parse_specs(" ".join(specs_in_file), concretize=concretize)
 
 
-def concrete_specs_from_user(args, selection_fn):
+def concrete_specs_from_user(args, selection_fn=None):
     """Return the list of concrete specs that the user wants to mirror. The list
     is passed either from command line or from a text file.
     """
+    selection_fn = selection_fn or IncludeFilter(args)
     specs = concrete_specs_from_cli_or_file(args)
     specs = extend_with_additional_versions(specs, num_versions=versions_per_spec(args))
     if args.dependencies:
@@ -402,7 +403,7 @@ class IncludeFilter:
         package does not explicitly forbid redistributing source."""
         if self.private:
             return True
-        elif x.package.redistribute_source:
+        elif x.package_class.redistribute_source:
             return True
         else:
             tty.debug(
