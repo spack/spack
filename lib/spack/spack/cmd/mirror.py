@@ -387,7 +387,7 @@ def concrete_specs_from_cli_or_file(args):
 
 class IncludeFilter:
     def __init__(self, args):
-        self. exclude_specs = []
+        self.exclude_specs = []
         if args.exclude_file:
             self.exclude_specs.extend(specs_from_text_file(args.exclude_file, concretize=False))
         if args.exclude_specs:
@@ -451,9 +451,7 @@ def versions_per_spec(args):
     return num_versions
 
 
-def create_mirror_for_individual_specs(
-    mirror_specs, path, skip_unstable_versions
-):
+def create_mirror_for_individual_specs(mirror_specs, path, skip_unstable_versions):
     present, mirrored, error = spack.mirror.create(path, mirror_specs, skip_unstable_versions)
     tty.msg("Summary for mirror in {}".format(path))
     process_mirror_stats(present, mirrored, error)
@@ -508,25 +506,19 @@ def mirror_create(args):
 
     if args.all and not ev.active_environment():
         create_mirror_for_all_specs(
-            path=path,
-            skip_unstable_versions=args.skip_unstable_versions,
-            selection_fn=include_fn,
+            path=path, skip_unstable_versions=args.skip_unstable_versions, selection_fn=include_fn
         )
         return
 
     if args.all and ev.active_environment():
         create_mirror_for_all_specs_inside_environment(
-            path=path,
-            skip_unstable_versions=args.skip_unstable_versions,
-            selection_fn=include_fn,
+            path=path, skip_unstable_versions=args.skip_unstable_versions, selection_fn=include_fn
         )
         return
 
     mirror_specs = concrete_specs_from_user(args, selection_fn=include_fn)
     create_mirror_for_individual_specs(
-        mirror_specs,
-        path=path,
-        skip_unstable_versions=args.skip_unstable_versions,
+        mirror_specs, path=path, skip_unstable_versions=args.skip_unstable_versions
     )
 
 
@@ -543,14 +535,10 @@ def create_mirror_for_all_specs(path, skip_unstable_versions, selection_fn):
     process_mirror_stats(*mirror_stats.stats())
 
 
-def create_mirror_for_all_specs_inside_environment(
-    path, skip_unstable_versions, selection_fn
-):
+def create_mirror_for_all_specs_inside_environment(path, skip_unstable_versions, selection_fn):
     mirror_specs = concrete_specs_from_environment(selection_fn=selection_fn)
     create_mirror_for_individual_specs(
-        mirror_specs,
-        path=path,
-        skip_unstable_versions=skip_unstable_versions,
+        mirror_specs, path=path, skip_unstable_versions=skip_unstable_versions
     )
 
 
