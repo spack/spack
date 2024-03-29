@@ -83,7 +83,7 @@ spack:
   ci:
     pipeline-gen:
     - build-job:
-        image: ecpe4s/manylinux2014:2024.03.11
+        image: ecpe4s/manylinux2014:2024.03.28
 
   cdash:
     build-group: Developer Tools Manylinux2014
