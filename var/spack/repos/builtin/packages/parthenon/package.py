@@ -1,3 +1,8 @@
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
+#
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack.package import *
 
 
@@ -49,18 +54,19 @@ class Parthenon(CMakePackage):
     depends_on("kokkos@4:")
 
     def cmake_args(self):
+        spec = self.spec
         return [
             self.define("PARTHENON_IMPORT_KOKKOS", True),
             self.define_from_variant("PARTHENON_SINGLE_PRECISION", "single"),
             self.define_from_variant("PARTHENON_ENABLE_HOST_COMM_BUFFERS", "host_comm_buffers"),
             self.define_from_variant("CHECK_REGISTRY_PRESSURE", "pressure"),
             self.define_from_variant("PARTHENON_ENABLE_ASCENT", "ascent"),
-            self.define("PARTHENON_DISABLE_MPI", not self.variants["mpi"].value),
-            self.define("PARTHENON_DISABLE_HDF5", not self.variants["hdf5"].value),
+            self.define("PARTHENON_DISABLE_MPI", not spec.variants["mpi"].value),
+            self.define("PARTHENON_DISABLE_HDF5", not spec.variants["hdf5"].value),
             self.define(
-                "PARTHENON_DISABLE_HDF5_COMPRESSION", not self.variants["compression"].value
+                "PARTHENON_DISABLE_HDF5_COMPRESSION", not spec.variants["compression"].value
             ),
-            self.define("PARTHENON_DISABLE_SPARSE", not self.variants["sparse"].value),
-            self.define("PARTHENON_DISABLE_EXAMPLES", not self.variants["examples"].value),
+            self.define("PARTHENON_DISABLE_SPARSE", not spec.variants["sparse"].value),
+            self.define("PARTHENON_DISABLE_EXAMPLES", not spec.variants["examples"].value),
             self.define("BUILD_TESTING", self.run_tests),
         ]
