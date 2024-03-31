@@ -168,7 +168,7 @@ class Clang(Compiler):
             raise UnsupportedCompilerFlag(self, "the C23 standard", "c23_flag", "< 9.0")
         elif self.real_version < Version("18.0"):
             return "-std=c2x"
-        else
+        else:
             return "-std=c23"
 
     @property
