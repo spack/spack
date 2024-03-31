@@ -749,7 +749,6 @@ def _concretize_specs_together_new(*abstract_specs, **kwargs):
     result = solver.solve(
         abstract_specs, tests=kwargs.get("tests", False), allow_deprecated=allow_deprecated
     )
-    result.raise_if_unsat()
     return [s.copy() for s in result.specs]
 
 
