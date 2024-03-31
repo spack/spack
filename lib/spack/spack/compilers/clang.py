@@ -125,7 +125,7 @@ class Clang(Compiler):
     @property
     def cxx20_flag(self):
         if self.real_version < Version("5.0"):
-            raise spack.compiler.UnsupportedCompilerFlag(
+            raise UnsupportedCompilerFlag(
                 self, "the C++20 standard", "cxx20_flag", "< 5.0"
             )
         elif self.real_version < Version("11.0"):
@@ -136,7 +136,7 @@ class Clang(Compiler):
     @property
     def cxx23_flag(self):
         if self.real_version < Version("12.0"):
-            raise spack.compiler.UnsupportedCompilerFlag(
+            raise UnsupportedCompilerFlag(
                 self, "the C++23 standard", "cxx23_flag", "< 12.0"
             )
         elif self.real_version < Version("17.0"):
