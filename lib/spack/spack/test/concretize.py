@@ -1794,6 +1794,22 @@ class TestConcretize:
                 counter += 1
         assert counter == occurances, concrete_specs
 
+    @pytest.mark.only_clingo("Original concretizer cannot concretize in rounds")
+    def test_solve_in_rounds_all_unsolved(self, monkeypatch, mock_packages, config):
+        specs = [Spec(x) for x in ["libdwarf%gcc", "libdwarf%clang"]]
+        solver = spack.solver.asp.Solver()
+        solver.reuse = False
+
+        simulate_unsolved_property = list((x, None) for x in specs)
+        monkeypatch.setattr(spack.solver.asp.Result, "unsolved_specs", simulate_unsolved_property)
+        monkeypatch.setattr(spack.solver.asp.Result, "specs", list())
+
+        with pytest.raises(
+            spack.solver.asp.InternalConcretizerError,
+            match="a subset of input specs could not be solved for",
+        ):
+            list(solver.solve_in_rounds(specs))
+
     @pytest.mark.only_clingo("Use case not supported by the original concretizer")
     def test_coconcretize_reuse_and_virtuals(self):
         reusable_specs = []
