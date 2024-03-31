@@ -20,6 +20,11 @@ class PyPetsc4py(PythonPackage):
     license("BSD-2-Clause")
 
     version("main", branch="main")
+    version("3.21.0", sha256="b2000a3f8ef60920e1f82fa4772372d7941bc737bcc421a234a2507097a44d00")
+    version("3.20.6", sha256="bcc4cb35231ba6664309ea195cc8ce8a9bb61f3e24b39be480eee59c52139dc2")
+    version("3.20.5", sha256="2f40a6a7bfdaa2bca7c1f3e739ab7c74aba8d95db05aa1d120826eec904bbc16")
+    version("3.20.4", sha256="3ebdb4c605ad59d71b7b7adc5f06b6d2a7ce9225c9b56e672923cb5bd6e43440")
+    version("3.20.3", sha256="8e10884df5ca38191b71294dc7e89f7479b18cca83fedfe27f89105e57c40785")
     version("3.20.2", sha256="d3f24aa6612ded3e9b9ae11d5533f319d1df1705bea6d81385fea023d01175c9")
     version("3.20.1", sha256="dcc9092040d13130496f1961b79c36468f383b6ede398080e004f1966c06ad38")
     version("3.20.0", sha256="c2461eef3977ae5c214ad252520adbb92ec3a31d00e79391dd92535077bbf03e")
@@ -76,7 +81,7 @@ class PyPetsc4py(PythonPackage):
     depends_on("petsc+mpi", when="+mpi")
     depends_on("petsc~mpi", when="~mpi")
     depends_on("petsc@main", when="@main")
-    for ver in ["3.20", "3.19", "3.18", "3.17", "3.16", "3.15", "3.13", "3.12", "3.11"]:
+    for ver in ["3.21", "3.20", "3.19", "3.18", "3.17", "3.16", "3.15", "3.13", "3.12", "3.11"]:
         depends_on(f"petsc@{ver}", when=f"@{ver}")
     depends_on("petsc@3.14.2:3.14", when="@3.14.1:3.14")
     depends_on("petsc@3.14.0:3.14.1", when="@3.14.0")
