@@ -763,7 +763,6 @@ class PyclingoDriver:
         timer.stop("ground")
 
         # With a grounded program, we can run the solve.
-        result = Result(specs)
         models = []  # stable models if things go well
         cores = []  # unsatisfiable cores if they do not
 
@@ -784,6 +783,7 @@ class PyclingoDriver:
         timer.stop("solve")
 
         # once done, construct the solve result
+        result = Result(specs)
         result.satisfiable = solve_result.satisfiable
 
         if result.satisfiable:
@@ -823,6 +823,8 @@ class PyclingoDriver:
         if output.stats:
             print("Statistics:")
             pprint.pprint(self.control.statistics)
+
+        result.raise_if_unsat()
 
         if result.satisfiable and result.unsolved_specs and setup.concretize_everything:
             unsolved_str = Result.format_unsolved(result.unsolved_specs)
@@ -3534,9 +3536,6 @@ class Solver:
             # If we don't have unsolved specs we are done
             if not result.unsolved_specs:
                 break
-
-            # This means we cannot progress with solving the input
-            result.raise_if_unsat()
 
             if not result.specs:
                 # This is also a problem: no specs were solved for, which
