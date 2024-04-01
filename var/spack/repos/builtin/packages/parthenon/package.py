@@ -29,9 +29,12 @@ class Parthenon(CMakePackage):
         "host_comm_buffers", default=False, description="Allocate communication buffers on host"
     )
     variant("hdf5", default=True, description="Enable hdf5")
-    variant(
-        "compression", default=True, description="Enable compression in hdf5 output/restart files"
-    )
+    with when("+hdf5"):
+        variant(
+            "compression",
+            default=True,
+            description="Enable compression in hdf5 output/restart files",
+        )
     variant("sparse", default=True, description="Sparse capability")
     variant("ascent", default=False, description="Enable Ascent for in-situ vis and analysis")
     variant("examples", default=False, description="Build example drivers")
