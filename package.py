@@ -30,5 +30,11 @@ class Meshlab(CMakePackage):
     def cmake_args(self):
         args = [
             self.define_from_variant("MESHLAB_BUILD_WITH_DOUBLE_SCALAR", "double_scalar"),
+            # E57 and Nexus plugins fail on gcc-13 due to missing include cstdint,
+            # but patching is cumbersome since build process downloads their source.
+            # Ref: https://github.com/asmaloney/libE57Format/pull/176
+            self.define("MESHLAB_ALLOW_DOWNLOAD_SOURCE_LIBE57", False),
+            # Ref: https://github.com/cnr-isti-vclab/corto/pull/44
+            self.define("MESHLAB_ALLOW_DOWNLOAD_SOURCE_NEXUS", False),
         ]
         return args
