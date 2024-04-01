@@ -74,8 +74,7 @@ def setup_parser(subparser):
     create_parser.add_argument(
         "--private",
         action="store_true",
-        help="if this is a private mirror, include packages that should "
-        "normally not be distributed",
+        help="for a private mirror, include non-redistributable packages",
     )
     arguments.add_common_arguments(create_parser, ["specs"])
     arguments.add_concretizer_args(create_parser)

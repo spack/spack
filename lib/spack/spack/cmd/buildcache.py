@@ -136,8 +136,7 @@ def setup_parser(subparser: argparse.ArgumentParser):
     push.add_argument(
         "--private",
         action="store_true",
-        help="if this is a private mirror, include packages that should "
-        "normally not be distributed",
+        help="for a private mirror, include non-redistributable packages",
     )
     arguments.add_common_arguments(push, ["specs", "jobs"])
     push.set_defaults(func=push_fn)
@@ -384,8 +383,8 @@ def _skip_no_redistribute_for_public(specs):
     if removed_specs:
         tty.debug(
             "The following specs will not be added to the binary cache"
-            " because their package.py file has marked them as"
-            " 'redistribute_binary = False': {0}".format(", ".join(s.name for s in removed_specs))
+            f" because they cannot be redistributed: {', '.join(s.name for s in removed_specs)}\n"
+            "You can use `--private` to include them."
         )
     return remaining_specs
 
