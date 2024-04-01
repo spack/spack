@@ -619,9 +619,6 @@ def redistribute(source=None, binary=None, when: WhenType = None):
                 "be explicitly disabled."
             )
 
-        #if pkg.name == 'no-redistribute':
-        #    import pdb; pdb.set_trace()
-
         when_spec = _make_when_spec(when)
         if not when_spec:
             return
@@ -640,7 +637,6 @@ def redistribute(source=None, binary=None, when: WhenType = None):
 
         if source is False:
             _default_append_or_set(pkg, "skip_redistribute_source", when_spec)
-            #import pdb; pdb.set_trace()
 
         if binary is False:
             _default_append_or_set(pkg, "skip_redistribute_binary", when_spec)

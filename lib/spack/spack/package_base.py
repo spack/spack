@@ -475,10 +475,6 @@ class RedistributionMixin(object):
 
     @classmethod
     def redistribute_source(cls, spec):
-        #if self.name == 'no-redistribute':
-        #    import pdb; pdb.set_trace()
-        #if self.name == 'no-redistribute-dependent':
-        #    import pdb; pdb.set_trace()
         skip_redistribute_source = getattr(cls, "skip_redistribute_source", [])
         for when_spec in skip_redistribute_source:
             if spec.satisfies(when_spec):
