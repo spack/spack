@@ -472,11 +472,27 @@ class RedistributionMixin(object):
     #: Whether it should be possible to add the source of this package to a
     #: Spack mirror. This is only false when licensing for the package
     #: implies that public mirrors should not redistribute its source code.
-    redistribute_source = True
+
+    skip_redistribute_source = []
+    skip_redistribute_binary = []
+
+    @property
+    def redistribute_source(self):
+        for when_spec in self.skip_redistribute_source:
+            if self.spec.satisfies(when_spec):
+                return False
+
+        return True
 
     #: Whether it should be possible to create a binary out of an installed
     #: instance of this package.
-    redistribute_binary = True
+    @property
+    def redistribute_binary(self):
+        for when_spec in self.skip_redistribute_binary:
+            if self.spec.satisfies(when_spec):
+                return False
+
+        return True
 
 
 class PackageBase(WindowsRPath, PackageViewMixin, RedistributionMixin, metaclass=PackageMeta):

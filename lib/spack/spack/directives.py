@@ -601,7 +601,7 @@ def depends_on(
 
 
 @directive(dicts=())
-def redistribute(source=True, binary=True):
+def redistribute(source=None, binary=None, when: WhenType = None):
     """Can be used inside a Package definition to declare that
     the package source and/or compiled binaries should not be
     redistributed.
@@ -611,8 +611,28 @@ def redistribute(source=True, binary=True):
     """
 
     def _execute_redistribute(pkg: "spack.package_base.PackageBase"):
-        pkg.redistribute_source = source
-        pkg.redistribute_binary = binary
+        if source is None and binary is None:
+            return
+        elif (source is True) or (binary is True):
+            raise DirectiveError(
+                "Source/binary distribution are true by default, they can only "
+                "be explicitly disabled."
+            )
+
+        when_spec = _make_when_spec(when)
+        if not when_spec:
+            return
+
+        if (not source) and when_spec:
+            max_constraint = spack.spec.Spec(f"{pkg.name}@{when_spec.versions}")
+            if not max_constraint.satisfies(when_spec):
+                raise DirectiveError("Source distribution can only be disabled for versions")
+
+        if not source:
+            pkg.skip_redistribute_source.append(when_spec)
+
+        if not binary:
+            pkg.skip_redistribute_binary.append(when_spec)
 
     return _execute_redistribute
 
