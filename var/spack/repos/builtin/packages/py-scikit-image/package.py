@@ -14,6 +14,9 @@ class PyScikitImage(PythonPackage):
     pypi = "scikit-image/scikit_image-0.17.2.tar.gz"
     git = "https://github.com/scikit-image/scikit-image.git"
 
+    maintainers("adamjstewart")
+    license("BSD-3-Clause")
+
     skip_modules = [
         # Requires pytest
         "skimage.filters.rank.tests",
