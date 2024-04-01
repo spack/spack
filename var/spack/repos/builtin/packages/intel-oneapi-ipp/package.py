@@ -28,6 +28,12 @@ class IntelOneapiIpp(IntelOneApiLibraryPackage):
     )
 
     version(
+        "2021.11.0",
+        url="https://registrationcenter-download.intel.com/akdlm/IRC_NAS/c8d09493-ca9b-45b1-b720-12b8719b4136/l_ipp_oneapi_p_2021.11.0.532_offline.sh",
+        sha256="42bfaf593184e3293c10e06ccc9e9781427d86a8a88e3d09f6921ffd7de24ee6",
+        expand=False,
+    )
+    version(
         "2021.10.0",
         url="https://registrationcenter-download.intel.com/akdlm//IRC_NAS/2d48c7d9-e716-4c73-8fe5-77a9599a405f/l_ipp_oneapi_p_2021.10.0.670_offline.sh",
         sha256="c4ad98f96760b0a821dbcd59963c5148fd9dc4eb790af0e6e765a5f36525d202",

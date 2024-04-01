@@ -33,6 +33,7 @@ class Veloc(CMakePackage):
     depends_on("mpi")
     depends_on("boost")
     depends_on("er")
+    depends_on("er@0.4:", when="@1.7:")
     depends_on("axl@:0.3.0", when="@:1.5")
     depends_on("axl@0.5.0:", when="@1.6:")
     depends_on("openssl")
