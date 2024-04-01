@@ -472,7 +472,6 @@ class RedistributionMixin(object):
     #: Whether it should be possible to add the source of this package to a
     #: Spack mirror. This is only false when licensing for the package
     #: implies that public mirrors should not redistribute its source code.
-
     @classmethod
     def redistribute_source(cls, spec):
         skip_redistribute_source = getattr(cls, "skip_redistribute_source", [])
