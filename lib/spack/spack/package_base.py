@@ -473,13 +473,15 @@ class RedistributionMixin(object):
     #: Spack mirror. This is only false when licensing for the package
     #: implies that public mirrors should not redistribute its source code.
 
-    skip_redistribute_source = []
-    skip_redistribute_binary = []
-
-    @property
-    def redistribute_source(self):
-        for when_spec in self.skip_redistribute_source:
-            if self.spec.satisfies(when_spec):
+    @classmethod
+    def redistribute_source(cls, spec):
+        #if self.name == 'no-redistribute':
+        #    import pdb; pdb.set_trace()
+        #if self.name == 'no-redistribute-dependent':
+        #    import pdb; pdb.set_trace()
+        skip_redistribute_source = getattr(cls, "skip_redistribute_source", [])
+        for when_spec in skip_redistribute_source:
+            if spec.satisfies(when_spec):
                 return False
 
         return True
@@ -488,7 +490,8 @@ class RedistributionMixin(object):
     #: instance of this package.
     @property
     def redistribute_binary(self):
-        for when_spec in self.skip_redistribute_binary:
+        skip_redistribute_binary = getattr(self, "skip_redistribute_binary", [])
+        for when_spec in skip_redistribute_binary:
             if self.spec.satisfies(when_spec):
                 return False
 

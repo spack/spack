@@ -400,7 +400,7 @@ class IncludeFilter:
         package does not explicitly forbid redistributing source."""
         if self.private:
             return True
-        elif x.package_class.redistribute_source:
+        elif x.package_class.redistribute_source(x):
             return True
         else:
             tty.debug(

@@ -619,20 +619,31 @@ def redistribute(source=None, binary=None, when: WhenType = None):
                 "be explicitly disabled."
             )
 
+        #if pkg.name == 'no-redistribute':
+        #    import pdb; pdb.set_trace()
+
         when_spec = _make_when_spec(when)
         if not when_spec:
             return
 
-        if (not source) and when_spec:
+        def _default_append_or_set(obj, name, value):
+            if not hasattr(obj, name):
+                setattr(obj, name, [])
+
+            getattr(obj, name).append(value)
+
+
+        if (source is False) and when_spec:
             max_constraint = spack.spec.Spec(f"{pkg.name}@{when_spec.versions}")
             if not max_constraint.satisfies(when_spec):
                 raise DirectiveError("Source distribution can only be disabled for versions")
 
-        if not source:
-            pkg.skip_redistribute_source.append(when_spec)
+        if source is False:
+            _default_append_or_set(pkg, "skip_redistribute_source", when_spec)
+            #import pdb; pdb.set_trace()
 
-        if not binary:
-            pkg.skip_redistribute_binary.append(when_spec)
+        if binary is False:
+            _default_append_or_set(pkg, "skip_redistribute_binary", when_spec)
 
     return _execute_redistribute
 
