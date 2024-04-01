@@ -629,7 +629,6 @@ def redistribute(source=None, binary=None, when: WhenType = None):
 
             getattr(obj, name).append(value)
 
-
         if (source is False) and when_spec:
             max_constraint = spack.spec.Spec(f"{pkg.name}@{when_spec.versions}")
             if not max_constraint.satisfies(when_spec):
