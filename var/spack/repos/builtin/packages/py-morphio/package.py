@@ -17,6 +17,8 @@ class PyMorphio(PythonPackage):
 
     license("Apache-2.0")
 
+    maintainers("tristan0x")
+    
     version("master", branch="master", submodules=True)
 
     version("3.3.7", sha256="7cb6676fcbaa2ac154742ca8aed3fcb03bb4643852e36e368858580133b61732")
