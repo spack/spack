@@ -37,7 +37,6 @@ import spack.compilers
 import spack.config
 import spack.deptypes as dt
 import spack.directives
-from spack.directives import DisableRedistribute
 import spack.directory_layout
 import spack.environment
 import spack.error
@@ -55,6 +54,7 @@ import spack.url
 import spack.util.environment
 import spack.util.path
 import spack.util.web
+from spack.directives import DisableRedistribute
 from spack.filesystem_view import YamlFilesystemView
 from spack.install_test import (
     PackageTest,
