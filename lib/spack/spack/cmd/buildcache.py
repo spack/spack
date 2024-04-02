@@ -381,9 +381,14 @@ def _skip_no_redistribute_for_public(specs):
         else:
             removed_specs.append(spec)
     if removed_specs:
+        colified_output = tty.colify.colified(
+            list(s.name for s in removed_specs),
+            indent=4,
+        )
         tty.debug(
             "The following specs will not be added to the binary cache"
-            f" because they cannot be redistributed: {', '.join(s.name for s in removed_specs)}\n"
+            " because they cannot be redistributed:\n"
+            f"{colified_output}\n"
             "You can use `--private` to include them."
         )
     return remaining_specs
