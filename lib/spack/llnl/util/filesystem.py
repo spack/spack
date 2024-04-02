@@ -202,10 +202,33 @@ def getuid():
 def rename(src, dst):
     # On Windows, os.rename will fail if the destination file already exists
     if sys.platform == "win32":
+        # if dst exists, we can potentially be copying
+        # src onto itself, in which case removing dst
+        # will delete the src file and raise on rename
+        # first copy original to tmp directory
+        # delete dst (if it exists)
+        # copy back and rename
+
+        # create tmp dir
+        tmp_dir = tempfile.mkdtemp()
+        tmp_copy = os.path.join(tmp_dir, os.path.basename(src))
+        # copy over src
+        shutil.copyfile(src, tmp_copy)
+        # delete original src
+        os.remove(src)
         # Windows path existence checks will sometimes fail on junctions/links/symlinks
         # so check for that case
         if os.path.exists(dst) or islink(dst):
             os.remove(dst)
+        # restore src
+        shutil.copyfile(tmp_copy, src)
+        # teardown tmp dir + contents
+        kwargs = {}
+        if sys.platform == "win32":
+            kwargs["ignore_errors"] = False
+            kwargs["onerror"] = readonly_file_handler(ignore_errors=True)
+        shutil.rmtree(tmp_dir, **kwargs)
+
     os.rename(src, dst)
 
 
