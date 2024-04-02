@@ -727,7 +727,7 @@ complete -c spack -n '__fish_spack_using_command buildcache push' -l base-image 
 complete -c spack -n '__fish_spack_using_command buildcache push' -l tag -s t -r -f -a tag
 complete -c spack -n '__fish_spack_using_command buildcache push' -l tag -s t -r -d 'when pushing to an OCI registry, tag an image containing all root specs and their runtime dependencies'
 complete -c spack -n '__fish_spack_using_command buildcache push' -l private -f -a private
-complete -c spack -n '__fish_spack_using_command buildcache push' -l private -d 'if this is a private mirror, include packages that should normally not be distributed'
+complete -c spack -n '__fish_spack_using_command buildcache push' -l private -d 'for a private mirror, include non-redistributable packages'
 complete -c spack -n '__fish_spack_using_command buildcache push' -s j -l jobs -r -f -a jobs
 complete -c spack -n '__fish_spack_using_command buildcache push' -s j -l jobs -r -d 'explicitly set number of parallel jobs'
 
@@ -759,7 +759,7 @@ complete -c spack -n '__fish_spack_using_command buildcache create' -l base-imag
 complete -c spack -n '__fish_spack_using_command buildcache create' -l tag -s t -r -f -a tag
 complete -c spack -n '__fish_spack_using_command buildcache create' -l tag -s t -r -d 'when pushing to an OCI registry, tag an image containing all root specs and their runtime dependencies'
 complete -c spack -n '__fish_spack_using_command buildcache create' -l private -f -a private
-complete -c spack -n '__fish_spack_using_command buildcache create' -l private -d 'if this is a private mirror, include packages that should normally not be distributed'
+complete -c spack -n '__fish_spack_using_command buildcache create' -l private -d 'for a private mirror, include non-redistributable packages'
 complete -c spack -n '__fish_spack_using_command buildcache create' -s j -l jobs -r -f -a jobs
 complete -c spack -n '__fish_spack_using_command buildcache create' -s j -l jobs -r -d 'explicitly set number of parallel jobs'
 
@@ -2219,7 +2219,7 @@ complete -c spack -n '__fish_spack_using_command mirror create' -s D -l dependen
 complete -c spack -n '__fish_spack_using_command mirror create' -s n -l versions-per-spec -r -f -a versions_per_spec
 complete -c spack -n '__fish_spack_using_command mirror create' -s n -l versions-per-spec -r -d 'the number of versions to fetch for each spec, choose \'all\' to retrieve all versions of each package'
 complete -c spack -n '__fish_spack_using_command mirror create' -l private -f -a private
-complete -c spack -n '__fish_spack_using_command mirror create' -l private -d 'if this is a private mirror, include packages that should normally not be distributed'
+complete -c spack -n '__fish_spack_using_command mirror create' -l private -d 'for a private mirror, include non-redistributable packages'
 complete -c spack -n '__fish_spack_using_command mirror create' -s U -l fresh -f -a concretizer_reuse
 complete -c spack -n '__fish_spack_using_command mirror create' -s U -l fresh -d 'do not reuse installed deps; build newest configuration'
 complete -c spack -n '__fish_spack_using_command mirror create' -l reuse -f -a concretizer_reuse
