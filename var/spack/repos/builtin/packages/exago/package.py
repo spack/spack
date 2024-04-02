@@ -156,7 +156,7 @@ class Exago(CMakePackage, CudaPackage, ROCmPackage):
     # This is duplicated from HiOp
     # RAJA > 0.14 and Umpire > 6.0 require c++ std 14
     # We are working on supporting newer Umpire/RAJA versions
-    depends_on("raja@0.14.0:0.14", when="@1.1.0:+raja")
+    depends_on("raja@0.14.0:0.14 +shared", when="@1.1.0:+raja")
     depends_on("umpire@6.0.0:6", when="@1.1.0:+raja")
     depends_on("camp@0.2.3:0.2", when="@1.1.0:+raja")
     # This is no longer a requirement in RAJA > 0.14

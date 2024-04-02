@@ -185,7 +185,10 @@ class Ascent(CMakePackage, CudaPackage):
     # RAJA and Umpire
     #######################
     depends_on("raja", when="+raja")
+    depends_on("raja+openmp", when="+raja +openmp")
+    depends_on("raja~openmp", when="+raja ~openmp")
     depends_on("umpire", when="+umpire")
+    depends_on("umpire@:2023.06.0", when="@:0.9.2 +umpire")
 
     #######################
     # BabelFlow

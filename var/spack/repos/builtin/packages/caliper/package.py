@@ -78,7 +78,7 @@ class Caliper(CMakePackage, CudaPackage, ROCmPackage):
     is_linux = sys.platform.startswith("linux")
     variant("shared", default=True, description="Build shared libraries")
     variant("adiak", default=True, description="Enable Adiak support")
-    variant("mpi", default=True, description="Enable MPI wrappers")
+    variant("mpi", default=True, description="Enable MPI support")
     # libunwind has some issues on Mac
     variant(
         "libunwind", default=sys.platform != "darwin", description="Enable stack unwind support"
@@ -94,6 +94,7 @@ class Caliper(CMakePackage, CudaPackage, ROCmPackage):
     variant("fortran", default=False, description="Enable Fortran support")
     variant("variorum", default=False, description="Enable Variorum support")
     variant("kokkos", default=True, when="@2.3.0:", description="Enable Kokkos profiling support")
+    variant("tests", default=False, description="Enable tests")
 
     depends_on("adiak@0.1:0", when="@2.2: +adiak")
 

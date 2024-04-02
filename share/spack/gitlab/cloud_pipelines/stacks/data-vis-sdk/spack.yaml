@@ -1,6 +1,8 @@
 spack:
   view: false
   packages:
+    all:
+      require: target=x86_64_v3
     cmake:
       variants: ~ownlibs
     ecp-data-vis-sdk:
@@ -20,8 +22,6 @@ spack:
       require: '@14:'
       # Minimize LLVM
       variants: ~lldb~lld~libomptarget~polly~gold libunwind=none compiler-rt=none
-    all:
-      require: target=x86_64_v3
 
   definitions:
   - paraview_specs:

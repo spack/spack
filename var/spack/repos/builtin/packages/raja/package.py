@@ -6,13 +6,23 @@
 import socket
 
 from spack.package import *
-from spack.pkg.builtin.camp import hip_repair_cache
+
+from .blt import llnl_link_helpers
+
+
+# Starting with 2022.03.0, the only submodule we want to fetch is tpl/desul
+# since there is no package for it. Other RAJA submodules are defined as
+# dependencies.
+def submodules(package):
+    submodules = []
+    submodules.append("tpl/desul")
+    return submodules
 
 
 class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
     """RAJA Parallel Framework."""
 
-    homepage = "https://software.llnl.gov/RAJA/"
+    homepage = "https://github.com/LLNL/RAJA"
     git = "https://github.com/LLNL/RAJA.git"
     tags = ["radiuss", "e4s"]
 
@@ -20,19 +30,43 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
 
     license("BSD-3-Clause")
 
-    version("develop", branch="develop", submodules=False)
-    version("main", branch="main", submodules=False)
+    version("develop", branch="develop", submodules=submodules)
+    version("main", branch="main", submodules=submodules)
+    version(
+        "2024.02.0",
+        tag="v2024.02.0",
+        commit="82d1b926ada0fbb15a4a6e0adadc30c715cfda7b",
+        submodules=submodules,
+    )
+    version(
+        "2023.06.1",
+        tag="v2023.06.1",
+        commit="9b5f61edf3aa1e6fdbc9a4b30828c81504639963",
+        submodules=submodules,
+    )
+    version(
+        "2023.06.0",
+        tag="v2023.06.0",
+        commit="e330b2560747d5417cd7bd265fab3fb91d32ecbd",
+        submodules=submodules,
+    )
+    version(
+        "2022.10.5",
+        tag="v2022.10.5",
+        commit="3774f51339459bbbdb77055aa23f82919b6335b6",
+        submodules=submodules,
+    )
     version(
         "2022.10.4",
         tag="v2022.10.4",
         commit="c2a6b1740759ae3ae7c85b35e20dbffbe235355d",
-        submodules=False,
+        submodules=submodules,
     )
     version(
         "2022.03.0",
         tag="v2022.03.0",
         commit="4351fe6a50bd579511a625b017c9e054885e7fd2",
-        submodules=False,
+        submodules=submodules,
     )
     version(
         "0.14.0",
@@ -122,8 +156,14 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
         when="^hip@6.0",
     )
 
-    variant("openmp", default=True, description="Build OpenMP backend")
-    variant("shared", default=True, description="Build Shared Libs")
+    variant("openmp", default=False, description="Build OpenMP backend")
+    variant("shared", default=False, description="Build shared libs")
+    variant("desul", default=False, description="Build desul atomics backend")
+    variant("vectorization", default=False, description="Build SIMD/SIMT intrinsics support")
+    variant(
+        "omptask", default=False, description="Build OpenMP task variants of internal algorithms"
+    )
+
     variant("plugins", default=False, description="Enable runtime plugins")
     variant("examples", default=True, description="Build examples.")
     variant("exercises", default=True, description="Build exercises.")
@@ -131,24 +171,40 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
     # and remove the +tests conflict below.
     variant("tests", default=False, description="Build tests")
 
+    # we don’t use variants to express the failing test, we only add a variant to
+    # define whether we want to run all the tests (including those known to fail)
+    # or only the passing ones.
+    variant(
+        "run-all-tests",
+        default=False,
+        description="Run all the tests, including those known to fail.",
+    )
+
     depends_on("blt", type="build")
+    depends_on("blt@0.6.1:", type="build", when="@2024.02.0:")
+    depends_on("blt@0.5.3", type="build", when="@2023.06.0:2023.06.1")
+    depends_on("blt@0.5.2:0.5.3", type="build", when="@2022.10.5")
     depends_on("blt@0.5.0:0.5.3", type="build", when="@0.14.1:2022.10.4")
     depends_on("blt@0.4.1", type="build", when="@0.14.0")
-    depends_on("blt@0.4.0:", type="build", when="@0.13.0")
-    depends_on("blt@0.3.6:", type="build", when="@:0.12.0")
+    depends_on("blt@0.4.0:0.4.1", type="build", when="@0.13.0")
+    depends_on("blt@0.3.6:0.4.1", type="build", when="@:0.12.0")
     conflicts("^blt@:0.3.6", when="+rocm")
 
+    depends_on("camp+openmp", when="+openmp")
+    depends_on("camp@main", when="@develop")
+    depends_on("camp@main", when="@main")
+    depends_on("camp@2024.02.0:", type="build", when="@2024.02.0:")
+    depends_on("camp@2023.06.0", type="build", when="@2023.06.0:2023.06.1")
+    depends_on("camp@2022.10.1:2023.06.0", type="build", when="@2022.10.3:2022.10.5")
+    depends_on("camp@2022.10.0:2023.06.0", type="build", when="@2022.10.0:2022.10.2")
+    depends_on("camp@2022.03.2", type="build", when="@2022.03.0:2022.03.1")
     depends_on("camp@0.2.2:0.2.3", when="@0.14.0")
     depends_on("camp@0.1.0", when="@0.10.0:0.13.0")
-    depends_on("camp@2022.03.2:2022.03", when="@2022.03.0:2022.03")
-    depends_on("camp@2022.10:", when="@2022.10:")
-    depends_on("camp@main", when="@main")
-    depends_on("camp@main", when="@develop")
-    depends_on("camp+openmp", when="+openmp")
 
-    depends_on("cmake@:3.20", when="@:2022.03+rocm", type="build")
-    depends_on("cmake@3.23:", when="@2022.10:+rocm", type="build")
+    depends_on("cmake@3.23:", when="@2022.10.0:+rocm", type="build")
+    depends_on("cmake@3.20:", when="@2022.10.0:", type="build")
     depends_on("cmake@3.14:", when="@2022.03.0:", type="build")
+    depends_on("cmake@:3.20", when="@:2022.03+rocm", type="build")
 
     depends_on("llvm-openmp", when="+openmp %apple-clang")
 
@@ -159,7 +215,7 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
             depends_on(
                 "camp+rocm amdgpu_target={0}".format(arch), when="amdgpu_target={0}".format(arch)
             )
-        conflicts("+openmp")
+        conflicts("+openmp", when="@:2022.03")
 
     with when("+cuda @0.12.0:"):
         depends_on("camp+cuda")
@@ -182,49 +238,44 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
         hostname = socket.gethostname()
         if "SYS_TYPE" in env:
             hostname = hostname.rstrip("1234567890")
-        return "{0}-{1}-{2}@{3}.cmake".format(
+        return "{0}-{1}-{2}@{3}-{4}.cmake".format(
             hostname,
             self._get_sys_type(self.spec),
             self.spec.compiler.name,
             self.spec.compiler.version,
+            self.spec.dag_hash(8),
         )
 
     def initconfig_compiler_entries(self):
         spec = self.spec
+        compiler = self.compiler
+        # Default entries are already defined in CachedCMakePackage, inherit them:
         entries = super().initconfig_compiler_entries()
-        if "+rocm" in spec:
-            entries.insert(0, cmake_cache_path("CMAKE_CXX_COMPILER", spec["hip"].hipcc))
+
+        llnl_link_helpers(entries, spec, compiler)
+
         return entries
 
     def initconfig_hardware_entries(self):
         spec = self.spec
         entries = super().initconfig_hardware_entries()
 
+        entries.append("#------------------{0}".format("-" * 30))
+        entries.append("# Package custom hardware settings")
+        entries.append("#------------------{0}\n".format("-" * 30))
+
         entries.append(cmake_cache_option("ENABLE_OPENMP", "+openmp" in spec))
 
         if "+cuda" in spec:
             entries.append(cmake_cache_option("ENABLE_CUDA", True))
-
-            if not spec.satisfies("cuda_arch=none"):
-                cuda_arch = spec.variants["cuda_arch"].value
-                entries.append(cmake_cache_string("CUDA_ARCH", "sm_{0}".format(cuda_arch[0])))
-                entries.append(
-                    cmake_cache_string("CMAKE_CUDA_ARCHITECTURES", "{0}".format(cuda_arch[0]))
-                )
         else:
             entries.append(cmake_cache_option("ENABLE_CUDA", False))
 
         if "+rocm" in spec:
             entries.append(cmake_cache_option("ENABLE_HIP", True))
-            entries.append(cmake_cache_path("HIP_ROOT_DIR", "{0}".format(spec["hip"].prefix)))
-            hip_repair_cache(entries, spec)
             hipcc_flags = []
-            if self.spec.satisfies("@0.14.0"):
+            if self.spec.satisfies("@0.14.0:"):
                 hipcc_flags.append("-std=c++14")
-            archs = self.spec.variants["amdgpu_target"].value
-            if archs != "none":
-                arch_str = ",".join(archs)
-                hipcc_flags.append("--amdgpu-target={0}".format(arch_str))
             entries.append(cmake_cache_string("HIP_HIPCC_FLAGS", " ".join(hipcc_flags)))
         else:
             entries.append(cmake_cache_option("ENABLE_HIP", False))
@@ -237,11 +288,39 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
 
         option_prefix = "RAJA_" if spec.satisfies("@0.14.0:") else ""
 
+        # TPL locations
+        entries.append("#------------------{0}".format("-" * 60))
+        entries.append("# TPLs")
+        entries.append("#------------------{0}\n".format("-" * 60))
+
         entries.append(cmake_cache_path("BLT_SOURCE_DIR", spec["blt"].prefix))
         if "camp" in self.spec:
             entries.append(cmake_cache_path("camp_DIR", spec["camp"].prefix))
+
+        # Build options
+        entries.append("#------------------{0}".format("-" * 60))
+        entries.append("# Build Options")
+        entries.append("#------------------{0}\n".format("-" * 60))
+
+        entries.append(cmake_cache_string("CMAKE_BUILD_TYPE", spec.variants["build_type"].value))
         entries.append(cmake_cache_option("BUILD_SHARED_LIBS", "+shared" in spec))
+
+        entries.append(cmake_cache_option("RAJA_ENABLE_DESUL_ATOMICS", "+desul" in spec))
+
+        entries.append(cmake_cache_option("RAJA_ENABLE_VECTORIZATION", "+vectorization" in spec))
+
+        entries.append(cmake_cache_option("RAJA_ENABLE_OPENMP_TASK", "+omptask" in spec))
+
+        # C++14
+        if spec.satisfies("@0.14.0:"):
+            entries.append(cmake_cache_string("BLT_CXX_STD", "c++14"))
+
+            if "+desul" in spec:
+                if "+cuda" in spec:
+                    entries.append(cmake_cache_string("CMAKE_CUDA_STANDARD", "14"))
+
         entries.append(cmake_cache_option("RAJA_ENABLE_RUNTIME_PLUGINS", "+plugins" in spec))
+
         entries.append(
             cmake_cache_option("{}ENABLE_EXAMPLES".format(option_prefix), "+examples" in spec)
         )
@@ -254,19 +333,50 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
         else:
             entries.append(cmake_cache_option("ENABLE_EXERCISES", "+exercises" in spec))
 
+        # TODO: Treat the workaround when building tests with spack wrapper
+        #       For now, removing it to test CI, which builds tests outside of wrapper.
         # Work around spack adding -march=ppc64le to SPACK_TARGET_ARGS which
         # is used by the spack compiler wrapper.  This can go away when BLT
         # removes -Werror from GTest flags
-        if self.spec.satisfies("%clang target=ppc64le:") or not self.run_tests:
+        #
+        # if self.spec.satisfies("%clang target=ppc64le:")
+        #   or (not self.run_tests and "+tests" not in spec):
+        if not self.run_tests and "+tests" not in spec:
             entries.append(cmake_cache_option("ENABLE_TESTS", False))
         else:
             entries.append(cmake_cache_option("ENABLE_TESTS", True))
+            if "+run-all-tests" not in spec:
+                if spec.satisfies("%clang@12.0.0:13.9.999"):
+                    entries.append(
+                        cmake_cache_string(
+                            "CTEST_CUSTOM_TESTS_IGNORE",
+                            "test-algorithm-sort-OpenMP.exe;test-algorithm-stable-sort-OpenMP.exe",
+                        )
+                    )
+                excluded_tests = [
+                    "test-algorithm-sort-Cuda.exe",
+                    "test-algorithm-stable-sort-Cuda.exe",
+                    "test-algorithm-sort-OpenMP.exe",
+                    "test-algorithm-stable-sort-OpenMP.exe",
+                ]
+                if spec.satisfies("+cuda %clang@12.0.0:13.9.999"):
+                    entries.append(
+                        cmake_cache_string("CTEST_CUSTOM_TESTS_IGNORE", ";".join(excluded_tests))
+                    )
+                if spec.satisfies("+cuda %xl@16.1.1.12"):
+                    entries.append(
+                        cmake_cache_string(
+                            "CTEST_CUSTOM_TESTS_IGNORE",
+                            "test-algorithm-sort-Cuda.exe;test-algorithm-stable-sort-Cuda.exe",
+                        )
+                    )
+
+        entries.append(cmake_cache_option("RAJA_HOST_CONFIG_LOADED", True))
 
         return entries
 
     def cmake_args(self):
-        options = []
-        return options
+        return []
 
     @property
     def build_relpath(self):

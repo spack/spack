@@ -81,7 +81,7 @@ spack:
   - boost +python +filesystem +iostreams +system
   - cabana
   - caliper
-  - chai ~benchmarks ~tests
+  - chai
   - charliecloud
   - conduit
   # - cp2k +mpi         # libxsmm: ftn-78 ftn: ERROR in command linel; The -f option has an invalid argument, "tree-vectorize".
