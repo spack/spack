@@ -1579,6 +1579,12 @@ depending on installation type (Professional, Build Tools, etc.)  The other requ
 "C++ CMake tools for Windows," which can be selected from among the optional packages.
 This provides CMake and Ninja for use during Spack configuration.
 
+.. Important::
+
+   Spack requires that the Windows SDK (including WGL) to be installed as part of your
+   visual studio installation
+
+
 If you already have Visual Studio installed, you can make sure these components are installed by
 rerunning the installer.  Next to your installation, select "Modify" and look at the
 "Installation details" pane on the right.

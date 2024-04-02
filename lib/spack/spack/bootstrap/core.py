@@ -559,6 +559,21 @@ def ensure_patchelf_in_path_or_raise() -> spack.util.executable.Executable:
         )
 
 
+def ensure_winsdk_or_raise() -> None:
+    """Ensure the Windows SDK + WGL are available on system"""
+    externals = spack.detection.by_path(["win-sdk", "wgl"])
+    if not externals:
+        raise RuntimeError(
+            "Unable to find the Windows SDK, please install via the Visual Studio installer\
+before proceeding with Spack or provide the path to a non standard install via\
+'spack external find --path'"
+        )
+    # wgl/sdk are not required for bootstrapping Spack, but
+    # are required for building anything non trivial
+    # add to user config so they can be used by subsequent Spack ops
+    spack.detection.update_configuration(externals, scope="user", buildable=False)
+
+
 def ensure_core_dependencies() -> None:
     """Ensure the presence of all the core dependencies."""
     if sys.platform.lower() == "linux":
