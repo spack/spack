@@ -990,16 +990,6 @@ class Llvm(CMakePackage, CudaPackage):
 
         return cmake_args
 
-    @run_after("cmake")
-    def change_makefile(self):
-        # Avoid Fujitsu compiler Clang Mode options when building LLVM
-        if self.spec.satisfies("%fj"):
-            filter_file(
-                r"-DCMAKE_C_COMPILER=",
-                "-DCMAKE_CXX_FLAGS= -DCMAKE_C_COMPILER=",
-                join_path(self.build_directory, "build.ninja"),
-            )
-
     @run_after("install")
     def post_install(self):
         spec = self.spec
