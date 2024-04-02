@@ -6,6 +6,7 @@
 
 from spack.package import *
 
+
 class Magma(CMakePackage, CudaPackage, ROCmPackage):
     """The MAGMA project aims to develop a dense linear algebra library similar
     to LAPACK but for heterogeneous/hybrid architectures, starting with
@@ -47,6 +48,8 @@ class Magma(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("cuda@8:", when="@2.5.1: +cuda")  # See PR #14471
     depends_on("hipblas", when="+rocm")
     depends_on("hipsparse", when="+rocm")
+    # This ensures that rocm-core matches the hip package version in the case that
+    # hip is an external package.
     for ver in ["5.5.0", "5.5.1", "5.6.0", "5.6.1", "5.7.0", "5.7.1", "6.0.0", "6.0.2"]:
             depends_on(f"rocm-core@{ver}", when=f"@2.8.0: +rocm ^hip@{ver}")
     depends_on("python", when="@master", type="build")
