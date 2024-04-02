@@ -469,6 +469,9 @@ def _names(when_indexed_dictionary):
 
 
 class RedistributionMixin(object):
+
+    disable_redistribute: Dict["spack.spec.Spec", spack.directives.DisableRedistribute]
+
     #: Whether it should be possible to add the source of this package to a
     #: Spack mirror. This is only false when licensing for the package
     #: implies that public mirrors should not redistribute its source code.

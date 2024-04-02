@@ -600,7 +600,7 @@ def depends_on(
     return _execute_depends_on
 
 
-DisableRedistribute = collections.namedtuple('DisableRedistribute', ['source', 'binary'])
+DisableRedistribute = collections.namedtuple("DisableRedistribute", ["source", "binary"])
 
 
 @directive("disable_redistribute")
@@ -635,12 +635,14 @@ def redistribute(source=None, binary=None, when: WhenType = None):
         when_spec = _make_when_spec(when)
         if not when_spec:
             return
-        if (source is False):
+        if source is False:
             max_constraint = spack.spec.Spec(f"{pkg.name}@{when_spec.versions}")
             if not max_constraint.satisfies(when_spec):
                 raise DirectiveError("Source distribution can only be disabled for versions")
 
-        pkg.disable_redistribute[when_spec] = DisableRedistribute(source=not source, binary=not binary)
+        pkg.disable_redistribute[when_spec] = DisableRedistribute(
+            source=not source, binary=not binary
+        )
 
     return _execute_redistribute
 
