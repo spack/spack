@@ -600,17 +600,25 @@ def depends_on(
     return _execute_depends_on
 
 
-@directive(dicts=())
+DisableRedistribute = collections.namedtuple('DisableRedistribute', ['source', 'binary'])
+
+
+@directive("disable_redistribute")
 def redistribute(source=None, binary=None, when: WhenType = None):
     """Can be used inside a Package definition to declare that
     the package source and/or compiled binaries should not be
     redistributed.
 
     By default, Packages allow source/binary distribution (i.e. in
-    mirrors).
+    mirrors). Because of this, and because overlapping enable/
+    disable specs are not allowed, this directive only allows users
+    to explicitly disable redistribution for specs.
     """
 
     def _execute_redistribute(pkg: "spack.package_base.PackageBase"):
+        nonlocal source
+        nonlocal binary
+
         if source is None and binary is None:
             return
         elif (source is True) or (binary is True):
@@ -619,26 +627,20 @@ def redistribute(source=None, binary=None, when: WhenType = None):
                 "be explicitly disabled."
             )
 
+        if source is None:
+            source = True
+        if binary is None:
+            binary = True
+
         when_spec = _make_when_spec(when)
         if not when_spec:
             return
-
-        def _default_append_or_set(obj, name, value):
-            if not hasattr(obj, name):
-                setattr(obj, name, [])
-
-            getattr(obj, name).append(value)
-
-        if (source is False) and when_spec:
+        if (source is False):
             max_constraint = spack.spec.Spec(f"{pkg.name}@{when_spec.versions}")
             if not max_constraint.satisfies(when_spec):
                 raise DirectiveError("Source distribution can only be disabled for versions")
 
-        if source is False:
-            _default_append_or_set(pkg, "skip_redistribute_source", when_spec)
-
-        if binary is False:
-            _default_append_or_set(pkg, "skip_redistribute_binary", when_spec)
+        pkg.disable_redistribute[when_spec] = DisableRedistribute(source=not source, binary=not binary)
 
     return _execute_redistribute
 

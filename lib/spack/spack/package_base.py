@@ -474,9 +474,8 @@ class RedistributionMixin(object):
     #: implies that public mirrors should not redistribute its source code.
     @classmethod
     def redistribute_source(cls, spec):
-        skip_redistribute_source = getattr(cls, "skip_redistribute_source", [])
-        for when_spec in skip_redistribute_source:
-            if spec.satisfies(when_spec):
+        for when_spec, disable_redistribute in cls.disable_redistribute.items():
+            if disable_redistribute.source and spec.satisfies(when_spec):
                 return False
 
         return True
@@ -485,9 +484,8 @@ class RedistributionMixin(object):
     #: instance of this package.
     @property
     def redistribute_binary(self):
-        skip_redistribute_binary = getattr(self, "skip_redistribute_binary", [])
-        for when_spec in skip_redistribute_binary:
-            if self.spec.satisfies(when_spec):
+        for when_spec, disable_redistribute in self.__class__.disable_redistribute.items():
+            if disable_redistribute.binary and self.spec.satisfies(when_spec):
                 return False
 
         return True
