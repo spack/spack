@@ -1472,8 +1472,10 @@ complete -c spack -n '__fish_spack_using_command_pos 0 env' -f -a deactivate -d 
 complete -c spack -n '__fish_spack_using_command_pos 0 env' -f -a create -d 'create a new environment'
 complete -c spack -n '__fish_spack_using_command_pos 0 env' -f -a remove -d 'remove an existing environment'
 complete -c spack -n '__fish_spack_using_command_pos 0 env' -f -a rm -d 'remove an existing environment'
-complete -c spack -n '__fish_spack_using_command_pos 0 env' -f -a list -d 'list available environments'
-complete -c spack -n '__fish_spack_using_command_pos 0 env' -f -a ls -d 'list available environments'
+complete -c spack -n '__fish_spack_using_command_pos 0 env' -f -a rename -d 'rename an existing environment'
+complete -c spack -n '__fish_spack_using_command_pos 0 env' -f -a mv -d 'rename an existing environment'
+complete -c spack -n '__fish_spack_using_command_pos 0 env' -f -a list -d 'list managed environments'
+complete -c spack -n '__fish_spack_using_command_pos 0 env' -f -a ls -d 'list managed environments'
 complete -c spack -n '__fish_spack_using_command_pos 0 env' -f -a status -d 'print whether there is an active environment'
 complete -c spack -n '__fish_spack_using_command_pos 0 env' -f -a st -d 'print whether there is an active environment'
 complete -c spack -n '__fish_spack_using_command_pos 0 env' -f -a loads -d 'list modules for an installed environment \'(see spack module loads)\''
@@ -1560,6 +1562,26 @@ complete -c spack -n '__fish_spack_using_command env rm' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command env rm' -s h -l help -d 'show this help message and exit'
 complete -c spack -n '__fish_spack_using_command env rm' -s y -l yes-to-all -f -a yes_to_all
 complete -c spack -n '__fish_spack_using_command env rm' -s y -l yes-to-all -d 'assume "yes" is the answer to every confirmation request'
+
+# spack env rename
+set -g __fish_spack_optspecs_spack_env_rename h/help d/dir f/force
+
+complete -c spack -n '__fish_spack_using_command env rename' -s h -l help -f -a help
+complete -c spack -n '__fish_spack_using_command env rename' -s h -l help -d 'show this help message and exit'
+complete -c spack -n '__fish_spack_using_command env rename' -s d -l dir -f -a dir
+complete -c spack -n '__fish_spack_using_command env rename' -s d -l dir -d 'the specified arguments correspond to directory paths'
+complete -c spack -n '__fish_spack_using_command env rename' -s f -l force -f -a force
+complete -c spack -n '__fish_spack_using_command env rename' -s f -l force -d 'allow overwriting of an existing environment'
+
+# spack env mv
+set -g __fish_spack_optspecs_spack_env_mv h/help d/dir f/force
+
+complete -c spack -n '__fish_spack_using_command env mv' -s h -l help -f -a help
+complete -c spack -n '__fish_spack_using_command env mv' -s h -l help -d 'show this help message and exit'
+complete -c spack -n '__fish_spack_using_command env mv' -s d -l dir -f -a dir
+complete -c spack -n '__fish_spack_using_command env mv' -s d -l dir -d 'the specified arguments correspond to directory paths'
+complete -c spack -n '__fish_spack_using_command env mv' -s f -l force -f -a force
+complete -c spack -n '__fish_spack_using_command env mv' -s f -l force -d 'allow overwriting of an existing environment'
 
 # spack env list
 set -g __fish_spack_optspecs_spack_env_list h/help
@@ -2069,7 +2091,7 @@ complete -c spack -n '__fish_spack_using_command list' -l update -r -f -a update
 complete -c spack -n '__fish_spack_using_command list' -l update -r -d 'write output to the specified file, if any package is newer'
 
 # spack load
-set -g __fish_spack_optspecs_spack_load h/help sh csh fish bat pwsh first only= list
+set -g __fish_spack_optspecs_spack_load h/help sh csh fish bat pwsh first list
 complete -c spack -n '__fish_spack_using_command_pos_remainder 0 load' -f -a '(__fish_spack_installed_specs)'
 complete -c spack -n '__fish_spack_using_command load' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command load' -s h -l help -d 'show this help message and exit'
@@ -2085,8 +2107,6 @@ complete -c spack -n '__fish_spack_using_command load' -l pwsh -f -a shell
 complete -c spack -n '__fish_spack_using_command load' -l pwsh -d 'print pwsh commands to load the package'
 complete -c spack -n '__fish_spack_using_command load' -l first -f -a load_first
 complete -c spack -n '__fish_spack_using_command load' -l first -d 'load the first match if multiple packages match the spec'
-complete -c spack -n '__fish_spack_using_command load' -l only -r -f -a 'package dependencies'
-complete -c spack -n '__fish_spack_using_command load' -l only -r -d 'select whether to load the package and its dependencies'
 complete -c spack -n '__fish_spack_using_command load' -l list -f -a list
 complete -c spack -n '__fish_spack_using_command load' -l list -d 'show loaded packages: same as `spack find --loaded`'
 
