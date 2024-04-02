@@ -14,7 +14,7 @@ from llnl.util.filesystem import HeaderList, LibraryList, find_libraries, join_p
 from llnl.util.link_tree import LinkTree
 
 from spack.build_environment import dso_suffix
-from spack.directives import conflicts, variant
+from spack.directives import conflicts, license, variant
 from spack.package_base import InstallError
 from spack.util.environment import EnvironmentModifications
 from spack.util.executable import Executable
@@ -26,6 +26,7 @@ class IntelOneApiPackage(Package):
     """Base class for Intel oneAPI packages."""
 
     homepage = "https://software.intel.com/oneapi"
+    license("https://intel.ly/393CijO")
 
     # oneAPI license does not allow mirroring outside of the
     # organization (e.g. University/Company).
