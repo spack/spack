@@ -1924,6 +1924,7 @@ def reproduce_ci_job(url, work_dir, autostart, gpg_url, runtime):
                 f"share/spack/setup-env.{platform_script_ext}",
             ),
         ],
+        # TODO johnwparent does this work on Windows at all??
         ["spack", "gpg", "trust", mounted_gpg_path if job_image else gpg_path] if gpg_path else [],
         ["spack", "env", "activate", mounted_env_dir if job_image else repro_dir],
         [
