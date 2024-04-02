@@ -18,17 +18,22 @@ class PyGeopmdpy(PythonPackage):
     license("BSD-3-Clause")
     tags = ["e4s"]
 
-    version(
-        "3.0.1",
-        sha256="ebdfa9b77fa92d3f411bfb1c94938039738d453b2441029b8ce44852115a8f73",
-        url="https://pypi.org/packages/6f/80/aaef19f83ff6aa4fb80e418b131a77161d988e63983db73ab920f9ef8710/geopmdpy-3.0.1-py3-none-any.whl",
-    )
+    version("develop", branch="dev")
+    version("3.0.1", sha256="32ba1948de58815ee055470dcdea64593d1113a6cad70ce00ab0286c127f8234")
 
-    with default_args(type="run"):
-        depends_on("py-cffi@1.14.5:", when="@3:")
-        depends_on("py-dasbus@1.6:")
-        depends_on("py-jsonschema@3.2:")
-        depends_on("py-psutil@5.8:", when="@3:")
-        depends_on("py-setuptools@53:", when="@3:")
+    depends_on("py-dasbus@1.6.0:", type=("build", "run"))
+    depends_on("py-cffi@1.14.5:", type="run")
+    depends_on("py-psutil@5.8.0:", type="run")
+    depends_on("py-jsonschema@3.2.0:", type="run")
+    depends_on("py-pyyaml@6.0:", type="run")
+    depends_on("py-setuptools@53.0.0:", type="build")
 
     build_directory = "service"
+
+    @run_before("install")
+    def populate_version(self):
+        # @develop builds will have a version of 0.0.0
+        if not self.spec.version.isdevelop():
+            with working_dir(join_path("service", "geopmdpy")):
+                with open("version.py", "w") as fd:
+                    fd.write(f"__version__ = '{self.spec.version}'")
