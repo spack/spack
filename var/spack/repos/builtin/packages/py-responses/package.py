@@ -16,10 +16,13 @@ class PyResponses(PythonPackage):
 
     license("Apache-2.0")
 
-    version("0.13.3", sha256="18a5b88eb24143adbf2b4100f328a2f5bfa72fbdacf12d97d41f07c26c45553d")
+    version(
+        "0.13.3",
+        sha256="b54067596f331786f5ed094ff21e8d79e6a1c68ef625180a7d34808d6f36c11b",
+        url="https://pypi.org/packages/ba/00/0e63b7024c2d873bf57411ab0ed77eeafd5f44bace7cbf1d56bca8ab3be2/responses-0.13.3-py2.py3-none-any.whl",
+    )
 
-    depends_on("python@2.7:2.8,3.5:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
-    depends_on("py-requests@2.0:", type=("build", "run"))
-    depends_on("py-urllib3@1.25.10:", type=("build", "run"))
-    depends_on("py-six", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-requests@2:", when="@:0.17")
+        depends_on("py-six", when="@:0.17")
+        depends_on("py-urllib3@1.25.10:", when="@0.10.16:0.23.1")

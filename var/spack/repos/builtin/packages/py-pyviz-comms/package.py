@@ -14,7 +14,11 @@ class PyPyvizComms(PythonPackage):
 
     license("BSD-3-Clause")
 
-    version("2.2.1", sha256="a26145b8ce43d2d934b3c6826d77b913ce105c528eb2e494c890b3e3525ddf33")
+    version(
+        "2.2.1",
+        sha256="aba28430cf28b39f2605acb48f7fddf0e3025394a8286adfeb40d74b0ae0f4f9",
+        url="https://pypi.org/packages/2f/78/72bec6805be44a11dc80e949752fcaacc21661c3423e26623263d19a73d1/pyviz_comms-2.2.1-py2.py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools@40.8:60", type="build")
-    depends_on("py-param", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-param")

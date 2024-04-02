@@ -14,15 +14,23 @@ class PySkl2onnx(PythonPackage):
 
     license("Apache-2.0")
 
-    version("1.12", sha256="15f4a07b97f7c5bf11b7353b8cb75c9f8c161485deb198cb49cc61a9d507c29c")
-    version("1.10.3", sha256="798933378145412b9876ab3ff2c1dd5f241a7296406d786262000afa8d329628")
+    version(
+        "1.12",
+        sha256="2b91a1c5051f50a96634189b46fb4184729f858b6dfeda30231e6eea48be99e3",
+        url="https://pypi.org/packages/d3/57/62e51efc91606aa447a1aaa54dc31b5028afd564ff7a750f1efc90b582cd/skl2onnx-1.12-py2.py3-none-any.whl",
+    )
+    version(
+        "1.10.3",
+        sha256="908bccb2974b6ef852878b28a2a5e65cfe59c7572ea285aee46c64a4b6d2728a",
+        url="https://pypi.org/packages/86/2d/055c27bdbcfe8fca11ba901e9161349f608c70173632f8241914d56ed20f/skl2onnx-1.10.3-py2.py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-numpy@1.15:", type=("build", "run"))
-    depends_on("py-scipy@1.0:", type=("build", "run"))
-    depends_on("py-protobuf", type=("build", "run"))
-    depends_on("py-onnx@1.2.1:", type=("build", "run"))
-    depends_on("py-scikit-learn@0.19:1.1.1", type=("build", "run"))
-    depends_on("py-onnxconverter-common@1.7.0:", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-numpy@1.15.0:", when="@1.7:1.13")
+        depends_on("py-onnx@1.2:", when="@1.7:")
+        depends_on("py-onnxconverter-common@1.7:", when="@1.9.3:")
+        depends_on("py-protobuf", when="@1.7:1.13")
+        depends_on("py-scikit-learn@0.19.0:", when="@1.7:1.13,1.15:")
+        depends_on("py-scipy@1.0.0:", when="@1.7:1.13")
+
     # Although this dep is undocumented, it's imported at run-time.
-    depends_on("py-packaging", when="@1.12:", type=("build", "run"))

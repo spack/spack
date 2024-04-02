@@ -16,6 +16,8 @@ class PyThrottler(PythonPackage):
 
     license("MIT")
 
-    version("1.2.2", sha256="d54db406d98e1b54d18a9ba2b31ab9f093ac64a0a59d730c1cf7bb1cdfc94a58")
-
-    depends_on("py-setuptools", type="build")
+    version(
+        "1.2.2",
+        sha256="fc6ae612a2529e01110b32335af40375258b98e3b81232ec77cd07f51bf71392",
+        url="https://pypi.org/packages/df/d4/36bf6010b184286000b2334622bfb3446a40c22c1d2a9776bff025cb0fe5/throttler-1.2.2-py3-none-any.whl",
+    )

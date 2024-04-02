@@ -16,18 +16,21 @@ class PyDaskMpi(PythonPackage):
 
     license("BSD-3-Clause")
 
-    version("2022.4.0", sha256="0a04f1d7d35a06cdff506593330d4414ea242c9172498ce191f5742eac499e17")
-    version("2.21.0", sha256="76e153fc8c58047d898970b33ede0ab1990bd4e69cc130c6627a96f11b12a1a7")
-    version("2.0.0", sha256="774cd2d69e5f7154e1fa133c22498062edd31507ffa2ea19f4ab4d8975c27bc3")
-
-    depends_on("py-setuptools", type="build")
-
-    depends_on("py-dask@2.2:", when="@:2.21.0", type=("build", "run"))
-    depends_on("py-dask@2.19:", when="@2022.4.0:", type=("build", "run"))
-    depends_on("py-distributed@2.19:", when="@2022.4.0:", type=("build", "run"))
-    depends_on("py-mpi4py", type=("build", "run"))
-    depends_on("py-mpi4py@3.0.3:", when="@2022.4.0:", type=("build", "run"))
+    version(
+        "2022.4.0",
+        sha256="fa3a76512291ce22923c83085cc3d9b115aaa5a325a607d505754d3d7c5879b2",
+        url="https://pypi.org/packages/25/a5/195604b42f504aa9b133d28114ad8a3fd503acd1c36acaff2dd3b1d9568b/dask_mpi-2022.4.0-py3-none-any.whl",
+    )
+    version(
+        "2.21.0",
+        sha256="80d787952eb4117c2072515d0991fbe82277920d0cef2c1c3f5039290626275a",
+        url="https://pypi.org/packages/84/d6/e0338667a37cff9d665df4803a3f9c31f5d938dd79f4093cb6e07141744d/dask_mpi-2.21.0-py3-none-any.whl",
+    )
+    version(
+        "2.0.0",
+        sha256="89d776eec1886d424eb62aaa979e54551891a96420e180a74dd35be0ff021579",
+        url="https://pypi.org/packages/f2/09/777bfd5484bdcf29839608c10d98124d9c1ded74fe63200218888182c7cb/dask_mpi-2.0.0-py3-none-any.whl",
+    )
 
     # jupyter-server-proxy is not a needed dependency; https://github.com/dask/dask-mpi/pull/102
     # this significantly reduces the dependency tree of py-dask-mpi
-    patch("remove-dependency-jupyter-proxy.patch", when="@:2022.4.0")

@@ -15,9 +15,11 @@ class PyXyzservices(PythonPackage):
 
     license("BSD-3-Clause")
 
-    version("2023.10.1", sha256="091229269043bc8258042edbedad4fcb44684b0473ede027b5672ad40dc9fa02")
+    version(
+        "2023.10.1",
+        sha256="6a4c38d3a9f89d3e77153eff9414b36a8ee0850c9e8b85796fd1b2a85b8dfd68",
+        url="https://pypi.org/packages/82/c3/e06dfa46464cce3eda4b86df8847cab99d9bc545c76807ee689545187a4c/xyzservices-2023.10.1-py3-none-any.whl",
+    )
 
-    depends_on("python@3.8:", type=("build", "run"))
-
-    depends_on("py-setuptools", type="build")
-    depends_on("py-setuptools-scm", type="build")
+    with default_args(type="run"):
+        depends_on("python@3.8:", when="@2023.5:")

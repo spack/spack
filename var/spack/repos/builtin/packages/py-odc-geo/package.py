@@ -14,12 +14,16 @@ class PyOdcGeo(PythonPackage):
 
     license("Apache-2.0")
 
-    version("0.1.2", sha256="c5ec3c66a326b138df5a28aa639b1c2c3c644093af463948255219bdc2513408")
+    version(
+        "0.1.2",
+        sha256="6f1d5bfb030ea9c1f21e16a8b5b3b1cb68b4d25f5e714fda767317b2bff69f97",
+        url="https://pypi.org/packages/db/a8/136de018114e21fa7b78272e9d9ed80c30a1abac9351fa2ce99e1aa5e778/odc_geo-0.1.2-py3-none-any.whl",
+    )
 
-    depends_on("python@3.8:", type=("build", "run"))
-    depends_on("py-setuptools@51:", type="build")
-    depends_on("py-affine", type=("build", "run"))
-    depends_on("py-cachetools", type=("build", "run"))
-    depends_on("py-numpy", type=("build", "run"))
-    depends_on("py-pyproj", type=("build", "run"))
-    depends_on("py-shapely", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("python@3.8:", when="@0.1.1-alpha1:")
+        depends_on("py-affine")
+        depends_on("py-cachetools")
+        depends_on("py-numpy")
+        depends_on("py-pyproj", when="@:0.3.0")
+        depends_on("py-shapely")

@@ -14,12 +14,15 @@ class PySnoop(PythonPackage):
 
     license("MIT", checked_by="jmlapre")
 
-    version("0.4.3", sha256="2e0930bb19ff0dbdaa6f5933f88e89ed5984210ea9f9de0e1d8231fa5c1c1f25")
+    version(
+        "0.4.3",
+        sha256="b7418581889ff78b29d9dc5ad4625c4c475c74755fb5cba82c693c6e32afadc0",
+        url="https://pypi.org/packages/10/b4/5eb395a7c44f382f42cc4ce2d544223c0506e06c61534f45a2188b8fdf13/snoop-0.4.3-py2.py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-setuptools-scm+toml", type="build")
-    depends_on("py-six", type=("build", "run"))
-    depends_on("py-cheap-repr@0.4.0:", type=("build", "run"))
-    depends_on("py-executing", type=("build", "run"))
-    depends_on("py-asttokens", type=("build", "run"))
-    depends_on("py-pygments", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-asttokens", when="@0.4.1:")
+        depends_on("py-cheap-repr@0.4:", when="@0.4.1:")
+        depends_on("py-executing", when="@0.4.1:")
+        depends_on("py-pygments", when="@0.4.1:")
+        depends_on("py-six", when="@0.4.1:")

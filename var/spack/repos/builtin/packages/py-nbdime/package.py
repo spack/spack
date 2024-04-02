@@ -12,19 +12,21 @@ class PyNbdime(PythonPackage):
     homepage = "https://nbdime.readthedocs.io/"
     pypi = "nbdime/nbdime-3.1.1.tar.gz"
 
-    version("3.1.1", sha256="67767320e971374f701a175aa59abd3a554723039d39fae908e72d16330d648b")
+    version(
+        "3.1.1",
+        sha256="ea4ddf919e3035800ef8bd5552b814522207cb154ca7512565e4539a54c74dbf",
+        url="https://pypi.org/packages/49/e2/aae3b46d8aa9994470454bfacb1c780196c1f53662656f32073ad90307a7/nbdime-3.1.1-py2.py3-none-any.whl",
+    )
 
-    depends_on("python@3.6:", type=("build", "run"))
-    depends_on("py-setuptools@40.8.0:", type="build")
-    depends_on("py-nbformat", type=("build", "run"))
-    depends_on("py-colorama", type=("build", "run"))
-    depends_on("py-pygments", type=("build", "run"))
-    depends_on("py-tornado", type=("build", "run"))
-    depends_on("py-requests", type=("build", "run"))
-    depends_on("py-gitpython@:2.1.3,2.1.7:", type=("build", "run"))
-    depends_on("py-jupyter-server", type=("build", "run"))
-    depends_on("py-jupyter-server-mathjax@0.2.2:", type=("build", "run"))
-    depends_on("py-jinja2@2.9:", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-colorama")
+        depends_on("py-gitpython@:2.1.3,2.1.7:")
+        depends_on("py-jinja2@2.9:")
+        depends_on("py-jupyter-server", when="@3:")
+        depends_on("py-jupyter-server-mathjax@0.2.2:", when="@3.0.0:3,4.0.0-alpha1:")
+        depends_on("py-nbformat")
+        depends_on("py-pygments")
+        depends_on("py-requests")
+        depends_on("py-tornado")
+
     # From pyproject.toml
-    depends_on("py-jupyterlab@3.0:3", type=("build", "run"))
-    depends_on("py-wheel", type="build")

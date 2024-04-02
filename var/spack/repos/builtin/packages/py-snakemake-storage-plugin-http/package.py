@@ -15,13 +15,15 @@ class PySnakemakeStoragePluginHttp(PythonPackage):
 
     license("MIT")
 
-    version("0.2.3", sha256="e4944a7c134e98515d9473c867c4ce071e3b625a5a9002a00da6ac917bc0c0ad")
+    version(
+        "0.2.3",
+        sha256="04f090a79e0ce61fe3e0871d58306a4d133554ed7a7c5514f58b622afd636a90",
+        url="https://pypi.org/packages/1d/7f/0c6de70886eaf9e83076d782ae4d8d86343b792101209c97918f25610297/snakemake_storage_plugin_http-0.2.3-py3-none-any.whl",
+    )
 
-    depends_on("py-requests@2.31:2", type=("build", "run"))
-    depends_on("py-requests-oauthlib@1.3.1:1", type=("build", "run"))
-
-    depends_on("py-snakemake-interface-common@1.14:1", type=("build", "run"))
-    depends_on("py-snakemake-interface-storage-plugins@3", type=("build", "run"))
-
-    depends_on("python@3.11:3", type=("build", "run"))
-    depends_on("py-poetry-core", type="build")
+    with default_args(type="run"):
+        depends_on("python@3.11:3", when="@0.2.2:")
+        depends_on("py-requests@2.31:")
+        depends_on("py-requests-oauthlib@1.3.1:1")
+        depends_on("py-snakemake-interface-common@1.14:", when="@0.2.2:")
+        depends_on("py-snakemake-interface-storage-plugins@3:", when="@0.2.2:")

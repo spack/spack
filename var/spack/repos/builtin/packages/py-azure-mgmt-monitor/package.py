@@ -13,10 +13,18 @@ class PyAzureMgmtMonitor(PythonPackage):
     homepage = "https://github.com/Azure/azure-sdk-for-python"
     pypi = "azure-mgmt-monitor/azure-mgmt-monitor-0.11.0.zip"
 
-    version("0.11.0", sha256="c6e1fe83dd2ddffa7f6d90c7aa63b3128042396a3893c14dc4816ad28cb15016")
-    version("0.10.0", sha256="d57d604cc1a7a9ce35eb7cf8a00d4924887c688aa78dc035ea1f80066b297464")
+    version(
+        "0.11.0",
+        sha256="91a8dc65c561abb0d1526a584763128adebc1ba9ccb1fbf7e91ab57e772a40d8",
+        url="https://pypi.org/packages/ec/5e/a8904655a08522367ba1e4a08db9c3b998875641281d9f31bfb4041a6048/azure_mgmt_monitor-0.11.0-py2.py3-none-any.whl",
+    )
+    version(
+        "0.10.0",
+        sha256="3b2a19d712884f20f2b1af88fbd8a28b063b63613642076e605b5622c58f3466",
+        url="https://pypi.org/packages/0c/21/14ade188b3a49aa01d024d002dc190197206d85b1be97e51f978ef318f06/azure_mgmt_monitor-0.10.0-py2.py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-msrest@0.5.0:", type=("build", "run"))
-    depends_on("py-msrestazure@0.4.32:1", type=("build", "run"))
-    depends_on("py-azure-common@1.1:1", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-azure-common@1.1:", when="@0.5:")
+        depends_on("py-msrest@0.5:", when="@0.6:2")
+        depends_on("py-msrestazure@0.4.32:", when="@0.6:0")

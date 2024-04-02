@@ -17,11 +17,22 @@ class PyH5glance(PythonPackage):
 
     license("BSD-3-Clause")
 
-    version("0.6", sha256="203369ab614273aaad3419f151e234609bb8390b201b65f678d7e17c57633e35")
-    version("0.5", sha256="bc34ee42429f0440b329083e3f67fbf3d7016a4aed9e8b30911e5905217bc8d9")
-    version("0.4", sha256="03babaee0d481991062842796126bc9e6b11e2e6e7daba57c26f2b58bf3bbd32")
+    version(
+        "0.6",
+        sha256="ddb5a71604c06619dca1d895603fda2057c999376751e48f52c3ec4b1721e829",
+        url="https://pypi.org/packages/fe/71/c5acb6ec531ebf431ae6f2fd34e17b729ddbe9a7d5038ac88a5175f88f34/h5glance-0.6-py3-none-any.whl",
+    )
+    version(
+        "0.5",
+        sha256="3b4bc11cb8c0b3316cf16c888d094ccda6a69a2e9dcbcebb898cce07db42c473",
+        url="https://pypi.org/packages/e2/7f/f3d2a4477d14ff082c328d534b047dbad399af028c33819683594e61c59e/h5glance-0.5-py3-none-any.whl",
+    )
+    version(
+        "0.4",
+        sha256="e4c06ca1ed3ba3aed44ba8f5b3e00fc70425988a1da0cccb62de5d1b8f11813a",
+        url="https://pypi.org/packages/f6/a8/3ee16ab4e4f9ad6989c1502408885b128ecb2e750f5156c607f3720303ab/h5glance-0.4-py3-none-any.whl",
+    )
 
-    depends_on("python@3.5:", type=("build", "run"))
-    depends_on("py-flit", type="build")
-    depends_on("py-h5py", type=("build", "run"))
-    depends_on("py-htmlgen", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-h5py", when="@:0.6")
+        depends_on("py-htmlgen")

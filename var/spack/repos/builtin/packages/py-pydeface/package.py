@@ -15,10 +15,14 @@ class PyPydeface(PythonPackage):
 
     license("MIT")
 
-    version("2.0.2", sha256="662263072ccccff9929432568caf5c183075f7fbf8f9d5c170767c3202c78f36")
+    version(
+        "2.0.2",
+        sha256="beb838c4246b8c5798fdc3a331f3064d4aac1bcd1ac9c26b991c9f28207d059e",
+        url="https://pypi.org/packages/81/78/257fe9f0715883bbecc2a68e3d965272956c292d0981d717665da69f4efd/pydeface-2.0.2-py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type=("build", "run"))
-
-    depends_on("py-numpy", type=("build", "run"))
-    depends_on("py-nibabel", type=("build", "run"))
-    depends_on("py-nipype", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-nibabel", when="@2.0.2:")
+        depends_on("py-nipype", when="@2.0.2:")
+        depends_on("py-numpy", when="@2.0.2:")
+        depends_on("py-setuptools", when="@2.0.2:")

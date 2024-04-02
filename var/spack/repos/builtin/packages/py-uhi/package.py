@@ -15,15 +15,27 @@ class PyUhi(PythonPackage):
 
     license("BSD-3-Clause")
 
-    version("0.3.3", sha256="800caf3a5f1273b08bcc3bb4b49228fe003942e23423812b0110546aad9a24be")
-    version("0.3.2", sha256="fd6ed2ae8ce68ba6be37b872de86e7775b45d54f858768c8fdaba162b6452ab2")
-    version("0.3.1", sha256="6f1ebcadd1d0628337a30b012184325618047abc01c3539538b1655c69101d91")
-    version("0.3.0", sha256="3f441bfa89fae11aa762ae1ef1b1b454362d228e9084477773ffb82d6e9f5d2c")
+    version(
+        "0.3.3",
+        sha256="4805a4194550310ee2a58aa8c777e6ab80f8896c96469d7c16fd2436aef4c9c3",
+        url="https://pypi.org/packages/70/e7/599c0589e0fcb3f330ea6cc13b3fde9d3f0a65fe939f9b5634c50dde6349/uhi-0.3.3-py3-none-any.whl",
+    )
+    version(
+        "0.3.2",
+        sha256="427d7d54f1ac072a52f3b476457732ecd3767da00b2a8b6fdc38dd6820db107e",
+        url="https://pypi.org/packages/ad/36/fbc93bc03270b16fd80d7e870fb459289aaaa6b1077bc8cd12836b4b751f/uhi-0.3.2-py3-none-any.whl",
+    )
+    version(
+        "0.3.1",
+        sha256="5c2f7ceceacd349f906104a7776859812e0926936273667eadf56762133d6d5e",
+        url="https://pypi.org/packages/67/03/b2731129bba0ed39f3dbb5e5cea557491efb82f34cf2d7a9fbaee2be4a83/uhi-0.3.1-py3-none-any.whl",
+    )
+    version(
+        "0.3.0",
+        sha256="20fe823e7e34f8f0a5a223ba3c22c164b43cb8fc2b2f9b4ed2e2cd6fceea583e",
+        url="https://pypi.org/packages/94/af/227bc7260a770fafe939e9c663ae348f6869f2964e58b1065cf9c312046b/uhi-0.3.0-py3-none-any.whl",
+    )
 
-    depends_on("python@3.6:", type=("build", "run"))
-    depends_on("py-numpy@1.13.3:", type=("build", "run"))
-    depends_on("py-typing-extensions@3.7:", type=("build", "run"), when="^python@:3.7")
-    depends_on("py-hatchling", when="@0.3.2:", type="build")
-    depends_on("py-hatch-vcs", when="@0.3.3:", type="build")
-    depends_on("py-flit-core@3.2:", when="@0.3.1", type="build")
-    depends_on("py-poetry-core@1:", when="@:0.3.0", type="build")
+    with default_args(type="run"):
+        depends_on("py-numpy@1.13.3:", when="@0.2:")
+        depends_on("py-typing-extensions@3.7:", when="@0.1.2: ^python@:3.7")

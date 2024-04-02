@@ -16,12 +16,27 @@ class PyPythonUtils(PythonPackage):
 
     license("BSD-3-Clause")
 
-    version("3.5.2", sha256="68198854fc276bc4b2403b261703c218e01ef564dcb072a7096ed9ea7aa5130c")
-    version("2.7.1", sha256="88595bfa054975534a2f813b6c8deb96b44f3b6fad00a927fd062fe65550fadf")
-    version("2.4.0", sha256="f21fc09ff58ea5ebd1fd2e8ef7f63e39d456336900f26bdc9334a03a3f7d8089")
-    version("2.3.0", sha256="34aaf26b39b0b86628008f2ae0ac001b30e7986a8d303b61e1357dfcdad4f6d3")
+    version(
+        "3.5.2",
+        sha256="8bfefc3430f1c48408fa0e5958eee51d39840a5a987c2181a579e99ab6fe5ca6",
+        url="https://pypi.org/packages/79/80/4276fba30da6ed26165b67093ce4a2ca78b701a55920d39e59cc82ee9639/python_utils-3.5.2-py2.py3-none-any.whl",
+    )
+    version(
+        "2.7.1",
+        sha256="9d535eda3fd4c0cd51f459bb9cfddd983a50f5adfacb0995504d12bf0c2981cb",
+        url="https://pypi.org/packages/0a/c2/962e0ec22173309d8914733dc78cf8a689fe2ae612938ec64c26d0f29ac6/python_utils-2.7.1-py2.py3-none-any.whl",
+    )
+    version(
+        "2.4.0",
+        sha256="ebaadab29d0cb9dca0a82eab9c405f5be5125dbbff35b8f32cc433fa498dbaa7",
+        url="https://pypi.org/packages/d9/ff/623dfa533f3277199957229f053fdb2c73a9c18048680e1899c9a5c95e6b/python_utils-2.4.0-py2.py3-none-any.whl",
+    )
+    version(
+        "2.3.0",
+        sha256="e25f840564554eaded56eaa395bca507b0b9e9f0ae5ecb13a8cb785305c56d25",
+        url="https://pypi.org/packages/eb/a0/19119d8b7c05be49baf6c593f11c432d571b70d805f2fe94c0585e55e4c8/python_utils-2.3.0-py2.py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-six", when="@:2.7.1", type=("build", "run"))
-
-    depends_on("py-typing-extensions", when="@3.5.2 ^python@:3.7", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-six", when="@2.6:2")
+        depends_on("py-typing-extensions", when="@3.5 ^python@:3.7")

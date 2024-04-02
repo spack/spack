@@ -12,9 +12,8 @@ class PyTraceback2(PythonPackage):
     homepage = "https://github.com/testing-cabal/traceback2"
     pypi = "traceback2/traceback2-1.4.0.tar.gz"
 
-    version("1.4.0", sha256="05acc67a09980c2ecfedd3423f7ae0104839eccb55fc645773e1caa0951c3030")
-
-    depends_on("py-setuptools", type="build")
-    depends_on("py-pbr", type="build")
-    depends_on("py-six", type=("build", "run"))
-    depends_on("py-linecache2", type=("build", "run"))
+    version(
+        "1.4.0",
+        sha256="8253cebec4b19094d67cc5ed5af99bf1dba1285292226e98a31929f87a5d6b23",
+        url="https://pypi.org/packages/17/0a/6ac05a3723017a967193456a2efa0aa9ac4b51456891af1e2353bb9de21e/traceback2-1.4.0-py2.py3-none-any.whl",
+    )

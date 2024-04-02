@@ -16,14 +16,17 @@ class PyContextily(PythonPackage):
 
     license("BSD-3-Clause")
 
-    version("1.0.1", sha256="f7dc25dbc8e01163be6cdeedb49a56da9cd0d586c838861f442ef2ee45eba9d4")
+    version(
+        "1.0.1",
+        sha256="945b31a3fab38a31f06379cefa6d625d02ac56610c3a4dedd5b5b7dc82a8cb7a",
+        url="https://pypi.org/packages/93/2a/22b34b6129303c594c21cb80ded800ebd6d13037f00d162d9b3a3785d5ea/contextily-1.0.1-py3-none-any.whl",
+    )
 
-    depends_on("python@3.6:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
-    depends_on("py-geopy", type=("build", "run"))
-    depends_on("py-matplotlib", type=("build", "run"))
-    depends_on("py-mercantile", type=("build", "run"))
-    depends_on("pil", type=("build", "run"))
-    depends_on("py-rasterio", type=("build", "run"))
-    depends_on("py-requests", type=("build", "run"))
-    depends_on("py-joblib", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-geopy", when="@1:")
+        depends_on("py-joblib", when="@1.0-rc2:")
+        depends_on("py-matplotlib", when="@1.0-rc2:")
+        depends_on("py-mercantile", when="@1:")
+        depends_on("py-pillow", when="@1:")
+        depends_on("py-rasterio", when="@1:")
+        depends_on("py-requests", when="@1:")

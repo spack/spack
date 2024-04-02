@@ -18,8 +18,13 @@ class PyStompPy(PythonPackage):
 
     license("Apache-2.0")
 
-    version("8.0.0", sha256="7085935293bfcc4a112a9830513275b2e0f3b040c5aad5ff8907e78f285b8b57")
+    version(
+        "8.0.0",
+        sha256="7e4d8d864ecd608f306d238ba951bd76e30bbfb2a4ba0b804b0333de6d75dfc4",
+        url="https://pypi.org/packages/8e/2e/5ebcdfbf76c5aee13fdff1b3903706e2c5181296b845644c5c116ebeedb7/stomp.py-8.0.0-py3-none-any.whl",
+    )
 
-    depends_on("python@3.6.3:", type=("build", "run"))
-    depends_on("py-poetry@0.12:", type="build")
-    depends_on("py-docopt@0.6.2:0", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("python@:3", when="@6:")
+        depends_on("py-docopt@0.6.2:", when="@6:")
+        depends_on("py-pyopenssl@20.0.1:20", when="@8:8.0.0")

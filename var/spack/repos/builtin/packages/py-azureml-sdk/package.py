@@ -15,15 +15,18 @@ class PyAzuremlSdk(PythonPackage):
 
     maintainers("adamjstewart")
 
-    version("1.23.0", sha256="b9520f426831acb99fafa1ecd154b6bfd4f73fbf71e918d819f9db4a75438ab9")
+    version(
+        "1.23.0",
+        sha256="b9520f426831acb99fafa1ecd154b6bfd4f73fbf71e918d819f9db4a75438ab9",
+        url="https://pypi.org/packages/e0/df/1ac487437507e59216c904aa9d1dbdbcaddd724e3248cb708987de9c482a/azureml_sdk-1.23.0-py3-none-any.whl",
+    )
+
+    with default_args(type="run"):
+        depends_on("python@:3", when="@:1.25")
+        depends_on("py-azureml-core@1.23", when="@1.23")
+        depends_on("py-azureml-dataset-runtime@1.23+fuse", when="@1.23")
+        depends_on("py-azureml-pipeline@1.23", when="@1.23")
+        depends_on("py-azureml-train@1.23", when="@1.23")
+        depends_on("py-azureml-train-automl-client@1.23", when="@1.23")
 
     # https://github.com/Azure/MachineLearningNotebooks/issues/1285
-    depends_on("python@3.5:3.8", type=("build", "run"))
-
-    depends_on("py-azureml-core@1.23.0:1.23", when="@1.23.0", type=("build", "run"))
-    depends_on(
-        "py-azureml-dataset-runtime@1.23.0:1.23 +fuse", when="@1.23.0", type=("build", "run")
-    )
-    depends_on("py-azureml-train@1.23.0:1.23", when="@1.23.0", type=("build", "run"))
-    depends_on("py-azureml-train-automl-client@1.23.0:1.23", when="@1.23.0", type=("build", "run"))
-    depends_on("py-azureml-pipeline@1.23.0:1.23", when="@1.23.0", type=("build", "run"))

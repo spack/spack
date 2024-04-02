@@ -14,8 +14,12 @@ class PyNpx(PythonPackage):
 
     license("BSD-3-Clause")
 
-    version("0.1.0", sha256="3edec9508326b6724d7c176dbcba2098508788241b8a671aab583d0c72b2f05b")
+    version(
+        "0.1.0",
+        sha256="5e07deadbf43096d8e1ec63dcd51b34e8d638e8e7e4a95d465e143e5701a0308",
+        url="https://pypi.org/packages/4b/c8/4d8f80bf78c38268274b29c45a1a99ade4ade02b4d8c444ddbcc5fbaf1dd/npx-0.1.0-py3-none-any.whl",
+    )
 
-    depends_on("python@3.7:", type=("build", "run"))
-    depends_on("py-flit-core@3.2:3", type="build")
-    depends_on("py-numpy@1.20.0:", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("python@3.7:", when="@0.0.17:0.0.20,0.0.23:")
+        depends_on("py-numpy@1.20.0:", when="@0.0.17:")

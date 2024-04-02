@@ -28,6 +28,8 @@ class PyApplicationinsights(PythonPackage):
 
     license("MIT")
 
-    version("0.11.9", sha256="30a11aafacea34f8b160fbdc35254c9029c7e325267874e3c68f6bdbcd6ed2c3")
-
-    depends_on("py-setuptools", type="build")
+    version(
+        "0.11.9",
+        sha256="b88bc5a41385d8e516489128d5e63f8c52efe597a3579b1718d1ab2f7cf150a2",
+        url="https://pypi.org/packages/a1/53/234c53004f71f0717d8acd37876e0b65c121181167057b9ce1b1795f96a0/applicationinsights-0.11.9-py2.py3-none-any.whl",
+    )

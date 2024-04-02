@@ -15,16 +15,18 @@ class PyCheckmGenome(PythonPackage):
 
     license("GPL-3.0-or-later")
 
-    version("1.2.1", sha256="33907aa7bbf029f8345e33df80d5c89b7a719041f55ece4f7470cd061c8eff76")
+    version(
+        "1.2.1",
+        sha256="dcae47d7003dccf2f6d49cd7bfbdfa6d250550ef9164779522ac8e5f1158fe39",
+        url="https://pypi.org/packages/b5/33/7d43376eb7b443dfbd88049178d2c7a9f3c638607eab957f98171ef3e3bf/checkm_genome-1.2.1-py3-none-any.whl",
+    )
+
+    with default_args(type="run"):
+        depends_on("py-dendropy@4.5.2:", when="@1.1.11:")
+        depends_on("py-matplotlib@3.5.1:", when="@1.1.11:")
+        depends_on("py-numpy@1.21.3:", when="@1.1.11:")
+        depends_on("py-pysam@0.19:", when="@1.1.11:")
+        depends_on("py-scipy@1.7.3:", when="@1.1.11:")
+        depends_on("py-setuptools", when="@1.1.4:")
 
     # pip silently replaces distutils with setuptools
-    depends_on("python@3:", type=("build", "run"))
-    depends_on("py-setuptools", type=("build", "run"))
-    depends_on("hmmer@3.1b1:", type=("build", "run"))
-    depends_on("pplacer", type=("build", "run"))
-    depends_on("prodigal@2.6.1:", type=("build", "run"))
-    depends_on("py-numpy@1.21.3:", type=("build", "run"))
-    depends_on("py-scipy@1.7.3:", type=("build", "run"))
-    depends_on("py-matplotlib@3.5.1:", type=("build", "run"))
-    depends_on("py-pysam@0.19.0:", type=("build", "run"))
-    depends_on("py-dendropy@4.5.2:", type=("build", "run"))

@@ -22,11 +22,17 @@ class PySpgl1(PythonPackage):
 
     license("LGPL-2.1-or-later")
 
-    version("master", branch="master")
-    version("0.0.2", sha256="a2a524724097bad18dd88a306dbcc99124c6c46ffcbb1a96d6ba6dd6fe2f7404")
-    version("0.0.1", sha256="24ff37ab5be57f0ccf14c53090b171e019c3c12799c80f368e628e1cc9ac9a1f")
+    version(
+        "0.0.2",
+        sha256="16ddc94a46a574855c605af13f0702b6bc5ccae1208c0685a83226324467226d",
+        url="https://pypi.org/packages/17/8e/143c7c424c8c9e8e1ce5f080430b8ec875143dcb00ec9d6edfc1e03efb1c/spgl1-0.0.2-py3-none-any.whl",
+    )
+    version(
+        "0.0.1",
+        sha256="5b848cd7ab744a50f367587cf001aa50ce3ea255406cb0f85ad6cd570160ed06",
+        url="https://pypi.org/packages/31/be/cd07d566e2e4ea4634c78e40aed9e69ae3fbf2010df6ba0d59307174db9c/spgl1-0.0.1-py3-none-any.whl",
+    )
 
-    depends_on("python@3.6:", type=("build", "run"))
-    depends_on("py-numpy@1.15:", type=("build", "run"))
-    depends_on("py-scipy", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
+    with default_args(type="run"):
+        depends_on("py-numpy@1.15.0:")
+        depends_on("py-scipy")

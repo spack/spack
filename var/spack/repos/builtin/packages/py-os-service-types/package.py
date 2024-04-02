@@ -14,8 +14,11 @@ class PyOsServiceTypes(PythonPackage):
 
     maintainers("haampie")
 
-    version("1.7.0", sha256="31800299a82239363995b91f1ebf9106ac7758542a1e4ef6dc737a5932878c6c")
+    version(
+        "1.7.0",
+        sha256="0505c72205690910077fb72b88f2a1f07533c8d39f2fe75b29583481764965d6",
+        url="https://pypi.org/packages/10/2d/318b2b631f68e0fc221ba8f45d163bf810cdb795cf242fe85ad3e5d45639/os_service_types-1.7.0-py2.py3-none-any.whl",
+    )
 
-    depends_on("python@2.7:2.8,3.5:", type=("build", "run"))
-    depends_on("py-pbr@2.0.0:2.0,2.1.1:", type="build")
-    depends_on("py-setuptools", type="build")
+    with default_args(type="run"):
+        depends_on("py-pbr@2:2.0,3:", when="@1:")

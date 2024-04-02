@@ -16,6 +16,8 @@ class PyDotmap(PythonPackage):
     maintainers("jonas-eschle")
     license("MIT", checked_by="jonas-eschle")
 
-    version("1.3.30", sha256="5821a7933f075fb47563417c0e92e0b7c031158b4c9a6a7e56163479b658b368")
-
-    depends_on("py-setuptools", type="build")
+    version(
+        "1.3.30",
+        sha256="bd9fa15286ea2ad899a4d1dc2445ed85a1ae884a42effb87c89a6ecce71243c6",
+        url="https://pypi.org/packages/4d/f9/976d6813c160d6c89196d81e9466dca1503d20e609d8751f3536daf37ec6/dotmap-1.3.30-py3-none-any.whl",
+    )

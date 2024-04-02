@@ -19,11 +19,15 @@ class PyNaraWpe(PythonPackage):
 
     license("MIT")
 
-    version("0.0.7", sha256="7aa2edd5261e5d953e584e69a9233d60fc588fc8a4b7886c3ce43cc8ac8cd99b")
+    version(
+        "0.0.7",
+        sha256="ebcd08ad5f9050238d501e81eddcd6a73fc4669935d4f9677d72ee1ef3dfb7be",
+        url="https://pypi.org/packages/4b/d4/11dddfd5f41017df8eda83cbcafab14ba8bf32d23e7697bf9d2bd343d979/nara_wpe-0.0.7-py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-numpy", type=("build", "run"))
-    depends_on("py-tqdm", type=("build", "run"))
-    depends_on("py-soundfile", type=("build", "run"))
-    depends_on("py-bottleneck", type=("build", "run"))
-    depends_on("py-click", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-bottleneck")
+        depends_on("py-click", when="@0.0.2:")
+        depends_on("py-numpy")
+        depends_on("py-soundfile")
+        depends_on("py-tqdm")

@@ -15,7 +15,11 @@ class PyGhpImport(PythonPackage):
 
     license("Apache-2.0")
 
-    version("2.1.0", sha256="9c535c4c61193c2df8871222567d7fd7e5014d835f97dc7b7439069e2413d343")
+    version(
+        "2.1.0",
+        sha256="8337dd7b50877f163d4c0289bc1f1c7f127550241988d568c1db512c4324a619",
+        url="https://pypi.org/packages/f7/ec/67fbef5d497f86283db54c22eec6f6140243aae73265799baaaa19cd17fb/ghp_import-2.1.0-py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-python-dateutil@2.8.1:", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-python-dateutil@2.8.1:", when="@2.0.1:")

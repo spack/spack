@@ -16,9 +16,11 @@ class PyBackportsWeakref(PythonPackage):
 
     version(
         "1.0.post1",
-        sha256="bc4170a29915f8b22c9e7c4939701859650f2eb84184aee80da329ac0b9825c2",
-        preferred=True,
+        sha256="81bc9b51c0abc58edc76aefbbc68c62a787918ffe943a37947e162c3f8e19e82",
+        url="https://pypi.org/packages/88/ec/f598b633c3d5ffe267aaada57d961c94fdfa183c5c3ebda2b6d151943db6/backports.weakref-1.0.post1-py2.py3-none-any.whl",
     )
-    version("1.0rc1", sha256="8813bf712a66b3d8b85dc289e1104ed220f1878cf981e2fe756dfaabe9a82892")
-
-    depends_on("py-setuptools", type="build")
+    version(
+        "1.0-rc1",
+        sha256="622badff14e0b62703b479244e2ebde2f1c19c266a1edc00608232f4dd3544f4",
+        url="https://pypi.org/packages/6a/f7/ae34b6818b603e264f26fe7db2bd07850ce331ce2fde74b266d61f4a2d87/backports.weakref-1.0rc1-py3-none-any.whl",
+    )

@@ -15,16 +15,19 @@ class PyAnndata(PythonPackage):
 
     license("BSD-3-Clause")
 
-    version("0.8.0", sha256="94d2cc6f76c0317c0ac28564e3092b313b7ad19c737d66701961f3e620b9066e")
+    version(
+        "0.8.0",
+        sha256="2a929360c3c893370865e8ee3d3b9d95ee93239da91bafc5bf5f3c306796746e",
+        url="https://pypi.org/packages/46/7f/ffe1546142d98ed55e7bb70eaedad92861d8e2ab07398ef7f06f4f46d06d/anndata-0.8.0-py3-none-any.whl",
+    )
 
-    depends_on("python@3.7:", type=("build", "run"))
-    depends_on("py-setuptools-scm", type="build")
-    depends_on("py-flit-core@3.4:3", type="build")
-    depends_on("py-importlib-metadata@0.7:", type=("build", "run"), when="^python@:3.7")
-    depends_on("py-pandas@1.1.1:", type=("build", "run"))
-    depends_on("py-numpy@1.16.5:", type=("build", "run"))
-    depends_on("py-scipy@1.4.1:", type=("build", "run"))
-    depends_on("py-h5py@3:", type=("build", "run"))
-    depends_on("py-natsort", type=("build", "run"))
-    depends_on("py-packaging@20:", type=("build", "run"))
-    depends_on("py-typing-extensions", when="^python@:3.7", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("python@3.7:", when="@0.8")
+        depends_on("py-h5py@3.0.0:", when="@0.8:0.10.5")
+        depends_on("py-importlib-metadata@0.7:", when="@:0.8 ^python@:3.7")
+        depends_on("py-natsort")
+        depends_on("py-numpy@1.16.5:", when="@0.7.6:0.10.5")
+        depends_on("py-packaging@20:", when="@0.7.6:")
+        depends_on("py-pandas@1.1.1:", when="@0.7.6:0.9.1")
+        depends_on("py-scipy@1.4.1:", when="@0.7.6:0.10.5")
+        depends_on("py-typing-extensions", when="@0.8 ^python@:3.7")

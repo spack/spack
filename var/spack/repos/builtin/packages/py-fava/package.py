@@ -15,26 +15,27 @@ class PyFava(PythonPackage):
 
     license("MIT")
 
-    version("1.18", sha256="21336b695708497e6f00cab77135b174c51feb2713b657e0e208282960885bf5")
+    version(
+        "1.18",
+        sha256="592540cc0f531c4092760497304f05d708305b2b7b9093661c10ee4d760565b1",
+        url="https://pypi.org/packages/0f/f4/81799aadb7be4f2d6d987c969df563989211ed6a12bba6f7e1d2bbbca6ff/fava-1.18-py3-none-any.whl",
+    )
+
+    with default_args(type="run"):
+        depends_on("py-babel@2.6:", when="@:1.18")
+        depends_on("py-beancount@2.3:", when="@1.16:1.18")
+        depends_on("py-cheroot", when="@:1.18")
+        depends_on("py-click", when="@:1.18")
+        depends_on("py-flask@0.10.1:", when="@:1.18")
+        depends_on("py-flask-babel@1:", when="@1.14:1.18")
+        depends_on("py-jinja2@2.10:", when="@:1.18")
+        depends_on("py-markdown2@2.3:", when="@:1.18")
+        depends_on("py-ply")
+        depends_on("py-simplejson@3.2:", when="@1.15:1.18")
+        depends_on("py-werkzeug@0.15:", when="@1.12:1.18")
 
     # Some of the dependencies are not listed as required at
     # build or run time, but actually are.
     # - py-setuptools
     # - py-importlib
     # - py-pytest
-    depends_on("python@3.6:", type=("build", "run"))
-    depends_on("py-setuptools", type=("build", "run"))
-    depends_on("py-setuptools-scm", type=("build"))
-
-    depends_on("py-babel@2.6.0:", type=("build", "run"))
-    depends_on("py-beancount@2.3.0:", type=("build", "run"))
-    depends_on("py-cheroot", type=("build", "run"))
-    depends_on("py-click", type=("build", "run"))
-    depends_on("py-flask@0.10.1:", type=("build", "run"))
-    depends_on("py-flask-babel@1.0.0:", type=("build", "run"))
-    depends_on("py-jinja2@2.10:", type=("build", "run"))
-    depends_on("py-markdown2@2.3.0:", type=("build", "run"))
-    depends_on("py-ply", type=("build", "run"))
-    depends_on("py-pytest", type=("build", "run"))
-    depends_on("py-simplejson@3.2.0:", type=("build", "run"))
-    depends_on("py-werkzeug@0.15.0:", type=("build", "run"))

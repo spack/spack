@@ -16,18 +16,23 @@ class PyPytestMock(PythonPackage):
 
     license("MIT")
 
-    version("3.10.0", sha256="fbbdb085ef7c252a326fd8cdcac0aa3b1333d8811f131bdcc701002e1be7ed4f")
-    version("1.11.1", sha256="f1ab8aefe795204efe7a015900296d1719e7bf0f4a0558d71e8599da1d1309d0")
+    version(
+        "3.10.0",
+        sha256="f4c973eeae0282963eb293eb173ce91b091a79c1334455acfac9ddee8a1c784b",
+        url="https://pypi.org/packages/91/84/c951790e199cd54ddbf1021965b62a5415b81193ebdb4f4af2659fd06a73/pytest_mock-3.10.0-py3-none-any.whl",
+    )
+    version(
+        "1.11.1",
+        sha256="34520283d459cdf1d0dbb58a132df804697f1b966ecedf808bbf3d255af8f659",
+        url="https://pypi.org/packages/ca/04/c530b2e4d61f99c524dcac0a9002563955370622f70fe4771cd4e56e217b/pytest_mock-1.11.1-py2.py3-none-any.whl",
+    )
     version(
         "1.2",
-        sha256="f78971ed376fcb265255d1e4bb313731b3a1be92d7f3ecb19ea7fedc4a56fd0f",
-        url="https://pypi.io/packages/source/p/pytest-mock/pytest-mock-1.2.zip",
+        sha256="2911668c5ea518a07e2da53a170e2f86eaccf1245ec9605c37eadf6578dec468",
+        url="https://pypi.org/packages/6a/40/d5f2fbef42f85b8c53ddb2bb1db847ef46c86e6204abfeaa605b3ed07307/pytest_mock-1.2-py2.py3-none-any.whl",
     )
 
-    depends_on("python@2.7:2.8,3.4:", type=("build", "run"), when="@:1.11.1")
-    depends_on("python@3.7:", type=("build", "run"), when="@3.10.0:")
-
-    depends_on("py-setuptools", type="build")
-    depends_on("py-setuptools-scm", type="build")
-    depends_on("py-pytest@2.7:", type=("build", "run"))
-    depends_on("py-pytest@5:", type=("build", "run"), when="@3.10.0:")
+    with default_args(type="run"):
+        depends_on("python@3.7:", when="@3.7:3.11")
+        depends_on("py-pytest@5:", when="@3.3:")
+        depends_on("py-pytest@2.7:", when="@1.6.1,1.6.3:3.2")

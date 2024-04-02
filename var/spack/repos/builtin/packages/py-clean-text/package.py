@@ -15,12 +15,19 @@ class PyCleanText(PythonPackage):
 
     license("Apache-2.0")
 
-    version("0.6.0", sha256="8374b385fc2a26e06383f62aed076fa6be115e5832239e2a7fd8b344fa8d2ab2")
-    version("0.5.0", sha256="e525951bef0c8b72e03c987fdac2c475b61d7debf7a8834366fd75716179b6e1")
+    version(
+        "0.6.0",
+        sha256="4fedb156042f192cdef9ed5324b281465f1116aba96791e9289384a2e6bec4da",
+        url="https://pypi.org/packages/34/7f/c99da1cf5b69ed112b3f21029f2cbf37ee4dbffc4607fa0c5601f1991410/clean_text-0.6.0-py3-none-any.whl",
+    )
+    version(
+        "0.5.0",
+        sha256="b83f39c72189a6e9c1356e31079cdcedc67d8e31e90cde788e60680ea0704afd",
+        url="https://pypi.org/packages/8e/1f/acc62e76dddb52e56d8e6ef20377e3e26976e4ad3ded582b1ff1d18505d7/clean_text-0.5.0-py3-none-any.whl",
+    )
 
-    depends_on("python@3.6:", type=("build", "run"))
-    depends_on("python@3.7:", when="@0.6:", type=("build", "run"))
-    depends_on("py-poetry@0.12:", type="build")
-    depends_on("py-emoji", type=("build", "run"))
-    depends_on("py-emoji@1", when="@0.6:", type=("build", "run"))
-    depends_on("py-ftfy@6", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("python@3.7:", when="@0.6:")
+        depends_on("py-emoji@1", when="@0.6:")
+        depends_on("py-emoji", when="@0.3:0.5")
+        depends_on("py-ftfy@6:", when="@0.4:")

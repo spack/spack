@@ -19,8 +19,12 @@ class PyWsproto(PythonPackage):
 
     license("MIT")
 
-    version("1.0.0", sha256="868776f8456997ad0d9720f7322b746bbe9193751b5b290b7f924659377c8c38")
+    version(
+        "1.0.0",
+        sha256="d8345d1808dd599b5ffb352c25a367adb6157e664e140dbecba3f9bc007edb9f",
+        url="https://pypi.org/packages/ea/25/0934b1d00f404d75335b144d4396e01998f25db8953bf54b4d6fe65b80ab/wsproto-1.0.0-py3-none-any.whl",
+    )
 
-    depends_on("python@3.6.1:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
-    depends_on("py-h11@0.9.0:0", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-dataclasses", when="@0.15:1.0 ^python@:3.6")
+        depends_on("py-h11@0.9:", when="@1:")

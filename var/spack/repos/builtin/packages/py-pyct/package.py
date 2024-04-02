@@ -16,8 +16,11 @@ class PyPyct(PythonPackage):
 
     license("BSD-3-Clause")
 
-    version("0.4.8", sha256="23d7525b5a1567535c093aea4b9c33809415aa5f018dd77f6eb738b1226df6f7")
+    version(
+        "0.4.8",
+        sha256="222e104d561b28cfdb56667d2ba10e5290b4466db66d0af38ab935577af85390",
+        url="https://pypi.org/packages/71/76/52ce7aec26b0171939d3b3843acd011f8eb297b2a569e992691bb2964185/pyct-0.4.8-py2.py3-none-any.whl",
+    )
 
-    depends_on("python@2.7:", type=("build", "run"))
-    depends_on("py-setuptools@30.3.0:", type="build")
-    depends_on("py-param@1.7.0:", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-param@1.7:", when="@0.4.4:")

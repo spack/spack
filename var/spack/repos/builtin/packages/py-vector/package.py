@@ -14,14 +14,19 @@ class PyVector(PythonPackage):
 
     license("BSD-3-Clause")
 
-    version("0.8.5", sha256="2c7c8b228168b89da5d30d50dbd05452348920559ebe0eb94cfdafa15cdc8378")
-    version("0.8.4", sha256="ef97bfec0263766edbb74c290401f89921f8d11ae9e4a0ffd904ae40674f1239")
+    version(
+        "0.8.5",
+        sha256="fccc2095edc93e2356dde116f37fa239b6268901dd98e35585f74480a31c4b17",
+        url="https://pypi.org/packages/e8/d0/6b0e698190a47c8dea2800c114711b6badceef3d6c4db6c50c57b8e3aa9f/vector-0.8.5-py3-none-any.whl",
+    )
+    version(
+        "0.8.4",
+        sha256="4d42865b08202850f58b21126fe8c3c884add75999985f70e7974cbed6f2e966",
+        url="https://pypi.org/packages/70/f2/058cde3474ff40a866050e71e2fc47fd22e33ceb5cd0ac90b02f8e9e3f2b/vector-0.8.4-py3-none-any.whl",
+    )
 
-    depends_on("python@3.6:", type=("build", "run"))
-    depends_on("py-setuptools@42:", type="build")
-    depends_on("py-setuptools-scm@3.4: +toml", type="build")
-    depends_on("py-wheel", type="build")
-    depends_on("py-numpy@1.13.3:", type=("build", "run"))
-    depends_on("py-packaging@19.0:", type=("build", "run"))
-    depends_on("py-importlib-metadata@0.22:", type=("build", "run"), when="^python@:3.7")
-    depends_on("py-typing-extensions", type=("build", "run"), when="^python@:3.7")
+    with default_args(type="run"):
+        depends_on("py-importlib-metadata@0.22:", when="@0.8.2:1.0 ^python@:3.7")
+        depends_on("py-numpy@1.13.3:", when="@0.8:")
+        depends_on("py-packaging@19:", when="@0.8.2:")
+        depends_on("py-typing-extensions", when="@0.8:1.0 ^python@:3.7")

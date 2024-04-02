@@ -18,21 +18,15 @@ class PyBakta(PythonPackage):
 
     license("GPL-3.0-only")
 
-    version("1.5.1", sha256="36781612c4eaa99e6e24a00e8ab5b27dadf21c98ae6d16432f3e78c96a4adb5d")
+    version(
+        "1.5.1",
+        sha256="82298adca0476612487147c70b38a1118bb8c301c79009924b3c5e26422e1dcd",
+        url="https://pypi.org/packages/41/56/afdcb385ae7e5ece17a2c6dee502787c67deda7038b67ee46204ac749c5f/bakta-1.5.1-py3-none-any.whl",
+    )
 
-    depends_on("python@3.8:", type=("build", "run"))
-    depends_on("py-setuptools", type=("build", "run"))
-    depends_on("py-biopython@1.78:", type=("build", "run"))
-    depends_on("py-xopen@1.1.0:", type=("build", "run"))
-    depends_on("py-requests@2.25.1:", type=("build", "run"))
-    depends_on("py-alive-progress@1.6.2", type=("build", "run"))
-    depends_on("trnascan-se@2.0.8:", type=("build", "run"))
-    depends_on("aragorn@1.2.38:", type=("build", "run"))
-    depends_on("infernal@1.1.4:", type=("build", "run"))
-    depends_on("pilercr@1.06:", type=("build", "run"))
-    depends_on("prodigal@2.6.3:", type=("build", "run"))
-    depends_on("hmmer@3.3.2:", type=("build", "run"))
-    depends_on("diamond@2.0.14:", type=("build", "run"))
-    depends_on("blast-plus@2.12.0:", type=("build", "run"))
-    depends_on("amrfinder@3.10.23:", type=("build", "run"))
-    depends_on("py-deepsig-biocomp@1.2.5:", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("python@3.8:", when="@:1.8.1")
+        depends_on("py-alive-progress@1.6.2:1", when="@1.3.3:1.6")
+        depends_on("py-biopython@1.78:", when="@:1.6,1.8.2:")
+        depends_on("py-requests@2.25.1:")
+        depends_on("py-xopen@1.1:", when="@:1.8.1")

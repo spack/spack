@@ -14,6 +14,11 @@ class PyReindent(PythonPackage):
 
     pypi = "reindent/reindent-3.5.1.tar.gz"
 
-    version("3.5.1", sha256="59aeb8fbc16e45686f65df23b91896a17eb14ace7a7546860f50d2bb5ec4c9c0")
+    version(
+        "3.5.1",
+        sha256="1248ddf8bb209499ddaff6e841d60c822edff7dcff5e0e5beedbafa06dbc33aa",
+        url="https://pypi.org/packages/e2/21/bbfe0baec43c1d1cb1683653334b55161ccc950991c1803e17f276b5759a/reindent-3.5.1-py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
+    with default_args(type="run"):
+        depends_on("py-setuptools", when="@3:")

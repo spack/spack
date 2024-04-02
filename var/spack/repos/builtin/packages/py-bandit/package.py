@@ -12,13 +12,8 @@ class PyBandit(PythonPackage):
     homepage = "https://bandit.readthedocs.io/en/latest/"
     pypi = "bandit/bandit-1.7.0.tar.gz"
 
-    version("1.7.0", sha256="8a4c7415254d75df8ff3c3b15cfe9042ecee628a1e40b44c15a98890fbfc2608")
-
-    depends_on("python@3.5:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
-    depends_on("py-pbr@2.0.0:", type="build")
-    depends_on("py-gitpython@1.0.1:", type=("build", "run"))
-    depends_on("py-pyyaml@5.3.1:", type=("build", "run"))
-    depends_on("py-six@1.10.0:", type=("build", "run"))
-    depends_on("py-stevedore@1.20.0:", type=("build", "run"))
-    depends_on("py-colorama@0.3.9:", when="platform=win32", type=("build", "run"))
+    version(
+        "1.7.0",
+        sha256="216be4d044209fa06cf2a3e51b319769a51be8318140659719aa7a115c35ed07",
+        url="https://pypi.org/packages/6e/68/dc39991eb6074cabeed2ee78f6e101054869f79ba806f8b6e4b1f4f7c3f6/bandit-1.7.0-py3-none-any.whl",
+    )

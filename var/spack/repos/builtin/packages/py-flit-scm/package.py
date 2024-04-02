@@ -18,10 +18,13 @@ class PyFlitScm(PythonPackage):
 
     license("MIT")
 
-    version("1.7.0", sha256="961bd6fb24f31bba75333c234145fff88e6de0a90fc0f7e5e7c79deca69f6bb2")
+    version(
+        "1.7.0",
+        sha256="9e864caa8a63f708f5bb2f1b5b53eedcd4da75ec2cc6221a64cea7aa5c9eae1a",
+        url="https://pypi.org/packages/b8/c3/8d97318eeca2cf41e2a59e3af3e79d5fd23d56eed56ef1c34866d3b0a435/flit_scm-1.7.0-py3-none-any.whl",
+    )
 
-    depends_on("python@3.6:", type=("build", "run"))
-
-    depends_on("py-flit-core@3.5:3", type=("build", "run"))
-    depends_on("py-setuptools-scm@6.4:", type=("build", "run"))
-    depends_on("py-tomli", when="^python@:3.10", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-flit-core@3.5:", when="@1.2,1.6:")
+        depends_on("py-setuptools-scm@6.4:", when="@1.7:")
+        depends_on("py-tomli", when="@1.7: ^python@:3.10")

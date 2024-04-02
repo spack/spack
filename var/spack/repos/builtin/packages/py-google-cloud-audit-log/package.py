@@ -14,13 +14,19 @@ class PyGoogleCloudAuditLog(PythonPackage):
 
     license("Apache-2.0")
 
-    version("0.2.5", sha256="86e2faba3383adc8fd04a5bd7fd4f960b3e4aedaa7ed950f2f891ce16902eb6b")
+    version(
+        "0.2.5",
+        sha256="18b94d4579002a450b7902cd2e8b8fdcb1ea2dd4df3b41f8f82be6d9f7fcd746",
+        url="https://pypi.org/packages/55/9b/2920117f37aff47b5b7d6081e2d5e13441d0952e5bd449babc392e03b621/google_cloud_audit_log-0.2.5-py2.py3-none-any.whl",
+    )
+
+    with default_args(type="run"):
+        depends_on("python@3.7:", when="@0.2.3:")
+        depends_on("py-googleapis-common-protos@1.56.2:", when="@0.2.1:")
+        depends_on(
+            "py-protobuf@3.19.5:3.20.0-rc2,3.20.1-rc1,3.20.2:4.21.0,4.21.6:4", when="@0.2.5:"
+        )
 
     # https://github.com/googleapis/python-audit-log/blob/v0.2.5/setup.py
 
-    depends_on("py-protobuf@3.19.5:4", type=("build", "run"))
     conflicts("py-protobuf@3.20.0,3.20.1,4.21.1:4.21.5")
-
-    depends_on("py-googleapis-common-protos@1.56.2:1", type=("build", "run"))
-
-    depends_on("py-setuptools", type="build")

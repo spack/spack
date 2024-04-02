@@ -16,7 +16,32 @@ class PyDatacube(PythonPackage):
 
     license("Apache-2.0")
 
-    version("1.8.3", sha256="d1e1a49c615fdaebf6e6008da7f925bc09e9d7bf94f259a1c596d266d1c36649")
+    version(
+        "1.8.3",
+        sha256="2685684ba57bd05f5438d3cc54f8a4c7e6b246933d11c66cff255680cf1d73b6",
+        url="https://pypi.org/packages/24/6b/007cd4e702d895114151407534d654c70cac8d9e274b70dd854b7b4c56d7/datacube-1.8.3-py2.py3-none-any.whl",
+    )
+
+    with default_args(type="run"):
+        depends_on("py-affine")
+        depends_on("py-cachetools")
+        depends_on("py-click@5:")
+        depends_on("py-cloudpickle@0.4:")
+        depends_on("py-dask+array")
+        depends_on("py-distributed", when="@1.8:")
+        depends_on("py-jsonschema", when="@:1.8.15")
+        depends_on("py-lark-parser@0.6.7:", when="@1.7-rc1:1.8.7")
+        depends_on("py-netcdf4", when="@:1.8,1.9.0-rc2")
+        depends_on("py-numpy")
+        depends_on("py-psycopg2")
+        depends_on("py-pyproj@2.5:", when="@1.8:")
+        depends_on("py-python-dateutil")
+        depends_on("py-pyyaml")
+        depends_on("py-rasterio@1.0.2:", when="@:1.8.7")
+        depends_on("py-shapely@1.6.4:", when="@1.8:1.8.9")
+        depends_on("py-sqlalchemy", when="@:1.8.9")
+        depends_on("py-toolz")
+        depends_on("py-xarray@0.9.0:", when="@:1.8.7,1.8.10:")
 
     # Excluding 'datacube.utils.aws' since it requires 'boto3'
     import_modules = [
@@ -40,25 +65,3 @@ class PyDatacube(PythonPackage):
         "datacube.index",
         "datacube.testutils",
     ]
-
-    depends_on("python@3.6:", type=("build", "run"))
-    depends_on("py-setuptools", type=("build", "run"))
-    depends_on("py-affine", type=("build", "run"))
-    depends_on("py-pyproj@2.5:", type=("build", "run"))
-    depends_on("py-shapely@1.6.4:", type=("build", "run"))
-    depends_on("py-cachetools", type=("build", "run"))
-    depends_on("py-click@5.0:", type=("build", "run"))
-    depends_on("py-cloudpickle@0.4:", type=("build", "run"))
-    depends_on("py-dask+array", type=("build", "run"))
-    depends_on("py-distributed", type=("build", "run"))
-    depends_on("py-jsonschema", type=("build", "run"))
-    depends_on("py-netcdf4", type=("build", "run"))
-    depends_on("py-numpy", type=("build", "run"))
-    depends_on("py-psycopg2", type=("build", "run"))
-    depends_on("py-lark@0.6.7:", type=("build", "run"))
-    depends_on("py-python-dateutil", type=("build", "run"))
-    depends_on("py-pyyaml", type=("build", "run"))
-    depends_on("py-rasterio@1.0.2:", type=("build", "run"))
-    depends_on("py-sqlalchemy", type=("build", "run"))
-    depends_on("py-toolz", type=("build", "run"))
-    depends_on("py-xarray@0.9:", type=("build", "run"))

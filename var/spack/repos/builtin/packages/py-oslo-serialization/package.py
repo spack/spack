@@ -17,12 +17,14 @@ class PyOsloSerialization(PythonPackage):
 
     maintainers("haampie")
 
-    version("4.1.0", sha256="cecc7794df806c85cb70dbd6c2b3af19bc68047ad29e3c6442be90a0a4de5379")
+    version(
+        "4.1.0",
+        sha256="a0acf0ff7ca88b3ee6514713571f614b5c20870005ed0eb90408fa7f9f3edb60",
+        url="https://pypi.org/packages/a4/99/d02844a4ddd063dab89b8b9cfd176081ef9e60a5b57fa89cd3a62a406195/oslo.serialization-4.1.0-py3-none-any.whl",
+    )
 
-    depends_on("python@3.6:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
-    depends_on("py-pbr@2.0.0:2.0,2.1.1:", type="build")
-
-    depends_on("py-msgpack@0.5.2:", type=("build", "run"))
-    depends_on("py-oslo-utils@3.33.0:", type=("build", "run"))
-    depends_on("py-pytz@2013.6:", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-msgpack@0.5.2:")
+        depends_on("py-oslo-utils@3.33:")
+        depends_on("py-pbr@2:2.0,3:")
+        depends_on("py-pytz@2013.6:", when="@:5.3")

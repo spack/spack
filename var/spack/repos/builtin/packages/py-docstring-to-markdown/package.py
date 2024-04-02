@@ -16,8 +16,13 @@ class PyDocstringToMarkdown(PythonPackage):
 
     license("LGPL-2.1-or-later")
 
-    version("0.11", sha256="5b1da2c89d9d0d09b955dec0ee111284ceadd302a938a03ed93f66e09134f9b5")
-    version("0.10", sha256="12f75b0c7b7572defea2d9e24b57ef7ac38c3e26e91c0e5547cfc02b1c168bf6")
-
-    depends_on("python@3.6:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
+    version(
+        "0.11",
+        sha256="01900aee1bc7fde5aacaf319e517a5e1d4f0bf04e401373c08d28fcf79bfb73b",
+        url="https://pypi.org/packages/ea/69/88a13ac387ebd1fcfda95eccfe4fa2dfb7e9794c7fa6a76c497c0bfe135c/docstring_to_markdown-0.11-py3-none-any.whl",
+    )
+    version(
+        "0.10",
+        sha256="a2cd520599d1499d4a5d4eb16dea5bdebe32e5627504fb417d5733570f3d4d0b",
+        url="https://pypi.org/packages/a9/ad/71cb84c8be4aa428d27b2c8e380a265b61671b2a15ce0dc4103133d12f6b/docstring_to_markdown-0.10-py3-none-any.whl",
+    )

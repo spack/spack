@@ -12,8 +12,13 @@ class PyLooseversion(PythonPackage):
     homepage = "https://github.com/effigies/looseversion"
     pypi = "looseversion/looseversion-1.0.2.tar.gz"
 
-    version("1.2.0", sha256="c64e71c0b29030683b4ea75aee431db2d25c4e6e533590e52129f1d9e51de204")
-    version("1.0.2", sha256="8b9f2e649eb81620c4527ba33ba87505eb69d4bb3f66523b34182a0450c294bc")
-
-    depends_on("py-hatchling", when="@1.1.1:", type="build")
-    depends_on("py-setuptools@40.8:", when="@:1.0.2", type="build")
+    version(
+        "1.2.0",
+        sha256="0b30eaca26506135c1109dbed582384f8503dee8fcfe07b85fd949f69f077977",
+        url="https://pypi.org/packages/76/26/25bbdec19a4351425db4ff319882243e01984c593ce88a1da67b6489e2b0/looseversion-1.2.0-py2.py3-none-any.whl",
+    )
+    version(
+        "1.0.2",
+        sha256="e38414e8e3f4a636084cecb910dc1ab88980289a06b1e5c57948b83becc7861c",
+        url="https://pypi.org/packages/41/70/466273a3876394309e5890477a6fc51b83ed8624cc28b627de72a262d258/looseversion-1.0.2-py3-none-any.whl",
+    )

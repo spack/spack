@@ -14,9 +14,13 @@ class PyDataclassesJson(PythonPackage):
 
     license("MIT")
 
-    version("0.5.12", sha256="70e28da52e36f4be6b724e1f1e77fbcd19e0e0a6bf9a4c4c6e5abf713d4dab5a")
+    version(
+        "0.5.12",
+        sha256="ece0f002af8d7b19c757c62b82ffb414e4bf49e856471f4070ba06590150c345",
+        url="https://pypi.org/packages/26/3a/502d66312c1e707a4d5f73d2fc2165a4217d8c77df3a1eb4c09db26dd3b0/dataclasses_json-0.5.12-py3-none-any.whl",
+    )
 
-    depends_on("python@3.7:3.11", type=("build", "run"))
-    depends_on("py-poetry-core@1.2:", type="build")
-    depends_on("py-typing-inspect@0.4:0", type=("build", "run"))
-    depends_on("py-marshmallow@3.18:3", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("python@3.7:3.11", when="@0.5.12:0.5.13")
+        depends_on("py-marshmallow@3.18:", when="@0.5.12:")
+        depends_on("py-typing-inspect@0.4:", when="@0.5.12:")

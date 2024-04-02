@@ -16,10 +16,23 @@ class PyCssselect(PythonPackage):
 
     license("BSD-3-Clause")
 
-    version("1.1.0", sha256="dde8c1d4a2c82de6889a3af1c1adbce1a6f3ec08b07a854d873f3f3da92960af")
-    version("1.0.3", sha256="203d9691c42c13cffe26a2f8fc714977882fcf54a6df82c8eda3371f6beaecdb")
-    version("1.0.2", sha256="ee16bbb99b0a1f593ed4cd822f20bffefa4a4676d19d7dd1f231b4c1cc1cc1e2")
-    version("1.0.1", sha256="cdfa17ab5dc8818209f310a930b18d3035a4585ddd2c179e833036e2dde511c6")
-    version("1.0.0", sha256="2f757203e03aedcc1b31a452cf2752728b843351b7819ea2d4cd9ef38df7b324")
-
-    depends_on("py-setuptools", type="build")
+    version(
+        "1.1.0",
+        sha256="f612ee47b749c877ebae5bb77035d8f4202c6ad0f0fc1271b3c18ad6c4468ecf",
+        url="https://pypi.org/packages/3b/d4/3b5c17f00cce85b9a1e6f91096e1cc8e8ede2e1be8e96b87ce1ed09e92c5/cssselect-1.1.0-py2.py3-none-any.whl",
+    )
+    version(
+        "1.0.3",
+        sha256="3b5103e8789da9e936a68d993b70df732d06b8bb9a337a05ed4eb52c17ef7206",
+        url="https://pypi.org/packages/7b/44/25b7283e50585f0b4156960691d951b05d061abf4a714078393e51929b30/cssselect-1.0.3-py2.py3-none-any.whl",
+    )
+    version(
+        "1.0.1",
+        sha256="4f5f799a1d3182b04814007e9e7fc6c362f4489c7420d6b348cc901ece07ced9",
+        url="https://pypi.org/packages/1d/e5/f1d410192e34b1034dba7804de5dbcdece20a883c445ad661e5ea8226b42/cssselect-1.0.1-py2.py3-none-any.whl",
+    )
+    version(
+        "1.0.0",
+        sha256="0bda987bf8d0cbd9e3a6c1468bdcc7c61e99b508894d65d30734415313d8d59f",
+        url="https://pypi.org/packages/6e/51/7ef09046b16d4faea6a683946993acda4398e60c699ff8336244859e45bd/cssselect-1.0.0-py2.py3-none-any.whl",
+    )

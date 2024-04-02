@@ -14,20 +14,25 @@ class PyDistlib(PythonPackage):
 
     license("PSF-2.0")
 
-    version("0.3.7", sha256="9dafe54b34a028eafd95039d5e5d4851a13734540f1331060d31c9916e7147a8")
-    version("0.3.6", sha256="14bad2d9b04d3a36127ac97f30b12a19268f211063d8f8ee4f47108896e11b46")
-    version("0.3.4", sha256="e4b58818180336dc9c529bfb9a0b58728ffc09ad92027a3f30b7cd91e3458579")
-    version("0.3.3", sha256="d982d0751ff6eaaab5e2ec8e691d949ee80eddf01a62eaa96ddb11531fe16b05")
+    version(
+        "0.3.7",
+        sha256="2e24928bc811348f0feb63014e97aaae3037f2cf48712d51ae61df7fd6075057",
+        url="https://pypi.org/packages/43/a0/9ba967fdbd55293bacfc1507f58e316f740a3b231fc00e3d86dc39bc185a/distlib-0.3.7-py2.py3-none-any.whl",
+    )
+    version(
+        "0.3.6",
+        sha256="f35c4b692542ca110de7ef0bea44d73981caeb34ca0b9b6b2e6d7790dda8f80e",
+        url="https://pypi.org/packages/76/cb/6bbd2b10170ed991cf64e8c8b85e01f2fb38f95d1bc77617569e0b0b26ac/distlib-0.3.6-py2.py3-none-any.whl",
+    )
+    version(
+        "0.3.4",
+        sha256="6564fe0a8f51e734df6333d08b8b94d4ea8ee6b99b5ed50613f731fd4089f34b",
+        url="https://pypi.org/packages/ac/a3/8ee4f54d5f12e16eeeda6b7df3dfdbda24e6cc572c86ff959a4ce110391b/distlib-0.3.4-py2.py3-none-any.whl",
+    )
+    version(
+        "0.3.3",
+        sha256="c8b54e8454e5bf6237cc84c20e8264c3e991e824ef27e8f1e81049867d861e31",
+        url="https://pypi.org/packages/28/36/4bdfb663826d6deedc30b179a7b7876a86943cec9fcfc3f1638489fd8b09/distlib-0.3.3-py2.py3-none-any.whl",
+    )
 
     # pip silently replaces distutils with setuptools
-    depends_on("py-setuptools", type="build")
-    depends_on("py-setuptools@44:", when="@0.3.6:", type="build")
-    depends_on("py-wheel@0.29.0:", when="@0.3.6:", type="build")
-
-    def url_for_version(self, version):
-        url = "https://files.pythonhosted.org/packages/source/d/distlib/distlib-{0}.{1}"
-        if version >= Version("0.3.5"):
-            ext = "tar.gz"
-        else:
-            ext = "zip"
-        return url.format(version, ext)

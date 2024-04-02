@@ -12,24 +12,79 @@ class PyTraitlets(PythonPackage):
     homepage = "https://github.com/ipython/traitlets"
     pypi = "traitlets/traitlets-5.0.4.tar.gz"
 
-    version("5.9.0", sha256="f6cde21a9c68cf756af02035f72d5a723bf607e862e7be33ece505abf4a3bad9")
-    version("5.7.1", sha256="fde8f62c05204ead43c2c1b9389cfc85befa7f54acb5da28529d671175bb4108")
-    version("5.3.0", sha256="0bb9f1f9f017aa8ec187d8b1b2a7a6626a2a1d877116baba52a129bfa124f8e2")
-    version("5.1.1", sha256="059f456c5a7c1c82b98c2e8c799f39c9b8128f6d0d46941ee118daace9eb70c7")
-    version("5.0.4", sha256="86c9351f94f95de9db8a04ad8e892da299a088a64fd283f9f6f18770ae5eae1b")
-    version("4.3.3", sha256="d023ee369ddd2763310e4c3eae1ff649689440d4ae59d7485eb4cfbbe3e359f7")
-    version("4.3.2", sha256="9c4bd2d267b7153df9152698efb1050a5d84982d3384a37b2c1f7723ba3e7835")
-    version("4.3.1", sha256="ba8c94323ccbe8fd792e45d8efe8c95d3e0744cc8c085295b607552ab573724c")
-    version("4.3.0", sha256="8a33cb7b1ef47f2d6dc16e9cf971217d5a4882a3541c070e78a0e8e8edcb3f82")
-    version("4.2.2", sha256="7d7e3070484b2fe490fa55e0acf7023afc5ed9ddabec57405f25c355158e152a")
-    version("4.2.1", sha256="76eba33c89723b8fc024f950cacaf5bf2ef37999642cc9a61f4e7c1ca5cf0ac0")
-    version("4.2.0", sha256="e4c39210f2f2ff7361b86043b6512adbcf6f024b44b501f7b42fd9a23402dea9")
-    version("4.1.0", sha256="440e38dfa5d2a26c086d4b427cfb7aed17d0a2dca78bce90c33354da2592af5b")
-    version("4.0.0", sha256="0b140b4a94a4f1951887d9bce4650da211f79600fc9fdb422acc90c5bbe0233b")
+    version(
+        "5.9.0",
+        sha256="9e6ec080259b9a5940c797d58b613b5e31441c2257b87c2e795c5228ae80d2d8",
+        url="https://pypi.org/packages/77/75/c28e9ef7abec2b7e9ff35aea3e0be6c1aceaf7873c26c95ae1f0d594de71/traitlets-5.9.0-py3-none-any.whl",
+    )
+    version(
+        "5.7.1",
+        sha256="57ba2ba951632eeab9388fa45f342a5402060a5cc9f0bb942f760fafb6641581",
+        url="https://pypi.org/packages/cb/1e/7b8ae7bbc4c0d4b913cabb345c2ac98450bbd9cfe90ee2be275019037932/traitlets-5.7.1-py3-none-any.whl",
+    )
+    version(
+        "5.3.0",
+        sha256="65fa18961659635933100db8ca120ef6220555286949774b9cfc106f941d1c7a",
+        url="https://pypi.org/packages/83/a9/1059771062cb80901c34a4dea020e76269412e69300b4ba12e3356865ad8/traitlets-5.3.0-py3-none-any.whl",
+    )
+    version(
+        "5.1.1",
+        sha256="2d313cc50a42cd6c277e7d7dc8d4d7fedd06a2c215f78766ae7b1a66277e0033",
+        url="https://pypi.org/packages/37/46/be8a3c030bd3673f4800fa7f46eda972dfa2990089a51ec5dd0a26ed33e9/traitlets-5.1.1-py3-none-any.whl",
+    )
+    version(
+        "5.0.4",
+        sha256="9664ec0c526e48e7b47b7d14cd6b252efa03e0129011de0a9c1d70315d4309c3",
+        url="https://pypi.org/packages/e6/20/f73a1130598ffaf561fda74d761bbe66db7a3639f34456761e781509881b/traitlets-5.0.4-py3-none-any.whl",
+    )
+    version(
+        "4.3.3",
+        sha256="70b4c6a1d9019d7b4f6846832288f86998aa3b9207c6821f3578a6a6a467fe44",
+        url="https://pypi.org/packages/ca/ab/872a23e29cec3cf2594af7e857f18b687ad21039c1f9b922fac5b9b142d5/traitlets-4.3.3-py2.py3-none-any.whl",
+    )
+    version(
+        "4.3.2",
+        sha256="c6cb5e6f57c5a9bdaa40fa71ce7b4af30298fbab9ece9815b5d995ab6217c7d9",
+        url="https://pypi.org/packages/93/d6/abcb22de61d78e2fc3959c964628a5771e47e7cc60d53e9342e21ed6cc9a/traitlets-4.3.2-py2.py3-none-any.whl",
+    )
+    version(
+        "4.3.1",
+        sha256="50522e46dd7b66c80686d50ff1b774000f1d2a80c84b2bcfbd657d588e99a368",
+        url="https://pypi.org/packages/b6/72/f62f13fb8cdb85af5239788d4c57c281b3a92efc9d2ad9cc44cb14c8c26d/traitlets-4.3.1-py2.py3-none-any.whl",
+    )
+    version(
+        "4.3.0",
+        sha256="c13c85694e33272612c61f9d0f368eca63350b0300d7e3b9331f809f0fc360b5",
+        url="https://pypi.org/packages/68/fe/a542484eb8d1b7b8949a06936f702dac80d316becc5d8416def728e13cea/traitlets-4.3.0-py2.py3-none-any.whl",
+    )
+    version(
+        "4.2.2",
+        sha256="c6176a597361219f2f4cc1e82c560cc976c479b6f001fd851ac849391d6a648e",
+        url="https://pypi.org/packages/ad/25/a507caa3514e7651fd14ffcffcd279779f604fefa3391b225bfb09d5c407/traitlets-4.2.2-py2.py3-none-any.whl",
+    )
+    version(
+        "4.2.1",
+        sha256="05a66843c96a320eec09df674c16ff330a43cb07f731cf2bd88aa3645a180541",
+        url="https://pypi.org/packages/db/f3/a24062437f01ceae74edf622ac3f8c55b555a2ed1967e5e3d945efe54c3d/traitlets-4.2.1-py2.py3-none-any.whl",
+    )
+    version(
+        "4.2.0",
+        sha256="b920f170255dda49415f3ebf3caf666d3dadd08e38d490c84009792bd16d338f",
+        url="https://pypi.org/packages/10/ed/37ca0815e846baea11d2cc65d7eeb127aef9c22f886847f151c372fc0d66/traitlets-4.2.0-py2.py3-none-any.whl",
+    )
+    version(
+        "4.1.0",
+        sha256="0fdac5614e5cb3329a39d48bbbc4b95813920af7565c1488b5d787ef2863be26",
+        url="https://pypi.org/packages/c7/ac/7bb361161e9b37d00a0b81f0e360fe0be8e2b9156e4da74aabf7f167b237/traitlets-4.1.0-py2.py3-none-any.whl",
+    )
+    version(
+        "4.0.0",
+        sha256="5461707171e0f3c500c90eedef87d41e72a682da4894686d71825e16c824909d",
+        url="https://pypi.org/packages/3a/9b/4a47994434b0f9f044c0cb44ebd5402a7cef4e02ff0662f7f5a2eeb6d484/traitlets-4.0.0-py2.py3-none-any.whl",
+    )
 
-    depends_on("py-hatchling@1.5:", when="@5.5:", type="build")
-    depends_on("py-hatchling@0.25:", when="@5.2.1.post0:", type="build")
-    depends_on("py-setuptools@40.8:", when="@:5.2.1.a", type="build")
-    depends_on("py-ipython-genutils", when="@:5.0", type=("build", "run"))
-    depends_on("py-six", when="@:4", type=("build", "run"))
-    depends_on("py-decorator", when="@:4", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("python@3.7:", when="@5:5.9")
+        depends_on("py-decorator", when="@4.1.0:4")
+        depends_on("py-ipython-genutils", when="@4.1.0:5.0")
+        depends_on("py-six", when="@4.3:4")

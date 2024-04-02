@@ -17,11 +17,13 @@ class PyDebtcollector(PythonPackage):
 
     maintainers("haampie")
 
-    version("2.2.0", sha256="787981f4d235841bf6eb0467e23057fb1ac7ee24047c32028a8498b9128b6829")
+    version(
+        "2.2.0",
+        sha256="34663e5de257c67bf38827cfbea259c4d4ad27eba6b5a9d9242cb54076bfb4ad",
+        url="https://pypi.org/packages/8e/50/07a7ccf4dbbe90b58e96f97b747ff98aef9d8c841d2616c48cc05b07db33/debtcollector-2.2.0-py3-none-any.whl",
+    )
 
-    depends_on("python@3.6:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
-    depends_on("py-pbr@2.0.0:2.0,2.1.1:", type="build")
-
-    depends_on("py-six@1.10.0:", type=("build", "run"))
-    depends_on("py-wrapt@1.7.0:", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-pbr@2:2.0,3:", when="@:2.4")
+        depends_on("py-six@1.10:", when="@1.19:2.3")
+        depends_on("py-wrapt@1.7:")

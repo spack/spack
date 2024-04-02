@@ -14,7 +14,8 @@ class PyAuxlib(PythonPackage):
 
     license("ISC")
 
-    version("0.0.43", sha256="0f175637e96a090a785767ce28483cf1aeec316a19afce9b2fbd113e1122786a")
-
-    depends_on("py-setuptools", type="build")
-    depends_on("py-wheel", type=("build", "run"))
+    version(
+        "0.0.43",
+        sha256="2864e48a0160beda799d404f2321faa0e3b9da33bf1384d5631a8329b1ad32d8",
+        url="https://pypi.org/packages/31/a6/8bc9f3fac7563c9a728595f5aa8eeac1e42f6b66b003900d11db06f7b901/auxlib-0.0.43-py2.py3-none-any.whl",
+    )

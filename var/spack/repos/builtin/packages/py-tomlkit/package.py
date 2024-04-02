@@ -14,11 +14,32 @@ class PyTomlkit(PythonPackage):
 
     license("MIT")
 
-    version("0.12.1", sha256="38e1ff8edb991273ec9f6181244a6a391ac30e9f5098e7535640ea6be97a7c86")
-    version("0.11.4", sha256="3235a9010fae54323e727c3ac06fb720752fe6635b3426e379daec60fbd44a83")
-    version("0.11.0", sha256="71ceb10c0eefd8b8f11fe34e8a51ad07812cb1dc3de23247425fbc9ddc47b9dd")
-    version("0.7.2", sha256="d7a454f319a7e9bd2e249f239168729327e4dd2d27b17dc68be264ad1ce36754")
-    version("0.7.0", sha256="ac57f29693fab3e309ea789252fcce3061e19110085aa31af5446ca749325618")
+    version(
+        "0.12.1",
+        sha256="712cbd236609acc6a3e2e97253dfc52d4c2082982a88f61b640ecf0817eab899",
+        url="https://pypi.org/packages/a0/6d/808775ed618e51edaa7bbe6759e22e1c7eafe359af6e084700c6d39d3455/tomlkit-0.12.1-py3-none-any.whl",
+    )
+    version(
+        "0.11.4",
+        sha256="25d4e2e446c453be6360c67ddfb88838cfc42026322770ba13d1fbd403a93a5c",
+        url="https://pypi.org/packages/18/31/2a87f292f752d39c6c207f9e44137e3e1d4250da880a9fbc0bbf630138e0/tomlkit-0.11.4-py3-none-any.whl",
+    )
+    version(
+        "0.11.0",
+        sha256="0f4050db66fd445b885778900ce4dd9aea8c90c4721141fde0d6ade893820ef1",
+        url="https://pypi.org/packages/96/6b/67e390f8efdd095c4fce0fa648ad711eb795fef2d954a01c289238e39076/tomlkit-0.11.0-py3-none-any.whl",
+    )
+    version(
+        "0.7.2",
+        sha256="173ad840fa5d2aac140528ca1933c29791b79a374a0861a80347f42ec9328117",
+        url="https://pypi.org/packages/eb/ef/5bd27c1a8040874cc863c263bf38857b5607017b656943c6c93b29bc8f42/tomlkit-0.7.2-py2.py3-none-any.whl",
+    )
+    version(
+        "0.7.0",
+        sha256="6babbd33b17d5c9691896b0e68159215a9387ebfa938aa3ac42f4a4beeb2b831",
+        url="https://pypi.org/packages/bc/01/a0ee34fe37dd54f795e8f8a820af57c9a94d7358276acf6cdc21ae8d9533/tomlkit-0.7.0-py2.py3-none-any.whl",
+    )
 
-    depends_on("python@3.6:3", when="@0.11.0:0.11.5", type=("build", "run"))
-    depends_on("py-poetry-core@1:", type="build")
+    with default_args(type="run"):
+        depends_on("python@3.7:", when="@0.11.7:")
+        depends_on("python@:3", when="@0.8:0.11.5")

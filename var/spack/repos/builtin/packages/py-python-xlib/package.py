@@ -18,9 +18,11 @@ class PyPythonXlib(PythonPackage):
 
     license("LGPL-2.1-or-later")
 
-    version("0.30", sha256="74131418faf9e7b83178c71d9d80297fbbd678abe99ae9258f5a20cd027acb5f")
+    version(
+        "0.30",
+        sha256="c4c92cd47e07588b2cbc7d52de18407b2902c3812d7cdec39cd2177b060828e2",
+        url="https://pypi.org/packages/54/c3/45ecfd3e6a541bb4b383fc320a32762703cfe28763c131d71f4183ace819/python_xlib-0.30-py2.py3-none-any.whl",
+    )
 
-    depends_on("python@2.7,3.3:", type=("build", "run"))
-    depends_on("py-setuptools@30.3.0:", type="build")
-    depends_on("py-setuptools-scm", type="build")
-    depends_on("py-six@1.10.0:", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-six@1.10:")

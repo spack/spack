@@ -14,9 +14,16 @@ class PyEcdsa(PythonPackage):
 
     license("MIT")
 
-    version("0.15", sha256="8f12ac317f8a1318efa75757ef0a651abe12e51fc1af8838fb91079445227277")
-    version("0.13.2", sha256="5c034ffa23413ac923541ceb3ac14ec15a0d2530690413bff58c12b80e56d884")
+    version(
+        "0.15",
+        sha256="867ec9cf6df0b03addc8ef66b56359643cb5d0c1dc329df76ba7ecfe256c8061",
+        url="https://pypi.org/packages/b8/11/4b4d30e4746584684c758d8f1ddc1fa5ab1470b6bf70bce4d9b235965e99/ecdsa-0.15-py2.py3-none-any.whl",
+    )
+    version(
+        "0.13.2",
+        sha256="20c17e527e75acad8f402290e158a6ac178b91b881f941fc6ea305bfdfb9657c",
+        url="https://pypi.org/packages/23/a8/8aa68e70959e1287da9154e5164bb8bd5dd7025e41ae54e8d177b8d165c9/ecdsa-0.13.2-py2.py3-none-any.whl",
+    )
 
-    depends_on("python@2.6:2.8,3.3:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
-    depends_on("py-six@1.9.0:", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-six@1.9:", when="@0.15:")

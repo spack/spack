@@ -14,13 +14,32 @@ class PyH11(PythonPackage):
 
     license("MIT")
 
-    version("0.13.0", sha256="70813c1135087a248a4d38cc0e1a0181ffab2188141a93eaf567940c3957ff06")
-    version("0.12.0", sha256="47222cb6067e4a307d535814917cd98fd0a57b6788ce715755fa2b6c28b56042")
-    version("0.11.0", sha256="3c6c61d69c6f13d41f1b80ab0322f1872702a3ba26e12aa864c928f6a43fbaab")
-    version("0.10.0", sha256="311dc5478c2568cc07262e0381cdfc5b9c6ba19775905736c87e81ae6662b9fd")
-    version("0.9.0", sha256="33d4bca7be0fa039f4e84d50ab00531047e53d6ee8ffbc83501ea602c169cae1")
+    version(
+        "0.13.0",
+        sha256="8ddd78563b633ca55346c8cd41ec0af27d3c79931828beffb46ce70a379e7442",
+        url="https://pypi.org/packages/19/d2/32a15a4955be1b8114a1c570999eefd31279c7f9aa2d2a43d492a79b53c5/h11-0.13.0-py3-none-any.whl",
+    )
+    version(
+        "0.12.0",
+        sha256="36a3cb8c0a032f56e2da7084577878a035d3b61d104230d4bd49c0c6b555a9c6",
+        url="https://pypi.org/packages/60/0f/7a0eeea938eaf61074f29fed9717f2010e8d0e0905d36b38d3275a1e4622/h11-0.12.0-py3-none-any.whl",
+    )
+    version(
+        "0.11.0",
+        sha256="ab6c335e1b6ef34b205d5ca3e228c9299cc7218b049819ec84a388c2525e5d87",
+        url="https://pypi.org/packages/b2/79/9c5f5cd738ec2a9b26453b3093915c0999f24454e2773921025c03b5509e/h11-0.11.0-py2.py3-none-any.whl",
+    )
+    version(
+        "0.10.0",
+        sha256="9eecfbafc980976dbff26a01dd3487644dd5d00f8038584451fc64a660f7c502",
+        url="https://pypi.org/packages/1f/0d/9a3a4de68d76bbacd4851ed9be9aeef8f170532d3907e009fe1fda81d350/h11-0.10.0-py2.py3-none-any.whl",
+    )
+    version(
+        "0.9.0",
+        sha256="4bc6d6a1238b7615b266ada57e0618568066f57dd6fa967d1290ec9309b2f2f1",
+        url="https://pypi.org/packages/5a/fd/3dad730b0f95e78aeeb742f96fa7bbecbdd56a58e405d3da440d5bfb90c6/h11-0.9.0-py2.py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-
-    depends_on("python@3.6:", type=("build", "run"), when="@0.12.0:")
-    depends_on("py-typing-extensions", type=("build", "run"), when="@0.13: ^python@:3.7")
+    with default_args(type="run"):
+        depends_on("py-dataclasses", when="@0.13 ^python@:3.6")
+        depends_on("py-typing-extensions", when="@0.13: ^python@:3.7")

@@ -14,9 +14,10 @@ class PyPlotext(PythonPackage):
 
     license("MIT")
 
-    version("master", branch="master")
-    version("5.2.8", sha256="319a287baabeb8576a711995f973a2eba631c887aa6b0f33ab016f12c50ffebe")
+    version(
+        "5.2.8",
+        sha256="7364cf72e6c9bffaf96158340fd2e0058faf404edbbc1e7a2aed421c8638d475",
+        url="https://pypi.org/packages/63/de/82df3f400392b586d18a8bd90714309c7e1fcf74c0f2e42a4f8abc347634/plotext-5.2.8-py3-none-any.whl",
+    )
 
     # build dependencies
-    depends_on("python@3.5.0:", type=("build", "run"))
-    depends_on("py-setuptools", type=("build"))

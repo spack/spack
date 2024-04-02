@@ -14,6 +14,8 @@ class PyTesttools(PythonPackage):
 
     license("MIT")
 
-    version("2.3.0", sha256="5827ec6cf8233e0f29f51025addd713ca010061204fdea77484a2934690a0559")
-
-    depends_on("py-setuptools", type="build")
+    version(
+        "2.3.0",
+        sha256="a2be448869171b6e0f26d9544088b8b98439ec180ce272040236d570a40bcbed",
+        url="https://pypi.org/packages/87/74/a4d55da28d7bba6d6f49430f22a62afd8472cb24a63fa61daef80d3e821b/testtools-2.3.0-py2.py3-none-any.whl",
+    )

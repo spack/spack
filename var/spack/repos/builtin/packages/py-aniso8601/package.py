@@ -14,7 +14,13 @@ class PyAniso8601(PythonPackage):
 
     license("BSD-3-Clause")
 
-    version("9.0.1", sha256="72e3117667eedf66951bb2d93f4296a56b94b078a8a95905a052611fb3f1b973")
-    version("7.0.0", sha256="513d2b6637b7853806ae79ffaca6f3e8754bdd547048f5ccc1420aec4b714f1e")
-
-    depends_on("py-setuptools", type="build")
+    version(
+        "9.0.1",
+        sha256="1d2b7ef82963909e93c4f24ce48d4de9e66009a21bf1c1e1c85bdd0812fe412f",
+        url="https://pypi.org/packages/e3/04/e97c12dc034791d7b504860acfcdd2963fa21ae61eaca1c9d31245f812c3/aniso8601-9.0.1-py2.py3-none-any.whl",
+    )
+    version(
+        "7.0.0",
+        sha256="d10a4bf949f619f719b227ef5386e31f49a2b6d453004b21f02661ccc8670c7b",
+        url="https://pypi.org/packages/45/a4/b4fcadbdab46c2ec2d2f6f8b4ab3f64fd0040789ac7f065eba82119cd602/aniso8601-7.0.0-py2.py3-none-any.whl",
+    )

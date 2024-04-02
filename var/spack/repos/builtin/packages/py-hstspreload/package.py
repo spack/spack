@@ -14,7 +14,8 @@ class PyHstspreload(PythonPackage):
 
     license("BSD-3-Clause")
 
-    version("2020.9.23", sha256="35822733ba67cfb4efc6cd7d1230b509f0bd42c90eeb329faf2fe679f801e40f")
-
-    depends_on("py-setuptools", type="build")
-    depends_on("py-wheel", type="build")
+    version(
+        "2020.9.23",
+        sha256="d0b5ee3f9f2aa7d2f0c5e8fe7b3b6605eef26a302ba373e0d5a76e7d8e871504",
+        url="https://pypi.org/packages/ae/c7/48e6c0c9391b277e47de6040732ffd78a4e518fcea07c7adda37219505c9/hstspreload-2020.9.23-py3-none-any.whl",
+    )

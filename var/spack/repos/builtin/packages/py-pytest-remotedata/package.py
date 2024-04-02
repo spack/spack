@@ -14,10 +14,13 @@ class PyPytestRemotedata(PythonPackage):
 
     license("BSD-3-Clause")
 
-    version("0.4.0", sha256="be21c558e34d7c11b0f6aeb50956c09520bffcd02b7fce9c6f8e8531a401a1c8")
+    version(
+        "0.4.0",
+        sha256="48ebd360d24bc670cfeca43fff62c1866251af9cfe53f2662f225f74b3496357",
+        url="https://pypi.org/packages/b3/b3/f08170b2a24a108f555ce517aae70628ce152e195b53d5dfac1dd33d94d2/pytest_remotedata-0.4.0-py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools@30.3:", type="build")
-    depends_on("py-setuptools-scm", type="build")
-
-    depends_on("py-pytest@4.6:", type=("build", "run"))
-    depends_on("py-packaging", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("python@3.7:", when="@0.4:")
+        depends_on("py-packaging", when="@0.3.3:")
+        depends_on("py-pytest@4.6:", when="@0.3.3:")

@@ -13,8 +13,12 @@ class PyAzureKeyvaultSecrets(PythonPackage):
     homepage = "https://github.com/Azure/azure-sdk-for-python/tree/master/sdk/keyvault/azure-keyvault-secrets"
     pypi = "azure-keyvault-secrets/azure-keyvault-secrets-4.1.0.zip"
 
-    version("4.1.0", sha256="4f3bfac60e025e01dd1c1998b73649d45d706975356c0cf147174cf5a6ddf8be")
+    version(
+        "4.1.0",
+        sha256="743a2eabb2bbb21d50b46fa6b321361b9b61121387ec35c0f3d953778793c179",
+        url="https://pypi.org/packages/6e/66/dc763e4ad80ea059d2a3df55fab8fbfb9ce39f79c0fd38f9c469d05bdbea/azure_keyvault_secrets-4.1.0-py2.py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-azure-core@1.2.1:1", type=("build", "run"))
-    depends_on("py-msrest@0.6.0:", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-azure-core@1.2.1:", when="@4.0.1:4.2.0-beta1")
+        depends_on("py-msrest@0.6.0:", when="@4.0.1:4.2")

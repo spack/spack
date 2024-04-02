@@ -16,13 +16,15 @@ class PyCoveralls(PythonPackage):
 
     license("MIT")
 
-    version("3.0.1", sha256="cbb942ae5ef3d2b55388cb5b43e93a269544911535f1e750e1c656aef019ce60")
+    version(
+        "3.0.1",
+        sha256="7bd173b3425733661ba3063c88f180127cc2b20e9740686f86d2622b31b41385",
+        url="https://pypi.org/packages/54/f5/a6431412a456267b43b03ebd3670d8e196754f5280a2409a4c9ceaccf192/coveralls-3.0.1-py2.py3-none-any.whl",
+    )
 
     variant("pyyaml", default=False, description="Enable useage of pyyaml")
 
-    depends_on("python@3.5:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
-    depends_on("py-pyyaml@3.10:", type=("build", "run"), when="+pyyaml")
-    depends_on("py-coverage@4.1:5", type=("build", "run"))
-    depends_on("py-docopt@0.6.1:", type=("build", "run"))
-    depends_on("py-pyyaml@1.0.0:", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-coverage@4.1:5", when="@2:3.2")
+        depends_on("py-docopt@0.6.1:")
+        depends_on("py-requests@1:")

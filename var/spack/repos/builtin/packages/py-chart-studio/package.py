@@ -14,11 +14,14 @@ class PyChartStudio(PythonPackage):
 
     license("MIT")
 
-    version("1.1.0", sha256="a17283b62470306d77060b200f13f9749c807dd15613c113d36f8d057f5c7019")
+    version(
+        "1.1.0",
+        sha256="fd183185d6e6d31c642567145c1a862f941ca9c7695aac8b2f3ebbcbcea31a7a",
+        url="https://pypi.org/packages/ca/ce/330794a6b6ca4b9182c38fc69dd2a9cbff60fd49421cb8648ee5fee352dc/chart_studio-1.1.0-py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-
-    depends_on("py-plotly", type=("build", "run"))
-    depends_on("py-requests", type=("build", "run"))
-    depends_on("py-retrying@1.3.3:", type=("build", "run"))
-    depends_on("py-six", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-plotly", when="@:1.0.0-alpha1,1.0.0-alpha3:")
+        depends_on("py-requests", when="@:1.0.0-alpha1,1.0.0-alpha3:")
+        depends_on("py-retrying@1.3.3:", when="@:1.0.0-alpha1,1.0.0-alpha3:")
+        depends_on("py-six", when="@:1.0.0-alpha1,1.0.0-alpha3:")

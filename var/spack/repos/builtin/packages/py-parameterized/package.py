@@ -12,6 +12,8 @@ class PyParameterized(PythonPackage):
     homepage = "https://github.com/wolever/parameterized"
     pypi = "parameterized/parameterized-0.7.1.tar.gz"
 
-    version("0.7.1", sha256="6a94dbea30c6abde99fd4c2f2042c1bf7f980e48908bf92ead62394f93cf57ed")
-
-    depends_on("py-setuptools", type="build")
+    version(
+        "0.7.1",
+        sha256="ea0326ba5bbbe7c427329a27b75003410df07d1173ca254976f8f5a64922c322",
+        url="https://pypi.org/packages/a3/bf/6ef8239028beae8298e0806b4f79c2466b1b16ca5b85dc13d631c5ea92c4/parameterized-0.7.1-py2.py3-none-any.whl",
+    )

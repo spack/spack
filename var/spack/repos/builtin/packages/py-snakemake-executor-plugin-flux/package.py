@@ -15,10 +15,13 @@ class PySnakemakeExecutorPluginFlux(PythonPackage):
 
     license("MIT")
 
-    version("0.1.0", sha256="92b1944dcf9ea163519a8879d4d638df2b3d0cd83ea6e8397d26046897811214")
+    version(
+        "0.1.0",
+        sha256="e0f02a1be00020bfb625e3d05d5ab584e0f56520d84ba729af957ecf2b9f8469",
+        url="https://pypi.org/packages/27/e4/f7cb4276eb8e4e2230326ffeb3b559423c19d3e7480d1e1ad584ba355e34/snakemake_executor_plugin_flux-0.1.0-py3-none-any.whl",
+    )
 
-    depends_on("py-snakemake-interface-common@1.14:1", type=("build", "run"))
-    depends_on("py-snakemake-interface-executor-plugins@8.1.1:8", type=("build", "run"))
-
-    depends_on("python@3.11:3", type=("build", "run"))
-    depends_on("py-poetry-core", type="build")
+    with default_args(type="run"):
+        depends_on("python@3.11:3")
+        depends_on("py-snakemake-interface-common@1.14:")
+        depends_on("py-snakemake-interface-executor-plugins@8.1.1:8", when="@:0.1.0")

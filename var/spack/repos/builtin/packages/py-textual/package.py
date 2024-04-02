@@ -13,14 +13,17 @@ class PyTextual(PythonPackage):
     homepage = "https://github.com/Textualize/textual"
     pypi = "textual/textual-0.47.1.tar.gz"
 
-    version("0.47.1", sha256="4b82e317884bb1092f693f474c319ceb068b5a0b128b121f1aa53a2d48b4b80c")
+    version(
+        "0.47.1",
+        sha256="da79df2e138f6de51bda84a1ee1460936bb2ecf5527ca2d47b9b59c584323327",
+        url="https://pypi.org/packages/b7/3f/61a8eae44a5ecffde54a69146e2885bd1b1a877ed46148b2c4e97eb8384b/textual-0.47.1-py3-none-any.whl",
+    )
 
-    depends_on("python@3.8:3", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("python@3.8:3", when="@0.44:")
+        depends_on("py-markdown-it-py@2.1:+linkify+plugins")
+        depends_on("py-rich@13.3.3:")
+        depends_on("py-typing-extensions@4.4:")
 
-    depends_on("py-poetry-core@1.2.0:", type="build")
-    depends_on("py-rich@13.3.3:", type=("build", "run"))
-    depends_on("py-markdown-it-py+linkify@2.1.0:", type=("build", "run"))
-    depends_on("py-mdit-py-plugins", type=("build", "run"))
     # Depending on py-mdit-py-plugins rather than on py-markdown-it-py+plugins,
     # because py-markdown-it-py+plugins would cause a circular dependency
-    depends_on("py-typing-extensions@4.4.0:4", type=("build", "run"))

@@ -17,6 +17,8 @@ class PySimpervisor(PythonPackage):
 
     license("BSD-3-Clause")
 
-    version("0.4", sha256="cec79e13cdbd6edb04a5c98c1ff8d4bd9713e706c069226909a1ef0e89d393c5")
-
-    depends_on("py-setuptools", type="build")
+    version(
+        "0.4",
+        sha256="8af72599d089efcfff30a86266de44b874b689611baa1345213795624fbd74fa",
+        url="https://pypi.org/packages/91/bb/61db1f8e008a4dcd668e8be37bd29a2f3dbd615f503686649c82fc3e544b/simpervisor-0.4-py3-none-any.whl",
+    )

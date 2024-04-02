@@ -16,10 +16,15 @@ class PyCylcRose(PythonPackage):
 
     license("GPL-3.0-only")
 
-    version("1.3.0", sha256="017072b69d7a50fa6d309a911d2428743b07c095f308529b36b1b787ebe7ab88")
+    version(
+        "1.3.0",
+        sha256="34319cefea4f039de9babc72e79788ca7b38a13f7df52bf26ab862f07005c205",
+        url="https://pypi.org/packages/bd/16/9d591c837df9e0321d678fd65206a01dd74f15afc43e078b2b7d7ad90c3a/cylc_rose-1.3.0-py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-metomi-rose@2.1", type=("build", "run"))
-    depends_on("py-cylc-flow@8.2", type=("build", "run"))
-    depends_on("py-metomi-isodatetime", type=("build", "run"))
-    depends_on("py-jinja2", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("python@3.7:", when="@1:")
+        depends_on("py-cylc-flow@8.2:", when="@1.3:")
+        depends_on("py-jinja2", when="@1:")
+        depends_on("py-metomi-isodatetime", when="@1:")
+        depends_on("py-metomi-rose@2.1", when="@1.3:1.3.1")

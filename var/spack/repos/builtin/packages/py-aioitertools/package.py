@@ -16,10 +16,17 @@ class PyAioitertools(PythonPackage):
 
     license("MIT")
 
-    version("0.11.0", sha256="42c68b8dd3a69c2bf7f2233bf7df4bb58b557bca5252ac02ed5187bbc67d6831")
-    version("0.7.1", sha256="54a56c7cf3b5290d1cb5e8974353c9f52c677612b5d69a859369a020c53414a3")
+    version(
+        "0.11.0",
+        sha256="04b95e3dab25b449def24d7df809411c10e62aab0cbe31a50ca4e68748c43394",
+        url="https://pypi.org/packages/45/66/d1a9fd8e6ff88f2157cb145dd054defb0fd7fe2507fe5a01347e7c690eab/aioitertools-0.11.0-py3-none-any.whl",
+    )
+    version(
+        "0.7.1",
+        sha256="8972308474c41ed5e0636819f948ebff32f2318e70f7e7d23cd208c4357cc773",
+        url="https://pypi.org/packages/32/0b/3260ac050de07bf6e91871944583bb8598091da19155c34f7ef02244709c/aioitertools-0.7.1-py3-none-any.whl",
+    )
 
-    depends_on("python@3.6:", type=("build", "run"))
-    depends_on("py-flit-core@2:3", type="build")
-    depends_on("py-typing-extensions@3.7:", when="@0.7.1", type=("build", "run"))
-    depends_on("py-typing-extensions@4:", when="@0.11.0: ^python@:3.9", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-typing-extensions@4:", when="@0.9: ^python@:3.9")
+        depends_on("py-typing-extensions@3.7:", when="@0.7")

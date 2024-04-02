@@ -14,8 +14,12 @@ class PyEmailValidator(PythonPackage):
 
     license("CC0-1.0")
 
-    version("1.3.1", sha256="d178c5c6fa6c6824e9b04f199cf23e79ac15756786573c190d2ad13089411ad2")
+    version(
+        "1.3.1",
+        sha256="49a72f5fa6ed26be1c964f0567d931d10bf3fdeeacdf97bc26ef1cd2a44e0bda",
+        url="https://pypi.org/packages/ba/ec/adc595d04e795b04bb0028fc6b067713fdb4a7e8cec44b428f7144fc432e/email_validator-1.3.1-py2.py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-dnspython@1.15:", type=("build", "run"))
-    depends_on("py-idna@2:", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-dnspython@1.15:", when="@:1")
+        depends_on("py-idna@2:")

@@ -16,9 +16,11 @@ class PySphinxArgparse(PythonPackage):
 
     license("MIT")
 
-    version("0.3.1", sha256="82151cbd43ccec94a1530155f4ad34f251aaca6a0ffd5516d7fadf952d32dc1e")
+    version(
+        "0.3.1",
+        sha256="295ccae425874630b6a3b47254854027345d786bab2c3ffd5e9a0407bc6856b2",
+        url="https://pypi.org/packages/d3/78/ac134e24feef6cffde66d3b67439d07624749dbaddd7fe7404b22f01f85b/sphinx_argparse-0.3.1-py2.py3-none-any.whl",
+    )
 
-    depends_on("python@2.7.0:2.7,3.5:", type=("build", "run"))
-    depends_on("py-sphinx@1.2.0:", type=("build", "run"))
-    depends_on("py-poetry-core", type="build")
-    depends_on("py-setuptools", type="build")
+    with default_args(type="run"):
+        depends_on("py-sphinx@1.2:", when="@0.3:")

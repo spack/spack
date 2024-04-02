@@ -14,7 +14,11 @@ class PyNbstripout(PythonPackage):
 
     license("MIT")
 
-    version("0.6.1", sha256="9065bcdd1488b386e4f3c081ffc1d48f4513a2f8d8bf4d0d9a28208c5dafe9d3")
+    version(
+        "0.6.1",
+        sha256="5ff6eb0debbcd656c4a64db8e082a24fabcfc753a9e8c9f6d786971e8f29e110",
+        url="https://pypi.org/packages/85/bd/b008a9f66ce2537ff86fbcd3beaf5a6fd86ede0897b0b6e9e65c447bb84a/nbstripout-0.6.1-py2.py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-nbformat", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-nbformat")

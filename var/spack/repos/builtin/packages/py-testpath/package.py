@@ -15,10 +15,18 @@ class PyTestpath(PythonPackage):
 
     license("BSD-3-Clause")
 
-    version("0.6.0", sha256="2f1b97e6442c02681ebe01bd84f531028a7caea1af3825000f52345c30285e0f")
-    version("0.5.0", sha256="1acf7a0bcd3004ae8357409fc33751e16d37ccc650921da1094a86581ad1e417")
-    version("0.4.2", sha256="b694b3d9288dbd81685c5d2e7140b81365d46c29f5db4bc659de5aa6b98780f8")
-
-    depends_on("python@3.5:", type=("build", "run"), when="@0.5.0:")
-    depends_on("py-flit-core@3.2.0:3.2", type="build", when="@:0.5.0")
-    depends_on("py-flit-core@3.2.0:3", type="build", when="@0.6.0:")
+    version(
+        "0.6.0",
+        sha256="8ada9f80a2ac6fb0391aa7cdb1a7d11cfa8429f693eda83f74dde570fe6fa639",
+        url="https://pypi.org/packages/86/43/1ebfb29c2ca1df2bdb33dbcb2b526b77ee96873ba7b9e25650ddd4ae7156/testpath-0.6.0-py3-none-any.whl",
+    )
+    version(
+        "0.5.0",
+        sha256="8044f9a0bab6567fc644a3593164e872543bb44225b0e24846e2c89237937589",
+        url="https://pypi.org/packages/ac/87/5422f6d056bfbded920ccf380a65de3713a3b95a95ba2255be2a3fb4f464/testpath-0.5.0-py3-none-any.whl",
+    )
+    version(
+        "0.4.2",
+        sha256="46c89ebb683f473ffe2aab0ed9f12581d4d078308a3cb3765d79c6b2317b0109",
+        url="https://pypi.org/packages/be/a4/162f9ebb6489421fe46dcca2ae420369edfee4b563c668d93cb4605d12ba/testpath-0.4.2-py2.py3-none-any.whl",
+    )

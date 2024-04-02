@@ -14,36 +14,107 @@ class PyJedi(PythonPackage):
 
     license("MIT")
 
-    version("0.18.2", sha256="bae794c30d07f6d910d32a7048af09b5a39ed740918da923c6b780790ebac612")
-    version("0.18.1", sha256="74137626a64a99c8eb6ae5832d99b3bdd7d29a3850fe2aa80a4126b2a7d949ab")
-    version("0.18.0", sha256="92550a404bad8afed881a137ec9a461fed49eca661414be45059329614ed0707")
-    version("0.17.2", sha256="86ed7d9b750603e4ba582ea8edc678657fb4007894a12bcf6f4bb97892f31d20")
-    version("0.17.1", sha256="807d5d4f96711a2bcfdd5dfa3b1ae6d09aa53832b182090b222b5efb81f52f63")
-    version("0.15.1", sha256="ba859c74fa3c966a22f2aeebe1b74ee27e2a462f56d3f5f7ca4a59af61bfe42e")
-    version("0.15.0", sha256="9f16cb00b2aee940df2efc1d7d7c848281fd16391536a3d4561f5aea49db1ee6")
-    version("0.14.1", sha256="53c850f1a7d3cfcd306cc513e2450a54bdf5cacd7604b74e42dd1f0758eaaf36")
-    version("0.14.0", sha256="49ccb782651bb6f7009810d17a3316f8867dde31654c750506970742e18b553d")
-    version("0.13.3", sha256="2bb0603e3506f708e792c7f4ad8fc2a7a9d9c2d292a358fbbd58da531695595b")
-    version("0.13.2", sha256="571702b5bd167911fe9036e5039ba67f820d6502832285cde8c881ab2b2149fd")
-    version("0.13.1", sha256="b7493f73a2febe0dc33d51c99b474547f7f6c0b2c8fb2b21f453eef204c12148")
-    version("0.13.0", sha256="e4db7a2e08980e48c6aec6588483629c81fdcf9b6d9e6a372b40ed7fec91f310")
-    version("0.12.1", sha256="b409ed0f6913a701ed474a614a3bb46e6953639033e31f769ca7581da5bd1ec1")
-    version("0.12.0", sha256="1972f694c6bc66a2fac8718299e2ab73011d653a6d8059790c3476d2353b99ad")
-    version("0.10.2", sha256="7abb618cac6470ebbd142e59c23daec5e6e063bfcecc8a43a037d2ab57276f4e")
-    version("0.10.1", sha256="2420daf6fd00e80caf1bc22903598b5bf5560c900113dcc120eaefc7b4d50e06")
-    # unfortunately pypi.io only offers a .whl for 0.10.0
+    version(
+        "0.18.2",
+        sha256="203c1fd9d969ab8f2119ec0a3342e0b49910045abe6af0a3ae83a5764d54639e",
+        url="https://pypi.org/packages/6d/60/4acda63286ef6023515eb914543ba36496b8929cb7af49ecce63afde09c6/jedi-0.18.2-py2.py3-none-any.whl",
+    )
+    version(
+        "0.18.1",
+        sha256="637c9635fcf47945ceb91cd7f320234a7be540ded6f3e99a50cb6febdfd1ba8d",
+        url="https://pypi.org/packages/b3/0e/836f12ec50075161e365131f13f5758451645af75c2becf61c6351ecec39/jedi-0.18.1-py2.py3-none-any.whl",
+    )
+    version(
+        "0.18.0",
+        sha256="18456d83f65f400ab0c2d3319e48520420ef43b23a086fdc05dff34132f0fb93",
+        url="https://pypi.org/packages/f9/36/7aa67ae2663025b49e8426ead0bad983fee1b73f472536e9790655da0277/jedi-0.18.0-py2.py3-none-any.whl",
+    )
+    version(
+        "0.17.2",
+        sha256="98cc583fa0f2f8304968199b01b6b4b94f469a1f4a74c1560506ca2a211378b5",
+        url="https://pypi.org/packages/c3/d4/36136b18daae06ad798966735f6c3fb96869c1be9f8245d2a8f556e40c36/jedi-0.17.2-py2.py3-none-any.whl",
+    )
+    version(
+        "0.17.1",
+        sha256="1ddb0ec78059e8e27ec9eb5098360b4ea0a3dd840bedf21415ea820c21b40a22",
+        url="https://pypi.org/packages/07/83/7e711550fcb2722f1ca9c8564d5bb23f625ae67d99f4a360b428c0f3e932/jedi-0.17.1-py2.py3-none-any.whl",
+    )
+    version(
+        "0.15.1",
+        sha256="786b6c3d80e2f06fd77162a07fed81b8baa22dde5d62896a790a331d6ac21a27",
+        url="https://pypi.org/packages/55/54/da994f359e4e7da4776a200e76dbc85ba5fc319eefc22e33d55296d95a1d/jedi-0.15.1-py2.py3-none-any.whl",
+    )
+    version(
+        "0.15.0",
+        sha256="0e4ba6cb008377b5a3c015a99ca007711f22fd69b8d5ff9c1f07673aed512adb",
+        url="https://pypi.org/packages/26/1a/010f06da107e3e81eba8a45f7a9bc95ef11953fb8a84f1e3d965b7c02c21/jedi-0.15.0-py2.py3-none-any.whl",
+    )
+    version(
+        "0.14.1",
+        sha256="e07457174ef7cb2342ff94fa56484fe41cec7ef69b0059f01d3f812379cb6f7c",
+        url="https://pypi.org/packages/4e/06/e906725a5b3ad7996bbdbfe9958aab75db64ef84bbaabefe47574de58865/jedi-0.14.1-py2.py3-none-any.whl",
+    )
+    version(
+        "0.14.0",
+        sha256="79d0f6595f3846dffcbe667cc6dc821b96e5baa8add125176c31a3917eb19d58",
+        url="https://pypi.org/packages/68/42/6309f3871b2f8361764ac5b2fe6719f9c6e6561d9307d8cecda319cf5843/jedi-0.14.0-py2.py3-none-any.whl",
+    )
+    version(
+        "0.13.3",
+        sha256="2c6bcd9545c7d6440951b12b44d373479bf18123a401a52025cf98563fbd826c",
+        url="https://pypi.org/packages/25/2b/1f188901be099d52d7b06f4d3b7cb9f8f09692c50697b139eaf6fa2928d8/jedi-0.13.3-py2.py3-none-any.whl",
+    )
+    version(
+        "0.13.2",
+        sha256="c8481b5e59d34a5c7c42e98f6625e633f6ef59353abea6437472c7ec2093f191",
+        url="https://pypi.org/packages/c2/bc/54d53f5bc4658380d0eca9055d72be4df45e5bfd91a4bac97da224a92553/jedi-0.13.2-py2.py3-none-any.whl",
+    )
+    version(
+        "0.13.1",
+        sha256="0191c447165f798e6a730285f2eee783fff81b0d3df261945ecb80983b5c3ca7",
+        url="https://pypi.org/packages/7a/1a/9bd24a185873b998611c2d8d4fb15cd5e8a879ead36355df7ee53e9111bf/jedi-0.13.1-py2.py3-none-any.whl",
+    )
+    version(
+        "0.13.0",
+        sha256="0ad328f5d9d0a6c8b22a0ca429c7b0cea1974e2b2d5a00e0bc45074dcd44d255",
+        url="https://pypi.org/packages/50/a2/b01263ac7192cda0207e5353176091e563183691f399b0b5d30f5b4e0549/jedi-0.13.0-py2.py3-none-any.whl",
+    )
+    version(
+        "0.12.1",
+        sha256="c254b135fb39ad76e78d4d8f92765ebc9bf92cbc76f49e97ade1d5f5121e1f6f",
+        url="https://pypi.org/packages/3d/68/8bbf0ef969095a13ba0d4c77c1945bd86e9811960d052510551d29a2f23b/jedi-0.12.1-py2.py3-none-any.whl",
+    )
+    version(
+        "0.12.0",
+        sha256="5861f6dc0c16e024cbb0044999f9cf8013b292c05f287df06d3d991a87a4eb89",
+        url="https://pypi.org/packages/e7/42/074192a165622e645ed4aeade63e76e56b3496a044569b3c6cae3a918352/jedi-0.12.0-py2.py3-none-any.whl",
+    )
+    version(
+        "0.10.2",
+        sha256="96678411f2ffa444da3a5e7fdd4adc513b728a4a4617b30308be5c950722424b",
+        url="https://pypi.org/packages/bd/04/789d25c1786e6d17f4a19847fd6536a1a491d48e8116db0b5c9c1fe5e821/jedi-0.10.2-py2.py3-none-any.whl",
+    )
+    version(
+        "0.10.1",
+        sha256="b18896833027d42556d44571260801cca1a08cca80dd95af500ca728b8082e4b",
+        url="https://pypi.org/packages/7e/1e/ea5d5723ef19fb0b76895c4415e1cbf26bc24ee794094e077951e37779be/jedi-0.10.1-py2.py3-none-any.whl",
+    )
     version(
         "0.10.0",
-        sha256="d6a7344df9c80562c3f62199278004ccc7c5889be9f1a6aa5abde117ec085123",
-        url="https://github.com/davidhalter/jedi/archive/v0.10.0.tar.gz",
+        sha256="c40b58119be456a8fb6a61a981c3bcaaccfc13c350cae59a96337d54b59cc5ae",
+        url="https://pypi.org/packages/06/f0/1d2a8462b322a200323f6c1fbd18a3d4047d2ed89a39b2f7f9a2b994a271/jedi-0.10.0-py2.py3-none-any.whl",
     )
-    version("0.9.0", sha256="3b4c19fba31bdead9ab7350fb9fa7c914c59b0a807dcdd5c00a05feb85491d31")
+    version(
+        "0.9.0",
+        sha256="51f2521a257bbc5ef036fddeaf29168e1312782fc580c5e889e53dba41ea730d",
+        url="https://pypi.org/packages/c4/59/e48a369168a84c8aef9127c227fc3b9f53bc9c528b24c2cda20487bc2deb/jedi-0.9.0-py2.py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-parso@0.8:", when="@0.18")
+        depends_on("py-parso@0.7", when="@0.17.1:0.17")
+        depends_on("py-parso@0.5:", when="@0.14.1:0.15.1")
+        depends_on("py-parso@0.3:", when="@0.12.1:0.14.0")
+        depends_on("py-parso@0.2:", when="@0.12:0.12.0")
 
-    depends_on("py-parso@0.8", when="@0.18.0:", type=("build", "run"))
-    depends_on("py-parso@0.7", when="@0.17", type=("build", "run"))
-    depends_on("py-parso@0.5.2:", when="@0.15.2:0.16", type=("build", "run"))
-    depends_on("py-parso@0.5.0:", when="@0.14.1:0.15.1", type=("build", "run"))
-    depends_on("py-parso@0.3.0:", when="@0.12.1:0.14.0", type=("build", "run"))
-    depends_on("py-parso@0.2.0:", when="@0.12.0", type=("build", "run"))
+    # unfortunately pypi.io only offers a .whl for 0.10.0

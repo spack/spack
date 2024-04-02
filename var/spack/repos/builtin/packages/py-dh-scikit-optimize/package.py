@@ -23,23 +23,44 @@ class PyDhScikitOptimize(PythonPackage):
 
     license("BSD-3-Clause")
 
-    version("0.9.5", sha256="c2777839a536215ab40fc5db2242809ccffd5e5b23718e23d58ea76ff35a7543")
-    version("0.9.4", sha256="9acfba4077fe45f3854a4af255763a3e8a396c05bd2a7c761a969171366b3840")
-    version("0.9.3", sha256="0c922c61dc1f010c7bbd2f0930c766e8ae040c35b129e4de6d51b611fd72b7c9")
-    version("0.9.2", sha256="9fd2d3accad7c3aca1d0edd0c88ec5490e9bc7a07f31d88f4051466a132dfd1d")
-    version("0.9.1", sha256="70e70011f4fd107082174c557de70ba37c215e71a676788234b85d5c370fd7bd")
-    version("0.9.0", sha256="fe70aa57ec5150a3d356b2184f0dda1ecc4ecb7e82d35edac3980094d409d676")
+    version(
+        "0.9.5",
+        sha256="2921adb41f4efa9c104c38126aa2fd5d4213e0db4da76fa506525a44bf8849ab",
+        url="https://pypi.org/packages/c6/f4/19a326dcc62f6387bb6c91e52aa838c7be7671e5fb4fce7c5f98303eda6c/dh_scikit_optimize-0.9.5-py2.py3-none-any.whl",
+    )
+    version(
+        "0.9.4",
+        sha256="fc19c8083493b571b644d8484ec40ba57e5ed12c53fd3dbec7f5a6fd1696c60b",
+        url="https://pypi.org/packages/0b/1b/2b7cffd77709717d3bc8cc0b3bac5f33d4e8001a91cbeefbc5e1c63fafe9/dh_scikit_optimize-0.9.4-py2.py3-none-any.whl",
+    )
+    version(
+        "0.9.3",
+        sha256="b170c3912e12157e189d3fe0faea0e7394073f05365f84990714f2713ca20dc0",
+        url="https://pypi.org/packages/05/a8/6076430342ad6afaa062851f4c084eb83d2886aad3fe36093246cea25625/dh_scikit_optimize-0.9.3-py2.py3-none-any.whl",
+    )
+    version(
+        "0.9.2",
+        sha256="14ee454b11aa59b963992df33a72f66f7cdfb5abe333fd05236e7308001ad6e8",
+        url="https://pypi.org/packages/bd/8b/4060e9050e40f016ff07625764c8b97c10b340464a7145dae9e297e41375/dh_scikit_optimize-0.9.2-py2.py3-none-any.whl",
+    )
+    version(
+        "0.9.1",
+        sha256="ac881251f7c60d76ac6d80d0e193247c7137de43c34818c5b173cc32103bd4b1",
+        url="https://pypi.org/packages/57/e4/315511ee029de75ea1f3de7f962897efdc3b533c7e36d6276886a9c1d9ec/dh_scikit_optimize-0.9.1-py2.py3-none-any.whl",
+    )
+    version(
+        "0.9.0",
+        sha256="d2608b97f23839aab6049a7314fcd9d93d6df6574a449f69623f40b2e278582c",
+        url="https://pypi.org/packages/c1/14/4a7825d71aac5a313e94b426d0116a523bbcb966b79360761a849ea57e6f/dh_scikit_optimize-0.9.0-py2.py3-none-any.whl",
+    )
 
     variant("plots", default=False, description="Build with plot support from py-matplotlib")
 
-    depends_on("python@3.6:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
-    depends_on("py-joblib@0.11:", type=("build", "run"))
-    depends_on("py-pyaml@16.9:", type=("build", "run"))
-    depends_on("py-numpy@1.13.3:", type=("build", "run"))
-    depends_on("py-scipy@0.19.1:", type=("build", "run"))
-    depends_on("py-scikit-learn@0.20.0:", type=("build", "run"))
-    depends_on("py-configspace@0.4.20:", type=("build", "run"))
-    depends_on("py-pandas", type=("build", "run"), when="@0.9.1:")
-
-    depends_on("py-matplotlib@2.0.0:", when="+plots", type="run")
+    with default_args(type="run"):
+        depends_on("py-joblib@0.11:")
+        depends_on("py-matplotlib@2.0.0:", when="+plots")
+        depends_on("py-numpy@1.13.3:", when="@0.9:")
+        depends_on("py-pandas", when="@0.9.1:")
+        depends_on("py-pyaml@16:")
+        depends_on("py-scikit-learn@0.20.0:", when="@0.9:")
+        depends_on("py-scipy@0.19.1:", when="@0.9:")

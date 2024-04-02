@@ -14,7 +14,11 @@ class PyModin(PythonPackage):
 
     license("Apache-2.0")
 
-    version("0.16.2", sha256="8e3f4cb478ae08dcc71b5a345781d57f29d6b95bc6ce1dc5c14d597a382f1354")
+    version(
+        "0.16.2",
+        sha256="6c00c42887d7aac72dcaa1dad4f34f66f22364b4d9df88fde260bf3551d1bb82",
+        url="https://pypi.org/packages/d4/d1/0f7de03512702c42133a54a4c0a04a8aa0e2eecd318959c45eb798f8a8f1/modin-0.16.2-py3-none-any.whl",
+    )
 
     variant(
         "engine",
@@ -24,24 +28,12 @@ class PyModin(PythonPackage):
         "functional as long as dependencies are found at run-time",
     )
 
-    depends_on("python@3.6:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
-    depends_on("py-pandas@1.5.1", when="^python@3.8:", type=("build", "run"))
-    depends_on("py-pandas@1.1.5", when="^python@:3.7", type=("build", "run"))
-    depends_on("py-packaging", type=("build", "run"))
-    depends_on("py-numpy@1.18.5:", type=("build", "run"))
-    depends_on("py-fsspec", type=("build", "run"))
-    depends_on("py-psutil", type=("build", "run"))
-
-    with when("engine=ray"):
-        depends_on("py-ray@1.4:+default", type=("build", "run"))
-        depends_on("py-pyarrow@4.0.1:", type=("build", "run"))
-        depends_on("py-redis@3.5:3", type=("build", "run"))
-
-    with when("engine=dask"):
-        depends_on("py-dask@2.22:", type=("build", "run"))
-        depends_on("py-distributed@2.22:", type=("build", "run"))
-        depends_on("py-pickle5", when="^python@:3.7", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-fsspec", when="@:0.23.0")
+        depends_on("py-numpy@1.18.5:", when="@:0.23.0")
+        depends_on("py-packaging", when="@:0.23.0")
+        depends_on("py-pandas@1.5.1", when="@0.16.2:0.17.0")
+        depends_on("py-psutil", when="@0.15.2:0.23.0")
 
     def setup_run_environment(self, env):
         # modin/config/envvars.py

@@ -14,10 +14,12 @@ class PyRetry(PythonPackage):
 
     license("Apache-2.0")
 
-    version("0.9.2", sha256="f8bfa8b99b69c4506d6f5bd3b0aabf77f98cdb17f3c9fc3f5ca820033336fba4")
+    version(
+        "0.9.2",
+        sha256="ccddf89761fa2c726ab29391837d4327f819ea14d244c232a1d24c67a2f98606",
+        url="https://pypi.org/packages/4b/0d/53aea75710af4528a25ed6837d71d117602b01946b307a3912cb3cfcbcba/retry-0.9.2-py2.py3-none-any.whl",
+    )
 
-    depends_on("python@2.6:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
-    depends_on("py-pbr", type="build")
-    depends_on("py-decorator@3.4.2:", type=("build", "run"))
-    depends_on("py-py@1.4.26:1", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-decorator@3.4.2:", when="@0.9.2:")
+        depends_on("py-py@1.4.26:", when="@0.9.1:")

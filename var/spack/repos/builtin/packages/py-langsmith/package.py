@@ -13,11 +13,23 @@ class PyLangsmith(PythonPackage):
 
     license("MIT")
 
-    version("0.0.11", sha256="7c1be28257d6c7279c85f81e6d8359d1006af3b1238fc198d13ca75c8fe421c8")
-    version("0.0.10", sha256="11e5db0d8e29ee5583cabd872eeece8ce50738737b1f52f316ac984f4a1a58c5")
-    version("0.0.7", sha256="2f18e51cfd4e42f2b3cf00fa87e9d03012eb7269cdafd8e7c0cf7aa828dcc03e")
+    version(
+        "0.0.11",
+        sha256="c7bdbe28d3fece0eba88e0bd3b85717dbee52399b05a21ccebaa152e5b57e757",
+        url="https://pypi.org/packages/67/aa/1a14d85f428281c4e9b2677d299cd49980d2147d3bda3604d2dae2aa1a54/langsmith-0.0.11-py3-none-any.whl",
+    )
+    version(
+        "0.0.10",
+        sha256="716412979613a5eb550c9bce33165cd1bad296eb19009040155deccef427ef07",
+        url="https://pypi.org/packages/a9/ed/9813d7c199e705865902fdc1e2076b588d6f93ffac93d37f4b50a5205a1b/langsmith-0.0.10-py3-none-any.whl",
+    )
+    version(
+        "0.0.7",
+        sha256="9e0ab264b499daa778c694f9129859830820d3fb3a7c93309b630a22b68a88a9",
+        url="https://pypi.org/packages/2d/77/d2fbb2155b2683ec3a35ab96e2c32a355615748e31cf9a256341b445900b/langsmith-0.0.7-py3-none-any.whl",
+    )
 
-    depends_on("python@3.8.1:3", type=("build", "run"))
-    depends_on("py-poetry-core", type="build")
-    depends_on("py-pydantic@1", type=("build", "run"))
-    depends_on("py-requests@2", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("python@3.8:3")
+        depends_on("py-pydantic@1.0:1", when="@:0.0.21")
+        depends_on("py-requests@2:")

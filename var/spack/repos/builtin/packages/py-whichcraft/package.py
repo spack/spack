@@ -14,6 +14,8 @@ class PyWhichcraft(PythonPackage):
 
     license("BSD-3-Clause")
 
-    version("0.4.1", sha256="66875022b3b9da8ddf7ab236c15670a782094550d07daeb51ceba4bc61b6b4aa")
-
-    depends_on("py-setuptools", type="build")
+    version(
+        "0.4.1",
+        sha256="cd0e10b58960ab877d9f273cd28788730936c3cdaceec2dafad97c7cf3067d46",
+        url="https://pypi.org/packages/60/8a/5c52e30e11672f7e3aa61f348ddae443d122bcd96bc8b785ac76dbae944b/whichcraft-0.4.1-py2.py3-none-any.whl",
+    )

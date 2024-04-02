@@ -16,9 +16,11 @@ class PyPyperf(PythonPackage):
 
     license("MIT")
 
-    version("1.6.1", sha256="fbe793f6f2e036ab4dcca105b5c5aa34fd331dd881e7a3e158e5e218c63cfc32")
-    version("1.6.0", sha256="7af7b9cfd9d26548ab7127f8e51791357ecd78cda46aad5b2d9664a70fc58878")
-    version("1.5.1", sha256="9c271862bc2911be8eb01031a4a86cbc3f5bb615971514383802d3dcf46f18ed")
+    version(
+        "1.6.1",
+        sha256="b9074a5e16e526ebe260922005ee96b67621ce804efd3e8dd49de49b513397a8",
+        url="https://pypi.org/packages/7f/34/12f4f27e43ed9d2269162fbb07005a08b45b6ed275a0e50cc3afda84af76/pyperf-1.6.1-py2.py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-six", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-six", when="@:1")

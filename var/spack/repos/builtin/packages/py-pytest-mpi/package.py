@@ -15,7 +15,11 @@ class PyPytestMpi(PythonPackage):
 
     maintainers("tristan0x")
 
-    version("0.6", sha256="09b3cd3511f8f3cd4d205f54d4a7223724fed0ab68b872ed1123d312152325a9")
+    version(
+        "0.6",
+        sha256="1b7e193fb3be31d08c8e4dd7435e8e13e14b17ead6a6fc6aa07a6d3c7145590b",
+        url="https://pypi.org/packages/a6/2b/0ed49de84e96ebf771c86a16d88b48c08d291627cfcdce30973f8538c99e/pytest_mpi-0.6-py2.py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools@42:", type="build")
-    depends_on("py-pytest@3.4:", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-pytest", when="@0.5-alpha1:")

@@ -14,15 +14,25 @@ class PyPyjwt(PythonPackage):
 
     license("MIT")
 
-    version("2.4.0", sha256="d42908208c699b3b973cbeb01a969ba6a96c821eefb1c5bfe4c390c01d67abba")
-    version("2.1.0", sha256="fba44e7898bbca160a2b2b501f492824fc8382485d3a6f11ba5d0c1937ce6130")
-    version("1.7.1", sha256="8d59a976fb773f3e6a39c85636357c4f0e242707394cadadd9814f5cbaa20e96")
+    version(
+        "2.4.0",
+        sha256="72d1d253f32dbd4f5c88eaf1fdc62f3a19f676ccbadb9dbc5d07e951b2b26daf",
+        url="https://pypi.org/packages/1c/fb/b82e9601b00d88cf8bbee1f39b855ae773f9d5bcbcedb3801b2f72460696/PyJWT-2.4.0-py3-none-any.whl",
+    )
+    version(
+        "2.1.0",
+        sha256="934d73fbba91b0483d3857d1aff50e96b2a892384ee2c17417ed3203f173fca1",
+        url="https://pypi.org/packages/3f/32/d5d3cab27fee7f6b22d7cd7507547ae45d52e26030fa77d1f83d0526c6e5/PyJWT-2.1.0-py3-none-any.whl",
+    )
+    version(
+        "1.7.1",
+        sha256="5c6eca3c2940464d106b99ba83b00c6add741c9becaec087fb7ccdefea71350e",
+        url="https://pypi.org/packages/87/8b/6a9f14b5f781697e51259d81657e6048fd31a113229cf346880bb7545565/PyJWT-1.7.1-py2.py3-none-any.whl",
+    )
 
     variant("crypto", default=False, description="Build with cryptography support")
 
-    depends_on("python@2.7:2.8,3.4:", type=("build", "run"))
-    depends_on("python@3.6:", when="@2.1.0:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
-    depends_on("py-cryptography@1.4:", when="+crypto", type=("build", "run"))
-    depends_on("py-cryptography@3.3.1:3", when="@2.1:2.3+crypto", type=("build", "run"))
-    depends_on("py-cryptography@3.3.1:", when="@2.4:+crypto", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-cryptography@3.3.1:", when="@2.2:2.5+crypto")
+        depends_on("py-cryptography@3.3.1:3", when="@2.0.0:2.1+crypto")
+        depends_on("py-cryptography@1.4:", when="@1.5.3:1+crypto")

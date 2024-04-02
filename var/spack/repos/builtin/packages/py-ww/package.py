@@ -14,12 +14,8 @@ class PyWw(PythonPackage):
 
     license("MIT")
 
-    version("0.2.1", sha256="3664f1f91bf927fe597ab153e8df73c8954927258b3737220efd1cb9912ebd7e")
-
-    depends_on("py-setuptools", type="build")
-    depends_on("py-pytest-runner", type="build")
-
-    depends_on("py-chardet", type=("build", "run"))
-    depends_on("py-formatizer", type=("build", "run"))
-    depends_on("py-future", type=("build", "run"))
-    depends_on("py-six", type=("build", "run"))
+    version(
+        "0.2.1",
+        sha256="02d2b9ea134317901c889fc844958630f478b5d1a98d5938ce787cf92d02b8ed",
+        url="https://pypi.org/packages/54/f2/5a43036cb61ce29a49b99a53c7d0fb68a4274467064ff77c5feafca03177/ww-0.2.1-py3-none-any.whl",
+    )

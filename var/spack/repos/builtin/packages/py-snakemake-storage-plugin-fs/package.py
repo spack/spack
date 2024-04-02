@@ -16,13 +16,15 @@ class PySnakemakeStoragePluginFs(PythonPackage):
 
     license("MIT")
 
-    version("0.2.0", sha256="cad1859036cbf429ea6fdb97f242567ec54a36d0b6ff900ce0d3ecfb6a824ae7")
+    version(
+        "0.2.0",
+        sha256="228fdcf4688993a0e9910d788d35f7a11311d0d5b4d4940ac3c63e16621c1330",
+        url="https://pypi.org/packages/9c/3d/e7d3de5b78d898119bfdc59d3988919134a5cd1ff458e89daaebf265d3ab/snakemake_storage_plugin_fs-0.2.0-py3-none-any.whl",
+    )
 
-    depends_on("py-sysrsync@1.1.1:1", type=("build", "run"))
-    depends_on("py-reretry@0.11.8:0.11", type=("build", "run"))
-
-    depends_on("py-snakemake-interface-common@1.17:1", type=("build", "run"))
-    depends_on("py-snakemake-interface-storage-plugins@3.1:3", type=("build", "run"))
-
-    depends_on("python@3.11:3", type=("build", "run"))
-    depends_on("py-poetry-core", type="build")
+    with default_args(type="run"):
+        depends_on("python@3.11:3")
+        depends_on("py-reretry@0.11.8:", when="@0.2:")
+        depends_on("py-snakemake-interface-common@1.17:", when="@0.2:")
+        depends_on("py-snakemake-interface-storage-plugins@3.1:", when="@0.2:")
+        depends_on("py-sysrsync@1.1.1:")

@@ -16,8 +16,11 @@ class PyItolapi(PythonPackage):
 
     license("MIT")
 
-    version("4.1.2", sha256="37a866a117a80d3d72a6eb6b2cba30444751c644cc6bc4242f050750375a8397")
+    version(
+        "4.1.2",
+        sha256="5eb44a21ef2db4fdb890a1e2ec6b29b0a5f6b2a253872e5032915ca88823d8c0",
+        url="https://pypi.org/packages/b4/ec/e67083cb4c6ac58763ff8eb0f4128de7cf8d6a9d082c4e686e7b8a0595f6/itolapi-4.1.2-py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-
-    depends_on("py-requests@2", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-requests@2:", when="@:3.0.1,3.0.3:")

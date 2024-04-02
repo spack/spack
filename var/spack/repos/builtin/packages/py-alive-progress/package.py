@@ -16,12 +16,19 @@ class PyAliveProgress(PythonPackage):
 
     license("MIT")
 
-    version("2.4.1", sha256="089757c8197f27ad972ba27e1060f6db92368d83c736884e159034fd74865323")
-    version("1.6.2", sha256="642e1ce98becf226c8c36bf24e10221085998c5465a357a66fb83b7dc618b43e")
+    version(
+        "2.4.1",
+        sha256="5503ffca0a0607d5f0d24d3b10a718fe50e375470fa07602b246333eb7ec88ee",
+        url="https://pypi.org/packages/e4/01/7a6bcf3eb3fb030fac47854a984dcc488304af15721df33ce827f25158d1/alive_progress-2.4.1-py3-none-any.whl",
+    )
+    version(
+        "1.6.2",
+        sha256="0f1111f56b1b870f5e5edd57e89fc97dc1ca0a73eb5c5a09533494c7e850a818",
+        url="https://pypi.org/packages/cc/5c/d63b13cc0bd945b4a9b16e921cc00c5657143f68da4f296bb628b8d1ff17/alive_progress-1.6.2-py3-none-any.whl",
+    )
 
-    depends_on("python@2.7:3.8", type=("build", "run"))
-    depends_on("python@3.6:3", type=("build", "run"), when="@2:")
-    depends_on("python@3.7:3", type=("build", "run"), when="@2.2:")
-    depends_on("py-setuptools", type="build")
-    depends_on("py-about-time@3.1.1", type=("build", "run"), when="@2.4.1:")
-    depends_on("py-grapheme@0.6.0", type=("build", "run"), when="@2.4.1:")
+    with default_args(type="run"):
+        depends_on("python@3.7:3", when="@2.2:")
+        depends_on("python@:3", when="@:2.1")
+        depends_on("py-about-time@3.1.1:3.1", when="@2")
+        depends_on("py-grapheme@0.6:", when="@2:")

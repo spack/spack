@@ -15,9 +15,13 @@ class PyGalaxy2cwl(PythonPackage):
 
     license("BSD-3-Clause")
 
-    version("0.1.4", sha256="ceb9024a7bf74c874be216c943cc97343563b1ec78f85fd3ec5b482c64350290")
+    version(
+        "0.1.4",
+        sha256="b6558272656e6f279948ee76d9863b4c00f467ad59b2d1190ca2304e514f7ce9",
+        url="https://pypi.org/packages/8d/38/79857ee2a38118ef4007311b7cba480b410369333ba004c6d842feadcc77/galaxy2cwl-0.1.4-py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-
-    depends_on("py-pyyaml@5.3.0:", type=("build", "run"))
-    depends_on("py-gxformat2@0.11.0:", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("python@:3")
+        depends_on("py-gxformat2@0.11:")
+        depends_on("py-pyyaml@5.3:")

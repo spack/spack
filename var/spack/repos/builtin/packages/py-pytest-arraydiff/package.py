@@ -13,9 +13,13 @@ class PyPytestArraydiff(PythonPackage):
     homepage = "https://github.com/astropy/pytest-arraydiff"
     pypi = "pytest-arraydiff/pytest-arraydiff-0.3.tar.gz"
 
-    version("0.3", sha256="de2d62f53ecc107ed754d70d562adfa7573677a263216a7f19aa332f20dc6c15")
+    version(
+        "0.3",
+        sha256="7d981cf9c09178f40d00c7b791a226438a2c1b46f210ddaaaa1c6aa63cae6456",
+        url="https://pypi.org/packages/b2/dd/0096e95a7da9d6cd566c35bd85b97659303007c2e8a3573c5d51fbf5da3d/pytest_arraydiff-0.3-py2.py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-numpy", type=("build", "run"))
-    depends_on("py-six", type=("build", "run"))
-    depends_on("py-pytest", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-numpy", when="@0.2:")
+        depends_on("py-pytest", when="@0.2:0.3")
+        depends_on("py-six", when="@0.2:0.3")

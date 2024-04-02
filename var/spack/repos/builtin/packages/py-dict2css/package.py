@@ -16,8 +16,12 @@ class PyDict2css(PythonPackage):
 
     license("MIT")
 
-    version("0.3.0", sha256="1e8b1bf580dca2083198f88a60ec88c878a8829d760dfe45483ef80fe2905117")
+    version(
+        "0.3.0",
+        sha256="ef934ce73a225fdd5f811b484fe9e2dd768f7ef14a89fc8f4eb5672597131d00",
+        url="https://pypi.org/packages/ff/1c/5c108f07fc0818bef046fd1d6cdd84ba081833d59b1adbc3a112a0f741cd/dict2css-0.3.0-py3-none-any.whl",
+    )
 
-    depends_on("py-whey", type="build")
-    depends_on("py-cssutils@2.2.0:", type=("build", "run"))
-    depends_on("py-domdf-python-tools@2.2.0:", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-cssutils@2.2:", when="@0.3:")
+        depends_on("py-domdf-python-tools@2.2:")

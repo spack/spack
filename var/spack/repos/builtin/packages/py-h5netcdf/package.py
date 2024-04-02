@@ -16,12 +16,18 @@ class PyH5netcdf(PythonPackage):
 
     license("BSD-3-Clause")
 
-    version("1.3.0", sha256="a171c027daeb34b24c24a3b6304195b8eabbb6f10c748256ed3cfe19806383cf")
-    version("0.10.0", sha256="fc1cfec33bb9f730c412f87fcbc259167fd7620635679ccfc6e31971730dbd60")
+    version(
+        "1.3.0",
+        sha256="f2df69dcd3665dc9c4d43eb6529dedd113b2508090d12ac973573305a8406465",
+        url="https://pypi.org/packages/68/2d/63851081b19d1ccf245091255797cb358c53c886609b5056da5457f7dbbf/h5netcdf-1.3.0-py3-none-any.whl",
+    )
+    version(
+        "0.10.0",
+        sha256="2c526715f9010f403b7f667a146950515e44b17068196c3f004ee5c6c7563e18",
+        url="https://pypi.org/packages/41/d4/ba3923cc4875e693d060b13ae53a8b3fee1588b11ddfb5b9247efaac2c97/h5netcdf-0.10.0-py2.py3-none-any.whl",
+    )
 
-    depends_on("python@3.9:", when="@1.3:", type=("build", "run"))
-    depends_on("py-setuptools@42:", when="@1.3:", type="build")
-    depends_on("py-setuptools", type="build")
-    depends_on("py-setuptools-scm@7:+toml", when="@1.3:", type="build")
-    depends_on("py-h5py", type=("build", "run"))
-    depends_on("py-packaging", when="@1.3:", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("python@3.9:", when="@1.2:")
+        depends_on("py-h5py")
+        depends_on("py-packaging", when="@0.13.1:")

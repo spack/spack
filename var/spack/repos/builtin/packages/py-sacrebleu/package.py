@@ -17,15 +17,21 @@ class PySacrebleu(PythonPackage):
 
     license("Apache-2.0")
 
-    version("2.0.0", sha256="51fb69b6683f1b9999cd180143bb6b21d7841744537c9aab235cfe676550f0cf")
+    version(
+        "2.4.1",
+        sha256="d24a783598ea5cfa2bb461cd377a5e3f76fa38a7df170bf99069fbd4c8157d25",
+        url="https://pypi.org/packages/de/a5/bf9eddf90deeb7833bbb1ecd7cd4515245cc54c330b936d502ac531f9412/sacrebleu-2.4.1-py3-none-any.whl",
+    )
+    version(
+        "2.0.0",
+        sha256="1acae0221e27c23c4987834fd17b284b4addc6556941c2097c4d618baa2d67af",
+        url="https://pypi.org/packages/fa/63/b3c11f951eafa2dc296862431f29fb12dbe191cb72217cf88ed04c32086b/sacrebleu-2.0.0-py3-none-any.whl",
+    )
 
-    depends_on("python@3.6.0:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
-    depends_on("py-portalocker", type=("build", "run"))
-    depends_on("py-regex", type=("build", "run"))
-    depends_on("py-tabulate@0.8.9:", type=("build", "run"))
-    depends_on("py-numpy@1.17:", type=("build", "run"))
-    depends_on("py-colorama", type=("build", "run"))
-
-    def patch(self):
-        touch("CHANGELOG.md")
+    with default_args(type="run"):
+        depends_on("py-colorama", when="@2:")
+        depends_on("py-lxml", when="@2.2:")
+        depends_on("py-numpy@1.17.0:", when="@2:")
+        depends_on("py-portalocker", when="@:1.5.0,2:")
+        depends_on("py-regex", when="@2:")
+        depends_on("py-tabulate@0.8.9:", when="@2:")

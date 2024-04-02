@@ -15,13 +15,14 @@ class PyCloudbridge(PythonPackage):
 
     license("MIT")
 
-    version("3.1.0", sha256="f9d3c1ae36b14a1c953d36c21a35fa2c72d42831cbbfe6117d13b25e9cccb28c")
+    version(
+        "3.1.0",
+        sha256="6b6c9464c25e5831339928e2043588c25b010d83b2c12508aeeb8cba048ee0c6",
+        url="https://pypi.org/packages/cc/1e/2157f70d465f3bbfa34ed958bca581e6f33c945b511229e50b2a4f6339c2/cloudbridge-3.1.0-py2.py3-none-any.whl",
+    )
 
-    depends_on("python@3.4:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
-    depends_on("py-nose@1:", type="build")
-
-    depends_on("py-six@1.11:", type=("build", "run"))
-    depends_on("py-tenacity@6.0:", type=("build", "run"))
-    depends_on("py-deprecation@2.0.7:", type=("build", "run"))
-    depends_on("py-pyeventsystem@:1", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-deprecation@2.0.7:", when="@2.1:")
+        depends_on("py-pyeventsystem", when="@2:")
+        depends_on("py-six@1.11:", when="@1.0.2:")
+        depends_on("py-tenacity@6:", when="@2.1:")

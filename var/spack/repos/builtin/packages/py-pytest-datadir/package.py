@@ -15,9 +15,11 @@ class PyPytestDatadir(PythonPackage):
 
     license("MIT")
 
-    version("1.4.1", sha256="9f7a3c4def6ac4cac3cc8181139ab53bd2667231052bd40cb07081748d4420f0")
+    version(
+        "1.4.1",
+        sha256="095f441782b1b907587eca7227fdbae94be43f1c96b4b2cbcc6801a4645be1af",
+        url="https://pypi.org/packages/46/0f/063f1d9754258254a61d20926ef1a7635f72a42604b12c036e0fc77aa1be/pytest_datadir-1.4.1-py3-none-any.whl",
+    )
 
-    depends_on("python@3.6:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
-    depends_on("py-setuptools-scm", type="build")
-    depends_on("py-pytest@5.0:", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-pytest@5:", when="@1.4:")

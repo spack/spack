@@ -14,8 +14,13 @@ class PyYaspin(PythonPackage):
 
     license("MIT")
 
-    version("2.1.0", sha256="c8d34eca9fda3f4dfbe59f57f3cf0f3641af3eefbf1544fbeb9b3bacf82c580a")
+    version(
+        "2.1.0",
+        sha256="d574cbfaf0a349df466c91f7f81b22460ae5ebb15ecb8bf9411d6049923aee8d",
+        url="https://pypi.org/packages/ce/ed/1ae83648729025952b483046d5164fc91625703899707655406db76ce671/yaspin-2.1.0-py3-none-any.whl",
+    )
 
-    depends_on("python@3.6.2:3", type=("build", "run"))
-    depends_on("py-poetry-core@1:", type="build")
-    depends_on("py-termcolor@1.1.0:1", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("python@:3", when="@2:2.1")
+        depends_on("py-dataclasses@0.8:", when="@2.1 ^python@:3.6")
+        depends_on("py-termcolor@1.1:1", when="@2:2.1")

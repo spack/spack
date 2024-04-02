@@ -17,13 +17,21 @@ class PyPyedr(PythonPackage):
 
     license("LGPL-2.1-or-later")
 
-    version("0.7.2", sha256="8a02b7d94f97f99083c489568f7816ee8ed37e2efca0c1ba3a2e4b83e932d5b9")
-    version("0.7.1", sha256="ad7ccdeb739399acd11a25f2d2413ebb46a54223059a2b902ac604d29fabd767")
+    version(
+        "0.7.2",
+        sha256="c5f024973f69ec32a3234eb4033b69044dbd3a73a9c96ed59f2b0f9962fb63ed",
+        url="https://pypi.org/packages/35/63/02ea8cef64bdead4c65d6e80f1f92f82b6db7438d285fa30ee4484102485/pyedr-0.7.2-py3-none-any.whl",
+    )
+    version(
+        "0.7.1",
+        sha256="7914ec210abb17a72684b4a8f042c5cfcf19042d3afa3bce2b3f0a2c9d22affa",
+        url="https://pypi.org/packages/64/76/5b1a485afba2cbaa5634a49eed716d12dcf92fcc548c2ea531f4bc2f4fc6/pyedr-0.7.1-py3-none-any.whl",
+    )
+
+    with default_args(type="run"):
+        depends_on("py-mda-xdrlib", when="@0.7.2:")
+        depends_on("py-numpy@1.19.0:", when="@:0.7")
+        depends_on("py-pbr", when="@:0.7")
+        depends_on("py-tqdm", when="@0.7.1:")
 
     # Minimal NumPy version only specified in requirements.txt
-    depends_on("py-numpy@1.19.0:", type=("build", "run"))
-    depends_on("py-pbr", type=("build", "run"))
-    depends_on("py-tqdm", type=("build", "run"))
-    depends_on("py-mda-xdrlib", when="@0.7.2:", type=("build", "run"))
-
-    depends_on("py-setuptools", type="build")

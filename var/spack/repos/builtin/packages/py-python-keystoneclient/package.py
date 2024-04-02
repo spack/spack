@@ -17,19 +17,20 @@ class PyPythonKeystoneclient(PythonPackage):
 
     maintainers("haampie")
 
-    version("4.2.0", sha256="0248426e483b95de395086482c077d48e45990d3b1a3e334b2ec8b2e108f5a8a")
+    version(
+        "4.2.0",
+        sha256="5702f387e2a3f3645459a0850ef3e92bc8fc0eb36bd2f8ba1004a50dfed1e5f4",
+        url="https://pypi.org/packages/26/71/a9ccf1faf72123909c87a06352366088a7f936ea04e5e4fe38e422dc2c1e/python_keystoneclient-4.2.0-py3-none-any.whl",
+    )
 
-    depends_on("python@3.6:", type=("build", "run"))
-
-    depends_on("py-pbr@2.0.0:2.0,2.1.1:", type="build")
-    depends_on("py-setuptools", type="build")
-
-    depends_on("py-debtcollector@1.2.0:", type=("build", "run"))
-    depends_on("py-keystoneauth1@3.4.0:", type=("build", "run"))
-    depends_on("py-oslo-config@5.2.0:", type=("build", "run"))
-    depends_on("py-oslo-i18n@3.15.3:", type=("build", "run"))
-    depends_on("py-oslo-serialization@2.18.0:2.19.0,2.19.2:", type=("build", "run"))
-    depends_on("py-oslo-utils@3.33.0:", type=("build", "run"))
-    depends_on("py-requests@2.14.2:", type=("build", "run"))
-    depends_on("py-six@1.10.0:", type=("build", "run"))
-    depends_on("py-stevedore@1.20.0:", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-debtcollector@1.2:")
+        depends_on("py-keystoneauth1@3.4:")
+        depends_on("py-oslo-config@5.2:")
+        depends_on("py-oslo-i18n@3.15.3:")
+        depends_on("py-oslo-serialization@2.18:2.19.0,2.20:")
+        depends_on("py-oslo-utils@3.33:")
+        depends_on("py-pbr@2:2.0,3:")
+        depends_on("py-requests@2.14.2:")
+        depends_on("py-six@1.10:", when="@:5.3")
+        depends_on("py-stevedore@1.20:")

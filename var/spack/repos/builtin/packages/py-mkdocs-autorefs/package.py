@@ -15,9 +15,13 @@ class PyMkdocsAutorefs(PythonPackage):
 
     license("ISC")
 
-    version("0.4.1", sha256="70748a7bd025f9ecd6d6feeba8ba63f8e891a1af55f48e366d6d6e78493aba84")
+    version(
+        "0.4.1",
+        sha256="a2248a9501b29dc0cc8ba4c09f4f47ff121945f6ce33d760f145d6f89d313f5b",
+        url="https://pypi.org/packages/fb/5c/6594400290df38f99bf8d9ef249387b56f4ad962667836266f6fe7da8597/mkdocs_autorefs-0.4.1-py3-none-any.whl",
+    )
 
-    depends_on("python@3.7:", type=("build", "run"))
-    depends_on("py-pdm-pep517", type="build")
-    depends_on("py-markdown@3.3:", type=("build", "run"))
-    depends_on("py-mkdocs@1.1:", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("python@3.7:", when="@0.4")
+        depends_on("py-markdown@3.3:", when="@0.4:")
+        depends_on("py-mkdocs@1.1:", when="@0.4:")

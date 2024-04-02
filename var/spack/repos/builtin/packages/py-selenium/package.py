@@ -17,7 +17,8 @@ class PySelenium(PythonPackage):
 
     license("Apache-2.0")
 
-    version("3.141.0", sha256="deaf32b60ad91a4611b98d8002757f29e6f2c2d5fcaf202e1c9ad06d6772300d")
-
-    depends_on("py-setuptools", type="build")
-    depends_on("py-urllib3", type=("build", "run"))
+    version(
+        "3.141.0",
+        sha256="2d7131d7bc5a5b99a2d9b04aaf2612c411b03b8ca1b1ee8d3de5845a9be2cb3c",
+        url="https://pypi.org/packages/80/d6/4294f0b4bce4de0abf13e17190289f9d0613b0a44e5dd6a7f5ca98459853/selenium-3.141.0-py2.py3-none-any.whl",
+    )

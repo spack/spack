@@ -16,11 +16,19 @@ class PyDataladMetadataModel(PythonPackage):
 
     license("MIT")
 
-    version("0.3.10", sha256="2d113d43fe5c611633e8e2c354e9ddc1224f4f8d7305b2e1fa20cdd7f5deedc4")
-    version("0.3.5", sha256="992241adef6d36ad7f9a83d8c7762d887fbec7111e06a2bd12fd8816e6ee739a")
+    version(
+        "0.3.10",
+        sha256="13c186aebfd5f9367850eb54e63bf4f21fbd80d72b951949c072d7411469ab95",
+        url="https://pypi.org/packages/9d/69/e1ae4839a98b880b6ee28fd9cd01db62dfa316748cca392e7908425312ab/datalad_metadata_model-0.3.10-py3-none-any.whl",
+    )
+    version(
+        "0.3.5",
+        sha256="b550e16508b6d21bbc7a3c6a28fb0b470799361a46aafbd28f6a152503b5fc15",
+        url="https://pypi.org/packages/0e/b8/0f87fdb1f1b37ecec1367e337d3c70ed351a7ef4e48295bf66ecbae2280e/datalad_metadata_model-0.3.5-py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools@42:", type=("build"))
-
-    depends_on("py-appdirs", type=("build", "run"))
-    depends_on("py-click", type=("build", "run"))
-    depends_on("py-fasteners", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("python@3.7:", when="@0.3.2:")
+        depends_on("py-appdirs")
+        depends_on("py-click")
+        depends_on("py-fasteners")

@@ -15,7 +15,11 @@ class PyXenv(PythonPackage):
 
     license("GPL-3.0-or-later")
 
-    version("develop", branch="master")
-    version("1.0.0", sha256="cea9547295f0bd07c87e68353bb9eb1c2f2d1c09a840e3196c19cbc807ee4558")
+    version(
+        "1.0.0",
+        sha256="e941ebbf479e03f4109d8c49cf4201f337418d221abbdea6ad9b7656e2bbc1ed",
+        url="https://pypi.org/packages/1b/a8/6cfed952e22f2e7a711c71c43426e777fe6aaad50f6262b7e0617b17ba36/xenv-1.0.0-py2.py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("python@:3", when="@:0.0.4,1:")

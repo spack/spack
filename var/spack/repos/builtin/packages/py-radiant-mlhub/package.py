@@ -16,42 +16,90 @@ class PyRadiantMlhub(PythonPackage):
 
     license("Apache-2.0")
 
-    version("0.5.5", sha256="93cabc3c8e9ba343cdb3b0bfaec01bf7a36aae75704fabfe96c8bf5cab9fa899")
-    version("0.5.3", sha256="f111983910e41f2ce40bf401ccf9e33b393e52cc1989f8f8b74c6b4e2bdd0127")
-    version("0.5.2", sha256="d310afce962508a44c60f5738fef164c50e78f76c3e85813653824b39a189ca3")
-    version("0.5.1", sha256="b7daff4a127e96e27c64eda66e393d9727e61a87c887f86738753486cc44fa46")
-    version("0.5.0", sha256="fff788aaa5f8afcb0f6eabff4147eaaf7de375f0a43ecaf2238033fc3a62e2c2")
-    version("0.4.1", sha256="1d95475ec9d4cf460d5201425ba843523b1885a9384b9c1adb81a4a1088adb0f")
-    version("0.4.0", sha256="0208881601216f895a1c084a3ca9e5c46b09dbc09dca0447540192e4abb847b1")
-    version("0.3.1", sha256="3a5a8e971132d5b4cd9e412c7f6d87894fc588655ae0e93006646927b1ecb902")
-    version("0.3.0", sha256="dd66479f12317e7bf366abe8d692841485e9497918c30ab14cd6db9e69ce3dbb")
-    version("0.2.2", sha256="0d9f634b7e29c7f7294b81a10cf712ac63251949a9c5a07aa6c64c0d5b77e1ba")
-    version("0.2.1", sha256="75a2f096b09a87191238fe557dc64dda8c44156351b4026c784c848c7d84b6fb")
-    version("0.2.0", sha256="4a3e4c301c5e74f282bbf77b7d65db5a1d6c2a4dc6d18637eff6e1228ca2eb9d")
+    version(
+        "0.5.5",
+        sha256="f5d1785da5357db55261f593c097fbd5a93c6be5f7167c1388ff5eb6d04db539",
+        url="https://pypi.org/packages/98/99/00a8ebc4784a9237bf058f723fbe9ffca60f9b457cc58bb289cf076175b1/radiant_mlhub-0.5.5-py3-none-any.whl",
+    )
+    version(
+        "0.5.3",
+        sha256="846c3b9b9409059699be2420478c1ba251c5f2e626a470e78c89de7d73832442",
+        url="https://pypi.org/packages/95/d9/4b76f01acfe0b363d5f8285c054ee044b0d28965b6032d8689ddc4012a87/radiant_mlhub-0.5.3-py3-none-any.whl",
+    )
+    version(
+        "0.5.2",
+        sha256="5f875e3e377122c1607ce70e1fb5c30ad04537b9c68f66ad71f1113b66c1ebdd",
+        url="https://pypi.org/packages/91/7d/d73ef337836e1d515c5c49cc1efb3b5c3091e7eaca4906a7218262bf7ae3/radiant_mlhub-0.5.2-py3-none-any.whl",
+    )
+    version(
+        "0.5.1",
+        sha256="a77fbccda2c55de68b1b8c39e75b925ba537dd6a28acfc46011613eb34ee91fd",
+        url="https://pypi.org/packages/55/ae/7b5654b9634fea6bd88e265e67c3d7071d6d79a75e742b9557208010e483/radiant_mlhub-0.5.1-py3-none-any.whl",
+    )
+    version(
+        "0.5.0",
+        sha256="78d44487080ce25567809579d315dd780ae038a2a2b1843a692447b3c8d21481",
+        url="https://pypi.org/packages/02/03/82e1208930c0f6397c5305de6363daee50f227a931874232106d5e434e81/radiant_mlhub-0.5.0-py3-none-any.whl",
+    )
+    version(
+        "0.4.1",
+        sha256="755b9556f10e1ec0da433e35ab5b1d6a0f7bfcf5d6ebe630114e0ffaa3861a4b",
+        url="https://pypi.org/packages/c2/f6/bc1f6c62f1ad0627240de897d856916892e967d20cb90bf3c90658091112/radiant_mlhub-0.4.1-py3-none-any.whl",
+    )
+    version(
+        "0.4.0",
+        sha256="d88fd49b51290bb03f51362f17da4a698aa7b13454262508658271bcadd6c009",
+        url="https://pypi.org/packages/fc/68/66d8f488d52b94dbef25b54d7b048e195fca51c3ad031ad8a9a95d698731/radiant_mlhub-0.4.0-py3-none-any.whl",
+    )
+    version(
+        "0.3.1",
+        sha256="706197a43e07a341015fdcad420cf17a452d48baa4ebd56bc9855becf2c52150",
+        url="https://pypi.org/packages/e6/b3/b16fc24799defc9bcf1394b757c2b0e3f02eb79f40ae70a4bcbf33483296/radiant_mlhub-0.3.1-py3-none-any.whl",
+    )
+    version(
+        "0.3.0",
+        sha256="7edf56381fa8e48fb992ec042635f29bc468bed0e51ba60520ae2bb3c2180e2b",
+        url="https://pypi.org/packages/7a/ae/e34beb7d4da6b6cf7e4000dda93157a40504287af29e11dce0402164db49/radiant_mlhub-0.3.0-py3-none-any.whl",
+    )
+    version(
+        "0.2.2",
+        sha256="fe3bf4d66e26b8b7071f9fa1d2196a8b894312b4244f16389f02d027fd0cac99",
+        url="https://pypi.org/packages/da/7b/6f515a5a114e0732acf008f185b6ffe1f895ede0eb674de134f35a5a2dc0/radiant_mlhub-0.2.2-py3-none-any.whl",
+    )
+    version(
+        "0.2.1",
+        sha256="02d9b56cdddee25665fc650abead516789709ebbc1837d77c69edfd2493b093f",
+        url="https://pypi.org/packages/d0/9d/7e226b0bd483260fa309d10bc6cb68ffbd965825d795055e3a4dd002635b/radiant_mlhub-0.2.1-py3-none-any.whl",
+    )
+    version(
+        "0.2.0",
+        sha256="cbb68a0d0ea56bd0999c4112627448dc3543c0ffeda035e6743c4f1439d2531a",
+        url="https://pypi.org/packages/75/d4/7e7fadd4a519c43977fb6d4026fc0d130db3fc05fbbc4a7167105aa75636/radiant_mlhub-0.2.0-py3-none-any.whl",
+    )
 
-    depends_on("python@3.8:", when="@0.5:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
-    depends_on("py-click@7.1.2:8", when="@0.3:", type=("build", "run"))
-    depends_on("py-click@7.1.2:7.1", when="@:0.2", type=("build", "run"))
-    depends_on("py-pydantic@1.9.2:1.9", when="@0.5.2:", type=("build", "run"))
-    depends_on("py-pydantic@1.9:1", when="@0.5.0:0.5.1", type=("build", "run"))
-    depends_on("py-pystac@1.4", when="@0.5.2:", type=("build", "run"))
-    depends_on("py-pystac@1.4:1", when="@0.5.0:0.5.1", type=("build", "run"))
-    depends_on("py-pystac@1.1:1", when="@0.3:0.4", type=("build", "run"))
-    depends_on("py-pystac@0.5.4", when="@:0.2", type=("build", "run"))
-    depends_on("py-python-dateutil@2.8.2:2.8", when="@0.5.2:", type=("build", "run"))
-    depends_on("py-python-dateutil@2.8:2", when="@0.5.0:0.5.1", type=("build", "run"))
-    depends_on("py-requests@2.27", when="@0.5.2:", type=("build", "run"))
-    depends_on("py-requests@2.27:2", when="@0.5.0:0.5.1", type=("build", "run"))
-    depends_on("py-requests@2.25:2", when="@0.3:0.4", type=("build", "run"))
-    depends_on("py-requests@2.25.1:2.25", when="@:0.2", type=("build", "run"))
-    depends_on("py-shapely@1.8", when="@0.5.2:", type=("build", "run"))
-    depends_on("py-shapely@1.8:1", when="@0.5.0:0.5.1", type=("build", "run"))
-    depends_on("py-tqdm@4.64", when="@0.5.2:", type=("build", "run"))
-    depends_on("py-tqdm@4.64:4", when="@0.5.0:0.5.1", type=("build", "run"))
-    depends_on("py-tqdm@4.56:4", when="@0.3:0.4", type=("build", "run"))
-    depends_on("py-tqdm@4.56", when="@:0.2", type=("build", "run"))
-    depends_on("py-urllib3@1.26.11:1.26", when="@0.5.5:", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("python@3.8:", when="@0.5:")
+        depends_on("python@3.7:", when="@0.3:0.4")
+        depends_on("py-click@7.1.2:", when="@0.3:")
+        depends_on("py-click@7.1.2:7", when="@0.1:0.2")
+        depends_on("py-pydantic@1.9.2:1.9", when="@0.5.2:")
+        depends_on("py-pydantic@1.9.0:1", when="@0.5:0.5.1")
+        depends_on("py-pystac@1.4", when="@0.5.2:")
+        depends_on("py-pystac@1.4:", when="@0.5:0.5.1")
+        depends_on("py-pystac@1.1:", when="@0.3:0.4")
+        depends_on("py-pystac@0.5.4", when="@0.2")
+        depends_on("py-python-dateutil@2.8.2:2.8", when="@0.5.2:")
+        depends_on("py-python-dateutil@2.8:", when="@0.5:0.5.1")
+        depends_on("py-requests@2.27", when="@0.5.2:")
+        depends_on("py-requests@2.27:", when="@0.5:0.5.1")
+        depends_on("py-requests@2.25:", when="@0.3:0.4")
+        depends_on("py-requests@2.25.1:2.25", when="@0.1:0.2")
+        depends_on("py-shapely@1.8.0:1", when="@0.5:")
+        depends_on("py-tqdm@4.64", when="@0.5.2:")
+        depends_on("py-tqdm@4.64:", when="@0.5:0.5.1")
+        depends_on("py-tqdm@4.56:", when="@0.3:0.4")
+        depends_on("py-tqdm@4.56", when="@0.1:0.2")
+        depends_on("py-typing-extensions@3.7:", when="@0.4.1:0.4 ^python@:3.7")
+        depends_on("py-urllib3@1.26.11:1", when="@0.5.5:")
 
     # Historical dependencies
-    depends_on("py-typing-extensions@3.7:", when="@0.3:0.4 ^python@:3.7", type=("build", "run"))

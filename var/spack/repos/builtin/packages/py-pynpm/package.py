@@ -16,7 +16,11 @@ class PyPynpm(PythonPackage):
 
     license("BSD-3-Clause")
 
-    version("0.2.0", sha256="212a1e5f86fe8b790945dd856682c6dcd8eddc6f8803a51e7046fe427d7f801b")
+    version(
+        "0.2.0",
+        sha256="a04d58e4c3d46be26eaae9abd1cf59109a7670c5edd9cacd90e1d3b3afdd77c0",
+        url="https://pypi.org/packages/06/b2/2289344ef62fd677ec87a453849bcb21b6c1531f5fee821f3ffe343c58f7/pynpm-0.2.0-py2.py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-babel@2.9:", type="build")
+    with default_args(type="run"):
+        depends_on("python@3.7:", when="@0.2:")

@@ -15,22 +15,13 @@ class PyClimax(PythonPackage):
 
     license("MIT")
 
-    version("main", branch="main")
-    version("0.3.1", sha256="1a8ab02fd1083de4340e26889ceea75f9dbc6e56433c731ba616cb46767872fc")
+    version(
+        "0.3.1",
+        sha256="9c13ed893aefcb03c1d34914b7aba92e0f18beadae68c1f5c83aecbad71d182c",
+        url="https://pypi.org/packages/91/51/1f3d7556c06d082623d8885aaa50767b6e1c0696004c27cadedfa81832cd/climax-0.3.1-py2.py3-none-any.whl",
+    )
 
     # pyproject.toml
-    depends_on("py-setuptools", type="build")
 
     # docker/environment.yml
     # (only including deps that are actually imported, ignoring version)
-    with default_args(type=("build", "run")):
-        depends_on("py-click")
-        depends_on("py-numpy")
-        depends_on("py-pytorch-lightning")
-        depends_on("py-scipy")
-        depends_on("py-timm")
-        depends_on("py-torch")
-        depends_on("py-torchdata")
-        depends_on("py-tqdm")
-        depends_on("py-xarray")
-        depends_on("py-xesmf")

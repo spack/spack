@@ -14,7 +14,11 @@ class PyMutagen(PythonPackage):
 
     license("GPL-2.0-or-later")
 
-    version("1.45.1", sha256="6397602efb3c2d7baebd2166ed85731ae1c1d475abca22090b7141ff5034b3e1")
+    version(
+        "1.45.1",
+        sha256="9c9f243fcec7f410f138cb12c21c84c64fde4195481a30c9bfb05b5f003adfed",
+        url="https://pypi.org/packages/16/b3/f7aa8edf2ff4495116f95fd442b2a346aa55d1d46313143c8814886dbcdb/mutagen-1.45.1-py3-none-any.whl",
+    )
 
-    depends_on("python@3.5:3", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
+    with default_args(type="run"):
+        depends_on("python@:3", when="@1.43:1.45")

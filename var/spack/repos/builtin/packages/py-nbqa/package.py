@@ -14,10 +14,14 @@ class PyNbqa(PythonPackage):
 
     license("MIT")
 
-    version("1.6.3", sha256="5394a29fc6d27b9a950c0a36d2d9de25de980be9acfe2a3f3aea0d27b5f7fec1")
+    version(
+        "1.6.3",
+        sha256="f3bac3e6d322b0a9bf2143d5fea8e5c2f7ac7daced717b3407f2e3279f58afbf",
+        url="https://pypi.org/packages/79/d4/ba0bd9e0c51509e29fa6d5a215ddcb8cd60026416f88fa807f500508f7a3/nbqa-1.6.3-py3-none-any.whl",
+    )
 
-    depends_on("python@3.8:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
-    depends_on("py-ipython@7.8:", type=("build", "run"))
-    depends_on("py-tokenize-rt@3.2:", type=("build", "run"))
-    depends_on("py-tomli", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("python@3.8:", when="@1.6:")
+        depends_on("py-ipython@7.8:")
+        depends_on("py-tokenize-rt@3.2:")
+        depends_on("py-tomli")

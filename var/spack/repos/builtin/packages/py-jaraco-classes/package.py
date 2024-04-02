@@ -14,10 +14,17 @@ class PyJaracoClasses(PythonPackage):
 
     license("MIT")
 
-    version("3.2.3", sha256="89559fa5c1d3c34eff6f631ad80bb21f378dbcbb35dd161fd2c6b93f5be2f98a")
-    version("3.2.2", sha256="6745f113b0b588239ceb49532aa09c3ebb947433ce311ef2f8e3ad64ebb74594")
+    version(
+        "3.2.3",
+        sha256="2353de3288bc6b82120752201c6b1c1a14b058267fa424ed5ce5984e3b922158",
+        url="https://pypi.org/packages/60/28/220d3ae0829171c11e50dded4355d17824d60895285631d7eb9dee0ab5e5/jaraco.classes-3.2.3-py3-none-any.whl",
+    )
+    version(
+        "3.2.2",
+        sha256="e6ef6fd3fcf4579a7a019d87d1e56a883f4e4c35cfe925f86731abc58804e647",
+        url="https://pypi.org/packages/8f/e6/f92d21f915cee7acf1cfe3e0ec60b8e9888dcf40a9814e3838a87ba487d0/jaraco.classes-3.2.2-py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools@56:", type="build")
-    depends_on("py-setuptools-scm@3.4.1: +toml", type="build")
-
-    depends_on("py-more-itertools", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("python@3.7:", when="@3.2.2:3.2")
+        depends_on("py-more-itertools", when="@3:")

@@ -15,9 +15,12 @@ class PyPaste(PythonPackage):
 
     license("MIT")
 
-    version("3.5.2", sha256="d5a7340c30bcdf3023dd0106c8a5c430dd8fe84aeb8113bc7b93f8dd729f4af6")
+    version(
+        "3.5.2",
+        sha256="fa0385cd07a50e6c679e735e44afef1e24ab1a0578eea501e45b8c2d38669b77",
+        url="https://pypi.org/packages/0c/f7/e965ace528fca3319fc6656f6ed6f6ba7c8f17fa32e588da1af291b95fd1/Paste-3.5.2-py2.py3-none-any.whl",
+    )
 
-    depends_on("python@3:", type=("build", "run"))
-    depends_on("py-setuptools", type=("build", "run"))
-
-    depends_on("py-six@1.4.0:", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-setuptools", when="@3.4.6:")
+        depends_on("py-six@1.4:")

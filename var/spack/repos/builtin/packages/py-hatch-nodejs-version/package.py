@@ -14,7 +14,12 @@ class PyHatchNodejsVersion(PythonPackage):
 
     license("MIT")
 
-    version("0.3.1", sha256="0e55fd713d92c5c1ccfee778efecaa780fd8bcd276d4ca7aff9f6791f6f76d9c")
+    version(
+        "0.3.1",
+        sha256="4570e00fe75a99075dd51d195352c9d7cc2f6186d4046ce58fd47da3a0583702",
+        url="https://pypi.org/packages/f3/5b/a19a9262a2c0079685f43a961b400a280c6db1670c844093145edef902c5/hatch_nodejs_version-0.3.1-py3-none-any.whl",
+    )
 
-    depends_on("python@3.7:", type=("build", "run"))
-    depends_on("py-hatchling@0.21:", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("python@3.7:", when="@0.2:")
+        depends_on("py-hatchling@0.21:", when="@0.2:")

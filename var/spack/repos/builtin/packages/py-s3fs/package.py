@@ -15,15 +15,29 @@ class PyS3fs(PythonPackage):
 
     license("BSD-3-Clause")
 
-    version("2024.2.0", sha256="f8064f522ad088b56b043047c825734847c0269df19f2613c956d4c20de15b62")
-    version("2022.11.0", sha256="10c5ac283a4f5b67ffad6d1f25ff7ee026142750c5c5dc868746cd904f617c33")
-    version("0.5.2", sha256="87e5210415db17b9de18c77bcfc4a301570cc9030ee112b77dc47ab82426bae1")
+    version(
+        "2024.2.0",
+        sha256="c140de37175c157cb662aa6ad7423365df732ac5f10ef5bf7b76078c6333a942",
+        url="https://pypi.org/packages/7c/76/efa5f84237620d5aa38e58285945b47449d8a94bf7037cae06f680b34c41/s3fs-2024.2.0-py3-none-any.whl",
+    )
+    version(
+        "2022.11.0",
+        sha256="42d57a3ceedb478b18ee53e34bbe3305a3f07f6381ca1ab76135efe076c6a07d",
+        url="https://pypi.org/packages/04/5c/6a5696e6e0fc30cfab334ed47e7e04707a6efd0ac1fe24158f5969fb4ef8/s3fs-2022.11.0-py3-none-any.whl",
+    )
+    version(
+        "0.5.2",
+        sha256="0e7a3fdab0ff66af7c8afd9cdc69723643e10ba6ce37776332fdad9f41bec3dd",
+        url="https://pypi.org/packages/d0/47/8f96b4a3af8bd54dda28df960307978679b3cc64bc8ec5460697c30bc783/s3fs-0.5.2-py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-aiobotocore@2.5.4:2", when="@2024:", type=("build", "run"))
-    depends_on("py-aiobotocore@2.4", when="@2022", type=("build", "run"))
-    depends_on("py-aiobotocore@1.0.1:", when="@:0", type=("build", "run"))
-    depends_on("py-fsspec@2024.2.0", when="@2024.2.0", type=("build", "run"))
-    depends_on("py-fsspec@2022.11.0", when="@2022.11.0", type=("build", "run"))
-    depends_on("py-fsspec@0.8.0:", when="@0", type=("build", "run"))
-    depends_on("py-aiohttp", when="@2022:", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("python@3.8:", when="@2023.3:")
+        depends_on("python@3.7:", when="@0.5.2:0,2022.2:2023.1")
+        depends_on("py-aiobotocore@2.5.4:", when="@2023.12:")
+        depends_on("py-aiobotocore@2.4", when="@2022.8:2022")
+        depends_on("py-aiobotocore@1.0.1:", when="@0.5:2021.7")
+        depends_on("py-aiohttp@:3", when="@2022.8:")
+        depends_on("py-fsspec@2024:2024.2", when="@2024:2024.2")
+        depends_on("py-fsspec@2022.11:2022", when="@2022.11:2022")
+        depends_on("py-fsspec@0.8:", when="@0.5:0")

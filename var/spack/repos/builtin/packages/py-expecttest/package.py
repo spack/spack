@@ -14,7 +14,11 @@ class PyExpecttest(PythonPackage):
 
     license("MIT")
 
-    version("0.1.6", sha256="fd49563b6703b9c060a0bc946dfafc62bad74898867432192927eb1e5f9d8952")
+    version(
+        "0.1.6",
+        sha256="7cf2db203c06f9e3173670ca9d09ac00912e535139afac2c7458c1627b1a3ee6",
+        url="https://pypi.org/packages/c7/39/689391845f5dc48df81b0c22248d5f66919b82da12f2bab1424bc3610529/expecttest-0.1.6-py3-none-any.whl",
+    )
 
-    depends_on("python@:3", type=("build", "run"))
-    depends_on("py-poetry-core@1:", type="build")
+    with default_args(type="run"):
+        depends_on("python@:3", when="@:0.1")

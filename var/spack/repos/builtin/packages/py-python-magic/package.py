@@ -18,9 +18,13 @@ class PyPythonMagic(PythonPackage):
 
     license("MIT")
 
-    version("0.4.24", sha256="de800df9fb50f8ec5974761054a708af6e4246b03b4bdaee993f948947b0ebcf")
-    version("0.4.15", sha256="f3765c0f582d2dfc72c15f3b5a82aecfae9498bd29ca840d72f37d7bd38bfcd5")
-
-    depends_on("python@2.7.0:2.7,3.5:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
-    depends_on("file", type="run")
+    version(
+        "0.4.24",
+        sha256="4fec8ee805fea30c07afccd1592c0f17977089895bdfaae5fec870a84e997626",
+        url="https://pypi.org/packages/d3/99/c89223c6547df268596899334ee77b3051f606077317023617b1c43162fb/python_magic-0.4.24-py2.py3-none-any.whl",
+    )
+    version(
+        "0.4.15",
+        sha256="f2674dcfad52ae6c49d4803fa027809540b130db1dec928cfbb9240316831375",
+        url="https://pypi.org/packages/42/a1/76d30c79992e3750dac6790ce16f056f870d368ba142f83f75f694d93001/python_magic-0.4.15-py2.py3-none-any.whl",
+    )

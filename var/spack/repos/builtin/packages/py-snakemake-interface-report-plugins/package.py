@@ -15,9 +15,12 @@ class PySnakemakeInterfaceReportPlugins(PythonPackage):
 
     license("MIT")
 
-    version("1.0.0", sha256="02311cdc4bebab2a1c28469b5e6d5c6ac6e9c66998ad4e4b3229f1472127490f")
+    version(
+        "1.0.0",
+        sha256="e39cf2f27a36bda788dd97ede8fd056f887e00dca2d14ffea91dbc696d1f17cd",
+        url="https://pypi.org/packages/5e/8d/aa3e3eab25854b358862b319e1c703ecd96d287ba93fe9ee6708f5074850/snakemake_interface_report_plugins-1.0.0-py3-none-any.whl",
+    )
 
-    depends_on("py-snakemake-interface-common@1.16:1", type=("build", "run"))
-
-    depends_on("python@:3", type=("build", "run"))
-    depends_on("py-poetry-core", type="build")
+    with default_args(type="run"):
+        depends_on("python@3.11:3")
+        depends_on("py-snakemake-interface-common@1.16:")

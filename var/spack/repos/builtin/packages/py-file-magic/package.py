@@ -12,7 +12,8 @@ class PyFileMagic(PythonPackage):
     homepage = "https://pypi.org/project/file-magic/"
     pypi = "file-magic/file-magic-0.4.1.tar.gz"
 
-    version("0.4.1", sha256="a91d1483117f7ed48cd0238ad9be36b04824d57e9c38ea7523113989e81b9c53")
-
-    depends_on("py-setuptools@61:", type="build")
-    depends_on("file", type="run")
+    version(
+        "0.4.1",
+        sha256="cb9496a1656baf75cadd771479f63b53081095e968d0be72b9b7a7ed538e4fb8",
+        url="https://pypi.org/packages/bd/13/de7c05b7b64f4e41cca7385642884490e2fa704dc1e695d1429119caa9c2/file_magic-0.4.1-py3-none-any.whl",
+    )

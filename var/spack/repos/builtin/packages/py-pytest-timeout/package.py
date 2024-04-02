@@ -16,9 +16,18 @@ class PyPytestTimeout(PythonPackage):
 
     license("MIT")
 
-    version("2.2.0", sha256="3b0b95dabf3cb50bac9ef5ca912fa0cfc286526af17afc806824df20c2f72c90")
-    version("1.4.2", sha256="20b3113cf6e4e80ce2d403b6fb56e9e1b871b510259206d40ff8d609f48bda76")
+    version(
+        "2.2.0",
+        sha256="bde531e096466f49398a59f2dde76fa78429a09a12411466f88a07213e220de2",
+        url="https://pypi.org/packages/e2/3e/abfdb7319d71a179bb8f5980e211d93e7db03f0c0091794dbcd652d642da/pytest_timeout-2.2.0-py3-none-any.whl",
+    )
+    version(
+        "1.4.2",
+        sha256="541d7aa19b9a6b4e475c759fd6073ef43d7cdc9a92d95644c260076eb257a063",
+        url="https://pypi.org/packages/46/df/97cc0b5b8b53da0e265acd0aeecfc0c279e950a029acd2d7b4e54b00b25f/pytest_timeout-1.4.2-py2.py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-pytest@5:", when="@2:", type=("build", "run"))
-    depends_on("py-pytest@3.6.0:", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("python@3.7:", when="@2.2:")
+        depends_on("py-pytest@5:", when="@2:2.2")
+        depends_on("py-pytest@3.6:", when="@1.3:1")

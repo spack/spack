@@ -14,7 +14,8 @@ class PyPythonEngineio(PythonPackage):
     homepage = "https://python-engineio.readthedocs.io/en/latest/"
     url = "https://github.com/miguelgrinberg/python-engineio/archive/v2.0.2.tar.gz"
 
-    version("2.0.2", sha256="9fbe531108a95bc61518b61c4718e2661fc81d32b54fd6af34799bf10a367a6b")
-
-    depends_on("py-setuptools", type="build")
-    depends_on("py-six@1.9.0:", type=("build", "run"))
+    version(
+        "2.0.2",
+        sha256="ab79f81a193ca1d9d4df213080fd818bb7ff8cd342f3a405e7302bf7fcfe3eae",
+        url="https://pypi.org/packages/c3/5a/316c1d956e229a9d5a80db842261922ea95a073d91d1402951c66bad7963/python_engineio-2.0.2-py2.py3-none-any.whl",
+    )

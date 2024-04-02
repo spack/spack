@@ -17,15 +17,19 @@ class PyAdbEnhanced(PythonPackage):
 
     license("Apache-2.0")
 
-    version("2.5.10", sha256="9e913d09814ce99974c455a766c5b616a92bca551e657517d6e079882eb19bdb")
-    version("2.5.4", sha256="329ee2e0cfceaa41c591398b365d9acdfd45ffe913c64ac06e1538041986fffb")
-    version("2.5.3", sha256="5a1d5182d1a073b440e862e5481c7a21073eccc3cda7a4774a2aa311fee9bbdc")
-    version("2.5.2", sha256="055676156c1566b8d952b9fdfdd89fc09f2d5d1e3b90b4cdf40858ce9947e2ca")
+    version(
+        "2.5.10",
+        sha256="19e9462702d1d20ee023686e128a43d15149411c7cd2838639df7d6df6d282ee",
+        url="https://pypi.org/packages/2b/ae/0515f15799a811d7e06c60ae4bcc7ac3df8f6c5024a8fb6093e0a0cc6d77/adb_enhanced-2.5.10-py3-none-any.whl",
+    )
+    version(
+        "2.5.4",
+        sha256="f8c4a1c4ee7ca82210b6f2472763c0239cd63c9c58c5b4b2b7d0edf3c7c5180e",
+        url="https://pypi.org/packages/fb/48/c9325bd726bebddf68f77da0d1ac90b6542c97121d008423f5d68f77e1ac/adb_enhanced-2.5.4-py3-none-any.whl",
+    )
 
-    depends_on("python@3:", type=("build", "run"))
-    depends_on("python@3.4:", when="@2.5.10:", type=("build", "run"))
-    depends_on("py-setuptools", type=("build", "run"))
-    depends_on("py-docopt", type=("build", "run"))
-    depends_on("py-future", when="@:2.5.4", type=("build", "run"))
-    depends_on("py-psutil", type=("build", "run"))
-    depends_on("py-asyncio", when="@:2.5.4", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-asyncio", when="@2.2:2.5.4")
+        depends_on("py-docopt")
+        depends_on("py-future", when="@:2.5.4")
+        depends_on("py-psutil")

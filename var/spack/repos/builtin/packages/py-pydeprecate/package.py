@@ -15,8 +15,13 @@ class PyPydeprecate(PythonPackage):
 
     license("MIT")
 
-    version("0.3.1", sha256="fa26870924d3475621c344045c2c01a16ba034113a902600c78e75b3fac5f72c")
-    version("0.3.0", sha256="335742ec53b9d22a0a9ff4f3470300c94935f6e169c74b08aee14d871ca40e00")
-
-    depends_on("python@3.6:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
+    version(
+        "0.3.1",
+        sha256="b5dd8c4c0535854b6a52936d1256883a940e3b02006fc7118b53027c0acde181",
+        url="https://pypi.org/packages/a2/17/ff7ec2752f53ea245499b23ee64e76d12f45fcde7a5b1b445f9c58cd1ec0/pyDeprecate-0.3.1-py3-none-any.whl",
+    )
+    version(
+        "0.3.0",
+        sha256="2497dd3a293eb62304ea28cacf5e4e58af8a773b4cefec8dc11a3121d06b8354",
+        url="https://pypi.org/packages/14/52/aa227a0884df71ed1957649085adf2b8bc2a1816d037c2f18b3078854516/pyDeprecate-0.3.0-py3-none-any.whl",
+    )

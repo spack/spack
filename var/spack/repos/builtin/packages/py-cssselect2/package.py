@@ -16,8 +16,13 @@ class PyCssselect2(PythonPackage):
     homepage = "https://github.com/Kozea/cssselect2"
     pypi = "cssselect2/cssselect2-0.7.0.tar.gz"
 
-    version("0.7.0", sha256="1ccd984dab89fc68955043aca4e1b03e0cf29cad9880f6e28e3ba7a74b14aa5a")
-    depends_on("python@3.7:", type=("build", "run"))
-    depends_on("py-flit-core@3.2:3", type="build")
-    depends_on("py-tinycss2", type=("build", "run"))
-    depends_on("py-webencodings", type=("build", "run"))
+    version(
+        "0.7.0",
+        sha256="fd23a65bfd444595913f02fc71f6b286c29261e354c41d722ca7a261a49b5969",
+        url="https://pypi.org/packages/9d/3a/e39436efe51894243ff145a37c4f9a030839b97779ebcc4f13b3ba21c54e/cssselect2-0.7.0-py3-none-any.whl",
+    )
+
+    with default_args(type="run"):
+        depends_on("python@3.7:", when="@0.5:")
+        depends_on("py-tinycss2", when="@0.2.2:0.2,0.4:")
+        depends_on("py-webencodings", when="@0.4:")

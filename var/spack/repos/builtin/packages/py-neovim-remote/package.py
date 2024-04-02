@@ -16,10 +16,13 @@ class PyNeovimRemote(PythonPackage):
 
     license("MIT")
 
-    version("2.4.0", sha256="f199ebb61c3decf462feed4e7d467094ed38d8afaf43620736b5983a12fe2427")
+    version(
+        "2.4.0",
+        sha256="4fa2ee4203dea2930ee19042dd22a25a97622cdda7258f99dd87ea0b417dee84",
+        url="https://pypi.org/packages/f2/8d/4ad4a14bb226a4121ed0a76bf38959f71c556a81adf378ccfcbc679f8537/neovim_remote-2.4.0-py3-none-any.whl",
+    )
 
-    depends_on("python@3.5:", type=("build", "run"))
-
-    depends_on("py-setuptools", type="build")
-    depends_on("py-psutil", type=("build", "run"))
-    depends_on("py-pynvim", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-psutil")
+        depends_on("py-pynvim", when="@:2.2,2.4:")
+        depends_on("py-setuptools")

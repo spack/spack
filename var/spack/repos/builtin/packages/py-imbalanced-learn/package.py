@@ -19,21 +19,24 @@ class PyImbalancedLearn(PythonPackage):
 
     license("MIT")
 
-    version("0.10.1", sha256="bc7609619ec3c38c442292928239ad3d10b5deb0af8a29c83822b7b57b319f8b")
-
-    # From setup.py:
-    depends_on("python@3.8:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
-    depends_on("py-numpy@1.17.3:", type=("build", "run"))
-    depends_on("py-scipy@1.3.2:", type=("build", "run"))
-    depends_on("py-scikit-learn@1.0.2:", type=("build", "run"))
+    version(
+        "0.10.1",
+        sha256="7b630516696c09b2b5a5398df8db19d73db0c13fa065d2f1407a6d2037794bc6",
+        url="https://pypi.org/packages/11/80/911e581a4fc973179e3a48c1272435aa09cce21c12af122c3886d3d35cb5/imbalanced_learn-0.10.1-py3-none-any.whl",
+    )
 
     variant("optional", default=False, description="Enable optional dependencies.")
-    depends_on("py-pandas@1.0.5:", when="+optional", type=("build", "run"))
-    depends_on("py-tensorflow@2.4.3:", when="+optional", type=("build", "run"))
-    depends_on("py-keras@2.4.3:", when="+optional", type=("build", "run"))
+
+    with default_args(type="run"):
+        depends_on("py-joblib@1.1.1:", when="@0.10:")
+        depends_on("py-keras@2.4.3:", when="@0.9:+optional")
+        depends_on("py-numpy@1.17.3:", when="@0.9.1:")
+        depends_on("py-pandas@1.0.5:", when="@0.9.1:+optional")
+        depends_on("py-scikit-learn@1.0.2:", when="@0.10:")
+        depends_on("py-scipy@1.3.2:", when="@0.9.1:0.10")
+        depends_on("py-tensorflow@2.4.3:", when="@0.9:+optional")
+        depends_on("py-threadpoolctl@2:", when="@0.9:")
+
+    # From setup.py:
 
     # From https://imbalanced-learn.org/stable/install.html#getting-started:
-    depends_on("py-joblib@1.1.1:", type=("build", "run"))
-    depends_on("py-threadpoolctl@2.0.0:", type=("build", "run"))
-    depends_on("py-cython@0.29.24:", type="build")

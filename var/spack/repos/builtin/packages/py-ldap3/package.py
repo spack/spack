@@ -16,7 +16,11 @@ class PyLdap3(PythonPackage):
 
     license("LGPL-3.0-or-later")
 
-    version("2.9.1", sha256="f3e7fc4718e3f09dda568b57100095e0ce58633bcabbed8667ce3f8fbaa4229f")
+    version(
+        "2.9.1",
+        sha256="5869596fc4948797020d3f03b7939da938778a0f9e2009f7a072ccf92b8e8d70",
+        url="https://pypi.org/packages/4e/f6/71d6ec9f18da0b2201287ce9db6afb1a1f637dedb3f0703409558981c723/ldap3-2.9.1-py2.py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-pyasn1@0.4.6:", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-pyasn1@0.4.6:", when="@2.8:")

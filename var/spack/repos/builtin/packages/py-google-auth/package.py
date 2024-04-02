@@ -15,26 +15,47 @@ class PyGoogleAuth(PythonPackage):
 
     license("Apache-2.0")
 
-    version("2.27.0", sha256="e863a56ccc2d8efa83df7a80272601e43487fa9a728a376205c86c26aaefa821")
-    version("2.20.0", sha256="030af34138909ccde0fbce611afc178f1d65d32fbff281f25738b1fe1c6f3eaa")
-    version("2.16.2", sha256="07e14f34ec288e3f33e00e2e3cc40c8942aa5d4ceac06256a28cd8e786591420")
-    version("2.11.0", sha256="ed65ecf9f681832298e29328e1ef0a3676e3732b2e56f41532d45f70a22de0fb")
-    version("2.3.2", sha256="2dc5218ee1192f9d67147cece18f47a929a9ef746cb69c50ab5ff5cfc983647b")
-    version("1.6.3", sha256="0f7c6a64927d34c1a474da92cfc59e552a5d3b940d3266606c6a28b72888b9e4")
+    version(
+        "2.27.0",
+        sha256="8e4bad367015430ff253fe49d500fdc3396c1a434db5740828c728e45bcce245",
+        url="https://pypi.org/packages/82/41/7fb855444cead5b2213e053447ce3a0b7bf2c3529c443e0cf75b2f13b405/google_auth-2.27.0-py2.py3-none-any.whl",
+    )
+    version(
+        "2.20.0",
+        sha256="23b7b0950fcda519bfb6692bf0d5289d2ea49fc143717cc7188458ec620e63fa",
+        url="https://pypi.org/packages/9a/1a/5866a7c6e16abc1df395e6d2b9808984d0905c747d75f5e20f1a052421d1/google_auth-2.20.0-py2.py3-none-any.whl",
+    )
+    version(
+        "2.16.2",
+        sha256="2fef3cf94876d1a0e204afece58bb4d83fb57228aaa366c64045039fda6770a2",
+        url="https://pypi.org/packages/93/c4/16f8ad44ed7544244a9883f35cc99dc96378652a0ec7cc39028b1c697a1e/google_auth-2.16.2-py2.py3-none-any.whl",
+    )
+    version(
+        "2.11.0",
+        sha256="be62acaae38d0049c21ca90f27a23847245c9f161ff54ede13af2cb6afecbac9",
+        url="https://pypi.org/packages/bb/6c/9b2dab3aff0dd9f685386598434dd8a0f205096b0a68d2c5e0c11be6f4b6/google_auth-2.11.0-py2.py3-none-any.whl",
+    )
+    version(
+        "2.3.2",
+        sha256="6e99f4b3b099feb50de20302f2f8987c1c36e80a3f856ce852675bdf7a0935d3",
+        url="https://pypi.org/packages/89/a9/2264dce8fd1e4d55c73044d01c5a35565d179cd885174ad4fcdf0fa6ee36/google_auth-2.3.2-py2.py3-none-any.whl",
+    )
+    version(
+        "1.6.3",
+        sha256="20705f6803fd2c4d1cc2dcb0df09d4dfcb9a7d51fd59e94a3a28231fd93119ed",
+        url="https://pypi.org/packages/c5/9b/ed0516cc1f7609fb0217e3057ff4f0f9f3e3ce79a369c6af4a6c5ca25664/google_auth-1.6.3-py2.py3-none-any.whl",
+    )
 
     variant("aiohttp", default=False, when="@1.22.1:", description="Enables aiohttp support")
 
-    depends_on("py-setuptools", type=("build", "run"))
-    depends_on("py-cachetools@2:5", when="@2.11:", type=("build", "run"))
-    depends_on("py-cachetools@2:4", when="@2.3", type=("build", "run"))
-    depends_on("py-cachetools@2:", type=("build", "run"))
-    depends_on("py-pyasn1-modules@0.2.1:", type=("build", "run"))
-    depends_on("py-rsa@3.1.4:4", when="@2.3:", type=("build", "run"))
-    depends_on("py-rsa@3.1.4:", type=("build", "run"))
-    depends_on("py-six@1.9:", when="@:2.22", type=("build", "run"))
-    depends_on("py-urllib3@2.0.5:", when="@2.23.1", type=("build", "run"))
-    depends_on("py-urllib3@:1", when="@2.18:2.23.0", type=("build", "run"))
-
-    with when("+aiohttp"):
-        depends_on("py-aiohttp@3.6.2:3", type=("build", "run"))
-        depends_on("py-requests@2.20:2", when="@1.30.2:", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("python@3.7:", when="@2.23:")
+        depends_on("py-aiohttp@3.6.2:3", when="@1.22.1:+aiohttp")
+        depends_on("py-cachetools@2:4", when="@1.10:2.3")
+        depends_on("py-cachetools@2:", when="@:1.6,2.4:")
+        depends_on("py-pyasn1-modules@0.2:", when="@1.3:")
+        depends_on("py-requests@2.20:", when="@1.30.2:2.0.0.0,2.0.1:+aiohttp")
+        depends_on("py-rsa@3.1.4:", when="@:1.6,1.17:")
+        depends_on("py-setuptools@40.3:", when="@1.7:2.3")
+        depends_on("py-six@1.9:", when="@:1,2.0.0.dev:2.0.0,2.3.1:2.22")
+        depends_on("py-urllib3@:1", when="@2.18:2.23.0")

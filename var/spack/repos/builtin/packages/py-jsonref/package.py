@@ -14,6 +14,8 @@ class PyJsonref(PythonPackage):
 
     license("MIT")
 
-    version("0.2", sha256="f3c45b121cf6257eafabdc3a8008763aed1cd7da06dbabc59a9e4d2a5e4e6697")
-
-    depends_on("py-setuptools", type="build")
+    version(
+        "0.2",
+        sha256="b1e82fa0b62e2c2796a13e5401fe51790b248f6d9bf9d7212a3e31a3501b291f",
+        url="https://pypi.org/packages/07/92/f8e4ac824b14af77e613984e480fa818397c72d4141fc466decb26752749/jsonref-0.2-py3-none-any.whl",
+    )

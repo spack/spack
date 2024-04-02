@@ -14,25 +14,27 @@ class PyBluepyopt(PythonPackage):
     license("LGPL-3.0-only")
 
     # NOTE : while adding new release check pmi_rank.patch compatibility
-    version("1.14.4", sha256="7567fd736053250ca06030f67ad93c607b100c2b98df8dc588c26b64cb3e171c")
-
-    # patch required to avoid hpe-mpi linked mechanism library
-    patch("pmi_rank.patch")
+    version(
+        "1.14.4",
+        sha256="11de74999036d3d6dd8a003dd0eb073c6325f7feb8c0a38c5f19267275ff424c",
+        url="https://pypi.org/packages/5e/45/3494c5c3f9abd414b66f3b4ef93545464b22bbf8c3e81c2896ef5e6899dc/bluepyopt-1.14.4-py3-none-any.whl",
+    )
 
     variant("scoop", default=False, description="Use BluePyOpt together with py-scoop")
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-numpy@1.6:", type=("build", "run"))
-    depends_on("py-pandas@0.18:", type=("build", "run"))
-    depends_on("py-deap@1.3.3:", type=("build", "run"))
-    depends_on("py-efel@2.13:", type=("build", "run"))
-    depends_on("py-ipyparallel", type=("build", "run"))
-    depends_on("py-pickleshare@0.7.3:", type=("build", "run"))
-    depends_on("py-jinja2@2.8:", type=("build", "run"))
-    depends_on("py-future", type=("build", "run"))
-    depends_on("py-pebble@4.6:", type=("build", "run"))
-    depends_on("py-scoop@0.7:", type=("build", "run"), when="+scoop")
-    depends_on("neuron@7.4:", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-deap@1.3.3:")
+        depends_on("py-efel@2.13:")
+        depends_on("py-future", when="@:1.14.4")
+        depends_on("py-ipyparallel")
+        depends_on("py-jinja2@2.8:")
+        depends_on("py-numpy@1.6:")
+        depends_on("py-pandas@0.18:")
+        depends_on("py-pebble@4.6:", when="@1.14.1:")
+        depends_on("py-pickleshare@0.7.3:")
+        depends_on("py-scoop", when="+scoop")
+
+    # patch required to avoid hpe-mpi linked mechanism library
 
     def setup_run_environment(self, env):
         env.unset("PMI_RANK")

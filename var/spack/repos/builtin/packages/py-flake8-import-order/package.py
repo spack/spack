@@ -14,7 +14,12 @@ class PyFlake8ImportOrder(PythonPackage):
 
     license("LGPL-3.0-only")
 
-    version("0.18.1", sha256="a28dc39545ea4606c1ac3c24e9d05c849c6e5444a50fb7e9cdd430fc94de6e92")
+    version(
+        "0.18.1",
+        sha256="90a80e46886259b9c396b578d75c749801a41ee969a235e163cfe1be7afd2543",
+        url="https://pypi.org/packages/ab/52/cf2d6e2c505644ca06de2f6f3546f1e4f2b7be34246c9e0757c6048868f9/flake8_import_order-0.18.1-py2.py3-none-any.whl",
+    )
 
-    depends_on("py-pycodestyle", type=("build", "run"))
-    depends_on("py-setuptools", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-pycodestyle")
+        depends_on("py-setuptools")

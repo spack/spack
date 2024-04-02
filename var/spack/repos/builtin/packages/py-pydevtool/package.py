@@ -14,8 +14,12 @@ class PyPydevtool(PythonPackage):
 
     license("MIT")
 
-    version("0.3.0", sha256="25e3ba4f3d33ccac33ee2b9775995848d49e9b318b7a146477fb5d52f786fc8a")
+    version(
+        "0.3.0",
+        sha256="da7876254f0bbedc6fffcd2a75cd1c624e3a2864ff13b2dff73e785056f7a643",
+        url="https://pypi.org/packages/d8/bf/3807d5876ed8ac2ef4515774c0b7ad977296eea084d5fafaccbefb9f1c7a/pydevtool-0.3.0-py3-none-any.whl",
+    )
 
-    depends_on("python@3.8:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
-    depends_on("py-doit@0.36:", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("python@3.8:")
+        depends_on("py-doit@0.36:", when="@0.3:")

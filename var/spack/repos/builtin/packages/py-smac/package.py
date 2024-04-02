@@ -17,18 +17,22 @@ class PySmac(PythonPackage):
 
     license("BSD-3-Clause")
 
-    version("1.1.1", sha256="7b8c14c53384b32feb357b9f918a9b023cb01cbda2033e69125dee69ec0bd5b1")
+    version(
+        "1.1.1",
+        sha256="c355dbb1992dc7ede0c310b9679b76835f7bfe66132c98e306774f812f3f5011",
+        url="https://pypi.org/packages/ae/e1/33ec4c188aa54624abd17fe41bd1bf18342bc595da5425789b5c427b1913/smac-1.1.1-py3-none-any.whl",
+    )
 
-    depends_on("python@3.7:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
-    depends_on("py-numpy@1.7.1:", type=("build", "run"))
-    depends_on("py-scipy@1.7.0:", type=("build", "run"))
-    depends_on("py-psutil", type=("build", "run"))
-    depends_on("py-pynisher@0.4.1:", type=("build", "run"))
-    depends_on("py-configspace@0.4.14:0.4", type=("build", "run"))
-    depends_on("py-joblib", type=("build", "run"))
-    depends_on("py-scikit-learn@0.22.0:", type=("build", "run"))
-    depends_on("py-pyrfr@0.8.0:", type=("build", "run"))
-    depends_on("py-dask", type=("build", "run"))
-    depends_on("py-distributed", type=("build", "run"))
-    depends_on("py-emcee@3.0.0:", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("python@3.7:", when="@0.14:1.2,1.3.1:1")
+        depends_on("py-configspace@0.4.14:0.4", when="@0.14:1.1")
+        depends_on("py-dask", when="@0.14:1.1")
+        depends_on("py-distributed", when="@0.14:1.1")
+        depends_on("py-emcee@3.0.0:", when="@1.1.1:1.1")
+        depends_on("py-joblib", when="@0.14:1.1")
+        depends_on("py-numpy@1.7.1:", when="@0.14:1.1")
+        depends_on("py-psutil", when="@0.14:1.1")
+        depends_on("py-pynisher@0.4.1:", when="@0.14:1.1")
+        depends_on("py-pyrfr@0.8:", when="@0.14:1.1")
+        depends_on("py-scikit-learn@0.22:", when="@0.14:1.1")
+        depends_on("py-scipy@1.7.0:", when="@0.14:1.1")

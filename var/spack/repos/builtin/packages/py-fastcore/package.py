@@ -23,9 +23,12 @@ class PyFastcore(PythonPackage):
 
     license("Apache-2.0")
 
-    version("1.3.27", sha256="0161f538d5b913932869a46bb90e98193eee79b8798b566272a394f7ef957243")
+    version(
+        "1.3.27",
+        sha256="03c6c93f2c769fdd611e32a7cc1433db5a82f67146d9e2f88e03107db203f6de",
+        url="https://pypi.org/packages/50/2b/832378cc02c608798fe13baec2709e70e3796459e6936c4bd3ee7edc4345/fastcore-1.3.27-py3-none-any.whl",
+    )
 
-    depends_on("python@3.6:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
-    depends_on("py-pip", type="build")
-    depends_on("py-packaging", type="build")
+    with default_args(type="run"):
+        depends_on("py-packaging")
+        depends_on("py-pip")

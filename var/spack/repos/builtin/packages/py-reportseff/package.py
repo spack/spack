@@ -14,9 +14,13 @@ class PyReportseff(PythonPackage):
 
     license("MIT")
 
-    version("2.7.2", sha256="63cf99ceb0111de511636b214ade937c6c1b8444531e8026dbc34ddf92049c41")
+    version(
+        "2.7.2",
+        sha256="cbd355848982959dfbede6286f4e12f5cf8e309dd293526a238250398015df32",
+        url="https://pypi.org/packages/98/d2/f7581f9cfa3c090ba2ddfb655b00170e8dcedc9c65372adeba2aff5a6fec/reportseff-2.7.2-py3-none-any.whl",
+    )
 
-    depends_on("python@3.7:3", type=("build", "run"))
-    depends_on("py-poetry-core@1:", type="build")
-    depends_on("py-click@6.7:", type=("build", "run"))
-    depends_on("py-importlib-metadata@4.8.2:4", when="^python@:3.7", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("python@3.7:3", when="@2.4:")
+        depends_on("py-click@6.7:6.7.0,7:")
+        depends_on("py-importlib-metadata@4.8.2:4", when="^python@:3.7")

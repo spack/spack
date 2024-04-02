@@ -14,10 +14,14 @@ class PyModelIndex(PythonPackage):
 
     license("MIT")
 
-    version("0.1.11", commit="a39af5f8aaa2a90b8fc7180744a855282360067a")
+    version(
+        "0.1.11",
+        sha256="a2a4d4431cd44e571d31e223cc4b0432663a62689de453bdb666e56a514b0e07",
+        url="https://pypi.org/packages/0f/a6/4d4cbbef704f186d143e2859296a610a355992e4eae71582bd598093b36a/model_index-0.1.11-py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-pyyaml", type=("build", "run"))
-    depends_on("py-markdown", type=("build", "run"))
-    depends_on("py-ordered-set", type=("build", "run"))
-    depends_on("py-click", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-click")
+        depends_on("py-markdown")
+        depends_on("py-ordered-set")
+        depends_on("py-pyyaml")

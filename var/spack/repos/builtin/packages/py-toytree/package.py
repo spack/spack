@@ -18,11 +18,14 @@ class PyToytree(PythonPackage):
 
     maintainers("snehring")
 
-    version("2.0.1", sha256="4f1452a76441857a13f72c99bf7d9f0a394cd8eae7fc02ee5349d946f2507101")
+    version(
+        "2.0.1",
+        sha256="300aa922ade2c642e6c78c1434d8c2566d1d23e410b5e81da8f5c87a62bc26da",
+        url="https://pypi.org/packages/79/f8/1b3ff2d2801cb6bf74274b90325ff6a8145cedda99f0628d0d44f0489b47/toytree-2.0.1-py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-
-    depends_on("py-toyplot", type=("build", "run"))
-    depends_on("py-numpy", type=("build", "run"))
-    depends_on("py-requests", type=("build", "run"))
-    depends_on("py-future", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-future")
+        depends_on("py-numpy", when="@1.2:")
+        depends_on("py-requests")
+        depends_on("py-toyplot", when="@1.2:")

@@ -18,17 +18,27 @@ class PyProv(PythonPackage):
 
     license("MIT")
 
-    version("2.0.0", sha256="b6438f2195ecb9f6e8279b58971e02bc51814599b5d5383366eef91d867422ee")
-    version("1.5.1", sha256="7a2d72b0df43cd9c6e374d815c8ce3cd5ca371d54f98f837853ac9fcc98aee4c")
+    version(
+        "2.0.0",
+        sha256="aaccc7c6ad6ec662fd1561c872991f13cd7df368d6dcab9cbac19fccc491d970",
+        url="https://pypi.org/packages/cf/8d/9a5110845c6b117d203e3ca9eec5ee79bed29cef508c8415fbc85e900150/prov-2.0.0-py3-none-any.whl",
+    )
+    version(
+        "1.5.1",
+        sha256="5c930cbbd05424aa3066d336dc31d314dd9fa0280caeab064288e592ed716bea",
+        url="https://pypi.org/packages/8e/fb/2c4c618185be2bda327f9dacd16b3122cc938809f19df7be840595d0e584/prov-1.5.1-py2.py3-none-any.whl",
+    )
 
     variant("dot", default=False, description="Graphical visualisation support for prov.model")
 
-    depends_on("python@3.6:3", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
-
-    depends_on("py-lxml@3.3.5:", type=("build", "run"))
-    depends_on("py-networkx@2.0:", type=("build", "run"))
-    depends_on("py-python-dateutil@2.2:", type=("build", "run"))
-    depends_on("py-rdflib@4.2.1:", type=("build", "run"))
-    depends_on("py-pydot@1.2.0:", when="+dot", type=("build", "run"))
-    depends_on("graphviz", when="+dot", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("python@:3", when="@2:")
+        depends_on("py-lxml@3.3.5:", when="@1.5.2:")
+        depends_on("py-lxml", when="@1.5.1")
+        depends_on("py-networkx@2:", when="@1.5.2:")
+        depends_on("py-networkx", when="@1.5.1")
+        depends_on("py-pydot@1.2:", when="@1.5.1:+dot")
+        depends_on("py-python-dateutil@2.2:", when="@1.5.2:")
+        depends_on("py-python-dateutil", when="@1.5.1")
+        depends_on("py-rdflib@4.2.1:", when="@1.5.1:")
+        depends_on("py-six@1.9:", when="@1.5.1:1")

@@ -15,7 +15,11 @@ class PyGalaxySequenceUtils(PythonPackage):
 
     license("CC-BY-3.0")
 
-    version("1.1.5", sha256="c32bd91f6ff11ad6e8b62f8de309d695ef5c33a782afbf5122c1db7144ef1162")
+    version(
+        "1.1.5",
+        sha256="f46e9ccec9313b7f1d5566acec85ac9b2b940f2bed468576cc837d186d608bdc",
+        url="https://pypi.org/packages/5d/bb/57457a4bf16c775f086269e77014b6ca6bb1295581c5fbfd8ee0638be475/galaxy_sequence_utils-1.1.5-py2.py3-none-any.whl",
+    )
 
-    depends_on("python@3.5:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
+    with default_args(type="run"):
+        depends_on("py-six")

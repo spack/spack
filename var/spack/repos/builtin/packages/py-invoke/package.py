@@ -14,8 +14,13 @@ class PyInvoke(PythonPackage):
 
     license("BSD-2-Clause")
 
-    version("1.4.1", sha256="de3f23bfe669e3db1085789fd859eb8ca8e0c5d9c20811e2407fa042e8a5e15d")
-    version("1.2.0", sha256="dc492f8f17a0746e92081aec3f86ae0b4750bf41607ea2ad87e5a7b5705121b7")
-
-    depends_on("python@2.7:2.8,3.4:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
+    version(
+        "1.4.1",
+        sha256="87b3ef9d72a1667e104f89b159eaf8a514dbf2f3576885b2bbdefe74c3fb2132",
+        url="https://pypi.org/packages/2c/16/f00efa99ae9f255142a230ce6819c37ae9dd29a7144477c1161cc72d01ed/invoke-1.4.1-py3-none-any.whl",
+    )
+    version(
+        "1.2.0",
+        sha256="4f4de934b15c2276caa4fbc5a3b8a61c0eb0b234f2be1780d2b793321995c2d6",
+        url="https://pypi.org/packages/be/9f/8508712c9cad73ac0c8eeb2c3e51c9ef65136653dda2b512bde64109f023/invoke-1.2.0-py3-none-any.whl",
+    )

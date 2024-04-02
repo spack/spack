@@ -16,11 +16,17 @@ class PyPythonLspJsonrpc(PythonPackage):
 
     license("MIT")
 
-    version("1.1.2", sha256="4688e453eef55cd952bff762c705cedefa12055c0aec17a06f595bcc002cc912")
-    version("1.0.0", sha256="7bec170733db628d3506ea3a5288ff76aa33c70215ed223abdb0d95e957660bd")
+    version(
+        "1.1.2",
+        sha256="7339c2e9630ae98903fdaea1ace8c47fba0484983794d6aafd0bd8989be2b03c",
+        url="https://pypi.org/packages/cb/d9/656659d5b5d5f402b2b174cd0ba9bc827e07ce3c0bf88da65424baf64af8/python_lsp_jsonrpc-1.1.2-py3-none-any.whl",
+    )
+    version(
+        "1.0.0",
+        sha256="079b143be64b0a378bdb21dff5e28a8c1393fe7e8a654ef068322d754e545fc7",
+        url="https://pypi.org/packages/06/ee/754bfd5f6bfe7162c10d3ecb0aeef6f882f91d3231596c83f761a75efd0b/python_lsp_jsonrpc-1.0.0-py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-setuptools@61.2.0:", type="build", when="@1.1.0:")
-    depends_on("py-setuptools-scm@3.4.3:+toml", type="build", when="@1.1.0:")
-
-    depends_on("py-ujson@3.0.0:", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("python@3.8:", when="@1.1:")
+        depends_on("py-ujson@3:")

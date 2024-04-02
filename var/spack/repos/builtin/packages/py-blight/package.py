@@ -16,27 +16,30 @@ class PyBlight(PythonPackage):
 
     license("Apache-2.0")
 
-    version("0.0.47", sha256="eb4a881adb98e03a0a855b95bfcddb0f4b3ca568b00cb45b571f047ae75c5667")
+    version(
+        "0.0.47",
+        sha256="6c2c5e4d630992b23fd4165e89af5036662ea62339e97f1df977db86b5203365",
+        url="https://pypi.org/packages/36/62/ce130d11c8ee839897851636e9d5de7be46208c30fbd54227b31c12acd3e/blight-0.0.47-py3-none-any.whl",
+    )
 
     variant("dev", default=False, description="Install dependencies to help with development")
 
-    depends_on("python@3.7:", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("python@3.7:")
+        depends_on("py-black", when="@0.0.35:0.0.47+dev")
+        depends_on("py-click@7.1:", when="@0.0.38:")
+        depends_on("py-coverage+toml", when="@0.0.35:0.0.47+dev")
+        depends_on("py-flake8", when="@0.0.35:0.0.47+dev")
+        depends_on("py-isort", when="@0.0.35:0.0.47+dev")
+        depends_on("py-mypy", when="@0.0.35:0.0.47+dev")
+        depends_on("py-pdoc3", when="@0.0.35:0.0.47+dev")
+        depends_on("py-pydantic@1.7:1", when="@0.0.35:")
+        depends_on("py-pytest", when="@0.0.35:0.0.47+dev")
+        depends_on("py-pytest-cov", when="@0.0.35:0.0.47+dev")
+        depends_on("py-twine", when="@0.0.35:+dev")
+        depends_on("py-typing-extensions", when="@0.0.35:")
 
     # In process of changing build backend after 0.0.47 release.
-    depends_on("py-setuptools", type="build")
 
-    depends_on("py-click@7.1:8", type=("build", "run"))
-    depends_on("py-typing-extensions", type=("build", "run"))
-    depends_on("py-pydantic@1.7:1", type=("build", "run"))
-
-    depends_on("py-flake8", type=("build", "run"), when="+dev")
-    depends_on("py-black", type=("build", "run"), when="+dev")
     # blight uses pyproject.toml to configure isort. isort added
     # support in 5.0.0
-    depends_on("py-isort@5.0.0:", type=("build", "run"), when="+dev")
-    depends_on("py-pytest", type=("build", "run"), when="+dev")
-    depends_on("py-pytest-cov", type=("build", "run"), when="+dev")
-    depends_on("py-coverage+toml", type=("build", "run"), when="+dev")
-    depends_on("py-twine", type=("build", "run"), when="+dev")
-    depends_on("py-pdoc3", type=("build", "run"), when="+dev")
-    depends_on("py-mypy", type=("build", "run"), when="@0.0.5:+dev")

@@ -14,21 +14,44 @@ class PyElasticsearch(PythonPackage):
 
     license("Apache-2.0")
 
-    version("8.6.2", sha256="084458e84caa91e3ad807b68aa82c022e785bead853a3b125641a25e894a1d47")
-    version("7.6.0", sha256="d228b2d37ac0865f7631335268172dbdaa426adec1da3ed006dddf05134f89c8")
-    version("7.5.1", sha256="2a0ca516378ae9b87ac840e7bb529ec508f3010360dd9feed605dff2a898aff5")
-    version("6.4.0", sha256="fb5ab15ee283f104b5a7a5695c7e879cb2927e4eb5aed9c530811590b41259ad")
-    version("5.2.0", sha256="45d9f8fbe0878a1b7493afeb20f4f6677a43982776ed1a77d9373e9c5b9de966")
-    version("2.3.0", sha256="be3080a2bf32dff0a9f9fcc1c087515a25a357645673a976d25ef77166134d81")
+    version(
+        "8.6.2",
+        sha256="8ccbebd9a0f6f523c7db67bb54863dde8bdb93daae4ff97f7c814e0500a73e84",
+        url="https://pypi.org/packages/f7/43/f73f5a5cc40b1943f90a895b248a4985a4b23aa25439d7919bc6ab147398/elasticsearch-8.6.2-py3-none-any.whl",
+    )
+    version(
+        "7.6.0",
+        sha256="f4bb05cfe55cf369bdcb4d86d0129d39d66a91fd9517b13cd4e4231fbfcf5c81",
+        url="https://pypi.org/packages/cc/cf/7973ac58090b960857da04add0b345415bf1e1741beddf4cbe136b8ad174/elasticsearch-7.6.0-py2.py3-none-any.whl",
+    )
+    version(
+        "7.5.1",
+        sha256="1815ee1377e7d3cf32770738a70785fe4ab1f05be28336a330ed71cb295a7c6c",
+        url="https://pypi.org/packages/10/60/0c79dde3e81beffeed422599d9ac65419289095186d37a3201739d52a57d/elasticsearch-7.5.1-py2.py3-none-any.whl",
+    )
+    version(
+        "6.4.0",
+        sha256="1f0f633e3b500d5042424f75a505badf8c4b9962c1b4734cdfb3087fb67920be",
+        url="https://pypi.org/packages/e0/b3/14dd62dfee3b0bca512167edc6f8baf5149b1108a02f9f246021953d117c/elasticsearch-6.4.0-py2.py3-none-any.whl",
+    )
+    version(
+        "5.2.0",
+        sha256="db1a1000308db56f1475e059d28238238fafc20aab8cbf0ec0c3011f1caecd65",
+        url="https://pypi.org/packages/44/e8/3529a15f3ccf9200fc2d8832b2aaa886a09b2086bb5232ffb9dd3209e4ff/elasticsearch-5.2.0-py2.py3-none-any.whl",
+    )
+    version(
+        "2.3.0",
+        sha256="6f184507c151bf8b093b86c0b7cd576a1d730acee03e8213cae367f196ad4c5c",
+        url="https://pypi.org/packages/c3/db/3869181ba938814d092a53ffbe2597be8597f0a4be62fc3989a82b0fa85a/elasticsearch-2.3.0-py2.py3-none-any.whl",
+    )
 
     variant("async", when="@8.6.2:", default=False, description="Include support for asyncio")
 
-    depends_on("py-setuptools", type="build")
-    depends_on("python@3.7:3", when="@7.6.0:", type=("build", "run"))
-    depends_on("py-urllib3@1.8:1", when="@:5.2.0", type=("build", "run"))
-    depends_on("py-urllib3@1.21.1:", when="@6:7", type=("build", "run"))
-    depends_on("py-elastic-transport@8.0:8", when="@8.6.2:", type=("build", "run"))
-    depends_on("py-aiohttp@3.0:3", when="+async", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("python@:3", when="@6.8:6,7.6:8.10")
+        depends_on("py-aiohttp@3.0.0:3", when="@7.8:+async")
+        depends_on("py-elastic-transport@8.0.0:", when="@8.0.0:8.12")
+        depends_on("py-urllib3@1.21.1:", when="@6.8:6,7.6:7.9")
 
     # tests_require
     # depends_on('py-requests@1.0.0:2.9', type=('build', 'run'))

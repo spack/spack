@@ -13,7 +13,16 @@ class PyExceptiongroup(PythonPackage):
     homepage = "https://github.com/agronholm/exceptiongroup"
     pypi = "exceptiongroup/exceptiongroup-1.0.4.tar.gz"
 
-    version("1.1.1", sha256="d484c3090ba2889ae2928419117447a14daf3c1231d5e30d0aae34f354f01785")
-    version("1.0.4", sha256="bd14967b79cd9bdb54d97323216f8fdf533e278df937aa2a90089e7d6e06e5ec")
+    version(
+        "1.1.1",
+        sha256="232c37c63e4f682982c8b6459f33a8981039e5fb8756b2074364e5055c498c9e",
+        url="https://pypi.org/packages/61/97/17ed81b7a8d24d8f69b62c0db37abbd8c0042d4b3fc429c73dab986e7483/exceptiongroup-1.1.1-py3-none-any.whl",
+    )
+    version(
+        "1.0.4",
+        sha256="542adf9dea4055530d6e1279602fa5cb11dab2395fa650b8674eaec35fc4a828",
+        url="https://pypi.org/packages/ce/2e/9a327cc0d2d674ee2d570ee30119755af772094edba86d721dda94404d1a/exceptiongroup-1.0.4-py3-none-any.whl",
+    )
 
-    depends_on("py-flit-scm", type="build")
+    with default_args(type="run"):
+        depends_on("python@3.7:")

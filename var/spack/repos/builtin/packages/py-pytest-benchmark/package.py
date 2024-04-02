@@ -15,9 +15,12 @@ class PyPytestBenchmark(PythonPackage):
 
     license("BSD-2-Clause")
 
-    version("3.2.3", sha256="ad4314d093a3089701b24c80a05121994c7765ce373478c8f4ba8d23c9ba9528")
+    version(
+        "3.2.3",
+        sha256="01f79d38d506f5a3a0a9ada22ded714537bbdfc8147a881a35c1655db07289d9",
+        url="https://pypi.org/packages/e7/1e/180579ad3bc53fe3181ef3843f0602f4db77f3609e5e5069a0ec194ff213/pytest_benchmark-3.2.3-py2.py3-none-any.whl",
+    )
 
-    depends_on("python@2.7:2.8,3.5:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
-    depends_on("py-pytest@3.8:", type=("build", "run"))
-    depends_on("py-py-cpuinfo", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-py-cpuinfo", when="@3.1.0-alpha2:")
+        depends_on("py-pytest@3.8:", when="@3.2.1:")

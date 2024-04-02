@@ -14,7 +14,11 @@ class PyPockets(PythonPackage):
 
     license("BSD-3-Clause")
 
-    version("0.9.1", sha256="9320f1a3c6f7a9133fe3b571f283bcf3353cd70249025ae8d618e40e9f7e92b3")
+    version(
+        "0.9.1",
+        sha256="68597934193c08a08eb2bf6a1d85593f627c22f9b065cc727a4f03f669d96d86",
+        url="https://pypi.org/packages/e9/2f/a4583c70fbd8cd04910e2884bcc2bdd670e884061f7b4d70bc13e632a993/pockets-0.9.1-py2.py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-six@1.5.2:", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-six@1.5.2:")

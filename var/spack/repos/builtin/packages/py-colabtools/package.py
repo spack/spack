@@ -14,6 +14,8 @@ class PyColabtools(PythonPackage):
 
     license("LGPL-3.0-only")
 
-    version("0.0.1", sha256="b6f7c0050e5924f4ad7e4762d46be663e21d417a39fc4adf6c6c90e8d9be47ec")
-
-    depends_on("py-setuptools", type="build")
+    version(
+        "0.0.1",
+        sha256="b80a6be1e4e5193af6c2d2b16f436fec6c67f1a77fabb222b82dcc3befcd516c",
+        url="https://pypi.org/packages/bb/29/9088b67e938f38885c1035b36624ed6176c73845152c5ddd603facfa3e24/colabtools-0.0.1-py3-none-any.whl",
+    )

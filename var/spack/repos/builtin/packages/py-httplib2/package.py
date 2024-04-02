@@ -14,13 +14,28 @@ class PyHttplib2(PythonPackage):
 
     license("MIT")
 
-    version("0.22.0", sha256="d7a10bc5ef5ab08322488bde8c726eeee5c8618723fdb399597ec58f3d82df81")
-    version("0.20.4", sha256="58a98e45b4b1a48273073f905d2961666ecf0fbac4250ea5b47aef259eb5c585")
-    version("0.18.0", sha256="b0e1f3ed76c97380fe2485bc47f25235453b40ef33ca5921bb2897e257a49c4c")
-    version("0.13.1", sha256="6901c8c0ffcf721f9ce270ad86da37bc2b4d32b8802d4a9cec38274898a64044")
+    version(
+        "0.22.0",
+        sha256="14ae0a53c1ba8f3d37e9e27cf37eabb0fb9980f435ba405d546948b009dd64dc",
+        url="https://pypi.org/packages/a8/6c/d2fbdaaa5959339d53ba38e94c123e4e84b8fbc4b84beb0e70d7c1608486/httplib2-0.22.0-py3-none-any.whl",
+    )
+    version(
+        "0.20.4",
+        sha256="8b6a905cb1c79eefd03f8669fd993c36dc341f7c558f056cb5a33b5c2f458543",
+        url="https://pypi.org/packages/59/0f/29725a9caf4b2618f524e0f28e2bda91aca8f880123ec77426ede6ea1ea4/httplib2-0.20.4-py3-none-any.whl",
+    )
+    version(
+        "0.18.0",
+        sha256="4f6988e6399a2546b525a037d56da34aed4d149bbdc0e78523018d5606c26e74",
+        url="https://pypi.org/packages/cc/f9/2a2c5be40e3d664cc3de70f72a9299fbe4fda5011e6ef1c008cfaef2d302/httplib2-0.18.0-py3-none-any.whl",
+    )
+    version(
+        "0.13.1",
+        sha256="cf6f9d5876d796539ec922a2c9b9a7cad9bfd90f04badcdc3bcfa537168052c3",
+        url="https://pypi.org/packages/60/55/3902b9f33ad9c15abf447ad91b86ef2d0835a1ae78530f1410c115cf8fe3/httplib2-0.13.1-py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools@40.8.0:", when="@0.18.1:", type="build")
-    depends_on("py-setuptools", type="build")
+    with default_args(type="run"):
+        depends_on("py-pyparsing@2.4.2:3.0.0-rc2,3.0.4:", when="@0.20.2:")
 
-    depends_on("py-pyparsing@2.4.2:3", when="@0.19:", type=("build", "run"))
     conflicts("^py-pyparsing@3.0.1:3.0.3", when="@0.19:")

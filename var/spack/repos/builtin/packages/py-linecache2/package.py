@@ -12,7 +12,8 @@ class PyLinecache2(PythonPackage):
     homepage = "https://github.com/testing-cabal/linecache2"
     pypi = "linecache2/linecache2-1.0.0.tar.gz"
 
-    version("1.0.0", sha256="4b26ff4e7110db76eeb6f5a7b64a82623839d595c2038eeda662f2a2db78e97c")
-
-    depends_on("py-setuptools", type="build")
-    depends_on("py-pbr", type="build")
+    version(
+        "1.0.0",
+        sha256="e78be9c0a0dfcbac712fe04fbf92b96cddae80b1b842f24248214c8496f006ef",
+        url="https://pypi.org/packages/c7/a3/c5da2a44c85bfbb6eebcfc1dde24933f8704441b98fdde6528f4831757a6/linecache2-1.0.0-py2.py3-none-any.whl",
+    )

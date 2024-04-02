@@ -16,13 +16,15 @@ class PyFortls(PythonPackage):
 
     license("MIT")
 
-    version("2.13.0", sha256="23c5013e8dd8e1d65bf07be610d0827bc48aa7331a7a7ce13612d4c646d0db31")
+    version(
+        "2.13.0",
+        sha256="85b42da62eba3f2048d740756ce944196bb36f867e0463f7917c4aa744aec34a",
+        url="https://pypi.org/packages/ac/ea/74e100561654d9589fd70fe0b87b5b53b894a34a0549235f9f99a8702e90/fortls-2.13.0-py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools@45:", type="build")
-    depends_on("py-packaging", type=("build", "run"))
-    depends_on("py-setuptools-scm@6.2:+toml", type="build")
-    depends_on("py-setuptools-scm-git-archive", type="build")
-
-    depends_on("py-json5", type=("build", "run"))
-    depends_on("py-importlib-metadata", type=("build", "run"), when="^python@:3.7")
-    depends_on("py-typing-extensions", type=("build", "run"), when="^python@:3.7")
+    with default_args(type="run"):
+        depends_on("python@3.7:")
+        depends_on("py-importlib-metadata", when="^python@:3.7")
+        depends_on("py-json5", when="@2.8:")
+        depends_on("py-packaging")
+        depends_on("py-typing-extensions", when="^python@:3.7")

@@ -14,15 +14,19 @@ class PyTox(PythonPackage):
 
     license("MIT")
 
-    version("3.14.2", sha256="7efd010a98339209f3a8292f02909b51c58417bfc6838ab7eca14cf90f96117a")
+    version(
+        "3.14.2",
+        sha256="8dd653bf0c6716a435df363c853cad1f037f9d5fddd0abc90d0f48ad06f39d03",
+        url="https://pypi.org/packages/a7/64/73ee95a48a69fb40f9ce415cdeda09c0c2721da483aae0687884f3cb0586/tox-3.14.2-py2.py3-none-any.whl",
+    )
 
-    depends_on("python@2.7:2.8,3.5:", type=("build", "run"))
-    depends_on("py-setuptools", type=("build", "run"))
-    depends_on("py-importlib-metadata@1.1.0:", when="^python@:3.7", type=("build", "run"))
-    depends_on("py-packaging@14:", type=("build", "run"))
-    depends_on("py-pluggy@0.12.0:0", type=("build", "run"))
-    depends_on("py-py@1.4.17:1", type=("build", "run"))
-    depends_on("py-six@1.0.0:1", type=("build", "run"))
-    depends_on("py-virtualenv@16.0.0:", type=("build", "run"))
-    depends_on("py-toml@0.9.4:", type=("build", "run"))
-    depends_on("py-filelock@3.0.0:3", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-colorama@0.4.1:", when="@3.14.2:3 platform=windows")
+        depends_on("py-filelock@3:", when="@:3.15.0")
+        depends_on("py-importlib-metadata@1.1:1", when="@3.14.2 ^python@:3.7")
+        depends_on("py-packaging", when="@3.13:3")
+        depends_on("py-pluggy@0.12:0", when="@3.13:3.15.0")
+        depends_on("py-py@1.4.17:", when="@:3.15.0")
+        depends_on("py-six@1.0.0:", when="@:3.14.3")
+        depends_on("py-toml@0.9.4:", when="@:3.25")
+        depends_on("py-virtualenv@16:", when="@3.14.1:3.14.5")

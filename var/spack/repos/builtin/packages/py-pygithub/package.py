@@ -14,20 +14,29 @@ class PyPygithub(PythonPackage):
 
     license("LGPL-3.0-only")
 
-    version("2.1.1", sha256="ecf12c2809c44147bce63b047b3d2e9dac8a41b63e90fcb263c703f64936b97c")
-    version("1.59.1", sha256="c44e3a121c15bf9d3a5cc98d94c9a047a5132a9b01d22264627f58ade9ddc217")
-    version("1.55", sha256="1bbfff9372047ff3f21d5cd8e07720f3dbfdaf6462fcaed9d815f528f1ba7283")
+    version(
+        "2.1.1",
+        sha256="4b528d5d6f35e991ea5fd3f942f58748f24938805cb7fcf24486546637917337",
+        url="https://pypi.org/packages/be/04/810d131be173cba445d3658a45512b2b2b3d0960d52c4a300d6ec5e00f52/PyGithub-2.1.1-py3-none-any.whl",
+    )
+    version(
+        "1.59.1",
+        sha256="3d87a822e6c868142f0c2c4bf16cce4696b5a7a4d142a7bd160e1bdf75bc54a9",
+        url="https://pypi.org/packages/2c/71/aff5465d9e3d448a5d4beab1dc7c8dec72037e3ae7e0d856ee08538dc934/PyGithub-1.59.1-py3-none-any.whl",
+    )
+    version(
+        "1.55",
+        sha256="2caf0054ea079b71e539741ae56c5a95e073b81fa472ce222e81667381b9601b",
+        url="https://pypi.org/packages/c1/1f/9dc4ba315eeea222473cf4c15d3e665f32d52f859d9d6e73219d0a408969/PyGithub-1.55-py3-none-any.whl",
+    )
 
-    depends_on("python@3.6:", type=("build", "run"))
-    depends_on("python@3.7:", type=("build", "run"), when="@1.57:")
-
-    depends_on("py-setuptools", type="build")
-    depends_on("py-setuptools-scm", type="build", when="@1.58.1:")
-    depends_on("py-pynacl@1.4.0:", type=("build", "run"))
-    depends_on("py-python-dateutil", type=("build", "run"), when="@2.1.0:")
-    depends_on("py-requests@2.14.0:", type=("build", "run"))
-    depends_on("py-pyjwt@2.4.0:", type=("build", "run"))
-    depends_on("py-pyjwt@2.4.0: +crypto", type=("build", "run"), when="@1.58.1:")
-    depends_on("py-typing-extensions@4:", type=("build", "run"), when="@2.1.0:")
-    depends_on("py-urllib3@1.26.0:", type=("build", "run"), when="@2.1.0:")
-    depends_on("py-deprecated", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("python@3.7:", when="@1.57:")
+        depends_on("py-deprecated", when="@1.46:")
+        depends_on("py-pyjwt@2.4:+crypto", when="@1.58.1:")
+        depends_on("py-pyjwt@2.0.0:", when="@1.55:1.56")
+        depends_on("py-pynacl@1.4:", when="@1.55:")
+        depends_on("py-python-dateutil", when="@2:2.1")
+        depends_on("py-requests@2.14:", when="@1.46:1.53,1.54.1:")
+        depends_on("py-typing-extensions@4:", when="@2.1:")
+        depends_on("py-urllib3@1.26:", when="@2.1.1:")

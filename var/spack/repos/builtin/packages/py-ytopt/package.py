@@ -17,10 +17,11 @@ class PyYtopt(PythonPackage):
 
     license("BSD-2-Clause")
 
-    version("0.0.4", sha256="4e47315b658f1943f756816455ae491818c37b0f700dd895a97fb7792bb49e35")
-    version("0.0.3", sha256="eac6ab87d4fd27517f136880016359c5b24836ec009e8cc9b4073a6c5edb17af")
-    version("0.0.2", sha256="5a624aa678b976ff6ef867610bafcb0dfd5c8af0d880138ca5d56d3f776e6d71")
-    version("0.0.1", sha256="3ca616922c8e76e73f695a5ddea5dd91b0103eada726185f008343cc5cbd7744")
+    version(
+        "0.0.1",
+        sha256="9f373a4802b18f3ce12537a106763489d7a9112500fcfde92191b696023a7662",
+        url="https://pypi.org/packages/b3/71/29066bc101b0f62215bbaf55a4a7ef1c8138b5d74107a2434e2a8c139df4/ytopt-0.0.1-py2.py3-none-any.whl",
+    )
 
     variant(
         "online",
@@ -29,17 +30,13 @@ class PyYtopt(PythonPackage):
         when="@0.0.3:",
     )
 
-    depends_on("python@3.6:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
-    depends_on("py-scikit-learn@0.23.1", type=("build", "run"), when="@:0.0.2")
-    depends_on("py-scikit-learn@1.0.0:", type=("build", "run"), when="@0.0.3:")
-    depends_on("py-dh-scikit-optimize", type=("build", "run"))
-    depends_on("py-configspace", type=("build", "run"))
-    depends_on("py-numpy", type=("build", "run"))
-    depends_on("py-ytopt-autotune@1.0.0:1.0.999", type=("build", "run"))
-    depends_on("py-joblib", type=("build", "run"))
-    depends_on("py-deap", type=("build", "run"))
-    depends_on("py-tqdm", type=("build", "run"))
-    depends_on("py-ray", type=("build", "run"))
-    depends_on("py-mpi4py@3.0.0:", type=("build", "run"))
-    depends_on("py-sdv@0.13.1:0.13", type=("build", "run"), when="@0.0.3: +online")
+    with default_args(type="run"):
+        depends_on("py-gym")
+        depends_on("py-joblib")
+        depends_on("py-keras")
+        depends_on("py-mpi4py@3:")
+        depends_on("py-numpy")
+        depends_on("py-scikit-learn")
+        depends_on("py-scikit-optimize")
+        depends_on("py-tensorflow@1.11.0:")
+        depends_on("py-tqdm")

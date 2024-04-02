@@ -12,7 +12,11 @@ class PyDescartes(PythonPackage):
 
     pypi = "descartes/descartes-1.1.0.tar.gz"
 
-    version("1.1.0", sha256="135a502146af5ed6ff359975e2ebc5fa4b71b5432c355c2cafdc6dea1337035b")
+    version(
+        "1.1.0",
+        sha256="4c62dc41109689d03e4b35de0a2bcbdeeb81047badc607c4415d5c753bd683af",
+        url="https://pypi.org/packages/e5/b6/1ed2eb03989ae574584664985367ba70cd9cf8b32ee8cad0e8aaeac819f3/descartes-1.1.0-py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-matplotlib", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-matplotlib", when="@1.1:")

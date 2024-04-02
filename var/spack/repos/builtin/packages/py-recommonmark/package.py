@@ -19,9 +19,13 @@ class PyRecommonmark(PythonPackage):
 
     license("MIT")
 
-    version("0.6.0", sha256="29cd4faeb6c5268c633634f2d69aef9431e0f4d347f90659fd0aab20e541efeb")
+    version(
+        "0.6.0",
+        sha256="2ec4207a574289355d5b6ae4ae4abb29043346ca12cdd5f07d374dc5987d2852",
+        url="https://pypi.org/packages/94/de/334aaf73df8c0e77fb07f883d1e274344526196c137ef3479cb5e5aef086/recommonmark-0.6.0-py2.py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-commonmark@0.8.1:", type=("build", "run"))
-    depends_on("py-docutils@0.11:", type=("build", "run"))
-    depends_on("py-sphinx@1.3.1:", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-commonmark@0.8.1:", when="@0.6:")
+        depends_on("py-docutils@0.11:", when="@0.0.2:0.4,0.6:")
+        depends_on("py-sphinx@1.3.1:", when="@0.6:")

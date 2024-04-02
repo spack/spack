@@ -17,7 +17,13 @@ class PyLizard(PythonPackage):
 
     license("MIT")
 
-    version("1.17.10", sha256="62d78acd64724be28b5f4aa27a630dfa4b4afbd1596d1f25d5ad1c1a3a075adc")
-    version("1.17.9", sha256="76ee0e631d985bea1dd6521a03c6c2fa9dce5a2248b3d26c49890e9e085b7aed")
-
-    depends_on("py-setuptools", type="build")
+    version(
+        "1.17.10",
+        sha256="686748cc003de54d3e37f84b6cbbdd975be41a2094f0a779cb7fef65e70fc53e",
+        url="https://pypi.org/packages/ef/4b/557cbe718f0550de5656f7480600989ddfc0279db15e90d9cdc38cb8e61d/lizard-1.17.10-py2.py3-none-any.whl",
+    )
+    version(
+        "1.17.9",
+        sha256="3a5c429321e67d4a1970adb30ce8c6aebf4688c275b2589d89b4bbd6ed3d40a9",
+        url="https://pypi.org/packages/4d/2e/ef0a4cc393164d24e5b2784850ed92dbd27999ab51244cd38a62dac48ff8/lizard-1.17.9-py2.py3-none-any.whl",
+    )

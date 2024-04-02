@@ -23,12 +23,23 @@ class PyPythonDaemon(PythonPackage):
 
     license("GPL-3.0-or-later")
 
-    version("2.3.1", sha256="15c2c5e2cef563e0a5f98d542b77ba59337380b472975d2b2fd6b8c4d5cf46ca")
-    version("2.3.0", sha256="bda993f1623b1197699716d68d983bb580043cf2b8a66a01274d9b8297b0aeaf")
-    version("2.0.5", sha256="afde4fa433d94d007206ee31a0941d55b5eb232a5422b670aad628547b46bf68")
+    version(
+        "2.3.1",
+        sha256="4e3bf67784c78aaa55ec001a2f832b464a54c5f9c89c11b311e2416a8c247431",
+        url="https://pypi.org/packages/aa/b0/bc79d8ff019c2583d839e0143b1f91eafd4cfe92f86fb9d378a515dfb612/python_daemon-2.3.1-py2.py3-none-any.whl",
+    )
+    version(
+        "2.3.0",
+        sha256="191c7b67b8f7aac58849abf54e19fe1957ef7290c914210455673028ad454989",
+        url="https://pypi.org/packages/b1/cc/2ab0d910548de45eaaa50d0372387951d9005c356a44c6858db12dc6b2b7/python_daemon-2.3.0-py2.py3-none-any.whl",
+    )
+    version(
+        "2.0.5",
+        sha256="db316a0fcf54b9702caf6ca619b76be25d53f5ee0781baff0bb9e2e0355faf24",
+        url="https://pypi.org/packages/5b/90/b55062dbce72c24ba1c1655b07974b300a66f352800152e6ed21f29b7dc4/python_daemon-2.0.5-py2.py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type=("build", "run"))
-    depends_on("py-lockfile", type=("build", "run"))
-    depends_on("py-lockfile@0.10:", type=("build", "run"), when="@2.3.0:")
-    depends_on("py-docutils", type="build")
-    depends_on("py-twine", type="build")
+    with default_args(type="run"):
+        depends_on("py-docutils", when="@2.2.1:")
+        depends_on("py-lockfile@0.10:", when="@2.2.1:")
+        depends_on("py-setuptools", when="@2.2.1:3.0.0")
