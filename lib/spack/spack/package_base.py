@@ -1284,7 +1284,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
 
         # If the extendee is in the spec's deps already, return that.
         for dep in self.spec.traverse(deptype=("link", "run")):
-            if dep.name in self.extendees:
+            if dep.name in self.extendees and dep not in deps:
                 deps.append(dep)
 
         if deps:
