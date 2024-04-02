@@ -54,7 +54,6 @@ import spack.url
 import spack.util.environment
 import spack.util.path
 import spack.util.web
-from spack.directives import DisableRedistribute
 from spack.filesystem_view import YamlFilesystemView
 from spack.install_test import (
     PackageTest,
@@ -476,7 +475,7 @@ class RedistributionMixin:
 
     #: Store whether a given Spec source/binary should not be
     #: redistributed.
-    disable_redistribute: Dict["spack.spec.Spec", DisableRedistribute]
+    disable_redistribute: Dict["spack.spec.Spec", "spack.directives.DisableRedistribute"]
 
     # Source redistribution must be determined before concretization
     # (because source mirrors work with un-concretized Specs).
