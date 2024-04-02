@@ -187,8 +187,10 @@ def test_repo(_create_test_repo, monkeypatch, mock_stage):
     with spack.repo.use_repositories(_create_test_repo) as mock_repo_path:
         yield mock_repo_path
 
+
 @pytest.mark.parametrize(
-    "spec_str,distribute_src,distribute_bin", [
+    "spec_str,distribute_src,distribute_bin",
+    [
         ("x@1.1~foo", False, False),
         ("x@1.2+foo", False, False),
         ("x@1.2~foo", False, True),
@@ -196,7 +198,7 @@ def test_repo(_create_test_repo, monkeypatch, mock_stage):
         ("x@1.3+foo", True, True),
         ("y@2.0", False, False),
         ("y@2.1+bar", False, False),
-    ]
+    ],
 )
 def test_redistribute_directive(test_repo, spec_str, distribute_src, distribute_bin):
     spec = spack.spec.Spec(spec_str)
