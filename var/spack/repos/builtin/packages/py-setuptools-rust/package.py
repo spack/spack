@@ -49,4 +49,4 @@ class PySetuptoolsRust(PythonPackage):
         depends_on("py-toml@0.9:", when="@:0")
         depends_on("py-typing-extensions@3.7.4.3:", when="@1:1.7")
 
-    # Historical dependencies
+    depends_on("rust", type="run")

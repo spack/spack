@@ -6,7 +6,7 @@
 from spack.package import *
 
 
-class PyTensorflowProbability(Package):
+class PyTensorflowProbability(PythonPackage):
     """TensorFlow Probability (TFP) is a Python library built on
     TensorFlow that makes it easy to combine probabilistic models and
     deep learning on modern hardware (TPU, GPU). It's for data

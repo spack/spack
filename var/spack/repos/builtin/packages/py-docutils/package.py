@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
+
 from spack.package import *
 
 
@@ -85,3 +87,9 @@ class PyDocutils(PythonPackage):
     # NOTE: This creates symbolic links to be able to run docutils scripts
     # without .py file extension similarly to various linux distributions to
     # increase compatibility with other packages
+    @run_after("install")
+    def post_install(self):
+        bin_path = self.prefix.bin
+        for file in os.listdir(bin_path):
+            if file.endswith(".py"):
+                os.symlink(os.path.join(bin_path, file), os.path.join(bin_path, file[:-3]))
