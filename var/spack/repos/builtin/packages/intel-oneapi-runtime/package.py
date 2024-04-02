@@ -18,7 +18,7 @@ class IntelOneapiRuntime(Package):
     license("https://intel.ly/393CijO")
 
     maintainers("rscohn2")
-    
+
     tags = ["runtime"]
 
     requires("%oneapi")
