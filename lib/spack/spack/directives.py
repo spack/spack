@@ -64,6 +64,7 @@ if TYPE_CHECKING:
 __all__ = [
     "DirectiveError",
     "DirectiveMeta",
+    "DisableRedistribute",
     "version",
     "conflicts",
     "depends_on",
@@ -600,6 +601,7 @@ def depends_on(
     return _execute_depends_on
 
 
+#: Store whether a given Spec source/binary should not be redistributed.
 DisableRedistribute = collections.namedtuple("DisableRedistribute", ["source", "binary"])
 
 

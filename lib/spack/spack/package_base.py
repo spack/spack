@@ -37,6 +37,7 @@ import spack.compilers
 import spack.config
 import spack.deptypes as dt
 import spack.directives
+from spack.directives import DisableRedistribute
 import spack.directory_layout
 import spack.environment
 import spack.error
@@ -475,7 +476,7 @@ class RedistributionMixin(object):
 
     #: Store whether a given Spec source/binary should not be
     #: redistributed.
-    disable_redistribute: Dict["spack.spec.Spec", spack.directives.DisableRedistribute]
+    disable_redistribute: Dict["spack.spec.Spec", DisableRedistribute]
 
     # Source redistribution must be determined before concretization
     # (because source mirrors work with un-concretized Specs).
