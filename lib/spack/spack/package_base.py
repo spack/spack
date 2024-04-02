@@ -469,7 +469,7 @@ def _names(when_indexed_dictionary):
     return sorted(all_names)
 
 
-class RedistributionMixin(object):
+class RedistributionMixin:
     """Logic for determining whether a Package is source/binary
     redistributable.
     """
