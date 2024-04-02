@@ -31,7 +31,7 @@ class PyCigPythia(AutotoolsPackage, PythonExtension):
     depends_on("python@3.8:")
     depends_on("py-pip")
     depends_on("py-packaging")
-    
+
     def configure_args(self):
         spec = self.spec
         args = []
