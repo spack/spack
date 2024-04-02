@@ -30,8 +30,8 @@ class PyCtgan(PythonPackage):
 
     with default_args(type="run"):
         depends_on("python@:3.9", when="@0.5:0.6")
-        depends_on("py-numpy@1.18.0:1.19", when="@0.5:0.6 ^python@:3.6")
         depends_on("py-numpy@1.20.0:1", when="@0.5:0.6 ^python@3.7:")
+        depends_on("py-numpy@1.18.0:1.19", when="@0.5:0.6 ^python@:3.6")
         depends_on("py-packaging@20:21", when="@0.5:0.7.3")
         depends_on("py-pandas@1.1.3:1", when="@0.5:0.6")
         depends_on("py-rdt@1.2:1.2.0.0,1.2.1:", when="@0.5.2:0.6")

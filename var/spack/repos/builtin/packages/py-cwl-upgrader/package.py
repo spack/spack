@@ -23,8 +23,8 @@ class PyCwlUpgrader(PythonPackage):
 
     with default_args(type="run"):
         depends_on("python@:3", when="@1:1.2.8")
-        depends_on("py-ruamel-yaml@0.15.98:0.17.21", when="@1.2.3:1.2.5 ^python@3.9:")
         depends_on("py-ruamel-yaml@0.16:0.17.21", when="@1.2.3:1.2.5 ^python@3.10:")
+        depends_on("py-ruamel-yaml@0.15.98:0.17.21", when="@1.2.3:1.2.5 ^python@3.9:")
         depends_on("py-ruamel-yaml@0.15.78:0.17.21", when="@1.2.3:1.2.5 ^python@3.8:")
         depends_on("py-ruamel-yaml@0.15.71:0.17.21", when="@1.2.3:1.2.4")
         depends_on("py-schema-salad", when="@1.1:")

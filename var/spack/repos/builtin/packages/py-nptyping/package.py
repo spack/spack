@@ -33,8 +33,8 @@ class PyNptyping(PythonPackage):
 
     with default_args(type="run"):
         depends_on("python@3.7:", when="@2:")
-        depends_on("py-numpy@1.21.5", when="@2.1.2: ^python@:3.7")
         depends_on("py-numpy@1.20.0:1", when="@2.1.2: ^python@3.8:")
+        depends_on("py-numpy@1.21.5", when="@2.1.2: ^python@:3.7")
         depends_on("py-numpy", when="@:1")
         depends_on("py-typing-extensions@4:", when="@2.1: ^python@:3.9")
         depends_on("py-typish@1.7:", when="@1.4:1")

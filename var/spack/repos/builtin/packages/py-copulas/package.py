@@ -32,10 +32,10 @@ class PyCopulas(PythonPackage):
 
     with default_args(type="run"):
         depends_on("python@:3.9", when="@0.5.2.dev1:0.7.0")
-        depends_on("py-matplotlib@3.2.0:3.3", when="@0.6.1:0.7.0 ^python@:3.6")
         depends_on("py-matplotlib@3.4.0:", when="@0.6.1:0.7.0 ^python@3.7:")
+        depends_on("py-matplotlib@3.2.0:3.3", when="@0.6.1:0.7.0 ^python@:3.6")
         depends_on("py-matplotlib@3.2.0:", when="@0.5:0.6.0")
-        depends_on("py-numpy@1.18.0:1.19", when="@0.5.2.dev1:0.7.0 ^python@:3.6")
         depends_on("py-numpy@1.20.0:1", when="@0.5.2.dev1:0.7.0 ^python@3.7:")
+        depends_on("py-numpy@1.18.0:1.19", when="@0.5.2.dev1:0.7.0 ^python@:3.6")
         depends_on("py-pandas@1.1.3:1", when="@0.5.2.dev1:0.7.0")
         depends_on("py-scipy@1.5.4:", when="@0.5.2.dev1:0.7.0")

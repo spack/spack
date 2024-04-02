@@ -28,8 +28,8 @@ class PySdmetrics(PythonPackage):
     with default_args(type="run"):
         depends_on("python@:3.9", when="@0.4:0.8")
         depends_on("py-copulas@0.6:0.6.0.0,0.6.1:0.6", when="@0.4:0.4.1")
-        depends_on("py-numpy@1.18.0:1.19", when="@0.4:0.8 ^python@:3.6")
         depends_on("py-numpy@1.20.0:1", when="@0.4:0.8 ^python@3.7:")
+        depends_on("py-numpy@1.18.0:1.19", when="@0.4:0.8 ^python@:3.6")
         depends_on("py-pandas@1.1.3:1", when="@0.4:0.8")
         depends_on("py-pyts@0.12", when="@0.4:0.5")
         depends_on("py-rdt@0.6.1:0.6.1.0,0.6.2:0", when="@0.4:0.5.0")
