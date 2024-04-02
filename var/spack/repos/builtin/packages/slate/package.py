@@ -137,8 +137,8 @@ class Slate(CMakePackage, CudaPackage, ROCmPackage):
             archs = ";".join(spec.variants["amdgpu_target"].value)
             config.append("-DCMAKE_HIP_ARCHITECTURES=%s" % archs)
 
-        config.append("-DSCALAPACK_LIBRARIES=%s" % 
-            spec["scalapack"].libs.joined(";") if "scalapack" in spec else "none")
+        slibs = spec["scalapack"].libs.joined(";") if "scalapack" in spec else "none"
+        config.append(f"-DSCALAPACK_LIBRARIES={slib}")
         return config
 
     @run_after("install")
