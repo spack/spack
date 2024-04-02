@@ -44,9 +44,9 @@ class GobjectIntrospection(MesonPackage, AutotoolsPackage):
     depends_on("cairo+gobject")
     depends_on("glib@2.78:", when="@1.78")
     depends_on("glib@2.76:", when="@1.76")
-    depends_on("glib@2.72:", when="@1.72")
+    depends_on("glib@2.58:", when="@1.72")
     depends_on("glib@2.56:", when="@1.56")
-    depends_on("glib@2.49.2:", when="@1.49.2:")
+    depends_on("glib@2.49.2:", when="@1.49.2")
     depends_on("glib@2.48.1", when="@1.48.0")
 
     depends_on("libffi")
