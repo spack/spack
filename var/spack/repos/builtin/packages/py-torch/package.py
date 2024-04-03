@@ -105,6 +105,10 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
         description="Enable breakpad crash dump library",
         when="@1.10:1.11",
     )
+    # py-torch has strict dependencies on old protobuf/py-protobuf versions that
+    # cause problems with other packages that require newer versions of protobuf
+    # and py-protobuf --> provide an option to use the internal/vendored protobuf.
+    variant("custom-protobuf", default=False, description="Use vendored protobuf")
 
     conflicts("+cuda+rocm")
     conflicts("+tensorpipe", when="+rocm ^hip@:5.1", msg="TensorPipe not supported until ROCm 5.2")
@@ -176,14 +180,15 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
     depends_on("py-pybind11@2.10.0", when="@1.13:1", type=("build", "link", "run"))
     depends_on("py-pybind11@2.6.2", when="@1.8:1.12", type=("build", "link", "run"))
     depends_on("py-pybind11@2.3.0", when="@:1.7", type=("build", "link", "run"))
-    depends_on("py-protobuf@3.12.2:", when="@1.10:", type=("build", "run"))
-    depends_on("py-protobuf@:3.14", when="@:1.9", type=("build", "run"))
-    depends_on("protobuf@3.12.2:", when="@1.10:")
-    depends_on("protobuf@:3.14", when="@:1.9")
-    # https://github.com/protocolbuffers/protobuf/issues/10051
-    # https://github.com/pytorch/pytorch/issues/78362
-    depends_on("py-protobuf@:3", type=("build", "run"))
-    depends_on("protobuf@:3", type=("build", "run"))
+    with when("~custom-protobuf"):
+        depends_on("py-protobuf@3.12.2:", when="@1.10:", type=("build", "run"))
+        depends_on("py-protobuf@:3.14", when="@:1.9", type=("build", "run"))
+        depends_on("protobuf@3.12.2:", when="@1.10:")
+        depends_on("protobuf@:3.14", when="@:1.9")
+        # https://github.com/protocolbuffers/protobuf/issues/10051
+        # https://github.com/pytorch/pytorch/issues/78362
+        depends_on("py-protobuf@:3", type=("build", "run"))
+        depends_on("protobuf@:3")
     depends_on("eigen")
     # https://github.com/pytorch/pytorch/issues/60329
     # depends_on("cpuinfo@2023-01-13", when="@2.1:")
@@ -616,7 +621,10 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
             env.set("WITH_BLAS", "generic")
 
         # Don't use vendored third-party libraries when possible
-        env.set("BUILD_CUSTOM_PROTOBUF", "OFF")
+        if self.spec.satisfies("+custom-protobuf"):
+            env.set("BUILD_CUSTOM_PROTOBUF", "ON")
+        else:
+            env.set("BUILD_CUSTOM_PROTOBUF", "OFF")
         env.set("USE_SYSTEM_NCCL", "ON")
         env.set("USE_SYSTEM_EIGEN_INSTALL", "ON")
         env.set("pybind11_DIR", self.spec["py-pybind11"].prefix)
