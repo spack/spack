@@ -2,9 +2,7 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import glob
 import os
-import shutil
 import sys
 
 from spack.package import *
@@ -98,6 +96,15 @@ class PyPip(Package, PythonExtension):
     # Uses collections.MutableMapping
     depends_on("python@:3.9", when="@:19.1", type=("build", "run"))
 
+    resource(
+        name="pip-bootstrap",
+        url="https://bootstrap.pypa.io/pip/zipapp/pip-22.3.1.pyz",
+        checksum="c9363c70ad91d463f9492a8a2c89f60068f86b0239bd2a6aa77367aab5fefb3e",
+        when="platform=windows",
+        placement={"pip-22.3.1.pyz": "pip.pyz"},
+        expand=False
+    )
+
     def url_for_version(self, version):
         url = "https://files.pythonhosted.org/packages/{0}/p/pip/pip-{1}-{0}-none-any.whl"
         if version >= Version("21"):
@@ -106,38 +113,20 @@ class PyPip(Package, PythonExtension):
             python_tag = "py2.py3"
         return url.format(python_tag, version)
 
-    def setup_build_environment(self, env):
-        """Specify where the user site-packages directory should be"""
-        if sys.platform == "win32":
-            env.set("PYTHONUSERBASE", self.spec.prefix)
-
     def install(self, spec, prefix):
-        # Pip must be bootstrapped on windows using ensurepip. When setting
-        # up the build environment, the PYTHONUSERBASE variable is injected
-        # into the environment, set to the spec prefix. Then, in conjunction
-        # with the --user flag, pip is installed into the appropriate directory.
-        # Once bootstrapped, we can install the desired version of pip from
-        # the wheel.
-        if sys.platform == "win32":
-            python("-m", "ensurepip", "--user")
-            whl = self.stage.archive_file
-            upgrade_cmd = ["-m", "pip", "install", "--user", whl]
-            python(*upgrade_cmd)
-            # Need to fix the directory name to "Lib" in order for the python package to correctly
-            # set the PYTHONPATH variable so the pip is usable because this is the structure that
-            # other python packages are installed with.
-            # TODO (smillie) Does this need to be protected in a try/except?
-            orig_pydir = glob.glob(os.path.join(self.spec.prefix, "Python3*"))[0]
-            new_pydir = os.path.join(self.spec.prefix, "Lib")
-            shutil.move(orig_pydir, new_pydir)
-            return
-
         # To build and install pip from source, you need setuptools, wheel, and pip
         # already installed. We get around this by using a pre-built wheel to install
         # itself, see:
         # https://discuss.python.org/t/bootstrapping-a-specific-version-of-pip/12306
+        # On Windows for newer versions of pip, you must bootstrap pip first. In order
+        # to achieve this, use the pip.pyz zipapp version of pip to bootstrap the
+        # wheel install.
         whl = self.stage.archive_file
-        args = [os.path.join(whl, "pip")] + std_pip_args + ["--prefix=" + prefix, whl]
+        args = std_pip_args + ["--prefix=" + prefix, whl]
+        if sys.platform == "win32":
+            args.insert(0, os.path.join(self.stage.source_path, "pip.pyz"))
+        else:
+            args.insert(0, os.path.join(whl, "pip"))
         python(*args)
 
     def setup_dependent_package(self, module, dependent_spec):
