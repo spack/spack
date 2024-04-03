@@ -15,7 +15,11 @@ class PyAmpltools(PythonPackage):
 
     license("BSD-3-Clause")
 
-    version("0.4.6", sha256="d54b399c1d78d02e3f4023aa2335b57832deb7d31cdefe4e219e4f2a2bb19a83")
+    version(
+        "0.4.6",
+        sha256="a0c7a21a0492f6809bb866f9887b8ad29b28ce43ea0c2f564562eb883bca34e9",
+        url="https://pypi.org/packages/2e/ce/5d7ac093633c8b73e7bfdf34cee14b5dea44e322bf2c938acdfadbb0d735/ampltools-0.4.6-py3-none-any.whl",
+    )
 
-    depends_on("py-requests", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
+    with default_args(type="run"):
+        depends_on("py-requests")

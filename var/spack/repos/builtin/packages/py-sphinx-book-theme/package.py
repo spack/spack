@@ -14,11 +14,13 @@ class PySphinxBookTheme(PythonPackage):
 
     license("BSD-3-Clause")
 
-    version("1.0.1", sha256="927b399a6906be067e49c11ef1a87472f1b1964075c9eea30fb82c64b20aedee")
+    version(
+        "1.0.1",
+        sha256="d15f8248b3718a9a6be0ba617a32d1591f9fa39c614469bface777ba06a73b75",
+        url="https://pypi.org/packages/8e/45/3abe359075154f4d6a8626f4b591a28cc703d7c169cef1f7b87cab1a62f7/sphinx_book_theme-1.0.1-py3-none-any.whl",
+    )
 
-    depends_on("python@3.7:", type=("build", "run"))
-
-    depends_on("py-sphinx-theme-builder@0.2.0a7:", type="build")
-
-    depends_on("py-sphinx@4:6", type=("build", "run"))
-    depends_on("py-pydata-sphinx-theme@0.13.3:", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("python@3.7:", when="@:1.0")
+        depends_on("py-pydata-sphinx-theme@0.13.3:", when="@1.0.1:1.0")
+        depends_on("py-sphinx@4.0.0:6", when="@1:1.0")

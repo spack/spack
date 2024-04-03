@@ -18,9 +18,13 @@ class PyMetricLearn(PythonPackage):
     homepage = "https://github.com/scikit-learn-contrib/metric-learn"
     pypi = "metric-learn/metric-learn-0.7.0.tar.gz"
 
-    version("0.7.0", sha256="2b35246a1098d74163b16cc7779e0abfcbf9036050f4caa258e4fee55eb299cc")
+    version(
+        "0.7.0",
+        sha256="193c218ca967289ab988d307fa18ead34fb0ef439774b06867ca526a05d766a8",
+        url="https://pypi.org/packages/52/51/e5d46bef64e6a39055eecca67b5342a5fefe3744b73a744a58487651a209/metric_learn-0.7.0-py2.py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-numpy@1.11.0:", type=("build", "run"))
-    depends_on("py-scipy@0.17.0:", type=("build", "run"))
-    depends_on("py-scikit-learn@0.21.3:", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-numpy@1.11.0:", when="@0.7:")
+        depends_on("py-scikit-learn@0.21.3:", when="@0.7:")
+        depends_on("py-scipy@0.17:", when="@0.7:")

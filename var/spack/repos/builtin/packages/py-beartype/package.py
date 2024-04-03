@@ -14,9 +14,18 @@ class PyBeartype(PythonPackage):
 
     license("MIT")
 
-    version("0.16.2", sha256="47ec1c8c3be3f999f4f9f829e8913f65926aa7e85b180d9ffd305dc78d3e7d7b")
-    version("0.15.0", sha256="2af6a8d8a7267ccf7d271e1a3bd908afbc025d2a09aa51123567d7d7b37438df")
+    version(
+        "0.16.2",
+        sha256="72d133615fe674affc8c49365dd24dfe2260552b9a8a2b7193cdd48021527782",
+        url="https://pypi.org/packages/29/83/ed78ed7304e29741dee2d3bfd08c99b133e0c8cb600b8ff66cdf66e2706a/beartype-0.16.2-py3-none-any.whl",
+    )
+    version(
+        "0.15.0",
+        sha256="52cd2edea72fdd84e4e7f8011a9e3007bf0125c3d6d7219e937b9d8868169177",
+        url="https://pypi.org/packages/6f/e7/9220de010e015fdfb7ce22e7d9a846bfcd6e5d686c4fc555fa76a22846ba/beartype-0.15.0-py3-none-any.whl",
+    )
+
+    with default_args(type="run"):
+        depends_on("python@3.8:", when="@0.15:")
 
     # See PYTHON_VERSION_MIN in beartype/meta.py
-    depends_on("python@3.8:", type=("build", "run"))
-    depends_on("py-setuptools@:49,50.1:", type="build")

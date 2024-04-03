@@ -15,26 +15,72 @@ class PyAttrs(PythonPackage):
 
     license("MIT")
 
-    version("23.1.0", sha256="6279836d581513a26f1bf235f9acd333bc9115683f14f7e8fae46c98fc50e015")
-    version("22.2.0", sha256="c9227bfc2f01993c03f68db37d1d15c9690188323c067c641f1a35ca58185f99")
-    version("22.1.0", sha256="29adc2665447e5191d0e7c568fde78b21f9672d344281d0c6e1ab085429b22b6")
-    version("21.4.0", sha256="626ba8234211db98e869df76230a137c4c40a12d72445c45d5f5b716f076e2fd")
-    version("21.2.0", sha256="ef6aaac3ca6cd92904cdd0d83f629a15f18053ec84e6432106f7a4d04ae4f5fb")
-    version("20.3.0", sha256="832aa3cde19744e49938b91fea06d69ecb9e649c93ba974535d08ad92164f700")
-    version("20.2.0", sha256="26b54ddbbb9ee1d34d5d3668dd37d6cf74990ab23c828c2888dccdceee395594")
-    version("20.1.0", sha256="0ef97238856430dcf9228e07f316aefc17e8939fc8507e18c6501b761ef1a42a")
-    version("19.3.0", sha256="f7b7ce16570fe9965acd6d30101a28f62fb4a7f9e926b3bbc9b61f8b04247e72")
-    version("19.2.0", sha256="f913492e1663d3c36f502e5e9ba6cd13cf19d7fab50aa13239e420fef95e1396")
-    version("19.1.0", sha256="f0b870f674851ecbfbbbd364d6b5cbdff9dcedbc7f3f5e18a6891057f21fe399")
-    version("18.1.0", sha256="e0d0eb91441a3b53dab4d9b743eafc1ac44476296a2053b6ca3af0b139faf87b")
-    version("16.3.0", sha256="80203177723e36f3bbe15aa8553da6e80d47bfe53647220ccaa9ad7a5e473ccc")
+    version(
+        "23.1.0",
+        sha256="1f28b4522cdc2fb4256ac1a020c78acf9cba2c6b461ccd2c126f3aa8e8335d04",
+        url="https://pypi.org/packages/f0/eb/fcb708c7bf5056045e9e98f62b93bd7467eb718b0202e7698eb11d66416c/attrs-23.1.0-py3-none-any.whl",
+    )
+    version(
+        "22.2.0",
+        sha256="29e95c7f6778868dbd49170f98f8818f78f3dc5e0e37c0b1f474e3561b240836",
+        url="https://pypi.org/packages/fb/6e/6f83bf616d2becdf333a1640f1d463fef3150e2e926b7010cb0f81c95e88/attrs-22.2.0-py3-none-any.whl",
+    )
+    version(
+        "22.1.0",
+        sha256="86efa402f67bf2df34f51a335487cf46b1ec130d02b8d39fd248abfd30da551c",
+        url="https://pypi.org/packages/f2/bc/d817287d1aa01878af07c19505fafd1165cd6a119e9d0821ca1d1c20312d/attrs-22.1.0-py2.py3-none-any.whl",
+    )
+    version(
+        "21.4.0",
+        sha256="2d27e3784d7a565d36ab851fe94887c5eccd6a463168875832a1be79c82828b4",
+        url="https://pypi.org/packages/be/be/7abce643bfdf8ca01c48afa2ddf8308c2308b0c3b239a44e57d020afa0ef/attrs-21.4.0-py2.py3-none-any.whl",
+    )
+    version(
+        "21.2.0",
+        sha256="149e90d6d8ac20db7a955ad60cf0e6881a3f20d37096140088356da6c716b0b1",
+        url="https://pypi.org/packages/20/a9/ba6f1cd1a1517ff022b35acd6a7e4246371dfab08b8e42b829b6d07913cc/attrs-21.2.0-py2.py3-none-any.whl",
+    )
+    version(
+        "20.3.0",
+        sha256="31b2eced602aa8423c2aea9c76a724617ed67cf9513173fd3a4f03e3a929c7e6",
+        url="https://pypi.org/packages/c3/aa/cb45262569fcc047bf070b5de61813724d6726db83259222cd7b4c79821a/attrs-20.3.0-py2.py3-none-any.whl",
+    )
+    version(
+        "20.2.0",
+        sha256="fce7fc47dfc976152e82d53ff92fa0407700c21acd20886a13777a0d20e655dc",
+        url="https://pypi.org/packages/14/df/479736ae1ef59842f512548bacefad1abed705e400212acba43f9b0fa556/attrs-20.2.0-py2.py3-none-any.whl",
+    )
+    version(
+        "20.1.0",
+        sha256="2867b7b9f8326499ab5b0e2d12801fa5c98842d2cbd22b35112ae04bf85b4dff",
+        url="https://pypi.org/packages/d6/e1/3aa3b03e7643ffd6e499b203fd2a44f79893443e8b0b520d05d3e5c638d5/attrs-20.1.0-py2.py3-none-any.whl",
+    )
+    version(
+        "19.3.0",
+        sha256="08a96c641c3a74e44eb59afb61a24f2cb9f4d7188748e76ba4bb5edfa3cb7d1c",
+        url="https://pypi.org/packages/a2/db/4313ab3be961f7a763066401fb77f7748373b6094076ae2bda2806988af6/attrs-19.3.0-py2.py3-none-any.whl",
+    )
+    version(
+        "19.2.0",
+        sha256="ec20e7a4825331c1b5ebf261d111e16fa9612c1f7a5e1f884f12bd53a664dfd2",
+        url="https://pypi.org/packages/6b/e8/2ecaf86b128a34e225807f03b22664302937ab826bd3b7eccab6754d29ea/attrs-19.2.0-py2.py3-none-any.whl",
+    )
+    version(
+        "19.1.0",
+        sha256="69c0dbf2ed392de1cb5ec704444b08a5ef81680a61cb899dc08127123af36a79",
+        url="https://pypi.org/packages/23/96/d828354fa2dbdf216eaa7b7de0db692f12c234f7ef888cc14980ef40d1d2/attrs-19.1.0-py2.py3-none-any.whl",
+    )
+    version(
+        "18.1.0",
+        sha256="4b90b09eeeb9b88c35bc642cbac057e45a5fd85367b985bd2809c62b7b939265",
+        url="https://pypi.org/packages/41/59/cedf87e91ed541be7957c501a92102f9cc6363c623a7666d69d51c78ac5b/attrs-18.1.0-py2.py3-none-any.whl",
+    )
+    version(
+        "16.3.0",
+        sha256="c59426b15b45e39a7bc408eb6ba7e7188d9532764f873cc691199ddd975c97ef",
+        url="https://pypi.org/packages/bb/6c/730710c765ab6d4493f460196ab003671d27b38568412a780fc67532b47c/attrs-16.3.0-py2.py3-none-any.whl",
+    )
 
-    depends_on("py-hatchling", when="@23.1:", type="build")
-    depends_on("py-hatch-vcs", when="@23.1:", type="build")
-    depends_on("py-hatch-fancy-pypi-readme", when="@23.1:", type="build")
-
-    with when("@:22.2.0"):
-        depends_on("py-setuptools@40.6.0:", when="@19.1", type="build")
-        depends_on("py-setuptools", type="build")
-
-    depends_on("py-importlib-metadata", when="@23.1: ^python@3.7", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("python@3.7:", when="@23:")
+        depends_on("py-importlib-metadata", when="@23: ^python@:3.7")

@@ -17,14 +17,44 @@ class PyBabel(PythonPackage):
 
     license("BSD-3-Clause")
 
-    version("2.12.1", sha256="cc2d99999cd01d44420ae725a21c9e3711b3aadc7976d6147f622d8581963455")
-    version("2.10.3", sha256="7614553711ee97490f732126dc077f8d0ae084ebc6a96e23db1482afabdb2c51")
-    version("2.9.1", sha256="bc0c176f9f6a994582230df350aa6e05ba2ebe4b3ac317eab29d9be5d2768da0")
-    version("2.7.0", sha256="e86135ae101e31e2c8ec20a4e0c5220f4eed12487d5cf3f78be7e98d3a57fc28")
-    version("2.6.0", sha256="8cba50f48c529ca3fa18cf81fa9403be176d374ac4d60738b839122dfaaa3d23")
-    version("2.4.0", sha256="8c98f5e5f8f5f088571f2c6bd88d530e331cbbcb95a7311a0db69d3dca7ec563")
-    version("2.3.4", sha256="c535c4403802f6eb38173cd4863e419e2274921a01a8aad8a5b497c131c62875")
+    version(
+        "2.12.1",
+        sha256="b4246fb7677d3b98f501a39d43396d3cafdc8eadb045f4a31be01863f655c610",
+        url="https://pypi.org/packages/df/c4/1088865e0246d7ecf56d819a233ab2b72f7d6ab043965ef327d0731b5434/Babel-2.12.1-py3-none-any.whl",
+    )
+    version(
+        "2.10.3",
+        sha256="ff56f4892c1c4bf0d814575ea23471c230d544203c7748e8c68f0089478d48eb",
+        url="https://pypi.org/packages/2e/57/a4177e24f8ed700c037e1eca7620097fdfbb1c9b358601e40169adf6d364/Babel-2.10.3-py3-none-any.whl",
+    )
+    version(
+        "2.9.1",
+        sha256="ab49e12b91d937cd11f0b67cb259a57ab4ad2b59ac7a3b41d6c06c0ac5b0def9",
+        url="https://pypi.org/packages/aa/96/4ba93c5f40459dc850d25f9ba93f869a623e77aaecc7a9344e19c01942cf/Babel-2.9.1-py2.py3-none-any.whl",
+    )
+    version(
+        "2.7.0",
+        sha256="af92e6106cb7c55286b25b38ad7695f8b4efb36a90ba483d7f7a6628c46158ab",
+        url="https://pypi.org/packages/2c/60/f2af68eb046c5de5b1fe6dd4743bf42c074f7141fe7b2737d3061533b093/Babel-2.7.0-py2.py3-none-any.whl",
+    )
+    version(
+        "2.6.0",
+        sha256="6778d85147d5d85345c14a26aada5e478ab04e39b078b0745ee6870c2b5cf669",
+        url="https://pypi.org/packages/b8/ad/c6f60602d3ee3d92fbed87675b6fb6a6f9a38c223343ababdb44ba201f10/Babel-2.6.0-py2.py3-none-any.whl",
+    )
+    version(
+        "2.4.0",
+        sha256="e86ca5a3a6bb64b9bbb62b9dac37225ec0ab5dfaae3c2492ebd648266468042f",
+        url="https://pypi.org/packages/5f/cf/17935db603f7044d188ce3e3a6545c4b4500dbaa8835d50da2934b738111/Babel-2.4.0-py2.py3-none-any.whl",
+    )
+    version(
+        "2.3.4",
+        sha256="3318ed2960240d61cbc6558858ee00c10eed77a6508c4d1ed8e6f7f48399c975",
+        url="https://pypi.org/packages/b4/ec/acd307eac2e23f9cab1c8bdbe29b3b1d43215e31c32f8aa91b3a97925b5b/Babel-2.3.4-py2.py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type=("build", "run"))
-    depends_on("py-pytz@2015.7:", when="@2.12: ^python@:3.8", type=("build", "run"))
-    depends_on("py-pytz@2015.7:", when="@:2.10", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("python@3.7:", when="@2.12:")
+        depends_on("py-pytz@2015.7:", when="@2.12: ^python@:3.8")
+        depends_on("py-pytz@2015.7:", when="@2.7:2.11")
+        depends_on("py-pytz", when="@2.1:2.6")

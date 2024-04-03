@@ -17,7 +17,8 @@ class PyIrpf90(PythonPackage):
 
     maintainers("scemama")
 
-    version("2.0.5", sha256="ac3b6a6dd50a93537c6068ed459d5ad75919cbd64cdbce870921da713b86ee37")
-
-    depends_on("python@3:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
+    version(
+        "2.0.5",
+        sha256="886fa2dd852d1040185f061f8ab05b3aafcf1dbc16cfff0e439fd6dcb63f1bc3",
+        url="https://pypi.org/packages/a4/03/a4ce3cb0d2c934888276875ed22f73166ad4651f8f960ee5de7f4c6f22a3/irpf90-2.0.5-py3-none-any.whl",
+    )

@@ -16,10 +16,14 @@ class PyImagehash(PythonPackage):
 
     license("BSD-2-Clause")
 
-    version("4.3.1", sha256="7038d1b7f9e0585beb3dd8c0a956f02b95a346c0b5f24a9e8cc03ebadaf0aa70")
+    version(
+        "4.3.1",
+        sha256="5ad9a5cde14fe255745a8245677293ac0d67f09c330986a351f34b614ba62fb5",
+        url="https://pypi.org/packages/2d/b4/19a746a986c6e38595fa5947c028b1b8e287773dcad766e648897ad2a4cf/ImageHash-4.3.1-py2.py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-    depends_on("pil", type=("build", "run"))
-    depends_on("py-numpy", type=("build", "run"))
-    depends_on("py-scipy", type=("build", "run"))
-    depends_on("py-pywavelets", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-numpy", when="@4.2:4.2.0,4.3:")
+        depends_on("py-pillow", when="@4.2:4.2.0,4.3:")
+        depends_on("py-pywavelets", when="@4.2:4.2.0,4.3:")
+        depends_on("py-scipy", when="@4.2:4.2.0,4.3:")

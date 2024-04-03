@@ -15,10 +15,12 @@ class PyWurlitzer(PythonPackage):
 
     license("MIT")
 
-    version("3.0.2", sha256="36051ac530ddb461a86b6227c4b09d95f30a1d1043de2b4a592e97ae8a84fcdf")
+    version(
+        "3.0.2",
+        sha256="37f3ed1b08bf887172eda7f5177417241ec54cdd5e70df74c92d96875ceff632",
+        url="https://pypi.org/packages/d3/16/4ed932c896808eae84ad92ea62dcfd5c8433b36fdd00dfc38b213abde178/wurlitzer-3.0.2-py3-none-any.whl",
+    )
 
-    depends_on("python+ctypes@3.5:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
     # In some circumstances (unclear exactly what) Wurlitzer is unable to get
     # stdout/stderr pointers from ctypes, so it falls back to trying to use
     # cffi. If you encounter this, please add the dependency below.

@@ -15,14 +15,16 @@ class PyGravity(PythonPackage):
 
     license("MIT")
 
-    version("0.13.6", sha256="6fc2377e7c61b7db9406fb5b5c70bf72c571fb777f1313fc98787ef4cd007394")
+    version(
+        "0.13.6",
+        sha256="887a59546cbd69b698bec95eb2239f2e6b99ac2faef432f4dd95cd3842c92b3e",
+        url="https://pypi.org/packages/48/87/4a45eb0a1b608aee8de1d708b8ec36a8614ee896435c1de2469d5ebc7f53/gravity-0.13.6-py3-none-any.whl",
+    )
 
-    depends_on("python@3.6:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
-
-    depends_on("py-click", type=("build", "run"))
-    depends_on("py-supervisor", type=("build", "run"))
-    depends_on("py-pyyaml", type=("build", "run"))
-    depends_on("py-ruamel-yaml", type=("build", "run"))
-    depends_on("py-pydantic", type=("build", "run"))
-    depends_on("py-jsonref", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-click")
+        depends_on("py-jsonref", when="@0.11:")
+        depends_on("py-pydantic", when="@0.11:1.0.3")
+        depends_on("py-pyyaml")
+        depends_on("py-ruamel-yaml", when="@:0")
+        depends_on("py-supervisor")

@@ -19,10 +19,12 @@ class PyPyaestro(PythonPackage):
     license("MIT")
 
     # git branches
-    version("main", branch="main")
-    version("0.0.1a2", sha256="1f6a5068ff8dd9fe4838aba43850e51a5b622f379819ae62103617bf9c8aaa31")
+    version(
+        "0.0.1-alpha2",
+        sha256="878504ba92ebd530c2c1ad40b1410d7ddd5f5c1e666ad12119e879d757c51f98",
+        url="https://pypi.org/packages/60/df/91fa1e2b0f7bbf9b02e5d907421a476d7aad8ee1cd1c6253098833b782e6/pyaestro-0.0.1a2-py3-none-any.whl",
+    )
 
-    depends_on("python@3.5:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
-    depends_on("py-coloredlogs", type=("build", "run"))
-    depends_on("py-psutil", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-coloredlogs")
+        depends_on("py-psutil")

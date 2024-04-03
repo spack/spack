@@ -14,13 +14,27 @@ class PyAsttokens(PythonPackage):
 
     license("Apache-2.0")
 
-    version("2.4.0", sha256="2e0171b991b2c959acc6c49318049236844a5da1d65ba2672c4880c1c894834e")
-    version("2.2.1", sha256="4622110b2a6f30b77e1473affaa97e711bc2f07d3f10848420ff1898edbe94f3")
-    version("2.0.8", sha256="c61e16246ecfb2cde2958406b4c8ebc043c9e6d73aaa83c941673b35e5d3a76b")
-    version("2.0.5", sha256="9a54c114f02c7a9480d56550932546a3f1fe71d8a02f1bc7ccd0ee3ee35cf4d5")
+    version(
+        "2.4.0",
+        sha256="cf8fc9e61a86461aa9fb161a14a0841a03c405fa829ac6b202670b3495d2ce69",
+        url="https://pypi.org/packages/4f/25/adda9979586d9606300415c89ad0e4c5b53d72b92d2747a3c634701a6a02/asttokens-2.4.0-py2.py3-none-any.whl",
+    )
+    version(
+        "2.2.1",
+        sha256="6b0ac9e93fb0335014d382b8fa9b3afa7df546984258005da0b9e7095b3deb1c",
+        url="https://pypi.org/packages/f3/e1/64679d9d0759db5b182222c81ff322c2fe2c31e156a59afd6e9208c960e5/asttokens-2.2.1-py2.py3-none-any.whl",
+    )
+    version(
+        "2.0.8",
+        sha256="e3305297c744ae53ffa032c45dc347286165e4ffce6875dc662b205db0623d86",
+        url="https://pypi.org/packages/2d/1b/fdbdf82b86e07ca90985740ac160a1dd4ab09cb81071ec12d71c701e1138/asttokens-2.0.8-py2.py3-none-any.whl",
+    )
+    version(
+        "2.0.5",
+        sha256="0844691e88552595a6f4a4281a9f7f79b8dd45ca4ccea82e5e05b4bbdb76705c",
+        url="https://pypi.org/packages/16/d5/b0ad240c22bba2f4591693b0ca43aae94fbd77fb1e2b107d54fff1462b6f/asttokens-2.0.5-py2.py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools@44:", type="build")
-    depends_on("py-setuptools-scm+toml@3.4.3:", type="build")
-
-    depends_on("py-six@1.12:", when="@2.3:", type=("build", "run"))
-    depends_on("py-six", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-six@1.12:", when="@2.3:")
+        depends_on("py-six", when="@:2.2")

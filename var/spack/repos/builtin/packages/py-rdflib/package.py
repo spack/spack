@@ -23,24 +23,43 @@ class PyRdflib(PythonPackage):
 
     license("BSD-3-Clause")
 
-    version("7.0.0", sha256="9995eb8569428059b8c1affd26b25eac510d64f5043d9ce8c84e0d0036e995ae")
-    version("6.3.2", sha256="72af591ff704f4caacea7ecc0c5a9056b8553e0489dd4f35a9bc52dbd41522e0")
-    version("6.2.0", sha256="62dc3c86d1712db0f55785baf8047f63731fa59b2682be03219cb89262065942")
-    version("6.0.2", sha256="6136ae056001474ee2aff5fc5b956e62a11c3a9c66bb0f3d9c0aaa5fbb56854e")
-    version("5.0.0", sha256="78149dd49d385efec3b3adfbd61c87afaf1281c30d3fcaf1b323b34f603fb155")
+    version(
+        "7.0.0",
+        sha256="0438920912a642c866a513de6fe8a0001bd86ef975057d6962c79ce4771687cd",
+        url="https://pypi.org/packages/d4/b0/7b7d8b5b0d01f1a0b12cc2e5038a868ef3a15825731b8a0d776cf47566c0/rdflib-7.0.0-py3-none-any.whl",
+    )
+    version(
+        "6.3.2",
+        sha256="36b4e74a32aa1e4fa7b8719876fb192f19ecd45ff932ea5ebbd2e417a0247e63",
+        url="https://pypi.org/packages/af/92/d7fb1d7fb70c9f7003fa50b7a3880ebcb311cc3f8552b3595e7c8f75aeeb/rdflib-6.3.2-py3-none-any.whl",
+    )
+    version(
+        "6.2.0",
+        sha256="85c34a86dfc517a41e5f2425a41a0aceacc23983462b32e68610b9fad1383bca",
+        url="https://pypi.org/packages/50/fb/a0f8b6ab6598b49871a48a189dc1942fb0b0543ab4c84f689486233ef1ec/rdflib-6.2.0-py3-none-any.whl",
+    )
+    version(
+        "6.0.2",
+        sha256="b7642daac8cdad1ba157fecb236f5d1b2aa1de64e714dcee80d65e2b794d88a6",
+        url="https://pypi.org/packages/34/77/2995c0d4b89607ce2c5e062995f7a26ed61a4d9e20cfc3711f5e8adeaa7e/rdflib-6.0.2-py3-none-any.whl",
+    )
+    version(
+        "5.0.0",
+        sha256="88208ea971a87886d60ae2b1a4b2cdc263527af0454c422118d43fe64b357877",
+        url="https://pypi.org/packages/d0/6b/6454aa1db753c0f8bc265a5bd5c10b5721a4bb24160fb4faf758cf6be8a1/rdflib-5.0.0-py3-none-any.whl",
+    )
 
-    depends_on("python@3.7:3", when="@6.3:", type=("build", "run"))
-    depends_on("python@3.8.1:3", when="@7:", type=("build", "run"))
-    depends_on("py-poetry-core@1.4:", when="@6.3:", type="build")
-
-    depends_on("py-isodate@0.6", when="@6.3:", type=("build", "run"))
-    depends_on("py-isodate", type=("build", "run"))
-    depends_on("py-pyparsing@2.1:3", when="@6.3:", type=("build", "run"))
-    depends_on("py-pyparsing", type=("build", "run"))
-    depends_on("py-importlib-metadata@4", when="@6.3: ^python@:3.7", type=("build", "run"))
-    depends_on("py-importlib-metadata", when="@6.1: ^python@:3.7", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("python@3.8:3", when="@7:")
+        depends_on("python@3.7:", when="@6:6.2")
+        depends_on("python@3.7:3", when="@6.3:6")
+        depends_on("py-importlib-metadata@4", when="@6.3:6 ^python@3.7")
+        depends_on("py-importlib-metadata", when="@6.1:6.2 ^python@:3.7")
+        depends_on("py-isodate@0.6:", when="@6.3:")
+        depends_on("py-isodate", when="@4.2.2:6.2")
+        depends_on("py-pyparsing@2.1:", when="@6.3:")
+        depends_on("py-pyparsing", when="@4.2.2:6.2")
+        depends_on("py-setuptools", when="@6:6.2")
+        depends_on("py-six", when="@5")
 
     # Historical dependencies
-    depends_on("py-setuptools", when="@6:6.2", type=("build", "run"))
-    depends_on("py-setuptools", when="@:5", type="build")
-    depends_on("py-six", when="@:5", type=("build", "run"))

@@ -15,7 +15,11 @@ class PyColorful(PythonPackage):
 
     license("MIT")
 
-    version("0.5.4", sha256="86848ad4e2eda60cd2519d8698945d22f6f6551e23e95f3f14dfbb60997807ea")
+    version(
+        "0.5.4",
+        sha256="8d264b52a39aae4c0ba3e2a46afbaec81b0559a99be0d2cfe2aba4cf94531348",
+        url="https://pypi.org/packages/b0/8e/e386e248266952d24d73ed734c2f5513f34d9557032618c8910e605dfaf6/colorful-0.5.4-py2.py3-none-any.whl",
+    )
 
-    depends_on("python@2.7:2.8,3.4:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
+    with default_args(type="run"):
+        depends_on("py-colorama", when="platform=windows")

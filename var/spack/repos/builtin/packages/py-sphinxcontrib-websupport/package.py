@@ -15,9 +15,18 @@ class PySphinxcontribWebsupport(PythonPackage):
 
     license("BSD-2-Clause")
 
-    version("1.1.2", sha256="1501befb0fdf1d1c29a800fdbf4ef5dc5369377300ddbdd16d2cd40e54c6eefc")
-    version("1.1.0", sha256="9de47f375baf1ea07cdb3436ff39d7a9c76042c10a769c52353ec46e4e8fc3b9")
-    version("1.0.1", sha256="7a85961326aa3a400cd4ad3c816d70ed6f7c740acd7ce5d78cd0a67825072eb9")
-
-    depends_on("python@2.7:2.8,3.4:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
+    version(
+        "1.1.2",
+        sha256="e02f717baf02d0b6c3dd62cf81232ffca4c9d5c331e03766982e3ff9f1d2bc3f",
+        url="https://pypi.org/packages/2a/59/d64bda9b7480a84a3569be4dde267c0f6675b255ba63b4c8e84469940457/sphinxcontrib_websupport-1.1.2-py2.py3-none-any.whl",
+    )
+    version(
+        "1.1.0",
+        sha256="68ca7ff70785cbe1e7bccc71a48b5b6d965d79ca50629606c7861a21b206d9dd",
+        url="https://pypi.org/packages/52/69/3c2fbdc3702358c5b34ee25e387b24838597ef099761fc9a42c166796e8f/sphinxcontrib_websupport-1.1.0-py2.py3-none-any.whl",
+    )
+    version(
+        "1.0.1",
+        sha256="f4932e95869599b89bf4f80fc3989132d83c9faa5bf633e7b5e0c25dffb75da2",
+        url="https://pypi.org/packages/56/0f/3ee19ca5e5a1d9751cf4bbeb372d40a46421c4321fe55a4703ba66d0bafb/sphinxcontrib_websupport-1.0.1-py2.py3-none-any.whl",
+    )

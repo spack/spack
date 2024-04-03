@@ -15,10 +15,14 @@ class PyBiobbGromacs(PythonPackage):
     maintainers("d-beltran")
 
     # Versions
-    version("4.1.1", sha256="270cce747fc214471527438c8319bda0613be5b76da9f4684e6f138d1927d2f7")
+    version(
+        "4.1.1",
+        sha256="698f0bdb6f6f5c896513b47669d2b2c6f6b7c0c753039df61a82fb1ca57c2f80",
+        url="https://pypi.org/packages/83/29/ba77b856d70014284b072f30499704544fff363802a87e370306e0076e2d/biobb_gromacs-4.1.1-py3-none-any.whl",
+    )
+
+    with default_args(type="run"):
+        depends_on("python@3.8:", when="@4.1:")
+        depends_on("py-biobb-common@4.1:", when="@4.1:")
 
     # Dependencies
-    depends_on("py-setuptools", type="build")
-    depends_on("python@3.8:", type=("build", "run"))
-    depends_on("py-biobb-common@4.1.0", type=("build", "run"))
-    depends_on("gromacs", type=("run"))

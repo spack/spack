@@ -14,9 +14,13 @@ class PyOnnxconverterCommon(PythonPackage):
 
     license("MIT")
 
-    version("1.9.0", sha256="32315bcc844a8203092f3117a4a092ac6cf03d6a20145477e284f1172557d6f9")
+    version(
+        "1.9.0",
+        sha256="02b58ca3351fba4eddf8503e1421cfecd4ddcf2074aea4d58e3b2410e6f67ce5",
+        url="https://pypi.org/packages/cc/51/de4e3d84282a6649f4fb73c29b33d96ac1b5e6d30217ed0fff74cc404467/onnxconverter_common-1.9.0-py2.py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-numpy", type=("build", "run"))
-    depends_on("py-protobuf", type=("build", "run"))
-    depends_on("py-onnx", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-numpy", when="@:1.7,1.8.1:")
+        depends_on("py-onnx", when="@:1.7,1.8.1:")
+        depends_on("py-protobuf", when="@:1.7,1.8.1:1.13")

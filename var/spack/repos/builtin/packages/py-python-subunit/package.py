@@ -14,8 +14,8 @@ class PyPythonSubunit(PythonPackage):
 
     license("MIT")
 
-    version("1.3.0", sha256="9607edbee4c1e5a30ff88549ce8d9feb0b9bcbcb5e55033a9d76e86075465cbb")
-
-    depends_on("py-setuptools", type="build")
-    depends_on("py-extras", type=("build", "run"))
-    depends_on("py-testtools@0.9.34:", type=("build", "run"))
+    version(
+        "1.3.0",
+        sha256="693f1bcb4fe4bd53438ee0b524c8280143e538d663fb92fb66bad05f744a0132",
+        url="https://pypi.org/packages/ee/3a/b8a93e1f5b9a9f7e0a7630146f1c62878b6949ac5e4bac6ae2ae13fa9f83/python_subunit-1.3.0-py2.py3-none-any.whl",
+    )

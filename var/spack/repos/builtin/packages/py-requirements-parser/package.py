@@ -17,10 +17,12 @@ class PyRequirementsParser(PythonPackage):
 
     license("Apache-2.0")
 
-    version("0.5.0", sha256="3336f3a3ae23e06d3f0f88595e4052396e3adf91688787f637e5d2ca1a904069")
+    version(
+        "0.5.0",
+        sha256="e7fcdcd04f2049e73a9fb150d8a0f9d51ce4108f5f7cbeac74c484e17b12bcd9",
+        url="https://pypi.org/packages/f8/89/612e3b326d87780dc1daf39af7696634f969838213cddae4f553f75d04ae/requirements_parser-0.5.0-py3-none-any.whl",
+    )
 
-    depends_on("python@3.6:3.99", type=("build", "run"))
-
-    depends_on("py-poetry-core@1:", type="build")
-
-    depends_on("py-types-setuptools@57:", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("python@:3", when="@0.3:")
+        depends_on("py-types-setuptools", when="@0.4:")

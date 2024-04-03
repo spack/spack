@@ -15,11 +15,14 @@ class PyPyqtgraph(PythonPackage):
 
     license("MIT", checked_by="A-N-Other")
 
-    version("0.13.3", sha256="58108d8411c7054e0841d8b791ee85e101fc296b9b359c0e01dde38a98ff2ace")
+    version(
+        "0.13.3",
+        sha256="fdcc04ac4b32a7bedf1bf3cf74cbb93ab3ba5687791712bbfa8d0712377d2f2b",
+        url="https://pypi.org/packages/61/57/0a096b8949d0ee5ca32de180f19240ddd5a81015a27c6f2e7342b9044d45/pyqtgraph-0.13.3-py3-none-any.whl",
+    )
 
-    depends_on("python@3.8:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
+    with default_args(type="run"):
+        depends_on("python@3.8:", when="@0.13:0.13.3")
+        depends_on("py-numpy@1.20.0:", when="@0.13:0.13.3")
 
-    depends_on("py-numpy@1.20:", type=("build", "run"))
     # This dependency listed in README.md ...
-    depends_on("py-pyqt6", type=("build", "run"))

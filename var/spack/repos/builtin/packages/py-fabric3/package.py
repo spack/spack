@@ -18,10 +18,7 @@ class PyFabric3(PythonPackage):
     license("BSD-2-Clause")
 
     version(
-        "1.14.post1", sha256="647e485ec83f30b587862f92374d6affc217f3d79819d1d7f512e42e7ae51e81"
+        "1.14.post1",
+        sha256="7c5a5f2eb3079eb6bd2a69931f1ca298844c730ce3fdc68111db16e8857a0408",
+        url="https://pypi.org/packages/85/14/0b4f34e1f9a351bbe0f1ddea8b12f8103e77e9b5dc7b935c25c2260fc2e5/Fabric3-1.14.post1-py3-none-any.whl",
     )
-
-    depends_on("py-setuptools", type="build")
-
-    depends_on("py-paramiko@2.0:2", type=("build", "run"))
-    depends_on("py-six@1.10.0:", type=("build", "run"))

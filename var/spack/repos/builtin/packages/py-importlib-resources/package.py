@@ -14,17 +14,43 @@ class PyImportlibResources(PythonPackage):
 
     license("Apache-2.0")
 
-    version("5.12.0", sha256="4be82589bf5c1d7999aedf2a45159d10cb3ca4f19b2271f8792bc8e6da7b22f6")
-    version("5.9.0", sha256="5481e97fb45af8dcf2f798952625591c58fe599d0735d86b10f54de086a61681")
-    version("5.3.0", sha256="f2e58e721b505a79abe67f5868d99f8886aec8594c962c7490d0c22925f518da")
-    version("5.2.3", sha256="203d70dda34cfbfbb42324a8d4211196e7d3e858de21a5eb68c6d1cdd99e4e98")
-    version("5.2.2", sha256="a65882a4d0fe5fbf702273456ba2ce74fe44892c25e42e057aca526b702a6d4b")
-    version("5.1.0", sha256="bfdad047bce441405a49cf8eb48ddce5e56c696e185f59147a8b79e75e9e6380")
-    version("1.0.2", sha256="d3279fd0f6f847cced9f7acc19bd3e5df54d34f93a2e7bb5f238f81545787078")
+    version(
+        "5.12.0",
+        sha256="7b1deeebbf351c7578e09bf2f63fa2ce8b5ffec296e0d349139d43cca061a81a",
+        url="https://pypi.org/packages/38/71/c13ea695a4393639830bf96baea956538ba7a9d06fcce7cef10bfff20f72/importlib_resources-5.12.0-py3-none-any.whl",
+    )
+    version(
+        "5.9.0",
+        sha256="f78a8df21a79bcc30cfd400bdc38f314333de7c0fb619763f6b9dabab8268bb7",
+        url="https://pypi.org/packages/d3/91/4df247dd4da18b72b5bbabe1fa2b85029c34e1d6f0afdd6329d15d6bf2b5/importlib_resources-5.9.0-py3-none-any.whl",
+    )
+    version(
+        "5.3.0",
+        sha256="7a65eb0d8ee98eedab76e6deb51195c67f8e575959f6356a6e15fd7e1148f2a3",
+        url="https://pypi.org/packages/b1/8e/f29e92e403acda0e28789c0f994500239dff45065c3b28e3a2855afc4f9a/importlib_resources-5.3.0-py3-none-any.whl",
+    )
+    version(
+        "5.2.3",
+        sha256="ae35ed1cfe8c0d6c1a53ecd168167f01fa93b893d51a62cdf23aea044c67211b",
+        url="https://pypi.org/packages/11/8e/84a6a778a1160cefcef1192a7bd26e4e6689981553aff13c2b2b6f1c352f/importlib_resources-5.2.3-py3-none-any.whl",
+    )
+    version(
+        "5.2.2",
+        sha256="2480d8e07d1890056cb53c96e3de44fead9c62f2ba949b0f2e4c4345f4afa977",
+        url="https://pypi.org/packages/f2/6c/2f3b930513bb971172ffceb63cf4e910944e57451724e69b1dec97cfefa6/importlib_resources-5.2.2-py3-none-any.whl",
+    )
+    version(
+        "5.1.0",
+        sha256="885b8eae589179f661c909d699a546cf10d83692553e34dca1bf5eb06f7f6217",
+        url="https://pypi.org/packages/82/70/7bf5f275a738629a7252c30c8461502d3658a75363db9f4f88ddbeb9eeac/importlib_resources-5.1.0-py3-none-any.whl",
+    )
+    version(
+        "1.0.2",
+        sha256="6e2783b2538bd5a14678284a3962b0660c715e5a0f10243fd5e00a4b5974f50b",
+        url="https://pypi.org/packages/2f/f7/b4aa02cdd3ee7ebba375969d77c00826aa15c5db84247d23c89522dccbfa/importlib_resources-1.0.2-py2.py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools@56:", when="@5.9.0:", type="build")
-    depends_on("py-setuptools", type="build")
-    depends_on("py-setuptools-scm@3.4.1:+toml", when="@5:", type="build")
-
-    depends_on("py-zipp@3.1.0:", when="@5.2.2: ^python@:3.9", type=("build", "run"))
-    depends_on("py-zipp@0.4:", when="@5.0:5.1", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("python@3.7:", when="@5.6:5.12")
+        depends_on("py-zipp@3.1:", when="@5.1.4: ^python@:3.9")
+        depends_on("py-zipp@0.4:", when="@1.1:5.1.3 ^python@:3.7")

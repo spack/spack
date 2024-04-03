@@ -14,12 +14,18 @@ class PyHistoprint(PythonPackage):
 
     license("MIT")
 
-    version("2.4.0", sha256="328f789d186e3bd76882d57b5aad3fa08c7870a856cc83bcdbad9f4aefbda94d")
-    version("2.2.0", sha256="ef8b65f7926aaa989f076857b76291175245dd974804b408483091d1e28b00f6")
+    version(
+        "2.4.0",
+        sha256="db5c07309ab12788c85ea2c679c47d49f1e961a5d4254270521c3e883256236a",
+        url="https://pypi.org/packages/4b/f1/b8e4e56241f53f4db673d8927eb92b0a374f0ef57791764597b182cee1cd/histoprint-2.4.0-py3-none-any.whl",
+    )
+    version(
+        "2.2.0",
+        sha256="bb2278172379b82aaa3b79e56896b51aad084902ddea7f076b5c4bf08c19ca6d",
+        url="https://pypi.org/packages/a5/a7/435cd9b0955a20d96fbe56e175856ac4dbdb1eeadf717d7b653d431a63c9/histoprint-2.2.0-py3-none-any.whl",
+    )
 
-    depends_on("python@3.6:", type=("build", "run"))
-    depends_on("py-setuptools@42:", type="build")
-    depends_on("py-setuptools-scm@3.4:+toml", type="build")
-    depends_on("py-click@7.0.0:", type=("build", "run"))
-    depends_on("py-numpy", type=("build", "run"))
-    depends_on("py-uhi@0.2.1:", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-click@7:")
+        depends_on("py-numpy", when="@2:")
+        depends_on("py-uhi@0.2.1:", when="@2.2:")

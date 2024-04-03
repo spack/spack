@@ -15,15 +15,33 @@ class PyGitdb(PythonPackage):
 
     license("BSD-3-Clause")
 
-    version("4.0.9", sha256="bac2fd45c0a1c9cf619e63a90d62bdc63892ef92387424b855792a6cabe789aa")
-    version("4.0.8", sha256="858966a9310649cb24a387c101429bb5a1110068a312517722b0281077e78bc6")
-    version("4.0.7", sha256="96bf5c08b157a666fec41129e6d327235284cca4c81e92109260f353ba138005")
-    version("4.0.6", sha256="42535bb16b5db8983e2c4f6a714d29a8feba7165a12addc63e08fc672dfeccb9")
-    version("4.0.5", sha256="c9e1f2d0db7ddb9a704c2a0217be31214e91a4fe1dea1efad19ae42ba0c285c9")
+    version(
+        "4.0.9",
+        sha256="8033ad4e853066ba6ca92050b9df2f89301b8fc8bf7e9324d412a63f8bf1a8fd",
+        url="https://pypi.org/packages/a3/7c/5d747655049bfbf75b5fcec57c8115896cb78d6fafa84f6d3ef4c0f13a98/gitdb-4.0.9-py3-none-any.whl",
+    )
+    version(
+        "4.0.8",
+        sha256="6875cbaed01f1b750394f372607803768fc7dad7c58c7ceb5f5917e980d779b2",
+        url="https://pypi.org/packages/cf/22/8d2a2a2aa965252f6ae55a4ef2dd9fcf422c0d2b4e7f32b8a7c2d5ef5343/gitdb-4.0.8-py3-none-any.whl",
+    )
+    version(
+        "4.0.7",
+        sha256="6c4cc71933456991da20917998acbe6cf4fb41eeaab7d6d67fbc05ecd4c865b0",
+        url="https://pypi.org/packages/ea/e8/f414d1a4f0bbc668ed441f74f44c116d9816833a48bf81d22b697090dba8/gitdb-4.0.7-py3-none-any.whl",
+    )
+    version(
+        "4.0.6",
+        sha256="27dea6c52fbcf768530e1af47f2e34afd24a52e53fa310c8279a5589bd7c85bd",
+        url="https://pypi.org/packages/58/1a/b53069576a6b48a203ec8b7971ae5e455b1d801f5b7d086b986b8fc17186/gitdb-4.0.6-py3-none-any.whl",
+    )
+    version(
+        "4.0.5",
+        sha256="91f36bfb1ab7949b3b40e23736db18231bf7593edada2ba5c3a174a7b23657ac",
+        url="https://pypi.org/packages/48/11/d1800bca0a3bae820b84b7d813ad1eff15a48a64caea9c823fc8c1b119e8/gitdb-4.0.5-py3-none-any.whl",
+    )
 
-    depends_on("python@3.4:", type=("build", "run"))
-    depends_on("python@3.6:", type=("build", "run"), when="@4.0.8:")
-    depends_on("py-setuptools", type="build")
-    depends_on("py-smmap@3.0.1:3", type=("build", "run"), when="@:4.0.5")
-    depends_on("py-smmap@3.0.1:4", type=("build", "run"), when="@4.0.6:4.0.7")
-    depends_on("py-smmap@3.0.1:5", type=("build", "run"), when="@4.0.8:")
+    with default_args(type="run"):
+        depends_on("py-smmap@3.0.1:5", when="@4.0.8:")
+        depends_on("py-smmap@3.0.1:4", when="@4.0.7")
+        depends_on("py-smmap@3.0.1:3", when="@4:4.0.6")

@@ -15,9 +15,16 @@ class PyA2wsgi(PythonPackage):
 
     license("Apache-2.0")
 
-    version("1.7.0", sha256="a906f62c0250eb0201120b93417dd0b12b105b5db35af431bfe86ef0dc5bbab2")
-    version("1.6.0", sha256="67a9902db6da72c268a24d4e5d01348f736980a577279b7df801c8902aba8554")
+    version(
+        "1.7.0",
+        sha256="d26be288b2a5f368181b6e0d1cfc3c2a4180732cca10e9cc4b9bc333235b8d80",
+        url="https://pypi.org/packages/c5/b8/ccf880c8a3e564283f0ed1b4268e13e4cb9075491b0863f9a2bf83d5e58a/a2wsgi-1.7.0-py3-none-any.whl",
+    )
+    version(
+        "1.6.0",
+        sha256="ee8507d07fd86b781d3e039fe458366e2127bd2251b47fcbedadbf013095a21e",
+        url="https://pypi.org/packages/b2/fb/4bb5451ee0a98194267a99acb060f9113c9b13796020c1a63eadd637acdb/a2wsgi-1.6.0-py3-none-any.whl",
+    )
 
-    depends_on("python@3.6.2:", type=("build", "run"))
-
-    depends_on("py-pdm-pep517@1.0.0:", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("python@3.7:", when="@1.7")

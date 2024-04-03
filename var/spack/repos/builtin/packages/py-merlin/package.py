@@ -16,19 +16,22 @@ class PyMerlin(PythonPackage):
 
     license("MIT")
 
-    version("develop", branch="develop")
-    version("master", branch="master")
-    version("1.10.3", sha256="6edaf17b502db090cef0bc53ae0118c55f77d7a16f43c7a235e0dd1770decadb")
+    version(
+        "1.10.3",
+        sha256="561d4fb0d332e92ec00901eb7b841eb6758b3fd3434733e6982614faecd23373",
+        url="https://pypi.org/packages/b1/db/ac3cb3ad6d039398ed72061fe30ed483bfcb503228b94aed09024f1958e4/merlin-1.10.3-py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type=("build", "run"))
-    depends_on("py-cached-property", type=("build", "run"))
-    depends_on("py-celery@5.0.3:+redis+sqlalchemy", type=("build", "run"))
-    depends_on("py-coloredlogs", type=("build", "run"))
-    depends_on("py-cryptography", type=("build", "run"))
-    depends_on("py-maestrowf@1.1.9:", type=("build", "run"))
-    depends_on("py-numpy", type=("build", "run"))
-    depends_on("py-parse", type=("build", "run"))
-    depends_on("py-psutil@5.1.0:", type=("build", "run"))
-    depends_on("py-pyyaml@5.1.2:", type=("build", "run"))
-    depends_on("py-tabulate", type=("build", "run"))
-    depends_on("py-redis@4.3.4:", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-cached-property")
+        depends_on("py-celery@5.0.3:+redis+sqlalchemy")
+        depends_on("py-coloredlogs")
+        depends_on("py-cryptography")
+        depends_on("py-importlib-resources", when="^python@:3.6")
+        depends_on("py-maestrowf@1.1.9:", when="@1.9:")
+        depends_on("py-numpy")
+        depends_on("py-parse")
+        depends_on("py-psutil@5.1:")
+        depends_on("py-pyyaml@5.1.2:")
+        depends_on("py-redis@4.3.4:", when="@1.9:")
+        depends_on("py-tabulate")

@@ -19,19 +19,40 @@ class PyPyopenssl(PythonPackage):
 
     license("Apache-2.0")
 
-    version("23.2.0", sha256="276f931f55a452e7dea69c7173e984eb2a4407ce413c918aa34b55f82f9b8bac")
-    version("22.1.0", sha256="7a83b7b272dd595222d672f5ce29aa030f1fb837630ef229f62e72e395ce8968")
-    version("19.0.0", sha256="aeca66338f6de19d1aa46ed634c3b9ae519a64b458f8468aec688e7e3c20f200")
-    version("18.0.0", sha256="6488f1423b00f73b7ad5167885312bb0ce410d3312eb212393795b53c8caa580")
+    version(
+        "23.2.0",
+        sha256="24f0dc5227396b3e831f4c7f602b950a5e9833d292c8e4a2e06b709292806ae2",
+        url="https://pypi.org/packages/f0/e2/f8b4f1c67933a4907e52228241f4bd52169f3196b70af04403b29c63238a/pyOpenSSL-23.2.0-py3-none-any.whl",
+    )
+    version(
+        "22.1.0",
+        sha256="b28437c9773bb6c6958628cf9c3bebe585de661dba6f63df17111966363dd15e",
+        url="https://pypi.org/packages/00/3f/ea5cfb789dddb327e6d2cf9377c36d9d8607af85530af0e7001165587ae7/pyOpenSSL-22.1.0-py3-none-any.whl",
+    )
+    version(
+        "20.0.1",
+        sha256="818ae18e06922c066f777a33f1fca45786d85edfe71cd043de6379337a7f274b",
+        url="https://pypi.org/packages/b2/5e/06351ede29fd4899782ad335c2e02f1f862a887c20a3541f17c3fa1a3525/pyOpenSSL-20.0.1-py2.py3-none-any.whl",
+    )
+    version(
+        "19.0.0",
+        sha256="c727930ad54b10fc157015014b666f2d8b41f70c0d03e83ab67624fd3dd5d1e6",
+        url="https://pypi.org/packages/01/c8/ceb170d81bd3941cbeb9940fc6cc2ef2ca4288d0ca8929ea4db5905d904d/pyOpenSSL-19.0.0-py2.py3-none-any.whl",
+    )
+    version(
+        "18.0.0",
+        sha256="26ff56a6b5ecaf3a2a59f132681e2a80afcc76b4f902f612f518f92c2a1bf854",
+        url="https://pypi.org/packages/96/af/9d29e6bd40823061aea2e0574ccb2fcf72bfd6130ce53d32773ec375458c/pyOpenSSL-18.0.0-py2.py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-
-    depends_on("py-cryptography@38:41", when="@23.2:", type=("build", "run"))
-    depends_on("py-cryptography@38", when="@22", type=("build", "run"))
-    depends_on("py-cryptography@2.3:", when="@19", type=("build", "run"))
-    depends_on("py-cryptography@2.2.1:", when="@18", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-cryptography@38:39,40.0.2:41", when="@23.2")
+        depends_on("py-cryptography@38", when="@22.1:22")
+        depends_on("py-cryptography@3.2:", when="@20")
+        depends_on("py-cryptography@2.3:", when="@19:19.0")
+        depends_on("py-cryptography@2.2.1:", when="@18")
+        depends_on("py-six@1.5.2:", when="@:21")
 
     conflicts("^py-cryptography@40:40.0.1", when="@23.2:")
 
     # Historical dependencies
-    depends_on("py-six@1.5.2:", when="@:19", type=("build", "run"))

@@ -15,12 +15,14 @@ class PySnakemakeStoragePluginSftp(PythonPackage):
 
     license("MIT")
 
-    version("0.1.2", sha256="1b5f99a6baf334d74e209d6ec8a59e495e56098cf6e9a19954e472ba1501525c")
+    version(
+        "0.1.2",
+        sha256="bc50da8349087bba5399e25a48e7b170cee6050cf7ffe461cea0fc8b14e0d433",
+        url="https://pypi.org/packages/da/62/e2d71b388af5d75da5873b73c118106695c8de0d76a1ec6eb64a6f571753/snakemake_storage_plugin_sftp-0.1.2-py3-none-any.whl",
+    )
 
-    depends_on("py-pysftp@0.2.9:0.2", type=("build", "run"))
-
-    depends_on("py-snakemake-interface-common@1.14.3:1", type=("build", "run"))
-    depends_on("py-snakemake-interface-storage-plugins@3", type=("build", "run"))
-
-    depends_on("python@3.11:3", type=("build", "run"))
-    depends_on("py-poetry-core", type="build")
+    with default_args(type="run"):
+        depends_on("python@3.11:3")
+        depends_on("py-pysftp@0.2.9:")
+        depends_on("py-snakemake-interface-common@1.14.3:")
+        depends_on("py-snakemake-interface-storage-plugins@3:", when="@0.1.1:")

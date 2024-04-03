@@ -16,13 +16,15 @@ class PySnakemakeInterfaceStoragePlugins(PythonPackage):
 
     license("MIT")
 
-    version("3.1.0", sha256="26e95be235ef2a9716b890ea96c3a9a2e62061c5d72fbb89c2fad2afada87304")
+    version(
+        "3.1.0",
+        sha256="bbe1e9f0cd9c8befa4223bad0388b54f61892bf105e38722604c8ce4f161ecc3",
+        url="https://pypi.org/packages/5d/17/d7001eef38781a74384e97593b05493b5250de38924847436a18a52226e1/snakemake_interface_storage_plugins-3.1.0-py3-none-any.whl",
+    )
 
-    depends_on("py-wrapt@1.15:1", type=("build", "run"))
-    depends_on("py-reretry@0.11.8:0.11", type=("build", "run"))
-    depends_on("py-throttler@1.2.2:1", type=("build", "run"))
-
-    depends_on("py-snakemake-interface-common@1.12:1", type=("build", "run"))
-
-    depends_on("python@3.11:3", type=("build", "run"))
-    depends_on("py-poetry-core", type="build")
+    with default_args(type="run"):
+        depends_on("python@3.11:3", when="@1.2:")
+        depends_on("py-reretry@0.11.8:")
+        depends_on("py-snakemake-interface-common@1.12:", when="@1.2:")
+        depends_on("py-throttler@1.2.2:")
+        depends_on("py-wrapt@1.15.0:")

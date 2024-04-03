@@ -20,8 +20,11 @@ class PyLmodule(PythonPackage):
 
     license("MIT")
 
-    version("0.1.0", sha256="cac8f3dad2df27b10e051b2c56ccbde1fcdd7044af594d13fd2e4144d3d46a29")
+    version(
+        "0.1.0",
+        sha256="2584138a3ecbe430d777f9ba194b099041649e78ea6619eeee0b8133ca796244",
+        url="https://pypi.org/packages/58/aa/28b051d38a02a5ca4abbeb8bbbecee7e7ea538d031bc77b626deff08d77d/lmodule-0.1.0-py3-none-any.whl",
+    )
 
-    depends_on("python@3.6.0:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
-    depends_on("lmod@7.0:", type="run")
+    with default_args(type="run"):
+        depends_on("python@:3")

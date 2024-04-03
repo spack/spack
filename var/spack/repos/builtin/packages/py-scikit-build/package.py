@@ -22,33 +22,41 @@ class PyScikitBuild(PythonPackage):
 
     license("MIT")
 
-    version("0.17.6", sha256="b51a51a36b37c42650994b5047912f59b22e3210b23e321f287611f9ef6e5c9d")
-    version("0.15.0", sha256="e723cd0f3489a042370b9ea988bbb9cfd7725e8b25b20ca1c7981821fcf65fb9")
-    version("0.12.0", sha256="f851382c469bcd9a8c98b1878bcfdd13b68556279d2fd9a329be41956ae5a7fe")
-    version("0.11.1", sha256="da40dfd69b2456fad1349a894b90180b43712152b8a85d2a00f4ae2ce8ac9a5c")
-    version("0.10.0", sha256="7342017cc82dd6178e3b19377389b8a8d1f8b429d9cdb315cfb1094e34a0f526")
+    version(
+        "0.17.6",
+        sha256="18bd55e81841106eec93f30a297df4f301003791c41be46ef6428d58bd42d6b3",
+        url="https://pypi.org/packages/fa/af/b3ef8fe0bb96bf7308e1f9d196fc069f0c75d9c74cfaad851e418cc704f4/scikit_build-0.17.6-py3-none-any.whl",
+    )
+    version(
+        "0.15.0",
+        sha256="14ae341652ac42eabd1e830bccfec9b2551a4d9c34329a5580591fdeb86b23a4",
+        url="https://pypi.org/packages/e3/36/34551e5035757ba17582eb530402a16612ec0446f67f3c7d509f6e9d8e63/scikit_build-0.15.0-py2.py3-none-any.whl",
+    )
+    version(
+        "0.12.0",
+        sha256="60784b9c02b06ad263c673988ebb6faa269a2acc261bc4233a7cf7655c0213e0",
+        url="https://pypi.org/packages/04/19/f694dbab665bc2aacaf614452b1577d740e5ce8518d1b10fced2522759bf/scikit_build-0.12.0-py2.py3-none-any.whl",
+    )
+    version(
+        "0.11.1",
+        sha256="dd236b60330f243e79a9795952c6efeb6e28fd0bd7a35fd92eb490456ae29356",
+        url="https://pypi.org/packages/78/c9/7c2c7397ea64e36ebb292446896edcdecbb8c1aa6b9a1a32f6f67984c3df/scikit_build-0.11.1-py2.py3-none-any.whl",
+    )
+    version(
+        "0.10.0",
+        sha256="e343cd0f012e4cc282132324223a15e6bae23c77f9c3e7f3b3b067a0db08d3b2",
+        url="https://pypi.org/packages/8a/b5/c6ca60421991c22e69b9a950b0d046e06d714f79f7071946ab885c7115fb/scikit_build-0.10.0-py2.py3-none-any.whl",
+    )
 
-    depends_on("py-hatchling", when="@0.17:", type="build")
-    depends_on("py-hatch-fancy-pypi-readme", when="@0.17:", type="build")
-    depends_on("py-hatch-vcs", when="@0.17:", type="build")
-    depends_on("py-distro", when="@0.11:", type=("build", "run"))
-    depends_on("py-packaging", type=("build", "run"))
-    depends_on("py-setuptools@42:", when="@0.15:", type=("build", "run"))
-    depends_on("py-setuptools@28:", type=("build", "run"))
-    depends_on("py-tomli", when="@0.17: ^python@:3.10", type=("build", "run"))
-    depends_on("py-typing-extensions@3.7:", when="@0.17: ^python@:3.7", type=("build", "run"))
-    depends_on("py-wheel@0.32:", when="@0.17:", type=("build", "run"))
-    depends_on("py-wheel@0.29:", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("python@3.7:", when="@0.17:")
+        depends_on("py-distro", when="@0.11:")
+        depends_on("py-packaging", when="@0.7:")
+        depends_on("py-setuptools@42:", when="@0.16:")
+        depends_on("py-setuptools@28:", when="@0.5:0.15")
+        depends_on("py-tomli", when="@0.17: ^python@:3.10")
+        depends_on("py-typing-extensions@3.7:", when="@0.16: ^python@:3.7")
+        depends_on("py-wheel@0.32:", when="@0.16:")
+        depends_on("py-wheel@0.29:", when="@0.6:0.15")
 
     # Historical dependencies
-    depends_on("py-setuptools-scm+toml", when="@0.15", type="build")
-
-    def url_for_version(self, version):
-        url = (
-            "https://files.pythonhosted.org/packages/source/s/scikit-build/scikit{}build-{}.tar.gz"
-        )
-        if version >= Version("0.17"):
-            separator = "_"
-        else:
-            separator = "-"
-        return url.format(separator, version)

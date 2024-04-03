@@ -15,12 +15,15 @@ class PyCairosvg(PythonPackage):
     homepage = "https://cairosvg.org/"
     pypi = "CairoSVG/CairoSVG-2.7.1.tar.gz"
 
-    version("2.7.1", sha256="432531d72347291b9a9ebfb6777026b607563fd8719c46ee742db0aef7271ba0")
+    version(
+        "2.7.1",
+        sha256="8a5222d4e6c3f86f1f7046b63246877a63b49923a1cd202184c3a634ef546b3b",
+        url="https://pypi.org/packages/01/a5/1866b42151f50453f1a0d28fc4c39f5be5f412a2e914f33449c42daafdf1/CairoSVG-2.7.1-py3-none-any.whl",
+    )
 
-    depends_on("python@3.5:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
-    depends_on("py-cairocffi", type=("build", "run"))
-    depends_on("py-cssselect2", type=("build", "run"))
-    depends_on("py-defusedxml", type=("build", "run"))
-    depends_on("py-pillow", type=("build", "run"))
-    depends_on("py-tinycss2", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-cairocffi")
+        depends_on("py-cssselect2")
+        depends_on("py-defusedxml")
+        depends_on("py-pillow")
+        depends_on("py-tinycss2")

@@ -16,8 +16,11 @@ class PyGeopy(PythonPackage):
 
     license("MIT")
 
-    version("2.1.0", sha256="892b219413e7955587b029949af3a1949c6fbac9d5ad17b79d850718f6a9550f")
+    version(
+        "2.1.0",
+        sha256="4db8a2b79a2b3358a7d020ea195be639251a831a1b429c0d1b20c9f00c67c788",
+        url="https://pypi.org/packages/0c/67/915668d0e286caa21a1da82a85ffe3d20528ec7212777b43ccd027d94023/geopy-2.1.0-py3-none-any.whl",
+    )
 
-    depends_on("python@3.5:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
-    depends_on("py-geographiclib@1.49:1", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-geographiclib@1.49:1", when="@:2.2")

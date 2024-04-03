@@ -16,13 +16,15 @@ class PyTrxPython(PythonPackage):
 
     license("BSD-2-Clause")
 
-    version("0.2.9", sha256="16b4104d7c991879c601f60e8d587decac50ce60388aae8d0c754a92136d1caf")
+    version(
+        "0.2.9",
+        sha256="234438b7f103c49768ab98e5f46e7b2624327065cd23fbfce5e681c32e8b4a3f",
+        url="https://pypi.org/packages/23/55/1a0953ffa30078aac893bff6b4e5ac2942eb34201f7c4375433f3337540b/trx_python-0.2.9-py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools@42.0:", type="build")
-    depends_on("py-setuptools-scm@3.4:+toml", type=("build", "run"))
-    depends_on("py-setuptools-scm-git-archive", type="build")
-    depends_on("py-packaging@19.0:", type="build")
-    depends_on("py-cython@0.29:", type="build")
-    depends_on("py-deepdiff", type=("build", "run"))
-    depends_on("py-nibabel@5:", type=("build", "run"))
-    depends_on("py-numpy@1.22:", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("python@3.8:", when="@0.2:")
+        depends_on("py-deepdiff")
+        depends_on("py-nibabel@5:", when="@0.2:")
+        depends_on("py-numpy@1.22.0:", when="@0.2:")
+        depends_on("py-setuptools-scm")

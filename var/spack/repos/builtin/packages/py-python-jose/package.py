@@ -15,11 +15,13 @@ class PyPythonJose(PythonPackage):
 
     license("MIT")
 
-    version("3.3.0", sha256="55779b5e6ad599c6336191246e95eb2293a9ddebd555f796a65f838f07e5d78a")
+    version(
+        "3.3.0",
+        sha256="9b1376b023f8b298536eedd47ae1089bcdb848f1535ab30555cd92002d78923a",
+        url="https://pypi.org/packages/bd/2d/e94b2f7bab6773c70efc70a61d66e312e1febccd9e0db6b9e0adf58cbad1/python_jose-3.3.0-py2.py3-none-any.whl",
+    )
 
-    depends_on("python@3.6:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
-
-    depends_on("py-rsa", type=("build", "run"))
-    depends_on("py-ecdsa@:0.14.1,0.16.0:", type=("build", "run"))
-    depends_on("py-pyasn1", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-ecdsa@:0.14,0.16:", when="@3.3:")
+        depends_on("py-pyasn1", when="@3.2:")
+        depends_on("py-rsa", when="@3.2:")

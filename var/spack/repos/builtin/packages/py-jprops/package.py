@@ -12,6 +12,8 @@ class PyJprops(PythonPackage):
     homepage = "https://github.com/mgood/jprops/"
     pypi = "jprops/jprops-2.0.2.tar.gz"
 
-    version("2.0.2", sha256="d297231833b6cd0a3f982a48fe148a7f9817f2895661743d166b267e4d3d5b2c")
-
-    depends_on("py-setuptools", type="build")
+    version(
+        "2.0.2",
+        sha256="f6be13f0bbc3ca6f7175d74ec8f9f17a4f33a6874473733591c6551d272186a0",
+        url="https://pypi.org/packages/d0/57/cb7364a3c3140091de3fffc6b91f7a638c7aeccabeef9b3f6e418a545d5b/jprops-2.0.2-py2.py3-none-any.whl",
+    )

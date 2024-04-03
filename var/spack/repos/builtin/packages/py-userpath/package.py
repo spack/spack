@@ -14,10 +14,12 @@ class PyUserpath(PythonPackage):
 
     license("MIT")
 
-    version("1.8.0", sha256="04233d2fcfe5cff911c1e4fb7189755640e1524ff87a4b82ab9d6b875fee5787")
+    version(
+        "1.8.0",
+        sha256="f133b534a8c0b73511fc6fa40be68f070d9474de1b5aada9cded58cdf23fb557",
+        url="https://pypi.org/packages/45/72/e8cf3e440a4719253cf114c091ae84e7a07394dbb44983f3a561f40f80b6/userpath-1.8.0-py3-none-any.whl",
+    )
 
-    depends_on("python@3.7:", type=("build", "run"))
-
-    depends_on("py-hatchling", type="build")
-
-    depends_on("py-click", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("python@3.7:", when="@1.8:")
+        depends_on("py-click")

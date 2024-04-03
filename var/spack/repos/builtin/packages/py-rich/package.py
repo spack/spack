@@ -16,37 +16,99 @@ class PyRich(PythonPackage):
 
     license("MIT")
 
-    version("13.4.2", sha256="d653d6bccede5844304c605d5aac802c7cf9621efd700b46c7ec2b51ea914898")
-    version("12.5.1", sha256="63a5c5ce3673d3d5fbbf23cd87e11ab84b6b451436f1b7f19ec54b6bc36ed7ca")
-    version("10.14.0", sha256="8bfe4546d56b4131298d3a9e571a0742de342f1593770bd0d4707299f772a0af")
-    version("10.9.0", sha256="ba285f1c519519490034284e6a9d2e6e3f16dc7690f2de3d9140737d81304d22")
-    version("10.0.0", sha256="4674bd3056a72bb282ad581e3f8092dc110cdcc456b5ba76e34965cb85a69724")
-    version("9.9.0", sha256="0bd8f42c3a03b7ef5e311d5e37f47bea9d268f541981c169072be5869c007957")
-    version("9.8.2", sha256="c0d5903b463f015b254d6f52da82af3821d266fe516ae05fdc266e6abba5c3a8")
-    version("9.8.1", sha256="0ec853f882613e75a5e46d545ddaa48cad235c616eaeb094792012fe22e8b2c6")
-    version("9.8.0", sha256="c91c2587dba9aa8dd30c5f090e700f54433ccd73e209f4737e10385c4c1cbf19")
-    version("9.7.0", sha256="25583ce533afae71de086ca97cf0aa883a5e1a220dfcc6049a2809a74bc79ca0")
-    version("9.6.2", sha256="b6a7f9ef1a35c248498952d3454fb4f88de415dd989f97c3e5c5e2235d66e3a5")
-    version("9.6.1", sha256="5ac9f4f7f6b0e32e7e412de127f15b94144e22c9a7896551474d640143bbaa7b")
-    version("9.6.0", sha256="ae7f5f24fc90c76ccb54883f4bd633cbd146e0bbe3e070275ca97038ce53cf2f")
-    version("9.5.1", sha256="8b937e2d2c4ff9dcfda8a5910a8cd384bd30f50ec92346d616f62065c662df5f")
-    version("9.5.0", sha256="a65a9d003cb6e87e6fa5d1b53bff6f43a8d7475524c58873acdbf5bba0683fa3")
-    version("9.4.0", sha256="bde23a1761373fed2802502ff98292c5d735a5389ed96f4fe1be5fb4c2cde8ea")
-
-    depends_on("python@3.7:", when="@13:", type=("build", "run"))
-    depends_on("python@3.6.3:3", when="@12.2.1:12", type=("build", "run"))
-    depends_on("python@3.6.2:3", when="@10.14.0:12", type=("build", "run"))
-    depends_on("py-poetry-core@1:", type="build")
-
-    depends_on("py-typing-extensions@4", when="@12.2: ^python@:3.8", type=("build", "run"))
-    depends_on(
-        "py-typing-extensions@3.7.4:4", when="@10.14:12.1 ^python@:3.7", type=("build", "run")
+    version(
+        "13.4.2",
+        sha256="8f87bc7ee54675732fa66a05ebfe489e27264caeeff3728c945d25971b6485ec",
+        url="https://pypi.org/packages/fc/1e/482e5eec0b89b593e81d78f819a9412849814e22225842b598908e7ac560/rich-13.4.2-py3-none-any.whl",
     )
-    depends_on("py-typing-extensions@3.7.4:3", when="@:10.13", type=("build", "run"))
-    depends_on("py-pygments@2.13:2", when="@13.3.2:", type=("build", "run"))
-    depends_on("py-pygments@2.6:2", when="@:13.2", type=("build", "run"))
-    depends_on("py-markdown-it-py@2.2:", when="@13.3.2:", type=("build", "run"))
+    version(
+        "12.5.1",
+        sha256="2eb4e6894cde1e017976d2975ac210ef515d7548bc595ba20e195fb9628acdeb",
+        url="https://pypi.org/packages/f6/39/4cb526e0d505464376e3c47a812df6e6638363ebe66e6a63618831fe47ad/rich-12.5.1-py3-none-any.whl",
+    )
+    version(
+        "10.14.0",
+        sha256="ab9cbfd7a3802d8c6f0fa91e974630e2a69447972dcbb9dfe9b01016dd95e38e",
+        url="https://pypi.org/packages/37/51/0e3e0adf12839a7ae73956942e5d47cb246566c8b9223851569369d4da34/rich-10.14.0-py3-none-any.whl",
+    )
+    version(
+        "10.9.0",
+        sha256="2c84d9b3459c16bf413fe0f9644c7ae1791971e0bb944dfae56e7c7634b187ab",
+        url="https://pypi.org/packages/e9/c4/ea9a6e34dd5c4c3049b0a86c49feb7f38c9f5e901ffb6eeb832e89dfa540/rich-10.9.0-py3-none-any.whl",
+    )
+    version(
+        "10.0.0",
+        sha256="01b3fcc305ae71b9ade4a645b6e371d395c6cd9ba52dcf180bfba69ef05c13b5",
+        url="https://pypi.org/packages/5c/94/435b820f6be96a650a3d00025efb9955a6b4e1e6f070ca18c3c134289b76/rich-10.0.0-py3-none-any.whl",
+    )
+    version(
+        "9.9.0",
+        sha256="d376396cb3793a042f6167cd613a31a370ea2c5ec1bbdf76a5c9e9c588ccff12",
+        url="https://pypi.org/packages/cb/dc/bee6fdd474ecc0456dcf176b40c95108978e9a6ec027a031dfe9a8520455/rich-9.9.0-py3-none-any.whl",
+    )
+    version(
+        "9.8.2",
+        sha256="d7732d12dfa91a2c06f89fa2b630a068ba12d39ad22a2078b477ef1948b38f3f",
+        url="https://pypi.org/packages/b9/2b/5ff334698e7b246dae1bdc672963b872faf9e74ffa8121305e9c0f0c018b/rich-9.8.2-py3-none-any.whl",
+    )
+    version(
+        "9.8.1",
+        sha256="7e594114b109dfcf4c242a5ae1b2767dbc49d0abc9c5f082eb7e558dd622bc90",
+        url="https://pypi.org/packages/20/d3/802735641e249bffa5dc650d21ec871cc8a34d49216385e457da61e222e0/rich-9.8.1-py3-none-any.whl",
+    )
+    version(
+        "9.8.0",
+        sha256="812a911cd85d32f484325f501fb8f84270b8e0a7af739d4bf1d3df42643e93a6",
+        url="https://pypi.org/packages/e6/1a/3d2d4e6ac7178cd9e1accfefef502eebec930e0a1d59bce83b4685044be3/rich-9.8.0-py3-none-any.whl",
+    )
+    version(
+        "9.7.0",
+        sha256="f1967aa6c91dc700c322b54165b35a38785e0e666c1522f9f9a876073b68831b",
+        url="https://pypi.org/packages/e5/30/4361eeb72b551262ee5ef415ea61b9e5ad2c6028649c63321d23f02c69fb/rich-9.7.0-py3-none-any.whl",
+    )
+    version(
+        "9.6.2",
+        sha256="e0efd2ba715dcfb78e57986e15c6d70a3beb98a7015471ca9dd511571a8a9882",
+        url="https://pypi.org/packages/37/61/d25e97f11b712fbbdbaff37d963197e6d218a94b4e0f8882da63bdb21613/rich-9.6.2-py3-none-any.whl",
+    )
+    version(
+        "9.6.1",
+        sha256="064814e6cfbc61ff1f82b1e950667c5dc3bf3ec3ed9ca6f62a29007d1bc5ed4c",
+        url="https://pypi.org/packages/40/b4/ff5ef4691df6d947bc9ce2f4bc3c12196f714048b5e2e401b22746e77634/rich-9.6.1-py3-none-any.whl",
+    )
+    version(
+        "9.6.0",
+        sha256="85d9d67f25ab2d676666c9895bdbfa064f9e68791977637f03b49b290cf4e3ac",
+        url="https://pypi.org/packages/f0/ea/e37495b286215f6fd41c68faf162f0933eb5106d7e3cef37015fc7dc49bd/rich-9.6.0-py3-none-any.whl",
+    )
+    version(
+        "9.5.1",
+        sha256="0f4359df97670c1981599690458c4c9ede02c56f59ae3a648b7154cdba21b0cc",
+        url="https://pypi.org/packages/e4/65/2376e6510efc51a3e7ead4012c6ade4742634cd89127bd5368a380d23454/rich-9.5.1-py3-none-any.whl",
+    )
+    version(
+        "9.5.0",
+        sha256="7a768215cc1175218223079fbfaa452b080529cac6439079bb70684e698281ce",
+        url="https://pypi.org/packages/76/8a/00f666183508da511f7f03dde9f05d708dd4a43ba1d2b6d96adc96f021c2/rich-9.5.0-py3-none-any.whl",
+    )
+    version(
+        "9.4.0",
+        sha256="dfc1d6a394f97674163b2b2c24d12e15f85752ce5451043c4d3ce77dad16a07d",
+        url="https://pypi.org/packages/f9/a0/875fd1285885fd491540380a10f22834f3648ff5a3c3a0ed3c2013888e72/rich-9.4.0-py3-none-any.whl",
+    )
+
+    with default_args(type="run"):
+        depends_on("python@3.7:", when="@13:")
+        depends_on("python@:3", when="@:12")
+        depends_on("py-colorama@0.4:", when="@:11")
+        depends_on("py-commonmark@0.9:", when="@:13.1")
+        depends_on("py-dataclasses@0.7:", when="@9.3:12 ^python@:3.6")
+        depends_on("py-markdown-it-py@2.2:", when="@13.4.2:")
+        depends_on("py-pygments@2.13:", when="@13.3.2:")
+        depends_on("py-pygments@2.6:", when="@:13.2")
+        depends_on("py-typing-extensions@4:", when="@12.2: ^python@:3.8")
+        depends_on("py-typing-extensions@3.7.4:", when="@10.14:12.0 ^python@:3.7")
+        depends_on("py-typing-extensions@3.7.4:3", when="@10.2:10.13 ^python@:3.7")
+        depends_on("py-typing-extensions@3.7.4:3", when="@:10.1")
 
     # Historical dependencies
-    depends_on("py-commonmark@0.9.0:0.9", when="@:13.1", type=("build", "run"))
-    depends_on("py-colorama@0.4.0:0.4", when="@:10.14.0", type=("build", "run"))

@@ -16,9 +16,12 @@ class PyColorcet(PythonPackage):
 
     maintainers("vvolkl")
 
-    version("3.0.0", sha256="21c522346a7aa81a603729f2996c22ac3f7822f4c8c303c59761e27d2dfcf3db")
+    version(
+        "3.0.0",
+        sha256="074027a442921813d4328f03c200a55c8ac73d19901919abcd0c6fb67fa79664",
+        url="https://pypi.org/packages/fc/db/d55e0d28e01d3f24cb5bcb8023437fc5fa2371f42e578a65251344690610/colorcet-3.0.0-py2.py3-none-any.whl",
+    )
 
-    depends_on("python@2.7:", type=("build", "run"))
-    depends_on("py-setuptools@30.3.0:", type="build")
-    depends_on("py-param@1.7.0:", type=("build", "run"))
-    depends_on("py-pyct@0.4.4:", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-param@1.7:", when="@:3.0.0-alpha7,3.0.0")
+        depends_on("py-pyct@0.4.4:", when="@:3.0")

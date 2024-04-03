@@ -13,9 +13,13 @@ class PyAzureMgmtMedia(PythonPackage):
     homepage = "https://github.com/Azure/azure-sdk-for-python"
     pypi = "azure-mgmt-media/azure-mgmt-media-2.2.0.zip"
 
-    version("2.2.0", sha256="0adeee9e654a9011f5107def06fea6838864a3514a1e5a9ed495f3a56a687cc7")
+    version(
+        "2.2.0",
+        sha256="4cf414376abaf7444359dd8d1a06f4e1156b7d151e7cea42420a0843b7afbe50",
+        url="https://pypi.org/packages/66/a1/4468df95486910343391539887881702ba90d98d005c0362edcb6f7aed89/azure_mgmt_media-2.2.0-py2.py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-msrest@0.5.0:", type=("build", "run"))
-    depends_on("py-msrestazure@0.4.32:1", type=("build", "run"))
-    depends_on("py-azure-common@1.1:1", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-azure-common@1.1:", when="@1:")
+        depends_on("py-msrest@0.5:", when="@1.0.0:7.0.0-beta1")
+        depends_on("py-msrestazure@0.4.32:", when="@1.0.0-rc2:4")

@@ -15,6 +15,8 @@ class PyArcp(PythonPackage):
 
     license("Apache-2.0")
 
-    version("0.2.1", sha256="5c17ac7972c9ef82979cc2caf2b3a87c1aefd3fefe9adb8a5dd728ada57715dd")
-
-    depends_on("py-setuptools", type="build")
+    version(
+        "0.2.1",
+        sha256="4e09b2d8a9fc3fda7ec112b553498ff032ea7de354e27dbeb1acc53667122444",
+        url="https://pypi.org/packages/66/df/32574bc8f1d440d40f4aaf3b455316b2b1536c7243c985a90f8516cf3074/arcp-0.2.1-py2.py3-none-any.whl",
+    )

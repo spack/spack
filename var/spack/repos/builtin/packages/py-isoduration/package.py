@@ -14,8 +14,12 @@ class PyIsoduration(PythonPackage):
 
     license("0BSD")
 
-    version("20.11.0", sha256="ac2f9015137935279eac671f94f89eb00584f940f5dc49462a0c4ee692ba1bd9")
+    version(
+        "20.11.0",
+        sha256="b2904c2a4228c3d44f409c8ae8e2370eb21a26f7ac2ec5446df141dde3452042",
+        url="https://pypi.org/packages/7b/55/e5326141505c5d5e34c5e0935d2908a74e4561eca44108fbfb9c13d2911a/isoduration-20.11.0-py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-
-    depends_on("py-arrow@0.15.0:", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("python@3.7:")
+        depends_on("py-arrow@0.15:")

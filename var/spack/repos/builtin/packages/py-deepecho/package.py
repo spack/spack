@@ -16,13 +16,15 @@ class PyDeepecho(PythonPackage):
     license("MIT")
 
     version(
-        "0.3.0.post1", sha256="9f67373a435b5bcd84441c53eae87a2ba17a27574419a59191f92198f400b914"
+        "0.3.0.post1",
+        sha256="a0fc284e330fd65acdba49c46399a2d3019ed9caaf85eb1d05bb44abae3d618f",
+        url="https://pypi.org/packages/a8/68/ef5ff2f4767003ce9999d2400904b81d842d7b155168a80c767507a384e8/deepecho-0.3.0.post1-py2.py3-none-any.whl",
     )
 
-    depends_on("python@3.6:3.9", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
-    depends_on("py-pytest-runner@2.11.1:", type="build")
-    depends_on("py-numpy@1.20.0:1", type=("build", "run"))
-    depends_on("py-pandas@1.1.3:1", type=("build", "run"))
-    depends_on("py-torch@1.8.0:1", type=("build", "run"))
-    depends_on("py-tqdm@4.15:4", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("python@:3.9", when="@0.3")
+        depends_on("py-numpy@1.20.0:1", when="@0.3 ^python@3.7:")
+        depends_on("py-numpy@1.18.0:1.19", when="@0.3 ^python@:3.6")
+        depends_on("py-pandas@1.1.3:1", when="@0.3")
+        depends_on("py-torch@1.8:1", when="@0.3")
+        depends_on("py-tqdm@4.15:", when="@0.3:")

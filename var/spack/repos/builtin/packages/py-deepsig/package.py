@@ -13,16 +13,16 @@ class PyDeepsig(PythonPackage):
     homepage = "https://github.com/Kaleidophon/deep-significance"
     pypi = "deepsig/deepsig-1.2.1.tar.gz"
 
-    version("1.2.1", sha256="8543630c00264898116a065f6461c131d026ef75d8703bc631a4fd2bafb31f89")
+    version(
+        "1.2.1",
+        sha256="f0d2c20d0521c87dea5bb36c25ba755d8502121309c2c8d6efdb240cea978bc8",
+        url="https://pypi.org/packages/bb/66/0c530dc27ea0c6063b654ad0ed05a852f34e71ff59c9af5dc54891cb8d71/deepsig-1.2.1-py3-none-any.whl",
+    )
 
-    depends_on("python@3.5.3:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
-    depends_on("py-numpy@1.19.5", type=("build", "run"))
-    depends_on("py-scipy@1.6.0", type=("build", "run"))
-    depends_on("py-tqdm@4.59.0", type=("build", "run"))
-    depends_on("py-joblib@1.0.1", type=("build", "run"))
-    depends_on("py-pandas@1.3.3", type=("build", "run"))
-    depends_on("py-dill@0.3.4", type=("build", "run"))
-
-    def patch(self):
-        filter_file("README_RAW.md", "README.md", "setup.py", string=True)
+    with default_args(type="run"):
+        depends_on("py-dill@0.3.4", when="@1.1:1.2.5")
+        depends_on("py-joblib@1.0.1:1.0", when="@1.0.1:1.2.5")
+        depends_on("py-numpy@1.19.5:1.19", when="@1.0.1:1.2.5")
+        depends_on("py-pandas@1.3.3", when="@1.1:1.2.5")
+        depends_on("py-scipy@1.6.0", when="@1.2:1.2.5")
+        depends_on("py-tqdm@4.59", when="@1.0.1:1.2.5")

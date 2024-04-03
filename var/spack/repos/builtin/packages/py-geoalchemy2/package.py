@@ -14,11 +14,18 @@ class PyGeoalchemy2(PythonPackage):
 
     license("MIT")
 
-    version("0.6.3", sha256="4dc4c6c2bda0fc82cccab4aaff185a6570e13a5351d85e29e12984a55d4138ee")
-    version("0.4.2", sha256="17fa10b0c01bd2ab036ea56975dfa850098aa394a5d6ee04d88b2aefc16751cb")
+    version(
+        "0.6.3",
+        sha256="0d1c9ea3ec13f6a522ccc3ffd2569ac524a6c6e80bab883e8805b28c48e77143",
+        url="https://pypi.org/packages/49/4f/a10d1aed8211d42c9601a3977674fe03fc0bd5545944fd1cacd238532af2/GeoAlchemy2-0.6.3-py2.py3-none-any.whl",
+    )
+    version(
+        "0.4.2",
+        sha256="540be4d6f5e32b0f621b8b7cc7881682890fbf30f1304be9a533f7875c9b1776",
+        url="https://pypi.org/packages/a9/78/3e17296bfda7e4b31e6353af8756c9748b57b441037408598cf287bae30e/GeoAlchemy2-0.4.2-py2.py3-none-any.whl",
+    )
 
     variant("dev", default=False, description="Enable development dependencies")
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-sqlalchemy@0.8:", type=("build", "run"))
-    depends_on("py-shapely@1.3.0:", type=("build", "run"), when="+dev")
+    with default_args(type="run"):
+        depends_on("py-sqlalchemy@0.8.0:", when="@0.2.6:0.8.4")

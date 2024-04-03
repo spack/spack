@@ -21,107 +21,171 @@ class PyDatalad(PythonPackage):
     pypi = "datalad/datalad-0.14.6.tar.gz"
     git = "https://github.com/datalad/datalad.git"
 
-    version("0.18.4", sha256="d832f3d70b79b7b66519ca30315791a6a265bdf8a86ddac5846489b75385cb09")
-    version("0.18.3", sha256="2da57df609f62a52a6652ade802e8ce0f229d498a5b93b15df2b8c69f8875b6e")
-    version("0.17.5", sha256="a221312c58b0b9b57605cc1a2288838f24932491b2e50475dd7a940151cafccd")
-    version("0.15.5", sha256="e569494a5bd4e0f100013ec30529d5ac02e78ba476a75fc533c0d89c0e5473bc")
-    version("0.15.3", sha256="44f8c5b3960c6d9848aeecd868c82330c49689a21e975597df5b112dc2e5c9f0")
-    version("0.15.2", sha256="1a878cf521270f089ee1f50339e71cfd7eed41e708d895a12d5c483a9b59991b")
-    version("0.15.1", sha256="0a905b3c3419786ae85b61a7aee34b0fc9eecd814f38408f2767ae7122b57a8b")
-    version("0.14.6", sha256="149b25a00da133a81be3cbdc041a1985418f0918fa5961ba979e23b5b3c08c63")
+    version(
+        "0.18.4",
+        sha256="75bf85db017bb5cff0e62b6e75ba282bf04d061e1410017e132320dd6a4e79e4",
+        url="https://pypi.org/packages/34/3a/639e37dc2c516342d4582ab9364aac948e235b661532ba56f3bd5f9a1d1b/datalad-0.18.4-py3-none-any.whl",
+    )
+    version(
+        "0.18.3",
+        sha256="a2607b592be02b7dbb5633484fd7055f3d7d6c1bd8c8490e80b85d49010ab69e",
+        url="https://pypi.org/packages/b3/5d/0f639182dd8bf8c5c98e9010b366fe252a8f0f1a53983e37d9e04c379fa6/datalad-0.18.3-py3-none-any.whl",
+    )
+    version(
+        "0.15.5",
+        sha256="ab2d929887a5a1e04ab361740fe44dd60d2155c9a6938ae60490b67197e4711e",
+        url="https://pypi.org/packages/54/cd/7336e65f5e8dab85406deb3955b268fe543114c7c61d7d99c617d0f072cc/datalad-0.15.5-py3-none-any.whl",
+    )
+    version(
+        "0.15.3",
+        sha256="ccd34eb26594c5f2aa3a7f5b562cde397a4e0f075bfff3d6685f8c6766051a5c",
+        url="https://pypi.org/packages/e5/5f/84354ada51ca68c08af4b00ea88a2785417efa10cc94dace81df5df98c00/datalad-0.15.3-py3-none-any.whl",
+    )
+    version(
+        "0.15.2",
+        sha256="e8dbe5f940b704ef4c70043c499f30716b6e6d7d7287c12ea0c2c4ae5050108f",
+        url="https://pypi.org/packages/fd/20/f4dc92cb59b047709256d6b8f3e6a473c0ac86aeb9f1dde6b02ba2bf4a68/datalad-0.15.2-py3-none-any.whl",
+    )
+    version(
+        "0.15.1",
+        sha256="afa91c75f7fd1e686e752e5272bc653e59037ee6644b8d48325e44dd17a225a3",
+        url="https://pypi.org/packages/17/3f/2446b7699463bcafbc8a28b0b35f6fadc0dee4ca26b3a4b4884750e556b5/datalad-0.15.1-py3-none-any.whl",
+    )
+    version(
+        "0.14.6",
+        sha256="09b479a1411ce6464feef326059ab2bd70192851940808e168d16409181a56d8",
+        url="https://pypi.org/packages/20/c6/8304d2a184e1f24aff1a4db9728f08c15a1bc02b3c698610ac3cdf9bc309/datalad-0.14.6-py3-none-any.whl",
+    )
 
     variant("downloaders-extra", default=False, description="Enable extra downloaders support")
-    variant("misc", default=False, description="Enable misc")
-    variant("tests", default=False, description="Enable tests")
     variant("duecredit", default=False, description="Enable duecredit support")
     variant("full", default=False, description="Enable support for all available variants")
-
     variant(
         "metadata-extra", when="@:0.17", default=False, description="Enable extra metadata support"
     )
+    variant("misc", default=False, description="Enable misc")
+    variant("tests", default=False, description="Enable tests")
 
-    depends_on("py-setuptools@40.8.0:", type="build")
+    with default_args(type="run"):
+        depends_on("python@3.7:", when="@0.16:")
+        depends_on("py-annexremote", when="@0.14.6:0.14.7,0.15.1:0.15,0.17.10:+full")
+        depends_on("py-annexremote", when="@0.14.6:0.14.7,0.15.1:0.15,0.17.10:")
+        depends_on("py-appdirs", when="@0.14.6:0.14.7,0.15.1:0.15+full")
+        depends_on("py-appdirs", when="@0.14.6:0.14.7,0.15.1:0.15")
+        depends_on("py-argcomplete@1.12.3:", when="@0.17.10:+misc")
+        depends_on("py-argcomplete@1.12.3:", when="@0.17.10:+full")
+        depends_on("py-argcomplete", when="@0.14.7,0.15.1:0.15+misc")
+        depends_on("py-argcomplete", when="@0.14.7,0.15.1:0.15+full")
+        depends_on("py-beautifulsoup4", when="@0.14.6:0.14.7,0.15.1:0.15,0.17.10:+tests")
+        depends_on("py-beautifulsoup4", when="@0.14.6:0.14.7,0.15.1:0.15,0.17.10:+full")
+        depends_on("py-boto", when="@0.14.6:0.14.7,0.15.1:0.15,0.17.10:+full")
+        depends_on("py-boto", when="@0.14.6:0.14.7,0.15.1:0.15,0.17.10:")
+        depends_on("py-chardet@3.0.4:", when="@0.14.6:0.14.7,0.15.1:0.15,0.18.2:+full")
+        depends_on("py-chardet@3.0.4:", when="@0.14.6:0.14.7,0.15.1:0.15,0.18.2:")
+        depends_on("py-colorama", when="@0.14.6:0.14.7,0.15.1:0.15,0.17.10:+full platform=windows")
+        depends_on("py-colorama", when="@0.14.6:0.14.7,0.15.1:0.15,0.17.10: platform=windows")
+        depends_on("py-distro", when="@0.14.6:0.14.7,0.15.1:0.15,0.17.10:+full ^python@3.8:")
+        depends_on("py-distro", when="@0.14.6:0.14.7,0.15.1:0.15,0.17.10: ^python@3.8:")
+        depends_on("py-duecredit", when="@0.14.6:0.14.7,0.15.1:0.15,0.17.10:+full")
+        depends_on("py-duecredit", when="@0.14.6:0.14.7,0.15.1:0.15,0.17.10:+duecredit")
+        depends_on("py-exifread", when="@0.14.6:0.14.7,0.15.1:0.15,0.17.10:0.17+metadata-extra")
+        depends_on("py-exifread", when="@0.14.6:0.14.7,0.15.1:0.15,0.17.10:0.17+full")
+        depends_on("py-fasteners@0.14:", when="@0.14.6:0.14.7,0.15.1:0.15,0.17.10:+full")
+        depends_on("py-fasteners@0.14:", when="@0.14.6:0.14.7,0.15.1:0.15,0.17.10:")
+        depends_on("py-httpretty@0.9.4:", when="@0.14.6:0.14.7,0.15.1:0.15,0.17.10:+tests")
+        depends_on("py-httpretty@0.9.4:", when="@0.14.6:0.14.7,0.15.1:0.15,0.17.10:+full")
+        depends_on("py-humanize", when="@0.14.6:0.14.7,0.15.1:0.15,0.17.10:+full")
+        depends_on("py-humanize", when="@0.14.6:0.14.7,0.15.1:0.15,0.17.10:")
+        depends_on("py-importlib-metadata@3.6:", when="@0.17.10:+full ^python@:3.9")
+        depends_on("py-importlib-metadata@3.6:", when="@0.17.10: ^python@:3.9")
+        depends_on("py-importlib-metadata", when="@0.14.6:0.14.7,0.15.1:0.15+full ^python@:3.7")
+        depends_on("py-importlib-metadata", when="@0.14.6:0.14.7,0.15.1:0.15 ^python@:3.7")
+        depends_on("py-iso8601", when="@0.14.6:0.14.7,0.15.1:0.15,0.17.10:+full")
+        depends_on("py-iso8601", when="@0.14.6:0.14.7,0.15.1:0.15,0.17.10:")
+        depends_on("py-jsmin", when="@0.14.6:0.14.7+full")
+        depends_on("py-jsmin", when="@0.14.6:0.14.7")
+        depends_on("py-keyring@20:23.8,23.9.1:", when="@0.17.10:+full")
+        depends_on("py-keyring@20:23.8,23.9.1:", when="@0.17.10:")
+        depends_on("py-keyring@8:", when="@0.14.6:0.14.7,0.15.1:0.15+full")
+        depends_on("py-keyring@8:", when="@0.14.6:0.14.7,0.15.1:0.15")
+        depends_on("py-keyrings-alt", when="@0.14.6:0.14.7,0.15.1:0.15,0.17.10:+full")
+        depends_on("py-keyrings-alt", when="@0.14.6:0.14.7,0.15.1:0.15,0.17.10:")
+        depends_on("py-looseversion", when="@0.18:+full")
+        depends_on("py-looseversion", when="@0.18:")
+        depends_on("py-msgpack", when="@0.14.6:0.14.7,0.15.1:0.15,0.17.10:+full")
+        depends_on("py-msgpack", when="@0.14.6:0.14.7,0.15.1:0.15,0.17.10:")
+        depends_on(
+            "py-mutagen@1.36:", when="@0.14.6:0.14.7,0.15.1:0.15,0.17.10:0.17+metadata-extra"
+        )
+        depends_on("py-mutagen@1.36:", when="@0.14.6:0.14.7,0.15.1:0.15,0.17.10:0.17+full")
+        depends_on("py-mypy", when="@0.18.3:+tests")
+        depends_on("py-mypy", when="@0.18.3:+full")
+        depends_on("py-nose@1.3.4:", when="@0.14.6:0.14.7,0.15.1:0.15+tests")
+        depends_on("py-nose@1.3.4:", when="@0.14.6:0.14.7,0.15.1:0.15+full")
+        depends_on("py-packaging", when="@0.15.4:0.15,0.17.10:+full")
+        depends_on("py-packaging", when="@0.15.4:0.15,0.17.10:")
+        depends_on("py-patool", when="@0.14.6:0.14.7,0.15.1:0.15,0.17.10:+full")
+        depends_on("py-patool", when="@0.14.6:0.14.7,0.15.1:0.15,0.17.10:")
+        depends_on("py-pillow", when="@0.14.6:0.14.7,0.15.1:0.15,0.17.10:0.17+metadata-extra")
+        depends_on("py-pillow", when="@0.14.6:0.14.7,0.15.1:0.15,0.17.10:0.17+full")
+        depends_on("py-platformdirs", when="@0.17.10:+full")
+        depends_on("py-platformdirs", when="@0.17.10:")
+        depends_on("py-pygithub", when="@0.14.6:0.14.7,0.15.1:0.15+full")
+        depends_on("py-pygithub", when="@0.14.6:0.14.7,0.15.1:0.15")
+        depends_on("py-pyperclip", when="@0.14.6:0.14.7,0.15.1:0.15,0.17.10:+misc")
+        depends_on("py-pyperclip", when="@0.14.6:0.14.7,0.15.1:0.15,0.17.10:+full")
+        depends_on("py-pytest", when="@0.17.10:+tests")
+        depends_on("py-pytest", when="@0.17.10:+full")
+        depends_on("py-pytest-cov", when="@0.17.10:+tests")
+        depends_on("py-pytest-cov", when="@0.17.10:+full")
+        depends_on("py-pytest-fail-slow@0.2:", when="@0.17.10:+tests")
+        depends_on("py-pytest-fail-slow@0.2:", when="@0.17.10:+full")
+        depends_on("py-python-dateutil", when="@0.14.6:0.14.7,0.15.1:0.15,0.17.10:+misc")
+        depends_on("py-python-dateutil", when="@0.14.6:0.14.7,0.15.1:0.15,0.17.10:+full")
+        depends_on("py-python-gitlab", when="@0.14.7,0.15.1:0.15,0.17.10:+full")
+        depends_on("py-python-gitlab", when="@0.14.7,0.15.1:0.15,0.17.10:")
+        depends_on(
+            "py-python-xmp-toolkit", when="@0.14.6:0.14.7,0.15.1:0.15,0.17.10:0.17+metadata-extra"
+        )
+        depends_on("py-python-xmp-toolkit", when="@0.14.6:0.14.7,0.15.1:0.15,0.17.10:0.17+full")
+        depends_on("py-pyyaml", when="@0.14.6:0.14.7,0.15.1:0.15,0.17.10:0.17+metadata-extra")
+        depends_on("py-pyyaml", when="@0.14.6:0.14.7,0.15.1:0.15,0.17.10:0.17+full")
+        depends_on("py-requests@1.2:", when="@0.14.6:0.14.7,0.15.1:0.15,0.17.10:+full")
+        depends_on("py-requests@1.2:", when="@0.14.6:0.14.7,0.15.1:0.15,0.17.10:")
+        depends_on("py-requests-ftp", when="@0.14.6:0.14.7,0.15.1:0.15,0.17.10:+full")
+        depends_on("py-requests-ftp", when="@0.14.6:0.14.7,0.15.1:0.15,0.17.10:+downloaders-extra")
+        depends_on("py-simplejson", when="@0.14.6:0.14.7,0.15.1:0.15,0.17.10:0.17+full")
+        depends_on("py-simplejson", when="@0.14.6:0.14.7,0.15.1:0.15,0.17.10:0.17")
+        depends_on("py-tqdm", when="@0.14.6:0.14.7,0.15.1:0.15,0.17.10:0.18+full")
+        depends_on("py-tqdm", when="@0.14.6:0.14.7,0.15.1:0.15,0.17.10:0.18")
+        depends_on("py-types-python-dateutil", when="@0.17.10:+tests")
+        depends_on("py-types-python-dateutil", when="@0.17.10:+full")
+        depends_on("py-types-requests", when="@0.17.10:+tests")
+        depends_on("py-types-requests", when="@0.17.10:+full")
+        depends_on("py-typing-extensions@4:", when="@0.18.4:+full ^python@:3.10")
+        depends_on("py-typing-extensions@4:", when="@0.18.4: ^python@:3.10")
+        depends_on("py-typing-extensions", when="@0.18.3+full ^python@:3.9")
+        depends_on("py-typing-extensions", when="@0.18.3 ^python@:3.9")
+        depends_on("py-vcrpy", when="@0.14.6:0.14.7,0.15.1:0.15,0.17.10:+tests")
+        depends_on("py-vcrpy", when="@0.14.6:0.14.7,0.15.1:0.15,0.17.10:+full")
+        depends_on("py-whoosh", when="@0.14.6:0.14.7,0.15.1:0.15,0.17.10:0.17+full")
+        depends_on("py-whoosh", when="@0.14.6:0.14.7,0.15.1:0.15,0.17.10:0.17")
+        depends_on("py-wrapt", when="@0.14.6:0.14.7,0.15.1:0.15+full")
+        depends_on("py-wrapt", when="@0.14.6:0.14.7,0.15.1:0.15")
+
     # upper bound needed because otherwise the following error occurs:
     # 'extras_require' must be a dictionary whose values are strings or lists
     # of strings containing valid project/version requirement specifiers.
-    depends_on("py-setuptools@40.8.0:66", when="@:17", type="build")
-
-    depends_on("git", type=("build", "run"))
-    depends_on("git-annex", type=("build", "run"))
 
     # core
-    depends_on("py-platformdirs", when="@0.16:", type=("build", "run"))
-    depends_on("py-chardet@3.0.4:", when="@0.18.2:", type=("build", "run"))
-    depends_on("py-chardet@3.0.4:4", when="@:0.18.1", type=("build", "run"))
-    depends_on("py-colorama", when="platform=windows", type=("build", "run"))
-    depends_on("py-distro", when="^python@3.8:", type=("build", "run"))
-    depends_on("py-importlib-metadata@3.6:", when="@0.16: ^python@:3.9", type=("build", "run"))
-    depends_on("py-importlib-metadata", when="@:0.15 ^python@:3.7", type=("build", "run"))
-    depends_on("py-iso8601", type=("build", "run"))
-    depends_on("py-humanize", type=("build", "run"))
-    depends_on("py-fasteners@0.14:", type=("build", "run"))
-    depends_on("py-packaging", when="@0.15.4:", type=("build", "run"))
-    depends_on("py-patool@1.7:", type=("build", "run"))
-    depends_on("py-tqdm", type=("build", "run"))
-    depends_on("py-typing-extensions@4:", when="@0.18.4: ^python@:3.10", type=("build", "run"))
-    depends_on("py-typing-extensions", when="@0.18.3: ^python@:3.9", type=("build", "run"))
-    depends_on("py-annexremote", type=("build", "run"))
-    depends_on("py-looseversion", when="@0.18:", type=("build", "run"))
-    depends_on("py-appdirs", when="@:0.15", type=("build", "run"))
-    depends_on("py-wrapt", when="@:0.15", type=("build", "run"))
 
     # downloaders
-    depends_on("py-boto", type=("build", "run"))
-    depends_on("py-keyring@20.0:23.8,23.9.1:", when="@0.16:", type=("build", "run"))
-    depends_on("py-keyring@8.0:", type=("build", "run"))
-    depends_on("py-keyrings-alt", type=("build", "run"))
-    depends_on("py-msgpack", type=("build", "run"))
-    depends_on("py-requests@1.2:", type=("build", "run"))
 
     # publish
-    depends_on("py-python-gitlab", when="@0.14.7:", type=("build", "run"))
-    depends_on("py-pygithub", when="@:0.16", type=("build", "run"))
-    depends_on("py-jsmin", when="@:0.14", type=("build", "run"))
 
     # metadata
-    with when("@:0.17"):
-        depends_on("py-simplejson", type=("build", "run"))
-        depends_on("py-whoosh", type=("build", "run"))
-
-    with when("+downloaders-extra"):
-        depends_on("py-requests-ftp", type=("build", "run"))
-
-    with when("+misc"):
-        depends_on("py-argcomplete@1.12.3:", when="@0.16.5:", type=("build", "run"))
-        depends_on("py-argcomplete", when="@0.14.7:", type=("build", "run"))
-        depends_on("py-pyperclip", type=("build", "run"))
-        depends_on("py-python-dateutil", type=("build", "run"))
-
-    with when("+tests"):
-        depends_on("py-beautifulsoup4", type=("build", "run"))
-        depends_on("py-httpretty@0.9.4:", type=("build", "run"))
-        depends_on("py-mypy", when="@0.18.3:", type=("build", "run"))
-        depends_on("py-mypy@0.900:0", when="@0.17.4:0.18.2", type=("build", "run"))
-        depends_on("py-pytest", when="@0.17.9:", type=("build", "run"))
-        depends_on("py-pytest@7", when="@0.17.0:0.17.8", type=("build", "run"))
-        depends_on("py-pytest-cov", when="@0.17.9:", type=("build", "run"))
-        depends_on("py-pytest-cov@3", when="@0.17.0:0.17.8", type=("build", "run"))
-        depends_on("py-pytest-fail-slow@0.2:0", when="@0.17:", type=("build", "run"))
-        depends_on("py-types-python-dateutil", when="@0.17.4:", type=("build", "run"))
-        depends_on("py-types-requests", when="@0.17.4:", type=("build", "run"))
-        depends_on("py-vcrpy", type=("build", "run"))
-        depends_on("py-nose@1.3.4:", when="@:0.16", type=("build", "run"))
-
-    with when("+duecredit"):
-        depends_on("py-duecredit", type=("build", "run"))
 
     # for version @:0.17
-    with when("+metadata-extra"):
-        depends_on("py-pyyaml", type=("build", "run"))
-        depends_on("py-mutagen@1.36:", type=("build", "run"))
-        depends_on("py-exifread", type=("build", "run"))
-        depends_on("py-python-xmp-toolkit", type=("build", "run"))
-        depends_on("pil", type=("build", "run"))
 
     # full
     # use conflict to avoid to have to maintain the dependencies twice

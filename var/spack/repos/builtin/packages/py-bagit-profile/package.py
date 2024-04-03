@@ -15,10 +15,12 @@ class PyBagitProfile(PythonPackage):
 
     license("Unlicense")
 
-    version("1.3.1", sha256="57798cdcf98b32a413edb29382d85f4f8c44d3204940d7e12d84998521a98c3f")
+    version(
+        "1.3.1",
+        sha256="7565a95902cbdc9a646eece0939cfec025d77b00764d10538fd3d5962fa1c2b7",
+        url="https://pypi.org/packages/a6/8e/a780f9d13ecfcd69e22cd6ba4497248abf82463386f616330f03da2b8a37/bagit_profile-1.3.1-py3-none-any.whl",
+    )
 
-    depends_on("python@2.7,3.4:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
-
-    depends_on("py-bagit", type=("build", "run"))
-    depends_on("py-requests", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-bagit", when="@1.2:")
+        depends_on("py-requests", when="@1.2:")

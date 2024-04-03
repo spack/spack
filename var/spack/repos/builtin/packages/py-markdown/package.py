@@ -19,15 +19,24 @@ class PyMarkdown(PythonPackage):
 
     license("BSD-3-Clause")
 
-    version("3.4.1", sha256="3b809086bb6efad416156e00a0da66fe47618a5d6918dd688f53f40c8e4cfeff")
-    version("3.3.4", sha256="31b5b491868dcc87d6c24b7e3d19a0d730d59d3e46f4eea6430a321bed387a49")
-    version("3.1.1", sha256="2e50876bcdd74517e7b71f3e7a76102050edec255b3983403f1a63e7c8a41e7a")
+    version(
+        "3.4.1",
+        sha256="08fb8465cffd03d10b9dd34a5c3fea908e20391a2a90b88d66362cb05beed186",
+        url="https://pypi.org/packages/86/be/ad281f7a3686b38dd8a307fa33210cdf2130404dfef668a37a4166d737ca/Markdown-3.4.1-py3-none-any.whl",
+    )
+    version(
+        "3.3.4",
+        sha256="96c3ba1261de2f7547b46a00ea8463832c921d3f9d6aba3f255a6f71386db20c",
+        url="https://pypi.org/packages/6e/33/1ae0f71395e618d6140fbbc9587cc3156591f748226075e0f7d6f9176522/Markdown-3.3.4-py3-none-any.whl",
+    )
+    version(
+        "3.1.1",
+        sha256="56a46ac655704b91e5b7e6326ce43d5ef72411376588afa1dd90e881b83c7e8c",
+        url="https://pypi.org/packages/c0/4e/fd492e91abdc2d2fcb70ef453064d980688762079397f779758e055f6575/Markdown-3.1.1-py2.py3-none-any.whl",
+    )
 
-    depends_on("python@2.7:2.8,3.3.5:", type=("build", "run"))
-    depends_on("python@3.6:", when="@3.3.4:", type=("build", "run"))
-    depends_on("python@3.7:", when="@3.4.1:", type=("build", "run"))
-
-    depends_on("py-setuptools", type="build")
-    depends_on("py-setuptools@36.6:", type="build")
-    depends_on("py-importlib-metadata", when="@3.3.4: ^python@:3.7", type=("build", "run"))
-    depends_on("py-importlib-metadata@4.4:", when="@3.4.1: ^python@:3.9", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("python@3.7:", when="@3.4")
+        depends_on("py-importlib-metadata@4.4:", when="@3.3.6: ^python@:3.9")
+        depends_on("py-importlib-metadata", when="@3.2.2:3.3.4 ^python@:3.7")
+        depends_on("py-setuptools@36:", when="@3.1:3.2.1")

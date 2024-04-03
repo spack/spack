@@ -15,8 +15,16 @@ class PySemver(PythonPackage):
 
     license("BSD-3-Clause")
 
-    version("3.0.1", sha256="9ec78c5447883c67b97f98c3b6212796708191d22e4ad30f4570f840171cbce1")
-    version("2.8.1", sha256="5b09010a66d9a3837211bb7ae5a20d10ba88f8cb49e92cb139a69ef90d5060d8")
+    version(
+        "3.0.1",
+        sha256="2a23844ba1647362c7490fe3995a86e097bb590d16f0f32dfc383008f19e4cdf",
+        url="https://pypi.org/packages/d4/5d/f2b4fe45886238c405ad177ca43911cb1459d08003004da5c27495eb4216/semver-3.0.1-py3-none-any.whl",
+    )
+    version(
+        "2.8.1",
+        sha256="41c9aa26c67dc16c54be13074c352ab666bce1fa219c7110e8f03374cd4206b0",
+        url="https://pypi.org/packages/21/18/a0de8cda637ba3efee1b3617ded00601507ce15bd70a39399740e0fd415f/semver-2.8.1-py2.py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-setuptools-scm", when="@3:", type="build")
+    with default_args(type="run"):
+        depends_on("python@3.7:", when="@3:")

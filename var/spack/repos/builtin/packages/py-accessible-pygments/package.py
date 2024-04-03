@@ -15,7 +15,11 @@ class PyAccessiblePygments(PythonPackage):
 
     license("BSD-3-Clause")
 
-    version("0.0.4", sha256="e7b57a9b15958e9601c7e9eb07a440c813283545a20973f2574a5f453d0e953e")
+    version(
+        "0.0.4",
+        sha256="416c6d8c1ea1c5ad8701903a20fcedf953c6e720d64f33dc47bfb2d3f2fa4e8d",
+        url="https://pypi.org/packages/20/d7/45cfa326d945e411c7e02764206845b05f8f5766aa7ebc812ef3bc4138cd/accessible_pygments-0.0.4-py2.py3-none-any.whl",
+    )
 
-    depends_on("py-pygments@1.5:", type=("build", "run"))
-    depends_on("py-setuptools", type=("build"))
+    with default_args(type="run"):
+        depends_on("py-pygments@1.5:")

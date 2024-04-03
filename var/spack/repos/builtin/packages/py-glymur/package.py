@@ -17,10 +17,15 @@ class PyGlymur(PythonPackage):
 
     license("MIT")
 
-    version("0.9.9", sha256="25b8a6ac07892c98b4613f959295ada9ca5e76b27bfa25069ab0a8a5bb4048f4")
+    version(
+        "0.9.9",
+        sha256="6a3df886b87c94c6f33b44c69b814afdfbc09fd849da5ba9dfd89e6b2f293de3",
+        url="https://pypi.org/packages/b2/2c/dc5b32c9b25255a8f8524e3290f8c62e78249fbe3f293c027985b1b2d411/Glymur-0.9.9-py3-none-any.whl",
+    )
 
-    depends_on("python@3.7:", type=("build", "run"))
-    depends_on("py-numpy", type=("build", "run"))
-    depends_on("py-lxml", type=("build", "run"))
-    depends_on("py-packaging", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
+    with default_args(type="run"):
+        depends_on("python@3.7:", when="@0.9.7:0.12.0")
+        depends_on("py-lxml", when="@0.9.2,0.9.7:")
+        depends_on("py-numpy", when="@0.9.2,0.9.7:")
+        depends_on("py-packaging", when="@0.9.8:")
+        depends_on("py-setuptools", when="@0.9.2,0.9.7:0.11")

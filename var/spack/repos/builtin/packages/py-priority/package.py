@@ -19,7 +19,8 @@ class PyPriority(PythonPackage):
 
     license("MIT")
 
-    version("2.0.0", sha256="c965d54f1b8d0d0b19479db3924c7c36cf672dbf2aec92d43fbdaf4492ba18c0")
-
-    depends_on("python@3.6.1:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
+    version(
+        "2.0.0",
+        sha256="6f8eefce5f3ad59baf2c080a664037bb4725cd0a790d53d59ab4059288faf6aa",
+        url="https://pypi.org/packages/5e/5f/82c8074f7e84978129347c2c6ec8b6c59f3584ff1a20bc3c940a3e061790/priority-2.0.0-py3-none-any.whl",
+    )

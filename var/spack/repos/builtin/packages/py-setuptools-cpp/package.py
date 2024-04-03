@@ -16,32 +16,13 @@ class PySetuptoolsCpp(PythonPackage):
 
     license("MIT")
 
-    version("0.1.0", sha256="4fd5e08603237578d06d28efd592d9847b523ede3e502f660be44b1e6254674d")
+    version(
+        "0.1.0",
+        sha256="cd8179c038a12dbf2914999928f193f54d4713fd11715efdc5d6f450f663c8bd",
+        url="https://pypi.org/packages/fc/7a/aac83f37a6362d6693eb5f4cfbfc8d42d2253c2d4d7a0fcc2444368fdca2/setuptools_cpp-0.1.0-py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-appdirs", type=("build", "run"))
-    depends_on("py-atomicwrites", type=("build", "run"))
-    depends_on("py-attrs", type=("build", "run"))
-    depends_on("py-black", type=("build", "run"))
-    depends_on("py-chardet", type=("build", "run"))
-    depends_on("py-colorama", type=("build", "run"))
-    depends_on("py-chardet", type=("build", "run"))
-    depends_on("py-certifi", type=("build", "run"))
-    depends_on("py-click", type=("build", "run"))
-    depends_on("py-coverage", type=("build", "run"))
-    depends_on("py-entrypoints", type=("build", "run"))
-    depends_on("py-flake8", type=("build", "run"))
-    depends_on("py-importlib-metadata", type=("build", "run"))
-    depends_on("py-isort", type=("build", "run"))
-    depends_on("py-jinja2", type=("build", "run"))
-    depends_on("py-markdown", type=("build", "run"))
-    depends_on("py-markupsafe", type=("build", "run"))
-    depends_on("py-mccabe", type=("build", "run"))
-    depends_on("py-more-itertools", type=("build", "run"))
-    depends_on("py-mypy", type=("build", "run"))
-    depends_on("py-mypy-extensions", type=("build", "run"))
-    depends_on("py-packaging", type=("build", "run"))
-    depends_on("py-pathspec", type=("build", "run"))
-    depends_on("py-pluggy", type=("build", "run"))
-    depends_on("py-tornado", type=("build", "run"))
-    depends_on("py-typed-ast", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("python@:3")
+        depends_on("py-pybind11")
+        depends_on("py-setuptools")

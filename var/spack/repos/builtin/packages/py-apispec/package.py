@@ -15,10 +15,17 @@ class PyApispec(PythonPackage):
 
     license("MIT")
 
-    version("6.0.2", sha256="e76d80b739edef4be213092a6384ad7fd933ba7d64f6d5a0aff8d4da1bef7887")
-    version("4.7.1", sha256="79029486d36a0d7f3c659dbf6ae50a91fbed0c22dcd5376f592e076c130bc7f9")
+    version(
+        "6.0.2",
+        sha256="d97f0ae9c65133185b9ed9c5be1a434eb85627dfa33c4c53cabda122256c1b67",
+        url="https://pypi.org/packages/06/05/397d3da7d64c095d38d75b95aacd76d22f7491184f7e2910e8ce79f068f8/apispec-6.0.2-py3-none-any.whl",
+    )
+    version(
+        "4.7.1",
+        sha256="6613dbc39f41cd58942a697f11c8762ba18422bd173fe0bdfc1535b83d3f84f0",
+        url="https://pypi.org/packages/3f/5b/312dd28e8e0b94dfe3c41db5a5c83a944c938a2108d631613fa0bbe3c8f7/apispec-4.7.1-py2.py3-none-any.whl",
+    )
 
-    depends_on("python@3.7:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
-
-    depends_on("py-packaging@21.3:", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("python@3.7:", when="@5.2:6.3")
+        depends_on("py-packaging@21.3:", when="@6:")

@@ -16,11 +16,12 @@ class PyTatsu(PythonPackage):
 
     license("BSD-2-Clause")
 
-    version("4.4.0", sha256="80713413473a009f2081148d0f494884cabaf9d6866b71f2a68a92b6442f343d")
+    version(
+        "4.4.0",
+        sha256="c9211eeee9a2d4c90f69879ec0b518b1aa0d9450249cb0dd181f5f5b18be0a92",
+        url="https://pypi.org/packages/1b/36/00664e684e4bba5730db661847447bbcfe789008a154755013e5f457b648/TatSu-4.4.0-py2.py3-none-any.whl",
+    )
 
     variant("future_regex", default=True, description="Use regex implementation")
 
-    depends_on("python@3.6:", type=("build", "run"), when="@4.5:")
-    depends_on("py-setuptools", type="build")
     # optional dependency, otherwise falls back to standard implementation
-    depends_on("py-regex@2018.8:", type=("build", "run"), when="+future_regex")

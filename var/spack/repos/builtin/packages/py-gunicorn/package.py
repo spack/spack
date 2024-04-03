@@ -15,7 +15,11 @@ class PyGunicorn(PythonPackage):
 
     license("MIT")
 
-    version("20.1.0", sha256="e0a968b5ba15f8a328fdfd7ab1fcb5af4470c28aaf7e55df02a99bc13138e6e8")
+    version(
+        "20.1.0",
+        sha256="9dcc4547dbb1cb284accfb15ab5667a0e5d1881cc443e0677b4882a4067a807e",
+        url="https://pypi.org/packages/e4/dd/5b190393e6066286773a67dfcc2f9492058e9b57c4867a95f1ba5caf0a83/gunicorn-20.1.0-py3-none-any.whl",
+    )
 
-    depends_on("python@3.5:", type=("build", "run"))
-    depends_on("py-setuptools@3:", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-setuptools@3:", when="@20")

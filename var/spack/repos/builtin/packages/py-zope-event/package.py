@@ -14,8 +14,21 @@ class PyZopeEvent(PythonPackage):
 
     license("ZPL-2.1")
 
-    version("4.6", sha256="81d98813046fc86cc4136e3698fee628a3282f9c320db18658c21749235fce80")
-    version("4.5.0", sha256="5e76517f5b9b119acf37ca8819781db6c16ea433f7e2062c4afc2b6fbedb1330")
-    version("4.3.0", sha256="e0ecea24247a837c71c106b0341a7a997e3653da820d21ef6c08b32548f733e7")
+    version(
+        "4.6",
+        sha256="73d9e3ef750cca14816a9c322c7250b0d7c9dbc337df5d1b807ff8d3d0b9e97c",
+        url="https://pypi.org/packages/8b/a8/3ab9648dc08d2ab7543145ec174a2d982d08fb996d50d9a4d3e057da7132/zope.event-4.6-py2.py3-none-any.whl",
+    )
+    version(
+        "4.5.0",
+        sha256="2666401939cdaa5f4e0c08cf7f20c9b21423b95e88f4675b1443973bdb080c42",
+        url="https://pypi.org/packages/9e/85/b45408c64f3b888976f1d5b37eed8d746b8d5729a66a49ec846fda27d371/zope.event-4.5.0-py2.py3-none-any.whl",
+    )
+    version(
+        "4.3.0",
+        sha256="57b5fefd1d92774a7c26d7307b7ad9d0eac2181fd320b2061e69216e2a3b3a07",
+        url="https://pypi.org/packages/03/62/bb2d843b59f62bac43d071e2d3543ffc63d35fcc515a5796c759b62de49b/zope.event-4.3.0-py2.py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-setuptools", when="@4.3:")

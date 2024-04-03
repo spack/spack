@@ -14,7 +14,8 @@ class PyPydub(PythonPackage):
 
     license("MIT")
 
-    version("0.25.1", sha256="980a33ce9949cab2a569606b65674d748ecbca4f0796887fd6f46173a7b0d30f")
-
-    depends_on("py-setuptools", type="build")
-    depends_on("ffmpeg", type="run")
+    version(
+        "0.25.1",
+        sha256="65617e33033874b59d87db603aa1ed450633288aefead953b30bded59cb599a6",
+        url="https://pypi.org/packages/a6/53/d78dc063216e62fc55f6b2eebb447f6a4b0a59f55c8406376f76bf959b08/pydub-0.25.1-py2.py3-none-any.whl",
+    )

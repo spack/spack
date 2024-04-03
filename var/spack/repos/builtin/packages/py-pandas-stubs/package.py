@@ -19,10 +19,12 @@ class PyPandasStubs(PythonPackage):
     license("BSD-3-Clause")
 
     version(
-        "2.0.2.230605", sha256="624c7bb06d38145a44b61be459ccd19b038e0bf20364a025ecaab78fea65e858"
+        "2.0.2.230605",
+        sha256="39106b602f3cb6dc5f728b84e1b32bde6ecf41ee34ee714c66228009609fbada",
+        url="https://pypi.org/packages/09/1d/2b9b5905d869c3e65d1c35e2a6420cbe4313a277aabfae6001670ef04075/pandas_stubs-2.0.2.230605-py3-none-any.whl",
     )
 
-    depends_on("python@3.8:", type=("build", "run"))
-    depends_on("py-poetry-core@1:", type="build")
-    depends_on("py-numpy@1.24.3:", type=("build", "run"))
-    depends_on("py-types-pytz@2022.1.1:", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("python@3.8:", when="@2:2.0")
+        depends_on("py-numpy@1.24.3:", when="@2.0.2")
+        depends_on("py-types-pytz@2022.1.1:")

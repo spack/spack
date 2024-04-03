@@ -27,44 +27,58 @@ class PyPylint(PythonPackage):
 
     license("GPL-2.0-or-later")
 
-    version("2.16.2", sha256="13b2c805a404a9bf57d002cd5f054ca4d40b0b87542bdaba5e05321ae8262c84")
-    version("2.15.0", sha256="4f3f7e869646b0bd63b3dfb79f3c0f28fc3d2d923ea220d52620fd625aed92b0")
-    version("2.14.4", sha256="47705453aa9dce520e123a7d51843d5f0032cbfa06870f89f00927aa1f735a4a")
-    version("2.13.5", sha256="dab221658368c7a05242e673c275c488670144123f4bd262b2777249c1c0de9b")
-    version("2.11.1", sha256="2c9843fff1a88ca0ad98a256806c82c5a8f86086e7ccbdb93297d86c3f90c436")
-    version("2.8.2", sha256="586d8fa9b1891f4b725f587ef267abe2a1bad89d6b184520c7f07a253dd6e217")
+    version(
+        "2.16.2",
+        sha256="ff22dde9c2128cd257c145cfd51adeff0be7df4d80d669055f24a962b351bbe4",
+        url="https://pypi.org/packages/e1/1b/b34a9c3485151db12402ab701f9cb836359cb95668870d071d5b2e327f67/pylint-2.16.2-py3-none-any.whl",
+    )
+    version(
+        "2.15.0",
+        sha256="4b124affc198b7f7c9b5f9ab690d85db48282a025ef9333f51d2d7281b92a6c3",
+        url="https://pypi.org/packages/5e/1b/920b36e0db0fe3d4b583a934e1889153699bcccbca0a41b18202d2d2e1e9/pylint-2.15.0-py3-none-any.whl",
+    )
+    version(
+        "2.14.4",
+        sha256="89b61867db16eefb7b3c5b84afc94081edaf11544189e2b238154677529ad69f",
+        url="https://pypi.org/packages/30/7a/db35d167413665b8cb82caa043d2931a45c4a05622367b1f19ceea65e415/pylint-2.14.4-py3-none-any.whl",
+    )
+    version(
+        "2.13.5",
+        sha256="c149694cfdeaee1aa2465e6eaab84c87a881a7d55e6e93e09466be7164764d1e",
+        url="https://pypi.org/packages/9f/53/e1d8da0d381e4a303cc812238e733073abdd9099525c42cb100b20faf8b9/pylint-2.13.5-py3-none-any.whl",
+    )
+    version(
+        "2.11.1",
+        sha256="0f358e221c45cbd4dad2a1e4b883e75d28acdcccd29d40c76eb72b307269b126",
+        url="https://pypi.org/packages/37/42/948d1486727806df2e0016f1cfc2d3beafe289f96d53dfc85d967f79afc5/pylint-2.11.1-py3-none-any.whl",
+    )
+    version(
+        "2.8.2",
+        sha256="f7e2072654a6b6afdf5e2fb38147d3e2d2d43c89f648637baab63e026481279b",
+        url="https://pypi.org/packages/10/f0/9705d6ec002876bc20b6923cbdeeca82569a895fc214211562580e946079/pylint-2.8.2-py3-none-any.whl",
+    )
 
-    depends_on("python@3.6:", when="@2.8.2:", type=("build", "run"))
-    depends_on("python@3.6.2:", when="@2.13.5:", type=("build", "run"))
-    depends_on("python@3.7.2:", when="@2.14.0:", type=("build", "run"))
-    depends_on("py-setuptools-scm", when="@2.8.2", type="build")
-    depends_on("py-setuptools@17.1:", type="build")
-    depends_on("py-setuptools@62.6:62", when="@2.15.0:", type="build")
-    depends_on("py-wheel@0.37.1:0.37", when="@2.15.0:", type="build")
-    depends_on("py-dill@0.2:", when="@2.13.5:2.15", type=("build", "run"))
-    depends_on("py-dill@0.2:", when="@2.16:  ^python@:3.10", type=("build", "run"))
-    depends_on("py-dill@0.3.6:", when="@2.16.0: ^python@3.11:", type=("build", "run"))
-    depends_on("py-platformdirs@2.2.0:", when="@2.11.1:", type=("build", "run"))
-    depends_on("py-astroid", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("python@3.7:", when="@2.14:2,3.0.0-alpha5:3.0.0-alpha6")
+        depends_on("python@:3", when="@:2.12.0,3:3.0.0-alpha4")
+        depends_on("py-astroid@2.14.2:2", when="@2.16.2:2.16")
+        depends_on("py-astroid@2.12.4:2.13", when="@2.15:2.15.0")
+        depends_on("py-astroid@2.11.6:2.11", when="@2.14.2:2.14")
+        depends_on("py-astroid@2.11.2:2.11", when="@2.13.2:2.13.5")
+        depends_on("py-astroid@2.8", when="@2.11")
+        depends_on("py-astroid@2.5.6:2.6", when="@2.8.1:2.8.1.0,2.8.2")
+        depends_on("py-colorama@0.4.5:", when="@2.14.3:2,3.0.0-alpha6: platform=windows")
+        depends_on("py-colorama", when="@:2.14.2,3:3.0.0-alpha5 platform=windows")
+        depends_on("py-dill@0.3.6:", when="@2.15.9:2.16.0.0,2.16.1:2,3.0.0-alpha6: ^python@3.11:")
+        depends_on("py-dill@0.2:", when="@2.15.9:2.16.0.0,2.16.1:2,3.0.0-alpha6: ^python@:3.10")
+        depends_on("py-dill@0.2:", when="@2.13:2.15.8,2.16.0.dev:2.16.0,3.0.0-alpha5")
+        depends_on("py-isort@4.2.5:5", when="@:3.0.2")
+        depends_on("py-mccabe@0.6:", when="@2.13:2,3.0.0-alpha5:")
+        depends_on("py-mccabe@0.6", when="@:2.12,3:3.0.0-alpha4")
+        depends_on("py-platformdirs@2.2:", when="@2.10.2:2,3.0.0-alpha5:")
+        depends_on("py-toml@0.7.1:", when="@:2.11,3:3.0.0-alpha4")
+        depends_on("py-tomli@1.1:", when="@2.13:2,3.0.0-alpha5: ^python@:3.10")
+        depends_on("py-tomlkit@0.10.1:", when="@2.14:2,3.0.0-alpha5:")
+        depends_on("py-typing-extensions@3.10:", when="@2.11:2,3.0.0-alpha5: ^python@:3.9")
+
     # note there is no working version of astroid for this
-    depends_on("py-astroid@1.5.1:", when="@1.7:", type=("build", "run"))
-    depends_on("py-astroid@2.0:", when="@2.2.0:", type=("build", "run"))
-    depends_on("py-astroid@2.2.0:2", when="@2.3.0:2.7", type=("build", "run"))
-    depends_on("py-astroid@2.5.6:2.6", when="@2.8.0:2.10", type=("build", "run"))
-    depends_on("py-astroid@2.8.0:2.8", when="@2.11.1", type=("build", "run"))
-    depends_on("py-astroid@2.11.2:2.11", when="@2.13.5:2.13", type=("build", "run"))
-    depends_on("py-astroid@2.11.6:2.11", when="@2.14.2:2.14", type=("build", "run"))
-    depends_on("py-astroid@2.12.4:2.13", when="@2.15", type=("build", "run"))
-    depends_on("py-astroid@2.14.2:2.15", when="@2.16:", type=("build", "run"))
-    depends_on("py-isort@4.2.5:", type=("build", "run"))
-    depends_on("py-isort@4.2.5:4", when="@2.3.1:2.5", type=("build", "run"))
-    depends_on("py-isort@4.2.5:5", when="@2.6:", type=("build", "run"))
-    depends_on("py-mccabe", type=("build", "run"))
-    depends_on("py-mccabe@0.6.0:0.6", when="@2.3.1:2.11", type=("build", "run"))
-    depends_on("py-mccabe@0.6.0:0.7", when="@2.13:", type=("build", "run"))
-    depends_on("py-tomli@1.1.0:", when="@2.13.5: ^python@:3.10", type=("build", "run"))
-    depends_on("py-tomlkit@0.10.1:", when="@2.14.0:", type=("build", "run"))
-    depends_on("py-colorama@0.4.5:", when="platform=windows", type=("build", "run"))
-    depends_on("py-typing-extensions@3.10.0:", when="@2.11.1: ^python@:3.9", type=("build", "run"))
-    depends_on("py-six", when="@1:2.3.1", type=("build", "run"))
-    depends_on("py-toml@0.7.1:", when="@2.8.2:2.12.2", type=("build", "run"))

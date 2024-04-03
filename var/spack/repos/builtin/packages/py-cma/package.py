@@ -17,16 +17,19 @@ class PyCma(PythonPackage):
 
     maintainers("LydDeb")
 
-    version("3.3.0", sha256="b748b8e03f4e7ae816157d7b9bb2fc6b1fb2fee1d5fd3399329b646bb75861ec")
+    version(
+        "3.3.0",
+        sha256="5cc571b1e2068fcf1c538be36f8f3a870107456fed22ce81c1345a96329e61db",
+        url="https://pypi.org/packages/77/70/da60edd6a12a8b4af07e583076c8f039f2a2792a0f0d9219d84522d23493/cma-3.3.0-py3-none-any.whl",
+    )
 
-    variant("plotting", default=False, description="Build with matplotlib support.")
     variant(
         "constrained_solution_tracking",
         default=False,
         description="Build with moarchiving support.",
     )
+    variant("plotting", default=False, description="Build with matplotlib support.")
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-numpy", type=("build", "run"))
-    depends_on("py-matplotlib", type=("build", "run"), when="+plotting")
-    depends_on("py-moarchiving", type=("build", "run"), when="+constrained_solution_tracking")
+    with default_args(type="run"):
+        depends_on("py-matplotlib", when="@3:3.0,3.2:+plotting")
+        depends_on("py-numpy", when="@3:3.0,3.2:")

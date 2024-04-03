@@ -16,11 +16,16 @@ class PyQuaternionic(PythonPackage):
 
     license("MIT")
 
-    version("1.0.1", sha256="ea69733d7311784963922bf08cc0c9c938b62fee2f91219f56544ff30658c10e")
+    version(
+        "1.0.1",
+        sha256="5e9ce1fa6a25d7339d3a9a9f4582b0244cbced21e289982c0fb2e0a54eabf491",
+        url="https://pypi.org/packages/0c/fe/cc8eb0bccf084aa1cdeb777cd8adb5380e0a440ff98b4bb2dae653b6288c/quaternionic-1.0.1-py3-none-any.whl",
+    )
 
-    depends_on("python@3.6:3.9", type=("build", "run"))
-    depends_on("py-poetry-core@1.0.1:", type="build")
-    depends_on("py-importlib-metadata@1:", when="^python@:3.7", type=("build", "run"))
-    depends_on("py-numpy@1.13:", type=("build", "run"))
-    depends_on("py-scipy@1:", type=("build", "run"))
-    depends_on("py-numba@0.50:", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("python@:3.9", when="@0.3:1.0.1")
+        depends_on("py-black@20.8-beta1:", when="@:1.0.1")
+        depends_on("py-importlib-metadata@1:", when="@0.3.4:1.0.1 ^python@:3.7")
+        depends_on("py-numba@0.50.0:", when="@:1.0.1")
+        depends_on("py-numpy@1.13.0:1", when="@:1.0.1")
+        depends_on("py-scipy@1.0.0:", when="@:1.0.6")

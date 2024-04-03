@@ -13,9 +13,13 @@ class PyAzureMgmtManagementgroups(PythonPackage):
     homepage = "https://github.com/Azure/azure-sdk-for-python"
     pypi = "azure-mgmt-managementgroups/azure-mgmt-managementgroups-0.2.0.zip"
 
-    version("0.2.0", sha256="3d5237947458dc94b4a392141174b1c1258d26611241ee104e9006d1d798f682")
+    version(
+        "0.2.0",
+        sha256="8194ee6274df865eccd1ed9d385ea625aeba9b8058b9e4fdf547f5207271a775",
+        url="https://pypi.org/packages/95/e8/2bbe79c62ad2787944dd7ae4d06d60afb3967b5efc09ed14046919371b59/azure_mgmt_managementgroups-0.2.0-py2.py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-msrest@0.5.0:", type=("build", "run"))
-    depends_on("py-msrestazure@0.4.32:1", type=("build", "run"))
-    depends_on("py-azure-common@1.1:1", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-azure-common@1.1:")
+        depends_on("py-msrest@0.5:", when="@0.2:1.0.0-beta1")
+        depends_on("py-msrestazure@0.4.32:", when="@0.2:0")

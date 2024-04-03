@@ -19,12 +19,11 @@ class PyIpyvuetify(PythonPackage):
 
     maintainers("jeremyfix")
 
-    version("1.9.0", sha256="9c537e218299de32194b1da949d6b96bffe6c00f36bb6035409f2485feb881e7")
+    version(
+        "1.9.0",
+        sha256="a190f62a10e89e92a0e25641c84c739e31f66680858d987b8a180b24e2278dec",
+        url="https://pypi.org/packages/d9/15/b3b6560dd4984660a75aff9cdf3e7d574b3b3fecb81fb6affa138d6c760b/ipyvuetify-1.9.0-py2.py3-none-any.whl",
+    )
 
-    depends_on("python@3.6:", type=("build", "run"))
-    depends_on("py-setuptools@40.8.0:", type="build")
-
-    depends_on("py-jupyter-packaging@0.7.9:0.7", type="build")
-    depends_on("py-jupyterlab@3", type="build")
-    depends_on("py-pynpm", type="build")
-    depends_on("py-ipyvue@1.7:1", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-ipyvue@1.7:1", when="@1.8.8:1")

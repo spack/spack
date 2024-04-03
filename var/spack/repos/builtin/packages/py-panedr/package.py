@@ -17,14 +17,20 @@ class PyPanedr(PythonPackage):
 
     license("LGPL-2.1-or-later")
 
-    version("0.7.2", sha256="2181009a962dc35745348d1146608c64fb1ba3ef5ae74043416fef739d1409e4")
-    version("0.7.1", sha256="64c74863f72d51729ac5cb1e2dbb18747f7137588990c308ef8ca120fbf2ddd4")
+    version(
+        "0.7.2",
+        sha256="fe8ba7071eae60db38b1d6307866baaf4f8ccd1b18d38708659b05ff078fe89b",
+        url="https://pypi.org/packages/c1/e9/3f7a09dc2ceb866e143c47f32486913eded2013525a0e3c2798a7aaa136c/panedr-0.7.2-py3-none-any.whl",
+    )
+    version(
+        "0.7.1",
+        sha256="61704feaed3feb47189a719e3e37d3b61f75f92c4f701d6490be5925519a1ba3",
+        url="https://pypi.org/packages/70/fa/f725a900f77401699fb60862395610b5d93d3d396ec9571fe8fda97a6c57/panedr-0.7.1-py3-none-any.whl",
+    )
+
+    with default_args(type="run"):
+        depends_on("py-pandas")
+        depends_on("py-pbr", when="@:0.7")
+        depends_on("py-pyedr", when="@0.6:")
 
     # PyEDR is released together with PanEDR, therefore versions should match
-    depends_on("py-pyedr@0.7.2", type=("build", "run"), when="@0.7.2")
-    depends_on("py-pyedr@0.7.1", type=("build", "run"), when="@0.7.1")
-
-    depends_on("py-pandas", type=("build", "run"))
-    depends_on("py-pbr", type=("build", "run"))
-
-    depends_on("py-setuptools", type="build")

@@ -14,8 +14,13 @@ class PySphinxcontribMermaid(PythonPackage):
     homepage = "https://github.com/mgaitan/sphinxcontrib-mermaid"
     pypi = "sphinxcontrib-mermaid/sphinxcontrib-mermaid-0.4.0.tar.gz"
 
-    version("0.7.1", sha256="aa8a40b50ec86ad12824b62180240ca52a9bda8424455d7eb252eae9aa5d293c")
-    version("0.4.0", sha256="0ee45ba45b9575505eacdd6212e4e545213f4f93dfa32c7eeca32720dbc3b468")
-
-    depends_on("py-setuptools", type="build")
-    depends_on("py-sphinx@1.7:", type=("build", "run"))
+    version(
+        "0.7.1",
+        sha256="3e20de1937c30dfa807e446bf99983d73d0dd3dc5c6524addda59800fe928762",
+        url="https://pypi.org/packages/24/cf/6f45fd1637d26b30360b019767b0ebbc81acc8d2bff58ab63c6bb06d5e41/sphinxcontrib_mermaid-0.7.1-py2.py3-none-any.whl",
+    )
+    version(
+        "0.4.0",
+        sha256="01b3301af659555313e25ebe3cfd6ba209318044b7443148a20d5580f47baa1d",
+        url="https://pypi.org/packages/fc/40/538db54f816aa65d73f31bc4b45f3784e52d27f610124b4c20f8d2b51199/sphinxcontrib_mermaid-0.4.0-py2.py3-none-any.whl",
+    )

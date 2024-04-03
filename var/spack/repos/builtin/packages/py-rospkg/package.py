@@ -13,9 +13,13 @@ class PyRospkg(PythonPackage):
     homepage = "https://wiki.ros.org/rospkg"
     pypi = "rospkg/rospkg-1.2.9.tar.gz"
 
-    version("1.2.9", sha256="d57aea0e7fdbf42e8189ef5e21b9fb4f8a70ecb6cd1a56a278eab301f6a2b074")
+    version(
+        "1.2.9",
+        sha256="7494c6c7c268c99c51e9d98b0a9eee82900cfd97408e485c6a4294898d834ad6",
+        url="https://pypi.org/packages/66/78/5395e9e4d3767f27ae63d74777e3fd735a2aaf9d764de8fc9f042d899dfc/rospkg-1.2.9-py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type=("build", "run"))
-    depends_on("py-catkin-pkg", type=("build", "run"))
-    depends_on("py-pyyaml", type=("build", "run"))
-    depends_on("py-distro", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-catkin-pkg")
+        depends_on("py-distro", when="@1.2.1:1.2.4,1.2.6:1.3")
+        depends_on("py-pyyaml")

@@ -16,17 +16,20 @@ class PyMkdocs(PythonPackage):
 
     license("BSD-2-Clause")
 
-    version("1.3.1", sha256="a41a2ff25ce3bbacc953f9844ba07d106233cd76c88bac1f59cb1564ac0d87ed")
+    version(
+        "1.3.1",
+        sha256="fda92466393127d2da830bc6edc3a625a14b436316d1caf347690648e774c4f0",
+        url="https://pypi.org/packages/e4/96/6b9d87ee8a11e6d2483e3767999d4aeb8d5478d2059cfb3e21404beae470/mkdocs-1.3.1-py3-none-any.whl",
+    )
 
-    depends_on("python@3.6:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
-    depends_on("py-click@3.3:", type=("build", "run"))
-    depends_on("py-jinja2@2.10.2:", type=("build", "run"))
-    depends_on("py-markdown@3.2.1:3.3", type=("build", "run"))
-    depends_on("py-pyyaml@3.10:", type=("build", "run"))
-    depends_on("py-watchdog@2.0:", type=("build", "run"))
-    depends_on("py-ghp-import@1.0:", type=("build", "run"))
-    depends_on("py-pyyaml-env-tag@0.1:", type=("build", "run"))
-    depends_on("py-importlib-metadata@4.3:", type=("build", "run"))
-    depends_on("py-packaging@20.5:", type=("build", "run"))
-    depends_on("py-mergedeep@1.3.4:", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-click@3.3:", when="@:1.3")
+        depends_on("py-ghp-import@1:", when="@1.2:")
+        depends_on("py-importlib-metadata@4.3:", when="@1.3")
+        depends_on("py-jinja2@2.10.2:", when="@1.3")
+        depends_on("py-markdown@3.2.1:3.3", when="@1.3.1:1.4")
+        depends_on("py-mergedeep@1.3.4:", when="@1.2:")
+        depends_on("py-packaging@20.5:", when="@1.2:")
+        depends_on("py-pyyaml", when="@:1.3")
+        depends_on("py-pyyaml-env-tag", when="@1.2:")
+        depends_on("py-watchdog@2:", when="@1.2:")

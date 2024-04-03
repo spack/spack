@@ -14,16 +14,17 @@ class PyPysurfer(PythonPackage):
 
     license("BSD-3-Clause")
 
-    version("0.11.0", sha256="ae709b6f933694f1810eb3c8f517bdb76c13576d74a7a5a1704e05239df0a179")
+    version(
+        "0.11.0",
+        sha256="44cb286f015d18911094645b23180b0216193daa41911bc7e08675539a91b816",
+        url="https://pypi.org/packages/66/01/231b0f66bc88b5ea232f3bf339807d3ef19a75a8fda59d1618c14168d7f0/pysurfer-0.11.0-py3-none-any.whl",
+    )
 
     variant("save_movie", default=False, description="Enable save_movie support")
 
-    depends_on("python@3.6:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
-    depends_on("py-numpy", type=("build", "run"))
-    depends_on("py-scipy", type=("build", "run"))
-    depends_on("py-matplotlib", type=("build", "run"))
-    depends_on("py-nibabel@1.2:", type=("build", "run"))
-    depends_on("py-mayavi", type=("build", "run"))
-
-    depends_on("py-imageio@1.5:", when="+save_movie", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-matplotlib", when="@0.10:0.11.0,0.11.2:")
+        depends_on("py-mayavi", when="@0.10:0.11.0,0.11.2:")
+        depends_on("py-nibabel@1.2:", when="@0.10:0.11.0,0.11.2:")
+        depends_on("py-numpy", when="@0.10:0.11.0,0.11.2:")
+        depends_on("py-scipy", when="@0.10:0.11.0,0.11.2:")

@@ -14,11 +14,16 @@ class PyBiobbCommon(PythonPackage):
     maintainers("d-beltran")
 
     # Versions
-    version("4.1.0", sha256="97637f359a3bb8ad79aca72b6c26f73fe2424845dc7f43005643971046e9d117")
+    version(
+        "4.1.0",
+        sha256="07640bbd23529f978f07fd245e3f0619f7df076be4f99d750d07dfac10b06a5c",
+        url="https://pypi.org/packages/f3/6c/2c5ec2166df63af7474b95649d33e7ba2ef3f8e38ff8b3beef0d4a425aeb/biobb_common-4.1.0-py3-none-any.whl",
+    )
+
+    with default_args(type="run"):
+        depends_on("python@3.8:", when="@4.1:")
+        depends_on("py-biopython", when="@4.1:")
+        depends_on("py-pyyaml")
+        depends_on("py-requests")
 
     # Dependencies
-    depends_on("py-setuptools", type="build")
-    depends_on("python@3.8:", type=("build", "run"))
-    depends_on("py-pyyaml", type=("build", "run"))
-    depends_on("py-requests", type=("build", "run"))
-    depends_on("py-biopython", type=("build", "run"))

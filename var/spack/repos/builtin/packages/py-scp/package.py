@@ -14,8 +14,8 @@ class PyScp(PythonPackage):
 
     license("LGPL-2.1-or-later")
 
-    version("0.13.2", sha256="ef9d6e67c0331485d3db146bf9ee9baff8a48f3eb0e6c08276a8584b13bf34b3")
-
-    depends_on("py-setuptools", type="build")
-    depends_on("py-paramiko", type=("build", "run"))
-    depends_on("python@2.6:2.8,3.3:", type=("build", "run"))
+    version(
+        "0.13.2",
+        sha256="26c0bbc7ea29c30ec096ae67b0afa7a6b7c557b2ce8f740109ee72a0d52af7d1",
+        url="https://pypi.org/packages/4d/7a/3d76dc5ad8deea79642f50a572e1c057cb27e8b427f83781a2c05ce4e5b6/scp-0.13.2-py2.py3-none-any.whl",
+    )

@@ -14,11 +14,19 @@ class PyGoogleAuthHttplib2(PythonPackage):
 
     license("Apache-2.0")
 
-    version("0.1.0", sha256="a07c39fd632becacd3f07718dfd6021bf396978f03ad3ce4321d060015cc30ac")
-    version("0.0.3", sha256="098fade613c25b4527b2c08fa42d11f3c2037dda8995d86de0745228e965d445")
+    version(
+        "0.1.0",
+        sha256="31e49c36c6b5643b57e82617cb3e021e3e1d2df9da63af67252c02fa9c1f4a10",
+        url="https://pypi.org/packages/ba/db/721e2f3f32339080153995d16e46edc3a7657251f167ddcb9327e632783b/google_auth_httplib2-0.1.0-py2.py3-none-any.whl",
+    )
+    version(
+        "0.0.3",
+        sha256="f1c437842155680cf9918df9bc51c1182fda41feef88c34004bd1978c8157e08",
+        url="https://pypi.org/packages/33/49/c814d6d438b823441552198f096fcd0377fd6c88714dbed34f1d3c8c4389/google_auth_httplib2-0.0.3-py2.py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-google-auth", type=("build", "run"))
-    depends_on("py-httplib2@0.15:", when="@0.1:", type=("build", "run"))
-    depends_on("py-httplib2@0.9.1:", type=("build", "run"))
-    depends_on("py-six", when="@0.1:", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-google-auth")
+        depends_on("py-httplib2@0.15:", when="@0.1:0.1.0")
+        depends_on("py-httplib2@0.9.1:", when="@0.0.3:0.0")
+        depends_on("py-six", when="@0.0.4:0.1.0")

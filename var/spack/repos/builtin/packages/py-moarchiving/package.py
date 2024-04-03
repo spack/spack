@@ -17,9 +17,10 @@ class PyMoarchiving(PythonPackage):
 
     maintainers("LydDeb")
 
-    version("0.6.0", sha256="705ded992d399bc1ac703e68391bded6f64e1bde81b2bb25061eaa6208b5b29a")
+    version(
+        "0.6.0",
+        sha256="16a2e2e12edfa324da1cd5c7fdf147a45fd7c4884c00ef2d2868a8ebf793b309",
+        url="https://pypi.org/packages/04/42/f294fcaba5ad224a04948a16935d9fee93a449ba174afb4f867ba18fab81/moarchiving-0.6.0-py2.py3-none-any.whl",
+    )
 
     variant("arbitrary_precision", default=False, description="Build with Fraction support")
-
-    depends_on("py-setuptools", type="build")
-    depends_on("py-fraction", when="+arbitrary_precision", type=("build", "run"))

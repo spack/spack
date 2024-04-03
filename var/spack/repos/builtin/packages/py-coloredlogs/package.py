@@ -15,11 +15,24 @@ class PyColoredlogs(PythonPackage):
 
     license("MIT")
 
-    version("15.0.1", sha256="7c991aa71a4577af2f82600d8f8f3a89f936baeaf9b50a9c197da014e5bf16b0")
-    version("14.0", sha256="a1fab193d2053aa6c0a97608c4342d031f1f93a3d1218432c59322441d31a505")
-    version("10.0", sha256="b869a2dda3fa88154b9dd850e27828d8755bfab5a838a1c97fbc850c6e377c36")
+    version(
+        "15.0.1",
+        sha256="612ee75c546f53e92e70049c9dbfcc18c935a2b9a53b66085ce9ef6a6e5c0934",
+        url="https://pypi.org/packages/a7/06/3d6badcf13db419e25b07041d9c7b4a2c331d3f4e7134445ec5df57714cd/coloredlogs-15.0.1-py2.py3-none-any.whl",
+    )
+    version(
+        "14.0",
+        sha256="346f58aad6afd48444c2468618623638dadab76e4e70d5e10822676f2d32226a",
+        url="https://pypi.org/packages/5c/2f/12747be360d6dea432e7b5dfae3419132cb008535cfe614af73b9ce2643b/coloredlogs-14.0-py2.py3-none-any.whl",
+    )
+    version(
+        "10.0",
+        sha256="34fad2e342d5a559c31b6c889e8d14f97cb62c47d9a2ae7b5ed14ea10a79eff8",
+        url="https://pypi.org/packages/08/0f/7877fc42fff0b9d70b6442df62d53b3868d3a6ad1b876bdb54335b30ff23/coloredlogs-10.0-py2.py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-
-    depends_on("py-humanfriendly@9.1:", when="@15:", type=("build", "run"))
-    depends_on("py-humanfriendly@4.7:", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-colorama", when="@:12 platform=windows")
+        depends_on("py-humanfriendly@9.1:", when="@15:")
+        depends_on("py-humanfriendly@7.1:", when="@14")
+        depends_on("py-humanfriendly@4.7:", when="@9:10")

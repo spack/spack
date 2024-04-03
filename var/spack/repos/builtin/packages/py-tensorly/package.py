@@ -18,8 +18,12 @@ class PyTensorly(PythonPackage):
 
     maintainers("meyersbs")
 
-    version("0.8.1", sha256="cf78e4ffe612feca3510214002845c6831b267b1f2c1181154d41430310b237d")
+    version(
+        "0.8.1",
+        sha256="08988dbc5e433c3f255d0e00855f99a613fe273d50a1627b7e82b03ff2a6da9a",
+        url="https://pypi.org/packages/71/6c/b07811af60b429d29ff1aab7a8d7b845f24e27462c7455c3df734007dd67/tensorly-0.8.1-py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-numpy", type=("build", "run"))
-    depends_on("py-scipy", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-numpy", when="@:0.4.3,0.6:")
+        depends_on("py-scipy", when="@:0.4.3,0.6:")

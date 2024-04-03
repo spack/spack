@@ -18,49 +18,46 @@ class PyPennylane(PythonPackage):
 
     license("Apache-2.0")
 
-    version("master", branch="master")
-    version("0.32.0", sha256="8a2206268d7cae0a59f9067b6075175eec93f4843519b371f02716c49a22e750")
-    version("0.31.0", sha256="f3b68700825c120e44434ed2b2ab71d0be9d3111f3043077ec0598661ec33477")
-    version("0.30.0", sha256="7fe4821fbc733e3e40d7011e054bd2e31edde3151fd9539025c827a5a3579d6b")
-    version("0.29.1", sha256="6ecfb305a3898347df8c539a89a67e748766941d159dbef9e34864872f13c45c")
-
-    depends_on("python@3.8:", type=("build", "run"), when="@:0.31.0")
-    depends_on("python@3.9:", type=("build", "run"), when="@0.32.0:")
-    depends_on("py-pip", type=("build", "run"))  # Runtime req for pennylane.about()
-    depends_on("py-setuptools", type="build")
-
-    depends_on("py-numpy@:1.23", type=("build", "run"))
-    depends_on("py-scipy", type=("build", "run"))
-    depends_on("py-scipy@:1.10", type=("build", "run"), when="@:0.31.0")
-    depends_on("py-networkx", type=("build", "run"))
-    depends_on("py-rustworkx", type=("build", "run"), when="@0.30.0:")
-    depends_on("py-retworkx", type=("build", "run"), when="@0.28.0:0.29.1")
-    depends_on("py-autograd@:1.5", type=("build", "run"))
-    depends_on("py-toml", type=("build", "run"))
-    depends_on("py-appdirs", type=("build", "run"))
-    depends_on("py-semantic-version@2.7:", type=("build", "run"))
-    depends_on("py-autoray@0.3.1:", type=("build", "run"))
-    depends_on("py-cachetools", type=("build", "run"))
-    for v in range(30, 33):
-        depends_on(f"py-pennylane-lightning@0.{v}.0:", type=("build", "run"), when=f"@0.{v}.0:")
-    depends_on(
-        "py-pennylane-lightning@0.28.0:0.29.0", type=("build", "run"), when="@0.28.0:0.29.1"
+    version(
+        "0.32.0",
+        sha256="3fe85394de25d0e189c93c6b92171bcff09bf392618ebed57a7401a3c819713d",
+        url="https://pypi.org/packages/ec/12/783161913f263cc311fb686b05c0e7abb42f87b158f49664f95472aa2135/PennyLane-0.32.0-py3-none-any.whl",
     )
-    depends_on("py-requests", type=("build", "run"))
-    depends_on("py-typing-extensions", type=("build", "run"), when="@0.32.0:")
+    version(
+        "0.31.0",
+        sha256="a62a30760f6d4b4c3b88449eb8a98e9a03860ae61ec6d5178d83d3140c5c9ae0",
+        url="https://pypi.org/packages/ef/07/34c305ba50e4ea662143e10d8f566078df5e4d71b8d8b376c532e30147de/PennyLane-0.31.0-py3-none-any.whl",
+    )
+    version(
+        "0.30.0",
+        sha256="6b8189bf34d84d39dbdda343c1bb1402117545443f57c6a6dd2480e6ab6c538c",
+        url="https://pypi.org/packages/f1/10/c84ea151654cc4f754ba362eb99db2321edbd5c96b08bdd30bfe1e6bc4a3/PennyLane-0.30.0-py3-none-any.whl",
+    )
+    version(
+        "0.29.1",
+        sha256="d6feac06958a8a324745e8094c4535a30a97f64e9befca039edb559d7e78e036",
+        url="https://pypi.org/packages/31/5d/1b645e719900f59c8f4c654f95e5ce62d040153f2f36562de9793dfea10c/PennyLane-0.29.1-py3-none-any.whl",
+    )
+
+    with default_args(type="run"):
+        depends_on("py-appdirs")
+        depends_on("py-autograd@:1.5", when="@0.31:0.32")
+        depends_on("py-autograd", when="@:0.30,0.33:")
+        depends_on("py-autoray@0.3:", when="@0.23.1:0.31.0,0.32")
+        depends_on("py-cachetools")
+        depends_on("py-networkx")
+        depends_on("py-numpy@:1.23", when="@0.28:0.32")
+        depends_on("py-pennylane-lightning@0.32:", when="@0.32")
+        depends_on("py-pennylane-lightning@0.31:", when="@0.31")
+        depends_on("py-pennylane-lightning@0.30:", when="@0.30")
+        depends_on("py-pennylane-lightning@0.28:", when="@0.28:0.29")
+        depends_on("py-requests", when="@0.27:")
+        depends_on("py-retworkx", when="@:0.29")
+        depends_on("py-rustworkx", when="@0.30:")
+        depends_on("py-scipy@:1.10.0", when="@0.31:0.31.0")
+        depends_on("py-scipy", when="@:0.30,0.31.1:")
+        depends_on("py-semantic-version@2.7:", when="@0.25:")
+        depends_on("py-toml")
+        depends_on("py-typing-extensions", when="@0.31.1:")
 
     # Test deps
-    depends_on("py-pytest", type="test")
-    depends_on("py-pytest-xdist@3.2:", type="test")
-    depends_on("py-pytest-mock", type="test")
-    depends_on("py-flaky", type="test")
-
-    @run_after("install")
-    @on_package_attributes(run_tests=True)
-    def install_test(self):
-        with working_dir("tests"):
-            pl_dev_test = Executable(join_path(self.prefix, "bin", "pl-device-test"))
-            pl_dev_test("--device", "default.qubit", "--shots", "None", "--skip-ops")
-            pl_dev_test("--device", "default.qubit", "--shots", "10000", "--skip-ops")
-            pl_dev_test("--device", "lightning.qubit", "--shots", "None", "--skip-ops")
-            pl_dev_test("--device", "lightning.qubit", "--shots", "10000", "--skip-ops")

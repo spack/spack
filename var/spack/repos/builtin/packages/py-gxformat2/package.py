@@ -16,11 +16,12 @@ class PyGxformat2(PythonPackage):
 
     license("MIT")
 
-    version("0.16.0", sha256="16ff5aae1456e0a65c1ed644537e66626ea047a567c8eda19d2a2eb0b20fb752")
+    version(
+        "0.16.0",
+        sha256="3501d7f0c2f75efb3a49e0805fd7597db691c2640bce2cdd71d8d263a2607793",
+        url="https://pypi.org/packages/11/3d/88016d9ed55ce46cb89d3d2d14ef9f138ee6520a1d3faaba8c76d718fb6e/gxformat2-0.16.0-py2.py3-none-any.whl",
+    )
 
-    depends_on("python@3.6:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
-
-    depends_on("py-bioblend", type=("build", "run"))
-    depends_on("py-pyyaml", type=("build", "run"))
-    depends_on("py-schema-salad@8.2:", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-bioblend")
+        depends_on("py-pyyaml")

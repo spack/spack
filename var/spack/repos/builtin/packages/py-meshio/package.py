@@ -14,12 +14,23 @@ class PyMeshio(PythonPackage):
 
     license("MIT")
 
-    version("5.0.1", sha256="e283f40b5fb68fc5c232829c33c086789661438960762b22dc2823571a089a8b")
-    version("5.0.0", sha256="f6327c06d6171d30e0991d3dcb048751035f9cfac1f19e2444971275fd971188")
-    version("4.4.6", sha256="be352a0924c9eff99768a6f402b7558dbb280bbf1e7bf43f18cef92db418684f")
+    version(
+        "5.0.1",
+        sha256="c595bb11869dda9afb3945d30f455c58ccf4807987e6797ebbf185793513b970",
+        url="https://pypi.org/packages/f3/55/82043c45c04c01dbf230e12a9de06f7eac4215caa7bdd7096537cf7dd59e/meshio-5.0.1-py3-none-any.whl",
+    )
+    version(
+        "5.0.0",
+        sha256="c166ede5dce301da45dcd7652156bd123a5032b153f1f2cb1653047c3ae02db4",
+        url="https://pypi.org/packages/0f/bd/ecff2af49fe5a1413cb9d42f87f61e1a399358041c74ffa4839a4ecf7446/meshio-5.0.0-py3-none-any.whl",
+    )
+    version(
+        "4.4.6",
+        sha256="ac77a066584265d3426d01bd0fde9e99c47c35340a32d23790ccd22aa566cd75",
+        url="https://pypi.org/packages/bb/36/02702cfc5fdf19e6477ea2a78cac4a774a8da4c2cf9557f3ddfb33c74192/meshio-4.4.6-py3-none-any.whl",
+    )
 
-    depends_on("python@3.7:", when="@5.0.0:", type=("build", "run"))
-    depends_on("python@3.6:", type=("build", "run"))
-    depends_on("py-setuptools@42:", type="build")
-    depends_on("py-numpy", type=("build", "run"))
-    depends_on("py-importlib-metadata", when="^python@:3.7", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("python@3.7:", when="@5:5.3.4")
+        depends_on("py-importlib-metadata", when="^python@:3.7")
+        depends_on("py-numpy", when="@:5.3.4")

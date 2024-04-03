@@ -14,15 +14,23 @@ class PyHttpbin(PythonPackage):
 
     license("0BSD")
 
-    version("0.7.0", sha256="cbb37790c91575f4f15757f42ad41d9f729eb227d5edbe89e4ec175486db8dfa")
-    version("0.5.0", sha256="79fbc5d27e4194ea908b0fa18e09a59d95d287c91667aa69bcd010342d1589b5")
+    version(
+        "0.7.0",
+        sha256="7a04b5904c80b7aa04dd0a6af6520d68ce17a5db175e66a64b971f8e93d73a26",
+        url="https://pypi.org/packages/ff/dd/c988f90445763b0a09668209756fa89bbdc8590a8ade902f7dc69c36b26f/httpbin-0.7.0-py2.py3-none-any.whl",
+    )
+    version(
+        "0.5.0",
+        sha256="710069973216d4bbf9ab6757f1e9a1f3be05832ce77da023adce0a98dfeecfee",
+        url="https://pypi.org/packages/55/0a/387c7e8dca03cd40a0048cd20c096c1204cb4c63eafb6e21bf00dbfbe8a6/httpbin-0.5.0-py2.py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-flask", type=("build", "run"))
-    depends_on("py-markupsafe", type=("build", "run"))
-    depends_on("py-decorator", type=("build", "run"))
-    depends_on("py-itsdangerous", type=("build", "run"))
-    depends_on("py-six", type=("build", "run"))
-    depends_on("py-brotlipy", type=("build", "run"))
-    depends_on("py-raven+flask", type=("build", "run"))
-    depends_on("py-werkzeug@0.14.1:", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-brotlipy", when="@0.6:0.6.0,0.6.2:0.7")
+        depends_on("py-decorator", when="@0.4.1:0.6.0,0.6.2:")
+        depends_on("py-flask", when="@0.4.1:0.6.0,0.6.2:0.10.1")
+        depends_on("py-itsdangerous", when="@0.4.1:0.6.0,0.6.2:0.10.0")
+        depends_on("py-markupsafe", when="@0.4.1:0.6.0,0.6.2:0.10.0")
+        depends_on("py-raven+flask", when="@0.6:0.6.0,0.6.2:0.7")
+        depends_on("py-six", when="@0.4.1:0.6.0,0.6.2:0.7,0.10.1:")
+        depends_on("py-werkzeug@0.14.1:", when="@0.7,0.10.1")

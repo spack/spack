@@ -18,15 +18,23 @@ class PyTypeguard(PythonPackage):
 
     license("MIT")
 
-    version("3.0.2", sha256="fee5297fdb28f8e9efcb8142b5ee219e02375509cd77ea9d270b5af826358d5a")
-    version("2.13.3", sha256="00edaa8da3a133674796cf5ea87d9f4b4c367d77476e185e80251cc13dfbb8c4")
-    version("2.12.1", sha256="c2af8b9bdd7657f4bd27b45336e7930171aead796711bc4cfc99b4731bb9d051")
+    version(
+        "3.0.2",
+        sha256="bbe993854385284ab42fd5bd3bee6f6556577ce8b50696d6cb956d704f286c8e",
+        url="https://pypi.org/packages/e2/62/7d206b0ac6fcbb163215ecc622a54eb747f85ad86d14bc513a834442d0f6/typeguard-3.0.2-py3-none-any.whl",
+    )
+    version(
+        "2.13.3",
+        sha256="5e3e3be01e887e7eafae5af63d1f36c849aaa94e3a0112097312aabfa16284f1",
+        url="https://pypi.org/packages/9a/bb/d43e5c75054e53efce310e79d63df0ac3f25e34c926be5dffb7d283fb2a8/typeguard-2.13.3-py3-none-any.whl",
+    )
+    version(
+        "2.12.1",
+        sha256="cc15ef2704c9909ef9c80e19c62fb8468c01f75aad12f651922acf4dbe822e02",
+        url="https://pypi.org/packages/a0/88/2a1613174e7d05540358b2f19881f369bfe6ba737f0a673177e69eb623df/typeguard-2.12.1-py3-none-any.whl",
+    )
 
-    depends_on("python@3.5.3:", when="@:2.13.3", type=("build", "run"))
-    depends_on("python@3.7.4:", when="@3.0.2:", type=("build", "run"))
-    depends_on("py-setuptools@42:", when="@:2.13.3", type="build")
-    depends_on("py-setuptools@64:", when="@3.0.2:", type="build")
-    depends_on("py-setuptools-scm@3.4:+toml", when="@:2.13.3", type="build")
-    depends_on("py-setuptools-scm@6.4:+toml", when="@3.0.2:", type="build")
-    depends_on("py-importlib-metadata@3.6:", when="@3.0.2: ^python@:3.9", type=("build", "run"))
-    depends_on("py-typing-extensions@4.4.0:", when="@3.0.2: ^python@:3.10", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("python@3.7:", when="@3:4.1.2")
+        depends_on("py-importlib-metadata@3.6:", when="@3: ^python@:3.9")
+        depends_on("py-typing-extensions@4.4:", when="@3.0.0-rc1:4.0.0 ^python@:3.10")

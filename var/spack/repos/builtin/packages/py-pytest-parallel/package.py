@@ -14,9 +14,12 @@ class PyPytestParallel(PythonPackage):
 
     license("MIT")
 
-    version("0.1.1", sha256="9aac3fc199a168c0a8559b60249d9eb254de7af58c12cee0310b54d4affdbfab")
+    version(
+        "0.1.1",
+        sha256="9e3703015b0eda52be9e07d2ba3498f09340a56d5c79a39b50f22fc5c38212fe",
+        url="https://pypi.org/packages/14/d2/a2cf7da29753a222d19a682d50fb3cb605544cec66770553611119c857d2/pytest_parallel-0.1.1-py3-none-any.whl",
+    )
 
-    depends_on("python@3.7:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
-    depends_on("py-pytest@3.0:", type=("build", "run"))
-    depends_on("py-tblib", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-pytest@3:")
+        depends_on("py-tblib", when="@0.0.10:")

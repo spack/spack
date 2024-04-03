@@ -17,18 +17,28 @@ class PyJsonargparse(PythonPackage):
 
     license("MIT")
 
-    version("4.27.5", sha256="88ad908387ea5c8285a48e7d94bfd025e6f536b0dbae616d755d701248ab85d9")
-    version("4.25.0", sha256="4eaadae69c387a3d83a76b1eaf20ca98d5274d8637f180dca0754ce5405adb6b")
-    version("4.19.0", sha256="63aa3c7bbdb219d0f254a5ae86f3d54384ebc1ffa905e776cc19283bc843787b")
+    version(
+        "4.27.5",
+        sha256="95d1ff000efa759c171fca816685c1d1a66daab056fe30a73062a0fc4a734a05",
+        url="https://pypi.org/packages/1a/dc/eb2ffcfbd529c3e6e9fe28d55b8663d2450370e6553f4f51cc89628efa2f/jsonargparse-4.27.5-py3-none-any.whl",
+    )
+    version(
+        "4.25.0",
+        sha256="90719b4070de26a2677d23f374c1cf52f6b9dbfd479e7ee5b96f47da893ee5b5",
+        url="https://pypi.org/packages/46/1a/1687c20b1c7aa9df40120b8faff067fce77bfdac215f9efbe3f39b7a6227/jsonargparse-4.25.0-py3-none-any.whl",
+    )
+    version(
+        "4.19.0",
+        sha256="f4377718317c6f7b42d437ea08a1833e6afda4ecf8a2d0704d21dff1f21017af",
+        url="https://pypi.org/packages/88/32/a68ac6cc18194fa88a56b1e7920e1a96deee14e759a906d902275a86c301/jsonargparse-4.19.0-py3-none-any.whl",
+    )
 
     variant("signatures", default=False, description="Enable signature features")
+    variant("typing-extensions", default=False, description="typing-extensions")
 
-    depends_on("py-setuptools@65.6.3:", when="@4.25:", type="build")
-    depends_on("py-setuptools", type="build")
-    depends_on("py-wheel@0.38.4:", when="@4.25:", type="build")
-    depends_on("py-pyyaml@3.13:", type=("build", "run"))
-
-    with when("+signatures"):
-        depends_on("py-typing-extensions@3.10:", when="@4.25: ^python@:3.9", type=("build", "run"))
-        depends_on("py-docstring-parser@0.15:", type=("build", "run"))
-        depends_on("py-typeshed-client@2.1:", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("python@3.7:", when="@4.25:")
+        depends_on("py-docstring-parser@0.15:", when="@4.14:+signatures")
+        depends_on("py-pyyaml@3.13:")
+        depends_on("py-typeshed-client@2.1:", when="@4.19:+signatures")
+        depends_on("py-typing-extensions@3.10:", when="@4.21:+typing-extensions ^python@:3.9")

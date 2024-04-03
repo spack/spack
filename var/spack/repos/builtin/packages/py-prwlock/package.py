@@ -14,6 +14,8 @@ class PyPrwlock(PythonPackage):
 
     license("MIT")
 
-    version("0.4.1", sha256="a2fa773cb877207ae5b54c7cf5d224b0215c9f7b9ef16a88d33eadc5c9e1466e")
-
-    depends_on("py-setuptools", type="build")
+    version(
+        "0.4.1",
+        sha256="a12339f729f69985581e68628336446f8abf6c99aadc9fde622ed201024dd37d",
+        url="https://pypi.org/packages/4a/d1/de4285f150a66ed3fb281560c0d249fe38356730f5ecbaf2847696e3bac1/prwlock-0.4.1-py3-none-any.whl",
+    )

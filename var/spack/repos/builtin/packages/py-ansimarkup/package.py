@@ -16,9 +16,16 @@ class PyAnsimarkup(PythonPackage):
 
     license("BSD-3-Clause")
 
-    version("2.1.0", sha256="7b3e3d93fecc5b64d23a6e8eb96dbc8b0b576a211829d948afb397d241a8c51b")
-    version("1.5.0", sha256="96c65d75bbed07d3dcbda8dbede8c2252c984f90d0ca07434b88a6bbf345fad3")
+    version(
+        "2.1.0",
+        sha256="51ab9f3157125c53e93d8fd2e92df37dfa1757c9f2371ed48554e111c7d4401a",
+        url="https://pypi.org/packages/60/99/878823a360a0bd9ae034d39fe37f8fdd976de8da642c2ec608f093efc273/ansimarkup-2.1.0-py3-none-any.whl",
+    )
+    version(
+        "1.5.0",
+        sha256="3146ca74af5f69e48a9c3d41b31085c0d6378f803edeb364856d37c11a684acf",
+        url="https://pypi.org/packages/22/09/3ad81e40d752ef51a9a8c320c9385de0d98a4dad68c0e4f793befc610f56/ansimarkup-1.5.0-py2.py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-setuptools@61:", type="build", when="@2.1.0")
-    depends_on("py-colorama", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-colorama", when="@1.4.1:")

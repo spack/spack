@@ -14,10 +14,26 @@ class PyRedis(PythonPackage):
 
     license("MIT")
 
-    version("4.5.1", sha256="1eec3741cda408d3a5f84b78d089c8b8d895f21b3b050988351e925faf202864")
-    version("3.5.3", sha256="0e7e0cfca8660dea8b7d5cd8c4f6c5e29e11f31158c0b0ae91a397f00e5a05a2")
-    version("3.5.0", sha256="7378105cd8ea20c4edc49f028581e830c01ad5f00be851def0f4bc616a83cd89")
-    version("3.3.8", sha256="98a22fb750c9b9bb46e75e945dc3f61d0ab30d06117cbb21ff9cd1d315fedd3b")
+    version(
+        "4.5.1",
+        sha256="5deb072d26e67d2be1712603bfb7947ec3431fb0eec9c578994052e33035af6d",
+        url="https://pypi.org/packages/06/b5/328851ee54bbf00cc609671a658e0420d88aa2b4f5ace7aa669932d59a0e/redis-4.5.1-py3-none-any.whl",
+    )
+    version(
+        "3.5.3",
+        sha256="432b788c4530cfe16d8d943a09d40ca6c16149727e4afe8c2c9d5580c59d9f24",
+        url="https://pypi.org/packages/a7/7c/24fb0511df653cf1a5d938d8f5d19802a88cef255706fdda242ff97e91b7/redis-3.5.3-py2.py3-none-any.whl",
+    )
+    version(
+        "3.5.0",
+        sha256="174101a3ce04560d716616290bb40e0a2af45d5844c8bd474c23fc5c52e7a46a",
+        url="https://pypi.org/packages/d2/07/20cb8df2ded4b5db176a65da48b7c8d4295d868776296580b11071218a2b/redis-3.5.0-py2.py3-none-any.whl",
+    )
+    version(
+        "3.3.8",
+        sha256="c504251769031b0dd7dd5cf786050a6050197c6de0d37778c80c08cb04ae8275",
+        url="https://pypi.org/packages/bd/64/b1e90af9bf0c7f6ef55e46b81ab527b33b785824d65300bb65636534b530/redis-3.3.8-py2.py3-none-any.whl",
+    )
 
     variant(
         "hiredis",
@@ -25,10 +41,10 @@ class PyRedis(PythonPackage):
         description="Support for hiredis which speeds up parsing of multi bulk replies",
     )
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-importlib-metadata@1:", when="@4: ^python@:3.7", type=("build", "run"))
-    depends_on("py-typing-extensions", when="@4: ^python@:3.7", type=("build", "run"))
-    depends_on("py-async-timeout@4.0.2:", when="@4:", type=("build", "run"))
-
-    depends_on("py-hiredis@1:", when="@4: +hiredis", type=("build", "run"))
-    depends_on("py-hiredis@0.1.3:", when="+hiredis", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("python@3.7:", when="@4.4:5.1.0-alpha1")
+        depends_on("py-async-timeout@4.0.2:", when="@4.2:4.5.1")
+        depends_on("py-hiredis@1:", when="@4.0.0-rc1:+hiredis")
+        depends_on("py-hiredis@0.1.3:", when="@:3+hiredis")
+        depends_on("py-importlib-metadata@1:", when="@4.1.0:5.1.0-alpha1 ^python@:3.7")
+        depends_on("py-typing-extensions", when="@4.2.1:5.1.0-alpha1,5.1.0-beta3 ^python@:3.7")

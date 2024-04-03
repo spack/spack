@@ -15,15 +15,19 @@ class PyDataladDeprecated(PythonPackage):
 
     license("MIT")
 
-    version("0.3.0", sha256="874cf31c7640a9eafe7c5ecf36f0924d5d5b47222666a55ef10eabb9c29f46cd")
+    version(
+        "0.3.0",
+        sha256="4c95890996ee50aa67b813fc7bf47f4e07ac25eb8148932c0aac3bc838567b71",
+        url="https://pypi.org/packages/94/dc/280c34ac6efc0099c787a80067605cebdbbae572db9d3e0180fa8b632450/datalad_deprecated-0.3.0-py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools@43:", type="build")
-
-    depends_on("py-datalad@0.18:", type=("build", "run"))
-    depends_on("py-jsmin", type=("build", "run"))
-    depends_on("py-whoosh", type=("build", "run"))
-    depends_on("py-pyyaml", type=("build", "run"))
-    depends_on("py-mutagen@1.36:", type=("build", "run"))
-    depends_on("py-exifread", type=("build", "run"))
-    depends_on("py-python-xmp-toolkit", type=("build", "run"))
-    depends_on("pil", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("python@3.7:", when="@0.2:")
+        depends_on("py-datalad@0.18:", when="@0.3:")
+        depends_on("py-exifread", when="@0.2.3:")
+        depends_on("py-jsmin")
+        depends_on("py-mutagen@1.36:", when="@0.2.3:")
+        depends_on("py-pillow", when="@0.2.3:")
+        depends_on("py-python-xmp-toolkit", when="@0.2.3:")
+        depends_on("py-pyyaml", when="@0.2.3:")
+        depends_on("py-whoosh", when="@0.2.3:")

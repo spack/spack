@@ -15,8 +15,18 @@ class PyFastjsonschema(PythonPackage):
 
     license("BSD-3-Clause")
 
-    version("2.16.3", sha256="4a30d6315a68c253cfa8f963b9697246315aa3db89f98b97235e345dedfb0b8e")
-    version("2.16.2", sha256="01e366f25d9047816fe3d288cbfc3e10541daf0af2044763f3d0ade42476da18")
-    version("2.15.1", sha256="671f36d225b3493629b5e789428660109528f373cf4b8a22bac6fa2f8191c2d2")
-
-    depends_on("py-setuptools", type="build")
+    version(
+        "2.16.3",
+        sha256="04fbecc94300436f628517b05741b7ea009506ce8f946d40996567c669318490",
+        url="https://pypi.org/packages/eb/e7/84b1571b866b8abd604f8b72234d16f01bd5944014ef9929b5cb0da198c1/fastjsonschema-2.16.3-py3-none-any.whl",
+    )
+    version(
+        "2.16.2",
+        sha256="21f918e8d9a1a4ba9c22e09574ba72267a6762d47822db9add95f6454e51cc1c",
+        url="https://pypi.org/packages/e4/be/cf1b876348070a23cb0c3ebfee7a452ad3a91b07b456dade3bd514656009/fastjsonschema-2.16.2-py3-none-any.whl",
+    )
+    version(
+        "2.15.1",
+        sha256="fa2f4bb1e31419c5eb1150f2e0545921712c10c34165b86d33f08f5562ad4b85",
+        url="https://pypi.org/packages/d1/fb/ea090e917b18320f79be31d754bbe496b715175e865603cfce1eaed2e774/fastjsonschema-2.15.1-py3-none-any.whl",
+    )

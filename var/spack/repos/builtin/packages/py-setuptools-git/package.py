@@ -13,7 +13,8 @@ class PySetuptoolsGit(PythonPackage):
 
     license("BSD-3-Clause")
 
-    version("1.2", sha256="ff64136da01aabba76ae88b050e7197918d8b2139ccbf6144e14d472b9c40445")
-
-    depends_on("py-setuptools", type="build")
-    depends_on("git")
+    version(
+        "1.2",
+        sha256="e7764dccce7d97b4b5a330d7b966aac6f9ac026385743fd6cedad553f2494cfa",
+        url="https://pypi.org/packages/05/97/dd99fa9c0d9627a7b3c103a00f1566d8193aca8d473884ed258cca82b06f/setuptools_git-1.2-py2.py3-none-any.whl",
+    )

@@ -14,24 +14,27 @@ class PyGrayskull(PythonPackage):
 
     license("Apache-2.0")
 
-    version("2.5.0", sha256="b021138655be550fd1b93b8db08b9c66169fac9cba6bcdad1411263e12fc703f")
+    version(
+        "2.5.0",
+        sha256="81477d18cb1c96de06173337a5fe46eb2e04a793dd1773ec990d3efa2c9f8949",
+        url="https://pypi.org/packages/68/3e/bc10142d64e27d66144cd462e1c11325bd1beccdce6dda1810cf86f8dc37/grayskull-2.5.0-py3-none-any.whl",
+    )
 
-    depends_on("python@3.8:", type=("build", "run"))
-    depends_on("py-setuptools@61:", type="build")
-    depends_on("py-setuptools-scm@6.2:+toml", type="build")
-    depends_on("py-beautifulsoup4", type=("build", "run"))
-    depends_on("py-colorama", type=("build", "run"))
-    depends_on("py-conda-souschef@2.2.3:", type=("build", "run"))
-    depends_on("py-packaging@21.3:", type=("build", "run"))
-    depends_on("py-pip", type=("build", "run"))
-    depends_on("py-pkginfo", type=("build", "run"))
-    depends_on("py-progressbar2@3.53:", type=("build", "run"))
-    depends_on("py-rapidfuzz@3:", type=("build", "run"))
-    depends_on("py-requests", type=("build", "run"))
-    depends_on("py-ruamel-yaml@0.16.10:", type=("build", "run"))
-    depends_on("py-ruamel-yaml-jinja2", type=("build", "run"))
-    depends_on("py-setuptools@30.3:", type=("build", "run"))
-    depends_on("py-semver@3.0", type=("build", "run"))
-    depends_on("py-stdlib-list", type=("build", "run"))
-    depends_on("py-tomli", type=("build", "run"))
-    depends_on("py-tomli-w", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("python@3.8:")
+        depends_on("py-beautifulsoup4", when="@2:")
+        depends_on("py-colorama")
+        depends_on("py-conda-souschef@2.2.3:")
+        depends_on("py-packaging@21.3:")
+        depends_on("py-pip")
+        depends_on("py-pkginfo")
+        depends_on("py-progressbar2@3.53:")
+        depends_on("py-rapidfuzz@3:", when="@2.3.1:")
+        depends_on("py-requests")
+        depends_on("py-ruamel-yaml@0.16.10:")
+        depends_on("py-ruamel-yaml-jinja2")
+        depends_on("py-semver@3.0.0:3.0.0.0,3.0.1:", when="@2.3.1:")
+        depends_on("py-setuptools@30.3:")
+        depends_on("py-stdlib-list")
+        depends_on("py-tomli")
+        depends_on("py-tomli-w")

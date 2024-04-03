@@ -16,15 +16,19 @@ class PyGrapheneTornado(PythonPackage):
 
     license("MIT")
 
-    version("2.6.1", sha256="953bf812267177224ce1ac2a93c669069d85a8fa187a9fac681b76b63dffebc2")
+    version(
+        "2.6.1",
+        sha256="291c61452917f9fa014ec69d73cef1f74f7f2f39fd85aa6a84a7e20332b7ce4d",
+        url="https://pypi.org/packages/e2/fe/068c5e3adeaeb3245a1756748c311d7214403501c4344baf66a63d719107/graphene_tornado-2.6.1-py2.py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-six@1.10.0:", type=("build", "run"))
-    depends_on("py-graphene@2.1:2", type=("build", "run"))
-    depends_on("py-jinja2@2.10.1:", type=("build", "run"))
-    depends_on("py-tornado@5.1.0:", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-graphene@2.1:2", when="@2.1.1:2.1,2.3:2")
+        depends_on("py-jinja2@2.10.1:", when="@2.0.3:2.1,2.3:2,3.0.0-beta2:")
+        depends_on("py-six@1.10:", when="@:2.1,2.3:2,3.0.0-beta2:")
+        depends_on("py-tornado@5.1:", when="@:2.1,2.3:2")
+        depends_on("py-werkzeug@0.12.2:0.12", when="@:2.1,2.3:2")
+
     # py-werkzeug version requirements differ between setup.py (0.12.2)
     # and requirements.txt (0.15.3); the latter seems to be correct,
     # see also https://github.com/spack/spack/pull/41426
-    depends_on("py-werkzeug@0.15.3", type=("build", "run"))
-    depends_on("py-pytest", type=("build"))

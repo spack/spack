@@ -12,8 +12,11 @@ class PyProtoPlus(PythonPackage):
     homepage = "https://github.com/googleapis/proto-plus-python"
     pypi = "proto-plus/proto-plus-1.23.0.tar.gz"
 
-    version("1.23.0", sha256="89075171ef11988b3fa157f5dbd8b9cf09d65fffee97e29ce403cd8defba19d2")
+    version(
+        "1.23.0",
+        sha256="a829c79e619e1cf632de091013a4173deed13a55f326ef84f05af6f50ff4c82c",
+        url="https://pypi.org/packages/ad/41/7361075f3a31dcd05a6a38cfd807a6eecbfb6dbfe420d922cd400fc03ac1/proto_plus-1.23.0-py3-none-any.whl",
+    )
 
-    depends_on("py-protobuf@3.19:4", type=("build", "run"))
-
-    depends_on("py-setuptools", type="build")
+    with default_args(type="run"):
+        depends_on("py-protobuf@3.19.0:4", when="@1.20.6:")

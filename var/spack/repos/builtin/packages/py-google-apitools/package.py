@@ -16,11 +16,14 @@ class PyGoogleApitools(PythonPackage):
 
     license("Apache-2.0")
 
-    version("0.5.32", sha256="c3763e52289f61e21c41d5531e20fbda9cc8484a088b8686fd460770db8bad13")
+    version(
+        "0.5.32",
+        sha256="b78f74116558e0476e19501b5b4b2ac7c93261a69c5449c861ea95cbc853c688",
+        url="https://pypi.org/packages/5e/cb/cb0311f2ec371c83d6510847476c665edc9cc97564a51923557bc8f0b680/google_apitools-0.5.32-py3-none-any.whl",
+    )
 
-    depends_on("python@2.7:2.8,3.5:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
-    depends_on("py-httplib2@0.8:", type=("build", "run"))
-    depends_on("py-fasteners@0.14:", type=("build", "run"))
-    depends_on("py-oauth2client@1.4.12:", type=("build", "run"))
-    depends_on("py-six@1.12.0:", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-fasteners@0.14:", when="@0.5.23:")
+        depends_on("py-httplib2@0.8:", when="@0.5.23:")
+        depends_on("py-oauth2client@1.4.12:", when="@0.5.23:")
+        depends_on("py-six@1.12:", when="@0.5.27:")

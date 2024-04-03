@@ -19,15 +19,20 @@ class PySdmetrics(PythonPackage):
 
     license("MIT")
 
-    version("0.4.1", sha256="28df1cdd6988b3464306c1d189da19ee13a49023c53ca8b3db399fc9fd45fae8")
+    version(
+        "0.4.1",
+        sha256="479ab86f466e69e12edf6d707a892479a939eb9e42ffb2b7dc6afdfddb998ee9",
+        url="https://pypi.org/packages/f6/72/8f85dfbd06466ff64d03d4fddb2874c2c0d9ea1bba34f305ab4588135dfd/sdmetrics-0.4.1-py2.py3-none-any.whl",
+    )
 
-    depends_on("python@3.6:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
-    depends_on("py-numpy@1.20:1", type=("build", "run"))
-    depends_on("py-pandas@1.1.3:1.1.4", type=("build", "run"))
-    depends_on("py-scikit-learn@0.24:1", type=("build", "run"))
-    depends_on("py-scipy@1.5.4:1", type=("build", "run"))
-    depends_on("py-torch@1.8.0:1", type=("build", "run"))
-    depends_on("py-copulas@0.6.0:0.6", type=("build", "run"))
-    depends_on("py-rdt@0.6.1:0.6", type=("build", "run"))
-    depends_on("py-pyts@0.12.0:0.12", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("python@:3.9", when="@0.4:0.8")
+        depends_on("py-copulas@0.6:0.6.0.0,0.6.1:0.6", when="@0.4:0.4.1")
+        depends_on("py-numpy@1.20.0:1", when="@0.4:0.8 ^python@3.7:")
+        depends_on("py-numpy@1.18.0:1.19", when="@0.4:0.8 ^python@:3.6")
+        depends_on("py-pandas@1.1.3:1", when="@0.4:0.8")
+        depends_on("py-pyts@0.12", when="@0.4:0.5")
+        depends_on("py-rdt@0.6.1:0.6.1.0,0.6.2:0", when="@0.4:0.5.0")
+        depends_on("py-scikit-learn@0.24.0:", when="@0.3.3:0.10")
+        depends_on("py-scipy@1.5.4:", when="@0.4:0.8")
+        depends_on("py-torch@1.8:1", when="@0.4:0.7")

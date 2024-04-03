@@ -14,10 +14,14 @@ class PySparse(PythonPackage):
 
     license("BSD-3-Clause")
 
-    version("0.11.2", sha256="365b6f038c4d331b3913e5fb00f5bc5dc5eadc49ef2feef332214f9bf33dbc82")
+    version(
+        "0.11.2",
+        sha256="08b937109203a69d1937ad7ea47a3ca4a552a48f7b5c40ba485b37ae6653b204",
+        url="https://pypi.org/packages/e3/82/d58361f8107e8686196b91319edf2c26490667b8340cc229b668ee7a1582/sparse-0.11.2-py2.py3-none-any.whl",
+    )
 
-    depends_on("python@3.6:3", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
-    depends_on("py-numpy", type=("build", "run"))
-    depends_on("py-scipy@0.19:", type=("build", "run"))
-    depends_on("py-numba@0.49:", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("python@:3", when="@:0.13")
+        depends_on("py-numba@0.49:", when="@0.10:")
+        depends_on("py-numpy", when="@0.8:0.11")
+        depends_on("py-scipy@0.19:")

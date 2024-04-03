@@ -14,8 +14,8 @@ class PyHyperlink(PythonPackage):
 
     license("MIT")
 
-    version("21.0.0", sha256="427af957daa58bc909471c6c40f74c5450fa123dd093fc53efd2e91d2705a56b")
-
-    depends_on("python@2.6:2,3.4:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
-    depends_on("py-idna@2.5:", type=("build", "run"))
+    version(
+        "21.0.0",
+        sha256="e6b14c37ecb73e89c77d78cdb4c2cc8f3fb59a885c5b3f819ff4ed80f25af1b4",
+        url="https://pypi.org/packages/6e/aa/8caf6a0a3e62863cbb9dab27135660acba46903b703e224f14f447e57934/hyperlink-21.0.0-py2.py3-none-any.whl",
+    )

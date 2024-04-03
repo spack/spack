@@ -19,13 +19,10 @@ class PyPythonBox(PythonPackage):
 
     license("MIT")
 
-    version("5.3.0", sha256="4ed4ef5d34de505a65c01e3f1911de8cdb29484fcae0c035141dce535c6c194a")
+    version(
+        "5.3.0",
+        sha256="f2a531f9f5bbef078c175fad6abb31e9b59d40d121ea79993197e6bb221c6be6",
+        url="https://pypi.org/packages/ae/55/b81be1c1456d93db93905b364d19cac5dde22fb8f442b42d41087c2fe28f/python_box-5.3.0-py3-none-any.whl",
+    )
 
     variant("extras", default=False, description='install the "extras" packages')
-
-    depends_on("python@3.6:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
-
-    depends_on("py-ruamel-yaml", when="+extras")
-    depends_on("py-toml", when="+extras")
-    depends_on("py-msgpack", when="+extras")

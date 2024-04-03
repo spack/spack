@@ -12,9 +12,13 @@ class PySphobjinv(PythonPackage):
     homepage = "https://github.com/bskinn/sphobjinv"
     pypi = "sphobjinv/sphobjinv-2.3.1.tar.gz"
 
-    version("2.3.1", sha256="1442a47fc93587a0177be95346904e388ef85a8366f90a1835a7c3eeeb122eb7")
+    version(
+        "2.3.1",
+        sha256="f3efe68bb0ba6e32cb50df064fe6349b8f94681589b400dea753a2860dd576b5",
+        url="https://pypi.org/packages/89/d2/4642eb80e3c5a9a00bf8a2ae5cb9390aadfd2a491f161d26a014afa63c4a/sphobjinv-2.3.1-py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type=("build", "run"))
-    depends_on("py-attrs@19.2:", type=("build", "run"))
-    depends_on("py-certifi", type=("build", "run"))
-    depends_on("py-jsonschema@3.0:", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-attrs@19.2:", when="@2.1:")
+        depends_on("py-certifi", when="@2.1-alpha1:")
+        depends_on("py-jsonschema@3.0.0:", when="@2.1:")

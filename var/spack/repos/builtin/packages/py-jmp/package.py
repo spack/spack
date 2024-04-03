@@ -16,9 +16,12 @@ class PyJmp(PythonPackage):
 
     license("Apache-2.0")
 
-    version("0.0.2", sha256="4d242fb14502b15a7c072e112bdcd7cb5d8b373d9733162eea23e0b9b7dbb6d0")
+    version(
+        "0.0.2",
+        sha256="48f94b2ba0c9db759851a23cce2fbfa622e954c3c811651bc11b196246f02527",
+        url="https://pypi.org/packages/ff/5c/1482f4a4a502e080af2ca54d7f80a60b5d4735f464c151666d583b78c226/jmp-0.0.2-py3-none-any.whl",
+    )
 
-    depends_on("python@3.6:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
-    depends_on("py-numpy@1.19.5:", type=("build", "run"))
-    depends_on("py-jax@0.1.71:", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-dataclasses@0.7:", when="@0.0.2: ^python@:3.6")
+        depends_on("py-numpy@1.19.5:", when="@0.0.2:")

@@ -17,8 +17,12 @@ class PyVectorQuantizePytorch(PythonPackage):
 
     license("MIT")
 
-    version("0.3.9", sha256="783ca76251299f0e3eb244062bc05c4416bb29157e57077e4a8969c5277f05ee")
+    version(
+        "0.3.9",
+        sha256="524f5a8cdad54b039ebc86320bef3dc2da633100af34e70bea1ddf09458bcfa2",
+        url="https://pypi.org/packages/f4/e3/4fddac6653e017ce643448beb8a2af4a437ecd58aa663f859d065b2a8e00/vector_quantize_pytorch-0.3.9-py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-einops", type=("build", "run"))
-    depends_on("py-torch", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-einops", when="@0.3:1.0.2")
+        depends_on("py-torch")

@@ -18,15 +18,19 @@ class PyUnyt(PythonPackage):
 
     license("BSD-3-Clause")
 
-    version("main", branch="main")
-    version("2.9.2", sha256="8d4bf3dd3f7b4c29580728c0359caa17d62239673eeab436448d0777adeee5e1")
+    version(
+        "2.9.2",
+        sha256="77370720cb9edd898492bf5a735101c8eabac9d9a9259a43be25352007262b5d",
+        url="https://pypi.org/packages/77/43/35fd177ee4d3353a0d42bb22214f492551548a51b97d4b9ed616c9936e39/unyt-2.9.2-py2.py3-none-any.whl",
+    )
+
+    with default_args(type="run"):
+        depends_on("python@3.8:", when="@:2")
+        depends_on("py-numpy@1.17.5:", when="@:2")
+        depends_on("py-sympy@1.5:", when="@:2")
 
     # Undocumented in 2.9.2
-    depends_on("py-setuptools", type="build")
 
     # https://github.com/yt-project/unyt/blob/v2.9.2/setup.py#L50
-    depends_on("python@3.8:", type=("build", "run"))
 
     # https://github.com/yt-project/unyt/blob/v2.9.2/setup.py#L21
-    depends_on("py-numpy@1.17.5:", type=("build", "run"))
-    depends_on("py-sympy@1.5:", type=("build", "run"))

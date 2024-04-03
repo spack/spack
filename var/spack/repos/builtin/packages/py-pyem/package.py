@@ -18,8 +18,13 @@ class PyPyem(PythonPackage):
 
     license("ISC")
 
-    version("2.1.0", sha256="5234a20427ab2813a8a0bf1e9112d4d854b1b0502b3e63d17c1b1a3c4be9340e")
+    version(
+        "2.1.0",
+        sha256="1970b55569d21e80734c428d6c3726aa6f2620c8c547c95bb0a5f3faef8e3eb2",
+        url="https://pypi.org/packages/c1/e0/98abd4c2db9f684554306b45ef0855913e4e51f36fac74c63f393cc82080/pyem-2.1.0-py3-none-any.whl",
+    )
 
-    depends_on("python@3.7:", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("python@3.7:")
+
     # pip silently replaces distutils with setuptools
-    depends_on("py-setuptools", type="build")

@@ -14,9 +14,13 @@ class PyPep517(PythonPackage):
 
     license("MIT")
 
-    version("0.12.0", sha256="931378d93d11b298cf511dd634cf5ea4cb249a28ef84160b3247ee9afb4e8ab0")
+    version(
+        "0.12.0",
+        sha256="dd884c326898e2c6e11f9e0b64940606a93eb10ea022a2e067959f3a110cf161",
+        url="https://pypi.org/packages/f4/67/846c08e18fefb265a66e6fd5a34269d649b779718d9bf59622085dabd370/pep517-0.12.0-py2.py3-none-any.whl",
+    )
 
-    depends_on("py-flit-core@2:3", type="build")
-    depends_on("py-tomli@1.1:", when="^python@3.6:", type=("build", "run"))
-    depends_on("py-importlib-metadata", when="^python@:3.7", type=("build", "run"))
-    depends_on("py-zipp", when="^python@:3.7", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-importlib-metadata", when="@0.8: ^python@:3.7")
+        depends_on("py-tomli@1.1:", when="@0.11.1:0.12")
+        depends_on("py-zipp", when="@0.8: ^python@:3.7")

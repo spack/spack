@@ -14,7 +14,8 @@ class PyAnsiwrap(PythonPackage):
 
     license("Apache-2.0")
 
-    version("0.8.4", sha256="ca0c740734cde59bf919f8ff2c386f74f9a369818cdc60efe94893d01ea8d9b7")
-
-    depends_on("py-setuptools", type="build")
-    depends_on("py-textwrap3@0.9.2:", type=("build", "run"))
+    version(
+        "0.8.4",
+        sha256="7b053567c88e1ad9eed030d3ac41b722125e4c1271c8a99ade797faff1f49fb1",
+        url="https://pypi.org/packages/03/50/43e775a63e0d632d9be3b3fa1c9b2cbaf3b7870d203655710a3426f47c26/ansiwrap-0.8.4-py2.py3-none-any.whl",
+    )

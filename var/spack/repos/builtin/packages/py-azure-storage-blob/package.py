@@ -16,38 +16,75 @@ class PyAzureStorageBlob(PythonPackage):
 
     license("MIT")
 
-    version("12.19.0", sha256="26c0a4320a34a3c2a1b74528ba6812ebcb632a04cd67b1c7377232c4b01a5897")
-    version("12.18.3", sha256="d8ced0deee3367fa3d4f3d1a03cd9edadf4440c0a371f503d623fa6c807554ee")
-    version("12.17.0", sha256="c14b785a17050b30fc326a315bdae6bc4a078855f4f94a4c303ad74a48dc8c63")
-    version("12.16.0", sha256="43b45f19a518a5c6895632f263b3825ebc23574f25cc84b66e1630a6160e466f")
-    version("12.15.0", sha256="f8b8d582492740ab16744455408342fb8e4c8897b64a8a3fc31743844722c2f2")
-    version("12.14.0", sha256="a72dd9923e4b38a552f2bc1749d1fa5b820f497a8fb3cd2d77e7045bbe87bb4d")
-    version("12.13.1", sha256="899c4b8e2671812d2cf78f107556a27dbb128caaa2bb06094e72a3d5836740af")
-    version("12.12.0", sha256="f6daf07d1ca86d189ae15c9b1859dff5b7127bf24a07a4bbe41e0b81e01d62f7")
-    version("12.11.0", sha256="49535b3190bb69d0d9ff7a383246b14da4d2b1bdff60cae5f9173920c67ca7ee")
-    version("12.10.0", sha256="3c7dc2c93e7ff2a731acd66a36a1f0a6266072b4154deba4894dab891285ea3a")
-    version("12.9.0", sha256="cff66a115c73c90e496c8c8b3026898a3ce64100840276e9245434e28a864225")
+    version(
+        "12.19.0",
+        sha256="7bbc2c9c16678f7a420367fef6b172ba8730a7e66df7f4d7a55d5b3c8216615b",
+        url="https://pypi.org/packages/f6/82/24b0d7cf67ea63af86f11092756b8fe2adc1d55323241dc4107f5f5748e2/azure_storage_blob-12.19.0-py3-none-any.whl",
+    )
+    version(
+        "12.18.3",
+        sha256="c278dde2ac41857a68d615c9f2b36d894ba877a7e84d62795603c7e79d0bb5e9",
+        url="https://pypi.org/packages/be/cd/30306c04f962b55cae44cab2859b5496d0d75521a3bf2e92ec4a6bb61ddb/azure_storage_blob-12.18.3-py3-none-any.whl",
+    )
+    version(
+        "12.17.0",
+        sha256="0016e0c549a80282d7b4920c03f2f4ba35c53e6e3c7dbcd2a4a8c8eb3882c1e7",
+        url="https://pypi.org/packages/f1/06/68c50a905e1e5481b04a6166b69fecddb87681aae7a556ab727f8e8e6f70/azure_storage_blob-12.17.0-py3-none-any.whl",
+    )
+    version(
+        "12.16.0",
+        sha256="91bb192b2a97939c4259c72373bac0f41e30810bbc853d5184f0f45904eacafd",
+        url="https://pypi.org/packages/95/e7/db8bfa32d44436e3753c60be51577420e0836ec101e3209452f3c84920c6/azure_storage_blob-12.16.0-py3-none-any.whl",
+    )
+    version(
+        "12.15.0",
+        sha256="08d8807c577c63a436740627927c1a03a97c963efc29af5c818aed906590e1cf",
+        url="https://pypi.org/packages/46/cf/ef1daa7b7df2b2d72db82fa2a777bf50133f4797b4bdfa6b3bbea09660fe/azure_storage_blob-12.15.0-py3-none-any.whl",
+    )
+    version(
+        "12.14.0",
+        sha256="073c9e99154975644b32ed5c900832d8aa3c041b972b2f34ef269760d023e69b",
+        url="https://pypi.org/packages/c3/04/636de31f41279f21d1b74f7acfcced80b9d2e2f27d8a729b1e3134102c6f/azure_storage_blob-12.14.0-py3-none-any.whl",
+    )
+    version(
+        "12.13.1",
+        sha256="726b86f733dc76218ce45b7a3254b61ba4f0cc3d68b7621be4985248c92ee483",
+        url="https://pypi.org/packages/dd/fb/1501707ae8d921079ea826d16926e1b9b179d15264a2d239a08d7b374522/azure_storage_blob-12.13.1-py3-none-any.whl",
+    )
+    version(
+        "12.12.0",
+        sha256="1eac4c364309ccc193c80ee26c78d25dfbf10926b1309095a448a7a0388526eb",
+        url="https://pypi.org/packages/85/2f/7b8ba0676118a451598c73ad772e47e13b5e66f68a2fc2dfca5c50d17ec4/azure_storage_blob-12.12.0-py3-none-any.whl",
+    )
+    version(
+        "12.11.0",
+        sha256="f3dfa605aefb453e7489328b76811a937a411761d7a1613a58c3975c556ec778",
+        url="https://pypi.org/packages/4d/4f/de7f58a5449d75b1a43610d069472b7b686fd73205de42a41e66631a4dce/azure_storage_blob-12.11.0-py3-none-any.whl",
+    )
+    version(
+        "12.10.0",
+        sha256="a70995c4f9310eb704594f30505d1499286b4caac5543a2ebfe84431c4a38b0b",
+        url="https://pypi.org/packages/64/e4/dcd968e113786fb946007dd76c6fb459a511ac63984dfa09737cfb3b7d69/azure_storage_blob-12.10.0-py3-none-any.whl",
+    )
+    version(
+        "12.9.0",
+        sha256="859195b4850dcfe77ffafbe53500abb74b001e52e77fe6d9492fa73639a22127",
+        url="https://pypi.org/packages/41/f3/e2b3fa9de629ab76031588daf54b4c28d71bd3c209d8a3d4f470d87e98a7/azure_storage_blob-12.9.0-py2.py3-none-any.whl",
+    )
+
+    with default_args(type="run"):
+        depends_on("python@3.7:", when="@12.14:")
+        depends_on("py-azure-core@1.28:", when="@12.17.0:")
+        depends_on("py-azure-core@1.26:", when="@12.15:12.17.0-beta1")
+        depends_on("py-azure-core@1.24.2:", when="@12.14")
+        depends_on("py-azure-core@1.23.1:", when="@12.12:12.13")
+        depends_on("py-azure-core@1.15.0:", when="@12.10.0-beta4:12.11")
+        depends_on("py-azure-core@1.10:", when="@12.7.0:12.10.0-beta2")
+        depends_on("py-cryptography@2.1.4:")
+        depends_on("py-isodate@0.6.1:", when="@12.15:")
+        depends_on("py-msrest@0.7.1:", when="@12.14.0-beta2:12.14")
+        depends_on("py-msrest@0.6.21:", when="@12.9:12.14.0-beta1")
+        depends_on("py-typing-extensions@4.3:", when="@12.17.0:")
+        depends_on("py-typing-extensions@4.0.1:", when="@12.15:12.17.0-beta1")
 
     # https://github.com/Azure/azure-sdk-for-python/blob/azure-storage-blob_12.19.0/sdk/storage/azure-storage-blob/setup.py
-
-    depends_on("py-setuptools", type="build")
-    depends_on("py-azure-core@1.28:1", type=("build", "run"), when="@12.17:")
-    depends_on("py-azure-core@1.26:1", type=("build", "run"), when="@12.15:")
-    depends_on("py-azure-core@1.24.2:1", type=("build", "run"), when="@12.14:")
-    depends_on("py-azure-core@1.23.1:1", type=("build", "run"), when="@12.12:")
-    depends_on("py-azure-core@1.15:1", type=("build", "run"), when="@12.10:")
-    depends_on("py-azure-core@1.10:1", type=("build", "run"))
-    depends_on("py-cryptography@2.1.4:", type=("build", "run"))
-    depends_on("py-typing-extensions@4.3:", type=("build", "run"), when="@12.17:")
-    depends_on("py-typing-extensions@4.0.1:", type=("build", "run"), when="@12.15:")
-    depends_on("py-isodate@0.6.1:", type=("build", "run"), when="@12.15:")
-    depends_on("py-msrest@0.7.1:", type=("build", "run"), when="@12.14")
-    depends_on("py-msrest@0.6.21:", type=("build", "run"), when="@:12.13")
-
-    def url_for_version(self, version):
-        if version < Version("12.18"):
-            return "https://pypi.io/packages/source/a/azure-storage-blob/azure-storage-blob-{0}.zip".format(
-                version
-            )
-
-        return super().url_for_version(version)

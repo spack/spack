@@ -14,9 +14,13 @@ class PyRuamelYamlJinja2(PythonPackage):
 
     license("MIT")
 
-    version("0.2.7", sha256="8449be29d9a157fa92d1648adc161d718e469f0d38a6b21e0eabb76fd5b3e663")
+    version(
+        "0.2.7",
+        sha256="eb36abd4d308794e9a497e48f98cbd2b921d2cd2946bbc9f1bea42c9b142a241",
+        url="https://pypi.org/packages/d0/ef/6281be4ef86a6a0e6f06004c2e4526de3d880f4eaf4210a07a269ad330b3/ruamel.yaml.jinja2-0.2.7-py2.py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
+    with default_args(type="run"):
+        depends_on("py-ruamel-yaml@0.16.1:", when="@0.2.5:")
 
     # __init__.py
-    depends_on("py-ruamel-yaml@0.16.1:", type=("build", "run"))

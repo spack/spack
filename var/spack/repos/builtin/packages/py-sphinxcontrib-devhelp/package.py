@@ -22,8 +22,13 @@ class PySphinxcontribDevhelp(PythonPackage):
 
     license("BSD-2-Clause")
 
-    version("1.0.2", sha256="ff7f1afa7b9642e7060379360a67e9c41e8f3121f2ce9164266f61b9f4b338e4")
-    version("1.0.1", sha256="6c64b077937330a9128a4da74586e8c2130262f014689b4b89e2d08ee7294a34")
-
-    depends_on("python@3.5:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
+    version(
+        "1.0.2",
+        sha256="8165223f9a335cc1af7ffe1ed31d2871f325254c0423bc0c4c7cd1c1e4734a2e",
+        url="https://pypi.org/packages/c5/09/5de5ed43a521387f18bdf5f5af31d099605c992fd25372b2b9b825ce48ee/sphinxcontrib_devhelp-1.0.2-py2.py3-none-any.whl",
+    )
+    version(
+        "1.0.1",
+        sha256="9512ecb00a2b0821a146736b39f7aeb90759834b07e81e8cc23a9c70bacb9981",
+        url="https://pypi.org/packages/b0/a3/fea98741f0b2f2902fbf6c35c8e91b22cd0dd13387291e81d457f9a93066/sphinxcontrib_devhelp-1.0.1-py2.py3-none-any.whl",
+    )

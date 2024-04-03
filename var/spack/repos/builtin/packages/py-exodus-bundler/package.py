@@ -15,9 +15,8 @@ class PyExodusBundler(PythonPackage):
 
     license("BSD-2-Clause-FreeBSD")
 
-    version("2.0.2", sha256="4e896a2034b94cf7b4fb33d86a68e29a7d3b08e57541e444db34dddc6ac1ef68")
-
-    depends_on("musl", type="run", when="%apple-clang")
-    depends_on("musl", type="run", when="%clang")
-    depends_on("musl", type="run", when="%gcc")
-    depends_on("py-setuptools", type=("build", "run"))
+    version(
+        "2.0.2",
+        sha256="efa3392428cfccf9a52539b96eac2a2aab0cb4ac83703028c1574a367d5adae6",
+        url="https://pypi.org/packages/3e/f6/5eda49f30947093fe559d8c6b6a3b41baf9a84989e7aa172bce388a1974d/exodus_bundler-2.0.2-py2.py3-none-any.whl",
+    )

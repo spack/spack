@@ -15,15 +15,28 @@ class PyHttpcore(PythonPackage):
 
     license("BSD-3-Clause")
 
-    version("0.16.3", sha256="c5d6f04e2fc530f39e0c077e6a30caa53f1451096120f1f38b954afd0b17c0cb")
-    version("0.14.7", sha256="7503ec1c0f559066e7e39bc4003fd2ce023d01cf51793e3c173b864eb456ead1")
-    version("0.11.0", sha256="35ffc735d746b83f8fc6d36f82600e56117b9e8adc65d0c0423264b6ebfef7bf")
+    version(
+        "0.16.3",
+        sha256="da1fb708784a938aa084bde4feb8317056c55037247c787bd7e19eb2c2949dc0",
+        url="https://pypi.org/packages/04/7e/ef97af4623024e8159993b3114ce208de4f677098ae058ec5882a1bf7605/httpcore-0.16.3-py3-none-any.whl",
+    )
+    version(
+        "0.14.7",
+        sha256="47d772f754359e56dd9d892d9593b6f9870a37aeb8ba51e9a88b09b3d68cfade",
+        url="https://pypi.org/packages/e7/38/7b76d3d71c462dc936e333b358a3106e7af913e6c8c9dd5a45684fec08cc/httpcore-0.14.7-py3-none-any.whl",
+    )
+    version(
+        "0.11.0",
+        sha256="7a6804b18e1b8fc61ec4df868cb5c679d225fffbb81e48455ee9b57792cc3ac6",
+        url="https://pypi.org/packages/64/fe/a9db014f98e0bb0c40d62dfee8b265f4e3a959da5daa672f68191776e523/httpcore-0.11.0-py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-h11@0.13:0.14", when="@0.16.3", type=("build", "run"))
-    depends_on("py-h11@0.11:0.12", type=("build", "run"), when="@0.14.7")
-    depends_on("py-h11@0.8:0.9", type=("build", "run"), when="@0.11.0")
-    depends_on("py-sniffio@1", type=("build", "run"))
-    depends_on("py-anyio@3:4", when="@0.16.3", type=("build", "run"))
-    depends_on("py-anyio@3", type=("build", "run"), when="@0.14.7")
-    depends_on("py-certifi", type=("build", "run"), when="@0.14.7:")
+    with default_args(type="run"):
+        depends_on("python@3.7:", when="@0.15:0.17")
+        depends_on("py-anyio@3.0.0:", when="@0.16:0")
+        depends_on("py-anyio@3", when="@0.13.4:0.15")
+        depends_on("py-certifi", when="@0.14.1:")
+        depends_on("py-h11@0.13:", when="@0.16:")
+        depends_on("py-h11@0.11:0.12", when="@0.13.3:0.15")
+        depends_on("py-h11@0.8:0.9", when="@:0.11")
+        depends_on("py-sniffio@1:", when="@:0")

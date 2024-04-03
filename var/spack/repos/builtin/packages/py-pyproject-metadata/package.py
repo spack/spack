@@ -14,8 +14,17 @@ class PyPyprojectMetadata(PythonPackage):
 
     license("MIT")
 
-    version("0.7.1", sha256="0a94f18b108b9b21f3a26a3d541f056c34edcb17dc872a144a15618fed7aef67")
-    version("0.6.1", sha256="b5fb09543a64a91165dfe85796759f9e415edc296beb4db33d1ecf7866a862bd")
+    version(
+        "0.7.1",
+        sha256="28691fbb36266a819ec56c9fa1ecaf36f879d6944dfde5411e87fc4ff793aa60",
+        url="https://pypi.org/packages/c4/cb/4678dfd70cd2f2d8969e571cdc1bb1e9293c698f8d1cf428fadcf48d6e9f/pyproject_metadata-0.7.1-py3-none-any.whl",
+    )
+    version(
+        "0.6.1",
+        sha256="36577274efd87df1bedb6fb335620cf7f4959d5457ef39881a7710c5b8c356a9",
+        url="https://pypi.org/packages/87/d4/beeb6ecb90df146a0d8e23599133d4298a0ae9a1ab1547146216965b2551/pyproject_metadata-0.6.1-py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools@42:", type="build")
-    depends_on("py-packaging@19:", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("python@3.7:", when="@0.5:")
+        depends_on("py-packaging@19:", when="@0.5:0.6,0.7.1:")

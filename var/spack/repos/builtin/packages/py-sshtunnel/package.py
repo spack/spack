@@ -15,7 +15,11 @@ class PySshtunnel(PythonPackage):
 
     license("MIT")
 
-    version("0.1.5", sha256="c813fdcda8e81c3936ffeac47cb69cfb2d1f5e77ad0de656c6dab56aeebd9249")
+    version(
+        "0.1.5",
+        sha256="5eee2e414c3fd9e9ef5d058bebece272a6aae928849ef7f2d9561b7fffab7aea",
+        url="https://pypi.org/packages/38/7d/6f19be1ee49cee9593c5ac3aa1fb38fe30eaf1520114e08dee2ab2a45855/sshtunnel-0.1.5-py2.py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-paramiko@1.15.2:", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-paramiko@1.15.2:", when="@0.1.3:0.1.3.0,0.1.5:0.3")

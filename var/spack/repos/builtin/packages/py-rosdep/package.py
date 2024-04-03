@@ -13,10 +13,14 @@ class PyRosdep(PythonPackage):
     homepage = "https://wiki.ros.org/rosdep"
     pypi = "rosdep/rosdep-0.20.0.tar.gz"
 
-    version("0.20.0", sha256="1de76e41ef17c7289a11d9de594f6c08e8422f26ad09bc855b4f1f4da5e9bfe7")
+    version(
+        "0.20.0",
+        sha256="e0af90f313c14bdbc92ff94ea2d56057047e515c98677423b1f9535d94fcf085",
+        url="https://pypi.org/packages/b9/6a/67afeb7640d66f92446bf5fa2920f1fb86a11d784f0d7063dd8da31d39a3/rosdep-0.20.0-py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type=("build", "run"))
-    depends_on("py-catkin-pkg@0.4.0:", type=("build", "run"))
-    depends_on("py-rospkg@1.2.7:", type=("build", "run"))
-    depends_on("py-rosdistro@0.7.5:", type=("build", "run"))
-    depends_on("py-pyyaml@3.1:", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-catkin-pkg@0.4:")
+        depends_on("py-pyyaml")
+        depends_on("py-rosdistro@0.7.5:", when="@0.16.2:")
+        depends_on("py-rospkg@1.2.7:", when="@0.20:0.20.0")

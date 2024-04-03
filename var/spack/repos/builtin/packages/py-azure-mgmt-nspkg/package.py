@@ -13,7 +13,11 @@ class PyAzureMgmtNspkg(PythonPackage):
     homepage = "https://github.com/Azure/azure-sdk-for-python"
     pypi = "azure-mgmt-nspkg/azure-mgmt-nspkg-3.0.2.zip"
 
-    version("3.0.2", sha256="8b2287f671529505b296005e6de9150b074344c2c7d1c805b3f053d081d58c52")
+    version(
+        "3.0.2",
+        sha256="d638ea5fda3ed323db943feb29acaa200f5d8ff092078bf8d29d4a2f8ed16999",
+        url="https://pypi.org/packages/b3/c2/af4b47845f27dc7d206ed4908b9e580f8bc94a4b2f3956a0d87c40719d90/azure_mgmt_nspkg-3.0.2-py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-azure-nspkg@3.0.0:", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-azure-nspkg@3:", when="@3:")

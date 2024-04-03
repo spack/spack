@@ -28,14 +28,21 @@ class PyLlnlSina(PythonPackage):
     license("MIT")
 
     maintainers("HaluskaR", "estebanpauli", "murray55", "doutriaux1")
-    version("1.11.0", tag="v1.11.0", commit="f3e9bb3a122cfae2a9fd82c3c5613cff939d3aa1")
-    version("1.10.0", tag="v1.10.0", commit="9c3c0acca5f0d4ac02470571688f00ab0bd61a30")
+    version(
+        "1.11.0",
+        sha256="a9891e8b050df40c5145d53eb5daf7ee622854a0e26876e1643463d6665f561e",
+        url="https://pypi.org/packages/f1/f7/3b3ec3791e5b0198a195a57b427473801e0f8776e23307fc5b6b95a6c5b9/llnl_sina-1.11.0-py2.py3-none-any.whl",
+    )
+    version(
+        "1.10.0",
+        sha256="70b84738d1ae2a1bda988c1b508c5e32867ce75b5460fce5d5e941e377e6d0a5",
+        url="https://pypi.org/packages/39/d9/faf441dcaba99567f8804516f0faf37de726d4cc65b5f1454153ddec615e/llnl_sina-1.10.0-py2.py3-none-any.whl",
+    )
+
+    with default_args(type="run"):
+        depends_on("py-six")
+        depends_on("py-sqlalchemy", when="@:1.13")
 
     # let's remove dependency on orjson
-    patch("no_orjson.patch")
-    depends_on("py-setuptools", type="build")
-    depends_on("py-ujson", type=("build", "run"))
-    depends_on("py-sqlalchemy", type=("build", "run"))
-    depends_on("py-six", type=("build", "run"))
 
     build_directory = "python"

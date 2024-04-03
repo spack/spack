@@ -15,10 +15,16 @@ class PyIniconfig(PythonPackage):
 
     license("MIT")
 
-    version("2.0.0", sha256="2d91e135bf72d31a410b17c16da610a82cb55f6b0477d1a902134b24a455b8b3")
-    version("1.1.1", sha256="bc3af051d7d14b2ee5ef9969666def0cd1a000e121eaea580d4a313df4b37f32")
+    version(
+        "2.0.0",
+        sha256="b6a85871a79d2e3b22d2d1b94ac2824226a63c6b741c88f7ae975f18b6778374",
+        url="https://pypi.org/packages/ef/a6/62565a6e1cf69e10f5727360368e451d4b7f58beeac6173dc9db836a5b46/iniconfig-2.0.0-py3-none-any.whl",
+    )
+    version(
+        "1.1.1",
+        sha256="011e24c64b7f47f6ebd835bb12a743f2fbe9a26d4cecaa7f53bc4f35ee9da8b3",
+        url="https://pypi.org/packages/9b/dd/b3c12c6d707058fa947864b67f0c4e0c39ef8610988d7baea9578f3c48f3/iniconfig-1.1.1-py2.py3-none-any.whl",
+    )
 
-    depends_on("py-hatchling", when="@2", type="build")
-    depends_on("py-hatch-vcs", when="@2", type="build")
-    depends_on("py-setuptools@41.2:", when="@1", type="build")
-    depends_on("py-setuptools-scm@4:", when="@1", type="build")
+    with default_args(type="run"):
+        depends_on("python@3.7:", when="@2:")

@@ -13,9 +13,13 @@ class PyApipkg(PythonPackage):
 
     license("MIT")
 
-    version("1.5", sha256="37228cda29411948b422fae072f57e31d3396d2ee1c9783775980ee9c9990af6")
-    version("1.4", sha256="2e38399dbe842891fe85392601aab8f40a8f4cc5a9053c326de35a1cc0297ac6")
-
-    depends_on("py-setuptools@30.3.0:", type="build")
-    depends_on("py-setuptools-scm", type="build")
-    depends_on("python@2.7:2.8,3.4:", type=("build", "run"))
+    version(
+        "1.5",
+        sha256="58587dd4dc3daefad0487f6d9ae32b4542b185e1c36db6993290e7c41ca2b47c",
+        url="https://pypi.org/packages/67/08/4815a09603fc800209431bec5b8bd2acf2f95abdfb558a44a42507fb94da/apipkg-1.5-py2.py3-none-any.whl",
+    )
+    version(
+        "1.4",
+        sha256="65d2aa68b28e7d31233bb2ba8eb31cda40e4671f8ac2d6b241e358c9652a74b9",
+        url="https://pypi.org/packages/94/72/fd4f2e46ce7b0d388191c819ef691c8195fab09602bbf1a2f92aa5351444/apipkg-1.4-py2.py3-none-any.whl",
+    )

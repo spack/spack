@@ -15,7 +15,11 @@ class PyVsts(PythonPackage):
 
     license("MIT")
 
-    version("0.1.25", sha256="da179160121f5b38be061dbff29cd2b60d5d029b2207102454d77a7114e64f97")
+    version(
+        "0.1.25",
+        sha256="c5595a42c9447888ebc91494d2db03c2b867cbca9f1f5f05c113261b92383e35",
+        url="https://pypi.org/packages/9a/4a/c9a5c90659bf0df577067cf8baf9c690501306290e5688d8aeae07fbd9f8/vsts-0.1.25-py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-msrest@0.6.0:0.6", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-msrest@0.6.0:0.6", when="@0.1.20:")

@@ -14,8 +14,12 @@ class PyRise(PythonPackage):
 
     license("BSD-3-Clause")
 
-    version("5.6.1", sha256="1343f068d01adc4dd0226d9b278ce93fc92f365d827431a57e8d5679eb39f4d6")
+    version(
+        "5.6.1",
+        sha256="e9637ee5499ad7801474da53a2c830350a44b2192c2f113594e4426190e55ad4",
+        url="https://pypi.org/packages/5c/f4/c226756f3e238a6109aba848ae7e1c96e5b3ed13bbd2916c5f0c6c207fe4/rise-5.6.1-py2.py3-none-any.whl",
+    )
 
-    depends_on("python@2.7.0:2.7,3.4:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
-    depends_on("py-notebook@5.5.0:", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("python@:3", when="@5.4:")
+        depends_on("py-notebook@5.5.0:", when="@5.3:5.6")

@@ -15,24 +15,22 @@ class PyIterativeStats(PythonPackage):
 
     license("BSD-3-Clause")
 
-    version("main", branch="main")
-    version("0.1.0", sha256="bb4f378a8fa117d1f24e9ea5ac0f1bd13c04b1ab3693a148ba936ffb237f2fba")
-    version("0.0.4", sha256="7e838aa79de867b0e312be8cdf9319bb70824b624c684e968636cc8d4c9d5712")
+    version(
+        "0.1.0",
+        sha256="104cd3cdb9bda7f3cb48a8df538ce4f673f7a7327ab1a2b64d31b3190fe80157",
+        url="https://pypi.org/packages/3d/e8/7266f17ae002ccd06cda9a6fac2fe8d1de7b1db2160b6d7f226d9a9773fe/iterative_stats-0.1.0-py3-none-any.whl",
+    )
+    version(
+        "0.0.4",
+        sha256="97e08023fed9988142e4bd98ba9d19521ac3e2e2bbe0c3bf80fb77f3ea023bec",
+        url="https://pypi.org/packages/c7/66/cbc52f9d7f17524abe306e0408a3797378932c3cdaa822a24c7ec51dece6/iterative_stats-0.0.4-py3-none-any.whl",
+    )
+
+    with default_args(type="run"):
+        depends_on("python@3.8:3.10", when="@0.0.2:")
+        depends_on("py-numpy@1.19.0:1")
+        depends_on("py-pyyaml@6.0:6.0.0")
 
     # main dependencies
-    depends_on("python@3.8.0:3.10", type=("build", "run"))
-    depends_on("py-poetry-core@1.0.0:", type=("build"))
-    depends_on("py-pyyaml@6.0", type=("build", "run"))
-    depends_on("py-numpy@1.19:1", type=("build", "run"))
 
     # dev dependencies
-    depends_on("py-pytest@6.2.1:6", type=("test"))
-    depends_on("py-autopep8@1.6.0", type=("test"))
-    depends_on("openturns@1.19+python+libxml2", type=("test"))
-    depends_on("py-scipy@1.8", type=("test"))
-
-    @run_after("install")
-    @on_package_attributes(run_tests=True)
-    def install_test(self):
-        pytest = which("pytest")
-        pytest()

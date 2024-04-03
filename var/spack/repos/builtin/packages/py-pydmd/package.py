@@ -16,32 +16,20 @@ class PyPydmd(PythonPackage):
 
     license("MIT")
 
-    version("0.3", sha256="f490fc139677e4d9fc1240636a2c5992d22879517c9574d13164dc5179b0f785")
+    version(
+        "0.3",
+        sha256="893e23fd8c3cc17d73a3828562a7bb312a8a04b882c6c1af89542a964694bf85",
+        url="https://pypi.org/packages/f5/a9/4dc123fe2cb3c7854b68f28627723376a8da0749c47b323a5bdbcc8abeff/pydmd-0.3-py2.py3-none-any.whl",
+    )
 
     variant("docs", default=False, description="Build HTML documentation")
 
-    depends_on("python@3:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
-    depends_on("py-numpy", type=("build", "run"))
-    depends_on("py-scipy", type=("build", "run"))
-    depends_on("py-matplotlib", type=("build", "run"))
-    depends_on("py-future", type=("build", "run"))
-    depends_on("py-nose", type="test")
-    depends_on("texlive", type="build", when="+docs")
-    depends_on("py-sphinx@1.4.0:1.4", type="build", when="+docs")
-    depends_on("py-sphinx-rtd-theme", type="build", when="+docs")
+    with default_args(type="run"):
+        depends_on("py-future", when="@:0.0.2,0.3:0.4.0")
+        depends_on("py-matplotlib", when="@:0.0.2,0.3:")
+        depends_on("py-numpy", when="@:0.0.2,0.3:0.4.1.post2308")
+        depends_on("py-scipy", when="@:0.0.2,0.3:")
+        depends_on("py-sphinx@1.4:1.4.0", when="@0.3:0.4.0+docs")
+        depends_on("py-sphinx-rtd-theme", when="@0.3:+docs")
 
     # https://github.com/mathLab/PyDMD/pull/133
-    patch("isuue-133.patch", when="@0.3")
-
-    @run_after("install")
-    def install_docs(self):
-        if "+docs" in self.spec:
-            with working_dir("docs"):
-                make("html")
-            install_tree("docs", self.prefix.docs)
-
-    @run_after("install")
-    @on_package_attributes(run_tests=True)
-    def build_test(self):
-        python("test.py")

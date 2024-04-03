@@ -14,7 +14,11 @@ class PyCroniter(PythonPackage):
 
     license("MIT")
 
-    version("1.3.8", sha256="32a5ec04e97ec0837bcdf013767abd2e71cceeefd3c2e14c804098ce51ad6cd9")
+    version(
+        "1.3.8",
+        sha256="d6ed8386d5f4bbb29419dc1b65c4909c04a2322bd15ec0dc5b2877bfa1b75c7a",
+        url="https://pypi.org/packages/0f/4d/0cc5a7f4bdcefecebdf8a95c8372606c13d3355e8536d9cd3e7070e94269/croniter-1.3.8-py2.py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-python-dateutil", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-python-dateutil")

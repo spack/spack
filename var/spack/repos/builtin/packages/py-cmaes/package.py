@@ -17,8 +17,12 @@ class PyCmaes(PythonPackage):
 
     license("MIT")
 
-    version("0.10.0", sha256="48afc70df027114739872b50489ae6b32461c307b92d084a63c7090a9742faf9")
+    version(
+        "0.10.0",
+        sha256="72cea747ad37b1780b0eb6f3c098cee33907fafbf6690c0c02db1e010cab72f6",
+        url="https://pypi.org/packages/f7/46/7d9544d453346f6c0c405916c95fdb653491ea2e9976cabb810ba2fe8cd4/cmaes-0.10.0-py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools@61:", type="build")
-
-    depends_on("py-numpy", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("python@3.7:", when="@0.9.1:")
+        depends_on("py-numpy", when="@:0.7.0,0.8.1:")

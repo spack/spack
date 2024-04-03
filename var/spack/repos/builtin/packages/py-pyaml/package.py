@@ -17,8 +17,11 @@ class PyPyaml(PythonPackage):
 
     license("WTFPL")
 
-    version("21.8.3", sha256="a1636d63c476328a07213d0b7111bb63570f1ab8a3eddf60522630250c23d975")
+    version(
+        "21.8.3",
+        sha256="aa61d6ebef7cd8ec691620616258d904bfbc152e9cf44557202b8bacc9ce5cce",
+        url="https://pypi.org/packages/7b/33/12e2e89527df0e1f5bc07f94a039b981cc4a15f040f29a6cc978f8f99dd4/pyaml-21.8.3-py2.py3-none-any.whl",
+    )
 
-    depends_on("python@2.7:2,3.5:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
-    depends_on("py-pyyaml", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-pyyaml", when="@21:")

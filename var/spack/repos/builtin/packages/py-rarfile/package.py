@@ -14,8 +14,13 @@ class PyRarfile(PythonPackage):
 
     license("ISC")
 
-    version("4.1", sha256="db60b3b5bc1c4bdeb941427d50b606d51df677353385255583847639473eda48")
-    version("4.0", sha256="67548769229c5bda0827c1663dce3f54644f9dbfba4ae86d4da2b2afd3e602a1")
-
-    depends_on("py-setuptools", type="build")
-    depends_on("unrar", type="run")
+    version(
+        "4.1",
+        sha256="17d7554c93c776ceae677e9d927051267d4c5eba38bf64b9cc89a415d9a5f901",
+        url="https://pypi.org/packages/75/34/f06b7de74bcea328d8d7a950aad099c1100578cc3960ffc5a00d30ab511c/rarfile-4.1-py3-none-any.whl",
+    )
+    version(
+        "4.0",
+        sha256="1094869119012f95c31a6f22cc3a9edbdca61861b805241116adbe2d737b68f8",
+        url="https://pypi.org/packages/95/f4/c92fab227c7457e3b76a4096ccb655ded9deac869849cb03afbe55dfdc1e/rarfile-4.0-py3-none-any.whl",
+    )

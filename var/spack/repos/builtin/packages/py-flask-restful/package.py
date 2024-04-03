@@ -14,10 +14,8 @@ class PyFlaskRestful(PythonPackage):
 
     license("BSD-3-Clause")
 
-    version("0.3.9", sha256="ccec650b835d48192138c85329ae03735e6ced58e9b2d9c2146d6c84c06fa53e")
-
-    depends_on("py-setuptools", type="build")
-    depends_on("py-aniso8601@0.82:", type=("build", "run"))
-    depends_on("py-flask@0.8:", type=("build", "run"))
-    depends_on("py-six@1.3.0:", type=("build", "run"))
-    depends_on("py-pytz", type=("build", "run"))
+    version(
+        "0.3.9",
+        sha256="4970c49b6488e46c520b325f54833374dc2b98e211f1b272bd4b0c516232afe2",
+        url="https://pypi.org/packages/a9/02/7e21a73564fe0d9d1a3a4ff478dfc407815c4e2fa4e5121bcfc646ba5d15/Flask_RESTful-0.3.9-py2.py3-none-any.whl",
+    )

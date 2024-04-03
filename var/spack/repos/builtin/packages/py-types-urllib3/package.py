@@ -13,8 +13,12 @@ class PyTypesUrllib3(PythonPackage):
     pypi = "types-urllib3/types-urllib3-1.26.24.tar.gz"
 
     version(
-        "1.26.25.14", sha256="229b7f577c951b8c1b92c1bc2b2fdb0b49847bd2af6d1cc2a2e3dd340f3bda8f"
+        "1.26.25.14",
+        sha256="9683bbb7fb72e32bfe9d2be6e04875fbe1b3eeec3cbb4ea231435aa7fd6b4f0e",
+        url="https://pypi.org/packages/11/7b/3fc711b2efea5e85a7a0bbfe269ea944aa767bbba5ec52f9ee45d362ccf3/types_urllib3-1.26.25.14-py3-none-any.whl",
     )
-    version("1.26.24", sha256="a1b3aaea7dda3eb1b51699ee723aadd235488e4dc4648e030f09bc429ecff42f")
-
-    depends_on("py-setuptools", type="build")
+    version(
+        "1.26.24",
+        sha256="cf7918503d02d3576e503bbfb419b0e047c4617653bba09624756ab7175e15c9",
+        url="https://pypi.org/packages/34/ed/9c4981c4d86bbd255a664fd19fe83a287766001300f5b8384cc2a5e61cb8/types_urllib3-1.26.24-py3-none-any.whl",
+    )

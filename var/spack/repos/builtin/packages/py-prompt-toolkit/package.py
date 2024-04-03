@@ -18,26 +18,66 @@ class PyPromptToolkit(PythonPackage):
 
     license("BSD-3-Clause")
 
-    version("3.0.38", sha256="23ac5d50538a9a38c8bde05fecb47d0b403ecd0662857a86f886f798563d5b9b")
-    version("3.0.31", sha256="9ada952c9d1787f52ff6d5f3484d0b4df8952787c087edf6a1f7c2cb1ea88148")
-    version("3.0.29", sha256="bd640f60e8cecd74f0dc249713d433ace2ddc62b65ee07f96d358e0b152b6ea7")
-    version("3.0.24", sha256="1bb05628c7d87b645974a1bad3f17612be0c29fa39af9f7688030163f680bad6")
-    version("3.0.17", sha256="9397a7162cf45449147ad6042fa37983a081b8a73363a5253dd4072666333137")
-    version("3.0.16", sha256="0fa02fa80363844a4ab4b8d6891f62dd0645ba672723130423ca4037b80c1974")
-    version("3.0.7", sha256="822f4605f28f7d2ba6b0b09a31e25e140871e96364d1d377667b547bb3bf4489")
-    version("2.0.10", sha256="f15af68f66e664eaa559d4ac8a928111eebd5feda0c11738b5998045224829db")
-    version("2.0.9", sha256="2519ad1d8038fd5fc8e770362237ad0364d16a7650fb5724af6997ed5515e3c1")
-    version("1.0.16", sha256="c1cedd626e08b8ee830ee65897de754113ff3f3035880030c08b01674d85c5b4")
-    version("1.0.9", sha256="cd6523b36adc174cc10d54b1193eb626b4268609ff6ea92c15bcf1996609599c")
+    version(
+        "3.0.38",
+        sha256="45ea77a2f7c60418850331366c81cf6b5b9cf4c7fd34616f733c5427e6abbb1f",
+        url="https://pypi.org/packages/87/3f/1f5a0ff475ae6481f4b0d45d4d911824d3218b94ee2a97a8cb84e5569836/prompt_toolkit-3.0.38-py3-none-any.whl",
+    )
+    version(
+        "3.0.31",
+        sha256="9696f386133df0fc8ca5af4895afe5d78f5fcfe5258111c2a79a1c3e41ffa96d",
+        url="https://pypi.org/packages/26/ec/2ebddd1f0584fec4a6d4b5dc57627254070c3db310f00981bc5de03dd5ab/prompt_toolkit-3.0.31-py3-none-any.whl",
+    )
+    version(
+        "3.0.29",
+        sha256="62291dad495e665fca0bda814e342c69952086afb0f4094d0893d357e5c78752",
+        url="https://pypi.org/packages/3f/2d/dcb44d69f388ca2ee1a4a4d3c204ab66b36975c0d5166781eaeeff76b882/prompt_toolkit-3.0.29-py3-none-any.whl",
+    )
+    version(
+        "3.0.24",
+        sha256="e56f2ff799bacecd3e88165b1e2f5ebf9bcd59e80e06d395fa0cc4b8bd7bb506",
+        url="https://pypi.org/packages/fb/37/4f9ae5a6cd0ebdfc1fbafcfd03e812df1ed92a92bf0bee09441c52164f58/prompt_toolkit-3.0.24-py3-none-any.whl",
+    )
+    version(
+        "3.0.17",
+        sha256="4cea7d09e46723885cb8bc54678175453e5071e9449821dce6f017b1d1fbfc1a",
+        url="https://pypi.org/packages/ce/ee/08ceeb759c570bf96b4c636582ebf18c14c3c844a601b2e77b17f462aa6b/prompt_toolkit-3.0.17-py3-none-any.whl",
+    )
+    version(
+        "3.0.16",
+        sha256="62c811e46bd09130fb11ab759012a4ae385ce4fb2073442d1898867a824183bd",
+        url="https://pypi.org/packages/a6/0b/c6de29441b29f8b54d5bbe29a8b223de6e400714ff50e85541bd4c783421/prompt_toolkit-3.0.16-py3-none-any.whl",
+    )
+    version(
+        "3.0.7",
+        sha256="83074ee28ad4ba6af190593d4d4c607ff525272a504eb159199b6dd9f950c950",
+        url="https://pypi.org/packages/2b/c1/53ac685833200eb77ef485c2220dac5bfc255418e660790a9eb5cf3abf25/prompt_toolkit-3.0.7-py3-none-any.whl",
+    )
+    version(
+        "2.0.10",
+        sha256="46642344ce457641f28fc9d1c9ca939b63dadf8df128b86f1b9860e59c73a5e4",
+        url="https://pypi.org/packages/87/61/2dfea88583d5454e3a64f9308a686071d58d59a55db638268a6413e1eb6d/prompt_toolkit-2.0.10-py3-none-any.whl",
+    )
+    version(
+        "2.0.9",
+        sha256="11adf3389a996a6d45cc277580d0d53e8a5afd281d0c9ec71b28e6f121463780",
+        url="https://pypi.org/packages/f7/a7/9b1dd14ef45345f186ef69d175bdd2491c40ab1dfa4b2b3e4352df719ed7/prompt_toolkit-2.0.9-py3-none-any.whl",
+    )
+    version(
+        "1.0.16",
+        sha256="1e71341526efa4b11bb44d323e687a5d9cef204aabe2907e3f0dc1534cda0ecc",
+        url="https://pypi.org/packages/57/a8/a151b6c61718eabe6b4672b6aa760b734989316d62ec1ba4996765e602d4/prompt_toolkit-1.0.16-py3-none-any.whl",
+    )
+    version(
+        "1.0.9",
+        sha256="2a90e971bd5cb958a80ce35507c97e063521b22dfd85ce05b5705c347d1193ed",
+        url="https://pypi.org/packages/0f/da/93c34968e6c3e15e2358b0a75ceddfaf6e322c8a8fd28332ad8952f6ac4c/prompt_toolkit-1.0.9-py3-none-any.whl",
+    )
 
-    depends_on("python@3.7:", when="@3.0.37:", type=("build", "run"))
-    depends_on("python@3.6.2:", when="@3.0.24:", type=("build", "run"))
-    depends_on("python@3.6.1:", when="@3:3.0.17", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("python@3.7:", when="@3.0.37:")
+        depends_on("py-wcwidth", when="@3:")
+
     # collections.Mapping was removed in python@3.10
-    depends_on("python@:3.9", when="@1.0.9", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
-
-    depends_on("py-wcwidth", type=("build", "run"))
 
     # Historical dependencies
-    depends_on("py-six@1.9.0:", when="@:2", type=("build", "run"))

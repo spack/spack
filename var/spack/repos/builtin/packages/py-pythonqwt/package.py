@@ -14,9 +14,8 @@ class PyPythonqwt(PythonPackage):
 
     license("LGPL-2.1-or-later")
 
-    version("0.5.5", sha256="1f13cc8b555a57f8fe0f806d6c2f6d847050e4d837649503932b81316d12788a")
-
-    depends_on("py-setuptools", type="build")
-    depends_on("py-numpy@1.3:", type=("build", "run"))
-    depends_on("py-sip", type=("build", "run"))
-    depends_on("py-pyqt4", type=("build", "run"))
+    version(
+        "0.5.5",
+        sha256="806d109a0f163ee37259516b498f9b2a711682efbb0dd60dff3c31f25007cbef",
+        url="https://pypi.org/packages/46/40/caf045d48f29b579f124a0cc33b140fa7e4ef4a58d9e3356b1efc5276d09/PythonQwt-0.5.5-py2.py3-none-any.whl",
+    )

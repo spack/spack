@@ -19,8 +19,8 @@ class PyPytaridx(PythonPackage):
 
     license("MIT")
 
-    version("1.0.2", sha256="702c42ade13ae8688a56a8edfcd7e0e7512a489a22796c6cfdbcef677010ee47")
-    version("master", branch="master")
-
-    depends_on("python@3:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
+    version(
+        "1.0.2",
+        sha256="7a41b3adc398e8c0cafe8981d0690daa03d51cfd0bd41a6748f73f703a997ef7",
+        url="https://pypi.org/packages/9b/05/60e76cb53b13a2b52bcfa21284845dc8b5a35e7d292a159d0ad48d4644cb/pytaridx-1.0.2-py3-none-any.whl",
+    )

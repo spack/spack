@@ -16,8 +16,12 @@ class PyCssutils(PythonPackage):
 
     license("LGPL-3.0-or-later")
 
-    version("2.7.1", sha256="340ecfd9835d21df8f98500f0dfcea0aee41cb4e19ecbc2cf94f0a6d36d7cb6c")
+    version(
+        "2.7.1",
+        sha256="1e92e0d9dab2ec8af9f38d715393964ba533dc3beacab9b072511dfc241db775",
+        url="https://pypi.org/packages/7a/4a/acc05aba9edb75bf016d9f57928f0bea5a33de2079fd09ca61baec79a6f2/cssutils-2.7.1-py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools@56:", type="build")
-    depends_on("py-setuptools-scm@3.4.1:+toml", type="build")
-    depends_on("py-importlib-metadata", type=("build", "run"), when="^python@:3.7")
+    with default_args(type="run"):
+        depends_on("python@3.7:", when="@2.4:2.7")
+        depends_on("py-importlib-metadata", when="^python@:3.7")

@@ -15,7 +15,11 @@ class PyDnspython(PythonPackage):
 
     license("ISC")
 
-    version("2.2.1", sha256="0f7569a4a6ff151958b64304071d370daa3243d15941a7beedf0c9fe5105603e")
+    version(
+        "2.2.1",
+        sha256="a851e51367fb93e9e1361732c1d60dab63eff98712e503ea7d92e6eccb109b4f",
+        url="https://pypi.org/packages/9b/ed/28fb14146c7033ba0e89decd92a4fa16b0b69b84471e2deab3cc4337cc35/dnspython-2.2.1-py3-none-any.whl",
+    )
 
-    depends_on("python@3.6:3", type=("build", "run"))
-    depends_on("py-poetry-core", type="build")
+    with default_args(type="run"):
+        depends_on("python@:3", when="@2.2")

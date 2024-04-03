@@ -14,16 +14,33 @@ class PyIdna(PythonPackage):
 
     license("BSD-3-Clause")
 
-    version("3.4", sha256="814f528e8dead7d329833b91c5faa87d60bf71824cd12a7530b5526063d02cb4")
-    version("3.3", sha256="9d643ff0a55b762d5cdb124b8eaa99c66322e2157b69160bc32796e824360e6d")
-    version("3.2", sha256="467fbad99067910785144ce333826c71fb0e63a425657295239737f7ecd125f3")
-    version("2.9", sha256="7588d1c14ae4c77d74036e8c22ff447b26d0fde8f007354fd48a7814db15b7cb")
-    version("2.8", sha256="c357b3f628cf53ae2c4c05627ecc484553142ca23264e593d327bcde5e9c3407")
-    version("2.5", sha256="3cb5ce08046c4e3a560fc02f138d0ac63e00f8ce5901a56b32ec8b7994082aab")
-
-    depends_on("python@3.5:", when="@3.2:", type=("build", "run"))
-    depends_on("python@3.4:", when="@3:", type=("build", "run"))
-    depends_on("python@2.7:2,3.4:", when="@2.8:2", type=("build", "run"))
-    depends_on("python@2.6:", when="@:2.7", type=("build", "run"))
-    depends_on("py-flit-core@3.2:3", when="@3.4:", type="build")
-    depends_on("py-setuptools", when="@:3.3", type=("build", "link"))
+    version(
+        "3.4",
+        sha256="90b77e79eaa3eba6de819a0c442c0b4ceefc341a7a2ab77d7562bf49f425c5c2",
+        url="https://pypi.org/packages/fc/34/3030de6f1370931b9dbb4dad48f6ab1015ab1d32447850b9fc94e60097be/idna-3.4-py3-none-any.whl",
+    )
+    version(
+        "3.3",
+        sha256="84d9dd047ffa80596e0f246e2eab0b391788b0503584e8945f2368256d2735ff",
+        url="https://pypi.org/packages/04/a2/d918dcd22354d8958fe113e1a3630137e0fc8b44859ade3063982eacd2a4/idna-3.3-py3-none-any.whl",
+    )
+    version(
+        "3.2",
+        sha256="14475042e284991034cb48e06f6851428fb14c4dc953acd9be9a5e95c7b6dd7a",
+        url="https://pypi.org/packages/d7/77/ff688d1504cdc4db2a938e2b7b9adee5dd52e34efbd2431051efc9984de9/idna-3.2-py3-none-any.whl",
+    )
+    version(
+        "2.9",
+        sha256="a068a21ceac8a4d63dbfd964670474107f541babbd2250d61922f029858365fa",
+        url="https://pypi.org/packages/89/e3/afebe61c546d18fb1709a61bee788254b40e736cff7271c7de5de2dc4128/idna-2.9-py2.py3-none-any.whl",
+    )
+    version(
+        "2.8",
+        sha256="ea8b7f6188e6fa117537c3df7da9fc686d485087abf6ac197f9c46432f7e4a3c",
+        url="https://pypi.org/packages/14/2c/cd551d81dbe15200be1cf41cd03869a46fe7226e7450af7a6545bfc474c9/idna-2.8-py2.py3-none-any.whl",
+    )
+    version(
+        "2.5",
+        sha256="cc19709fd6d0cbfed39ea875d29ba6d4e22c0cebc510a76d6302a28385e8bb70",
+        url="https://pypi.org/packages/11/7d/9bbbd7bb35f34b0169542487d2a8859e44306bb2e6a4455d491800a5621f/idna-2.5-py2.py3-none-any.whl",
+    )

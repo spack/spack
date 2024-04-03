@@ -17,13 +17,14 @@ class PyZfitInterface(PythonPackage):
     maintainers("jonas-eschle")
     license("BSD-3-Clause", checked_by="jonas-eschle")
 
-    version("0.0.3", sha256="af7e8ed409f136187b2cd4def723504f9d619738668e963af388a79121239f74")
+    version(
+        "0.0.3",
+        sha256="c41cf79f1da4150b9a60bb1e8cab15df895b6ff4b753e2306494a7abda4150d0",
+        url="https://pypi.org/packages/61/ce/07d8fa63a501dc3af9639595e486be0a18de00726b54a7dc88a5ada235d8/zfit_interface-0.0.3-py2.py3-none-any.whl",
+    )
 
-    depends_on("python@3.8:", type=("build", "run"))
-
-    depends_on("py-setuptools@42:", type="build")
-    depends_on("py-setuptools-scm@3.4:+toml", type="build")
-    depends_on("py-setuptools-scm-git-archive", type="build")
-    depends_on("py-numpy", type=("build", "run"))
-    depends_on("py-uhi", type=("build", "run"))
-    depends_on("py-typing-extensions", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("python@3.7:", when="@0.0.3:")
+        depends_on("py-numpy", when="@0.0.3:")
+        depends_on("py-typing-extensions", when="@0.0.3:")
+        depends_on("py-uhi", when="@0.0.3:")

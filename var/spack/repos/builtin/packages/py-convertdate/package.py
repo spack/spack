@@ -16,8 +16,12 @@ class PyConvertdate(PythonPackage):
 
     license("MIT")
 
-    version("2.2.0", sha256="9d2b0cd8d5382d2458d4cfa59665abba398a9e9bfd3a01c6f61b7b47768d28bf")
+    version(
+        "2.2.0",
+        sha256="fc34133ef6ceb31738cf1169b528ba487d0164d69f4451a7cef206887c45b71d",
+        url="https://pypi.org/packages/c9/f8/02a18000b0fbfd714f78aa16359796727a181e80f679682e3f62771a5c23/convertdate-2.2.0-py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-pytz@2014.10:2019.13", type=("build", "run"))
-    depends_on("py-pymeeus@0.3.6:1", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-pymeeus@0.3.6:", when="@2.2:2.3.0")
+        depends_on("py-pytz@2014.10:2019", when="@2.1.3:2.2.0")

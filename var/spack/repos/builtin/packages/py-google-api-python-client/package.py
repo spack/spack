@@ -15,21 +15,26 @@ class PyGoogleApiPythonClient(PythonPackage):
 
     license("Apache-2.0")
 
-    version("2.80.0", sha256="51dd62d467da7ad3df63c3f0e6fca84266ce50c2218691204b2e8cd651a0719a")
-    version("1.7.10", sha256="2e55a5c7b56233c68945b6804c73e253445933f4d485d4e69e321b38772b9dd6")
+    version(
+        "2.80.0",
+        sha256="b9cd2550c2cdfeb78c3150d8c52208841082dabe597063a116476937170907ab",
+        url="https://pypi.org/packages/f8/63/fea1330ab4966d37a64bfd23378f8c32722ed7b91178cab4ab3601f4fd5e/google_api_python_client-2.80.0-py2.py3-none-any.whl",
+    )
+    version(
+        "1.7.10",
+        sha256="60f2ac2f27997d9af10ae126d9937b7d8c1fd061d12668ccaf94b4347ee85021",
+        url="https://pypi.org/packages/ab/4b/66b7591b83864caef0d960aefd05a110bcf9cb18cc6dd957414e34861530/google_api_python_client-1.7.10-py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-
-    with when("@2:"):
-        depends_on("py-httplib2@0.15:0", type=("build", "run"))
-        depends_on("py-google-auth@1.19:2", type=("build", "run"))
-        depends_on("py-google-auth-httplib2@0.1:", type=("build", "run"))
-        depends_on("py-google-api-core@1.31.5:1,2.3.1:2", type=("build", "run"))
-        depends_on("py-uritemplate@3.0.1:4", type=("build", "run"))
-
-    with when("@:1"):
-        depends_on("py-httplib2@0.9.2:", type=("build", "run"))
-        depends_on("py-google-auth@1.4.1:", type=("build", "run"))
-        depends_on("py-google-auth-httplib2@0.0.3:", type=("build", "run"))
-        depends_on("py-six@1.6.1:", type=("build", "run"))
-        depends_on("py-uritemplate@3.0.0:", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("python@3.7:", when="@2.53:")
+        depends_on("py-google-api-core@1.31.5:1,2.3.1:", when="@2.40:")
+        depends_on("py-google-auth@1.19:", when="@2.52:")
+        depends_on("py-google-auth@1.4.1:", when="@:1.8")
+        depends_on("py-google-auth-httplib2@0.1:", when="@2.1:")
+        depends_on("py-google-auth-httplib2@0.0.3:", when="@:2.0")
+        depends_on("py-httplib2@0.15:", when="@1.12.3:")
+        depends_on("py-httplib2@0.9.2:", when="@:1.7.11,1.8:1.12.2")
+        depends_on("py-six@1.6.1:", when="@:1.12.0")
+        depends_on("py-uritemplate@3.0.1:", when="@2.34:")
+        depends_on("py-uritemplate@3", when="@:2.25")

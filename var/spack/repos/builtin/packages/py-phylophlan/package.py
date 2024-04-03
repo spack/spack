@@ -16,23 +16,21 @@ class PyPhylophlan(PythonPackage):
 
     license("MIT")
 
-    version("3.0.3", sha256="d8d0082c95d58d7b11a60c1e2214b35c1a23a65675005f1393e7647d76c6a054")
-    version("3.0.2", sha256="c342116662bbfbb49f0665291fc7c0be5a0d04a02a7be2da81de0322eb2256b4")
+    version(
+        "3.0.3",
+        sha256="1c37393742fa2eefb1f7b7829609d0dac03d53dae761c6ab2db13b4c4609cb79",
+        url="https://pypi.org/packages/74/92/0513cefa30ef0f6bef6d7441bf59979213510efdbf875bc877521b5a96e9/PhyloPhlAn-3.0.3-py3-none-any.whl",
+    )
+    version(
+        "3.0.2",
+        sha256="1f5626a920aaed8f0e2ce333326945ea7267a096d7de5cc57dce785079618e16",
+        url="https://pypi.org/packages/61/84/be11873e8749b1c5e5f914a65a23ce41d90204590044129f630516c14420/PhyloPhlAn-3.0.2-py3-none-any.whl",
+    )
 
-    depends_on("python@3.7:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
-    depends_on("py-biopython@1.73:", type=("build", "run"))
-    depends_on("py-dendropy@4.4.0:", type=("build", "run"))
-    depends_on("py-matplotlib@3.1.0:", type=("build", "run"))
-    depends_on("py-numpy@1.15.4:", type=("build", "run"))
-    depends_on("py-pandas@0.24.2:", type=("build", "run"))
-    depends_on("py-seaborn@0.9.0:", type=("build", "run"))
-    depends_on("blast-plus@2.6.0:", type=("build", "run"))
-    depends_on("diamond@0.9:", type=("build", "run"))
-    depends_on("trimal@1.4.1:", type=("build", "run"))
-    depends_on("muscle@3.8.1551:", type=("build", "run"))
-    depends_on("mafft@7.310:", type=("build", "run"))
-    depends_on("fasttree@2.1.8:", type=("build", "run"))
-    depends_on("raxml@8.2.10:", type=("build", "run"))
-    depends_on("iqtree2", type=("build", "run"))
-    depends_on("mash", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-biopython", when="@3.0.1:")
+        depends_on("py-dendropy", when="@3.0.1:")
+        depends_on("py-matplotlib", when="@3.0.1:")
+        depends_on("py-numpy", when="@3.0.1:")
+        depends_on("py-pandas", when="@3.0.1:")
+        depends_on("py-seaborn", when="@3.0.1:")

@@ -14,9 +14,16 @@ class PyCycler(PythonPackage):
 
     license("BSD-3-Clause")
 
-    version("0.11.0", sha256="9c87405839a19696e837b3b818fed3f5f69f16f1eec1a1ad77e043dcea9c772f")
-    version("0.10.0", sha256="cd7b2d1018258d7247a71425e9f26463dfb444d411c39569972f4ce586b0c9d8")
+    version(
+        "0.11.0",
+        sha256="3a27e95f763a428a739d2add979fa7494c912a32c17c4c38c4d5f082cad165a3",
+        url="https://pypi.org/packages/5c/f9/695d6bedebd747e5eb0fe8fad57b72fdf25411273a39791cde838d5a8f51/cycler-0.11.0-py3-none-any.whl",
+    )
+    version(
+        "0.10.0",
+        sha256="1d8a5ae1ff6c5cf9b93e8811e581232ad8920aeec647c37316ceac982b08cb2d",
+        url="https://pypi.org/packages/f7/d2/e07d3ebb2bd7af696440ce7e754c59dd546ffe1bbe732c8ab68b9c834e61/cycler-0.10.0-py2.py3-none-any.whl",
+    )
 
-    depends_on("python@3.6:", when="@0.11:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
-    depends_on("py-six", when="@:0.10", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-six", when="@:0.10")

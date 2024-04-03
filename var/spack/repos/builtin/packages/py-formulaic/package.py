@@ -13,27 +13,34 @@ class PyFormulaic(PythonPackage):
     homepage = "https://github.com/matthewwardrop/formulaic"
     pypi = "formulaic/formulaic-0.2.4.tar.gz"
 
-    version("0.6.1", sha256="5b20b2130436dc8bf5ea604e69d88d44b3be4d8ea20bfea96d982fa1f6bb762b")
-    version("0.5.2", sha256="25b1e1c8dff73f0b11c0028a6ab350222de6bbc47b316ccb770cec16189cef53")
-    version("0.2.4", sha256="15b71ea8972fb451f80684203cddd49620fc9ed5c2e35f31e0874e9c41910d1a")
+    version(
+        "0.6.1",
+        sha256="3eebbee86bfde23f66c7b86f727b52e4f2af1b08be9ea752d2ea3fe2ff951fe8",
+        url="https://pypi.org/packages/ad/79/1ce60c6368cfbfbc186f8ccd45edaa945e0a8dba77469c7f3f0cc44db40e/formulaic-0.6.1-py3-none-any.whl",
+    )
+    version(
+        "0.5.2",
+        sha256="65d04b1249584504912eb64f83b47fc1e7e95b0ff3e24fb0859148e2f2f033c2",
+        url="https://pypi.org/packages/15/3c/5853059034a58de0b79de67584a22d6fa8f732a1cb7a388942c735584c3e/formulaic-0.5.2-py3-none-any.whl",
+    )
+    version(
+        "0.2.4",
+        sha256="775620d93f24f01b33a17aa2cf65a04112003c5112f12015368e4e4605a5013b",
+        url="https://pypi.org/packages/45/40/3c337ed87b8ffeb129f21db97bce3d4f1e9125ed4697969348bb6f871931/formulaic-0.2.4-py3-none-any.whl",
+    )
 
-    depends_on("python@3.7.2:", when="@5:", type=("build", "run"))
-    depends_on("py-hatchling", when="@0.5:", type="build")
-    depends_on("py-hatch-vcs", when="@0.5:", type="build")
-    depends_on("py-setuptools", when="@:0.3.2", type="build")
-    depends_on("py-setupmeta", when="@:0.3.2", type="build")
-
-    depends_on("py-astor@0.8:", when="@0.3.4:", type=("build", "run"))
-    depends_on("py-astor", type=("build", "run"))
-    depends_on("py-cached-property@1.3:", when="@0.4: ^python@:3.7", type=("build", "run"))
-    depends_on("py-graphlib-backport@1:", when="@0.5: ^python@:3.8", type=("build", "run"))
-    depends_on("py-interface-meta@1.2:", type=("build", "run"))
-    depends_on("py-numpy@1.16.5:", when="@0.5:", type=("build", "run"))
-    depends_on("py-numpy", type=("build", "run"))
-    depends_on("py-pandas@1:", when="@0.4:", type=("build", "run"))
-    depends_on("py-pandas", type=("build", "run"))
-    depends_on("py-scipy@1.6:", when="@0.3:", type=("build", "run"))
-    depends_on("py-scipy", type=("build", "run"))
-    depends_on("py-wrapt@1:", when="@0.3:", type=("build", "run"))
-    depends_on("py-wrapt", type=("build", "run"))
-    depends_on("py-typing-extensions@4.2:", when="@0.5:", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("python@3.7:", when="@0.3:0.3.2,0.5:")
+        depends_on("py-astor@0.8:", when="@0.3.4:0")
+        depends_on("py-astor", when="@0.1:0.2")
+        depends_on("py-cached-property@1.3:", when="@0.4: ^python@:3.7")
+        depends_on("py-graphlib-backport", when="@0.5: ^python@:3.8")
+        depends_on("py-interface-meta@1.2:", when="@0.2:0.3.2,0.5:")
+        depends_on("py-numpy@1.16.5:", when="@0.5:")
+        depends_on("py-numpy", when="@0.2")
+        depends_on("py-pandas@1.0.0:", when="@0.4:")
+        depends_on("py-pandas", when="@0.1:0.2")
+        depends_on("py-scipy@1.6.0:", when="@0.3:")
+        depends_on("py-scipy", when="@0.1:0.2")
+        depends_on("py-typing-extensions@4.2:", when="@0.5:")
+        depends_on("py-wrapt", when="@0.1:")

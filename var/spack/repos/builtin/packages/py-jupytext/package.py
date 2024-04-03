@@ -18,29 +18,38 @@ class PyJupytext(PythonPackage):
 
     license("MIT")
 
-    version("1.16.0", sha256="94c7e67775e90e1792c39ab7fca4e0459bf7c35656123e8dc2e9e1b3e953baf8")
-    version("1.14.1", sha256="314fa0e732b1d14764271843b676938ef8a7b9d53c3575ade636b45d13f341c8")
-    version("1.13.6", sha256="c6c25918ddb6403d0d8504e08d35f6efc447baf0dbeb6a28b73adf39e866a0c4")
-    version("1.13.0", sha256="fb220af65d2bd32d01c779b0e935c4c2b71e3f5f2f01bf1bab10d5f23fe121d4")
+    version(
+        "1.16.0",
+        sha256="c2b951ac72871f39cd6cd242b56bc43219b7ed8169598bae5359811fb1f54d28",
+        url="https://pypi.org/packages/b4/35/1f396e6745cbaa1aec3624fb6656a77f2e001b324cb4a056aa6a4a436e46/jupytext-1.16.0-py3-none-any.whl",
+    )
+    version(
+        "1.14.1",
+        sha256="216bddba8bbb9355831ba17fd8d45cfe5d1355e7152bc8980f39175fc2584875",
+        url="https://pypi.org/packages/1e/b6/53edfeda6e8ac67a9fd31b510fe8c8e46c1b505805ae958d6fff82f9b2df/jupytext-1.14.1-py3-none-any.whl",
+    )
+    version(
+        "1.13.6",
+        sha256="2160774e30587fb427213231f0267ed070ba4ede41cf6121dbb2b14225eb83ba",
+        url="https://pypi.org/packages/07/3f/18d7d371bd1d74b9ef8a7d14b91f28a609277d849c036d930436ed243b92/jupytext-1.13.6-py3-none-any.whl",
+    )
+    version(
+        "1.13.0",
+        sha256="c31f016c6fc000d88c5aed2cfc58f1acbfb3d9c58898aa0e4bdc3716f3860b09",
+        url="https://pypi.org/packages/f9/c9/24d58379d6c6600aec4dc1ed5c893b6c963a73598bfcb9270d494c3c3896/jupytext-1.13.0-py3-none-any.whl",
+    )
 
-    depends_on("python@3.8:", type=("build", "run"), when="@1.16:")
-    depends_on("python@3.6:3", type=("build", "run"), when="@:1.14")
-
-    depends_on("py-hatchling@1.5.0:", type="build", when="@1.16:")
-    depends_on("py-setuptools@40.8.0:", type="build", when="@:1.14.1")
-
-    depends_on("py-nbformat", type=("build", "run"))
-    depends_on("py-mdit-py-plugins", type=("build", "run"))
-    depends_on("py-markdown-it-py@1.0:", type=("build", "run"), when="@1.16:")
-    depends_on("py-markdown-it-py@1.0:2", type=("build", "run"), when="@1.14.1")
-    depends_on("py-markdown-it-py@1.0:1", type=("build", "run"), when="@:1.13.6")
-    depends_on("py-packaging", type=("build", "run"), when="@1.16:")
-    depends_on("py-pyyaml", type=("build", "run"))
-    depends_on("py-toml", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("python@3.8:", when="@1.16:")
+        depends_on("python@:3", when="@:1.15")
+        depends_on("py-markdown-it-py@1.0.0:", when="@1.14.7:")
+        depends_on("py-markdown-it-py@1.0.0:2", when="@1.13.8:1.14.6")
+        depends_on("py-markdown-it-py@1.0.0:1", when="@1.11.4:1.13.7")
+        depends_on("py-mdit-py-plugins", when="@1.11.4:")
+        depends_on("py-nbformat")
+        depends_on("py-packaging", when="@1.16:")
+        depends_on("py-pyyaml")
+        depends_on("py-toml")
 
     # todo: in order to use jupytext as a jupyterlab extension,
     # some additional dependencies need to be added (and checked):
-    depends_on("py-jupyterlab@4", type=("build", "run"), when="@1.16:")
-    depends_on("py-jupyterlab@3", type=("build", "run"), when="@:1.14")
-    depends_on("py-hatch-jupyter-builder@0.5:", type=("build", "run"), when="@1.16:")
-    depends_on("py-jupyter-packaging@0.7.9:0.7", type="build", when="@:1.14")

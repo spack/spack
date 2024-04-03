@@ -16,10 +16,16 @@ class PySphinxcontribTrio(PythonPackage):
 
     license("Apache-2.0")
 
-    version("1.1.2", sha256="9f1ba9c1d5965b534e85258d8b677dd94e9b1a9a2e918b85ccd42590596b47c0")
-    version("1.1.0", sha256="d90f46d239ba0556e53d9a110989f98c9eb2cea76ab47937a1f39b62f63fe654")
+    version(
+        "1.1.2",
+        sha256="1b849be08a147ef4113e35c191a51c5792613a9a54697b497cd91656d906a232",
+        url="https://pypi.org/packages/a7/4d/6e1598531046c272730501337d5303ce3958387a4fde1da8875580f5c41b/sphinxcontrib_trio-1.1.2-py3-none-any.whl",
+    )
+    version(
+        "1.1.0",
+        sha256="39196d15b8c9a9947be2e593518f404bc0da6020ae69007b9f8ce49b4ba3d49b",
+        url="https://pypi.org/packages/57/39/e00e5c1fc21e10dcfd103e2b0de6ce9f2901aab28eaef8075fbf4946ad20/sphinxcontrib_trio-1.1.0-py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-sphinx@1.7:", type=("build", "run"))
-
-    patch("sphinxcontrib-trio.patch", when="@1.1.0")
+    with default_args(type="run"):
+        depends_on("py-sphinx@1.7.0:", when="@1.1:")

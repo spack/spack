@@ -17,8 +17,13 @@ class PyFlaskPaginate(PythonPackage):
 
     license("BSD-3-Clause")
 
-    version("2022.1.8", sha256="a32996ec07ca004c45b768b0d50829728ab8f3986c0650ef538e42852c7aeba2")
+    version(
+        "2022.1.8",
+        sha256="b3fc28752b8e0546999f3d4b0678351ae3230ea4424353c59db9f0d479fd9049",
+        url="https://pypi.org/packages/94/d5/5610ce12fcd5985d4ad8e868c6a1de9862f3a6fdf3a5dd15925b7d968a22/flask_paginate-2022.1.8-py2.py3-none-any.whl",
+    )
+
+    with default_args(type="run"):
+        depends_on("py-flask")
 
     # From setup.py:
-    depends_on("py-setuptools", type="build")
-    depends_on("py-flask", type=("build", "run"))

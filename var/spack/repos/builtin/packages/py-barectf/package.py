@@ -15,6 +15,16 @@ class PyBarectf(PythonPackage):
 
     license("MIT")
 
-    version("3.1.2", sha256="d4d626b22a33b7d9bc9ac033bba8893890aba0ee1011c9e78429a67296c09e1c")
+    version(
+        "3.1.2",
+        sha256="e8efe74a1def51e4a288eec379fc85ba93d796dec6b65f958cbe53d827ca0023",
+        url="https://pypi.org/packages/94/c2/9f423d775cfe5dcbace2510e642a3c136b228c024a05460f06f410f2bc2f/barectf-3.1.2-py3-none-any.whl",
+    )
 
-    depends_on("py-poetry-core", type="build")
+    with default_args(type="run"):
+        depends_on("python@:3", when="@3:")
+        depends_on("py-jinja2@3.0.0:", when="@3.0.2:")
+        depends_on("py-jsonschema@3.2:3", when="@3:")
+        depends_on("py-pyyaml@5.3:5", when="@3:")
+        depends_on("py-setuptools", when="@3:")
+        depends_on("py-termcolor@1.1:1", when="@3:")

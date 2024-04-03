@@ -15,10 +15,13 @@ class PySwaggerSpecValidator(PythonPackage):
     homepage = "https://github.com/Yelp/swagger_spec_validator"
     pypi = "swagger-spec-validator/swagger-spec-validator-2.7.6.tar.gz"
 
-    version("2.7.6", sha256="73f33e631a58f407265f2f813d194f2762a2b86f9aa905e7eee3df9b7f9428d3")
+    version(
+        "2.7.6",
+        sha256="ff55d671f4cf8a386e7ecda60267d6cdd2cfbe0b3521a8ccf09b0669cbb72ab6",
+        url="https://pypi.org/packages/5b/0f/d7f6a7f610487a25583db19d2ce2808ad8be356e0067b4f2758d076af8a5/swagger_spec_validator-2.7.6-py2.py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-jsonschema", type=("build", "run"))
-    depends_on("py-pyyaml", type=("build", "run"))
-    depends_on("py-six", type=("build", "run"))
-    depends_on("py-pyrsistent@:0.16", when="^python@:3.0", type="build")
+    with default_args(type="run"):
+        depends_on("py-jsonschema", when="@:2.7.4,2.7.6:")
+        depends_on("py-pyyaml")
+        depends_on("py-six", when="@:2")

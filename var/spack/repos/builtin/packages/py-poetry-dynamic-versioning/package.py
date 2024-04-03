@@ -14,11 +14,14 @@ class PyPoetryDynamicVersioning(PythonPackage):
 
     license("MIT")
 
-    version("0.19.0", sha256="a11a7eba6e7be167c55a1dddec78f52b61a1832275c95519ad119c7a89a7f821")
+    version(
+        "0.19.0",
+        sha256="b59410538490aaeb35ae8672761a048d2cf58287b3ce261e50efef201813c1d6",
+        url="https://pypi.org/packages/55/2b/939cc8ecb32bcaf262aad0eb69a57b77a90738e35856c44074a2d78375c6/poetry_dynamic_versioning-0.19.0-py3-none-any.whl",
+    )
 
-    depends_on("python@3.7:3", type=("build", "run"))
-    depends_on("py-poetry-core@1:", type="build")
-
-    depends_on("py-dunamai@1.12:1", type=("build", "run"))
-    depends_on("py-tomlkit@0.4:", type=("build", "run"))
-    depends_on("py-jinja2@2.11.1:3", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("python@3.7:3", when="@0.18:0,1.0.0:")
+        depends_on("py-dunamai@1.12:", when="@0.16:0.19")
+        depends_on("py-jinja2@2.11.1:", when="@0.18:")
+        depends_on("py-tomlkit@0.4:", when="@:0,1.0.0:")

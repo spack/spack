@@ -14,35 +14,75 @@ class PySetuptoolsScm(PythonPackage):
 
     license("MIT")
 
-    version("7.1.0", sha256="6c508345a771aad7d56ebff0e70628bf2b0ec7573762be9960214730de278f27")
-    version("7.0.5", sha256="031e13af771d6f892b941adb6ea04545bbf91ebc5ce68c78aaf3fff6e1fb4844")
-    version("7.0.3", sha256="cf8ab8e235bed840cd4559b658af0d8e8a70896a191bbc510ee914ec5325332d")
-    version("6.3.2", sha256="a49aa8081eeb3514eb9728fa5040f2eaa962d6c6f4ec9c32f6c1fba88f88a0f2")
-    version("6.0.1", sha256="d1925a69cb07e9b29416a275b9fadb009a23c148ace905b2fb220649a6c18e92")
-    version("5.0.2", sha256="83a0cedd3449e3946307811a4c7b9d89c4b5fd464a2fb5eeccd0a5bb158ae5c8")
-    version("4.1.2", sha256="a8994582e716ec690f33fec70cca0f85bd23ec974e3f783233e4879090a7faa8")
-    version("3.5.0", sha256="5bdf21a05792903cafe7ae0c9501182ab52497614fa6b1750d9dbae7b60c1a87")
-    version("3.3.3", sha256="bd25e1fb5e4d603dcf490f1fde40fb4c595b357795674c3e5cb7f6217ab39ea5")
-    version("3.1.0", sha256="1191f2a136b5e86f7ca8ab00a97ef7aef997131f1f6d4971be69a1ef387d8b40")
-    version("1.15.6", sha256="49ab4685589986a42da85706b3311a2f74f1af567d39fee6cb1e088d7a75fb5f")
+    version(
+        "7.1.0",
+        sha256="73988b6d848709e2af142aa48c986ea29592bbcfca5375678064708205253d8e",
+        url="https://pypi.org/packages/1d/66/8f42c941be949ef2b22fe905d850c794e7c170a526023612aad5f3a121ad/setuptools_scm-7.1.0-py3-none-any.whl",
+    )
+    version(
+        "7.0.5",
+        sha256="7930f720905e03ccd1e1d821db521bff7ec2ac9cf0ceb6552dd73d24a45d3b02",
+        url="https://pypi.org/packages/01/ed/75a20e7b075e8ecb1f84e8debf833917905d8790b78008915bd68dddd5c4/setuptools_scm-7.0.5-py3-none-any.whl",
+    )
+    version(
+        "7.0.3",
+        sha256="7934c856b042199eb44e1523b46abb881726b7d61b3c9b41a756e4ffb4adf73b",
+        url="https://pypi.org/packages/cb/50/a88ad10c10caba0a375123db0dc9ff31c075655eb844135f57691925298f/setuptools_scm-7.0.3-py3-none-any.whl",
+    )
+    version(
+        "6.3.2",
+        sha256="4c64444b1d49c4063ae60bfe1680f611c8b13833d556fd1d6050c0023162a119",
+        url="https://pypi.org/packages/bc/bf/353180314d0e27929703faf240c244f25ae765e01f595a010cafb209ab51/setuptools_scm-6.3.2-py3-none-any.whl",
+    )
+    version(
+        "6.0.1",
+        sha256="c3bd5f701c8def44a5c0bfe8d407bef3f80342217ef3492b951f3777bd2d915c",
+        url="https://pypi.org/packages/c4/d5/e50358c82026f44cd8810c8165002746cd3f8b78865f6bcf5d7f0fe4f652/setuptools_scm-6.0.1-py3-none-any.whl",
+    )
+    version(
+        "5.0.2",
+        sha256="bd5c4e37f74c103e117549f89aeb3c244488c4a6422df786d1a7d03257f16b34",
+        url="https://pypi.org/packages/6a/18/23ad8654c5c8d91d1238b2d52882e50152473f2bd2db0da60215b51f401b/setuptools_scm-5.0.2-py2.py3-none-any.whl",
+    )
+    version(
+        "4.1.2",
+        sha256="69258e2eeba5f7ce1ed7a5f109519580fa3578250f8e4d6684859f86d1b15826",
+        url="https://pypi.org/packages/ad/d3/e54f8b4cde0f6fb4f231629f570c1a33ded18515411dee6df6fe363d976f/setuptools_scm-4.1.2-py2.py3-none-any.whl",
+    )
+    version(
+        "3.5.0",
+        sha256="0d23db3d43e0a43eb7196bcf0eb8a4a2eb0561f621ed7ec44b2fdccfd907e38f",
+        url="https://pypi.org/packages/4b/c1/118ec08816737cc46b4dd93b22f7a138fbfb14b53f4b4718fd9983e70a50/setuptools_scm-3.5.0-py2.py3-none-any.whl",
+    )
+    version(
+        "3.3.3",
+        sha256="1f11cb2eea431346d46589c2dafcafe2e7dc1c7b2c70bc4c3752d2048ad5c148",
+        url="https://pypi.org/packages/1d/70/97966deebaeeda0b81d3cd63ba9f8ec929b838871ed17476de9d8159db3e/setuptools_scm-3.3.3-py2.py3-none-any.whl",
+    )
+    version(
+        "3.1.0",
+        sha256="cc6953d224a22f10e933fa2f55c95979317c55259016adcf93310ba2997febfa",
+        url="https://pypi.org/packages/b2/d5/970632917c53a1fb2751f7da8b288d26546f2b113e4321674051fc9f81e4/setuptools_scm-3.1.0-py2.py3-none-any.whl",
+    )
+    version(
+        "1.15.6",
+        sha256="dac89650c7909d238965e163e10b736cbd3a72f28e2dd5c0fea6cf5e49e8562e",
+        url="https://pypi.org/packages/54/66/00a0e93b02409454af83cfbd782887b5b131dd915af23d53c6651d7cc039/setuptools_scm-1.15.6-py2.py3-none-any.whl",
+    )
 
-    # Basically a no-op in setuptools_scm 7+, toml support is always built
     variant("toml", default=True, description="Build with TOML support")
 
-    depends_on("python@3.7:", when="@7:", type=("build", "run"))
-    depends_on("python@3.6:", when="@6:", type=("build", "run"))
-    depends_on("python@2.7:2.8,3.5:", when="@4:", type=("build", "run"))
-    depends_on("python@2.7:2.8,3.4:", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("python@3.7:", when="@7")
+        depends_on("py-importlib-metadata", when="@7.0.1:7 ^python@:3.7")
+        depends_on("py-packaging@20:", when="@6.3:")
+        depends_on("py-setuptools@42:", when="@6.3:7+toml")
+        depends_on("py-setuptools@45:", when="@6:6.2")
+        depends_on("py-setuptools", when="@4:5,6.3:")
+        depends_on("py-toml", when="@4:6.0,6.1.0.dev:6.1.0+toml")
+        depends_on("py-tomli@1:", when="@7.1: ^python@:3.10")
+        depends_on("py-tomli@1:", when="@6.3+toml")
+        depends_on("py-tomli@1:", when="@6.2,6.3.1:7.0")
+        depends_on("py-typing-extensions", when="@7,8.0.4:")
 
-    depends_on("py-packaging@20.0:", when="@6.3:", type=("build", "run"))
-    depends_on("py-setuptools@45:", when="@6:", type=("build", "run"))
-    depends_on("py-setuptools@42:", when="@5:", type=("build", "run"))
-    depends_on("py-setuptools@34.4:", type=("build", "run"))
-    depends_on("py-toml", when="+toml @:6.1.0", type=("build", "run"))
-    depends_on("py-tomli@1:", when="+toml @6.1.0:", type=("build", "run"))
-    depends_on("py-tomli@1:", when="@7.0", type=("build", "run"))
-    depends_on("py-tomli@1:", when="@7.1: ^python@:3.10", type=("build", "run"))
-    depends_on("py-typing-extensions", when="@7:", type=("build", "run"))
-    depends_on("py-importlib-metadata", when="@7: ^python@:3.7", type=("build", "run"))
-
-    depends_on("git", type=("build", "run"))
+    # Basically a no-op in setuptools_scm 7+, toml support is always built

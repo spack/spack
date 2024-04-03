@@ -14,8 +14,8 @@ class PyJinja2Time(PythonPackage):
 
     license("MIT")
 
-    version("0.2.0", sha256="0e647e525ba47523fa400a58fdec090b1cc6dcec4afbf095ee01e9e589e5a5ef")
-
-    depends_on("py-setuptools", type="build")
-    depends_on("py-arrow")
-    depends_on("py-jinja2")
+    version(
+        "0.2.0",
+        sha256="d3eab6605e3ec8b7a0863df09cc1d23714908fa61aa6986a845c20ba488b4efa",
+        url="https://pypi.org/packages/6a/a1/d44fa38306ffa34a7e1af09632b158e13ec89670ce491f8a15af3ebcb4e4/jinja2_time-0.2.0-py2.py3-none-any.whl",
+    )

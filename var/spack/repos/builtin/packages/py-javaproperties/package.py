@@ -15,9 +15,17 @@ class PyJavaproperties(PythonPackage):
 
     license("MIT")
 
-    version("0.7.0", sha256="cf45b39fcbaeced1dfc0b7f2bda16e34fc0349116269e001dada42fd2e145d87")
-    version("0.5.1", sha256="2b0237b054af4d24c74f54734b7d997ca040209a1820e96fb4a82625f7bd40cf")
+    version(
+        "0.7.0",
+        sha256="2de84a64579abccc201e56ef4449bd27a9b2c644874f7738e7d04ebeadc75bec",
+        url="https://pypi.org/packages/d9/e1/2c9ba71d740c953996aca3d2899649805db2f3b5fdbd3b570570d7d52bbf/javaproperties-0.7.0-py2.py3-none-any.whl",
+    )
+    version(
+        "0.5.1",
+        sha256="8bfb757116ed0589d88b4e13ecdc7d05a22c647a4645abf43ec27059430b1468",
+        url="https://pypi.org/packages/ee/c3/1e42437893a99717da1eda415c4b7353e8aaba395cc0ef387a47f4ac1c60/javaproperties-0.5.1-py2.py3-none-any.whl",
+    )
 
-    depends_on("python@2.7:2.8,3.4:3", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
-    depends_on("py-six@1.4:1", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("python@:3", when="@0.5:")
+        depends_on("py-six@1.4:", when="@0.5:0.7")

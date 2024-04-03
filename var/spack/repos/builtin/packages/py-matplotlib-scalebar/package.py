@@ -16,11 +16,17 @@ class PyMatplotlibScalebar(PythonPackage):
 
     license("BSD-2-Clause")
 
-    version("master", branch="master")
-    version("0.8.1", sha256="14887af1093579c5e6afae51a0a1ecc3f715cdbc5c4d7ef59cdeec76ee6bb15d")
-    version("0.6.1", sha256="85cec2bacf85aaf00a70cafa5786f7e66e7c0f6e9dc5c894fd6d1afaa7264ecd")
+    version(
+        "0.8.1",
+        sha256="a8a2f361d4c2d576d087df3092ed95cac2f708f8b40d5d2bb992bd190e740b3a",
+        url="https://pypi.org/packages/a9/9e/22930e3deb2c374f47c6633aff9f6f379f8c421ab868fff3b4f85eac8b8a/matplotlib_scalebar-0.8.1-py2.py3-none-any.whl",
+    )
+    version(
+        "0.6.1",
+        sha256="913e0c2e3f7039d6e3d3f8bfb569241b3baaa747bfc1ec842ceec1adc1c2013f",
+        url="https://pypi.org/packages/d1/95/d311da1083a426b872e7be318373c45f075bb356d0524c3097f5f4c6d2d9/matplotlib_scalebar-0.6.1-py2.py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-
-    depends_on("python@3.7:3", type=("build", "run"))
-    depends_on("py-matplotlib", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("python@3.7:3", when="@0.8:")
+        depends_on("py-matplotlib", when="@0.3:")

@@ -19,13 +19,17 @@ class PyOmegaconf(PythonPackage):
 
     license("BSD-3-Clause")
 
-    version("2.3.0", sha256="d5d4b6d29955cc50ad50c46dc269bcd92c6e00f5f90d23ab5fee7bfca4ba4cc7")
-    version("2.2.2", sha256="10a89b5cb81887d68137b69a7c5c046a060e2239af4e37f20c3935ad2e5fd865")
-    version("2.1.0", sha256="a08aec03a63c66449b550b85d70238f4dee9c6c4a0541d6a98845dcfeb12439d")
+    version(
+        "2.3.0",
+        sha256="7b4df175cdb08ba400f45cae3bdcae7ba8365db4d165fc65fd04b050ab63b46b",
+        url="https://pypi.org/packages/e3/94/1843518e420fa3ed6919835845df698c7e27e183cb997394e4a670973a65/omegaconf-2.3.0-py3-none-any.whl",
+    )
+    version(
+        "2.2.2",
+        sha256="556917181487fb66fe832d3c7b324f51b2f4c8adc373dd5091be921501b7d420",
+        url="https://pypi.org/packages/ce/56/ffc5a96c317f94aad1cdfa1e00307a9c18b4c79841663d8d6decb15afcf1/omegaconf-2.2.2-py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-pytest-runner", when="@2.1", type="build")
-    depends_on("py-antlr4-python3-runtime@4.9", when="@2.2.2:", type=("build", "run"))
-    depends_on("py-antlr4-python3-runtime@4.8", when="@2.1", type=("build", "run"))
-    depends_on("py-pyyaml@5.1:", type=("build", "run"))
-    depends_on("java", type="build")
+    with default_args(type="run"):
+        depends_on("py-antlr4-python3-runtime@4.9", when="@2.2.0.dev3:2.4.0.dev0")
+        depends_on("py-pyyaml@5.1:", when="@2.1:")

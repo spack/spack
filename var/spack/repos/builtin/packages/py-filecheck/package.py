@@ -13,7 +13,11 @@ class PyFilecheck(PythonPackage):
 
     license("Apache-2.0")
 
-    version("0.0.23", sha256="1c5db511fb7b5a32e1e24736479cfe754ea27c9ae0d5b6d52c0af132c8db3e7d")
+    version(
+        "0.0.23",
+        sha256="cc1dc3fc2fc682ccd059b0d535606d32235613a32c018211d93aa6a99047ceb2",
+        url="https://pypi.org/packages/d8/6a/a864c347dcffa6ac6b97f3770b5f4642b26cb3acf04a5b5bc2b14a04149b/filecheck-0.0.23-py3-none-any.whl",
+    )
 
-    depends_on("python@3.6.2:3", type=("build", "run"))
-    depends_on("py-poetry-core", type="build")
+    with default_args(type="run"):
+        depends_on("python@:3", when="@:0.0.23")

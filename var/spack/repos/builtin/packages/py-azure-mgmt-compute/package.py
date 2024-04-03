@@ -13,9 +13,13 @@ class PyAzureMgmtCompute(PythonPackage):
     homepage = "https://github.com/Azure/azure-sdk-for-python"
     pypi = "azure-mgmt-compute/azure-mgmt-compute-13.0.0.zip"
 
-    version("13.0.0", sha256="7f331bafcbedf25d65aa42038f7553747dab18d7f10a5af3297192d31c45339e")
+    version(
+        "13.0.0",
+        sha256="0848fe37b4b6e49bed07d3969789072da7c259e8a8d21458251c3912f695e7c2",
+        url="https://pypi.org/packages/f3/5d/e42ae8d9f9ee8ba36a800a8eaf16cd14a0ea6cb79d8cccfb203c505cc802/azure_mgmt_compute-13.0.0-py2.py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-msrest@0.5.0:", type=("build", "run"))
-    depends_on("py-msrestazure@0.4.32:1", type=("build", "run"))
-    depends_on("py-azure-common@1.1:1", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-azure-common@1.1:", when="@:30.5")
+        depends_on("py-msrest@0.5:", when="@:19")
+        depends_on("py-msrestazure@0.4.32:", when="@:14")

@@ -19,10 +19,14 @@ class PyAdal(PythonPackage):
 
     license("MIT")
 
-    version("1.2.4", sha256="7a15d22b1ee7ce1be92441199958748982feba6b7dec35fbf60f9b607bad1bc0")
+    version(
+        "1.2.4",
+        sha256="b332316f54d947f39acd9628e7d61d90f6e54d413d6f97025a51482c96bac6bc",
+        url="https://pypi.org/packages/46/58/a19e0eb0c388fb7aced40f940c09069343862613d83095b592a8d3961ba1/adal-1.2.4-py2.py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-pyjwt@1.0.0:", type=("build", "run"))
-    depends_on("py-requests@2.0.0:", type=("build", "run"))
-    depends_on("py-python-dateutil@2.1.0:", type=("build", "run"))
-    depends_on("py-cryptography@1.1.0:", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-cryptography@1.1:")
+        depends_on("py-pyjwt@1:", when="@:1.2.5")
+        depends_on("py-python-dateutil@2:", when="@:1.2.5")
+        depends_on("py-requests@2:", when="@:1.2.5")

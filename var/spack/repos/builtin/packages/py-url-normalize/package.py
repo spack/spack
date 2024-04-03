@@ -15,9 +15,11 @@ class PyUrlNormalize(PythonPackage):
 
     license("MIT")
 
-    version("1.4.3", sha256="d23d3a070ac52a67b83a1c59a0e68f8608d1cd538783b401bc9de2c0fac999b2")
+    version(
+        "1.4.3",
+        sha256="ec3c301f04e5bb676d333a7fa162fa977ad2ca04b7e652bfc9fac4e405728eed",
+        url="https://pypi.org/packages/65/1c/6c6f408be78692fc850006a2b6dea37c2b8592892534e09996e401efc74b/url_normalize-1.4.3-py2.py3-none-any.whl",
+    )
 
-    depends_on("python@3.6:3", type=("build", "run"))
-    depends_on("py-poetry@0.12:", type="build")
-
-    depends_on("py-six", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-six", when="@1.4.3:")

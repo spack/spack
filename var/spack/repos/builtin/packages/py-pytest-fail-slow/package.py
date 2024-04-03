@@ -14,9 +14,12 @@ class PyPytestFailSlow(PythonPackage):
 
     license("MIT")
 
-    version("0.3.0", sha256="bc022f3f4f170b7e3e7d4dff45bd9e7855e4935ae396bb40b4521ce1ef8ea41c")
+    version(
+        "0.3.0",
+        sha256="bf8b57a90d13f8f694ad8250c6d2e869714422c5d7f3c2d6541bec7d1706f783",
+        url="https://pypi.org/packages/a2/bb/275f32982bd4f7a5c52639a1cb9571f0716d1b50647e607beb88769d9ff3/pytest_fail_slow-0.3.0-py3-none-any.whl",
+    )
 
-    depends_on("python@3.6:3", type=("build", "run"))
-    depends_on("py-setuptools@46.4:", type="build")
-
-    depends_on("py-pytest@6:", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("python@:3", when="@:0.3")
+        depends_on("py-pytest@6.0.0:", when="@:0.4")

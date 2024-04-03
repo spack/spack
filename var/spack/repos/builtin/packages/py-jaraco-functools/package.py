@@ -14,9 +14,11 @@ class PyJaracoFunctools(PythonPackage):
 
     license("MIT")
 
-    version("2.0", sha256="35ba944f52b1a7beee8843a5aa6752d1d5b79893eeb7770ea98be6b637bf9345")
+    version(
+        "2.0",
+        sha256="e9e377644cee5f6f9128b4dab1631fca74981236e95a255f80e4292bcd2b5284",
+        url="https://pypi.org/packages/12/a4/3e7366d0f5e75dcad7be88524c8cbd0f3a9fb1db243269550981740c57fe/jaraco.functools-2.0-py2.py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-setuptools-scm@1.15.0:", type="build")
-    depends_on("py-more-itertools", type=("build", "run"))
-    depends_on("python@2.7:", type=("build", "run"))
+    with default_args(type="run"):
+        depends_on("py-more-itertools")
