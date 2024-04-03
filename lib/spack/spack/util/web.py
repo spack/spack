@@ -116,8 +116,8 @@ def append_curl_env_for_ssl_certs(curl):
                 "CURL config:ssl_certs "
                 "resolves to {}. This is not a file so default certs will be used.".format(certs)
             )
-    tty.debug(dbg_msg_no_ssl_cert_config)
-    return curl
+    else:
+        tty.debug(dbg_msg_no_ssl_cert_config)
 
 
 def _urlopen():
@@ -348,7 +348,8 @@ def _curl(curl=None):
         except CommandNotFoundError as exc:
             tty.error(str(exc))
             raise spack.error.FetchError("Missing required curl fetch method")
-    return append_curl_env_for_ssl_certs(curl)
+    append_curl_env_for_ssl_certs(curl)
+    return curl
 
 
 def fetch_url_text(url, curl=None, dest_dir="."):
