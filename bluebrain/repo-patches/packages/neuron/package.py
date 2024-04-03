@@ -84,7 +84,7 @@ class Neuron(BuiltinNeuron):
         spec = self.spec
 
         # extra optimisation specific option added
-        nmodl_options = "codegen --force"
+        nmodl_options = ""
         if spec.satisfies("+sympy"):
             nmodl_options += " sympy --analytic"
         if spec.satisfies("+sympyopt"):
