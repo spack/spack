@@ -23,7 +23,45 @@ import spack.compilers.pgi
 import spack.compilers.xl
 import spack.compilers.xl_r
 import spack.util.module_cmd
+
 from spack.operating_systems.cray_frontend import CrayFrontend
+from spack.pkg.builtin.aocc import Aocc
+from spack.pkg.builtin.apple_clang import AppleClang
+from spack.pkg.builtin.arm import Arm
+from spack.pkg.builtin.gcc import Gcc
+from spack.pkg.builtin.nag import Nag
+
+
+def check_package_detection(mock_executable, output, expected_version, cls):
+    languages = cls.languages
+
+    executables = {}
+    script = "\n".join(f'echo "{line}"' for line in output.split("\n"))
+    for lang in languages:
+        name = getattr(cls, f"{lang}_names")[0]
+        executables[name] = mock_executable(name, output=script)
+        bindir = os.path.dirname(executables[name])
+        with open(executables[name], "r") as f:
+            print(f.read())
+
+    detected = spack.detection.by_path(
+        [cls.fullname.replace("_", "-")], path_hints=[bindir], max_workers=1
+    )
+
+    spec_name = cls.name.replace("_", "-")
+    assert len(detected) == 1
+    assert spec_name in detected
+
+    detected_package = detected[spec_name]
+    assert len(detected_package) == 1
+    assert detected_package[0].spec.satisfies(f"{spec_name}@{expected_version}")
+    assert detected_package[0].prefix == os.path.dirname(bindir)
+
+    for lang in languages:
+        name = getattr(cls, f"{lang}_names")[0]
+        assert detected_package[0].spec.extra_attributes["paths"][lang] == os.path.join(
+            bindir, name
+        )
 
 
 @pytest.mark.parametrize(
@@ -47,9 +85,11 @@ from spack.operating_systems.cray_frontend import CrayFrontend
         ),
     ],
 )
-def test_arm_version_detection(version_str, expected_version):
+def test_arm_version_detection(version_str, expected_version, mock_executable):
     version = spack.compilers.arm.Arm.extract_version_from_output(version_str)
     assert version == expected_version
+
+    check_package_detection(mock_executable, version_str, expected_version, Arm)
 
 
 @pytest.mark.parametrize(
@@ -88,10 +128,13 @@ def test_cce_version_detection(version_str, expected_version):
         ),
     ],
 )
-def test_apple_clang_version_detection(version_str, expected_version):
+def test_apple_clang_version_detection(version_str, expected_version, mock_executable):
     cls = spack.compilers.class_for_compiler_name("apple-clang")
     version = cls.extract_version_from_output(version_str)
     assert version == expected_version
+
+    # apple-clang uses a different regex/version_argument in the package vs compiler
+    check_package_detection(mock_executable, expected_version, expected_version, AppleClang)
 
 
 @pytest.mark.regression("10191")
@@ -181,9 +224,10 @@ def test_fj_version_detection(version_str, expected_version):
         ("7\n", "7"),
     ],
 )
-def test_gcc_version_detection(version_str, expected_version):
+def test_gcc_version_detection(version_str, expected_version, mock_executable):
     version = spack.compilers.gcc.Gcc.extract_version_from_output(version_str)
     assert version == expected_version
+    check_package_detection(mock_executable, version_str, expected_version, Gcc)
 
 
 @pytest.mark.parametrize(
@@ -284,9 +328,11 @@ def test_oneapi_version_detection(version_str, expected_version):
         )
     ],
 )
-def test_nag_version_detection(version_str, expected_version):
+def test_nag_version_detection(version_str, expected_version, mock_executable):
     version = spack.compilers.nag.Nag.extract_version_from_output(version_str)
     assert version == expected_version
+
+    check_package_detection(mock_executable, version_str, expected_version, Nag)
 
 
 @pytest.mark.parametrize(
@@ -489,9 +535,11 @@ def test_cray_frontend_compiler_detection(compiler, version, tmpdir, monkeypatch
         ),
     ],
 )
-def test_aocc_version_detection(version_str, expected_version):
+def test_aocc_version_detection(version_str, expected_version, mock_executable):
     version = spack.compilers.aocc.Aocc.extract_version_from_output(version_str)
     assert version == expected_version
+
+    check_package_detection(mock_executable, version_str, expected_version, Aocc)
 
 
 @pytest.mark.regression("33901")
