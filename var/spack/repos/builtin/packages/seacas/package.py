@@ -186,27 +186,32 @@ class Seacas(CMakePackage):
     variant(
         "matio",
         default=True,
-        description="Compile with matio (MatLab) support.  Enables exo2mat and mat2exo translators.",
+        description="Compile with matio (MatLab) support."
+        "  Enables exo2mat and mat2exo translators.",
     )
     variant(
         "metis",
         default=False,
-        description="Compile with METIS and ParMETIS. Provides additional parallel decomposition options.",
+        description="Compile with METIS and ParMETIS. "
+        "Provides additional parallel decomposition options.",
     )
     variant(
         "pamgen",
         default=False,
-        description="Compile with pamgen. Provides another ioss database option for internal generation of mesh models.",
+        description="Compile with pamgen. "
+        "Provides another ioss database option for internal generation of mesh models.",
     )
     variant(
         "x11",
         default=True,
-        description="Compile with X11. Needed if building blot (visualizer) and fastq (2D mesh generation).",
+        description="Compile with X11. "
+        "Needed if building blot (visualizer) and fastq (2D mesh generation).",
     )
     variant(
         "zlib",
         default=False,
-        description="Compile with zlib. Sometimes needed when building static libraries on some systems.",
+        description="Compile with zlib. "
+        "Sometimes needed when building static libraries on some systems.",
     )
     # ###################### Dependencies ##########################
     depends_on("cmake@3.22:", when="@2023-10-24:", type="build")
