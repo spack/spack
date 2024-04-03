@@ -21,6 +21,9 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     tags = ["e4s"]
 
     version("main", branch="main")
+    version("3.21.0", sha256="1e0c2f92514c72f80d4a4d0e6439a3aba0ceda7a0bcbc7ad9c44ce4cd8b14c28")
+    version("3.20.6", sha256="20e6c260765f9593924bc5b1783bd152ec5c47246b47ce516cded7b505b34795")
+    version("3.20.5", sha256="fb4e637758737af910b05f30a785245633916cd0a929b7b6447ad1028da4ea5a")
     version("3.20.4", sha256="b0d03a5595ee0a5696dd6683321e1dbfe9fea85238d3016a847b3d0bcdcfb3d9")
     version("3.20.3", sha256="75a94fb44df0512f51ad093fa784e56b61f51b7ead5956fbe49185c203f8c245")
     version("3.20.2", sha256="2a2d08b5f0e3d0198dae2c42ce1fd036f25c153ef2bb4a2d320ca141ac7cd30b")
@@ -234,6 +237,10 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     depends_on("lapack")
     depends_on("mpi", when="+mpi")
     depends_on("cuda", when="+cuda")
+    # Fixed in https://gitlab.com/petsc/petsc/-/merge_requests/7354
+    conflicts(
+        "^cuda@12.4:", when="@:3.20.5 +cuda", msg="Deprecation in CCCL 2.3 causes build failure."
+    )
     depends_on("hip", when="+rocm")
 
     with when("+rocm"):
