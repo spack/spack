@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Test detection of compiler version"""
 import os
+import sys
 
 import pytest
 
@@ -56,10 +57,11 @@ def check_package_detection(mock_executable, output, expected_version, cls):
     assert detected_package[0].spec.satisfies(f"{spec_name}@{expected_version}")
     assert detected_package[0].prefix == os.path.dirname(bindir)
 
+    suffix = ".bat" if sys.platform == "win32" else ""
     for lang in languages:
         name = getattr(cls, f"{lang}_names")[0]
         assert detected_package[0].spec.extra_attributes["paths"][lang] == os.path.join(
-            bindir, name
+            bindir, name + suffix
         )
 
 

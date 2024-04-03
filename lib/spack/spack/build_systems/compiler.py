@@ -60,7 +60,7 @@ class CompilerPackage(spack.package_base.PackageBase):
     def executables(cls):
         regexp_fmt = r"^({0}){1}({2})$"
         return [
-            re.compile(regexp_fmt.format(prefix, re.escape(name), suffix))
+            regexp_fmt.format(prefix, re.escape(name), suffix)
             for prefix, name, suffix in itertools.product(
                 cls.prefixes + [""], cls.compiler_names, cls.suffixes + [""]
             )
@@ -86,7 +86,7 @@ class CompilerPackage(spack.package_base.PackageBase):
             exes = []
             bindir = os.path.join(prefix, "bin")
             for f, regex in itertools.product(os.listdir(bindir), cls.executables):
-                if regex.match(f):
+                if re.match(regex, f):
                     exes.append(os.path.join(bindir, f))
 
         # There are often at least two copies (not symlinks) of each compiler executable in the
