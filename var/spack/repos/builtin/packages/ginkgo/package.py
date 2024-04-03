@@ -121,7 +121,7 @@ class Ginkgo(CMakePackage, CudaPackage, ROCmPackage):
             env.set("MKLROOT", join_path(spec["intel-oneapi-mkl"].prefix, "mkl", "latest"))
             env.set("DPL_ROOT", join_path(spec["intel-oneapi-dpl"].prefix, "dpl", "latest"))
             # The `IntelSYCLConfig.cmake` is broken with spack. By default, it
-            # relies on the CMAKE_CXX_COMPILER being the real ipcx/dpcpp
+            # relies on the CMAKE_CXX_COMPILER being the real ipcx
             # compiler. If not, the variable SYCL_COMPILER of that script is
             # broken, and all the SYCL detection mechanism is wrong. We fix it
             # by giving hint environment variables.
@@ -200,9 +200,9 @@ class Ginkgo(CMakePackage, CudaPackage, ROCmPackage):
                 )
 
         if "+sycl" in self.spec:
-            sycl_compatible_compilers = ["dpcpp", "icpx"]
+            sycl_compatible_compilers = ["icpx"]
             if not (os.path.basename(self.compiler.cxx) in sycl_compatible_compilers):
-                raise InstallError("ginkgo +sycl requires DPC++ (dpcpp) or icpx compiler.")
+                raise InstallError("ginkgo +sycl requires icpx compiler.")
         return args
 
     @property
