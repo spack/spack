@@ -106,6 +106,9 @@ class Ginkgo(CMakePackage, CudaPackage, ROCmPackage):
     # https://github.com/ginkgo-project/ginkgo/pull/1524
     patch("ginkgo-sycl-pr1524.patch", when="@1.7.0 +sycl %oneapi@2024:")
 
+    # https://github.com/ginkgo-project/ginkgo/pull/1585
+    patch("ginkgo-dpcpp-intrinsincs-oneapi-2024.1.patch", when="@1.7.0 +sycl %oneapi@2024.1:")
+
     # Skip smoke tests if compatible hardware isn't found
     patch("1.4.0_skip_invalid_smoke_tests.patch", when="@1.4.0")
 

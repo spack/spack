@@ -89,7 +89,8 @@ class Slate(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("lapackpp@2021.04.00:", when="@2021.05.01:")
     depends_on("lapackpp@2020.10.02", when="@2020.10.00")
     depends_on("lapackpp@master", when="@master")
-    depends_on("scalapack", type="test")
+    depends_on("scalapack", when="@:2022.07.00", type="test")
+    depends_on("python", type="test")
     depends_on("hipify-clang", when="@:2021.05.02 +rocm ^hip@5:")
 
     requires("%oneapi", when="+sycl", msg="slate+sycl must be compiled with %oneapi")
@@ -136,8 +137,8 @@ class Slate(CMakePackage, CudaPackage, ROCmPackage):
             archs = ";".join(spec.variants["amdgpu_target"].value)
             config.append("-DCMAKE_HIP_ARCHITECTURES=%s" % archs)
 
-        if self.run_tests:
-            config.append("-DSCALAPACK_LIBRARIES=%s" % spec["scalapack"].libs.joined(";"))
+        slibs = spec["scalapack"].libs.joined(";") if "scalapack" in spec else "none"
+        config.append(f"-DSCALAPACK_LIBRARIES={slibs}")
         return config
 
     @run_after("install")
