@@ -127,8 +127,10 @@ class AmrWind(CMakePackage, CudaPackage, ROCmPackage):
                 "%dpcpp",
                 "%oneapi",
                 policy="one_of",
-                msg=("AMReX's SYCL GPU Backend requires DPC++ (dpcpp) "
-                     "or the oneAPI CXX (icpx) compiler."),
+                msg=(
+                    "AMReX's SYCL GPU Backend requires DPC++ (dpcpp) "
+                    "or the oneAPI CXX (icpx) compiler."
+                ),
             )
 
         return args
