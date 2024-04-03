@@ -1023,14 +1023,6 @@ error(100, "Cannot select '{0} os={1}' (operating system '{1}' is not buildable)
     attr("node_os", node(X, Package), OS),
     not buildable_os(OS).
 
-% can't have dependencies on incompatible OS's
-error(100, "{0} and dependency {1} have incompatible operating systems 'os={2}' and 'os={3}'", Package, Dependency, PackageNodeOS, DependencyOS)
-  :- depends_on(node(X, Package), node(Y, Dependency)),
-     attr("node_os", node(X, Package), PackageNodeOS),
-     attr("node_os", node(Y, Dependency), DependencyOS),
-     not os_compatible(PackageNodeOS, DependencyOS),
-     build(node(X, Package)).
-
 % give OS choice weights according to os declarations
 node_os_weight(PackageNode, Weight)
  :- attr("node", PackageNode),
@@ -1042,13 +1034,6 @@ os_compatible(OS, OS) :- os(OS).
 
 % Transitive compatibility among operating systems
 os_compatible(OS1, OS3) :- os_compatible(OS1, OS2), os_compatible(OS2, OS3).
-
-% We can select only operating systems compatible with the ones
-% for which we can build software. We need a cardinality constraint
-% since we might have more than one "buildable_os(OS)" fact.
-:- not 1 { os_compatible(CurrentOS, ReusedOS) : buildable_os(CurrentOS) },
-   attr("node_os", Package, ReusedOS),
-   internal_error("Reused OS incompatible with build OS").
 
 % If an OS is set explicitly respect the value
 attr("node_os", PackageNode, OS) :- attr("node_os_set", PackageNode, OS), attr("node", PackageNode).

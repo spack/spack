@@ -13,6 +13,7 @@ import archspec.cpu
 
 import llnl.util.lang
 
+import spack.compiler
 import spack.compilers
 import spack.concretize
 import spack.config
@@ -65,6 +66,24 @@ def check_concretize(abstract_spec):
     assert concrete.concrete
     check_spec(abstract, concrete)
     return concrete
+
+
+@pytest.fixture(scope="function", autouse=True)
+def binary_compatibility(monkeypatch, request):
+    """Selects whether we use OS compatibility for binaries, or libc compatibility."""
+    if spack.platforms.real_host().name != "linux":
+        return
+
+    if "mock_packages" not in request.fixturenames:
+        # Only builtin.mock has a mock glibc package
+        return
+
+    if "database" in request.fixturenames or "mutable_database" in request.fixturenames:
+        # Databases have been created without glibc support
+        return
+
+    monkeypatch.setattr(spack.solver.asp, "using_libc_compatibility", lambda: True)
+    monkeypatch.setattr(spack.compiler.Compiler, "default_libc", lambda x: Spec("glibc@=2.28"))
 
 
 @pytest.fixture(
@@ -1452,6 +1471,8 @@ class TestConcretize:
         ):
             s = Spec(spec_str).concretized()
             for node in s.traverse():
+                if node.name == "glibc":
+                    continue
                 assert node.satisfies(expected_os)
 
     @pytest.mark.regression("22718")
@@ -1764,7 +1785,8 @@ class TestConcretize:
             for s in result.specs:
                 concrete_specs.update(s.traverse())
 
-        assert len(concrete_specs) == expected
+        libc_offset = 1 if spack.solver.asp.using_libc_compatibility() else 0
+        assert len(concrete_specs) == expected + libc_offset
 
     @pytest.mark.parametrize(
         "specs,expected_spec,occurances",
@@ -1884,28 +1906,15 @@ class TestConcretize:
             result_spec = result.specs[0]
             num_specs = len(list(result_spec.traverse()))
 
+            libc_offset = 1 if spack.solver.asp.using_libc_compatibility() else 0
             criteria = [
-                (num_specs - 1, None, "number of packages to build (vs. reuse)"),
+                (num_specs - 1 - libc_offset, None, "number of packages to build (vs. reuse)"),
                 (2, 0, "version badness"),
             ]
 
             for criterion in criteria:
-                assert criterion in result.criteria
+                assert criterion in result.criteria, result_spec
             assert result_spec.satisfies("^b@1.0")
-
-    @pytest.mark.regression("31169")
-    @pytest.mark.only_clingo("Use case not supported by the original concretizer")
-    def test_not_reusing_incompatible_os(self):
-        root_spec = Spec("b")
-        s = root_spec.concretized()
-        wrong_os = s.copy()
-        wrong_os.architecture = spack.spec.ArchSpec("test-ubuntu2204-x86_64")
-        with spack.config.override("concretizer:reuse", True):
-            solver = spack.solver.asp.Solver()
-            setup = spack.solver.asp.SpackSolverSetup()
-            result, _, _ = solver.driver.solve(setup, [root_spec], reuse=[wrong_os])
-        concrete_spec = result.specs[0]
-        assert concrete_spec.satisfies("os={}".format(s.architecture.os))
 
     @pytest.mark.only_clingo("Use case not supported by the original concretizer")
     def test_reuse_succeeds_with_config_compatible_os(self):
