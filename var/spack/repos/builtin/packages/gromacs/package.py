@@ -259,7 +259,7 @@ class Gromacs(CMakePackage, CudaPackage):
         depends_on("plumed+mpi", when="+mpi")
         depends_on("plumed~mpi", when="~mpi")
         for gmx_ver, plumed_vers in plumed_patches.items():
-            depends_on("plumed@{0}".format(plumed_vers), when="@{0}+plumed".format(gmx_ver))
+            depends_on("plumed@{0}".format(plumed_vers), when="@={0}+plumed".format(gmx_ver))
 
     variant(
         "intel_provided_gcc",
