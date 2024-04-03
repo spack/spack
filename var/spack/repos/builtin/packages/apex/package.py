@@ -125,6 +125,11 @@ class Apex(CMakePackage):
     # https://github.com/UO-OACISS/apex/pull/177#issuecomment-1726322959
     conflicts("+openmp", when="%gcc")
 
+    # Up to 2.6.3 Kokkos support is always enabled. In 2.6.4 and 2.6.5 there is
+    # a CMake option to disable Kokkos support but it doesn't work:
+    # https://github.com/UO-OACISS/apex/issues/180.
+    conflicts("~kokkos", when="@:2.6.5")
+
     # Patches
 
     # This patch ensures that the missing dependency_tree.hpp header is
@@ -154,6 +159,7 @@ class Apex(CMakePackage):
         args.append(self.define_from_variant(prefix + "_LM_SENSORS", "lmsensors"))
         args.append(self.define_from_variant(prefix + "_TCMALLOC", "gperftools"))
         args.append(self.define_from_variant(prefix + "_JEMALLOC", "jemalloc"))
+        args.append(self.define_from_variant(prefix + "_KOKKOS", "kokkos"))
         args.append(self.define_from_variant(test_prefix + "BUILD_TESTS", "tests"))
         args.append(self.define_from_variant(test_prefix + "BUILD_EXAMPLES", "examples"))
 

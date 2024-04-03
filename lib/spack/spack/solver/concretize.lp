@@ -159,6 +159,14 @@ error(100, multiple_values_error, Attribute, Package)
      2 { attr(Attribute, node(ID, Package), Value) }.
 
 %-----------------------------------------------------------------------------
+% Languages used
+%-----------------------------------------------------------------------------
+
+attr("language", node(X, Package), Language) :-
+  condition_holds(ConditionID, node(X, Package)),
+  pkg_fact(Package,language(ConditionID, Language)).
+
+%-----------------------------------------------------------------------------
 % Version semantics
 %-----------------------------------------------------------------------------
 
@@ -1178,7 +1186,8 @@ error(100, "{0} compiler '%{1}@{2}' incompatible with 'os={3}'", Package, Compil
      node_compiler(node(X, Package), CompilerID),
      compiler_name(CompilerID, Compiler),
      compiler_version(CompilerID, Version),
-     not compiler_os(CompilerID, OS),
+     compiler_os(CompilerID, CompilerOS),
+     not os_compatible(CompilerOS, OS),
      not allow_compiler(Compiler, Version),
      build(node(X, Package)).
 

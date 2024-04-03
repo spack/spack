@@ -100,6 +100,9 @@ class Ginkgo(CMakePackage, CudaPackage, ROCmPackage):
         "+sycl", when="@:1.4.0", msg="For SYCL support, please use Ginkgo version 1.4.0 and newer."
     )
 
+    # Probably fixed in NVIDIA/cccl#1528 which hopefully comes with the next CUDA release
+    conflicts("^cuda@12.4.0", when="+cuda", msg="CCCL 2.3 bug causes build failure.")
+
     # https://github.com/ginkgo-project/ginkgo/pull/1524
     patch("ginkgo-sycl-pr1524.patch", when="@1.7.0 +sycl %oneapi@2024:")
 

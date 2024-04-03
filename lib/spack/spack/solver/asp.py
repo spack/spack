@@ -541,6 +541,7 @@ def _concretization_version_order(version_info: Tuple[GitOrStandardVersion, dict
         info.get("preferred", False),
         not info.get("deprecated", False),
         not version.isdevelop(),
+        not version.is_prerelease(),
         version,
     )
 
@@ -762,7 +763,6 @@ class PyclingoDriver:
         timer.stop("ground")
 
         # With a grounded program, we can run the solve.
-        result = Result(specs)
         models = []  # stable models if things go well
         cores = []  # unsatisfiable cores if they do not
 
@@ -783,6 +783,7 @@ class PyclingoDriver:
         timer.stop("solve")
 
         # once done, construct the solve result
+        result = Result(specs)
         result.satisfiable = solve_result.satisfiable
 
         if result.satisfiable:
@@ -822,6 +823,8 @@ class PyclingoDriver:
         if output.stats:
             print("Statistics:")
             pprint.pprint(self.control.statistics)
+
+        result.raise_if_unsat()
 
         if result.satisfiable and result.unsolved_specs and setup.concretize_everything:
             unsolved_str = Result.format_unsolved(result.unsolved_specs)
@@ -1039,6 +1042,25 @@ class SpackSolverSetup:
                 )
                 self.gen.newline()
 
+    def package_languages(self, pkg):
+        for when_spec, languages in pkg.languages.items():
+            condition_msg = f"{pkg.name} needs the {', '.join(sorted(languages))} language"
+            if when_spec != spack.spec.Spec():
+                condition_msg += f" when {when_spec}"
+            condition_id = self.condition(when_spec, name=pkg.name, msg=condition_msg)
+            for language in sorted(languages):
+                self.gen.fact(fn.pkg_fact(pkg.name, fn.language(condition_id, language)))
+        self.gen.newline()
+
+    def config_compatible_os(self):
+        """Facts about compatible os's specified in configs"""
+        self.gen.h2("Compatible OS from concretizer config file")
+        os_data = spack.config.get("concretizer:os_compatible", {})
+        for recent, reusable in os_data.items():
+            for old in reusable:
+                self.gen.fact(fn.os_compatible(recent, old))
+                self.gen.newline()
+
     def compiler_facts(self):
         """Facts about available compilers."""
 
@@ -1087,6 +1109,9 @@ class SpackSolverSetup:
         # versions
         self.pkg_version_rules(pkg)
         self.gen.newline()
+
+        # languages
+        self.package_languages(pkg)
 
         # variants
         self.variant_rules(pkg)
@@ -2158,7 +2183,7 @@ class SpackSolverSetup:
             if isinstance(v, vn.StandardVersion):
                 return [v]
             elif isinstance(v, vn.ClosedOpenRange):
-                return [v.lo, vn.prev_version(v.hi)]
+                return [v.lo, vn._prev_version(v.hi)]
             elif isinstance(v, vn.VersionList):
                 return sum((versions_for(e) for e in v), [])
             else:
@@ -2293,8 +2318,6 @@ class SpackSolverSetup:
         self.possible_virtuals = node_counter.possible_virtuals()
         self.pkgs = node_counter.possible_dependencies()
 
-        self.pkgs.update(spack.repo.PATH.packages_with_tags("runtime"))
-
         # Fail if we already know an unreachable node is requested
         for spec in specs:
             missing_deps = [
@@ -2308,7 +2331,6 @@ class SpackSolverSetup:
                 self.explicitly_required_namespaces[node.name] = node.namespace
 
         self.gen = ProblemInstanceBuilder()
-
         if not allow_deprecated:
             self.gen.fact(fn.deprecated_versions_not_allowed())
 
@@ -2347,6 +2369,7 @@ class SpackSolverSetup:
         self.gen.newline()
 
         self.gen.h1("General Constraints")
+        self.config_compatible_os()
         self.compiler_facts()
 
         # architecture defaults
@@ -2438,14 +2461,14 @@ class SpackSolverSetup:
         """Define the constraints to be imposed on the runtimes"""
         recorder = RuntimePropertyRecorder(self)
         for compiler in self.possible_compilers:
-            if compiler.name != "gcc":
-                continue
+            compiler_with_different_cls_names = {"oneapi": "intel-oneapi-compilers"}
+            compiler_cls_name = compiler_with_different_cls_names.get(compiler.name, compiler.name)
             try:
-                compiler_cls = spack.repo.PATH.get_pkg_class(compiler.name)
+                compiler_cls = spack.repo.PATH.get_pkg_class(compiler_cls_name)
             except spack.repo.UnknownPackageError:
                 continue
             if hasattr(compiler_cls, "runtime_constraints"):
-                compiler_cls.runtime_constraints(compiler=compiler, pkg=recorder)
+                compiler_cls.runtime_constraints(spec=compiler.spec, pkg=recorder)
 
         recorder.consume_facts()
 
@@ -2857,13 +2880,24 @@ class RuntimePropertyRecorder:
         """Resets the current state."""
         self.current_package = None
 
-    def depends_on(self, dependency_str: str, *, when: str, type: str, description: str) -> None:
+    def depends_on(
+        self,
+        dependency_str: str,
+        *,
+        when: str,
+        type: str,
+        description: str,
+        languages: Optional[List[str]] = None,
+    ) -> None:
         """Injects conditional dependencies on packages.
+
+        Conditional dependencies can be either "real" packages or virtual dependencies.
 
         Args:
             dependency_str: the dependency spec to inject
             when: anonymous condition to be met on a package to have the dependency
             type: dependency type
+            languages: languages needed by the package for the dependency to be considered
             description: human-readable description of the rule for adding the dependency
         """
         # TODO: The API for this function is not final, and is still subject to change. At
@@ -2889,26 +2923,45 @@ class RuntimePropertyRecorder:
             f"  not external({node_variable}),\n"
             f"  not runtime(Package)"
         ).replace(f'"{placeholder}"', f"{node_variable}")
+        if languages:
+            body_str += ",\n"
+            for language in languages:
+                body_str += f'  attr("language", {node_variable}, "{language}")'
+
         head_clauses = self._setup.spec_clauses(dependency_spec, body=False)
 
         runtime_pkg = dependency_spec.name
+
+        is_virtual = head_clauses[0].args[0] == "virtual_node"
         main_rule = (
             f"% {description}\n"
             f'1 {{ attr("depends_on", {node_variable}, node(0..X-1, "{runtime_pkg}"), "{type}") :'
-            f' max_dupes("gcc-runtime", X)}} 1:-\n'
+            f' max_dupes("{runtime_pkg}", X)}} 1:-\n'
             f"{body_str}.\n\n"
         )
+        if is_virtual:
+            main_rule = (
+                f"% {description}\n"
+                f'attr("dependency_holds", {node_variable}, "{runtime_pkg}", "{type}") :-\n'
+                f"{body_str}.\n\n"
+            )
+
         self.rules.append(main_rule)
         for clause in head_clauses:
             if clause.args[0] == "node":
                 continue
             runtime_node = f'node(RuntimeID, "{runtime_pkg}")'
             head_str = str(clause).replace(f'"{runtime_pkg}"', runtime_node)
-            rule = (
-                f"{head_str} :-\n"
+            depends_on_constraint = (
                 f'  attr("depends_on", {node_variable}, {runtime_node}, "{type}"),\n'
-                f"{body_str}.\n\n"
             )
+            if is_virtual:
+                depends_on_constraint = (
+                    f'  attr("depends_on", {node_variable}, ProviderNode, "{type}"),\n'
+                    f"  provider(ProviderNode, {runtime_node}),\n"
+                )
+
+            rule = f"{head_str} :-\n" f"{depends_on_constraint}" f"{body_str}.\n\n"
             self.rules.append(rule)
 
         self.reset()
@@ -3484,9 +3537,14 @@ class Solver:
             if not result.unsolved_specs:
                 break
 
-            # This means we cannot progress with solving the input
-            if not result.satisfiable or not result.specs:
-                break
+            if not result.specs:
+                # This is also a problem: no specs were solved for, which
+                # means we would be in a loop if we tried again
+                unsolved_str = Result.format_unsolved(result.unsolved_specs)
+                raise InternalConcretizerError(
+                    "Internal Spack error: a subset of input specs could not"
+                    f" be solved for.\n\t{unsolved_str}"
+                )
 
             input_specs = list(x for (x, y) in result.unsolved_specs)
             for spec in result.specs:
