@@ -198,3 +198,7 @@ class Glibc(AutotoolsPackage, GNUMirrorPackage):
             make("-C", "..", f"objdir={os.getcwd()}", "lib")
             delete_rpath(join_path("elf", "ld.so"))
             make()
+
+    @property
+    def libs(self):
+        return LibraryList([])

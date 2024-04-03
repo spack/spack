@@ -28,8 +28,6 @@ class LlvmDoe(CMakePackage, CudaPackage):
 
     generator("ninja")
 
-    family = "compiler"  # Used by lmod
-
     version("doe", branch="doe", preferred=True)
     version("upstream", branch="llvm.org/main")
     version("bolt", branch="bolt/main")

@@ -422,5 +422,5 @@ class IntelOneapiCompilers(IntelOneApiPackage):
                 description=f"Add a dependency on 'libifcore' for nodes compiled with "
                 f"{str(spec)} and using the 'fortran' language",
             )
-        # The version of gcc-runtime is the same as the %gcc used to "compile" it
+        # The version of intel-oneapi-runtime is the same as the %oneapi used to "compile" it
         pkg("intel-oneapi-runtime").requires(f"@={str(spec.version)}", when=f"%{str(spec)}")

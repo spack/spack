@@ -53,6 +53,8 @@ class GccRuntime(Package):
     provides("libgfortran@4", when="%gcc@7")
     provides("libgfortran@5", when="%gcc@8:")
 
+    depends_on("libc", type="link")
+
     def install(self, spec, prefix):
         if spec.platform in ["linux", "cray", "freebsd"]:
             libraries = get_elf_libraries(compiler=self.compiler, libraries=self.LIBRARIES)

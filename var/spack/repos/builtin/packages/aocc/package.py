@@ -28,7 +28,6 @@ class Aocc(Package):
     """
 
     _name = "aocc"
-    family = "compiler"
     homepage = "https://www.amd.com/en/developer/aocc.html"
 
     maintainers("amd-toolchain-support")
