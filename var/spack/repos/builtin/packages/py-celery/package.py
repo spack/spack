@@ -61,8 +61,8 @@ class PyCelery(PythonPackage):
     depends_on("py-sqlalchemy", when="+sqlalchemy", type=("build", "run"))
 
     depends_on("py-click@7.0:7", when="@5.0.0:5.0", type=("build", "run"))
-    depends_on("py-click@8.0.3:8", when="@5.2.0:5.2.99", type=("build", "run"))
-    depends_on("py-click@8.1.2:", when="@5.3.0:", type=("build", "run"))
+    depends_on("py-click@8.0.3:8", when="@5.2", type=("build", "run"))
+    depends_on("py-click@8.1.2:", when="@5.3:", type=("build", "run"))
     depends_on("py-click-didyoumean@0.0.3:", when="@5.0.0:5", type=("build", "run"))
     depends_on("py-click-plugins@1.1.1:", when="@5.0.3:", type=("build", "run"))
     depends_on("py-click-repl@:0.1.6", when="@5.0.0:5.0", type=("build", "run"))

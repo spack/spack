@@ -26,7 +26,7 @@ class PyAmqp(PythonPackage):
     version("2.5.0", sha256="cbb6f87d53cac612a594f982b717cc1c54c6a1e17943a0a0d32dc6cc9e2120c8")
     version("2.4.2", sha256="043beb485774ca69718a35602089e524f87168268f0d1ae115f28b88d27f92d7")
     version("2.4.1", sha256="6816eed27521293ee03aa9ace300a07215b11fee4e845588a9b863a7ba30addb")
-    version("2.4.0", sha256="1183b66e54a5c533b679d9f557b31c5b31d26701761f2bbd144054cce58f3588")
+    version("2.4.0", sha256="9f181e4aef6562e6f9f45660578fc1556150ca06e836ecb9e733e6ea10b48464")
 
     depends_on("python@2.7:2.8,3.5:", type=("build", "run"))
     depends_on("python@3.6:", type=("build", "run"), when="@5.0.9:")
