@@ -1,0 +1,12 @@
+diff -Nur SIRIUS-7.3.2/src/k_point/k_point_set.cpp SIRIUS-7.3.2-src/src/k_point/k_point_set.cpp
+--- SIRIUS-7.3.2/src/k_point/k_point_set.cpp	2022-07-05 16:19:54.000000000 +0900
++++ SIRIUS-7.3.2-src/src/k_point/k_point_set.cpp	2023-09-22 18:28:23.000000000 +0900
+@@ -317,7 +317,7 @@
+     splindex<splindex_t::block> splb(ctx_.num_bands(), ctx_.comm_band().size(), ctx_.comm_band().rank());
+ 
+     /* computes N(ef; f) = \sum_{i,k} f(ef - e_{k,i}) */
+-    auto compute_ne = [&](double ef, auto&& f) {
++    auto compute_ne = [&](double ef, std::function<double(double)> f) {
+         double ne{0};
+         for (int ikloc = 0; ikloc < spl_num_kpoints_.local_size(); ikloc++) {
+             int ik = spl_num_kpoints_[ikloc];
