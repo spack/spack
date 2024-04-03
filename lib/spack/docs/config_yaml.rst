@@ -146,6 +146,22 @@ tools like ``curl`` will use their ``--insecure`` options.  Disabling
 this can expose you to attacks.  Use at your own risk.
 
 --------------------
+``ssl_certs``
+--------------------
+
+Path to custom certificats for SSL verification. The value can be a 
+filesytem path, or an environment variable that expands to a file path.
+The default value is set to the environment variable ``SSL_CERT_FILE``
+to use the same syntax used by many other applications that automatically
+detect custom certificates.
+When ``url_fetch_method:curl`` the ``config:ssl_certs`` should resolve to
+a single file.  Spack will then set the environment variable ``CURL_CA_BUNDLE``
+in the subprocess calling ``curl``.
+If ``url_fetch_method:urllib`` then files and directories are supported i.e. 
+``config:ssl_certs:$SSL_CERT_FILE`` or ``config:ssl_certs:$SSL_CERT_DIR``
+will work.
+
+--------------------
 ``checksum``
 --------------------
 

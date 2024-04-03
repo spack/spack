@@ -85,6 +85,7 @@ class Gdb(AutotoolsPackage, GNUMirrorPackage):
     depends_on("xz", when="+xz")
     depends_on("zlib-api")
     depends_on("zstd", when="@13.1:")
+    depends_on("pkgconfig", type="build", when="@13.1:")
     depends_on("source-highlight", when="+source-highlight")
     depends_on("ncurses", when="+tui")
     depends_on("gmp", when="@11.1:")

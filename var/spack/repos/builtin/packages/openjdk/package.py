@@ -334,7 +334,7 @@ _versions = {
 class Openjdk(Package):
     """The free and opensource java implementation"""
 
-    homepage = "https://jdk.java.net"
+    homepage = "https://openjdk.org/"
     preferred_prefix = "11."
 
     preferred_defined = False
