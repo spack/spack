@@ -478,6 +478,12 @@ prefix, you can add them to the ``extra_attributes`` field. Similarly,
 all other fields from the compilers config can be added to the
 ``extra_attributes`` field for an external representing a compiler.
 
+Note that the format for the ``paths`` field in the
+``extra_attributes`` section is different than in the ``compilers``
+config. For compilers configured as external packages, the ``paths``
+dictionary maps language names (``c``, ``cxx``, ``fortran``) to paths,
+rather than using the names ``cc``, ``fc``, and ``f77``.
+
 .. code-block:: yaml
 
    packages:
@@ -494,10 +500,9 @@ all other fields from the compilers config can be added to the
          prefix: /usr
          extra_attributes:
            paths:
-             cc: /usr/bin/clang-with-suffix
+             c: /usr/bin/clang-with-suffix
              cxx: /usr/bin/clang++-with-extra-info
-             fc: /usr/bin/gfortran
-             f77: /usr/bin/gfortran
+             fortran: /usr/bin/gfortran
            extra_rpaths:
            - /usr/lib/llvm/
 
