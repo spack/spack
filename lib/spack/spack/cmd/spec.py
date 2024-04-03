@@ -32,7 +32,9 @@ for further documentation regarding the spec syntax, see:
     arguments.add_common_arguments(subparser, ["long", "very_long", "namespaces"])
 
     install_status_group = subparser.add_mutually_exclusive_group()
-    arguments.add_common_arguments(install_status_group, ["install_status", "no_install_status"])
+    arguments.add_common_arguments(
+        install_status_group, ["install_status", "no_install_status", "debug_nondefaults"]
+    )
 
     format_group = subparser.add_mutually_exclusive_group()
     format_group.add_argument(
@@ -84,6 +86,8 @@ def spec(parser, args):
     tree_kwargs = {
         "cover": args.cover,
         "format": fmt,
+        "hashes": args.long or args.very_long,
+        "nondefaults": args.debug_nondefaults,
         "hashlen": None if args.very_long else 7,
         "show_types": args.types,
         "status_fn": install_status_fn if args.install_status else None,
@@ -125,12 +129,14 @@ def spec(parser, args):
             # repeated output. This happens because parse_specs outputs concrete
             # specs for `/hash` inputs.
             if not input.concrete:
-                tree_kwargs["hashes"] = False  # Always False for input spec
+                # NOTE: can use overrides | tree_kwargs in python 3.9+
+                overrides = {"hashes": False}
+                overriden_kwargs = {**overrides, **tree_kwargs}
+
                 print("Input spec")
                 print("--------------------------------")
-                print(input.tree(**tree_kwargs))
+                print(input.tree(**overriden_kwargs))
                 print("Concretized")
                 print("--------------------------------")
 
-            tree_kwargs["hashes"] = args.long or args.very_long
             print(output.tree(**tree_kwargs))

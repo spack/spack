@@ -475,10 +475,7 @@ def print_virtuals(pkg, args):
     color.cprint(section_title("Virtual Packages: "))
     if pkg.provided:
         for when, specs in reversed(sorted(pkg.provided.items())):
-            line = "    %s provides %s" % (
-                when.colorized(),
-                ", ".join(s.colorized() for s in specs),
-            )
+            line = "    %s provides %s" % (when.cformat(), ", ".join(s.cformat() for s in specs))
             print(line)
 
     else:

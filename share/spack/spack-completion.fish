@@ -2721,7 +2721,7 @@ complete -c spack -n '__fish_spack_using_command restage' -s h -l help -f -a hel
 complete -c spack -n '__fish_spack_using_command restage' -s h -l help -d 'show this help message and exit'
 
 # spack solve
-set -g __fish_spack_optspecs_spack_solve h/help show= l/long L/very-long N/namespaces I/install-status no-install-status y/yaml j/json c/cover= t/types timers stats U/fresh reuse reuse-deps deprecated
+set -g __fish_spack_optspecs_spack_solve h/help show= l/long L/very-long N/namespaces I/install-status no-install-status d/debug-nondefaults y/yaml j/json c/cover= t/types timers stats U/fresh reuse reuse-deps deprecated
 complete -c spack -n '__fish_spack_using_command_pos_remainder 0 solve' -f -k -a '(__fish_spack_specs_or_id)'
 complete -c spack -n '__fish_spack_using_command solve' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command solve' -s h -l help -d 'show this help message and exit'
@@ -2737,6 +2737,8 @@ complete -c spack -n '__fish_spack_using_command solve' -s I -l install-status -
 complete -c spack -n '__fish_spack_using_command solve' -s I -l install-status -d 'show install status of packages'
 complete -c spack -n '__fish_spack_using_command solve' -l no-install-status -f -a install_status
 complete -c spack -n '__fish_spack_using_command solve' -l no-install-status -d 'do not show install status annotations'
+complete -c spack -n '__fish_spack_using_command solve' -s d -l debug-nondefaults -f -a debug_nondefaults
+complete -c spack -n '__fish_spack_using_command solve' -s d -l debug-nondefaults -d 'show non-default decisions in red'
 complete -c spack -n '__fish_spack_using_command solve' -s y -l yaml -f -a format
 complete -c spack -n '__fish_spack_using_command solve' -s y -l yaml -d 'print concrete spec as yaml'
 complete -c spack -n '__fish_spack_using_command solve' -s j -l json -f -a format
@@ -2759,7 +2761,7 @@ complete -c spack -n '__fish_spack_using_command solve' -l deprecated -f -a conf
 complete -c spack -n '__fish_spack_using_command solve' -l deprecated -d 'allow concretizer to select deprecated versions'
 
 # spack spec
-set -g __fish_spack_optspecs_spack_spec h/help l/long L/very-long N/namespaces I/install-status no-install-status y/yaml j/json format= c/cover= t/types U/fresh reuse reuse-deps deprecated
+set -g __fish_spack_optspecs_spack_spec h/help l/long L/very-long N/namespaces I/install-status no-install-status d/debug-nondefaults y/yaml j/json format= c/cover= t/types U/fresh reuse reuse-deps deprecated
 complete -c spack -n '__fish_spack_using_command_pos_remainder 0 spec' -f -k -a '(__fish_spack_specs_or_id)'
 complete -c spack -n '__fish_spack_using_command spec' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command spec' -s h -l help -d 'show this help message and exit'
@@ -2773,6 +2775,8 @@ complete -c spack -n '__fish_spack_using_command spec' -s I -l install-status -f
 complete -c spack -n '__fish_spack_using_command spec' -s I -l install-status -d 'show install status of packages'
 complete -c spack -n '__fish_spack_using_command spec' -l no-install-status -f -a install_status
 complete -c spack -n '__fish_spack_using_command spec' -l no-install-status -d 'do not show install status annotations'
+complete -c spack -n '__fish_spack_using_command spec' -s d -l debug-nondefaults -f -a debug_nondefaults
+complete -c spack -n '__fish_spack_using_command spec' -s d -l debug-nondefaults -d 'show non-default decisions in red'
 complete -c spack -n '__fish_spack_using_command spec' -s y -l yaml -f -a format
 complete -c spack -n '__fish_spack_using_command spec' -s y -l yaml -d 'print concrete spec as YAML'
 complete -c spack -n '__fish_spack_using_command spec' -s j -l json -f -a format

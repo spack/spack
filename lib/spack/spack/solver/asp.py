@@ -3020,6 +3020,23 @@ class RuntimePropertyRecorder:
         self._setup.effect_rules()
 
 
+def call_on_concrete(fun):
+    """Annotation for SpecBuilder actions that indicates they should be called on concrete specs.
+
+    While building Specs, we set a lot of attributes on the Specs that are under
+    construction, but we may also just look up a concrete spec (e.g., if a specific hash
+    was reused). We don't need to set most attributes on these b/c we just look them up
+    in the DB.
+
+    Metadata attributes like concretizer weights aren't stored on the spec or in the DB
+    -- they're transient annotations for a single run. So we need their handlers to be
+    called on all specs, including concrete ones.
+
+    """
+    fun._call_on_concrete = True
+    return fun
+
+
 class SpecBuilder:
     """Class with actions to rebuild a spec from ASP results."""
 
@@ -3119,6 +3136,7 @@ class SpecBuilder:
     def node_flag(self, node, flag_type, flag):
         self._specs[node].compiler_flags.add_flag(flag_type, flag, False)
 
+    @call_on_concrete
     def node_flag_source(self, node, flag_type, source):
         self._flag_sources[(node, flag_type)].add(source)
 
@@ -3227,6 +3245,31 @@ class SpecBuilder:
     def deprecated(self, node: NodeArgument, version: str) -> None:
         tty.warn(f'using "{node.pkg}@{version}" which is a deprecated version')
 
+    @call_on_concrete
+    def version_weight(self, node: NodeArgument, weight: int):
+        self._specs[node]._weights["version_weight"] = int(weight)
+
+    @call_on_concrete
+    def provider_weight(self, node: NodeArgument, virtual: str, weight: int):
+        self._specs[node]._weights.setdefault("provider_weight", 0)
+        self._specs[node]._weights["provider_weight"] += int(weight)
+
+    @call_on_concrete
+    def variant_not_default(self, node: NodeArgument, variant: str, value: str):
+        self._specs[node]._weights[f"variant_not_default({variant})"] = bool(value)
+
+    @call_on_concrete
+    def variant_default_not_used(self, node: NodeArgument, variant: str, value: str):
+        self._specs[node]._weights[f"variant_default_not_used({variant})"] = bool(value)
+
+    @call_on_concrete
+    def node_compiler_weight(self, node: NodeArgument, weight: int):
+        self._specs[node]._weights["node_compiler_weight"] = int(weight)
+
+    @call_on_concrete
+    def node_target_weight(self, node: NodeArgument, weight: int):
+        self._specs[node]._weights["node_target_weight"] = int(weight)
+
     @staticmethod
     def sort_fn(function_tuple):
         """Ensure attributes are evaluated in the correct order.
@@ -3285,13 +3328,12 @@ class SpecBuilder:
                 if spack.repo.PATH.is_virtual(pkg):
                     continue
 
-                # if we've already gotten a concrete spec for this pkg,
-                # do not bother calling actions on it except for node_flag_source,
-                # since node_flag_source is tracking information not in the spec itself
+                # if we've already gotten a concrete spec for this pkg, do not bother
+                # calling actions on it except for certain metaata methods that add
+                # information not tracked on the spec itself.
                 spec = self._specs.get(args[0])
-                if spec and spec.concrete:
-                    if name != "node_flag_source":
-                        continue
+                if spec and spec.concrete and not getattr(action, "_call_on_concrete", None):
+                    continue
 
             action(*args)
 

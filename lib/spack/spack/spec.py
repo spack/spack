@@ -125,31 +125,15 @@ __all__ = [
 
 IDENTIFIER_RE = r"\w[\w-]*"
 
+# Coloring of specs when using color output. Fields are printed with
+# different colors to enhance readability.
+# See llnl.util.tty.color for descriptions of the color codes.
 COMPILER_COLOR = "@g"  #: color for highlighting compilers
 VERSION_COLOR = "@c"  #: color for highlighting versions
 ARCHITECTURE_COLOR = "@m"  #: color for highlighting architectures
-ENABLED_VARIANT_COLOR = "@B"  #: color for highlighting enabled variants
-DISABLED_VARIANT_COLOR = "r"  #: color for highlighting disabled varaints
-DEPENDENCY_COLOR = "@."  #: color for highlighting dependencies
+VARIANT_COLOR = "@B"  #: color for highlighting variants
 HASH_COLOR = "@K"  #: color for highlighting package hashes
-
-#: This map determines the coloring of specs when using color output.
-#: We make the fields different colors to enhance readability.
-#: See llnl.util.tty.color for descriptions of the color codes.
-COLOR_FORMATS = {
-    "%": COMPILER_COLOR,
-    "@": VERSION_COLOR,
-    "=": ARCHITECTURE_COLOR,
-    "+": ENABLED_VARIANT_COLOR,
-    "~": DISABLED_VARIANT_COLOR,
-    "^": DEPENDENCY_COLOR,
-    "#": HASH_COLOR,
-}
-
-#: Regex used for splitting by spec field separators.
-#: These need to be escaped to avoid metacharacters in
-#: ``COLOR_FORMATS.keys()``.
-_SEPARATORS = "[\\%s]" % "\\".join(COLOR_FORMATS.keys())
+NONDEFAULT_COLOR = "@_R"  #: color for highlighting non-defaults in spec output
 
 #: Default format for Spec.format(). This format can be round-tripped, so that:
 #:     Spec(Spec("string").format()) == Spec("string)"
@@ -191,26 +175,6 @@ class InstallStatus(enum.Enum):
     external = "@g{[e]}  "
     absent = "@K{ - }  "
     missing = "@r{[-]}  "
-
-
-def colorize_spec(spec):
-    """Returns a spec colorized according to the colors specified in
-    COLOR_FORMATS."""
-
-    class insert_color:
-        def __init__(self):
-            self.last = None
-
-        def __call__(self, match):
-            # ignore compiler versions (color same as compiler)
-            sep = match.group(0)
-            if self.last == "%" and sep == "@":
-                return clr.cescape(sep)
-            self.last = sep
-
-            return "%s%s" % (COLOR_FORMATS[sep], clr.cescape(sep))
-
-    return clr.colorize(re.sub(_SEPARATORS, insert_color(), str(spec)) + "@.")
 
 
 OLD_STYLE_FMT_RE = re.compile(r"\${[A-Z]+}")
@@ -1371,6 +1335,10 @@ class Spec:
         # is deployed "as built."
         # Build spec should be the actual build spec unless marked dirty.
         self._build_spec = None
+
+        # Optimization weight information from the solver for coloring non-defaults in
+        # spec formatting output.
+        self._weights = {}
 
         if isinstance(spec_like, str):
             spack.parser.parse_one_or_raise(spec_like, self)
@@ -4039,6 +4007,7 @@ class Spec:
         self.compiler_flags.spec = self
         self.variants = other.variants.copy()
         self._build_spec = other._build_spec
+        self._weights = other._weights.copy()
 
         # FIXME: we manage _patches_in_order_of_appearance specially here
         # to keep it from leaking out of spec.py, but we should figure
@@ -4292,10 +4261,13 @@ class Spec:
 
         yield deps
 
-    def colorized(self):
-        return colorize_spec(self)
-
-    def format(self, format_string=DEFAULT_FORMAT, **kwargs):
+    def format(
+        self,
+        format_string: str = DEFAULT_FORMAT,
+        color: bool = False,
+        nondefaults: bool = False,
+        transform: Optional[Callable] = None,
+    ):
         r"""Prints out particular pieces of a spec, depending on what is
         in the format string.
 
@@ -4367,18 +4339,17 @@ class Spec:
 
         """
         ensure_modern_format_string(format_string)
-        color = kwargs.get("color", False)
-        transform = kwargs.get("transform", {})
+        transform = transform if transform is not None else {}
 
         out = io.StringIO()
 
-        def write(s, c=None):
-            f = clr.cescape(s)
-            if c is not None:
-                f = COLOR_FORMATS[c] + f + "@."
-            clr.cwrite(f, stream=out, color=color)
+        def write(string, cformat=None):
+            escaped = clr.cescape(string)
+            if cformat is not None:
+                escaped = f"{cformat}{escaped}@."
+            clr.cwrite(escaped, stream=out, color=color)
 
-        def write_attribute(spec, attribute, color):
+        def write_attribute(spec, attribute):
             attribute = attribute.lower()
 
             sig = ""
@@ -4424,12 +4395,11 @@ class Spec:
                 write(morph(spec, spack.store.STORE.layout.root))
                 return
             elif re.match(r"hash(:\d)?", attribute):
-                col = "#"
                 if ":" in attribute:
                     _, length = attribute.split(":")
-                    write(sig + morph(spec, current.dag_hash(int(length))), col)
+                    write(sig + morph(spec, current.dag_hash(int(length))), HASH_COLOR)
                 else:
-                    write(sig + morph(spec, current.dag_hash()), col)
+                    write(sig + morph(spec, current.dag_hash()), HASH_COLOR)
                 return
 
             # Iterate over components using getattr to get next element
@@ -4473,18 +4443,39 @@ class Spec:
                         return
 
             # Set color codes for various attributes
-            col = None
+            def nondefault_or_color(color, *weights):
+                """Spec attributes are nondefault relevant weights are present and nonzero."""
+                if nondefaults and any(self._weights.get(w) for w in weights):
+                    return NONDEFAULT_COLOR
+                else:
+                    return color
+
+            attr_color = None
             if "variants" in parts:
-                col = "+"
+                write(sig)
+                for variant, boolean in current.ordered_variants():
+                    attr_color = nondefault_or_color(
+                        VARIANT_COLOR,
+                        f"variant_not_default({variant.name})",
+                        f"variant_default_not_used({variant.name})",
+                    )
+                    if not boolean:
+                        write(" ")
+
+                    write(morph(spec, str(variant)), attr_color)
+                return
+            elif "name" == parts[0]:
+                attr_color = nondefault_or_color(None, "provider_weight")
             elif "architecture" in parts:
-                col = "="
+                # TODO: handle arch parts independently
+                attr_color = nondefault_or_color(ARCHITECTURE_COLOR, "node_target_weight")
             elif "compiler" in parts or "compiler_flags" in parts:
-                col = "%"
+                attr_color = nondefault_or_color(COMPILER_COLOR, "node_compiler_weight")
             elif "version" in parts or "versions" in parts:
-                col = "@"
+                attr_color = nondefault_or_color(VERSION_COLOR, "version_weight")
 
             # Finally, write the output
-            write(sig + morph(spec, str(current)), col)
+            write(sig + morph(spec, str(current)), attr_color)
 
         attribute = ""
         in_attribute = False
@@ -4498,7 +4489,7 @@ class Spec:
                 escape = True
             elif in_attribute:
                 if c == "}":
-                    write_attribute(self, attribute, color)
+                    write_attribute(self, attribute)
                     attribute = ""
                     in_attribute = False
                 else:
@@ -4629,6 +4620,7 @@ class Spec:
         recurse_dependencies: bool = True,
         status_fn: Optional[Callable[["Spec"], InstallStatus]] = None,
         prefix: Optional[Callable[["Spec"], str]] = None,
+        nondefaults: bool = False,
     ) -> str:
         """Prints out this spec and its dependencies, tree-formatted
         with indentation.
@@ -4652,6 +4644,7 @@ class Spec:
                 installation status
             prefix: optional callable that takes a node as an argument and return its
                 installation prefix
+            nondefaults: highlight non-default values in output
         """
         out = ""
 
@@ -4700,7 +4693,7 @@ class Spec:
             out += "    " * d
             if d > 0:
                 out += "^"
-            out += node.format(format, color=color) + "\n"
+            out += node.format(format, color=color, nondefaults=nondefaults) + "\n"
 
             # Check if we wanted just the first line
             if not recurse_dependencies:
