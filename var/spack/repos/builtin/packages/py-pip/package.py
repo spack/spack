@@ -66,12 +66,12 @@ class PyPip(Package, PythonExtension):
         # already installed. We get around this by using a pre-built wheel to install
         # itself, see:
         # https://discuss.python.org/t/bootstrapping-a-specific-version-of-pip/12306
-        # On Windows for newer versions of pip, you must bootstrap pip first. In order
-        # to achieve this, use the pip.pyz zipapp version of pip to bootstrap the
-        # wheel install.
         whl = self.stage.archive_file
         args = std_pip_args + ["--prefix=" + prefix, whl]
         if sys.platform == "win32":
+            # On Windows for newer versions of pip, you must bootstrap pip first.
+            # In order to achieve this, use the pip.pyz zipapp version of pip to
+            # bootstrap the pip wheel install.
             args.insert(0, os.path.join(self.stage.source_path, "pip.pyz"))
         else:
             args.insert(0, os.path.join(whl, "pip"))
