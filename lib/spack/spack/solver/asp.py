@@ -696,6 +696,8 @@ class RequirementRule(NamedTuple):
     condition: "spack.spec.Spec"
     kind: RequirementKind
     message: Optional[str]
+    not_externals: bool
+    not_build: bool
 
 
 class PyclingoDriver:
@@ -1483,6 +1485,11 @@ class SpackSolverSetup:
             if rule.message:
                 self.gen.fact(fn.requirement_message(pkg_name, requirement_grp_id, rule.message))
             self.gen.newline()
+
+            if rule.not_externals:
+                self.gen.fact(fn.exclude_requirement_for_externals(pkg_name, requirement_grp_id))
+            if rule.not_build:
+                self.gen.fact(fn.exclude_requirement_for_build(pkg_name, requirement_grp_id))
 
             for input_spec in requirement_grp:
                 spec = spack.spec.Spec(input_spec)
@@ -2690,6 +2697,8 @@ class RequirementParser:
                         kind=RequirementKind.PACKAGE,
                         condition=when_spec,
                         message=message,
+                        not_build=False,
+                        not_externals=False,
                     )
                 )
         return rules
@@ -2721,6 +2730,8 @@ class RequirementParser:
                     kind=kind,
                     message=message,
                     condition=condition,
+                    not_build=False,
+                    not_externals=False,
                 )
             )
         return result
@@ -2742,6 +2753,8 @@ class RequirementParser:
                     kind=kind,
                     message=message,
                     condition=condition,
+                    not_build=False,
+                    not_externals=False,
                 )
             )
         return result
@@ -2807,12 +2820,17 @@ class RequirementParser:
                 if not constraints:
                     continue
 
+                not_externals = "externals" in requirement.get("turn_off_for", [])
+                not_build = "build" in requirement.get("turn_off_for", [])
+
                 rules.append(
                     RequirementRule(
                         pkg_name=pkg_name,
                         policy=policy,
                         requirements=constraints,
                         kind=kind,
+                        not_externals=not_externals,
+                        not_build=not_build,
                         message=requirement.get("message"),
                         condition=when,
                     )
