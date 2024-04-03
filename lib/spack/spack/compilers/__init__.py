@@ -195,6 +195,11 @@ def _compiler_config_from_external(config):
     if all(v is None for v in paths.values()):
         return None
 
+    # fill out whatever paths are unset
+    for var in _path_instance_vars:
+        if var not in paths:
+            paths[var] = None
+
     if not spec.architecture:
         host_platform = spack.platforms.host()
         operating_system = host_platform.operating_system("default_os")
