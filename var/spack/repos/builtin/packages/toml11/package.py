@@ -18,6 +18,8 @@ class Toml11(CMakePackage):
 
     license("MIT")
 
+    version("3.8.1", sha256="6a3d20080ecca5ea42102c078d3415bef80920f6c4ea2258e87572876af77849")
+    version("3.8.0", sha256="36ce64b09f9151b57ba1970f12a591006fcae17b751ba011314c1f5518e77bc7")
     version("3.7.1", sha256="afeaa9aa0416d4b6b2cd3897ca55d9317084103077b32a852247d8efd4cf6068")
     version("3.7.0", sha256="a0b6bec77c0e418eea7d270a4437510884f2fe8f61e7ab121729624f04c4b58e")
     version("3.6.1", sha256="ca4c390ed8da0d77ae6eca30e70ab0bf5cc92adfc1bc2f71a2066bc5656d8d96")
