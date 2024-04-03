@@ -5,14 +5,13 @@
 import itertools
 import os
 import re
+from typing import Sequence
 
 import llnl.util.tty as tty
+from llnl.util.lang import classproperty
 
 import spack.compiler
 import spack.package_base
-
-from typing import Sequence
-from llnl.util.lang import classproperty
 
 
 class CompilerPackage(spack.package_base.PackageBase):
@@ -22,10 +21,10 @@ class CompilerPackage(spack.package_base.PackageBase):
     # Optional suffix regexes for searching for this type of compiler.
     # Suffixes are used by some frameworks, e.g. macports uses an '-mp-X.Y'
     # version suffix for gcc.
-    suffixes = [r"-.*"]
+    suffixes: Sequence[str] = [r"-.*"]
 
     # Optional prefix regexes for searching for this compiler
-    prefixes = []
+    prefixes: Sequence[str] = []
 
     #: Compiler argument that produces version information
     version_argument = "-dumpversion"
@@ -40,12 +39,12 @@ class CompilerPackage(spack.package_base.PackageBase):
     is_supported_on_platform = lambda x: True
 
     #: Static definition of languages supported by this class
-    languages = ["c", "cxx", "fortran"]
+    compiler_languages = ["c", "cxx", "fortran"]
 
     #: Dynamic definition of languages supported by this package
     @property
     def supported_languages(self):
-        return self.languages
+        return self.compiler_languages
 
     # TODO: how do these play nicely with other tags
     tags = ["compiler"]
@@ -53,7 +52,7 @@ class CompilerPackage(spack.package_base.PackageBase):
     @classproperty
     def compiler_names(cls):
         names = []
-        for language in cls.languages:
+        for language in cls.compiler_languages:
             names.extend(getattr(cls, f"{language}_names"))
         return names
 
@@ -100,7 +99,7 @@ class CompilerPackage(spack.package_base.PackageBase):
 
         paths = {}
         for exe in sorted(exes, reverse=True):
-            for lang in cls.languages:
+            for lang in cls.compiler_languages:
                 for name in getattr(cls, f"{lang}_names"):
                     if name in os.path.basename(exe):
                         paths[lang] = exe

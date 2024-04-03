@@ -5,13 +5,11 @@
 import glob
 import itertools
 import os
-import re
 import sys
 
 from archspec.cpu import UnsupportedMicroarchitecture
 
 import llnl.util.tty as tty
-from llnl.util.lang import classproperty
 from llnl.util.symlink import readlink
 
 import spack.platforms
@@ -503,14 +501,14 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage, CompilerPackage):
 
     build_directory = "spack-build"
 
-    languages = ["c", "cxx", "fortran", "d", "go"]
+    compiler_languages = ["c", "cxx", "fortran", "d", "go"]
 
     @property
     def supported_languages(self):
         # This weirdness is because it could be called on an abstract spec
         if "languages" not in self.spec.variants:
-            return self.languages
-        return [lang for lang in self.languages if lang in self.spec.variants["languages"].value]
+            return self.compiler_languages
+        return [x for x in self.compiler_languages if x in self.spec.variants["languages"].value]
 
     c_names = ["gcc"]
     cxx_names = ["g++"]
@@ -563,9 +561,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage, CompilerPackage):
     @classmethod
     def validate_detected_spec(cls, spec, extra_attributes):
         # For GCC 'compilers' is a mandatory attribute
-        msg = 'the extra attribute "paths" must be set for ' 'the detected spec "{0}"'.format(
-            spec
-        )
+        msg = 'the extra attribute "paths" must be set for ' 'the detected spec "{0}"'.format(spec)
         assert "paths" in extra_attributes, msg
 
         paths = extra_attributes["paths"]
@@ -1056,9 +1052,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage, CompilerPackage):
         else:
             # It is rather unlikely to end up here but let us try to resolve the ambiguity:
             candidate_gdc = candidate_specs[0].extra_attributes["paths"]["d"]
-            if all(
-                candidate_gdc == s.extra_attributes["paths"]["d"] for s in candidate_specs[1:]
-            ):
+            if all(candidate_gdc == s.extra_attributes["paths"]["d"] for s in candidate_specs[1:]):
                 # It does not matter which one we take if they are all the same:
                 return candidate_gdc
             else:
@@ -1069,8 +1063,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage, CompilerPackage):
                         error_nl,
                         error_nl.join(
                             "{0} (cc: {1})".format(
-                                s.extra_attributes["paths"]["d"],
-                                s.extra_attributes["paths"]["c"],
+                                s.extra_attributes["paths"]["d"], s.extra_attributes["paths"]["c"]
                             )
                             for s in candidate_specs
                         ),

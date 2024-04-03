@@ -11,7 +11,7 @@ class Arm(Package, CompilerPackage):
     homepage = "https://developer.arm.com/downloads/-/arm-compiler-for-linux"
     url = "https://developer.arm.com/downloads/-/arm-compiler-for-linux"
 
-    languages = ["c", "cxx", "fortran"]
+    compiler_languages = ["c", "cxx", "fortran"]
     c_names = ["armclang"]
     cxx_names = ["armclang++"]
     fortran_names = ["armflang"]

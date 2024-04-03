@@ -3,11 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
-import re
 
-import llnl.util.tty as tty
-
-import spack.compiler
 from spack.package import *
 
 
@@ -64,14 +60,9 @@ class Nag(Package, CompilerPackage):
         env.set("F77", self.prefix.bin.nagfor)
         env.set("FC", self.prefix.bin.nagfor)
 
-    languages = ["fortran"]
-
-    @property
-    def supported_languages(self):
-        return self.languages
-
+    compiler_languages = ["fortran"]
     fortran_names = ["nagfor"]
-    version_regex = "NAG Fortran Compiler Release (\d+).(\d+)\(.*\) Build (\d+)"
+    version_regex = r"NAG Fortran Compiler Release (\d+).(\d+)\(.*\) Build (\d+)"
     version_argument = "-V"
 
     @property

@@ -173,8 +173,6 @@ def _compiler_config_from_external(config):
     extra_attributes = config.get("extra_attributes", {})
     prefix = config.get("prefix", None)
 
-    compiler_class = class_for_compiler_name(compiler_spec.name)
-
     # Compute paths if needed first, then update with configured paths
     # This gets priority correct between computed and configured paths
     paths = {}

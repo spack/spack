@@ -106,7 +106,7 @@ class Aocc(Package, CompilerPackage):
                     f.write(compiler_options)
 
     version_argument = "--version"
-    version_regex = "AOCC_(\d+[._]\d+[._]\d+)"
+    version_regex = r"AOCC_(\d+[._]\d+[._]\d+)"
     c_names = ["clang"]
     cxx_names = ["clang++"]
     fortran_names = ["flang"]

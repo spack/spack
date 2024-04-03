@@ -1,10 +1,7 @@
-<<<<<<< HEAD
 # Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import re
-
 from spack.package import *
 
 
@@ -16,15 +13,15 @@ class AppleClang(BundlePackage, CompilerPackage):
 
     maintainers("alalazo")
 
-    languages = ["c", "cxx"]
+    compiler_languages = ["c", "cxx"]
     c_names = ["clang"]
     cxx_names = ["clang++"]
 
     @classmethod
     def validate_detected_spec(cls, spec, extra_attributes):
-        msg = f'the extra attribute "compilers" must be set for the detected spec "{spec}"'
-        assert "compilers" in extra_attributes, msg
-        compilers = extra_attributes["compilers"]
+        msg = f'the extra attribute "paths" must be set for the detected spec "{spec}"'
+        assert "paths" in extra_attributes, msg
+        compilers = extra_attributes["paths"]
         for key in ("c", "cxx"):
             msg = f"{key} compiler not found for {spec}"
             assert key in compilers, msg

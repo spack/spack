@@ -23,7 +23,6 @@ import spack.compilers.pgi
 import spack.compilers.xl
 import spack.compilers.xl_r
 import spack.util.module_cmd
-
 from spack.operating_systems.cray_frontend import CrayFrontend
 from spack.pkg.builtin.aocc import Aocc
 from spack.pkg.builtin.apple_clang import AppleClang
@@ -33,7 +32,7 @@ from spack.pkg.builtin.nag import Nag
 
 
 def check_package_detection(mock_executable, output, expected_version, cls):
-    languages = cls.languages
+    languages = cls.compiler_languages
 
     executables = {}
     script = "\n".join(f'echo "{line}"' for line in output.split("\n"))
