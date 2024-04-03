@@ -102,7 +102,7 @@ class PyPip(Package, PythonExtension):
         checksum="c9363c70ad91d463f9492a8a2c89f60068f86b0239bd2a6aa77367aab5fefb3e",
         when="platform=windows",
         placement={"pip-22.3.1.pyz": "pip.pyz"},
-        expand=False
+        expand=False,
     )
 
     def url_for_version(self, version):
