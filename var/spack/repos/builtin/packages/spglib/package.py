@@ -9,7 +9,7 @@ from spack.package import *
 class Spglib(CMakePackage):
     """C library for finding and handling crystal symmetries."""
 
-    homepage = "https://atztogo.github.io/spglib/"
+    homepage = "https://spglib.readthedocs.io/"
     url = "https://github.com/spglib/spglib/archive/v2.0.2.tar.gz"
 
     maintainers("RMeli")
@@ -20,6 +20,8 @@ class Spglib(CMakePackage):
 
     license("BSD-3-Clause")
 
+    version("2.3.1", sha256="c295dbea7d2fc9e50639aa14331fef277878c35f00ef0766e688bfbb7b17d44c")
+    version("2.3.0", sha256="c05eb869018efe2efe5dcb2654cda19c5dd4c07434874205fa542f7766f7548e")
     version("2.2.0", sha256="ac929e20ec9d4621411e2cdec59b1442e02506c1e546005bbe2c7f781e9bd49a")
     version("2.1.0", sha256="31bca273a1bc54e1cff4058eebe7c0a35d5f9b489579e84667d8e005c73dcc13")
     version("2.0.2", sha256="10e44a35099a0a5d0fc6ee0cdb39d472c23cb98b1f5167c0e2b08f6069f3db1e")
@@ -52,6 +54,10 @@ class Spglib(CMakePackage):
 
     variant("openmp", default=True, description="Build with OpenMP support", when="@1.16.2:")
     variant("fortran", default=True, description="Build Fortran interface", when="@1.16.4:")
+    variant("tests", default=False, description="Build with tests", when="@2.1.0:")
+
+    depends_on("cmake@3.15:", type="build", when="@2.1.0:")
+    depends_on("cmake@3.24:", type="build", when="+tests")
 
     @property
     def libs(self):
@@ -62,4 +68,5 @@ class Spglib(CMakePackage):
         return [
             self.define_from_variant(pfx + "USE_OMP", "openmp"),
             self.define_from_variant(pfx + "WITH_Fortran", "fortran"),
+            self.define_from_variant(pfx + "WITH_TESTS", "tests"),
         ]

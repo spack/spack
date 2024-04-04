@@ -18,10 +18,12 @@ class G2c(CMakePackage):
     maintainers("AlexanderRichert-NOAA", "Hang-Lei-NOAA", "edwardhartnett")
 
     version("develop", branch="develop")
+    version("1.8.0", sha256="4ce9f5a7cb0950699fe08ebc5a463ab4d09ef550c050391a319308a2494f971f")
     version("1.7.0", sha256="73afba9da382fed73ed8692d77fa037bb313280879cd4012a5e5697dccf55175")
     version("1.6.4", sha256="5129a772572a358296b05fbe846bd390c6a501254588c6a223623649aefacb9d")
     version("1.6.2", sha256="b5384b48e108293d7f764cdad458ac8ce436f26be330b02c69c2a75bb7eb9a2c")
 
+    variant("aec", default=True, description="Use AEC library")
     variant("png", default=True, description="Use PNG library")
     variant("jasper", default=True, description="Use Jasper library")
     variant("openjpeg", default=False, description="Use OpenJPEG library")
@@ -46,10 +48,18 @@ class G2c(CMakePackage):
         description="Build and install some utility programs",
         when="@develop",
     )
+    variant(
+        "build_v2_api",
+        default=False,
+        description="Build new g2c API, experimental until 2.0.0 release",
+        when="@develop",
+    )
 
+    depends_on("libaec", when="+aec")
     depends_on("libpng", when="+png")
     depends_on("jasper", when="+jasper")
     depends_on("openjpeg", when="+openjpeg")
+    depends_on("libxml2@2.9:", when="+build_v2_api")
 
     conflicts("+jasper +openjpeg", msg="Either Jasper or OpenJPEG should be used, not both")
 
@@ -58,11 +68,13 @@ class G2c(CMakePackage):
             self.define_from_variant("CMAKE_POSITION_INDEPENDENT_CODE", "pic"),
             self.define("BUILD_SHARED_LIBS", self.spec.satisfies("libs=shared")),
             self.define("BUILD_STATIC_LIBS", self.spec.satisfies("libs=static")),
+            self.define_from_variant("USE_AEC", "aec"),
             self.define_from_variant("USE_PNG", "png"),
             self.define_from_variant("USE_Jasper", "jasper"),
             self.define_from_variant("USE_OpenJPEG", "openjpeg"),
             self.define_from_variant("PTHREADS", "pthreads"),
             self.define_from_variant("UTILS", "utils"),
+            self.define_from_variant("BUILD_G2C", "build_v2_api"),
             self.define("BUILD_TESTING", self.run_tests),
         ]
 

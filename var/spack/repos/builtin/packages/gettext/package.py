@@ -18,6 +18,7 @@ class Gettext(AutotoolsPackage, GNUMirrorPackage):
     maintainers("michaelkuhn")
 
     executables = [r"^gettext$"]
+    tags = ["build-tools"]
 
     license("GPL-3.0-or-later AND LGPL-2.1-or-later AND MIT")
 

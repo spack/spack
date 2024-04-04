@@ -70,10 +70,7 @@ class Gnina(CMakePackage, CudaPackage):
     depends_on("cudnn", when="+cudnn")
 
     def cmake_args(self):
-        args = [
-            "-DBLAS=Open",  # Use OpenBLAS instead of Atlas' BLAS
-            f"-DPYTHON_EXECUTABLE={self.spec['python'].command.path}",
-        ]
+        args = ["-DBLAS=Open"]  # Use OpenBLAS instead of Atlas' BLAS
 
         if "+gninavis" in self.spec:
             args.append(f"-DRDKIT_INCLUDE_DIR={self.spec['rdkit'].prefix.include.rdkit}")

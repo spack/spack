@@ -22,6 +22,8 @@ class Tbl2asn(Package):
         deprecated=True,
     )
 
+    depends_on("libidn@1.34", type="run")
+
     def url_for_version(self, ver):
         return "https://ftp.ncbi.nih.gov/toolbox/ncbi_tools/converters/by_program/tbl2asn/linux64.tbl2asn.gz"
 

@@ -42,6 +42,7 @@ class Fmt(CMakePackage):
     version("3.0.2", sha256="51407b62a202b29d1a9c0eb5ecd4095d30031aea65407c42c25cb10cb5c59ad4")
     version("3.0.1", sha256="4c9af0dc919a8ae7022b44e1a03c435e42d65c866f44667d8d920d342b098550")
     version("3.0.0", sha256="1b050b66fa31b74f1d75a14f15e99e728ab79572f176a53b2f8ad7c201c30ceb")
+    version("master", branch="master")
 
     variant(
         "cxxstd",
@@ -91,6 +92,14 @@ class Fmt(CMakePackage):
         "https://github.com/fmtlib/fmt/commit/89860eb9013a345608c8144b1aad5f12b0682d7e.patch?full_index=1",
         sha256="6ef12fe60a2b3625139c6d29c748dafd81b51e2a0690c1fa37604ed5b15615e0",
         when="@10.0.0:10.1.1",
+    )
+
+    # Fix 'variable "buffer" may not be initialized' compiler error
+    patch(
+        "fmt-no-variable-initialize_10.0.0.patch", when="@10.0.0:10.2.1%clang@12.0.1.ibm.gcc.8.3.1"
+    )
+    patch(
+        "fmt-no-variable-initialize_10.0.0.patch", when="@10.0.0:10.2.1%clang@14.0.5.ibm.gcc.8.3.1"
     )
 
     def cmake_args(self):

@@ -56,17 +56,33 @@ def upstream_and_downstream_db(tmpdir, gen_mock_layout):
     yield upstream_write_db, upstream_db, upstream_layout, downstream_db, downstream_layout
 
 
+@pytest.mark.parametrize(
+    "install_tree,result",
+    [("all", ["b", "c"]), ("upstream", ["c"]), ("local", ["b"]), ("{u}", ["c"]), ("{d}", ["b"])],
+)
+def test_query_by_install_tree(
+    install_tree, result, upstream_and_downstream_db, mock_packages, monkeypatch, config
+):
+    up_write_db, up_db, up_layout, down_db, down_layout = upstream_and_downstream_db
+
+    # Set the upstream DB to contain "c" and downstream to contain "b")
+    b = spack.spec.Spec("b").concretized()
+    c = spack.spec.Spec("c").concretized()
+    up_write_db.add(c, up_layout)
+    up_db._read()
+    down_db.add(b, down_layout)
+
+    specs = down_db.query(install_tree=install_tree.format(u=up_db.root, d=down_db.root))
+    assert [s.name for s in specs] == result
+
+
 def test_spec_installed_upstream(
     upstream_and_downstream_db, mock_custom_repository, config, monkeypatch
 ):
     """Test whether Spec.installed_upstream() works."""
-    (
-        upstream_write_db,
-        upstream_db,
-        upstream_layout,
-        downstream_db,
-        downstream_layout,
-    ) = upstream_and_downstream_db
+    upstream_write_db, upstream_db, upstream_layout, downstream_db, downstream_layout = (
+        upstream_and_downstream_db
+    )
 
     # a known installed spec should say that it's installed
     with spack.repo.use_repositories(mock_custom_repository):
@@ -90,13 +106,9 @@ def test_spec_installed_upstream(
 
 @pytest.mark.usefixtures("config")
 def test_installed_upstream(upstream_and_downstream_db, tmpdir):
-    (
-        upstream_write_db,
-        upstream_db,
-        upstream_layout,
-        downstream_db,
-        downstream_layout,
-    ) = upstream_and_downstream_db
+    upstream_write_db, upstream_db, upstream_layout, downstream_db, downstream_layout = (
+        upstream_and_downstream_db
+    )
 
     builder = spack.repo.MockRepositoryBuilder(tmpdir.mkdir("mock.repo"))
     builder.add_package("x")
@@ -132,13 +144,9 @@ def test_installed_upstream(upstream_and_downstream_db, tmpdir):
 
 @pytest.mark.usefixtures("config")
 def test_removed_upstream_dep(upstream_and_downstream_db, tmpdir):
-    (
-        upstream_write_db,
-        upstream_db,
-        upstream_layout,
-        downstream_db,
-        downstream_layout,
-    ) = upstream_and_downstream_db
+    upstream_write_db, upstream_db, upstream_layout, downstream_db, downstream_layout = (
+        upstream_and_downstream_db
+    )
 
     builder = spack.repo.MockRepositoryBuilder(tmpdir.mkdir("mock.repo"))
     builder.add_package("z")
@@ -168,13 +176,9 @@ def test_add_to_upstream_after_downstream(upstream_and_downstream_db, tmpdir):
     DB. When a package is recorded as installed in both, the results should
     refer to the downstream DB.
     """
-    (
-        upstream_write_db,
-        upstream_db,
-        upstream_layout,
-        downstream_db,
-        downstream_layout,
-    ) = upstream_and_downstream_db
+    upstream_write_db, upstream_db, upstream_layout, downstream_db, downstream_layout = (
+        upstream_and_downstream_db
+    )
 
     builder = spack.repo.MockRepositoryBuilder(tmpdir.mkdir("mock.repo"))
     builder.add_package("x")

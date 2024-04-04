@@ -22,6 +22,7 @@ class Xforms(AutotoolsPackage):
     depends_on("libx11", type="link")
     depends_on("libxpm", type="link")
     depends_on("jpeg", type="link")
+    patch("xformsPatch.patch")
 
     def configure_args(self):
         args = ["--enable-static"]

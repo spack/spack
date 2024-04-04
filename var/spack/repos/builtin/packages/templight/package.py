@@ -128,7 +128,6 @@ class Templight(CMakePackage):
         cmake_args = [
             "-DLLVM_REQUIRES_RTTI:BOOL=ON",
             "-DCLANG_DEFAULT_OPENMP_RUNTIME:STRING=libomp",
-            "-DPYTHON_EXECUTABLE:PATH={0}".format(spec["python"].command.path),
             "-DLLVM_EXTERNAL_POLLY_BUILD:Bool=OFF",
             "-DLLVM_TOOL_POLLY_BUILD:Bool=OFF",
             "-DLLVM_POLLY_BUILD:Bool=OFF",

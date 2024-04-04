@@ -67,7 +67,7 @@ class Octave(AutotoolsPackage, GNUMirrorPackage):
     variant("gnuplot", default=False, description="Use gnuplot")
     variant("magick", default=False, description="Use magick")
     variant("hdf5", default=False, description="Use HDF5")
-    variant("jdk", default=False, description="Use JDK")
+    variant("jdk", default=False, description="Use Java")
     variant("llvm", default=False, description="Use LLVM")
     variant("opengl", default=False, description="Use OpenGL")
     variant("qhull", default=False, description="Use qhull")

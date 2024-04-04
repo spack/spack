@@ -15,6 +15,7 @@ class Pkgconf(AutotoolsPackage):
     homepage = "http://pkgconf.org/"
     # URL must remain http:// so Spack can bootstrap curl
     url = "https://distfiles.ariadne.space/pkgconf/pkgconf-1.6.3.tar.xz"
+    tags = ["build-tools"]
 
     license("ISC")
 

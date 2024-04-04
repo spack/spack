@@ -63,7 +63,7 @@ class Mpich(AutotoolsPackage, CudaPackage, ROCmPackage):
         "pmi",
         default="pmi",
         description="""PMI interface.""",
-        values=("off", "pmi", "pmi2", "pmix", "cray"),
+        values=("pmi", "pmi2", "pmix", "cray"),
         multi=False,
     )
     variant(
@@ -116,10 +116,15 @@ supported, and netmod is ignored if device is ch3:sock.""",
         when="@3.4:",
         multi=False,
     )
-    depends_on("yaksa", when="@4.0: device=ch4 datatype-engine=auto")
-    depends_on("yaksa", when="@4.0: device=ch4 datatype-engine=yaksa")
-    depends_on("yaksa+cuda", when="+cuda ^yaksa")
-    depends_on("yaksa+rocm", when="+rocm ^yaksa")
+    for _yaksa_cond in (
+        "@4.0: device=ch4 datatype-engine=auto",
+        "@4.0: device=ch4 datatype-engine=yaksa",
+    ):
+        with when(_yaksa_cond):
+            depends_on("yaksa")
+            depends_on("yaksa+cuda", when="+cuda")
+            depends_on("yaksa+rocm", when="+rocm")
+
     conflicts("datatype-engine=yaksa", when="device=ch3")
     conflicts("datatype-engine=yaksa", when="device=ch3:sock")
 
@@ -131,6 +136,9 @@ supported, and netmod is ignored if device is ch3:sock.""",
         when="@3.3: device=ch4 netmod=ucx",
     )
     depends_on("hcoll", when="+hcoll")
+
+    variant("xpmem", default=False, when="@3.4:", description="Enable XPMEM support")
+    depends_on("xpmem", when="+xpmem")
 
     # Todo: cuda can be a conditional variant, but it does not seem to work when
     # overriding the variant from CudaPackage.
@@ -183,6 +191,26 @@ supported, and netmod is ignored if device is ch3:sock.""",
         "https://github.com/pmodels/mpich/commit/b324d2de860a7a2848dc38aefb8c7627a72d2003.patch?full_index=1",
         sha256="5f48d2dd8cc9f681cf710b864f0d9b00c599f573a75b1e1391de0a3d697eba2d",
         when="@=3.3",
+    )
+
+    # Fix SLURM hostlist_t usage
+    # See https://github.com/pmodels/mpich/issues/6806
+    # and https://github.com/pmodels/mpich/pull/6820
+    patch(
+        "https://github.com/pmodels/mpich/commit/7a28682a805acfe84a4ea7b41cea079696407398.patch?full_index=1",
+        sha256="8cc80a8ffc3f1c907b1d8176129a0c1d01794a95adbed5b5357f50c13f6560e4",
+        when="@4.1:4.1.2 +slurm ^slurm@23-11-1-1:",
+    )
+    # backports of fix down to v3.3
+    patch(
+        "mpich40_slurm_hostlist.patch",
+        sha256="39aa1353305b7b03bc5c645c87d5299bd5d2ff676750898ba925f6cb9b716bdb",
+        when="@4.0 +slurm ^slurm@23-11-1-1:",
+    )
+    patch(
+        "mpich33_slurm_hostlist.patch",
+        sha256="d6ec26adcf2d08d0739be44ab65b928a7a88e9ff1375138a0593678eedd420ab",
+        when="@3.3:3.4 +slurm ^slurm@23-11-1-1:",
     )
 
     # Fix reduce operations for unsigned integers
@@ -360,9 +388,7 @@ supported, and netmod is ignored if device is ch3:sock.""",
             if re.search(r"--with-thread-package=argobots", output):
                 variants.append("+argobots")
 
-            if re.search(r"--with-pmi=no", output):
-                variants.append("pmi=off")
-            elif re.search(r"--with-pmi=simple", output):
+            if re.search(r"--with-pmi=simple", output):
                 variants.append("pmi=pmi")
             elif re.search(r"--with-pmi=pmi2/simple", output):
                 variants.append("pmi=pmi2")
@@ -432,8 +458,6 @@ supported, and netmod is ignored if device is ch3:sock.""",
             env.set("MPIF90", join_path(self.prefix.bin, "mpif90"))
 
     def setup_dependent_build_environment(self, env, dependent_spec):
-        self.setup_run_environment(env)
-
         env.set("MPICH_CC", spack_cc)
         env.set("MPICH_CXX", spack_cxx)
         env.set("MPICH_F77", spack_f77)
@@ -530,9 +554,7 @@ supported, and netmod is ignored if device is ch3:sock.""",
         else:
             config_args.append("--with-slurm=no")
 
-        if "pmi=off" in spec:
-            config_args.append("--with-pmi=no")
-        elif "pmi=pmi" in spec:
+        if "pmi=pmi" in spec:
             config_args.append("--with-pmi=simple")
         elif "pmi=pmi2" in spec:
             config_args.append("--with-pmi=pmi2/simple")
@@ -595,7 +617,6 @@ supported, and netmod is ignored if device is ch3:sock.""",
 
         if "+vci" in spec:
             config_args.append("--enable-thread-cs=per-vci")
-            config_args.append("--with-ch4-max-vcis=default")
 
         if "datatype-engine=yaksa" in spec:
             config_args.append("--with-datatype-engine=yaksa")
@@ -606,6 +627,9 @@ supported, and netmod is ignored if device is ch3:sock.""",
 
         if "+hcoll" in spec:
             config_args.append("--with-hcoll=" + spec["hcoll"].prefix)
+
+        if "+xpmem" in spec:
+            config_args.append("--with-xpmem=" + spec["xpmem"].prefix)
 
         return config_args
 

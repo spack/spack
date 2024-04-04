@@ -137,6 +137,7 @@ class Ucx(AutotoolsPackage, CudaPackage):
     depends_on("rdma-core", when="+verbs")
     depends_on("xpmem", when="+xpmem")
     depends_on("hip", when="+rocm")
+    depends_on("hsa-rocr-dev", when="+rocm")
 
     conflicts("+gdrcopy", when="~cuda", msg="gdrcopy currently requires cuda support")
     conflicts("+rocm", when="+gdrcopy", msg="gdrcopy > 2.0 does not support rocm")
@@ -158,6 +159,9 @@ class Ucx(AutotoolsPackage, CudaPackage):
             filter_file(
                 "-L$with_rocm/hip/lib -L$with_rocm/lib", "$ROCM_LDFLAGS", "configure", string=True
             )
+
+            if self.spec.satisfies("^hip@6:"):
+                filter_file("HIP_PLATFORM_HCC", "HIP_PLATFORM_AMD", "configure", string=True)
 
     @when("@1.9-dev")
     def autoreconf(self, spec, prefix):

@@ -18,7 +18,7 @@ class Thepeg(AutotoolsPackage):
 
     # The commented out versions exist, but may need patches
     # and/or recipe changes
-    version("2.3.0", sha256="deec8f22e89bb1a3f31b3b84e8feddf59a69845c9d33fba718f5599ce4a6ae9d")
+    version("2.3.0", sha256="ac35979ae89c29608ca92c156a49ff68aace7a5a12a0c92f0a01a833d2d34572")
     version("2.2.3", sha256="f21473197a761fc32917b08a8d24d2bfaf93ff57f3441fd605da99ac9de5d50b")
     version("2.2.2", sha256="97bf55d4391b0a070a3303d3845f8160afec403f1573dfb0e857709ad6262e3e")
     version("2.2.1", sha256="63abc7215e6ad45c11cf9dac013738e194cc38556a8368b850b70ab1b57ea58f")

@@ -53,6 +53,7 @@ class Kripke(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("mpi", when="+mpi")
     depends_on("blt", type="build")
     depends_on("caliper", when="+caliper")
+    depends_on("adiak@0.4:", when="+caliper")
     depends_on("chai~examples+raja")
     depends_on("raja~exercises~examples")
     depends_on("umpire~examples")

@@ -22,6 +22,7 @@ import xml.etree.ElementTree
 import py
 import pytest
 
+import archspec.cpu
 import archspec.cpu.microarchitecture
 import archspec.cpu.schema
 
@@ -568,8 +569,8 @@ def mock_repo_path():
 def _pkg_install_fn(pkg, spec, prefix):
     # sanity_check_prefix requires something in the install directory
     mkdirp(prefix.bin)
-    if not os.path.exists(spec.package.build_log_path):
-        touchp(spec.package.build_log_path)
+    if not os.path.exists(spec.package.install_log_path):
+        touchp(spec.package.install_log_path)
 
 
 @pytest.fixture
@@ -710,7 +711,9 @@ def configuration_dir(tmpdir_factory, linux_os):
     t.write(content)
 
     compilers_yaml = test_config.join("compilers.yaml")
-    content = "".join(compilers_yaml.read()).format(linux_os)
+    content = "".join(compilers_yaml.read()).format(
+        linux_os=linux_os, target=str(archspec.cpu.host().family)
+    )
     t = tmpdir.join("site", "compilers.yaml")
     t.write(content)
     yield tmpdir
@@ -1851,7 +1854,7 @@ def binary_with_rpaths(prefix_tmpdir):
     paths are encoded with `$ORIGIN` prepended.
     """
 
-    def _factory(rpaths, message="Hello world!"):
+    def _factory(rpaths, message="Hello world!", dynamic_linker="/lib64/ld-linux.so.2"):
         source = prefix_tmpdir.join("main.c")
         source.write(
             """
@@ -1867,10 +1870,10 @@ def binary_with_rpaths(prefix_tmpdir):
         executable = source.dirpath("main.x")
         # Encode relative RPATHs using `$ORIGIN` as the root prefix
         rpaths = [x if os.path.isabs(x) else os.path.join("$ORIGIN", x) for x in rpaths]
-        rpath_str = ":".join(rpaths)
         opts = [
             "-Wl,--disable-new-dtags",
-            "-Wl,-rpath={0}".format(rpath_str),
+            f"-Wl,-rpath={':'.join(rpaths)}",
+            f"-Wl,--dynamic-linker,{dynamic_linker}",
             str(source),
             "-o",
             str(executable),
@@ -1950,23 +1953,10 @@ def pytest_runtest_setup(item):
         pytest.skip(*not_on_windows_marker.args)
 
 
-class MockPool:
-    def map(self, func, args):
-        return [func(a) for a in args]
-
-    def starmap(self, func, args):
-        return [func(*a) for a in args]
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, *args):
-        pass
-
-
 @pytest.fixture(scope="function")
 def disable_parallel_buildcache_push(monkeypatch):
-    monkeypatch.setattr(spack.cmd.buildcache, "_make_pool", MockPool)
+    """Disable process pools in tests."""
+    monkeypatch.setattr(spack.cmd.buildcache, "_make_pool", spack.cmd.buildcache.NoPool)
 
 
 def _root_path(x, y, *, path):
@@ -1999,3 +1989,27 @@ repo:
             f.write(pkg_str)
 
     return spack.repo.Repo(repo_path)
+
+
+@pytest.fixture()
+def compiler_factory():
+    """Factory for a compiler dict, taking a spec and an OS as arguments."""
+
+    def _factory(*, spec, operating_system):
+        return {
+            "compiler": {
+                "spec": spec,
+                "operating_system": operating_system,
+                "paths": {"cc": "/path/to/cc", "cxx": "/path/to/cxx", "f77": None, "fc": None},
+                "modules": [],
+                "target": str(archspec.cpu.host().family),
+            }
+        }
+
+    return _factory
+
+
+@pytest.fixture()
+def host_architecture_str():
+    """Returns the broad architecture family (x86_64, aarch64, etc.)"""
+    return str(archspec.cpu.host().family)

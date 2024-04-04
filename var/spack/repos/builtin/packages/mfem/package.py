@@ -184,6 +184,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     variant("strumpack", default=False, description="Enable support for STRUMPACK")
     variant("suite-sparse", default=False, description="Enable serial, sparse direct solvers")
     variant("petsc", default=False, description="Enable PETSc solvers, preconditioners, etc.")
+    variant("mumps", default=False, description="Enable MUMPS solver.")
     variant("slepc", default=False, description="Enable SLEPc integration")
     variant("sundials", default=False, description="Enable Sundials time integrators")
     variant("pumi", default=False, description="Enable functionality based on PUMI")
@@ -254,30 +255,28 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     conflicts("+slepc", when="~petsc")
     conflicts("+pumi", when="~mpi")
     conflicts("timer=mpi", when="~mpi")
+    conflicts("+mumps", when="~mpi")
 
     # See https://github.com/mfem/mfem/issues/2957
     conflicts("^mpich@4:", when="@:4.3+mpi")
 
     depends_on("mpi", when="+mpi")
     depends_on("hipsparse", when="@4.4.0:+rocm")
-    depends_on("hypre@2.10.0:2.13", when="@:3.3+mpi")
-    depends_on("hypre@:2.20.0", when="@3.4:4.2+mpi")
-    depends_on("hypre@:2.23.0", when="@4.3.0+mpi")
-    depends_on("hypre", when="+mpi")
-    # Propagate 'cuda_arch' to 'hypre' without propagating the '+cuda'
-    # variant because we want to allow 'mfem+cuda ^hypre~cuda':
+
+    with when("+mpi"):
+        depends_on("hypre")
+        depends_on("hypre@2.10.0:2.13", when="@:3.3")
+        depends_on("hypre@:2.20.0", when="@3.4:4.2")
+        depends_on("hypre@:2.23.0", when="@4.3.0")
+
+    # If hypre is built with +cuda, propagate cuda_arch
+    requires("^hypre@2.22.1:", when="+mpi+cuda ^hypre+cuda")
     for sm_ in CudaPackage.cuda_arch_values:
-        depends_on(
-            "hypre@2.22.1:+cuda cuda_arch={0}".format(sm_),
-            when="+mpi+cuda cuda_arch={0} ^hypre+cuda".format(sm_),
-        )
-    # Propagate 'amdgpu_target' to 'hypre' without propagating the '+rocm'
-    # variant because we want to allow 'mfem+rocm ^hypre~rocm':
+        requires(f"^hypre cuda_arch={sm_}", when=f"+mpi+cuda cuda_arch={sm_} ^hypre+cuda")
+    # If hypre is built with +rocm, propagate amdgpu_target
+    requires("^hypre@2.23.0: ", when="+mpi+rocm ^hypre+rocm")
     for gfx in ROCmPackage.amdgpu_targets:
-        depends_on(
-            "hypre@2.23.0:+rocm amdgpu_target={0}".format(gfx),
-            when="+mpi+rocm amdgpu_target={0} ^hypre+rocm".format(gfx),
-        )
+        requires(f"^hypre amdgpu_target={gfx}", when=f"+mpi+rocm amdgpu_target={gfx} ^hypre+rocm")
 
     depends_on("metis", when="+metis")
     depends_on("blas", when="+lapack")
@@ -289,8 +288,8 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     depends_on("sundials@2.7.0:+mpi+hypre", when="@3.3.2:+sundials+mpi")
     depends_on("sundials@5.0.0:5", when="@4.0.1-xsdk:4.4+sundials~mpi")
     depends_on("sundials@5.0.0:5+mpi+hypre", when="@4.0.1-xsdk:4.4+sundials+mpi")
-    depends_on("sundials@5.0.0:", when="@4.5.0:+sundials~mpi")
-    depends_on("sundials@5.0.0:+mpi+hypre", when="@4.5.0:+sundials+mpi")
+    depends_on("sundials@5.0.0:6.7.0", when="@4.5.0:+sundials~mpi")
+    depends_on("sundials@5.0.0:6.7.0+mpi+hypre", when="@4.5.0:+sundials+mpi")
     for sm_ in CudaPackage.cuda_arch_values:
         depends_on(
             "sundials@5.4.0:+cuda cuda_arch={0}".format(sm_),
@@ -311,19 +310,17 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     depends_on("gslib@1.0.7:", when="@4.3.0:+gslib")
     depends_on("suite-sparse", when="+suite-sparse")
     depends_on("superlu-dist", when="+superlu-dist")
-    # Propagate 'cuda_arch' to 'superlu-dist' without propagating the '+cuda'
-    # variant so we can build 'mfem+cuda+superlu-dist ^superlu-dist~cuda':
+    # If superlu-dist is built with +cuda, propagate cuda_arch
     for sm_ in CudaPackage.cuda_arch_values:
-        depends_on(
-            "superlu-dist+cuda cuda_arch={0}".format(sm_),
-            when="+superlu-dist+cuda cuda_arch={0} ^superlu-dist+cuda".format(sm_),
+        requires(
+            f"^superlu-dist cuda_arch={sm_}",
+            when=f"+superlu-dist+cuda cuda_arch={sm_} ^superlu-dist+cuda",
         )
-    # Propagate 'amdgpu_target' to 'superlu-dist' without propagating the '+rocm'
-    # variant so we can build 'mfem+rocm+superlu-dist ^superlu-dist~rocm':
+    # If superlu-dist is built with +rocm, propagate amdgpu_target
     for gfx in ROCmPackage.amdgpu_targets:
-        depends_on(
-            "superlu-dist+rocm amdgpu_target={0}".format(gfx),
-            when="+superlu-dist+rocm amdgpu_target={0} ^superlu-dist+rocm".format(gfx),
+        requires(
+            f"^superlu-dist+rocm amdgpu_target={gfx}",
+            when=f"+superlu-dist+rocm amdgpu_target={gfx} ^superlu-dist+rocm",
         )
     depends_on("strumpack@3.0.0:", when="+strumpack~shared")
     depends_on("strumpack@3.0.0:+shared", when="+strumpack+shared")
@@ -342,28 +339,19 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     # with MUMPS is not strictly required, so we do not require it here.
     depends_on("petsc@3.8:+mpi+double+hypre", when="+petsc")
     depends_on("slepc@3.8.0:", when="+slepc")
-    # Propagate  'cuda_arch' to 'petsc'/'slepc' without propagating the '+cuda'
-    # variant because we want to allow 'mfem+cuda+petsc ^petsc~cuda':
+    # If petsc is built with +cuda, propagate cuda_arch to petsc and slepc
     for sm_ in CudaPackage.cuda_arch_values:
-        depends_on(
-            "petsc+cuda cuda_arch={0}".format(sm_),
-            when="+cuda+petsc cuda_arch={0} ^petsc+cuda".format(sm_),
-        )
-        depends_on(
-            "slepc+cuda cuda_arch={0}".format(sm_),
-            when="+cuda+slepc cuda_arch={0} ^petsc+cuda".format(sm_),
-        )
-    # Propagate 'amdgpu_target' to 'petsc'/'slepc' without propagating the
-    # '+rocm' variant because we want to allow 'mfem+rocm+petsc ^petsc~rocm':
+        requires(f"^petsc cuda_arch={sm_}", when=f"+cuda+petsc cuda_arch={sm_} ^petsc+cuda")
+        depends_on(f"slepc+cuda cuda_arch={sm_}", when=f"+cuda+slepc cuda_arch={sm_} ^petsc+cuda")
+    # If petsc is built with +rocm, propagate amdgpu_target to petsc and slepc
     for gfx in ROCmPackage.amdgpu_targets:
-        depends_on(
-            "petsc+rocm amdgpu_target={0}".format(gfx),
-            when="+rocm+petsc amdgpu_target={0} ^petsc+rocm".format(gfx),
+        requires(
+            f"^petsc amdgpu_target={gfx}", when=f"+rocm+petsc amdgpu_target={gfx} ^petsc+rocm"
         )
         depends_on(
-            "slepc+rocm amdgpu_target={0}".format(gfx),
-            when="+rocm+slepc amdgpu_target={0} ^petsc+rocm".format(gfx),
+            f"slepc+rocm amdgpu_target={gfx}", when=f"+rocm+slepc amdgpu_target={gfx} ^petsc+rocm"
         )
+    depends_on("mumps@5.1.1:", when="+mumps")
     depends_on("mpfr", when="+mpfr")
     depends_on("netcdf-c@4.1.3:", when="+netcdf")
     depends_on("unwind", when="+libunwind")
@@ -480,6 +468,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
         when="@4.6.0 +gslib+shared+miniapps",
         sha256="2a31682d876626529e2778a216d403648b83b90997873659a505d982d0e65beb",
     )
+    patch("mfem-hip.patch", when="+rocm ^hip@6.0:")
 
     phases = ["configure", "build", "install"]
 
@@ -628,6 +617,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
             "MFEM_MPIEXEC=%s" % mfem_mpiexec,
             "MFEM_MPIEXEC_NP=%s" % mfem_mpiexec_np,
             "MFEM_USE_EXCEPTIONS=%s" % yes_no("+exceptions"),
+            "MFEM_USE_MUMPS=%s" % yes_no("+mumps"),
         ]
 
         # Determine C++ standard to use:
@@ -954,6 +944,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
             options += ["HIP_CXX=%s" % spec["hip"].hipcc, "HIP_ARCH=%s" % amdgpu_target]
             hip_headers = HeaderList([])
             hip_libs = LibraryList([])
+            hip_libs += find_libraries("libamdhip64", spec["hip"].prefix.lib)
             # To use a C++ compiler that supports -xhip flag one can use
             # something like this:
             #   options += [
@@ -1117,6 +1108,17 @@ class Mfem(Package, CudaPackage, ROCmPackage):
             options += [
                 "HIOP_OPT=%s" % hiop_hdrs.cpp_flags,
                 "HIOP_LIB=%s" % ld_flags_from_library_list(hiop_libs),
+            ]
+
+        if "+mumps" in spec:
+            mumps = spec["mumps"]
+            mumps_opt = ["-I%s" % mumps.prefix.include]
+            if "+openmp" in mumps:
+                if not self.spec.satisfies("%apple-clang"):
+                    mumps_opt += [xcompiler + self.compiler.openmp_flag]
+            options += [
+                "MUMPS_OPT=%s" % " ".join(mumps_opt),
+                "MUMPS_LIB=%s" % ld_flags_from_library_list(mumps.libs),
             ]
 
         make("config", *options, parallel=False)

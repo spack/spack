@@ -18,6 +18,7 @@ class Sp(CMakePackage):
     maintainers("AlexanderRichert-NOAA", "edwardhartnett", "Hang-Lei-NOAA")
 
     version("develop", branch="develop")
+    version("2.5.0", sha256="aec475ccb5ccf7c5a758dfb699626f2be78a22729a9d8d5e0a286db6a3213a51")
     version("2.4.0", sha256="dbb4280e622d2683b68a28f8e3837744adf9bbbb1e7940856e8f4597f481c708")
     version("2.3.3", sha256="c0d465209e599de3c0193e65671e290e9f422f659f1da928505489a3edeab99f")
 

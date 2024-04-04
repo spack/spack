@@ -15,6 +15,7 @@ class Opencv(CMakePackage, CudaPackage):
     homepage = "https://opencv.org/"
     url = "https://github.com/opencv/opencv/archive/4.5.0.tar.gz"
     git = "https://github.com/opencv/opencv.git"
+    find_python_hints = False  # opencv uses custom OpenCVDetectPython.cmake
 
     maintainers("bvanessen", "adamjstewart")
 

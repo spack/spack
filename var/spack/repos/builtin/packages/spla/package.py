@@ -57,10 +57,10 @@ class Spla(CMakePackage):
     depends_on("hip", when="+rocm")
 
     # Propagate openmp to blas
-    depends_on("openblas threads=openmp", when="+openmp ^openblas")
-    depends_on("amdblis threads=openmp", when="+openmp ^amdblis")
-    depends_on("blis threads=openmp", when="+openmp ^blis")
-    depends_on("intel-mkl threads=openmp", when="+openmp ^intel-mkl")
+    depends_on("openblas threads=openmp", when="+openmp ^[virtuals=blas] openblas")
+    depends_on("amdblis threads=openmp", when="+openmp ^[virtuals=blas] amdblis")
+    depends_on("blis threads=openmp", when="+openmp ^[virtuals=blas] blis")
+    depends_on("intel-mkl threads=openmp", when="+openmp ^[virtuals=blas] intel-mkl")
 
     # Fix CMake find module for AMD BLIS,
     # which uses a different library name for the multi-threaded version

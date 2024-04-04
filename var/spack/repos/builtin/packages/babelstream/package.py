@@ -157,7 +157,7 @@ class Babelstream(CMakePackage, CudaPackage, ROCmPackage):
         when="+thrust",
         msg="Which Thrust implementation to use, supported options include:\
          - CUDA (via https://github.com/NVIDIA/thrust)\
-         - ROCM (via https://github.com/ROCmSoftwarePlatform/rocThrust)",
+         - ROCM (via https://github.com/ROCm/rocThrust)",
     )
 
     # This applies to all

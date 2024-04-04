@@ -5,6 +5,7 @@
 import argparse
 import builtins
 import filecmp
+import gzip
 import itertools
 import os
 import pathlib
@@ -137,8 +138,7 @@ def test_package_output(tmpdir, capsys, install_mockery, mock_fetch):
     pkg = spec.package
     pkg.do_install(verbose=True)
 
-    log_file = pkg.build_log_path
-    with open(log_file) as f:
+    with gzip.open(pkg.install_log_path, "rt") as f:
         out = f.read()
 
     # make sure that output from the actual package file appears in the

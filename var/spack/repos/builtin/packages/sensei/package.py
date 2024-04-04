@@ -116,27 +116,30 @@ class Sensei(CMakePackage):
 
     def cmake_args(self):
         spec = self.spec
+        prefix = ""
+        if spec.satisfies("@5:"):
+            prefix = "SENSEI_"
 
         # -Ox flags are set by default in CMake based on the build type
         args = [
             self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
             self.define("SENSEI_USE_EXTERNAL_pugixml", True),
-            self.define("ENABLE_SENSEI", True),
+            self.define(f"{prefix}ENABLE_SENSEI", True),
             self.define("MPI_C_COMPILER", spec["mpi"].mpicc),
             self.define("MPI_CXX_COMPILER", spec["mpi"].mpicxx),
             # Don"t rely on MPI found in cray environment for cray systems.
             # On non-cray systems this should be a no-op
-            self.define("ENABLE_CRAY_MPICH", False),
-            self.define_from_variant("ENABLE_ASCENT", "ascent"),
-            self.define_from_variant("ENABLE_VTKM", "vtkm"),
-            self.define_from_variant("ENABLE_CATALYST", "catalyst"),
-            self.define_from_variant("ENABLE_LIBSIM", "libsim"),
-            self.define_from_variant("ENABLE_VTK_IO", "vtkio"),
-            self.define_from_variant("ENABLE_PYTHON", "python"),
-            self.define_from_variant("ENABLE_ADIOS2", "adios2"),
-            self.define_from_variant("ENABLE_HDF5", "hdf5"),
-            self.define_from_variant("ENABLE_PARALLEL3D", "miniapps"),
-            self.define_from_variant("ENABLE_OSCILLATORS", "miniapps"),
+            self.define(f"{prefix}ENABLE_CRAY_MPICH", False),
+            self.define_from_variant(f"{prefix}ENABLE_ASCENT", "ascent"),
+            self.define_from_variant(f"{prefix}ENABLE_VTKM", "vtkm"),
+            self.define_from_variant(f"{prefix}ENABLE_CATALYST", "catalyst"),
+            self.define_from_variant(f"{prefix}ENABLE_LIBSIM", "libsim"),
+            self.define_from_variant(f"{prefix}ENABLE_VTK_IO", "vtkio"),
+            self.define_from_variant(f"{prefix}ENABLE_PYTHON", "python"),
+            self.define_from_variant(f"{prefix}ENABLE_ADIOS2", "adios2"),
+            self.define_from_variant(f"{prefix}ENABLE_HDF5", "hdf5"),
+            self.define_from_variant(f"{prefix}ENABLE_PARALLEL3D", "miniapps"),
+            self.define_from_variant(f"{prefix}ENABLE_OSCILLATORS", "miniapps"),
         ]
 
         if "+adios2" in spec:
@@ -151,11 +154,8 @@ class Sensei(CMakePackage):
             args.append("-DVISIT_DIR:PATH={0}/current/linux-x86_64".format(spec["visit"].prefix))
 
         if "+python" in spec:
-            args.append(self.define("PYTHON_EXECUTABLE", spec["python"].command.path))
-            args.append(self.define("Python_EXECUTABLE", spec["python"].command.path))
-            args.append(self.define("Python3_EXECUTABLE", spec["python"].command.path))
             if spec.satisfies("@3:"):
                 args.append(self.define("SENSEI_PYTHON_VERSION", 3))
-            args.append(self.define_from_variant("ENABLE_CATALYST_PYTHON", "catalyst"))
+            args.append(self.define_from_variant(f"{prefix}ENABLE_CATALYST_PYTHON", "catalyst"))
 
         return args

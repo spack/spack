@@ -11,9 +11,9 @@ from spack.package import *
 class HipExamples(Package):
     """Examples for HIP"""
 
-    homepage = "https://github.com/ROCm-Developer-Tools/HIP-Examples/"
-    git = "https://github.com/ROCm-Developer-Tools/HIP-Examples.git"
-    url = "https://github.com/ROCm-Developer-Tools/HIP-Examples/archive/rocm-5.4.3.tar.gz"
+    homepage = "https://github.com/ROCm/HIP-Examples/"
+    git = "https://github.com/ROCm/HIP-Examples.git"
+    url = "https://github.com/ROCm/HIP-Examples/archive/rocm-5.4.3.tar.gz"
     tags = ["rocm"]
 
     maintainers("srekolam", "renjithravindrankannath", "afzpatel")

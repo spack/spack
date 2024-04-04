@@ -229,6 +229,8 @@ def post_install(spec, explicit=None):
     $spack_prefix/bin/sbang instead of something longer than the
     shebang limit.
     """
+    if sys.platform == "win32":
+        return
     if spec.external:
         tty.debug("SKIP: shebang filtering [external package]")
         return

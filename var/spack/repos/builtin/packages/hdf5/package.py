@@ -33,6 +33,9 @@ class Hdf5(CMakePackage):
 
     license("custom")
 
+    depends_on("cxx", type="build", when="+cxx")
+    depends_on("fortran", type="build", when="+fortran")
+
     # The 'develop' version is renamed so that we could uninstall (or patch) it
     # without affecting other develop version.
     version("develop-1.15", branch="develop")
@@ -88,7 +91,9 @@ class Hdf5(CMakePackage):
     variant("hl", default=False, description="Enable the high-level library")
     variant("cxx", default=False, description="Enable C++ support")
     variant("map", when="@1.14:", default=False, description="Enable MAP API support")
-    variant("subfiling", when="@1.14:", default=False, description="Enable Subfiling VFD support")
+    variant(
+        "subfiling", when="@1.14: +mpi", default=False, description="Enable Subfiling VFD support"
+    )
     variant("fortran", default=False, description="Enable Fortran support")
     variant("java", when="@1.10:", default=False, description="Enable Java support")
     variant("threadsafe", default=False, description="Enable thread-safe capabilities")
@@ -167,6 +172,15 @@ class Hdf5(CMakePackage):
     # 3. Parallel features are not supported via CXX API, but for the reasons
     #    described in #2 we allow for such combination.
     # conflicts('+mpi+cxx')
+
+    # Patch needed for HDF5 1.14.3 to fix signaling FPE checks from triggering
+    # at dynamic type system initialization. The type system's builtin types
+    # were refactored in 1.14.3 and switched from compile-time to run-time
+    # initialization. This patch suppresses floating point exception checks
+    # that would otherwise be triggered by this code. Later HDF5 versions
+    # will include the patch code changes.
+    # See https://github.com/HDFGroup/hdf5/pull/3837
+    patch("hdf5_1_14_3_fpe.patch", when="@1.14.3")
 
     # There are known build failures with intel@18.0.1. This issue is
     # discussed and patch is provided at
@@ -293,9 +307,13 @@ class Hdf5(CMakePackage):
                 cmake_flags.append(self.compiler.cc_pic_flag)
             if spec.satisfies("@1.8.21 %oneapi@2023.0.0"):
                 cmake_flags.append("-Wno-error=int-conversion")
+            if spec.satisfies("%apple-clang@15:"):
+                cmake_flags.append("-Wl,-ld_classic")
         elif name == "cxxflags":
             if spec.satisfies("@:1.8.12+cxx~shared"):
                 cmake_flags.append(self.compiler.cxx_pic_flag)
+            if spec.satisfies("%apple-clang@15:"):
+                cmake_flags.append("-Wl,-ld_classic")
         elif name == "fflags":
             if spec.satisfies("%cce+fortran"):
                 # Cray compiler generates module files with uppercase names by

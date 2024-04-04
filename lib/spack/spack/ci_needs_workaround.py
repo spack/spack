@@ -7,9 +7,7 @@ import collections.abc
 get_job_name = lambda needs_entry: (
     needs_entry.get("job")
     if (isinstance(needs_entry, collections.abc.Mapping) and needs_entry.get("artifacts", True))
-    else needs_entry
-    if isinstance(needs_entry, str)
-    else None
+    else needs_entry if isinstance(needs_entry, str) else None
 )
 
 

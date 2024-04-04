@@ -36,6 +36,7 @@ import shutil
 import sys
 import time
 from collections import defaultdict
+from gzip import GzipFile
 from typing import Dict, Iterator, List, Optional, Set, Tuple
 
 import llnl.util.filesystem as fs
@@ -638,13 +639,12 @@ def archive_install_logs(pkg: "spack.package_base.PackageBase", phase_log_dir: s
         pkg: the package that was built and installed
         phase_log_dir: path to the archive directory
     """
-    # Archive the whole stdout + stderr for the package
-    fs.install(pkg.log_path, pkg.install_log_path)
-
-    # Archive all phase log paths
-    for phase_log in pkg.phase_log_files:
-        log_file = os.path.basename(phase_log)
-        fs.install(phase_log, os.path.join(phase_log_dir, log_file))
+    # Copy a compressed version of the install log
+    with open(pkg.log_path, "rb") as f, open(pkg.install_log_path, "wb") as g:
+        # Use GzipFile directly so we can omit filename / mtime in header
+        gzip_file = GzipFile(filename="", mode="wb", compresslevel=6, mtime=0, fileobj=g)
+        shutil.copyfileobj(f, gzip_file)
+        gzip_file.close()
 
     # Archive the install-phase test log, if present
     pkg.archive_install_test_log()
@@ -1705,7 +1705,6 @@ class PackageInstaller:
         except spack.build_environment.StopPhase as e:
             # A StopPhase exception means that do_install was asked to
             # stop early from clients, and is not an error at this point
-            spack.hooks.on_install_failure(task.request.pkg.spec)
             pid = f"{self.pid}: " if tty.show_pid() else ""
             tty.debug(f"{pid}{str(e)}")
             tty.debug(f"Package stage directory: {pkg.stage.source_path}")
@@ -2011,7 +2010,6 @@ class PackageInstaller:
             if task is None:
                 continue
 
-            spack.hooks.on_install_start(task.request.pkg.spec)
             install_args = task.request.install_args
             keep_prefix = install_args.get("keep_prefix")
 
@@ -2037,9 +2035,6 @@ class PackageInstaller:
                     tty.warn(f"{pkg_id} does NOT actually have any uninstalled deps left")
                 dep_str = "dependencies" if task.priority > 1 else "dependency"
 
-                # Hook to indicate task failure, but without an exception
-                spack.hooks.on_install_failure(task.request.pkg.spec)
-
                 raise InstallError(
                     f"Cannot proceed with {pkg_id}: {task.priority} uninstalled "
                     f"{dep_str}: {','.join(task.uninstalled_deps)}",
@@ -2061,11 +2056,6 @@ class PackageInstaller:
                 term_status.clear()
                 tty.warn(f"{pkg_id} failed to install")
                 self._update_failed(task)
-
-                # Mark that the package failed
-                # TODO: this should also be for the task.pkg, but we don't
-                # model transitive yet.
-                spack.hooks.on_install_failure(task.request.pkg.spec)
 
                 if self.fail_fast:
                     raise InstallError(fail_fast_err, pkg=pkg)
@@ -2169,7 +2159,6 @@ class PackageInstaller:
                 tty.error(
                     f"Failed to install {pkg.name} due to " f"{exc.__class__.__name__}: {str(exc)}"
                 )
-                spack.hooks.on_install_cancel(task.request.pkg.spec)
                 raise
 
             except binary_distribution.NoChecksumException as exc:
@@ -2188,7 +2177,6 @@ class PackageInstaller:
 
             except (Exception, SystemExit) as exc:
                 self._update_failed(task, True, exc)
-                spack.hooks.on_install_failure(task.request.pkg.spec)
 
                 # Best effort installs suppress the exception and mark the
                 # package as a failure.
@@ -2286,11 +2274,15 @@ class BuildProcessInstaller:
         # whether to install source code with the packag
         self.install_source = install_args.get("install_source", False)
 
+        is_develop = pkg.spec.is_develop
         # whether to keep the build stage after installation
-        self.keep_stage = install_args.get("keep_stage", False)
-
+        # Note: user commands do not have an explicit choice to disable
+        # keeping stages (i.e., we have a --keep-stage option, but not
+        # a --destroy-stage option), so we can override a default choice
+        # to destroy
+        self.keep_stage = is_develop or install_args.get("keep_stage", False)
         # whether to restage
-        self.restage = install_args.get("restage", False)
+        self.restage = (not is_develop) and install_args.get("restage", False)
 
         # whether to skip the patch phase
         self.skip_patch = install_args.get("skip_patch", False)
@@ -2372,9 +2364,6 @@ class BuildProcessInstaller:
         _print_timer(pre=self.pre, pkg_id=self.pkg_id, timer=self.timer)
         _print_installed_pkg(self.pkg.prefix)
 
-        # Send final status that install is successful
-        spack.hooks.on_install_success(self.pkg.spec)
-
         # preserve verbosity across runs
         return self.echo
 
@@ -2453,15 +2442,10 @@ class BuildProcessInstaller:
                         # Catch any errors to report to logging
                         self.timer.start(phase_fn.name)
                         phase_fn.execute()
-                        spack.hooks.on_phase_success(pkg, phase_fn.name, log_file)
                         self.timer.stop(phase_fn.name)
 
                 except BaseException:
                     combine_phase_logs(pkg.phase_log_files, pkg.log_path)
-                    spack.hooks.on_phase_error(pkg, phase_fn.name, log_file)
-
-                    # phase error indicates install error
-                    spack.hooks.on_install_failure(pkg.spec)
                     raise
 
                 # We assume loggers share echo True/False

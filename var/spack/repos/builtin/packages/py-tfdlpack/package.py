@@ -33,14 +33,7 @@ class PyTfdlpack(CMakePackage, PythonExtension):
     depends_on("py-tensorflow", type=("build", "run"))
 
     def cmake_args(self):
-        args = ["-DPYTHON_EXECUTABLE=" + self.spec["python"].command.path]
-
-        if "+cuda" in self.spec:
-            args.append("-DUSE_CUDA=ON")
-        else:
-            args.append("-DUSE_CUDA=OFF")
-
-        return args
+        return [self.define_from_variant("USE_CUDA", "cuda")]
 
     def install(self, spec, prefix):
         with working_dir("python"):

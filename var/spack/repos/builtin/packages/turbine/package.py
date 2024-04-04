@@ -57,9 +57,14 @@ class Turbine(AutotoolsPackage):
             "--with-c-utils=" + self.spec["exmcutils"].prefix,
             "--with-adlb=" + self.spec["adlbx"].prefix,
             "--with-tcl=" + self.spec["tcl"].prefix,
-            "--with-mpi=" + self.spec["mpi"].prefix,
             "--disable-static-pkg",
         ]
+
+        if self.spec.satisfies("^intel-oneapi-mpi"):
+            args.append("--with-mpi=" + self.spec["intel-oneapi-mpi"].package.component_prefix)
+        else:
+            args.append("--with-mpi=" + self.spec["mpi"].prefix)
+
         if "+hdf5" in self.spec:
             args.append("--with-hdf5=ON")
         else:

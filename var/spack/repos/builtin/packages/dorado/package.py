@@ -6,18 +6,41 @@
 from spack.package import *
 
 
-class Dorado(Package):
-    """
-    Dorado is a high-performance, easy-to-use, open source basecaller for Oxford Nanopore reads.
-    """
+class Dorado(CMakePackage, CudaPackage):
+    """Dorado is a high-performance, easy-to-use, open source basecaller
+    for Oxford Nanopore reads."""
 
     homepage = "https://github.com/nanoporetech/dorado"
-    url = "https://cdn.oxfordnanoportal.com/software/analysis/dorado-0.5.1-linux-x64.tar.gz"
+    git = "https://github.com/nanoporetech/dorado.git"
+    url = "https://github.com/nanoporetech/dorado/archive/refs/tags/v0.5.1.tar.gz"
 
-    version("0.5.1", sha256="7d95f4d47e0024db8ca275a5c591ebcaf2e17bfbff714fa824b212fb58a98802")
+    maintainers("snehring")
 
-    def install(self, spec, prefix):
-        mkdirp(prefix.bin)
-        install("bin/dorado", prefix.bin)
-        mkdirp(prefix.lib)
-        install_tree("lib/.", prefix.lib)
+    version("0.5.3", commit="d9af343c0097e0e60503231e036d69e6eda2f19a", submodules=True)
+    version("0.5.1", commit="a7fb3e3d4afa7a11cb52422e7eecb1a2cdb7860f", submodules=True)
+
+    depends_on("autoconf", type="build")
+    depends_on("automake", type="build")
+    depends_on("git", type="build")
+    depends_on("curl", type="build")
+    depends_on("cuda")
+    depends_on("hdf5@1.17:+hl+cxx+szip")
+    depends_on("htslib@1.15.1")
+    depends_on("openssl")
+    depends_on("zstd")
+    depends_on("libdeflate")
+    depends_on("zlib-api")
+
+    conflicts("%gcc@:8", msg="Dorado requires at least gcc@9 to compile.")
+    conflicts("%gcc@13:", msg="Dorado will not build with gcc@13 and newer.")
+
+    patch("cmake-htslib.patch")
+
+    def setup_build_environment(self, env):
+        env.prepend_path("LD_LIBRARY_PATH", self.spec["libdeflate"].prefix.lib64)
+        env.prepend_path("LIBRARY_PATH", self.spec["libdeflate"].prefix.lib64)
+
+    def cmake_args(self):
+        htslib_prefix = self.spec["htslib"].prefix
+        args = [f"-DHTSLIB_PREFIX={htslib_prefix}", f"-DDORADO_INSTALL_PATH={self.prefix}"]
+        return args

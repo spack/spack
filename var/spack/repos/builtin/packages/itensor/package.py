@@ -80,10 +80,10 @@ class Itensor(MakefilePackage):
                 vinc += " -fpermissive"
             vinc += " -DHAVE_LAPACK_CONFIG_H"
             vinc += " -DLAPACK_COMPLEX_STRUCTURE"
-            filter_file("#PLATFORM=lapack", vinc, mf, String=True)
+            filter_file("#PLATFORM=lapack", vinc, mf, string=True)
         elif ltype == "intel-mkl":
             vpla = "PLATFORM=mkl"
-            filter_file("#PLATFORM=lapack", vinc, mf, String=True)
+            filter_file("#PLATFORM=lapack", vinc, mf, string=True)
 
         filter_file(r"^PLATFORM.+", vpla, mf)
         filter_file(r"^BLAS_LAPACK_LIBFLAGS.+", vlib, mf)

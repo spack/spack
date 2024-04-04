@@ -7,7 +7,6 @@ from spack.package import *
 
 
 class Mpip(AutotoolsPackage):
-
     """mpiP: Lightweight, Scalable MPI Profiling"""
 
     homepage = "https://software.llnl.gov/mpiP/"
