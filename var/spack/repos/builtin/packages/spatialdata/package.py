@@ -7,15 +7,30 @@ from spack.package import *
 
 
 class Spatialdata(AutotoolsPackage):
-    """FIXME: Put a proper description of your package here."""
+    """Spatialdata is a C++ library for
 
-    # FIXME: Add a proper url for your package's homepage here.
-    homepage = "https://www.example.com"
+    interpolating values for spatially distributed data,
+    converting coordinates among geographic projections using Proj,
+    nondimensionalization of quantities,
+    specification of units via Pyre (optional).
+
+    This library is used in the finite-element code PyLith
+    (https://github.com/geodynamics/pylith). The primary focus is specification
+    of parameters that vary in space, such as values for boundary conditions
+    and parameters of constitutive models. This provides a specification of
+    these parameters independent of the discretization."""
+
+    homepage = "https://geodynamics.org/resources/spatialdata/"
     url = "https://github.com/geodynamics/spatialdata/archive/refs/tags/v3.1.0.tar.gz"
 
-    license("UNKNOWN", checked_by="github_user1")
+    license("MIT", checked_by="downloadico")
 
-    version("develop", git="https://github.com/geodynamics/spatialdata/", submodules="true")
+    version(
+        "develop",
+        git="https://github.com/geodynamics/spatialdata/",
+        submodules="true",
+        preferred=1,
+    )
     version("3.1.0", sha256="dd6caccbf41a51928183d6a1caf2380aa0ed0f2c8c71ecc9b2cd9e3f23aa418c")
 
     depends_on("autoconf", type="build")
