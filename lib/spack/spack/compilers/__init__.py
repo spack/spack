@@ -10,6 +10,7 @@ import collections
 import itertools
 import multiprocessing.pool
 import os
+import warnings
 from typing import Dict, List, Optional, Tuple
 
 import archspec.cpu
@@ -324,7 +325,9 @@ def all_compilers_config(scope=None, init_config=True):
     from_compilers_yaml = get_compiler_config(scope, init_config)
 
     result = from_compilers_yaml + from_packages_yaml
-    key = lambda c: _compiler_from_config_entry(c["compiler"])
+    # Dedupe entries by the compiler they represent
+    # If the entry is invalid, treat it as unique for deduplication
+    key = lambda c: _compiler_from_config_entry(c["compiler"] or id(c))
     return list(llnl.util.lang.dedupe(result, key=key))
 
 
@@ -496,7 +499,9 @@ def all_compilers(scope=None, init_config=True):
     compilers = list()
     for items in config:
         items = items["compiler"]
-        compilers.append(_compiler_from_config_entry(items))
+        compiler = _compiler_from_config_entry(items)  # can be None in error case
+        if compiler:
+            compilers.append(compiler)
     return compilers
 
 
@@ -603,7 +608,10 @@ def _compiler_from_config_entry(items):
     compiler = _compiler_cache.get(config_id, None)
 
     if compiler is None:
-        compiler = compiler_from_dict(items)
+        try:
+            compiler = compiler_from_dict(items)
+        except UnknownCompilerError as e:
+            warnings.warn(e.message)
         _compiler_cache[config_id] = compiler
 
     return compiler
@@ -656,7 +664,9 @@ def get_compilers(config, cspec=None, arch_spec=None):
                 raise ValueError(msg)
             continue
 
-        compilers.append(_compiler_from_config_entry(items))
+        compiler = _compiler_from_config_entry(items)
+        if compiler:
+            compilers.append(compiler)
 
     return compilers
 
