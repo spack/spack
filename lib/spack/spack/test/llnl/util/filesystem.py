@@ -908,3 +908,69 @@ def test_find_first_file(tmpdir, bfs_depth):
 
     # Should find first dir
     assert os.path.samefile(fs.find_first(root, "a", bfs_depth=bfs_depth), os.path.join(root, "a"))
+
+
+def test_rename_dest_exists(tmpdir):
+
+    def setup_test_files(root):
+        a = tmpdir.join(root, "file1")
+        b = tmpdir.join(root, "file2")
+        fs.touch(a)
+        fs.touch(b)
+        return a,b
+
+    def setup_test_dirs(root):
+        a = tmpdir.join(root, "a")
+        b = tmpdir.join(root, "b")
+        fs.mkdirp(a)
+        fs.mkdirp(b)
+        return a, b
+
+    # test standard behavior of rename
+    # smoke test
+    a,b = setup_test_files("a")
+    fs.rename(str(a), str(b))
+    assert(os.path.exists(b))
+    assert(not os.path.exists(a))
+
+    # test relatitve paths
+    # another sanity check/smoke test
+    a, b = setup_test_files("b")
+    os.chdir(str(tmpdir))
+    fs.rename(os.path.join("b", "file1"), os.path.join("b", "file2"))
+    assert(os.path.exists(b))
+    assert(not os.path.exists(a))
+
+    # Test rename symlinks to same file
+    c = tmpdir.join("c", "file1")
+    a = tmpdir.join("c", "link1")
+    b = tmpdir.join("c", "link2")
+    fs.touch(c)
+    symlink(c, a)
+    symlink(c, b)
+    fs.rename(str(a), str(b))
+    assert(os.path.exists(b))
+    assert(not os.path.exists(a))
+    assert(os.path.realpath(b) == c)
+
+    # test rename onto itself
+    a = tmpdir.join("d", "file1")
+    b = a
+    fs.touch(a)
+    fs.rename(str(a), str(b))
+    # check a, or b, doesn't matter, same file
+    assert(os.path.exists(a))
+
+    # test rename onto symlink
+    # to directory from symlink to directory
+    # (this is something spack does when regenerating views)
+    a, b = setup_test_dirs("e")
+    link1 = tmpdir.join("f", "link1")
+    link2 = tmpdir.join("f", "link2")
+    symlink(a, link1)
+    symlink(b, link2)
+    fs.rename(a, b)
+    assert(os.path.exists(b))
+    assert(os.path.realpath(b) == link1)
+
+
