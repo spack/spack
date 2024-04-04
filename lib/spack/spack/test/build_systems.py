@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,6 +8,8 @@ import os
 
 import py.path
 import pytest
+
+import archspec.cpu
 
 import llnl.util.filesystem as fs
 
@@ -209,6 +211,9 @@ class TestAutotoolsPackage:
             assert "gnuconfig version of config.guess" not in f.read()
 
     @pytest.mark.disable_clean_stage_check
+    @pytest.mark.skipif(
+        str(archspec.cpu.host().family) != "x86_64", reason="test data is specific for x86_64"
+    )
     def test_autotools_gnuconfig_replacement_no_gnuconfig(self, mutable_database, monkeypatch):
         """
         Tests whether a useful error message is shown when patch_config_files is

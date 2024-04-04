@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,8 @@ class Libharu(AutotoolsPackage):
     homepage = "http://libharu.org"
     url = "https://github.com/libharu/libharu/archive/RELEASE_2_3_0.tar.gz"
     git = "https://github.com/libharu/libharu.git"
+
+    license("custom")
 
     version("master", branch="master")
     version("2.3.0", sha256="8f9e68cc5d5f7d53d1bc61a1ed876add1faf4f91070dbc360d8b259f46d9a4d2")

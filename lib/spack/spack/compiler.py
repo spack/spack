@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,7 @@ import sys
 import tempfile
 from typing import List, Optional, Sequence
 
+import llnl.path
 import llnl.util.lang
 import llnl.util.tty as tty
 from llnl.util.filesystem import path_contains_subdirectory, paths_containing_libs
@@ -24,7 +25,6 @@ import spack.util.executable
 import spack.util.module_cmd
 import spack.version
 from spack.util.environment import filter_system_paths
-from spack.util.path import system_path_filter
 
 __all__ = ["Compiler"]
 
@@ -39,10 +39,17 @@ def _get_compiler_version_output(compiler_path, version_arg, ignore_errors=()):
         version_arg (str): the argument used to extract version information
     """
     compiler = spack.util.executable.Executable(compiler_path)
+    compiler_invocation_args = {
+        "output": str,
+        "error": str,
+        "ignore_errors": ignore_errors,
+        "timeout": 120,
+        "fail_on_error": True,
+    }
     if version_arg:
-        output = compiler(version_arg, output=str, error=str, ignore_errors=ignore_errors)
+        output = compiler(version_arg, **compiler_invocation_args)
     else:
-        output = compiler(output=str, error=str, ignore_errors=ignore_errors)
+        output = compiler(**compiler_invocation_args)
     return output
 
 
@@ -153,7 +160,7 @@ def _parse_link_paths(string):
     return implicit_link_dirs
 
 
-@system_path_filter
+@llnl.path.system_path_filter
 def _parse_non_system_link_dirs(string: str) -> List[str]:
     """Parses link paths out of compiler debug output.
 
@@ -228,6 +235,9 @@ class Compiler:
     # These libraries are anticipated to be required by all executables built
     # by any compiler
     _all_compiler_rpath_libraries = ["libc", "libc++", "libstdc++"]
+
+    #: Platform matcher for Platform objects supported by compiler
+    is_supported_on_platform = lambda x: True
 
     # Default flags used by a compiler to set an rpath
     @property
@@ -324,6 +334,40 @@ class Compiler:
         # used for version checks for API, e.g. C++11 flag
         self._real_version = None
 
+    def __eq__(self, other):
+        return (
+            self.cc == other.cc
+            and self.cxx == other.cxx
+            and self.fc == other.fc
+            and self.f77 == other.f77
+            and self.spec == other.spec
+            and self.operating_system == other.operating_system
+            and self.target == other.target
+            and self.flags == other.flags
+            and self.modules == other.modules
+            and self.environment == other.environment
+            and self.extra_rpaths == other.extra_rpaths
+            and self.enable_implicit_rpaths == other.enable_implicit_rpaths
+        )
+
+    def __hash__(self):
+        return hash(
+            (
+                self.cc,
+                self.cxx,
+                self.fc,
+                self.f77,
+                self.spec,
+                self.operating_system,
+                self.target,
+                str(self.flags),
+                str(self.modules),
+                str(self.environment),
+                str(self.extra_rpaths),
+                self.enable_implicit_rpaths,
+            )
+        )
+
     def verify_executables(self):
         """Raise an error if any of the compiler executables is not valid.
 
@@ -379,8 +423,7 @@ class Compiler:
 
         # Put CXX first since it has the most linking issues
         # And because it has flags that affect linking
-        exe_paths = [x for x in [self.cxx, self.cc, self.fc, self.f77] if x]
-        link_dirs = self._get_compiler_link_paths(exe_paths)
+        link_dirs = self._get_compiler_link_paths()
 
         all_required_libs = list(self.required_libs) + Compiler._all_compiler_rpath_libraries
         return list(paths_containing_libs(link_dirs, all_required_libs))
@@ -393,43 +436,33 @@ class Compiler:
         # By default every compiler returns the empty list
         return []
 
-    def _get_compiler_link_paths(self, paths):
-        first_compiler = next((c for c in paths if c), None)
-        if not first_compiler:
-            return []
-        if not self.verbose_flag:
-            # In this case there is no mechanism to learn what link directories
-            # are used by the compiler
+    def _get_compiler_link_paths(self):
+        cc = self.cc if self.cc else self.cxx
+        if not cc or not self.verbose_flag:
+            # Cannot determine implicit link paths without a compiler / verbose flag
             return []
 
         # What flag types apply to first_compiler, in what order
-        flags = ["cppflags", "ldflags"]
-        if first_compiler == self.cc:
-            flags = ["cflags"] + flags
-        elif first_compiler == self.cxx:
-            flags = ["cxxflags"] + flags
+        if cc == self.cc:
+            flags = ["cflags", "cppflags", "ldflags"]
         else:
-            flags.append("fflags")
+            flags = ["cxxflags", "cppflags", "ldflags"]
 
         try:
             tmpdir = tempfile.mkdtemp(prefix="spack-implicit-link-info")
             fout = os.path.join(tmpdir, "output")
             fin = os.path.join(tmpdir, "main.c")
 
-            with open(fin, "w+") as csource:
+            with open(fin, "w") as csource:
                 csource.write(
-                    "int main(int argc, char* argv[]) { " "(void)argc; (void)argv; return 0; }\n"
+                    "int main(int argc, char* argv[]) { (void)argc; (void)argv; return 0; }\n"
                 )
-            compiler_exe = spack.util.executable.Executable(first_compiler)
+            cc_exe = spack.util.executable.Executable(cc)
             for flag_type in flags:
-                for flag in self.flags.get(flag_type, []):
-                    compiler_exe.add_default_arg(flag)
+                cc_exe.add_default_arg(*self.flags.get(flag_type, []))
 
-            output = ""
             with self.compiler_environment():
-                output = str(
-                    compiler_exe(self.verbose_flag, fin, "-o", fout, output=str, error=str)
-                )  # str for py2
+                output = cc_exe(self.verbose_flag, fin, "-o", fout, output=str, error=str)
             return _parse_non_system_link_dirs(output)
         except spack.util.executable.ProcessError as pe:
             tty.debug("ProcessError: Command exited with non-zero status: " + pe.long_message)
@@ -594,8 +627,6 @@ class Compiler:
         compiler_names = getattr(cls, "{0}_names".format(language))
         prefixes = [""] + cls.prefixes
         suffixes = [""]
-        # Windows compilers generally have an extension of some sort
-        # as do most files on Windows, handle that case here
         if sys.platform == "win32":
             ext = r"\.(?:exe|bat)"
             cls_suf = [suf + ext for suf in cls.suffixes]

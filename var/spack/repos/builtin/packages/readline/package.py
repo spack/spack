@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,8 @@ class Readline(AutotoolsPackage, GNUMirrorPackage):
     homepage = "https://tiswww.case.edu/php/chet/readline/rltop.html"
     # URL must remain http:// so Spack can bootstrap curl
     gnu_mirror_path = "readline/readline-8.0.tar.gz"
+
+    license("GPL-3.0-or-later")
 
     version("8.2", sha256="3feb7171f16a84ee82ca18a36d7b9be109a52c04f492a053331d7d1095007c35")
     version("8.1", sha256="f8ceb4ee131e3232226a17f51b164afc46cd0b9e6cef344be87c65962cb82b02")

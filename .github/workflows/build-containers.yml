@@ -38,12 +38,11 @@ jobs:
         # Meaning of the various items in the matrix list
         # 0: Container name (e.g. ubuntu-bionic)
         # 1: Platforms to build for
-        # 2: Base image (e.g. ubuntu:18.04)
+        # 2: Base image (e.g. ubuntu:22.04)
         dockerfile: [[amazon-linux, 'linux/amd64,linux/arm64', 'amazonlinux:2'],
                      [centos7, 'linux/amd64,linux/arm64,linux/ppc64le', 'centos:7'],
                      [centos-stream, 'linux/amd64,linux/arm64,linux/ppc64le', 'centos:stream'],
                      [leap15, 'linux/amd64,linux/arm64,linux/ppc64le', 'opensuse/leap:15'],
-                     [ubuntu-bionic, 'linux/amd64,linux/arm64,linux/ppc64le', 'ubuntu:18.04'],
                      [ubuntu-focal, 'linux/amd64,linux/arm64,linux/ppc64le', 'ubuntu:20.04'],
                      [ubuntu-jammy, 'linux/amd64,linux/arm64,linux/ppc64le', 'ubuntu:22.04'],
                      [almalinux8, 'linux/amd64,linux/arm64,linux/ppc64le', 'almalinux:8'],
@@ -56,20 +55,22 @@ jobs:
     if: github.repository == 'spack/spack'
     steps:
       - name: Checkout
-        uses: actions/checkout@3df4ab11eba7bda6032a0b82a6bb43b11571feac # @v2
+        uses: actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633
 
-      - name: Set Container Tag Normal (Nightly)
-        run: |
-          container="${{ matrix.dockerfile[0] }}:latest"
-          echo "container=${container}" >> $GITHUB_ENV
-          echo "versioned=${container}" >> $GITHUB_ENV
-
-        # On a new release create a container with the same tag as the release.
-      - name: Set Container Tag on Release
-        if: github.event_name == 'release'
-        run: |
-          versioned="${{matrix.dockerfile[0]}}:${GITHUB_REF##*/}"
-          echo "versioned=${versioned}" >> $GITHUB_ENV
+      - uses: docker/metadata-action@8e5442c4ef9f78752691e2d8f8d19755c6f78e81
+        id: docker_meta
+        with:
+          images: |
+              ghcr.io/${{ github.repository_owner }}/${{ matrix.dockerfile[0] }}
+              ${{ github.repository_owner }}/${{ matrix.dockerfile[0] }}
+          tags: |
+              type=schedule,pattern=nightly
+              type=schedule,pattern=develop
+              type=semver,pattern={{version}}
+              type=semver,pattern={{major}}.{{minor}}
+              type=semver,pattern={{major}}
+              type=ref,event=branch
+              type=ref,event=pr
 
       - name: Generate the Dockerfile
         env:
@@ -92,13 +93,13 @@ jobs:
           path: dockerfiles
 
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@2b82ce82d56a2a04d2637cd93a637ae1b359c0a7 # @v1
+        uses: docker/setup-qemu-action@68827325e0b33c7199eb31dd4e31fbe9023e06e3
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@885d1462b80bc1c1c7f0b00334ad271f09369c55 # @v1
+        uses: docker/setup-buildx-action@2b51285047da1547ffb1b2203d8be4c0af6b1f20
 
       - name: Log in to GitHub Container Registry
-        uses: docker/login-action@465a07811f14bebb1938fbed4728c6a1ff8901fc # @v1
+        uses: docker/login-action@e92390c5fb421da1463c202d546fed0ec5c39f20
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
@@ -106,21 +107,16 @@ jobs:
 
       - name: Log in to DockerHub
         if: github.event_name != 'pull_request'
-        uses: docker/login-action@465a07811f14bebb1938fbed4728c6a1ff8901fc # @v1
+        uses: docker/login-action@e92390c5fb421da1463c202d546fed0ec5c39f20
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Build & Deploy ${{ matrix.dockerfile[0] }}
-        uses: docker/build-push-action@0a97817b6ade9f46837855d676c4cca3a2471fc9 # @v2
+        uses: docker/build-push-action@2cdde995de11925a030ce8070c3d77a52ffcf1c0
         with:
           context: dockerfiles/${{ matrix.dockerfile[0] }}
           platforms: ${{ matrix.dockerfile[1] }}
           push: ${{ github.event_name != 'pull_request' }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-          tags: |
-            spack/${{ env.container }}
-            spack/${{ env.versioned }}
-            ghcr.io/spack/${{ env.container }}
-            ghcr.io/spack/${{ env.versioned }}
+          tags: ${{ steps.docker_meta.outputs.tags }}
+          labels: ${{ steps.docker_meta.outputs.labels }}

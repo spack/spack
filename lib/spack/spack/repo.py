@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,6 +6,7 @@
 import abc
 import collections.abc
 import contextlib
+import difflib
 import errno
 import functools
 import importlib
@@ -24,8 +25,9 @@ import sys
 import traceback
 import types
 import uuid
-from typing import Any, Dict, List, Union
+from typing import Any, Dict, List, Set, Tuple, Union
 
+import llnl.path
 import llnl.util.filesystem as fs
 import llnl.util.lang
 import llnl.util.tty as tty
@@ -488,7 +490,7 @@ class TagIndexer(Indexer):
         self.index = spack.tag.TagIndex.from_json(stream, self.repository)
 
     def update(self, pkg_fullname):
-        self.index.update_package(pkg_fullname)
+        self.index.update_package(pkg_fullname.split(".")[-1])
 
     def write(self, stream):
         self.index.to_json(stream)
@@ -563,7 +565,7 @@ class RepoIndex:
         self.checker = package_checker
         self.packages_path = self.checker.packages_path
         if sys.platform == "win32":
-            self.packages_path = spack.util.path.convert_to_posix_path(self.packages_path)
+            self.packages_path = llnl.path.convert_to_posix_path(self.packages_path)
         self.namespace = namespace
 
         self.indexers: Dict[str, Indexer] = {}
@@ -744,11 +746,17 @@ class RepoPath:
         for name in self.all_package_names():
             yield self.package_path(name)
 
-    def packages_with_tags(self, *tags):
-        r = set()
-        for repo in self.repos:
-            r |= set(repo.packages_with_tags(*tags))
-        return sorted(r)
+    def packages_with_tags(self, *tags: str, full: bool = False) -> Set[str]:
+        """Returns a set of packages matching any of the tags in input.
+
+        Args:
+            full: if True the package names in the output are fully-qualified
+        """
+        return {
+            f"{repo.namespace}.{pkg}" if full else pkg
+            for repo in self.repos
+            for pkg in repo.packages_with_tags(*tags)
+        }
 
     def all_package_classes(self):
         for name in self.all_package_names():
@@ -1123,7 +1131,8 @@ class Repo:
     def dirname_for_package_name(self, pkg_name):
         """Get the directory name for a particular package.  This is the
         directory that contains its package.py file."""
-        return os.path.join(self.packages_path, pkg_name)
+        _, unqualified_name = self.partition_package_name(pkg_name)
+        return os.path.join(self.packages_path, unqualified_name)
 
     def filename_for_package_name(self, pkg_name):
         """Get the filename for the module we should load for a particular
@@ -1158,15 +1167,10 @@ class Repo:
         for name in self.all_package_names():
             yield self.package_path(name)
 
-    def packages_with_tags(self, *tags):
+    def packages_with_tags(self, *tags: str) -> Set[str]:
         v = set(self.all_package_names())
-        index = self.tag_index
-
-        for t in tags:
-            t = t.lower()
-            v &= set(index[t])
-
-        return sorted(v)
+        v.intersection_update(*(self.tag_index[tag.lower()] for tag in tags))
+        return v
 
     def all_package_classes(self):
         """Iterator over all package *classes* in the repository.
@@ -1221,15 +1225,10 @@ class Repo:
         package. Then extracts the package class from the module
         according to Spack's naming convention.
         """
-        namespace, _, pkg_name = pkg_name.rpartition(".")
-        if namespace and (namespace != self.namespace):
-            raise InvalidNamespaceError(
-                "Invalid namespace for %s repo: %s" % (self.namespace, namespace)
-            )
-
+        namespace, pkg_name = self.partition_package_name(pkg_name)
         class_name = nm.mod_to_class(pkg_name)
+        fullname = f"{self.full_namespace}.{pkg_name}"
 
-        fullname = "{0}.{1}".format(self.full_namespace, pkg_name)
         try:
             module = importlib.import_module(fullname)
         except ImportError:
@@ -1240,7 +1239,7 @@ class Repo:
 
         cls = getattr(module, class_name)
         if not inspect.isclass(cls):
-            tty.die("%s.%s is not a class" % (pkg_name, class_name))
+            tty.die(f"{pkg_name}.{class_name} is not a class")
 
         new_cfg_settings = (
             spack.config.get("packages").get(pkg_name, {}).get("package_attributes", {})
@@ -1279,6 +1278,15 @@ class Repo:
 
         return cls
 
+    def partition_package_name(self, pkg_name: str) -> Tuple[str, str]:
+        namespace, pkg_name = partition_package_name(pkg_name)
+        if namespace and (namespace != self.namespace):
+            raise InvalidNamespaceError(
+                f"Invalid namespace for the '{self.namespace}' repo: {namespace}"
+            )
+
+        return namespace, pkg_name
+
     def __str__(self):
         return "[Repo '%s' at '%s']" % (self.namespace, self.root)
 
@@ -1290,6 +1298,20 @@ class Repo:
 
 
 RepoType = Union[Repo, RepoPath]
+
+
+def partition_package_name(pkg_name: str) -> Tuple[str, str]:
+    """Given a package name that might be fully-qualified, returns the namespace part,
+    if present and the unqualified package name.
+
+    If the package name is unqualified, the namespace is an empty string.
+
+    Args:
+        pkg_name: a package name, either unqualified like "llvl", or
+            fully-qualified, like "builtin.llvm"
+    """
+    namespace, _, pkg_name = pkg_name.rpartition(".")
+    return namespace, pkg_name
 
 
 def create_repo(root, namespace=None, subdir=packages_dir_name):
@@ -1488,7 +1510,18 @@ class UnknownPackageError(UnknownEntityError):
                 long_msg = "Did you mean to specify a filename with './{0}'?"
                 long_msg = long_msg.format(name)
             else:
-                long_msg = "You may need to run 'spack clean -m'."
+                long_msg = "Use 'spack create' to create a new package."
+
+                if not repo:
+                    repo = spack.repo.PATH
+
+                # We need to compare the base package name
+                pkg_name = name.rsplit(".", 1)[-1]
+                similar = difflib.get_close_matches(pkg_name, repo.all_package_names())
+
+                if 1 <= len(similar) <= 5:
+                    long_msg += "\n\nDid you mean one of the following packages?\n  "
+                    long_msg += "\n  ".join(similar)
 
         super().__init__(msg, long_msg)
         self.name = name

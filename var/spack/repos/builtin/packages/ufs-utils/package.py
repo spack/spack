@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,6 +18,12 @@ class UfsUtils(CMakePackage):
 
     maintainers("t-brown", "edwardhartnett", "AlexanderRichert-NOAA", "Hang-Lei-NOAA")
 
+    version(
+        "1.11.0",
+        tag="ufs_utils_1_11_0",
+        commit="72701ab45165ae67a1c4b4d855e763bf5674dbd2",
+        submodules=True,
+    )
     version(
         "1.10.0",
         tag="ufs_utils_1_10_0",

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -23,6 +23,8 @@ class RCopula(RPackage):
     dependence function."""
 
     cran = "copula"
+
+    license("GPL-3.0-or-later OR custom")
 
     version("1.1-2", sha256="88f9454d25e4dcdf53d8ca5156daf48e664769f5e13b1e835ed64f37251587d3")
     version("1.1-0", sha256="9ab76e6256534db2a18d3880143b8c67e385767010de861bbde25212aa75d924")

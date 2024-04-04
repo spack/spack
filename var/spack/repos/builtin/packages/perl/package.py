@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,7 @@ import re
 import sys
 from contextlib import contextmanager
 
+from llnl.util.filesystem import windows_sfn
 from llnl.util.lang import match_predicate
 from llnl.util.symlink import symlink
 
@@ -30,12 +31,16 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
     homepage = "https://www.perl.org"
     # URL must remain http:// so Spack can bootstrap curl
     url = "http://www.cpan.org/src/5.0/perl-5.34.0.tar.gz"
-    tags = ["windows"]
+    tags = ["windows", "build-tools"]
+
+    maintainers("LydDeb")
 
     executables = [r"^perl(-?\d+.*)?$"]
 
     # see https://www.cpan.org/src/README.html for
     # explanation of version numbering scheme
+
+    license("Artistic-1.0-Perl OR GPL-1.0-or-later")
 
     # Maintenance releases (even numbers, preferred)
     version(
@@ -117,6 +122,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
     extendable = True
 
     if sys.platform != "win32":
+        depends_on("gmake", type="build")
         depends_on("gdbm@:1.23")
         # Bind us below gdbm-1.20 due to API change: https://github.com/Perl/perl5/issues/18915
         depends_on("gdbm@:1.19", when="@:5.35")
@@ -258,13 +264,23 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
     # aren't writeable so make pp.c user writeable
     # before patching. This should probably walk the
     # source and make everything writeable in the future.
+    # The patch "zlib-ng.patch" also fail. So, apply chmod
+    # to Makefile.PL and Zlib.xs too.
     def do_stage(self, mirror_only=False):
         # Do Spack's regular stage
         super().do_stage(mirror_only)
-        # Add write permissions on file to be patched
-        filename = join_path(self.stage.source_path, "pp.c")
-        perm = os.stat(filename).st_mode
-        os.chmod(filename, perm | 0o200)
+        # Add write permissions on files to be patched
+        files_to_chmod = [
+            join_path(self.stage.source_path, "pp.c"),
+            join_path(self.stage.source_path, "cpan/Compress-Raw-Zlib/Makefile.PL"),
+            join_path(self.stage.source_path, "cpan/Compress-Raw-Zlib/Zlib.xs"),
+        ]
+        for filename in files_to_chmod:
+            try:
+                perm = os.stat(filename).st_mode
+                os.chmod(filename, perm | 0o200)
+            except IOError:
+                continue
 
     def nmake_arguments(self):
         args = []
@@ -272,7 +288,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
             args.append("CCTYPE=%s" % self.compiler.short_msvc_version)
         else:
             raise RuntimeError("Perl unsupported for non MSVC compilers on Windows")
-        args.append("INST_TOP=%s" % self.prefix.replace("/", "\\"))
+        args.append("INST_TOP=%s" % windows_sfn(self.prefix.replace("/", "\\")))
         args.append("INST_ARCH=\\$(ARCHNAME)")
         if self.spec.satisfies("~shared"):
             args.append("ALL_STATIC=%s" % "define")
@@ -353,6 +369,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
     def build_test(self):
         if sys.platform == "win32":
             win32_dir = os.path.join(self.stage.source_path, "win32")
+            win32_dir = windows_sfn(win32_dir)
             with working_dir(win32_dir):
                 nmake("test", ignore_quotes=True)
         else:
@@ -361,6 +378,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
     def install(self, spec, prefix):
         if sys.platform == "win32":
             win32_dir = os.path.join(self.stage.source_path, "win32")
+            win32_dir = windows_sfn(win32_dir)
             with working_dir(win32_dir):
                 nmake("install", *self.nmake_arguments(), ignore_quotes=True)
         else:
@@ -394,6 +412,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         if sys.platform == "win32":
             maker = nmake
             cpan_dir = join_path(self.stage.source_path, cpan_dir)
+            cpan_dir = windows_sfn(cpan_dir)
         if "+cpanm" in spec:
             with working_dir(cpan_dir):
                 perl = spec["perl"].command
@@ -401,14 +420,13 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
                 maker()
                 maker("install")
 
-    def _setup_dependent_env(self, env, dependent_spec, deptype):
+    def _setup_dependent_env(self, env, dependent_spec):
         """Set PATH and PERL5LIB to include the extension and
         any other perl extensions it depends on,
         assuming they were installed with INSTALL_BASE defined."""
         perl_lib_dirs = []
-        for d in dependent_spec.traverse(deptype=deptype):
-            if d.package.extends(self.spec):
-                perl_lib_dirs.append(d.prefix.lib.perl5)
+        if dependent_spec.package.extends(self.spec):
+            perl_lib_dirs.append(dependent_spec.prefix.lib.perl5)
         if perl_lib_dirs:
             perl_lib_path = ":".join(perl_lib_dirs)
             env.prepend_path("PERL5LIB", perl_lib_path)
@@ -416,10 +434,10 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
             env.append_path("PATH", self.prefix.bin)
 
     def setup_dependent_build_environment(self, env, dependent_spec):
-        self._setup_dependent_env(env, dependent_spec, deptype=("build", "run", "test"))
+        self._setup_dependent_env(env, dependent_spec)
 
     def setup_dependent_run_environment(self, env, dependent_spec):
-        self._setup_dependent_env(env, dependent_spec, deptype=("run",))
+        self._setup_dependent_env(env, dependent_spec)
 
     def setup_dependent_package(self, module, dependent_spec):
         """Called before perl modules' install() methods.

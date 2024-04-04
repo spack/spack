@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -93,7 +93,7 @@ def filter_compiler_wrappers(*files, **kwargs):
         replacements = []
 
         for idx, (env_var, compiler_path) in enumerate(compiler_vars):
-            if env_var in os.environ:
+            if env_var in os.environ and compiler_path is not None:
                 # filter spack wrapper and links to spack wrapper in case
                 # build system runs realpath
                 wrapper = os.environ[env_var]

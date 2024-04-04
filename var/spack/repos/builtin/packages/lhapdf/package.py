@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,6 +21,8 @@ class Lhapdf(AutotoolsPackage):
 
     maintainers("vvolkl", "wdconinc")
 
+    license("GPL-3.0-or-later")
+
     version("6.5.4", sha256="ace8913781044ad542e378697fcd95a8535d510818bb74a6665f9fd2b132ac0f")
     version("6.5.3", sha256="90fe7254d5a48a9b2d424fcbac1bf9708b0e54690efec4c78e9ad28b9203bfcd")
     version("6.5.2", sha256="23972ec46289c82a63df60b55b62f219418b4d80f94b8d570feb2b5e48014054")
@@ -40,6 +42,15 @@ class Lhapdf(AutotoolsPackage):
     depends_on("py-cython", type="build", when="+python")
     depends_on("py-setuptools", type="build", when="+python")
     depends_on("gettext", type="build", when="+python")
+
+    def setup_build_environment(self, env):
+        # Add -lintl if provided by gettext, otherwise libintl is provided by the system's glibc:
+        if (
+            self.spec.satisfies("+python")
+            and "gettext" in self.spec
+            and "intl" in self.spec["gettext"].libs.names
+        ):
+            env.append_flags("LDFLAGS", "-L" + self.spec["gettext"].prefix.lib)
 
     def configure_args(self):
         args = ["FCFLAGS=-O3", "CFLAGS=-O3", "CXXFLAGS=-O3"]

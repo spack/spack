@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,8 @@ class VarnishCache(AutotoolsPackage):
 
     homepage = "https://www.varnish-cache.org/"
     url = "https://github.com/varnishcache/varnish-cache/archive/varnish-6.4.0.tar.gz"
+
+    license("BSD-2-Clause")
 
     version("6.4.0", sha256="d9702c2c689c5d4ecd911886f769ddf22f46ac0722e275bee4033928cab09243")
     version("6.3.2", sha256="e50f3dd4e26d5669c5b73657cdb0d5ddac7dcc3cfa1761a983afa24b659f3785")

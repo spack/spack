@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class RedisAi(MakefilePackage):
     git = "https://github.com/RedisAI/RedisAI.git"
 
     maintainers("MattToast")
+
+    license("Apache-2.0")
 
     version(
         "1.2.7", tag="v1.2.7", commit="1bf38d86233ba06e1350ca9de794df2b07cdb274", submodules=True

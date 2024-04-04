@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,12 +13,13 @@ class EnvironmentModules(Package):
     """
 
     homepage = "https://cea-hpc.github.io/modules/"
-    url = "https://github.com/cea-hpc/modules/releases/download/v5.3.1/modules-5.3.1.tar.gz"
+    url = "https://github.com/cea-hpc/modules/releases/download/v5.4.0/modules-5.4.0.tar.gz"
     git = "https://github.com/cea-hpc/modules.git"
 
     maintainers("xdelaruelle")
 
     version("main", branch="main")
+    version("5.4.0", sha256="586245cbf9420866078d8c28fce8ef4f192530c69a0f368f51e848340dcf3b90")
     version("5.3.1", sha256="d02f9ce4f8baf6c99edceb7c73bfdd1e97d77bcc4725810b86efed9f58dda962")
     version("5.3.0", sha256="21b8daa0181044ef65097a1e3517af1f24e7c7343cc5bdaf70be11e3cb0edb51")
     version("5.2.0", sha256="48f9f10864303df628a48cab17074820a6251ad8cd7d66dd62aa7798af479254")
@@ -59,13 +60,15 @@ class EnvironmentModules(Package):
 
     variant("X", default=True, description="Build with X functionality")
 
-    depends_on("autoconf", type="build", when="@main")
-    depends_on("automake", type="build", when="@main")
-    depends_on("libtool", type="build", when="@main")
-    depends_on("m4", type="build", when="@main")
-    depends_on("python", type="build", when="@main")
-    depends_on("py-sphinx@1.0:", type="build", when="@main")
-    depends_on("gzip", type="build", when="@main")
+    depends_on("less", type=("build", "run"), when="@4.1:")
+    with when("@main"):
+        depends_on("autoconf", type="build")
+        depends_on("automake", type="build")
+        depends_on("libtool", type="build")
+        depends_on("m4", type="build")
+        depends_on("python", type="build")
+        depends_on("py-sphinx@1.0:", type="build")
+        depends_on("gzip", type="build")
 
     # Dependencies:
     depends_on("tcl", type=("build", "link", "run"))
@@ -134,6 +137,9 @@ class EnvironmentModules(Package):
                     "--disable-versioning",
                 ]
             )
+
+        if self.spec.satisfies("@4.1:"):
+            config_args.append(f"--with-pager={str(self.spec['less'].prefix.bin.less)}")
 
         configure(*config_args)
         make()

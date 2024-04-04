@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,6 @@ from spack.package import *
 
 
 class Openvdb(CMakePackage):
-
     """OpenVDB - a sparse volume data format."""
 
     homepage = "https://github.com/AcademySoftwareFoundation/openvdb"
@@ -19,6 +18,8 @@ class Openvdb(CMakePackage):
 
     # Github account name for drew@lagrangian.xyz
     maintainers("eloop")
+
+    license("MPL-2.0")
 
     version("develop", branch="develop")
     version("10.0.0", sha256="6d4f6b5ccd0f9d35a4886d9a51a98c97fa314f75bf9737c5121e91b706e2db70")

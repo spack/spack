@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,8 +14,10 @@ class Veloc(CMakePackage):
     url = "https://github.com/ECP-VeloC/VELOC/archive/veloc-1.7.tar.gz"
     git = "https://github.com/ecp-veloc/veloc.git"
 
-    maintainers = ["bnicolae"]
     tags = ["e4s"]
+
+    maintainers("bnicolae")
+    license("MIT")
 
     version("main", branch="main")
     version("1.7", sha256="ca50cb300830ea7f7e5679d32e3671ce4ea250eac384e7231def8dbb90e0cf31")
@@ -31,6 +33,7 @@ class Veloc(CMakePackage):
     depends_on("mpi")
     depends_on("boost")
     depends_on("er")
+    depends_on("er@0.4:", when="@1.7:")
     depends_on("axl@:0.3.0", when="@:1.5")
     depends_on("axl@0.5.0:", when="@1.6:")
     depends_on("openssl")

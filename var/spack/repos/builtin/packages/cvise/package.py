@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class Cvise(CMakePackage):
     homepage = "https://github.com/marxin/cvise"
     url = "https://github.com/marxin/cvise"
     git = "https://github.com/marxin/cvise.git"
+
+    license("NCSA")
 
     version("master", branch="master")
     version("2.7.0", tag="v2.7.0", commit="d9e4a50514d9931b2a1293755a7e96e0f9520032")
@@ -31,6 +33,3 @@ class Cvise(CMakePackage):
 
     depends_on("py-pytest", when="+pytest", type=("build", "run"))
     depends_on("colordiff", when="+colordiff", type=("build", "run"))
-
-    def cmake_args(self):
-        return ["-DPYTHON_EXECUTABLE=" + self.spec["python"].command.path]

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class PyEcos(PythonPackage):
     pypi = "ecos/ecos-2.0.7.post1.tar.gz"
 
     maintainers("meyersbs")
+
+    license("GPL-3.0-or-later")
 
     version("2.0.12", sha256="f48816d73b87ae325556ea537b7c8743187311403c80e3832035224156337c4e")
     version(

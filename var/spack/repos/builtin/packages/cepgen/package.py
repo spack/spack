@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class Cepgen(CMakePackage):
     url = "https://github.com/cepgen/cepgen/archive/refs/tags/1.0.2patch1.tar.gz"
 
     tags = ["hep"]
+
+    license("GPL-3.0-or-later")
 
     version("1.1.0", sha256="2a4eaed161f007269516cbfb6e90421e657ab1922d4509de0165f08dde91bf3d")
     version(

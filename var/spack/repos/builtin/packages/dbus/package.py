@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,6 +19,8 @@ class Dbus(AutotoolsPackage):
     homepage = "https://dbus.freedesktop.org/"
     url = "https://dbus.freedesktop.org/releases/dbus/dbus-1.8.8.tar.gz"
 
+    license("AFL-2.1 OR GPL-2.0-or-later")
+
     version("1.13.6", sha256="b533693232d36d608a09f70c15440c1816319bac3055433300d88019166c1ae4")
     version("1.12.8", sha256="e2dc99e7338303393b6663a98320aba6a63421bcdaaf571c8022f815e5896eb3")
     version("1.11.2", sha256="5abc4c57686fa82669ad0039830788f9b03fdc4fff487f0ccf6c9d56ba2645c9")
@@ -29,6 +31,7 @@ class Dbus(AutotoolsPackage):
     version("1.8.2", sha256="5689f7411165adc953f37974e276a3028db94447c76e8dd92efe910c6d3bae08")
 
     variant("xml_docs", default=False, description="Build XML documentation")
+    variant("system-socket", default="default", description="Location for the DBus system socket")
 
     depends_on("pkgconfig", type="build")
     depends_on("docbook-xml", type="build")
@@ -41,6 +44,9 @@ class Dbus(AutotoolsPackage):
     def configure_args(self):
         args = ["--disable-systemd", "--disable-launchd"]
         args += self.enable_or_disable("xml-docs", variant="xml_docs")
+        socket = self.spec.variants["system-socket"].value
+        if socket != "default":
+            args += ["--with-system-socket={0}".format(socket)]
         return args
 
     @run_after("install")

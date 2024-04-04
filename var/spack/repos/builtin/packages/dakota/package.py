@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -40,13 +40,27 @@ class Dakota(CMakePackage):
     git = "https://github.com/snl-dakota/dakota.git"
     url = "https://dakota.sandia.gov/sites/default/files/distributions/public/dakota-6.12-release-public.src.tar.gz"
 
-    version("6.18", tag="v6.18.0", submodules=submodules)
+    license("LGPL-2.1-or-later")
+
+    version(
+        "6.19.0",
+        tag="v6.19.0",
+        commit="603f448b916a8f629d258922e26e7e40dcaaf8ce",
+        submodules=submodules,
+    )
+    version(
+        "6.18",
+        tag="v6.18.0",
+        commit="f6cb33b517bb304795e1e14d3673fe289df2ec9b",
+        submodules=submodules,
+    )
     version("6.12", sha256="4d69f9cbb0c7319384ab9df27643ff6767eb410823930b8fbd56cc9de0885bc9")
     version("6.9", sha256="989b689278964b96496e3058b8ef5c2724d74bcd232f898fe450c51eba7fe0c2")
     version("6.3", sha256="0fbc310105860d77bb5c96de0e8813d75441fca1a5e6dfaf732aa095c4488d52")
 
     variant("shared", default=True, description="Enables the build of shared libraries")
     variant("mpi", default=True, description="Activates MPI support")
+    variant("python", default=True, description="Add Python dependency for dakota.interfacing API")
 
     # Generic 'lapack' provider won't work, dakota searches for
     # 'LAPACKConfig.cmake' or 'lapack-config.cmake' on the path
@@ -55,10 +69,11 @@ class Dakota(CMakePackage):
     depends_on("blas")
     depends_on("mpi", when="+mpi")
 
-    depends_on("python")
+    depends_on("python", when="+python")
     depends_on("perl-data-dumper", type="build", when="@6.12:")
     depends_on("boost@:1.68.0", when="@:6.12")
     depends_on("boost@1.69.0:", when="@6.18:")
+    depends_on("boost +filesystem +program_options +regex +serialization +system")
 
     # TODO: replace this with an explicit list of components of Boost,
     # for instance depends_on('boost +filesystem')
@@ -70,7 +85,10 @@ class Dakota(CMakePackage):
     def cmake_args(self):
         spec = self.spec
 
-        args = [self.define_from_variant("BUILD_SHARED_LIBS", "shared")]
+        args = [
+            self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
+            self.define_from_variant("DAKOTA_PYTHON", "python"),
+        ]
 
         if "+mpi" in spec:
             args.extend(

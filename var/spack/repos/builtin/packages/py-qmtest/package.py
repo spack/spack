@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class PyQmtest(PythonPackage):
     url = "https://github.com/MentorEmbedded/qmtest/archive/refs/tags/2.4.1.tar.gz"
 
     maintainers("haralmha")
+
+    license("GPL-2.0-only")
 
     version("2.4.1", sha256="098f705aea9c8f7f5b6b5fe131974cee33b50cad3e13977e39708f306ce9ac91")
 

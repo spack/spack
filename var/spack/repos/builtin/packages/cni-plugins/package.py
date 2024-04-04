@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class CniPlugins(Package):
     homepage = "https://github.com/containernetworking/plugins"
     url = "https://github.com/containernetworking/plugins/archive/v1.0.1.tar.gz"
     maintainers("bernhardkaindl")
+
+    license("Apache-2.0")
 
     version("1.3.0", sha256="f9871b9f6ccb51d2b264532e96521e44f926928f91434b56ce135c95becf2901")
     version("1.2.0", sha256="f3496ddda9c7770a0b695b67ae7ee80a4ee331ac2745af4830054b81627f79b7")

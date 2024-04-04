@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,11 +11,11 @@ from spack.package import *
 
 
 class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
-    """Tensors and Dynamic neural networks in Python
-    with strong GPU acceleration."""
+    """Tensors and Dynamic neural networks in Python with strong GPU acceleration."""
 
     homepage = "https://pytorch.org/"
     git = "https://github.com/pytorch/pytorch.git"
+    submodules = True
 
     maintainers("adamjstewart")
 
@@ -23,89 +23,36 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
     # core libraries to ensure that the package was successfully installed.
     import_modules = ["torch", "torch.autograd", "torch.nn", "torch.utils"]
 
-    version("main", branch="main", submodules=True)
-    version("master", branch="main", submodules=True, deprecated=True)
-    version(
-        "2.0.1", tag="v2.0.1", commit="e9ebda29d87ce0916ab08c06ab26fd3766a870e5", submodules=True
-    )
-    version(
-        "2.0.0", tag="v2.0.0", commit="c263bd43e8e8502d4726643bc6fd046f0130ac0e", submodules=True
-    )
-    version(
-        "1.13.1", tag="v1.13.1", commit="49444c3e546bf240bed24a101e747422d1f8a0ee", submodules=True
-    )
-    version(
-        "1.13.0", tag="v1.13.0", commit="7c98e70d44abc7a1aead68b6ea6c8adc8c554db5", submodules=True
-    )
-    version(
-        "1.12.1", tag="v1.12.1", commit="664058fa83f1d8eede5d66418abff6e20bd76ca8", submodules=True
-    )
-    version(
-        "1.12.0", tag="v1.12.0", commit="67ece03c8cd632cce9523cd96efde6f2d1cc8121", submodules=True
-    )
-    version(
-        "1.11.0", tag="v1.11.0", commit="bc2c6edaf163b1a1330e37a6e34caf8c553e4755", submodules=True
-    )
-    version(
-        "1.10.2", tag="v1.10.2", commit="71f889c7d265b9636b93ede9d651c0a9c4bee191", submodules=True
-    )
-    version(
-        "1.10.1", tag="v1.10.1", commit="302ee7bfb604ebef384602c56e3853efed262030", submodules=True
-    )
-    version(
-        "1.10.0", tag="v1.10.0", commit="36449ea93134574c2a22b87baad3de0bf8d64d42", submodules=True
-    )
-    version(
-        "1.9.1", tag="v1.9.1", commit="dfbd030854359207cb3040b864614affeace11ce", submodules=True
-    )
-    version(
-        "1.9.0", tag="v1.9.0", commit="d69c22dd61a2f006dcfe1e3ea8468a3ecaf931aa", submodules=True
-    )
-    version(
-        "1.8.2", tag="v1.8.2", commit="e0495a7aa104471d95dc85a1b8f6473fbcc427a8", submodules=True
-    )
-    version(
-        "1.8.1", tag="v1.8.1", commit="56b43f4fec1f76953f15a627694d4bba34588969", submodules=True
-    )
-    version(
-        "1.8.0", tag="v1.8.0", commit="37c1f4a7fef115d719104e871d0cf39434aa9d56", submodules=True
-    )
-    version(
-        "1.7.1", tag="v1.7.1", commit="57bffc3a8e4fee0cce31e1ff1f662ccf7b16db57", submodules=True
-    )
-    version(
-        "1.7.0", tag="v1.7.0", commit="e85d494707b835c12165976b8442af54b9afcb26", submodules=True
-    )
-    version(
-        "1.6.0", tag="v1.6.0", commit="b31f58de6fa8bbda5353b3c77d9be4914399724d", submodules=True
-    )
-    version(
-        "1.5.1", tag="v1.5.1", commit="3c31d73c875d9a4a6ea8a843b9a0d1b19fbe36f3", submodules=True
-    )
-    version(
-        "1.5.0", tag="v1.5.0", commit="4ff3872a2099993bf7e8c588f7182f3df777205b", submodules=True
-    )
-    version(
-        "1.4.1", tag="v1.4.1", commit="74044638f755cd8667bedc73da4dbda4aa64c948", submodules=True
-    )
-    version(
-        "1.3.1", tag="v1.3.1", commit="ee77ccbb6da4e2efd83673e798acf7081bc03564", submodules=True
-    )
-    version(
-        "1.3.0", tag="v1.3.0", commit="de394b672d0346f2f387a8bb1a1280d5d2eaf9cb", submodules=True
-    )
-    version(
-        "1.2.0", tag="v1.2.0", commit="8554416a199c4cec01c60c7015d8301d2bb39b64", submodules=True
-    )
-    version(
-        "1.1.0", tag="v1.1.0", commit="142c973f4179e768164cd578951489e89021b29c", submodules=True
-    )
-    version(
-        "1.0.1", tag="v1.0.1", commit="83221655a8237ca80f9673dad06a98d34c43e546", submodules=True
-    )
-    version(
-        "1.0.0", tag="v1.0.0", commit="db5d3131d16f57abd4f13d3f4b885d5f67bf6644", submodules=True
-    )
+    license("BSD-3-Clause")
+
+    version("main", branch="main")
+    version("2.2.2", tag="v2.2.2", commit="39901f229520a5256505ec24782f716ee7ddc843")
+    version("2.2.1", tag="v2.2.1", commit="6c8c5ad5eaf47a62fafbb4a2747198cbffbf1ff0")
+    version("2.2.0", tag="v2.2.0", commit="8ac9b20d4b090c213799e81acf48a55ea8d437d6")
+    version("2.1.2", tag="v2.1.2", commit="a8e7c98cb95ff97bb30a728c6b2a1ce6bff946eb")
+    version("2.1.1", tag="v2.1.1", commit="4c55dc50355d5e923642c59ad2a23d6ad54711e7")
+    version("2.1.0", tag="v2.1.0", commit="7bcf7da3a268b435777fe87c7794c382f444e86d")
+    version("2.0.1", tag="v2.0.1", commit="e9ebda29d87ce0916ab08c06ab26fd3766a870e5")
+    version("2.0.0", tag="v2.0.0", commit="c263bd43e8e8502d4726643bc6fd046f0130ac0e")
+    version("1.13.1", tag="v1.13.1", commit="49444c3e546bf240bed24a101e747422d1f8a0ee")
+    version("1.13.0", tag="v1.13.0", commit="7c98e70d44abc7a1aead68b6ea6c8adc8c554db5")
+    version("1.12.1", tag="v1.12.1", commit="664058fa83f1d8eede5d66418abff6e20bd76ca8")
+    version("1.12.0", tag="v1.12.0", commit="67ece03c8cd632cce9523cd96efde6f2d1cc8121")
+    version("1.11.0", tag="v1.11.0", commit="bc2c6edaf163b1a1330e37a6e34caf8c553e4755")
+    version("1.10.2", tag="v1.10.2", commit="71f889c7d265b9636b93ede9d651c0a9c4bee191")
+    version("1.10.1", tag="v1.10.1", commit="302ee7bfb604ebef384602c56e3853efed262030")
+    version("1.10.0", tag="v1.10.0", commit="36449ea93134574c2a22b87baad3de0bf8d64d42")
+    version("1.9.1", tag="v1.9.1", commit="dfbd030854359207cb3040b864614affeace11ce")
+    version("1.9.0", tag="v1.9.0", commit="d69c22dd61a2f006dcfe1e3ea8468a3ecaf931aa")
+    version("1.8.2", tag="v1.8.2", commit="e0495a7aa104471d95dc85a1b8f6473fbcc427a8")
+    version("1.8.1", tag="v1.8.1", commit="56b43f4fec1f76953f15a627694d4bba34588969")
+    version("1.8.0", tag="v1.8.0", commit="37c1f4a7fef115d719104e871d0cf39434aa9d56")
+    version("1.7.1", tag="v1.7.1", commit="57bffc3a8e4fee0cce31e1ff1f662ccf7b16db57")
+    version("1.7.0", tag="v1.7.0", commit="e85d494707b835c12165976b8442af54b9afcb26")
+    version("1.6.0", tag="v1.6.0", commit="b31f58de6fa8bbda5353b3c77d9be4914399724d")
+    version("1.5.1", tag="v1.5.1", commit="3c31d73c875d9a4a6ea8a843b9a0d1b19fbe36f3")
+    version("1.5.0", tag="v1.5.0", commit="4ff3872a2099993bf7e8c588f7182f3df777205b")
+    version("1.4.1", tag="v1.4.1", commit="74044638f755cd8667bedc73da4dbda4aa64c948")
 
     is_darwin = sys.platform == "darwin"
 
@@ -156,8 +103,12 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
         "breakpad",
         default=True,
         description="Enable breakpad crash dump library",
-        when="@1.9:1.11",
+        when="@1.10:1.11",
     )
+    # py-torch has strict dependencies on old protobuf/py-protobuf versions that
+    # cause problems with other packages that require newer versions of protobuf
+    # and py-protobuf --> provide an option to use the internal/vendored protobuf.
+    variant("custom-protobuf", default=False, description="Use vendored protobuf")
 
     conflicts("+cuda+rocm")
     conflicts("+tensorpipe", when="+rocm ^hip@:5.1", msg="TensorPipe not supported until ROCm 5.2")
@@ -166,9 +117,6 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
 
     # https://github.com/pytorch/pytorch/issues/77811
     conflicts("+qnnpack", when="platform=darwin target=aarch64:")
-
-    # https://github.com/pytorch/pytorch/issues/80805
-    conflicts("+openmp", when="platform=darwin target=aarch64:")
 
     # https://github.com/pytorch/pytorch/issues/97397
     conflicts(
@@ -188,15 +136,12 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
     )
 
     # Required dependencies
-    # See python_min_version in setup.py
-    # Upper bounds come from wheel availability on PyPI
-    depends_on("python@3.8:3.11", when="@2:", type=("build", "link", "run"))
-    depends_on("python@3.7:3.10", when="@1.11:1", type=("build", "link", "run"))
-    depends_on("python@3.6.2:3.9", when="@1.7.1:1.10", type=("build", "link", "run"))
-    depends_on("python@3.6.1:3.8", when="@1.6:1.7.0", type=("build", "link", "run"))
-    depends_on("python@3.5:3.8", when="@1.5", type=("build", "link", "run"))
-    depends_on("python@2.7:2,3.5:3.8", when="@1.4", type=("build", "link", "run"))
-    depends_on("python@2.7:2,3.5:3.7", when="@:1.3", type=("build", "link", "run"))
+    # Based on PyPI wheel availability
+    depends_on("python@3.8:3.12", when="@2.2:", type=("build", "link", "run"))
+    depends_on("python@3.8:3.11", when="@2.0:2.1", type=("build", "link", "run"))
+    depends_on("python@:3.10", when="@1.11:1", type=("build", "link", "run"))
+    depends_on("python@:3.9", when="@1.7.1:1.10", type=("build", "link", "run"))
+    depends_on("python@:3.8", when="@1.4:1.7.0", type=("build", "link", "run"))
 
     # CMakelists.txt
     depends_on("cmake@3.18:", when="@2:", type="build")
@@ -217,10 +162,12 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
 
     # setup.py
     depends_on("py-filelock", when="@2:", type=("build", "run"))
+    depends_on("py-typing-extensions@4.8:", when="@2.2:", type=("build", "run"))
     depends_on("py-typing-extensions@3.6.2.1:", when="@1.7:", type=("build", "run"))
     depends_on("py-sympy", when="@2:", type=("build", "run"))
     depends_on("py-networkx", when="@2:", type=("build", "run"))
     depends_on("py-jinja2", when="@2:", type=("build", "run"))
+    depends_on("py-fsspec", when="@2.1:", type=("build", "run"))
 
     # Undocumented dependencies
     depends_on("py-tqdm", type="run")
@@ -228,31 +175,31 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
     depends_on("lapack")
 
     # third_party
-    depends_on("py-pybind11@2.10.1", when="@2:", type=("build", "link", "run"))
+    depends_on("py-pybind11@2.11.0", when="@2.1:", type=("build", "link", "run"))
+    depends_on("py-pybind11@2.10.1", when="@2.0", type=("build", "link", "run"))
     depends_on("py-pybind11@2.10.0", when="@1.13:1", type=("build", "link", "run"))
     depends_on("py-pybind11@2.6.2", when="@1.8:1.12", type=("build", "link", "run"))
-    depends_on("py-pybind11@2.3.0", when="@1.1:1.7", type=("build", "link", "run"))
-    depends_on("py-pybind11@2.2.4", when="@:1.0", type=("build", "link", "run"))
-    depends_on("py-protobuf@3.12.2:", when="@1.10:", type=("build", "run"))
-    depends_on("py-protobuf@:3.14", when="@:1.9", type=("build", "run"))
-    depends_on("protobuf@3.12.2:", when="@1.10:")
-    depends_on("protobuf@:3.14", when="@:1.9")
-    # https://github.com/protocolbuffers/protobuf/issues/10051
-    # https://github.com/pytorch/pytorch/issues/78362
-    depends_on("py-protobuf@:3", type=("build", "run"))
-    depends_on("protobuf@:3", type=("build", "run"))
+    depends_on("py-pybind11@2.3.0", when="@:1.7", type=("build", "link", "run"))
+    with when("~custom-protobuf"):
+        depends_on("py-protobuf@3.12.2:", when="@1.10:", type=("build", "run"))
+        depends_on("py-protobuf@:3.14", when="@:1.9", type=("build", "run"))
+        depends_on("protobuf@3.12.2:", when="@1.10:")
+        depends_on("protobuf@:3.14", when="@:1.9")
+        # https://github.com/protocolbuffers/protobuf/issues/10051
+        # https://github.com/pytorch/pytorch/issues/78362
+        depends_on("py-protobuf@:3", type=("build", "run"))
+        depends_on("protobuf@:3")
     depends_on("eigen")
     # https://github.com/pytorch/pytorch/issues/60329
-    # depends_on("cpuinfo@2022-08-19", when="@1.13:")
+    # depends_on("cpuinfo@2023-01-13", when="@2.1:")
+    # depends_on("cpuinfo@2022-08-19", when="@1.13:2.0")
     # depends_on("cpuinfo@2020-12-17", when="@1.8:1.12")
     # depends_on("cpuinfo@2020-06-11", when="@1.6:1.7")
-    # https://github.com/shibatch/sleef/issues/427
-    # depends_on("sleef@3.5.1_2020-12-22", when="@1.8:")
-    # https://github.com/pytorch/pytorch/issues/60334
-    # depends_on("sleef@3.4.0_2019-07-30", when="@1.6:1.7")
-    # https://github.com/Maratyszcza/FP16/issues/18
-    # depends_on("fp16@2020-05-14", when="@1.6:")
-    depends_on("pthreadpool@2021-04-13", when="@1.9:")
+    depends_on("sleef@3.5.1_2020-12-22", when="@1.8:")
+    depends_on("sleef@3.4.0_2019-07-30", when="@1.6:1.7")
+    depends_on("fp16@2020-05-14", when="@1.6:")
+    depends_on("pthreadpool@2023-08-29", when="@2.2:")
+    depends_on("pthreadpool@2021-04-13", when="@1.9:2.1")
     depends_on("pthreadpool@2020-10-05", when="@1.8")
     depends_on("pthreadpool@2020-06-15", when="@1.6:1.7")
     depends_on("psimd@2020-05-17", when="@1.6:")
@@ -260,17 +207,17 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
     depends_on("benchmark", when="@1.6:+test")
 
     # Optional dependencies
-    # https://github.com/pytorch/pytorch#prerequisites
+    # cmake/public/cuda.cmake
     depends_on("cuda@11:", when="@2:+cuda", type=("build", "link", "run"))
     depends_on("cuda@10.2:", when="@1.11:1+cuda", type=("build", "link", "run"))
     # https://discuss.pytorch.org/t/compiling-1-10-1-from-source-with-gcc-11-and-cuda-11-5/140971
     depends_on("cuda@10.2:11.4", when="@1.10+cuda", type=("build", "link", "run"))
     depends_on("cuda@9.2:11.4", when="@1.6:1.9+cuda", type=("build", "link", "run"))
-    depends_on("cuda@9:11.4", when="@1.2:1.5+cuda", type=("build", "link", "run"))
-    depends_on("cuda@7.5:11.4", when="@:1.1+cuda", type=("build", "link", "run"))
+    depends_on("cuda@9:11.4", when="@:1.5+cuda", type=("build", "link", "run"))
+    # https://github.com/pytorch/pytorch#prerequisites
+    depends_on("cudnn@8.5:", when="@2.3:+cudnn")
     depends_on("cudnn@7:", when="@1.6:+cudnn")
-    depends_on("cudnn@7", when="@1.2:1.5+cudnn")
-    depends_on("cudnn@6.5:7", when="@:1.1+cudnn")
+    depends_on("cudnn@7", when="@:1.5+cudnn")
     depends_on("magma+cuda", when="+magma+cuda")
     depends_on("magma+rocm", when="+magma+rocm")
     depends_on("nccl", when="+nccl+cuda")
@@ -299,15 +246,18 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
     # depends_on("xnnpack@2021-02-22", when="@1.8:1.9+xnnpack")
     # depends_on("xnnpack@2020-03-23", when="@1.6:1.7+xnnpack")
     depends_on("mpi", when="+mpi")
-    # https://github.com/pytorch/pytorch/issues/60270
-    # depends_on("gloo@2023-01-17", when="@2:+gloo")
-    # depends_on("gloo@2022-05-18", when="@1.13:1+gloo")
-    # depends_on("gloo@2021-05-21", when="@1.10:1.12+gloo")
-    # depends_on("gloo@2021-05-04", when="@1.9+gloo")
-    # depends_on("gloo@2020-09-18", when="@1.7:1.8+gloo")
-    # depends_on("gloo@2020-03-17", when="@1.6+gloo")
+    depends_on("gloo@2023-05-19", when="@2.1:+gloo")
+    depends_on("gloo@2023-01-17", when="@2.0+gloo")
+    depends_on("gloo@2022-05-18", when="@1.13:1+gloo")
+    depends_on("gloo@2021-05-21", when="@1.10:1.12+gloo")
+    depends_on("gloo@2021-05-04", when="@1.9+gloo")
+    depends_on("gloo@2020-09-18", when="@1.7:1.8+gloo")
+    depends_on("gloo@2020-03-17", when="@1.6+gloo")
+    depends_on("gloo+cuda", when="@1.6:+gloo+cuda")
     # https://github.com/pytorch/pytorch/issues/60331
-    # depends_on("onnx@1.13.1", when="@2:+onnx_ml")
+    # depends_on("onnx@1.15.0", when="@2.2:+onnx_ml")
+    # depends_on("onnx@1.14.1", when="@2.1+onnx_ml")
+    # depends_on("onnx@1.13.1", when="@2.0+onnx_ml")
     # depends_on("onnx@1.12.0", when="@1.13:1+onnx_ml")
     # depends_on("onnx@1.11.0", when="@1.12+onnx_ml")
     # depends_on("onnx@1.10.1_2021-10-08", when="@1.11+onnx_ml")
@@ -321,19 +271,36 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
     depends_on("py-six", type="test")
     depends_on("py-psutil", type="test")
 
+    conflicts("%gcc@:9.3", when="@2.2:", msg="C++17 support required")
+
+    # https://github.com/pytorch/pytorch/issues/90448
+    patch(
+        "https://github.com/pytorch/pytorch/pull/97270.patch?full_index=1",
+        sha256="beb3fb57746cf8443f5caa6e08b2f8f4d4822c1e11e0c912134bd166c6a0ade7",
+        when="@1.10:2.0",
+    )
+
     # Fix BLAS being overridden by MKL
     # https://github.com/pytorch/pytorch/issues/60328
     patch(
         "https://github.com/pytorch/pytorch/pull/59220.patch?full_index=1",
         sha256="6d5717267f901e8ee493dfacd08734d9bcc48ad29a76ca9ef702368e96bee675",
-        when="@1.2:1.11",
+        when="@:1.11",
     )
 
     # Fixes build on older systems with glibc <2.12
     patch(
         "https://github.com/pytorch/pytorch/pull/55063.patch?full_index=1",
         sha256="2229bcbf20fbe88aa9f7318f89c126ec7f527875ffe689a763c78abfa127a65c",
-        when="@1.1:1.8.1",
+        when="@:1.8.1",
+    )
+
+    # https://github.com/pytorch/pytorch/issues/70297
+    patch(
+        "https://github.com/google/breakpad/commit/605c51ed96ad44b34c457bbca320e74e194c317e.patch?full_index=1",
+        sha256="694d83db3a2147d543357f22ba5c8d5683d0ed43e693d42bca8f24ec50080f98",
+        when="+breakpad",
+        working_dir="third_party/breakpad",
     )
 
     # Fixes CMake configuration error when XNNPACK is disabled
@@ -344,22 +311,13 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
     # Fixes build error when ROCm is enabled for pytorch-1.5 release
     patch("rocm.patch", when="@1.5+rocm")
 
-    # Fixes fatal error: sleef.h: No such file or directory
-    # https://github.com/pytorch/pytorch/pull/35359
-    # https://github.com/pytorch/pytorch/issues/26555
-    # patch("sleef.patch", when="@:1.5")
-
     # Fixes compilation with Clang 9.0.0 and Apple Clang 11.0.3
     # https://github.com/pytorch/pytorch/pull/37086
     patch(
         "https://github.com/pytorch/pytorch/commit/e921cd222a8fbeabf5a3e74e83e0d8dfb01aa8b5.patch?full_index=1",
         sha256="0f3ad037a95af9d34b1d085050c1e7771fd00f0b89e5b3a276097b7c9f4fabf8",
-        when="@1.1:1.5",
+        when="@:1.5",
     )
-
-    # Removes duplicate definition of getCusparseErrorString
-    # https://github.com/pytorch/pytorch/issues/32083
-    patch("cusparseGetErrorString.patch", when="@:1.0^cuda@10.1.243:")
 
     # Fixes 'FindOpenMP.cmake'
     # to detect openmp settings used by Fujitsu compiler.
@@ -371,8 +329,7 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
     patch("fj-ssl2_1.9.patch", when="@1.9^fujitsu-ssl2")
     patch("fj-ssl2_1.8.patch", when="@1.8^fujitsu-ssl2")
     patch("fj-ssl2_1.6-1.7.patch", when="@1.6:1.7^fujitsu-ssl2")
-    patch("fj-ssl2_1.3-1.5.patch", when="@1.3:1.5^fujitsu-ssl2")
-    patch("fj-ssl2_1.2.patch", when="@1.2^fujitsu-ssl2")
+    patch("fj-ssl2_1.3-1.5.patch", when="@:1.5^fujitsu-ssl2")
 
     # Fix compilation of +distributed~tensorpipe
     # https://github.com/pytorch/pytorch/issues/68002
@@ -420,7 +377,22 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
         sha256="a54db63640b90e5833cc1099c0935572f5297d2d8625f62f01ac1fda79ed4569",
         when="@1.13 arch=ppc64le:",
     )
-    conflicts("arch=ppc64le:", when="@:1.9,2:")
+    patch(
+        "https://github.com/open-ce/pytorch-feedstock/raw/open-ce-v1.9.0/pytorch-2.0/recipe/0309-fallback-to-cpu_kernel-with-VSX.patch",
+        sha256="27f41c8d6cb61e69e761be62f03dc1ce023cbca34926e3ba559996821a7ce726",
+        when="@2.0 arch=ppc64le:",
+    )
+    patch(
+        "https://github.com/open-ce/pytorch-feedstock/raw/open-ce-v1.9.0/pytorch-2.0/recipe/0310-PR100149.patch",
+        sha256="1adbd38a9cc1611f1caaa325614695f4349d9ffd236332e0d8f0de5a3880f4dd",
+        when="@2.0 arch=ppc64le:",
+    )
+    patch(
+        "https://github.com/open-ce/pytorch-feedstock/raw/open-ce-v1.10.0/pytorch-2.0/recipe/0311-PR104956.patch",
+        sha256="be27c906924a21be198a3ea6c459739a1daa8b8b89045af339dafa4cd6f90d6c",
+        when="@2.0 arch=ppc64le:",
+    )
+    conflicts("arch=ppc64le:", when="@:1.9")
 
     # Cherry-pick a patch to allow earlier versions of PyTorch to work with CUDA 11.4
     patch(
@@ -461,6 +433,20 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
         when="@2.0.0:2.0.1",
     )
 
+    # Use correct OpenBLAS include path under prefix
+    patch(
+        "https://patch-diff.githubusercontent.com/raw/pytorch/pytorch/pull/110063.patch?full_index=1",
+        sha256="23fb4009f7337051fc5303927ff977186a5af960245e7212895406477d8b2f66",
+        when="@:2.1",
+    )
+
+    patch(
+        "https://github.com/pytorch/FBGEMM/commit/da01a59556fec9776733bf20aea8fe8fb29cdd3d.patch?full_index=1",
+        sha256="97d8bd43f8cd8bb203dab3480d609c08499224acaca9915f2bdeb23c62350fb1",
+        when="@2.0.1 +fbgemm",
+        working_dir="third_party/fbgemm",
+    )
+
     @when("@1.5.0:")
     def patch(self):
         # https://github.com/pytorch/pytorch/issues/52208
@@ -482,7 +468,7 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
         environment variables.
         """
 
-        def enable_or_disable(variant, keyword="USE", var=None, newer=False):
+        def enable_or_disable(variant, keyword="USE", var=None):
             """Set environment variable to enable or disable support for a
             particular variant.
 
@@ -490,23 +476,14 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
                 variant (str): the variant to check
                 keyword (str): the prefix to use for enabling/disabling
                 var (str): CMake variable to set. Defaults to variant.upper()
-                newer (bool): newer variants that never used NO_*
             """
             if var is None:
                 var = variant.upper()
 
-            # Version 1.1.0 switched from NO_* to USE_* or BUILD_*
-            # But some newer variants have always used USE_* or BUILD_*
-            if self.spec.satisfies("@1.1:") or newer:
-                if "+" + variant in self.spec:
-                    env.set(keyword + "_" + var, "ON")
-                elif "~" + variant in self.spec:
-                    env.set(keyword + "_" + var, "OFF")
-            else:
-                if "+" + variant in self.spec:
-                    env.unset("NO_" + var)
-                elif "~" + variant in self.spec:
-                    env.set("NO_" + var, "ON")
+            if "+" + variant in self.spec:
+                env.set(keyword + "_" + var, "ON")
+            elif "~" + variant in self.spec:
+                env.set(keyword + "_" + var, "OFF")
 
         # Build in parallel to speed up build times
         env.set("MAX_JOBS", make_jobs)
@@ -519,9 +496,8 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
 
         enable_or_disable("cuda")
         if "+cuda" in self.spec:
-            # cmake/public/cuda.cmake
-            # cmake/Modules_CUDA_fix/upstream/FindCUDA.cmake
-            env.unset("CUDA_ROOT")
+            env.set("CUDA_HOME", self.spec["cuda"].prefix)  # Linux/macOS
+            env.set("CUDA_PATH", self.spec["cuda"].prefix)  # Windows
             torch_cuda_arch = ";".join(
                 "{0:.1f}".format(float(i) / 10.0) for i in self.spec.variants["cuda_arch"].value
             )
@@ -581,7 +557,7 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
         # cmake/Modules/FindNumPy.cmake
         enable_or_disable("numpy")
         # cmake/Modules/FindOpenMP.cmake
-        enable_or_disable("openmp", newer=True)
+        enable_or_disable("openmp")
         enable_or_disable("qnnpack")
         enable_or_disable("qnnpack", var="PYTORCH_QNNPACK")
         enable_or_disable("valgrind")
@@ -590,7 +566,7 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
         enable_or_disable("distributed")
         enable_or_disable("mpi")
         # cmake/Modules/FindGloo.cmake
-        enable_or_disable("gloo", newer=True)
+        enable_or_disable("gloo")
         enable_or_disable("tensorpipe")
 
         if "+debug" in self.spec:
@@ -603,7 +579,7 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
         elif "~onnx_ml" in self.spec:
             env.set("ONNX_ML", "OFF")
 
-        if not self.spec.satisfies("@main,master"):
+        if not self.spec.satisfies("@main"):
             env.set("PYTORCH_BUILD_VERSION", self.version)
             env.set("PYTORCH_BUILD_NUMBER", 0)
 
@@ -612,9 +588,11 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
         if self.spec["blas"].name == "atlas":
             env.set("BLAS", "ATLAS")
             env.set("WITH_BLAS", "atlas")
+            env.set("Atlas_ROOT_DIR", self.spec["atlas"].prefix)
         elif self.spec["blas"].name in ["blis", "amdblis"]:
             env.set("BLAS", "BLIS")
             env.set("WITH_BLAS", "blis")
+            env.set("BLIS_HOME", self.spec["blas"].prefix)
         elif self.spec["blas"].name == "eigen":
             env.set("BLAS", "Eigen")
         elif self.spec["lapack"].name in ["libflame", "amdlibflame"]:
@@ -631,6 +609,7 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
         elif self.spec["blas"].name == "openblas":
             env.set("BLAS", "OpenBLAS")
             env.set("WITH_BLAS", "open")
+            env.set("OpenBLAS_HOME", self.spec["openblas"].prefix)
         elif self.spec["blas"].name == "veclibfort":
             env.set("BLAS", "vecLib")
             env.set("WITH_BLAS", "veclib")
@@ -642,24 +621,23 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
             env.set("WITH_BLAS", "generic")
 
         # Don't use vendored third-party libraries when possible
-        env.set("BUILD_CUSTOM_PROTOBUF", "OFF")
+        if self.spec.satisfies("+custom-protobuf"):
+            env.set("BUILD_CUSTOM_PROTOBUF", "ON")
+        else:
+            env.set("BUILD_CUSTOM_PROTOBUF", "OFF")
         env.set("USE_SYSTEM_NCCL", "ON")
         env.set("USE_SYSTEM_EIGEN_INSTALL", "ON")
         env.set("pybind11_DIR", self.spec["py-pybind11"].prefix)
         env.set("pybind11_INCLUDE_DIR", self.spec["py-pybind11"].prefix.include)
         if self.spec.satisfies("@1.10:"):
             env.set("USE_SYSTEM_PYBIND11", "ON")
-        # https://github.com/pytorch/pytorch/issues/60334
-        # if self.spec.satisfies("@1.8:"):
-        #     env.set("USE_SYSTEM_SLEEF", "ON")
         if self.spec.satisfies("@1.6:"):
             # env.set("USE_SYSTEM_LIBS", "ON")
             # https://github.com/pytorch/pytorch/issues/60329
             # env.set("USE_SYSTEM_CPUINFO", "ON")
-            # https://github.com/pytorch/pytorch/issues/60270
-            # env.set("USE_SYSTEM_GLOO", "ON")
-            # https://github.com/Maratyszcza/FP16/issues/18
-            # env.set("USE_SYSTEM_FP16", "ON")
+            env.set("USE_SYSTEM_SLEEF", "ON")
+            env.set("USE_SYSTEM_GLOO", "ON")
+            env.set("USE_SYSTEM_FP16", "ON")
             env.set("USE_SYSTEM_PTHREADPOOL", "ON")
             env.set("USE_SYSTEM_PSIMD", "ON")
             env.set("USE_SYSTEM_FXDIV", "ON")
@@ -668,6 +646,10 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
             # env.set("USE_SYSTEM_ONNX", "ON")
             # https://github.com/pytorch/pytorch/issues/60332
             # env.set("USE_SYSTEM_XNNPACK", "ON")
+
+        # https://github.com/pytorch/pytorch/issues/111086
+        if self.spec.satisfies("%apple-clang@15:"):
+            env.append_flags("LDFLAGS", "-Wl,-ld_classic")
 
     @run_before("install")
     def build_amd(self):

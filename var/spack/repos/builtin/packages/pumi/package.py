@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -23,11 +23,16 @@ class Pumi(CMakePackage):
 
     tags = ["e4s"]
 
+    license("BSD-3-Clause")
+
     # We will use the scorec/core master branch as the 'nightly' version
     # of pumi in spack.  The master branch is more stable than the
     # scorec/core develop branch and we prefer not to expose spack users
     # to the added instability.
     version("master", submodules=True, branch="master")
+    version(
+        "2.2.8", submodules=True, commit="736bb87ccd8db51fc499a1b91e53717a88841b1f"
+    )  # tag 2.2.8
     version(
         "2.2.7", submodules=True, commit="a295720d7b4828282484f2b78bac1f6504512de4"
     )  # tag 2.2.7

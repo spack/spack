@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -93,14 +93,28 @@ class SpecList:
             if (isinstance(s, str) and not s.startswith("$")) and Spec(s) == Spec(spec)
         ]
         if not remove:
-            msg = "Cannot remove %s from SpecList %s\n" % (spec, self.name)
-            msg += "Either %s is not in %s or %s is " % (spec, self.name, spec)
+            msg = f"Cannot remove {spec} from SpecList {self.name}.\n"
+            msg += f"Either {spec} is not in {self.name} or {spec} is "
             msg += "expanded from a matrix and cannot be removed directly."
             raise SpecListError(msg)
 
         # Remove may contain more than one string representation of the same spec
         for item in remove:
             self.yaml_list.remove(item)
+
+        # invalidate cache variables when we change the list
+        self._expanded_list = None
+        self._constraints = None
+        self._specs = None
+
+    def replace(self, idx: int, spec: str):
+        """Replace the existing spec at the index with the new one.
+
+        Args:
+            idx: index of the spec to replace in the speclist
+            spec: new spec
+        """
+        self.yaml_list[idx] = spec
 
         # invalidate cache variables when we change the list
         self._expanded_list = None
@@ -133,9 +147,8 @@ class SpecList:
 
         # Make sure the reference is valid
         if name not in self._reference:
-            msg = "SpecList %s refers to " % self.name
-            msg += "named list %s " % name
-            msg += "which does not appear in its reference dict"
+            msg = f"SpecList '{self.name}' refers to named list '{name}'"
+            msg += " which does not appear in its reference dict."
             raise UndefinedReferenceError(msg)
 
         return (name, sigil)
@@ -149,6 +162,7 @@ class SpecList:
                 if isinstance(item, str) and item.startswith("$"):
                     # replace the reference and apply the sigil if needed
                     name, sigil = self._parse_reference(item)
+
                     referent = [
                         _sigilify(item, sigil) for item in self._reference[name].specs_as_yaml_list
                     ]

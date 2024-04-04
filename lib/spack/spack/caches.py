@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -35,9 +35,9 @@ def _misc_cache():
 
 
 #: Spack's cache for small data
-MISC_CACHE: Union[
-    spack.util.file_cache.FileCache, llnl.util.lang.Singleton
-] = llnl.util.lang.Singleton(_misc_cache)
+MISC_CACHE: Union[spack.util.file_cache.FileCache, llnl.util.lang.Singleton] = (
+    llnl.util.lang.Singleton(_misc_cache)
+)
 
 
 def fetch_cache_location():
@@ -91,6 +91,6 @@ class MirrorCache:
 
 
 #: Spack's local cache for downloaded source archives
-FETCH_CACHE: Union[
-    spack.fetch_strategy.FsCache, llnl.util.lang.Singleton
-] = llnl.util.lang.Singleton(_fetch_cache)
+FETCH_CACHE: Union[spack.fetch_strategy.FsCache, llnl.util.lang.Singleton] = (
+    llnl.util.lang.Singleton(_fetch_cache)
+)

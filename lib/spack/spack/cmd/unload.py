@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,10 +7,10 @@ import os
 import sys
 
 import spack.cmd
-import spack.cmd.common.arguments as arguments
 import spack.error
 import spack.user_environment as uenv
 import spack.util.environment
+from spack.cmd.common import arguments
 
 description = "remove package from the user environment"
 section = "user environment"
@@ -88,9 +88,8 @@ def unload(parser, args):
         )
         return 1
 
-    env_mod = spack.util.environment.EnvironmentModifications()
+    env_mod = uenv.environment_modifications_for_specs(*specs).reversed()
     for spec in specs:
-        env_mod.extend(uenv.environment_modifications_for_spec(spec).reversed())
         env_mod.remove_path(uenv.spack_loaded_hashes_var, spec.dag_hash())
     cmds = env_mod.shell_modifications(args.shell)
 

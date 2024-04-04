@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class Ross(CMakePackage):
     homepage = "https://ross-org.github.io"
     git = "https://github.com/ROSS-org/ROSS.git"
     url = "https://github.com/ROSS-org/ROSS/archive/v7.0.0.tar.gz"
+
+    license("BSD-3-Clause")
 
     version("develop", branch="develop")
     version("master", branch="master")

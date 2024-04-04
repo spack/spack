@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -54,10 +54,15 @@ import enum
 import io
 import itertools
 import os
+import pathlib
+import platform
 import re
+import socket
 import warnings
-from typing import Callable, List, Optional, Tuple, Union
+from typing import Any, Callable, Dict, List, Optional, Set, Tuple, Union
 
+import llnl.path
+import llnl.string
 import llnl.util.filesystem as fs
 import llnl.util.lang as lang
 import llnl.util.tty as tty
@@ -67,8 +72,11 @@ import spack.compiler
 import spack.compilers
 import spack.config
 import spack.dependency as dp
+import spack.deptypes as dt
 import spack.error
 import spack.hash_types as ht
+import spack.parser
+import spack.patch
 import spack.paths
 import spack.platforms
 import spack.provider_index
@@ -81,11 +89,9 @@ import spack.util.crypto
 import spack.util.executable
 import spack.util.hash
 import spack.util.module_cmd as md
-import spack.util.path as pth
 import spack.util.prefix
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
-import spack.util.string
 import spack.variant as vt
 import spack.version as vn
 import spack.version.git_ref_lookup
@@ -205,6 +211,19 @@ def colorize_spec(spec):
             return "%s%s" % (COLOR_FORMATS[sep], clr.cescape(sep))
 
     return clr.colorize(re.sub(_SEPARATORS, insert_color(), str(spec)) + "@.")
+
+
+OLD_STYLE_FMT_RE = re.compile(r"\${[A-Z]+}")
+
+
+def ensure_modern_format_string(fmt: str) -> None:
+    """Ensure that the format string does not contain old ${...} syntax."""
+    result = OLD_STYLE_FMT_RE.search(fmt)
+    if result:
+        raise SpecFormatStringError(
+            f"Format string `{fmt}` contains old syntax `{result.group(0)}`. "
+            "This is no longer supported."
+        )
 
 
 @lang.lazy_lexicographic_ordering
@@ -606,18 +625,6 @@ class CompilerSpec:
         else:
             raise TypeError("__init__ takes 1 or 2 arguments. (%d given)" % nargs)
 
-    def _add_versions(self, version_list):
-        # If it already has a non-trivial version list, this is an error
-        if self.versions and self.versions != vn.any_version:
-            # Note: This may be impossible to reach by the current parser
-            # Keeping it in case the implementation changes.
-            raise MultipleVersionError(
-                "A spec cannot contain multiple version signifiers. Use a version list instead."
-            )
-        self.versions = vn.VersionList()
-        for version in version_list:
-            self.versions.add(version)
-
     def _autospec(self, compiler_spec_like):
         if isinstance(compiler_spec_like, CompilerSpec):
             return compiler_spec_like
@@ -727,81 +734,54 @@ class DependencySpec:
     Args:
         parent: starting node of the edge
         spec: ending node of the edge.
-        deptypes: list of strings, representing dependency relationships.
+        depflag: represents dependency relationships.
         virtuals: virtual packages provided from child to parent node.
     """
 
-    __slots__ = "parent", "spec", "parameters"
+    __slots__ = "parent", "spec", "depflag", "virtuals"
 
     def __init__(
-        self,
-        parent: "Spec",
-        spec: "Spec",
-        *,
-        deptypes: dp.DependencyArgument,
-        virtuals: Tuple[str, ...],
+        self, parent: "Spec", spec: "Spec", *, depflag: dt.DepFlag, virtuals: Tuple[str, ...]
     ):
         self.parent = parent
         self.spec = spec
-        self.parameters = {
-            "deptypes": dp.canonical_deptype(deptypes),
-            "virtuals": tuple(sorted(set(virtuals))),
-        }
+        self.depflag = depflag
+        self.virtuals = tuple(sorted(set(virtuals)))
 
-    @property
-    def deptypes(self) -> Tuple[str, ...]:
-        return self.parameters["deptypes"]
-
-    @property
-    def virtuals(self) -> Tuple[str, ...]:
-        return self.parameters["virtuals"]
-
-    def _update_edge_multivalued_property(
-        self, property_name: str, value: Tuple[str, ...]
-    ) -> bool:
-        current = self.parameters[property_name]
-        update = set(current) | set(value)
-        update = tuple(sorted(update))
-        changed = current != update
-
-        if not changed:
-            return False
-
-        self.parameters[property_name] = update
-        return True
-
-    def update_deptypes(self, deptypes: Tuple[str, ...]) -> bool:
+    def update_deptypes(self, depflag: dt.DepFlag) -> bool:
         """Update the current dependency types"""
-        return self._update_edge_multivalued_property("deptypes", deptypes)
+        old = self.depflag
+        new = depflag | old
+        if new == old:
+            return False
+        self.depflag = new
+        return True
 
     def update_virtuals(self, virtuals: Tuple[str, ...]) -> bool:
         """Update the list of provided virtuals"""
-        return self._update_edge_multivalued_property("virtuals", virtuals)
+        old = self.virtuals
+        self.virtuals = tuple(sorted(set(virtuals).union(self.virtuals)))
+        return old != self.virtuals
 
     def copy(self) -> "DependencySpec":
         """Return a copy of this edge"""
-        return DependencySpec(
-            self.parent, self.spec, deptypes=self.deptypes, virtuals=self.virtuals
-        )
+        return DependencySpec(self.parent, self.spec, depflag=self.depflag, virtuals=self.virtuals)
 
     def _cmp_iter(self):
         yield self.parent.name if self.parent else None
         yield self.spec.name if self.spec else None
-        yield self.deptypes
+        yield self.depflag
         yield self.virtuals
 
     def __str__(self) -> str:
         parent = self.parent.name if self.parent else None
         child = self.spec.name if self.spec else None
-        return f"{parent} {self.deptypes}[virtuals={','.join(self.virtuals)}] --> {child}"
-
-    def canonical(self) -> Tuple[str, str, Tuple[str, ...], Tuple[str, ...]]:
-        return self.parent.dag_hash(), self.spec.dag_hash(), self.deptypes, self.virtuals
+        return f"{parent} {self.depflag}[virtuals={','.join(self.virtuals)}] --> {child}"
 
     def flip(self) -> "DependencySpec":
         """Flip the dependency, and drop virtual information"""
         return DependencySpec(
-            parent=self.spec, spec=self.parent, deptypes=self.deptypes, virtuals=()
+            parent=self.spec, spec=self.parent, depflag=self.depflag, virtuals=()
         )
 
 
@@ -931,24 +911,27 @@ class FlagMap(lang.HashableMap):
             yield flags
 
     def __str__(self):
-        sorted_keys = [k for k in sorted(self.keys()) if self[k] != []]
-        cond_symbol = " " if len(sorted_keys) > 0 else ""
-        return (
-            cond_symbol
-            + " ".join(
-                key
-                + ('=="' if True in [f.propagate for f in self[key]] else '="')
-                + " ".join(self[key])
-                + '"'
-                for key in sorted_keys
-            )
-            + cond_symbol
-        )
+        sorted_items = sorted((k, v) for k, v in self.items() if v)
+
+        result = ""
+        for flag_type, flags in sorted_items:
+            normal = [f for f in flags if not f.propagate]
+            if normal:
+                result += f" {flag_type}={spack.parser.quote_if_needed(' '.join(normal))}"
+
+            propagated = [f for f in flags if f.propagate]
+            if propagated:
+                result += f" {flag_type}=={spack.parser.quote_if_needed(' '.join(propagated))}"
+
+        # TODO: somehow add this space only if something follows in Spec.format()
+        if sorted_items:
+            result += " "
+
+        return result
 
 
-def _sort_by_dep_types(dspec):
-    # Use negation since False < True for sorting
-    return tuple(t not in dspec.deptypes for t in ("link", "run", "build", "test"))
+def _sort_by_dep_types(dspec: DependencySpec):
+    return dspec.depflag
 
 
 #: Enum for edge directions
@@ -1014,7 +997,7 @@ class _EdgeMap(collections.abc.Mapping):
 
         return clone
 
-    def select(self, parent=None, child=None, deptypes=dp.all_deptypes):
+    def select(self, parent=None, child=None, depflag: dt.DepFlag = dt.ALL):
         """Select a list of edges and return them.
 
         If an edge:
@@ -1022,18 +1005,18 @@ class _EdgeMap(collections.abc.Mapping):
         - Matches the parent and/or child name, if passed
         then it is selected.
 
-        The deptypes argument needs to be canonical, since the method won't
+        The deptypes argument needs to be a flag, since the method won't
         convert it for performance reason.
 
         Args:
             parent (str): name of the parent package
             child (str): name of the child package
-            deptypes (tuple): allowed dependency types in canonical form
+            depflag: allowed dependency types in flag form
 
         Returns:
             List of DependencySpec objects
         """
-        if not deptypes:
+        if not depflag:
             return []
 
         # Start from all the edges we store
@@ -1048,12 +1031,7 @@ class _EdgeMap(collections.abc.Mapping):
             selected = (d for d in selected if d.spec.name == child)
 
         # Filter by allowed dependency types
-        if deptypes:
-            selected = (
-                dep
-                for dep in selected
-                if not dep.deptypes or any(d in deptypes for d in dep.deptypes)
-            )
+        selected = (dep for dep in selected if not dep.depflag or (depflag & dep.depflag))
 
         return list(selected)
 
@@ -1346,8 +1324,6 @@ class Spec:
         self.external_path = external_path
         self.external_module = external_module
         """
-        import spack.parser
-
         # Copy if spec_like is a Spec.
         if isinstance(spec_like, Spec):
             self._dup(spec_like)
@@ -1422,7 +1398,7 @@ class Spec:
 
     @property
     def external_path(self):
-        return pth.path_to_os_path(self._external_path)[0]
+        return llnl.path.path_to_os_path(self._external_path)[0]
 
     @external_path.setter
     def external_path(self, ext_path):
@@ -1431,6 +1407,13 @@ class Spec:
     @property
     def external(self):
         return bool(self.external_path) or bool(self.external_modules)
+
+    @property
+    def is_develop(self):
+        """Return whether the Spec represents a user-developed package
+        in a Spack ``Environment`` (i.e. using `spack develop`).
+        """
+        return bool(self.variants.get("dev_path", False))
 
     def clear_dependencies(self):
         """Trim the dependencies of this spec."""
@@ -1473,47 +1456,73 @@ class Spec:
             raise spack.error.SpecError(err_msg.format(name, len(deps)))
         return deps[0]
 
-    def edges_from_dependents(self, name=None, deptype="all"):
+    def edges_from_dependents(self, name=None, depflag: dt.DepFlag = dt.ALL):
         """Return a list of edges connecting this node in the DAG
         to parents.
 
         Args:
             name (str): filter dependents by package name
-            deptype (str or tuple): allowed dependency types
+            depflag: allowed dependency types
         """
-        deptype = dp.canonical_deptype(deptype)
-        return [d for d in self._dependents.select(parent=name, deptypes=deptype)]
+        return [d for d in self._dependents.select(parent=name, depflag=depflag)]
 
-    def edges_to_dependencies(self, name=None, deptype="all"):
+    def edges_to_dependencies(self, name=None, depflag: dt.DepFlag = dt.ALL):
         """Return a list of edges connecting this node in the DAG
         to children.
 
         Args:
             name (str): filter dependencies by package name
-            deptype (str or tuple): allowed dependency types
+            depflag: allowed dependency types
         """
-        deptype = dp.canonical_deptype(deptype)
-        return [d for d in self._dependencies.select(child=name, deptypes=deptype)]
+        return [d for d in self._dependencies.select(child=name, depflag=depflag)]
 
-    def dependencies(self, name=None, deptype="all"):
+    @property
+    def edge_attributes(self) -> str:
+        """Helper method to print edge attributes in spec literals"""
+        edges = self.edges_from_dependents()
+        if not edges:
+            return ""
+
+        union = DependencySpec(parent=Spec(), spec=self, depflag=0, virtuals=())
+        for edge in edges:
+            union.update_deptypes(edge.depflag)
+            union.update_virtuals(edge.virtuals)
+        deptypes_str = (
+            f"deptypes={','.join(dt.flag_to_tuple(union.depflag))}" if union.depflag else ""
+        )
+        virtuals_str = f"virtuals={','.join(union.virtuals)}" if union.virtuals else ""
+        if not deptypes_str and not virtuals_str:
+            return ""
+        result = f"{deptypes_str} {virtuals_str}".strip()
+        return f"[{result}]"
+
+    def dependencies(
+        self, name=None, deptype: Union[dt.DepTypes, dt.DepFlag] = dt.ALL
+    ) -> List["Spec"]:
         """Return a list of direct dependencies (nodes in the DAG).
 
         Args:
             name (str): filter dependencies by package name
-            deptype (str or tuple): allowed dependency types
+            deptype: allowed dependency types
         """
-        return [d.spec for d in self.edges_to_dependencies(name, deptype=deptype)]
+        if not isinstance(deptype, dt.DepFlag):
+            deptype = dt.canonicalize(deptype)
+        return [d.spec for d in self.edges_to_dependencies(name, depflag=deptype)]
 
-    def dependents(self, name=None, deptype="all"):
+    def dependents(
+        self, name=None, deptype: Union[dt.DepTypes, dt.DepFlag] = dt.ALL
+    ) -> List["Spec"]:
         """Return a list of direct dependents (nodes in the DAG).
 
         Args:
             name (str): filter dependents by package name
-            deptype (str or tuple): allowed dependency types
+            deptype: allowed dependency types
         """
-        return [d.parent for d in self.edges_from_dependents(name, deptype=deptype)]
+        if not isinstance(deptype, dt.DepFlag):
+            deptype = dt.canonicalize(deptype)
+        return [d.parent for d in self.edges_from_dependents(name, depflag=deptype)]
 
-    def _dependencies_dict(self, deptype="all"):
+    def _dependencies_dict(self, depflag: dt.DepFlag = dt.ALL):
         """Return a dictionary, keyed by package name, of the direct
         dependencies.
 
@@ -1522,28 +1531,13 @@ class Spec:
         Args:
             deptype: allowed dependency types
         """
-        _sort_fn = lambda x: (x.spec.name,) + _sort_by_dep_types(x)
+        _sort_fn = lambda x: (x.spec.name, _sort_by_dep_types(x))
         _group_fn = lambda x: x.spec.name
-        deptype = dp.canonical_deptype(deptype)
-        selected_edges = self._dependencies.select(deptypes=deptype)
+        selected_edges = self._dependencies.select(depflag=depflag)
         result = {}
         for key, group in itertools.groupby(sorted(selected_edges, key=_sort_fn), key=_group_fn):
             result[key] = list(group)
         return result
-
-    #
-    # Private routines here are called by the parser when building a spec.
-    #
-    def _add_versions(self, version_list):
-        """Called by the parser to add an allowable version."""
-        # If it already has a non-trivial version list, this is an error
-        if self.versions and self.versions != vn.any_version:
-            raise MultipleVersionError(
-                "A spec cannot contain multiple version signifiers." " Use a version list instead."
-            )
-        self.versions = vn.VersionList()
-        for version in version_list:
-            self.versions.add(version)
 
     def _add_flag(self, name, value, propagate):
         """Called by the parser to add a known flag.
@@ -1613,43 +1607,36 @@ class Spec:
                 else:
                     setattr(self.architecture, new_attr, new_value)
 
-    def _set_compiler(self, compiler):
-        """Called by the parser to set the compiler."""
-        if self.compiler:
-            raise DuplicateCompilerSpecError(
-                "Spec for '%s' cannot have two compilers." % self.name
-            )
-        self.compiler = compiler
-
-    def _add_dependency(
-        self, spec: "Spec", *, deptypes: dp.DependencyArgument, virtuals: Tuple[str, ...]
-    ):
+    def _add_dependency(self, spec: "Spec", *, depflag: dt.DepFlag, virtuals: Tuple[str, ...]):
         """Called by the parser to add another spec as a dependency."""
         if spec.name not in self._dependencies or not spec.name:
-            self.add_dependency_edge(spec, deptypes=deptypes, virtuals=virtuals)
+            self.add_dependency_edge(spec, depflag=depflag, virtuals=virtuals)
             return
 
-        # Keep the intersection of constraints when a dependency is added
-        # multiple times. Currently, we only allow identical edge types.
+        # Keep the intersection of constraints when a dependency is added multiple times.
+        # The only restriction, currently, is keeping the same dependency type
         orig = self._dependencies[spec.name]
         try:
-            dspec = next(dspec for dspec in orig if deptypes == dspec.deptypes)
+            dspec = next(dspec for dspec in orig if depflag == dspec.depflag)
         except StopIteration:
-            raise DuplicateDependencyError("Cannot depend on '%s' twice" % spec)
+            edge_attrs = f"deptypes={dt.flag_to_chars(depflag).strip()}"
+            required_dep_str = f"^[{edge_attrs}] {str(spec)}"
+
+            raise DuplicateDependencyError(
+                f"{spec.name} is a duplicate dependency, with conflicting dependency types\n"
+                f"\t'{str(self)}' cannot depend on '{required_dep_str}'"
+            )
 
         try:
             dspec.spec.constrain(spec)
+            dspec.update_virtuals(virtuals=virtuals)
         except spack.error.UnsatisfiableSpecError:
             raise DuplicateDependencyError(
-                "Cannot depend on incompatible specs '%s' and '%s'" % (dspec.spec, spec)
+                f"Cannot depend on incompatible specs '{dspec.spec}' and '{spec}'"
             )
 
     def add_dependency_edge(
-        self,
-        dependency_spec: "Spec",
-        *,
-        deptypes: dp.DependencyArgument,
-        virtuals: Tuple[str, ...],
+        self, dependency_spec: "Spec", *, depflag: dt.DepFlag, virtuals: Tuple[str, ...]
     ):
         """Add a dependency edge to this spec.
 
@@ -1658,19 +1645,17 @@ class Spec:
             deptypes: dependency types for this edge
             virtuals: virtuals provided by this edge
         """
-        deptypes = dp.canonical_deptype(deptypes)
-
         # Check if we need to update edges that are already present
         selected = self._dependencies.select(child=dependency_spec.name)
         for edge in selected:
             has_errors, details = False, []
             msg = f"cannot update the edge from {edge.parent.name} to {edge.spec.name}"
-            if any(d in edge.deptypes for d in deptypes):
+            if edge.depflag & depflag:
                 has_errors = True
                 details.append(
                     (
                         f"{edge.parent.name} has already an edge matching any"
-                        f" of these types {str(deptypes)}"
+                        f" of these types {depflag}"
                     )
                 )
 
@@ -1679,7 +1664,7 @@ class Spec:
                 details.append(
                     (
                         f"{edge.parent.name} has already an edge matching any"
-                        f" of these virtuals {str(virtuals)}"
+                        f" of these virtuals {virtuals}"
                     )
                 )
 
@@ -1691,11 +1676,11 @@ class Spec:
                 # If we are here, it means the edge object was previously added to
                 # both the parent and the child. When we update this object they'll
                 # both see the deptype modification.
-                edge.update_deptypes(deptypes=deptypes)
+                edge.update_deptypes(depflag=depflag)
                 edge.update_virtuals(virtuals=virtuals)
                 return
 
-        edge = DependencySpec(self, dependency_spec, deptypes=deptypes, virtuals=virtuals)
+        edge = DependencySpec(self, dependency_spec, depflag=depflag, virtuals=virtuals)
         self._dependencies.add(edge)
         dependency_spec._dependents.add(edge)
 
@@ -1838,7 +1823,7 @@ class Spec:
 
     @prefix.setter
     def prefix(self, value):
-        self._prefix = spack.util.prefix.Prefix(pth.convert_to_platform_path(value))
+        self._prefix = spack.util.prefix.Prefix(llnl.path.convert_to_platform_path(value))
 
     def spec_hash(self, hash):
         """Utility method for computing different types of Spec hashes.
@@ -1962,12 +1947,12 @@ class Spec:
         # Get dependencies that need to be replaced
         for node in self.traverse(root=False):
             if node.abstract_hash:
-                spec._add_dependency(node._lookup_hash(), deptypes=(), virtuals=())
+                spec._add_dependency(node._lookup_hash(), depflag=0, virtuals=())
 
         # reattach nodes that were not otherwise satisfied by new dependencies
         for node in self.traverse(root=False):
             if not any(n.satisfies(node) for n in spec.traverse()):
-                spec._add_dependency(node.copy(), deptypes=(), virtuals=())
+                spec._add_dependency(node.copy(), depflag=0, virtuals=())
 
         return spec
 
@@ -2079,7 +2064,12 @@ class Spec:
             if hasattr(variant, "_patches_in_order_of_appearance"):
                 d["patches"] = variant._patches_in_order_of_appearance
 
-        if self._concrete and hash.package_hash and self._package_hash:
+        if (
+            self._concrete
+            and hash.package_hash
+            and hasattr(self, "_package_hash")
+            and self._package_hash
+        ):
             # We use the attribute here instead of `self.package_hash()` because this
             # should *always* be assignhed at concretization time. We don't want to try
             # to compute a package hash for concrete spec where a) the package might not
@@ -2093,7 +2083,7 @@ class Spec:
             d["package_hash"] = package_hash
 
         # Note: Relies on sorting dict by keys later in algorithm.
-        deps = self._dependencies_dict(deptype=hash.deptype)
+        deps = self._dependencies_dict(depflag=hash.depflag)
         if deps:
             deps_list = []
             for name, edges_for_name in sorted(deps.items()):
@@ -2103,7 +2093,10 @@ class Spec:
                     parameters_tuple = (
                         "parameters",
                         syaml.syaml_dict(
-                            (key, dspec.parameters[key]) for key in sorted(dspec.parameters)
+                            (
+                                ("deptypes", dt.flag_to_tuple(dspec.depflag)),
+                                ("virtuals", dspec.virtuals),
+                            )
                         ),
                     )
                     ordered_entries = [name_tuple, hash_tuple, parameters_tuple]
@@ -2201,7 +2194,7 @@ class Spec:
         """
         node_list = []  # Using a list to preserve preorder traversal for hash.
         hash_set = set()
-        for s in self.traverse(order="pre", deptype=hash.deptype):
+        for s in self.traverse(order="pre", deptype=hash.depflag):
             spec_hash = s._cached_hash(hash)
 
             if spec_hash not in hash_set:
@@ -2385,13 +2378,12 @@ class Spec:
             if dep_like is None:
                 return spec
 
-            def name_and_dependency_types(s):
+            def name_and_dependency_types(s: str) -> Tuple[str, dt.DepFlag]:
                 """Given a key in the dictionary containing the literal,
                 extracts the name of the spec and its dependency types.
 
                 Args:
-                    s (str): key in the dictionary containing the literal
-
+                    s: key in the dictionary containing the literal
                 """
                 t = s.split(":")
 
@@ -2399,39 +2391,37 @@ class Spec:
                     msg = 'more than one ":" separator in key "{0}"'
                     raise KeyError(msg.format(s))
 
-                n = t[0]
+                name = t[0]
                 if len(t) == 2:
-                    dtypes = tuple(dt.strip() for dt in t[1].split(","))
+                    depflag = dt.flag_from_strings(dep_str.strip() for dep_str in t[1].split(","))
                 else:
-                    dtypes = ()
+                    depflag = 0
+                return name, depflag
 
-                return n, dtypes
-
-            def spec_and_dependency_types(s):
+            def spec_and_dependency_types(
+                s: Union[Spec, Tuple[Spec, str]]
+            ) -> Tuple[Spec, dt.DepFlag]:
                 """Given a non-string key in the literal, extracts the spec
                 and its dependency types.
 
                 Args:
-                    s (spec or tuple): either a Spec object or a tuple
-                        composed of a Spec object and a string with the
-                        dependency types
-
+                    s: either a Spec object, or a tuple of Spec and string of dependency types
                 """
                 if isinstance(s, Spec):
-                    return s, ()
+                    return s, 0
 
                 spec_obj, dtypes = s
-                return spec_obj, tuple(dt.strip() for dt in dtypes.split(","))
+                return spec_obj, dt.flag_from_strings(dt.strip() for dt in dtypes.split(","))
 
             # Recurse on dependencies
             for s, s_dependencies in dep_like.items():
                 if isinstance(s, str):
-                    dag_node, dependency_types = name_and_dependency_types(s)
+                    dag_node, dep_flag = name_and_dependency_types(s)
                 else:
-                    dag_node, dependency_types = spec_and_dependency_types(s)
+                    dag_node, dep_flag = spec_and_dependency_types(s)
 
                 dependency_spec = spec_builder({dag_node: s_dependencies})
-                spec._add_dependency(dependency_spec, deptypes=dependency_types, virtuals=())
+                spec._add_dependency(dependency_spec, depflag=dep_flag, virtuals=())
 
             return spec
 
@@ -2604,7 +2594,7 @@ class Spec:
         virtuals = (self.name,)
         for dep_spec in itertools.chain.from_iterable(self._dependents.values()):
             dependent = dep_spec.parent
-            deptypes = dep_spec.deptypes
+            depflag = dep_spec.depflag
 
             # remove self from all dependents, unless it is already removed
             if self.name in dependent._dependencies:
@@ -2612,7 +2602,7 @@ class Spec:
 
             # add the replacement, unless it is already a dep of dependent.
             if concrete.name not in dependent._dependencies:
-                dependent._add_dependency(concrete, deptypes=deptypes, virtuals=virtuals)
+                dependent._add_dependency(concrete, depflag=depflag, virtuals=virtuals)
             else:
                 dependent.edges_to_dependencies(name=concrete.name)[0].update_virtuals(
                     virtuals=virtuals
@@ -2760,14 +2750,16 @@ class Spec:
         if self._concrete:
             return
 
+        # take the spec apart once before starting the main concretization loop and resolving
+        # deps, but don't break dependencies during concretization as the spec is built.
+        user_spec_deps = self.flat_dependencies(disconnect=True)
+
         changed = True
         force = False
-
-        user_spec_deps = self.flat_dependencies(copy=False)
         concretizer = spack.concretize.Concretizer(self.copy())
         while changed:
             changes = (
-                self.normalize(force, tests=tests, user_spec_deps=user_spec_deps),
+                self.normalize(force, tests, user_spec_deps, disconnect=False),
                 self._expand_virtual_packages(concretizer),
                 self._concretize_helper(concretizer),
             )
@@ -2778,7 +2770,7 @@ class Spec:
         for dep in self.traverse():
             visited_user_specs.add(dep.name)
             pkg_cls = spack.repo.PATH.get_pkg_class(dep.name)
-            visited_user_specs.update(x.name for x in pkg_cls(dep).provided)
+            visited_user_specs.update(pkg_cls(dep).provided_virtual_names())
 
         extra = set(user_spec_deps.keys()).difference(visited_user_specs)
         if extra:
@@ -2813,10 +2805,11 @@ class Spec:
                 # external specs are already built, don't worry about whether
                 # it's possible to build that configuration with Spack
                 continue
-            for conflict_spec, when_list in x.package_class.conflicts.items():
-                if x.satisfies(conflict_spec):
-                    for when_spec, msg in when_list:
-                        if x.satisfies(when_spec):
+
+            for when_spec, conflict_list in x.package_class.conflicts.items():
+                if x.satisfies(when_spec):
+                    for conflict_spec, msg in conflict_list:
+                        if x.satisfies(conflict_spec):
                             when = when_spec.copy()
                             when.name = x.name
                             matches.append((x, conflict_spec, when, msg))
@@ -2866,13 +2859,14 @@ class Spec:
                 continue
 
             # Add any patches from the package to the spec.
-            patches = []
+            patches = set()
             for cond, patch_list in s.package_class.patches.items():
                 if s.satisfies(cond):
                     for patch in patch_list:
-                        patches.append(patch)
+                        patches.add(patch)
             if patches:
                 spec_to_patches[id(s)] = patches
+
         # Also record all patches required on dependencies by
         # depends_on(..., patch=...)
         for dspec in root.traverse_edges(deptype=all, cover="edges", root=False):
@@ -2880,17 +2874,25 @@ class Spec:
                 continue
 
             pkg_deps = dspec.parent.package_class.dependencies
-            if dspec.spec.name not in pkg_deps:
-                continue
 
             patches = []
-            for cond, dependency in pkg_deps[dspec.spec.name].items():
+            for cond, deps_by_name in pkg_deps.items():
+                if not dspec.parent.satisfies(cond):
+                    continue
+
+                dependency = deps_by_name.get(dspec.spec.name)
+                if not dependency:
+                    continue
+
                 for pcond, patch_list in dependency.patches.items():
-                    if dspec.parent.satisfies(cond) and dspec.spec.satisfies(pcond):
+                    if dspec.spec.satisfies(pcond):
                         patches.extend(patch_list)
+
             if patches:
-                all_patches = spec_to_patches.setdefault(id(dspec.spec), [])
-                all_patches.extend(patches)
+                all_patches = spec_to_patches.setdefault(id(dspec.spec), set())
+                for patch in patches:
+                    all_patches.add(patch)
+
         for spec in root.traverse():
             if id(spec) not in spec_to_patches:
                 continue
@@ -2965,8 +2967,7 @@ class Spec:
 
         allow_deprecated = spack.config.get("config:deprecated", False)
         solver = spack.solver.asp.Solver()
-        result = solver.solve([self], tests=tests, deprecated=allow_deprecated)
-        result.raise_if_unsat()
+        result = solver.solve([self], tests=tests, allow_deprecated=allow_deprecated)
 
         # take the best answer
         opt, i, answer = min(result.answers)
@@ -3100,47 +3101,33 @@ class Spec:
         clone.concretize(tests=tests)
         return clone
 
-    def flat_dependencies(self, **kwargs):
-        """Return a DependencyMap containing all of this spec's
-        dependencies with their constraints merged.
+    def flat_dependencies(self, disconnect: bool = False):
+        """Build DependencyMap of all of this spec's dependencies with their constraints merged.
 
-        If copy is True, returns merged copies of its dependencies
-        without modifying the spec it's called on.
-
-        If copy is False, clears this spec's dependencies and
-        returns them. This disconnects all dependency links including
-        transitive dependencies, except for concrete specs: if a spec
-        is concrete it will not be disconnected from its dependencies
-        (although a non-concrete spec with concrete dependencies will
-        be disconnected from those dependencies).
+        Arguments:
+            disconnect: if True, disconnect all dependents and dependencies among nodes in this
+                spec's DAG.
         """
-        copy = kwargs.get("copy", True)
-
         flat_deps = {}
-        try:
-            deptree = self.traverse(root=False)
-            for spec in deptree:
-                if spec.name not in flat_deps:
-                    if copy:
-                        spec = spec.copy(deps=False)
-                    flat_deps[spec.name] = spec
-                else:
+        deptree = self.traverse(root=False)
+
+        for spec in deptree:
+            if spec.name not in flat_deps:
+                flat_deps[spec.name] = spec
+            else:
+                try:
                     flat_deps[spec.name].constrain(spec)
+                except spack.error.UnsatisfiableSpecError as e:
+                    # DAG contains two instances of the same package with inconsistent constraints.
+                    raise InconsistentSpecError("Invalid Spec DAG: %s" % e.message) from e
 
-            if not copy:
-                for spec in flat_deps.values():
-                    if not spec.concrete:
-                        spec.clear_edges()
-                self.clear_dependencies()
+        if disconnect:
+            for spec in flat_deps.values():
+                if not spec.concrete:
+                    spec.clear_edges()
+            self.clear_dependencies()
 
-            return flat_deps
-
-        except spack.error.UnsatisfiableSpecError as e:
-            # Here, the DAG contains two instances of the same package
-            # with inconsistent constraints.  Users cannot produce
-            # inconsistent specs like this on the command line: the
-            # parser doesn't allow it. Spack must be broken!
-            raise InconsistentSpecError("Invalid Spec DAG: %s" % e.message) from e
+        return flat_deps
 
     def index(self, deptype="all"):
         """Return a dictionary that points to all the dependencies in this
@@ -3167,15 +3154,19 @@ class Spec:
         If no conditions are True (and we don't depend on it), return
         ``(None, None)``.
         """
-        conditions = self.package_class.dependencies[name]
-
         vt.substitute_abstract_variants(self)
         # evaluate when specs to figure out constraints on the dependency.
         dep = None
-        for when_spec, dependency in conditions.items():
-            if self.satisfies(when_spec):
+        for when_spec, deps_by_name in self.package_class.dependencies.items():
+            if not self.satisfies(when_spec):
+                continue
+
+            for dep_name, dependency in deps_by_name.items():
+                if dep_name != name:
+                    continue
+
                 if dep is None:
-                    dep = dp.Dependency(self.name, Spec(name), type=())
+                    dep = dp.Dependency(Spec(self.name), Spec(name), depflag=0)
                 try:
                     dep.merge(dependency)
                 except spack.error.UnsatisfiableSpecError as e:
@@ -3319,7 +3310,7 @@ class Spec:
         # Add merged spec to my deps and recurse
         spec_dependency = spec_deps[dep.name]
         if dep.name not in self._dependencies:
-            self._add_dependency(spec_dependency, deptypes=dependency.type, virtuals=virtuals)
+            self._add_dependency(spec_dependency, depflag=dependency.depflag, virtuals=virtuals)
 
         changed |= spec_dependency._normalize_helper(visited, spec_deps, provider_index, tests)
         return changed
@@ -3348,7 +3339,7 @@ class Spec:
 
         while changed:
             changed = False
-            for dep_name in self.package_class.dependencies:
+            for dep_name in self.package_class.dependency_names():
                 # Do we depend on dep_name?  If so pkg_dep is not None.
                 dep = self._evaluate_dependency_conditions(dep_name)
 
@@ -3360,7 +3351,7 @@ class Spec:
                         or (tests and self.name in tests)
                         or
                         # this is not a test-only dependency
-                        dep.type - set(["test"])
+                        (dep.depflag & ~dt.TEST)
                     )
 
                     if merge:
@@ -3371,7 +3362,7 @@ class Spec:
 
         return any_change
 
-    def normalize(self, force=False, tests=False, user_spec_deps=None):
+    def normalize(self, force=False, tests=False, user_spec_deps=None, disconnect=True):
         """When specs are parsed, any dependencies specified are hanging off
         the root, and ONLY the ones that were explicitly provided are there.
         Normalization turns a partial flat spec into a DAG, where:
@@ -3408,7 +3399,7 @@ class Spec:
         # user-specified dependencies are recorded separately in case they
         # refer to specs which take several normalization passes to
         # materialize.
-        all_spec_deps = self.flat_dependencies(copy=False)
+        all_spec_deps = self.flat_dependencies(disconnect=disconnect)
 
         if user_spec_deps:
             for name, spec in user_spec_deps.items():
@@ -3432,6 +3423,14 @@ class Spec:
         visited = set()
 
         any_change = self._normalize_helper(visited, all_spec_deps, provider_index, tests)
+
+        # remove any leftover dependents outside the spec from, e.g., pruning externals
+        valid = {id(spec) for spec in all_spec_deps.values()} | {id(self)}
+        for spec in all_spec_deps.values():
+            remove = [dep for dep in spec.dependents() if id(dep) not in valid]
+            for dep in remove:
+                del spec._dependents.edges[dep.name]
+                del dep._dependencies.edges[spec.name]
 
         # Mark the spec as normal once done.
         self._normal = True
@@ -3654,9 +3653,7 @@ class Spec:
                 # WARNING: using index 0 i.e. we assume that we have only
                 # WARNING: one edge from package "name"
                 edges_from_name = self._dependencies[name]
-                changed |= edges_from_name[0].update_deptypes(
-                    other._dependencies[name][0].deptypes
-                )
+                changed |= edges_from_name[0].update_deptypes(other._dependencies[name][0].depflag)
                 changed |= edges_from_name[0].update_virtuals(
                     other._dependencies[name][0].virtuals
                 )
@@ -3668,7 +3665,7 @@ class Spec:
             dep_spec_copy = other._get_dependency(name)
             self._add_dependency(
                 dep_spec_copy.spec.copy(),
-                deptypes=dep_spec_copy.deptypes,
+                depflag=dep_spec_copy.depflag,
                 virtuals=dep_spec_copy.virtuals,
             )
             changed = True
@@ -3703,7 +3700,7 @@ class Spec:
             return spec_like
         return Spec(spec_like)
 
-    def intersects(self, other: "Spec", deps: bool = True) -> bool:
+    def intersects(self, other: Union[str, "Spec"], deps: bool = True) -> bool:
         """Return True if there exists at least one concrete spec that matches both
         self and other, otherwise False.
 
@@ -3719,8 +3716,15 @@ class Spec:
         if other.concrete and self.concrete:
             return self.dag_hash() == other.dag_hash()
 
-        self_hash = self.dag_hash() if self.concrete else self.abstract_hash
-        other_hash = other.dag_hash() if other.concrete else other.abstract_hash
+        elif self.concrete:
+            return self.satisfies(other)
+
+        elif other.concrete:
+            return other.satisfies(self)
+
+        # From here we know both self and other are not concrete
+        self_hash = self.abstract_hash
+        other_hash = other.abstract_hash
 
         if (
             self_hash
@@ -3751,11 +3755,9 @@ class Spec:
                     return False
 
                 if pkg.provides(virtual_spec.name):
-                    for provided, when_specs in pkg.provided.items():
-                        if any(
-                            non_virtual_spec.intersects(when, deps=False) for when in when_specs
-                        ):
-                            if provided.intersects(virtual_spec):
+                    for when_spec, provided in pkg.provided.items():
+                        if non_virtual_spec.intersects(when_spec, deps=False):
+                            if any(vpkg.intersects(virtual_spec) for vpkg in provided):
                                 return True
             return False
 
@@ -3809,10 +3811,6 @@ class Spec:
             repository=spack.repo.PATH, specs=other.traverse(), restrict=True
         )
 
-        # This handles cases where there are already providers for both vpkgs
-        if not self_index.satisfies(other_index):
-            return False
-
         # These two loops handle cases where there is an overly restrictive
         # vpkg in one spec for a provider in the other (e.g., mpi@3: is not
         # compatible with mpich2)
@@ -3826,7 +3824,7 @@ class Spec:
 
         return True
 
-    def satisfies(self, other: "Spec", deps: bool = True) -> bool:
+    def satisfies(self, other: Union[str, "Spec"], deps: bool = True) -> bool:
         """Return True if all concrete specs matching self also match other, otherwise False.
 
         Args:
@@ -3862,9 +3860,9 @@ class Spec:
                     return False
 
                 if pkg.provides(other.name):
-                    for provided, when_specs in pkg.provided.items():
-                        if any(self.satisfies(when, deps=False) for when in when_specs):
-                            if provided.intersects(other):
+                    for when_spec, provided in pkg.provided.items():
+                        if self.satisfies(when_spec, deps=False):
+                            if any(vpkg.intersects(other) for vpkg in provided):
                                 return True
             return False
 
@@ -3910,7 +3908,46 @@ class Spec:
             return False
 
         # If we arrived here, then rhs is abstract. At the moment we don't care about the edge
-        # structure of an abstract DAG - hence the deps=False parameter.
+        # structure of an abstract DAG, so we check if any edge could satisfy the properties
+        # we ask for.
+        lhs_edges: Dict[str, Set[DependencySpec]] = collections.defaultdict(set)
+        for rhs_edge in other.traverse_edges(root=False, cover="edges"):
+            # If we are checking for ^mpi we need to verify if there is any edge
+            if rhs_edge.spec.virtual:
+                rhs_edge.update_virtuals(virtuals=(rhs_edge.spec.name,))
+
+            if not rhs_edge.virtuals:
+                continue
+
+            if not lhs_edges:
+                # Construct a map of the link/run subDAG + direct "build" edges,
+                # keyed by dependency name
+                for lhs_edge in self.traverse_edges(
+                    root=False, cover="edges", deptype=("link", "run")
+                ):
+                    lhs_edges[lhs_edge.spec.name].add(lhs_edge)
+                    for virtual_name in lhs_edge.virtuals:
+                        lhs_edges[virtual_name].add(lhs_edge)
+
+                build_edges = self.edges_to_dependencies(depflag=dt.BUILD)
+                for lhs_edge in build_edges:
+                    lhs_edges[lhs_edge.spec.name].add(lhs_edge)
+                    for virtual_name in lhs_edge.virtuals:
+                        lhs_edges[virtual_name].add(lhs_edge)
+
+            # We don't have edges to this dependency
+            current_dependency_name = rhs_edge.spec.name
+            if current_dependency_name not in lhs_edges:
+                return False
+
+            for virtual in rhs_edge.virtuals:
+                has_virtual = any(
+                    virtual in edge.virtuals for edge in lhs_edges[current_dependency_name]
+                )
+                if not has_virtual:
+                    return False
+
+        # Edges have been checked above already, hence deps=False
         return all(
             any(lhs.satisfies(rhs, deps=False) for lhs in self.traverse(root=False))
             for rhs in other.traverse(root=False)
@@ -3938,12 +3975,20 @@ class Spec:
                 for sha256 in self.variants["patches"]._patches_in_order_of_appearance:
                     index = spack.repo.PATH.patch_index
                     pkg_cls = spack.repo.PATH.get_pkg_class(self.name)
-                    patch = index.patch_for_package(sha256, pkg_cls)
+                    try:
+                        patch = index.patch_for_package(sha256, pkg_cls)
+                    except spack.patch.PatchLookupError as e:
+                        raise spack.error.SpecError(
+                            f"{e}. This usually means the patch was modified or removed. "
+                            "To fix this, either reconcretize or use the original package "
+                            "repository"
+                        ) from e
+
                     self._patches.append(patch)
 
         return self._patches
 
-    def _dup(self, other, deps=True, cleardeps=True):
+    def _dup(self, other, deps: Union[bool, dt.DepTypes, dt.DepFlag] = True, cleardeps=True):
         """Copy the spec other into self.  This is an overwriting
         copy. It does not copy any dependents (parents), but by default
         copies dependencies.
@@ -3952,9 +3997,8 @@ class Spec:
 
         Args:
             other (Spec): spec to be copied onto ``self``
-            deps (bool or Sequence): if True copies all the dependencies. If
-                False copies None. If a sequence of dependency types copy
-                only those types.
+            deps: if True copies all the dependencies. If
+                False copies None. If deptype/depflag, copy matching types.
             cleardeps (bool): if True clears the dependencies of ``self``,
                 before possibly copying the dependencies of ``other`` onto
                 ``self``
@@ -4014,10 +4058,10 @@ class Spec:
         if deps:
             # If caller restricted deptypes to be copied, adjust that here.
             # By default, just copy all deptypes
-            deptypes = dp.all_deptypes
-            if isinstance(deps, (tuple, list)):
-                deptypes = deps
-            self._dup_deps(other, deptypes)
+            depflag = dt.ALL
+            if isinstance(deps, (tuple, list, str)):
+                depflag = dt.canonicalize(deps)
+            self._dup_deps(other, depflag)
 
         self._concrete = other._concrete
 
@@ -4038,13 +4082,13 @@ class Spec:
 
         return changed
 
-    def _dup_deps(self, other, deptypes):
+    def _dup_deps(self, other, depflag: dt.DepFlag):
         def spid(spec):
             return id(spec)
 
         new_specs = {spid(other): self}
         for edge in other.traverse_edges(cover="edges", root=False):
-            if edge.deptypes and not any(d in deptypes for d in edge.deptypes):
+            if edge.depflag and not depflag & edge.depflag:
                 continue
 
             if spid(edge.parent) not in new_specs:
@@ -4054,17 +4098,16 @@ class Spec:
                 new_specs[spid(edge.spec)] = edge.spec.copy(deps=False)
 
             new_specs[spid(edge.parent)].add_dependency_edge(
-                new_specs[spid(edge.spec)], deptypes=edge.deptypes, virtuals=edge.virtuals
+                new_specs[spid(edge.spec)], depflag=edge.depflag, virtuals=edge.virtuals
             )
 
-    def copy(self, deps=True, **kwargs):
+    def copy(self, deps: Union[bool, dt.DepTypes, dt.DepFlag] = True, **kwargs):
         """Make a copy of this spec.
 
         Args:
-            deps (bool or tuple): Defaults to True. If boolean, controls
+            deps: Defaults to True. If boolean, controls
                 whether dependencies are copied (copied if True). If a
-                tuple is provided, *only* dependencies of types matching
-                those in the tuple are copied.
+                DepTypes or DepFlag is provided, *only* matching dependencies are copied.
             kwargs: additional arguments for internal use (passed to ``_dup``).
 
         Returns:
@@ -4106,9 +4149,7 @@ class Spec:
         """
         query_parameters = name.split(":")
         if len(query_parameters) > 2:
-            msg = "key has more than one ':' symbol."
-            msg += " At most one is admitted."
-            raise KeyError(msg)
+            raise KeyError("key has more than one ':' symbol. At most one is admitted.")
 
         name, query_parameters = query_parameters[0], query_parameters[1:]
         if query_parameters:
@@ -4124,7 +4165,7 @@ class Spec:
         # only when we don't find the package do we consider the full DAG.
         order = lambda: itertools.chain(
             self.traverse(deptype="link"),
-            self.dependencies(deptype=("build", "run", "test")),
+            self.dependencies(deptype=dt.BUILD | dt.RUN | dt.TEST),
             self.traverse(),  # fall back to a full search
         )
 
@@ -4133,11 +4174,17 @@ class Spec:
                 itertools.chain(
                     # Regular specs
                     (x for x in order() if x.name == name),
+                    (
+                        x
+                        for x in order()
+                        if (not x.virtual)
+                        and any(name in edge.virtuals for edge in x.edges_from_dependents())
+                    ),
                     (x for x in order() if (not x.virtual) and x.package.provides(name)),
                 )
             )
         except StopIteration:
-            raise KeyError("No spec with name %s in %s" % (name, self))
+            raise KeyError(f"No spec with name {name} in {self}")
 
         if self._concrete:
             return SpecBuildInterface(value, name, query_parameters)
@@ -4182,7 +4229,7 @@ class Spec:
         for s_dspec, o_dspec in zip(
             itertools.chain.from_iterable(ssorted), itertools.chain.from_iterable(osorted)
         ):
-            if deptypes and s_dspec.deptypes != o_dspec.deptypes:
+            if deptypes and s_dspec.depflag != o_dspec.depflag:
                 return False
 
             s, o = s_dspec.spec, o_dspec.spec
@@ -4240,7 +4287,7 @@ class Spec:
         def deps():
             for dep in sorted(itertools.chain.from_iterable(self._dependencies.values())):
                 yield dep.spec.name
-                yield tuple(sorted(dep.deptypes))
+                yield dep.depflag
                 yield hash(dep.spec)
 
         yield deps
@@ -4319,6 +4366,7 @@ class Spec:
                 that accepts a string and returns another one
 
         """
+        ensure_modern_format_string(format_string)
         color = kwargs.get("color", False)
         transform = kwargs.get("transform", {})
 
@@ -4478,11 +4526,63 @@ class Spec:
         kwargs.setdefault("color", None)
         return self.format(*args, **kwargs)
 
+    def format_path(
+        # self, format_string: str, _path_ctor: Optional[pathlib.PurePath] = None
+        self,
+        format_string: str,
+        _path_ctor: Optional[Callable[[Any], pathlib.PurePath]] = None,
+    ) -> str:
+        """Given a `format_string` that is intended as a path, generate a string
+        like from `Spec.format`, but eliminate extra path separators introduced by
+        formatting of Spec properties.
+
+        Path separators explicitly added to the string are preserved, so for example
+        "{name}/{version}" would generate a directory based on the Spec's name, and
+        a subdirectory based on its version; this function guarantees though that
+        the resulting string would only have two directories (i.e. that if under
+        normal circumstances that `str(Spec.version)` would contain a path
+        separator, it would not in this case).
+        """
+        format_component_with_sep = r"\{[^}]*[/\\][^}]*}"
+        if re.search(format_component_with_sep, format_string):
+            raise SpecFormatPathError(
+                f"Invalid path format string: cannot contain {{/...}}\n\t{format_string}"
+            )
+
+        path_ctor = _path_ctor or pathlib.PurePath
+        format_string_as_path = path_ctor(format_string)
+        if format_string_as_path.is_absolute():
+            output_path_components = [format_string_as_path.parts[0]]
+            input_path_components = list(format_string_as_path.parts[1:])
+        else:
+            output_path_components = []
+            input_path_components = list(format_string_as_path.parts)
+        output_path_components += [
+            fs.polite_filename(self.format(x)) for x in input_path_components
+        ]
+        return str(path_ctor(*output_path_components))
+
     def __str__(self):
-        sorted_nodes = [self] + sorted(
-            self.traverse(root=False), key=lambda x: x.name or x.abstract_hash
+        root_str = [self.format()]
+        sorted_dependencies = sorted(
+            self.traverse(root=False), key=lambda x: (x.name, x.abstract_hash)
         )
-        spec_str = " ^".join(d.format() for d in sorted_nodes)
+        sorted_dependencies = [
+            d.format("{edge_attributes} " + DEFAULT_FORMAT) for d in sorted_dependencies
+        ]
+        spec_str = " ^".join(root_str + sorted_dependencies)
+        return spec_str.strip()
+
+    @property
+    def colored_str(self):
+        root_str = [self.cformat()]
+        sorted_dependencies = sorted(
+            self.traverse(root=False), key=lambda x: (x.name, x.abstract_hash)
+        )
+        sorted_dependencies = [
+            d.cformat("{edge_attributes} " + DISPLAY_FORMAT) for d in sorted_dependencies
+        ]
+        spec_str = " ^".join(root_str + sorted_dependencies)
         return spec_str.strip()
 
     def install_status(self):
@@ -4586,13 +4686,15 @@ class Spec:
                 if cover == "nodes":
                     # when only covering nodes, we merge dependency types
                     # from all dependents before showing them.
-                    types = [ds.deptypes for ds in node.edges_from_dependents()]
+                    depflag = 0
+                    for ds in node.edges_from_dependents():
+                        depflag |= ds.depflag
                 else:
                     # when covering edges or paths, we show dependency
                     # types only for the edge through which we visited
-                    types = [dep_spec.deptypes]
+                    depflag = dep_spec.depflag
 
-                type_chars = dp.deptype_chars(*types)
+                type_chars = dt.flag_to_chars(depflag)
                 out += "[%s]  " % type_chars
 
             out += "    " * d
@@ -4630,6 +4732,20 @@ class Spec:
     @build_spec.setter
     def build_spec(self, value):
         self._build_spec = value
+
+    def trim(self, dep_name):
+        """
+        Remove any package that is or provides `dep_name` transitively
+        from this tree. This can also remove other dependencies if
+        they are only present because of `dep_name`.
+        """
+        for spec in list(self.traverse()):
+            new_dependencies = _EdgeMap()  # A new _EdgeMap
+            for pkg_name, edge_list in spec._dependencies.items():
+                for edge in edge_list:
+                    if (dep_name not in edge.virtuals) and (not dep_name == edge.spec.name):
+                        new_dependencies.add(edge)
+            spec._dependencies = new_dependencies
 
     def splice(self, other, transitive):
         """Splices dependency "other" into this ("target") Spec, and return the
@@ -4754,14 +4870,14 @@ class Spec:
                 for edge in self[name].edges_to_dependencies():
                     dep_name = deps_to_replace.get(edge.spec, edge.spec).name
                     nodes[name].add_dependency_edge(
-                        nodes[dep_name], deptypes=edge.deptypes, virtuals=edge.virtuals
+                        nodes[dep_name], depflag=edge.depflag, virtuals=edge.virtuals
                     )
                 if any(dep not in self_nodes for dep in self[name]._dependencies):
                     nodes[name].build_spec = self[name].build_spec
             else:
                 for edge in other[name].edges_to_dependencies():
                     nodes[name].add_dependency_edge(
-                        nodes[edge.spec.name], deptypes=edge.deptypes, virtuals=edge.virtuals
+                        nodes[edge.spec.name], depflag=edge.depflag, virtuals=edge.virtuals
                     )
                 if any(dep not in other_nodes for dep in other[name]._dependencies):
                     nodes[name].build_spec = other[name].build_spec
@@ -4852,8 +4968,9 @@ def merge_abstract_anonymous_specs(*abstract_specs: Spec):
         # Update with additional constraints from other spec
         for name in current_spec_constraint.direct_dep_difference(merged_spec):
             edge = next(iter(current_spec_constraint.edges_to_dependencies(name)))
+
             merged_spec._add_dependency(
-                edge.spec.copy(), deptypes=edge.deptypes, virtuals=edge.virtuals
+                edge.spec.copy(), depflag=edge.depflag, virtuals=edge.virtuals
             )
 
     return merged_spec
@@ -5000,9 +5117,11 @@ class SpecfileReaderBase:
         # Pass 2: Finish construction of all DAG edges (including build specs)
         for node_hash, node in hash_dict.items():
             node_spec = node["node_spec"]
-            for _, dhash, dtypes, _, virtuals in cls.dependencies_from_node_dict(node):
+            for _, dhash, dtype, _, virtuals in cls.dependencies_from_node_dict(node):
                 node_spec._add_dependency(
-                    hash_dict[dhash]["node_spec"], deptypes=dtypes, virtuals=virtuals
+                    hash_dict[dhash]["node_spec"],
+                    depflag=dt.canonicalize(dtype),
+                    virtuals=virtuals,
                 )
             if "build_spec" in node.keys():
                 _, bhash, _ = cls.build_spec_from_node_dict(node, hash_type=hash_type)
@@ -5038,7 +5157,9 @@ class SpecfileV1(SpecfileReaderBase):
             # get dependency dict from the node.
             name, data = cls.name_and_data(node)
             for dname, _, dtypes, _, virtuals in cls.dependencies_from_node_dict(data):
-                deps[name]._add_dependency(deps[dname], deptypes=dtypes, virtuals=virtuals)
+                deps[name]._add_dependency(
+                    deps[dname], depflag=dt.canonicalize(dtypes), virtuals=virtuals
+                )
 
         reconstruct_virtuals_on_edges(result)
         return result
@@ -5184,6 +5305,43 @@ def save_dependency_specfiles(root: Spec, output_directory: str, dependencies: L
             fd.write(spec.to_json(hash=ht.dag_hash))
 
 
+def get_host_environment_metadata() -> Dict[str, str]:
+    """Get the host environment, reduce to a subset that we can store in
+    the install directory, and add the spack version.
+    """
+    import spack.main
+
+    environ = get_host_environment()
+    return {
+        "host_os": environ["os"],
+        "platform": environ["platform"],
+        "host_target": environ["target"],
+        "hostname": environ["hostname"],
+        "spack_version": spack.main.get_version(),
+        "kernel_version": platform.version(),
+    }
+
+
+def get_host_environment() -> Dict[str, Any]:
+    """Return a dictionary (lookup) with host information (not including the
+    os.environ).
+    """
+    host_platform = spack.platforms.host()
+    host_target = host_platform.target("default_target")
+    host_os = host_platform.operating_system("default_os")
+    arch_fmt = "platform={0} os={1} target={2}"
+    arch_spec = Spec(arch_fmt.format(host_platform, host_os, host_target))
+    return {
+        "target": str(host_target),
+        "os": str(host_os),
+        "platform": str(host_platform),
+        "arch": arch_spec,
+        "architecture": arch_spec,
+        "arch_str": str(arch_spec),
+        "hostname": socket.gethostname(),
+    }
+
+
 class SpecParseError(spack.error.SpecError):
     """Wrapper for ParseError for when we're parsing specs."""
 
@@ -5244,7 +5402,7 @@ class InvalidDependencyError(spack.error.SpecError):
     def __init__(self, pkg, deps):
         self.invalid_deps = deps
         super().__init__(
-            "Package {0} does not depend on {1}".format(pkg, spack.util.string.comma_or(deps))
+            "Package {0} does not depend on {1}".format(pkg, llnl.string.comma_or(deps))
         )
 
 
@@ -5358,6 +5516,10 @@ class NoSuchSpecFileError(SpecFilenameError):
 
 class SpecFormatStringError(spack.error.SpecError):
     """Called for errors in Spec format strings."""
+
+
+class SpecFormatPathError(spack.error.SpecError):
+    """Called for errors in Spec path-format strings."""
 
 
 class SpecFormatSigilError(SpecFormatStringError):
