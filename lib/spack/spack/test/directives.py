@@ -213,6 +213,7 @@ def test_redistribute_override_when():
 
     The second call should not undo the effect of the first.
     """
+
     class MockPackage:
         name = "mock"
         disable_redistribute = {}
