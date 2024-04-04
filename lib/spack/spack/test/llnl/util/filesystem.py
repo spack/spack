@@ -917,7 +917,7 @@ def test_rename_dest_exists(tmpdir):
         b = tmpdir.join(root, "file2")
         fs.touch(a)
         fs.touch(b)
-        return a,b
+        return a, b
 
     def setup_test_dirs(root):
         a = tmpdir.join(root, "a")
@@ -928,18 +928,18 @@ def test_rename_dest_exists(tmpdir):
 
     # test standard behavior of rename
     # smoke test
-    a,b = setup_test_files("a")
+    a, b = setup_test_files("a")
     fs.rename(str(a), str(b))
-    assert(os.path.exists(b))
-    assert(not os.path.exists(a))
+    assert os.path.exists(b)
+    assert not os.path.exists(a)
 
     # test relatitve paths
     # another sanity check/smoke test
     a, b = setup_test_files("b")
     os.chdir(str(tmpdir))
     fs.rename(os.path.join("b", "file1"), os.path.join("b", "file2"))
-    assert(os.path.exists(b))
-    assert(not os.path.exists(a))
+    assert os.path.exists(b)
+    assert not os.path.exists(a)
 
     # Test rename symlinks to same file
     c = tmpdir.join("c", "file1")
@@ -949,9 +949,9 @@ def test_rename_dest_exists(tmpdir):
     symlink(c, a)
     symlink(c, b)
     fs.rename(str(a), str(b))
-    assert(os.path.exists(b))
-    assert(not os.path.exists(a))
-    assert(os.path.realpath(b) == c)
+    assert os.path.exists(b)
+    assert not os.path.exists(a)
+    assert os.path.realpath(b) == c
 
     # test rename onto itself
     a = tmpdir.join("d", "file1")
@@ -959,7 +959,7 @@ def test_rename_dest_exists(tmpdir):
     fs.touch(a)
     fs.rename(str(a), str(b))
     # check a, or b, doesn't matter, same file
-    assert(os.path.exists(a))
+    assert os.path.exists(a)
 
     # test rename onto symlink
     # to directory from symlink to directory
@@ -970,7 +970,5 @@ def test_rename_dest_exists(tmpdir):
     symlink(a, link1)
     symlink(b, link2)
     fs.rename(a, b)
-    assert(os.path.exists(b))
-    assert(os.path.realpath(b) == link1)
-
-
+    assert os.path.exists(b)
+    assert os.path.realpath(b) == link1
