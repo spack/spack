@@ -208,6 +208,11 @@ def test_redistribute_directive(test_repo, spec_str, distribute_src, distribute_
 
 
 def test_redistribute_override_when():
+    """Allow a user to call `redistribute` twice to separately disable
+    source and binary distribution for the same when spec.
+
+    The second call should not undo the effect of the first.
+    """
     class MockPackage:
         name = "mock"
         disable_redistribute = {}
