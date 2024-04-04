@@ -602,7 +602,10 @@ def depends_on(
 
 
 #: Store whether a given Spec source/binary should not be redistributed.
-DisableRedistribute = collections.namedtuple("DisableRedistribute", ["source", "binary"])
+class DisableRedistribute:
+    def __init__(self, source, binary):
+        self.source = source
+        self.binary = binary
 
 
 @directive("disable_redistribute")
@@ -620,7 +623,9 @@ def redistribute(source=None, binary=None, when: WhenType = None):
     return lambda pkg: _execute_redistribute(pkg, source, binary, when)
 
 
-def _execute_redistribute(pkg: "spack.package_base.PackageBase", source, binary, when: WhenType = None):
+def _execute_redistribute(
+    pkg: "spack.package_base.PackageBase", source, binary, when: WhenType = None
+):
     if source is None and binary is None:
         return
     elif (source is True) or (binary is True):
@@ -648,10 +653,10 @@ def _execute_redistribute(pkg: "spack.package_base.PackageBase", source, binary,
             redistribute.source = False
         if not binary:
             redistribute.binary = False
-
-    pkg.disable_redistribute[when_spec] = DisableRedistribute(
-        source=not source, binary=not binary
-    )
+    else:
+        pkg.disable_redistribute[when_spec] = DisableRedistribute(
+            source=not source, binary=not binary
+        )
 
 
 @directive(("extendees", "dependencies"))
