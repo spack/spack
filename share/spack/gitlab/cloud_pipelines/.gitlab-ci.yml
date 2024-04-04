@@ -951,6 +951,31 @@ e4s-cray-sles-build:
   variables:
     SPACK_CI_STACK_NAME: gcp-base
 
+.gcp-publish:
+  stage: publish
+  only:
+  - /^develop$/
+  - /^releases\/v.*/
+  - /^v.*/
+  - /^develop-[\d]{4}-[\d]{2}-[\d]{2}$/
+  image: "gcr.io/google.com/cloudsdktool/google-cloud-cli:459.0.0"
+  tags: ["spack", "public", "medium", "gcp", "x86_64"]
+  retry:
+    max: 2
+    when: ["runner_system_failure", "stuck_or_timeout_failure"]
+  variables:
+    KUBERNETES_CPU_REQUEST: 4000m
+    KUBERNETES_MEMORY_REQUEST: 16G
+  script:
+    - . "./share/spack/setup-env.sh"
+    - spack --version
+    - spack mirror add --type binary gcp_store "${GCP_TARGET_MIRROR}"
+    - export COPY_SPECS_DIR=${CI_PROJECT_DIR}/jobs_scratch_dir/specs_to_copy
+    - spack buildcache sync --manifest-glob "${COPY_SPECS_DIR}/*.json" gcp_store
+    - curl -fLsS https://spack.github.io/keys/spack-public-binary-key.pub -o /tmp/spack-public-binary-key.pub
+    - gsutil cp /tmp/spack-public-binary-key.pub "${GCP_TARGET_MIRROR}/build_cache/_pgp/spack-public-binary-key.pub"
+    - spack buildcache update-index --keys gcp_store
+
 gcp-base-generate:
   extends: [ ".generate-base", ".gcp-base" ]
   tags: [ "gcp", "base", "x86_64", "medium"]
@@ -966,3 +991,10 @@ gcp-base-build:
   needs:
     - artifacts: True
       job: gcp-base-generate
+
+gcp-base-publish:
+  extends: [.gcp-publish]
+  variables:
+    GCP_TARGET_MIRROR: "gs://dwjacobsen/spack_cache/${CI_COMMIT_REF_NAME}/gcp-base"
+  dependencies:
+  - gcp-base-generate
