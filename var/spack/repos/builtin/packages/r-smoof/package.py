@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,8 @@ class RSmoof(RPackage):
     functions."""
 
     cran = "smoof"
+
+    license("BSD-2-Clause")
 
     version("1.6.0.3", sha256="af8664b152876c545f6545528de6e05a289d0714103fac7afc52960a9a855fb1")
     version("1.6.0.2", sha256="d82dba9702eade00afb84c2c12167de6cec790be7d23ac227f8fe705bdcefc93")

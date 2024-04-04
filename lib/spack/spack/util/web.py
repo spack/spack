@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,7 +17,7 @@ import traceback
 import urllib.parse
 from html.parser import HTMLParser
 from pathlib import Path, PurePosixPath
-from typing import IO, Dict, List, Optional, Set, Union
+from typing import IO, Dict, Iterable, List, Optional, Set, Union
 from urllib.error import HTTPError, URLError
 from urllib.request import HTTPSHandler, Request, build_opener
 
@@ -27,6 +27,7 @@ from llnl.util.filesystem import mkdirp, rename, working_dir
 
 import spack.config
 import spack.error
+import spack.util.path
 import spack.util.url as url_util
 
 from .executable import CommandNotFoundError, which
@@ -59,6 +60,66 @@ class SpackHTTPDefaultErrorHandler(urllib.request.HTTPDefaultErrorHandler):
         raise DetailedHTTPError(req, code, msg, hdrs, fp)
 
 
+dbg_msg_no_ssl_cert_config = (
+    "config:ssl_certs not in configuration. "
+    "Default cert configuation and environment will be used."
+)
+
+
+def urllib_ssl_cert_handler():
+    """context for configuring ssl during urllib HTTPS operations"""
+    custom_cert_var = spack.config.get("config:ssl_certs")
+    if custom_cert_var:
+        # custom certs will be a location, so expand env variables, paths etc
+        certs = spack.util.path.canonicalize_path(custom_cert_var)
+        tty.debug("URLLIB: Looking for custom SSL certs at {}".format(certs))
+        if os.path.isfile(certs):
+            tty.debug("URLLIB: Custom SSL certs file found at {}".format(certs))
+            return ssl.create_default_context(cafile=certs)
+        elif os.path.isdir(certs):
+            tty.debug("URLLIB: Custom SSL certs directory found at {}".format(certs))
+            return ssl.create_default_context(capath=certs)
+        else:
+            tty.debug("URLLIB: Custom SSL certs not found")
+            return ssl.create_default_context()
+    else:
+        tty.debug(dbg_msg_no_ssl_cert_config)
+        return ssl.create_default_context()
+
+
+# curl requires different strategies for custom certs at runtime depending on if certs
+# are stored as a file or a directory
+def append_curl_env_for_ssl_certs(curl):
+    """
+    configure curl to use custom certs in a file at run time
+    see: https://curl.se/docs/sslcerts.html item 4
+    """
+    custom_cert_var = spack.config.get("config:ssl_certs")
+    if custom_cert_var:
+        # custom certs will be a location, so expand env variables, paths etc
+        certs = spack.util.path.canonicalize_path(custom_cert_var)
+        tty.debug("CURL: Looking for custom SSL certs file at {}".format(certs))
+        if os.path.isfile(certs):
+            tty.debug(
+                "CURL: Configuring curl to use custom"
+                " certs from {} by setting "
+                "CURL_CA_BUNDLE".format(certs)
+            )
+            curl.add_default_env("CURL_CA_BUNDLE", certs)
+        elif os.path.isdir(certs):
+            tty.warn(
+                "CURL config:ssl_certs"
+                " is a directory but cURL only supports files. Default certs will be used instead."
+            )
+        else:
+            tty.debug(
+                "CURL config:ssl_certs "
+                "resolves to {}. This is not a file so default certs will be used.".format(certs)
+            )
+    else:
+        tty.debug(dbg_msg_no_ssl_cert_config)
+
+
 def _urlopen():
     s3 = UrllibS3Handler()
     gcs = GCSHandler()
@@ -66,7 +127,7 @@ def _urlopen():
 
     # One opener with HTTPS ssl enabled
     with_ssl = build_opener(
-        s3, gcs, HTTPSHandler(context=ssl.create_default_context()), error_handler
+        s3, gcs, HTTPSHandler(context=urllib_ssl_cert_handler()), error_handler
     )
 
     # One opener with HTTPS ssl disabled
@@ -110,19 +171,28 @@ class LinkParser(HTMLParser):
                     self.links.append(val)
 
 
-class IncludeFragmentParser(HTMLParser):
+class ExtractMetadataParser(HTMLParser):
     """This parser takes an HTML page and selects the include-fragments,
-    used on GitHub, https://github.github.io/include-fragment-element."""
+    used on GitHub, https://github.github.io/include-fragment-element,
+    as well as a possible base url."""
 
     def __init__(self):
         super().__init__()
-        self.links = []
+        self.fragments = []
+        self.base_url = None
 
     def handle_starttag(self, tag, attrs):
+        # <include-fragment src="..." />
         if tag == "include-fragment":
             for attr, val in attrs:
                 if attr == "src":
-                    self.links.append(val)
+                    self.fragments.append(val)
+
+        # <base href="..." />
+        elif tag == "base":
+            for attr, val in attrs:
+                if attr == "href":
+                    self.base_url = val
 
 
 def read_from_url(url, accept_content_type=None):
@@ -197,9 +267,7 @@ def push_to_url(local_file_path, remote_path, keep_original=True, extra_args=Non
             os.remove(local_file_path)
 
     else:
-        raise NotImplementedError(
-            "Unrecognized URL scheme: {SCHEME}".format(SCHEME=remote_url.scheme)
-        )
+        raise NotImplementedError(f"Unrecognized URL scheme: {remote_url.scheme}")
 
 
 def base_curl_fetch_args(url, timeout=0):
@@ -280,6 +348,7 @@ def _curl(curl=None):
         except CommandNotFoundError as exc:
             tty.error(str(exc))
             raise spack.error.FetchError("Missing required curl fetch method")
+    append_curl_env_for_ssl_certs(curl)
     return curl
 
 
@@ -526,7 +595,7 @@ def list_url(url, recursive=False):
     if local_path:
         if recursive:
             # convert backslash to forward slash as required for URLs
-            return [str(PurePosixPath(Path(p))) for p in list(_iter_local_prefix(local_path))]
+            return [str(PurePosixPath(Path(p))) for p in _iter_local_prefix(local_path)]
         return [
             subpath
             for subpath in os.listdir(local_path)
@@ -545,7 +614,9 @@ def list_url(url, recursive=False):
         return gcs.get_all_blobs(recursive=recursive)
 
 
-def spider(root_urls: Union[str, List[str]], depth: int = 0, concurrency: Optional[int] = None):
+def spider(
+    root_urls: Union[str, Iterable[str]], depth: int = 0, concurrency: Optional[int] = None
+):
     """Get web pages from root URLs.
 
     If depth is specified (e.g., depth=2), then this will also follow up to <depth> levels
@@ -625,12 +696,15 @@ def _spider(url: urllib.parse.ParseResult, collect_nested: bool, _visited: Set[s
 
         # Parse out the include-fragments in the page
         # https://github.github.io/include-fragment-element
-        include_fragment_parser = IncludeFragmentParser()
-        include_fragment_parser.feed(page)
+        metadata_parser = ExtractMetadataParser()
+        metadata_parser.feed(page)
+
+        # Change of base URL due to <base href="..." /> tag
+        response_url = metadata_parser.base_url or response_url
 
         fragments = set()
-        while include_fragment_parser.links:
-            raw_link = include_fragment_parser.links.pop()
+        while metadata_parser.fragments:
+            raw_link = metadata_parser.fragments.pop()
             abs_link = url_util.join(response_url, raw_link.strip(), resolve_href=True)
 
             try:

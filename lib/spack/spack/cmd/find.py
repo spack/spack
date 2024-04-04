@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,9 +12,9 @@ import llnl.util.tty.color as color
 
 import spack.bootstrap
 import spack.cmd as cmd
-import spack.cmd.common.arguments as arguments
 import spack.environment as ev
 import spack.repo
+from spack.cmd.common import arguments
 from spack.database import InstallStatuses
 
 description = "list and search installed packages"
@@ -140,6 +140,12 @@ def setup_parser(subparser):
     subparser.add_argument(
         "--only-deprecated", action="store_true", help="show only deprecated packages"
     )
+    subparser.add_argument(
+        "--install-tree",
+        action="store",
+        default="all",
+        help="Install trees to query: 'all' (default), 'local', 'upstream', upstream name or path",
+    )
 
     subparser.add_argument("--start-date", help="earliest date of installation [YYYY-MM-DD]")
     subparser.add_argument("--end-date", help="latest date of installation [YYYY-MM-DD]")
@@ -167,6 +173,12 @@ def query_arguments(args):
         explicit = False
 
     q_args = {"installed": installed, "known": known, "explicit": explicit}
+
+    install_tree = args.install_tree
+    upstreams = spack.config.get("upstreams", {})
+    if install_tree in upstreams.keys():
+        install_tree = upstreams[install_tree]["install_tree"]
+    q_args["install_tree"] = install_tree
 
     # Time window of installation
     for attribute in ("start_date", "end_date"):
@@ -261,10 +273,8 @@ def find(parser, args):
 
     # Exit early with an error code if no package matches the constraint
     if not results and args.constraint:
-        msg = "No package matches the query: {0}"
-        msg = msg.format(" ".join(args.constraint))
-        tty.msg(msg)
-        raise SystemExit(1)
+        constraint_str = " ".join(str(s) for s in args.constraint_specs)
+        tty.die(f"No package matches the query: {constraint_str}")
 
     # If tags have been specified on the command line, filter by tags
     if args.tags:

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class Xwininfo(AutotoolsPackage, XorgPackage):
 
     homepage = "https://cgit.freedesktop.org/xorg/app/xwininfo"
     xorg_mirror_path = "app/xwininfo-1.1.3.tar.gz"
+
+    license("MIT")
 
     version("1.1.5", sha256="aaa915909bb509320c3c775c79babaccc063fd3edc39e520a3c0352e265e9f58")
     version("1.1.4", sha256="3561f6c37eec416ad306f41ff24172b86cbed00854dff8912915e97d2cc17c34")

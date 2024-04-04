@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -26,6 +26,16 @@ class Mash(AutotoolsPackage):
     depends_on("m4", type="build")
     depends_on("capnproto")
     depends_on("gsl")
+
+    def patch(self):
+        if self.spec.satisfies("target=aarch64:"):
+            filter_file(
+                "CXXFLAGS += -include src/mash/memcpyLink.h -Wl,--wrap=memcpy",
+                "",
+                "Makefile.in",
+                string=True,
+            )
+            filter_file("CFLAGS += -include src/mash/memcpyLink.h", "", "Makefile.in", string=True)
 
     def configure_args(self):
         args = []

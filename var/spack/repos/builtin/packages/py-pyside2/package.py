@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class PyPyside2(PythonPackage):
     # More recent versions of PySide2 (for Qt5) have been taken under
     # the offical Qt umbrella.  For more information, see:
     # https://wiki.qt.io/Qt_for_Python_Development_Getting_Started
+
+    license("LGPL-3.0-or-later")
 
     version("develop", tag="dev")
     version(
@@ -54,7 +56,7 @@ class PyPyside2(PythonPackage):
     depends_on("cmake@3.1:", type="build")
     # libclang versioning from sources/shiboken2/doc/gettingstarted.rst
     depends_on("llvm@6", type="build", when="@5.12:5.13")
-    depends_on("llvm@10", type="build", when="@5.15")
+    depends_on("llvm@10:", type="build", when="@5.15:")
     depends_on("py-setuptools", type="build")
     depends_on("py-packaging", type="build")
     depends_on("py-wheel", type="build")
@@ -68,6 +70,23 @@ class PyPyside2(PythonPackage):
     depends_on("libxml2@2.6.32:", when="+doc", type="build")
     depends_on("libxslt@1.1.19:", when="+doc", type="build")
     depends_on("py-sphinx", when="+doc", type="build")
+
+    def patch(self):
+        filter_file(
+            "=${shiboken_include_dirs}",
+            ":".join(
+                [
+                    "=${shiboken_include_dirs}",
+                    self.spec["qt"]["glx"]["libglx"].prefix.include,
+                    self.spec["qt"]["libxcb"].prefix.include,
+                ]
+            ),
+            "sources/pyside2/cmake/Macros/PySideModules.cmake",
+            string=True,
+        )
+
+    def setup_build_environment(self, env):
+        env.set("LLVM_INSTALL_DIR", self.spec["llvm"].prefix)
 
     def install_options(self, spec, prefix):
         args = [

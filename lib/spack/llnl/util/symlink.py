@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,8 +11,7 @@ import tempfile
 
 from llnl.util import lang, tty
 
-from spack.error import SpackError
-from spack.util.path import system_path_filter
+from ..path import system_path_filter
 
 if sys.platform == "win32":
     from win32file import CreateHardLink
@@ -190,6 +189,7 @@ def _windows_can_symlink() -> bool:
     import llnl.util.filesystem as fs
 
     fs.touchp(fpath)
+    fs.mkdirp(dpath)
 
     try:
         os.symlink(dpath, dlink)
@@ -338,7 +338,7 @@ def resolve_link_target_relative_to_the_link(link):
     return os.path.join(link_dir, target)
 
 
-class SymlinkError(SpackError):
+class SymlinkError(RuntimeError):
     """Exception class for errors raised while creating symlinks,
     junctions and hard links
     """

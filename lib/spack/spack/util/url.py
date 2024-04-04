@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,9 @@ import sys
 import urllib.parse
 import urllib.request
 
-from spack.util.path import convert_to_posix_path, sanitize_filename
+from llnl.path import convert_to_posix_path
+
+from spack.util.path import sanitize_filename
 
 
 def validate_scheme(scheme):

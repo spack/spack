@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,6 +20,9 @@ class Pythia8(AutotoolsPackage):
 
     maintainers("ChristianTackeGSI")
 
+    license("GPL-2.0-only")
+
+    version("8.310", sha256="90c811abe7a3d2ffdbf9b4aeab51cf6e0a5a8befb4e3efa806f3d5b9c311e227")
     version("8.309", sha256="5bdafd9f2c4a1c47fd8a4e82fb9f0d8fcfba4de1003b8e14be4e0347436d6c33")
     version("8.308", sha256="c2e8c8d38136d85fc0bc9c9fad4c2db679b0819b7d2b6fc9a47f80f99538b4e3")
     version("8.307", sha256="e5b14d44aa5943332e32dd5dda9a18fdd1a0085c7198e28d840e04167fa6013d")
@@ -131,16 +134,16 @@ class Pythia8(AutotoolsPackage):
                 args.append("--with-boost=" + self.spec["boost"].prefix)
 
         if "+madgraph5amc" in self.spec:
-            args += "--with-mg5mes=" + self.spec["madgraph5amc"].prefix
+            args.append("--with-mg5mes=" + self.spec["madgraph5amc"].prefix)
         else:
-            args += "--without-mg5mes"
+            args.append("--without-mg5mes")
 
         args += self.with_or_without("hepmc3", activation_value="prefix")
 
         if "+fastjet" in self.spec:
-            args += "--with-fastjet3=" + self.spec["fastjet"].prefix
+            args.append("--with-fastjet3=" + self.spec["fastjet"].prefix)
         else:
-            args += "--without-fastjet3"
+            args.append("--without-fastjet3")
 
         args += self.with_or_without("evtgen", activation_value="prefix")
         args += self.with_or_without("root", activation_value="prefix")

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,8 @@ class Cdd(Package):
 
     homepage = "https://www.inf.ethz.ch/personal/fukudak/cdd_home/cdd.html"
     url = "https://www.cs.mcgill.ca/~fukuda/download/cdd/cdd-061a.tar.gz"
+
+    license("GPL-2.0-or-later")
 
     version("0.61a", sha256="637a1909bbd8aa4d32667da08f9e9ac687bf7d3ef1b8af5bd227e91a3cd4019b")
 

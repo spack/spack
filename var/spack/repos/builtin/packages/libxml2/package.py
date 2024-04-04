@@ -1,9 +1,10 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
 
+import spack.builder
 from spack.build_systems import autotools, nmake
 from spack.package import *
 
@@ -24,6 +25,8 @@ class Libxml2(AutotoolsPackage, NMakePackage):
             url = "https://download.gnome.org/sources/libxml2/{0}/libxml2-{1}.tar.xz"
             return url.format(version.up_to(2), version)
         return "http://xmlsoft.org/sources/libxml2-{0}.tar.gz".format(version)
+
+    license("MIT")
 
     version("2.10.3", sha256="5d2cc3d78bec3dbe212a9d7fa629ada25a7da928af432c93060ff5c17ee28a9c")
     version("2.10.2", sha256="d240abe6da9c65cb1900dd9bf3a3501ccf88b3c2a1cb98317d03f272dda5b265")
@@ -74,8 +77,8 @@ class Libxml2(AutotoolsPackage, NMakePackage):
     # Use NAN/INFINITY if available to avoid SIGFPE
     # See https://gitlab.gnome.org/GNOME/libxml2/-/merge_requests/186
     patch(
-        "https://gitlab.gnome.org/GNOME/libxml2/-/commit/c9925454fd384a17c8c03d358c6778a552e9287b.patch",
-        sha256="3e06d42596b105839648070a5921157fe284b932289ffdbfa304ddc3457e5637",
+        "https://gitlab.gnome.org/GNOME/libxml2/-/commit/c9925454fd384a17c8c03d358c6778a552e9287b.diff",
+        sha256="5dc43fed02b443d2563a502a52caafe39477c06fc30b70f786d5ed3eb5aea88d",
         when="@2.9.11:2.9.14",
     )
     build_system(conditional("nmake", when="platform=windows"), "autotools", default="autotools")
@@ -197,7 +200,7 @@ class Libxml2(AutotoolsPackage, NMakePackage):
             xmllint("--dtdvalid", dtd_path, data_dir.join("info.xml"))
 
 
-class RunAfter:
+class BaseBuilder(metaclass=spack.builder.PhaseCallbacksMeta):
     @run_after("install")
     @on_package_attributes(run_tests=True)
     def import_module_test(self):
@@ -206,7 +209,7 @@ class RunAfter:
                 python("-c", "import libxml2")
 
 
-class AutotoolsBuilder(autotools.AutotoolsBuilder, RunAfter):
+class AutotoolsBuilder(BaseBuilder, autotools.AutotoolsBuilder):
     def configure_args(self):
         spec = self.spec
 
@@ -232,7 +235,7 @@ class AutotoolsBuilder(autotools.AutotoolsBuilder, RunAfter):
         return args
 
 
-class NMakeBuilder(nmake.NMakeBuilder, RunAfter):
+class NMakeBuilder(BaseBuilder, nmake.NMakeBuilder):
     phases = ("configure", "build", "install")
 
     @property

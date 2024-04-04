@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class Libyaml(AutotoolsPackage):
     homepage = "https://pyyaml.org/wiki/LibYAML"
     url = "https://pyyaml.org/download/libyaml/yaml-0.2.4.tar.gz"
     git = "https://github.com/yaml/libyaml.git"
+
+    license("MIT")
 
     version("master", branch="master")
     version("0.2.5", sha256="c642ae9b75fee120b2d96c712538bd2cf283228d2337df2cf2988e3c02678ef4")

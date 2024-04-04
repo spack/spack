@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,5 +12,7 @@ class Cjson(CMakePackage):
     homepage = "https://github.com/DaveGamble/cJSON"
     git = "https://github.com/DaveGamble/cJSON"
     url = "https://github.com/DaveGamble/cJSON/archive/refs/tags/v1.7.15.zip"
+
+    license("MIT")
 
     version("1.7.15", sha256="c55519316d940757ef93a779f1db1ca809dbf979c551861f339d35aaea1c907c")

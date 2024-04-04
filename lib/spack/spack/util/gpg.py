@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -334,7 +334,7 @@ def _verify_exe_or_raise(exe):
         raise SpackGPGError(msg)
 
     output = exe("--version", output=str)
-    match = re.search(r"^gpg(conf)? \(GnuPG\) (.*)$", output, re.M)
+    match = re.search(r"^gpg(conf)? \(GnuPG(?:/MacGPG2)?\) (.*)$", output, re.M)
     if not match:
         raise SpackGPGError('Could not determine "{0}" version'.format(exe.name))
 

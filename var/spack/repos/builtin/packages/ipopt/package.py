@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class Ipopt(AutotoolsPackage):
     homepage = "https://github.com/coin-or/Ipopt"
     url = "https://github.com/coin-or/Ipopt/archive/refs/tags/releases/3.13.2.tar.gz"
     maintainers("goxberry")
+
+    license("EPL-2.0")
 
     version("3.14.9", sha256="e12eba451269ec30f4cf6e2acb8b35399f0d029c97dff10465416f5739c8cf7a")
     version("3.14.5", sha256="9ebbbbf14a64e998e3fba5d2662a8f9bd03f97b1406017e78ae54e5d105ae932")

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -448,12 +448,10 @@ def test_ci_process_command_fail(repro_dir, monkeypatch):
 def test_ci_create_buildcache(tmpdir, working_env, config, mock_packages, monkeypatch):
     """Test that create_buildcache returns a list of objects with the correct
     keys and types."""
-    monkeypatch.setattr(spack.ci, "push_mirror_contents", lambda a, b, c: True)
+    monkeypatch.setattr(spack.ci, "_push_to_build_cache", lambda a, b, c: True)
 
     results = ci.create_buildcache(
-        None,
-        buildcache_mirror_url="file:///fake-url-one",
-        pipeline_mirror_url="file:///fake-url-two",
+        None, destination_mirror_urls=["file:///fake-url-one", "file:///fake-url-two"]
     )
 
     assert len(results) == 2
@@ -463,7 +461,7 @@ def test_ci_create_buildcache(tmpdir, working_env, config, mock_packages, monkey
     assert result2.success
     assert result2.url == "file:///fake-url-two"
 
-    results = ci.create_buildcache(None, buildcache_mirror_url="file:///fake-url-one")
+    results = ci.create_buildcache(None, destination_mirror_urls=["file:///fake-url-one"])
 
     assert len(results) == 1
     assert results[0].success

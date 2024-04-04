@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class Skopeo(MakefilePackage):
 
     homepage = "https://github.com/containers/skopeo"
     url = "https://github.com/containers/skopeo/archive/v0.1.39.tar.gz"
+
+    license("Apache-2.0")
 
     version("0.1.40", sha256="ee1e33245938fcb622f5864fac860e2d8bfa2fa907af4b5ffc3704ed0db46bbf")
     version("0.1.39", sha256="e9d70f7f7b891675a816f06a22df0490285ad20eefbd91f5da69ca12f56c29f2")

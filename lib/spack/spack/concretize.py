@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -155,7 +155,7 @@ class Concretizer:
             ),
         )
 
-    def choose_virtual_or_external(self, spec):
+    def choose_virtual_or_external(self, spec: spack.spec.Spec):
         """Given a list of candidate virtual and external packages, try to
         find one that is most ABI compatible.
         """
@@ -749,7 +749,6 @@ def _concretize_specs_together_new(*abstract_specs, **kwargs):
     result = solver.solve(
         abstract_specs, tests=kwargs.get("tests", False), allow_deprecated=allow_deprecated
     )
-    result.raise_if_unsat()
     return [s.copy() for s in result.specs]
 
 
@@ -826,7 +825,6 @@ class NoValidVersionError(spack.error.SpackError):
 
 
 class InsufficientArchitectureInfoError(spack.error.SpackError):
-
     """Raised when details on architecture cannot be collected from the
     system"""
 

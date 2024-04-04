@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,7 +6,7 @@
 import os
 import re
 
-import llnl.util.tty as tty
+from llnl.util import tty
 
 from spack.package import *
 
@@ -39,10 +39,26 @@ class Go(Package):
 
     maintainers("alecbcs")
 
-    version("1.20.6", sha256="62ee5bc6fb55b8bae8f705e0cb8df86d6453626b4ecf93279e2867092e0b7f70")
-    version("1.19.11", sha256="e25c9ab72d811142b7f41ff6da5165fec2d1be5feec3ef2c66bc0bdecb431489")
+    license("BSD-3-Clause")
+
+    version("1.22.1", sha256="79c9b91d7f109515a25fc3ecdaad125d67e6bdb54f6d4d98580f46799caea321")
+    version("1.22.0", sha256="4d196c3d41a0d6c1dfc64d04e3cc1f608b0c436bd87b7060ce3e23234e1f4d5c")
+    version("1.21.6", sha256="124926a62e45f78daabbaedb9c011d97633186a33c238ffc1e25320c02046248")
+    version("1.21.5", sha256="285cbbdf4b6e6e62ed58f370f3f6d8c30825d6e56c5853c66d3c23bcdb09db19")
 
     # Deprecated Versions
+    # https://nvd.nist.gov/vuln/detail/CVE-2023-44487
+    version(
+        "1.21.3",
+        sha256="186f2b6f8c8b704e696821b09ab2041a5c1ee13dcbc3156a13adcf75931ee488",
+        deprecated=True,
+    )
+    # https://nvd.nist.gov/vuln/detail/CVE-2023-39533
+    version(
+        "1.20.6",
+        sha256="62ee5bc6fb55b8bae8f705e0cb8df86d6453626b4ecf93279e2867092e0b7f70",
+        deprecated=True,
+    )
     # https://nvd.nist.gov/vuln/detail/CVE-2023-29405
     version(
         "1.20.4",
@@ -55,6 +71,11 @@ class Go(Package):
         deprecated=True,
     )
     version(
+        "1.19.11",
+        sha256="e25c9ab72d811142b7f41ff6da5165fec2d1be5feec3ef2c66bc0bdecb431489",
+        deprecated=True,
+    )
+    version(
         "1.19.9",
         sha256="131190a4697a70c5b1d232df5d3f55a3f9ec0e78e40516196ffb3f09ae6a5744",
         deprecated=True,
@@ -64,7 +85,6 @@ class Go(Package):
         sha256="1d7a67929dccafeaf8a29e55985bc2b789e0499cb1a17100039f084e3238da2f",
         deprecated=True,
     )
-
     # https://nvd.nist.gov/vuln/detail/CVE-2023-24538
     version(
         "1.20.2",
@@ -79,9 +99,10 @@ class Go(Package):
 
     provides("golang")
 
-    depends_on("git", type=("build", "link", "run"))
+    depends_on("git", type="run")
     depends_on("go-or-gccgo-bootstrap", type="build")
     depends_on("go-or-gccgo-bootstrap@1.17.13:", type="build", when="@1.20:")
+    depends_on("go-or-gccgo-bootstrap@1.20.6:", type="build", when="@1.22:")
 
     phases = ["build", "install"]
 
@@ -106,7 +127,7 @@ class Go(Package):
         bash = which("bash")
 
         with working_dir("src"):
-            bash("{0}.bash".format("all" if self.run_tests else "make"))
+            bash(f"{'all' if self.run_tests else 'make'}.bash")
 
     def install(self, spec, prefix):
         install_tree(".", prefix)

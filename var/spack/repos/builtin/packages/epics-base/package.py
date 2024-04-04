@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -26,6 +26,7 @@ class EpicsBase(MakefilePackage):
     def patch(self):
         filter_file(r"^\s*CC\s*=.*", "CC = " + spack_cc, "configure/CONFIG.gnuCommon")
         filter_file(r"^\s*CCC\s*=.*", "CCC = " + spack_cxx, "configure/CONFIG.gnuCommon")
+        filter_file(r"\$\(PERL\)\s+\$\(XSUBPP\)", "$(XSUBPP)", "modules/ca/src/perl/Makefile")
 
     @property
     def install_targets(self):

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class Xxdiff(MakefilePackage):
     git = "https://github.com/blais/xxdiff.git"
 
     maintainers("vanderwb")
+
+    license("GPL-2.0-or-later")
 
     version("master", branch="master")
     version("2023-01-10", commit="604300ea9875611726ba885fb14f872b964df579")

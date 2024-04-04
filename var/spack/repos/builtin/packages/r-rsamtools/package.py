@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,8 @@ class RRsamtools(RPackage):
     (tabix) files."""
 
     bioc = "Rsamtools"
+
+    license("MIT")
 
     version("2.16.0", commit="3eb6d03acecb8d640ec5201cacdc322e9e0c2445")
     version("2.14.0", commit="8302eb7fa1c40384f1af5855222d94f2efbdcad1")

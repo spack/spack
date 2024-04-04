@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,14 +18,15 @@ class Garfieldpp(CMakePackage):
 
     maintainers("mirguest")
     patch(
-        "https://gitlab.cern.ch/garfield/garfieldpp/-/commit/882c3023cfa89b45ca7a0c95ab1518454536e8e1.patch",
-        sha256="440bc8129c55168e6c45d39e4344911d48ddb13fd3f9ee05974b2ede46a23b93",
+        "https://gitlab.cern.ch/garfield/garfieldpp/-/commit/882c3023cfa89b45ca7a0c95ab1518454536e8e1.diff",
+        sha256="ea3b91d67011abe41e72c7b55578d14b77bd2ef5e7f344077091934b24f38f0d",
         when="@4.0",
     )
 
     variant("examples", default=False, description="Build garfield examples")
 
     version("master", branch="master")
+    version("5.0", sha256="453e83c2829f57046c471a691e7cd9630650a3c6a696f3be6e86bf2d5159e7b3")
     version("4.0", sha256="82bc1f0395213bd30a7cd854426e6757d0b4155e99ffd4405355c9648fa5ada3")
     version("3.0", sha256="c1282427a784658bc38b71c8e8cfc8c9f5202b185f0854d85f7c9c5a747c5406")
 

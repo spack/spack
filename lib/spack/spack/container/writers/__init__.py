@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -271,13 +271,6 @@ class PathContext(tengine.Context):
             )
             raise spack.error.SpackError(msg)
         return os_pkg_manager
-
-    @tengine.context_property
-    def extra_instructions(self):
-        Extras = namedtuple("Extra", ["build", "final"])
-        extras = self.container_config.get("extra_instructions", {})
-        build, final = extras.get("build", None), extras.get("final", None)
-        return Extras(build=build, final=final)
 
     @tengine.context_property
     def labels(self):

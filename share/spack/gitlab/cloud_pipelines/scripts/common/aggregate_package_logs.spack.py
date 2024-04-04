@@ -28,9 +28,17 @@ if __name__ == "__main__":
 
     # Aggregate the install timers into a single json
     data = []
+
+    # Look in the CWD for logs
+    local_log_path = os.path.join(os.getcwd(), args.log)
+    if os.path.exists(local_log_path):
+        with open(local_log_path) as fd:
+            data.append(json.load(fd))
+
+    # Look in the list of prefixes for logs
     for prefix in prefixes:
-        time_logs = find_logs(prefix, args.log)
-        for log in time_logs:
+        logs = find_logs(prefix, args.log)
+        for log in logs:
             with open(log) as fd:
                 data.append(json.load(fd))
 

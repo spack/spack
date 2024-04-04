@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,11 +6,13 @@
 import os
 import re
 
+import spack.build_systems.cmake
+import spack.build_systems.makefile
 from spack.package import *
 from spack.package_test import compare_output_file, compile_c_and_execute
 
 
-class Openblas(MakefilePackage):
+class Openblas(CMakePackage, MakefilePackage):
     """OpenBLAS: An optimized BLAS library"""
 
     homepage = "https://www.openblas.net"
@@ -19,9 +21,13 @@ class Openblas(MakefilePackage):
     )
     git = "https://github.com/OpenMathLib/OpenBLAS.git"
 
-    libraries = ["libopenblas"]
+    libraries = ["libopenblas", "openblas"]
+
+    license("BSD-3-Clause")
 
     version("develop", branch="develop")
+    version("0.3.26", sha256="4e6e4f5cb14c209262e33e6816d70221a2fe49eb69eaf0a06f065598ac602c68")
+    version("0.3.25", sha256="4c25cb30c4bb23eddca05d7d0a85997b8db6144f5464ba7f8c09ce91e2f35543")
     version("0.3.24", sha256="ceadc5065da97bd92404cac7254da66cc6eb192679cf1002098688978d4d5132")
     version("0.3.23", sha256="5d9491d07168a5d00116cdc068a40022c3455bf9293c7cb86a65b1054d7e5114")
     version("0.3.22", sha256="7fa9685926ba4f27cfe513adbf9af64d6b6b63f9dcabb37baefad6a65ff347a7")
@@ -65,6 +71,11 @@ class Openblas(MakefilePackage):
     variant("pic", default=True, description="Build position independent code")
     variant("shared", default=True, description="Build shared libraries")
     variant(
+        "dynamic_dispatch",
+        default=True,
+        description="Enable runtime cpu detection for best kernel selection",
+    )
+    variant(
         "consistent_fpcsr",
         default=False,
         description="Synchronize FP CSR between threads (x86/x86_64 only)",
@@ -86,10 +97,15 @@ class Openblas(MakefilePackage):
     )
 
     # virtual dependency
-    provides("blas")
-    provides("lapack")
+    provides("blas", "lapack")
     provides("lapack@3.9.1:", when="@0.3.15:")
     provides("lapack@3.7.0", when="@0.2.20")
+
+    # https://github.com/OpenMathLib/OpenBLAS/pull/4328
+    patch("xcode15-fortran.patch", when="@0.3.25 %apple-clang@15:")
+
+    # https://github.com/xianyi/OpenBLAS/pull/2519/files
+    patch("ifort-msvc.patch", when="%msvc")
 
     # https://github.com/OpenMathLib/OpenBLAS/pull/3712
     patch("cce.patch", when="@0.3.20 %cce")
@@ -187,6 +203,24 @@ class Openblas(MakefilePackage):
         when="@0.3.21 %gcc@:9",
     )
 
+    # Some installations of clang and libomp have non-standard locations for
+    # libomp. OpenBLAS adds the correct linker flags but overwrites the
+    # variables in a couple places, causing link-time failures.
+    patch("openblas_append_lflags.patch", when="@:0.3.23 threads=openmp")
+
+    # Some builds of libomp on certain systems cause test failures related to
+    # forking, so disable the specific test that's failing. This is currently
+    # an open issue upstream:
+    # https://github.com/llvm/llvm-project/issues/63908
+    patch("openblas_libomp_fork.patch", when="%clang@15:")
+
+    # Fix build on A64FX for OpenBLAS v0.3.24
+    patch(
+        "https://github.com/OpenMathLib/OpenBLAS/commit/90231bfc4e4afc51f67c248328fbef0cecdbd2c2.patch?full_index=1",
+        sha256="139e314f3408dc5c080d28887471f382e829d1bd06c8655eb72593e4e7b921cc",
+        when="@0.3.24 target=a64fx",
+    )
+
     # See https://github.com/spack/spack/issues/19932#issuecomment-733452619
     # Notice: fixed on Amazon Linux GCC 7.3.1 (which is an unofficial version
     # as GCC only has major.minor releases. But the bound :7.3.0 doesn't hurt)
@@ -210,8 +244,16 @@ class Openblas(MakefilePackage):
         when="%clang",
         msg="OpenBLAS @:0.2.19 does not support OpenMP with clang!",
     )
+    # See https://github.com/OpenMathLib/OpenBLAS/issues/2826#issuecomment-688399162
+    conflicts(
+        "+dynamic_dispatch",
+        when="platform=windows",
+        msg="Visual Studio does not support OpenBLAS dynamic dispatch features",
+    )
 
     depends_on("perl", type="build")
+
+    build_system("makefile", "cmake", default="makefile")
 
     def flag_handler(self, name, flags):
         spec = self.spec
@@ -242,13 +284,37 @@ class Openblas(MakefilePackage):
         # require both.
         # As of 08/2022 (0.3.21), we can build purely with a C compiler using
         # a f2c translated LAPACK version
-        #   https://github.com/OpenMathLib/OpenBLAS/releases/tag/v0.3.21
+        #   https://github.com/xianyi/OpenBLAS/releases/tag/v0.3.21
         if self.compiler.fc is None and "~fortran" not in self.spec:
             raise InstallError(
                 self.compiler.cc
                 + " has no Fortran compiler added in spack. Add it or use openblas~fortran!"
             )
 
+    @property
+    def headers(self):
+        # The only public headers for cblas and lapacke in
+        # openblas are cblas.h and lapacke.h. The remaining headers are private
+        # headers either included in one of these two headers, or included in
+        # one of the source files implementing functions declared in these
+        # headers.
+        return find_headers(["cblas", "lapacke"], self.prefix.include)
+
+    @property
+    def libs(self):
+        spec = self.spec
+
+        # Look for openblas{symbol_suffix}
+        name = ["libopenblas", "openblas"]
+        search_shared = bool(spec.variants["shared"].value)
+        suffix = spec.variants["symbol_suffix"].value
+        if suffix != "none":
+            name = [x + suffix for x in name]
+
+        return find_libraries(name, spec.prefix, shared=search_shared, recursive=True)
+
+
+class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
     @staticmethod
     def _read_targets(target_file):
         """Parse a list of available targets from the OpenBLAS/TargetList.txt
@@ -278,6 +344,16 @@ class Openblas(MakefilePackage):
         # Get our build microarchitecture
         microarch = self.spec.target
 
+        # We need to detect whether the target supports SVE before the magic for
+        # loop below which would change the value of `microarch`.
+        has_sve = (
+            self.spec.satisfies("@0.3.19:")
+            and microarch.family == "aarch64"
+            and "sve" in microarch
+            # Exclude A64FX, which has its own special handling in OpenBLAS.
+            and microarch.name != "a64fx"
+        )
+
         # List of arguments returned by this function
         args = []
 
@@ -304,7 +380,7 @@ class Openblas(MakefilePackage):
                 if microarch.name in available_targets:
                     break
 
-        if self.version >= Version("0.3"):
+        if self.spec.version >= Version("0.3"):
             # 'ARCH' argument causes build errors in older OpenBLAS
             # see https://github.com/spack/spack/issues/15385
             arch_name = microarch.family.name
@@ -313,7 +389,14 @@ class Openblas(MakefilePackage):
                 arch_name = openblas_arch_map.get(arch_name, arch_name)
                 args.append("ARCH=" + arch_name)
 
-        if microarch.vendor == "generic" and microarch.name != "riscv64":
+        if has_sve:
+            # Check this before testing the value of `microarch`, which may have
+            # been altered by the magic for loop above.  If SVE is available
+            # (but target isn't A64FX which is treated specially below), use the
+            # `ARMV8SVE` OpenBLAS target.
+            args.append("TARGET=ARMV8SVE")
+
+        elif microarch.vendor == "generic" and microarch.name != "riscv64":
             # User requested a generic platform, or we couldn't find a good
             # match for the requested one. Allow OpenBLAS to determine
             # an optimized kernel at run time, including older CPUs, while
@@ -338,6 +421,14 @@ class Openblas(MakefilePackage):
             # DYNAMIC_ARCH or TARGET=GENERIC. Once it does, this special
             # case can go away.
             args.append("TARGET=" + "RISCV64_GENERIC")
+
+        elif self.spec.satisfies("@0.3.19: target=a64fx"):
+            # Special case for Fujitsu's A64FX
+            if any(self.spec.satisfies(i) for i in ["%gcc@11:", "%clang", "%fj"]):
+                args.append("TARGET=A64FX")
+            else:
+                # fallback to armv8-a+sve without -mtune=a64fx flag
+                args.append("TARGET=ARMV8SVE")
 
         else:
             args.append("TARGET=" + microarch.name.upper())
@@ -373,15 +464,18 @@ class Openblas(MakefilePackage):
         # Add target and architecture flags
         make_defs += self._microarch_target_args()
 
+        if self.spec.satisfies("+dynamic_dispatch"):
+            make_defs += ["DYNAMIC_ARCH=1"]
+
         # Fortran-free compilation
         if "~fortran" in self.spec:
             make_defs += ["NOFORTRAN=1"]
 
         if "~shared" in self.spec:
             if "+pic" in self.spec:
-                make_defs.append("CFLAGS={0}".format(self.compiler.cc_pic_flag))
+                make_defs.append("CFLAGS={0}".format(self.pkg.compiler.cc_pic_flag))
                 if "~fortran" not in self.spec:
-                    make_defs.append("FFLAGS={0}".format(self.compiler.f77_pic_flag))
+                    make_defs.append("FFLAGS={0}".format(self.pkg.compiler.f77_pic_flag))
             make_defs += ["NO_SHARED=1"]
         # fix missing _dggsvd_ and _sggsvd_
         if self.spec.satisfies("@0.2.16"):
@@ -443,28 +537,6 @@ class Openblas(MakefilePackage):
         return make_defs
 
     @property
-    def headers(self):
-        # As in netlib-lapack, the only public headers for cblas and lapacke in
-        # openblas are cblas.h and lapacke.h. The remaining headers are private
-        # headers either included in one of these two headers, or included in
-        # one of the source files implementing functions declared in these
-        # headers.
-        return find_headers(["cblas", "lapacke"], self.prefix.include)
-
-    @property
-    def libs(self):
-        spec = self.spec
-
-        # Look for openblas{symbol_suffix}
-        name = "libopenblas"
-        search_shared = bool(spec.variants["shared"].value)
-        suffix = spec.variants["symbol_suffix"].value
-        if suffix != "none":
-            name += suffix
-
-        return find_libraries(name, spec.prefix, shared=search_shared, recursive=True)
-
-    @property
     def build_targets(self):
         return ["-s"] + self.make_defs + ["all"]
 
@@ -499,3 +571,30 @@ class Openblas(MakefilePackage):
 
         output = compile_c_and_execute(source_file, [include_flags], link_flags.split())
         compare_output_file(output, blessed_file)
+
+
+class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
+    def cmake_args(self):
+        cmake_defs = [self.define("TARGET", "GENERIC")]
+        if self.spec.satisfies("+dynamic_dispatch"):
+            cmake_defs += [self.define("DYNAMIC_ARCH", "ON")]
+        if self.spec.satisfies("platform=windows"):
+            cmake_defs += [
+                self.define("DYNAMIC_ARCH", "OFF"),
+                self.define("BUILD_WITHOUT_LAPACK", "ON"),
+            ]
+
+        if "~fortran" in self.spec:
+            cmake_defs += [self.define("NOFORTRAN", "ON")]
+
+        if "+shared" in self.spec:
+            cmake_defs += [self.define("BUILD_SHARED_LIBS", "ON")]
+
+        if self.spec.satisfies("threads=openmp"):
+            cmake_defs += [self.define("USE_OPENMP", "ON"), self.define("USE_THREAD", "ON")]
+        elif self.spec.satisfies("threads=pthreads"):
+            cmake_defs += [self.define("USE_OPENMP", "OFF"), self.define("USE_THREAD", "ON")]
+        else:
+            cmake_defs += [self.define("USE_OPENMP", "OFF"), self.define("USE_THREAD", "OFF")]
+
+        return cmake_defs

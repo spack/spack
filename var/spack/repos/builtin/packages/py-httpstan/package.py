@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class PyHttpstan(PythonPackage):
     url = "https://github.com/stan-dev/httpstan/archive/refs/tags/4.6.1.tar.gz"
 
     maintainers("haralmha")
+
+    license("ISC")
 
     version("4.8.0", sha256="cadfce05d24ec2af50d71c5212c648cbee5684a7f98fedd3838e124e5a9b4962")
     version("4.7.2", sha256="94f6631d969cbd91d136194b074d02642d8c9e2a05674877a39059be87c5bf7b")

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,9 @@ class Gtkplus(MesonPackage):
     homepage = "https://www.gtk.org/"
     url = "https://download.gnome.org/sources/gtk+/3.24/gtk+-3.24.26.tar.xz"
 
+    license("LGPL-2.0-or-later")
+
+    version("3.24.41", sha256="47da61487af3087a94bc49296fd025ca0bc02f96ef06c556e7c8988bd651b6fa")
     version("3.24.29", sha256="f57ec4ade8f15cab0c23a80dcaee85b876e70a8823d9105f067ce335a8268caa")
     version("3.24.26", sha256="2cc1b2dc5cad15d25b6abd115c55ffd8331e8d4677745dd3ce6db725b4fff1e9")
     version(
@@ -72,10 +75,11 @@ class Gtkplus(MesonPackage):
         return url.format(version.up_to(2), version)
 
     def patch(self):
-        # remove disable deprecated flag.
-        filter_file(
-            r'CFLAGS="-DGDK_PIXBUF_DISABLE_DEPRECATED $CFLAGS"', "", "configure", string=True
-        )
+        if self.spec.satisfies("@:3.24.35"):
+            # remove disable deprecated flag.
+            filter_file(
+                r'CFLAGS="-DGDK_PIXBUF_DISABLE_DEPRECATED $CFLAGS"', "", "configure", string=True
+            )
 
         # https://gitlab.gnome.org/GNOME/gtk/-/issues/3776
         if self.spec.satisfies("@3:%gcc@11:"):
@@ -93,7 +97,7 @@ class Gtkplus(MesonPackage):
         env.prepend_path("GI_TYPELIB_PATH", join_path(self.prefix.lib, "girepository-1.0"))
 
     def meson_args(self):
-        args = std_meson_args
+        args = []
 
         if self.spec.satisfies("platform=darwin"):
             args.extend(["-Dx11_backend=false", "-Dquartz_backend=true"])
@@ -101,6 +105,8 @@ class Gtkplus(MesonPackage):
         args.extend(
             ["-Dgtk_doc=false", "-Dman=false", "-Dintrospection=true", "-Dwayland_backend=false"]
         )
+
+        args.append("-Dprint_backends=file,lpr{0}".format(",cups" if "+cups" in self.spec else ""))
 
         return args
 

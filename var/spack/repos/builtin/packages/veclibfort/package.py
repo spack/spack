@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,8 @@ class Veclibfort(Package):
     url = "https://github.com/mcg1969/vecLibFort/archive/0.4.2.tar.gz"
     git = "https://github.com/mcg1969/vecLibFort.git"
 
+    license("BSL-1.0")
+
     version("develop", branch="master")
     version("0.4.3", sha256="fe9e7e0596bfb4aa713b2273b21e7d96c0d7a6453ee4b214a8a50050989d5586")
     version("0.4.2", sha256="c61316632bffa1c76e3c7f92b11c9def4b6f41973ecf9e124d68de6ae37fbc85")
@@ -27,6 +29,8 @@ class Veclibfort(Package):
     provides("blas")
     # https://github.com/scipy/scipy/wiki/Dropping-support-for-Accelerate
     provides("lapack@3.2.1")
+
+    requires("platform=darwin", msg="vecLibFort can be installed on macOS only")
 
     @property
     def libs(self):
