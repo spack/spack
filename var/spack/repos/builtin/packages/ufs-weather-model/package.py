@@ -83,10 +83,13 @@ class UfsWeatherModel(CMakePackage):
     )
     dev_ccpp_default = [
         "FV3_GFS_v16",
-        "FV3_GFS_v15_thompson_mynn",
+        "FV3_GFS_v16_flake",
         "FV3_GFS_v17_p8",
         "FV3_GFS_v17_p8_rrtmgp",
         "FV3_GFS_v15_thompson_mynn_lam3km",
+        "FV3_WoFS_v0",
+        "FV3_GFS_v17_p8_mynn",
+        "FV3_GFS_v17_p8_ugwpv1",
     ]
     variant(
         "ccpp_suites",
@@ -123,7 +126,7 @@ class UfsWeatherModel(CMakePackage):
     depends_on("bacio@2.4.0:", when="@develop")
     depends_on("crtm", when="@develop")
     depends_on("esmf@8.3.0:", when="@develop")
-    depends_on("fms@2022.04: constants=GFS", when="@develop")
+    depends_on("fms@2022.04: +deprecated_io precision=32,64 constants=GFS", when="@develop")
     depends_on("g2", when="@develop")
     depends_on("g2tmpl", when="@develop")
     depends_on("hdf5+hl+mpi", when="@develop")
