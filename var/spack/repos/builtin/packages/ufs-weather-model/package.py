@@ -127,7 +127,7 @@ class UfsWeatherModel(CMakePackage):
     depends_on("g2", when="@develop")
     depends_on("g2tmpl", when="@develop")
     depends_on("hdf5+hl+mpi", when="@develop")
-    depends_on("ip", when="@develop")
+    depends_on("ip@:4", when="@develop")
     depends_on("netcdf-c~parallel-netcdf+mpi", when="@develop")
     for app in [
         "ATMW",
@@ -159,10 +159,10 @@ class UfsWeatherModel(CMakePackage):
         depends_on("gftl-shared")
     depends_on("scotch", when="+pdlib")
 
-    conflicts("%gcc@:8", when="@develop")
-
     depends_on("w3nco", when="@:2.0.0")
     depends_on("python", type="build", when="@:2.0.0")
+
+    conflicts("%gcc@:8", when="@develop")
 
     def setup_build_environment(self, env):
         spec = self.spec
