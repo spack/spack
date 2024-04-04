@@ -12,7 +12,10 @@ class PySimpy(PythonPackage):
     homepage = "https://simpy.readthedocs.io/"
     pypi = "simpy/simpy-4.0.2.tar.gz"
 
+    version("4.1.1", sha256="6d8adc0229df6b02fb7e26dcd1338703b4f4f63f167a5ac2a7213cb80aba4484")
     version("4.0.2", sha256="6d8adc0229df6b02fb7e26dcd1338703b4f4f63f167a5ac2a7213cb80aba4484")
 
-    depends_on("py-setuptools@42:", type="build")
-    depends_on("py-setuptools-scm@3.4:+toml", type="build")
+    depends_on("py-setuptools@42:", type="build", when="@4.0.2")
+    depends_on("py-setuptools@64:", type="build", when="@4.1.1:")
+    depends_on("py-setuptools-scm@3.4:+toml", type="build", when="@4.0.2")
+    depends_on("py-setuptools-scm@8.0:+toml", type="build", when="@4.1.1:")
