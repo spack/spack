@@ -15,9 +15,14 @@ class Nalu(CMakePackage):
     """
 
     homepage = "https://github.com/NaluCFD/Nalu"
+    url = "https://github.com/NaluCFD/Nalu/archive/refs/tags/v1.6.0.tar.gz"
     git = "https://github.com/NaluCFD/Nalu.git"
 
     version("master", branch="master")
+    version("1.6.0", sha256="2eafafe25ed44a7bc1429881f8f944b9794ca51b1e1b29c28a45b91520c7cf97")
+
+    depends_on("trilinos@master", when="@master")
+    depends_on("trilinos@=14.0.0", when="@1.6.0")
 
     # Options
     variant(
@@ -37,15 +42,14 @@ class Nalu(CMakePackage):
     # which is why we have a 'shared' variant for Nalu
     # https://github.com/trilinos/Trilinos/issues/2994
     depends_on(
-        "trilinos@develop"
-        "+mpi+exodus+tpetra+muelu+belos+ifpack2+amesos2+zoltan+stk+boost"
+        "trilinos"
+        "+mpi+exodus+tpetra+muelu+belos+ifpack2+amesos2+zoltan+stk+boost+gtest"
         "~superlu-dist+superlu+hdf5+shards~hypre gotype=long"
     )
     depends_on("trilinos~shared", when="~shared")
     # Optional dependencies
     depends_on("tioga", when="+tioga+shared")
     depends_on("tioga~shared", when="+tioga~shared")
-    depends_on("fmt")
 
     def cmake_args(self):
         spec = self.spec
