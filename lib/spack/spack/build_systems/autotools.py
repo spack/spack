@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -434,11 +434,6 @@ To resolve this problem, please try the following:
                 r"crtendS\.o",
             ]:
                 x.filter(regex=(rehead + o), repl="")
-        elif self.pkg.compiler.name == "dpcpp":
-            # Hack to filter out spurious predep_objects when building with Intel dpcpp
-            # (see https://github.com/spack/spack/issues/32863):
-            x.filter(regex=r"^(predep_objects=.*)/tmp/conftest-[0-9A-Fa-f]+\.o", repl=r"\1")
-            x.filter(regex=r"^(predep_objects=.*)/tmp/a-[0-9A-Fa-f]+\.o", repl=r"\1")
         elif self.pkg.compiler.name == "nag":
             for tag in ["fc", "f77"]:
                 marker = markers[tag]
@@ -541,7 +536,7 @@ To resolve this problem, please try the following:
         if os.path.exists(self.configure_abs_path):
             return
 
-        # Else try to regenerate it, which reuquires a few build dependencies
+        # Else try to regenerate it, which requires a few build dependencies
         ensure_build_dependencies_or_raise(
             spec=spec,
             dependencies=["autoconf", "automake", "libtool"],

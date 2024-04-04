@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class Libxc(AutotoolsPackage, CudaPackage):
 
     homepage = "https://tddft.org/programs/libxc/"
     url = "https://gitlab.com/libxc/libxc/-/archive/6.1.0/libxc-6.1.0.tar.gz"
+
+    license("MPL-2.0-no-copyleft-exception")
 
     version("6.2.2", sha256="3b0523924579cf494cafc6fea92945257f35692b004217d3dfd3ea7ca780e8dc")
     version("6.2.1", sha256="b5f3b4514db6bc4ccda1da90ac6176ea1f82e12241cc66427c58cbc4a5197b9b")

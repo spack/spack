@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,7 +19,6 @@ import spack.environment
 import spack.tengine
 import spack.util.cpus
 import spack.util.executable
-from spack.environment import depfile
 
 from ._common import _root_spec
 from .config import root_path, spec_for_current_python, store_path
@@ -86,12 +85,9 @@ class BootstrapEnvironment(spack.environment.Environment):
         super().__init__(self.environment_root())
 
     def update_installations(self) -> None:
-        """Update the installations of this environment.
-
-        The update is done using a depfile on Linux and macOS, and using the ``install_all``
-        method of environments on Windows.
-        """
-        with tty.SuppressOutput(msg_enabled=False, warn_enabled=False):
+        """Update the installations of this environment."""
+        log_enabled = tty.is_debug() or tty.is_verbose()
+        with tty.SuppressOutput(msg_enabled=log_enabled, warn_enabled=log_enabled):
             specs = self.concretize()
         if specs:
             colorized_specs = [
@@ -100,11 +96,9 @@ class BootstrapEnvironment(spack.environment.Environment):
             ]
             tty.msg(f"[BOOTSTRAPPING] Installing dependencies ({', '.join(colorized_specs)})")
             self.write(regenerate=False)
-            if sys.platform == "win32":
+            with tty.SuppressOutput(msg_enabled=log_enabled, warn_enabled=log_enabled):
                 self.install_all()
-            else:
-                self._install_with_depfile()
-            self.write(regenerate=True)
+                self.write(regenerate=True)
 
     def update_syspath_and_environ(self) -> None:
         """Update ``sys.path`` and the PATH, PYTHONPATH environment variables to point to
@@ -120,25 +114,6 @@ class BootstrapEnvironment(spack.environment.Environment):
         os.environ["PYTHONPATH"] = os.pathsep.join(
             os.environ.get("PYTHONPATH", "").split(os.pathsep)
             + [str(x) for x in self.pythonpaths()]
-        )
-
-    def _install_with_depfile(self) -> None:
-        model = depfile.MakefileModel.from_env(self)
-        template = spack.tengine.make_environment().get_template(
-            os.path.join("depfile", "Makefile")
-        )
-        makefile = self.environment_root() / "Makefile"
-        makefile.write_text(template.render(model.to_dict()))
-        make = spack.util.executable.which("make")
-        kwargs = {}
-        if not tty.is_debug():
-            kwargs = {"output": os.devnull, "error": os.devnull}
-        make(
-            "-C",
-            str(self.environment_root()),
-            "-j",
-            str(spack.util.cpus.determine_number_of_jobs(parallel=True)),
-            **kwargs,
         )
 
     def _write_spack_yaml_file(self) -> None:
@@ -161,7 +136,7 @@ class BootstrapEnvironment(spack.environment.Environment):
 
 def isort_root_spec() -> str:
     """Return the root spec used to bootstrap isort"""
-    return _root_spec("py-isort@4.3.5:")
+    return _root_spec("py-isort@5")
 
 
 def mypy_root_spec() -> str:
@@ -171,7 +146,7 @@ def mypy_root_spec() -> str:
 
 def black_root_spec() -> str:
     """Return the root spec used to bootstrap black"""
-    return _root_spec("py-black@:23.1.0")
+    return _root_spec("py-black@:24.1.0")
 
 
 def flake8_root_spec() -> str:

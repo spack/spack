@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class Sqlcipher(AutotoolsPackage):
     git = "https://github.com/sqlcipher/sqlcipher.git"
 
     maintainers("rmsds")
+
+    license("BSD-3-Clause")
 
     version("4.4.1", sha256="a36ed7c879a5e9af1054942201c75fc56f1db22e46bf6c2bbae3975dfeb6782d")
     version("4.4.0", sha256="0924b2ae1079717954498bda78a30de20ce2a6083076b16214a711567821d148")

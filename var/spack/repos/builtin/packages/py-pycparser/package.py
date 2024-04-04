@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,8 @@ class PyPycparser(PythonPackage):
 
     homepage = "https://github.com/eliben/pycparser"
     pypi = "pycparser/pycparser-2.19.tar.gz"
+
+    license("BSD-3-Clause")
 
     version("2.21", sha256="e644fdec12f7872f86c58ff790da456218b10f863970249516d60a5eaca77206")
     version("2.20", sha256="2d475327684562c3a96cc71adf7dc8c4f0565175cf86b6d7a404ff4c771f15f0")

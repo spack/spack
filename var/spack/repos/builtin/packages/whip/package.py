@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class Whip(CMakePackage, CudaPackage, ROCmPackage):
     url = "https://github.com/eth-cscs/whip/archive/0.0.0.tar.gz"
     git = "https://github.com/eth-cscs/whip.git"
     maintainers("msimberg", "rasolca")
+
+    license("BSD-3-Clause")
 
     version("main", branch="main")
     version("0.2.0", sha256="d8fec662526accbd1624922fdf01a077d6f312cf253382660e4a2f65e28e8686")

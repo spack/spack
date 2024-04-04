@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -117,11 +117,9 @@ class UfsWeatherModel(CMakePackage):
     depends_on("netcdf-fortran")
     depends_on("sp")
     depends_on("w3emc")
-
     depends_on("esmf@:8.0.0", when="@:2.0.0")
     depends_on("nemsio", when="@:2.0.0")
     depends_on("w3nco", when="@:2.0.0")
-
     depends_on("bacio@2.4.0:", when="@develop")
     depends_on("crtm", when="@develop")
     depends_on("esmf@8.3.0:", when="@develop")
@@ -162,6 +160,9 @@ class UfsWeatherModel(CMakePackage):
     depends_on("scotch", when="+pdlib")
 
     conflicts("%gcc@:8", when="@develop")
+
+    depends_on("w3nco", when="@:2.0.0")
+    depends_on("python", type="build", when="@:2.0.0")
 
     def setup_build_environment(self, env):
         spec = self.spec

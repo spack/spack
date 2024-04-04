@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class PyNetket(PythonPackage):
 
     homepage = "https://github.com/netket/netket"
     url = "https://github.com/netket/netket/archive/v2.1.1.tar.gz"
+
+    license("Apache-2.0")
 
     version("2.1.1", sha256="881ae8605a829364b2116bc4398084766b24e2cd8958d0cb2b85595650e7bfd6")
     version("2.1", sha256="041d2b058c5d2945bf0a4194ad2bf3c426ad9b6ce0dd323a81a7154bc6e45452")

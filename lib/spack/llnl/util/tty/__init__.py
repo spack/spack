@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -42,10 +42,6 @@ def is_verbose():
 
 def is_debug(level=1):
     return _debug >= level
-
-
-def is_stacktrace():
-    return _stacktrace
 
 
 def set_debug(level=0):
@@ -250,37 +246,6 @@ def die(message, *args, **kwargs) -> NoReturn:
     kwargs.setdefault("countback", 4)
     error(message, *args, **kwargs)
     sys.exit(1)
-
-
-def get_number(prompt, **kwargs):
-    default = kwargs.get("default", None)
-    abort = kwargs.get("abort", None)
-
-    if default is not None and abort is not None:
-        prompt += " (default is %s, %s to abort) " % (default, abort)
-    elif default is not None:
-        prompt += " (default is %s) " % default
-    elif abort is not None:
-        prompt += " (%s to abort) " % abort
-
-    number = None
-    while number is None:
-        msg(prompt, newline=False)
-        ans = input()
-        if ans == str(abort):
-            return None
-
-        if ans:
-            try:
-                number = int(ans)
-                if number < 1:
-                    msg("Please enter a valid number.")
-                    number = None
-            except ValueError:
-                msg("Please enter a valid number.")
-        elif default is not None:
-            number = default
-    return number
 
 
 def get_yes_or_no(prompt, **kwargs):

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -28,7 +28,12 @@ class Spectre(CMakePackage):
 
     generator("ninja")
 
+    license("MIT")
+
     version("develop", branch="develop")
+    version(
+        "2024.02.05", sha256="cf5c4da473d665d0cac0a32562b1b8e8c0f1a77eebca8c3171e52cdf3056fdb3"
+    )
     version(
         "2023.10.11", sha256="f25d17bc80cc49ebdd81726326701fe9ecd2b6705d86e6e3d48d9e4a458c8aff"
     )
@@ -305,7 +310,6 @@ class Spectre(CMakePackage):
         args = [
             self.define("CHARM_ROOT", self.spec["charmpp"].prefix),
             self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
-            self.define("Python_EXECUTABLE", self.spec["python"].command.path),
             self.define_from_variant("BUILD_PYTHON_BINDINGS", "python"),
             self.define("BUILD_TESTING", self.run_tests),
             self.define_from_variant("BUILD_DOCS", "doc"),

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,8 @@ class Openslide(AutotoolsPackage):
 
     homepage = "https://openslide.org/"
     url = "https://github.com/openslide/openslide/releases/download/v3.4.1/openslide-3.4.1.tar.xz"
+
+    license("LGPL-2.1-only")
 
     version("3.4.1", sha256="9938034dba7f48fadc90a2cdf8cfe94c5613b04098d1348a5ff19da95b990564")
 

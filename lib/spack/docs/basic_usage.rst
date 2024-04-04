@@ -1,4 +1,4 @@
-.. Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -1119,6 +1119,9 @@ and ``3.4.2``.  Similarly, ``@4.2:`` means any version above and including
 ``4.2``.  As a short-hand, ``@3`` is equivalent to the range ``@3:3`` and
 includes any version with major version ``3``.
 
+Versions are ordered lexicograpically by its components. For more details
+on the order, see :ref:`the packaging guide <version-comparison>`.
+
 Notice that you can distinguish between the specific version ``@=3.2`` and
 the range ``@3.2``. This is useful for packages that follow a versioning
 scheme that omits the zero patch version number: ``3.2``, ``3.2.1``,
@@ -1129,6 +1132,10 @@ scheme that omits the zero patch version number: ``3.2``, ``3.2.1``,
 A version specifier can also be a list of ranges and specific versions,
 separated by commas.  For example, ``@1.0:1.5,=1.7.1`` matches any version
 in the range ``1.0:1.5`` and the specific version ``1.7.1``.
+
+^^^^^^^^^^^^
+Git versions
+^^^^^^^^^^^^
 
 For packages with a ``git`` attribute, ``git`` references
 may be specified instead of a numerical version i.e. branches, tags
@@ -1525,6 +1532,30 @@ any MPI implementation will do.  If another package depends on
 (e.g., one that provides only ``mpi@:1``), then Spack will raise an
 error.  Likewise, if you try to plug in some package that doesn't
 provide MPI, Spack will raise an error.
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Explicit binding of virtual dependencies
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+There are packages that provide more than just one virtual dependency. When interacting with them, users
+might want to utilize just a subset of what they could provide, and use other providers for virtuals they
+need.
+
+It is possible to be more explicit and tell Spack which dependency should provide which virtual, using a
+special syntax:
+
+.. code-block:: console
+
+   $ spack spec strumpack ^[virtuals=mpi] intel-parallel-studio+mkl ^[virtuals=lapack] openblas
+
+Concretizing the spec above produces the following DAG:
+
+.. figure:: images/strumpack_virtuals.svg
+   :scale: 60 %
+   :align: center
+
+where ``intel-parallel-studio`` *could* provide ``mpi``, ``lapack``, and ``blas`` but is used only for the former. The ``lapack``
+and ``blas`` dependencies are satisfied by ``openblas``.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^
 Specifying Specs by Hash

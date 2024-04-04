@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class Bubblewrap(AutotoolsPackage):
         "https://github.com/containers/bubblewrap/releases/download/v0.3.0/bubblewrap-0.3.0.tar.xz"
     )
     maintainers("haampie")
+
+    license("LGPL-2.0-or-later")
 
     version("0.8.0", sha256="957ad1149db9033db88e988b12bcebe349a445e1efc8a9b59ad2939a113d333a")
     version("0.7.0", sha256="764ab7100bd037ea53d440d362e099d7a425966bc62d1f00ab26b8fbb882a9dc")

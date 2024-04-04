@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,6 +21,8 @@ class Gmt(CMakePackage, AutotoolsPackage):
     git = "https://github.com/GenericMappingTools/gmt.git"
 
     maintainers("adamjstewart")
+
+    license("LGPL-3.0-only")
 
     version("master", branch="master")
     version("6.4.0", sha256="c39d23dbc8a85416457946f6b93c2b9a5f039f092453e7f4b1aaf88d4a288300")

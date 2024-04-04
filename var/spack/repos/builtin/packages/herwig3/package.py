@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class Herwig3(AutotoolsPackage):
     url = "https://herwig.hepforge.org/downloads/Herwig-7.2.1.tar.bz2"
 
     tags = ["hep"]
+
+    license("GPL-3.0-only")
 
     version("7.2.3", sha256="5599899379b01b09e331a2426d78d39b7f6ec126db2543e9d340aefe6aa50f84")
     version("7.2.2", sha256="53e06b386df5bc20fe268b6c8ba50f1e62b6744e577d383ec836ea3fc672c383")

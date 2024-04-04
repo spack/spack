@@ -18,6 +18,7 @@ jobs:
   prechecks:
     needs: [ changes ]
     uses: ./.github/workflows/valid-style.yml
+    secrets: inherit
     with:
       with_coverage: ${{ needs.changes.outputs.core }}
   all-prechecks:
@@ -35,12 +36,12 @@ jobs:
       core: ${{ steps.filter.outputs.core }}
       packages: ${{ steps.filter.outputs.packages }}
     steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # @v2
+      - uses: actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633
         if: ${{ github.event_name == 'push' }}
         with:
           fetch-depth: 0
             # For pull requests it's not necessary to checkout the code
-      - uses: dorny/paths-filter@4512585405083f25c027a35db413c2b3b9006d50
+      - uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36
         id: filter
         with:
           # See https://github.com/dorny/paths-filter/issues/56 for the syntax used below
@@ -70,14 +71,17 @@ jobs:
     if: ${{ github.repository == 'spack/spack' && needs.changes.outputs.bootstrap == 'true' }}
     needs: [ prechecks, changes ]
     uses: ./.github/workflows/bootstrap.yml
+    secrets: inherit
   unit-tests:
     if: ${{ github.repository == 'spack/spack' && needs.changes.outputs.core == 'true' }}
     needs: [ prechecks, changes ]
     uses: ./.github/workflows/unit_tests.yaml
+    secrets: inherit
   windows:
     if: ${{ github.repository == 'spack/spack' && needs.changes.outputs.core == 'true' }}
     needs: [ prechecks ]
     uses: ./.github/workflows/windows_python.yml
+    secrets: inherit
   all:
     needs: [ windows, unit-tests, bootstrap ]
     runs-on: ubuntu-latest

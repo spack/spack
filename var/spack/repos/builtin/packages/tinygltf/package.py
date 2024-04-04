@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class Tinygltf(CMakePackage):
     homepage = "https://github.com/syoyo/tinygltf"
     url = "https://github.com/syoyo/tinygltf/archive/refs/tags/v2.5.0.tar.gz"
     git = "https://github.com/syoyo/tinygltf/"
+
+    license("MIT")
 
     version("release", branch="release")
     version("2.8.14", sha256="63cd43746c9ddfe5777494500422e831a312299e386fbf80922839dc1a5575f8")

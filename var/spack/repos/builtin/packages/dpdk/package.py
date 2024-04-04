@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,8 @@ class Dpdk(MakefilePackage, MesonPackage):
     git = "https://github.com/DPDK/dpdk"
 
     maintainers("hyoklee")
+
+    license("BSD-3-Clause AND GPL-2.0-only")
 
     version("main", branch="main")
     version("23.03", sha256="8a8fa67941b1e0d428937f9068f401457e4e4fd576031479450da065385b332c")

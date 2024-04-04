@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class RConvevol(RPackage):
     framework."""
 
     cran = "convevol"
+
+    license("GPL-2.0-only")
 
     version("2.0.0", sha256="690664b93c1f144a409e80b2ebfc20dc34f0eb9405607d15e066e8db573e84de")
     version("1.3", sha256="d6b24b9796a559f5280e277746189d141151ade4b14cc6b4c2d9d496d7f314ac")

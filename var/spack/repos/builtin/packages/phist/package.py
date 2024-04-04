@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -30,6 +30,8 @@ class Phist(CMakePackage):
     # phist is a required part of spack GitLab CI pipelines. In them, mpich is requested
     # to provide 'mpi' like this: spack install phist ^mpich %gcc@7.5.0
     # Failure of this command to succeed breaks spack's gitlab CI pipelines!
+
+    license("BSD-3-Clause")
 
     version("develop", branch="devel")
     version("master", branch="master")
@@ -235,6 +237,13 @@ class Phist(CMakePackage):
         test.filter("1 2 3 12", "1 2 3")
         test.filter("12/", "6/")
         test.filter("TEST_DRIVERS_NUM_THREADS 6", "TEST_DRIVERS_NUM_THREADS 3")
+        # Avoid finding external modules like:
+        #    /opt/rocm/llvm/include/iso_fortran_env.mod
+        filter_file(
+            "use iso_fortran_env",
+            "use, intrinsic :: iso_fortran_env",
+            "drivers/matfuncs/matpde3d.F90",
+        )
 
     def setup_build_environment(self, env):
         env.set("SPACK_SBANG", sbang.sbang_install_path())

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,8 @@ class HttpParser(MakefilePackage):
 
     homepage = "https://github.com/nodejs/http-parser"
     url = "https://github.com/nodejs/http-parser/archive/v2.9.4.tar.gz"
+
+    license("MIT")
 
     version("2.9.4", sha256="467b9e30fd0979ee301065e70f637d525c28193449e1b13fbcb1b1fab3ad224f")
     version("2.9.3", sha256="8fa0ab8770fd8425a9b431fdbf91623c4d7a9cdb842b9339289bd2b0b01b0d3d")

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,6 @@ class Gbl(CMakePackage):
     homepage = "https://www.desy.de/~kleinwrt/GBL/doc/cpp/html/"
     git = "https://gitlab.desy.de/claus.kleinwort/general-broken-lines.git"
 
-    maintainers("iarspider")
     tags = ["hep"]
 
     version("V02-04-01", commit="1061b643c6656fbf7ceba579997eb43f0a9e9d3c")

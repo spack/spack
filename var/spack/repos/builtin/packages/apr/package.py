@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,8 @@ class Apr(AutotoolsPackage):
 
     homepage = "https://apr.apache.org/"
     url = "https://archive.apache.org/dist/apr/apr-1.7.0.tar.gz"
+
+    license("Apache-2.0")
 
     version("1.7.4", sha256="a4137dd82a185076fa50ba54232d920a17c6469c30b0876569e1c2a05ff311d9")
     version("1.7.3", sha256="af9bfd5b8a04425d6b419673f3e0a7656fade226aae78180d93f8a6f2d3d1c09")

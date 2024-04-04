@@ -1,4 +1,4 @@
-.. Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -237,7 +237,7 @@ for details):
 .. code-block:: python
    :linenos:
 
-   # Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+   # Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
    # Spack Project Developers. See the top-level COPYRIGHT file for details.
    #
    # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -893,26 +893,50 @@ as an option to the ``version()`` directive. Example situations would be a
 "snapshot"-like Version Control System (VCS) tag, a VCS branch such as
 ``v6-16-00-patches``, or a URL specifying a regularly updated snapshot tarball.
 
+
+.. _version-comparison:
+
 ^^^^^^^^^^^^^^^^^^
 Version comparison
 ^^^^^^^^^^^^^^^^^^
 
+Spack imposes a generic total ordering on the set of versions,
+independently from the package they are associated with.
+
 Most Spack versions are numeric, a tuple of integers; for example,
-``0.1``, ``6.96`` or ``1.2.3.1``.  Spack knows how to compare and sort
-numeric versions.
+``0.1``, ``6.96`` or ``1.2.3.1``. In this very basic case, version
+comparison is lexicographical on the numeric components:
+``1.2 < 1.2.1 < 1.2.2 < 1.10``.
 
-Some Spack versions involve slight extensions of numeric syntax; for
-example, ``py-sphinx-rtd-theme@=0.1.10a0``.  In this case, numbers are
-always considered to be "newer" than letters.  This is for consistency
-with `RPM <https://bugzilla.redhat.com/show_bug.cgi?id=50977>`_.
+Spack can also supports string components such as ``1.1.1a`` and
+``1.y.0``. String components are considered less than numeric
+components, so ``1.y.0 < 1.0``. This is for consistency with
+`RPM <https://bugzilla.redhat.com/show_bug.cgi?id=50977>`_. String
+components do not have to be separated by dots or any other delimiter.
+So, the contrived version ``1y0`` is identical to ``1.y.0``.
 
-Spack versions may also be arbitrary non-numeric strings, for example
-``develop``, ``master``, ``local``.
+Pre-release suffixes also contain string parts, but they are handled
+in a special way. For example ``1.2.3alpha1`` is parsed as a pre-release
+of the version ``1.2.3``. This allows Spack to order it before the
+actual release: ``1.2.3alpha1 < 1.2.3``. Spack supports alpha, beta and
+release candidate suffixes: ``1.2alpha1 < 1.2beta1 < 1.2rc1 < 1.2``. Any
+suffix not recognized as a pre-release is treated as an ordinary
+string component, so ``1.2 < 1.2-mysuffix``.
 
-The order on versions is defined as follows. A version string is split
-into a list of components based on delimiters such as ``.``, ``-`` etc.
-Lists are then ordered lexicographically, where components are ordered
-as follows:
+Finally, there are a few special string components that are considered
+"infinity versions". They include ``develop``, ``main``, ``master``,
+``head``, ``trunk``, and ``stable``. For example: ``1.2 < develop``.
+These are useful for specifying the most recent development version of
+a package (often a moving target like a git branch), without assigning
+a specific version number. Infinity versions are not automatically used when determining the latest version of a package unless explicitly required by another package or user.
+
+More formally, the order on versions is defined as follows. A version
+string is split into a list of components based on delimiters such as
+``.`` and ``-`` and string boundaries. The components are split into
+the **release** and a possible **pre-release** (if the last component
+is numeric and the second to last is a string ``alpha``, ``beta`` or ``rc``).
+The release components are ordered lexicographically, with comparsion
+between different types of components as follows:
 
 #. The following special strings are considered larger than any other
    numeric or non-numeric version component, and satisfy the following
@@ -924,6 +948,9 @@ as follows:
 
 #. All other non-numeric components are less than numeric components,
    and are ordered alphabetically.
+
+Finally, if the release components are equal, the pre-release components
+are used to break the tie, in the obvious way.
 
 The logic behind this sort order is two-fold:
 
@@ -2337,7 +2364,7 @@ window while a batch job is running ``spack install`` on the same or
 overlapping dependencies without any process trying to re-do the work of
 another.
 
-For example, if you are using SLURM, you could launch an installation
+For example, if you are using Slurm, you could launch an installation
 of ``mpich`` using the following command:
 
 .. code-block:: console
@@ -2352,7 +2379,7 @@ the following at the command line of a bash shell:
 
 .. code-block:: console
 
-   $ for i in {1..12}; do nohup spack install -j 4 mpich@3.3.2 >> mpich_install.txt 2>&1 &; done
+   $ for i in {1..12}; do nohup spack install -j 4 mpich@3.3.2 >> mpich_install.txt 2>&1 & done
 
 .. note::
 
@@ -2688,60 +2715,6 @@ appear in the package file (or in this case, in the list).
    right version. If two packages depend on ``binutils`` patched *the
    same* way, they can both use a single installation of ``binutils``.
 
-.. _setup-dependent-environment:
-
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Influence how dependents are built or run
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Spack provides a mechanism for dependencies to influence the
-environment of their dependents by overriding  the
-:meth:`setup_dependent_run_environment <spack.package_base.PackageBase.setup_dependent_run_environment>`
-or the
-:meth:`setup_dependent_build_environment <spack.builder.Builder.setup_dependent_build_environment>`
-methods.
-The Qt package, for instance, uses this call:
-
-.. literalinclude:: _spack_root/var/spack/repos/builtin/packages/qt/package.py
-   :pyobject: Qt.setup_dependent_build_environment
-   :linenos:
-
-to set the ``QTDIR`` environment variable so that packages
-that depend on a particular Qt installation will find it.
-Another good example of how a dependency can influence
-the build environment of dependents is the Python package:
-
-.. literalinclude:: _spack_root/var/spack/repos/builtin/packages/python/package.py
-   :pyobject: Python.setup_dependent_build_environment
-   :linenos:
-
-In the method above it is ensured that any package that depends on Python
-will have the ``PYTHONPATH``, ``PYTHONHOME`` and ``PATH`` environment
-variables set appropriately before starting the installation. To make things
-even simpler the ``python setup.py`` command is also inserted into the module
-scope of dependents by overriding a third method called
-:meth:`setup_dependent_package <spack.package_base.PackageBase.setup_dependent_package>`
-:
-
-.. literalinclude:: _spack_root/var/spack/repos/builtin/packages/python/package.py
-   :pyobject: Python.setup_dependent_package
-   :linenos:
-
-This allows most python packages to have a very simple install procedure,
-like the following:
-
-.. code-block:: python
-
-   def install(self, spec, prefix):
-       setup_py("install", "--prefix={0}".format(prefix))
-
-Finally the Python package takes also care of the modifications to ``PYTHONPATH``
-to allow dependencies to run correctly:
-
-.. literalinclude:: _spack_root/var/spack/repos/builtin/packages/python/package.py
-    :pyobject: Python.setup_dependent_run_environment
-    :linenos:
-
 
 .. _packaging_conflicts:
 
@@ -2886,6 +2859,70 @@ variant(s) are selected.  This may be accomplished with conditional
        extends("python", when="+python")
        ...
 
+.. _setup-environment:
+
+--------------------------------------------
+Runtime and build time environment variables
+--------------------------------------------
+
+Spack provides a few methods to help package authors set up the required environment variables for
+their package. Environment variables typically depend on how the package is used: variables that
+make sense during the build phase may not be needed at runtime, and vice versa. Further, sometimes
+it makes sense to let a dependency set the environment variables for its dependents. To allow all
+this, Spack provides four different methods that can be overridden in a package:
+
+1. :meth:`setup_build_environment <spack.builder.Builder.setup_build_environment>`
+2. :meth:`setup_run_environment <spack.package_base.PackageBase.setup_run_environment>`
+3. :meth:`setup_dependent_build_environment <spack.builder.Builder.setup_dependent_build_environment>`
+4. :meth:`setup_dependent_run_environment <spack.package_base.PackageBase.setup_dependent_run_environment>`
+
+The Qt package, for instance, uses this call:
+
+.. literalinclude:: _spack_root/var/spack/repos/builtin/packages/qt/package.py
+   :pyobject: Qt.setup_dependent_build_environment
+   :linenos:
+
+to set the ``QTDIR`` environment variable so that packages that depend on a particular Qt
+installation will find it.
+
+The following diagram will give you an idea when each of these methods is called in a build
+context:
+
+.. image:: images/setup_env.png
+   :align: center
+
+Notice that ``setup_dependent_run_environment`` can be called multiple times, once for each
+dependent package, whereas ``setup_run_environment`` is called only once for the package itself.
+This means that the former should only be used if the environment variables depend on the dependent
+package, whereas the latter should be used if the environment variables depend only on the package
+itself.
+
+--------------------------------
+Setting package module variables
+--------------------------------
+
+Apart from modifying environment variables of the dependent package, you can also define Python
+variables to be used by the dependent. This is done by implementing
+:meth:`setup_dependent_package <spack.package_base.PackageBase.setup_dependent_package>`. An
+example of this can be found in the ``Python`` package:
+
+.. literalinclude:: _spack_root/var/spack/repos/builtin/packages/python/package.py
+   :pyobject: Python.setup_dependent_package
+   :linenos:
+
+This allows Python packages to directly use these variables:
+
+.. code-block:: python
+
+   def install(self, spec, prefix):
+       ...
+       install("script.py", python_platlib)
+
+.. note::
+
+   We recommend using ``setup_dependent_package`` sparingly, as it is not always clear where
+   global variables are coming from when editing a ``package.py`` file.
+
 -----
 Views
 -----
@@ -2963,6 +3000,33 @@ say MPICH, we'll see something like this:
 The ``provides("mpi")`` call tells Spack that the ``mpich`` package
 can be used to satisfy the dependency of any package that
 ``depends_on("mpi")``.
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Providing multiple virtuals simultaneously
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Packages can provide more than one virtual dependency. Sometimes, due to implementation details,
+there are subsets of those virtuals that need to be provided together by the same package.
+
+A well-known example is ``openblas``, which provides both the ``lapack`` and ``blas`` API in a single ``libopenblas``
+library. A package that needs ``lapack`` and ``blas`` must either use ``openblas`` to provide both, or not use
+``openblas`` at all. It cannot pick one or the other.
+
+To express this constraint in a package, the two virtual dependencies must be listed in the same ``provides`` directive:
+
+.. code-block:: python
+
+   provides('blas', 'lapack')
+
+This makes it impossible to select ``openblas`` as a provider for one of the two
+virtual dependencies and not for the other. If you try to, Spack will report an error:
+
+.. code-block:: console
+
+   $ spack spec netlib-scalapack  ^[virtuals=lapack] openblas ^[virtuals=blas] atlas
+   ==> Error: concretization failed for the following reasons:
+
+      1. Package 'openblas' needs to provide both 'lapack' and 'blas' together, but provides only 'lapack'
 
 ^^^^^^^^^^^^^^^^^^^^
 Versioned Interfaces
@@ -3466,6 +3530,56 @@ is equivalent to:
 Constraints from nested context managers are also combined together, but they are rarely
 needed or recommended.
 
+.. _default_args:
+
+------------------------
+Common default arguments
+------------------------
+
+Similarly, if directives have a common set of default arguments, you can
+group them together in a ``with default_args()`` block:
+
+.. code-block:: python
+
+   class PyExample(PythonPackage):
+
+       with default_args(type=("build", "run")):
+           depends_on("py-foo")
+           depends_on("py-foo@2:", when="@2:")
+           depends_on("py-bar")
+           depends_on("py-bz")
+
+The above is short for:
+
+.. code-block:: python
+
+   class PyExample(PythonPackage):
+
+       depends_on("py-foo", type=("build", "run"))
+       depends_on("py-foo@2:", when="@2:", type=("build", "run"))
+       depends_on("py-bar", type=("build", "run"))
+       depends_on("py-bz", type=("build", "run"))
+
+.. note::
+
+   The ``with when()`` context manager is composable, while ``with default_args()``
+   merely overrides the default. For example:
+
+   .. code-block:: python
+
+      with default_args(when="+feature"):
+          depends_on("foo")
+          depends_on("bar")
+          depends_on("baz", when="+baz")
+
+   is equivalent to:
+
+   .. code-block:: python
+
+      depends_on("foo", when="+feature")
+      depends_on("bar", when="+feature")
+      depends_on("baz", when="+baz")  # Note: not when="+feature+baz"
+
 .. _install-method:
 
 ------------------
@@ -3765,7 +3879,7 @@ Similarly, ``spack install example +feature build_system=autotools`` will pick
 the  ``AutotoolsBuilder`` and invoke ``./configure --with-my-feature``.
 
 Dependencies are always specified in the package class. When some dependencies
-depend on the choice of the build system, it is possible to use when conditions as 
+depend on the choice of the build system, it is possible to use when conditions as
 usual:
 
 .. code-block:: python
@@ -3783,7 +3897,7 @@ usual:
            depends_on("cmake@3.18:", when="@2.0:", type="build")
            depends_on("cmake@3:", type="build")
 
-       # Specify extra build dependencies used only in the configure script 
+       # Specify extra build dependencies used only in the configure script
        with when("build_system=autotools"):
            depends_on("perl", type="build")
            depends_on("pkgconfig", type="build")
@@ -4292,10 +4406,16 @@ implementation was selected for this build:
    elif "mvapich" in spec:
        configure_args.append("--with-mvapich")
 
-It's also a bit more concise than satisfies.  The difference between
-the two functions is that ``satisfies()`` tests whether spec
-constraints overlap at all, while ``in`` tests whether a spec or any
-of its dependencies satisfy the provided spec.
+It's also a bit more concise than satisfies.
+
+.. note::
+
+   The ``satisfies()`` method tests whether this spec has, at least, all the constraints of the argument spec,
+   while ``in`` tests whether a spec or any of its dependencies satisfy the provided spec.
+
+   If the provided spec is anonymous (e.g., ":1.2:", "+shared") or has the
+   same name as the spec being checked, then ``in`` works the same as
+   ``satisfies()``; however, use of ``satisfies()`` is more intuitive.
 
 ^^^^^^^^^^^^^^^^^^^^^^^
 Architecture specifiers
@@ -5197,7 +5317,7 @@ installed example.
            example = which(self.prefix.bin.example)
            example()
 
-Output showing the identification of each test part after runnig the tests
+Output showing the identification of each test part after running the tests
 is illustrated below.
 
 .. code-block:: console
@@ -5694,7 +5814,7 @@ with those implemented in the package itself.
    * - `Cxx
        <https://github.com/spack/spack/blob/develop/var/spack/repos/builtin/packages/cxx>`_
      - Compiles and runs several ``hello`` programs
-   * - `Fortan
+   * - `Fortran
        <https://github.com/spack/spack/blob/develop/var/spack/repos/builtin/packages/fortran>`_
      - Compiles and runs ``hello`` programs (``F`` and ``f90``)
    * - `Mpi
@@ -6831,25 +6951,73 @@ the adapter role is to "emulate" a method resolution order like the one represen
 Specifying License Information
 ------------------------------
 
-A significant portion of software that Spack packages is open source. Most open
-source software is released under one or more common open source licenses.
-Specifying the specific license that a package is released under in a project's
-`package.py` is good practice. To specify a license, find the SPDX identifier for
-a project and then add it using the license directive:
+Most of the software in Spack is open source, and most open source software is released
+under one or more `common open source licenses <https://opensource.org/licenses/>`_.
+Specifying the license that a package is released under in a project's
+`package.py` is good practice. To specify a license, find the `SPDX identifier
+<https://spdx.org/licenses/>`_ for a project and then add it using the license
+directive:
 
 .. code-block:: python
 
    license("<SPDX Identifier HERE>")
 
+For example, the SPDX ID for the Apache Software License, version 2.0 is ``Apache-2.0``,
+so you'd write:
+
+.. code-block:: python
+
+   license("Apache-2.0")
+
+Or, for a dual-licensed package like Spack, you would use an `SPDX Expression
+<https://spdx.github.io/spdx-spec/v2-draft/SPDX-license-expressions/>`_ with both of its
+licenses:
+
+.. code-block:: python
+
+   license("Apache-2.0 OR MIT")
+
 Note that specifying a license without a when clause makes it apply to all
 versions and variants of the package, which might not actually be the case.
 For example, a project might have switched licenses at some point or have
 certain build configurations that include files that are licensed differently.
-To account for this, you can specify when licenses should be applied. For
-example, to specify that a specific license identifier should only apply
-to versionup to and including 1.5, you could write the following directive:
+Spack itself used to be under the ``LGPL-2.1`` license, until it was relicensed
+in version ``0.12`` in 2018.
+
+You can specify when a ``license()`` directive applies using with a ``when=``
+clause, just like other directives. For example, to specify that a specific
+license identifier should only apply to versions up to ``0.11``, but another
+license should apply for later versions, you could write:
 
 .. code-block:: python
 
-   license("...", when="@:1.5")
+   license("LGPL-2.1", when="@:0.11")
+   license("Apache-2.0 OR MIT", when="@0.12:")
 
+Note that unlike for most other directives, the ``when=`` constraints in the
+``license()`` directive can't intersect. Spack needs to be able to resolve
+exactly one license identifier expression for any given version. To specify
+*multiple* licenses, use SPDX expressions and operators as above. The operators
+you probably care most about are:
+
+* ``OR``: user chooses one license to adhere to; and
+* ``AND``: user has to adhere to all the licenses.
+
+You may also care about `license exceptions
+<https://spdx.org/licenses/exceptions-index.html>`_ that use the ``WITH`` operator,
+e.g. ``Apache-2.0 WITH LLVM-exception``.
+
+Many of the licenses that are currently in the spack repositories have been
+automatically determined. While this is great for bulk adding license
+information and is most likely correct, there are sometimes edge cases that
+require manual intervention. To determine which licenses are validated and
+which are not, there is the `checked_by` parameter in the license directive:
+
+.. code-block:: python
+
+   license("<license>", when="<when>", checked_by="<github username>")
+
+When you have validated a github license, either when doing so explicitly or
+as part of packaging a new package, please set the `checked_by` parameter
+to your Github username to signal that the license has been manually
+verified.

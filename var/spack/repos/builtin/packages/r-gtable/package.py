@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,8 @@ class RGtable(RPackage):
     compositions can be build up sequentially."""
 
     cran = "gtable"
+
+    license("MIT")
 
     version("0.3.3", sha256="2f9a58d978e2a487b7fd8841539ea33cf948e55ddf6f7a9bd2dd3362600a7b3a")
     version("0.3.1", sha256="8bd62c5722d5188914d667cabab12991c555f657f4f5ce7b547571ae3aec7cb5")

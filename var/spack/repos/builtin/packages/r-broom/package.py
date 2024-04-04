@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,6 +19,8 @@ class RBroom(RPackage):
     observations to a dataset, such as fitted values or influence measures."""
 
     cran = "broom"
+
+    license("MIT")
 
     version("1.0.4", sha256="1d5f11b509786a8a45ffdd137243e24d6445f2944947cbd62a0734a06add0ad6")
     version("1.0.1", sha256="4b5e5aa485f0e23ed993088fc84159e31a00087e3a12327071dda25193382892")

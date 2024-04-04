@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,8 @@ class Kaldi(Package):  # Does not use Autotools
 
     homepage = "https://github.com/kaldi-asr/kaldi"
     git = "https://github.com/kaldi-asr/kaldi.git"
+
+    license("Apache-2.0")
 
     version("master")
     version("2021-11-16", commit="6e03a3f5f99d6d8c22494d90b7e7f9ceb0117ac8")
