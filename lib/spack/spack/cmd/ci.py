@@ -550,12 +550,7 @@ def ci_rebuild(args):
     # No hash match anywhere means we need to rebuild spec
 
     # Start with spack arguments
-    spack_cmd = [SPACK_COMMAND,
-        "--color=always",
-        "--backtrace",
-        "--verbose",
-        "install"
-    ]
+    spack_cmd = [SPACK_COMMAND, "--color=always", "--backtrace", "--verbose", "install"]
 
     config = cfg.get("config")
     if not config["verify_ssl"]:
@@ -585,7 +580,7 @@ def ci_rebuild(args):
     commands = [
         # apparently there's a race when spack bootstraps? do it up front once
         spack_cmd + deps_install_args + [slash_hash],
-        spack_cmd + root_install_args + [slash_hash]
+        spack_cmd + root_install_args + [slash_hash],
     ]
 
     tty.debug("Installing {0} from source".format(job_spec.name))
