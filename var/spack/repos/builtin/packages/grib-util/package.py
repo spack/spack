@@ -22,6 +22,7 @@ class GribUtil(CMakePackage):
     version("1.2.3", sha256="b17b08e12360bb8ad01298e615f1b4198e304b0443b6db35fe990a817e648ad5")
 
     variant("openmp", default=False, description="Use OpenMP multithreading")
+    variant("tests", default=False, description="Enable this variant when installing with --test")
 
     depends_on("jasper")
     depends_on("libpng")
@@ -30,15 +31,19 @@ class GribUtil(CMakePackage):
     requires("^w3emc precision=4,d", when="^w3emc@2.10:")
     depends_on("w3nco", when="@:1.2.3")
     depends_on("g2")
+    depends_on("g2c@1.8: +utils", when="+tests")
     depends_on("bacio")
     depends_on("ip")
-    depends_on("ip@:3.3.3", when="@:1.2.4")
-    depends_on("sp")
+    requires("^ip precision=d", when="^ip@4.1:")
+    depends_on("ip@:3.3.3", when="@:1.2")
+    depends_on("sp", when="^ip@:4")
+    requires("^sp precision=d", when="^ip@:4 ^sp@2.4:")
 
     def cmake_args(self):
         args = [
             self.define_from_variant("OPENMP", "openmp"),
             self.define("BUILD_TESTING", self.run_tests),
+            self.define("G2C_COMPARE", self.run_tests),
         ]
         return args
 

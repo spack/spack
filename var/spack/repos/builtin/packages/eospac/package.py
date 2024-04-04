@@ -23,8 +23,18 @@ class Eospac(Package):
     # - alpha and beta versions are marked with 'deprecated=True' to help
     #   spack's version comparison.
     version(
-        "6.5.7",
+        "6.5.9",
         preferred=True,
+        sha256="54df29b1dc3b35c654ef2ebfbfa42d960a230cfb2d3c04a75ba93d3a789a312a",
+        url="https://laws.lanl.gov/projects/data/eos/get_file.php?package=eospac&filename=eospac_v6.5.9_4c633156bacc7b721bdd2735e40e09984a4d60a3.tgz",
+    )
+    version(
+        "6.5.8",
+        sha256="4e2c5db150bf7f45b5615c034848b9256f8659bcde95f097e446c226c70c6d96",
+        url="https://laws.lanl.gov/projects/data/eos/get_file.php?package=eospac&filename=eospac_v6.5.8_052127ccd65148632bd1258764f455c692a4dfc1.tgz",
+    )
+    version(
+        "6.5.7",
         sha256="e59bd449bf97ce977309c6fc8a54fa30f4db9b2ca3e21f996095d78e23799e42",
         url="https://laws.lanl.gov/projects/data/eos/get_file.php?package=eospac&filename=eospac_v6.5.7_9a867a15ae4137d22e1b52199d6a46b486fc4376.tgz",
     )

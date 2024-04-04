@@ -104,7 +104,7 @@ class Axom(CachedCMakePackage, CudaPackage, ROCmPackage):
     depends_on("cmake@3.21:", type="build", when="+rocm")
 
     depends_on("blt", type="build")
-    depends_on("blt@0.5.1:", type="build", when="@0.6.1:")
+    depends_on("blt@0.5.1:0.5.3", type="build", when="@0.6.1:")
 
     depends_on("mpi", when="+mpi")
 
@@ -122,13 +122,13 @@ class Axom(CachedCMakePackage, CudaPackage, ROCmPackage):
     depends_on("scr~fortran", when="+scr~fortran")
 
     with when("+umpire"):
-        depends_on("umpire@2022.03.0:", when="@0.7.0:")
+        depends_on("umpire@2022.03.0:2023.06", when="@0.7.0:")
         depends_on("umpire@6.0.0", when="@0.6.0")
         depends_on("umpire@5:5.0.1", when="@:0.5.0")
         depends_on("umpire +openmp", when="+openmp")
 
     with when("+raja"):
-        depends_on("raja@2022.03.0:", when="@0.7.0:")
+        depends_on("raja@2022.03.0:2023.06", when="@0.7.0:")
         depends_on("raja@0.14.0", when="@0.6.0")
         depends_on("raja@:0.13.0", when="@:0.5.0")
         depends_on("raja~openmp", when="~openmp")
