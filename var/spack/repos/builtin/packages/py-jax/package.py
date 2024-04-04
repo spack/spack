@@ -22,8 +22,6 @@ class PyJax(PythonPackage):
     pypi = "jax/jax-0.2.25.tar.gz"
 
     license("Apache-2.0")
-    maintainers("adamjstewart")
-
     maintainers("adamjstewart", "jonas-eschle")
 
     version("0.4.25", sha256="a8ee189c782de2b7b2ffb64a8916da380b882a617e2769aa429b71d79747b982")
