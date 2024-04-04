@@ -199,28 +199,18 @@ def getuid():
 
 
 def _win_rename(src, dst):
-    tmp_dir = ""
     # os.replace will still fail if on Windows (but not POSIX) if the dst
     # is a symlink to a directory (all other cases have parity Windows <-> Posix)
-    @contextmanager
-    def safe_rename(src, dst):
-        if os.path.isdir(os.path.relapath(dst)):
-            # If dst exists and is a symlink to a directory
-            # we need to remove dst and rename/replace
-            # if dst == src (i.e. they're the same symlink)
-            # removing dst directly will delete src, copy src to a temp directory
-            # and perform rename from there.
-            tmp_dir = tempfile.mkdtemp()
-            tmp_copy = os.path.join(tmp_dir, os.path.basename(src))
-            shutil.copyfile(src, tmp_copy) if os.path.isfile(src) else copy_tree(src, tmp_copy)
-            os.remove(dst)
-            if not os.path.exists(src):
-                # dst and src were the same,
-                src = tmp_copy
-            yield
-            shutil.rmtree(tmp_dir)
-    with safe_rename(src, dst):
-        os.replace(src, dst)
+    if os.path.islink(dst) and os.path.isdir(os.path.realpath(dst)):
+        if os.path.samefile(src, dst):
+            # src and dst are the same
+            # do nothing and exit early
+            return
+        # If dst exists and is a symlink to a directory
+        # we need to remove dst and then perform rename/replace
+        # this is safe to do as there's no chance src == dst now
+        os.remove(dst)
+    os.replace(src, dst)
 
 
 @system_path_filter
