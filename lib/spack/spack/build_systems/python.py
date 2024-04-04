@@ -371,8 +371,9 @@ class PythonPackage(PythonExtension):
 
         # Headers should only be in include or platlib, but no harm in checking purelib too
         include = self.prefix.join(self.spec["python"].package.include).join(name)
-        platlib = self.prefix.join(self.spec["python"].package.platlib).join(name)
-        purelib = self.prefix.join(self.spec["python"].package.purelib).join(name)
+        python, *_ = self.spec.dependencies("python-venv") or self.spec.dependencies("python")
+        platlib = self.prefix.join(python.package.platlib).join(name)
+        purelib = self.prefix.join(python.package.purelib).join(name)
 
         headers_list = map(fs.find_all_headers, [include, platlib, purelib])
         headers = functools.reduce(operator.add, headers_list)
@@ -391,8 +392,9 @@ class PythonPackage(PythonExtension):
         name = self.spec.name[3:]
 
         # Libraries should only be in platlib, but no harm in checking purelib too
-        platlib = self.prefix.join(self.spec["python"].package.platlib).join(name)
-        purelib = self.prefix.join(self.spec["python"].package.purelib).join(name)
+        python, *_ = self.spec.dependencies("python-venv") or self.spec.dependencies("python")
+        platlib = self.prefix.join(python.package.platlib).join(name)
+        purelib = self.prefix.join(python.package.purelib).join(name)
 
         find_all_libraries = functools.partial(fs.find_all_libraries, recursive=True)
         libs_list = map(find_all_libraries, [platlib, purelib])
