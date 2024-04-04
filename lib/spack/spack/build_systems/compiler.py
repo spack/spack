@@ -93,17 +93,26 @@ class CompilerPackage(spack.package_base.PackageBase):
         # same directory: one with a canonical name, e.g. "gfortran", and another one with the
         # target prefix, e.g. "x86_64-pc-linux-gnu-gfortran". There also might be a copy of "gcc"
         # with the version suffix, e.g. "x86_64-pc-linux-gnu-gcc-6.3.0". To ensure the consistency
-        # of values in the "compilers" dictionary (i.e. we prefer all of them to reference copies
+        # of values in the "paths" dictionary (i.e. we prefer all of them to reference copies
         # with canonical names if possible), we iterate over the executables in the reversed sorted
         # order:
-
+        # First pass over languages identifies exes that are perfect matches for canonical names
+        # Second pass checks for names with prefix/suffix
+        # Second pass is sorted by language name length because longer named languages
+        # e.g. cxx can often contain the names of shorter named languages
+        # e.g. c (e.g. clang/clang++)
         paths = {}
         for exe in sorted(exes, reverse=True):
             for lang in cls.compiler_languages:
-                for name in getattr(cls, f"{lang}_names"):
-                    if name in os.path.basename(exe):
-                        paths[lang] = exe
-                        break
+                if os.path.basename(exe) in getattr(cls, f"{lang}_names"):
+                    paths[lang] = exe
+                    break
+            else:
+                for lang in sorted(cls.compiler_languages, key=len, reverse=True):
+                    for name in getattr(cls, f"{lang}_names"):
+                        if name in os.path.basename(exe):
+                            paths[lang] = exe
+                            break
         return paths
 
     @classmethod
