@@ -136,7 +136,7 @@ def test_get_dependent_ids(install_mockery, mock_packages):
     spec.concretize()
     assert spec.concrete
 
-    pkg_id = inst.package_id(spec.package)
+    pkg_id = inst.package_id(spec)
 
     # Grab the sole dependency of 'a', which is 'b'
     dep = spec.dependencies()[0]
@@ -385,7 +385,7 @@ def test_ensure_locked_have(install_mockery, tmpdir, capsys):
     const_arg = installer_args(["trivial-install-test-package"], {})
     installer = create_installer(const_arg)
     spec = installer.build_requests[0].pkg.spec
-    pkg_id = inst.package_id(spec.package)
+    pkg_id = inst.package_id(spec)
 
     with tmpdir.as_cwd():
         # Test "downgrade" of a read lock (to a read lock)
@@ -456,17 +456,15 @@ def test_ensure_locked_new_warn(install_mockery, monkeypatch, tmpdir, capsys):
 
 def test_package_id_err(install_mockery):
     s = spack.spec.Spec("trivial-install-test-package")
-    pkg_cls = spack.repo.PATH.get_pkg_class(s.name)
     with pytest.raises(ValueError, match="spec is not concretized"):
-        inst.package_id(pkg_cls(s))
+        inst.package_id(s)
 
 
 def test_package_id_ok(install_mockery):
     spec = spack.spec.Spec("trivial-install-test-package")
     spec.concretize()
     assert spec.concrete
-    pkg = spec.package
-    assert pkg.name in inst.package_id(pkg)
+    assert spec.name in inst.package_id(spec)
 
 
 def test_fake_install(install_mockery):
@@ -726,7 +724,7 @@ def test_check_deps_status_external(install_mockery, monkeypatch):
     installer._check_deps_status(request)
 
     for dep in request.spec.traverse(root=False):
-        assert inst.package_id(dep.package) in installer.installed
+        assert inst.package_id(dep) in installer.installed
 
 
 def test_check_deps_status_upstream(install_mockery, monkeypatch):
@@ -739,7 +737,7 @@ def test_check_deps_status_upstream(install_mockery, monkeypatch):
     installer._check_deps_status(request)
 
     for dep in request.spec.traverse(root=False):
-        assert inst.package_id(dep.package) in installer.installed
+        assert inst.package_id(dep) in installer.installed
 
 
 def test_add_bootstrap_compilers(install_mockery, monkeypatch):
@@ -1111,7 +1109,7 @@ def test_install_fail_fast_on_detect(install_mockery, monkeypatch, capsys):
     const_arg = installer_args(["b"], {"fail_fast": False})
     const_arg.extend(installer_args(["c"], {"fail_fast": True}))
     installer = create_installer(const_arg)
-    pkg_ids = [inst.package_id(spec.package) for spec, _ in const_arg]
+    pkg_ids = [inst.package_id(spec) for spec, _ in const_arg]
 
     # Make sure all packages are identified as failed
     #
@@ -1186,7 +1184,7 @@ def test_install_lock_installed_requeue(install_mockery, monkeypatch, capfd):
     const_arg = installer_args(["b"], {})
     b, _ = const_arg[0]
     installer = create_installer(const_arg)
-    b_pkg_id = inst.package_id(b.package)
+    b_pkg_id = inst.package_id(b)
 
     def _prep(installer, task):
         installer.installed.add(b_pkg_id)
@@ -1196,7 +1194,7 @@ def test_install_lock_installed_requeue(install_mockery, monkeypatch, capfd):
         monkeypatch.setattr(inst.PackageInstaller, "_ensure_locked", _not_locked)
 
     def _requeued(installer, task, install_status):
-        tty.msg("requeued {0}".format(inst.package_id(task.pkg)))
+        tty.msg("requeued {0}".format(inst.package_id(task.pkg.spec)))
 
     # Flag the package as installed
     monkeypatch.setattr(inst.PackageInstaller, "_prepare_for_install", _prep)
@@ -1262,7 +1260,7 @@ def test_install_skip_patch(install_mockery, mock_fetch):
     installer.install()
 
     spec, install_args = const_arg[0]
-    assert inst.package_id(spec.package) in installer.installed
+    assert inst.package_id(spec) in installer.installed
 
 
 def test_install_implicit(install_mockery, mock_fetch):
