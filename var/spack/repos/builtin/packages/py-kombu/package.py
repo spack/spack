@@ -36,7 +36,7 @@ class PyKombu(PythonPackage):
     variant("redis", default=False, description="Use redis transport")
 
     depends_on("py-setuptools", type="build")
-    depends_on("py-amqp@2.4.0:2.4.99", when="@4.3.0:4.5.0", type=("build", "run"))
+    depends_on("py-amqp@2.4", when="@4.3.0:4.5.0", type=("build", "run"))
     depends_on("py-amqp@2.5.0", when="@4.6.0:4.6.3", type=("build", "run"))
     depends_on("py-amqp@2.5.1", when="@4.6.4:4.6.5", type=("build", "run"))
     depends_on("py-amqp@2.5.2:2.5.99", when="@4.6.6:4.6.8", type=("build", "run"))
