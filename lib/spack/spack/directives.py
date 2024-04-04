@@ -624,7 +624,7 @@ def redistribute(source=None, binary=None, when: WhenType = None):
 
 
 def _execute_redistribute(
-    pkg: "spack.package_base.PackageBase", source, binary, when: WhenType = None
+    pkg: "spack.package_base.PackageBase", source=None, binary=None, when: WhenType = None
 ):
     if source is None and binary is None:
         return
@@ -648,11 +648,11 @@ def _execute_redistribute(
             raise DirectiveError("Source distribution can only be disabled for versions")
 
     if when_spec in pkg.disable_redistribute:
-        redistribute = pkg.disable_redistribute[when_spec]
+        disable = pkg.disable_redistribute[when_spec]
         if not source:
-            redistribute.source = False
+            disable.source = True
         if not binary:
-            redistribute.binary = False
+            disable.binary = True
     else:
         pkg.disable_redistribute[when_spec] = DisableRedistribute(
             source=not source, binary=not binary

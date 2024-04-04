@@ -205,3 +205,18 @@ def test_redistribute_directive(test_repo, spec_str, distribute_src, distribute_
     assert spec.package_class.redistribute_source(spec) == distribute_src
     concretized_spec = spec.concretized()
     assert concretized_spec.package.redistribute_binary == distribute_bin
+
+
+def test_redistribute_override_when():
+    class MockPackage:
+        name = "mock"
+        disable_redistribute = {}
+
+    cls = MockPackage
+    spack.directives._execute_redistribute(cls, source=False, when="@1.0")
+    spec_key = spack.directives._make_when_spec("@1.0")
+    assert not cls.disable_redistribute[spec_key].binary
+    assert cls.disable_redistribute[spec_key].source
+    spack.directives._execute_redistribute(cls, binary=False, when="@1.0")
+    assert cls.disable_redistribute[spec_key].binary
+    assert cls.disable_redistribute[spec_key].source
