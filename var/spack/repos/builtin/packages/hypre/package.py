@@ -286,11 +286,10 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
 
         if spec.satisfies("+sycl"):
             configure_args.append("--with-sycl")
-            sycl_compatible_compilers = ["dpcpp", "icpx"]
+            sycl_compatible_compilers = ["icpx"]
             if not (os.path.basename(self.compiler.cxx) in sycl_compatible_compilers):
                 raise InstallError(
-                    "Hypre's SYCL GPU Backend requires DPC++ (dpcpp)"
-                    + " or the oneAPI CXX (icpx) compiler."
+                    "Hypre's SYCL GPU Backend requires the oneAPI CXX (icpx) compiler."
                 )
 
         if spec.satisfies("+unified-memory"):

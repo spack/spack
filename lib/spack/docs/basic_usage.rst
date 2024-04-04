@@ -1119,6 +1119,9 @@ and ``3.4.2``.  Similarly, ``@4.2:`` means any version above and including
 ``4.2``.  As a short-hand, ``@3`` is equivalent to the range ``@3:3`` and
 includes any version with major version ``3``.
 
+Versions are ordered lexicograpically by its components. For more details
+on the order, see :ref:`the packaging guide <version-comparison>`.
+
 Notice that you can distinguish between the specific version ``@=3.2`` and
 the range ``@3.2``. This is useful for packages that follow a versioning
 scheme that omits the zero patch version number: ``3.2``, ``3.2.1``,

@@ -188,6 +188,127 @@ def test_env_remove(capfd):
     assert "bar" not in out
 
 
+def test_env_rename_managed(capfd):
+    # Need real environment
+    with pytest.raises(spack.main.SpackCommandError):
+        env("rename", "foo", "bar")
+    assert (
+        "The specified name does not correspond to a managed spack environment"
+        in capfd.readouterr()[0]
+    )
+
+    env("create", "foo")
+
+    out = env("list")
+    assert "foo" in out
+
+    out = env("rename", "foo", "bar")
+    assert "Successfully renamed environment foo to bar" in out
+
+    out = env("list")
+    assert "foo" not in out
+    assert "bar" in out
+
+    bar = ev.read("bar")
+    with bar:
+        # Cannot rename active environment
+        with pytest.raises(spack.main.SpackCommandError):
+            env("rename", "bar", "baz")
+        assert "Cannot rename active environment" in capfd.readouterr()[0]
+
+        env("create", "qux")
+
+        # Cannot rename to an active environment (even with force flag)
+        with pytest.raises(spack.main.SpackCommandError):
+            env("rename", "-f", "qux", "bar")
+        assert "bar is an active environment" in capfd.readouterr()[0]
+
+        # Can rename inactive environment when another's active
+        out = env("rename", "qux", "quux")
+        assert "Successfully renamed environment qux to quux" in out
+
+    out = env("list")
+    assert "bar" in out
+    assert "baz" not in out
+
+    env("create", "baz")
+
+    # Cannot rename to existing environment without --force
+    with pytest.raises(spack.main.SpackCommandError):
+        env("rename", "bar", "baz")
+    errmsg = (
+        "The new name corresponds to an existing environment;"
+        " specify the --force flag to overwrite it."
+    )
+    assert errmsg in capfd.readouterr()[0]
+
+    env("rename", "-f", "bar", "baz")
+    out = env("list")
+    assert "bar" not in out
+    assert "baz" in out
+
+
+def test_env_rename_anonymous(capfd, tmpdir):
+    # Need real environment
+    with pytest.raises(spack.main.SpackCommandError):
+        env("rename", "-d", "./non-existing", "./also-non-existing")
+    assert (
+        "The specified path does not correspond to a valid spack environment"
+        in capfd.readouterr()[0]
+    )
+
+    anon_foo = str(tmpdir / "foo")
+    env("create", "-d", anon_foo)
+
+    anon_bar = str(tmpdir / "bar")
+    out = env("rename", "-d", anon_foo, anon_bar)
+    assert f"Successfully renamed environment {anon_foo} to {anon_bar}" in out
+    assert not ev.is_env_dir(anon_foo)
+    assert ev.is_env_dir(anon_bar)
+
+    # Cannot rename active environment
+    anon_baz = str(tmpdir / "baz")
+    env("activate", "--sh", "-d", anon_bar)
+    with pytest.raises(spack.main.SpackCommandError):
+        env("rename", "-d", anon_bar, anon_baz)
+    assert "Cannot rename active environment" in capfd.readouterr()[0]
+    env("deactivate", "--sh")
+
+    assert ev.is_env_dir(anon_bar)
+    assert not ev.is_env_dir(anon_baz)
+
+    # Cannot rename to existing environment without --force
+    env("create", "-d", anon_baz)
+    with pytest.raises(spack.main.SpackCommandError):
+        env("rename", "-d", anon_bar, anon_baz)
+    errmsg = (
+        "The new path corresponds to an existing environment;"
+        " specify the --force flag to overwrite it."
+    )
+    assert errmsg in capfd.readouterr()[0]
+    assert ev.is_env_dir(anon_bar)
+    assert ev.is_env_dir(anon_baz)
+
+    env("rename", "-f", "-d", anon_bar, anon_baz)
+    assert not ev.is_env_dir(anon_bar)
+    assert ev.is_env_dir(anon_baz)
+
+    # Cannot rename to existing (non-environment) path without --force
+    qux = tmpdir / "qux"
+    qux.mkdir()
+    anon_qux = str(qux)
+    assert not ev.is_env_dir(anon_qux)
+
+    with pytest.raises(spack.main.SpackCommandError):
+        env("rename", "-d", anon_baz, anon_qux)
+    errmsg = "The new path already exists; specify the --force flag to overwrite it."
+    assert errmsg in capfd.readouterr()[0]
+
+    env("rename", "-f", "-d", anon_baz, anon_qux)
+    assert not ev.is_env_dir(anon_baz)
+    assert ev.is_env_dir(anon_qux)
+
+
 def test_concretize():
     e = ev.create("test")
     e.add("mpileaks")
@@ -856,6 +977,7 @@ spack:
     assert any(x.satisfies("mpileaks@2.2") for x in e._get_environment_specs())
 
 
+@pytest.mark.only_clingo("original concretizer does not support requirements")
 def test_config_change_existing(mutable_mock_env_path, tmp_path, mock_packages, mutable_config):
     """Test ``config change`` with config in the ``spack.yaml`` as well as an
     included file scope.
@@ -931,6 +1053,7 @@ spack:
         spack.spec.Spec("bowtie@1.2.2").concretized()
 
 
+@pytest.mark.only_clingo("original concretizer does not support requirements")
 def test_config_change_new(mutable_mock_env_path, tmp_path, mock_packages, mutable_config):
     spack_yaml = tmp_path / ev.manifest_name
     spack_yaml.write_text(
@@ -3038,6 +3161,41 @@ spack:
                     assert spec.prefix in contents
 
 
+@pytest.mark.disable_clean_stage_check
+def test_install_develop_keep_stage(
+    environment_from_manifest, install_mockery, mock_fetch, monkeypatch, tmpdir
+):
+    """Develop a dependency of a package and make sure that the associated
+    stage for the package is retained after a successful install.
+    """
+    environment_from_manifest(
+        """
+spack:
+  specs:
+  - mpileaks
+"""
+    )
+
+    monkeypatch.setattr(spack.stage.DevelopStage, "destroy", _always_fail)
+
+    with ev.read("test") as e:
+        libelf_dev_path = tmpdir.ensure("libelf-test-dev-path", dir=True)
+        develop(f"--path={libelf_dev_path}", "libelf@0.8.13")
+        concretize()
+        (libelf_spec,) = e.all_matching_specs("libelf")
+        (mpileaks_spec,) = e.all_matching_specs("mpileaks")
+        assert not os.path.exists(libelf_spec.package.stage.path)
+        assert not os.path.exists(mpileaks_spec.package.stage.path)
+        install()
+        assert os.path.exists(libelf_spec.package.stage.path)
+        assert not os.path.exists(mpileaks_spec.package.stage.path)
+
+
+# Helper method for test_install_develop_keep_stage
+def _always_fail(cls, *args, **kwargs):
+    raise Exception("Restage or destruction of dev stage detected during install")
+
+
 @pytest.mark.regression("24148")
 def test_virtual_spec_concretize_together(tmpdir):
     # An environment should permit to concretize "mpi"
@@ -3131,7 +3289,7 @@ def test_create_and_activate_managed(tmp_path):
         env("deactivate")
 
 
-def test_create_and_activate_unmanaged(tmp_path):
+def test_create_and_activate_anonymous(tmp_path):
     with fs.working_dir(str(tmp_path)):
         env_dir = os.path.join(str(tmp_path), "foo")
         shell = env("activate", "--without-view", "--create", "--sh", "-d", env_dir)

@@ -155,4 +155,6 @@ class Target:
                 # log this and just return compiler.version instead
                 tty.debug(str(e))
 
-        return self.microarchitecture.optimization_flags(compiler.name, str(compiler_version))
+        return self.microarchitecture.optimization_flags(
+            compiler.name, compiler_version.dotted_numeric_string
+        )

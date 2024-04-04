@@ -28,6 +28,8 @@ class Xz(MSBuildPackage, AutotoolsPackage, SourceforgePackage):
 
     license("GPL-2.0-or-later AND Public-Domain AND LGPL-2.1-or-later", checked_by="tgamblin")
 
+    # NOTE: don't add XZ 5.6 until this compromise is resolved:
+    # https://www.openwall.com/lists/oss-security/2024/03/29/4
     version("5.4.6", sha256="913851b274e8e1d31781ec949f1c23e8dbcf0ecf6e73a2436dc21769dd3e6f49")
     version("5.4.5", sha256="8ccf5fff868c006f29522e386fb4c6a1b66463fbca65a4cfc3c4bd596e895e79")
     version("5.4.1", sha256="dd172acb53867a68012f94c17389401b2f274a1aa5ae8f84cbfb8b7e383ea8d3")
