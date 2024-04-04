@@ -959,7 +959,7 @@ e4s-cray-sles-build:
   - /^v.*/
   - /^develop-[\d]{4}-[\d]{2}-[\d]{2}$/
   image: "gcr.io/google.com/cloudsdktool/google-cloud-cli:459.0.0"
-  tags: ["spack", "public", "medium", "gcp", "x86_64"]
+  tags: ["spack", "public", "medium", "gcp", "x86_64-gcp"]
   retry:
     max: 2
     when: ["runner_system_failure", "stuck_or_timeout_failure"]
@@ -978,7 +978,7 @@ e4s-cray-sles-build:
 
 gcp-base-generate:
   extends: [ ".generate-base", ".gcp-base" ]
-  tags: [ "gcp", "base", "x86_64", "medium"]
+  tags: [ "gcp", "base", "x86_64-gcp", "medium"]
   image: "ghcr.io/spack/e4s-centos-7:v2023-10-30"
 
 gcp-base-build:
