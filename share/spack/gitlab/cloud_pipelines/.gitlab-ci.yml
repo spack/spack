@@ -14,10 +14,10 @@ default:
   image: { "name": "ghcr.io/spack/e4s-ubuntu-18.04:v2021-10-18", "entrypoint": [""] }
 
 # CI Platform-Arch
-.cray_rhel_zen4:
+.cray_rhel_x86_64_v3:
   variables:
     SPACK_TARGET_PLATFORM: "cray-rhel"
-    SPACK_TARGET_ARCH: "zen4"
+    SPACK_TARGET_ARCH: "x86_64_v3"
 
 .cray_sles_zen4:
   variables:
@@ -891,7 +891,7 @@ aws-pcluster-build-neoverse_v1:
     - module list
 
 .generate-cray-rhel:
-  tags: [ "cray-rhel-zen4", "public" ]
+  tags: [ "cray-rhel", "cray_x86_64_v3", "public", "staging" ]
   extends: [ ".generate-cray" ]
 
 .generate-cray-sles:
@@ -903,7 +903,7 @@ aws-pcluster-build-neoverse_v1:
 # E4S - Cray RHEL
 #######################################
 .e4s-cray-rhel:
-  extends: [ ".cray_rhel_zen4" ]
+  extends: [ ".cray_rhel_x86_64_v3" ]
   variables:
     SPACK_CI_STACK_NAME: e4s-cray-rhel
 
