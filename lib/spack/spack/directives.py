@@ -617,36 +617,41 @@ def redistribute(source=None, binary=None, when: WhenType = None):
     to explicitly disable redistribution for specs.
     """
 
-    def _execute_redistribute(pkg: "spack.package_base.PackageBase"):
-        nonlocal source
-        nonlocal binary
+    return lambda pkg: _execute_redistribute(pkg, source, binary, when)
 
-        if source is None and binary is None:
-            return
-        elif (source is True) or (binary is True):
-            raise DirectiveError(
-                "Source/binary distribution are true by default, they can only "
-                "be explicitly disabled."
-            )
 
-        if source is None:
-            source = True
-        if binary is None:
-            binary = True
-
-        when_spec = _make_when_spec(when)
-        if not when_spec:
-            return
-        if source is False:
-            max_constraint = spack.spec.Spec(f"{pkg.name}@{when_spec.versions}")
-            if not max_constraint.satisfies(when_spec):
-                raise DirectiveError("Source distribution can only be disabled for versions")
-
-        pkg.disable_redistribute[when_spec] = DisableRedistribute(
-            source=not source, binary=not binary
+def _execute_redistribute(pkg: "spack.package_base.PackageBase", source, binary, when: WhenType = None):
+    if source is None and binary is None:
+        return
+    elif (source is True) or (binary is True):
+        raise DirectiveError(
+            "Source/binary distribution are true by default, they can only "
+            "be explicitly disabled."
         )
 
-    return _execute_redistribute
+    if source is None:
+        source = True
+    if binary is None:
+        binary = True
+
+    when_spec = _make_when_spec(when)
+    if not when_spec:
+        return
+    if source is False:
+        max_constraint = spack.spec.Spec(f"{pkg.name}@{when_spec.versions}")
+        if not max_constraint.satisfies(when_spec):
+            raise DirectiveError("Source distribution can only be disabled for versions")
+
+    if when_spec in pkg.disable_redistribute:
+        redistribute = pkg.disable_redistribute[when_spec]
+        if not source:
+            redistribute.source = False
+        if not binary:
+            redistribute.binary = False
+
+    pkg.disable_redistribute[when_spec] = DisableRedistribute(
+        source=not source, binary=not binary
+    )
 
 
 @directive(("extendees", "dependencies"))
