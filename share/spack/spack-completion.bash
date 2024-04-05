@@ -1441,7 +1441,7 @@ _spack_mirror_destroy() {
 _spack_mirror_add() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --scope --type --unsigned --signed --s3-access-key-id --s3-access-key-secret --s3-access-token --s3-profile --s3-endpoint-url --oci-username --oci-password"
+        SPACK_COMPREPLY="-h --help --scope --type --autopush --unsigned --signed --s3-access-key-id --s3-access-key-secret --s3-access-token --s3-profile --s3-endpoint-url --oci-username --oci-password"
     else
         _mirrors
     fi

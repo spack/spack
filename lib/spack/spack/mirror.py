@@ -276,6 +276,9 @@ class Mirror:
     def get_endpoint_url(self, direction: str) -> Optional[str]:
         return self._get_value("endpoint_url", direction)
 
+    def get_autopush(self) -> Optional[str]:
+        return self._get_value("autopush", "push")
+
 
 class MirrorCollection(collections.abc.Mapping):
     """A mapping of mirror names to mirrors."""
