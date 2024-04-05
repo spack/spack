@@ -22,7 +22,9 @@ spack:
   ci:
     pipeline-gen:
     - build-job:
-        tags: ["gcp"]
+        tags: ["gcp", "x86_64-gcp"]
+      build-job-remove:
+        tags: ["x86_64", "x86_64_v2", "x86_64_v3", "x86_64_v4"]
         image: "ghcr.io/spack/e4s-centos-7:v2023-10-30"
 
   cdash:
