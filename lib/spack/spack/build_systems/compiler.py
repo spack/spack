@@ -101,19 +101,20 @@ class CompilerPackage(spack.package_base.PackageBase):
         # Second pass is sorted by language name length because longer named languages
         # e.g. cxx can often contain the names of shorter named languages
         # e.g. c (e.g. clang/clang++)
-        paths = {}
+        by_lang = {lang: [] for lang in cls.compiler_languages}
         for exe in sorted(exes, reverse=True):
             for lang in cls.compiler_languages:
                 if os.path.basename(exe) in getattr(cls, f"{lang}_names"):
-                    paths[lang] = exe
+                    by_lang[lang].append(exe)
                     break
             else:
-                for lang in sorted(cls.compiler_languages, key=len, reverse=True):
+                for lang in sorted(cls.compiler_languages, key=len):
                     for name in getattr(cls, f"{lang}_names"):
                         if name in os.path.basename(exe):
-                            paths[lang] = exe
+                            by_lang[lang] = exe
                             break
-        return paths
+
+        return {lang: (by_lang[lang][0] if by_lang[lang] else None) for lang in by_lang}
 
     @classmethod
     def determine_variants(cls, exes, version_str):
