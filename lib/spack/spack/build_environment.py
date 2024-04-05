@@ -59,6 +59,7 @@ import spack.build_systems.python
 import spack.builder
 import spack.config
 import spack.deptypes as dt
+import spack.error
 import spack.main
 import spack.package_base
 import spack.paths
@@ -583,10 +584,13 @@ def set_package_py_globals(pkg, context: Context = Context.BUILD):
     # Put spack compiler paths in module scope. (Some packages use it
     # in setup_run_environment etc, so don't put it context == build)
     link_dir = spack.paths.build_env_path
-    module.spack_cc = os.path.join(link_dir, pkg.compiler.link_paths["cc"])
-    module.spack_cxx = os.path.join(link_dir, pkg.compiler.link_paths["cxx"])
-    module.spack_f77 = os.path.join(link_dir, pkg.compiler.link_paths["f77"])
-    module.spack_fc = os.path.join(link_dir, pkg.compiler.link_paths["fc"])
+    try:
+        module.spack_cc = os.path.join(link_dir, pkg.compiler.link_paths["cc"])
+        module.spack_cxx = os.path.join(link_dir, pkg.compiler.link_paths["cxx"])
+        module.spack_f77 = os.path.join(link_dir, pkg.compiler.link_paths["f77"])
+        module.spack_fc = os.path.join(link_dir, pkg.compiler.link_paths["fc"])
+    except spack.error.SpackError as e:
+        tty.debug(f"{__file__}: {str(e)}")
 
     # Useful directories within the prefix are encapsulated in
     # a Prefix object.
