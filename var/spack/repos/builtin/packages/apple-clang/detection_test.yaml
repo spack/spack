@@ -4,7 +4,11 @@ paths:
       - executables:
           - "bin/clang"
           - "bin/clang++"
-        script: "echo 11.0.0"
+        script: |
+          echo "Apple clang version 11.0.0 (clang-1100.0.33.8)"
+          echo "Target: x86_64-apple-darwin19.5.0"
+          echo "Thread model: posix"
+          echo "InstalledDir: /Library/Developer/CommandLineTools/usr/bin"
     platforms: ["darwin"]
     results:
       - spec: 'apple-clang@11.0.0'
@@ -13,7 +17,11 @@ paths:
       - executables:
           - "bin/clang"
           - "bin/clang++"
-        script: "echo 15.0.0"
+        script: |
+          echo "Apple clang version 15.0.0 (clang-1500.0.40.1)"
+          echo "Target: arm64-apple-darwin22.6.0"
+          echo "Thread model: posix"
+          echo "InstalledDir: /Library/Developer/CommandLineTools/usr/bin"
     platforms: ["darwin"]
     results:
       - spec: 'apple-clang@15.0.0'
@@ -21,6 +29,10 @@ paths:
   - layout:
       - executables:
           - "bin/clang"
-        script: echo "11.0.0"
+        script: |
+          echo "Apple clang version 11.0.0 (clang-1100.0.33.8)"
+          echo "Target: x86_64-apple-darwin19.5.0"
+          echo "Thread model: posix"
+          echo "InstalledDir: /Library/Developer/CommandLineTools/usr/bin"
     platforms: ["darwin"]
     results: [ ]

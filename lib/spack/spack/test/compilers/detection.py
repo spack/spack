@@ -134,8 +134,7 @@ def test_apple_clang_version_detection(version_str, expected_version, mock_execu
     version = cls.extract_version_from_output(version_str)
     assert version == expected_version
 
-    # apple-clang uses a different regex/version_argument in the package vs compiler
-    check_package_detection(mock_executable, expected_version, expected_version, AppleClang)
+    check_package_detection(mock_executable, version_str, expected_version, AppleClang)
 
 
 @pytest.mark.regression("10191")

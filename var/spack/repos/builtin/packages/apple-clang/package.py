@@ -17,6 +17,9 @@ class AppleClang(BundlePackage, CompilerPackage):
     c_names = ["clang"]
     cxx_names = ["clang++"]
 
+    version_regex = r"^Apple (?:LLVM|clang) version ([^ )]+)"
+    version_argument = "--version"
+
     @classmethod
     def validate_detected_spec(cls, spec, extra_attributes):
         msg = f'the extra attribute "paths" must be set for the detected spec "{spec}"'
