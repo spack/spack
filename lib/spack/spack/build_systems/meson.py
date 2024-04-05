@@ -110,7 +110,8 @@ class MesonBuilder(BaseBuilder):
     @property
     def archive_files(self):
         """Files to archive for packages based on Meson"""
-        return [os.path.join(self.build_directory, "meson-logs", "meson-log.txt")]
+        staging_prefixes = (self.build_directory, self.pkg.stage.source_path)
+        return [os.path.join(prefix, "meson-logs", "meson-log.txt") for prefix in staging_prefixes]
 
     @property
     def root_mesonlists_dir(self):
