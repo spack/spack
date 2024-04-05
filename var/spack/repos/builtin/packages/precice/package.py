@@ -23,6 +23,7 @@ class Precice(CMakePackage):
     license("LGPL-3.0-or-later")
 
     version("develop", branch="develop")
+    version("3.1.0", sha256="11e7d3d4055ee30852c0e83692ca7563acaa095bd223ebdbd5c8c851b3646d37")
     version("3.0.0", sha256="efe6cf505d9305af89c6da1fdba246199a75a1c63a6a22103773ed95341879ba")
     version("2.5.1", sha256="a5a37d3430eac395e885eb9cbbed9d0980a15e96c3e44763a3769fa7301e3b3a")
     version("2.5.0", sha256="76ec6ee0d1a66f6f3d3d2d11f03cfc5aa7ef4d9e5deb9b7a4b4455ec7f796c00")
@@ -71,7 +72,8 @@ class Precice(CMakePackage):
     depends_on("pkgconfig", type="build", when="@2.2:")
 
     # Boost components
-    depends_on("boost+filesystem+log+program_options+system+test+thread")
+    depends_on("boost+log+program_options+system+test+thread")
+    depends_on("boost+filesystem", when="@:3.0.0")
     depends_on("boost+signals", when="@:2.3")
 
     # Baseline versions
