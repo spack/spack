@@ -53,6 +53,7 @@ spack:
     - py-pytouchreader
     - spatial-index
     - spykfunc
+    - spykfunc@0.18.7
     - steps
     - synapsetool
     - touchdetector
