@@ -177,9 +177,10 @@ def _compiler_config_from_external(config):
     # This gets priority correct between computed and configured paths
     paths = {}
     attribute_paths = extra_attributes.get("paths", {})
-    if prefix and not set(spec.package_class(spec).supported_languages).issubset(
-        set(attribute_paths.keys())
-    ):
+    supported_languages = set(
+        getattr(spec.package_class(spec), "supported_languages", ("c", "cxx", "fortran"))
+    )
+    if prefix and not supported_languages.issubset(set(attribute_paths.keys())):
         paths = spec.package_class.determine_paths(prefix=prefix)
     paths.update(attribute_paths)
 
