@@ -208,6 +208,8 @@ spack:
   - py-tensorflow
   - py-torch
 
+  - nekbone +mpi
+  - nek5000 +mpi +visit
   # # CUDA NOARCH
   # - bricks +cuda
   # - flux-core +cuda
