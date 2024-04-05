@@ -40,7 +40,9 @@ class PyDeephyper(PythonPackage):
     depends_on("py-numpy", type=("build", "run"))
     depends_on("py-pandas@0.24.2:", type=("build", "run"))
     depends_on("py-packaging", type=("build", "run"))
-    depends_on("py-packaging@20.5:", type=("build", "run"), when="@0.6.0 target=aarch64: platform=darwin")
+    depends_on(
+        "py-packaging@20.5:", type=("build", "run"), when="@0.6.0 target=aarch64: platform=darwin"
+    )
     depends_on("py-scikit-learn@0.23.1:", type=("build", "run"))
     depends_on("py-scipy@1.7:", type=("build", "run"), when="@0.6.0")
     depends_on("py-scipy@0.19.1:", type=("build", "run"))
