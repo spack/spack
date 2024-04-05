@@ -1947,9 +1947,9 @@ def reproduce_ci_job(url, work_dir, autostart, gpg_url, runtime):
         entrypoint_script.append(["echo", f"Re-run install script using:\n\t{install_mechanism}"])
         # Allow interactive
         if IS_WINDOWS:
-            entrypoint_script.extend(["&", "($args -Join ' ')", "-NoExit"])
+            entrypoint_script.append(["&", "($args -Join ' ')", "-NoExit"])
         else:
-            entrypoint_script.extend(["exec", "$@"])
+            entrypoint_script.append(["exec", "$@"])
 
         process_command(
             "entrypoint", entrypoint_script, work_dir, run=False, exit_on_failure=False
