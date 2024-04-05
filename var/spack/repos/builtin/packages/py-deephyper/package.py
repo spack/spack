@@ -24,6 +24,7 @@ class PyDeephyper(PythonPackage):
     version("0.4.2", sha256="ee1811a22b08eff3c9098f63fbbb37f7c8703e2f878f2bdf2ec35a978512867f")
 
     depends_on("python@3.7:3.9", type=("build", "run"))
+    depends_on("python@3.7:3.11", type=("build", "run"), when="@0.6.0")
 
     depends_on("py-setuptools@42:", type="build", when="@0.6.0")
     depends_on("py-setuptools@40:49.1", type="build")
