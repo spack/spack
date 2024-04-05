@@ -16,6 +16,7 @@ class Freetype(AutotoolsPackage, CMakePackage):
 
     homepage = "https://www.freetype.org/index.html"
     url = "https://download.savannah.gnu.org/releases/freetype/freetype-2.10.1.tar.gz"
+    list_url = "https://download.savannah.gnu.org/releases/freetype/freetype-old/"
 
     maintainers("michaelkuhn")
 
@@ -30,6 +31,7 @@ class Freetype(AutotoolsPackage, CMakePackage):
     version("2.9.1", sha256="ec391504e55498adceb30baceebd147a6e963f636eb617424bcfc47a169898ce")
     version("2.7.1", sha256="162ef25aa64480b1189cdb261228e6c5c44f212aac4b4621e28cf2157efb59f5")
     version("2.7", sha256="7b657d5f872b0ab56461f3bd310bd1c5ec64619bd15f0d8e08282d494d9cfea4")
+    version("2.6.1", sha256="0a3c7dfbda6da1e8fce29232e8e96d987ababbbf71ebc8c75659e4132c367014")
     version("2.5.3", sha256="41217f800d3f40d78ef4eb99d6a35fd85235b64f81bc56e4812d7672fca7b806")
 
     build_system("cmake", "autotools", default="autotools")

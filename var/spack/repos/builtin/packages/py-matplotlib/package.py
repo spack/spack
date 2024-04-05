@@ -244,7 +244,7 @@ class PyMatplotlib(PythonPackage):
     depends_on("pkgconfig", type="build")
 
     # C libraries
-    depends_on("freetype@2.3:")  # freetype 2.6.1 needed for tests to pass
+    depends_on("freetype@2.3:")
     depends_on("qhull@2020.2:", when="@3.4:")
     # starting from qhull 2020.2 libqhull.so on which py-matplotlib@3.3 versions
     # rely on does not exist anymore, only libqhull_r.so
@@ -266,6 +266,7 @@ class PyMatplotlib(PythonPackage):
 
     # Testing dependencies
     # Required
+    depends_on("freetype@2.6.1", type="test")
     depends_on("py-pytest@7:", type="test")
 
     msg = "MacOSX backend requires macOS 10.12+"
