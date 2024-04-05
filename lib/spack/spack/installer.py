@@ -119,7 +119,7 @@ class InstallStatus:
         self.pkg_ids: Set[str] = set()
 
     def next_pkg(self, pkg: "spack.package_base.PackageBase"):
-        pkg_id = package_id(pkg)
+        pkg_id = package_id(pkg.spec)
 
         if pkg_id not in self.pkg_ids:
             self.pkg_num += 1
@@ -221,12 +221,12 @@ def _handle_external_and_upstream(pkg: "spack.package_base.PackageBase", explici
     # consists in module file generation and registration in the DB.
     if pkg.spec.external:
         _process_external_package(pkg, explicit)
-        _print_installed_pkg(f"{pkg.prefix} (external {package_id(pkg)})")
+        _print_installed_pkg(f"{pkg.prefix} (external {package_id(pkg.spec)})")
         return True
 
     if pkg.spec.installed_upstream:
         tty.verbose(
-            f"{package_id(pkg)} is installed in an upstream Spack instance at "
+            f"{package_id(pkg.spec)} is installed in an upstream Spack instance at "
             f"{pkg.spec.prefix}"
         )
         _print_installed_pkg(pkg.prefix)
@@ -403,7 +403,7 @@ def _install_from_cache(
         return False
     t.stop()
 
-    pkg_id = package_id(pkg)
+    pkg_id = package_id(pkg.spec)
     tty.debug(f"Successfully extracted {pkg_id} from binary cache")
 
     _write_timer_json(pkg, t, True)
@@ -484,7 +484,7 @@ def _process_binary_cache_tarball(
         if download_result is None:
             return False
 
-    tty.msg(f"Extracting {package_id(pkg)} from binary cache")
+    tty.msg(f"Extracting {package_id(pkg.spec)} from binary cache")
 
     with timer.measure("install"), spack.util.path.filter_padding():
         binary_distribution.extract_tarball(pkg.spec, download_result, force=False, timer=timer)
@@ -513,7 +513,7 @@ def _try_install_from_binary_cache(
     if not spack.mirror.MirrorCollection(binary=True):
         return False
 
-    tty.debug(f"Searching for binary cache of {package_id(pkg)}")
+    tty.debug(f"Searching for binary cache of {package_id(pkg.spec)}")
 
     with timer.measure("search"):
         matches = binary_distribution.get_mirrors_for_spec(pkg.spec, index_only=True)
@@ -610,7 +610,7 @@ def get_dependent_ids(spec: "spack.spec.Spec") -> List[str]:
 
     Returns: list of package ids
     """
-    return [package_id(d.package) for d in spec.dependents()]
+    return [package_id(d) for d in spec.dependents()]
 
 
 def install_msg(name: str, pid: int, install_status: InstallStatus) -> str:
@@ -720,7 +720,7 @@ def log(pkg: "spack.package_base.PackageBase") -> None:
     dump_packages(pkg.spec, packages_dir)
 
 
-def package_id(pkg: "spack.package_base.PackageBase") -> str:
+def package_id(spec: "spack.spec.Spec") -> str:
     """A "unique" package identifier for installation purposes
 
     The identifier is used to track build tasks, locks, install, and
@@ -732,10 +732,10 @@ def package_id(pkg: "spack.package_base.PackageBase") -> str:
     Args:
         pkg: the package from which the identifier is derived
     """
-    if not pkg.spec.concrete:
+    if not spec.concrete:
         raise ValueError("Cannot provide a unique, readable id when the spec is not concretized.")
 
-    return f"{pkg.name}-{pkg.version}-{pkg.spec.dag_hash()}"
+    return f"{spec.name}-{spec.version}-{spec.dag_hash()}"
 
 
 class BuildRequest:
@@ -765,7 +765,7 @@ class BuildRequest:
         self.pkg.last_phase = install_args.pop("stop_at", None)  # type: ignore[attr-defined]
 
         # Cache the package id for convenience
-        self.pkg_id = package_id(pkg)
+        self.pkg_id = package_id(pkg.spec)
 
         # Save off the original install arguments plus standard defaults
         # since they apply to the requested package *and* dependencies.
@@ -780,9 +780,9 @@ class BuildRequest:
         # are not able to return full dependents for all packages across
         # environment specs.
         self.dependencies = set(
-            package_id(d.package)
+            package_id(d)
             for d in self.pkg.spec.dependencies(deptype=self.get_depflags(self.pkg))
-            if package_id(d.package) != self.pkg_id
+            if package_id(d) != self.pkg_id
         )
 
     def __repr__(self) -> str:
@@ -832,7 +832,7 @@ class BuildRequest:
         depflag = dt.LINK | dt.RUN
         include_build_deps = self.install_args.get("include_build_deps")
 
-        if self.pkg_id == package_id(pkg):
+        if self.pkg_id == package_id(pkg.spec):
             cache_only = self.install_args.get("package_cache_only")
         else:
             cache_only = self.install_args.get("dependencies_cache_only")
@@ -927,7 +927,7 @@ class BuildTask:
             raise ValueError(f"{self.pkg.name} must have a concrete spec")
 
         # The "unique" identifier for the task's package
-        self.pkg_id = package_id(self.pkg)
+        self.pkg_id = package_id(self.pkg.spec)
 
         # The explicit build request associated with the package
         if not isinstance(request, BuildRequest):
@@ -965,9 +965,9 @@ class BuildTask:
         # if use traverse for transitive dependencies, then must remove
         # transitive dependents on failure.
         self.dependencies = set(
-            package_id(d.package)
+            package_id(d)
             for d in self.pkg.spec.dependencies(deptype=self.request.get_depflags(self.pkg))
-            if package_id(d.package) != self.pkg_id
+            if package_id(d) != self.pkg_id
         )
 
         # Handle bootstrapped compiler
@@ -983,7 +983,7 @@ class BuildTask:
             dep.constrain(f"os={str(arch_spec.os)}")
             dep.constrain(f"target={arch_spec.target.microarchitecture.family.name}:")
             dep.concretize()
-            dep_id = package_id(dep.package)
+            dep_id = package_id(dep)
             self.dependencies.add(dep_id)
 
         # List of uninstalled dependencies, which is used to establish
@@ -1194,7 +1194,7 @@ class PackageInstaller:
         """
         packages = _packages_needed_to_bootstrap_compiler(compiler, architecture, pkgs)
         for comp_pkg, is_compiler in packages:
-            pkgid = package_id(comp_pkg)
+            pkgid = package_id(comp_pkg.spec)
             if pkgid not in self.build_tasks:
                 self._add_init_task(comp_pkg, request, is_compiler, all_deps)
             elif is_compiler:
@@ -1241,7 +1241,7 @@ class PackageInstaller:
         """
         task = BuildTask(pkg, request, is_compiler, 0, 0, STATUS_ADDED, self.installed)
         for dep_id in task.dependencies:
-            all_deps[dep_id].add(package_id(pkg))
+            all_deps[dep_id].add(package_id(pkg.spec))
 
         self._push_task(task)
 
@@ -1276,7 +1276,7 @@ class PackageInstaller:
         err = "Cannot proceed with {0}: {1}"
         for dep in request.traverse_dependencies():
             dep_pkg = dep.package
-            dep_id = package_id(dep_pkg)
+            dep_id = package_id(dep)
 
             # Check for failure since a prefix lock is not required
             if spack.store.STORE.failure_tracker.has_failed(dep):
@@ -1409,7 +1409,7 @@ class PackageInstaller:
         Args:
             pkg: the package being installed
         """
-        self._remove_task(package_id(pkg))
+        self._remove_task(package_id(pkg.spec))
 
         # Ensure we have a read lock to prevent others from uninstalling the
         # spec during our installation.
@@ -1423,7 +1423,7 @@ class PackageInstaller:
         Args:
             pkg: the package being locally installed
         """
-        pkg_id = package_id(pkg)
+        pkg_id = package_id(pkg.spec)
         pre = f"{pkg_id} cannot be installed locally:"
 
         # External packages cannot be installed locally.
@@ -1465,7 +1465,7 @@ class PackageInstaller:
             "write",
         ], f'"{lock_type}" is not a supported package management lock type'
 
-        pkg_id = package_id(pkg)
+        pkg_id = package_id(pkg.spec)
         ltype, lock = self.locks.get(pkg_id, (lock_type, None))
         if lock and ltype == lock_type:
             return ltype, lock
@@ -1601,7 +1601,7 @@ class PackageInstaller:
             for dep in request.traverse_dependencies():
                 dep_pkg = dep.package
 
-                dep_id = package_id(dep_pkg)
+                dep_id = package_id(dep)
                 if dep_id not in self.build_tasks:
                     self._add_init_task(dep_pkg, request, False, all_deps)
 
@@ -1913,7 +1913,7 @@ class PackageInstaller:
             dependent_ids: set of the package's dependent ids, or None if the dependent ids are
                 limited to those maintained in the package (dependency DAG)
         """
-        pkg_id = package_id(pkg)
+        pkg_id = package_id(pkg.spec)
 
         if pkg_id in self.installed:
             # Already determined the package has been installed
@@ -2309,7 +2309,7 @@ class BuildProcessInstaller:
 
         # info/debug information
         self.pre = _log_prefix(pkg.name)
-        self.pkg_id = package_id(pkg)
+        self.pkg_id = package_id(pkg.spec)
 
     def run(self) -> bool:
         """Main entry point from ``build_process`` to kick off install in child."""
