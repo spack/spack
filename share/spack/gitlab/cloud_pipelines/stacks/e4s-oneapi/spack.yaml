@@ -157,7 +157,7 @@ spack:
   - umpire
   - variorum
   - wannier90
-  - xyce +mpi +shared +pymi +pymi_static_tpls
+  # - xyce +mpi +shared +pymi +pymi_static_tpls # xyce fails with ICE w/ oneapi 2024.1-- internal ticket filed, should be fixed in oneapi 2024.2
   # INCLUDED IN ECP DAV CPU
   - adios2                # mgard:  mgard.tpp:63:48: error: non-constant-expression cannot be narrowed from type 'int' to 'unsigned long' in initializer list [-Wc++11-narrowing]
   - ascent
