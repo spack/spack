@@ -79,7 +79,6 @@ spack:
   - chai
   - charliecloud
   - conduit
-  # - cp2k +mpi # dbcsr
   - datatransferkit
   - drishti
   - exaworks
@@ -152,14 +151,12 @@ spack:
   - sz3
   - tasmanian
   - trilinos +amesos +amesos2 +anasazi +aztec +belos +boost +epetra +epetraext +ifpack +ifpack2 +intrepid +intrepid2 +isorropia +kokkos +ml +minitensor +muelu +nox +piro +phalanx +rol +rythmos +sacado +stk +shards +shylu +stokhos +stratimikos +teko +tempus +tpetra +trilinoscouplings +zoltan +zoltan2 +superlu-dist gotype=long_long
-  - turbine
   - umap
   - umpire
   - variorum
   - wannier90
-  # - xyce +mpi +shared +pymi +pymi_static_tpls # xyce fails with ICE w/ oneapi 2024.1-- internal ticket filed, should be fixed in oneapi 2024.2
   # INCLUDED IN ECP DAV CPU
-  - adios2                # mgard:  mgard.tpp:63:48: error: non-constant-expression cannot be narrowed from type 'int' to 'unsigned long' in initializer list [-Wc++11-narrowing]
+  - adios2                                                    # mgard:  mgard.tpp:63:48: error: non-constant-expression cannot be narrowed from type 'int' to 'unsigned long' in initializer list [-Wc++11-narrowing]
   - ascent
   - darshan-runtime
   - darshan-util
@@ -167,37 +164,41 @@ spack:
   - hdf5
   - libcatalyst
   - parallel-netcdf
-  # - paraview            # paraview: VTK/ThirdParty/cgns/vtkcgns/src/adfh/ADFH.c:2002:23: error: incompatible function pointer types passing 'herr_t (hid_t, const char *, const H5L_info1_t *, void *)' (aka 'int (long, const char *, const H5L_info1_t *, void *)') to parameter of type 'H5L_iterate2_t' (aka 'int (*)(long, const char *,const H5L_info2_t *, void *)') [-Wincompatible-function-pointer-types]
+  # - paraview                                                # paraview: VTK/ThirdParty/cgns/vtkcgns/src/adfh/ADFH.c:2002:23: error: incompatible function pointer types passing 'herr_t (hid_t, const char *, const H5L_info1_t *, void *)' (aka 'int (long, const char *, const H5L_info1_t *, void *)') to parameter of type 'H5L_iterate2_t' (aka 'int (*)(long, const char *,const H5L_info2_t *, void *)') [-Wincompatible-function-pointer-types]
   - py-cinemasci
   - sz
   - unifyfs
   - veloc
-  # - visit               # silo: https://github.com/spack/spack/issues/39538
-  - vtk-m ~openmp         # https://github.com/spack/spack/issues/31830
+  # - visit                                                   # silo: https://github.com/spack/spack/issues/39538
+  - vtk-m ~openmp                                             # vtk-m +openmp: https://github.com/spack/spack/issues/31830
   - zfp
   # --
   # - alquimia                                                # pflotran: https://github.com/spack/spack/issues/39474
+  # - bricks ~cuda                                            # bricks: /opt/intel/oneapi/compiler/2024.0/bin/sycl-post-link: error while loading shared libraries: libonnxruntime.1.12.22.721.so: cannot open shared object file: No such file or directory
+  # - cp2k +mpi                                               # dbcsr
   # - dealii                                                  # dealii: https://github.com/spack/spack/issues/39482
   # - dxt-explorer                                            # r: https://github.com/spack/spack/issues/40257
   # - ecp-data-vis-sdk ~cuda ~rocm +adios2 +ascent +cinema +darshan +faodel +hdf5 +paraview +pnetcdf +sz +unifyfs +veloc +visit +vtkm +zfp # embree: CMake Error at CMakeLists.txt:215 (MESSAGE): Unsupported compiler: IntelLLVM; qt: qtbase/src/corelib/global/qendian.h:333:54: error: incomplete type 'std::numeric_limits' used in nested name specifier
   # - geopm                                                   # geopm issue: https://github.com/spack/spack/issues/38795
+  # - glvis ^llvm                                             # glvis: https://github.com/spack/spack/issues/42839
   # - hpctoolkit                                              # dyninst@12.3.0%gcc: /usr/bin/ld: libiberty/./d-demangle.c:142: undefined reference to `_intel_fast_memcpy'; can't mix intel-tbb@%oneapi with dyninst%gcc
   # - mgard +serial +openmp +timing +unstructured ~cuda       # mgard: mgard.tpp:63:48: error: non-constant-expression cannot be narrowed from type 'int' to 'unsigned long' in initializer list [-Wc++11-narrowing]
   # - openfoam                                                # cgal: https://github.com/spack/spack/issues/39481
   # - openpmd-api                                             # mgard:  mgard.tpp:63:48: error: non-constant-expression cannot be narrowed from type 'int' to 'unsigned long' in initializer list [-Wc++11-narrowing]
-  # - swig@4.0.2-fortran                                      # ?
-  # - upcxx                                                   # upcxx: /opt/intel/oneapi/mpi/2021.10.0//libfabric/bin/fi_info: error while loading shared libraries: libfabric.so.1: cannot open shared object file: No such file or directory
-  # --
-  # - bricks ~cuda                                            # bricks: /opt/intel/oneapi/compiler/2024.0/bin/sycl-post-link: error while loading shared libraries: libonnxruntime.1.12.22.721.so: cannot open shared object file: No such file or directory
-  # - glvis ^llvm                                             # glvis: https://github.com/spack/spack/issues/42839
   # - pdt                                                     # pdt: pdbType.cc:193:21: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
   # - quantum-espresso                                        # quantum-espresso@7.2 /i3fqdx5: warning: <unknown>:0:0: loop not unroll-and-jammed: the optimizer was unable to perform the requested transformation; the transformation might be disabled or specified as part of an unsupported transformation ordering
+  # - swig@4.0.2-fortran                                      # ?
   # - tau +mpi +python +syscall                               # pdt: pdbType.cc:193:21: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
+  # - turbine                                                 # turbine: oneapi 2024.1 compiler bug; internal ticket filed; expect fix in 2024.2
+  # - upcxx                                                   # upcxx: /opt/intel/oneapi/mpi/2021.10.0//libfabric/bin/fi_info: error while loading shared libraries: libfabric.so.1: cannot open shared object file: No such file or directory
+  # - xyce +mpi +shared +pymi +pymi_static_tpls               # xyce: oneapi 2024.1 ICE; internal ticket filed; expect fix in 2024.2
 
   # PYTHON PACKAGES
   - opencv +python3
   - py-jupyterlab
+  - py-mpi4py
   - py-notebook
+  - py-numba
   - py-numpy
   - py-openai
   - py-pandas
@@ -206,9 +207,8 @@ spack:
   - py-pytest
   - py-scikit-learn
   - py-scipy
+  - py-scipy
   - py-seaborn
-  - py-mpi4py
-  - py-numba
   # - py-horovod      # error
   # - py-jax          # error
   # - py-matplotlib   # error
@@ -216,26 +216,24 @@ spack:
   # - py-torch        # error
 
   # GPU
+  - aml
+  - aml +ze
   - amrex +sycl
-  - tau +mpi +opencl +level_zero ~pdt +syscall                # requires libdrm.so to be installed
+  - arborx +sycl ^kokkos +sycl +openmp cxxstd=17 +examples
+  - cabana +sycl ^kokkos +sycl +openmp cxxstd=17 +examples
+  - ginkgo +sycl
+  - heffte +sycl
+  - kokkos +sycl +openmp cxxstd=17 +examples
+  - kokkos-kernels build_type=Release %oneapi ^kokkos +sycl +openmp cxxstd=17 +examples
+  - petsc +sycl
+  - sundials +sycl cxxstd=17 +examples-install
+  - tau +mpi +opencl +level_zero ~pdt +syscall              # requires libdrm.so to be installed
   - upcxx +level_zero
   # --
-  # - hpctoolkit +level_zero            # dyninst@12.3.0%gcc: /usr/bin/ld: libiberty/./d-demangle.c:142: undefined reference to `_intel_fast_memcpy'; can't mix intel-tbb@%oneapi with dyninst%gcc
-  # - warpx compute=sycl                # warpx: spack-build-wzp6vvo/_deps/fetchedamrex-src/Src/Base/AMReX_RandomEngine.H:18:10: fatal error: 'oneapi/mkl/rng/device.hpp' file not found
-  # --
-  - aml                                                     # aml: /opt/intel/oneapi/compiler/2024.0/bin/sycl-post-link: error while loading shared libraries: libonnxruntime.1.12.22.721.so: cannot open shared object file: No such file or directory
-  - aml +ze                                                 # aml: /opt/intel/oneapi/compiler/2024.0/bin/sycl-post-link: error while loading shared libraries: libonnxruntime.1.12.22.721.so: cannot open shared object file: No such file or directory
-  - arborx +sycl ^kokkos +sycl +openmp cxxstd=17 +examples  # kokkos@4.2.00: CMake Error at cmake/Modules/FindTPLONEDPL.cmake:31 (FIND_PACKAGE):
-  - cabana +sycl ^kokkos +sycl +openmp cxxstd=17 +examples  # kokkos@4.2.00: CMake Error at cmake/Modules/FindTPLONEDPL.cmake:31 (FIND_PACKAGE):
-  - ginkgo +sycl                                            # ginkgo: Could NOT find PAPI (missing: PAPI_LIBRARY PAPI_INCLUDE_DIR sde) (Required is at least version "7.0.1.0") SYCL feature test compile failed! compile output is: CMake Error at /opt/intel/oneapi/compiler/2024.0/lib/cmake/IntelSYCL/IntelSYCLConfig.cmake:282 (SYCL_FEATURE_TEST_EXTRACT): SYCL_FEATURE_TEST_EXTRACT Function invoked with incorrect arguments for
-  - heffte +sycl                                            # heffte: /opt/intel/oneapi/compiler/2024.0/bin/sycl-post-link: error while loading shared libraries: libonnxruntime.1.12.22.721.so: cannot open shared object file: No such file or directory
-  - kokkos +sycl +openmp cxxstd=17 +examples                # kokkos@4.2.00: CMake Error at cmake/Modules/FindTPLONEDPL.cmake:31 (FIND_PACKAGE):
-  - kokkos-kernels build_type=Release %oneapi ^kokkos +sycl +openmp cxxstd=17 +examples # kokkos@4.0.00: tpls/desul/include/desul/atomics/Adapt_SYCL.hpp:83:7: error: no template named 'sycl_memory_scope'
-  - petsc +sycl                                             # kokkos@4.0.00: tpls/desul/include/desul/atomics/Adapt_SYCL.hpp:83:7: error: no template named 'sycl_memory_scope'
-  # - slate +sycl                                             # blaspp: CMake Error at CMakeLists.txt:313 (find_package): ... set MKL_FOUND to FALSE so package "MKL" is considered to be NOT FOUND.
-  - sundials +sycl cxxstd=17 +examples-install              # sundials@6.6.2 /cakfnxs: CMake: could NOT find MPI_CXX (missing: MPI_CXX_WORKS) (Required is at least version "2.0.0")    
+  # - hpctoolkit +level_zero                                # dyninst@12.3.0%gcc: /usr/bin/ld: libiberty/./d-demangle.c:142: undefined reference to `_intel_fast_memcpy'; can't mix intel-tbb@%oneapi with dyninst%gcc
+  # - slate +sycl                                           # blaspp: CMake Error at CMakeLists.txt:313 (find_package): ... set MKL_FOUND to FALSE so package "MKL" is considered to be NOT FOUND.
+  # - warpx compute=sycl                                    # warpx: spack-build-wzp6vvo/_deps/fetchedamrex-src/Src/Base/AMReX_RandomEngine.H:18:10: fatal error: 'oneapi/mkl/rng/device.hpp' file not found
 
-  - py-scipy
 
   ci:
     pipeline-gen:
