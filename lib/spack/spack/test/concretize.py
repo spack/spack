@@ -254,7 +254,7 @@ def gcc11_with_flags(compiler_factory):
 # This must use the mutable_config fixture because the test
 # adjusting_default_target_based_on_compiler uses the current_host fixture,
 # which changes the config.
-@pytest.mark.usefixtures("mutable_config", "mock_packages")
+@pytest.mark.usefixtures("mutable_config", "mock_packages", "do_not_check_runtimes_on_reuse")
 class TestConcretize:
     def test_concretize(self, spec):
         check_concretize(spec)
@@ -614,7 +614,7 @@ class TestConcretize:
         spec.normalize()
         spec.concretize()
 
-    @pytest.mark.parametrize("compiler_str", ["clang", "gcc", "gcc@10.2.1", "clang@:12.0.0"])
+    @pytest.mark.parametrize("compiler_str", ["clang", "gcc", "gcc@10.2.1", "clang@:15.0.0"])
     def test_compiler_inheritance(self, compiler_str):
         spec_str = "mpileaks %{0}".format(compiler_str)
         spec = Spec(spec_str).concretized()
@@ -877,7 +877,7 @@ class TestConcretize:
             # Unconstrained versions select default compiler (gcc@4.5.0)
             ("bowtie@1.4.0", "%gcc@10.2.1"),
             # Version with conflicts and no valid gcc select another compiler
-            ("bowtie@1.3.0", "%clang@12.0.0"),
+            ("bowtie@1.3.0", "%clang@15.0.0"),
             # If a higher gcc is available still prefer that
             ("bowtie@1.2.2 os=redhat6", "%gcc@11.1.0"),
         ],
@@ -1439,7 +1439,7 @@ class TestConcretize:
     @pytest.mark.regression("22718")
     @pytest.mark.parametrize(
         "spec_str,expected_compiler",
-        [("mpileaks", "%gcc@10.2.1"), ("mpileaks ^mpich%clang@12.0.0", "%clang@12.0.0")],
+        [("mpileaks", "%gcc@10.2.1"), ("mpileaks ^mpich%clang@15.0.0", "%clang@15.0.0")],
     )
     def test_compiler_is_unique(self, spec_str, expected_compiler):
         s = Spec(spec_str).concretized()
@@ -1727,7 +1727,7 @@ class TestConcretize:
         [
             (["libelf", "libelf@0.8.10"], 1),
             (["libdwarf%gcc", "libelf%clang"], 2),
-            (["libdwarf%gcc", "libdwarf%clang"], 4),
+            (["libdwarf%gcc", "libdwarf%clang"], 3),
             (["libdwarf^libelf@0.8.12", "libdwarf^libelf@0.8.13"], 4),
             (["hdf5", "zmpi"], 3),
             (["hdf5", "mpich"], 2),
