@@ -420,10 +420,9 @@ def install_with_active_env(env: ev.Environment, args, install_kwargs, reporter_
         with reporter_factory(specs_to_install):
             env.install_specs(specs_to_install, **install_kwargs)
     finally:
-        # TODO: this is doing way too much to trigger
-        # views and modules to be generated.
-        with env.write_transaction():
-            env.write(regenerate=True)
+        if env.views:
+            with env.write_transaction():
+                env.write(regenerate=True)
 
 
 def concrete_specs_from_cli(args, install_kwargs):
