@@ -221,6 +221,7 @@ def create_mirror_from_package_object(
                 pkg_stage.cache_mirror(mirror_cache, mirror_stats)
             break
         except Exception as e:
+            pkg_obj.stage.destroy()
             if num_retries + 1 == max_retries:
                 if spack.config.get("config:debug"):
                     traceback.print_exc()
