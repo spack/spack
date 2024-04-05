@@ -3398,10 +3398,10 @@ def _has_runtime_dependencies(spec: spack.spec.Spec) -> bool:
     if not WITH_RUNTIME:
         return True
 
-    if spec.satisfies("%gcc") and not spec.satisfies("^gcc-runtime"):
+    if spec.satisfies("%gcc") and not spec.dependencies("gcc-runtime"):
         return False
 
-    if spec.satisfies("%oneapi") and not spec.satisfies("^intel-oneapi-runtime"):
+    if spec.satisfies("%oneapi") and not spec.dependencies("intel-oneapi-runtime"):
         return False
 
     return True
