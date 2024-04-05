@@ -143,7 +143,6 @@ spack:
   - scr
   - slate ~cuda
   - slepc
-  - stc
   - strumpack ~slate
   - sundials
   - superlu
@@ -187,6 +186,7 @@ spack:
   # - openpmd-api                                             # mgard:  mgard.tpp:63:48: error: non-constant-expression cannot be narrowed from type 'int' to 'unsigned long' in initializer list [-Wc++11-narrowing]
   # - pdt                                                     # pdt: pdbType.cc:193:21: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
   # - quantum-espresso                                        # quantum-espresso@7.2 /i3fqdx5: warning: <unknown>:0:0: loop not unroll-and-jammed: the optimizer was unable to perform the requested transformation; the transformation might be disabled or specified as part of an unsupported transformation ordering
+  # - stc                                                     # turbine: oneapi 2024.1 compiler bug; internal ticket filed; expect fix in 2024.2
   # - swig@4.0.2-fortran                                      # ?
   # - tau +mpi +python +syscall                               # pdt: pdbType.cc:193:21: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
   # - turbine                                                 # turbine: oneapi 2024.1 compiler bug; internal ticket filed; expect fix in 2024.2
