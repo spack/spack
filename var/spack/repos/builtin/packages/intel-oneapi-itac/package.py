@@ -28,6 +28,12 @@ class IntelOneapiItac(IntelOneApiPackage):
     maintainers("rscohn2")
 
     version(
+        "2022.1.0",
+        url="https://registrationcenter-download.intel.com/akdlm/IRC_NAS/644eec67-83d9-4bdd-be0d-d90587ec72ed/l_itac_oneapi_p_2022.1.0.158_offline.sh",
+        sha256="2a1f4be6b349d1629006ee72087b361a5f3e714bddd1ef932045d0c03c0b20e8",
+        expand=False,
+    )
+    version(
         "2022.0.0",
         url="https://registrationcenter-download.intel.com/akdlm//IRC_NAS/e83526f5-7e0f-4708-9e0d-47f1e65f29aa/l_itac_oneapi_p_2022.0.0.49690_offline.sh",
         sha256="6ab2888afcfc981273aed3df316463fbaf511faf83ee091ca79016459b03b79e",
