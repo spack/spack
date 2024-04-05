@@ -80,6 +80,7 @@ unification_set(SetID, VirtualNode)
 
 
 #defined multiple_unification_sets/1.
+#defined runtime/1.
 
 %----
 % Rules to break symmetry and speed-up searches
@@ -1494,18 +1495,20 @@ opt_criterion(40, "compiler mismatches that are not from CLI").
 #minimize{ 0@240: #true }.
 #minimize{ 0@40: #true }.
 #minimize{
-    1@40+Priority,PackageNode,DependencyNode
-    : compiler_mismatch(PackageNode, DependencyNode),
-      build_priority(PackageNode, Priority)
+    1@40+Priority,PackageNode,node(ID, Dependency)
+    : compiler_mismatch(PackageNode, node(ID, Dependency)),
+      build_priority(node(ID, Dependency), Priority),
+      not runtime(Dependency)
 }.
 
 opt_criterion(39, "compiler mismatches that are not from CLI").
 #minimize{ 0@239: #true }.
 #minimize{ 0@39: #true }.
 #minimize{
-    1@39+Priority,PackageNode,DependencyNode
-    : compiler_mismatch_required(PackageNode, DependencyNode),
-      build_priority(PackageNode, Priority)
+    1@39+Priority,PackageNode,node(ID, Dependency)
+    : compiler_mismatch_required(PackageNode, node(ID, Dependency)),
+      build_priority(node(ID, Dependency), Priority),
+      not runtime(Dependency)
 }.
 
 opt_criterion(30, "non-preferred OS's").
@@ -1522,9 +1525,10 @@ opt_criterion(25, "version badness").
 #minimize{ 0@225: #true }.
 #minimize{ 0@25: #true }.
 #minimize{
-    Weight@25+Priority,PackageNode
-    : version_weight(PackageNode, Weight),
-      build_priority(PackageNode, Priority)
+    Weight@25+Priority,node(X, Package)
+    : version_weight(node(X, Package), Weight),
+      build_priority(node(X, Package), Priority),
+      not runtime(Package)
 }.
 
 % Try to use all the default values of variants
@@ -1543,9 +1547,10 @@ opt_criterion(15, "non-preferred compilers").
 #minimize{ 0@215: #true }.
 #minimize{ 0@15: #true }.
 #minimize{
-    Weight@15+Priority,PackageNode
-    : node_compiler_weight(PackageNode, Weight),
-      build_priority(PackageNode, Priority)
+    Weight@15+Priority,node(X, Package)
+    : node_compiler_weight(node(X, Package), Weight),
+      build_priority(node(X, Package), Priority),
+      not runtime(Package)
 }.
 
 % Minimize the number of mismatches for targets in the DAG, try
@@ -1554,18 +1559,55 @@ opt_criterion(10, "target mismatches").
 #minimize{ 0@210: #true }.
 #minimize{ 0@10: #true }.
 #minimize{
-    1@10+Priority,PackageNode,Dependency
-    : node_target_mismatch(PackageNode, Dependency),
-      build_priority(PackageNode, Priority)
+    1@10+Priority,PackageNode,node(ID, Dependency)
+    : node_target_mismatch(PackageNode, node(ID, Dependency)),
+      build_priority(node(ID, Dependency), Priority),
+      not runtime(Dependency)
 }.
 
 opt_criterion(5, "non-preferred targets").
 #minimize{ 0@205: #true }.
 #minimize{ 0@5: #true }.
 #minimize{
-    Weight@5+Priority,PackageNode
-    : node_target_weight(PackageNode, Weight),
-      build_priority(PackageNode, Priority)
+    Weight@5+Priority,node(X, Package)
+    : node_target_weight(node(X, Package), Weight),
+      build_priority(node(X, Package), Priority),
+      not runtime(Package)
+}.
+
+
+% Minimize the number of compiler mismatches for runtimes
+opt_criterion(4, "compiler mismatches (runtimes)").
+#minimize{ 0@204: #true }.
+#minimize{ 0@4: #true }.
+#minimize{
+    1@4,PackageNode,node(ID, Dependency)
+    : compiler_mismatch(PackageNode, node(ID, Dependency)), runtime(Dependency)
+}.
+#minimize{
+    1@4,PackageNode,node(ID, Dependency)
+    : compiler_mismatch_required(PackageNode, node(ID, Dependency)), runtime(Dependency)
+}.
+
+
+% Choose more recent versions for runtimes
+opt_criterion(3, "version badness (runtimes)").
+#minimize{ 0@203: #true }.
+#minimize{ 0@3: #true }.
+#minimize{
+    Weight@3,node(X, Package)
+    : version_weight(node(X, Package), Weight),
+      runtime(Package)
+}.
+
+% Choose best target for runtimes
+opt_criterion(2, "non-preferred targets (runtimes)").
+#minimize{ 0@202: #true }.
+#minimize{ 0@2: #true }.
+#minimize{
+    Weight@2,node(X, Package)
+    : node_target_weight(node(X, Package), Weight),
+      runtime(Package)
 }.
 
 % Choose more recent versions for nodes

@@ -142,7 +142,7 @@ class Target:
         # custom spec.
         compiler_version = compiler.version
         version_number, suffix = archspec.cpu.version_components(compiler.version)
-        if not version_number or suffix not in ("", "apple"):
+        if not version_number or suffix:
             # Try to deduce the underlying version of the compiler, regardless
             # of its name in compilers.yaml. Depending on where this function
             # is called we might get either a CompilerSpec or a fully fledged

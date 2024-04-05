@@ -2013,3 +2013,12 @@ def compiler_factory():
 def host_architecture_str():
     """Returns the broad architecture family (x86_64, aarch64, etc.)"""
     return str(archspec.cpu.host().family)
+
+
+def _true(x):
+    return True
+
+
+@pytest.fixture()
+def do_not_check_runtimes_on_reuse(monkeypatch):
+    monkeypatch.setattr(spack.solver.asp, "_has_runtime_dependencies", _true)

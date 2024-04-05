@@ -112,10 +112,10 @@ fi
 @pytest.mark.regression("37996")
 def test_compiler_remove(mutable_config, mock_packages):
     """Tests that we can remove a compiler from configuration."""
-    assert spack.spec.CompilerSpec("gcc@=4.8.0") in spack.compilers.all_compiler_specs()
-    args = spack.util.pattern.Bunch(all=True, compiler_spec="gcc@4.8.0", add_paths=[], scope=None)
+    assert spack.spec.CompilerSpec("gcc@=9.4.0") in spack.compilers.all_compiler_specs()
+    args = spack.util.pattern.Bunch(all=True, compiler_spec="gcc@9.4.0", add_paths=[], scope=None)
     spack.cmd.compiler.compiler_remove(args)
-    assert spack.spec.CompilerSpec("gcc@=4.8.0") not in spack.compilers.all_compiler_specs()
+    assert spack.spec.CompilerSpec("gcc@=9.4.0") not in spack.compilers.all_compiler_specs()
 
 
 @pytest.mark.regression("37996")
@@ -124,10 +124,10 @@ def test_removing_compilers_from_multiple_scopes(mutable_config, mock_packages):
     site_config = spack.config.get("compilers", scope="site")
     spack.config.set("compilers", site_config, scope="user")
 
-    assert spack.spec.CompilerSpec("gcc@=4.8.0") in spack.compilers.all_compiler_specs()
-    args = spack.util.pattern.Bunch(all=True, compiler_spec="gcc@4.8.0", add_paths=[], scope=None)
+    assert spack.spec.CompilerSpec("gcc@=9.4.0") in spack.compilers.all_compiler_specs()
+    args = spack.util.pattern.Bunch(all=True, compiler_spec="gcc@9.4.0", add_paths=[], scope=None)
     spack.cmd.compiler.compiler_remove(args)
-    assert spack.spec.CompilerSpec("gcc@=4.8.0") not in spack.compilers.all_compiler_specs()
+    assert spack.spec.CompilerSpec("gcc@=9.4.0") not in spack.compilers.all_compiler_specs()
 
 
 @pytest.mark.not_on_windows("Cannot execute bash script on Windows")
