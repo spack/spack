@@ -919,6 +919,9 @@ def test_rename_dest_exists(tmpdir):
         b = tmpdir.join("a", "file2")
         fs.touchp(a)
         fs.touchp(b)
+        with open(a, "w") as oa, open(b, "w") as ob:
+            oa.write("I am A")
+            ob.write("I am B")
         yield a, b
         os.removedirs(tmpdir.join("a"))
 
@@ -938,20 +941,26 @@ def test_rename_dest_exists(tmpdir):
         fs.rename(str(a), str(b))
         assert os.path.exists(b)
         assert not os.path.exists(a)
+        with open(b, "r") as ob:
+            content = ob.read()
+        assert content == "I am A"
 
     # test relatitve paths
     # another sanity check/smoke test
     with setup_test_files() as files:
         a, b = files
         with fs.working_dir(str(tmpdir)):
-            fs.rename(os.path.join("b", "file1"), os.path.join("b", "file2"))
+            fs.rename(os.path.join("a", "file1"), os.path.join("a", "file2"))
             assert os.path.exists(b)
             assert not os.path.exists(a)
+            with open(b, "r") as ob:
+                content = ob.read()
+            assert content == "I am A"
 
     # Test rename symlinks to same file
-    c = tmpdir.join("c", "file1")
-    a = tmpdir.join("c", "link1")
-    b = tmpdir.join("c", "link2")
+    c = tmpdir.join("a", "file1")
+    a = tmpdir.join("a", "link1")
+    b = tmpdir.join("a", "link2")
     fs.touchp(c)
     symlink(c, a)
     symlink(c, b)
@@ -959,24 +968,34 @@ def test_rename_dest_exists(tmpdir):
     assert os.path.exists(b)
     assert not os.path.exists(a)
     assert os.path.realpath(b) == c
+    os.removedirs(tmpdir.join("a"))
 
     # test rename onto itself
-    a = tmpdir.join("d", "file1")
+    a = tmpdir.join("a", "file1")
     b = a
     fs.touchp(a)
+    with open(a, "w") as oa:
+        oa.write("I am A")
     fs.rename(str(a), str(b))
     # check a, or b, doesn't matter, same file
     assert os.path.exists(a)
+    # ensure original file was not duplicated
+    assert os.path.listdir(tmpdir.join("a")) == 1
+    with open(a, "r") as oa:
+        assert oa.read()
+    os.removedirs("a")
 
     # test rename onto symlink
     # to directory from symlink to directory
     # (this is something spack does when regenerating views)
-    with setup_test_dirs() as a, b:
+    with setup_test_dirs() as dirs:
+        a, b = dirs
         link1 = tmpdir.join("f", "link1")
         link2 = tmpdir.join("f", "link2")
         fs.mkdirp(tmpdir.join("f"))
         symlink(a, link1)
         symlink(b, link2)
-        fs.rename(link1, link2)
+        fs.rename(str(link1), str(link2))
         assert os.path.exists(link2)
         assert os.path.realpath(link2) == a
+        os.removedirs(tmpdir.join("f"))
