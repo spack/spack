@@ -187,8 +187,11 @@ class AutotoolsBuilder(BaseBuilder):
     @property
     def archive_files(self):
         """Files to archive for packages based on autotools"""
+        archives = ("config.log", "config.guess", "configure")
         staging_prefixes = (self.build_directory, self.pkg.stage.source_path)
-        files = [os.path.join(prefix, "config.log") for prefix in staging_prefixes]
+        files = [
+            os.path.join(prefix, archive) for archive in archives for prefix in staging_prefixes
+        ]
         if not self.install_libtool_archives:
             files.append(self._removed_la_files_log)
         return files
