@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,8 @@ class Icedtea(AutotoolsPackage):
 
     homepage = "https://openjdk.java.net/projects/icedtea/"
     url = "https://icedtea.wildebeest.org/download/source/icedtea-3.4.0.tar.gz"
+
+    license("GPL-2.0-or-later")
 
     version("3.9.0", sha256="84a63bc59f4e101ce8fa183060a59c7e8cbe270945310e90c92b8609a9b8bc88")
     version("3.8.0", sha256="ef1a9110294d0a905833f1db30da0c8a88bd2bde8d92ddb711d72ec763cd25b0")
@@ -35,7 +37,7 @@ class Icedtea(AutotoolsPackage):
     depends_on("pkgconfig", type="build")
     depends_on("gmake", type="build")
     depends_on("cups")
-    depends_on("jdk", type="build")
+    depends_on("java", type="build")
     # X11 deps required for building even when headless
     depends_on("libx11", when="~X", type="build")
     depends_on("xproto", when="~X", type="build")

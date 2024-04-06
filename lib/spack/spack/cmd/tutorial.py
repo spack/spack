@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,11 +10,11 @@ import llnl.util.tty as tty
 from llnl.util.filesystem import working_dir
 
 import spack
-import spack.cmd.common.arguments as arguments
 import spack.config
 import spack.paths
 import spack.util.git
 import spack.util.gpg
+from spack.cmd.common import arguments
 from spack.util.spack_yaml import syaml_dict
 
 description = "set up spack for our tutorial (WARNING: modifies config!)"

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -24,6 +24,8 @@ class Petaca(CMakePackage):
     url = "https://github.com/nncarlson/petaca/archive/refs/tags/v22.03.tar.gz"
 
     maintainers("pbrady", "zjibben")
+
+    license("MIT")
 
     version("develop", branch="master")
     version("22.03", sha256="e6559e928c7cca6017ef0582c204eee775f6bb3f927f1c224c515c2ad574cc32")

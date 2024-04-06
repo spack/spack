@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,6 +20,8 @@ class SuperluDist(CMakePackage, CudaPackage, ROCmPackage):
 
     version("develop", branch="master")
     version("amd", branch="amd")
+    version("8.2.1", sha256="b77d065cafa6bc1a1dcc15bf23fd854f54b05762b165badcffc195835ad2bddf")
+    version("8.2.0", sha256="d53573e5a399b2b4ab1fcc36e8421c1b6fab36345c0af14f8fa20326e3365f1f")
     version("8.1.2", sha256="7b16c442bb01ea8b298c0aab9a2584aa4615d09786aac968cb2f3118c058206b")
     version("8.1.1", sha256="766d70b84ece79d88249fe10ff51d2a397a29f274d9fd1e4a4ac39179a9ef23f")
     version("8.1.0", sha256="9308844b99a7e762d5704934f7e9f79daf158b0bfc582994303c2e0b31518b34")

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,6 +18,8 @@ class RHardhat(RPackage):
     functionality for preprocessing, predicting, and validating input."""
 
     cran = "hardhat"
+
+    license("MIT")
 
     version("1.3.0", sha256="fe9ff009e2ba6dd4d70cbb541430f88d85c0a28d6a1c2772e4910c79b81fe82e")
     version("1.2.0", sha256="f9320eccb1b5f624a46fa074e3ccc202c383b77098ecd08b193aeb47daedad78")

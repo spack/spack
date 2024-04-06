@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class PyTatsu(PythonPackage):
 
     homepage = "https://github.com/neogeny/tatsu"
     pypi = "TatSu/TatSu-4.4.0.zip"
+
+    license("BSD-2-Clause")
 
     version("4.4.0", sha256="80713413473a009f2081148d0f494884cabaf9d6866b71f2a68a92b6442f343d")
 

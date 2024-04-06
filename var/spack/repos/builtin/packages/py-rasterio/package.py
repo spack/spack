@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,6 +19,8 @@ class PyRasterio(PythonPackage):
 
     maintainers("adamjstewart")
 
+    license("BSD-3-Clause")
+
     version("master", branch="master")
     version("1.3.9", sha256="fc6d0d290492fa1a5068711cfebb21cc936968891b7ed9da0690c8a7388885c5")
     version("1.3.8", sha256="ffdd18e78efdf8ad5861065fd812a66dd34264293317ff6540a078ea891cdef8")
@@ -34,8 +36,6 @@ class PyRasterio(PythonPackage):
     version("1.2.3", sha256="d8c345e01052b70ac3bbbe100c83def813c0ab19f7412c2c98e553d03720c1c5")
     version("1.1.8", sha256="f7cac7e2ecf65b4b1eb78c994c63bd429b67dc679b0bc0ecfe487d3d5bf88fd5")
     version("1.1.5", sha256="ebe75c71f9257c780615caaec8ef81fa4602702cf9290a65c213e1639284acc9")
-    version("1.0.24", sha256="4839479621045211f66868ec49625979693450bc2e476f23e7e8ac4804eaf452")
-    version("1.0a12", sha256="47d460326e04c64590ff56952271a184a6307f814efc34fb319c12e690585f3c")
 
     # From pyproject.toml
     depends_on("py-setuptools@67.8:", when="@1.3.9:", type="build")
@@ -46,7 +46,6 @@ class PyRasterio(PythonPackage):
     depends_on("python@3.8:", when="@1.3:", type=("build", "link", "run"))
     depends_on("python@3.6:3.9", when="@1.2", type=("build", "link", "run"))
     depends_on("python@2.7:2.8,3.5:3.8", when="@1.1", type=("build", "link", "run"))
-    depends_on("python@2.7:2.8,3.5:3.7", when="@:1.0", type=("build", "link", "run"))
     depends_on("py-affine", type=("build", "run"))
     depends_on("py-attrs", type=("build", "run"))
     depends_on("py-certifi", when="@1.2:", type=("build", "run"))
@@ -65,5 +64,3 @@ class PyRasterio(PythonPackage):
     depends_on("gdal@2.4:3.3", when="@1.2.7:1.2")
     depends_on("gdal@2.3:3.2", when="@1.2.0:1.2.6")
     depends_on("gdal@1.11:3.2", when="@1.1.0:1.1")
-    depends_on("gdal@1.11:3.0", when="@1.0.25:1.0")
-    depends_on("gdal@1.11:2", when="@:1.0.24")

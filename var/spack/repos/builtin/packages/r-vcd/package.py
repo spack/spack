@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,8 @@ class RVcd(RPackage):
     Michael Friendly and David Meyer (2015)."""
 
     cran = "vcd"
+
+    license("GPL-2.0-only")
 
     version("1.4-11", sha256="7a54e855689e1429d46e0d4d7a956f96b0ad2fd0c7084fa023902c55849e0932")
     version("1.4-10", sha256="7188192afa289350cc1b89790f4f8f5a5114c1c88bee7715a0c8f5347aa0b35b")

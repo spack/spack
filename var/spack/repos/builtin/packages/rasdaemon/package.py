@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,8 @@ class Rasdaemon(AutotoolsPackage):
 
     homepage = "https://github.com/mchehab/rasdaemon"
     url = "https://github.com/mchehab/rasdaemon/archive/v0.6.6.tar.gz"
+
+    license("GPL-2.0-or-later")
 
     version("0.6.6", sha256="eea5fefc68583cca2e6daec58508a554553056aeec5eeee0989417c89607eaba")
     version("0.6.5", sha256="1d85580778a0b7c0587b42e24dfe6c02f4c07c6ca9bbb80737d50b58ac830c92")

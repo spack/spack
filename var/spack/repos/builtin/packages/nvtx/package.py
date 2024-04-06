@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class Nvtx(Package, PythonExtension):
     url = "https://github.com/NVIDIA/NVTX/archive/refs/tags/v3.1.0.tar.gz"
 
     maintainers("thomas-bouvier")
+
+    license("Apache-2.0")
 
     version("develop", branch="dev")
     version("3.1.0", sha256="dc4e4a227d04d3da46ad920dfee5f7599ac8d6b2ee1809c9067110fb1cc71ced")

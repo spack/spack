@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -147,7 +147,7 @@ def _add_compilers_if_missing() -> None:
             mixed_toolchain=sys.platform == "darwin"
         )
         if new_compilers:
-            spack.compilers.add_compilers_to_config(new_compilers, init_config=False)
+            spack.compilers.add_compilers_to_config(new_compilers)
 
 
 @contextlib.contextmanager

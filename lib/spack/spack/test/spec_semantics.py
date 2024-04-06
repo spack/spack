@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -734,18 +734,6 @@ class TestSpecSemantics:
             with pytest.raises(SpecFormatStringError):
                 spec.format(fmt_str)
 
-    @pytest.mark.regression("9908")
-    def test_spec_flags_maintain_order(self):
-        # Spack was assembling flags in a manner that could result in
-        # different orderings for repeated concretizations of the same
-        # spec and config
-        spec_str = "libelf %gcc@11.1.0 os=redhat6"
-        for _ in range(3):
-            s = Spec(spec_str).concretized()
-            assert all(
-                s.compiler_flags[x] == ["-O0", "-g"] for x in ("cflags", "cxxflags", "fflags")
-            )
-
     def test_combination_of_wildcard_or_none(self):
         # Test that using 'none' and another value raises
         with pytest.raises(spack.variant.InvalidVariantValueCombinationError):
@@ -1288,6 +1276,17 @@ def test_call_dag_hash_on_old_dag_hash_spec(mock_packages, default_mock_concreti
             spec.package_hash()
 
 
+def test_spec_trim(mock_packages, config):
+    top = Spec("dt-diamond").concretized()
+    top.trim("dt-diamond-left")
+    remaining = set(x.name for x in top.traverse())
+    assert set(["dt-diamond", "dt-diamond-right", "dt-diamond-bottom"]) == remaining
+
+    top.trim("dt-diamond-right")
+    remaining = set(x.name for x in top.traverse())
+    assert set(["dt-diamond"]) == remaining
+
+
 @pytest.mark.regression("30861")
 def test_concretize_partial_old_dag_hash_spec(mock_packages, config):
     # create an "old" spec with no package hash
@@ -1517,3 +1516,9 @@ def test_edge_equality_does_not_depend_on_virtual_order():
     assert edge1 == edge2
     assert tuple(sorted(edge1.virtuals)) == edge1.virtuals
     assert tuple(sorted(edge2.virtuals)) == edge1.virtuals
+
+
+def test_old_format_strings_trigger_error(default_mock_concretization):
+    s = Spec("a").concretized()
+    with pytest.raises(SpecFormatStringError):
+        s.format("${PACKAGE}-${VERSION}-${HASH}")

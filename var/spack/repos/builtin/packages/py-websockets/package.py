@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class PyWebsockets(PythonPackage):
 
     homepage = "https://github.com/aaugustin/websockets"
     pypi = "websockets/websockets-10.4.tar.gz"
+
+    license("BSD-3-Clause")
 
     version("10.4", sha256="eef610b23933c54d5d921c92578ae5f89813438fded840c2e9809d378dc765d3")
     version("10.3", sha256="fc06cc8073c8e87072138ba1e431300e2d408f054b27047d047b549455066ff4")

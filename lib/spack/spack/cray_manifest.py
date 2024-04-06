@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -227,7 +227,7 @@ def read(path, apply_updates):
     if apply_updates and compilers:
         for compiler in compilers:
             try:
-                spack.compilers.add_compilers_to_config([compiler], init_config=False)
+                spack.compilers.add_compilers_to_config([compiler])
             except Exception:
                 warnings.warn(
                     f"Could not add compiler {str(compiler.spec)}: "

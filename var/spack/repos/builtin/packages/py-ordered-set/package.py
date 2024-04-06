@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class PyOrderedSet(PythonPackage):
 
     homepage = "https://github.com/LuminosoInsight/ordered-set"
     pypi = "ordered-set/ordered-set-4.0.2.tar.gz"
+
+    license("MIT")
 
     version("4.0.2", sha256="ba93b2df055bca202116ec44b9bead3df33ea63a7d5827ff8e16738b97f33a95")
 

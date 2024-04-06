@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -26,6 +26,8 @@ class Mpich(AutotoolsPackage, CudaPackage, ROCmPackage):
     executables = ["^mpichversion$"]
 
     keep_werror = "specific"
+
+    license("Unlicense")
 
     version("develop", submodules=True)
     version("4.1.2", sha256="3492e98adab62b597ef0d292fb2459b6123bc80070a8aa0a30be6962075a12f0")
@@ -55,13 +57,13 @@ class Mpich(AutotoolsPackage, CudaPackage, ROCmPackage):
     variant("hydra", default=True, description="Build the hydra process manager")
     variant("romio", default=True, description="Enable ROMIO MPI I/O implementation")
     variant("verbs", default=False, description="Build support for OpenFabrics verbs.")
-    variant("slurm", default=False, description="Enable SLURM support")
+    variant("slurm", default=False, description="Enable Slurm support")
     variant("wrapperrpath", default=True, description="Enable wrapper rpath")
     variant(
         "pmi",
         default="pmi",
         description="""PMI interface.""",
-        values=("off", "pmi", "pmi2", "pmix", "cray"),
+        values=("pmi", "pmi2", "pmix", "cray"),
         multi=False,
     )
     variant(
@@ -70,16 +72,14 @@ class Mpich(AutotoolsPackage, CudaPackage, ROCmPackage):
         description="""Abstract Device Interface (ADI)
 implementation. The ch4 device is in experimental state for versions
 before 3.4.""",
-        values=("ch3", "ch4"),
+        values=("ch3", "ch4", "ch3:sock"),
         multi=False,
     )
     variant(
         "netmod",
         default="ofi",
         description="""Network module. Only single netmod builds are
-supported. For ch3 device configurations, this presumes the
-ch3:nemesis communication channel. ch3:sock is not supported by this
-spack package at this time.""",
+supported, and netmod is ignored if device is ch3:sock.""",
         values=("tcp", "mxm", "ofi", "ucx"),
         multi=False,
     )
@@ -116,11 +116,17 @@ spack package at this time.""",
         when="@3.4:",
         multi=False,
     )
-    depends_on("yaksa", when="@4.0: device=ch4 datatype-engine=auto")
-    depends_on("yaksa", when="@4.0: device=ch4 datatype-engine=yaksa")
-    depends_on("yaksa+cuda", when="+cuda ^yaksa")
-    depends_on("yaksa+rocm", when="+rocm ^yaksa")
+    for _yaksa_cond in (
+        "@4.0: device=ch4 datatype-engine=auto",
+        "@4.0: device=ch4 datatype-engine=yaksa",
+    ):
+        with when(_yaksa_cond):
+            depends_on("yaksa")
+            depends_on("yaksa+cuda", when="+cuda")
+            depends_on("yaksa+rocm", when="+rocm")
+
     conflicts("datatype-engine=yaksa", when="device=ch3")
+    conflicts("datatype-engine=yaksa", when="device=ch3:sock")
 
     variant(
         "hcoll",
@@ -131,12 +137,17 @@ spack package at this time.""",
     )
     depends_on("hcoll", when="+hcoll")
 
+    variant("xpmem", default=False, when="@3.4:", description="Enable XPMEM support")
+    depends_on("xpmem", when="+xpmem")
+
     # Todo: cuda can be a conditional variant, but it does not seem to work when
     # overriding the variant from CudaPackage.
     conflicts("+cuda", when="@:3.3")
     conflicts("+cuda", when="device=ch3")
+    conflicts("+cuda", when="device=ch3:sock")
     conflicts("+rocm", when="@:4.0")
     conflicts("+rocm", when="device=ch3")
+    conflicts("+rocm", when="device=ch3:sock")
     conflicts("+cuda", when="+rocm", msg="CUDA must be disabled to support ROCm")
 
     provides("mpi@:4.0")
@@ -180,6 +191,26 @@ spack package at this time.""",
         "https://github.com/pmodels/mpich/commit/b324d2de860a7a2848dc38aefb8c7627a72d2003.patch?full_index=1",
         sha256="5f48d2dd8cc9f681cf710b864f0d9b00c599f573a75b1e1391de0a3d697eba2d",
         when="@=3.3",
+    )
+
+    # Fix SLURM hostlist_t usage
+    # See https://github.com/pmodels/mpich/issues/6806
+    # and https://github.com/pmodels/mpich/pull/6820
+    patch(
+        "https://github.com/pmodels/mpich/commit/7a28682a805acfe84a4ea7b41cea079696407398.patch?full_index=1",
+        sha256="8cc80a8ffc3f1c907b1d8176129a0c1d01794a95adbed5b5357f50c13f6560e4",
+        when="@4.1:4.1.2 +slurm ^slurm@23-11-1-1:",
+    )
+    # backports of fix down to v3.3
+    patch(
+        "mpich40_slurm_hostlist.patch",
+        sha256="39aa1353305b7b03bc5c645c87d5299bd5d2ff676750898ba925f6cb9b716bdb",
+        when="@4.0 +slurm ^slurm@23-11-1-1:",
+    )
+    patch(
+        "mpich33_slurm_hostlist.patch",
+        sha256="d6ec26adcf2d08d0739be44ab65b928a7a88e9ff1375138a0593678eedd420ab",
+        when="@3.3:3.4 +slurm ^slurm@23-11-1-1:",
     )
 
     # Fix reduce operations for unsigned integers
@@ -271,6 +302,7 @@ spack package at this time.""",
     conflicts("netmod=tcp", when="device=ch4")
     conflicts("pmi=pmi2", when="device=ch3 netmod=ofi")
     conflicts("pmi=pmix", when="device=ch3")
+    conflicts("pmi=pmix", when="device=ch3:sock")
     conflicts("pmi=pmix", when="+hydra")
     conflicts("pmi=cray", when="+hydra")
 
@@ -356,9 +388,7 @@ spack package at this time.""",
             if re.search(r"--with-thread-package=argobots", output):
                 variants.append("+argobots")
 
-            if re.search(r"--with-pmi=no", output):
-                variants.append("pmi=off")
-            elif re.search(r"--with-pmi=simple", output):
+            if re.search(r"--with-pmi=simple", output):
                 variants.append("pmi=pmi")
             elif re.search(r"--with-pmi=pmi2/simple", output):
                 variants.append("pmi=pmi2")
@@ -428,8 +458,6 @@ spack package at this time.""",
             env.set("MPIF90", join_path(self.prefix.bin, "mpif90"))
 
     def setup_dependent_build_environment(self, env, dependent_spec):
-        self.setup_run_environment(env)
-
         env.set("MPICH_CC", spack_cc)
         env.set("MPICH_CXX", spack_cxx)
         env.set("MPICH_F77", spack_f77)
@@ -526,9 +554,7 @@ spack package at this time.""",
         else:
             config_args.append("--with-slurm=no")
 
-        if "pmi=off" in spec:
-            config_args.append("--with-pmi=no")
-        elif "pmi=pmi" in spec:
+        if "pmi=pmi" in spec:
             config_args.append("--with-pmi=simple")
         elif "pmi=pmi2" in spec:
             config_args.append("--with-pmi=pmi2/simple")
@@ -556,7 +582,10 @@ spack package at this time.""",
         elif "device=ch3" in spec:
             device_config = "--with-device=ch3:nemesis:"
 
-        if "netmod=ucx" in spec:
+        # Do not apply any netmod if device is ch3:sock
+        if "device=ch3:sock" in spec:
+            device_config = "--with-device=ch3:sock"
+        elif "netmod=ucx" in spec:
             device_config += "ucx"
         elif "netmod=ofi" in spec:
             device_config += "ofi"
@@ -588,7 +617,6 @@ spack package at this time.""",
 
         if "+vci" in spec:
             config_args.append("--enable-thread-cs=per-vci")
-            config_args.append("--with-ch4-max-vcis=default")
 
         if "datatype-engine=yaksa" in spec:
             config_args.append("--with-datatype-engine=yaksa")
@@ -599,6 +627,9 @@ spack package at this time.""",
 
         if "+hcoll" in spec:
             config_args.append("--with-hcoll=" + spec["hcoll"].prefix)
+
+        if "+xpmem" in spec:
+            config_args.append("--with-xpmem=" + spec["xpmem"].prefix)
 
         return config_args
 

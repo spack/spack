@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,7 +7,10 @@ import os
 import re
 import subprocess
 import sys
+import tempfile
 from typing import Dict, List, Set
+
+import archspec.cpu
 
 import spack.compiler
 import spack.operating_systems.windows_os
@@ -15,7 +18,7 @@ import spack.platforms
 import spack.util.executable
 from spack.compiler import Compiler
 from spack.error import SpackError
-from spack.version import Version
+from spack.version import Version, VersionRange
 
 avail_fc_version: Set[str] = set()
 fc_path: Dict[str, str] = dict()
@@ -185,6 +188,9 @@ class Msvc(Compiler):
         # get current platform architecture and format for vcvars argument
         arch = spack.platforms.real_host().default.lower()
         arch = arch.replace("-", "_")
+        if str(archspec.cpu.host().family) == "x86_64":
+            arch = "amd64"
+
         self.vcvars_call = VCVarsInvocation(vcvars_script_path, arch, self.msvc_version)
         env_cmds.append(self.vcvars_call)
         # Below is a check for a valid fortran path
@@ -193,7 +199,7 @@ class Msvc(Compiler):
         # for a fortran compiler
         if paths[2]:
             # If this found, it sets all the vars
-            oneapi_root = os.getenv("ONEAPI_ROOT")
+            oneapi_root = os.path.join(self.cc, "../../..")
             oneapi_root_setvars = os.path.join(oneapi_root, "setvars.bat")
             oneapi_version_setvars = os.path.join(
                 oneapi_root, "compiler", str(self.ifx_version), "env", "vars.bat"
@@ -292,6 +298,15 @@ class Msvc(Compiler):
             else:
                 env.set_path(env_var, int_env[env_var].split(os.pathsep))
 
+        # certain versions of ifx (2021.3.0:2023.1.0) do not play well with env:TMP
+        # that has a "." character in the path
+        # Work around by pointing tmp to the stage for the duration of the build
+        if self.fc and Version(self.fc_version(self.fc)).satisfies(
+            VersionRange("2021.3.0", "2023.1.0")
+        ):
+            new_tmp = tempfile.mkdtemp(dir=pkg.stage.path)
+            env.set("TMP", new_tmp)
+
         env.set("CC", self.cc)
         env.set("CXX", self.cxx)
         env.set("FC", self.fc)
@@ -308,7 +323,7 @@ class Msvc(Compiler):
         fc_path[fc_ver] = fc
         if os.getenv("ONEAPI_ROOT"):
             try:
-                sps = spack.operating_systems.windows_os.WindowsOs.compiler_search_paths
+                sps = spack.operating_systems.windows_os.WindowsOs().compiler_search_paths
             except AttributeError:
                 raise SpackError("Windows compiler search paths not established")
             clp = spack.util.executable.which_string("cl", path=sps)

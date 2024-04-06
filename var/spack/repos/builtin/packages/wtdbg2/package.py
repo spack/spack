@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,8 @@ class Wtdbg2(MakefilePackage):
 
     homepage = "https://github.com/ruanjue/wtdbg2"
     url = "https://github.com/ruanjue/wtdbg2/archive/v2.3.tar.gz"
+
+    license("GPL-3.0-only")
 
     version("2.3", sha256="fb61d38a4c60a39b3b194e63b855141c05ddcbe71cf244ae613766a9b0a56621")
 

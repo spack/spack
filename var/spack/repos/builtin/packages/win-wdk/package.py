@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -133,7 +133,7 @@ class WinWdk(Package):
             except ProcessError as pe:
                 reg = winreg.WindowsRegistryView(
                     "SOFTWARE\\Microsoft\\Windows Kits\\Installed Roots",
-                    root_key=spack.util.windows_registry.HKEY_LOCAL_MACHINE,
+                    root_key=spack.util.windows_registry.HKEY.HKEY_LOCAL_MACHINE,
                 )
                 if not reg:
                     # No Kits are available, failure was genuine

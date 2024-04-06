@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class Hadoop(Package):
 
     homepage = "https://hadoop.apache.org/"
     url = "https://archive.apache.org/dist/hadoop/common/hadoop-3.3.2/hadoop-3.3.2.tar.gz"
+
+    license("Apache-2.0")
 
     version("3.3.2", sha256="b341587495b12eec0b244b517f21df88eb46ef634dc7dc3e5969455b80ce2ce5")
     version("3.3.0", sha256="ea1a0f0afcdfb9b6b9d261cdce5a99023d7e8f72d26409e87f69bda65c663688")

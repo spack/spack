@@ -1,10 +1,11 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import argparse
 import builtins
 import filecmp
+import gzip
 import itertools
 import os
 import pathlib
@@ -137,8 +138,7 @@ def test_package_output(tmpdir, capsys, install_mockery, mock_fetch):
     pkg = spec.package
     pkg.do_install(verbose=True)
 
-    log_file = pkg.build_log_path
-    with open(log_file) as f:
+    with gzip.open(pkg.install_log_path, "rt") as f:
         out = f.read()
 
     # make sure that output from the actual package file appears in the
@@ -904,13 +904,12 @@ def test_install_help_cdash():
 
 
 @pytest.mark.disable_clean_stage_check
-def test_cdash_auth_token(tmpdir, mock_fetch, install_mockery, capfd):
+def test_cdash_auth_token(tmpdir, mock_fetch, install_mockery, monkeypatch, capfd):
     # capfd interferes with Spack's capturing
-    with tmpdir.as_cwd():
-        with capfd.disabled():
-            os.environ["SPACK_CDASH_AUTH_TOKEN"] = "asdf"
-            out = install("-v", "--log-file=cdash_reports", "--log-format=cdash", "a")
-            assert "Using CDash auth token from environment" in out
+    with tmpdir.as_cwd(), capfd.disabled():
+        monkeypatch.setenv("SPACK_CDASH_AUTH_TOKEN", "asdf")
+        out = install("-v", "--log-file=cdash_reports", "--log-format=cdash", "a")
+        assert "Using CDash auth token from environment" in out
 
 
 @pytest.mark.not_on_windows("Windows log_output logs phase header out of order")

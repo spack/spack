@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class Tixi(CMakePackage):
     homepage = "https://github.com/DLR-SC/tixi"
     url = "https://github.com/DLR-SC/tixi/archive/v3.0.3.tar.gz"
     git = "https://github.com/DLR-SC/tixi.git"
+
+    license("Apache-2.0")
 
     version("3.3.0", sha256="988d79ccd53c815d382cff0c244c0bb8e393986377dfb45385792766adf6f6a9")
     version("3.2.0", sha256="8df65c4d252d56e98c5ef2657c7aff6086a07b5686716e786891609adaca9d2d")

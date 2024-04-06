@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,13 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
     git = "https://github.com/pika-org/pika.git"
     maintainers("msimberg", "albestro", "teonnik", "aurianer")
 
+    license("BSL-1.0")
+
+    version("0.23.0", sha256="d1981e198ac4f8443770cebbeff7a132b8f6c1a42e32b0b06fea02cc9df99595")
+    version("0.22.2", sha256="eeffa8584336b239aca167f0056e815b1b6d911e46cbb3cd6b8b811d101c1052")
+    version("0.22.1", sha256="b0de0649bee336847622f97b59b34a80cb3cfd9a931bbdb38299bc4904f19b92")
+    version("0.22.0", sha256="75f8932f3a233958c69802b483335eeeb39032ea66f12442f6f77048e259bdea")
+    version("0.21.0", sha256="0ab24966e6ae026b355147f02354af4bd2117c342915fe844addf8e493735a33")
     version("0.20.0", sha256="f338cceea66a0e3954806b2aca08f6560bba524ecea222f04bc18b483851c877")
     version("0.19.1", sha256="674675abf0dd4c6f5a0b2fa3db944b277ed65c62f654029d938a8cab608a9c1d")
     version("0.19.0", sha256="f45cc16e4e50cbb183ed743bdc8b775d49776ee33c13ea39a650f4230a5744cb")
@@ -73,6 +80,12 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
     variant("apex", default=False, description="Enable APEX support", when="@0.2:")
     variant("tracy", default=False, description="Enable Tracy support", when="@0.7:")
     variant(
+        "sanitizers",
+        default=False,
+        description="Enable support for sanitizers. "
+        "Specific sanitizers must be explicitly enabled with -fsanitize=*.",
+    )
+    variant(
         "stdexec",
         default=False,
         description="Use stdexec for sender/receiver functionality",
@@ -91,9 +104,9 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
     conflicts("%clang@:8", when="@0.2:")
     conflicts("+stdexec", when="cxxstd=17")
     conflicts("cxxstd=23", when="^cmake@:3.20.2")
-    # CUDA version <= 11 does not support C++20 and newer
+    # nvcc version <= 11 does not support C++20 and newer
     for cxxstd in filter(lambda x: x != "17", cxxstds):
-        conflicts(f"cxxstd={cxxstd}", when="^cuda@:11")
+        requires("%nvhpc", when=f"cxxstd={cxxstd} ^cuda@:11")
 
     # Other dependencies
     depends_on("boost@1.71:")
@@ -123,27 +136,17 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
 
     with when("+rocm"):
         for val in ROCmPackage.amdgpu_targets:
-            depends_on(
-                "whip@0.1: amdgpu_target={0}".format(val),
-                when="@0.9: amdgpu_target={0}".format(val),
-            )
-            depends_on(
-                "rocsolver amdgpu_target={0}".format(val),
-                when="@0.5: amdgpu_target={0}".format(val),
-            )
-            depends_on(
-                "rocblas amdgpu_target={0}".format(val), when="amdgpu_target={0}".format(val)
-            )
+            depends_on(f"whip@0.1: amdgpu_target={val}", when=f"@0.9: amdgpu_target={val}")
+            depends_on(f"rocsolver amdgpu_target={val}", when=f"@0.5: amdgpu_target={val}")
+            depends_on(f"rocblas amdgpu_target={val}", when=f"amdgpu_target={val}")
 
     with when("+cuda"):
         for val in CudaPackage.cuda_arch_values:
-            depends_on(
-                "whip@0.1: cuda_arch={0}".format(val), when="@0.9: cuda_arch={0}".format(val)
-            )
+            depends_on(f"whip@0.1: cuda_arch={val}", when=f"@0.9: cuda_arch={val}")
 
     for cxxstd in cxxstds:
-        depends_on("boost cxxstd={0}".format(cxxstd), when="cxxstd={0}".format(cxxstd))
-        depends_on("fmt cxxstd={0}".format(cxxstd), when="@0.11: cxxstd={0}".format(cxxstd))
+        depends_on(f"boost cxxstd={cxxstd}", when=f"cxxstd={cxxstd}")
+        depends_on(f"fmt cxxstd={cxxstd}", when=f"@0.11: cxxstd={cxxstd}")
 
     # COROUTINES
     # ~generic_coroutines conflict is not fully implemented
@@ -189,6 +192,7 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
             self.define_from_variant("PIKA_WITH_MPI", "mpi"),
             self.define_from_variant("PIKA_WITH_APEX", "apex"),
             self.define_from_variant("PIKA_WITH_TRACY", "tracy"),
+            self.define_from_variant("PIKA_WITH_SANITIZERS", "sanitizers"),
             self.define("PIKA_WITH_TESTS", self.run_tests),
             self.define_from_variant("PIKA_WITH_GENERIC_CONTEXT_COROUTINES", "generic_coroutines"),
             self.define("BOOST_ROOT", spec["boost"].prefix),

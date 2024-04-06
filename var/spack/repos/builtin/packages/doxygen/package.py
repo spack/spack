@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,6 +18,10 @@ class Doxygen(CMakePackage):
     homepage = "https://www.doxygen.org"
     url = "https://github.com/doxygen/doxygen/archive/refs/tags/Release_1_9_5.tar.gz"
 
+    license("GPL-2.0-or-later")
+
+    version("1.9.8", sha256="77371e8a58d22d5e03c52729844d1043e9cbf8d0005ec5112ffa4c8f509ddde8")
+    version("1.9.7", sha256="691777992a7240ed1f822a5c2ff2c4273b57c1cf9fc143553d87f91a0c5970ee")
     version("1.9.6", sha256="2a3ee47f7276b759f74bac7614c05a1296a5b028d3f6a79a88e4c213db78e7dc")
     version("1.9.5", sha256="1c5c9cd4445f694e43f089c17529caae6fe889b732fb0b145211025a1fcda1bb")
     version("1.9.4", sha256="1b083d15b29817463129ae1ae73b930d883030eeec090ea7a99b3a04fdb51c76")
@@ -120,12 +124,3 @@ class Doxygen(CMakePackage):
             join_path("cmake", "FindIconv.cmake"),
             string=True,
         )
-
-    def cmake_args(self):
-        args = [
-            # Doxygen's build system uses CMake's deprecated `FindPythonInterp`,
-            # which can get confused by other `python` executables in the PATH.
-            # See issue: https://github.com/spack/spack/issues/28215
-            self.define("PYTHON_EXECUTABLE", self.spec["python"].command.path)
-        ]
-        return args

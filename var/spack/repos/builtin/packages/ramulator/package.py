@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,8 @@ class Ramulator(MakefilePackage):
     git = "https://github.com/CMU-SAFARI/ramulator"
 
     maintainers("jjwilke")
+
+    license("MIT")
 
     version("sst", commit="7d2e72306c6079768e11a1867eb67b60cee34a1c")
 

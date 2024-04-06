@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,7 +21,11 @@ class Libfabric(AutotoolsPackage):
 
     executables = ["^fi_info$"]
 
+    license("GPL-2.0-or-later")
+
     version("main", branch="main")
+    version("1.20.1", sha256="fd88d65c3139865d42a6eded24e121aadabd6373239cef42b76f28630d6eed76")
+    version("1.20.0", sha256="7fbbaeb0e15c7c4553c0ac5f54e4ef7aecaff8a669d4ba96fa04b0fc780b9ddc")
     version("1.19.0", sha256="f14c764be9103e80c46223bde66e530e5954cb28b3835b57c8e728479603ef9e")
     version("1.18.2", sha256="64d7837853ca84d2a413fdd96534b6a81e6e777cc13866e28cf86cd0ccf1b93e")
     version("1.18.1", sha256="4615ae1e22009e59c72ae03c20adbdbd4a3dce95aeefbc86cc2bf1acc81c9e38")
@@ -72,6 +76,7 @@ class Libfabric(AutotoolsPackage):
         "shm",
         "sockets",
         "tcp",
+        "ucx",
         "udp",
         "usnic",
         "verbs",
@@ -97,6 +102,8 @@ class Libfabric(AutotoolsPackage):
 
     variant("debug", default=False, description="Enable debugging")
 
+    variant("uring", default=False, when="@1.17.0:", description="Enable uring support")
+
     # For version 1.9.0:
     # headers: fix forward-declaration of enum fi_collective_op with C++
     patch(
@@ -114,8 +121,10 @@ class Libfabric(AutotoolsPackage):
     depends_on("opa-psm2", when="fabrics=psm2")
     depends_on("psm", when="fabrics=psm")
     depends_on("ucx", when="fabrics=mlx")
+    depends_on("ucx", when="@1.18.0: fabrics=ucx")
     depends_on("uuid", when="fabrics=opx")
     depends_on("numactl", when="fabrics=opx")
+    depends_on("liburing@2.1:", when="+uring")
 
     depends_on("m4", when="@main", type="build")
     depends_on("autoconf", when="@main", type="build")
@@ -124,6 +133,12 @@ class Libfabric(AutotoolsPackage):
 
     conflicts("@1.9.0", when="platform=darwin", msg="This distribution is missing critical files")
     conflicts("fabrics=opx", when="@:1.14.99")
+    conflicts(
+        "fabrics=opx",
+        when="@1.20.0",
+        msg="Libfabric 1.20.0 uses values in memory that are not correctly "
+        "set by OPX, resulting in undefined behavior.",
+    )
 
     flag_handler = build_system_flags
 
@@ -181,6 +196,9 @@ class Libfabric(AutotoolsPackage):
             args.append("--with-kdreg=yes")
         else:
             args.append("--with-kdreg=no")
+
+        if self.spec.satisfies("+uring"):
+            args.append("--with-uring=yes")
 
         for fabric in [f if isinstance(f, str) else f[0].value for f in self.fabrics]:
             if "fabrics=" + fabric in self.spec:

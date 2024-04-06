@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class RSubplex(RPackage):
     Rowan <https://www.netlib.org/opt/subplex.tgz>."""
 
     cran = "subplex"
+
+    license("GPL-3.0-only")
 
     version("1.8", sha256="3bc31d8990380c9f790c9c7d84cb2e39f4945eff934eddfa1196d597465be5a5")
     version("1.7", sha256="d5ecf4a484936d71cb294f08c3968ef5a8dcbdc861bfc0e97e3b1ab99afff887")

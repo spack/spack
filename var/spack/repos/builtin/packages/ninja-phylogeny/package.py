@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class NinjaPhylogeny(MakefilePackage):
     url = "https://github.com/TravisWheelerLab/NINJA/archive/refs/tags/0.98-cluster_only.tar.gz"
 
     maintainers("snehring")
+
+    license("MIT")
 
     version("0.98", sha256="55675e1a9d51eddb3decc9a7570b6bcddb12e8a922cf1ca0a1ea43995793c9db")
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,6 +21,8 @@ class Libnetworkit(CMakePackage):
     url = "https://github.com/networkit/networkit/archive/6.1.tar.gz"
 
     maintainers("fabratu")
+
+    license("MIT")
 
     version("9.0", sha256="c574473bc7d86934f0f4b3049c0eeb9c4444cfa873e5fecda194ee5b1930f82c")
     version("8.1", sha256="0a22eb839606b9fabfa68c7add12c4de5eee735c6f8bb34420e5916ce5d7f829")
