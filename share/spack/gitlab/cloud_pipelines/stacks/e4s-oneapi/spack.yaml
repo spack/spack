@@ -81,7 +81,6 @@ spack:
   - conduit
   - datatransferkit
   - drishti
-  - exaworks
   - flecsi
   - flit
   - flux-core
@@ -178,6 +177,7 @@ spack:
   # - dealii                                                  # dealii: https://github.com/spack/spack/issues/39482
   # - dxt-explorer                                            # r: https://github.com/spack/spack/issues/40257
   # - ecp-data-vis-sdk ~cuda ~rocm +adios2 +ascent +cinema +darshan +faodel +hdf5 +paraview +pnetcdf +sz +unifyfs +veloc +visit +vtkm +zfp # embree: CMake Error at CMakeLists.txt:215 (MESSAGE): Unsupported compiler: IntelLLVM; qt: qtbase/src/corelib/global/qendian.h:333:54: error: incomplete type 'std::numeric_limits' used in nested name specifier
+  # - exaworks                                                # turbine: oneapi 2024.1 compiler bug; internal ticket filed; expect fix in 2024.2
   # - geopm                                                   # geopm issue: https://github.com/spack/spack/issues/38795
   # - glvis ^llvm                                             # glvis: https://github.com/spack/spack/issues/42839
   # - hpctoolkit                                              # dyninst@12.3.0%gcc: /usr/bin/ld: libiberty/./d-demangle.c:142: undefined reference to `_intel_fast_memcpy'; can't mix intel-tbb@%oneapi with dyninst%gcc
