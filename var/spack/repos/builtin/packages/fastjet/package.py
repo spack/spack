@@ -72,6 +72,28 @@ class Fastjet(AutotoolsPackage):
     )
     variant("atlas", default=False, description="Patch to make random generator thread_local")
 
+    available_plugins = (
+        conditional("atlascone", when="@2.4.0:"),
+        conditional("cdfcones", when="@2.1.0:"),
+        conditional("cmsiterativecone", when="@2.4.0:"),
+        conditional("d0runicone", when="@3.0.0:"),
+        conditional("d0runiicone", when="@2.4.0:"),
+        conditional("eecambridge", when="@2.4.0:"),
+        conditional("gridjet", when="@3.0.0:"),
+        conditional("jade", when="@2.4.0:"),
+        conditional("nesteddefs", when="@2.4.0:"),
+        conditional("pxcone", when="@2.1.0:"),
+        conditional("siscone", when="@2.1.0:"),
+        conditional("trackjet", when="@2.4.0:"),
+    )
+    variant(
+        "plugins",
+        multi=True,
+        values=("all", "cxx") + available_plugins,
+        default="all",
+        description="List of plugins to enable, or 'cxx' or 'all'",
+    )
+
     patch("atlas.patch", when="@:3.3 +atlas", level=0)
     patch(
         "https://gitlab.cern.ch/sft/lcgcmake/-/raw/23c82f269b8e5df0190e20b7fbe06db16b24d667/externals/patches/fastjet-3.4.1.patch",
@@ -81,7 +103,21 @@ class Fastjet(AutotoolsPackage):
     )
 
     def configure_args(self):
-        extra_args = ["--enable-allplugins"]
+        extra_args = []
+        plugins = self.spec.variants["plugins"].value
+        if "all" in plugins:
+            extra_args += ["--enable-allplugins"]
+        elif "cxx" in plugins:
+            extra_args += ["--enable-allcxxplugins"]
+        else:
+            for plugin in self.available_plugins:
+                # conditional returns an iterable _ConditionalVariantValues
+                for v in plugin:
+                    # this version does not support this plugin
+                    if not self.spec.satisfies(v.when):
+                        continue
+                    enabled = v.value in plugins
+                    extra_args += [f"--{'enable' if enabled else 'disable'}-{v.value}"]
         extra_args += self.enable_or_disable("shared")
         extra_args += self.enable_or_disable("auto-ptr")
         if self.spec.variants["thread-safety"].value == "limited":
