@@ -331,10 +331,7 @@ class Acts(CMakePackage, CudaPackage):
     depends_on("python@3.8:", when="+python @19.11:19")
     depends_on("python@3.8:", when="+python @21:")
     depends_on("py-onnxruntime@:1.12", when="+onnx @:23.2")
-    # FIXME py-onnxruntime@1.12: required but not yet available
-    # Ref: https://github.com/spack/spack/pull/37064
-    # depends_on("py-onnxruntime@1.12:", when="+onnx @23.3:")
-    conflicts("+onnx", when="@23.3:", msg="py-onnxruntime@1.12: required but not yet available")
+    depends_on("py-onnxruntime@1.12:", when="+onnx @23.3:")
     depends_on("py-pybind11 @2.6.2:", when="+python @18:")
     depends_on("py-pytest", when="+python +unit_tests")
 
