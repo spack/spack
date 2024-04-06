@@ -15,6 +15,9 @@ class IntelOneapiRuntime(Package):
 
     homepage = "https://software.intel.com/content/www/us/en/develop/tools/oneapi.html"
     has_code = False
+    license("https://intel.ly/393CijO")
+
+    maintainers("rscohn2")
 
     tags = ["runtime"]
 
