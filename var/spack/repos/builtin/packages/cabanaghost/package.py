@@ -6,7 +6,7 @@
 from spack.package import *
 
 
-class CabanaGhost(CMakePackage, CudaPackage, ROCmPackage):
+class Cabanaghost(CMakePackage, CudaPackage, ROCmPackage):
     """Halo Exchange Benchmark for Exploring Fine-grain Communication APIs and Performance in the Cabana/Cajita performance portability framework."""
 
     homepage = "https://github.com/CUP-ECS/CabanaGOL"
@@ -44,7 +44,7 @@ class CabanaGhost(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("kokkos +wrapper", when="%gcc+cuda")
 
     # Cabana dependencies
-    depends_on("cabana @0.6.0 +grid +silo +hdf5 +mpi")
+    depends_on("cabana @0.6.0: +grid +silo +hdf5 +mpi")
     depends_on("cabana +cuda", when="+cuda")
     depends_on("cabana +rocm", when="+rocm")
 
