@@ -405,7 +405,7 @@ def test_clang_flags():
     unsupported_flag_test("cxx20_flag", "clang@4.0")
     supported_flag_test("cxx20_flag", "-std=c++2a", "clang@5.0")
     supported_flag_test("cxx20_flag", "-std=c++20", "clang@11.0")
-    unsupported_flag_test("cxx23_flag", "clang@11.")
+    unsupported_flag_test("cxx23_flag", "clang@11.0")
     supported_flag_test("cxx23_flag", "-std=c++2b", "clang@12.0")
     supported_flag_test("cxx23_flag", "-std=c++23", "clang@17.0")
     supported_flag_test("c99_flag", "-std=c99", "clang@3.3")
