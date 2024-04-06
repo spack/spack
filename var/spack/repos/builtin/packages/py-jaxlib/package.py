@@ -100,7 +100,7 @@ class PyJaxlib(PythonPackage, CudaPackage):
     )
 
     # https://github.com/google/jax/issues/19992
-    conflicts("@0.4.7:", when="target=ppc64le:")
+    conflicts("@0.4.6:", when="target=ppc64le:")
 
     def patch(self):
         self.tmp_path = tempfile.mkdtemp(prefix="spack")
