@@ -240,7 +240,6 @@ spack:
   - umpire ~shared +cuda cuda_arch=75
   # INCLUDED IN ECP DAV CUDA
   - adios2 +cuda cuda_arch=75
-  - paraview +cuda cuda_arch=75
   - vtk-m +cuda cuda_arch=75
   - zfp +cuda cuda_arch=75
   # --
@@ -248,6 +247,7 @@ spack:
   # - axom +cuda cuda_arch=75       # axom: https://github.com/spack/spack/issues/29520
   # - cusz +cuda cuda_arch=75       # cusz: https://github.com/spack/spack/issues/38787
   # - dealii +cuda cuda_arch=75     # slepc: make[1]: *** internal error: invalid --jobserver-auth string 'fifo:/tmp/GMfifo1313'.
+  # - paraview +cuda cuda_arch=75   # Error building some cuda componets in paraview
   # - ecp-data-vis-sdk +adios2 +hdf5 +vtkm +zfp +paraview +cuda cuda_arch=75  # embree: https://github.com/spack/spack/issues/39534
   # - lammps +cuda cuda_arch=75     # lammps: needs NVIDIA driver
   # - lbann +cuda cuda_arch=75      # lbann: https://github.com/spack/spack/issues/38788
@@ -287,7 +287,6 @@ spack:
   - umpire ~shared +cuda cuda_arch=80
   # INCLUDED IN ECP DAV CUDA
   - adios2 +cuda cuda_arch=80
-  - paraview +cuda cuda_arch=80
   - vtk-m +cuda cuda_arch=80
   - zfp +cuda cuda_arch=80
   # --
@@ -295,6 +294,7 @@ spack:
   # - axom +cuda cuda_arch=80       # axom: https://github.com/spack/spack/issues/29520
   # - cusz +cuda cuda_arch=80       # cusz: https://github.com/spack/spack/issues/38787
   # - dealii +cuda cuda_arch=80     # slepc: make[1]: *** internal error: invalid --jobserver-auth string 'fifo:/tmp/GMfifo1313'.
+  # - paraview +cuda cuda_arch=80   # Error building some cuda componets in paraview
   # - ecp-data-vis-sdk +adios2 +hdf5 +vtkm +zfp +paraview +cuda cuda_arch=80 # embree: https://github.com/spack/spack/issues/39534
   # - lammps +cuda cuda_arch=80     # lammps: needs NVIDIA driver
   # - lbann +cuda cuda_arch=80      # lbann: https://github.com/spack/spack/issues/38788
