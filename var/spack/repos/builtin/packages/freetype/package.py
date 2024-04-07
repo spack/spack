@@ -72,6 +72,8 @@ class Freetype(AutotoolsPackage, CMakePackage):
 
 
 class AutotoolsBuilder(AutotoolsBuilder):
+    build_directory = "builds/unix"
+
     def configure_args(self):
         args = [
             "--with-brotli=no",
