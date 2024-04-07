@@ -20,7 +20,7 @@ class NetlibLapack(CMakePackage):
     tags = ["windows"]
 
     license("BSD-3-Clause-Open-MPI")
-    
+
     version(
         "3.11.0",
         sha256="4b9ba79bfd4921ca820e83979db76ab3363155709444a787979e81c22285ffa9",
