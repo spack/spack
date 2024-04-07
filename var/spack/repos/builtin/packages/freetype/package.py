@@ -56,6 +56,14 @@ class Freetype(AutotoolsPackage, CMakePackage):
 
     patch("windows.patch", when="@2.9.1")
 
+    def url_for_version(self, version):
+        url = "https://download.savannah.gnu.org/releases/{}/freetype-{}.tar.gz"
+        if version >= Version("2.7"):
+            directory = "freetype"
+        else:
+            directory = "freetype/freetype-old"
+        return url.format(directory, version)
+
     @property
     def headers(self):
         headers = find_headers("*", self.prefix.include, recursive=True)
