@@ -923,16 +923,16 @@ def test_rename_dest_exists(tmpdir):
             oa.write("I am A")
             ob.write("I am B")
         yield a, b
-        os.removedirs(tmpdir.join("a"))
+        shutil.rmtree(tmpdir.join("a"))
 
     @contextmanager
-    def setup_test_dirs(root):
+    def setup_test_dirs():
         a = tmpdir.join("d", "a")
         b = tmpdir.join("d", "b")
         fs.mkdirp(a)
         fs.mkdirp(b)
         yield a, b
-        os.removedirs(tmpdir.join("d"))
+        shutil.rmtree(tmpdir.join("d"))
 
     # test standard behavior of rename
     # smoke test
@@ -968,7 +968,7 @@ def test_rename_dest_exists(tmpdir):
     assert os.path.exists(b)
     assert not os.path.exists(a)
     assert os.path.realpath(b) == c
-    os.removedirs(tmpdir.join("a"))
+    shutil.rmtree(tmpdir.join("a"))
 
     # test rename onto itself
     a = tmpdir.join("a", "file1")
@@ -980,10 +980,10 @@ def test_rename_dest_exists(tmpdir):
     # check a, or b, doesn't matter, same file
     assert os.path.exists(a)
     # ensure original file was not duplicated
-    assert os.path.listdir(tmpdir.join("a")) == 1
+    assert len(os.listdir(tmpdir.join("a"))) == 1
     with open(a, "r") as oa:
         assert oa.read()
-    os.removedirs("a")
+    shutil.rmtree(tmpdir.join("a"))
 
     # test rename onto symlink
     # to directory from symlink to directory
@@ -998,4 +998,4 @@ def test_rename_dest_exists(tmpdir):
         fs.rename(str(link1), str(link2))
         assert os.path.exists(link2)
         assert os.path.realpath(link2) == a
-        os.removedirs(tmpdir.join("f"))
+        shutil.rmtree(tmpdir.join("f"))
