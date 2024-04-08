@@ -539,6 +539,10 @@ class Llvm(CMakePackage, CudaPackage):
     # avoid build failed with Fujitsu compiler
     patch("llvm13-fujitsu.patch", when="@13 %fj")
 
+    # avoid build failed with Fujitsu compiler since llvm17
+    patch("llvm17-fujitsu.patch", when="@17: %fj")
+    patch("llvm17-18-thread.patch", when="@17:18 %fj")
+
     # patch for missing hwloc.h include for libompd
     # see https://reviews.llvm.org/D123888
     patch(
