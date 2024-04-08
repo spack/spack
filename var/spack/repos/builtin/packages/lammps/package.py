@@ -875,6 +875,11 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage, PythonExtension):
 
         if "+rocm" in spec:
             args.append(self.define("CMAKE_CXX_COMPILER", spec["hip"].hipcc))
+            if "@:20231121" in spec:
+                if "^hip@:5.4" in spec:
+                    args.append(self.define("HIP_PATH", f"{spec['hip'].prefix}/hip"))
+                elif "^hip@5.5:" in spec:
+                    args.append(self.define("HIP_PATH", spec["hip"].prefix))
 
         return args
 
