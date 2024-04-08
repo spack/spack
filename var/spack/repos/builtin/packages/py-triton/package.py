@@ -19,5 +19,6 @@ class PyTriton(PythonPackage):
     depends_on("py-setuptools@40.8:", type="build")
     depends_on("cmake@3.18:", type="build")
     depends_on("py-filelock", type=("build", "run"))
+    depends_on("zlib-api", type="link")
 
     build_directory = "python"
