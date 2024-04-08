@@ -198,15 +198,32 @@ def getuid():
         return os.getuid()
 
 
+def _win_rename(src, dst):
+    # os.replace will still fail if on Windows (but not POSIX) if the dst
+    # is a symlink to a directory (all other cases have parity Windows <-> Posix)
+    if os.path.islink(dst) and os.path.isdir(os.path.realpath(dst)):
+        if os.path.samefile(src, dst):
+            # src and dst are the same
+            # do nothing and exit early
+            return
+        # If dst exists and is a symlink to a directory
+        # we need to remove dst and then perform rename/replace
+        # this is safe to do as there's no chance src == dst now
+        os.remove(dst)
+    os.replace(src, dst)
+
+
 @system_path_filter
 def rename(src, dst):
     # On Windows, os.rename will fail if the destination file already exists
+    # os.replace is the same as os.rename on POSIX and is MoveFileExW w/
+    # the MOVEFILE_REPLACE_EXISTING flag on Windows
+    # Windows invocation is abstracted behind additonal logic handling
+    # remaining cases of divergent behavior accross platforms
     if sys.platform == "win32":
-        # Windows path existence checks will sometimes fail on junctions/links/symlinks
-        # so check for that case
-        if os.path.exists(dst) or islink(dst):
-            os.remove(dst)
-    os.rename(src, dst)
+        _win_rename(src, dst)
+    else:
+        os.replace(src, dst)
 
 
 @system_path_filter
