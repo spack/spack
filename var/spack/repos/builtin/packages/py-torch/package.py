@@ -222,7 +222,6 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
     depends_on("magma+rocm", when="+magma+rocm")
     depends_on("nccl", when="+nccl+cuda")
     depends_on("numactl", when="+numa")
-    depends_on("llvm-openmp", when="%apple-clang +openmp")
     depends_on("valgrind", when="+valgrind")
     with when("+rocm"):
         depends_on("hsa-rocr-dev")

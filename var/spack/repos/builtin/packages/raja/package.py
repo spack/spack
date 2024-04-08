@@ -206,8 +206,6 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
     depends_on("cmake@3.14:", when="@2022.03.0:", type="build")
     depends_on("cmake@:3.20", when="@:2022.03+rocm", type="build")
 
-    depends_on("llvm-openmp", when="+openmp %apple-clang")
-
     depends_on("rocprim", when="+rocm")
     with when("+rocm @0.12.0:"):
         depends_on("camp+rocm")

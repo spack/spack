@@ -128,8 +128,6 @@ class Hydrogen(CachedCMakePackage, CudaPackage, ROCmPackage):
     depends_on("hipcub +rocm", when="+rocm +cub")
     depends_on("half", when="+half")
 
-    depends_on("llvm-openmp", when="%apple-clang +openmp")
-
     # Fixes https://github.com/spack/spack/issues/42286
     # https://github.com/LLNL/Elemental/pull/177
     patch("cmake-intel-mpi-escape-quotes-pr177.patch", when="@1.5.3")

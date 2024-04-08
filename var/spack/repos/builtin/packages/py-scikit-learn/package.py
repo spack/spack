@@ -81,7 +81,6 @@ class PyScikitLearn(PythonPackage):
     depends_on("py-joblib@1:", when="@1.1:", type=("build", "run"))
     depends_on("py-joblib@0.11:", type=("build", "run"))
     depends_on("py-threadpoolctl@2.0.0:", when="@0.23:", type=("build", "run"))
-    depends_on("llvm-openmp", when="%apple-clang +openmp")
 
     # Test dependencies
     depends_on("py-matplotlib@3.3.4:", type="test")

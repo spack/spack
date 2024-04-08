@@ -55,7 +55,6 @@ class EcmwfAtlas(CMakePackage):
     )
 
     variant("openmp", default=True, description="Use OpenMP")
-    depends_on("llvm-openmp", when="+openmp %apple-clang", type=("build", "run"))
     variant("shared", default=True, description="Build shared libraries")
     variant("trans", default=False, description="Enable trans")
     depends_on("ectrans@1.1.0:", when="@0.31.0: +trans")

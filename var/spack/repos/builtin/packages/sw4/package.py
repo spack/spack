@@ -36,7 +36,6 @@ class Sw4(MakefilePackage):
     depends_on("h5z-zfp@develop", when="+zfp")
     depends_on("python")
     depends_on("py-h5py")
-    depends_on("llvm-openmp", when="%apple-clang +openmp")
 
     def edit(self, spec, prefix):
         os.environ["CXX"] = spec["mpi"].mpicxx

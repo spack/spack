@@ -71,7 +71,6 @@ class Eckit(CMakePackage):
     depends_on("ecbuild@3.7:", when="@1.21:", type="build")
 
     depends_on("mpi", when="+mpi")
-    depends_on("llvm-openmp", when="+openmp %apple-clang", type=("build", "run"))
 
     depends_on("yacc", type="build", when="+admin")
     depends_on("flex", type="build", when="+admin")
