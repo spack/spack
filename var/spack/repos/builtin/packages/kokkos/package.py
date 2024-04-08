@@ -120,6 +120,7 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
         "skylake": "BDW",
         "icelake": "SKX",
         "skylake_avx512": "SKX",
+        "sophgo2042": "RISCV_SG2042",
     }
 
     spack_cuda_arch_map = {
