@@ -2,13 +2,18 @@ spack:
   view: false
 
   definitions:
-  - optimized_configs:
-    - gromacs target=neoverse_v1
-    - gromacs target=neoverse_n1
+  - apps:
+    - gromacs
+    - openfoam
+
+  - targets:
+      - 'target=neoverse_v1'
+      - 'target=neoverse_n1'
 
   specs:
-  - $optimized_configs
-
+  - matrix:
+      - [$apps]
+      - [$targets]
   ci:
     pipeline-gen:
     - build-job:
