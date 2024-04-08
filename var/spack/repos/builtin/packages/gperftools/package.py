@@ -3,10 +3,11 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from spack.build_systems import autotools, cmake
 from spack.package import *
 
 
-class Gperftools(AutotoolsPackage):
+class Gperftools(AutotoolsPackage, CMakePackage):
     """Google's fast malloc/free implementation, especially for
     multi-threaded applications.  Contains tcmalloc, heap-checker,
     heap-profiler, and cpu-profiler.
@@ -18,6 +19,8 @@ class Gperftools(AutotoolsPackage):
     maintainers("albestro", "eschnett", "msimberg", "teonnik")
 
     license("BSD-3-Clause")
+
+    build_system(conditional("cmake", when="@2.8.1:"), "autotools", default="cmake")
 
     version("2.15", sha256="c69fef855628c81ef56f12e3c58f2b7ce1f326c0a1fe783e5cae0b88cbbe9a80")
     version("2.14", sha256="6b561baf304b53d0a25311bd2e29bc993bed76b7c562380949e7cb5e3846b299")
@@ -43,21 +46,38 @@ class Gperftools(AutotoolsPackage):
     )
 
     depends_on("unwind", when="+libunwind")
+    depends_on("cmake@3.12:", type="build", when="build_system=cmake")
 
     # Linker error: src/base/dynamic_annotations.cc:46: undefined reference to
     # `TCMallocGetenvSafe'
     conflicts("target=ppc64:", when="@2.14")
     conflicts("target=ppc64le:", when="@2.14")
 
-    def configure_args(self):
-        args = []
-        args += self.enable_or_disable("sized-delete", variant="sized_delete")
-        args += self.enable_or_disable(
-            "dynamic-sized-delete-support", variant="dynamic_sized_delete_support"
-        )
-        args += self.enable_or_disable("debugalloc")
-        args += self.enable_or_disable("libunwind")
-        if self.spec.satisfies("+libunwind"):
-            args += ["LDFLAGS=-lunwind"]
+    # the autotools build system creates an explicit list of -L <system dir> flags that end up
+    # before the -L <spack dir> flags, which causes the system libunwind to be linked instead of
+    # the spack libunwind. This is a workaround to fix that.
+    conflicts("+libunwind", when="build_system=autotools")
 
-        return args
+
+class CMakeBuilder(cmake.CMakeBuilder):
+    def cmake_args(self):
+        return [
+            self.define_from_variant("gperftools_sized_delete", "sized_delete"),
+            self.define_from_variant(
+                "gperftools_dynamic_sized_delete_support", "dynamic_sized_delete_support"
+            ),
+            self.define_from_variant("GPERFTOOLS_BUILD_DEBUGALLOC", "debugalloc"),
+            self.define_from_variant("gperftools_enable_libunwind", "libunwind"),
+        ]
+
+
+class AutotooolsBuilder(autotools.AutotoolsBuilder):
+    def configure_args(self):
+        return [
+            *self.enable_or_disable("sized-delete", variant="sized_delete"),
+            *self.enable_or_disable(
+                "dynamic-sized-delete-support", variant="dynamic_sized_delete_support"
+            ),
+            *self.enable_or_disable("debugalloc"),
+            *self.enable_or_disable("libunwind"),
+        ]
