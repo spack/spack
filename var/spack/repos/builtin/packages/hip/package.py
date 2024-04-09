@@ -107,6 +107,9 @@ class Hip(CMakePackage):
         # ref https://github.com/ROCm/HIP/pull/2202
         depends_on("numactl", when="@3.7.0:")
 
+        for ver in ["6.0.0", "6.0.2"]:
+            depends_on("hipcc", when=f"@{ver}")
+
     # roc-obj-ls requirements
     depends_on("perl-file-which")
     depends_on("perl-uri-encode")
@@ -198,10 +201,23 @@ class Hip(CMakePackage):
             when=f"@{d_version}",
         )
 
+        # For avx build, the start address of values_ buffer in KernelParameters is not
+        # correct as it is computed based on 16-byte alignment.
+        patch(
+            "https://github.com/ROCm/clr/commit/c4f773db0b4ccbbeed4e3d6c0f6bff299c2aa3f0.patch?full_index=1",
+            sha256="5bb9b0e08888830ccf3a0a658529fe25f4ee62b5b8890f349bf2cc914236eb2f",
+            working_dir="clr",
+            when="@5.7:",
+        )
+        patch(
+            "https://github.com/ROCm/clr/commit/7868876db742fb4d44483892856a66d2993add03.patch?full_index=1",
+            sha256="7668b2a710baf4cb063e6b00280fb75c4c3e0511575e8298a9c7ae5143f60b33",
+            working_dir="clr",
+            when="@5.7:",
+        )
+
     # Add hipcc sources thru the below
     for d_version, d_shasum in [
-        ("6.0.2", "d6209b14fccdd00d7231dec4b4f962aa23914b9dde389ba961370e8ba918bde5"),
-        ("6.0.0", "e9cfaaecaf0e6ed363946439197f340c115e8e1189f96dbd716cf20245c29255"),
         ("5.7.1", "d47d27ef2b5de7f49cdfd8547832ac9b437a32e6fc6f0e9c1646f4b704c90aee"),
         ("5.7.0", "9f839bf7226e5e26f3150f8ba6eca507ab9a668e68b207736301b3bb9040c973"),
         ("5.6.1", "5800fac92b841ef6f52acda78d9bf86f83970bec0fb848a6265d239bdb7eb51a"),
@@ -262,7 +278,6 @@ class Hip(CMakePackage):
     patch("0014-Remove-compiler-rt-linkage-for-host-for-5.7.0.patch", when="@5.7.0:5.7")
     patch("0014-remove-compiler-rt-linkage-for-host.6.0.patch", when="@6.0:")
     patch("0015-reverting-operator-mixup-fix-for-slate.patch", when="@5.6:6.0")
-    patch("0017-Set-PARAMETERS_MIN_ALIGNMENT-to-the-native-alignment.patch", when="@5.7:6.0")
     patch("0018-reverting-hipMemoryType-with-memoryType.patch", when="@6.0")
 
     # See https://github.com/ROCm/HIP/pull/3206
@@ -401,7 +416,9 @@ class Hip(CMakePackage):
             env.set("HIP_DEVICE_LIB_PATH", paths["bitcode"])
 
             # Just the prefix of hip (used in hipcc)
-            env.set("HIP_PATH", paths["hip-path"])
+            # Deprecated in 5.1.0 and breaks hipcc in 5.5.1+
+            if self.spec.satisfies("@:5.4"):
+                env.set("HIP_PATH", paths["hip-path"])
 
             # Used in comgr and seems necessary when using the JIT compiler, e.g.
             # hiprtcCreateProgram:
@@ -486,6 +503,7 @@ class Hip(CMakePackage):
         if self.spec.satisfies("@5.6:"):
             with working_dir("clr/hipamd/bin"):
                 filter_file("^#!/usr/bin/perl", f"#!{perl}", "roc-obj-extract", "roc-obj-ls")
+        if self.spec.satisfies("@5.6:5.7"):
             with working_dir("hipcc/bin"):
                 filter_shebang("hipconfig")
 
@@ -494,7 +512,7 @@ class Hip(CMakePackage):
             if self.spec.satisfies("@:5.5"):
                 with working_dir("bin"):
                     filter_file(" -lnuma", f" -L{numactl} -lnuma", "hipcc")
-            elif self.spec.satisfies("@5.6:"):
+            elif self.spec.satisfies("@5.6:5.7"):
                 with working_dir("hipcc/src"):
                     filter_file(" -lnuma", f" -L{numactl} -lnuma", "hipBin_amd.h")
 
@@ -524,10 +542,13 @@ class Hip(CMakePackage):
         if "@5.6.0:" in self.spec:
             args.append(self.define("ROCCLR_PATH", self.stage.source_path + "/clr/rocclr"))
             args.append(self.define("AMD_OPENCL_PATH", self.stage.source_path + "/clr/opencl"))
-            args.append(self.define("HIPCC_BIN_DIR", self.stage.source_path + "/hipcc/bin")),
             args.append(self.define("CLR_BUILD_HIP", True)),
             args.append(self.define("CLR_BUILD_OCL", False)),
             args.append(self.define("HIP_LLVM_ROOT", self.spec["llvm-amdgpu"].prefix))
+        if "@5.6:5.7" in self.spec:
+            args.append(self.define("HIPCC_BIN_DIR", self.stage.source_path + "/hipcc/bin")),
+        if "@6.0:" in self.spec:
+            args.append(self.define("HIPCC_BIN_DIR", self.spec["hipcc"].prefix.bin)),
         return args
 
     test_src_dir_old = "samples"

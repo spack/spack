@@ -72,6 +72,7 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
     variant("int64", default=False, description="Use 64bit integers")
     variant("mixedint", default=False, description="Use 64bit integers while reducing memory use")
     variant("complex", default=False, description="Use complex values")
+    variant("gpu-aware-mpi", default=False, description="Use gpu-aware mpi")
     variant("mpi", default=True, description="Enable MPI support")
     variant("openmp", default=False, description="Enable OpenMP support")
     variant("debug", default=False, description="Build debug instead of optimized version")
@@ -286,11 +287,10 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
 
         if spec.satisfies("+sycl"):
             configure_args.append("--with-sycl")
-            sycl_compatible_compilers = ["dpcpp", "icpx"]
+            sycl_compatible_compilers = ["icpx"]
             if not (os.path.basename(self.compiler.cxx) in sycl_compatible_compilers):
                 raise InstallError(
-                    "Hypre's SYCL GPU Backend requires DPC++ (dpcpp)"
-                    + " or the oneAPI CXX (icpx) compiler."
+                    "Hypre's SYCL GPU Backend requires the oneAPI CXX (icpx) compiler."
                 )
 
         if spec.satisfies("+unified-memory"):
@@ -300,6 +300,9 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
             configure_args.append("--with-magma-include=%s" % spec["magma"].prefix.include)
             configure_args.append("--with-magma-lib=%s" % spec["magma"].libs)
             configure_args.append("--with-magma")
+
+        if "+gpu-aware-mpi" in spec:
+            options.append("--enable-gpu-aware-mpi")
 
         configure_args.extend(self.enable_or_disable("fortran"))
 

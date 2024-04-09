@@ -10,6 +10,8 @@ import sys
 import tempfile
 from typing import Dict, List, Set
 
+import archspec.cpu
+
 import spack.compiler
 import spack.operating_systems.windows_os
 import spack.platforms
@@ -186,6 +188,9 @@ class Msvc(Compiler):
         # get current platform architecture and format for vcvars argument
         arch = spack.platforms.real_host().default.lower()
         arch = arch.replace("-", "_")
+        if str(archspec.cpu.host().family) == "x86_64":
+            arch = "amd64"
+
         self.vcvars_call = VCVarsInvocation(vcvars_script_path, arch, self.msvc_version)
         env_cmds.append(self.vcvars_call)
         # Below is a check for a valid fortran path
@@ -194,7 +199,7 @@ class Msvc(Compiler):
         # for a fortran compiler
         if paths[2]:
             # If this found, it sets all the vars
-            oneapi_root = os.getenv("ONEAPI_ROOT")
+            oneapi_root = os.path.join(self.cc, "../../..")
             oneapi_root_setvars = os.path.join(oneapi_root, "setvars.bat")
             oneapi_version_setvars = os.path.join(
                 oneapi_root, "compiler", str(self.ifx_version), "env", "vars.bat"
@@ -318,7 +323,7 @@ class Msvc(Compiler):
         fc_path[fc_ver] = fc
         if os.getenv("ONEAPI_ROOT"):
             try:
-                sps = spack.operating_systems.windows_os.WindowsOs.compiler_search_paths
+                sps = spack.operating_systems.windows_os.WindowsOs().compiler_search_paths
             except AttributeError:
                 raise SpackError("Windows compiler search paths not established")
             clp = spack.util.executable.which_string("cl", path=sps)

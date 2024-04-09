@@ -1621,15 +1621,32 @@ class Database:
     query_local.__doc__ += _QUERY_DOCSTRING
 
     def query(self, *args, **kwargs):
-        """Query the Spack database including all upstream databases."""
+        """Query the Spack database including all upstream databases.
+
+        Additional Arguments:
+            install_tree (str): query 'all' (default), 'local', 'upstream', or upstream path
+        """
+        install_tree = kwargs.pop("install_tree", "all")
+        valid_trees = ["all", "upstream", "local", self.root] + [u.root for u in self.upstream_dbs]
+        if install_tree not in valid_trees:
+            msg = "Invalid install_tree argument to Database.query()\n"
+            msg += f"Try one of {', '.join(valid_trees)}"
+            tty.error(msg)
+            return []
+
         upstream_results = []
-        for upstream_db in self.upstream_dbs:
+        upstreams = self.upstream_dbs
+        if install_tree not in ("all", "upstream"):
+            upstreams = [u for u in self.upstream_dbs if u.root == install_tree]
+        for upstream_db in upstreams:
             # queries for upstream DBs need to *not* lock - we may not
             # have permissions to do this and the upstream DBs won't know about
             # us anyway (so e.g. they should never uninstall specs)
             upstream_results.extend(upstream_db._query(*args, **kwargs) or [])
 
-        local_results = set(self.query_local(*args, **kwargs))
+        local_results = []
+        if install_tree in ("all", "local") or self.root == install_tree:
+            local_results = set(self.query_local(*args, **kwargs))
 
         results = list(local_results) + list(x for x in upstream_results if x not in local_results)
 

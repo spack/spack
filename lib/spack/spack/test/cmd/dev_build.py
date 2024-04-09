@@ -20,7 +20,10 @@ dev_build = SpackCommand("dev-build")
 install = SpackCommand("install")
 env = SpackCommand("env")
 
-pytestmark = pytest.mark.not_on_windows("does not run on windows")
+pytestmark = [
+    pytest.mark.not_on_windows("does not run on windows"),
+    pytest.mark.disable_clean_stage_check,
+]
 
 
 def test_dev_build_basics(tmpdir, install_mockery):

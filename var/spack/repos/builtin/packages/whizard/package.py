@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
+
 from spack.package import *
 
 
@@ -120,6 +122,14 @@ class Whizard(AutotoolsPackage):
         env.set("CXX", self.compiler.cxx)
         env.set("FC", self.compiler.fc)
         env.set("F77", self.compiler.fc)
+
+    @run_before("autoreconf")
+    def prepare_whizard(self):
+        # As described in the manual (SVN Repository version)
+        # https://whizard.hepforge.org/manual/manual003.html#sec%3Aprerequisites
+        if not os.path.exists("configure.ac"):
+            shell = which("sh")
+            shell("build_master.sh")
 
     def configure_args(self):
         spec = self.spec
