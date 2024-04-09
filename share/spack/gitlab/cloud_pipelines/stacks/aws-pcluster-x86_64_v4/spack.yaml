@@ -9,7 +9,7 @@ spack:
     - openfoam
     - palace
     - quantum-espresso
-    - wrf
+    # - wrf : While building hdf5 cmake errors out with Detecting Fortran/C Interface: Failed to compile
 
   - targets:
       - 'target=x86_64_v4'
