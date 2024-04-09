@@ -10,7 +10,7 @@ class Libxc(AutotoolsPackage, CudaPackage):
     """Libxc is a library of exchange-correlation functionals for
     density-functional theory."""
 
-    homepage = "https://tddft.org/programs/libxc/"
+    homepage = "https://libxc.gitlab.io"
     url = "https://gitlab.com/libxc/libxc/-/archive/6.1.0/libxc-6.1.0.tar.gz"
 
     license("MPL-2.0-no-copyleft-exception")
