@@ -1171,11 +1171,11 @@ class SpackSolverSetup:
         # for idx, declared_version in enumerate(llnl.util.lang.dedupe(most_to_least_preferred)):
         # for idx, declared_version in enumerate(most_to_least_preferred):
         for declared_version in most_to_least_preferred:
-            # tty.debug(f"[SETUP] {pkg.name}, {declared_version.weight}: generating version_declared({declared_version.version}, {idx}, {declared_version.origin})", level=2)
-            # tty.debug(
-            #     f"[SETUP] {pkg.name}, {idx}: generating version_declared({declared_version.version}, {declared_version.weight}, {declared_version.origin})",
-            #     level=2,
-            # )
+            #tty.debug(f"[SETUP] {pkg.name}, {declared_version.weight}: generating version_declared({declared_version.version}, {idx}, {declared_version.origin})", level=2)
+            #tty.debug(
+            #    f"[SETUP] {pkg.name}, {idx}: generating version_declared({declared_version.version}, {declared_version.weight}, {declared_version.origin})",
+            #    level=2,
+            #)
             self.gen.fact(
                 fn.pkg_fact(
                     pkg.name,
