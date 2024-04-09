@@ -22,6 +22,7 @@ class PyKeras(PythonPackage):
     maintainers("adamjstewart")
     license("Apache-2.0")
 
+    version("3.2.0", sha256="e3ff572c872ebb24d2ae62d4e12c3579ccd0019d0f0adaf3cb7dc610e77e84c1")
     version("3.1.1", sha256="55558ea228dc38e7667874fd2e83eaf7faeb026e2e8615b36a8616830f7e303b")
     version("3.1.0", sha256="cac46e053f0493da313e7c9b16379a532b1a38f9f19c7a5fe4578759f4c6aa4d")
     version("3.0.5", sha256="df3d3795e12c3f6035e811c43c13f1eb41e37241796a0fea120ede4ebe1c4496")
