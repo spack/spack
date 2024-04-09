@@ -261,7 +261,22 @@ def get_package_url(version):
 
 
 def get_armpl_prefix(spec):
-    return os.path.join(spec.prefix, "armpl_" + spec.version.string)
+    armpl_dir = [
+        d
+        for d in os.listdir(spec.prefix)
+        if os.path.isdir(os.path.join(spec.prefix, d)) and d.startswith("armpl_")
+    ][0]
+    return os.path.join(spec.prefix, armpl_dir)
+
+
+def get_armpl_suffix(spec):
+    suffix = ""
+    if spec.satisfies("@24:"):
+        suffix += "_ilp64" if spec.satisfies("+ilp64") else "_lp64"
+    else:
+        suffix += "_ilp64" if spec.satisfies("+ilp64") else ""
+    suffix += "_mp" if spec.satisfies("threads=openmp") else ""
+    return suffix
 
 
 class ArmplGcc(Package):
@@ -269,9 +284,9 @@ class ArmplGcc(Package):
     high-performance computing applications on Arm processors."""
 
     homepage = "https://developer.arm.com/tools-and-software/server-and-hpc/downloads/arm-performance-libraries"
-    url = "https://developer.arm.com/-/media/Files/downloads/hpc/arm-performance-libraries/23-04-1/ubuntu-22/arm-performance-libraries_23.04.1_Ubuntu-22.04_gcc-12.2.tar"
+    url = "https://developer.arm.com/-/media/Files/downloads/hpc/arm-performance-libraries/24-04/linux/arm-performance-libraries_24.04_deb_gcc.tar"
 
-    maintainers("annop-w")
+    maintainers("paolotricerri")
 
     for ver, packages in _versions.items():
         key = get_os(ver)
@@ -282,6 +297,31 @@ class ArmplGcc(Package):
             # Don't attempt to expand .dmg files
             expand = extension != ".dmg"
             version(ver, sha256=sha256sum, url=url, extension=extension, expand=expand)
+
+    if spack.platforms.host().default_os.startswith("ubuntu"):
+        version(
+            "24.04",
+            sha256="a323074cd08af82f4d79988cc66088b18e47dea4b93323b1b8a0f994f769f2f0",
+            url="https://developer.arm.com/-/media/Files/downloads/hpc/arm-performance-libraries/24-04/linux/arm-performance-libraries_24.04_deb_gcc.tar",
+            extension=".tar",
+            expand=True,
+        )
+    elif spack.platforms.host().name == "darwin":
+        version(
+            "24.04",
+            sha256="228bf3a2c25dbd45c2f89c78f455ee3c7dfb25e121c20d2765138b5174e688dc",
+            url="https://developer.arm.com/-/media/Files/downloads/hpc/arm-performance-libraries/24-04/macos/arm-performance-libraries_24.04_macOS.tgz",
+            extension=".tgz",
+            expand=True,
+        )
+    else:
+        version(
+            "24.04",
+            sha256="d3917523034cf5a35e4f31f9a8bf4e53e7cc97892e89739d5757cb65ce40dc2e",
+            url="https://developer.arm.com/-/media/Files/downloads/hpc/arm-performance-libraries/24-04/linux/arm-performance-libraries_24.04_rpm_gcc.tar",
+            extension=".tar",
+            expand=True,
+        )
 
     conflicts("target=x86:", msg="Only available on Aarch64")
     conflicts("target=ppc64:", msg="Only available on Aarch64")
@@ -339,10 +379,17 @@ class ArmplGcc(Package):
             hdiutil = which("hdiutil")
             # Mount image
             mountpoint = os.path.join(self.stage.path, "mount")
-            hdiutil("attach", "-mountpoint", mountpoint, self.stage.archive_file)
+            if spec.satisfies("@:23"):
+                dmg_file = self.stage.archive_file
+            else:
+                # The archive file only extracts to one .dmg file
+                dmg_file = os.path.join(
+                    self.stage.source_path, os.listdir(self.stage.source_path)[0]
+                )
+            hdiutil("attach", "-mountpoint", mountpoint, dmg_file)
             try:
                 # Run installer
-                exe_name = f"armpl_{spec.version.string}_install.sh"
+                exe_name = [f for f in os.listdir(mountpoint) if f.endswith(".sh")][0]
                 installer = Executable(os.path.join(mountpoint, exe_name))
                 installer("-y", f"--install_dir={prefix}")
             finally:
@@ -357,15 +404,20 @@ class ArmplGcc(Package):
         with when("@23:"):
             armpl_version = spec.version.string.split("_")[0]
 
-        exe = Executable(f"./arm-performance-libraries_{armpl_version}_{get_os(armpl_version)}.sh")
+        if spec.satisfies("@:23"):
+            exe = Executable(
+                f"./arm-performance-libraries_{armpl_version}_{get_os(armpl_version)}.sh"
+            )
+        else:
+            package_type = (
+                "deb" if spack.platforms.host().default_os.startswith("ubuntu") else "rpm"
+            )
+            exe = Executable(f"./arm-performance-libraries_{armpl_version}_{package_type}.sh")
         exe("--accept", "--force", "--install-to", prefix)
 
     @property
     def lib_suffix(self):
-        suffix = ""
-        suffix += "_ilp64" if self.spec.satisfies("+ilp64") else ""
-        suffix += "_mp" if self.spec.satisfies("threads=openmp") else ""
-        return suffix
+        return get_armpl_suffix(self.spec)
 
     @property
     def blas_libs(self):
@@ -419,7 +471,9 @@ class ArmplGcc(Package):
     @run_after("install")
     def check_install(self):
         armpl_dir = get_armpl_prefix(self.spec)
-        armpl_example_dir = join_path(armpl_dir, "examples")
+        suffix = get_armpl_suffix(self.spec)
+        armpl_example_dir = join_path(armpl_dir, f"examples{suffix}")
+
         # run example makefile
         if self.spec.platform == "darwin":
             # Fortran examples on MacOS requires flang-new which is
