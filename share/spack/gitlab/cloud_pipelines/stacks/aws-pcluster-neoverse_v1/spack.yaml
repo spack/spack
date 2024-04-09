@@ -4,7 +4,10 @@ spack:
   definitions:
   - apps:
     - gromacs
+    - mpas-model
     - openfoam
+    - quantum-espresso
+    - wrf
 
   - targets:
       - 'target=neoverse_v1'
