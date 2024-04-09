@@ -99,7 +99,7 @@ install_compilers() {
     # The compilers needs to be in the same install tree as the rest of the software such that the path
     # relocation works correctly. This holds the danger that this part will fail when the current spack gets
     # incompatible with the one in $spack_intel_compiler_commit. Therefore, we make intel installations optional
-    # in package.yaml files.
+    # in package.yaml files and add a fallback `%gcc` version for each application.
     if [ "x86_64" == "$(arch)" ]; then
         (
             CURRENT_SPACK_ROOT=${SPACK_ROOT}
