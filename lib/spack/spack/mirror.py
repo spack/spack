@@ -148,7 +148,7 @@ class Mirror:
         return self.get_url("push")
 
     def _update_connection_dict(self, current_data: dict, new_data: dict, top_level: bool):
-        keys = ["url", "access_pair", "access_token", "profile", "endpoint_url"]
+        keys = ["url", "access_pair", "access_token", "profile", "endpoint_url", "autopush"]
         if top_level:
             keys += ["binary", "source", "signed"]
         changed = False
