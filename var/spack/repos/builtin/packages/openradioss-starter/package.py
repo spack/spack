@@ -35,10 +35,10 @@ class OpenradiossStarter(CMakePackage):
     depends_on("cmake@2.8:", type="build")
     depends_on("perl", type="build")
     depends_on("python", type="build")
+    depends_on("intel-oneapi-mkl", when="%oneapi")
 
     requires(
         "%gcc",
-        "%intel",
         "%oneapi",
         "%aocc",
         "%arm",
@@ -54,7 +54,6 @@ class OpenradiossStarter(CMakePackage):
     def compiler_name(self):
         compiler_mapping = {
             "aocc": "linux64_AOCC",
-            "intel": "linux64_intel",
             "oneapi": "linux64_intel",
             "gcc": "linux64_gf",
             "arm": "linuxa64",
@@ -70,7 +69,6 @@ class OpenradiossStarter(CMakePackage):
             self.define("CMAKE_CXX_COMPILER", spack_cxx),
             self.define("santize", False),
             self.define("arch", self.compiler_name),
-            self.define("EXEC_NAME", f"starter_{self.compiler_name}"),
             self.define_from_variant("debug", "debug"),
             self.define_from_variant("static_link", "static_link"),
         ]
@@ -80,12 +78,19 @@ class OpenradiossStarter(CMakePackage):
         else:
             args.append(self.define("precision", "dp"))
 
+        exec_file = f"starter_{self.compiler_name}"
+        if "+sp" in self.spec:
+            exec_file += "_sp"
+        args.append(self.define("EXEC_NAME", exec_file))
+
         return args
 
     def install(self, spec, prefix):
         mkdirp(join_path(prefix, "exec"))
 
         exec_file = f"starter_{self.compiler_name}"
+        if "+sp" in self.spec:
+            exec_file += "_sp"
 
         install(
             join_path(self.stage.source_path, "starter", exec_file),
