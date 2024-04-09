@@ -179,7 +179,7 @@ class FluxCore(AutotoolsPackage):
     depends_on("libtool", type="build", when="@master")
 
     # Testing Dependencies
-    depends_on("mpich pmi=pmi", type="test")
+    depends_on("mpich pmi=pmi1", type="test")
     depends_on("valgrind", type="test")
     depends_on("jq", type="test")
 
