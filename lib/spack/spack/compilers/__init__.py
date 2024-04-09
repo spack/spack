@@ -322,7 +322,7 @@ def _remove_compiler_from_scope(compiler_spec, scope):
     # We need to preserve the YAML type for comments, hence we are copying the
     # items in the list that has just been retrieved
     compiler_config[:] = filtered_compiler_config
-    spack.config.set("compilers", compiler_config, scope=scope)
+    spack.config.CONFIG.set("compilers", compiler_config, scope=scope)
     return True
 
 
