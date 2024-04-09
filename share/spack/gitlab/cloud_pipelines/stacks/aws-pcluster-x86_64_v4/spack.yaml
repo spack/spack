@@ -5,11 +5,13 @@ spack:
   - apps:
     - gromacs
     - lammps
-    - mpas-model
+    # - mpas-model: Spack currently forces REAL(8) when using GCC. This conflicts with `precision=single`
     - openfoam
     - palace
-    - quantum-espresso
+    # - quantum-espresso : %gcc@12.3.0 on neoverse_v1 fails.
+    # Root cause: internal compiler error: in compute_live_loop_exits, at tree-ssa-loop-manip.cc:247
     # - wrf : While building hdf5 cmake errors out with Detecting Fortran/C Interface: Failed to compile
+    # Root cause: ifort cannot deal with arbitrarily long file names.
 
   - targets:
       - 'target=x86_64_v4'
