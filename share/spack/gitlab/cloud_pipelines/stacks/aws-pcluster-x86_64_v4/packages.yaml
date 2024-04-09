@@ -6,6 +6,12 @@ packages:
           - "cflags=-std=c18 target=x86_64_v4"
           - "cflags=-std=c18 target=x86_64_v3"
           - "%gcc"
+  gettext:
+    require:
+      - one_of:
+          - '%intel cflags="-std=c18"'
+          - '%gcc'
+        message: "gettext uses single valued `static_assert` which is only available in `icc` as part of later C standard."
   gromacs:
     require:
       - one_of:
