@@ -120,14 +120,16 @@ def current_host(request, monkeypatch):
     # is_preference is not empty if we want to supply the
     # preferred target via packages.yaml
     cpu, _, is_preference = request.param.partition("-")
-    target = archspec.cpu.TARGETS[cpu]
 
     monkeypatch.setattr(spack.platforms.Test, "default", cpu)
     monkeypatch.setattr(spack.platforms.Test, "front_end", cpu)
     if not is_preference:
+        target = archspec.cpu.TARGETS[cpu]
         monkeypatch.setattr(archspec.cpu, "host", lambda: target)
         yield target
     else:
+        target = archspec.cpu.TARGETS["sapphirerapids"]
+        monkeypatch.setattr(archspec.cpu, "host", lambda: target)
         with spack.config.override("packages:all", {"target": [cpu]}):
             yield target
 
