@@ -434,6 +434,8 @@ class AutotoolsBuilder(BaseBuilder, autotools.AutotoolsBuilder):
 
         config_args += self.enable_or_disable("fsync")
 
+        config_args.extend(self.enable_or_disable("logging"))
+
         if any(self.spec.satisfies(s) for s in ["+mpi", "+parallel-netcdf", "^hdf5+mpi~shared"]):
             config_args.append("CC={0}".format(self.spec["mpi"].mpicc))
 
@@ -531,8 +533,6 @@ class AutotoolsBuilder(BaseBuilder, autotools.AutotoolsBuilder):
         if not self.spec.satisfies("@:4.4,main"):
             # Suppress the redundant check for m4:
             config_args.append("ac_cv_prog_NC_M4=false")
-
-        config_args.extend(self.enable_or_disable("logging"))
 
         lib_search_dirs.extend(d for libs in extra_libs for d in libs.directories)
         # Remove duplicates and system prefixes:
