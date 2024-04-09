@@ -92,6 +92,9 @@ class Slate(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("scalapack", when="@:2022.07.00", type="test")
     depends_on("python", type="test")
     depends_on("hipify-clang", when="@:2021.05.02 +rocm ^hip@5:")
+    depends_on("comgr", when="+rocm")
+    depends_on("rocblas", when="+rocm")
+    depends_on("rocsolver", when="+rocm")
 
     requires("%oneapi", when="+sycl", msg="slate+sycl must be compiled with %oneapi")
 
@@ -166,9 +169,11 @@ class Slate(CMakePackage, CudaPackage, ROCmPackage):
         test_dir = join_path(self.test_suite.current_test_cache_dir, "examples", "build")
         with working_dir(test_dir, create=True):
             cmake_bin = join_path(self.spec["cmake"].prefix.bin, "cmake")
+            # This package must directly depend on all packages listed here.
+            # Otherwise, it will not work when some packages are external to spack.
             deps = "slate blaspp lapackpp mpi"
             if self.spec.satisfies("+rocm"):
-                deps += " rocblas hip llvm-amdgpu comgr hsa-rocr-dev rocsolver"
+                deps += " rocblas hip llvm-amdgpu comgr hsa-rocr-dev rocsolver "
             prefixes = ";".join([self.spec[x].prefix for x in deps.split()])
             self.run_test(cmake_bin, ["-DCMAKE_PREFIX_PATH=" + prefixes, ".."])
             make()

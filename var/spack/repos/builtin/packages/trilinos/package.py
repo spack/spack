@@ -103,6 +103,13 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     variant("uvm", default=False, when="@13.2: +cuda", description="Turn on UVM for CUDA build")
     variant("wrapper", default=False, description="Use nvcc-wrapper for CUDA build")
 
+    # Makes the Teuchos Memory Management classes (Teuchos::RCP, Teuchos::Ptr, Teuchos::Array,
+    # Teuchos::ArrayView, and Teuchos::ArrayRCP) thread-safe. Requires at least the OMP kokkos
+    # backend to be enabled. Without, this seemingly does nothing
+    variant(
+        "threadsafe", default=False, when="+openmp", description="Enable threadsafe in Teuchos"
+    )
+
     # TPLs (alphabet order)
     variant("adios2", default=False, description="Enable ADIOS2")
     variant("boost", default=False, description="Compile with Boost")
@@ -633,6 +640,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
                 define_trilinos_enable(
                     "EXPLICIT_INSTANTIATION", "explicit_template_instantiation"
                 ),
+                define_from_variant("Trilinos_ENABLE_THREAD_SAFE", "threadsafe"),
             ]
         )
 

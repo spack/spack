@@ -16,7 +16,7 @@ packages:
   externalvirtual:
     buildable: False
     externals:
-    - spec: externalvirtual@2.0%clang@12.0.0
+    - spec: externalvirtual@2.0%clang@15.0.0
       prefix: /path/to/external_virtual_clang
     - spec: externalvirtual@1.0%gcc@10.2.1
       prefix: /path/to/external_virtual_gcc

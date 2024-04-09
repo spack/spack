@@ -31,13 +31,11 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
 
     version("master", branch="master", submodules=True)
     version(
-        "5.12.0-RC3", sha256="6aaa46ff295126707294482e6ba24bd0ec0d68cf6bb5f56f145f8bcc53fc3f70"
-    )
-    version(
-        "5.11.2",
-        sha256="5c5d2f922f30d91feefc43b4a729015dbb1459f54c938896c123d2ac289c7a1e",
+        "5.12.0",
+        sha256="d289afe7b48533e2ca4a39a3b48d3874bfe67cf7f37fdd2131271c57e64de20d",
         preferred=True,
     )
+    version("5.11.2", sha256="5c5d2f922f30d91feefc43b4a729015dbb1459f54c938896c123d2ac289c7a1e")
     version("5.11.1", sha256="5cc2209f7fa37cd3155d199ff6c3590620c12ca4da732ef7698dec37fa8dbb34")
     version("5.11.0", sha256="9a0b8fe8b1a2cdfd0ace9a87fa87e0ec21ee0f6f0bcb1fdde050f4f585a25165")
     version("5.10.1", sha256="520e3cdfba4f8592be477314c2f6c37ec73fb1d5b25ac30bdbd1c5214758b9c2")
@@ -318,6 +316,8 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
     patch("adios2-remove-deprecated-functions.patch", when="@5.10:5.11 ^adios2@2.9:")
 
     patch("exodusII-netcdf4.9.0.patch", when="@5.10.0:5.10.2")
+
+    patch("kits_with_catalyst_5_12.patch", when="@5.12.0")
 
     generator("ninja", "make", default="ninja")
     # https://gitlab.kitware.com/paraview/paraview/-/issues/21223
