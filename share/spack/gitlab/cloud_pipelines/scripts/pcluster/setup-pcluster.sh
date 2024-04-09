@@ -23,10 +23,9 @@ set_pcluster_defaults() {
 
 setup_spack() {
     spack compiler add --scope site
-    spack external find --scope site
-    # Remove all autotools/buildtools packages. These versions need to be managed by spack or it will
+    # Do not add  autotools/buildtools packages. These versions need to be managed by spack or it will
     # eventually end up in a version mismatch (e.g. when compiling gmp).
-    spack tags build-tools | xargs -I {} spack config --scope site rm packages:{}
+    spack external find --scope site --tag core-packages
 }
 
 patch_compilers_yaml() {
