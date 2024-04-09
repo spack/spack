@@ -64,8 +64,6 @@ from .counter import FullDuplicatesCounter, MinimalDuplicatesCounter, NoDuplicat
 
 GitOrStandardVersion = Union[spack.version.GitVersion, spack.version.StandardVersion]
 
-PossibleVersionType = Tuple["Provenance", bool, GitOrStandardVersion]
-
 TransformFunction = Callable[["spack.spec.Spec", List[AspFunction]], List[AspFunction]]
 
 #: Enable the addition of a runtime node
@@ -1095,7 +1093,7 @@ class SpackSolverSetup:
         self.possible_versions: Dict[str, PossibleVersions] = collections.defaultdict(
             PossibleVersions
         )
-        self.deprecated_versions: Dict[str, PossibleVersions] = collections.defaultdict(set)
+        self.deprecated_versions: Dict[str, Set[GitOrStandardVersion]] = collections.defaultdict(set)
 
         self.possible_compilers: List = []
         self.possible_oses: Set = set()
@@ -1168,14 +1166,17 @@ class SpackSolverSetup:
                 list(sorted(group, reverse=True, key=lambda x: vn.ver(x.version)))
             )
 
+        # Now that declared versions are sorted according to the desired
+        # criteria (including prioritizing major versions), reduce the
+        # weights to help the solver.
         # for idx, declared_version in enumerate(llnl.util.lang.dedupe(most_to_least_preferred)):
-        # for idx, declared_version in enumerate(most_to_least_preferred):
-        for declared_version in most_to_least_preferred:
-            #tty.debug(f"[SETUP] {pkg.name}, {declared_version.weight}: generating version_declared({declared_version.version}, {idx}, {declared_version.origin})", level=2)
-            #tty.debug(
+        #for declared_version in most_to_least_preferred:
+        for idx, declared_version in enumerate(most_to_least_preferred):
+            # tty.debug(f"[SETUP] {pkg.name}, {declared_version.weight}: generating version_declared({declared_version.version}, {idx}, {declared_version.origin})", level=2)
+            # tty.debug(
             #    f"[SETUP] {pkg.name}, {idx}: generating version_declared({declared_version.version}, {declared_version.weight}, {declared_version.origin})",
             #    level=2,
-            #)
+            # )
             self.gen.fact(
                 fn.pkg_fact(
                     pkg.name,
@@ -1183,9 +1184,12 @@ class SpackSolverSetup:
                         declared_version.version,
                         # TBD: Why does using the calculated weight break
                         # a number of tests (externals and included config)?
+                        idx,
                         # declared_version.weight,
-                        # idx,
-                        possible_versions.weight(declared_version.version),
+                        #possible_versions.weight(declared_version.version),
+                        # Weights are currently based on version criteria but
+                        # we need to make them unique across origins as well.
+                        #possible_versions.weight(declared_version.version) * 10+ declared_version.origin,
                         str(declared_version.origin),
                     ),
                 )
