@@ -80,9 +80,9 @@ spack:
     - py-tensorflow-probability
 
     # XGBoost
-    - py-xgboost
+    # - py-xgboost
     # - r-xgboost
-    - xgboost
+    # - xgboost
 
   mirrors:
     mirror: s3://spack-binaries/develop/ml-linux-aarch64-cuda
