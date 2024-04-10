@@ -2,8 +2,10 @@ spack:
   view: false
   packages:
     all:
-      require: target=aarch64
-      variants: ~cuda~rocm
+      require:
+      - target=aarch64
+      - ~cuda
+      - ~rocm
     mpi:
       require: openmpi
 
@@ -19,7 +21,9 @@ spack:
     - py-jaxlib
 
     # Keras
-    - py-keras
+    - py-keras backend=tensorflow
+    - py-keras backend=jax
+    - py-keras backend=torch
     - py-keras-applications
     - py-keras-preprocessing
     - py-keras2onnx
