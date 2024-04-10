@@ -1,7 +1,7 @@
-diff --git a/tmp/yizeping/spack-stage/spack-stage-binutils-2.42-lkdx5qollqoytwfulbtmqzrcso46vx2h/spack-src/gold/merge.cc b/./merge.cc
+diff --git a/gold/merge.cc b/gold/merge.cc
 index ca15149..a270bc0 100644
---- a/tmp/yizeping/spack-stage/spack-stage-binutils-2.42-lkdx5qollqoytwfulbtmqzrcso46vx2h/spack-src/gold/merge.cc
-+++ b/./merge.cc
+--- a/gold/merge.cc
++++ b/gold/merge.cc
 @@ -24,6 +24,7 @@
  
  #include <cstdlib>
