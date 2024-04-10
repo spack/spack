@@ -18,6 +18,7 @@ class Rkcommon(CMakePackage):
 
     license("Apache-2.0")
 
+    version("1.13.0", sha256="8ae9f911420085ceeca36e1f16d1316a77befbf6bf6de2a186d65440ac66ff1f")
     version("1.12.0", sha256="6abb901073811cdbcbe336772e1fcb458d78cab5ad8d5d61de2b57ab83581e80")
     version("1.11.0", sha256="9cfeedaccdefbdcf23c465cb1e6c02057100c4a1a573672dc6cfea5348cedfdd")
     version("1.10.0", sha256="57a33ce499a7fc5a5aaffa39ec7597115cf69ed4ff773546b5b71ff475ee4730")

@@ -16,6 +16,7 @@ class Ospray(CMakePackage):
 
     # maintainers("aumuell")
 
+    version("3.1.0", sha256="0b9d7df900fe0474b12e5a2641bb9c3f5a1561217b2789834ebf994a15288a82")
     version("3.0.0", sha256="d8d8e632d77171c810c0f38f8d5c8387470ca19b75f5b80ad4d3d12007280288")
     version("2.12.0", sha256="268b16952b2dd44da2a1e40d2065c960bc2442dd09b63ace8b65d3408f596301")
     version("2.11.0", sha256="55974e650d9b78989ee55adb81cffd8c6e39ce5d3cf0a3b3198c522bf36f6e81")
@@ -40,6 +41,7 @@ class Ospray(CMakePackage):
     depends_on("rkcommon@1.10:", when="@2.10.0:")
     depends_on("rkcommon@1.11:", when="@2.11:")
     depends_on("rkcommon@1.12:", when="@3:")
+    depends_on("rkcommon@1.13:", when="@3.1:")
     depends_on("embree@3.12: +ispc")
     depends_on("embree@3.13.1:", when="@2.7.0:")
     depends_on("embree@:3", when="@:2.10")
