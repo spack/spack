@@ -5,20 +5,22 @@ packages:
       - one_of:
           - "cflags=-std=c18 target=x86_64_v4"
           - "cflags=-std=c18 target=x86_64_v3"
-          - "%gcc"
+        when: "%intel"
   gettext:
     require:
       - one_of:
           - "cflags=-std=c18 target=x86_64_v4"
-          - "cflags=-std=c18 target=x86_64_v4"
-          - "%gcc"
+          - "cflags=-std=c18 target=x86_64_v3"
+        when: "%intel"
         message: "gettext uses single valued `static_assert` which is only available in `icc` as part of later C standard."
   gromacs:
+    prefer:
+      - "%intel"
     require:
       - one_of:
-          - "+intel_provided_gcc %intel ^intel-oneapi-mkl target=x86_64_v4"
-          - "+intel_provided_gcc %intel ^intel-oneapi-mkl target=x86_64_v3"
-          - "%gcc"
+          - "+intel_provided_gcc ^intel-oneapi-mkl target=x86_64_v4"
+          - "+intel_provided_gcc ^intel-oneapi-mkl target=x86_64_v3"
+        when: "%intel"
   intel-mpi:
     variants: +external-libfabric
   intel-oneapi-compilers:
@@ -26,17 +28,19 @@ packages:
   intel-oneapi-mpi:
     variants: +external-libfabric generic-names=True
   lammps:
+    prefer:
+      - "%intel"
     require:
       - one_of:
-          - "lammps_sizes=bigbig +molecule +kspace +rigid +asphere +opt +openmp +openmp-package +intel %intel ^intel-oneapi-mkl target=x86_64_v4"
-          - "lammps_sizes=bigbig +molecule +kspace +rigid +asphere +opt +openmp +openmp-package %intel ^intel-oneapi-mkl target=x86_64_v3"
-          - "%gcc"
+          - "lammps_sizes=bigbig +molecule +kspace +rigid +asphere +opt +openmp +openmp-package +intel ^intel-oneapi-mkl target=x86_64_v4"
+          - "lammps_sizes=bigbig +molecule +kspace +rigid +asphere +opt +openmp +openmp-package ^intel-oneapi-mkl target=x86_64_v3"
+        when: "%intel"
   libidn2:
     require:
       - one_of:
           - "cflags=-std=c18 target=x86_64_v4"
           - "cflags=-std=c18 target=x86_64_v3"
-          - '%gcc'
+        when: "%intel"
   libfabric:
     buildable: true
     externals:
@@ -48,13 +52,15 @@ packages:
       - one_of:
           - "cflags=-std=c18 target=x86_64_v4"
           - "cflags=-std=c18 target=x86_64_v3"
-          - "%gcc"
+        when: "%intel"
   mpas-model:
+    prefer:
+      - "%intel"
     require:
       - one_of:
-          - "precision=single %intel ^parallelio+pnetcdf target=x86_64_v4"
-          - "precision=single %intel ^parallelio+pnetcdf target=x86_64_v3"
-          - "%gcc"
+          - "precision=single ^parallelio+pnetcdf target=x86_64_v4"
+          - "precision=single ^parallelio+pnetcdf target=x86_64_v3"
+        when: "%intel"
   mpich:
     require:
       - one_of:
@@ -72,36 +78,46 @@ packages:
           - "openmpi @4: target=x86_64_v4"
           - "openmpi @4: target=x86_64_v3"
   palace:
+    prefer:
+      - "%oneapi"
     require:
       - one_of:
-          - "palace %oneapi ^fmt@9.1.0 target=x86_64_v4"
-          - "palace %oneapi ^fmt@9.1.0 target=x86_64_v3"
-          - "%gcc ^fmt@9.1.0"
+          - "palace ^fmt@9.1.0 target=x86_64_v4"
+          - "palace ^fmt@9.1.0 target=x86_64_v3"
+        when: "%oneapi"
+      - one_of:
+          - "palace ^fmt@9.1.0"
+        when: "%gcc"
   pmix:
     require:
       - one_of:
           - "pmix@3: target=x86_64_v4"
           - "pmix@3: target=x86_64_v3"
   quantum-espresso:
+    prefer:
+      - "%intel"
     require:
       - one_of:
-          - "quantum-espresso@6.6 %intel ^intel-oneapi-mkl+cluster target=x86_64_v4"
-          - "quantum-espresso@6.6 %intel ^intel-oneapi-mkl+cluster target=x86_64_v3"
-          - "%gcc"
+          - "quantum-espresso@6.6 ^intel-oneapi-mkl+cluster target=x86_64_v4"
+          - "quantum-espresso@6.6 ^intel-oneapi-mkl+cluster target=x86_64_v3"
+        when: "%intel"
   slurm:
     buildable: false
     externals:
       - prefix: /opt/slurm/
         spec: slurm@${SLURM_VERSION} +pmix
   wrf:
+    prefer:
+      - "%intel"
     require:
       - one_of:
-          - "wrf@4 build_type=dm+sm %intel target=x86_64_v4"
-          - "wrf@4 build_type=dm+sm %intel target=x86_64_v3"
-          - "wrf@4.2.2 +netcdf_classic fflags=\"-fp-model fast=2 -no-heap-arrays -no-prec-div -no-prec-sqrt -fno-common\" build_type=dm+sm %intel  target=x86_64_v3"
-          - "%gcc"
+          - "wrf@4 build_type=dm+sm target=x86_64_v4"
+          - "wrf@4 build_type=dm+sm target=x86_64_v3"
+          - "wrf@4.2.2 +netcdf_classic fflags=\"-fp-model fast=2 -no-heap-arrays -no-prec-div -no-prec-sqrt -fno-common\" build_type=dm+sm target=x86_64_v3"
+        when: "%intel"
+
   all:
-    compiler: [intel, gcc]
+    compiler: [intel, oneapi, gcc]
     permissions:
       read: world
       write: user
