@@ -23,10 +23,12 @@ class Fontconfig(AutotoolsPackage):
     version("2.12.1", sha256="a9f42d03949f948a3a4f762287dbc16e53a927c91a07ee64207ebd90a9e5e292")
     version("2.11.1", sha256="b6b066c7dce3f436fdc0dfbae9d36122b38094f4f53bd8dffd45e195b0540d8d")
 
+    # freetype2 21.0.15+ provided by freetype 2.8.1+
+    depends_on("freetype@2.8.1:", when="@2.13:")
     depends_on("freetype")
     depends_on("gperf", type="build", when="@2.12.2:")
-    depends_on("libxml2")
-    depends_on("pkgconfig", type="build")
+    depends_on("libxml2@2.6:")
+    depends_on("pkgconfig@0.9:", type="build")
     depends_on("font-util")
     depends_on("uuid", when="@2.13.1:")
     depends_on("python@3:", type="build", when="@2.13.93:")

@@ -26,6 +26,7 @@ class PyMatplotlib(PythonPackage):
 
     license("Apache-2.0")
 
+    version("3.8.4", sha256="8aac397d5e9ec158960e31c381c5ffc52ddd52bd9a47717e2a694038167dffea")
     version("3.8.3", sha256="7b416239e9ae38be54b028abbf9048aff5054a9aba5416bef0bd17f9162ce161")
     version("3.8.2", sha256="01a978b871b881ee76017152f1f1a0cbf6bd5f7b8ff8c96df0df1bd57d8755a1")
     version("3.8.1", sha256="044df81c1f6f3a8e52d70c4cfcb44e77ea9632a10929932870dfaa90de94365d")
@@ -61,14 +62,38 @@ class PyMatplotlib(PythonPackage):
     version("3.1.0", sha256="1e0213f87cc0076f7b0c4c251d7e23601e2419cd98691df79edb95517ba06f0c")
     version("3.0.2", sha256="c94b792af431f6adb6859eb218137acd9a35f4f7442cea57e4a59c54751c36af")
     version("3.0.0", sha256="b4e2333c98a7c2c1ff6eb930cd2b57d4b818de5437c5048802096b32f66e65f9")
-    version("2.2.5", sha256="a3037a840cd9dfdc2df9fee8af8f76ca82bfab173c0f9468193ca7a89a2b60ea")
-    version("2.2.4", sha256="029620799e581802961ac1dcff5cb5d3ee2f602e0db9c0f202a90495b37d2126")
-    version("2.2.3", sha256="7355bf757ecacd5f0ac9dd9523c8e1a1103faadf8d33c22664178e17533f8ce5")
-    version("2.2.2", sha256="4dc7ef528aad21f22be85e95725234c5178c0f938e2228ca76640e5e84d8cde8")
-    version("2.0.2", sha256="0ffbc44faa34a8b1704bc108c451ecf87988f900ef7ce757b8e2e84383121ff1")
-    version("2.0.0", sha256="36cf0985829c1ab2b8b1dae5e2272e53ae681bf33ab8bedceed4f0565af5f813")
+    version(
+        "2.2.5",
+        sha256="a3037a840cd9dfdc2df9fee8af8f76ca82bfab173c0f9468193ca7a89a2b60ea",
+        deprecated=True,
+    )
+    version(
+        "2.2.4",
+        sha256="029620799e581802961ac1dcff5cb5d3ee2f602e0db9c0f202a90495b37d2126",
+        deprecated=True,
+    )
+    version(
+        "2.2.3",
+        sha256="7355bf757ecacd5f0ac9dd9523c8e1a1103faadf8d33c22664178e17533f8ce5",
+        deprecated=True,
+    )
+    version(
+        "2.2.2",
+        sha256="4dc7ef528aad21f22be85e95725234c5178c0f938e2228ca76640e5e84d8cde8",
+        deprecated=True,
+    )
+    version(
+        "2.0.2",
+        sha256="0ffbc44faa34a8b1704bc108c451ecf87988f900ef7ce757b8e2e84383121ff1",
+        deprecated=True,
+    )
+    version(
+        "2.0.0",
+        sha256="36cf0985829c1ab2b8b1dae5e2272e53ae681bf33ab8bedceed4f0565af5f813",
+        deprecated=True,
+    )
 
-    # https://matplotlib.org/tutorials/introductory/usage.html#backends
+    # https://matplotlib.org/stable/users/explain/figure/backends.html
     # From `lib/matplotlib/rcsetup.py`:
     interactive_bk = [
         # GTK
@@ -133,7 +158,7 @@ class PyMatplotlib(PythonPackage):
     variant("latex", default=False, description="Enable LaTeX text rendering support")
     variant("fonts", default=False, description="Enable support for system font detection")
 
-    # https://matplotlib.org/stable/devel/dependencies.html
+    # https://matplotlib.org/stable/users/installing/dependencies.html
     # Runtime dependencies
     # Mandatory dependencies
     depends_on("python@3.9:", when="@3.8:", type=("build", "link", "run"))
@@ -144,13 +169,14 @@ class PyMatplotlib(PythonPackage):
     depends_on("py-fonttools@4.22:", when="@3.5:", type=("build", "run"))
     depends_on("py-kiwisolver@1.3.1:", when="@3.8.1:", type=("build", "run"))
     depends_on("py-kiwisolver@1.0.1:", when="@2.2:", type=("build", "run"))
-    depends_on("py-numpy@1.21:1", when="@3.8:", type=("build", "link", "run"))
-    depends_on("py-numpy@1.20:", when="@3.7:", type=("build", "link", "run"))
-    depends_on("py-numpy@1.19:", when="@3.6:", type=("build", "link", "run"))
-    depends_on("py-numpy@1.17:", when="@3.5:", type=("build", "link", "run"))
-    depends_on("py-numpy@1.16:", when="@3.4:", type=("build", "link", "run"))
-    depends_on("py-numpy@1.15:", when="@3.3:", type=("build", "link", "run"))
-    depends_on("py-numpy@1.11:", type=("build", "run"))
+    depends_on("py-numpy@1.21:", when="@3.8.4:", type=("build", "link", "run"))
+    depends_on("py-numpy@1.21:1", when="@3.8.0:3.8.3", type=("build", "link", "run"))
+    depends_on("py-numpy@1.20:1", when="@3.7", type=("build", "link", "run"))
+    depends_on("py-numpy@1.19:1", when="@3.6", type=("build", "link", "run"))
+    depends_on("py-numpy@1.17:1", when="@3.5", type=("build", "link", "run"))
+    depends_on("py-numpy@1.16:1", when="@3.4", type=("build", "link", "run"))
+    depends_on("py-numpy@1.15:1", when="@3.3", type=("build", "link", "run"))
+    depends_on("py-numpy@1.11:1", when="@:3.2", type=("build", "run"))
     depends_on("py-packaging@20:", when="@3.6:", type=("build", "run"))
     depends_on("py-packaging", when="@3.5:", type=("build", "run"))
     depends_on("pil@8:", when="@3.8.1:", type=("build", "run"))
@@ -166,7 +192,6 @@ class PyMatplotlib(PythonPackage):
     # Historical dependencies
     depends_on("py-pytz", type=("build", "run"), when="@:2")
     depends_on("py-six@1.10.0:", type=("build", "run"), when="@2")
-    depends_on("py-six@1.9.0:", type=("build", "run"), when="@:1")
 
     # Optional dependencies
     # Backends
@@ -219,7 +244,7 @@ class PyMatplotlib(PythonPackage):
     depends_on("pkgconfig", type="build")
 
     # C libraries
-    depends_on("freetype@2.3:")  # freetype 2.6.1 needed for tests to pass
+    depends_on("freetype@2.3: build_system=autotools")
     depends_on("qhull@2020.2:", when="@3.4:")
     # starting from qhull 2020.2 libqhull.so on which py-matplotlib@3.3 versions
     # rely on does not exist anymore, only libqhull_r.so
@@ -240,10 +265,9 @@ class PyMatplotlib(PythonPackage):
     depends_on("py-setuptools-scm-git-archive", when="@3.5", type="build")
 
     # Testing dependencies
-    # https://matplotlib.org/stable/devel/development_setup.html#additional-dependencies-for-testing
-    depends_on("py-pytest@3.6:", type="test")
-    depends_on("ghostscript@9.0:", type="test")
-    # depends_on("inkscape@:0", type="test")
+    # Required
+    depends_on("freetype@2.6.1 build_system=autotools", type="test")
+    depends_on("py-pytest@7:", type="test")
 
     msg = "MacOSX backend requires macOS 10.12+"
     conflicts("platform=linux", when="backend=macosx", msg=msg)
@@ -306,7 +330,22 @@ class PyMatplotlib(PythonPackage):
                     config.write("enable_lto = False\n")
 
     @run_after("install")
+    def copy_reference_images(self):
+        # https://matplotlib.org/devdocs/devel/testing.html#obtain-the-reference-images
+        install_tree(
+            join_path("lib", "matplotlib", "tests", "baseline_images"),
+            join_path(python_platlib, "matplotlib", "tests", "baseline_images"),
+        )
+        for toolkit in ["axes_grid1", "axisartist", "mplot3d"]:
+            install_tree(
+                join_path("lib", "mpl_toolkits", toolkit, "tests", "baseline_images"),
+                join_path(python_platlib, "mpl_toolkits", toolkit, "tests", "baseline_images"),
+            )
+
+    @run_after("install")
     @on_package_attributes(run_tests=True)
-    def build_test(self):
-        pytest = which("pytest")
-        pytest()
+    def install_test(self):
+        # https://matplotlib.org/devdocs/devel/testing.html#run-the-tests
+        python("-m", "pytest", "--pyargs", "matplotlib.tests")
+        for toolkit in ["axes_grid1", "axisartist", "mplot3d"]:
+            python("-m", "pytest", "--pyargs", f"mpl_toolkits.{toolkit}.tests")
