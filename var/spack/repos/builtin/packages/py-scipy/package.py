@@ -18,6 +18,8 @@ class PyScipy(PythonPackage):
     license("BSD-3-Clause")
 
     version("main", branch="main")
+    version("1.13.0", sha256="58569af537ea29d3f78e5abd18398459f195546bb3be23d16677fb26616cc11e")
+    version("1.12.0", sha256="4bf5abab8a36d20193c698b0f1fc282c1d083c94723902c447e5d2f1780936a3")
     version("1.11.4", sha256="90a2b78e7f5733b9de748f589f09225013685f9b218275257f8a8168ededaeaa")
     version("1.11.3", sha256="bba4d955f54edd61899776bad459bf7326e14b9fa1c552181f0479cc60a568cd")
     version("1.11.2", sha256="b29318a5e39bd200ca4381d80b065cdf3076c7d7281c5e36569e99273867f61d")
@@ -50,54 +52,60 @@ class PyScipy(PythonPackage):
     version("1.3.2", sha256="a03939b431994289f39373c57bbe452974a7da724ae7f9620a1beee575434da4")
 
     # Based on wheel availability on PyPI
-    depends_on("python@3.9:3.12", when="@1.11:", type=("build", "link", "run"))
-    depends_on("python@3.8:3.11", when="@1.9.2:1.10", type=("build", "link", "run"))
-    depends_on("python@3.8:3.10", when="@1.8:1.9.1", type=("build", "link", "run"))
-    depends_on("python@:3.10", when="@1.7.2:1.7", type=("build", "link", "run"))
-    depends_on("python@:3.9", when="@1.5.4:1.7.1", type=("build", "link", "run"))
-    depends_on("python@:3.8", when="@1.3.2:1.5.3", type=("build", "link", "run"))
+    with default_args(type=("build", "link", "run")):
+        depends_on("python@3.9:3.12", when="@1.11.2:")
+        depends_on("python@3.8:3.11", when="@1.9.2:1.11.1")
+        depends_on("python@3.8:3.10", when="@1.8:1.9.1")
+        depends_on("python@:3.10", when="@1.7.2:1.7")
+        depends_on("python@:3.9", when="@1.5.4:1.7.1")
+        depends_on("python@:3.8", when="@1.3.2:1.5.3")
 
-    depends_on("py-meson-python@0.12.1:", when="@1.11:", type="build")
-    depends_on("py-meson-python@0.11:", when="@1.10:", type="build")
-    depends_on("py-meson-python@0.9:", when="@1.9.2:", type="build")
-    depends_on("py-meson-python@0.8.1:", when="@1.9.1:", type="build")
-    depends_on("py-meson-python@0.7:", when="@1.9:", type="build")
-    depends_on("meson", when="@1.9.0:1.9.1", type="build")
-    depends_on("py-cython@0.29.35:2", when="@1.11:", type="build")
-    depends_on("py-cython@0.29.32:2", when="@1.9.2:", type="build")
-    depends_on("py-cython@0.29.21:2", when="@1.9:", type="build")
-    depends_on("py-cython@0.29.18:2", when="@1.7:", type="build")
-    depends_on("py-pybind11@2.10.4:2.11.0", when="@1.11.3:", type=("build", "link"))
-    depends_on("py-pybind11@2.10.4:2.10", when="@1.11.0:1.11.2", type=("build", "link"))
-    depends_on("py-pybind11@2.10.1", when="@1.10", type=("build", "link"))
-    depends_on("py-pybind11@2.4.3:2.10", when="@1.9.1:1.9", type=("build", "link"))
-    depends_on("py-pybind11@2.4.3:2.9", when="@1.9.0", type=("build", "link"))
-    depends_on("py-pybind11@2.4.3:2.8", when="@1.8", type=("build", "link"))
-    depends_on("py-pybind11@2.4.3:2.7", when="@1.7.2:1.7", type=("build", "link"))
-    depends_on("py-pybind11@2.4.3:2.6", when="@1.6.2:1.7.1", type=("build", "link"))
-    depends_on("py-pybind11@2.4.3:", when="@1.5:1.6.1", type=("build", "link"))
-    depends_on("py-pybind11@2.4.0:", when="@1.4.1:1.4", type=("build", "link"))
-    depends_on("py-pybind11@2.2.4:", when="@1.4.0", type=("build", "link"))
-    depends_on("py-pythran@0.12:", when="@1.10:", type="build")
-    depends_on("py-pythran@0.10:", when="@1.8", type="build")
-    depends_on("py-pythran@0.9.12:", when="@1.7.2:", type="build")
-    depends_on("py-pythran@0.9.11:", when="@1.7:", type="build")
-    depends_on("py-wheel@:0.40", when="@1.11.0:1.11.2", type="build")
-    depends_on("py-wheel@:0.38", when="@1.10", type="build")
-    depends_on("py-wheel@:0.37", when="@:1.9", type="build")
-    depends_on("pkgconfig", when="@1.9:", type="build")
-    depends_on("py-setuptools", when="@:1.8", type="build")
-    depends_on("py-setuptools@:59", when="@1.8", type="build")
-    depends_on("py-setuptools@:57", when="@1.7", type="build")
-    depends_on("py-setuptools@:51.0.0", when="@1.6", type="build")
-    depends_on("py-numpy@1.21.6:1.27", when="@1.11:", type=("build", "link", "run"))
-    depends_on("py-numpy@1.19.5:1.26", when="@1.10", type=("build", "link", "run"))
-    depends_on("py-numpy@1.18.5:1.25", when="@1.9", type=("build", "link", "run"))
-    depends_on("py-numpy@1.17.3:1.24", when="@1.8", type=("build", "link", "run"))
-    depends_on("py-numpy@1.16.5:1.22", when="@1.6:1.7", type=("build", "link", "run"))
-    depends_on("py-numpy@1.14.5:1.21", when="@1.5", type=("build", "link", "run"))
-    depends_on("py-numpy@1.13.3:1.21", when="@1.3:1.4", type=("build", "link", "run"))
-    depends_on("py-pytest", type="test")
+    # Build dependencies (do not include upper bound unless known issues)
+    with default_args(type="build"):
+        depends_on("py-meson-python@0.15:", when="@1.12:")
+        depends_on("py-meson-python@0.12.1:", when="@1.11:")
+        depends_on("py-meson-python@0.11:", when="@1.10:")
+        depends_on("py-meson-python@0.9:", when="@1.9.2:")
+        depends_on("py-meson-python@0.8.1:", when="@1.9.1:")
+        depends_on("py-meson-python@0.7:", when="@1.9:")
+        depends_on("py-cython@3.0.8:", when="@1.13:")
+        depends_on("py-cython@0.29.35:", when="@1.12")
+        depends_on("py-cython@0.29.35:2", when="@1.11")
+        depends_on("py-cython@0.29.32:2", when="@1.9.2:1.10")
+        depends_on("py-cython@0.29.21:2", when="@1.9.0:1.9.1")
+        depends_on("py-cython@0.29.18:2", when="@1.7:1.8")
+        with default_args(type=("build", "link")):
+            depends_on("py-pybind11@2.12:", when="@1.13:")
+            depends_on("py-pybind11@2.10.4:", when="@1.11:")
+            depends_on("py-pybind11@2.10.1:", when="@1.10:")
+            depends_on("py-pybind11@2.4.3:", when="@1.5:")
+            depends_on("py-pybind11@2.4.0:", when="@1.4.1:")
+            depends_on("py-pybind11@2.2.4:", when="@1.4.0:")
+        depends_on("py-pythran@0.14:", when="@1.13:")
+        depends_on("py-pythran@0.15:", when="@1.12")
+        depends_on("py-pythran@0.12:", when="@1.10:")
+        depends_on("py-pythran@0.10:", when="@1.8:")
+        depends_on("py-pythran@0.9.12:", when="@1.7.2:")
+        depends_on("py-pythran@0.9.11:", when="@1.7:")
+        depends_on("pkgconfig", when="@1.9:")
+
+    # Run dependencies
+    with default_args(type=("build", "link", "run")):
+        depends_on("py-numpy@1.22.4:2.2", when="@1.13:")
+        depends_on("py-numpy@1.22.4:1.28", when="@1.12")
+        depends_on("py-numpy@1.21.6:1.27", when="@1.11")
+        depends_on("py-numpy@1.19.5:1.26", when="@1.10")
+        depends_on("py-numpy@1.18.5:1.25", when="@1.9")
+        depends_on("py-numpy@1.17.3:1.24", when="@1.8")
+        depends_on("py-numpy@1.16.5:1.22", when="@1.6:1.7")
+        depends_on("py-numpy@1.14.5:1.21", when="@1.5")
+        depends_on("py-numpy@1.13.3:1.21", when="@1.3:1.4")
+
+    # Test dependencies
+    with default_args(type="test"):
+        depends_on("py-pytest")
+        depends_on("py-pooch")
+        depends_on("py-hypothesis@6.30:")
 
     # Required to use --config-settings
     depends_on("py-pip@23.1:", when="@1.9:", type="build")
@@ -108,10 +116,19 @@ class PyScipy(PythonPackage):
     depends_on("lapack")
     depends_on("blas")
 
+    # Historical dependencies
+    with default_args(type="build"):
+        depends_on("meson", when="@1.9.0:1.9.1")
+        depends_on("py-setuptools", when="@:1.8")
+        depends_on("py-setuptools@:59", when="@1.8")
+        depends_on("py-setuptools@:57", when="@1.7")
+        depends_on("py-setuptools@:51.0.0", when="@1.6")
+
     # meson.build
     # https://docs.scipy.org/doc/scipy/dev/toolchain.html#compilers
     conflicts("%gcc@:7", when="@1.10:", msg="SciPy requires GCC >= 8.0")
     conflicts("%gcc@:4.7", when="@:1.9", msg="SciPy requires GCC >= 4.8")
+    conflicts("%apple-clang@:9", when="@1.10:", msg="SciPy requires Apple Clang >= 10")
     conflicts(
         "%msvc@:19.19",
         when="@1.10:",

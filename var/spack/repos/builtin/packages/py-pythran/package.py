@@ -18,6 +18,7 @@ class PyPythran(PythonPackage):
 
     license("BSD-3-Clause")
 
+    version("0.15.0", sha256="f9bc61bcb96df2cd4b578abc5a62dfb3fbb0b0ef02c264513dfb615c5f87871c")
     version("0.12.2", sha256="2344c7ad76255f31f79d87877cc6bb8bddc5e5593015dae29b3f821c6c06a627")
     version("0.12.0", sha256="eff3dd0d3eebe57372f0d14f82985525e9bcdfb5b1d1010e1932cf9207060f9f")
     version("0.11.0", sha256="0b2cba712e09f7630879dff69f268460bfe34a6d6000451b47d598558a92a875")
@@ -33,10 +34,13 @@ class PyPythran(PythonPackage):
     version("0.9.4", sha256="ec9c91f5331454263b064027292556a184a9f55a50f8615e09b08f57a4909855")
     version("0.9.3", sha256="217427a8225a331fdc8f3efe57871aed775cdf2c6e847a0a83df0aaae4b02493")
 
+    # https://github.com/serge-sans-paille/pythran/pull/2196
+    depends_on("py-setuptools@62:", when="@0.15:", type="build")
     depends_on("py-setuptools", type="build")
     depends_on("py-ply@3.4:", type=("build", "run"))
+    depends_on("py-gast@0.5", when="@0.15:", type=("build", "run"))
     # upper bound due to https://github.com/scipy/scipy/issues/18390
-    depends_on("py-gast@0.5:0.5.3", when="@0.9.12:", type=("build", "run"))
+    depends_on("py-gast@0.5:0.5.3", when="@0.9.12:0.12", type=("build", "run"))
     depends_on("py-gast@0.4", when="@0.9.7:0.9.11", type=("build", "run"))
     depends_on("py-gast@0.3.3:0.3", when="@0.9.6", type=("build", "run"))
     depends_on("py-gast@0.3:", when="@0.9.4:0.9.5", type=("build", "run"))
