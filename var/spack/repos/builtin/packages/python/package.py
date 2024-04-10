@@ -548,7 +548,7 @@ class Python(Package):
         static_libraries = glob.glob("%s\\*.lib" % build_root)
         os.makedirs(prefix.libs, exist_ok=True)
         for lib in static_libraries:
-            copy(lib, os.path.join(prefix.libs, os.path.basename(lib)))
+            copy(lib, prefix.libs)
 
     def configure_args(self):
         spec = self.spec
