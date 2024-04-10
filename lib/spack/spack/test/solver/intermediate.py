@@ -38,7 +38,7 @@ class TestCompilerParser:
 
         parser = asp.CompilerParser(mutable_config)
         for reuse_spec in mutable_database.query():
-            parser.add_compiler_from_spec(reuse_spec)
+            parser.add_compiler_from_concrete_spec(reuse_spec)
 
         expected_order = [
             ("gcc@=9.4.0", True),

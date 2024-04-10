@@ -2308,7 +2308,7 @@ class SpackSolverSetup:
         if reuse:
             self.gen.fact(fn.optimize_for_reuse())
             for reusable_spec in reuse:
-                compiler_parser.add_compiler_from_spec(reusable_spec)
+                compiler_parser.add_compiler_from_concrete_spec(reusable_spec)
                 self.register_concrete_spec(reusable_spec, self.pkgs)
         self.concrete_specs()
 
@@ -2798,6 +2798,8 @@ class RequirementParser:
 
 
 class CompilerParser:
+    """Parses configuration files, and builds a list of possible compilers for the solve."""
+
     def __init__(self, configuration) -> None:
         self.compilers: Set[KnownCompiler] = set()
         for c in all_compilers_in_config(configuration):
@@ -2815,6 +2817,11 @@ class CompilerParser:
             self.compilers.add(candidate)
 
     def with_input_specs(self, input_specs: List["spack.spec.Spec"]) -> "CompilerParser":
+        """Accounts for input specs when building the list of possible compilers.
+
+        Args:
+            input_specs: specs to be concretized
+        """
         strict = spack.concretize.Concretizer().check_for_compiler_existence
         default_os = str(spack.platforms.host().default_os)
         default_target = str(archspec.cpu.host().family)
@@ -2849,16 +2856,13 @@ class CompilerParser:
 
         return self
 
-    def add_compiler_from_spec(self, spec: "spack.spec.Spec") -> None:
-        if spec.compiler is None or not spec.compiler.concrete:
-            return
+    def add_compiler_from_concrete_spec(self, spec: "spack.spec.Spec") -> None:
+        """Account for compilers that are coming from concrete specs, through reuse.
 
-        if spec.architecture is None:
-            return
-
-        if not spec.architecture.os or not spec.architecture.target:
-            return
-
+        Args:
+            spec: concrete spec to be reused
+        """
+        assert spec.concrete, "the spec argument must be concrete"
         candidate = KnownCompiler(
             spec=spec.compiler,
             os=str(spec.architecture.os),
@@ -2866,7 +2870,6 @@ class CompilerParser:
             available=False,
             compiler_obj=None,
         )
-
         self.compilers.add(candidate)
 
     def possible_compilers(self) -> List[KnownCompiler]:

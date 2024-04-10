@@ -1879,19 +1879,16 @@ class TestConcretize:
 
     @pytest.mark.regression("31169")
     @pytest.mark.only_clingo("Use case not supported by the original concretizer")
-    def test_not_reusing_incompatible_os_or_compiler(self):
+    def test_not_reusing_incompatible_os(self):
         root_spec = Spec("b")
         s = root_spec.concretized()
-        wrong_compiler, wrong_os = s.copy(), s.copy()
-        wrong_compiler.compiler = spack.spec.CompilerSpec("gcc@12.1.0")
+        wrong_os = s.copy()
         wrong_os.architecture = spack.spec.ArchSpec("test-ubuntu2204-x86_64")
-        reusable_specs = [wrong_compiler, wrong_os]
         with spack.config.override("concretizer:reuse", True):
             solver = spack.solver.asp.Solver()
             setup = spack.solver.asp.SpackSolverSetup()
-            result, _, _ = solver.driver.solve(setup, [root_spec], reuse=reusable_specs)
+            result, _, _ = solver.driver.solve(setup, [root_spec], reuse=[wrong_os])
         concrete_spec = result.specs[0]
-        assert concrete_spec.satisfies("%{}".format(s.compiler))
         assert concrete_spec.satisfies("os={}".format(s.architecture.os))
 
     @pytest.mark.only_clingo("Use case not supported by the original concretizer")
