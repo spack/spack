@@ -2366,6 +2366,9 @@ class TestConcretize:
     def test_reuse_specs_from_non_available_compilers(self, mutable_config, mutable_database):
         """Tests that we can reuse specs with compilers that are not configured locally."""
         # All the specs in the mutable DB have been compiled with %gcc@=10.2.1
+        specs = mutable_database.query_local()
+        assert all(s.satisfies("%gcc@=10.2.1") for s in specs)
+
         spack.compilers.remove_compiler_from_config("gcc@=10.2.1")
         assert not spack.compilers.compilers_for_spec("gcc@=10.2.1")
         mutable_config.set("concretizer:reuse", True)
