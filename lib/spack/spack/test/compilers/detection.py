@@ -28,6 +28,7 @@ from spack.operating_systems.cray_frontend import CrayFrontend
 from spack.pkg.builtin.aocc import Aocc
 from spack.pkg.builtin.apple_clang import AppleClang
 from spack.pkg.builtin.arm import Arm
+from spack.pkg.builtin.fj import Fj
 from spack.pkg.builtin.gcc import Gcc
 from spack.pkg.builtin.nag import Nag
 
@@ -211,9 +212,13 @@ def test_clang_version_detection(version_str, expected_version):
         ("frt (FRT) 4.0.0a 20190314\n" "Copyright FUJITSU LIMITED 2019", "4.0.0a"),
     ],
 )
-def test_fj_version_detection(version_str, expected_version):
+def test_fj_version_detection(version_str, expected_version, mock_executable):
     version = spack.compilers.fj.Fj.extract_version_from_output(version_str)
     assert version == expected_version
+
+    # Cannot test on macos because of case insensitive filesystem
+    if sys.platform != "darwin":
+        check_package_detection(mock_executable, version_str, expected_version, Fj)
 
 
 @pytest.mark.parametrize(
