@@ -45,6 +45,11 @@ class Legion(CMakePackage, ROCmPackage):
     version("stable", branch="stable")
     version("master", branch="master")
 
+    # Old control replication commits used by FleCSI releases, prior to 24.03.0
+    version("cr-20230307", commit="435183796d7c8b6ac1035a6f7af480ded750f67d", deprecated=True)
+    version("cr-20210122", commit="181e63ad4187fbd9a96761ab3a52d93e157ede20", deprecated=True)
+    version("cr-20191217", commit="572576b312509e666f2d72fafdbe9d968b1a6ac3", deprecated=True)
+
     depends_on("cmake@3.16:", type="build")
     # TODO: Need to spec version of MPI v3 for use of the low-level MPI transport
     # layer. At present the MPI layer is still experimental and we discourge its
