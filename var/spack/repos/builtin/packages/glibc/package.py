@@ -166,6 +166,8 @@ class Glibc(AutotoolsPackage, GNUMirrorPackage):
 
     # See 2d7ed98add14f75041499ac189696c9bd3d757fe
     depends_on("gmake@:4.3", type="build", when="@:2.36")
+    # Since f2873d2da0ac9802e0b570e8e0b9e7e04a82bf55
+    depends_on("gmake@4.0:", type="build", when="@2.28:")
 
     # From 2.29: generates locale/C-translit.h
     # before that it's a test dependency.
