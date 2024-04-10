@@ -147,7 +147,7 @@ class Tau(Package):
     conflicts("+adios2", when="@:2.29.1")
     conflicts("+sqlite", when="@:2.29.1")
     conflicts("+dyninst", when="@:2.32.1")
-
+    conflicts("+disable-no-pie", when="@:2.32.2")
     patch("unwind.patch", when="@2.29.0")
 
     filter_compiler_wrappers("Makefile", relative_root="include")
