@@ -106,7 +106,11 @@ class Tau(Package):
     )
     variant("dyninst", default=False, description="Activates dyninst support")
 
-    variant("disable-no-pie", default=False, description="Do not add -no-pie while linking with Ubuntu.")
+    variant(
+        "disable-no-pie",
+        default=False,
+        description="Do not add -no-pie while linking with Ubuntu.",
+    )
 
     depends_on("cmake@3.14:", type="build", when="%clang")
     depends_on("zlib-api", type="link")
