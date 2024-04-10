@@ -845,10 +845,11 @@ class Openmpi(AutotoolsPackage, CudaPackage):
 
     def setup_dependent_build_environment(self, env, dependent_spec):
         # Use the spack compiler wrappers under MPI
-        env.set("OMPI_CC", spack_cc)
-        env.set("OMPI_CXX", spack_cxx)
-        env.set("OMPI_FC", spack_fc)
-        env.set("OMPI_F77", spack_f77)
+        dependent_module = dependent_spec.package.module
+        env.set("OMPI_CC", dependent_module.spack_cc)
+        env.set("OMPI_CXX", dependent_module.spack_cxx)
+        env.set("OMPI_FC", dependent_module.spack_fc)
+        env.set("OMPI_F77", dependent_module.spack_f77)
 
         # See https://www.open-mpi.org/faq/?category=building#installdirs
         for suffix in [
@@ -870,7 +871,7 @@ class Openmpi(AutotoolsPackage, CudaPackage):
             "PKGLIBDIR",
             "PKGINCLUDEDIR",
         ]:
-            env.unset("OPAL_%s" % suffix)
+            env.unset(f"OPAL_{suffix}")
 
     def setup_dependent_package(self, module, dependent_spec):
         self.spec.mpicc = join_path(self.prefix.bin, "mpicc")
