@@ -523,6 +523,12 @@ attr("virtual_on_edge", PackageNode, ProviderNode, Virtual)
      provider(ProviderNode, node(_, Virtual)),
      not external(PackageNode).
 
+% If a virtual node is in the answer set, it must be either a virtual root,
+% or used somewhere
+:- attr("virtual_node", node(_, Virtual)),
+   not attr("virtual_on_incoming_edges", _, Virtual),
+   not attr("virtual_root", node(_, Virtual)).
+
 attr("virtual_on_incoming_edges", ProviderNode, Virtual)
   :- attr("virtual_on_edge", _, ProviderNode, Virtual).
 
