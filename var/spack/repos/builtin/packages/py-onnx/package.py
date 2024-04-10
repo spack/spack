@@ -41,7 +41,6 @@ class PyOnnx(PythonPackage):
 
     # requirements.txt
     depends_on("py-setuptools@64:", type="build")
-    depends_on("py-setuptools", type="build")
     depends_on("py-protobuf@3.20.2:", type=("build", "run"), when="@1.15:")
     depends_on("py-protobuf@3.20.2:3", type=("build", "run"), when="@1.13")
     depends_on("py-protobuf@3.12.2:3.20.1", type=("build", "run"), when="@1.12")
