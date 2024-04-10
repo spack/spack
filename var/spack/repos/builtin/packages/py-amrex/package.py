@@ -87,7 +87,7 @@ class PyAmrex(PythonPackage, CudaPackage, ROCmPackage):
 
         # disable superbuilds: use external dependencies
         env.set("AMREX_INTERNAL", "OFF")
-        env.set("PYAMREX_CCACHE", "ON")
+        env.set("PYAMREX_CCACHE", "OFF")
         env.set("PYAMREX_IPO", "ON")
         env.set("PYBIND11_INTERNAL", "OFF")
 
