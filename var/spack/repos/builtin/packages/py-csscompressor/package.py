@@ -11,8 +11,7 @@ class PyCsscompressor(PythonPackage):
 
     pypi = "csscompressor/csscompressor-0.9.5.tar.gz"
 
-    # Custom license
-    license("UNKNOWN", checked_by="lizzyd710")
+    license("BSD", checked_by="lizzyd710")
 
     version("0.9.5", sha256="afa22badbcf3120a4f392e4d22f9fff485c044a1feda4a950ecc5eba9dd31a05")
 
