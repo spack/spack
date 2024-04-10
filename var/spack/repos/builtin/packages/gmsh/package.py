@@ -20,6 +20,8 @@ class Gmsh(CMakePackage):
     url = "https://gmsh.info/src/gmsh-4.4.1-source.tgz"
     git = "https://gitlab.onelab.info/gmsh/gmsh.git"
 
+    maintainers("tristan0x")
+
     license("GPL-2.0-or-later")
 
     version("master", branch="master")
