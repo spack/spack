@@ -27,9 +27,8 @@ class Task(CMakePackage):
     conflicts("%gcc@:4.7")
 
     def patch(self):
-      if self.spec.satisfies("@3.0.0:"):
-        # new major release adds rust to the codebase. A bug in cmake/Corrosion
-        # causes release builds with the integration tests to fail.
-        # See https://github.com/GothenburgBitFactory/taskwarrior/issues/3294
-        filter_file('"taskchampion/integration-tests",', "", "Cargo.toml")
-
+        if self.spec.satisfies("@3.0.0:"):
+            # new major release adds rust to the codebase. A bug in cmake/Corrosion
+            # causes release builds with the integration tests to fail.
+            # See https://github.com/GothenburgBitFactory/taskwarrior/issues/3294
+            filter_file('"taskchampion/integration-tests",', "", "Cargo.toml")
