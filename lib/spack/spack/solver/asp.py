@@ -2874,7 +2874,7 @@ class CompilerParser:
         result = sorted(self.compilers, key=lambda x: (x.spec.name, x.spec.version), reverse=True)
         # Then stable sort to prefer available compilers and account for preferences
         ppk = spack.package_prefs.PackagePrefs("all", "compiler", all=False)
-        result = sorted(result, key=lambda x: (not x.available, ppk(x.spec)))
+        result.sort(key=lambda x: (not x.available, ppk(x.spec)))
         return result
 
 
