@@ -35,7 +35,7 @@ class PyMkdocs(PythonPackage):
     depends_on("py-ghp-import@1.0:", type=("build", "run"))
     depends_on("py-pyyaml-env-tag@0.1:", type=("build", "run"))
     depends_on("py-importlib-metadata@4.3:", when="@1.4.1: ^python@:3.9", type=("build", "run"))
-    depends_on("py-importlib-metadata@4.3:", type=("build", "run"))
+    depends_on("py-importlib-metadata@4.3:", type=("build", "run"), when="@:1.4.0")
     depends_on("py-packaging@20.5:", type=("build", "run"))
     depends_on("py-mergedeep@1.3.4:", type=("build", "run"))
     depends_on("py-typing-extensions@3.10:", when="@1.4.1: ^python@:3.7", type=("build", "run"))
