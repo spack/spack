@@ -753,10 +753,7 @@ class Llvm(CMakePackage, CudaPackage):
                     )
 
     def flag_handler(self, name, flags):
-        if name == "cxxflags":
-            flags.append(self.compiler.cxx11_flag)
-            return (None, flags, None)
-        elif name == "ldflags" and self.spec.satisfies("%intel"):
+        if name == "ldflags" and self.spec.satisfies("%intel"):
             flags.append("-shared-intel")
             return (None, flags, None)
         return (flags, None, None)
