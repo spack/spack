@@ -215,16 +215,17 @@ class Mvapich(AutotoolsPackage):
         self.setup_compiler_environment(env)
 
         # use the Spack compiler wrappers under MPI
-        env.set("MPICH_CC", spack_cc)
-        env.set("MPICH_CXX", spack_cxx)
-        env.set("MPICH_F77", spack_f77)
-        env.set("MPICH_F90", spack_fc)
-        env.set("MPICH_FC", spack_fc)
+        dependent_module = dependent_spec.package.module
+        env.set("MPICH_CC", dependent_module.spack_cc)
+        env.set("MPICH_CXX", dependent_module.spack_cxx)
+        env.set("MPICH_F77", dependent_module.spack_f77)
+        env.set("MPICH_F90", dependent_module.spack_fc)
+        env.set("MPICH_FC", dependent_module.spack_fc)
 
     def setup_compiler_environment(self, env):
         # For Cray MPIs, the regular compiler wrappers *are* the MPI wrappers.
         # Cray MPIs always have cray in the module name, e.g. "cray-mvapich"
-        if self.spec.satisfies("platform=cray"):
+        if self.spec.satisfies("platform=cray") and spack_cc is not None:
             env.set("MPICC", spack_cc)
             env.set("MPICXX", spack_cxx)
             env.set("MPIF77", spack_fc)

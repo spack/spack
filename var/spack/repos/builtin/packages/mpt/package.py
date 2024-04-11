@@ -36,9 +36,10 @@ class Mpt(BundlePackage):
 
     def setup_dependent_build_environment(self, env, dependent_spec):
         # use the Spack compiler wrappers under MPI
-        env.set("MPICC_CC", spack_cc)
-        env.set("MPICXX_CXX", spack_cxx)
-        env.set("MPIF90_F90", spack_fc)
+        dependent_module = dependent_spec.package.module
+        env.set("MPICC_CC", dependent_module.spack_cc)
+        env.set("MPICXX_CXX", dependent_module.spack_cxx)
+        env.set("MPIF90_F90", dependent_module.spack_fc)
 
     def setup_run_environment(self, env):
         # Because MPI is both runtime and compiler, we have to setup the mpi
@@ -50,10 +51,11 @@ class Mpt(BundlePackage):
 
     def setup_dependent_package(self, module, dependent_spec):
         if "platform=cray" in self.spec:
-            self.spec.mpicc = spack_cc
-            self.spec.mpicxx = spack_cxx
-            self.spec.mpifc = spack_fc
-            self.spec.mpif77 = spack_f77
+            dependent_module = dependent_spec.package.module
+            self.spec.mpicc = dependent_module.spack_cc
+            self.spec.mpicxx = dependent_module.spack_cxx
+            self.spec.mpifc = dependent_module.spack_fc
+            self.spec.mpif77 = dependent_module.spack_f77
         else:
             self.spec.mpicc = self.prefix.bin.mpicc
             self.spec.mpicxx = self.prefix.bin.mpicxx
