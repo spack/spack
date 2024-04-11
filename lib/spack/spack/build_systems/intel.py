@@ -218,7 +218,7 @@ class IntelPackage(Package):
             "+inspector": " intel-inspector",
             "+itac": " intel-itac intel-ta intel-tc" " intel-trace-analyzer intel-trace-collector",
             # Trace Analyzer and Collector
-            "+vtune": " intel-vtune"
+            "+vtune": " intel-vtune",
             # VTune, ..-profiler since 2020, ..-amplifier before
         }.items():
             if variant in self.spec:

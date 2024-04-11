@@ -625,18 +625,6 @@ class CompilerSpec:
         else:
             raise TypeError("__init__ takes 1 or 2 arguments. (%d given)" % nargs)
 
-    def _add_versions(self, version_list):
-        # If it already has a non-trivial version list, this is an error
-        if self.versions and self.versions != vn.any_version:
-            # Note: This may be impossible to reach by the current parser
-            # Keeping it in case the implementation changes.
-            raise MultipleVersionError(
-                "A spec cannot contain multiple version signifiers. Use a version list instead."
-            )
-        self.versions = vn.VersionList()
-        for version in version_list:
-            self.versions.add(version)
-
     def _autospec(self, compiler_spec_like):
         if isinstance(compiler_spec_like, CompilerSpec):
             return compiler_spec_like
@@ -1420,6 +1408,13 @@ class Spec:
     def external(self):
         return bool(self.external_path) or bool(self.external_modules)
 
+    @property
+    def is_develop(self):
+        """Return whether the Spec represents a user-developed package
+        in a Spack ``Environment`` (i.e. using `spack develop`).
+        """
+        return bool(self.variants.get("dev_path", False))
+
     def clear_dependencies(self):
         """Trim the dependencies of this spec."""
         self._dependencies.clear()
@@ -1501,7 +1496,9 @@ class Spec:
         result = f"{deptypes_str} {virtuals_str}".strip()
         return f"[{result}]"
 
-    def dependencies(self, name=None, deptype: Union[dt.DepTypes, dt.DepFlag] = dt.ALL):
+    def dependencies(
+        self, name=None, deptype: Union[dt.DepTypes, dt.DepFlag] = dt.ALL
+    ) -> List["Spec"]:
         """Return a list of direct dependencies (nodes in the DAG).
 
         Args:
@@ -1512,7 +1509,9 @@ class Spec:
             deptype = dt.canonicalize(deptype)
         return [d.spec for d in self.edges_to_dependencies(name, depflag=deptype)]
 
-    def dependents(self, name=None, deptype: Union[dt.DepTypes, dt.DepFlag] = dt.ALL):
+    def dependents(
+        self, name=None, deptype: Union[dt.DepTypes, dt.DepFlag] = dt.ALL
+    ) -> List["Spec"]:
         """Return a list of direct dependents (nodes in the DAG).
 
         Args:
@@ -1539,20 +1538,6 @@ class Spec:
         for key, group in itertools.groupby(sorted(selected_edges, key=_sort_fn), key=_group_fn):
             result[key] = list(group)
         return result
-
-    #
-    # Private routines here are called by the parser when building a spec.
-    #
-    def _add_versions(self, version_list):
-        """Called by the parser to add an allowable version."""
-        # If it already has a non-trivial version list, this is an error
-        if self.versions and self.versions != vn.any_version:
-            raise MultipleVersionError(
-                "A spec cannot contain multiple version signifiers." " Use a version list instead."
-            )
-        self.versions = vn.VersionList()
-        for version in version_list:
-            self.versions.add(version)
 
     def _add_flag(self, name, value, propagate):
         """Called by the parser to add a known flag.
@@ -1622,37 +1607,29 @@ class Spec:
                 else:
                     setattr(self.architecture, new_attr, new_value)
 
-    def _set_compiler(self, compiler):
-        """Called by the parser to set the compiler."""
-        if self.compiler:
-            raise DuplicateCompilerSpecError(
-                "Spec for '%s' cannot have two compilers." % self.name
-            )
-        self.compiler = compiler
-
     def _add_dependency(self, spec: "Spec", *, depflag: dt.DepFlag, virtuals: Tuple[str, ...]):
         """Called by the parser to add another spec as a dependency."""
         if spec.name not in self._dependencies or not spec.name:
             self.add_dependency_edge(spec, depflag=depflag, virtuals=virtuals)
             return
 
-        # Keep the intersection of constraints when a dependency is added
-        # multiple times. Currently, we only allow identical edge types.
+        # Keep the intersection of constraints when a dependency is added multiple times.
+        # The only restriction, currently, is keeping the same dependency type
         orig = self._dependencies[spec.name]
         try:
             dspec = next(dspec for dspec in orig if depflag == dspec.depflag)
         except StopIteration:
-            current_deps = ", ".join(
-                dt.flag_to_chars(x.depflag) + " " + x.spec.short_spec for x in orig
-            )
+            edge_attrs = f"deptypes={dt.flag_to_chars(depflag).strip()}"
+            required_dep_str = f"^[{edge_attrs}] {str(spec)}"
+
             raise DuplicateDependencyError(
-                f"{self.short_spec} cannot depend on '{spec.short_spec}' multiple times.\n"
-                f"\tRequired: {dt.flag_to_chars(depflag)}\n"
-                f"\tDependency: {current_deps}"
+                f"{spec.name} is a duplicate dependency, with conflicting dependency types\n"
+                f"\t'{str(self)}' cannot depend on '{required_dep_str}'"
             )
 
         try:
             dspec.spec.constrain(spec)
+            dspec.update_virtuals(virtuals=virtuals)
         except spack.error.UnsatisfiableSpecError:
             raise DuplicateDependencyError(
                 f"Cannot depend on incompatible specs '{dspec.spec}' and '{spec}'"
@@ -2087,7 +2064,12 @@ class Spec:
             if hasattr(variant, "_patches_in_order_of_appearance"):
                 d["patches"] = variant._patches_in_order_of_appearance
 
-        if self._concrete and hash.package_hash and self._package_hash:
+        if (
+            self._concrete
+            and hash.package_hash
+            and hasattr(self, "_package_hash")
+            and self._package_hash
+        ):
             # We use the attribute here instead of `self.package_hash()` because this
             # should *always* be assignhed at concretization time. We don't want to try
             # to compute a package hash for concrete spec where a) the package might not
@@ -2986,7 +2968,6 @@ class Spec:
         allow_deprecated = spack.config.get("config:deprecated", False)
         solver = spack.solver.asp.Solver()
         result = solver.solve([self], tests=tests, allow_deprecated=allow_deprecated)
-        result.raise_if_unsat()
 
         # take the best answer
         opt, i, answer = min(result.answers)

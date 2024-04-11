@@ -25,6 +25,8 @@ class Openssh(AutotoolsPackage):
 
     license("SSH-OpenSSH")
 
+    version("9.7p1", sha256="490426f766d82a2763fcacd8d83ea3d70798750c7bd2aff2e57dc5660f773ffd")
+    version("9.6p1", sha256="910211c07255a8c5ad654391b40ee59800710dd8119dd5362de09385aa7a777c")
     version("9.5p1", sha256="f026e7b79ba7fb540f75182af96dc8a8f1db395f922bbc9f6ca603672686086b")
     version("9.4p1", sha256="3608fd9088db2163ceb3e600c85ab79d0de3d221e59192ea1923e23263866a85")
     version("9.3p1", sha256="e9baba7701a76a51f3d85a62c383a3c9dcd97fa900b859bc7db114c1868af8a8")
@@ -106,9 +108,13 @@ class Openssh(AutotoolsPackage):
         # #39599: fix configure to parse zlib 1.3's version number to prevent build fail
         filter_file(r"if \(n != 3 && n != 4\)", "if (n < 2)", "configure")
 
-        # https://github.com/Homebrew/homebrew-core/blob/7aabdeb30506be9b01708793ae553502c115dfc8/Formula/o/openssh.rb#L71-L77
-        if self.spec.target.family == "x86_64" and self.spec.platform == "darwin":
-            filter_file(r"-fzero-call-used-regs=all", "-fzero-call-used-regs=used", "configure")
+        # Clang-based compilers (known at least 14-17) may randomly mis-compile
+        # openssh according to this thread even when -fzero-call-used-regs=used:
+        # https://www.mail-archive.com/openssh-bugs@mindrot.org/msg17461.html
+        # Therefore, remove -fzero-call-used-regs=all for these compilers:
+        spec = self.spec
+        if spec.version < Version("9.6p1") and self.compiler.name.endswith(("clang", "oneapi")):
+            filter_file("-fzero-call-used-regs=all", "", "configure")
 
     def configure_args(self):
         # OpenSSH's privilege separation path defaults to /var/empty. At

@@ -17,7 +17,8 @@ class Brahma(CMakePackage):
 
     version("develop", branch="dev")
     version("master", branch="master")
-    version("0.0.2", tag="v0.0.2", commit="bac58d5aa8962a5c902d401fbf8021aff9104d3c")
+    version("0.0.3", tag="v0.0.3", commit="fd201c653e8fa00d4ba6197a56a513f740e3014e")
+    version("0.0.2", tag="v0.0.2", commit="4a36d5c08787d41c939fa1b987344b69d9ef97a6")
     version("0.0.1", tag="v0.0.1", commit="15156036f14e36511dfc3f3751dc953540526a2b")
 
     variant("mpi", default=False, description="Enable MPI support")

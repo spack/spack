@@ -44,10 +44,13 @@ class Openmpi(AutotoolsPackage, CudaPackage):
 
     # Current
     version(
-        "5.0.1", sha256="e357043e65fd1b956a47d0dae6156a90cf0e378df759364936c1781f1a25ef80"
-    )  # libmpi.so.40.40.1
+        "5.0.2", sha256="ee46ad8eeee2c3ff70772160bff877cbf38c330a0bc3b3ddc811648b3396698f"
+    )  # libmpi.so.40.40.2
 
     # Still supported
+    version(
+        "5.0.1", sha256="e357043e65fd1b956a47d0dae6156a90cf0e378df759364936c1781f1a25ef80"
+    )  # libmpi.so.40.40.1
     version(
         "5.0.0", sha256="9d845ca94bc1aeb445f83d98d238cd08f6ec7ad0f73b0f79ec1668dbfdacd613"
     )  # libmpi.so.40.40.0
@@ -411,6 +414,13 @@ class Openmpi(AutotoolsPackage, CudaPackage):
     # To fix performance regressions introduced while fixing a bug in older
     # gcc versions on x86_64, Refs. open-mpi/ompi#8603
     patch("opal_assembly_arch.patch", when="@4.0.0:4.0.5,4.1.0")
+    # Fix reduce operations for unsigned long integers
+    # See https://github.com/open-mpi/ompi/issues/10648
+    patch(
+        "https://github.com/open-mpi/ompi/commit/8e6d9ba8058a0c128438dbc0cd6476f1abb1d4f1.patch?full_index=1",
+        sha256="12f3aabbcdb02f28138e250273c2f62591db4b1f9f8aa3dcc3ef9ed551f4f587",
+        when="@4.0.7,4.1.2:4.1.4",
+    )
     # To fix an error in Open MPI configury related to findng dl lib.
     # This is specific to the 5.0.0 release.
     patch("fix-for-dlopen-missing-symbol-problem.patch", when="@5.0.0")
@@ -433,6 +443,7 @@ class Openmpi(AutotoolsPackage, CudaPackage):
                 "ofi",
                 "fca",
                 "hcoll",
+                "ucc",
                 "xpmem",
                 "cma",
                 "knem",
@@ -488,6 +499,26 @@ class Openmpi(AutotoolsPackage, CudaPackage):
     variant("lustre", default=False, description="Lustre filesystem library support")
     variant("romio", default=True, when="@:5", description="Enable ROMIO support")
     variant("romio", default=False, when="@5:", description="Enable ROMIO support")
+    variant(
+        "romio-filesystem",
+        description="Add the filesystem to romio",
+        values=disjoint_sets(
+            (
+                "daos",
+                "nfs",
+                "ufs",
+                "pvfs2",
+                "testfs",
+                "xfs",
+                "panfs",
+                "lustre",
+                "gpfs",
+                "ime",
+                "quobytefs",
+            )
+        ).with_non_feature_values("none"),
+    )
+
     variant("rsh", default=True, description="Enable rsh (openssh) process lifecycle management")
     variant(
         "orterunprefix",
@@ -563,6 +594,7 @@ class Openmpi(AutotoolsPackage, CudaPackage):
     depends_on("libfabric", when="fabrics=ofi")
     depends_on("fca", when="fabrics=fca")
     depends_on("hcoll", when="fabrics=hcoll")
+    depends_on("ucc", when="fabrics=ucc")
     depends_on("xpmem", when="fabrics=xpmem")
     depends_on("knem", when="fabrics=knem")
 
@@ -575,7 +607,7 @@ class Openmpi(AutotoolsPackage, CudaPackage):
     with when("~internal-pmix"):
         depends_on("pmix@1", when="@2")
         depends_on("pmix@3.2:", when="@4:")
-        depends_on("pmix@4.2:", when="@5:")
+        depends_on("pmix@4.2.4:", when="@5:")
 
         # pmix@4.2.3 contains a breaking change, compat fixed in openmpi@4.1.6
         # See https://www.mail-archive.com/announce@lists.open-mpi.org//msg00158.html
@@ -604,6 +636,8 @@ class Openmpi(AutotoolsPackage, CudaPackage):
     conflicts("fabrics=fca", when="@:1.4,5:")
     # hcoll support was added in 1.7.3:
     conflicts("fabrics=hcoll", when="@:1.7.2")
+    # ucc support was added in 4.1.4:
+    conflicts("fabrics=ucc", when="@:4.1.3")
     # xpmem support was added in 1.7
     conflicts("fabrics=xpmem", when="@:1.6")
     # cma support was added in 1.7
@@ -816,13 +850,12 @@ class Openmpi(AutotoolsPackage, CudaPackage):
             env.set("MPIFC", join_path(self.prefix.bin, "mpifort"))
 
     def setup_dependent_build_environment(self, env, dependent_spec):
-        self.setup_run_environment(env)
-
         # Use the spack compiler wrappers under MPI
-        env.set("OMPI_CC", spack_cc)
-        env.set("OMPI_CXX", spack_cxx)
-        env.set("OMPI_FC", spack_fc)
-        env.set("OMPI_F77", spack_f77)
+        dependent_module = dependent_spec.package.module
+        env.set("OMPI_CC", dependent_module.spack_cc)
+        env.set("OMPI_CXX", dependent_module.spack_cxx)
+        env.set("OMPI_FC", dependent_module.spack_fc)
+        env.set("OMPI_F77", dependent_module.spack_f77)
 
         # See https://www.open-mpi.org/faq/?category=building#installdirs
         for suffix in [
@@ -844,7 +877,7 @@ class Openmpi(AutotoolsPackage, CudaPackage):
             "PKGLIBDIR",
             "PKGINCLUDEDIR",
         ]:
-            env.unset("OPAL_%s" % suffix)
+            env.unset(f"OPAL_{suffix}")
 
     def setup_dependent_package(self, module, dependent_spec):
         self.spec.mpicc = join_path(self.prefix.bin, "mpicc")
@@ -902,6 +935,11 @@ class Openmpi(AutotoolsPackage, CudaPackage):
         if not activated:
             return "--without-hcoll"
         return "--with-hcoll={0}".format(self.spec["hcoll"].prefix)
+
+    def with_or_without_ucc(self, activated):
+        if not activated:
+            return "--without-ucc"
+        return "--with-ucc={0}".format(self.spec["ucc"].prefix)
 
     def with_or_without_xpmem(self, activated):
         if not activated:
@@ -1024,8 +1062,13 @@ class Openmpi(AutotoolsPackage, CudaPackage):
         elif spec.satisfies("@1.7.4:"):
             config_args.extend(["--disable-java", "--disable-mpi-java"])
 
+        # Romio
         if "~romio" in spec:
             config_args.append("--disable-io-romio")
+
+        if not spec.satisfies("romio-filesystem=none"):
+            args = "+".join(spec.variants["romio-filesystem"].value)
+            config_args.append(f"--with-io-romio-flags=--with-file-system={args}")
 
         if "+gpfs" in spec:
             config_args.append("--with-gpfs")

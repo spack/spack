@@ -14,11 +14,11 @@ class RocmSmi(MakefilePackage):
     management of your ROCm enabled system
 
     Note: After ROCm 3.9, this project moved to
-          https://github.com/RadeonOpenCompute/rocm_smi_lib/tree/master/python_smi_tools
+          https://github.com/ROCm/rocm_smi_lib/tree/master/python_smi_tools
           The spack package is called: rocm-smi-lib"""
 
-    homepage = "https://github.com/RadeonOpenCompute/ROC-smi"
-    url = "https://github.com/RadeonOpenCompute/ROC-smi/archive/rocm-4.1.0.tar.gz"
+    homepage = "https://github.com/ROCm/ROC-smi"
+    url = "https://github.com/ROCm/ROC-smi/archive/rocm-4.1.0.tar.gz"
 
     maintainers("srekolam", "renjithravindrankannath")
     tags = ["rocm"]

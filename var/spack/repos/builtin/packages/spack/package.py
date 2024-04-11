@@ -24,6 +24,8 @@ class Spack(Package):
     license("Apache-2.0 OR MIT")
 
     version("develop", branch="develop")
+    version("0.21.1", sha256="9a66bc8b59d436d5c0bd7b052c36d2177b228665ece6c9a2c339c2acb3f9103e")
+    version("0.21.0", sha256="98680e52591428dc194a021e673a79bdc7799f394c1217b3fc22c89465159a84")
     version("0.20.1", sha256="141be037b56e4b095840a95ac51c428c29dad078f7f88140ae6355b2a1b32dc3")
     version("0.20.0", sha256="a189b4e8173eefdf76617445125b329d912f730767048846c38c8a2637396a7d")
     version("0.19.2", sha256="4978b37da50f5690f4e1aa0cfe3975a89ccef85d96c68d417ea0716a8ce3aa98")
@@ -67,6 +69,7 @@ class Spack(Package):
     depends_on("python@2.6.0:2.7,3.5:", type="run")
     depends_on("python@2.7.0:2.7,3.5:", type="run", when="@0.18.0:")
     depends_on("python@2.7.0:2.7,3.6:", type="run", when="@0.19.0:")
+    depends_on("python@3.6:", type="run", when="@0.20.0:")
 
     # Old Spack unfortunately depends on distutils, removed in Python 3.12
     depends_on("python@:3.12", type="run", when="@0.18:0.20.1")

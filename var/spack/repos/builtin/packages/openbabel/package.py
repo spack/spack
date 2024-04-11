@@ -63,13 +63,7 @@ class Openbabel(CMakePackage):
         args = []
 
         if "+python" in spec:
-            args.extend(
-                [
-                    "-DPYTHON_BINDINGS=ON",
-                    "-DPYTHON_EXECUTABLE={0}".format(spec["python"].command.path),
-                    "-DRUN_SWIG=ON",
-                ]
-            )
+            args.extend(["-DPYTHON_BINDINGS=ON", "-DRUN_SWIG=ON"])
         else:
             args.append("-DPYTHON_BINDINGS=OFF")
 

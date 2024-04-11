@@ -15,6 +15,7 @@ class Libvterm(MakefilePackage):
 
     license("MIT")
 
+    version("0.3.3", sha256="09156f43dd2128bd347cbeebe50d9a571d32c64e0cf18d211197946aff7226e0")
     version("0.3.1", sha256="25a8ad9c15485368dfd0a8a9dca1aec8fea5c27da3fa74ec518d5d3787f0c397")
     version("0.3", sha256="61eb0d6628c52bdf02900dfd4468aa86a1a7125228bab8a67328981887483358")
     version("0.2", sha256="4c5150655438cfb8c57e7bd133041140857eb04defd0e544521c0e469258e105")

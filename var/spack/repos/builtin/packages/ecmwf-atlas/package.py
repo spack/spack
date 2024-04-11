@@ -32,6 +32,7 @@ class EcmwfAtlas(CMakePackage):
     version("0.31.0", sha256="fa4ff8665544b8e19f79d171c540a9ca8bfc4127f52a3c4d4d618a2fe23354d7")
 
     depends_on("ecbuild", type=("build"))
+    depends_on("ecbuild@3.4:", type=("build"), when="@0.36.0:")
     depends_on("eckit@:1.23", when="@:0.33")
     depends_on("eckit@1.24:", when="@0.34:")
     depends_on("boost cxxstd=14 visibility=hidden", when="@0.26.0:0.33.99", type=("build", "run"))
@@ -56,13 +57,14 @@ class EcmwfAtlas(CMakePackage):
     variant("openmp", default=True, description="Use OpenMP")
     depends_on("llvm-openmp", when="+openmp %apple-clang", type=("build", "run"))
     variant("shared", default=True, description="Build shared libraries")
-
     variant("trans", default=False, description="Enable trans")
     depends_on("ectrans@1.1.0:", when="@0.31.0: +trans")
     variant("eigen", default=True, description="Enable eigen")
     depends_on("eigen", when="+eigen")
     variant("fftw", default=True, description="Enable fftw")
     depends_on("fftw-api", when="+fftw")
+    variant("tesselation", default=False, description="Enable tesselation", when="@0.35.0:")
+    depends_on("qhull", when="+tesselation")
 
     variant("fismahigh", default=False, description="Apply patching for FISMA-high compliance")
 
@@ -70,11 +72,14 @@ class EcmwfAtlas(CMakePackage):
         args = [
             self.define_from_variant("ENABLE_OMP", "openmp"),
             self.define_from_variant("ENABLE_FCKIT", "fckit"),
-            self.define_from_variant("ENABLE_TRANS", "trans"),
             self.define_from_variant("ENABLE_EIGEN", "eigen"),
             self.define_from_variant("ENABLE_FFTW", "fftw"),
-            "-DPYTHON_EXECUTABLE:FILEPATH=" + self.spec["python"].command.path,
         ]
+        if self.spec.satisfies("@0.31:0.34"):
+            args.append(self.define_from_variant("ENABLE_TRANS", "trans"))
+        if self.spec.satisfies("@0.35:"):
+            args.append(self.define_from_variant("ENABLE_ECTRANS", "trans"))
+            args.append(self.define_from_variant("ENABLE_TESSELATION", "tesselation"))
         if "~shared" in self.spec:
             args.append("-DBUILD_SHARED_LIBS=OFF")
         return args

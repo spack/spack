@@ -112,6 +112,7 @@ class Xrootd(CMakePackage):
     conflicts("^cmake@:3.0", when="@5.0.0")
     conflicts("^cmake@:3.15.99", when="@5.5.4:5.5")
     depends_on("davix", when="+davix")
+    depends_on("pkgconfig", type="build", when="+davix")
     depends_on("libxml2", when="+http")
     depends_on("uuid", when="@4.11.0:")
     depends_on("openssl@:1", when="@:5.4")
@@ -203,12 +204,7 @@ class Xrootd(CMakePackage):
         ]
         # see https://github.com/spack/spack/pull/11581
         if "+python" in self.spec:
-            options.extend(
-                [
-                    define("PYTHON_EXECUTABLE", spec["python"].command.path),
-                    define("XRD_PYTHON_REQ_VERSION", spec["python"].version.up_to(2)),
-                ]
-            )
+            options.append(define("XRD_PYTHON_REQ_VERSION", spec["python"].version.up_to(2)))
 
         if "+scitokens-cpp" in self.spec:
             options.append("-DSCITOKENS_CPP_DIR=%s" % spec["scitokens-cpp"].prefix)

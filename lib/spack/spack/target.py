@@ -102,7 +102,10 @@ class Target:
         if self.microarchitecture.vendor == "generic":
             return str(self)
 
-        return syaml.syaml_dict(self.microarchitecture.to_dict(return_list_of_items=True))
+        # Get rid of compiler flag information before turning the uarch into a dict
+        uarch_dict = self.microarchitecture.to_dict()
+        uarch_dict.pop("compilers", None)
+        return syaml.syaml_dict(uarch_dict.items())
 
     def __repr__(self):
         cls_name = self.__class__.__name__
@@ -139,7 +142,7 @@ class Target:
         # custom spec.
         compiler_version = compiler.version
         version_number, suffix = archspec.cpu.version_components(compiler.version)
-        if not version_number or suffix not in ("", "apple"):
+        if not version_number or suffix:
             # Try to deduce the underlying version of the compiler, regardless
             # of its name in compilers.yaml. Depending on where this function
             # is called we might get either a CompilerSpec or a fully fledged
@@ -152,4 +155,6 @@ class Target:
                 # log this and just return compiler.version instead
                 tty.debug(str(e))
 
-        return self.microarchitecture.optimization_flags(compiler.name, str(compiler_version))
+        return self.microarchitecture.optimization_flags(
+            compiler.name, compiler_version.dotted_numeric_string
+        )
