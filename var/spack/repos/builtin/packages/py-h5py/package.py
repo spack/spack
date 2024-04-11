@@ -18,6 +18,7 @@ class PyH5py(PythonPackage):
     license("BSD-3-Clause")
 
     version("master", branch="master")
+    version("3.11.0", sha256="7b7e8f78072a2edec87c9836f25f34203fd492a4475709a18b417a33cfb21fa9")
     version("3.10.0", sha256="d93adc48ceeb33347eb24a634fb787efc7ae4644e6ea4ba733d099605045c049")
     version("3.9.0", sha256="e604db6521c1e367c6bd7fad239c847f53cc46646f2d2651372d05ae5e95f817")
     version("3.8.0", sha256="6fead82f0c4000cf38d53f9c030780d81bfa0220218aee13b90b7701c937d95f")
@@ -45,6 +46,8 @@ class PyH5py(PythonPackage):
     depends_on("python@:3.9", type=("build", "run"), when="@:2.8")
 
     # Build dependencies
+    # h5py@3.11 can build with cython@3.x
+    depends_on("py-cython@0.29.31:", type="build", when="@3.11:")
     depends_on("py-cython@0.29.31:0", type="build", when="@3.9:")
     depends_on("py-cython@0.29.15:0", type=("build"), when="@3:3.7 ^python@3.9.0:")
     depends_on("py-cython@0.29.14:0", type=("build"), when="@3:3.7 ^python@3.8.0:3.8")
