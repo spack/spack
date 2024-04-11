@@ -20,6 +20,5 @@ class Qgraf(Package):
     def install(self, spec, prefix):
         fortran = Executable(spack_fc)
         fortran("qgraf-{0}.f".format(self.spec.version), "-o", "qgraf")
-        # TODO: use share... subdirectories
         mkdirp(prefix.bin)
-        install_tree(".", prefix.bin)
+        install("./qgraf", prefix.bin)

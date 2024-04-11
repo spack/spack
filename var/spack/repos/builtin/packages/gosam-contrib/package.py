@@ -20,7 +20,6 @@ class GosamContrib(AutotoolsPackage):
     # whizard checks for .la files ( but does not use them )
     install_libtool_archives = True
 
-
     variant(
         "libs",
         default="shared,static",
@@ -29,6 +28,11 @@ class GosamContrib(AutotoolsPackage):
         description="Build shared libs, static libs or both",
     )
     variant("pic", default=False, description="Build position-independent code")
+
+    def patch(self):
+        # remove spack compiler wrapper path
+        mf = FileFilter("gosam.conf.in")
+        mf.filter("^fc.bin=.*", "fc.bin=gfortran")
 
     def flag_handler(self, name, flags):
         if name in ["cflags", "cxxflags", "cppflags"]:

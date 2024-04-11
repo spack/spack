@@ -155,10 +155,6 @@ class Whizard(AutotoolsPackage):
         args.extend(self.enable_or_disable("lhapdf"))
         args.extend(self.enable_or_disable("openloops"))
 
-        if "+gosam" in spec:
-            args.append(f"--with-golem={spec['gosam-contrib'].prefix}")
-            args.append(f"--with-gosam={spec['py-gosam'].prefix}")
-            args.append(f"--with-qgraf={spec['qgraf'].prefix}")
         if "+openloops" in spec:
             args.append(f"--with-openloops={spec['openloops'].prefix}")
         if "+openmp" not in spec:
