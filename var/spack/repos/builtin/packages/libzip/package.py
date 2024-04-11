@@ -25,8 +25,6 @@ class Libzip(CMakePackage, AutotoolsPackage):
         url="https://github.com/nih-at/libzip/releases/download/rel-1-6-1/libzip-1.6.1.tar.gz",
     )
     # older releases are available on libzip.org
-    version("1.5.2", sha256="be694a4abb2ffe5ec02074146757c8b56084dbcebf329123c84b205417435e15")
-    version("1.4.0", sha256="759a89690e155ca52247638b9f97e16e48fbb6077abb7ce2d921dd5b81259940")
     version("1.3.2", sha256="ab4c34eb6c3a08b678cd0f2450a6c57a13e9618b1ba34ee45d00eb5327316457")
     version("1.2.0", sha256="6cf9840e427db96ebf3936665430bab204c9ebbd0120c326459077ed9c907d9f")
 
