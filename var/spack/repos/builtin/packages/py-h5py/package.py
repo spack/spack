@@ -59,16 +59,16 @@ class PyH5py(PythonPackage):
 
     # Build and runtime dependencies
     depends_on("py-numpy@1.17.3:", type=("build", "run"), when="@3.11:")
-    depends_on("py-numpy@1.17.3:2", type=("build", "run"), when="@3.9:3.11")
-    depends_on("py-numpy@1.19.3:2", type=("build", "run"), when="@3:3.5 ^python@3.9.0:")
-    depends_on("py-numpy@1.17.5:2", type=("build", "run"), when="@3:3.5 ^python@3.8.0:3.8")
-    depends_on("py-numpy@1.14.5:2", type=("build", "run"), when="@3:")
-    depends_on("py-numpy@1.7:2", type=("build", "run"), when="@:2")
+    depends_on("py-numpy@1.17.3:1", type=("build", "run"), when="@3.9:3.10")
+    depends_on("py-numpy@1.19.3:1", type=("build", "run"), when="@3:3.5 ^python@3.9.0:")
+    depends_on("py-numpy@1.17.5:1", type=("build", "run"), when="@3:3.5 ^python@3.8.0:3.8")
+    depends_on("py-numpy@1.14.5:1", type=("build", "run"), when="@3:")
+    depends_on("py-numpy@1.7:1", type=("build", "run"), when="@:2")
 
     # Link dependencies (py-h5py v2 cannot build against HDF5 1.12 regardless
     # of API setting)
     depends_on("hdf5@1.10.4:1.14 +hl", when="@3.10:")
-    depends_on("hdf5@1.8.4:1.14 +hl", when="@3.8:3.10")
+    depends_on("hdf5@1.8.4:1.14 +hl", when="@3.8:3.9")
     depends_on("hdf5@1.8.4:1.12 +hl", when="@3:3.7")
     depends_on("hdf5@1.8.4:1.11 +hl", when="@:2")
 
