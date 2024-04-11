@@ -169,70 +169,23 @@ def test_update_key_index(
     assert "index.json" in key_dir_list
 
 
-def test_buildcache_autopush(
-    tmpdir,
-    mutable_mock_env_path,
-    install_mockery,
-    mock_packages,
-    mock_fetch,
-    mock_stage,
-    mock_gnupghome,
-):
+def test_buildcache_autopush(tmp_path, install_mockery, mock_fetch):
     """Test buildcache with autopush"""
-    working_dir = tmpdir.join("working_dir")
+    mirror_dir = tmp_path / "mirror"
+    mirror_autopush_dir = tmp_path / "mirror_autopush"
 
-    mirror_dir = working_dir.join("mirror")
-    mirror_autopush_dir = working_dir.join("mirror_autopush")
-    mirror_url = "file://{0}".format(mirror_dir.strpath)
-    mirror_autopush_url = "file://{0}".format(mirror_autopush_dir.strpath)
-
-    mirror("add", "mirror", mirror_url)
-    mirror("add", "--autopush", "mirror-autopush", mirror_autopush_url)
-
-    gpg("create", "Test Signing Key", "nobody@nowhere.com")
+    mirror("add", "--unsigned", "mirror", mirror_dir.as_uri())
+    mirror("add", "--autopush", "--unsigned", "mirror-autopush", mirror_autopush_dir.as_uri())
 
     s = Spec("libdwarf").concretized()
 
-    tarball_path = spack.binary_distribution.tarball_path_name(s, ".spack")
-    tarball_sig = spack.binary_distribution.tarball_name(s, ".spec.json.sig")
+    # Install and generate build cache index
+    s.package.do_install()
 
-    m_tarball_path = os.path.join(str(mirror_dir), "build_cache", tarball_path)
-    m_tarball_sig = os.path.join(str(mirror_dir), "build_cache", tarball_sig)
-    m_autopush_tarball_path = os.path.join(str(mirror_autopush_dir), "build_cache", tarball_path)
-    m_autopush_tarball_sig = os.path.join(str(mirror_autopush_dir), "build_cache", tarball_sig)
+    metadata_file = spack.binary_distribution.tarball_name(s, ".spec.json")
 
-    # Install a package
-    install(s.name)
-
-    # Package is in mirror-autopush, but not in mirror
-    assert not os.path.exists(m_tarball_path)
-    assert not os.path.exists(m_tarball_sig)
-    assert os.path.exists(m_autopush_tarball_path)
-    assert os.path.exists(m_autopush_tarball_sig)
-
-    # Push installed package in the buildcache mirror (without autopush)
-    buildcache("push", "mirror", s.name)
-
-    # Now package is in both buildcaches
-    assert os.path.exists(m_tarball_path)
-    assert os.path.exists(m_tarball_sig)
-    assert os.path.exists(m_autopush_tarball_path)
-    assert os.path.exists(m_autopush_tarball_sig)
-
-    # Update index of the buildcaches
-    buildcache("update-index", "mirror")
-    buildcache("update-index", "mirror-autopush")
-
-    # Updating the index should not change anything
-    assert os.path.exists(m_tarball_path)
-    assert os.path.exists(m_tarball_sig)
-    assert os.path.exists(m_autopush_tarball_path)
-    assert os.path.exists(m_autopush_tarball_sig)
-
-    # Cleanup
-    uninstall("-y", s.name)
-    mirror("rm", "mirror")
-    mirror("rm", "mirror-autopush")
+    assert not (mirror_dir / "build_cache" / metadata_file).exists()
+    assert (mirror_autopush_dir / "build_cache" / metadata_file).exists()
 
 
 def test_buildcache_sync(

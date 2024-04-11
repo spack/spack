@@ -17,14 +17,11 @@ def post_install(spec, explicit):
     if pkg.installed_from_binary_cache:
         return
 
-    # Iterate over all mirrors with autopush==True
-    all_mirrors = spack.mirror.MirrorCollection(binary=True)
-    autopush_mirrors = [mirror for mirror in all_mirrors.values() if mirror.get_autopush()]
-    for mirror in autopush_mirrors:
-        # Push the package to a mirror
+    # Push the package to all autopush mirrors
+    for mirror in spack.mirror.MirrorCollection(binary=True, autopush=True).values():
         bindist.push_or_raise(
             spec,
             mirror.push_url,
-            bindist.PushOptions(force=True, regenerate_index=False, unsigned=False, key=None),
+            bindist.PushOptions(force=True, regenerate_index=False, unsigned=not mirror.signed),
         )
-        tty.msg(f"Pushed to mirror {mirror.name}")
+        tty.msg(f"{spec.name}: Pushed to build cache: '{mirror.name}'")
