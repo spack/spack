@@ -44,7 +44,7 @@ Each source in ``from`` is itself an object:
    * - Attribute name
      - Description
    * - type (mandatory, string)
-     - Can be ``local``, ``mirror``, or ``external``
+     - Can be ``local``, ``buildcache``, or ``external``
    * - include (optional, list of specs)
      - If present, reusable specs must match at least one of the constraint in the list
    * - exclude (optional, list of specs)
@@ -78,13 +78,13 @@ To reduce the boilerplate in configuration files, default values for the ``inclu
        - "%gcc"
        from:
        - type: local
-       - type: mirror
+       - type: buildcache
        - type: local
          include:
          - "foo %oneapi"
 
 In the example above we reuse all specs compiled with ``gcc`` from the local store
-and remote mirrors, and we also reuse ``foo %oneapi``. Note that the last source of
+and remote buildcaches, and we also reuse ``foo %oneapi``. Note that the last source of
 specs override the default ``include`` attribute.
 
 For one-off concretizations, the are command line arguments for each of the simple "single value"
