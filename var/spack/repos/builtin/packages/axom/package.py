@@ -45,6 +45,7 @@ class Axom(CachedCMakePackage, CudaPackage, ROCmPackage):
 
     version("main", branch="main")
     version("develop", branch="develop")
+    version("0.9.0", tag="v0.9.0", commit="5f531595d941d16fa3b8583bfc347a845d9feb6d")
     version("0.8.1", tag="v0.8.1", commit="0da8a5b1be596887158ac2fcd321524ba5259e15")
     version("0.8.0", tag="v0.8.0", commit="71fab3262eb7e1aa44a04c21d072b77f06362f7b")
     version("0.7.0", tag="v0.7.0", commit="ea5158191181c137117ae37959879bdc8b107f35")
@@ -129,13 +130,15 @@ class Axom(CachedCMakePackage, CudaPackage, ROCmPackage):
     depends_on("scr~fortran", when="+scr~fortran")
 
     with when("+umpire"):
+        depends_on("umpire")
         depends_on("umpire@2024.02.0:", when="@0.9:")
         depends_on("umpire@2022.03.0:2023.06", when="@0.7.0:0.8")
         depends_on("umpire@6.0.0", when="@0.6.0")
         depends_on("umpire@5:5.0.1", when="@:0.5.0")
-        depends_on("umpire +openmp", when="+openmp")
+        depends_on("umpire+openmp", when="+openmp")
 
     with when("+raja"):
+        depends_on("raja")
         depends_on("raja@2024.02.0:", when="@0.9:")
         depends_on("raja@2022.03.0:2023.06", when="@0.7.0:0.8")
         depends_on("raja@0.14.0", when="@0.6.0")
