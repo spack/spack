@@ -107,7 +107,7 @@ class Axom(CachedCMakePackage, CudaPackage, ROCmPackage):
     depends_on("cmake@3.21:", type="build", when="+rocm")
 
     depends_on("blt", type="build")
-    depends_on("blt@0.5.1:0.5.3", type="build", when="@0.6.1:")
+    depends_on("blt@0.5.1:0.5.3", type="build", when="@0.6.1:0.8")
     depends_on("blt@0.6.2:", type="build", when="@0.9:")
 
     depends_on("mpi", when="+mpi")
@@ -270,10 +270,9 @@ class Axom(CachedCMakePackage, CudaPackage, ROCmPackage):
         if "+cpp14" in spec and spec.satisfies("@:0.6.1"):
             entries.append(cmake_cache_string("BLT_CXX_STD", "c++14", ""))
 
-        # Add optimization flag workaround for Debug builds with
-        # cray compiler or newer HIP
+        # Add optimization flag workaround for Debug builds with cray compiler or newer HIP
         if "+rocm" in spec:
-            if spec.satisfies("%cce") or spec.satisfies("%clang@16"):
+            if spec.satisfies("%cce") or spec.satisfies("%clang@16") or spec.satisfies("%clang@17"):
                 entries.append(cmake_cache_string("CMAKE_CXX_FLAGS_DEBUG", "-O1 -g -DNDEBUG"))
 
         return entries
@@ -285,8 +284,6 @@ class Axom(CachedCMakePackage, CudaPackage, ROCmPackage):
         if "+cuda" in spec:
             entries.append(cmake_cache_option("ENABLE_CUDA", True))
             entries.append(cmake_cache_option("CMAKE_CUDA_SEPARABLE_COMPILATION", True))
-
-            entries.append(cmake_cache_option("AXOM_ENABLE_ANNOTATIONS", True))
 
             # CUDA_FLAGS
             cudaflags = "-restrict --expt-extended-lambda "
