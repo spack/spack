@@ -54,9 +54,10 @@ class Geomodel(CMakePackage):
     depends_on("geant4", when="+fullsimlight")
     depends_on("hepmc3", when="+hepmc3")
     depends_on("pythia8", when="+pythia")
-    depends_on("hdf5", when="+visualization")
-    depends_on("qt-base +gui +opengl +sql +widgets", when="+visualization")
-    depends_on("opengl", when="+visualization")
+    with when("+visualization"):
+        depends_on("hdf5")
+        depends_on("qt-base +gui +opengl +sql +widgets")
+        depends_on("opengl")
 
     def cmake_args(self):
         def cmake_variant(cmake_label, spack_variant):
