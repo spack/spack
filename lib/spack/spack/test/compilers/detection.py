@@ -28,11 +28,14 @@ from spack.operating_systems.cray_frontend import CrayFrontend
 from spack.pkg.builtin.aocc import Aocc
 from spack.pkg.builtin.apple_clang import AppleClang
 from spack.pkg.builtin.arm import Arm
+from spack.pkg.builtin.cce import Cce
 from spack.pkg.builtin.fj import Fj
 from spack.pkg.builtin.gcc import Gcc
 from spack.pkg.builtin.intel_oneapi_compilers_classic import IntelOneapiCompilersClassic
 from spack.pkg.builtin.intel_oneapi_compilers import IntelOneapiCompilers
 from spack.pkg.builtin.nag import Nag
+from spack.pkg.builtin.nvhpc import Nvhpc
+from spack.pkg.builtin.pgi import Pgi
 
 
 def check_package_detection(mock_executable, output, expected_version, cls):
@@ -105,9 +108,13 @@ def test_arm_version_detection(version_str, expected_version, mock_executable):
         ("Cray Fortran : Version 8.4.6  Mon Apr 15, 2019  12:13:55\n", "8.4.6"),
     ],
 )
-def test_cce_version_detection(version_str, expected_version):
+def test_cce_version_detection(version_str, expected_version, mock_executable):
     version = spack.compilers.cce.Cce.extract_version_from_output(version_str)
     assert version == expected_version
+
+    # Cannot test on macos because of case insensitive filesystem
+    if sys.platform != "darwin":
+        check_package_detection(mock_executable, version_str, expected_version, Cce)
 
 
 @pytest.mark.regression("10191")
@@ -414,9 +421,10 @@ def test_nag_version_detection(version_str, expected_version, mock_executable):
         ),
     ],
 )
-def test_nvhpc_version_detection(version_str, expected_version):
+def test_nvhpc_version_detection(version_str, expected_version, mock_executable):
     version = spack.compilers.nvhpc.Nvhpc.extract_version_from_output(version_str)
     assert version == expected_version
+    check_package_detection(mock_executable, version_str, expected_version, Nvhpc)
 
 
 @pytest.mark.parametrize(
@@ -445,9 +453,10 @@ def test_nvhpc_version_detection(version_str, expected_version):
         ),
     ],
 )
-def test_pgi_version_detection(version_str, expected_version):
+def test_pgi_version_detection(version_str, expected_version, mock_executable):
     version = spack.compilers.pgi.Pgi.extract_version_from_output(version_str)
     assert version == expected_version
+    check_package_detection(mock_executable, version_str, expected_version, Pgi)
 
 
 @pytest.mark.parametrize(
