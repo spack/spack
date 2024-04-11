@@ -53,6 +53,7 @@ class Whizard(AutotoolsPackage):
 
     variant("pythia8", default=True, description="builds with pythia8")
     variant("fastjet", default=False, description="builds with fastjet")
+    variant("gosam", default=False, description="builds with gosam")
     variant("lcio", default=False, description="builds with lcio")
     variant("lhapdf", default=False, description="builds with fastjet")
     variant("openmp", default=False, description="builds with openmp")
@@ -68,6 +69,10 @@ class Whizard(AutotoolsPackage):
     depends_on("pythia8", when="+pythia8")
     depends_on("lhapdf", when="+lhapdf")
     depends_on("fastjet", when="+fastjet")
+    depends_on("py-gosam", when="+gosam")
+    depends_on("gosam-contrib", when="+gosam")
+    depends_on("qgraf", when="+gosam")
+
     depends_on(
         "openloops@2.0.0: +compile_extra num_jobs=1 " "processes=eett,eevvjj,ppllj,tbw",
         when="+openloops",
@@ -141,15 +146,19 @@ class Whizard(AutotoolsPackage):
             # todo: hoppet
             # todo: recola
             # todo: looptools
-            # todo: gosam
             # todo: pythia6
         ]
         args.extend(self.enable_or_disable("fastjet"))
+        args.extend(self.enable_or_disable("gosam"))
         args.extend(self.enable_or_disable("pythia8"))
         args.extend(self.enable_or_disable("lcio"))
         args.extend(self.enable_or_disable("lhapdf"))
         args.extend(self.enable_or_disable("openloops"))
 
+        if "+gosam" in spec:
+            args.append(f"--with-golem={spec['gosam-contrib'].prefix}")
+            args.append(f"--with-gosam={spec['py-gosam'].prefix}")
+            args.append(f"--with-qgraf={spec['qgraf'].prefix}")
         if "+openloops" in spec:
             args.append(f"--with-openloops={spec['openloops'].prefix}")
         if "+openmp" not in spec:
