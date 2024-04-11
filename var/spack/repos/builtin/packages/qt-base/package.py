@@ -133,6 +133,8 @@ class QtBase(QtPackage):
     variant("widgets", default=True, when="+gui", description="Build with widgets.")
 
     # Dependencies, then variant- and version-specific dependencies
+    depends_on("cmake@3.21:", type="build", when="~shared")
+    depends_on("cmake@3.21:", type="build", when="platform=darwin")
     depends_on("double-conversion")
     depends_on("icu4c")
     depends_on("libxml2")
