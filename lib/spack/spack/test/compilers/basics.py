@@ -700,7 +700,7 @@ def test_raising_if_compiler_target_is_over_specific(config):
     ]
     arch_spec = spack.spec.ArchSpec(("linux", "ubuntu18.04", "haswell"))
     with spack.config.override("compilers", compilers):
-        cfg = spack.compilers.get_compiler_config()
+        cfg = spack.compilers.get_compiler_config(config)
         with pytest.raises(ValueError):
             spack.compilers.get_compilers(cfg, spack.spec.CompilerSpec("gcc@9.0.1"), arch_spec)
 

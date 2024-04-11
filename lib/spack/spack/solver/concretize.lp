@@ -1110,7 +1110,7 @@ error(100, "'{0} target={1}' is not compatible with this machine", Package, Targ
 % Compiler semantics
 %-----------------------------------------------------------------------------
 % There must be only one compiler set per built node.
-{ node_compiler(PackageNode, CompilerID) : compiler_id(CompilerID) } :-
+{ node_compiler(PackageNode, CompilerID) : compiler_id(CompilerID), compiler_available(CompilerID) } :-
     attr("node", PackageNode),
     build(PackageNode).
 
@@ -1127,6 +1127,7 @@ attr("node_compiler_version", PackageNode, CompilerName, CompilerVersion)
   :- node_compiler(PackageNode, CompilerID),
      compiler_name(CompilerID, CompilerName),
      compiler_version(CompilerID, CompilerVersion),
+     compiler_available(CompilerID),
      build(PackageNode).
 
 attr("node_compiler", PackageNode, CompilerName)
@@ -1189,7 +1190,6 @@ error(100, "{0} compiler '%{1}@{2}' incompatible with 'os={3}'", Package, Compil
      compiler_version(CompilerID, Version),
      compiler_os(CompilerID, CompilerOS),
      not os_compatible(CompilerOS, OS),
-     not allow_compiler(Compiler, Version),
      build(node(X, Package)).
 
 % If a package and one of its dependencies don't have the
@@ -1210,7 +1210,6 @@ compiler_mismatch_required(PackageNode, DependencyNode)
      not compiler_match(PackageNode, DependencyNode).
 
 #defined compiler_os/3.
-#defined allow_compiler/2.
 
 % compilers weighted by preference according to packages.yaml
 node_compiler_weight(node(ID, Package), Weight)

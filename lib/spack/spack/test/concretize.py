@@ -120,14 +120,16 @@ def current_host(request, monkeypatch):
     # is_preference is not empty if we want to supply the
     # preferred target via packages.yaml
     cpu, _, is_preference = request.param.partition("-")
-    target = archspec.cpu.TARGETS[cpu]
 
     monkeypatch.setattr(spack.platforms.Test, "default", cpu)
     monkeypatch.setattr(spack.platforms.Test, "front_end", cpu)
     if not is_preference:
+        target = archspec.cpu.TARGETS[cpu]
         monkeypatch.setattr(archspec.cpu, "host", lambda: target)
         yield target
     else:
+        target = archspec.cpu.TARGETS["sapphirerapids"]
+        monkeypatch.setattr(archspec.cpu, "host", lambda: target)
         with spack.config.override("packages:all", {"target": [cpu]}):
             yield target
 
@@ -874,7 +876,7 @@ class TestConcretize:
     @pytest.mark.parametrize(
         "spec_str,expected_str",
         [
-            # Unconstrained versions select default compiler (gcc@4.5.0)
+            # Unconstrained versions select default compiler (gcc@10.2.1)
             ("bowtie@1.4.0", "%gcc@10.2.1"),
             # Version with conflicts and no valid gcc select another compiler
             ("bowtie@1.3.0", "%clang@15.0.0"),
@@ -1012,7 +1014,7 @@ class TestConcretize:
         [("cmake", ["%clang"]), ("cmake %gcc", ["%gcc"]), ("cmake %clang", ["%clang"])],
     )
     @pytest.mark.only_clingo("Use case not supported by the original concretizer")
-    def test_external_package_and_compiler_preferences(self, spec_str, expected):
+    def test_external_package_and_compiler_preferences(self, spec_str, expected, mutable_config):
         packages_yaml = {
             "all": {"compiler": ["clang", "gcc"]},
             "cmake": {
@@ -1020,7 +1022,7 @@ class TestConcretize:
                 "buildable": False,
             },
         }
-        spack.config.set("packages", packages_yaml)
+        mutable_config.set("packages", packages_yaml)
         s = Spec(spec_str).concretized()
 
         assert s.external
@@ -1877,19 +1879,16 @@ class TestConcretize:
 
     @pytest.mark.regression("31169")
     @pytest.mark.only_clingo("Use case not supported by the original concretizer")
-    def test_not_reusing_incompatible_os_or_compiler(self):
+    def test_not_reusing_incompatible_os(self):
         root_spec = Spec("b")
         s = root_spec.concretized()
-        wrong_compiler, wrong_os = s.copy(), s.copy()
-        wrong_compiler.compiler = spack.spec.CompilerSpec("gcc@12.1.0")
+        wrong_os = s.copy()
         wrong_os.architecture = spack.spec.ArchSpec("test-ubuntu2204-x86_64")
-        reusable_specs = [wrong_compiler, wrong_os]
         with spack.config.override("concretizer:reuse", True):
             solver = spack.solver.asp.Solver()
             setup = spack.solver.asp.SpackSolverSetup()
-            result, _, _ = solver.driver.solve(setup, [root_spec], reuse=reusable_specs)
+            result, _, _ = solver.driver.solve(setup, [root_spec], reuse=[wrong_os])
         concrete_spec = result.specs[0]
-        assert concrete_spec.satisfies("%{}".format(s.compiler))
         assert concrete_spec.satisfies("os={}".format(s.architecture.os))
 
     @pytest.mark.only_clingo("Use case not supported by the original concretizer")
@@ -2359,6 +2358,29 @@ class TestConcretize:
         for name, namespace in expected_namespaces.items():
             assert s[name].concrete
             assert s[name].namespace == namespace
+
+    @pytest.mark.only_clingo("Old concretizer cannot reuse")
+    def test_reuse_specs_from_non_available_compilers(self, mutable_config, mutable_database):
+        """Tests that we can reuse specs with compilers that are not configured locally."""
+        # All the specs in the mutable DB have been compiled with %gcc@=10.2.1
+        specs = mutable_database.query_local()
+        assert all(s.satisfies("%gcc@=10.2.1") for s in specs)
+
+        spack.compilers.remove_compiler_from_config("gcc@=10.2.1")
+        assert not spack.compilers.compilers_for_spec("gcc@=10.2.1")
+        mutable_config.set("concretizer:reuse", True)
+
+        # mpileaks is in the database, it will be reused with gcc@=10.2.1
+        root = Spec("mpileaks").concretized()
+        for s in root.traverse():
+            assert s.satisfies("%gcc@10.2.1")
+
+        # fftw is not in the database, therefore the root will be compiled with gcc@=9.4.0,
+        # while the mpi is reused from the database and is compiled with gcc@=10.2.1
+        root = Spec("fftw").concretized()
+        assert root.satisfies("%gcc@=9.4.0")
+        for s in root.traverse(root=False):
+            assert s.satisfies("%gcc@10.2.1")
 
 
 @pytest.fixture()
