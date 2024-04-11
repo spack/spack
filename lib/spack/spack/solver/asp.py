@@ -990,12 +990,14 @@ class SpackSolverSetup:
             # TBD: Is this possible?
             if any(dv == declared for dv in self.declared_versions[pkg_name]):
                 tty.debug(
-                    f"[SETUP]: {pkg_name}: declared version ({version} ({type(version)}), {idx}, {origin}) already exists, skipping"
+                    f"[SETUP]: {pkg_name}: declared version ({version} ({type(version)}), {idx}, "
+                    f"{origin}) already exists, skipping"
                 )
                 return
 
         tty.debug(
-            f"[SETUP]: {pkg_name}: adding declared version ({version} ({type(version)}), {idx}, {origin})",
+            f"[SETUP]: {pkg_name}: adding declared version ({version} ({type(version)}), {idx}, "
+            f"{origin})",
             level=2,
         )
         self.declared_versions[pkg_name].append(declared)
@@ -1025,7 +1027,6 @@ class SpackSolverSetup:
             version_indices = collections.defaultdict(list)
             indices = [-1] * 3
             last_vers = [None] * 3
-            info = self.version_info[pkg_name]
             versions = sorted(self.version_info[pkg_name], reverse=True)
             for vers in versions:
                 offset = [0 if x == y else 1 for x, y in zip(last_vers, vers)]
@@ -1082,7 +1083,8 @@ class SpackSolverSetup:
             weight = new_weight(dotted, self.version_info[pkg_name][dotted], declared.weight)
             if declared.weight != weight:
                 tty.debug(
-                    f"[SETUP]: {pkg_name}: updated declared version ({declared.version}, {declared.weight}->{weight}, {declared.origin})",
+                    f"[SETUP]: {pkg_name}: updated declared version ({declared.version}, "
+                    f"{declared.weight}->{weight}, {declared.origin})",
                     level=2,
                 )
                 self.declared_versions[pkg_name][i] = DeclaredVersion(
@@ -3675,7 +3677,7 @@ class Solver:
         reusable_specs.extend(self._reusable_specs(specs))
         setup = SpackSolverSetup(tests=tests)
 
-        tty.debug(f"[solve] declared versions:", level=2)
+        tty.debug("[solve] declared versions:", level=2)
         for name in setup.declared_versions:
             dvs = "\n\t".join(setup.declared_versions[name])
             tty.debug(f"[solve]   {name}:\n\t{dvs}", level=2)
