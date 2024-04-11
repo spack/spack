@@ -126,6 +126,7 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
     # 2.36 is missing some dependencies, this patch allows a parallel build.
     # https://sourceware.org/bugzilla/show_bug.cgi?id=27482
     patch("parallel-build-2.36.patch", when="@2.36")
+    patch("gold-gcc4.patch", when="@2.42 %gcc@:4.8.5")
 
     # compression libs for debug symbols.
     # pkg-config is used to find zstd in gas/configure
