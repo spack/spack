@@ -15,7 +15,6 @@ import sys
 import types
 import typing
 import warnings
-from functools import reduce
 from typing import Callable, Dict, Iterator, List, NamedTuple, Optional, Set, Tuple, Type, Union
 
 import archspec.cpu
@@ -131,155 +130,6 @@ class RequirementKind(enum.Enum):
     PACKAGE = enum.auto()
 
 
-class VersionInfo:
-    """Class to track key information about possible versions."""
-
-    def __init__(self, version):
-        #: Preferred version
-        self.preferred: bool = hasattr(version, "preferred") and version.preferred
-        #: Deprecated version
-        self.deprecated: bool = hasattr(version, "deprecated") and version.deprecated
-        #: Is a develop version?
-        self.develop: bool = hasattr(version, "isdevelop") and version.isdevelop()
-        #: Is a prerelease version?
-        self.prerelease: bool = hasattr(version, "is_prerelease") and version.is_prerelease()
-
-        ## TBD: Should we be tracking and including the number of calls (so the
-        ## TBD:  number of times the version appears across origins/provenances?
-        ##: Number of times added
-        # self.number: int = 1
-
-        #: Unique versions(s)
-        self.versions = set()
-        self.versions.add(version)
-
-    def add(self, version: GitOrStandardVersion):
-        """Add the relevant version information.
-
-        Args:
-            version: the version of interest
-        """
-        self.preferred |= hasattr(version, "preferred") and version.preferred
-        self.deprecated |= hasattr(version, "deprecated") and version.deprecated
-        self.develop |= hasattr(version, "isdevelop") and version.isdevelop()
-        self.prerelease |= hasattr(version, "is_prerelease") and version.is_prerelease()
-        ## TBD: Should we be including the number across origins/provenances?
-        # self.number += 1
-        self.versions.add(version)
-
-
-class PossibleVersions:
-    """Class for tracking possible versions regardless of origin."""
-
-    def __init__(self):
-        self.info = collections.defaultdict(VersionInfo)
-        self._weights: collections.defaultdict(int) = None
-
-    @staticmethod
-    def dotted(version: Union[GitOrStandardVersion, str]) -> Tuple[str, str, str]:
-        """A tuple of the dotted represenation: (major, minor, patch).
-
-        Args:
-            version: the version of interest
-        """
-        vers_str = str(version.dotted) if hasattr(version, "dotted") else version
-        vers = vers_str.split(".")[:3]
-        vers += ["0"] * (3 - len(vers))
-        return tuple(vers)
-
-    def add(self, version):
-        """Add the version's information for tracking.
-
-        Args:
-            version: the version of interest
-        """
-        dotted = PossibleVersions.dotted(version)
-        if dotted in self.info:
-            self.info[dotted].add(version)
-        else:
-            self.info[dotted] = VersionInfo(version)
-
-    @property
-    def versions(self) -> List[GitOrStandardVersion]:
-        """Return possible versions being tracked.
-
-        Returns: list of all tracked versions
-        """
-        all_versions = set()
-        for dotted, info in self.info.items():
-            all_versions.union(info.versions)
-        return list(all_versions)
-
-    def satisfy(self, version: GitOrStandardVersion) -> List[GitOrStandardVersion]:
-        """Return the list of versions that satisfy the provided spec.
-
-        Args:
-            version: the version of interest
-
-        Returns: list of matching versions
-        """
-        # TBD: Is it necessary to iterate over actual versions or would
-        # TBD:  it be sufficient to instantiate the key-equivalent version
-        # TBD:  and check that?  If latter, could tighten set/list handling.
-        return [v for v in self.versions if v.satisfies(version)]
-
-    def _calc_weights(self):
-        factors = [0] * 3
-        # factors = [1000000, 1000, 1]   # Todd's recommended
-
-        info = sorted(self.info, reverse=True)
-        for i in range(3):
-            factors[i] += len(set([dotted[i : i + 1] for dotted in info]))
-        factors = [reduce(lambda x, y: x * y, factors[i:]) for i in range(3)]
-
-        penalty = len(self.info) + 1
-        # penalty = 1000000000   # Todd's recommendation
-
-        indices = [-1] * 3
-        last_vers = [None] * 3
-
-        weights = []
-        self._weights = collections.defaultdict(int)
-        for vers in info:
-            if self.info[vers].preferred:
-                self._weights[vers] = 0
-                continue
-
-            offset = [0 if x == y else 1 for x, y in zip(last_vers, vers)]
-            indices = [x + y for x, y in zip(indices, offset)]
-
-            last_vers = vers
-
-            # Reset indices for patch when minor or major changes and for
-            # minor when major changes.
-            try:
-                ind = offset.index(1) + 1
-                indices[ind:] = [0] * (3 - ind)
-            except ValueError:
-                pass
-
-            w = penalty
-            for f, i in zip(factors, indices):
-                w += f * i
-
-            while w in weights:
-                w += 1
-
-            self._weights[vers] = w
-            weights.append(w)
-
-    def weight(self, version):
-        return self.weights[PossibleVersions.dotted(version)]
-
-    @property
-    def weights(self):
-        if self._weights is None:
-            self._calc_weights()
-
-        return self._weights
-
-
-# TBD: Is weight relevant for DeclaredVersion anymore?
 class DeclaredVersion(NamedTuple):
     """Data class to contain information on declared versions used in the solve"""
 
@@ -1078,6 +928,16 @@ ConditionSpecKey = Tuple[str, Optional[TransformFunction]]
 ConditionIdFunctionPair = Tuple[int, List[AspFunction]]
 ConditionSpecCache = Dict[str, Dict[ConditionSpecKey, ConditionIdFunctionPair]]
 
+# type for prioritizing versions
+VersionInfo = Dict[Tuple, bool]
+
+
+def _dotted(version):
+    vers = str(version.dotted) if hasattr(version, "dotted") else str(version)
+    vers = vers.split(".")[:3]
+    vers += ["0"] * (3 - len(vers))
+    return tuple(vers)
+
 
 class SpackSolverSetup:
     """Class to set up and run a Spack concretization solve."""
@@ -1089,11 +949,11 @@ class SpackSolverSetup:
 
         self.assumptions: List[Tuple["clingo.Symbol", bool]] = []  # type: ignore[name-defined]
         self.declared_versions: Dict[str, List[DeclaredVersion]] = collections.defaultdict(list)
-        # self.possible_versions: Dict[str, Set[GitOrStandardVersion]] = collections.defaultdict(set)
-        self.possible_versions: Dict[str, PossibleVersions] = collections.defaultdict(
-            PossibleVersions
+        self.version_info: Dict[str, VersionInfo] = collections.defaultdict(VersionInfo)
+        self.possible_versions: Dict[str, Set[GitOrStandardVersion]] = collections.defaultdict(set)
+        self.deprecated_versions: Dict[str, Set[GitOrStandardVersion]] = collections.defaultdict(
+            set
         )
-        self.deprecated_versions: Dict[str, Set[GitOrStandardVersion]] = collections.defaultdict(set)
 
         self.possible_compilers: List = []
         self.possible_oses: Set = set()
@@ -1123,20 +983,111 @@ class SpackSolverSetup:
         self.pkgs: Set[str] = set()
         self.explicitly_required_namespaces: Dict[str, str] = {}
 
-    def _add_declared_version(self, pkg_name, version, weight, origin):
+    def _add_declared_version(self, pkg_name, version, idx, origin, possible=True):
         """Add the declared version if not already present."""
-        # TBD: Is weight relevant for DeclaredVersion anymore?
-        declared = DeclaredVersion(version=version, weight=weight, origin=origin)
+        declared = DeclaredVersion(version=str(version), weight=idx, origin=origin)
         if pkg_name in self.declared_versions:
+            # TBD: Is this possible?
             if any(dv == declared for dv in self.declared_versions[pkg_name]):
+                tty.debug(
+                    f"[SETUP]: {pkg_name}: declared version ({version} ({type(version)}), {idx}, {origin}) already exists, skipping"
+                )
                 return
 
         tty.debug(
-            f"[SETUP]: {pkg_name}: adding declared version ({version}, {weight}, {origin})",
+            f"[SETUP]: {pkg_name}: adding declared version ({version} ({type(version)}), {idx}, {origin})",
             level=2,
         )
-        self.possible_versions[pkg_name].add(version)
         self.declared_versions[pkg_name].append(declared)
+        if possible:
+            self.possible_versions[pkg_name].add(version)
+
+        preferred = hasattr(version, "preferred") and version.preferred
+        vers = _dotted(version)
+        tty.debug(f"[SETUP]: {pkg_name}: adding version info ({vers}, {preferred}", level=2)
+        # TLD/TODO: TypeError: Type Dict cannot be instantiated; use dict() instead
+        if pkg_name in self.version_info:
+            info = self.version_info[pkg_name]
+            if vers in info:
+                info[vers] |= preferred
+            else:
+                info[vers] = preferred
+        else:
+            self.version_info[pkg_name] = collections.defaultdict(bool)
+            info = self.version_info[pkg_name]
+            info[vers] = preferred
+
+    def adjust_version_weights(self, pkg_name):
+        if pkg_name not in self.version_info:
+            return
+
+        def indices():
+            version_indices = collections.defaultdict(list)
+            indices = [-1] * 3
+            last_vers = [None] * 3
+            info = self.version_info[pkg_name]
+            versions = sorted(self.version_info[pkg_name], reverse=True)
+            for vers in versions:
+                offset = [0 if x == y else 1 for x, y in zip(last_vers, vers)]
+                indices = [x + y for x, y in zip(indices, offset)]
+
+                try:
+                    ind = offset.index(1) + 1
+                    indices[ind:] = [0] * (3 - ind)
+                except ValueError:
+                    pass
+
+                version_indices[vers] = indices
+
+                last_vers = vers
+            return version_indices
+
+        # For "simplicity", factors are based on:
+        #   [preferred, major version, minor version, patch version]
+        #
+        # Assumption: It is generally "safe" to assume at most 10 patch
+        #   versions for each minor version and 10 minor for each major.
+        #
+        # TBD: Is above assumption "safe"?
+        # TBD: Is it appropriate to include the "assigned" weight/index in
+        # TBD:  the 1s place?
+        factors = [10000, 1000, 100, 10]
+        version_indices = indices()
+        weights = []
+
+        def new_weight(vers, preferred, weight):
+            new = weight
+            indices = [1 if preferred else 0] + version_indices[vers]
+            tty.debug(f"new_weight({vers}, {preferred}, {weight}): indices={indices}")
+            for factor, idx in zip(factors, indices):
+                new += factor * idx
+
+            # Ensure we are not duplicating any existing weights, which is
+            # more can be common when declared versions are coming from
+            # origins that simply assign a weight of 0 or an enumeration
+            # index.
+            #
+            # TBD: Is this an appropriate way to adjust the weight given
+            # TBD:  that weight arguments may be 0 or indices depending
+            # TBD:  on the provenance?
+            while new in weights:
+                new += 1
+
+            weights.append(new)
+            return new
+
+        declared_versions = self.declared_versions[pkg_name]
+        for i, declared in enumerate(declared_versions):
+            dotted = tuple(str(declared.version).split(".")[:3])
+            weight = new_weight(dotted, self.version_info[pkg_name][dotted], declared.weight)
+            if declared.weight != weight:
+                tty.debug(
+                    f"[SETUP]: {pkg_name}: updated declared version ({declared.version}, {declared.weight}->{weight}, {declared.origin})",
+                    level=2,
+                )
+                self.declared_versions[pkg_name][i] = DeclaredVersion(
+                    declared.version, weight, declared.origin
+                )
 
     def pkg_version_rules(self, pkg):
         """Output declared versions of a package.
@@ -1145,18 +1096,14 @@ class SpackSolverSetup:
         that arise from a spec.
         """
 
+        def key_fn(version):
+            # Origins are sorted by "provenance" first, see the Provenance enumeration above
+            return version.origin, version.weight
+
         if isinstance(pkg, str):
             pkg = self.pkg_class(pkg)
 
-        possible_versions = self.possible_versions[pkg.name]
-
-        def key_fn(version):
-            # Origins are sorted by "provenance" first, see the Provenance enumeration above
-            # return version.origin, version.weight
-            # The weight is (re)calculated based on all possible versions
-            # in order to better account for major, minor, patch priorities.
-            return version.origin, possible_versions.weight(version.version)
-
+        self.adjust_version_weights(pkg.name)
         declared_versions = self.declared_versions[pkg.name]
         partially_sorted_versions = sorted(set(declared_versions), key=key_fn)
 
@@ -1166,30 +1113,14 @@ class SpackSolverSetup:
                 list(sorted(group, reverse=True, key=lambda x: vn.ver(x.version)))
             )
 
-        # Now that declared versions are sorted according to the desired
-        # criteria (including prioritizing major versions), reduce the
-        # weights to help the solver.
-        # for idx, declared_version in enumerate(llnl.util.lang.dedupe(most_to_least_preferred)):
-        #for declared_version in most_to_least_preferred:
-        for idx, declared_version in enumerate(most_to_least_preferred):
-            # tty.debug(f"[SETUP] {pkg.name}, {declared_version.weight}: generating version_declared({declared_version.version}, {idx}, {declared_version.origin})", level=2)
-            # tty.debug(
-            #    f"[SETUP] {pkg.name}, {idx}: generating version_declared({declared_version.version}, {declared_version.weight}, {declared_version.origin})",
-            #    level=2,
-            # )
+        # for weight, declared_version in enumerate(most_to_least_preferred):
+        for declared_version in most_to_least_preferred:
             self.gen.fact(
                 fn.pkg_fact(
                     pkg.name,
                     fn.version_declared(
                         declared_version.version,
-                        # TBD: Why does using the calculated weight break
-                        # a number of tests (externals and included config)?
-                        idx,
-                        # declared_version.weight,
-                        #possible_versions.weight(declared_version.version),
-                        # Weights are currently based on version criteria but
-                        # we need to make them unique across origins as well.
-                        #possible_versions.weight(declared_version.version) * 10+ declared_version.origin,
+                        declared_version.weight,
                         str(declared_version.origin),
                     ),
                 )
@@ -1743,9 +1674,6 @@ class SpackSolverSetup:
             if pkg_name not in spack.repo.PATH:
                 continue
 
-            # dvs = "\n\t".join([str(dv) for dv in self.declared_versions[pkg_name]])
-            # tty.debug(f"requires: {pkg_name}:\n\t{dvs}")
-
             self.gen.h2("External package: {0}".format(pkg_name))
             # Check if the external package is buildable. If it is
             # not then "external(<pkg>)" is a fact, unless we can
@@ -1768,11 +1696,12 @@ class SpackSolverSetup:
                 for idx, (v, external_id) in enumerate(sorted(external_versions, reverse=True))
             ]
             for version, idx, external_id in external_versions:
-                # TBD: Should these versions NOT be added to possible?
-                self._add_declared_version(pkg_name, version, idx, Provenance.EXTERNAL)
                 # self.declared_versions[pkg_name].append(
                 #    DeclaredVersion(version=version, idx=idx, origin=Provenance.EXTERNAL)
                 # )
+                self._add_declared_version(
+                    pkg_name, version, idx, Provenance.EXTERNAL, possible=False
+                )
 
             # Declare external conditions with a local index into packages.yaml
             for local_idx, spec in enumerate(external_specs):
@@ -1784,7 +1713,6 @@ class SpackSolverSetup:
                     ]
 
                 self.condition(spec, spec, msg=msg, transform_imposed=external_imposition)
-                # TBD: Is this needed?  Why?
                 self.possible_versions[spec.name].add(spec.version)
                 self.gen.newline()
 
@@ -2056,9 +1984,6 @@ class SpackSolverSetup:
         for pkg_name in possible_pkgs:
             pkg_cls = self.pkg_class(pkg_name)
 
-            dvs = "\n\t".join([str(dv) for dv in self.declared_versions[pkg_name]])
-            tty.debug(f"define_package_versions_and_validate_preferences: {pkg_name}\n\t{dvs}")
-
             # All the versions from the corresponding package.py file. Since concepts
             # like being a "develop" version or being preferred exist only at a
             # package.py level, sort them in this partial list here
@@ -2095,8 +2020,7 @@ class SpackSolverSetup:
                     if not require_checksum or v.is_commit:
                         version_defs.append(v)
                 else:
-                    # matches = [x for x in self.possible_versions[pkg_name] if x.satisfies(v)]
-                    matches = self.possible_versions[pkg_name].satisfy(v)
+                    matches = [x for x in self.possible_versions[pkg_name] if x.satisfies(v)]
                     matches.sort(reverse=True)
                     if not matches:
                         raise spack.config.ConfigError(
@@ -2122,10 +2046,7 @@ class SpackSolverSetup:
             # best possible, so they're guaranteed to be used preferentially.
             version = s.versions.concrete
 
-            # if version is None or any(v == version for v in self.possible_versions[s.name]):
-            if version is None or any(
-                v == version for v in self.possible_versions[s.name].versions
-            ):
+            if version is None or any(v == version for v in self.possible_versions[s.name]):
                 continue
 
             if require_checksum and not _is_checksummed_git_version(version):
@@ -2136,6 +2057,9 @@ class SpackSolverSetup:
             if not allow_deprecated and version in self.deprecated_versions[s.name]:
                 continue
 
+            # declared = DeclaredVersion(version=version, idx=0, origin=origin)
+            # self.declared_versions[s.name].append(declared)
+            # self.possible_versions[s.name].add(version)
             self._add_declared_version(s.name, version, 0, origin)
 
     def _supported_targets(self, compiler_name, compiler_version, targets):
@@ -2316,8 +2240,7 @@ class SpackSolverSetup:
         for pkg_name, versions in sorted(self.version_constraints):
             # generate facts for each package constraint and the version
             # that satisfies it
-            # for v in sorted(v for v in self.possible_versions[pkg_name] if v.satisfies(versions)):
-            for v in sorted(self.possible_versions[pkg_name].satisfy(versions)):
+            for v in sorted(v for v in self.possible_versions[pkg_name] if v.satisfies(versions)):
                 self.gen.fact(fn.pkg_fact(pkg_name, fn.version_satisfies(versions, v)))
 
             self.gen.newline()
@@ -2436,7 +2359,6 @@ class SpackSolverSetup:
             # Declare as possible parts of specs that are not in package.py
             # - Add versions to possible versions
             # - Add OS to possible OS's
-            # versions: Dict[str, List[GitOrStandardVersion]] = collections.defaultdict(list)
             for dep in spec.traverse():
                 # self.possible_versions[dep.name].add(dep.version)
                 # self.declared_versions[dep.name].append(
@@ -2695,21 +2617,18 @@ class SpackSolverSetup:
                 s.attach_git_version_lookup()
                 v = versions.concrete
 
-                possible_versions = self.possible_versions[name].versions
                 if not v:
                     # If the version is not concrete, check it's statically concretizable. If
                     # not throw an error, which is just so that users know they need to change
                     # their config, instead of getting a hard to decipher concretization error.
-                    # if not any(x for x in self.possible_versions[name] if x.satisfies(versions)):
-                    if not any(possible_versions.satisfy(versions)):
+                    if not any(x for x in self.possible_versions[name] if x.satisfies(versions)):
                         raise spack.config.ConfigError(
                             f"Version requirement {versions} on {pkg_name} for {name} "
                             f"cannot match any known version from package.py or externals"
                         )
                     continue
 
-                # if v in self.possible_versions[name]:
-                if v in possible_versions:
+                if v in self.possible_versions[name]:
                     continue
 
                 if not allow_deprecated and v in self.deprecated_versions[name]:
@@ -2718,6 +2637,10 @@ class SpackSolverSetup:
                 # If concrete an not yet defined, conditionally define it, like we do for specs
                 # from the command line.
                 if not require_checksum or _is_checksummed_git_version(v):
+                    # self.declared_versions[name].append(
+                    #     DeclaredVersion(version=v, idx=0, origin=Provenance.PACKAGE_REQUIREMENT)
+                    # )
+                    self.possible_versions[name].add(v)
                     self._add_declared_version(name, v, 0, Provenance.PACKAGE_REQUIREMENT)
 
     def _specs_from_requires(self, pkg_name, section):
@@ -3237,7 +3160,6 @@ class RuntimePropertyRecorder:
             # self._setup.declared_versions[s.name].append(
             #     DeclaredVersion(version=s.version, idx=0, origin=Provenance.RUNTIME)
             # )
-
             self._setup._add_declared_version(s.name, s.version, 0, Provenance.RUNTIME)
 
         self.runtime_conditions.add((imposed_spec, when_spec))
@@ -3753,10 +3675,10 @@ class Solver:
         reusable_specs.extend(self._reusable_specs(specs))
         setup = SpackSolverSetup(tests=tests)
 
-        tty.debug(f"[solve] declared versions:")
+        tty.debug(f"[solve] declared versions:", level=2)
         for name in setup.declared_versions:
             dvs = "\n\t".join(setup.declared_versions[name])
-            tty.debug(f"[solve]   {name}:\n\t{dvs}")
+            tty.debug(f"[solve]   {name}:\n\t{dvs}", level=2)
 
         output = OutputConfiguration(timers=timers, stats=stats, out=out, setup_only=setup_only)
         result, _, _ = self.driver.solve(
