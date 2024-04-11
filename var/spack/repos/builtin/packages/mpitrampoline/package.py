@@ -90,10 +90,11 @@ class Mpitrampoline(CMakePackage):
         env.set("MPIF90", join_path(self.prefix.bin, "mpifc"))
 
     def setup_dependent_build_environment(self, env, dependent_spec):
+        dependent_module = dependent_spec.package.module
         # Use the Spack compiler wrappers under MPI
-        env.set("MPITRAMPOLINE_CC", spack_cc)
-        env.set("MPITRAMPOLINE_CXX", spack_cxx)
-        env.set("MPITRAMPOLINE_FC", spack_fc)
+        env.set("MPITRAMPOLINE_CC", dependent_module.spack_cc)
+        env.set("MPITRAMPOLINE_CXX", dependent_module.spack_cxx)
+        env.set("MPITRAMPOLINE_FC", dependent_module.spack_fc)
         fflags = []
         if (
             self.spec.satisfies("%apple-clang")

@@ -1,5 +1,6 @@
 packages:
   all:
+    compiler: [gcc, clang]
     providers:
       mpi: [openmpi, mpich, zmpi]
       lapack: [openblas-with-lapack]
