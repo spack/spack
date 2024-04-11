@@ -932,7 +932,7 @@ ConditionSpecCache = Dict[str, Dict[ConditionSpecKey, ConditionIdFunctionPair]]
 VersionInfo = Dict[Tuple, bool]
 
 
-def _dotted(version):
+def _vers_tuple(version):
     vers = str(version.dotted) if hasattr(version, "dotted") else str(version)
     vers = vers.split(".")[:3]
     vers += ["0"] * (3 - len(vers))
@@ -1005,7 +1005,7 @@ class SpackSolverSetup:
             self.possible_versions[pkg_name].add(version)
 
         preferred = hasattr(version, "preferred") and version.preferred
-        vers = _dotted(version)
+        vers = _vers_tuple(version)
         tty.debug(f"[SETUP]: {pkg_name}: adding version info ({vers}, {preferred}", level=2)
         # TLD/TODO: TypeError: Type Dict cannot be instantiated; use dict() instead
         if pkg_name in self.version_info:
@@ -1079,8 +1079,8 @@ class SpackSolverSetup:
 
         declared_versions = self.declared_versions[pkg_name]
         for i, declared in enumerate(declared_versions):
-            dotted = tuple(str(declared.version).split(".")[:3])
-            weight = new_weight(dotted, self.version_info[pkg_name][dotted], declared.weight)
+            vers = _vers_tuple(declared.version)
+            weight = new_weight(vers, self.version_info[pkg_name][vers], declared.weight)
             if declared.weight != weight:
                 tty.debug(
                     f"[SETUP]: {pkg_name}: updated declared version ({declared.version}, "
