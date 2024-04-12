@@ -7,11 +7,11 @@ paths:
         - "bin/gcc"
         - "bin/g++"
         script: |
-          if [[ "$1" == "-dumpversion" ]] ; then
+          if [ "$1" = "-dumpversion" ] ; then
             echo "9"
-          elif [[ "$1" == "-dumpfullversion" ]] ; then
+          elif [ "$1" = "-dumpfullversion" ] ; then
             echo "9.4.0"
-          elif [[ "$1" == "--version" ]] ; then
+          elif [ "$1" = "--version" ] ; then
             echo "gcc (Ubuntu 9.4.0-1ubuntu1~20.04.2) 9.4.0"
             echo "Copyright (C) 2019 Free Software Foundation, Inc."
             echo "This is free software; see the source for copying conditions.  There is NO"
@@ -30,7 +30,7 @@ paths:
         - "bin/g++-5"
         - "bin/gfortran-5"
         script: |
-          if [[ "$1" == "-dumpversion" ]] ; then
+          if [ "$1" = "-dumpversion" ] ; then
             echo "5.5.0"
           else
             echo "gcc-5: fatal error: no input files"
@@ -56,12 +56,12 @@ paths:
       - executables:
         - "bin/gcc"
         script: |
-          if [[ "$1" == "-dumpversion" ]] ; then
+          if [ "$1" = "-dumpversion" ] ; then
             echo "15.0.0"
-          elif [[ "$1" == "-dumpfullversion" ]] ; then
-            echo "clang: error: no input files"
+          elif [ "$1" = "-dumpfullversion" ] ; then
+            echo "clang: error: no input files" >&2
             exit 1
-          elif [[ "$1" == "--version" ]] ; then
+          elif [ "$1" = "--version" ] ; then
             echo "Apple clang version 15.0.0 (clang-1500.3.9.4)"
             echo "Target: x86_64-apple-darwin23.4.0"
             echo "Thread model: posix"
