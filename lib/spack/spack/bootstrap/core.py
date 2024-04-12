@@ -560,18 +560,27 @@ def ensure_patchelf_in_path_or_raise() -> spack.util.executable.Executable:
 
 
 def ensure_winsdk_or_raise() -> None:
-    """Ensure the Windows SDK + WGL are available on system"""
+    """Ensure the Windows SDK + WGL are available on system
+    If found, the Spack configuration is updated to include
+    all versions/variants detected in the packages section
+    """
     externals = spack.detection.by_path(["win-sdk", "wgl"])
-    if not externals:
+    if not set(["win-sdk", "wgl"]) == externals.keys():
+        missing_packages_lst = []
+        if "wgl" not in externals:
+            missing_packages_lst.append("wgl")
+        if "win-sdk" not in externals:
+            missing_packages_lst.append("win-sdk")
+        missing_packages = " & ".join(missing_packages_lst)
         raise RuntimeError(
-            "Unable to find the Windows SDK, please install via the Visual Studio installer\
+            f"Unable to find the {missing_packages}, please install via the Visual Studio installer\
 before proceeding with Spack or provide the path to a non standard install via\
 'spack external find --path'"
         )
     # wgl/sdk are not required for bootstrapping Spack, but
     # are required for building anything non trivial
     # add to user config so they can be used by subsequent Spack ops
-    spack.detection.update_configuration(externals, scope="user", buildable=False)
+    spack.detection.update_configuration(externals, buildable=False)
 
 
 def ensure_core_dependencies() -> None:
@@ -580,6 +589,8 @@ def ensure_core_dependencies() -> None:
         ensure_patchelf_in_path_or_raise()
     if not IS_WINDOWS:
         ensure_gpg_in_path_or_raise()
+    else:
+        ensure_winsdk_or_raise()
     ensure_clingo_importable_or_raise()
 
 
