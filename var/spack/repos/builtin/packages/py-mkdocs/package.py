@@ -38,7 +38,7 @@ class PyMkdocs(PythonPackage):
     depends_on("py-packaging@20.5:", type=("build", "run"))
     depends_on("py-mergedeep@1.3.4:", type=("build", "run"))
     depends_on("py-pathspec@0.11.1:", when="@1.5.0:", type=("build", "run"))
-    depends_on("py-platformdirs@2.2.0:", when="@.1.5.0:", type=("build", "run"))
+    depends_on("py-platformdirs@2.2.0:", when="@1.5.0:", type=("build", "run"))
     depends_on("py-colorama@0.4:", when="@1.4.1: platform=windows", type=("build", "run"))
     #Babel is listed as an optional dependency, but the spack install fails without it.
     depends_on("py-babel@2.9.0:", when="@1.4.1:", type=("build", "run"))
