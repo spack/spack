@@ -92,7 +92,7 @@ class WindowsOs(OperatingSystem):
         oneapi_root = self.oneapi_root
         if oneapi_root:
             _compiler_search_paths.extend(
-                glob.glob(os.path.join("compiler", "**", "bin"), recursive=True)
+                glob.glob(os.path.join(oneapi_root, "compiler", "**", "bin"), recursive=True)
             )
 
         # Second strategy: Find MSVC via the registry
