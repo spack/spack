@@ -517,6 +517,8 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage, CompilerPackage):
     go_names = ["gccgo"]
     prefixes = [r"\w+-\w+-\w+-"]
     suffixes = [r"-mp-\d+(?:\.\d+)?", r"-\d+(?:\.\d+)?", r"\d\d"]
+    version_regex = r"(?<!clang version)\s?([0-9.]+)"
+    version_argument = ["-dumpfullversion", "-dumpversion"]
 
     @classmethod
     def filter_detected_exes(cls, prefix, exes_in_prefix):
@@ -545,8 +547,6 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage, CompilerPackage):
             result.append(exe)
 
         return result
-
-    version_regex = r"(?<!clang version)\s?([0-9.]+)"
 
     @classmethod
     def determine_variants(cls, exes, version_str):

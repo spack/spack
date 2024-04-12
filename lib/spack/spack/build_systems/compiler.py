@@ -26,7 +26,8 @@ class CompilerPackage(spack.package_base.PackageBase):
     # Optional prefix regexes for searching for this compiler
     prefixes: Sequence[str] = []
 
-    #: Compiler argument that produces version information
+    #: Compiler argument(s) that produces version information
+    #: If multiple arguments, the earlier arguments must produce errors when invalid
     version_argument = "-dumpversion"
 
     #: Return values to ignore when invoking the compiler to get its version
@@ -68,15 +69,20 @@ class CompilerPackage(spack.package_base.PackageBase):
 
     @classmethod
     def determine_version(cls, exe):
-        try:
-            output = spack.compiler.get_compiler_version_output(exe, cls.version_argument)
-            match = re.search(cls.version_regex, output)
-            if match:
-                return ".".join(match.groups())
-        except spack.util.executable.ProcessError:
-            pass
-        except Exception as e:
-            tty.debug(e)
+        version_argument = cls.version_argument
+        if isinstance(version_argument, str):
+            version_argument = [version_argument]
+
+        for va in version_argument:
+            try:
+                output = spack.compiler.get_compiler_version_output(exe, cls.version_argument)
+                match = re.search(cls.version_regex, output)
+                if match:
+                    return ".".join(match.groups())
+            except spack.util.executable.ProcessError:
+                pass
+            except Exception as e:
+                tty.debug(e)
 
     @classmethod
     def determine_paths(cls, *, exes=None, prefix=None):
