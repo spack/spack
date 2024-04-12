@@ -15,6 +15,7 @@ import spack.package_base
 
 
 class CompilerPackage(spack.package_base.PackageBase):
+    """A Package mixin for all common logic for packages that implement compilers"""
     # metadata identifying this as a compiler for lmod
     family = "compiler"
 
@@ -28,6 +29,7 @@ class CompilerPackage(spack.package_base.PackageBase):
 
     #: Compiler argument(s) that produces version information
     #: If multiple arguments, the earlier arguments must produce errors when invalid
+    #: Must be a hashable type (e.g. tuple, rather than list)
     version_argument = "-dumpversion"
 
     #: Return values to ignore when invoking the compiler to get its version
@@ -52,6 +54,7 @@ class CompilerPackage(spack.package_base.PackageBase):
 
     @classproperty
     def compiler_names(cls):
+        """Construct list of compiler names from per-language names"""
         names = []
         for language in cls.compiler_languages:
             names.extend(getattr(cls, f"{language}_names"))
@@ -59,6 +62,7 @@ class CompilerPackage(spack.package_base.PackageBase):
 
     @classproperty
     def executables(cls):
+        """Construct executables for external detection from names, prefixes, and suffixes."""
         regexp_fmt = r"^({0}){1}({2})$"
         return [
             regexp_fmt.format(prefix, re.escape(name), suffix)
@@ -75,7 +79,7 @@ class CompilerPackage(spack.package_base.PackageBase):
 
         for va in version_argument:
             try:
-                output = spack.compiler.get_compiler_version_output(exe, cls.version_argument)
+                output = spack.compiler.get_compiler_version_output(exe, va)
                 match = re.search(cls.version_regex, output)
                 if match:
                     return ".".join(match.groups())
@@ -85,7 +89,11 @@ class CompilerPackage(spack.package_base.PackageBase):
                 tty.debug(e)
 
     @classmethod
-    def determine_paths(cls, *, exes=None, prefix=None):
+    def determine_compiler_paths(cls, *, exes=None, prefix=None):
+        """Compute the paths to compiler executables associated with this package
+
+        This is a helper method for ``determine_variants`` to compute the ``extra_attributes``
+        to include with each spec object."""
         assert exes is not None or prefix is not None
 
         if exes is None:
@@ -129,4 +137,4 @@ class CompilerPackage(spack.package_base.PackageBase):
     @classmethod
     def determine_variants(cls, exes, version_str):
         # path determination is separated so it can be reused in subclasses
-        return "", {"paths": cls.determine_paths(exes=exes)}
+        return "", {"compilers": cls.determine_compiler_paths(exes=exes)}

@@ -302,7 +302,7 @@ class Acfl(Package, CompilerPackage):
         msg = "cannot retrieve C compiler [spec is not concrete]"
         assert self.spec.concrete, msg
         if self.spec.external:
-            return self.spec.extra_attributes["paths"].get("c", None)
+            return self.spec.extra_attributes["compilers"].get("c", None)
         return join_path(get_acfl_prefix(self.spec), "bin", "armclang")
 
     @property
@@ -310,7 +310,7 @@ class Acfl(Package, CompilerPackage):
         msg = "cannot retrieve C++ compiler [spec is not concrete]"
         assert self.spec.concrete, msg
         if self.spec.external:
-            return self.spec.extra_attributes["paths"].get("cxx", None)
+            return self.spec.extra_attributes["compilers"].get("cxx", None)
         return join_path(get_acfl_prefix(self.spec), "bin", "armclang++")
 
     @property
@@ -318,7 +318,7 @@ class Acfl(Package, CompilerPackage):
         msg = "cannot retrieve Fortran compiler [spec is not concrete]"
         assert self.spec.concrete, msg
         if self.spec.external:
-            return self.spec.extra_attributes["paths"].get("fortran", None)
+            return self.spec.extra_attributes["compilers"].get("fortran", None)
         return join_path(get_acfl_prefix(self.spec), "bin", "armflang")
 
     @property

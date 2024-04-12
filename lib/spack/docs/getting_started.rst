@@ -480,9 +480,10 @@ all other fields from the compilers config can be added to the
 
 Note that the format for the ``paths`` field in the
 ``extra_attributes`` section is different than in the ``compilers``
-config. For compilers configured as external packages, the ``paths``
-dictionary maps language names (``c``, ``cxx``, ``fortran``) to paths,
-rather than using the names ``cc``, ``fc``, and ``f77``.
+config. For compilers configured as external packages, the section is
+named ``compilers`` and the dictionary maps language names (``c``,
+``cxx``, ``fortran``) to paths, rather than using the names ``cc``,
+``fc``, and ``f77``.
 
 .. code-block:: yaml
 
@@ -499,7 +500,7 @@ rather than using the names ``cc``, ``fc``, and ``f77``.
        - spec: llvm+clang@15.0.0 arch=linux-rhel8-skylake
          prefix: /usr
          extra_attributes:
-           paths:
+           compilers:
              c: /usr/bin/clang-with-suffix
              cxx: /usr/bin/clang++-with-extra-info
              fortran: /usr/bin/gfortran

@@ -39,14 +39,14 @@ class Xl(Package, CompilerPackage):
         _r_exes = [e for e in exes if "_r" in e]
         _exes = [e for e in exes if "_r" not in e]
 
-        _r_paths = cls.determine_paths(exes=_r_exes) if _r_exes else None
-        _paths = cls.determine_paths(exes=_exes) if _exes else None
+        _r_compilers = cls.determine_compiler_paths(exes=_r_exes) if _r_exes else None
+        _compilers = cls.determine_compiler_paths(exes=_exes) if _exes else None
 
         results = []
-        if _r_paths:
-            results.append(("+r", {"paths": _r_paths}))
-        if _paths:
-            results.append(("~r", {"paths": _paths}))
+        if _r_compilers:
+            results.append(("+r", {"compilers": _r_compilers}))
+        if _compilers:
+            results.append(("~r", {"compilers": _compilers}))
         return results
 
     @property
@@ -60,12 +60,12 @@ class Xl(Package, CompilerPackage):
     def cxx(self):
         if self.spec.external:
             return self.spec.extra_attributes["compilers"]["cxx"]
-        msg = "cannot retrieve C compiler [spec is not concrete]"
+        msg = "cannot retrieve C++ compiler [spec is not concrete]"
         assert self.spec.concrete, msg
 
     @property
     def fortran(self):
         if self.spec.external:
             return self.spec.extra_attributes["compilers"]["fortran"]
-        msg = "cannot retrieve C compiler [spec is not concrete]"
+        msg = "cannot retrieve Fortran compiler [spec is not concrete]"
         assert self.spec.concrete, msg

@@ -22,9 +22,9 @@ class AppleClang(BundlePackage, CompilerPackage):
 
     @classmethod
     def validate_detected_spec(cls, spec, extra_attributes):
-        msg = f'the extra attribute "paths" must be set for the detected spec "{spec}"'
-        assert "paths" in extra_attributes, msg
-        compilers = extra_attributes["paths"]
+        msg = f'the extra attribute "compilers" must be set for the detected spec "{spec}"'
+        assert "compilers" in extra_attributes, msg
+        compilers = extra_attributes["compilers"]
         for key in ("c", "cxx"):
             msg = f"{key} compiler not found for {spec}"
             assert key in compilers, msg

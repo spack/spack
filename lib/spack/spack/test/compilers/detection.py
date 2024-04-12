@@ -48,8 +48,6 @@ def check_package_detection(mock_executable, output, expected_version, cls):
         name = getattr(cls, f"{lang}_names")[0]
         executables[name] = mock_executable(name, output=script)
         bindir = os.path.dirname(executables[name])
-        with open(executables[name], "r") as f:
-            print(f.read())
 
     detected = spack.detection.by_path(
         [cls.fullname.replace("_", "-")], path_hints=[bindir], max_workers=1
@@ -67,7 +65,7 @@ def check_package_detection(mock_executable, output, expected_version, cls):
     suffix = ".bat" if sys.platform == "win32" else ""
     for lang in languages:
         name = getattr(cls, f"{lang}_names")[0]
-        assert detected_package[0].spec.extra_attributes["paths"][lang] == os.path.join(
+        assert detected_package[0].spec.extra_attributes["compilers"][lang] == os.path.join(
             bindir, name + suffix
         )
 

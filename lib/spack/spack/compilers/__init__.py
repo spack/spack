@@ -176,12 +176,12 @@ def _compiler_config_from_external(config):
     # Compute paths if needed first, then update with configured paths
     # This gets priority correct between computed and configured paths
     paths = {}
-    attribute_paths = extra_attributes.get("paths", {})
+    attribute_paths = extra_attributes.get("compilers", {})
     supported_languages = set(
         getattr(spec.package_class(spec), "supported_languages", ("c", "cxx", "fortran"))
     )
     if prefix and not supported_languages.issubset(set(attribute_paths.keys())):
-        paths = spec.package_class.determine_paths(prefix=prefix)
+        paths = spec.package_class.determine_compiler_paths(prefix=prefix)
     paths.update(attribute_paths)
 
     # compilers format has cc/fc/f77, externals format has "c/fortran"

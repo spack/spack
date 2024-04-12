@@ -518,7 +518,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage, CompilerPackage):
     prefixes = [r"\w+-\w+-\w+-"]
     suffixes = [r"-mp-\d+(?:\.\d+)?", r"-\d+(?:\.\d+)?", r"\d\d"]
     version_regex = r"(?<!clang version)\s?([0-9.]+)"
-    version_argument = ["-dumpfullversion", "-dumpversion"]
+    version_argument = ("-dumpfullversion", "-dumpversion")
 
     @classmethod
     def filter_detected_exes(cls, prefix, exes_in_prefix):
@@ -550,22 +550,25 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage, CompilerPackage):
 
     @classmethod
     def determine_variants(cls, exes, version_str):
-        paths = cls.determine_paths(exes=exes)
+        print("VARIANTS", exes, version_str)
+        compilers = cls.determine_compiler_paths(exes=exes)
 
         languages = set()
         translation = {"cxx": "c++"}
-        for lang, path in paths.items():
+        for lang, compiler in compilers.items():
             languages.add(translation.get(lang, lang))
         variant_str = "languages={0}".format(",".join(languages))
-        return variant_str, {"paths": paths}
+        return variant_str, {"compilers": compilers}
 
     @classmethod
     def validate_detected_spec(cls, spec, extra_attributes):
         # For GCC 'compilers' is a mandatory attribute
-        msg = 'the extra attribute "paths" must be set for ' 'the detected spec "{0}"'.format(spec)
-        assert "paths" in extra_attributes, msg
+        msg = 'the extra attribute "compilers" must be set for ' 'the detected spec "{0}"'.format(
+            spec
+        )
+        assert "compilers" in extra_attributes, msg
 
-        paths = extra_attributes["paths"]
+        compilers = extra_attributes["compilers"]
         for constraint, key in {
             "languages=c": "c",
             "languages=c++": "cxx",
@@ -574,14 +577,14 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage, CompilerPackage):
         }.items():
             if spec.satisfies(constraint):
                 msg = "{0} not in {1}"
-                assert key in paths, msg.format(key, spec)
+                assert key in compilers, msg.format(key, spec)
 
     @property
     def cc(self):
         msg = "cannot retrieve C compiler [spec is not concrete]"
         assert self.spec.concrete, msg
         if self.spec.external:
-            return self.spec.extra_attributes["paths"].get("c", None)
+            return self.spec.extra_attributes["compilers"].get("c", None)
         result = None
         if "languages=c" in self.spec:
             result = str(self.spec.prefix.bin.gcc)
@@ -592,7 +595,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage, CompilerPackage):
         msg = "cannot retrieve C++ compiler [spec is not concrete]"
         assert self.spec.concrete, msg
         if self.spec.external:
-            return self.spec.extra_attributes["paths"].get("cxx", None)
+            return self.spec.extra_attributes["compilers"].get("cxx", None)
         result = None
         if "languages=c++" in self.spec:
             result = os.path.join(self.spec.prefix.bin, "g++")
@@ -603,7 +606,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage, CompilerPackage):
         msg = "cannot retrieve Fortran compiler [spec is not concrete]"
         assert self.spec.concrete, msg
         if self.spec.external:
-            return self.spec.extra_attributes["paths"].get("fortran", None)
+            return self.spec.extra_attributes["compilers"].get("fortran", None)
         result = None
         if "languages=fortran" in self.spec:
             result = str(self.spec.prefix.bin.gfortran)
@@ -1049,11 +1052,13 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage, CompilerPackage):
                 ),
             )
         elif len(candidate_specs) == 0:
-            return candidate_specs[0].extra_attributes["paths"]["d"]
+            return candidate_specs[0].extra_attributes["compilers"]["d"]
         else:
             # It is rather unlikely to end up here but let us try to resolve the ambiguity:
-            candidate_gdc = candidate_specs[0].extra_attributes["paths"]["d"]
-            if all(candidate_gdc == s.extra_attributes["paths"]["d"] for s in candidate_specs[1:]):
+            candidate_gdc = candidate_specs[0].extra_attributes["compilers"]["d"]
+            if all(
+                candidate_gdc == s.extra_attributes["compilers"]["d"] for s in candidate_specs[1:]
+            ):
                 # It does not matter which one we take if they are all the same:
                 return candidate_gdc
             else:
@@ -1064,7 +1069,8 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage, CompilerPackage):
                         error_nl,
                         error_nl.join(
                             "{0} (cc: {1})".format(
-                                s.extra_attributes["paths"]["d"], s.extra_attributes["paths"]["c"]
+                                s.extra_attributes["compilers"]["d"],
+                                s.extra_attributes["compilers"]["c"]
                             )
                             for s in candidate_specs
                         ),
