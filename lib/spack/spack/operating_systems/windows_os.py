@@ -76,15 +76,12 @@ class WindowsOs(OperatingSystem):
     @property
     def oneapi_root(self):
         oneapi_root = ""
-        root = os.environ.get("ONEAPI_ROOT", "") or \
-        os.path.join(os.environ.get("ProgramFiles(x86)", ""), "Intel", "oneAPI")
+        root = os.environ.get("ONEAPI_ROOT", "") or os.path.join(
+            os.environ.get("ProgramFiles(x86)", ""), "Intel", "oneAPI"
+        )
         if os.path.exists(root):
             oneapi_root = root
         return oneapi_root
-
-
-
-
 
     @property
     def compiler_search_paths(self):
@@ -94,7 +91,9 @@ class WindowsOs(OperatingSystem):
             _compiler_search_paths.extend(glob.glob(os.path.join(p, "*", "bin", "Hostx64", "x64")))
         oneapi_root = self.oneapi_root
         if oneapi_root:
-            _compiler_search_paths.extend(glob.glob(os.path.join("compiler", "**", "bin"), recursive=True))
+            _compiler_search_paths.extend(
+                glob.glob(os.path.join("compiler", "**", "bin"), recursive=True)
+            )
 
         # Second strategy: Find MSVC via the registry
         def try_query_registry(retry=False):
