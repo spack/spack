@@ -20,15 +20,8 @@ from spack.compiler import Compiler
 from spack.error import SpackError
 from spack.version import Version, VersionRange
 
-avail_fc_version: Set[str] = set()
-fc_path: Dict[str, str] = dict()
-
-fortran_mapping = {
-    "2021.3.0": "19.29.30133",
-    "2021.2.1": "19.28.29913",
-    "2021.2.0": "19.28.29334",
-    "2021.1.0": "19.28.29333",
-}
+_avail_fc_version: Set[str] = set()
+FC_PATH: Dict[str, str] = dict()
 
 
 class CmdCall:
@@ -115,15 +108,13 @@ class VCVarsInvocation(VarsInvocation):
         return f"{script} {self.arch} {self.sdk_ver} {self.vcvars_ver}"
 
 
-def get_valid_fortran_pth(comp_ver):
-    cl_ver = str(comp_ver)
+def get_valid_fortran_pth():
+    """Assign maximum available fortran compiler"""
+    # TODO (johnwparent): validate compatibility w/ try compiler
+    # functionality when added
     sort_fn = lambda fc_ver: Version(fc_ver)
-    sort_fc_ver = sorted(list(avail_fc_version), key=sort_fn)
-    for ver in sort_fc_ver:
-        if ver in fortran_mapping:
-            if Version(cl_ver) <= Version(fortran_mapping[ver]):
-                return fc_path[ver]
-    return None
+    sort_fc_ver = sorted(list(_avail_fc_version), key=sort_fn)
+    return FC_PATH[sort_fc_ver[-1]]
 
 
 class Msvc(Compiler):
@@ -169,8 +160,7 @@ class Msvc(Compiler):
         paths = args[3]
         # This positional argument "cspec" is also parsed and handled by the base class
         # constructor
-        cspec = args[0]
-        new_pth = [pth if pth else get_valid_fortran_pth(cspec.version) for pth in paths]
+        new_pth = [pth if pth else get_valid_fortran_pth() for pth in paths]
         paths[:] = new_pth
         # Initialize, deferring to base class but then adding the vcvarsallfile
         # file based on compiler executable path.
@@ -319,17 +309,14 @@ class Msvc(Compiler):
         if not sys.platform == "win32":
             return "unknown"
         fc_ver = cls.default_version(fc)
-        avail_fc_version.add(fc_ver)
-        fc_path[fc_ver] = fc
-        ver = fc_ver
+        _avail_fc_version.add(fc_ver)
+        FC_PATH[fc_ver] = fc
         try:
             sps = spack.operating_systems.windows_os.WindowsOs().compiler_search_paths
         except AttributeError:
             raise SpackError("Windows compiler search paths not established")
         clp = spack.util.executable.which_string("cl", path=sps)
-        if clp:
-            ver = cls.default_version(clp)
-        return ver
+        return cls.default_version(clp) if clp else fc_ver
 
     @classmethod
     def f77_version(cls, f77):
