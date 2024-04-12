@@ -88,6 +88,7 @@ class Axom(CachedCMakePackage, CudaPackage, ROCmPackage):
     variant(
         "profiling",
         default=False,
+        when="@develop",
         description="Build with hooks for Adiak/Caliper performance analysis",
     )
 
@@ -278,12 +279,7 @@ class Axom(CachedCMakePackage, CudaPackage, ROCmPackage):
 
         # Add optimization flag workaround for Debug builds with cray compiler or newer HIP
         if "+rocm" in spec:
-            if (
-                spec.satisfies("%cce")
-                or spec.satisfies("%clang@16")
-                or spec.satisfies("%clang@17")
-            ):
-                entries.append(cmake_cache_string("CMAKE_CXX_FLAGS_DEBUG", "-O1 -g -DNDEBUG"))
+            entries.append(cmake_cache_string("CMAKE_CXX_FLAGS_DEBUG", "-O1 -g -DNDEBUG"))
 
         return entries
 
