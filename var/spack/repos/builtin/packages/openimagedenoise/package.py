@@ -19,6 +19,7 @@ class Openimagedenoise(CMakePackage):
 
     license("Apache-2.0")
 
+    version("2.2.2", sha256="d26b75fa216165086f65bf48c80648290f2cfed7d3c4bfc1e86c247b46c96b7e")
     version("2.1.0", sha256="ce144ba582ff36563d9442ee07fa2a4d249bc85aa93e5b25fc527ff4ee755ed6")
     version("2.0.1", sha256="328eeb9809d18e835dca7203224af3748578794784c026940c02eea09c695b90")
     version("1.4.3", sha256="3276e252297ebad67a999298d8f0c30cfb221e166b166ae5c955d88b94ad062a")

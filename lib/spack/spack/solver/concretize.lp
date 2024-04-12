@@ -80,6 +80,7 @@ unification_set(SetID, VirtualNode)
 
 
 #defined multiple_unification_sets/1.
+#defined runtime/1.
 
 %----
 % Rules to break symmetry and speed-up searches
@@ -521,6 +522,12 @@ attr("virtual_on_edge", PackageNode, ProviderNode, Virtual)
      attr("depends_on", PackageNode, ProviderNode, Type),
      provider(ProviderNode, node(_, Virtual)),
      not external(PackageNode).
+
+% If a virtual node is in the answer set, it must be either a virtual root,
+% or used somewhere
+:- attr("virtual_node", node(_, Virtual)),
+   not attr("virtual_on_incoming_edges", _, Virtual),
+   not attr("virtual_root", node(_, Virtual)).
 
 attr("virtual_on_incoming_edges", ProviderNode, Virtual)
   :- attr("virtual_on_edge", _, ProviderNode, Virtual).
@@ -1109,7 +1116,7 @@ error(100, "'{0} target={1}' is not compatible with this machine", Package, Targ
 % Compiler semantics
 %-----------------------------------------------------------------------------
 % There must be only one compiler set per built node.
-{ node_compiler(PackageNode, CompilerID) : compiler_id(CompilerID) } :-
+{ node_compiler(PackageNode, CompilerID) : compiler_id(CompilerID), compiler_available(CompilerID) } :-
     attr("node", PackageNode),
     build(PackageNode).
 
@@ -1126,6 +1133,7 @@ attr("node_compiler_version", PackageNode, CompilerName, CompilerVersion)
   :- node_compiler(PackageNode, CompilerID),
      compiler_name(CompilerID, CompilerName),
      compiler_version(CompilerID, CompilerVersion),
+     compiler_available(CompilerID),
      build(PackageNode).
 
 attr("node_compiler", PackageNode, CompilerName)
@@ -1186,8 +1194,8 @@ error(100, "{0} compiler '%{1}@{2}' incompatible with 'os={3}'", Package, Compil
      node_compiler(node(X, Package), CompilerID),
      compiler_name(CompilerID, Compiler),
      compiler_version(CompilerID, Version),
-     not compiler_os(CompilerID, OS),
-     not allow_compiler(Compiler, Version),
+     compiler_os(CompilerID, CompilerOS),
+     not os_compatible(CompilerOS, OS),
      build(node(X, Package)).
 
 % If a package and one of its dependencies don't have the
@@ -1208,7 +1216,6 @@ compiler_mismatch_required(PackageNode, DependencyNode)
      not compiler_match(PackageNode, DependencyNode).
 
 #defined compiler_os/3.
-#defined allow_compiler/2.
 
 % compilers weighted by preference according to packages.yaml
 node_compiler_weight(node(ID, Package), Weight)
@@ -1493,18 +1500,20 @@ opt_criterion(40, "compiler mismatches that are not from CLI").
 #minimize{ 0@240: #true }.
 #minimize{ 0@40: #true }.
 #minimize{
-    1@40+Priority,PackageNode,DependencyNode
-    : compiler_mismatch(PackageNode, DependencyNode),
-      build_priority(PackageNode, Priority)
+    1@40+Priority,PackageNode,node(ID, Dependency)
+    : compiler_mismatch(PackageNode, node(ID, Dependency)),
+      build_priority(node(ID, Dependency), Priority),
+      not runtime(Dependency)
 }.
 
 opt_criterion(39, "compiler mismatches that are not from CLI").
 #minimize{ 0@239: #true }.
 #minimize{ 0@39: #true }.
 #minimize{
-    1@39+Priority,PackageNode,DependencyNode
-    : compiler_mismatch_required(PackageNode, DependencyNode),
-      build_priority(PackageNode, Priority)
+    1@39+Priority,PackageNode,node(ID, Dependency)
+    : compiler_mismatch_required(PackageNode, node(ID, Dependency)),
+      build_priority(node(ID, Dependency), Priority),
+      not runtime(Dependency)
 }.
 
 opt_criterion(30, "non-preferred OS's").
@@ -1521,9 +1530,10 @@ opt_criterion(25, "version badness").
 #minimize{ 0@225: #true }.
 #minimize{ 0@25: #true }.
 #minimize{
-    Weight@25+Priority,PackageNode
-    : version_weight(PackageNode, Weight),
-      build_priority(PackageNode, Priority)
+    Weight@25+Priority,node(X, Package)
+    : version_weight(node(X, Package), Weight),
+      build_priority(node(X, Package), Priority),
+      not runtime(Package)
 }.
 
 % Try to use all the default values of variants
@@ -1542,9 +1552,10 @@ opt_criterion(15, "non-preferred compilers").
 #minimize{ 0@215: #true }.
 #minimize{ 0@15: #true }.
 #minimize{
-    Weight@15+Priority,PackageNode
-    : node_compiler_weight(PackageNode, Weight),
-      build_priority(PackageNode, Priority)
+    Weight@15+Priority,node(X, Package)
+    : node_compiler_weight(node(X, Package), Weight),
+      build_priority(node(X, Package), Priority),
+      not runtime(Package)
 }.
 
 % Minimize the number of mismatches for targets in the DAG, try
@@ -1553,18 +1564,55 @@ opt_criterion(10, "target mismatches").
 #minimize{ 0@210: #true }.
 #minimize{ 0@10: #true }.
 #minimize{
-    1@10+Priority,PackageNode,Dependency
-    : node_target_mismatch(PackageNode, Dependency),
-      build_priority(PackageNode, Priority)
+    1@10+Priority,PackageNode,node(ID, Dependency)
+    : node_target_mismatch(PackageNode, node(ID, Dependency)),
+      build_priority(node(ID, Dependency), Priority),
+      not runtime(Dependency)
 }.
 
 opt_criterion(5, "non-preferred targets").
 #minimize{ 0@205: #true }.
 #minimize{ 0@5: #true }.
 #minimize{
-    Weight@5+Priority,PackageNode
-    : node_target_weight(PackageNode, Weight),
-      build_priority(PackageNode, Priority)
+    Weight@5+Priority,node(X, Package)
+    : node_target_weight(node(X, Package), Weight),
+      build_priority(node(X, Package), Priority),
+      not runtime(Package)
+}.
+
+
+% Minimize the number of compiler mismatches for runtimes
+opt_criterion(4, "compiler mismatches (runtimes)").
+#minimize{ 0@204: #true }.
+#minimize{ 0@4: #true }.
+#minimize{
+    1@4,PackageNode,node(ID, Dependency)
+    : compiler_mismatch(PackageNode, node(ID, Dependency)), runtime(Dependency)
+}.
+#minimize{
+    1@4,PackageNode,node(ID, Dependency)
+    : compiler_mismatch_required(PackageNode, node(ID, Dependency)), runtime(Dependency)
+}.
+
+
+% Choose more recent versions for runtimes
+opt_criterion(3, "version badness (runtimes)").
+#minimize{ 0@203: #true }.
+#minimize{ 0@3: #true }.
+#minimize{
+    Weight@3,node(X, Package)
+    : version_weight(node(X, Package), Weight),
+      runtime(Package)
+}.
+
+% Choose best target for runtimes
+opt_criterion(2, "non-preferred targets (runtimes)").
+#minimize{ 0@202: #true }.
+#minimize{ 0@2: #true }.
+#minimize{
+    Weight@2,node(X, Package)
+    : node_target_weight(node(X, Package), Weight),
+      runtime(Package)
 }.
 
 % Choose more recent versions for nodes

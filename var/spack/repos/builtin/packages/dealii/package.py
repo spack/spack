@@ -206,7 +206,7 @@ class Dealii(CMakePackage, CudaPackage):
     depends_on("slepc~arpack", when="+slepc+petsc+mpi+int64")
     depends_on("sundials@:3~pthread", when="@9.0:9.2+sundials")
     depends_on("sundials@5:5.8", when="@9.3:9.3.3+sundials")
-    depends_on("sundials@5:", when="@9.3.4:+sundials")
+    depends_on("sundials@5:6.7", when="@9.3.4:+sundials")
     depends_on("taskflow@3.4:", when="@9.6:+taskflow")
     depends_on("trilinos gotype=int", when="+trilinos@12.18.1:")
     # TODO: next line fixes concretization with trilinos and adol-c
@@ -288,6 +288,9 @@ class Dealii(CMakePackage, CudaPackage):
         sha256="c9884ebb0fe379c539012a225d8bcdcfe288edec8dc9d319fbfd64d8fbafba8e",
         when="@:9.4 +ginkgo ^ginkgo@1.5.0:",
     )
+
+    # deal.II's own CUDA backend does not support CUDA version 12.0 or newer.
+    conflicts("+cuda ^cuda@12:")
 
     # Check for sufficiently modern versions
     conflicts("cxxstd=11", when="@9.3:")

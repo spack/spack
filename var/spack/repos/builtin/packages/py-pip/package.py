@@ -2,8 +2,8 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
 import os
+import sys
 
 from spack.package import *
 
@@ -44,6 +44,15 @@ class PyPip(Package, PythonExtension):
     # Uses collections.MutableMapping
     depends_on("python@:3.9", when="@:19.1", type=("build", "run"))
 
+    resource(
+        name="pip-bootstrap",
+        url="https://bootstrap.pypa.io/pip/zipapp/pip-22.3.1.pyz",
+        checksum="c9363c70ad91d463f9492a8a2c89f60068f86b0239bd2a6aa77367aab5fefb3e",
+        when="platform=windows",
+        placement={"pip-22.3.1.pyz": "pip.pyz"},
+        expand=False,
+    )
+
     def url_for_version(self, version):
         url = "https://files.pythonhosted.org/packages/{0}/p/pip/pip-{1}-{0}-none-any.whl"
         if version >= Version("21"):
@@ -58,7 +67,14 @@ class PyPip(Package, PythonExtension):
         # itself, see:
         # https://discuss.python.org/t/bootstrapping-a-specific-version-of-pip/12306
         whl = self.stage.archive_file
-        args = [os.path.join(whl, "pip")] + std_pip_args + ["--prefix=" + prefix, whl]
+        args = std_pip_args + ["--prefix=" + prefix, whl]
+        if sys.platform == "win32":
+            # On Windows for newer versions of pip, you must bootstrap pip first.
+            # In order to achieve this, use the pip.pyz zipapp version of pip to
+            # bootstrap the pip wheel install.
+            args.insert(0, os.path.join(self.stage.source_path, "pip.pyz"))
+        else:
+            args.insert(0, os.path.join(whl, "pip"))
         python(*args)
 
     def setup_dependent_package(self, module, dependent_spec):

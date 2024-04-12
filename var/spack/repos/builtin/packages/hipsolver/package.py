@@ -70,6 +70,7 @@ class Hipsolver(CMakePackage, CudaPackage, ROCmPackage):
         values=("Release", "Debug", "RelWithDebInfo"),
         description="CMake build type",
     )
+    variant("asan", default=False, description="Build with address-sanitizer enabled or disabled")
 
     depends_on("cmake@3.5:", type="build")
 
@@ -123,6 +124,10 @@ class Hipsolver(CMakePackage, CudaPackage, ROCmPackage):
         else:
             ver = None
         return ver
+
+    def setup_build_environment(self, env):
+        if self.spec.satisfies("+asan"):
+            self.asan_on(env, self.spec["llvm-amdgpu"].prefix)
 
     def cmake_args(self):
         args = [

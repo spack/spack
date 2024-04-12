@@ -1032,7 +1032,7 @@ _spack_env() {
     then
         SPACK_COMPREPLY="-h --help"
     else
-        SPACK_COMPREPLY="activate deactivate create remove rm list ls status st loads view update revert depfile"
+        SPACK_COMPREPLY="activate deactivate create remove rm rename mv list ls status st loads view update revert depfile"
     fi
 }
 
@@ -1073,6 +1073,24 @@ _spack_env_rm() {
         SPACK_COMPREPLY="-h --help -y --yes-to-all"
     else
         _environments
+    fi
+}
+
+_spack_env_rename() {
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help -d --dir -f --force"
+    else
+        SPACK_COMPREPLY=""
+    fi
+}
+
+_spack_env_mv() {
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help -d --dir -f --force"
+    else
+        SPACK_COMPREPLY=""
     fi
 }
 
@@ -1179,7 +1197,7 @@ _spack_fetch() {
 _spack_find() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --format -H --hashes --json -d --deps -p --paths --groups --no-groups -l --long -L --very-long -t --tag -N --namespaces -c --show-concretized -f --show-flags --show-full-compiler -x --explicit -X --implicit -u --unknown -m --missing -v --variants --loaded -M --only-missing --deprecated --only-deprecated --start-date --end-date"
+        SPACK_COMPREPLY="-h --help --format -H --hashes --json -d --deps -p --paths --groups --no-groups -l --long -L --very-long -t --tag -N --namespaces -c --show-concretized -f --show-flags --show-full-compiler -x --explicit -X --implicit -u --unknown -m --missing -v --variants --loaded -M --only-missing --deprecated --only-deprecated --install-tree --start-date --end-date"
     else
         _installed_packages
     fi
@@ -1338,7 +1356,7 @@ _spack_list() {
 _spack_load() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --sh --csh --fish --bat --pwsh --first --only --list"
+        SPACK_COMPREPLY="-h --help --sh --csh --fish --bat --pwsh --first --list"
     else
         _installed_packages
     fi
@@ -1423,7 +1441,7 @@ _spack_mirror_destroy() {
 _spack_mirror_add() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --scope --type --unsigned --signed --s3-access-key-id --s3-access-key-secret --s3-access-token --s3-profile --s3-endpoint-url --oci-username --oci-password"
+        SPACK_COMPREPLY="-h --help --scope --type --autopush --unsigned --signed --s3-access-key-id --s3-access-key-secret --s3-access-token --s3-profile --s3-endpoint-url --oci-username --oci-password"
     else
         _mirrors
     fi
@@ -1459,7 +1477,7 @@ _spack_mirror_set_url() {
 _spack_mirror_set() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --push --fetch --type --url --unsigned --signed --scope --s3-access-key-id --s3-access-key-secret --s3-access-token --s3-profile --s3-endpoint-url --oci-username --oci-password"
+        SPACK_COMPREPLY="-h --help --push --fetch --type --url --autopush --no-autopush --unsigned --signed --scope --s3-access-key-id --s3-access-key-secret --s3-access-token --s3-profile --s3-endpoint-url --oci-username --oci-password"
     else
         _mirrors
     fi
