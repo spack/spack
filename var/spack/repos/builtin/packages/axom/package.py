@@ -296,17 +296,11 @@ class Axom(CachedCMakePackage, CudaPackage, ROCmPackage):
             entries.append(cmake_cache_option("CMAKE_CUDA_SEPARABLE_COMPILATION", True))
 
             # CUDA_FLAGS
-            cudaflags = "-restrict --expt-extended-lambda "
+            cudaflags = "${CMAKE_CUDA_FLAGS} -restrict --expt-extended-lambda "
 
             # Pass through any cxxflags to the host compiler via nvcc's Xcompiler flag
             host_cxx_flags = spec.compiler_flags["cxxflags"]
             cudaflags += " ".join(["-Xcompiler=%s " % flag for flag in host_cxx_flags])
-
-            if not spec.satisfies("cuda_arch=none"):
-                cuda_arch = spec.variants["cuda_arch"].value[0]
-                entries.append(cmake_cache_string("CMAKE_CUDA_ARCHITECTURES", cuda_arch))
-            else:
-                entries.append("# cuda_arch could not be determined\n\n")
 
             if spec.satisfies("^blt@:0.5.1"):
                 # This is handled internally by BLT now
@@ -314,7 +308,7 @@ class Axom(CachedCMakePackage, CudaPackage, ROCmPackage):
                     cudaflags += " -std=c++14"
                 else:
                     cudaflags += " -std=c++11"
-            entries.append(cmake_cache_string("CMAKE_CUDA_FLAGS", cudaflags))
+            entries.append(cmake_cache_string("CMAKE_CUDA_FLAGS", cudaflags, force=True))
 
             entries.append("# nvcc does not like gtest's 'pthreads' flag\n")
             entries.append(cmake_cache_option("gtest_disable_pthreads", True))
