@@ -36,6 +36,7 @@ from spack.pkg.builtin.intel_oneapi_compilers import IntelOneapiCompilers
 from spack.pkg.builtin.nag import Nag
 from spack.pkg.builtin.nvhpc import Nvhpc
 from spack.pkg.builtin.pgi import Pgi
+from spack.pkg.builtin.xl import Xl
 
 
 def check_package_detection(mock_executable, output, expected_version, cls):
@@ -471,13 +472,14 @@ def test_pgi_version_detection(version_str, expected_version, mock_executable):
         ),
     ],
 )
-def test_xl_version_detection(version_str, expected_version):
+def test_xl_version_detection(version_str, expected_version, mock_executable):
     version = spack.compilers.xl.Xl.extract_version_from_output(version_str)
     assert version == expected_version
 
     version = spack.compilers.xl_r.XlR.extract_version_from_output(version_str)
     assert version == expected_version
 
+    check_package_detection(mock_executable, version_str, expected_version, Xl)
 
 @pytest.mark.not_on_windows("Not supported on Windows (yet)")
 @pytest.mark.parametrize(

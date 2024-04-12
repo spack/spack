@@ -5,6 +5,8 @@ paths:
           - "bin/xlc++"
           - "bin/xlc_r"
           - "bin/xlc++_r"
+          - "bin/xlf"
+          - "bin/xlf_r"
         script: |
           echo "IBM XL C/C++ for Linux, V16.1.1 (5725-C73, 5765-J13)"
           echo "Version: 16.01.0001.0006"
@@ -15,5 +17,5 @@ paths:
           echo "Version: 16.01.0001.0006"
     platforms: ["linux"]
     results:
-      - spec: "xlc+r@16.1"
-      - spec: "xlc~r@16.1"
+      - spec: "xl+r@16.1"
+      - spec: "xl~r@16.1"

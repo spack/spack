@@ -11,8 +11,8 @@ import spack.compiler
 from spack.package import *
 
 
-class Xlc(Package):
-    """IBM XL C/C++ is an advanced, high-performance compiler that can be
+class Xl(Package, CompilerPackage):
+    """IBM XL C/C++/Fortran is an advanced, high-performance compiler that can be
     used for developing complex, computationally intensive programs, including
     interlanguage calls with C and Fortran programs.
     """
@@ -27,43 +27,26 @@ class Xlc(Package):
             "detected on a system where they are supplied by vendor"
         )
 
-    executables = [r"xlc", r"xlC", r"xlc\+\+"]
-
-    @classmethod
-    def determine_version(cls, exe):
-        version_regex = re.compile(r"([0-9]?[0-9]\.[0-9])")
-        try:
-            output = spack.compiler.get_compiler_version_output(exe, "-qversion")
-            # Exclude spurious Fortran compilers
-            if "Fortran" in output:
-                return None
-
-            match = version_regex.search(output)
-            if match:
-                return match.group(1)
-        except spack.util.executable.ProcessError:
-            pass
-        except Exception as e:
-            tty.debug(str(e))
+    languages = ["c", "cxx", "fortran"]
+    c_names = ["xlc", "xlc_r"]
+    cxx_names = ["xlc++", "xlc++_r"]
+    fortran_names = ["xlf", "xlf_r"]  # TODO complete this
+    version_argument = "-qversion"
+    version_regex = r"([0-9]?[0-9]\.[0-9])"
 
     @classmethod
     def determine_variants(cls, exes, version_str):
-        variants = collections.defaultdict(dict)
-        for exe in exes:
-            # Determine the variant of the spec
-            variant_str = "+r" if "_r" in exe else "~r"
-            if "xlc++" in exe:
-                variants[variant_str]["cxx"] = exe
-                continue
+        _r_exes = [e for e in exes if "_r" in e]
+        _exes = [e for e in exes if "_r" not in e]
 
-            if "xlc" in exe:
-                variants[variant_str]["c"] = exe
-                continue
+        _r_paths = cls.determine_paths(exes=_r_exes) if _r_exes else None
+        _paths = cls.determine_paths(exes=_exes) if _exes else None
 
         results = []
-        for variant_str, compilers in variants.items():
-            results.append((variant_str, {"compilers": compilers}))
-
+        if _r_paths:
+            results.append(("+r", {"paths": _r_paths}))
+        if _paths:
+            results.append(("~r", {"paths": _paths}))
         return results
 
     @property
@@ -77,5 +60,12 @@ class Xlc(Package):
     def cxx(self):
         if self.spec.external:
             return self.spec.extra_attributes["compilers"]["cxx"]
+        msg = "cannot retrieve C compiler [spec is not concrete]"
+        assert self.spec.concrete, msg
+
+    @property
+    def fortran(self):
+        if self.spec.external:
+            return self.spec.extra_attributes["compilers"]["fortran"]
         msg = "cannot retrieve C compiler [spec is not concrete]"
         assert self.spec.concrete, msg
