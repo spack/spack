@@ -912,7 +912,6 @@ def test_find_first_file(tmpdir, bfs_depth):
 
 
 def test_rename_dest_exists(tmpdir):
-
     @contextmanager
     def setup_test_files():
         a = tmpdir.join("a", "file1")
@@ -1036,4 +1035,3 @@ def test_windows_sfn(tmpdir):
     assert "d\\LONGER~1" in fs.windows_sfn(d)
     assert "d\\LONGER~2" in fs.windows_sfn(e)
     shutil.rmtree(tmpdir.join("d"))
-
