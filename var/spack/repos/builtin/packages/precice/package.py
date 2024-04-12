@@ -23,6 +23,7 @@ class Precice(CMakePackage):
     license("LGPL-3.0-or-later")
 
     version("develop", branch="develop")
+    version("3.1.1", sha256="fe759293942ebc9cb2e6127f356a8c795ab7383c1b074595994ebc92466e478d")
     version("3.1.0", sha256="11e7d3d4055ee30852c0e83692ca7563acaa095bd223ebdbd5c8c851b3646d37")
     version("3.0.0", sha256="efe6cf505d9305af89c6da1fdba246199a75a1c63a6a22103773ed95341879ba")
     version("2.5.1", sha256="a5a37d3430eac395e885eb9cbbed9d0980a15e96c3e44763a3769fa7301e3b3a")
