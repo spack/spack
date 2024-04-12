@@ -521,6 +521,19 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage, CompilerPackage):
     version_argument = ("-dumpfullversion", "-dumpversion")
 
     @classmethod
+    def determine_version(cls, exe):
+        try:
+            output = spack.compiler.get_compiler_version_output(exe, "--version")
+        except Exception:
+            output = ""
+        # Apple's gcc is actually apple clang, so skip it.
+        # Users can add it manually to compilers.yaml at their own risk.
+        if "Apple" in output:
+            return None
+
+        return super().determine_version(exe)
+
+    @classmethod
     def filter_detected_exes(cls, prefix, exes_in_prefix):
         result = []
         for exe in exes_in_prefix:
