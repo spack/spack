@@ -2253,7 +2253,7 @@ complete -c spack -n '__fish_spack_using_command mirror destroy' -l mirror-url -
 complete -c spack -n '__fish_spack_using_command mirror destroy' -l mirror-url -r -d 'find mirror to destroy by url'
 
 # spack mirror add
-set -g __fish_spack_optspecs_spack_mirror_add h/help scope= type= unsigned signed s3-access-key-id= s3-access-key-secret= s3-access-token= s3-profile= s3-endpoint-url= oci-username= oci-password=
+set -g __fish_spack_optspecs_spack_mirror_add h/help scope= type= autopush unsigned signed s3-access-key-id= s3-access-key-secret= s3-access-token= s3-profile= s3-endpoint-url= oci-username= oci-password=
 complete -c spack -n '__fish_spack_using_command_pos 0 mirror add' -f
 complete -c spack -n '__fish_spack_using_command mirror add' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command mirror add' -s h -l help -d 'show this help message and exit'
@@ -2261,6 +2261,8 @@ complete -c spack -n '__fish_spack_using_command mirror add' -l scope -r -f -a '
 complete -c spack -n '__fish_spack_using_command mirror add' -l scope -r -d 'configuration scope to modify'
 complete -c spack -n '__fish_spack_using_command mirror add' -l type -r -f -a 'binary source'
 complete -c spack -n '__fish_spack_using_command mirror add' -l type -r -d 'specify the mirror type: for both binary and source use `--type binary --type source` (default)'
+complete -c spack -n '__fish_spack_using_command mirror add' -l autopush -f -a autopush
+complete -c spack -n '__fish_spack_using_command mirror add' -l autopush -d 'set mirror to push automatically after installation'
 complete -c spack -n '__fish_spack_using_command mirror add' -l unsigned -f -a signed
 complete -c spack -n '__fish_spack_using_command mirror add' -l unsigned -d 'do not require signing and signature verification when pushing and installing from this build cache'
 complete -c spack -n '__fish_spack_using_command mirror add' -l signed -f -a signed
@@ -2323,7 +2325,7 @@ complete -c spack -n '__fish_spack_using_command mirror set-url' -l oci-password
 complete -c spack -n '__fish_spack_using_command mirror set-url' -l oci-password -r -d 'password to use to connect to this OCI mirror'
 
 # spack mirror set
-set -g __fish_spack_optspecs_spack_mirror_set h/help push fetch type= url= unsigned signed scope= s3-access-key-id= s3-access-key-secret= s3-access-token= s3-profile= s3-endpoint-url= oci-username= oci-password=
+set -g __fish_spack_optspecs_spack_mirror_set h/help push fetch type= url= autopush no-autopush unsigned signed scope= s3-access-key-id= s3-access-key-secret= s3-access-token= s3-profile= s3-endpoint-url= oci-username= oci-password=
 complete -c spack -n '__fish_spack_using_command_pos 0 mirror set' -f -a '(__fish_spack_mirrors)'
 complete -c spack -n '__fish_spack_using_command mirror set' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command mirror set' -s h -l help -d 'show this help message and exit'
@@ -2335,6 +2337,10 @@ complete -c spack -n '__fish_spack_using_command mirror set' -l type -r -f -a 'b
 complete -c spack -n '__fish_spack_using_command mirror set' -l type -r -d 'specify the mirror type: for both binary and source use `--type binary --type source`'
 complete -c spack -n '__fish_spack_using_command mirror set' -l url -r -f -a url
 complete -c spack -n '__fish_spack_using_command mirror set' -l url -r -d 'url of mirror directory from \'spack mirror create\''
+complete -c spack -n '__fish_spack_using_command mirror set' -l autopush -f -a autopush
+complete -c spack -n '__fish_spack_using_command mirror set' -l autopush -d 'set mirror to push automatically after installation'
+complete -c spack -n '__fish_spack_using_command mirror set' -l no-autopush -f -a autopush
+complete -c spack -n '__fish_spack_using_command mirror set' -l no-autopush -d 'set mirror to not push automatically after installation'
 complete -c spack -n '__fish_spack_using_command mirror set' -l unsigned -f -a signed
 complete -c spack -n '__fish_spack_using_command mirror set' -l unsigned -d 'do not require signing and signature verification when pushing and installing from this build cache'
 complete -c spack -n '__fish_spack_using_command mirror set' -l signed -f -a signed
