@@ -22,6 +22,10 @@ class W3nco(CMakePackage):
 
     def flag_handler(self, name, flags):
         if name == "cflags":
-            if self.spec.satisfies("%oneapi") or self.spec.satisfies("%apple-clang") or self.spec.satisfies("%clang"):
+            if (
+                self.spec.satisfies("%oneapi")
+                or self.spec.satisfies("%apple-clang")
+                or self.spec.satisfies("%clang")
+            ):
                 flags.append("-Wno-error=implicit-function-declaration")
         return (flags, None, None)
