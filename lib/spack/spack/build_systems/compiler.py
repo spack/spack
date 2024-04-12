@@ -23,6 +23,9 @@ class CompilerPackage(spack.package_base.PackageBase):
     # metadata identifying this as a compiler for lmod
     family = "compiler"
 
+    # TODO: how do these play nicely with other tags
+    tags = ["compiler"]
+
     # Optional suffix regexes for searching for this type of compiler.
     # Suffixes are used by some frameworks, e.g. macports uses an '-mp-X.Y'
     # version suffix for gcc.
@@ -49,13 +52,14 @@ class CompilerPackage(spack.package_base.PackageBase):
     #: Static definition of languages supported by this class
     compiler_languages = ["c", "cxx", "fortran"]
 
+    def __init__(self):
+        super().__init__()
+        assert set(self.supported_languages) <= set(self.compiler_languages)
+
     #: Dynamic definition of languages supported by this package
     @property
     def supported_languages(self):
         return self.compiler_languages
-
-    # TODO: how do these play nicely with other tags
-    tags = ["compiler"]
 
     @classproperty
     def compiler_names(cls):
