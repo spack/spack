@@ -548,7 +548,7 @@ developer-tools-manylinux2014-build:
 .radiuss:
   extends: [ ".linux_x86_64_v3" ]
   variables:
-    SPACK_CI_STACK_NAME: radiuss
+    SPACK_CI_STACK_NAME: radiuss_test
 
 radiuss-generate:
   extends: [ ".radiuss", ".generate-x86_64" ]
