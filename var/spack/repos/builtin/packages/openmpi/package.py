@@ -842,6 +842,12 @@ class Openmpi(AutotoolsPackage, CudaPackage):
         env.set("MPICXX", join_path(self.prefix.bin, "mpic++"))
         env.set("MPIF77", join_path(self.prefix.bin, "mpif77"))
         env.set("MPIF90", join_path(self.prefix.bin, "mpif90"))
+        # Open MPI also has had mpifort since v1.7, so we can set MPIFC to that
+        # Note: that mpif77 and mpif90 are deprecated since v1.7, but careful
+        # testing would be needed to change the MPIF77 and MPIF90 above. For now
+        # we just *add* functionality
+        if self.spec.satisfies("@1.7:"):
+            env.set("MPIFC", join_path(self.prefix.bin, "mpifort"))
 
     def setup_dependent_build_environment(self, env, dependent_spec):
         # Use the spack compiler wrappers under MPI
