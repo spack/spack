@@ -169,6 +169,25 @@ def test_update_key_index(
     assert "index.json" in key_dir_list
 
 
+def test_buildcache_autopush(tmp_path, install_mockery, mock_fetch):
+    """Test buildcache with autopush"""
+    mirror_dir = tmp_path / "mirror"
+    mirror_autopush_dir = tmp_path / "mirror_autopush"
+
+    mirror("add", "--unsigned", "mirror", mirror_dir.as_uri())
+    mirror("add", "--autopush", "--unsigned", "mirror-autopush", mirror_autopush_dir.as_uri())
+
+    s = Spec("libdwarf").concretized()
+
+    # Install and generate build cache index
+    s.package.do_install()
+
+    metadata_file = spack.binary_distribution.tarball_name(s, ".spec.json")
+
+    assert not (mirror_dir / "build_cache" / metadata_file).exists()
+    assert (mirror_autopush_dir / "build_cache" / metadata_file).exists()
+
+
 def test_buildcache_sync(
     mutable_mock_env_path,
     install_mockery_mutable_config,
