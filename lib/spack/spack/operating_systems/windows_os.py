@@ -74,17 +74,27 @@ class WindowsOs(OperatingSystem):
         return [os.path.join(path, "VC", "Tools", "MSVC") for path in self.vs_install_paths]
 
     @property
+    def oneapi_root(self):
+        oneapi_root = ""
+        root = os.environ.get("ONEAPI_ROOT", "") or \
+        os.path.join(os.environ.get("ProgramFiles(x86)", ""), "Intel", "oneAPI")
+        if os.path.exists(root):
+            oneapi_root = root
+        return oneapi_root
+
+
+
+
+
+    @property
     def compiler_search_paths(self):
         # First Strategy: Find MSVC directories using vswhere
         _compiler_search_paths = []
         for p in self.msvc_paths:
             _compiler_search_paths.extend(glob.glob(os.path.join(p, "*", "bin", "Hostx64", "x64")))
-        if os.getenv("ONEAPI_ROOT"):
-            _compiler_search_paths.extend(
-                glob.glob(
-                    os.path.join(str(os.getenv("ONEAPI_ROOT")), "compiler", "*", "windows", "bin")
-                )
-            )
+        oneapi_root = self.oneapi_root
+        if oneapi_root:
+            _compiler_search_paths.extend(glob.glob(os.path.join("compiler", "**", "bin"), recursive=True))
 
         # Second strategy: Find MSVC via the registry
         def try_query_registry(retry=False):
