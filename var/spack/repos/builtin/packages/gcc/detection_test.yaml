@@ -1,12 +1,27 @@
 paths:
-  # Ubuntu 18.04, system compilers without Fortran
+  # Ubuntu 20.04, system compilers without Fortran. This
+  # test also covers which flags are expected to be used
+  # during the detection of gcc.
   - layout:
       - executables:
         - "bin/gcc"
         - "bin/g++"
-        script: "echo 7.5.0"
+        script: |
+          if [ "$1" = "-dumpversion" ] ; then
+            echo "9"
+          elif [ "$1" = "-dumpfullversion" ] ; then
+            echo "9.4.0"
+          elif [ "$1" = "--version" ] ; then
+            echo "gcc (Ubuntu 9.4.0-1ubuntu1~20.04.2) 9.4.0"
+            echo "Copyright (C) 2019 Free Software Foundation, Inc."
+            echo "This is free software; see the source for copying conditions.  There is NO"
+            echo "warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE."
+          else
+            echo "mock executable got an unexpected flag: $1"
+            exit 1
+          fi
     results:
-      - spec: "gcc@7.5.0 languages=c,c++"
+      - spec: "gcc@9.4.0 languages=c,c++"
   # Mock a version < 7 of GCC that requires -dumpversion and
   # errors with -dumpfullversion
   - layout:
@@ -15,7 +30,7 @@ paths:
         - "bin/g++-5"
         - "bin/gfortran-5"
         script: |
-          if [[ "$1" == "-dumpversion" ]] ; then
+          if [ "$1" = "-dumpversion" ] ; then
             echo "5.5.0"
           else
             echo "gcc-5: fatal error: no input files"
@@ -36,3 +51,23 @@ paths:
     results:
       - spec: "gcc@6.5.0 languages=c"
       - spec: "gcc@10.1.0 languages=c,c++"
+  # Apple clang under disguise as gcc should not be detected
+  - layout:
+      - executables:
+        - "bin/gcc"
+        script: |
+          if [ "$1" = "-dumpversion" ] ; then
+            echo "15.0.0"
+          elif [ "$1" = "-dumpfullversion" ] ; then
+            echo "clang: error: no input files" >&2
+            exit 1
+          elif [ "$1" = "--version" ] ; then
+            echo "Apple clang version 15.0.0 (clang-1500.3.9.4)"
+            echo "Target: x86_64-apple-darwin23.4.0"
+            echo "Thread model: posix"
+            echo "InstalledDir: /Library/Developer/CommandLineTools/usr/bin"
+          else
+            echo "mock executable got an unexpected flag: $1"
+            exit 1
+          fi
+    results: []
