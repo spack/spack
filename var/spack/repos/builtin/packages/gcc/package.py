@@ -550,7 +550,6 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage, CompilerPackage):
 
     @classmethod
     def determine_variants(cls, exes, version_str):
-        print("VARIANTS", exes, version_str)
         compilers = cls.determine_compiler_paths(exes=exes)
 
         languages = set()
@@ -1070,7 +1069,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage, CompilerPackage):
                         error_nl.join(
                             "{0} (cc: {1})".format(
                                 s.extra_attributes["compilers"]["d"],
-                                s.extra_attributes["compilers"]["c"]
+                                s.extra_attributes["compilers"]["c"],
                             )
                             for s in candidate_specs
                         ),

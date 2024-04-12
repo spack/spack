@@ -31,8 +31,8 @@ from spack.pkg.builtin.apple_clang import AppleClang
 from spack.pkg.builtin.cce import Cce
 from spack.pkg.builtin.fj import Fj
 from spack.pkg.builtin.gcc import Gcc
-from spack.pkg.builtin.intel_oneapi_compilers_classic import IntelOneapiCompilersClassic
 from spack.pkg.builtin.intel_oneapi_compilers import IntelOneapiCompilers
+from spack.pkg.builtin.intel_oneapi_compilers_classic import IntelOneapiCompilersClassic
 from spack.pkg.builtin.nag import Nag
 from spack.pkg.builtin.nvhpc import Nvhpc
 from spack.pkg.builtin.pgi import Pgi
@@ -478,6 +478,7 @@ def test_xl_version_detection(version_str, expected_version, mock_executable):
     assert version == expected_version
 
     check_package_detection(mock_executable, version_str, expected_version, Xl)
+
 
 @pytest.mark.not_on_windows("Not supported on Windows (yet)")
 @pytest.mark.parametrize(

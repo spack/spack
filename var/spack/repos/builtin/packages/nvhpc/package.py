@@ -430,7 +430,7 @@ class Nvhpc(Package, CompilerPackage):
 
     @classmethod
     def determine_variants(cls, exes, version_str):
-        # TODO: use other components to determine default_cuda/install_type/blas/lapack/mpi variants
+        # TODO: use other exes to determine default_cuda/install_type/blas/lapack/mpi variants
         return "~blas~lapack~mpi", {"compilers": cls.determine_compiler_paths(exes=exes)}
 
     def _version_prefix(self):

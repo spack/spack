@@ -5,6 +5,7 @@
 import itertools
 import os
 import re
+import sys
 from typing import Sequence
 
 import llnl.util.tty as tty
@@ -20,6 +21,7 @@ def true():
 
 class CompilerPackage(spack.package_base.PackageBase):
     """A Package mixin for all common logic for packages that implement compilers"""
+
     # metadata identifying this as a compiler for lmod
     family = "compiler"
 
@@ -52,8 +54,8 @@ class CompilerPackage(spack.package_base.PackageBase):
     #: Static definition of languages supported by this class
     compiler_languages = ["c", "cxx", "fortran"]
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, spec):
+        super().__init__(spec)
         assert set(self.supported_languages) <= set(self.compiler_languages)
 
     #: Dynamic definition of languages supported by this package
@@ -73,11 +75,14 @@ class CompilerPackage(spack.package_base.PackageBase):
     def executables(cls):
         """Construct executables for external detection from names, prefixes, and suffixes."""
         regexp_fmt = r"^({0}){1}({2})$"
+        prefixes = [""] + cls.prefixes
+        suffixes = [""] + cls.suffixes
+        if sys.platform == "win32":
+            ext = r"\.(?:exe|bat)"
+            suffixes += [suf + ext for suf in suffixes]
         return [
             regexp_fmt.format(prefix, re.escape(name), suffix)
-            for prefix, name, suffix in itertools.product(
-                cls.prefixes + [""], cls.compiler_names, cls.suffixes + [""]
-            )
+            for prefix, name, suffix in itertools.product(prefixes, cls.compiler_names, suffixes)
         ]
 
     @classmethod
