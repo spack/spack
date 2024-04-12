@@ -307,10 +307,14 @@ class Msvc(Compiler):
             new_tmp = tempfile.mkdtemp(dir=pkg.stage.path)
             env.set("TMP", new_tmp)
 
-        env.set("CC", self.cc)
-        env.set("CXX", self.cxx)
-        env.set("FC", self.fc)
-        env.set("F77", self.f77)
+        # Compiler paths require quotes in order for some build systems to
+        # correcly load the entire compiler path due to spaces in paths.
+        str_or_none = lambda string: f"\"{string}\"" if string else None
+
+        env.set("CC", str_or_none(self.cc))
+        env.set("CXX", str_or_none(self.cxx))
+        env.set("FC", str_or_none(self.fc))
+        env.set("F77", str_or_none(self.f77))
 
     @classmethod
     def fc_version(cls, fc):
