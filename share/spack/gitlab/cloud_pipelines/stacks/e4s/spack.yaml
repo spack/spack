@@ -78,12 +78,14 @@ spack:
   - drishti
   - dxt-explorer
   - dyninst
+  - e4s-cl
   - ecp-data-vis-sdk ~cuda ~rocm +adios2 +ascent +cinema +darshan +faodel +hdf5 +paraview +pnetcdf +sz +unifyfs +veloc +visit +vtkm +zfp # adios2~cuda, ascent~cuda, darshan-runtime, darshan-util, faodel, hdf5, libcatalyst, parallel-netcdf, paraview~cuda, py-cinemasci, sz, unifyfs, veloc, visit, vtk-m, zfp
   - exaworks
   - flecsi
   - flit
   - flux-core
   - fortrilinos
+  - fpm
   - gasnet
   - ginkgo
   - globalarrays
@@ -120,6 +122,7 @@ spack:
   - nccmp
   - nco
   - nekbone +mpi
+  - netcdf-fortran
   - netlib-scalapack
   - nrm
   - nvhpc
