@@ -20,7 +20,7 @@ class Yosys(MakefilePackage):
     """
 
     homepage = "https://yosyshq.net/yosys"
-    url = "https://github.com/YosysHQ/yosys/archive/refs/tags/yosys-0.37.tar.gz"
+    url = "https://github.com/YosysHQ/yosys/archive/refs/tags/yosys-0.40.tar.gz"
     git = "https://github.com/YosysHQ/yosys.git"
 
     maintainers("davekeeshan")
@@ -29,6 +29,8 @@ class Yosys(MakefilePackage):
 
     version("master", branch="master")
 
+    version("0.40", sha256="c1d42ad90d587b587210b40cf3c5584e41e20f656e8630c33b6583322e8b764e")
+    version("0.39", sha256="a66d95747b21d03e5b9c274d3f7cb0f7dd99610891dd66920bfaee25bc30dad1")
     version("0.38", sha256="5f3d7bb12c5371db00586700a658a9196008a9457839f046403a660fe0c7a1df")
     version("0.37", sha256="98e91253b116728e5db037512a4d837529d408269358f06fe7b4633c89cf8756")
     version("0.36", sha256="d69beedcb76db80681c2a0f445046311f3ba16716d5d0c3c5034dabcb6bd9b23")
