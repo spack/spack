@@ -14,6 +14,10 @@ import spack.compiler
 import spack.package_base
 
 
+def true():
+    return True
+
+
 class CompilerPackage(spack.package_base.PackageBase):
     """A Package mixin for all common logic for packages that implement compilers"""
     # metadata identifying this as a compiler for lmod
@@ -39,7 +43,8 @@ class CompilerPackage(spack.package_base.PackageBase):
     version_regex = "(.*)"
 
     #: Platform matcher for Platform objects supported by compiler
-    is_supported_on_platform = lambda x: True
+    # The value must be callable
+    is_supported_on_platform = true
 
     #: Static definition of languages supported by this class
     compiler_languages = ["c", "cxx", "fortran"]
