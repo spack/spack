@@ -20,6 +20,7 @@ class Gsibec(CMakePackage):
     license("Apache-2.0")
 
     version("develop", branch="develop")
+    version("1.2.1", sha256="83bf12ad6603d66e2e48b50cfcb57b7acd64e0d428a597a842db978a3277baf6")
     version("1.1.3", sha256="9cac000562250487c16608e8245d97457cc1663b1793b3833be5a76ebccb4b47")
     version("1.1.2", sha256="8bdcdf1663e6071b6ad9e893a76307abc70a6de744fb75a13986e70242993ada")
     version("1.0.7", sha256="53912f1f19d46f4941b377803cc2fce89a2b50d2ece7562f8fd65215a8908158")
