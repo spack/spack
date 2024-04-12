@@ -25,9 +25,9 @@ import spack.compilers.xl
 import spack.compilers.xl_r
 import spack.util.module_cmd
 from spack.operating_systems.cray_frontend import CrayFrontend
+from spack.pkg.builtin.acfl import Acfl
 from spack.pkg.builtin.aocc import Aocc
 from spack.pkg.builtin.apple_clang import AppleClang
-from spack.pkg.builtin.arm import Arm
 from spack.pkg.builtin.cce import Cce
 from spack.pkg.builtin.fj import Fj
 from spack.pkg.builtin.gcc import Gcc
@@ -97,7 +97,7 @@ def test_arm_version_detection(version_str, expected_version, mock_executable):
     version = spack.compilers.arm.Arm.extract_version_from_output(version_str)
     assert version == expected_version
 
-    check_package_detection(mock_executable, version_str, expected_version, Arm)
+    check_package_detection(mock_executable, version_str, expected_version, Acfl)
 
 
 @pytest.mark.parametrize(

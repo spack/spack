@@ -228,7 +228,7 @@ def get_gcc_prefix(spec):
     return join_path(spec.prefix, next(dir for dir in dirlist if dir.startswith("gcc")))
 
 
-class Acfl(Package):
+class Acfl(Package, CompilerPackage):
     """Arm Compiler combines the optimized tools and libraries from Arm
     with a modern LLVM-based compiler framework.
     """
@@ -275,13 +275,19 @@ class Acfl(Package):
         )
         exe("--accept", "--force", "--install-to", prefix)
 
+    compiler_languages = ["c", "cxx", "fortran"]
+    c_names = ["armclang"]
+    cxx_names = ["armclang++"]
+    fortran_names = ["armflang"]
+
+    version_argument = "--version"
+    version_regex = r"Arm C\/C\+\+\/Fortran Compiler version ([\d\.]+) \(build number (\d+)\) "
+
     @classmethod
     def determine_version(cls, exe):
-        regex_str = r"Arm C\/C\+\+\/Fortran Compiler version ([\d\.]+) " r"\(build number (\d+)\) "
-        version_regex = re.compile(regex_str)
         try:
             output = spack.compiler.get_compiler_version_output(exe, "--version")
-            match = version_regex.search(output)
+            match = re.search(cls.version_regex, output)
             if match:
                 if match.group(1).count(".") == 1:
                     return match.group(1) + ".0." + match.group(2)
@@ -291,24 +297,12 @@ class Acfl(Package):
         except Exception as e:
             tty.debug(e)
 
-    @classmethod
-    def determine_variants(cls, exes, version_str):
-        compilers = {}
-        for exe in exes:
-            if "armclang" in exe:
-                compilers["c"] = exe
-            if "armclang++" in exe:
-                compilers["cxx"] = exe
-            if "armflang" in exe:
-                compilers["fortran"] = exe
-        return "", {"compilers": compilers}
-
     @property
     def cc(self):
         msg = "cannot retrieve C compiler [spec is not concrete]"
         assert self.spec.concrete, msg
         if self.spec.external:
-            return self.spec.extra_attributes["compilers"].get("c", None)
+            return self.spec.extra_attributes["paths"].get("c", None)
         return join_path(get_acfl_prefix(self.spec), "bin", "armclang")
 
     @property
@@ -316,7 +310,7 @@ class Acfl(Package):
         msg = "cannot retrieve C++ compiler [spec is not concrete]"
         assert self.spec.concrete, msg
         if self.spec.external:
-            return self.spec.extra_attributes["compilers"].get("cxx", None)
+            return self.spec.extra_attributes["paths"].get("cxx", None)
         return join_path(get_acfl_prefix(self.spec), "bin", "armclang++")
 
     @property
@@ -324,7 +318,7 @@ class Acfl(Package):
         msg = "cannot retrieve Fortran compiler [spec is not concrete]"
         assert self.spec.concrete, msg
         if self.spec.external:
-            return self.spec.extra_attributes["compilers"].get("fortran", None)
+            return self.spec.extra_attributes["paths"].get("fortran", None)
         return join_path(get_acfl_prefix(self.spec), "bin", "armflang")
 
     @property
