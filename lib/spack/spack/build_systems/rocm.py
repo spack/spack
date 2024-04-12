@@ -145,7 +145,11 @@ class ROCmPackage(PackageBase):
     depends_on("hip +rocm", when="+rocm")
 
     # need amd gpu type for rocm builds
+    compilers_supporting_rocm = ("cce", "rocmcc")
     conflicts("amdgpu_target=none", when="+rocm")
+    for compiler in spack.compilers.supported_compilers():
+        if compiler not in compilers_supporting_rocm:
+            conflicts(f"%{compiler}", when="+rocm")
 
     # https://github.com/ROCm-Developer-Tools/HIP/blob/master/bin/hipcc
     # It seems that hip-clang does not (yet?) accept this flag, in which case
