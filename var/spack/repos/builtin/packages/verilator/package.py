@@ -42,6 +42,7 @@ class Verilator(AutotoolsPackage):
 
     version("master", branch="master")
 
+    version("5.024", sha256="88b04c953e7165c670d6a700f202cef99c746a0867b4e2efe1d7ea789dee35f3")
     version("5.022", sha256="3c2f5338f4b6ce7e2f47a142401acdd18cbf4c5da06092618d6d036c0afef12d")
     version("5.020", sha256="41ca9abfadf8d2413efbff7f8277379733d0095957fe7769dc38f8fd1bc899a6")
     version("5.018", sha256="8b544273eedee379e3c1a3bb849e14c754c9b5035d61ad03acdf3963092ba6c0")
@@ -88,7 +89,6 @@ class Verilator(AutotoolsPackage):
         env.prepend_path("VERILATOR_ROOT", self.prefix)
 
     def autoreconf(self, spec, prefix):
-        autoconf = which("autoconf")
         autoconf()
 
     # verilator requires access to its shipped scripts (bin) and include
