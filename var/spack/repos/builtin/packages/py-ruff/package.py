@@ -14,6 +14,7 @@ class PyRuff(PythonPackage):
     git = "https://github.com/astral-sh/ruff.git"
 
     license("MIT")
+    maintainers("adamjstewart")
 
     version("0.3.7", sha256="d5c1aebee5162c2226784800ae031f660c350e7a3402c4d1f8ea4e97e232e3ba")
     version("0.3.0", sha256="0886184ba2618d815067cf43e005388967b67ab9c80df52b32ec1152ab49f53a")
