@@ -44,6 +44,6 @@ class Gsibec(CMakePackage):
         args = []
 
         mkl_providers = ["intel-mkl", "intel-oneapi-mkl", "intel-parallel-studio"]
-        args.append(self.define("ENABLE_MKL", spec["lapack"].name in mkl_providers))
+        args.append(self.define("ENABLE_MKL", self.spec["lapack"].name in mkl_providers))
 
         return args
