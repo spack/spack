@@ -10,6 +10,17 @@ from spack.package import *
 
 versions = [
     {
+        "version": "2024.1.0",
+        "cpp": {
+            "url": "https://registrationcenter-download.intel.com/akdlm/IRC_NAS/2e562b6e-5d0f-4001-8121-350a828332fb/l_dpcpp-cpp-compiler_p_2024.1.0.468_offline.sh",
+            "sha256": "534ecc6e4b690c9011d7765cbe178f520aa8f49c0eb4ea80ea1415e48e5d7cf7",
+        },
+        "ftn": {
+            "url": "https://registrationcenter-download.intel.com/akdlm/IRC_NAS/fd9342bd-7d50-442c-a3e4-f41974e14396/l_fortran-compiler_p_2024.1.0.465_offline.sh",
+            "sha256": "30a02bad9a96a543c60f3bfa4238dfe07c2d26d76fc22ba9aa9b7c603e11f1b9",
+        },
+    },
+    {
         "version": "2024.0.2",
         "cpp": {
             "url": "https://registrationcenter-download.intel.com/akdlm/IRC_NAS/bb99984f-370f-413d-bbec-38928d2458f2/l_dpcpp-cpp-compiler_p_2024.0.2.29_offline.sh",
@@ -212,10 +223,7 @@ versions = [
 
 @IntelOneApiPackage.update_description
 class IntelOneapiCompilers(IntelOneApiPackage):
-    """Intel oneAPI Compilers. Includes: icc, icpc, ifort, icx, icpx, ifx,
-    and dpcpp.
-
-    """
+    """Intel oneAPI Compilers. Includes: icc, icpc, ifort, icx, icpx, and ifx."""
 
     maintainers("rscohn2")
 
@@ -388,3 +396,31 @@ class IntelOneapiCompilers(IntelOneApiPackage):
             p = join_path(self.component_prefix.linux, d)
             if find(p, "*." + dso_suffix, recursive=False):
                 yield p
+
+    @classmethod
+    def runtime_constraints(cls, *, spec, pkg):
+        pkg("*").depends_on(
+            "intel-oneapi-runtime",
+            when="%oneapi",
+            type="link",
+            description="If any package uses %oneapi, it depends on intel-oneapi-runtime",
+        )
+        pkg("*").depends_on(
+            f"intel-oneapi-runtime@{str(spec.version)}:",
+            when=f"%{str(spec)}",
+            type="link",
+            description=f"If any package uses %{str(spec)}, "
+            f"it depends on intel-oneapi-runtime@{str(spec.version)}:",
+        )
+
+        for fortran_virtual in ("fortran-rt", "libifcore@5"):
+            pkg("*").depends_on(
+                fortran_virtual,
+                when=f"%{str(spec)}",
+                languages=["fortran"],
+                type="link",
+                description=f"Add a dependency on 'libifcore' for nodes compiled with "
+                f"{str(spec)} and using the 'fortran' language",
+            )
+        # The version of gcc-runtime is the same as the %gcc used to "compile" it
+        pkg("intel-oneapi-runtime").requires(f"@={str(spec.version)}", when=f"%{str(spec)}")

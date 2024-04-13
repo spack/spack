@@ -74,6 +74,10 @@ class Rocthrust(CMakePackage):
         depends_on(f"rocprim@{ver}", when=f"@{ver}")
         depends_on(f"rocm-cmake@{ver}:", type="build", when=f"@{ver}")
 
+    def check(self):
+        with working_dir(self.builder.build_directory):
+            make("test")
+
     def setup_build_environment(self, env):
         env.set("CXX", self.spec["hip"].hipcc)
 

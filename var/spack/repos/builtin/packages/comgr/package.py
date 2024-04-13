@@ -42,6 +42,8 @@ class Comgr(CMakePackage):
         version("5.1.3", sha256="3078c10e9a852fe8357712a263ad775b15944e083f93a879935c877511066ac9")
         version("5.1.0", sha256="1cdcfe5acb768ef50fb0026d4ee7ba01e615251ad3c27bb2593cdcf8c070a894")
 
+    variant("asan", default=False, description="Build with address-sanitizer enabled or disabled")
+
     # Disable the hip compile tests.  Spack should not be using
     # /opt/rocm, and this breaks the build when /opt/rocm exists.
     patch("hip-tests.patch", when="@:4.2.0")
@@ -90,6 +92,8 @@ class Comgr(CMakePackage):
         args = [self.define("BUILD_TESTING", self.run_tests)]
         if self.spec.satisfies("@5.4.3:"):
             args.append("-DCMAKE_INSTALL_LIBDIR=lib")
+        if self.spec.satisfies("@5.7:"):
+            args.append(self.define_from_variant("ADDRESS_SANITIZER", "asan"))
         return args
 
     @classmethod

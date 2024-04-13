@@ -434,11 +434,6 @@ To resolve this problem, please try the following:
                 r"crtendS\.o",
             ]:
                 x.filter(regex=(rehead + o), repl="")
-        elif self.pkg.compiler.name == "dpcpp":
-            # Hack to filter out spurious predep_objects when building with Intel dpcpp
-            # (see https://github.com/spack/spack/issues/32863):
-            x.filter(regex=r"^(predep_objects=.*)/tmp/conftest-[0-9A-Fa-f]+\.o", repl=r"\1")
-            x.filter(regex=r"^(predep_objects=.*)/tmp/a-[0-9A-Fa-f]+\.o", repl=r"\1")
         elif self.pkg.compiler.name == "nag":
             for tag in ["fc", "f77"]:
                 marker = markers[tag]

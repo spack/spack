@@ -46,6 +46,7 @@ mirror_entry = {
         "signed": {"type": "boolean"},
         "fetch": fetch_and_push,
         "push": fetch_and_push,
+        "autopush": {"type": "boolean"},
         **connection,  # type: ignore
     },
 }
