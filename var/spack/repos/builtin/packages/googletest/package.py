@@ -47,8 +47,7 @@ class Googletest(CMakePackage):
             self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
             self.define_from_variant("CMAKE_CXX_STANDARD", "cxxstd"),
         ]
-        if spec.satisfies("~pthreads"):
-            args.append(self.define("gtest_disable_pthreads", True))
+        args.append(self.define("gtest_disable_pthreads", !spec.satisfies("pthreads")))
         if spec.satisfies("@1.8:"):
             # New style (contains both Google Mock and Google Test)
             args.append(self.define("BUILD_GTEST", True))
