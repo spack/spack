@@ -10,6 +10,7 @@ import collections
 import itertools
 import multiprocessing.pool
 import os
+import warnings
 from typing import Dict, List, Optional, Tuple
 
 import archspec.cpu
@@ -109,27 +110,33 @@ def _to_dict(compiler):
     return {"compiler": d}
 
 
-def get_compiler_config(scope=None, init_config=False):
+def get_compiler_config(
+    configuration: "spack.config.Configuration",
+    *,
+    scope: Optional[str] = None,
+    init_config: bool = False,
+) -> List[Dict]:
     """Return the compiler configuration for the specified architecture."""
-
-    config = spack.config.CONFIG.get("compilers", scope=scope) or []
+    config = configuration.get("compilers", scope=scope) or []
     if config or not init_config:
         return config
 
-    merged_config = spack.config.CONFIG.get("compilers")
+    merged_config = configuration.get("compilers")
     if merged_config:
         # Config is empty for this scope
         # Do not init config because there is a non-empty scope
         return config
 
-    _init_compiler_config(scope=scope)
-    config = spack.config.CONFIG.get("compilers", scope=scope)
+    _init_compiler_config(configuration, scope=scope)
+    config = configuration.get("compilers", scope=scope)
     return config
 
 
-def get_compiler_config_from_packages(scope=None):
+def get_compiler_config_from_packages(
+    configuration: "spack.config.Configuration", *, scope: Optional[str] = None
+) -> List[Dict]:
     """Return the compiler configuration from packages.yaml"""
-    config = spack.config.get("packages", scope=scope)
+    config = configuration.get("packages", scope=scope)
     if not config:
         return []
 
@@ -216,13 +223,15 @@ def _compiler_config_from_external(config):
     return compiler_entry
 
 
-def _init_compiler_config(*, scope):
+def _init_compiler_config(
+    configuration: "spack.config.Configuration", *, scope: Optional[str]
+) -> None:
     """Compiler search used when Spack has no compilers."""
     compilers = find_compilers()
     compilers_dict = []
     for compiler in compilers:
         compilers_dict.append(_to_dict(compiler))
-    spack.config.set("compilers", compilers_dict, scope=scope)
+    configuration.set("compilers", compilers_dict, scope=scope)
 
 
 def compiler_config_files():
@@ -233,7 +242,7 @@ def compiler_config_files():
         compiler_config = config.get("compilers", scope=name)
         if compiler_config:
             config_files.append(config.get_config_filename(name, "compilers"))
-        compiler_config_from_packages = get_compiler_config_from_packages(scope=name)
+        compiler_config_from_packages = get_compiler_config_from_packages(config, scope=name)
         if compiler_config_from_packages:
             config_files.append(config.get_config_filename(name, "packages"))
     return config_files
@@ -246,7 +255,9 @@ def add_compilers_to_config(compilers, scope=None):
         compilers: a list of Compiler objects.
         scope: configuration scope to modify.
     """
-    compiler_config = get_compiler_config(scope, init_config=False)
+    compiler_config = get_compiler_config(
+        configuration=spack.config.CONFIG, scope=scope, init_config=False
+    )
     for compiler in compilers:
         if not compiler.cc:
             tty.debug(f"{compiler.spec} does not have a C compiler")
@@ -295,7 +306,9 @@ def _remove_compiler_from_scope(compiler_spec, scope):
          True if one or more compiler entries were actually removed, False otherwise
     """
     assert scope is not None, "a specific scope is needed when calling this function"
-    compiler_config = get_compiler_config(scope, init_config=False)
+    compiler_config = get_compiler_config(
+        configuration=spack.config.CONFIG, scope=scope, init_config=False
+    )
     filtered_compiler_config = [
         compiler_entry
         for compiler_entry in compiler_config
@@ -310,21 +323,28 @@ def _remove_compiler_from_scope(compiler_spec, scope):
     # We need to preserve the YAML type for comments, hence we are copying the
     # items in the list that has just been retrieved
     compiler_config[:] = filtered_compiler_config
-    spack.config.set("compilers", compiler_config, scope=scope)
+    spack.config.CONFIG.set("compilers", compiler_config, scope=scope)
     return True
 
 
-def all_compilers_config(scope=None, init_config=True):
+def all_compilers_config(
+    configuration: "spack.config.Configuration",
+    *,
+    scope: Optional[str] = None,
+    init_config: bool = True,
+) -> List["spack.compiler.Compiler"]:
     """Return a set of specs for all the compiler versions currently
     available to build with.  These are instances of CompilerSpec.
     """
-    from_packages_yaml = get_compiler_config_from_packages(scope)
+    from_packages_yaml = get_compiler_config_from_packages(configuration, scope=scope)
     if from_packages_yaml:
         init_config = False
-    from_compilers_yaml = get_compiler_config(scope, init_config)
+    from_compilers_yaml = get_compiler_config(configuration, scope=scope, init_config=init_config)
 
     result = from_compilers_yaml + from_packages_yaml
-    key = lambda c: _compiler_from_config_entry(c["compiler"])
+    # Dedupe entries by the compiler they represent
+    # If the entry is invalid, treat it as unique for deduplication
+    key = lambda c: _compiler_from_config_entry(c["compiler"] or id(c))
     return list(llnl.util.lang.dedupe(result, key=key))
 
 
@@ -332,7 +352,7 @@ def all_compiler_specs(scope=None, init_config=True):
     # Return compiler specs from the merged config.
     return [
         spack.spec.parse_with_version_concrete(s["compiler"]["spec"], compiler=True)
-        for s in all_compilers_config(scope, init_config)
+        for s in all_compilers_config(spack.config.CONFIG, scope=scope, init_config=init_config)
     ]
 
 
@@ -492,11 +512,20 @@ def find_specs_by_arch(compiler_spec, arch_spec, scope=None, init_config=True):
 
 
 def all_compilers(scope=None, init_config=True):
-    config = all_compilers_config(scope, init_config=init_config)
-    compilers = list()
-    for items in config:
+    return all_compilers_from(
+        configuration=spack.config.CONFIG, scope=scope, init_config=init_config
+    )
+
+
+def all_compilers_from(configuration, scope=None, init_config=True):
+    compilers = []
+    for items in all_compilers_config(
+        configuration=configuration, scope=scope, init_config=init_config
+    ):
         items = items["compiler"]
-        compilers.append(_compiler_from_config_entry(items))
+        compiler = _compiler_from_config_entry(items)  # can be None in error case
+        if compiler:
+            compilers.append(compiler)
     return compilers
 
 
@@ -507,7 +536,7 @@ def compilers_for_spec(
     """This gets all compilers that satisfy the supplied CompilerSpec.
     Returns an empty list if none are found.
     """
-    config = all_compilers_config(scope, init_config)
+    config = all_compilers_config(spack.config.CONFIG, scope=scope, init_config=init_config)
 
     matches = set(find(compiler_spec, scope, init_config))
     compilers = []
@@ -517,7 +546,7 @@ def compilers_for_spec(
 
 
 def compilers_for_arch(arch_spec, scope=None):
-    config = all_compilers_config(scope)
+    config = all_compilers_config(spack.config.CONFIG, scope=scope)
     return list(get_compilers(config, arch_spec=arch_spec))
 
 
@@ -603,7 +632,10 @@ def _compiler_from_config_entry(items):
     compiler = _compiler_cache.get(config_id, None)
 
     if compiler is None:
-        compiler = compiler_from_dict(items)
+        try:
+            compiler = compiler_from_dict(items)
+        except UnknownCompilerError as e:
+            warnings.warn(e.message)
         _compiler_cache[config_id] = compiler
 
     return compiler
@@ -656,7 +688,9 @@ def get_compilers(config, cspec=None, arch_spec=None):
                 raise ValueError(msg)
             continue
 
-        compilers.append(_compiler_from_config_entry(items))
+        compiler = _compiler_from_config_entry(items)
+        if compiler:
+            compilers.append(compiler)
 
     return compilers
 

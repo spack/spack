@@ -18,6 +18,7 @@ class Openvkl(CMakePackage):
 
     license("Apache-2.0")
 
+    version("2.0.1", sha256="0c7faa9582a93e93767afdb15a6c9c9ba154af7ee83a6b553705797be5f8af62")
     version("2.0.0", sha256="469c3fba254c4fcdd84f8a9763d2e1aaa496dc123b5a9d467cc0a561e284c4e6")
     version("1.3.2", sha256="7704736566bf17497a3e51c067bd575316895fda96eccc682dae4aac7fb07b28")
     version("1.3.1", sha256="c9cefb6c313f2b4c0331e9629931759a6bc204ec00deed6ec0becad1670a1933")

@@ -442,7 +442,7 @@ supported, and netmod is ignored if device is ch3:sock.""",
         # their run environments the code to make the compilers available.
         # For Cray MPIs, the regular compiler wrappers *are* the MPI wrappers.
         # Cray MPIs always have cray in the module name, e.g. "cray-mpich"
-        if self.spec.satisfies("platform=cray"):
+        if self.spec.satisfies("platform=cray") and spack_cc is not None:
             # This is intended to support external MPICH instances registered
             # by Spack on Cray machines prior to a879c87; users defining an
             # external MPICH entry for Cray should generally refer to the
@@ -458,18 +458,19 @@ supported, and netmod is ignored if device is ch3:sock.""",
             env.set("MPIF90", join_path(self.prefix.bin, "mpif90"))
 
     def setup_dependent_build_environment(self, env, dependent_spec):
-        env.set("MPICH_CC", spack_cc)
-        env.set("MPICH_CXX", spack_cxx)
-        env.set("MPICH_F77", spack_f77)
-        env.set("MPICH_F90", spack_fc)
-        env.set("MPICH_FC", spack_fc)
+        dependent_module = dependent_spec.package.module
+        env.set("MPICH_CC", dependent_module.spack_cc)
+        env.set("MPICH_CXX", dependent_module.spack_cxx)
+        env.set("MPICH_F77", dependent_module.spack_f77)
+        env.set("MPICH_F90", dependent_module.spack_fc)
+        env.set("MPICH_FC", dependent_module.spack_fc)
 
     def setup_dependent_package(self, module, dependent_spec):
         spec = self.spec
 
         # For Cray MPIs, the regular compiler wrappers *are* the MPI wrappers.
         # Cray MPIs always have cray in the module name, e.g. "cray-mpich"
-        if self.spec.satisfies("platform=cray"):
+        if self.spec.satisfies("platform=cray") and spack_cc is not None:
             spec.mpicc = spack_cc
             spec.mpicxx = spack_cxx
             spec.mpifc = spack_fc

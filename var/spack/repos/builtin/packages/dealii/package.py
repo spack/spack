@@ -289,6 +289,9 @@ class Dealii(CMakePackage, CudaPackage):
         when="@:9.4 +ginkgo ^ginkgo@1.5.0:",
     )
 
+    # deal.II's own CUDA backend does not support CUDA version 12.0 or newer.
+    conflicts("+cuda ^cuda@12:")
+
     # Check for sufficiently modern versions
     conflicts("cxxstd=11", when="@9.3:")
 
