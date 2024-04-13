@@ -338,7 +338,7 @@ class IntelOneapiCompilers(IntelOneApiPackage):
             # Tolerate missing compilers.
             # Initially, we installed icx/ifx/icc/ifort into a single prefix.
             # Starting in 2024, there is no icc. 2023.2.3 does not have an ifx.
-            if os.path.exists(compiler):
+            if os.path.exists(path.join(compiler)):
                 p = path.join(compiler + ".cfg")
                 with open(p, "w") as f:
                     f.write(" ".join(flags))
