@@ -3,22 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-# ----------------------------------------------------------------------------
-# If you submit this package back to Spack as a pull request,
-# please first remove this boilerplate and all FIXME comments.
-#
-# This is a template package file for Spack.  We've put "FIXME"
-# next to all the things you'll want to change. Once you've handled
-# them, you can save this file and test your package like this:
-#
-#     spack install ollama
-#
-# You can edit this file again by typing:
-#
-#     spack edit ollama
-#
-# See the Spack documentation for more information on packaging.
-# ----------------------------------------------------------------------------
 import spack.build_systems.go
 from spack.package import *
 
@@ -31,7 +15,14 @@ class Ollama(GoPackage):
 
     maintainers("teaguesterling")
 
+    # We're using commit IDs because the `go generate` process will fail for some
+    # dependencies that expect to be within a git repo. This is also an issue with
+    # cached downloads, but I don't know how to fix that yet
     version("0.1.31", commit="dc011d16b9ff160c0be3829fc39a43054f0315d0", submodules=True)
+    # This is the last verified non-preview version as of 20240413
+    version("0.1.30", commit="756c2575535641f1b96d94b4214941b90f4c30c7", submodules=True, preferred=True)
+
+    license("MIT", checked_by="teaguesterling")
 
     depends_on("cmake", type="build")
     depends_on("go", type="build")
@@ -53,4 +44,3 @@ class GoBuilder(spack.build_systems.go.GoBuilder):
         import inspect, llnl.util.filesystem as fs
         with fs.working_dir(self.build_directory):
             inspect.getmodule(pkg).go("generate", *self.generate_args)
-
