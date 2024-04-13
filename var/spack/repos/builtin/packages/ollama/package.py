@@ -20,7 +20,12 @@ class Ollama(GoPackage):
     # cached downloads, but I don't know how to fix that yet
     version("0.1.31", commit="dc011d16b9ff160c0be3829fc39a43054f0315d0", submodules=True)
     # This is the last verified non-preview version as of 20240413
-    version("0.1.30", commit="756c2575535641f1b96d94b4214941b90f4c30c7", submodules=True, preferred=True)
+    version(
+        "0.1.30",
+        commit="756c2575535641f1b96d94b4214941b90f4c30c7",
+        submodules=True,
+        preferred=True,
+    )
 
     license("MIT", checked_by="teaguesterling")
 
@@ -41,6 +46,9 @@ class GoBuilder(spack.build_systems.go.GoBuilder):
 
     def generate(self, pkg, spec, prefix):
         """Runs ``go generate`` in the source directory"""
-        import inspect, llnl.util.filesystem as fs
+        import inspect
+
+        import llnl.util.filesystem as fs
+
         with fs.working_dir(self.build_directory):
             inspect.getmodule(pkg).go("generate", *self.generate_args)
