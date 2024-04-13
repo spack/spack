@@ -15,8 +15,6 @@ class PyBlack(PythonPackage):
     homepage = "https://github.com/psf/black"
     pypi = "black/black-22.1.0.tar.gz"
 
-    maintainers("adamjstewart")
-
     license("MIT", checked_by="tgamblin")
 
     version("24.3.0", sha256="a0c9c4a0771afc6919578cec71ce82a3e31e054904e7197deacbc9382671c41f")
