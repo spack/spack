@@ -22,6 +22,11 @@ class Freetype(AutotoolsPackage, CMakePackage):
 
     license("FTL OR GPL-2.0-or-later")
 
+    version("2.13.2", sha256="1ac27e16c134a7f2ccea177faba19801131116fd682efc1f5737037c5db224b5")
+    version("2.13.1", sha256="0b109c59914f25b4411a8de2a506fdd18fa8457eb86eca6c7b15c19110a92fa5")
+    version("2.13.0", sha256="a7aca0e532a276ea8d85bd31149f0a74c33d19c8d287116ef8f5f8357b4f1f80")
+    version("2.12.1", sha256="efe71fd4b8246f1b0b1b9bfca13cfff1c9ad85930340c27df469733bbb620938")
+    version("2.12.0", sha256="7940a46eeb0255baaa87c553d72778c4f8daa2b8888c8e2a05766a2a8686740c")
     version("2.11.1", sha256="f8db94d307e9c54961b39a1cc799a67d46681480696ed72ecf78d4473770f09b")
     version("2.11.0", sha256="a45c6b403413abd5706f3582f04c8339d26397c4304b78fa552f2215df64101f")
     version("2.10.4", sha256="5eab795ebb23ac77001cfb68b7d4d50b5d6c7469247b0b01b2c953269f658dac")
