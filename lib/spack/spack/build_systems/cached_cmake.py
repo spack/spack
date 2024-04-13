@@ -139,11 +139,6 @@ class CachedCMakeBuilder(CMakeBuilder):
             "endif()\n",
         ]
 
-        # We defined hipcc as top-level compiler for packages when +rocm.
-        # This avoid problems coming from rocm flags being applied to another compiler.
-        if "+rocm" in spec:
-            entries.insert(0, cmake_cache_path("CMAKE_CXX_COMPILER", self.spec["hip"].hipcc))
-
         flags = spec.compiler_flags
 
         # use global spack compiler flags
