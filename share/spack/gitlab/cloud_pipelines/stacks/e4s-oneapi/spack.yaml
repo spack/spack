@@ -90,7 +90,6 @@ spack:
   - globalarrays
   - gmp
   - gotcha
-  - gptune ~mpispawn
   - gromacs
   - h5bench
   - hdf5-vol-async
@@ -118,7 +117,6 @@ spack:
   - nccmp
   - nco
   - netlib-scalapack
-  - nrm
   - omega-h
   - openmpi
   - papi
@@ -135,7 +133,6 @@ spack:
   - py-jupyterhub
   - py-libensemble
   - py-petsc4py
-  - py-warpx
   - qthreads scheduler=distrib
   - raja
   - rempi
@@ -163,7 +160,7 @@ spack:
   - libcatalyst
   - parallel-netcdf
   # - paraview                                                # paraview: VTK/ThirdParty/cgns/vtkcgns/src/adfh/ADFH.c:2002:23: error: incompatible function pointer types passing 'herr_t (hid_t, const char *, const H5L_info1_t *, void *)' (aka 'int (long, const char *, const H5L_info1_t *, void *)') to parameter of type 'H5L_iterate2_t' (aka 'int (*)(long, const char *,const H5L_info2_t *, void *)') [-Wincompatible-function-pointer-types]
-  - py-cinemasci
+  # - py-cinemasci                                            # py-scipy oneapi bug
   - sz
   - unifyfs
   - veloc
@@ -180,11 +177,14 @@ spack:
   # - exaworks                                                # turbine: oneapi 2024.1 compiler bug; internal ticket filed; expect fix in 2024.2
   # - geopm                                                   # geopm issue: https://github.com/spack/spack/issues/38795
   # - glvis ^llvm                                             # glvis: https://github.com/spack/spack/issues/42839
+  # - gptune ~mpispawn                                        # py-scipy oneapi bug
   # - hpctoolkit                                              # dyninst@12.3.0%gcc: /usr/bin/ld: libiberty/./d-demangle.c:142: undefined reference to `_intel_fast_memcpy'; can't mix intel-tbb@%oneapi with dyninst%gcc
   # - mgard +serial +openmp +timing +unstructured ~cuda       # mgard: mgard.tpp:63:48: error: non-constant-expression cannot be narrowed from type 'int' to 'unsigned long' in initializer list [-Wc++11-narrowing]
+  # - nrm                                                     # py-scipy oneapi bug
   # - openfoam                                                # cgal: https://github.com/spack/spack/issues/39481
   # - openpmd-api                                             # mgard:  mgard.tpp:63:48: error: non-constant-expression cannot be narrowed from type 'int' to 'unsigned long' in initializer list [-Wc++11-narrowing]
   # - pdt                                                     # pdt: pdbType.cc:193:21: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
+  # - py-warpx                                                # py-scipy oneapi bug
   # - quantum-espresso                                        # quantum-espresso@7.2 /i3fqdx5: warning: <unknown>:0:0: loop not unroll-and-jammed: the optimizer was unable to perform the requested transformation; the transformation might be disabled or specified as part of an unsupported transformation ordering
   # - stc                                                     # turbine: oneapi 2024.1 compiler bug; internal ticket filed; expect fix in 2024.2
   # - swig@4.0.2-fortran                                      # ?
@@ -205,13 +205,12 @@ spack:
   - py-plotly
   - py-pooch
   - py-pytest
-  - py-scikit-learn
-  - py-scipy
-  - py-scipy
   - py-seaborn
   # - py-horovod      # error
   # - py-jax          # error
   # - py-matplotlib   # error
+  # - py-scikit-learn # py-scipy oneapi bug
+  # - py-scipy        # py-scipy oneapi bug
   # - py-tensorflow   # error
   # - py-torch        # error
 
