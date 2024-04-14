@@ -44,7 +44,9 @@ class ScitokensCpp(CMakePackage):
     depends_on("pkgconfig", type="build")
     depends_on("uuid", type="build")
 
+    # Some jwt-cpp releases introduce breaking API changes
     conflicts("^jwt-cpp@0.5:", when="@:0.7")
+    conflicts("^jwt-cpp@0.7:", when="@:1.1")
 
     # https://github.com/scitokens/scitokens-cpp/issues/72
     @when("@0.7.0 ^openssl@3:")
