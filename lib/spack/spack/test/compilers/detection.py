@@ -111,8 +111,8 @@ def test_cce_version_detection(version_str, expected_version, mock_executable):
     version = spack.compilers.cce.Cce.extract_version_from_output(version_str)
     assert version == expected_version
 
-    # Cannot test on macos because of case insensitive filesystem
-    if sys.platform != "darwin":
+    # Cannot test on macos or windows because of case insensitive filesystem
+    if sys.platform not in ["darwin", "win32"]:
         check_package_detection(mock_executable, version_str, expected_version, Cce)
 
 
@@ -224,8 +224,8 @@ def test_fj_version_detection(version_str, expected_version, mock_executable):
     version = spack.compilers.fj.Fj.extract_version_from_output(version_str)
     assert version == expected_version
 
-    # Cannot test on macos because of case insensitive filesystem
-    if sys.platform != "darwin":
+    # Cannot test on macos or windows because of case insensitive filesystem
+    if sys.platform not in ["darwin", "win32"]:
         check_package_detection(mock_executable, version_str, expected_version, Fj)
 
 
