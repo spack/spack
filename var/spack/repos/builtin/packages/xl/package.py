@@ -23,7 +23,7 @@ class Xl(Package, CompilerPackage):
 
     languages = ["c", "cxx", "fortran"]
     c_names = ["xlc", "xlc_r"]
-    cxx_names = ["xlc++", "xlc++_r"]
+    cxx_names = ["xlc++", "xlC", "xlc++_r", "xlC_r"]
     fortran_names = ["xlf", "xlf_r"]  # TODO complete this
     version_argument = "-qversion"
     version_regex = r"([0-9]?[0-9]\.[0-9])"

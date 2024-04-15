@@ -12,7 +12,6 @@ class Msvc(Package, CompilerPackage):
 
     homepage = "https://visualstudio.microsoft.com/vs/features/cplusplus/"
 
-
     def install(self, spec, prefix):
         raise InstallError(
             "MSVC compilers are not installable with Spack, but can be "
@@ -32,7 +31,7 @@ class Msvc(Package, CompilerPackage):
         # Errors out and prints version info with no args
         return re.search(
             cls.version_regex,
-            spack.compiler.get_compiler_version_output(exe, version_arg=None, ignore_errors=True)
+            spack.compiler.get_compiler_version_output(exe, version_arg=None, ignore_errors=True),
         ).group(1)
 
     @classmethod
