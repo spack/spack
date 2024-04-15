@@ -23,10 +23,10 @@ class Brahma(CMakePackage):
 
     variant("mpi", default=False, description="Enable MPI support")
     depends_on("cpp-logger@0.0.1", when="@:0.0.1")
-    depends_on("cpp-logger@0.0.2", when="@0.0.2:")
+    depends_on("cpp-logger@0.0.2:", when="@0.0.2:")
     depends_on("gotcha@1.0.4", when="@:0.0.1")
-    depends_on("gotcha@1.0.5", when="@0.0.2:")
-    depends_on("catch2@3.0.1")
+    depends_on("gotcha@1.0.5:", when="@0.0.2:")
+    depends_on("catch2@3.0.1:")
 
     depends_on("mpi", when="+mpi")
 
