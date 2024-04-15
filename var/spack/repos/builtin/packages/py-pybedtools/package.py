@@ -14,6 +14,7 @@ class PyPybedtools(PythonPackage):
 
     license("MIT")
 
+    version("0.10.0", sha256="1a6fbaad23b013becc741d7d5922a2df03e391bc44ff92772ffb7dd456711161")
     version("0.9.0", sha256="9267c92cd764173449d9c31baedac0659b4eccc3d7c05e22ec378f86c0fc30a3")
     version("0.8.0", sha256="4eebd2cd1764ee1c604fd881703c3e329195485350b987b7fb8db42d232984f6")
     version("0.7.10", sha256="518a2311bd33f29cf2ee8fc1a028dda8c8e380c9fc83fcb0fbaa206933174b50")
