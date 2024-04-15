@@ -24,6 +24,7 @@ class RangeV3(CMakePackage):
     license("BSL-1.0")
 
     version("master", branch="master")
+    version("0.12.0", sha256="015adb2300a98edfceaf0725beec3337f542af4915cec4d0b89fa0886f4ba9cb")
     version("0.11.0", sha256="376376615dbba43d3bef75aa590931431ecb49eb36d07bb726a19f680c75e20c")
     version("0.10.0", sha256="5a1cd44e7315d0e8dcb1eee4df6802221456a9d1dbeac53da02ac7bd4ea150cd")
     version("0.5.0", sha256="32e30b3be042246030f31d40394115b751431d9d2b4e0f6d58834b2fd5594280")
