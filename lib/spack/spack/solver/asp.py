@@ -133,8 +133,9 @@ class RequirementKind(enum.Enum):
 class DeclaredVersion(NamedTuple):
     """Data class to contain information on declared versions used in the solve"""
 
-    #: String representation of the version
-    version: str
+    #: version (or String representation of the version?)
+    # version: str
+    version: GitOrStandardVersion
     #: Unique weight assigned to this version
     weight: int
     #: Provenance of the version
@@ -933,9 +934,16 @@ VersionInfo = Dict[Tuple, bool]
 
 
 def _vers_tuple(version):
-    vers = str(version.dotted) if hasattr(version, "dotted") else str(version)
+    vers = str(version.dotted).replace("_", ".") if hasattr(version, "dotted") else str(version)
     vers = vers.split(".")[:3]
-    vers += ["0"] * (3 - len(vers))
+    for i, v in enumerate(vers):
+        try:
+            vers[i] = int(v)
+        except ValueError:
+            vers[i] = 99  # What *should* we for branches or string versions?
+
+    # vers += ["0"] * (3 - len(vers))
+    vers += [0] * (3 - len(vers))
     return tuple(vers)
 
 
@@ -951,6 +959,9 @@ class SpackSolverSetup:
         self.declared_versions: Dict[str, List[DeclaredVersion]] = collections.defaultdict(list)
         self.version_info: Dict[str, VersionInfo] = collections.defaultdict(VersionInfo)
         self.possible_versions: Dict[str, Set[GitOrStandardVersion]] = collections.defaultdict(set)
+        self.preferred_versions: Dict[str, Set[GitOrStandardVersion]] = collections.defaultdict(
+            set
+        )
         self.deprecated_versions: Dict[str, Set[GitOrStandardVersion]] = collections.defaultdict(
             set
         )
@@ -985,29 +996,30 @@ class SpackSolverSetup:
 
     def _add_declared_version(self, pkg_name, version, idx, origin, possible=True):
         """Add the declared version if not already present."""
-        declared = DeclaredVersion(version=str(version), weight=idx, origin=origin)
+        # declared = DeclaredVersion(version=str(version), weight=idx, origin=origin)
+        declared = DeclaredVersion(version=version, weight=idx, origin=origin)
         if pkg_name in self.declared_versions:
             # TBD: Is this possible?
             if any(dv == declared for dv in self.declared_versions[pkg_name]):
                 tty.debug(
-                    f"[SETUP]: {pkg_name}: declared version ({version} ({type(version)}), {idx}, "
-                    f"{origin}) already exists, skipping"
+                    f"[SETUP] {pkg_name}: declared version ({version}, {idx}, {origin}) "
+                    "already exists, skipping"
                 )
                 return
 
         tty.debug(
-            f"[SETUP]: {pkg_name}: adding declared version ({version} ({type(version)}), {idx}, "
-            f"{origin})",
-            level=2,
+            f"[SETUP] {pkg_name}: adding declared version ({version}), {idx}, {origin})",
+            # level=2,
+            level=1,
         )
         self.declared_versions[pkg_name].append(declared)
         if possible:
             self.possible_versions[pkg_name].add(version)
 
-        preferred = hasattr(version, "preferred") and version.preferred
+        preferred = version in self.preferred_versions[pkg_name]
         vers = _vers_tuple(version)
-        tty.debug(f"[SETUP]: {pkg_name}: adding version info ({vers}, {preferred}", level=2)
-        # TLD/TODO: TypeError: Type Dict cannot be instantiated; use dict() instead
+        # tty.debug(f"[SETUP] {pkg_name}: adding version info {vers}: {preferred}", level=2)
+        tty.debug(f"[SETUP] {pkg_name}: adding version info {vers}: {preferred}", level=1)
         if pkg_name in self.version_info:
             info = self.version_info[pkg_name]
             if vers in info:
@@ -1023,43 +1035,89 @@ class SpackSolverSetup:
         if pkg_name not in self.version_info:
             return
 
-        def indices():
-            version_indices = collections.defaultdict(list)
-            indices = [-1] * 3
-            last_vers = [None] * 3
+        def indices(parts):
+            version_indices = collections.defaultdict(tuple)
+            index_versions = collections.defaultdict(list)
+            indices = [-1] * parts
+            last_vers = [None] * parts
             versions = sorted(self.version_info[pkg_name], reverse=True)
             for vers in versions:
-                offset = [0 if x == y else 1 for x, y in zip(last_vers, vers)]
+                offset = [0 if x == y else 1 for x, y in zip(last_vers, vers[:parts])]
+                if "develop" in vers:
+                    offset[0] += len(versions)
                 indices = [x + y for x, y in zip(indices, offset)]
 
                 try:
                     ind = offset.index(1) + 1
-                    indices[ind:] = [0] * (3 - ind)
+                    indices[ind:] = [0] * (parts - ind)
                 except ValueError:
                     pass
 
+                indices = tuple(indices)
                 version_indices[vers] = indices
+                index_versions[indices].append(vers)
 
                 last_vers = vers
-            return version_indices
+
+            return version_indices, index_versions
 
         # For "simplicity", factors are based on:
-        #   [preferred, major version, minor version, patch version]
+        # #   [preferred, major version, minor version, patch version]
+        #   [preferred, minor version, major version]
         #
-        # Assumption: It is generally "safe" to assume at most 10 patch
-        #   versions for each minor version and 10 minor for each major.
+        # # Assumption: It is generally "safe" to assume at most 10 patch
+        # #   versions for each minor version and 10 minor for each major.
+        # Assumption: It is generally "safe" to assume at most 10 major
+        #   versions.
         #
         # TBD: Is above assumption "safe"?
         # TBD: Is it appropriate to include the "assigned" weight/index in
         # TBD:  the 1s place?
-        factors = [10000, 1000, 100, 10]
-        version_indices = indices()
+        # ##factors = (10000, 1000, 100, 10)
+        # #factors = (1000, 1, 10, 100)
+        factors = (100, 1, 10)
+
+        # Sort by minor, major to ensure changes in major versions
+        # weigh less than changes in minor versions.
+        #
+        # TBD: Does the following example reflect major-over-minor?
+        # For example, package has versions: 2.1.0, 2.0, 1.1.1, 1.0 would
+        # be sorted to be ordered: 2.1.0, 1.1.1, 2.0, 1.0.
+        parts = 2
+        version_indices, index_versions = indices(parts)
+        tty.debug(
+            f"[SETUP] {pkg_name}: version_indices = {version_indices}, index_versions={index_versions}"
+        )
+        # index_version_keys = sorted(index_versions, key=lambda v: [v[1], v[0]])
+        tty.debug(f"[SETUP] {pkg_name}: sorted index_versions = {index_versions}")
         weights = []
 
         def new_weight(vers, preferred, weight):
-            new = weight
-            indices = [1 if preferred else 0] + version_indices[vers]
-            tty.debug(f"new_weight({vers}, {preferred}, {weight}): indices={indices}")
+            tty.debug(f"new_weight({vers}, {preferred}, {weight})")
+            indices = version_indices[vers]
+
+            # TBD: How do we handle things like armp-gcc's 23.10_gcc-12.2?
+            if len(indices) == 0:
+                # new = weight
+                new = 0
+                if not preferred:
+                    new += factors[0]
+
+                while new in weights:
+                    new += 1
+
+                weights.append(new)
+                return new
+
+            versions_with_index = index_versions[indices]
+            tty.debug(
+                f"new_weight({vers}, {preferred}, {weight}): versions_with_index={versions_with_index}"
+            )
+            indices = [1 if not preferred else 0] + list(indices)
+            offset = len(versions_with_index) - 1
+            # new = weight
+            # new = weight + offset
+            new = offset
             for factor, idx in zip(factors, indices):
                 new += factor * idx
 
@@ -2003,6 +2061,9 @@ class SpackSolverSetup:
                     self.deprecated_versions[pkg_name].add(v)
                     if not allow_deprecated:
                         continue
+
+                if version_info.get("preferred", False):
+                    self.preferred_versions[pkg_name].add(v)
 
                 # self.possible_versions[pkg_name].add(v)
                 # self.declared_versions[pkg_name].append(
