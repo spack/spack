@@ -16,8 +16,9 @@ class UtilLinux(AutotoolsPackage):
     list_url = "https://www.kernel.org/pub/linux/utils/util-linux"
     list_depth = 1
 
-    license("GPL-2.0-only")
+    license("GPL-2.0-only", checked_by="wdconinc")
 
+    version("2.40", sha256="2a51d08cb71fd8e491e0cf633032c928f9a2848417f8441cb8cf7ef9971de916")
     version("2.39.3", sha256="40ea07584d56c310455471afa92c119ec259776a561af7159cc802344c2c370d")
     version("2.39.1", sha256="d7c8a58eb2c7248a32754eb3a3b6772e368b984d9907ada834c2cf3e13024270")
     version("2.38.1", sha256="0820eb8eea90408047e3715424bc6be771417047f683950fecb4bdd2e2cbbc6e")
@@ -76,6 +77,10 @@ class UtilLinux(AutotoolsPackage):
             config_args.extend(
                 ["--disable-ipcs", "--disable-ipcrm", "--disable-wall", "--disable-libmount"]
             )
+
+        if self.spec.satisfies("@2.40:"):
+            # Disable liblastlog2, which depends on sqlite
+            config_args.append("--disable-liblastlog2")
 
         return config_args
 
