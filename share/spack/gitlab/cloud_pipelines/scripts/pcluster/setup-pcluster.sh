@@ -10,7 +10,7 @@ set -e
 # The best solution would be to have the compilers hash (or packages contents) be part of the
 # individual packages hashes. I don't see this at the moment.
 # Set to the latest tag including a recent oneapi compiler.
-spack_intel_compiler_commit="develop-2024-03-10"
+spack_intel_compiler_commit="develop-2023-08-06"
 
 set_pcluster_defaults() {
     # Set versions of pre-installed software in packages.yaml
@@ -108,6 +108,8 @@ install_compilers() {
             # this leads to libstdc++.so errors during linking (e.g. slepc).
             git clone --depth=1 -b ${spack_intel_compiler_commit} https://github.com/spack/spack.git \
                 && cd spack \
+                && curl -sL https://github.com/spack/spack/pull/40557.patch | patch -p1 \
+                && curl -sL https://github.com/spack/spack/pull/40561.patch | patch -p1 \
                 && cp "${CURRENT_SPACK_ROOT}/etc/spack/config.yaml" etc/spack/ \
                 && cp "${CURRENT_SPACK_ROOT}/etc/spack/compilers.yaml" etc/spack/ \
                 && cp "${CURRENT_SPACK_ROOT}/etc/spack/packages.yaml" etc/spack/ \
