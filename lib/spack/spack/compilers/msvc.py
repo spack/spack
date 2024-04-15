@@ -191,6 +191,7 @@ class Msvc(Compiler):
         # paths[2] refers to the fc path and is a generic check
         # for a fortran compiler
         if paths[2]:
+
             def get_oneapi_root(pth: str):
                 """From within a prefix known to be a oneAPI path
                 determine the oneAPI root path from arbitrary point
@@ -200,10 +201,11 @@ class Msvc(Compiler):
                     pth: path prefixed within oneAPI root
                 """
                 if not pth or not os.path.basename(pth):
-                    return ''
+                    return ""
                 if os.path.basename(pth) == "oneAPI":
                     return pth
                 return get_oneapi_root(os.path.dirname(pth))
+
             # If this found, it sets all the vars
             oneapi_root = get_oneapi_root(self.fc)
             if not oneapi_root:
