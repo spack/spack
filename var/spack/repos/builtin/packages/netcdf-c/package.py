@@ -434,7 +434,7 @@ class AutotoolsBuilder(BaseBuilder, autotools.AutotoolsBuilder):
 
         config_args += self.enable_or_disable("fsync")
 
-        config_args.extend(self.enable_or_disable("logging"))
+        config_args += self.enable_or_disable("logging")
 
         if any(self.spec.satisfies(s) for s in ["+mpi", "+parallel-netcdf", "^hdf5+mpi~shared"]):
             config_args.append("CC={0}".format(self.spec["mpi"].mpicc))
