@@ -209,8 +209,11 @@ class Msvc(Compiler):
             if not oneapi_root:
                 raise RuntimeError(f"Non oneAPI Fortran compiler {self.fc} assigned to MSVC")
             oneapi_root_setvars = os.path.join(oneapi_root, "setvars.bat")
+            # some oneAPI versions return a version more precise than their
+            # install paths
+            version_from_path = re.search(r"([1-9][0-9]*\.[0-9]*(?:\.[0-9])*)", self.fc).group(1)
             oneapi_version_setvars = os.path.join(
-                oneapi_root, "compiler", str(self.ifx_version), "env", "vars.bat"
+                oneapi_root, "compiler", version_from_path, "env", "vars.bat"
             )
             # order matters here, the specific version env must be invoked first,
             # otherwise it will be ignored if the root setvars sets up the oneapi
