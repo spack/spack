@@ -33,6 +33,7 @@ from spack.pkg.builtin.fj import Fj
 from spack.pkg.builtin.gcc import Gcc
 from spack.pkg.builtin.intel_oneapi_compilers import IntelOneapiCompilers
 from spack.pkg.builtin.intel_oneapi_compilers_classic import IntelOneapiCompilersClassic
+from spack.pkg.builtin.llvm import Llvm
 from spack.pkg.builtin.nag import Nag
 from spack.pkg.builtin.nvhpc import Nvhpc
 from spack.pkg.builtin.pgi import Pgi
@@ -194,9 +195,10 @@ def test_apple_clang_version_detection(version_str, expected_version, mock_execu
         ),
     ],
 )
-def test_clang_version_detection(version_str, expected_version):
+def test_clang_version_detection(version_str, expected_version, mock_executable):
     version = spack.compilers.clang.Clang.extract_version_from_output(version_str)
     assert version == expected_version
+    check_package_detection(mock_executable, version_str, expected_version, Llvm)
 
 
 @pytest.mark.parametrize(
