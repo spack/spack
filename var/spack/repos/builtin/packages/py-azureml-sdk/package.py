@@ -28,3 +28,8 @@ class PyAzuremlSdk(PythonPackage):
         depends_on("py-azureml-pipeline@1.23", when="@1.23")
         depends_on("py-azureml-train@1.23", when="@1.23")
         depends_on("py-azureml-train-automl-client@1.23", when="@1.23")
+
+    # <<< manual changes
+    # https://github.com/Azure/MachineLearningNotebooks/issues/1285#issuecomment-1215799814
+    depends_on("python@:3.8", type=("build", "run"), when="@:1.44")
+    # manual changes >>>
