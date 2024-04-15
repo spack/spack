@@ -55,6 +55,7 @@ import spack.util.git
 import spack.util.gpg
 import spack.util.spack_yaml as syaml
 import spack.util.url as url_util
+import spack.version
 from spack.fetch_strategy import URLFetchStrategy
 from spack.util.pattern import Bunch
 
@@ -1438,6 +1439,15 @@ def mock_git_repository(git, tmpdir_factory):
         unversioned_commit=r2,
     )
     yield t
+
+
+@pytest.fixture(scope="function")
+def mock_git_test_package(mock_git_repository, mutable_mock_repo, monkeypatch):
+    # install a fake git version in the package class
+    pkg_class = spack.repo.PATH.get_pkg_class("git-test")
+    monkeypatch.delattr(pkg_class, "git")
+    monkeypatch.setitem(pkg_class.versions, spack.version.Version("git"), mock_git_repository.url)
+    return pkg_class
 
 
 @pytest.fixture(scope="session")

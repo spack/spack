@@ -551,12 +551,12 @@ def specfile_for(default_mock_concretization):
             "^[deptypes=build,link] zlib",
         ),
         (
-            "zlib@git.foo/bar",
+            "git-test@git.foo/bar",
             [
-                Token(TokenType.UNQUALIFIED_PACKAGE_NAME, "zlib"),
+                Token(TokenType.UNQUALIFIED_PACKAGE_NAME, "git-test"),
                 Token(TokenType.GIT_VERSION, "@git.foo/bar"),
             ],
-            "zlib@git.foo/bar",
+            "git-test@git.foo/bar",
         ),
         # Variant propagation
         (
@@ -585,7 +585,7 @@ def specfile_for(default_mock_concretization):
         ),
     ],
 )
-def test_parse_single_spec(spec_str, tokens, expected_roundtrip):
+def test_parse_single_spec(spec_str, tokens, expected_roundtrip, mock_git_test_package):
     parser = SpecParser(spec_str)
     assert tokens == parser.tokens()
     assert expected_roundtrip == str(parser.next_spec())

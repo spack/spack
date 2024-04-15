@@ -1096,22 +1096,22 @@ class TestSpecSemantics:
 @pytest.mark.parametrize(
     "spec_str,format_str,expected",
     [
-        ("zlib@git.foo/bar", "{name}-{version}", str(pathlib.Path("zlib-git.foo_bar"))),
-        ("zlib@git.foo/bar", "{name}-{version}-{/hash}", None),
-        ("zlib@git.foo/bar", "{name}/{version}", str(pathlib.Path("zlib", "git.foo_bar"))),
+        ("git-test@git.foo/bar", "{name}-{version}", str(pathlib.Path("git-test-git.foo_bar"))),
+        ("git-test@git.foo/bar", "{name}-{version}-{/hash}", None),
+        ("git-test@git.foo/bar", "{name}/{version}", str(pathlib.Path("git-test", "git.foo_bar"))),
         (
-            "zlib@{0}=1.0%gcc".format("a" * 40),
+            "git-test@{0}=1.0%gcc".format("a" * 40),
             "{name}/{version}/{compiler}",
-            str(pathlib.Path("zlib", "{0}_1.0".format("a" * 40), "gcc")),
+            str(pathlib.Path("git-test", "{0}_1.0".format("a" * 40), "gcc")),
         ),
         (
-            "zlib@git.foo/bar=1.0%gcc",
+            "git-test@git.foo/bar=1.0%gcc",
             "{name}/{version}/{compiler}",
-            str(pathlib.Path("zlib", "git.foo_bar_1.0", "gcc")),
+            str(pathlib.Path("git-test", "git.foo_bar_1.0", "gcc")),
         ),
     ],
 )
-def test_spec_format_path(spec_str, format_str, expected):
+def test_spec_format_path(spec_str, format_str, expected, mock_git_test_package):
     _check_spec_format_path(spec_str, format_str, expected)
 
 
@@ -1129,45 +1129,57 @@ def _check_spec_format_path(spec_str, format_str, expected, path_ctor=None):
     "spec_str,format_str,expected",
     [
         (
-            "zlib@git.foo/bar",
+            "git-test@git.foo/bar",
             r"C:\\installroot\{name}\{version}",
-            r"C:\installroot\zlib\git.foo_bar",
+            r"C:\installroot\git-test\git.foo_bar",
         ),
         (
-            "zlib@git.foo/bar",
+            "git-test@git.foo/bar",
             r"\\hostname\sharename\{name}\{version}",
-            r"\\hostname\sharename\zlib\git.foo_bar",
+            r"\\hostname\sharename\git-test\git.foo_bar",
         ),
         # Windows doesn't attribute any significance to a leading
         # "/" so it is discarded
-        ("zlib@git.foo/bar", r"/installroot/{name}/{version}", r"installroot\zlib\git.foo_bar"),
+        (
+            "git-test@git.foo/bar",
+            r"/installroot/{name}/{version}",
+            r"installroot\git-test\git.foo_bar",
+        ),
     ],
 )
-def test_spec_format_path_windows(spec_str, format_str, expected):
+def test_spec_format_path_windows(spec_str, format_str, expected, mock_git_test_package):
     _check_spec_format_path(spec_str, format_str, expected, path_ctor=pathlib.PureWindowsPath)
 
 
 @pytest.mark.parametrize(
     "spec_str,format_str,expected",
     [
-        ("zlib@git.foo/bar", r"/installroot/{name}/{version}", "/installroot/zlib/git.foo_bar"),
-        ("zlib@git.foo/bar", r"//installroot/{name}/{version}", "//installroot/zlib/git.foo_bar"),
+        (
+            "git-test@git.foo/bar",
+            r"/installroot/{name}/{version}",
+            "/installroot/git-test/git.foo_bar",
+        ),
+        (
+            "git-test@git.foo/bar",
+            r"//installroot/{name}/{version}",
+            "//installroot/git-test/git.foo_bar",
+        ),
         # This is likely unintentional on Linux: Firstly, "\" is not a
         # path separator for POSIX, so this is treated as a single path
         # component (containing literal "\" characters); secondly,
         # Spec.format treats "\" as an escape character, so is
         # discarded (unless directly following another "\")
         (
-            "zlib@git.foo/bar",
+            "git-test@git.foo/bar",
             r"C:\\installroot\package-{name}-{version}",
-            r"C__installrootpackage-zlib-git.foo_bar",
+            r"C__installrootpackage-git-test-git.foo_bar",
         ),
         # "\" is not a POSIX separator, and Spec.format treats "\{" as a literal
         # "{", which means that the resulting format string is invalid
-        ("zlib@git.foo/bar", r"package\{name}\{version}", None),
+        ("git-test@git.foo/bar", r"package\{name}\{version}", None),
     ],
 )
-def test_spec_format_path_posix(spec_str, format_str, expected):
+def test_spec_format_path_posix(spec_str, format_str, expected, mock_git_test_package):
     _check_spec_format_path(spec_str, format_str, expected, path_ctor=pathlib.PurePosixPath)
 
 
