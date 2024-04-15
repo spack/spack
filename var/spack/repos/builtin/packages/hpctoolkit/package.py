@@ -143,7 +143,7 @@ class Hpctoolkit(AutotoolsPackage, MesonPackage):
             depends_on("libtool", type="build")
 
         with when("@2024.02:"):
-            depends_on("pkgconf", type="build")
+            depends_on("pkgconfig", type="build")
             depends_on("cmake", type="build")
 
     boost_libs = (
