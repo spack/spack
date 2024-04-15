@@ -29,7 +29,9 @@ class SpatialIndex(PythonPackage):
     version("0.7.0", tag="0.7.0")
     version("0.6.0", tag="0.6.0")
 
-    depends_on("py-setuptools")
+    depends_on("py-setuptools", when="@:2.1.0")
+    depends_on("py-scikit-build-core+pyproject", type="build", when="@2.1.1:")
+    depends_on("py-setuptools-scm", type="build", when="@2.1.1:")
     depends_on("cmake@3.2:", type="build")
     depends_on("boost@1.79.0: +filesystem+serialization")
     depends_on("py-docopt", type=("build", "run"))
