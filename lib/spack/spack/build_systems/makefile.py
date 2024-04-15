@@ -21,7 +21,7 @@ from ._checks import (
 
 
 class MakefilePackage(spack.package_base.PackageBase):
-    """Specialized class for packages built using a Makefiles."""
+    """Specialized class for packages built using Makefiles."""
 
     #: This attribute is used in UI queries that need to know the build
     #: system base class
