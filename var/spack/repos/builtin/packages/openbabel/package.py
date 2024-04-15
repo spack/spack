@@ -58,6 +58,9 @@ class Openbabel(CMakePackage):
     # Convert tabs to spaces. Allows unit tests to pass
     patch("testpdbformat-tabs-to-spaces.patch", when="@:2.4.1")
 
+    # https://github.com/openbabel/openbabel/pull/2493
+    patch("cmake-time.patch", when="@3.1.1")
+
     def cmake_args(self):
         spec = self.spec
         args = []
