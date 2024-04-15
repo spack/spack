@@ -22,6 +22,7 @@ class FluxCore(AutotoolsPackage):
     license("LGPL-3.0-only")
 
     version("master", branch="master")
+    version("0.61.2", sha256="06f38143723e3f8331f55893ad8f74d43eb0588078f91abb603690c3e5f5112c")
     version("0.61.1", sha256="59cc730b34b732a1d00355bb5589bf2d26bf522b4a31ebfabff70ddb3afb51d6")
     version("0.61.0", sha256="02cedc6abb12816cbb01f2195c1acf7b6552c1d8b9029f899148df48a7cd05e2")
     version("0.60.0", sha256="f96025204a20f94c2821db47fe010b2c19e076ef93281ac7d308e82853e135ff")
