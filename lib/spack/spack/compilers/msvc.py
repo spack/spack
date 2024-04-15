@@ -112,9 +112,12 @@ def get_valid_fortran_pth():
     """Assign maximum available fortran compiler"""
     # TODO (johnwparent): validate compatibility w/ try compiler
     # functionality when added
-    sort_fn = lambda fc_ver: Version(fc_ver)
-    sort_fc_ver = sorted(list(_avail_fc_version), key=sort_fn)
-    return FC_PATH[sort_fc_ver[-1]]
+    valid_fortran_path = None
+    if FC_PATH:
+        sort_fn = lambda fc_ver: Version(fc_ver)
+        sort_fc_ver = sorted(list(_avail_fc_version), key=sort_fn)
+        valid_fortran_path = FC_PATH[sort_fc_ver[-1]]
+    return valid_fortran_path
 
 
 class Msvc(Compiler):
@@ -173,7 +176,7 @@ class Msvc(Compiler):
         # and stores their path, but their respective VCVARS
         # file must be invoked before useage.
         env_cmds = []
-        compiler_root = os.path.join(self.cc, "../../../../../../..")
+        compiler_root = os.path.join(os.path.dirname(self.cc), "../../../../../..")
         vcvars_script_path = os.path.join(compiler_root, "Auxiliary", "Build", "vcvars64.bat")
         # get current platform architecture and format for vcvars argument
         arch = spack.platforms.real_host().default.lower()
@@ -188,8 +191,23 @@ class Msvc(Compiler):
         # paths[2] refers to the fc path and is a generic check
         # for a fortran compiler
         if paths[2]:
+            def get_oneapi_root(pth: str):
+                """From within a prefix known to be a oneAPI path
+                determine the oneAPI root path from arbitrary point
+                under root
+
+                Args:
+                    pth: path prefixed within oneAPI root
+                """
+                if not pth or not os.path.basename(pth):
+                    return ''
+                if os.path.basename(pth) == "oneAPI":
+                    return pth
+                return get_oneapi_root(os.path.dirname(pth))
             # If this found, it sets all the vars
-            oneapi_root = os.path.join(self.fc, "../../..")
+            oneapi_root = get_oneapi_root(self.fc)
+            if not oneapi_root:
+                raise RuntimeError(f"Non oneAPI Fortran compiler {self.fc} assigned to MSVC")
             oneapi_root_setvars = os.path.join(oneapi_root, "setvars.bat")
             oneapi_version_setvars = os.path.join(
                 oneapi_root, "compiler", str(self.ifx_version), "env", "vars.bat"
