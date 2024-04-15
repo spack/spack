@@ -7,9 +7,11 @@ from spack.package import *
 
 
 class Editorconfig(CMakePackage):
-    """FIXME: Put a proper description of your package here."""
+    """
+    EditorConfig helps maintain consistent coding styles for multiple
+    developers working on the same project across various editors and IDEs.
+    """
 
-    # FIXME: Add a proper url for your package's homepage here.
     homepage = "https://editorconfig.org/"
     url = "https://github.com/editorconfig/editorconfig-core-c/archive/refs/tags/v0.12.7.tar.gz"
 
