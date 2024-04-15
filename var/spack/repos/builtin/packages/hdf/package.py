@@ -146,7 +146,11 @@ class Hdf(AutotoolsPackage):
 
         if name == "cflags":
             # https://forum.hdfgroup.org/t/help-building-hdf4-with-clang-error-implicit-declaration-of-function-test-mgr-szip-is-invalid-in-c99/7680
-            if self.spec.satisfies("@:4.2.15 %apple-clang") or self.spec.satisfies("%clang@16:"):
+            if (
+                self.spec.satisfies("@:4.2.15 %apple-clang")
+                or self.spec.satisfies("%clang@16:")
+                or self.spec.satisfies("%oneapi")
+            ):
                 flags.append("-Wno-error=implicit-function-declaration")
 
             if self.spec.satisfies("%clang@16:"):
