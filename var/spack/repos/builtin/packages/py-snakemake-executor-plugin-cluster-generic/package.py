@@ -18,10 +18,13 @@ class PySnakemakeExecutorPluginClusterGeneric(PythonPackage):
 
     license("MIT")
 
-    version("1.0.7", sha256="093808e63cc48294a9d1eb0b620cdff8cc970806294a2f6ba127a49f8a81d473")
+    version(
+        "1.0.7",
+        sha256="8ac47d50923d1cadd3e1f847ce2da6b983d7f98a5f6448307665438daa7fad32",
+        url="https://pypi.org/packages/c5/53/98856650e6f693edd0fd9d194b353ab660357de638c6f48f185a54ae3ac9/snakemake_executor_plugin_cluster_generic-1.0.7-py3-none-any.whl",
+    )
 
-    depends_on("py-snakemake-interface-common@1.13:1", type=("build", "run"))
-    depends_on("py-snakemake-interface-executor-plugins@8.1:8", type=("build", "run"))
-
-    depends_on("python@3.11:3", type=("build", "run"))
-    depends_on("py-poetry-core", type="build")
+    with default_args(type=("build", "run")):
+        depends_on("python@3.11:3", when="@1.0.4:")
+        depends_on("py-snakemake-interface-common@1.13:", when="@1.0.4:")
+        depends_on("py-snakemake-interface-executor-plugins@8.1:8", when="@1.0.5:1.0.8")

@@ -15,9 +15,12 @@ class PyPoetryPluginTweakDependenciesVersion(PythonPackage):
 
     maintainers("LydDeb")
 
-    version("1.5.1", sha256="4e0be2b8e23a04e542c5090deb5b6e191750ec45bace98ea8b55150844c6026b")
+    version(
+        "1.5.1",
+        sha256="50fe77909d61947572cf9d83916d5e87eb64f7a4744b4606b940b78d9ec53b83",
+        url="https://pypi.org/packages/0b/58/4b821ef2eeaff4c3c7e4f5122d746fc074261ab06e4b630cb20cb1b8e120/poetry_plugin_tweak_dependencies_version-1.5.1-py3-none-any.whl",
+    )
 
-    depends_on("python@3.9:3.11", type=("build", "run"))
-    depends_on("py-poetry-core@1.0.0:", type="build")
-    depends_on("py-poetry-dynamic-versioning", type="build")
-    depends_on("py-poetry@1.6", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("python@3.9:3.11", when="@1.5:1.5.1")
+        depends_on("py-poetry@1.6", when="@1.5.1")

@@ -14,8 +14,12 @@ class PyPycm(PythonPackage):
 
     license("MIT")
 
-    version("4.0", sha256="839e217eeb9a093be633ea746c5ca8b7ab6591d978762face892473c9f28959d")
+    version(
+        "4.0",
+        sha256="7d198fb2422371d94d41b27316e4982bc887727a92a4b59471005772654d895a",
+        url="https://pypi.org/packages/ba/a2/cde7186bb567df8e5244d9d885788fd2161bc6bbe0fa1b130eea56db1988/pycm-4.0-py3-none-any.whl",
+    )
 
-    depends_on("py-art@1.8:", type=("build", "run"))
-    depends_on("py-numpy@1.9.0:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
+    with default_args(type=("build", "run")):
+        depends_on("py-art@1.8:")
+        depends_on("py-numpy@1.9:")

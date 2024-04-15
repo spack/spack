@@ -16,8 +16,12 @@ class PyFlaskCors(PythonPackage):
 
     license("MIT")
 
-    version("3.0.10", sha256="b60839393f3b84a0f3746f6cdca56c1ad7426aa738b70d6c61375857823181de")
+    version(
+        "3.0.10",
+        sha256="74efc975af1194fc7891ff5cd85b0f7478be4f7f59fe158102e91abb72bb4438",
+        url="https://pypi.org/packages/db/84/901e700de86604b1c4ef4b57110d4e947c218b9997adf5d38fa7da493bce/Flask_Cors-3.0.10-py2.py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-flask@0.9:", type=("build", "run"))
-    depends_on("py-six", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("py-flask@0.9:", when="@3:")
+        depends_on("py-six", when="@3")

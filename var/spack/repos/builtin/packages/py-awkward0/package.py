@@ -15,8 +15,11 @@ class PyAwkward0(PythonPackage):
     homepage = "https://github.com/scikit-hep/awkward-0.x"
     pypi = "awkward0/awkward0-0.15.5.tar.gz"
 
-    version("0.15.5", sha256="156e6e338c56d857a7bb53c4fcc8b0b2592a3470eff0d854e6d68777986359ad")
+    version(
+        "0.15.5",
+        sha256="5fdaa3b29ea2426665215478b9b9199e991da5ab1f1f2996dcbfe848e08a40a1",
+        url="https://pypi.org/packages/9a/b3/376b258ea021eed2c9bdaa1011e0f7b25365157de472d9fae8a2443d9ff5/awkward0-0.15.5-py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-pytest-runner", type="build")
-    depends_on("py-numpy@1.13.1:", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("py-numpy@1.13.1:")

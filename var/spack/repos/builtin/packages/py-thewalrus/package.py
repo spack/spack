@@ -17,13 +17,15 @@ class PyThewalrus(PythonPackage):
 
     license("Apache-2.0")
 
-    version("0.19.0", sha256="06ff07a14cd8cd4650d9c82b8bb8301ef9a58dcdd4bafb14841768ccf80c98b9")
+    version(
+        "0.19.0",
+        sha256="07b6e2969bf5405a2df736c442b1500857438bbd2afc2053b8b600b8b0c67f97",
+        url="https://pypi.org/packages/92/ec/aec87db2151afd4527b119f524203f8631d3c2457a127c8d1ed4ce9f59a9/thewalrus-0.19.0-py3-none-any.whl",
+    )
 
-    depends_on("python@3.7:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
-
-    depends_on("py-dask+delayed", type=("build", "run"))
-    depends_on("py-numba@0.49.1:", type=("build", "run"))
-    depends_on("py-scipy@1.2.1:", type=("build", "run"))
-    depends_on("py-sympy@1.5.1:", type=("build", "run"))
-    depends_on("py-numpy@1.19.2:", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("py-dask+delayed", when="@:0.13.0-rc1,0.18:0.19,0.21:")
+        depends_on("py-numba@0.49.1:", when="@0.19,0.21:")
+        depends_on("py-numpy@1.19.2:", when="@0.18:0.19,0.21:")
+        depends_on("py-scipy@1.2.1:", when="@:0.13.0-rc1,0.18:0.19,0.21:")
+        depends_on("py-sympy@1.5.1:", when="@:0.13.0-rc1,0.18:0.19,0.21:")

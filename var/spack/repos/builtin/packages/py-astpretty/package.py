@@ -14,10 +14,13 @@ class PyAstpretty(PythonPackage):
 
     license("MIT")
 
-    version("2.0.0", sha256="e4724bfd753636ba4a84384702e9796e5356969f40af2596d846ce64addde086")
+    version(
+        "2.0.0",
+        sha256="7f27633ed885033da8b58666e7079ffff7e8e01869ec1aa66484cb5185ea3aa4",
+        url="https://pypi.org/packages/34/8e/93b94d3c6dc00446ddf33d0e82490fcc52b094a0fd59bf5433158da330e5/astpretty-2.0.0-py2.py3-none-any.whl",
+    )
 
     variant("typed", default=False, description="Add support for typed comments")
 
-    depends_on("python@3.6.1:", type=("build", "run"))
-    depends_on("py-setuptools", type=("build", "run"))
-    depends_on("py-typed-ast", type=("build", "run"), when="+typed")
+    with default_args(type=("build", "run")):
+        depends_on("py-typed-ast", when="@1.4:2+typed")

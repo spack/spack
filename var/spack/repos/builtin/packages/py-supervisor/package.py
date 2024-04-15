@@ -13,7 +13,11 @@ class PySupervisor(PythonPackage):
     homepage = "http://supervisord.org"
     pypi = "supervisor/supervisor-4.2.4.tar.gz"
 
-    version("4.2.4", sha256="40dc582ce1eec631c3df79420b187a6da276bbd68a4ec0a8f1f123ea616b97a2")
+    version(
+        "4.2.4",
+        sha256="bbae57abf74e078fe0ecc9f30068b6da41b840546e233ef1e659a12e4c875af6",
+        url="https://pypi.org/packages/3d/47/b4030b2b01f6c559bd528974cee72bee7fe75594b31cc3e064678a454548/supervisor-4.2.4-py2.py3-none-any.whl",
+    )
 
-    depends_on("python@3.4:", type=("build", "run"))
-    depends_on("py-setuptools", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("py-setuptools", when="@4.2.3:")

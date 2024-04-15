@@ -15,7 +15,11 @@ class PyAnytree(PythonPackage):
 
     license("Apache-2.0")
 
-    version("2.8.0", sha256="3f0f93f355a91bc3e6245319bf4c1d50e3416cc7a35cc1133c1ff38306bbccab")
+    version(
+        "2.8.0",
+        sha256="14c55ac77492b11532395049a03b773d14c7e30b22aa012e337b1e983de31521",
+        url="https://pypi.org/packages/a8/65/be23d8c3ecd68d40541d49812cd94ed0f3ee37eb88669ca15df0e43daed1/anytree-2.8.0-py2.py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-six@1.9.0:", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("py-six@1.9:", when="@2.5,2.7:2.7.0,2.7.3:2.8")

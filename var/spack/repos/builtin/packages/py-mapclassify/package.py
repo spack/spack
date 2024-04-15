@@ -16,11 +16,15 @@ class PyMapclassify(PythonPackage):
 
     license("BSD-3-Clause")
 
-    version("2.4.2", sha256="bc20954aa433466f5fbc572e3f23b05f9606b59209f40b0ded93ac1ca983d24e")
+    version(
+        "2.4.2",
+        sha256="e2c9585bc0b17457d6b13bacaf1fc4222f7196408b6317e431b0397a03dad8c3",
+        url="https://pypi.org/packages/22/8e/d968c0945d41bb02de0efaa92e31e43a817dc52d30e82b4dfdda407a1903/mapclassify-2.4.2-py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-scipy@1.0:", type=("build", "run"))
-    depends_on("py-numpy@1.3:", type=("build", "run"))
-    depends_on("py-scikit-learn", type=("build", "run"))
-    depends_on("py-pandas@1.0:", type=("build", "run"))
-    depends_on("py-networkx", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("py-networkx", when="@2.3:2.6.0,23:")
+        depends_on("py-numpy@1.3:", when="@2.3:2.6.0,23:")
+        depends_on("py-pandas@1.0.0:", when="@2.3:2.6.0,23:")
+        depends_on("py-scikit-learn", when="@2.3:2.6.0,23:")
+        depends_on("py-scipy@1.0.0:", when="@2.3:2.6.0,23:")

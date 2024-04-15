@@ -14,9 +14,12 @@ class PyBranca(PythonPackage):
 
     license("MIT")
 
-    version("0.7.1", sha256="e6b6f37a37bc0abffd960c68c045a7fe025d628eff87fedf6ab6ca814812110c")
+    version(
+        "0.7.1",
+        sha256="70515944ed2d1ed2784c552508df58037ca19402a8a1069d57f9113e3e012f51",
+        url="https://pypi.org/packages/17/ce/14166d0e273d12065516625fb02426350298e7b4ba59198b5fe454b46202/branca-0.7.1-py3-none-any.whl",
+    )
 
-    depends_on("python@3.7:", type=("build", "run"))
-    depends_on("py-setuptools@41.2:", type="build")
-    depends_on("py-setuptools-scm", type="build")
-    depends_on("py-jinja2@3:", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("python@3.7:", when="@0.6:")
+        depends_on("py-jinja2@3.0.0:", when="@0.7.1:")

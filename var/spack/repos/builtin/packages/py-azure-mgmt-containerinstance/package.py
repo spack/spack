@@ -13,10 +13,18 @@ class PyAzureMgmtContainerinstance(PythonPackage):
     homepage = "https://github.com/Azure/azure-sdk-for-python"
     pypi = "azure-mgmt-containerinstance/azure-mgmt-containerinstance-2.0.0.zip"
 
-    version("2.0.0", sha256="5ad247d186c3c040da7a1d40ad39c9881e99afc58271f673abb602abb0b6b85b")
-    version("1.5.0", sha256="b055386f04ba8433112b0df7fcbc260b5208828d7bb8c057e760fe596aa7a8cd")
+    version(
+        "2.0.0",
+        sha256="1d08587c30d870e2f7961e865dab01db3160f8a8ad53a525d94b0ce7115d39e7",
+        url="https://pypi.org/packages/47/89/20bf1f4bb8d54f7f6fb96f0743c3b35871a7fac7dd5273c84c7201ff12c4/azure_mgmt_containerinstance-2.0.0-py2.py3-none-any.whl",
+    )
+    version(
+        "1.5.0",
+        sha256="0e55fb1dddcc01a9d58a99095e5cca50252bb6c42150b225e552560fe29fd8a5",
+        url="https://pypi.org/packages/fd/d1/d770050f20ad81b80f7eb41f89e1a5d841cf74bf41c7e1ff137c46f28a1e/azure_mgmt_containerinstance-1.5.0-py2.py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-msrest@0.5.0:", type=("build", "run"))
-    depends_on("py-msrestazure@0.4.32:1", type=("build", "run"))
-    depends_on("py-azure-common@1.1:1", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("py-azure-common@1.1:")
+        depends_on("py-msrest@0.5:", when="@1.1:7")
+        depends_on("py-msrestazure@0.4.32:", when="@1.1:3")

@@ -17,8 +17,8 @@ class PyResultsfile(PythonPackage):
 
     license("GPL-2.0-only")
 
-    version("2.0", sha256="2a34208254e4bea155695690437f6a59bf5f7b0ddb421d6c1a2d377510f018f7")
-
-    depends_on("python@3:", type=("build", "run"))
-    # pip silently replaces distutils with setuptools
-    depends_on("py-setuptools", type="build")
+    version(
+        "2.0",
+        sha256="4a560e17e972088865e9f9717726cf4fc831135b94ad576ed2a472332e6281e4",
+        url="https://pypi.org/packages/ff/66/1a98fa07dd9c3cebc94866e302bf16f7b0a316709ae36b2e809577cbc354/resultsFile-2.0-py3-none-any.whl",
+    )

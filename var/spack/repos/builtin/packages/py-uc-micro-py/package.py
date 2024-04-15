@@ -14,7 +14,11 @@ class PyUcMicroPy(PythonPackage):
 
     license("MIT")
 
-    version("1.0.2", sha256="30ae2ac9c49f39ac6dce743bd187fcd2b574b16ca095fa74cd9396795c954c54")
+    version(
+        "1.0.2",
+        sha256="8c9110c309db9d9e87302e2f4ad2c3152770930d88ab385cd544e7a7e75f3de0",
+        url="https://pypi.org/packages/d1/1c/5aeb94aa980da111e4fd0c0fbe5ad95ed5bf9bd957f8e2a6178b85ff4da8/uc_micro_py-1.0.2-py3-none-any.whl",
+    )
 
-    depends_on("python@3.7:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
+    with default_args(type=("build", "run")):
+        depends_on("python@3.7:", when="@1.0.2:")

@@ -14,6 +14,8 @@ class PyXlwt(PythonPackage):
 
     pypi = "xlwt/xlwt-1.3.0.tar.gz"
 
-    version("1.3.0", sha256="c59912717a9b28f1a3c2a98fd60741014b06b043936dcecbc113eaaada156c88")
-
-    depends_on("py-setuptools", type="build")
+    version(
+        "1.3.0",
+        sha256="a082260524678ba48a297d922cc385f58278b8aa68741596a87de01a9c628b2e",
+        url="https://pypi.org/packages/44/48/def306413b25c3d01753603b1a222a011b8621aed27cd7f89cbc27e6b0f4/xlwt-1.3.0-py2.py3-none-any.whl",
+    )

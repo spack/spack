@@ -14,9 +14,13 @@ class PyShellingham(PythonPackage):
 
     license("0BSD")
 
-    version("1.5.0", sha256="72fb7f5c63103ca2cb91b23dee0c71fe8ad6fbfd46418ef17dbe40db51592dad")
-    version("1.4.0", sha256="4855c2458d6904829bd34c299f11fdeed7cfefbf8a2c522e4caea6cd76b3171e")
-
-    depends_on("python@2.6:2.7,3.4:", type=("build", "run"))
-    depends_on("python@3.4:", when="@1.5.0:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
+    version(
+        "1.5.0",
+        sha256="a8f02ba61b69baaa13facdba62908ca8690a94b8119b69f5ec5873ea85f7391b",
+        url="https://pypi.org/packages/3d/1a/d31fce69c119df1fddab3706b63c53d363982c55d841d9c3839b12f15327/shellingham-1.5.0-py2.py3-none-any.whl",
+    )
+    version(
+        "1.4.0",
+        sha256="536b67a0697f2e4af32ab176c00a50ac2899c5a05e0d8e2dadac8e58888283f9",
+        url="https://pypi.org/packages/76/94/7a764d57d0f46534e0022e651da6547bc5cfe7b6372e7e0ed1dde6f5cb67/shellingham-1.4.0-py2.py3-none-any.whl",
+    )

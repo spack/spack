@@ -17,9 +17,11 @@ class PySphinxAutodocTypehints(PythonPackage):
 
     license("MIT")
 
-    version("1.12.0", sha256="193617d9dbe0847281b1399d369e74e34cd959c82e02c7efde077fca908a9f52")
+    version(
+        "1.12.0",
+        sha256="5e81776ec422dd168d688ab60f034fccfafbcd94329e9537712c93003bddc04a",
+        url="https://pypi.org/packages/25/04/f59887284d9ea7e5e1473b74177fc8fca43c949a683750c733a154ba8148/sphinx_autodoc_typehints-1.12.0-py3-none-any.whl",
+    )
 
-    depends_on("python@3.6:", type=("build", "run"))
-    depends_on("py-setuptools@40.0.4:", type="build")
-    depends_on("py-setuptools-scm@2.0.0:", type="build")
-    depends_on("py-sphinx@3:", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("py-sphinx@3.0.0:", when="@1.11:1.12")

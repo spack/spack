@@ -14,8 +14,12 @@ class PySobolSeq(PythonPackage):
 
     license("MIT")
 
-    version("0.2.0", sha256="e16e701bd7b03ec6ce65b3a64c9205799f6a2d00c2054dd8c4ff4343f3981172")
+    version(
+        "0.2.0",
+        sha256="277ab767250a20b440fc74df8b6f4d79773949d5770927e1cee83e8de026b704",
+        url="https://pypi.org/packages/e4/df/6c4ad25c0b48545a537b631030f7de7e4abb939e6d2964ac2169d4379c85/sobol_seq-0.2.0-py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-scipy", type=("build", "run"))
-    depends_on("py-numpy", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("py-numpy", when="@0.2:")
+        depends_on("py-scipy", when="@0.2:")

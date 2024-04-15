@@ -16,9 +16,13 @@ class PyInquirerpy(PythonPackage):
 
     license("MIT")
 
-    version("0.3.4", sha256="89d2ada0111f337483cb41ae31073108b2ec1e618a49d7110b0d7ade89fc197e")
+    version(
+        "0.3.4",
+        sha256="c65fdfbac1fa00e3ee4fb10679f4d3ed7a012abf4833910e63c295827fe2a7d4",
+        url="https://pypi.org/packages/ce/ff/3b59672c47c6284e8005b42e84ceba13864aa0f39f067c973d1af02f5d91/InquirerPy-0.3.4-py3-none-any.whl",
+    )
 
-    depends_on("python@3.7:3", type=("build", "run"))
-    depends_on("py-poetry-core@1:", type="build")
-    depends_on("py-prompt-toolkit@3.0.1:3", type=("build", "run"))
-    depends_on("py-pfzy@0.3.1:0.3", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("python@3.7:3", when="@0.2.2:")
+        depends_on("py-pfzy@0.3.1:", when="@0.3:")
+        depends_on("py-prompt-toolkit@3.0.1:", when="@0.2.2:")

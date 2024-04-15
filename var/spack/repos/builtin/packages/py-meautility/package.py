@@ -14,10 +14,13 @@ class PyMeautility(PythonPackage):
 
     license("GPL-3.0-or-later")
 
-    version("1.5.1", sha256="de12cc9c1772d3321e941af78e6bfb36cdcb5702a7b1272a852cc95f413bbfcb")
+    version(
+        "1.5.1",
+        sha256="93d0ed4fcd9f65fb10376b53c846ac0942332e06c6144e12e5c7a5b1f31accf6",
+        url="https://pypi.org/packages/c6/20/de3443888225574e1e42675e8d740f6cecc5873a6da7640b2c798e22fc81/MEAutility-1.5.1-py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-
-    depends_on("py-numpy", type=("build", "run"))
-    depends_on("py-pyyaml", type=("build", "run"))
-    depends_on("py-matplotlib", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("py-matplotlib", when="@1.5:")
+        depends_on("py-numpy", when="@1.5:")
+        depends_on("py-pyyaml", when="@1.5:")

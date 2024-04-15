@@ -14,8 +14,12 @@ class PyMonkeytype(PythonPackage):
 
     license("BSD-3-Clause")
 
-    version("22.2.0", sha256="6b0c00b49dcc5095a2c08d28246cf005e05673fc51f64d203f9a6bca2036dfab")
+    version(
+        "22.2.0",
+        sha256="3d0815c7e98a18e9267990a452548247f6775fd636e65df5a7d77100ea7ad282",
+        url="https://pypi.org/packages/0c/40/2ce3488035207c0a2acb9c9d101a80bbb274e27138a09f5a39445c6c3faf/MonkeyType-22.2.0-py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-mypy-extensions", type=("build", "run"))
-    depends_on("py-libcst@0.3.7:", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("py-libcst@0.3.7:", when="@21:22")
+        depends_on("py-mypy-extensions", when="@19.11.1:20.4.2.0,20.5:")

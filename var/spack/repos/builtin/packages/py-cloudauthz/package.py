@@ -15,10 +15,12 @@ class PyCloudauthz(PythonPackage):
 
     license("MIT")
 
-    version("0.6.0", sha256="7e62f3ae04b1842540ca484717d40bd9ec17c6764dd842c1f73f6290b9b54ac1")
+    version(
+        "0.6.0",
+        sha256="e76e65c9fa3f3e1c63d44bd4488e0d75c0ede919870e0e9f08eae21f1316193b",
+        url="https://pypi.org/packages/61/4f/390c7c2d1b2777e8a4a70c295e911778b41a14f5936dec70ed5646d0c767/cloudauthz-0.6.0-py2.py3-none-any.whl",
+    )
 
-    depends_on("python@3:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
-
-    depends_on("py-requests@2.18.4:", type=("build", "run"))
-    depends_on("py-adal@1.0.2:", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("py-adal@1.0.2:", when="@0.1:")
+        depends_on("py-requests@2.18.4:", when="@0.1:")

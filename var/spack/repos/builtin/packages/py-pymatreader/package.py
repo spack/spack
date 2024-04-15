@@ -14,12 +14,15 @@ class PyPymatreader(PythonPackage):
 
     license("BSD-2-Clause")
 
-    version("0.0.30", sha256="c8187b6ee77a9b1ec0d8ccae9b22c9031d01104a412737cc4a71e6d993a1a12b")
+    version(
+        "0.0.30",
+        sha256="d5719dd9b4d018c7ec59c69ed1320d15eb5957eb071e8d01d9b4f6468779cc25",
+        url="https://pypi.org/packages/11/b1/9d2db885e5bfbd6b552090f4d0fb80d05f9c555f9b6f4e37135d164304a7/pymatreader-0.0.30-py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-
-    depends_on("py-h5py", type=("build", "run"))
-    depends_on("py-scipy@:1.6,1.7.1:", type=("build", "run"))
-    depends_on("py-numpy", type=("build", "run"))
-    depends_on("py-xmltodict", type=("build", "run"))
-    depends_on("py-future", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("py-future", when="@0.0.27:0.0.30")
+        depends_on("py-h5py", when="@0.0.27:")
+        depends_on("py-numpy", when="@0.0.27:")
+        depends_on("py-scipy@:1.7.0-rc2,1.7.1:", when="@0.0.27:")
+        depends_on("py-xmltodict", when="@0.0.27:")

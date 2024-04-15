@@ -15,12 +15,14 @@ class PySnakemakeStoragePluginZenodo(PythonPackage):
 
     license("MIT")
 
-    version("0.1.2", sha256="3675e76ae5dc930664bbcc1132a957c6490199c366e4e1e607d1491a7a46cf3d")
+    version(
+        "0.1.2",
+        sha256="739958562bde0e5cb539e45032621334c95ef791cf05ed711ff737c1dd588b9b",
+        url="https://pypi.org/packages/61/60/1f9fc05e55a0df725f0335939b4d1e56e0fb3c09eca01448361f29934aa8/snakemake_storage_plugin_zenodo-0.1.2-py3-none-any.whl",
+    )
 
-    depends_on("py-requests@2.31:2", type=("build", "run"))
-
-    depends_on("py-snakemake-interface-common@1.14.4:1", type=("build", "run"))
-    depends_on("py-snakemake-interface-storage-plugins@3", type=("build", "run"))
-
-    depends_on("python@3.11:3", type=("build", "run"))
-    depends_on("py-poetry-core", type="build")
+    with default_args(type=("build", "run")):
+        depends_on("python@3.11:3")
+        depends_on("py-requests@2.31:")
+        depends_on("py-snakemake-interface-common@1.14.4:")
+        depends_on("py-snakemake-interface-storage-plugins@3:", when="@0.1.1:")

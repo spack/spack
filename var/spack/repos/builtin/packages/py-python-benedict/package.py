@@ -15,18 +15,21 @@ class PyPythonBenedict(PythonPackage):
 
     license("MIT")
 
-    version("0.23.2", sha256="b7bdffd92ba1c9b9e044bda08ed545a48a45bd7a5207f93b4b2a8eb2660d1b4c")
+    version(
+        "0.23.2",
+        sha256="b484901d94eb5b8aabd3e612cf1c504b42a92b6f17506428c60dbf93c3a88c6e",
+        url="https://pypi.org/packages/87/c8/ae31902c3e6f671580e14472ca23d4b19831085999ff34ee00a22f648e84/python_benedict-0.23.2-py3-none-any.whl",
+    )
 
-    depends_on("python@2.7:2.8,3.4:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
-    depends_on("py-ftfy", type=("build", "run"))
-    depends_on("py-mailchecker", type=("build", "run"))
-    depends_on("py-phonenumbers", type=("build", "run"))
-    depends_on("py-python-dateutil", type=("build", "run"))
-    depends_on("py-python-fsutil", type=("build", "run"))
-    depends_on("py-python-slugify", type=("build", "run"))
-    depends_on("py-pyyaml", type=("build", "run"))
-    depends_on("py-requests", type=("build", "run"))
-    depends_on("py-six", type=("build", "run"))
-    depends_on("py-toml", type=("build", "run"))
-    depends_on("py-xmltodict", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("py-ftfy", when="@:0.24")
+        depends_on("py-mailchecker", when="@:0.24")
+        depends_on("py-phonenumbers", when="@:0.24")
+        depends_on("py-python-dateutil", when="@:0.24")
+        depends_on("py-python-fsutil", when="@0.23:0.24")
+        depends_on("py-python-slugify", when="@:0.24")
+        depends_on("py-pyyaml", when="@:0.24")
+        depends_on("py-requests", when="@:0.24")
+        depends_on("py-six", when="@:0.24")
+        depends_on("py-toml", when="@:0.24")
+        depends_on("py-xmltodict", when="@:0.24")

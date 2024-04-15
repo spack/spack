@@ -15,12 +15,16 @@ class PyKeras2onnx(PythonPackage):
 
     license("MIT")
 
-    version("1.7.0", sha256="8ec9c4e1c1f870d420934d1aa7cbc9faab80c6af366900bf95e5f48280c0d199")
+    version(
+        "1.7.0",
+        sha256="341159ae4b8b2ae06d876e71475e87a364ee2160b49981474a53f1d62b9626e6",
+        url="https://pypi.org/packages/a6/2f/c7aef8f8215c62d55ea05f5b36737c1726e4fea6c73970909523ae497fd9/keras2onnx-1.7.0-py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-numpy", type=("build", "run"))
-    depends_on("py-protobuf", type=("build", "run"))
-    depends_on("py-requests", type=("build", "run"))
-    depends_on("py-onnx", type=("build", "run"))
-    depends_on("py-onnxconverter-common@1.7.0:", type=("build", "run"))
-    depends_on("py-fire", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("py-fire", when="@1.5.2:")
+        depends_on("py-numpy")
+        depends_on("py-onnx")
+        depends_on("py-onnxconverter-common@1.7:", when="@1.7:")
+        depends_on("py-protobuf")
+        depends_on("py-requests", when="@1.5:")

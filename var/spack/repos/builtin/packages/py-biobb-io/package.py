@@ -15,9 +15,12 @@ class PyBiobbIo(PythonPackage):
     maintainers("d-beltran")
 
     # Versions
-    version("4.1.0", sha256="074ea97a3682731e13d559b7f91b04e4a3f0f02ee798503089e4af79a730bf72")
+    version(
+        "4.1.0",
+        sha256="4ea494e1cbd0f4d2d5f17a8e92b81c73efbf2a25b3b34a1eb86053edf28e482f",
+        url="https://pypi.org/packages/f9/d7/35ab091c2db4161002c5cf6f9de3362c813bfc0a492e8bedd0d455097df1/biobb_io-4.1.0-py3-none-any.whl",
+    )
 
-    # Dependencies
-    depends_on("py-setuptools", type="build")
-    depends_on("py-biobb-common@4.1.0", type=("build", "run"))
-    depends_on("python@3.8:", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("python@3.8:", when="@4.1:")
+        depends_on("py-biobb-common@4.1:", when="@4.1:")

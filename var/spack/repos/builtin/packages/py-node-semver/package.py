@@ -14,8 +14,13 @@ class PyNodeSemver(PythonPackage):
 
     license("MIT")
 
-    version("0.8.1", sha256="281600d009606f4f63ddcbe148992e235b39a69937b9c20359e2f4a2adbb1e00")
-    version("0.6.1", sha256="4016f7c1071b0493f18db69ea02d3763e98a633606d7c7beca811e53b5ac66b7")
-
-    depends_on("python@3:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
+    version(
+        "0.8.1",
+        sha256="3b3594c2d87e1a44fd332ce7f00e87a235a0a4fb9cb46d62b243e43c019c27fd",
+        url="https://pypi.org/packages/bc/9d/299d024bbf3d73f158aa836c955c29574b351cfcfd92dfbc9f97c2762e46/node_semver-0.8.1-py3-none-any.whl",
+    )
+    version(
+        "0.6.1",
+        sha256="d4bf83873894591a0cbb6591910d96917fbadc9731e8e39e782d3a2fbc2b841e",
+        url="https://pypi.org/packages/08/51/6cf3a2b18ca35cbe4ad3c7538a7c3dc0cb24e71629fb16e729c137d06432/node_semver-0.6.1-py3-none-any.whl",
+    )

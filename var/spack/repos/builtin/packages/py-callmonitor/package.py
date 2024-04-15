@@ -14,7 +14,11 @@ class PyCallmonitor(PythonPackage):
 
     maintainers("DaxLynch")
 
-    version("0.3.7", sha256="11bacfe5940c3f6aff223e8e761b033d540542b4d738f7fef38cd923b3be0cbc")
+    version(
+        "0.3.7",
+        sha256="352c0f3bd8268b38a8f5e7e4dd80d4bdbafac7e6520860234b1f91de95888277",
+        url="https://pypi.org/packages/9f/31/8035151093faa5b2fe6d3bea7136643fe718689334825396f371f947a095/callmonitor-0.3.7-py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-numpy", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("py-numpy", when="@0.3:")

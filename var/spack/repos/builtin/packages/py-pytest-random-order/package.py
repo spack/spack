@@ -17,8 +17,11 @@ class PyPytestRandomOrder(PythonPackage):
 
     license("MIT")
 
-    version("1.0.4", sha256="6b2159342a4c8c10855bc4fc6d65ee890fc614cb2b4ff688979b008a82a0ff52")
+    version(
+        "1.0.4",
+        sha256="72279a7f823969e18b10e438950f58330d17e0fcffb57cbd7929770cd687ecb2",
+        url="https://pypi.org/packages/e0/b8/617b593b629b8198338b1d860ada33be94d78195543dc0aa8659077ee0a0/pytest_random_order-1.0.4-py3-none-any.whl",
+    )
 
-    depends_on("python@3.5:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
-    depends_on("py-pytest@3.0.0:", type=("build", "test", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("py-pytest@3:", when="@1.0.3:")

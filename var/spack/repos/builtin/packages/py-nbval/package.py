@@ -20,12 +20,16 @@ class PyNbval(PythonPackage):
 
     license("BSD-3-Clause")
 
-    version("0.9.6", sha256="cfefcd2ef66ee2d337d0b252c6bcec4023384eb32e8b9e5fcc3ac80ab8cd7d40")
+    version(
+        "0.9.6",
+        sha256="4f9b780997d8942408853513f2c5ee6c1863de193559fc3f95e1c1cde8110439",
+        url="https://pypi.org/packages/b0/92/23d60d4593b6e69f2114caf6fec238ce461233a8633dcbef6f619ad339c9/nbval-0.9.6-py2.py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-pytest@2.8:", type=("build", "run"))
-    depends_on("py-six", type=("build", "run"))
-    depends_on("py-jupyter-client", type=("build", "run"))
-    depends_on("py-nbformat", type=("build", "run"))
-    depends_on("py-ipykernel", type=("build", "run"))
-    depends_on("py-coverage", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("py-coverage", when="@0.9:0.9.3,0.9.5:")
+        depends_on("py-ipykernel")
+        depends_on("py-jupyter-client")
+        depends_on("py-nbformat")
+        depends_on("py-pytest@2.8:", when="@:0.10")
+        depends_on("py-six", when="@:0.9")

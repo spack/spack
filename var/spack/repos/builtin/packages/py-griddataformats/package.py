@@ -19,10 +19,14 @@ class PyGriddataformats(PythonPackage):
 
     license("LGPL-3.0-only")
 
-    version("1.0.1", sha256="ad2c9ab7d672a6d8c426de7d083eee4f3e2b0bd59391675d30683c768ab83cc4")
+    version(
+        "1.0.1",
+        sha256="c2c45c9ea18f29ffd8fe311d5322b4cba4f4e4c76980ec4e2e9a7f296b208a46",
+        url="https://pypi.org/packages/03/f7/a676afdb039c77eb012f4cdbed231e44555cc90025ce660d17cbeecdc9f9/GridDataFormats-1.0.1-py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-    depends_on("python@3.8:", type=("build", "run"))
-    depends_on("py-numpy@1.19:", type=("build", "run"))
-    depends_on("py-scipy", type=("build", "run"))
-    depends_on("py-mrcfile", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("python@3.8:", when="@1.0.1")
+        depends_on("py-mrcfile", when="@0.7:")
+        depends_on("py-numpy@1.19.0:", when="@1:1.0.1")
+        depends_on("py-scipy", when="@0.4.1:")

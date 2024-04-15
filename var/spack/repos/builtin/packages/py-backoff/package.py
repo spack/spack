@@ -14,7 +14,11 @@ class PyBackoff(PythonPackage):
 
     license("MIT")
 
-    version("2.2.1", sha256="03f829f5bb1923180821643f8753b0502c3b682293992485b0eef2807afa5cba")
+    version(
+        "2.2.1",
+        sha256="63579f9a0628e06278f7e47b7d7d5b6ce20dc65c5e96a6f3ca99a6adca0396e8",
+        url="https://pypi.org/packages/df/73/b6e24bd22e6720ca8ee9a85a0c4a2971af8497d8f3193fa05390cbd46e09/backoff-2.2.1-py3-none-any.whl",
+    )
 
-    depends_on("python@3.7:3", type=("build", "run"))
-    depends_on("py-poetry-core@1:", type="build")
+    with default_args(type=("build", "run")):
+        depends_on("python@3.7:3", when="@2:")

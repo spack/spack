@@ -14,14 +14,21 @@ class PyPintXarray(PythonPackage):
 
     license("Apache-2.0")
 
-    version("0.3", sha256="3545dfa78bee3f98eba29b8bd17500e3b5cb7c7b03a2c2781c4d4d59b6a82841")
-    version("0.2.1", sha256="1ee6bf74ee7b52b946f226a96469276fa4f5c68f7381c1b2aae66852562cb275")
+    version(
+        "0.3",
+        sha256="a7d87c792a2e981cbff464bd1c875e872ef7a0c882a9395cfbc34512b3dcb1ab",
+        url="https://pypi.org/packages/f2/2a/ca2d4ab154db0dc6f716e65a3c2d2f32a46e8ca8bd016962f517c779e57b/pint_xarray-0.3-py3-none-any.whl",
+    )
+    version(
+        "0.2.1",
+        sha256="ad51ecd1c8384f5d38b51d232d1f5f03061f47673ee215414cd0b59dc67329a7",
+        url="https://pypi.org/packages/8d/d5/bb7c9b6e5e6489cefa1056146400d652df7abc227378e3fa5d089d214236/pint_xarray-0.2.1-py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools@42:", type="build")
-    depends_on("py-setuptools-scm@3.4:+toml", type="build")
-
-    depends_on("python@3.8:", when="@0.3:", type=("build", "run"))
-    depends_on("py-numpy@1.17:", type=("build", "run"))
-    depends_on("py-xarray@0.16.1:", type=("build", "run"))
-    depends_on("py-pint@0.16:", type=("build", "run"))
-    depends_on("py-importlib-metadata", when="@0.2.1 ^python@:3.7", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("python@3.8:", when="@0.3:")
+        depends_on("python@3.7:", when="@0.2")
+        depends_on("py-importlib-metadata", when="@:0.2 ^python@:3.7")
+        depends_on("py-numpy@1.17.0:")
+        depends_on("py-pint@0.16:", when="@0.2:")
+        depends_on("py-xarray@0.16.1:", when="@0.2:")

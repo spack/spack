@@ -14,6 +14,11 @@ class PyNdindex(PythonPackage):
 
     license("MIT")
 
-    version("1.7", sha256="bf9bd0b76eeada1c8275e04091f8291869ed2b373b7af48e56faf7579fd2efd2")
+    version(
+        "1.7",
+        sha256="4c0555d352ac9947b0f022562aea9f5d57fa06743ea069669138f75a88b42884",
+        url="https://pypi.org/packages/7e/6e/bc00eed30c09815d815fce51f4f921c603b188ad6c3c9887662eabea4c64/ndindex-1.7-py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
+    with default_args(type=("build", "run")):
+        depends_on("python@3.7:", when="@1.5:1.7")

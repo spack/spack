@@ -15,10 +15,11 @@ class PyPythonMarkdownMath(PythonPackage):
 
     license("BSD-3-Clause")
 
-    version("0.8", sha256="8564212af679fc18d53f38681f16080fcd3d186073f23825c7ce86fadd3e3635")
+    version(
+        "0.8",
+        sha256="c685249d84b5b697e9114d7beb352bd8ca2e07fd268fd4057ffca888c14641e5",
+        url="https://pypi.org/packages/4d/36/d16118345ff5f503d4d1c708e8427ed2213f2af7aaffac9d59010e665b5c/python_markdown_math-0.8-py3-none-any.whl",
+    )
 
-    depends_on("python@3.6:", type=("build", "run"))
-
-    depends_on("py-setuptools@30.3:", type="build")
-
-    depends_on("py-markdown@3.0:", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("py-markdown@3:", when="@0.7:")

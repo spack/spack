@@ -15,9 +15,8 @@ class PyVersioneer518(PythonPackage):
     git = "https://github.com/python-versioneer/versioneer-518.git"
 
     # A workaround for invalid URL, most likely due to presence of 518 in the name.
-    def url_for_version(self, version):
-        return super().url_for_version(f"518-{version}")
-
-    version("0.19", sha256="a287608997415f45401849d1227a42bb41b80a6e4a7da5776666f85ce6faec41")
-
-    depends_on("py-setuptools", type="build")
+    version(
+        "0.19",
+        sha256="c0ec39a20525d0eb030ae29d76096131bb09050c71f8dd82bbeda4c24fa79dac",
+        url="https://pypi.org/packages/23/fe/36afae1284065be05b5620ee2c22592baf39c71e00dbc11d55f0558b4b38/versioneer_518-0.19-py2.py3-none-any.whl",
+    )

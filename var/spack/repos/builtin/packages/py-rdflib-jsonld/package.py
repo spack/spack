@@ -15,10 +15,17 @@ class PyRdflibJsonld(PythonPackage):
 
     license("BSD-3-Clause")
 
-    version("0.6.2", sha256="107cd3019d41354c31687e64af5e3fd3c3e3fa5052ce635f5ce595fd31853a63")
-    version("0.6.0", sha256="03af8b5540a8e7bb0dae0d9ba1a3bd7f6435abd82cfb4b3ad5e0cdb1bf45a2a6")
+    version(
+        "0.6.2",
+        sha256="011afe67672353ca9978ab9a4bee964dff91f14042f2d8a28c22a573779d2f8b",
+        url="https://pypi.org/packages/29/92/da92898b2aab0da78207afc9c035a71bedef3544966374c44e9627d761c5/rdflib_jsonld-0.6.2-py2.py3-none-any.whl",
+    )
+    version(
+        "0.6.0",
+        sha256="d290c03c5097ec3d96bd20dad8ff8b535e3e7cf53d05acf8ac48983eb36a4572",
+        url="https://pypi.org/packages/89/26/cc1ec0d5da9288ac308733b888220dbfc41824384261cd881f27e2b68bd5/rdflib_jsonld-0.6.0-py2.py3-none-any.whl",
+    )
 
-    depends_on("python@3.6:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
-
-    depends_on("py-rdflib@5.0.0:", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("py-rdflib@5.0.0:", when="@0.6.1:")
+        depends_on("py-rdflib", when="@0.6:0.6.0")

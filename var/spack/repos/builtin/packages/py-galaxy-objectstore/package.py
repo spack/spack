@@ -15,9 +15,12 @@ class PyGalaxyObjectstore(PythonPackage):
 
     license("CC-BY-3.0")
 
-    version("22.1.1", sha256="321a70f8bce89fec8d0322ba5821ee0b26d5cd3170a8dc9b7278cd383a9e88dd")
+    version(
+        "22.1.1",
+        sha256="57a9c4d1390cb497409c5a3d045b8dc47f08cb66d35b36c4c98b27f33999049c",
+        url="https://pypi.org/packages/b0/0b/6ba4e0b8e1baab4f0f369014b9a5c16c488ce6b89dba22fd4f9897d86fbf/galaxy_objectstore-22.1.1-py2.py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-
-    depends_on("py-galaxy-util", type=("build", "run"))
-    depends_on("py-pyyaml", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("py-galaxy-util")
+        depends_on("py-pyyaml", when="@20:")

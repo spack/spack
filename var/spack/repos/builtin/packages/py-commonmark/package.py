@@ -16,8 +16,16 @@ class PyCommonmark(PythonPackage):
 
     license("BSD-3-Clause")
 
-    version("0.9.1", sha256="452f9dc859be7f06631ddcb328b6919c67984aca654e5fefb3914d54691aed60")
-    version("0.9.0", sha256="867fc5db078ede373ab811e16b6789e9d033b15ccd7296f370ca52d1ee792ce0")
+    version(
+        "0.9.1",
+        sha256="da2f38c92590f83de410ba1a3cbceafbc74fee9def35f9251ba9a971d6d66fd9",
+        url="https://pypi.org/packages/b1/92/dfd892312d822f36c55366118b95d914e5f16de11044a27cf10a7d71bbbf/commonmark-0.9.1-py2.py3-none-any.whl",
+    )
+    version(
+        "0.9.0",
+        sha256="14c3df31e8c9c463377e287b2a1eefaa6019ab97b22dad36e2f32be59d61d68d",
+        url="https://pypi.org/packages/a7/65/2ea45a38e8c6a0a13453c5cadcc9b725049425c8628dbe7da87b30944573/commonmark-0.9.0-py2.py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-future", type=("build", "run"), when="@0.9.0")
+    with default_args(type=("build", "run")):
+        depends_on("py-future", when="@0.8.1:0.9.0")

@@ -15,9 +15,13 @@ class PyNcbiGenomeDownload(PythonPackage):
 
     license("Apache-2.0")
 
-    version("0.3.1", sha256="74675e94f184b8d80429641b27ed6d46ed81028d95156337de6d09f8dd739c6e")
+    version(
+        "0.3.1",
+        sha256="5c28b83f4f53f4e45cb3bedc122dcdc99032377a8bb7e79f52e155bc5f6a2558",
+        url="https://pypi.org/packages/0f/81/bb57c4450469c855926f55324bc09519f6625a58a17c4a1947f9f5938059/ncbi_genome_download-0.3.1-py2.py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-appdirs", type=("build", "run"))
-    depends_on("py-requests@2.4.3:", type=("build", "run"))
-    depends_on("py-tqdm", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("py-appdirs", when="@0.2.7:")
+        depends_on("py-requests@2.4.3:")
+        depends_on("py-tqdm", when="@0.3.1:")

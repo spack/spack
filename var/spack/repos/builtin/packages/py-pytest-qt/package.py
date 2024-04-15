@@ -16,9 +16,11 @@ class PyPytestQt(PythonPackage):
 
     license("MIT")
 
-    version("3.3.0", sha256="714b0bf86c5313413f2d300ac613515db3a1aef595051ab8ba2ffe619dbe8925")
+    version(
+        "3.3.0",
+        sha256="5f8928288f50489d83f5d38caf2d7d9fcd6e7cf769947902caa4661dc7c851e3",
+        url="https://pypi.org/packages/38/b4/c1e8d65fac47eb48c265b7ab926cf5c439e5517fbdfc892dcf5e8aa303a5/pytest_qt-3.3.0-py2.py3-none-any.whl",
+    )
 
-    depends_on("python@2.7:2.8,3.4:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
-    depends_on("py-setuptools-scm", type="build")
-    depends_on("py-pytest@3:", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("py-pytest@3:", when="@3.3:4.3")

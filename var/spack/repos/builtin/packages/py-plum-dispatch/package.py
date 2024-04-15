@@ -14,10 +14,13 @@ class PyPlumDispatch(PythonPackage):
 
     license("MIT")
 
-    version("2.2.2", sha256="d5d180225c9fbf0277375bb558b649d97d0b651a91037bb7155cedbe9f52764b")
+    version(
+        "2.2.2",
+        sha256="d7ee415bd166ffa90eaa4b24d7c9dc7ca6f8875750586001e7c9baff706223bd",
+        url="https://pypi.org/packages/45/07/95c6be6710207f4a2c83023f59889a86c58282c8367aa49a907e9e6deb57/plum_dispatch-2.2.2-py3-none-any.whl",
+    )
 
-    depends_on("python@3.8:", type=("build", "run"))
-    depends_on("py-hatchling@1.8.0:", type="build")
-    depends_on("py-hatch-vcs", type="build")
-    depends_on("py-beartype@0.16.2:", type=("build", "run"))
-    depends_on("py-typing-extensions", when="^python@:3.10", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("python@3.8:", when="@2.2:")
+        depends_on("py-beartype@0.16.2:", when="@2.2.2:")
+        depends_on("py-typing-extensions", when="@2.2: ^python@:3.9")

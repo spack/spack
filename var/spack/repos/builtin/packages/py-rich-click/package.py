@@ -16,10 +16,14 @@ class PyRichClick(PythonPackage):
 
     license("MIT")
 
-    version("1.5.2", sha256="a57ca70242cb8b372a670eaa0b0be48f2440b66656deb4a56e6aadc1bbb79670")
+    version(
+        "1.5.2",
+        sha256="131a94bed597eab9f1eda7eb41fb7275b6b60ae9e6defc3769277b70b104285d",
+        url="https://pypi.org/packages/6b/7f/b60be5d08e0dd119a05884e55ab26a2b14c2a0bb696e4bbb05c2bb1436d1/rich_click-1.5.2-py3-none-any.whl",
+    )
 
-    depends_on("python@3.7:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
-    depends_on("py-click@7:", type=("build", "run"))
-    depends_on("py-rich@10.7.0:", type=("build", "run"))
-    depends_on("py-importlib-metadata", type=("build", "run"), when="^python@:3.7")
+    with default_args(type=("build", "run")):
+        depends_on("python@3.7:", when="@1.3:")
+        depends_on("py-click@7:")
+        depends_on("py-importlib-metadata", when="@1.2: ^python@:3.7")
+        depends_on("py-rich@10.7:", when="@1.3.1:")

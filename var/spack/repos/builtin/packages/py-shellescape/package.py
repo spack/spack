@@ -13,6 +13,8 @@ class PyShellescape(PythonPackage):
     homepage = "https://github.com/chrissimpkins/shellescape"
     pypi = "shellescape/shellescape-3.8.1.tar.gz"
 
-    version("3.8.1", sha256="40b310b30479be771bf3ab28bd8d40753778488bd46ea0969ba0b35038c3ec26")
-
-    depends_on("py-setuptools", type="build")
+    version(
+        "3.8.1",
+        sha256="f17127e390fa3f9aaa80c69c16ea73615fd9b5318fd8309c1dca6168ae7d85bf",
+        url="https://pypi.org/packages/d0/f4/0081137fceff5779cd4205c1e96657e41cc2d2d56c940dc8eeb6111780f7/shellescape-3.8.1-py2.py3-none-any.whl",
+    )

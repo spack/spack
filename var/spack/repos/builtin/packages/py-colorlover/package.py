@@ -14,6 +14,8 @@ class PyColorlover(PythonPackage):
 
     license("MIT")
 
-    version("0.3.0", sha256="b8fb7246ab46e1f5e6715649453c1762e245a515de5ff2d2b4aab7a6e67fa4e2")
-
-    depends_on("py-setuptools", type="build")
+    version(
+        "0.3.0",
+        sha256="58705cdd1f1c3903b5cbc15ac5ad816779363400a74e5f407563b0b3627902e5",
+        url="https://pypi.org/packages/9a/53/f696e4480b1d1de3b1523991dea71cf417c8b19fe70c704da164f3f90972/colorlover-0.3.0-py3-none-any.whl",
+    )

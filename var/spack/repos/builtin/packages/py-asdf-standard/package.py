@@ -16,11 +16,12 @@ class PyAsdfStandard(PythonPackage):
 
     license("BSD-3-Clause")
 
-    version("1.0.3", sha256="afd8ff9a70e7b17f6bcc64eb92a544867d5d4fe1f0076719142fdf62b96cfd44")
+    version(
+        "1.0.3",
+        sha256="1c628379c75f0663b6376a7e681d31b1b54391053e53447c9921fb04c26d41da",
+        url="https://pypi.org/packages/b1/3e/2873079563324cbc60a152be07a38c8595bcfe0cadda4db8a1a1c9b5b2a7/asdf_standard-1.0.3-py3-none-any.whl",
+    )
 
-    depends_on("python@3.8:", type=("build", "run"))
-
-    depends_on("py-setuptools@42:", type="build")
-    depends_on("py-setuptools-scm@3.4: +toml", type="build")
-
-    depends_on("py-importlib-resources@3:", type=("build", "run"), when="^python@:3.8")
+    with default_args(type=("build", "run")):
+        depends_on("python@3.8:", when="@1.0.2:1.0")
+        depends_on("py-importlib-resources@3:", when="@1.0.1:1.0 ^python@:3.8")

@@ -15,14 +15,17 @@ class PyRocrate(PythonPackage):
 
     license("Apache-2.0")
 
-    version("0.7.0", sha256="f7537132f45b724bfa6a212b2ed3daa0aaee1d602a773f0f049b8ca9a14958e1")
+    version(
+        "0.7.0",
+        sha256="86443b621e4eb31eb501c202402ce0d8d8b0e9d5f8a446296d8df83ac21c0d53",
+        url="https://pypi.org/packages/3b/b9/20dea9f6f79c4032fc2ab971bacfcd91a59e452d66cd3d04e6a1a3ef7a0f/rocrate-0.7.0-py3-none-any.whl",
+    )
 
-    depends_on("python@3.7:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
-
-    depends_on("py-requests", type=("build", "run"))
-    depends_on("py-arcp@0.2.1", type=("build", "run"))
-    depends_on("py-galaxy2cwl", type=("build", "run"))
-    depends_on("py-jinja2", type=("build", "run"))
-    depends_on("py-python-dateutil", type=("build", "run"))
-    depends_on("py-click", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("python@3.7:", when="@0.6.1:")
+        depends_on("py-arcp@0.2.1:")
+        depends_on("py-click", when="@0.4:")
+        depends_on("py-galaxy2cwl")
+        depends_on("py-jinja2")
+        depends_on("py-python-dateutil")
+        depends_on("py-requests", when="@0.3.1:")

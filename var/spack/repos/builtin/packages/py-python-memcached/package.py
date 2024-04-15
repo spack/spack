@@ -14,7 +14,11 @@ class PyPythonMemcached(PythonPackage):
 
     pypi = "python-memcached/python-memcached-1.59.tar.gz"
 
-    version("1.59", sha256="a2e28637be13ee0bf1a8b6843e7490f9456fd3f2a4cb60471733c7b5d5557e4f")
+    version(
+        "1.59",
+        sha256="4dac64916871bd3550263323fc2ce18e1e439080a2d5670c594cf3118d99b594",
+        url="https://pypi.org/packages/f5/90/19d3908048f70c120ec66a39e61b92c253e834e6e895cd104ce5e46cbe53/python_memcached-1.59-py2.py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-six@1.4.0:", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("py-six@1.4:", when="@1.59")

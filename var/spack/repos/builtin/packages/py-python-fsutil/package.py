@@ -14,8 +14,11 @@ class PyPythonFsutil(PythonPackage):
 
     license("MIT")
 
-    version("0.4.0", sha256="873eceb11fb488fc2d7675cd1bc74a743502f674f0be88f5e7b920c7baeefed6")
+    version(
+        "0.4.0",
+        sha256="3e93c919b96a146de78900b644c9d9f957b1d50ae67c510a39f866d30ab626c7",
+        url="https://pypi.org/packages/4b/b1/d9cd591b718300a3c45d959bd71c87cbac932a906d5efc20892e5d152e67/python_fsutil-0.4.0-py3-none-any.whl",
+    )
 
-    depends_on("python@2.7:2.8,3.5:", type=("build", "run"))
-    depends_on("py-requests", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
+    with default_args(type=("build", "run")):
+        depends_on("py-requests", when="@0.4:0.5")

@@ -14,13 +14,12 @@ class PyPdoc3(PythonPackage):
 
     license("AGPL-3.0")
 
-    version("0.10.0", sha256="5f22e7bcb969006738e1aa4219c75a32f34c2d62d46dc9d2fb2d3e0b0287e4b7")
+    version(
+        "0.10.0",
+        sha256="ba45d1ada1bd987427d2bf5cdec30b2631a3ff5fb01f6d0e77648a572ce6028b",
+        url="https://pypi.org/packages/67/36/add16f4705689ed1f31aba24c973d035fc953c6fe54af9143837cc3b1315/pdoc3-0.10.0-py3-none-any.whl",
+    )
 
-    depends_on("python@3.6:", type=("build", "run"))
-
-    depends_on("py-setuptools", type="build")
-    depends_on("py-setuptools-git", type="build")
-    depends_on("py-setuptools-scm", type="build")
-
-    depends_on("py-mako", type=("build", "run"))
-    depends_on("py-markdown@3.0:", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("py-mako", when="@0.10:")
+        depends_on("py-markdown@3:", when="@0.10:")

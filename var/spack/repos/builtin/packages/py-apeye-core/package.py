@@ -15,9 +15,12 @@ class PyApeyeCore(PythonPackage):
 
     license("BSD-3-Clause")
 
-    version("1.1.4", sha256="72bb89fed3baa647cb81aa28e1d851787edcbf9573853b5d2b5f87c02f50eaf5")
+    version(
+        "1.1.4",
+        sha256="084bc696448d3ac428fece41c1f2eb08fa9d9ce1d1b2f4d43187e3def4528a60",
+        url="https://pypi.org/packages/f4/af/7cfe2c5e01d70848ac1731c8ab37e0e49ab39cf18e595446c192349639c0/apeye_core-1.1.4-py3-none-any.whl",
+    )
 
-    depends_on("py-hatch-requirements-txt", type="build")
-    depends_on("py-hatchling", type="build")
-    depends_on("py-domdf-python-tools@2.6:", type=("build", "run"))
-    depends_on("py-idna@2.5:", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("py-domdf-python-tools@2.6:")
+        depends_on("py-idna@2.5:")

@@ -15,11 +15,15 @@ class PyAzuremlTrainAutomlClient(PythonPackage):
     homepage = "https://docs.microsoft.com/en-us/azure/machine-learning/service/"
     url = "https://pypi.io/packages/py3/a/azureml_train_automl_client/azureml_train_automl_client-1.11.0-py3-none-any.whl"
 
-    version("1.23.0", sha256="ac5f1ce9b04b4e61e2e28e0fa8d2d8e47937a546f624d1cd3aa6bc4f9110ecbe")
+    version(
+        "1.23.0",
+        sha256="ac5f1ce9b04b4e61e2e28e0fa8d2d8e47937a546f624d1cd3aa6bc4f9110ecbe",
+        url="https://pypi.org/packages/aa/3b/787bf39d04d346ab3747a6d5dd10a6edcba9b1ab7e310f650e39fdf46074/azureml_train_automl_client-1.23.0-py3-none-any.whl",
+    )
 
-    depends_on("python@3.5:3", type=("build", "run"))
-
-    depends_on("py-azureml-automl-core@1.23.0:1.23", when="@1.23.0", type=("build", "run"))
-    depends_on("py-azureml-core@1.23.0:1.23", when="@1.23.0", type=("build", "run"))
-    depends_on("py-azureml-dataset-runtime@1.23.0:1.23", when="@1.23.0", type=("build", "run"))
-    depends_on("py-azureml-telemetry@1.23.0:1.23", when="@1.23.0", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("python@:3.8", when="@1.19:1.44")
+        depends_on("py-azureml-automl-core@1.23", when="@1.23")
+        depends_on("py-azureml-core@1.23", when="@1.23")
+        depends_on("py-azureml-dataset-runtime@1.23", when="@1.23")
+        depends_on("py-azureml-telemetry@1.23", when="@1.23")

@@ -18,9 +18,13 @@ class PyWebargs(PythonPackage):
 
     license("MIT")
 
-    version("8.1.0", sha256="f1f0b7f054a22263cf750529fc0926709ca47da9a2c417d423ad88d9fa6a5d33")
+    version(
+        "8.1.0",
+        sha256="8d4025a5efcfe15cc385e39bd84167d3e9ede0eb485e246eec21f340f1a0caf9",
+        url="https://pypi.org/packages/96/67/1e4d9caaf7c78ef279ecf37c168c62322e685fd4bf16cc3158f127fbf598/webargs-8.1.0-py3-none-any.whl",
+    )
 
-    depends_on("python@3.7:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
-    depends_on("py-marshmallow@3.0.0:", type=("build", "run"))
-    depends_on("py-packaging", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("python@3.7:", when="@8.1:8.3")
+        depends_on("py-marshmallow@3.0.0:", when="@7:")
+        depends_on("py-packaging", when="@8.1:")

@@ -16,7 +16,11 @@ class PyColorspacious(PythonPackage):
 
     license("MIT")
 
-    version("1.1.2", sha256="5e9072e8cdca889dac445c35c9362a22ccf758e97b00b79ff0d5a7ba3e11b618")
+    version(
+        "1.1.2",
+        sha256="c78befa603cea5dccb332464e7dd29e96469eebf6cd5133029153d1e69e3fd6f",
+        url="https://pypi.org/packages/ab/a1/318b9aeca7b9856410ededa4f52d6f82174d1a41e64bdd70d951e532675a/colorspacious-1.1.2-py2.py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-numpy", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("py-numpy", when="@1:")

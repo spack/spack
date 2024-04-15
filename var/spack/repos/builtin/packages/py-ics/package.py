@@ -29,12 +29,19 @@ class PyIcs(PythonPackage):
     homepage = "https://github.com/C4ptainCrunch/ics.py"
     url = "https://github.com/C4ptainCrunch/ics.py/archive/v0.6.tar.gz"
 
-    version("0.7", sha256="48c637e5eb8dfc817b1f3f6b3f662ba19cfcc25f8f71eb42f5d07e6f2c573994")
-    version("0.6", sha256="4947263136202d0489d4f5e5c7175dfd2db5d3508b8b003ddeaef96347f68830")
+    version(
+        "0.7",
+        sha256="bf5fbdef6e1e073afdadf1b996f0271186dd114a148e38e795919a1ae644d6ac",
+        url="https://pypi.org/packages/42/e2/b09e44126e2858346c8b3a722d8de4b9baf4a58e9bc3931b579aaa0ac763/ics-0.7-py2.py3-none-any.whl",
+    )
+    version(
+        "0.6",
+        sha256="12cf34aed0dafa1bf99d79ca58e99949d6721511b856386e118015fe5f5d6e3a",
+        url="https://pypi.org/packages/cf/68/e99b7c80638dd5dcc03e976ce2cb312e1a6abc8a6a7d688614bb62d61429/ics-0.6-py2.py3-none-any.whl",
+    )
 
-    depends_on("python@3.6:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
-    depends_on("py-python-dateutil", type=("build", "run"))
-    depends_on("py-arrow@0.11:0.14", type=("build", "run"))
-    depends_on("py-six@1.5:", type=("build", "run"))
-    depends_on("py-tatsu@4.2:", type=("build", "run"), when="@0.6:")
+    with default_args(type=("build", "run")):
+        depends_on("py-arrow@0.11:0.14", when="@0.6:0.7.0")
+        depends_on("py-python-dateutil", when="@0.4:0.7")
+        depends_on("py-six@1.5.1:", when="@0.4:0.7")
+        depends_on("py-tatsu@4.2.1:", when="@0.6:0.7")

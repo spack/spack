@@ -14,7 +14,11 @@ class PyTreeMath(PythonPackage):
 
     license("Apache-2.0")
 
-    version("0.2.0", sha256="fced2b436fa265b4e24ab46b5768d7b03a4a8d0b75de8a5ab110abaeac3b5772")
+    version(
+        "0.2.0",
+        sha256="653e504b77d736ec837f1f418362e4fc37a0dd39478c817cac786536de84cf0c",
+        url="https://pypi.org/packages/4b/71/c41359212464e1c2ba55118b4bf530a7b1dcc2731d67391e118c8e26e559/tree_math-0.2.0-py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-jax", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("py-jax")

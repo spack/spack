@@ -15,9 +15,14 @@ class PyLfpykit(PythonPackage):
 
     license("GPL-3.0-only")
 
-    version("0.5", sha256="9a7ae80ad905bb8dd0eeab8517b43c3d5b4fff2b8766c9d5a36320a7a67bd545")
+    version(
+        "0.5",
+        sha256="3f87f12466ec905890ea854eb1444d9709a72218aefe683cb762f10c9df51ea2",
+        url="https://pypi.org/packages/79/c2/3d26ea734e2195e6320fec4a6e50ffa2c3ac3e14b923376ead8c4f62257f/LFPykit-0.5-py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-numpy@1.15.2:", type=("build", "run"))
-    depends_on("py-scipy", type=("build", "run"))
-    depends_on("py-meautility", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("python@3.7:", when="@0.5-rc0:")
+        depends_on("py-meautility", when="@0.2-rc2:")
+        depends_on("py-numpy@1.15.2:", when="@0.2-rc2:")
+        depends_on("py-scipy", when="@0.2-rc2:")

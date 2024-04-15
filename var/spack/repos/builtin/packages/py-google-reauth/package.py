@@ -14,7 +14,11 @@ class PyGoogleReauth(PythonPackage):
 
     license("Apache-2.0")
 
-    version("0.1.1", sha256="f9f6852a55c2c5453d581cd01f3d1278e86147c03d008409800390a834235892")
+    version(
+        "0.1.1",
+        sha256="cb39074488d74c8853074dde47368bbf8f739d4a4338b89aab696c895b6d8368",
+        url="https://pypi.org/packages/69/e1/67ffaa3a645b86318ce30717af7145070ebccec5eef5c623ae08b86129b8/google_reauth-0.1.1-py2.py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-pyu2f", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("py-pyu2f")

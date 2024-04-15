@@ -14,6 +14,8 @@ class PyConstantly(PythonPackage):
 
     license("MIT")
 
-    version("15.1.0", sha256="586372eb92059873e29eba4f9dec8381541b4d3834660707faf8ba59146dfc35")
-
-    depends_on("py-setuptools", type="build")
+    version(
+        "15.1.0",
+        sha256="dd2fa9d6b1a51a83f0d7dd76293d734046aa176e384bf6e33b7e44880eb37c5d",
+        url="https://pypi.org/packages/b9/65/48c1909d0c0aeae6c10213340ce682db01b48ea900a7d9fce7a7910ff318/constantly-15.1.0-py2.py3-none-any.whl",
+    )

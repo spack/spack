@@ -14,12 +14,16 @@ class PyPydap(PythonPackage):
 
     license("MIT")
 
-    version("3.2.2", sha256="86326642e24f421595a74b0f9986da76d7932b277768f501fe214d72592bdc40")
+    version(
+        "3.2.2",
+        sha256="9655711d8da71192bda78fed15cbf4fc7fb1decc661ea5022263c0143648cf63",
+        url="https://pypi.org/packages/9e/ad/01367f79b24015e223dd7679e4c9b16a6792fe5a9772e45e5f81b2c4a021/Pydap-3.2.2-py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-numpy", type=("build", "run"))
-    depends_on("py-webob", type=("build", "run"))
-    depends_on("py-jinja2", type=("build", "run"))
-    depends_on("py-docopt", type=("build", "run"))
-    depends_on("py-six@1.4.0:", type=("build", "run"))
-    depends_on("py-beautifulsoup4", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("py-beautifulsoup4", when="@3.2.2:")
+        depends_on("py-docopt", when="@3.2.2:")
+        depends_on("py-jinja2", when="@3.2.2:")
+        depends_on("py-numpy", when="@3.2.2:")
+        depends_on("py-six@1.4:", when="@3.2.2:")
+        depends_on("py-webob", when="@3.2.2:")

@@ -14,8 +14,11 @@ class PyAspyYaml(PythonPackage):
 
     license("MIT")
 
-    version("1.3.0", sha256="e7c742382eff2caed61f87a39d13f99109088e5e93f04d76eb8d4b28aa143f45")
+    version(
+        "1.3.0",
+        sha256="463372c043f70160a9ec950c3f1e4c3a82db5fca01d334b6bc89c7164d744bdc",
+        url="https://pypi.org/packages/99/ce/78be097b00817ccf02deaf481eb7a603eecee6fa216e82fa7848cd265449/aspy.yaml-1.3.0-py2.py3-none-any.whl",
+    )
 
-    depends_on("python@2.7:2.8,3.4:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
-    depends_on("py-pyyaml", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("py-pyyaml", when="@0.2.2:")

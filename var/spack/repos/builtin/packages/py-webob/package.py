@@ -14,7 +14,8 @@ class PyWebob(PythonPackage):
 
     license("MIT")
 
-    version("1.8.7", sha256="b64ef5141be559cfade448f044fa45c2260351edcb6a8ef6b7e00c7dcef0c323")
-
-    depends_on("python@2.7:2.8,3.3:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
+    version(
+        "1.8.7",
+        sha256="73aae30359291c14fa3b956f8b5ca31960e420c28c1bec002547fb04928cf89b",
+        url="https://pypi.org/packages/62/9c/e94a9982e9f31fc35cf46cdc543a6c2c26cb7174635b5fd25b0bbc6a7bc0/WebOb-1.8.7-py2.py3-none-any.whl",
+    )

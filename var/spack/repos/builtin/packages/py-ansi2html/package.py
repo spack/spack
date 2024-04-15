@@ -16,7 +16,8 @@ class PyAnsi2html(PythonPackage):
 
     license("LGPL-3.0-or-later")
 
-    version("1.6.0", sha256="0f124ea7efcf3f24f1f9398e527e688c9ae6eab26b0b84e1299ef7f94d92c596")
-
-    depends_on("py-setuptools", type="build")
-    depends_on("py-pip", type="build")
+    version(
+        "1.6.0",
+        sha256="9fa44ca8fb8c417a05a9af1c62e192694b0fcec269ab55f130b5b26e260d0b7c",
+        url="https://pypi.org/packages/c6/85/3a46be84afbb16b392a138cd396117f438c7b2e91d8dc327621d1ae1b5dc/ansi2html-1.6.0-py3-none-any.whl",
+    )

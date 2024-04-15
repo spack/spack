@@ -24,7 +24,11 @@ class PyImmutabledict(PythonPackage):
 
     license("MIT")
 
-    version("2.2.1", sha256="1ddb0edf1bb6c70d0197eb90ce1fe2b2d58502334f5fdfde72d7c633d723ec3a")
+    version(
+        "2.2.1",
+        sha256="8d7e32e0bda6dfb846349b78c753b858587c736f46be247d01ccd583ce5cc85b",
+        url="https://pypi.org/packages/ea/ac/b443f0d19088968360df751113fa49646b597ab96ab466d73a281638a877/immutabledict-2.2.1-py3-none-any.whl",
+    )
 
-    depends_on("python@3.6:3", type=("build", "run"))
-    depends_on("py-poetry-core@1:", type="build")
+    with default_args(type=("build", "run")):
+        depends_on("python@:3", when="@:2.2.1")

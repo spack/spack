@@ -14,18 +14,18 @@ class PyAstor(PythonPackage):
 
     license("BSD-3-Clause")
 
-    version("0.8.1", sha256="6a6effda93f4e1ce9f618779b2dd1d9d84f1e32812c23a29b3fff6fd7f63fa5e")
-    version("0.8.0", sha256="37a6eed8b371f1228db08234ed7f6cfdc7817a3ed3824797e20cbb11dc2a7862")
-    version("0.6", sha256="175ec395cde36aa0178c5a3120d03954c65d1ef4bb19ec4aa30e9d7a7cc426c4")
-
-    depends_on("python@2.7:2.8,3.4:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
-
-    # Build fails with newer versions of setuptools
-    # https://github.com/berkerpeksag/astor/issues/162
-    # https://github.com/berkerpeksag/astor/pull/163
-    patch(
-        "https://github.com/berkerpeksag/astor/pull/163/commits/30059dac4eb832e58ab2109db84508b294ba366d.patch?full_index=1",
-        sha256="edc5eeddabe153b08e938f52edaeb2d880ee3128082967f310db0f98510fe6e0",
-        when="@0.8.0",
+    version(
+        "0.8.1",
+        sha256="070a54e890cefb5b3739d19f30f5a5ec840ffc9c50ffa7d23cc9fc1a38ebbfc5",
+        url="https://pypi.org/packages/c3/88/97eef84f48fa04fbd6750e62dcceafba6c63c81b7ac1420856c8dcc0a3f9/astor-0.8.1-py2.py3-none-any.whl",
+    )
+    version(
+        "0.8.0",
+        sha256="0e41295809baf43ae8303350e031aff81ae52189b6f881f36d623fa8b2f1960e",
+        url="https://pypi.org/packages/d1/4f/950dfae467b384fc96bc6469de25d832534f6b4441033c39f914efd13418/astor-0.8.0-py2.py3-none-any.whl",
+    )
+    version(
+        "0.6",
+        sha256="5b5d375c4e3d2d0f52fcfe0128bc064d928f36fe622b52e4127a631803fbe2ab",
+        url="https://pypi.org/packages/69/32/e8a3285c0be9ce7ef42bfa302b995109036994713344b6baeed88bb12146/astor-0.6-py2.py3-none-any.whl",
     )

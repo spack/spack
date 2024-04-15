@@ -17,13 +17,24 @@ class PyGraphqlCore(PythonPackage):
 
     license("MIT")
 
-    version("3.1.2", sha256="c056424cbdaa0ff67446e4379772f43746bad50a44ec23d643b9bdcd052f5b3a")
-    version("3.0.5", sha256="51f7dab06b5035515b23984f6fcb677ed909b56c672152699cca32e03624992e")
-    version("2.3.2", sha256="aac46a9ac524c9855910c14c48fc5d60474def7f99fd10245e76608eba7af746")
+    version(
+        "3.1.2",
+        sha256="b1826fbd1c6c290f7180d758ecf9c3859a46574cff324bf35a10167533c0e463",
+        url="https://pypi.org/packages/8b/04/5f79f6c48383d40717867bfcbda72adfeff20bb5dcc14abe7d44edf7064d/graphql_core-3.1.2-py3-none-any.whl",
+    )
+    version(
+        "3.0.5",
+        sha256="dfc374d3426677727772d8da9dd010e92d10305ddd9c2f7f0fc388f07cee94c4",
+        url="https://pypi.org/packages/cc/45/c74fe65ade57473105f727ae9c8c36b8cf5b592d88ffae9b8b3198cd52c2/graphql_core-3.0.5-py3-none-any.whl",
+    )
+    version(
+        "2.3.2",
+        sha256="44c9bac4514e5e30c5a595fac8e3c76c1975cae14db215e8174c7fe995825bad",
+        url="https://pypi.org/packages/11/71/d51beba3d8986fa6d8670ec7bcba989ad6e852d5ae99d95633e5dacc53e7/graphql_core-2.3.2-py2.py3-none-any.whl",
+    )
 
-    depends_on("python@3.6:3", type=("build", "run"))
-    depends_on("py-poetry@1", when="@3:", type="build")
-    depends_on("py-setuptools", when="@2", type="build")
-    depends_on("py-six@1.10.0:", type=("build", "run"), when="@2.3.2")
-    depends_on("py-promise@2.3:2", type=("build", "run"), when="@2.3.2")
-    depends_on("py-rx@1.6:1", type=("build", "run"), when="@2.3.2")
+    with default_args(type=("build", "run")):
+        depends_on("python@:3", when="@3:3.2")
+        depends_on("py-promise@2.3:", when="@2.3:2")
+        depends_on("py-rx@1.6:1", when="@2.3:2")
+        depends_on("py-six@1.10:", when="@:2")

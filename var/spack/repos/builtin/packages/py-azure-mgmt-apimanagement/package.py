@@ -13,10 +13,18 @@ class PyAzureMgmtApimanagement(PythonPackage):
     homepage = "https://github.com/Azure/azure-sdk-for-python"
     pypi = "azure-mgmt-apimanagement/azure-mgmt-apimanagement-0.2.0.zip"
 
-    version("0.2.0", sha256="790f01c0b32583706b8b8c59667c0f5a51cd70444eee76474e23a598911e1d72")
-    version("0.1.0", sha256="5d45d3438c6a11bae6bb8d4d5173cdb44b85683695f9f3433f22f45aecc47819")
+    version(
+        "0.2.0",
+        sha256="815c98f7fb6a3429caea496cb6637b58ee005e710b5f825c8e980318586cc338",
+        url="https://pypi.org/packages/95/4e/0884a860dff4bf16760ec5ed248e6a2a9b9457502fe525ebdeed773c31bf/azure_mgmt_apimanagement-0.2.0-py2.py3-none-any.whl",
+    )
+    version(
+        "0.1.0",
+        sha256="71007d356618d421c208a365f85f334cf21819bd439dbbf4ff252202da74f219",
+        url="https://pypi.org/packages/af/50/6c514ad0850dbd371bdce481661cd4bbd61e569cc44478adf4dc92eeac3c/azure_mgmt_apimanagement-0.1.0-py2.py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-msrest@0.5.0:", type=("build", "run"))
-    depends_on("py-msrestazure@0.4.32:1", type=("build", "run"))
-    depends_on("py-azure-common@1.1:1", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("py-azure-common@1.1:", when="@:4.0.0")
+        depends_on("py-msrest@0.5:", when="@:2.0")
+        depends_on("py-msrestazure@0.4.32:", when="@:0")

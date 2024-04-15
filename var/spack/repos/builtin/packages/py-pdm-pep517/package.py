@@ -15,6 +15,11 @@ class PyPdmPep517(PythonPackage):
 
     license("MIT")
 
-    version("1.0.4", sha256="392f8c2b47c6ec20550cb8e19e24b9dbd27373413f067b56ecd75f9767f93015")
+    version(
+        "1.0.4",
+        sha256="8fd42caeaa2031a41d86bce6519ad96edaf1dfc99cf0c2b6d310d1ae2089bb39",
+        url="https://pypi.org/packages/32/56/1d4b069d8c406ba85ef2992a56f6780de6f8e76fef98af7d291138c4221e/pdm_pep517-1.0.4-py3-none-any.whl",
+    )
 
-    depends_on("python@3.7:", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("python@3.7:")

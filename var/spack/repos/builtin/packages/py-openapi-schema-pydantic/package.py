@@ -14,8 +14,11 @@ class PyOpenapiSchemaPydantic(PythonPackage):
 
     license("MIT")
 
-    version("1.2.4", sha256="3e22cf58b74a69f752cc7e5f1537f6e44164282db2700cbbcd3bb99ddd065196")
+    version(
+        "1.2.4",
+        sha256="a932ecc5dcbb308950282088956e94dea069c9823c84e507d64f6b622222098c",
+        url="https://pypi.org/packages/a8/e7/22abb5a10733bf8142984201aedf27d4a58f5810ebdfe9679f9876c7bf4d/openapi_schema_pydantic-1.2.4-py3-none-any.whl",
+    )
 
-    depends_on("python@3.6.1:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
-    depends_on("py-pydantic@1.8.2:", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("py-pydantic@1.8.2:", when="@1.2.1:")

@@ -16,13 +16,17 @@ class PyArviz(PythonPackage):
 
     license("Apache-2.0")
 
-    version("0.6.1", sha256="435edf8db49c41a8fa198f959e7581063006c49a4efdef4755bb778db6fd4f72")
+    version(
+        "0.6.1",
+        sha256="fa613e6f796501f352462c747638d7e1d7ae3e3ed36e665e547def1b2524602c",
+        url="https://pypi.org/packages/ec/8b/83472d660e004a69b8e7b3c1dd12a607167774097138445d0dda1a3590dc/arviz-0.6.1-py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-matplotlib@3.0:", type=("build", "run"))
-    depends_on("py-numpy@1.12:", type=("build", "run"))
-    depends_on("py-scipy@0.19:", type=("build", "run"))
-    depends_on("py-packaging", type=("build", "run"))
-    depends_on("py-pandas@0.23:", type=("build", "run"))
-    depends_on("py-xarray@0.11:", type=("build", "run"))
-    depends_on("py-netcdf4", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("py-matplotlib@3.0.0:", when="@:0.12")
+        depends_on("py-netcdf4", when="@:0.14")
+        depends_on("py-numpy@1.12.0:", when="@0.5:0.12")
+        depends_on("py-packaging", when="@0.6:")
+        depends_on("py-pandas@0.23.0:", when="@0.5:0.12")
+        depends_on("py-scipy@0.19:", when="@0.5:0.12")
+        depends_on("py-xarray@0.11:", when="@0.5:0.9")

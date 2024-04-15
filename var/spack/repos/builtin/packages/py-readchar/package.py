@@ -14,6 +14,12 @@ class PyReadchar(PythonPackage):
 
     license("MIT")
 
-    version("4.0.5", sha256="08a456c2d7c1888cde3f4688b542621b676eb38cd6cfed7eb6cb2e2905ddc826")
+    version(
+        "4.0.5",
+        sha256="76ec784a5dd2afac3b7da8003329834cdd9824294c260027f8c8d2e4d0a78f43",
+        url="https://pypi.org/packages/cd/14/730280df294e52e395a70111f4d9b07be94f5ba7a69db7eba3c324f113b2/readchar-4.0.5-py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools@41:", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("python@3.7:", when="@4.0.4:4.0.5")
+        depends_on("py-setuptools@41:", when="@4.0.3:")

@@ -18,8 +18,11 @@ class PyIpyvue(PythonPackage):
 
     maintainers("jeremyfix")
 
-    version("1.10.1", sha256="20615ce86ba516cf0b7aad84cc607e4e2c9104232e954cd0eccbf33530a5e1d4")
+    version(
+        "1.10.1",
+        sha256="572057b4b003b5a1b8cbe04eef2c41baa561fa74199cd2b9dd76cc4b5f2c5985",
+        url="https://pypi.org/packages/5f/dc/107a9756ce488fbf4bb2dc8c08a3c4a680c96f2c7476b5014e14e9b71868/ipyvue-1.10.1-py2.py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-
-    depends_on("py-ipywidgets@7:", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("py-ipywidgets@7.0.0:")

@@ -14,8 +14,16 @@ class PyFprettify(PythonPackage):
     homepage = "https://github.com/pseewald/fprettify"
     pypi = "fprettify/fprettify-0.3.6.tar.gz"
 
-    version("0.3.7", sha256="1488a813f7e60a9e86c56fd0b82bd9df1b75bfb4bf2ee8e433c12f63b7e54057")
-    version("0.3.6", sha256="5ee954763eba2bc54ee7444c1f592944f1c1933223bb0c07957d60d44f7f0b75")
+    version(
+        "0.3.7",
+        sha256="56f0a64c43dc47134ce32af2e5da8cd7a1584897be29d19289ec5d87510d1daf",
+        url="https://pypi.org/packages/52/13/2c32d63574e116f8c933f56315df9135bf2fae7a88e9e7c6c4d37f48f4ef/fprettify-0.3.7-py3-none-any.whl",
+    )
+    version(
+        "0.3.6",
+        sha256="2190fb4f84785245d01a2945d822113137c396b1db82b7ee93fbbfbf19043f0b",
+        url="https://pypi.org/packages/8a/da/0f24541c9f20f5494be76bc9300f01c391ff219f62a4a628df540a96466e/fprettify-0.3.6-py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-configargparse", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("py-configargparse", when="@0.3.4:")

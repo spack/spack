@@ -15,8 +15,11 @@ class PyAttmap(PythonPackage):
 
     license("BSD-2-Clause")
 
-    version("0.13.2", sha256="fdffa45f8671c13428eb8c3a1702bfdd1123badb99f7af14d72ad53cc7e770de")
+    version(
+        "0.13.2",
+        sha256="9c76af312c3678927a03ebb8fd2fa3a9cab37f7ce34f1dc574ea890c778f2f26",
+        url="https://pypi.org/packages/2b/14/20b368acd5aacbd0f01004f7ac8b57ced1a961833795c053fd87774ce7e8/attmap-0.13.2-py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-
-    depends_on("py-ubiquerg@0.2.1:", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("py-ubiquerg@0.2.1:", when="@0.13:")

@@ -14,8 +14,16 @@ class PyNum2words(PythonPackage):
 
     license("LGPL-2.1-or-later")
 
-    version("0.5.12", sha256="7e7c0b0f080405aa3a1dd9d32b1ca90b3bf03bab17b8e54db05e1b78301a0988")
-    version("0.5.10", sha256="37cd4f60678f7e1045cdc3adf6acf93c8b41bf732da860f97d301f04e611cc57")
+    version(
+        "0.5.12",
+        sha256="9eeef488658226ab36818c06d7aeb956d19b530fb62030596b6802fb4659f30e",
+        url="https://pypi.org/packages/eb/09/b14d798bc02411b1e5a9896d680f8f417cadc53232bbf7ae9d30263dcf45/num2words-0.5.12-py3-none-any.whl",
+    )
+    version(
+        "0.5.10",
+        sha256="0b6e5f53f11d3005787e206d9c03382f459ef048a43c544e3db3b1e05a961548",
+        url="https://pypi.org/packages/eb/a2/ea800689730732e27711c41beed4b2a129b34974435bdc450377ec407738/num2words-0.5.10-py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-docopt@0.6.2:", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("py-docopt@0.6.2:", when="@0.5.8:")

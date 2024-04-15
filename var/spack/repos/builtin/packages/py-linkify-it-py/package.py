@@ -14,10 +14,17 @@ class PyLinkifyItPy(PythonPackage):
 
     license("MIT")
 
-    version("2.0.2", sha256="19f3060727842c254c808e99d465c80c49d2c7306788140987a1a7a29b0d6ad2")
-    version("1.0.3", sha256="2b3f168d5ce75e3a425e34b341a6b73e116b5d9ed8dbbbf5dc7456843b7ce2ee")
+    version(
+        "2.0.2",
+        sha256="a3a24428f6c96f27370d7fe61d2ac0be09017be5190d68d8658233171f1b6541",
+        url="https://pypi.org/packages/1f/1a/16b0d2f66601ba3081f1d4177087c79fd1f11d17706ee01d373e4ba8e00d/linkify_it_py-2.0.2-py3-none-any.whl",
+    )
+    version(
+        "1.0.3",
+        sha256="11e29f00150cddaa8f434153f103c14716e7e097a8fd372d9eb1ed06ed91524d",
+        url="https://pypi.org/packages/ff/f1/74e54ab5ae6aa1d3b6dc5de56fecf57fe4873d8f6b2a72a1269dbedd111b/linkify_it_py-1.0.3-py3-none-any.whl",
+    )
 
-    depends_on("python@3.6:", when="@1.0.3", type=("build", "run"))
-    depends_on("python@3.7:", when="@2.0.2:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
-    depends_on("py-uc-micro-py", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("python@3.7:", when="@2.0.1:")
+        depends_on("py-uc-micro-py")

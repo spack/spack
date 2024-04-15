@@ -14,21 +14,37 @@ class PySetuptoolsRust(PythonPackage):
 
     license("MIT")
 
-    version("1.6.0", sha256="c86e734deac330597998bfbc08da45187e6b27837e23bd91eadb320732392262")
-    version("1.5.1", sha256="0e05e456645d59429cb1021370aede73c0760e9360bbfdaaefb5bced530eb9d7")
-    version("1.4.1", sha256="18ff850831f58ee21d5783825c99fad632da21e47645e9427fd7dec048029e76")
-    version("1.2.0", sha256="0a4ada479e8c7e3d8bd7cb56e1a29acc2b2bb98c2325051b0cdcb57d7f056de8")
-    version("0.12.1", sha256="647009e924f0ae439c7f3e0141a184a69ad247ecb9044c511dabde232d3d570e")
+    version(
+        "1.6.0",
+        sha256="e28ae09fb7167c44ab34434eb49279307d611547cb56cb9789955cdb54a1aed9",
+        url="https://pypi.org/packages/57/db/7cc20ad859bc2a6a0c60e497c4be19784a8d14ff8e53a6da6ee4a6edd500/setuptools_rust-1.6.0-py3-none-any.whl",
+    )
+    version(
+        "1.5.1",
+        sha256="306b236ff3aa5229180e58292610d0c2c51bb488191122d2fc559ae4caeb7d5e",
+        url="https://pypi.org/packages/5b/76/6ebf4728d287527514b29bc92c14ec59f666f43b0af650df6c100614c3dc/setuptools_rust-1.5.1-py3-none-any.whl",
+    )
+    version(
+        "1.4.1",
+        sha256="12b5350d75008f2d4b64a991aba0358bb7ef45502bad086990b019a760afec67",
+        url="https://pypi.org/packages/c4/d3/b101f6af5d70988a89fa2b5d7f0d9bc92974014e3eb61ee3802966dc07a6/setuptools_rust-1.4.1-py3-none-any.whl",
+    )
+    version(
+        "1.2.0",
+        sha256="decc6bdf4aef0ff3c323ba85e2fcabed8c77044443cd239ea01b67ca9b1d777e",
+        url="https://pypi.org/packages/3e/92/7d8e368c14284ff7dc7df5bf55883f0841a1f7cbcae5517417379c46718f/setuptools_rust-1.2.0-py3-none-any.whl",
+    )
+    version(
+        "0.12.1",
+        sha256="60c9bf1423a725e472c4a2a6274598251f959f3ed5ffe7698526e78bb431b9b7",
+        url="https://pypi.org/packages/82/2b/349ad916a2f032506a2c7c0810950a299f96e05d88b21797c2170bd6b2c6/setuptools_rust-0.12.1-py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools@62.4:", when="@1.4.0:", type=("build", "run"))
-    depends_on("py-setuptools@46.1:", type=("build", "run"))
-    depends_on("py-setuptools", type=("build", "run"))
-    depends_on("py-semantic-version@2.8.2:2", when="@1.2.0:", type=("build", "run"))
-    depends_on("py-semantic-version@2.6.0:", type=("build", "run"))
-    depends_on("py-typing-extensions@3.7.4.3:", when="@1.2.0:", type=("build", "run"))
-    depends_on("rust", type="run")
-
-    # Historical dependencies
-    depends_on("py-setuptools-scm+toml@6.3.2:", when="@1.2.0:1.4.1", type="build")
-    depends_on("py-setuptools-scm+toml@3.4.3:", when="@:1.1", type="build")
-    depends_on("py-toml@0.9.0:", type=("build", "run"), when="@0.12.1")
+    with default_args(type=("build", "run")):
+        depends_on("python@3.7:", when="@1.2:1.7")
+        depends_on("py-semantic-version@2.8.2:", when="@1:")
+        depends_on("py-semantic-version@2.6:", when="@:0")
+        depends_on("py-setuptools@62.4:", when="@1.4:")
+        depends_on("py-setuptools@46.1:", when="@0.12:1.2")
+        depends_on("py-toml@0.9:", when="@:0")
+        depends_on("py-typing-extensions@3.7.4.3:", when="@1:1.7")

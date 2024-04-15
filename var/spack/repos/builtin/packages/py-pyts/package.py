@@ -18,12 +18,15 @@ class PyPyts(PythonPackage):
 
     license("BSD-3-Clause")
 
-    version("0.12.0", sha256="af85e09a14334cbe384318de6ca4379e9a30bf5bbd1aaf3a1c4a94872e9765b1")
+    version(
+        "0.12.0",
+        sha256="acd66b0cf1fd17d9ce6449335f5da30701f65fdee185d4b918726b62ca6af79d",
+        url="https://pypi.org/packages/55/6e/fedefe4a1564943824e2dc4baa4cc5ed0862a4fe25ea3b69b4e3b9134bcf/pyts-0.12.0-py3-none-any.whl",
+    )
 
-    depends_on("python@3.7:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
-    depends_on("py-numpy@1.17.5:", type=("build", "run"))
-    depends_on("py-scipy@1.3.0:", type=("build", "run"))
-    depends_on("py-scikit-learn@0.22.1:", type=("build", "run"))
-    depends_on("py-joblib@0.12:", type=("build", "run"))
-    depends_on("py-numba@0.48.0:", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("py-joblib@0.12:", when="@0.11:0.12")
+        depends_on("py-numba@0.48:", when="@0.11:0.12")
+        depends_on("py-numpy@1.17.5:", when="@0.11:0.12")
+        depends_on("py-scikit-learn@0.22.1:", when="@0.11:0.12")
+        depends_on("py-scipy@1.3.0:", when="@0.11:0.12")

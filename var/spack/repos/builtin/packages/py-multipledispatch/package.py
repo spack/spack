@@ -14,7 +14,11 @@ class PyMultipledispatch(PythonPackage):
 
     license("BSD-3-Clause")
 
-    version("0.6.0", sha256="649f6e61b8a6ce581c75f32365c926b55495c01b8177135408b83aa03886cde0")
+    version(
+        "0.6.0",
+        sha256="a55c512128fb3f7c2efd2533f2550accb93c35f1045242ef74645fc92a2c3cba",
+        url="https://pypi.org/packages/89/79/429ecef45fd5e4504f7474d4c3c3c4668c267be3370e4c2fd33e61506833/multipledispatch-0.6.0-py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-six", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("py-six", when="@0.6:0")

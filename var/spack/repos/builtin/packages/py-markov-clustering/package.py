@@ -15,17 +15,17 @@ class PyMarkovClustering(PythonPackage):
     license("MIT", checked_by="A-N-Other")
 
     version(
-        "0.0.6.dev0", sha256="8f72eee0ee5d9bfbab1b28bbfa95eaa020b2bba64b528ce45030b8b4300ecf33"
+        "0.0.6.dev0",
+        sha256="75a1fd0c05552e3bf0804ec4879346a7691b4453d43e48079079378bee21887c",
+        url="https://pypi.org/packages/76/42/19e11a42fa952d35116b90577e2cde31c541ce78364a52167f852864ba29/markov_clustering-0.0.6.dev0-py3-none-any.whl",
     )
 
     variant("drawing", default=False, description="Include graphing capabilities")
 
-    depends_on("python@3", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
-
-    depends_on("py-numpy", type=("build", "run"))
-    depends_on("py-scipy@0.19.0:", type=("build", "run"))
-    depends_on("py-scikit-learn", type=("build", "run"))
-
-    depends_on("py-networkx", type=("build", "run"), when="+drawing")
-    depends_on("py-matplotlib", type=("build", "run"), when="+drawing")
+    with default_args(type=("build", "run")):
+        depends_on("python@:3")
+        depends_on("py-matplotlib", when="@:0.0.3,0.0.6:+drawing")
+        depends_on("py-networkx", when="@:0.0.3,0.0.6:+drawing")
+        depends_on("py-numpy", when="@:0.0.3,0.0.6:")
+        depends_on("py-scikit-learn", when="@:0.0.3,0.0.6:")
+        depends_on("py-scipy@0.19:", when="@0.0.6:")

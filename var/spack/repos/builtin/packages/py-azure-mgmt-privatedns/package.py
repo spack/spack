@@ -13,9 +13,13 @@ class PyAzureMgmtPrivatedns(PythonPackage):
     homepage = "https://github.com/Azure/azure-sdk-for-python"
     pypi = "azure-mgmt-privatedns/azure-mgmt-privatedns-0.1.0.zip"
 
-    version("0.1.0", sha256="d29cfd8cec806e06673d9382d3f5766fc65d9a9de75b424705094a34a7db8d23")
+    version(
+        "0.1.0",
+        sha256="aeea39403333b280ceb7086cda6ea98ba78472735c1a14388e16d22ea87974c7",
+        url="https://pypi.org/packages/f1/47/fd5dba6d5f57c97bf21b4bf9e13bef73b50cab0b18bc171e497057f7e474/azure_mgmt_privatedns-0.1.0-py2.py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-msrest@0.5.0:", type=("build", "run"))
-    depends_on("py-msrestazure@0.4.32:1", type=("build", "run"))
-    depends_on("py-azure-common@1.1:1", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("py-azure-common@1.1:")
+        depends_on("py-msrest@0.5:", when="@:1.0")
+        depends_on("py-msrestazure@0.4.32:", when="@:0")

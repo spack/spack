@@ -22,14 +22,18 @@ class PyOgb(PythonPackage):
 
     license("MIT")
 
-    version("1.3.5", sha256="ac958094ac3019822e742155b82cb2bf02830aa72a4264ba9ee09b288f0c080c")
+    version(
+        "1.3.5",
+        sha256="25a4265cc610de49f481ccd70d80acf57e4d338b3133659c7c5396336c4e5654",
+        url="https://pypi.org/packages/75/b1/33a442a945188c5d1cf3d87487f30a7fce9775b73c119149c0f708aa3caa/ogb-1.3.5-py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-torch@1.6.0:", type=("build", "run"))
-    depends_on("py-numpy@1.16.0:", type=("build", "run"))
-    depends_on("py-tqdm@4.29.0:", type=("build", "run"))
-    depends_on("py-scikit-learn@0.20.0:", type=("build", "run"))
-    depends_on("py-pandas@0.24.0:", type=("build", "run"))
-    depends_on("py-six@1.12.0:", type=("build", "run"))
-    depends_on("py-urllib3@1.24.0:", type=("build", "run"))
-    depends_on("py-outdated@0.2.0:", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("py-numpy@1.16.0:")
+        depends_on("py-outdated@0.2:")
+        depends_on("py-pandas@0.24.0:")
+        depends_on("py-scikit-learn@0.20.0:")
+        depends_on("py-six@1.12:")
+        depends_on("py-torch@1.6:", when="@1.3.1:")
+        depends_on("py-tqdm@4.29:")
+        depends_on("py-urllib3@1.24:")

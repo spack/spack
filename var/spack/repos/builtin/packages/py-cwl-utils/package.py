@@ -17,14 +17,16 @@ class PyCwlUtils(PythonPackage):
 
     license("Apache-2.0")
 
-    version("0.21", sha256="583f05010f7572f3a69310325472ccb6efc2db7f43dc6428d03552e0ffcbaaf9")
+    version(
+        "0.21",
+        sha256="fba9348bfef42e7d359f1a93e1188f1da40cce714532a3e49901343bae6b01a0",
+        url="https://pypi.org/packages/03/15/a4156b82adf2a6f7575c3229adf1e523237786c25385151460dd8d2eb560/cwl_utils-0.21-py3-none-any.whl",
+    )
 
-    depends_on("python@3.6:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
-
-    depends_on("py-cwl-upgrader@1.2.3:", type=("build", "run"))
-    depends_on("py-packaging", type=("build", "run"))
-    depends_on("py-rdflib", type=("build", "run"))
-    depends_on("py-requests", type=("build", "run"))
-    depends_on("py-cachecontrol", type=("build", "run"))
-    depends_on("py-schema-salad@8.3.20220825114525:8", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("py-cachecontrol", when="@0.15:0.25")
+        depends_on("py-cwl-upgrader@1.2.3:", when="@0.15:")
+        depends_on("py-packaging", when="@0.14:")
+        depends_on("py-rdflib", when="@0.15:")
+        depends_on("py-requests")
+        depends_on("py-schema-salad@8.3.20220825114525:", when="@0.16:0.31")

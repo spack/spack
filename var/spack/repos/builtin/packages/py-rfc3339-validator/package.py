@@ -14,8 +14,11 @@ class PyRfc3339Validator(PythonPackage):
 
     license("MIT")
 
-    version("0.1.4", sha256="138a2abdf93304ad60530167e51d2dfb9549521a836871b88d7f4695d0022f6b")
+    version(
+        "0.1.4",
+        sha256="24f6ec1eda14ef823da9e36ec7113124b39c04d50a4d3d3a3c2859577e7791fa",
+        url="https://pypi.org/packages/7b/44/4e421b96b67b2daff264473f7465db72fbdf36a07e05494f50300cc7b0c6/rfc3339_validator-0.1.4-py2.py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-
-    depends_on("py-six", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("py-six")

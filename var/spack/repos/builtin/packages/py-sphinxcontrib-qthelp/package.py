@@ -22,8 +22,13 @@ class PySphinxcontribQthelp(PythonPackage):
 
     license("BSD-2-Clause")
 
-    version("1.0.3", sha256="4c33767ee058b70dba89a6fc5c1892c0d57a54be67ddd3e7875a18d14cba5a72")
-    version("1.0.2", sha256="79465ce11ae5694ff165becda529a600c754f4bc459778778c7017374d4d406f")
-
-    depends_on("python@3.5:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
+    version(
+        "1.0.3",
+        sha256="bd9fc24bcb748a8d51fd4ecaade681350aa63009a347a8c14e637895444dfab6",
+        url="https://pypi.org/packages/2b/14/05f9206cf4e9cfca1afb5fd224c7cd434dcc3a433d6d9e4e0264d29c6cdb/sphinxcontrib_qthelp-1.0.3-py2.py3-none-any.whl",
+    )
+    version(
+        "1.0.2",
+        sha256="513049b93031beb1f57d4daea74068a4feb77aa5630f856fcff2e50de14e9a20",
+        url="https://pypi.org/packages/ce/5b/4747c3ba98b3a3e21a66faa183d8f79b9ded70e74212a7988d236a6eb78a/sphinxcontrib_qthelp-1.0.2-py2.py3-none-any.whl",
+    )

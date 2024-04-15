@@ -14,18 +14,17 @@ class PySphinxImmaterial(PythonPackage):
 
     license("MIT")
 
-    version("0.11.2", sha256="a1c8387ca8b4da282949e474647d06f3b2f7d12fe54e9e662b962771012bf257")
+    version(
+        "0.11.2",
+        sha256="96fc25386863a20626827104217b58ec1c541c9d77fc14c169226619fdb2fd9e",
+        url="https://pypi.org/packages/13/17/0b7805cd078a47d0fd24faa4fa350b21568ea59f345b06574059ad794375/sphinx_immaterial-0.11.2-py3-none-any.whl",
+    )
 
-    depends_on("python@3.8:", type=("build", "run"))
-    depends_on("py-setuptools@42:", type="build")
-    depends_on("py-setuptools-scm@6.3.2:", type="build")
-    depends_on("py-appdirs", type=("build", "run"))
-    depends_on("py-markupsafe", type=("build", "run"))
-    depends_on("py-pydantic", type=("build", "run"))
-    depends_on("py-requests", type=("build", "run"))
-    depends_on("py-sphinx@4:", type=("build", "run"))
-    depends_on("py-typing-extensions", type=("build", "run"))
-
-    # see https://jbms.github.io/sphinx-immaterial/#material-for-sphinx for node requirements
-    depends_on("node-js@14:", type="build")
-    depends_on("npm", type="build")
+    with default_args(type=("build", "run")):
+        depends_on("python@3.8:", when="@0.11.1:")
+        depends_on("py-appdirs", when="@0.9:")
+        depends_on("py-markupsafe")
+        depends_on("py-pydantic", when="@:0.11.4")
+        depends_on("py-requests", when="@0.9:")
+        depends_on("py-sphinx@4.0.0:", when="@:0.11.2")
+        depends_on("py-typing-extensions")

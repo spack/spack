@@ -13,9 +13,13 @@ class PyAzureMgmtCosmosdb(PythonPackage):
     homepage = "https://github.com/Azure/azure-sdk-for-python"
     pypi = "azure-mgmt-cosmosdb/azure-mgmt-cosmosdb-0.15.0.zip"
 
-    version("0.15.0", sha256="e70fe9b3d9554c501d46e69f18b73de18d77fbcb98a7a87b965b3dd027cada0f")
+    version(
+        "0.15.0",
+        sha256="967e2f54c956d343e7c2738b8725aa5133df1e894472fa3d07f387a6a4328c8b",
+        url="https://pypi.org/packages/7a/15/3645115e2255a227292851bc9413878bf84959850b6273b5895b70f808d3/azure_mgmt_cosmosdb-0.15.0-py2.py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-msrest@0.5.0:", type=("build", "run"))
-    depends_on("py-msrestazure@0.4.32:1", type=("build", "run"))
-    depends_on("py-azure-common@1.1:1", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("py-azure-common@1.1:")
+        depends_on("py-msrest@0.5:", when="@:6.1")
+        depends_on("py-msrestazure@0.4.32:", when="@:4")

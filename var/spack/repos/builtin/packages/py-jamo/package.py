@@ -16,7 +16,8 @@ class PyJamo(PythonPackage):
 
     license("Apache-2.0")
 
-    version("0.4.1", sha256="ea65cf9d35338d0e0af48d75ff426d8a369b0ebde6f07051c3ac37256f56d025")
-
-    depends_on("python@3:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
+    version(
+        "0.4.1",
+        sha256="d4b94fd23324c606ed2fbc4037c603e2c3a7ae9390c05d3473aea1ccb6b1c3fb",
+        url="https://pypi.org/packages/ac/cc/49812faae67f9a24be6ddaf58a2cf7e8c3cbfcf5b762d9414f7103d2ea2c/jamo-0.4.1-py3-none-any.whl",
+    )

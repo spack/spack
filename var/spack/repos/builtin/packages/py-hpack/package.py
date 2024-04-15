@@ -14,8 +14,13 @@ class PyHpack(PythonPackage):
 
     license("MIT")
 
-    version("4.0.0", sha256="fc41de0c63e687ebffde81187a948221294896f6bdc0ae2312708df339430095")
-    version("3.0.0", sha256="8eec9c1f4bfae3408a3f30500261f7e6a65912dc138526ea054f9ad98892e9d2")
-
-    depends_on("python@3.6.1:", type=("build", "run"), when="@4:")
-    depends_on("py-setuptools", type="build")
+    version(
+        "4.0.0",
+        sha256="84a076fad3dc9a9f8063ccb8041ef100867b1878b25ef0ee63847a5d53818a6c",
+        url="https://pypi.org/packages/d5/34/e8b383f35b77c402d28563d2b8f83159319b509bc5f760b15d60b0abf165/hpack-4.0.0-py3-none-any.whl",
+    )
+    version(
+        "3.0.0",
+        sha256="0edd79eda27a53ba5be2dfabf3b15780928a0dff6eb0c60a3d6767720e970c89",
+        url="https://pypi.org/packages/8a/cc/e53517f4a1e13f74776ca93271caef378dadec14d71c61c949d759d3db69/hpack-3.0.0-py2.py3-none-any.whl",
+    )

@@ -16,14 +16,23 @@ class PyAccelerate(PythonPackage):
 
     license("Apache-2.0")
 
-    version("0.21.0", sha256="e2959a0bf74d97c0b3c0e036ed96065142a060242281d27970d4c4e34f11ca59")
-    version("0.16.0", sha256="d13e30f3e6debfb46cada7b931af85560619b6a6a839d0cafeeab6ed7c6a498d")
+    version(
+        "0.21.0",
+        sha256="e2609d37f2c6a56e36a0612feae6ff6d9daac9759f4899432b86b1dc97024ebb",
+        url="https://pypi.org/packages/70/f9/c381bcdd0c3829d723aa14eec8e75c6c377b4ca61ec68b8093d9f35fc7a7/accelerate-0.21.0-py3-none-any.whl",
+    )
+    version(
+        "0.16.0",
+        sha256="27aa39b2076560b3ee674b9650c237c58520b3fd7907e5da1f922cf6868c1576",
+        url="https://pypi.org/packages/dc/0c/f95215bc5f65e0a5fb97d4febce7c18420002a4c3ea5182294dc576f17fb/accelerate-0.16.0-py3-none-any.whl",
+    )
 
-    depends_on("python@3.8.0:", when="@0.21.0:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
-    depends_on("py-numpy@1.17:", type=("build", "run"))
-    depends_on("py-packaging@20:", type=("build", "run"))
-    depends_on("py-psutil", type=("build", "run"))
-    depends_on("py-pyyaml", type=("build", "run"))
-    depends_on("py-torch@1.10.0:", when="@0.21.0:", type=("build", "run"))
-    depends_on("py-torch@1.4:", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("python@3.8:", when="@0.21:")
+        depends_on("python@3.7:", when="@0.10:0.20")
+        depends_on("py-numpy@1.17.0:")
+        depends_on("py-packaging@20:", when="@0.10:")
+        depends_on("py-psutil", when="@0.10:")
+        depends_on("py-pyyaml")
+        depends_on("py-torch@1.10:", when="@0.21:")
+        depends_on("py-torch@1.4:", when="@:0.18")

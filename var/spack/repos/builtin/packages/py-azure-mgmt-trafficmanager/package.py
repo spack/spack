@@ -13,9 +13,13 @@ class PyAzureMgmtTrafficmanager(PythonPackage):
     homepage = "https://github.com/Azure/azure-sdk-for-python"
     pypi = "azure-mgmt-trafficmanager/azure-mgmt-trafficmanager-0.51.0.zip"
 
-    version("0.51.0", sha256="fc8ae77022cfe52fda4379a2f31e0b857574d536e41291a7b569b5c0f4104186")
+    version(
+        "0.51.0",
+        sha256="672f909459e70d41eb8d7bc619839cd60eb2cea2fd20dc7924b7e9670ea8aedf",
+        url="https://pypi.org/packages/b1/2d/2a95dd8e57fa0c96548f0c1b11936c9820a40344e39660e3aebd63796c26/azure_mgmt_trafficmanager-0.51.0-py2.py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-msrest@0.5.0:", type=("build", "run"))
-    depends_on("py-msrestazure@0.4.32:1", type=("build", "run"))
-    depends_on("py-azure-common@1.1:1", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("py-azure-common@1.1:", when="@0.50:")
+        depends_on("py-msrest@0.5:", when="@0.51:0")
+        depends_on("py-msrestazure@0.4.32:", when="@0.51:0")

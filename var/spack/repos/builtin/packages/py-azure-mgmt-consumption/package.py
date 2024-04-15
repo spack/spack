@@ -13,11 +13,20 @@ class PyAzureMgmtConsumption(PythonPackage):
     homepage = "https://github.com/Azure/azure-sdk-for-python"
     pypi = "azure-mgmt-consumption/azure-mgmt-consumption-3.0.0.zip"
 
-    version("3.0.0", sha256="035d4b74ca7c47e2683bea17105fd9014c27060336fb6255324ac86b27f70f5b")
-    version("2.0.0", sha256="9a85a89f30f224d261749be20b4616a0eb8948586f7f0f20573b8ea32f265189")
+    version(
+        "3.0.0",
+        sha256="af319ad6e3ec162a7578563f149e3cdd7d833a62ec80761cfd93caf79467610b",
+        url="https://pypi.org/packages/3f/97/c13a39c275b2cae19041b1ed36b7f7e53fbeb02c44f6a30235e867306ff1/azure_mgmt_consumption-3.0.0-py2.py3-none-any.whl",
+    )
+    version(
+        "2.0.0",
+        sha256="36ea28bb2ed4bec7e4d643444085ba4debed20a01fbd87f599896a4bda3318bd",
+        url="https://pypi.org/packages/11/f4/2db9557494dfb17ff3edeae5726981143a7baace17df3712b189e343bd8c/azure_mgmt_consumption-2.0.0-py2.py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-msrest@0.5.0:", when="@3:", type=("build", "run"))
-    depends_on("py-msrestazure@0.4.32:1", when="@3:", type=("build", "run"))
-    depends_on("py-msrestazure@0.4.20:1", type=("build", "run"))
-    depends_on("py-azure-common@1.1:1", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("py-azure-common@1.1:", when="@1.1:")
+        depends_on("py-azure-mgmt-nspkg@2:", when="@:2")
+        depends_on("py-msrest@0.5:", when="@3:8")
+        depends_on("py-msrestazure@0.4.32:", when="@3")
+        depends_on("py-msrestazure@0.4.20:", when="@2")

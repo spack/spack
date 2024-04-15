@@ -13,9 +13,13 @@ class PyAzureMgmtMarketplaceordering(PythonPackage):
     homepage = "https://github.com/Azure/azure-sdk-for-python"
     pypi = "azure-mgmt-marketplaceordering/azure-mgmt-marketplaceordering-0.2.1.zip"
 
-    version("0.2.1", sha256="dc765cde7ec03efe456438c85c6207c2f77775a8ce8a7adb19b0df5c5dc513c2")
+    version(
+        "0.2.1",
+        sha256="12d595f3dbda90de7cbc08ace99b925124ce675219b32bb3fde90e36d357c095",
+        url="https://pypi.org/packages/38/10/7a334338d33d5d0f409ee3736568761cf681f2db50a32e477f287c7e4602/azure_mgmt_marketplaceordering-0.2.1-py2.py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-msrest@0.5.0:", type=("build", "run"))
-    depends_on("py-msrestazure@0.4.32:1", type=("build", "run"))
-    depends_on("py-azure-common@1.1:1", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("py-azure-common@1.1:")
+        depends_on("py-msrest@0.5:", when="@0.2:1.1")
+        depends_on("py-msrestazure@0.4.32:", when="@0.2:0")

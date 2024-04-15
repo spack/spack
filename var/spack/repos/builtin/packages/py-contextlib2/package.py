@@ -16,10 +16,18 @@ class PyContextlib2(PythonPackage):
 
     license("PSF-2.0")
 
-    version("21.6.0", sha256="ab1e2bfe1d01d968e1b7e8d9023bc51ef3509bba217bb730cee3827e1ee82869")
-    version("0.6.0", sha256="7197aa736777caac513dbd800944c209a49765bf1979b12b037dce0277077ed3")
-    version("0.5.5", sha256="509f9419ee91cdd00ba34443217d5ca51f5a364a404e1dce9e8979cea969ca48")
-
-    depends_on("py-setuptools", type="build")
-    depends_on("python@2.7:2.8,3.4:", type=("build", "run"))
-    depends_on("python@3.6:", type=("build", "run"), when="@21.6.0:")
+    version(
+        "21.6.0",
+        sha256="3fbdb64466afd23abaf6c977627b75b6139a5a3e8ce38405c5b413aed7a0471f",
+        url="https://pypi.org/packages/76/56/6d6872f79d14c0cb02f1646cbb4592eef935857c0951a105874b7b62a0c3/contextlib2-21.6.0-py2.py3-none-any.whl",
+    )
+    version(
+        "0.6.0",
+        sha256="9d2c67f18c1f9b6db1b46317f7f784aa82789d2ee5dea5d9c0f0f2a764eb862e",
+        url="https://pypi.org/packages/cf/e5/989798d38831a8505d62687c94b0f2954ff0a40782e25f9add8ed675dc1f/contextlib2-0.6.0-py2.py3-none-any.whl",
+    )
+    version(
+        "0.5.5",
+        sha256="f5260a6e679d2ff42ec91ec5252f4eeffdcf21053db9113bd0a8e4d953769c00",
+        url="https://pypi.org/packages/a2/71/8273a7eeed0aff6a854237ab5453bc9aa67deb49df4832801c21f0ff3782/contextlib2-0.5.5-py2.py3-none-any.whl",
+    )

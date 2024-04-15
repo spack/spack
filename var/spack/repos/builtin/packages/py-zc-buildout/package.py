@@ -13,6 +13,11 @@ class PyZcBuildout(PythonPackage):
 
     license("ZPL-2.1")
 
-    version("2.13.1", sha256="3d14d07226963a517295dfad5879d2799e2e3b65b2c61c71b53cb80f5ab11484")
+    version(
+        "2.13.1",
+        sha256="968e318d1a8c46acab0e5feddb16358fccc4f7f3c2a3b425a02f3471e2209570",
+        url="https://pypi.org/packages/da/7e/f8174cafc7616ddc7230c4cb1f2e39efffcb7be110d49d50d2ff9709ebef/zc.buildout-2.13.1-py2.py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools@8.0:", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("py-setuptools@8:", when="@:2.13.1,2.13.3,3:")

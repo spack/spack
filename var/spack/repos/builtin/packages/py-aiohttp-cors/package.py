@@ -16,8 +16,11 @@ class PyAiohttpCors(PythonPackage):
 
     license("Apache-2.0")
 
-    version("0.7.0", sha256="4d39c6d7100fd9764ed1caf8cebf0eb01bf5e3f24e2e073fda6234bc48b19f5d")
+    version(
+        "0.7.0",
+        sha256="0451ba59fdf6909d0e2cd21e4c0a43752bc0703d33fc78ae94d9d9321710193e",
+        url="https://pypi.org/packages/13/e7/e436a0c0eb5127d8b491a9b83ecd2391c6ff7dcd5548dfaec2080a2340fd/aiohttp_cors-0.7.0-py3-none-any.whl",
+    )
 
-    depends_on("python@3.4.1:", type=("build", "run"))
-    depends_on("py-setuptools@20.8.1:", type="build")
-    depends_on("py-aiohttp@1.1:", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("py-aiohttp@1.1:", when="@0.5:0.5.0,0.5.2:")

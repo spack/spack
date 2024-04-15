@@ -12,34 +12,50 @@ class PyIpyparallel(PythonPackage):
     homepage = "https://github.com/ipython/ipyparallel"
     pypi = "ipyparallel/ipyparallel-7.1.0.tar.gz"
 
-    version("8.4.1", sha256="670bbe05755381742e1ea01177dc428ff8f3e94af1f0d5642c9d19f37ca8289b")
-    version("8.0.0", sha256="95305a886f2c42e9603c034ea684e5c031d9d4222c66ed6d85eb3ae15d631e4b")
-    version("7.1.0", sha256="ea756df0d2485bac19cccb0dbf4cafbc855c922b9b5905b4906e6cfac8b3c648")
-    version("6.3.0", sha256="0a97b276c62db633e9e97a816282bdd166f9df74e28204f0c8fa54b71944cfdc")
-    version("6.2.5", sha256="33416179665f9c2f567011ab1a618232bc32c0845c0a3a5c388f6c71048bc053")
-    version("6.2.4", sha256="76c7b028962b0ba762e4e45b450ee3a4353e7221526a8af812e817d7ef6ac065")
+    version(
+        "8.4.1",
+        sha256="ecce5fc3c2717cc94ed7593eaf95419fb528f7f70abff3c7038f70a33fea1e6b",
+        url="https://pypi.org/packages/e2/80/7f01a9a4fd4c3e1d2addd7696335cc07c5b990a11c579f44b417cf316ca4/ipyparallel-8.4.1-py3-none-any.whl",
+    )
+    version(
+        "8.0.0",
+        sha256="3365f8020baa2a675b5c7e42b6fe1c03b20e95de7af3330fa5557265ac07451a",
+        url="https://pypi.org/packages/62/e6/2aaddc081158cd6bedeed86047ed4609b38fcd0e44ddf0fe002bd8f9f7a6/ipyparallel-8.0.0-py3-none-any.whl",
+    )
+    version(
+        "7.1.0",
+        sha256="d72496c1e75e6d26636117b33d3770b66d46b99c2421412676656ca957933ee3",
+        url="https://pypi.org/packages/8d/c5/39e862edc26bbaf6973575c20a243705788156d3b1a5657a16eb565ebe54/ipyparallel-7.1.0-py3-none-any.whl",
+    )
+    version(
+        "6.3.0",
+        sha256="61013af22cbcbefcaa9ba7b118a6ea1538491a82ef95b0adfd157924777c1df9",
+        url="https://pypi.org/packages/3b/e9/03a9189eb39276396309faf28bf833b4328befe4513bbf375b811a36a076/ipyparallel-6.3.0-py3-none-any.whl",
+    )
+    version(
+        "6.2.5",
+        sha256="4d11a85c420bfc15bfba74190513227d52b38263a8b2855e0e0eacc6cea27c68",
+        url="https://pypi.org/packages/d5/45/abc77804b90034c75f4798df90833d9b61df8928d2358559471fddbfd413/ipyparallel-6.2.5-py2.py3-none-any.whl",
+    )
+    version(
+        "6.2.4",
+        sha256="2acbffcbd6da955b47ec7befb320dcad1788cc146cfc7abfa6d1c74436d74d38",
+        url="https://pypi.org/packages/3f/82/aaa7a357845a98d4028f27c799f0d3bb2fe55fc1247c73dc712b4ae2344c/ipyparallel-6.2.4-py2.py3-none-any.whl",
+    )
 
-    depends_on("python@3.6:", type=("build", "run"), when="@7.1:")
-    depends_on("python@3.5:", type=("build", "run"), when="@6.3:")
-    depends_on("python@2.7,3.4:", type=("build", "run"))
-
-    depends_on("py-jupyterlab@3.0:3", type="build", when="@7.1:")
-    depends_on("py-packaging", type="build", when="@7.1:8.0.0")
-    depends_on("py-setuptools@40.8:", type="build", when="@7.1:8.2")
-    depends_on("py-setuptools@:60", type="build", when="@:8.2.0")
-    depends_on("py-hatchling@0.25:", type="build", when="@8.4:")
-
-    depends_on("py-ipython-genutils", type=("build", "run"), when="@:6.3")
-    depends_on("py-entrypoints", type=("build", "run"), when="@7.1:")
-    depends_on("py-decorator", type=("build", "run"))
-    depends_on("py-pyzmq@18:", type=("build", "run"), when="@7.1:")
-    depends_on("py-pyzmq@13:", type=("build", "run"))
-    depends_on("py-traitlets@4.3:", type=("build", "run"))
-    depends_on("py-ipython@4:", type=("build", "run"))
-    depends_on("py-jupyter-client", type=("build", "run"))
-    depends_on("py-ipykernel@4.4:", type=("build", "run"))
-    depends_on("py-tornado@5.1:", type=("build", "run"), when="@7.1:")
-    depends_on("py-tornado@4:", type=("build", "run"))
-    depends_on("py-psutil", type=("build", "run"), when="@7.1:")
-    depends_on("py-python-dateutil@2.1:", type=("build", "run"))
-    depends_on("py-tqdm", type=("build", "run"), when="@7.1:")
+    with default_args(type=("build", "run")):
+        depends_on("python@3.7:", when="@8.3:8.6")
+        depends_on("py-decorator")
+        depends_on("py-entrypoints", when="@7.0.0-beta1:")
+        depends_on("py-ipykernel@4.4:", when="@6.2.3:")
+        depends_on("py-ipython@4.0.0:")
+        depends_on("py-ipython-genutils", when="@:7.0.0-beta2")
+        depends_on("py-jupyter-client")
+        depends_on("py-psutil", when="@7.0.0-alpha4:")
+        depends_on("py-python-dateutil@2:", when="@6:")
+        depends_on("py-pyzmq@18:", when="@7.0.0-alpha3:")
+        depends_on("py-pyzmq@13:", when="@:7.0.0-alpha1")
+        depends_on("py-tornado@5.1:", when="@7:")
+        depends_on("py-tornado@4:", when="@:6")
+        depends_on("py-tqdm", when="@7.0.0-alpha3:")
+        depends_on("py-traitlets@4.3.0:", when="@6.1:")

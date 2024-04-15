@@ -14,7 +14,8 @@ class PySpacyLoggers(PythonPackage):
 
     license("MIT")
 
-    version("1.0.4", sha256="e6f983bf71230091d5bb7b11bf64bd54415eca839108d5f83d9155d0ba93bf28")
-
-    depends_on("python@3.6:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
+    version(
+        "1.0.4",
+        sha256="e050bf2e63208b2f096b777e494971c962ad7c1dc997641c8f95c622550044ae",
+        url="https://pypi.org/packages/62/8c/814e0bd139a8c94b50298be3a4e640d90cdce78efe0099e373a767b7d854/spacy_loggers-1.0.4-py3-none-any.whl",
+    )

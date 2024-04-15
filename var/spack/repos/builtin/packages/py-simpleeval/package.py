@@ -16,8 +16,13 @@ class PySimpleeval(PythonPackage):
 
     license("MIT")
 
-    version("0.9.13", sha256="4a30f9cc01825fe4c719c785e3762623e350c4840d5e6855c2a8496baaa65fac")
-    version("0.9.12", sha256="3e0be507486d4e21cf9d08847c7e57dd61a1603950399985f7c5a0be7fd33e36")
-
-    depends_on("py-setuptools@30.3.0:", type="build")
-    depends_on("py-build", type="build", when="@:0.9.12")
+    version(
+        "0.9.13",
+        sha256="22a2701a5006e4188d125d34accf2405c2c37c93f6b346f2484b6422415ae54a",
+        url="https://pypi.org/packages/0a/51/bedb4af4f3fe4bb32a3cabfd285be388958c6d676f6b0fa65997812a381b/simpleeval-0.9.13-py2.py3-none-any.whl",
+    )
+    version(
+        "0.9.12",
+        sha256="d82faa7dc88379614ea3b385fd84cc24f0aa4853432e267718526e5aeac6b1b9",
+        url="https://pypi.org/packages/7d/39/d5be0242308735b87bea7dc8fdadaca1056d4e73a3e7db6c5f0d20a90f7f/simpleeval-0.9.12-py2.py3-none-any.whl",
+    )

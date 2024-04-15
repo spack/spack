@@ -15,8 +15,12 @@ class PyPyrr(PythonPackage):
 
     license("Unlicense")
 
-    version("0.10.3", sha256="3c0f7b20326e71f706a610d58f2190fff73af01eef60c19cb188b186f0ec7e1d")
+    version(
+        "0.10.3",
+        sha256="d8af23fb9bb29262405845e1c98f7339fbba5e49323b98528bd01160a75c65ac",
+        url="https://pypi.org/packages/80/d4/09bb74e93f9f677eadcf9ddb92681755f75e0f354a1b904f1913e32ca1b2/pyrr-0.10.3-py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-numpy", type=("build", "run"))
-    depends_on("py-multipledispatch", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("py-multipledispatch", when="@0.9:")
+        depends_on("py-numpy", when="@0.9:")
