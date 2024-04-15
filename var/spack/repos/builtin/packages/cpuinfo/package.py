@@ -17,7 +17,8 @@ class Cpuinfo(CMakePackage):
     license("BSD-2-Clause")
 
     version("main", branch="main")
-    version("2022-08-19", commit="8ec7bd91ad0470e61cf38f618cc1f270dede599c")  # py-torch@1.13
+    version("2023-01-13", commit="6481e8bef08f606ddd627e4d3be89f64d62e1b8a")  # py-torch@2.1:
+    version("2022-08-19", commit="8ec7bd91ad0470e61cf38f618cc1f270dede599c")  # py-torch@1.13:2.0
     version("2020-12-17", commit="5916273f79a21551890fd3d56fc5375a78d1598d")  # py-torch@1.8:1.12
     version("2020-06-11", commit="63b254577ed77a8004a9be6ac707f3dccc4e1fd9")  # py-torch@1.6:1.7
     version("2020-01-21", commit="0e6bde92b343c5fbcfe34ecd41abf9515d54b4a7")  # py-torch@1.5
@@ -30,9 +31,12 @@ class Cpuinfo(CMakePackage):
     depends_on("cmake@3.5:", type="build")
 
     def cmake_args(self):
+        # https://salsa.debian.org/deeplearning-team/cpuinfo/-/blob/master/debian/rules
         return [
-            self.define("BUILD_SHARED_LIBS", True),
             self.define("CPUINFO_BUILD_UNIT_TESTS", False),
             self.define("CPUINFO_BUILD_MOCK_TESTS", False),
             self.define("CPUINFO_BUILD_BENCHMARKS", False),
+            self.define("CPUINFO_LIBRARY_TYPE", "shared"),
+            self.define("CPUINFO_LOG_LEVEL", "error"),
+            self.define("CMAKE_SKIP_RPATH", True),
         ]
