@@ -58,6 +58,9 @@ class Charmpp(Package):
     # Ignore compiler warnings while configuring
     patch("strictpass.patch", when="@:6.8.2")
 
+    # Support Cray Shasta with ARM
+    patch("ofi-crayshasta-arm.patch", when="backend=ofi pmi=cray-pmi target=aarch64:")
+
     # Build targets
     # "target" is reserved, so we have to use something else.
     variant(
@@ -86,7 +89,7 @@ class Charmpp(Package):
     variant(
         "pmi",
         default="none",
-        values=("none", "simplepmi", "slurmpmi", "slurmpmi2", "pmix"),
+        values=("none", "simplepmi", "slurmpmi", "slurmpmi2", "pmix", "cray-pmi"),
         description="The ucx/ofi/gni backends need PMI to run!",
     )
 
@@ -112,6 +115,7 @@ class Charmpp(Package):
     depends_on("cuda", when="+cuda")
 
     depends_on("ucx", when="backend=ucx")
+    depends_on("libfabric", when="backend=ofi")
     depends_on("slurm@:17-11-9-2", when="pmi=slurmpmi")
     depends_on("slurm@17-11-9-2:", when="pmi=slurmpmi2")
 
@@ -123,6 +127,7 @@ class Charmpp(Package):
     depends_on("mpi", when="pmi=simplepmi")
     depends_on("mpi", when="pmi=slurmpmi")
     depends_on("mpi", when="pmi=slurmpmi2")
+    depends_on("cray-mpich", when="pmi=cray-pmi")
 
     # Git versions of Charm++ require automake and autoconf
     depends_on("automake", when="@develop")
@@ -180,7 +185,6 @@ class Charmpp(Package):
             ("linux", "x86_64", "netlrts"): "netlrts-linux-x86_64",
             ("linux", "x86_64", "verbs"): "verbs-linux-x86_64",
             ("linux", "x86_64", "ofi"): "ofi-linux-x86_64",
-            ("linux", "x86_64", "ucx"): "ucx-linux-x86_64",
             ("linux", "ppc", "mpi"): "mpi-linux-ppc",
             ("linux", "ppc", "multicore"): "multicore-linux-ppc",
             ("linux", "ppc", "netlrts"): "netlrts-linux-ppc",
@@ -195,28 +199,52 @@ class Charmpp(Package):
             ("cnl", "x86_64", "mpi"): "mpi-crayxc",
         }
 
-        # Some versions were renamed/removed in 6.11
-        if self.spec.version < Version("6.11.0"):
-            versions.update({("linux", "i386", "mpi"): "mpi-linux"})
-            versions.update({("linux", "i386", "multicore"): "multicore-linux"})
-            versions.update({("linux", "i386", "netlrts"): "netlrts-linux"})
-            versions.update({("linux", "i386", "uth"): "uth-linux"})
+        if self.spec.satisfies("@6.10:"):
             versions.update(
                 {
+                    ("linux", "x86_64", "ucx"): "ucx-linux-x86_64",
+                    ("linux", "aarch64", "ucx"): "ucx-linux-arm8",
+                }
+            )
+
+        # Some versions were renamed/removed in 6.11
+        if self.spec.version < Version("6.11.0"):
+            versions.update(
+                {
+                    ("linux", "i386", "mpi"): "mpi-linux",
+                    ("linux", "i386", "multicore"): "multicore-linux",
+                    ("linux", "i386", "netlrts"): "netlrts-linux",
+                    ("linux", "i386", "uth"): "uth-linux",
                     ("linux", "arm", "multicore"): "multicore-arm7",
                     ("linux", "aarch64", "multicore"): "multicore-arm8",
                 }
             )
         else:
-            versions.update({("linux", "i386", "mpi"): "mpi-linux-i386"})
-            versions.update({("linux", "i386", "multicore"): "multicore-linux-i386"})
-            versions.update({("linux", "i386", "netlrts"): "netlrts-linux-i386"})
             versions.update(
                 {
+                    ("linux", "i386", "mpi"): "mpi-linux-i386",
+                    ("linux", "i386", "multicore"): "multicore-linux-i386",
+                    ("linux", "i386", "netlrts"): "netlrts-linux-i386",
                     ("linux", "arm", "multicore"): "multicore-linux-arm7",
                     ("linux", "aarch64", "multicore"): "multicore-linux-arm8",
                 }
             )
+
+        if self.spec.satisfies("@7:"):
+            versions.update(
+                {
+                    ("linux", "arm", "mpi"): "mpi-linux-arm7",
+                    ("linux", "aarch64", "mpi"): "mpi-linux-arm8",
+                }
+            )
+
+            if self.spec.satisfies("backend=ofi pmi=cray-pmi"):
+                versions.update(
+                    {
+                        ("linux", "x86_64", "ofi"): "ofi-crayshasta",
+                        ("linux", "aarch64", "ofi"): "ofi-crayshasta",
+                    }
+                )
 
         if (plat, mach, comm) not in versions:
             raise InstallError(
@@ -394,4 +422,4 @@ class Charmpp(Package):
         self.spec.mpicxx = self.prefix.bin.ampicxx
         self.spec.mpifc = self.prefix.bin.ampif90
         self.spec.mpif77 = self.prefix.bin.ampif77
-        self.spec.charmarch = self.charmarch
+        self.spec.charmarch = self.charmarch + "-smp" if self.spec.satisfies("+smp") else ""
