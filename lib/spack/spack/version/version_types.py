@@ -146,13 +146,11 @@ class StandardVersion(ConcreteVersion):
 
     @staticmethod
     def typemin():
-        return StandardVersion("", ((), (ALPHA,)), ("",))
+        return _STANDARD_VERSION_TYPEMIN
 
     @staticmethod
     def typemax():
-        return StandardVersion(
-            "infinity", ((VersionStrComponent(len(infinity_versions)),), (FINAL,)), ("",)
-        )
+        return _STANDARD_VERSION_TYPEMAX
 
     def __bool__(self):
         return True
@@ -388,6 +386,13 @@ class StandardVersion(ConcreteVersion):
             Version: The first index components of the version
         """
         return self[:index]
+
+
+_STANDARD_VERSION_TYPEMIN = StandardVersion("", ((), (ALPHA,)), ("",))
+
+_STANDARD_VERSION_TYPEMAX = StandardVersion(
+    "infinity", ((VersionStrComponent(len(infinity_versions)),), (FINAL,)), ("",)
+)
 
 
 class GitVersion(ConcreteVersion):
