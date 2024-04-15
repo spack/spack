@@ -66,6 +66,7 @@ class Arborx(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("cmake@3.16:", type="build", when="@1.0:")
     depends_on("mpi", when="+mpi")
     depends_on("rocthrust", when="+rocm")
+    patch("0001-update-major-version-required-for-rocm-6.0.patch", when="@:1.5+rocm ^hip@6.0:")
 
     # Standalone Kokkos
     depends_on("kokkos@3.1.00:", when="~trilinos")
@@ -100,7 +101,6 @@ class Arborx(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("trilinos@14.2.0:", when="@1.5:+trilinos")
     depends_on("trilinos@14.4.0:", when="@1.6:+trilinos")
     patch("trilinos14.0-kokkos-major-version.patch", when="@1.4+trilinos ^trilinos@14.0.0")
-    patch("0001-update-major-version-required-for-rocm-6.0.patch", when="+rocm ^hip@6.0:")
     conflicts("~serial", when="+trilinos")
     conflicts("+cuda", when="+trilinos")
 
