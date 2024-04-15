@@ -491,6 +491,7 @@ class Gdal(CMakePackage, AutotoolsPackage, PythonExtension):
     def patch(self):
         if "+java platform=darwin" in self.spec:
             filter_file("linux", "darwin", "swig/java/java.opt", string=True)
+            filter_file("-lazy-ljvm", "-ljvm", "configure", string=True)
 
 
 class CMakeBuilder(CMakeBuilder):
