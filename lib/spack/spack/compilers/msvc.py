@@ -308,7 +308,7 @@ class Msvc(Compiler):
             env.set("TMP", new_tmp)
 
         # Compiler paths require quotes in order for some build systems to
-        # correcly load the entire compiler path due to spaces in paths.
+        # correctly load the entire compiler path due to spaces in paths.
         str_or_none = lambda string: f"\"{string}\"" if string else None
 
         env.set("CC", str_or_none(self.cc))
