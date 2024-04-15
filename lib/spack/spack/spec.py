@@ -195,7 +195,7 @@ class InstallStatus(enum.Enum):
 OLD_STYLE_FMT_RE = re.compile(r"\${[A-Z]+}")
 
 HASH_FMT_RE = re.compile(r"(abstract_)?hash(:\d+)?$")
-SHORT_HASH_FMT_RE = re.compile(r"hash(:\d)?")  # TODO: is this regex correct?
+SHORT_HASH_FMT_RE = re.compile(r"hash(?::(\d+))?")  # TODO: is this regex correct?
 
 
 def ensure_modern_format_string(fmt: str) -> None:
@@ -4389,16 +4389,11 @@ class Spec:
 
             # Special cases for non-spec attributes and hashes.
             # These must be the only non-dep component of the format attribute
-            if attribute == "spack_root":
-                return spack.paths.spack_root
-            elif attribute == "spack_install":
-                return spack.store.STORE.layout.root
-            elif SHORT_HASH_FMT_RE.match(attribute):
-                if ":" in attribute:
-                    _, length = attribute.split(":")
-                    return safe_color(sig + current.dag_hash(int(length)), HASH_COLOR)
-                else:
-                    return safe_color(sig + current.dag_hash(), HASH_COLOR)
+            match = SHORT_HASH_FMT_RE.match(attribute)
+            if match:
+                length = match.group(1)
+                length = int(length) if length else None
+                return safe_color(sig + current.dag_hash(length), HASH_COLOR)
 
             # Iterate over components using getattr to get next element
             for idx, part in enumerate(parts):
@@ -4461,6 +4456,16 @@ class Spec:
         kwargs = kwargs.copy()
         kwargs.setdefault("color", None)
         return self.format(*args, **kwargs)
+
+    @property
+    def spack_root(self):
+        """Special field for using ``{spack_root}`` in Spec.format()."""
+        return spack.paths.spack_root
+
+    @property
+    def spack_install(self):
+        """Special field for using ``{spack_install}`` in Spec.format()."""
+        return spack.store.STORE.layout.root
 
     def format_path(
         # self, format_string: str, _path_ctor: Optional[pathlib.PurePath] = None
