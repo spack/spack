@@ -33,7 +33,7 @@ jobs:
         ./share/spack/qa/validate_last_exit.ps1
         coverage combine -a
         coverage xml
-    - uses: codecov/codecov-action@c16abc29c95fcf9174b58eb7e1abf4c866893bc8
+    - uses: codecov/codecov-action@84508663e988701840491b86de86b666e8a86bed
       with:
         flags: unittests,windows
         token: ${{ secrets.CODECOV_TOKEN }}
@@ -59,7 +59,7 @@ jobs:
         ./share/spack/qa/validate_last_exit.ps1
         coverage combine -a
         coverage xml
-    - uses: codecov/codecov-action@c16abc29c95fcf9174b58eb7e1abf4c866893bc8
+    - uses: codecov/codecov-action@84508663e988701840491b86de86b666e8a86bed
       with:
         flags: unittests,windows
         token: ${{ secrets.CODECOV_TOKEN }}
