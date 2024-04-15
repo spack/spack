@@ -19,6 +19,7 @@ spack:
           - py-emodel-generalisation
           - py-synthesis-workflow
           - py-visual-cortex-analysis
+          - py-connectomeutilities
   packages:
     hdf5:
       variants: ~mpi+hl
@@ -44,3 +45,4 @@ spack:
     - py-multiscale-run
     - py-synthesis-workflow
     - py-visual-cortex-analysis
+    - py-connectomeutilities
