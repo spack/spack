@@ -34,6 +34,7 @@ class Crtm(CMakePackage):
     depends_on("netcdf-fortran", when="@v2.3-jedi.4")
     depends_on("netcdf-fortran", when="@v2.4-jedi.1")
     depends_on("netcdf-fortran", when="@v2.4-jedi.2")
+    depends_on("netcdf-fortran", when="@v2.4.1-jedi")
 
     depends_on("crtm-fix@2.3.0_emc", when="@2.3.0 +fix")
     depends_on("crtm-fix@2.4.0_emc", when="@2.4.0 +fix")
@@ -41,6 +42,7 @@ class Crtm(CMakePackage):
     depends_on("ecbuild", type=("build"), when="@v2.3-jedi.4")
     depends_on("ecbuild", type=("build"), when="@v2.4-jedi.1")
     depends_on("ecbuild", type=("build"), when="@v2.4-jedi.2")
+    depends_on("ecbuild", type=("build"), when="@v2.4.1-jedi")
 
     # ecbuild release v2.4.0 is broken
     # add ecbuild dependency for next release with fix
