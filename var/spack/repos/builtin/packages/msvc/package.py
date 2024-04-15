@@ -10,7 +10,7 @@ class Msvc(Package, CompilerPackage):
     Microsoft Visual C++ is a compiler for the C, C++, C++/CLI and C++/CX programming languages.
     """
 
-    homepage = https://visualstudio.microsoft.com/vs/features/cplusplus/
+    homepage = "https://visualstudio.microsoft.com/vs/features/cplusplus/"
 
 
     def install(self, spec, prefix):
