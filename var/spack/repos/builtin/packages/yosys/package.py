@@ -59,7 +59,7 @@ class Yosys(MakefilePackage):
     depends_on("bison")
     depends_on("libffi")
     depends_on("readline")
-    depends_on("pkg-config")
+    depends_on("pkgconfig")
     depends_on("tcl")
     depends_on("zlib")
     depends_on("llvm")
