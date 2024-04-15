@@ -20,6 +20,8 @@ class Gmsh(CMakePackage):
     url = "https://gmsh.info/src/gmsh-4.4.1-source.tgz"
     git = "https://gitlab.onelab.info/gmsh/gmsh.git"
 
+    maintainers("tristan0x")
+
     license("GPL-2.0-or-later")
 
     version("master", branch="master")
@@ -185,4 +187,5 @@ class Gmsh(CMakePackage):
         return options
 
     def setup_run_environment(self, env):
-        env.prepend_path("PYTHONPATH", self.prefix.lib)
+        sitedir = ancestor(find_first(self.prefix, "gmsh.py"))
+        env.prepend_path("PYTHONPATH", sitedir)
