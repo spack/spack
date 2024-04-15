@@ -22,6 +22,7 @@ class PyRasterio(PythonPackage):
     license("BSD-3-Clause")
 
     version("master", branch="master")
+    version("1.3.10", sha256="ce182c735b4f9e8735d90600607ecab15ef895eb8aa660bf665751529477e326")
     version("1.3.9", sha256="fc6d0d290492fa1a5068711cfebb21cc936968891b7ed9da0690c8a7388885c5")
     version("1.3.8", sha256="ffdd18e78efdf8ad5861065fd812a66dd34264293317ff6540a078ea891cdef8")
     version("1.3.7", sha256="abfdcb8f10210b8fad939f40d545d6c47e9e3b5cf4a43773ca8dd11c58204304")
@@ -39,7 +40,8 @@ class PyRasterio(PythonPackage):
 
     # From pyproject.toml
     depends_on("py-setuptools@67.8:", when="@1.3.9:", type="build")
-    depends_on("py-cython@0.29.29:", when="@1.3.3:", type="build")
+    depends_on("py-cython@3.0.2:", when="@1.3.10:", type="build")
+    depends_on("py-cython@0.29.29:", when="@1.3.3:1.3.9", type="build")
     depends_on("py-cython@0.29.24:0.29", when="@1.3.0:1.3.2", type="build")
 
     # From setup.py
@@ -52,8 +54,10 @@ class PyRasterio(PythonPackage):
     depends_on("py-click@4:", when="@1.2.4:", type=("build", "run"))
     depends_on("py-click@4:7", when="@:1.2.3", type=("build", "run"))
     depends_on("py-cligj@0.5:", type=("build", "run"))
-    depends_on("py-numpy@1.18:", when="@1.3:", type=("build", "link", "run"))
-    depends_on("py-numpy@1.15:", when="@1.2:", type=("build", "link", "run"))
+    depends_on("py-importlib-metadata", when="@1.3.10: ^python@:3.9", type=("build", "run"))
+    depends_on("py-numpy@1.18:", when="@1.3.10:", type=("build", "link", "run"))
+    depends_on("py-numpy@1.18:1", when="@1.3.0:1.3.9", type=("build", "link", "run"))
+    depends_on("py-numpy@1.15:1", when="@1.2:", type=("build", "link", "run"))
     depends_on("py-numpy", type=("build", "link", "run"))
     depends_on("py-snuggs@1.4.1:", type=("build", "run"))
     depends_on("py-click-plugins", type=("build", "run"))
