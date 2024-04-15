@@ -24,6 +24,7 @@ class Zlib(MakefilePackage, Package):
     url = "http://zlib.net/fossils/zlib-1.2.11.tar.gz"
     git = "https://github.com/madler/zlib.git"
 
+    version("1.3.1", sha256="9a93b2b7dfdac77ceba5a558a580e74667dd6fede4585b91eefb60f03b72df23")
     version("1.3", sha256="ff0ba4c292013dbc27530b3a81e1f9a813cd39de01ca5e0f8bf355702efa593e")
     version("1.2.13", sha256="b3a24de97a8fdbc835b9833169501030b8977031bcb54b3b3ac13740f846ab30")
     version(
