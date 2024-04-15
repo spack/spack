@@ -55,7 +55,7 @@ def check_package_detection(mock_executable, output, expected_version, cls):
     )
 
     print(detected)
-    print(detected[0]
+    print(detected[0])
     print(detected[0].spec.extra_attributes)
 
     spec_name = cls.name.replace("_", "-")
