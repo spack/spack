@@ -15,7 +15,8 @@ class PyMorphio(PythonPackage):
     git = "https://github.com/BlueBrain/MorphIO.git"
     pypi = "morphio/MorphIO-3.3.2.tar.gz"
 
-    license("Apache-2.0")
+    license("LGPL-3.0-or-later", when="@:3.3.6")
+    license("Apache-2.0", when="@3.3.7:")
 
     maintainers("tristan0x")
 
