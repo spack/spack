@@ -10,6 +10,7 @@ set -e
 # The best solution would be to have the compilers hash (or packages contents) be part of the
 # individual packages hashes. I don't see this at the moment.
 # Set to the latest tag including a recent oneapi compiler.
+# NOTE: If we update this spack version in the future make sure the compiler version also updates.
 spack_intel_compiler_commit="develop-2023-08-06"
 
 set_pcluster_defaults() {

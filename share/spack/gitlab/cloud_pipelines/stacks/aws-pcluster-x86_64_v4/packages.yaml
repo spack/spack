@@ -14,8 +14,6 @@ packages:
         when: "%intel"
         message: "gettext uses single valued `static_assert` which is only available in `icc` as part of later C standard."
   gromacs:
-    prefer:
-      - "%intel"
     require:
       - one_of:
           - "+intel_provided_gcc ^intel-oneapi-mkl target=x86_64_v4"
@@ -28,8 +26,6 @@ packages:
   intel-oneapi-mpi:
     variants: +external-libfabric generic-names=True
   lammps:
-    prefer:
-      - "%intel"
     require:
       - one_of:
           - "lammps_sizes=bigbig +molecule +kspace +rigid +asphere +opt +openmp +openmp-package +intel ^intel-oneapi-mkl target=x86_64_v4"
@@ -54,8 +50,6 @@ packages:
           - "cflags=-std=c18 target=x86_64_v3"
         when: "%intel"
   mpas-model:
-    prefer:
-      - "%intel"
     require:
       - one_of:
           - "precision=single ^parallelio+pnetcdf target=x86_64_v4"
@@ -78,8 +72,6 @@ packages:
           - "openmpi @4: target=x86_64_v4"
           - "openmpi @4: target=x86_64_v3"
   palace:
-    prefer:
-      - "%oneapi"
     require:
       - one_of:
           - "palace ^fmt@9.1.0 target=x86_64_v4"
@@ -94,8 +86,6 @@ packages:
           - "pmix@3: target=x86_64_v4"
           - "pmix@3: target=x86_64_v3"
   quantum-espresso:
-    prefer:
-      - "%intel"
     require:
       - one_of:
           - "quantum-espresso@6.6 ^intel-oneapi-mkl+cluster target=x86_64_v4"
@@ -107,8 +97,6 @@ packages:
       - prefix: /opt/slurm/
         spec: slurm@${SLURM_VERSION} +pmix
   wrf:
-    prefer:
-      - "%intel"
     require:
       - one_of:
           - "wrf@4 build_type=dm+sm target=x86_64_v4"
