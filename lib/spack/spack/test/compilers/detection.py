@@ -54,6 +54,10 @@ def check_package_detection(mock_executable, output, expected_version, cls):
         [cls.fullname.replace("_", "-")], path_hints=[bindir], max_workers=1
     )
 
+    print(detected)
+    print(detected[0]
+    print(detected[0].spec.extra_attributes)
+
     spec_name = cls.name.replace("_", "-")
     assert len(detected) == 1
     assert spec_name in detected
