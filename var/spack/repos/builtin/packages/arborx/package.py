@@ -136,12 +136,6 @@ class Arborx(CMakePackage, CudaPackage, ROCmPackage):
 
     def test_run_ctest(self):
         """run ctest tests on the installed package"""
-
-        arborx_dir = self.spec["arborx"].prefix
-        cmake_prefix_path = f"-DCMAKE_PREFIX_PATH={arborx_dir}"
-        if "+mpi" in self.spec:
-            cmake_prefix_path += f";{self.spec['mpi'].prefix}"
-
         cmake_args = [
             ".",
             cmake_prefix_path,
@@ -154,7 +148,10 @@ class Arborx(CMakePackage, CudaPackage, ROCmPackage):
                     else self.spec["trilinos"].prefix
                 ),
             ),
+            self.define("ArborX_ROOT", self.spec["arborx".prefix]),
         ]
+        if "+mpi" in self.spec:
+            cmake_args.append(self.define("MPI_HOME", self.spec["mpi"].prefix))
         cmake = which(self.spec["cmake"].prefix.bin.cmake)
         make = which("make")
         ctest = which("ctest")
