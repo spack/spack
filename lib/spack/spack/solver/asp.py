@@ -932,11 +932,14 @@ ConditionSpecCache = Dict[str, Dict[ConditionSpecKey, ConditionIdFunctionPair]]
 # type for prioritizing versions
 VersionInfo = Dict[Tuple, bool]
 
+#: Maximum number of version parts of concern for weighting package versions
+NUMBER_VERSION_PARTS = 3
+
 
 def _vers_tuple(version):
     vers = str(version.dotted).replace("_", ".") if hasattr(version, "dotted") else str(version)
-    vers = vers.split(".")[:3]
-    vers += ["0"] * (3 - len(vers))
+    vers = vers.split(".")[:NUMBER_VERSION_PARTS]
+    vers += ["0"] * (NUMBER_VERSION_PARTS - len(vers))
     return tuple(vers)
 
 
@@ -988,7 +991,6 @@ class SpackSolverSetup:
 
     def _add_declared_version(self, pkg_name, version, idx, origin, possible=True):
         """Add the declared version if not already present."""
-        # declared = DeclaredVersion(version=str(version), weight=idx, origin=origin)
         declared = DeclaredVersion(version=version, weight=idx, origin=origin)
         if pkg_name in self.declared_versions:
             if any(dv == declared for dv in self.declared_versions[pkg_name]):
@@ -1000,41 +1002,34 @@ class SpackSolverSetup:
 
     def adjust_version_weights(self, pkg_name):
         # For "simplicity", factors are based on:
-        #   [preferred, major version, minor version, patch version]
+        #   [Provenance, preferred, major version, minor version, patch version]
         #
-        # ##factors = (10000, 1000, 100, 10)
-        factors = (1000, 100, 10, 1)
-        parts = 3
+        # Provenance matters because priority should be given to explicit specs
+        # over preferred versions, which have priority over major, then minor,
+        # then patch versions.
+        #
+        factors = (10000, 1000, 100, 10, 1)
 
         weights = []
 
         def ordered_versions():
-            # Ensure versions sorted according to package preferences/
-            # concretization.
-            pkg_class = packagize(pkg_name)
-            pkg_versions = pkg_class.versions
-            prefs = spack.package_prefs.PackagePrefs(pkg_name, "version")
-            key_fn = lambda v: (
-                -prefs(v),
-                pkg_versions.get(v).get("preferred", False),
-                not v.isdevelop(),
-                v,
+            # Ensure the current concretization order key is used for all
+            # of the declared versions.
+            pkg_cls = self.pkg_class(pkg_name)
+            versions = sorted(
+                pkg_cls.versions.items(), key=_concretization_version_order, reverse=True
             )
+            # We only need the versions at this point since the relevant info
+            # should have already been stored.
+            return [v for v, _ in versions]
 
-            versions = [v for v in pkg_versions]
-            versions.sort(key=key_fn, reverse=True)
-            return versions
-
-        # versions = ordered_versions() or sorted(
-        #    set(self.preferred_versions[pkg_name]), reverse=True
-        # )
         versions = ordered_versions()
 
         def version_info():
             version_indices = collections.defaultdict(tuple)
             index_versions = collections.defaultdict(list)
-            indices = [-1] * parts
-            last_vtuple = [None] * parts
+            indices = [-1] * NUMBER_VERSION_PARTS
+            last_vtuple = [None] * NUMBER_VERSION_PARTS
 
             for vers in versions:
                 vtuple = vers if isinstance(vers, tuple) else _vers_tuple(vers)
@@ -1043,7 +1038,7 @@ class SpackSolverSetup:
 
                 try:
                     ind = offsets.index(1) + 1
-                    indices[ind:] = [0] * (parts - ind)
+                    indices[ind:] = [0] * (NUMBER_VERSION_PARTS - ind)
                 except ValueError:
                     pass
 
@@ -1064,10 +1059,9 @@ class SpackSolverSetup:
             preferred = declared_version.version in self.preferred_versions[pkg_name]
 
             versions_with_index = index_versions[indices]
-            new = len(versions_with_index)
-            if new > 0:
-                new -= 1
-            indices = [0 if preferred else 1] + list(indices)
+            new = len(versions_with_index) - 1
+
+            indices = [declared_version.origin] + [0 if preferred else 1] + list(indices)
             for factor, idx in zip(factors, indices):
                 new += factor * idx
 
