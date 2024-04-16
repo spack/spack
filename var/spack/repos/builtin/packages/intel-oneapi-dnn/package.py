@@ -28,7 +28,7 @@ class IntelOneapiDnn(IntelOneApiLibraryPackage):
 
     version(
         "2024.1.1",
-        url="'https://registrationcenter-download.intel.com/akdlm//IRC_NAS/5f6d82fa-2580-4bb1-83bb-cce7a52d1d34/l_onednn_p_2024.1.1.16_offline.sh",
+        url="https://registrationcenter-download.intel.com/akdlm//IRC_NAS/5f6d82fa-2580-4bb1-83bb-cce7a52d1d34/l_onednn_p_2024.1.1.16_offline.sh",
         sha256="a67a387bc0d30a5ca1bd0ed3d551ed13df7dba7939b208fd0c81a24425e6e90a",
         expand=False,
     )
