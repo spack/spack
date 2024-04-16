@@ -400,8 +400,8 @@ class PyNumpy(PythonPackage):
         elif self.spec.satisfies("%msvc"):
             # For meson build system, compiler paths must be in quotes
             # to prevent paths from being split by spaces.
-            env.set("CC", f"\"{self.compiler.cc}\"")
-            env.set("CXX", f"\"{self.compiler.cxx}\"")
+            env.set("CC", f'"{self.compiler.cc}"')
+            env.set("CXX", f'"{self.compiler.cxx}"')
 
     @when("@:1.25")
     def setup_build_environment(self, env):

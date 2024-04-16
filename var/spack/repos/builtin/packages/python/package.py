@@ -1191,7 +1191,7 @@ print(json.dumps(config))
                 env.prepend_path("PYTHONPATH", os.path.join(prefix, directory))
 
             if sys.platform == "win32":
-                prefix_scripts_dir = os.path.join(prefix, 'Scripts')
+                prefix_scripts_dir = os.path.join(prefix, "Scripts")
                 if os.path.exists(prefix_scripts_dir):
                     env.prepend_path("PATH", prefix_scripts_dir)
 

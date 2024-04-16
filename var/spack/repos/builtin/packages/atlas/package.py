@@ -64,7 +64,7 @@ class Atlas(Package):
     conflicts(
         "platform=windows",
         msg="Atlas requires cygwin to build on Windows, which is unsupported by Spack. "
-            "See https://math-atlas.sourceforge.net/atlas_install/node55.html",
+        "See https://math-atlas.sourceforge.net/atlas_install/node55.html",
     )
 
     provides("blas")
