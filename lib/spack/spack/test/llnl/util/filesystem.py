@@ -912,7 +912,6 @@ def test_find_first_file(tmpdir, bfs_depth):
 
 
 def test_rename_dest_exists(tmpdir):
-
     @contextmanager
     def setup_test_files():
         a = tmpdir.join("a", "file1")
@@ -999,3 +998,40 @@ def test_rename_dest_exists(tmpdir):
         assert os.path.exists(link2)
         assert os.path.realpath(link2) == a
         shutil.rmtree(tmpdir.join("f"))
+
+
+@pytest.mark.skipif(sys.platform != "win32", reason="No-op on non Windows")
+def test_windows_sfn(tmpdir):
+    # first check some standard Windows locations
+    # we know require sfn names
+    # this is basically a smoke test
+    # ensure spaces are replaced + path abbreviated
+    assert fs.windows_sfn("C:\\Program Files (x86)") == "C:\\PROGRA~2"
+    # ensure path without spaces is still properly shortened
+    assert fs.windows_sfn("C:\\ProgramData") == "C:\\PROGRA~3"
+
+    # test user created paths
+    # ensure longer path with spaces is properly abbreviated
+    a = tmpdir.join("d", "this is a test", "a", "still test")
+    # ensure longer path is properly abbreviated
+    b = tmpdir.join("d", "long_path_with_no_spaces", "more_long_path")
+    # ensure path not in need of abbreviation is properly roundtripped
+    c = tmpdir.join("d", "this", "is", "short")
+    # ensure paths that are the same in the first six letters
+    # are incremented post tilde
+    d = tmpdir.join("d", "longerpath1")
+    e = tmpdir.join("d", "longerpath2")
+    fs.mkdirp(a)
+    fs.mkdirp(b)
+    fs.mkdirp(c)
+    fs.mkdirp(d)
+    fs.mkdirp(e)
+    # check only for path of path we can control,
+    # pytest prefix may or may not be mangled by windows_sfn
+    # based on user/pytest config
+    assert "d\\THISIS~1\\a\\STILLT~1" in fs.windows_sfn(a)
+    assert "d\\LONG_P~1\\MORE_L~1" in fs.windows_sfn(b)
+    assert "d\\this\\is\\short" in fs.windows_sfn(c)
+    assert "d\\LONGER~1" in fs.windows_sfn(d)
+    assert "d\\LONGER~2" in fs.windows_sfn(e)
+    shutil.rmtree(tmpdir.join("d"))

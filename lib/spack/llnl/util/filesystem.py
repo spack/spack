@@ -1234,10 +1234,12 @@ def windows_sfn(path: os.PathLike):
     import ctypes
 
     k32 = ctypes.WinDLL("kernel32", use_last_error=True)
+    # Method with null values returns size of short path name
+    sz = k32.GetShortPathNameW(path, None, 0)
     # stub Windows types TCHAR[LENGTH]
-    TCHAR_arr = ctypes.c_wchar * len(path)
+    TCHAR_arr = ctypes.c_wchar * sz
     ret_str = TCHAR_arr()
-    k32.GetShortPathNameW(path, ret_str, len(path))
+    k32.GetShortPathNameW(path, ctypes.byref(ret_str), sz)
     return ret_str.value
 
 
