@@ -1351,6 +1351,7 @@ class TestConcretize:
         assert root.dag_hash() != new_root_without_reuse.dag_hash()
 
     @pytest.mark.only_clingo("Use case not supported by the original concretizer")
+    @pytest.mark.regression("43663")
     def test_no_reuse_when_variant_condition_does_not_hold(self, mutable_database, mock_packages):
         spack.config.set("concretizer:reuse", True)
 
