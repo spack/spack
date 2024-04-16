@@ -36,8 +36,6 @@ class PyTfKeras(PythonPackage):
     max_minor = 16
     version("2.16.0", sha256="db53891f1ac98197c2acced98cdca8c06ba8255655a6cb7eb95ed49676118280")
 
-
-
     # Supported Python versions listed in multiple places:
     # * tf-keras/tools/pip_package/setup.py
     # * CONTRIBUTING.md
@@ -48,15 +46,16 @@ class PyTfKeras(PythonPackage):
     # Required dependencies listed in multiple places:
     # * BUILD
     # * WORKSPACE
-    depends_on("py-absl-py", type=("build", "run"), when="@2.6:")
+    depends_on("py-absl-py", type=("build", "run"))
     depends_on("py-h5py", type=("build", "run"))
     depends_on("py-numpy", type=("build", "run"))
     depends_on("py-pandas", type=("build", "run"))
     depends_on("pil", type=("build", "run"))
-    depends_on("py-portpicker", type=("build", "run"), when="@2.10:")
+    depends_on("py-portpicker", type=("build", "run"))
     depends_on("py-pydot", type=("build", "run"))
     depends_on("py-scipy", type=("build", "run"))
     depends_on("py-six", type=("build", "run"))
+    # the tf-keras versions are following along with TF versions
     for minor_ver in range(16, max_minor + 1):
         depends_on(
             "py-tensorflow@2.{}".format(minor_ver),
@@ -69,8 +68,8 @@ class PyTfKeras(PythonPackage):
             when="@2.{}".format(minor_ver),
         )
     depends_on("py-pyyaml", type=("build", "run"))
-    depends_on("bazel", type="build", when="@2.5:")
-    depends_on("protobuf", type="build", when="@2.5:")
+    depends_on("bazel", type="build")
+    depends_on("protobuf", type="build")
 
     @when("@2.16:")
     def patch(self):
