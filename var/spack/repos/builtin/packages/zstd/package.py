@@ -66,6 +66,8 @@ class Zstd(CMakePackage, MakefilePackage):
     # (last tested: nvhpc@22.3)
     conflicts("+programs %nvhpc")
 
+    conflicts("platform=windows", when="@1.5.6")
+
     build_system("cmake", "makefile", default="makefile")
 
 
