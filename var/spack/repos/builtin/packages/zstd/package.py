@@ -65,7 +65,7 @@ class Zstd(CMakePackage, MakefilePackage):
     # +programs builds vendored xxhash, which uses unsupported builtins
     # (last tested: nvhpc@22.3)
     conflicts("+programs %nvhpc")
-
+    patch("https://github.com/facebook/zstd/pull/4009.patch", sha256="f24a0b522e17b4ce6f824e332872b56e43ddca0c1364040bdc7c079a3fc52c94", when="@1.5.6 platform=windows")
     build_system("cmake", "makefile", default="makefile")
 
 
