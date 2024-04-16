@@ -32,6 +32,8 @@ class Hadoop(Package):
 
     depends_on("java", type="run")
 
+    # hadoop@:2 is not happy about paths with special characters, spaces, ...
+    # quotes solve that, @3: is better about it
     patch("hadoop-shell-quoting.patch", when="@2")
 
     def install(self, spec, prefix):
