@@ -11,10 +11,11 @@ class PyHttpx(PythonPackage):
     and async APIs, and support for both HTTP/1.1 and HTTP/2."""
 
     homepage = "https://github.com/encode/httpx"
-    pypi = "httpx/httpx-0.15.2.tar.gz"
+    pypi = "httpx/httpx-0.27.0.tar.gz"
 
     license("BSD-3-Clause")
 
+    version("0.27.0", sha256="a0cb88a46f32dc874e04ee956e4c2764aba2aa228f650b06788ba6bda2962ab5")
     version("0.23.3", sha256="9818458eb565bb54898ccb9b8b251a28785dd4a55afbc23d0eb410754fe7d0f9")
     version("0.22.0", sha256="d8e778f76d9bbd46af49e7f062467e3157a5a3d2ae4876a4bbfd8a51ed9c9cb4")
     version("0.15.2", sha256="713a2deaf96d85bbd4a1fbdf0edb27d6b4ee2c9aaeda8433042367e4b9e1628d")
@@ -25,13 +26,16 @@ class PyHttpx(PythonPackage):
     depends_on("py-hatchling", when="@0.23:", type="build")
     depends_on("py-hatch-fancy-pypi-readme", when="@0.23:", type="build")
     depends_on("py-certifi", type=("build", "run"))
-    depends_on("py-httpcore@0.15:0.16", when="@0.23:", type=("build", "run"))
+    depends_on("py-httpcore@0.15:0.16", when="@0.23", type=("build", "run"))
     depends_on("py-httpcore@0.14.5:0.14", type=("build", "run"), when="@0.22")
     depends_on("py-httpcore@0.11.0:0.11", type=("build", "run"), when="@0.15.2")
+    depends_on("py-httpcore@1", type=("build", "run"), when="@0.27.3:")
     depends_on("py-rfc3986+idna2008@1.3:1", type=("build", "run"), when="@0.15.2:")
     depends_on("py-rfc3986@1.3:1", type=("build", "run"), when="@0.11.1")
     depends_on("py-sniffio", type=("build", "run"), when="@0.15.2:")
     depends_on("py-sniffio@1.0:1", type=("build", "run"), when="@0.11.1")
+    depends_on("py-anyio", type=("build", "run"), when="@0.27.3:")
+    depends_on("py-idna", type=("build", "run"), when="@0.27.3")
 
     depends_on("py-h2@3.0:4", type=("build", "run"), when="@0.22.0:+http2")
     depends_on("py-h2@3.0:3", type=("build", "run"), when="@0.15.2+http2")
