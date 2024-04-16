@@ -57,9 +57,7 @@ class NodeJs(Package):
         description="Build with Spack's OpenSSL instead of the bundled version",
     )
     variant(
-        "zlib",
-        default=True,
-        description="Build with Spack's zlib instead of the bundled version"
+        "zlib", default=True, description="Build with Spack's zlib instead of the bundled version"
     )
     variant(
         "cares",
@@ -175,8 +173,6 @@ class NodeJs(Package):
                     "--shared-libuv-libpath={0}".format(self.spec["libuv"].prefix.lib),
                 ]
             )
-
-
 
         if "+icu4c" in self.spec:
             args.append("--with-intl=full-icu")
