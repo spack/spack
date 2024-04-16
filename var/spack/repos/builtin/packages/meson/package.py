@@ -2,8 +2,6 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import os
-
 from spack.package import *
 
 
@@ -102,8 +100,6 @@ class Meson(PythonPackage):
         # https://github.com/pybind/pybind11/issues/595
         if self.spec.satisfies("platform=darwin"):
             env.set("STRIP", "strip -x")
-        elif self.spec.satisfies("platform=windows"):
-            env.append_path('PATH', os.path.join(self.spec.prefix, 'Scripts'))
 
     def setup_dependent_package(self, module, dspec):
         module.meson = Executable(self.spec.prefix.bin.meson)
