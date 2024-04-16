@@ -22,6 +22,7 @@ class Pythia8(AutotoolsPackage):
 
     license("GPL-2.0-only")
 
+    version("8.311", sha256="2782d5e429c1543c67375afe547fd4c4ca0720309deb008f7db78626dc7d1464")
     version("8.310", sha256="90c811abe7a3d2ffdbf9b4aeab51cf6e0a5a8befb4e3efa806f3d5b9c311e227")
     version("8.309", sha256="5bdafd9f2c4a1c47fd8a4e82fb9f0d8fcfba4de1003b8e14be4e0347436d6c33")
     version("8.308", sha256="c2e8c8d38136d85fc0bc9c9fad4c2db679b0819b7d2b6fc9a47f80f99538b4e3")
