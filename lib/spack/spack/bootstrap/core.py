@@ -568,7 +568,9 @@ def ensure_winsdk_or_raise() -> None:
     a RuntimeError.
 
     **NOTE:** This modifies the Spack config in the current scope,
-    either user or environment depending on the calling context
+    either user or environment depending on the calling context.
+    This is different from all other current bootstrap dependency
+    checks.
     """
     externals = spack.detection.by_path(["win-sdk", "wgl"])
     if not set(["win-sdk", "wgl"]) == externals.keys():
