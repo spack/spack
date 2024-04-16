@@ -213,7 +213,8 @@ class Msvc(Compiler):
             oneapi_root_setvars = os.path.join(oneapi_root, "setvars.bat")
             # some oneAPI versions return a version more precise than their
             # install paths
-            version_from_path = re.search(r"([1-9][0-9]*\.[0-9]*(?:\.[0-9])*)", self.fc).group(1)
+            version_from_path_grp = re.search(r"([1-9][0-9]*\.[0-9]*(?:\.[0-9])*)", self.fc)
+            version_from_path = "latest" if not version_from_path_grp else version_from_path_grp.group(1)
             oneapi_version_setvars = os.path.join(
                 oneapi_root, "compiler", version_from_path, "env", "vars.bat"
             )
