@@ -23,6 +23,7 @@ class Arborx(CMakePackage, CudaPackage, ROCmPackage):
     license("BSD-3-Clause")
 
     version("master", branch="master")
+    version("1.6", sha256="c2230de185d62f1999d36c6b8b92825f19ab9fbf30bdae90595cab04e76561a4")
     version("1.5", sha256="c26f23c17e749ccf3e2d353a68969aa54d31b8e720dbfdbc2cef16c5d8477e9e")
     version("1.4.1", sha256="2ca828ef6615859654b233a7df17017e7cfd904982b80026ec7409eb46b77a95")
     version("1.4", sha256="803a1018a6305cf3fea161172b3ada49537f59261279d91c2abbcce9492ee7af")
@@ -65,6 +66,7 @@ class Arborx(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("cmake@3.16:", type="build", when="@1.0:")
     depends_on("mpi", when="+mpi")
     depends_on("rocthrust", when="+rocm")
+    patch("0001-update-major-version-required-for-rocm-6.0.patch", when="@:1.5+rocm ^hip@6.0:")
 
     # Standalone Kokkos
     depends_on("kokkos@3.1.00:", when="~trilinos")
@@ -72,6 +74,7 @@ class Arborx(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("kokkos@3.6.00:", when="@1.3~trilinos")
     depends_on("kokkos@3.7.01:", when="@1.4:~trilinos")
     depends_on("kokkos@4.0.00:", when="@1.5:~trilinos")
+    depends_on("kokkos@4.1.00:", when="@1.6:~trilinos")
     for backend in kokkos_backends:
         depends_on("kokkos+%s" % backend.lower(), when="~trilinos+%s" % backend.lower())
 
@@ -95,8 +98,9 @@ class Arborx(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("trilinos@13.2.0:", when="@1.2+trilinos")
     depends_on("trilinos@13.4.0:", when="@1.3+trilinos")
     depends_on("trilinos@14.0.0:", when="@1.4:+trilinos")
+    depends_on("trilinos@14.2.0:", when="@1.5:+trilinos")
+    depends_on("trilinos@14.4.0:", when="@1.6:+trilinos")
     patch("trilinos14.0-kokkos-major-version.patch", when="@1.4+trilinos ^trilinos@14.0.0")
-    patch("0001-update-major-version-required-for-rocm-6.0.patch", when="+rocm ^hip@6.0:")
     conflicts("~serial", when="+trilinos")
     conflicts("+cuda", when="+trilinos")
 
@@ -132,12 +136,6 @@ class Arborx(CMakePackage, CudaPackage, ROCmPackage):
 
     def test_run_ctest(self):
         """run ctest tests on the installed package"""
-
-        arborx_dir = self.spec["arborx"].prefix
-        cmake_prefix_path = f"-DCMAKE_PREFIX_PATH={arborx_dir}"
-        if "+mpi" in self.spec:
-            cmake_prefix_path += f";{self.spec['mpi'].prefix}"
-
         cmake_args = [
             ".",
             cmake_prefix_path,
@@ -150,7 +148,10 @@ class Arborx(CMakePackage, CudaPackage, ROCmPackage):
                     else self.spec["trilinos"].prefix
                 ),
             ),
+            self.define("ArborX_ROOT", self.spec["arborx".prefix]),
         ]
+        if "+mpi" in self.spec:
+            cmake_args.append(self.define("MPI_HOME", self.spec["mpi"].prefix))
         cmake = which(self.spec["cmake"].prefix.bin.cmake)
         make = which("make")
         ctest = which("ctest")
