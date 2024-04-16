@@ -7,7 +7,10 @@ spack:
 
   packages:
     all:
-      require: '%gcc target=x86_64_v3'
+      require:
+      - one_of:
+        - '%gcc target=x86_64_v3'
+        - '+rocm %rocmcc target=x86_64_v3'
       providers:
         blas: [openblas]
       variants: +mpi
@@ -259,7 +262,7 @@ spack:
   - chai +rocm amdgpu_target=gfx90a
   # - cp2k +mpi +rocm amdgpu_target=gfx90a # cp2k: Error: KeyError: 'No spec with name rocm in... "-L{}".format(spec["rocm"].libs.directories[0]),
   - ecp-data-vis-sdk +paraview +vtkm +rocm amdgpu_target=gfx90a
-  - exago +mpi +python +raja +hiop +rocm amdgpu_target=gfx90a ~ipopt cxxflags="-Wno-error=non-pod-varargs" ^hiop@1.0.0 ~sparse +mpi +raja +rocm amdgpu_target=gfx90a  
+  - exago +mpi +python +raja +hiop +rocm amdgpu_target=gfx90a ~ipopt cxxflags="-Wno-error=non-pod-varargs" ^hiop@1.0.0 ~sparse +mpi +raja +rocm amdgpu_target=gfx90a
   - gasnet +rocm amdgpu_target=gfx90a
   - ginkgo +rocm amdgpu_target=gfx90a
   - heffte +rocm amdgpu_target=gfx90a
