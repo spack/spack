@@ -44,7 +44,8 @@ def check_package_detection(mock_executable, output, expected_version, cls):
     languages = cls.compiler_languages
 
     executables = {}
-    script = "\n".join(f'echo "{line}"' for line in output.split("\n"))
+    quote = "" if sys.platform == "win32" else '"'
+    script = "\n".join(f'echo {quote}{line}{quote}' for line in output.split("\n"))
     for lang in languages:
         name = getattr(cls, f"{lang}_names")[0]
         executables[name] = mock_executable(name, output=script)
