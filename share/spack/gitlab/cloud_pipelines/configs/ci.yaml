@@ -29,7 +29,7 @@ ci:
       after_script:
       - - cat /proc/loadavg || true
         - cat /proc/meminfo | grep 'MemTotal\|MemFree' || true
-      - - time python ${CI_PROJECT_DIR}/share/spack/gitlab/cloud_pipelines/scripts/common/aggregate_package_logs.spack.py
+      - - time ./bin/spack python ${CI_PROJECT_DIR}/share/spack/gitlab/cloud_pipelines/scripts/common/aggregate_package_logs.spack.py
           --prefix /home/software/spack:${CI_PROJECT_DIR}/opt/spack
           --log install_times.json
           ${SPACK_ARTIFACTS_ROOT}/user_data/install_times.json || true
