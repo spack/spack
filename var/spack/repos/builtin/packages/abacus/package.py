@@ -61,41 +61,6 @@ class Abacus(MakefilePackage, CMakePackage, CudaPackage, ROCmPackage):
     version("3.0.1", sha256="812941146c31ab53c9a7695abbca6bfb36ae55878e38f8d0f13a17f3d9c36dc0")
     version("3.0.0", sha256="1c1299f53788beb2f6b6180d8484d584b6f293c81cea25f45b9632dd608ba4f9")
     version(
-        "2.3.5",
-        sha256="81c44be76c820b59a8b95f2b398c772160068a5e323f319e33704ff87dbefc5e",
-        deprecated=True,
-    )
-    version(
-        "2.3.4",
-        sha256="16b817311c8055cf055021d895642fbb913585f08ec96f9aff3e0ef20148ec0e",
-        deprecated=True,
-    )
-    version(
-        "2.3.3",
-        sha256="a1246c4a6de385826cae15d9a446e862331eb189a592622b1014c7b49504c908",
-        deprecated=True,
-    )
-    version(
-        "2.3.2",
-        sha256="edcaae88e51360548bbdf1bcbd5048bec0d309b4fe11d8d11d5425afc001e9a1",
-        deprecated=True,
-    )
-    version(
-        "2.3.1",
-        sha256="e9522469f499bcb1c57ec05e9866403e4142c97762d7662b4b638f7493bf5122",
-        deprecated=True,
-    )
-    version(
-        "2.3.0",
-        sha256="c5a803a1a596983681d65aff46762f2f6b82b5f50449a53d0ec7dad368d35842",
-        deprecated=True,
-    )
-    version(
-        "2.2.4",
-        sha256="1f3923d32c392fd2564d137b076134aebdc461dc3148c535a00f9b10a615157a",
-        deprecated=True,
-    )
-    version(
         "2.2.3",
         sha256="88dbf6a3bdd907df3e097637ec8e51fde13e2f5e0b44f3667443195481320edf",
         deprecated=True,
