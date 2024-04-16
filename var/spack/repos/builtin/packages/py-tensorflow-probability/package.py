@@ -23,8 +23,7 @@ class PyTensorflowProbability(Package):
 
     license("Apache-2.0")
 
-    # tf-keras does not (yet) exist on Spack, i.e. the TF extra won't work, see below
-    # version("0.24.0", sha256="3d75418cef09ea357ee879347133ab784fe4637a5ba251a8e06ef930dd970a3e")
+    version("0.24.0", sha256="3d75418cef09ea357ee879347133ab784fe4637a5ba251a8e06ef930dd970a3e")
     version("0.23.0", sha256="a00769550da9284acbd69e32a005507153ad39b0c190feca2bbbf6373366cc14")
     version("0.22.1", sha256="9c1203b454aaeb48ac67dea862a411dba6b04f67c1e874e0e83bd1d7f13829a3")
     version("0.22.0", sha256="f9ce55b00c8069246d701c04eaafccde413355f6e76ccf9e549772ecfa0349a4")
@@ -63,9 +62,8 @@ class PyTensorflowProbability(Package):
 
     variant("py-tensorflow", default=False, description="Build with TensorFlow support")
     with when("+py-tensorflow"):
-        # TODO(0.24): requires tf-keras on Spack
-        # depends_on("py-tf-keras", when="@0.24:", type=("build", "run"))
-        # depends_on("py-tensorflow@2.16", when="@0.24", type=("build", "run"))
+        depends_on("py-tf-keras", when="@0.24:", type=("build", "run"))
+        depends_on("py-tensorflow@2.16", when="@0.24", type=("build", "run"))
         depends_on("py-tensorflow@2.15", when="@0.23", type=("build", "run"))
         depends_on("py-tensorflow@2.14:2", when="@0.22", type=("build", "run"))
         depends_on("py-tensorflow@2.13:2", when="@0.21", type=("build", "run"))
@@ -75,6 +73,7 @@ class PyTensorflowProbability(Package):
     # jaxlib is not required, as it's already a dependency of py-jax
     variant("py-jax", default=False, description="Build with JAX support")
     with when("+py-jax"):
+        depends_on("py-jax@0.4.25:0.4", when="@0.24", type=("build", "run"))
         depends_on("py-jax@0.4.20:0.4", when="@0.23", type=("build", "run"))
         depends_on("py-jax@0.4.16:0.4", when="@0.22", type=("build", "run"))
         depends_on("py-jax@0.4.14:0.4", when="@0.21", type=("build", "run"))
