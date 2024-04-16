@@ -14,8 +14,9 @@ class PyZfitPhysics(Package):
     pypi = "zfit_physics/zfit_physics-0.7.0.tar.gz"
 
     maintainers("jonas-eschle", "ikrommyd")
-
     license("BSD-3-Clause", checked_by="jonas-eschle")
+
+    tags = ["likelihood", "statistics", "inference", "fitting", "hep"]
 
     version("0.7.0", sha256="5d65becff7265a12d9b62a8476c5359e75ec10d6ac0fd84dfa39eb82b6693cda")
 
