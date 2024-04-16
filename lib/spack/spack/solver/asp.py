@@ -936,14 +936,7 @@ VersionInfo = Dict[Tuple, bool]
 def _vers_tuple(version):
     vers = str(version.dotted).replace("_", ".") if hasattr(version, "dotted") else str(version)
     vers = vers.split(".")[:3]
-    for i, v in enumerate(vers):
-        try:
-            vers[i] = int(v)
-        except ValueError:
-            vers[i] = 99  # What *should* we for branches or string versions?
-
-    # vers += ["0"] * (3 - len(vers))
-    vers += [0] * (3 - len(vers))
+    vers += ["0"] * (3 - len(vers))
     return tuple(vers)
 
 
@@ -957,7 +950,6 @@ class SpackSolverSetup:
 
         self.assumptions: List[Tuple["clingo.Symbol", bool]] = []  # type: ignore[name-defined]
         self.declared_versions: Dict[str, List[DeclaredVersion]] = collections.defaultdict(list)
-        self.version_info: Dict[str, VersionInfo] = collections.defaultdict(VersionInfo)
         self.possible_versions: Dict[str, Set[GitOrStandardVersion]] = collections.defaultdict(set)
         self.preferred_versions: Dict[str, Set[GitOrStandardVersion]] = collections.defaultdict(
             set
@@ -999,125 +991,83 @@ class SpackSolverSetup:
         # declared = DeclaredVersion(version=str(version), weight=idx, origin=origin)
         declared = DeclaredVersion(version=version, weight=idx, origin=origin)
         if pkg_name in self.declared_versions:
-            # TBD: Is this possible?
             if any(dv == declared for dv in self.declared_versions[pkg_name]):
-                tty.debug(
-                    f"[SETUP] {pkg_name}: declared version ({version}, {idx}, {origin}) "
-                    "already exists, skipping"
-                )
                 return
 
-        tty.debug(
-            f"[SETUP] {pkg_name}: adding declared version ({version}), {idx}, {origin})",
-            # level=2,
-            level=1,
-        )
         self.declared_versions[pkg_name].append(declared)
         if possible:
             self.possible_versions[pkg_name].add(version)
 
-        preferred = version in self.preferred_versions[pkg_name]
-        vers = _vers_tuple(version)
-        # tty.debug(f"[SETUP] {pkg_name}: adding version info {vers}: {preferred}", level=2)
-        tty.debug(f"[SETUP] {pkg_name}: adding version info {vers}: {preferred}", level=1)
-        if pkg_name in self.version_info:
-            info = self.version_info[pkg_name]
-            if vers in info:
-                info[vers] |= preferred
-            else:
-                info[vers] = preferred
-        else:
-            self.version_info[pkg_name] = collections.defaultdict(bool)
-            info = self.version_info[pkg_name]
-            info[vers] = preferred
-
     def adjust_version_weights(self, pkg_name):
-        if pkg_name not in self.version_info:
-            return
+        # For "simplicity", factors are based on:
+        #   [preferred, major version, minor version, patch version]
+        #
+        # ##factors = (10000, 1000, 100, 10)
+        factors = (1000, 100, 10, 1)
+        parts = 3
 
-        def indices(parts):
+        weights = []
+
+        def ordered_versions():
+            # Ensure versions sorted according to package preferences/
+            # concretization.
+            pkg_class = packagize(pkg_name)
+            pkg_versions = pkg_class.versions
+            prefs = spack.package_prefs.PackagePrefs(pkg_name, "version")
+            key_fn = lambda v: (
+                -prefs(v),
+                pkg_versions.get(v).get("preferred", False),
+                not v.isdevelop(),
+                v,
+            )
+
+            versions = [v for v in pkg_versions]
+            versions.sort(key=key_fn, reverse=True)
+            return versions
+
+        # versions = ordered_versions() or sorted(
+        #    set(self.preferred_versions[pkg_name]), reverse=True
+        # )
+        versions = ordered_versions()
+
+        def version_info():
             version_indices = collections.defaultdict(tuple)
             index_versions = collections.defaultdict(list)
             indices = [-1] * parts
-            last_vers = [None] * parts
-            versions = sorted(self.version_info[pkg_name], reverse=True)
+            last_vtuple = [None] * parts
+
             for vers in versions:
-                offset = [0 if x == y else 1 for x, y in zip(last_vers, vers[:parts])]
-                if "develop" in vers:
-                    offset[0] += len(versions)
-                indices = [x + y for x, y in zip(indices, offset)]
+                vtuple = vers if isinstance(vers, tuple) else _vers_tuple(vers)
+                offsets = [0 if x == y else 1 for x, y in zip(last_vtuple, vtuple)]
+                indices = [x + y for x, y in zip(indices, offsets)]
 
                 try:
-                    ind = offset.index(1) + 1
+                    ind = offsets.index(1) + 1
                     indices[ind:] = [0] * (parts - ind)
                 except ValueError:
                     pass
 
                 indices = tuple(indices)
-                version_indices[vers] = indices
+                version_indices[vtuple] = indices
                 index_versions[indices].append(vers)
 
-                last_vers = vers
+                last_vtuple = vtuple
 
             return version_indices, index_versions
 
-        # For "simplicity", factors are based on:
-        # #   [preferred, major version, minor version, patch version]
-        #   [preferred, minor version, major version]
-        #
-        # # Assumption: It is generally "safe" to assume at most 10 patch
-        # #   versions for each minor version and 10 minor for each major.
-        # Assumption: It is generally "safe" to assume at most 10 major
-        #   versions.
-        #
-        # TBD: Is above assumption "safe"?
-        # TBD: Is it appropriate to include the "assigned" weight/index in
-        # TBD:  the 1s place?
-        # ##factors = (10000, 1000, 100, 10)
-        # #factors = (1000, 1, 10, 100)
-        factors = (100, 1, 10)
+        version_indices, index_versions = version_info()
 
-        # Sort by minor, major to ensure changes in major versions
-        # weigh less than changes in minor versions.
-        #
-        # TBD: Does the following example reflect major-over-minor?
-        # For example, package has versions: 2.1.0, 2.0, 1.1.1, 1.0 would
-        # be sorted to be ordered: 2.1.0, 1.1.1, 2.0, 1.0.
-        parts = 2
-        version_indices, index_versions = indices(parts)
-        tty.debug(
-            f"[SETUP] {pkg_name}: version_indices = {version_indices}, index_versions={index_versions}"
-        )
-        # index_version_keys = sorted(index_versions, key=lambda v: [v[1], v[0]])
-        tty.debug(f"[SETUP] {pkg_name}: sorted index_versions = {index_versions}")
-        weights = []
+        def new_weight(declared_version):
+            vers = _vers_tuple(declared_version.version)
 
-        def new_weight(vers, preferred, weight):
-            tty.debug(f"new_weight({vers}, {preferred}, {weight})")
             indices = version_indices[vers]
-
-            # TBD: How do we handle things like armp-gcc's 23.10_gcc-12.2?
-            if len(indices) == 0:
-                # new = weight
-                new = 0
-                if not preferred:
-                    new += factors[0]
-
-                while new in weights:
-                    new += 1
-
-                weights.append(new)
-                return new
+            preferred = declared_version.version in self.preferred_versions[pkg_name]
 
             versions_with_index = index_versions[indices]
-            tty.debug(
-                f"new_weight({vers}, {preferred}, {weight}): versions_with_index={versions_with_index}"
-            )
-            indices = [1 if not preferred else 0] + list(indices)
-            offset = len(versions_with_index) - 1
-            # new = weight
-            # new = weight + offset
-            new = offset
+            new = len(versions_with_index)
+            if new > 0:
+                new -= 1
+            indices = [0 if preferred else 1] + list(indices)
             for factor, idx in zip(factors, indices):
                 new += factor * idx
 
@@ -1125,10 +1075,6 @@ class SpackSolverSetup:
             # more can be common when declared versions are coming from
             # origins that simply assign a weight of 0 or an enumeration
             # index.
-            #
-            # TBD: Is this an appropriate way to adjust the weight given
-            # TBD:  that weight arguments may be 0 or indices depending
-            # TBD:  on the provenance?
             while new in weights:
                 new += 1
 
@@ -1137,14 +1083,8 @@ class SpackSolverSetup:
 
         declared_versions = self.declared_versions[pkg_name]
         for i, declared in enumerate(declared_versions):
-            vers = _vers_tuple(declared.version)
-            weight = new_weight(vers, self.version_info[pkg_name][vers], declared.weight)
+            weight = new_weight(declared)
             if declared.weight != weight:
-                tty.debug(
-                    f"[SETUP]: {pkg_name}: updated declared version ({declared.version}, "
-                    f"{declared.weight}->{weight}, {declared.origin})",
-                    level=2,
-                )
                 self.declared_versions[pkg_name][i] = DeclaredVersion(
                     declared.version, weight, declared.origin
                 )
