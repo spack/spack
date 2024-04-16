@@ -9,10 +9,9 @@ packages:
   gettext:
     require:
       - one_of:
-          - "cflags=-std=c18 target=x86_64_v4"
-          - "cflags=-std=c18 target=x86_64_v3"
-        when: "%intel"
-        message: "gettext uses single valued `static_assert` which is only available in `icc` as part of later C standard."
+          - "%gcc"
+          - "%oneapi"
+          - "%intel cflags=-std=c18"
   gromacs:
     require:
       - one_of:
