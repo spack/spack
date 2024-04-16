@@ -54,13 +54,23 @@ class NodeJs(Package):
     variant(
         "openssl",
         default=True,
-        description="Build with Spacks OpenSSL instead of the bundled version",
+        description="Build with Spack's OpenSSL instead of the bundled version",
     )
     variant(
-        "zlib", default=True, description="Build with Spacks zlib instead of the bundled version"
+        "zlib",
+        default=True,
+        description="Build with Spack's zlib instead of the bundled version"
     )
-    variant("cares", default=False )
-    variant("libuv", default=False )
+    variant(
+        "cares",
+        default=False,
+        description="Build with Spack's c-ares instead of the bundled version",
+    )
+    variant(
+        "libuv",
+        default=False,
+        description="Build with Spack's libuv instead of the bundled version",
+    )
 
     # https://github.com/nodejs/node/blob/master/BUILDING.md#unix-and-macos
     depends_on("gmake@3.81:", type="build")
