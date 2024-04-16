@@ -19,6 +19,8 @@ class NodeJs(Package):
 
     maintainers("cosmicexplorer")
 
+    license("Unicode-TOU")
+
     # Current (latest features) - odd major number
     version("21.7.3", sha256="ce1f61347671ef219d9c2925313d629d3fef98fc8d7f5ef38dd4656f7d0f58e7")
     version("19.9.0", sha256="c9293eb40dff8e5f55ef8da7cf1b9fd71b4a6a513620d02bbd158936e85216f2")
@@ -41,10 +43,6 @@ class NodeJs(Package):
     version("14.15.1", sha256="a1120472bf55aea745287693a6651e16973e1008c9d6107df350126adf9716fe")
     version("14.13.0", sha256="8538b2e76aa06ee0e6eb1c118426c3c5ca53b2e49d66591738eacf76e89edd61")
     version("14.10.0", sha256="7e0d7a1aa23697415e3588a1ca4f1c47496e6c88b9cf37c66be90353d3e4ac3e")
-    version("12.18.4", sha256="a802d87e579e46fc52771ed6f2667048320caca867be3276f4c4f1bbb41389c3")
-    version("12.18.3", sha256="6ea85f80e01b007cc9b566b8836513bc5102667d833bad4c1092be60fa60c2d4")
-    version("12.16.0", sha256="ae2dfe74485d821d4fef7cf1802acd2322cd994c853a2327c4306952f4453441")
-    version("12.14.0", sha256="5c1939867228f3845c808ef84a89c8ee93cc35f857bf7587ecee1b5a6d9da67b")
 
     variant("debug", default=False, description="Include debugger support")
     variant("doc", default=False, description="Compile with documentation")
@@ -73,7 +71,6 @@ class NodeJs(Package):
     depends_on("python@2.7,3.5:3.8", when="@15", type="build")
     depends_on("python@2.7,3.6:3.10", when="@14.18.2:14", type="build")
     depends_on("python@2.7,3.5:3.8", when="@13.1:14.18.1", type="build")
-    depends_on("python@2.7,3.5:3.7", when="@12:13.0", type="build")
     depends_on("libtool", type="build", when=sys.platform != "darwin")
     depends_on("pkgconfig", type="build")
     # depends_on('bash-completion', when="+bash-completion")
