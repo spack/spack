@@ -573,7 +573,8 @@ def ensure_winsdk_or_raise() -> None:
             missing_packages_lst.append("win-sdk")
         missing_packages = " & ".join(missing_packages_lst)
         raise RuntimeError(
-            f"Unable to find the {missing_packages}, please install via the Visual Studio installer\
+            f"Unable to find the {missing_packages}, please install these packages\
+via the Visual Studio installer\
 before proceeding with Spack or provide the path to a non standard install via\
 'spack external find --path'"
         )
