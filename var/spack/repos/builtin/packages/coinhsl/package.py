@@ -20,8 +20,8 @@ class Coinhsl(MesonPackage, AutotoolsPackage):
     mirror, see https://spack.readthedocs.io/en/latest/mirrors.html"""
 
     build_system(
-        conditional("autotools", when="@:2019.05.21"),
-        conditional("meson", when="@2022.11.09:"),
+        conditional("autotools", when="@b:2019.05.21"),
+        conditional("meson", when="@2022.11.09:,@:b"),
         default="meson",
     )
 
@@ -30,7 +30,6 @@ class Coinhsl(MesonPackage, AutotoolsPackage):
     manual_download = True
 
     maintainers("AndrewLister-STFC")
-    
 
     # Meson builds
     version(
