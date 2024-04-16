@@ -89,7 +89,7 @@ class Proj(CMakePackage, AutotoolsPackage):
 
     patch("proj.cmakelists.5.0.patch", when="@5.0")
     patch("proj.cmakelists.5.1.patch", when="@5.1:5.2")
-    patch("proj-8.1-cmake-3.29-new-tiff-interface.patch", when="@:9.1.0 ^cmake@3.29: +tiff")
+    patch("proj-8.1-cmake-3.29-new-tiff-interface.patch", when="+tiff @:9.1.0 ^cmake@3.19:")
 
     # https://proj.org/install.html#build-requirements
     with when("build_system=cmake"):
