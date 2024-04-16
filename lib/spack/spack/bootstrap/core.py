@@ -561,8 +561,14 @@ def ensure_patchelf_in_path_or_raise() -> spack.util.executable.Executable:
 
 def ensure_winsdk_or_raise() -> None:
     """Ensure the Windows SDK + WGL are available on system
-    If found, the Spack configuration is updated to include
-    all versions/variants detected in the packages section
+    If both of these package are found, the Spack user or bootstrap
+    configuration (depending on where Spack is running)
+    will be updated to include all versions and variants detected.
+    If either the WDK or WSDK are not found, this method will raise
+    a RuntimeError.
+
+    **NOTE:** This modifies the Spack config in the current scope,
+    either user or environment depending on the calling context
     """
     externals = spack.detection.by_path(["win-sdk", "wgl"])
     if not set(["win-sdk", "wgl"]) == externals.keys():
