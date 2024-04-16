@@ -24,7 +24,11 @@ from spack.package import *
 
 
 class PyTfKeras(PythonPackage):
-    """The TF-Keras library is a pure TensorFlow implementation of Keras, based on the legacy tf.keras codebase. Note that the "main" version of Keras is now Keras 3 (formerly Keras Core), which is a multi-backend implementation of Keras, supporting JAX, PyTorch, and TensorFlow. Keras 3 is being developed at keras-team/keras."""
+    """The TF-Keras library is a pure TensorFlow implementation of Keras,
+    based on the legacy tf.keras codebase. Note that the "main" version
+    of Keras is now Keras 3 (formerly Keras Core), which is a
+    multi-backend implementation of Keras, supporting JAX, PyTorch, and TensorFlow.
+     Keras 3 is being developed at keras-team/keras."""
 
     homepage = "https://github.com/keras-team/tf-keras"
     pypi = "tf_keras/tf_keras-2.16.0.tar.gz"
@@ -108,7 +112,7 @@ class PyTfKeras(PythonPackage):
             "--action_env",
             "PYTHONPATH={0}".format(env["PYTHONPATH"]),
             "//tf-keras/tools/pip_package:build_pip_package",
-            ]
+        ]
 
         bazel(*args)
 
