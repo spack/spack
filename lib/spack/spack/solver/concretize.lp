@@ -891,12 +891,8 @@ error(100, "{0} variant '{1}' cannot have values '{2}' and '{3}' as they come fr
      Set1 < Set2, % see[1]
      build(node(ID, Package)).
 
-% variant_set is an explicitly set variant value. If it's not 'set',
-% we revert to the default value. If it is set, we force the set value
-attr("variant_value", PackageNode, Variant, Value)
- :- attr("node", PackageNode),
-    node_has_variant(PackageNode, Variant),
-    attr("variant_set", PackageNode, Variant, Value).
+:- attr("variant_set", node(ID, Package), Variant, Value),
+   not attr("variant_value", node(ID, Package), Variant, Value).
 
 % The rules below allow us to prefer default values for variants
 % whenever possible. If a variant is set in a spec, or if it is
