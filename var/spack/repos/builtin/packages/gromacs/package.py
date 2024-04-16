@@ -225,15 +225,20 @@ class Gromacs(CMakePackage, CudaPackage):
     # Above dependencies can be verified, and new versions added, by going to
     # https://github.com/plumed/plumed2/tree/v2.9.0/patches
     # and switching tags.
+
+    # Versions without minor release number, such as `2023` and `2021`,
+    # require exact specifcation using `@=`, starting from Spack v0.20.0,
+    # see https://github.com/spack/spack/releases/tag/v0.20.0
+
     plumed_patches = {
-        "2023": "2.9.0",
+        "=2023": "2.9.0",
         "2022.5": "2.8.2:2.9.0",
         "2022.3": "2.8.1",
         "2021.7": "2.8.2:2.9.0",
         "2021.6": "2.8.1",
         "2021.5": "2.7.5:2.7.6",
         "2021.4": "2.7.3:2.8.0",
-        "2021": "2.7.1:2.7.2",
+        "=2021": "2.7.1:2.7.2",
         "2020.7": "2.8.1:2.9.0",
         "2020.6": "2.7.2:2.8.0",
         "2020.5": "2.7.1",
