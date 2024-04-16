@@ -1355,7 +1355,7 @@ class TestConcretize:
     def test_no_reuse_when_variant_condition_does_not_hold(self, mutable_database, mock_packages):
         spack.config.set("concretizer:reuse", True)
 
-        # Install a spec which for which the `version_based` variant condition does not hold
+        # Install a spec for which the `version_based` variant condition does not hold
         old = Spec("conditional-variant-pkg @1").concretized()
         old.package.do_install(fake=True, explicit=True)
 
