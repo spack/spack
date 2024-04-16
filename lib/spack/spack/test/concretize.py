@@ -1351,6 +1351,22 @@ class TestConcretize:
         assert root.dag_hash() != new_root_without_reuse.dag_hash()
 
     @pytest.mark.only_clingo("Use case not supported by the original concretizer")
+    @pytest.mark.regression("43663")
+    def test_no_reuse_when_variant_condition_does_not_hold(self, mutable_database, mock_packages):
+        spack.config.set("concretizer:reuse", True)
+
+        # Install a spec for which the `version_based` variant condition does not hold
+        old = Spec("conditional-variant-pkg @1").concretized()
+        old.package.do_install(fake=True, explicit=True)
+
+        # Then explicitly require a spec with `+version_based`, which shouldn't reuse previous spec
+        new1 = Spec("conditional-variant-pkg +version_based").concretized()
+        assert new1.satisfies("@2 +version_based")
+
+        new2 = Spec("conditional-variant-pkg +two_whens").concretized()
+        assert new2.satisfies("@2 +two_whens +version_based")
+
+    @pytest.mark.only_clingo("Use case not supported by the original concretizer")
     def test_reuse_with_flags(self, mutable_database, mutable_config):
         spack.config.set("concretizer:reuse", True)
         spec = Spec("a cflags=-g cxxflags=-g").concretized()
