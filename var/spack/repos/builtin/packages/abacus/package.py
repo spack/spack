@@ -173,7 +173,11 @@ class Abacus(MakefilePackage, CMakePackage, CudaPackage, ROCmPackage):
         depends_on("elpa+openmp", when="+elpa")
         depends_on(
             "openblas threads=openmp",
-            when="^[virtuals=blas] openblas" or "^[virtuals=lapack] openblas",
+            when="^[virtuals=blas] openblas",
+        )
+        depends_on(
+            "openblas threads=openmp",
+            when="^[virtuals=lapack] openblas",
         )
     with when("~openmp"):
         depends_on("elpa~openmp", when="+elpa")
