@@ -18,13 +18,20 @@ class Npm(Package):
 
     license("Artistic-2.0")
 
+    version("10.5.2", sha256="df0a1f7691654b94786013e5d5b80a873a7ffbae9c82c3bec8b5db76bc3b7dfd")
+    version("9.9.3", sha256="d835b2d7293ce928e98bc967a05a3ef5ac48d4ea10bb8fb1a1dd1049dc5ef06e")
     version("9.3.1", sha256="41caa26a340b0562bc5429d28792049c980fe3e872b42b82cad94e8f70e37f40")
     version("8.19.3", sha256="634bf4e0dc87be771ebf48a058629960e979a209c20a51ebdbc4897ca6a25260")
     version("7.24.2", sha256="5b9eeea011f8bc3b76e55cc33339e87213800677f37e0756ad13ef0e9eaccd64")
     version("6.14.18", sha256="c9b15f277e2a0b1b57e05bad04504296a27024555d56c2aa967f862e957ad2ed")
 
     depends_on("node-js", type=("build", "run"))
+    depends_on("node-js@14.17:", type=("build", "run"), when="@9:")
+    depends_on("node-js@18.17:", type=("build", "run"), when="@10.1:")
     depends_on("libvips", when="@:7")
+
+    conflicts("node-js@16.0:16.12", when="@9")
+    conflicts("node-js@20.0:20.4", when="@10.1:")
 
     # npm 6.13.4 ships with node-gyp 5.0.5, which contains several Python 3
     # compatibility issues on macOS. Manually update to node-gyp 6.0.1 for
