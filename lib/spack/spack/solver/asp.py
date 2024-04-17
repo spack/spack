@@ -929,13 +929,13 @@ ConditionIdFunctionPair = Tuple[int, List[AspFunction]]
 ConditionSpecCache = Dict[str, Dict[ConditionSpecKey, ConditionIdFunctionPair]]
 
 #: Maximum number of version parts of concern for weighting package versions
-NUMBER_VERSION_PARTS = 3
+number_version_parts = 3
 
 
 def _vers_tuple(version):
     vers = str(version.dotted).replace("_", ".") if hasattr(version, "dotted") else str(version)
-    vers = vers.split(".")[:NUMBER_VERSION_PARTS]
-    vers += ["0"] * (NUMBER_VERSION_PARTS - len(vers))
+    vers = vers.split(".")[:number_version_parts]
+    vers += ["0"] * (number_version_parts - len(vers))
     return tuple(vers)
 
 
@@ -1027,8 +1027,8 @@ class SpackSolverSetup:
         def version_info():
             version_indices = collections.defaultdict(tuple)
             index_versions = collections.defaultdict(list)
-            indices = [-1] * NUMBER_VERSION_PARTS
-            last_vtuple = [None] * NUMBER_VERSION_PARTS
+            indices = [-1] * number_version_parts
+            last_vtuple = [None] * number_version_parts
 
             for vers in versions:
                 vtuple = vers if isinstance(vers, tuple) else _vers_tuple(vers)
@@ -1037,7 +1037,7 @@ class SpackSolverSetup:
 
                 try:
                     ind = offsets.index(1) + 1
-                    indices[ind:] = [0] * (NUMBER_VERSION_PARTS - ind)
+                    indices[ind:] = [0] * (number_version_parts - ind)
                 except ValueError:
                     pass
 
@@ -1098,6 +1098,9 @@ class SpackSolverSetup:
             pkg = self.pkg_class(pkg)
 
         self.adjust_version_weights(pkg.name)
+
+        # TBD: Are the folllowing sortings necessary after weights are adjusted
+        # TBD: s.t. the origin is included?
         declared_versions = self.declared_versions[pkg.name]
         partially_sorted_versions = sorted(set(declared_versions), key=key_fn)
 
