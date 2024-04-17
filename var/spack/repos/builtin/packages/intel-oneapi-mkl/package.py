@@ -200,7 +200,11 @@ class IntelOneapiMkl(IntelOneApiLibraryPackage):
         if self.spec.satisfies("+cluster"):
             libs.extend([self._xlp64_lib("libmkl_scalapack"), "libmkl_cdft_core"])
 
-        libs.append(self._xlp64_lib("libmkl_intel"))
+        if self.spec.satisfies("%oneapi") or self.spec.satisfies("%intel"):
+            libs.append(self._xlp64_lib("libmkl_intel"))
+        else:
+            libs.append(self._xlp64_lib("libmkl_gf"))
+
         if self.spec.satisfies("threads=tbb"):
             libs.append("libmkl_tbb_thread")
         elif self.spec.satisfies("threads=openmp"):
