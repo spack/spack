@@ -16,11 +16,15 @@ class PyAzureMultiapiStorage(PythonPackage):
 
     license("MIT")
 
-    version("0.3.5", sha256="71c238c785786a159b3ffd587a5e7fa1d9a517b66b592ae277fed73a9fbfa2b0")
+    version(
+        "0.3.5",
+        sha256="d31340b073f20b55f1a3736e390b4dc227061ba7d99af8a84584e8b3a724ff49",
+        url="https://pypi.org/packages/e6/a9/79b98b5d27b407dd6bae32c453f3151819becd74c27e2bcdf7e6fb3806e7/azure_multiapi_storage-0.3.5-py2.py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-azure-common", type=("build", "run"))
-    depends_on("py-cryptography", type=("build", "run"))
-    depends_on("py-python-dateutil", type=("build", "run"))
-    depends_on("py-requests", type=("build", "run"))
-    depends_on("py-azure-core", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("py-azure-common")
+        depends_on("py-azure-core", when="@0.3:0.5")
+        depends_on("py-cryptography", when="@:0.5")
+        depends_on("py-python-dateutil")
+        depends_on("py-requests")

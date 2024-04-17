@@ -15,9 +15,11 @@ class PyQuantumXir(PythonPackage):
 
     license("Apache-2.0")
 
-    version("0.2.2", sha256="4b6a60bd3dcddb455e33b036b320cf634c5bd772ecea031b110fc5fb2fcf8a51")
+    version(
+        "0.2.2",
+        sha256="5acd7955d8d854e216bdeb773afbf534d6fbe2e35ded5295ff0cacc7fd84f9fc",
+        url="https://pypi.org/packages/98/8f/29e6eb321df7777f7b97c818f191d8db05ecbd71d0452de5fbba4605af92/quantum_xir-0.2.2-py3-none-any.whl",
+    )
 
-    depends_on("python@3.7:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
-
-    depends_on("py-lark-parser@0.11.0:", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("py-lark-parser@0.11.0:")

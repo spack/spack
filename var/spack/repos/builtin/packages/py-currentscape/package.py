@@ -15,11 +15,14 @@ class PyCurrentscape(PythonPackage):
 
     license("Apache-2.0")
 
-    version("1.0.12", sha256="d83c5a58074e4d612553472a487e5d1d2854dc4d5c161817c6bafdf4a5988011")
+    version(
+        "1.0.12",
+        sha256="b1bef26352f240d09e413d312deb06d212afe158de85c9dcae96e371968d1d9c",
+        url="https://pypi.org/packages/dd/de/423d92aff7c18e418672db238a379e0f7b5379508daeb1854996916ac371/currentscape-1.0.12-py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type=("build", "run"))
-    depends_on("py-setuptools-scm", type=("build",))
-    depends_on("python@3.8:", type=("build", "run"))
-    depends_on("py-numpy", type=("build", "run"))
-    depends_on("py-matplotlib", type=("build", "run"))
-    depends_on("py-palettable", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("python@3.8:")
+        depends_on("py-matplotlib")
+        depends_on("py-numpy")
+        depends_on("py-palettable")

@@ -15,10 +15,14 @@ class PyBatchspawner(PythonPackage):
 
     license("BSD-3-Clause")
 
-    version("1.1.0", sha256="9bae72f7c1bd9bb11aa58ecc3bc9fae5475a10fdd92dc0c0d67fa7eb95c9dd3a")
+    version(
+        "1.1.0",
+        sha256="d7e203128700c9105c660bf139a2dfe132e4c92708292576ea7ffe7985ed1481",
+        url="https://pypi.org/packages/27/de/b9f3cf50d90167cca00e2f98f501038e0d2fb9a918343abfb767df000976/batchspawner-1.1.0-py3-none-any.whl",
+    )
 
-    depends_on("python@3.3:3", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
-    depends_on("py-async-generator@1.8:", type=("build", "run"))
-    depends_on("py-jinja2", type=("build", "run"))
-    depends_on("py-jupyterhub@0.5:", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("python@:3", when="@:1.2")
+        depends_on("py-async-generator@1.8:", when="@1:1.2")
+        depends_on("py-jinja2", when="@1:1.2")
+        depends_on("py-jupyterhub@0.5:", when="@:1.1")

@@ -14,7 +14,11 @@ class PyRply(PythonPackage):
 
     license("BSD-3-Clause")
 
-    version("0.7.8", sha256="2a808ac25a4580a9991fc304d64434e299a8fc75760574492f242cbb5bb301c9")
+    version(
+        "0.7.8",
+        sha256="28ffd11d656c48aeb8c508eb382acd6a0bd906662624b34388751732a27807e7",
+        url="https://pypi.org/packages/c0/7c/f66be9e75485ae6901ae77d8bdbc3c0e99ca748ab927b3e18205759bde09/rply-0.7.8-py2.py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-appdirs", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("py-appdirs", when="@0.7.4:")

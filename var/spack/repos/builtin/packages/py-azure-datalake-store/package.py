@@ -13,9 +13,13 @@ class PyAzureDatalakeStore(PythonPackage):
     homepage = "https://github.com/Azure/azure-data-lake-store-python"
     pypi = "azure-datalake-store/azure-datalake-store-0.0.48.tar.gz"
 
-    version("0.0.48", sha256="d27c335783d4add00b3a5f709341e4a8009857440209e15a739a9a96b52386f7")
+    version(
+        "0.0.48",
+        sha256="b35108939f9ac4b6bc568e9b735e3e38a5fdabe00065073b5e48659929d536d1",
+        url="https://pypi.org/packages/27/9a/e7140775b3f8f011ef5d001c12a3519310094375671950105519e30bb12b/azure_datalake_store-0.0.48-py2.py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-cffi", type=("build", "run"))
-    depends_on("py-adal@0.4.2:", type=("build", "run"))
-    depends_on("py-requests@2.20.0:", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("py-adal@0.4.2:", when="@:0.0.52")
+        depends_on("py-cffi")
+        depends_on("py-requests@2.20:")

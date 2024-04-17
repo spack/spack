@@ -17,10 +17,26 @@ class PyArchspec(PythonPackage):
 
     license("Apache-2.0")
 
-    version("0.2.3", sha256="d07deb5b6e2ab3b74861e217523d02e69be8522f6e6565f4cc5d2062eb1a5d2c")
-    version("0.2.2", sha256="d922c9fd80a5234d8cef883fbe0e146b381c449062c0405f91714ebad1edc035")
-    version("0.2.1", sha256="0974a8a95831d2d43cce906c5b79a35d5fd2bf9be478b0e3b7d83ccc51ac815e")
-    version("0.2.0", sha256="6aaba5ebdb5c3633c400d8c221a6a18716da0c64b367a8509f4217b22e91a5f5")
+    version(
+        "0.2.3",
+        sha256="1b76fe2e75ee8750f0aac8c728af4beca1a95bdb5df246f4d39263664d6d301f",
+        url="https://pypi.org/packages/36/a6/7f0f500ce427b19c25f8cc05ee8cff9fb635373d62ae39e446d6f789e882/archspec-0.2.3-py3-none-any.whl",
+    )
+    version(
+        "0.2.2",
+        sha256="1054b599abb66f4d141c7a278dd34beb5766b1c84c7595aab3907a5bf55ee258",
+        url="https://pypi.org/packages/57/c1/45410841aaafe218632cfb9ae946eb4007ac8b5136bcae2987f0f56c7f56/archspec-0.2.2-py3-none-any.whl",
+    )
+    version(
+        "0.2.1",
+        sha256="e135481fc8384141ea2a18df9843045951717d8d029d60474a65d7d89b210821",
+        url="https://pypi.org/packages/63/ae/333e7d216dda9134558ddc30792d96bfc58968ff5cc69b4ad9e02dfac654/archspec-0.2.1-py3-none-any.whl",
+    )
+    version(
+        "0.2.0",
+        sha256="6e820d5afc45fe051b7f2c07aa2ede68ea55ae67c27ba78ca795da8e3671f9cc",
+        url="https://pypi.org/packages/9d/94/4c7f18613a052d5fbcb58bb1f938d3b1a04874c1464bfb63a26fe24435aa/archspec-0.2.0-py3-none-any.whl",
+    )
 
-    depends_on("py-poetry-core@1.0.0:", type="build")
-    depends_on("py-click@8", type=("build", "run"), when="@:0.2.0")
+    with default_args(type=("build", "run")):
+        depends_on("py-click@8.0.0:", when="@0.2:0.2.0")

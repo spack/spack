@@ -19,14 +19,21 @@ class PyOntFast5Api(PythonPackage):
 
     license("MPL-2.0")
 
-    version("4.1.0", sha256="afa58fb0a73ac33161fe0d13d32698b3325756c370f2f440a8a43b4b68c75f32")
-    version("0.3.2", sha256="ae44b1bcd812e8acf8beff3db92456647c343cf19340f97cff4847de5cc905d8")
+    version(
+        "4.1.0",
+        sha256="92bf1f12e042db4fdfffbaa757b27f92e049fe922b204ae83ec720a72d20bcd3",
+        url="https://pypi.org/packages/60/1b/b67baa5fe047344c17089cbddd25ff181238dd7187d04c5e11aabe47f03b/ont_fast5_api-4.1.0-py3-none-any.whl",
+    )
+    version(
+        "0.3.2",
+        sha256="db8d302d215f8c7b82252d9e0f162ef294de1a749a2d27e675615b3d537c03d8",
+        url="https://pypi.org/packages/ac/ad/4ccffa38e299d36d0ea1efb6390e37b95a6fe0bee5008db50f01113ef440/ont_fast5_api-0.3.2-py2.py3-none-any.whl",
+    )
 
-    depends_on("python@3.6:", type=("build", "run"), when="@4:")
-    depends_on("py-setuptools", type="build")
-    depends_on("py-h5py", type=("build", "run"))
-    depends_on("py-h5py@2.10:", type=("build", "run"), when="@4.0.1:")
-    depends_on("py-numpy@1.8.1:", type=("build", "run"))
-    depends_on("py-numpy@1.16:", type=("build", "run"), when="@3.2.0:")
-    depends_on("py-packaging", type=("build", "run"), when="@3.0.2:")
-    depends_on("py-progressbar33@2.3.1:", type=("build", "run"), when="@1.0.1:")
+    with default_args(type=("build", "run")):
+        depends_on("py-h5py@2.10:", when="@4.0.1:4.1.1")
+        depends_on("py-h5py", when="@:0")
+        depends_on("py-numpy@1.16.0:", when="@3.2:")
+        depends_on("py-numpy@1.8.1:", when="@:1")
+        depends_on("py-packaging", when="@3.0.2:")
+        depends_on("py-progressbar33", when="@1:")

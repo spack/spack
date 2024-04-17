@@ -16,11 +16,19 @@ class PyRfc3986(PythonPackage):
 
     license("Apache-2.0")
 
-    version("2.0.0", sha256="97aacf9dbd4bfd829baad6e6309fa6573aaf1be3f6fa735c8ab05e46cecb261c")
-    version("1.4.0", sha256="112398da31a3344dc25dbf477d8df6cb34f9278a94fee2625d89e4514be8bb9d")
+    version(
+        "2.0.0",
+        sha256="50b1502b60e289cb37883f3dfd34532b8873c7de9f49bb546641ce9cbd256ebd",
+        url="https://pypi.org/packages/ff/9a/9afaade874b2fa6c752c36f1548f718b5b83af81ed9b76628329dab81c1b/rfc3986-2.0.0-py2.py3-none-any.whl",
+    )
+    version(
+        "1.4.0",
+        sha256="af9147e9aceda37c91a05f4deb128d4b4b49d6b199775fd2d2927768abdc8f50",
+        url="https://pypi.org/packages/78/be/7b8b99fd74ff5684225f50dd0e865393d2265656ef3b4ba9eaaaffe622b8/rfc3986-1.4.0-py2.py3-none-any.whl",
+    )
 
     variant("idna2008", default=False, description="Enable idna2008 Functionality")
 
-    depends_on("py-setuptools", type="build")
-
-    depends_on("py-idna", when="+idna2008")
+    with default_args(type=("build", "run")):
+        depends_on("python@3.7:", when="@2:")
+        depends_on("py-idna", when="@1.3:+idna2008")

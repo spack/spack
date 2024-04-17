@@ -16,9 +16,13 @@ class PyMpldock(PythonPackage):
 
     license("MIT")
 
-    version("0.1", sha256="8fee2e9cb25e122c9e11c15ea3ad22c9d03e78a08a0bc2b7f453230d58a31a55")
+    version(
+        "0.1",
+        sha256="54366800cd2963d35a8942355714a6a28361906c54ca9d89a6882bf281610131",
+        url="https://pypi.org/packages/ab/ee/babafc1920fedba594160487e5ec8c7be524cbf9f167a85a660f3e631746/mpldock-0.1-py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-pyqt5", type=("build", "run"))
-    depends_on("py-matplotlib", type=("build", "run"))
-    depends_on("py-appdirs", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("py-appdirs", when="@:0.0.1,0.0.3:")
+        depends_on("py-matplotlib", when="@:0.0.1,0.0.3:")
+        depends_on("py-pyqt5", when="@:0.0.1,0.0.3:")

@@ -16,9 +16,12 @@ class PyStui(PythonPackage):
 
     license("MIT")
 
-    version("0.3.6", sha256="b7f4f9ff537977af0d37a3218217f2b882a30709fcd2773a07df09050c700102")
+    version(
+        "0.3.6",
+        sha256="441a3e7c8e9b9991c833f8c2a278009fadb97adee49cdeaa581355575fb7a418",
+        url="https://pypi.org/packages/8e/47/02763888893798f4c5be9adae4b5f56f6e921238370c5739c08241d6886e/stui-0.3.6-py3-none-any.whl",
+    )
 
-    depends_on("python@3.6:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
-    depends_on("py-urwid", type=("build", "run"))
-    depends_on("py-fabric@2.5.0:", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("py-fabric@2.5:", when="@0.2:")
+        depends_on("py-urwid")

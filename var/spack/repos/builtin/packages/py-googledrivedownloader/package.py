@@ -15,6 +15,8 @@ class PyGoogledrivedownloader(PythonPackage):
 
     license("MIT")
 
-    version("0.4", sha256="4b34c1337b2ff3bf2bd7581818efbdcaea7d50ffd484ccf80809688f5ca0e204")
-
-    depends_on("py-setuptools", type="build")
+    version(
+        "0.4",
+        sha256="26ef906c4a038de6fb36f375b0cb0af6f0b6d7ea9ce019a3a08abc50fd6a3b73",
+        url="https://pypi.org/packages/3a/5c/485e8724383b482cc6c739f3359991b8a93fb9316637af0ac954729545c9/googledrivedownloader-0.4-py2.py3-none-any.whl",
+    )

@@ -15,13 +15,18 @@ class PyConsolekit(PythonPackage):
 
     license("MIT")
 
-    version("1.5.1", sha256="55ea43e226863e1d618ec9b860c9842d84249d895c3376c03b158d8f3a335626")
+    version(
+        "1.5.1",
+        sha256="5f9f98b2d618d51cd9ddb73062c531811253d144b05ae351a972867b4ecde7b9",
+        url="https://pypi.org/packages/3e/86/93eb5e2bd7b05cb04cf555da79c4bb769c5d0966c5592831273b570e4129/consolekit-1.5.1-py3-none-any.whl",
+    )
 
-    depends_on("py-flit-core@3.2:3", type="build")
-    depends_on("py-click@7.1.2:", type=("build", "run"))
-    depends_on("py-colorama@0.4.3:", type=("build", "run"), when="^python@:3.9 platform=windows")
-    depends_on("py-deprecation-alias@0.1.1:", type=("build", "run"))
-    depends_on("py-domdf-python-tools@2.6:", type=("build", "run"))
-    depends_on("py-mistletoe@0.7.2:", type=("build", "run"))
-    depends_on("py-typing-extensions@3.10:", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("py-click@7.1.2:")
+        depends_on("py-colorama@0.4.3:", when="platform=windows ^python@:3.9")
+        depends_on("py-deprecation-alias@0.1.1:")
+        depends_on("py-domdf-python-tools@2.6:", when="@1.2.2:1.5")
+        depends_on("py-mistletoe@0.7.2:")
+        depends_on("py-typing-extensions@3.10:3.10.0.0,3.10.0.2:", when="@1.3.2:")
+
     conflicts("^py-typing-extensions@3.10.0.1")

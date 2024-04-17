@@ -15,10 +15,23 @@ class PyImagesize(PythonPackage):
 
     license("MIT")
 
-    version("1.4.1", sha256="69150444affb9cb0d5cc5a92b3676f0b2fb7cd9ae39e947a5e11a36b4497cd4a")
-    version("1.3.0", sha256="cd1750d452385ca327479d45b64d9c7729ecf0b3969a58148298c77092261f9d")
-    version("1.1.0", sha256="f3832918bc3c66617f92e35f5d70729187676313caa60c187eb0f28b8fe5e3b5")
-    version("0.7.1", sha256="0ab2c62b87987e3252f89d30b7cedbec12a01af9274af9ffa48108f2c13c6062")
-
-    depends_on("python@2.7:2,3.4:", when="@1.2:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
+    version(
+        "1.4.1",
+        sha256="0d8d18d08f840c19d0ee7ca1fd82490fdc3729b7ac93f49870406ddde8ef8d8b",
+        url="https://pypi.org/packages/ff/62/85c4c919272577931d407be5ba5d71c20f0b616d31a0befe0ae45bb79abd/imagesize-1.4.1-py2.py3-none-any.whl",
+    )
+    version(
+        "1.3.0",
+        sha256="1db2f82529e53c3e929e8926a1fa9235aa82d0bd0c580359c67ec31b2fddaa8c",
+        url="https://pypi.org/packages/60/d6/5e803b17f4d42e085c365b44fda34deb0d8675a1a910635930b831c43f07/imagesize-1.3.0-py2.py3-none-any.whl",
+    )
+    version(
+        "1.1.0",
+        sha256="3f349de3eb99145973fefb7dbe38554414e5c30abd0c8e4b970a7c9d09f3a1d8",
+        url="https://pypi.org/packages/fc/b6/aef66b4c52a6ad6ac18cf6ebc5731ed06d8c9ae4d3b2d9951f261150be67/imagesize-1.1.0-py2.py3-none-any.whl",
+    )
+    version(
+        "0.7.1",
+        sha256="6ebdc9e0ad188f9d1b2cdd9bc59cbe42bf931875e829e7a595e6b3abdc05cdfb",
+        url="https://pypi.org/packages/29/e9/342106962eac603ff7865a29de05e965af6a259e30fbccc6fc5aeac74d70/imagesize-0.7.1-py2.py3-none-any.whl",
+    )

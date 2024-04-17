@@ -15,10 +15,17 @@ class PyPytestCpp(PythonPackage):
 
     license("MIT")
 
-    version("1.5.0", sha256="efb7eaac30f9f61515be181d04b70d80d60ce8871426f726ef1844e2db4f3353")
-    version("1.4.0", sha256="aa3a04fe7906e50094d1a9b8d38bc10eb59d0a8330a11a0f7a660405228b48ca")
+    version(
+        "1.5.0",
+        sha256="b23784c1ad97ca5ee67c4513f04295263161daf14043783a61a955663f35934e",
+        url="https://pypi.org/packages/35/58/40dac4487a7349a2e59b30d973a2651d5465244e0cb3e2ab6475d9b75826/pytest_cpp-1.5.0-py2.py3-none-any.whl",
+    )
+    version(
+        "1.4.0",
+        sha256="61dfb7d87042c8768a83d706750c3dbacb334d7bc994f6cf2b850af49225edfa",
+        url="https://pypi.org/packages/cb/24/fc32d2397bb510a943b0bce5b1f68cc6e4b0053ef88f51c83213c8ae99e2/pytest_cpp-1.4.0-py2.py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-setuptools-scm", type="build")
-    depends_on("py-pytest@:5.3,5.4.2:", type=("build", "run"))
-    depends_on("py-colorama", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("py-colorama")
+        depends_on("py-pytest@:5.3,5.4.2:", when="@1.2.1:2.1")

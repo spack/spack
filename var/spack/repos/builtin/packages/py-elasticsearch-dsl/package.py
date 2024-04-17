@@ -17,9 +17,13 @@ class PyElasticsearchDsl(PythonPackage):
 
     license("Apache-2.0")
 
-    version("7.4.0", sha256="c4a7b93882918a413b63bed54018a1685d7410ffd8facbc860ee7fd57f214a6d")
+    version(
+        "7.4.0",
+        sha256="046ea10820b94c075081b528b4526c5bc776bda4226d702f269a5f203232064b",
+        url="https://pypi.org/packages/12/1e/c59c873cc63643b277e80efec0c5a9714798e4716ca43e97fba35b94e811/elasticsearch_dsl-7.4.0-py2.py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-six", type=("build", "run"))
-    depends_on("py-python-dateutil", type=("build", "run"))
-    depends_on("py-elasticsearch@7.0.0:7", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("py-elasticsearch@7", when="@7.2:7")
+        depends_on("py-python-dateutil", when="@7.2:")
+        depends_on("py-six", when="@7.2:7")

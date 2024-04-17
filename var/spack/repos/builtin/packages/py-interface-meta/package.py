@@ -15,12 +15,16 @@ class PyInterfaceMeta(PythonPackage):
 
     license("MIT")
 
-    version("1.3.0", sha256="8a4493f8bdb73fb9655dcd5115bc897e207319e36c8835f39c516a2d7e9d79a1")
-    version("1.2.4", sha256="4c7725dd4b80f97b7eecfb26023e1a8a7cdbb6d6a7207a8e93f9d4bfef9ee566")
+    version(
+        "1.3.0",
+        sha256="de35dc5241431886e709e20a14d6597ed07c9f1e8b4bfcffde2190ca5b700ee8",
+        url="https://pypi.org/packages/02/3f/a6ec28c88e2d8e54d32598a1e0b5208a4baa72a8e7f6e241beab5731eb9d/interface_meta-1.3.0-py3-none-any.whl",
+    )
+    version(
+        "1.2.4",
+        sha256="8d11375064d51e73764a02b8225af87b1ed63c20c1df52d3867611a5e70a5fc0",
+        url="https://pypi.org/packages/f1/43/4dddcfe75b42cd4cf285b95c5f3b132c7e13af44dcb3b74b03656072f237/interface_meta-1.2.4-py2.py3-none-any.whl",
+    )
 
-    depends_on("python@3.7:3", when="@1.3:", type=("build", "run"))
-    depends_on("python@3.4:", type=("build", "run"))
-    depends_on("py-poetry-core@1:", when="@1.3:", type="build")
-    depends_on("py-poetry-dynamic-versioning", when="@1.3:", type="build")
-    depends_on("py-setuptools", when="@:1.2", type="build")
-    depends_on("py-setupmeta", when="@:1.2", type="build")
+    with default_args(type=("build", "run")):
+        depends_on("python@3.7:3", when="@1.3:")

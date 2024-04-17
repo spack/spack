@@ -14,8 +14,21 @@ class PyPalettable(PythonPackage):
 
     license("MIT")
 
-    version("3.3.3", sha256="094dd7d9a5fc1cca4854773e5c1fc6a315b33bd5b3a8f47064928facaf0490a8")
-    version("3.3.0", sha256="72feca71cf7d79830cd6d9181b02edf227b867d503bec953cf9fa91bf44896bd")
-    version("3.0.0", sha256="eed9eb0399386ff42f90ca61d4fa38a1819a93d5adfc2d546e3e2869d9972c31")
+    version(
+        "3.3.3",
+        sha256="74e9e7d7fe5a9be065e02397558ed1777b2df0b793a6f4ce1a5ee74f74fb0caa",
+        url="https://pypi.org/packages/cf/f7/3367feadd4ab56783b0971c9b7edfbdd68e0c70ce877949a5dd2117ed4a0/palettable-3.3.3-py2.py3-none-any.whl",
+    )
+    version(
+        "3.3.0",
+        sha256="c3bf3f548fc228e86bd3d16928bbf8d621c1d1098791ceab446d0e3a5e1298d1",
+        url="https://pypi.org/packages/ca/46/5198aa24e61bb7eef28d06cb69e56bfa1942f4b6807d95a0b5ce361fe09b/palettable-3.3.0-py2.py3-none-any.whl",
+    )
+    version(
+        "3.0.0",
+        sha256="78f050b711f841941360ac6d129ff4489ad15af169e77f0ea2bde8fcafde7a3f",
+        url="https://pypi.org/packages/13/6c/99929b2e733125f8005e4f7e4b73851c54d5b099ca87fa5777948feb7417/palettable-3.0.0-py2.py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
+    with default_args(type=("build", "run")):
+        depends_on("python@3.7:", when="@3.3.3:")

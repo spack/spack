@@ -12,10 +12,16 @@ class PyTypesRequests(PythonPackage):
     homepage = "https://github.com/python/typeshed"
     pypi = "types-requests/types-requests-2.28.10.tar.gz"
 
-    version("2.31.0.2", sha256="6aa3f7faf0ea52d728bb18c0a0d1522d9bfd8c72d26ff6f61bfc3d06a411cf40")
-    version("2.28.10", sha256="97d8f40aa1ffe1e58c3726c77d63c182daea9a72d9f1fa2cafdea756b2a19f2c")
+    version(
+        "2.31.0.2",
+        sha256="56d181c85b5925cbc59f4489a57e72a8b2166f18273fd8ba7b6fe0c0b986f12a",
+        url="https://pypi.org/packages/06/9b/04bb62f11a6824df5d4568439cf0715118c265d0ffbebeb7cf4b8c9caa15/types_requests-2.31.0.2-py3-none-any.whl",
+    )
+    version(
+        "2.28.10",
+        sha256="45b485725ed58752f2b23461252f1c1ad9205b884a1e35f786bb295525a3e16a",
+        url="https://pypi.org/packages/07/41/5c0bf629bb4abdda40a5c6966deb36a7435c634e710381c8ad7398e13839/types_requests-2.28.10-py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-
-    depends_on("py-types-urllib3", type=("build", "run"))
-    depends_on("py-types-urllib3@:1.26", when="@:2.29", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("py-types-urllib3", when="@:2.31.0.6")

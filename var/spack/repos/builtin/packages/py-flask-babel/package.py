@@ -14,11 +14,14 @@ class PyFlaskBabel(PythonPackage):
 
     license("BSD-3-Clause")
 
-    version("2.0.0", sha256="f9faf45cdb2e1a32ea2ec14403587d4295108f35017a7821a2b1acb8cfd9257d")
+    version(
+        "2.0.0",
+        sha256="e6820a052a8d344e178cdd36dd4bb8aea09b4bda3d5f9fa9f008df2c7f2f5468",
+        url="https://pypi.org/packages/ab/3e/02331179ffab8b79e0383606a028b6a60fb1b4419b84935edd43223406a0/Flask_Babel-2.0.0-py3-none-any.whl",
+    )
 
-    depends_on("python@3.5:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
-    depends_on("py-flask", type=("build", "run"))
-    depends_on("py-babel@2.3:", type=("build", "run"))
-    depends_on("py-pytz", type=("build", "run"))
-    depends_on("py-jinja2@2.5:", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("py-babel@2.3:", when="@1:2")
+        depends_on("py-flask", when="@1:2")
+        depends_on("py-jinja2@2.5:", when="@1:2")
+        depends_on("py-pytz", when="@1:2")

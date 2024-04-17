@@ -15,14 +15,17 @@ class PyGalaxyToolUtil(PythonPackage):
 
     license("CC-BY-3.0")
 
-    version("22.1.5", sha256="60e0372f16255c5c11ec5c49dff432ed3beb97123d026f463cf633bc605c0112")
+    version(
+        "22.1.5",
+        sha256="062a758024cda103d3d40ba232379c0c1853e8e181b58a65c4e954456cdcc040",
+        url="https://pypi.org/packages/76/b0/4745ccb75fdb5c48a27a73900f8430119afe6c7c95b1aafed004f093788c/galaxy_tool_util-22.1.5-py2.py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-
-    depends_on("py-galaxy-util@22.1:", type=("build", "run"))
-    depends_on("py-galaxy-containers@22.1:", type=("build", "run"))
-    depends_on("py-lxml", type=("build", "run"))
-    depends_on("py-pydantic", type=("build", "run"))
-    depends_on("py-pyyaml", type=("build", "run"))
-    depends_on("py-sortedcontainers", type=("build", "run"))
-    depends_on("py-typing-extensions", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("py-galaxy-containers@22:", when="@22.1.2:22.1")
+        depends_on("py-galaxy-util@22:", when="@22.1.2:")
+        depends_on("py-lxml")
+        depends_on("py-pydantic", when="@21.9:23.0.3")
+        depends_on("py-pyyaml", when="@22:")
+        depends_on("py-sortedcontainers", when="@21.9:")
+        depends_on("py-typing-extensions", when="@21.9:")

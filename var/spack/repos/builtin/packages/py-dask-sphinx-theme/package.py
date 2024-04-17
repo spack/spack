@@ -14,7 +14,11 @@ class PyDaskSphinxTheme(PythonPackage):
 
     license("BSD-3-Clause")
 
-    version("1.3.5", sha256="151970cf0efedeb398fd6ca080407d3e81b4584d333e24498262d954171baa33")
+    version(
+        "1.3.5",
+        sha256="9b8560d014e6f0a721a9d8d2e8b5ac678152054c16fb8d33861174b09ef08e92",
+        url="https://pypi.org/packages/52/c6/952594499619881c188e1bfe24e743f9f2837489513f0fe1f34684283afd/dask_sphinx_theme-1.3.5-py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-sphinx-rtd-theme", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("py-sphinx-rtd-theme", when="@:1.3.5")

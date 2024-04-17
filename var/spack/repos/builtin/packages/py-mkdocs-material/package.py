@@ -16,14 +16,22 @@ class PyMkdocsMaterial(PythonPackage):
 
     license("MIT")
 
-    version("8.4.0", sha256="6c0a6e6cda8b43956e0c562374588160af8110584a1444f422b1cfd91930f9c7")
-    version("8.3.6", sha256="be8f95c0dfb927339b55b2cc066423dc0b381be9828ff74a5b02df979a859b66")
+    version(
+        "8.4.0",
+        sha256="ef6641e1910d4f217873ac376b4594f3157dca3949901b88b4991ba8e5477577",
+        url="https://pypi.org/packages/b8/be/e2f9f868d64d2147dd641eda9216e0f86ce5b3111a2be63a07cc1bc55520/mkdocs_material-8.4.0-py2.py3-none-any.whl",
+    )
+    version(
+        "8.3.6",
+        sha256="01f3fbab055751b3b75a64b538e86b9ce0c6a0f8d43620f6287dfa16534443e5",
+        url="https://pypi.org/packages/cb/bf/501a3aa2e67f9d35dfd6c1882dc62c53b6bb4dc2110f7d49c1df45d40b92/mkdocs_material-8.3.6-py2.py3-none-any.whl",
+    )
 
-    depends_on("python@3.7:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
-    depends_on("py-jinja2@3.0.2:", type=("build", "run"))
-    depends_on("py-markdown@3.2:", type=("build", "run"))
-    depends_on("py-mkdocs@1.3.0:", type=("build", "run"))
-    depends_on("py-mkdocs-material-extensions@1.0.3:", type=("build", "run"))
-    depends_on("py-pygments@2.12:", type=("build", "run"))
-    depends_on("py-pymdown-extensions@9.4:", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("python@3.7:", when="@:9.2")
+        depends_on("py-jinja2@3.0.2:", when="@8.3.1:9.0.0-beta4")
+        depends_on("py-markdown@3.2:", when="@:9.2.6")
+        depends_on("py-mkdocs@1.3:", when="@:8.5.4")
+        depends_on("py-mkdocs-material-extensions@1.0.3:", when="@:8.5.7")
+        depends_on("py-pygments@2.12:", when="@:9.0.0-beta4")
+        depends_on("py-pymdown-extensions@9.4:", when="@:8")

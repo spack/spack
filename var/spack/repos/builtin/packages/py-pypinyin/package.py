@@ -14,7 +14,11 @@ class PyPypinyin(PythonPackage):
 
     license("MIT")
 
-    version("0.46.0", sha256="0d2e41e95dbc20a232c0f5d3850654eebbfcba303d96358d2c46592725bb989c")
+    version(
+        "0.46.0",
+        sha256="7251f4fa0b1e43ad91f6121d9a842e8acd72a6a34deea5e87d2a97621eadc11f",
+        url="https://pypi.org/packages/29/24/39eceaa25584f704efc22d7beb17a887fc92425f82180be28bf0486b2c83/pypinyin-0.46.0-py2.py3-none-any.whl",
+    )
 
-    depends_on("python@2.6:2,3.3:3", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
+    with default_args(type=("build", "run")):
+        depends_on("python@:3")

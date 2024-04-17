@@ -14,8 +14,11 @@ class PyMplhepData(PythonPackage):
 
     license("MIT")
 
-    version("0.0.3", sha256="b54d257f3f53c93a442cda7a6681ce267277e09173c0b41fd78820f78321772f")
+    version(
+        "0.0.3",
+        sha256="a1eba7727fab31902e6fcd113c8f4b12ff3fb0666781e7514f8b79093cdc1c65",
+        url="https://pypi.org/packages/b9/f2/97faf68c79fc135061190092e8e6db9a024de4249a7e82acc83d9443db2b/mplhep_data-0.0.3-py3-none-any.whl",
+    )
 
-    depends_on("python@3.7:", type=("build", "run"))
-    depends_on("py-setuptools@42:", type="build")
-    depends_on("py-setuptools-scm@3.4:+toml", type="build")
+    with default_args(type=("build", "run")):
+        depends_on("python@3.7:")

@@ -14,7 +14,8 @@ class PyPastel(PythonPackage):
 
     license("MIT")
 
-    version("0.2.1", sha256="e6581ac04e973cac858828c6202c1e1e81fee1dc7de7683f3e1ffe0bfd8a573d")
-
-    depends_on("python@2.7,3.4:3", type=("build", "run"))
-    depends_on("py-poetry-core@1:", type="build")
+    version(
+        "0.2.1",
+        sha256="4349225fcdf6c2bb34d483e523475de5bb04a5c10ef711263452cb37d7dd4364",
+        url="https://pypi.org/packages/aa/18/a8444036c6dd65ba3624c63b734d3ba95ba63ace513078e1580590075d21/pastel-0.2.1-py2.py3-none-any.whl",
+    )

@@ -17,8 +17,12 @@ class PyGriffe(PythonPackage):
 
     license("ISC")
 
-    version("0.22.0", sha256="a3c25a2b7bf729ecee7cd455b4eff548f01c620b8f58a8097a800caad221f12e")
+    version(
+        "0.22.0",
+        sha256="65c94cba634d6ad397c495b04ed5fd3f06d9b16c4f9f78bd63be9ea34d6b7113",
+        url="https://pypi.org/packages/fe/ad/0b31357c29f9108c51e5ba85cdf989fe45652e4e24883da68be7e2272700/griffe-0.22.0-py3-none-any.whl",
+    )
 
-    depends_on("python@3.7:", type=("build", "run"))
-    depends_on("py-pdm-pep517", type="build")
-    depends_on("py-cached-property", type=("build", "run"), when="^python@:3.7")
+    with default_args(type=("build", "run")):
+        depends_on("python@3.7:", when="@:0.30")
+        depends_on("py-cached-property", when="@:0.30 ^python@:3.7")

@@ -14,10 +14,13 @@ class PySymfit(PythonPackage):
 
     license("MIT")
 
-    version("0.3.5", sha256="24c66305895c590249da7e61f62f128ee1c0c43c0a8c8e33b8abd3e0931f0881")
+    version(
+        "0.3.5",
+        sha256="33bde64b1092b57550c3c136d4d2d608896f29a3d41e940d24e0ff8696e5fa00",
+        url="https://pypi.org/packages/ea/71/e653cce934d1711198b29f336d31e7bdeff1c5f07bf053948203f8809cb1/symfit-0.3.5-py2.py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools@17.1:", type="build")
-    depends_on("py-pbr@1.9:", type="build")
-    depends_on("py-numpy", type="run")
-    depends_on("py-scipy", type="run")
-    depends_on("py-sympy", type="run")
+    with default_args(type=("build", "run")):
+        depends_on("py-numpy", when="@0.3:0.4.1")
+        depends_on("py-scipy", when="@0.3:0.4.0")
+        depends_on("py-sympy", when="@0.3:0.4.2")

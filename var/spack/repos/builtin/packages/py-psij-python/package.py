@@ -19,11 +19,13 @@ class PyPsijPython(PythonPackage):
     license("MIT")
 
     version(
-        "0.1.0.post2", sha256="78f4fb147248be479aa6128b583dff9052698c49f36c6e9811b4c3f9db326043"
+        "0.1.0.post2",
+        sha256="427c58dda028e6dec222bc45ebaec13d843a28696cc96814355ca6efe4d739b1",
+        url="https://pypi.org/packages/8c/38/ba44be75f86d32df45d2deb275c9c250bf71a2629fd6ca4ee1def5739d25/psij_python-0.1.0.post2-py3-none-any.whl",
     )
 
-    depends_on("python@3.7:", type=("build", "run"))
-    depends_on("py-filelock", type=("build", "run"))
-    depends_on("py-psutil", type=("build", "run"))
-    depends_on("py-pystache", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
+    with default_args(type=("build", "run")):
+        depends_on("python@3.7:")
+        depends_on("py-filelock", when="@:0.1")
+        depends_on("py-psutil", when="@:0.1")
+        depends_on("py-pystache@0.6:")

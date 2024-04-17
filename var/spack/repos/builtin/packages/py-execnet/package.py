@@ -16,12 +16,21 @@ class PyExecnet(PythonPackage):
 
     license("MIT")
 
-    version("1.9.0", sha256="8f694f3ba9cc92cab508b152dcfe322153975c29bda272e2fd7f3f00f36e47c5")
-    version("1.7.1", sha256="cacb9df31c9680ec5f95553976c4da484d407e85e41c83cb812aa014f0eddc50")
-    version("1.4.1", sha256="f66dd4a7519725a1b7e14ad9ae7d3df8e09b2da88062386e08e941cafc0ef3e6")
+    version(
+        "1.9.0",
+        sha256="a295f7cc774947aac58dde7fdc85f4aa00c42adf5d8f5468fc630c1acf30a142",
+        url="https://pypi.org/packages/81/c0/3072ecc23f4c5e0a1af35e3a222855cfd9c80a1a105ca67be3b6172637dd/execnet-1.9.0-py2.py3-none-any.whl",
+    )
+    version(
+        "1.7.1",
+        sha256="d4efd397930c46415f62f8a31388d6be4f27a91d7550eb79bc64a756e0056547",
+        url="https://pypi.org/packages/d3/2e/c63af07fa471e0a02d05793c7a56a9f7d274a8489442a5dc4fb3b2b3c705/execnet-1.7.1-py2.py3-none-any.whl",
+    )
+    version(
+        "1.4.1",
+        sha256="d2b909c7945832e1c19cfacd96e78da68bdadc656440cfc7dfe59b766744eb8c",
+        url="https://pypi.org/packages/07/16/51d99ff02e7b03dfdf407b05c157b8d578e23fb0404a640c0ef57ce708e9/execnet-1.4.1-py2.py3-none-any.whl",
+    )
 
-    depends_on("python@2.7:2.8,3.4:", type=("build", "run"))
-    depends_on("python@2.7:2.8,3.5:", type=("build", "run"), when="@1.9:")
-    depends_on("py-setuptools", type="build")
-    depends_on("py-setuptools-scm", type="build")
-    depends_on("py-apipkg@1.4:", type=("build", "run"), when="@:1.7")
+    with default_args(type=("build", "run")):
+        depends_on("py-apipkg@1.4:", when="@1.4:1.8")

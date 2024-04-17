@@ -15,8 +15,11 @@ class PyPyyamlEnvTag(PythonPackage):
 
     license("MIT")
 
-    version("0.1", sha256="70092675bda14fdec33b31ba77e7543de9ddc88f2e5b99160396572d11525bdb")
+    version(
+        "0.1",
+        sha256="af31106dec8a4d68c60207c1886031cbf839b68aa7abccdb19868200532c2069",
+        url="https://pypi.org/packages/5a/66/bbb1dd374f5c870f59c5bb1db0e18cbe7fa739415a24cbd95b2d1f5ae0c4/pyyaml_env_tag-0.1-py3-none-any.whl",
+    )
 
-    depends_on("python@3.6:", type=("build", "run"))
-    depends_on("py-flit-core@2:3", type="build")
-    depends_on("py-pyyaml", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("py-pyyaml")

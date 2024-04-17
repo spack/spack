@@ -14,21 +14,45 @@ class PyPythonSwiftclient(PythonPackage):
 
     maintainers("ajkotobi")
 
-    version("3.12.0", sha256="313b444a14d0f9b628cbf3e8c52f2c4271658f9e8a33d4222851c2e4f0f7b7a0")
-    version("3.11.1", sha256="06919d59676d3e215f4da4f3f930d71880dda3528289842b25199509df712411")
-    version("3.10.0", sha256="66227eaf29a691c70675fb9982022980b92797c273dd5e6dc7e680425e9a3634")
-    version("3.9.0", sha256="4f2097492e4c76e948882fc859bfa033ade09bed72f8e6b328e34a3467d9a377")
-    version("3.8.1", sha256="3a013303643f77a99befa05582dfb93671e1fba1aed9f4a517418129700aedb8")
-    version("3.8.0", sha256="107a9d5356663365a9f7c0b3a2b55da97a0a9ba7f10da2319b3972481510f33d")
-    version("3.7.1", sha256="06bda5a6f81ea132e5cb52d0eb0616a0ab0958b4ec0d1cb7f850f04bf178852f")
+    version(
+        "3.12.0",
+        sha256="07c63cf223127b7047e034c71532c71277d95ad60ba1d38bbae5bed2f4342c09",
+        url="https://pypi.org/packages/7b/71/454f3d6c72b9a7740295afed58e4382c06bd9a8b2657f98dad3ab9ec521f/python_swiftclient-3.12.0-py2.py3-none-any.whl",
+    )
+    version(
+        "3.11.1",
+        sha256="eb53bf614eb276896002884c9cf5c2bbdff56da49e9e343df088d180baf8c685",
+        url="https://pypi.org/packages/49/e5/692e4383986f5b5893d495961d8582501679082b51ab139ca8153abff07d/python_swiftclient-3.11.1-py2.py3-none-any.whl",
+    )
+    version(
+        "3.10.0",
+        sha256="fc504de50fa1c37b4869c9badd1bd2161bf212475ecbad954abd8327b224a383",
+        url="https://pypi.org/packages/3e/b7/b3d61ef72cfa37083f67dcd440d009b05bfbcc350791de61d4fd220a205c/python_swiftclient-3.10.0-py2.py3-none-any.whl",
+    )
+    version(
+        "3.9.0",
+        sha256="cba38ac00a69bcea610318bfbe4f8aaee9d7b46705359477b8d3602ea2009878",
+        url="https://pypi.org/packages/cb/a5/f901ca2b74aa8ad1eb051407b2cdb09f311d02a3f3ba77a4c27629d052be/python_swiftclient-3.9.0-py2.py3-none-any.whl",
+    )
+    version(
+        "3.8.1",
+        sha256="0b460f6a2c16d474dd2a85674162a04e14f40a21d9ef0197172fb5c5cc0bc5d5",
+        url="https://pypi.org/packages/1a/6c/1dca59a10d9689203599b1507f0420242cfe914fa518063f5cebf36207b1/python_swiftclient-3.8.1-py2.py3-none-any.whl",
+    )
+    version(
+        "3.8.0",
+        sha256="9d8c76cc78dbf252f9c6f57e5a5f45299fceb06ac13c04de431a73610110ff89",
+        url="https://pypi.org/packages/1d/00/4461030f0b0937475029c959dc21d254c02d6809e6102a12287ec2d4843b/python_swiftclient-3.8.0-py2.py3-none-any.whl",
+    )
+    version(
+        "3.7.1",
+        sha256="179449354b9dcda6f24c5f66826d8a59263c531761d0ce83591ea4aedbd656d4",
+        url="https://pypi.org/packages/91/9e/bec42f5bf9dbe31417888b76a0c68e85ba07505e1b4775655c1b70745b55/python_swiftclient-3.7.1-py2.py3-none-any.whl",
+    )
 
     variant("keystone", default=False, description="Enable keystone authentication")
 
-    depends_on("python@2.7:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
-    depends_on("py-pbr", type="build")
-
-    depends_on("py-requests@1.1.0:", type=("build", "run"))
-    depends_on("py-six@1.9:", type=("build", "run"))
-
-    depends_on("py-python-keystoneclient@0.7.0:", when="+keystone", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("py-python-keystoneclient@0.7:", when="+keystone")
+        depends_on("py-requests@1.1:", when="@:3")
+        depends_on("py-six@1.9:", when="@3.6:3")

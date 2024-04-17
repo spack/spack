@@ -15,12 +15,26 @@ class PyJeepney(PythonPackage):
 
     license("MIT")
 
-    version("0.8.0", sha256="5efe48d255973902f6badc3ce55e2aa6c5c3b3bc642059ef3a91247bcfcc5806")
-    version("0.7.1", sha256="fa9e232dfa0c498bd0b8a3a73b8d8a31978304dcef0515adc859d4e096f96f4f")
-    version("0.6.0", sha256="7d59b6622675ca9e993a6bd38de845051d315f8b0c72cca3aef733a20b648657")
-    version("0.4.3", sha256="3479b861cc2b6407de5188695fa1a8d57e5072d7059322469b62628869b8e36e")
+    version(
+        "0.8.0",
+        sha256="c0a454ad016ca575060802ee4d590dd912e35c122fa04e70306de3d076cce755",
+        url="https://pypi.org/packages/ae/72/2a1e2290f1ab1e06f71f3d0f1646c9e4634e70e1d37491535e19266e8dc9/jeepney-0.8.0-py3-none-any.whl",
+    )
+    version(
+        "0.7.1",
+        sha256="1b5a0ea5c0e7b166b2f5895b91a08c14de8915afda4407fb5022a195224958ac",
+        url="https://pypi.org/packages/14/b8/bb3e34d71472140f9bfdf5d77cd063e2cc964b72b1bb0b70fe3c1e7db932/jeepney-0.7.1-py3-none-any.whl",
+    )
+    version(
+        "0.6.0",
+        sha256="aec56c0eb1691a841795111e184e13cad504f7703b9a64f63020816afa79a8ae",
+        url="https://pypi.org/packages/51/b0/a6ea72741aaac3f37fb96d195e4ee576a103c4c04e279bc6b446a70960e1/jeepney-0.6.0-py3-none-any.whl",
+    )
+    version(
+        "0.4.3",
+        sha256="d6c6b49683446d2407d2fe3acb7a368a77ff063f9182fe427da15d622adc24cf",
+        url="https://pypi.org/packages/79/31/2e8d42727595faf224c6dbb748c32b192e212f25495fe841fb7ce8e168b8/jeepney-0.4.3-py3-none-any.whl",
+    )
 
-    depends_on("python@3.7:", when="@0.8:", type=("build", "run"))
-    depends_on("python@3.6:", when="@0.5:", type=("build", "run"))
-    depends_on("python@3.5:", when="@:0.4", type=("build", "run"))
-    depends_on("py-flit-core@2:3", type="build")
+    with default_args(type=("build", "run")):
+        depends_on("python@3.7:", when="@0.8:")

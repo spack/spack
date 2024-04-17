@@ -17,9 +17,12 @@ class PyFastdownload(PythonPackage):
 
     license("Apache-2.0")
 
-    version("0.0.5", sha256="64e67af30690fa98ae1c8a1b52495769842f723565239a5430208ad05585af18")
+    version(
+        "0.0.5",
+        sha256="bf5c48fd415e01484307dd619ff01fc0747f22b0ee01cafd1b2b3b98d34f31f4",
+        url="https://pypi.org/packages/4a/7d/d352ae8f0aa2170f9e0ae4676148675a738cf9fd0c034bd024b82f7df8ed/fastdownload-0.0.5-py3-none-any.whl",
+    )
 
-    depends_on("python@3.6:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
-    depends_on("py-fastprogress", type=("build", "run"))
-    depends_on("py-fastcore@1.3.26:", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("py-fastcore@1.3.26:", when="@0.0.5:")
+        depends_on("py-fastprogress")

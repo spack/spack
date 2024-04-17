@@ -12,9 +12,11 @@ class PyPytestMetadata(PythonPackage):
     homepage = "https://github.com/pytest-dev/pytest-metadata"
     pypi = "pytest-metadata/pytest-metadata-1.11.0.tar.gz"
 
-    version("1.11.0", sha256="71b506d49d34e539cc3cfdb7ce2c5f072bea5c953320002c95968e0238f8ecf1")
+    version(
+        "1.11.0",
+        sha256="576055b8336dd4a9006dd2a47615f76f2f8c30ab12b1b1c039d99e834583523f",
+        url="https://pypi.org/packages/e5/12/bfb677aad996cc994efb9c61289a4994d60079587e85155738859fd3b68e/pytest_metadata-1.11.0-py2.py3-none-any.whl",
+    )
 
-    depends_on("python@2.7:2.8,3.6:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
-    depends_on("py-setuptools-scm", type="build")
-    depends_on("py-pytest@2.9:", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("py-pytest@2.9:", when="@1.4:1")

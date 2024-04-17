@@ -17,21 +17,23 @@ class PyStrawberryfields(PythonPackage):
 
     license("Apache-2.0")
 
-    version("0.23.0", sha256="bfe94867cdee8e2904752573f1ff46b78d9f373da16a1cfa31e1bd6cdf2e3cb0")
+    version(
+        "0.23.0",
+        sha256="3298b77b07e5e8e16e63af253ac20b826a9df926f8002450ea421e7c9faaeac7",
+        url="https://pypi.org/packages/c0/16/e0062ed6fb37bc3734660aed2a4ddbef0cfd82b78dae48b82e9aa2019075/StrawberryFields-0.23.0-py3-none-any.whl",
+    )
 
-    depends_on("python@3.7:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
-
-    depends_on("py-networkx@2.0:", type=("build", "run"))
-    depends_on("py-numba", type=("build", "run"))
-    depends_on("py-numpy@1.17.4:", type=("build", "run"))
-    depends_on("py-python-dateutil@2.8.0:", type=("build", "run"))
-    depends_on("py-quantum-blackbird@0.3.0:", type=("build", "run"))
-    depends_on("py-requests@2.22.0:", type=("build", "run"))
-    depends_on("py-scipy@1.0.0:", type=("build", "run"))
-    depends_on("py-sympy@1.5:", type=("build", "run"))
-    depends_on("py-thewalrus@0.18.0:", type=("build", "run"))
-    depends_on("py-toml", type=("build", "run"))
-    depends_on("py-urllib3@1.25.3:", type=("build", "run"))
-    depends_on("py-quantum-xir@0.1.1:", type=("build", "run"))
-    depends_on("py-xanadu-cloud-client@0.2.1:", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("py-networkx@2:")
+        depends_on("py-numba")
+        depends_on("py-numpy@1.17.4:")
+        depends_on("py-python-dateutil@2.8:")
+        depends_on("py-quantum-blackbird@0.3:", when="@0.17:")
+        depends_on("py-quantum-xir@0.1.1:", when="@0.21:")
+        depends_on("py-requests@2.22:")
+        depends_on("py-scipy@1.0.0:")
+        depends_on("py-sympy@1.5:")
+        depends_on("py-thewalrus@0.18:", when="@0.21:")
+        depends_on("py-toml")
+        depends_on("py-urllib3@1.25.3:")
+        depends_on("py-xanadu-cloud-client@0.2.1:", when="@0.23:")

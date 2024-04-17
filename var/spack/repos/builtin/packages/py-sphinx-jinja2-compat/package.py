@@ -16,9 +16,12 @@ class PySphinxJinja2Compat(PythonPackage):
 
     license("MIT")
 
-    version("0.2.0", sha256="c41346d859653e202b623f4236da8936243ed734abf5984adc3bef59d6f9a946")
+    version(
+        "0.2.0",
+        sha256="a5f3112d6873991c2cf28e37287163a0485d9c0812863b8aa4df7182722501fb",
+        url="https://pypi.org/packages/75/c7/18ffe4d7cb65ea20094645d640ff18ac4cd6a64b1f26b71f8308d26c9d32/sphinx_jinja2_compat-0.2.0-py3-none-any.whl",
+    )
 
-    depends_on("py-whey", type="build")
-    depends_on("py-whey-pth", type="build")
-    depends_on("py-jinja2@2.10:", type=("build", "run"))
-    depends_on("py-markupsafe@1:", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("py-jinja2@2.10:")
+        depends_on("py-markupsafe@1:")

@@ -15,14 +15,16 @@ class PySnakemakeStoragePluginAzure(PythonPackage):
 
     license("MIT")
 
-    version("0.1.4", sha256="dcfcf285c9f1b1aa89db359afbf02b28d9e57a97ddac66747d3e46832e7ddbff")
+    version(
+        "0.1.4",
+        sha256="bafb2797c94a92954765ce3816f15d09aa51b566505d51e0fc3d046fb10ef4ec",
+        url="https://pypi.org/packages/66/6a/0f696f1d87dea8450c8aed92e1f7c4dd382585c4e699c0a0a002a0d769fd/snakemake_storage_plugin_azure-0.1.4-py3-none-any.whl",
+    )
 
-    depends_on("py-azure-storage-blob@12.19:12", type=("build", "run"))
-    depends_on("py-azure-core@1.29.5:1", type=("build", "run"))
-    depends_on("py-azure-identity@1.15:1", type=("build", "run"))
-
-    depends_on("py-snakemake-interface-common@1.15:1", type=("build", "run"))
-    depends_on("py-snakemake-interface-storage-plugins@3", type=("build", "run"))
-
-    depends_on("python@3.11:3", type=("build", "run"))
-    depends_on("py-poetry-core", type="build")
+    with default_args(type=("build", "run")):
+        depends_on("python@3.11:3")
+        depends_on("py-azure-core@1.29.5:")
+        depends_on("py-azure-identity@1.15.0:")
+        depends_on("py-azure-storage-blob@12.19.0:")
+        depends_on("py-snakemake-interface-common@1.15:", when="@0.1.4:")
+        depends_on("py-snakemake-interface-storage-plugins@3:", when="@0.1.2:")

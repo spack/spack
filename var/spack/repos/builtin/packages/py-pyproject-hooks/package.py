@@ -14,7 +14,12 @@ class PyPyprojectHooks(PythonPackage):
 
     license("MIT")
 
-    version("1.0.0", sha256="f271b298b97f5955d53fb12b72c1fb1948c22c1a6b70b315c54cedaca0264ef5")
+    version(
+        "1.0.0",
+        sha256="283c11acd6b928d2f6a7c73fa0d01cb2bdc5f07c57a2eeb6e83d5e56b97976f8",
+        url="https://pypi.org/packages/d5/ea/9ae603de7fbb3df820b23a70f6aff92bf8c7770043254ad8d2dc9d6bcba4/pyproject_hooks-1.0.0-py3-none-any.whl",
+    )
 
-    depends_on("py-flit-core@3.2:3", type="build")
-    depends_on("py-tomli@1.1:", when="^python@:3.10", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("python@3.7:")
+        depends_on("py-tomli@1.1:", when="@1: ^python@:3.10")

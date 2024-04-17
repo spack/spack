@@ -15,12 +15,15 @@ class PyBioblend(PythonPackage):
 
     license("MIT")
 
-    version("1.0.0", sha256="3794288bbf891ae6edc1bcdd9618a3ae16b6ed4a04c946505f7e29f2f28898a5")
+    version(
+        "1.0.0",
+        sha256="db9616a77c614f3de900796079e9db72af739809232702d5ea4acf5ef49b4d38",
+        url="https://pypi.org/packages/97/cb/eb052cb733e6422599786f56f5f6bf2a055e7041a522ec3541beb9ee4518/bioblend-1.0.0-py2.py3-none-any.whl",
+    )
 
-    depends_on("python@3.7:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
-
-    depends_on("py-requests@2.20.0:", type=("build", "run"))
-    depends_on("py-requests-toolbelt@0.5.1:0.8,0.9.1:", type=("build", "run"))
-    depends_on("py-tuspy", type=("build", "run"))
-    depends_on("py-typing-extensions", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("python@3.7:", when="@0.17:")
+        depends_on("py-requests@2.20:", when="@0.12:")
+        depends_on("py-requests-toolbelt@0.5.1:0.8,0.9.1:", when="@0.13:")
+        depends_on("py-tuspy", when="@0.18:")
+        depends_on("py-typing-extensions", when="@1:")

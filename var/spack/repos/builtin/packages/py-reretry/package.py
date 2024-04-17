@@ -15,9 +15,16 @@ class PyReretry(PythonPackage):
 
     license("Apache-2.0")
 
-    version("0.11.8", sha256="f2791fcebe512ea2f1d153a2874778523a8064860b591cd90afc21a8bed432e3")
-    version("0.11.1", sha256="4ae1840ae9e443822bb70543c485bb9c45d1d009e32bd6809f2a9f2839149f5d")
+    version(
+        "0.11.8",
+        sha256="5ec1084cd9644271ee386d34cd5dd24bdb3e91d55961b076d1a31d585ad68a79",
+        url="https://pypi.org/packages/66/11/e295e07d4ae500144177f875a8de11daa4d86b8246ab41c76a98ce9280ca/reretry-0.11.8-py2.py3-none-any.whl",
+    )
+    version(
+        "0.11.1",
+        sha256="54ecdd41b5ead5bc65a65cdeccf10cb3450f884168c08f4a9e0e089583890d10",
+        url="https://pypi.org/packages/eb/75/592a6dabe116d0e54e95052aafaa703c1737c6a2d8c3a7f99cc6d1eeb5b8/reretry-0.11.1-py2.py3-none-any.whl",
+    )
 
-    depends_on("python@3.7:", type=("build", "run"), when="@0.11.4:")
-    depends_on("py-setuptools", type="build")
-    depends_on("py-pbr", type="build", when="@:0.11.7")
+    with default_args(type=("build", "run")):
+        depends_on("python@3.7:", when="@0.11.7:")

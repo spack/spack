@@ -14,11 +14,21 @@ class PyIso8601(PythonPackage):
 
     license("MIT")
 
-    version("1.1.0", sha256="32811e7b81deee2063ea6d2e94f8819a86d1f3811e49d23623a41fa832bef03f")
-    version("1.0.2", sha256="27f503220e6845d9db954fb212b95b0362d8b7e6c1b2326a87061c3de93594b1")
-    version("0.1.14", sha256="8aafd56fa0290496c5edbb13c311f78fa3a241f0853540da09d9363eae3ebd79")
+    version(
+        "1.1.0",
+        sha256="8400e90141bf792bce2634df533dc57e3bee19ea120a87bebcd3da89a58ad73f",
+        url="https://pypi.org/packages/65/6c/9d72435c72adfa6e4ed1824b6df7fffbeaaf15c653881e9b041a318ba572/iso8601-1.1.0-py3-none-any.whl",
+    )
+    version(
+        "1.0.2",
+        sha256="d7bc01b1c2a43b259570bb307f057abc578786ea734ba2b87b836c5efc5bd443",
+        url="https://pypi.org/packages/df/e5/589bc81d410139ec4e4f37d9af5a50987566abf6d087b3c4fbed708109a9/iso8601-1.0.2-py3-none-any.whl",
+    )
+    version(
+        "0.1.14",
+        sha256="e7e1122f064d626e17d47cd5106bed2c620cb38fe464999e0ddae2b6d2de6004",
+        url="https://pypi.org/packages/c5/10/da48dc228b821a64407c2527e1e8ee98917b36e80a181f2ca06ea3cb676b/iso8601-0.1.14-py2.py3-none-any.whl",
+    )
 
-    depends_on("python@3.6.2:3", when="@1:", type=("build", "run"))
-    depends_on("py-poetry-core@1:", when="@1:", type="build")
-
-    depends_on("py-setuptools", when="@:0", type="build")
+    with default_args(type=("build", "run")):
+        depends_on("python@:3", when="@1")

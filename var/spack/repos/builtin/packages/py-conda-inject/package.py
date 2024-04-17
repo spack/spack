@@ -14,9 +14,12 @@ class PyCondaInject(PythonPackage):
 
     license("MIT")
 
-    version("1.3.1", sha256="9e8d902230261beba74083aae12c2c5a395e29b408469fefadc8aaf51ee441e5")
+    version(
+        "1.3.1",
+        sha256="0a106bb0ef3553e82b6e7ef343162305c44dad7789c1909eed1abe83548c7fc6",
+        url="https://pypi.org/packages/bd/4e/97d9e1758c6d505ca61daf2a24d736b14b52d8538d161d539046690802fc/conda_inject-1.3.1-py3-none-any.whl",
+    )
 
-    depends_on("py-pyyaml@6", type=("build", "run"))
-
-    depends_on("python@3.9:3", type=("build", "run"))
-    depends_on("py-poetry-core", type="build")
+    with default_args(type=("build", "run")):
+        depends_on("python@3.9:3")
+        depends_on("py-pyyaml@6.0:")

@@ -14,8 +14,12 @@ class PyMsrestazure(PythonPackage):
     homepage = "https://github.com/Azure/msrestazure-for-python"
     pypi = "msrestazure/msrestazure-0.6.3.tar.gz"
 
-    version("0.6.3", sha256="0ec9db93eeea6a6cf1240624a04f49cd8bbb26b98d84a63a8220cfda858c2a96")
+    version(
+        "0.6.3",
+        sha256="0ae7f903ff81631512beef39602c4104a8fe04cb7d166f28a1ec43c0f0985749",
+        url="https://pypi.org/packages/01/70/4abd575d876428e3892ca6b7acafb59b53cb9923fa6aec2cbbf173495ce1/msrestazure-0.6.3-py2.py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-msrest@0.6.0:1", type=("build", "run"))
-    depends_on("py-adal@0.6.0:1", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("py-adal@0.6:", when="@0.5:")
+        depends_on("py-msrest@0.6.0:", when="@0.6:")

@@ -13,6 +13,8 @@ class PyZipstreamNew(PythonPackage):
     homepage = "https://github.com/arjan-s/python-zipstream"
     pypi = "zipstream-new/zipstream-new-1.1.8.tar.gz"
 
-    version("1.1.8", sha256="b031fe181b94e51678389d26b174bc76382605a078d7d5d8f5beae083f111c76")
-
-    depends_on("py-setuptools", type="build")
+    version(
+        "1.1.8",
+        sha256="0662eb3ebe764fa168a5883cd8819ef83b94bd9e39955537188459d2264a7f60",
+        url="https://pypi.org/packages/81/f3/d7b4c8c9b6657ff0db27b739894ed0665fa8f3c78a7452bf74d6447f6865/zipstream_new-1.1.8-py3-none-any.whl",
+    )

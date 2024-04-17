@@ -13,7 +13,11 @@ class PyAzureKeyvaultNspkg(PythonPackage):
     homepage = "https://github.com/Azure/azure-sdk-for-python/tree/master/sdk/keyvault"
     pypi = "azure-keyvault-nspkg/azure-keyvault-nspkg-1.0.0.zip"
 
-    version("1.0.0", sha256="ac68b88aab9c6caf54a23da2a1d1c718d7520bae5adff04dd0a743228269b641")
+    version(
+        "1.0.0",
+        sha256="04f505c736d899da41e81a873ff2edccca53a4a4b451a77a10083722b8002a70",
+        url="https://pypi.org/packages/f2/be/28ff251e315509e7f4b8fa5a5968d72291982a93196752b5b45782af2249/azure_keyvault_nspkg-1.0.0-py2.py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-azure-nspkg@3.0.0:", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("py-azure-nspkg@3:")

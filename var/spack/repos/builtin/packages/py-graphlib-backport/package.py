@@ -12,7 +12,11 @@ class PyGraphlibBackport(PythonPackage):
     homepage = "https://github.com/mariushelf/graphlib_backport"
     pypi = "graphlib_backport/graphlib_backport-1.0.3.tar.gz"
 
-    version("1.0.3", sha256="7bb8fc7757b8ae4e6d8000a26cd49e9232aaa9a3aa57edb478474b8424bfaae2")
+    version(
+        "1.0.3",
+        sha256="24246967b9e7e6a91550bc770e6169585d35aa32790258579a8a3899a8c18fde",
+        url="https://pypi.org/packages/b0/2a/d77491343f72546943dd79974133a5261b9bc12a80806c34f51a058c0732/graphlib_backport-1.0.3-py3-none-any.whl",
+    )
 
-    depends_on("python@3.6:3", type=("build", "run"))
-    depends_on("py-poetry@1:", type="build")
+    with default_args(type=("build", "run")):
+        depends_on("python@:3")

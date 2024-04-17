@@ -15,7 +15,8 @@ class PyEdamOntology(PythonPackage):
 
     license("MIT")
 
-    version("1.25.2", sha256="608c062ecb1ec260637645f73b4157d5abd47b19058a4ccca3bf292e373b8e06")
-
-    depends_on("python@3.5:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
+    version(
+        "1.25.2",
+        sha256="7258e0ae1aed6976ab5b292e3f665fb5105efcd654313890840c7554f226d140",
+        url="https://pypi.org/packages/72/11/2ce89a7d5f018bce4c8aa26f815f0001774f9594afa17396aced9de52b0a/edam_ontology-1.25.2-py2.py3-none-any.whl",
+    )

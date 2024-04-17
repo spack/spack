@@ -14,11 +14,12 @@ class PyAutomat(PythonPackage):
 
     license("MIT")
 
-    version("20.2.0", sha256="7979803c74610e11ef0c0d68a2942b152df52da55336e0c9d58daf1831cbdf33")
+    version(
+        "20.2.0",
+        sha256="b6feb6455337df834f6c9962d6ccf771515b7d939bca142b29c20c2376bc6111",
+        url="https://pypi.org/packages/dd/83/5f6f3c1a562674d65efc320257bdc0873ec53147835aeef7762fe7585273/Automat-20.2.0-py2.py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-setuptools-scm", type="build")
-    depends_on("py-m2r", type="build")
-
-    depends_on("py-attrs@19.2.0:", type=("build", "run"))
-    depends_on("py-six", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("py-attrs@19.2:", when="@20:")
+        depends_on("py-six")

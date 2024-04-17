@@ -15,12 +15,14 @@ class PySnakemakeStoragePluginFtp(PythonPackage):
 
     license("MIT")
 
-    version("0.1.2", sha256="e3097e19dbe9ed4c8cf794e1d4594c3032ee7f7a9f7797dfb0d2556f0aafe07c")
+    version(
+        "0.1.2",
+        sha256="8331a571f709b9e9729e4d8188c373e371b401e3afcdc2ff25c0da766b98d1ec",
+        url="https://pypi.org/packages/9b/73/4acb25f5381a18bfa5a7cf3e4535028ef4f15d9a9e6eb6415fa66e35b8bd/snakemake_storage_plugin_ftp-0.1.2-py3-none-any.whl",
+    )
 
-    depends_on("py-ftputil@5.0.4:5", type=("build", "run"))
-
-    depends_on("py-snakemake-interface-common@1.15.1:1", type=("build", "run"))
-    depends_on("py-snakemake-interface-storage-plugins@3", type=("build", "run"))
-
-    depends_on("python@3.11:3", type=("build", "run"))
-    depends_on("py-poetry-core", type="build")
+    with default_args(type=("build", "run")):
+        depends_on("python@3.11:3")
+        depends_on("py-ftputil@5.0.4:")
+        depends_on("py-snakemake-interface-common@1.15.1:", when="@0.1.2:")
+        depends_on("py-snakemake-interface-storage-plugins@3:")

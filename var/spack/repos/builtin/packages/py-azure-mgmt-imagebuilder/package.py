@@ -13,9 +13,13 @@ class PyAzureMgmtImagebuilder(PythonPackage):
     homepage = "https://github.com/Azure/azure-sdk-for-python"
     pypi = "azure-mgmt-imagebuilder/azure-mgmt-imagebuilder-0.4.0.zip"
 
-    version("0.4.0", sha256="4c9291bf16b40b043637e5e4f15650f71418ac237393e62219cab478a7951733")
+    version(
+        "0.4.0",
+        sha256="e9240c332f2dabb8fdabce8a8b21ed37392ac97389d151bcf79e4e9ea1ca2d09",
+        url="https://pypi.org/packages/d1/42/7c50901d834bdeee7fa8ea03993ce3294c4f41640e066468cc0d6e255483/azure_mgmt_imagebuilder-0.4.0-py2.py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-msrest@0.5.0:", type=("build", "run"))
-    depends_on("py-msrestazure@0.4.32:1", type=("build", "run"))
-    depends_on("py-azure-common@1.1:1", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("py-azure-common@1.1:")
+        depends_on("py-msrest@0.5:", when="@:0")
+        depends_on("py-msrestazure@0.4.32:", when="@:0")

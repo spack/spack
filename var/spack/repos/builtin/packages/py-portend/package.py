@@ -14,9 +14,11 @@ class PyPortend(PythonPackage):
 
     license("MIT")
 
-    version("2.5", sha256="19dc27bfb3c72471bd30a235a4d5fbefef8a7e31cab367744b5d87a205e7bfd9")
+    version(
+        "2.5",
+        sha256="d2dca12e585ce29fc357b31ce424a27c16e2d485029252bbf8ddcc9696207976",
+        url="https://pypi.org/packages/0a/f5/0e5fe0bba1450034f023519aed3ca326bc42981475a93e3645ab868f351c/portend-2.5-py2.py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-setuptools-scm@1.15.0:", type="build")
-    depends_on("py-tempora@1.8:", type=("run", "build"))
-    depends_on("python@2.7:", type=("run", "build"))
+    with default_args(type=("build", "run")):
+        depends_on("py-tempora@1.8:", when="@2:")

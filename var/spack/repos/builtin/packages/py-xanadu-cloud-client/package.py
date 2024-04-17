@@ -15,14 +15,16 @@ class PyXanaduCloudClient(PythonPackage):
 
     license("Apache-2.0")
 
-    version("0.3.0", sha256="ef65ab7a629e7cd801b20bca8d300d278bf0136c6157c49e12d52c9108171edf")
+    version(
+        "0.3.0",
+        sha256="f96a7a4ef6b0bfe08f21a83c572524fda561f9fbec2b805639f6aa452909d230",
+        url="https://pypi.org/packages/51/d7/3c8505a9583ac42d29946f1d46a2fc52c8a4bc2dbd0ebd05a121295c7b1b/xanadu_cloud_client-0.3.0-py3-none-any.whl",
+    )
 
-    depends_on("python@3.7:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
-
-    depends_on("py-appdirs", type=("build", "run"))
-    depends_on("py-fire", type=("build", "run"))
-    depends_on("py-numpy", type=("build", "run"))
-    depends_on("py-pydantic+dotenv", type=("build", "run"))
-    depends_on("py-python-dateutil", type=("build", "run"))
-    depends_on("py-requests", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("py-appdirs")
+        depends_on("py-fire")
+        depends_on("py-numpy")
+        depends_on("py-pydantic+dotenv", when="@:0.3.0")
+        depends_on("py-python-dateutil")
+        depends_on("py-requests")

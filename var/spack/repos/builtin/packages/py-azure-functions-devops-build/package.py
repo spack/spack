@@ -16,9 +16,13 @@ class PyAzureFunctionsDevopsBuild(PythonPackage):
 
     license("MIT")
 
-    version("0.0.22", sha256="c6341abda6098813f8fa625acd1e925410a17a8a1c7aaabdf975bb7cecb14edf")
+    version(
+        "0.0.22",
+        sha256="adc4c45de5510acf4c094df84b54bc7767e1466e4bfdce23b99ffccf29de3f2f",
+        url="https://pypi.org/packages/96/57/65ca02568edf21abbb0831dedb3f87b6c2164bd4188778865f27b8a05645/azure_functions_devops_build-0.0.22-py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-msrest", type=("build", "run"))
-    depends_on("py-vsts", type=("build", "run"))
-    depends_on("py-jinja2", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("py-jinja2", when="@0.0.18:")
+        depends_on("py-msrest", when="@0.0.18:")
+        depends_on("py-vsts", when="@0.0.18:")

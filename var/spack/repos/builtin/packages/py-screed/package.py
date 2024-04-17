@@ -12,9 +12,11 @@ class PyScreed(PythonPackage):
     homepage = "https://screed.readthedocs.io/"
     pypi = "screed/screed-1.1.2.tar.gz"
 
-    version("1.1.2", sha256="734ffa7a8a645286496d895b736f91d6b2988956e2fd42358123d93ec8519b6a")
+    version(
+        "1.1.2",
+        sha256="413e9cfce4b4908d0fa1fe69dcd2c523641a02a856eb196f9ce2183657f342dc",
+        url="https://pypi.org/packages/a6/c1/e33d75369bffaf304b891afa34aa8b9765f117931673cdf8837eba9b0efb/screed-1.1.2-py2.py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools@48:", type="build")
-    depends_on("py-setuptools-scm@4:5", type="build")
-    depends_on("py-setuptools-scm-git-archive", type="build")
-    depends_on("py-wheel@0.29.0:", type="build")
+    with default_args(type=("build", "run")):
+        depends_on("python@3.7:", when="@1.0.5:")

@@ -17,11 +17,23 @@ class PyJsonpathNg(PythonPackage):
 
     license("Apache-2.0")
 
-    version("1.6.0", sha256="5483f8e9d74c39c9abfab554c070ae783c1c8cbadf5df60d561bc705ac68a07e")
-    version("1.5.3", sha256="a273b182a82c1256daab86a313b937059261b5c5f8c4fa3fc38b882b344dd567")
-    version("1.5.2", sha256="144d91379be14d9019f51973bd647719c877bfc07dc6f3f5068895765950c69d")
+    version(
+        "1.6.0",
+        sha256="6fd04833412c4b3d9299edf369542f5e67095ca84efa17cbb7f06a34958adc9f",
+        url="https://pypi.org/packages/92/8d/f6592a8267fcf85d4066605d671b509b456866b962554112c562d2b8be4b/jsonpath_ng-1.6.0-py3-none-any.whl",
+    )
+    version(
+        "1.5.3",
+        sha256="292a93569d74029ba75ac2dc3d3630fc0e17b2df26119a165fa1d498ca47bf65",
+        url="https://pypi.org/packages/4c/b7/3627068d9aa6b2d49af117eb3897770a5dbc6bb3f4c09ed56a9eb749438e/jsonpath_ng-1.5.3-py3-none-any.whl",
+    )
+    version(
+        "1.5.2",
+        sha256="93d1f248be68e485eb6635c3a01b2d681f296dc349d71e37c8755837b8944d36",
+        url="https://pypi.org/packages/ae/03/a8a12e49e88ba7983d704ef518e25041206aa2e934686270516f1bc439ff/jsonpath_ng-1.5.2-py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-ply", type=("build", "run"))
-    depends_on("py-decorator", type=("build", "run"), when="@:1.5")
-    depends_on("py-six", type=("build", "run"), when="@:1.5")
+    with default_args(type=("build", "run")):
+        depends_on("py-decorator", when="@1.5")
+        depends_on("py-ply", when="@1.5:")
+        depends_on("py-six", when="@1.5")

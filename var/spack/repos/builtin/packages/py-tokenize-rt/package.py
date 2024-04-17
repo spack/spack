@@ -14,7 +14,8 @@ class PyTokenizeRt(PythonPackage):
 
     license("MIT")
 
-    version("4.2.1", sha256="0d4f69026fed520f8a1e0103aa36c406ef4661417f20ca643f913e33531b3b94")
-
-    depends_on("python@3.6.1:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
+    version(
+        "4.2.1",
+        sha256="08a27fa032a81cf45e8858d0ac706004fcd523e8463415ddf1442be38e204ea8",
+        url="https://pypi.org/packages/2f/e2/654a25ad594df2eb07f76e405f6f261d8fa9b5c06eb1e78549a086245455/tokenize_rt-4.2.1-py2.py3-none-any.whl",
+    )

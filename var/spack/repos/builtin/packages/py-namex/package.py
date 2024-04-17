@@ -14,6 +14,8 @@ class PyNamex(PythonPackage):
 
     license("Apache-2.0")
 
-    version("0.0.7", sha256="84ba65bc4d22bd909e3d26bf2ffb4b9529b608cb3f9a4336f776b04204ced69b")
-
-    depends_on("py-setuptools", type="build")
+    version(
+        "0.0.7",
+        sha256="8a4f062945f405d77cb66b907f16aa2fd83681945e998be840eb6c4154d40108",
+        url="https://pypi.org/packages/cd/43/b971880e2eb45c0bee2093710ae8044764a89afe9620df34a231c6f0ecd2/namex-0.0.7-py3-none-any.whl",
+    )

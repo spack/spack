@@ -17,15 +17,18 @@ class PyBdbag(PythonPackage):
 
     license("Apache-2.0")
 
-    version("1.6.3", sha256="1ad2e4956045cb3d43a6276391ad919e42a90a2443727dbc5b1ac6eeb6d6e3c9")
+    version(
+        "1.6.3",
+        sha256="3586002920ee552d4b23de025c05f9c2b8d01e9ef8a99ed1db0f7c391c320fe7",
+        url="https://pypi.org/packages/dc/d6/71c569260ac1f98ed472bc26b8e52f59a711c82d67b89401b5a1a01937c6/bdbag-1.6.3-py2.py3-none-any.whl",
+    )
 
-    depends_on("python@2.7:2,3.5:3", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
-    depends_on("py-setuptools-scm@:5", type=("build", "run"))
-
-    depends_on("py-pytz", type=("build", "run"))
-    depends_on("py-tzlocal@2.1", type=("build", "run"))
-    depends_on("py-certifi", type=("build", "run"))
-    depends_on("py-requests@2.7:", type=("build", "run"))
-    depends_on("py-bagit@1.8.1", type=("build", "run"))
-    depends_on("py-bagit-profile@1.3.1", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("python@:3", when="@1.5:1.6")
+        depends_on("py-bagit@1.8.1:", when="@1.6:")
+        depends_on("py-bagit-profile@1.3.1:", when="@1.6:")
+        depends_on("py-certifi")
+        depends_on("py-pytz")
+        depends_on("py-requests@2.7:", when="@1.5:1.7.1")
+        depends_on("py-setuptools-scm@:5", when="@1.6.1:")
+        depends_on("py-tzlocal@2.1:2", when="@1.6")

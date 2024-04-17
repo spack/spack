@@ -16,14 +16,18 @@ class PyMystParser(PythonPackage):
 
     license("MIT")
 
-    version("0.18.1", sha256="79317f4bb2c13053dd6e64f9da1ba1da6cd9c40c8a430c447a7b146a594c246d")
+    version(
+        "0.18.1",
+        sha256="61b275b85d9f58aa327f370913ae1bec26ebad372cc99f3ab85c8ec3ee8d9fb8",
+        url="https://pypi.org/packages/72/fd/594c936c65e707deda5670e8fff5ca2c948a12e922813eab5d316694e9ca/myst_parser-0.18.1-py3-none-any.whl",
+    )
 
-    depends_on("python@3.7:", type=("build", "run"))
-    depends_on("py-flit-core@3.4:3", type="build")
-    depends_on("py-docutils@0.15:0.19", type=("build", "run"))
-    depends_on("py-jinja2", type=("build", "run"))  # let sphinx decide version
-    depends_on("py-markdown-it-py@1.0.0:2", type=("build", "run"))
-    depends_on("py-mdit-py-plugins@0.3.1:0.3", type=("build", "run"))
-    depends_on("py-pyyaml", type=("build", "run"))
-    depends_on("py-sphinx@4.0.0:5", type=("build", "run"))
-    depends_on("py-typing-extensions", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("python@3.7:", when="@0.17:1")
+        depends_on("py-docutils@0.15:0.19", when="@0.18.1:1")
+        depends_on("py-jinja2")
+        depends_on("py-markdown-it-py@1.0.0:2", when="@0.16:1")
+        depends_on("py-mdit-py-plugins@0.3.1:0.3", when="@0.18.1:0.18")
+        depends_on("py-pyyaml")
+        depends_on("py-sphinx@4.0.0:5", when="@0.18")
+        depends_on("py-typing-extensions", when="@0.17:0.18")

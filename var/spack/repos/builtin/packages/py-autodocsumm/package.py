@@ -16,8 +16,12 @@ class PyAutodocsumm(PythonPackage):
 
     license("Apache-2.0")
 
-    version("0.2.11", sha256="183212bd9e9f3b58a96bb21b7958ee4e06224107aa45b2fd894b61b83581b9a9")
+    version(
+        "0.2.11",
+        sha256="f1d0a623bf1ad64d979a9e23fd360d1fb1b8f869beaf3197f711552cddc174e2",
+        url="https://pypi.org/packages/c6/37/0a08e3e1d8b78185837c0c483267b87660ae74cdee0c91dc56ae83093965/autodocsumm-0.2.11-py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools@61.0:", type="build")
-    depends_on("py-versioneer+toml", type="build")
-    depends_on("py-sphinx@2.2:7", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("python@3.7:", when="@0.2.9:")
+        depends_on("py-sphinx@2.2:", when="@0.2.11:")

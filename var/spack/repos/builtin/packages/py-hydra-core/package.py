@@ -14,11 +14,14 @@ class PyHydraCore(PythonPackage):
 
     license("MIT")
 
-    version("1.3.1", sha256="8dd42d551befc43dfca0c612cbd58c4f3e273dbd97a87214c1a030ba557d238b")
+    version(
+        "1.3.1",
+        sha256="d1c8b273eba0be68218c4ff1ae9a7df7430ce4aa580f1bbebc03297029761cf4",
+        url="https://pypi.org/packages/01/d1/d2e852afd72da2ca7f5ee1e71124ef61328282482b1cd8d96d37145bb947/hydra_core-1.3.1-py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-omegaconf@2.2:2.3", type=("build", "run"))
-    depends_on("py-antlr4-python3-runtime@4.9", type=("build", "run"))
-    depends_on("py-importlib-resources", when="^python@:3.8", type=("build", "run"))
-    depends_on("py-packaging", type=("build", "run"))
-    depends_on("java", type="build")
+    with default_args(type=("build", "run")):
+        depends_on("py-antlr4-python3-runtime@4.9", when="@1.2:1.2.0.0,1.3:")
+        depends_on("py-importlib-resources", when="@1.2: ^python@:3.8")
+        depends_on("py-omegaconf@2.2:2.2.0.0,2.2.1:2.3", when="@1.3.1:")
+        depends_on("py-packaging", when="@1.2:")

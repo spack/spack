@@ -14,9 +14,17 @@ class PyPyupgrade(PythonPackage):
 
     license("MIT")
 
-    version("3.3.1", sha256="f88bce38b0ba92c2a9a5063c8629e456e8d919b67d2d42c7ecab82ff196f9813")
-    version("2.31.1", sha256="22e0ad6dd39c4381805cb059f1e691b6315c62c0ebcec98a5f29d22cd186a72a")
+    version(
+        "3.3.1",
+        sha256="3b93641963df022d605c78aeae4b5956a5296ea24701eafaef9c487527b77e60",
+        url="https://pypi.org/packages/31/ee/dda0d7b86c4c0cd02494566243ad14f152e10994f1c345d57e9b9edd0c8a/pyupgrade-3.3.1-py2.py3-none-any.whl",
+    )
+    version(
+        "2.31.1",
+        sha256="4060a7c20c79d373a3dcf34566b275c6de6cd2b034ad22465d3263fb0de82648",
+        url="https://pypi.org/packages/87/c5/5db2c423c83b9369f5985d2a9ca9318524756c028b46ab1827e15807e306/pyupgrade-2.31.1-py2.py3-none-any.whl",
+    )
 
-    depends_on("python@3.7:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
-    depends_on("py-tokenize-rt@3.2:", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("python@3.7:", when="@2.31.1:3.3")
+        depends_on("py-tokenize-rt@3.2:", when="@:2.38.2,3:3.9")

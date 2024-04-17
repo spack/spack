@@ -15,7 +15,11 @@ class PyMistletoe(PythonPackage):
 
     license("MIT")
 
-    version("1.2.1", sha256="7d0c1ab3747047d169f9fc4b925d1cba3f5c13eaf0b90c365b72e47e59d00a02")
+    version(
+        "1.2.1",
+        sha256="620563ac06380ce0629b4a2afa2f2ab797ffac3efdcccaf2362a7266600e6dcc",
+        url="https://pypi.org/packages/2a/98/399f57478bd84f5bc568f92b630a0e6b7bd9b7d0e7a86e98614a5abab8bc/mistletoe-1.2.1-py3-none-any.whl",
+    )
 
-    depends_on("python@3.5:3", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
+    with default_args(type=("build", "run")):
+        depends_on("python@:3")

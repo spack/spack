@@ -14,8 +14,11 @@ class PyDocutilsStubs(PythonPackage):
 
     license("Unlicense")
 
-    version("0.0.21", sha256="e0d3d2588a0c0b47bf66b917bf4ff2c100cf4cf77bbe2f518d97b8f4d63e735c")
+    version(
+        "0.0.21",
+        sha256="d8beb6ffac94d2db39179681f6bc17a3b81d3386201dc8b1aec3d61201b1edc9",
+        url="https://pypi.org/packages/8a/1f/441df2631e58ef71eab304b02efe5f7d0e93a887690b887d8f213106abd0/docutils_stubs-0.0.21-py3-none-any.whl",
+    )
 
-    depends_on("python@3.5:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
-    depends_on("py-docutils@0.14", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("py-docutils@0.14", when="@:0.0.21")

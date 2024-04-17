@@ -14,9 +14,14 @@ class PyXhistogram(PythonPackage):
 
     license("MIT")
 
-    version("0.3.2", sha256="56b0751e1469eaed81710f644c8ba5c574b51883baa2feee26a95f2f708f91a1")
+    version(
+        "0.3.2",
+        sha256="ad55330d55296d273b3370678223fde0f50085e04cb744c7b3b0bb7702a2c6bf",
+        url="https://pypi.org/packages/18/08/1432dd10193a5d45294bd42042a5631259ee5a12cd2e9075350546d07a03/xhistogram-0.3.2-py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-xarray@0.12:", type=("build", "run"))
-    depends_on("py-dask@2.3:+array", type=("build", "run"))
-    depends_on("py-numpy@1.17:", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("python@3.7:", when="@0.2:")
+        depends_on("py-dask@2.3:+array", when="@0.3.2:")
+        depends_on("py-numpy@1.17.0:", when="@0.3:")
+        depends_on("py-xarray@0.12:")

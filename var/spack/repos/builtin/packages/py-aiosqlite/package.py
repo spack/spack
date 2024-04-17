@@ -14,11 +14,13 @@ class PyAiosqlite(PythonPackage):
 
     license("MIT")
 
-    version("0.17.0", sha256="f0e6acc24bc4864149267ac82fb46dfb3be4455f99fe21df82609cc6e6baee51")
+    version(
+        "0.17.0",
+        sha256="6c49dc6d3405929b1d08eeccc72306d3677503cc5e5e43771efc1e00232e8231",
+        url="https://pypi.org/packages/a0/48/77c0092f716c4bf9460dca44f5120f70b8f71f14a12f40d22551a7152719/aiosqlite-0.17.0-py3-none-any.whl",
+    )
 
-    depends_on("python@3.6:", type=("build", "run"))
-    depends_on("py-typing-extensions@3.7.2:", type=("build", "run"))
-    depends_on("py-flit-core@2:3", type="build")
+    with default_args(type=("build", "run")):
+        depends_on("py-typing-extensions@3.7:", when="@0.16:0.17")
 
-    # aiosqlite.test requires aiounittests, not yet in spack
     import_modules = ["aiosqlite"]

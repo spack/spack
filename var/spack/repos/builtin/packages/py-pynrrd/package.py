@@ -14,9 +14,14 @@ class PyPynrrd(PythonPackage):
 
     license("MIT")
 
-    version("1.0.0", sha256="4eb4caba03fbca1b832114515e748336cb67bce70c7f3ae36bfa2e135fc990d2")
+    version(
+        "1.0.0",
+        sha256="65e5a61920d2f01ecf321eb41b0472940e181e4ba5e8a32f01ef5499d4192db5",
+        url="https://pypi.org/packages/ee/43/1be50fe04e6a5df8cfdafa62151035a9358a768e26a5b9f33fc417e10bc6/pynrrd-1.0.0-py2.py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-numpy@1.11.1:", type=("build", "run"))
-    depends_on("py-nptyping", type=("build", "run"))
-    depends_on("py-typing-extensions", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("python@3.7:", when="@1:")
+        depends_on("py-nptyping", when="@1:")
+        depends_on("py-numpy@1.11.1:")
+        depends_on("py-typing-extensions", when="@1:")

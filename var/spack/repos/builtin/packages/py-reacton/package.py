@@ -20,9 +20,12 @@ class PyReacton(PythonPackage):
 
     maintainers("jeremyfix")
 
-    version("1.8.2", sha256="eaa4eeeffd11688d2b60a49a9895fd299f2ecbe8614f1ad61d144c56edaf7304")
+    version(
+        "1.8.2",
+        sha256="37ff8b7622511fa62ecb4595475eb3787b983476fcdbd34322ca28384139af06",
+        url="https://pypi.org/packages/7d/87/aaf958a4c85db9290414518dcc9115c2cbd903fd4d3fda5580f79cb53eb8/reacton-1.8.2-py2.py3-none-any.whl",
+    )
 
-    depends_on("py-hatchling", type="build")
-
-    depends_on("py-ipywidgets", type=("build", "run"))
-    depends_on("py-typing-extensions@4.1.1:", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("py-ipywidgets")
+        depends_on("py-typing-extensions@4.1.1:")

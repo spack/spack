@@ -16,8 +16,12 @@ class PyRequestsFile(PythonPackage):
 
     license("Apache-2.0")
 
-    version("1.5.1", sha256="07d74208d3389d01c38ab89ef403af0cfec63957d53a0081d8eca738d0247d8e")
+    version(
+        "1.5.1",
+        sha256="dfe5dae75c12481f68ba353183c53a65e6044c923e64c24b2209f6c7570ca953",
+        url="https://pypi.org/packages/77/86/cdb5e8eaed90796aa83a6d9f75cfbd37af553c47a291cd47bc410ef9bdb2/requests_file-1.5.1-py2.py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-requests@1.0.0:", type=("build", "run"))
-    depends_on("py-six", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("py-requests@1:", when="@1.5:")
+        depends_on("py-six", when="@1.5:1")

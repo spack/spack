@@ -19,18 +19,22 @@ class PyRobocrys(PythonPackage):
 
     maintainers("meyersbs")
 
-    version("0.2.7", sha256="c8155bbc13efbf66ce0a834ebd0eaba9102f2c405a9cbaac071aa230d81ee5f6")
+    version(
+        "0.2.7",
+        sha256="5caafe816c68a2d2d2446f3774d0ec9853bc4e7d91d8907fa71b9cdf4ee9d5c9",
+        url="https://pypi.org/packages/40/62/f3c599e6533e5f43f759478c642327fc195938ee1be9e053b0288031504f/robocrys-0.2.7-py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-    depends_on("python@3.7:", type=("build", "run"))
-    depends_on("py-spglib", type=("build", "run"))
-    depends_on("py-numpy", type=("build", "run"))
-    depends_on("py-scipy", type=("build", "run"))
-    depends_on("py-inflect", type=("build", "run"))
-    depends_on("py-networkx", type=("build", "run"))
-    depends_on("py-matminer", type=("build", "run"))
-    depends_on("py-monty", type=("build", "run"))
-    depends_on("py-pubchempy", type=("build", "run"))
-    depends_on("py-pybtex", type=("build", "run"))
-    depends_on("py-ruamel-yaml", type=("build", "run"))
-    depends_on("py-pymatgen@2020.10.20:", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("python@3.7:", when="@0.2.7")
+        depends_on("py-inflect", when="@:0.2.4,0.2.6:")
+        depends_on("py-matminer", when="@:0.1,0.2.6:")
+        depends_on("py-monty", when="@:0.2.4,0.2.6:")
+        depends_on("py-networkx", when="@:0.2.4,0.2.6:")
+        depends_on("py-numpy", when="@:0.2.4,0.2.6:")
+        depends_on("py-pubchempy", when="@:0.2.4,0.2.6:")
+        depends_on("py-pybtex", when="@:0.2.4,0.2.6:")
+        depends_on("py-pymatgen@2020.10.20:", when="@0.2.6:")
+        depends_on("py-ruamel-yaml", when="@0.2.7:")
+        depends_on("py-scipy", when="@:0.2.4,0.2.6:")
+        depends_on("py-spglib", when="@:0.2.4,0.2.6:")

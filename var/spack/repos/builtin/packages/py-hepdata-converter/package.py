@@ -16,9 +16,12 @@ class PyHepdataConverter(PythonPackage):
 
     maintainers("haralmha")
 
-    version("0.2.3", sha256="cbed0ffc512a794fae023650f10f415b687bb8c07fc67ac3321da70ce8846085")
+    version(
+        "0.2.3",
+        sha256="52d810011971993341908628a00591f912a3365cad675dd655b140ee3b19c331",
+        url="https://pypi.org/packages/61/76/ed28e00180c2ff4368d30e7fc79c8b1a7316ec7eb3523fb3ce8d420fb544/hepdata_converter-0.2.3-py3-none-any.whl",
+    )
 
-    depends_on("python@3.6:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
-    depends_on("py-pyyaml@5.3:", type=("build", "run"))
-    depends_on("py-hepdata-validator@0.2.2:", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("py-hepdata-validator@0.2.2:", when="@0.2")
+        depends_on("py-pyyaml@5.3:", when="@0.1.35:0.2")

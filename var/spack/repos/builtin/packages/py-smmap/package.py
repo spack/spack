@@ -16,12 +16,23 @@ class PySmmap(PythonPackage):
 
     license("BSD-3-Clause")
 
-    version("5.0.0", sha256="c840e62059cd3be204b0c9c9f74be2c09d5648eddd4580d9314c3ecde0b30936")
-    version("4.0.0", sha256="7e65386bd122d45405ddf795637b7f7d2b532e7e401d46bbe3fb49b9986d5182")
-    version("3.0.5", sha256="84c2751ef3072d4f6b2785ec7ee40244c6f45eb934d9e543e2c51f1bd3d54c50")
-    version("3.0.4", sha256="9c98bbd1f9786d22f14b3d4126894d56befb835ec90cef151af566c7e19b5d24")
-
-    depends_on("python@3.6:", type=("build", "run"), when="@5.0.0:")
-    depends_on("python@3.5:", type=("build", "run"), when="@4.0.0")
-    depends_on("python@2.7:2.8,3.4:", type=("build", "run"), when="@:3")
-    depends_on("py-setuptools", type="build")
+    version(
+        "5.0.0",
+        sha256="2aba19d6a040e78d8b09de5c57e96207b09ed71d8e55ce0959eeee6c8e190d94",
+        url="https://pypi.org/packages/6d/01/7caa71608bc29952ae09b0be63a539e50d2484bc37747797a66a60679856/smmap-5.0.0-py3-none-any.whl",
+    )
+    version(
+        "4.0.0",
+        sha256="a9a7479e4c572e2e775c404dcd3080c8dc49f39918c2cf74913d30c4c478e3c2",
+        url="https://pypi.org/packages/68/ee/d540eb5e5996eb81c26ceffac6ee49041d473bc5125f2aa995cf51ec1cf1/smmap-4.0.0-py2.py3-none-any.whl",
+    )
+    version(
+        "3.0.5",
+        sha256="7bfcf367828031dc893530a29cb35eb8c8f2d7c8f2d0989354d75d24c8573714",
+        url="https://pypi.org/packages/d5/1e/6130925131f639b2acde0f7f18b73e33ce082ff2d90783c436b52040af5a/smmap-3.0.5-py2.py3-none-any.whl",
+    )
+    version(
+        "3.0.4",
+        sha256="54c44c197c819d5ef1991799a7e30b662d1e520f2ac75c9efbeb54a742214cf4",
+        url="https://pypi.org/packages/b0/9a/4d409a6234eb940e6a78dfdfc66156e7522262f5f2fecca07dc55915952d/smmap-3.0.4-py2.py3-none-any.whl",
+    )

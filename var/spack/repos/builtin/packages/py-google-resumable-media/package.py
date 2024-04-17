@@ -14,10 +14,23 @@ class PyGoogleResumableMedia(PythonPackage):
 
     license("Apache-2.0")
 
-    version("2.7.0", sha256="5f18f5fa9836f4b083162064a1c2c98c17239bfda9ca50ad970ccf905f3e625b")
-    version("2.4.1", sha256="15b8a2e75df42dc6502d1306db0bce2647ba6013f9cd03b6e17368c0886ee90a")
-    version("0.3.2", sha256="3e38923493ca0d7de0ad91c31acfefc393c78586db89364e91cb4f11990e51ba")
+    version(
+        "2.7.0",
+        sha256="79543cfe433b63fd81c0844b7803aba1bb8950b47bedf7d980c38fa123937e08",
+        url="https://pypi.org/packages/b2/c6/1202ef64a9336d846f713107dac1c7a0b016cb3840ca3d5615c7005a23d1/google_resumable_media-2.7.0-py2.py3-none-any.whl",
+    )
+    version(
+        "2.4.1",
+        sha256="831e86fd78d302c1a034730a0c6e5369dd11d37bad73fa69ca8998460d5bae8d",
+        url="https://pypi.org/packages/0b/d8/9a46125189d955ff50228351848019aef51775787db59373fefb20b09b3b/google_resumable_media-2.4.1-py2.py3-none-any.whl",
+    )
+    version(
+        "0.3.2",
+        sha256="2dae98ee716efe799db3578a7b902fbf5592fc5c77d3c0906fc4ef9b1b930861",
+        url="https://pypi.org/packages/e2/5d/4bc5c28c252a62efe69ed1a1561da92bd5af8eca0cdcdf8e60354fae9b29/google_resumable_media-0.3.2-py2.py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-google-crc32c@1", when="@2:", type=("build", "run"))
-    depends_on("py-six", when="@0", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("python@3.7:", when="@2.4:")
+        depends_on("py-google-crc32c@1:", when="@1:2.0.1,2.0.3:")
+        depends_on("py-six", when="@:1.3.0")

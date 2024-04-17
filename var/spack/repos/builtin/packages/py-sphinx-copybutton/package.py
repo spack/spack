@@ -14,7 +14,11 @@ class PySphinxCopybutton(PythonPackage):
 
     license("MIT")
 
-    version("0.2.12", sha256="9492883786984b6179c92c07ab0410237b26efa826adfa792acfd17b91a63e5c")
+    version(
+        "0.2.12",
+        sha256="517870030a931f313695705edbe14a8c30660829716100d3d24b379cf9257060",
+        url="https://pypi.org/packages/8d/b7/aee2c0dc1c5e413fffd08d5f933f3de08d12d978583fe940c419d9eebc31/sphinx_copybutton-0.2.12-py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-sphinx@1.8:")
+    with default_args(type=("build", "run")):
+        depends_on("py-sphinx@1.8.0:", when="@0.2.9:")

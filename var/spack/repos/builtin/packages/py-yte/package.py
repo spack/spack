@@ -16,13 +16,14 @@ class PyYte(PythonPackage):
 
     license("MIT")
 
-    version("1.5.1", sha256="6d0b315b78af83276d78f5f67c107c84238f772a76d74f4fc77905b46f3731f5")
+    version(
+        "1.5.1",
+        sha256="fd646bc47c355f202f14b7476996de4a31501cf1e107ac7ad8e19edcd786d30b",
+        url="https://pypi.org/packages/27/a2/638c528c6b35582b1de094de2ff2e8d0ac87c426ed04a375281356857bc7/yte-1.5.1-py3-none-any.whl",
+    )
 
-    # https://github.com/yte-template-engine/yte/blob/v1.5.1/pyproject.toml#L12
-    depends_on("py-dpath@2", type=("build", "run"))
-    depends_on("py-plac@1.3.4:1", type=("build", "run"))
-    depends_on("python@3.7:", type=("build", "run"))
-    depends_on("py-pyyaml@6", type=("build", "run"))
-
-    # https://github.com/yte-template-engine/yte/blob/v1.5.1/pyproject.toml#L41
-    depends_on("py-poetry-core@1:", type="build")
+    with default_args(type=("build", "run")):
+        depends_on("python@3.7:", when="@0.2:")
+        depends_on("py-dpath@2:", when="@1.3:1.5.1")
+        depends_on("py-plac@1.3.4:")
+        depends_on("py-pyyaml@6.0:")

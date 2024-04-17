@@ -14,8 +14,8 @@ class PyCachy(PythonPackage):
 
     license("MIT")
 
-    version("0.3.0", sha256="186581f4ceb42a0bbe040c407da73c14092379b1e4c0e327fdb72ae4a9b269b1")
-
-    depends_on("python@2.7,3.4:4", type=("build", "run"))
-    # https://github.com/sdispater/cachy/issues/20
-    depends_on("py-setuptools", type="build")
+    version(
+        "0.3.0",
+        sha256="338ca09c8860e76b275aff52374330efedc4d5a5e45dc1c5b539c1ead0786fe7",
+        url="https://pypi.org/packages/82/e6/badd9af6feee43e76c3445b2621a60d3d99fe0e33fffa8df43590212ea63/cachy-0.3.0-py2.py3-none-any.whl",
+    )

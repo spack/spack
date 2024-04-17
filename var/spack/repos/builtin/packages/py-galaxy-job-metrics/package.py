@@ -15,8 +15,11 @@ class PyGalaxyJobMetrics(PythonPackage):
 
     license("CC-BY-3.0")
 
-    version("22.1.1", sha256="53d9c791d60372a90a59709863570246066f395b9e83f0011865f930a53a63b4")
+    version(
+        "22.1.1",
+        sha256="ab37fbfd3b792c5751f984565fe52026eaa8425046df16fc879b6c6860a9ab03",
+        url="https://pypi.org/packages/29/cf/ee35c158179eab845b16903b26cdfc874440d106d64f567f704153f188b2/galaxy_job_metrics-22.1.1-py2.py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-
-    depends_on("py-galaxy-util", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("py-galaxy-util")

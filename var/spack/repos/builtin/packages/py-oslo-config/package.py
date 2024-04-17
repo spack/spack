@@ -17,17 +17,18 @@ class PyOsloConfig(PythonPackage):
 
     maintainers("haampie")
 
-    version("8.7.1", sha256="a0c346d778cdc8870ab945e438bea251b5f45fae05d6d99dfe4953cca2277b60")
+    version(
+        "8.7.1",
+        sha256="3c5cc681ef106a4573d677510f907ab48f40004dc3aac2298d9a517559491efb",
+        url="https://pypi.org/packages/35/3a/62f4f3e724151d78b97608b8c72a285decdaa91ac2073946381ef042ebb1/oslo.config-8.7.1-py3-none-any.whl",
+    )
 
-    depends_on("python@3.6:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
-    depends_on("py-pbr@2.0.0:", type="build")
-
-    depends_on("py-debtcollector@1.2.0:", type=("build", "run"))
-    depends_on("py-netaddr@0.7.18:", type=("build", "run"))
-    depends_on("py-stevedore@1.20.0:", type=("build", "run"))
-    depends_on("py-oslo-i18n@3.15.3:", type=("build", "run"))
-    depends_on("py-rfc3986@1.2.0:", type=("build", "run"))
-    depends_on("py-pyyaml@5.1:", type=("build", "run"))
-    depends_on("py-requests@2.18.0:", type=("build", "run"))
-    depends_on("py-importlib-metadata@1.7.0:", when="^python@:3.7", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("py-debtcollector@1.2:")
+        depends_on("py-importlib-metadata@1.7:", when="@:9.2 ^python@:3.7")
+        depends_on("py-netaddr@0.7.18:")
+        depends_on("py-oslo-i18n@3.15.3:")
+        depends_on("py-pyyaml@5.1:", when="@8.5:")
+        depends_on("py-requests@2.18:")
+        depends_on("py-rfc3986@1.2:")
+        depends_on("py-stevedore@1.20:")

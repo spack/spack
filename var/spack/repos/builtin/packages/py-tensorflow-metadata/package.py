@@ -3,8 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import tempfile
-
 from spack.package import *
 
 
@@ -21,39 +19,20 @@ class PyTensorflowMetadata(PythonPackage):
 
     license("Apache-2.0")
 
-    version("1.10.0", sha256="e7aa81aa01433e2a75c11425affd55125b64f384baf96b71eeb3a88dca8cf2ae")
-    version("1.5.0", sha256="f0ec8aaf62fd772ef908efe4ee5ea3bc0d67dcbf10ae118415b7b206a1d61745")
-
-    # Fix non-existing zlib URL
-    patch(
-        "https://github.com/tensorflow/metadata/commit/8df679e782f5bf2d163d63e550d8752c3812d566.patch?full_index=1",
-        sha256="a6b294d5e6099979192fcdb4d5b7b0388dc30b48671944d22e51a9e6bd5e1490",
-        when="@1.10.0",
+    version(
+        "1.10.0",
+        sha256="e3ff528496105c0d73b2a402877525b1695635378fbe5c1b47ac7b3780816bb3",
+        url="https://pypi.org/packages/3a/86/2b3251bb560068f31817d9b678588098e28f396c1f6b88c57cf5d28670af/tensorflow_metadata-1.10.0-py3-none-any.whl",
+    )
+    version(
+        "1.5.0",
+        sha256="982aa5715a306c5fcce0817da49ad0892f5d977db37e1811c34013ba4da06207",
+        url="https://pypi.org/packages/81/e6/193d9637b844f88797199fced0e3baa893dd110bdca34b5708b49120ae30/tensorflow_metadata-1.5.0-py3-none-any.whl",
     )
 
-    depends_on("bazel@0.24.1:", type="build")
-    depends_on("python@3.7:3", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
-    depends_on("py-absl-py@0.9:1", when="@1.6:", type=("build", "run"))
-    depends_on("py-absl-py@0.9:0.12", when="@:1.5", type=("build", "run"))
-    depends_on("py-googleapis-common-protos@1.52:1", type=("build", "run"))
-    depends_on("py-protobuf@3.13:3", type=("build", "run"))
-
-    def patch(self):
-        filter_file(
-            "self._additional_build_options = ['--copt=-DWIN32_LEAN_AND_MEAN']",
-            "self._additional_build_options = ['--copt=-DWIN32_LEAN_AND_MEAN',"
-            f" '--jobs={make_jobs}']",
-            "setup.py",
-            string=True,
-        )
-        filter_file(
-            "self._additional_build_options = []",
-            f"self._additional_build_options = ['--jobs={make_jobs}']",
-            "setup.py",
-            string=True,
-        )
-
-    def setup_build_environment(self, env):
-        tmp_path = tempfile.mkdtemp(prefix="spack")
-        env.set("TEST_TMPDIR", tmp_path)
+    with default_args(type=("build", "run")):
+        depends_on("python@3.7:3", when="@1.4:1.12")
+        depends_on("py-absl-py@0.9:1", when="@1.6:")
+        depends_on("py-absl-py@0.9:0.12", when="@0.29:1.5")
+        depends_on("py-googleapis-common-protos@1.52:")
+        depends_on("py-protobuf@3.13.0:3", when="@1.1:1.13.0")

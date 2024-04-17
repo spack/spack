@@ -15,9 +15,12 @@ class PyAioredis(PythonPackage):
 
     license("MIT")
 
-    version("1.3.1", sha256="15f8af30b044c771aee6787e5ec24694c048184c7b9e54c3b60c750a4b93273a")
+    version(
+        "1.3.1",
+        sha256="b61808d7e97b7cd5a92ed574937a079c9387fdadd22bfbfa7ad2fd319ecc26e3",
+        url="https://pypi.org/packages/b0/64/1b1612d0a104f21f80eb4c6e1b6075f2e6aba8e228f46f229cfd3fdac859/aioredis-1.3.1-py3-none-any.whl",
+    )
 
-    depends_on("python@3.5:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
-    depends_on("py-async-timeout", type=("build", "run"))
-    depends_on("py-hiredis", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("py-async-timeout", when="@1:")
+        depends_on("py-hiredis", when="@:1")

@@ -14,18 +14,26 @@ class PyPytestRunner(PythonPackage):
 
     license("MIT")
 
-    version("6.0.0", sha256="b4d85362ed29b4c348678de797df438f0f0509497ddb8c647096c02a6d87b685")
-    version("5.3.1", sha256="0fce5b8dc68760f353979d99fdd6b3ad46330b6b1837e2077a89ebcf204aac91")
-    version("5.1", sha256="25a013c8d84f0ca60bb01bd11913a3bcab420f601f0f236de4423074af656e7a")
-    version("2.11.1", sha256="983a31eab45e375240e250161a556163bc8d250edaba97960909338c273a89b3")
+    version(
+        "6.0.0",
+        sha256="4c059cf11cf4306e369c0f8f703d1eaf8f32fad370f41deb5f007044656aca6b",
+        url="https://pypi.org/packages/42/7b/1cec26caae4bf44bb9911e1119d5d1a35171571e100b728a2ccd8719a3b1/pytest_runner-6.0.0-py3-none-any.whl",
+    )
+    version(
+        "5.3.1",
+        sha256="85f93af814438ee322b4ea08fe3f5c2ad53b253577f3bd84b2ad451fee450ac5",
+        url="https://pypi.org/packages/f4/f5/6605d73bf3f4c198915872111b10c4b3c2dccd8485f47b7290ceef037190/pytest_runner-5.3.1-py3-none-any.whl",
+    )
+    version(
+        "5.1",
+        sha256="d04243fbf29a3b574f18f1bcff2a07f505db5daede82f706f2e32728f77d3f4d",
+        url="https://pypi.org/packages/f8/31/f291d04843523406f242e63b5b90f7b204a756169b4250ff213e10326deb/pytest_runner-5.1-py2.py3-none-any.whl",
+    )
+    version(
+        "2.11.1",
+        sha256="feca6166c9c3b535441a9818126c9030101417c057892f29ffd5d8ae56613f35",
+        url="https://pypi.org/packages/26/d4/9e25eb226ddc6d395a72e3a6a6dcdfea197c21a2c7fbcd6f94545effb04d/pytest_runner-2.11.1-py2.py3-none-any.whl",
+    )
 
-    # requirements from pyproject.toml are marked with *
-    depends_on("python@3.6:", when="@5.3:", type=("build", "run"))
-    depends_on("python@3.7:", when="@6.0.0:", type=("build", "run"))
-    depends_on("py-setuptools@56:", when="@6.0.0:", type=("build", "run"))  # *
-    depends_on("py-setuptools@42:", when="@5.3:", type=("build", "run"))  # *
-    depends_on("py-setuptools@34.4:", when="@5:", type=("build", "run"))  # *
-    depends_on("py-setuptools@27.3:", when="@4.1:", type=("build", "run"))
-    depends_on("py-setuptools", type=("build", "run"))
-    depends_on("py-setuptools-scm+toml@3.4.1:", when="@5.3:", type="build")  # *
-    depends_on("py-setuptools-scm@1.15:", type="build")
+    with default_args(type=("build", "run")):
+        depends_on("python@3.7:", when="@6:")

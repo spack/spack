@@ -15,14 +15,16 @@ class PySnakemakeStoragePluginS3(PythonPackage):
 
     license("MIT")
 
-    version("0.2.10", sha256="a4554d170b5621751aba20ee08e6357090471a0a68b173525b118580c287a12e")
+    version(
+        "0.2.10",
+        sha256="8604e73694470e93d5736baae809dc17359292aced58894df370edaaf2231ece",
+        url="https://pypi.org/packages/54/4f/5fc5b99425ed7af30d556a4d2e2c71b799cff49b3b1971da4b5fc05bccae/snakemake_storage_plugin_s3-0.2.10-py3-none-any.whl",
+    )
 
-    depends_on("py-boto3@1.33:1", type=("build", "run"))
-    depends_on("py-botocore@1.33:1", type=("build", "run"))
-    depends_on("py-urllib3@2:2.1", type=("build", "run"))
-
-    depends_on("py-snakemake-interface-common@1.14:1", type=("build", "run"))
-    depends_on("py-snakemake-interface-storage-plugins@3", type=("build", "run"))
-
-    depends_on("python@3.11:3", type=("build", "run"))
-    depends_on("py-poetry-core", type="build")
+    with default_args(type=("build", "run")):
+        depends_on("python@3.11:3", when="@0.2.3:")
+        depends_on("py-boto3@1.33:", when="@0.2.9:")
+        depends_on("py-botocore@1.33:", when="@0.2.9:")
+        depends_on("py-snakemake-interface-common@1.14:", when="@0.2.8:")
+        depends_on("py-snakemake-interface-storage-plugins@3:", when="@0.2.7:")
+        depends_on("py-urllib3@2.0.0:2.1", when="@0.2.10:")

@@ -14,12 +14,14 @@ class PyPytestAiohttp(PythonPackage):
 
     license("Apache-2.0")
 
-    version("1.0.5", sha256="880262bc5951e934463b15e3af8bb298f11f7d4d3ebac970aab425aff10a780a")
+    version(
+        "1.0.5",
+        sha256="63a5360fd2f34dda4ab8e6baee4c5f5be4cd186a403cabd498fced82ac9c561e",
+        url="https://pypi.org/packages/9a/a7/6e50ba2c0a27a34859a952162e63362a13142ce3c646e925b76de440e102/pytest_aiohttp-1.0.5-py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools@51.0:", type="build")
-    depends_on("py-setuptools-scm@6.2:", type="build")
-    depends_on("py-wheel@0.36:", type="build")
-
-    depends_on("py-pytest@6.1.0:", type=("build", "run"))
-    depends_on("py-aiohttp@3.8.1:", type=("build", "run"))
-    depends_on("py-pytest-asyncio@0.17.2:", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("python@3.7:", when="@1:")
+        depends_on("py-aiohttp@3.8.1:", when="@1:")
+        depends_on("py-pytest@6.1:", when="@1:")
+        depends_on("py-pytest-asyncio@0.17.2:", when="@1:")

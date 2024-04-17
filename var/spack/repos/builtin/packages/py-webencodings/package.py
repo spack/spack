@@ -14,7 +14,8 @@ class PyWebencodings(PythonPackage):
 
     license("BSD-2-Clause")
 
-    version("0.5.1", sha256="b36a1c245f2d304965eb4e0a82848379241dc04b865afcc4aab16748587e1923")
-
-    depends_on("py-setuptools", type="build")
-    depends_on("python@2.6:2.8,3.3:", type=("build", "run"))
+    version(
+        "0.5.1",
+        sha256="a0af1213f3c2226497a97e2b3aa01a7e4bee4f403f95be16fc9acd2947514a78",
+        url="https://pypi.org/packages/f4/24/2a3e3df732393fed8b3ebf2ec078f05546de641fe1b667ee316ec1dcf3b7/webencodings-0.5.1-py2.py3-none-any.whl",
+    )

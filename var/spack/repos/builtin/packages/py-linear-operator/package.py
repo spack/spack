@@ -17,12 +17,23 @@ class PyLinearOperator(PythonPackage):
 
     license("MIT")
 
-    version("0.4.0", sha256="7c57c9f8f258c9785c0db4dd7625f4dd03a340313d7314cba0b633644909f5c6")
-    version("0.3.0", sha256="84bf572631a7e1576de6920d81600ca0fedcf6bda2f29dbaf440d6e72ce6abab")
-    version("0.1.1", sha256="81adc1aea9e98f3c4f07f5608eb77b689bc61793e9beebfea82155e9237bf1be")
+    version(
+        "0.4.0",
+        sha256="55f120f4e3102eaf017f04af911949536beec9009d6a35c26b775637aa4fe026",
+        url="https://pypi.org/packages/4e/60/770e7e7fabbada728a47ad5d83e98a608dcbd6aa2ed361085bcfc1fc97b0/linear_operator-0.4.0-py3-none-any.whl",
+    )
+    version(
+        "0.3.0",
+        sha256="262b1028ed3cd1ae70d79a3a29b0210301576d9e426a68b8767acdd4abb116a6",
+        url="https://pypi.org/packages/3b/c3/d8cad67ed11f8a270c318b1eae726b4c8fa17df33108811b4e79bc2f438c/linear_operator-0.3.0-py3-none-any.whl",
+    )
+    version(
+        "0.1.1",
+        sha256="55472043408959f04c8eb6153bc68a487b141b8c1f2fdb84afcdf6c2e04e01f0",
+        url="https://pypi.org/packages/e6/3c/a2cbf56429c4e370cdcd76155fc1068d21a812c67655244f0776a27697c7/linear_operator-0.1.1-py3-none-any.whl",
+    )
 
-    depends_on("python@3.8:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
-    depends_on("py-setuptools-scm", type="build")
-    depends_on("py-torch@1.11:", type=("build", "run"))
-    depends_on("py-scipy", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("python@3.8:")
+        depends_on("py-scipy")
+        depends_on("py-torch@1.11:")

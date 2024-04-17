@@ -14,9 +14,12 @@ class PyPytestFilterSubpackage(PythonPackage):
 
     license("BSD-3-Clause")
 
-    version("0.1.2", sha256="1faea36717803e524588d6c109d26d20d3b34422e8d6a96812758977dca01782")
+    version(
+        "0.1.2",
+        sha256="39a1fb6f559e0579851c1e447d3c876f6a5c2e49ab356c568b90e4f5b0d4a19e",
+        url="https://pypi.org/packages/f0/23/67097daf438eef3b4c7bf90939445e89983801c1c40e2c377ebd234c55ad/pytest_filter_subpackage-0.1.2-py2.py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-setuptools-scm", type="build")
-
-    depends_on("py-pytest@3:", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("python@3.7:", when="@0.1.2:0.1")
+        depends_on("py-pytest@3:", when="@:0.1")

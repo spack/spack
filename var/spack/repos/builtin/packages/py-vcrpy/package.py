@@ -14,17 +14,27 @@ class PyVcrpy(PythonPackage):
 
     license("MIT")
 
-    version("5.1.0", sha256="bbf1532f2618a04f11bce2a99af3a9647a32c880957293ff91e0a5f187b6b3d2")
-    version("4.2.1", sha256="7cd3e81a2c492e01c281f180bcc2a86b520b173d2b656cb5d89d99475423e013")
-    version("4.1.1", sha256="57095bf22fc0a2d99ee9674cdafebed0f3ba763018582450706f7d3a74fff599")
+    version(
+        "5.1.0",
+        sha256="605e7b7a63dcd940db1df3ab2697ca7faf0e835c0852882142bafb19649d599e",
+        url="https://pypi.org/packages/2a/5b/3f70bcb279ad30026cc4f1df0a0491a0205a24dddd88301f396c485de9e7/vcrpy-5.1.0-py2.py3-none-any.whl",
+    )
+    version(
+        "4.2.1",
+        sha256="efac3e2e0b2af7686f83a266518180af7a048619b2f696e7bad9520f5e2eac09",
+        url="https://pypi.org/packages/8b/c5/f9efe3fea61a844ef1c47c800139d02984442a3a61ab4608fb2a682bc78d/vcrpy-4.2.1-py2.py3-none-any.whl",
+    )
+    version(
+        "4.1.1",
+        sha256="12c3fcdae7b88ecf11fc0d3e6d77586549d4575a2ceee18e82eee75c1f626162",
+        url="https://pypi.org/packages/6e/62/571e9fa5c2a2c986c001d1be99403a5e800d2e72b905e6b1e951148c75c9/vcrpy-4.1.1-py2.py3-none-any.whl",
+    )
 
-    depends_on("python@3.8:", when="@5:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
-
-    depends_on("py-pyyaml", type=("build", "run"))
-    depends_on("py-wrapt", type=("build", "run"))
-    depends_on("py-yarl", type=("build", "run"))
-    depends_on("py-urllib3@:1", when="@4.3.1: ^python@:3.9", type=("build", "run"))
-
-    # Historical dependencies
-    depends_on("py-six@1.5:", when="@:5.0", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("python@3.8:", when="@5:")
+        depends_on("python@3.7:", when="@4.2:4")
+        depends_on("py-pyyaml", when="@:5")
+        depends_on("py-six@1.5:", when="@:5.0")
+        depends_on("py-urllib3@:1", when="@4.3.1:5 ^python@:3.9")
+        depends_on("py-wrapt", when="@:5")
+        depends_on("py-yarl", when="@:5")

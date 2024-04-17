@@ -17,8 +17,8 @@ class PyBagit(PythonPackage):
 
     license("CC0-1.0")
 
-    version("1.8.1", sha256="37df1330d2e8640c8dee8ab6d0073ac701f0614d25f5252f9e05263409cee60c")
-
-    depends_on("python@2.7:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
-    depends_on("py-setuptools-scm", type="build")
+    version(
+        "1.8.1",
+        sha256="d14dd7e373dd24d41f6748c42f123f7db77098dfa4a0125dbacb4c8bdf767c09",
+        url="https://pypi.org/packages/1b/fc/58b3c209fdd383744b27914d0b88d0f9db72aa043e1475618d981d7089d9/bagit-1.8.1-py2.py3-none-any.whl",
+    )

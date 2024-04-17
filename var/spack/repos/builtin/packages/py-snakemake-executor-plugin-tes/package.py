@@ -15,12 +15,14 @@ class PySnakemakeExecutorPluginTes(PythonPackage):
 
     license("MIT")
 
-    version("0.1.2", sha256="bec01801ae3f158cfe7ca406a513455bcffa36fa7f83e35b2c7cb93bec9b00e9")
+    version(
+        "0.1.2",
+        sha256="3757627870a07f6552c3948ddd71823e6aabe24c6b3c827046e64a255d2c8fde",
+        url="https://pypi.org/packages/28/03/c19699ee9b0bf84748d37bdab9bb88f575df6f0f2be45bc2433dcd0f5195/snakemake_executor_plugin_tes-0.1.2-py3-none-any.whl",
+    )
 
-    depends_on("py-py-tes@0.4.2:0.4", type=("build", "run"))
-
-    depends_on("py-snakemake-interface-common@1.14:1", type=("build", "run"))
-    depends_on("py-snakemake-interface-executor-plugins@8.1.1:8", type=("build", "run"))
-
-    depends_on("python@3.11:3", type=("build", "run"))
-    depends_on("py-poetry-core", type="build")
+    with default_args(type=("build", "run")):
+        depends_on("python@3.11:3")
+        depends_on("py-py-tes@0.4.2:0")
+        depends_on("py-snakemake-interface-common@1.14:", when="@0.1.1:")
+        depends_on("py-snakemake-interface-executor-plugins@8.1.1:8", when="@0.1.2")

@@ -16,7 +16,11 @@ class PyParalleltask(PythonPackage):
 
     license("GPL-3.0-only")
 
-    version("0.2.2", sha256="f00945e2bd5b6aff9cdc48fbd92aa7b48d23bb530d7f6643ac966fea11a7a9d5")
+    version(
+        "0.2.2",
+        sha256="2a067f7a696883d77e8eee6f4a19499f11856147476f823fd83512e134723fe5",
+        url="https://pypi.org/packages/52/76/e2e56a4b0785063baf06852459c4f63e38e9831cbe4bf696865123aa03de/Paralleltask-0.2.2-py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-psutil", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("py-psutil")

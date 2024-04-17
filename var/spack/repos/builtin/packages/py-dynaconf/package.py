@@ -14,7 +14,11 @@ class PyDynaconf(PythonPackage):
 
     license("MIT")
 
-    version("3.2.2", sha256="2f98ec85a2b8edb767b3ed0f82c6d605d30af116ce4622932a719ba70ff152fc")
+    version(
+        "3.2.2",
+        sha256="0d62e51af6e9971e8e45cabee487ec70467d6c5065a9f070beac973bedaf1d54",
+        url="https://pypi.org/packages/47/a6/154f6b6bbc7a2183d166fea2470caf8b904a38e2897852c5296f36aea3dd/dynaconf-3.2.2-py2.py3-none-any.whl",
+    )
 
-    depends_on("python@3.8:", type=("build", "run"))
-    depends_on("py-setuptools@38.6.0:", type="build")
+    with default_args(type=("build", "run")):
+        depends_on("python@3.8:", when="@3.1.12:")

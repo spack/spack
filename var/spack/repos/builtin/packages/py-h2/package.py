@@ -14,13 +14,24 @@ class PyH2(PythonPackage):
 
     license("MIT")
 
-    version("4.1.0", sha256="a83aca08fbe7aacb79fec788c9c0bac936343560ed9ec18b82a13a12c28d2abb")
-    version("4.0.0", sha256="bb7ac7099dd67a857ed52c815a6192b6b1f5ba6b516237fc24a085341340593d")
-    version("3.2.0", sha256="875f41ebd6f2c44781259005b157faed1a5031df3ae5aa7bcb4628a6c0782f14")
+    version(
+        "4.1.0",
+        sha256="03a46bcf682256c95b5fd9e9a99c1323584c3eec6440d379b9903d709476bc6d",
+        url="https://pypi.org/packages/2a/e5/db6d438da759efbb488c4f3fbdab7764492ff3c3f953132efa6b9f0e9e53/h2-4.1.0-py3-none-any.whl",
+    )
+    version(
+        "4.0.0",
+        sha256="ac9e293a1990b339d5d71b19c5fe630e3dd4d768c620d1730d355485323f1b25",
+        url="https://pypi.org/packages/bd/c2/5ffec707d0022208787908d9657f782ce35b653baa1e87abecf22a7cf513/h2-4.0.0-py3-none-any.whl",
+    )
+    version(
+        "3.2.0",
+        sha256="61e0f6601fa709f35cdb730863b4e5ec7ad449792add80d1410d4174ed139af5",
+        url="https://pypi.org/packages/25/de/da019bcc539eeab02f6d45836f23858ac467f584bfec7a526ef200242afe/h2-3.2.0-py2.py3-none-any.whl",
+    )
 
-    depends_on("python@3.6.1:", type=("build", "run"), when="@4.0.0:")
-    depends_on("py-setuptools", type="build")
-    depends_on("py-hyperframe@5.2:5", type=("build", "run"), when="@3.2.0")
-    depends_on("py-hyperframe@6.0:6", type=("build", "run"), when="@4.0.0:")
-    depends_on("py-hpack@3.0:3", type=("build", "run"), when="@3.2.0")
-    depends_on("py-hpack@4.0:4", type=("build", "run"), when="@4.0.0:")
+    with default_args(type=("build", "run")):
+        depends_on("py-hpack@4:", when="@4:")
+        depends_on("py-hpack@3", when="@3.2:3")
+        depends_on("py-hyperframe@6:", when="@4:")
+        depends_on("py-hyperframe@5.2:5", when="@3.1:3")

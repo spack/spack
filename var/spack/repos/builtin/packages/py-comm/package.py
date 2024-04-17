@@ -14,10 +14,17 @@ class PyComm(PythonPackage):
 
     license("BSD-3-Clause")
 
-    version("0.1.4", sha256="354e40a59c9dd6db50c5cc6b4acc887d82e9603787f83b68c01a80a923984d15")
-    version("0.1.3", sha256="a61efa9daffcfbe66fd643ba966f846a624e4e6d6767eda9cf6e993aadaab93e")
+    version(
+        "0.1.4",
+        sha256="6d52794cba11b36ed9860999cd10fd02d6b2eac177068fdd585e1e2f8a96e67a",
+        url="https://pypi.org/packages/fe/47/0133ac1b7dc476ed77710715e98077119b3d9bae56b13f6f9055e7da1c53/comm-0.1.4-py3-none-any.whl",
+    )
+    version(
+        "0.1.3",
+        sha256="16613c6211e20223f215fc6d3b266a247b6e2641bf4e0a3ad34cb1aff2aa3f37",
+        url="https://pypi.org/packages/74/f3/b88d7e1dadf741550c56b70d7ce62673354fddb68e143d193ceb80224208/comm-0.1.3-py3-none-any.whl",
+    )
 
-    depends_on("py-hatchling@1.10:", type="build")
-
-    depends_on("py-traitlets@4:", when="@0.1.4:", type=("build", "run"))
-    depends_on("py-traitlets@5.3:", when="@0.1.3", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("py-traitlets@4:4.0.0.0,4.1:", when="@0.1.4:")
+        depends_on("py-traitlets@5.3:5.3.0.0,5.4:", when="@0.1.2:0.1.3")

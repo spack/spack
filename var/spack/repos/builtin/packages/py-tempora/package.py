@@ -14,11 +14,13 @@ class PyTempora(PythonPackage):
 
     license("MIT")
 
-    version("1.14.1", sha256="cb60b1d2b1664104e307f8e5269d7f4acdb077c82e35cd57246ae14a3427d2d6")
+    version(
+        "1.14.1",
+        sha256="d28a03d2f64ee81aec6e6bff374127ef306fe00c1b7e27c7ff1618344221a699",
+        url="https://pypi.org/packages/5c/12/4c97c44e5c9d111649e363353a4ca3ece9c6cc04b11cc48540f26e42d7b9/tempora-1.14.1-py2.py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-setuptools-scm@1.15.0:", type="build")
-    depends_on("py-six", type=("build", "run"))
-    depends_on("py-pytz", type=("build", "run"))
-    depends_on("py-jaraco-functools@1.20:", type=("build", "run"))
-    depends_on("python@2.7:", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("py-jaraco-functools@1.20:", when="@1.13:5.1,5.2.1:")
+        depends_on("py-pytz")
+        depends_on("py-six", when="@:1")

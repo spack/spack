@@ -14,9 +14,17 @@ class PyClickPlugins(PythonPackage):
 
     license("BSD-3-Clause")
 
-    version("1.1.1", sha256="46ab999744a9d831159c3411bb0c79346d94a444df9a3a3742e9ed63645f264b")
-    version("1.0.4", sha256="dfed74b5063546a137de99baaaf742b4de4337ad2b3e1df5ec7c8a256adc0847")
+    version(
+        "1.1.1",
+        sha256="5d262006d3222f5057fd81e1623d4443e41dcda5dc815c06b442aa3c02889fc8",
+        url="https://pypi.org/packages/e9/da/824b92d9942f4e472702488857914bdd50f73021efea15b4cad9aca8ecef/click_plugins-1.1.1-py2.py3-none-any.whl",
+    )
+    version(
+        "1.0.4",
+        sha256="b1ee1ccc9421c73007fe290680d97984eb6eaf5f4512b7620c6aa46031d6cb6b",
+        url="https://pypi.org/packages/95/dd/fef84cf1678418f241ef542c0288bdf215bdd3e35f1fe03dc5223a2e80ba/click_plugins-1.0.4-py2.py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-click@3.0:", type=("build", "run"))
-    depends_on("py-click@4.0:", type=("build", "run"), when="@1.1.1:")
+    with default_args(type=("build", "run")):
+        depends_on("py-click@4:", when="@1.1:")
+        depends_on("py-click@3:", when="@1.0.2,1.0.4:1.0")

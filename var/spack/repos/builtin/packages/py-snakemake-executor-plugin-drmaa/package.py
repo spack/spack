@@ -15,11 +15,14 @@ class PySnakemakeExecutorPluginDrmaa(PythonPackage):
 
     license("MIT")
 
-    version("0.1.3", sha256="1250d0f307bf3db3aa3f26f85ea5ecc7ae00b2598ea1e1afceab7a457042fa12")
+    version(
+        "0.1.3",
+        sha256="1f9ee37e0f9ffb2f38f5f08ba5045ac3ae9f60d580f9e6ef2c4faa9fa6a9b665",
+        url="https://pypi.org/packages/b1/4a/f7374471e5efd5123ab9084897b23f09063025f7edadf0ac688aaa9d4fb4/snakemake_executor_plugin_drmaa-0.1.3-py3-none-any.whl",
+    )
 
-    depends_on("py-snakemake-interface-common@1.13:1", type=("build", "run"))
-    depends_on("py-snakemake-interface-executor-plugins@8.1:8", type=("build", "run"))
-    depends_on("py-drmaa@0.7.9:0.7", type=("build", "run"))
-
-    depends_on("python@3.11:3", type=("build", "run"))
-    depends_on("py-poetry-core", type="build")
+    with default_args(type=("build", "run")):
+        depends_on("python@3.11:3", when="@0.1.1:")
+        depends_on("py-drmaa@0.7.9:")
+        depends_on("py-snakemake-interface-common@1.13:", when="@0.1.1:")
+        depends_on("py-snakemake-interface-executor-plugins@8.1:8", when="@0.1.2:0.1.3")

@@ -16,10 +16,12 @@ class PyAuditwheel(PythonPackage):
 
     license("MIT")
 
-    version("5.1.2", sha256="3ee5830014931ea84af5cd065c637b6614efa03d9b88bd8fbfc924e7ed01d6ba")
+    version(
+        "5.1.2",
+        sha256="4d06aea3ab59a2b8aa733798ac221556a3f5c021fddc42e5de5bcef20201c031",
+        url="https://pypi.org/packages/5e/6d/252b892a851cc43edb523982178da19cf69efc45f5f3aea9752a61813beb/auditwheel-5.1.2-py3-none-any.whl",
+    )
 
-    depends_on("python@3.6:", type=("build", "run"))
-    depends_on("py-setuptools@45:", type="build")
-    depends_on("py-setuptools-scm@6.2:", type="build")
-    depends_on("py-pyelftools@0.24:", type=("build", "run"))
-    depends_on("py-importlib-metadata", when="^python@:3.7", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("py-importlib-metadata", when="@5 ^python@:3.7")
+        depends_on("py-pyelftools@0.24:", when="@3.1.1:3.1,3.3:")

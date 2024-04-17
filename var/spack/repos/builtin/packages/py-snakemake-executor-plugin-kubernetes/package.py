@@ -15,12 +15,14 @@ class PySnakemakeExecutorPluginKubernetes(PythonPackage):
 
     license("MIT")
 
-    version("0.1.4", sha256="c3aeac87939ec5d038efdc3ba7dbbef5eeb3171c1b718b8af850b6287b9c54ff")
+    version(
+        "0.1.4",
+        sha256="17f3b75579d02a44fa4f578fee0e41c03c2eacc2d0c91ecbe2971fdf06ef86cf",
+        url="https://pypi.org/packages/39/b3/7744cae5393b7b0f679678116c4bb1c3a6e070943409adc79de6b3f810cd/snakemake_executor_plugin_kubernetes-0.1.4-py3-none-any.whl",
+    )
 
-    depends_on("py-kubernetes@27.2:27", type=("build", "run"))
-
-    depends_on("py-snakemake-interface-common@1.14.1:1", type=("build", "run"))
-    depends_on("py-snakemake-interface-executor-plugins@8.0.2:8", type=("build", "run"))
-
-    depends_on("python@3.11:3", type=("build", "run"))
-    depends_on("py-poetry-core", type="build")
+    with default_args(type=("build", "run")):
+        depends_on("python@3.11:3")
+        depends_on("py-kubernetes@27.2.0:27", when="@:0.1.4")
+        depends_on("py-snakemake-interface-common@1.14.1:", when="@0.1.2:")
+        depends_on("py-snakemake-interface-executor-plugins@8.0.2:8", when="@0.1.3:0.1.4")

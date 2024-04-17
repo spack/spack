@@ -15,8 +15,11 @@ class PyPipdeptree(PythonPackage):
 
     license("MIT")
 
-    version("2.13.0", sha256="ff71a48abd0b1ab810c23734b47de6ebd93270857d6665e21ed5ef6136fcba6e")
+    version(
+        "2.13.0",
+        sha256="70c582224a41f20c4b69be7aaeeed40b59d3f247a93b4d6891b3d772c9befc94",
+        url="https://pypi.org/packages/1a/16/dcf8dab5bde96006502d80c858676728364e307f23c3df210fc1f6f406ee/pipdeptree-2.13.0-py3-none-any.whl",
+    )
 
-    depends_on("python@3.8:", type=("build", "run"))
-    depends_on("py-hatch-vcs@0.3:", type="build")
-    depends_on("py-hatchling@1.18:", type="build")
+    with default_args(type=("build", "run")):
+        depends_on("python@3.8:", when="@2.10:")

@@ -17,7 +17,11 @@ class PyPytestSubprocess(PythonPackage):
 
     license("MIT")
 
-    version("1.5.0", sha256="d7693b96f588f39b84c7b2b5c04287459246dfae6be1dd4098937a728ad4fbe3")
+    version(
+        "1.5.0",
+        sha256="dfd75b10af6800a89a9b758f2e2eceff9de082a27bd1388521271b6e8bde298b",
+        url="https://pypi.org/packages/44/96/de22cf4a31bf5f21e6b74dc57e3628e3bc78847acf7a1752bdb1e36dfaf1/pytest_subprocess-1.5.0-py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-pytest@4:", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("py-pytest@4:")

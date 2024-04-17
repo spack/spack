@@ -14,7 +14,11 @@ class PyTypeshedClient(PythonPackage):
 
     license("MIT")
 
-    version("2.1.0", sha256="da1969ec48c342197ddec655c873100ece38fd93e6827a1e6377793a16526f28")
+    version(
+        "2.1.0",
+        sha256="95aabf54a80ee19b56ac349ca3fb9bdd4cf03e10ee46778ec2ba05e737290ff5",
+        url="https://pypi.org/packages/0f/41/800089b9b6ff9222b2477e59905296baef77464b206cb69f17656a5d9478/typeshed_client-2.1.0-py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools@42:", type="build")
-    depends_on("py-importlib-resources@1.4:", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("py-importlib-resources@1.4:")

@@ -18,7 +18,11 @@ class PySpectral(PythonPackage):
 
     license("MIT")
 
-    version("0.22.4", sha256="b208ffd1042e32fd2276a35e098e3df26a5f6ff1310b829e97d222c66645a9af")
+    version(
+        "0.22.4",
+        sha256="46643a3379c748d643de6de2c30acd54b067721be7b5b5bce0aee076ebbb227c",
+        url="https://pypi.org/packages/29/58/0d1988431c253cc8628c7946ff753498149f50a899e8c5383fe17625d2b9/spectral-0.22.4-py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-numpy", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("py-numpy", when="@0.21:0.22.1,0.22.3:")

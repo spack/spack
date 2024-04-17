@@ -14,7 +14,8 @@ class PyLangcodes(PythonPackage):
 
     license("MIT")
 
-    version("3.3.0", sha256="794d07d5a28781231ac335a1561b8442f8648ca07cd518310aeb45d6f0807ef6")
-
-    depends_on("python@3.6:", type=("build", "run"))
-    depends_on("py-poetry-core@1:", type="build")
+    version(
+        "3.3.0",
+        sha256="4d89fc9acb6e9c8fdef70bcdf376113a3db09b67285d9e1d534de6d8818e7e69",
+        url="https://pypi.org/packages/fe/c3/0d04d248624a181e57c2870127dfa8d371973561caf54333c85e8f9133a2/langcodes-3.3.0-py3-none-any.whl",
+    )

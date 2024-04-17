@@ -13,8 +13,12 @@ class PyVcstools(PythonPackage):
     homepage = "https://wiki.ros.org/vcstools"
     pypi = "vcstools/vcstools-0.1.42.tar.gz"
 
-    version("0.1.42", sha256="9e48d8ed8b0fdda739af56e05bf10da1a509cb7d4950a19c73264c770802777a")
+    version(
+        "0.1.42",
+        sha256="451d9efc1d7e0089a4a4488ec4be13b66d820c06e9d656011aa5c94c5b0385f1",
+        url="https://pypi.org/packages/30/4a/a3ee59bd58ea68d1d33693c310c7f44206d53f1e17e9cab815273589503e/vcstools-0.1.42-py3-none-any.whl",
+    )
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-pyyaml", type=("build", "run"))
-    depends_on("py-python-dateutil", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("py-python-dateutil", when="@0.1.42:")
+        depends_on("py-pyyaml", when="@0.1.42:")

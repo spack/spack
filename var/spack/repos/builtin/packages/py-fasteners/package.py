@@ -14,14 +14,32 @@ class PyFasteners(PythonPackage):
 
     license("Apache-2.0")
 
-    version("0.18", sha256="cb7c13ef91e0c7e4fe4af38ecaf6b904ec3f5ce0dda06d34924b6b74b869d953")
-    version("0.17.3", sha256="a9a42a208573d4074c77d041447336cf4e3c1389a256fd3e113ef59cf29b7980")
-    version("0.16.3", sha256="b1ab4e5adfbc28681ce44b3024421c4f567e705cc3963c732bf1cba3348307de")
-    version("0.15", sha256="3a176da6b70df9bb88498e1a18a9e4a8579ed5b9141207762368a1017bf8f5ef")
-    version("0.14.1", sha256="427c76773fe036ddfa41e57d89086ea03111bbac57c55fc55f3006d027107e18")
+    version(
+        "0.18",
+        sha256="1d4caf5f8db57b0e4107d94fd5a1d02510a450dced6ca77d1839064c1bacf20c",
+        url="https://pypi.org/packages/bc/a2/7d35ba2c8d9963398fcec49cd814e50a6b920d213928f06fdbbf8aa3289b/fasteners-0.18-py3-none-any.whl",
+    )
+    version(
+        "0.17.3",
+        sha256="cae0772df265923e71435cc5057840138f4e8b6302f888a567d06ed8e1cbca03",
+        url="https://pypi.org/packages/f6/01/274da83334c20dc1ae7a48b1ea4ae50d3571d4e6aea65bb0368f841701ad/fasteners-0.17.3-py3-none-any.whl",
+    )
+    version(
+        "0.16.3",
+        sha256="8408e52656455977053871990bd25824d85803b9417aa348f10ba29ef0c751f7",
+        url="https://pypi.org/packages/31/91/6630ebd169ca170634ca8a10dfcc5f5c11b0621672d4c2c9e40381c6d81a/fasteners-0.16.3-py2.py3-none-any.whl",
+    )
+    version(
+        "0.15",
+        sha256="007e4d2b2d4a10093f67e932e5166722d2eab83b77724156e92ad013c6226574",
+        url="https://pypi.org/packages/18/bd/55eb2d6397b9c0e263af9d091ebdb756b15756029b3cededf6461481bc63/fasteners-0.15-py2.py3-none-any.whl",
+    )
+    version(
+        "0.14.1",
+        sha256="564a115ff9698767df401efca29620cbb1a1c2146b7095ebd304b79cc5807a7c",
+        url="https://pypi.org/packages/14/3a/096c7ad18e102d4f219f5dd15951f9728ca5092a3385d2e8f79a7c1e1017/fasteners-0.14.1-py2.py3-none-any.whl",
+    )
 
-    depends_on("python@3.6:", when="@0.17:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
-
-    depends_on("py-monotonic@0.1:", when="@:0.15", type=("build", "run"))
-    depends_on("py-six", when="@:0.16", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("py-monotonic", when="@0.11:0.15")
+        depends_on("py-six", when="@:0.16.0,0.16.2:0.16")

@@ -18,11 +18,13 @@ class PyPytestWorkflow(PythonPackage):
 
     license("AGPL-3.0-or-later")
 
-    version("1.6.0", sha256="8fb9fb31a6132c783231afbbbb92941297a42713dcd459694b5efe4a13b8cba7")
+    version(
+        "1.6.0",
+        sha256="bb1f1dbc2cfa4d4a9af45e7764fb8e65d8baa59cb0db72cf88ff0ad1590887e6",
+        url="https://pypi.org/packages/09/3e/af45083f33ce8d4a412f9f7264254b689e6182c85619219fb8086294f158/pytest_workflow-1.6.0-py3-none-any.whl",
+    )
 
-    depends_on("python@3.6:", type=("build", "run"))
-    depends_on("py-setuptools@51:", type="build")
-
-    depends_on("py-pyyaml", type=("build", "run"))
-    depends_on("py-pytest@5.4.0:", type=("build", "run"))
-    depends_on("py-jsonschema", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("py-jsonschema")
+        depends_on("py-pytest@5.4:", when="@1.3:1")
+        depends_on("py-pyyaml")
