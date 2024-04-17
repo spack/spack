@@ -12,7 +12,7 @@ class PyPennylane(PythonPackage):
 
     homepage = "https://docs.pennylane.ai/"
     git = "https://github.com/PennyLaneAI/pennylane.git"
-    url = "https://github.com/PennyLaneAI/pennylane/archive/refs/tags/v0.32.0.tar.gz"
+    url = "https://github.com/PennyLaneAI/pennylane/archive/refs/tags/v0.35.1.tar.gz"
 
     maintainers("mlxd", "AmintorDusko", "marcodelapierre", "vincentmr")
 
@@ -21,7 +21,6 @@ class PyPennylane(PythonPackage):
     version("0.35.0", sha256="3b99185661e8a0d0f7bc2dcc9cfa51dde20e99708c3c7d858c4732f0eb774716")
     version("0.34.0", sha256="f76f544212c028a8f882ce7f66639e7f7c4c9213277bde0454c7f3a7d9d46538")
     version("0.33.1", sha256="89d02bfe3a37abd13dcdb2f34f00a38e9e60a13af66a97911c8558f77ff4e32e")
-    version("0.33.0", sha256="b41c843a432c5869fc63dc35c9e9d53bec64d296ca0e0eeb1c9b83d95a68c3f1")
     version("0.33.0", sha256="b41c843a432c5869fc63dc35c9e9d53bec64d296ca0e0eeb1c9b83d95a68c3f1")
     version("0.32.0", sha256="8a2206268d7cae0a59f9067b6075175eec93f4843519b371f02716c49a22e750")
     version("0.31.0", sha256="f3b68700825c120e44434ed2b2ab71d0be9d3111f3043077ec0598661ec33477")
