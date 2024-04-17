@@ -523,6 +523,12 @@ attr("virtual_on_edge", PackageNode, ProviderNode, Virtual)
      provider(ProviderNode, node(_, Virtual)),
      not external(PackageNode).
 
+% If a virtual node is in the answer set, it must be either a virtual root,
+% or used somewhere
+:- attr("virtual_node", node(_, Virtual)),
+   not attr("virtual_on_incoming_edges", _, Virtual),
+   not attr("virtual_root", node(_, Virtual)).
+
 attr("virtual_on_incoming_edges", ProviderNode, Virtual)
   :- attr("virtual_on_edge", _, ProviderNode, Virtual).
 
@@ -885,12 +891,8 @@ error(100, "{0} variant '{1}' cannot have values '{2}' and '{3}' as they come fr
      Set1 < Set2, % see[1]
      build(node(ID, Package)).
 
-% variant_set is an explicitly set variant value. If it's not 'set',
-% we revert to the default value. If it is set, we force the set value
-attr("variant_value", PackageNode, Variant, Value)
- :- attr("node", PackageNode),
-    node_has_variant(PackageNode, Variant),
-    attr("variant_set", PackageNode, Variant, Value).
+:- attr("variant_set", node(ID, Package), Variant, Value),
+   not attr("variant_value", node(ID, Package), Variant, Value).
 
 % The rules below allow us to prefer default values for variants
 % whenever possible. If a variant is set in a spec, or if it is
@@ -1110,7 +1112,7 @@ error(100, "'{0} target={1}' is not compatible with this machine", Package, Targ
 % Compiler semantics
 %-----------------------------------------------------------------------------
 % There must be only one compiler set per built node.
-{ node_compiler(PackageNode, CompilerID) : compiler_id(CompilerID) } :-
+{ node_compiler(PackageNode, CompilerID) : compiler_id(CompilerID), compiler_available(CompilerID) } :-
     attr("node", PackageNode),
     build(PackageNode).
 
@@ -1127,6 +1129,7 @@ attr("node_compiler_version", PackageNode, CompilerName, CompilerVersion)
   :- node_compiler(PackageNode, CompilerID),
      compiler_name(CompilerID, CompilerName),
      compiler_version(CompilerID, CompilerVersion),
+     compiler_available(CompilerID),
      build(PackageNode).
 
 attr("node_compiler", PackageNode, CompilerName)
@@ -1189,7 +1192,6 @@ error(100, "{0} compiler '%{1}@{2}' incompatible with 'os={3}'", Package, Compil
      compiler_version(CompilerID, Version),
      compiler_os(CompilerID, CompilerOS),
      not os_compatible(CompilerOS, OS),
-     not allow_compiler(Compiler, Version),
      build(node(X, Package)).
 
 % If a package and one of its dependencies don't have the
@@ -1210,7 +1212,6 @@ compiler_mismatch_required(PackageNode, DependencyNode)
      not compiler_match(PackageNode, DependencyNode).
 
 #defined compiler_os/3.
-#defined allow_compiler/2.
 
 % compilers weighted by preference according to packages.yaml
 node_compiler_weight(node(ID, Package), Weight)

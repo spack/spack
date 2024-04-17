@@ -30,6 +30,8 @@ class Octave(AutotoolsPackage, GNUMirrorPackage):
 
     license("GPL-3.0-or-later")
 
+    version("9.1.0", sha256="3f8c6c6ecfa249a47c97e18e651be4db8499be2f5de1a095a3eea53efc01d6a1")
+    version("8.4.0", sha256="6b38dd9751678424aeb3a9d666432b1f378eb3971a21290a90cd3d35119d56ad")
     version("8.2.0", sha256="57d17f918a940d38ca3348211e110b34d735a322a87db71c177c4692a49a9c84")
     version("8.1.0", sha256="8052074d17b0ef643d037de8ab389672c752bb201ee9cea4dfa69858fb6a213f")
     version("7.3.0", sha256="6e14a4649d70af45ab660f8cbbf645aaf1ec33f25f88bfda4697cb17e440c4f5")

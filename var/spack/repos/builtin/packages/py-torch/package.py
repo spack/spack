@@ -190,11 +190,10 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
         depends_on("py-protobuf@:3", type=("build", "run"))
         depends_on("protobuf@:3")
     depends_on("eigen")
-    # https://github.com/pytorch/pytorch/issues/60329
-    # depends_on("cpuinfo@2023-01-13", when="@2.1:")
-    # depends_on("cpuinfo@2022-08-19", when="@1.13:2.0")
-    # depends_on("cpuinfo@2020-12-17", when="@1.8:1.12")
-    # depends_on("cpuinfo@2020-06-11", when="@1.6:1.7")
+    depends_on("cpuinfo@2023-01-13", when="@2.1:")
+    depends_on("cpuinfo@2022-08-19", when="@1.13:2.0")
+    depends_on("cpuinfo@2020-12-17", when="@1.8:1.12")
+    depends_on("cpuinfo@2020-06-11", when="@1.6:1.7")
     depends_on("sleef@3.5.1_2020-12-22", when="@1.8:")
     depends_on("sleef@3.4.0_2019-07-30", when="@1.6:1.7")
     depends_on("fp16@2020-05-14", when="@1.6:")
@@ -633,8 +632,7 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
             env.set("USE_SYSTEM_PYBIND11", "ON")
         if self.spec.satisfies("@1.6:"):
             # env.set("USE_SYSTEM_LIBS", "ON")
-            # https://github.com/pytorch/pytorch/issues/60329
-            # env.set("USE_SYSTEM_CPUINFO", "ON")
+            env.set("USE_SYSTEM_CPUINFO", "ON")
             env.set("USE_SYSTEM_SLEEF", "ON")
             env.set("USE_SYSTEM_GLOO", "ON")
             env.set("USE_SYSTEM_FP16", "ON")

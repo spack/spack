@@ -37,6 +37,7 @@ class Llvm(CMakePackage, CudaPackage):
     license("Apache-2.0")
 
     version("main", branch="main")
+    version("18.1.3", sha256="fc5a2fd176d73ceb17f4e522f8fe96d8dde23300b8c233476d3609f55d995a7a")
     version("18.1.2", sha256="8d686d5ece6f12b09985cb382a3a530dc06bb6e7eb907f57c7f8bf2d868ebb0b")
     version("18.1.1", sha256="62439f733311869dbbaf704ce2e02141d2a07092d952fc87ef52d1d636a9b1e4")
     version("18.1.0", sha256="eb18f65a68981e94ea1a5aae4f02321b17da9e99f76bfdb983b953f4ba2d3550")
@@ -756,10 +757,7 @@ class Llvm(CMakePackage, CudaPackage):
                     )
 
     def flag_handler(self, name, flags):
-        if name == "cxxflags":
-            flags.append(self.compiler.cxx11_flag)
-            return (None, flags, None)
-        elif name == "ldflags" and self.spec.satisfies("%intel"):
+        if name == "ldflags" and self.spec.satisfies("%intel"):
             flags.append("-shared-intel")
             return (None, flags, None)
         return (flags, None, None)

@@ -56,8 +56,6 @@ class Hipcub(CMakePackage, CudaPackage, ROCmPackage):
 
     depends_on("cmake@3.10.2:", type="build")
 
-    depends_on("hip +cuda", when="+cuda")
-
     depends_on("googletest@1.10.0:", type="test")
 
     for ver in [
@@ -81,6 +79,7 @@ class Hipcub(CMakePackage, CudaPackage, ROCmPackage):
     ]:
         depends_on(f"rocprim@{ver}", when=f"+rocm @{ver}")
         depends_on(f"rocm-cmake@{ver}:", type="build", when=f"@{ver}")
+        depends_on(f"hip +cuda@{ver}", when=f"+cuda @{ver}")
 
     # fix hardcoded search in /opt/rocm and broken config mode search
     patch("find-hip-cuda-rocm-5.1.patch", when="@5.1:5.2 +cuda")

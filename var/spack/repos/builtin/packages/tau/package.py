@@ -106,6 +106,12 @@ class Tau(Package):
     )
     variant("dyninst", default=False, description="Activates dyninst support")
 
+    variant(
+        "disable-no-pie",
+        default=False,
+        description="Do not add -no-pie while linking with Ubuntu.",
+    )
+
     depends_on("cmake@3.14:", type="build", when="%clang")
     depends_on("zlib-api", type="link")
     depends_on("pdt", when="+pdt")  # Required for TAU instrumentation
@@ -145,7 +151,7 @@ class Tau(Package):
     conflicts("+adios2", when="@:2.29.1")
     conflicts("+sqlite", when="@:2.29.1")
     conflicts("+dyninst", when="@:2.32.1")
-
+    conflicts("+disable-no-pie", when="@:2.33.2")
     patch("unwind.patch", when="@2.29.0")
 
     filter_compiler_wrappers("Makefile", relative_root="include")
@@ -352,6 +358,8 @@ class Tau(Package):
                 if found:
                     break
             options.append("-pythonlib=%s" % lib_path)
+        if "+disable-no-pie" in spec:
+            options.append("-disable-no-pie-on-ubuntu")
 
         if "+dyninst" in spec:
             options.append("-dyninst=%s" % spec["dyninst"].prefix)

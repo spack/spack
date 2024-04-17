@@ -977,7 +977,7 @@ def test_single_file_scope(config, env_yaml):
         # from the single-file config
         assert spack.config.get("config:verify_ssl") is False
         assert spack.config.get("config:dirty") is False
-        assert spack.config.get("packages:all:compiler") == ["gcc@4.5.3"]
+        assert spack.config.get("packages:all:compiler") == ["gcc@4.5.3", "gcc", "clang"]
 
         # from the lower config scopes
         assert spack.config.get("config:checksum") is True
