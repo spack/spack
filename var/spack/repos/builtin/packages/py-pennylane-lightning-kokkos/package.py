@@ -13,14 +13,21 @@ class PyPennylaneLightningKokkos(CMakePackage, PythonExtension, CudaPackage, ROC
 
     homepage = "https://docs.pennylane.ai/projects/lightning-kokkos"
     git = "https://github.com/PennyLaneAI/pennylane-lightning-kokkos.git"
-    url = "https://github.com/PennyLaneAI/pennylane-lightning-kokkos/archive/refs/tags/v0.32.0.tar.gz"
-
+    urls = [
+        "https://github.com/PennyLaneAI/pennylane-lightning-kokkos/archive/refs/tags/v0.32.0.tar.gz"
+        "https://github.com/PennyLaneAI/pennylane-lightning/archive/refs/tags/v0.35.1.tar.gz"
+    ]
     maintainers("AmintorDusko", "vincentmr")
 
     license("Apache-2.0")
 
     version("main", branch="main")
-
+    version("master", branch="master")
+    version("0.35.1", sha256="c4cab4a8a1a53edc0990a2a429805dca1c6a46a7ffcc6f77c985b88cd6ff6247")
+    version("0.35.0", sha256="878f63cd1afadd52386b1aca9c0e3fb0a097b64ce8e347b325ebc7cac722e5e0")
+    version("0.34.0", sha256="398c3a1d4450a9f3e146204c22329da9adc3f83a1685ae69187f3b25f47824c0")
+    version("0.33.1", sha256="1a16fd3dbf03788e4f8dd510bbb668e7a7073ca62be4d9414e2c32e0166e8bda")
+    version("0.33.0", sha256="d39a2749d08ef2ba336ed2d6f77b3bd5f6d1b25292263a41b97943ae7538b7da")
     version("0.32.0", sha256="06f19dfb1073387ef9ee30c38ea44884844a771373256b694a0e1ceb87195bb2")
     version("0.31.0", sha256="fe10322fee0fa7df45cd3a81d6c229a79c7dfa7f20ff7d67c65c9a28f494dc89")
     version("0.30.0", sha256="7c8f0e0431f8052993cd8033a316f53590c7bf5419445d0725e214b93cbc661b")
@@ -70,6 +77,7 @@ class PyPennylaneLightningKokkos(CMakePackage, PythonExtension, CudaPackage, ROC
     depends_on("cmake@3.20:", type="build")
     depends_on("ninja", type="build")
     depends_on("python@3.8:", type=("build", "run"))
+    depends_on("python@3.9:", type=("build", "run"), when="@0.32:")
     depends_on("py-setuptools", type="build")
     depends_on("py-pybind11", type="link")
     depends_on("py-pip", type="build")
@@ -80,6 +88,8 @@ class PyPennylaneLightningKokkos(CMakePackage, PythonExtension, CudaPackage, ROC
     # but the introduction of `StatePrep` demands `pennylane>=0.32`
     depends_on("py-pennylane@0.32:", type=("build", "run"), when="@0.32:")
     depends_on("py-pennylane-lightning~kokkos", type=("build", "run"), when="@:0.31")
+    for v in range(33, 36):
+        depends_on(f"py-pennylane-lightning@0.{v}:", type=("build", "run"), when=f"@0.{v}:")
 
     # variant defined dependencies
     depends_on("llvm-openmp", when="+openmp %apple-clang")
@@ -97,8 +107,10 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
         """
         Here we specify all variant options that can be dynamically specified at build time
         """
+        args_prefix = "PLKOKKOS_" if self.spec.version < Version("0.33") else ""
+
         args = [
-            self.define_from_variant("PLKOKKOS_BUILD_TESTS", "cpptests"),
+            self.define_from_variant(f"{args_prefix}BUILD_TESTS", "cpptests"),
             self.define_from_variant("PLKOKKOS_ENABLE_NATIVE", "native"),
             self.define_from_variant("PLKOKKOS_ENABLE_SANITIZER", "sanitize"),
         ]
@@ -108,6 +120,10 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
         args.append(
             "-DPLKOKKOS_ENABLE_WARNINGS=OFF"
         )  # otherwise build might fail due to Kokkos::InitArguments deprecated
+        if self.spec.version >= Version("0.33"):
+            args.append(
+                f"-DPL_BACKEND=lightning_kokkos"
+            )
         return args
 
     def build(self, pkg, spec, prefix):

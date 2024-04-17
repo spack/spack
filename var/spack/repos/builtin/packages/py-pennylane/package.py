@@ -15,7 +15,7 @@ class PyPennylane(PythonPackage):
     url = "https://github.com/PennyLaneAI/pennylane/archive/refs/tags/v0.35.1.tar.gz"
 
     maintainers("mlxd", "AmintorDusko", "marcodelapierre", "vincentmr")
-    
+
     license("Apache-2.0")
 
     version("master", branch="master")
@@ -45,8 +45,8 @@ class PyPennylane(PythonPackage):
     depends_on("py-toml", type=("build", "run"))
     depends_on("py-appdirs", type=("build", "run"))
     depends_on("py-semantic-version@2.7:", type=("build", "run"))
-    depends_on("py-autoray@0.6.1:", type=("build", "run"))
     depends_on("py-autoray@0.3.1:", type=("build", "run"), when="@:0.32.0")
+    depends_on("py-autoray@0.6.1:", type=("build", "run"), when="@0.33.0:")
     depends_on("py-cachetools", type=("build", "run"))
     for v in range(30, 36):
         depends_on(f"py-pennylane-lightning@0.{v}.0:", type=("build", "run"), when=f"@0.{v}.0:")
