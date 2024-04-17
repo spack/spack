@@ -138,6 +138,20 @@ explicitly_requested_root(node(min_dupe_id, Package)) :-
   trigger_and_effect(Package, TriggerID, EffectID),
   imposed_constraint(EffectID, "root", Package).
 
+
+associated_with_root(RootNode, RootNode) :- attr("root", RootNode).
+
+associated_with_root(RootNode, ChildNode) :-
+   depends_on(ParentNode, ChildNode),
+   associated_with_root(RootNode, ParentNode).
+
+error(100, "node({0}, {1}) is not associated with root", X, Package)
+  :- attr("root", RootNode),
+     condition_set(RootNode, node(X, Package)),
+     not virtual(Package),
+     not associated_with_root(RootNode, node(X, Package)).
+
+
 #defined concretize_everything/0.
 #defined literal/1.
 
