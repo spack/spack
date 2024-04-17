@@ -736,7 +736,7 @@ ml-linux-x86_64-cuda-build:
 
 ml-linux-aarch64-cpu-generate:
   extends: [ ".generate-aarch64", .ml-linux-aarch64-cpu ]
-  image: ghcr.io/spack/e4s-amazonlinux-2:v2023-03-09
+  image: ghcr.io/spack/ubuntu-22.04:pr-50
 
 ml-linux-aarch64-cpu-build:
   extends: [ ".build", ".ml-linux-aarch64-cpu" ]
@@ -759,7 +759,7 @@ ml-linux-aarch64-cpu-build:
 
 ml-linux-aarch64-cuda-generate:
   extends: [ ".generate-aarch64", .ml-linux-aarch64-cuda ]
-  image: ghcr.io/spack/e4s-amazonlinux-2:v2023-03-09
+  image: ghcr.io/spack/ubuntu-22.04:pr-50
 
 ml-linux-aarch64-cuda-build:
   extends: [ ".build", ".ml-linux-aarch64-cuda" ]

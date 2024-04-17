@@ -91,7 +91,7 @@ spack:
     pipeline-gen:
     - build-job:
         image:
-          name: ghcr.io/spack/e4s-amazonlinux-2:v2023-03-09
+          name: ghcr.io/spack/ubuntu-22.04:pr-50
           entrypoint: ['']
 
   cdash:
