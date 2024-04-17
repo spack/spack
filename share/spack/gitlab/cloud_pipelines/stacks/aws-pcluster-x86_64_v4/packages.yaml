@@ -7,11 +7,8 @@ packages:
           - "cflags=-std=c18 target=x86_64_v3"
         when: "%intel"
   gettext:
-    require:
-      - one_of:
-          - "%gcc"
-          - "%oneapi"
-          - "%intel cflags=-std=c18"
+    # Newer gettext cannot build with gcc@12 and old AL2 glibc headers
+    require: '@0.19.8.1'
   gromacs:
     require:
       - one_of:
