@@ -13,6 +13,8 @@ class PyPythonFmask(PythonPackage):
     homepage = "https://www.pythonfmask.org/en/latest/"
     url = "https://github.com/ubarsc/python-fmask/releases/download/pythonfmask-0.5.8/python-fmask-0.5.8.tar.gz"
 
+    maintainers("gillins", "neilflood")
+
     license("GPL-3.0-only")
 
     version("0.5.9", sha256="7e2875abab87da545d3ec06b9dad704105729977ad1e479a3d9d3b8294c49e44")
@@ -30,5 +32,3 @@ class PyPythonFmask(PythonPackage):
     depends_on("py-numpy", type=("build", "run"))
     depends_on("py-scipy", type=("build", "run"))
     depends_on("gdal+python", type=("build", "run"))
-
-    maintainers("gillins", "neilflood")
