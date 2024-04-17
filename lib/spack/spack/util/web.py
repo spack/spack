@@ -707,6 +707,7 @@ def _spider(url: urllib.parse.ParseResult, collect_nested: bool, _visited: Set[s
             raw_link = metadata_parser.fragments.pop()
             abs_link = url_util.join(response_url, raw_link.strip(), resolve_href=True)
 
+            fragment_response_url = None
             try:
                 # This seems to be text/html, though text/fragment+html is also used
                 fragment_response_url, _, fragment_response = read_from_url(abs_link, "text/html")
