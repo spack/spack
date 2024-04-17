@@ -916,6 +916,7 @@ def list_fn(args):
 
     if not args.allarch:
         arch = spack.spec.Spec.default_arch()
+        breakpoint()
         specs = [s for s in specs if s.intersects(arch)]
 
     if args.specs:
