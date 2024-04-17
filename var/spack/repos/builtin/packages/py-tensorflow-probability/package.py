@@ -60,7 +60,7 @@ class PyTensorflowProbability(Package):
 
     variant("tensorflow", default=False, description="Build with TensorFlow support")
     with when("+tensorflow"):
-        depends_on("py-tf-keras", when="@0.24:", type=("build", "run"))
+        depends_on("py-tf-keras@2.16:", when="@0.24:", type=("build", "run"))
         depends_on("py-tensorflow@2.16", when="@0.24", type=("build", "run"))
         depends_on("py-tensorflow@2.15", when="@0.23", type=("build", "run"))
         depends_on("py-tensorflow@2.14:2", when="@0.22", type=("build", "run"))
