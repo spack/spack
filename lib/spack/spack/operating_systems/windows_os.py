@@ -75,13 +75,11 @@ class WindowsOs(OperatingSystem):
 
     @property
     def oneapi_root(self):
-        oneapi_root = ""
         root = os.environ.get("ONEAPI_ROOT", "") or os.path.join(
             os.environ.get("ProgramFiles(x86)", ""), "Intel", "oneAPI"
         )
         if os.path.exists(root):
-            oneapi_root = root
-        return oneapi_root
+            return root
 
     @property
     def compiler_search_paths(self):

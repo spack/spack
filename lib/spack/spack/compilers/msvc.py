@@ -20,7 +20,6 @@ from spack.compiler import Compiler
 from spack.error import SpackError
 from spack.version import Version, VersionRange
 
-_avail_fc_version: Set[str] = set()
 FC_PATH: Dict[str, str] = dict()
 
 
@@ -109,13 +108,13 @@ class VCVarsInvocation(VarsInvocation):
 
 
 def get_valid_fortran_pth():
-    """Assign maximum available fortran compiler"""
+    """Assign maximum available fortran compiler version"""
     # TODO (johnwparent): validate compatibility w/ try compiler
     # functionality when added
     valid_fortran_path = None
-    if FC_PATH:
+    if FC_PATH.get(""):
         sort_fn = lambda fc_ver: Version(fc_ver)
-        sort_fc_ver = sorted(list(_avail_fc_version), key=sort_fn)
+        sort_fc_ver = sorted(list(FC_PATH.keys()), key=sort_fn)
         valid_fortran_path = FC_PATH[sort_fc_ver[-1]]
     return valid_fortran_path
 
@@ -161,10 +160,9 @@ class Msvc(Compiler):
         # This positional argument "paths" is later parsed and process by the base class
         # via the call to `super` later in this method
         paths = args[3]
-        # This positional argument "cspec" is also parsed and handled by the base class
-        # constructor
-        new_pth = [pth if pth else get_valid_fortran_pth() for pth in paths]
-        paths[:] = new_pth
+        latest_fc = get_valid_fortran_pth()
+        new_pth = [pth if pth else latest_fc for pth in paths[2:]]
+        paths[2:] = new_pth
         # Initialize, deferring to base class but then adding the vcvarsallfile
         # file based on compiler executable path.
         super().__init__(*args, **kwargs)
@@ -200,23 +198,23 @@ class Msvc(Compiler):
                 Args:
                     pth: path prefixed within oneAPI root
                 """
-                if not pth or not os.path.basename(pth):
+                if not pth:
                     return ""
-                if os.path.basename(pth) == "oneAPI":
-                    return pth
-                return get_oneapi_root(os.path.dirname(pth))
+                while os.path.basename(pth) and os.path.basename(pth) != "oneAPI":
+                    pth = os.path.dirname(pth)
+                return pth
 
             # If this found, it sets all the vars
             oneapi_root = get_oneapi_root(self.fc)
             if not oneapi_root:
-                raise RuntimeError(f"Non oneAPI Fortran compiler {self.fc} assigned to MSVC")
+                raise RuntimeError(f"Non-oneAPI Fortran compiler {self.fc} assigned to MSVC")
             oneapi_root_setvars = os.path.join(oneapi_root, "setvars.bat")
-            # some oneAPI versions return a version more precise than their
-            # install paths
-            version_from_path_grp = re.search(r"([1-9][0-9]*\.[0-9]*(?:\.[0-9])*)", self.fc)
-            version_from_path = (
-                "latest" if not version_from_path_grp else version_from_path_grp.group(1)
-            )
+            # some oneAPI exes return a version more precise than their
+            # install paths specify, so we determine path from
+            # the install path rather than the fc executable itself
+            numver = r"\d+\.\d+(?:\.\d+)?"
+            pattern = f"((?:{numver})|(?:latest))"
+            version_from_path = re.search(pattern, self.fc).group(1)
             oneapi_version_setvars = os.path.join(
                 oneapi_root, "compiler", version_from_path, "env", "vars.bat"
             )
@@ -335,12 +333,14 @@ class Msvc(Compiler):
         if not sys.platform == "win32":
             return "unknown"
         fc_ver = cls.default_version(fc)
-        _avail_fc_version.add(fc_ver)
         FC_PATH[fc_ver] = fc
         try:
             sps = spack.operating_systems.windows_os.WindowsOs().compiler_search_paths
         except AttributeError:
-            raise SpackError("Windows compiler search paths not established")
+            raise SpackError(
+                "Windows compiler search paths not established, "
+                "please report this behavior to github.com/spack/spack"
+            )
         clp = spack.util.executable.which_string("cl", path=sps)
         return cls.default_version(clp) if clp else fc_ver
 
