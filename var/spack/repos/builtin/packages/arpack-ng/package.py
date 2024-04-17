@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -150,14 +150,14 @@ class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
         options = (
             self.enable_or_disable("mpi")
             + [
-                "--with-blas={0}".format(spec["blas"].libs.ld_flags),
-                "--with-lapack={0}".format(spec["lapack"].libs.ld_flags),
+                f"--with-blas={spec['blas'].libs.ld_flags}",
+                f"--with-lapack={spec['lapack'].libs.ld_flags}",
             ]
             + self.enable_or_disable("shared")
         )
 
         if "+mpi" in spec:
-            options.append("F77={0}".format(spec["mpi"].mpif77))
+            options.append(f"F77={spec['mpi'].mpif77}")
 
         return options
 

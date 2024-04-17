@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,11 @@ class GmapGsnap(AutotoolsPackage):
 
     maintainers("snehring")
 
+    license("Apache-2.0")
+
+    version(
+        "2023-07-20", sha256="19e70eebd9b282d8596721812d071efed188b6d5000627b9948f0486f87fe68f"
+    )
     version(
         "2023-06-01", sha256="c7e6f6cf644e6f66f9f5a0811a49da8cc81f095a4bd7b7cef2ab10aa5b314430"
     )
@@ -60,12 +65,18 @@ class GmapGsnap(AutotoolsPackage):
     depends_on("bzip2")
     depends_on("perl", type="run")
 
+    requires("simd=arm", when="target=aarch64", msg="simd=arm is required when building on arm")
+
     variant(
         "simd",
         description="CPU support.",
-        values=("avx2", "sse42", "avx512", "sse2"),
+        values=(
+            conditional("avx2", "sse42", "avx512", "sse2", when="target=x86_64:"),
+            conditional("arm", when="@2023-02-17: target=aarch64:"),
+            conditional("avx512", "avx512bw", when="@2023-03-24: target=x86_64:"),
+        ),
         multi=True,
-        default="sse2",
+        default="avx2",
     )
 
     def configure(self, spec, prefix):

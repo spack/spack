@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,6 +19,11 @@ class OmegaH(CMakePackage, CudaPackage):
     maintainers("cwsmith")
     tags = ["e4s"]
     version("main", branch="main")
+    version(
+        "scorec.10.7.0",
+        commit="0e5de8618c3370f702e08c1b1af476dbbc118892",
+        git="https://github.com/SCOREC/omega_h.git",
+    )
     version(
         "scorec.10.6.0",
         commit="f376fad4741b55a4b2482218eb3437d719b7c72e",

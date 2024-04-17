@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class Libpfm4(MakefilePackage):
     homepage = "http://perfmon2.sourceforge.net"
     url = "https://downloads.sourceforge.net/project/perfmon2/libpfm4/libpfm-4.12.0.tar.gz"
     maintainers("mwkrentel")
+
+    license("MIT")
 
     version("4.13.0", sha256="d18b97764c755528c1051d376e33545d0eb60c6ebf85680436813fa5b04cc3d1")
     version("4.12.0", sha256="4b0c1f53f39a61525b69bebf532c68040c1b984d7544a8ae0844b13cd91e1ee4")

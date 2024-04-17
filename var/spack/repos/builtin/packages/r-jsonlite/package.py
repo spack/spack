@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,6 +21,8 @@ class RJsonlite(RPackage):
     use with dynamic data in systems and applications."""
 
     cran = "jsonlite"
+
+    license("MIT")
 
     version("1.8.4", sha256="79eaabe042226b0918aa828cc63d54fee8be67ae7c67f5e0d3010f468efb1278")
     version("1.8.3", sha256="c57f1daf681fc7d5db893693a65ac61a48ddd7aabf66b28647b0e30df92ac8f0")

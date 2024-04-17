@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,9 @@ class Gh(Package):
 
     maintainers("lcnzg")
 
+    license("MIT")
+
+    version("2.43.1", sha256="1ea3f451fb7002c1fb95a7fab21e9ab16591058492628fe264c5878e79ec7c90")
     version("2.32.1", sha256="1d569dc82eb6520e6a8959568c2db84fea3bbaab2604c8dd5901849d320e1eae")
     version("2.28.0", sha256="cf3c0fb7f601d717d8b5177707a197c49fd426f5dc3c9aa52a932e96ba7166af")
     version("2.25.1", sha256="d3b28da03f49600697d2e80c2393425bd382e340040c34641bf3569593c7fbe8")
@@ -33,6 +36,9 @@ class Gh(Package):
     conflicts("platform=darwin", when="@2.28.0")
 
     depends_on("go@1.16:", type="build")
+    depends_on("go@1.18:", type="build", when="@2.10.0:")
+    depends_on("go@1.19:", type="build", when="@2.21.0:")
+    depends_on("go@1.21:", type="build", when="@2.33.0:")
 
     phases = ["build", "install"]
 

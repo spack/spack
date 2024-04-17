@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,11 +14,14 @@ class PyTorchNvidiaApex(PythonPackage, CudaPackage):
     homepage = "https://github.com/nvidia/apex/"
     git = "https://github.com/nvidia/apex/"
 
+    license("BSD-3-Clause")
+
     version("master", branch="master")
     version("2020-10-19", commit="8a1ed9e8d35dfad26fb973996319965e4224dcdd")
 
     depends_on("python@3:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
+    depends_on("py-packaging", type="build")
     depends_on("py-torch@0.4:", type=("build", "run"))
     depends_on("cuda@9:", when="+cuda")
     depends_on("py-pybind11", type=("build", "link", "run"))
@@ -41,6 +44,7 @@ class PyTorchNvidiaApex(PythonPackage, CudaPackage):
         else:
             env.unset("CUDA_HOME")
 
+    @when("^python@:3.10")
     def global_options(self, spec, prefix):
         args = []
         if spec.satisfies("^py-torch@1.0:"):
@@ -48,3 +52,11 @@ class PyTorchNvidiaApex(PythonPackage, CudaPackage):
             if "+cuda" in spec:
                 args.append("--cuda_ext")
         return args
+
+    @when("^python@3.11:")
+    def config_settings(self, spec, prefix):
+        return {
+            "builddir": "build",
+            "compile-args": f"-j{make_jobs}",
+            "--global-option": "--cpp_ext --cuda_ext",
+        }

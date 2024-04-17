@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -370,7 +370,7 @@ _spack_compress_aliases() {
     # If there are zero or one completions, don't do anything
     # If this isn't the first argument, bail because aliases currently only apply
     # to top-level commands.
-    if [ "${#COMPREPLY[@]}" -le "1" ] || [ "$COMP_CWORD" != "1" ]; then
+    if [ "${#COMPREPLY[@]}" -le "1" ] || [ "$COMP_CWORD_NO_FLAGS" != "1" ]; then
         return
     fi
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class RCluster(RPackage):
     (1990) "Finding Groups in Data"."""
 
     cran = "cluster"
+
+    license("GPL-2.0-or-later")
 
     version("2.1.4", sha256="c6f10ceca29a176ba833f24ebf71fd451629052c2338398ba286df5689d6f5b6")
     version("2.1.3", sha256="a3ad7a9455d634c4e0c6ccf8ea7a3a392a0ecf9c2bdb368d127ffa68a93164a9")

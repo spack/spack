@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class N2p2(MakefilePackage):
 
     homepage = "https://github.com/CompPhysVienna/n2p2"
     url = "https://github.com/CompPhysVienna/n2p2/archive/v2.1.0.tar.gz"
+
+    license("GPL-3.0-only")
 
     version("2.2.0", sha256="4acaa255632a7b9811d7530fd52ac7dd0bb3a8e3a3cf8512beadd29b62c1bfef")
     version("2.1.4", sha256="f1672c09af4ed16a7f396606977e4675a0fee98f04bfd9574907fba4b83a14ef")
@@ -69,11 +71,13 @@ class N2p2(MakefilePackage):
 
     def build(self, spec, prefix):
         with working_dir("src"):
-            make()
-            make("lammps-nnp")
-            make("pynnp")
+            # Add --no-print-directory flag to avoid issues when variables set
+            # to value of shell function with cd cmd used as target (see #43192)
+            make("--no-print-directory")
+            make("--no-print-directory", "lammps-nnp")
+            make("--no-print-directory", "pynnp")
             if "+doc" in self.spec:
-                make("doc")
+                make("--no-print-directory", "doc")
 
     def install(self, spec, prefix):
         install_tree("bin", prefix.bin)

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -24,9 +24,9 @@ class _3proxy(MakefilePackage):
     depends_on("m4", type="build")
 
     def build(self, spec, prefix):
-        make("-f", "Makefile.{0}".format(platform.system()))
+        make("-f", f"Makefile.{platform.system()}", f"CC={spack_cc}")
 
     def install(self, spec, prefix):
         make(
-            "-f", "Makefile.{0}".format(platform.system()), "prefix={0}".format(prefix), "install"
+            "-f", f"Makefile.{platform.system()}", f"prefix={prefix}", f"CC={spack_cc}", "install"
         )

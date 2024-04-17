@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class Metaphysicl(AutotoolsPackage):
 
     homepage = "https://github.com/roystgnr/MetaPhysicL"
     url = "https://github.com/roystgnr/MetaPhysicL/archive/v0.2.0.tar.gz"
+
+    license("LGPL-2.1-or-later")
 
     version("0.5.0", sha256="dbba0590970a128ae2ae7064b621f78f95ca2303b70a12b079a51702573840a6")
     version("0.3.3", sha256="6581ec6512d3509bfca6f93052f7d47dd2d9e4b9f2b3580d778495ae381a0b0d")

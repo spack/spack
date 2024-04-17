@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -25,7 +25,20 @@ import pathlib
 import socket
 import sys
 import time
-from typing import Any, Callable, Dict, Generator, List, NamedTuple, Set, Type, Union
+from typing import (
+    Any,
+    Callable,
+    Container,
+    Dict,
+    Generator,
+    List,
+    NamedTuple,
+    Optional,
+    Set,
+    Tuple,
+    Type,
+    Union,
+)
 
 try:
     import uuid
@@ -35,13 +48,13 @@ except ImportError:
     _use_uuid = False
     pass
 
-from typing import Optional, Tuple
-
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
 
+import spack.deptypes as dt
 import spack.hash_types as ht
 import spack.spec
+import spack.traverse as tr
 import spack.util.lock as lk
 import spack.util.spack_json as sjson
 import spack.version as vn
@@ -89,7 +102,7 @@ _DEFAULT_PKG_LOCK_TIMEOUT = None
 
 #: Types of dependencies tracked by the database
 #: We store by DAG hash, so we track the dependencies that the DAG hash includes.
-_TRACKED_DEPENDENCIES = ht.dag_hash.deptype
+_TRACKED_DEPENDENCIES = ht.dag_hash.depflag
 
 #: Default list of fields written for each install record
 DEFAULT_INSTALL_RECORD_FIELDS = (
@@ -295,7 +308,7 @@ _QUERY_DOCSTRING = """
             end_date (datetime.datetime or None): filters the query discarding
                 specs that have been installed after ``end_date``.
 
-            hashes (typing.Container): list or set of hashes that we can use to
+            hashes (Container): list or set of hashes that we can use to
                 restrict the search
 
             in_buildcache (bool or None): Specs that are marked in
@@ -795,7 +808,7 @@ class Database:
                     tty.warn(msg)
                     continue
 
-                spec._add_dependency(child, deptypes=dtypes, virtuals=virtuals)
+                spec._add_dependency(child, depflag=dt.canonicalize(dtypes), virtuals=virtuals)
 
     def _read_from_file(self, filename):
         """Fill database from file, do not maintain old data.
@@ -1146,7 +1159,7 @@ class Database:
         # Retrieve optional arguments
         installation_time = installation_time or _now()
 
-        for edge in spec.edges_to_dependencies(deptype=_TRACKED_DEPENDENCIES):
+        for edge in spec.edges_to_dependencies(depflag=_TRACKED_DEPENDENCIES):
             if edge.spec.dag_hash() in self._data:
                 continue
             # allow missing build-only deps. This prevents excessive
@@ -1154,7 +1167,7 @@ class Database:
             # is missing a build dep; there's no need to install the
             # build dep's build dep first, and there's no need to warn
             # about it missing.
-            dep_allow_missing = allow_missing or edge.deptypes == ("build",)
+            dep_allow_missing = allow_missing or edge.depflag == dt.BUILD
             self._add(
                 edge.spec,
                 directory_layout,
@@ -1198,10 +1211,10 @@ class Database:
             self._data[key] = InstallRecord(new_spec, path, installed, ref_count=0, **extra_args)
 
             # Connect dependencies from the DB to the new copy.
-            for dep in spec.edges_to_dependencies(deptype=_TRACKED_DEPENDENCIES):
+            for dep in spec.edges_to_dependencies(depflag=_TRACKED_DEPENDENCIES):
                 dkey = dep.spec.dag_hash()
                 upstream, record = self.query_by_spec_hash(dkey)
-                new_spec._add_dependency(record.spec, deptypes=dep.deptypes, virtuals=dep.virtuals)
+                new_spec._add_dependency(record.spec, depflag=dep.depflag, virtuals=dep.virtuals)
                 if not upstream:
                     record.ref_count += 1
 
@@ -1371,7 +1384,13 @@ class Database:
             return self._deprecate(spec, deprecator)
 
     @_autospec
-    def installed_relatives(self, spec, direction="children", transitive=True, deptype="all"):
+    def installed_relatives(
+        self,
+        spec,
+        direction="children",
+        transitive=True,
+        deptype: Union[dt.DepFlag, dt.DepTypes] = dt.ALL,
+    ):
         """Return installed specs related to this one."""
         if direction not in ("parents", "children"):
             raise ValueError("Invalid direction: %s" % direction)
@@ -1514,20 +1533,27 @@ class Database:
         # TODO: like installed and known that can be queried?  Or are
         # TODO: these really special cases that only belong here?
 
-        # Just look up concrete specs with hashes; no fancy search.
-        if isinstance(query_spec, spack.spec.Spec) and query_spec.concrete:
-            # TODO: handling of hashes restriction is not particularly elegant.
-            hash_key = query_spec.dag_hash()
-            if hash_key in self._data and (not hashes or hash_key in hashes):
-                return [self._data[hash_key].spec]
-            else:
-                return []
+        if query_spec is not any:
+            if not isinstance(query_spec, spack.spec.Spec):
+                query_spec = spack.spec.Spec(query_spec)
+
+            # Just look up concrete specs with hashes; no fancy search.
+            if query_spec.concrete:
+                # TODO: handling of hashes restriction is not particularly elegant.
+                hash_key = query_spec.dag_hash()
+                if hash_key in self._data and (not hashes or hash_key in hashes):
+                    return [self._data[hash_key].spec]
+                else:
+                    return []
 
         # Abstract specs require more work -- currently we test
         # against everything.
         results = []
         start_date = start_date or datetime.datetime.min
         end_date = end_date or datetime.datetime.max
+
+        # save specs whose name doesn't match for last, to avoid a virtual check
+        deferred = []
 
         for key, rec in self._data.items():
             if hashes is not None and rec.spec.dag_hash() not in hashes:
@@ -1553,8 +1579,26 @@ class Database:
                 if not (start_date < inst_date < end_date):
                     continue
 
-            if query_spec is any or rec.spec.satisfies(query_spec):
+            if query_spec is any:
                 results.append(rec.spec)
+                continue
+
+            # check anon specs and exact name matches first
+            if not query_spec.name or rec.spec.name == query_spec.name:
+                if rec.spec.satisfies(query_spec):
+                    results.append(rec.spec)
+
+            # save potential virtual matches for later, but not if we already found a match
+            elif not results:
+                deferred.append(rec.spec)
+
+        # Checking for virtuals is expensive, so we save it for last and only if needed.
+        # If we get here, we didn't find anything in the DB that matched by name.
+        # If we did fine something, the query spec can't be virtual b/c we matched an actual
+        # package installation, so skip the virtual check entirely. If we *didn't* find anything,
+        # check all the deferred specs *if* the query is virtual.
+        if not results and query_spec is not any and deferred and query_spec.virtual:
+            results = [spec for spec in deferred if spec.satisfies(query_spec)]
 
         return results
 
@@ -1577,15 +1621,32 @@ class Database:
     query_local.__doc__ += _QUERY_DOCSTRING
 
     def query(self, *args, **kwargs):
-        """Query the Spack database including all upstream databases."""
+        """Query the Spack database including all upstream databases.
+
+        Additional Arguments:
+            install_tree (str): query 'all' (default), 'local', 'upstream', or upstream path
+        """
+        install_tree = kwargs.pop("install_tree", "all")
+        valid_trees = ["all", "upstream", "local", self.root] + [u.root for u in self.upstream_dbs]
+        if install_tree not in valid_trees:
+            msg = "Invalid install_tree argument to Database.query()\n"
+            msg += f"Try one of {', '.join(valid_trees)}"
+            tty.error(msg)
+            return []
+
         upstream_results = []
-        for upstream_db in self.upstream_dbs:
+        upstreams = self.upstream_dbs
+        if install_tree not in ("all", "upstream"):
+            upstreams = [u for u in self.upstream_dbs if u.root == install_tree]
+        for upstream_db in upstreams:
             # queries for upstream DBs need to *not* lock - we may not
             # have permissions to do this and the upstream DBs won't know about
             # us anyway (so e.g. they should never uninstall specs)
             upstream_results.extend(upstream_db._query(*args, **kwargs) or [])
 
-        local_results = set(self.query_local(*args, **kwargs))
+        local_results = []
+        if install_tree in ("all", "local") or self.root == install_tree:
+            local_results = set(self.query_local(*args, **kwargs))
 
         results = list(local_results) + list(x for x in upstream_results if x not in local_results)
 
@@ -1615,31 +1676,39 @@ class Database:
         with self.read_transaction():
             return path in self._installed_prefixes
 
-    @property
-    def unused_specs(self):
-        """Return all the specs that are currently installed but not needed
-        at runtime to satisfy user's requests.
-
-        Specs in the return list are those which are not either:
-            1. Installed on an explicit user request
-            2. Installed as a "run" or "link" dependency (even transitive) of
-               a spec at point 1.
-        """
-        needed, visited = set(), set()
+    def all_hashes(self):
+        """Return dag hash of every spec in the database."""
         with self.read_transaction():
-            for key, rec in self._data.items():
-                if not rec.explicit:
-                    continue
+            return list(self._data.keys())
 
-                # recycle `visited` across calls to avoid redundantly traversing
-                for spec in rec.spec.traverse(visited=visited, deptype=("link", "run")):
-                    needed.add(spec.dag_hash())
+    def unused_specs(
+        self,
+        root_hashes: Optional[Container[str]] = None,
+        deptype: Union[dt.DepFlag, dt.DepTypes] = dt.LINK | dt.RUN,
+    ) -> "List[spack.spec.Spec]":
+        """Return all specs that are currently installed but not needed by root specs.
 
-            unused = [
-                rec.spec for key, rec in self._data.items() if key not in needed and rec.installed
+        By default, roots are all explicit specs in the database. If a set of root
+        hashes are passed in, they are instead used as the roots.
+
+        Arguments:
+            root_hashes: optional list of roots to consider when evaluating needed installations.
+            deptype: if a spec is reachable from a root via these dependency types, it is
+                considered needed. By default only link and run dependency types are considered.
+        """
+
+        def root(key, record):
+            """Whether a DB record is a root for garbage collection."""
+            return key in root_hashes if root_hashes is not None else record.explicit
+
+        with self.read_transaction():
+            roots = [rec.spec for key, rec in self._data.items() if root(key, rec)]
+            needed = set(id(spec) for spec in tr.traverse_nodes(roots, deptype=deptype))
+            return [
+                rec.spec
+                for rec in self._data.values()
+                if id(rec.spec) not in needed and rec.installed
             ]
-
-        return unused
 
     def update_explicit(self, spec, explicit):
         """

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,10 @@ class Rocksdb(MakefilePackage):
     url = "https://github.com/facebook/rocksdb/archive/v6.5.3.tar.gz"
     git = "https://github.com/facebook/rocksdb.git"
 
+    license("Apache-2.0 OR GPL-2.0-only")
+
     version("master", git=git, branch="master", submodules=True)
+    version("8.6.7", sha256="cdb2fc3c6a556f20591f564cb8e023e56828469aa3f76e1d9535c443ba1f0c1a")
     version("8.1.1", sha256="9102704e169cfb53e7724a30750eeeb3e71307663852f01fa08d5a320e6155a8")
     version("7.7.3", sha256="b8ac9784a342b2e314c821f6d701148912215666ac5e9bdbccd93cf3767cb611")
     version("7.2.2", sha256="c4ea6bd2e3ffe3f0f8921c699234d59108c9122d61b0ba2aa78358642a7b614e")

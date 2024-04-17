@@ -8,7 +8,7 @@ SPACK_INSTALL_FLAGS ?=
 
 {{ all_target }}: {{ env_target }}
 
-{{ env_target }}: {{ root_install_targets }}
+{{ env_target }}: {{ root_install_targets }} | {{ dirs_target }}
 	@touch $@
 
 {{ dirs_target }}:

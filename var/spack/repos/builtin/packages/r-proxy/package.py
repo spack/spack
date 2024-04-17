@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class RProxy(RPackage):
     cross-proximities, along with implementations of the most popular ones."""
 
     cran = "proxy"
+
+    license("GPL-2.0-only")
 
     version("0.4-27", sha256="249991a4c4d70ad139e93f3a24e17f161ad1ec854951813ea192daf79478563f")
     version("0.4-26", sha256="676bad821343974e0297a0566c4bf0cf0ea890104906a745b87d3b5989c81a4d")

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,6 +21,8 @@ class Vacuumms(CMakePackage):
     git = "https://github.com/frankwillmore/VACUUMMS.git"
 
     maintainers("frankwillmore")
+
+    license("Unlicense")
 
     version("master", branch="master")
     version("1.1.1", tag="v1.1.1", commit="a395930c87f5b52ab0ab8db278bd2bde592e8f12")

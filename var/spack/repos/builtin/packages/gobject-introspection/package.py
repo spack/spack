@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,6 +18,9 @@ class GobjectIntrospection(MesonPackage, AutotoolsPackage):
 
     maintainers("michaelkuhn")
 
+    license("LGPL-2.0-or-later AND GPL-2.0-or-later AND MIT")
+
+    version("1.78.1", sha256="bd7babd99af7258e76819e45ba4a6bc399608fe762d83fde3cac033c50841bb4")
     version("1.76.1", sha256="196178bf64345501dcdc4d8469b36aa6fe80489354efe71cb7cb8ab82a3738bf")
     version("1.72.1", sha256="012e313186e3186cf0fde6decb57d970adf90e6b1fac5612fe69cbb5ba99543a")
     version("1.72.0", sha256="02fe8e590861d88f83060dd39cda5ccaa60b2da1d21d0f95499301b186beaabc")
@@ -39,9 +42,13 @@ class GobjectIntrospection(MesonPackage, AutotoolsPackage):
     depends_on("sed", when="platform=darwin", type="build")
 
     depends_on("cairo+gobject")
-    depends_on("glib@2.49.2:", when="@1.49.2:")
-    # version 1.48.0 build fails with glib 2.49.4
+    depends_on("glib@2.78:", when="@1.78")
+    depends_on("glib@2.76:", when="@1.76")
+    depends_on("glib@2.58:", when="@1.72")
+    depends_on("glib@2.56:", when="@1.56")
+    depends_on("glib@2.49.2:", when="@1.49.2")
     depends_on("glib@2.48.1", when="@1.48.0")
+
     depends_on("libffi")
     # https://gitlab.gnome.org/GNOME/gobject-introspection/-/merge_requests/283
     depends_on("libffi@:3.3", when="@:1.72")  # libffi 3.4 caused seg faults
@@ -74,8 +81,8 @@ class GobjectIntrospection(MesonPackage, AutotoolsPackage):
     # https://gitlab.gnome.org/GNOME/gobject-introspection/-/issues/325
     patch(
         "https://gitlab.gnome.org/GNOME/gobject-introspection/-/commit/"
-        "1f9284228092b2a7200e8a78bc0ea6702231c6db.patch",
-        sha256="7700828b638c85255c87fcc317ea7e9572ff443f65c86648796528885e5b4cea",
+        "1f9284228092b2a7200e8a78bc0ea6702231c6db.diff",
+        sha256="dcb9e7c956dff49c3a73535829382e8662fa6bd13bdfb416e8eac47b2604fa0a",
         when="@:1.63.1",
     )
 

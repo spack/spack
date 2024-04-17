@@ -1,17 +1,25 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import collections.abc
 import os
+import re
 from typing import Tuple
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
 
+import spack.build_environment
 import spack.builder
 
 from .cmake import CMakeBuilder, CMakePackage
+
+
+def spec_uses_toolchain(spec):
+    gcc_toolchain_regex = re.compile(".*gcc-toolchain.*")
+    using_toolchain = list(filter(gcc_toolchain_regex.match, spec.compiler_flags["cxxflags"]))
+    return using_toolchain
 
 
 def cmake_cache_path(name, value, comment="", force=False):
@@ -32,6 +40,11 @@ def cmake_cache_option(name, boolean_value, comment="", force=False):
     value = "ON" if boolean_value else "OFF"
     force_str = " FORCE" if force else ""
     return 'set({0} {1} CACHE BOOL "{2}"{3})\n'.format(name, value, comment, force_str)
+
+
+def cmake_cache_filepath(name, value, comment=""):
+    """Generate a string for a cmake cache variable of type FILEPATH"""
+    return 'set({0} "{1}" CACHE FILEPATH "{2}")\n'.format(name, value, comment)
 
 
 class CachedCMakeBuilder(CMakeBuilder):
@@ -193,6 +206,8 @@ class CachedCMakeBuilder(CMakeBuilder):
                 mpiexec = "/usr/bin/srun"
             else:
                 mpiexec = os.path.join(spec["slurm"].prefix.bin, "srun")
+        elif hasattr(spec["mpi"].package, "mpiexec"):
+            mpiexec = spec["mpi"].package.mpiexec
         else:
             mpiexec = os.path.join(spec["mpi"].prefix.bin, "mpirun")
             if not os.path.exists(mpiexec):
@@ -205,7 +220,7 @@ class CachedCMakeBuilder(CMakeBuilder):
         else:
             # starting with cmake 3.10, FindMPI expects MPIEXEC_EXECUTABLE
             # vs the older versions which expect MPIEXEC
-            if self.pkg.spec["cmake"].satisfies("@3.10:"):
+            if spec["cmake"].satisfies("@3.10:"):
                 entries.append(cmake_cache_path("MPIEXEC_EXECUTABLE", mpiexec))
             else:
                 entries.append(cmake_cache_path("MPIEXEC", mpiexec))
@@ -240,12 +255,17 @@ class CachedCMakeBuilder(CMakeBuilder):
             # Include the deprecated CUDA_TOOLKIT_ROOT_DIR for supporting BLT packages
             entries.append(cmake_cache_path("CUDA_TOOLKIT_ROOT_DIR", cudatoolkitdir))
 
-            archs = spec.variants["cuda_arch"].value
-            if archs[0] != "none":
-                arch_str = ";".join(archs)
-                entries.append(
-                    cmake_cache_string("CMAKE_CUDA_ARCHITECTURES", "{0}".format(arch_str))
-                )
+            # CUDA_FLAGS
+            cuda_flags = []
+
+            if not spec.satisfies("cuda_arch=none"):
+                cuda_archs = ";".join(spec.variants["cuda_arch"].value)
+                entries.append(cmake_cache_string("CMAKE_CUDA_ARCHITECTURES", cuda_archs))
+
+            if spec_uses_toolchain(spec):
+                cuda_flags.append("-Xcompiler {}".format(spec_uses_toolchain(spec)[0]))
+
+            entries.append(cmake_cache_string("CMAKE_CUDA_FLAGS", " ".join(cuda_flags)))
 
         if "+rocm" in spec:
             entries.append("#------------------{0}".format("-" * 30))
@@ -254,30 +274,50 @@ class CachedCMakeBuilder(CMakeBuilder):
 
             # Explicitly setting HIP_ROOT_DIR may be a patch that is no longer necessary
             entries.append(cmake_cache_path("HIP_ROOT_DIR", "{0}".format(spec["hip"].prefix)))
+            llvm_bin = spec["llvm-amdgpu"].prefix.bin
+            llvm_prefix = spec["llvm-amdgpu"].prefix
+            # Some ROCm systems seem to point to /<path>/rocm-<ver>/ and
+            # others point to /<path>/rocm-<ver>/llvm
+            if os.path.basename(os.path.normpath(llvm_prefix)) != "llvm":
+                llvm_bin = os.path.join(llvm_prefix, "llvm/bin/")
             entries.append(
-                cmake_cache_path("HIP_CXX_COMPILER", "{0}".format(self.spec["hip"].hipcc))
+                cmake_cache_filepath("CMAKE_HIP_COMPILER", os.path.join(llvm_bin, "clang++"))
             )
             archs = self.spec.variants["amdgpu_target"].value
             if archs[0] != "none":
                 arch_str = ";".join(archs)
-                entries.append(
-                    cmake_cache_string("CMAKE_HIP_ARCHITECTURES", "{0}".format(arch_str))
-                )
-                entries.append(cmake_cache_string("AMDGPU_TARGETS", "{0}".format(arch_str)))
-                entries.append(cmake_cache_string("GPU_TARGETS", "{0}".format(arch_str)))
+                entries.append(cmake_cache_string("CMAKE_HIP_ARCHITECTURES", arch_str))
+                entries.append(cmake_cache_string("AMDGPU_TARGETS", arch_str))
+                entries.append(cmake_cache_string("GPU_TARGETS", arch_str))
 
         return entries
 
     def std_initconfig_entries(self):
         cmake_prefix_path_env = os.environ["CMAKE_PREFIX_PATH"]
         cmake_prefix_path = cmake_prefix_path_env.replace(os.pathsep, ";")
+        cmake_rpaths_env = spack.build_environment.get_rpaths(self.pkg)
+        cmake_rpaths_path = ";".join(cmake_rpaths_env)
+        complete_rpath_list = cmake_rpaths_path
+        if "SPACK_COMPILER_EXTRA_RPATHS" in os.environ:
+            spack_extra_rpaths_env = os.environ["SPACK_COMPILER_EXTRA_RPATHS"]
+            spack_extra_rpaths_path = spack_extra_rpaths_env.replace(os.pathsep, ";")
+            complete_rpath_list = "{0};{1}".format(complete_rpath_list, spack_extra_rpaths_path)
+
+        if "SPACK_COMPILER_IMPLICIT_RPATHS" in os.environ:
+            spack_implicit_rpaths_env = os.environ["SPACK_COMPILER_IMPLICIT_RPATHS"]
+            spack_implicit_rpaths_path = spack_implicit_rpaths_env.replace(os.pathsep, ";")
+            complete_rpath_list = "{0};{1}".format(complete_rpath_list, spack_implicit_rpaths_path)
+
         return [
             "#------------------{0}".format("-" * 60),
             "# !!!! This is a generated file, edit at own risk !!!!",
             "#------------------{0}".format("-" * 60),
             "# CMake executable path: {0}".format(self.pkg.spec["cmake"].command.path),
             "#------------------{0}\n".format("-" * 60),
-            cmake_cache_path("CMAKE_PREFIX_PATH", cmake_prefix_path),
+            cmake_cache_string("CMAKE_PREFIX_PATH", cmake_prefix_path),
+            cmake_cache_string("CMAKE_INSTALL_RPATH_USE_LINK_PATH", "ON"),
+            cmake_cache_string("CMAKE_BUILD_RPATH", complete_rpath_list),
+            cmake_cache_string("CMAKE_INSTALL_RPATH", complete_rpath_list),
             self.define_cmake_cache_from_variant("CMAKE_BUILD_TYPE", "build_type"),
         ]
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class Lmdb(MakefilePackage):
 
     homepage = "https://lmdb.tech/"
     url = "https://github.com/LMDB/lmdb/archive/LMDB_0.9.21.tar.gz"
+
+    license("OLDAP-2.8")
 
     version("0.9.31", sha256="dd70a8c67807b3b8532b3e987b0a4e998962ecc28643e1af5ec77696b081c9b0")
     version("0.9.29", sha256="22054926b426c66d8f2bc22071365df6e35f3aacf19ad943bc6167d4cae3bebb")

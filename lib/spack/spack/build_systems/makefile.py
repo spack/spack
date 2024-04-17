@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,7 +9,8 @@ import llnl.util.filesystem as fs
 
 import spack.builder
 import spack.package_base
-from spack.directives import build_system, conflicts
+from spack.directives import build_system, conflicts, depends_on
+from spack.multimethod import when
 
 from ._checks import (
     BaseBuilder,
@@ -20,7 +21,7 @@ from ._checks import (
 
 
 class MakefilePackage(spack.package_base.PackageBase):
-    """Specialized class for packages built using a Makefiles."""
+    """Specialized class for packages built using Makefiles."""
 
     #: This attribute is used in UI queries that need to know the build
     #: system base class
@@ -29,7 +30,10 @@ class MakefilePackage(spack.package_base.PackageBase):
     legacy_buildsystem = "makefile"
 
     build_system("makefile")
-    conflicts("platform=windows", when="build_system=makefile")
+
+    with when("build_system=makefile"):
+        conflicts("platform=windows")
+        depends_on("gmake", type="build")
 
 
 @spack.builder.builder("makefile")

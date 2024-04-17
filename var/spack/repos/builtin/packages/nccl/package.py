@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,7 +17,10 @@ class Nccl(MakefilePackage, CudaPackage):
     maintainers("adamjstewart")
     libraries = ["libnccl.so"]
 
-    version("2.18.3-1", sha256="b4f5d7d9eea2c12e32e7a06fe138b2cfc75969c6d5c473aa6f819a792db2fc96")
+    version("2.20.3-1", sha256="19456bd63ca7d23a8319cbbdbaaf6c25949dd51161a9f8809f6b7453282983dd")
+    version("2.19.3-1", sha256="1c5474553afedb88e878c772f13d6f90b9226b3f2971dfa6f873adb9443100c2")
+    version("2.18.5-1", sha256="16ac98f3e926c024ce48e10ab220e19ce734adc48c423cfd55ad6f509bd1179f")
+    version("2.18.3-1", sha256="6477d83c9edbb34a0ebce6d751a1b32962bc6415d75d04972b676c6894ceaef9")
     version("2.18.1-1", sha256="0e4ede5cf8df009bff5aeb3a9f194852c03299ae5664b5a425b43358e7a9eef2")
     version("2.17.1-1", sha256="1311a6fd7cd44ad6d4523ba03065ce694605843fd30a5c0f77aa3d911abe706d")
     version("2.16.2-1", sha256="7f7c738511a8876403fc574d13d48e7c250d934d755598d82e14bab12236fc64")

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,11 @@ class PyGreenlet(PythonPackage):
 
     homepage = "https://github.com/python-greenlet/greenlet"
     pypi = "greenlet/greenlet-0.4.17.tar.gz"
+
+    # Requires objgraph
+    skip_modules = ["greenlet.tests"]
+
+    license("MIT AND PSF-2.0", checked_by="tgamblin")
 
     version("3.0.0a1", sha256="1bd4ea36f0aeb14ca335e0c9594a5aaefa1ac4e2db7d86ba38f0be96166b3102")
     version(

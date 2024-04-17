@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,6 +21,13 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
 
     executables = ["^nm$", "^readelf$"]
 
+    license(
+        "GPL-2.0-or-later AND LGPL-2.1-or-later AND GPL-3.0-or-later AND LGPL-3.0-or-later",
+        checked_by="tgamblin",
+    )
+
+    version("2.42", sha256="aa54850ebda5064c72cd4ec2d9b056c294252991486350d9a97ab2a6dfdfaf12")
+    version("2.41", sha256="a4c4bec052f7b8370024e60389e194377f3f48b56618418ea51067f67aaab30b")
     version("2.40", sha256="f8298eb153a4b37d112e945aa5cb2850040bcf26a3ea65b5a715c83afe05e48a")
     version("2.39", sha256="da24a84fef220102dd24042df06fdea851c2614a5377f86effa28f33b7b16148")
     version("2.38", sha256="070ec71cf077a6a58e0b959f05a09a35015378c2d8a51e90f3aeabfe30590ef8")
@@ -95,13 +102,7 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
         when="@2.37:",
     )
     variant("ld", default=False, description="Enable ld.")
-    # When you build binutils with ~ld and +gas and load it in your PATH, you
-    # may end up with incompatibilities between a potentially older system ld
-    # and a recent assembler. For instance the linker on ubuntu 16.04 from
-    # binutils 2.26 and the assembler from binutils 2.36.1 will result in:
-    # "unable to initialize decompress status for section .debug_info"
-    # when compiling with debug symbols on gcc.
-    variant("gas", default=False, when="+ld", description="Enable as assembler.")
+    variant("gas", default=False, description="Enable as assembler.")
     variant("interwork", default=False, description="Enable interwork.")
     variant("gprofng", default=False, description="Enable gprofng.", when="@2.39:")
     variant(
@@ -125,6 +126,7 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
     # 2.36 is missing some dependencies, this patch allows a parallel build.
     # https://sourceware.org/bugzilla/show_bug.cgi?id=27482
     patch("parallel-build-2.36.patch", when="@2.36")
+    patch("gold-gcc4.patch", when="@2.42 %gcc@:4.8.5")
 
     # compression libs for debug symbols.
     # pkg-config is used to find zstd in gas/configure
@@ -160,6 +162,14 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
     conflicts(
         "~lto", when="+pgo", msg="Profile-guided optimization enables link-time optimization"
     )
+
+    # When you build binutils with ~ld and +gas and load it in your PATH, you
+    # may end up with incompatibilities between a potentially older system ld
+    # and a recent assembler. For instance the linker on ubuntu 16.04 from
+    # binutils 2.26 and the assembler from binutils 2.36.1 will result in:
+    # "unable to initialize decompress status for section .debug_info"
+    # when compiling with debug symbols on gcc.
+    conflicts("+gas", "~ld", msg="Assembler not always compatible with system ld")
 
     @classmethod
     def determine_version(cls, exe):

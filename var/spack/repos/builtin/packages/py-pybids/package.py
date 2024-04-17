@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,9 @@ class PyPybids(PythonPackage):
     homepage = "https://github.com/bids-standard/pybids"
     pypi = "pybids/pybids-0.13.1.tar.gz"
 
+    license("MIT")
+
+    version("0.16.3", sha256="10e279350c8d14ca602c0d4469a5e4bf7ff393e8643c831a546ae735b6b82cc3")
     version("0.16.1", sha256="1a6ab06d375f3b783e738826e6d220b2f4145419b4b02f4edbcc8cb7c9b2208a")
     version("0.15.3", sha256="4d99c979bc4bc209cff70a02d1da309c9bf8c6b0338e2a0b66ebea77c7f3c461")
     version("0.15.1", sha256="0253507a04dbfea43eb1f75a1f71aab04be21076bfe96c004888000b802e38f2")
@@ -22,7 +25,6 @@ class PyPybids(PythonPackage):
     version("0.8.0", sha256="fe60fa7d1e171e75a38a04220ed992f1b062531a7452fcb7ce5ba81bb6abfdbc")
 
     depends_on("python@3.8:", when="@0.16:", type=("build", "run"))
-    depends_on("python@3.7:", when="@0.15:", type=("build", "run"))
     depends_on("py-setuptools", when="@0.15.6:", type="build")
     depends_on("py-setuptools@30.3:60,61.0.1:", when="@:0.15.5", type="build")
     depends_on("py-versioneer+toml", when="@0.15.6:", type="build")

@@ -1,9 +1,10 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+import glob
 import os
 
 from spack.package import *
@@ -20,6 +21,8 @@ class Vtk(CMakePackage):
     list_url = "https://www.vtk.org/download/"
 
     maintainers("chuckatkins", "danlipsa")
+
+    license("BSD-3-Clause")
 
     version("9.2.6", sha256="06fc8d49c4e56f498c40fcb38a563ed8d4ec31358d0101e8988f0bb4d539dd12")
     version("9.2.2", sha256="1c5b0a2be71fac96ff4831af69e350f7a0ea3168981f790c000709dcf9121075")
@@ -54,6 +57,7 @@ class Vtk(CMakePackage):
     variant("xdmf", default=False, description="Build XDMF file support")
     variant("ffmpeg", default=False, description="Build with FFMPEG support")
     variant("mpi", default=True, description="Enable MPI support")
+    variant("examples", default=False, description="Enable building & installing the VTK examples")
 
     patch("gcc.patch", when="@6.1.0")
     # patch to fix some missing stl includes
@@ -67,10 +71,13 @@ class Vtk(CMakePackage):
 
     # Patch for paraview 5.10: +hdf5 ^hdf5@1.13.2:
     # https://gitlab.kitware.com/vtk/vtk/-/merge_requests/9690
-    patch("xdmf2-hdf51.13.2.patch", when="@9:9.2 +xdmf")
+    # patch seems to effectively been added to vtk@9.2.3 (e81a2fe)
+    patch("xdmf2-hdf51.13.2.patch", when="@9:9.2.2 +xdmf")
 
     # We cannot build with both osmesa and qt in spack
     conflicts("+osmesa", when="+qt")
+
+    conflicts("%gcc@13", when="@9.2")
 
     with when("+python"):
         # Depend on any Python, add bounds below.
@@ -91,8 +98,9 @@ class Vtk(CMakePackage):
     # Broken downstream FindMPI
     patch("vtkm-findmpi-downstream.patch", when="@9.0.0")
 
-    # use internal FindHDF5
-    patch("internal_findHDF5.patch", when="@:8")
+    for plat in ["linux", "darwin", "freebsd", "cray"]:
+        # use internal FindHDF5
+        patch("internal_findHDF5.patch", when=f"@:8 platform={plat}")
 
     # Fix IOADIOS2 module to work with kits
     # https://gitlab.kitware.com/vtk/vtk/-/merge_requests/8653
@@ -111,6 +119,13 @@ class Vtk(CMakePackage):
     depends_on("gl@3.2:", when="+opengl2")
     depends_on("gl@1.2:", when="~opengl2")
 
+    depends_on("xz")
+    patch("vtk_find_liblzma.patch", when="@8.2")
+    patch("vtk_movie_link_ogg.patch", when="@8.2")
+    patch("vtk_use_sqlite_name_vtk_expects.patch", when="@8.2")
+    patch("vtk_proj_include_no_strict.patch", when="@9: platform=windows")
+    patch("vtk_alias_hdf5.patch", when="@9: platform=windows")
+    patch("vtk_findproj_config.patch", when="platform=windows")
     with when("~osmesa"):
         depends_on("glx", when="platform=linux")
         depends_on("glx", when="platform=cray")
@@ -148,25 +163,37 @@ class Vtk(CMakePackage):
     depends_on("lz4")
     depends_on("netcdf-c~mpi", when="~mpi")
     depends_on("netcdf-c+mpi", when="+mpi")
-    depends_on("netcdf-cxx")
+    depends_on("netcdf-cxx4", when="@:8.1.2")
     depends_on("libpng")
     depends_on("libtiff")
     depends_on("zlib-api")
     depends_on("eigen", when="@8.2.0:")
     depends_on("double-conversion", when="@8.2.0:")
     depends_on("sqlite", when="@8.2.0:")
-    depends_on("pugixml", when="@8.2.0:")
+    depends_on("pugixml", when="@8.3.0:")
     depends_on("libogg")
     depends_on("libtheora")
     depends_on("utf8cpp", when="@9:")
     depends_on("gl2ps", when="@8.1:")
     depends_on("gl2ps@1.4.1:", when="@9:")
     depends_on("proj@4", when="@8.2.0")
-    depends_on("proj@4:7", when="@9:")
+    depends_on("proj@4:", when="@9:")
     depends_on("cgns@4.1.1:+mpi", when="@9.1: +mpi")
     depends_on("cgns@4.1.1:~mpi", when="@9.1: ~mpi")
-    depends_on("seacas@2021-05-12:+mpi", when="@9.1: +mpi")
-    depends_on("seacas@2021-05-12:~mpi", when="@9.1: ~mpi")
+    with when("@9.1:"):
+        depends_on("seacas+mpi", when="+mpi")
+        depends_on("seacas~mpi", when="~mpi")
+        depends_on("seacas@2021-05-12:")
+
+    # seacas@2023-05-30 does not provide needed SEACASIoss_INCLUDE_DIRS:
+    # CMake Error at CMake/vtkModule.cmake:5552 (message):
+    # The variable `SEACASIoss_INCLUDE_DIRS` was expected to have been available,
+    # but was not defined:
+    conflicts("seacas@2023-05-30", when="@:9.2")
+
+    # vtk@9.2: need Ioss::Utils::get_debug_stream() which only 2022-10-14 provides,
+    # and to be safe against other issues, make them build with this version only:
+    depends_on("seacas@2022-10-14", when="@9.2:")
     depends_on("nlohmann-json", when="@9.2:")
 
     # For finding Fujitsu-MPI wrapper commands
@@ -181,10 +208,17 @@ class Vtk(CMakePackage):
     )
 
     patch(
-        "https://gitlab.kitware.com/vtk/vtk/-/commit/5a1c96e12e9b4a660d326be3bed115a2ceadb573.patch",
-        sha256="65175731c080961f85d779d613ac1f6bce89783745e54e864edec7637b03b18a",
+        "https://gitlab.kitware.com/vtk/vtk/-/commit/5a1c96e12e9b4a660d326be3bed115a2ceadb573.diff",
+        sha256="c446a90459b108082db5b28d9aeda99d030e636325e01929beba062cafb16b76",
         when="@9.1",
     )
+
+    @when("@9.2:")
+    def patch(self):
+        # provide definition for Ioss::Init::Initializer::Initializer(),
+        # required on macOS, as "-undefined error" is the default,
+        # but not on Linux, as undefined symbols are tolerated
+        filter_file("TARGETS Ioss", "TARGETS Ioss Ionit", "ThirdParty/ioss/CMakeLists.txt")
 
     def url_for_version(self, version):
         url = "http://www.vtk.org/files/release/{0}/VTK-{1}.tar.gz"
@@ -285,8 +319,6 @@ class Vtk(CMakePackage):
         # Enable/Disable wrappers for Python.
         if "+python" in spec:
             cmake_args.append("-DVTK_WRAP_PYTHON=ON")
-            if spec.satisfies("@:8"):
-                cmake_args.append("-DPYTHON_EXECUTABLE={0}".format(spec["python"].command.path))
             if "+mpi" in spec and spec.satisfies("@:8"):
                 cmake_args.append("-DVTK_USE_SYSTEM_MPI4PY:BOOL=ON")
             if spec.satisfies("@9.0.0: ^python@3:"):
@@ -449,5 +481,18 @@ class Vtk(CMakePackage):
                     "-DCMAKE_CXX_FLAGS={0}".format(compile_flags),
                 ]
             )
+        if spec.satisfies("@:8"):
+            vtk_example_arg = "BUILD_EXAMPLES"
+        else:
+            vtk_example_arg = "VTK_BUILD_EXAMPLES"
+        cmake_args.append(self.define_from_variant(f"{vtk_example_arg}", "examples"))
 
         return cmake_args
+
+    @when("+examples")
+    def install(self, spec, prefix):
+        super().install(spec, prefix)
+        with working_dir(self.build_directory):
+            examples = glob.glob("bin\\*.exe")
+            for example in examples:
+                install(example, prefix.bin)

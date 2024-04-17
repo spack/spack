@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,11 +6,10 @@
 import argparse
 import os
 import re
-import shlex
 import sys
-from textwrap import dedent
-from typing import List, Match, Tuple
+from typing import List, Union
 
+import llnl.string
 import llnl.util.tty as tty
 from llnl.util.filesystem import join_path
 from llnl.util.lang import attr_setdefault, index_by
@@ -29,7 +28,6 @@ import spack.traverse as traverse
 import spack.user_environment as uenv
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
-import spack.util.string
 
 # cmd has a submodule called "list" so preserve the python list module
 python_list = list
@@ -147,89 +145,37 @@ def get_command(cmd_name):
     return getattr(get_module(cmd_name), pname)
 
 
-class _UnquotedFlags:
-    """Use a heuristic in `.extract()` to detect whether the user is trying to set
-    multiple flags like the docker ENV attribute allows (e.g. 'cflags=-Os -pipe').
+def quote_kvp(string: str) -> str:
+    """For strings like ``name=value`` or ``name==value``, quote and escape the value if needed.
 
-    If the heuristic finds a match (which can be checked with `__bool__()`), a warning
-    message explaining how to quote multiple flags correctly can be generated with
-    `.report()`.
+    This is a compromise to respect quoting of key-value pairs on the CLI. The shell
+    strips quotes from quoted arguments, so we cannot know *exactly* how CLI arguments
+    were quoted. To compensate, we re-add quotes around anything staritng with ``name=``
+    or ``name==``, and we assume the rest of the argument is the value. This covers the
+    common cases of passign flags, e.g., ``cflags="-O2 -g"`` on the command line.
     """
+    match = spack.parser.SPLIT_KVP.match(string)
+    if not match:
+        return string
 
-    flags_arg_pattern = re.compile(
-        r'^({0})=([^\'"].*)$'.format("|".join(spack.spec.FlagMap.valid_compiler_flags()))
-    )
-
-    def __init__(self, all_unquoted_flag_pairs: List[Tuple[Match[str], str]]):
-        self._flag_pairs = all_unquoted_flag_pairs
-
-    def __bool__(self) -> bool:
-        return bool(self._flag_pairs)
-
-    @classmethod
-    def extract(cls, sargs: str) -> "_UnquotedFlags":
-        all_unquoted_flag_pairs: List[Tuple[Match[str], str]] = []
-        prev_flags_arg = None
-        for arg in shlex.split(sargs):
-            if prev_flags_arg is not None:
-                all_unquoted_flag_pairs.append((prev_flags_arg, arg))
-            prev_flags_arg = cls.flags_arg_pattern.match(arg)
-        return cls(all_unquoted_flag_pairs)
-
-    def report(self) -> str:
-        single_errors = [
-            "({0}) {1} {2} => {3}".format(
-                i + 1,
-                match.group(0),
-                next_arg,
-                '{0}="{1} {2}"'.format(match.group(1), match.group(2), next_arg),
-            )
-            for i, (match, next_arg) in enumerate(self._flag_pairs)
-        ]
-        return dedent(
-            """\
-        Some compiler or linker flags were provided without quoting their arguments,
-        which now causes spack to try to parse the *next* argument as a spec component
-        such as a variant instead of an additional compiler or linker flag. If the
-        intent was to set multiple flags, try quoting them together as described below.
-
-        Possible flag quotation errors (with the correctly-quoted version after the =>):
-        {0}"""
-        ).format("\n".join(single_errors))
+    key, delim, value = match.groups()
+    return f"{key}{delim}{spack.parser.quote_if_needed(value)}"
 
 
-def parse_specs(args, **kwargs):
+def parse_specs(
+    args: Union[str, List[str]], concretize: bool = False, tests: bool = False
+) -> List[spack.spec.Spec]:
     """Convenience function for parsing arguments from specs.  Handles common
     exceptions and dies if there are errors.
     """
-    concretize = kwargs.get("concretize", False)
-    normalize = kwargs.get("normalize", False)
-    tests = kwargs.get("tests", False)
+    args = [args] if isinstance(args, str) else args
+    arg_string = " ".join([quote_kvp(arg) for arg in args])
 
-    sargs = args
-    if not isinstance(args, str):
-        sargs = " ".join(args)
-    unquoted_flags = _UnquotedFlags.extract(sargs)
-
-    try:
-        specs = spack.parser.parse(sargs)
-        for spec in specs:
-            if concretize:
-                spec.concretize(tests=tests)  # implies normalize
-            elif normalize:
-                spec.normalize(tests=tests)
-        return specs
-
-    except spack.error.SpecError as e:
-        msg = e.message
-        if e.long_message:
-            msg += e.long_message
-        # Unquoted flags will be read as a variant or hash
-        if unquoted_flags and ("variant" in msg or "hash" in msg):
-            msg += "\n\n"
-            msg += unquoted_flags.report()
-
-        raise spack.error.SpackError(msg) from e
+    specs = spack.parser.parse(arg_string)
+    for spec in specs:
+        if concretize:
+            spec.concretize(tests=tests)
+    return specs
 
 
 def matching_spec_from_env(spec):
@@ -388,8 +334,7 @@ def display_specs(specs, args=None, **kwargs):
         variants (bool): Show variants with specs
         indent (int): indent each line this much
         groups (bool): display specs grouped by arch/compiler (default True)
-        decorators (dict): dictionary mappng specs to decorators
-        header_callback (typing.Callable): called at start of arch/compiler groups
+        decorator (typing.Callable): function to call to decorate specs
         all_headers (bool): show headers even when arch/compiler aren't defined
         output (typing.IO): A file object to write to. Default is ``sys.stdout``
 
@@ -438,15 +383,13 @@ def display_specs(specs, args=None, **kwargs):
         vfmt = "{variants}" if variants else ""
         format_string = nfmt + "{@version}" + ffmt + vfmt
 
-    transform = {"package": decorator, "fullpackage": decorator}
-
     def fmt(s, depth=0):
         """Formatter function for all output specs"""
         string = ""
         if hashes:
             string += gray_hash(s, hlen) + " "
         string += depth * "    "
-        string += s.cformat(format_string, transform=transform)
+        string += decorator(s, s.cformat(format_string))
         return string
 
     def format_list(specs):
@@ -505,7 +448,7 @@ def filter_loaded_specs(specs):
     return [x for x in specs if x.dag_hash() in hashes]
 
 
-def print_how_many_pkgs(specs, pkg_type=""):
+def print_how_many_pkgs(specs, pkg_type="", suffix=""):
     """Given a list of specs, this will print a message about how many
     specs are in that list.
 
@@ -516,7 +459,7 @@ def print_how_many_pkgs(specs, pkg_type=""):
             category, e.g. if pkg_type is "installed" then the message
             would be "3 installed packages"
     """
-    tty.msg("%s" % spack.util.string.plural(len(specs), pkg_type + " package"))
+    tty.msg("%s" % llnl.string.plural(len(specs), pkg_type + " package") + suffix)
 
 
 def spack_is_git_repo():

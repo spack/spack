@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,12 +12,12 @@ import llnl.util.tty.color as color
 
 import spack
 import spack.cmd
-import spack.cmd.common.arguments as arguments
 import spack.config
 import spack.environment
 import spack.hash_types as ht
 import spack.package_base
 import spack.solver.asp as asp
+from spack.cmd.common import arguments
 
 description = "concretize a specs using an ASP solver"
 section = "developer"
@@ -91,7 +91,6 @@ def setup_parser(subparser):
 
 
 def _process_result(result, show, required_format, kwargs):
-    result.raise_if_unsat()
     opt, _, _ = min(result.answers)
     if ("opt" in show) and (not required_format):
         tty.msg("Best of %d considered solutions." % result.nmodels)
@@ -127,10 +126,7 @@ def _process_result(result, show, required_format, kwargs):
         print()
 
     if result.unsolved_specs and "solutions" in show:
-        tty.msg("Unsolved specs")
-        for spec in result.unsolved_specs:
-            print(spec)
-        print()
+        tty.msg(asp.Result.format_unsolved(result.unsolved_specs))
 
 
 def solve(parser, args):
@@ -176,17 +172,29 @@ def solve(parser, args):
     output = sys.stdout if "asp" in show else None
     setup_only = set(show) == {"asp"}
     unify = spack.config.get("concretizer:unify")
+    allow_deprecated = spack.config.get("config:deprecated", False)
     if unify != "when_possible":
         # set up solver parameters
         # Note: reuse and other concretizer prefs are passed as configuration
         result = solver.solve(
-            specs, out=output, timers=args.timers, stats=args.stats, setup_only=setup_only
+            specs,
+            out=output,
+            timers=args.timers,
+            stats=args.stats,
+            setup_only=setup_only,
+            allow_deprecated=allow_deprecated,
         )
         if not setup_only:
             _process_result(result, show, required_format, kwargs)
     else:
         for idx, result in enumerate(
-            solver.solve_in_rounds(specs, out=output, timers=args.timers, stats=args.stats)
+            solver.solve_in_rounds(
+                specs,
+                out=output,
+                timers=args.timers,
+                stats=args.stats,
+                allow_deprecated=allow_deprecated,
+            )
         ):
             if "solutions" in show:
                 tty.msg("ROUND {0}".format(idx))

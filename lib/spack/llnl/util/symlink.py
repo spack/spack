@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,8 +11,7 @@ import tempfile
 
 from llnl.util import lang, tty
 
-from spack.error import SpackError
-from spack.util.path import system_path_filter
+from ..path import system_path_filter
 
 if sys.platform == "win32":
     from win32file import CreateHardLink
@@ -66,7 +65,9 @@ def symlink(source_path: str, link_path: str, allow_broken_symlinks: bool = not 
     if not allow_broken_symlinks:
         # Perform basic checks to make sure symlinking will succeed
         if os.path.lexists(link_path):
-            raise SymlinkError(f"Link path ({link_path}) already exists. Cannot create link.")
+            raise AlreadyExistsError(
+                f"Link path ({link_path}) already exists. Cannot create link."
+            )
 
         if not os.path.exists(source_path):
             if os.path.isabs(source_path) and not allow_broken_symlinks:
@@ -78,7 +79,7 @@ def symlink(source_path: str, link_path: str, allow_broken_symlinks: bool = not 
             else:
                 # os.symlink can create a link when the given source path is relative to
                 # the link path. Emulate this behavior and check to see if the source exists
-                # relative to the link patg ahead of link creation to prevent broken
+                # relative to the link path ahead of link creation to prevent broken
                 # links from being made.
                 link_parent_dir = os.path.dirname(link_path)
                 relative_path = os.path.join(link_parent_dir, source_path)
@@ -188,6 +189,7 @@ def _windows_can_symlink() -> bool:
     import llnl.util.filesystem as fs
 
     fs.touchp(fpath)
+    fs.mkdirp(dpath)
 
     try:
         os.symlink(dpath, dlink)
@@ -234,7 +236,7 @@ def _windows_create_junction(source: str, link: str):
     elif not os.path.exists(source):
         raise SymlinkError("Source path does not exist, cannot create a junction.")
     elif os.path.lexists(link):
-        raise SymlinkError("Link path already exists, cannot create a junction.")
+        raise AlreadyExistsError("Link path already exists, cannot create a junction.")
     elif not os.path.isdir(source):
         raise SymlinkError("Source path is not a directory, cannot create a junction.")
 
@@ -259,7 +261,7 @@ def _windows_create_hard_link(path: str, link: str):
     elif not os.path.exists(path):
         raise SymlinkError(f"File path {path} does not exist. Cannot create hard link.")
     elif os.path.lexists(link):
-        raise SymlinkError(f"Link path ({link}) already exists. Cannot create hard link.")
+        raise AlreadyExistsError(f"Link path ({link}) already exists. Cannot create hard link.")
     elif not os.path.isfile(path):
         raise SymlinkError(f"File path ({link}) is not a file. Cannot create hard link.")
     else:
@@ -336,7 +338,11 @@ def resolve_link_target_relative_to_the_link(link):
     return os.path.join(link_dir, target)
 
 
-class SymlinkError(SpackError):
+class SymlinkError(RuntimeError):
     """Exception class for errors raised while creating symlinks,
     junctions and hard links
     """
+
+
+class AlreadyExistsError(SymlinkError):
+    """Link path already exists."""

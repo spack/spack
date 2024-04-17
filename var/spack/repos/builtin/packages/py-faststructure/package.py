@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class PyFaststructure(PythonPackage):
 
     homepage = "https://github.com/rajanil/fastStructure"
     url = "https://github.com/rajanil/fastStructure/archive/v1.0.tar.gz"
+
+    license("MIT")
 
     version("1.0", sha256="f1bfb24bb5ecd108bc3a90145fad232012165c1e60608003f1c87d200f867b81")
 
