@@ -559,7 +559,7 @@ def ensure_patchelf_in_path_or_raise() -> spack.util.executable.Executable:
         )
 
 
-def ensure_winsdk_or_raise() -> None:
+def ensure_winsdk_external_or_raise() -> None:
     """Ensure the Windows SDK + WGL are available on system
     If both of these package are found, the Spack user or bootstrap
     configuration (depending on where Spack is running)
@@ -572,6 +572,8 @@ def ensure_winsdk_or_raise() -> None:
     This is different from all other current bootstrap dependency
     checks.
     """
+    if set(["win-sdk", "wgl"]).issubset(spack.config.get("packages").keys()):
+        return
     externals = spack.detection.by_path(["win-sdk", "wgl"])
     if not set(["win-sdk", "wgl"]) == externals.keys():
         missing_packages_lst = []
