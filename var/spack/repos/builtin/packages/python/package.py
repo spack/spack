@@ -1191,8 +1191,8 @@ print(json.dumps(config))
             for directory in {self.platlib, self.purelib}:
                 env.prepend_path("PYTHONPATH", os.path.join(prefix, directory))
 
-            if sys.platform == "win32":
-                prefix_scripts_dir = os.path.join(prefix, "Scripts")
+            if self.spec.satisfies("platform=windows"):
+                prefix_scripts_dir = prefix.Scripts
                 if os.path.exists(prefix_scripts_dir):
                     env.prepend_path("PATH", prefix_scripts_dir)
 
