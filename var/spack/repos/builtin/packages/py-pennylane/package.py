@@ -15,6 +15,8 @@ class PyPennylane(PythonPackage):
     url = "https://github.com/PennyLaneAI/pennylane/archive/refs/tags/v0.35.1.tar.gz"
 
     maintainers("mlxd", "AmintorDusko", "marcodelapierre", "vincentmr")
+    
+    license("Apache-2.0")
 
     version("master", branch="master")
     version("0.35.1", sha256="5a234d0605012f3d0201fdcfd2bfe84205a09c8ac42801fe7123eddddec71366")
