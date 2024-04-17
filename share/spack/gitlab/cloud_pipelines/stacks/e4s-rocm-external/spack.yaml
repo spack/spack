@@ -143,9 +143,12 @@ spack:
       - spec: llvm-amdgpu@5.7.1
         prefix: /opt/rocm-5.7.1/llvm
         extra_attributes:
-          compilers:
-            c: /opt/rocm-5.7.1/llvm/bin/clang++
-            cxx: /opt/rocm-5.7.1/llvm/bin/clang++
+          # These will change to new cleaner format soon
+          paths:
+            cc: /opt/rocm-5.7.1/bin/amdclang
+            cxx: /opt/rocm-5.7.1/bin/amdclang++
+            fc: /opt/rocm-5.7.1/bin/amdflang
+            f77: /opt/rocm-5.7.1/bin/amdflang
     hsakmt-roct:
       buildable: false
       externals:
