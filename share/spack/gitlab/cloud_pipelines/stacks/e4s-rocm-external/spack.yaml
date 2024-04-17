@@ -11,6 +11,8 @@ spack:
       - one_of:
         - '%gcc target=x86_64_v3'
         - '+rocm %rocmcc target=x86_64_v3'
+      - spec: '+rocm'
+        when: 'rocm=*'
       providers:
         blas: [openblas]
       variants: +mpi
