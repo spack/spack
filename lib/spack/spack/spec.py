@@ -403,7 +403,6 @@ class ArchSpec:
         Args:
             other: spec to be satisfied
         """
-        breakpoint()
         other = self._autospec(other)
 
         # Check platform and os
@@ -429,7 +428,6 @@ class ArchSpec:
         """
         other = self._autospec(other)
 
-        breakpoint()
         # Check platform and os
         other_attribute = other.platform
         self_attribute = self.platform
@@ -442,7 +440,6 @@ class ArchSpec:
         return self._target_satisfies(other, strict=False)
 
     def _os_satisfies(self, other: "ArchSpec", strict: bool) -> bool:
-        breakpoint()
         if bool(self.os) and bool(other.os):
             if strict and self.os != other.os:
                 return False
@@ -3730,7 +3727,6 @@ class Spec:
             other: spec to be checked for compatibility
             deps: if True check compatibility of dependency nodes too, if False only check root
         """
-        breakpoint()
         other = self._autospec(other)
 
         if other.concrete and self.concrete:
@@ -3851,7 +3847,6 @@ class Spec:
             other: spec to be satisfied
             deps: if True descend to dependencies, otherwise only check root node
         """
-        breakpoint()
         other = self._autospec(other)
 
         if other.concrete:
