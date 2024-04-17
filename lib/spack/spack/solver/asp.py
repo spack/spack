@@ -133,10 +133,9 @@ class RequirementKind(enum.Enum):
 class DeclaredVersion(NamedTuple):
     """Data class to contain information on declared versions used in the solve"""
 
-    #: version (or String representation of the version?)
-    # version: str
+    #: version
     version: GitOrStandardVersion
-    #: Unique weight assigned to this version
+    #: Unique weight (initially index) assigned to this version
     weight: int
     #: Provenance of the version
     origin: Provenance
@@ -929,9 +928,6 @@ ConditionSpecKey = Tuple[str, Optional[TransformFunction]]
 ConditionIdFunctionPair = Tuple[int, List[AspFunction]]
 ConditionSpecCache = Dict[str, Dict[ConditionSpecKey, ConditionIdFunctionPair]]
 
-# type for prioritizing versions
-VersionInfo = Dict[Tuple, bool]
-
 #: Maximum number of version parts of concern for weighting package versions
 NUMBER_VERSION_PARTS = 3
 
@@ -1010,6 +1006,8 @@ class SpackSolverSetup:
         #
         factors = (10000, 1000, 100, 10, 1)
 
+        # Track already calculated weights to prevent sending duplicates to
+        # the solver.
         weights = []
 
         def ordered_versions():
@@ -1019,8 +1017,9 @@ class SpackSolverSetup:
             versions = sorted(
                 pkg_cls.versions.items(), key=_concretization_version_order, reverse=True
             )
-            # We only need the versions at this point since the relevant info
-            # should have already been stored.
+            # We only need the versions at this point since the relevant info,
+            # such as whether the version is preferred, should have already been
+            # cached.
             return [v for v, _ in versions]
 
         versions = ordered_versions()
@@ -1059,16 +1058,17 @@ class SpackSolverSetup:
             preferred = declared_version.version in self.preferred_versions[pkg_name]
 
             versions_with_index = index_versions[indices]
-            new = len(versions_with_index) - 1
+            # Make sure to include the existing weight/index since it was added
+            # to affect ordering.
+            new = declared_version.weight + len(versions_with_index) - 1
 
             indices = [declared_version.origin] + [0 if preferred else 1] + list(indices)
             for factor, idx in zip(factors, indices):
                 new += factor * idx
 
-            # Ensure we are not duplicating any existing weights, which is
-            # more can be common when declared versions are coming from
-            # origins that simply assign a weight of 0 or an enumeration
-            # index.
+            # Ensure we are not duplicating any existing weights, which is common
+            # when declared versions are coming from origins that initialize the
+            # weight to 0 or an enumeration index tied to the origin.
             while new in weights:
                 new += 1
 
@@ -1107,7 +1107,6 @@ class SpackSolverSetup:
                 list(sorted(group, reverse=True, key=lambda x: vn.ver(x.version)))
             )
 
-        # for weight, declared_version in enumerate(most_to_least_preferred):
         for declared_version in most_to_least_preferred:
             self.gen.fact(
                 fn.pkg_fact(
@@ -1690,16 +1689,13 @@ class SpackSolverSetup:
                 for idx, (v, external_id) in enumerate(sorted(external_versions, reverse=True))
             ]
             for version, idx, external_id in external_versions:
-                # self.declared_versions[pkg_name].append(
-                #    DeclaredVersion(version=version, idx=idx, origin=Provenance.EXTERNAL)
-                # )
                 self._add_declared_version(
                     pkg_name, version, idx, Provenance.EXTERNAL, possible=False
                 )
 
             # Declare external conditions with a local index into packages.yaml
             for local_idx, spec in enumerate(external_specs):
-                msg = "%s available as external when satisfying %s" % (spec.name, spec)
+                msg = f"{spec.name} available as external when satisfying {spec}"
 
                 def external_imposition(input_spec, requirements):
                     return requirements + [
@@ -1999,10 +1995,6 @@ class SpackSolverSetup:
                 if version_info.get("preferred", False):
                     self.preferred_versions[pkg_name].add(v)
 
-                # self.possible_versions[pkg_name].add(v)
-                # self.declared_versions[pkg_name].append(
-                #     DeclaredVersion(version=v, idx=idx, origin=Provenance.PACKAGE_PY)
-                # )
                 self._add_declared_version(pkg_name, v, idx, Provenance.PACKAGE_PY)
 
             if pkg_name not in packages_yaml or "version" not in packages_yaml[pkg_name]:
@@ -2027,10 +2019,6 @@ class SpackSolverSetup:
                     version_defs.extend(matches)
 
             for weight, vdef in enumerate(llnl.util.lang.dedupe(version_defs)):
-                # self.declared_versions[pkg_name].append(
-                #     DeclaredVersion(version=vdef, idx=weight, origin=Provenance.PACKAGES_YAML)
-                # )
-                # self.possible_versions[pkg_name].add(vdef)
                 self._add_declared_version(pkg_name, vdef, weight, Provenance.PACKAGES_YAML)
 
     def define_ad_hoc_versions_from_specs(
@@ -2054,9 +2042,6 @@ class SpackSolverSetup:
             if not allow_deprecated and version in self.deprecated_versions[s.name]:
                 continue
 
-            # declared = DeclaredVersion(version=version, idx=0, origin=origin)
-            # self.declared_versions[s.name].append(declared)
-            # self.possible_versions[s.name].add(version)
             self._add_declared_version(s.name, version, 0, origin)
 
     def _supported_targets(self, compiler_name, compiler_version, targets):
@@ -2357,10 +2342,6 @@ class SpackSolverSetup:
             # - Add versions to possible versions
             # - Add OS to possible OS's
             for dep in spec.traverse():
-                # self.possible_versions[dep.name].add(dep.version)
-                # self.declared_versions[dep.name].append(
-                #     DeclaredVersion(version=dep.version, idx=0, origin=Provenance.INSTALLED)
-                # )
                 self._add_declared_version(dep.name, dep.version, 0, Provenance.INSTALLED)
                 self.possible_oses.add(dep.os)
 
@@ -2634,10 +2615,6 @@ class SpackSolverSetup:
                 # If concrete an not yet defined, conditionally define it, like we do for specs
                 # from the command line.
                 if not require_checksum or _is_checksummed_git_version(v):
-                    # self.declared_versions[name].append(
-                    #     DeclaredVersion(version=v, idx=0, origin=Provenance.PACKAGE_REQUIREMENT)
-                    # )
-                    self.possible_versions[name].add(v)
                     self._add_declared_version(name, v, 0, Provenance.PACKAGE_REQUIREMENT)
 
     def _specs_from_requires(self, pkg_name, section):
@@ -3153,10 +3130,7 @@ class RuntimePropertyRecorder:
         for s in (imposed_spec, when_spec):
             if not s.versions.concrete:
                 continue
-            # self._setup.possible_versions[s.name].add(s.version)
-            # self._setup.declared_versions[s.name].append(
-            #     DeclaredVersion(version=s.version, idx=0, origin=Provenance.RUNTIME)
-            # )
+
             self._setup._add_declared_version(s.name, s.version, 0, Provenance.RUNTIME)
 
         self.runtime_conditions.add((imposed_spec, when_spec))
@@ -3671,11 +3645,6 @@ class Solver:
         reusable_specs = self._check_input_and_extract_concrete_specs(specs)
         reusable_specs.extend(self._reusable_specs(specs))
         setup = SpackSolverSetup(tests=tests)
-
-        tty.debug("[solve] declared versions:", level=2)
-        for name in setup.declared_versions:
-            dvs = "\n\t".join(setup.declared_versions[name])
-            tty.debug(f"[solve]   {name}:\n\t{dvs}", level=2)
 
         output = OutputConfiguration(timers=timers, stats=stats, out=out, setup_only=setup_only)
         result, _, _ = self.driver.solve(

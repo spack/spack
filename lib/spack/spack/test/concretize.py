@@ -1886,7 +1886,7 @@ class TestConcretize:
 
             criteria = [
                 (num_specs - 1, None, "number of packages to build (vs. reuse)"),
-                (2, 0, "version badness"),
+                (71000, 122000, "version badness"),  # #s tied to weighting alg
             ]
 
             for criterion in criteria:
