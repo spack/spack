@@ -8,7 +8,11 @@ packages:
         when: "%intel"
   gettext:
     # Newer gettext cannot build with gcc@12 and old AL2 glibc headers
-    require: '@:0.20'
+    # Older gettext versions do not build correctly with oneapi.
+    require:
+      - one_of:
+          - '@:0.20'
+          - '%oneapi'
   gromacs:
     require:
       - one_of:
