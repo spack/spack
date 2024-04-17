@@ -32,4 +32,3 @@ class PyPythonFmask(PythonPackage):
     depends_on("gdal+python", type=("build", "run"))
 
     maintainers("gillins", "neilflood")
-
