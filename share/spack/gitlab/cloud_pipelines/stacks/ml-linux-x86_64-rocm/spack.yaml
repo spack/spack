@@ -9,9 +9,6 @@ spack:
       - amdgpu_target=gfx90a
     gl:
       require: "osmesa"
-    py-torch:
-      # Does not yet support Spack-installed ROCm
-      require: ~rocm
     mpi:
       require: openmpi
 
