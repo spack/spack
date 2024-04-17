@@ -145,7 +145,7 @@ class ROCmPackage(PackageBase):
     depends_on("hip +rocm", when="+rocm")
 
     # need amd gpu type for rocm builds
-    compilers_supporting_rocm = ("cce", "rocmcc")
+    compilers_supporting_rocm = ("cce", "rocmcc", "clang", "aocc")
     conflicts("amdgpu_target=none", when="+rocm")
     # If this variable shadows a property, it overrides it
     for cmp_name in spack.compilers.supported_compilers():
