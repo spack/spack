@@ -25,15 +25,12 @@ spack:
     - py-jaxlib
 
     # Keras
-    # - py-keras backend=tensorflow
+    - py-keras backend=tensorflow
     - py-keras backend=jax
     - py-keras backend=torch
     - py-keras-applications
     - py-keras-preprocessing
     - py-keras2onnx
-
-    # MXNet
-    - mxnet
 
     # PyTorch
     - py-botorch
@@ -80,9 +77,9 @@ spack:
     - py-tensorflow-probability
 
     # XGBoost
-    # - py-xgboost
+    - py-xgboost
     # - r-xgboost
-    # - xgboost
+    - xgboost
 
   mirrors:
     mirror: s3://spack-binaries/develop/ml-linux-aarch64-cuda
