@@ -15,7 +15,7 @@ class PyPennylaneLightning(CMakePackage, PythonExtension):
     url = "https://github.com/PennyLaneAI/pennylane-lightning/archive/refs/tags/v0.35.1.tar.gz"
 
     maintainers("mlxd", "AmintorDusko", "vincentmr")
-    
+
     license("Apache-2.0")
 
     version("master", branch="master")

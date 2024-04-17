@@ -121,9 +121,7 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
             "-DPLKOKKOS_ENABLE_WARNINGS=OFF"
         )  # otherwise build might fail due to Kokkos::InitArguments deprecated
         if self.spec.version >= Version("0.33"):
-            args.append(
-                f"-DPL_BACKEND=lightning_kokkos"
-            )
+            args.append(f"-DPL_BACKEND=lightning_kokkos")
         return args
 
     def build(self, pkg, spec, prefix):
