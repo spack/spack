@@ -8,7 +8,7 @@ import re
 import subprocess
 import sys
 import tempfile
-from typing import Dict, List, Set
+from typing import Dict, List
 
 import archspec.cpu
 
