@@ -57,8 +57,6 @@ class PyTensorflowProbability(Package):
     depends_on("py-dm-tree", when="@0.12:", type=("build", "run"))
 
     # tensorflow_probability/python/__init__.py
-    # TODO: reactivate the JAX versions once the JAX package is available with newer versions
-    #  also add jaxlib as a dependency
 
     variant("tensorflow", default=False, description="Build with TensorFlow support")
     with when("+tensorflow"):
