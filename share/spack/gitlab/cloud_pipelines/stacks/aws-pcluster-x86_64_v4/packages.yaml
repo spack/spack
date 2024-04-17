@@ -8,7 +8,7 @@ packages:
         when: "%intel"
   gettext:
     # Newer gettext cannot build with gcc@12 and old AL2 glibc headers
-    require: '@0.19.8.1'
+    require: '@:0.20'
   gromacs:
     require:
       - one_of:
