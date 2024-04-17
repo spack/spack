@@ -58,8 +58,8 @@ class PyTensorflowProbability(Package):
 
     # tensorflow_probability/python/__init__.py
 
-    variant("tensorflow", default=False, description="Build with TensorFlow support")
-    with when("+tensorflow"):
+    variant("tf", default=False, description="Build with TensorFlow support")
+    with when("+tf"):
         depends_on("py-tf-keras@2.16:", when="@0.24:", type=("build", "run"))
         depends_on("py-tensorflow@2.16", when="@0.24", type=("build", "run"))
         depends_on("py-tensorflow@2.15", when="@0.23", type=("build", "run"))
