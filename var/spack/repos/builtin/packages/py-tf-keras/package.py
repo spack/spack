@@ -14,14 +14,14 @@ class PyTfKeras(PythonPackage):
      Keras 3 is being developed at keras-team/keras."""
 
     homepage = "https://github.com/keras-team/tf-keras"
-    pypi = "tf_keras/tf_keras-2.16.0.tar.gz"
+    url = "https://github.com/keras-team/tf-keras/archive/refs/tags/v2.16.0.tar.gz"
 
     maintainers("jonas-eschle")
 
     license("Apache-2.0", checked_by="jonas-eschle")
 
     max_minor = 16
-    version("2.16.0", sha256="db53891f1ac98197c2acced98cdca8c06ba8255655a6cb7eb95ed49676118280")
+    version("2.16.0")
 
     # Supported Python versions listed in multiple places:
     # * tf-keras/tools/pip_package/setup.py
@@ -58,7 +58,6 @@ class PyTfKeras(PythonPackage):
     depends_on("bazel", type="build")
     depends_on("protobuf", type="build")
 
-    @when("@2.16:")
     def patch(self):
         infile = join_path(self.package_dir, "protobuf_build.patch")
         with open(infile, "r") as source_file:
@@ -73,7 +72,6 @@ class PyTfKeras(PythonPackage):
             string=True,
         )
 
-    @when("@2.16:")
     def install(self, spec, prefix):
         self.tmp_path = tempfile.mkdtemp(prefix="spack")
         env["HOME"] = self.tmp_path
