@@ -49,7 +49,7 @@ class PyPennylane(PythonPackage):
     depends_on("py-autoray@0.6.1:", type=("build", "run"), when="@0.33.0:")
     depends_on("py-cachetools", type=("build", "run"))
     for v in range(30, 36):
-        depends_on(f"py-pennylane-lightning@0.{v}.0:", type=("build", "run"), when=f"@0.{v}.0:")
+        depends_on(f"py-pennylane-lightning@0.{v}:", type=("build", "run"), when=f"@0.{v}:")
     depends_on(
         "py-pennylane-lightning@0.28.0:0.29.0", type=("build", "run"), when="@0.28.0:0.29.1"
     )
