@@ -234,7 +234,7 @@ def display_env(env, args, decorator, results):
     }
 
     def root_decorator(spec, string):
-        """Decorate root specs wtih their install status if needed"""
+        """Decorate root specs with their install status if needed"""
         concrete = concrete_specs.get(spec)
         if concrete:
             status = color.colorize(concrete.install_status().value)
