@@ -8,6 +8,8 @@ import spack.builder
 from spack.build_systems import autotools, nmake
 from spack.package import *
 
+import llnl.util.filesystem as fs
+
 
 class Libxml2(AutotoolsPackage, NMakePackage):
     """Libxml2 is the XML C parser and toolkit developed for the Gnome
@@ -244,19 +246,19 @@ class NMakeBuilder(BaseBuilder, nmake.NMakeBuilder):
 
     @property
     def build_directory(self):
-        return os.path.join(self.stage.source_path, "win32")
+        return fs.windows_sfn(os.path.join(self.stage.source_path, "win32"))
 
     def configure(self, pkg, spec, prefix):
         with working_dir(self.build_directory):
             opts = [
-                "prefix=%s" % prefix,
+                "prefix=%s" % fs.windows_sfn(prefix),
                 "compiler=msvc",
                 "iconv=no",
                 "zlib=yes",
                 "lzma=yes",
-                "lib=%s" % ";".join((spec["zlib-api"].prefix.lib, spec["xz"].prefix.lib)),
+                "lib=%s" % ";".join((fs.windows_sfn(spec["zlib-api"].prefix.lib), fs.windows_sfn(spec["xz"].prefix.lib))),
                 "include=%s"
-                % ";".join((spec["zlib-api"].prefix.include, spec["xz"].prefix.include)),
+                % ";".join((fs.windows_sfn(spec["zlib-api"].prefix.include), fs.windows_sfn(spec["xz"].prefix.include))),
             ]
             if "+python" in spec:
                 opts.append("python=yes")
