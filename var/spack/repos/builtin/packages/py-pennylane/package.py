@@ -33,11 +33,12 @@ class PyPennylane(PythonPackage):
     depends_on("python@3.9:", type=("build", "run"), when="@0.32.0:")
     depends_on("py-pip", type=("build", "run"))  # Runtime req for pennylane.about()
     depends_on("py-setuptools", type="build")
+    depends_on("py-setuptools", type=("build", "run"), when="@0.33")
 
     depends_on("py-numpy", type=("build", "run"))
     depends_on("py-numpy@:1.23", type=("build", "run"), when="@:0.32.0")
     depends_on("py-scipy", type=("build", "run"))
-    depends_on("py-scipy@:1.10", type=("build", "run"), when="@:0.31.0")
+    depends_on("py-scipy@:1.10.0", type=("build", "run"), when="@:0.31")
     depends_on("py-networkx", type=("build", "run"))
     depends_on("py-rustworkx", type=("build", "run"), when="@0.30.0:")
     depends_on("py-retworkx", type=("build", "run"), when="@0.28.0:0.29.1")
@@ -48,11 +49,11 @@ class PyPennylane(PythonPackage):
     depends_on("py-autoray@0.3.1:", type=("build", "run"), when="@:0.32.0")
     depends_on("py-autoray@0.6.1:", type=("build", "run"), when="@0.33.0:")
     depends_on("py-cachetools", type=("build", "run"))
-    for v in range(30, 36):
-        depends_on(f"py-pennylane-lightning@0.{v}:", type=("build", "run"), when=f"@0.{v}:")
     depends_on(
         "py-pennylane-lightning@0.28.0:0.29.0", type=("build", "run"), when="@0.28.0:0.29.1"
     )
+    for v in range(30, 36):
+        depends_on(f"py-pennylane-lightning@0.{v}:", type=("build", "run"), when=f"@0.{v}:")
     depends_on("py-requests", type=("build", "run"))
     depends_on("py-typing-extensions", type=("build", "run"), when="@0.32.0:")
 
