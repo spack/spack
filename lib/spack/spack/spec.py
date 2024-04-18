@@ -4349,11 +4349,15 @@ class Spec:
         ensure_modern_format_string(format_string)
         enable_color = kwargs.get("color", False)
 
-        def safe_color(s, color=None):
-            escaped = clr.cescape(s)
-            if color is not None:
-                escaped = f"{color}{escaped}@."
-            return clr.colorize(escaped, color=enable_color)
+        def safe_color(sigil, string, color):
+            # enable_color is False/True/None (None for auto)
+            # avoid colorizing if there is no color or the string is empty
+            if (enable_color is False) or not color or not string:
+                return sigil + string
+            # escape and add the sigil here to avoid multiple concatenations
+            if sigil == "@":
+                sigil = "@@"
+            return clr.colorize(f"{color}{sigil}{clr.cescape(string)}@.", color=enable_color)
 
         def write_attribute(match_object):
             (sig, dep, hash, hash_len, attribute, close_brace, unmatched_close_brace) = (
@@ -4382,7 +4386,7 @@ class Spec:
                     length = int(hash_len) if hash_len else None
                 except ValueError:
                     raise SpecFormatStringError(f"Invalid hash length: '{hash_len}'")
-                return safe_color(sig + current.dag_hash(length), HASH_COLOR)
+                return safe_color(sig, current.dag_hash(length), HASH_COLOR)
 
             if attribute == "":
                 raise SpecFormatStringError("Format string attributes must be non-empty")
@@ -4452,7 +4456,7 @@ class Spec:
                 color = VERSION_COLOR
 
             # return colored output
-            return safe_color(sig + str(current), color)
+            return safe_color(sig, str(current), color)
 
         return SPEC_FORMAT_RE.sub(write_attribute, format_string).strip()
 
