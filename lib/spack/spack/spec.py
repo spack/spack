@@ -4369,24 +4369,19 @@ class Spec:
             elif not close_brace:
                 raise SpecFormatStringError(f"Missing close brace: '{format_string}'")
 
-            if sig == "arch=":
-                sig = " arch="  # include space as separator
-            elif not sig:
-                sig = ""
-
             current = self if dep is None else self[dep]
 
             # Hash attributes can return early.
             # NOTE: we currently treat abstract_hash like an attribute and ignore
             # any length associated with it. We may want to change that.
             if hash:
-                if sig != "/":
+                if sig and sig != "/":
                     raise SpecFormatSigilError(sig, "DAG hashes", hash)
                 try:
                     length = int(hash_len) if hash_len else None
                 except ValueError:
                     raise SpecFormatStringError(f"Invalid hash length: '{hash_len}'")
-                return safe_color(sig, current.dag_hash(length), HASH_COLOR)
+                return safe_color(sig or "", current.dag_hash(length), HASH_COLOR)
 
             if attribute == "":
                 raise SpecFormatStringError("Format string attributes must be non-empty")
@@ -4395,14 +4390,18 @@ class Spec:
             assert parts
 
             # check that the sigil is valid for the attribute.
-            if sig == "@" and parts[-1] not in ("versions", "version"):
+            if not sig:
+                sig = ""
+            elif sig == "@" and parts[-1] not in ("versions", "version"):
                 raise SpecFormatSigilError(sig, "versions", attribute)
             elif sig == "%" and attribute not in ("compiler", "compiler.name"):
                 raise SpecFormatSigilError(sig, "compilers", attribute)
-            elif sig == "/" and not (hash or attribute == "abstract_hash"):
+            elif sig == "/" and attribute != "abstract_hash":
                 raise SpecFormatSigilError(sig, "DAG hashes", attribute)
-            elif sig == " arch=" and attribute not in ("architecture", "arch"):
-                raise SpecFormatSigilError(sig, "the architecture", attribute)
+            elif sig == "arch=":
+                if attribute not in ("architecture", "arch"):
+                    raise SpecFormatSigilError(sig, "the architecture", attribute)
+                sig = " arch="  # include space as separator
 
             # Iterate over components using getattr to get next element
             for idx, part in enumerate(parts):
