@@ -77,8 +77,6 @@ spack:
 
     # XGBoost
     - py-xgboost
-    # - r-xgboost
-    - xgboost
 
   ci:
     pipeline-gen:
