@@ -88,20 +88,26 @@ class CompilerPackage(spack.package_base.PackageBase):
                 tty.debug(e)
 
     @classmethod
-    def determine_compiler_paths(cls, *, exes=None, prefix=None):
+    def compiler_bindir(cls, prefix):
+        """Overridable method for the location of the compiler bindir within the preifx"""
+        return os.path.join(prefix, "bin")
+
+    @classmethod
+    def determine_compiler_exes(cls, prefix):
+        """Compute the executables in the compiler prefix that may be compiler executables"""
+        exes = []
+        bindir = cls.compiler_bindir(prefix)
+        for f, regex in itertools.product(os.listdir(bindir), cls.executables):
+            if re.match(regex, f):
+                exes.append(os.path.join(bindir, f))
+        return exes
+
+    @classmethod
+    def determine_compiler_paths(cls, exes):
         """Compute the paths to compiler executables associated with this package
 
         This is a helper method for ``determine_variants`` to compute the ``extra_attributes``
         to include with each spec object."""
-        assert exes is not None or prefix is not None
-
-        if exes is None:
-            exes = []
-            bindir = os.path.join(prefix, "bin")
-            for f, regex in itertools.product(os.listdir(bindir), cls.executables):
-                if re.match(regex, f):
-                    exes.append(os.path.join(bindir, f))
-
         # There are often at least two copies (not symlinks) of each compiler executable in the
         # same directory: one with a canonical name, e.g. "gfortran", and another one with the
         # target prefix, e.g. "x86_64-pc-linux-gnu-gfortran". There also might be a copy of "gcc"

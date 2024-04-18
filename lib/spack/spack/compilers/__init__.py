@@ -181,7 +181,8 @@ def _compiler_config_from_external(config):
         getattr(spec.package_class(spec), "supported_languages", ("c", "cxx", "fortran"))
     )
     if prefix and not supported_languages.issubset(set(attribute_paths.keys())):
-        paths = spec.package_class.determine_compiler_paths(prefix=prefix)
+        exes = spec.package_class.determine_compiler_exes(prefix)
+        paths = spec.package_class.determine_compiler_paths(exes)
     paths.update(attribute_paths)
 
     # compilers format has cc/fc/f77, externals format has "c/fortran"
