@@ -22,9 +22,6 @@ def true():
 class CompilerPackage(spack.package_base.PackageBase):
     """A Package mixin for all common logic for packages that implement compilers"""
 
-    # metadata identifying this as a compiler for lmod
-    family = "compiler"
-
     # TODO: how do these play nicely with other tags
     tags = ["compiler"]
 
