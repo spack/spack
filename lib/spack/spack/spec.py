@@ -4349,6 +4349,11 @@ class Spec:
         """
         ensure_modern_format_string(format_string)
 
+        # TODO: This preserves a bug from the original version of this function that's needed
+        # TODO: by format_path(). Get rid of it eventually; plain '\' should just format as '\'
+        if format_string == "\\":
+            return ""
+
         def safe_color(sigil: str, string: str, color_fmt: Optional[str]):
             # avoid colorizing if there is no color or the string is empty
             if (color is False) or not color_fmt or not string:
