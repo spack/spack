@@ -11,10 +11,7 @@ class PyPennylaneLightningKokkos(CMakePackage, PythonExtension, CudaPackage, ROC
 
     homepage = "https://docs.pennylane.ai/projects/lightning-kokkos"
     git = "https://github.com/PennyLaneAI/pennylane-lightning-kokkos.git"
-    urls = [
-        "https://github.com/PennyLaneAI/pennylane-lightning-kokkos/archive/refs/tags/v0.32.0.tar.gz"
-        "https://github.com/PennyLaneAI/pennylane-lightning/archive/refs/tags/v0.35.1.tar.gz"
-    ]
+
     maintainers("AmintorDusko", "vincentmr")
 
     license("Apache-2.0")
@@ -32,7 +29,8 @@ class PyPennylaneLightningKokkos(CMakePackage, PythonExtension, CudaPackage, ROC
     version("0.29.1", sha256="f51ba7718defc7bb5064f690f381e04b2ec58cb09f22a171ae5f410860716e30")
 
     depends_on("kokkos@:3.7.2", when="@:0.30", type=("run", "build"))
-    depends_on("kokkos@4:4.2", when="@0.31:", type=("run", "build"))
+    depends_on("kokkos@4:4.1", when="@0.31", type=("run", "build"))
+    depends_on("kokkos@4:4.2", when="@0.32:", type=("run", "build"))
 
     # kokkos backends
     backends = {
@@ -88,7 +86,7 @@ class PyPennylaneLightningKokkos(CMakePackage, PythonExtension, CudaPackage, ROC
     depends_on("py-pennylane-lightning~kokkos", type=("build", "run"), when="@:0.31")
     for v in range(33, 36):
         depends_on(f"py-pennylane@0.{v}:", type="run", when=f"@0.{v}")
-        depends_on(f"py-pennylane-lightning@0.{v}:", type=("build", "run"), when=f"@0.{v}")
+        depends_on(f"py-pennylane-lightning@0.{v}", type=("build", "run"), when=f"@0.{v}")
 
     # variant defined dependencies
     depends_on("llvm-openmp", when="+openmp %apple-clang")
@@ -97,6 +95,10 @@ class PyPennylaneLightningKokkos(CMakePackage, PythonExtension, CudaPackage, ROC
     depends_on("py-pytest", type="test")
     depends_on("py-pytest-mock", type="test")
     depends_on("py-flaky", type="test")
+
+    def url_for_version(self, version):
+        extra = "-kokkos" if version <= Version("0.32.0") else ""
+        return f"https://github.com/PennyLaneAI/pennylane-lightning{extra}/archive/refs/tags/v{version}.tar.gz"
 
 
 class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
