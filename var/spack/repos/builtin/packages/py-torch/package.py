@@ -233,7 +233,7 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
         depends_on("rocthrust")
         depends_on("roctracer-dev")
         depends_on("rocrand")
-        depends_on("riprand")
+        depends_on("hiprand")
         depends_on("hipsparse")
         depends_on("hipfft")
         depends_on("rocfft")
@@ -517,7 +517,7 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
             env.set("HIPFFT_PATH", self.spec["hipfft"].prefix)
             env.set("HIPSPARSE_PATH", self.spec["hipsparse"].prefix)
             env.set("HIP_PATH", self.spec["hip"].prefix)
-            env.set("HIPRAND_PATH", self.spec["riprand"].prefix)
+            env.set("HIPRAND_PATH", self.spec["hiprand"].prefix)
             env.set("ROCRAND_PATH", self.spec["rocrand"].prefix)
             env.set("MIOPEN_PATH", self.spec["miopen-hip"].prefix)
             if "+nccl" in self.spec:
