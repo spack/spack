@@ -669,8 +669,9 @@ class Boost(Package):
 
     def boostrap_windows(self):
         """Run the Windows-specific bootstrap.bat. The only bootstrapping command
-        line accepted by the bootstrap.bat file is the compiler information,
-        either the vc version (e.g. MSVC 14.3.x would be vc143) or gcc or clang.
+        line option that is accepted by the bootstrap.bat script is the compiler
+        information: either the vc version (e.g. MSVC 14.3.x would be vc143)
+        or gcc or clang.
         """
         bootstrap_options = list()
         if self.spec.satisfies("%msvc"):
