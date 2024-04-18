@@ -325,8 +325,6 @@ class Msvc(Compiler):
 
     @classmethod
     def fc_version(cls, fc):
-        # We're using intel for the Fortran compilers, which exist if
-        # ONEAPI_ROOT is a meaningful variable
         if not sys.platform == "win32":
             return "unknown"
         fc_ver = cls.default_version(fc)
