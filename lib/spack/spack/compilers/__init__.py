@@ -156,7 +156,15 @@ def get_compiler_config_from_packages(
 def _compiler_config_from_package_config(config):
     compilers = []
     for entry in config:
-        compiler = _compiler_config_from_external(entry)
+        try:
+            compiler = _compiler_config_from_external(entry)
+        except Exception as e:
+            msg = "Reading compiler from packages config section failed\n"
+            msg += f"  Compiler: {entry.get('spec', None)}\n"
+            msg += f"  Prefix: {entry.get('prefix', None)}\n"
+            msg += f"  Failure: {e}"
+            warnings.warn(msg)
+            compiler = None
         if compiler:
             compilers.append(compiler)
 
