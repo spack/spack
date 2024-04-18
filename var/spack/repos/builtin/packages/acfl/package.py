@@ -281,21 +281,7 @@ class Acfl(Package, CompilerPackage):
     fortran_names = ["armflang"]
 
     version_argument = "--version"
-    version_regex = r"Arm C\/C\+\+\/Fortran Compiler version ([\d\.]+) \(build number (\d+)\) "
-
-    @classmethod
-    def determine_version(cls, exe):
-        try:
-            output = spack.compiler.get_compiler_version_output(exe, "--version")
-            match = re.search(cls.version_regex, output)
-            if match:
-                if match.group(1).count(".") == 1:
-                    return match.group(1) + ".0." + match.group(2)
-                return match.group(1) + "." + match.group(2)
-        except spack.util.executable.ProcessError:
-            pass
-        except Exception as e:
-            tty.debug(e)
+    version_regex = r"Arm C\/C\+\+\/Fortran Compiler version ([\d\.]+) \(build number \d+\) "
 
     @property
     def cc(self):
