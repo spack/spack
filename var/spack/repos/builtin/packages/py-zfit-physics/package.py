@@ -11,7 +11,7 @@ class PyZfitPhysics(Package):
     """Tools and models to extend zfit with physics specific content."""
 
     homepage = "https://github.com/zfit/zfit-physics"
-    pypi = "zfit_physics/zfit_physics-0.7.0.tar.gz"
+    pypi = "zfit-physics/zfit_physics-0.7.0.tar.gz"
 
     maintainers("jonas-eschle", "ikrommyd")
     license("BSD-3-Clause", checked_by="jonas-eschle")
