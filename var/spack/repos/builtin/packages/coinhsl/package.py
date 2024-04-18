@@ -3,8 +3,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.package import *
 import os
+
+from spack.package import *
+
 
 class Coinhsl(MesonPackage, AutotoolsPackage):
     """CoinHSL is a collection of linear algebra libraries (KB22, MA27,
@@ -21,7 +23,7 @@ class Coinhsl(MesonPackage, AutotoolsPackage):
 
     build_system(
         conditional("autotools", when="@b:2019.05.21"),
-        conditional("meson", when="@2022.11.09:,:b"),
+        conditional("meson", when="@2023:,:b"),
         default="meson",
     )
 
@@ -48,15 +50,8 @@ class Coinhsl(MesonPackage, AutotoolsPackage):
         "archive-2023.05.26",
         sha256="6fd92bbbb2eaa22de5bd9944a282e0089f6a90fb10dbc991182a67b07eaafce7",
     )
-    version(
-        "archive-2022.12.02",
-        sha256="5ebdbf8a70a9e10863c5809cf53e4e236b07f65ab2e96cc367ba8131dc19e232",
-    )
-    version(
-        "2022.11.09", sha256="d6d9089bb9cf3eb0e4af195f1a2f10cd61da42eddf8da73a12b8c62902bceee3"
-    )
 
-    with when("build_system=meson @2022:"):
+    with when("build_system=meson @2023:"):
         depends_on("blas")
         depends_on("lapack")
         variant("metis", default=True, description="Build with Metis support.")
@@ -65,13 +60,13 @@ class Coinhsl(MesonPackage, AutotoolsPackage):
     def meson_args(self):
         spec = self.spec
         args = []
-        if spec.satisfies("@2022:"):
+        if spec.satisfies("@:b"):
             return []
 
-        blas = spec["blas"].names[0]
-        blas_paths = [sf[2:] for sf in spec["blas"].search_flags.split()]
-        lapack = spec["lapack"].names[0]
-        lapack_paths = [sf[2:] for sf in spec["lapack"].search_flags.split()]
+        blas = spec["blas"].libs.names[0]
+        blas_paths = [sf[2:] for sf in spec["blas"].libs.search_flags.split()]
+        lapack = spec["lapack"].libs.names[0]
+        lapack_paths = [sf[2:] for sf in spec["lapack"].libs.search_flags.split()]
         args.append(f"-Dlibblas={blas}")
         args.extend([f"-Dlibblas_path={p}" for p in blas_paths])
         args.append(f"-Dliblapack={lapack}")
@@ -88,6 +83,7 @@ class Coinhsl(MesonPackage, AutotoolsPackage):
                     f"-Dlibmetis_path={metis.prefix.lib}",
                 ]
             )
+        return args
 
     # Autotools builds
     version(
