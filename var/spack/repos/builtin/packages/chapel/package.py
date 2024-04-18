@@ -143,7 +143,7 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
         "comm",
         default="none",
         description="Build Chapel with multi-locale support",
-        values=("gasnet", "none", "ofi"),
+        values=("gasnet", "none", "ofi", "ugni"),
     )
 
     variant(
@@ -428,7 +428,6 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
 
     # Add dependencies
 
-    # TODO: Make conditional on +chpldoc variant once removed from install target
     depends_on("doxygen@1.8.17:", when="+chpldoc")
 
     for opt, dep in package_module_dict.items():
@@ -490,11 +489,17 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
                 value = "system"
             env.set(var, value)
 
+    # TODO: How to coordinate target CPU with spack? Spack's idea of target is
+    #       Chapel's idea of host
+    def setup_chpl_target_cpu(self, env):
+        env.set("CHPL_TARGET_CPU", self.spec.target)
+
     def setup_env_vars(self, env):
         for v in self.spec.variants.keys():
             self.setup_if_not_unset(env, "CHPL_" + v.upper(), self.spec.variants[v].value)
         self.setup_chpl_llvm(env)
         self.setup_chpl_compilers(env)
+        self.setup_chpl_target_cpu(env)
 
         # TODO: a function to set defaults for things where we removed variants
         env.set("CHPL_LOCALE_MODEL", "flat")
