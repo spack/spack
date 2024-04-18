@@ -8,7 +8,7 @@ import re
 import subprocess
 import sys
 import tempfile
-from typing import Dict, List, Set
+from typing import Dict, List
 
 import archspec.cpu
 
@@ -20,15 +20,7 @@ from spack.compiler import Compiler
 from spack.error import SpackError
 from spack.version import Version, VersionRange
 
-avail_fc_version: Set[str] = set()
-fc_path: Dict[str, str] = dict()
-
-fortran_mapping = {
-    "2021.3.0": "19.29.30133",
-    "2021.2.1": "19.28.29913",
-    "2021.2.0": "19.28.29334",
-    "2021.1.0": "19.28.29333",
-}
+FC_PATH: Dict[str, str] = dict()
 
 
 class CmdCall:
@@ -115,15 +107,13 @@ class VCVarsInvocation(VarsInvocation):
         return f"{script} {self.arch} {self.sdk_ver} {self.vcvars_ver}"
 
 
-def get_valid_fortran_pth(comp_ver):
-    cl_ver = str(comp_ver)
+def get_valid_fortran_pth():
+    """Assign maximum available fortran compiler version"""
+    # TODO (johnwparent): validate compatibility w/ try compiler
+    # functionality when added
     sort_fn = lambda fc_ver: Version(fc_ver)
-    sort_fc_ver = sorted(list(avail_fc_version), key=sort_fn)
-    for ver in sort_fc_ver:
-        if ver in fortran_mapping:
-            if Version(cl_ver) <= Version(fortran_mapping[ver]):
-                return fc_path[ver]
-    return None
+    sort_fc_ver = sorted(list(FC_PATH.keys()), key=sort_fn)
+    return FC_PATH[sort_fc_ver[-1]] if sort_fc_ver else None
 
 
 class Msvc(Compiler):
@@ -167,11 +157,9 @@ class Msvc(Compiler):
         # This positional argument "paths" is later parsed and process by the base class
         # via the call to `super` later in this method
         paths = args[3]
-        # This positional argument "cspec" is also parsed and handled by the base class
-        # constructor
-        cspec = args[0]
-        new_pth = [pth if pth else get_valid_fortran_pth(cspec.version) for pth in paths]
-        paths[:] = new_pth
+        latest_fc = get_valid_fortran_pth()
+        new_pth = [pth if pth else latest_fc for pth in paths[2:]]
+        paths[2:] = new_pth
         # Initialize, deferring to base class but then adding the vcvarsallfile
         # file based on compiler executable path.
         super().__init__(*args, **kwargs)
@@ -183,7 +171,7 @@ class Msvc(Compiler):
         # and stores their path, but their respective VCVARS
         # file must be invoked before useage.
         env_cmds = []
-        compiler_root = os.path.join(self.cc, "../../../../../../..")
+        compiler_root = os.path.join(os.path.dirname(self.cc), "../../../../../..")
         vcvars_script_path = os.path.join(compiler_root, "Auxiliary", "Build", "vcvars64.bat")
         # get current platform architecture and format for vcvars argument
         arch = spack.platforms.real_host().default.lower()
@@ -198,11 +186,34 @@ class Msvc(Compiler):
         # paths[2] refers to the fc path and is a generic check
         # for a fortran compiler
         if paths[2]:
+
+            def get_oneapi_root(pth: str):
+                """From within a prefix known to be a oneAPI path
+                determine the oneAPI root path from arbitrary point
+                under root
+
+                Args:
+                    pth: path prefixed within oneAPI root
+                """
+                if not pth:
+                    return ""
+                while os.path.basename(pth) and os.path.basename(pth) != "oneAPI":
+                    pth = os.path.dirname(pth)
+                return pth
+
             # If this found, it sets all the vars
-            oneapi_root = os.path.join(self.cc, "../../..")
+            oneapi_root = get_oneapi_root(self.fc)
+            if not oneapi_root:
+                raise RuntimeError(f"Non-oneAPI Fortran compiler {self.fc} assigned to MSVC")
             oneapi_root_setvars = os.path.join(oneapi_root, "setvars.bat")
+            # some oneAPI exes return a version more precise than their
+            # install paths specify, so we determine path from
+            # the install path rather than the fc executable itself
+            numver = r"\d+\.\d+(?:\.\d+)?"
+            pattern = f"((?:{numver})|(?:latest))"
+            version_from_path = re.search(pattern, self.fc).group(1)
             oneapi_version_setvars = os.path.join(
-                oneapi_root, "compiler", str(self.ifx_version), "env", "vars.bat"
+                oneapi_root, "compiler", version_from_path, "env", "vars.bat"
             )
             # order matters here, the specific version env must be invoked first,
             # otherwise it will be ignored if the root setvars sets up the oneapi
@@ -314,23 +325,19 @@ class Msvc(Compiler):
 
     @classmethod
     def fc_version(cls, fc):
-        # We're using intel for the Fortran compilers, which exist if
-        # ONEAPI_ROOT is a meaningful variable
         if not sys.platform == "win32":
             return "unknown"
         fc_ver = cls.default_version(fc)
-        avail_fc_version.add(fc_ver)
-        fc_path[fc_ver] = fc
-        if os.getenv("ONEAPI_ROOT"):
-            try:
-                sps = spack.operating_systems.windows_os.WindowsOs().compiler_search_paths
-            except AttributeError:
-                raise SpackError("Windows compiler search paths not established")
-            clp = spack.util.executable.which_string("cl", path=sps)
-            ver = cls.default_version(clp)
-        else:
-            ver = fc_ver
-        return ver
+        FC_PATH[fc_ver] = fc
+        try:
+            sps = spack.operating_systems.windows_os.WindowsOs().compiler_search_paths
+        except AttributeError:
+            raise SpackError(
+                "Windows compiler search paths not established, "
+                "please report this behavior to github.com/spack/spack"
+            )
+        clp = spack.util.executable.which_string("cl", path=sps)
+        return cls.default_version(clp) if clp else fc_ver
 
     @classmethod
     def f77_version(cls, f77):
