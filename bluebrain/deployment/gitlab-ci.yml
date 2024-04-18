@@ -22,6 +22,9 @@ default:
     # We will do this ourselves, will be on GPFS
     GIT_STRATEGY: none
   before_script:
+    # Setup an ominous SSH key to access private Github repos?
+    - eval $(ssh-agent -s)
+    - echo "${BBPHPC_NEURODAMUS_PRIVATE_KEY}" | ssh-add -
     # Tell Git how to re-write BBP GitLab URLs to use a token instead of SSH
     - export XDG_CONFIG_HOME=${PWD}/local_config
     - mkdir -p "${XDG_CONFIG_HOME}/git"

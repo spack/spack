@@ -8,9 +8,7 @@ spack:
           - model-neocortex
           - morpho-kit
           - nest
-          - neurodamus-hippocampus
-          - neurodamus-neocortex
-          - neurodamus-thalamus
+          - neurodamus-models
           - neurodamus-mousify
           - parquet-converters
           - py-archive-advisor
@@ -26,10 +24,11 @@ spack:
           - unit-test-translator
         projections:
           all: '{name}/{version}'
-          ^neuron+knl: '{name}-knl/{version}'
-          +common: '{name}/{version}-commonmods'
-          +plasticity: '{name}-plasticity/{version}'
-          +ngv+metabolism: '{name}-multiscale/{version}'
+          neurodamus-models model=hippocampus: 'neurodamus-hippocampus/{version}'
+          neurodamus-models model=neocortex +plasticity: 'neurodamus-neocortex-plasticity/{version}'
+          neurodamus-models model=neocortex +ngv+metabolism: 'neurodamus-neocortex-multiscale/{version}'
+          neurodamus-models model=neocortex: 'neurodamus-neocortex/{version}'
+          neurodamus-models model=thalamus: 'neurodamus-thalamus/{version}'
   specs:
     - morpho-kit
     - neuron+tests+coreneuron
@@ -38,12 +37,12 @@ spack:
     - neuron%nvhpc+caliper+coreneuron+gpu+tests~openmp
     - neuron%nvhpc+caliper+coreneuron+gpu+tests+openmp+sympy
     - nest@2.20.1
-    - neurodamus-hippocampus+coreneuron+caliper
     - neurodamus-mousify+coreneuron+caliper
-    - neurodamus-neocortex~plasticity+coreneuron+caliper
-    - neurodamus-neocortex+plasticity+coreneuron+caliper
-    - neurodamus-neocortex+ngv+metabolism+caliper~~coreneuron
-    - neurodamus-thalamus+coreneuron+caliper
+    - neurodamus-models model=hippocampus +coreneuron+caliper
+    - neurodamus-models model=neocortex ~plasticity+coreneuron+caliper
+    - neurodamus-models model=neocortex +plasticity+coreneuron+caliper
+    - neurodamus-models model=neocortex +ngv+metabolism+caliper~~coreneuron
+    - neurodamus-models model=thalamus +coreneuron+caliper
     - neuron+coreneuron build_type=Debug
     - neuron+coreneuron build_type=FastDebug
     - nmodl

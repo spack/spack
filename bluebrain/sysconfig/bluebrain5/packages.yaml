@@ -71,6 +71,10 @@ packages:
     variants: ~~gpu
     require:
       - one_of: ["%oneapi", "%intel"]
+  neurodamus-models:
+    variants: ~~gpu
+    require:
+      - one_of: ["%oneapi", "%intel"]
   neurodamus-model:
     variants: ~~gpu
     require:
