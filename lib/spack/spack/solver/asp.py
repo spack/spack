@@ -15,6 +15,7 @@ import sys
 import types
 import typing
 import warnings
+from contextlib import contextmanager
 from typing import Callable, Dict, Iterator, List, NamedTuple, Optional, Set, Tuple, Type, Union
 
 import archspec.cpu
@@ -117,6 +118,17 @@ class Provenance(enum.IntEnum):
 
     def __str__(self):
         return f"{self._name_.lower()}"
+
+
+@contextmanager
+def spec_with_name(spec, name):
+    """Context manager to temporarily set the name of a spec"""
+    old_name = spec.name
+    spec.name = name
+    try:
+        yield spec
+    finally:
+        spec.name = old_name
 
 
 class RequirementKind(enum.Enum):
@@ -1323,33 +1335,38 @@ class SpackSolverSetup:
         Returns:
             int: id of the condition created by this function
         """
-        named_cond = required_spec.copy()
-        named_cond.name = named_cond.name or name
-        if not named_cond.name:
-            raise ValueError(f"Must provide a name for anonymous condition: '{named_cond}'")
+        name = required_spec.name or name
+        if not name:
+            raise ValueError(f"Must provide a name for anonymous condition: '{required_spec}'")
 
-        # Check if we can emit the requirements before updating the condition ID counter.
-        # In this way, if a condition can't be emitted but the exception is handled in the caller,
-        # we won't emit partial facts.
+        with spec_with_name(required_spec, name):
 
-        condition_id = next(self._id_counter)
-        self.gen.fact(fn.pkg_fact(named_cond.name, fn.condition(condition_id)))
-        self.gen.fact(fn.condition_reason(condition_id, msg))
+            # Check if we can emit the requirements before updating the condition ID counter.
+            # In this way, if a condition can't be emitted but the exception is handled in the
+            # caller, we won't emit partial facts.
 
-        trigger_id = self._get_condition_id(
-            named_cond, cache=self._trigger_cache, body=True, transform=transform_required
-        )
-        self.gen.fact(fn.pkg_fact(named_cond.name, fn.condition_trigger(condition_id, trigger_id)))
+            condition_id = next(self._id_counter)
+            self.gen.fact(fn.pkg_fact(required_spec.name, fn.condition(condition_id)))
+            self.gen.fact(fn.condition_reason(condition_id, msg))
 
-        if not imposed_spec:
+            trigger_id = self._get_condition_id(
+                required_spec, cache=self._trigger_cache, body=True, transform=transform_required
+            )
+            self.gen.fact(
+                fn.pkg_fact(required_spec.name, fn.condition_trigger(condition_id, trigger_id))
+            )
+
+            if not imposed_spec:
+                return condition_id
+
+            effect_id = self._get_condition_id(
+                imposed_spec, cache=self._effect_cache, body=False, transform=transform_imposed
+            )
+            self.gen.fact(
+                fn.pkg_fact(required_spec.name, fn.condition_effect(condition_id, effect_id))
+            )
+
             return condition_id
-
-        effect_id = self._get_condition_id(
-            imposed_spec, cache=self._effect_cache, body=False, transform=transform_imposed
-        )
-        self.gen.fact(fn.pkg_fact(named_cond.name, fn.condition_effect(condition_id, effect_id)))
-
-        return condition_id
 
     def impose(self, condition_id, imposed_spec, node=True, name=None, body=False):
         imposed_constraints = self.spec_clauses(imposed_spec, body=body, required_from=name)
