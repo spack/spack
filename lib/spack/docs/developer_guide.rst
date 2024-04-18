@@ -1071,9 +1071,9 @@ Announcing a release
 
 We announce releases in all of the major Spack communication channels.
 Publishing the release takes care of GitHub. The remaining channels are
-Twitter, Slack, and the mailing list. Here are the steps:
+X, Slack, and the mailing list. Here are the steps:
 
-#. Announce the release on Twitter.
+#. Announce the release on X.
 
    * Compose the tweet on the ``@spackpm`` account per the
      ``spack-twitter`` slack channel.
