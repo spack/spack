@@ -8,4 +8,3 @@ config:
     # Reduce the projections to only including the hash to avoid path length issues
     projections:
       all: '{hash}'
-  url_fetch_method: curl
