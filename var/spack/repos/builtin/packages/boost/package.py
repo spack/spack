@@ -598,7 +598,11 @@ class Boost(Package):
         options.extend(["link=%s" % ",".join(link_types), "--layout=%s" % layout])
 
         if spec.satisfies("platform=windows"):
-            options.extend(["runtime-link=%s" % ",".join(link_types)])
+            # The runtime link must either be shared or static, not both.
+            if "+shared" in spec:
+                options.append("runtime-link=shared")
+            else:
+                options.append("runtime-link=static")
             for lib in self.all_libs:
                 # Without explicitly adding or removing specific libs, all would be built,
                 # so instead, explicitly exclude libs that aren't requested.
