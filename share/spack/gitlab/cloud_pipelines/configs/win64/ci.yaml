@@ -5,6 +5,7 @@ ci:
       - Write-Output "Done"
 
       before_script::
+      - fsutil 8dot3name set C:\ 0
       - . .\share\spack\setup-env.ps1
       - spack.ps1 compiler find
       - spack.ps1 external find --not-buildable cmake ninja win-wdk win-sdk wgl msmpi
