@@ -111,12 +111,9 @@ def get_valid_fortran_pth():
     """Assign maximum available fortran compiler version"""
     # TODO (johnwparent): validate compatibility w/ try compiler
     # functionality when added
-    valid_fortran_path = None
-    if FC_PATH.get(""):
-        sort_fn = lambda fc_ver: Version(fc_ver)
-        sort_fc_ver = sorted(list(FC_PATH.keys()), key=sort_fn)
-        valid_fortran_path = FC_PATH[sort_fc_ver[-1]]
-    return valid_fortran_path
+    sort_fn = lambda fc_ver: Version(fc_ver)
+    sort_fc_ver = sorted(list(FC_PATH.keys()), key=sort_fn)
+    return FC_PATH[sort_fc_ver[-1]] if sort_fc_ver else None
 
 
 class Msvc(Compiler):
