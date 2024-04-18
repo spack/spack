@@ -32,7 +32,7 @@
 :- attr("no_flags", PackageNode, _), not attr("node", PackageNode), internal_error("empty compiler flag without node").
 :- attr("external_spec_selected", PackageNode, _), not attr("node", PackageNode), internal_error("external spec without node").
 :- attr("depends_on", ParentNode, _, _), not attr("node", ParentNode), internal_error("depends on without node for parent").
-- attr("depends_on", _, ChildNode, _), not attr("node", ChildNode), internal_error("depends on without node for child").
+:- attr("depends_on", _, ChildNode, _), not attr("node", ChildNode), internal_error("depends on without node for child").
 :- attr("node_flag_source", ParentNode, _, _), not attr("node", ParentNode), internal_error("node flag source without flag node").
 :- attr("node_flag_source", _, _, ChildNode), not attr("node", ChildNode), internal_error("node flag source without source node").
 :- attr("virtual_node", VirtualNode), not provider(_, VirtualNode), internal_error("virtual node with no provider").
