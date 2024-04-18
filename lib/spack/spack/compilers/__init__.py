@@ -175,32 +175,24 @@ def _compiler_config_from_external(config):
 
     # Compute paths if needed first, then update with configured paths
     # This gets priority correct between computed and configured paths
-    paths = {}
-    attribute_paths = extra_attributes.get("compilers", {})
-    supported_languages = set(
-        getattr(spec.package_class(spec), "supported_languages", ("c", "cxx", "fortran"))
-    )
-    if prefix and not supported_languages.issubset(set(attribute_paths.keys())):
+    compilers = {}
+    attribute_compilers = extra_attributes.get("compilers", {})
+    supported_languages = set(spec.package_class(spec).supported_languages)
+    if prefix and not supported_languages.issubset(set(attribute_compilers.keys())):
         exes = spec.package_class.determine_compiler_exes(prefix)
-        paths = spec.package_class.determine_compiler_paths(exes)
-    paths.update(attribute_paths)
+        compilers = spec.package_class.determine_compiler_paths(exes)
+    compilers.update(attribute_compilers)
 
     # compilers format has cc/fc/f77, externals format has "c/fortran"
-    if "c" in paths:
-        paths["cc"] = paths.pop("c")
-    if "fortran" in paths:
-        fc = paths.pop("fortran")
-        paths["fc"] = fc
-        if "f77" not in paths:
-            paths["f77"] = fc
+    paths = {
+        "cc": compilers.get("c", None),
+        "cxx": compilers.get("cxx", None),
+        "fc": compilers.get("fortran", None),
+        "f77": compilers.get("fortran", None),
+    }
 
     if all(v is None for v in paths.values()):
         return None
-
-    # fill out whatever paths are unset
-    for var in _path_instance_vars:
-        if var not in paths:
-            paths[var] = None
 
     if not spec.architecture:
         host_platform = spack.platforms.host()
