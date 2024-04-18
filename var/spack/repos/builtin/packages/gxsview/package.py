@@ -66,7 +66,7 @@ class Gxsview(QMakePackage):
         )
         # Below to avoid undefined reference to `std::filesystem::__cxx11::path::_M_split_cmpts()'
         if self.spec.satisfies("%gcc@8.0:8.9") or self.spec.satisfies("%fj"):
-            if "^vtk@9:" in spec:
+            if "^vtk@9:" in self.spec:
                 fic = "vtk9.pri"
             else:
                 fic = "vtk8.pri"
