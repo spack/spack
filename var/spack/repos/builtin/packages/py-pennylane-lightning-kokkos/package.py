@@ -2,8 +2,6 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-
 from spack.package import *
 
 
@@ -104,6 +102,11 @@ class PyPennylaneLightningKokkos(CMakePackage, PythonExtension, CudaPackage, ROC
 class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
     build_directory = "build"
 
+    def setup_build_environment(self, env):
+        env.set("PL_BACKEND", "lightning_kokkos")
+        cm_args = " ".join([s[2:] for s in self.cmake_args()])
+        env.set("CMAKE_ARGS", f"{cm_args}")
+
     def cmake_args(self):
         """
         Here we specify all variant options that can be dynamically specified at build time
@@ -126,10 +129,11 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
         return args
 
     def build(self, pkg, spec, prefix):
-        super().build(pkg, spec, prefix)
-        cm_args = ";".join([s[2:] for s in self.cmake_args()])
-        args = ["-i", f"--define={cm_args}"]
-        python("setup.py", "build_ext", *args)
+        if self.spec.version < Version("0.32"):
+            super().build(pkg, spec, prefix)
+            cm_args = ";".join([s[2:] for s in self.cmake_args()])
+            args = ["-i", f"--define={cm_args}"]
+            python("setup.py", "build_ext", *args)
 
     def install(self, pkg, spec, prefix):
         pip_args = std_pip_args + [f"--prefix={prefix}", "."]

@@ -56,11 +56,13 @@ class PyPennylane(PythonPackage):
     depends_on("py-requests", type=("build", "run"))
     depends_on("py-typing-extensions", type=("build", "run"), when="@0.32.0:")
 
-    # Test deps
+    # The following packages are required by the `pl-device-test binary`
     depends_on("py-pytest", type="test")
-    depends_on("py-pytest-xdist@3.2:", type="test")
     depends_on("py-pytest-mock", type="test")
     depends_on("py-flaky", type="test")
+    depends_on("py-pytest-benchmark", type="test", when="@0.34.0:")
+    # Additional test deps
+    depends_on("py-pytest-xdist@3.2:", type="test")
 
     @run_after("install")
     @on_package_attributes(run_tests=True)

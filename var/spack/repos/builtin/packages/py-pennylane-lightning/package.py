@@ -69,6 +69,11 @@ class PyPennylaneLightning(CMakePackage, PythonExtension):
 class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
     build_directory = "build"
 
+    def setup_build_environment(self, env):
+        env.set("PL_BACKEND", "lightning_qubit")
+        cm_args = " ".join([s[2:] for s in self.cmake_args()])
+        env.set("CMAKE_ARGS", f"{cm_args}")
+
     def cmake_args(self):
         """
         Here we specify all variant options that can be dynamicaly specified at build time
@@ -79,9 +84,10 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
             self.define_from_variant("ENABLE_BLAS", "blas"),
             self.define_from_variant("CMAKE_VERBOSE_MAKEFILE:BOOL", "verbose"),
             self.define_from_variant("BUILD_TESTS", "cpptests"),
-            self.define_from_variant("BUILD_BENCHMARKS", "cppbenchmarks"),
             self.define_from_variant("ENABLE_GATE_DISPATCHER", "dispatcher"),
         ]
+        if self.spec.version < Version("0.32"):
+            args.append(self.define_from_variant("BUILD_BENCHMARKS", "cppbenchmarks"))
 
         if "+kokkos" in self.spec:
             args += [
@@ -95,16 +101,12 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
         return args
 
     def build(self, pkg, spec, prefix):
-        super().build(pkg, spec, prefix)
-        cm_args = ";".join(
-            [
-                s[2:]
-                for s in self.cmake_args()
-                if s[2:] not in ["BUILD_TESTS:BOOL=ON", "BUILD_BENCHMARKS:BOOL=ON"]
-            ]
-        )
-        args = ["-i", f"--define={cm_args}"]
-        python("setup.py", "build_ext", *args)
+        if self.spec.version < Version("0.32"):
+            super().build(pkg, spec, prefix)
+            skipped_args = ["BUILD_TESTS:BOOL=ON", "BUILD_BENCHMARKS:BOOL=ON"]
+            cm_args = ";".join([s[2:] for s in self.cmake_args() if s[2:] not in skipped_args])
+            args = ["-i", f"--define={cm_args}"]
+            python("setup.py", "build_ext", *args)
 
     def install(self, pkg, spec, prefix):
         pip_args = std_pip_args + ["--prefix=" + prefix, "."]
