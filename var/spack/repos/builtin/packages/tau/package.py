@@ -422,7 +422,8 @@ class Tau(Package):
     ompt_test = join_path("examples", "openmp", "c++")
     python_test = join_path("examples", "python")
 
-    @run_after("install")
+    # Disabled, see PR#43682 comments
+    # @run_after("install")
     def setup_build_tests(self):
         """Copy the build test files after the package is installed to an
         install test subdirectory for use during `spack test run`."""
