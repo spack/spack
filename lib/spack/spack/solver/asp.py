@@ -1102,7 +1102,7 @@ class SpackSolverSetup:
 
         self.adjust_version_weights(pkg.name)
 
-        # TBD: Are the folllowing sortings necessary after weights are adjusted
+        # TBD: Are the following sortings necessary after weights are adjusted
         # TBD: s.t. the origin is included?
         declared_versions = self.declared_versions[pkg.name]
         partially_sorted_versions = sorted(set(declared_versions), key=key_fn)
