@@ -55,6 +55,7 @@ class PyOnnxruntime(CMakePackage, PythonExtension):
     depends_on("protobuf@:3.19", when="@:1.11")
     depends_on("py-cerberus", type=("build", "run"))
     depends_on("py-onnx", type=("build", "run"))
+    depends_on("py-onnx@:1.15.0", type=("build", "run"), when="@:1.17.1")
     depends_on("zlib-api")
     depends_on("libpng")
     depends_on("cuda", when="+cuda")
