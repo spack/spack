@@ -4278,7 +4278,7 @@ class Spec:
 
         yield deps
 
-    def format(self, format_string=DEFAULT_FORMAT, **kwargs):
+    def format(self, format_string: str = DEFAULT_FORMAT, color: Optional[bool] = False) -> str:
         r"""Prints out particular pieces of a spec, depending on what is
         in the format string.
 
@@ -4341,25 +4341,24 @@ class Spec:
         literal ``\`` character.
 
         Args:
-            format_string (str): string containing the format to be expanded
+            format_string: string containing the format to be expanded
 
         Keyword Args:
-            color (bool): True if returned string is colored
+            color: True if returned string is colored, False if not,
+                None for auto color (default is False)
         """
         ensure_modern_format_string(format_string)
-        enable_color = kwargs.get("color", False)
 
-        def safe_color(sigil, string, color):
-            # enable_color is False/True/None (None for auto)
+        def safe_color(sigil: str, string: str, color_fmt: Optional[str]):
             # avoid colorizing if there is no color or the string is empty
-            if (enable_color is False) or not color or not string:
+            if (color is False) or not color_fmt or not string:
                 return sigil + string
             # escape and add the sigil here to avoid multiple concatenations
             if sigil == "@":
                 sigil = "@@"
-            return clr.colorize(f"{color}{sigil}{clr.cescape(string)}@.", color=enable_color)
+            return clr.colorize(f"{color_fmt}{sigil}{clr.cescape(string)}@.", color=color)
 
-        def write_attribute(match_object):
+        def format_attribute(match_object: re.Match) -> str:
             (sig, dep, hash, hash_len, attribute, close_brace, unmatched_close_brace) = (
                 match_object.groups()
             )
@@ -4434,14 +4433,15 @@ class Spec:
                             raise SpecFormatStringError(m)
                         if isinstance(current, vn.VersionList):
                             if current == vn.any_version:
-                                # We don't print empty version lists
-                                return
+                                # don't print empty version lists
+                                return ""
 
                     if callable(current):
                         raise SpecFormatStringError("Attempted to format callable object")
+
                     if current is None:
-                        # We're not printing anything
-                        return
+                        # not printing anything
+                        return ""
 
             # Set color codes for various attributes
             color = None
@@ -4457,7 +4457,7 @@ class Spec:
             # return colored output
             return safe_color(sig, str(current), color)
 
-        return SPEC_FORMAT_RE.sub(write_attribute, format_string).strip()
+        return SPEC_FORMAT_RE.sub(format_attribute, format_string).strip()
 
     def cformat(self, *args, **kwargs):
         """Same as format, but color defaults to auto instead of False."""
