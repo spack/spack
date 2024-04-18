@@ -22,7 +22,6 @@ class Msvc(Package, CompilerPackage):
     c_names = ["cl"]
     cxx_names = ["cl"]
     version_argument = ""
-    ignore_version_errors = [1]
     version_regex = r"([1-9][0-9]*\.[0-9]*\.[0-9]*)"
 
     @classmethod

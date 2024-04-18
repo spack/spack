@@ -6,7 +6,7 @@ import itertools
 import os
 import re
 import sys
-from typing import Sequence
+from typing import Sequence, Tuple, Union
 
 import llnl.util.tty as tty
 from llnl.util.lang import classproperty
@@ -15,49 +15,37 @@ import spack.compiler
 import spack.package_base
 
 
-def true():
-    return True
-
-
 class CompilerPackage(spack.package_base.PackageBase):
     """A Package mixin for all common logic for packages that implement compilers"""
 
     # TODO: how do these play nicely with other tags
     tags = ["compiler"]
 
-    # Optional suffix regexes for searching for this type of compiler.
-    # Suffixes are used by some frameworks, e.g. macports uses an '-mp-X.Y'
-    # version suffix for gcc.
+    #: Optional suffix regexes for searching for this type of compiler.
+    #: Suffixes are used by some frameworks, e.g. macports uses an '-mp-X.Y'
+    #: version suffix for gcc.
     suffixes: Sequence[str] = [r"-.*"]
 
-    # Optional prefix regexes for searching for this compiler
+    #: Optional prefix regexes for searching for this compiler
     prefixes: Sequence[str] = []
 
     #: Compiler argument(s) that produces version information
     #: If multiple arguments, the earlier arguments must produce errors when invalid
-    #: Must be a hashable type (e.g. tuple, rather than list)
-    version_argument = "-dumpversion"
-
-    #: Return values to ignore when invoking the compiler to get its version
-    ignore_version_errors: Sequence[int] = ()
+    version_argument: Union[str, Tuple[str]] = "-dumpversion"
 
     #: Regex used to extract version from compiler's output
-    version_regex = "(.*)"
-
-    #: Platform matcher for Platform objects supported by compiler
-    # The value must be callable
-    is_supported_on_platform = true
+    version_regex: str = "(.*)"
 
     #: Static definition of languages supported by this class
-    compiler_languages = ["c", "cxx", "fortran"]
+    compiler_languages: Sequence[str] = ["c", "cxx", "fortran"]
 
     def __init__(self, spec):
         super().__init__(spec)
         assert set(self.supported_languages) <= set(self.compiler_languages)
 
-    #: Dynamic definition of languages supported by this package
     @property
     def supported_languages(self):
+        """Dynamic definition of languages supported by this package"""
         return self.compiler_languages
 
     @classproperty
