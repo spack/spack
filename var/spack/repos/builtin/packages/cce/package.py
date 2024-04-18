@@ -17,7 +17,7 @@ class Cce(Package, CompilerPackage):
     fortran_names = ["crayftn"]
 
     version_argument = "--version"
-    version_regex = r"[Cc]ray (?:clang|C :|C\+\+ :|Fortran :) [Vv]ersion.*?(\d+(\.\d+)+)"
+    version_regex = r"[Cc]ray (?:clang|C :|C\+\+ :|Fortran :) [Vv]ersion.*?(\d+(?:\.\d+)+)"
 
     # notify when the package is updated.
     maintainers("becker33")
