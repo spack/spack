@@ -261,7 +261,7 @@ spack:
   - matrix:
     - [$per_arch_specs]
     - [++rocm]
-    - [amdgpu_target==gfx908, amgdpu_target==gfx90a]
+    - [amdgpu_target==gfx908, amdgpu_target==gfx90a]
 
   ci:
     pipeline-gen:
