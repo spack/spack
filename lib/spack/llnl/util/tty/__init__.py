@@ -162,7 +162,9 @@ def msg(message, *args, **kwargs):
     if not msg_enabled():
         return
 
-    if isinstance(message, Exception):
+    if message is None:
+        message = "None"
+    elif isinstance(message, Exception):
         message = "%s: %s" % (message.__class__.__name__, str(message))
 
     newline = kwargs.get("newline", True)
