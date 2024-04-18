@@ -2536,6 +2536,29 @@ class TestConcretizeSeparately:
         assert len(edges) == 1
         assert edges[0].spec.satisfies("@=60")
 
+    @pytest.mark.regression("43647")
+    def test_specifying_different_versions_build_deps(self):
+        """Tests that we can concretize a spec with nodes using the same build
+        dependency pinned at different versions, when the constraint is specified
+        in the root spec.
+
+        o hdf5@1.0
+        |\
+        o | pinned-gmake@1.0
+        o | gmake@3.0
+         /
+        o gmake@4.1
+
+        """
+        hdf5_str = "hdf5@1.0 ^gmake@4.1"
+        pinned_str = "pinned-gmake@1.0 ^gmake@3.0"
+        input_specs = [Spec(hdf5_str), Spec(pinned_str)]
+        solver = spack.solver.asp.Solver()
+        result = solver.solve(input_specs)
+
+        assert any(x.satisfies(hdf5_str) for x in result.specs)
+        assert any(x.satisfies(pinned_str) for x in result.specs)
+
 
 @pytest.mark.parametrize(
     "v_str,v_opts,checksummed",

@@ -127,16 +127,32 @@ trigger_node(TriggerID, Node, Node) :-
   trigger_condition_holds(TriggerID, Node),
   literal(TriggerID).
 
-% Since we trigger the existence of literal nodes from a condition, we need to construct
-% the condition_set/2 manually below
+% Since we trigger the existence of literal nodes from a condition, we need to construct the condition_set/2
 mentioned_in_literal(Root, Mentioned) :- mentioned_in_literal(TriggerID, Root, Mentioned), solve_literal(TriggerID).
-condition_set(node(min_dupe_id, Root), node(min_dupe_id, Mentioned)) :-  mentioned_in_literal(Root, Mentioned).
+condition_set(node(min_dupe_id, Root), node(min_dupe_id, Root)) :-  mentioned_in_literal(Root, Root).
+
+1 { condition_set(node(min_dupe_id, Root), node(0..Y-1, Mentioned)) : max_dupes(Mentioned, Y) } 1 :-
+  mentioned_in_literal(Root, Mentioned), Mentioned != Root.
 
 % Discriminate between "roots" that have been explicitly requested, and roots that are deduced from "virtual roots"
 explicitly_requested_root(node(min_dupe_id, Package)) :-
   solve_literal(TriggerID),
   trigger_and_effect(Package, TriggerID, EffectID),
   imposed_constraint(EffectID, "root", Package).
+
+
+% Keep track of which nodes are associated with which root DAG
+associated_with_root(RootNode, RootNode) :- attr("root", RootNode).
+
+associated_with_root(RootNode, ChildNode) :-
+   depends_on(ParentNode, ChildNode),
+   associated_with_root(RootNode, ParentNode).
+
+% We cannot have a node in the root condition set, that is not associated with that root
+:- attr("root", RootNode),
+   condition_set(RootNode, node(X, Package)),
+   not virtual(Package),
+   not associated_with_root(RootNode, node(X, Package)).
 
 #defined concretize_everything/0.
 #defined literal/1.
