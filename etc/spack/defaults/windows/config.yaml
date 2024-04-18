@@ -2,5 +2,12 @@ config:
   locks: false
   concretizer: clingo
   build_stage::
-    - '$spack/.staging'
+    - 'C:/spack stage'
   stage_name: '{name}-{version}-{hash:7}'
+  install_tree:
+    root: "C:/spack install"
+    # Path lengths on windows doesn't support much padding
+    padded_length: 0
+    # Reduce the projections to only including the hash to avoid path length issues
+    projections:
+      all: '{hash}'
