@@ -28,9 +28,6 @@ spack:
     - py-keras-preprocessing
     - py-keras2onnx
 
-    # MXNet
-    - mxnet
-
     # PyTorch
     - py-botorch
     - py-efficientnet-pytorch
