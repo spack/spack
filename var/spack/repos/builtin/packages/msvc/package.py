@@ -2,6 +2,8 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import re
+
 from spack.package import *
 
 
@@ -18,7 +20,7 @@ class Msvc(Package, CompilerPackage):
             "detected on a system where they are externally installed"
         )
 
-    languages = ["c", "cxx"]
+    compiler_languages = ["c", "cxx"]
     c_names = ["cl"]
     cxx_names = ["cl"]
     version_argument = ""
@@ -28,10 +30,12 @@ class Msvc(Package, CompilerPackage):
     def determine_version(cls, exe):
         # MSVC compiler does not have a proper version argument
         # Errors out and prints version info with no args
-        return re.search(
+        match = re.search(
             cls.version_regex,
             spack.compiler.get_compiler_version_output(exe, version_arg=None, ignore_errors=True),
-        ).group(1)
+        )
+        if match:
+            return match.group(1)
 
     @classmethod
     def determine_variants(cls, exes, version_str):
