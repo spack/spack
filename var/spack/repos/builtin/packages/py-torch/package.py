@@ -224,22 +224,29 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
     depends_on("numactl", when="+numa")
     depends_on("llvm-openmp", when="%apple-clang +openmp")
     depends_on("valgrind", when="+valgrind")
+
     with when("+rocm"):
-        depends_on("hsa-rocr-dev")
-        depends_on("hip")
-        depends_on("rccl", when="+nccl")
+        # cmake/public/LoadHIP.cmake
+        depends_on("hip@1:")
+        # depends_on("rocm-core")  # maybe?
+        # depends_on("hsa-rocr-dev")  # hsa-runtime64?
+        # amd_comgr?
+        depends_on("rocrand")
+        depends_on("hiprand")
+        depends_on("rocblas")
+        depends_on("hipblas")  # hipblaslt?
+        depends_on("miopen-hip")
+        depends_on("rocfft")
+        depends_on("hipfft")  # alternative?
+        depends_on("hipsparse")
+        depends_on("rccl", when="+nccl")  # required?
         depends_on("rocprim")
         depends_on("hipcub")
         depends_on("rocthrust")
-        depends_on("roctracer-dev")
-        depends_on("rocrand")
-        depends_on("hiprand")
-        depends_on("hipsparse")
-        depends_on("hipfft")
-        depends_on("rocfft")
-        depends_on("rocblas")
-        depends_on("miopen-hip")
-        depends_on("rocminfo")
+        depends_on("hipsolver")
+        # depends_on("roctracer-dev")
+        # depends_on("rocminfo")
+
     # https://github.com/pytorch/pytorch/issues/60332
     # depends_on("xnnpack@2022-12-21", when="@2:+xnnpack")
     # depends_on("xnnpack@2022-02-16", when="@1.12:1+xnnpack")
@@ -510,24 +517,25 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
 
         enable_or_disable("rocm")
         if "+rocm" in self.spec:
+            # cmake/Dependencies.cmake
+            # env.set("ROCM_PATH", self.spec["rocm-core"].prefix)
             env.set("PYTORCH_ROCM_ARCH", ";".join(self.spec.variants["amdgpu_target"].value))
-            env.set("HSA_PATH", self.spec["hsa-rocr-dev"].prefix)
-            env.set("ROCBLAS_PATH", self.spec["rocblas"].prefix)
-            env.set("ROCFFT_PATH", self.spec["rocfft"].prefix)
-            env.set("HIPFFT_PATH", self.spec["hipfft"].prefix)
-            env.set("HIPSPARSE_PATH", self.spec["hipsparse"].prefix)
-            env.set("HIP_PATH", self.spec["hip"].prefix)
-            env.set("HIPRAND_PATH", self.spec["hiprand"].prefix)
-            env.set("ROCRAND_PATH", self.spec["rocrand"].prefix)
-            env.set("MIOPEN_PATH", self.spec["miopen-hip"].prefix)
-            if "+nccl" in self.spec:
-                env.set("RCCL_PATH", self.spec["rccl"].prefix)
-            env.set("ROCPRIM_PATH", self.spec["rocprim"].prefix)
-            env.set("HIPCUB_PATH", self.spec["hipcub"].prefix)
-            env.set("ROCTHRUST_PATH", self.spec["rocthrust"].prefix)
-            env.set("ROCTRACER_PATH", self.spec["roctracer-dev"].prefix)
-            if self.spec.satisfies("^hip@5.2.0:"):
-                env.set("CMAKE_MODULE_PATH", self.spec["hip"].prefix.lib.cmake.hip)
+            # env.set("HIP_PATH", self.spec["hip"].prefix)
+            # env.set("HIPBLAS_PATH", self.spec["hipblas"].prefix)
+            # env.set("HIPFFT_PATH", self.spec["hipfft"].prefix)
+            # env.set("HIPSPARSE_PATH", self.spec["hipsparse"].prefix)
+            # env.set("HIPRAND_PATH", self.spec["hiprand"].prefix)
+            # env.set("THRUST_PATH", self.spec["rocthrust"].prefix)
+
+            # env.set("ROCRAND_PATH", self.spec["rocrand"].prefix)
+            # env.set("MIOPEN_PATH", self.spec["miopen-hip"].prefix)
+            # if "+nccl" in self.spec:
+            #    env.set("RCCL_PATH", self.spec["rccl"].prefix)
+            # env.set("ROCPRIM_PATH", self.spec["rocprim"].prefix)
+            # env.set("HIPCUB_PATH", self.spec["hipcub"].prefix)
+            # env.set("ROCTRACER_PATH", self.spec["roctracer-dev"].prefix)
+            # if self.spec.satisfies("^hip@5.2.0:"):
+            #    env.set("CMAKE_MODULE_PATH", self.spec["hip"].prefix.lib.cmake.hip)
 
         enable_or_disable("cudnn")
         if "+cudnn" in self.spec:
