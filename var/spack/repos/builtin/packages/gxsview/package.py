@@ -64,9 +64,9 @@ class Gxsview(QMakePackage):
         # Below to avoid undefined reference to `std::filesystem::__cxx11::path::_M_split_cmpts()'
         if self.spec.satisfies("%gcc@8.0:8.9") or self.spec.satisfies("%fj"):
             if "^vtk@9:" in spec:
-                fic="vtk9.pri"
+                fic = "vtk9.pri"
             else:
-                fic="vtk8.pri"
+                fic = "vtk8.pri"
             with open(fic, "a") as fh:
                 fh.write("-lstdc++fs\n")
         return args
