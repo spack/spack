@@ -527,7 +527,6 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage, CompilerPackage):
         except Exception:
             output = ""
         # Apple's gcc is actually apple clang, so skip it.
-        # Users can add it manually to compilers.yaml at their own risk.
         if "Apple" in output:
             return None
 
