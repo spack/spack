@@ -54,6 +54,7 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
         return [
             self.define_from_variant("USE_SCOTCH", "scotch"),
             self.define_from_variant("USE_VTK", "vtk"),
+            self.define("BUILD_SHARED_LIBS", shared_active),
             self.define("LIBMMG3D_SHARED", shared_active),
             self.define("LIBMMG2D_SHARED", shared_active),
             self.define("LIBMMGS_SHARED", shared_active),
