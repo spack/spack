@@ -4,8 +4,8 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
-import sys
 import platform
+import sys
 
 from spack.package import *
 
@@ -607,7 +607,7 @@ class Boost(Package):
                 # Without explicitly adding or removing specific libs, all would be built,
                 # so instead, explicitly exclude libs that aren't requested.
                 # Some items in all_libs cannot be excluded.
-                required_libs = ('signals', )
+                required_libs = ("signals",)
                 if f"+{lib}" not in spec and lib not in required_libs:
                     options.append(f"--without-{lib}")
 
