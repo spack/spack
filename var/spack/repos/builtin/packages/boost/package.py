@@ -5,6 +5,7 @@
 
 import os
 import sys
+import platform
 
 from spack.package import *
 
@@ -601,7 +602,9 @@ class Boost(Package):
             for lib in self.all_libs:
                 # Without explicitly adding or removing specific libs, all would be built,
                 # so instead, explicitly exclude libs that aren't requested.
-                if f"+{lib}" not in spec:
+                # Some items in all_libs cannot be excluded.
+                required_libs = ('signals', )
+                if f"+{lib}" not in spec and lib not in required_libs:
                     options.append(f"--without-{lib}")
 
         if not spec.satisfies("@:1.75 %intel") and not spec.satisfies("platform=windows"):
@@ -754,7 +757,7 @@ class Boost(Package):
         if self.spec.satisfies("platform=windows"):
             b2_options = [
                 f"--prefix={self.prefix}",
-                # "address-model=64",
+                f"address-model={64 if platform.machine().endswith('64') else 32}",
                 # "architecture=x86"
             ]
         else:
