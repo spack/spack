@@ -1,0 +1,31 @@
+paths:
+- layout:
+  - executables:
+    - "bin/craycc"
+    script: |
+      echo "Cray C : Version 8.4.6 Mon Apr 15, 2019 12:13:39"
+  - executables:
+    - "bin/crayCC"
+    script: |
+      echo "Cray C++ : Version 8.4.6 Mon Apr 15, 2019 12:13:39"
+  - executables:
+    - "bin/crayftn"
+    script: |
+      echo "Cray Fortran : Version 8.4.6 Mon Apr 15, 2019 12:13:39"
+  results:
+  - spec: cce@8.4.6
+- layout:
+  - executables:
+    - "bin/craycc"
+    script: |
+      echo "Cray clang : Version 8.4.6 Mon Apr 15, 2019 12:13:39"
+  - executables:
+    - "bin/crayCC"
+    script: |
+      echo "Cray clang++ : Version 8.4.6 Mon Apr 15, 2019 12:13:39"
+  - executables:
+    - "bin/crayftn"
+    script: |
+      echo "Cray Fortran : Version 8.4.6 Mon Apr 15, 2019 12:13:39"
+  results:
+  - spec: cce@8.4.6
