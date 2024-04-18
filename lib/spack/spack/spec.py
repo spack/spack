@@ -123,18 +123,17 @@ __all__ = [
 
 SPEC_FORMAT_RE = re.compile(
     r"(?:"
-    r"(?<!\\){"  # non-escaped open brace {
+    r"(?:\\(.))"  # escaped character (needs to be first to catch opening \{)
+    r"|"
+    r"{"  # non-escaped open brace {
+    r"([%@/]|arch=)?"  # optional sigil (to print sigil in color)
+    r"(?:\^([^}\.]+)\.)?"  # optional ^depname. (to get attr from dependency)
     r"(?:"  # one of
-    r"([%@/]|arch=)"  # optional sigil (to print sigil in color)
+    r"(hash\b)(?:\:(\d+))?"  # hash followed by :<optional length>
     r"|"  # or
-    r"(?:\^([^(?<!\\)}]+)\.)"  # optional ^depname. (to get attr from dependency)
-    r")?"  # end one of
-    r"(?:"  # one of
-    r"(hash)(?:\:(\d+))?"  # hash or abstract_hash followed by :<optional length>
-    r"|"  # or
-    r"([^(?<!\\)}]*)"  # another attribute to format
+    r"([^}]*)"  # another attribute to format
     r")"  # end one of
-    r"((?<!\\)})?"  # non-escaped close brace }, or missing closed brace if not present
+    r"(})?"  # non-escaped close brace }, or missing closed brace if not present
     r"|"
     r"(})"  # mismatched close brace
     r")",
@@ -4360,10 +4359,11 @@ class Spec:
             return clr.colorize(f"{color_fmt}{sigil}{clr.cescape(string)}@.", color=color)
 
         def format_attribute(match_object: re.Match) -> str:
-            (sig, dep, hash, hash_len, attribute, close_brace, unmatched_close_brace) = (
+            (esc, sig, dep, hash, hash_len, attribute, close_brace, unmatched_close_brace) = (
                 match_object.groups()
             )
-
+            if esc:
+                return esc
             if unmatched_close_brace:
                 raise SpecFormatStringError(f"Unmatched close brace: '{format_string}'")
             elif not close_brace:
