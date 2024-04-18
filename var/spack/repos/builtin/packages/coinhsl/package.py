@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack.package import *
-
+import os
 
 class Coinhsl(MesonPackage, AutotoolsPackage):
     """CoinHSL is a collection of linear algebra libraries (KB22, MA27,
@@ -21,12 +21,12 @@ class Coinhsl(MesonPackage, AutotoolsPackage):
 
     build_system(
         conditional("autotools", when="@b:2019.05.21"),
-        conditional("meson", when="@2022.11.09:,@:b"),
+        conditional("meson", when="@2022.11.09:,:b"),
         default="meson",
     )
 
     homepage = "https://www.hsl.rl.ac.uk/ipopt/"
-    url = "file://{os.getcwd()}/coinhsl-2023.11.17.tar.gz"
+    url = f"file://{os.getcwd()}/coinhsl-2023.11.17.tar.gz"
     manual_download = True
 
     maintainers("AndrewLister-STFC")
