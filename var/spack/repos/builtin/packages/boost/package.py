@@ -596,6 +596,16 @@ class Boost(Package):
 
         options.extend(["link=%s" % ",".join(link_types), "--layout=%s" % layout])
 
+        if spec.satisfies("platform=windows"):
+            options.extend(["runtime-link=%s" % ",".join(link_types)])
+            for lib in self.all_libs:
+                # Without explicitly adding or removing specific libs, all would be built,
+                # so instead, explicitly add with or without each lib to the b2 options.
+                if f"+{lib}" in spec:
+                    options.append(f"--with-{lib}")
+                else:
+                    options.append(f"--without-{lib}")
+
         if not spec.satisfies("@:1.75 %intel") and not spec.satisfies("platform=windows"):
             # When building any version >= 1.76, the toolset must be specified.
             # Earlier versions could not specify Intel as the toolset
@@ -652,6 +662,24 @@ class Boost(Package):
                     prefix, remainder = lib.split(".", 1)
                     symlink(lib, "%s-mt.%s" % (prefix, remainder))
 
+    def boostrap_windows(self):
+        """Run the Windows-specific bootstrap.bat. The only bootstrapping command
+        line accepted by the bootstrap.bat file is the compiler information,
+        either the vc version (e.g. MSVC 14.3.x would be vc143) or gcc or clang.
+        """
+        bootstrap_options = list()
+        if self.spec.satisfies("%msvc"):
+            # MSVC is the default compiler and is automatically detected
+            # TODO: Set to vc<maj><min> based on the selected compiler.
+            pass
+        elif self.spec.satisfies("%gcc"):
+            bootstrap_options.append("gcc")
+        elif self.spec.satisfies("%clang"):
+            bootstrap_options.append("clang")
+
+        bootstrap = Executable("cmd.exe")
+        bootstrap("/c", ".\\bootstrap.bat", *bootstrap_options)
+
     def install(self, spec, prefix):
         # On Darwin, Boost expects the Darwin libtool. However, one of the
         # dependencies may have pulled in Spack's GNU libtool, and these two
@@ -696,16 +724,13 @@ class Boost(Package):
             install_tree(src, dst)
             return
 
-        # to make Boost find the user-config.jam
-        env["BOOST_BUILD_PATH"] = self.stage.source_path
-
-        bootstrap_options = ["--prefix=%s" % prefix]
-        self.determine_bootstrap_options(spec, with_libs, bootstrap_options)
-
         if self.spec.satisfies("platform=windows"):
-            bootstrap = Executable("cmd.exe")
-            bootstrap("/c", ".\\bootstrap.bat", *bootstrap_options)
+            self.boostrap_windows()
         else:
+            # to make Boost find the user-config.jam
+            env["BOOST_BUILD_PATH"] = self.stage.source_path
+            bootstrap_options = ["--prefix=%s" % prefix]
+            self.determine_bootstrap_options(spec, with_libs, bootstrap_options)
             bootstrap = Executable("./bootstrap.sh")
             bootstrap(*bootstrap_options)
 
@@ -728,9 +753,13 @@ class Boost(Package):
         if jobs > 64 and spec.satisfies("@:1.58"):
             jobs = 64
 
-        # Windows just wants a b2 call with no args
-        b2_options = []
-        if not self.spec.satisfies("platform=windows"):
+        if self.spec.satisfies("platform=windows"):
+            b2_options = [
+                f"--prefix={self.prefix}",
+                # "address-model=64",
+                # "architecture=x86"
+            ]
+        else:
             path_to_config = "--user-config=%s" % os.path.join(
                 self.stage.source_path, "user-config.jam"
             )
