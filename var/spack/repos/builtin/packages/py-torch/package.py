@@ -247,7 +247,7 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
         depends_on("cuda@9.2:11.4", when="@1.6:1.9+cuda")
         depends_on("cuda@9:11.4", when="@:1.5+cuda")
         # https://github.com/pytorch/pytorch/issues/122169
-        depends_on("cuda@:12.3", when="platform=aarch64")
+        depends_on("cuda@:12.3", when="platform=aarch64:")
     # https://github.com/pytorch/pytorch#prerequisites
     # https://github.com/pytorch/pytorch/issues/119400
     depends_on("cudnn@8.5:9.0", when="@2.3:+cudnn")
