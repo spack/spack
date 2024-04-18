@@ -600,10 +600,8 @@ class Boost(Package):
             options.extend(["runtime-link=%s" % ",".join(link_types)])
             for lib in self.all_libs:
                 # Without explicitly adding or removing specific libs, all would be built,
-                # so instead, explicitly add with or without each lib to the b2 options.
-                if f"+{lib}" in spec:
-                    options.append(f"--with-{lib}")
-                else:
+                # so instead, explicitly exclude libs that aren't requested.
+                if f"+{lib}" not in spec:
                     options.append(f"--without-{lib}")
 
         if not spec.satisfies("@:1.75 %intel") and not spec.satisfies("platform=windows"):
