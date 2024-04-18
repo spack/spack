@@ -319,6 +319,8 @@ class ArmplGcc(Package):
     conflicts("%gcc@:7", when="@22.0.1_gcc-8.2")
     conflicts("%gcc@:6", when="@22.0.1_gcc-7.5")
 
+    conflicts("%msvc", msg="Not compatible with MSVC compiler.")
+
     variant("ilp64", default=False, description="use ilp64 specific Armpl library")
     variant("shared", default=True, description="enable shared libs")
     variant(

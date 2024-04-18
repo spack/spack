@@ -1191,6 +1191,11 @@ print(json.dumps(config))
             for directory in {self.platlib, self.purelib}:
                 env.prepend_path("PYTHONPATH", os.path.join(prefix, directory))
 
+            if self.spec.satisfies("platform=windows"):
+                prefix_scripts_dir = prefix.Scripts
+                if os.path.exists(prefix_scripts_dir):
+                    env.prepend_path("PATH", prefix_scripts_dir)
+
         # We need to make sure that the extensions are compiled and linked with
         # the Spack wrapper. Paths to the executables that are used for these
         # operations are normally taken from the sysconfigdata file, which we
