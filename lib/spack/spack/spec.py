@@ -911,6 +911,9 @@ class FlagMap(lang.HashableMap):
             yield flags
 
     def __str__(self):
+        if not self:
+            return ""
+
         sorted_items = sorted((k, v) for k, v in self.items() if v)
 
         result = ""
@@ -4563,6 +4566,8 @@ class Spec:
         return str(path_ctor(*output_path_components))
 
     def __str__(self):
+        if not self._dependencies:
+            return self.format()
         root_str = [self.format()]
         sorted_dependencies = sorted(
             self.traverse(root=False), key=lambda x: (x.name, x.abstract_hash)
