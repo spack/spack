@@ -12,6 +12,7 @@ class PyBluepyemodel(PythonPackage):
     homepage = "https://github.com/BlueBrain/BluePyEModel"
     pypi = "bluepyemodel/bluepyemodel-0.0.46.tar.gz"
 
+    version("0.0.105", sha256="51841b7a5c82a8b7fd160290affff6ebfc6465dbae9b943ba15b5e1fc2e26e7f")
     version("0.0.64", sha256="14fec4f77fb79295ce7cfe1711cd32f66e5d3e0ebc8da9404491ab7f59da1e71")
     version("0.0.59", sha256="5e8869522d82e719f9775c2d95cfe953cedc66bc44355765a6f406289baf6791")
     version("0.0.58", sha256="327de9d2c49e7ff83cc77850873293299d4eacf95b3cf33716e5a8501685f08c")
@@ -28,10 +29,10 @@ class PyBluepyemodel(PythonPackage):
     depends_on("py-tqdm", type=("build", "run"))
     depends_on("py-pyyaml", type=("build", "run"))
     depends_on("py-gitpython", type=("build", "run"))
-    depends_on("py-bluepyopt@1.12.12:", type=("build", "run"))
+    depends_on("py-bluepyopt@1.14.10:", type=("build", "run"))
     depends_on("py-bluepyefe@2.2.0:", type=("build", "run"))
     depends_on("py-neurom@3.0:3", type=("build", "run"))
-    depends_on("py-efel@3.1:", type=("build", "run"))
+    depends_on("py-efel@5.5.5:", type=("build", "run"))
     depends_on("py-configparser", type=("build", "run"))
     depends_on("py-morph-tool@2.8:", type=("build", "run"))
     depends_on("py-fasteners@0.16:", type=("build", "run"))
