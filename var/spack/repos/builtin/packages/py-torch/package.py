@@ -228,7 +228,7 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
     with when("+rocm"):
         # cmake/public/LoadHIP.cmake
         depends_on("hip@1:")
-        # depends_on("rocm-core")  # maybe?
+        depends_on("rocm-core")
         # depends_on("hsa-rocr-dev")  # hsa-runtime64?
         # amd_comgr?
         depends_on("rocrand")
