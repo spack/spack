@@ -129,7 +129,11 @@ SPEC_FORMAT_RE = re.compile(
     r"|"  # or
     r"(?:\^([^(?<!\\)}]+)\.)"  # optional ^depname. (to get attr from dependency)
     r")?"  # end one of
-    r"([^(?<!\\)}]*)"  # attribute to format
+    r"(?:"  # one of
+    r"(hash)(?:\:(\d+))?"  # hash or abstract_hash followed by :<optional length>
+    r"|"  # or
+    r"([^(?<!\\)}]*)"  # another attribute to format
+    r")"  # end one of
     r"((?<!\\)})?"  # non-escaped close brace }, or missing closed brace if not present
     r"|"
     r"(})"  # mismatched close brace
@@ -193,9 +197,6 @@ class InstallStatus(enum.Enum):
 
 # regexes used in spec formatting
 OLD_STYLE_FMT_RE = re.compile(r"\${[A-Z]+}")
-
-HASH_FMT_RE = re.compile(r"(abstract_)?hash(:\d+)?$")
-SHORT_HASH_FMT_RE = re.compile(r"hash(?::(\d+))?")  # TODO: is this regex correct?
 
 
 def ensure_modern_format_string(fmt: str) -> None:
@@ -4355,21 +4356,33 @@ class Spec:
             return clr.colorize(escaped, color=enable_color)
 
         def write_attribute(match_object):
-            sig, dep, attribute, close_brace, unmatched_close_brace = match_object.groups()
+            (sig, dep, hash, hash_len, attribute, close_brace, unmatched_close_brace) = (
+                match_object.groups()
+            )
+
             if unmatched_close_brace:
                 raise SpecFormatStringError(f"Unmatched close brace: '{format_string}'")
             elif not close_brace:
                 raise SpecFormatStringError(f"Missing close brace: '{format_string}'")
-
-            attribute = attribute.lower()
 
             if sig == "arch=":
                 sig = " arch="  # include space as separator
             elif not sig:
                 sig = ""
 
-            # print(match_object.groups())
             current = self if dep is None else self[dep]
+
+            # Hash attributes can return early.
+            # NOTE: we currently treat abstract_hash like an attribute and ignore
+            # any length associated with it. We may want to change that.
+            if hash:
+                if sig != "/":
+                    raise SpecFormatSigilError(sig, "DAG hashes", hash)
+                try:
+                    length = int(hash_len) if hash_len else None
+                except ValueError:
+                    raise SpecFormatStringError(f"Invalid hash length: '{hash_len}'")
+                return safe_color(sig + current.dag_hash(length), HASH_COLOR)
 
             if attribute == "":
                 raise SpecFormatStringError("Format string attributes must be non-empty")
@@ -4382,18 +4395,10 @@ class Spec:
                 raise SpecFormatSigilError(sig, "versions", attribute)
             elif sig == "%" and attribute not in ("compiler", "compiler.name"):
                 raise SpecFormatSigilError(sig, "compilers", attribute)
-            elif sig == "/" and not HASH_FMT_RE.match(attribute):
+            elif sig == "/" and not (hash or attribute == "abstract_hash"):
                 raise SpecFormatSigilError(sig, "DAG hashes", attribute)
             elif sig == " arch=" and attribute not in ("architecture", "arch"):
                 raise SpecFormatSigilError(sig, "the architecture", attribute)
-
-            # Special cases for non-spec attributes and hashes.
-            # These must be the only non-dep component of the format attribute
-            match = SHORT_HASH_FMT_RE.match(attribute)
-            if match:
-                length = match.group(1)
-                length = int(length) if length else None
-                return safe_color(sig + current.dag_hash(length), HASH_COLOR)
 
             # Iterate over components using getattr to get next element
             for idx, part in enumerate(parts):
