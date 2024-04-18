@@ -57,11 +57,13 @@ class Gxsview(QMakePackage):
         if not os.path.exists(vtk_include_dir):
             vtk_include_dir = join_path(self.spec["vtk"].prefix.include, "vtk")
             args.append("VTK_NO_VER_SUFFIX=ON")
-        args.extend([
-            "VTK_LIB_DIR={0}".format(vtk_lib_dir),
-            "VTK_INC_DIR={0}".format(vtk_include_dir),
-            "VTK_MAJOR_VER={0}".format(str(vtk_suffix)),
-        ])
+        args.extend(
+            [
+                "VTK_LIB_DIR={0}".format(vtk_lib_dir),
+                "VTK_INC_DIR={0}".format(vtk_include_dir),
+                "VTK_MAJOR_VER={0}".format(str(vtk_suffix)),
+            ]
+        )
         # Below to avoid undefined reference to `std::filesystem::__cxx11::path::_M_split_cmpts()'
         if self.spec.satisfies("%gcc@8.0:8.9") or self.spec.satisfies("%fj"):
             if "^vtk@9:" in spec:
