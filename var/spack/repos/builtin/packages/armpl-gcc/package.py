@@ -21,7 +21,7 @@ _os_map_before_23 = {
     "amzn2023": "RHEL-7",
 }
 
-_os_map = {
+_os_map_before_24 = {
     "ubuntu20.04": "Ubuntu-20.04",
     "ubuntu22.04": "Ubuntu-22.04",
     "sles15": "SLES-15",
@@ -36,7 +36,27 @@ _os_map = {
     "amzn2023": "AmazonLinux-2023",
 }
 
+_os_pkg_map = {
+    "ubuntu20.04": "deb",
+    "ubuntu22.04": "deb",
+    "sles15": "rpm",
+    "centos7": "rpm",
+    "centos8": "rpm",
+    "rhel7": "rpm",
+    "rhel8": "rpm",
+    "rhel9": "rpm",
+    "rocky8": "rpm",
+    "rocky9": "rpm",
+    "amzn2": "rpm",
+    "amzn2023": "rpm",
+}
+
 _versions = {
+    "24.04": {
+        "deb": ("a323074cd08af82f4d79988cc66088b18e47dea4b93323b1b8a0f994f769f2f0"),
+        "macOS": ("228bf3a2c25dbd45c2f89c78f455ee3c7dfb25e121c20d2765138b5174e688dc"),
+        "rpm": ("d3917523034cf5a35e4f31f9a8bf4e53e7cc97892e89739d5757cb65ce40dc2e"),
+    },
     "23.10_gcc-12.2": {
         "RHEL-7": ("e5e2c69ad281a676f2a06c835fbf31d4f9fdf46aa3f3f7c8aafff46985f64902"),
         "RHEL-8": ("cc0f3572ead93d1e31797b7a39a40cff3414878df9bd24a452bf4877dc35ca4c"),
@@ -227,28 +247,32 @@ _versions = {
 }
 
 
-def get_os(ver):
+def get_os_or_pkg_manager(ver):
     platform = spack.platforms.host()
     if platform.name == "darwin":
         return "macOS"
     if ver.startswith("22."):
         return _os_map_before_23.get(platform.default_os, "")
+    elif ver.startswith("23."):
+        return _os_map_before_24.get(platform.default_os, "RHEL-7")
     else:
-        return _os_map.get(platform.default_os, "RHEL-7")
+        return _os_pkg_map.get(platform.default_os, "rpm")
 
 
-def get_package_url(version):
-    base_url = "https://developer.arm.com/-/media/Files/downloads/hpc/arm-performance-libraries/"
+def get_package_url_before_24(base_url, version):
     armpl_version = version.split("_")[0]
     armpl_version_dashed = armpl_version.replace(".", "-")
     compiler_version = version.split("_", 1)[1]
-    os = get_os(armpl_version)
+    os = get_os_or_pkg_manager(armpl_version)
     if os == "macOS":
         if armpl_version.startswith("23.06"):
-            return f"{base_url}{armpl_version_dashed}/armpl_{armpl_version}_{compiler_version}.dmg"
+            return (
+                f"{base_url}/{armpl_version_dashed}/"
+                + f"armpl_{armpl_version}_{compiler_version}.dmg"
+            )
         else:
             filename = f"arm-performance-libraries_{armpl_version}_macOS.dmg"
-            return f"{base_url}{armpl_version_dashed}/macos/{filename}"
+            return f"{base_url}/{armpl_version_dashed}/macos/{filename}"
     filename = f"arm-performance-libraries_{armpl_version}_{os}_{compiler_version}.tar"
     os_short = ""
     if armpl_version.startswith("22.0."):
@@ -257,7 +281,32 @@ def get_package_url(version):
         os_short = os.split(".")[0].lower()
         if "amazonlinux" in os_short:
             os_short = os_short.replace("amazonlinux", "al")
-    return f"{base_url}{armpl_version_dashed}/{os_short}/{filename}"
+    return f"{base_url}/{armpl_version_dashed}/{os_short}/{filename}"
+
+
+def get_package_url_from_24(base, version):
+    pkg_system = get_os_or_pkg_manager(version)
+    os = "macOS" if pkg_system == "macOS" else "linux"
+
+    extension = "tgz" if pkg_system == "macOS" else "tar"
+
+    full_name_library = f"arm-performance-libraries_{version}_{pkg_system}"
+
+    if pkg_system != "macOS":
+        full_name_library = f"{full_name_library}_gcc"
+    file_name = f"{full_name_library}.{extension}"
+
+    vn = version.replace(".", "-")
+    url_parts = f"{base}/{vn}/{os}/{file_name}"
+    return url_parts
+
+
+def get_package_url(version):
+    base_url = "https://developer.arm.com/-/media/Files/downloads/hpc/arm-performance-libraries"
+    if version[:2] >= "24":
+        return get_package_url_from_24(base_url, version)
+    else:
+        return get_package_url_before_24(base_url, version)
 
 
 def get_armpl_prefix(spec):
@@ -289,7 +338,7 @@ class ArmplGcc(Package):
     maintainers("paolotricerri")
 
     for ver, packages in _versions.items():
-        key = get_os(ver)
+        key = get_os_or_pkg_manager(ver)
         sha256sum = packages.get(key)
         url = get_package_url(ver)
         if sha256sum:
@@ -297,31 +346,6 @@ class ArmplGcc(Package):
             # Don't attempt to expand .dmg files
             expand = extension != ".dmg"
             version(ver, sha256=sha256sum, url=url, extension=extension, expand=expand)
-
-    if spack.platforms.host().default_os.startswith("ubuntu"):
-        version(
-            "24.04",
-            sha256="a323074cd08af82f4d79988cc66088b18e47dea4b93323b1b8a0f994f769f2f0",
-            url="https://developer.arm.com/-/media/Files/downloads/hpc/arm-performance-libraries/24-04/linux/arm-performance-libraries_24.04_deb_gcc.tar",
-            extension=".tar",
-            expand=True,
-        )
-    elif spack.platforms.host().name == "darwin":
-        version(
-            "24.04",
-            sha256="228bf3a2c25dbd45c2f89c78f455ee3c7dfb25e121c20d2765138b5174e688dc",
-            url="https://developer.arm.com/-/media/Files/downloads/hpc/arm-performance-libraries/24-04/macos/arm-performance-libraries_24.04_macOS.tgz",
-            extension=".tgz",
-            expand=True,
-        )
-    else:
-        version(
-            "24.04",
-            sha256="d3917523034cf5a35e4f31f9a8bf4e53e7cc97892e89739d5757cb65ce40dc2e",
-            url="https://developer.arm.com/-/media/Files/downloads/hpc/arm-performance-libraries/24-04/linux/arm-performance-libraries_24.04_rpm_gcc.tar",
-            extension=".tar",
-            expand=True,
-        )
 
     conflicts("target=x86:", msg="Only available on Aarch64")
     conflicts("target=ppc64:", msg="Only available on Aarch64")
@@ -406,7 +430,8 @@ class ArmplGcc(Package):
 
         if spec.satisfies("@:23"):
             exe = Executable(
-                f"./arm-performance-libraries_{armpl_version}_{get_os(armpl_version)}.sh"
+                f"./arm-performance-libraries_{armpl_version}_"
+                + f"{get_os_or_pkg_manager(armpl_version)}.sh"
             )
         else:
             package_type = (
