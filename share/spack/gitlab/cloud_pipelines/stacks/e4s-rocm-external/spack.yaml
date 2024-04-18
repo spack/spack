@@ -183,7 +183,12 @@ spack:
     rocrand:
       buildable: false
       externals:
-      - spec: rocrand@5.7.1
+      - spec: rocrand@5.7.1 amdgpu_target=gfx908,gfx90a
+        prefix: /opt/rocm-5.7.1
+    hiprand:
+      buildable: false
+      externals:
+      - spec: hiprand@5.7.1 amdgpu_target=gfx908,gfx90a
         prefix: /opt/rocm-5.7.1
     hipsolver:
       buildable: false
