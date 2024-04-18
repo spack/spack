@@ -137,7 +137,8 @@ SPEC_FORMAT_RE = re.compile(
     r"((?<!\\)})?"  # non-escaped close brace }, or missing closed brace if not present
     r"|"
     r"(})"  # mismatched close brace
-    r")"
+    r")",
+    re.IGNORECASE,
 )
 
 #: Valid pattern for an identifier in Spack
@@ -4385,6 +4386,7 @@ class Spec:
             if attribute == "":
                 raise SpecFormatStringError("Format string attributes must be non-empty")
 
+            attribute = attribute.lower()
             parts = attribute.split(".")
             assert parts
 
