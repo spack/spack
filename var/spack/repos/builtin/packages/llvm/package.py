@@ -29,7 +29,7 @@ class Llvm(CMakePackage, CudaPackage, CompilerPackage):
     git = "https://github.com/llvm/llvm-project"
     maintainers("trws", "haampie", "skosukhin")
 
-    tags = ["e4s"]
+    tags = ["e4s", "compiler"]
 
     generator("ninja")
 
