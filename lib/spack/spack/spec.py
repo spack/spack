@@ -58,7 +58,7 @@ import platform
 import re
 import socket
 import warnings
-from typing import Any, Callable, Dict, List, Optional, Set, Tuple, Union
+from typing import Any, Callable, Dict, List, Match, Optional, Set, Tuple, Union
 
 import llnl.path
 import llnl.string
@@ -4363,7 +4363,7 @@ class Spec:
                 sigil = "@@"
             return clr.colorize(f"{color_fmt}{sigil}{clr.cescape(string)}@.", color=color)
 
-        def format_attribute(match_object: re.Match) -> str:
+        def format_attribute(match_object: Match) -> str:
             (esc, sig, dep, hash, hash_len, attribute, close_brace, unmatched_close_brace) = (
                 match_object.groups()
             )
