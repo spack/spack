@@ -1058,9 +1058,12 @@ class SpackSolverSetup:
             preferred = declared_version.version in self.preferred_versions[pkg_name]
 
             versions_with_index = index_versions[indices]
-            # Make sure to include the existing weight/index since it was added
-            # to affect ordering.
-            new = declared_version.weight + len(versions_with_index) - 1
+
+            # Make sure to include the existing weight/index for non-package.py
+            # versions since the relative ordering matters.
+            new = len(versions_with_index) - 1
+            if declared_version.origin != Provenance.PACKAGE_PY:
+                new += declared_version.weight
 
             indices = [declared_version.origin] + [0 if preferred else 1] + list(indices)
             for factor, idx in zip(factors, indices):

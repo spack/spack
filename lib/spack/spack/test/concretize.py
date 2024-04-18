@@ -1873,12 +1873,12 @@ class TestConcretize:
             setup = spack.solver.asp.SpackSolverSetup()
             result, _, _ = solver.driver.solve(setup, [root_spec], reuse=reusable_specs)
             # The result here should have a single spec to build ('a')
-            # and it should be using b@1.0 with a version badness of 2
+            # and it should be using b@1.0 with a version badness of 71000.
             # The provenance is:
-            # version_declared("b","1.0",0,"package_py").
-            # version_declared("b","0.9",1,"package_py").
-            # version_declared("b","1.0",2,"installed").
-            # version_declared("b","0.9",3,"installed").
+            # version_declared("b","1.0",61000,"package_py").
+            # version_declared("b","0.9",61100,"package_py").
+            # version_declared("b","1.0",71000,"installed").
+            # version_declared("b","0.9",71100,"installed").
             #
             # Depending on the target, it may also use gnuconfig
             result_spec = result.specs[0]
