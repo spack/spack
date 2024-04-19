@@ -2808,10 +2808,8 @@ class EnvironmentManifestFile(collections.abc.Mapping):
 
     @property
     def env_config_scopes(self) -> List[spack.config.ConfigScope]:
-        """A list of all configuration scopes for the environment manifest.
-
-        Returns:  All configuration scopes associated with the environment
-        """
+        """A list of all configuration scopes for the environment manifest. On the first call this
+        instantiates all the scopes, on subsequent calls it returns the cached list."""
         if self._config_scopes is not None:
             return self._config_scopes
         scopes: List[spack.config.ConfigScope] = [
