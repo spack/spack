@@ -576,6 +576,7 @@ def ci_rebuild(args):
     if cdash_handler:
         # Add additional arguments to `spack install` for CDash reporting.
         root_install_args.extend(cdash_handler.args())
+    deps_install_args.append(slash_hash)
     root_install_args.append(slash_hash)
 
     commands = [
