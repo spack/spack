@@ -25,6 +25,9 @@ class CrayLibsci(Package):
     version("16.06.1")
     version("16.03.1")
 
+    conflicts("platform=windows")
+    conflicts("platform=darwin")
+
     variant("shared", default=True, description="enable shared libs")
     variant("openmp", default=False, description="link with openmp")
     variant("mpi", default=False, description="link with mpi libs")
