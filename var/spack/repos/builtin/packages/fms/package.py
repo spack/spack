@@ -85,13 +85,11 @@ class Fms(CMakePackage):
         description="Compiles with support for deprecated io modules fms_io and mpp_io",
         when="@2023.02:",
     )
-    variant(
-        "large_file", default=False, description="Enable compiler definition -Duse_LARGEFILE."
-    )
+    variant("large_file", default=False, description="Enable compiler definition -Duse_LARGEFILE.")
     variant(
         "internal_file_nml",
         default=True,
-        description="Enable compiler definition -DINTERNAL_FILE_NML."
+        description="Enable compiler definition -DINTERNAL_FILE_NML.",
     )
 
     depends_on("netcdf-c")
