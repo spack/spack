@@ -579,8 +579,6 @@ def ensure_core_dependencies() -> None:
         ensure_patchelf_in_path_or_raise()
     if not IS_WINDOWS:
         ensure_gpg_in_path_or_raise()
-    else:
-        ensure_winsdk_external_or_raise()
     ensure_clingo_importable_or_raise()
 
 

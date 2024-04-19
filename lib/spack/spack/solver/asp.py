@@ -25,7 +25,6 @@ import llnl.util.tty as tty
 
 import spack
 import spack.binary_distribution
-import spack.bootstrap
 import spack.cmd
 import spack.compilers
 import spack.config
