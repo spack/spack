@@ -307,6 +307,9 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
         # Default entries are already defined in CachedCMakePackage, inherit them:
         entries = super().initconfig_compiler_entries()
 
+        if "+rocm" in spec:
+            entries.insert(0, cmake_cache_path("CMAKE_CXX_COMPILER", spec["hip"].hipcc))
+
         option_prefix = "UMPIRE_" if spec.satisfies("@2022.03.0:") else ""
 
         if "+fortran" in spec and compiler.fc is not None:
