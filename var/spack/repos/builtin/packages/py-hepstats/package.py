@@ -13,7 +13,7 @@ class PyHepstats(Package):
     """
 
     homepage = "https://github.com/scikit-hep/hepstats"
-    pypi = "hepstats/hepstats-0.8.0.tar.gz"
+    pypi = "hepstats/hepstats-0.8.1.tar.gz"
 
     maintainers("jonas-eschle")
 
