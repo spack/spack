@@ -352,7 +352,7 @@ class PythonPackage(PythonExtension):
     @lang.classproperty
     def url(cls) -> Optional[str]:
         if cls.pypi:
-            return f"https://files.pythonhosted.org/packages/source/{cls.pypi[0]}/{cls.pypi}"
+            return f"https://pypi.io/packages/source/{cls.pypi[0]}/{cls.pypi}"
         return None
 
     @lang.classproperty
