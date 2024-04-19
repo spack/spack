@@ -25,6 +25,7 @@ import llnl.util.tty as tty
 
 import spack
 import spack.binary_distribution
+import spack.bootstrap
 import spack.cmd
 import spack.compilers
 import spack.config
@@ -813,6 +814,12 @@ class PyclingoDriver:
 
         # Initialize the control object for the solver
         self.control = control or default_clingo_control()
+
+        # ensure core deps are present on Windows
+        # needs to modify active config scope, so cannot be run within
+        # bootstrap config scope
+        if sys.platform == "win32":
+            spack.bootstrap.core.ensure_winsdk_external_or_raise()
 
         timer.start("setup")
         asp_problem = setup.setup(specs, reuse=reuse, allow_deprecated=allow_deprecated)
