@@ -12,7 +12,7 @@ spack:
   - $spack/share/spack/gitlab/cloud_pipelines/configs
 
   specs:
-  - perl
+  - vtk
 
   cdash:
     build-group: Windows Visualization (Kitware)
