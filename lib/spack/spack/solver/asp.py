@@ -1113,14 +1113,15 @@ class SpackSolverSetup:
                 list(sorted(group, reverse=True, key=lambda x: vn.ver(x.version)))
             )
 
-        for declared_version in most_to_least_preferred:
+        for idx, declared_version in enumerate(most_to_least_preferred):
+            # Minimization necessitates that the most preferred version be
+            # 0 so use indices for weights now that the versions are sorted
+            # according to the weighting algorithm.
             self.gen.fact(
                 fn.pkg_fact(
                     pkg.name,
                     fn.version_declared(
-                        declared_version.version,
-                        declared_version.weight,
-                        str(declared_version.origin),
+                        declared_version.version, idx, str(declared_version.origin)
                     ),
                 )
             )
