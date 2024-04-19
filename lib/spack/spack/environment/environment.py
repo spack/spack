@@ -106,17 +106,16 @@ def environment_name(path: Union[str, pathlib.Path]) -> str:
         return path_str
 
 
-def check_disallowed_env_config_mods(scopes):
+def ensure_no_disallowed_env_config_mods(scopes: List[spack.config.ConfigScope]) -> None:
     for scope in scopes:
-        with spack.config.use_configuration(scope):
-            if spack.config.get("config:environments_root"):
-                raise SpackEnvironmentError(
-                    "Spack environments are prohibited from modifying 'config:environments_root' "
-                    "because it can make the definition of the environment ill-posed. Please "
-                    "remove from your environment and place it in a permanent scope such as "
-                    "defaults, system, site, etc."
-                )
-    return scopes
+        config = scope.get_section("config")
+        if config and "environments_root" in config["config"]:
+            raise SpackEnvironmentError(
+                "Spack environments are prohibited from modifying 'config:environments_root' "
+                "because it can make the definition of the environment ill-posed. Please "
+                "remove from your environment and place it in a permanent scope such as "
+                "defaults, system, site, etc."
+            )
 
 
 def default_manifest_yaml():
@@ -2462,6 +2461,7 @@ class EnvironmentManifestFile(collections.abc.Mapping):
         self.manifest_file = self.manifest_dir / manifest_name
         self.scope_name = f"env:{environment_name(self.manifest_dir)}"
         self.config_stage_dir = os.path.join(env_subdir_path(manifest_dir), "config")
+        self._config_scopes: Optional[List[spack.config.ConfigScope]] = None
 
         if not self.manifest_file.exists():
             msg = f"cannot find '{manifest_name}' in {self.manifest_dir}"
@@ -2812,12 +2812,17 @@ class EnvironmentManifestFile(collections.abc.Mapping):
 
         Returns:  All configuration scopes associated with the environment
         """
-        config_name = self.scope_name
-        env_scope = spack.config.SingleFileScope(
-            config_name, str(self.manifest_file), spack.schema.env.schema, [TOP_LEVEL_KEY]
-        )
-
-        return check_disallowed_env_config_mods(self.included_config_scopes + [env_scope])
+        if self._config_scopes is not None:
+            return self._config_scopes
+        scopes: List[spack.config.ConfigScope] = [
+            *self.included_config_scopes,
+            spack.config.SingleFileScope(
+                self.scope_name, str(self.manifest_file), spack.schema.env.schema, [TOP_LEVEL_KEY]
+            ),
+        ]
+        ensure_no_disallowed_env_config_mods(scopes)
+        self._config_scopes = scopes
+        return scopes
 
     def prepare_config_scope(self) -> None:
         """Add the manifest's scopes to the global configuration search path."""
