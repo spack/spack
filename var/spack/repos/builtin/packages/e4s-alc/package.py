@@ -7,7 +7,7 @@ from spack.package import *
 
 
 class E4sAlc(PythonPackage):
-    """Container file creator, facilitating the generation of 
+    """Container file creator, facilitating the generation of
     Dockerfiles and Singularity definition files infused with OS packages,
     spack packages and custom commands"""
 
