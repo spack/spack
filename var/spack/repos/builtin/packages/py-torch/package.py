@@ -518,7 +518,7 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
         enable_or_disable("rocm")
         if "+rocm" in self.spec:
             # cmake/Dependencies.cmake
-            # env.set("ROCM_PATH", self.spec["rocm-core"].prefix)
+            env.set("ROCM_PATH", self.spec["rocm-core"].prefix)
             env.set("PYTORCH_ROCM_ARCH", ";".join(self.spec.variants["amdgpu_target"].value))
             # env.set("HIP_PATH", self.spec["hip"].prefix)
             # env.set("HIPBLAS_PATH", self.spec["hipblas"].prefix)
