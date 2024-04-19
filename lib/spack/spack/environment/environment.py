@@ -2461,6 +2461,9 @@ class EnvironmentManifestFile(collections.abc.Mapping):
         self.manifest_file = self.manifest_dir / manifest_name
         self.scope_name = f"env:{environment_name(self.manifest_dir)}"
         self.config_stage_dir = os.path.join(env_subdir_path(manifest_dir), "config")
+
+        #: Configuration scopes associated with this environment. Note that these are not
+        #: invalidated by a re-read of the manifest file.
         self._config_scopes: Optional[List[spack.config.ConfigScope]] = None
 
         if not self.manifest_file.exists():
