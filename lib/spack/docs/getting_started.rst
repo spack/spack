@@ -1572,12 +1572,15 @@ Microsoft Visual Studio
 """""""""""""""""""""""
 
 Microsoft Visual Studio provides the only Windows C/C++ compiler that is currently supported by Spack.
+Spack additionally requires that the Windows SDK (including WGL) to be installed as part of your
+visual studio installation as it is required to build many packages from source.
 
 We require several specific components to be included in the Visual Studio installation.
 One is the C/C++ toolset, which can be selected as "Desktop development with C++" or "C++ build tools,"
 depending on installation type (Professional, Build Tools, etc.)  The other required component is
 "C++ CMake tools for Windows," which can be selected from among the optional packages.
 This provides CMake and Ninja for use during Spack configuration.
+
 
 If you already have Visual Studio installed, you can make sure these components are installed by
 rerunning the installer.  Next to your installation, select "Modify" and look at the
