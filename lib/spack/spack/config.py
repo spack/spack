@@ -1562,8 +1562,9 @@ def ensure_latest_format_fn(section: str) -> Callable[[YamlConfigDict], bool]:
 def use_configuration(
     *scopes_or_paths: Union[ConfigScope, str]
 ) -> Generator[Configuration, None, None]:
-    """Use the configuration scopes passed as arguments within the
-    context manager.
+    """Use the configuration scopes passed as arguments within the context manager.
+
+    This function invalidates caches, and is therefore very slow.
 
     Args:
         *scopes_or_paths: scope objects or paths to be used

@@ -858,8 +858,7 @@ spack:
 """
     )
 
-    e = ev.Environment(env_root)
-    with e:
+    with ev.Environment(env_root) as e:
         e.concretize()
 
     # we've created an environment with some included config files (which do
@@ -869,7 +868,7 @@ spack:
     os.remove(abs_include_path)
     os.remove(include1)
     with pytest.raises(spack.config.ConfigFileError) as exc:
-        ev.activate(e)
+        ev.activate(ev.Environment(env_root))
 
     err = exc.value.message
     assert "missing include" in err
@@ -1063,8 +1062,7 @@ spack:
 """
     )
 
-    e = ev.Environment(tmp_path)
-    with e:
+    with ev.Environment(tmp_path):
         config("change", "packages:mpich:require:~debug")
         with pytest.raises(spack.solver.asp.UnsatisfiableSpecError):
             spack.spec.Spec("mpich+debug").concretized()
@@ -1081,7 +1079,7 @@ spack:
       require: "@3.0.3"
 """
     )
-    with e:
+    with ev.Environment(tmp_path):
         assert spack.spec.Spec("mpich").concretized().satisfies("@3.0.3")
         with pytest.raises(spack.config.ConfigError, match="not a list"):
             config("change", "packages:mpich:require:~debug")
