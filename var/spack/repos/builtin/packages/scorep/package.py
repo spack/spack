@@ -154,7 +154,7 @@ class Scorep(AutotoolsPackage):
         return libs.directories[0]
 
     def with_or_without(self, arg):
-        return super.with_or_without(arg).remove_suffix("=yes")
+        return super.with_or_without(arg).rstrip("=yes")
 
     def configure_args(self):
         spec = self.spec
