@@ -7,7 +7,9 @@ from spack.package import *
 
 
 class Spatialdata(AutotoolsPackage):
-    """Spatialdata is a C++ library for
+    """SpatialData provides an interface to Proj.4 for converting coordinates
+
+    Spatialdata is a C++ library for
 
     interpolating values for spatially distributed data,
     converting coordinates among geographic projections using Proj,
@@ -22,16 +24,15 @@ class Spatialdata(AutotoolsPackage):
 
     homepage = "https://geodynamics.org/resources/spatialdata/"
     url = "https://github.com/geodynamics/spatialdata/archive/refs/tags/v3.1.0.tar.gz"
+    git = "https://github.com/geodynamics/spatialdata.git"
 
     license("MIT", checked_by="downloadico")
 
-    version(
-        "develop",
-        git="https://github.com/geodynamics/spatialdata/",
-        submodules="true",
-        preferred=1,
-    )
+    version("develop", branch="develop", submodules="true")
     version("3.1.0", sha256="dd6caccbf41a51928183d6a1caf2380aa0ed0f2c8c71ecc9b2cd9e3f23aa418c")
+
+    # M4 macros shared for the CIG codes
+    resource(name="autoconf_cig", git="https://github.com/geodynamics/autoconf_cig.git")
 
     depends_on("autoconf", type="build")
     depends_on("automake", type="build")
@@ -39,13 +40,22 @@ class Spatialdata(AutotoolsPackage):
     depends_on("m4", type="build")
     depends_on("swig", type="build")
 
+    depends_on("python")
+    depends_on("py-setuptools")
     depends_on("py-cig-pythia")
     depends_on("proj")
-    depends_on("catch2")
     depends_on("py-numpy")
 
     def autoreconf(self, spec, prefix):
-        autoreconf("--install", "--verbose", "--force")
+        autoupdate("--include=autoconf_cig", "--include=m4")
+        autoreconf(
+            "--install",
+            "--verbose",
+            "--force",
+            "--include=autoconf_cig",
+            "--include=m4",
+            "--include=" + spec["libtool"].prefix + "/share/aclocal/",
+        )
 
     def configure_args(self):
         args = []
