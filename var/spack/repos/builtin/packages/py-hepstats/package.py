@@ -21,7 +21,7 @@ class PyHepstats(Package):
 
     tags = ["likelihood", "statistics", "inference", "fitting", "hep"]
 
-    version("0.8.1", sha256="78f283fc77b2a1bd0f6dd108f2ecce269359a14797cbf3a1af2eea9a29ce96db")
+    version("0.8.1", sha256="ebb890496d7aebbf1d717de15d073be31d6775065308a4e0f263ed4051992b3f")
 
     depends_on("python@3.9:3.12", type=("build", "run"), when="@0.8:")
     depends_on("py-setuptools@42:", type="build")
