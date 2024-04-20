@@ -98,7 +98,7 @@ class PyTfKeras(PythonPackage):
 
         bazel(*args)
 
-        build_pip_package = Executable("bazel-bin/tf-keras/tools/pip_package/build_pip_package")
+        build_pip_package = Executable("bazel-bin/tf_keras/tools/pip_package/build_pip_package")
         buildpath = join_path(self.stage.source_path, "spack-build")
         build_pip_package("--src", buildpath)
 
