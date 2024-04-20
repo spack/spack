@@ -16,8 +16,8 @@ import sys
 import tempfile
 import time
 import zipfile
-from collections import namedtuple
-from typing import List, Optional
+from collections import defaultdict, namedtuple
+from typing import Dict, List, Optional, Set, Tuple
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode
 from urllib.request import HTTPHandler, Request, build_opener
@@ -113,54 +113,24 @@ def _remove_reserved_tags(tags):
     return [tag for tag in tags if tag not in SPACK_RESERVED_TAGS]
 
 
-def _spec_deps_key(s):
+def _spec_ci_label(s):
     return f"{s.name}/{s.dag_hash(7)}"
 
 
-def _add_dependency(spec_label, dep_label, deps):
-    if spec_label == dep_label:
-        return
-    if spec_label not in deps:
-        deps[spec_label] = set()
-    deps[spec_label].add(dep_label)
+PlainNodes = Dict[str, spack.spec.Spec]
+PlainEdges = Dict[str, Set[str]]
 
 
-def _get_spec_dependencies(specs, deps, spec_labels):
-    spec_deps_obj = _compute_spec_deps(specs)
-
-    if spec_deps_obj:
-        dependencies = spec_deps_obj["dependencies"]
-        specs = spec_deps_obj["specs"]
-
-        for entry in specs:
-            spec_labels[entry["label"]] = entry["spec"]
-
-        for entry in dependencies:
-            _add_dependency(entry["spec"], entry["depends"], deps)
-
-
-def stage_spec_jobs(specs):
-    """Take a set of release specs and generate a list of "stages", where the
-        jobs in any stage are dependent only on jobs in previous stages.  This
-        allows us to maximize build parallelism within the gitlab-ci framework.
+def stage_spec_jobs(specs: List[spack.spec.Spec]) -> Tuple[PlainNodes, PlainEdges, List[Set[str]]]:
+    """Turn a DAG into a list of stages (set of nodes), the list is ordered topologically, so that
+    each node in a stage has dependencies only in previous stages.
 
     Arguments:
-        specs (Iterable): Specs to build
+        specs: Specs to build
 
-    Returns: A tuple of information objects describing the specs, dependencies
-        and stages:
-
-        spec_labels: A dictionary mapping the spec labels (which are formatted
-            as pkg-name/hash-prefix) to concrete specs.
-
-        deps: A dictionary where the keys should also have appeared as keys in
-            the spec_labels dictionary, and the values are the set of
-            dependencies for that spec.
-
-        stages: An ordered list of sets, each of which contains all the jobs to
-            built in that stage.  The jobs are expressed in the same format as
-            the keys in the spec_labels and deps objects.
-
+    Returns: A tuple (nodes, edges, stages) where ``nodes`` maps labels to specs, ``edges`` maps
+        labels to a set of labels of dependencies, and ``stages`` is a topologically ordered list
+        of sets of labels.
     """
 
     # The convenience method below, "_remove_satisfied_deps()", does not modify
@@ -177,17 +147,12 @@ def stage_spec_jobs(specs):
 
         return new_deps
 
-    deps = {}
-    spec_labels = {}
+    nodes, edges = _extract_dag(specs)
 
-    _get_spec_dependencies(specs, deps, spec_labels)
-
-    # Save the original deps, as we need to return them at the end of the
-    # function.  In the while loop below, the "dependencies" variable is
-    # overwritten rather than being modified each time through the loop,
-    # thus preserving the original value of "deps" saved here.
-    dependencies = deps
-    unstaged = set(spec_labels.keys())
+    # Save the original edges, as we need to return them at the end of the function. In the loop
+    # below, the "dependencies" variable is rebound rather than mutated, so "edges" is not mutated.
+    dependencies = edges
+    unstaged = set(nodes.keys())
     stages = []
 
     while dependencies:
@@ -203,7 +168,7 @@ def stage_spec_jobs(specs):
     if unstaged:
         stages.append(unstaged.copy())
 
-    return spec_labels, deps, stages
+    return nodes, edges, stages
 
 
 def _print_staging_summary(spec_labels, stages, mirrors_to_check, rebuild_decisions):
@@ -235,87 +200,22 @@ def _print_staging_summary(spec_labels, stages, mirrors_to_check, rebuild_decisi
             tty.msg(msg)
 
 
-def _compute_spec_deps(spec_list):
-    """
-    Computes all the dependencies for the spec(s) and generates a JSON
-    object which provides both a list of unique spec names as well as a
-    comprehensive list of all the edges in the dependency graph.  For
-    example, given a single spec like 'readline@7.0', this function
-    generates the following JSON object:
+def _extract_dag(specs: List[spack.spec.Spec]) -> Tuple[PlainNodes, PlainEdges]:
+    """Extract a sub-DAG as plain old Python objects with external nodes removed."""
+    nodes: PlainNodes = {}
+    edges: PlainEdges = defaultdict(set)
 
-    .. code-block:: JSON
+    for edge in traverse.traverse_edges(specs):
+        if (edge.parent and edge.parent.external) or edge.spec.external:
+            continue
+        child_id = _spec_ci_label(edge.spec)
+        nodes[child_id] = edge.spec
+        if edge.parent:
+            parent_id = _spec_ci_label(edge.parent)
+            nodes[parent_id] = edge.parent
+            edges[parent_id].add(child_id)
 
-       {
-           "dependencies": [
-               {
-                   "depends": "readline/ip6aiun",
-                   "spec": "readline/ip6aiun"
-               },
-               {
-                   "depends": "ncurses/y43rifz",
-                   "spec": "readline/ip6aiun"
-               },
-               {
-                   "depends": "ncurses/y43rifz",
-                   "spec": "readline/ip6aiun"
-               },
-               {
-                   "depends": "pkgconf/eg355zb",
-                   "spec": "ncurses/y43rifz"
-               },
-               {
-                   "depends": "pkgconf/eg355zb",
-                   "spec": "readline/ip6aiun"
-               }
-           ],
-           "specs": [
-               {
-                 "spec": "readline@7.0%apple-clang@9.1.0 arch=darwin-highs...",
-                 "label": "readline/ip6aiun"
-               },
-               {
-                 "spec": "ncurses@6.1%apple-clang@9.1.0 arch=darwin-highsi...",
-                 "label": "ncurses/y43rifz"
-               },
-               {
-                 "spec": "pkgconf@1.5.4%apple-clang@9.1.0 arch=darwin-high...",
-                 "label": "pkgconf/eg355zb"
-               }
-           ]
-       }
-
-    """
-    spec_labels = {}
-
-    specs = []
-    dependencies = []
-
-    def append_dep(s, d):
-        dependencies.append({"spec": s, "depends": d})
-
-    for spec in spec_list:
-        for s in spec.traverse(deptype="all"):
-            if s.external:
-                tty.msg(f"Will not stage external pkg: {s}")
-                continue
-
-            skey = _spec_deps_key(s)
-            spec_labels[skey] = s
-
-            for d in s.dependencies(deptype="all"):
-                dkey = _spec_deps_key(d)
-                if d.external:
-                    tty.msg(f"Will not stage external dep: {d}")
-                    continue
-
-                append_dep(skey, dkey)
-
-    for spec_label, concrete_spec in spec_labels.items():
-        specs.append({"label": spec_label, "spec": concrete_spec})
-
-    deps_json_obj = {"specs": specs, "dependencies": dependencies}
-
-    return deps_json_obj
+    return nodes, edges
 
 
 def _spec_matches(spec, match_string):
@@ -327,7 +227,7 @@ def _format_job_needs(
 ):
     needs_list = []
     for dep_job in dep_jobs:
-        dep_spec_key = _spec_deps_key(dep_job)
+        dep_spec_key = _spec_ci_label(dep_job)
         rebuild = rebuild_decisions[dep_spec_key].rebuild
 
         if not prune_dag or rebuild:
