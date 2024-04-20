@@ -62,13 +62,13 @@ class PyTfKeras(PythonPackage):
         infile = join_path(self.package_dir, "protobuf_build.patch")
         with open(infile, "r") as source_file:
             text = source_file.read()
-        with open("tf-keras/keras.bzl", mode="a") as f:
+        with open("tf_keras/keras.bzl", mode="a") as f:
             f.write(text)
 
         filter_file(
             'load("@com_google_protobuf//:protobuf.bzl", "py_proto_library")',
-            'load("@org_keras//keras:keras.bzl", "py_proto_library")',
-            "tf-keras/protobuf/BUILD",
+            'load("@org_keras//tf_keras:keras.bzl", "py_proto_library")',
+            "tf_keras/protobuf/BUILD",
             string=True,
         )
 
@@ -92,7 +92,7 @@ class PyTfKeras(PythonPackage):
             # bazel uses system PYTHONPATH instead of spack paths
             "--action_env",
             "PYTHONPATH={0}".format(env["PYTHONPATH"]),
-            "//tf-keras/tools/pip_package:build_pip_package",
+            "//tf_keras/tools/pip_package:build_pip_package",
         ]
 
         bazel(*args)
