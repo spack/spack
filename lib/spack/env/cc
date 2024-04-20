@@ -183,7 +183,6 @@ case \"\$1\" in
     $SPACK_SYSTEM_DIRS) return 2 ;;
     /*) return 1 ;;
 esac
-return 0
 }
 "
 
