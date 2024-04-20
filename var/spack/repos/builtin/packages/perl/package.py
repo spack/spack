@@ -455,10 +455,6 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
             # Add variables for library directory
             module.perl_lib_dir = dependent_spec.prefix.lib.perl5
 
-            # Make the site packages directory for extensions,
-            # if it does not exist already.
-            mkdirp(module.perl_lib_dir)
-
     def setup_build_environment(self, env):
         if sys.platform == "win32":
             env.append_path("PATH", self.prefix.bin)
