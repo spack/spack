@@ -545,7 +545,8 @@ class Python(Package):
                 copy(lib, prefix)
             else:
                 copy(lib, prefix.DLLs)
-        static_libraries = glob.glob("%s\\*.lib")
+        static_libraries = glob.glob("%s\\*.lib" % build_root)
+        os.makedirs(prefix.libs, exist_ok=True)
         for lib in static_libraries:
             copy(lib, prefix.libs)
 
@@ -1189,6 +1190,11 @@ print(json.dumps(config))
             # site-packages directories
             for directory in {self.platlib, self.purelib}:
                 env.prepend_path("PYTHONPATH", os.path.join(prefix, directory))
+
+            if self.spec.satisfies("platform=windows"):
+                prefix_scripts_dir = prefix.Scripts
+                if os.path.exists(prefix_scripts_dir):
+                    env.prepend_path("PATH", prefix_scripts_dir)
 
         # We need to make sure that the extensions are compiled and linked with
         # the Spack wrapper. Paths to the executables that are used for these

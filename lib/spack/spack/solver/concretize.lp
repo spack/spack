@@ -127,16 +127,32 @@ trigger_node(TriggerID, Node, Node) :-
   trigger_condition_holds(TriggerID, Node),
   literal(TriggerID).
 
-% Since we trigger the existence of literal nodes from a condition, we need to construct
-% the condition_set/2 manually below
+% Since we trigger the existence of literal nodes from a condition, we need to construct the condition_set/2
 mentioned_in_literal(Root, Mentioned) :- mentioned_in_literal(TriggerID, Root, Mentioned), solve_literal(TriggerID).
-condition_set(node(min_dupe_id, Root), node(min_dupe_id, Mentioned)) :-  mentioned_in_literal(Root, Mentioned).
+condition_set(node(min_dupe_id, Root), node(min_dupe_id, Root)) :-  mentioned_in_literal(Root, Root).
+
+1 { condition_set(node(min_dupe_id, Root), node(0..Y-1, Mentioned)) : max_dupes(Mentioned, Y) } 1 :-
+  mentioned_in_literal(Root, Mentioned), Mentioned != Root.
 
 % Discriminate between "roots" that have been explicitly requested, and roots that are deduced from "virtual roots"
 explicitly_requested_root(node(min_dupe_id, Package)) :-
   solve_literal(TriggerID),
   trigger_and_effect(Package, TriggerID, EffectID),
   imposed_constraint(EffectID, "root", Package).
+
+
+% Keep track of which nodes are associated with which root DAG
+associated_with_root(RootNode, RootNode) :- attr("root", RootNode).
+
+associated_with_root(RootNode, ChildNode) :-
+   depends_on(ParentNode, ChildNode),
+   associated_with_root(RootNode, ParentNode).
+
+% We cannot have a node in the root condition set, that is not associated with that root
+:- attr("root", RootNode),
+   condition_set(RootNode, node(X, Package)),
+   not virtual(Package),
+   not associated_with_root(RootNode, node(X, Package)).
 
 #defined concretize_everything/0.
 #defined literal/1.
@@ -891,12 +907,8 @@ error(100, "{0} variant '{1}' cannot have values '{2}' and '{3}' as they come fr
      Set1 < Set2, % see[1]
      build(node(ID, Package)).
 
-% variant_set is an explicitly set variant value. If it's not 'set',
-% we revert to the default value. If it is set, we force the set value
-attr("variant_value", PackageNode, Variant, Value)
- :- attr("node", PackageNode),
-    node_has_variant(PackageNode, Variant),
-    attr("variant_set", PackageNode, Variant, Value).
+:- attr("variant_set", node(ID, Package), Variant, Value),
+   not attr("variant_value", node(ID, Package), Variant, Value).
 
 % The rules below allow us to prefer default values for variants
 % whenever possible. If a variant is set in a spec, or if it is

@@ -1743,7 +1743,7 @@ complete -c spack -n '__fish_spack_using_command fetch' -l deprecated -f -a conf
 complete -c spack -n '__fish_spack_using_command fetch' -l deprecated -d 'allow concretizer to select deprecated versions'
 
 # spack find
-set -g __fish_spack_optspecs_spack_find h/help format= H/hashes json d/deps p/paths groups no-groups l/long L/very-long t/tag= N/namespaces c/show-concretized f/show-flags show-full-compiler x/explicit X/implicit u/unknown m/missing v/variants loaded M/only-missing deprecated only-deprecated install-tree= start-date= end-date=
+set -g __fish_spack_optspecs_spack_find h/help format= H/hashes json d/deps p/paths groups no-groups l/long L/very-long t/tag= N/namespaces r/only-roots c/show-concretized f/show-flags show-full-compiler x/explicit X/implicit u/unknown m/missing v/variants loaded M/only-missing deprecated only-deprecated install-tree= start-date= end-date=
 complete -c spack -n '__fish_spack_using_command_pos_remainder 0 find' -f -a '(__fish_spack_installed_specs)'
 complete -c spack -n '__fish_spack_using_command find' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command find' -s h -l help -d 'show this help message and exit'
@@ -1769,6 +1769,8 @@ complete -c spack -n '__fish_spack_using_command find' -s t -l tag -r -f -a tags
 complete -c spack -n '__fish_spack_using_command find' -s t -l tag -r -d 'filter a package query by tag (multiple use allowed)'
 complete -c spack -n '__fish_spack_using_command find' -s N -l namespaces -f -a namespaces
 complete -c spack -n '__fish_spack_using_command find' -s N -l namespaces -d 'show fully qualified package names'
+complete -c spack -n '__fish_spack_using_command find' -s r -l only-roots -f -a only_roots
+complete -c spack -n '__fish_spack_using_command find' -s r -l only-roots -d 'don\'t show full list of installed specs in an environment'
 complete -c spack -n '__fish_spack_using_command find' -s c -l show-concretized -f -a show_concretized
 complete -c spack -n '__fish_spack_using_command find' -s c -l show-concretized -d 'show concretized specs in an environment'
 complete -c spack -n '__fish_spack_using_command find' -s f -l show-flags -f -a show_flags
