@@ -68,6 +68,7 @@ import spack.platforms
 import spack.repo
 import spack.schema.environment
 import spack.spec
+import spack.stage
 import spack.store
 import spack.subprocess_context
 import spack.user_environment
@@ -80,7 +81,7 @@ from spack.install_test import spack_install_test_log
 from spack.installer import InstallError
 from spack.util.cpus import determine_number_of_jobs
 from spack.util.environment import (
-    SYSTEM_DIRS,
+    SYSTEM_DIR_CASE_ENTRY,
     EnvironmentModifications,
     env_flag,
     filter_system_paths,
@@ -103,9 +104,13 @@ SPACK_NO_PARALLEL_MAKE = "SPACK_NO_PARALLEL_MAKE"
 # Spack's compiler wrappers.
 #
 SPACK_ENV_PATH = "SPACK_ENV_PATH"
+SPACK_MANAGED_DIRS = "SPACK_MANAGED_DIRS"
 SPACK_INCLUDE_DIRS = "SPACK_INCLUDE_DIRS"
 SPACK_LINK_DIRS = "SPACK_LINK_DIRS"
 SPACK_RPATH_DIRS = "SPACK_RPATH_DIRS"
+SPACK_STORE_INCLUDE_DIRS = "SPACK_STORE_INCLUDE_DIRS"
+SPACK_STORE_LINK_DIRS = "SPACK_STORE_LINK_DIRS"
+SPACK_STORE_RPATH_DIRS = "SPACK_STORE_RPATH_DIRS"
 SPACK_RPATH_DEPS = "SPACK_RPATH_DEPS"
 SPACK_LINK_DEPS = "SPACK_LINK_DEPS"
 SPACK_PREFIX = "SPACK_PREFIX"
@@ -418,7 +423,7 @@ def set_compiler_environment_variables(pkg, env):
 
     env.set("SPACK_COMPILER_SPEC", str(spec.compiler))
 
-    env.set("SPACK_SYSTEM_DIRS", ":".join(SYSTEM_DIRS))
+    env.set("SPACK_SYSTEM_DIRS", SYSTEM_DIR_CASE_ENTRY)
 
     compiler.setup_custom_environment(pkg, env)
 
@@ -546,9 +551,23 @@ def set_wrapper_variables(pkg, env):
     include_dirs = list(dedupe(filter_system_paths(include_dirs)))
     rpath_dirs = list(dedupe(filter_system_paths(rpath_dirs)))
 
-    env.set(SPACK_LINK_DIRS, ":".join(link_dirs))
-    env.set(SPACK_INCLUDE_DIRS, ":".join(include_dirs))
-    env.set(SPACK_RPATH_DIRS, ":".join(rpath_dirs))
+    spack_managed_dirs: List[str] = [
+        spack.stage.get_stage_root(),
+        spack.store.STORE.db.root,
+        *(db.root for db in spack.store.STORE.db.upstream_dbs),
+    ]
+
+    env.set(SPACK_MANAGED_DIRS, "|".join(f'"{p}/"*' for p in spack_managed_dirs))
+    is_spack_managed = lambda p: any(p.startswith(store) for store in spack_managed_dirs)
+    link_dirs_spack, link_dirs_system = stable_partition(link_dirs, is_spack_managed)
+    include_dirs_spack, include_dirs_system = stable_partition(include_dirs, is_spack_managed)
+    rpath_dirs_spack, rpath_dirs_system = stable_partition(rpath_dirs, is_spack_managed)
+    env.set(SPACK_LINK_DIRS, ":".join(link_dirs_system))
+    env.set(SPACK_INCLUDE_DIRS, ":".join(include_dirs_system))
+    env.set(SPACK_RPATH_DIRS, ":".join(rpath_dirs_system))
+    env.set(SPACK_STORE_LINK_DIRS, ":".join(link_dirs_spack))
+    env.set(SPACK_STORE_INCLUDE_DIRS, ":".join(include_dirs_spack))
+    env.set(SPACK_STORE_RPATH_DIRS, ":".join(rpath_dirs_spack))
 
 
 def set_package_py_globals(pkg, context: Context = Context.BUILD):
