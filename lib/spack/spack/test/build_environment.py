@@ -63,7 +63,8 @@ def build_environment(working_env):
     os.environ["SPACK_LINKER_ARG"] = "-Wl,"
     os.environ["SPACK_DTAGS_TO_ADD"] = "--disable-new-dtags"
     os.environ["SPACK_DTAGS_TO_STRIP"] = "--enable-new-dtags"
-    os.environ["SPACK_SYSTEM_DIRS"] = "/usr/include /usr/lib"
+    os.environ["SPACK_SYSTEM_DIRS"] = "/usr/include|/usr/lib"
+    os.environ["SPACK_MANAGED_DIRS"] = f"{prefix}/opt/spack"
     os.environ["SPACK_TARGET_ARGS"] = ""
 
     if "SPACK_DEPENDENCIES" in os.environ:
