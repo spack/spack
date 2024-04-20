@@ -6,7 +6,7 @@
 from spack.package import *
 
 
-class PyHepstats(Package):
+class PyHepstats(PythonPackage):
     """hepstats is a library for statistical inference aiming
     to cover the needs High Energy Physics.
     It is part of the Scikit-HEP project.
