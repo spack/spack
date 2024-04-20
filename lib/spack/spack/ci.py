@@ -205,7 +205,7 @@ def _extract_dag(specs: List[spack.spec.Spec]) -> Tuple[PlainNodes, PlainEdges]:
     nodes: PlainNodes = {}
     edges: PlainEdges = defaultdict(set)
 
-    for edge in traverse.traverse_edges(specs):
+    for edge in traverse.traverse_edges(specs, cover="edges"):
         if (edge.parent and edge.parent.external) or edge.spec.external:
             continue
         child_id = _spec_ci_label(edge.spec)
