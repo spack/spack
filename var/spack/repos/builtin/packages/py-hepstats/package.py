@@ -32,7 +32,7 @@ class PyHepstats(PythonPackage):
     depends_on("py-setuptools@42:", type="build")
     depends_on("py-setuptools-scm@3.4:+toml", type="build")
 
-    variant("zfit", default=True, description="Allows to use improved tools from zfit.")
+    variant("zfit", default=False, description="Allows to use improved tools from zfit.")
 
     with default_args(type=("build", "run")):
         depends_on("py-pandas")
