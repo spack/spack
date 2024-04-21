@@ -266,7 +266,7 @@ class PyMatplotlib(PythonPackage):
 
     # Testing dependencies
     # Required
-    depends_on("freetype@2.6.1 build_system=autotools", type="test")
+    # depends_on("freetype@2.6.1 build_system=autotools", type="test")
     depends_on("py-pytest@7:", type="test")
 
     msg = "MacOSX backend requires macOS 10.12+"
