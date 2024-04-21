@@ -266,6 +266,7 @@ class PyMatplotlib(PythonPackage):
 
     # Testing dependencies
     # Required
+    # https://github.com/spack/spack/issues/43597
     # depends_on("freetype@2.6.1 build_system=autotools", type="test")
     depends_on("py-pytest@7:", type="test")
 
