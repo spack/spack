@@ -62,6 +62,7 @@ To output an @, use '@@'.  To output a } inside braces, use '}}'.
 import re
 import sys
 from contextlib import contextmanager
+from typing import Optional
 
 
 class ColorParseError(Exception):
@@ -219,7 +220,9 @@ def _escape(s: str, color: bool, enclose: bool, zsh: bool) -> str:
         return ""
 
 
-def colorize(string: str, color: bool = None, enclose: bool = False, zsh: bool = False) -> str:
+def colorize(
+    string: str, color: Optional[bool] = None, enclose: bool = False, zsh: bool = False
+) -> str:
     """Replace all color expressions in a string with ANSI control codes.
 
     Args:
@@ -290,7 +293,7 @@ def cprint(string, stream=None, color=None):
     cwrite(string + "\n", stream, color)
 
 
-def cescape(string):
+def cescape(string: str):
     """Escapes special characters needed for color codes.
 
     Replaces the following symbols with their equivalent literal forms:
@@ -306,7 +309,7 @@ def cescape(string):
     Returns:
         (str): the string with color codes escaped
     """
-    return str(string).replace("@", "@@").replace("}", "}}")
+    return string.replace("@", "@@").replace("}", "}}")
 
 
 class ColorStream:
