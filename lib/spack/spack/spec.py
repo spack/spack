@@ -51,7 +51,6 @@ line is a spec for a particular installation of the mpileaks package.
 import collections
 import collections.abc
 import enum
-import io
 import itertools
 import os
 import pathlib
@@ -4345,13 +4344,9 @@ class Spec:
 
         Keyword Args:
             color (bool): True if returned string is colored
-            transform (dict): maps full-string formats to a callable \
-                that accepts a string and returns another one
-
         """
         ensure_modern_format_string(format_string)
         enable_color = kwargs.get("color", False)
-        transform = kwargs.get("transform", {})
 
         def safe_color(s, color=None):
             escaped = clr.cescape(s)
@@ -4392,21 +4387,18 @@ class Spec:
             elif sig == " arch=" and attribute not in ("architecture", "arch"):
                 raise SpecFormatSigilError(sig, "the architecture", attribute)
 
-            # find the morph function for our attribute
-            morph = transform.get(attribute, lambda s, x: x)
-
             # Special cases for non-spec attributes and hashes.
             # These must be the only non-dep component of the format attribute
             if attribute == "spack_root":
-                return morph(self, spack.paths.spack_root)
+                return spack.paths.spack_root
             elif attribute == "spack_install":
-                return morph(self, spack.store.STORE.layout.root)
+                return spack.store.STORE.layout.root
             elif SHORT_HASH_FMT_RE.match(attribute):
                 if ":" in attribute:
                     _, length = attribute.split(":")
-                    return safe_color(sig + morph(self, current.dag_hash(int(length))), HASH_COLOR)
+                    return safe_color(sig + current.dag_hash(int(length)), HASH_COLOR)
                 else:
-                    return safe_color(sig + morph(self, current.dag_hash()), HASH_COLOR)
+                    return safe_color(sig + current.dag_hash(), HASH_COLOR)
 
             # Iterate over components using getattr to get next element
             for idx, part in enumerate(parts):
@@ -4460,7 +4452,7 @@ class Spec:
                 color = VERSION_COLOR
 
             # return colored output
-            return safe_color(sig + morph(self, str(current)), color)
+            return safe_color(sig + str(current), color)
 
         return SPEC_FORMAT_RE.sub(write_attribute, format_string).strip()
 
