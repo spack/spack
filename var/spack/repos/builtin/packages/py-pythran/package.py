@@ -15,6 +15,7 @@ class PyPythran(PythonPackage):
 
     homepage = "https://github.com/serge-sans-paille/pythran"
     pypi = "pythran/pythran-0.9.11.tar.gz"
+    tags = ["build-tools"]
 
     license("BSD-3-Clause")
 
