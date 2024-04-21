@@ -731,6 +731,8 @@ class TestSpecSemantics:
             r"{dag_hash}",
             r"{foo}",
             r"{+variants.debug}",
+            "\\",  # unterminated escape character
+            "foobar\\",  # unterminated escape character
         ],
     )
     def test_spec_formatting_bad_formats(self, default_mock_concretization, fmt_str):
@@ -1142,12 +1144,12 @@ def _check_spec_format_path(spec_str, format_str, expected, path_ctor=None):
             r"\\hostname\sharename\{name}\{version}",
             r"\\hostname\sharename\git-test\git.foo_bar",
         ),
-        # Windows doesn't attribute any significance to a leading
-        # "/" so it is discarded
+        # leading '/' is preserved on windows but converted to '\'
+        # note that it's still not "absolute" -- absolute windows paths start with a drive.
         (
             "git-test@git.foo/bar",
             r"/installroot/{name}/{version}",
-            r"installroot\git-test\git.foo_bar",
+            r"\installroot\git-test\git.foo_bar",
         ),
     ],
 )

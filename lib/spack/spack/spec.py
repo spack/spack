@@ -122,20 +122,27 @@ __all__ = [
 
 
 SPEC_FORMAT_RE = re.compile(
-    r"(?:"
-    r"(?:\\(.))"  # escaped character (needs to be first to catch opening \{)
-    r"|"
+    r"(?:"  # this is one big or, with matches ordered by priority
+    # OPTION 1: escaped character (needs to be first to catch opening \{)
+    r"(?:\\(.))"
+    r"|"  # or
+    # OPTION 2: an actual format string
     r"{"  # non-escaped open brace {
     r"([%@/]|arch=)?"  # optional sigil (to print sigil in color)
     r"(?:\^([^}\.]+)\.)?"  # optional ^depname. (to get attr from dependency)
+    # after the sigil or depname, we can have a hash expression or another attribute
     r"(?:"  # one of
     r"(hash\b)(?:\:(\d+))?"  # hash followed by :<optional length>
     r"|"  # or
     r"([^}]*)"  # another attribute to format
     r")"  # end one of
-    r"(})?"  # non-escaped close brace }, or missing closed brace if not present
+    r"(})?"  # finish format string with non-escaped close brace }, or missing if not present
     r"|"
-    r"(})"  # mismatched close brace
+    # OPTION 3: mismatched close brace (option 2 would consume a matched open brace)
+    r"(})"  # brace
+    r"|"
+    # OPTION 4: unterminated escape character (option 1 would consume a terminated escape)
+    r"(?<!\\)(\\)$"  # unterminated escape
     r")",
     re.IGNORECASE,
 )
@@ -4349,11 +4356,6 @@ class Spec:
         """
         ensure_modern_format_string(format_string)
 
-        # TODO: This preserves a bug from the original version of this function that's needed
-        # TODO: by format_path(). Get rid of it eventually; plain '\' should just format as '\'
-        if format_string == "\\":
-            return ""
-
         def safe_color(sigil: str, string: str, color_fmt: Optional[str]):
             # avoid colorizing if there is no color or the string is empty
             if (color is False) or not color_fmt or not string:
@@ -4364,12 +4366,16 @@ class Spec:
             return clr.colorize(f"{color_fmt}{sigil}{clr.cescape(string)}@.", color=color)
 
         def format_attribute(match_object: Match) -> str:
-            (esc, sig, dep, hash, hash_len, attribute, close_brace, unmatched_close_brace) = (
+            (esc, sig, dep, hash, hash_len, attribute, close_brace, unmatch_brace, bare_slash) = (
                 match_object.groups()
             )
             if esc:
                 return esc
-            if unmatched_close_brace:
+            elif bare_slash:
+                raise SpecFormatStringError(
+                    f"Unterminated '\\' escape in format string: '{format_string}'"
+                )
+            elif unmatch_brace:
                 raise SpecFormatStringError(f"Unmatched close brace: '{format_string}'")
             elif not close_brace:
                 raise SpecFormatStringError(f"Missing close brace: '{format_string}'")
@@ -4513,8 +4519,10 @@ class Spec:
         else:
             output_path_components = []
             input_path_components = list(format_string_as_path.parts)
+
         output_path_components += [
-            fs.polite_filename(self.format(x)) for x in input_path_components
+            fs.polite_filename(self.format(part)) if part != "\\" else part
+            for part in input_path_components
         ]
         return str(path_ctor(*output_path_components))
 
