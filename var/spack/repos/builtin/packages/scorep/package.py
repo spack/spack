@@ -203,7 +203,7 @@ class Scorep(AutotoolsPackage):
             or spec.satisfies("^cray-mpich")
         ):
             config_args.append("--with-mpi=mpich3")
-        elif spec.satisfies("^openmpi"):
+        elif spec.satisfies("^openmpi") or spec.satisfies("^hpcx-mpi"):
             config_args.append("--with-mpi=openmpi")
 
         if spec.satisfies("^binutils"):
