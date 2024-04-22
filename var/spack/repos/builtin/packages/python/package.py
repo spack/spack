@@ -833,21 +833,19 @@ class Python(Package):
         version = self.spec.version
         for ver in [version.up_to(2), version.up_to(1), ""]:
             if sys.platform != "win32":
-                path = os.path.join(self.prefix.bin, "python{0}".format(ver))
+                path = os.path.join(self.prefix.bin, f"python{ver}")
             else:
-                path = os.path.join(self.prefix, "python{0}.exe".format(ver))
+                path = os.path.join(self.prefix, f"python{ver}.exe")
             if os.path.exists(path):
                 return Executable(path)
 
-        else:
-            # Give a last try at rhel8 platform python
-            if self.spec.external and self.prefix == "/usr" and self.spec.satisfies("os=rhel8"):
-                path = os.path.join(self.prefix, "libexec", "platform-python")
-                if os.path.exists(path):
-                    return Executable(path)
+        # Give a last try at rhel8 platform python
+        if self.spec.external and self.prefix == "/usr" and self.spec.os == "rhel":
+            path = os.path.join(self.prefix, "libexec", "platform-python")
+            if os.path.exists(path):
+                return Executable(path)
 
-            msg = "Unable to locate {0} command in {1}"
-            raise RuntimeError(msg.format(self.name, self.prefix.bin))
+        raise RuntimeError(f"Unable to locate {self.name} command in {self.prefix.bin}")
 
     @property
     def config_vars(self):
