@@ -644,8 +644,8 @@ class EnvironmentModifications:
             elif isinstance(envmod, AppendFlagsEnv):
                 rev.remove_flags(envmod.name, envmod.value)
             else:
-                tty.warn(
-                    f"Skipping reversal of unreversable operation {type(envmod)} {envmod.name}"
+                tty.debug(
+                    f"Skipping reversal of irreversible operation {type(envmod)} {envmod.name}"
                 )
 
         return rev
