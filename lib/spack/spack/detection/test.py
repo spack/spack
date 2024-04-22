@@ -33,6 +33,8 @@ class ExpectedTestResult(NamedTuple):
 
     #: Spec to be detected
     spec: str
+    #: Attributes expected in the external spec
+    extra_attributes: Dict[str, str]
 
 
 class DetectionTest(NamedTuple):
@@ -101,7 +103,10 @@ class Runner:
 
     @property
     def expected_specs(self) -> List[spack.spec.Spec]:
-        return [spack.spec.Spec(r.spec) for r in self.test.results]
+        return [
+            spack.spec.Spec.from_detection(item.spec, extra_attributes=item.extra_attributes)
+            for item in self.test.results
+        ]
 
 
 def detection_tests(pkg_name: str, repository: spack.repo.RepoPath) -> List[Runner]:
@@ -132,7 +137,11 @@ def detection_tests(pkg_name: str, repository: spack.repo.RepoPath) -> List[Runn
             )
         expected_results = []
         for assertion in single_test_data["results"]:
-            expected_results.append(ExpectedTestResult(spec=assertion["spec"]))
+            expected_results.append(
+                ExpectedTestResult(
+                    spec=assertion["spec"], extra_attributes=assertion.get("extra_attributes", {})
+                )
+            )
 
         current_test = DetectionTest(
             pkg_name=pkg_name, layout=mock_executables, results=expected_results

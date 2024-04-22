@@ -1111,4 +1111,76 @@ def _test_detection_by_executable(pkgs, error_cls):
                 details = [msg.format(s, idx) for s in sorted(not_expected)]
                 errors.append(error_cls(summary=summary, details=details))
 
+            matched_detection = []
+            for candidate in expected_specs:
+                try:
+                    idx = specs.index(candidate)
+                except (AttributeError, ValueError):
+                    pass
+
+                matched_detection.append((candidate, specs[idx]))
+
+            def _compare_extra_attribute(_expected, _detected, *, _spec):
+                result = []
+                # Check items are of the same type
+                if not isinstance(_detected, type(_expected)):
+                    _summary = f'{pkg_name}: error when trying to detect "{_expected}"'
+                    _details = [f"{_detected} was detected instead"]
+                    return [error_cls(summary=_summary, details=_details)]
+
+                # If they are string expected is a regex
+                if isinstance(_expected, str):
+                    try:
+                        _regex = re.compile(_expected)
+                    except re.error:
+                        _summary = f'{pkg_name}: illegal regex in "{_spec}" extra attributes'
+                        _details = [f"{_expected} is not a valid regex"]
+                        return [error_cls(summary=_summary, details=_details)]
+
+                    if not _regex.match(_detected):
+                        _summary = (
+                            f'{pkg_name}: error when trying to match "{_expected}" '
+                            f"in extra attributes"
+                        )
+                        _details = [f"{_detected} does not match the regex"]
+                        return [error_cls(summary=_summary, details=_details)]
+
+                if isinstance(_expected, dict):
+                    _not_detected = set(_expected.keys()) - set(_detected.keys())
+                    if _not_detected:
+                        _summary = f"{pkg_name}: cannot detect some attributes for spec {_spec}"
+                        _details = [
+                            f'"{_expected}" was expected',
+                            f'"{_detected}" was detected',
+                        ] + [f'attribute "{s}" was not detected' for s in sorted(_not_detected)]
+                        result.append(error_cls(summary=_summary, details=_details))
+
+                    _common = set(_expected.keys()) & set(_detected.keys())
+                    for _key in _common:
+                        result.extend(
+                            _compare_extra_attribute(_expected[_key], _detected[_key], _spec=_spec)
+                        )
+
+                return result
+
+            for expected, detected in matched_detection:
+                # We might not want to test all attributes, so avoid not_expected
+                not_detected = set(expected.extra_attributes) - set(detected.extra_attributes)
+                if not_detected:
+                    summary = f"{pkg_name}: cannot detect some attributes for spec {expected}"
+                    details = [
+                        f'"{s}" was not detected [test_id={idx}]' for s in sorted(not_detected)
+                    ]
+                    errors.append(error_cls(summary=summary, details=details))
+
+                common = set(expected.extra_attributes) & set(detected.extra_attributes)
+                for key in common:
+                    errors.extend(
+                        _compare_extra_attribute(
+                            expected.extra_attributes[key],
+                            detected.extra_attributes[key],
+                            _spec=expected,
+                        )
+                    )
+
     return errors
