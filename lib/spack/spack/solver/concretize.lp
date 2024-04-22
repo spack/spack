@@ -993,14 +993,13 @@ pkg_fact(Package, variant_single_value("dev_path"))
 % Platform semantics
 %-----------------------------------------------------------------------------
 
-% if no platform is set, fall back to the default
-error(100, "platform '{0}' is not allowed on the current host", Platform)
-  :- attr("node_platform", _, Platform), not allowed_platform(Platform).
+% NOTE: Currently we have a single allowed platform per DAG, therefore there is no
+% need to have additional optimization criteria. If we ever add cross-platform dags,
+% this needs to be changed.
+:- 2 { allowed_platform(Platform) }, internal_error("More than one allowed platform detected").
 
-attr("node_platform", PackageNode, Platform)
- :- attr("node", PackageNode),
-    not attr("node_platform_set", PackageNode),
-    node_platform_default(Platform).
+1 { attr("node_platform", PackageNode, Platform) : allowed_platform(Platform) } 1
+  :- attr("node", PackageNode).
 
 % setting platform on a node is a hard constraint
 attr("node_platform", PackageNode, Platform)
