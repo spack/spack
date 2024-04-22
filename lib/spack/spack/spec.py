@@ -4422,7 +4422,7 @@ class Spec:
                 if part.startswith("_"):
                     raise SpecFormatStringError("Attempted to format private attribute")
                 else:
-                    if isinstance(current, vt.VariantMap):
+                    if part == "variants" and isinstance(current, vt.VariantMap):
                         # subscript instead of getattr for variant names
                         current = current[part]
                     else:
