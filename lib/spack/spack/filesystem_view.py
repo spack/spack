@@ -662,9 +662,6 @@ class SimpleFilesystemView(FilesystemView):
             return
 
         # Drop externals
-        for s in specs:
-            if s.external:
-                tty.warn("Skipping external package: " + s.short_spec)
         specs = [s for s in specs if not s.external]
 
         self._sanity_check_view_projection(specs)
