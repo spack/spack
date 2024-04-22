@@ -728,7 +728,7 @@ class RepoPath:
 
     @llnl.util.lang.memoized
     def _all_package_names_set(self, include_virtuals):
-        return {name for name in self._all_package_names(include_virtuals)}
+        return {name for repo in self.repos for name in repo.all_package_names(include_virtuals)}
 
     @llnl.util.lang.memoized
     def _all_package_names(self, include_virtuals):
