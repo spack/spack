@@ -727,7 +727,7 @@ class RepoPath:
         return self.repos[0] if self.repos else None
 
     @llnl.util.lang.memoized
-    def _all_package_names_set(self, include_virtuals=False):
+    def _all_package_names_set(self, include_virtuals):
         return {name for name in self._all_package_names(include_virtuals)}
 
     @llnl.util.lang.memoized
@@ -797,7 +797,7 @@ class RepoPath:
         providers = [
             spec
             for spec in self.provider_index.providers_for(vpkg_spec)
-            if spec.name in self._all_package_names_set()
+            if spec.name in self._all_package_names_set(include_virtuals=False)
         ]
         if not providers:
             raise UnknownPackageError(vpkg_spec.fullname)
