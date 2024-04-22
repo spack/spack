@@ -1798,9 +1798,30 @@ def _tar_strip_component(tar: tarfile.TarFile, prefix: str):
             continue
         m.name = m.name[result.end() :]
         if m.linkname:
-            result = regex.match(m.linkname)
-            if result:
-                m.linkname = m.linkname[result.end() :]
+            if m.type == tarfile.SYMTYPE:
+                result = regex.match(m.linkname)
+                is_abs = os.path.isabs(m.linkname)
+                if not result and is_abs:
+                    # absolute path outside of the install prefix
+                    # this cannot be extracted because we have no garuntee
+                    # the absolute path exists on the target system
+                    source = m.name
+                    target = m.linkname
+                    raise ValueError(
+                        f'Symbolic link from "{source}" to "{target}" cannot be relocated'
+                    )
+                elif result:
+                    # backwards compat for previously created spackballs that
+                    # have absolute paths inside the prefix
+
+                    # absolute path inside of the install prefix
+                    # not viable to extract in its current state
+                    # instead set link name to equivalent relative link
+                    m.linkname = os.path.relpath(m.linkname, os.path.basename(m.name))
+            elif m.type == tarfile.LNKTYPE:
+                result = regex.match(m.linkname)
+                if result:
+                    m.linkname = m.linkname[result.end() :]
         yield m
 
 
