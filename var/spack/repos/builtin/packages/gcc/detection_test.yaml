@@ -20,6 +20,7 @@ paths:
             echo "mock executable got an unexpected flag: $1"
             exit 1
           fi
+    platforms: ["darwin", "linux"]
     results:
       - spec: "gcc@9.4.0 languages=c,c++"
   # Mock a version < 7 of GCC that requires -dumpversion and
@@ -37,6 +38,7 @@ paths:
             echo "compilation terminated."
             exit 1
           fi
+    platforms: ["darwin", "linux"]
     results:
       - spec: "gcc@5.5.0 languages=c,c++,fortran"
   # Multiple compilers present at the same time
@@ -70,4 +72,5 @@ paths:
             echo "mock executable got an unexpected flag: $1"
             exit 1
           fi
+    platforms: ["darwin"]
     results: []

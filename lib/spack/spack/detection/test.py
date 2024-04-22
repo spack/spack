@@ -11,6 +11,7 @@ from typing import Any, Deque, Dict, Generator, List, NamedTuple, Tuple
 
 from llnl.util import filesystem
 
+import spack.platforms
 import spack.repo
 import spack.spec
 from spack.util import spack_yaml
@@ -117,9 +118,13 @@ def detection_tests(pkg_name: str, repository: spack.repo.RepoPath) -> List[Runn
     """
     result = []
     detection_tests_content = read_detection_tests(pkg_name, repository)
+    current_platform = str(spack.platforms.host())
 
     tests_by_path = detection_tests_content.get("paths", [])
     for single_test_data in tests_by_path:
+        if current_platform not in single_test_data.get("platforms", [current_platform]):
+            continue
+
         mock_executables = []
         for layout in single_test_data["layout"]:
             mock_executables.append(

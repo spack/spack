@@ -6435,9 +6435,12 @@ the ``paths`` attribute:
          echo "Target: x86_64-pc-linux-gnu"
          echo "Thread model: posix"
          echo "InstalledDir: /usr/bin"
+     platforms: ["linux", "darwin"]
      results:
      - spec: 'llvm@3.9.1 +clang~lld~lldb'
 
+If the ``platforms`` attribute is present, tests are run only if the current host
+matches one of the listed platforms.
 Each test is performed by first creating a temporary directory structure as
 specified in the corresponding ``layout`` and by then running
 package detection and checking that the outcome matches the expected
