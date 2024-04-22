@@ -11,6 +11,7 @@ class PySetuptoolsScm(PythonPackage):
 
     homepage = "https://github.com/pypa/setuptools_scm"
     pypi = "setuptools_scm/setuptools_scm-4.1.2.tar.gz"
+    tags = ["build-tools"]
 
     license("MIT")
 

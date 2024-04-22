@@ -11,6 +11,7 @@ class PyMesonPython(PythonPackage):
 
     homepage = "https://github.com/mesonbuild/meson-python"
     pypi = "meson_python/meson_python-0.7.0.tar.gz"
+    tags = ["build-tools"]
 
     maintainers("eli-schwartz", "adamjstewart", "rgommers")
 
