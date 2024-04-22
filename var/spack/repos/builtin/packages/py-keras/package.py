@@ -22,6 +22,7 @@ class PyKeras(PythonPackage):
     maintainers("adamjstewart")
     license("Apache-2.0")
 
+    version("3.3.0", sha256="46763bd84696aa5e326734ee0ccfde12bef73b27f1e5e241bbf539cb6411e78d")
     version("3.2.1", sha256="966abbf0dfc1f9725f6293fb2a04ec83f56cd2a800990b38d1a03041255214a7")
     version("3.2.0", sha256="e3ff572c872ebb24d2ae62d4e12c3579ccd0019d0f0adaf3cb7dc610e77e84c1")
     version("3.1.1", sha256="55558ea228dc38e7667874fd2e83eaf7faeb026e2e8615b36a8616830f7e303b")
@@ -83,7 +84,7 @@ class PyKeras(PythonPackage):
     depends_on("py-protobuf", type=("build", "run"), when="@3:")
 
     # requirements-tensorflow-cuda.txt
-    depends_on("py-tensorflow@2.16.1", type=("build", "run"), when="@3.0: backend=tensorflow")
+    depends_on("py-tensorflow@2.16.1:2.16", type=("build", "run"), when="@3.0: backend=tensorflow")
 
     # requirements-jax-cuda.txt
     depends_on("py-jax@0.4.23", type=("build", "run"), when="@3.0.5: backend=jax")
