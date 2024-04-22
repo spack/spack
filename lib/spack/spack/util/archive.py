@@ -7,6 +7,7 @@ import hashlib
 import io
 import os
 import pathlib
+import re
 import tarfile
 from contextlib import closing, contextmanager
 from gzip import GzipFile
@@ -193,13 +194,43 @@ def reproducible_tarfile_from_prefix(
             file_info = tarfile.TarInfo(path_to_name(entry.path))
 
             if entry.is_symlink():
-                file_info.type = tarfile.SYMTYPE
-                file_info.linkname = os.readlink(entry.path)
-                # According to POSIX: "the value of the file mode bits returned in the
-                # st_mode field of the stat structure is unspecified." So we set it to
-                # something sensible without lstat'ing the link.
-                file_info.mode = 0o755
-                tar.addfile(file_info)
+                def add_entry_to_tarfile(safe_link_path):
+                    """encapsulate logic around adding symlinks to a tarball"""
+                    file_info.linkname = safe_link_path
+                    # According to POSIX: "the value of the file mode bits returned in the
+                    # st_mode field of the stat structure is unspecified." So we set it to
+                    # something sensible without lstat'ing the link.
+                    file_info.mode = 0o755
+                    tar.addfile(file_info)
+                    file_info.type = tarfile.SYMTYPE
+
+                # Absolute links need to be made relative
+                #  - if links point inside the prefix
+                #    compute relative link as normal
+                #  - if link points outside the prefix
+                #    we should not include them
+                # strip off long path reg prefix on Windows
+                link_dest = os.readlink(entry.path).strip("\\\\?\\")
+                if os.path.isabs(link_dest):
+                    full_path = os.path.realpath(link_dest)
+                    reg = re.compile(re.escape(prefix))
+                    res = reg.match(full_path)
+                    if res:
+                        # need to compute relative path
+                        add_entry_to_tarfile(
+                            os.path.relpath(full_path, os.path.dirname(entry.path))
+                        )
+                # Relative links should stay relative
+                #  - if links point inside the prefix
+                #    leave them
+                #  - if they point outside the prefix
+                #    don't include them in the first place
+                #    as we can't reason about
+                else:
+                    potential_path = os.path.join(prefix, link_dest)
+                    candidate_rel_path = os.path.relpath(os.path.realpath(potential_path), prefix)
+                    if not candidate_rel_path.startswith(".."):
+                        add_entry_to_tarfile(candidate_rel_path)
 
             elif entry.is_file(follow_symlinks=False):
                 # entry.stat has zero (st_ino, st_dev, st_nlink) on Windows: use lstat.
