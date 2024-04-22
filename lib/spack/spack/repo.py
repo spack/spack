@@ -727,13 +727,13 @@ class RepoPath:
         return self.repos[0] if self.repos else None
 
     @llnl.util.lang.memoized
+    def _all_package_names_set(self, include_virtuals):
+        return {name for repo in self.repos for name in repo.all_package_names(include_virtuals)}
+
+    @llnl.util.lang.memoized
     def _all_package_names(self, include_virtuals):
         """Return all unique package names in all repositories."""
-        all_pkgs = set()
-        for repo in self.repos:
-            for name in repo.all_package_names(include_virtuals):
-                all_pkgs.add(name)
-        return sorted(all_pkgs, key=lambda n: n.lower())
+        return sorted(self._all_package_names_set(include_virtuals), key=lambda n: n.lower())
 
     def all_package_names(self, include_virtuals=False):
         return self._all_package_names(include_virtuals)
@@ -794,7 +794,11 @@ class RepoPath:
 
     @autospec
     def providers_for(self, vpkg_spec):
-        providers = self.provider_index.providers_for(vpkg_spec)
+        providers = [
+            spec
+            for spec in self.provider_index.providers_for(vpkg_spec)
+            if spec.name in self._all_package_names_set(include_virtuals=False)
+        ]
         if not providers:
             raise UnknownPackageError(vpkg_spec.fullname)
         return providers
