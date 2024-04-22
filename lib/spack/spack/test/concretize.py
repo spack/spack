@@ -2398,6 +2398,19 @@ class TestConcretize:
         for s in root.traverse(root=False):
             assert s.satisfies("%gcc@10.2.1")
 
+    @pytest.mark.regression("43406")
+    def test_externals_with_platform_explicitly_set(self, tmp_path):
+        """Tests that users can specify platform=xxx in an external spec"""
+        external_conf = {
+            "mpich": {
+                "buildable": False,
+                "externals": [{"spec": "mpich@=2.0.0 platform=test", "prefix": str(tmp_path)}],
+            }
+        }
+        spack.config.set("packages", external_conf)
+        s = Spec("mpich").concretized()
+        assert s.external
+
 
 @pytest.fixture()
 def duplicates_test_repository():
