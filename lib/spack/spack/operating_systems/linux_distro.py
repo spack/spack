@@ -4,67 +4,43 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import platform as py_platform
 import re
-from subprocess import check_output
+import shlex
+from typing import Optional
 
-from spack.version import Version
+from spack.version import StandardVersion
 
 from ._operating_system import OperatingSystem
 
 
-def kernel_version():
-    """Return the kernel version as a Version object.
-    Note that the kernel version is distinct from OS and/or
-    distribution versions. For instance:
-    >>> distro.id()
-    'centos'
-    >>> distro.version()
-    '7'
-    >>> platform.release()
-    '5.10.84+'
-    """
-    # Strip '+' characters just in case we're running a
-    # version built from git/etc
-    clean_version = re.sub(r"\+", r"", py_platform.release())
-    return Version(clean_version)
+def kernel_version() -> StandardVersion:
+    """Return the kernel version."""
+    # Strip '+' characters just in case we're running a version built from git/etc
+    return StandardVersion.from_string(re.sub(r"\+", r"", py_platform.release()))
+
+
+def _parse_os_release(contents: str) -> Optional[str]:
+    for expression in shlex.split(contents, posix=True):
+        if "=" not in expression:
+            continue
+        name, value = expression.split("=", 1)
+        if name.lower() != "id":
+            continue
+        value = value.lower().replace(" ", "_")
+        if value:
+            return value
+    return None
+
+
+def _detect_distro() -> Optional[str]:
+    try:
+        with open("/etc/os-release") as f:
+            return _parse_os_release(f.read())
+    except OSError:
+        return None
 
 
 class LinuxDistro(OperatingSystem):
-    """This class will represent the autodetected operating system
-    for a Linux System. Since there are many different flavors of
-    Linux, this class will attempt to encompass them all through
-    autodetection using the python module platform and the method
-    platform.dist()
-    """
+    """Detect the Linux distro name"""
 
     def __init__(self):
-        try:
-            # This will throw an error if imported on a non-Linux platform.
-            import distro
-
-            distname, version = distro.id(), distro.version()
-        except ImportError:
-            distname, version = "unknown", ""
-
-        # Grabs major version from tuple on redhat; on other platforms
-        # grab the first legal identifier in the version field.  On
-        # debian you get things like 'wheezy/sid'; sid means unstable.
-        # We just record 'wheezy' and don't get quite so detailed.
-        version = re.split(r"[^\w-]", version)
-
-        if "ubuntu" in distname:
-            version = ".".join(version[0:2])
-        # openSUSE Tumbleweed is a rolling release which can change
-        # more than once in a week, so set version to tumbleweed$GLIBVERS
-        elif "opensuse-tumbleweed" in distname or "opensusetumbleweed" in distname:
-            distname = "opensuse"
-            output = check_output(["ldd", "--version"]).decode()
-            libcvers = re.findall(r"ldd \(GNU libc\) (.*)", output)
-            if len(libcvers) == 1:
-                version = "tumbleweed" + libcvers[0]
-            else:
-                version = "tumbleweed" + version[0]
-
-        else:
-            version = version[0]
-
-        super().__init__(distname, version)
+        super().__init__(_detect_distro() or "unknown", "")
