@@ -332,7 +332,7 @@ def all_compilers_config(
     *,
     scope: Optional[str] = None,
     init_config: bool = True,
-) -> List["spack.compiler.Compiler"]:
+) -> List[dict]:
     """Return a set of specs for all the compiler versions currently
     available to build with.  These are instances of CompilerSpec.
     """
@@ -517,7 +517,9 @@ def all_compilers(scope=None, init_config=True):
     )
 
 
-def all_compilers_from(configuration, scope=None, init_config=True):
+def all_compilers_from(
+    configuration, scope=None, init_config=True
+) -> List[spack.compiler.Compiler]:
     compilers = []
     for items in all_compilers_config(
         configuration=configuration, scope=scope, init_config=init_config

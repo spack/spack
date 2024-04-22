@@ -41,6 +41,8 @@ import spack.repo
 import spack.spec
 import spack.store
 import spack.util.crypto
+import spack.util.elf
+import spack.util.libc
 import spack.util.path
 import spack.util.timer
 import spack.variant
@@ -283,20 +285,27 @@ def all_compilers_in_config(configuration):
     return spack.compilers.all_compilers_from(configuration)
 
 
-def compatible_libc(candidate_libc_spec):
-    """Returns a list of libc specs that are compatible with the one passed as argument"""
-    result = set()
-    for compiler in all_compilers_in_config(spack.config.CONFIG):
-        libc = compiler.default_libc()
-        if not libc:
-            continue
-        if (
-            libc.name == candidate_libc_spec.name
-            and libc.version >= candidate_libc_spec.version
-            and libc.external_path == candidate_libc_spec.external_path
-        ):
-            result.add(libc)
-    return sorted(result)
+def all_libcs() -> Set[spack.spec.Spec]:
+    """Return a set of all libc specs targeted by any configured compiler. If none, fall back to
+    libc determined from the current Python process if dynamically linked."""
+
+    libcs = {
+        c.default_libc for c in all_compilers_in_config(spack.config.CONFIG) if c.default_libc
+    }
+
+    if libcs:
+        return libcs
+
+    libc = spack.util.libc.libc_from_current_python_process()
+    return {libc} if libc else set()
+
+
+def libc_is_compatible(lhs: spack.spec.Spec, rhs: spack.spec.Spec) -> List[spack.spec.Spec]:
+    return (
+        lhs.name == rhs.name
+        and lhs.external_path == rhs.external_path
+        and lhs.version >= rhs.version
+    )
 
 
 def using_libc_compatibility() -> bool:
@@ -597,7 +606,7 @@ def _external_config_with_implicit_externals(configuration):
         return packages_yaml
 
     for compiler in all_compilers_in_config(configuration):
-        libc = compiler.default_libc()
+        libc = compiler.default_libc
         if libc:
             entry = {"spec": f"{libc} %{compiler.spec}", "prefix": libc.external_path}
             packages_yaml.setdefault(libc.name, {}).setdefault("externals", []).append(entry)
@@ -1027,6 +1036,9 @@ class SpackSolverSetup:
         # Set during the call to setup
         self.pkgs: Set[str] = set()
         self.explicitly_required_namespaces: Dict[str, str] = {}
+
+        # list of unique libc specs targeted by compilers (or an educated guess if no compiler)
+        self.libcs: List[spack.spec.Spec] = []
 
     def pkg_version_rules(self, pkg):
         """Output declared versions of a package.
@@ -1872,13 +1884,14 @@ class SpackSolverSetup:
                     if dep.name == "gcc-runtime":
                         continue
 
-                    # LIBC is also solved again by clingo, but in this case the compatibility
+                    # libc is also solved again by clingo, but in this case the compatibility
                     # is not encoded in the parent node - so we need to emit explicit facts
                     if "libc" in dspec.virtuals:
-                        for x in compatible_libc(dep):
-                            clauses.append(
-                                fn.attr("compatible_libc", spec.name, x.name, x.version)
-                            )
+                        for libc in self.libcs:
+                            if libc_is_compatible(libc, dep):
+                                clauses.append(
+                                    fn.attr("compatible_libc", spec.name, libc.name, libc.version)
+                                )
                         continue
 
                     # We know dependencies are real for concrete specs. For abstract
@@ -2336,6 +2349,7 @@ class SpackSolverSetup:
         node_counter = _create_counter(specs, tests=self.tests)
         self.possible_virtuals = node_counter.possible_virtuals()
         self.pkgs = node_counter.possible_dependencies()
+        self.libcs = sorted(all_libcs())
 
         # Fail if we already know an unreachable node is requested
         for spec in specs:
@@ -2345,16 +2359,16 @@ class SpackSolverSetup:
             if missing_deps:
                 raise spack.spec.InvalidDependencyError(spec.name, missing_deps)
 
-        for node in spack.traverse.traverse_nodes(specs):
+        for node in traverse.traverse_nodes(specs):
             if node.namespace is not None:
                 self.explicitly_required_namespaces[node.name] = node.namespace
 
         self.gen = ProblemInstanceBuilder()
         compiler_parser = CompilerParser(configuration=spack.config.CONFIG).with_input_specs(specs)
 
-        # Only relevant for linux
-        for libc in compiler_parser.allowed_libcs:
-            self.gen.fact(fn.allowed_libc(libc.name, libc.version))
+        if using_libc_compatibility():
+            for libc in self.libcs:
+                self.gen.fact(fn.allowed_libc(libc.name, libc.version))
 
         if not allow_deprecated:
             self.gen.fact(fn.deprecated_versions_not_allowed())
@@ -2505,15 +2519,16 @@ class SpackSolverSetup:
             if not compiler.available:
                 continue
 
-            if using_libc_compatibility():
-                libc = compiler.compiler_obj.default_libc()
-                if libc:
-                    recorder("*").depends_on(
-                        "libc", when=f"%{compiler.spec}", type="link", description="Add libc"
-                    )
-                    recorder("*").depends_on(
-                        str(libc), when=f"%{compiler.spec}", type="link", description="Add libc"
-                    )
+            if using_libc_compatibility() and compiler.compiler_obj.default_libc:
+                recorder("*").depends_on(
+                    "libc", when=f"%{compiler.spec}", type="link", description="Add libc"
+                )
+                recorder("*").depends_on(
+                    str(compiler.compiler_obj.default_libc),
+                    when=f"%{compiler.spec}",
+                    type="link",
+                    description="Add libc",
+                )
 
         recorder.consume_facts()
 
@@ -2890,18 +2905,13 @@ class CompilerParser:
 
     def __init__(self, configuration) -> None:
         self.compilers: Set[KnownCompiler] = set()
-        self.allowed_libcs = set()
         for c in all_compilers_in_config(configuration):
-            if using_libc_compatibility():
-                libc = c.default_libc()
-                if not libc:
-                    warnings.warn(
-                        f"cannot detect libc from {c.spec}. The compiler will not be used "
-                        f"during concretization."
-                    )
-                    continue
-
-                self.allowed_libcs.add(libc)
+            if using_libc_compatibility() and not c.default_libc:
+                warnings.warn(
+                    f"cannot detect libc from {c.spec}. The compiler will not be used "
+                    f"during concretization."
+                )
+                continue
 
             target = c.target if c.target != "any" else None
             candidate = KnownCompiler(
