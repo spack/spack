@@ -794,7 +794,11 @@ class RepoPath:
 
     @autospec
     def providers_for(self, vpkg_spec):
-        providers = self.provider_index.providers_for(vpkg_spec)
+        providers = [
+            spec
+            for spec in self.provider_index.providers_for(vpkg_spec)
+            if spec.name in self.all_package_names()
+        ]
         if not providers:
             raise UnknownPackageError(vpkg_spec.fullname)
         return providers
