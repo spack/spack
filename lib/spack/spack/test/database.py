@@ -1106,3 +1106,31 @@ def test_database_construction_doesnt_use_globals(tmpdir, config, nullify_global
     lock_cfg = lock_cfg or spack.database.lock_configuration(config)
     db = spack.database.Database(str(tmpdir), lock_cfg=lock_cfg)
     assert os.path.exists(db.database_directory)
+
+
+def test_database_read_works_with_trailing_data(tmp_path, default_mock_concretization):
+    # Populate a database
+    root = str(tmp_path)
+    db = spack.database.Database(root)
+    spec = default_mock_concretization("a")
+    db.add(spec, directory_layout=None)
+    specs_in_db = db.query_local()
+    assert spec in specs_in_db
+
+    # Append anything to the end of the database file
+    with open(db._index_path, "a") as f:
+        f.write(json.dumps({"hello": "world"}))
+
+    # Read the database and check that it ignores the trailing data
+    assert spack.database.Database(root).query_local() == specs_in_db
+
+
+def test_database_errors_with_just_a_version_key(tmp_path):
+    root = str(tmp_path)
+    db = spack.database.Database(root)
+    next_version = f"{spack.database._DB_VERSION}.next"
+    with open(db._index_path, "w") as f:
+        f.write(json.dumps({"database": {"version": next_version}}))
+
+    with pytest.raises(spack.database.InvalidDatabaseVersionError):
+        spack.database.Database(root).query_local()
