@@ -1610,6 +1610,7 @@ class SpackSolverSetup:
                 self.gen.newline()
 
             self.trigger_rules()
+            self.effect_rules()
 
     def preferred_variants(self, pkg_name):
         """Facts on concretization preferences, as read from packages.yaml"""
