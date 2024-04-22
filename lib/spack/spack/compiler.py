@@ -109,7 +109,6 @@ def _parse_link_paths(string):
     """
     lib_search_paths = False
     raw_link_dirs = []
-    tty.debug("parsing implicit link info")
     for line in string.splitlines():
         if lib_search_paths:
             if line.startswith("\t"):
@@ -124,7 +123,7 @@ def _parse_link_paths(string):
             continue
         if _LINKER_LINE_IGNORE.match(line):
             continue
-        tty.debug("linker line: %s" % line)
+        tty.debug(f"implicit link dirs: link line: {line}")
 
         next_arg = False
         for arg in line.split():
@@ -140,15 +139,12 @@ def _parse_link_paths(string):
             link_dir_arg = _LINK_DIR_ARG.match(arg)
             if link_dir_arg:
                 link_dir = link_dir_arg.group("dir")
-                tty.debug("linkdir: %s" % link_dir)
                 raw_link_dirs.append(link_dir)
 
             link_dir_arg = _LIBPATH_ARG.match(arg)
             if link_dir_arg:
                 link_dir = link_dir_arg.group("dir")
-                tty.debug("libpath: %s", link_dir)
                 raw_link_dirs.append(link_dir)
-    tty.debug("found raw link dirs: %s" % ", ".join(raw_link_dirs))
 
     implicit_link_dirs = list()
     visited = set()
@@ -158,7 +154,7 @@ def _parse_link_paths(string):
             implicit_link_dirs.append(normalized_path)
             visited.add(normalized_path)
 
-    tty.debug("found link dirs: %s" % ", ".join(implicit_link_dirs))
+    tty.debug(f"implicit link dirs: result: {', '.join(implicit_link_dirs)}")
     return implicit_link_dirs
 
 
