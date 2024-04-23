@@ -32,8 +32,6 @@ class Llvm(CMakePackage, CudaPackage):
 
     generator("ninja")
 
-    family = "compiler"  # Used by lmod
-
     license("Apache-2.0")
 
     version("main", branch="main")
