@@ -51,7 +51,6 @@ line is a spec for a particular installation of the mpileaks package.
 import collections
 import collections.abc
 import enum
-import io
 import itertools
 import os
 import pathlib
@@ -59,7 +58,7 @@ import platform
 import re
 import socket
 import warnings
-from typing import Any, Callable, Dict, List, Optional, Set, Tuple, Union
+from typing import Any, Callable, Dict, List, Match, Optional, Set, Tuple, Union
 
 import llnl.path
 import llnl.string
@@ -121,35 +120,43 @@ __all__ = [
     "SpecDeprecatedError",
 ]
 
+
+SPEC_FORMAT_RE = re.compile(
+    r"(?:"  # this is one big or, with matches ordered by priority
+    # OPTION 1: escaped character (needs to be first to catch opening \{)
+    # Note that an unterminated \ at the end of a string is left untouched
+    r"(?:\\(.))"
+    r"|"  # or
+    # OPTION 2: an actual format string
+    r"{"  # non-escaped open brace {
+    r"([%@/]|arch=)?"  # optional sigil (to print sigil in color)
+    r"(?:\^([^}\.]+)\.)?"  # optional ^depname. (to get attr from dependency)
+    # after the sigil or depname, we can have a hash expression or another attribute
+    r"(?:"  # one of
+    r"(hash\b)(?:\:(\d+))?"  # hash followed by :<optional length>
+    r"|"  # or
+    r"([^}]*)"  # another attribute to format
+    r")"  # end one of
+    r"(})?"  # finish format string with non-escaped close brace }, or missing if not present
+    r"|"
+    # OPTION 3: mismatched close brace (option 2 would consume a matched open brace)
+    r"(})"  # brace
+    r")",
+    re.IGNORECASE,
+)
+
 #: Valid pattern for an identifier in Spack
 
 IDENTIFIER_RE = r"\w[\w-]*"
 
+# Coloring of specs when using color output. Fields are printed with
+# different colors to enhance readability.
+# See llnl.util.tty.color for descriptions of the color codes.
 COMPILER_COLOR = "@g"  #: color for highlighting compilers
 VERSION_COLOR = "@c"  #: color for highlighting versions
 ARCHITECTURE_COLOR = "@m"  #: color for highlighting architectures
-ENABLED_VARIANT_COLOR = "@B"  #: color for highlighting enabled variants
-DISABLED_VARIANT_COLOR = "r"  #: color for highlighting disabled varaints
-DEPENDENCY_COLOR = "@."  #: color for highlighting dependencies
+VARIANT_COLOR = "@B"  #: color for highlighting variants
 HASH_COLOR = "@K"  #: color for highlighting package hashes
-
-#: This map determines the coloring of specs when using color output.
-#: We make the fields different colors to enhance readability.
-#: See llnl.util.tty.color for descriptions of the color codes.
-COLOR_FORMATS = {
-    "%": COMPILER_COLOR,
-    "@": VERSION_COLOR,
-    "=": ARCHITECTURE_COLOR,
-    "+": ENABLED_VARIANT_COLOR,
-    "~": DISABLED_VARIANT_COLOR,
-    "^": DEPENDENCY_COLOR,
-    "#": HASH_COLOR,
-}
-
-#: Regex used for splitting by spec field separators.
-#: These need to be escaped to avoid metacharacters in
-#: ``COLOR_FORMATS.keys()``.
-_SEPARATORS = "[\\%s]" % "\\".join(COLOR_FORMATS.keys())
 
 #: Default format for Spec.format(). This format can be round-tripped, so that:
 #:     Spec(Spec("string").format()) == Spec("string)"
@@ -193,26 +200,7 @@ class InstallStatus(enum.Enum):
     missing = "@r{[-]}  "
 
 
-def colorize_spec(spec):
-    """Returns a spec colorized according to the colors specified in
-    COLOR_FORMATS."""
-
-    class insert_color:
-        def __init__(self):
-            self.last = None
-
-        def __call__(self, match):
-            # ignore compiler versions (color same as compiler)
-            sep = match.group(0)
-            if self.last == "%" and sep == "@":
-                return clr.cescape(sep)
-            self.last = sep
-
-            return "%s%s" % (COLOR_FORMATS[sep], clr.cescape(sep))
-
-    return clr.colorize(re.sub(_SEPARATORS, insert_color(), str(spec)) + "@.")
-
-
+# regexes used in spec formatting
 OLD_STYLE_FMT_RE = re.compile(r"\${[A-Z]+}")
 
 
@@ -4295,10 +4283,7 @@ class Spec:
 
         yield deps
 
-    def colorized(self):
-        return colorize_spec(self)
-
-    def format(self, format_string=DEFAULT_FORMAT, **kwargs):
+    def format(self, format_string: str = DEFAULT_FORMAT, color: Optional[bool] = False) -> str:
         r"""Prints out particular pieces of a spec, depending on what is
         in the format string.
 
@@ -4361,79 +4346,65 @@ class Spec:
         literal ``\`` character.
 
         Args:
-            format_string (str): string containing the format to be expanded
-
-        Keyword Args:
-            color (bool): True if returned string is colored
-            transform (dict): maps full-string formats to a callable \
-                that accepts a string and returns another one
-
+            format_string: string containing the format to be expanded
+            color: True for colorized result; False for no color; None for auto color.
         """
         ensure_modern_format_string(format_string)
-        color = kwargs.get("color", False)
-        transform = kwargs.get("transform", {})
 
-        out = io.StringIO()
+        def safe_color(sigil: str, string: str, color_fmt: Optional[str]) -> str:
+            # avoid colorizing if there is no color or the string is empty
+            if (color is False) or not color_fmt or not string:
+                return sigil + string
+            # escape and add the sigil here to avoid multiple concatenations
+            if sigil == "@":
+                sigil = "@@"
+            return clr.colorize(f"{color_fmt}{sigil}{clr.cescape(string)}@.", color=color)
 
-        def write(s, c=None):
-            f = clr.cescape(s)
-            if c is not None:
-                f = COLOR_FORMATS[c] + f + "@."
-            clr.cwrite(f, stream=out, color=color)
+        def format_attribute(match_object: Match) -> str:
+            (esc, sig, dep, hash, hash_len, attribute, close_brace, unmatched_close_brace) = (
+                match_object.groups()
+            )
+            if esc:
+                return esc
+            elif unmatched_close_brace:
+                raise SpecFormatStringError(f"Unmatched close brace: '{format_string}'")
+            elif not close_brace:
+                raise SpecFormatStringError(f"Missing close brace: '{format_string}'")
 
-        def write_attribute(spec, attribute, color):
-            attribute = attribute.lower()
+            current = self if dep is None else self[dep]
 
-            sig = ""
-            if attribute.startswith(("@", "%", "/")):
-                # color sigils that are inside braces
-                sig = attribute[0]
-                attribute = attribute[1:]
-            elif attribute.startswith("arch="):
-                sig = " arch="  # include space as separator
-                attribute = attribute[5:]
-
-            current = spec
-            if attribute.startswith("^"):
-                attribute = attribute[1:]
-                dep, attribute = attribute.split(".", 1)
-                current = self[dep]
+            # Hash attributes can return early.
+            # NOTE: we currently treat abstract_hash like an attribute and ignore
+            # any length associated with it. We may want to change that.
+            if hash:
+                if sig and sig != "/":
+                    raise SpecFormatSigilError(sig, "DAG hashes", hash)
+                try:
+                    length = int(hash_len) if hash_len else None
+                except ValueError:
+                    raise SpecFormatStringError(f"Invalid hash length: '{hash_len}'")
+                return safe_color(sig or "", current.dag_hash(length), HASH_COLOR)
 
             if attribute == "":
                 raise SpecFormatStringError("Format string attributes must be non-empty")
 
+            attribute = attribute.lower()
             parts = attribute.split(".")
             assert parts
 
             # check that the sigil is valid for the attribute.
-            if sig == "@" and parts[-1] not in ("versions", "version"):
+            if not sig:
+                sig = ""
+            elif sig == "@" and parts[-1] not in ("versions", "version"):
                 raise SpecFormatSigilError(sig, "versions", attribute)
             elif sig == "%" and attribute not in ("compiler", "compiler.name"):
                 raise SpecFormatSigilError(sig, "compilers", attribute)
-            elif sig == "/" and not re.match(r"(abstract_)?hash(:\d+)?$", attribute):
+            elif sig == "/" and attribute != "abstract_hash":
                 raise SpecFormatSigilError(sig, "DAG hashes", attribute)
-            elif sig == " arch=" and attribute not in ("architecture", "arch"):
-                raise SpecFormatSigilError(sig, "the architecture", attribute)
-
-            # find the morph function for our attribute
-            morph = transform.get(attribute, lambda s, x: x)
-
-            # Special cases for non-spec attributes and hashes.
-            # These must be the only non-dep component of the format attribute
-            if attribute == "spack_root":
-                write(morph(spec, spack.paths.spack_root))
-                return
-            elif attribute == "spack_install":
-                write(morph(spec, spack.store.STORE.layout.root))
-                return
-            elif re.match(r"hash(:\d)?", attribute):
-                col = "#"
-                if ":" in attribute:
-                    _, length = attribute.split(":")
-                    write(sig + morph(spec, current.dag_hash(int(length))), col)
-                else:
-                    write(sig + morph(spec, current.dag_hash()), col)
-                return
+            elif sig == "arch=":
+                if attribute not in ("architecture", "arch"):
+                    raise SpecFormatSigilError(sig, "the architecture", attribute)
+                sig = " arch="  # include space as separator
 
             # Iterate over components using getattr to get next element
             for idx, part in enumerate(parts):
@@ -4442,7 +4413,7 @@ class Spec:
                 if part.startswith("_"):
                     raise SpecFormatStringError("Attempted to format private attribute")
                 else:
-                    if isinstance(current, vt.VariantMap):
+                    if part == "variants" and isinstance(current, vt.VariantMap):
                         # subscript instead of getattr for variant names
                         current = current[part]
                     else:
@@ -4466,68 +4437,47 @@ class Spec:
                             raise SpecFormatStringError(m)
                         if isinstance(current, vn.VersionList):
                             if current == vn.any_version:
-                                # We don't print empty version lists
-                                return
+                                # don't print empty version lists
+                                return ""
 
                     if callable(current):
                         raise SpecFormatStringError("Attempted to format callable object")
+
                     if current is None:
-                        # We're not printing anything
-                        return
+                        # not printing anything
+                        return ""
 
             # Set color codes for various attributes
-            col = None
+            color = None
             if "variants" in parts:
-                col = "+"
+                color = VARIANT_COLOR
             elif "architecture" in parts:
-                col = "="
+                color = ARCHITECTURE_COLOR
             elif "compiler" in parts or "compiler_flags" in parts:
-                col = "%"
+                color = COMPILER_COLOR
             elif "version" in parts or "versions" in parts:
-                col = "@"
+                color = VERSION_COLOR
 
-            # Finally, write the output
-            write(sig + morph(spec, str(current)), col)
+            # return colored output
+            return safe_color(sig, str(current), color)
 
-        attribute = ""
-        in_attribute = False
-        escape = False
-
-        for c in format_string:
-            if escape:
-                out.write(c)
-                escape = False
-            elif c == "\\":
-                escape = True
-            elif in_attribute:
-                if c == "}":
-                    write_attribute(self, attribute, color)
-                    attribute = ""
-                    in_attribute = False
-                else:
-                    attribute += c
-            else:
-                if c == "}":
-                    raise SpecFormatStringError(
-                        "Encountered closing } before opening { in %s" % format_string
-                    )
-                elif c == "{":
-                    in_attribute = True
-                else:
-                    out.write(c)
-        if in_attribute:
-            raise SpecFormatStringError(
-                "Format string terminated while reading attribute." "Missing terminating }."
-            )
-
-        formatted_spec = out.getvalue()
-        return formatted_spec.strip()
+        return SPEC_FORMAT_RE.sub(format_attribute, format_string).strip()
 
     def cformat(self, *args, **kwargs):
         """Same as format, but color defaults to auto instead of False."""
         kwargs = kwargs.copy()
         kwargs.setdefault("color", None)
         return self.format(*args, **kwargs)
+
+    @property
+    def spack_root(self):
+        """Special field for using ``{spack_root}`` in Spec.format()."""
+        return spack.paths.spack_root
+
+    @property
+    def spack_install(self):
+        """Special field for using ``{spack_install}`` in Spec.format()."""
+        return spack.store.STORE.layout.root
 
     def format_path(
         # self, format_string: str, _path_ctor: Optional[pathlib.PurePath] = None
@@ -4554,14 +4504,21 @@ class Spec:
 
         path_ctor = _path_ctor or pathlib.PurePath
         format_string_as_path = path_ctor(format_string)
-        if format_string_as_path.is_absolute():
+        if format_string_as_path.is_absolute() or (
+            # Paths that begin with a single "\" on windows are relative, but we still
+            # want to preserve the initial "\\" to be consistent with PureWindowsPath.
+            # Ensure that this '\' is not passed to polite_filename() so it's not converted to '_'
+            (os.name == "nt" or path_ctor == pathlib.PureWindowsPath)
+            and format_string_as_path.parts[0] == "\\"
+        ):
             output_path_components = [format_string_as_path.parts[0]]
             input_path_components = list(format_string_as_path.parts[1:])
         else:
             output_path_components = []
             input_path_components = list(format_string_as_path.parts)
+
         output_path_components += [
-            fs.polite_filename(self.format(x)) for x in input_path_components
+            fs.polite_filename(self.format(part)) for part in input_path_components
         ]
         return str(path_ctor(*output_path_components))
 

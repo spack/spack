@@ -390,11 +390,11 @@ def test_built_spec_cache(mirror_dir):
         assert any([r["spec"] == s for r in results])
 
 
-def fake_dag_hash(spec):
+def fake_dag_hash(spec, length=None):
     # Generate an arbitrary hash that is intended to be different than
     # whatever a Spec reported before (to test actions that trigger when
     # the hash changes)
-    return "tal4c7h4z0gqmixb1eqa92mjoybxn5l6"
+    return "tal4c7h4z0gqmixb1eqa92mjoybxn5l6"[:length]
 
 
 @pytest.mark.usefixtures(
