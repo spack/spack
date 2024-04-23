@@ -731,8 +731,6 @@ class TestSpecSemantics:
             r"{dag_hash}",
             r"{foo}",
             r"{+variants.debug}",
-            "\\",  # unterminated escape character
-            "foobar\\",  # unterminated escape character
         ],
     )
     def test_spec_formatting_bad_formats(self, default_mock_concretization, fmt_str):

@@ -124,6 +124,7 @@ __all__ = [
 SPEC_FORMAT_RE = re.compile(
     r"(?:"  # this is one big or, with matches ordered by priority
     # OPTION 1: escaped character (needs to be first to catch opening \{)
+    # Note that an unterminated \ at the end of a string is left untouched
     r"(?:\\(.))"
     r"|"  # or
     # OPTION 2: an actual format string
@@ -140,9 +141,6 @@ SPEC_FORMAT_RE = re.compile(
     r"|"
     # OPTION 3: mismatched close brace (option 2 would consume a matched open brace)
     r"(})"  # brace
-    r"|"
-    # OPTION 4: unterminated escape character (option 1 would consume a terminated escape)
-    r"(?<!\\)(\\)$"  # unterminated escape
     r")",
     re.IGNORECASE,
 )
@@ -4366,16 +4364,12 @@ class Spec:
             return clr.colorize(f"{color_fmt}{sigil}{clr.cescape(string)}@.", color=color)
 
         def format_attribute(match_object: Match) -> str:
-            (esc, sig, dep, hash, hash_len, attribute, close_brace, unmatch_brace, bare_slash) = (
+            (esc, sig, dep, hash, hash_len, attribute, close_brace, unmatched_close_brace) = (
                 match_object.groups()
             )
             if esc:
                 return esc
-            elif bare_slash:
-                raise SpecFormatStringError(
-                    f"Unterminated '\\' escape in format string: '{format_string}'"
-                )
-            elif unmatch_brace:
+            elif unmatched_close_brace:
                 raise SpecFormatStringError(f"Unmatched close brace: '{format_string}'")
             elif not close_brace:
                 raise SpecFormatStringError(f"Missing close brace: '{format_string}'")
@@ -4513,7 +4507,13 @@ class Spec:
 
         path_ctor = _path_ctor or pathlib.PurePath
         format_string_as_path = path_ctor(format_string)
-        if format_string_as_path.is_absolute():
+        if format_string_as_path.is_absolute() or (
+            # Paths that begin with a single "\" on windows are relative, but we still
+            # want to preserve the initial "\\" to be consistent with PureWindowsPath.
+            # Ensure that this '\' is not passed to polite_filename() so it's not converted to '_'
+            (os.name == "nt" or path_ctor == pathlib.PureWindowsPath)
+            and format_string_as_path.parts[0] == "\\"
+        ):
             output_path_components = [format_string_as_path.parts[0]]
             input_path_components = list(format_string_as_path.parts[1:])
         else:
@@ -4521,8 +4521,7 @@ class Spec:
             input_path_components = list(format_string_as_path.parts)
 
         output_path_components += [
-            fs.polite_filename(self.format(part)) if part != "\\" else part
-            for part in input_path_components
+            fs.polite_filename(self.format(part)) for part in input_path_components
         ]
         return str(path_ctor(*output_path_components))
 
