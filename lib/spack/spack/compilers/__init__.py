@@ -967,10 +967,11 @@ def make_compiler_list(
         make_mixed_toolchain(flat_compilers)
 
     # Finally, create the compiler list
-    compilers = []
+    compilers: List["spack.compiler.Compiler"] = []
     for compiler_id, _, compiler in flat_compilers:
         make_compilers = getattr(compiler_id.os, "make_compilers", _default_make_compilers)
-        compilers.extend(make_compilers(compiler_id, compiler))
+        candidates = make_compilers(compiler_id, compiler)
+        compilers.extend(x for x in candidates if x.cc is not None)
 
     return compilers
 

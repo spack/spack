@@ -894,3 +894,52 @@ def test_compiler_executable_verification_success(tmpdir):
     # Test that null entries don't fail
     compiler.cc = None
     compiler.verify_executables()
+
+
+@pytest.mark.parametrize(
+    "detected_versions,expected_length",
+    [
+        # If we detect a C compiler we expect the result to be valid
+        (
+            [
+                spack.compilers.DetectVersionArgs(
+                    id=spack.compilers.CompilerID(
+                        os="ubuntu20.04", compiler_name="clang", version="12.0.0"
+                    ),
+                    variation=spack.compilers.NameVariation(prefix="", suffix="-12"),
+                    language="cc",
+                    path="/usr/bin/clang-12",
+                ),
+                spack.compilers.DetectVersionArgs(
+                    id=spack.compilers.CompilerID(
+                        os="ubuntu20.04", compiler_name="clang", version="12.0.0"
+                    ),
+                    variation=spack.compilers.NameVariation(prefix="", suffix="-12"),
+                    language="cxx",
+                    path="/usr/bin/clang++-12",
+                ),
+            ],
+            1,
+        ),
+        # If we detect only a C++ compiler we expect the result to be discarded
+        (
+            [
+                spack.compilers.DetectVersionArgs(
+                    id=spack.compilers.CompilerID(
+                        os="ubuntu20.04", compiler_name="clang", version="12.0.0"
+                    ),
+                    variation=spack.compilers.NameVariation(prefix="", suffix="-12"),
+                    language="cxx",
+                    path="/usr/bin/clang++-12",
+                )
+            ],
+            0,
+        ),
+    ],
+)
+def test_detection_requires_c_compiler(detected_versions, expected_length):
+    """Tests that compilers automatically added to the configuration have
+    at least a C compiler.
+    """
+    result = spack.compilers.make_compiler_list(detected_versions)
+    assert len(result) == expected_length
