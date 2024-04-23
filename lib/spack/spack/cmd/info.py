@@ -263,7 +263,7 @@ def _fmt_name_and_default(variant):
     return color.colorize(f"@c{{{variant.name}}} @C{{[{_fmt_value(variant.default)}]}}")
 
 
-def _fmt_when(when: bool, indent: int):
+def _fmt_when(when: "spack.spec.Spec", indent: int):
     return color.colorize(f"{indent * ' '}@B{{when}} {color.cescape(str(when))}")
 
 
