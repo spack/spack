@@ -971,9 +971,7 @@ def make_compiler_list(
     for compiler_id, _, compiler in flat_compilers:
         make_compilers = getattr(compiler_id.os, "make_compilers", _default_make_compilers)
         candidates = make_compilers(compiler_id, compiler)
-        # Discard candidates without a C compiler
-        candidates = [x for x in candidates if x.cc is not None]
-        compilers.extend(candidates)
+        compilers.extend(x for x in candidates if x.cc is not None)
 
     return compilers
 
