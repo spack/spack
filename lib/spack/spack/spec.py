@@ -4351,7 +4351,7 @@ class Spec:
         """
         ensure_modern_format_string(format_string)
 
-        def safe_color(sigil: str, string: str, color_fmt: Optional[str]):
+        def safe_color(sigil: str, string: str, color_fmt: Optional[str]) -> str:
             # avoid colorizing if there is no color or the string is empty
             if (color is False) or not color_fmt or not string:
                 return sigil + string
