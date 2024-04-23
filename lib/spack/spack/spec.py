@@ -4347,10 +4347,7 @@ class Spec:
 
         Args:
             format_string: string containing the format to be expanded
-
-        Keyword Args:
-            color: True if returned string is colored, False if not,
-                None for auto color (default is False)
+            color: True for colorized result; False for no color; None for auto color.
         """
         ensure_modern_format_string(format_string)
 
