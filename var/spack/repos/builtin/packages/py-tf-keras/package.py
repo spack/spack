@@ -46,14 +46,14 @@ class PyTfKeras(PythonPackage):
     # the tf-keras versions are following along with TF versions
     for minor_ver in range(16, max_minor + 1):
         depends_on(
-            "py-tensorflow@2.{}".format(minor_ver),
+            f"py-tensorflow@2.{minor_ver}",
             type=("build", "run"),
-            when="@2.{}".format(minor_ver),
+            when=f"@2.{minor_ver}",
         )
         depends_on(
-            "py-tensorboard@2.{}".format(minor_ver),
+            f"py-tensorboard@2.{minor_ver}",
             type=("build", "run"),
-            when="@2.{}".format(minor_ver),
+            when=f"@2.{minor_ver}",
         )
     depends_on("py-pyyaml", type=("build", "run"))
     depends_on("bazel", type="build")
