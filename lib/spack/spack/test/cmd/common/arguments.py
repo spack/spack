@@ -123,17 +123,18 @@ def test_root_and_dep_match_returns_root(mock_packages, mutable_mock_env_path):
 
 
 @pytest.mark.parametrize(
-    "arg,config", [("--reuse", True), ("--fresh", False), ("--reuse-deps", "dependencies")]
+    "arg,conf", [("--reuse", True), ("--fresh", False), ("--reuse-deps", "dependencies")]
 )
-def test_concretizer_arguments(mutable_config, mock_packages, arg, config):
+def test_concretizer_arguments(mutable_config, mock_packages, arg, conf):
     """Ensure that ConfigSetAction is doing the right thing."""
     spec = spack.main.SpackCommand("spec")
 
-    assert spack.config.get("concretizer:reuse", None) is None
+    assert spack.config.get("concretizer:reuse", None, scope="command_line") is None
 
     spec(arg, "zlib")
 
-    assert spack.config.get("concretizer:reuse", None) == config
+    assert spack.config.get("concretizer:reuse", None) == conf
+    assert spack.config.get("concretizer:reuse", None, scope="command_line") == conf
 
 
 def test_use_buildcache_type():
