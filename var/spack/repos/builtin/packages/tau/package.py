@@ -162,10 +162,11 @@ class Tau(Package):
     requires("+rocm", when="+roctracer", msg="Roctracer requires ROCm")
 
     requires(
-        "+rocprofiler", "+roctracer",
+        "+rocprofiler",
+        "+roctracer",
         policy="one_of",
         when="+rocm",
-        msg="When using ROCm, you need to select either +rocprofiler or +roctracer"
+        msg="When using ROCm, you need to select either +rocprofiler or +roctracer",
     )
 
     filter_compiler_wrappers("Makefile", relative_root="include")
@@ -563,7 +564,7 @@ class Tau(Package):
         )
 
     def test(self):
-        #Temporarily disable tests, will update them with the new test method.
+        # Temporarily disable tests, will update them with the new test method.
         return
         test_dir = self.test_suite.current_test_cache_dir
         # Run mm test program pulled from the build
