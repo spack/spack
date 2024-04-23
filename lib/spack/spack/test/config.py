@@ -1276,7 +1276,7 @@ def test_user_config_path_is_default_when_env_var_is_empty(working_env):
 
 def test_default_install_tree(monkeypatch, default_config):
     s = spack.spec.Spec("nonexistent@x.y.z %none@a.b.c arch=foo-bar-baz")
-    monkeypatch.setattr(s, "dag_hash", lambda: "abc123")
+    monkeypatch.setattr(s, "dag_hash", lambda length: "abc123")
     _, _, projections = spack.store.parse_install_tree(spack.config.get("config"))
     assert s.format(projections["all"]) == "foo-bar-baz/none-a.b.c/nonexistent-x.y.z-abc123"
 
