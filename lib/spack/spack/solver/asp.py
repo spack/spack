@@ -2349,7 +2349,7 @@ class SpackSolverSetup:
         node_counter = _create_counter(specs, tests=self.tests)
         self.possible_virtuals = node_counter.possible_virtuals()
         self.pkgs = node_counter.possible_dependencies()
-        self.libcs = sorted(all_libcs())
+        self.libcs = sorted(all_libcs())  # type: ignore[type-var]
 
         # Fail if we already know an unreachable node is requested
         for spec in specs:
