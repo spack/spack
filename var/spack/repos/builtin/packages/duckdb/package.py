@@ -117,9 +117,11 @@ class Duckdb(MakefilePackage):
         # DuckDB pulls its version from a git tag, which it can't find in the tarball
         # and thus defaults to something arbitrary and breaks extensions.
         # We use the Spack version to inject it in the right place during the build
+        # Patching is not needed for versions from 10.0.2 onward as we can 
+        # set OVERRIDE_GIT_DESCRIBE to force the version when not building from a repo.
 
         version = self.spec.version
-        if not self.spec.satisfies("@0.10.0:"):
+        if self.spec.satisfies("@:0.9.2"):
             # Prior to version 0.10.0, this was sufficient
             filter_file(
                 r'(message\(STATUS "git hash \$\{GIT_COMMIT_HASH\}, '
