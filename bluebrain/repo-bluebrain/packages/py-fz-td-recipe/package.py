@@ -10,8 +10,8 @@ class PyFzTdRecipe(PythonPackage):
     """Python package to read and modify the definitions and parameters used in circuit
     building."""
 
-    homepage = "https://bbpteam.epfl.ch/documentation/projects/fz-td-recipe"
-    git = "ssh://git@bbpgitlab.epfl.ch/hpc/circuit-building/fz-td-recipe.git"
+    homepage = "https://github.com/BlueBrain/fz-td-recipe"
+    git = "ssh://git@github.com/BlueBrain/fz-td-recipe.git"
 
     version("develop", branch="main")
     version("0.2.0", tag="fz-td-recipe-v0.2.0")
@@ -19,7 +19,9 @@ class PyFzTdRecipe(PythonPackage):
     version("0.1.1", tag="fz-td-recipe-v0.1.1")
     version("0.1.0", tag="fz-td-recipe-v0.1.0")
 
-    depends_on("py-setuptools", type="build")
+    depends_on("py-setuptools", type="build", when="@:0.2")
+    depends_on("py-hatchling", type="build", when="@0.2.1:")
+    depends_on("py-hatch-vcs", type="build", when="@0.2.1:")
 
     depends_on("py-click", type=("build", "run"), when="@0.2:")
     depends_on("py-jsonschema", type=("build", "run"), when="@0.2:")
