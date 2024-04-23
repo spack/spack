@@ -13,7 +13,7 @@ import spack.spec
 import spack.util.elf
 
 
-def _libc_from_ldd(ldd: str) -> Optional[spack.spec.Spec]:
+def _libc_from_ldd(ldd: str) -> Optional["spack.spec.Spec"]:
     try:
         result = run([ldd, "--version"], stdout=PIPE, stderr=PIPE, check=False)
         stdout = result.stdout.decode("utf-8")
@@ -32,7 +32,7 @@ def _libc_from_ldd(ldd: str) -> Optional[spack.spec.Spec]:
         return None
 
 
-def libc_from_dynamic_linker(dynamic_linker: str) -> Optional[spack.spec.Spec]:
+def libc_from_dynamic_linker(dynamic_linker: str) -> Optional["spack.spec.Spec"]:
     if not os.path.exists(dynamic_linker):
         return None
 
@@ -105,7 +105,7 @@ def libc_from_dynamic_linker(dynamic_linker: str) -> Optional[spack.spec.Spec]:
         return maybe_spec
 
 
-def libc_from_current_python_process() -> Optional[spack.spec.Spec]:
+def libc_from_current_python_process() -> Optional["spack.spec.Spec"]:
     if not sys.executable:
         return None
 
