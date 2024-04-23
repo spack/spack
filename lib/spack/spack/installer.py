@@ -488,6 +488,7 @@ def _process_binary_cache_tarball(
 
     with timer.measure("install"), spack.util.path.filter_padding():
         binary_distribution.extract_tarball(pkg.spec, download_result, force=False, timer=timer)
+        pkg.windows_establish_runtime_linkage()
 
         if hasattr(pkg, "_post_buildcache_install_hook"):
             pkg._post_buildcache_install_hook()

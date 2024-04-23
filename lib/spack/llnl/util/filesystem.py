@@ -2429,9 +2429,10 @@ class WindowsSimulatedRPath:
         """
         for pth in dest:
             if os.path.isfile(pth):
-                self._additional_library_dependents.add(pathlib.Path(pth).parent)
+                new_pth = pathlib.Path(pth).parent
             else:
-                self._additional_library_dependents.add(pathlib.Path(pth))
+                new_pth = pathlib.Path(pth)
+            self._additional_library_dependents.add(new_pth)
 
     @property
     def rpaths(self):

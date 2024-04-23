@@ -201,8 +201,8 @@ def reproducible_tarfile_from_prefix(
                     # st_mode field of the stat structure is unspecified." So we set it to
                     # something sensible without lstat'ing the link.
                     file_info.mode = 0o755
-                    tar.addfile(file_info)
                     file_info.type = tarfile.SYMTYPE
+                    tar.addfile(file_info)
 
                 # Absolute links need to be made relative
                 #  - if links point inside the prefix
