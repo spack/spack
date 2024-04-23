@@ -31,4 +31,4 @@ class HipTensor(CMakePackage, ROCmPackage):
     def setup_build_environment(self, env):
         env.set("CXX", self.spec["hip"].hipcc)
         if self.spec.satisfies("+asan"):
-            self.asan_on(env, self.spec["llvm-amdgpu"].prefix)
+            self.asan_on(env)

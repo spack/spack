@@ -552,11 +552,11 @@ With either interpreter you can run a single command:
 
 .. code-block:: console
 
-   $ spack python -c 'import distro; distro.linux_distribution()'
-   ('Ubuntu', '18.04', 'Bionic Beaver')
+   $ spack python -c 'from spack.spec import Spec; Spec("python").concretized()'
+   ...
 
-   $ spack python -i ipython -c 'import distro; distro.linux_distribution()'
-   Out[1]: ('Ubuntu', '18.04', 'Bionic Beaver')
+   $ spack python -i ipython -c 'from spack.spec import Spec; Spec("python").concretized()'
+   Out[1]: ...
 
 or a file:
 

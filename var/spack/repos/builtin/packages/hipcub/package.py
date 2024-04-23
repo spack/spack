@@ -89,7 +89,7 @@ class Hipcub(CMakePackage, CudaPackage, ROCmPackage):
         if self.spec.satisfies("+rocm"):
             env.set("CXX", self.spec["hip"].hipcc)
         if self.spec.satisfies("+asan"):
-            self.asan_on(env, self.spec["llvm-amdgpu"].prefix)
+            self.asan_on(env)
 
     def cmake_args(self):
         args = [self.define("BUILD_TEST", self.run_tests)]

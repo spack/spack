@@ -117,7 +117,7 @@ class Hipblas(CMakePackage, CudaPackage, ROCmPackage):
 
     def setup_build_environment(self, env):
         if self.spec.satisfies("+asan"):
-            self.asan_on(env, self.spec["llvm-amdgpu"].prefix)
+            self.asan_on(env)
 
     def cmake_args(self):
         args = [
