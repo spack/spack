@@ -48,7 +48,7 @@ class Prefix(str):
         Returns:
             the newly created installation prefix
         """
-        return Prefix(os.path.join(self, name))
+        return self.join(name)
 
     def join(self, string: str) -> "Prefix":  # type: ignore[override]
         """Concatenate a string to a prefix.

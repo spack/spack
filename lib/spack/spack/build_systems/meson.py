@@ -12,6 +12,7 @@ import spack.builder
 import spack.package_base
 from spack.directives import build_system, conflicts, depends_on, variant
 from spack.multimethod import when
+from spack.util.prefix import Prefix
 
 from ._checks import BaseBuilder, execute_build_time_tests
 
@@ -171,7 +172,7 @@ class MesonBuilder(BaseBuilder):
     @property
     def build_directory(self):
         """Directory to use when building the package."""
-        return os.path.join(self.pkg.stage.path, self.build_dirname)
+        return Prefix(self.pkg.stage.path).join(self.build_dirname)
 
     def meson_args(self):
         """List of arguments that must be passed to meson, except:

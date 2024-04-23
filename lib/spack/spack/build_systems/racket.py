@@ -16,6 +16,7 @@ from spack.package_base import PackageBase
 from spack.util.cpus import determine_number_of_jobs
 from spack.util.environment import env_flag
 from spack.util.executable import Executable, ProcessError
+from spack.util.prefix import Prefix
 
 
 class RacketPackage(PackageBase):
@@ -73,7 +74,7 @@ class RacketBuilder(spack.builder.Builder):
         ret = os.getcwd()
         if self.subdirectory:
             ret = os.path.join(ret, self.subdirectory)
-        return ret
+        return Prefix(ret)
 
     def install(self, pkg, spec, prefix):
         """Install everything from build directory."""
