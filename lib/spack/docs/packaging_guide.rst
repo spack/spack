@@ -6474,6 +6474,10 @@ package detection and checking that the outcome matches the expected
      - A spec that is expected from detection
      - Any valid spec
      - Yes
+   * - ``results:[0]:extra_attributes``
+     - Extra attributes expected on the associated Spec
+     - Nested dictionary with string as keys, and regular expressions as leaf values
+     - No
 
 """""""""""""""""""""""""""""""
 Reuse tests from other packages
