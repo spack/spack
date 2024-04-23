@@ -107,8 +107,8 @@ class Duckdb(MakefilePackage):
                 env.set(make_flag, "1")
             elif "~" + flag in self.spec:
                 env.set(make_flag, "0")
-        if self.spec.satisfies("@:0.10.2"):
-            env.set("OVERRIDE_GIT_DESCRIBE", "v{0}".format(self.spec.version))
+        if self.spec.satisfies("@0.10.2:"):
+            env.set("OVERRIDE_GIT_DESCRIBE", f"v{self.spec.version}")
 
     def url_for_version(self, version):
         return "https://github.com/duckdb/duckdb/archive/refs/tags/v{0}.tar.gz".format(version)
@@ -127,7 +127,7 @@ class Duckdb(MakefilePackage):
                 'set(DUCKDB_VERSION "v{0}")\n\\1'.format(version),
                 "CMakeLists.txt",
             )
-        elif self.spec.satisfies("@0.10.2:"):
+        elif not self.spec.satisfies("@0.10.0"):
             # Override the fallback values that are set when GIT_COMMIT_HASH doesn't work
             for i, n in enumerate(["MAJOR", "MINOR", "PATCH"]):
                 filter_file(
