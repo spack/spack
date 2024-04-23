@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class Voropp(MakefilePackage):
     url = "http://math.lbl.gov/voro++/download/dir/voro++-0.4.6.tar.gz"
 
     variant("pic", default=True, description="Position independent code")
+
+    license("BSD-3-Clause-LBNL")
 
     version("0.4.6", sha256="ef7970071ee2ce3800daa8723649ca069dc4c71cc25f0f7d22552387f3ea437e")
 

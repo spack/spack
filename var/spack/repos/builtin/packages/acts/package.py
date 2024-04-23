@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -37,9 +37,18 @@ class Acts(CMakePackage, CudaPackage):
 
     tags = ["hep"]
 
+    license("MPL-2.0")
+
     # Supported Acts versions
     version("main", branch="main")
     version("master", branch="main", deprecated=True)  # For compatibility
+    version("34.0.0", commit="daafd83adf0ce50f9667f3c9d4791a459e39fd1b", submodules=True)
+    version("33.1.0", commit="00591a593a648430820e980b031301d25c18f1c7", submodules=True)
+    version("33.0.0", commit="f6ed9013e76120137ae456583a04b554d88d9452", submodules=True)
+    version("32.1.0", commit="5333c67b49b4bfcd45558090e4ba37b4f86b82db", submodules=True)
+    version("32.0.2", commit="3d23e16a2d0ba68ce5a596ced16883f90de1fae4", submodules=True)
+    version("32.0.1", commit="6317634ec16eb40e52ca85445a014e378c9a4829", submodules=True)
+    version("32.0.0", commit="9385e36691bb2687437c39ad02ddb2ac21acccdc", submodules=True)
     version("31.2.0", commit="1d2e90f534ff2c9bf1c40914980b426f4b5d3096", submodules=True)
     version("31.1.0", commit="95c3ceef79a7b68fcfc7fd558c3134d0c7529dac", submodules=True)
     version("31.0.0", commit="2cf3fe0254d2bf9434899fdcfbe316366a970956", submodules=True)
@@ -205,7 +214,7 @@ class Acts(CMakePackage, CudaPackage):
         "autodiff",
         default=False,
         description="Build the auto-differentiation plugin",
-        when="@1.2:",
+        when="@1.2:32",
     )
     variant("dd4hep", default=False, description="Build the DD4hep plugin", when="+tgeo")
     variant(
@@ -223,10 +232,11 @@ class Acts(CMakePackage, CudaPackage):
         when="@0.16:",
     )
     variant("fatras_geant4", default=False, description="Build Geant4 Fatras package")
+    variant("geomodel", default=False, description="Build GeoModel plugin", when="@33:")
     variant("identification", default=False, description="Build the Identification plugin")
     variant("json", default=False, description="Build the Json plugin")
     variant("legacy", default=False, description="Build the Legacy package")
-    variant("mlpack", default=False, description="Build MLpack plugin", when="@25:")
+    variant("mlpack", default=False, description="Build MLpack plugin", when="@25:31")
     variant("onnx", default=False, description="Build ONNX plugin")
     variant("odd", default=False, description="Build the Open Data Detector", when="@19.1:")
     variant("podio", default=False, description="Build Podio plugin", when="@30.3:")
@@ -247,7 +257,10 @@ class Acts(CMakePackage, CudaPackage):
 
     # Variants that only affect Acts examples for now
     variant(
-        "binaries", default=False, description="Build the examples binaries", when="@23: +examples"
+        "binaries",
+        default=False,
+        description="Build the examples binaries",
+        when="@23:32 +examples",
     )
     variant(
         "edm4hep",
@@ -290,12 +303,15 @@ class Acts(CMakePackage, CudaPackage):
 
     # Build dependencies
     depends_on("acts-dd4hep", when="@19 +dd4hep")
-    depends_on("actsvg@0.4.20:", when="@20.1: +svg")
-    depends_on("actsvg@0.4.28:", when="@23.2: +svg")
-    depends_on("actsvg@0.4.29:", when="@23.4: +svg")
-    depends_on("actsvg@0.4.30:", when="@23.5: +svg")
-    depends_on("actsvg@0.4.33:", when="@25:27 +svg")
-    depends_on("actsvg@0.4.35:", when="@28: +svg")
+    with when("+svg"):
+        depends_on("actsvg@0.4.20:", when="@20.1:")
+        depends_on("actsvg@0.4.28:", when="@23.2:")
+        depends_on("actsvg@0.4.29:", when="@23.4:")
+        depends_on("actsvg@0.4.30:", when="@23.5:")
+        depends_on("actsvg@0.4.33:", when="@25:27")
+        depends_on("actsvg@0.4.35:", when="@28:")
+        depends_on("actsvg@0.4.39:", when="@32:")
+        depends_on("actsvg@0.4.40:", when="@32.1:")
     depends_on("autodiff @0.6:", when="@17: +autodiff")
     depends_on("autodiff @0.5.11:0.5.99", when="@1.2:16 +autodiff")
     depends_on("boost @1.62:1.69 +program_options +test", when="@:0.10.3")
@@ -326,14 +342,14 @@ class Acts(CMakePackage, CudaPackage):
     depends_on("python@3.8:", when="+python @19.11:19")
     depends_on("python@3.8:", when="+python @21:")
     depends_on("py-onnxruntime@:1.12", when="+onnx @:23.2")
-    # FIXME py-onnxruntime@1.12: required but not yet available
-    # Ref: https://github.com/spack/spack/pull/37064
-    # depends_on("py-onnxruntime@1.12:", when="+onnx @23.3:")
-    conflicts("+onnx", when="@23.3:", msg="py-onnxruntime@1.12: required but not yet available")
+    depends_on("py-onnxruntime@1.12:", when="+onnx @23.3:")
     depends_on("py-pybind11 @2.6.2:", when="+python @18:")
     depends_on("py-pytest", when="+python +unit_tests")
-    depends_on("root @6.10:", when="+tgeo @:0.8.0")
-    depends_on("root @6.20:", when="+tgeo @0.8.1:")
+
+    with when("+tgeo"):
+        depends_on("root @6.10:")
+        depends_on("root @6.20:", when="@0.8.1:")
+
     depends_on("sycl", when="+sycl")
     depends_on("vecmem@0.4: +sycl", when="+sycl")
 
@@ -342,12 +358,18 @@ class Acts(CMakePackage, CudaPackage):
         if isinstance(_cxxstd, _ConditionalVariantValues):
             for _v in _cxxstd:
                 depends_on(
-                    f"geant4 cxxstd={_v.value}", when=f"cxxstd={_v.value} {_v.when} ^geant4"
+                    f"geant4 cxxstd={_v.value}", when=f"cxxstd={_v.value} {_v.when} +geant4"
                 )
-                depends_on(f"root cxxstd={_v.value}", when=f"cxxstd={_v.value} {_v.when} ^root")
+                depends_on(
+                    f"geant4 cxxstd={_v.value}", when=f"cxxstd={_v.value} {_v.when} +fatras_geant4"
+                )
+                depends_on(f"root cxxstd={_v.value}", when=f"cxxstd={_v.value} {_v.when} +tgeo")
         else:
-            depends_on(f"geant4 cxxstd={_v.value}", when=f"cxxstd={_v.value} {_v.when} ^geant4")
-            depends_on(f"root cxxstd={_cxxstd}", when=f"cxxstd={_cxxstd} ^root")
+            depends_on(f"geant4 cxxstd={_v.value}", when=f"cxxstd={_v.value} {_v.when} +geant4")
+            depends_on(
+                f"geant4 cxxstd={_v.value}", when=f"cxxstd={_v.value} {_v.when} +fatras_geant4"
+            )
+            depends_on(f"root cxxstd={_cxxstd}", when=f"cxxstd={_cxxstd} +tgeo")
 
     # ACTS has been using C++17 for a while, which precludes use of old GCC
     conflicts("%gcc@:7", when="@0.23:")
@@ -402,6 +424,7 @@ class Acts(CMakePackage, CudaPackage):
             cmake_variant("FATRAS_GEANT4", "fatras_geant4"),
             example_cmake_variant("GEANT4", "geant4"),
             plugin_cmake_variant("GEANT4", "geant4"),
+            plugin_cmake_variant("GEOMODEL", "geomodel"),
             example_cmake_variant("HEPMC3", "hepmc3"),
             plugin_cmake_variant("IDENTIFICATION", "identification"),
             cmake_variant(integration_tests_label, "integration_tests"),
@@ -455,10 +478,6 @@ class Acts(CMakePackage, CudaPackage):
             cuda_arch = spec.variants["cuda_arch"].value
             if cuda_arch != "none":
                 args.append(f"-DCUDA_FLAGS=-arch=sm_{cuda_arch[0]}")
-
-        if "+python" in spec:
-            python = spec["python"].command.path
-            args.append(f"-DPython_EXECUTABLE={python}")
 
         args.append(self.define_from_variant("CMAKE_CXX_STANDARD", "cxxstd"))
 

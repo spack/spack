@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,8 @@ class PyEspressopp(CMakePackage):
     homepage = "https://espressopp.github.io"
     url = "https://github.com/espressopp/espressopp/tarball/v3.0.0"
     git = "https://github.com/espressopp/espressopp.git"
+
+    license("GPL-3.0-or-later")
 
     version("master", branch="master")
     version("3.0.0", sha256="63518e768a98179ad5ef3be96eabaa4d38063b34962e2278db7d59ed2bb8a32e")

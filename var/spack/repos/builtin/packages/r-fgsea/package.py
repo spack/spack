@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class RFgsea(RPackage):
     approaches to multiple hypothesis correction."""
 
     bioc = "fgsea"
+
+    license("MIT")
 
     version("1.26.0", commit="102b439e2208ae415dc19d3d1ac8936f9c5999f1")
     version("1.24.0", commit="ac74ccd935c15623b8584caa791835aec514144b")

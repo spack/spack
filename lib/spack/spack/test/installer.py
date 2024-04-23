@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,6 +10,8 @@ import sys
 
 import py
 import pytest
+
+import archspec.cpu
 
 import llnl.util.filesystem as fs
 import llnl.util.lock as ulk
@@ -134,7 +136,7 @@ def test_get_dependent_ids(install_mockery, mock_packages):
     spec.concretize()
     assert spec.concrete
 
-    pkg_id = inst.package_id(spec.package)
+    pkg_id = inst.package_id(spec)
 
     # Grab the sole dependency of 'a', which is 'b'
     dep = spec.dependencies()[0]
@@ -165,23 +167,19 @@ def test_install_msg(monkeypatch):
     assert inst.install_msg(name, pid, None) == expected
 
 
-def test_install_from_cache_errors(install_mockery, capsys):
-    """Test to ensure cover _install_from_cache errors."""
+def test_install_from_cache_errors(install_mockery):
+    """Test to ensure cover install from cache errors."""
     spec = spack.spec.Spec("trivial-install-test-package")
     spec.concretize()
     assert spec.concrete
 
     # Check with cache-only
-    with pytest.raises(SystemExit):
-        inst._install_from_cache(spec.package, True, True, False)
-
-    captured = str(capsys.readouterr())
-    assert "No binary" in captured
-    assert "found when cache-only specified" in captured
+    with pytest.raises(inst.InstallError, match="No binary found when cache-only was specified"):
+        spec.package.do_install(package_cache_only=True, dependencies_cache_only=True)
     assert not spec.package.installed_from_binary_cache
 
     # Check when don't expect to install only from binary cache
-    assert not inst._install_from_cache(spec.package, False, True, False)
+    assert not inst._install_from_cache(spec.package, explicit=True, unsigned=False)
     assert not spec.package.installed_from_binary_cache
 
 
@@ -192,7 +190,7 @@ def test_install_from_cache_ok(install_mockery, monkeypatch):
     monkeypatch.setattr(inst, "_try_install_from_binary_cache", _true)
     monkeypatch.setattr(spack.hooks, "post_install", _noop)
 
-    assert inst._install_from_cache(spec.package, True, True, False)
+    assert inst._install_from_cache(spec.package, explicit=True, unsigned=False)
 
 
 def test_process_external_package_module(install_mockery, monkeypatch, capfd):
@@ -387,7 +385,7 @@ def test_ensure_locked_have(install_mockery, tmpdir, capsys):
     const_arg = installer_args(["trivial-install-test-package"], {})
     installer = create_installer(const_arg)
     spec = installer.build_requests[0].pkg.spec
-    pkg_id = inst.package_id(spec.package)
+    pkg_id = inst.package_id(spec)
 
     with tmpdir.as_cwd():
         # Test "downgrade" of a read lock (to a read lock)
@@ -458,17 +456,15 @@ def test_ensure_locked_new_warn(install_mockery, monkeypatch, tmpdir, capsys):
 
 def test_package_id_err(install_mockery):
     s = spack.spec.Spec("trivial-install-test-package")
-    pkg_cls = spack.repo.PATH.get_pkg_class(s.name)
     with pytest.raises(ValueError, match="spec is not concretized"):
-        inst.package_id(pkg_cls(s))
+        inst.package_id(s)
 
 
 def test_package_id_ok(install_mockery):
     spec = spack.spec.Spec("trivial-install-test-package")
     spec.concretize()
     assert spec.concrete
-    pkg = spec.package
-    assert pkg.name in inst.package_id(pkg)
+    assert spec.name in inst.package_id(spec)
 
 
 def test_fake_install(install_mockery):
@@ -532,6 +528,10 @@ def test_update_tasks_for_compiler_packages_as_compiler(mock_packages, config, m
     assert installer.build_pq[0][1].compiler
 
 
+@pytest.mark.skipif(
+    str(archspec.cpu.host().family) != "x86_64",
+    reason="OneAPI compiler is not supported on other architectures",
+)
 def test_bootstrapping_compilers_with_different_names_from_spec(
     install_mockery, mutable_config, mock_fetch, archspec_host_is_spack_test_host
 ):
@@ -724,7 +724,7 @@ def test_check_deps_status_external(install_mockery, monkeypatch):
     installer._check_deps_status(request)
 
     for dep in request.spec.traverse(root=False):
-        assert inst.package_id(dep.package) in installer.installed
+        assert inst.package_id(dep) in installer.installed
 
 
 def test_check_deps_status_upstream(install_mockery, monkeypatch):
@@ -737,7 +737,7 @@ def test_check_deps_status_upstream(install_mockery, monkeypatch):
     installer._check_deps_status(request)
 
     for dep in request.spec.traverse(root=False):
-        assert inst.package_id(dep.package) in installer.installed
+        assert inst.package_id(dep) in installer.installed
 
 
 def test_add_bootstrap_compilers(install_mockery, monkeypatch):
@@ -1109,7 +1109,7 @@ def test_install_fail_fast_on_detect(install_mockery, monkeypatch, capsys):
     const_arg = installer_args(["b"], {"fail_fast": False})
     const_arg.extend(installer_args(["c"], {"fail_fast": True}))
     installer = create_installer(const_arg)
-    pkg_ids = [inst.package_id(spec.package) for spec, _ in const_arg]
+    pkg_ids = [inst.package_id(spec) for spec, _ in const_arg]
 
     # Make sure all packages are identified as failed
     #
@@ -1184,7 +1184,7 @@ def test_install_lock_installed_requeue(install_mockery, monkeypatch, capfd):
     const_arg = installer_args(["b"], {})
     b, _ = const_arg[0]
     installer = create_installer(const_arg)
-    b_pkg_id = inst.package_id(b.package)
+    b_pkg_id = inst.package_id(b)
 
     def _prep(installer, task):
         installer.installed.add(b_pkg_id)
@@ -1194,7 +1194,7 @@ def test_install_lock_installed_requeue(install_mockery, monkeypatch, capfd):
         monkeypatch.setattr(inst.PackageInstaller, "_ensure_locked", _not_locked)
 
     def _requeued(installer, task, install_status):
-        tty.msg("requeued {0}".format(inst.package_id(task.pkg)))
+        tty.msg("requeued {0}".format(inst.package_id(task.pkg.spec)))
 
     # Flag the package as installed
     monkeypatch.setattr(inst.PackageInstaller, "_prepare_for_install", _prep)
@@ -1260,7 +1260,7 @@ def test_install_skip_patch(install_mockery, mock_fetch):
     installer.install()
 
     spec, install_args = const_arg[0]
-    assert inst.package_id(spec.package) in installer.installed
+    assert inst.package_id(spec) in installer.installed
 
 
 def test_install_implicit(install_mockery, mock_fetch):

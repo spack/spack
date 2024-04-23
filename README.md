@@ -1,8 +1,15 @@
 <div align="left">
+
 <h2>
-<img src="https://cdn.rawgit.com/spack/spack/develop/share/spack/logo/spack-logo-text.svg" width="250" valign="middle" alt="Spack"/>
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://cdn.rawgit.com/spack/spack/develop/share/spack/logo/spack-logo-white-text.svg" width="250">
+  <source media="(prefers-color-scheme: light)" srcset="https://cdn.rawgit.com/spack/spack/develop/share/spack/logo/spack-logo-text.svg" width="250">
+  <img alt="Spack" src="https://cdn.rawgit.com/spack/spack/develop/share/spack/logo/spack-logo-text.svg" width="250">
+</picture>
+
 <br>
 <br clear="all">
+
 <a href="https://github.com/spack/spack/actions/workflows/ci.yml"><img src="https://github.com/spack/spack/workflows/ci/badge.svg" alt="CI Status"></a>
 <a href="https://github.com/spack/spack/actions/workflows/bootstrapping.yml"><img src="https://github.com/spack/spack/actions/workflows/bootstrap.yml/badge.svg" alt="Bootstrap Status"></a>
 <a href="https://github.com/spack/spack/actions/workflows/build-containers.yml"><img src="https://github.com/spack/spack/actions/workflows/build-containers.yml/badge.svg" alt="Containers Status"></a>
@@ -10,6 +17,7 @@
 <a href="https://codecov.io/gh/spack/spack"><img src="https://codecov.io/gh/spack/spack/branch/develop/graph/badge.svg" alt="Code coverage"/></a>
 <a href="https://slack.spack.io"><img src="https://slack.spack.io/badge.svg" alt="Slack"/></a>
 <a href="https://matrix.to/#/#spack-space:matrix.org"><img src="https://img.shields.io/matrix/spack-space%3Amatrix.org?label=matrix" alt="Matrix"/></a>
+
 </h2>
 
 **[Getting Started] &nbsp; • &nbsp; [Config] &nbsp; • &nbsp; [Community] &nbsp; • &nbsp; [Contributing] &nbsp; • &nbsp; [Packaging Guide]**
@@ -80,7 +88,7 @@ Resources:
   [bridged](https://github.com/matrix-org/matrix-appservice-slack#matrix-appservice-slack) to Slack.
 * [**Github Discussions**](https://github.com/spack/spack/discussions):
   for Q&A and discussions. Note the pinned discussions for announcements.
-* **Twitter**: [@spackpm](https://twitter.com/spackpm). Be sure to
+* **X**: [@spackpm](https://twitter.com/spackpm). Be sure to
   `@mention` us!
 * **Mailing list**: [groups.google.com/d/forum/spack](https://groups.google.com/d/forum/spack):
   only for announcements. Please use other venues for discussions.

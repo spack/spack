@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,6 +6,7 @@
 import json
 import os
 import shutil
+from urllib.parse import urlparse, urlunparse
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
@@ -13,6 +14,7 @@ import llnl.util.tty.color as clr
 
 import spack.binary_distribution as bindist
 import spack.ci as spack_ci
+import spack.cmd
 import spack.cmd.buildcache as buildcache
 import spack.config as cfg
 import spack.environment as ev
@@ -31,6 +33,7 @@ level = "long"
 SPACK_COMMAND = "spack"
 MAKE_COMMAND = "make"
 INSTALL_FAIL_CODE = 1
+FAILED_CREATE_BUILDCACHE_CODE = 100
 
 
 def deindent(desc):
@@ -157,7 +160,9 @@ def setup_parser(subparser):
         description=deindent(ci_reproduce.__doc__),
         help=spack.cmd.first_line(ci_reproduce.__doc__),
     )
-    reproduce.add_argument("job_url", help="URL of job artifacts bundle")
+    reproduce.add_argument(
+        "job_url", help="URL of GitLab job web page or artifact", type=_gitlab_artifacts_url
+    )
     reproduce.add_argument(
         "--runtime",
         help="Container runtime to use.",
@@ -702,11 +707,9 @@ def ci_rebuild(args):
                 cdash_handler.report_skipped(job_spec, reports_dir, reason=msg)
                 cdash_handler.copy_test_results(reports_dir, job_test_dir)
 
-    # If the install succeeded, create a buildcache entry for this job spec
-    # and push it to one or more mirrors.  If the install did not succeed,
-    # print out some instructions on how to reproduce this build failure
-    # outside of the pipeline environment.
     if install_exit_code == 0:
+        # If the install succeeded, push it to one or more mirrors. Failure to push to any mirror
+        # will result in a non-zero exit code. Pushing is best-effort.
         mirror_urls = [buildcache_mirror_url]
 
         # TODO: Remove this block in Spack 0.23
@@ -718,13 +721,12 @@ def ci_rebuild(args):
             destination_mirror_urls=mirror_urls,
             sign_binaries=spack_ci.can_sign_binaries(),
         ):
-            msg = tty.msg if result.success else tty.warn
-            msg(
-                "{} {} to {}".format(
-                    "Pushed" if result.success else "Failed to push",
-                    job_spec.format("{name}{@version}{/hash:7}", color=clr.get_color_when()),
-                    result.url,
-                )
+            if not result.success:
+                install_exit_code = FAILED_CREATE_BUILDCACHE_CODE
+            (tty.msg if result.success else tty.error)(
+                f'{"Pushed" if result.success else "Failed to push"} '
+                f'{job_spec.format("{name}{@version}{/hash:7}", color=clr.get_color_when())} '
+                f"to {result.url}"
             )
 
         # If this is a develop pipeline, check if the spec that we just built is
@@ -745,22 +747,22 @@ def ci_rebuild(args):
                     tty.warn(msg.format(broken_spec_path, err))
 
     else:
+        # If the install did not succeed, print out some instructions on how to reproduce this
+        # build failure outside of the pipeline environment.
         tty.debug("spack install exited non-zero, will not create buildcache")
 
         api_root_url = os.environ.get("CI_API_V4_URL")
         ci_project_id = os.environ.get("CI_PROJECT_ID")
         ci_job_id = os.environ.get("CI_JOB_ID")
 
-        repro_job_url = "{0}/projects/{1}/jobs/{2}/artifacts".format(
-            api_root_url, ci_project_id, ci_job_id
-        )
-
+        repro_job_url = f"{api_root_url}/projects/{ci_project_id}/jobs/{ci_job_id}/artifacts"
         # Control characters cause this to be printed in blue so it stands out
-        reproduce_msg = """
+        print(
+            f"""
 
 \033[34mTo reproduce this build locally, run:
 
-    spack ci reproduce-build {0} [--working-dir <dir>] [--autostart]
+    spack ci reproduce-build {repro_job_url} [--working-dir <dir>] [--autostart]
 
 If this project does not have public pipelines, you will need to first:
 
@@ -768,11 +770,8 @@ If this project does not have public pipelines, you will need to first:
 
 ... then follow the printed instructions.\033[0;0m
 
-""".format(
-            repro_job_url
+"""
         )
-
-        print(reproduce_msg)
 
     rebuild_timer.stop()
     try:
@@ -792,11 +791,6 @@ def ci_reproduce(args):
     artifacts of the provided gitlab pipeline rebuild job's URL will be used to derive
     instructions for reproducing the build locally
     """
-    job_url = args.job_url
-    work_dir = args.working_dir
-    autostart = args.autostart
-    runtime = args.runtime
-
     # Allow passing GPG key for reprocuding protected CI jobs
     if args.gpg_file:
         gpg_key_url = url_util.path_to_file_url(args.gpg_file)
@@ -805,7 +799,47 @@ def ci_reproduce(args):
     else:
         gpg_key_url = None
 
-    return spack_ci.reproduce_ci_job(job_url, work_dir, autostart, gpg_key_url, runtime)
+    return spack_ci.reproduce_ci_job(
+        args.job_url, args.working_dir, args.autostart, gpg_key_url, args.runtime
+    )
+
+
+def _gitlab_artifacts_url(url: str) -> str:
+    """Take a URL either to the URL of the job in the GitLab UI, or to the artifacts zip file,
+    and output the URL to the artifacts zip file."""
+    parsed = urlparse(url)
+
+    if not parsed.scheme or not parsed.netloc:
+        raise ValueError(url)
+
+    parts = parsed.path.split("/")
+
+    if len(parts) < 2:
+        raise ValueError(url)
+
+    # Just use API endpoints verbatim, they're probably generated by Spack.
+    if parts[1] == "api":
+        return url
+
+    # If it's a URL to the job in the Gitlab UI, we may need to append the artifacts path.
+    minus_idx = parts.index("-")
+
+    # Remove repeated slashes in the remainder
+    rest = [p for p in parts[minus_idx + 1 :] if p]
+
+    # Now the format is jobs/X or jobs/X/artifacts/download
+    if len(rest) < 2 or rest[0] != "jobs":
+        raise ValueError(url)
+
+    if len(rest) == 2:
+        # replace jobs/X with jobs/X/artifacts/download
+        rest.extend(("artifacts", "download"))
+
+    # Replace the parts and unparse.
+    parts[minus_idx + 1 :] = rest
+
+    # Don't allow fragments / queries
+    return urlunparse(parsed._replace(path="/".join(parts), fragment="", query=""))
 
 
 def ci(parser, args):

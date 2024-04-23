@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -569,6 +569,14 @@ def add_concretizer_args(subparser):
         const="dependencies",
         default=None,
         help="reuse installed dependencies only",
+    )
+    subgroup.add_argument(
+        "--deprecated",
+        action=ConfigSetAction,
+        dest="config:deprecated",
+        const=True,
+        default=None,
+        help="allow concretizer to select deprecated versions",
     )
 
 

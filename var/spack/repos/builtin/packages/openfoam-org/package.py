@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -66,6 +66,8 @@ class OpenfoamOrg(Package):
     baseurl = "https://github.com/OpenFOAM"
     url = "https://github.com/OpenFOAM/OpenFOAM-6/archive/version-6.tar.gz"
     git = "https://github.com/OpenFOAM/OpenFOAM-dev.git"
+
+    license("GPL-3.0-or-later")
 
     version("develop", branch="master")
     version("10", sha256="59d712ba798ca44b989b6ac50bcb7c534eeccb82bcf961e10ec19fc8d84000cf")

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,7 @@ class DlaFuture(CMakePackage, CudaPackage, ROCmPackage):
 
     license("BSD-3-Clause")
 
+    version("0.4.0", sha256="34fd0da0d1a72b6981bed0bba029ba0947e0d0d99beb3e0aad0a478095c9527d")
     version("0.3.1", sha256="350a7fd216790182aa52639a3d574990a9d57843e02b92d87b854912f4812bfe")
     version("0.3.0", sha256="9887ac0b466ca03d704a8738bc89e68550ed33509578c576390e98e76b64911b")
     version("0.2.1", sha256="4c2669d58f041304bd618a9d69d9879a42e6366612c2fc932df3894d0326b7fe")
@@ -44,6 +45,7 @@ class DlaFuture(CMakePackage, CudaPackage, ROCmPackage):
     )
 
     depends_on("cmake@3.22:", type="build")
+    depends_on("pkgconfig", type="build")
     depends_on("doxygen", type="build", when="+doc")
     depends_on("mpi")
 
@@ -52,6 +54,9 @@ class DlaFuture(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("scalapack", when="+scalapack")
     depends_on("blaspp@2022.05.00:")
     depends_on("lapackpp@2022.05.00:")
+    depends_on("intel-oneapi-mkl +cluster", when="^[virtuals=scalapack] intel-oneapi-mkl")
+
+    conflicts("intel-oneapi-mkl", when="@:0.3")
 
     depends_on("umpire~examples")
     depends_on("umpire~cuda", when="~cuda")
@@ -63,7 +68,8 @@ class DlaFuture(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("pika@0.15.1:", when="@0.1")
     depends_on("pika@0.16:", when="@0.2.0")
     depends_on("pika@0.17:", when="@0.2.1")
-    depends_on("pika@0.18:", when="@0.3.0:")
+    depends_on("pika@0.18:", when="@0.3")
+    depends_on("pika@0.19.1:", when="@0.4.0:")
     depends_on("pika-algorithms@0.1:", when="@:0.2")
     depends_on("pika +mpi")
     depends_on("pika +cuda", when="+cuda")
@@ -75,9 +81,10 @@ class DlaFuture(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("whip +rocm", when="+rocm")
 
     depends_on("rocblas", when="+rocm")
-    depends_on("rocprim", when="+rocm")
     depends_on("rocsolver", when="+rocm")
-    depends_on("rocthrust", when="+rocm")
+
+    depends_on("rocprim", when="@:0.3 +rocm")
+    depends_on("rocthrust", when="@:0.3 +rocm")
 
     # nvcc 11.2 and older is unable to detect fmt::formatter specializations.
     # DLA-Future 0.3.1 includes a workaround to avoid including fmt in device
@@ -100,35 +107,30 @@ class DlaFuture(CMakePackage, CudaPackage, ROCmPackage):
     conflicts("+cuda", when="+rocm")
 
     with when("+rocm"):
-        for val in ROCmPackage.amdgpu_targets:
-            depends_on("pika amdgpu_target={0}".format(val), when="amdgpu_target={0}".format(val))
-            depends_on(
-                "rocsolver amdgpu_target={0}".format(val), when="amdgpu_target={0}".format(val)
-            )
-            depends_on(
-                "rocblas amdgpu_target={0}".format(val), when="amdgpu_target={0}".format(val)
-            )
-            depends_on(
-                "rocprim amdgpu_target={0}".format(val), when="amdgpu_target={0}".format(val)
-            )
-            depends_on(
-                "rocthrust amdgpu_target={0}".format(val), when="amdgpu_target={0}".format(val)
-            )
-            depends_on("whip amdgpu_target={0}".format(val), when="amdgpu_target={0}".format(val))
-            depends_on(
-                "umpire amdgpu_target={0}".format(val), when="amdgpu_target={0}".format(val)
-            )
+        for arch in ROCmPackage.amdgpu_targets:
+            depends_on(f"pika amdgpu_target={arch}", when=f"amdgpu_target={arch}")
+            depends_on(f"rocsolver amdgpu_target={arch}", when=f"amdgpu_target={arch}")
+            depends_on(f"rocblas amdgpu_target={arch}", when=f"amdgpu_target={arch}")
+            depends_on(f"whip amdgpu_target={arch}", when=f"amdgpu_target={arch}")
+            depends_on(f"umpire amdgpu_target={arch}", when=f"amdgpu_target={arch}")
+
+    with when("@:0.3 +rocm"):
+        for arch in ROCmPackage.amdgpu_targets:
+            depends_on(f"rocprim amdgpu_target={arch}", when=f"amdgpu_target={arch}")
+            depends_on(f"rocthrust amdgpu_target={arch}", when=f"amdgpu_target={arch}")
 
     with when("+cuda"):
-        for val in CudaPackage.cuda_arch_values:
-            depends_on("pika cuda_arch={0}".format(val), when="cuda_arch={0}".format(val))
-            depends_on("umpire cuda_arch={0}".format(val), when="cuda_arch={0}".format(val))
+        for arch in CudaPackage.cuda_arch_values:
+            depends_on(f"pika cuda_arch={arch}", when=f"cuda_arch={arch}")
+            depends_on(f"umpire cuda_arch={arch}", when=f"cuda_arch={arch}")
 
     patch(
         "https://github.com/eth-cscs/DLA-Future/pull/1063/commits/efc9c176a7a8c512b3f37d079dec8c25ac1b7389.patch?full_index=1",
         sha256="7f382c872d89f22da1ad499e85ffe9881cc7404c8465e42877a210a09382e2ea",
         when="@:0.3 %gcc@13:",
     )
+    # https://github.com/spack/spack/issues/41511
+    patch("hip_complex_operator_overloads.patch", when="+rocm")
 
     def cmake_args(self):
         spec = self.spec
@@ -137,35 +139,69 @@ class DlaFuture(CMakePackage, CudaPackage, ROCmPackage):
         args.append(self.define_from_variant("BUILD_SHARED_LIBS", "shared"))
 
         # BLAS/LAPACK
-        if self.spec["lapack"].name in INTEL_MATH_LIBRARIES:
+        if spec["lapack"].name in INTEL_MATH_LIBRARIES:
+            mkl_provider = spec["lapack"].name
+
             vmap = {
-                "none": "seq",
-                "openmp": "omp",
-                "tbb": "tbb",
-            }  # Map MKL variants to LAPACK target name
-            mkl_threads = vmap[spec["intel-mkl"].variants["threads"].value]
-            # TODO: Generalise for intel-oneapi-mkl
-            args += [
-                self.define("DLAF_WITH_MKL", True),
-                self.define("MKL_LAPACK_TARGET", f"mkl::mkl_intel_32bit_{mkl_threads}_dyn"),
-            ]
-            if "+scalapack" in spec:
-                if (
-                    "^mpich" in spec
-                    or "^cray-mpich" in spec
-                    or "^intel-mpi" in spec
-                    or "^mvapich" in spec
-                    or "^mvapich2" in spec
-                ):
-                    mkl_mpi = "mpich"
-                elif "^openmpi" in spec:
-                    mkl_mpi = "ompi"
-                args.append(
-                    self.define(
-                        "MKL_SCALAPACK_TARGET",
-                        f"mkl::scalapack_{mkl_mpi}_intel_32bit_{mkl_threads}_dyn",
-                    )
+                "intel-oneapi-mkl": {
+                    "threading": {
+                        "none": "sequential",
+                        "openmp": "gnu_thread",
+                        "tbb": "tbb_thread",
+                    },
+                    "mpi": {"intel-mpi": "intelmpi", "mpich": "mpich", "openmpi": "openmpi"},
+                },
+                "intel-mkl": {
+                    "threading": {"none": "seq", "openmp": "omp", "tbb": "tbb"},
+                    "mpi": {"intel-mpi": "mpich", "mpich": "mpich", "openmpi": "ompi"},
+                },
+            }
+
+            if mkl_provider not in vmap.keys():
+                raise RuntimeError(
+                    f"dla-future does not support {mkl_provider} as lapack provider"
                 )
+            mkl_mapper = vmap[mkl_provider]
+
+            mkl_threads = mkl_mapper["threading"][spec[mkl_provider].variants["threads"].value]
+            if mkl_provider == "intel-oneapi-mkl":
+                args += [
+                    self.define("DLAF_WITH_MKL", True),
+                    self.define("MKL_INTERFACE", "lp64"),
+                    self.define("MKL_THREADING", mkl_threads),
+                ]
+            elif mkl_provider == "intel-mkl":
+                args += [
+                    (
+                        self.define("DLAF_WITH_MKL", True)
+                        if spec.version <= Version("0.3")
+                        else self.define("DLAF_WITH_MKL_LEGACY", True)
+                    ),
+                    self.define("MKL_LAPACK_TARGET", f"mkl::mkl_intel_32bit_{mkl_threads}_dyn"),
+                ]
+
+            if "+scalapack" in spec:
+                try:
+                    mpi_provider = spec["mpi"].name
+                    if mpi_provider in ["mpich", "cray-mpich", "mvapich", "mvapich2"]:
+                        mkl_mpi = mkl_mapper["mpi"]["mpich"]
+                    else:
+                        mkl_mpi = mkl_mapper["mpi"][mpi_provider]
+                except KeyError:
+                    raise RuntimeError(
+                        f"dla-future does not support {spec['mpi'].name} as mpi provider with "
+                        f"the selected scalapack provider {mkl_provider}"
+                    )
+
+                if mkl_provider == "intel-oneapi-mkl":
+                    args.append(self.define("MKL_MPI", mkl_mpi))
+                elif mkl_provider == "intel-mkl":
+                    args.append(
+                        self.define(
+                            "MKL_SCALAPACK_TARGET",
+                            f"mkl::scalapack_{mkl_mpi}_intel_32bit_{mkl_threads}_dyn",
+                        )
+                    )
         else:
             args.append(self.define("DLAF_WITH_MKL", False))
             args.append(
@@ -183,12 +219,12 @@ class DlaFuture(CMakePackage, CudaPackage, ROCmPackage):
         args.append(self.define_from_variant("DLAF_WITH_CUDA", "cuda"))
         args.append(self.define_from_variant("DLAF_WITH_HIP", "rocm"))
         if "+rocm" in spec:
-            archs = self.spec.variants["amdgpu_target"].value
+            archs = spec.variants["amdgpu_target"].value
             if "none" not in archs:
                 arch_str = ";".join(archs)
                 args.append(self.define("CMAKE_HIP_ARCHITECTURES", arch_str))
         if "+cuda" in spec:
-            archs = self.spec.variants["cuda_arch"].value
+            archs = spec.variants["cuda_arch"].value
             if "none" not in archs:
                 arch_str = ";".join(archs)
                 args.append(self.define("CMAKE_CUDA_ARCHITECTURES", arch_str))

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -29,6 +29,8 @@ class Mmg(CMakePackage):
 
     homepage = "https://www.mmgtools.org/"
     url = "https://github.com/MmgTools/mmg/archive/v5.3.13.tar.gz"
+
+    license("LGPL-3.0-or-later")
 
     version("5.7.1", sha256="27c09477ebc080f54919f76f8533a343936677c81809fe37ce4e2d62fa97237b")
     version("5.6.0", sha256="bbf9163d65bc6e0f81dd3acc5a51e4a8c47a7fdae849abc26277e01154fe2437")

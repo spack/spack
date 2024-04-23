@@ -1,13 +1,16 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
 import re
+import sys
 from tempfile import NamedTemporaryFile
 
 import spack.platforms
 from spack.package import *
+
+is_windows = sys.platform == "win32"
 
 
 class Sqlite(AutotoolsPackage, NMakePackage):
@@ -17,6 +20,8 @@ class Sqlite(AutotoolsPackage, NMakePackage):
 
     homepage = "https://www.sqlite.org"
     tags = ["windows"]
+
+    license("blessing")
 
     version("3.43.2", sha256="6d422b6f62c4de2ca80d61860e3a3fb693554d2f75bb1aaca743ccc4d6f609f0")
     version("3.42.0", sha256="7abcfd161c6e2742ca5c6c0895d1f853c940f203304a0b49da4e1eca5d088ca6")
@@ -51,19 +56,6 @@ class Sqlite(AutotoolsPackage, NMakePackage):
     # no hard readline dep on Windows + no variant support, makefile has minimal to no options
     for plat in ["linux", "darwin", "cray", "freebsd"]:
         variant(
-            "functions",
-            default=False,
-            description="Provide mathematical and string extension functions for SQL "
-            "queries using the loadable extensions mechanism",
-            when=f"+dynamic_extensions platform={plat}",
-        )
-        variant(
-            "fts",
-            default=True,
-            description="Include fts4 and fts5 support",
-            when=f"platform={plat}",
-        )
-        variant(
             "column_metadata",
             default=True,
             description="Build with COLUMN_METADATA",
@@ -75,11 +67,22 @@ class Sqlite(AutotoolsPackage, NMakePackage):
             description="Support loadable extensions",
             when=f"platform={plat}",
         )
-        variant(
-            "rtree", default=True, description="Build with Rtree module", when=f"platform={plat}"
-        )
+
         depends_on("readline", when=f"platform={plat}")
 
+    variant("fts", default=True, description="Include fts4 and fts5 support")
+
+    # functions variant is always available on Windows platform, otherwise is tied
+    # to +dynamic_extensions
+    function_condition = "platform=windows" if is_windows else "+dynamic_extensions"
+    variant(
+        "functions",
+        default=is_windows,
+        description="Provide mathematical and string extension functions for SQL "
+        "queries using the loadable extensions mechanism",
+        when=f"{function_condition}",
+    )
+    variant("rtree", default=True, description="Build with Rtree module")
     depends_on("zlib-api")
     depends_on("tcl", when="platform=windows")
 
@@ -107,6 +110,8 @@ class Sqlite(AutotoolsPackage, NMakePackage):
     # Starting version 3.21.0 SQLite doesn't use the built-ins if Intel
     # compiler is used.
     patch("remove_overflow_builtins.patch", when="@3.17.0:3.20%intel")
+
+    patch("quote_compiler_in_makefile.patch", when="platform=windows")
 
     build_system("autotools", "nmake")
 
@@ -207,10 +212,6 @@ class Sqlite(AutotoolsPackage, NMakePackage):
     def libs(self):
         return find_libraries("libsqlite3", root=self.prefix.lib)
 
-    def get_arch(self):
-        host_platform = spack.platforms.host()
-        return str(host_platform.target("default_target"))
-
     def test_example(self):
         """check example table dump"""
 
@@ -260,6 +261,10 @@ class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
 
         return args
 
+    def get_arch(self):
+        host_platform = spack.platforms.host()
+        return str(host_platform.target("default_target"))
+
     @run_after("install")
     def build_libsqlitefunctions(self):
         if "+functions" in self.spec:
@@ -282,5 +287,32 @@ class NMakeBuilder(spack.build_systems.nmake.NMakeBuilder):
         return "Makefile.msc"
 
     def nmake_args(self):
-        args = [self.define("TCLDIR", self.spec["tcl"].prefix)]
-        return args
+        enable_fts = "1" if "+fts" in self.spec else "0"
+        enable_rtree = "1" if "+rtree" in self.spec else "0"
+        enable_functions = "1" if "+functions" in self.spec else "0"
+
+        opts = (
+            "OPTS="
+            f"-DSQLITE_ENABLE_FTS3={enable_fts} "
+            f"-DSQLITE_ENABLE_FTS4={enable_fts} "
+            f"-DSQLITE_ENABLE_FTS5={enable_fts} "
+            f"-DSQLITE_ENABLE_RTREE={enable_rtree} "
+            "-DSQLITE_ENABLE_JSON1=1 "
+            "-DSQLITE_ENABLE_GEOPOLY=1 "
+            "-DSQLITE_ENABLE_SESSION=1 "
+            "-DSQLITE_ENABLE_PREUPDATE_HOOK=1 "
+            "-DSQLITE_ENABLE_SERIALIZE=1 "
+            f"-DSQLITE_ENABLE_MATH_FUNCTIONS={enable_functions}"
+        )
+
+        return ["USE_NATIVE_LIBPATHS=1", "DYNAMIC_SHELL=1", opts]
+
+    def install(self, pkg, spec, prefix):
+        with working_dir(self.build_directory):
+            mkdirp(prefix.include)
+            mkdirp(prefix.lib)
+            mkdirp(prefix.bin)
+            install(f"{self.build_directory}\\*.exe", prefix.bin)
+            install(f"{self.build_directory}\\*.dll", prefix.bin)
+            install(f"{self.build_directory}\\*.lib", prefix.lib)
+            install(f"{self.build_directory}\\*.h", prefix.include)

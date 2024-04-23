@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class PyCachecontrol(PythonPackage):
 
     homepage = "https://github.com/ionrock/cachecontrol"
     pypi = "CacheControl/CacheControl-0.12.10.tar.gz"
+
+    license("Apache-2.0")
 
     version("0.13.1", sha256="f012366b79d2243a6118309ce73151bf52a38d4a5dac8ea57f09bd29087e506b")
     version("0.13.0", sha256="fd3fd2cb0ca66b9a6c1d56cc9709e7e49c63dbd19b1b1bcbd8d3f94cedfe8ce5")

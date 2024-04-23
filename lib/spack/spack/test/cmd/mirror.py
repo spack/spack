@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -407,3 +407,27 @@ def test_mirror_add_set_signed(mutable_config):
     assert spack.config.get("mirrors:example") == {"url": "http://example.com", "signed": False}
     mirror("set", "--signed", "example")
     assert spack.config.get("mirrors:example") == {"url": "http://example.com", "signed": True}
+
+
+def test_mirror_add_set_autopush(mutable_config):
+    # Add mirror without autopush
+    mirror("add", "example", "http://example.com")
+    assert spack.config.get("mirrors:example") == "http://example.com"
+    mirror("set", "--no-autopush", "example")
+    assert spack.config.get("mirrors:example") == {"url": "http://example.com", "autopush": False}
+    mirror("set", "--autopush", "example")
+    assert spack.config.get("mirrors:example") == {"url": "http://example.com", "autopush": True}
+    mirror("set", "--no-autopush", "example")
+    assert spack.config.get("mirrors:example") == {"url": "http://example.com", "autopush": False}
+    mirror("remove", "example")
+
+    # Add mirror with autopush
+    mirror("add", "--autopush", "example", "http://example.com")
+    assert spack.config.get("mirrors:example") == {"url": "http://example.com", "autopush": True}
+    mirror("set", "--autopush", "example")
+    assert spack.config.get("mirrors:example") == {"url": "http://example.com", "autopush": True}
+    mirror("set", "--no-autopush", "example")
+    assert spack.config.get("mirrors:example") == {"url": "http://example.com", "autopush": False}
+    mirror("set", "--autopush", "example")
+    assert spack.config.get("mirrors:example") == {"url": "http://example.com", "autopush": True}
+    mirror("remove", "example")

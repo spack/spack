@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -24,8 +24,9 @@ import sys
 import textwrap
 import time
 import traceback
+import typing
 import warnings
-from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Type, TypeVar
+from typing import Any, Callable, Dict, Iterable, List, Optional, Set, Tuple, Type, TypeVar, Union
 
 import llnl.util.filesystem as fsys
 import llnl.util.tty as tty
@@ -63,10 +64,10 @@ from spack.install_test import (
     install_test_root,
 )
 from spack.installer import InstallError, PackageInstaller
-from spack.stage import DIYStage, ResourceStage, Stage, StageComposite, compute_stage_name
+from spack.stage import DevelopStage, ResourceStage, Stage, StageComposite, compute_stage_name
 from spack.util.executable import ProcessError, which
 from spack.util.package_hash import package_hash
-from spack.version import GitVersion, StandardVersion, Version
+from spack.version import GitVersion, StandardVersion
 
 FLAG_HANDLER_RETURN_TYPE = Tuple[
     Optional[Iterable[str]], Optional[Iterable[str]], Optional[Iterable[str]]
@@ -93,29 +94,26 @@ _spack_configure_argsfile = "spack-configure-args.txt"
 spack_times_log = "install_times.json"
 
 
-def deprecated_version(pkg, version):
-    """Return True if the version is deprecated, False otherwise.
+def deprecated_version(pkg: "PackageBase", version: Union[str, StandardVersion]) -> bool:
+    """Return True iff the version is deprecated.
 
     Arguments:
-        pkg (PackageBase): The package whose version is to be checked.
-        version (str or spack.version.StandardVersion): The version being checked
+        pkg: The package whose version is to be checked.
+        version: The version being checked
     """
     if not isinstance(version, StandardVersion):
-        version = Version(version)
+        version = StandardVersion.from_string(version)
 
-    for k, v in pkg.versions.items():
-        if version == k and v.get("deprecated", False):
-            return True
-
-    return False
+    details = pkg.versions.get(version)
+    return details is not None and details.get("deprecated", False)
 
 
-def preferred_version(pkg):
+def preferred_version(pkg: "PackageBase"):
     """
     Returns a sorted list of the preferred versions of the package.
 
     Arguments:
-        pkg (PackageBase): The package whose versions are to be assessed.
+        pkg: The package whose versions are to be assessed.
     """
     # Here we sort first on the fact that a version is marked
     # as preferred in the package, then on the fact that the
@@ -432,6 +430,43 @@ class PackageViewMixin:
 
 Pb = TypeVar("Pb", bound="PackageBase")
 
+WhenDict = Dict[spack.spec.Spec, Dict[str, Any]]
+NameValuesDict = Dict[str, List[Any]]
+NameWhenDict = Dict[str, Dict[spack.spec.Spec, List[Any]]]
+
+
+def _by_name(
+    when_indexed_dictionary: WhenDict, when: bool = False
+) -> Union[NameValuesDict, NameWhenDict]:
+    """Convert a dict of dicts keyed by when/name into a dict of lists keyed by name.
+
+    Optional Arguments:
+        when: if ``True``, don't discared the ``when`` specs; return a 2-level dictionary
+            keyed by name and when spec.
+    """
+    # very hard to define this type to be conditional on `when`
+    all_by_name: Dict[str, Any] = {}
+
+    for when_spec, by_name in when_indexed_dictionary.items():
+        for name, value in by_name.items():
+            if when:
+                when_dict = all_by_name.setdefault(name, {})
+                when_dict.setdefault(when_spec, []).append(value)
+            else:
+                all_by_name.setdefault(name, []).append(value)
+
+    return dict(sorted(all_by_name.items()))
+
+
+def _names(when_indexed_dictionary):
+    """Get sorted names from dicts keyed by when/name."""
+    all_names = set()
+    for when, by_name in when_indexed_dictionary.items():
+        for name in by_name:
+            all_names.add(name)
+
+    return sorted(all_names)
+
 
 class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     """This is the superclass for all spack packages.
@@ -523,9 +558,16 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     # Declare versions dictionary as placeholder for values.
     # This allows analysis tools to correctly interpret the class attributes.
     versions: dict
-
-    # Same for dependencies
-    dependencies: dict
+    dependencies: Dict["spack.spec.Spec", Dict[str, "spack.dependency.Dependency"]]
+    conflicts: Dict["spack.spec.Spec", List[Tuple["spack.spec.Spec", Optional[str]]]]
+    requirements: Dict[
+        "spack.spec.Spec", List[Tuple[Tuple["spack.spec.Spec", ...], str, Optional[str]]]
+    ]
+    provided: Dict["spack.spec.Spec", Set["spack.spec.Spec"]]
+    provided_together: Dict["spack.spec.Spec", List[Set[str]]]
+    patches: Dict["spack.spec.Spec", List["spack.patch.Patch"]]
+    variants: Dict[str, Tuple["spack.variant.Variant", "spack.spec.Spec"]]
+    languages: Dict["spack.spec.Spec", Set[str]]
 
     #: By default, packages are not virtual
     #: Virtual packages override this attribute
@@ -680,15 +722,23 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         super().__init__()
 
     @classmethod
+    def dependency_names(cls):
+        return _names(cls.dependencies)
+
+    @classmethod
+    def dependencies_by_name(cls, when: bool = False):
+        return _by_name(cls.dependencies, when=when)
+
+    @classmethod
     def possible_dependencies(
         cls,
-        transitive=True,
-        expand_virtuals=True,
+        transitive: bool = True,
+        expand_virtuals: bool = True,
         depflag: dt.DepFlag = dt.ALL,
-        visited=None,
-        missing=None,
-        virtuals=None,
-    ):
+        visited: Optional[dict] = None,
+        missing: Optional[dict] = None,
+        virtuals: Optional[set] = None,
+    ) -> Dict[str, Set[str]]:
         """Return dict of possible dependencies of this package.
 
         Args:
@@ -727,11 +777,12 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
 
         visited.setdefault(cls.name, set())
 
-        for name, conditions in cls.dependencies.items():
+        for name, conditions in cls.dependencies_by_name(when=True).items():
             # check whether this dependency could be of the type asked for
             depflag_union = 0
-            for dep in conditions.values():
-                depflag_union |= dep.depflag
+            for deplist in conditions.values():
+                for dep in deplist:
+                    depflag_union |= dep.depflag
             if not (depflag & depflag_union):
                 continue
 
@@ -851,22 +902,16 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
 
     @classmethod
     @memoized
-    def version_urls(cls):
-        """OrderedDict of explicitly defined URLs for versions of this package.
+    def version_urls(cls) -> Dict[StandardVersion, str]:
+        """Dict of explicitly defined URLs for versions of this package.
 
         Return:
-           An OrderedDict (version -> URL) different versions of this
-           package, sorted by version.
+           An dict mapping version to url, ordered by version.
 
-        A version's URL only appears in the result if it has an an
-        explicitly defined ``url`` argument. So, this list may be empty
-        if a package only defines ``url`` at the top level.
+        A version's URL only appears in the result if it has an an explicitly defined ``url``
+        argument. So, this list may be empty if a package only defines ``url`` at the top level.
         """
-        version_urls = collections.OrderedDict()
-        for v, args in sorted(cls.versions.items()):
-            if "url" in args:
-                version_urls[v] = args["url"]
-        return version_urls
+        return {v: args["url"] for v, args in sorted(cls.versions.items()) if "url" in args}
 
     def nearest_url(self, version):
         """Finds the URL with the "closest" version to ``version``.
@@ -909,36 +954,39 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         """
         pass
 
-    def all_urls_for_version(self, version):
+    def all_urls_for_version(self, version: StandardVersion) -> List[str]:
         """Return all URLs derived from version_urls(), url, urls, and
         list_url (if it contains a version) in a package in that order.
 
         Args:
-            version (spack.version.Version): the version for which a URL is sought
+            version: the version for which a URL is sought
         """
         uf = None
         if type(self).url_for_version != PackageBase.url_for_version:
             uf = self.url_for_version
         return self._implement_all_urls_for_version(version, uf)
 
-    def _implement_all_urls_for_version(self, version, custom_url_for_version=None):
-        if not isinstance(version, StandardVersion):
-            version = Version(version)
+    def _implement_all_urls_for_version(
+        self,
+        version: Union[str, StandardVersion],
+        custom_url_for_version: Optional[Callable[[StandardVersion], Optional[str]]] = None,
+    ) -> List[str]:
+        version = StandardVersion.from_string(version) if isinstance(version, str) else version
 
-        urls = []
+        urls: List[str] = []
 
         # If we have a specific URL for this version, don't extrapolate.
-        version_urls = self.version_urls()
-        if version in version_urls:
-            urls.append(version_urls[version])
+        url = self.version_urls().get(version)
+        if url:
+            urls.append(url)
 
         # if there is a custom url_for_version, use it
         if custom_url_for_version is not None:
             u = custom_url_for_version(version)
-            if u not in urls and u is not None:
+            if u is not None and u not in urls:
                 urls.append(u)
 
-        def sub_and_add(u):
+        def sub_and_add(u: Optional[str]) -> None:
             if u is None:
                 return
             # skip the url if there is no version to replace
@@ -946,9 +994,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
                 spack.url.parse_version(u)
             except spack.url.UndetectableVersionError:
                 return
-            nu = spack.url.substitute_version(u, self.url_version(version))
-
-            urls.append(nu)
+            urls.append(spack.url.substitute_version(u, self.url_version(version)))
 
         # If no specific URL, use the default, class-level URL
         sub_and_add(getattr(self, "url", None))
@@ -1030,7 +1076,12 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         # If it's a dev package (not transitively), use a DIY stage object
         dev_path_var = self.spec.variants.get("dev_path", None)
         if dev_path_var:
-            return DIYStage(dev_path_var.value)
+            dev_path = dev_path_var.value
+            link_format = spack.config.get("config:develop_stage_link")
+            if not link_format:
+                link_format = "build-{arch}-{hash:7}"
+            stage_link = self.spec.format_path(link_format)
+            return DevelopStage(compute_stage_name(self.spec), dev_path, stage_link)
 
         # To fetch the current version
         source_stage = self._make_root_stage(self.fetcher)
@@ -1079,13 +1130,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     @property
     def env_path(self):
         """Return the build environment file path associated with staging."""
-        # Backward compatibility: Return the name of an existing log path;
-        # otherwise, return the current install env path name.
-        old_filename = os.path.join(self.stage.path, "spack-build.env")
-        if os.path.exists(old_filename):
-            return old_filename
-        else:
-            return os.path.join(self.stage.path, _spack_build_envfile)
+        return os.path.join(self.stage.path, _spack_build_envfile)
 
     @property
     def env_mods_path(self):
@@ -1116,13 +1161,6 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     @property
     def log_path(self):
         """Return the build log file path associated with staging."""
-        # Backward compatibility: Return the name of an existing log path.
-        for filename in ["spack-build.out", "spack-build.txt"]:
-            old_log = os.path.join(self.stage.path, filename)
-            if os.path.exists(old_log):
-                return old_log
-
-        # Otherwise, return the current log path name.
         return os.path.join(self.stage.path, _spack_build_logfile)
 
     @property
@@ -1135,15 +1173,15 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
 
     @property
     def install_log_path(self):
-        """Return the build log file path on successful installation."""
+        """Return the (compressed) build log file path on successful installation"""
         # Backward compatibility: Return the name of an existing install log.
-        for filename in ["build.out", "build.txt"]:
+        for filename in [_spack_build_logfile, "build.out", "build.txt"]:
             old_log = os.path.join(self.metadata_dir, filename)
             if os.path.exists(old_log):
                 return old_log
 
         # Otherwise, return the current install log path name.
-        return os.path.join(self.metadata_dir, _spack_build_logfile)
+        return os.path.join(self.metadata_dir, _spack_build_logfile + ".gz")
 
     @property
     def configure_args_path(self):
@@ -1219,7 +1257,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
 
     @classmethod
     def dependencies_of_type(cls, deptypes: dt.DepFlag):
-        """Get dependencies that can possibly have these deptypes.
+        """Get names of dependencies that can possibly have these deptypes.
 
         This analyzes the package and determines which dependencies *can*
         be a certain kind of dependency. Note that they may not *always*
@@ -1227,11 +1265,11 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         so something may be a build dependency in one configuration and a
         run dependency in another.
         """
-        return dict(
-            (name, conds)
-            for name, conds in cls.dependencies.items()
-            if any(deptypes & cls.dependencies[name][cond].depflag for cond in conds)
-        )
+        return {
+            name
+            for name, dependencies in cls.dependencies_by_name().items()
+            if any(deptypes & dep.depflag for dep in dependencies)
+        }
 
     # TODO: allow more than one active extendee.
     @property
@@ -1260,20 +1298,8 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         else:
             # If it's not concrete, then return the spec from the
             # extends() directive since that is all we know so far.
-            spec_str, kwargs = next(iter(self.extendees.items()))
+            spec_str = next(iter(self.extendees))
             return spack.spec.Spec(spec_str)
-
-    @property
-    def extendee_args(self):
-        """
-        Spec of the extendee of this package, or None if it is not an extension
-        """
-        if not self.extendees:
-            return None
-
-        # TODO: allow multiple extendees.
-        name = next(iter(self.extendees))
-        return self.extendees[name][1]
 
     @property
     def is_extension(self):
@@ -1305,9 +1331,9 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         True if this package provides a virtual package with the specified name
         """
         return any(
-            any(self.spec.intersects(c) for c in constraints)
-            for s, constraints in self.provided.items()
-            if s.name == vpkg_name
+            any(spec.name == vpkg_name for spec in provided)
+            for when_spec, provided in self.provided.items()
+            if self.spec.intersects(when_spec)
         )
 
     @property
@@ -1317,9 +1343,15 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         """
         return [
             vspec
-            for vspec, constraints in self.provided.items()
-            if any(self.spec.satisfies(c) for c in constraints)
+            for when_spec, provided in self.provided.items()
+            for vspec in provided
+            if self.spec.satisfies(when_spec)
         ]
+
+    @classmethod
+    def provided_virtual_names(cls):
+        """Return sorted list of names of virtuals that can be provided by this package."""
+        return sorted(set(vpkg.name for virtuals in cls.provided.values() for vpkg in virtuals))
 
     @property
     def prefix(self):
@@ -1367,13 +1399,9 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
             (str):  default manual download instructions
         """
         required = (
-            "Manual download is required for {0}. ".format(self.spec.name)
-            if self.manual_download
-            else ""
+            f"Manual download is required for {self.spec.name}. " if self.manual_download else ""
         )
-        return "{0}Refer to {1} for download instructions.".format(
-            required, self.spec.package.homepage
-        )
+        return f"{required}Refer to {self.homepage} for download instructions."
 
     def do_fetch(self, mirror_only=False):
         """
@@ -1385,7 +1413,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
             return
 
         checksum = spack.config.get("config:checksum")
-        fetch = self.stage.managed_by_spack
+        fetch = self.stage.needs_fetching
         if (
             checksum
             and fetch
@@ -1458,9 +1486,6 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         if self.has_code:
             self.do_fetch(mirror_only)
             self.stage.expand_archive()
-
-            if not os.listdir(self.stage.path):
-                raise spack.error.FetchError("Archive was empty for %s" % self.name)
         else:
             # Support for post-install hooks requires a stage.source_path
             fsys.mkdirp(self.stage.source_path)
@@ -1494,7 +1519,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         # If we encounter an archive that failed to patch, restage it
         # so that we can apply all the patches again.
         if os.path.isfile(bad_file):
-            if self.stage.managed_by_spack:
+            if self.stage.requires_patch_success:
                 tty.debug("Patching failed last time. Restaging.")
                 self.stage.restage()
             else:
@@ -1515,6 +1540,8 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
             tty.msg("No patches needed for {0}".format(self.name))
             return
 
+        errors = []
+
         # Apply all the patches for specs that match this one
         patched = False
         for patch in patches:
@@ -1524,12 +1551,16 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
                 tty.msg("Applied patch {0}".format(patch.path_or_url))
                 patched = True
             except spack.error.SpackError as e:
-                tty.debug(e)
-
                 # Touch bad file if anything goes wrong.
-                tty.msg("Patch %s failed." % patch.path_or_url)
                 fsys.touch(bad_file)
-                raise
+                error_msg = f"Patch {patch.path_or_url} failed."
+                if self.stage.requires_patch_success:
+                    tty.msg(error_msg)
+                    raise
+                else:
+                    tty.debug(error_msg)
+                    tty.debug(e)
+                    errors.append(e)
 
         if has_patch_fun:
             try:
@@ -1547,24 +1578,29 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
                     # printed a message for each patch.
                     tty.msg("No patches needed for {0}".format(self.name))
             except spack.error.SpackError as e:
-                tty.debug(e)
-
                 # Touch bad file if anything goes wrong.
-                tty.msg("patch() function failed for {0}".format(self.name))
                 fsys.touch(bad_file)
-                raise
+                error_msg = f"patch() function failed for {self.name}"
+                if self.stage.requires_patch_success:
+                    tty.msg(error_msg)
+                    raise
+                else:
+                    tty.debug(error_msg)
+                    tty.debug(e)
+                    errors.append(e)
 
-        # Get rid of any old failed file -- patches have either succeeded
-        # or are not needed.  This is mostly defensive -- it's needed
-        # if the restage() method doesn't clean *everything* (e.g., for a repo)
-        if os.path.isfile(bad_file):
-            os.remove(bad_file)
+        if not errors:
+            # Get rid of any old failed file -- patches have either succeeded
+            # or are not needed.  This is mostly defensive -- it's needed
+            # if we didn't restage
+            if os.path.isfile(bad_file):
+                os.remove(bad_file)
 
-        # touch good or no patches file so that we skip next time.
-        if patched:
-            fsys.touch(good_file)
-        else:
-            fsys.touch(no_patches_file)
+            # touch good or no patches file so that we skip next time.
+            if patched:
+                fsys.touch(good_file)
+            else:
+                fsys.touch(no_patches_file)
 
     @classmethod
     def all_patches(cls):
@@ -2046,15 +2082,6 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         """
         return True
 
-    @property
-    def build_log_path(self):
-        """
-        Return the expected (or current) build log file path.  The path points
-        to the staging build file until the software is successfully installed,
-        when it points to the file in the installation directory.
-        """
-        return self.install_log_path if self.spec.installed else self.log_path
-
     @classmethod
     def inject_flags(cls: Type[Pb], name: str, flags: Iterable[str]) -> FLAG_HANDLER_RETURN_TYPE:
         """
@@ -2338,15 +2365,14 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         return results.getvalue()
 
     @property
-    def all_urls(self):
+    def all_urls(self) -> List[str]:
         """A list of all URLs in a package.
 
         Check both class-level and version-specific URLs.
 
-        Returns:
-            list: a list of URLs
+        Returns a list of URLs
         """
-        urls = []
+        urls: List[str] = []
         if hasattr(self, "url") and self.url:
             urls.append(self.url)
 
@@ -2359,7 +2385,9 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
                 urls.append(args["url"])
         return urls
 
-    def fetch_remote_versions(self, concurrency=None):
+    def fetch_remote_versions(
+        self, concurrency: Optional[int] = None
+    ) -> Dict[StandardVersion, str]:
         """Find remote versions of this package.
 
         Uses ``list_url`` and any other URLs listed in the package file.
@@ -2448,14 +2476,21 @@ def flatten_dependencies(spec, flat_dir):
         dep_files.merge(flat_dir + "/" + name)
 
 
-def possible_dependencies(*pkg_or_spec, **kwargs):
+def possible_dependencies(
+    *pkg_or_spec: Union[str, spack.spec.Spec, typing.Type[PackageBase]],
+    transitive: bool = True,
+    expand_virtuals: bool = True,
+    depflag: dt.DepFlag = dt.ALL,
+    missing: Optional[dict] = None,
+    virtuals: Optional[set] = None,
+) -> Dict[str, Set[str]]:
     """Get the possible dependencies of a number of packages.
 
     See ``PackageBase.possible_dependencies`` for details.
     """
     packages = []
     for pos in pkg_or_spec:
-        if isinstance(pos, PackageMeta):
+        if isinstance(pos, PackageMeta) and issubclass(pos, PackageBase):
             packages.append(pos)
             continue
 
@@ -2468,9 +2503,16 @@ def possible_dependencies(*pkg_or_spec, **kwargs):
         else:
             packages.append(pos.package_class)
 
-    visited = {}
+    visited: Dict[str, Set[str]] = {}
     for pkg in packages:
-        pkg.possible_dependencies(visited=visited, **kwargs)
+        pkg.possible_dependencies(
+            visited=visited,
+            transitive=transitive,
+            expand_virtuals=expand_virtuals,
+            depflag=depflag,
+            missing=missing,
+            virtuals=virtuals,
+        )
 
     return visited
 
@@ -2518,3 +2560,7 @@ class DependencyConflictError(spack.error.SpackError):
 
     def __init__(self, conflict):
         super().__init__("%s conflicts with another file in the flattened directory." % (conflict))
+
+
+class ManualDownloadRequiredError(InvalidPackageOpError):
+    """Raised when attempting an invalid operation on a package that requires a manual download."""

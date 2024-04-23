@@ -1,6 +1,5 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
-# Copyright 2023 EMBL-European Bioinformatics Institute
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -15,12 +14,6 @@ class PerlMimeTypes(PerlPackage):
 
     maintainers("EbiArnie")
 
+    license("GPL-1.0-or-later OR Artistic-1.0-Perl")
+
     version("2.24", sha256="629e361f22b220be50c2da7354e23c0451757709a03c25a22f3160edb94cb65f")
-
-    def test_use(self):
-        """Test 'use module'"""
-        options = ["-we", 'use strict; use MIME::Types; print("OK\n")']
-
-        perl = self.spec["perl"].command
-        out = perl(*options, output=str.split, error=str.split)
-        assert "OK" in out

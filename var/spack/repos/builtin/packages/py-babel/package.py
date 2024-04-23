@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class PyBabel(PythonPackage):
     homepage = "https://babel.pocoo.org/en/latest/"
     pypi = "Babel/Babel-2.7.0.tar.gz"
     git = "https://github.com/python-babel/babel"
+
+    license("BSD-3-Clause")
 
     version("2.12.1", sha256="cc2d99999cd01d44420ae725a21c9e3711b3aadc7976d6147f622d8581963455")
     version("2.10.3", sha256="7614553711ee97490f732126dc077f8d0ae084ebc6a96e23db1482afabdb2c51")

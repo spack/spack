@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -28,6 +28,10 @@ class Octave(AutotoolsPackage, GNUMirrorPackage):
 
     extendable = True
 
+    license("GPL-3.0-or-later")
+
+    version("9.1.0", sha256="3f8c6c6ecfa249a47c97e18e651be4db8499be2f5de1a095a3eea53efc01d6a1")
+    version("8.4.0", sha256="6b38dd9751678424aeb3a9d666432b1f378eb3971a21290a90cd3d35119d56ad")
     version("8.2.0", sha256="57d17f918a940d38ca3348211e110b34d735a322a87db71c177c4692a49a9c84")
     version("8.1.0", sha256="8052074d17b0ef643d037de8ab389672c752bb201ee9cea4dfa69858fb6a213f")
     version("7.3.0", sha256="6e14a4649d70af45ab660f8cbbf645aaf1ec33f25f88bfda4697cb17e440c4f5")
@@ -65,7 +69,7 @@ class Octave(AutotoolsPackage, GNUMirrorPackage):
     variant("gnuplot", default=False, description="Use gnuplot")
     variant("magick", default=False, description="Use magick")
     variant("hdf5", default=False, description="Use HDF5")
-    variant("jdk", default=False, description="Use JDK")
+    variant("jdk", default=False, description="Use Java")
     variant("llvm", default=False, description="Use LLVM")
     variant("opengl", default=False, description="Use OpenGL")
     variant("qhull", default=False, description="Use qhull")

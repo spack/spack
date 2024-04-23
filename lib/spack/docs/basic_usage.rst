@@ -1,4 +1,4 @@
-.. Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -1119,6 +1119,9 @@ and ``3.4.2``.  Similarly, ``@4.2:`` means any version above and including
 ``4.2``.  As a short-hand, ``@3`` is equivalent to the range ``@3:3`` and
 includes any version with major version ``3``.
 
+Versions are ordered lexicograpically by its components. For more details
+on the order, see :ref:`the packaging guide <version-comparison>`.
+
 Notice that you can distinguish between the specific version ``@=3.2`` and
 the range ``@3.2``. This is useful for packages that follow a versioning
 scheme that omits the zero patch version number: ``3.2``, ``3.2.1``,
@@ -1129,6 +1132,10 @@ scheme that omits the zero patch version number: ``3.2``, ``3.2.1``,
 A version specifier can also be a list of ranges and specific versions,
 separated by commas.  For example, ``@1.0:1.5,=1.7.1`` matches any version
 in the range ``1.0:1.5`` and the specific version ``1.7.1``.
+
+^^^^^^^^^^^^
+Git versions
+^^^^^^^^^^^^
 
 For packages with a ``git`` attribute, ``git`` references
 may be specified instead of a numerical version i.e. branches, tags

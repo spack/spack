@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,8 @@ class Glew(CMakePackage):
     root_cmakelists_dir = "build/cmake"
 
     maintainers("biddisco")
+
+    license("GPL-2.0-or-later")
 
     version("2.2.0", sha256="d4fc82893cfb00109578d0a1a2337fb8ca335b3ceccf97b97e5cc7f08e4353e1")
     version("2.1.0", sha256="04de91e7e6763039bc11940095cd9c7f880baba82196a7765f727ac05a993c95")
@@ -55,15 +57,12 @@ class Glew(CMakePackage):
             self.define("BUILD_UTILS", True),
             self.define("GLEW_REGAL", False),
             self.define("GLEW_EGL", "gl=egl" in spec),
-            self.define("OpenGL_GL_PREFERENCE", "LEGACY"),
             self.define("OPENGL_INCLUDE_DIR", spec["gl"].headers.directories[0]),
             self.define("OPENGL_gl_LIBRARY", spec["gl"].libs[0]),
             self.define("OPENGL_opengl_LIBRARY", "IGNORE"),
             self.define("OPENGL_glx_LIBRARY", "IGNORE"),
             self.define("OPENGL_glu_LIBRARY", "IGNORE"),
             self.define("GLEW_OSMESA", "gl=osmesa" in spec),
-            self.define("GLEW_X11", "gl=glx" in spec),
-            self.define("CMAKE_DISABLE_FIND_PACKAGE_X11", "gl=glx" not in spec),
         ]
         if "gl=egl" in spec:
             args.append(

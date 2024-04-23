@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -69,21 +69,13 @@ class Converge(Package):
 
     depends_on("mpi", when="+mpi")
 
-    # FIXME: Concretization is currently broken, so this causes:
-    #     $ spack spec converge
-    # to crash. You must explicitly state what MPI version you want:
-    #     $ spack spec converge@2.4.10 +mpi ^openmpi@:1.10
-    #
     # TODO: Add version ranges for other MPI libraries
-    depends_on("openmpi@1.10.0:1.10", when="@2.4.0:2.4+mpi^openmpi")
-    depends_on("openmpi@1.5:1.8", when="@2.2:2.3+mpi^openmpi")
-    depends_on("openmpi@:1.4", when="@:2.1+mpi^openmpi")
+    depends_on("openmpi@1.10.0:1.10", when="@2.4.0:2.4+mpi^[virtuals=mpi] openmpi")
+    depends_on("openmpi@1.5:1.8", when="@2.2:2.3+mpi^[virtuals=mpi] openmpi")
+    depends_on("openmpi@:1.4", when="@:2.1+mpi^[virtuals=mpi] openmpi")
 
-    # TODO: Add packages for hp-mpi and platform-mpi
-    # conflicts('^hp-mpi', when='@2.4:')
     conflicts("^intel-mpi", when="@:2.3")
     conflicts("^intel-parallel-studio+mpi", when="@:2.3")
-    # conflicts('^platform-mpi', when='@:2.1')
     conflicts("^spectrum-mpi")
 
     # Licensing

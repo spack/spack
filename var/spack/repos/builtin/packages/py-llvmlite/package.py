@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class PyLlvmlite(PythonPackage):
     homepage = "https://llvmlite.readthedocs.io/en/latest/index.html"
     pypi = "llvmlite/llvmlite-0.23.0.tar.gz"
     git = "https://github.com/numba/llvmlite.git"
+
+    license("BSD-2-Clause")
 
     version("0.41.1", sha256="f19f767a018e6ec89608e1f6b13348fa2fcde657151137cb64e56d48598a92db")
     version("0.41.0", sha256="7d41db345d76d2dfa31871178ce0d8e9fd8aa015aa1b7d4dab84b5cb393901e0")
@@ -52,6 +54,9 @@ class PyLlvmlite(PythonPackage):
     depends_on("llvm@9.0", when="@0.33")
     depends_on("llvm@7.0:7.1,8.0", when="@0.29:0.32")
     depends_on("binutils", type="build")
+
+    # TODO: investigate
+    conflicts("%apple-clang@15:")
 
     def setup_build_environment(self, env):
         if self.spec.satisfies("%fj"):

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,6 +21,8 @@ class Mpifileutils(Package):
     git = "https://github.com/hpc/mpifileutils.git"
 
     tags = ["e4s"]
+
+    license("BSD-3-Clause")
 
     version("develop", branch="main")
     version("0.11.1", sha256="e2cba53309b5b3ee581b6ff82e4e66f54628370cce694c34224ed947fece32d4")

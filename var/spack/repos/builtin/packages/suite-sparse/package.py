@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,10 @@ class SuiteSparse(Package):
     url = "https://github.com/DrTimothyAldenDavis/SuiteSparse/archive/v4.5.3.tar.gz"
     git = "https://github.com/DrTimothyAldenDavis/SuiteSparse.git"
 
+    license("Apache-2.0")
+
+    version("7.3.1", sha256="b512484396a80750acf3082adc1807ba0aabb103c2e09be5691f46f14d0a9718")
+    version("7.2.1", sha256="304e959a163ff74f8f4055dade3e0b5498d9aa3b1c483633bb400620f521509f")
     version("5.13.0", sha256="59c6ca2959623f0c69226cf9afb9a018d12a37fab3a8869db5f6d7f83b6b147d")
     version("5.12.0", sha256="5fb0064a3398111976f30c5908a8c0b40df44c6dd8f0cc4bfa7b9e45d8c647de")
     version("5.11.0", sha256="fdd957ed06019465f7de73ce931afaf5d40e96e14ae57d91f60868b8c123c4c8")
@@ -63,6 +67,7 @@ class SuiteSparse(Package):
     depends_on("gmp", when="@5.8.0:")
     depends_on("m4", type="build", when="@5.0.0:")
     depends_on("cmake", when="+graphblas @5.2.0:", type="build")
+    depends_on("cmake@3.22:", when="@6:", type="build")
     depends_on("metis@5.1.0", when="@4.5.1:")
 
     with when("+tbb"):
@@ -72,7 +77,7 @@ class SuiteSparse(Package):
         # related stuff (which have long been deprecated).  This appears to be
         # rather problematic for suite-sparse (see e.g.
         # https://github.com/DrTimothyAldenDavis/SuiteSparse/blob/master/SPQR/Source/spqr_parallel.cpp)
-        depends_on("intel-tbb@:2020 build_system=makefile", when="^intel-tbb")
+        depends_on("intel-tbb@:2020 build_system=makefile", when="^[virtuals=tbb] intel-tbb")
         conflicts(
             "^intel-oneapi-tbb@2021:",
             msg="suite-sparse needs task_scheduler_init.h dropped in recent tbb libs",
@@ -226,6 +231,13 @@ class SuiteSparse(Package):
             make_args += [
                 "CMAKE_OPTIONS=-DCMAKE_INSTALL_PREFIX=%s" % prefix
                 + " -DCMAKE_LIBRARY_PATH=%s" % prefix.lib
+                + " -DBLAS_ROOT=%s" % spec["blas"].prefix
+                + " -DLAPACK_ROOT=%s" % spec["lapack"].prefix
+                # *_LIBRARIES is critical to pick up static
+                # libraries (if intended) and also to avoid
+                # unintentional system blas/lapack packages
+                + " -DBLAS_LIBRARIES=%s" % spec["blas"].libs
+                + " -DLAPACK_LIBRARIES=%s" % spec["lapack"].libs
             ]
 
         if spec.satisfies("%gcc platform=darwin"):
@@ -253,11 +265,14 @@ class SuiteSparse(Package):
         targets.extend(["SPQR"])
         if spec.satisfies("+graphblas"):
             targets.append("GraphBLAS")
-        if spec.satisfies("@5.8.0:"):
+        if spec.satisfies("@5.8.0:6"):
             targets.append("SLIP_LU")
 
         # Finally make and install
-        make("-C", "SuiteSparse_config", "config", *make_args)
+        if spec.satisfies("@6:"):
+            make("-C", "SuiteSparse_config", *make_args)
+        else:
+            make("-C", "SuiteSparse_config", "config", *make_args)
         for target in targets:
             make("-C", target, "library", *make_args)
             make("-C", target, "install", *make_args)

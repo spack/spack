@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,8 +17,6 @@ class Templight(CMakePackage):
     homepage = "https://github.com/mikael-s-persson/templight"
     git = "https://github.com/mikael-s-persson/templight.git"
     llvm_svn = "http://llvm.org/svn/llvm-project/{0}/trunk"
-
-    family = "compiler"  # Used by lmod
 
     # Templight is a patch to clang, so we have three versions to care about:
     # - The one that will be used in Spack specifications
@@ -128,7 +126,6 @@ class Templight(CMakePackage):
         cmake_args = [
             "-DLLVM_REQUIRES_RTTI:BOOL=ON",
             "-DCLANG_DEFAULT_OPENMP_RUNTIME:STRING=libomp",
-            "-DPYTHON_EXECUTABLE:PATH={0}".format(spec["python"].command.path),
             "-DLLVM_EXTERNAL_POLLY_BUILD:Bool=OFF",
             "-DLLVM_TOOL_POLLY_BUILD:Bool=OFF",
             "-DLLVM_POLLY_BUILD:Bool=OFF",

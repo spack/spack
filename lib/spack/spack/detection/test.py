@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,8 +8,6 @@ import contextlib
 import pathlib
 import tempfile
 from typing import Any, Deque, Dict, Generator, List, NamedTuple, Tuple
-
-import jinja2
 
 from llnl.util import filesystem
 
@@ -85,6 +83,8 @@ class Runner:
             self.tmpdir.cleanup()
 
     def _create_executable_scripts(self, mock_executables: MockExecutables) -> List[pathlib.Path]:
+        import jinja2
+
         relative_paths = mock_executables.executables
         script = mock_executables.script
         script_template = jinja2.Template("#!/bin/bash\n{{ script }}\n")

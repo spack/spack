@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -28,8 +28,14 @@ class Gromacs(CMakePackage, CudaPackage):
     git = "https://gitlab.com/gromacs/gromacs.git"
     maintainers("danielahlin", "eirrgang", "junghans")
 
+    license("GPL-2.0-or-later", when="@:4.5")
+    license("LGPL-2.1-or-later", when="@4.6:")
+
     version("main", branch="main")
     version("master", branch="main", deprecated=True)
+    version("2024.1", sha256="937d8f12a36fffbf2af7add71adbb5aa5c5537892d46c9a76afbecab1aa0aac7")
+    version("2024", sha256="04d226d52066a8bc3a42e00d6213de737b4ec292e26703065924ff01956801e2")
+    version("2023.4", sha256="e5d6c4d9e7ccacfaccb0888619bd21b5ea8911f82b410e68d6db5d40f695f231")
     version("2023.3", sha256="4ec8f8d0c7af76b13f8fd16db8e2c120e749de439ae9554d9f653f812d78d1cb")
     version("2023.2", sha256="bce1480727e4b2bb900413b75d99a3266f3507877da4f5b2d491df798f9fcdae")
     version("2023.1", sha256="eef2bb4a6cb6314cf9da47f26df2a0d27af4bf7b3099723d43601073ab0a42f4")
@@ -219,15 +225,20 @@ class Gromacs(CMakePackage, CudaPackage):
     # Above dependencies can be verified, and new versions added, by going to
     # https://github.com/plumed/plumed2/tree/v2.9.0/patches
     # and switching tags.
+
+    # Versions without minor release number, such as `2023` and `2021`,
+    # require exact specifcation using `@=`, starting from Spack v0.20.0,
+    # see https://github.com/spack/spack/releases/tag/v0.20.0
+
     plumed_patches = {
-        "2023": "2.9.0",
+        "=2023": "2.9.0",
         "2022.5": "2.8.2:2.9.0",
         "2022.3": "2.8.1",
         "2021.7": "2.8.2:2.9.0",
         "2021.6": "2.8.1",
         "2021.5": "2.7.5:2.7.6",
         "2021.4": "2.7.3:2.8.0",
-        "2021": "2.7.1:2.7.2",
+        "=2021": "2.7.1:2.7.2",
         "2020.7": "2.8.1:2.9.0",
         "2020.6": "2.7.2:2.8.0",
         "2020.5": "2.7.1",
@@ -270,6 +281,8 @@ class Gromacs(CMakePackage, CudaPackage):
     depends_on("cmake@3.16.3:3", type="build", when="@2022:")
     depends_on("cmake@3.18.4:3", type="build", when="@main")
     depends_on("cmake@3.16.0:3", type="build", when="%fj")
+    depends_on("pkgconfig", type="build")
+
     depends_on("cuda", when="+cuda")
     depends_on("sycl", when="+sycl")
     depends_on("lapack")

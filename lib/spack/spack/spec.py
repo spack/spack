@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -211,6 +211,19 @@ def colorize_spec(spec):
             return "%s%s" % (COLOR_FORMATS[sep], clr.cescape(sep))
 
     return clr.colorize(re.sub(_SEPARATORS, insert_color(), str(spec)) + "@.")
+
+
+OLD_STYLE_FMT_RE = re.compile(r"\${[A-Z]+}")
+
+
+def ensure_modern_format_string(fmt: str) -> None:
+    """Ensure that the format string does not contain old ${...} syntax."""
+    result = OLD_STYLE_FMT_RE.search(fmt)
+    if result:
+        raise SpecFormatStringError(
+            f"Format string `{fmt}` contains old syntax `{result.group(0)}`. "
+            "This is no longer supported."
+        )
 
 
 @lang.lazy_lexicographic_ordering
@@ -612,18 +625,6 @@ class CompilerSpec:
         else:
             raise TypeError("__init__ takes 1 or 2 arguments. (%d given)" % nargs)
 
-    def _add_versions(self, version_list):
-        # If it already has a non-trivial version list, this is an error
-        if self.versions and self.versions != vn.any_version:
-            # Note: This may be impossible to reach by the current parser
-            # Keeping it in case the implementation changes.
-            raise MultipleVersionError(
-                "A spec cannot contain multiple version signifiers. Use a version list instead."
-            )
-        self.versions = vn.VersionList()
-        for version in version_list:
-            self.versions.add(version)
-
     def _autospec(self, compiler_spec_like):
         if isinstance(compiler_spec_like, CompilerSpec):
             return compiler_spec_like
@@ -910,6 +911,9 @@ class FlagMap(lang.HashableMap):
             yield flags
 
     def __str__(self):
+        if not self:
+            return ""
+
         sorted_items = sorted((k, v) for k, v in self.items() if v)
 
         result = ""
@@ -1407,6 +1411,13 @@ class Spec:
     def external(self):
         return bool(self.external_path) or bool(self.external_modules)
 
+    @property
+    def is_develop(self):
+        """Return whether the Spec represents a user-developed package
+        in a Spack ``Environment`` (i.e. using `spack develop`).
+        """
+        return bool(self.variants.get("dev_path", False))
+
     def clear_dependencies(self):
         """Trim the dependencies of this spec."""
         self._dependencies.clear()
@@ -1488,7 +1499,9 @@ class Spec:
         result = f"{deptypes_str} {virtuals_str}".strip()
         return f"[{result}]"
 
-    def dependencies(self, name=None, deptype: Union[dt.DepTypes, dt.DepFlag] = dt.ALL):
+    def dependencies(
+        self, name=None, deptype: Union[dt.DepTypes, dt.DepFlag] = dt.ALL
+    ) -> List["Spec"]:
         """Return a list of direct dependencies (nodes in the DAG).
 
         Args:
@@ -1499,7 +1512,9 @@ class Spec:
             deptype = dt.canonicalize(deptype)
         return [d.spec for d in self.edges_to_dependencies(name, depflag=deptype)]
 
-    def dependents(self, name=None, deptype: Union[dt.DepTypes, dt.DepFlag] = dt.ALL):
+    def dependents(
+        self, name=None, deptype: Union[dt.DepTypes, dt.DepFlag] = dt.ALL
+    ) -> List["Spec"]:
         """Return a list of direct dependents (nodes in the DAG).
 
         Args:
@@ -1526,20 +1541,6 @@ class Spec:
         for key, group in itertools.groupby(sorted(selected_edges, key=_sort_fn), key=_group_fn):
             result[key] = list(group)
         return result
-
-    #
-    # Private routines here are called by the parser when building a spec.
-    #
-    def _add_versions(self, version_list):
-        """Called by the parser to add an allowable version."""
-        # If it already has a non-trivial version list, this is an error
-        if self.versions and self.versions != vn.any_version:
-            raise MultipleVersionError(
-                "A spec cannot contain multiple version signifiers." " Use a version list instead."
-            )
-        self.versions = vn.VersionList()
-        for version in version_list:
-            self.versions.add(version)
 
     def _add_flag(self, name, value, propagate):
         """Called by the parser to add a known flag.
@@ -1609,37 +1610,29 @@ class Spec:
                 else:
                     setattr(self.architecture, new_attr, new_value)
 
-    def _set_compiler(self, compiler):
-        """Called by the parser to set the compiler."""
-        if self.compiler:
-            raise DuplicateCompilerSpecError(
-                "Spec for '%s' cannot have two compilers." % self.name
-            )
-        self.compiler = compiler
-
     def _add_dependency(self, spec: "Spec", *, depflag: dt.DepFlag, virtuals: Tuple[str, ...]):
         """Called by the parser to add another spec as a dependency."""
         if spec.name not in self._dependencies or not spec.name:
             self.add_dependency_edge(spec, depflag=depflag, virtuals=virtuals)
             return
 
-        # Keep the intersection of constraints when a dependency is added
-        # multiple times. Currently, we only allow identical edge types.
+        # Keep the intersection of constraints when a dependency is added multiple times.
+        # The only restriction, currently, is keeping the same dependency type
         orig = self._dependencies[spec.name]
         try:
             dspec = next(dspec for dspec in orig if depflag == dspec.depflag)
         except StopIteration:
-            current_deps = ", ".join(
-                dt.flag_to_chars(x.depflag) + " " + x.spec.short_spec for x in orig
-            )
+            edge_attrs = f"deptypes={dt.flag_to_chars(depflag).strip()}"
+            required_dep_str = f"^[{edge_attrs}] {str(spec)}"
+
             raise DuplicateDependencyError(
-                f"{self.short_spec} cannot depend on '{spec.short_spec}' multiple times.\n"
-                f"\tRequired: {dt.flag_to_chars(depflag)}\n"
-                f"\tDependency: {current_deps}"
+                f"{spec.name} is a duplicate dependency, with conflicting dependency types\n"
+                f"\t'{str(self)}' cannot depend on '{required_dep_str}'"
             )
 
         try:
             dspec.spec.constrain(spec)
+            dspec.update_virtuals(virtuals=virtuals)
         except spack.error.UnsatisfiableSpecError:
             raise DuplicateDependencyError(
                 f"Cannot depend on incompatible specs '{dspec.spec}' and '{spec}'"
@@ -2074,7 +2067,12 @@ class Spec:
             if hasattr(variant, "_patches_in_order_of_appearance"):
                 d["patches"] = variant._patches_in_order_of_appearance
 
-        if self._concrete and hash.package_hash and self._package_hash:
+        if (
+            self._concrete
+            and hash.package_hash
+            and hasattr(self, "_package_hash")
+            and self._package_hash
+        ):
             # We use the attribute here instead of `self.package_hash()` because this
             # should *always* be assignhed at concretization time. We don't want to try
             # to compute a package hash for concrete spec where a) the package might not
@@ -2755,14 +2753,16 @@ class Spec:
         if self._concrete:
             return
 
+        # take the spec apart once before starting the main concretization loop and resolving
+        # deps, but don't break dependencies during concretization as the spec is built.
+        user_spec_deps = self.flat_dependencies(disconnect=True)
+
         changed = True
         force = False
-
-        user_spec_deps = self.flat_dependencies(copy=False)
         concretizer = spack.concretize.Concretizer(self.copy())
         while changed:
             changes = (
-                self.normalize(force, tests=tests, user_spec_deps=user_spec_deps),
+                self.normalize(force, tests, user_spec_deps, disconnect=False),
                 self._expand_virtual_packages(concretizer),
                 self._concretize_helper(concretizer),
             )
@@ -2773,7 +2773,7 @@ class Spec:
         for dep in self.traverse():
             visited_user_specs.add(dep.name)
             pkg_cls = spack.repo.PATH.get_pkg_class(dep.name)
-            visited_user_specs.update(x.name for x in pkg_cls(dep).provided)
+            visited_user_specs.update(pkg_cls(dep).provided_virtual_names())
 
         extra = set(user_spec_deps.keys()).difference(visited_user_specs)
         if extra:
@@ -2808,10 +2808,11 @@ class Spec:
                 # external specs are already built, don't worry about whether
                 # it's possible to build that configuration with Spack
                 continue
-            for conflict_spec, when_list in x.package_class.conflicts.items():
-                if x.satisfies(conflict_spec):
-                    for when_spec, msg in when_list:
-                        if x.satisfies(when_spec):
+
+            for when_spec, conflict_list in x.package_class.conflicts.items():
+                if x.satisfies(when_spec):
+                    for conflict_spec, msg in conflict_list:
+                        if x.satisfies(conflict_spec):
                             when = when_spec.copy()
                             when.name = x.name
                             matches.append((x, conflict_spec, when, msg))
@@ -2861,13 +2862,14 @@ class Spec:
                 continue
 
             # Add any patches from the package to the spec.
-            patches = []
+            patches = set()
             for cond, patch_list in s.package_class.patches.items():
                 if s.satisfies(cond):
                     for patch in patch_list:
-                        patches.append(patch)
+                        patches.add(patch)
             if patches:
                 spec_to_patches[id(s)] = patches
+
         # Also record all patches required on dependencies by
         # depends_on(..., patch=...)
         for dspec in root.traverse_edges(deptype=all, cover="edges", root=False):
@@ -2875,17 +2877,25 @@ class Spec:
                 continue
 
             pkg_deps = dspec.parent.package_class.dependencies
-            if dspec.spec.name not in pkg_deps:
-                continue
 
             patches = []
-            for cond, dependency in pkg_deps[dspec.spec.name].items():
+            for cond, deps_by_name in pkg_deps.items():
+                if not dspec.parent.satisfies(cond):
+                    continue
+
+                dependency = deps_by_name.get(dspec.spec.name)
+                if not dependency:
+                    continue
+
                 for pcond, patch_list in dependency.patches.items():
-                    if dspec.parent.satisfies(cond) and dspec.spec.satisfies(pcond):
+                    if dspec.spec.satisfies(pcond):
                         patches.extend(patch_list)
+
             if patches:
-                all_patches = spec_to_patches.setdefault(id(dspec.spec), [])
-                all_patches.extend(patches)
+                all_patches = spec_to_patches.setdefault(id(dspec.spec), set())
+                for patch in patches:
+                    all_patches.add(patch)
+
         for spec in root.traverse():
             if id(spec) not in spec_to_patches:
                 continue
@@ -2961,7 +2971,6 @@ class Spec:
         allow_deprecated = spack.config.get("config:deprecated", False)
         solver = spack.solver.asp.Solver()
         result = solver.solve([self], tests=tests, allow_deprecated=allow_deprecated)
-        result.raise_if_unsat()
 
         # take the best answer
         opt, i, answer = min(result.answers)
@@ -3095,45 +3104,33 @@ class Spec:
         clone.concretize(tests=tests)
         return clone
 
-    def flat_dependencies(self, **kwargs):
-        """Return a DependencyMap containing all of this spec's
-        dependencies with their constraints merged.
+    def flat_dependencies(self, disconnect: bool = False):
+        """Build DependencyMap of all of this spec's dependencies with their constraints merged.
 
-        If copy is True, returns merged copies of its dependencies
-        without modifying the spec it's called on.
-
-        If copy is False, clears this spec's dependencies and
-        returns them. This disconnects all dependency links including
-        transitive dependencies, except for concrete specs: if a spec
-        is concrete it will not be disconnected from its dependencies
-        (although a non-concrete spec with concrete dependencies will
-        be disconnected from those dependencies).
+        Arguments:
+            disconnect: if True, disconnect all dependents and dependencies among nodes in this
+                spec's DAG.
         """
-        copy = kwargs.get("copy", True)
-
         flat_deps = {}
-        try:
-            deptree = self.traverse(root=False)
-            for spec in deptree:
-                if spec.name not in flat_deps:
-                    if copy:
-                        spec = spec.copy(deps=False)
-                    flat_deps[spec.name] = spec
-                else:
+        deptree = self.traverse(root=False)
+
+        for spec in deptree:
+            if spec.name not in flat_deps:
+                flat_deps[spec.name] = spec
+            else:
+                try:
                     flat_deps[spec.name].constrain(spec)
+                except spack.error.UnsatisfiableSpecError as e:
+                    # DAG contains two instances of the same package with inconsistent constraints.
+                    raise InconsistentSpecError("Invalid Spec DAG: %s" % e.message) from e
 
-            if not copy:
-                for spec in flat_deps.values():
-                    if not spec.concrete:
-                        spec.clear_edges()
-                self.clear_dependencies()
+        if disconnect:
+            for spec in flat_deps.values():
+                if not spec.concrete:
+                    spec.clear_edges()
+            self.clear_dependencies()
 
-            return flat_deps
-
-        except spack.error.UnsatisfiableSpecError as e:
-            # Here, the DAG contains two instances of the same package
-            # with inconsistent constraints.
-            raise InconsistentSpecError("Invalid Spec DAG: %s" % e.message) from e
+        return flat_deps
 
     def index(self, deptype="all"):
         """Return a dictionary that points to all the dependencies in this
@@ -3160,15 +3157,19 @@ class Spec:
         If no conditions are True (and we don't depend on it), return
         ``(None, None)``.
         """
-        conditions = self.package_class.dependencies[name]
-
         vt.substitute_abstract_variants(self)
         # evaluate when specs to figure out constraints on the dependency.
         dep = None
-        for when_spec, dependency in conditions.items():
-            if self.satisfies(when_spec):
+        for when_spec, deps_by_name in self.package_class.dependencies.items():
+            if not self.satisfies(when_spec):
+                continue
+
+            for dep_name, dependency in deps_by_name.items():
+                if dep_name != name:
+                    continue
+
                 if dep is None:
-                    dep = dp.Dependency(self.name, Spec(name), depflag=0)
+                    dep = dp.Dependency(Spec(self.name), Spec(name), depflag=0)
                 try:
                     dep.merge(dependency)
                 except spack.error.UnsatisfiableSpecError as e:
@@ -3341,7 +3342,7 @@ class Spec:
 
         while changed:
             changed = False
-            for dep_name in self.package_class.dependencies:
+            for dep_name in self.package_class.dependency_names():
                 # Do we depend on dep_name?  If so pkg_dep is not None.
                 dep = self._evaluate_dependency_conditions(dep_name)
 
@@ -3364,7 +3365,7 @@ class Spec:
 
         return any_change
 
-    def normalize(self, force=False, tests=False, user_spec_deps=None):
+    def normalize(self, force=False, tests=False, user_spec_deps=None, disconnect=True):
         """When specs are parsed, any dependencies specified are hanging off
         the root, and ONLY the ones that were explicitly provided are there.
         Normalization turns a partial flat spec into a DAG, where:
@@ -3401,7 +3402,7 @@ class Spec:
         # user-specified dependencies are recorded separately in case they
         # refer to specs which take several normalization passes to
         # materialize.
-        all_spec_deps = self.flat_dependencies(copy=False)
+        all_spec_deps = self.flat_dependencies(disconnect=disconnect)
 
         if user_spec_deps:
             for name, spec in user_spec_deps.items():
@@ -3425,6 +3426,14 @@ class Spec:
         visited = set()
 
         any_change = self._normalize_helper(visited, all_spec_deps, provider_index, tests)
+
+        # remove any leftover dependents outside the spec from, e.g., pruning externals
+        valid = {id(spec) for spec in all_spec_deps.values()} | {id(self)}
+        for spec in all_spec_deps.values():
+            remove = [dep for dep in spec.dependents() if id(dep) not in valid]
+            for dep in remove:
+                del spec._dependents.edges[dep.name]
+                del dep._dependencies.edges[spec.name]
 
         # Mark the spec as normal once done.
         self._normal = True
@@ -3749,11 +3758,9 @@ class Spec:
                     return False
 
                 if pkg.provides(virtual_spec.name):
-                    for provided, when_specs in pkg.provided.items():
-                        if any(
-                            non_virtual_spec.intersects(when, deps=False) for when in when_specs
-                        ):
-                            if provided.intersects(virtual_spec):
+                    for when_spec, provided in pkg.provided.items():
+                        if non_virtual_spec.intersects(when_spec, deps=False):
+                            if any(vpkg.intersects(virtual_spec) for vpkg in provided):
                                 return True
             return False
 
@@ -3856,9 +3863,9 @@ class Spec:
                     return False
 
                 if pkg.provides(other.name):
-                    for provided, when_specs in pkg.provided.items():
-                        if any(self.satisfies(when, deps=False) for when in when_specs):
-                            if provided.intersects(other):
+                    for when_spec, provided in pkg.provided.items():
+                        if self.satisfies(when_spec, deps=False):
+                            if any(vpkg.intersects(other) for vpkg in provided):
                                 return True
             return False
 
@@ -4362,6 +4369,7 @@ class Spec:
                 that accepts a string and returns another one
 
         """
+        ensure_modern_format_string(format_string)
         color = kwargs.get("color", False)
         transform = kwargs.get("transform", {})
 
@@ -4558,6 +4566,8 @@ class Spec:
         return str(path_ctor(*output_path_components))
 
     def __str__(self):
+        if not self._dependencies:
+            return self.format()
         root_str = [self.format()]
         sorted_dependencies = sorted(
             self.traverse(root=False), key=lambda x: (x.name, x.abstract_hash)

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -58,18 +58,15 @@ class Openbabel(CMakePackage):
     # Convert tabs to spaces. Allows unit tests to pass
     patch("testpdbformat-tabs-to-spaces.patch", when="@:2.4.1")
 
+    # https://github.com/openbabel/openbabel/pull/2493
+    patch("cmake-time.patch", when="@3.1.1")
+
     def cmake_args(self):
         spec = self.spec
         args = []
 
         if "+python" in spec:
-            args.extend(
-                [
-                    "-DPYTHON_BINDINGS=ON",
-                    "-DPYTHON_EXECUTABLE={0}".format(spec["python"].command.path),
-                    "-DRUN_SWIG=ON",
-                ]
-            )
+            args.extend(["-DPYTHON_BINDINGS=ON", "-DRUN_SWIG=ON"])
         else:
             args.append("-DPYTHON_BINDINGS=OFF")
 

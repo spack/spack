@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,11 @@ class Nwchem(Package):
 
     tags = ["ecp", "ecp-apps"]
 
+    version(
+        "7.2.2",
+        sha256="6b68e9c12eec38c09d92472bdd1ff130b93c1b5e1f65e4702aa7ee36c80e4af7",
+        url="https://github.com/nwchemgit/nwchem/releases/download/v7.2.2-release/nwchem-7.2.2-release.revision-74936fb9-srconly.2023-11-03.tar.bz2",
+    )
     version(
         "7.2.0",
         sha256="28ea70947e77886337c84e6fae3bdf88f25f0acfdeaf95e722615779c19f7a7e",
@@ -50,7 +55,7 @@ class Nwchem(Package):
     # https://github.com/nwchemgit/nwchem/commit/376f86f96eb982e83f10514e9dcd994564f973b4
     # https://github.com/nwchemgit/nwchem/commit/c89fc9d1eca6689bce12564a63fdea95d962a123
     # Prior versions of NWChem, including 7.0.2, were not able to link with FFTW
-    patch("fftw_splans.patch", when="@7.2.0")
+    patch("fftw_splans.patch", when="@7.2.0:7.2.2 +fftw3")
 
     depends_on("blas")
     depends_on("lapack")
@@ -66,7 +71,7 @@ class Nwchem(Package):
         scalapack = spec["scalapack"].libs
         lapack = spec["lapack"].libs
         blas = spec["blas"].libs
-        fftw = spec["fftw-api:double,float"].libs
+        fftw = spec["fftw-api:double,float"].libs if self.spec.satisfies("+fftw3") else ""
         # see https://nwchemgit.github.io/Compiling-NWChem.html
         args = []
         args.extend(
@@ -128,8 +133,8 @@ class Nwchem(Package):
             args.extend(["FFTW3_INCLUDE={0}".format(spec["fftw-api"].prefix.include)])
 
         if spec.satisfies("+libxc"):
-            args.extend([f"LIBXC_LIB={0}".format(spec["libxc"].libs.ld_flags)])
-            args.extend([f"LIBXC_INCLUDE={0}".format(spec["libxc"].prefix.include)])
+            args.extend(["LIBXC_LIB={0}".format(spec["libxc"].libs.ld_flags)])
+            args.extend(["LIBXC_INCLUDE={0}".format(spec["libxc"].prefix.include)])
 
         if spec.satisfies("+elpa"):
             elpa = spec["elpa"]

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -950,13 +950,9 @@ def _main(argv=None):
         parser.print_help()
         return 1
 
-    # -h, -H, and -V are special as they do not require a command, but
-    # all the other options do nothing without a command.
+    # version is special as it does not require a command or loading and additional infrastructure
     if args.version:
         print(get_version())
-        return 0
-    elif args.help:
-        sys.stdout.write(parser.format_help(level=args.help))
         return 0
 
     # ------------------------------------------------------------------------
@@ -994,6 +990,12 @@ def _main(argv=None):
     # ------------------------------------------------------------------------
     if args.print_shell_vars:
         print_setup_info(*args.print_shell_vars.split(","))
+        return 0
+
+    # -h and -H are special as they do not require a command, but
+    # all the other options do nothing without a command.
+    if args.help:
+        sys.stdout.write(parser.format_help(level=args.help))
         return 0
 
     # At this point we've considered all the options to spack itself, so we
@@ -1038,9 +1040,9 @@ def finish_parse_and_run(parser, cmd_name, main_args, env_format_error):
     set_working_dir()
 
     # now we can actually execute the command.
-    if args.spack_profile or args.sorted_profile:
+    if main_args.spack_profile or main_args.sorted_profile:
         _profile_wrapper(command, parser, args, unknown)
-    elif args.pdb:
+    elif main_args.pdb:
         import pdb
 
         pdb.runctx("_invoke_command(command, parser, args, unknown)", globals(), locals())

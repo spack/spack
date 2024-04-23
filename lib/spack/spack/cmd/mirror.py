@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -28,7 +28,7 @@ level = "long"
 
 
 def setup_parser(subparser):
-    arguments.add_common_arguments(subparser, ["no_checksum", "deprecated"])
+    arguments.add_common_arguments(subparser, ["no_checksum"])
 
     sp = subparser.add_subparsers(metavar="SUBCOMMAND", dest="mirror_command")
 
@@ -72,6 +72,7 @@ def setup_parser(subparser):
         " retrieve all versions of each package",
     )
     arguments.add_common_arguments(create_parser, ["specs"])
+    arguments.add_concretizer_args(create_parser)
 
     # Destroy
     destroy_parser = sp.add_parser("destroy", help=mirror_destroy.__doc__)
@@ -106,6 +107,11 @@ def setup_parser(subparser):
             "specify the mirror type: for both binary "
             "and source use `--type binary --type source` (default)"
         ),
+    )
+    add_parser.add_argument(
+        "--autopush",
+        action="store_true",
+        help=("set mirror to push automatically after installation"),
     )
     add_parser_signed = add_parser.add_mutually_exclusive_group(required=False)
     add_parser_signed.add_argument(
@@ -174,6 +180,21 @@ def setup_parser(subparser):
         ),
     )
     set_parser.add_argument("--url", help="url of mirror directory from 'spack mirror create'")
+    set_parser_autopush = set_parser.add_mutually_exclusive_group(required=False)
+    set_parser_autopush.add_argument(
+        "--autopush",
+        help="set mirror to push automatically after installation",
+        action="store_true",
+        default=None,
+        dest="autopush",
+    )
+    set_parser_autopush.add_argument(
+        "--no-autopush",
+        help="set mirror to not push automatically after installation",
+        action="store_false",
+        default=None,
+        dest="autopush",
+    )
     set_parser_unsigned = set_parser.add_mutually_exclusive_group(required=False)
     set_parser_unsigned.add_argument(
         "--unsigned",
@@ -217,6 +238,7 @@ def mirror_add(args):
         or args.type
         or args.oci_username
         or args.oci_password
+        or args.autopush
         or args.signed is not None
     ):
         connection = {"url": args.url}
@@ -233,6 +255,8 @@ def mirror_add(args):
         if args.type:
             connection["binary"] = "binary" in args.type
             connection["source"] = "source" in args.type
+        if args.autopush:
+            connection["autopush"] = args.autopush
         if args.signed is not None:
             connection["signed"] = args.signed
         mirror = spack.mirror.Mirror(connection, name=args.name)
@@ -269,6 +293,8 @@ def _configure_mirror(args):
         changes["access_pair"] = [args.oci_username, args.oci_password]
     if getattr(args, "signed", None) is not None:
         changes["signed"] = args.signed
+    if getattr(args, "autopush", None) is not None:
+        changes["autopush"] = args.autopush
 
     # argparse cannot distinguish between --binary and --no-binary when same dest :(
     # notice that set-url does not have these args, so getattr
@@ -548,8 +574,5 @@ def mirror(parser, args):
 
     if args.no_checksum:
         spack.config.set("config:checksum", False, scope="command_line")
-
-    if args.deprecated:
-        spack.config.set("config:deprecated", True, scope="command_line")
 
     action[args.mirror_command](args)

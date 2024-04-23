@@ -1,9 +1,10 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import errno
+import json
 import os
 import shutil
 
@@ -168,6 +169,25 @@ def test_update_key_index(
     assert "index.json" in key_dir_list
 
 
+def test_buildcache_autopush(tmp_path, install_mockery, mock_fetch):
+    """Test buildcache with autopush"""
+    mirror_dir = tmp_path / "mirror"
+    mirror_autopush_dir = tmp_path / "mirror_autopush"
+
+    mirror("add", "--unsigned", "mirror", mirror_dir.as_uri())
+    mirror("add", "--autopush", "--unsigned", "mirror-autopush", mirror_autopush_dir.as_uri())
+
+    s = Spec("libdwarf").concretized()
+
+    # Install and generate build cache index
+    s.package.do_install()
+
+    metadata_file = spack.binary_distribution.tarball_name(s, ".spec.json")
+
+    assert not (mirror_dir / "build_cache" / metadata_file).exists()
+    assert (mirror_autopush_dir / "build_cache" / metadata_file).exists()
+
+
 def test_buildcache_sync(
     mutable_mock_env_path,
     install_mockery_mutable_config,
@@ -234,10 +254,71 @@ def test_buildcache_sync(
         # Use mirror names to specify mirrors
         mirror("add", "src", src_mirror_url)
         mirror("add", "dest", dest_mirror_url)
+        mirror("add", "ignored", "file:///dummy/io")
 
         buildcache("sync", "src", "dest")
 
         verify_mirror_contents()
+        shutil.rmtree(dest_mirror_dir)
+
+        def manifest_insert(manifest, spec, dest_url):
+            manifest[spec.dag_hash()] = [
+                {
+                    "src": spack.util.url.join(
+                        src_mirror_url,
+                        spack.binary_distribution.build_cache_relative_path(),
+                        spack.binary_distribution.tarball_name(spec, ".spec.json"),
+                    ),
+                    "dest": spack.util.url.join(
+                        dest_url,
+                        spack.binary_distribution.build_cache_relative_path(),
+                        spack.binary_distribution.tarball_name(spec, ".spec.json"),
+                    ),
+                },
+                {
+                    "src": spack.util.url.join(
+                        src_mirror_url,
+                        spack.binary_distribution.build_cache_relative_path(),
+                        spack.binary_distribution.tarball_path_name(spec, ".spack"),
+                    ),
+                    "dest": spack.util.url.join(
+                        dest_url,
+                        spack.binary_distribution.build_cache_relative_path(),
+                        spack.binary_distribution.tarball_path_name(spec, ".spack"),
+                    ),
+                },
+            ]
+
+        manifest_file = os.path.join(tmpdir.strpath, "manifest_dest.json")
+        with open(manifest_file, "w") as fd:
+            test_env = ev.active_environment()
+
+            manifest = {}
+            for spec in test_env.specs_by_hash.values():
+                manifest_insert(manifest, spec, dest_mirror_url)
+            json.dump(manifest, fd)
+
+        buildcache("sync", "--manifest-glob", manifest_file)
+
+        verify_mirror_contents()
+        shutil.rmtree(dest_mirror_dir)
+
+        manifest_file = os.path.join(tmpdir.strpath, "manifest_bad_dest.json")
+        with open(manifest_file, "w") as fd:
+            manifest = {}
+            for spec in test_env.specs_by_hash.values():
+                manifest_insert(
+                    manifest, spec, spack.util.url.join(dest_mirror_url, "invalid_path")
+                )
+            json.dump(manifest, fd)
+
+        # Trigger the warning
+        output = buildcache("sync", "--manifest-glob", manifest_file, "dest", "ignored")
+
+        assert "Ignoring unused arguemnt: ignored" in output
+
+        verify_mirror_contents()
+        shutil.rmtree(dest_mirror_dir)
 
 
 def test_buildcache_create_install(

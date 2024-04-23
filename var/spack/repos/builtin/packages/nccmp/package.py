@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class Nccmp(CMakePackage):
     url = "https://gitlab.com/remikz/nccmp/-/archive/1.9.0.1/nccmp-1.9.0.1.tar.gz"
 
     maintainers("ulmononian", "climbfuji")
+
+    license("GPL-2.0-only")
 
     version("1.9.1.0", sha256="5aa8d6cbc54d26f77e3d0511690cfafa57514a4145f75e8cabce782126509c91")
     version("1.9.0.1", sha256="81e9753cf451afe8248d44c841e102349e07cde942b11d1f91b5f85feb622b99")

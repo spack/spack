@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,8 @@ class PyTensorflowEstimator(Package):
     url = "https://github.com/tensorflow/estimator/archive/v2.2.0.tar.gz"
 
     maintainers("aweits")
+
+    license("Apache-2.0")
 
     version("2.14.0", sha256="622797bf5311f239c2b123364fa360868ae97d16b678413e5e0633241f7d7d5c")
     version("2.13.0", sha256="4175e9276a1eb8b5e4e876d228e4605871832e7bd8517965d6a47f1481af2c3e")

@@ -1,4 +1,4 @@
-.. Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -237,7 +237,7 @@ for details):
 .. code-block:: python
    :linenos:
 
-   # Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+   # Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
    # Spack Project Developers. See the top-level COPYRIGHT file for details.
    #
    # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -893,26 +893,50 @@ as an option to the ``version()`` directive. Example situations would be a
 "snapshot"-like Version Control System (VCS) tag, a VCS branch such as
 ``v6-16-00-patches``, or a URL specifying a regularly updated snapshot tarball.
 
+
+.. _version-comparison:
+
 ^^^^^^^^^^^^^^^^^^
 Version comparison
 ^^^^^^^^^^^^^^^^^^
 
+Spack imposes a generic total ordering on the set of versions,
+independently from the package they are associated with.
+
 Most Spack versions are numeric, a tuple of integers; for example,
-``0.1``, ``6.96`` or ``1.2.3.1``.  Spack knows how to compare and sort
-numeric versions.
+``0.1``, ``6.96`` or ``1.2.3.1``. In this very basic case, version
+comparison is lexicographical on the numeric components:
+``1.2 < 1.2.1 < 1.2.2 < 1.10``.
 
-Some Spack versions involve slight extensions of numeric syntax; for
-example, ``py-sphinx-rtd-theme@=0.1.10a0``.  In this case, numbers are
-always considered to be "newer" than letters.  This is for consistency
-with `RPM <https://bugzilla.redhat.com/show_bug.cgi?id=50977>`_.
+Spack can also supports string components such as ``1.1.1a`` and
+``1.y.0``. String components are considered less than numeric
+components, so ``1.y.0 < 1.0``. This is for consistency with
+`RPM <https://bugzilla.redhat.com/show_bug.cgi?id=50977>`_. String
+components do not have to be separated by dots or any other delimiter.
+So, the contrived version ``1y0`` is identical to ``1.y.0``.
 
-Spack versions may also be arbitrary non-numeric strings, for example
-``develop``, ``master``, ``local``.
+Pre-release suffixes also contain string parts, but they are handled
+in a special way. For example ``1.2.3alpha1`` is parsed as a pre-release
+of the version ``1.2.3``. This allows Spack to order it before the
+actual release: ``1.2.3alpha1 < 1.2.3``. Spack supports alpha, beta and
+release candidate suffixes: ``1.2alpha1 < 1.2beta1 < 1.2rc1 < 1.2``. Any
+suffix not recognized as a pre-release is treated as an ordinary
+string component, so ``1.2 < 1.2-mysuffix``.
 
-The order on versions is defined as follows. A version string is split
-into a list of components based on delimiters such as ``.``, ``-`` etc.
-Lists are then ordered lexicographically, where components are ordered
-as follows:
+Finally, there are a few special string components that are considered
+"infinity versions". They include ``develop``, ``main``, ``master``,
+``head``, ``trunk``, and ``stable``. For example: ``1.2 < develop``.
+These are useful for specifying the most recent development version of
+a package (often a moving target like a git branch), without assigning
+a specific version number. Infinity versions are not automatically used when determining the latest version of a package unless explicitly required by another package or user.
+
+More formally, the order on versions is defined as follows. A version
+string is split into a list of components based on delimiters such as
+``.`` and ``-`` and string boundaries. The components are split into
+the **release** and a possible **pre-release** (if the last component
+is numeric and the second to last is a string ``alpha``, ``beta`` or ``rc``).
+The release components are ordered lexicographically, with comparsion
+between different types of components as follows:
 
 #. The following special strings are considered larger than any other
    numeric or non-numeric version component, and satisfy the following
@@ -924,6 +948,9 @@ as follows:
 
 #. All other non-numeric components are less than numeric components,
    and are ordered alphabetically.
+
+Finally, if the release components are equal, the pre-release components
+are used to break the tie, in the obvious way.
 
 The logic behind this sort order is two-fold:
 
@@ -4379,10 +4406,16 @@ implementation was selected for this build:
    elif "mvapich" in spec:
        configure_args.append("--with-mvapich")
 
-It's also a bit more concise than satisfies.  The difference between
-the two functions is that ``satisfies()`` tests whether spec
-constraints overlap at all, while ``in`` tests whether a spec or any
-of its dependencies satisfy the provided spec.
+It's also a bit more concise than satisfies.
+
+.. note::
+
+   The ``satisfies()`` method tests whether this spec has, at least, all the constraints of the argument spec,
+   while ``in`` tests whether a spec or any of its dependencies satisfy the provided spec.
+
+   If the provided spec is anonymous (e.g., ":1.2:", "+shared") or has the
+   same name as the spec being checked, then ``in`` works the same as
+   ``satisfies()``; however, use of ``satisfies()`` is more intuitive.
 
 ^^^^^^^^^^^^^^^^^^^^^^^
 Architecture specifiers
@@ -5284,7 +5317,7 @@ installed example.
            example = which(self.prefix.bin.example)
            example()
 
-Output showing the identification of each test part after runnig the tests
+Output showing the identification of each test part after running the tests
 is illustrated below.
 
 .. code-block:: console
@@ -5781,7 +5814,7 @@ with those implemented in the package itself.
    * - `Cxx
        <https://github.com/spack/spack/blob/develop/var/spack/repos/builtin/packages/cxx>`_
      - Compiles and runs several ``hello`` programs
-   * - `Fortan
+   * - `Fortran
        <https://github.com/spack/spack/blob/develop/var/spack/repos/builtin/packages/fortran>`_
      - Compiles and runs ``hello`` programs (``F`` and ``f90``)
    * - `Mpi
@@ -6973,3 +7006,18 @@ you probably care most about are:
 You may also care about `license exceptions
 <https://spdx.org/licenses/exceptions-index.html>`_ that use the ``WITH`` operator,
 e.g. ``Apache-2.0 WITH LLVM-exception``.
+
+Many of the licenses that are currently in the spack repositories have been
+automatically determined. While this is great for bulk adding license
+information and is most likely correct, there are sometimes edge cases that
+require manual intervention. To determine which licenses are validated and
+which are not, there is the `checked_by` parameter in the license directive:
+
+.. code-block:: python
+
+   license("<license>", when="<when>", checked_by="<github username>")
+
+When you have validated a github license, either when doing so explicitly or
+as part of packaging a new package, please set the `checked_by` parameter
+to your Github username to signal that the license has been manually
+verified.

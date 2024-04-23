@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,6 +19,8 @@ class Sherpa(AutotoolsPackage):
     tags = ["hep", "eic"]
 
     maintainers("wdconinc", "vvolkl")
+
+    license("GPL-3.0-only")
 
     version("2.2.15", sha256="0300fd719bf6a089b7dc5441f720e669ac1cb030045d87034a4733bee98e7bbc")
     version("2.2.14", sha256="f17d88d7f3bc4234a9db3872e8a3c1f3ef99e1e2dc881ada5ddf848715dc82da")
@@ -157,10 +159,12 @@ class Sherpa(AutotoolsPackage):
 
     # Note that the delphes integration seems utterly broken: https://sherpa.hepforge.org/trac/ticket/305
 
-    depends_on("autoconf", type="build")
-    depends_on("automake", type="build")
-    depends_on("libtool", type="build")
-    depends_on("m4", type="build")
+    # autotools dependencies are needed at runtime to compile processes
+    # at least as long as sherpa is an autotools package
+    depends_on("autoconf")
+    depends_on("automake")
+    depends_on("libtool")
+    depends_on("m4")
     depends_on("texinfo", type="build")
     depends_on("sqlite")
 
@@ -184,6 +188,8 @@ class Sherpa(AutotoolsPackage):
     depends_on("blackhat", when="+blackhat")
     depends_on("hztool", when="+hztool")
     # depends_on('cernlib',   when='+cernlib')
+
+    filter_compiler_wrappers("share/SHERPA-MC/makelibs")
 
     for std in _cxxstd_values:
         depends_on("root cxxstd=" + std, when="+root cxxstd=" + std)
@@ -259,3 +265,14 @@ class Sherpa(AutotoolsPackage):
                     flags.append("-m64")
 
         return (None, None, flags)
+
+    # This may not be needed when this package is changed to be a CMake package
+    # since it's specific to makelibs
+    def install(self, spec, prefix):
+        # Make sure the path to the provided libtool is used instead of the system one
+        filter_file(
+            r"autoreconf -fi",
+            f"autoreconf -fi -I {self.spec['libtool'].prefix.share.aclocal}",
+            "AMEGIC++/Main/makelibs",
+        )
+        make("install")

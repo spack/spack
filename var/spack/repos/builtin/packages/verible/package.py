@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -30,8 +30,30 @@ class Verible(Package):
     homepage = "https://chipsalliance.github.io/verible"
     git = "https://github.com/chipsalliance/verible.git"
 
+    license("BSD-3-Clause")
+
     version("master", branch="master")
 
+    version(
+        "0.0.3624",
+        sha256="e5995644e092e72c9d37c492f319b0d4861a3c63d03d1c3cfefe2363bcd6b74f",
+        url="https://github.com/chipsalliance/verible/archive/refs/tags/v0.0-3624-gd256d779.tar.gz",
+    )
+    version(
+        "0.0.3607",
+        sha256="5ea427ed843916f8c1b5d7263c1aaad526dc7181de5afcf84542bca4c4f8f1ca",
+        url="https://github.com/chipsalliance/verible/archive/refs/tags/v0.0-3607-g46de0f64.tar.gz",
+    )
+    version(
+        "0.0.3539",
+        sha256="e93c9638dac7d314cea506d483b0f078b80aa6837afa74db68ace322b0dbba31",
+        url="https://github.com/chipsalliance/verible/archive/refs/tags/v0.0-3539-g9442853c.tar.gz",
+    )
+    version(
+        "0.0.3483",
+        sha256="c40591813a7cf6b1a6f46f7e02d81526c999966c3ceb9a67c5542234cf49dddb",
+        url="https://github.com/chipsalliance/verible/archive/refs/tags/v0.0-3483-ga4d61b11.tar.gz",
+    )
     version(
         "0.0.3430",
         sha256="580ab39c82da9f67523658c0bb0859e2b6c662f7c06855859f476eeedd92a7e0",

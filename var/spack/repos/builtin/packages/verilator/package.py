@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -33,13 +33,18 @@ class Verilator(AutotoolsPackage):
     designs with thousands of modules."""
 
     homepage = "https://www.veripool.org/projects/verilator"
-    url = "https://github.com/verilator/verilator/archive/refs/tags/v5.018.tar.gz"
+    url = "https://github.com/verilator/verilator/archive/refs/tags/v5.022.tar.gz"
     git = "https://github.com/verilator/verilator.git"
 
     maintainers("davekeeshan")
 
+    license("LGPL-3.0-only")
+
     version("master", branch="master")
 
+    version("5.024", sha256="88b04c953e7165c670d6a700f202cef99c746a0867b4e2efe1d7ea789dee35f3")
+    version("5.022", sha256="3c2f5338f4b6ce7e2f47a142401acdd18cbf4c5da06092618d6d036c0afef12d")
+    version("5.020", sha256="41ca9abfadf8d2413efbff7f8277379733d0095957fe7769dc38f8fd1bc899a6")
     version("5.018", sha256="8b544273eedee379e3c1a3bb849e14c754c9b5035d61ad03acdf3963092ba6c0")
     version("5.016", sha256="66fc36f65033e5ec904481dd3d0df56500e90c0bfca23b2ae21b4a8d39e05ef1")
     version("5.014", sha256="36e16c8a7c4b376f88d87411cea6ee68710e6d1382a13faf21f35d65b54df4a7")
@@ -73,7 +78,6 @@ class Verilator(AutotoolsPackage):
     depends_on("flex")
     depends_on("ccache", type=("build", "run"), when="@5.018:")
     depends_on("perl", type=("build", "run"))
-    depends_on("bash", type="build")
 
     conflicts("%gcc@:6", msg="C++14 support required")
 
@@ -85,7 +89,7 @@ class Verilator(AutotoolsPackage):
         env.prepend_path("VERILATOR_ROOT", self.prefix)
 
     def autoreconf(self, spec, prefix):
-        which("bash")("autoconf")
+        autoconf()
 
     # verilator requires access to its shipped scripts (bin) and include
     # but the standard make doesn't put it in the correct places

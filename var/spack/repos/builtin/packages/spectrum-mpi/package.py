@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -136,11 +136,11 @@ class SpectrumMpi(BundlePackage):
             env.set("MPIF77", os.path.join(self.prefix.bin, "mpif77"))
             env.set("MPIF90", os.path.join(self.prefix.bin, "mpif90"))
 
-        env.set("OMPI_CC", spack_cc)
-        env.set("OMPI_CXX", spack_cxx)
-        env.set("OMPI_FC", spack_fc)
-        env.set("OMPI_F77", spack_f77)
-
+        dependent_module = dependent_spec.package.module
+        env.set("OMPI_CC", dependent_module.spack_cc)
+        env.set("OMPI_CXX", dependent_module.spack_cxx)
+        env.set("OMPI_FC", dependent_module.spack_fc)
+        env.set("OMPI_F77", dependent_module.spack_f77)
         env.prepend_path("LD_LIBRARY_PATH", self.prefix.lib)
 
     def setup_run_environment(self, env):

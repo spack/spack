@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class PypyBootstrap(Package):
     url = "https://downloads.python.org/pypy/pypy2.7-v7.3.12-linux64.tar.bz2"
 
     maintainers("adamjstewart")
+
+    license("MIT")
 
     if platform.system() == "Linux":
         if platform.machine() == "x86_64":

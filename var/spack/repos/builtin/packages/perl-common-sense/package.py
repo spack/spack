@@ -1,6 +1,5 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
-# Copyright 2023 EMBL-European Bioinformatics Institute
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -15,12 +14,6 @@ class PerlCommonSense(PerlPackage):
 
     maintainers("EbiArnie")
 
+    license("GPL-1.0-or-later OR Artistic-1.0-Perl")
+
     version("3.75", sha256="a86a1c4ca4f3006d7479064425a09fa5b6689e57261fcb994fe67d061cba0e7e")
-
-    def test_use(self):
-        """Test 'use module'"""
-        options = ["-we", 'use strict; use common::sense; print("OK\n")']
-
-        perl = self.spec["perl"].command
-        out = perl(*options, output=str.split, error=str.split)
-        assert "OK" in out

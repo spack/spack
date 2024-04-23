@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -283,6 +283,13 @@ def test_add_config_path(mutable_config):
     spack.config.add(path)
     set_value = spack.config.get("config")["install_tree"]["projections"]["cmake"]
     assert set_value == "{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}"
+
+    path = 'modules:default:tcl:all:environment:set:"{name}_ROOT":"{prefix}"'
+    spack.config.add(path)
+    set_value = spack.config.get("modules")["default"]["tcl"]["all"]["environment"]["set"]
+    assert r"{name}_ROOT" in set_value
+    assert set_value[r"{name}_ROOT"] == r"{prefix}"
+    assert spack.config.get('modules:default:tcl:all:environment:set:"{name}_ROOT"') == r"{prefix}"
 
     # NOTE:
     # The config path: "config:install_tree:root:<path>" is unique in that it can accept multiple
@@ -970,7 +977,7 @@ def test_single_file_scope(config, env_yaml):
         # from the single-file config
         assert spack.config.get("config:verify_ssl") is False
         assert spack.config.get("config:dirty") is False
-        assert spack.config.get("packages:all:compiler") == ["gcc@4.5.3"]
+        assert spack.config.get("packages:all:compiler") == ["gcc@4.5.3", "gcc", "clang"]
 
         # from the lower config scopes
         assert spack.config.get("config:checksum") is True
@@ -1188,7 +1195,7 @@ def test_set_dict_override(mock_low_high_config, write_config_file):
 
 
 def test_set_bad_path(config):
-    with pytest.raises(syaml.SpackYAMLError, match="Illegal leading"):
+    with pytest.raises(ValueError):
         with spack.config.override(":bad:path", ""):
             pass
 
@@ -1462,3 +1469,26 @@ def test_config_file_read_invalid_yaml(tmpdir, mutable_empty_config):
 
     with pytest.raises(spack.config.ConfigFileError, match="parsing YAML"):
         spack.config.read_config_file(filename)
+
+
+@pytest.mark.parametrize(
+    "path,it_should_work,expected_parsed",
+    [
+        ("x:y:z", True, ["x:", "y:", "z"]),
+        ("x+::y:z", True, ["x+::", "y:", "z"]),
+        ('x:y:"{z}"', True, ["x:", "y:", '"{z}"']),
+        ('x:"y"+:z', True, ["x:", '"y"+:', "z"]),
+        ('x:"y"trail:z', False, None),
+        ("x:y:[1.0]", True, ["x:", "y:", "[1.0]"]),
+        ("x:y:['1.0']", True, ["x:", "y:", "['1.0']"]),
+        ("x:{y}:z", True, ["x:", "{y}:", "z"]),
+        ("x:'{y}':z", True, ["x:", "'{y}':", "z"]),
+        ("x:{y}", True, ["x:", "{y}"]),
+    ],
+)
+def test_config_path_dsl(path, it_should_work, expected_parsed):
+    if it_should_work:
+        assert spack.config.ConfigPath._validate(path) == expected_parsed
+    else:
+        with pytest.raises(ValueError):
+            spack.config.ConfigPath._validate(path)

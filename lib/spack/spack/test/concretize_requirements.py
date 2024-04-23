@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -856,6 +856,8 @@ def test_skip_requirement_when_default_requirement_condition_cannot_be_met(
 
 def test_requires_directive(concretize_scope, mock_packages):
     compilers_yaml = pathlib.Path(concretize_scope) / "compilers.yaml"
+
+    # NOTE: target is omitted here so that the test works on aarch64, as well.
     compilers_yaml.write_text(
         """
 compilers::
@@ -867,7 +869,6 @@ compilers::
       f77: null
       fc: null
     operating_system: debian6
-    target: x86_64
     modules: []
 """
     )
@@ -1011,3 +1012,167 @@ def test_default_requirements_semantic_with_mv_variants(
 
     for constraint in not_expected:
         assert not s.satisfies(constraint), constraint
+
+
+@pytest.mark.regression("42084")
+def test_requiring_package_on_multiple_virtuals(concretize_scope, mock_packages):
+    update_packages_config(
+        """
+    packages:
+      all:
+        providers:
+          scalapack: [netlib-scalapack]
+      blas:
+        require: intel-parallel-studio
+      lapack:
+        require: intel-parallel-studio
+      scalapack:
+        require: intel-parallel-studio
+    """
+    )
+    s = Spec("dla-future").concretized()
+
+    assert s["blas"].name == "intel-parallel-studio"
+    assert s["lapack"].name == "intel-parallel-studio"
+    assert s["scalapack"].name == "intel-parallel-studio"
+
+
+@pytest.mark.parametrize(
+    "packages_yaml,spec_str,expected,not_expected",
+    [
+        (
+            """
+        packages:
+          all:
+            prefer:
+            - "%clang"
+            compiler: [gcc]
+    """,
+            "multivalue-variant",
+            ["%clang"],
+            ["%gcc"],
+        ),
+        (
+            """
+            packages:
+              all:
+                prefer:
+                - "%clang"
+        """,
+            "multivalue-variant %gcc",
+            ["%gcc"],
+            ["%clang"],
+        ),
+        # Test parsing objects instead of strings
+        (
+            """
+            packages:
+              all:
+                prefer:
+                - spec: "%clang"
+                compiler: [gcc]
+        """,
+            "multivalue-variant",
+            ["%clang"],
+            ["%gcc"],
+        ),
+    ],
+)
+def test_strong_preferences_packages_yaml(
+    packages_yaml, spec_str, expected, not_expected, concretize_scope, mock_packages
+):
+    """Tests that "preferred" specs are stronger than usual preferences, but can be overridden."""
+    update_packages_config(packages_yaml)
+    s = Spec(spec_str).concretized()
+
+    for constraint in expected:
+        assert s.satisfies(constraint), constraint
+
+    for constraint in not_expected:
+        assert not s.satisfies(constraint), constraint
+
+
+@pytest.mark.parametrize(
+    "packages_yaml,spec_str",
+    [
+        (
+            """
+        packages:
+          all:
+            conflict:
+            - "%clang"
+    """,
+            "multivalue-variant %clang",
+        ),
+        # Use an object instead of a string in configuration
+        (
+            """
+        packages:
+          all:
+            conflict:
+            - spec: "%clang"
+              message: "cannot use clang"
+    """,
+            "multivalue-variant %clang",
+        ),
+        (
+            """
+            packages:
+              multivalue-variant:
+                conflict:
+                - spec: "%clang"
+                  when: "@2"
+                  message: "cannot use clang with version 2"
+        """,
+            "multivalue-variant@=2.3 %clang",
+        ),
+    ],
+)
+def test_conflict_packages_yaml(packages_yaml, spec_str, concretize_scope, mock_packages):
+    """Tests conflicts that are specified from configuration files."""
+    update_packages_config(packages_yaml)
+    with pytest.raises(UnsatisfiableSpecError):
+        Spec(spec_str).concretized()
+
+
+@pytest.mark.parametrize(
+    "spec_str,expected,not_expected",
+    [
+        (
+            "forward-multi-value +cuda cuda_arch=10 ^dependency-mv~cuda",
+            ["cuda_arch=10", "^dependency-mv~cuda"],
+            ["cuda_arch=11", "^dependency-mv cuda_arch=10", "^dependency-mv cuda_arch=11"],
+        ),
+        (
+            "forward-multi-value +cuda cuda_arch=10 ^dependency-mv+cuda",
+            ["cuda_arch=10", "^dependency-mv cuda_arch=10"],
+            ["cuda_arch=11", "^dependency-mv cuda_arch=11"],
+        ),
+        (
+            "forward-multi-value +cuda cuda_arch=11 ^dependency-mv+cuda",
+            ["cuda_arch=11", "^dependency-mv cuda_arch=11"],
+            ["cuda_arch=10", "^dependency-mv cuda_arch=10"],
+        ),
+        (
+            "forward-multi-value +cuda cuda_arch=10,11 ^dependency-mv+cuda",
+            ["cuda_arch=10,11", "^dependency-mv cuda_arch=10,11"],
+            [],
+        ),
+    ],
+)
+def test_forward_multi_valued_variant_using_requires(
+    spec_str, expected, not_expected, config, mock_packages
+):
+    """Tests that a package can forward multivalue variants to dependencies, using
+    `requires` directives of the form:
+
+        for _val in ("shared", "static"):
+            requires(f"^some-virtual-mv libs={_val}", when=f"libs={_val} ^some-virtual-mv")
+    """
+    s = Spec(spec_str).concretized()
+
+    for constraint in expected:
+        assert s.satisfies(constraint)
+
+    for constraint in not_expected:
+        assert not s.satisfies(constraint)

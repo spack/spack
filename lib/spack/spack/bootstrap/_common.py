@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -213,9 +213,6 @@ def _root_spec(spec_str: str) -> str:
     platform = str(spack.platforms.host())
     if platform == "darwin":
         spec_str += " %apple-clang"
-    elif platform == "windows":
-        # TODO (johnwparent): Remove version constraint when clingo patch is up
-        spec_str += " %msvc@:19.37"
     elif platform == "linux":
         spec_str += " %gcc"
     elif platform == "freebsd":

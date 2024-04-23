@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class RGh(RPackage):
     Minimal client to access the 'GitHub' 'API'."""
 
     cran = "gh"
+
+    license("MIT")
 
     version("1.4.0", sha256="68c69fcd18429b378e639a09652465a4e92b7b5b5704804d0c5b1ca2b9b58b71")
     version("1.3.1", sha256="fbaea2abdeceb03d28839fd0e58c2eea01092f9ef92dcc044718ef0d298612ef")

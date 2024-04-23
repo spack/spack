@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class Ltrace(AutotoolsPackage):
 
     homepage = "https://www.ltrace.org"
     url = "https://www.ltrace.org/ltrace_0.7.3.orig.tar.bz2"
+
+    license("GPL-2.0-or-later")
 
     version("0.7.3", sha256="0e6f8c077471b544c06def7192d983861ad2f8688dd5504beae62f0c5f5b9503")
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,12 @@ class PyPyvista(PythonPackage):
     homepage = "https://github.com/pyvista/pyvista"
     pypi = "pyvista/pyvista-0.32.1.tar.gz"
 
+    # Requires optional trame dependency
+    skip_modules = ["pyvista.ext", "pyvista.jupyter", "pyvista.trame"]
+
     maintainers("banesullivan")
+
+    license("MIT")
 
     version("0.42.3", sha256="00159cf0dea05c1ecfd1695c8c6ccfcfff71b0744c9997fc0276e661dc052351")
     version("0.37.0", sha256="d36a2c6d5f53f473ab6a9241669693acee7a5179394dc97595da14cc1de23141")

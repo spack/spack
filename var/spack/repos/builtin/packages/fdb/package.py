@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class Fdb(CMakePackage):
     git = "https://github.com/ecmwf/fdb.git"
 
     maintainers("skosukhin", "victoria-cherkas", "dominichofer")
+
+    license("Apache-2.0")
 
     version("master", branch="master")
     version("5.11.23", sha256="09b1d93f2b71d70c7b69472dfbd45a7da0257211f5505b5fcaf55bfc28ca6c65")
@@ -63,6 +65,10 @@ class Fdb(CMakePackage):
         sha256="8b4bf3a473ec86fd4d7672faa7d74292dde443719299f2ba59a2c8501d6f0906",
         when="@5.7.1:5.7.10+tools",
     )
+
+    @property
+    def libs(self):
+        return find_libraries("libfdb5", root=self.prefix, shared=True, recursive=True)
 
     def cmake_args(self):
         enable_build_tools = "+tools" in self.spec

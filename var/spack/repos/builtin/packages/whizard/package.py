@@ -1,7 +1,9 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+import os
 
 from spack.package import *
 
@@ -21,6 +23,8 @@ class Whizard(AutotoolsPackage):
     tags = ["hep"]
 
     maintainers("vvolkl")
+
+    license("GPL-2.0-or-later")
 
     version("master", branch="master")
     version("3.1.2", sha256="4f706f8ef02a580ae4dba867828691dfe0b3f9f9b8982b617af72eb8cd4c6fa3")
@@ -118,6 +122,14 @@ class Whizard(AutotoolsPackage):
         env.set("CXX", self.compiler.cxx)
         env.set("FC", self.compiler.fc)
         env.set("F77", self.compiler.fc)
+
+    @run_before("autoreconf")
+    def prepare_whizard(self):
+        # As described in the manual (SVN Repository version)
+        # https://whizard.hepforge.org/manual/manual003.html#sec%3Aprerequisites
+        if not os.path.exists("configure.ac"):
+            shell = which("sh")
+            shell("build_master.sh")
 
     def configure_args(self):
         spec = self.spec

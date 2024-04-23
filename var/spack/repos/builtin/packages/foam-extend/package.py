@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -54,6 +54,8 @@ class FoamExtend(Package):
     """
 
     homepage = "https://sourceforge.net/projects/foam-extend/"
+
+    license("GPL-3.0-only")
 
     version("5.0", git="http://git.code.sf.net/p/foam-extend/foam-extend-5.0.git")
     version("4.1", git="http://git.code.sf.net/p/foam-extend/foam-extend-4.1.git")

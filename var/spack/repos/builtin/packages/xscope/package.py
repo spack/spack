@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,8 @@ class Xscope(AutotoolsPackage, XorgPackage):
 
     homepage = "https://cgit.freedesktop.org/xorg/app/xscope"
     xorg_mirror_path = "app/xscope-1.4.1.tar.gz"
+
+    license("MIT")
 
     version("1.4.3", sha256="86f9da3cf0422b5964191c9e8f792e107577818de094b38db0a6dbce403a9b54")
     version("1.4.2", sha256="e12d634a69ce1ec36b0afd1d40814215e262801a030ddf83d7d0348cd046b381")

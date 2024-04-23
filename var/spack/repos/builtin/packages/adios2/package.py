@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,12 +22,15 @@ class Adios2(CMakePackage, CudaPackage, ROCmPackage):
 
     tags = ["e4s"]
 
+    license("Apache-2.0")
+
     version("master", branch="master")
     version(
-        "2.9.2",
-        sha256="78309297c82a95ee38ed3224c98b93d330128c753a43893f63bbe969320e4979",
+        "2.10.0",
+        sha256="e5984de488bda546553dd2f46f047e539333891e63b9fe73944782ba6c2d95e4",
         preferred=True,
     )
+    version("2.9.2", sha256="78309297c82a95ee38ed3224c98b93d330128c753a43893f63bbe969320e4979")
     version("2.9.1", sha256="ddfa32c14494250ee8a48ef1c97a1bf6442c15484bbbd4669228a0f90242f4f9")
     version("2.9.0", sha256="69f98ef58c818bb5410133e1891ac192653b0ec96eb9468590140f2552b6e5d1")
     version("2.8.3", sha256="4906ab1899721c41dd918dddb039ba2848a1fb0cf84f3a563a1179b9d6ee0d9f")
@@ -115,9 +118,11 @@ class Adios2(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("cuda", when="+cuda ~kokkos")
 
     # Kokkos support
-    depends_on("kokkos@3.7: +cuda +wrapper", when="+kokkos +cuda")
-    depends_on("kokkos@3.7: +rocm", when="+kokkos +rocm")
-    depends_on("kokkos@3.7: +sycl", when="+kokkos +sycl")
+    with when("+kokkos"):
+        depends_on("kokkos@3.7:")
+        depends_on("kokkos +cuda +wrapper", when="+cuda")
+        depends_on("kokkos +rocm", when="+rocm")
+        depends_on("kokkos +sycl", when="+sycl")
 
     # Propagate CUDA target to kokkos for +cuda
     for cuda_arch in CudaPackage.cuda_arch_values:
@@ -218,7 +223,7 @@ class Adios2(CMakePackage, CudaPackage, ROCmPackage):
 
     # cmake: find threads package first
     # https://github.com/ornladios/ADIOS2/pull/3893
-    patch("2.9.2-cmake-find-threads-package-first.patch", when="@2.9.2:")
+    patch("2.9.2-cmake-find-threads-package-first.patch", when="@2.9")
 
     @when("%fj")
     def patch(self):
@@ -286,10 +291,6 @@ class Adios2(CMakePackage, CudaPackage, ROCmPackage):
 
         if "%fj" in spec:
             args.extend(["-DCMAKE_Fortran_SUBMODULE_EXT=.smod", "-DCMAKE_Fortran_SUBMODULE_SEP=."])
-
-        if "+python" in spec or self.run_tests:
-            args.append(f"-DPYTHON_EXECUTABLE:FILEPATH={spec['python'].command.path}")
-            args.append(f"-DPython_EXECUTABLE:FILEPATH={spec['python'].command.path}")
 
         # hip support
         if "+cuda" in spec:

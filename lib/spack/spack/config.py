@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -63,10 +63,11 @@ from spack.error import SpackError
 from spack.util.cpus import cpus_available
 
 #: Dict from section names -> schema for that section
-SECTION_SCHEMAS = {
+SECTION_SCHEMAS: Dict[str, Any] = {
     "compilers": spack.schema.compilers.schema,
     "concretizer": spack.schema.concretizer.schema,
     "definitions": spack.schema.definitions.schema,
+    "view": spack.schema.view.schema,
     "develop": spack.schema.develop.schema,
     "mirrors": spack.schema.mirrors.schema,
     "repos": spack.schema.repos.schema,
@@ -81,7 +82,7 @@ SECTION_SCHEMAS = {
 
 # Same as above, but including keys for environments
 # this allows us to unify config reading between configs and environments
-_ALL_SCHEMAS = copy.deepcopy(SECTION_SCHEMAS)
+_ALL_SCHEMAS: Dict[str, Any] = copy.deepcopy(SECTION_SCHEMAS)
 _ALL_SCHEMAS.update({spack.schema.env.TOP_LEVEL_KEY: spack.schema.env.schema})
 
 #: Path to the default configuration
@@ -106,7 +107,7 @@ CONFIG_DEFAULTS = {
 
 #: metavar to use for commands that accept scopes
 #: this is shorter and more readable than listing all choices
-SCOPES_METAVAR = "{defaults,system,site,user}[/PLATFORM] or env:ENVIRONMENT"
+SCOPES_METAVAR = "{defaults,system,site,user,command_line}[/PLATFORM] or env:ENVIRONMENT"
 
 #: Base name for the (internal) overrides scope.
 _OVERRIDES_BASE_NAME = "overrides-"
@@ -638,7 +639,6 @@ class Configuration:
 
         We use ``:`` as the separator, like YAML objects.
         """
-        # TODO: Currently only handles maps. Think about lists if needed.
         parts = process_config_path(path)
         section = parts.pop(0)
 
@@ -764,6 +764,31 @@ def _add_platform_scope(
     cfg.push_scope(scope_type(plat_name, plat_path))
 
 
+def config_paths_from_entry_points() -> List[Tuple[str, str]]:
+    """Load configuration paths from entry points
+
+    A python package can register entry point metadata so that Spack can find
+    its configuration by adding the following to the project's pyproject.toml:
+
+    .. code-block:: toml
+
+       [project.entry-points."spack.config"]
+       baz = "baz:get_spack_config_path"
+
+    The function ``get_spack_config_path`` returns the path to the package's
+    spack configuration scope
+
+    """
+    config_paths: List[Tuple[str, str]] = []
+    for entry_point in lang.get_entry_points(group="spack.config"):
+        hook = entry_point.load()
+        if callable(hook):
+            config_path = hook()
+            if config_path and os.path.exists(config_path):
+                config_paths.append(("plugin-%s" % entry_point.name, str(config_path)))
+    return config_paths
+
+
 def _add_command_line_scopes(
     cfg: Union[Configuration, lang.Singleton], command_line_scopes: List[str]
 ) -> None:
@@ -815,6 +840,9 @@ def create() -> Configuration:
     # Site configuration is per spack instance, for sites or projects
     # No site-level configs should be checked into spack by default.
     configuration_paths.append(("site", os.path.join(spack.paths.etc_path)))
+
+    # Python package's can register configuration scopes via entry_points
+    configuration_paths.extend(config_paths_from_entry_points())
 
     # User configuration can override both spack defaults and site config
     # This is disabled if user asks for no local configuration.
@@ -883,7 +911,9 @@ def add(fullpath: str, scope: Optional[str] = None) -> None:
     has_existing_value = True
     path = ""
     override = False
-    value = syaml.load_config(components[-1])
+    value = components[-1]
+    if not isinstance(value, syaml.syaml_str):
+        value = syaml.load_config(value)
     for idx, name in enumerate(components[:-1]):
         # First handle double colons in constructing path
         colon = "::" if override else ":" if path else ""
@@ -905,7 +935,7 @@ def add(fullpath: str, scope: Optional[str] = None) -> None:
 
             # construct value from this point down
             for component in reversed(components[idx + 1 : -1]):
-                value = {component: value}
+                value: Dict[str, str] = {component: value}  # type: ignore[no-redef]
             break
 
     if override:
@@ -916,7 +946,7 @@ def add(fullpath: str, scope: Optional[str] = None) -> None:
 
     # append values to lists
     if isinstance(existing, list) and not isinstance(value, list):
-        value = [value]
+        value: List[str] = [value]  # type: ignore[no-redef]
 
     # merge value into existing
     new = merge_yaml(existing, value)
@@ -949,7 +979,8 @@ def scopes() -> Dict[str, ConfigScope]:
 
 def writable_scopes() -> List[ConfigScope]:
     """
-    Return list of writable scopes
+    Return list of writable scopes. Higher-priority scopes come first in the
+    list.
     """
     return list(
         reversed(
@@ -1094,7 +1125,7 @@ def read_config_file(
             data = syaml.load_config(f)
 
         if data:
-            if not schema:
+            if schema is None:
                 key = next(iter(data))
                 schema = _ALL_SCHEMAS[key]
             validate(data, schema)
@@ -1336,56 +1367,141 @@ def merge_yaml(dest, source, prepend=False, append=False):
     return copy.copy(source)
 
 
+class ConfigPath:
+    quoted_string = "(?:\"[^\"]+\")|(?:'[^']+')"
+    unquoted_string = "[^:'\"]+"
+    element = rf"(?:(?:{quoted_string})|(?:{unquoted_string}))"
+    next_key_pattern = rf"({element}[+-]?)(?:\:|$)"
+
+    @staticmethod
+    def _split_front(string, extract):
+        m = re.match(extract, string)
+        if not m:
+            return None, None
+        token = m.group(1)
+        return token, string[len(token) :]
+
+    @staticmethod
+    def _validate(path):
+        """Example valid config paths:
+
+        x:y:z
+        x:"y":z
+        x:y+:z
+        x:y::z
+        x:y+::z
+        x:y:
+        x:y::
+        """
+        first_key, path = ConfigPath._split_front(path, ConfigPath.next_key_pattern)
+        if not first_key:
+            raise ValueError(f"Config path does not start with a parse-able key: {path}")
+        path_elements = [first_key]
+        path_index = 1
+        while path:
+            separator, path = ConfigPath._split_front(path, r"(\:+)")
+            if not separator:
+                raise ValueError(f"Expected separator for {path}")
+
+            path_elements[path_index - 1] += separator
+            if not path:
+                break
+
+            element, remainder = ConfigPath._split_front(path, ConfigPath.next_key_pattern)
+            if not element:
+                # If we can't parse something as a key, then it must be a
+                # value (if it's valid).
+                try:
+                    syaml.load_config(path)
+                except spack.util.spack_yaml.SpackYAMLError as e:
+                    raise ValueError(
+                        "Remainder of path is not a valid key"
+                        f" and does not parse as a value {path}"
+                    ) from e
+                element = path
+                path = None  # The rest of the path was consumed into the value
+            else:
+                path = remainder
+
+            path_elements.append(element)
+            path_index += 1
+
+        return path_elements
+
+    @staticmethod
+    def process(path):
+        result = []
+        quote = "['\"]"
+        seen_override_in_path = False
+
+        path_elements = ConfigPath._validate(path)
+        last_element_idx = len(path_elements) - 1
+        for i, element in enumerate(path_elements):
+            override = False
+            append = False
+            prepend = False
+            quoted = False
+            if element.endswith("::") or (element.endswith(":") and i == last_element_idx):
+                if seen_override_in_path:
+                    raise syaml.SpackYAMLError(
+                        "Meaningless second override indicator `::' in path `{0}'".format(path), ""
+                    )
+                override = True
+                seen_override_in_path = True
+            element = element.rstrip(":")
+
+            if element.endswith("+"):
+                prepend = True
+            elif element.endswith("-"):
+                append = True
+            element = element.rstrip("+-")
+
+            if re.match(f"^{quote}", element):
+                quoted = True
+            element = element.strip("'\"")
+
+            if any([append, prepend, override, quoted]):
+                element = syaml.syaml_str(element)
+                if append:
+                    element.append = True
+                if prepend:
+                    element.prepend = True
+                if override:
+                    element.override = True
+
+            result.append(element)
+
+        return result
+
+
 def process_config_path(path: str) -> List[str]:
     """Process a path argument to config.set() that may contain overrides ('::' or
     trailing ':')
 
-    Note: quoted value path components will be processed as a single value (escaping colons)
-        quoted path components outside of the value will be considered ill formed and will
-        raise.
-        e.g. `this:is:a:path:'value:with:colon'` will yield:
+    Colons will be treated as static strings if inside of quotes,
+    e.g. `this:is:a:path:'value:with:colon'` will yield:
 
-            [this, is, a, path, value:with:colon]
+        [this, is, a, path, value:with:colon]
+
+    The path may consist only of keys (e.g. for a `get`) or may end in a value.
+    Keys are always strings: if a user encloses a key in quotes, the quotes
+    should be removed. Values with quotes should be treated as strings,
+    but without quotes, may be parsed as a different yaml object (e.g.
+    '{}' is a dict, but '"{}"' is a string).
+
+    This function does not know whether the final element of the path is a
+    key or value, so:
+
+    * It must strip the quotes, in case it is a key (so we look for "key" and
+      not '"key"'))
+    * It must indicate somehow that the quotes were stripped, in case it is a
+      value (so that we don't process '"{}"' as a YAML dict)
+
+    Therefore, all elements with quotes are stripped, and then also converted
+    to ``syaml_str`` (if treating the final element as a value, the caller
+    should not parse it in this case).
     """
-    result = []
-    if path.startswith(":"):
-        raise syaml.SpackYAMLError(f"Illegal leading `:' in path `{path}'", "")
-    seen_override_in_path = False
-    while path:
-        front, sep, path = path.partition(":")
-        if (sep and not path) or path.startswith(":"):
-            if seen_override_in_path:
-                raise syaml.SpackYAMLError(
-                    f"Meaningless second override indicator `::' in path `{path}'", ""
-                )
-            path = path.lstrip(":")
-            front = syaml.syaml_str(front)
-            front.override = True  # type: ignore[attr-defined]
-            seen_override_in_path = True
-
-        elif front.endswith("+"):
-            front = front.rstrip("+")
-            front = syaml.syaml_str(front)
-            front.prepend = True  # type: ignore[attr-defined]
-
-        elif front.endswith("-"):
-            front = front.rstrip("-")
-            front = syaml.syaml_str(front)
-            front.append = True  # type: ignore[attr-defined]
-
-        result.append(front)
-
-        quote = "['\"]"
-        not_quote = "[^'\"]"
-
-        if re.match(f"^{quote}", path):
-            m = re.match(rf"^({quote}{not_quote}+{quote})$", path)
-            if not m:
-                raise ValueError("Quotes indicate value, but there are additional path entries")
-            result.append(m.group(1))
-            break
-
-    return result
+    return ConfigPath.process(path)
 
 
 #
@@ -1446,8 +1562,9 @@ def ensure_latest_format_fn(section: str) -> Callable[[YamlConfigDict], bool]:
 def use_configuration(
     *scopes_or_paths: Union[ConfigScope, str]
 ) -> Generator[Configuration, None, None]:
-    """Use the configuration scopes passed as arguments within the
-    context manager.
+    """Use the configuration scopes passed as arguments within the context manager.
+
+    This function invalidates caches, and is therefore very slow.
 
     Args:
         *scopes_or_paths: scope objects or paths to be used
@@ -1580,6 +1697,49 @@ def fetch_remote_configs(url: str, dest_dir: str, skip_existing: bool = True) ->
     raise ConfigFileError(f"Cannot retrieve configuration (yaml) from {url}")
 
 
+def get_mark_from_yaml_data(obj):
+    """Try to get ``spack.util.spack_yaml`` mark from YAML data.
+
+    We try the object, and if that fails we try its first member (if it's a container).
+
+    Returns:
+        mark if one is found, otherwise None.
+    """
+    # mark of object itelf
+    mark = getattr(obj, "_start_mark", None)
+    if mark:
+        return mark
+
+    # mark of first member if it is a container
+    if isinstance(obj, (list, dict)):
+        first_member = next(iter(obj), None)
+        if first_member:
+            mark = getattr(first_member, "_start_mark", None)
+
+    return mark
+
+
+def parse_spec_from_yaml_string(string: str) -> "spack.spec.Spec":
+    """Parse a spec from YAML and add file/line info to errors, if it's available.
+
+    Parse a ``Spec`` from the supplied string, but also intercept any syntax errors and
+    add file/line information for debugging using file/line annotations from the string.
+
+    Arguments:
+        string: a string representing a ``Spec`` from config YAML.
+
+    """
+    try:
+        spec = spack.spec.Spec(string)
+        return spec
+    except spack.parser.SpecSyntaxError as e:
+        mark = spack.config.get_mark_from_yaml_data(string)
+        if mark:
+            msg = f"{mark.name}:{mark.line + 1}: {str(e)}"
+            raise spack.parser.SpecSyntaxError(msg) from e
+        raise e
+
+
 class ConfigError(SpackError):
     """Superclass for all Spack config related errors."""
 
@@ -1625,23 +1785,9 @@ class ConfigFormatError(ConfigError):
     def _get_mark(self, validation_error, data):
         """Get the file/line mark fo a validation error from a Spack YAML file."""
 
-        def _get_mark_or_first_member_mark(obj):
-            # mark of object itelf
-            mark = getattr(obj, "_start_mark", None)
-            if mark:
-                return mark
-
-            # mark of first member if it is a container
-            if isinstance(obj, (list, dict)):
-                first_member = next(iter(obj), None)
-                if first_member:
-                    mark = getattr(first_member, "_start_mark", None)
-                    if mark:
-                        return mark
-
         # Try various places, starting with instance and parent
         for obj in (validation_error.instance, validation_error.parent):
-            mark = _get_mark_or_first_member_mark(obj)
+            mark = get_mark_from_yaml_data(obj)
             if mark:
                 return mark
 

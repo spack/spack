@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class PySphinxJinja2Compat(PythonPackage):
     pypi = "sphinx_jinja2_compat/sphinx_jinja2_compat-0.2.0.tar.gz"
 
     maintainers("LydDeb")
+
+    license("MIT")
 
     version("0.2.0", sha256="c41346d859653e202b623f4236da8936243ed734abf5984adc3bef59d6f9a946")
 

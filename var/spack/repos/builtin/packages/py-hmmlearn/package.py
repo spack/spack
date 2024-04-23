@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class PyHmmlearn(PythonPackage):
     pypi = "hmmlearn/hmmlearn-0.3.0.tar.gz"
 
     maintainers("snehring")
+
+    license("BSD-3-Clause")
 
     version("0.3.0", sha256="d13a91ea3695df881465e3d36132d7eef4e84d483f4ba538a4b46e24b5ea100f")
 

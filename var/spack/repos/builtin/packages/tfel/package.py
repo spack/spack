@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -31,6 +31,8 @@ class Tfel(CMakePackage):
     url = "https://github.com/thelfer/tfel/archive/TFEL-4.0.tar.gz"
     git = "https://github.com/thelfer/tfel.git"
     maintainers("thelfer")
+
+    license("CECILL-2.1")
 
     # development branches
     version("master", branch="master")
@@ -178,6 +180,8 @@ class Tfel(CMakePackage):
             args.append("-Denable-python-bindings=OFF")
 
         if ("+python" in self.spec) or ("+python_bindings" in self.spec):
+            # Note: calls find_package(PythonLibs) before find_package(PythonInterp), so these
+            # variables are required.
             python = self.spec["python"]
             args.append("-DPYTHON_LIBRARY={0}".format(python.libs[0]))
             args.append("-DPYTHON_INCLUDE_DIR={0}".format(python.headers.directories[0]))

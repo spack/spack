@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,8 @@ class PyVector(PythonPackage):
 
     homepage = "https://github.com/scikit-hep/vector"
     pypi = "vector/vector-0.8.4.tar.gz"
+
+    license("BSD-3-Clause")
 
     version("0.8.5", sha256="2c7c8b228168b89da5d30d50dbd05452348920559ebe0eb94cfdafa15cdc8378")
     version("0.8.4", sha256="ef97bfec0263766edbb74c290401f89921f8d11ae9e4a0ffd904ae40674f1239")

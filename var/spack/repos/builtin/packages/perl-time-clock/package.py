@@ -1,6 +1,5 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
-# Copyright 2023 EMBL-European Bioinformatics Institute
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -18,11 +17,3 @@ class PerlTimeClock(PerlPackage):
     version("1.03", sha256="35e8a8bbfcdb35d86dd4852a9cd32cfb455a9b42e22669186e920c8aca017aef")
 
     depends_on("perl@5.6.0:", type=("build", "link", "run", "test"))
-
-    def test_use(self):
-        """Test 'use module'"""
-        options = ["-we", 'use strict; use Time::Clock; print("OK\n")']
-
-        perl = self.spec["perl"].command
-        out = perl(*options, output=str.split, error=str.split)
-        assert "OK" in out

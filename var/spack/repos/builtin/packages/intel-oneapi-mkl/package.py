@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -26,10 +26,17 @@ class IntelOneapiMkl(IntelOneApiLibraryPackage):
     )
 
     version(
+        "2024.1.0",
+        url="https://registrationcenter-download.intel.com/akdlm/IRC_NAS/2f3a5785-1c41-4f65-a2f9-ddf9e0db3ea0/l_onemkl_p_2024.1.0.695_offline.sh",
+        sha256="b121bc70d3493ef1fbd05f077b1cd27ac4eb2fd1099f44e9f4b8a1366995fb92",
+        expand=False,
+    )
+    version(
         "2024.0.0",
         url="https://registrationcenter-download.intel.com/akdlm//IRC_NAS/86d6a4c1-c998-4c6b-9fff-ca004e9f7455/l_onemkl_p_2024.0.0.49673_offline.sh",
         sha256="2a3be7d01d75ba8cc3059f9a32ae72e5bfc93e68e72e94e79d7fa6ea2f7814de",
         expand=False,
+        preferred=True,
     )
     version(
         "2023.2.0",
@@ -45,61 +52,61 @@ class IntelOneapiMkl(IntelOneApiLibraryPackage):
     )
     version(
         "2023.0.0",
-        url="https://registrationcenter-download.intel.com/akdlm/irc_nas/19138/l_onemkl_p_2023.0.0.25398_offline.sh",
+        url="https://registrationcenter-download.intel.com/akdlm/IRC_NAS/19138/l_onemkl_p_2023.0.0.25398_offline.sh",
         sha256="0d61188e91a57bdb575782eb47a05ae99ea8eebefee6b2dfe20c6708e16e9927",
         expand=False,
     )
     version(
         "2022.2.1",
-        url="https://registrationcenter-download.intel.com/akdlm/irc_nas/19038/l_onemkl_p_2022.2.1.16993_offline.sh",
+        url="https://registrationcenter-download.intel.com/akdlm/IRC_NAS/19038/l_onemkl_p_2022.2.1.16993_offline.sh",
         sha256="eedd4b795720de776b1fc5f542ae0fac37ec235cdb567f7c2ee3182e73e3e59d",
         expand=False,
     )
     version(
         "2022.2.0",
-        url="https://registrationcenter-download.intel.com/akdlm/irc_nas/18898/l_onemkl_p_2022.2.0.8748_offline.sh",
+        url="https://registrationcenter-download.intel.com/akdlm/IRC_NAS/18898/l_onemkl_p_2022.2.0.8748_offline.sh",
         sha256="07d7caedd4b9f025c6fd439a0d2c2f279b18ecbbb63cadb864f6c63c1ed942db",
         expand=False,
     )
     version(
         "2022.1.0",
-        url="https://registrationcenter-download.intel.com/akdlm/irc_nas/18721/l_onemkl_p_2022.1.0.223_offline.sh",
+        url="https://registrationcenter-download.intel.com/akdlm/IRC_NAS/18721/l_onemkl_p_2022.1.0.223_offline.sh",
         sha256="4b325a3c4c56e52f4ce6c8fbb55d7684adc16425000afc860464c0f29ea4563e",
         expand=False,
     )
     version(
         "2022.0.2",
-        url="https://registrationcenter-download.intel.com/akdlm/irc_nas/18483/l_onemkl_p_2022.0.2.136_offline.sh",
+        url="https://registrationcenter-download.intel.com/akdlm/IRC_NAS/18483/l_onemkl_p_2022.0.2.136_offline.sh",
         sha256="134b748825a474acc862bb4a7fada99741a15b7627cfaa6ba0fb05ec0b902b5e",
         expand=False,
     )
     version(
         "2022.0.1",
-        url="https://registrationcenter-download.intel.com/akdlm/irc_nas/18444/l_onemkl_p_2022.0.1.117_offline.sh",
+        url="https://registrationcenter-download.intel.com/akdlm/IRC_NAS/18444/l_onemkl_p_2022.0.1.117_offline.sh",
         sha256="22afafbe2f3762eca052ac21ec40b845ff2f3646077295c88c2f37f80a0cc160",
         expand=False,
     )
     version(
         "2021.4.0",
-        url="https://registrationcenter-download.intel.com/akdlm/irc_nas/18222/l_onemkl_p_2021.4.0.640_offline.sh",
+        url="https://registrationcenter-download.intel.com/akdlm/IRC_NAS/18222/l_onemkl_p_2021.4.0.640_offline.sh",
         sha256="9ad546f05a421b4f439e8557fd0f2d83d5e299b0d9bd84bdd86be6feba0c3915",
         expand=False,
     )
     version(
         "2021.3.0",
-        url="https://registrationcenter-download.intel.com/akdlm/irc_nas/17901/l_onemkl_p_2021.3.0.520_offline.sh",
+        url="https://registrationcenter-download.intel.com/akdlm/IRC_NAS/17901/l_onemkl_p_2021.3.0.520_offline.sh",
         sha256="a06e1cdbfd8becc63440b473b153659885f25a6e3c4dcb2907ad9cd0c3ad59ce",
         expand=False,
     )
     version(
         "2021.2.0",
-        url="https://registrationcenter-download.intel.com/akdlm/irc_nas/17757/l_onemkl_p_2021.2.0.296_offline.sh",
+        url="https://registrationcenter-download.intel.com/akdlm/IRC_NAS/17757/l_onemkl_p_2021.2.0.296_offline.sh",
         sha256="816e9df26ff331d6c0751b86ed5f7d243f9f172e76f14e83b32bf4d1d619dbae",
         expand=False,
     )
     version(
         "2021.1.1",
-        url="https://registrationcenter-download.intel.com/akdlm/irc_nas/17402/l_onemkl_p_2021.1.1.52_offline.sh",
+        url="https://registrationcenter-download.intel.com/akdlm/IRC_NAS/17402/l_onemkl_p_2021.1.1.52_offline.sh",
         sha256="818b6bd9a6c116f4578cda3151da0612ec9c3ce8b2c8a64730d625ce5b13cc0c",
         expand=False,
     )
@@ -125,6 +132,16 @@ class IntelOneapiMkl(IntelOneApiLibraryPackage):
         multi=False,
     )
 
+    requires(
+        "%clang",
+        "%gcc",
+        "%intel",
+        "%oneapi",
+        policy="one_of",
+        when="threads=openmp",
+        msg="MKL with OpenMP threading requires GCC, clang, or Intel compilers",
+    )
+
     depends_on("tbb")
     # cluster libraries need mpi
     depends_on("mpi", when="+cluster")
@@ -133,6 +150,20 @@ class IntelOneapiMkl(IntelOneApiLibraryPackage):
     provides("scalapack", when="+cluster")
     provides("mkl")
     provides("lapack", "blas")
+
+    @run_after("install")
+    def fixup_installation(self):
+        # fixup missing path in mkl cmake files. This issue was new in
+        # 2024.0.0 and expected to be fixed in the next release.
+        if self.spec.satisfies("@2024.0.0"):
+            # cannot use spack patch because this is applied to the
+            # installed mkl, not sources
+            filter_file(
+                'PATH_SUFFIXES "lib"',
+                'PATH_SUFFIXES "lib" "../../compiler/latest/lib"',
+                self.component_prefix.lib.cmake.mkl.join("MKLConfig.cmake"),
+                backup=False,
+            )
 
     @property
     def v2_layout_versions(self):
@@ -158,7 +189,10 @@ class IntelOneapiMkl(IntelOneApiLibraryPackage):
         # Only if environment modifications are desired (default is +envmods)
         if self.spec.satisfies("+envmods"):
             env.set("MKLROOT", self.component_prefix)
+            # 2023.1.0 has the pkgconfig files in lib/pkgconfig, 2021.3.0 has them in
+            # tools/pkgconfig, just including both in PKG_CONFIG_PATH
             env.append_path("PKG_CONFIG_PATH", self.component_prefix.lib.pkgconfig)
+            env.append_path("PKG_CONFIG_PATH", self.component_prefix.tools.pkgconfig)
 
     def _find_mkl_libs(self, shared):
         libs = []
@@ -166,7 +200,11 @@ class IntelOneapiMkl(IntelOneApiLibraryPackage):
         if self.spec.satisfies("+cluster"):
             libs.extend([self._xlp64_lib("libmkl_scalapack"), "libmkl_cdft_core"])
 
-        libs.append(self._xlp64_lib("libmkl_intel"))
+        if self.spec.satisfies("%oneapi") or self.spec.satisfies("%intel"):
+            libs.append(self._xlp64_lib("libmkl_intel"))
+        else:
+            libs.append(self._xlp64_lib("libmkl_gf"))
+
         if self.spec.satisfies("threads=tbb"):
             libs.append("libmkl_tbb_thread")
         elif self.spec.satisfies("threads=openmp"):
@@ -209,7 +247,10 @@ class IntelOneapiMkl(IntelOneApiLibraryPackage):
         )
         lib_path = lib_path if isdir(lib_path) else dirname(lib_path)
 
+        # resolved_libs is populated as follows
+        # MKL-related + MPI-related + threading-related
         resolved_libs = find_libraries(libs, lib_path, shared=shared)
+
         # Add MPI libraries for cluster support. If MPI is not in the
         # spec, then MKL is externally installed and application must
         # link with MPI libaries. If MPI is in spec, but there are no
@@ -220,6 +261,9 @@ class IntelOneapiMkl(IntelOneApiLibraryPackage):
                 resolved_libs = resolved_libs + self.spec["mpi"].libs
         except spack.error.NoLibrariesError:
             pass
+
+        if self.spec.satisfies("threads=openmp"):
+            resolved_libs += self.openmp_libs()
         return resolved_libs
 
     def _xlp64_lib(self, lib):

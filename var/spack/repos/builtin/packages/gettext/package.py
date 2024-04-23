@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,6 +18,9 @@ class Gettext(AutotoolsPackage, GNUMirrorPackage):
     maintainers("michaelkuhn")
 
     executables = [r"^gettext$"]
+    tags = ["build-tools"]
+
+    license("GPL-3.0-or-later AND LGPL-2.1-or-later AND MIT")
 
     version("0.22.4", sha256="29217f1816ee2e777fa9a01f9956a14139c0c23cc1b20368f06b2888e8a34116")
     version("0.22.3", sha256="b838228b3f8823a6c1eddf07297197c4db13f7e1b173b9ef93f3f945a63080b6")
@@ -65,12 +68,28 @@ class Gettext(AutotoolsPackage, GNUMirrorPackage):
     patch("nvhpc-export-symbols.patch", when="%nvhpc")
     patch("nvhpc-long-width.patch", when="%nvhpc")
 
-    # Apply this only where we know that the system libc is glibc, be very careful:
-    @when("@:0.21.0 target=ppc64le:")
     def patch(self):
-        for fn in ("gettext-tools/gnulib-lib/cdefs.h", "gettext-tools/libgrep/cdefs.h"):
-            with open(fn, "w") as f:
-                f.write("#include <sys/cdefs.h>\n")
+        # Apply this only where we know that the system libc is glibc, be very careful:
+        if self.spec.satisfies("@:0.21.0 target=ppc64le"):
+            for fn in ("gettext-tools/gnulib-lib/cdefs.h", "gettext-tools/libgrep/cdefs.h"):
+                with open(fn, "w") as f:
+                    f.write("#include <sys/cdefs.h>\n")
+
+        # From the configure script: "we don't want to use an external libxml, because its
+        # dependencies and their dynamic relocations have an impact on the startup time", well,
+        # *we* do.
+        filter_file(
+            "gl_cv_libxml_force_included=yes",
+            "gl_cv_libxml_force_included=no",
+            "libtextstyle/configure",
+            string=True,
+        )
+
+    def flag_handler(self, name, flags):
+        # this goes together with gl_cv_libxml_force_included=no
+        if name == "ldflags":
+            flags.append("-lxml2")
+        return (flags, None, None)
 
     @classmethod
     def determine_version(cls, exe):

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -32,9 +32,15 @@ class Llvm(CMakePackage, CudaPackage):
 
     generator("ninja")
 
-    family = "compiler"  # Used by lmod
+    license("Apache-2.0")
 
     version("main", branch="main")
+    version("18.1.3", sha256="fc5a2fd176d73ceb17f4e522f8fe96d8dde23300b8c233476d3609f55d995a7a")
+    version("18.1.2", sha256="8d686d5ece6f12b09985cb382a3a530dc06bb6e7eb907f57c7f8bf2d868ebb0b")
+    version("18.1.1", sha256="62439f733311869dbbaf704ce2e02141d2a07092d952fc87ef52d1d636a9b1e4")
+    version("18.1.0", sha256="eb18f65a68981e94ea1a5aae4f02321b17da9e99f76bfdb983b953f4ba2d3550")
+    version("17.0.6", sha256="81494d32e6f12ea6f73d6d25424dbd2364646011bb8f7e345ca870750aa27de1")
+    version("17.0.5", sha256="432c1eda3d1c9379cd52a9bee8e0ea6f7b204bff5075895f963fd8e575aa4fb8")
     version("17.0.4", sha256="46200b79f52a02fe26d0a43fd856ab6ceff49ab2a0b7c240ac4b700a6ada700c")
     version("17.0.3", sha256="1e3d9d04fb5fbd8d0080042ad72c7e2a5c68788b014b186647a604dbbdd625d2")
     version("17.0.2", sha256="dcba3eb486973dce45b6edfe618f3f29b703ae7e6ef9df65182fb50fb6fe4235")
@@ -532,6 +538,10 @@ class Llvm(CMakePackage, CudaPackage):
     # avoid build failed with Fujitsu compiler
     patch("llvm13-fujitsu.patch", when="@13 %fj")
 
+    # avoid build failed with Fujitsu compiler since llvm17
+    patch("llvm17-fujitsu.patch", when="@17: %fj")
+    patch("llvm17-18-thread.patch", when="@17:18 %fj")
+
     # patch for missing hwloc.h include for libompd
     # see https://reviews.llvm.org/D123888
     patch(
@@ -745,10 +755,7 @@ class Llvm(CMakePackage, CudaPackage):
                     )
 
     def flag_handler(self, name, flags):
-        if name == "cxxflags":
-            flags.append(self.compiler.cxx11_flag)
-            return (None, flags, None)
-        elif name == "ldflags" and self.spec.satisfies("%intel"):
+        if name == "ldflags" and self.spec.satisfies("%intel"):
             flags.append("-shared-intel")
             return (None, flags, None)
         return (flags, None, None)
@@ -764,6 +771,14 @@ class Llvm(CMakePackage, CudaPackage):
                     os.symlink(bin, sym)
             env.prepend_path("PATH", self.stage.path)
 
+    def setup_run_environment(self, env):
+        if "+clang" in self.spec:
+            env.set("CC", join_path(self.spec.prefix.bin, "clang"))
+            env.set("CXX", join_path(self.spec.prefix.bin, "clang++"))
+        if "+flang" in self.spec:
+            env.set("FC", join_path(self.spec.prefix.bin, "flang"))
+            env.set("F77", join_path(self.spec.prefix.bin, "flang"))
+
     root_cmakelists_dir = "llvm"
 
     def cmake_args(self):
@@ -771,13 +786,11 @@ class Llvm(CMakePackage, CudaPackage):
         define = self.define
         from_variant = self.define_from_variant
 
-        python = spec["python"]
         cmake_args = [
             define("LLVM_REQUIRES_RTTI", True),
             define("LLVM_ENABLE_RTTI", True),
             define("LLVM_ENABLE_LIBXML2", False),
             define("CLANG_DEFAULT_OPENMP_RUNTIME", "libomp"),
-            define("PYTHON_EXECUTABLE", python.command.path),
             define("LIBOMP_USE_HWLOC", True),
             define("LIBOMP_HWLOC_INSTALL_DIR", spec["hwloc"].prefix),
             from_variant("LLVM_ENABLE_ZSTD", "zstd"),
@@ -800,11 +813,6 @@ class Llvm(CMakePackage, CudaPackage):
         shlib_symbol_version = spec.variants.get("shlib_symbol_version", None)
         if shlib_symbol_version is not None and shlib_symbol_version.value != "none":
             cmake_args.append(define("LLVM_SHLIB_SYMBOL_VERSION", shlib_symbol_version.value))
-
-        if python.version >= Version("3"):
-            cmake_args.append(define("Python3_EXECUTABLE", python.command.path))
-        else:
-            cmake_args.append(define("Python2_EXECUTABLE", python.command.path))
 
         projects = []
         runtimes = []
@@ -837,6 +845,12 @@ class Llvm(CMakePackage, CudaPackage):
             )
 
         cmake_args.append(from_variant("LIBOMPTARGET_ENABLE_DEBUG", "libomptarget_debug"))
+
+        if spec.satisfies("@14:"):
+            # The hsa-rocr-dev package may be pulled in through hwloc, which can lead to cmake
+            # finding libhsa and enabling the AMDGPU plugin. Since we don't support this yet,
+            # disable explicitly. See commit a05a0c3c2f8eefc80d84b7a87a23a4452d4a3087.
+            cmake_args.append(define("LIBOMPTARGET_BUILD_AMDGPU_PLUGIN", False))
 
         if "+lldb" in spec:
             projects.append("lldb")
@@ -958,9 +972,9 @@ class Llvm(CMakePackage, CudaPackage):
                     "openmp",
                 ]
                 runtimes.sort(
-                    key=lambda x: runtimes_order.index(x)
-                    if x in runtimes_order
-                    else len(runtimes_order)
+                    key=lambda x: (
+                        runtimes_order.index(x) if x in runtimes_order else len(runtimes_order)
+                    )
                 )
             cmake_args.extend(
                 [

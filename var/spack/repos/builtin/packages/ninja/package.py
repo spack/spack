@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,6 +21,8 @@ class Ninja(Package):
     tags = ["build-tools", "e4s", "windows"]
 
     executables = ["^ninja$"]
+
+    license("Apache-2.0")
 
     version("kitware", branch="features-for-fortran", git="https://github.com/Kitware/ninja.git")
     version("master", branch="master")

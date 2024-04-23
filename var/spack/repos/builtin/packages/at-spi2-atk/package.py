@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class AtSpi2Atk(MesonPackage):
     url = "http://ftp.gnome.org/pub/gnome/sources/at-spi2-atk/2.26/at-spi2-atk-2.26.1.tar.xz"
     list_url = "http://ftp.gnome.org/pub/gnome/sources/at-spi2-atk"
     list_depth = 1
+
+    license("LGPL-2.1-or-later")
 
     version("2.38.0", sha256="cfa008a5af822b36ae6287f18182c40c91dd699c55faa38605881ed175ca464f")
     version("2.34.2", sha256="901323cee0eef05c01ec4dee06c701aeeca81a314a7d60216fa363005e27f4f0")

@@ -1,16 +1,18 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import configparser
 import os
+import tempfile
 
 import llnl.util.tty as tty
 
 from spack.package import *
 
 
-class Hpctoolkit(AutotoolsPackage):
+class Hpctoolkit(AutotoolsPackage, MesonPackage):
     """HPCToolkit is an integrated suite of tools for measurement and analysis
     of program performance on computers ranging from multicore desktop systems
     to the nation's largest supercomputers. By using statistical sampling of
@@ -26,7 +28,11 @@ class Hpctoolkit(AutotoolsPackage):
 
     test_requires_compiler = True
 
+    license("BSD-3-Clause")
+
     version("develop", branch="develop")
+    version("2024.01.stable", branch="release/2024.01")
+    version("2024.01.1", tag="2024.01.1", commit="0672b9a9a2a1e3846c5e2059fb73a07a129f22cd")
     version("2023.08.stable", branch="release/2023.08")
     version("2023.08.1", tag="2023.08.1", commit="753a72affd584a5e72fe153d1e8c47a394a3886e")
     version("2023.03.stable", branch="release/2023.03")
@@ -55,13 +61,14 @@ class Hpctoolkit(AutotoolsPackage):
         "cray",
         default=False,
         description="Build hpcprof-mpi for Cray systems (may require --dirty).",
+        when="build_system=autotools",
     )
 
     variant(
         "cray-static",
         default=False,
         description="Build old rev of hpcprof-mpi statically on Cray systems.",
-        when="@:2022.09+cray",
+        when="@:2022.09+cray build_system=autotools",
     )
 
     variant(
@@ -102,17 +109,42 @@ class Hpctoolkit(AutotoolsPackage):
     variant("rocm", default=False, description="Support ROCM on AMD GPUs.", when="@2022.04:")
 
     # Other variants.
-    variant("debug", default=False, description="Build in debug (develop) mode.")
+    variant(
+        "debug",
+        default=False,
+        description="Build in debug (develop) mode.",
+        when="build_system=autotools",
+    )
     variant("viewer", default=True, description="Include hpcviewer.")
 
     variant(
         "python", default=False, description="Support unwinding Python source.", when="@2023.03:"
     )
 
-    with when("@develop build_system=autotools"):
+    build_system(
+        conditional("meson", when="@2024.01:"),
+        conditional("autotools", when="@:2024.01"),
+        default="autotools",
+    )
+
+    with when("@2024.01: build_system=autotools"):
         depends_on("autoconf", type="build")
         depends_on("automake", type="build")
         depends_on("libtool", type="build")
+
+    with when("build_system=meson"):
+        depends_on("meson@1.1.0:", type="build")
+
+        with when("@:2024.01"):
+            depends_on("gmake", type="build")
+            depends_on("m4", type="build")
+            depends_on("autoconf", type="build")
+            depends_on("automake", type="build")
+            depends_on("libtool", type="build")
+
+        with when("@2024.02:"):
+            depends_on("pkgconfig", type="build")
+            depends_on("cmake", type="build")
 
     boost_libs = (
         "+atomic +chrono +date_time +filesystem +system +thread +timer"
@@ -124,22 +156,27 @@ class Hpctoolkit(AutotoolsPackage):
     depends_on("binutils@:2.33.1 +libiberty~nls", type="link", when="@:2020.03")
     depends_on("boost" + boost_libs)
     depends_on("bzip2+shared", type="link")
-    depends_on("dyninst@12.1.0:", when="@2022.0:")
-    depends_on("dyninst@10.2.0:", when="@2021.0:2021.12")
-    depends_on("dyninst@9.3.2:", when="@:2020")
+    depends_on("dyninst@12.1.0:", when="@2024.01:")
+    depends_on("dyninst@12.1.0:12", when="@2022:2023.08")
+    depends_on("dyninst@10.2.0:12", when="@2021")
+    depends_on("dyninst@9.3.2:12", when="@:2020")
     depends_on("elfutils~nls", type="link")
     depends_on("gotcha@1.0.3:", when="@:2020.09")
-    depends_on("intel-tbb+shared")
+    depends_on("tbb")
+    depends_on("intel-tbb+shared", when="^[virtuals=tbb] intel-tbb")
     depends_on("libdwarf", when="@:2022.06")
     depends_on("libiberty+pic", when="@2022.10:")
-    depends_on("libmonitor+hpctoolkit~dlopen", when="@2021.00:")
+    depends_on("libmonitor+hpctoolkit~dlopen", when="@2021.00:2024")
     depends_on("libmonitor+hpctoolkit+dlopen", when="@:2020")
-    depends_on("libmonitor@2023.02.13:", when="@2023.01:")
-    depends_on("libmonitor@2021.11.08:", when="@2022.01:")
-    depends_on("libunwind@1.4: +xz+pic")
+    depends_on("libmonitor@2023.02.13:", when="@2023.01:2024")
+    depends_on("libmonitor@2021.11.08:", when="@2022.01:2024")
+    depends_on("libunwind@1.4: +xz")
+    depends_on("libunwind +pic libs=static", when="@:2023.08")
     depends_on("mbedtls+pic", when="@:2022.03")
     depends_on("xerces-c transcoder=iconv")
-    depends_on("xz+pic libs=static", type="link")
+    depends_on("xxhash@0.8.1:", when="@develop")
+    depends_on("xz", type="link")
+    depends_on("xz+pic libs=static", type="link", when="@:2023.08")
     depends_on("yaml-cpp@0.7.0: +shared", when="@2022.10:")
 
     depends_on("zlib-api")
@@ -152,7 +189,7 @@ class Hpctoolkit(AutotoolsPackage):
     depends_on("opencl-c-headers", when="+opencl")
 
     depends_on("intel-xed+pic", when="target=x86_64:")
-    depends_on("memkind", type=("build", "run"), when="@2021.05.01:")
+    depends_on("memkind", type=("build", "run"), when="@2021.05.01:2023.08")
     depends_on("papi", when="+papi")
     depends_on("libpfm4", when="~papi")
     depends_on("mpi", when="+cray")
@@ -192,6 +229,9 @@ class Hpctoolkit(AutotoolsPackage):
     depends_on("python@3.4:", type="build", when="@2020.03:2020.08")
     patch("python3.patch", when="@2020.03:2020.08")
 
+    # HIP header files require HIP_PLATFORM_AMD to be set for AMD GPUs
+    patch("define-hip-platform-as-amd.patch", when="^hip@6:")
+
     # Fix a bug where make would mistakenly overwrite hpcrun-fmt.h.
     # https://gitlab.com/hpctoolkit/hpctoolkit/-/merge_requests/751
     def patch(self):
@@ -199,8 +239,41 @@ class Hpctoolkit(AutotoolsPackage):
             if os.access("hpcrun-fmt.txt", os.F_OK):
                 os.rename("hpcrun-fmt.txt", "hpcrun-fmt.readme")
 
-    flag_handler = AutotoolsPackage.build_system_flags
+    # We only want hpctoolkit and hpcviewer paths and man paths in the
+    # module file.  The run dependencies are all curried into hpctoolkit
+    # and we don't want to risk exposing a package if the application
+    # uses a different version of the same package.
+    def setup_run_environment(self, env):
+        spec = self.spec
+        env.clear()
+        env.prepend_path("PATH", spec.prefix.bin)
+        env.prepend_path("MANPATH", spec.prefix.share.man)
+        env.prepend_path("CPATH", spec.prefix.include)
+        env.prepend_path("LD_LIBRARY_PATH", spec.prefix.lib.hpctoolkit)
+        if "+viewer" in spec:
+            env.prepend_path("PATH", spec["hpcviewer"].prefix.bin)
+            env.prepend_path("MANPATH", spec["hpcviewer"].prefix.share.man)
 
+    def test_sort(self):
+        """build and run selection sort unit test"""
+        exe = "tst-sort"
+        cxx = which(os.environ["CXX"])
+        cxx(self.test_suite.current_test_data_dir.join("sort.cpp"), "-o", exe)
+
+        hpcrun = which("hpcrun")
+        meas = "tst-sort.m"
+        hpcrun("-e", "REALTIME@5000", "-t", "-o", meas, "./" + exe)
+
+        hpcstruct = which("hpcstruct")
+        struct = "tst-sort.hpcstruct"
+        hpcstruct("-j", "4", "--time", "-o", struct, "./" + exe)
+
+        hpcprof = which("hpcprof")
+        db = "tst-sort.d"
+        hpcprof("-S", struct, "-o", db, meas)
+
+
+class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
     def configure_args(self):
         spec = self.spec
 
@@ -232,7 +305,7 @@ class Hpctoolkit(AutotoolsPackage):
         if spec.satisfies("@:2022.03"):
             args.append("--with-mbedtls=%s" % spec["mbedtls"].prefix)
 
-        if spec.satisfies("@2021.05.01:"):
+        if spec.satisfies("@2021.05.01:2023.08"):
             args.append("--with-memkind=%s" % spec["memkind"].prefix)
 
         if spec.satisfies("+papi"):
@@ -291,29 +364,14 @@ class Hpctoolkit(AutotoolsPackage):
 
         return args
 
-    # We only want hpctoolkit and hpcviewer paths and man paths in the
-    # module file.  The run dependencies are all curried into hpctoolkit
-    # and we don't want to risk exposing a package if the application
-    # uses a different version of the same package.
-    def setup_run_environment(self, env):
-        spec = self.spec
-        env.clear()
-        env.prepend_path("PATH", spec.prefix.bin)
-        env.prepend_path("MANPATH", spec.prefix.share.man)
-        env.prepend_path("CPATH", spec.prefix.include)
-        env.prepend_path("LD_LIBRARY_PATH", spec.prefix.lib.hpctoolkit)
-        if "+viewer" in spec:
-            env.prepend_path("PATH", spec["hpcviewer"].prefix.bin)
-            env.prepend_path("MANPATH", spec["hpcviewer"].prefix.share.man)
+    flag_handler = AutotoolsPackage.build_system_flags
 
     # Build tests (spack install --run-tests).  Disable the default
     # spack tests and run autotools 'make check', but only from the
     # tests directory.
     build_time_test_callbacks = []  # type: List[str]
-    install_time_test_callbacks = []  # type: List[str]
+    install_time_test_callbacks = ["check_install"]  # type: List[str]
 
-    @run_after("install")
-    @on_package_attributes(run_tests=True)
     def check_install(self):
         if not self.spec.satisfies("@2022:"):
             tty.warn("requires 2022.01.15 or later")
@@ -322,25 +380,86 @@ class Hpctoolkit(AutotoolsPackage):
         with working_dir("tests"):
             make("check")
 
-    # Post-Install tests (spack test run).  These are the same tests
-    # but with a different Makefile that works outside the build
-    # directory.
-    @run_after("install")
-    def copy_test_files(self):
-        if self.spec.satisfies("@2022:"):
-            self.cache_extra_test_sources(["tests"])
 
-    def test_run_sort(self):
-        """build and run selection sort unit test"""
-        if not self.spec.satisfies("@2022:"):
-            raise SkipTest("No tests exist for versions prior to 2022.01.15")
+class MesonBuilder(spack.build_systems.meson.MesonBuilder):
+    def meson_args(self):
+        spec = self.spec
 
-        test_dir = self.test_suite.current_test_cache_dir.tests
-        with working_dir(test_dir):
-            make = which("make")
-            make("-f", "Makefile.spack", "all")
+        args = [
+            "-Dhpcprof_mpi=" + ("enabled" if "+mpi" in spec else "disabled"),
+            "-Dpython=" + ("enabled" if "+python" in spec else "disabled"),
+            "-Dpapi=" + ("enabled" if "+papi" in spec else "disabled"),
+            "-Dopencl=" + ("enabled" if "+opencl" in spec else "disabled"),
+            "-Dcuda=" + ("enabled" if "+cuda" in spec else "disabled"),
+            "-Drocm=" + ("enabled" if "+rocm" in spec else "disabled"),
+            "-Dlevel0=" + ("enabled" if "+level_zero" in spec else "disabled"),
+            "-Dgtpin=" + ("enabled" if "+gtpin" in spec else "disabled"),
+        ]
 
-            run_sort = which(join_path(".", "run-sort"))
-            assert run_sort, "run-sort is missing"
+        if "@:2024.01" in spec:
+            args.append(f"--native-file={self.gen_prefix_file()}")
 
-            run_sort()
+        return args
+
+    def gen_prefix_file(self):
+        """Generate a native file specifying install prefixes for dependencies"""
+        spec = self.spec
+
+        cfg = configparser.ConfigParser()
+        cfg["properties"] = {}
+        cfg["binaries"] = {}
+
+        cfg["properties"]["prefix_boost"] = f"'''{spec['boost'].prefix}'''"
+        cfg["properties"]["prefix_bzip"] = f"'''{spec['bzip2'].prefix}'''"
+        cfg["properties"]["prefix_dyninst"] = f"'''{spec['dyninst'].prefix}'''"
+        cfg["properties"]["prefix_elfutils"] = f"'''{spec['elfutils'].prefix}'''"
+        cfg["properties"]["prefix_tbb"] = f"'''{spec['intel-tbb'].prefix}'''"
+        cfg["properties"]["prefix_libmonitor"] = f"'''{spec['libmonitor'].prefix}'''"
+        cfg["properties"]["prefix_libunwind"] = f"'''{spec['libunwind'].prefix}'''"
+        cfg["properties"]["prefix_xerces"] = f"'''{spec['xerces-c'].prefix}'''"
+        cfg["properties"]["prefix_lzma"] = f"'''{spec['xz'].prefix}'''"
+        cfg["properties"]["prefix_zlib"] = f"'''{spec['zlib-api'].prefix}'''"
+        cfg["properties"]["prefix_libiberty"] = f"'''{spec['libiberty'].prefix}'''"
+
+        if spec.target.family == "x86_64":
+            cfg["properties"]["prefix_xed"] = f"'''{spec['intel-xed'].prefix}'''"
+
+        if spec.satisfies("+papi"):
+            cfg["properties"]["prefix_papi"] = f"'''{spec['papi'].prefix}'''"
+        else:
+            cfg["properties"]["prefix_perfmon"] = f"'''{spec['libpfm4'].prefix}'''"
+
+        cfg["properties"]["prefix_yaml_cpp"] = f"'''{spec['yaml-cpp'].prefix}'''"
+
+        if "+cuda" in spec:
+            cfg["properties"]["prefix_cuda"] = f"'''{spec['cuda'].prefix}'''"
+
+        if "+level_zero" in spec:
+            cfg["properties"]["prefix_level0"] = f"'''{spec['oneapi-level-zero'].prefix}'''"
+
+        if "+gtpin" in spec:
+            cfg["properties"]["prefix_gtpin"] = f"'''{spec['intel-gtpin'].prefix}'''"
+            cfg["properties"]["prefix_igc"] = f"'''{spec['oneapi-igc'].prefix}'''"
+
+        if "+opencl" in spec:
+            cfg["properties"]["prefix_opencl"] = f"'''{spec['opencl-c-headers'].prefix}'''"
+
+        if "+rocm" in spec:
+            cfg["properties"]["prefix_rocm_hip"] = f"'''{spec['hip'].prefix}'''"
+            cfg["properties"]["prefix_rocm_hsa"] = f"'''{spec['hsa-rocr-dev'].prefix}'''"
+            cfg["properties"]["prefix_rocm_tracer"] = f"'''{spec['roctracer-dev'].prefix}'''"
+            cfg["properties"]["prefix_rocm_profiler"] = f"'''{spec['rocprofiler-dev'].prefix}'''"
+
+        if "+python" in spec:
+            cfg["binaries"]["python"] = f"'''{spec['python'].command}'''"
+
+        if "+mpi" in spec:
+            cfg["binaries"]["mpicxx"] = f"'''{spec['mpi'].mpicxx}'''"
+
+        native_fd, native_path = tempfile.mkstemp(
+            prefix="spack-native.", suffix=".ini", dir=self.stage.path
+        )
+        with os.fdopen(native_fd, "w") as native_f:
+            cfg.write(native_f)
+
+        return native_path

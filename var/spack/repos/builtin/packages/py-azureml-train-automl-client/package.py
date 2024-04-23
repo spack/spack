@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,11 +15,7 @@ class PyAzuremlTrainAutomlClient(PythonPackage):
     homepage = "https://docs.microsoft.com/en-us/azure/machine-learning/service/"
     url = "https://pypi.io/packages/py3/a/azureml_train_automl_client/azureml_train_automl_client-1.11.0-py3-none-any.whl"
 
-    version(
-        "1.23.0",
-        sha256="ac5f1ce9b04b4e61e2e28e0fa8d2d8e47937a546f624d1cd3aa6bc4f9110ecbe",
-        expand=False,
-    )
+    version("1.23.0", sha256="ac5f1ce9b04b4e61e2e28e0fa8d2d8e47937a546f624d1cd3aa6bc4f9110ecbe")
 
     depends_on("python@3.5:3", type=("build", "run"))
 

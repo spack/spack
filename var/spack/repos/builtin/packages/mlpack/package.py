@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,8 @@ class Mlpack(CMakePackage):
     url = "https://github.com/mlpack/mlpack/archive/refs/tags/4.0.1.tar.gz"
 
     maintainers("wdconinc")
+
+    license("BSD-3-Clause")
 
     version("4.2.0", sha256="f780df984a71029e62eeecdd145fb95deb71b133cefc7840de0ec706d116dd60")
     version("4.1.0", sha256="e0c760baf15fd0af5601010b7cbc536e469115e9dd45f96712caa3b651b1852a")

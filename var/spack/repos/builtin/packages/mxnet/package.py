@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class Mxnet(CMakePackage, CudaPackage, PythonExtension):
     list_url = "https://mxnet.apache.org/get_started/download"
     git = "https://github.com/apache/mxnet.git"
 
-    maintainers("adamjstewart")
+    license("Apache-2.0")
 
     version("master", branch="master", submodules=True)
     version("1.9.1", sha256="11ea61328174d8c29b96f341977e03deb0bf4b0c37ace658f93e38d9eb8c9322")

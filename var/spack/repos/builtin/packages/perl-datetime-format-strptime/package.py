@@ -1,6 +1,5 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
-# Copyright 2023 EMBL-European Bioinformatics Institute
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -15,6 +14,8 @@ class PerlDatetimeFormatStrptime(PerlPackage):
 
     maintainers("EbiArnie")
 
+    license("Artistic-2.0")
+
     version("1.79", sha256="701e46802c86ed4d88695c1a6dacbbe90b3390beeb794f387e7c792300037579")
 
     depends_on("perl-datetime@1.00:", type=("build", "run", "test"))
@@ -25,11 +26,3 @@ class PerlDatetimeFormatStrptime(PerlPackage):
     depends_on("perl-test-fatal", type=("build", "test"))
     depends_on("perl-test-warnings", type=("build", "test"))
     depends_on("perl-try-tiny", type=("build", "run", "test"))
-
-    def test_use(self):
-        """Test 'use module'"""
-        options = ["-we", 'use strict; use DateTime::Format::Strptime; print("OK\n")']
-
-        perl = self.spec["perl"].command
-        out = perl(*options, output=str.split, error=str.split)
-        assert "OK" in out

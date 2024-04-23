@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,11 @@ class AbseilCpp(CMakePackage):
     maintainers("jcftang")
     tags = ["windows"]
 
+    license("Apache-2.0")
+
+    version(
+        "20240116.1", sha256="3c743204df78366ad2eaf236d6631d83f6bc928d1705dd0000b872e53b73dc6a"
+    )
     version(
         "20230802.1", sha256="987ce98f02eefbaf930d6e38ab16aa05737234d7afbab2d5c4ea7adbe50c28ed"
     )
@@ -69,8 +74,8 @@ class AbseilCpp(CMakePackage):
         description="C++ standard used during compilation",
     )
 
-    depends_on("cmake@3.10:", when="@2023:", type="build")
-    depends_on("cmake@3.5:", when="@2019:", type="build")
+    depends_on("cmake@3.10:", when="@20220907:", type="build")
+    depends_on("cmake@3.5:", when="@20190312:", type="build")
     depends_on("cmake@3.1:", type="build")
 
     def cmake_args(self):
