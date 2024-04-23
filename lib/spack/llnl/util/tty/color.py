@@ -293,7 +293,7 @@ def cprint(string, stream=None, color=None):
     cwrite(string + "\n", stream, color)
 
 
-def cescape(string: str):
+def cescape(string: str) -> str:
     """Escapes special characters needed for color codes.
 
     Replaces the following symbols with their equivalent literal forms:
