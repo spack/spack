@@ -20,8 +20,11 @@ class Glibc(AutotoolsPackage, GNUMirrorPackage):
     maintainers("haampie")
 
     build_directory = "build"
+    tags = ["runtime"]
 
     license("LGPL-2.1-or-later")
+
+    provides("libc")
 
     version("master", branch="master")
     version("2.39", sha256="97f84f3b7588cd54093a6f6389b0c1a81e70d99708d74963a2e3eab7c7dc942d")
@@ -195,3 +198,7 @@ class Glibc(AutotoolsPackage, GNUMirrorPackage):
             make("-C", "..", f"objdir={os.getcwd()}", "lib")
             delete_rpath(join_path("elf", "ld.so"))
             make()
+
+    @property
+    def libs(self):
+        return LibraryList([])
