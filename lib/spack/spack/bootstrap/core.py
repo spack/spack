@@ -538,49 +538,12 @@ def ensure_patchelf_in_path_or_raise() -> spack.util.executable.Executable:
         )
 
 
-def ensure_winsdk_external_or_raise() -> None:
-    """Ensure the Windows SDK + WGL are available on system
-    If both of these package are found, the Spack user or bootstrap
-    configuration (depending on where Spack is running)
-    will be updated to include all versions and variants detected.
-    If either the WDK or WSDK are not found, this method will raise
-    a RuntimeError.
-
-    **NOTE:** This modifies the Spack config in the current scope,
-    either user or environment depending on the calling context.
-    This is different from all other current bootstrap dependency
-    checks.
-    """
-    if set(["win-sdk", "wgl"]).issubset(spack.config.get("packages").keys()):
-        return
-    externals = spack.detection.by_path(["win-sdk", "wgl"])
-    if not set(["win-sdk", "wgl"]) == externals.keys():
-        missing_packages_lst = []
-        if "wgl" not in externals:
-            missing_packages_lst.append("wgl")
-        if "win-sdk" not in externals:
-            missing_packages_lst.append("win-sdk")
-        missing_packages = " & ".join(missing_packages_lst)
-        raise RuntimeError(
-            f"Unable to find the {missing_packages}, please install these packages\
-via the Visual Studio installer\
-before proceeding with Spack or provide the path to a non standard install via\
-'spack external find --path'"
-        )
-    # wgl/sdk are not required for bootstrapping Spack, but
-    # are required for building anything non trivial
-    # add to user config so they can be used by subsequent Spack ops
-    spack.detection.update_configuration(externals, buildable=False)
-
-
 def ensure_core_dependencies() -> None:
     """Ensure the presence of all the core dependencies."""
     if sys.platform.lower() == "linux":
         ensure_patchelf_in_path_or_raise()
     if not IS_WINDOWS:
         ensure_gpg_in_path_or_raise()
-    else:
-        ensure_winsdk_external_or_raise()
     ensure_clingo_importable_or_raise()
 
 
