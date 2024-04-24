@@ -1,0 +1,98 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index e39c46a..e649efd 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -88,12 +88,8 @@ find_package(OpenMP REQUIRED)
+ # Laplace Minimax
+ if (SERENITY_USE_LAPLACE_MINIMAX)
+   message("-----Checking Laplace_Minimax-----")
+-  if (SERENITY_DOWNLOAD_DEPENDENCIES)
+-    include(ImportLaplaceMinimax)
+-    import_laplace_minimax()
+-  else()
+-    message(FATAL_ERROR "Laplace-Minimax cannot be detected via CMake please enable download or disable this dependency")
+-  endif()
++  include(ImportLaplaceMinimax)
++  import_laplace_minimax()
+ endif(SERENITY_USE_LAPLACE_MINIMAX)
+ 
+ # Libint2
+@@ -196,6 +192,7 @@ if (SERENITY_DOWNLOAD_DEPENDENCIES)
+ else()
+   find_package(ecpint CONFIG REQUIRED)
+   add_library(ecpint INTERFACE IMPORTED)
++  target_link_libraries(ecpint INTERFACE ECPINT::ecpint)
+ endif()
+ 
+ #################
+@@ -491,15 +488,24 @@ install(FILES
+ )
+ 
+ # Add all targets to the build-tree export set
+-export(
+-  TARGETS
+-    xc
+-    xcfun
+-    libint2-static
+-    serenity
+-    serenity_exe
+-  FILE "${PROJECT_BINARY_DIR}/serenity-targets.cmake"
+-)
++if(SERENITY_DOWNLOAD_DEPENDENCIES)
++  export(
++    TARGETS
++      xc
++      xcfun
++      libint2-static
++      serenity
++      serenity_exe
++    FILE "${PROJECT_BINARY_DIR}/serenity-targets.cmake"
++  )
++else()
++  export(
++    TARGETS
++      serenity
++      serenity_exe
++    FILE "${PROJECT_BINARY_DIR}/serenity-targets.cmake"
++  )
++endif()
+ 
+ # Export the package for use from the build-tree
+ # (this registers the build-tree with a global CMake-registry)
+diff --git a/cmake/FindMKL.cmake b/cmake/FindMKL.cmake
+index 3b05006..d1109dc 100644
+--- a/cmake/FindMKL.cmake
++++ b/cmake/FindMKL.cmake
+@@ -22,24 +22,24 @@ endif()
+ 
+ # Find libraries
+ if ("${SYSTEM_BIT}" STREQUAL "64")
+-  find_library(MKL_INTERFACE_LIBRARY NAMES libmkl_intel_lp64.so libmkl_intel_lp64.so.1 PATHS ${MKL_ROOT}/lib/intel64/)
++  find_library(MKL_INTERFACE_LIBRARY NAMES libmkl_intel_lp64.so libmkl_intel_lp64.so.1 libmkl_intel_lp64.so.2 PATHS ${MKL_ROOT}/lib/intel64/)
+ else()
+-  find_library(MKL_INTERFACE_LIBRARY NAMES libmkl_intel.so libmkl_intel.so.1 PATHS ${MKL_ROOT}/lib/ia32/)
++  find_library(MKL_INTERFACE_LIBRARY NAMES libmkl_intel.so libmkl_intel.so.1 libmkl_intel.so.2 PATHS ${MKL_ROOT}/lib/ia32/)
+ endif()
+ 
+ if("${CMAKE_CXX_COMPILER_ID}" MATCHES "Intel")
+-  find_library(MKL_THREADING_LIBRARY NAMES libmkl_intel_thread.so libmkl_intel_thread.so.1 PATHS ${MKL_ROOT}/${MKL_LIB_ARCH})
++  find_library(MKL_THREADING_LIBRARY NAMES libmkl_intel_thread.so libmkl_intel_thread.so.1 libmkl_intel_thread.so.2 PATHS ${MKL_ROOT}/${MKL_LIB_ARCH})
+ elseif("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU")
+-  find_library(MKL_THREADING_LIBRARY NAMES libmkl_gnu_thread.so libmkl_gnu_thread.so.1 PATHS ${MKL_ROOT}/${MKL_LIB_ARCH})
++  find_library(MKL_THREADING_LIBRARY NAMES libmkl_gnu_thread.so libmkl_gnu_thread.so.1 libmkl_gnu_thread.so.2 PATHS ${MKL_ROOT}/${MKL_LIB_ARCH})
+ elseif("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
+-  find_library(MKL_THREADING_LIBRARY NAMES libmkl_gnu_thread.so libmkl_gnu_thread.so.1 PATHS ${MKL_ROOT}/${MKL_LIB_ARCH})
++  find_library(MKL_THREADING_LIBRARY NAMES libmkl_gnu_thread.so libmkl_gnu_thread.so.1 libmkl_gnu_thread.so.2 PATHS ${MKL_ROOT}/${MKL_LIB_ARCH})
+ else()
+   unset(MKL_FOUND)
+ endif()
+ 
+-find_library(MKL_CORE_LIBRARY NAMES libmkl_core.so libmkl_core.so.1 PATHS ${MKL_ROOT}/${MKL_LIB_ARCH})
+-find_library(MKL_AVX2_LIBRARY NAMES libmkl_avx2.so libmkl_avx2.so.1 PATHS ${MKL_ROOT}/${MKL_LIB_ARCH})
+-find_library(MKL_VML_AVX2_LIBRARY NAMES libmkl_vml_avx2.so libmkl_vml_avx2.so.1 PATHS ${MKL_ROOT}/${MKL_LIB_ARCH})
++find_library(MKL_CORE_LIBRARY NAMES libmkl_core.so libmkl_core.so.1 libmkl_core.so.2 PATHS ${MKL_ROOT}/${MKL_LIB_ARCH})
++find_library(MKL_AVX2_LIBRARY NAMES libmkl_avx2.so libmkl_avx2.so.1 libmkl_avx2.so.2 PATHS ${MKL_ROOT}/${MKL_LIB_ARCH})
++find_library(MKL_VML_AVX2_LIBRARY NAMES libmkl_vml_avx2.so libmkl_vml_avx2.so.1 libmkl_vml_avx2.so.2 PATHS ${MKL_ROOT}/${MKL_LIB_ARCH})
+ 
+ set(MKL_LIBRARIES ${MKL_AVX2_LIBRARY} ${MKL_VML_AVX2_LIBRARY} ${MKL_INTERFACE_LIBRARY} ${MKL_THREADING_LIBRARY} ${MKL_CORE_LIBRARY})
+ 
