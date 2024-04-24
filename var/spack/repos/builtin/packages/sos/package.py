@@ -24,14 +24,39 @@ class Sos(AutotoolsPackage):
 
     variant("xpmem", default=False, description="Enable xpmem for transport")
     variant("ofi", default=True, description="Enable ofi for transport")
-    variant("manual-progress", default=False, description="Enable intermittent progress calls in transport layer")
-    variant("ofi-manual-progress", default=False, when="+ofi", description="Use FI_MANUAL_PROGRESS for data progress control mode")
+    variant(
+        "manual-progress",
+        default=False,
+        description="Enable intermittent progress calls in transport layer",
+    )
+    variant(
+        "ofi-manual-progress",
+        default=False,
+        when="+ofi",
+        description="Use FI_MANUAL_PROGRESS for data progress control mode",
+    )
     variant("shr-atomics", default=False, description="Enable shared memory atomic operations")
-    variant("av-map", default=False, description="Enable av-map instead of av-table in the OFI transport")
-    variant("completion-polling", default=False, description="Enable polling in quiet, fence, and local completion operations")
-    variant("thread-completion", default=False, description="Support SHMEM_THREAD_MULTIPLE in OFI transport using FI_THREAD_COMPLETION")
+    variant(
+        "av-map",
+        default=False,
+        description="Enable av-map instead of av-table in the OFI transport",
+    )
+    variant(
+        "completion-polling",
+        default=False,
+        description="Enable polling in quiet, fence, and local completion operations",
+    )
+    variant(
+        "thread-completion",
+        default=False,
+        description="Support SHMEM_THREAD_MULTIPLE in OFI transport using FI_THREAD_COMPLETION",
+    )
     variant("error-checking", default=False, description="Enable error checking for SHMEM calls")
-    variant("lengthy-tests", default=False, description="Execute long running tests as part of 'make check'")
+    variant(
+        "lengthy-tests",
+        default=False,
+        description="Execute long running tests as part of 'make check'",
+    )
     variant("rpath", default=True, description="Use rpath in compiler wrappers ")
     variant("hard-polling", default=False, description="Enable hard polling of wait calls")
 
@@ -39,7 +64,7 @@ class Sos(AutotoolsPackage):
     depends_on("automake", type="build")
     depends_on("libtool", type="build")
     depends_on("m4", type="build")
-    depends_on("hydra", type=("build","run"), when="+ofi")
+    depends_on("hydra", type=("build", "run"), when="+ofi")
 
     depends_on("libfabric", type="link", when="+ofi")
     depends_on("xpmem", type="link", when="+xpmem")
