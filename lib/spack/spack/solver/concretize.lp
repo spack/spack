@@ -1082,6 +1082,9 @@ error(100, "{0} compiler '{2}@{3}' incompatible with 'target={1}'", Package, Tar
      compiler_version(CompilerID, Version),
      build(node(X, Package)).
 
+#defined compiler_supports_target/2.
+#defined compiler_available/1.
+
 % if a target is set explicitly, respect it
 attr("node_target", PackageNode, Target)
  :- attr("node", PackageNode), attr("node_target_set", PackageNode, Target).
