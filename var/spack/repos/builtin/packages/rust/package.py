@@ -56,10 +56,12 @@ class Rust(Package):
     depends_on("cmake@3.13.4:", type="build")
     depends_on("curl+nghttp2")
     depends_on("libgit2")
+    depends_on("libssh2")
     depends_on("ninja", type="build")
     depends_on("openssl")
     depends_on("pkgconfig", type="build")
     depends_on("python", type="build")
+    depends_on("zlib-api")
 
     # Compiling Rust requires a previous version of Rust.
     # The easiest way to bootstrap a Rust environment is to
@@ -94,6 +96,11 @@ class Rust(Package):
         module.cargo = Executable(os.path.join(self.spec.prefix.bin, "cargo"))
 
     def setup_build_environment(self, env):
+        # Manually instruct Cargo dependency libssh2-sys to build with
+        # the Spack installed libssh2 package. For more info see
+        # https://github.com/alexcrichton/ssh2-rs/issues/173
+        env.set("LIBSSH2_SYS_USE_PKG_CONFIG", "1")
+
         # Manually inject the path of ar for build.
         ar = which("ar", required=True)
         env.set("AR", ar.path)
