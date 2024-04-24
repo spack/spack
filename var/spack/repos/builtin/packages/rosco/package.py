@@ -29,8 +29,6 @@ class Rosco(CMakePackage):
     root_cmakelists_dir = "rosco/controller"
 
     def cmake_args(self):
-        spec = self.spec
-
         options = []
 
         options.extend(
