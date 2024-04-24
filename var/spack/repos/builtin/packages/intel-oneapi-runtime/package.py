@@ -19,6 +19,12 @@ class IntelOneapiRuntime(Package):
 
     maintainers("rscohn2")
 
+    # The libraries are redistributable according to intel
+    # license. Need to investigate if the way it is redistributed
+    # meets the conditions of the license. Until then, disable
+    # distribution
+    redistribute(source=False, binary=False)
+
     tags = ["runtime"]
 
     requires("%oneapi")
