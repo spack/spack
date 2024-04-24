@@ -17,7 +17,7 @@ class Rosco(CMakePackage):
     url = "https://github.com/NREL/ROSCO/archive/refs/tags/v.2.9.1.tar.gz"
     git = "https://github.com/NREL/ROSCO.git"
 
-    maintainers("dzalkind","ndevelder")
+    maintainers("dzalkind", "ndevelder")
 
     version("develop", branch="develop")
     version("main", branch="main")
@@ -26,7 +26,7 @@ class Rosco(CMakePackage):
     variant("shared", default=False, description="Build shared libraries")
     variant("pic", default=False, description="Position independent code")
 
-    root_cmakelists_dir = 'rosco/controller'
+    root_cmakelists_dir = "rosco/controller"
 
     def cmake_args(self):
         spec = self.spec
@@ -43,8 +43,8 @@ class Rosco(CMakePackage):
         return options
 
     def setup_run_environment(self, env):
-        env.set('ROSCO_DISCON', self.prefix.lib + "/libdiscon.so")
-        env.set('ROSCO_DISCON_DIR', self.prefix.lib)
+        env.set("ROSCO_DISCON", self.prefix.lib + "/libdiscon.so")
+        env.set("ROSCO_DISCON_DIR", self.prefix.lib)
 
     def flag_handler(self, name, flags):
         if name == "fflags" and self.compiler.fc.endswith("gfortran"):
