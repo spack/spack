@@ -675,8 +675,8 @@ class Boost(Package):
         """
         bootstrap_options = list()
         if self.spec.satisfies("%msvc"):
-            # MSVC is the default compiler and is automatically detected
-            # TODO: Set to vc<maj><min> based on the selected compiler.
+            # MSVC is the default compiler and is automatically detected by
+            # the bootstrapping script.
             pass
         elif self.spec.satisfies("%gcc"):
             bootstrap_options.append("gcc")
@@ -763,7 +763,6 @@ class Boost(Package):
             b2_options = [
                 f"--prefix={self.prefix}",
                 f"address-model={64 if platform.machine().endswith('64') else 32}",
-                # "architecture=x86"
             ]
         else:
             path_to_config = "--user-config=%s" % os.path.join(
