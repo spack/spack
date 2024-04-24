@@ -24,6 +24,7 @@ class Libfabric(AutotoolsPackage):
     license("GPL-2.0-or-later")
 
     version("main", branch="main")
+    version("1.21.0", sha256="0c1b7b830d9147f661e5d7f359250b85b5a9885c330464cd3b5e5d35b86551c7")
     version("1.20.1", sha256="fd88d65c3139865d42a6eded24e121aadabd6373239cef42b76f28630d6eed76")
     version("1.20.0", sha256="7fbbaeb0e15c7c4553c0ac5f54e4ef7aecaff8a669d4ba96fa04b0fc780b9ddc")
     version("1.19.0", sha256="f14c764be9103e80c46223bde66e530e5954cb28b3835b57c8e728479603ef9e")
