@@ -32,7 +32,11 @@ class Spatialdata(AutotoolsPackage):
     version("3.1.0", sha256="dd6caccbf41a51928183d6a1caf2380aa0ed0f2c8c71ecc9b2cd9e3f23aa418c")
 
     # M4 macros shared for the CIG codes
-    resource(name="autoconf_cig", git="https://github.com/geodynamics/autoconf_cig.git")
+    resource(
+        name="autoconf_cig",
+        git="https://github.com/geodynamics/autoconf_cig.git",
+        commit="e490e14fb13595428d39055304bcf0ee7ab94806",
+    )
 
     depends_on("autoconf", type="build")
     depends_on("automake", type="build")
@@ -43,7 +47,7 @@ class Spatialdata(AutotoolsPackage):
     depends_on("python")
     depends_on("py-setuptools")
     depends_on("py-cig-pythia")
-    depends_on("proj")
+    depends_on("proj@:6")
     depends_on("py-numpy")
 
     def autoreconf(self, spec, prefix):
