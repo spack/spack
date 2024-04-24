@@ -83,7 +83,7 @@ def binary_compatibility(monkeypatch, request):
         return
 
     monkeypatch.setattr(spack.solver.asp, "using_libc_compatibility", lambda: True)
-    monkeypatch.setattr(spack.compiler.Compiler, "default_libc", lambda x: Spec("glibc@=2.28"))
+    monkeypatch.setattr(spack.compiler.Compiler, "default_libc", Spec("glibc@=2.28"))
 
 
 @pytest.fixture(

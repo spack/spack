@@ -641,6 +641,20 @@ def substitute_rpath_and_pt_interp_in_place_or_raise(
         return False
 
 
+def pt_interp(path: str) -> Optional[str]:
+    """Retrieve the interpreter of an executable at `path`."""
+    try:
+        with open(path, "rb") as f:
+            elf = parse_elf(f, interpreter=True)
+    except (OSError, ElfParsingError):
+        return None
+
+    if not elf.has_pt_interp:
+        return None
+
+    return elf.pt_interp_str.decode("utf-8")
+
+
 class ElfCStringUpdatesFailed(Exception):
     def __init__(
         self, rpath: Optional[UpdateCStringAction], pt_interp: Optional[UpdateCStringAction]
