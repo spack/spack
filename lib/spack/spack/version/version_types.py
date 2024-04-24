@@ -146,13 +146,11 @@ class StandardVersion(ConcreteVersion):
 
     @staticmethod
     def typemin():
-        return StandardVersion("", ((), (ALPHA,)), ("",))
+        return _STANDARD_VERSION_TYPEMIN
 
     @staticmethod
     def typemax():
-        return StandardVersion(
-            "infinity", ((VersionStrComponent(len(infinity_versions)),), (FINAL,)), ("",)
-        )
+        return _STANDARD_VERSION_TYPEMAX
 
     def __bool__(self):
         return True
@@ -388,6 +386,13 @@ class StandardVersion(ConcreteVersion):
             Version: The first index components of the version
         """
         return self[:index]
+
+
+_STANDARD_VERSION_TYPEMIN = StandardVersion("", ((), (ALPHA,)), ("",))
+
+_STANDARD_VERSION_TYPEMAX = StandardVersion(
+    "infinity", ((VersionStrComponent(len(infinity_versions)),), (FINAL,)), ("",)
+)
 
 
 class GitVersion(ConcreteVersion):
@@ -1019,6 +1024,9 @@ class VersionList:
         return hash(tuple(self.versions))
 
     def __str__(self):
+        if not self.versions:
+            return ""
+
         return ",".join(
             f"={v}" if isinstance(v, StandardVersion) else str(v) for v in self.versions
         )
@@ -1127,7 +1135,9 @@ def _prev_version(v: StandardVersion) -> StandardVersion:
     components[1::2] = separators[: len(release)]
     if prerelease_type != FINAL:
         components.extend((PRERELEASE_TO_STRING[prerelease_type], *prerelease[1:]))
-    return StandardVersion("".join(str(c) for c in components), (release, prerelease), separators)
+
+    # this is only used for comparison functions, so don't bother making a string
+    return StandardVersion(None, (release, prerelease), separators)
 
 
 def Version(string: Union[str, int]) -> Union[GitVersion, StandardVersion]:

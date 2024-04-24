@@ -1966,16 +1966,23 @@ def mock_modules_root(tmp_path, monkeypatch):
     monkeypatch.setattr(spack.modules.common, "root_path", fn)
 
 
+_repo_name_id = 0
+
+
 def create_test_repo(tmpdir, pkg_name_content_tuples):
+    global _repo_name_id
+
     repo_path = str(tmpdir)
     repo_yaml = tmpdir.join("repo.yaml")
     with open(str(repo_yaml), "w") as f:
         f.write(
-            """\
+            f"""\
 repo:
-  namespace: testcfgrequirements
+  namespace: testrepo{str(_repo_name_id)}
 """
         )
+
+    _repo_name_id += 1
 
     packages_dir = tmpdir.join("packages")
     for pkg_name, pkg_str in pkg_name_content_tuples:

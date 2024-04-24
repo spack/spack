@@ -703,22 +703,25 @@ class TestSpecSemantics:
             actual = spec.format(named_str)
             assert expected == actual
 
-    def test_spec_formatting_escapes(self, default_mock_concretization):
-        spec = default_mock_concretization("multivalue-variant cflags=-O2")
-
-        sigil_mismatches = [
+    @pytest.mark.parametrize(
+        "fmt_str",
+        [
             "{@name}",
             "{@version.concrete}",
             "{%compiler.version}",
             "{/hashd}",
             "{arch=architecture.os}",
-        ]
+        ],
+    )
+    def test_spec_formatting_sigil_mismatches(self, default_mock_concretization, fmt_str):
+        spec = default_mock_concretization("multivalue-variant cflags=-O2")
 
-        for fmt_str in sigil_mismatches:
-            with pytest.raises(SpecFormatSigilError):
-                spec.format(fmt_str)
+        with pytest.raises(SpecFormatSigilError):
+            spec.format(fmt_str)
 
-        bad_formats = [
+    @pytest.mark.parametrize(
+        "fmt_str",
+        [
             r"{}",
             r"name}",
             r"\{name}",
@@ -728,11 +731,12 @@ class TestSpecSemantics:
             r"{dag_hash}",
             r"{foo}",
             r"{+variants.debug}",
-        ]
-
-        for fmt_str in bad_formats:
-            with pytest.raises(SpecFormatStringError):
-                spec.format(fmt_str)
+        ],
+    )
+    def test_spec_formatting_bad_formats(self, default_mock_concretization, fmt_str):
+        spec = default_mock_concretization("multivalue-variant cflags=-O2")
+        with pytest.raises(SpecFormatStringError):
+            spec.format(fmt_str)
 
     def test_combination_of_wildcard_or_none(self):
         # Test that using 'none' and another value raises
@@ -1138,12 +1142,12 @@ def _check_spec_format_path(spec_str, format_str, expected, path_ctor=None):
             r"\\hostname\sharename\{name}\{version}",
             r"\\hostname\sharename\git-test\git.foo_bar",
         ),
-        # Windows doesn't attribute any significance to a leading
-        # "/" so it is discarded
+        # leading '/' is preserved on windows but converted to '\'
+        # note that it's still not "absolute" -- absolute windows paths start with a drive.
         (
             "git-test@git.foo/bar",
             r"/installroot/{name}/{version}",
-            r"installroot\git-test\git.foo_bar",
+            r"\installroot\git-test\git.foo_bar",
         ),
     ],
 )
