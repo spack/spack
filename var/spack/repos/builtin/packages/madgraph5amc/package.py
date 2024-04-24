@@ -17,16 +17,33 @@ class Madgraph5amc(MakefilePackage):
     event manipulation and analysis."""
 
     homepage = "https://launchpad.net/mg5amcnlo"
-    url = "https://launchpad.net/mg5amcnlo/2.0/2.7.x/+download/MG5_aMC_v2.7.3.tar.gz"
+    url = "https://github.com/mg5amcnlo/mg5amcnlo/archive/refs/tags/v3.5.4.tar.gz"
 
     tags = ["hep"]
 
+    version(
+        "3.5.4",
+        sha256="19121a4b8b4ccaddd86b5b87188e91da25b755e789663c790481bf387154c950",
+    )
+    version(
+        "2.9.19",
+        sha256="58e3e9930033b9db08769684ec12f31100235af4b8a852eedf683541195d4c95",
+        preferred=True,
+    )
+    version(
+        "2.9.17",
+        sha256="24026a534344c77a05b23a681437f825c41dc70c5bae5b7f79bb99e149d966b8",
+    )
     version(
         "2.8.1",
         sha256="acda34414beba201e529b8c03f87f4893fb3f99ed2956a131d60a387e76c5b8c",
         url="https://launchpad.net/mg5amcnlo/2.0/2.8.x/+download/MG5_aMC_v2.8.1.tar.gz",
     )
-    version("2.7.3.py3", sha256="400c26f9b15b07baaad9bd62091ceea785c2d3a59618fdc27cad213816bc7225")
+    version(
+        "2.7.3.py3",
+        sha256="400c26f9b15b07baaad9bd62091ceea785c2d3a59618fdc27cad213816bc7225",
+        url="",
+    )
 
     variant(
         "atlas",
@@ -35,6 +52,7 @@ class Madgraph5amc(MakefilePackage):
     )
     variant("ninja", default=False, description="Use external installation" + " of Ninja")
     variant("collier", default=False, description="Use external installation" + " of Collier")
+    variant("pythia8", default=False, description="Use external installation of Pythia8")
 
     conflicts("%gcc@10:", when="@2.7.3")
 
@@ -46,12 +64,12 @@ class Madgraph5amc(MakefilePackage):
     depends_on("py-six", when="@2.7.3.py3,2.8.0:", type=("build", "run"))
 
     depends_on("python@3.7:", when="@2.7.3.py3", type=("build", "run"))
-    depends_on("python@2.7.0:2.8.0,3.7:", when="@2.8.0:", type=("build", "run"))
     depends_on("libtirpc")
+    depends_on("pythia8", when="+pythia8")
 
-    patch("array-bounds.patch")
-    patch("madgraph5amc.patch", level=0)
-    patch("madgraph5amc-2.7.3.atlas.patch", level=0, when="@2.7.3.py2+atlas")
+    patch("madgraph5amc-3.patch", when="@3")
+    patch("array-bounds.patch", when="@:2.9")
+    patch("madgraph5amc.patch", level=0, when="@:2.9")
     patch("madgraph5amc-2.7.3.atlas.patch", level=0, when="@2.7.3.py3+atlas")
     patch("madgraph5amc-2.8.0.atlas.patch", level=0, when="@2.8.0+atlas")
     patch("madgraph5amc-2.8.0.atlas.patch", level=0, when="@2.8.1+atlas")
@@ -120,3 +138,13 @@ class Madgraph5amc(MakefilePackage):
             join_path("Template", "LO", "Source", ".make_opts"),
             join_path(prefix, "Template", "LO", "Source", "make_opts"),
         )
+
+        if "pythia8" in spec:
+            with open("install-pythia8-interface", "w") as f:
+                f.write(
+                    f"""set pythia8_path {spec['pythia8'].prefix}
+                        install mg5amc_py8_interface
+                """
+                )
+            mg5 = Executable(join_path(prefix, "bin", "mg5_aMC"))
+            mg5("install-pythia8-interface")
