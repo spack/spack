@@ -47,7 +47,7 @@ class Spatialdata(AutotoolsPackage):
     depends_on("python")
     depends_on("py-setuptools")
     depends_on("py-cig-pythia")
-    depends_on("proj@:6")
+    depends_on("proj@6:")
     depends_on("py-numpy")
 
     def autoreconf(self, spec, prefix):
