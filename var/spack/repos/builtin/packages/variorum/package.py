@@ -19,7 +19,7 @@ class Variorum(CMakePackage):
 
     license("MIT")
 
-    version("dev",   branch="dev")
+    version("dev", branch="dev")
     version("0.8.0", sha256="0e7288d523488b2a585af8ffeb7874721526f46df563b21fc51e8846bf65f7d8")
     version("0.7.0", sha256="36ec0219379ea2b7c8f9770b3271335c776ff5a3de71585714c33356345b2f0c")
     version("0.6.0", sha256="c0928a0e6901808ee50142d1034de15edc2c90d7d1b9fbce43757226e7c04306")
