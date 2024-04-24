@@ -400,7 +400,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     # ###################### Dependencies ##########################
 
     # External Kokkos
-    depends_on("kokkos@4.3", when="@15.2: +kokkos")
+    depends_on("kokkos@4.3.00", when="@master: +kokkos")
     depends_on("kokkos@4.2.01", when="@15.1.0:15.1.1 +kokkos")
     depends_on("kokkos@4.1.00", when="@14.4.0:15.0.0 +kokkos")
 
