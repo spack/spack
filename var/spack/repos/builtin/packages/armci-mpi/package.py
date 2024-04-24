@@ -24,7 +24,9 @@ from spack.package import *
 
 
 class ArmciMpi(AutotoolsPackage):
-    """FIXME: Put a proper description of your package here."""
+    """ARMCI-MPI is an implementation of the ARMCI library used by Global Arrays.
+       MPI-3 one-sided communication is used to implement ARMCI.
+    """
 
     homepage = "https://github.com/pmodels/armci-mpi"
     url = "https://github.com/pmodels/armci-mpi/archive/refs/tags/v0.4.tar.gz"
@@ -35,6 +37,9 @@ class ArmciMpi(AutotoolsPackage):
 
     version("0.4", sha256="bcc3bb189b23bf653dcc69bc469eb86eae5ebc5ad94ab5f83e52ddbdbbebf1b1")
     version("0.3.1-beta", sha256="f3eaa8f365fb55123ecd9ced401086b0732e37e4df592b27916d71a67ab34fe9")
+
+    variant("shared", default=True, description="Builds a shared version of the library")
+    variant("progress", default=False, description="Enable asynchronous progress")
 
     depends_on("autoconf", type="build")
     depends_on("automake", type="build")
@@ -50,5 +55,18 @@ class ArmciMpi(AutotoolsPackage):
     def configure_args(self):
         # FIXME: Add arguments other than --prefix
         # FIXME: If not needed delete this function
-        args = []
+        args = ["--enable-g"]
+
+        shared = int(self.spec.variants["shared"].value)
+        if shared:
+            args.extend([
+                "--enable-shared",
+            ])
+
+        progress = int(self.spec.variants["progress"].value)
+        if progress:
+            args.extend([
+                "--with-progress",
+            ])
+
         return args
