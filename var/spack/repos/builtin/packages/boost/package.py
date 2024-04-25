@@ -674,9 +674,7 @@ class Boost(Package):
         """
         bootstrap_options = list()
         if self.spec.satisfies("%msvc"):
-            # MSVC is the default compiler and is automatically detected by
-            # the bootstrapping script.
-            pass
+            bootstrap_options.append(f"vc{self.compiler.platform_toolset_ver}")
         elif self.spec.satisfies("%gcc"):
             bootstrap_options.append("gcc")
         elif self.spec.satisfies("%clang"):
