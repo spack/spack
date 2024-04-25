@@ -16,6 +16,7 @@ from llnl.util.symlink import readlink
 
 import spack.platforms
 import spack.util.executable
+import spack.util.libc
 from spack.operating_systems.mac_os import macos_sdk_path, macos_version
 from spack.package import *
 
@@ -1152,3 +1153,29 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
             )
         # The version of gcc-runtime is the same as the %gcc used to "compile" it
         pkg("gcc-runtime").requires(f"@={str(spec.version)}", when=f"%{str(spec)}")
+
+    def post_buildcache_install_hook(self):
+        # Setting up the runtime environment shouldn't be necessary here.
+        gcc = self.spec["gcc"].command
+        output = gcc("test.c", "-###", output=os.devnull, error=str).strip()
+        if not output:
+            return
+        dynamic_linker = spack.util.libc.parse_dynamic_linker(output)
+        if not dynamic_linker:
+            return
+        libc = spack.util.libc.libc_from_dynamic_linker(dynamic_linker)
+        startfile_prefix = spack.util.libc.startfile_prefix(libc.external_path, dynamic_linker)
+
+        # Delete current spec files.
+        specs_file = join_path(self.spec_dir, "specs")
+        for f in (specs_file, f"{specs_file}.orig"):
+            try:
+                os.unlink(f)
+            except OSError:
+                pass
+
+        # Write a new one
+        self.write_rpath_specs()
+
+        # And replace crt*.o%s file with their absolute path.
+        filter_file(r"(crt(?:1|i|n).o)%s", f"{startfile_prefix}/\\1", specs_file)

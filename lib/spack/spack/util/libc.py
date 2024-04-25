@@ -5,6 +5,7 @@
 
 import os
 import re
+import shlex
 import sys
 from subprocess import PIPE, run
 from typing import Optional
@@ -118,15 +119,12 @@ def libc_from_current_python_process() -> Optional["spack.spec.Spec"]:
     return libc_from_dynamic_linker(dynamic_linker)
 
 
-def startfile_prefix(prefix: str) -> Optional[str]:
-    # Search for host compatible crt1.o at max depth 2. That should cover most cases where libc is
-    # external on a multiarch system.
-    # TODO: there should be a mapping from `target=*` to ELF header like e_machine etc. Currently
-    # this function is implemented to locate crt1.o with the same ELF header data as the current
-    # Python interpreter, which clearly does not work for cross compilation.
+def startfile_prefix(prefix: str, compatible_with: str = sys.executable) -> Optional[str]:
+    # Search for crt1.o at max depth 2 compatible with the ELF file provided in compatible_with.
+    # This is useful for finding external libc startfiles on a multiarch system.
     try:
-        host_compat = spack.detection.path.get_elf_compat(sys.executable)
-        accept = lambda path: spack.detection.path.get_elf_compat(path) == host_compat
+        compat = spack.detection.path.get_elf_compat(compatible_with)
+        accept = lambda path: spack.detection.path.get_elf_compat(path) == compat
     except Exception:
         accept = lambda path: True
 
@@ -148,3 +146,18 @@ def startfile_prefix(prefix: str) -> Optional[str]:
                 except Exception:
                     continue
     return None
+
+
+def parse_dynamic_linker(output: str):
+    """Parse -dynamic-linker /path/to/ld.so from compiler output"""
+    for line in reversed(output.splitlines()):
+        if "-dynamic-linker" not in line:
+            continue
+        args = shlex.split(line)
+
+        for idx in reversed(range(1, len(args))):
+            arg = args[idx]
+            if arg == "-dynamic-linker" or args == "--dynamic-linker":
+                return args[idx + 1]
+            elif arg.startswith("--dynamic-linker=") or arg.startswith("-dynamic-linker="):
+                return arg.split("=", 1)[1]
