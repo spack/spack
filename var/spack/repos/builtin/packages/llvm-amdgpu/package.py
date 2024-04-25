@@ -250,19 +250,19 @@ class LlvmAmdgpu(CMakePackage):
             args.append("-DSANITIZER_COMGR_INCLUDE_PATH={0}".format(comgrinc_path))
             args.append("-DSANITIZER_AMDGPU:Bool=ON")
         if self.spec.satisfies("@:6.0"):
-           args.append(self.define("LLVM_ENABLE_PROJECTS", llvm_projects))
-           args.append(self.define("LLVM_ENABLE_RUNTIMES", llvm_runtimes))
+            args.append(self.define("LLVM_ENABLE_PROJECTS", llvm_projects))
+            args.append(self.define("LLVM_ENABLE_RUNTIMES", llvm_runtimes))
         elif self.spec.satisfies("@6.1:"):
-           llvm_projects.remove("compiler-rt")
-           llvm_runtimes.extend(["compiler-rt","libunwind"])
-           args.append(self.define("LLVM_ENABLE_PROJECTS", llvm_projects))
-           args.append(self.define("LLVM_ENABLE_RUNTIMES", llvm_runtimes))
-           args.append(self.define("LLVM_ENABLE_LIBCXX", "OFF"))
-           args.append(self.define("CLANG_LINK_FLANG_LEGACY",True))
-           args.append(self.define("CMAKE_CXX_STANDARD", 17))
-           args.append(self.define("FLANG_INCLUDE_DOCS", False))
-           args.append(self.define("LLVM_BUILD_DOCS", "ON"))
-           args.append(self.define("CLANG_DEFAULT_PIE_ON_LINUX", "OFF"))
+            llvm_projects.remove("compiler-rt")
+            llvm_runtimes.extend(["compiler-rt", "libunwind"])
+            args.append(self.define("LLVM_ENABLE_PROJECTS", llvm_projects))
+            args.append(self.define("LLVM_ENABLE_RUNTIMES", llvm_runtimes))
+            args.append(self.define("LLVM_ENABLE_LIBCXX", "OFF"))
+            args.append(self.define("CLANG_LINK_FLANG_LEGACY", True))
+            args.append(self.define("CMAKE_CXX_STANDARD", 17))
+            args.append(self.define("FLANG_INCLUDE_DOCS", False))
+            args.append(self.define("LLVM_BUILD_DOCS", "ON"))
+            args.append(self.define("CLANG_DEFAULT_PIE_ON_LINUX", "OFF"))
         return args
 
     @classmethod

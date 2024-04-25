@@ -12,11 +12,10 @@ class RocmDeviceLibs(CMakePackage):
 
     homepage = "https://github.com/ROCm/ROCm-Device-Libs"
     git = "https://github.com/ROCm/ROCm-Device-Libs.git"
+
     def url_for_version(self, version):
         if version <= Version("6.0.2"):
-            url = (
-                "https://github.com/ROCm/ROCm-Device-Libs/archive/rocm-{0}.tar.gz"
-            )
+            url = "https://github.com/ROCm/ROCm-Device-Libs/archive/rocm-{0}.tar.gz"
         else:
             url = "https://github.com/ROCm/llvm-project/archive/rocm-{0}.tar.gz"
         return url.format(version)
@@ -82,6 +81,7 @@ class RocmDeviceLibs(CMakePackage):
 
     for ver in ["5.5.0", "5.5.1", "5.6.0", "5.6.1", "5.7.0", "5.7.1", "6.0.0", "6.0.2", "6.1.0"]:
         depends_on(f"rocm-core@{ver}", when=f"@{ver}")
+
     @property
     def root_cmakelists_dir(self):
         if self.spec.satisfies("@:6.0"):

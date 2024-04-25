@@ -13,15 +13,13 @@ class Hipcc(CMakePackage):
 
     homepage = "https://github.com/ROCm/hipcc"
     git = "https://github.com/ROCm/hipcc.git"
+
     def url_for_version(self, version):
         if version <= Version("6.0.2"):
-            url = (
-                "https://github.com/ROCm/HIPCC/archive/rocm-{0}.tar.gz"
-            )
+            url = "https://github.com/ROCm/HIPCC/archive/rocm-{0}.tar.gz"
         else:
             url = "https://github.com/ROCm/llvm-project/archive/rocm-{0}.tar.gz"
         return url.format(version)
-
 
     maintainers("srekolam", "renjithravindrankannath", "afzpatel")
 
@@ -60,4 +58,3 @@ class Hipcc(CMakePackage):
         else:
             with working_dir("amd/hipcc/src"):
                 filter_file(" -lnuma", f" -L{numactl} -lnuma", "hipBin_amd.h")
-

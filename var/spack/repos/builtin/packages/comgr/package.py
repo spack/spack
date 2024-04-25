@@ -14,6 +14,7 @@ class Comgr(CMakePackage):
 
     homepage = "https://github.com/ROCm/ROCm-CompilerSupport"
     git = "https://github.com/ROCm/ROCm-CompilerSupport.git"
+
     def url_for_version(self, version):
         if version <= Version("6.0.2"):
             url = "https://github.com/ROCm/ROCm-CompilerSupport/archive/rocm-{0}.tar.gz"
