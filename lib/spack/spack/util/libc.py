@@ -10,7 +10,6 @@ import sys
 from subprocess import PIPE, run
 from typing import Optional
 
-import spack.detection.path
 import spack.spec
 import spack.util.elf
 
@@ -123,8 +122,8 @@ def startfile_prefix(prefix: str, compatible_with: str = sys.executable) -> Opti
     # Search for crt1.o at max depth 2 compatible with the ELF file provided in compatible_with.
     # This is useful for finding external libc startfiles on a multiarch system.
     try:
-        compat = spack.detection.path.get_elf_compat(compatible_with)
-        accept = lambda path: spack.detection.path.get_elf_compat(path) == compat
+        compat = spack.util.elf.get_elf_compat(compatible_with)
+        accept = lambda path: spack.util.elf.get_elf_compat(path) == compat
     except Exception:
         accept = lambda path: True
 
