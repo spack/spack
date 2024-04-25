@@ -43,7 +43,7 @@ import types
 from collections import defaultdict
 from enum import Flag, auto
 from itertools import chain
-from typing import List, Tuple
+from typing import List, Set, Tuple
 
 import llnl.util.tty as tty
 from llnl.string import plural
@@ -551,13 +551,16 @@ def set_wrapper_variables(pkg, env):
     include_dirs = list(dedupe(filter_system_paths(include_dirs)))
     rpath_dirs = list(dedupe(filter_system_paths(rpath_dirs)))
 
-    spack_managed_dirs: List[str] = [
+    # Spack managed directories include the stage, store and upstream stores. We extend this with
+    # their real paths to make it more robust (e.g. /tmp vs /private/tmp on macOS).
+    spack_managed_dirs: Set[str] = {
         spack.stage.get_stage_root(),
         spack.store.STORE.db.root,
         *(db.root for db in spack.store.STORE.db.upstream_dbs),
-    ]
+    }
+    spack_managed_dirs.update([os.path.realpath(p) for p in spack_managed_dirs])
 
-    env.set(SPACK_MANAGED_DIRS, "|".join(f'"{p}/"*' for p in spack_managed_dirs))
+    env.set(SPACK_MANAGED_DIRS, "|".join(f'"{p}/"*' for p in sorted(spack_managed_dirs)))
     is_spack_managed = lambda p: any(p.startswith(store) for store in spack_managed_dirs)
     link_dirs_spack, link_dirs_system = stable_partition(link_dirs, is_spack_managed)
     include_dirs_spack, include_dirs_system = stable_partition(include_dirs, is_spack_managed)
