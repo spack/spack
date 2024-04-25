@@ -85,7 +85,7 @@ class NodeJs(Package):
     depends_on("icu4c", when="+icu4c")
     depends_on("openssl@1.1:", when="+openssl")
     depends_on("zlib-api", when="+zlib")
-    depends_on("c-ares", when="+cares")
+    depends_on("c-ares@1.18.1:", when="+cares")
     depends_on("libuv", when="+libuv")
 
     phases = ["configure", "build", "install"]
