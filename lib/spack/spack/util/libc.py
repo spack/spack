@@ -9,6 +9,7 @@ import sys
 from subprocess import PIPE, run
 from typing import Optional
 
+import spack.detection.path
 import spack.spec
 import spack.util.elf
 
@@ -115,3 +116,35 @@ def libc_from_current_python_process() -> Optional["spack.spec.Spec"]:
         return None
 
     return libc_from_dynamic_linker(dynamic_linker)
+
+
+def startfile_prefix(prefix: str) -> Optional[str]:
+    # Search for host compatible crt1.o at max depth 2. That should cover most cases where libc is
+    # external on a multiarch system.
+    # TODO: there should be a mapping from `target=*` to ELF header like e_machine etc. Currently
+    # this function is implemented to locate crt1.o with the same ELF header data as the current
+    # Python interpreter, which clearly does not work for cross compilation.
+    try:
+        host_compat = spack.detection.path.get_elf_compat(sys.executable)
+        accept = lambda path: spack.detection.path.get_elf_compat(path) == host_compat
+    except Exception:
+        accept = lambda path: True
+
+    queue = [(0, prefix)]
+    while queue:
+        depth, path = queue.pop()
+        try:
+            iterator = os.scandir(path)
+        except OSError:
+            continue
+        with iterator:
+            for entry in iterator:
+                try:
+                    if entry.is_dir(follow_symlinks=True):
+                        if depth < 2:
+                            queue.append((depth + 1, entry.path))
+                    elif entry.name == "crt1.o" and accept(entry.path):
+                        return path
+                except Exception:
+                    continue
+    return None
