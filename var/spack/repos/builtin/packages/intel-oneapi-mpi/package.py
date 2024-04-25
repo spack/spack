@@ -20,7 +20,7 @@ class IntelOneapiMpi(IntelOneApiLibraryPackage):
     maintainers("rscohn2")
 
     homepage = "https://software.intel.com/content/www/us/en/develop/tools/oneapi/components/mpi-library.html"
-    
+
     version(
         "2021.12.1",
         url="https://registrationcenter-download.intel.com/akdlm/IRC_NAS/56b2dd0e-954d-4330-b0a7-b22992f7e6b7/l_mpi_oneapi_p_2021.12.1.8_offline.sh",
