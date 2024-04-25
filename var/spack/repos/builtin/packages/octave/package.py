@@ -351,9 +351,8 @@ class Octave(AutotoolsPackage, GNUMirrorPackage):
         else:
             config_args.append("--without-z")
 
-        if "~pcre2" in spec:
+        if spec.satisfies("~pcre2"):
             config_args.append("--without-pcre2")
-
         # If 64-bit BLAS is used:
         if (
             spec.satisfies("^openblas+ilp64")
