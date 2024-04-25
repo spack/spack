@@ -1,5 +1,14 @@
+From c7a7b3cf90c32f712c76d6471dbe5c4420cbcd50 Mon Sep 17 00:00:00 2001
+From: Andrew Elble <aweits@rit.edu>
+Date: Thu, 25 Apr 2024 08:09:36 -0400
+Subject: [PATCH] fix
+
+---
+ absl/base/config.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
 diff --git a/absl/base/config.h b/absl/base/config.h
-index 5fa9f0efe5a4..741e320fe40c 100644
+index 5fa9f0efe5a4..bfedf4e1d7bd 100644
 --- a/absl/base/config.h
 +++ b/absl/base/config.h
 @@ -962,7 +962,7 @@ static_assert(ABSL_INTERNAL_INLINE_NAMESPACE_STR[0] != 'h' ||
@@ -7,6 +16,10 @@ index 5fa9f0efe5a4..741e320fe40c 100644
  #ifdef ABSL_INTERNAL_HAVE_ARM_NEON
  #error ABSL_INTERNAL_HAVE_ARM_NEON cannot be directly set
 -#elif defined(__ARM_NEON) && !defined(__CUDA_ARCH__)
-+#elif defined(__ARM_NEON) && !defined(__CUDACC__)
++#elif defined(__ARM_NEON) && defined(__CUDACC__)
  #define ABSL_INTERNAL_HAVE_ARM_NEON 1
  #endif
+ 
+-- 
+2.31.1
+
