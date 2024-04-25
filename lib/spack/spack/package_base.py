@@ -2555,7 +2555,7 @@ class PackageStillNeededError(InstallError):
     """Raised when package is still needed by another on uninstall."""
 
     def __init__(self, spec, dependents):
-        super().__init__("Cannot uninstall %s" % spec)
+        super().__init__("Cannot uninstall %s, needed by %s" % (spec, dependents))
         self.spec = spec
         self.dependents = dependents
 
