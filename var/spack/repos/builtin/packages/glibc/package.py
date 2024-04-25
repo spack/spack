@@ -7,7 +7,6 @@ import os
 
 from spack.package import *
 from spack.util.elf import delete_rpath
-from spack.util.libc import startfile_prefix
 
 
 class Glibc(AutotoolsPackage, GNUMirrorPackage):
@@ -203,7 +202,3 @@ class Glibc(AutotoolsPackage, GNUMirrorPackage):
     @property
     def libs(self):
         return LibraryList([])
-
-    @property
-    def startfile_prefix(self) -> Optional[str]:
-        return startfile_prefix(self.prefix)

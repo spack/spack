@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack.package import *
-from spack.util.libc import startfile_prefix
 
 
 class Musl(MakefilePackage):
@@ -63,7 +62,3 @@ class Musl(MakefilePackage):
 
     def edit(self, spec, prefix):
         configure(*self.configure_args())
-
-    @property
-    def startfile_prefix(self) -> Optional[str]:
-        return startfile_prefix(self.prefix)
