@@ -400,7 +400,8 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     # ###################### Dependencies ##########################
 
     # External Kokkos
-    depends_on("kokkos@4.2.01", when="@15.1.0: +kokkos")
+    depends_on("kokkos@4.3.00", when="@master: +kokkos")
+    depends_on("kokkos@4.2.01", when="@15.1.0:15.1.1 +kokkos")
     depends_on("kokkos@4.1.00", when="@14.4.0:15.0.0 +kokkos")
 
     depends_on("kokkos +wrapper", when="trilinos@14.4.0: +kokkos +wrapper")
@@ -420,7 +421,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("binder@1.3:", when="@15: +python", type="build")
     depends_on("blas")
     depends_on("boost+graph+math+exception+stacktrace", when="+boost")
-    depends_on("boost+graph+math+exception+stacktrace", when="@:14.0.0 +stk")
+    depends_on("boost+graph+math+exception+stacktrace", when="@:13.4.0 +stk")
     depends_on("cgns", when="+exodus")
     depends_on("cmake@3.23:", type="build", when="@14.0.0:")
     depends_on("hdf5+hl", when="+hdf5")

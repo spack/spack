@@ -34,6 +34,7 @@ from llnl.util.filesystem import copy_tree, mkdirp, remove_linked_tree, touchp, 
 import spack.binary_distribution
 import spack.caches
 import spack.cmd.buildcache
+import spack.compiler
 import spack.compilers
 import spack.config
 import spack.database
@@ -55,6 +56,7 @@ import spack.util.git
 import spack.util.gpg
 import spack.util.spack_yaml as syaml
 import spack.util.url as url_util
+import spack.version
 from spack.fetch_strategy import URLFetchStrategy
 from spack.util.pattern import Bunch
 
@@ -268,10 +270,6 @@ def clean_test_environment():
     ev.deactivate()
 
 
-def _verify_executables_noop(*args):
-    return None
-
-
 def _host():
     """Mock archspec host so there is no inconsistency on the Windows platform
     This function cannot be local as it needs to be pickleable"""
@@ -297,9 +295,7 @@ def mock_compiler_executable_verification(request, monkeypatch):
 
     If a test is marked in that way this is a no-op."""
     if "enable_compiler_verification" not in request.keywords:
-        monkeypatch.setattr(
-            spack.compiler.Compiler, "verify_executables", _verify_executables_noop
-        )
+        monkeypatch.setattr(spack.compiler.Compiler, "verify_executables", _return_none)
 
 
 # Hooks to add command line options or set other custom behaviors.
@@ -790,6 +786,7 @@ def no_compilers_yaml(mutable_config):
         compilers_yaml = os.path.join(local_config.path, "compilers.yaml")
         if os.path.exists(compilers_yaml):
             os.remove(compilers_yaml)
+    return mutable_config
 
 
 @pytest.fixture()
@@ -932,26 +929,16 @@ def dirs_with_libfiles(tmpdir_factory):
     yield lib_to_dirs, all_dirs
 
 
-def _compiler_link_paths_noop(*args):
-    return []
+def _return_none(*args):
+    return None
 
 
 @pytest.fixture(scope="function", autouse=True)
 def disable_compiler_execution(monkeypatch, request):
-    """
-    This fixture can be disabled for tests of the compiler link path
-    functionality by::
-
-        @pytest.mark.enable_compiler_link_paths
-
-    If a test is marked in that way this is a no-op."""
-    if "enable_compiler_link_paths" not in request.keywords:
-        # Compiler.determine_implicit_rpaths actually runs the compiler. So
-        # replace that function with a noop that simulates finding no implicit
-        # RPATHs
-        monkeypatch.setattr(
-            spack.compiler.Compiler, "_get_compiler_link_paths", _compiler_link_paths_noop
-        )
+    """Disable compiler execution to determine implicit link paths and libc flavor and version.
+    To re-enable use `@pytest.mark.enable_compiler_execution`"""
+    if "enable_compiler_execution" not in request.keywords:
+        monkeypatch.setattr(spack.compiler.Compiler, "_compile_dummy_c_source", _return_none)
 
 
 @pytest.fixture(scope="function")
@@ -1437,6 +1424,15 @@ def mock_git_repository(git, tmpdir_factory):
         unversioned_commit=r2,
     )
     yield t
+
+
+@pytest.fixture(scope="function")
+def mock_git_test_package(mock_git_repository, mutable_mock_repo, monkeypatch):
+    # install a fake git version in the package class
+    pkg_class = spack.repo.PATH.get_pkg_class("git-test")
+    monkeypatch.delattr(pkg_class, "git")
+    monkeypatch.setitem(pkg_class.versions, spack.version.Version("git"), mock_git_repository.url)
+    return pkg_class
 
 
 @pytest.fixture(scope="session")
@@ -1970,16 +1966,23 @@ def mock_modules_root(tmp_path, monkeypatch):
     monkeypatch.setattr(spack.modules.common, "root_path", fn)
 
 
+_repo_name_id = 0
+
+
 def create_test_repo(tmpdir, pkg_name_content_tuples):
+    global _repo_name_id
+
     repo_path = str(tmpdir)
     repo_yaml = tmpdir.join("repo.yaml")
     with open(str(repo_yaml), "w") as f:
         f.write(
-            """\
+            f"""\
 repo:
-  namespace: testcfgrequirements
+  namespace: testrepo{str(_repo_name_id)}
 """
         )
+
+    _repo_name_id += 1
 
     packages_dir = tmpdir.join("packages")
     for pkg_name, pkg_str in pkg_name_content_tuples:

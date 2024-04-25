@@ -173,35 +173,14 @@ class BuildcacheBootstrapper(Bootstrapper):
         return data
 
     def _install_by_hash(
-        self,
-        pkg_hash: str,
-        pkg_sha256: str,
-        index: List[spack.spec.Spec],
-        bincache_platform: spack.platforms.Platform,
+        self, pkg_hash: str, pkg_sha256: str, bincache_platform: spack.platforms.Platform
     ) -> None:
-        index_spec = next(x for x in index if x.dag_hash() == pkg_hash)
-        # Reconstruct the compiler that we need to use for bootstrapping
-        compiler_entry = {
-            "modules": [],
-            "operating_system": str(index_spec.os),
-            "paths": {
-                "cc": "/dev/null",
-                "cxx": "/dev/null",
-                "f77": "/dev/null",
-                "fc": "/dev/null",
-            },
-            "spec": str(index_spec.compiler),
-            "target": str(index_spec.target.family),
-        }
         with spack.platforms.use_platform(bincache_platform):
-            with spack.config.override("compilers", [{"compiler": compiler_entry}]):
-                spec_str = "/" + pkg_hash
-                query = spack.binary_distribution.BinaryCacheQuery(all_architectures=True)
-                matches = spack.store.find([spec_str], multiple=False, query_fn=query)
-                for match in matches:
-                    spack.binary_distribution.install_root_node(
-                        match, unsigned=True, force=True, sha256=pkg_sha256
-                    )
+            query = spack.binary_distribution.BinaryCacheQuery(all_architectures=True)
+            for match in spack.store.find([f"/{pkg_hash}"], multiple=False, query_fn=query):
+                spack.binary_distribution.install_root_node(
+                    match, unsigned=True, force=True, sha256=pkg_sha256
+                )
 
     def _install_and_test(
         self,
@@ -232,7 +211,7 @@ class BuildcacheBootstrapper(Bootstrapper):
                     continue
 
                 for _, pkg_hash, pkg_sha256 in item["binaries"]:
-                    self._install_by_hash(pkg_hash, pkg_sha256, index, bincache_platform)
+                    self._install_by_hash(pkg_hash, pkg_sha256, bincache_platform)
 
                 info: ConfigDictionary = {}
                 if test_fn(query_spec=abstract_spec, query_info=info):

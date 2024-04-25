@@ -21,6 +21,7 @@ class PyShapely(PythonPackage):
     license("BSD-3-Clause")
 
     version("main", branch="main")
+    version("2.0.4", sha256="5dc736127fac70009b8d309a0eeb74f3e08979e530cf7017f2f507ef62e6cfb8")
     version("2.0.3", sha256="4d65d0aa7910af71efa72fd6447e02a8e5dd44da81a983de9d736d6e6ccbe674")
     version("2.0.2", sha256="1713cc04c171baffc5b259ba8531c58acc2a301707b7f021d88a15ed090649e7")
     version("2.0.1", sha256="66a6b1a3e72ece97fc85536a281476f9b7794de2e646ca8a4517e2e3c1446893")
@@ -41,7 +42,8 @@ class PyShapely(PythonPackage):
     depends_on("py-cython@0.29.24:2", when="@:1", type="build")
     depends_on("py-setuptools@61:", when="@2:", type="build")
     depends_on("py-setuptools@:63", when="@:1", type="build")
-    depends_on("py-numpy@1.14:1", when="@2:", type=("build", "link", "run"))
+    depends_on("py-numpy@1.14:2", when="@2.0.4:", type=("build", "link", "run"))
+    depends_on("py-numpy@1.14:1", when="@2.0.0:2.0.3", type=("build", "link", "run"))
     depends_on("py-numpy@:1", when="@1", type=("build", "link", "run"))
     depends_on("py-pytest", type="test")
     depends_on("py-pytest-cov", type="test")

@@ -28,6 +28,7 @@ class Tau(Package):
     license("MIT")
 
     version("master", branch="master")
+    version("2.33.2", sha256="8ee81fe75507612379f70033183bed2a90e1245554b2a78196b6c5145da44f27")
     version("2.33.1", sha256="13cc5138e110932f34f02ddf548db91d8219ccb7ff9a84187f0790e40a502403")
     version("2.33", sha256="04d9d67adb495bc1ea56561f33c5ce5ba44f51cc7f64996f65bd446fac5483d9")
     version("2.32.1", sha256="0eec3de46b0873846dfc639270c5e30a226b463dd6cb41aa12e975b7563f0eeb")
@@ -106,7 +107,14 @@ class Tau(Package):
     )
     variant("dyninst", default=False, description="Activates dyninst support")
 
+    variant(
+        "disable-no-pie",
+        default=False,
+        description="Do not add -no-pie while linking with Ubuntu.",
+    )
+
     depends_on("cmake@3.14:", type="build", when="%clang")
+    depends_on("cmake@3.14:", type="build", when="%aocc")
     depends_on("zlib-api", type="link")
     depends_on("pdt", when="+pdt")  # Required for TAU instrumentation
     depends_on("scorep", when="+scorep")
@@ -133,6 +141,8 @@ class Tau(Package):
     depends_on("roctracer-dev", when="+roctracer")
     depends_on("hsa-rocr-dev", when="+rocm")
     depends_on("rocm-smi-lib", when="@2.32.1: +rocm")
+    depends_on("rocm-core", when="@2.34: +rocm")
+    depends_on("hip", when="@2.34: +roctracer")
     depends_on("java", type="run")  # for paraprof
     depends_on("oneapi-level-zero", when="+level_zero")
     depends_on("dyninst@12.3.0:", when="+dyninst")
@@ -145,8 +155,20 @@ class Tau(Package):
     conflicts("+adios2", when="@:2.29.1")
     conflicts("+sqlite", when="@:2.29.1")
     conflicts("+dyninst", when="@:2.32.1")
-
+    conflicts("+disable-no-pie", when="@:2.33.2")
     patch("unwind.patch", when="@2.29.0")
+
+    conflicts("+rocprofiler", when="+roctracer", msg="Use either rocprofiler or roctracer")
+    requires("+rocm", when="+rocprofiler", msg="Rocprofiler requires ROCm")
+    requires("+rocm", when="+roctracer", msg="Roctracer requires ROCm")
+
+    requires(
+        "+rocprofiler",
+        "+roctracer",
+        policy="one_of",
+        when="+rocm",
+        msg="When using ROCm, you need to select either +rocprofiler or +roctracer",
+    )
 
     filter_compiler_wrappers("Makefile", relative_root="include")
     filter_compiler_wrappers("Makefile.tau*", relative_root="lib")
@@ -309,12 +331,16 @@ class Tau(Package):
             options.append("-rocm=%s" % spec["hsa-rocr-dev"].prefix)
             if spec.satisfies("@2.32.1"):
                 options.append("-rocmsmi=%s" % spec["rocm-smi-lib"].prefix)
+            if spec.satisfies("@2.34:"):
+                options.append("-rocm-core=%s" % spec["rocm-core"].prefix)
 
         if "+rocprofiler" in spec:
             options.append("-rocprofiler=%s" % spec["rocprofiler-dev"].prefix)
 
         if "+roctracer" in spec:
             options.append("-roctracer=%s" % spec["roctracer-dev"].prefix)
+            if spec.satisfies("@2.34:"):
+                options.append("-hip=%s" % spec["hip"].prefix)
 
         if "+adios2" in spec:
             options.append("-adios=%s" % spec["adios2"].prefix)
@@ -352,6 +378,8 @@ class Tau(Package):
                 if found:
                     break
             options.append("-pythonlib=%s" % lib_path)
+        if "+disable-no-pie" in spec:
+            options.append("-disable-no-pie-on-ubuntu")
 
         if "+dyninst" in spec:
             options.append("-dyninst=%s" % spec["dyninst"].prefix)
@@ -413,7 +441,8 @@ class Tau(Package):
     ompt_test = join_path("examples", "openmp", "c++")
     python_test = join_path("examples", "python")
 
-    @run_after("install")
+    # Disabled, see PR#43682 comments
+    # @run_after("install")
     def setup_build_tests(self):
         """Copy the build test files after the package is installed to an
         install test subdirectory for use during `spack test run`."""
@@ -536,6 +565,8 @@ class Tau(Package):
         )
 
     def test(self):
+        # Temporarily disable tests, will update them with the new test method.
+        return
         test_dir = self.test_suite.current_test_cache_dir
         # Run mm test program pulled from the build
         if "+ompt" in self.spec:

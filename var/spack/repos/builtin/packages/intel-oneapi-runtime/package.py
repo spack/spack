@@ -44,6 +44,8 @@ class IntelOneapiRuntime(Package):
     conflicts("platform=windows", msg="IntelOneAPI can only be installed on Linux, and FreeBSD")
     conflicts("platform=darwin", msg="IntelOneAPI can only be installed on Linux, and FreeBSD")
 
+    depends_on("libc", type="link")
+
     def install(self, spec, prefix):
         libraries = get_elf_libraries(compiler=self.compiler, libraries=self.LIBRARIES)
         mkdir(prefix.lib)

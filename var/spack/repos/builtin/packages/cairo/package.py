@@ -59,7 +59,7 @@ class Cairo(AutotoolsPackage):
     depends_on("autoconf", type="build")
     depends_on("libtool", type="build")
     depends_on("m4", type="build")
-    depends_on("freetype", when="+ft")
+    depends_on("freetype build_system=autotools", when="+ft")
     depends_on("pkgconfig", type="build")
     depends_on("fontconfig@2.10.91:", when="+fc")  # Require newer version of fontconfig.
     depends_on("which", type="build")

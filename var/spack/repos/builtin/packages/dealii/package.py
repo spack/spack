@@ -177,6 +177,7 @@ class Dealii(CMakePackage, CudaPackage):
     depends_on("arpack-ng+mpi", when="+arpack+mpi")
     depends_on("assimp", when="@9.0:+assimp")
     depends_on("cgal", when="@9.4:+cgal")
+    depends_on("cgal@5:", when="@9.5:+cgal")
     depends_on("doxygen+graphviz", when="+doc")
     depends_on("graphviz", when="+doc")
     depends_on("ginkgo", when="@9.1:+ginkgo")
@@ -288,6 +289,9 @@ class Dealii(CMakePackage, CudaPackage):
         sha256="c9884ebb0fe379c539012a225d8bcdcfe288edec8dc9d319fbfd64d8fbafba8e",
         when="@:9.4 +ginkgo ^ginkgo@1.5.0:",
     )
+
+    # deal.II's own CUDA backend does not support CUDA version 12.0 or newer.
+    conflicts("+cuda ^cuda@12:")
 
     # Check for sufficiently modern versions
     conflicts("cxxstd=11", when="@9.3:")
