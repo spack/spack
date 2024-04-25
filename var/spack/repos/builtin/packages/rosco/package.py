@@ -30,6 +30,9 @@ class Rosco(CMakePackage):
     variant("shared", default=False, description="Build shared libraries")
     variant("pic", default=False, description="Position independent code")
 
+    patch("intel-oneapi-2x.patch", when="@2.5:2.8%oneapi")
+    patch("intel-oneapi-29.patch", when="@2.9.0:2.9.1%oneapi")
+
     @property
     def root_cmakelists_dir(self):
         if self.spec.version >= Version("2.9.0"):
