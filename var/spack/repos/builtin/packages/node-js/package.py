@@ -74,7 +74,7 @@ class NodeJs(Package):
 
     # https://github.com/nodejs/node/blob/master/BUILDING.md#unix-and-macos
     depends_on("gmake@3.81:", type="build")
-    depends_on("binutils", type="build")
+    depends_on("binutils+gas", type="build")
     depends_on("python@3.6:3.11", when="@19.1:", type="build")
     depends_on("python@3.6:3.10", when="@16.11:19.0", type="build")
     depends_on("python@3.6:3.9", when="@16.0:16.10", type="build")
