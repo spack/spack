@@ -62,6 +62,7 @@ class Starpu(AutotoolsPackage):
     version("git-1.1", branch="starpu-1.1")
     version("git-1.2", branch="starpu-1.2")
     version("git-1.3", branch="starpu-1.3")
+    version("git-1.4", branch="starpu-1.4")
 
     variant("shared", default=True, description="Build STARPU as a shared library")
     variant("fast", default=True, description="Disable runtime assertions")
