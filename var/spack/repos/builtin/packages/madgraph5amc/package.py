@@ -21,19 +21,13 @@ class Madgraph5amc(MakefilePackage):
 
     tags = ["hep"]
 
-    version(
-        "3.5.4",
-        sha256="19121a4b8b4ccaddd86b5b87188e91da25b755e789663c790481bf387154c950",
-    )
+    version("3.5.4", sha256="19121a4b8b4ccaddd86b5b87188e91da25b755e789663c790481bf387154c950")
     version(
         "2.9.19",
         sha256="58e3e9930033b9db08769684ec12f31100235af4b8a852eedf683541195d4c95",
         preferred=True,
     )
-    version(
-        "2.9.17",
-        sha256="24026a534344c77a05b23a681437f825c41dc70c5bae5b7f79bb99e149d966b8",
-    )
+    version("2.9.17", sha256="24026a534344c77a05b23a681437f825c41dc70c5bae5b7f79bb99e149d966b8")
     version(
         "2.8.1",
         sha256="acda34414beba201e529b8c03f87f4893fb3f99ed2956a131d60a387e76c5b8c",
