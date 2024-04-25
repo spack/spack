@@ -1,0 +1,49 @@
+diff --git a/library/CMakeLists.txt b/library/CMakeLists.txt
+index 3252da0..1b8d628 100644
+--- a/library/CMakeLists.txt
++++ b/library/CMakeLists.txt
+@@ -72,6 +72,8 @@ include(src/CMakeLists.txt)
+ # Create hipBLASLt library
+ add_library(hipblaslt ${hipblaslt_source} ${hipblaslt_headers_public})
+ add_library(roc::hipblaslt ALIAS hipblaslt)
++target_include_directories( hipblaslt PRIVATE ${HIPBLAS_INCLUDE_DIRS} )
++target_include_directories( hipblaslt PRIVATE ${MSGPACK_DIR}/include )
+
+ # Target compile definitions
+ if(NOT BUILD_CUDA)
+diff --git a/tensilelite/Tensile/Common.py b/tensilelite/Tensile/Common.py
+index 0f862b8..af617b7 100644
+--- a/tensilelite/Tensile/Common.py
++++ b/tensilelite/Tensile/Common.py
+@@ -270,6 +270,8 @@ globalParameters["LazyLibraryLoading"] = False # Load library and code object fi
+
+ globalParameters["UseUserArgs"] = False
+
++globalParameters["LLVMPath"] = os.environ.get("LLVM_PATH")
++
+ # Save a copy - since pytest doesn't re-run this initialization code and YAML files can override global settings - odd things can happen
+ defaultGlobalParameters = deepcopy(globalParameters)
+
+@@ -1471,7 +1473,7 @@ def assignGlobalParameters( config ):
+     if os.name == "nt":
+       globalParameters["AssemblerPath"] = locateExe(globalParameters["ROCmBinPath"], "clang++.exe")
+     else:
+-      globalParameters["AssemblerPath"] = locateExe(os.path.join(globalParameters["ROCmPath"], "llvm/bin"), "clang++")
++      globalParameters["AssemblerPath"] = locateExe(os.path.join(globalParameters["LLVMPath"], "bin"), "clang++")
+
+   globalParameters["ROCmSMIPath"] = locateExe(globalParameters["ROCmBinPath"], "rocm-smi")
+
+diff --git a/tensilelite/Tensile/Ops/gen_assembly.sh b/tensilelite/Tensile/Ops/gen_assembly.sh
+index 7b16069..0151bf5 100644
+--- a/tensilelite/Tensile/Ops/gen_assembly.sh
++++ b/tensilelite/Tensile/Ops/gen_assembly.sh
+@@ -32,7 +32,9 @@ if ! [ -z ${ROCM_PATH+x} ]; then
+     rocm_path=${ROCM_PATH}
+ fi
+
+-toolchain=${rocm_path}/llvm/bin/clang++
++$LLVM_PATH= $ENV{'LLVM_PATH'};
++
++toolchain=${LLVM_PATH}/bin/clang++
+
+ . ${venv}/bin/activate
