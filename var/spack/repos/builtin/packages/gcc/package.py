@@ -10,6 +10,7 @@ import sys
 
 from archspec.cpu import UnsupportedMicroarchitecture
 
+import llnl.util.filesystem as fs
 import llnl.util.tty as tty
 from llnl.util.lang import classproperty
 from llnl.util.symlink import readlink
@@ -1176,6 +1177,15 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
 
         # Write a new one
         self.write_rpath_specs()
+        headers = fs.find_first(libc.external_path, libc.package_class.representative_headers)
+        if not headers:
+            return
 
-        # And replace crt*.o%s file with their absolute path.
-        filter_file(r"\b((?:S|gr|g|M|r)?crt(?:1|i|n).o)%s\b", f"{startfile_prefix}/\\1", specs_file)
+        header_dir = os.path.dirname(headers)
+        with open(specs_file, "a") as f:
+            f.write(
+                f"""
+*self_spec:
++ -B {startfile_prefix} -isystem {header_dir}
+"""
+            )

@@ -22,6 +22,8 @@ class Glibc(AutotoolsPackage, GNUMirrorPackage):
     build_directory = "build"
     tags = ["runtime"]
 
+    representative_headers = ["ieee754.h"]
+
     license("LGPL-2.1-or-later")
 
     provides("libc")
