@@ -10,20 +10,15 @@ from spack.package import *
 from spack.pkg.builtin.gcc_runtime import get_elf_libraries
 
 
+@IntelOneApiPackage.update_description
 class IntelOneapiRuntime(Package):
-    """Package for OneAPI compiler runtime libraries"""
+    """Package for OneAPI compiler runtime libraries redistributables."""
 
     homepage = "https://software.intel.com/content/www/us/en/develop/tools/oneapi.html"
     has_code = False
     license("https://intel.ly/393CijO")
 
     maintainers("rscohn2")
-
-    # The libraries are redistributable according to intel
-    # license. Need to investigate if the way it is redistributed
-    # meets the conditions of the license. Until then, disable
-    # distribution
-    redistribute(source=False, binary=False)
 
     tags = ["runtime"]
 
