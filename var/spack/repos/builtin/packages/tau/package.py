@@ -114,6 +114,7 @@ class Tau(Package):
     )
 
     depends_on("cmake@3.14:", type="build", when="%clang")
+    depends_on("cmake@3.14:", type="build", when="%aocc")
     depends_on("zlib-api", type="link")
     depends_on("pdt", when="+pdt")  # Required for TAU instrumentation
     depends_on("scorep", when="+scorep")
