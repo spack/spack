@@ -85,6 +85,8 @@ class NodeJs(Package):
     depends_on("icu4c", when="+icu4c")
     depends_on("openssl@1.1:", when="+openssl")
     depends_on("zlib-api", when="+zlib")
+    # internal c-ares fails to build on older machines with older glibc-devel
+    # hence use external lib
     depends_on("c-ares@1.18.1:", when="+cares")
     depends_on("libuv", when="+libuv")
 
