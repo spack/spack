@@ -7,8 +7,8 @@ from spack.package import *
 
 
 class Hipblaslt(CMakePackage):
-    # hipBLASLt is a library that provides general matrix-matrix operations with a flexible API
-    # and extends functionalities beyond a traditional BLAS library
+    """hipBLASLt is a library that provides general matrix-matrix operations with a flexible API
+    and extends functionalities beyond a traditional BLAS library"""
 
     homepage = "https://github.com/ROCm/hipBLASLt"
     url = "https://github.com/ROCm/hipBLASLt/archive/refs/tags/rocm-6.0.2.tar.gz"
