@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
-import platform
 import sys
 
 from spack.package import *
@@ -760,10 +759,13 @@ class Boost(Package):
             jobs = 64
 
         if self.spec.satisfies("platform=windows"):
-            b2_options = [
-                f"--prefix={self.prefix}",
-                f"address-model={64 if platform.machine().endswith('64') else 32}",
-            ]
+
+            def is_64bit():
+                # TODO: This method should be abstracted to a more general location
+                #  as it is repeated in many places (msmpi.py for one)
+                return "64" in str(self.spec.target.family)
+
+            b2_options = [f"--prefix={self.prefix}", f"address-model={64 if is_64bit() else 32}"]
         else:
             path_to_config = "--user-config=%s" % os.path.join(
                 self.stage.source_path, "user-config.jam"
