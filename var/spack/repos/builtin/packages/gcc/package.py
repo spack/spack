@@ -1178,4 +1178,4 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         self.write_rpath_specs()
 
         # And replace crt*.o%s file with their absolute path.
-        filter_file(r"((?:S|gr|g|M|r)?crt(?:1|i|n).o)%s", f"{startfile_prefix}/\\1", specs_file)
+        filter_file(r"\b((?:S|gr|g|M|r)?crt(?:1|i|n).o)%s\b", f"{startfile_prefix}/\\1", specs_file)
