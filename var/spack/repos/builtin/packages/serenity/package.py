@@ -50,17 +50,21 @@ class Serenity(CMakePackage):
 
     extends("python", when="+python")
 
-    patch("1.6.1-cmake.patch", when="@1.6.1:")
+    patch(
+        "https://github.com/qcserenity/serenity/commit/af9f76d013e240d971337a467a03640cb9aabfb7.patch",
+        sha256="45cce5e4d47b681891e78725b2cf5031d306337a5c7b8e62cd4891beb4a7b8b6",
+        when="@1.6.1:",
+    )
 
     def patch(self):
-        if self.spec.satisfies("@1.4.0"):
-            filter_file(
-                "include(CMakeParseArguments)",
-                'message(FATAL_ERROR "Tried to download a dependency")',
-                "cmake/DownloadProject.cmake",
-                string=True,
-            )
+        filter_file(
+            "include(CMakeParseArguments)",
+            'message(FATAL_ERROR "Tried to download a dependency")',
+            "cmake/DownloadProject.cmake",
+            string=True,
+        )
 
+        if self.spec.satisfies(":@1.4"):
             filter_file(
                 "find_package(GTest 1.8.1 QUIET)",
                 "find_package(GTest REQUIRED)",
