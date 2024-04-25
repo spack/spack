@@ -666,7 +666,7 @@ class Boost(Package):
                     prefix, remainder = lib.split(".", 1)
                     symlink(lib, "%s-mt.%s" % (prefix, remainder))
 
-    def boostrap_windows(self):
+    def bootstrap_windows(self):
         """Run the Windows-specific bootstrap.bat. The only bootstrapping command
         line option that is accepted by the bootstrap.bat script is the compiler
         information: either the vc version (e.g. MSVC 14.3.x would be vc143)
@@ -730,7 +730,7 @@ class Boost(Package):
             return
 
         if self.spec.satisfies("platform=windows"):
-            self.boostrap_windows()
+            self.bootstrap_windows()
         else:
             # to make Boost find the user-config.jam
             env["BOOST_BUILD_PATH"] = self.stage.source_path
