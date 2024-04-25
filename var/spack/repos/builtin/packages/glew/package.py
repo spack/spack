@@ -76,7 +76,7 @@ class Glew(CMakePackage):
 
         return args
 
-    if sys.platform == "darwin":
-
-        def setup_build_environment(self, env):
-            env.prepend_path("LDFLAGS", "-framework OpenGL")
+    def flag_handler(self, name, flags):
+        if name == "ldflags" and self.spec.satisfies("platform=darwin ^apple-gl"):
+            flags.append("-framework OpenGL")
+        return (flags, None, None)
