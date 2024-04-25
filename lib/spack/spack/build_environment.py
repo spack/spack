@@ -560,7 +560,7 @@ def set_wrapper_variables(pkg, env):
     }
     spack_managed_dirs.update([os.path.realpath(p) for p in spack_managed_dirs])
 
-    env.set(SPACK_MANAGED_DIRS, "|".join(f'"{p}/"*' for p in spack_managed_dirs))
+    env.set(SPACK_MANAGED_DIRS, "|".join(f'"{p}/"*' for p in sorted(spack_managed_dirs)))
     is_spack_managed = lambda p: any(p.startswith(store) for store in spack_managed_dirs)
     link_dirs_spack, link_dirs_system = stable_partition(link_dirs, is_spack_managed)
     include_dirs_spack, include_dirs_system = stable_partition(include_dirs, is_spack_managed)
