@@ -24,19 +24,19 @@ class IntelOneapiCompilersClassic(Package, CompilerPackage):
 
     has_code = False
 
-    languages = ["c", "cxx", "fortran"]
+    compiler_languages = ["c", "cxx", "fortran"]
     c_names = ["icc"]
     cxx_names = ["icpc"]
     fortran_names = ["ifort"]
 
     @classproperty
-    def version_argument(self):
+    def compiler_version_argument(self):
         if sys.platform == "win32":
             return "/QV"
         return "--version"
 
     @classproperty
-    def version_regex(self):
+    def compiler_version_regex(self):
         if sys.platform == "win32":
             return r"([1-9][0-9]*\.[0-9]*\.[0-9]*)"
         return r"\((?:IFORT|ICC)\) ([^ ]+)"

@@ -23,15 +23,15 @@ class Msvc(Package, CompilerPackage):
     compiler_languages = ["c", "cxx"]
     c_names = ["cl"]
     cxx_names = ["cl"]
-    version_argument = ""
-    version_regex = r"([1-9][0-9]*\.[0-9]*\.[0-9]*)"
+    compiler_version_argument = ""
+    compiler_version_regex = r"([1-9][0-9]*\.[0-9]*\.[0-9]*)"
 
     @classmethod
     def determine_version(cls, exe):
         # MSVC compiler does not have a proper version argument
         # Errors out and prints version info with no args
         match = re.search(
-            cls.version_regex,
+            cls.compiler_version_regex,
             spack.compiler.get_compiler_version_output(exe, version_arg=None, ignore_errors=True),
         )
         if match:

@@ -595,7 +595,7 @@ class Llvm(CMakePackage, CudaPackage, CompilerPackage):
             string=True,
         )
 
-    version_regex = (
+    compiler_version_regex = (
         # Normal clang compiler versions are left as-is
         r"clang version ([^ )\n]+)-svn[~.\w\d-]*|"
         # Don't include hyphenated patch numbers in the version
@@ -607,7 +607,7 @@ class Llvm(CMakePackage, CudaPackage, CompilerPackage):
         # LLD
         r"LLD ([^ )\n]+) \(compatible with GNU linkers\)"
     )
-    version_argument = "--version"
+    compiler_version_argument = "--version"
     compiler_languages = ["c", "cxx", "fortran"]
     c_names = ["clang"]
     cxx_names = ["clang++"]
@@ -643,12 +643,12 @@ class Llvm(CMakePackage, CudaPackage, CompilerPackage):
     def determine_version(cls, exe):
         try:
             compiler = Executable(exe)
-            output = compiler(cls.version_argument, output=str, error=str)
+            output = compiler(cls.compiler_version_argument, output=str, error=str)
             if "Apple" in output:
                 return None
             if "AMD" in output:
                 return None
-            match = re.search(cls.version_regex, output)
+            match = re.search(cls.compiler_version_regex, output)
             if match:
                 return match.group(match.lastindex)
         except spack.util.executable.ProcessError:

@@ -515,10 +515,10 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage, CompilerPackage):
     fortran_names = ["gfortran"]
     d_names = ["gdc"]
     go_names = ["gccgo"]
-    prefixes = [r"\w+-\w+-\w+-"]
-    suffixes = [r"-mp-\d+(?:\.\d+)?", r"-\d+(?:\.\d+)?", r"\d\d"]
-    version_regex = r"(?<!clang version)\s?([0-9.]+)"
-    version_argument = ("-dumpfullversion", "-dumpversion")
+    compiler_prefixes = [r"\w+-\w+-\w+-"]
+    compiler_suffixes = [r"-mp-\d+(?:\.\d+)?", r"-\d+(?:\.\d+)?", r"\d\d"]
+    compiler_version_regex = r"(?<!clang version)\s?([0-9.]+)"
+    compiler_version_argument = ("-dumpfullversion", "-dumpversion")
 
     @classmethod
     def determine_version(cls, exe):

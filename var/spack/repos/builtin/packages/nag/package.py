@@ -62,8 +62,8 @@ class Nag(Package, CompilerPackage):
 
     compiler_languages = ["fortran"]
     fortran_names = ["nagfor"]
-    version_regex = r"NAG Fortran Compiler Release (\d+).(\d+)\(.*\) Build (\d+)"
-    version_argument = "-V"
+    compiler_version_regex = r"NAG Fortran Compiler Release (\d+).(\d+)\(.*\) Build (\d+)"
+    compiler_version_argument = "-V"
 
     @property
     def fortran(self):

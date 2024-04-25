@@ -21,12 +21,12 @@ class Xl(Package, CompilerPackage):
             "detected on a system where they are supplied by vendor"
         )
 
-    languages = ["c", "cxx", "fortran"]
+    compiler_languages = ["c", "cxx", "fortran"]
     c_names = ["xlc", "xlc_r"]
     cxx_names = ["xlc++", "xlC", "xlc++_r", "xlC_r"]
     fortran_names = ["xlf", "xlf_r"]  # TODO complete this
-    version_argument = "-qversion"
-    version_regex = r"([0-9]?[0-9]\.[0-9])"
+    compiler_version_argument = "-qversion"
+    compiler_version_regex = r"([0-9]?[0-9]\.[0-9])"
 
     @classmethod
     def determine_variants(cls, exes, version_str):

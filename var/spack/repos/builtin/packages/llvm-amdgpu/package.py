@@ -248,8 +248,8 @@ class LlvmAmdgpu(CMakePackage, CompilerPackage):
     c_names = ["amdclang"]
     cxx_names = ["amdclang++"]
     fortran_names = ["amdflang"]
-    version_argument = "--version"
-    version_regex = r"roc-(\d+[._]\d+[._]\d+)"
+    compiler_version_argument = "--version"
+    compiler_version_regex = r"roc-(\d+[._]\d+[._]\d+)"
 
     # Make sure that the compiler paths are in the LD_LIBRARY_PATH
     def setup_run_environment(self, env):

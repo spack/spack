@@ -279,8 +279,10 @@ class Acfl(Package, CompilerPackage):
     cxx_names = ["armclang++"]
     fortran_names = ["armflang"]
 
-    version_argument = "--version"
-    version_regex = r"Arm C\/C\+\+\/Fortran Compiler version ([\d\.]+) \(build number \d+\) "
+    compiler_version_argument = "--version"
+    compiler_version_regex = (
+        r"Arm C\/C\+\+\/Fortran Compiler version ([\d\.]+) \(build number \d+\) "
+    )
 
     @property
     def cc(self):

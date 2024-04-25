@@ -21,9 +21,9 @@ class Fj(Package, CompilerPackage):
             "detected on a system where they are supplied by vendor"
         )
 
-    languages = ["c", "cxx", "fortran"]
+    compiler_languages = ["c", "cxx", "fortran"]
     c_names = ["fcc"]
     cxx_names = ["FCC"]
     fortran_names = ["frt"]
-    version_regex = r"\((?:FCC|FRT)\) ([a-z\d.]+)"
-    version_argument = "--version"
+    compiler_version_regex = r"\((?:FCC|FRT)\) ([a-z\d.]+)"
+    compiler_version_argument = "--version"

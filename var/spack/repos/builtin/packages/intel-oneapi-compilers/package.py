@@ -229,12 +229,14 @@ class IntelOneapiCompilers(IntelOneApiPackage, CompilerPackage):
 
     homepage = "https://software.intel.com/content/www/us/en/develop/tools/oneapi.html"
 
-    languages = ["c", "cxx", "fortran"]
+    compiler_languages = ["c", "cxx", "fortran"]
     c_names = ["icx"]
     cxx_names = ["icpx"]
     fortran_names = ["ifx"]
-    version_argument = "--version"
-    version_regex = r"(?:(?:oneAPI DPC\+\+(?:\/C\+\+)? Compiler)|(?:\(IFORT\))|(?:\(IFX\))) (\S+)"
+    compiler_version_argument = "--version"
+    compiler_version_regex = (
+        r"(?:(?:oneAPI DPC\+\+(?:\/C\+\+)? Compiler)|(?:\(IFORT\))|(?:\(IFX\))) (\S+)"
+    )
 
     # See https://github.com/spack/spack/issues/39252
     depends_on("patchelf@:0.17", type="build")

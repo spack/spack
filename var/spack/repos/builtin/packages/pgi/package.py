@@ -58,12 +58,12 @@ class Pgi(Package, CompilerPackage):
                 os.getcwd(), version.up_to(1), version.joined
             )
 
-    languages = ["c", "cxx", "fortran"]
+    compiler_languages = ["c", "cxx", "fortran"]
     c_names = ["pgcc"]
     cxx_names = ["pgc++", "pgCC"]
     fortran_names = ["pgfortran"]  # older names long deprecated
-    version_argument = "-V"
-    version_regex = r"pg[^ ]* ([0-9.]+)-[0-9]+ (?:LLVM )?[^ ]+ target on "
+    compiler_version_argument = "-V"
+    compiler_version_regex = r"pg[^ ]* ([0-9.]+)-[0-9]+ (?:LLVM )?[^ ]+ target on "
 
     def install(self, spec, prefix):
         # Enable the silent installation feature

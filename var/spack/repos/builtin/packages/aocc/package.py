@@ -105,8 +105,8 @@ class Aocc(Package, CompilerPackage):
                 with open(join_path(self.prefix.bin, "{}.cfg".format(compiler)), "w") as f:
                     f.write(compiler_options)
 
-    version_argument = "--version"
-    version_regex = r"AOCC_(\d+[._]\d+[._]\d+)"
+    compiler_version_argument = "--version"
+    compiler_version_regex = r"AOCC_(\d+[._]\d+[._]\d+)"
     c_names = ["clang"]
     cxx_names = ["clang++"]
     fortran_names = ["flang"]

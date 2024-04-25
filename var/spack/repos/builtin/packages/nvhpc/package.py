@@ -421,12 +421,12 @@ class Nvhpc(Package, CompilerPackage):
 
     # For now we only detect compiler components
     # It will require additional work to detect mpi/lapack/blas components
-    languages = ["c", "cxx", "fortran"]
+    compiler_languages = ["c", "cxx", "fortran"]
     c_names = ["nvc"]
     cxx_names = ["nvc++"]
     fortran_names = ["nvfortran"]
-    version_argument = "--version"
-    version_regex = r"nv[^ ]* (?:[^ ]+ Dev-r)?([0-9.]+)(?:-[0-9]+)?"
+    compiler_version_argument = "--version"
+    compiler_version_regex = r"nv[^ ]* (?:[^ ]+ Dev-r)?([0-9.]+)(?:-[0-9]+)?"
 
     @classmethod
     def determine_variants(cls, exes, version_str):

@@ -11,13 +11,15 @@ class Cce(Package, CompilerPackage):
     homepage = "https://cpe.ext.hpe.com/docs/cce/index.html"
     url = "https://cpe.ext.hpe.com/docs/cce/index.html"
 
-    languages = ["c", "cxx", "fortran"]
+    compiler_languages = ["c", "cxx", "fortran"]
     c_names = ["craycc"]
     cxx_names = ["crayCC"]
     fortran_names = ["crayftn"]
 
-    version_argument = "--version"
-    version_regex = r"[Cc]ray (?:clang|C :|C\+\+ :|Fortran :) [Vv]ersion.*?(\d+(?:\.\d+)+)"
+    compiler_version_argument = "--version"
+    compiler_version_regex = (
+        r"[Cc]ray (?:clang|C :|C\+\+ :|Fortran :) [Vv]ersion.*?(\d+(?:\.\d+)+)"
+    )
 
     # notify when the package is updated.
     maintainers("becker33")
