@@ -141,7 +141,7 @@ class Julia(MakefilePackage):
         "llvm",
         when="^llvm@12.0.1",
         patches=patch(
-            "https://raw.githubusercontent.com/spack/patches/master/julia/10cb42f80c2eaad3e9c87cb818b6676f1be26737bdf972c77392d71707386aa4.patch",
+            "https://raw.githubusercontent.com/spack/patches/24ff44c4c5439400747941473c0298a74c1fbcb1/julia/10cb42f80c2eaad3e9c87cb818b6676f1be26737bdf972c77392d71707386aa4.patch",
             sha256="10cb42f80c2eaad3e9c87cb818b6676f1be26737bdf972c77392d71707386aa4",
         ),
     )
@@ -149,7 +149,7 @@ class Julia(MakefilePackage):
         "llvm",
         when="^llvm@13.0.1",
         patches=patch(
-            "https://raw.githubusercontent.com/spack/patches/master/julia/45f72c59ae5cf45461e9cd8b224ca49b739d885c79b3786026433c6c22f83b5f.patch",
+            "https://raw.githubusercontent.com/spack/patches/24ff44c4c5439400747941473c0298a74c1fbcb1/julia/45f72c59ae5cf45461e9cd8b224ca49b739d885c79b3786026433c6c22f83b5f.patch",
             sha256="45f72c59ae5cf45461e9cd8b224ca49b739d885c79b3786026433c6c22f83b5f",
         ),
     )
@@ -157,7 +157,7 @@ class Julia(MakefilePackage):
         "llvm",
         when="^llvm@14.0.6",
         patches=patch(
-            "https://raw.githubusercontent.com/spack/patches/master/julia/f3def26930832532bbcd861d41b31ae03db993bc2b3510f89ef831a30bd3e099.patch",
+            "https://raw.githubusercontent.com/spack/patches/24ff44c4c5439400747941473c0298a74c1fbcb1/julia/f3def26930832532bbcd861d41b31ae03db993bc2b3510f89ef831a30bd3e099.patch",
             sha256="f3def26930832532bbcd861d41b31ae03db993bc2b3510f89ef831a30bd3e099",
         ),
     )
@@ -165,7 +165,7 @@ class Julia(MakefilePackage):
         "llvm",
         when="^llvm@15.0.7",
         patches=patch(
-            "https://github.com/spack/patches/raw/master/julia/25cdc0271e7722d4a7cc6f72abcb17bfe205fc741bbe3716a21759c3eee7d32c.patch",
+            "https://raw.githubusercontent.com/spack/patches/24ff44c4c5439400747941473c0298a74c1fbcb1/julia/25cdc0271e7722d4a7cc6f72abcb17bfe205fc741bbe3716a21759c3eee7d32c.patch",
             sha256="25cdc0271e7722d4a7cc6f72abcb17bfe205fc741bbe3716a21759c3eee7d32c",
         ),
     )
