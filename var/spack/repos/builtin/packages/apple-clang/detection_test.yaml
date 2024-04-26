@@ -9,6 +9,7 @@ paths:
           echo "Target: x86_64-apple-darwin19.5.0"
           echo "Thread model: posix"
           echo "InstalledDir: /Library/Developer/CommandLineTools/usr/bin"
+    platforms: ["darwin"]
     results:
       - spec: 'apple-clang@11.0.0'
   # Apple Clang on Apple M1 (Ventura)
@@ -21,6 +22,7 @@ paths:
           echo "Target: arm64-apple-darwin22.6.0"
           echo "Thread model: posix"
           echo "InstalledDir: /Library/Developer/CommandLineTools/usr/bin"
+    platforms: ["darwin"]
     results:
       - spec: 'apple-clang@15.0.0'
   # Test that missing a compiler prevents the package from being detected
@@ -32,4 +34,5 @@ paths:
           echo "Target: x86_64-apple-darwin19.5.0"
           echo "Thread model: posix"
           echo "InstalledDir: /Library/Developer/CommandLineTools/usr/bin"
+    platforms: ["darwin"]
     results: [ ]
