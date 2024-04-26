@@ -57,11 +57,7 @@ class ArmciMpi(AutotoolsPackage):
         # FIXME: If not needed delete this function
         args = ["--enable-g"]
 
-        shared = int(self.spec.variants["shared"].value)
-        if shared:
-            args.extend([
-                "--enable-shared",
-            ])
+        args.extend(self.enable_or_disable("shared"))
 
         progress = int(self.spec.variants["progress"].value)
         if progress:
