@@ -16,13 +16,13 @@ class Libcatalyst(CMakePackage):
 
     homepage = "https://gitlab.kitware.com/paraview/catalyst"
     git = "https://gitlab.kitware.com/paraview/catalyst.git"
-    url = "https://gitlab.kitware.com/api/v4/projects/paraview%2Fcatalyst/packages/generic/catalyst/v2.0.0/catalyst-v2.0.0.tar.gz"
+    url = "https://gitlab.kitware.com/api/v4/projects/5912/packages/generic/catalyst/v2.0.0/catalyst-v2.0.0.tar.gz"
 
     license("BSD-3-Clause")
 
     maintainers("mathstuf", "ayenpure")
     version("master", branch="master")
-    version("2.0.0-rc4", sha256="cb491e4ccd344156cc2494f65b9f38885598c16d12e1016c36e2ee0bc3640863")
+    version("2.0.0", sha256="5842b690bd8afa635414da9b9c5e5d79fa37879b0d382428d0d8e26ba5374828")
 
     variant("mpi", default=False, description="Enable MPI support")
     variant("conduit", default=False, description="Use external Conduit for Catalyst")
