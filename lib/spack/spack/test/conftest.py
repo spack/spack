@@ -763,28 +763,10 @@ def mutable_empty_config(tmpdir_factory, configuration_dir):
         yield cfg
 
 
-@pytest.fixture(scope="session", autouse=True)
-def mock_wsdk_externals(mock_configuration_scopes):
-    with spack.config.use_configuration(*mock_configuration_scopes) as config:
-        mock_pkgs = spack.util.spack_yaml.syaml_dict()
-
-        def make_external_entry(name):
-            external_pkg_items = spack.util.spack_yaml.syaml_dict(
-                [
-                    ("spec", f"{name}@10.0.20348 plat=x64"),
-                    ("prefix", "C:/Program Files (x86)/Windows Kits/10"),
-                ]
-            )
-            external_pkg = spack.util.spack_yaml.syaml_dict()
-            external_pkg["externals"] = [external_pkg_items]
-            external_pkg["buildable"] = False
-            mock_pkgs[name] = external_pkg
-
-        make_external_entry("win-sdk")
-        make_external_entry("wgl")
-        pkgs_cfg = config.get("packages")
-        pkgs_cfg = spack.config.merge_yaml(pkgs_cfg, mock_pkgs)
-        config.set("packages", pkgs_cfg)
+@pytest.fixture(scope="function", autouse=True)
+def mock_wsdk_externals(monkeypatch):
+    """Skip check for required external packages on Windows during testing"""
+    monkeypatch.setattr(spack.bootstrap.core, "ensure_winsdk_external_or_raise", _return_none)
 
 
 @pytest.fixture(scope="function")
