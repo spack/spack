@@ -472,6 +472,7 @@ class Compiler:
         """Verbose output from compiling a dummy C source file. Output is cached."""
         if not hasattr(self, "_compile_c_source_output"):
             self._compile_c_source_output = self._compile_dummy_c_source()
+            print(self._compile_c_source_output)
         return self._compile_c_source_output
 
     def _compile_dummy_c_source(self) -> Optional[str]:
@@ -494,9 +495,6 @@ class Compiler:
 
             with self.compiler_environment():
                 return cc_exe(self.verbose_flag, fin, "-o", fout, output=str, error=str)
-        except spack.util.executable.ProcessError as pe:
-            tty.debug("ProcessError: Command exited with non-zero status: " + pe.long_message)
-            return None
         finally:
             shutil.rmtree(tmpdir, ignore_errors=True)
 
