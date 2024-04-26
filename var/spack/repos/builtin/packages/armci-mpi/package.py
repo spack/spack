@@ -25,7 +25,7 @@ from spack.package import *
 
 class ArmciMpi(AutotoolsPackage):
     """ARMCI-MPI is an implementation of the ARMCI library used by Global Arrays.
-       MPI-3 one-sided communication is used to implement ARMCI.
+    MPI-3 one-sided communication is used to implement ARMCI.
     """
 
     homepage = "https://github.com/pmodels/armci-mpi"
@@ -35,8 +35,12 @@ class ArmciMpi(AutotoolsPackage):
 
     license("BSD-3-Clause", checked_by="jeffhammond")
 
-    version("0.4", sha256="bcc3bb189b23bf653dcc69bc469eb86eae5ebc5ad94ab5f83e52ddbdbbebf1b1")
-    version("0.3.1-beta", sha256="f3eaa8f365fb55123ecd9ced401086b0732e37e4df592b27916d71a67ab34fe9")
+    version(
+        "0.4", sha256="bcc3bb189b23bf653dcc69bc469eb86eae5ebc5ad94ab5f83e52ddbdbbebf1b1"
+    )
+    version(
+        "0.3.1-beta", sha256="f3eaa8f365fb55123ecd9ced401086b0732e37e4df592b27916d71a67ab34fe9"
+    )
 
     variant("shared", default=True, description="Builds a shared version of the library")
     variant("progress", default=False, description="Enable asynchronous progress")
@@ -49,16 +53,10 @@ class ArmciMpi(AutotoolsPackage):
     depends_on("mpi")
 
     def autoreconf(self, spec, prefix):
-        # FIXME: Modify the autoreconf method as necessary
         autoreconf("--install", "--verbose", "--force")
 
     def configure_args(self):
-        # FIXME: Add arguments other than --prefix
-        # FIXME: If not needed delete this function
         args = ["--enable-g"]
-
         args.extend(self.enable_or_disable("shared"))
-
         args.extend(self.with_or_without("progress"))
-
         return args
