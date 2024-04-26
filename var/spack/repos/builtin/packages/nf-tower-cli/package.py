@@ -17,6 +17,8 @@ class NfTowerCli(Package):
     homepage = "https://github.com/seqeralabs/tower-cli"
     maintainers("marcodelapierre")
 
+    skip_version_audit = ["platform=windows"]
+
     if platform.machine() == "x86_64":
         if platform.system() == "Darwin":
             version(
