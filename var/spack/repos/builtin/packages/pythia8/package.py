@@ -134,7 +134,8 @@ class Pythia8(AutotoolsPackage):
             r"-std=c\+\+[0-9][0-9]", f"-std=c++{self.spec.variants['cxxstd'].value}", "configure"
         )
 
-    @when("@:8.311")
+    # Fix for https://gitlab.com/Pythia8/releases/-/issues/428
+    @when("@:8.311") 
     def patch(self):
         filter_file("\|;n'", "|'", "configure")
 
