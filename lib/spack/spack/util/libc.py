@@ -163,18 +163,14 @@ def parse_dynamic_linker(output: str):
                 return arg.split("=", 1)[1]
 
 
-def libc_include_dir_from_startfile_prefix(startfile_prefix: str) -> str:
-    parts = startfile_prefix.split(os.path.sep)
-    # Subdirectory to search, in order, to find where to substitute.
-    # This list is based on the inspection of a few common distros,
-    # and might therefore not be complete.
-    markers = ["lib", "lib64", "libx32", "lib32"]
-    for current_marker in markers:
-        try:
-            idx = parts.index(current_marker)
-        except ValueError:
-            continue
-        parts[idx] = "include"
-        return os.path.sep.join(parts)
-    else:
-        return ""
+def libc_include_dir_from_startfile_prefix(
+    libc_prefix: str, startfile_prefix: str
+) -> Optional[str]:
+    """Heuristic to determine the glibc include directory from the startfile prefix. Replaces
+    $libc_prefix/lib*/<multiarch> with $libc_prefix/include/<multiarch>. This function does not
+    check if the include directory actually exists or is correct."""
+    parts = os.path.relpath(startfile_prefix, libc_prefix).split(os.path.sep)
+    if parts[0] not in ("lib", "lib64", "libx32", "lib32"):
+        return None
+    parts[0] = "include"
+    return os.path.join(libc_prefix, *parts)

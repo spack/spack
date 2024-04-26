@@ -1172,8 +1172,10 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         relocation_args = [f"-B{startfile_prefix}"]
 
         # libc headers may also be in some multiarch subdir.
-        header_dir = spack.util.libc.libc_include_dir_from_startfile_prefix(startfile_prefix)
-        if all(
+        header_dir = spack.util.libc.libc_include_dir_from_startfile_prefix(
+            libc.external_path, startfile_prefix
+        )
+        if header_dir and all(
             os.path.exists(os.path.join(header_dir, h))
             for h in libc.package_class.representative_headers
         ):
