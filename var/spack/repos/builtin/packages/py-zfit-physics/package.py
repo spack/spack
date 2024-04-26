@@ -7,7 +7,7 @@
 from spack.package import *
 
 
-class PyZfitPhysics(Package):
+class PyZfitPhysics(PythonPackage):
     """Tools and models to extend zfit with physics specific content."""
 
     homepage = "https://github.com/zfit/zfit-physics"
