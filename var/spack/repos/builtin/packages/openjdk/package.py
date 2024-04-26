@@ -367,6 +367,8 @@ class Openjdk(Package):
 
     executables = ["^java$"]
 
+    skip_version_audit = ["platform=windows"]
+
     @classmethod
     def determine_version(cls, exe):
         output = Executable(exe)("-version", output=str, error=str)

@@ -1046,7 +1046,7 @@ external_detection = AuditClass(
     group="externals",
     tag="PKG-EXTERNALS",
     description="Sanity checks for external software detection",
-    kwargs=("pkgs",),
+    kwargs=("pkgs", "debug_log"),
 )
 
 
@@ -1069,7 +1069,7 @@ def packages_with_detection_tests():
 
 
 @external_detection
-def _test_detection_by_executable(pkgs, error_cls):
+def _test_detection_by_executable(pkgs, debug_log, error_cls):
     """Test drive external detection for packages"""
     import spack.detection
 
@@ -1095,6 +1095,7 @@ def _test_detection_by_executable(pkgs, error_cls):
         for idx, test_runner in enumerate(
             spack.detection.detection_tests(pkg_name, spack.repo.PATH)
         ):
+            debug_log(f"[{__file__}]: running test {idx} for package {pkg_name}")
             specs = test_runner.execute()
             expected_specs = test_runner.expected_specs
 
@@ -1115,10 +1116,9 @@ def _test_detection_by_executable(pkgs, error_cls):
             for candidate in expected_specs:
                 try:
                     idx = specs.index(candidate)
+                    matched_detection.append((candidate, specs[idx]))
                 except (AttributeError, ValueError):
                     pass
-
-                matched_detection.append((candidate, specs[idx]))
 
             def _compare_extra_attribute(_expected, _detected, *, _spec):
                 result = []
