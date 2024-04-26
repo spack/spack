@@ -20,8 +20,13 @@ paths:
             echo "mock executable got an unexpected flag: $1"
             exit 1
           fi
+    platforms: ["darwin", "linux"]
     results:
       - spec: "gcc@9.4.0 languages=c,c++"
+        extra_attributes:
+          compilers:
+            c: ".*/bin/gcc"
+            cxx: ".*/bin/g++"
   # Mock a version < 7 of GCC that requires -dumpversion and
   # errors with -dumpfullversion
   - layout:
@@ -37,8 +42,14 @@ paths:
             echo "compilation terminated."
             exit 1
           fi
+    platforms: ["darwin", "linux"]
     results:
       - spec: "gcc@5.5.0 languages=c,c++,fortran"
+        extra_attributes:
+          compilers:
+            c: ".*/bin/gcc-5$"
+            cxx: ".*/bin/g[+][+]-5$"
+            fortran: ".*/bin/gfortran-5$"
   # Multiple compilers present at the same time
   - layout:
       - executables:
@@ -50,7 +61,14 @@ paths:
         script: "echo 10.1.0"
     results:
       - spec: "gcc@6.5.0 languages=c"
+        extra_attributes:
+          compilers:
+            c: ".*/bin/x86_64-linux-gnu-gcc-6$"
       - spec: "gcc@10.1.0 languages=c,c++"
+        extra_attributes:
+          compilers:
+            c: ".*/bin/x86_64-linux-gnu-gcc-10$"
+            cxx: ".*/bin/x86_64-linux-gnu-g[+][+]-10$"
   # Apple clang under disguise as gcc should not be detected
   - layout:
       - executables:
@@ -70,4 +88,5 @@ paths:
             echo "mock executable got an unexpected flag: $1"
             exit 1
           fi
+    platforms: ["darwin"]
     results: []
