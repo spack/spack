@@ -1396,7 +1396,6 @@ class SpackSolverSetup:
             raise ValueError(f"Must provide a name for anonymous condition: '{required_spec}'")
 
         with spec_with_name(required_spec, name):
-
             # Check if we can emit the requirements before updating the condition ID counter.
             # In this way, if a condition can't be emitted but the exception is handled in the
             # caller, we won't emit partial facts.
@@ -2000,7 +1999,10 @@ class SpackSolverSetup:
             # best possible, so they're guaranteed to be used preferentially.
             version = s.versions.concrete
 
-            if version is None or any((v == version and not isinstance(version, vn.GitVersion)) for v in self.possible_versions[s.name]):
+            if version is None or any(
+                (v == version and not isinstance(version, vn.GitVersion))
+                for v in self.possible_versions[s.name]
+            ):
                 continue
 
             if require_checksum and not _is_checksummed_git_version(version):
