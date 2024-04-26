@@ -258,6 +258,11 @@ class Julia(MakefilePackage):
     # Make sure Julia sets -DNDEBUG when including LLVM header files.
     patch("llvm-NDEBUG.patch", when="@1.7.0:1.7")
 
+    # suite-sparse@7.2.1 sometimes builds cuda stub libraries and Julia build
+    # system deals with them, but we don't compile them, so we remove the code
+    # which is creating symlinks to those libraries.
+    patch("julia-1.10-rm-suite-sparse-cuda-stubs.patch", when="@1.10.0:1.10")
+
     def patch(self):
         # The system-libwhich-libblastrampoline.patch causes a rebuild of docs as it
         # touches the main Makefile, so we reset the a/m-time to doc/_build's.
