@@ -114,7 +114,7 @@ class Provenance(enum.IntEnum):
     # A 'package.py' file
     PACKAGE_PY = enum.auto()
     # An installed spec
-    INSTALLED_STANDARD_VERSION = enum.auto()
+    INSTALLED = enum.auto()
     # lower provenance for installed git refs so concretizer prefers StandardVersion installs
     INSTALLED_GIT_VERSION = enum.auto()
     # A runtime injected from another package (e.g. a compiler)
@@ -2326,11 +2326,7 @@ class SpackSolverSetup:
                     )
                 else:
                     self.declared_versions[dep.name].append(
-                        DeclaredVersion(
-                            version=dep.version,
-                            idx=0,
-                            origin=Provenance.INSTALLED_STANDARD_VERSION,
-                        )
+                        DeclaredVersion(version=dep.version, idx=0, origin=Provenance.INSTALLED)
                     )
                 self.possible_oses.add(dep.os)
 
