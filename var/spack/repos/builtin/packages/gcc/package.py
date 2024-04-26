@@ -1165,7 +1165,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         if not dynamic_linker:
             return
         libc = spack.util.libc.libc_from_dynamic_linker(dynamic_linker)
-        B_flag_dirs = [spack.util.libc.startfile_prefix(libc.external_path, dynamic_linker)]
+        startfile_prefix = spack.util.libc.startfile_prefix(libc.external_path, dynamic_linker)
 
         # libc headers may also be in some multiarch subdir.
         libc_header = fs.find_first(libc.external_path, libc.package_class.representative_headers)
@@ -1173,26 +1173,17 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
             return
         header_dir = os.path.dirname(libc_header)
 
-        if self.spec.satisfies("+binutils"):
-            B_flag_dirs.append(self.spec["binutils"].prefix.bin)
-
         # Delete current spec files.
-        specs_file = join_path(self.spec_dir, "specs")
+        specs_file = os.path.join(self.spec_dir, "specs")
         for f in (specs_file, f"{specs_file}.orig"):
             try:
                 os.unlink(f)
             except OSError:
                 pass
 
-        # Write a new one
-        self.write_rpath_specs()
-
-        B_flags = " ".join(f"-B{d}" for d in B_flag_dirs)
-
+        # Write a new one and append flags for libc
+        self.write_specs_file()
         with open(specs_file, "a") as f:
-            f.write(
-                f"""
-*self_spec:
-+ {B_flags} -isystem {header_dir}
-"""
-            )
+            print("*self_spec:", file=f)
+            print(f"+ -B{startfile_prefix} -isystem {header_dir}", file=f)
+            print(file=f)
