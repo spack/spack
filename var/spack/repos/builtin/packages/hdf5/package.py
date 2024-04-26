@@ -173,6 +173,15 @@ class Hdf5(CMakePackage):
     #    described in #2 we allow for such combination.
     # conflicts('+mpi+cxx')
 
+    # Patch needed for HDF5 1.14.3 to fix signaling FPE checks from triggering
+    # at dynamic type system initialization. The type system's builtin types
+    # were refactored in 1.14.3 and switched from compile-time to run-time
+    # initialization. This patch suppresses floating point exception checks
+    # that would otherwise be triggered by this code. Later HDF5 versions
+    # will include the patch code changes.
+    # See https://github.com/HDFGroup/hdf5/pull/3837
+    patch("hdf5_1_14_3_fpe.patch", when="@1.14.3")
+
     # There are known build failures with intel@18.0.1. This issue is
     # discussed and patch is provided at
     # https://software.intel.com/en-us/forums/intel-fortran-compiler-for-linux-and-mac-os-x/topic/747951.

@@ -1408,6 +1408,13 @@ class Spec:
     def external(self):
         return bool(self.external_path) or bool(self.external_modules)
 
+    @property
+    def is_develop(self):
+        """Return whether the Spec represents a user-developed package
+        in a Spack ``Environment`` (i.e. using `spack develop`).
+        """
+        return bool(self.variants.get("dev_path", False))
+
     def clear_dependencies(self):
         """Trim the dependencies of this spec."""
         self._dependencies.clear()
@@ -2961,7 +2968,6 @@ class Spec:
         allow_deprecated = spack.config.get("config:deprecated", False)
         solver = spack.solver.asp.Solver()
         result = solver.solve([self], tests=tests, allow_deprecated=allow_deprecated)
-        result.raise_if_unsat()
 
         # take the best answer
         opt, i, answer = min(result.answers)

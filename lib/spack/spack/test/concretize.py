@@ -1794,6 +1794,22 @@ class TestConcretize:
                 counter += 1
         assert counter == occurances, concrete_specs
 
+    @pytest.mark.only_clingo("Original concretizer cannot concretize in rounds")
+    def test_solve_in_rounds_all_unsolved(self, monkeypatch, mock_packages, config):
+        specs = [Spec(x) for x in ["libdwarf%gcc", "libdwarf%clang"]]
+        solver = spack.solver.asp.Solver()
+        solver.reuse = False
+
+        simulate_unsolved_property = list((x, None) for x in specs)
+        monkeypatch.setattr(spack.solver.asp.Result, "unsolved_specs", simulate_unsolved_property)
+        monkeypatch.setattr(spack.solver.asp.Result, "specs", list())
+
+        with pytest.raises(
+            spack.solver.asp.InternalConcretizerError,
+            match="a subset of input specs could not be solved for",
+        ):
+            list(solver.solve_in_rounds(specs))
+
     @pytest.mark.only_clingo("Use case not supported by the original concretizer")
     def test_coconcretize_reuse_and_virtuals(self):
         reusable_specs = []
@@ -1875,6 +1891,25 @@ class TestConcretize:
         concrete_spec = result.specs[0]
         assert concrete_spec.satisfies("%{}".format(s.compiler))
         assert concrete_spec.satisfies("os={}".format(s.architecture.os))
+
+    @pytest.mark.only_clingo("Use case not supported by the original concretizer")
+    def test_reuse_succeeds_with_config_compatible_os(self):
+        root_spec = Spec("b")
+        s = root_spec.concretized()
+        other_os = s.copy()
+        mock_os = "ubuntu2204"
+        other_os.architecture = spack.spec.ArchSpec(
+            "test-{os}-{target}".format(os=mock_os, target=str(s.architecture.target))
+        )
+        reusable_specs = [other_os]
+        overrides = {"concretizer": {"reuse": True, "os_compatible": {s.os: [mock_os]}}}
+        custom_scope = spack.config.InternalConfigScope("concretize_override", overrides)
+        with spack.config.override(custom_scope):
+            solver = spack.solver.asp.Solver()
+            setup = spack.solver.asp.SpackSolverSetup()
+            result, _, _ = solver.driver.solve(setup, [root_spec], reuse=reusable_specs)
+        concrete_spec = result.specs[0]
+        assert concrete_spec.satisfies("os={}".format(other_os.architecture.os))
 
     def test_git_hash_assigned_version_is_preferred(self):
         hash = "a" * 40
