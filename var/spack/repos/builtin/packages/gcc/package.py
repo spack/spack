@@ -1155,23 +1155,36 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         pkg("gcc-runtime").requires(f"@={str(spec.version)}", when=f"%{str(spec)}")
 
     def _post_buildcache_install_hook(self):
+        if not self.spec.satisfies("platform=linux"):
+            return
+
         # Setting up the runtime environment shouldn't be necessary here.
+        relocation_args = []
         gcc = self.spec["gcc"].command
         specs_file = os.path.join(self.spec_dir, "specs")
-        output = gcc("test.c", "-###", output=os.devnull, error=str).strip()
-        if not output:
+        dryrun = gcc("test.c", "-###", output=os.devnull, error=str).strip()
+        if not dryrun:
             tty.warn(f"Cannot relocate {specs_file}, compiler might not be working properly")
             return
-        dynamic_linker = spack.util.libc.parse_dynamic_linker(output)
+        dynamic_linker = spack.util.libc.parse_dynamic_linker(dryrun)
         if not dynamic_linker:
             tty.warn(f"Cannot relocate {specs_file}, compiler might not be working properly")
             return
 
         libc = spack.util.libc.libc_from_dynamic_linker(dynamic_linker)
-        startfile_prefix = spack.util.libc.startfile_prefix(libc.external_path, dynamic_linker)
-        relocation_args = [f"-B{startfile_prefix}"]
 
-        # libc headers may also be in some multiarch subdir.
+        # We search for crt1.o ourselves because `gcc -print-prile-name=crt1.o` can give a rather
+        # convoluted relative path from a different prefix.
+        startfile_prefix = spack.util.libc.startfile_prefix(libc.external_path, dynamic_linker)
+
+        gcc_can_locate = lambda p: os.path.isabs(
+            gcc(f"-print-file-name={p}", output=str, error=os.devnull).strip()
+        )
+
+        if not gcc_can_locate("crt1.o"):
+            relocation_args.append(f"-B{startfile_prefix}")
+
+        # libc headers may also be in a multiarch subdir.
         header_dir = spack.util.libc.libc_include_dir_from_startfile_prefix(
             libc.external_path, startfile_prefix
         )
@@ -1194,7 +1207,9 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
 
         # Write a new one and append flags for libc
         self.write_specs_file()
-        with open(specs_file, "a") as f:
-            print("*self_spec:", file=f)
-            print(f"+ {' '.join(relocation_args)}", file=f)
-            print(file=f)
+
+        if relocation_args:
+            with open(specs_file, "a") as f:
+                print("*self_spec:", file=f)
+                print(f"+ {' '.join(relocation_args)}", file=f)
+                print(file=f)
