@@ -10,7 +10,6 @@ import sys
 
 from archspec.cpu import UnsupportedMicroarchitecture
 
-import llnl.util.filesystem as fs
 import llnl.util.tty as tty
 from llnl.util.lang import classproperty
 from llnl.util.symlink import readlink
@@ -1158,23 +1157,28 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     def post_buildcache_install_hook(self):
         # Setting up the runtime environment shouldn't be necessary here.
         gcc = self.spec["gcc"].command
+        specs_file = os.path.join(self.spec_dir, "specs")
         output = gcc("test.c", "-###", output=os.devnull, error=str).strip()
         if not output:
+            tty.warn(f"Cannot relocate {specs_file}, compiler might not be working properly")
             return
         dynamic_linker = spack.util.libc.parse_dynamic_linker(output)
         if not dynamic_linker:
+            tty.warn(f"Cannot relocate {specs_file}, compiler might not be working properly")
             return
         libc = spack.util.libc.libc_from_dynamic_linker(dynamic_linker)
         startfile_prefix = spack.util.libc.startfile_prefix(libc.external_path, dynamic_linker)
-
+        tty.warn(startfile_prefix)
         # libc headers may also be in some multiarch subdir.
-        libc_header = fs.find_first(libc.external_path, libc.package_class.representative_headers)
-        if not libc_header:
+        header_dir = spack.util.libc.libc_include_dir_from_startfile_prefix(startfile_prefix)
+        if not all(
+            os.path.exists(os.path.join(header_dir, h))
+            for h in libc.package_class.representative_headers
+        ):
+            tty.warn(f"Cannot relocate {specs_file}, compiler might not be working properly")
             return
-        header_dir = os.path.dirname(libc_header)
 
         # Delete current spec files.
-        specs_file = os.path.join(self.spec_dir, "specs")
         for f in (specs_file, f"{specs_file}.orig"):
             try:
                 os.unlink(f)

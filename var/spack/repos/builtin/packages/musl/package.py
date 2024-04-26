@@ -29,6 +29,8 @@ class Musl(MakefilePackage):
 
     license("MIT")
 
+    representative_headers = ["iso646.h"]
+
     provides("libc")
 
     version("1.2.4", sha256="7a35eae33d5372a7c0da1188de798726f68825513b7ae3ebe97aaaa52114f039")

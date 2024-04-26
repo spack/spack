@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import os.path
 import re
 import shlex
 import sys
@@ -160,3 +161,20 @@ def parse_dynamic_linker(output: str):
                 return args[idx + 1]
             elif arg.startswith("--dynamic-linker=") or arg.startswith("-dynamic-linker="):
                 return arg.split("=", 1)[1]
+
+
+def libc_include_dir_from_startfile_prefix(startfile_prefix: str) -> str:
+    parts = startfile_prefix.split(os.path.sep)
+    # Subdirectory to search, in order, to find where to substitute.
+    # This list is based on the inspection of a few common distros,
+    # and might therefore not be complete.
+    markers = ["lib", "lib64", "libx32", "lib32"]
+    for current_marker in markers:
+        try:
+            idx = parts.index(current_marker)
+        except ValueError:
+            continue
+        parts[idx] = "include"
+        return os.path.sep.join(parts)
+    else:
+        return ""
