@@ -441,7 +441,7 @@ class Tau(Package):
     ompt_test = join_path("examples", "openmp", "c++")
     python_test = join_path("examples", "python")
 
-    #Re-enabled
+    # Re-enabled
     # Disabled, see PR#43682 comments
     @run_after("install")
     def setup_build_tests(self):
@@ -603,21 +603,27 @@ class Tau(Package):
         else:
              self._run_tau_test(test_dir, self.matmult_test, "matrix multiplication", "matmult")
     '''
-    
-    
-    
+
     def _run_python_test(self, test_name, purpose, work_dir):
         tau_python = which(self.prefix.bin.tau_python)
         tau_py_inter = "-tau-python-interpreter=" + self.spec["python"].prefix.bin.python
-        pprof = which(self.prefix.bin.pprof)          
+        pprof = which(self.prefix.bin.pprof)
         with test_part(self, f"{test_name}", purpose, work_dir):
             if "+mpi" in self.spec:
                 flag = "mpi"
                 mpirun = which(self.spec["mpi"].prefix.bin.mpirun)
-                mpirun("-np", "4", self.prefix.bin.tau_python, tau_py_inter, "-T", flag, "firstprime.py")
+                mpirun(
+                    "-np",
+                    "4",
+                    self.prefix.bin.tau_python,
+                    tau_py_inter,
+                    "-T",
+                    flag,
+                    "firstprime.py",
+                )
             else:
                 flag = "serial"
-                tau_python(tau_py_inter, "-T", flag, "firstprime.py")                    
+                tau_python(tau_py_inter, "-T", flag, "firstprime.py")
 
     def _run_default_test(self, test_name, purpose, work_dir):
         tau_exec = which(self.prefix.bin.tau_exec)
@@ -630,8 +636,8 @@ class Tau(Package):
                 mpirun("-np", "4", self.prefix.bin.tau_exec, *flags, "./matmult")
             else:
                 flags = ["-T", "serial"]
-                tau_exec(*flags, "./matmult")  
-                
+                tau_exec(*flags, "./matmult")
+
     def _run_ompt_test(self, test_name, purpose, work_dir):
         tau_exec = which(self.prefix.bin.tau_exec)
         pprof = which(self.prefix.bin.pprof)
@@ -643,16 +649,14 @@ class Tau(Package):
                 mpirun("-np", "4", self.prefix.bin.tau_exec, *flags, "./mandel")
             else:
                 flags = ["-T", "serial", "-ompt"]
-                tau_exec(*flags, "./mandel")  
-    
+                tau_exec(*flags, "./mandel")
 
     def test_python(self):
         """test python variant"""
         if "+python" in self.spec:
             # current_test_cache_dir.examples.python
-            python_test_dir =  join_path(self.test_suite.current_test_cache_dir, self.python_test)       
+            python_test_dir = join_path(self.test_suite.current_test_cache_dir, self.python_test)
             self._run_python_test("test_tau_python", "Testing tau_python", python_test_dir)
-
 
     def test_default(self):
         """default matmult test"""
@@ -660,7 +664,7 @@ class Tau(Package):
             return
         default_test_dir = join_path(self.test_suite.current_test_cache_dir, self.matmult_test)
         self._run_default_test("test_default", "Testing TAU", default_test_dir)
-    
+
     def test_ompt(self):
         """ompt test"""
         if "+ompt" in self.spec:
