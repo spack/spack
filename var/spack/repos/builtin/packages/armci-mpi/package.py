@@ -5,6 +5,7 @@
 
 from spack.package import *
 
+
 class ArmciMpi(AutotoolsPackage):
     """ARMCI-MPI is an implementation of the ARMCI library used by Global Arrays.
     MPI-3 one-sided communication is used to implement ARMCI.
