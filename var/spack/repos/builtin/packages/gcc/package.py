@@ -1168,7 +1168,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
             return
         libc = spack.util.libc.libc_from_dynamic_linker(dynamic_linker)
         startfile_prefix = spack.util.libc.startfile_prefix(libc.external_path, dynamic_linker)
-        tty.warn(startfile_prefix)
+
         # libc headers may also be in some multiarch subdir.
         header_dir = spack.util.libc.libc_include_dir_from_startfile_prefix(startfile_prefix)
         if not all(
