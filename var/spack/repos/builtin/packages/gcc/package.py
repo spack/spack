@@ -1166,28 +1166,33 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         if not dynamic_linker:
             tty.warn(f"Cannot relocate {specs_file}, compiler might not be working properly")
             return
+
         libc = spack.util.libc.libc_from_dynamic_linker(dynamic_linker)
         startfile_prefix = spack.util.libc.startfile_prefix(libc.external_path, dynamic_linker)
+        relocation_args = [f"-B{startfile_prefix}"]
 
         # libc headers may also be in some multiarch subdir.
         header_dir = spack.util.libc.libc_include_dir_from_startfile_prefix(startfile_prefix)
-        if not all(
+        if all(
             os.path.exists(os.path.join(header_dir, h))
             for h in libc.package_class.representative_headers
         ):
-            tty.warn(f"Cannot relocate {specs_file}, compiler might not be working properly")
-            return
+            relocation_args.append(f"-isystem {header_dir}")
+        else:
+            tty.warn(
+                f"Cannot relocate {specs_file} include directories, "
+                f"compiler might not be working properly"
+            )
 
         # Delete current spec files.
-        for f in (specs_file, f"{specs_file}.orig"):
-            try:
-                os.unlink(f)
-            except OSError:
-                pass
+        try:
+            os.unlink(specs_file)
+        except OSError:
+            pass
 
         # Write a new one and append flags for libc
         self.write_specs_file()
         with open(specs_file, "a") as f:
             print("*self_spec:", file=f)
-            print(f"+ -B{startfile_prefix} -isystem {header_dir}", file=f)
+            print(f"+ {' '.join(relocation_args)}", file=f)
             print(file=f)
