@@ -59,10 +59,6 @@ class ArmciMpi(AutotoolsPackage):
 
         args.extend(self.enable_or_disable("shared"))
 
-        progress = int(self.spec.variants["progress"].value)
-        if progress:
-            args.extend([
-                "--with-progress",
-            ])
+        args.extend(self.with_or_without("progress"))
 
         return args
