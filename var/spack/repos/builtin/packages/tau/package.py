@@ -624,6 +624,7 @@ class Tau(Package):
             else:
                 flag = "serial"
                 tau_python(tau_py_inter, "-T", flag, "firstprime.py")
+            pprof() 
 
     def _run_default_test(self, test_name, purpose, work_dir):
         tau_exec = which(self.prefix.bin.tau_exec)
@@ -637,6 +638,7 @@ class Tau(Package):
             else:
                 flags = ["-T", "serial"]
                 tau_exec(*flags, "./matmult")
+            pprof() 
 
     def _run_ompt_test(self, test_name, purpose, work_dir):
         tau_exec = which(self.prefix.bin.tau_exec)
@@ -650,6 +652,7 @@ class Tau(Package):
             else:
                 flags = ["-T", "serial", "-ompt"]
                 tau_exec(*flags, "./mandel")
+            pprof()
 
     def test_python(self):
         """test python variant"""
