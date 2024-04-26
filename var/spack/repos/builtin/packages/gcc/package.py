@@ -1154,7 +1154,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         # The version of gcc-runtime is the same as the %gcc used to "compile" it
         pkg("gcc-runtime").requires(f"@={str(spec.version)}", when=f"%{str(spec)}")
 
-    def post_buildcache_install_hook(self):
+    def _post_buildcache_install_hook(self):
         # Setting up the runtime environment shouldn't be necessary here.
         gcc = self.spec["gcc"].command
         specs_file = os.path.join(self.spec_dir, "specs")
