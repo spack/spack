@@ -16,6 +16,8 @@ class RustBootstrap(Package):
 
     maintainers("alecbcs")
 
+    skip_version_audit = ["platform=windows"]
+
     # List binary rust releases for multiple operating systems and architectures.
     # These binary versions are not intended to stay up-to-date. Instead we
     # should update these binary releases as bootstrapping requirements are
@@ -110,6 +112,9 @@ class RustBootstrap(Package):
             version(release, sha256=rust_releases[release][os][target])
 
     def url_for_version(self, version):
+        if self.os not in ("linux", "darwin"):
+            return None
+
         # Allow maintainers to checksum multiple architectures via
         # `spack checksum rust-bootstrap@1.70.0-darwin-aarch64`.
         match = re.search(r"(\S+)-(\S+)-(\S+)", str(version))

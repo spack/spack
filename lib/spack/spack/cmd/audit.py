@@ -84,7 +84,7 @@ def externals(parser, args):
         return
 
     pkgs = args.name or spack.repo.PATH.all_package_names()
-    reports = spack.audit.run_group(args.subcommand, pkgs=pkgs)
+    reports = spack.audit.run_group(args.subcommand, pkgs=pkgs, debug_log=tty.debug)
     _process_reports(reports)
 
 

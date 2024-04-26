@@ -59,6 +59,7 @@ paths:
         - "bin/x86_64-linux-gnu-gcc-10"
         - "bin/x86_64-linux-gnu-g++-10"
         script: "echo 10.1.0"
+    platforms: [darwin, linux]
     results:
       - spec: "gcc@6.5.0 languages=c"
         extra_attributes:

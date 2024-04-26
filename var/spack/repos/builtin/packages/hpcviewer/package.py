@@ -46,6 +46,8 @@ class Hpcviewer(Package):
     homepage = "http://hpctoolkit.org"
     maintainers("mwkrentel")
 
+    skip_version_audit = ["platform=windows"]
+
     darwin_sha = {
         ("2024.02", "aarch64"): "0f2bf2f89b7b9656b1b249efc8b24763f7865e8ddae5b22a3c21cc79fda49ce9",
         ("2024.02", "x86_64"): "7f61166155f326179e309aa18568b44d98a2219973a323cd4713123b5bf6fd54",

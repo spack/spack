@@ -13,6 +13,8 @@ class PyAzuremlDataprepNative(PythonPackage):
 
     homepage = "https://docs.microsoft.com/en-us/python/api/overview/azure/ml/?view=azure-ml-py"
 
+    skip_version_audit = ["platform=windows"]
+
     if sys.platform == "darwin":
         version(
             "30.0.0-py3.9",

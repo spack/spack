@@ -16,7 +16,7 @@ class PyNvidiaDali(PythonPackage):
     homepage = "https://developer.nvidia.com/dali"
     url = "https://developer.download.nvidia.com/compute/redist/"
 
-    skip_version_audit = ["platform=darwin"]
+    skip_version_audit = ["platform=darwin", "platform=windows"]
 
     maintainers("thomas-bouvier")
 

@@ -27,7 +27,7 @@ class Cutensor(Package):
     maintainers("bvanessen")
     url = "cutensor"
 
-    skip_version_audit = ["platform=darwin"]
+    skip_version_audit = ["platform=darwin", "platform=windows"]
 
     for ver, packages in _versions.items():
         key = "{0}-{1}".format(platform.system(), platform.machine())
