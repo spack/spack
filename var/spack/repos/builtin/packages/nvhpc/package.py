@@ -388,7 +388,7 @@ class Nvhpc(Package):
     maintainers("samcmill")
     tags = ["e4s"]
 
-    skip_version_audit = ["platform=darwin"]
+    skip_version_audit = ["platform=darwin", "platform=windows"]
 
     redistribute(source=False, binary=False)
 
