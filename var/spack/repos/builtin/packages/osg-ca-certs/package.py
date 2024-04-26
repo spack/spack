@@ -21,6 +21,12 @@ class OsgCaCerts(Package):
 
     releases = [
         {
+            "osg_version": "1.119",
+            "igtf_version": "1.128",
+            "osg_sha256": "d5558cd419c8d46bdc958064cb97f963d1ea793866414c025906ec15033512ed",
+            "igtf_sha256": "1385e2206b4088cbad94264e2c252ad431f075f88a427cdee4ed523df95b9ab7 ",
+        }
+        {
             "osg_version": "1.110",
             "igtf_version": "1.119",
             "osg_sha256": "025969d415bf27c1609699caf63d0d79540a01df500187195f2bd973fe69e00d",
