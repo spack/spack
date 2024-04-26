@@ -288,6 +288,13 @@ class Boost(Package):
     # (https://github.com/spack/spack/pull/32879#issuecomment-1265933265)
     conflicts("%oneapi", when="@1.80")
 
+    # Boost 1.85.0 stacktrace added a hard compilation error that has to
+    # explicitly be suppressed on some platforms:
+    # https://github.com/boostorg/stacktrace/pull/150. This conflict could be
+    # turned into a variant that allows users to opt-in when they know it is
+    # safe to do so on affected platforms.
+    conflicts("+clanglibcpp", when="@1.85: +stacktrace")
+
     # Patch fix from https://svn.boost.org/trac/boost/ticket/11856
     patch("boost_11856.patch", when="@1.60.0%gcc@4.4.7")
 
@@ -636,6 +643,13 @@ class Boost(Package):
             # change into boost compilation
             if spec.variants["cxxstd"].value == "11":
                 cxxflags.append("-std=c++11")
+
+        # See conflict above and
+        # https://github.com/boostorg/stacktrace/pull/150. This suppresses a
+        # compilation error that must be explicitly suppressed. Because of the
+        # conflict we can suppress the error without input from a user.
+        if spec.satisfies("@1.85: +stacktrace"):
+            cxxflags.append("-DBOOST_STACKTRACE_LIBCXX_RUNTIME_MAY_CAUSE_MEMORY_LEAK")
 
         if cxxflags:
             options.append('cxxflags="{0}"'.format(" ".join(cxxflags)))
