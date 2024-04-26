@@ -15,7 +15,7 @@
 # -------------------------------------------------------------------------
 packages:
   all:
-    compiler: [gcc, intel, pgi, clang, xl, nag, fj, aocc]
+    compiler: [gcc, clang, oneapi, xl, nag, fj, aocc]
     providers:
       awk: [gawk]
       blas: [openblas, amdblis]
