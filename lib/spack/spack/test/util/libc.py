@@ -20,6 +20,7 @@ from spack.util import libc
         ("/usr/lib", "/usr/include"),
     ],
 )
+@pytest.mark.not_on_windows("The unit test deals with unix-like paths")
 def test_header_dir_computation(startfile_prefix, expected):
     """Tests that we compute the correct header directory from the prefix of the libc startfiles"""
     assert libc.libc_include_dir_from_startfile_prefix(startfile_prefix) == expected
