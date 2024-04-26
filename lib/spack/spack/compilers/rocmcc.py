@@ -75,3 +75,9 @@ class Rocmcc(spack.compilers.clang.Clang):
     @property
     def stdcxx_libs(self):
         return ("-lstdc++",)
+
+    @property
+    def verbose_flag(self):
+        # `rocmcc -v` calls `clang -cc1 -v`, which isn't as verbose as `clang -v`. So instead make
+        # the linker verbose explicitly.
+        return "-Wl,-v"
