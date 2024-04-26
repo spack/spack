@@ -24,16 +24,13 @@ class OsgCaCerts(Package):
             "igtf_version": "1.128",
             "osg_commit": "1f7abbe392e339aae28625a4016bc98d58ad7cab",
             "igtf_sha256": "1385e2206b4088cbad94264e2c252ad431f075f88a427cdee4ed523df95b9ab7",
-        },
+        }
     ]
 
     for release in releases:
         _version = "{0}.igtf.{1}".format(release["osg_version"], release["igtf_version"])
 
-        version(
-            _version,
-            commit=release["osg_commit"],
-        )
+        version(_version, commit=release["osg_commit"])
 
         resource(
             name="igtf-{igtf_version}".format(igtf_version=release["igtf_version"]),
