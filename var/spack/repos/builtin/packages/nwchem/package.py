@@ -35,6 +35,8 @@ class Nwchem(Package):
 
     variant("openmp", default=False, description="Enables OpenMP support")
     variant("mpipr", default=False, description="Enables ARMCI with progress rank")
+    variant("armcimpi", default=False, description="Enables ARMCI-MPI")
+    variant("extratce", default=False, description="Enables rarely-used TCE features")
     variant("fftw3", default=False, description="Link against the FFTW library")
     variant("libxc", default=False, description="Support additional functionals via libxc")
     variant(
@@ -88,10 +90,6 @@ class Nwchem(Package):
                 f"LAPACK_LIB={lapack.ld_flags}",
                 f"SCALAPACK_LIB={scalapack.ld_flags}",
                 "USE_NOIO=Y",  # skip I/O algorithms
-                "MRCC_METHODS=y",  # TCE extra module
-                "IPCCSD=y",  # TCE extra module
-                "EACCSD=y",  # TCE extra module
-                "CCSDTQ=y",  # TCE extra module
                 "V=1",  # verbose build
             ]
         )
@@ -121,11 +119,23 @@ class Nwchem(Package):
 
         args.extend([f"NWCHEM_TARGET={target}"])
 
+        # These optional components of TCE are rarely used and in some cases
+        # increase the compilation time significantly (CCSDTLR and CCSDTQ).
+        if spec.satisfies("+extratce"):
+            args.extend(["MRCC_METHODS=y"])
+            args.extend(["IPCCSD=y"])
+            args.extend(["EACCSD=y"])
+            args.extend(["CCSDTLR=y"])
+            args.extend(["CCSDTQ=y"])
+
         if spec.satisfies("+openmp"):
             args.extend(["USE_OPENMP=y"])
 
         if spec.satisfies("+mpipr"):
             args.extend(["ARMCI_NETWORK=MPI-PR"])
+        elif spec.satisfies("+armcimpi"):
+            args.extend(["ARMCI_NETWORK=ARMCI"])
+            args.extend([f"EXTERNAL_ARMCI_PATH={armcimpi.prefix}"])
 
         if spec.satisfies("+fftw3"):
             args.extend(["USE_FFTW3=y"])
