@@ -16,7 +16,6 @@ from llnl.util.symlink import readlink
 
 import spack.platforms
 import spack.util.executable
-from spack.build_environment import dso_suffix
 from spack.operating_systems.mac_os import macos_sdk_path, macos_version
 from spack.package import *
 
@@ -957,76 +956,42 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     @property
     def spec_dir(self):
         # e.g. lib/gcc/x86_64-unknown-linux-gnu/4.9.2
-        spec_dir = glob.glob("{0}/gcc/*/*".format(self.prefix.lib))
+        spec_dir = glob.glob(f"{self.prefix.lib}/gcc/*/*")
         return spec_dir[0] if spec_dir else None
 
     @run_after("install")
-    def write_rpath_specs(self):
-        """Generate a spec file so the linker adds a rpath to the libs
-        the compiler used to build the executable.
-
-        .. caution::
-
-           The custom spec file by default with *always* pass ``-Wl,-rpath
-           ...`` to the linker, which will cause the linker to *ignore* the
-           value of ``LD_RUN_PATH``, which otherwise would be saved to the
-           binary as the default rpath. See the mitigation below for how to
-           temporarily disable this behavior.
-
-        Structure the specs file so that users can define a custom spec file
-        to suppress the spack-linked rpaths to facilitate rpath adjustment
-        for relocatable binaries. The custom spec file
-        :file:`{norpath}.spec` will have a single
-        line followed by two blanks lines::
-
-            *link_libgcc_rpath:
-
-
-
-        It can be passed to the GCC linker using the argument
-        ``--specs=norpath.spec`` to disable the automatic rpath and restore
-        the behavior of ``LD_RUN_PATH``."""
+    def write_specs_file(self):
+        """(1) inject an rpath to its runtime library dir, (2) add a default programs search path
+        to <binutils>/bin."""
         if not self.spec_dir:
-            tty.warn(
-                "Could not install specs for {0}.".format(self.spec.format("{name}{@version}"))
-            )
+            tty.warn(f"Could not install specs for {self.spec.format('{name}{@version}')}.")
             return
-
-        gcc = self.spec["gcc"].command
-        lines = gcc("-dumpspecs", output=str).splitlines(True)
-        specs_file = join_path(self.spec_dir, "specs")
-
-        # Save a backup
-        with open(specs_file + ".orig", "w") as out:
-            out.writelines(lines)
 
         # Find which directories have shared libraries
-        rpath_libdirs = []
-        for dir in ["lib", "lib64"]:
+        for dir in ["lib64", "lib"]:
             libdir = join_path(self.prefix, dir)
-            if glob.glob(join_path(libdir, "*." + dso_suffix)):
-                rpath_libdirs.append(libdir)
-
-        if not rpath_libdirs:
-            # No shared libraries
+            if glob.glob(join_path(libdir, "libgcc_s.*")):
+                rpath_dir = libdir
+                break
+        else:
             tty.warn("No dynamic libraries found in lib/lib64")
-            return
+            rpath_dir = None
 
-        # Overwrite the specs file
-        with open(specs_file, "w") as out:
-            for line in lines:
-                out.write(line)
-                if line.startswith("*link_libgcc:"):
-                    # Insert at start of line following link_libgcc, which gets
-                    # inserted into every call to the linker
-                    out.write("%(link_libgcc_rpath) ")
+        specs_file = join_path(self.spec_dir, "specs")
+        with open(specs_file, "w") as f:
+            # rpath
+            if rpath_dir:
+                print("*link_libgcc:", file=f)
+                print(f"+ -rpath={rpath_dir}", file=f)
+                print(file=f)
 
-            # Add easily-overridable rpath string at the end
-            out.write("*link_libgcc_rpath:\n")
-            out.write(" ".join("-rpath " + lib for lib in rpath_libdirs))
-            out.write("\n")
+            # programs search path
+            if self.spec.satisfies("+binutils"):
+                print("*self_spec:", file=f)
+                print(f"+ -B{self.spec['binutils'].prefix.bin}", file=f)
+                print(file=f)
         set_install_permissions(specs_file)
-        tty.info("Wrote new spec file to {0}".format(specs_file))
+        tty.info(f"Wrote new spec file to {specs_file}")
 
     def setup_run_environment(self, env):
         # Search prefix directory for possibly modified compiler names
