@@ -755,7 +755,7 @@ esac
 
 # Linker flags
 case "$mode" in
-    ld|ccld)
+    ccld)
         extend spack_flags_list SPACK_LDFLAGS
         ;;
 esac
