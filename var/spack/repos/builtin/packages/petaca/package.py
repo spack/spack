@@ -28,6 +28,7 @@ class Petaca(CMakePackage):
     license("MIT")
 
     version("develop", branch="master")
+    version("24.04", sha256="951a0ba3380502fa09009af8613471256bbcb4edc14fe810f7e3afe7adc21b7e")
     version("23.12", sha256="8d7f1c7170500db52a624c891fb1563b8cfc322d138d935a5b4c6f12d9bdbd23")
     version("23.11.1", sha256="5c0809965046be5391b476edf1bc0c80584c3bc4fc5ecbf915a2344c6c5b9914")
     version("23.11", sha256="2230ea8e90ee00bd571c557be4f208077e1606310bef2e43a0257102cc875c45")
