@@ -16,6 +16,8 @@ class BlisBase(MakefilePackage):
     of the library in the 'amdblis' package.
     """
 
+    maintainers("jeffhammond")
+
     depends_on("python@2.7:2.8,3.4:", type=("build", "run"))
 
     variant(
