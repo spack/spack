@@ -35,11 +35,7 @@ class Cernlib(CMakePackage):
 
     depends_on("openssl", when="platform=linux")
 
-    @when("@2022.11.08.0-free")
-    def patch(self):
-        filter_file("crypto", "crypt", "packlib/CMakeLists.txt")
-
-    @when("@2023.08.14.0-free")
+    @when("@:2023.08.14.0-free")
     def patch(self):
         filter_file("crypto", "crypt", "packlib/CMakeLists.txt")
 
