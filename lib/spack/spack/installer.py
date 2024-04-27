@@ -489,6 +489,9 @@ def _process_binary_cache_tarball(
     with timer.measure("install"), spack.util.path.filter_padding():
         binary_distribution.extract_tarball(pkg.spec, download_result, force=False, timer=timer)
 
+        if hasattr(pkg, "_post_buildcache_install_hook"):
+            pkg._post_buildcache_install_hook()
+
         pkg.installed_from_binary_cache = True
         spack.store.STORE.db.add(pkg.spec, spack.store.STORE.layout, explicit=explicit)
         return True

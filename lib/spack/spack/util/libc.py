@@ -4,7 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import os.path
 import re
+import shlex
 import sys
 from subprocess import PIPE, run
 from typing import Optional
@@ -115,3 +117,60 @@ def libc_from_current_python_process() -> Optional["spack.spec.Spec"]:
         return None
 
     return libc_from_dynamic_linker(dynamic_linker)
+
+
+def startfile_prefix(prefix: str, compatible_with: str = sys.executable) -> Optional[str]:
+    # Search for crt1.o at max depth 2 compatible with the ELF file provided in compatible_with.
+    # This is useful for finding external libc startfiles on a multiarch system.
+    try:
+        compat = spack.util.elf.get_elf_compat(compatible_with)
+        accept = lambda path: spack.util.elf.get_elf_compat(path) == compat
+    except Exception:
+        accept = lambda path: True
+
+    queue = [(0, prefix)]
+    while queue:
+        depth, path = queue.pop()
+        try:
+            iterator = os.scandir(path)
+        except OSError:
+            continue
+        with iterator:
+            for entry in iterator:
+                try:
+                    if entry.is_dir(follow_symlinks=True):
+                        if depth < 2:
+                            queue.append((depth + 1, entry.path))
+                    elif entry.name == "crt1.o" and accept(entry.path):
+                        return path
+                except Exception:
+                    continue
+    return None
+
+
+def parse_dynamic_linker(output: str):
+    """Parse -dynamic-linker /path/to/ld.so from compiler output"""
+    for line in reversed(output.splitlines()):
+        if "-dynamic-linker" not in line:
+            continue
+        args = shlex.split(line)
+
+        for idx in reversed(range(1, len(args))):
+            arg = args[idx]
+            if arg == "-dynamic-linker" or args == "--dynamic-linker":
+                return args[idx + 1]
+            elif arg.startswith("--dynamic-linker=") or arg.startswith("-dynamic-linker="):
+                return arg.split("=", 1)[1]
+
+
+def libc_include_dir_from_startfile_prefix(
+    libc_prefix: str, startfile_prefix: str
+) -> Optional[str]:
+    """Heuristic to determine the glibc include directory from the startfile prefix. Replaces
+    $libc_prefix/lib*/<multiarch> with $libc_prefix/include/<multiarch>. This function does not
+    check if the include directory actually exists or is correct."""
+    parts = os.path.relpath(startfile_prefix, libc_prefix).split(os.path.sep)
+    if parts[0] not in ("lib", "lib64", "libx32", "lib32"):
+        return None
+    parts[0] = "include"
+    return os.path.join(libc_prefix, *parts)
