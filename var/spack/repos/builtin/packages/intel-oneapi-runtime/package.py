@@ -10,8 +10,9 @@ from spack.package import *
 from spack.pkg.builtin.gcc_runtime import get_elf_libraries
 
 
+@IntelOneApiPackage.update_description
 class IntelOneapiRuntime(Package):
-    """Package for OneAPI compiler runtime libraries"""
+    """Package for OneAPI compiler runtime libraries redistributables."""
 
     homepage = "https://software.intel.com/content/www/us/en/develop/tools/oneapi.html"
     has_code = False

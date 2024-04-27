@@ -34,7 +34,7 @@ jobs:
       run: |
           . share/spack/setup-env.sh
           coverage run $(which spack) audit packages
-          coverage run $(which spack) audit externals        
+          coverage run $(which spack) -d audit externals        
           coverage combine
           coverage xml
     - name: Package audits (without coverage)
