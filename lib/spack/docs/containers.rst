@@ -203,6 +203,9 @@ The OS that are currently supported are summarized in the table below:
    * - Ubuntu 22.04
      - ``ubuntu:22.04``
      - ``spack/ubuntu-jammy``
+   * - Ubuntu 24.04
+     - ``ubuntu:24.04``
+     - ``spack/ubuntu-noble``
    * - CentOS 7
      - ``centos:7``
      - ``spack/centos7``

@@ -45,6 +45,7 @@ jobs:
                      [leap15, 'linux/amd64,linux/arm64,linux/ppc64le', 'opensuse/leap:15'],
                      [ubuntu-focal, 'linux/amd64,linux/arm64,linux/ppc64le', 'ubuntu:20.04'],
                      [ubuntu-jammy, 'linux/amd64,linux/arm64,linux/ppc64le', 'ubuntu:22.04'],
+                     [ubuntu-noble, 'linux/amd64,linux/arm64,linux/ppc64le', 'ubuntu:24.04'],
                      [almalinux8, 'linux/amd64,linux/arm64,linux/ppc64le', 'almalinux:8'],
                      [almalinux9, 'linux/amd64,linux/arm64,linux/ppc64le', 'almalinux:9'],
                      [rockylinux8, 'linux/amd64,linux/arm64', 'rockylinux:8'],
