@@ -87,7 +87,7 @@ jobs:
           fi
 
       - name: Upload Dockerfile
-        uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32
+        uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808
         with:
           name: dockerfiles
           path: dockerfiles
