@@ -64,6 +64,7 @@ class Nwchem(Package):
     depends_on("blas")
     depends_on("lapack")
     depends_on("mpi")
+    depends_on("armci", when="+armcimpi")
     depends_on("scalapack")
     depends_on("fftw-api@3", when="+fftw3")
     depends_on("libxc", when="+libxc")
@@ -136,12 +137,9 @@ class Nwchem(Package):
         if spec.satisfies("+mpipr"):
             args.extend(["ARMCI_NETWORK=MPI-PR"])
         elif spec.satisfies("+armcimpi"):
-            # this does not work, sadly
-            # armcimpi = spec["armcimpi"]
-            # args.extend([f"EXTERNAL_ARMCI_PATH={armcimpi.prefix}"])
-            # this works
-            args.extend(["EXTERNAL_ARMCI_PATH=${ARMCIMPI_DIR}"])
+            armcimpi = spec["armci"]
             args.extend(["ARMCI_NETWORK=ARMCI"])
+            args.extend([f"EXTERNAL_ARMCI_PATH={armcimpi.prefix}"])
 
         if spec.satisfies("+fftw3"):
             args.extend(["USE_FFTW3=y"])
