@@ -28,6 +28,8 @@ class Armcimpi(AutotoolsPackage):
     variant("shared", default=True, description="Builds a shared version of the library")
     variant("progress", default=False, description="Enable asynchronous progress")
 
+    provides("armci")
+
     depends_on("autoconf", type="build")
     depends_on("automake", type="build")
     depends_on("libtool", type="build")
@@ -43,3 +45,7 @@ class Armcimpi(AutotoolsPackage):
         args.extend(self.enable_or_disable("shared"))
         args.extend(self.with_or_without("progress"))
         return args
+
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        env.set("ARMCIMPI_DIR", self.prefix)
+

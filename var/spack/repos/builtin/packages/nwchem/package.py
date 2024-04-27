@@ -134,8 +134,12 @@ class Nwchem(Package):
         if spec.satisfies("+mpipr"):
             args.extend(["ARMCI_NETWORK=MPI-PR"])
         elif spec.satisfies("+armcimpi"):
+            # this does not work, sadly
+            #armcimpi = spec["armcimpi"]
+            #args.extend([f"EXTERNAL_ARMCI_PATH={armcimpi.prefix}"])
+            # this works
+            args.extend(["EXTERNAL_ARMCI_PATH=${ARMCIMPI_DIR}"])
             args.extend(["ARMCI_NETWORK=ARMCI"])
-            args.extend([f"EXTERNAL_ARMCI_PATH={armcimpi.prefix}"])
 
         if spec.satisfies("+fftw3"):
             args.extend(["USE_FFTW3=y"])
