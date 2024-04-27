@@ -17,6 +17,8 @@ class Nwchem(Package):
 
     tags = ["ecp", "ecp-apps"]
 
+    maintainers("jeffhammond")
+
     version(
         "7.2.2",
         sha256="6b68e9c12eec38c09d92472bdd1ff130b93c1b5e1f65e4702aa7ee36c80e4af7",
