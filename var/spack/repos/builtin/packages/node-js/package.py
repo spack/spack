@@ -72,7 +72,9 @@ class NodeJs(Package):
 
     # https://github.com/nodejs/node/blob/master/BUILDING.md#unix-and-macos
     depends_on("gmake@3.81:", type="build")
-    depends_on("binutils+gas", type="build")
+    # new internal dependency simdutf needs binutils+gas
+    depends_on("binutils+gas", type="build", when='@18.14:18')
+    depends_on("binutils+gas", type="build", when='@19.4:')
     depends_on("python@3.6:3.11", when="@19.1:", type="build")
     depends_on("python@3.6:3.10", when="@16.11:19.0", type="build")
     depends_on("python@3.6:3.9", when="@16.0:16.10", type="build")
