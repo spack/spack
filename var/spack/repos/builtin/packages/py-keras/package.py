@@ -22,6 +22,7 @@ class PyKeras(PythonPackage):
     maintainers("adamjstewart")
     license("Apache-2.0")
 
+    version("3.3.3", sha256="f2fdffc8434fd77045cf8fb21816dbaa2308d5f76974ca924b2f60b40433b1a0")
     version("3.3.2", sha256="e7e2ccba2dfe2cf10b82e3c75ea971b82a4c62560dc562c43b33f7790127c92f")
     version("3.3.1", sha256="03531beb01b108b867683762ceaacd0f28efc40cb92eee3c8c988b80cf718bbe")
     version("3.3.0", sha256="46763bd84696aa5e326734ee0ccfde12bef73b27f1e5e241bbf539cb6411e78d")
@@ -67,61 +68,61 @@ class PyKeras(PythonPackage):
         when="@3:",
     )
 
-    # setup.py
-    depends_on("python@3.9:", type=("build", "run"), when="@3:")
-    depends_on("python@3.8:", type=("build", "run"), when="@2.12:")
-    depends_on("py-setuptools", type="build")
-    depends_on("py-absl-py", type=("build", "run"), when="@2.6:")
-    depends_on("py-numpy", type=("build", "run"))
-    depends_on("py-rich", type=("build", "run"), when="@3:")
-    depends_on("py-namex", type=("build", "run"), when="@3:")
-    depends_on("py-h5py", type=("build", "run"))
-    depends_on("py-optree", type=("build", "run"), when="@3.1:")
-    depends_on("py-ml-dtypes", type=("build", "run"), when="@3.0.5:")
+    with default_args(type="build"):
+        depends_on("py-setuptools")
 
-    # requirements-common.txt
-    depends_on("py-scipy", type=("build", "run"))
-    depends_on("py-pandas", type=("build", "run"))
-    depends_on("py-requests", type=("build", "run"), when="@3:")
-    depends_on("py-protobuf", type=("build", "run"), when="@3:")
+    with default_args(type=("build", "run")):
+        # setup.py
+        depends_on("python@3.9:", when="@3:")
+        depends_on("python@3.8:", when="@2.12:")
+        depends_on("py-absl-py", when="@2.6:")
+        depends_on("py-numpy")
+        depends_on("py-rich", when="@3:")
+        depends_on("py-namex@0.0.8:", when="@3.3.3:")
+        depends_on("py-namex", when="@3:")
+        depends_on("py-h5py")
+        depends_on("py-optree", when="@3.1:")
+        depends_on("py-ml-dtypes", when="@3.0.5:")
 
-    # requirements-tensorflow-cuda.txt
-    depends_on("py-tensorflow@2.16.1:2.16", type=("build", "run"), when="@3.0: backend=tensorflow")
+        # requirements-common.txt
+        depends_on("py-scipy")
+        depends_on("py-pandas")
+        depends_on("py-requests", when="@3:")
+        depends_on("py-protobuf", when="@3:")
 
-    # requirements-jax-cuda.txt
-    depends_on("py-jax@0.4.23", type=("build", "run"), when="@3.0.5: backend=jax")
-    depends_on("py-jax", type=("build", "run"), when="@3: backend=jax")
+        # requirements-tensorflow-cuda.txt
+        depends_on("py-tensorflow@2.16.1:2.16", when="@3.0: backend=tensorflow")
 
-    # requirements-torch-cuda.txt
-    depends_on("py-torch@2.2.1", type=("build", "run"), when="@3.1.0: backend=torch")
-    depends_on("py-torch@2.1.2", type=("build", "run"), when="@3.0.3:3.0.5 backend=torch")
-    depends_on("py-torch@2.1.1", type=("build", "run"), when="@3.0.1:3.0.2 backend=torch")
-    depends_on("py-torch@2.1.0", type=("build", "run"), when="@3.0.0 backend=torch")
-    depends_on("py-torchvision@0.17.1", type=("build", "run"), when="@3.1.0: backend=torch")
-    depends_on("py-torchvision@0.16.2", type=("build", "run"), when="@3.0.3:3.0.5 backend=torch")
-    depends_on("py-torchvision@0.16.1", type=("build", "run"), when="@3.0.1:3.0.2 backend=torch")
-    depends_on("py-torchvision@0.16.0", type=("build", "run"), when="@3.0.0 backend=torch")
+        # requirements-jax-cuda.txt
+        depends_on("py-jax@0.4.23", when="@3.0.5: backend=jax")
+        depends_on("py-jax", when="@3: backend=jax")
+
+        # requirements-torch-cuda.txt
+        depends_on("py-torch@2.2.1", when="@3.1.0: backend=torch")
+        depends_on("py-torch@2.1.2", when="@3.0.3:3.0.5 backend=torch")
+        depends_on("py-torch@2.1.1", when="@3.0.1:3.0.2 backend=torch")
+        depends_on("py-torch@2.1.0", when="@3.0.0 backend=torch")
+        depends_on("py-torchvision@0.17.1", when="@3.1.0: backend=torch")
+        depends_on("py-torchvision@0.16.2", when="@3.0.3:3.0.5 backend=torch")
+        depends_on("py-torchvision@0.16.1", when="@3.0.1:3.0.2 backend=torch")
+        depends_on("py-torchvision@0.16.0", when="@3.0.0 backend=torch")
 
     # Historical dependencies
-    depends_on("bazel", type="build", when="@2.5:2")
-    depends_on("protobuf", type="build", when="@2.5:2")
-    depends_on("pil", type=("build", "run"), when="@:2")
-    depends_on("py-dm-tree", type=("build", "run"), when="@3.0")
-    depends_on("py-portpicker", type=("build", "run"), when="@2.10:2")
-    depends_on("py-pydot", type=("build", "run"), when="@:2")
-    depends_on("py-pyyaml", type=("build", "run"), when="@:2")
-    depends_on("py-six", type=("build", "run"), when="@:2")
-    for minor_ver in range(6, 16):
-        depends_on(
-            "py-tensorflow@2.{}".format(minor_ver),
-            type=("build", "run"),
-            when="@2.{}".format(minor_ver),
-        )
-        depends_on(
-            "py-tensorboard@2.{}".format(minor_ver),
-            type=("build", "run"),
-            when="@2.{}".format(minor_ver),
-        )
+    with default_args(type="build"):
+        depends_on("bazel", when="@2.5:2")
+        depends_on("protobuf", when="@2.5:2")
+
+    with default_args(type=("build", "run")):
+        depends_on("pil", when="@:2")
+        depends_on("py-dm-tree", when="@3.0")
+        depends_on("py-portpicker", when="@2.10:2")
+        depends_on("py-pydot", when="@:2")
+        depends_on("py-pyyaml", when="@:2")
+        depends_on("py-six", when="@:2")
+
+        for minor_ver in range(6, 16):
+            depends_on("py-tensorflow@2.{}".format(minor_ver), when="@2.{}".format(minor_ver))
+            depends_on("py-tensorboard@2.{}".format(minor_ver), when="@2.{}".format(minor_ver))
 
     def url_for_version(self, version):
         if version >= Version("3"):
