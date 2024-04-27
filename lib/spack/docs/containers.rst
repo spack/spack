@@ -233,6 +233,12 @@ The OS that are currently supported are summarized in the table below:
    * - Fedora Linux 38
      - ``fedora:38``
      - ``spack/fedora38``
+   * - Fedora Linux 39
+     - ``fedora:39``
+     - ``spack/fedora39``
+   * - Fedora Linux 40
+     - ``fedora:40``
+     - ``spack/fedora40``
 
 
 
