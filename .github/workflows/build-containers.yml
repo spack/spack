@@ -130,3 +130,4 @@ jobs:
         with:
           name: dockerfiles
           pattern: dockerfiles_*
+          delete-merged: true
