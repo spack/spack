@@ -26,6 +26,7 @@ class BlisBase(MakefilePackage):
         multi=False,
     )
 
+    variant("ilp64", default=False, description="Force 64-bit Fortran native integers")
     variant("blas", default=True, description="BLAS compatibility")
     variant("cblas", default=True, description="CBLAS compatibility")
     variant(
@@ -51,6 +52,11 @@ class BlisBase(MakefilePackage):
     def configure_args(self):
         spec = self.spec
         config_args = ["--enable-threading={0}".format(spec.variants["threads"].value)]
+
+        if "+ilp64" in spec:
+            config_args.append("--blas-int-size=64")
+        else:
+            config_args.append("--blas-int-size=32")
 
         if "+cblas" in spec:
             config_args.append("--enable-cblas")
