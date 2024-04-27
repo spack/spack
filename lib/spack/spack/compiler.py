@@ -8,7 +8,6 @@ import itertools
 import os
 import platform
 import re
-import shlex
 import shutil
 import sys
 import tempfile
@@ -180,21 +179,6 @@ def _parse_non_system_link_dirs(string: str) -> List[str]:
     # a system directory as a subdirectory
     link_dirs = filter_system_paths(link_dirs)
     return list(p for p in link_dirs if not in_system_subdirectory(p))
-
-
-def _parse_dynamic_linker(output: str):
-    """Parse -dynamic-linker /path/to/ld.so from compiler output"""
-    for line in reversed(output.splitlines()):
-        if "-dynamic-linker" not in line:
-            continue
-        args = shlex.split(line)
-
-        for idx in reversed(range(1, len(args))):
-            arg = args[idx]
-            if arg == "-dynamic-linker" or args == "--dynamic-linker":
-                return args[idx + 1]
-            elif arg.startswith("--dynamic-linker=") or arg.startswith("-dynamic-linker="):
-                return arg.split("=", 1)[1]
 
 
 def in_system_subdirectory(path):
@@ -452,7 +436,7 @@ class Compiler:
         if not output:
             return None
 
-        dynamic_linker = _parse_dynamic_linker(output)
+        dynamic_linker = spack.util.libc.parse_dynamic_linker(output)
 
         if not dynamic_linker:
             return None
