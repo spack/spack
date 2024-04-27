@@ -2439,6 +2439,7 @@ class TestConcretize:
                 return None
             return Spec("glibc@=2.28")
 
+        monkeypatch.setattr(spack.concretize.Concretizer, "check_for_compiler_existence", False)
         monkeypatch.setattr(spack.compiler.Compiler, "default_libc", property(_default_libc))
         monkeypatch.setattr(
             spack.util.libc, "libc_from_current_python_process", lambda: Spec("glibc@=2.28")
