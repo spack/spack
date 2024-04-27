@@ -18,8 +18,6 @@ class Armcimpi(AutotoolsPackage):
 
     license("BSD-3-Clause", checked_by="jeffhammond")
 
-    version("master", branch="master")
-
     version("0.4", sha256="bcc3bb189b23bf653dcc69bc469eb86eae5ebc5ad94ab5f83e52ddbdbbebf1b1")
     version(
         "0.3.1-beta", sha256="f3eaa8f365fb55123ecd9ced401086b0732e37e4df592b27916d71a67ab34fe9"
@@ -48,4 +46,3 @@ class Armcimpi(AutotoolsPackage):
 
     def setup_dependent_build_environment(self, env, dependent_spec):
         env.set("ARMCIMPI_DIR", self.prefix)
-
