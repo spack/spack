@@ -12,9 +12,31 @@
       },
       "os_package_manager": "yum_amazon"
     },
+    "fedora:40": {
+      "bootstrap": {
+        "template": "container/fedora.dockerfile",
+        "image": "docker.io/fedora:40"
+      },
+      "os_package_manager": "dnf",
+      "build": "spack/fedora40",
+      "final": {
+        "image": "docker.io/fedora:40"
+      }
+    },
+    "fedora:39": {
+      "bootstrap": {
+        "template": "container/fedora.dockerfile",
+        "image": "docker.io/fedora:39"
+      },
+      "os_package_manager": "dnf",
+      "build": "spack/fedora39",
+      "final": {
+        "image": "docker.io/fedora:39"
+      }
+    },
     "fedora:38": {
       "bootstrap": {
-        "template": "container/fedora_38.dockerfile",
+        "template": "container/fedora.dockerfile",
         "image": "docker.io/fedora:38"
       },
       "os_package_manager": "dnf",
@@ -25,7 +47,7 @@
     },
     "fedora:37": {
       "bootstrap": {
-        "template": "container/fedora_37.dockerfile",
+        "template": "container/fedora.dockerfile",
         "image": "docker.io/fedora:37"
       },
       "os_package_manager": "dnf",
