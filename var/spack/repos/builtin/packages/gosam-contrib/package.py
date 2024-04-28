@@ -32,7 +32,7 @@ class GosamContrib(AutotoolsPackage):
     def patch(self):
         # remove spack compiler wrapper path
         mf = FileFilter("gosam.conf.in")
-        mf.filter("^fc.bin=.*", "fc.bin=gfortran")
+        mf.filter("^fc.bin=.*", "fc.bin=" + self.compiler.fc)
 
     def flag_handler(self, name, flags):
         if name in ["cflags", "cxxflags", "cppflags"]:
