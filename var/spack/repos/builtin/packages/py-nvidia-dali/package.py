@@ -24,9 +24,19 @@ class PyNvidiaDali(PythonPackage):
     arch = platform.machine()
     if "linux" in system and arch == "x86_64":
         version(
+            "1.36.0-cuda120",
+            sha256="9a7754aacb245785462592aec89cbaec72e0a84d84399a061a563546bbf44805",
+            preferred=True,
+            url="https://developer.download.nvidia.com/compute/redist/nvidia-dali-cuda120/nvidia_dali_cuda120-1.36.0-13435171-py3-none-manylinux2014_x86_64.whl",
+        )
+        version(
+            "1.36.0-cuda110",
+            sha256="aa0e4a6def4b25ec1110e3488b020bc9997e0fde376a123e0b6414fc16684673",
+            url="https://developer.download.nvidia.com/compute/redist/nvidia-dali-cuda110/nvidia_dali_cuda110-1.36.0-13435172-py3-none-manylinux2014_x86_64.whl",
+        )
+        version(
             "1.27.0-cuda120",
             sha256="d8def4361bd9f888ddac3e2316b9eb89ee216f280c0973be12b8e1061d1ff108",
-            preferred=True,
             url="https://developer.download.nvidia.com/compute/redist/nvidia-dali-cuda120/nvidia_dali_cuda120-1.27.0-8625314-py3-none-manylinux2014_x86_64.whl",
         )
         version(
@@ -86,9 +96,19 @@ class PyNvidiaDali(PythonPackage):
         )
     elif "linux" in system and arch == "aarch64":
         version(
+            "1.36.0-cuda120",
+            sha256="575ae1ff9b7633c847182163e2d339f2bdafe8dd0ca4ca6e3092a02890f803c2",
+            preferred=True,
+            url="https://developer.download.nvidia.com/compute/redist/nvidia-dali-cuda120/nvidia_dali_cuda120-1.36.0-13435171-py3-none-manylinux2014_aarch64.whl",
+        )
+        version(
+            "1.36.0-cuda110",
+            sha256="505301223134b7efd8522a949f9b33725701579a775c9abcdd8b11f1118cec3a",
+            url="https://developer.download.nvidia.com/compute/redist/nvidia-dali-cuda110/nvidia_dali_cuda110-1.36.0-13435172-py3-none-manylinux2014_aarch64.whl",
+        )
+        version(
             "1.27.0-cuda120",
             sha256="57700656c4dd411497d3f8c690d409c71d6a8e9c2cc5e70499098dd0a01fd56b",
-            preferred=True,
             url="https://developer.download.nvidia.com/compute/redist/nvidia-dali-cuda120/nvidia_dali_cuda120-1.27.0-8625314-py3-none-manylinux2014_aarch64.whl",
         )
         version(
@@ -148,6 +168,7 @@ class PyNvidiaDali(PythonPackage):
         )
 
     cuda120_versions = (
+        "@1.36.0-cuda120",
         "@1.27.0-cuda120",
         "@1.26.0-cuda120",
         "@1.25.0-cuda120",
@@ -156,6 +177,7 @@ class PyNvidiaDali(PythonPackage):
         "@1.22.0-cuda120",
     )
     cuda110_versions = (
+        "@1.36.0-cuda110",
         "@1.27.0-cuda110",
         "@1.26.0-cuda110",
         "@1.25.0-cuda110",
@@ -169,7 +191,8 @@ class PyNvidiaDali(PythonPackage):
     for v in cuda110_versions:
         depends_on("cuda@11", when=v, type=("build", "run"))
 
-    depends_on("python@3.6:3.11", when="@1.23:", type=("build", "run"))
+    depends_on("python@3.8:3.12", when="@1.36:", type=("build", "run"))
+    depends_on("python@3.6:3.11", when="@1.23:1.27", type=("build", "run"))
     depends_on("python@3.6:3.10", when="@:1.22", type=("build", "run"))
     depends_on("py-astunparse@1.6.0:", type=("build", "run"))
     depends_on("py-gast@0.3.3:", when="@1.27:", type=("build", "run"))
