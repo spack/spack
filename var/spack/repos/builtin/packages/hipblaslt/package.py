@@ -1,0 +1,65 @@
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
+#
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+from spack.package import *
+
+
+class Hipblaslt(CMakePackage):
+    """hipBLASLt is a library that provides general matrix-matrix operations with a flexible API
+    and extends functionalities beyond a traditional BLAS library"""
+
+    homepage = "https://github.com/ROCm/hipBLASLt"
+    url = "https://github.com/ROCm/hipBLASLt/archive/refs/tags/rocm-6.0.2.tar.gz"
+    git = "https://github.com/ROCm/hipBLASLt.git"
+
+    maintainers("srekolam", "afzpatel", "renjithravindrankannath")
+
+    license("MIT")
+
+    version("6.0.2", sha256="e281a1a7760fab8c3e0baafe17950cf43c422184e3226e3c14eb06e50c69d421")
+    version("6.0.0", sha256="6451b6fdf7f24787628190bbe8f2208c929546b68b692d8355d2f18bea7ca7db")
+
+    amdgpu_targets = ROCmPackage.amdgpu_targets
+
+    variant(
+        "amdgpu_target",
+        description="AMD GPU architecture",
+        values=auto_or_any_combination_of(*amdgpu_targets),
+        sticky=True,
+    )
+    variant("asan", default=False, description="Build with address-sanitizer enabled or disabled")
+
+    for ver in ["6.0.0", "6.0.2"]:
+        depends_on(f"hip@{ver}", when=f"@{ver}")
+        depends_on(f"hipblas@{ver}", when=f"@{ver}")
+        depends_on(f"rocm-openmp-extras@{ver}", type="test", when=f"@{ver}")
+
+    depends_on("msgpack-c")
+    depends_on("py-joblib")
+    depends_on("googletest@1.10.0:", type="test")
+    depends_on("netlib-lapack@3.7.1:", type="test")
+    depends_on("py-pyyaml", type="test")
+
+    # Sets the proper for clang++ and clang-offload-blunder.
+    # Also adds hipblas and msgpack include directories
+    patch("001_Set_LLVM_Paths_And_Add_Includes.patch")
+
+    def setup_build_environment(self, env):
+        env.set("CXX", self.spec["hip"].hipcc)
+
+    def cmake_args(self):
+        args = [
+            self.define("Tensile_CODE_OBJECT_VERSION", "V3"),
+            self.define("MSGPACK_DIR", self.spec["msgpack-c"].prefix),
+            self.define_from_variant("ADDRESS_SANITIZER", "asan"),
+            self.define("BUILD_CLIENTS_TESTS", self.run_tests),
+        ]
+        if "auto" not in self.spec.variants["amdgpu_target"]:
+            args.append(self.define_from_variant("AMDGPU_TARGETS", "amdgpu_target"))
+        if self.run_tests:
+            args.append(
+                self.define("ROCM_OPENMP_EXTRAS_DIR", self.spec["rocm-openmp-extras"].prefix)
+            )
+        return args
