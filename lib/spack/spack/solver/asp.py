@@ -2519,12 +2519,18 @@ class SpackSolverSetup:
             if not compiler.available:
                 continue
 
-            if using_libc_compatibility() and compiler.compiler_obj.default_libc:
+            current_libc = compiler.compiler_obj.default_libc
+            # If this is a compiler yet to be built (config:install_missing_compilers:true)
+            # infer libc from the Python process
+            if not current_libc and compiler.compiler_obj.cc is None:
+                current_libc = spack.util.libc.libc_from_current_python_process()
+
+            if using_libc_compatibility() and current_libc:
                 recorder("*").depends_on(
                     "libc", when=f"%{compiler.spec}", type="link", description="Add libc"
                 )
                 recorder("*").depends_on(
-                    str(compiler.compiler_obj.default_libc),
+                    str(current_libc),
                     when=f"%{compiler.spec}",
                     type="link",
                     description="Add libc",
