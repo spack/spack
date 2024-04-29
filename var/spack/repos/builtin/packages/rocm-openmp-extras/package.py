@@ -213,7 +213,6 @@ class RocmOpenmpExtras(Package):
         "5.7.1",
         "6.0.0",
         "6.0.2",
-        "6.1.0",
     ]:
         depends_on(f"hsakmt-roct@{ver}", when=f"@{ver}")
         depends_on(f"comgr@{ver}", when=f"@{ver}")
@@ -227,8 +226,45 @@ class RocmOpenmpExtras(Package):
             expand=True,
             destination="rocm-openmp-extras",
             placement="rocm-device-libs",
-            when="@:6.0",
+            when=f"@{ver}",
         )
+        resource(
+            name="flang",
+            url=f"{tools_url}/flang/archive/rocm-{ver}.tar.gz",
+            sha256=versions_dict[ver]["flang"],
+            expand=True,
+            destination="rocm-openmp-extras",
+            placement="flang",
+            when=f"@{ver}",
+        )
+
+        resource(
+            name="aomp-extras",
+            url=f"{tools_url}/aomp-extras/archive/rocm-{ver}.tar.gz",
+            sha256=versions_dict[ver]["extras"],
+            expand=True,
+            destination="rocm-openmp-extras",
+            placement="aomp-extras",
+            when=f"@{ver}",
+        )
+
+        resource(
+            name="llvm-project",
+            url=f"{compute_url}/llvm-project/archive/rocm-{ver}.tar.gz",
+            sha256=versions_dict[ver]["llvm"],
+            expand=True,
+            destination="rocm-openmp-extras",
+            placement="llvm-project",
+            when=f"@{ver}",
+        )
+    for ver in [
+        "6.1.0",
+    ]:
+        depends_on(f"hsakmt-roct@{ver}", when=f"@{ver}")
+        depends_on(f"comgr@{ver}", when=f"@{ver}")
+        depends_on(f"hsa-rocr-dev@{ver}", when=f"@{ver}")
+        depends_on(f"llvm-amdgpu@{ver}", when=f"@{ver}")
+
         resource(
             name="rocm-device-libs",
             url=f"{compute_url}/llvm-project/archive/rocm-{ver}.tar.gz",
@@ -236,7 +272,7 @@ class RocmOpenmpExtras(Package):
             expand=True,
             destination="rocm-openmp-extras",
             placement="rocm-device-libs",
-            when="@6.1:",
+            when=f"@{ver}",
         )
 
         resource(
