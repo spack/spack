@@ -7,6 +7,7 @@ import os
 import shutil
 import sys
 
+import pathlib
 import pytest
 
 import llnl.util.filesystem as fs
@@ -630,3 +631,15 @@ def test_install_from_binary_with_missing_patch_succeeds(
     s.package.do_install(package_cache_only=True, dependencies_cache_only=True, unsigned=True)
 
     assert temporary_store.db.query_local_by_spec_hash(s.dag_hash())
+
+
+@pytest.mark.regression("38484")
+def test_git_ref_version_can_be_reused(monkeypatch, mock_git_version_info, install_mockery):
+    repo_path, filename, commits = mock_git_version_info
+    monkeypatch.setattr(
+        spack.package_base.PackageBase, "git", pathlib.Path(repo_path).as_uri(), raising=False
+    )
+    spec = spack.spec.Spec("git-test-commit@git.v1.0=1.0+generic_install+feature").concretized()
+    spec.package.do_install()
+    new_spec = spack.spec.Spec("git-test-commit@git.v1.0=1.0+generic_install~feature")
+    new_spec.concretize()
