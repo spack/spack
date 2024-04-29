@@ -16,7 +16,12 @@ paths:
           echo "InstalledDir: /usr/bin"
     platforms: ["darwin", "linux"]
     results:
-      - spec: 'llvm@3.9.1 +clang~lld~lldb'
+    - spec: 'llvm@3.9.1 +clang~lld~lldb'
+      extra_attributes:
+        compilers:
+          c: ".*/bin/clang-3.9$"
+          cxx: ".*/bin/clang[+][+]-3.9$"
+
   # Multiple LLVM packages in the same prefix
   - layout:
       - executables:
@@ -43,8 +48,19 @@ paths:
           echo "InstalledDir: /usr/bin"
     platforms: ["darwin", "linux"]
     results:
-      - spec: 'llvm@8.0.0+clang+lld+lldb'
-      - spec: 'llvm@3.9.1+clang~lld~lldb'
+    - spec: 'llvm@8.0.0+clang+lld+lldb'
+      extra_attributes:
+        compilers:
+          c: ".*/bin/clang-8$"
+          cxx: ".*/bin/clang[+][+]-8$"
+          ld: ".*/bin/ld.lld-8$"  
+      
+    - spec: 'llvm@3.9.1+clang~lld~lldb'
+      extra_attributes:
+        compilers:
+          c: ".*/bin/clang-3.9$"
+          cxx: ".*/bin/clang[+][+]-3.9$"
+
   # Apple Clang should not be detected
   - layout:
     - executables:

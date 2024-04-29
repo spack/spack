@@ -15,15 +15,20 @@ paths:
   platforms: [linux]
   results:
   - spec: cce@8.4.6
+    extra_attributes:
+      compilers:
+        c: ".*/bin/craycc"
+        cxx: ".*/bin/crayCC"
+        fortran: ".*/bin/crayftn"  
 - layout:
   - executables:
     - "bin/craycc"
     script: |
-      echo "Cray clang : Version 8.4.6 Mon Apr 15, 2019 12:13:39"
+      echo "Cray clang Version 8.4.6  Mon Apr 15, 2019  12:13:45"
   - executables:
     - "bin/crayCC"
     script: |
-      echo "Cray clang++ : Version 8.4.6 Mon Apr 15, 2019 12:13:39"
+      echo "Cray clang Version 8.4.6 Mon Apr 15, 2019 12:13:39"
   - executables:
     - "bin/crayftn"
     script: |
@@ -31,3 +36,8 @@ paths:
   platforms: [linux]
   results:
   - spec: cce@8.4.6
+    extra_attributes:
+      compilers:
+        c: ".*/bin/craycc"
+        cxx: ".*/bin/crayCC"
+        fortran: ".*/bin/crayftn"  

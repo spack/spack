@@ -11,6 +11,11 @@ paths:
     platforms: [linux]
     results:
     - spec: aocc@3.1.0
+      extra_attributes:
+        compilers:
+          c: ".*/bin/clang"
+          cxx: ".*/bin/clang[+][+]"
+          fortran: ".*/bin/flang"
   - layout:
       - executables:
         - "bin/clang"
@@ -22,6 +27,10 @@ paths:
     platforms: [linux]
     results:
     - spec: aocc@3.1.0
+      extra_attributes:
+        compilers:
+          c: ".*/bin/clang"
+          cxx: ".*/bin/clang[+][+]"
   - layout:
       - executables:
         - "bin/clang"
@@ -32,9 +41,9 @@ paths:
           echo "Target: x86_64-unknown-linux-gnu\n"
           echo "Thread model: posix\n"
       - executables:
-        - "bin/clang-2"
-        - "bin/clang++-2"
-        - "bin/flang-2"
+        - "bin/clang-11"
+        - "bin/clang++-11"
+        - "bin/flang-11"
         script: |
           echo "AMD clang version 11.0.0 (CLANG: AOCC_2_3_0-Build#85 2020_11_10)(based on LLVM Mirror.Version.11.0.0)\n"
           echo "Target: x86_64-unknown-linux-gnu\n"
@@ -42,7 +51,17 @@ paths:
     platforms: [linux]
     results:
     - spec: aocc@3.0.0
+      extra_attributes:
+        compilers:
+          c: ".*/bin/clang$"
+          cxx: ".*/bin/clang[+][+]$"
+          fortran: ".*/bin/flang$"
     - spec: aocc@2.3.0
+      extra_attributes:
+        compilers:
+          c: ".*/bin/clang-11"
+          cxx: ".*/bin/clang[+][+]-11"
+          fortran: ".*/bin/flang-11"
   - layout:
       - executables:
         - "bin/clang"

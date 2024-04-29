@@ -19,6 +19,12 @@ paths:
     platforms: [linux]
     results:
     - spec: llvm-amdgpu@5.7.1
+      extra_attributes:
+        compilers:
+          c: ".*/bin/amdclang"
+          cxx: ".*/bin/amdclang[+][+]"
+          fortran: ".*/bin/amdflang"  
+
   - layout:
       - executables:
         - "bin/amdclang"
@@ -32,6 +38,11 @@ paths:
     platforms: [linux]
     results:
     - spec: llvm-amdgpu@5.7.1
+      extra_attributes:
+        compilers:
+          c: ".*/bin/amdclang"
+          cxx: ".*/bin/amdclang[+][+]"
+
   - layout:
       - executables:
         - "bin/amdclang"
@@ -68,7 +79,17 @@ paths:
     platforms: [linux]
     results:
     - spec: llvm-amdgpu@6.0.2
+      extra_attributes:
+        compilers:
+          c: ".*/bin/amdclang-6$"
+          cxx: ".*/bin/amdclang[+][+]-6$"
+          fortran: ".*/bin/amdflang-6$"  
     - spec: llvm-amdgpu@5.7.1
+      extra_attributes:
+        compilers:
+          c: ".*/bin/amdclang"
+          cxx: ".*/bin/amdclang[+][+]"
+          fortran: ".*/bin/amdflang"  
   - layout:  # does not detect upstream clang
       - executables:
         - "bin/clang"

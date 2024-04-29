@@ -17,4 +17,9 @@ paths:
           echo "Copyright (C) 1985-2018 Intel Corporation.  All rights reserved."
     platforms: ["darwin", "linux"]
     results:
-      - spec: 'intel@18.0.5'
+    - spec: 'intel@18.0.5'
+      extra_attributes:
+        compilers:
+          c: ".*/bin/intel64/icc"
+          cxx: ".*/bin/intel64/icpc"
+          fortran: ".*/bin/intel64/ifort"  

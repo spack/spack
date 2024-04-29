@@ -8,3 +8,6 @@ paths:
   platforms: [linux]
   results:
   - spec: nag@6.0.1037
+    extra_attributes:
+      compilers:
+        fortran: ".*/bin/nagfor"  

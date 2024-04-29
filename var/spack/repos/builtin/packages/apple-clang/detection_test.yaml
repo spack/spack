@@ -11,7 +11,11 @@ paths:
           echo "InstalledDir: /Library/Developer/CommandLineTools/usr/bin"
     platforms: ["darwin"]
     results:
-      - spec: 'apple-clang@11.0.0'
+    - spec: 'apple-clang@11.0.0'
+      extra_attributes:
+        compilers:
+          c: ".*/bin/clang"
+          cxx: ".*/bin/clang[+][+]"
   # Apple Clang on Apple M1 (Ventura)
   - layout:
       - executables:
@@ -24,7 +28,11 @@ paths:
           echo "InstalledDir: /Library/Developer/CommandLineTools/usr/bin"
     platforms: ["darwin"]
     results:
-      - spec: 'apple-clang@15.0.0'
+    - spec: 'apple-clang@15.0.0'
+      extra_attributes:
+        compilers:
+          c: ".*/bin/clang"
+          cxx: ".*/bin/clang[+][+]"
   # Test that missing a compiler prevents the package from being detected
   - layout:
       - executables:

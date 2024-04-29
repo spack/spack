@@ -17,7 +17,12 @@ paths:
           echo "Copyright (C) 1985-2018 Intel Corporation.  All rights reserved."
     platforms: [linux]
     results:
-      - spec: 'intel-oneapi-compilers-classic@18.0.5'
+    - spec: 'intel-oneapi-compilers-classic@18.0.5'
+      extra_attributes:
+        compilers:
+          c: ".*/bin/intel64/icc"
+          cxx: ".*/bin/intel64/icpc"
+          fortran: ".*/bin/intel64/ifort"  
   - layout:
       - executables:
         - "bin/icc"
@@ -36,7 +41,12 @@ paths:
           echo "Copyright (C) 1985-2018 Intel Corporation.  All rights reserved."
     platforms: [linux]
     results:
-      - spec: 'intel-oneapi-compilers-classic@18.0.5'
+    - spec: 'intel-oneapi-compilers-classic@18.0.5'
+      extra_attributes:
+        compilers:
+          c: ".*/bin/icc"
+          cxx: ".*/bin/icpc"
+          fortran: ".*/bin/ifort"  
   - layout:
       - executables:
         - "compiler/18.0.5/linux/bin/intel64/icc"
@@ -55,7 +65,12 @@ paths:
           echo "Copyright (C) 1985-2018 Intel Corporation.  All rights reserved."
     platforms: [linux]
     results:
-      - spec: 'intel-oneapi-compilers-classic@18.0.5'
+    - spec: 'intel-oneapi-compilers-classic@18.0.5'
+      extra_attributes:
+        compilers:
+          c: ".*compiler/18.0.5/linux/bin/intel64/icc"
+          cxx: ".*compiler/18.0.5/linux/bin/intel64/icpc"
+          fortran: ".*compiler/18.0.5/linux/bin/intel64/ifort"  
   - layout:  # oneapi compiler is not detected as classic
       - executables:
         - "compiler/18.0.5/linux/bin/icx"

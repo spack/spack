@@ -20,3 +20,8 @@ paths:
   platforms: [linux]
   results:
   - spec: fj@4.0.0a
+    extra_attributes:
+      compilers:
+        c: ".*/bin/fcc"
+        cxx: ".*/bin/FCC"
+        fortran: ".*/bin/frt"  

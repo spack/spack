@@ -7,3 +7,8 @@ paths:
   platforms: [windows]
   results:
   - spec: msvc@19.04.54321
+    extra_attributes:
+      compilers:
+        c: ".*cl.bat$"
+        cxx: ".*cl.bat"
+
