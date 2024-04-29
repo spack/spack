@@ -2814,7 +2814,26 @@ def test_git_ref_version_can_be_reused(monkeypatch, mock_packages, install_mocke
     )
     first_spec = spack.spec.Spec("git-test-commit@git.v1.0=1.0+generic_install+feature").concretized()
     first_spec.package.do_install()
-    second_spec = spack.spec.Spec("git-test-commit@git.v1.0=1.0+generic_install~feature")
     with spack.config.override("concretizer:reuse", True):
-        second_spec.concretize()
+        second_spec = spack.spec.Spec("git-test-commit@git.v1.0=1.0+generic_install~feature").concretized()
         assert second_spec.dag_hash() != first_spec.dag_hash()
+
+
+def test_reuse_prefers_standard_over_git_versions(monkeypatch, mock_packages, install_mockery_mutable_config, mock_git_version_info):
+    repo_path, filename, commits = mock_git_version_info
+    monkeypatch.setattr(
+        spack.package_base.PackageBase, "git", pathlib.Path(repo_path).as_uri(), raising=False
+    )
+    """
+    order matters in this test. typically re-use would pick the last installed match
+    but we want to prefer the standard version over git ref based versions
+    """
+    standard_spec = spack.spec.Spec("git-test-commit@1.0+generic_install+feature").concretized()
+    standard_spec.package.do_install()
+    git_spec = spack.spec.Spec("git-test-commit@git.v1.0=1.0+generic_install+feature").concretized()
+    git_spec.package.do_install()
+    with spack.config.override("concretizer:reuse", True):
+        test_spec = spack.spec.Spec("git-test-commit@1.0+generic_install").concretized()
+        assert git_spec.dag_hash() != test_spec.dag_hash()
+        assert standard_spec.dag_hash() == test_spec.dag_hash()
+        print(test_spec)
