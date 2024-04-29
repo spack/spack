@@ -16,6 +16,7 @@ paths:
           echo "Target: x86_64-unknown-linux-gnu"
           echo "Thread model: posix"
           echo "InstalledDir: /opt/rocm-5.7.1/llvm/bin"
+    platforms: [linux]
     results:
     - spec: llvm-amdgpu@5.7.1
   - layout:
@@ -28,6 +29,7 @@ paths:
           echo "Thread model: posix"
           echo "InstalledDir: /opt/rocm-5.7.1/llvm/bin"
           echo "Configuration file: /opt/rocm-5.7.1/llvm/bin/clang.cfg"
+    platforms: [linux]
     results:
     - spec: llvm-amdgpu@5.7.1
   - layout:
@@ -63,6 +65,7 @@ paths:
           echo "Target: x86_64-unknown-linux-gnu"
           echo "Thread model: posix"
           echo "InstalledDir: /opt/rocm-6.0.2/llvm/bin"
+    platforms: [linux]
     results:
     - spec: llvm-amdgpu@6.0.2
     - spec: llvm-amdgpu@5.7.1
@@ -75,4 +78,5 @@ paths:
           echo "Target: x86_64-unknown-linux-gnu\n"
           echo "Thread model: posix\n"
           echo "InstalledDir: /usr/bin"
+    platforms: [linux]
     results: []
