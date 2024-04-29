@@ -13,5 +13,6 @@ paths:
     script: |
       echo "ifx (IFORT) 2021.2.0 Beta 20201214"
       echo "Copyright (C) 1985-2020 Intel Corporation.  All rights reserved."
+  platforms: [linux]
   results:
   - spec: intel-oneapi-compilers@2021.2.0
