@@ -257,9 +257,7 @@ class RocmOpenmpExtras(Package):
             placement="llvm-project",
             when=f"@{ver}",
         )
-    for ver in [
-        "6.1.0",
-    ]:
+    for ver in ["6.1.0"]:
         depends_on(f"hsakmt-roct@{ver}", when=f"@{ver}")
         depends_on(f"comgr@{ver}", when=f"@{ver}")
         depends_on(f"hsa-rocr-dev@{ver}", when=f"@{ver}")
