@@ -26,7 +26,7 @@ import spack.util.executable
 import spack.util.libc
 import spack.util.module_cmd
 import spack.version
-from spack.util.environment import EnvironmentModifications, filter_system_paths
+from spack.util.environment import filter_system_paths
 
 __all__ = ["Compiler"]
 
