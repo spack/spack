@@ -17,5 +17,6 @@ paths:
     script: |
       echo "frt (FRT) 4.0.0a 20190314"
       echo "Copyright FUJITSU LIMITED 2019"
+  platforms: [linux]
   results:
   - spec: fj@4.0.0a
