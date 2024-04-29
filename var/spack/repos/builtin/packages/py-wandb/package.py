@@ -31,7 +31,7 @@ class PyWandb(PythonPackage):
 
     depends_on("py-pyyaml", type=("build", "run"))
     depends_on("py-click@7:", type=("build", "run"), when="@0.13")
-    depends_on("py-click@7.1:", type=("build", "rim"), when="@0.16:")
+    depends_on("py-click@7.1:", type=("build", "run"), when="@0.16:")
     conflicts("^py-click@8.0.0")
     depends_on("py-gitpython@1:", type=("build", "run"))
     conflicts("^py-gitpython@3.1.29")
