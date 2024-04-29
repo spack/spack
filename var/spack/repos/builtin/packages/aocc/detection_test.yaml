@@ -8,6 +8,7 @@ paths:
           echo "AMD clang version 12.0.0 (CLANG: AOCC_3_1_0-Build#126 2021_06_07)(based on LLVM Mirror.Version.12.0.0)\n"
           echo "Target: x86_64-unknown-linux-gnu\n"
           echo "Thread model: posix\n"
+    platforms: [linux]
     results:
     - spec: aocc@3.1.0
   - layout:
@@ -18,6 +19,7 @@ paths:
           echo "AMD clang version 12.0.0 (CLANG: AOCC_3_1_0-Build#126 2021_06_07)(based on LLVM Mirror.Version.12.0.0)\n"
           echo "Target: x86_64-unknown-linux-gnu\n"
           echo "Thread model: posix\n"
+    platforms: [linux]
     results:
     - spec: aocc@3.1.0
   - layout:
@@ -37,6 +39,7 @@ paths:
           echo "AMD clang version 11.0.0 (CLANG: AOCC_2_3_0-Build#85 2020_11_10)(based on LLVM Mirror.Version.11.0.0)\n"
           echo "Target: x86_64-unknown-linux-gnu\n"
           echo "Thread model: posix\n"
+    platforms: [linux]
     results:
     - spec: aocc@3.0.0
     - spec: aocc@2.3.0
@@ -49,4 +52,5 @@ paths:
           echo "Target: x86_64-unknown-linux-gnu\n"
           echo "Thread model: posix\n"
           echo "InstalledDir: /usr/bin"
+    platforms: [linux]
     results: []
