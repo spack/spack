@@ -10,6 +10,7 @@ paths:
           echo "Thread model: posix"
           echo "InstalledDir:"
           echo "/opt/arm/arm-hpc-compiler-19.0_Generic-AArch64_RHEL-7_aarch64-linux/bin"
+    platforms: [linux]
     results:
     - spec: acfl@19.0
   - layout:
@@ -22,7 +23,7 @@ paths:
           echo "Thread model: posix"
           echo "InstalledDir:"
           echo "/opt/arm/arm-hpc-compiler-19.0_Generic-AArch64_RHEL-7_aarch64-linux/bin"
-
+    platforms: [linux]
     results:
     - spec: acfl@19.0
   - layout:
@@ -46,6 +47,7 @@ paths:
           echo "Thread model: posix"
           echo "InstalledDir:"
           echo "/opt/arm/arm-hpc-compiler-19_Generic-AArch64_RHEL-7_aarch64-linux/bin"
+    platforms: [linux]
     results:
     - spec: acfl@19.3.1
     - spec: acfl@18.0
@@ -58,4 +60,5 @@ paths:
           echo "Target: x86_64-unknown-linux-gnu\n"
           echo "Thread model: posix\n"
           echo "InstalledDir: /usr/bin"
+    platforms: [linux]
     results: []
