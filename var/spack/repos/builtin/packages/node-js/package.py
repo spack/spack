@@ -23,11 +23,31 @@ class NodeJs(Package):
 
     # Current (latest features) - odd major number
     version("21.7.3", sha256="ce1f61347671ef219d9c2925313d629d3fef98fc8d7f5ef38dd4656f7d0f58e7")
-    version("19.9.0", sha256="c9293eb40dff8e5f55ef8da7cf1b9fd71b4a6a513620d02bbd158936e85216f2", deprecated=True)
-    version("19.2.0", sha256="aac9d1a366fb57d68f4639f9204d1de5d6387656959a97ed929a5ba9e62c033a", deprecated=True)
-    version("15.3.0", sha256="cadfa384a5f14591b84ce07a1afe529f28deb0d43366fb0ae4e78afba96bfaf2", deprecated=True)
-    version("13.8.0", sha256="815b5e1b18114f35da89e4d98febeaba97555d51ef593bd5175db2b05f2e8be6", deprecated=True)
-    version("13.5.0", sha256="4b8078d896a7550d7ed399c1b4ac9043e9f883be404d9b337185c8d8479f2db8", deprecated=True)
+    version(
+        "19.9.0",
+        sha256="c9293eb40dff8e5f55ef8da7cf1b9fd71b4a6a513620d02bbd158936e85216f2",
+        deprecated=True,
+    )
+    version(
+        "19.2.0",
+        sha256="aac9d1a366fb57d68f4639f9204d1de5d6387656959a97ed929a5ba9e62c033a",
+        deprecated=True,
+    )
+    version(
+        "15.3.0",
+        sha256="cadfa384a5f14591b84ce07a1afe529f28deb0d43366fb0ae4e78afba96bfaf2",
+        deprecated=True,
+    )
+    version(
+        "13.8.0",
+        sha256="815b5e1b18114f35da89e4d98febeaba97555d51ef593bd5175db2b05f2e8be6",
+        deprecated=True,
+    )
+    version(
+        "13.5.0",
+        sha256="4b8078d896a7550d7ed399c1b4ac9043e9f883be404d9b337185c8d8479f2db8",
+        deprecated=True,
+    )
 
     # LTS (recommended for most users) - even major number
     version(
@@ -39,11 +59,31 @@ class NodeJs(Package):
     version("18.12.1", sha256="ba8174dda00d5b90943f37c6a180a1d37c861d91e04a4cb38dc1c0c74981c186")
     version("16.20.2", sha256="33188eb11b977113adb65b2e09d71bddd63f12168ba73ceadae6c27938dc9e93")
     version("16.18.1", sha256="3d24c9c3a953afee43edc44569045eda56cd45cd58b0539922d17da62736189c")
-    version("14.21.1", sha256="76ba961536dc11e4dfd9b198c61ff3399e655eca959ae4b66d926f29bfcce9d3", deprecated=True)
-    version("14.16.1", sha256="5f5080427abddde7f22fd2ba77cd2b8a1f86253277a1eec54bc98a202728ce80", deprecated=True)
-    version("14.15.1", sha256="a1120472bf55aea745287693a6651e16973e1008c9d6107df350126adf9716fe", deprecated=True)
-    version("14.13.0", sha256="8538b2e76aa06ee0e6eb1c118426c3c5ca53b2e49d66591738eacf76e89edd61", deprecated=True)
-    version("14.10.0", sha256="7e0d7a1aa23697415e3588a1ca4f1c47496e6c88b9cf37c66be90353d3e4ac3e", deprecated=True)
+    version(
+        "14.21.1",
+        sha256="76ba961536dc11e4dfd9b198c61ff3399e655eca959ae4b66d926f29bfcce9d3",
+        deprecated=True,
+    )
+    version(
+        "14.16.1",
+        sha256="5f5080427abddde7f22fd2ba77cd2b8a1f86253277a1eec54bc98a202728ce80",
+        deprecated=True,
+    )
+    version(
+        "14.15.1",
+        sha256="a1120472bf55aea745287693a6651e16973e1008c9d6107df350126adf9716fe",
+        deprecated=True,
+    )
+    version(
+        "14.13.0",
+        sha256="8538b2e76aa06ee0e6eb1c118426c3c5ca53b2e49d66591738eacf76e89edd61",
+        deprecated=True,
+    )
+    version(
+        "14.10.0",
+        sha256="7e0d7a1aa23697415e3588a1ca4f1c47496e6c88b9cf37c66be90353d3e4ac3e",
+        deprecated=True,
+    )
 
     variant("debug", default=False, description="Include debugger support")
     variant("doc", default=False, description="Compile with documentation")
