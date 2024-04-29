@@ -773,7 +773,9 @@ def monkeypatch_session():
 @pytest.fixture(scope="session", autouse=True)
 def mock_wsdk_externals(monkeypatch_session):
     """Skip check for required external packages on Windows during testing"""
-    monkeypatch_session.setattr(spack.bootstrap.core, "ensure_winsdk_external_or_raise", _return_none)
+    monkeypatch_session.setattr(
+        spack.bootstrap.core, "ensure_winsdk_external_or_raise", _return_none
+    )
 
 
 @pytest.fixture(scope="function")
