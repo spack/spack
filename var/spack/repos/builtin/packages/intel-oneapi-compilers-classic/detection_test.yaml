@@ -15,6 +15,7 @@ paths:
         script: |
           echo "ifort (IFORT) 18.0.5 20180823"
           echo "Copyright (C) 1985-2018 Intel Corporation.  All rights reserved."
+    platforms: [linux]
     results:
       - spec: 'intel-oneapi-compilers-classic@18.0.5'
   - layout:
@@ -33,6 +34,7 @@ paths:
         script: |
           echo "ifort (IFORT) 18.0.5 20180823"
           echo "Copyright (C) 1985-2018 Intel Corporation.  All rights reserved."
+    platforms: [linux]
     results:
       - spec: 'intel-oneapi-compilers-classic@18.0.5'
   - layout:
@@ -51,6 +53,7 @@ paths:
         script: |
           echo "ifort (IFORT) 18.0.5 20180823"
           echo "Copyright (C) 1985-2018 Intel Corporation.  All rights reserved."
+    platforms: [linux]
     results:
       - spec: 'intel-oneapi-compilers-classic@18.0.5'
   - layout:  # oneapi compiler is not detected as classic
@@ -67,4 +70,5 @@ paths:
         script: |
           echo "ifx (IFORT) 2021.1.2 Beta 20201214"
           echo "Copyright (C) 1985-2020 Intel Corporation.  All rights reserved."
+    platforms: [linux]
     results: []
