@@ -18,6 +18,7 @@ paths:
       echo "nvfortran 20.9-0 LLVM 64-bit target on x86-64 Linux -tp haswell"
       echo "NVIDIA Compilers and Tools"
       echo "Copyright (c) 2020, NVIDIA CORPORATION.  All rights reserved."
+  platforms: [linux]
   results:
   - spec: nvhpc@20.9~blas~lapack~mpi
 - layout:
@@ -39,6 +40,7 @@ paths:
       echo "nvfortran 20.9-0 linuxpower target on Linuxpower"
       echo "NVIDIA Compilers and Tools"
       echo "Copyright (c) 2020, NVIDIA CORPORATION.  All rights reserved."
+  platforms: [linux]
   results:
   - spec: nvhpc@20.9~blas~lapack~mpi
 - layout:
@@ -60,5 +62,6 @@ paths:
       echo "nvfortran 20.9-0 linuxarm64 target on aarch64 Linux"
       echo "NVIDIA Compilers and Tools"
       echo "Copyright (c) 2020, NVIDIA CORPORATION.  All rights reserved."
+  platforms: [linux]
   results:
   - spec: nvhpc@20.9~blas~lapack~mpi
