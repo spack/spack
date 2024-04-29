@@ -91,7 +91,10 @@ class CompilerPackage(spack.package_base.PackageBase):
             except spack.util.executable.ProcessError:
                 pass
             except Exception as e:
-                tty.debug(e)
+                tty.debug(
+                    f"[{__file__}] Cannot detect a valid version for the executable "
+                    f"{str(exe)}, for package '{cls.name}': {e}"
+                )
 
     @classmethod
     def compiler_bindir(cls, prefix: Path) -> Path:
