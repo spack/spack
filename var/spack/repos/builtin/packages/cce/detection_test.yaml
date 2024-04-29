@@ -23,19 +23,20 @@ paths:
 - layout:
   - executables:
     - "bin/craycc"
-    script: |
-      echo "Cray clang Version 8.4.6  Mon Apr 15, 2019  12:13:45"
-  - executables:
     - "bin/crayCC"
     script: |
-      echo "Cray clang Version 8.4.6 Mon Apr 15, 2019 12:13:39"
+      echo "Cray clang version 17.0.1  (5ec9405551a8c8845cf14e81dc28bff7aa3935cb)"
+      echo "Target: x86_64-unknown-linux-gnu"
+      echo "Thread model: posix"
+      echo "InstalledDir: /opt/cray/pe/cce/17.0.1/cce-clang/x86_64/share/../bin"
+      echo "Configuration file: /opt/cray/pe/cce/17.0.1/cce-clang/x86_64/bin/clang.cfg"
   - executables:
     - "bin/crayftn"
     script: |
-      echo "Cray Fortran : Version 8.4.6 Mon Apr 15, 2019 12:13:39"
+      echo "Cray Fortran : Version 17.0.1"
   platforms: [linux]
   results:
-  - spec: cce@8.4.6
+  - spec: cce@17.0.1
     extra_attributes:
       compilers:
         c: ".*/bin/craycc"
