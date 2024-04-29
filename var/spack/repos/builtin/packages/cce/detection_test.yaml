@@ -12,6 +12,7 @@ paths:
     - "bin/crayftn"
     script: |
       echo "Cray Fortran : Version 8.4.6 Mon Apr 15, 2019 12:13:39"
+  platforms: [linux]
   results:
   - spec: cce@8.4.6
 - layout:
@@ -27,5 +28,6 @@ paths:
     - "bin/crayftn"
     script: |
       echo "Cray Fortran : Version 8.4.6 Mon Apr 15, 2019 12:13:39"
+  platforms: [linux]
   results:
   - spec: cce@8.4.6
