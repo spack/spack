@@ -658,7 +658,7 @@ def get_buildfile_manifest(spec):
     #   2. paths are used as strings.
     for rel_path in visitor.symlinks:
         abs_path = os.path.join(root, rel_path)
-        link = os.readlink(abs_path)
+        link = spack.util.path.sanitize_win_longpath(os.readlink(abs_path))
         if os.path.isabs(link) and link.startswith(spack.store.STORE.layout.root):
             data["link_to_relocate"].append(rel_path)
 
@@ -703,6 +703,7 @@ def hashes_to_prefixes(spec):
 
 def get_buildinfo_dict(spec):
     """Create metadata for a tarball"""
+    import pdb; pdb.set_trace()
     manifest = get_buildfile_manifest(spec)
 
     return {
@@ -1637,6 +1638,13 @@ def relocate_package(spec):
     # First match specific prefix paths. Possibly the *local* install prefix
     # of some dependency is in an upstream, so we cannot assume the original
     # spack store root can be mapped uniformly to the new spack store root.
+
+    # this logic is fundamentally wrong
+    # if in hdf5 we have bin/zlib.dll where zlib.dll points to
+    # <install-prefix>/zlib-hash/bin/zlib.dll
+    # the old dep prefix <orig-install-hash>/bin/zlib.dll will now point
+    # to the hdf5 install hash (new_dep_prefix) which is wrong
+    import pdb; pdb.set_trace()
     for dag_hash, new_dep_prefix in hashes_to_prefixes(spec).items():
         if dag_hash in hash_to_old_prefix:
             old_dep_prefix = hash_to_old_prefix[dag_hash]

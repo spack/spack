@@ -101,6 +101,13 @@ def win_exe_ext():
     return r"(?:\.bat|\.exe)"
 
 
+def sanitize_win_longpath(path: str) -> str:
+    """Strip Windows extended path prefix from strings
+    Returns santized string.
+    no-op if extended path prefix is not present"""
+    return path.strip("\\\\?\\")
+
+
 def sanitize_filename(filename: str) -> str:
     """
     Replaces unsupported characters (for the host) in a filename with underscores.
