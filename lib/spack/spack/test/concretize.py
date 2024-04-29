@@ -7,6 +7,7 @@ import os
 import sys
 
 import jinja2
+import pathlib
 import pytest
 
 import archspec.cpu
@@ -2802,3 +2803,18 @@ def test_concretization_version_order():
         Version("develop"),  # likely development version
         Version("2.0"),  # deprecated
     ]
+
+
+@pytest.mark.only_clingo("clingo only re-use feature being tested")
+@pytest.mark.regression("38484")
+def test_git_ref_version_can_be_reused(monkeypatch, mock_packages, install_mockery_mutable_config, mock_git_version_info):
+    repo_path, filename, commits = mock_git_version_info
+    monkeypatch.setattr(
+        spack.package_base.PackageBase, "git", pathlib.Path(repo_path).as_uri(), raising=False
+    )
+    first_spec = spack.spec.Spec("git-test-commit@git.v1.0=1.0+generic_install+feature").concretized()
+    first_spec.package.do_install()
+    second_spec = spack.spec.Spec("git-test-commit@git.v1.0=1.0+generic_install~feature")
+    with spack.config.override("concretizer:reuse", True):
+        second_spec.concretize()
+        assert second_spec.dag_hash() != first_spec.dag_hash()
