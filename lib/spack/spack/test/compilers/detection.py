@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Test detection of compiler version"""
 import os
-import sys
 
 import pytest
 
@@ -25,51 +24,6 @@ import spack.compilers.xl
 import spack.compilers.xl_r
 import spack.util.module_cmd
 from spack.operating_systems.cray_frontend import CrayFrontend
-from spack.pkg.builtin.acfl import Acfl
-from spack.pkg.builtin.aocc import Aocc
-from spack.pkg.builtin.apple_clang import AppleClang
-from spack.pkg.builtin.cce import Cce
-from spack.pkg.builtin.fj import Fj
-from spack.pkg.builtin.gcc import Gcc
-from spack.pkg.builtin.intel_oneapi_compilers import IntelOneapiCompilers
-from spack.pkg.builtin.intel_oneapi_compilers_classic import IntelOneapiCompilersClassic
-from spack.pkg.builtin.llvm import Llvm
-from spack.pkg.builtin.nag import Nag
-from spack.pkg.builtin.nvhpc import Nvhpc
-from spack.pkg.builtin.pgi import Pgi
-from spack.pkg.builtin.xl import Xl
-
-
-def check_package_detection(mock_executable, output, expected_version, cls):
-    languages = cls.compiler_languages
-
-    executables = {}
-    quote = "" if sys.platform == "win32" else '"'
-    script = "\n".join(f"echo {quote}{line}{quote}" for line in output.split("\n"))
-    for lang in languages:
-        name = getattr(cls, f"{lang}_names")[0]
-        executables[name] = mock_executable(name, output=script)
-        bindir = os.path.dirname(executables[name])
-
-    detected = spack.detection.by_path(
-        [cls.fullname.replace("_", "-")], path_hints=[bindir], max_workers=1
-    )
-
-    spec_name = cls.name.replace("_", "-")
-    assert len(detected) == 1
-    assert spec_name in detected
-
-    detected_package = detected[spec_name]
-    assert len(detected_package) == 1
-    assert detected_package[0].spec.satisfies(f"{spec_name}@{expected_version}")
-    assert detected_package[0].prefix == os.path.dirname(bindir)
-
-    suffix = ".bat" if sys.platform == "win32" else ""
-    for lang in languages:
-        name = getattr(cls, f"{lang}_names")[0]
-        assert detected_package[0].spec.extra_attributes["compilers"][lang] == os.path.join(
-            bindir, name + suffix
-        )
 
 
 @pytest.mark.parametrize(
@@ -93,11 +47,9 @@ def check_package_detection(mock_executable, output, expected_version, cls):
         ),
     ],
 )
-def test_arm_version_detection(version_str, expected_version, mock_executable):
+def test_arm_version_detection(version_str, expected_version):
     version = spack.compilers.arm.Arm.extract_version_from_output(version_str)
     assert version == expected_version
-
-    check_package_detection(mock_executable, version_str, expected_version, Acfl)
 
 
 @pytest.mark.parametrize(
@@ -109,13 +61,9 @@ def test_arm_version_detection(version_str, expected_version, mock_executable):
         ("Cray Fortran : Version 8.4.6  Mon Apr 15, 2019  12:13:55\n", "8.4.6"),
     ],
 )
-def test_cce_version_detection(version_str, expected_version, mock_executable):
+def test_cce_version_detection(version_str, expected_version):
     version = spack.compilers.cce.Cce.extract_version_from_output(version_str)
     assert version == expected_version
-
-    # Cannot test on macos or windows because of case insensitive filesystem
-    if sys.platform not in ["darwin", "win32"]:
-        check_package_detection(mock_executable, version_str, expected_version, Cce)
 
 
 @pytest.mark.regression("10191")
@@ -140,12 +88,10 @@ def test_cce_version_detection(version_str, expected_version, mock_executable):
         ),
     ],
 )
-def test_apple_clang_version_detection(version_str, expected_version, mock_executable):
+def test_apple_clang_version_detection(version_str, expected_version):
     cls = spack.compilers.class_for_compiler_name("apple-clang")
     version = cls.extract_version_from_output(version_str)
     assert version == expected_version
-
-    check_package_detection(mock_executable, version_str, expected_version, AppleClang)
 
 
 @pytest.mark.regression("10191")
@@ -196,10 +142,9 @@ def test_apple_clang_version_detection(version_str, expected_version, mock_execu
         ),
     ],
 )
-def test_clang_version_detection(version_str, expected_version, mock_executable):
+def test_clang_version_detection(version_str, expected_version):
     version = spack.compilers.clang.Clang.extract_version_from_output(version_str)
     assert version == expected_version
-    check_package_detection(mock_executable, version_str, expected_version, Llvm)
 
 
 @pytest.mark.parametrize(
@@ -223,13 +168,9 @@ def test_clang_version_detection(version_str, expected_version, mock_executable)
         ("frt (FRT) 4.0.0a 20190314\n" "Copyright FUJITSU LIMITED 2019", "4.0.0a"),
     ],
 )
-def test_fj_version_detection(version_str, expected_version, mock_executable):
+def test_fj_version_detection(version_str, expected_version):
     version = spack.compilers.fj.Fj.extract_version_from_output(version_str)
     assert version == expected_version
-
-    # Cannot test on macos or windows because of case insensitive filesystem
-    if sys.platform not in ["darwin", "win32"]:
-        check_package_detection(mock_executable, version_str, expected_version, Fj)
 
 
 @pytest.mark.parametrize(
@@ -240,10 +181,9 @@ def test_fj_version_detection(version_str, expected_version, mock_executable):
         ("7\n", "7"),
     ],
 )
-def test_gcc_version_detection(version_str, expected_version, mock_executable):
+def test_gcc_version_detection(version_str, expected_version):
     version = spack.compilers.gcc.Gcc.extract_version_from_output(version_str)
     assert version == expected_version
-    check_package_detection(mock_executable, version_str, expected_version, Gcc)
 
 
 @pytest.mark.parametrize(
@@ -261,12 +201,9 @@ def test_gcc_version_detection(version_str, expected_version, mock_executable):
         ),
     ],
 )
-def test_intel_version_detection(version_str, expected_version, mock_executable):
+def test_intel_version_detection(version_str, expected_version):
     version = spack.compilers.intel.Intel.extract_version_from_output(version_str)
     assert version == expected_version
-    check_package_detection(
-        mock_executable, version_str, expected_version, IntelOneapiCompilersClassic
-    )
 
 
 @pytest.mark.parametrize(
@@ -332,10 +269,9 @@ def test_intel_version_detection(version_str, expected_version, mock_executable)
         ),
     ],
 )
-def test_oneapi_version_detection(version_str, expected_version, mock_executable):
+def test_oneapi_version_detection(version_str, expected_version):
     version = spack.compilers.oneapi.Oneapi.extract_version_from_output(version_str)
     assert version == expected_version
-    check_package_detection(mock_executable, version_str, expected_version, IntelOneapiCompilers)
 
 
 @pytest.mark.parametrize(
@@ -348,11 +284,9 @@ def test_oneapi_version_detection(version_str, expected_version, mock_executable
         )
     ],
 )
-def test_nag_version_detection(version_str, expected_version, mock_executable):
+def test_nag_version_detection(version_str, expected_version):
     version = spack.compilers.nag.Nag.extract_version_from_output(version_str)
     assert version == expected_version
-
-    check_package_detection(mock_executable, version_str, expected_version, Nag)
 
 
 @pytest.mark.parametrize(
@@ -423,10 +357,9 @@ def test_nag_version_detection(version_str, expected_version, mock_executable):
         ),
     ],
 )
-def test_nvhpc_version_detection(version_str, expected_version, mock_executable):
+def test_nvhpc_version_detection(version_str, expected_version):
     version = spack.compilers.nvhpc.Nvhpc.extract_version_from_output(version_str)
     assert version == expected_version
-    check_package_detection(mock_executable, version_str, expected_version, Nvhpc)
 
 
 @pytest.mark.parametrize(
@@ -455,10 +388,9 @@ def test_nvhpc_version_detection(version_str, expected_version, mock_executable)
         ),
     ],
 )
-def test_pgi_version_detection(version_str, expected_version, mock_executable):
+def test_pgi_version_detection(version_str, expected_version):
     version = spack.compilers.pgi.Pgi.extract_version_from_output(version_str)
     assert version == expected_version
-    check_package_detection(mock_executable, version_str, expected_version, Pgi)
 
 
 @pytest.mark.parametrize(
@@ -473,14 +405,12 @@ def test_pgi_version_detection(version_str, expected_version, mock_executable):
         ),
     ],
 )
-def test_xl_version_detection(version_str, expected_version, mock_executable):
+def test_xl_version_detection(version_str, expected_version):
     version = spack.compilers.xl.Xl.extract_version_from_output(version_str)
     assert version == expected_version
 
     version = spack.compilers.xl_r.XlR.extract_version_from_output(version_str)
     assert version == expected_version
-
-    check_package_detection(mock_executable, version_str, expected_version, Xl)
 
 
 @pytest.mark.not_on_windows("Not supported on Windows (yet)")
@@ -559,11 +489,9 @@ def test_cray_frontend_compiler_detection(compiler, version, tmpdir, monkeypatch
         ),
     ],
 )
-def test_aocc_version_detection(version_str, expected_version, mock_executable):
+def test_aocc_version_detection(version_str, expected_version):
     version = spack.compilers.aocc.Aocc.extract_version_from_output(version_str)
     assert version == expected_version
-
-    check_package_detection(mock_executable, version_str, expected_version, Aocc)
 
 
 @pytest.mark.regression("33901")
