@@ -17,7 +17,11 @@ class GitTestCommit(Package):
     version("1.2", tag="1.2")  # not a typo
     version("2.0", tag="v2.0")
 
-    variant("generic_install", default=False, description="Override install feature for original implementations tests")
+    variant(
+        "generic_install",
+        default=False,
+        description="Override install feature for original implementations tests",
+    )
     variant("feature", default=False, description="A very cool feature")
 
     def install(self, spec, prefix):

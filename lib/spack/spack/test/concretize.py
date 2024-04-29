@@ -4,10 +4,10 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import copy
 import os
+import pathlib
 import sys
 
 import jinja2
-import pathlib
 import pytest
 
 import archspec.cpu
@@ -2807,19 +2807,27 @@ def test_concretization_version_order():
 
 @pytest.mark.only_clingo("clingo only re-use feature being tested")
 @pytest.mark.regression("38484")
-def test_git_ref_version_can_be_reused(monkeypatch, mock_packages, install_mockery_mutable_config, mock_git_version_info):
+def test_git_ref_version_can_be_reused(
+    monkeypatch, mock_packages, install_mockery_mutable_config, mock_git_version_info
+):
     repo_path, filename, commits = mock_git_version_info
     monkeypatch.setattr(
         spack.package_base.PackageBase, "git", pathlib.Path(repo_path).as_uri(), raising=False
     )
-    first_spec = spack.spec.Spec("git-test-commit@git.v1.0=1.0+generic_install+feature").concretized()
+    first_spec = spack.spec.Spec(
+        "git-test-commit@git.v1.0=1.0+generic_install+feature"
+    ).concretized()
     first_spec.package.do_install()
     with spack.config.override("concretizer:reuse", True):
-        second_spec = spack.spec.Spec("git-test-commit@git.v1.0=1.0+generic_install~feature").concretized()
+        second_spec = spack.spec.Spec(
+            "git-test-commit@git.v1.0=1.0+generic_install~feature"
+        ).concretized()
         assert second_spec.dag_hash() != first_spec.dag_hash()
 
 
-def test_reuse_prefers_standard_over_git_versions(monkeypatch, mock_packages, install_mockery_mutable_config, mock_git_version_info):
+def test_reuse_prefers_standard_over_git_versions(
+    monkeypatch, mock_packages, install_mockery_mutable_config, mock_git_version_info
+):
     repo_path, filename, commits = mock_git_version_info
     monkeypatch.setattr(
         spack.package_base.PackageBase, "git", pathlib.Path(repo_path).as_uri(), raising=False
@@ -2830,10 +2838,11 @@ def test_reuse_prefers_standard_over_git_versions(monkeypatch, mock_packages, in
     """
     standard_spec = spack.spec.Spec("git-test-commit@1.0+generic_install+feature").concretized()
     standard_spec.package.do_install()
-    git_spec = spack.spec.Spec("git-test-commit@git.v1.0=1.0+generic_install+feature").concretized()
+    git_spec = spack.spec.Spec(
+        "git-test-commit@git.v1.0=1.0+generic_install+feature"
+    ).concretized()
     git_spec.package.do_install()
     with spack.config.override("concretizer:reuse", True):
         test_spec = spack.spec.Spec("git-test-commit@1.0+generic_install").concretized()
         assert git_spec.dag_hash() != test_spec.dag_hash()
         assert standard_spec.dag_hash() == test_spec.dag_hash()
-        print(test_spec)
