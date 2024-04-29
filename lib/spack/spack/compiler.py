@@ -702,9 +702,7 @@ class Compiler:
                 spack.util.module_cmd.load_module(module)
 
             # apply other compiler environment changes
-            env = EnvironmentModifications()
-            env.extend(spack.schema.environment.parse(self.environment))
-            env.apply_modifications()
+            spack.schema.environment.parse(self.environment).apply_modifications()
 
             yield
         finally:
