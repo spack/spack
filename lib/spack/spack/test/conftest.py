@@ -763,10 +763,17 @@ def mutable_empty_config(tmpdir_factory, configuration_dir):
         yield cfg
 
 
-@pytest.fixture(scope="function", autouse=True)
-def mock_wsdk_externals(monkeypatch):
+# From https://github.com/pytest-dev/pytest/issues/363
+@pytest.fixture(scope="session")
+def monkeypatch_session():
+    with pytest.MonkeyPatch.context() as monkeypatch:
+        yield monkeypatch
+
+
+@pytest.fixture(scope="session", autouse=True)
+def mock_wsdk_externals(monkeypatch_session):
     """Skip check for required external packages on Windows during testing"""
-    monkeypatch.setattr(spack.bootstrap.core, "ensure_winsdk_external_or_raise", _return_none)
+    monkeypatch_session.setattr(spack.bootstrap.core, "ensure_winsdk_external_or_raise", _return_none)
 
 
 @pytest.fixture(scope="function")
@@ -848,7 +855,13 @@ def _store_dir_and_cache(tmpdir_factory):
 
 
 @pytest.fixture(scope="session")
-def mock_store(tmpdir_factory, mock_repo_path, mock_configuration_scopes, _store_dir_and_cache):
+def mock_store(
+    tmpdir_factory,
+    mock_wsdk_externals,
+    mock_repo_path,
+    mock_configuration_scopes,
+    _store_dir_and_cache,
+):
     """Creates a read-only mock database with some packages installed note
     that the ref count for dyninst here will be 3, as it's recycled
     across each install.
