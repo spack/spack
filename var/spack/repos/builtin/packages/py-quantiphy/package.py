@@ -19,4 +19,4 @@ class PyQuantiphy(PythonPackage):
     version("2.20", sha256="ba5375ac55c3b90077a793588dd5a88aaf81b2c3b0fc9c9359513ac39f6ed84d")
 
     depends_on("python@3.6:", type=("build", "run"))
-    depends_on("py-flit-core@2:,:3", type=("build"))
+    depends_on("py-flit-core@2:3", type=("build"))
