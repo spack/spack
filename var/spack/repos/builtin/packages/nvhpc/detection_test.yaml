@@ -25,7 +25,7 @@ paths:
       compilers:
         c: ".*/bin/nvc"
         cxx: ".*/bin/nvc++"
-        fortran: ".*/bin/nvfortran"  
+        fortran: ".*/bin/nvfortran"
 - layout:
   - executables:
     - bin/nvc
@@ -52,7 +52,7 @@ paths:
       compilers:
         c: ".*/bin/nvc"
         cxx: ".*/bin/nvc++"
-        fortran: ".*/bin/nvfortran"  
+        fortran: ".*/bin/nvfortran"
 - layout:
   - executables:
     - bin/nvc
@@ -79,4 +79,4 @@ paths:
       compilers:
         c: ".*/bin/nvc"
         cxx: ".*/bin/nvc++"
-        fortran: ".*/bin/nvfortran"  
+        fortran: ".*/bin/nvfortran"

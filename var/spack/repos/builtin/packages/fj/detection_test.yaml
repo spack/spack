@@ -24,4 +24,4 @@ paths:
       compilers:
         c: ".*/bin/fcc"
         cxx: ".*/bin/FCC"
-        fortran: ".*/bin/frt"  
+        fortran: ".*/bin/frt"

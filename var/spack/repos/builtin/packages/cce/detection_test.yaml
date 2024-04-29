@@ -19,7 +19,7 @@ paths:
       compilers:
         c: ".*/bin/craycc"
         cxx: ".*/bin/crayCC"
-        fortran: ".*/bin/crayftn"  
+        fortran: ".*/bin/crayftn"
 - layout:
   - executables:
     - "bin/craycc"
@@ -40,4 +40,4 @@ paths:
       compilers:
         c: ".*/bin/craycc"
         cxx: ".*/bin/crayCC"
-        fortran: ".*/bin/crayftn"  
+        fortran: ".*/bin/crayftn"

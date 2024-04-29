@@ -20,4 +20,4 @@ paths:
       compilers:
         c: ".*/compiler/2021.2.0/linux/bin/icx"
         cxx: ".*/compiler/2021.2.0/linux/bin/icpx"
-        fortran: ".*/compiler/2021.2.0/linux/bin/ifx"  
+        fortran: ".*/compiler/2021.2.0/linux/bin/ifx"
