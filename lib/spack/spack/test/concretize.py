@@ -2805,6 +2805,14 @@ def test_concretization_version_order():
     ]
 
 
+def mock_runtime_dependencies(*args, **kwargs):
+    """
+    mock function moved outside local definition to allow
+    multiprocessing pickling to work
+    """
+    return True
+
+
 @pytest.mark.only_clingo("clingo only re-use feature being tested")
 @pytest.mark.regression("38484")
 def test_git_ref_version_can_be_reused(
@@ -2814,34 +2822,39 @@ def test_git_ref_version_can_be_reused(
     monkeypatch.setattr(
         spack.package_base.PackageBase, "git", pathlib.Path(repo_path).as_uri(), raising=False
     )
+    # override gcc-runtime dep and make all installs reusable
+    monkeypatch.setattr(spack.solver.asp, "_has_runtime_dependencies", mock_runtime_dependencies)
     first_spec = spack.spec.Spec(
         "git-test-commit@git.v1.0=1.0+generic_install+feature"
     ).concretized()
-    first_spec.package.do_install()
+    first_spec.package.do_install(fake=True, explicit=True)
     with spack.config.override("concretizer:reuse", True):
         second_spec = spack.spec.Spec(
             "git-test-commit@git.v1.0=1.0+generic_install~feature"
         ).concretized()
+        # is_installed(first_spec)
         assert second_spec.dag_hash() != first_spec.dag_hash()
 
 
 def test_reuse_prefers_standard_over_git_versions(
     monkeypatch, mock_packages, install_mockery_mutable_config, mock_git_version_info
 ):
-    repo_path, filename, commits = mock_git_version_info
-    monkeypatch.setattr(
-        spack.package_base.PackageBase, "git", pathlib.Path(repo_path).as_uri(), raising=False
-    )
     """
     order matters in this test. typically re-use would pick the last installed match
     but we want to prefer the standard version over git ref based versions
     """
+    repo_path, filename, commits = mock_git_version_info
+    monkeypatch.setattr(
+        spack.package_base.PackageBase, "git", pathlib.Path(repo_path).as_uri(), raising=False
+    )
+    # override gcc-runtime dep and make all installs reusable
+    monkeypatch.setattr(spack.solver.asp, "_has_runtime_dependencies", mock_runtime_dependencies)
     standard_spec = spack.spec.Spec("git-test-commit@1.0+generic_install+feature").concretized()
-    standard_spec.package.do_install()
+    standard_spec.package.do_install(fake=True, explicit=True)
     git_spec = spack.spec.Spec(
         "git-test-commit@git.v1.0=1.0+generic_install+feature"
     ).concretized()
-    git_spec.package.do_install()
+    git_spec.package.do_install(fake=True, explicit=True)
     with spack.config.override("concretizer:reuse", True):
         test_spec = spack.spec.Spec("git-test-commit@1.0+generic_install").concretized()
         assert git_spec.dag_hash() != test_spec.dag_hash()
