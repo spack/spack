@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -133,7 +133,7 @@ class Hwloc(AutotoolsPackage, CudaPackage, ROCmPackage):
         depends_on("rocm-opencl", when="+opencl")
         # Avoid a circular dependency since the openmp
         # variant of llvm-amdgpu depends on hwloc.
-        depends_on("llvm-amdgpu~openmp", when="+opencl")
+        depends_on("llvm-amdgpu", when="+opencl")
 
     with when("+oneapi-level-zero"):
         depends_on("oneapi-level-zero")

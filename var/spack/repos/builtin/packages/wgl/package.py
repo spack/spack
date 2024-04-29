@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -69,7 +69,7 @@ class Wgl(Package):
         return ver_str if not ver_str else Version(ver_str.group())
 
     def _spec_arch_to_sdk_arch(self):
-        spec_arch = str(self.spec.architecture.target).lower()
+        spec_arch = str(self.spec.architecture.target.microarchitecture.family).lower()
         _64bit = "64" in spec_arch
         arm = "arm" in spec_arch
         if arm:

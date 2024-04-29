@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,7 @@ import re
 import sys
 from contextlib import contextmanager
 
+from llnl.util.filesystem import windows_sfn
 from llnl.util.lang import match_predicate
 from llnl.util.symlink import symlink
 
@@ -30,7 +31,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
     homepage = "https://www.perl.org"
     # URL must remain http:// so Spack can bootstrap curl
     url = "http://www.cpan.org/src/5.0/perl-5.34.0.tar.gz"
-    tags = ["windows"]
+    tags = ["windows", "build-tools"]
 
     maintainers("LydDeb")
 
@@ -287,7 +288,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
             args.append("CCTYPE=%s" % self.compiler.short_msvc_version)
         else:
             raise RuntimeError("Perl unsupported for non MSVC compilers on Windows")
-        args.append("INST_TOP=%s" % self.prefix.replace("/", "\\"))
+        args.append("INST_TOP=%s" % windows_sfn(self.prefix.replace("/", "\\")))
         args.append("INST_ARCH=\\$(ARCHNAME)")
         if self.spec.satisfies("~shared"):
             args.append("ALL_STATIC=%s" % "define")
@@ -368,6 +369,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
     def build_test(self):
         if sys.platform == "win32":
             win32_dir = os.path.join(self.stage.source_path, "win32")
+            win32_dir = windows_sfn(win32_dir)
             with working_dir(win32_dir):
                 nmake("test", ignore_quotes=True)
         else:
@@ -376,6 +378,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
     def install(self, spec, prefix):
         if sys.platform == "win32":
             win32_dir = os.path.join(self.stage.source_path, "win32")
+            win32_dir = windows_sfn(win32_dir)
             with working_dir(win32_dir):
                 nmake("install", *self.nmake_arguments(), ignore_quotes=True)
         else:
@@ -409,6 +412,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         if sys.platform == "win32":
             maker = nmake
             cpan_dir = join_path(self.stage.source_path, cpan_dir)
+            cpan_dir = windows_sfn(cpan_dir)
         if "+cpanm" in spec:
             with working_dir(cpan_dir):
                 perl = spec["perl"].command
@@ -450,10 +454,6 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
 
             # Add variables for library directory
             module.perl_lib_dir = dependent_spec.prefix.lib.perl5
-
-            # Make the site packages directory for extensions,
-            # if it does not exist already.
-            mkdirp(module.perl_lib_dir)
 
     def setup_build_environment(self, env):
         if sys.platform == "win32":

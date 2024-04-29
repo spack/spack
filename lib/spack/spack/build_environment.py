@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -43,7 +43,7 @@ import types
 from collections import defaultdict
 from enum import Flag, auto
 from itertools import chain
-from typing import List, Tuple
+from typing import List, Set, Tuple
 
 import llnl.util.tty as tty
 from llnl.string import plural
@@ -57,8 +57,10 @@ import spack.build_systems.cmake
 import spack.build_systems.meson
 import spack.build_systems.python
 import spack.builder
+import spack.compilers
 import spack.config
 import spack.deptypes as dt
+import spack.error
 import spack.main
 import spack.package_base
 import spack.paths
@@ -66,6 +68,7 @@ import spack.platforms
 import spack.repo
 import spack.schema.environment
 import spack.spec
+import spack.stage
 import spack.store
 import spack.subprocess_context
 import spack.user_environment
@@ -78,7 +81,7 @@ from spack.install_test import spack_install_test_log
 from spack.installer import InstallError
 from spack.util.cpus import determine_number_of_jobs
 from spack.util.environment import (
-    SYSTEM_DIRS,
+    SYSTEM_DIR_CASE_ENTRY,
     EnvironmentModifications,
     env_flag,
     filter_system_paths,
@@ -101,9 +104,13 @@ SPACK_NO_PARALLEL_MAKE = "SPACK_NO_PARALLEL_MAKE"
 # Spack's compiler wrappers.
 #
 SPACK_ENV_PATH = "SPACK_ENV_PATH"
+SPACK_MANAGED_DIRS = "SPACK_MANAGED_DIRS"
 SPACK_INCLUDE_DIRS = "SPACK_INCLUDE_DIRS"
 SPACK_LINK_DIRS = "SPACK_LINK_DIRS"
 SPACK_RPATH_DIRS = "SPACK_RPATH_DIRS"
+SPACK_STORE_INCLUDE_DIRS = "SPACK_STORE_INCLUDE_DIRS"
+SPACK_STORE_LINK_DIRS = "SPACK_STORE_LINK_DIRS"
+SPACK_STORE_RPATH_DIRS = "SPACK_STORE_RPATH_DIRS"
 SPACK_RPATH_DEPS = "SPACK_RPATH_DEPS"
 SPACK_LINK_DEPS = "SPACK_LINK_DEPS"
 SPACK_PREFIX = "SPACK_PREFIX"
@@ -216,6 +223,9 @@ def clean_environment():
     env.unset("PYTHONPATH")
     env.unset("R_HOME")
     env.unset("R_ENVIRON")
+
+    env.unset("LUA_PATH")
+    env.unset("LUA_CPATH")
 
     # Affects GNU make, can e.g. indirectly inhibit enabling parallel build
     # env.unset('MAKEFLAGS')
@@ -413,7 +423,7 @@ def set_compiler_environment_variables(pkg, env):
 
     env.set("SPACK_COMPILER_SPEC", str(spec.compiler))
 
-    env.set("SPACK_SYSTEM_DIRS", ":".join(SYSTEM_DIRS))
+    env.set("SPACK_SYSTEM_DIRS", SYSTEM_DIR_CASE_ENTRY)
 
     compiler.setup_custom_environment(pkg, env)
 
@@ -541,9 +551,26 @@ def set_wrapper_variables(pkg, env):
     include_dirs = list(dedupe(filter_system_paths(include_dirs)))
     rpath_dirs = list(dedupe(filter_system_paths(rpath_dirs)))
 
-    env.set(SPACK_LINK_DIRS, ":".join(link_dirs))
-    env.set(SPACK_INCLUDE_DIRS, ":".join(include_dirs))
-    env.set(SPACK_RPATH_DIRS, ":".join(rpath_dirs))
+    # Spack managed directories include the stage, store and upstream stores. We extend this with
+    # their real paths to make it more robust (e.g. /tmp vs /private/tmp on macOS).
+    spack_managed_dirs: Set[str] = {
+        spack.stage.get_stage_root(),
+        spack.store.STORE.db.root,
+        *(db.root for db in spack.store.STORE.db.upstream_dbs),
+    }
+    spack_managed_dirs.update([os.path.realpath(p) for p in spack_managed_dirs])
+
+    env.set(SPACK_MANAGED_DIRS, "|".join(f'"{p}/"*' for p in sorted(spack_managed_dirs)))
+    is_spack_managed = lambda p: any(p.startswith(store) for store in spack_managed_dirs)
+    link_dirs_spack, link_dirs_system = stable_partition(link_dirs, is_spack_managed)
+    include_dirs_spack, include_dirs_system = stable_partition(include_dirs, is_spack_managed)
+    rpath_dirs_spack, rpath_dirs_system = stable_partition(rpath_dirs, is_spack_managed)
+    env.set(SPACK_LINK_DIRS, ":".join(link_dirs_system))
+    env.set(SPACK_INCLUDE_DIRS, ":".join(include_dirs_system))
+    env.set(SPACK_RPATH_DIRS, ":".join(rpath_dirs_system))
+    env.set(SPACK_STORE_LINK_DIRS, ":".join(link_dirs_spack))
+    env.set(SPACK_STORE_INCLUDE_DIRS, ":".join(include_dirs_spack))
+    env.set(SPACK_STORE_RPATH_DIRS, ":".join(rpath_dirs_spack))
 
 
 def set_package_py_globals(pkg, context: Context = Context.BUILD):
@@ -552,58 +579,67 @@ def set_package_py_globals(pkg, context: Context = Context.BUILD):
     """
     module = ModuleChangePropagator(pkg)
 
-    m = module
-
     if context == Context.BUILD:
-        jobs = determine_number_of_jobs(parallel=pkg.parallel)
-        m.make_jobs = jobs
+        module.std_cmake_args = spack.build_systems.cmake.CMakeBuilder.std_args(pkg)
+        module.std_meson_args = spack.build_systems.meson.MesonBuilder.std_args(pkg)
+        module.std_pip_args = spack.build_systems.python.PythonPipBuilder.std_args(pkg)
 
-        # TODO: make these build deps that can be installed if not found.
-        m.make = MakeExecutable("make", jobs)
-        m.gmake = MakeExecutable("gmake", jobs)
-        m.ninja = MakeExecutable("ninja", jobs, supports_jobserver=False)
-        # TODO: johnwparent: add package or builder support to define these build tools
-        # for now there is no entrypoint for builders to define these on their
-        # own
-        if sys.platform == "win32":
-            m.nmake = Executable("nmake")
-            m.msbuild = Executable("msbuild")
-            # analog to configure for win32
-            m.cscript = Executable("cscript")
+    jobs = determine_number_of_jobs(parallel=pkg.parallel)
+    module.make_jobs = jobs
 
-        # Find the configure script in the archive path
-        # Don't use which for this; we want to find it in the current dir.
-        m.configure = Executable("./configure")
+    # TODO: make these build deps that can be installed if not found.
+    module.make = MakeExecutable("make", jobs)
+    module.gmake = MakeExecutable("gmake", jobs)
+    module.ninja = MakeExecutable("ninja", jobs, supports_jobserver=False)
+    # TODO: johnwparent: add package or builder support to define these build tools
+    # for now there is no entrypoint for builders to define these on their
+    # own
+    if sys.platform == "win32":
+        module.nmake = Executable("nmake")
+        module.msbuild = Executable("msbuild")
+        # analog to configure for win32
+        module.cscript = Executable("cscript")
 
-        # Standard CMake arguments
-        m.std_cmake_args = spack.build_systems.cmake.CMakeBuilder.std_args(pkg)
-        m.std_meson_args = spack.build_systems.meson.MesonBuilder.std_args(pkg)
-        m.std_pip_args = spack.build_systems.python.PythonPipBuilder.std_args(pkg)
+    # Find the configure script in the archive path
+    # Don't use which for this; we want to find it in the current dir.
+    module.configure = Executable("./configure")
 
     # Put spack compiler paths in module scope. (Some packages use it
     # in setup_run_environment etc, so don't put it context == build)
     link_dir = spack.paths.build_env_path
-    m.spack_cc = os.path.join(link_dir, pkg.compiler.link_paths["cc"])
-    m.spack_cxx = os.path.join(link_dir, pkg.compiler.link_paths["cxx"])
-    m.spack_f77 = os.path.join(link_dir, pkg.compiler.link_paths["f77"])
-    m.spack_fc = os.path.join(link_dir, pkg.compiler.link_paths["fc"])
+    pkg_compiler = None
+    try:
+        pkg_compiler = pkg.compiler
+    except spack.compilers.NoCompilerForSpecError as e:
+        tty.debug(f"cannot set 'spack_cc': {str(e)}")
+
+    if pkg_compiler is not None:
+        module.spack_cc = os.path.join(link_dir, pkg_compiler.link_paths["cc"])
+        module.spack_cxx = os.path.join(link_dir, pkg_compiler.link_paths["cxx"])
+        module.spack_f77 = os.path.join(link_dir, pkg_compiler.link_paths["f77"])
+        module.spack_fc = os.path.join(link_dir, pkg_compiler.link_paths["fc"])
+    else:
+        module.spack_cc = None
+        module.spack_cxx = None
+        module.spack_f77 = None
+        module.spack_fc = None
 
     # Useful directories within the prefix are encapsulated in
     # a Prefix object.
-    m.prefix = pkg.prefix
+    module.prefix = pkg.prefix
 
     # Platform-specific library suffix.
-    m.dso_suffix = dso_suffix
+    module.dso_suffix = dso_suffix
 
     def static_to_shared_library(static_lib, shared_lib=None, **kwargs):
-        compiler_path = kwargs.get("compiler", m.spack_cc)
+        compiler_path = kwargs.get("compiler", module.spack_cc)
         compiler = Executable(compiler_path)
 
         return _static_to_shared_library(
             pkg.spec.architecture, compiler, static_lib, shared_lib, **kwargs
         )
 
-    m.static_to_shared_library = static_to_shared_library
+    module.static_to_shared_library = static_to_shared_library
 
     module.propagate_changes_to_mro()
 
@@ -789,7 +825,7 @@ def setup_package(pkg, dirty, context: Context = Context.BUILD):
         for mod in ["cray-mpich", "cray-libsci"]:
             module("unload", mod)
 
-    if target.module_name:
+    if target and target.module_name:
         load_module(target.module_name)
 
     load_external_modules(pkg)
@@ -972,8 +1008,8 @@ class SetupContext:
         self.should_set_package_py_globals = (
             self.should_setup_dependent_build_env | self.should_setup_run_env | UseMode.ROOT
         )
-        # In a build context, the root and direct build deps need build-specific globals set.
-        self.needs_build_context = UseMode.ROOT | UseMode.BUILDTIME_DIRECT
+        # In a build context, the root needs build-specific globals set.
+        self.needs_build_context = UseMode.ROOT
 
     def set_all_package_py_globals(self):
         """Set the globals in modules of package.py files."""
@@ -1338,7 +1374,7 @@ def get_package_context(traceback, context=3):
             # don't provide context if the code is actually in the base classes.
             obj = frame.f_locals["self"]
             func = getattr(obj, tb.tb_frame.f_code.co_name, "")
-            if func:
+            if func and hasattr(func, "__qualname__"):
                 typename, *_ = func.__qualname__.partition(".")
                 if isinstance(obj, CONTEXT_BASES) and typename not in basenames:
                     break

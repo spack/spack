@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,8 +15,4 @@ class PyOpencensusContext(PythonPackage):
 
     license("Apache-2.0")
 
-    version(
-        "0.1.1",
-        sha256="1a3fdf6bec537031efcc93d51b04f1edee5201f8c9a0c85681d63308b76f5702",
-        expand=False,
-    )
+    version("0.1.1", sha256="1a3fdf6bec537031efcc93d51b04f1edee5201f8c9a0c85681d63308b76f5702")

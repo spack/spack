@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -38,10 +38,10 @@ class Clang(Compiler):
     cxx_names = ["clang++"]
 
     # Subclasses use possible names of Fortran 77 compiler
-    f77_names = ["flang"]
+    f77_names = ["flang-new", "flang"]
 
     # Subclasses use possible names of Fortran 90 compiler
-    fc_names = ["flang"]
+    fc_names = ["flang-new", "flang"]
 
     version_argument = "--version"
 
@@ -171,10 +171,11 @@ class Clang(Compiler):
 
         match = re.search(
             # Normal clang compiler versions are left as-is
-            r"clang version ([^ )\n]+)-svn[~.\w\d-]*|"
+            r"(?:clang|flang-new) version ([^ )\n]+)-svn[~.\w\d-]*|"
             # Don't include hyphenated patch numbers in the version
             # (see https://github.com/spack/spack/pull/14365 for details)
-            r"clang version ([^ )\n]+?)-[~.\w\d-]*|" r"clang version ([^ )\n]+)",
+            r"(?:clang|flang-new) version ([^ )\n]+?)-[~.\w\d-]*|"
+            r"(?:clang|flang-new) version ([^ )\n]+)",
             output,
         )
         if match:

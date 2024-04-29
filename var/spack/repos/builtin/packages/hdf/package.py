@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -146,7 +146,11 @@ class Hdf(AutotoolsPackage):
 
         if name == "cflags":
             # https://forum.hdfgroup.org/t/help-building-hdf4-with-clang-error-implicit-declaration-of-function-test-mgr-szip-is-invalid-in-c99/7680
-            if self.spec.satisfies("@:4.2.15 %apple-clang") or self.spec.satisfies("%clang@16:"):
+            if (
+                self.spec.satisfies("@:4.2.15 %apple-clang")
+                or self.spec.satisfies("%clang@16:")
+                or self.spec.satisfies("%oneapi")
+            ):
                 flags.append("-Wno-error=implicit-function-declaration")
 
             if self.spec.satisfies("%clang@16:"):

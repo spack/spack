@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -153,7 +153,8 @@ class Visit(CMakePackage):
 
     # VisIt uses Silo's 'ghost zone' data structures, which are only available
     # in v4.10+ releases: https://wci.llnl.gov/simulation/computer-codes/silo/releases/release-notes-4.10
-    depends_on("silo@4.10: +shared", when="+silo")
+    # Silo versions < 4.11 do not build successfully with Spack
+    depends_on("silo@4.11: +shared", when="+silo")
     depends_on("silo+hdf5", when="+silo+hdf5")
     depends_on("silo~hdf5", when="+silo~hdf5")
     depends_on("silo+mpi", when="+silo+mpi")
@@ -170,13 +171,16 @@ class Visit(CMakePackage):
     depends_on("mfem+shared+exceptions+fms+conduit", when="+mfem")
     depends_on("libfms@0.2:", when="+mfem")
 
-    depends_on("adios2@2.7.1", when="+adios2")
-    depends_on("adios2+hdf5", when="+adios2+hdf5")
-    depends_on("adios2~hdf5", when="+adios2~hdf5")
-    depends_on("adios2+mpi", when="+adios2+mpi")
-    depends_on("adios2~mpi", when="+adios2~mpi")
-    depends_on("adios2+python", when="+adios2+python")
-    depends_on("adios2~python", when="+adios2~python")
+    with when("+adios2"):
+        depends_on("adios2")
+        # adios 2.8 removed adios2_taustubs (https://github.com/visit-dav/visit/issues/19209)
+        depends_on("adios2@:2.7.1")
+        depends_on("adios2+hdf5", when="+hdf5")
+        depends_on("adios2~hdf5", when="~hdf5")
+        depends_on("adios2+mpi", when="+mpi")
+        depends_on("adios2~mpi", when="~mpi")
+        depends_on("adios2+python", when="+python")
+        depends_on("adios2~python", when="~python")
 
     # For version 3.3.0 through 3.3.2, we used vtk-h to utilize vtk-m.
     # For version starting with 3.3.3 we use vtk-m directly.
@@ -352,23 +356,23 @@ class Visit(CMakePackage):
             args.append(self.define("VISIT_VTKH_DIR", spec["vtk-h"].prefix))
 
         if "@3.3.3: +vtkm" in spec:
+            lib_dirs = [spec["libx11"].prefix.lib]
+            if self.spec.satisfies("^vtkm+rocm"):
+                lib_dirs.append(spec["hip"].prefix.lib)
             args.append(self.define("VISIT_VTKM_DIR", spec["vtk-m"].prefix))
             args.append(
                 self.define(
-                    "CMAKE_EXE_LINKER_FLAGS",
-                    "-L%s/lib -L%s/lib" % (spec["hip"].prefix, spec["libx11"].prefix),
+                    "CMAKE_EXE_LINKER_FLAGS", "".join("-L%s " % s for s in lib_dirs).strip()
                 )
             )
             args.append(
                 self.define(
-                    "CMAKE_MODULE_LINKER_FLAGS",
-                    "-L%s/lib -L%s/lib" % (spec["hip"].prefix, spec["libx11"].prefix),
+                    "CMAKE_MODULE_LINKER_FLAGS", "".join("-L%s " % s for s in lib_dirs).strip()
                 )
             )
             args.append(
                 self.define(
-                    "CMAKE_SHARED_LINKER_FLAGS",
-                    "-L%s/lib -L%s/lib" % (spec["hip"].prefix, spec["libx11"].prefix),
+                    "CMAKE_SHARED_LINKER_FLAGS", "".join("-L%s " % s for s in lib_dirs).strip()
                 )
             )
 

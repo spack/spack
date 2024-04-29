@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -96,9 +96,6 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
             self.define_from_variant("BUILD_TESTING", "tests"),
             self.define("FAISS_OPT_LEVEL", "generic"),
         ]
-        if "+python" in spec:
-            pyexe = spec["python"].command.path
-            args.append(self.define("Python_EXECUTABLE", pyexe))
 
         if "+cuda" in spec:
             key = "CMAKE_CUDA_ARCHITECTURES"

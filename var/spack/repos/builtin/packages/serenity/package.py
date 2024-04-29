@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -115,7 +115,7 @@ class Serenity(CMakePackage):
         )
 
     def cmake_args(self):
-        args = [
+        return [
             self.define("SERENITY_BUILD_TESTS", self.run_tests),
             self.define_from_variant("SERENITY_BUILD_PYTHON_BINDINGS", "python"),
             self.define("SERENITY_MARCH", ""),
@@ -137,6 +137,3 @@ class Serenity(CMakePackage):
             self.define("BOOST_NO_SYSTEM_PATHS", True),
             self.define("Boost_NO_BOOST_CMAKE", True),
         ]
-        if "+python" in self.spec:
-            args.append(self.define("PYTHON_EXECUTABLE", self.spec["python"].command.path))
-        return args

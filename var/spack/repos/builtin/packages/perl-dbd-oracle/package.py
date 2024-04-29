@@ -1,6 +1,5 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
-# Copyright 2023 EMBL-European Bioinformatics Institute
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -24,11 +23,3 @@ class PerlDbdOracle(PerlPackage):
 
     def setup_build_environment(self, env):
         env.set("ORACLE_HOME", self.spec["oracle-instant-client"].prefix)
-
-    def test_use(self):
-        """Test 'use module'"""
-        options = ["-we", 'use strict; use DBD::Oracle; print("OK\n")']
-
-        perl = self.spec["perl"].command
-        out = perl(*options, output=str.split, error=str.split)
-        assert "OK" in out

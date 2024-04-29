@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -125,11 +125,6 @@ class Omnitrace(CMakePackage):
         if "+tau" in spec:
             tau_root = spec["tau"].prefix
             args.append(self.define("TAU_ROOT_DIR", tau_root))
-
-        if "+python" in spec:
-            pyexe = spec["python"].command.path
-            args.append(self.define("PYTHON_EXECUTABLE", pyexe))
-            args.append(self.define("Python3_EXECUTABLE", pyexe))
 
         if "+mpi" in spec:
             args.append(self.define("MPI_C_COMPILER", spec["mpi"].mpicc))

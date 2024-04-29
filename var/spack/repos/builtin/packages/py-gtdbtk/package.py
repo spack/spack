@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -28,7 +28,7 @@ class PyGtdbtk(PythonPackage):
     depends_on("py-pydantic@1.9.2:1", type=("build", "run"), when="@2.3.0:")
     depends_on("prodigal@2.6.2:", type=("build", "run"))
     depends_on("hmmer@3.1b2:", type=("build", "run"))
-    depends_on("pplacer@1.1:", type=("build", "run"))
+    depends_on("pplacer@1.1alpha:", type=("build", "run"))
     depends_on("fastani@1.32:", type=("build", "run"))
     depends_on("fasttree@2.1.9:", type=("build", "run"))
     depends_on("mash@2.2:", type=("build", "run"))

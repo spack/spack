@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -689,11 +689,13 @@ class Openfoam(Package):
             "CGAL": [
                 ("BOOST_ARCH_PATH", spec["boost"].prefix),
                 ("CGAL_ARCH_PATH", spec["cgal"].prefix),
+                ("MPFR_ARCH_PATH", spec["mpfr"].prefix),
                 (
                     "LD_LIBRARY_PATH",
                     foam_add_lib(
                         pkglib(spec["boost"], "${BOOST_ARCH_PATH}"),
                         pkglib(spec["cgal"], "${CGAL_ARCH_PATH}"),
+                        pkglib(spec["mpfr"], "${MPFR_ARCH_PATH}"),
                     ),
                 ),
             ],

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,7 +22,7 @@ class PyPySpy(Package):
     # CargoPackage base class.
     depends_on("rust", type="build")
     depends_on("unwind")
-    depends_on("libunwind components=ptrace", when="^libunwind")
+    depends_on("libunwind components=ptrace", when="^[virtuals=unwind] libunwind")
 
     def install(self, spec, prefix):
         cargo = which("cargo")

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,7 +16,9 @@ class Unzip(MakefilePackage):
 
     version("6.0", sha256="036d96991646d0449ed0aa952e4fbe21b476ce994abc276e49d30e686708bd37")
 
-    patch("configure-cflags.patch", when="%clang@16:")
+    # clang and oneapi need this patch, likely others
+    # There is no problem with it on gcc, so make it a catch all
+    patch("configure-cflags.patch")
 
     # The Cray cc wrapper doesn't handle the '-s' flag (strip) cleanly.
     @when("platform=cray")
@@ -27,9 +29,8 @@ class Unzip(MakefilePackage):
         make_args = ["-f", join_path("unix", "Makefile")]
 
         cflags = []
-        if self.spec.satisfies("%clang@16:"):
-            cflags.append("-Wno-error=implicit-function-declaration")
-            cflags.append("-Wno-error=implicit-int")
+        cflags.append("-Wno-error=implicit-function-declaration")
+        cflags.append("-Wno-error=implicit-int")
         cflags.append("-DLARGE_FILE_SUPPORT")
 
         make_args.append('LOC="{}"'.format(" ".join(cflags)))

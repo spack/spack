@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -523,6 +523,23 @@ def specfile_for(default_mock_concretization):
             ],
             "^[virtuals=mpi] openmpi",
         ),
+        # Allow merging attributes, if deptypes match
+        (
+            "^[virtuals=mpi] openmpi+foo ^[virtuals=lapack] openmpi+bar",
+            [
+                Token(TokenType.START_EDGE_PROPERTIES, value="^["),
+                Token(TokenType.KEY_VALUE_PAIR, value="virtuals=mpi"),
+                Token(TokenType.END_EDGE_PROPERTIES, value="]"),
+                Token(TokenType.UNQUALIFIED_PACKAGE_NAME, value="openmpi"),
+                Token(TokenType.BOOL_VARIANT, value="+foo"),
+                Token(TokenType.START_EDGE_PROPERTIES, value="^["),
+                Token(TokenType.KEY_VALUE_PAIR, value="virtuals=lapack"),
+                Token(TokenType.END_EDGE_PROPERTIES, value="]"),
+                Token(TokenType.UNQUALIFIED_PACKAGE_NAME, value="openmpi"),
+                Token(TokenType.BOOL_VARIANT, value="+bar"),
+            ],
+            "^[virtuals=lapack,mpi] openmpi+bar+foo",
+        ),
         (
             "^[deptypes=link,build] zlib",
             [
@@ -534,12 +551,12 @@ def specfile_for(default_mock_concretization):
             "^[deptypes=build,link] zlib",
         ),
         (
-            "zlib@git.foo/bar",
+            "git-test@git.foo/bar",
             [
-                Token(TokenType.UNQUALIFIED_PACKAGE_NAME, "zlib"),
+                Token(TokenType.UNQUALIFIED_PACKAGE_NAME, "git-test"),
                 Token(TokenType.GIT_VERSION, "@git.foo/bar"),
             ],
-            "zlib@git.foo/bar",
+            "git-test@git.foo/bar",
         ),
         # Variant propagation
         (
@@ -568,7 +585,7 @@ def specfile_for(default_mock_concretization):
         ),
     ],
 )
-def test_parse_single_spec(spec_str, tokens, expected_roundtrip):
+def test_parse_single_spec(spec_str, tokens, expected_roundtrip, mock_git_test_package):
     parser = SpecParser(spec_str)
     assert tokens == parser.tokens()
     assert expected_roundtrip == str(parser.next_spec())

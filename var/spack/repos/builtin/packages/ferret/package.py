@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -62,6 +62,11 @@ class Ferret(Package):
             )
         else:
             return "https://github.com/NOAA-PMEL/Ferret/archive/v{0}.tar.gz".format(version)
+
+    def flag_handler(self, name, flags):
+        if name == "fflags" and self.spec.satisfies("%gcc@10:"):
+            flags.extend(["-fallow-argument-mismatch", "-fallow-invalid-boz"])
+        return (flags, None, None)
 
     def patch(self):
         spec = self.spec

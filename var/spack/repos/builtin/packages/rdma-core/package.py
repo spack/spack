@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -107,11 +107,4 @@ class RdmaCore(CMakePackage):
         if self.spec.satisfies("~man_pages"):
             cmake_args.append("-DNO_MAN_PAGES=1")
 
-        if self.spec.satisfies("@:39.0"):
-            cmake_args.extend(
-                [
-                    self.define("PYTHON_LIBRARY", self.spec["python"].libs[0]),
-                    self.define("PYTHON_INCLUDE_DIR", self.spec["python"].headers.directories[0]),
-                ]
-            )
         return cmake_args

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -53,7 +53,7 @@ class PyAlphafold(PythonPackage, CudaPackage):
         type="run",
         patches=[
             patch(
-                "https://raw.githubusercontent.com/deepmind/alphafold/main/docker/openmm.patch",
+                "https://raw.githubusercontent.com/google-deepmind/alphafold/2819de4ddd075340b81d36bcf7932a0ff0fbe404/docker/openmm.patch",
                 sha256="a5a0ced820f3ecc56ae634c3111f80614863559b0587954a2658c8d4b2a07ae3",
                 working_dir="wrappers/python",
                 level=0,

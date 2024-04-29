@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -45,7 +45,7 @@ class Care(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("camp")
     depends_on("umpire@develop")
     depends_on("raja@develop")
-    depends_on("chai@develop+enable_pick~benchmarks")
+    depends_on("chai@develop+enable_pick")
 
     # WARNING: this package currently only supports an internal cub
     # package. This will cause a race condition if compiled with another

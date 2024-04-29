@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -73,5 +73,9 @@ class Pixman(AutotoolsPackage):
             #  https://gitlab.freedesktop.org/pixman/pixman/-/issues/69
             if self.spec.target.family == "aarch64":
                 args.append("--disable-arm-a64-neon")
+
+        # The Fujitsu compiler does not support assembler macros.
+        if self.spec.satisfies("%fj"):
+            args.append("--disable-arm-a64-neon")
 
         return args

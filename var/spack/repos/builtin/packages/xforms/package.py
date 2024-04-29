@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,6 +22,7 @@ class Xforms(AutotoolsPackage):
     depends_on("libx11", type="link")
     depends_on("libxpm", type="link")
     depends_on("jpeg", type="link")
+    patch("xformsPatch.patch")
 
     def configure_args(self):
         args = ["--enable-static"]

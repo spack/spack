@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -153,6 +153,9 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
             "MFEM_DIR={0}".format(self.spec["mfem"].prefix),
             "CONFIG_MK={0}".format(self.spec["mfem"].package.config_mk),
         ]
+
+        # https://github.com/spack/spack/issues/42839
+        result.append("CPPFLAGS=-DGLEW_NO_GLU")
 
         if self.spec.satisfies("@4.0:"):
             # Spack will inject the necessary include dirs and link paths via

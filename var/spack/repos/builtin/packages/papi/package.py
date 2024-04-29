@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -33,7 +33,7 @@ class Papi(AutotoolsPackage, ROCmPackage):
     license("BSD-3-Clause")
 
     version("master", branch="master")
-    version("7.1.0", sha256="950d0e997e9e908f58c103efd54983e905b6cffa75ef52ed8fdd1ab441977bb6")
+    version("7.1.0", sha256="5818afb6dba3ece57f51e65897db5062f8e3464e6ed294b654ebf34c3991bc4f")
     version("7.0.1", sha256="c105da5d8fea7b113b0741a943d467a06c98db959ce71bdd9a50b9f03eecc43e")
     # Note: version 7.0.0 is omitted due to build issues, see PR 33940 for more information
     version("6.0.0.1", sha256="3cd7ed50c65b0d21d66e46d0ba34cd171178af4bbf9d94e693915c1aca1e287f")
@@ -68,12 +68,14 @@ class Papi(AutotoolsPackage, ROCmPackage):
     depends_on("cuda", when="+nvml")
     depends_on("hsa-rocr-dev", when="+rocm")
     depends_on("rocprofiler-dev", when="+rocm")
-    depends_on("llvm-amdgpu +openmp", when="+rocm")
+    depends_on("llvm-amdgpu", when="+rocm")
+    depends_on("rocm-openmp-extras", when="+rocm")
     depends_on("rocm-smi-lib", when="+rocm_smi")
 
     conflicts("%gcc@8:", when="@5.3.0", msg="Requires GCC version less than 8.0")
     conflicts("+sde", when="@:5", msg="Software defined events (SDE) added in 6.0.0")
     conflicts("^cuda", when="@:5", msg="CUDA support for versions < 6.0.0 not implemented")
+    conflicts("%cce", when="@7.1:", msg="-ffree-form flag not recognized")
 
     conflicts("@=6.0.0", when="+static_tools", msg="Static tools cannot build on version 6.0.0")
 
@@ -85,7 +87,7 @@ class Papi(AutotoolsPackage, ROCmPackage):
         when="@5.4.0:5.6%gcc@8:",
     )
     # 7.1.0 erroneously adds -ffree-form for all fortran compilers
-    patch("sysdetect-free-form-fix.patch", when="@7.1.0:")
+    patch("sysdetect-free-form-fix.patch", when="@7.1.0")
     patch("crayftn-fixes.patch", when="@6.0.0:%cce@9:")
     patch("intel-oneapi-compiler-fixes.patch", when="@6.0.0:%oneapi")
     patch("intel-cray-freeform.patch", when="@7.0.1")

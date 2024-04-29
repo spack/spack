@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -81,9 +81,10 @@ class Dray(Package, CudaPackage):
     depends_on("apcomp~shared", when="~shared")
     depends_on("apcomp+shared", when="+shared")
 
-    depends_on("raja@0.12.0:")
+    depends_on("raja@0.14.0:0.14", when="@0.1.8:")
     depends_on("raja@:0.14", when="@0.1.7:")
     depends_on("raja@:0.13", when="@:0.1.6")
+    depends_on("raja@0.12.0:")
     depends_on("raja~cuda", when="~cuda")
     depends_on("raja+cuda", when="+cuda")
     propagate_cuda_arch("raja")

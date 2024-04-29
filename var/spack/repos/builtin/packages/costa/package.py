@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -29,7 +29,7 @@ class Costa(CMakePackage):
     version("2.0", sha256="de250197f31f7d23226c6956a687c3ff46fb0ff6c621a932428236c3f7925fe4")
 
     variant("scalapack", default=False, description="Build with ScaLAPACK API")
-    variant("shared", default=False, description="Build shared libraries")
+    variant("shared", default=True, description="Build shared libraries")
     variant("profiling", default=False, description="Enable profiling")
     variant("tests", default=False, description="Enable tests")
     variant("apps", default=False, description="Enable miniapp")

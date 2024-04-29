@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -156,10 +156,7 @@ class Serialbox(CMakePackage):
         env.prepend_path("PATH", self.prefix.python.pp_ser)
         # Allow for running the preprocessor as a Python module, as well as
         # enable the Python interface in a non-standard directory:
-        env.prepend_path("PYTHONPATH", self.prefix.python)
-
-    def setup_dependent_build_environment(self, env, dependent_spec):
-        self.setup_run_environment(env)
+        env.prepend_path("PYTHONPATH", self.prefix.python.pp_ser)
 
     def setup_dependent_package(self, module, dependent_spec):
         # Simplify the location of the preprocessor by dependent packages:

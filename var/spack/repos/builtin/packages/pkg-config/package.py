@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -60,5 +60,10 @@ class PkgConfig(AutotoolsPackage):
             # glib uses pkg-config as well, so break
             # the cycle by using the internal glib.
             config_args.append("--with-internal-glib")
+
+        c_name = self.spec.compiler.name
+        if "oneapi" in c_name or "cce" in c_name:
+            # Don't treat int-conversion warning as error with oneapi and cce.
+            config_args.append("CFLAGS=-Wno-error=int-conversion")
 
         return config_args

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -39,6 +39,8 @@ class Motif(AutotoolsPackage):
     depends_on("pkgconfig", type="build")
 
     patch("add_xbitmaps_dependency.patch")
+    # ensure tools/wml/wmluiltok.c has a main function
+    patch("add_wmluiltok_option_main.patch")
 
     def patch(self):
         # fix linking the simple_app demo program

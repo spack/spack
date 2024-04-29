@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -105,7 +105,7 @@ class TestConcretizePreferences:
 
     @pytest.mark.parametrize(
         "compiler_str,spec_str",
-        [("gcc@=4.5.0", "mpileaks"), ("clang@=12.0.0", "mpileaks"), ("gcc@=4.5.0", "openmpi")],
+        [("gcc@=9.4.0", "mpileaks"), ("clang@=15.0.0", "mpileaks"), ("gcc@=9.4.0", "openmpi")],
     )
     def test_preferred_compilers(self, compiler_str, spec_str):
         """Test preferred compilers are applied correctly"""

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,6 +20,12 @@ class IntelOneapiDpct(IntelOneApiPackage):
     homepage = "https://www.intel.com/content/www/us/en/developer/tools/oneapi/dpc-compatibility-tool.html#gs.2p8km6"
 
     version(
+        "2024.1.0",
+        url="https://registrationcenter-download.intel.com/akdlm/IRC_NAS/997fe522-cedf-46da-a54d-be4f22992fa1/l_dpcpp-ct_p_2024.1.0.378_offline.sh",
+        sha256="f4855ef768b9067476f0e216140c65777e301c9b32be45d9e644d54b6dc21e1b",
+        expand=False,
+    )
+    version(
         "2024.0.0",
         url="https://registrationcenter-download.intel.com/akdlm//IRC_NAS/6633bc4b-5356-471a-9aae-d5e63e7acd95/l_dpcpp-ct_p_2024.0.0.49394_offline.sh",
         sha256="5fdba92edf24084187d98f083f9a6e17ee6b33ad8a736d6c9cdd3dbd4e0eab8a",
@@ -39,25 +45,25 @@ class IntelOneapiDpct(IntelOneApiPackage):
     )
     version(
         "2023.0.0",
-        url="https://registrationcenter-download.intel.com/akdlm/irc_nas/19100/l_dpcpp-ct_p_2023.0.0.25483_offline.sh",
+        url="https://registrationcenter-download.intel.com/akdlm/IRC_NAS/19100/l_dpcpp-ct_p_2023.0.0.25483_offline.sh",
         sha256="81f392d16a10cbdb8e9d053f18566304a78e1be624280ad43ddbc0dfd767fc7f",
         expand=False,
     )
     version(
         "2022.2.1",
-        url="https://registrationcenter-download.intel.com/akdlm/irc_nas/18991/l_dpcpp-ct_p_2022.2.1.14994_offline.sh",
+        url="https://registrationcenter-download.intel.com/akdlm/IRC_NAS/18991/l_dpcpp-ct_p_2022.2.1.14994_offline.sh",
         sha256="ea2fbe36de70eb3c78c97133f81e0b2a2fbcfc9525e77125a183d7af446ef3e6",
         expand=False,
     )
     version(
         "2022.2.0",
-        url="https://registrationcenter-download.intel.com/akdlm/irc_nas/18908/l_dpcpp-ct_p_2022.2.0.8701_offline.sh",
+        url="https://registrationcenter-download.intel.com/akdlm/IRC_NAS/18908/l_dpcpp-ct_p_2022.2.0.8701_offline.sh",
         sha256="ca79b89ba4b97accb868578a1b7ba0e38dc5e4457d45c6c2552ba33d71b52128",
         expand=False,
     )
     version(
         "2022.1.0",
-        url="https://registrationcenter-download.intel.com/akdlm/irc_nas/18746/l_dpcpp-ct_p_2022.1.0.172_offline.sh",
+        url="https://registrationcenter-download.intel.com/akdlm/IRC_NAS/18746/l_dpcpp-ct_p_2022.1.0.172_offline.sh",
         sha256="ec42f4df3f9daf1af587b14b8b6644c773a0b270e03dd22ac9e2f49131e3e40c",
         expand=False,
     )

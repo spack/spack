@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -70,10 +70,7 @@ class Gnina(CMakePackage, CudaPackage):
     depends_on("cudnn", when="+cudnn")
 
     def cmake_args(self):
-        args = [
-            "-DBLAS=Open",  # Use OpenBLAS instead of Atlas' BLAS
-            f"-DPYTHON_EXECUTABLE={self.spec['python'].command.path}",
-        ]
+        args = ["-DBLAS=Open"]  # Use OpenBLAS instead of Atlas' BLAS
 
         if "+gninavis" in self.spec:
             args.append(f"-DRDKIT_INCLUDE_DIR={self.spec['rdkit'].prefix.include.rdkit}")

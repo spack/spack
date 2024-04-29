@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -25,8 +25,15 @@ class Musl(MakefilePackage):
 
     homepage = "https://www.musl-libc.org"
     url = "https://www.musl-libc.org/releases/musl-1.1.23.tar.gz"
+    tags = ["runtime"]
 
     license("MIT")
+
+    # This is used when the package is external and we need to find the actual default include path
+    # which may be in a multiarch subdir.
+    representative_headers = ["iso646.h"]
+
+    provides("libc")
 
     version("1.2.4", sha256="7a35eae33d5372a7c0da1188de798726f68825513b7ae3ebe97aaaa52114f039")
     version("1.2.3", sha256="7d5b0b6062521e4627e099e4c9dc8248d32a30285e959b7eecaa780cf8cfd4a4")

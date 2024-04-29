@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -391,7 +391,6 @@ class Qmcpack(CMakePackage, CudaPackage):
         else:
             args.append("-DBUILD_PPCONVERT=0")
 
-        args.append(self.define("Python3_EXECUTABLE", self.spec["python"].command.path))
         return args
 
     # QMCPACK needs custom install method for the following reason:

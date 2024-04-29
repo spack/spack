@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -36,6 +36,7 @@ class Krb5(AutotoolsPackage):
     depends_on("openssl@:1", when="@:1.19")
     depends_on("openssl")
     depends_on("gettext")
+    depends_on("perl", type="build")
     depends_on("findutils", type="build")
     depends_on("pkgconfig", type="build", when="^openssl~shared")
 

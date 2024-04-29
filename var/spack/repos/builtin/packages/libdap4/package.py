@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -41,7 +41,7 @@ class Libdap4(AutotoolsPackage):
         # during configure tests. This can cause a failure with libtirpc if the following variable
         # is not set.
         if self.spec.satisfies("^libtirpc"):
-            env.set("TIRPC_LIBS", self.spec["rpc"].libs)
+            env.set("TIRPC_LIBS", self.spec["rpc"].libs.link_flags)
 
     def configure_args(self):
         # libxml2 exports ./include/libxml2/ instead of ./include/, which we

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -44,11 +44,7 @@ class Openmolcas(CMakePackage):
             env.append_path("PATH", self.prefix)
 
     def cmake_args(self):
-        args = [
-            "-DLINALG=OpenBLAS",
-            "-DOPENBLASROOT=%s" % self.spec["openblas"].prefix,
-            "-DPYTHON_EXECUTABLE=%s" % self.spec["python"].command.path,
-        ]
+        args = ["-DLINALG=OpenBLAS", "-DOPENBLASROOT=%s" % self.spec["openblas"].prefix]
         if "+mpi" in self.spec:
             mpi_args = [
                 "-DMPI=ON",

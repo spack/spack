@@ -1,11 +1,9 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import sys
-
-import llnl.util.tty as tty
 
 import spack.cmd
 import spack.cmd.find
@@ -71,16 +69,6 @@ def setup_parser(subparser):
     )
 
     subparser.add_argument(
-        "--only",
-        default="package,dependencies",
-        dest="things_to_load",
-        choices=["package", "dependencies"],
-        help="select whether to load the package and its dependencies\n\n"
-        "the default is to load the package and all dependencies. alternatively, "
-        "one can decide to load only the package or only the dependencies",
-    )
-
-    subparser.add_argument(
         "--list",
         action="store_true",
         default=False,
@@ -109,11 +97,6 @@ def load(parser, args):
             "spack load", f"    eval `spack load {{sh_arg}} {specs_str}`"
         )
         return 1
-
-    if args.things_to_load != "package,dependencies":
-        tty.warn(
-            "The `--only` flag in spack load is deprecated and will be removed in Spack v0.22"
-        )
 
     with spack.store.STORE.db.read_transaction():
         env_mod = uenv.environment_modifications_for_specs(*specs)

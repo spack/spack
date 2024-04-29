@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -43,6 +43,14 @@ class Libuv(AutotoolsPackage):
     depends_on("autoconf", type="build", when="@:1.43.0")
     depends_on("libtool", type="build", when="@:1.43.0")
     depends_on("m4", type="build", when="@:1.43.0")
+
+    conflicts(
+        "%gcc@:4.8",
+        when="@1.45:",
+        msg="libuv version 1.45 and above require <stdatomic.h>. "
+        "See: https://github.com/libuv/libuv/blob/v1.45.0/ChangeLog#L11"
+        "and https://gcc.gnu.org/gcc-4.9/changes.html",
+    )
 
     # Tries to build an Objective-C file with GCC's C frontend
     # https://github.com/libuv/libuv/issues/2805

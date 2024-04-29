@@ -51,10 +51,10 @@ jobs:
           on_develop: false
 
     steps:
-    - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # @v2
+    - uses: actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633
       with:
         fetch-depth: 0
-    - uses: actions/setup-python@0a5c61591373683505ea898e09a3ea4f39ef2b9c # @v2
+    - uses: actions/setup-python@82c7e631bb3cdc910f68e0081d67478d79c6982d
       with:
         python-version: ${{ matrix.python-version }}
     - name: Install System packages
@@ -91,17 +91,19 @@ jobs:
           UNIT_TEST_COVERAGE: ${{ matrix.python-version == '3.11' }}
       run: |
           share/spack/qa/run-unit-tests
-    - uses: codecov/codecov-action@eaaf4bedf32dbdc6b720b63067d99c4d77d6047d
+    - uses: codecov/codecov-action@84508663e988701840491b86de86b666e8a86bed
       with:
         flags: unittests,linux,${{ matrix.concretizer }}
+        token: ${{ secrets.CODECOV_TOKEN }}
+        verbose: true
   # Test shell integration
   shell:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # @v2
+    - uses: actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633
       with:
         fetch-depth: 0
-    - uses: actions/setup-python@0a5c61591373683505ea898e09a3ea4f39ef2b9c # @v2
+    - uses: actions/setup-python@82c7e631bb3cdc910f68e0081d67478d79c6982d
       with:
         python-version: '3.11'
     - name: Install System packages
@@ -122,9 +124,11 @@ jobs:
           COVERAGE: true
       run: |
           share/spack/qa/run-shell-tests
-    - uses: codecov/codecov-action@eaaf4bedf32dbdc6b720b63067d99c4d77d6047d
+    - uses: codecov/codecov-action@84508663e988701840491b86de86b666e8a86bed
       with:
         flags: shelltests,linux
+        token: ${{ secrets.CODECOV_TOKEN }}
+        verbose: true
 
   # Test RHEL8 UBI with platform Python. This job is run
   # only on PRs modifying core Spack
@@ -137,7 +141,7 @@ jobs:
           dnf install -y \
               bzip2 curl file gcc-c++ gcc gcc-gfortran git gnupg2 gzip \
               make patch tcl unzip which xz
-    - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # @v2
+    - uses: actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633
     - name: Setup repo and non-root user
       run: |
           git --version
@@ -156,10 +160,10 @@ jobs:
   clingo-cffi:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # @v2
+    - uses: actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633
       with:
         fetch-depth: 0
-    - uses: actions/setup-python@0a5c61591373683505ea898e09a3ea4f39ef2b9c # @v2
+    - uses: actions/setup-python@82c7e631bb3cdc910f68e0081d67478d79c6982d
       with:
         python-version: '3.11'
     - name: Install System packages
@@ -181,20 +185,23 @@ jobs:
           SPACK_TEST_SOLVER: clingo
       run: |
           share/spack/qa/run-unit-tests
-    - uses: codecov/codecov-action@eaaf4bedf32dbdc6b720b63067d99c4d77d6047d # @v2.1.0
+    - uses: codecov/codecov-action@84508663e988701840491b86de86b666e8a86bed
       with:
         flags: unittests,linux,clingo
+        token: ${{ secrets.CODECOV_TOKEN }}
+        verbose: true
   # Run unit tests on MacOS
   macos:
-    runs-on: macos-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
+        os: [macos-latest, macos-14]
         python-version: ["3.11"]
     steps:
-    - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # @v2
+    - uses: actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633
       with:
         fetch-depth: 0
-    - uses: actions/setup-python@0a5c61591373683505ea898e09a3ea4f39ef2b9c # @v2
+    - uses: actions/setup-python@82c7e631bb3cdc910f68e0081d67478d79c6982d
       with:
         python-version: ${{ matrix.python-version }}
     - name: Install Python packages
@@ -216,6 +223,8 @@ jobs:
         $(which spack) solve zlib
         common_args=(--dist loadfile --tx '4*popen//python=./bin/spack-tmpconfig python -u ./bin/spack python' -x)
         $(which spack) unit-test --verbose --cov --cov-config=pyproject.toml --cov-report=xml:coverage.xml "${common_args[@]}"
-    - uses: codecov/codecov-action@eaaf4bedf32dbdc6b720b63067d99c4d77d6047d
+    - uses: codecov/codecov-action@84508663e988701840491b86de86b666e8a86bed
       with:
         flags: unittests,macos
+        token: ${{ secrets.CODECOV_TOKEN }}
+        verbose: true

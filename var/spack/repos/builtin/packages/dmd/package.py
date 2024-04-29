@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -46,9 +46,6 @@ class Dmd(MakefilePackage):
         env.prepend_path("PATH", self.prefix.linux.bin64)
         env.prepend_path("LIBRARY_PATH", self.prefix.linux.lib64)
         env.prepend_path("LD_LIBRARY_PATH", self.prefix.linux.lib64)
-
-    def setup_dependent_build_environment(self, env, dependent_spec):
-        self.setup_run_environment(env)
 
     def edit(self, spec, prefix):
         # Move contents to dmd/

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -124,12 +124,3 @@ class Doxygen(CMakePackage):
             join_path("cmake", "FindIconv.cmake"),
             string=True,
         )
-
-    def cmake_args(self):
-        args = [
-            # Doxygen's build system uses CMake's deprecated `FindPythonInterp`,
-            # which can get confused by other `python` executables in the PATH.
-            # See issue: https://github.com/spack/spack/issues/28215
-            self.define("PYTHON_EXECUTABLE", self.spec["python"].command.path)
-        ]
-        return args

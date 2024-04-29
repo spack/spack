@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -40,6 +40,7 @@ class JwtCpp(CMakePackage):
     depends_on("openssl@1.0.2:", when="@0.5.0:0.5.99 ssl=openssl")
     depends_on("openssl@1.0.1:", when="@0.6.0: ssl=openssl")
     depends_on("libressl@3:", when="@0.5.0: ssl=libressl")
+    depends_on("nlohmann-json", when="@0.7.0:")
 
     def cmake_args(self):
         spec = self.spec

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -61,6 +61,8 @@ class Openldap(AutotoolsPackage):
     depends_on("groff", type="build")
     depends_on("pkgconfig", type="build")
     depends_on("wiredtiger", when="@2.6.0:")
+    depends_on("findutils", type="build")
+    # see https://github.com/openldap/openldap/blob/OPENLDAP_REL_ENG_2_4_48/libraries/liblunicode/Makefile.in
 
     # Ref: https://www.linuxfromscratch.org/blfs/view/svn/server/openldap.html
     @when("+client_only")

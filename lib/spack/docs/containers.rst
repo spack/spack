@@ -1,4 +1,4 @@
-.. Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -233,6 +233,12 @@ The OS that are currently supported are summarized in the table below:
    * - Fedora Linux 38
      - ``fedora:38``
      - ``spack/fedora38``
+   * - Fedora Linux 39
+     - ``fedora:39``
+     - ``spack/fedora39``
+   * - Fedora Linux 40
+     - ``fedora:40``
+     - ``spack/fedora40``
 
 
 

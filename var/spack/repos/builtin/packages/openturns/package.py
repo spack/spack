@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -59,10 +59,8 @@ class Openturns(CMakePackage):
         if "+python" in spec:
             args.extend(
                 [
-                    # By default picks up the system python not the Spack build
-                    "-DPYTHON_EXECUTABLE={0}".format(spec["python"].command.path),
                     # By default installs to the python prefix
-                    "-DPYTHON_SITE_PACKAGES={0}".format(python_platlib),
+                    "-DPYTHON_SITE_PACKAGES={0}".format(python_platlib)
                 ]
             )
 

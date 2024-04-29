@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,6 +22,7 @@ import xml.etree.ElementTree
 import py
 import pytest
 
+import archspec.cpu
 import archspec.cpu.microarchitecture
 import archspec.cpu.schema
 
@@ -33,6 +34,7 @@ from llnl.util.filesystem import copy_tree, mkdirp, remove_linked_tree, touchp, 
 import spack.binary_distribution
 import spack.caches
 import spack.cmd.buildcache
+import spack.compiler
 import spack.compilers
 import spack.config
 import spack.database
@@ -54,6 +56,7 @@ import spack.util.git
 import spack.util.gpg
 import spack.util.spack_yaml as syaml
 import spack.util.url as url_util
+import spack.version
 from spack.fetch_strategy import URLFetchStrategy
 from spack.util.pattern import Bunch
 
@@ -267,10 +270,6 @@ def clean_test_environment():
     ev.deactivate()
 
 
-def _verify_executables_noop(*args):
-    return None
-
-
 def _host():
     """Mock archspec host so there is no inconsistency on the Windows platform
     This function cannot be local as it needs to be pickleable"""
@@ -296,9 +295,7 @@ def mock_compiler_executable_verification(request, monkeypatch):
 
     If a test is marked in that way this is a no-op."""
     if "enable_compiler_verification" not in request.keywords:
-        monkeypatch.setattr(
-            spack.compiler.Compiler, "verify_executables", _verify_executables_noop
-        )
+        monkeypatch.setattr(spack.compiler.Compiler, "verify_executables", _return_none)
 
 
 # Hooks to add command line options or set other custom behaviors.
@@ -568,8 +565,8 @@ def mock_repo_path():
 def _pkg_install_fn(pkg, spec, prefix):
     # sanity_check_prefix requires something in the install directory
     mkdirp(prefix.bin)
-    if not os.path.exists(spec.package.build_log_path):
-        touchp(spec.package.build_log_path)
+    if not os.path.exists(spec.package.install_log_path):
+        touchp(spec.package.install_log_path)
 
 
 @pytest.fixture
@@ -710,7 +707,9 @@ def configuration_dir(tmpdir_factory, linux_os):
     t.write(content)
 
     compilers_yaml = test_config.join("compilers.yaml")
-    content = "".join(compilers_yaml.read()).format(linux_os)
+    content = "".join(compilers_yaml.read()).format(
+        linux_os=linux_os, target=str(archspec.cpu.host().family)
+    )
     t = tmpdir.join("site", "compilers.yaml")
     t.write(content)
     yield tmpdir
@@ -787,6 +786,7 @@ def no_compilers_yaml(mutable_config):
         compilers_yaml = os.path.join(local_config.path, "compilers.yaml")
         if os.path.exists(compilers_yaml):
             os.remove(compilers_yaml)
+    return mutable_config
 
 
 @pytest.fixture()
@@ -929,26 +929,16 @@ def dirs_with_libfiles(tmpdir_factory):
     yield lib_to_dirs, all_dirs
 
 
-def _compiler_link_paths_noop(*args):
-    return []
+def _return_none(*args):
+    return None
 
 
 @pytest.fixture(scope="function", autouse=True)
 def disable_compiler_execution(monkeypatch, request):
-    """
-    This fixture can be disabled for tests of the compiler link path
-    functionality by::
-
-        @pytest.mark.enable_compiler_link_paths
-
-    If a test is marked in that way this is a no-op."""
-    if "enable_compiler_link_paths" not in request.keywords:
-        # Compiler.determine_implicit_rpaths actually runs the compiler. So
-        # replace that function with a noop that simulates finding no implicit
-        # RPATHs
-        monkeypatch.setattr(
-            spack.compiler.Compiler, "_get_compiler_link_paths", _compiler_link_paths_noop
-        )
+    """Disable compiler execution to determine implicit link paths and libc flavor and version.
+    To re-enable use `@pytest.mark.enable_compiler_execution`"""
+    if "enable_compiler_execution" not in request.keywords:
+        monkeypatch.setattr(spack.compiler.Compiler, "_compile_dummy_c_source", _return_none)
 
 
 @pytest.fixture(scope="function")
@@ -1436,6 +1426,15 @@ def mock_git_repository(git, tmpdir_factory):
     yield t
 
 
+@pytest.fixture(scope="function")
+def mock_git_test_package(mock_git_repository, mutable_mock_repo, monkeypatch):
+    # install a fake git version in the package class
+    pkg_class = spack.repo.PATH.get_pkg_class("git-test")
+    monkeypatch.delattr(pkg_class, "git")
+    monkeypatch.setitem(pkg_class.versions, spack.version.Version("git"), mock_git_repository.url)
+    return pkg_class
+
+
 @pytest.fixture(scope="session")
 def mock_hg_repository(tmpdir_factory):
     """Creates a very simple hg repository with two commits."""
@@ -1851,7 +1850,7 @@ def binary_with_rpaths(prefix_tmpdir):
     paths are encoded with `$ORIGIN` prepended.
     """
 
-    def _factory(rpaths, message="Hello world!"):
+    def _factory(rpaths, message="Hello world!", dynamic_linker="/lib64/ld-linux.so.2"):
         source = prefix_tmpdir.join("main.c")
         source.write(
             """
@@ -1867,10 +1866,10 @@ def binary_with_rpaths(prefix_tmpdir):
         executable = source.dirpath("main.x")
         # Encode relative RPATHs using `$ORIGIN` as the root prefix
         rpaths = [x if os.path.isabs(x) else os.path.join("$ORIGIN", x) for x in rpaths]
-        rpath_str = ":".join(rpaths)
         opts = [
             "-Wl,--disable-new-dtags",
-            "-Wl,-rpath={0}".format(rpath_str),
+            f"-Wl,-rpath={':'.join(rpaths)}",
+            f"-Wl,--dynamic-linker,{dynamic_linker}",
             str(source),
             "-o",
             str(executable),
@@ -1950,23 +1949,10 @@ def pytest_runtest_setup(item):
         pytest.skip(*not_on_windows_marker.args)
 
 
-class MockPool:
-    def map(self, func, args):
-        return [func(a) for a in args]
-
-    def starmap(self, func, args):
-        return [func(*a) for a in args]
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, *args):
-        pass
-
-
 @pytest.fixture(scope="function")
 def disable_parallel_buildcache_push(monkeypatch):
-    monkeypatch.setattr(spack.cmd.buildcache, "_make_pool", MockPool)
+    """Disable process pools in tests."""
+    monkeypatch.setattr(spack.cmd.buildcache, "_make_pool", spack.cmd.buildcache.NoPool)
 
 
 def _root_path(x, y, *, path):
@@ -1980,16 +1966,23 @@ def mock_modules_root(tmp_path, monkeypatch):
     monkeypatch.setattr(spack.modules.common, "root_path", fn)
 
 
+_repo_name_id = 0
+
+
 def create_test_repo(tmpdir, pkg_name_content_tuples):
+    global _repo_name_id
+
     repo_path = str(tmpdir)
     repo_yaml = tmpdir.join("repo.yaml")
     with open(str(repo_yaml), "w") as f:
         f.write(
-            """\
+            f"""\
 repo:
-  namespace: testcfgrequirements
+  namespace: testrepo{str(_repo_name_id)}
 """
         )
+
+    _repo_name_id += 1
 
     packages_dir = tmpdir.join("packages")
     for pkg_name, pkg_str in pkg_name_content_tuples:
@@ -1999,3 +1992,36 @@ repo:
             f.write(pkg_str)
 
     return spack.repo.Repo(repo_path)
+
+
+@pytest.fixture()
+def compiler_factory():
+    """Factory for a compiler dict, taking a spec and an OS as arguments."""
+
+    def _factory(*, spec, operating_system):
+        return {
+            "compiler": {
+                "spec": spec,
+                "operating_system": operating_system,
+                "paths": {"cc": "/path/to/cc", "cxx": "/path/to/cxx", "f77": None, "fc": None},
+                "modules": [],
+                "target": str(archspec.cpu.host().family),
+            }
+        }
+
+    return _factory
+
+
+@pytest.fixture()
+def host_architecture_str():
+    """Returns the broad architecture family (x86_64, aarch64, etc.)"""
+    return str(archspec.cpu.host().family)
+
+
+def _true(x):
+    return True
+
+
+@pytest.fixture()
+def do_not_check_runtimes_on_reuse(monkeypatch):
+    monkeypatch.setattr(spack.solver.asp, "_has_runtime_dependencies", _true)

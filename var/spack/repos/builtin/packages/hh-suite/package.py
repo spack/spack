@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -25,6 +25,12 @@ class HhSuite(CMakePackage):
 
     depends_on("cmake@2.8.12:", type="build")
     depends_on("mpi", when="+mpi")
+
+    # https://github.com/soedinglab/hh-suite/pull/357
+    patch(
+        "https://github.com/soedinglab/hh-suite/commit/cec47cba5dcd580e668b1ee507c9282fbdc8e7d7.patch?full_index=1",
+        sha256="dad4ee82e506a42c243fa315f542a0e91e379851dffc368e17c9584b2ee71d89",
+    )
 
     def build_args(self, spec, prefix):
         args = []

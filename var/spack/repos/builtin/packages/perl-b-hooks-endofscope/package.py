@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,11 +22,3 @@ class PerlBHooksEndofscope(PerlPackage):
     depends_on("perl@5.6.1:", type=("build", "link", "run", "test"))
     depends_on("perl-module-implementation@0.05:", type=("build", "run", "test"))
     depends_on("perl-sub-exporter-progressive@0.001006:", type=("build", "run", "test"))
-
-    def test_use(self):
-        """Test 'use module'"""
-        options = ["-we", 'use strict; use B::Hooks::EndOfScope; print("OK\n")']
-
-        perl = self.spec["perl"].command
-        out = perl(*options, output=str.split, error=str.split)
-        assert "OK" in out

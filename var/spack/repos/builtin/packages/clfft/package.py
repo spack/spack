@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -34,6 +34,12 @@ class Clfft(CMakePackage):
     )
 
     root_cmakelists_dir = "src"
+
+    def flag_handler(self, name, flags):
+        if name == "cxxflags":
+            # https://github.com/clMathLibraries/clFFT/issues/237
+            flags.append("-fpermissive")
+        return (flags, None, None)
 
     def cmake_args(self):
         args = [
