@@ -707,8 +707,6 @@ class Compiler:
             env.apply_modifications()
 
             yield
-        except BaseException:
-            raise
         finally:
             # Restore environment regardless of whether inner code succeeded
             os.environ.clear()
