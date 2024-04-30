@@ -25,6 +25,7 @@ import spack.spec
 import spack.store
 import spack.util.elf as elf
 import spack.util.executable as executable
+import spack.util.path
 
 from .relocate_text import BinaryFilePrefixReplacer, TextFilePrefixReplacer
 
@@ -613,7 +614,7 @@ def relocate_links(links, prefix_to_prefix):
     """Relocate links to a new install prefix."""
     regex = re.compile("|".join(re.escape(p) for p in prefix_to_prefix.keys()))
     for link in links:
-        old_target = os.readlink(link)
+        old_target = spack.util.path.sanitize_win_longpath(os.readlink(link))
         match = regex.match(old_target)
 
         # No match.

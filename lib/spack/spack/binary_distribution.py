@@ -703,7 +703,6 @@ def hashes_to_prefixes(spec):
 
 def get_buildinfo_dict(spec):
     """Create metadata for a tarball"""
-    import pdb; pdb.set_trace()
     manifest = get_buildfile_manifest(spec)
 
     return {
@@ -1641,10 +1640,9 @@ def relocate_package(spec):
 
     # this logic is fundamentally wrong
     # if in hdf5 we have bin/zlib.dll where zlib.dll points to
-    # <install-prefix>/zlib-hash/bin/zlib.dll
-    # the old dep prefix <orig-install-hash>/bin/zlib.dll will now point
+    # <host-install-prefix>/zlib-hash/bin/zlib.dll
+    # the old dep prefix <host-install-hash>/bin/zlib.dll will now point
     # to the hdf5 install hash (new_dep_prefix) which is wrong
-    import pdb; pdb.set_trace()
     for dag_hash, new_dep_prefix in hashes_to_prefixes(spec).items():
         if dag_hash in hash_to_old_prefix:
             old_dep_prefix = hash_to_old_prefix[dag_hash]
@@ -1815,7 +1813,7 @@ def _tar_strip_component(tar: tarfile.TarFile, prefix: str):
                     # the absolute path exists on the target system
                     source = m.name
                     target = m.linkname
-                    raise ValueError(
+                    tty.warn(
                         f'Symbolic link from "{source}" to "{target}" cannot be relocated'
                     )
             elif m.type == tarfile.LNKTYPE:

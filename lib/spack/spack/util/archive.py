@@ -196,7 +196,6 @@ def reproducible_tarfile_from_prefix(
             file_info = tarfile.TarInfo(path_to_name(entry.path))
 
             if entry.is_symlink():
-
                 def add_entry_to_tarfile(safe_link_path):
                     """encapsulate logic around adding symlinks to a tarball"""
                     file_info.linkname = safe_link_path
@@ -215,21 +214,21 @@ def reproducible_tarfile_from_prefix(
 
                 # strip off long path reg prefix on Windows
                 link_dest = sanitize_win_longpath(os.readlink(entry.path))
-                if os.path.isabs(link_dest):
-                    full_path = os.path.realpath(link_dest)
-                    reg = re.compile(re.escape(prefix))
-                    res = reg.match(full_path)
-                    if res:
-                        # need to compute relative path
-                        add_entry_to_tarfile(
-                            os.path.relpath(full_path, os.path.dirname(entry.path))
-                        )
-                    else:
-                        add_entry_to_tarfile(full_path)
-                # Relative links should stay relative
-                # always leave as is
-                else:
-                    add_entry_to_tarfile(link_dest)
+                # if os.path.isabs(link_dest):
+                #     full_path = os.path.realpath(link_dest)
+                #     reg = re.compile(re.escape(prefix))
+                #     res = reg.match(full_path)
+                #     if res:
+                #         # need to compute relative path
+                #         add_entry_to_tarfile(
+                #             os.path.relpath(full_path, os.path.dirname(entry.path))
+                #         )
+                #     else:
+                #         add_entry_to_tarfile(full_path)
+                # # Relative links should stay relative
+                # # always leave as is
+                # else:
+                add_entry_to_tarfile(link_dest)
 
             elif entry.is_file(follow_symlinks=False):
                 # entry.stat has zero (st_ino, st_dev, st_nlink) on Windows: use lstat.
