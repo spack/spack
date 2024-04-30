@@ -13,6 +13,7 @@ class NeurodamusModels(CMakePackage):
     git = "ssh://git@github.com/BlueBrain/neurodamus-models.git"
 
     version("develop", branch="main")
+    version("2.1.0", tag="2.1.0")
     version("2.0.0", tag="2.0.0")
 
     variant("caliper", default=False, description="Enable Caliper instrumentation")
