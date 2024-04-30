@@ -13,10 +13,11 @@ class Qrmumps(CMakePackage):
 
     homepage = "https://gitlab.com/qr_mumps/qr_mumps"
     git = "https://gitlab.com/qr_mumps/qr_mumps"
-    url = "https://gitlab.com/qr_mumps/qr_mumps/-/archive/3.0.4/qr_mumps-3.0.4.tar.gz"
+    url = "https://gitlab.com/qr_mumps/qr_mumps/-/archive/3.1/qr_mumps-3.1.tar.gz"
     maintainers("fpruvost")
 
     version("master", branch="master")
+    version("3.1", sha256="6e39dbfa1e6ad3730b006c8953a43cc6da3dfc91f00edeb68a641d364703b773")
     version("3.0.4", sha256="621a294c3bf1e60e4ea6ae29c0586760648947f650e0f86bbabaf82805fc17db")
 
     variant("amd", default=True, description="Enable AMD ordering")
