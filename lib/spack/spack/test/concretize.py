@@ -2817,10 +2817,9 @@ def mock_runtime_dependencies(*args, **kwargs):
 
 @pytest.mark.only_clingo("clingo only re-use feature being tested")
 @pytest.mark.regression("38484")
-def test_git_ref_version_can_be_reused(monkeypatch, install_mockery_mutable_config):
-    # override gcc-runtime dep and make all installs reusable
-    monkeypatch.setattr(spack.solver.asp, "_has_runtime_dependencies", mock_runtime_dependencies)
-
+def test_git_ref_version_can_be_reused(
+    install_mockery_mutable_config, do_not_check_runtimes_on_reuse
+):
     first_spec = spack.spec.Spec("zlib-ng@git.2.1.5=2.1.5").concretized()
     first_spec.package.do_install(fake=True, explicit=True)
 
@@ -2831,15 +2830,14 @@ def test_git_ref_version_can_be_reused(monkeypatch, install_mockery_mutable_conf
 
 
 @pytest.mark.only_clingo("clingo only re-use feature being tested")
-def test_reuse_prefers_standard_over_git_versions(monkeypatch, install_mockery_mutable_config):
+def test_reuse_prefers_standard_over_git_versions(
+    install_mockery_mutable_config, do_not_check_runtimes_on_reuse
+):
     """
     order matters in this test. typically re-use would pick the last installed match
     but we want to prefer the standard version over git ref based versions
     so install git ref last and ensure it is not picked up by re-use
     """
-    # override gcc-runtime dep and make all installs reusable
-    monkeypatch.setattr(spack.solver.asp, "_has_runtime_dependencies", mock_runtime_dependencies)
-
     standard_spec = spack.spec.Spec("zlib-ng@2.1.5").concretized()
     standard_spec.package.do_install(fake=True, explicit=True)
 
