@@ -95,7 +95,15 @@ class Npm(Package):
         if spec.satisfies("@:9.4.1"):
             node("bin/npm-cli.js", "install", "-ddd", "--global", f"--prefix={prefix}", ".")
         else:
-            node("bin/npm-cli.js", "install", "-ddd", "--global", f"--prefix={prefix}", "--install-links", ".")
+            node(
+                "bin/npm-cli.js",
+                "install",
+                "-ddd",
+                "--global",
+                f"--prefix={prefix}",
+                "--install-links",
+                ".",
+            )
 
     def setup_dependent_build_environment(self, env, dependent_spec):
         npm_config_cache_dir = "%s/npm-cache" % dependent_spec.prefix
