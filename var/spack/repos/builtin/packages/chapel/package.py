@@ -33,9 +33,6 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
     version("main", branch="main")
 
     version("2.0.0", sha256="a8cab99fd034c7b7229be8d4626ec95cf02072646fb148c74b4f48c460c6059c")
-    # Chapel version 1.33 is the final 1.x release
-    version("1.33.0", sha256="c7dfe691a043b6a5dcbea6fe7607ca030014f1a8019744c4c99f67caa8829ba3")
-    version("1.32.0", sha256="a359032b4355774e250fb2796887b3bbf58d010c468faba97f7b471bc6bab57d")
 
     compilers = (
         "allinea",
@@ -132,11 +129,7 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
 
     # TODO: refactor this somehow, this is a separate documentation tool, not a variant of chapel
     variant(
-        "chpldoc", when="@2.0.0:", default=False, description="Build chpldoc in addition to chpl"
-    )
-    # TODO: do we need this? is main not included in the rule above @2.0.0: ?
-    variant(
-        "chpldoc", when="@main", default=False, description="Build chpldoc in addition to chpl"
+        "chpldoc", default=False, description="Build chpldoc in addition to chpl"
     )
 
     variant(
@@ -406,12 +399,6 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
 
     conflicts("rocm", when="cuda", msg="Chapel must be built with either CUDA or ROCm, not both")
     conflicts("rocm", when="@:2.0.0", msg="ROCm support in spack requires Chapel 2.0.0 or later")
-
-    conflicts(
-        "chpldoc",
-        when="@:1.9.9",
-        msg="chpldoc has no effect and is installed by default on versions prior to 2.0.0",
-    )
 
     conflicts(
         "^python@3.12:",
