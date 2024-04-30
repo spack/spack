@@ -2831,9 +2831,7 @@ def test_git_ref_version_can_be_reused(monkeypatch, install_mockery_mutable_conf
 
 
 @pytest.mark.only_clingo("clingo only re-use feature being tested")
-def test_reuse_prefers_standard_over_git_versions(
-    monkeypatch, install_mockery_mutable_config
-):
+def test_reuse_prefers_standard_over_git_versions(monkeypatch, install_mockery_mutable_config):
     """
     order matters in this test. typically re-use would pick the last installed match
     but we want to prefer the standard version over git ref based versions
