@@ -58,6 +58,8 @@ class Visit(CMakePackage):
     executables = ["^visit$"]
 
     version("develop", branch="develop")
+    version("3.4.1", sha256="942108cb294f4c9584a1628225b0be39c114c7e9e01805fb335d9c0b507689f5")
+    version("3.4.0", sha256="6cfb8b190045439e39fa6014dfa797de189bd40bbb9aa6facf711ebd908229e3")
     version("3.3.3", sha256="cc67abb7585e23b51ad576e797df4108641ae6c8c5e80e5359a279c729769187")
     version("3.3.2", sha256="0ae7c38287598e8d7d238cf284ea8be1096dcf13f58a7e9e444a28a32c085b56")
     version("3.3.1", sha256="2e969d3146b559fb833e4cdfaefa72f303d8ad368ef325f68506003f7bc317b9")
