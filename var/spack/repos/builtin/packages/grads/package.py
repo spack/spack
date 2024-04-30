@@ -69,7 +69,8 @@ class Grads(AutotoolsPackage):
         
         if self.spec.satisfies("+grib2"):
             filter_file("grib2c", "g2c", "configure")
-            filter_file("G2_VERSION", "G2C_VERSION", "src/gacfg.c")
+            if self.spec.satisfies("^g2c@1.8.0:"):
+                filter_file("G2_VERSION", "G2C_VERSION", "src/gacfg.c")
 
     def setup_build_environment(self, env):
         env.set("SUPPLIBS", "/")
