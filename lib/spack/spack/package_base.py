@@ -2558,7 +2558,8 @@ class PackageStillNeededError(InstallError):
         spec_fmt = spack.spec.DEFAULT_FORMAT + " /{hash:7}"
         dep_fmt = "{name}{@versions} /{hash:7}"
         super().__init__(
-            f"Cannot uninstall {spec.format(spec_fmt)}, needed by {[dep.format(dep_fmt) for dep in dependents]}"
+            f"Cannot uninstall {spec.format(spec_fmt)}, "
+            f"needed by {[dep.format(dep_fmt) for dep in dependents]}"
         )
         self.spec = spec
         self.dependents = dependents
