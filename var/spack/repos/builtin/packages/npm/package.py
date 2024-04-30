@@ -26,12 +26,10 @@ class Npm(Package):
     version("6.14.18", sha256="c9b15f277e2a0b1b57e05bad04504296a27024555d56c2aa967f862e957ad2ed")
 
     depends_on("node-js", type=("build", "run"))
-    depends_on("node-js@14.17:", type=("build", "run"), when="@9:")
-    depends_on("node-js@18.17:", type=("build", "run"), when="@10.1:")
+    # see https://github.com/npm/cli/blob/v10.0.0/README.md for version constraints
+    depends_on("node-js@14.17:14,@16.13:16,@18:", type=("build", "run"), when="@9:")
+    depends_on("node-js@18.17:18,@20.5:", type=("build", "run"), when="@10.1:")
     depends_on("libvips", when="@:7")
-
-    conflicts("node-js@16.0:16.12", when="@9")
-    conflicts("node-js@20.0:20.4", when="@10.1:")
 
     # npm 6.13.4 ships with node-gyp 5.0.5, which contains several Python 3
     # compatibility issues on macOS. Manually update to node-gyp 6.0.1 for
