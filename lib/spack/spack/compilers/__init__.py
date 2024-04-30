@@ -164,35 +164,56 @@ def _compiler_config_from_package_config(config):
 
 
 def _compiler_config_from_external(config):
+    extra_attributes_key = "extra_attributes"
+    compilers_key = "compilers"
+    c_key, cxx_key, fortran_key = "c", "cxx", "fortran"
+
+    # Allow `@x.y.z` instead of `@=x.y.z`
     spec = spack.spec.parse_with_version_concrete(config["spec"])
-    # use str(spec.versions) to allow `@x.y.z` instead of `@=x.y.z`
+
     compiler_spec = spack.spec.CompilerSpec(
         package_name_to_compiler_name.get(spec.name, spec.name), spec.version
     )
 
-    extra_attributes = config.get("extra_attributes", {})
-    prefix = config.get("prefix", None)
+    err_header = f"The external spec '{spec}' cannot be used as a compiler"
 
-    # Compute paths if needed first, then update with configured paths
-    # This gets priority correct between computed and configured paths
-    compilers = {}
-    attribute_compilers = extra_attributes.get("compilers", {})
-    supported_languages = set(spec.package_class(spec).supported_languages)
-    if prefix and not supported_languages.issubset(set(attribute_compilers.keys())):
-        exes = spec.package_class.determine_compiler_exes(prefix)
-        compilers = spec.package_class.determine_compiler_paths(exes)
-    compilers.update(attribute_compilers)
+    # If extra_attributes is not there I might not want to use this entry as a compiler,
+    # therefore just leave a debug message, but don't be loud with a warning.
+    if extra_attributes_key not in config:
+        tty.debug(f"[{__file__}] {err_header}: missing the '{extra_attributes_key}' key")
+        return None
+    extra_attributes = config[extra_attributes_key]
+
+    # If I have 'extra_attributes' warn if 'compilers' is missing, or we don't have a C compiler
+    if compilers_key not in extra_attributes:
+        warnings.warn(
+            f"{err_header}: missing the '{compilers_key}' key under '{extra_attributes_key}'"
+        )
+        return None
+    attribute_compilers = extra_attributes[compilers_key]
+
+    if c_key not in attribute_compilers:
+        warnings.warn(
+            f"{err_header}: missing the C compiler path under "
+            f"'{extra_attributes_key}:{compilers_key}'"
+        )
+        return None
+    c_compiler = attribute_compilers[c_key]
+
+    # C++ and Fortran compilers are not mandatory, so let's just leave a debug trace
+    if cxx_key not in attribute_compilers:
+        tty.debug(f"[{__file__}] The external spec {spec} does not have a C++ compiler")
+
+    if fortran_key not in attribute_compilers:
+        tty.debug(f"[{__file__}] The external spec {spec} does not have a Fortran compiler")
 
     # compilers format has cc/fc/f77, externals format has "c/fortran"
     paths = {
-        "cc": compilers.get("c", None),
-        "cxx": compilers.get("cxx", None),
-        "fc": compilers.get("fortran", None),
-        "f77": compilers.get("fortran", None),
+        "cc": c_compiler,
+        "cxx": attribute_compilers.get(cxx_key, None),
+        "fc": attribute_compilers.get(fortran_key, None),
+        "f77": attribute_compilers.get(fortran_key, None),
     }
-
-    if all(v is None for v in paths.values()):
-        return None
 
     if not spec.architecture:
         host_platform = spack.platforms.host()

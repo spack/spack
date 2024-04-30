@@ -102,16 +102,6 @@ class CompilerPackage(spack.package_base.PackageBase):
         return os.path.join(prefix, "bin")
 
     @classmethod
-    def determine_compiler_exes(cls, prefix: Path) -> Sequence[Path]:
-        """Compute the executables in the compiler prefix that may be compiler executables"""
-        exes = []
-        bindir = cls.compiler_bindir(prefix)
-        for f, regex in itertools.product(os.listdir(bindir), cls.executables):
-            if re.match(regex, f):
-                exes.append(os.path.join(bindir, f))
-        return exes
-
-    @classmethod
     def determine_compiler_paths(cls, exes: Sequence[Path]) -> Dict[str, Path]:
         """Compute the paths to compiler executables associated with this package
 
