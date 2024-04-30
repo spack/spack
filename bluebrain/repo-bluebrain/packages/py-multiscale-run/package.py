@@ -42,6 +42,7 @@ class PyMultiscaleRun(PythonPackage):
     depends_on("py-psutil@5.8:", type=("build", "run"))
     depends_on("py-pyyaml@5:", type=("build", "run"), when="@:0.6")
     depends_on("py-scipy@1.11.1:", type=("build", "run"))
+    depends_on("py-simpleeval@0.9.13:", type=("build", "run"))
     depends_on("py-tqdm@4.65:", type=("build", "run"))
     depends_on("py-trimesh@3:", type=("build", "run"))
     depends_on("steps@5", type=("build", "run"))
