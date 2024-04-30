@@ -437,9 +437,9 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
     # TODO: llvm version requirements when llvm=system, these are conditional
     # on the version of Chapel
 
-    depends_on("llvm@14:16", when="llvm=spack")
+    depends_on("llvm@14:17", when="llvm=spack")
 
-    depends_on("llvm@15", when="llvm=spack ^cuda@12:")
+    depends_on("llvm@16", when="llvm=spack ^cuda@12:")
 
     depends_on("m4")
 
