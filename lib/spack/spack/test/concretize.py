@@ -2817,7 +2817,7 @@ def mock_runtime_dependencies(*args, **kwargs):
 
 @pytest.mark.only_clingo("clingo only re-use feature being tested")
 @pytest.mark.regression("38484")
-def test_git_ref_version_can_be_reused(monkeypatch, mock_packages, install_mockery_mutable_config):
+def test_git_ref_version_can_be_reused(monkeypatch, install_mockery_mutable_config):
     # override gcc-runtime dep and make all installs reusable
     monkeypatch.setattr(spack.solver.asp, "_has_runtime_dependencies", mock_runtime_dependencies)
 
@@ -2832,7 +2832,7 @@ def test_git_ref_version_can_be_reused(monkeypatch, mock_packages, install_mocke
 
 @pytest.mark.only_clingo("clingo only re-use feature being tested")
 def test_reuse_prefers_standard_over_git_versions(
-    monkeypatch, mock_packages, install_mockery_mutable_config
+    monkeypatch, install_mockery_mutable_config
 ):
     """
     order matters in this test. typically re-use would pick the last installed match
