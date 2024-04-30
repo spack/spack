@@ -58,6 +58,7 @@ class Amdlibm(SConsPackage):
 
     patch("0001-libm-ose-Scripts-cleanup-pyc-files.patch", when="@2.2")
     patch("0002-libm-ose-prevent-log-v3.c-from-building.patch", when="@2.2")
+    patch("libm-ose-SconsSpack.patch", when="@3.1:4.2")
 
     conflicts("%gcc@:9.1.0", msg="Minimum supported GCC version is 9.2.0")
     conflicts("%gcc@13.2.0:", msg="Maximum supported GCC version is 13.1.0")
