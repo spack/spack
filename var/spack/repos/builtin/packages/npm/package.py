@@ -27,8 +27,8 @@ class Npm(Package):
 
     depends_on("node-js", type=("build", "run"))
     # see https://github.com/npm/cli/blob/v10.0.0/README.md for version constraints
-    depends_on("node-js@14.17:14,@16.13:16,@18:", type=("build", "run"), when="@9:")
-    depends_on("node-js@18.17:18,@20.5:", type=("build", "run"), when="@10.1:")
+    depends_on("node-js@14.17:14,16.13:16,18:", type=("build", "run"), when="@9:")
+    depends_on("node-js@18.17:18,20.5:", type=("build", "run"), when="@10.1:")
     depends_on("libvips", when="@:7")
 
     # npm 6.13.4 ships with node-gyp 5.0.5, which contains several Python 3
