@@ -74,6 +74,10 @@ class Concretizer:
     #: during concretization. Used for testing and for mirror creation
     check_for_compiler_existence = None
 
+    #: Packages that the old concretizer cannot deal with correctly, and cannot build anyway.
+    #: Those will not be considered as providers for virtuals.
+    non_buildable_packages = {"glibc", "musl"}
+
     def __init__(self, abstract_spec=None):
         if Concretizer.check_for_compiler_existence is None:
             Concretizer.check_for_compiler_existence = not spack.config.get(
@@ -113,7 +117,11 @@ class Concretizer:
         pref_key = lambda spec: 0  # no-op pref key
 
         if spec.virtual:
-            candidates = spack.repo.PATH.providers_for(spec)
+            candidates = [
+                s
+                for s in spack.repo.PATH.providers_for(spec)
+                if s.name not in self.non_buildable_packages
+            ]
             if not candidates:
                 raise spack.error.UnsatisfiableProviderSpecError(candidates[0], spec)
 
