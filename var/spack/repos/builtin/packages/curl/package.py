@@ -32,6 +32,7 @@ class Curl(NMakePackage, AutotoolsPackage):
 
     license("curl")
 
+    version("8.7.1", sha256="05bbd2b698e9cfbab477c33aa5e99b4975501835a41b7ca6ca71de03d8849e76")
     version("8.6.0", sha256="b4785f2d8877fa92c0e45d7155cf8cc6750dbda961f4b1a45bcbec990cf2fa9b")
     version("8.4.0", sha256="e5250581a9c032b1b6ed3cf2f9c114c811fc41881069e9892d115cc73f9e88c6")
 
@@ -313,6 +314,10 @@ class Curl(NMakePackage, AutotoolsPackage):
     depends_on("libssh", when="+libssh")
     depends_on("krb5", when="+gssapi")
     depends_on("rtmpdump", when="+librtmp")
+
+    # https://github.com/curl/curl/issues/12832
+    # https://github.com/curl/curl/issues/13508
+    depends_on("perl", type="build", when="@8.6:8.7.1")
 
     # https://github.com/curl/curl/pull/9054
     patch("easy-lock-sched-header.patch", when="@7.84.0")
