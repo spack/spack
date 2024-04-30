@@ -94,7 +94,10 @@ class Npm(Package):
     def install(self, spec, prefix):
         # in npm 9, `npm install .` finally works within the repo, so we can just call it.
         node = which("node", required=True)
-        node("bin/npm-cli.js", "install", "-ddd", "--global", f"--prefix={prefix}", ".")
+        if spec.satisfies("@:9.4.1"):
+            node("bin/npm-cli.js", "install", "-ddd", "--global", f"--prefix={prefix}", ".")
+        else:
+            node("bin/npm-cli.js", "install", "-ddd", "--global", f"--prefix={prefix}", "--install-links", ".")
 
     def setup_dependent_build_environment(self, env, dependent_spec):
         npm_config_cache_dir = "%s/npm-cache" % dependent_spec.prefix
