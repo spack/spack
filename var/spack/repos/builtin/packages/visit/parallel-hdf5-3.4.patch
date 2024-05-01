@@ -1,0 +1,12 @@
+diff --git a/src/CMake/FindHDF5.cmake b/src/CMake/FindHDF5.cmake
+index 6d217093f8..7687f7354d 100644
+--- a/src/CMake/FindHDF5.cmake
++++ b/src/CMake/FindHDF5.cmake
+@@ -41,6 +41,6 @@ IF(WIN32)
+ ELSE()
+   SET_UP_THIRD_PARTY(HDF5 LIBS hdf5)
+   IF(VISIT_PARALLEL)
+-      SET_UP_THIRD_PARTY(HDF5_MPI LIBS hdf5_mpi)
++      SET_UP_THIRD_PARTY(HDF5_MPI LIBS hdf5)
+   ENDIF(VISIT_PARALLEL)
+ ENDIF()
