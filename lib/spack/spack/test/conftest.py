@@ -763,7 +763,10 @@ def mutable_empty_config(tmpdir_factory, configuration_dir):
         yield cfg
 
 
-# From https://github.com/pytest-dev/pytest/issues/363
+# From  https://github.com/pytest-dev/pytest/issues/363#issuecomment-1335631998
+# Current suggested implementation from issue compatible with pytest >= 6.2
+# this may be subject to change as new versions of Pytest are released
+# and update the suggested solution
 @pytest.fixture(scope="session")
 def monkeypatch_session():
     with pytest.MonkeyPatch.context() as monkeypatch:
@@ -772,7 +775,11 @@ def monkeypatch_session():
 
 @pytest.fixture(scope="session", autouse=True)
 def mock_wsdk_externals(monkeypatch_session):
-    """Skip check for required external packages on Windows during testing"""
+    """Skip check for required external packages on Windows during testing
+    Note: In general this should cover this behavior for all tests,
+    however any session scoped fixture involving concretization should
+    include this fixture
+    """
     monkeypatch_session.setattr(
         spack.bootstrap.core, "ensure_winsdk_external_or_raise", _return_none
     )
