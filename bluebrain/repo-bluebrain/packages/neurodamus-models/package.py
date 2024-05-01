@@ -10,7 +10,7 @@ class NeurodamusModels(CMakePackage):
     """Neuroscientific models to be used with Neurodamus"""
 
     homepage = "https://github.com/BlueBrain/neurodamus-models"
-    git = "ssh://git@github.com/BlueBrain/neurodamus-models.git"
+    git = "https://github.com/BlueBrain/neurodamus-models.git"
 
     version("develop", branch="main")
     version("2.1.0", tag="2.1.0")
