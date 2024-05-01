@@ -19,6 +19,7 @@ class PyTorchtext(PythonPackage):
     license("BSD-3-Clause")
 
     version("main", branch="main")
+    version("0.18.0", tag="v0.18.0", commit="9bed85d7a7ae13cf8c28598a88d8e461fe1afcb4")
     version("0.17.2", tag="v0.17.2", commit="5c34b86897a93ad6564543130661c260a760b356")
     version("0.17.1", tag="v0.17.1", commit="15e55dd73b5de8c179c7bd5cc9e2cc813830fb34")
     version("0.17.0", tag="v0.17.0", commit="400da5c61bab4abaaeaeca91744ca031ad9b2edf")
@@ -51,6 +52,7 @@ class PyTorchtext(PythonPackage):
 
         # https://github.com/pytorch/text#installation
         depends_on("py-torch@main", when="@main")
+        depends_on("py-torch@2.3.0", when="@0.18.0")
         depends_on("py-torch@2.2.2", when="@0.17.2")
         depends_on("py-torch@2.2.1", when="@0.17.1")
         depends_on("py-torch@2.2.0", when="@0.17.0")

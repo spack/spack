@@ -26,6 +26,7 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
     license("BSD-3-Clause")
 
     version("main", branch="main")
+    version("2.3.0", tag="v2.3.0", commit="97ff6cfd9c86c5c09d7ce775ab64ec5c99230f5d")
     version("2.2.2", tag="v2.2.2", commit="39901f229520a5256505ec24782f716ee7ddc843")
     version("2.2.1", tag="v2.2.1", commit="6c8c5ad5eaf47a62fafbb4a2747198cbffbf1ff0")
     version("2.2.0", tag="v2.2.0", commit="8ac9b20d4b090c213799e81acf48a55ea8d437d6")
@@ -137,89 +138,122 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
 
     # Required dependencies
     # Based on PyPI wheel availability
-    depends_on("python@3.8:3.12", when="@2.2:", type=("build", "link", "run"))
-    depends_on("python@3.8:3.11", when="@2.0:2.1", type=("build", "link", "run"))
-    depends_on("python@:3.10", when="@1.11:1", type=("build", "link", "run"))
-    depends_on("python@:3.9", when="@1.7.1:1.10", type=("build", "link", "run"))
-    depends_on("python@:3.8", when="@1.4:1.7.0", type=("build", "link", "run"))
+    with default_args(type=("build", "link", "run")):
+        depends_on("python@3.8:3.12", when="@2.2:")
+        depends_on("python@3.8:3.11", when="@2.0:2.1")
+        depends_on("python@:3.10", when="@1.11:1")
+        depends_on("python@:3.9", when="@1.7.1:1.10")
+        depends_on("python@:3.8", when="@1.4:1.7.0")
 
     # CMakelists.txt
-    depends_on("cmake@3.18:", when="@2:", type="build")
-    depends_on("cmake@3.13:", when="@1.11:", type="build")
-    depends_on("cmake@3.10:", when="@1.10:", type="build")
-    depends_on("cmake@3.5:", type="build")
+    with default_args(type="build"):
+        depends_on("cmake@3.18:", when="@2:")
+        depends_on("cmake@3.13:", when="@1.11:")
+        depends_on("cmake@3.10:", when="@1.10:")
+        depends_on("cmake@3.5:")
+        depends_on("ninja@1.5:")
 
-    # pyproject.toml
-    depends_on("py-setuptools", type=("build", "run"))
-    depends_on("py-astunparse", when="@1.13:", type=("build", "run"))
-    depends_on("py-numpy@1.16.6:", type=("build", "run"))
-    depends_on("ninja@1.5:", when="@1.1:", type="build")
-    depends_on("py-pyyaml", type=("build", "run"))
-    depends_on("py-requests", when="@1.13:", type=("build", "run"))
-    depends_on("py-cffi", when="@:1", type=("build", "run"))
-    depends_on("py-future", when="@1.5:1", type=("build", "run"))
-    depends_on("py-six", when="@1.13:1", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        # setup.py
+        depends_on("py-filelock", when="@2:")
+        depends_on("py-typing-extensions@4.8:", when="@2.2:")
+        depends_on("py-typing-extensions@3.6.2.1:", when="@1.7:")
+        depends_on("py-sympy", when="@2:")
+        depends_on("py-networkx", when="@2:")
+        depends_on("py-jinja2", when="@2:")
+        depends_on("py-fsspec", when="@2.1:")
+        depends_on("mkl@2021.1.1:2021.4.0", when="@2.3: platform=windows")
 
-    # setup.py
-    depends_on("py-filelock", when="@2:", type=("build", "run"))
-    depends_on("py-typing-extensions@4.8:", when="@2.2:", type=("build", "run"))
-    depends_on("py-typing-extensions@3.6.2.1:", when="@1.7:", type=("build", "run"))
-    depends_on("py-sympy", when="@2:", type=("build", "run"))
-    depends_on("py-networkx", when="@2:", type=("build", "run"))
-    depends_on("py-jinja2", when="@2:", type=("build", "run"))
-    depends_on("py-fsspec", when="@2.1:", type=("build", "run"))
+        # pyproject.toml
+        depends_on("py-setuptools")
+        depends_on("py-astunparse", when="@1.13:")
+        depends_on("py-numpy@1.16.6:")
+        depends_on("py-pyyaml")
+        depends_on("py-requests", when="@1.13:")
 
     # Undocumented dependencies
     depends_on("py-tqdm", type="run")
     depends_on("blas")
     depends_on("lapack")
 
-    # third_party
-    depends_on("py-pybind11@2.11.0", when="@2.1:", type=("build", "link", "run"))
-    depends_on("py-pybind11@2.10.1", when="@2.0", type=("build", "link", "run"))
-    depends_on("py-pybind11@2.10.0", when="@1.13:1", type=("build", "link", "run"))
-    depends_on("py-pybind11@2.6.2", when="@1.8:1.12", type=("build", "link", "run"))
-    depends_on("py-pybind11@2.3.0", when="@:1.7", type=("build", "link", "run"))
-    with when("~custom-protobuf"):
-        depends_on("py-protobuf@3.12.2:", when="@1.10:", type=("build", "run"))
-        depends_on("py-protobuf@:3.14", when="@:1.9", type=("build", "run"))
-        depends_on("protobuf@3.12.2:", when="@1.10:")
-        depends_on("protobuf@:3.14", when="@:1.9")
-        # https://github.com/protocolbuffers/protobuf/issues/10051
-        # https://github.com/pytorch/pytorch/issues/78362
-        depends_on("py-protobuf@:3", type=("build", "run"))
-        depends_on("protobuf@:3")
-    depends_on("eigen")
-    depends_on("cpuinfo@2023-01-13", when="@2.1:")
+    # Third party dependencies
+    depends_on("fp16@2020-05-14", when="@1.6:")
+    depends_on("fxdiv@2020-04-17", when="@1.6:")
+    # https://github.com/pytorch/pytorch/issues/60332
+    # depends_on("xnnpack@2024-02-29", when="@2.3:+xnnpack")
+    # depends_on("xnnpack@2022-12-21", when="@2.0:2.2+xnnpack")
+    # depends_on("xnnpack@2022-02-16", when="@1.12:1+xnnpack")
+    # depends_on("xnnpack@2021-06-21", when="@1.10:1.11+xnnpack")
+    # depends_on("xnnpack@2021-02-22", when="@1.8:1.9+xnnpack")
+    # depends_on("xnnpack@2020-03-23", when="@1.6:1.7+xnnpack")
+    depends_on("benchmark", when="@1.6:+test")
+    depends_on("cpuinfo@2023-11-04", when="@2.3:")
+    depends_on("cpuinfo@2023-01-13", when="@2.1:2.2")
     depends_on("cpuinfo@2022-08-19", when="@1.13:2.0")
     depends_on("cpuinfo@2020-12-17", when="@1.8:1.12")
     depends_on("cpuinfo@2020-06-11", when="@1.6:1.7")
-    depends_on("sleef@3.5.1_2020-12-22", when="@1.8:")
-    depends_on("sleef@3.4.0_2019-07-30", when="@1.6:1.7")
-    depends_on("fp16@2020-05-14", when="@1.6:")
+    depends_on("eigen")
+    depends_on("gloo@2023-12-03", when="@2.3:+gloo")
+    depends_on("gloo@2023-05-19", when="@2.1:2.2+gloo")
+    depends_on("gloo@2023-01-17", when="@2.0+gloo")
+    depends_on("gloo@2022-05-18", when="@1.13:1+gloo")
+    depends_on("gloo@2021-05-21", when="@1.10:1.12+gloo")
+    depends_on("gloo@2021-05-04", when="@1.9+gloo")
+    depends_on("gloo@2020-09-18", when="@1.7:1.8+gloo")
+    depends_on("gloo@2020-03-17", when="@1.6+gloo")
+    depends_on("gloo+cuda", when="@1.6:+gloo+cuda")
+    depends_on("nccl", when="+nccl+cuda")
+    # https://github.com/pytorch/pytorch/issues/60331
+    # depends_on("onnx@1.16.0", when="@2.3:+onnx_ml")
+    # depends_on("onnx@1.15.0", when="@2.2+onnx_ml")
+    # depends_on("onnx@1.14.1", when="@2.1+onnx_ml")
+    # depends_on("onnx@1.13.1", when="@2.0+onnx_ml")
+    # depends_on("onnx@1.12.0", when="@1.13:1+onnx_ml")
+    # depends_on("onnx@1.11.0", when="@1.12+onnx_ml")
+    # depends_on("onnx@1.10.1_2021-10-08", when="@1.11+onnx_ml")
+    # depends_on("onnx@1.10.1", when="@1.10+onnx_ml")
+    # depends_on("onnx@1.8.0_2020-11-03", when="@1.8:1.9+onnx_ml")
+    # depends_on("onnx@1.7.0_2020-05-31", when="@1.6:1.7+onnx_ml")
+    with when("~custom-protobuf"):
+        depends_on("protobuf@3.13.0", when="@1.10:")
+        depends_on("protobuf@3.11.4", when="@1.6:1.9")
+        depends_on("protobuf@3.6.1", when="@1.1:1.5")
+        depends_on("protobuf@3.5.0", when="@1.0")
+        with default_args(type=("build", "run")):
+            depends_on("py-protobuf@3.13", when="@1.10:")
+            depends_on("py-protobuf@3.11", when="@1.6:1.9")
+            depends_on("py-protobuf@3.6", when="@1.1:1.5")
+            depends_on("py-protobuf@3.5", when="@1.0")
+    depends_on("psimd@2020-05-17", when="@1.6:")
     depends_on("pthreadpool@2023-08-29", when="@2.2:")
     depends_on("pthreadpool@2021-04-13", when="@1.9:2.1")
     depends_on("pthreadpool@2020-10-05", when="@1.8")
     depends_on("pthreadpool@2020-06-15", when="@1.6:1.7")
-    depends_on("psimd@2020-05-17", when="@1.6:")
-    depends_on("fxdiv@2020-04-17", when="@1.6:")
-    depends_on("benchmark", when="@1.6:+test")
+    with default_args(type=("build", "link", "run")):
+        depends_on("py-pybind11@2.12.0", when="@2.3:")
+        depends_on("py-pybind11@2.11.0", when="@2.1:2.2")
+        depends_on("py-pybind11@2.10.1", when="@2.0")
+        depends_on("py-pybind11@2.10.0", when="@1.13:1")
+        depends_on("py-pybind11@2.6.2", when="@1.8:1.12")
+        depends_on("py-pybind11@2.3.0", when="@:1.7")
+    depends_on("sleef@3.5.1_2020-12-22", when="@1.8:")
+    depends_on("sleef@3.4.0_2019-07-30", when="@1.6:1.7")
 
     # Optional dependencies
-    # cmake/public/cuda.cmake
-    depends_on("cuda@11:", when="@2:+cuda", type=("build", "link", "run"))
-    depends_on("cuda@10.2:", when="@1.11:1+cuda", type=("build", "link", "run"))
-    # https://discuss.pytorch.org/t/compiling-1-10-1-from-source-with-gcc-11-and-cuda-11-5/140971
-    depends_on("cuda@10.2:11.4", when="@1.10+cuda", type=("build", "link", "run"))
-    depends_on("cuda@9.2:11.4", when="@1.6:1.9+cuda", type=("build", "link", "run"))
-    depends_on("cuda@9:11.4", when="@:1.5+cuda", type=("build", "link", "run"))
+    with default_args(type=("build", "link", "run")):
+        # cmake/public/cuda.cmake
+        depends_on("cuda@11:", when="@2:+cuda")
+        depends_on("cuda@10.2:", when="@1.11:1+cuda")
+        # https://discuss.pytorch.org/t/compiling-1-10-1-from-source-with-gcc-11-and-cuda-11-5/140971
+        depends_on("cuda@10.2:11.4", when="@1.10+cuda")
+        depends_on("cuda@9.2:11.4", when="@1.6:1.9+cuda")
+        depends_on("cuda@9:11.4", when="@:1.5+cuda")
     # https://github.com/pytorch/pytorch#prerequisites
     depends_on("cudnn@8.5:", when="@2.3:+cudnn")
     depends_on("cudnn@7:", when="@1.6:+cudnn")
     depends_on("cudnn@7", when="@:1.5+cudnn")
     depends_on("magma+cuda", when="+magma+cuda")
     depends_on("magma+rocm", when="+magma+rocm")
-    depends_on("nccl", when="+nccl+cuda")
     depends_on("numactl", when="+numa")
     depends_on("llvm-openmp", when="%apple-clang +openmp")
     depends_on("valgrind", when="+valgrind")
@@ -238,37 +272,20 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
         depends_on("rocblas")
         depends_on("miopen-hip")
         depends_on("rocminfo")
-    # https://github.com/pytorch/pytorch/issues/60332
-    # depends_on("xnnpack@2022-12-21", when="@2:+xnnpack")
-    # depends_on("xnnpack@2022-02-16", when="@1.12:1+xnnpack")
-    # depends_on("xnnpack@2021-06-21", when="@1.10:1.11+xnnpack")
-    # depends_on("xnnpack@2021-02-22", when="@1.8:1.9+xnnpack")
-    # depends_on("xnnpack@2020-03-23", when="@1.6:1.7+xnnpack")
     depends_on("mpi", when="+mpi")
-    depends_on("gloo@2023-05-19", when="@2.1:+gloo")
-    depends_on("gloo@2023-01-17", when="@2.0+gloo")
-    depends_on("gloo@2022-05-18", when="@1.13:1+gloo")
-    depends_on("gloo@2021-05-21", when="@1.10:1.12+gloo")
-    depends_on("gloo@2021-05-04", when="@1.9+gloo")
-    depends_on("gloo@2020-09-18", when="@1.7:1.8+gloo")
-    depends_on("gloo@2020-03-17", when="@1.6+gloo")
-    depends_on("gloo+cuda", when="@1.6:+gloo+cuda")
-    # https://github.com/pytorch/pytorch/issues/60331
-    # depends_on("onnx@1.15.0", when="@2.2:+onnx_ml")
-    # depends_on("onnx@1.14.1", when="@2.1+onnx_ml")
-    # depends_on("onnx@1.13.1", when="@2.0+onnx_ml")
-    # depends_on("onnx@1.12.0", when="@1.13:1+onnx_ml")
-    # depends_on("onnx@1.11.0", when="@1.12+onnx_ml")
-    # depends_on("onnx@1.10.1_2021-10-08", when="@1.11+onnx_ml")
-    # depends_on("onnx@1.10.1", when="@1.10+onnx_ml")
-    # depends_on("onnx@1.8.0_2020-11-03", when="@1.8:1.9+onnx_ml")
-    # depends_on("onnx@1.7.0_2020-05-31", when="@1.6:1.7+onnx_ml")
     depends_on("mkl", when="+mkldnn")
 
     # Test dependencies
-    depends_on("py-hypothesis", type="test")
-    depends_on("py-six", type="test")
-    depends_on("py-psutil", type="test")
+    with default_args(type="test"):
+        depends_on("py-hypothesis")
+        depends_on("py-six")
+        depends_on("py-psutil")
+
+    # Historical dependencies
+    with default_args(type=("build", "run")):
+        depends_on("py-cffi", when="@:1")
+        depends_on("py-future", when="@1.5:1")
+        depends_on("py-six", when="@1.13:1")
 
     conflicts("%gcc@:9.3", when="@2.2:", msg="C++17 support required")
 
@@ -620,30 +637,30 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
             env.set("WITH_BLAS", "generic")
 
         # Don't use vendored third-party libraries when possible
+        # env.set("USE_SYSTEM_LIBS", "ON")
+        env.set("USE_SYSTEM_BENCHMARK", "ON")
+        env.set("USE_SYSTEM_CPUINFO", "ON")
+        env.set("USE_SYSTEM_EIGEN_INSTALL", "ON")
+        env.set("USE_SYSTEM_FP16", "ON")
+        env.set("USE_SYSTEM_FXDIV", "ON")
+        env.set("USE_SYSTEM_GLOO", "ON")
+        env.set("USE_SYSTEM_NCCL", "ON")
+        # https://github.com/pytorch/pytorch/issues/60331
+        # env.set("USE_SYSTEM_ONNX", "ON")
+        env.set("USE_SYSTEM_PSIMD", "ON")
+        env.set("USE_SYSTEM_PTHREADPOOL", "ON")
+        env.set("USE_SYSTEM_PYBIND11", "ON")
+        env.set("USE_SYSTEM_SLEEF", "ON")
+        # env.set("USE_SYSTEM_TBB", "ON")
+        # env.set("USE_SYSTEM_UCC", "ON")
+        # https://github.com/pytorch/pytorch/issues/60332
+        # env.set("USE_SYSTEM_XNNPACK", "ON")
+        # env.set("USE_SYSTEM_ZSTD", "ON")
+
         if self.spec.satisfies("+custom-protobuf"):
             env.set("BUILD_CUSTOM_PROTOBUF", "ON")
         else:
             env.set("BUILD_CUSTOM_PROTOBUF", "OFF")
-        env.set("USE_SYSTEM_NCCL", "ON")
-        env.set("USE_SYSTEM_EIGEN_INSTALL", "ON")
-        env.set("pybind11_DIR", self.spec["py-pybind11"].prefix)
-        env.set("pybind11_INCLUDE_DIR", self.spec["py-pybind11"].prefix.include)
-        if self.spec.satisfies("@1.10:"):
-            env.set("USE_SYSTEM_PYBIND11", "ON")
-        if self.spec.satisfies("@1.6:"):
-            # env.set("USE_SYSTEM_LIBS", "ON")
-            env.set("USE_SYSTEM_CPUINFO", "ON")
-            env.set("USE_SYSTEM_SLEEF", "ON")
-            env.set("USE_SYSTEM_GLOO", "ON")
-            env.set("USE_SYSTEM_FP16", "ON")
-            env.set("USE_SYSTEM_PTHREADPOOL", "ON")
-            env.set("USE_SYSTEM_PSIMD", "ON")
-            env.set("USE_SYSTEM_FXDIV", "ON")
-            env.set("USE_SYSTEM_BENCHMARK", "ON")
-            # https://github.com/pytorch/pytorch/issues/60331
-            # env.set("USE_SYSTEM_ONNX", "ON")
-            # https://github.com/pytorch/pytorch/issues/60332
-            # env.set("USE_SYSTEM_XNNPACK", "ON")
 
         # https://github.com/pytorch/pytorch/issues/111086
         if self.spec.satisfies("%apple-clang@15:"):

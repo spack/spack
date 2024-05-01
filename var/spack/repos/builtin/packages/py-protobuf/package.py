@@ -42,6 +42,7 @@ class PyProtobuf(PythonPackage):
     version("3.15.6", sha256="2b974519a2ae83aa1e31cff9018c70bbe0e303a46a598f982943c49ae1d4fcd3")
     version("3.15.5", sha256="be8a929c6178bb6cbe9e2c858be62fa08966a39ae758a8493a88f0ed1efb6097")
     version("3.15.1", sha256="824dbae3390fcc3ea1bf96748e6da951a601802894cf7e1465e72b4732538cab")
+    version("3.13.0", sha256="6a82e0c8bb2bf58f606040cc5814e07715b2094caeba281e2e7d0b0e2e397db5")
     version("3.12.2", sha256="49ef8ab4c27812a89a76fa894fe7a08f42f2147078392c0dee51d4a444ef6df5")
     version("3.11.2", sha256="3d7a7d8d20b4e7a8f63f62de2d192cfd8b7a53c56caba7ece95367ca2b80c574")
     version("3.11.1", sha256="aecdf12ef6dc7fd91713a6da93a86c2f2a8fe54840a3b1670853a2b7402e77c9")
