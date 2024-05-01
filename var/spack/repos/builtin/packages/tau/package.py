@@ -476,16 +476,24 @@ class Tau(Package):
     def _run_python_test(self, test_name, purpose, work_dir):
         tau_python = which(self.prefix.bin.tau_python)
         tau_py_inter = "-tau-python-interpreter=" + self.spec["python"].prefix.bin.python
-        pprof = which(self.prefix.bin.pprof)          
+        pprof = which(self.prefix.bin.pprof)
         with test_part(self, f"{test_name}", purpose, work_dir):
             if "+mpi" in self.spec:
                 flag = "mpi"
                 mpirun = which(self.spec["mpi"].prefix.bin.mpirun)
-                mpirun("-np", "4", self.prefix.bin.tau_python, tau_py_inter, "-T", flag, "firstprime.py")
+                mpirun(
+                    "-np",
+                    "4",
+                    self.prefix.bin.tau_python,
+                    tau_py_inter,
+                    "-T",
+                    flag,
+                    "firstprime.py",
+                )
             else:
                 flag = "serial"
                 tau_python(tau_py_inter, "-T", flag, "firstprime.py")
-            pprof()         
+            pprof()
 
     def _run_default_test(self, test_name, purpose, work_dir):
         tau_exec = which(self.prefix.bin.tau_exec)
@@ -500,7 +508,7 @@ class Tau(Package):
                 flags = ["-T", "serial"]
                 tau_exec(*flags, "./matmult")
             pprof()
-                
+
     def _run_ompt_test(self, test_name, purpose, work_dir):
         tau_exec = which(self.prefix.bin.tau_exec)
         pprof = which(self.prefix.bin.pprof)
@@ -514,7 +522,7 @@ class Tau(Package):
                 flags = ["-T", "serial", "-ompt"]
                 tau_exec(*flags, "./mandel")
             pprof()
-            
+
     def _run_rocm_test(self, test_name, purpose, work_dir):
         tau_exec = which(self.prefix.bin.tau_exec)
         pprof = which(self.prefix.bin.pprof)
@@ -528,45 +536,43 @@ class Tau(Package):
                 flags = ["-T", "serial", "-rocm"]
                 tau_exec(*flags, "./gpu-stream-hip")
             pprof()
-    
 
     def test_python(self):
         """test python variant"""
-        if self.disable_tests :
+        if self.disable_tests:
             return
         if "+python" in self.spec:
             # current_test_cache_dir.examples.python
-            python_test_dir =  join_path(self.test_suite.current_test_cache_dir, self.python_test)       
+            python_test_dir = join_path(self.test_suite.current_test_cache_dir, self.python_test)
             self._run_python_test("test_tau_python", "Testing tau_python", python_test_dir)
-
 
     def test_default(self):
         """default matmult test"""
-        if self.disable_tests :
+        if self.disable_tests:
             return
         if "+ompt" in self.spec:
             return
         default_test_dir = join_path(self.test_suite.current_test_cache_dir, self.matmult_test)
         self._run_default_test("test_default", "Testing TAU", default_test_dir)
-    
+
     def test_ompt(self):
         """ompt test"""
-        if self.disable_tests :
+        if self.disable_tests:
             return
         if "+ompt" in self.spec:
             ompt_test_dir = join_path(self.test_suite.current_test_cache_dir, self.ompt_test)
             self._run_ompt_test("test_ompt", "Testing ompt", ompt_test_dir)
-            
-    
+
     def test_rocm(self):
         """rocm test"""
         # Disabled, see PR#43682
         # make is unable to find rocm_agent_enumerator
         # when testing, with spack load, there is no issue
         return
-        if self.disable_tests :
+        if self.disable_tests:
             return
-        if "+rocm" in self.spec and ("+rocprofiler" in self.spec or "+roctracer" in self.spec or "+rocprofv2" in self.spec):
+        if "+rocm" in self.spec and (
+            "+rocprofiler" in self.spec or "+roctracer" in self.spec or "+rocprofv2" in self.spec
+        ):
             rocm_test_dir = join_path(self.test_suite.current_test_cache_dir, self.rocm_test)
             self._run_rocm_test("test_rocm", "Testing rocm", rocm_test_dir)
-    
