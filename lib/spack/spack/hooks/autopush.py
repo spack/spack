@@ -12,7 +12,7 @@ import spack.mirror
 def post_install(spec, explicit):
     # Push package to all buildcaches with autopush==True
 
-    # Do nothing in package is an external install
+    # Do nothing if spec is an external package
     if spec.external:
         return
 
