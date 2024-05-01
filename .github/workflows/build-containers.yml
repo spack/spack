@@ -89,9 +89,9 @@ jobs:
           fi
 
       - name: Upload Dockerfile
-        uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32
+        uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808
         with:
-          name: dockerfiles
+          name: dockerfiles_${{ matrix.dockerfile[0] }}
           path: dockerfiles
 
       - name: Set up QEMU
@@ -122,3 +122,14 @@ jobs:
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.docker_meta.outputs.tags }}
           labels: ${{ steps.docker_meta.outputs.labels }}
+
+  merge-dockerfiles:
+    runs-on: ubuntu-latest
+    needs: deploy-images
+    steps:
+      - name: Merge Artifacts
+        uses: actions/upload-artifact/merge@65462800fd760344b1a7b4382951275a0abb4808
+        with:
+          name: dockerfiles
+          pattern: dockerfiles_*
+          delete-merged: true
