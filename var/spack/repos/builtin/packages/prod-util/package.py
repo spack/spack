@@ -24,9 +24,9 @@ class ProdUtil(CMakePackage):
     version(
         "1.2.2",
         sha256="c51b903ea5a046cb9b545b5c04fd28647c58b4ab6182e61710f0287846350ef8",
-        deprecated=True
+        deprecated=True,
     )
- 
+
     depends_on("w3nco", when="@1")
     depends_on("w3emc", when="@2:")
 
