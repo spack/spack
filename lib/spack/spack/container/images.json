@@ -138,6 +138,13 @@
       },
       "os_package_manager": "apt"
     },
+    "ubuntu:24.04": {
+      "bootstrap": {
+        "template": "container/ubuntu_2404.dockerfile"
+      },
+      "os_package_manager": "apt",
+      "build": "spack/ubuntu-noble"
+    },
     "ubuntu:22.04": {
       "bootstrap": {
         "template": "container/ubuntu_2204.dockerfile"
