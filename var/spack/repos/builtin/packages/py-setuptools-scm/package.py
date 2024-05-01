@@ -10,7 +10,7 @@ class PySetuptoolsScm(PythonPackage):
     """The blessed package to manage your versions by scm tags."""
 
     homepage = "https://github.com/pypa/setuptools_scm"
-    pypi = "setuptools-scm/setuptools-scm-8.0.4.tar.gz"
+    pypi = "setuptools_scm/setuptools_scm-4.1.2.tar.gz"
     tags = ["build-tools"]
 
     license("MIT")
@@ -49,3 +49,10 @@ class PySetuptoolsScm(PythonPackage):
     depends_on("py-importlib-metadata", when="@7: ^python@:3.7", type=("build", "run"))
 
     depends_on("git", type=("build", "run"))
+
+    def url_for_version(self, version):
+        # setuptools_scm-7.1.0.tar.gz with an underscore became setuptools-scm-8.0.4.tar.gz with a dash
+        url = super().url_for_version(version)
+        if version >= Version(8):
+            return url.replace("_", "-")
+        return url
