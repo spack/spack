@@ -66,7 +66,7 @@ class Grads(AutotoolsPackage):
     def patch(self):
         if self.spec.satisfies("@:2.2.2"):
             filter_file("png15", "png", "configure")
-        
+
         if self.spec.satisfies("+grib2"):
             filter_file("grib2c", "g2c", "configure")
             if self.spec.satisfies("^g2c@1.8.0:"):
