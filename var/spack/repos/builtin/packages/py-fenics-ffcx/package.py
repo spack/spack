@@ -32,7 +32,7 @@ class PyFenicsFfcx(PythonPackage):
     )
 
     depends_on("python@3.9:", when="@0.8:", type=("build", "run"))
-    depends_on("python@3.8:", when=":@0.7", type=("build", "run"))
+    depends_on("python@3.8:", when="@:0.7", type=("build", "run"))
     depends_on("py-setuptools@62:", when="@0.7:", type="build")
     # Runtime dependency on pkg_resources from setuptools at 0.6.0
     depends_on("py-setuptools@58:", when="@0.4.2:0.6", type=("build", "run"))
