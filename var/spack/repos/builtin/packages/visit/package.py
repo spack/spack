@@ -93,7 +93,7 @@ class Visit(CMakePackage):
     patch("spack-changes-3.0.1.patch", when="@3.0.1")
     patch("nonframework-qwt.patch", when="^qt~framework platform=darwin")
     patch("parallel-hdf5.patch", when="@3.0.1:3.2.2+hdf5+mpi")
-    patch("parallel-hdf5-3.3.patch", when="@3.3.0:+hdf5+mpi")
+    patch("parallel-hdf5-3.3.patch", when="@3.3.0:3.3.3+hdf5+mpi")
     patch("cmake-findvtkh-3.3.patch", when="@3.3.0:3.3.2+vtkm")
     patch("cmake-findjpeg.patch", when="@3.1.0:3.2.2")
     patch("cmake-findjpeg-3.3.patch", when="@3.3.0")
