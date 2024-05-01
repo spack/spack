@@ -15,5 +15,6 @@ paths:
         script: |
           echo "ifort (IFORT) 18.0.5 20180823"
           echo "Copyright (C) 1985-2018 Intel Corporation.  All rights reserved."
+    platforms: ["darwin", "linux"]
     results:
       - spec: 'intel@18.0.5'

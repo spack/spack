@@ -7,9 +7,7 @@ from spack.package import *
 
 
 class PyNanobind(PythonPackage):
-    """nanobind -- Seamless operability between C++11 and Python.
-
-    nanobind is a small binding library that exposes C++ types in
+    """nanobind is a small binding library that exposes C++ types in
     Python and vice versa. It is reminiscent of Boost.Python and pybind11
     and uses near-identical syntax. In contrast to these existing tools,
     nanobind is more efficient: bindings compile in a shorter amount of time,
@@ -25,6 +23,9 @@ class PyNanobind(PythonPackage):
     license("BSD-3-Clause")
 
     version("master", branch="master", submodules=True)
+    version(
+        "1.9.2", tag="v1.9.2", commit="80a30c8efb093b14f0e744bc7f6a9ef34beb3f7f", submodules=True
+    )
     version(
         "1.8.0", tag="v1.8.0", commit="1a309ba444a47e081dc6213d72345a2fbbd20795", submodules=True
     )

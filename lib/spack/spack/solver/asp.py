@@ -41,6 +41,8 @@ import spack.repo
 import spack.spec
 import spack.store
 import spack.util.crypto
+import spack.util.elf
+import spack.util.libc
 import spack.util.path
 import spack.util.timer
 import spack.variant
@@ -281,6 +283,34 @@ def _create_counter(specs: List[spack.spec.Spec], tests: bool):
 
 def all_compilers_in_config(configuration):
     return spack.compilers.all_compilers_from(configuration)
+
+
+def all_libcs() -> Set[spack.spec.Spec]:
+    """Return a set of all libc specs targeted by any configured compiler. If none, fall back to
+    libc determined from the current Python process if dynamically linked."""
+
+    libcs = {
+        c.default_libc for c in all_compilers_in_config(spack.config.CONFIG) if c.default_libc
+    }
+
+    if libcs:
+        return libcs
+
+    libc = spack.util.libc.libc_from_current_python_process()
+    return {libc} if libc else set()
+
+
+def libc_is_compatible(lhs: spack.spec.Spec, rhs: spack.spec.Spec) -> List[spack.spec.Spec]:
+    return (
+        lhs.name == rhs.name
+        and lhs.external_path == rhs.external_path
+        and lhs.version >= rhs.version
+    )
+
+
+def using_libc_compatibility() -> bool:
+    """Returns True if we are currently using libc compatibility"""
+    return spack.platforms.host().name == "linux"
 
 
 def extend_flag_list(flag_list, new_flags):
@@ -566,6 +596,23 @@ def _spec_with_default_name(spec_str, name):
     return spec
 
 
+def _external_config_with_implicit_externals(configuration):
+    # Read packages.yaml and normalize it, so that it will not contain entries referring to
+    # virtual packages.
+    packages_yaml = _normalize_packages_yaml(configuration.get("packages"))
+
+    # Add externals for libc from compilers on Linux
+    if not using_libc_compatibility():
+        return packages_yaml
+
+    for compiler in all_compilers_in_config(configuration):
+        libc = compiler.default_libc
+        if libc:
+            entry = {"spec": f"{libc} %{compiler.spec}", "prefix": libc.external_path}
+            packages_yaml.setdefault(libc.name, {}).setdefault("externals", []).append(entry)
+    return packages_yaml
+
+
 class ErrorHandler:
     def __init__(self, model):
         self.model = model
@@ -784,10 +831,16 @@ class PyclingoDriver:
         self.control.load(os.path.join(parent_dir, "heuristic.lp"))
         if spack.config.CONFIG.get("concretizer:duplicates:strategy", "none") != "none":
             self.control.load(os.path.join(parent_dir, "heuristic_separate.lp"))
-        self.control.load(os.path.join(parent_dir, "os_compatibility.lp"))
         self.control.load(os.path.join(parent_dir, "display.lp"))
         if not setup.concretize_everything:
             self.control.load(os.path.join(parent_dir, "when_possible.lp"))
+
+        # Binary compatibility is based on libc on Linux, and on the os tag elsewhere
+        if using_libc_compatibility():
+            self.control.load(os.path.join(parent_dir, "libc_compatibility.lp"))
+        else:
+            self.control.load(os.path.join(parent_dir, "os_compatibility.lp"))
+
         timer.stop("load")
 
         # Grounding is the first step in the solve -- it turns our facts
@@ -983,6 +1036,9 @@ class SpackSolverSetup:
         # Set during the call to setup
         self.pkgs: Set[str] = set()
         self.explicitly_required_namespaces: Dict[str, str] = {}
+
+        # list of unique libc specs targeted by compilers (or an educated guess if no compiler)
+        self.libcs: List[spack.spec.Spec] = []
 
     def pkg_version_rules(self, pkg):
         """Output declared versions of a package.
@@ -1554,12 +1610,8 @@ class SpackSolverSetup:
                 requirement_weight += 1
 
     def external_packages(self):
-        """Facts on external packages, as read from packages.yaml"""
-        # Read packages.yaml and normalize it, so that it
-        # will not contain entries referring to virtual
-        # packages.
-        packages_yaml = spack.config.get("packages")
-        packages_yaml = _normalize_packages_yaml(packages_yaml)
+        """Facts on external packages, from packages.yaml and implicit externals."""
+        packages_yaml = _external_config_with_implicit_externals(spack.config.CONFIG)
 
         self.gen.h1("External packages")
         for pkg_name, data in packages_yaml.items():
@@ -1610,6 +1662,7 @@ class SpackSolverSetup:
                 self.gen.newline()
 
             self.trigger_rules()
+            self.effect_rules()
 
     def preferred_variants(self, pkg_name):
         """Facts on concretization preferences, as read from packages.yaml"""
@@ -1829,6 +1882,16 @@ class SpackSolverSetup:
                     # GCC runtime is solved again by clingo, even on concrete specs, to give
                     # the possibility to reuse specs built against a different runtime.
                     if dep.name == "gcc-runtime":
+                        continue
+
+                    # libc is also solved again by clingo, but in this case the compatibility
+                    # is not encoded in the parent node - so we need to emit explicit facts
+                    if "libc" in dspec.virtuals:
+                        for libc in self.libcs:
+                            if libc_is_compatible(libc, dep):
+                                clauses.append(
+                                    fn.attr("compatible_libc", spec.name, libc.name, libc.version)
+                                )
                         continue
 
                     # We know dependencies are real for concrete specs. For abstract
@@ -2286,6 +2349,7 @@ class SpackSolverSetup:
         node_counter = _create_counter(specs, tests=self.tests)
         self.possible_virtuals = node_counter.possible_virtuals()
         self.pkgs = node_counter.possible_dependencies()
+        self.libcs = sorted(all_libcs())  # type: ignore[type-var]
 
         # Fail if we already know an unreachable node is requested
         for spec in specs:
@@ -2295,12 +2359,16 @@ class SpackSolverSetup:
             if missing_deps:
                 raise spack.spec.InvalidDependencyError(spec.name, missing_deps)
 
-        for node in spack.traverse.traverse_nodes(specs):
+        for node in traverse.traverse_nodes(specs):
             if node.namespace is not None:
                 self.explicitly_required_namespaces[node.name] = node.namespace
 
         self.gen = ProblemInstanceBuilder()
         compiler_parser = CompilerParser(configuration=spack.config.CONFIG).with_input_specs(specs)
+
+        if using_libc_compatibility():
+            for libc in self.libcs:
+                self.gen.fact(fn.allowed_libc(libc.name, libc.version))
 
         if not allow_deprecated:
             self.gen.fact(fn.deprecated_versions_not_allowed())
@@ -2431,18 +2499,42 @@ class SpackSolverSetup:
     def define_runtime_constraints(self):
         """Define the constraints to be imposed on the runtimes"""
         recorder = RuntimePropertyRecorder(self)
-        # TODO: Use only available compilers ?
+
         for compiler in self.possible_compilers:
-            compiler_with_different_cls_names = {"oneapi": "intel-oneapi-compilers"}
+            compiler_with_different_cls_names = {
+                "oneapi": "intel-oneapi-compilers",
+                "clang": "llvm",
+            }
             compiler_cls_name = compiler_with_different_cls_names.get(
                 compiler.spec.name, compiler.spec.name
             )
             try:
                 compiler_cls = spack.repo.PATH.get_pkg_class(compiler_cls_name)
+                if hasattr(compiler_cls, "runtime_constraints"):
+                    compiler_cls.runtime_constraints(spec=compiler.spec, pkg=recorder)
             except spack.repo.UnknownPackageError:
+                pass
+
+            # Inject libc from available compilers, on Linux
+            if not compiler.available:
                 continue
-            if hasattr(compiler_cls, "runtime_constraints"):
-                compiler_cls.runtime_constraints(spec=compiler.spec, pkg=recorder)
+
+            current_libc = compiler.compiler_obj.default_libc
+            # If this is a compiler yet to be built (config:install_missing_compilers:true)
+            # infer libc from the Python process
+            if not current_libc and compiler.compiler_obj.cc is None:
+                current_libc = spack.util.libc.libc_from_current_python_process()
+
+            if using_libc_compatibility() and current_libc:
+                recorder("*").depends_on(
+                    "libc", when=f"%{compiler.spec}", type="link", description="Add libc"
+                )
+                recorder("*").depends_on(
+                    str(current_libc),
+                    when=f"%{compiler.spec}",
+                    type="link",
+                    description="Add libc",
+                )
 
         recorder.consume_facts()
 
@@ -2820,6 +2912,13 @@ class CompilerParser:
     def __init__(self, configuration) -> None:
         self.compilers: Set[KnownCompiler] = set()
         for c in all_compilers_in_config(configuration):
+            if using_libc_compatibility() and not c.default_libc:
+                warnings.warn(
+                    f"cannot detect libc from {c.spec}. The compiler will not be used "
+                    f"during concretization."
+                )
+                continue
+
             target = c.target if c.target != "any" else None
             candidate = KnownCompiler(
                 spec=c.spec, os=c.operating_system, target=target, available=True, compiler_obj=c
@@ -3184,12 +3283,8 @@ class SpecBuilder:
         self._specs[node].compiler_flags[flag_type] = []
 
     def external_spec_selected(self, node, idx):
-        """This means that the external spec and index idx
-        has been selected for this package.
-        """
-
-        packages_yaml = spack.config.get("packages")
-        packages_yaml = _normalize_packages_yaml(packages_yaml)
+        """This means that the external spec and index idx has been selected for this package."""
+        packages_yaml = _external_config_with_implicit_externals(spack.config.CONFIG)
         spec_info = packages_yaml[node.pkg]["externals"][int(idx)]
         self._specs[node].external_path = spec_info.get("prefix", None)
         self._specs[node].external_modules = spack.spec.Spec._format_module_list(
@@ -3487,7 +3582,7 @@ class Solver:
 
         # These properties are settable via spack configuration, and overridable
         # by setting them directly as properties.
-        self.reuse = spack.config.get("concretizer:reuse", False)
+        self.reuse = spack.config.get("concretizer:reuse", True)
 
     @staticmethod
     def _check_input_and_extract_concrete_specs(specs):
@@ -3504,7 +3599,7 @@ class Solver:
     def _reusable_specs(self, specs):
         reusable_specs = []
         if self.reuse:
-            packages = spack.config.get("packages")
+            packages = _external_config_with_implicit_externals(spack.config.CONFIG)
             # Specs from the local Database
             with spack.store.STORE.db.read_transaction():
                 reusable_specs.extend(

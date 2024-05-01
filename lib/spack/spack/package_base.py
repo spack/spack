@@ -468,7 +468,41 @@ def _names(when_indexed_dictionary):
     return sorted(all_names)
 
 
-class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
+class RedistributionMixin:
+    """Logic for determining whether a Package is source/binary
+    redistributable.
+    """
+
+    #: Store whether a given Spec source/binary should not be
+    #: redistributed.
+    disable_redistribute: Dict["spack.spec.Spec", "spack.directives.DisableRedistribute"]
+
+    # Source redistribution must be determined before concretization
+    # (because source mirrors work with un-concretized Specs).
+    @classmethod
+    def redistribute_source(cls, spec):
+        """Whether it should be possible to add the source of this
+        package to a Spack mirror.
+        """
+        for when_spec, disable_redistribute in cls.disable_redistribute.items():
+            if disable_redistribute.source and spec.satisfies(when_spec):
+                return False
+
+        return True
+
+    @property
+    def redistribute_binary(self):
+        """Whether it should be possible to create a binary out of an
+        installed instance of this package.
+        """
+        for when_spec, disable_redistribute in self.__class__.disable_redistribute.items():
+            if disable_redistribute.binary and self.spec.satisfies(when_spec):
+                return False
+
+        return True
+
+
+class PackageBase(WindowsRPath, PackageViewMixin, RedistributionMixin, metaclass=PackageMeta):
     """This is the superclass for all spack packages.
 
     ***The Package class***
@@ -2521,7 +2555,12 @@ class PackageStillNeededError(InstallError):
     """Raised when package is still needed by another on uninstall."""
 
     def __init__(self, spec, dependents):
-        super().__init__("Cannot uninstall %s" % spec)
+        spec_fmt = spack.spec.DEFAULT_FORMAT + " /{hash:7}"
+        dep_fmt = "{name}{@versions} /{hash:7}"
+        super().__init__(
+            f"Cannot uninstall {spec.format(spec_fmt)}, "
+            f"needed by {[dep.format(dep_fmt) for dep in dependents]}"
+        )
         self.spec = spec
         self.dependents = dependents
 

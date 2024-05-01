@@ -45,12 +45,15 @@ jobs:
                      [leap15, 'linux/amd64,linux/arm64,linux/ppc64le', 'opensuse/leap:15'],
                      [ubuntu-focal, 'linux/amd64,linux/arm64,linux/ppc64le', 'ubuntu:20.04'],
                      [ubuntu-jammy, 'linux/amd64,linux/arm64,linux/ppc64le', 'ubuntu:22.04'],
+                     [ubuntu-noble, 'linux/amd64,linux/arm64,linux/ppc64le', 'ubuntu:24.04'],
                      [almalinux8, 'linux/amd64,linux/arm64,linux/ppc64le', 'almalinux:8'],
                      [almalinux9, 'linux/amd64,linux/arm64,linux/ppc64le', 'almalinux:9'],
                      [rockylinux8, 'linux/amd64,linux/arm64', 'rockylinux:8'],
                      [rockylinux9, 'linux/amd64,linux/arm64', 'rockylinux:9'],
                      [fedora37, 'linux/amd64,linux/arm64,linux/ppc64le', 'fedora:37'],
-                     [fedora38, 'linux/amd64,linux/arm64,linux/ppc64le', 'fedora:38']]
+                     [fedora38, 'linux/amd64,linux/arm64,linux/ppc64le', 'fedora:38'],
+                     [fedora39, 'linux/amd64,linux/arm64,linux/ppc64le', 'fedora:39'],
+                     [fedora40, 'linux/amd64,linux/arm64,linux/ppc64le', 'fedora:40']]
     name: Build ${{ matrix.dockerfile[0] }}
     if: github.repository == 'spack/spack'
     steps:
@@ -87,9 +90,9 @@ jobs:
           fi
 
       - name: Upload Dockerfile
-        uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32
+        uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808
         with:
-          name: dockerfiles
+          name: dockerfiles_${{ matrix.dockerfile[0] }}
           path: dockerfiles
 
       - name: Set up QEMU
@@ -120,3 +123,14 @@ jobs:
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.docker_meta.outputs.tags }}
           labels: ${{ steps.docker_meta.outputs.labels }}
+
+  merge-dockerfiles:
+    runs-on: ubuntu-latest
+    needs: deploy-images
+    steps:
+      - name: Merge Artifacts
+        uses: actions/upload-artifact/merge@65462800fd760344b1a7b4382951275a0abb4808
+        with:
+          name: dockerfiles
+          pattern: dockerfiles_*
+          delete-merged: true
