@@ -3,7 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import os
 import sys
 import tempfile
 
@@ -400,6 +399,10 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
     # protobuf definitions.
     patch("0008-Fix-protobuf-errors-when-using-system-protobuf.patch", when="@2.5:2.6")
 
+    # see https://github.com/tensorflow/tensorflow/issues/62490
+    # and https://github.com/abseil/abseil-cpp/issues/1665
+    patch("absl_neon.patch", when="target=aarch64:")
+
     phases = ["configure", "build", "install"]
 
     # https://www.tensorflow.org/install/source
@@ -708,18 +711,6 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
         filter_file("build:opt --host_copt=-march=native", "", ".tf_configure.bazelrc")
 
     def build(self, spec, prefix):
-        if spec.target.family == "aarch64":
-            copy(
-                join_path(os.path.dirname(__file__), "absl_neon.patch"),
-                "third_party/absl/absl_neon.patch",
-            )
-            filter_file(
-                "system_link_files = SYS_LINKS,",
-                "system_link_files = SYS_LINKS,"
-                """patch_file = ["//third_party/absl:absl_neon.patch"],""",
-                "third_party/absl/workspace.bzl",
-            )
-
         # Bazel needs the directory to exist on install
         mkdirp(python_platlib)
         tmp_path = env["TEST_TMPDIR"]
