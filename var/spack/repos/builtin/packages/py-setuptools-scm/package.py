@@ -51,7 +51,8 @@ class PySetuptoolsScm(PythonPackage):
     depends_on("git", type=("build", "run"))
 
     def url_for_version(self, version):
-        # setuptools_scm-7.1.0.tar.gz with an underscore became setuptools-scm-8.0.4.tar.gz with a dash
+        # setuptools_scm-7.1.0.tar.gz with an underscore became
+        # setuptools-scm-8.0.4.tar.gz with a dash
         url = super().url_for_version(version)
         if version >= Version(8):
             return url.replace("_", "-")
