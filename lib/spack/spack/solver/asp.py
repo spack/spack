@@ -810,6 +810,7 @@ class PyclingoDriver:
         """
         # avoid circular import
         import spack.bootstrap
+
         output = output or DEFAULT_OUTPUT_CONFIGURATION
         timer = spack.util.timer.Timer()
 
@@ -1405,7 +1406,6 @@ class SpackSolverSetup:
             raise ValueError(f"Must provide a name for anonymous condition: '{required_spec}'")
 
         with spec_with_name(required_spec, name):
-
             # Check if we can emit the requirements before updating the condition ID counter.
             # In this way, if a condition can't be emitted but the exception is handled in the
             # caller, we won't emit partial facts.
