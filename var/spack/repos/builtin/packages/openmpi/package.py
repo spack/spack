@@ -526,6 +526,7 @@ class Openmpi(AutotoolsPackage, CudaPackage):
     variant(
         "orterunprefix",
         default=False,
+        when="@:4",
         description="Prefix Open MPI to PATH and LD_LIBRARY_PATH on local and remote hosts",
     )
     # Adding support to build a debug version of OpenMPI that activates
