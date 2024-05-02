@@ -17,6 +17,7 @@ class PyFenicsFfcx(PythonPackage):
     license("LGPL-3.0-or-later")
 
     version("main", branch="main")
+    version("0.8.0", sha256="8a854782dbd119ec1c23c4522a2134d5281e7f1bd2f37d64489f75da055282e3")
     version("0.7.0", sha256="7f3c3ca91d63ce7831d37799cc19d0551bdcd275bdfa4c099711679533dd1c71")
     version("0.6.0", sha256="076fad61d406afffd41019ae1abf6da3f76406c035c772abad2156127667980e")
     version(
@@ -30,7 +31,8 @@ class PyFenicsFfcx(PythonPackage):
         deprecated=True,
     )
 
-    depends_on("python@3.8:", when="@0.7:", type=("build", "run"))
+    depends_on("python@3.9:", when="@0.8:", type=("build", "run"))
+    depends_on("python@3.8:", when="@:0.7", type=("build", "run"))
     depends_on("py-setuptools@62:", when="@0.7:", type="build")
     # Runtime dependency on pkg_resources from setuptools at 0.6.0
     depends_on("py-setuptools@58:", when="@0.4.2:0.6", type=("build", "run"))
@@ -42,13 +44,14 @@ class PyFenicsFfcx(PythonPackage):
     depends_on("py-numpy@1.21:", type=("build", "run"))
 
     depends_on("py-fenics-ufl@main", type=("build", "run"), when="@main")
-    depends_on("py-fenics-ufl@2023.3.0:", type=("build", "run"), when="@0.8")
+    depends_on("py-fenics-ufl@2024.1.0:", type=("build", "run"), when="@0.8")
     depends_on("py-fenics-ufl@2023.2.0", type=("build", "run"), when="@0.7")
     depends_on("py-fenics-ufl@2023.1", type=("build", "run"), when="@0.6")
     depends_on("py-fenics-ufl@2022.2.0", type=("build", "run"), when="@0.5.0:0.5")
     depends_on("py-fenics-ufl@2022.1.0", type=("build", "run"), when="@0.4.2")
 
     depends_on("py-fenics-basix@main", type=("build", "run"), when="@main")
+    depends_on("py-fenics-basix@0.8", type=("build", "run"), when="@0.8")
     depends_on("py-fenics-basix@0.7", type=("build", "run"), when="@0.7")
     depends_on("py-fenics-basix@0.6.0:0.6", type=("build", "run"), when="@0.6.0:0.6")
     depends_on("py-fenics-basix@0.5.1:0.5", type=("build", "run"), when="@0.5.0:0.5")
