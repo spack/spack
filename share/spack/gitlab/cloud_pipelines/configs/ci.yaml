@@ -13,7 +13,7 @@ ci:
       before_script-:
       - - cat /proc/loadavg || true
         - cat /proc/meminfo | grep 'MemTotal\|MemFree' || true
-      - - touch tmp/_user_cache/cache/*/*  # bump mtime of cache so it is not invalidated
+      - - touch ${SPACK_USER_CACHE_PATH}/cache/*/*  # bump mtime of cache so it is not invalidated
         - time spack list --count
       - - spack env activate --without-view ${SPACK_CONCRETE_ENV_DIR}
         - spack compiler list
