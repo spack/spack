@@ -18,6 +18,7 @@ class G2tmpl(CMakePackage):
     maintainers("edwardhartnett", "AlexanderRichert-NOAA", "Hang-Lei-NOAA")
 
     version("develop", branch="develop")
+    version("1.12.0", sha256="44272be7bde8da05565255a8ecdbd080c659d7f0669e356e1c8fef6bac05e723")
     version("1.11.0", sha256="00fde3b37c6b4d1f0eaf60f230159298ffcb47349a076c3bd6afa20c7ed791a9")
     version("1.10.2", sha256="4063361369f3691f75288c801fa9d1a2414908b7d6c07bbf69d4165802e2a7fc")
     version("1.10.1", sha256="0be425e5128fabb89915a92261aa75c27a46a3e115e00c686fc311321e5d1e2a")
