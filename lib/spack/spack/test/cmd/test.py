@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import argparse
+import json
 import os
 
 import pytest
@@ -161,9 +162,10 @@ def test_cdash_output_test_error(
     mock_test_stage,
     capfd,
 ):
-    """Confirm stand-alone test error expected outputs in CDash reporting."""
-    install("test-error")
+    """Confirm stand-alone test error expected outputs in CDash reporting.
+    Also verify that build and test results get reported together on CDash."""
     with tmpdir.as_cwd():
+        install("--log-format=cdash", "--log-file=cdash_reports", "test-error")
         spack_test(
             "run",
             "--log-format=cdash",
@@ -172,10 +174,36 @@ def test_cdash_output_test_error(
             fail_on_error=False,
         )
         report_dir = tmpdir.join("cdash_reports")
-        reports = [name for name in report_dir.listdir() if str(name).endswith("Testing.xml")]
-        assert len(reports) == 1
-        content = reports[0].open().read()
-        assert "Command exited with status 1" in content
+        report_dir_files = report_dir.listdir()
+
+        test_reports = [name for name in report_dir_files if str(name).endswith("Testing.xml")]
+        assert len(test_reports) == 1
+        test_content = test_reports[0].open().read()
+        assert "Command exited with status 1" in test_content
+
+        build_file = report_dir.join("Build.xml")
+        assert build_file in report_dir_files
+        build_content = build_file.open().read()
+
+        metadata_file = report_dir.join("cdash_metadata.json")
+        assert metadata_file in report_dir_files
+        with open(metadata_file, "r") as fd:
+            cdash_metadata = json.load(fd)
+
+            buildname = cdash_metadata["base_buildname"]
+            expected_buildname = f'BuildName="{buildname}"'
+            assert expected_buildname in test_content
+            assert expected_buildname in build_content
+
+            buildstamp = cdash_metadata["buildstamp"]
+            expected_buildstamp = f'BuildStamp="{buildstamp}"'
+            assert expected_buildstamp in test_content
+            assert expected_buildstamp in build_content
+
+            site = cdash_metadata["site"]
+            expected_site = f'Name="{site}"'
+            assert expected_site in test_content
+            assert expected_site in build_content
 
 
 def test_cdash_upload_clean_test(
@@ -301,10 +329,7 @@ def test_test_results_status(mock_packages, mock_test_stage, status):
 @pytest.mark.regression("35337")
 def test_report_filename_for_cdash(install_mockery_mutable_config, mock_fetch):
     """Test that the temporary file used to write Testing.xml for CDash is not the upload URL"""
-    name = "trivial"
     spec = spack.spec.Spec("trivial-smoke-test").concretized()
-    suite = spack.install_test.TestSuite([spec], name)
-    suite.ensure_stage()
 
     parser = argparse.ArgumentParser()
     spack.cmd.test.setup_parser(parser)
@@ -317,7 +342,7 @@ def test_report_filename_for_cdash(install_mockery_mutable_config, mock_fetch):
     )
 
     spack.cmd.common.arguments.sanitize_reporter_options(args)
-    filename = spack.cmd.test.report_filename(args, suite)
+    filename = spack.report.get_filename(args, [spec])
     assert filename != "https://blahblah/submit.php?project=debugging"
 
 
@@ -325,6 +350,7 @@ def test_test_output_multiple_specs(
     mock_test_stage, mock_packages, mock_archive, mock_fetch, install_mockery_mutable_config
 ):
     """Ensure proper reporting for suite with skipped, failing, and passed tests."""
+
     install("test-error", "simple-standalone-test@0.9", "simple-standalone-test@1.0")
     out = spack_test("run", "test-error", "simple-standalone-test", fail_on_error=False)
 

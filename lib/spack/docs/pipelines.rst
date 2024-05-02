@@ -915,3 +915,51 @@ also have already trusted a key spack know about, or if no key is present anywhe
 spack will install specs using ``--no-check-signature`` and create buildcaches
 using ``-u`` (for unsigned binaries).
 
+.. _cdash_reporting:
+
+---------------
+CDash Reporting
+---------------
+
+The following example demonstrates how to report build & test results to CDash
+for a :ref:`Spack environment <environments>`.
+
+Create a new environment.
+
+.. code-block:: console
+
+   $ spack env create myenv
+
+Activate the environment.
+
+.. code-block:: console
+
+   $ spack env activate myenv
+
+Add one or more abstract root specs to the environment.
+
+.. code-block:: console
+
+   $ spack add libxml2
+
+Concretize the root specs in this environment.
+
+.. code-block:: console
+
+   [myenv]$ spack concretize
+
+Install the entire environment, reporting the results to a CDash server.
+
+.. code-block:: console
+
+   [myenv]$ spack install --cdash-upload-url https://my.cdash.org/submit.php?project=SpackTutorial
+
+Run the stand-alone tests for the root specs of the environment and report the results to CDash.
+
+.. code-block:: console
+
+   [myenv]$ spack test run --explicit --cdash-upload-url https://my.cdash.org/submit.php?project=SpackTutorial
+
+If all goes well, you should see your results posted here:
+
+https://my.cdash.org/index.php?project=SpackTutorial

@@ -208,15 +208,11 @@ def test_run(args):
         )
 
 
-def report_filename(args, test_suite):
-    return os.path.abspath(args.log_file or "test-{}".format(test_suite.name))
-
-
 def create_reporter(args, specs_to_test, test_suite):
     if args.log_format is None:
         return None
 
-    filename = report_filename(args, test_suite)
+    filename = spack.report.get_filename(args, specs_to_test)
     context_manager = spack.report.test_context_manager(
         reporter=args.reporter(),
         filename=filename,

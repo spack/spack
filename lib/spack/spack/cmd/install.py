@@ -3,13 +3,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import argparse
 import os
 import shutil
 import sys
-from typing import List
 
-import llnl.util.filesystem as fs
 from llnl.util import lang, tty
 
 import spack.build_environment
@@ -236,22 +233,6 @@ def setup_parser(subparser):
     arguments.add_concretizer_args(subparser)
 
 
-def default_log_file(spec):
-    """Computes the default filename for the log file and creates
-    the corresponding directory if not present
-    """
-    basename = spec.format_path("test-{name}-{version}-{hash}.xml")
-    dirname = fs.os.path.join(spack.paths.reports_path, "junit")
-    fs.mkdirp(dirname)
-    return fs.os.path.join(dirname, basename)
-
-
-def report_filename(args: argparse.Namespace, specs: List[spack.spec.Spec]) -> str:
-    """Return the filename to be used for reporting to JUnit or CDash format."""
-    result = args.log_file or default_log_file(specs[0])
-    return result
-
-
 def compute_tests_install_kwargs(specs, cli_test_arg):
     """Translate the test cli argument into the proper install argument"""
     if cli_test_arg == "all":
@@ -337,7 +318,9 @@ def install(parser, args):
             return lang.nullcontext()
 
         return spack.report.build_context_manager(
-            reporter=args.reporter(), filename=report_filename(args, specs=specs), specs=specs
+            reporter=args.reporter(),
+            filename=spack.report.get_filename(args, specs=specs),
+            specs=specs,
         )
 
     install_kwargs = install_kwargs_from_args(args)
@@ -437,7 +420,9 @@ def concrete_specs_from_cli(args, install_kwargs):
         tty.debug(e)
         if args.log_format is not None:
             reporter = args.reporter()
-            reporter.concretization_report(report_filename(args, abstract_specs), e.message)
+            reporter.concretization_report(
+                spack.report.get_filename(args, abstract_specs), e.message
+            )
         raise
     return concrete_specs
 
