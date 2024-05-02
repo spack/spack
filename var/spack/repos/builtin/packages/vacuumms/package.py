@@ -40,8 +40,8 @@ class Vacuumms(CMakePackage):
     version(
         "1.2.0",
         sha256="1836e6c29d1e83a79f9c6a9b686d1419bd72618aba7c46d3d038373808519d56",
-        deprecated=False,
         preferred=True,
+        deprecated=False,
     )
 
     variant("test", default=True, description="enable CMake testing")
