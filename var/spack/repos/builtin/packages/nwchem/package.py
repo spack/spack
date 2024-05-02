@@ -42,7 +42,7 @@ class Nwchem(Package):
         default="mpi-ts",
         description="ARMCI runtime",
     )
-    variant("extratce", default=False, description="Enables rarely-used TCE features")
+    variant("extratce", default=False, description="Enables rarely-used TCE features (CCSDTQ, CCSDTLR, EACCSD, IPCCSD, MRCC)")
     variant("fftw3", default=False, description="Link against the FFTW library")
     variant("libxc", default=False, description="Support additional functionals via libxc")
     variant(
