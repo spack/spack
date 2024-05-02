@@ -12,7 +12,7 @@ class PyLibensemble(PythonPackage):
     """Library for managing ensemble-like collections of computations."""
 
     homepage = "https://libensemble.readthedocs.io"
-    pypi = "libensemble/libensemble-1.2.2.tar.gz"
+    pypi = "libensemble/libensemble-1.3.0.tar.gz"
     git = "https://github.com/Libensemble/libensemble.git"
     maintainers("shuds13", "jlnav")
 
@@ -21,6 +21,7 @@ class PyLibensemble(PythonPackage):
     license("BSD-3-Clause")
 
     version("develop", branch="develop")
+    version("1.3.0", sha256="4a2f47de9ab57c577f3de5dd849ec1b621effde7206a54b2aa29aaf309c87532")
     version("1.2.2", sha256="936e34ed4e8129a9980187b21d586472b6362403889a739595d6b631335a8678")
     version("1.2.1", sha256="b80e77548a1e2a71483352b3b00e22b47191e45ca5741324c2b0f20b05579a3d")
     version("1.2.0", sha256="e1076e8eea7844d3799f92d136586eca4da34ec753bf41a8d1be04d7a45ec4c1")
