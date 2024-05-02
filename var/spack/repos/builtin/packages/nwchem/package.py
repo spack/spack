@@ -36,8 +36,12 @@ class Nwchem(Package):
     )
 
     variant("openmp", default=False, description="Enables OpenMP support")
-    variant("mpipr", default=False, description="Enables ARMCI with progress rank")
-    variant("armcimpi", default=False, description="Enables ARMCI-MPI")
+    variant(
+        "armci",
+        values=("mpi-ts", "mpi-pr", "armcimpi", "mpi3", "openib", "ofi"),
+        default="mpi-ts",
+        description="ARMCI runtime",
+    )
     variant("extratce", default=False, description="Enables rarely-used TCE features")
     variant("fftw3", default=False, description="Link against the FFTW library")
     variant("libxc", default=False, description="Support additional functionals via libxc")
@@ -64,7 +68,7 @@ class Nwchem(Package):
     depends_on("blas")
     depends_on("lapack")
     depends_on("mpi")
-    depends_on("armci", when="+armcimpi")
+    depends_on("armcimpi", when="armci=armcimpi")
     depends_on("scalapack")
     depends_on("fftw-api@3", when="+fftw3")
     depends_on("libxc", when="+libxc")
@@ -134,12 +138,20 @@ class Nwchem(Package):
         if spec.satisfies("+openmp"):
             args.extend(["USE_OPENMP=y"])
 
-        if spec.satisfies("+mpipr"):
-            args.extend(["ARMCI_NETWORK=MPI-PR"])
-        elif spec.satisfies("+armcimpi"):
+        if self.spec.variants["armci"].value == "armcimpi":
             armcimpi = spec["armci"]
             args.extend(["ARMCI_NETWORK=ARMCI"])
             args.extend([f"EXTERNAL_ARMCI_PATH={armcimpi.prefix}"])
+        elif self.spec.variants["armci"].value == "mpi-pr":
+            args.extend(["ARMCI_NETWORK=MPI-PR"])
+        elif self.spec.variants["armci"].value == "mpi-ts":
+            args.extend(["ARMCI_NETWORK=MPI-TS"])
+        elif self.spec.variants["armci"].value == "mpi3":
+            args.extend(["ARMCI_NETWORK=MPI3"])
+        elif self.spec.variants["armci"].value == "openib":
+            args.extend(["ARMCI_NETWORK=OPENIB"])
+        elif self.spec.variants["armci"].value == "ofi":
+            args.extend(["ARMCI_NETWORK=OFI"])
 
         if spec.satisfies("+fftw3"):
             args.extend(["USE_FFTW3=y"])
