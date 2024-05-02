@@ -32,7 +32,7 @@ index 000000000000..d4eb77bc3f86
 + #ifdef ABSL_INTERNAL_HAVE_ARM_NEON
 + #error ABSL_INTERNAL_HAVE_ARM_NEON cannot be directly set
 +-#elif defined(__ARM_NEON) && !defined(__CUDA_ARCH__)
-++#elif defined(__ARM_NEON) && !defined(__NVCC__)
+++#elif defined(__ARM_NEON) && !defined(__CUDACC__)
 + #define ABSL_INTERNAL_HAVE_ARM_NEON 1
 + #endif
 + 
