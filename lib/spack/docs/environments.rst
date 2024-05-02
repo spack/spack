@@ -128,7 +128,7 @@ guaranteed to initially have the same concrete specs as the original.
 
    If the path is not under the ``$SPACK_ROOT/var/spack/environments``
    directory then the source is referred to as an
-   :ref:`independent environment <independent_environment>`.
+   :ref:`independent environment <independent_environments>`.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 Activating an Environment
