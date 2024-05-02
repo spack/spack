@@ -13,7 +13,7 @@ ci:
       before_script-:
       - - cat /proc/loadavg || true
         - cat /proc/meminfo | grep 'MemTotal\|MemFree' || true
-      - - spack list --count  # ensure that spack's cache is populated
+      - - touch ${SPACK_USER_CACHE_PATH}/cache/*/*  # bump mtime of cache so it is not invalidated
       - - spack env activate --without-view ${SPACK_CONCRETE_ENV_DIR}
         - spack compiler list
         - if [ -n "$SPACK_BUILD_JOBS" ]; then spack config add "config:build_jobs:$SPACK_BUILD_JOBS"; fi
@@ -119,7 +119,7 @@ ci:
         # Disable local configs to avoid issues on shell runners
         SPACK_DISABLE_LOCAL_CONFIG: "1"
       before_script:
-      - - export SPACK_USER_CACHE_PATH="${CI_PROJECT_DIR}/_user_cache/"
+      - - export SPACK_USER_CACHE_PATH="${CI_PROJECT_DIR}/tmp/_user_cache/"
       - - uname -a || true
         - grep -E "vendor|model name" /proc/cpuinfo 2>/dev/null | sort -u || head -n10 /proc/cpuinfo 2>/dev/null || true
         - nproc || true
