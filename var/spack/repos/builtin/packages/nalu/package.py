@@ -22,7 +22,7 @@ class Nalu(CMakePackage):
     version("1.6.0", sha256="2eafafe25ed44a7bc1429881f8f944b9794ca51b1e1b29c28a45b91520c7cf97")
 
     depends_on("trilinos@master", when="@master")
-    depends_on("trilinos@=14.0.0", when="@1.6.0")
+    depends_on("trilinos@14.0.0:14.2.0", when="@1.6.0")
 
     # Options
     variant(
@@ -44,6 +44,7 @@ class Nalu(CMakePackage):
     depends_on(
         "trilinos"
         "+mpi+exodus+tpetra+muelu+belos+ifpack2+amesos2+zoltan+stk+boost+gtest"
+        "~epetra~ml"
         "~superlu-dist+superlu+hdf5+shards~hypre gotype=long"
     )
     depends_on("trilinos~shared", when="~shared")
