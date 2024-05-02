@@ -851,7 +851,6 @@ class PyclingoDriver:
                 self.control.load(os.path.join(parent_dir, "propagation.lp"))
                 break
 
-
         # Binary compatibility is based on libc on Linux, and on the os tag elsewhere
         if using_libc_compatibility():
             self.control.load(os.path.join(parent_dir, "libc_compatibility.lp"))
