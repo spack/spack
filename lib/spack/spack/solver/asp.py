@@ -809,11 +809,21 @@ class PyclingoDriver:
             A tuple of the solve result, the timer for the different phases of the
             solve, and the internal statistics from clingo.
         """
+        # avoid circular import
+        import spack.bootstrap
+
         output = output or DEFAULT_OUTPUT_CONFIGURATION
         timer = spack.util.timer.Timer()
 
         # Initialize the control object for the solver
         self.control = control or default_clingo_control()
+
+        # ensure core deps are present on Windows
+        # needs to modify active config scope, so cannot be run within
+        # bootstrap config scope
+        if sys.platform == "win32":
+            tty.debug("Ensuring basic dependencies {win-sdk, wgl} available")
+            spack.bootstrap.core.ensure_winsdk_external_or_raise()
 
         timer.start("setup")
         asp_problem = setup.setup(specs, reuse=reuse, allow_deprecated=allow_deprecated)
@@ -1403,7 +1413,6 @@ class SpackSolverSetup:
             raise ValueError(f"Must provide a name for anonymous condition: '{required_spec}'")
 
         with spec_with_name(required_spec, name):
-
             # Check if we can emit the requirements before updating the condition ID counter.
             # In this way, if a condition can't be emitted but the exception is handled in the
             # caller, we won't emit partial facts.
