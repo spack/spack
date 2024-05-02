@@ -52,8 +52,7 @@ class PyTorchGeometric(PythonPackage):
     # Optional dependencies
     depends_on("py-torch-cluster+cuda", when="+cuda", type=("build", "run"))
     depends_on("py-torch-cluster~cuda", when="~cuda", type=("build", "run"))
-    depends_on("py-torch-spline-conv+cuda", when="+cuda", type=("build", "run"))
-    depends_on("py-torch-spline-conv~cuda", when="~cuda", type=("build", "run"))
+    depends_on("py-torch-spline-conv", type=("build", "run"))
 
     # Undocumented dependencies
     depends_on("py-torch", type=("build", "run"))
