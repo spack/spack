@@ -10,9 +10,24 @@ from spack.package import *
 from spack.util.environment import set_env
 
 
+def is_CrayEX():
+    # Credit to upcxx package for this hpe-cray-ex detection function
+    if spack.platforms.host().name in ["linux", "cray"]:
+        target = os.environ.get("CRAYPE_NETWORK_TARGET")
+        if target in ["ofi", "ucx"]:  # normal case
+            return True
+        elif target is None:  # but some systems lack Cray PrgEnv
+            fi_info = which("fi_info")
+            if fi_info and fi_info("-l", output=str).find("cxi") >= 0:
+                return True
+    return False
+
+
 class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
     """Chapel is a modern programming language that is parallel, productive,
-    portable, scalable and open-source."""
+    portable, scalable and open-source. The Chapel package comes with many
+    options in the form of variants, most of which can be left unset to allow
+    Chapel's built-in scripts to determine the proper values based on the environment."""
 
     homepage = "https://chapel-lang.org/"
 
@@ -83,11 +98,37 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
         "dpcpp": "intel",
         "gcc": "gnu",
         "intel": "intel",
+        "llvm": "llvm",
         "oneapi": "intel",
         "pgi": "pgi",
         "rocmcc": "clang",
         "unset": "unset",
     }
+
+    cpu_options = (
+        "native",
+        "none",
+        "unknown",
+        "unset",
+        "aarch64",
+        "barcelona",
+        "bdver1",
+        "bdver2",
+        "bdver3",
+        "bdver4",
+        "broadwell",
+        "core2",
+        "haswell",
+        "ivybridge",
+        "k8",
+        "k8sse3",
+        "nehalem",
+        "sandybridge",
+        "skylake",
+        "thunderx",
+        "thunderx2t99",
+        "westmere",
+    )
 
     # TODO: add other package dependencies
     package_module_dict = {
@@ -124,13 +165,8 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
         multi=False,
     )
 
-    # TODO: delete, running checks after install isn't a variant of chapel
-    # variant("check", default=False, description="Run make check after installing the package")
-
     # TODO: refactor this somehow, this is a separate documentation tool, not a variant of chapel
-    variant(
-        "chpldoc", default=False, description="Build chpldoc in addition to chpl"
-    )
+    variant("chpldoc", default=False, description="Build chpldoc in addition to chpl")
 
     variant(
         "comm",
@@ -147,14 +183,6 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
         values=("ibv", "ofi", "udp", "unset"),
         multi=False,
     )
-
-    # TODO: remove this, it's not a variant of chapel we expect in the field
-    # variant(
-    #     "developer",
-    #     values=(True, False),
-    #     default=False,
-    #     description="Build with developer flag to enable assertions and other checks",
-    # )
 
     variant(
         "gasnet_segment",
@@ -189,12 +217,14 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
         multi=False,
     )
 
-    variant(
-        "host_compiler",
-        values=compilers,
-        description="Compiler suite for building the Chapel compiler on CHPL_HOST_PLATFORM",
-        default="unset",
-    )
+    # Feedback that it's hard to imagine any circumstance where host_compiler or
+    # target_compiler could meaningfully differ from what Spack already knows about
+    # variant(
+    #     "host_compiler",
+    #     values=compilers,
+    #     description="Compiler suite for building the Chapel compiler on CHPL_HOST_PLATFORM",
+    #     default="unset",
+    # )
 
     variant(
         "host_jemalloc",
@@ -259,20 +289,12 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
         values=("bundled", "none", "spack", "system"),
     )
 
-    # TODO: delete, executing module_tests is not a property of a chapel install
-    # variant(
-    #     "module_tests",
-    #     default=False,
-    #     description="Run self-tests on selected modules after installing the package "
-    #     "(may add several minutes to install time)",
-    # )
-
     variant(
         "package_modules",
         description="Include package module dependencies with spack",
         values=disjoint_sets(("none",), ("all",), package_module_dict.keys())
         .with_error("'none' or 'all' cannot be activated along with other package_modules")
-        .with_default("none")
+        .with_default("all")
         .with_non_feature_values("none", "all"),
     )
 
@@ -292,12 +314,23 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
         multi=False,
     )
 
+    # Feedback that it's hard to imagine any circumstance where host_compiler or
+    # target_compiler could meaningfully differ from what Spack already knows about
+    # variant(
+    #     "target_compiler",
+    #     values=compilers,
+    #     description="Compiler suite for building runtime libraries and "
+    #     "generated code on CHPL_TARGET_PLATFORM",
+    #     default="unset",
+    # )
+
     variant(
-        "target_compiler",
-        values=compilers,
-        description="Compiler suite for building runtime libraries and "
-        "generated code on CHPL_TARGET_PLATFORM",
+        "target_cpu",
+        values=cpu_options,
+        description="Indicate that the target executable should be specialized "
+        "to the given architecture when using --specialize (and --fast).",
         default="unset",
+        multi=False,
     )
 
     variant(
@@ -329,27 +362,8 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
         description="Build with unwind library for stack tracing",
         default="none",
         values=("bundled", "none", "system"),
+        multi=False,
     )
-
-    # Deprecated as of (?)
-    # variant(
-    #     "aux_filesys",
-    #     description="Build with runtime support for certain filesystems",
-    #     default="none",
-    #     values=("none", "lustre", "hdfs"),
-    #     multi=False,
-    # )
-
-    # This variant is superseded by the host_mem variant
-    # TODO: determine what version introduced the host_mem variant and
-    # remove this one if it is old enough that all supported versions have host_mem
-    # variant(
-    #     "mem",
-    #     values=("cstdlib", "jemalloc"),
-    #     default="jemalloc",
-    #     description="Memory management layer",
-    #     multi=False,
-    # )
 
     # TODO: for CHPL_X_CC and CHPL_X_CXX, can we capture an arbitrary path, possibly
     # with arguments?
@@ -448,6 +462,11 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
         if spec.variants["chpldoc"].value:
             make("chpldoc")
 
+    def setup_chpl_platform(self, env):
+        if self.spec.variants["host_platform"].value == "unset":
+            if is_CrayEX():
+                env.set("CHPL_HOST_PLATFORM", "hpe-cray-ex")
+
     def setup_chpl_compilers(self, env):
         if self.compiler_map.get(self.spec.compiler.name) is None:
             raise InstallError(
@@ -476,19 +495,15 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
                 value = "system"
             env.set(var, value)
 
-    # TODO: How to coordinate target CPU with spack? Spack's idea of target is
-    #       Chapel's idea of host
-    def setup_chpl_target_cpu(self, env):
-        env.set("CHPL_TARGET_CPU", self.spec.target)
-
     def setup_env_vars(self, env):
         for v in self.spec.variants.keys():
             self.setup_if_not_unset(env, "CHPL_" + v.upper(), self.spec.variants[v].value)
         self.setup_chpl_llvm(env)
         self.setup_chpl_compilers(env)
-        self.setup_chpl_target_cpu(env)
+        self.setup_chpl_platform(env)
 
         # TODO: a function to set defaults for things where we removed variants
+        # We'll set to GPU later if +rocm or +cuda requested
         env.set("CHPL_LOCALE_MODEL", "flat")
 
         if self.spec.variants["gmp"].value == "spack":
