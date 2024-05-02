@@ -22,6 +22,7 @@ class PyTorchSplineConv(PythonPackage):
         deprecated=True,
     )
 
+    depends_on("python", type=("build", "link", "run"))
     depends_on("py-setuptools", type="build")
     depends_on("py-torch", type=("build", "link", "run"))
 
