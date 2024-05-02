@@ -81,6 +81,9 @@ class Rust(Package):
     depends_on("rust-bootstrap@1.73:1.74", type="build", when="@1.74")
     depends_on("rust-bootstrap@1.74:1.75", type="build", when="@1.75")
 
+    # src/llvm-project/llvm/cmake/modules/CheckCompilerVersion.cmake
+    conflicts("%gcc@:7.3", when="@1.73:", msg="Host GCC version must be at least 7.4")
+
     extendable = True
     executables = ["^rustc$", "^cargo$"]
 
