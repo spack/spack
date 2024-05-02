@@ -18,6 +18,9 @@ class RdmaCore(CMakePackage):
 
     license("GPL-2.0-only OR BSD-2-Clause")
 
+    version("51.0", sha256="0a4a55b1351356c2750f26ec9010e8c7370402a13c95799cb8b447cf0134dd61")
+    version("50.0", sha256="405b9dd551120da9d1b8944c5ad24ab1f478fb13caedf5bf0d47053a6d6e20cc")
+    version("49.1", sha256="2e531d398073dd7ed28d95c94fa698e1a831952b508e9af93e36644dcd399936")
     version("49.0", sha256="953546ad2b179f9ce68dc21eb1eb26003098ea1bf0f87a4baed45bcea134b2b4")
     version("47.1", sha256="5d92058473b90be231c17220ce456837cb6da9975de498bd63b9660baa25afd6")
     version("46.2", sha256="c59c3c79fbae6038d7c6d16b37132e433e19f4a86d41341c6b7974b830b0d4fa")
