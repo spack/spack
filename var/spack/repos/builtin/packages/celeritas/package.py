@@ -19,6 +19,7 @@ class Celeritas(CMakePackage, CudaPackage, ROCmPackage):
 
     license("Apache-2.0")
 
+    version("0.4.3", sha256="b4f603dce1dc9c4894ea4c86f6574026ea8536714982e7dc6dff7472c925c892")
     version("0.4.2", sha256="eeca9705413f5e16e0fb81154e042600c8df125af7049912757feb01d43730e2")
     version("0.4.1", sha256="24e5c15eb9eec45f52d94a6719ae3505388b49d409cb7e26c875c70ac409bd2c")
     version(
