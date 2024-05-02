@@ -41,7 +41,6 @@ import spack.platforms
 import spack.repo
 import spack.spec
 import spack.store
-import spack.traverse
 import spack.util.crypto
 import spack.util.elf
 import spack.util.libc
@@ -316,7 +315,7 @@ def using_libc_compatibility() -> bool:
 
 
 def specs_are_propagating_compiler_flags(specs):
-    for node in spack.traverse.traverse_nodes(specs):
+    for node in traverse.traverse_nodes(specs):
         for _, flag_vals in node.compiler_flags.items():
             if any(val.propagate for val in flag_vals):
                 return True
