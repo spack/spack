@@ -44,8 +44,7 @@ class PyTorchGeometric(PythonPackage):
     depends_on("py-scikit-learn", type=("build", "run"))
 
     # README.md
-    depends_on("py-torch-scatter+cuda", when="+cuda", type=("build", "run"))
-    depends_on("py-torch-scatter~cuda", when="~cuda", type=("build", "run"))
+    depends_on("py-torch-scatter", type=("build", "run"))
     depends_on("py-torch-sparse+cuda", when="+cuda", type=("build", "run"))
     depends_on("py-torch-sparse~cuda", when="~cuda", type=("build", "run"))
 
