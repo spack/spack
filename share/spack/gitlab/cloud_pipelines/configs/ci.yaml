@@ -13,7 +13,9 @@ ci:
       before_script-:
       - - cat /proc/loadavg || true
         - cat /proc/meminfo | grep 'MemTotal\|MemFree' || true
-      - - time spack list --count  # ensure that spack's cache is populated
+      - - ls tmp/_user_cache/cache/*/*.json
+        - touch tmp/_user_cache/cache/*/*.json
+        - time spack list --count
       - - spack env activate --without-view ${SPACK_CONCRETE_ENV_DIR}
         - spack compiler list
         - if [ -n "$SPACK_BUILD_JOBS" ]; then spack config add "config:build_jobs:$SPACK_BUILD_JOBS"; fi
