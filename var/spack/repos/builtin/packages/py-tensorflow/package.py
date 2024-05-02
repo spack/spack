@@ -401,7 +401,7 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
 
     # see https://github.com/tensorflow/tensorflow/issues/62490
     # and https://github.com/abseil/abseil-cpp/issues/1665
-    patch("absl_neon.patch", when="target=aarch64:")
+    patch("absl_neon.patch", when="@2.16.1: target=aarch64:")
 
     phases = ["configure", "build", "install"]
 
