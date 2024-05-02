@@ -41,6 +41,7 @@ import spack.platforms
 import spack.repo
 import spack.spec
 import spack.store
+import spack.traverse
 import spack.util.crypto
 import spack.util.elf
 import spack.util.libc
