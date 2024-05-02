@@ -463,10 +463,12 @@ class TestConcretize:
     @pytest.mark.only_clingo(
         "Optional compiler propagation isn't deprecated for original concretizer"
     )
-    def test_concretize_specified_compiler_flag_propagate(self):
-        spec = Spec("callpath cflags=='-g' cxxflags='-O3'")
-        spec.concretize()
+    @pytest.mark.parametrize("spec_name", ["callpath", "mpich", "hypre"])
+    def test_concretize_specified_compiler_flag_propagate(self, spec_name):
+        spec = Spec(f"{spec_name} cflags=='-g' cxxflags='-O3'").concretized()
 
+        assert spec.satisfies("cflags='-g'")
+        assert spec.satisfies("cxxflags='-O3'")
         for dep in spec.traverse(root=False):
             assert dep.satisfies("cflags='-g'")
             assert not dep.satisfies("cxxflags='-O3'")

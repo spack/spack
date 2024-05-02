@@ -301,7 +301,7 @@ def all_libcs() -> Set[spack.spec.Spec]:
     return {libc} if libc else set()
 
 
-def libc_is_compatible(lhs: spack.spec.Spec, rhs: spack.spec.Spec) -> List[spack.spec.Spec]:
+def libc_is_compatible(lhs: spack.spec.Spec, rhs: spack.spec.Spec) -> bool:
     return (
         lhs.name == rhs.name
         and lhs.external_path == rhs.external_path
@@ -312,6 +312,14 @@ def libc_is_compatible(lhs: spack.spec.Spec, rhs: spack.spec.Spec) -> List[spack
 def using_libc_compatibility() -> bool:
     """Returns True if we are currently using libc compatibility"""
     return spack.platforms.host().name == "linux"
+
+
+def specs_are_propagating_compiler_flags(specs):
+    for node in spack.traverse.traverse_nodes(specs):
+        for _, flag_vals in node.compiler_flags.items():
+            if any(val.propagate for val in flag_vals):
+                return True
+    return False
 
 
 def extend_flag_list(flag_list, new_flags):
@@ -846,10 +854,8 @@ class PyclingoDriver:
         if not setup.concretize_everything:
             self.control.load(os.path.join(parent_dir, "when_possible.lp"))
 
-        for spec in specs:
-            if self._compiler_flags_has_propagation(spec):
-                self.control.load(os.path.join(parent_dir, "propagation.lp"))
-                break
+        if specs_are_propagating_compiler_flags(specs):
+            self.control.load(os.path.join(parent_dir, "propagation.lp"))
 
         # Binary compatibility is based on libc on Linux, and on the os tag elsewhere
         if using_libc_compatibility():
@@ -938,13 +944,6 @@ class PyclingoDriver:
             )
 
         return result, timer, self.control.statistics
-
-    def _compiler_flags_has_propagation(self, spec):
-        for dep in spec.traverse():
-            for _, flag_vals in dep.compiler_flags.items():
-                if any(val.propagate for val in flag_vals):
-                    return True
-        return False
 
 
 class ConcreteSpecsByHash(collections.abc.Mapping):
