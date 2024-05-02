@@ -25,6 +25,7 @@ class Nghttp2(AutotoolsPackage):
     version("1.26.0", sha256="daf7c0ca363efa25b2cbb1e4bd925ac4287b664c3d1465f6a390359daa3f0cf1")
 
     depends_on("pkgconfig", type="build")
+    depends_on("diffutils", type="build")
 
     def configure_args(self):
         return [
