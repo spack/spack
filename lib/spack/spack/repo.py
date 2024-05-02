@@ -619,6 +619,13 @@ class RepoIndex:
                 indexer.read(f)
 
         else:
+            print(
+                cache_filename,
+                self.cache.cache_path(cache_filename),
+                index_mtime,
+                self.checker.last_mtime(),
+            )
+
             # Otherwise update it and rewrite the cache file
             with self.cache.write_transaction(cache_filename) as (old, new):
                 indexer.read(old) if old else indexer.create()
