@@ -108,6 +108,15 @@ class Sirius(CMakePackage, CudaPackage, ROCmPackage):
     )
     variant("nvtx", default=False, description="Use NVTX profiler")
 
+    with when("@7.6:"):
+        variant(
+            "pugixml",
+            default=False,
+            description="Enable direct reading of UPF v2 pseudopotentials",
+        )
+        conflicts("+tests~pugixml")
+    depends_on("pugixml", when="+pugixml")
+
     depends_on("cmake@3.23:", type="build")
     depends_on("mpi")
     depends_on("gsl")
@@ -162,18 +171,38 @@ class Sirius(CMakePackage, CudaPackage, ROCmPackage):
         depends_on("dla-future +cuda", when="+cuda")
         depends_on("dla-future +rocm", when="+rocm")
 
+        conflicts("^pika@:0.22.1", when="+cuda")
+        conflicts("^pika@:0.22.1", when="+rocm")
+
     depends_on("rocblas", when="+rocm")
     depends_on("rocsolver", when="@7.5.0: +rocm")
+
+    # FindHIP cmake script only works for < 4.1, but HIP 4.1 is not provided by spack anymore
+    conflicts("+rocm", when="@:7.2.0")
 
     conflicts("^libxc@5.0.0")  # known to produce incorrect results
     conflicts("+single_precision", when="@:7.2.4")
     conflicts("+scalapack", when="^cray-libsci")
 
     # Propagate openmp to blas
-    depends_on("openblas threads=openmp", when="+openmp ^[virtuals=blas] openblas")
+    depends_on("openblas threads=openmp", when="+openmp ^[virtuals=blas,lapack] openblas")
     depends_on("amdblis threads=openmp", when="+openmp ^[virtuals=blas] amdblis")
     depends_on("blis threads=openmp", when="+openmp ^[virtuals=blas] blis")
-    depends_on("intel-mkl threads=openmp", when="+openmp ^[virtuals=blas] intel-mkl")
+    depends_on(
+        "intel-mkl threads=openmp", when="+openmp ^[virtuals=blas,lapack,fftw-api] intel-mkl"
+    )
+    depends_on(
+        "intel-oneapi-mkl threads=openmp",
+        when="+openmp ^[virtuals=blas,lapack,fftw-api] intel-oneapi-mkl",
+    )
+    depends_on(
+        "intel-oneapi-mkl+cluster",
+        when="+scalapack ^[virtuals=blas,lapack,fftw-api] intel-oneapi-mkl",
+    )
+
+    conflicts("intel-mkl", when="@develop")  # TODO: Change to @7.5.3
+    # MKLConfig.cmake introduced in 2021.3
+    conflicts("intel-oneapi-mkl@:2021.2", when="^intel-oneapi-mkl")
 
     depends_on("wannier90", when="@7.5.0: +wannier90")
     depends_on("wannier90+shared", when="@7.5.0: +wannier90+shared")
@@ -183,7 +212,7 @@ class Sirius(CMakePackage, CudaPackage, ROCmPackage):
 
     depends_on("eigen@3.4.0:", when="@7.3.2: +tests")
 
-    depends_on("costa", when="@7.3.2:")
+    depends_on("costa+shared", when="@7.3.2:")
 
     with when("@7.5: +memory_pool"):
         depends_on("umpire~cuda~rocm", when="~cuda~rocm")
@@ -218,6 +247,7 @@ class Sirius(CMakePackage, CudaPackage, ROCmPackage):
             self.define_from_variant(cm_label + "USE_PROFILER", "profiler"),
             self.define_from_variant(cm_label + "USE_NVTX", "nvtx"),
             self.define_from_variant(cm_label + "USE_WANNIER90", "wannier90"),
+            self.define_from_variant(cm_label + "USE_PUGIXML", "pugixml"),
             self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
             self.define_from_variant("BUILD_TESTING", "tests"),
         ]
@@ -250,8 +280,42 @@ class Sirius(CMakePackage, CudaPackage, ROCmPackage):
         if "^cray-libsci" in spec:
             args.append(self.define(cm_label + "USE_CRAY_LIBSCI", "ON"))
 
-        if spec["blas"].name in ["intel-mkl", "intel-parallel-studio", "intel-oneapi-mkl"]:
+        if spec["blas"].name in INTEL_MATH_LIBRARIES:
             args.append(self.define(cm_label + "USE_MKL", "ON"))
+
+            if spec.satisfies("@develop"):  # TODO: Change to @7.5.3:
+                mkl_mapper = {
+                    "threading": {
+                        "none": "sequential",
+                        "openmp": "gnu_thread",
+                        "tbb": "tbb_thread",
+                    },
+                    "mpi": {"intel-mpi": "intelmpi", "mpich": "mpich", "openmpi": "openmpi"},
+                }
+
+                mkl_threads = mkl_mapper["threading"][
+                    spec["intel-oneapi-mkl"].variants["threads"].value
+                ]
+
+                mpi_provider = spec["mpi"].name
+                if mpi_provider in ["mpich", "cray-mpich", "mvapich", "mvapich2"]:
+                    mkl_mpi = mkl_mapper["mpi"]["mpich"]
+                else:
+                    mkl_mpi = mkl_mapper["mpi"][mpi_provider]
+
+                args.extend(
+                    [
+                        self.define("MKL_INTERFACE", "lp64"),
+                        self.define("MKL_THREADING", mkl_threads),
+                        self.define("MKL_MPI", mkl_mpi),
+                    ]
+                )
+
+                if "+scalapack" in self.spec:
+                    # options provided by `MKLConfig.cmake`
+                    args.extend(
+                        [self.define("ENABLE_BLACS", "On"), self.define("ENABLE_SCALAPACK", "On")]
+                    )
 
         if "+elpa" in spec:
             elpa_incdir = os.path.join(spec["elpa"].headers.directories[0], "elpa")
