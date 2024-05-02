@@ -6,6 +6,7 @@ import collections
 import collections.abc
 import copy
 import enum
+import functools
 import itertools
 import os
 import pathlib
@@ -808,11 +809,21 @@ class PyclingoDriver:
             A tuple of the solve result, the timer for the different phases of the
             solve, and the internal statistics from clingo.
         """
+        # avoid circular import
+        import spack.bootstrap
+
         output = output or DEFAULT_OUTPUT_CONFIGURATION
         timer = spack.util.timer.Timer()
 
         # Initialize the control object for the solver
         self.control = control or default_clingo_control()
+
+        # ensure core deps are present on Windows
+        # needs to modify active config scope, so cannot be run within
+        # bootstrap config scope
+        if sys.platform == "win32":
+            tty.debug("Ensuring basic dependencies {win-sdk, wgl} available")
+            spack.bootstrap.core.ensure_winsdk_external_or_raise()
 
         timer.start("setup")
         asp_problem = setup.setup(specs, reuse=reuse, allow_deprecated=allow_deprecated)
@@ -1221,6 +1232,9 @@ class SpackSolverSetup:
 
     def trigger_rules(self):
         """Flushes all the trigger rules collected so far, and clears the cache."""
+        if not self._trigger_cache:
+            return
+
         self.gen.h2("Trigger conditions")
         for name in self._trigger_cache:
             cache = self._trigger_cache[name]
@@ -1234,6 +1248,9 @@ class SpackSolverSetup:
 
     def effect_rules(self):
         """Flushes all the effect rules collected so far, and clears the cache."""
+        if not self._effect_cache:
+            return
+
         self.gen.h2("Imposed requirements")
         for name in self._effect_cache:
             cache = self._effect_cache[name]
@@ -1396,7 +1413,6 @@ class SpackSolverSetup:
             raise ValueError(f"Must provide a name for anonymous condition: '{required_spec}'")
 
         with spec_with_name(required_spec, name):
-
             # Check if we can emit the requirements before updating the condition ID counter.
             # In this way, if a condition can't be emitted but the exception is handled in the
             # caller, we won't emit partial facts.
@@ -1614,6 +1630,27 @@ class SpackSolverSetup:
         packages_yaml = _external_config_with_implicit_externals(spack.config.CONFIG)
 
         self.gen.h1("External packages")
+        spec_filters = []
+        concretizer_yaml = spack.config.get("concretizer")
+        reuse_yaml = concretizer_yaml.get("reuse")
+        if isinstance(reuse_yaml, typing.Mapping):
+            default_include = reuse_yaml.get("include", [])
+            default_exclude = reuse_yaml.get("exclude", [])
+            for source in reuse_yaml.get("from", []):
+                if source["type"] != "external":
+                    continue
+
+                include = source.get("include", default_include)
+                exclude = source.get("exclude", default_exclude)
+                spec_filters.append(
+                    SpecFilter(
+                        factory=lambda: [],
+                        is_usable=lambda x: True,
+                        include=include,
+                        exclude=exclude,
+                    )
+                )
+
         for pkg_name, data in packages_yaml.items():
             if pkg_name == "all":
                 continue
@@ -1622,7 +1659,6 @@ class SpackSolverSetup:
             if pkg_name not in spack.repo.PATH:
                 continue
 
-            self.gen.h2("External package: {0}".format(pkg_name))
             # Check if the external package is buildable. If it is
             # not then "external(<pkg>)" is a fact, unless we can
             # reuse an already installed spec.
@@ -1632,7 +1668,17 @@ class SpackSolverSetup:
 
             # Read a list of all the specs for this package
             externals = data.get("externals", [])
-            external_specs = [spack.spec.parse_with_version_concrete(x["spec"]) for x in externals]
+            candidate_specs = [
+                spack.spec.parse_with_version_concrete(x["spec"]) for x in externals
+            ]
+
+            external_specs = []
+            if spec_filters:
+                for current_filter in spec_filters:
+                    current_filter.factory = lambda: candidate_specs
+                    external_specs.extend(current_filter.selected_specs())
+            else:
+                external_specs.extend(candidate_specs)
 
             # Order the external versions to prefer more recent versions
             # even if specs in packages.yaml are not ordered that way
@@ -3564,25 +3610,159 @@ def _has_runtime_dependencies(spec: spack.spec.Spec) -> bool:
     return True
 
 
+class SpecFilter:
+    """Given a method to produce a list of specs, this class can filter them according to
+    different criteria.
+    """
+
+    def __init__(
+        self,
+        factory: Callable[[], List[spack.spec.Spec]],
+        is_usable: Callable[[spack.spec.Spec], bool],
+        include: List[str],
+        exclude: List[str],
+    ) -> None:
+        """
+        Args:
+            factory: factory to produce a list of specs
+            is_usable: predicate that takes a spec in input and returns False if the spec
+                should not be considered for this filter, True otherwise.
+            include: if present, a "good" spec must match at least one entry in the list
+            exclude: if present, a "good" spec must not match any entry in the list
+        """
+        self.factory = factory
+        self.is_usable = is_usable
+        self.include = include
+        self.exclude = exclude
+
+    def is_selected(self, s: spack.spec.Spec) -> bool:
+        if not self.is_usable(s):
+            return False
+
+        if self.include and not any(s.satisfies(c) for c in self.include):
+            return False
+
+        if self.exclude and any(s.satisfies(c) for c in self.exclude):
+            return False
+
+        return True
+
+    def selected_specs(self) -> List[spack.spec.Spec]:
+        return [s for s in self.factory() if self.is_selected(s)]
+
+    @staticmethod
+    def from_store(configuration, include, exclude) -> "SpecFilter":
+        """Constructs a filter that takes the specs from the current store."""
+        packages = _external_config_with_implicit_externals(configuration)
+        is_reusable = functools.partial(_is_reusable, packages=packages, local=True)
+        factory = functools.partial(_specs_from_store, configuration=configuration)
+        return SpecFilter(factory=factory, is_usable=is_reusable, include=include, exclude=exclude)
+
+    @staticmethod
+    def from_buildcache(configuration, include, exclude) -> "SpecFilter":
+        """Constructs a filter that takes the specs from the configured buildcaches."""
+        packages = _external_config_with_implicit_externals(configuration)
+        is_reusable = functools.partial(_is_reusable, packages=packages, local=False)
+        return SpecFilter(
+            factory=_specs_from_mirror, is_usable=is_reusable, include=include, exclude=exclude
+        )
+
+
+def _specs_from_store(configuration):
+    store = spack.store.create(configuration)
+    with store.db.read_transaction():
+        return store.db.query(installed=True)
+
+
+def _specs_from_mirror():
+    try:
+        return spack.binary_distribution.update_cache_and_get_specs()
+    except (spack.binary_distribution.FetchCacheError, IndexError):
+        # this is raised when no mirrors had indices.
+        # TODO: update mirror configuration so it can indicate that the
+        # TODO: source cache (or any mirror really) doesn't have binaries.
+        return []
+
+
+class ReuseStrategy(enum.Enum):
+    ROOTS = enum.auto()
+    DEPENDENCIES = enum.auto()
+    NONE = enum.auto()
+
+
+class ReusableSpecsSelector:
+    """Selects specs that can be reused during concretization."""
+
+    def __init__(self, configuration: spack.config.Configuration) -> None:
+        self.configuration = configuration
+        self.store = spack.store.create(configuration)
+        self.reuse_strategy = ReuseStrategy.ROOTS
+
+        reuse_yaml = self.configuration.get("concretizer:reuse", False)
+        self.reuse_sources = []
+        if not isinstance(reuse_yaml, typing.Mapping):
+            if reuse_yaml is False:
+                self.reuse_strategy = ReuseStrategy.NONE
+            if reuse_yaml == "dependencies":
+                self.reuse_strategy = ReuseStrategy.DEPENDENCIES
+            self.reuse_sources.extend(
+                [
+                    SpecFilter.from_store(
+                        configuration=self.configuration, include=[], exclude=[]
+                    ),
+                    SpecFilter.from_buildcache(
+                        configuration=self.configuration, include=[], exclude=[]
+                    ),
+                ]
+            )
+        else:
+            roots = reuse_yaml.get("roots", True)
+            if roots is True:
+                self.reuse_strategy = ReuseStrategy.ROOTS
+            else:
+                self.reuse_strategy = ReuseStrategy.DEPENDENCIES
+            default_include = reuse_yaml.get("include", [])
+            default_exclude = reuse_yaml.get("exclude", [])
+            default_sources = [{"type": "local"}, {"type": "buildcache"}]
+            for source in reuse_yaml.get("from", default_sources):
+                include = source.get("include", default_include)
+                exclude = source.get("exclude", default_exclude)
+                if source["type"] == "local":
+                    self.reuse_sources.append(
+                        SpecFilter.from_store(self.configuration, include=include, exclude=exclude)
+                    )
+                elif source["type"] == "buildcache":
+                    self.reuse_sources.append(
+                        SpecFilter.from_buildcache(
+                            self.configuration, include=include, exclude=exclude
+                        )
+                    )
+
+    def reusable_specs(self, specs: List[spack.spec.Spec]) -> List[spack.spec.Spec]:
+        if self.reuse_strategy == ReuseStrategy.NONE:
+            return []
+
+        result = []
+        for reuse_source in self.reuse_sources:
+            result.extend(reuse_source.selected_specs())
+
+        # If we only want to reuse dependencies, remove the root specs
+        if self.reuse_strategy == ReuseStrategy.DEPENDENCIES:
+            result = [spec for spec in result if not any(root in spec for root in specs)]
+
+        return result
+
+
 class Solver:
     """This is the main external interface class for solving.
 
     It manages solver configuration and preferences in one place. It sets up the solve
     and passes the setup method to the driver, as well.
-
-    Properties of interest:
-
-      ``reuse (bool)``
-        Whether to try to reuse existing installs/binaries
-
     """
 
     def __init__(self):
         self.driver = PyclingoDriver()
-
-        # These properties are settable via spack configuration, and overridable
-        # by setting them directly as properties.
-        self.reuse = spack.config.get("concretizer:reuse", True)
+        self.selector = ReusableSpecsSelector(configuration=spack.config.CONFIG)
 
     @staticmethod
     def _check_input_and_extract_concrete_specs(specs):
@@ -3595,39 +3775,6 @@ class Solver:
                     reusable.append(s)
                 spack.spec.Spec.ensure_valid_variants(s)
         return reusable
-
-    def _reusable_specs(self, specs):
-        reusable_specs = []
-        if self.reuse:
-            packages = _external_config_with_implicit_externals(spack.config.CONFIG)
-            # Specs from the local Database
-            with spack.store.STORE.db.read_transaction():
-                reusable_specs.extend(
-                    s
-                    for s in spack.store.STORE.db.query(installed=True)
-                    if _is_reusable(s, packages, local=True)
-                )
-
-            # Specs from buildcaches
-            try:
-                reusable_specs.extend(
-                    s
-                    for s in spack.binary_distribution.update_cache_and_get_specs()
-                    if _is_reusable(s, packages, local=False)
-                )
-            except (spack.binary_distribution.FetchCacheError, IndexError):
-                # this is raised when no mirrors had indices.
-                # TODO: update mirror configuration so it can indicate that the
-                # TODO: source cache (or any mirror really) doesn't have binaries.
-                pass
-
-        # If we only want to reuse dependencies, remove the root specs
-        if self.reuse == "dependencies":
-            reusable_specs = [
-                spec for spec in reusable_specs if not any(root in spec for root in specs)
-            ]
-
-        return reusable_specs
 
     def solve(
         self,
@@ -3654,7 +3801,7 @@ class Solver:
         # Check upfront that the variants are admissible
         specs = [s.lookup_hash() for s in specs]
         reusable_specs = self._check_input_and_extract_concrete_specs(specs)
-        reusable_specs.extend(self._reusable_specs(specs))
+        reusable_specs.extend(self.selector.reusable_specs(specs))
         setup = SpackSolverSetup(tests=tests)
         output = OutputConfiguration(timers=timers, stats=stats, out=out, setup_only=setup_only)
         result, _, _ = self.driver.solve(
@@ -3683,7 +3830,7 @@ class Solver:
         """
         specs = [s.lookup_hash() for s in specs]
         reusable_specs = self._check_input_and_extract_concrete_specs(specs)
-        reusable_specs.extend(self._reusable_specs(specs))
+        reusable_specs.extend(self.selector.reusable_specs(specs))
         setup = SpackSolverSetup(tests=tests)
 
         # Tell clingo that we don't have to solve all the inputs at once
