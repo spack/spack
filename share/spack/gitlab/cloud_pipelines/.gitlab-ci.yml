@@ -170,6 +170,7 @@ default:
   artifacts:
     paths:
       - "${CI_PROJECT_DIR}/jobs_scratch_dir"
+      - "${CI_PROJECT_DIR}/tmp/_user_cache/cache"
   variables:
     KUBERNETES_CPU_REQUEST: 4000m
     KUBERNETES_MEMORY_REQUEST: 16G
