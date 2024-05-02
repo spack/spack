@@ -75,7 +75,7 @@ def libc_from_dynamic_linker(dynamic_linker: str) -> Optional["spack.spec.Spec"]
             return spec
         except Exception:
             return None
-    elif re.search("\b(?:gnu|glibc|arm)\b", stdout, re.IGNORECASE):
+    elif re.search(r"\b(?:gnu|glibc|arm)\b", stdout, re.IGNORECASE):
         # output is like "ld.so (...) stable release version 2.33." write a regex for it
         match = re.search(r"version (\d+\.\d+(?:\.\d+)?)", stdout)
         if not match:
