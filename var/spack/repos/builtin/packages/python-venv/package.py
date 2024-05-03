@@ -95,11 +95,6 @@ class PythonVenv(Package):
 
     def setup_dependent_package(self, module, dependent_spec):
         """Called before python modules' install() methods."""
-
-        purelib, platlib = self.purelib, self.platlib
-
         module.python = self.command
-        module.python_platlib = join_path(dependent_spec.prefix, platlib)
-        module.python_purelib = join_path(dependent_spec.prefix, purelib)
-        module.python_relative_purelib = purelib
-        module.python_relative_platlib = platlib
+        module.python_platlib = join_path(dependent_spec.prefix, self.platlib)
+        module.python_purelib = join_path(dependent_spec.prefix, self.purelib)
