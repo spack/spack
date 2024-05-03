@@ -242,8 +242,9 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
     # Optional dependencies
     with default_args(type=("build", "link", "run")):
         # cmake/public/cuda.cmake
-        depends_on("cuda@11:", when="@2:+cuda")
-        depends_on("cuda@10.2:", when="@1.11:1+cuda")
+        # https://github.com/pytorch/pytorch/issues/122169
+        depends_on("cuda@11:12.3", when="@2:+cuda")
+        depends_on("cuda@10.2:12.3", when="@1.11:1+cuda")
         # https://discuss.pytorch.org/t/compiling-1-10-1-from-source-with-gcc-11-and-cuda-11-5/140971
         depends_on("cuda@10.2:11.4", when="@1.10+cuda")
         depends_on("cuda@9.2:11.4", when="@1.6:1.9+cuda")
