@@ -18,6 +18,7 @@ packages:
     compiler: [gcc, clang, oneapi, xl, nag, fj, aocc]
     providers:
       awk: [gawk]
+      armci: [armcimpi]
       blas: [openblas, amdblis]
       D: [ldc]
       daal: [intel-oneapi-daal]
