@@ -47,6 +47,9 @@ class Nwchem(Package):
         default=False,
         description="Enables rarely-used TCE features (CCSDTQ, CCSDTLR, EACCSD, IPCCSD, MRCC)",
     )
+    variant("f90allocatable", default=False, description="Use F90 allocatable instead of MA")
+    variant("ccsdcuda", default=False, description="Enable CCSD(T) semidirect CUDA support")
+    variant("tcecuda", default=False, description="Enable TCE CCSD(T) CUDA support")
     variant("fftw3", default=False, description="Link against the FFTW library")
     variant("libxc", default=False, description="Support additional functionals via libxc")
     variant(
@@ -81,6 +84,8 @@ class Nwchem(Package):
     depends_on("elpa", when="+elpa")
     depends_on("python@3:3.9", type=("build", "link", "run"), when="@:7.0.2")
     depends_on("python@3", type=("build", "link", "run"), when="@7.2.0:")
+    depends_on("cuda", when="+tcecuda")
+    depends_on("nvhpc", when="+ccsdcuda")
 
     def install(self, spec, prefix):
         scalapack = spec["scalapack"].libs
@@ -143,6 +148,17 @@ class Nwchem(Package):
 
         if spec.satisfies("+openmp"):
             args.extend(["USE_OPENMP=y"])
+
+        if spec.satisfies("+f90allocatable"):
+            args.extend(["USE_F90_ALLOCATABLE=1"])
+
+        if spec.satisfies("+ccsdcuda"):
+            if spec.satisfies("%nvhpc"):
+                args.extend(["USE_F90_ALLOCATABLE=1"])
+                args.extend(["USE_OPENACC_TRPDRV=1"])
+                args.extend(["NWCHEM_LINK_CUDA=1"])
+            else:
+                exit(17)
 
         if self.spec.variants["armci"].value == "armcimpi":
             armcimpi = spec["armci"]
