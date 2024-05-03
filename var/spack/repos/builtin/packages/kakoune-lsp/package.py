@@ -15,8 +15,3 @@ class KakouneLsp(CargoPackage):
     license("UNLICENSE", checked_by="taliaferro")
 
     version("17.0.1", sha256="c32172a7d13621d7f7fd8b32b819865fd58a38c0c431d3cedd6046fb6de42f44")
-
-    # FIXME: Add dependencies if required.
-    # depends_on("foo")
-
-
