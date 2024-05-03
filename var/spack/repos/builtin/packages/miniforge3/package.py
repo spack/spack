@@ -33,6 +33,8 @@ class Miniforge3(Package):
 
     homepage = "https://github.com/conda-forge/miniforge"
 
+    maintainers("ChristopherChristofi")
+
     license("BSD-3-Clause")
 
     variant("mamba", default=True, description="Enable mamba support.")
