@@ -35,12 +35,6 @@ class PyTorchNvidiaApex(PythonPackage, CudaPackage):
     def setup_build_environment(self, env):
         if "+cuda" in self.spec:
             env.set("CUDA_HOME", self.spec["cuda"].prefix)
-            if self.spec.variants["cuda_arch"].value[0] != "none":
-                torch_cuda_arch = ";".join(
-                    "{0:.1f}".format(float(i) / 10.0)
-                    for i in self.spec.variants["cuda_arch"].value
-                )
-                env.set("TORCH_CUDA_ARCH_LIST", torch_cuda_arch)
         else:
             env.unset("CUDA_HOME")
 

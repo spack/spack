@@ -27,11 +27,6 @@ class PyTorchSplineConv(PythonPackage):
 
     def setup_build_environment(self, env):
         if "+cuda" in self.spec:
-            cuda_arches = list(self.spec["py-torch"].variants["cuda_arch"].value)
-            for i, x in enumerate(cuda_arches):
-                cuda_arches[i] = "{0}.{1}".format(x[0:-1], x[-1])
-            env.set("TORCH_CUDA_ARCH_LIST", str.join(" ", cuda_arches))
-
             env.set("FORCE_CUDA", "1")
             env.set("CUDA_HOME", self.spec["cuda"].prefix)
         else:

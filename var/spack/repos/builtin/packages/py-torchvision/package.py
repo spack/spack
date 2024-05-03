@@ -150,11 +150,6 @@ class PyTorchvision(PythonPackage):
 
         if "^cuda" in self.spec:
             env.set("CUDA_HOME", self.spec["cuda"].prefix)
-            torch_cuda_arch_list = ";".join(
-                "{0:.1f}".format(float(i) / 10.0)
-                for i in self.spec["py-torch"].variants["cuda_arch"].value
-            )
-            env.set("TORCH_CUDA_ARCH_LIST", torch_cuda_arch_list)
 
         for gpu in ["cuda", "mps"]:
             env.set(f"FORCE_{gpu.upper()}", int(f"+{gpu}" in self.spec["py-torch"]))
