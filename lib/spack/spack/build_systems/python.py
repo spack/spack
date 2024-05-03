@@ -120,6 +120,12 @@ class PythonExtension(spack.package_base.PackageBase):
         """
         return []
 
+    @property
+    def python_spec(self):
+        """Get python-venv if it exists or python otherwise."""
+        python, *_ = self.spec.dependencies("python-venv") or self.spec.dependencies("python")
+        return python
+
     def view_file_conflicts(self, view, merge_map):
         """Report all file conflicts, excepting special cases for python.
         Specifically, this does not report errors for duplicate
@@ -140,7 +146,7 @@ class PythonExtension(spack.package_base.PackageBase):
     def add_files_to_view(self, view, merge_map, skip_if_exists=True):
         # Patch up shebangs if the package extends Python and we put a Python interpreter in the
         # view.
-        python, *_ = self.spec.dependencies("python-venv") or self.spec.dependencies("python")
+        python = self.python_spec
         if not self.extendee_spec or python.external:
             return super().add_files_to_view(view, merge_map, skip_if_exists)
 
@@ -371,7 +377,7 @@ class PythonPackage(PythonExtension):
 
         # Headers should only be in include or platlib, but no harm in checking purelib too
         include = self.prefix.join(self.spec["python"].package.include).join(name)
-        python, *_ = self.spec.dependencies("python-venv") or self.spec.dependencies("python")
+        python = self.python_spec
         platlib = self.prefix.join(python.package.platlib).join(name)
         purelib = self.prefix.join(python.package.purelib).join(name)
 
@@ -392,7 +398,7 @@ class PythonPackage(PythonExtension):
         name = self.spec.name[3:]
 
         # Libraries should only be in platlib, but no harm in checking purelib too
-        python, *_ = self.spec.dependencies("python-venv") or self.spec.dependencies("python")
+        python = self.python_spec
         platlib = self.prefix.join(python.package.platlib).join(name)
         purelib = self.prefix.join(python.package.purelib).join(name)
 
@@ -506,7 +512,7 @@ class PythonPipBuilder(BaseBuilder):
 
     def install(self, pkg: PythonPackage, spec: Spec, prefix: Prefix) -> None:
         """Install everything from build directory."""
-        pip = spec["python-venv"].command
+        pip = spec["python"].command
         pip.add_default_arg("-m", "pip")
 
         args = PythonPipBuilder.std_args(pkg) + [f"--prefix={prefix}"]
