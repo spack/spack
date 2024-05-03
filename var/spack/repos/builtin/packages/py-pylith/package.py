@@ -7,7 +7,8 @@ from spack.package import *
 
 
 class PyPylith(AutotoolsPackage, PythonExtension):
-    """PyLith is a finite-element code for dynamic and quasi-static simulations of crustal deformation, primarily earthquakes and volcanoes."""
+    """PyLith does dynamic and quasi-static simulations of crustal deformation.
+    PyLith is an open-source finite-element code for dynamic and quasi-static simulations of crustal deformation, primarily earthquakes and volcanoes."""
 
     homepage = "https://geodynamics.org/resources/pylith"
     url = "https://github.com/geodynamics/pylith/releases/download/v4.0.0/pylith-4.0.0.tar.gz"
