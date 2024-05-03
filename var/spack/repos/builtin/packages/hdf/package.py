@@ -153,7 +153,7 @@ class Hdf(AutotoolsPackage):
             ):
                 flags.append("-Wno-error=implicit-function-declaration")
 
-            if self.spec.satisfies("%clang@16:"):
+            if self.spec.satisfies("%clang@16:") or self.spec.satisfies("%apple-clang@15:"):
                 flags.append("-Wno-error=implicit-int")
 
         return flags, None, None
