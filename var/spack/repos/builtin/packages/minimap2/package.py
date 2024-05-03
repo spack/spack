@@ -15,8 +15,11 @@ class Minimap2(PythonPackage):
     url = "https://github.com/lh3/minimap2/releases/download/v2.2/minimap2-2.2.tar.bz2"
     git = "https://github.com/lh3/minimap2.git"
 
+    maintainers("snehring")
+
     license("MIT")
 
+    version("2.28", sha256="ffa5712735d229119f8c05722a0638ae0cc15aeb8938e29a3e52d5da5c92a0b4")
     version("2.26", sha256="6a588efbd273bff4f4808d5190957c50272833d2daeb4407ccf4c1b78143624c")
     version("2.24", sha256="9dd4c31ff082182948944bcdad6d328f64f09295d10547d72eba24189880a615")
     version("2.17", sha256="b68ac8882d33cc63e9e3246775062aeb159b6990ff7f38099172c3fe6f8a2742")
