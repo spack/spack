@@ -3898,9 +3898,13 @@ class Spec:
         if not self._dependencies:
             return False
 
-        # If we arrived here, then rhs is abstract. At the moment we don't care about the edge
-        # structure of an abstract DAG, so we check if any edge could satisfy the properties
-        # we ask for.
+        # If we arrived here, the lhs root node satisfies the rhs root node. Now we need to check
+        # all the edges that have an abstract parent, and verify that they match some edge in the
+        # lhs.
+        #
+        # It might happen that the rhs brings in concrete sub-DAGs. For those we don't need to
+        # verify the edge properties, cause everything is encoded in the hash of the nodes that
+        # will be verified later.
         lhs_edges: Dict[str, Set[DependencySpec]] = collections.defaultdict(set)
         for rhs_edge in other.traverse_edges(root=False, cover="edges"):
             # If we are checking for ^mpi we need to verify if there is any edge
@@ -3908,6 +3912,10 @@ class Spec:
                 rhs_edge.update_virtuals(virtuals=(rhs_edge.spec.name,))
 
             if not rhs_edge.virtuals:
+                continue
+
+            # Skip edges from a concrete sub-DAG
+            if rhs_edge.parent.concrete:
                 continue
 
             if not lhs_edges:

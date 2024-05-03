@@ -2448,6 +2448,20 @@ class TestConcretize:
         s = Spec("a %gcc@=13.2.0").concretized()
         assert s.satisfies("%gcc@13.2.0")
 
+    @pytest.mark.regression("43267")
+    def test_spec_with_build_dep_from_json(self, tmp_path):
+        """Tests that we can correctly concretize a spec, when we express its dependency as a
+        concrete spec to be read from JSON.
+
+        The bug was triggered by missing virtuals on edges that were trimmed from pure build
+        dependencies.
+        """
+        build_dep = Spec("dttop").concretized()
+        json_file = tmp_path / "build.json"
+        json_file.write_text(build_dep.to_json())
+        s = Spec(f"dtuse ^{str(json_file)}").concretized()
+        assert s["dttop"].dag_hash() == build_dep.dag_hash()
+
 
 @pytest.fixture()
 def duplicates_test_repository():
