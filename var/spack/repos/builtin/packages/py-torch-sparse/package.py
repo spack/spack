@@ -14,6 +14,7 @@ class PyTorchSparse(PythonPackage):
     git = "https://github.com/rusty1s/pytorch_sparse.git"
 
     license("MIT")
+    maintainers("adamjstewart")
 
     version("0.6.18", sha256="2f14c510a6e93f404c6ea357210615b3c15a71731f9dbd86f25434e34fb5a741")
     version("0.6.17", sha256="06e268dd77f73eb641da8f9383306d7afac6423383c9197b9df120955e2a96bd")
