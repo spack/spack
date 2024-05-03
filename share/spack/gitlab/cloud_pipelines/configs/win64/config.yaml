@@ -1,9 +1,7 @@
 config:
-  concretizer: clingo
-  db_lock_timeout: 120
   install_tree:
     # Path lengths on windows doesn't support much padding
     padded_length: 0
+    # Reduce the projections to only including the hash to avoid path length issues
     projections:
-      all: '{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}'
-
+      all: '{hash}'

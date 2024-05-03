@@ -67,6 +67,7 @@ default:
 .win64-msvc2019:
   variables:
     SPACK_TARGET_PLATFORM: "win64"
+    SPACK_TARGET_ARCH: "x86_64"
 
 ########################################
 # Job templates
@@ -115,47 +116,12 @@ default:
         PIPELINE_MIRROR_TEMPLATE: "multi-src-mirrors.yaml.in"
         OIDC_TOKEN_AUDIENCE: "pr_binary_mirror"
 
-.generate-base-windows:
+.generate-common:
   stage: generate
   script:
     - . "./share/spack/setup-env.sh"
     - spack --version
-    - cd share/spack/gitlab/cloud_pipelines/stacks/${SPACK_CI_STACK_NAME}
-    - spack env activate --without-view .
-    - $SPACK_CI_CONFIG_ROOT = "${SPACK_ROOT}/share/spack/gitlab/cloud_pipelines/configs"
-    - spack
-      --config-scope "$SPACK_CI_CONFIG_ROOT"
-      --config-scope "$SPACK_CI_CONFIG_ROOT/${SPACK_TARGET_PLATFORM}"
-      ci generate --check-index-only
-      --buildcache-destination "${SPACK_BUILDCACHE_DESTINATION}"
-      --artifacts-root "${CI_PROJECT_DIR}/jobs_scratch_dir"
-      --output-file "${CI_PROJECT_DIR}/jobs_scratch_dir/cloud-ci-pipeline.yml"
-  artifacts:
-    paths:
-      - "${CI_PROJECT_DIR}/jobs_scratch_dir"
-  interruptible: true
-  timeout: 60 minutes
-  retry:
-    max: 2
-    when:
-      - always
-
-.generate-win64:
-  extends: [ ".generate-base-windows" ]
-  tags: ["spack", "public", "medium", "win64"]
-
-.generate-base:
-  stage: generate
-  script:
-    - uname -a || true
-    - grep -E 'vendor|model name' /proc/cpuinfo 2>/dev/null | sort -u || head -n10 /proc/cpuinfo 2>/dev/null || true
-    - nproc || true
-    - cat /proc/loadavg || true
-    - cat /proc/meminfo | grep 'MemTotal\|MemFree' || true
-    - . "./share/spack/setup-env.sh"
-    - spack --version
-    - cd share/spack/gitlab/cloud_pipelines/stacks/${SPACK_CI_STACK_NAME}
-    - spack env activate --without-view .
+    - spack env activate --without-view share/spack/gitlab/cloud_pipelines/stacks/${SPACK_CI_STACK_NAME}
     - export SPACK_CI_CONFIG_ROOT="${SPACK_ROOT}/share/spack/gitlab/cloud_pipelines/configs"
     - spack
       --config-scope "${SPACK_CI_CONFIG_ROOT}"
@@ -169,10 +135,11 @@ default:
       --config-scope "${SPACK_CI_CONFIG_ROOT}/${SPACK_TARGET_PLATFORM}/${SPACK_TARGET_ARCH}"
       ${CI_STACK_CONFIG_SCOPES}
       audit configs
-    - spack python -c "import os,sys; print(os.path.expandvars(sys.stdin.read()))"
-      < "${SPACK_CI_CONFIG_ROOT}/${PIPELINE_MIRROR_TEMPLATE}" > "${SPACK_CI_CONFIG_ROOT}/mirrors.yaml"
+    - python ${SPACK_CI_SCRIPTS_ROOT}/common/expand_vars.py
+      "${SPACK_CI_CONFIG_ROOT}/${PIPELINE_MIRROR_TEMPLATE}"
+      "${SPACK_CI_CONFIG_ROOT}/mirrors.yaml"
     - spack config add -f "${SPACK_CI_CONFIG_ROOT}/mirrors.yaml"
-    - mkdir -p "${CI_PROJECT_DIR}/jobs_scratch_dir"
+    - mkdir "${CI_PROJECT_DIR}/jobs_scratch_dir"
     - spack
       --config-scope "${SPACK_CI_CONFIG_ROOT}"
       --config-scope "${SPACK_CI_CONFIG_ROOT}/${SPACK_TARGET_PLATFORM}"
@@ -187,9 +154,6 @@ default:
       ci generate --check-index-only
       --artifacts-root "${CI_PROJECT_DIR}/jobs_scratch_dir"
       --output-file "${CI_PROJECT_DIR}/jobs_scratch_dir/cloud-ci-pipeline.yml"
-  after_script:
-    - cat /proc/loadavg || true
-    - cat /proc/meminfo | grep 'MemTotal\|MemFree' || true
   artifacts:
     paths:
       - "${CI_PROJECT_DIR}/jobs_scratch_dir"
@@ -212,10 +176,35 @@ default:
 # Generate without tags for cases using external runners
 .generate-base:
   extends: [ ".base-job", ".generate-common" ]
+  before_script:
+    - uname -a || true
+    - grep -E 'vendor|model name' /proc/cpuinfo 2>/dev/null | sort -u || head -n10 /proc/cpuinfo 2>/dev/null || true
+    - nproc || true
+    - cat /proc/loadavg || true
+    - cat /proc/meminfo | grep 'MemTotal\|MemFree' || true
+  after_script:
+    - cat /proc/loadavg || true
+    - cat /proc/meminfo | grep 'MemTotal\|MemFree' || true
 
 .generate-x86_64:
   extends: [ ".generate-base" ]
   tags: ["spack", "public", "medium", "x86_64"]
+
+.generate-aarch64:
+  extends: [ ".generate-base" ]
+  tags: ["spack", "public", "medium", "aarch64"]
+
+.generate-neoverse_v1:
+  extends: [ ".generate-base" ]
+  tags: ["spack", "public", "medium", "aarch64", "graviton3"]
+
+.generate-neoverse-v2:
+  extends: [ ".generate-base" ]
+  tags: ["spack", "public", "medium", "neoverse_v2"]
+
+.generate-win64:
+  extends: [ ".generate-common" ]
+  tags: ["spack", "public", "medium", "x86_64-win"]
 
 .generate-deprecated:
   extends: [ ".base-job" ]
@@ -585,15 +574,6 @@ radiuss-build:
 .tags-x86_64_v4:
   tags: ["spack", "public", "aws", "medium", "x86_64_v4"]
 
-.tags-win64-msvc2019:
-  tags: ["spack", "protected", "medium", "win64", "msvc2019"]
-
-# Include this AFTER .*-generate in "extends" list
-.radiuss-aws-overrides:
-  # This controls image for generate step; build step is controlled by spack.yaml
-  # Note that generator emits OS info for build so these should be the same.
-  image: { "name": "ghcr.io/spack/e4s-amazonlinux-2:v2023-03-09", "entrypoint": [""] }
-
 # Include this AFTER .*-generate in "extends" list
 .radiuss-aws-overrides:
   # This controls image for generate step; build step is controlled by spack.yaml
@@ -943,16 +923,16 @@ e4s-cray-sles-build:
     - artifacts: True
       job: e4s-cray-sles-generate
 
-########################################
-# Windows Vis
-########################################
+#######################################
+# Windows Visualization Tools
+#######################################
 .windows-vis:
   extends: [".win64-msvc2019"]
   variables:
     SPACK_CI_STACK_NAME: windows-vis
 
 windows-vis-generate:
-  extends: [ ".generate-win64", ".windows-vis", ".tags-win64-msvc2019" ]
+  extends: [ ".generate-win64", ".windows-vis" ]
 
 windows-vis-build:
   extends: [ ".build", ".windows-vis"]
@@ -963,84 +943,4 @@ windows-vis-build:
     strategy: depend
   needs:
     - artifacts: True
-      job: aws-pcluster-generate-icelake
-
-# Skylake_avx512 (one pipeline per target)
-.aws-pcluster-skylake:
-  variables:
-    SPACK_CI_STACK_NAME: aws-pcluster-skylake
-
-aws-pcluster-generate-skylake:
-  extends: [ ".linux_skylake", ".aws-pcluster-skylake", ".generate", ".tags-x86_64_v4", ".aws-pcluster-generate", ".aws-pcluster-generate-image" ]
-
-aws-pcluster-build-skylake:
-  extends: [ ".linux_skylake", ".aws-pcluster-skylake", ".build" ]
-  trigger:
-    include:
-      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
-        job: aws-pcluster-generate-skylake
-    strategy: depend
-  needs:
-    - artifacts: True
-      job: aws-pcluster-generate-skylake
-
-# Neoverse_n1 (one pipeline per target)
-.aws-pcluster-neoverse_n1:
-  variables:
-    SPACK_CI_STACK_NAME: aws-pcluster-neoverse_n1
-
-aws-pcluster-generate-neoverse_n1:
-  extends: [ ".linux_neoverse_n1", ".aws-pcluster-neoverse_n1", ".generate-aarch64", ".aws-pcluster-generate", ".aws-pcluster-generate-image" ]
-
-aws-pcluster-build-neoverse_n1:
-  extends: [  ".linux_neoverse_n1", ".aws-pcluster-neoverse_n1", ".build" ]
-  trigger:
-    include:
-      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
-        job: aws-pcluster-generate-neoverse_n1
-    strategy: depend
-  needs:
-    - artifacts: True
-      job: aws-pcluster-generate-neoverse_n1
-
-# Neoverse_v1 (one pipeline per target)
-.aws-pcluster-neoverse_v1:
-  variables:
-    SPACK_CI_STACK_NAME: aws-pcluster-neoverse_v1
-
-aws-pcluster-generate-neoverse_v1:
-  extends: [ ".linux_neoverse_v1", ".aws-pcluster-neoverse_v1", ".generate-aarch64", ".aws-pcluster-generate", ".aws-pcluster-generate-image" ]
-
-aws-pcluster-build-neoverse_v1:
-  extends: [  ".linux_neoverse_v1", ".aws-pcluster-neoverse_v1", ".build" ]
-  trigger:
-    include:
-      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
-        job: aws-pcluster-generate-neoverse_v1
-    strategy: depend
-  needs:
-    - artifacts: True
-      job: aws-pcluster-generate-neoverse_v1
-
-########################################
-# Windows Vis
-########################################
-.windows-vis:
-  extends: [ ".win64-msvc2019", ".tags-win64-msvc2019"]
-  variables:
-    SPACK_CI_STACK_NAME: windows-vis
-
-# Windows CI only runs on protected pipelines
-windows-vis-generate:
-  extends: [ ".generate-win64", ".windows-vis" ]
-
-windows-vis-build:
-  extends: [ ".build", ".windows-vis" ]
-  trigger:
-    include:
-      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
-        job: windows-vis-protected-generate
-    strategy: depend
-  needs:
-    - artifacts: True
-      job: windows-vis-protected-generate
+      job: windows-vis-generate

@@ -30,7 +30,7 @@ spack:
       buildable: False
 
   specs:
-  - paraview
+  - vtk
 
   mirrors:
     mirror: "s3://spack-binaries/develop/windows-vis"
