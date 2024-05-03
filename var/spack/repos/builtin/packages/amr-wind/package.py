@@ -22,6 +22,12 @@ class AmrWind(CMakePackage, CudaPackage, ROCmPackage):
 
     version("main", branch="main", submodules=True)
     version(
+        "1.4.0", tag="v1.4.0", commit="bdddf133e41a9b7b4c8ce28f1ea1bebec47678f5", submodules=True
+    )
+    version(
+        "1.3.1", tag="v1.3.1", commit="63692889143599de57232e64a9c7e4af8f0a2e1e", submodules=True
+    )
+    version(
         "1.3.0", tag="v1.3.0", commit="f74d7b3801f0492e586d440fac729d9dec595a8b", submodules=True
     )
     version(
@@ -73,9 +79,12 @@ class AmrWind(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("ascent~mpi", when="+ascent~mpi")
     depends_on("ascent+mpi", when="+ascent+mpi")
     depends_on("netcdf-c", when="+netcdf")
-    depends_on("openfast+cxx@2.6.0:3.4.1", when="@0.9.0:1.3.0,main+openfast")
     depends_on("py-matplotlib", when="+masa")
     depends_on("py-pandas", when="+masa")
+    when("+openfast"):
+        depends_on("openfast+cxx")
+        depends_on("openfast@2.6.0:3.4.1", when="@0.9.0:1")
+        depends_on("openfast@3.5.3:", when="@2:")
 
     for arch in CudaPackage.cuda_arch_values:
         depends_on("hypre+cuda cuda_arch=%s" % arch, when="+cuda+hypre cuda_arch=%s" % arch)
