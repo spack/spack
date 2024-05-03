@@ -17,6 +17,8 @@ class Nwchem(Package):
 
     tags = ["ecp", "ecp-apps"]
 
+    maintainers("jeffhammond")
+
     version(
         "7.2.2",
         sha256="6b68e9c12eec38c09d92472bdd1ff130b93c1b5e1f65e4702aa7ee36c80e4af7",
@@ -34,7 +36,20 @@ class Nwchem(Package):
     )
 
     variant("openmp", default=False, description="Enables OpenMP support")
-    variant("mpipr", default=False, description="Enables ARMCI with progress rank")
+    variant(
+        "armci",
+        values=("mpi-ts", "mpi-pr", "armcimpi", "mpi3", "openib", "ofi"),
+        default="mpi-ts",
+        description="ARMCI runtime",
+    )
+    variant(
+        "extratce",
+        default=False,
+        description="Enables rarely-used TCE features (CCSDTQ, CCSDTLR, EACCSD, IPCCSD, MRCC)",
+    )
+    variant("f90allocatable", default=False, description="Use F90 allocatable instead of MA")
+    variant("ccsdcuda", default=False, description="Enable CCSD(T) semidirect CUDA support")
+    variant("tcecuda", default=False, description="Enable TCE CCSD(T) CUDA support")
     variant("fftw3", default=False, description="Link against the FFTW library")
     variant("libxc", default=False, description="Support additional functionals via libxc")
     variant(
@@ -60,12 +75,17 @@ class Nwchem(Package):
     depends_on("blas")
     depends_on("lapack")
     depends_on("mpi")
+    depends_on("armcimpi", when="armci=armcimpi")
+    depends_on("libfabric", when="armci=ofi")
+    depends_on("rdma-core", when="armci=openib")
     depends_on("scalapack")
     depends_on("fftw-api@3", when="+fftw3")
     depends_on("libxc", when="+libxc")
     depends_on("elpa", when="+elpa")
     depends_on("python@3:3.9", type=("build", "link", "run"), when="@:7.0.2")
     depends_on("python@3", type=("build", "link", "run"), when="@7.2.0:")
+    depends_on("cuda", when="+tcecuda")
+    depends_on("nvhpc", when="+ccsdcuda")
 
     def install(self, spec, prefix):
         scalapack = spec["scalapack"].libs
@@ -88,10 +108,6 @@ class Nwchem(Package):
                 f"LAPACK_LIB={lapack.ld_flags}",
                 f"SCALAPACK_LIB={scalapack.ld_flags}",
                 "USE_NOIO=Y",  # skip I/O algorithms
-                "MRCC_METHODS=y",  # TCE extra module
-                "IPCCSD=y",  # TCE extra module
-                "EACCSD=y",  # TCE extra module
-                "CCSDTQ=y",  # TCE extra module
                 "V=1",  # verbose build
             ]
         )
@@ -121,11 +137,43 @@ class Nwchem(Package):
 
         args.extend([f"NWCHEM_TARGET={target}"])
 
+        # These optional components of TCE are rarely used and in some cases
+        # increase the compilation time significantly (CCSDTLR and CCSDTQ).
+        if spec.satisfies("+extratce"):
+            args.extend(["MRCC_METHODS=y"])
+            args.extend(["IPCCSD=y"])
+            args.extend(["EACCSD=y"])
+            args.extend(["CCSDTLR=y"])
+            args.extend(["CCSDTQ=y"])
+
         if spec.satisfies("+openmp"):
             args.extend(["USE_OPENMP=y"])
 
-        if spec.satisfies("+mpipr"):
+        if spec.satisfies("+f90allocatable"):
+            args.extend(["USE_F90_ALLOCATABLE=1"])
+
+        if spec.satisfies("+ccsdcuda"):
+            if spec.satisfies("%nvhpc"):
+                args.extend(["USE_F90_ALLOCATABLE=1"])
+                args.extend(["USE_OPENACC_TRPDRV=1"])
+                args.extend(["NWCHEM_LINK_CUDA=1"])
+            else:
+                exit(17)
+
+        if self.spec.variants["armci"].value == "armcimpi":
+            armcimpi = spec["armci"]
+            args.extend(["ARMCI_NETWORK=ARMCI"])
+            args.extend([f"EXTERNAL_ARMCI_PATH={armcimpi.prefix}"])
+        elif self.spec.variants["armci"].value == "mpi-pr":
             args.extend(["ARMCI_NETWORK=MPI-PR"])
+        elif self.spec.variants["armci"].value == "mpi-ts":
+            args.extend(["ARMCI_NETWORK=MPI-TS"])
+        elif self.spec.variants["armci"].value == "mpi3":
+            args.extend(["ARMCI_NETWORK=MPI3"])
+        elif self.spec.variants["armci"].value == "openib":
+            args.extend(["ARMCI_NETWORK=OPENIB"])
+        elif self.spec.variants["armci"].value == "ofi":
+            args.extend(["ARMCI_NETWORK=OFI"])
 
         if spec.satisfies("+fftw3"):
             args.extend(["USE_FFTW3=y"])
