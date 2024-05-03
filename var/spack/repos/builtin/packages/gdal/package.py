@@ -710,9 +710,7 @@ class AutotoolsBuilder(AutotoolsBuilder):
             self.with_or_without("xerces", variant="xercesc", package="xerces-c"),
             self.with_or_without("zstd", package="zstd"),
             # Language bindings
-            self.with_or_without(
-                "python", variant="python", package="python-venv", attribute="command"
-            ),
+            self.with_or_without("python", package="python", attribute="command"),
             self.with_or_without("java", package="java"),
             self.with_or_without("jvm-lib", variant="mdb", package="java", attribute="libs"),
             self.with_or_without("jvm-lib-add-rpath", variant="mdb"),

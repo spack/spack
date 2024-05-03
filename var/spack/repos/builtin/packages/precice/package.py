@@ -183,7 +183,7 @@ class Precice(CMakePackage):
             python_library = spec["python"].libs[0]
             python_include = spec["python"].headers.directories[0]
             numpy_include = join_path(
-                spec["py-numpy"].prefix, spec["python"].package.platlib, "numpy", "core", "include"
+                spec["py-numpy"].prefix, python_relative_platlib, "numpy", "core", "include"
             )
             cmake_args.extend(
                 [
