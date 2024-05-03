@@ -1006,26 +1006,7 @@ prefix for all packages in the environment.
    $ spack -e . concretize
    $ spack -e . install
 
-Once done, you can run ``python3`` directly from the view:
-
-.. code-block:: console
-
-   $ ./view/bin/python3
-   >>> import numpy
-
-There is no need to set ``PYTHONPATH`` or even activate the environment.
-
-If you're used to working with Python virtual environments, you can
-activate the Spack environment view as a virtual environment:
-
-.. code-block:: console
-
-   $ source ./view/bin/activate
-   $ python3
-   >>> import numpy
-
-Similarly, Spack itself provides the ``spack env activate`` command to activate
-an environment:
+Now you can activate the environment and start using the packages:
 
 .. code-block:: console
 
@@ -1033,10 +1014,28 @@ an environment:
    $ python3
    >>> import numpy
 
-In general, there should not be much of a difference. The only advantage
-of ``spack env activate`` is that it knows about more packages than just
-Python packages, and it may set additional runtime variables that are
-not covered by the virtual environment activation script.
+The environment view is also a virtual environment, which is useful if you are
+sharing the environment with others who are unfamiliar with Spack. They can
+either use the Python executable directly:
+
+.. code-block:: console
+
+   $ ./view/bin/python3
+   >>> import numpy
+
+or use the activation script:
+
+.. code-block:: console
+
+   $ source ./view/bin/activate
+   $ python3
+   >>> import numpy
+
+In general, there should not be much difference between ``spack env activate``
+and using the virtual environment. The main advantage of ``spack env activate``
+is that it knows about more packages than just Python packages, and it may set
+additional runtime variables that are not covered by the virtual environment
+activation script.
 
 See :ref:`environments` for a more in-depth description of Spack
 environments and customizations to views.
