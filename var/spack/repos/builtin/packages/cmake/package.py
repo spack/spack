@@ -637,7 +637,7 @@ class Cmake(Package):
     def install(self, spec, prefix):
         self.generator("install")
 
-        if spec.satisfies("%fj"):
+        if spec.satisfies("%fj") or spec.satisfies("%clang@11:"):
             for f in find(self.prefix, "FindMPI.cmake", recursive=True):
                 filter_file("mpcc_r)", "mpcc_r mpifcc)", f, string=True)
                 filter_file("mpc++_r)", "mpc++_r mpiFCC)", f, string=True)
