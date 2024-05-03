@@ -28,9 +28,10 @@ class Vacuumms(CMakePackage):
     version("develop", branch="develop")
 
     version(
-        "1.0.0",
-        sha256="c18fe52f5041880da7f50d3808d37afb3e9c936a56f80f67838d045bf7af372f",
-        deprecated=True,
+        "1.2.0",
+        sha256="1836e6c29d1e83a79f9c6a9b686d1419bd72618aba7c46d3d038373808519d56",
+        preferred=True,
+        deprecated=False,
     )
     version(
         "1.1.4",
@@ -38,10 +39,9 @@ class Vacuumms(CMakePackage):
         deprecated=False,
     )
     version(
-        "1.2.0",
-        sha256="1836e6c29d1e83a79f9c6a9b686d1419bd72618aba7c46d3d038373808519d56",
-        preferred=True,
-        deprecated=False,
+        "1.0.0",
+        sha256="c18fe52f5041880da7f50d3808d37afb3e9c936a56f80f67838d045bf7af372f",
+        deprecated=True,
     )
 
     variant("test", default=True, description="enable CMake testing")
@@ -52,7 +52,7 @@ class Vacuumms(CMakePackage):
     variant(
         "VOROPP_HOME",
         default="/opt/voropp",
-        description="""voro++ location""",
+        description="voro++ location",
         multi=False,
         when="+voronoi",
     )
