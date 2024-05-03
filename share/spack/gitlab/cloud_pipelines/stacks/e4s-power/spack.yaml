@@ -129,6 +129,7 @@ spack:
   - precice
   - pruners-ninja
   - pumi
+  - py-amrex
   - py-h5py
   - py-jupyterhub
   - py-libensemble

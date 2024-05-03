@@ -17,6 +17,7 @@ class PyFenicsBasix(PythonPackage):
     license("MIT")
 
     version("main", branch="main")
+    version("0.8.0", sha256="b299af82daf8fa3e4845e17f202491fe71b313bf6ab64c767a5287190b3dd7fe")
     version("0.7.0", sha256="9bee81b396ee452eec8d9735f278cb44cb6994c6bc30aec8ed9bb4b12d83fa7f")
     version("0.6.0", sha256="687ae53153c98facac4080dcdc7081701db1dcea8c5e7ae3feb72aec17f83304")
     version(
@@ -31,6 +32,7 @@ class PyFenicsBasix(PythonPackage):
     )
 
     depends_on("fenics-basix@main", type=("build", "run"), when="@main")
+    depends_on("fenics-basix@0.8.0", type=("build", "run"), when="@0.8.0")
     depends_on("fenics-basix@0.7.0", type=("build", "run"), when="@0.7.0")
     depends_on("fenics-basix@0.6.0", type=("build", "run"), when="@0.6.0")
     depends_on("fenics-basix@0.5.1", type=("build", "run"), when="@0.5.1")
@@ -41,7 +43,8 @@ class PyFenicsBasix(PythonPackage):
     depends_on("cmake@3.19:", when="@0.8:", type="build")
 
     # See python/pyproject.toml
-    depends_on("python@3.8:", when="@0.7:", type=("build", "run"))
+    depends_on("python@3.9:", when="@0.8:", type=("build", "run"))
+    depends_on("python@3.8:", when="@:0.7", type=("build", "run"))
     depends_on("py-numpy@1.21:", type=("build", "run"))
     depends_on("py-pybind11@2.9.1:", when="@:0.7", type="build")
     depends_on("py-setuptools@42:", when="@:0.7", type="build")
