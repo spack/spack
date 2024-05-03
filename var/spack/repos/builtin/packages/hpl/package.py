@@ -103,27 +103,30 @@ class Hpl(AutotoolsPackage):
     def configure_args(self):
         filter_file(r"^libs10=.*", "libs10=%s" % self.spec["blas"].libs.ld_flags, "configure")
 
+        cflags, ldflags = ["-O3"], []
         if "+openmp" in self.spec:
-            config = ["CFLAGS=-O3 " + self.compiler.openmp_flag]
-        else:
-            config = ["CFLAGS=-O3"]
+            cflags.append(self.compiler.openmp_flag)
 
         if (
             self.spec.satisfies("^intel-mkl")
             or self.spec.satisfies("^intel-oneapi-mkl")
             or self.spec.satisfies("^intel-parallel-studio+mkl")
         ):
-            config.append("LDFLAGS={0}".format(self.spec["blas"].libs.ld_flags))
+            ldflags.append(self.spec["blas"].libs.ld_flags)
 
         if "%aocc" in self.spec:
-            amd_ldflags = " "
             if "%aocc@3:" in self.spec:
-                amd_ldflags += "-lamdlibm -lm "
+                ldflags.extend(["-lamdlibm", "-lm"])
             if "%aocc@4:" in self.spec:
-                amd_ldflags += "-lamdalloc "
-            config.append("LDFLAGS=" + amd_ldflags)
+                ldflags.append("-lamdalloc")
 
-        return config
+        if self.spec["blas"].name == "fujitsu-ssl2" and (
+            self.spec.satisfies("%fj") or self.spec.satisfies("%clang@17:")
+        ):
+            cflags.append("-SSL2BLAMP")
+            ldflags.append("-SSL2BLAMP")
+
+        return ["CFLAGS={0}".format(" ".join(cflags)), "LDFLAGS={0}".format(" ".join(ldflags))]
 
     @when("@:2.2")
     def install(self, spec, prefix):
