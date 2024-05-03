@@ -264,16 +264,6 @@ class RocmOpenmpExtras(Package):
         depends_on(f"llvm-amdgpu@{ver}", when=f"@{ver}")
 
         resource(
-            name="rocm-device-libs",
-            url=f"{compute_url}/llvm-project/archive/rocm-{ver}.tar.gz",
-            sha256=versions_dict[ver]["devlib"],
-            expand=True,
-            destination="rocm-openmp-extras",
-            placement="rocm-device-libs",
-            when=f"@{ver}",
-        )
-
-        resource(
             name="flang",
             url=f"{tools_url}/flang/archive/rocm-{ver}.tar.gz",
             sha256=versions_dict[ver]["flang"],
@@ -303,6 +293,11 @@ class RocmOpenmpExtras(Package):
             when=f"@{ver}",
         )
     patch("0001-Linking-hsakmt-libdrm-and-numactl-libraries.patch", when="@5.7:6.0")
+    patch(
+        "0001-Linking-hsakmt-libdrm-and-numactl-libraries-6.1.patch",
+        working_dir="rocm-openmp-extras/llvm-project/openmp/libomptarget",
+        when="@6.1",
+    )
 
     def setup_run_environment(self, env):
         devlibs_prefix = self.spec["llvm-amdgpu"].prefix
@@ -351,6 +346,23 @@ class RocmOpenmpExtras(Package):
                 "{DEVICE_LIBS_DIR}",
                 aomp_extras.format(src) + "/aompextras/CMakeLists.txt",
                 libomptarget.format(src) + "/deviceRTLs/amdgcn/CMakeLists.txt",
+            )
+        if self.spec.satisfies("@6.1"):
+            filter_file(
+                r"${HSAKMT_LIB_PATH}",
+                "${HSAKMT_LIB_PATH} ${HSAKMT_LIB64}"
+                + "${HSAKMT_LIB} ${LIBDRM_LIB} ${NUMACTL_DIR}/lib",
+                libomptarget.format(src) + "/CMakeLists.txt",
+            )
+            filter_file(
+                r"${LIBOMPTARGET_LLVM_INCLUDE_DIRS}",
+                "${LIBOMPTARGET_LLVM_INCLUDE_DIRS} ${HSAKMT_INC_PATH}",
+                libomptarget.format(src) + "/../CMakeLists.txt",
+            )
+            filter_file(
+                r"${LIBOMPTARGET_LLVM_INCLUDE_DIRS}",
+                "${LIBOMPTARGET_LLVM_INCLUDE_DIRS} ${HSAKMT_INC_PATH}",
+                libomptarget.format(src) + "/CMakeLists.txt",
             )
 
         # Openmp adjustments
@@ -449,10 +461,13 @@ class RocmOpenmpExtras(Package):
         gfx_list = gfx_list.replace(" ", ";")
         openmp_extras_prefix = self.spec["rocm-openmp-extras"].prefix
         devlibs_prefix = self.spec["llvm-amdgpu"].prefix
-        devlibs_src = "{0}/rocm-openmp-extras/rocm-device-libs".format(src)
+        if self.spec.satisfies("@6.1"):
+            devlibs_src = "{0}/rocm-openmp-extras/llvm-project/amd/device-libs".format(src)
+        else:
+            devlibs_src = "{0}/rocm-openmp-extras/rocm-device-libs".format(src)
         hsa_prefix = self.spec["hsa-rocr-dev"].prefix
         hsakmt_prefix = self.spec["hsakmt-roct"].prefix
-        if self.spec.satisfies("@5.7:6.0"):
+        if self.spec.satisfies("@5.7:6.1"):
             libdrm_prefix = self.spec["libdrm"].prefix
             numactl_prefix = self.spec["numactl"].prefix
         comgr_prefix = self.spec["comgr"].prefix
@@ -532,7 +547,7 @@ class RocmOpenmpExtras(Package):
             "-DNEW_BC_PATH=1",
             "-DHSA_INCLUDE={0}/include/hsa".format(hsa_prefix),
         ]
-        if self.spec.satisfies("@5.7:6.0"):
+        if self.spec.satisfies("@5.7:6.1"):
             openmp_common_args += [
                 "-DLIBDRM_LIB={0}/lib".format(libdrm_prefix),
                 "-DHSAKMT_INC_PATH={0}/include".format(hsakmt_prefix),

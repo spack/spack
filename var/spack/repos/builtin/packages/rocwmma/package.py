@@ -27,6 +27,7 @@ class Rocwmma(CMakePackage):
     license("MIT")
 
     maintainers("srekolam", "renjithravindrankannath")
+    version("6.1.0", sha256="ca29f33cfe6894909159ad68d786eacd469febab33883886a202f13ae061f691")
     version("6.0.2", sha256="61c6cc095b4ac555f4be4b55f6a7e3194c8c54bffc57bfeb0c02191119ac5dc8")
     version("6.0.0", sha256="f9e97e7c6c552d43ef8c7348e4402bead2cd978d0f81a9657d6a0f6c83a6139b")
     version("5.7.1", sha256="a998a1385e6ad7062707ddb9ff82bef727ca48c39a10b4d861667024e3ffd2a3")
@@ -83,6 +84,7 @@ class Rocwmma(CMakePackage):
         "5.7.1",
         "6.0.0",
         "6.0.2",
+        "6.1.0",
     ]:
         depends_on("rocm-cmake@%s:" % ver, type="build", when="@" + ver)
         depends_on("llvm-amdgpu@" + ver, type="build", when="@" + ver)
@@ -90,7 +92,7 @@ class Rocwmma(CMakePackage):
         depends_on("rocblas@" + ver, type="build", when="@" + ver)
         depends_on("rocm-openmp-extras@" + ver, type="build", when="@" + ver)
 
-    for ver in ["5.6.0", "5.6.1", "5.7.0", "5.7.1", "6.0.0", "6.0.2"]:
+    for ver in ["5.6.0", "5.6.1", "5.7.0", "5.7.1", "6.0.0", "6.0.2", "6.1.0"]:
         depends_on("rocm-smi-lib@" + ver, when="@" + ver)
 
     for tgt in itertools.chain(["auto"], amdgpu_targets):

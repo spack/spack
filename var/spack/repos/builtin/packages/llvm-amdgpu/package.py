@@ -258,7 +258,7 @@ class LlvmAmdgpu(CMakePackage):
             args.append(self.define("LLVM_ENABLE_PROJECTS", llvm_projects))
             args.append(self.define("LLVM_ENABLE_RUNTIMES", llvm_runtimes))
             args.append(self.define("LLVM_ENABLE_LIBCXX", "OFF"))
-            args.append(self.define("CLANG_LINK_FLANG_LEGACY", True))
+            args.append(self.define("CLANG_LINK_FLANG_LEGACY", False))
             args.append(self.define("CMAKE_CXX_STANDARD", 17))
             args.append(self.define("FLANG_INCLUDE_DOCS", False))
             args.append(self.define("LLVM_BUILD_DOCS", "ON"))
