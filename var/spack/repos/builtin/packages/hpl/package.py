@@ -120,16 +120,13 @@ class Hpl(AutotoolsPackage):
             if "%aocc@4:" in self.spec:
                 ldflags.append("-lamdalloc")
 
-        if (
-            self.spec["blas"].name == "fujitsu-ssl2"
-            and (self.spec.satisfies("%fj")
-                 or self.spec.satisfies("%clang@17:"))
+        if self.spec["blas"].name == "fujitsu-ssl2" and (
+            self.spec.satisfies("%fj") or self.spec.satisfies("%clang@17:")
         ):
             cflags.append("-SSL2BLAMP")
             ldflags.append("-SSL2BLAMP")
 
-        return ["CFLAGS={0}".format(" ".join(cflags)),
-                "LDFLAGS={0}".format(" ".join(ldflags))]
+        return ["CFLAGS={0}".format(" ".join(cflags)), "LDFLAGS={0}".format(" ".join(ldflags))]
 
     @when("@:2.2")
     def install(self, spec, prefix):
