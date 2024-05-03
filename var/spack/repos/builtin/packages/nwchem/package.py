@@ -73,6 +73,8 @@ class Nwchem(Package):
     depends_on("lapack")
     depends_on("mpi")
     depends_on("armcimpi", when="armci=armcimpi")
+    depends_on("libfabric", when="armci=ofi")
+    depends_on("rdma-core", when="armci=openib")
     depends_on("scalapack")
     depends_on("fftw-api@3", when="+fftw3")
     depends_on("libxc", when="+libxc")
