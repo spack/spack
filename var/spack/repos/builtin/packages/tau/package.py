@@ -85,6 +85,7 @@ class Tau(Package):
     variant("level_zero", default=False, description="Activates Intel OneAPI Level Zero support")
     variant("rocprofiler", default=False, description="Activates ROCm rocprofiler support")
     variant("roctracer", default=False, description="Activates ROCm roctracer support")
+    variant("rocprofv2", default=False, description="Activates ROCm rocprofiler support")
     variant("opencl", default=False, description="Activates OpenCL support")
     variant("fortran", default=darwin_default, description="Activates Fortran support")
     variant("io", default=True, description="Activates POSIX I/O support")
@@ -140,6 +141,7 @@ class Tau(Package):
     depends_on("sqlite", when="+sqlite")
     depends_on("hwloc")
     depends_on("rocprofiler-dev", when="+rocprofiler")
+    depends_on("rocprofiler-dev@6.0.0:", when="@2.34: +rocprofv2")
     depends_on("roctracer-dev", when="+roctracer")
     depends_on("hsa-rocr-dev", when="+rocm")
     depends_on("rocm-smi-lib", when="@2.32.1: +rocm")
@@ -161,15 +163,18 @@ class Tau(Package):
     patch("unwind.patch", when="@2.29.0")
 
     conflicts("+rocprofiler", when="+roctracer", msg="Use either rocprofiler or roctracer")
+    conflicts("+rocprofv2", when="+rocprofiler", msg="Rocprofv2 does not need rocprofiler")
+    conflicts("+rocprofv2", when="+roctracer", msg="Rocprofv2 does not need roctracer")
     requires("+rocm", when="+rocprofiler", msg="Rocprofiler requires ROCm")
     requires("+rocm", when="+roctracer", msg="Roctracer requires ROCm")
 
     requires(
         "+rocprofiler",
         "+roctracer",
+        "+rocprofv2",
         policy="one_of",
         when="+rocm",
-        msg="When using ROCm, you need to select either +rocprofiler or +roctracer",
+        msg="Using ROCm, select either +rocprofiler, +roctracer or +rocprofv2",
     )
 
     filter_compiler_wrappers("Makefile", relative_root="include")
@@ -344,6 +349,10 @@ class Tau(Package):
             if spec.satisfies("@2.34:"):
                 options.append("-hip=%s" % spec["hip"].prefix)
 
+        if "+rocprofv2" in spec:
+            options.append("-rocprofiler=%s" % spec["rocprofiler-dev"].prefix)
+            options.append("-rocprofv2")
+
         if "+adios2" in spec:
             options.append("-adios=%s" % spec["adios2"].prefix)
 
@@ -442,9 +451,9 @@ class Tau(Package):
     syscall_test = join_path("examples", "syscall")
     ompt_test = join_path("examples", "openmp", "c++")
     python_test = join_path("examples", "python")
+    disable_tests = False
 
-    # Disabled, see PR#43682 comments
-    # @run_after("install")
+    @run_after("install")
     def setup_build_tests(self):
         """Copy the build test files after the package is installed to an
         install test subdirectory for use during `spack test run`."""
@@ -466,157 +475,106 @@ class Tau(Package):
         if "+python" in self.spec:
             self.cache_extra_test_sources(self.python_test)
 
-    def _run_dyninst_test(self, test_dir):
-        dyn_dir = join_path(test_dir, self.dyninst_test)
-        flags = "serial"
-        if "+mpi" in self.spec:
-            flags = "mpi"
-        self.run_test("make", ["all"], [], 0, False, "Build example code", False, dyn_dir)
-        self.run_test(
-            "tau_run",
-            ["-T", flags, "./klargest", "-v", "-o", "./klargest.i"],
-            [],
-            0,
-            False,
-            "Instrument code with dyninst",
-            False,
-            dyn_dir,
-        )
-        self.run_test(
-            "./klargest.i", [], [], 0, False, "Execute instrumented code", False, dyn_dir
-        )
-        self.run_test(
-            "pprof",
-            [],
-            [],
-            0,
-            False,
-            "Run pprof profile analysis tool on profile output",
-            False,
-            dyn_dir,
-        )
-
-    def _run_tau_test(
-        self, main_test_dir, test_dir, test_name, test_exe, tau_exec_flags=[], use_tau_exec=False
-    ):
-        inst_test_dir = join_path(main_test_dir, test_dir)
-        print(inst_test_dir)
-        test_description = "Build {} test code".format(test_name)
-        self.run_test("make", ["all"], [], 0, False, test_description, False, inst_test_dir)
-        if "+mpi" in self.spec:
-            if use_tau_exec:
-                test_args = ["-n", "4", "tau_exec", "-T", "mpi"] + tau_exec_flags
+    def _run_python_test(self, test_name, purpose, work_dir):
+        tau_python = which(self.prefix.bin.tau_python)
+        tau_py_inter = "-tau-python-interpreter=" + self.spec["python"].prefix.bin.python
+        pprof = which(self.prefix.bin.pprof)
+        with test_part(self, f"{test_name}", purpose, work_dir):
+            if "+mpi" in self.spec:
+                flag = "mpi"
+                mpirun = which(self.spec["mpi"].prefix.bin.mpirun)
+                mpirun(
+                    "-np",
+                    "4",
+                    self.prefix.bin.tau_python,
+                    tau_py_inter,
+                    "-T",
+                    flag,
+                    "firstprime.py",
+                )
             else:
-                test_args = ["-n", "4"] + tau_exec_flags
-            test_args.append(test_exe)
-            mpiexe_list = ["mpirun", "mpiexec", "srun"]
-            for mpiexe in mpiexe_list:
-                if which(mpiexe) is not None:
-                    test_description = "Run {} test with mpi".format(test_name)
-                    self.run_test(
-                        mpiexe, test_args, [], 0, False, test_description, False, inst_test_dir
-                    )
-                    break
-        else:
-            if use_tau_exec:
-                test_app = "tau_exec"
-                test_args = ["-T", "serial"] + tau_exec_flags
-                test_args.append(test_exe)
+                flag = "serial"
+                tau_python(tau_py_inter, "-T", flag, "firstprime.py")
+            pprof()
+
+    def _run_default_test(self, test_name, purpose, work_dir):
+        tau_exec = which(self.prefix.bin.tau_exec)
+        pprof = which(self.prefix.bin.pprof)
+        with test_part(self, f"{test_name}", purpose, work_dir):
+            make("all")
+            if "+mpi" in self.spec:
+                flags = ["-T", "mpi"]
+                mpirun = which(self.spec["mpi"].prefix.bin.mpirun)
+                mpirun("-np", "4", self.prefix.bin.tau_exec, *flags, "./matmult")
             else:
-                test_app = test_exe
-                test_args = []
-            test_description = "Run sequential {} test".format(test_name)
-            self.run_test(
-                test_app, test_args, [], 0, False, test_description, False, inst_test_dir
-            )
-        self.run_test(
-            "pprof",
-            [],
-            [],
-            0,
-            False,
-            "Run pprof profile analysis tool on profile output",
-            False,
-            inst_test_dir,
-        )
+                flags = ["-T", "serial"]
+                tau_exec(*flags, "./matmult")
+            pprof()
 
-    def _run_python_test(self, test_dir):
-        python_dir = join_path(test_dir, self.python_test)
-        flags = "serial"
-        if "+mpi" in self.spec:
-            flags = "mpi"
-        self.run_test(
-            "tau_python",
-            ["-T", flags, "firstprime.py"],
-            [],
-            0,
-            False,
-            "Pyhon example",
-            False,
-            python_dir,
-        )
-        self.run_test(
-            "pprof",
-            [],
-            [],
-            0,
-            False,
-            "Run pprof profile analysis tool on profile output",
-            False,
-            python_dir,
-        )
+    def _run_ompt_test(self, test_name, purpose, work_dir):
+        tau_exec = which(self.prefix.bin.tau_exec)
+        pprof = which(self.prefix.bin.pprof)
+        with test_part(self, f"{test_name}", purpose, work_dir):
+            make("all")
+            if "+mpi" in self.spec:
+                flags = ["-T", "mpi", "-ompt"]
+                mpirun = which(self.spec["mpi"].prefix.bin.mpirun)
+                mpirun("-np", "4", self.prefix.bin.tau_exec, *flags, "./mandel")
+            else:
+                flags = ["-T", "serial", "-ompt"]
+                tau_exec(*flags, "./mandel")
+            pprof()
 
-    def test(self):
-        # Temporarily disable tests, will update them with the new test method.
-        return
-        test_dir = self.test_suite.current_test_cache_dir
-        # Run mm test program pulled from the build
-        if "+ompt" in self.spec:
-            tau_exec_flags = ["-ompt"]
-            self._run_tau_test(test_dir, self.ompt_test, "OMPT example", "mandel", tau_exec_flags)
-        else:
-            self._run_tau_test(test_dir, self.matmult_test, "matrix multiplication", "matmult")
-        if "+dyninst" in self.spec:
-            self._run_dyninst_test(test_dir)
+    def _run_rocm_test(self, test_name, purpose, work_dir):
+        tau_exec = which(self.prefix.bin.tau_exec)
+        pprof = which(self.prefix.bin.pprof)
+        with test_part(self, f"{test_name}", purpose, work_dir):
+            make("all")
+            if "+mpi" in self.spec:
+                flags = ["-T", "mpi", "-rocm"]
+                mpirun = which(self.spec["mpi"].prefix.bin.mpirun)
+                mpirun("-np", "4", self.prefix.bin.tau_exec, *flags, "./gpu-stream-hip")
+            else:
+                flags = ["-T", "serial", "-rocm"]
+                tau_exec(*flags, "./gpu-stream-hip")
+            pprof()
+
+    def test_python(self):
+        """test python variant"""
+        if self.disable_tests:
+            return
         if "+python" in self.spec:
-            self._run_python_test(test_dir)
-        if "+cuda" in self.spec:
-            tau_exec_flags = ["-cupti"]
-            self._run_tau_test(
-                test_dir,
-                self.cuda_test,
-                "CUDA example",
-                "dataElem_um",
-                tau_exec_flags,
-                use_tau_exec=True,
-            )
-        if "+level_zero" in self.spec:
-            tau_exec_flags = ["-l0"]
-            self._run_tau_test(
-                test_dir,
-                self.level_zero_test,
-                "Level Zero example",
-                "complex_mult.exe",
-                tau_exec_flags,
-                use_tau_exec=True,
-            )
-        if "+rocm" in self.spec and ("+rocprofiler" in self.spec or "+roctracer" in self.spec):
-            tau_exec_flags = ["-rocm"]
-            self._run_tau_test(
-                test_dir,
-                self.rocm_test,
-                "Rocm example",
-                "vectoradd_hip.exe",
-                tau_exec_flags,
-                use_tau_exec=True,
-            )
-        if "+syscall" in self.spec:
-            tau_exec_flags = ["-syscall"]
-            self._run_tau_test(
-                test_dir,
-                self.syscall_test,
-                "Syscall example",
-                "syscall_test",
-                tau_exec_flags,
-                use_tau_exec=True,
-            )
+            # current_test_cache_dir.examples.python
+            python_test_dir = join_path(self.test_suite.current_test_cache_dir, self.python_test)
+            self._run_python_test("test_tau_python", "Testing tau_python", python_test_dir)
+
+    def test_default(self):
+        """default matmult test"""
+        if self.disable_tests:
+            return
+        if "+ompt" in self.spec:
+            return
+        default_test_dir = join_path(self.test_suite.current_test_cache_dir, self.matmult_test)
+        self._run_default_test("test_default", "Testing TAU", default_test_dir)
+
+    def test_ompt(self):
+        """ompt test"""
+        if self.disable_tests:
+            return
+        if "+ompt" in self.spec:
+            ompt_test_dir = join_path(self.test_suite.current_test_cache_dir, self.ompt_test)
+            self._run_ompt_test("test_ompt", "Testing ompt", ompt_test_dir)
+
+    def test_rocm(self):
+        """rocm test"""
+        # Disabled, see PR#43682
+        # make is unable to find rocm_agent_enumerator
+        # when testing, with spack load, there is no issue
+        return
+        if self.disable_tests:
+            return
+        if "+rocm" in self.spec and (
+            "+rocprofiler" in self.spec or "+roctracer" in self.spec or "+rocprofv2" in self.spec
+        ):
+            rocm_test_dir = join_path(self.test_suite.current_test_cache_dir, self.rocm_test)
+            self._run_rocm_test("test_rocm", "Testing rocm", rocm_test_dir)
