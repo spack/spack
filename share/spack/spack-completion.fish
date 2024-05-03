@@ -660,7 +660,7 @@ complete -c spack -n '__fish_spack_using_command bootstrap mirror' -l dev -f -a 
 complete -c spack -n '__fish_spack_using_command bootstrap mirror' -l dev -d 'download dev dependencies too'
 
 # spack build-env
-set -g __fish_spack_optspecs_spack_build_env h/help clean dirty U/fresh reuse reuse-deps deprecated dump= pickle=
+set -g __fish_spack_optspecs_spack_build_env h/help clean dirty U/fresh reuse fresh-roots deprecated dump= pickle=
 complete -c spack -n '__fish_spack_using_command_pos_remainder 0 build-env' -f -a '(__fish_spack_build_env_spec)'
 complete -c spack -n '__fish_spack_using_command build-env' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command build-env' -s h -l help -d 'show this help message and exit'
@@ -672,8 +672,8 @@ complete -c spack -n '__fish_spack_using_command build-env' -s U -l fresh -f -a 
 complete -c spack -n '__fish_spack_using_command build-env' -s U -l fresh -d 'do not reuse installed deps; build newest configuration'
 complete -c spack -n '__fish_spack_using_command build-env' -l reuse -f -a concretizer_reuse
 complete -c spack -n '__fish_spack_using_command build-env' -l reuse -d 'reuse installed packages/buildcaches when possible'
-complete -c spack -n '__fish_spack_using_command build-env' -l reuse-deps -f -a concretizer_reuse
-complete -c spack -n '__fish_spack_using_command build-env' -l reuse-deps -d 'reuse installed dependencies only'
+complete -c spack -n '__fish_spack_using_command build-env' -l fresh-roots -l reuse-deps -f -a concretizer_reuse
+complete -c spack -n '__fish_spack_using_command build-env' -l fresh-roots -l reuse-deps -d 'concretize with fresh roots and reused dependencies'
 complete -c spack -n '__fish_spack_using_command build-env' -l deprecated -f -a config_deprecated
 complete -c spack -n '__fish_spack_using_command build-env' -l deprecated -d 'allow concretizer to select deprecated versions'
 complete -c spack -n '__fish_spack_using_command build-env' -l dump -r -f -a dump
@@ -1128,7 +1128,7 @@ complete -c spack -n '__fish_spack_using_command compilers' -l scope -r -f -a '_
 complete -c spack -n '__fish_spack_using_command compilers' -l scope -r -d 'configuration scope to read/modify'
 
 # spack concretize
-set -g __fish_spack_optspecs_spack_concretize h/help f/force test= q/quiet U/fresh reuse reuse-deps deprecated j/jobs=
+set -g __fish_spack_optspecs_spack_concretize h/help f/force test= q/quiet U/fresh reuse fresh-roots deprecated j/jobs=
 complete -c spack -n '__fish_spack_using_command concretize' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command concretize' -s h -l help -d 'show this help message and exit'
 complete -c spack -n '__fish_spack_using_command concretize' -s f -l force -f -a force
@@ -1141,15 +1141,15 @@ complete -c spack -n '__fish_spack_using_command concretize' -s U -l fresh -f -a
 complete -c spack -n '__fish_spack_using_command concretize' -s U -l fresh -d 'do not reuse installed deps; build newest configuration'
 complete -c spack -n '__fish_spack_using_command concretize' -l reuse -f -a concretizer_reuse
 complete -c spack -n '__fish_spack_using_command concretize' -l reuse -d 'reuse installed packages/buildcaches when possible'
-complete -c spack -n '__fish_spack_using_command concretize' -l reuse-deps -f -a concretizer_reuse
-complete -c spack -n '__fish_spack_using_command concretize' -l reuse-deps -d 'reuse installed dependencies only'
+complete -c spack -n '__fish_spack_using_command concretize' -l fresh-roots -l reuse-deps -f -a concretizer_reuse
+complete -c spack -n '__fish_spack_using_command concretize' -l fresh-roots -l reuse-deps -d 'concretize with fresh roots and reused dependencies'
 complete -c spack -n '__fish_spack_using_command concretize' -l deprecated -f -a config_deprecated
 complete -c spack -n '__fish_spack_using_command concretize' -l deprecated -d 'allow concretizer to select deprecated versions'
 complete -c spack -n '__fish_spack_using_command concretize' -s j -l jobs -r -f -a jobs
 complete -c spack -n '__fish_spack_using_command concretize' -s j -l jobs -r -d 'explicitly set number of parallel jobs'
 
 # spack concretise
-set -g __fish_spack_optspecs_spack_concretise h/help f/force test= q/quiet U/fresh reuse reuse-deps deprecated j/jobs=
+set -g __fish_spack_optspecs_spack_concretise h/help f/force test= q/quiet U/fresh reuse fresh-roots deprecated j/jobs=
 complete -c spack -n '__fish_spack_using_command concretise' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command concretise' -s h -l help -d 'show this help message and exit'
 complete -c spack -n '__fish_spack_using_command concretise' -s f -l force -f -a force
@@ -1162,8 +1162,8 @@ complete -c spack -n '__fish_spack_using_command concretise' -s U -l fresh -f -a
 complete -c spack -n '__fish_spack_using_command concretise' -s U -l fresh -d 'do not reuse installed deps; build newest configuration'
 complete -c spack -n '__fish_spack_using_command concretise' -l reuse -f -a concretizer_reuse
 complete -c spack -n '__fish_spack_using_command concretise' -l reuse -d 'reuse installed packages/buildcaches when possible'
-complete -c spack -n '__fish_spack_using_command concretise' -l reuse-deps -f -a concretizer_reuse
-complete -c spack -n '__fish_spack_using_command concretise' -l reuse-deps -d 'reuse installed dependencies only'
+complete -c spack -n '__fish_spack_using_command concretise' -l fresh-roots -l reuse-deps -f -a concretizer_reuse
+complete -c spack -n '__fish_spack_using_command concretise' -l fresh-roots -l reuse-deps -d 'concretize with fresh roots and reused dependencies'
 complete -c spack -n '__fish_spack_using_command concretise' -l deprecated -f -a config_deprecated
 complete -c spack -n '__fish_spack_using_command concretise' -l deprecated -d 'allow concretizer to select deprecated versions'
 complete -c spack -n '__fish_spack_using_command concretise' -s j -l jobs -r -f -a jobs
@@ -1375,7 +1375,7 @@ complete -c spack -n '__fish_spack_using_command deprecate' -s l -l link-type -r
 complete -c spack -n '__fish_spack_using_command deprecate' -s l -l link-type -r -d 'type of filesystem link to use for deprecation (default soft)'
 
 # spack dev-build
-set -g __fish_spack_optspecs_spack_dev_build h/help j/jobs= n/no-checksum d/source-path= i/ignore-dependencies keep-prefix skip-patch q/quiet drop-in= test= b/before= u/until= clean dirty U/fresh reuse reuse-deps deprecated
+set -g __fish_spack_optspecs_spack_dev_build h/help j/jobs= n/no-checksum d/source-path= i/ignore-dependencies keep-prefix skip-patch q/quiet drop-in= test= b/before= u/until= clean dirty U/fresh reuse fresh-roots deprecated
 complete -c spack -n '__fish_spack_using_command_pos_remainder 0 dev-build' -f -k -a '(__fish_spack_specs)'
 complete -c spack -n '__fish_spack_using_command dev-build' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command dev-build' -s h -l help -d 'show this help message and exit'
@@ -1409,8 +1409,8 @@ complete -c spack -n '__fish_spack_using_command dev-build' -s U -l fresh -f -a 
 complete -c spack -n '__fish_spack_using_command dev-build' -s U -l fresh -d 'do not reuse installed deps; build newest configuration'
 complete -c spack -n '__fish_spack_using_command dev-build' -l reuse -f -a concretizer_reuse
 complete -c spack -n '__fish_spack_using_command dev-build' -l reuse -d 'reuse installed packages/buildcaches when possible'
-complete -c spack -n '__fish_spack_using_command dev-build' -l reuse-deps -f -a concretizer_reuse
-complete -c spack -n '__fish_spack_using_command dev-build' -l reuse-deps -d 'reuse installed dependencies only'
+complete -c spack -n '__fish_spack_using_command dev-build' -l fresh-roots -l reuse-deps -f -a concretizer_reuse
+complete -c spack -n '__fish_spack_using_command dev-build' -l fresh-roots -l reuse-deps -d 'concretize with fresh roots and reused dependencies'
 complete -c spack -n '__fish_spack_using_command dev-build' -l deprecated -f -a config_deprecated
 complete -c spack -n '__fish_spack_using_command dev-build' -l deprecated -d 'allow concretizer to select deprecated versions'
 
@@ -1727,7 +1727,7 @@ complete -c spack -n '__fish_spack_using_command external read-cray-manifest' -l
 complete -c spack -n '__fish_spack_using_command external read-cray-manifest' -l fail-on-error -d 'if a manifest file cannot be parsed, fail and report the full stack trace'
 
 # spack fetch
-set -g __fish_spack_optspecs_spack_fetch h/help n/no-checksum m/missing D/dependencies U/fresh reuse reuse-deps deprecated
+set -g __fish_spack_optspecs_spack_fetch h/help n/no-checksum m/missing D/dependencies U/fresh reuse fresh-roots deprecated
 complete -c spack -n '__fish_spack_using_command_pos_remainder 0 fetch' -f -k -a '(__fish_spack_specs)'
 complete -c spack -n '__fish_spack_using_command fetch' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command fetch' -s h -l help -d 'show this help message and exit'
@@ -1741,8 +1741,8 @@ complete -c spack -n '__fish_spack_using_command fetch' -s U -l fresh -f -a conc
 complete -c spack -n '__fish_spack_using_command fetch' -s U -l fresh -d 'do not reuse installed deps; build newest configuration'
 complete -c spack -n '__fish_spack_using_command fetch' -l reuse -f -a concretizer_reuse
 complete -c spack -n '__fish_spack_using_command fetch' -l reuse -d 'reuse installed packages/buildcaches when possible'
-complete -c spack -n '__fish_spack_using_command fetch' -l reuse-deps -f -a concretizer_reuse
-complete -c spack -n '__fish_spack_using_command fetch' -l reuse-deps -d 'reuse installed dependencies only'
+complete -c spack -n '__fish_spack_using_command fetch' -l fresh-roots -l reuse-deps -f -a concretizer_reuse
+complete -c spack -n '__fish_spack_using_command fetch' -l fresh-roots -l reuse-deps -d 'concretize with fresh roots and reused dependencies'
 complete -c spack -n '__fish_spack_using_command fetch' -l deprecated -f -a config_deprecated
 complete -c spack -n '__fish_spack_using_command fetch' -l deprecated -d 'allow concretizer to select deprecated versions'
 
@@ -1973,7 +1973,7 @@ complete -c spack -n '__fish_spack_using_command info' -l variants-by-name -f -a
 complete -c spack -n '__fish_spack_using_command info' -l variants-by-name -d 'list variants in strict name order; don\'t group by condition'
 
 # spack install
-set -g __fish_spack_optspecs_spack_install h/help only= u/until= j/jobs= overwrite fail-fast keep-prefix keep-stage dont-restage use-cache no-cache cache-only use-buildcache= include-build-deps no-check-signature show-log-on-error source n/no-checksum v/verbose fake only-concrete add no-add f/file= clean dirty test= log-format= log-file= help-cdash cdash-upload-url= cdash-build= cdash-site= cdash-track= cdash-buildstamp= y/yes-to-all U/fresh reuse reuse-deps deprecated
+set -g __fish_spack_optspecs_spack_install h/help only= u/until= j/jobs= overwrite fail-fast keep-prefix keep-stage dont-restage use-cache no-cache cache-only use-buildcache= include-build-deps no-check-signature show-log-on-error source n/no-checksum v/verbose fake only-concrete add no-add f/file= clean dirty test= log-format= log-file= help-cdash cdash-upload-url= cdash-build= cdash-site= cdash-track= cdash-buildstamp= y/yes-to-all U/fresh reuse fresh-roots deprecated
 complete -c spack -n '__fish_spack_using_command_pos_remainder 0 install' -f -k -a '(__fish_spack_specs)'
 complete -c spack -n '__fish_spack_using_command install' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command install' -s h -l help -d 'show this help message and exit'
@@ -2046,8 +2046,8 @@ complete -c spack -n '__fish_spack_using_command install' -s U -l fresh -f -a co
 complete -c spack -n '__fish_spack_using_command install' -s U -l fresh -d 'do not reuse installed deps; build newest configuration'
 complete -c spack -n '__fish_spack_using_command install' -l reuse -f -a concretizer_reuse
 complete -c spack -n '__fish_spack_using_command install' -l reuse -d 'reuse installed packages/buildcaches when possible'
-complete -c spack -n '__fish_spack_using_command install' -l reuse-deps -f -a concretizer_reuse
-complete -c spack -n '__fish_spack_using_command install' -l reuse-deps -d 'reuse installed dependencies only'
+complete -c spack -n '__fish_spack_using_command install' -l fresh-roots -l reuse-deps -f -a concretizer_reuse
+complete -c spack -n '__fish_spack_using_command install' -l fresh-roots -l reuse-deps -d 'concretize with fresh roots and reused dependencies'
 complete -c spack -n '__fish_spack_using_command install' -l deprecated -f -a config_deprecated
 complete -c spack -n '__fish_spack_using_command install' -l deprecated -d 'allow concretizer to select deprecated versions'
 
@@ -2220,7 +2220,7 @@ complete -c spack -n '__fish_spack_using_command mirror' -s n -l no-checksum -f 
 complete -c spack -n '__fish_spack_using_command mirror' -s n -l no-checksum -d 'do not use checksums to verify downloaded files (unsafe)'
 
 # spack mirror create
-set -g __fish_spack_optspecs_spack_mirror_create h/help d/directory= a/all f/file= exclude-file= exclude-specs= skip-unstable-versions D/dependencies n/versions-per-spec= private U/fresh reuse reuse-deps deprecated
+set -g __fish_spack_optspecs_spack_mirror_create h/help d/directory= a/all f/file= exclude-file= exclude-specs= skip-unstable-versions D/dependencies n/versions-per-spec= private U/fresh reuse fresh-roots deprecated
 complete -c spack -n '__fish_spack_using_command_pos_remainder 0 mirror create' -f -k -a '(__fish_spack_specs)'
 complete -c spack -n '__fish_spack_using_command mirror create' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command mirror create' -s h -l help -d 'show this help message and exit'
@@ -2246,8 +2246,8 @@ complete -c spack -n '__fish_spack_using_command mirror create' -s U -l fresh -f
 complete -c spack -n '__fish_spack_using_command mirror create' -s U -l fresh -d 'do not reuse installed deps; build newest configuration'
 complete -c spack -n '__fish_spack_using_command mirror create' -l reuse -f -a concretizer_reuse
 complete -c spack -n '__fish_spack_using_command mirror create' -l reuse -d 'reuse installed packages/buildcaches when possible'
-complete -c spack -n '__fish_spack_using_command mirror create' -l reuse-deps -f -a concretizer_reuse
-complete -c spack -n '__fish_spack_using_command mirror create' -l reuse-deps -d 'reuse installed dependencies only'
+complete -c spack -n '__fish_spack_using_command mirror create' -l fresh-roots -l reuse-deps -f -a concretizer_reuse
+complete -c spack -n '__fish_spack_using_command mirror create' -l fresh-roots -l reuse-deps -d 'concretize with fresh roots and reused dependencies'
 complete -c spack -n '__fish_spack_using_command mirror create' -l deprecated -f -a config_deprecated
 complete -c spack -n '__fish_spack_using_command mirror create' -l deprecated -d 'allow concretizer to select deprecated versions'
 
@@ -2509,7 +2509,7 @@ complete -c spack -n '__fish_spack_using_command module tcl setdefault' -s h -l 
 complete -c spack -n '__fish_spack_using_command module tcl setdefault' -s h -l help -d 'show this help message and exit'
 
 # spack patch
-set -g __fish_spack_optspecs_spack_patch h/help n/no-checksum U/fresh reuse reuse-deps deprecated
+set -g __fish_spack_optspecs_spack_patch h/help n/no-checksum U/fresh reuse fresh-roots deprecated
 complete -c spack -n '__fish_spack_using_command_pos_remainder 0 patch' -f -k -a '(__fish_spack_specs)'
 complete -c spack -n '__fish_spack_using_command patch' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command patch' -s h -l help -d 'show this help message and exit'
@@ -2519,8 +2519,8 @@ complete -c spack -n '__fish_spack_using_command patch' -s U -l fresh -f -a conc
 complete -c spack -n '__fish_spack_using_command patch' -s U -l fresh -d 'do not reuse installed deps; build newest configuration'
 complete -c spack -n '__fish_spack_using_command patch' -l reuse -f -a concretizer_reuse
 complete -c spack -n '__fish_spack_using_command patch' -l reuse -d 'reuse installed packages/buildcaches when possible'
-complete -c spack -n '__fish_spack_using_command patch' -l reuse-deps -f -a concretizer_reuse
-complete -c spack -n '__fish_spack_using_command patch' -l reuse-deps -d 'reuse installed dependencies only'
+complete -c spack -n '__fish_spack_using_command patch' -l fresh-roots -l reuse-deps -f -a concretizer_reuse
+complete -c spack -n '__fish_spack_using_command patch' -l fresh-roots -l reuse-deps -d 'concretize with fresh roots and reused dependencies'
 complete -c spack -n '__fish_spack_using_command patch' -l deprecated -f -a config_deprecated
 complete -c spack -n '__fish_spack_using_command patch' -l deprecated -d 'allow concretizer to select deprecated versions'
 
@@ -2735,7 +2735,7 @@ complete -c spack -n '__fish_spack_using_command restage' -s h -l help -f -a hel
 complete -c spack -n '__fish_spack_using_command restage' -s h -l help -d 'show this help message and exit'
 
 # spack solve
-set -g __fish_spack_optspecs_spack_solve h/help show= l/long L/very-long N/namespaces I/install-status no-install-status y/yaml j/json c/cover= t/types timers stats U/fresh reuse reuse-deps deprecated
+set -g __fish_spack_optspecs_spack_solve h/help show= l/long L/very-long N/namespaces I/install-status no-install-status y/yaml j/json c/cover= t/types timers stats U/fresh reuse fresh-roots deprecated
 complete -c spack -n '__fish_spack_using_command_pos_remainder 0 solve' -f -k -a '(__fish_spack_specs_or_id)'
 complete -c spack -n '__fish_spack_using_command solve' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command solve' -s h -l help -d 'show this help message and exit'
@@ -2767,13 +2767,13 @@ complete -c spack -n '__fish_spack_using_command solve' -s U -l fresh -f -a conc
 complete -c spack -n '__fish_spack_using_command solve' -s U -l fresh -d 'do not reuse installed deps; build newest configuration'
 complete -c spack -n '__fish_spack_using_command solve' -l reuse -f -a concretizer_reuse
 complete -c spack -n '__fish_spack_using_command solve' -l reuse -d 'reuse installed packages/buildcaches when possible'
-complete -c spack -n '__fish_spack_using_command solve' -l reuse-deps -f -a concretizer_reuse
-complete -c spack -n '__fish_spack_using_command solve' -l reuse-deps -d 'reuse installed dependencies only'
+complete -c spack -n '__fish_spack_using_command solve' -l fresh-roots -l reuse-deps -f -a concretizer_reuse
+complete -c spack -n '__fish_spack_using_command solve' -l fresh-roots -l reuse-deps -d 'concretize with fresh roots and reused dependencies'
 complete -c spack -n '__fish_spack_using_command solve' -l deprecated -f -a config_deprecated
 complete -c spack -n '__fish_spack_using_command solve' -l deprecated -d 'allow concretizer to select deprecated versions'
 
 # spack spec
-set -g __fish_spack_optspecs_spack_spec h/help l/long L/very-long N/namespaces I/install-status no-install-status y/yaml j/json format= c/cover= t/types U/fresh reuse reuse-deps deprecated
+set -g __fish_spack_optspecs_spack_spec h/help l/long L/very-long N/namespaces I/install-status no-install-status y/yaml j/json format= c/cover= t/types U/fresh reuse fresh-roots deprecated
 complete -c spack -n '__fish_spack_using_command_pos_remainder 0 spec' -f -k -a '(__fish_spack_specs_or_id)'
 complete -c spack -n '__fish_spack_using_command spec' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command spec' -s h -l help -d 'show this help message and exit'
@@ -2801,13 +2801,13 @@ complete -c spack -n '__fish_spack_using_command spec' -s U -l fresh -f -a concr
 complete -c spack -n '__fish_spack_using_command spec' -s U -l fresh -d 'do not reuse installed deps; build newest configuration'
 complete -c spack -n '__fish_spack_using_command spec' -l reuse -f -a concretizer_reuse
 complete -c spack -n '__fish_spack_using_command spec' -l reuse -d 'reuse installed packages/buildcaches when possible'
-complete -c spack -n '__fish_spack_using_command spec' -l reuse-deps -f -a concretizer_reuse
-complete -c spack -n '__fish_spack_using_command spec' -l reuse-deps -d 'reuse installed dependencies only'
+complete -c spack -n '__fish_spack_using_command spec' -l fresh-roots -l reuse-deps -f -a concretizer_reuse
+complete -c spack -n '__fish_spack_using_command spec' -l fresh-roots -l reuse-deps -d 'concretize with fresh roots and reused dependencies'
 complete -c spack -n '__fish_spack_using_command spec' -l deprecated -f -a config_deprecated
 complete -c spack -n '__fish_spack_using_command spec' -l deprecated -d 'allow concretizer to select deprecated versions'
 
 # spack stage
-set -g __fish_spack_optspecs_spack_stage h/help n/no-checksum p/path= U/fresh reuse reuse-deps deprecated
+set -g __fish_spack_optspecs_spack_stage h/help n/no-checksum p/path= U/fresh reuse fresh-roots deprecated
 complete -c spack -n '__fish_spack_using_command_pos_remainder 0 stage' -f -k -a '(__fish_spack_specs_or_id)'
 complete -c spack -n '__fish_spack_using_command stage' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command stage' -s h -l help -d 'show this help message and exit'
@@ -2819,8 +2819,8 @@ complete -c spack -n '__fish_spack_using_command stage' -s U -l fresh -f -a conc
 complete -c spack -n '__fish_spack_using_command stage' -s U -l fresh -d 'do not reuse installed deps; build newest configuration'
 complete -c spack -n '__fish_spack_using_command stage' -l reuse -f -a concretizer_reuse
 complete -c spack -n '__fish_spack_using_command stage' -l reuse -d 'reuse installed packages/buildcaches when possible'
-complete -c spack -n '__fish_spack_using_command stage' -l reuse-deps -f -a concretizer_reuse
-complete -c spack -n '__fish_spack_using_command stage' -l reuse-deps -d 'reuse installed dependencies only'
+complete -c spack -n '__fish_spack_using_command stage' -l fresh-roots -l reuse-deps -f -a concretizer_reuse
+complete -c spack -n '__fish_spack_using_command stage' -l fresh-roots -l reuse-deps -d 'concretize with fresh roots and reused dependencies'
 complete -c spack -n '__fish_spack_using_command stage' -l deprecated -f -a config_deprecated
 complete -c spack -n '__fish_spack_using_command stage' -l deprecated -d 'allow concretizer to select deprecated versions'
 
@@ -2939,7 +2939,7 @@ complete -c spack -n '__fish_spack_using_command test remove' -s y -l yes-to-all
 complete -c spack -n '__fish_spack_using_command test remove' -s y -l yes-to-all -d 'assume "yes" is the answer to every confirmation request'
 
 # spack test-env
-set -g __fish_spack_optspecs_spack_test_env h/help clean dirty U/fresh reuse reuse-deps deprecated dump= pickle=
+set -g __fish_spack_optspecs_spack_test_env h/help clean dirty U/fresh reuse fresh-roots deprecated dump= pickle=
 complete -c spack -n '__fish_spack_using_command_pos_remainder 0 test-env' -f -a '(__fish_spack_build_env_spec)'
 complete -c spack -n '__fish_spack_using_command test-env' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command test-env' -s h -l help -d 'show this help message and exit'
@@ -2951,8 +2951,8 @@ complete -c spack -n '__fish_spack_using_command test-env' -s U -l fresh -f -a c
 complete -c spack -n '__fish_spack_using_command test-env' -s U -l fresh -d 'do not reuse installed deps; build newest configuration'
 complete -c spack -n '__fish_spack_using_command test-env' -l reuse -f -a concretizer_reuse
 complete -c spack -n '__fish_spack_using_command test-env' -l reuse -d 'reuse installed packages/buildcaches when possible'
-complete -c spack -n '__fish_spack_using_command test-env' -l reuse-deps -f -a concretizer_reuse
-complete -c spack -n '__fish_spack_using_command test-env' -l reuse-deps -d 'reuse installed dependencies only'
+complete -c spack -n '__fish_spack_using_command test-env' -l fresh-roots -l reuse-deps -f -a concretizer_reuse
+complete -c spack -n '__fish_spack_using_command test-env' -l fresh-roots -l reuse-deps -d 'concretize with fresh roots and reused dependencies'
 complete -c spack -n '__fish_spack_using_command test-env' -l deprecated -f -a config_deprecated
 complete -c spack -n '__fish_spack_using_command test-env' -l deprecated -d 'allow concretizer to select deprecated versions'
 complete -c spack -n '__fish_spack_using_command test-env' -l dump -r -f -a dump

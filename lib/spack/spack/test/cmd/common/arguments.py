@@ -123,7 +123,13 @@ def test_root_and_dep_match_returns_root(mock_packages, mutable_mock_env_path):
 
 
 @pytest.mark.parametrize(
-    "arg,conf", [("--reuse", True), ("--fresh", False), ("--reuse-deps", "dependencies")]
+    "arg,conf",
+    [
+        ("--reuse", True),
+        ("--fresh", False),
+        ("--reuse-deps", "dependencies"),
+        ("--fresh-roots", "dependencies"),
+    ],
 )
 def test_concretizer_arguments(mutable_config, mock_packages, arg, conf):
     """Ensure that ConfigSetAction is doing the right thing."""
