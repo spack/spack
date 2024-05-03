@@ -102,11 +102,6 @@ class PyTorchaudio(PythonPackage):
 
         if "+cuda" in self.spec["py-torch"]:
             env.set("USE_CUDA", 1)
-            torch_cuda_arch_list = ";".join(
-                "{0:.1f}".format(float(i) / 10.0)
-                for i in self.spec["py-torch"].variants["cuda_arch"].value
-            )
-            env.set("TORCH_CUDA_ARCH_LIST", torch_cuda_arch_list)
         else:
             env.set("USE_CUDA", 0)
 
