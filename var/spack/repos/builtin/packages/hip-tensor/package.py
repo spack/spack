@@ -29,7 +29,7 @@ class HipTensor(CMakePackage, ROCmPackage):
         depends_on(f"composable-kernel@{ver}", when=f"@{ver}")
         depends_on(f"rocm-cmake@{ver}", when=f"@{ver}")
 
-    for ver in ["6.1.0", "master"]:
+    for ver in ["6.1.0"]:
         depends_on(f"hipcc@{ver}", when=f"@{ver}")
 
     def setup_build_environment(self, env):
