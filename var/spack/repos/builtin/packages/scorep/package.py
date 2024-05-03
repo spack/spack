@@ -153,9 +153,6 @@ class Scorep(AutotoolsPackage):
             return None
         return libs.directories[0]
 
-    def with_or_without(self, arg):
-        return super.with_or_without(arg).remove_suffix("=yes")
-
     def configure_args(self):
         spec = self.spec
 
@@ -203,7 +200,7 @@ class Scorep(AutotoolsPackage):
             or spec.satisfies("^cray-mpich")
         ):
             config_args.append("--with-mpi=mpich3")
-        elif spec.satisfies("^openmpi"):
+        elif spec.satisfies("^openmpi") or spec.satisfies("^hpcx-mpi"):
             config_args.append("--with-mpi=openmpi")
 
         if spec.satisfies("^binutils"):

@@ -14,6 +14,7 @@ paths:
           echo "Target: x86_64-pc-linux-gnu"
           echo "Thread model: posix"
           echo "InstalledDir: /usr/bin"
+    platforms: ["darwin", "linux"]
     results:
       - spec: 'llvm@3.9.1 +clang~lld~lldb'
   # Multiple LLVM packages in the same prefix
@@ -40,6 +41,7 @@ paths:
           echo "Target: x86_64-pc-linux-gnu"
           echo "Thread model: posix"
           echo "InstalledDir: /usr/bin"
+    platforms: ["darwin", "linux"]
     results:
       - spec: 'llvm@8.0.0+clang+lld+lldb'
       - spec: 'llvm@3.9.1+clang~lld~lldb'
@@ -53,4 +55,5 @@ paths:
         echo "Target: x86_64-apple-darwin19.5.0"
         echo "Thread model: posix"
         echo "InstalledDir: /Library/Developer/CommandLineTools/usr/bin"
+    platforms: ["darwin"]
     results: []
