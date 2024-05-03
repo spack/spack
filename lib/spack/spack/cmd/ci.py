@@ -574,9 +574,6 @@ def ci_rebuild(args):
         # Add additional arguments to `spack install` for CDash reporting.
         root_install_args.extend(cdash_handler.args())
 
-    # ["x", "y"] -> "'x' 'y'"
-    args_to_string = lambda args: " ".join("'{}'".format(arg) for arg in args)
-
     commands = [
         # apparently there's a race when spack bootstraps? do it up front once
         spack_cmd + deps_install_args + [slash_hash],
