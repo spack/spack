@@ -114,6 +114,7 @@ class Tau(Package):
         description="Do not add -no-pie while linking with Ubuntu.",
     )
 
+    depends_on("gmake", type="build")
     depends_on("cmake@3.14:", type="build", when="%clang")
     depends_on("cmake@3.14:", type="build", when="%aocc")
     depends_on("zlib-api", type="link")
