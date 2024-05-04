@@ -84,7 +84,7 @@ class Pythia8(AutotoolsPackage):
     variant("mpich", default=False, description="Multi-threading support via MPICH")
     variant("hdf5", default=False, description="Support the use of HDF5 format")
 
-    depends_on("gzip", when="+gzip")
+    depends_on("zlib-api", when="+gzip")
     depends_on("rsync", type="build")
     depends_on("hepmc", when="+hepmc")
     depends_on("hepmc3", when="+hepmc3")
@@ -159,7 +159,9 @@ class Pythia8(AutotoolsPackage):
         if self.spec.satisfies("+hdf5"):
             args.append("--with-highfive=" + self.spec["highfive"].prefix)
 
-        args += self.with_or_without("gzip", activation_value="prefix")
+        args += self.with_or_without(
+            "gzip", activation_value=lambda x: self.spec["zlib-api"].prefix
+        )
 
         return args
 
