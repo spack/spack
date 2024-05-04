@@ -74,8 +74,8 @@ class Madgraph5amc(MakefilePackage):
     patch("madgraph5amc-2.8.0.atlas.patch", level=0, when="@2.8.1+atlas")
     # Fix running from CVMFS on AFS, for example on lxplus at CERN
     patch(
-        "https://patch-diff.githubusercontent.com/raw/mg5amcnlo/mg5amcnlo/pull/96.diff",
-        sha256="81cc5d235a0f3ad816863afc965cbb40056b9ae26cab89c118e48548003914df",
+        "https://patch-diff.githubusercontent.com/raw/mg5amcnlo/mg5amcnlo/pull/96.diff?full_index=1",
+        sha256="ac6644f1d0ef51d9bdb27a1519261f1cf27d075d39faa278fbc2849acbc5575d",
     )
 
     def edit(self, spec, prefix):
