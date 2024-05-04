@@ -37,9 +37,11 @@ class Cernlib(CMakePackage):
 
     depends_on("openssl", when="platform=linux")
 
-    @when("@:2023.08.14.0-free")
     def patch(self):
-        filter_file("crypto", "crypt", "packlib/CMakeLists.txt")
+        if self.spec.satisfies("@:2023.08.14.0-free"):
+            filter_file("crypto", "crypt", "packlib/CMakeLists.txt")
+        if self.spec.satisfies("@2023.08.14.0-free"):
+            filter_file(r"\${MOTIF_LIBRARIES} \${Xbae}", "${Xbae} ${MOTIF_LIBRARIES}", "CMakeLists.txt")
 
     def cmake_args(self):
         args = [self.define_from_variant("CERNLIB_BUILD_SHARED", "shared")]
