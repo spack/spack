@@ -17,14 +17,19 @@ class Madgraph5amc(MakefilePackage):
     event manipulation and analysis."""
 
     homepage = "https://launchpad.net/mg5amcnlo"
-    url = "https://github.com/mg5amcnlo/mg5amcnlo/archive/refs/tags/v3.5.4.tar.gz"
+    url = "https://launchpad.net/mg5amcnlo/2.0/2.7.x/+download/MG5_aMC_v2.7.3.tar.gz"
 
     tags = ["hep"]
 
-    version("3.5.4", sha256="19121a4b8b4ccaddd86b5b87188e91da25b755e789663c790481bf387154c950")
+    # Versions from github are not recommended by the authors, see https://github.com/spack/spack/pull/41128#issuecomment-2077343326
+    version(
+        "3.5.4",
+        sha256="19121a4b8b4ccaddd86b5b87188e91da25b755e789663c790481bf387154c950",
+        url="https://github.com/mg5amcnlo/mg5amcnlo/archive/refs/tags/v3.5.4.tar.gz",
+    )
     version(
         "2.9.19",
-        sha256="58e3e9930033b9db08769684ec12f31100235af4b8a852eedf683541195d4c95",
+        sha256="e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
         preferred=True,
     )
     version("2.9.17", sha256="24026a534344c77a05b23a681437f825c41dc70c5bae5b7f79bb99e149d966b8")
@@ -32,11 +37,13 @@ class Madgraph5amc(MakefilePackage):
         "2.8.1",
         sha256="acda34414beba201e529b8c03f87f4893fb3f99ed2956a131d60a387e76c5b8c",
         url="https://launchpad.net/mg5amcnlo/2.0/2.8.x/+download/MG5_aMC_v2.8.1.tar.gz",
+        deprecated=True,
     )
     version(
         "2.7.3.py3",
         sha256="400c26f9b15b07baaad9bd62091ceea785c2d3a59618fdc27cad213816bc7225",
         url="",
+        deprecated=True,
     )
 
     variant(
@@ -67,6 +74,11 @@ class Madgraph5amc(MakefilePackage):
     patch("madgraph5amc-2.7.3.atlas.patch", level=0, when="@2.7.3.py3+atlas")
     patch("madgraph5amc-2.8.0.atlas.patch", level=0, when="@2.8.0+atlas")
     patch("madgraph5amc-2.8.0.atlas.patch", level=0, when="@2.8.1+atlas")
+    # Fix running from CVMFS on AFS, for example on lxplus at CERN
+    patch(
+        "https://patch-diff.githubusercontent.com/raw/mg5amcnlo/mg5amcnlo/pull/96.diff",
+        sha256="81cc5d235a0f3ad816863afc965cbb40056b9ae26cab89c118e48548003914df",
+    )
 
     def edit(self, spec, prefix):
         def set_parameter(name, value):
@@ -95,12 +107,6 @@ class Madgraph5amc(MakefilePackage):
 
     def build(self, spec, prefix):
         with working_dir(join_path("vendor", "CutTools")):
-            make(parallel=False)
-
-        with working_dir(join_path("vendor", "StdHEP")):
-            for m in ["mcfio/arch_mcfio", "src/stdhep_arch"]:
-                arch = FileFilter(m)
-                arch.filter("CC.*=.*", "CC = {0}".format(spack_cc))
             make(parallel=False)
 
         if "+atlas" in spec:
