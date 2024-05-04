@@ -54,7 +54,6 @@ import spack.schema.mirrors
 import spack.schema.modules
 import spack.schema.packages
 import spack.schema.repos
-import spack.schema.spack  # TLD
 import spack.schema.upstreams
 
 # Hacked yaml for configuration files preserves line numbers.
@@ -79,15 +78,13 @@ SECTION_SCHEMAS: Dict[str, Any] = {
     "bootstrap": spack.schema.bootstrap.schema,
     "ci": spack.schema.ci.schema,
     "cdash": spack.schema.cdash.schema,
-    "spack": spack.schema.spack.schema,
-    # TLD: "spack": spack.schema.env.schema,
+    "spack": spack.schema.env.schema,
 }
 
 # Same as above, but including keys for environments
 # this allows us to unify config reading between configs and environments
 _ALL_SCHEMAS: Dict[str, Any] = copy.deepcopy(SECTION_SCHEMAS)
-# _ALL_SCHEMAS.update({spack.schema.env.TOP_LEVEL_KEY: spack.schema.env.schema})
-_ALL_SCHEMAS.update({spack.schema.env.TOP_LEVEL_KEY: spack.schema.spack.schema})
+_ALL_SCHEMAS.update({spack.schema.env.TOP_LEVEL_KEY: spack.schema.env.schema})
 
 #: Path to the default configuration
 CONFIGURATION_DEFAULTS_PATH = ("defaults", os.path.join(spack.paths.etc_path, "defaults"))

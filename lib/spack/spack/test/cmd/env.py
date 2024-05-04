@@ -4428,6 +4428,7 @@ def test_env_view_ignores_different_file_conflicts(tmp_path, install_mockery, mo
     # The dependent's file is linked into the view
     assert os.readlink(tmp_path / "view" / "bin" / "x") == prefix_dependent.bin.x
 
+
 def test_env_include_env(
     tmp_path,
     mock_fetch,
