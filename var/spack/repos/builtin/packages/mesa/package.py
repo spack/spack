@@ -22,10 +22,11 @@ class Mesa(MesonPackage):
 
     version("main", branch="main")
     version(
-        "23.2.1",
-        sha256="64de0616fc2d801f929ab1ac2a4f16b3e2783c4309a724c8a259b20df8bbc1cc",
+        "23.3.6",
+        sha256="cd3d6c60121dea73abbae99d399dc2facaecde1a8c6bd647e6d85410ff4b577b",
         preferred=True,
     )
+    version("23.2.1", sha256="64de0616fc2d801f929ab1ac2a4f16b3e2783c4309a724c8a259b20df8bbc1cc")
     version("23.1.9", sha256="295ba27c28146ed09214e8ce79afa1659edf9d142decc3c91f804552d64f7510")
     version("23.0.3", sha256="386362a5d80df3b096636b67f340e1ce67b705b44767d5bdd11d2ed1037192d5")
     version("23.0.2", sha256="1b7d3399fc6f16f030361f925d33ebc7600cbf98094582f54775b6a1180529e7")
