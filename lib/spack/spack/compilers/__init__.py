@@ -342,9 +342,7 @@ def all_compilers_config(
     from_compilers_yaml = get_compiler_config(configuration, scope=scope, init_config=init_config)
 
     result = from_compilers_yaml + from_packages_yaml
-    # Dedupe entries by the compiler they represent
-    # If the entry is invalid, treat it as unique for deduplication
-    key = lambda c: _compiler_from_config_entry(c["compiler"] or id(c))
+    key = lambda c: _compiler_from_config_entry(c["compiler"])
     return list(llnl.util.lang.dedupe(result, key=key))
 
 
