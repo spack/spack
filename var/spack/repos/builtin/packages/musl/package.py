@@ -67,3 +67,11 @@ class Musl(MakefilePackage):
 
     def edit(self, spec, prefix):
         configure(*self.configure_args())
+
+    @property
+    def libs(self):
+        return LibraryList([])
+
+    @property
+    def headers(self):
+        return HeaderList([])

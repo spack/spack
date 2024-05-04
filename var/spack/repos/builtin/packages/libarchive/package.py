@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack.package import *
-from spack.util.environment import is_system_path
 
 
 class Libarchive(AutotoolsPackage):
@@ -132,10 +131,10 @@ class Libarchive(AutotoolsPackage):
         args += self.enable_or_disable("programs")
 
         if "+iconv" in spec:
-            if spec["iconv"].name == "libc":
+            if spec["iconv"].name == "libiconv":
+                args.append(f"--with-libiconv-prefix={spec['iconv'].prefix}")
+            else:
                 args.append("--without-libiconv-prefix")
-            elif not is_system_path(spec["iconv"].prefix):
-                args.append("--with-libiconv-prefix={p}".format(p=spec["iconv"].prefix))
         else:
             args.append("--without-iconv")
 

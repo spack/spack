@@ -6,7 +6,6 @@
 import re
 
 from spack.package import *
-from spack.util.environment import is_system_path
 
 
 class Bash(AutotoolsPackage, GNUMirrorPackage):
@@ -187,10 +186,10 @@ class Bash(AutotoolsPackage, GNUMirrorPackage):
             "--enable-readline",
             "--with-installed-readline",
         ]
-        if spec["iconv"].name == "libc":
+        if spec["iconv"].name == "libiconv":
+            args.append(f"--with-libiconv-prefix={spec['iconv'].prefix}")
+        else:
             args.append("--without-libiconv-prefix")
-        elif not is_system_path(spec["iconv"].prefix):
-            args.append("--with-libiconv-prefix={0}".format(spec["iconv"].prefix))
         return args
 
     def check(self):

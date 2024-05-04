@@ -130,8 +130,8 @@ class HdfEos2(AutotoolsPackage):
         # Add flags to LDFLAGS for any dependencies that need it
         extra_ldflags = []
         # hdf might have link dependency on rpc, if so need to add flags
-        if "rpc" in self.spec:
-            tmp = self.spec["rpc"].libs.ld_flags
+        if self.spec.satisfies("^libtirpc"):
+            tmp = self.spec["libtirpc"].libs.ld_flags
             extra_ldflags.append(tmp)
         # Set LDFLAGS
         env.set("LDFLAGS", " ".join(extra_ldflags))

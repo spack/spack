@@ -70,9 +70,9 @@ class Procps(AutotoolsPackage):
         else:
             args.append("--disable-nls")
 
-        if spec["iconv"].name == "libc":
+        if spec["iconv"].name == "libiconv":
+            args.append(f"--with-libiconv-prefix={spec['iconv'].prefix}")
+        else:
             args.append("--without-libiconv-prefix")
-        elif not is_system_path(spec["iconv"].prefix):
-            args.append("--with-libiconv-prefix={0}".format(spec["iconv"].prefix))
 
         return args

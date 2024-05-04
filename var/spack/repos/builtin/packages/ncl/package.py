@@ -236,9 +236,11 @@ class Ncl(Package):
             f.writelines(
                 [
                     "#define HdfDefines\n",
-                    "#define StdDefines -DByteSwapped\n#define ByteSwapped\n"
-                    if self.spec.satisfies("+byteswapped")
-                    else "",
+                    (
+                        "#define StdDefines -DByteSwapped\n#define ByteSwapped\n"
+                        if self.spec.satisfies("+byteswapped")
+                        else ""
+                    ),
                     "#define CppCommand '/usr/bin/env cpp -traditional'\n",
                     "#define CCompiler {0}\n".format(spack_cc),
                     "#define FCompiler {0}\n".format(spack_fc),
@@ -367,7 +369,7 @@ class Ncl(Package):
         with open(config_answers_filename, "r") as f:
             config_script(input=f)
 
-        if self.spec.satisfies("^hdf+external-xdr") and not self.spec["hdf"].satisfies("^libc"):
+        if self.spec.satisfies("^hdf+external-xdr ^libtirpc"):
             hdf4 = self.spec["hdf"]
             replace_str = hdf4["rpc"].libs.link_flags
 

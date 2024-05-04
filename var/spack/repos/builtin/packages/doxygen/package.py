@@ -112,7 +112,7 @@ class Doxygen(CMakePackage):
     conflicts("%gcc@7.0:7.9", when="@1.9:")
 
     def patch(self):
-        if self.spec["iconv"].name == "libc":
+        if self.spec["iconv"].name != "libiconv":
             return
         # On Linux systems, iconv is provided by libc. Since CMake finds the
         # symbol in libc, it does not look for libiconv, which leads to linker

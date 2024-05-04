@@ -278,12 +278,8 @@ class Git(AutotoolsPackage):
             "--with-zlib={0}".format(spec["zlib-api"].prefix),
         ]
 
-        if not self.spec["iconv"].name == "libc":
-            configure_args.append(
-                "--with-iconv={0}".format(
-                    "yes" if is_system_path(spec["iconv"].prefix) else spec["iconv"].prefix
-                )
-            )
+        if self.spec["iconv"].name == "libiconv":
+            configure_args.append(f"--with-iconv={self.spec['iconv'].prefix}")
 
         if "+perl" in self.spec:
             configure_args.append("--with-perl={0}".format(spec["perl"].command.path))
