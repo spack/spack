@@ -33,6 +33,8 @@ class Cernlib(CMakePackage):
     depends_on("libxt")
     depends_on("libxcrypt")
 
+    depends_on("xbae", when="@2023:")
+
     depends_on("openssl", when="platform=linux")
 
     @when("@:2023.08.14.0-free")
