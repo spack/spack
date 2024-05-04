@@ -78,22 +78,12 @@ default:
       when: never
     - if: $SPACK_CI_ENABLE_STACKS =~ /.+/ && $SPACK_CI_STACK_NAME !~ $SPACK_CI_ENABLE_STACKS
       when: never
-    - if: $CI_COMMIT_REF_NAME == "develop"
-      # Pipelines on develop only rebuild what is missing from the mirror
+    - if: $CI_COMMIT_REF_NAME == "develop" || $CI_COMMIT_REF_NAME =~ /^releases\/v.*/
+      # Pipelines on develop/release branches only rebuild what is missing from the mirror
       when: always
       variables:
         SPACK_PIPELINE_TYPE: "spack_protected_branch"
         SPACK_COPY_BUILDCACHE: "${PROTECTED_MIRROR_PUSH_DOMAIN}/${CI_COMMIT_REF_NAME}"
-        SPACK_REQUIRE_SIGNING: "True"
-        OIDC_TOKEN_AUDIENCE: "protected_binary_mirror"
-    - if: $CI_COMMIT_REF_NAME =~ /^releases\/v.*/
-      # Pipelines on release branches always rebuild everything
-      when: always
-      variables:
-        SPACK_PIPELINE_TYPE: "spack_protected_branch"
-        SPACK_COPY_BUILDCACHE: "${PROTECTED_MIRROR_PUSH_DOMAIN}/${CI_COMMIT_REF_NAME}"
-        SPACK_PRUNE_UNTOUCHED: "False"
-        SPACK_PRUNE_UP_TO_DATE: "False"
         SPACK_REQUIRE_SIGNING: "True"
         OIDC_TOKEN_AUDIENCE: "protected_binary_mirror"
     - if: $CI_COMMIT_TAG =~ /^develop-[\d]{4}-[\d]{2}-[\d]{2}$/ || $CI_COMMIT_TAG =~ /^v.*/
