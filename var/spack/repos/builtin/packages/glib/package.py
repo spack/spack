@@ -339,9 +339,9 @@ class AutotoolsBuilder(BaseBuilder, spack.build_systems.autotools.AutotoolsBuild
                 "--with-python={0}".format(os.path.basename(self.spec["python"].command.path))
             )
         if self.spec["iconv"].name == "libiconv":
-            args.append("--with-libiconv=maybe")
-        else:
             args.append("--with-libiconv=gnu")
+        else:
+            args.append("--with-libiconv=maybe")
         if self.spec.satisfies("@2.56:"):
             for value in ("dtrace", "systemtap"):
                 if ("tracing=" + value) in self.spec:
