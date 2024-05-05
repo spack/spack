@@ -59,6 +59,7 @@ class Pythia8(AutotoolsPackage):
     )
 
     variant("shared", default=True, description="Build shared library")
+    variant("gzip", default=False, description="Build with gzip support, for reading lhe.gz files")
     variant(
         "hepmc", default=True, description="Export PYTHIA events to the HEPMC format, version 2"
     )
@@ -84,6 +85,7 @@ class Pythia8(AutotoolsPackage):
     variant("mpich", default=False, description="Multi-threading support via MPICH")
     variant("hdf5", default=False, description="Support the use of HDF5 format")
 
+    depends_on("zlib-api", when="+gzip")
     depends_on("rsync", type="build")
     depends_on("hepmc", when="+hepmc")
     depends_on("hepmc3", when="+hepmc3")
@@ -116,6 +118,8 @@ class Pythia8(AutotoolsPackage):
     conflicts("+hdf5", when="@:8.304", msg="HDF5 support was added in 8.304")
     conflicts("+hdf5", when="~mpich", msg="MPICH is required for reading HDF5 files")
 
+    filter_compiler_wrappers("Makefile.inc", relative_root="share/Pythia8/examples")
+
     def configure_args(self):
         args = []
 
@@ -136,15 +140,11 @@ class Pythia8(AutotoolsPackage):
 
         if "+madgraph5amc" in self.spec:
             args.append("--with-mg5mes=" + self.spec["madgraph5amc"].prefix)
-        else:
-            args.append("--without-mg5mes")
 
         args += self.with_or_without("hepmc3", activation_value="prefix")
 
         if "+fastjet" in self.spec:
             args.append("--with-fastjet3=" + self.spec["fastjet"].prefix)
-        else:
-            args.append("--without-fastjet3")
 
         args += self.with_or_without("evtgen", activation_value="prefix")
         args += self.with_or_without("root", activation_value="prefix")
@@ -159,6 +159,10 @@ class Pythia8(AutotoolsPackage):
 
         if self.spec.satisfies("+hdf5"):
             args.append("--with-highfive=" + self.spec["highfive"].prefix)
+
+        args += self.with_or_without(
+            "gzip", activation_value=lambda x: self.spec["zlib-api"].prefix
+        )
 
         return args
 

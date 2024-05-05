@@ -71,6 +71,11 @@ def setup_parser(subparser):
         help="the number of versions to fetch for each spec, choose 'all' to"
         " retrieve all versions of each package",
     )
+    create_parser.add_argument(
+        "--private",
+        action="store_true",
+        help="for a private mirror, include non-redistributable packages",
+    )
     arguments.add_common_arguments(create_parser, ["specs"])
     arguments.add_concretizer_args(create_parser)
 
@@ -359,7 +364,6 @@ def concrete_specs_from_user(args):
     specs = filter_externals(specs)
     specs = list(set(specs))
     specs.sort(key=lambda s: (s.name, s.version))
-    specs, _ = lang.stable_partition(specs, predicate_fn=not_excluded_fn(args))
     return specs
 
 
@@ -404,36 +408,50 @@ def concrete_specs_from_cli_or_file(args):
     return specs
 
 
-def not_excluded_fn(args):
-    """Return a predicate that evaluate to True if a spec was not explicitly
-    excluded by the user.
-    """
-    exclude_specs = []
-    if args.exclude_file:
-        exclude_specs.extend(specs_from_text_file(args.exclude_file, concretize=False))
-    if args.exclude_specs:
-        exclude_specs.extend(spack.cmd.parse_specs(str(args.exclude_specs).split()))
+class IncludeFilter:
+    def __init__(self, args):
+        self.exclude_specs = []
+        if args.exclude_file:
+            self.exclude_specs.extend(specs_from_text_file(args.exclude_file, concretize=False))
+        if args.exclude_specs:
+            self.exclude_specs.extend(spack.cmd.parse_specs(str(args.exclude_specs).split()))
+        self.private = args.private
 
-    def not_excluded(x):
-        return not any(x.satisfies(y) for y in exclude_specs)
+    def __call__(self, x):
+        return all([self._not_license_excluded(x), self._not_cmdline_excluded(x)])
 
-    return not_excluded
+    def _not_license_excluded(self, x):
+        """True if the spec is for a private mirror, or as long as the
+        package does not explicitly forbid redistributing source."""
+        if self.private:
+            return True
+        elif x.package_class.redistribute_source(x):
+            return True
+        else:
+            tty.debug(
+                "Skip adding {0} to mirror: the package.py file"
+                " indicates that a public mirror should not contain"
+                " it.".format(x.name)
+            )
+            return False
+
+    def _not_cmdline_excluded(self, x):
+        """True if a spec was not explicitly excluded by the user."""
+        return not any(x.satisfies(y) for y in self.exclude_specs)
 
 
-def concrete_specs_from_environment(selection_fn):
+def concrete_specs_from_environment():
     env = ev.active_environment()
     assert env, "an active environment is required"
     mirror_specs = env.all_specs()
     mirror_specs = filter_externals(mirror_specs)
-    mirror_specs, _ = lang.stable_partition(mirror_specs, predicate_fn=selection_fn)
     return mirror_specs
 
 
-def all_specs_with_all_versions(selection_fn):
+def all_specs_with_all_versions():
     specs = [spack.spec.Spec(n) for n in spack.repo.all_package_names()]
     mirror_specs = spack.mirror.get_all_versions(specs)
     mirror_specs.sort(key=lambda s: (s.name, s.version))
-    mirror_specs, _ = lang.stable_partition(mirror_specs, predicate_fn=selection_fn)
     return mirror_specs
 
 
@@ -452,12 +470,6 @@ def versions_per_spec(args):
                 " got '{0}'".format(args.versions_per_spec)
             )
     return num_versions
-
-
-def create_mirror_for_individual_specs(mirror_specs, path, skip_unstable_versions):
-    present, mirrored, error = spack.mirror.create(path, mirror_specs, skip_unstable_versions)
-    tty.msg("Summary for mirror in {}".format(path))
-    process_mirror_stats(present, mirrored, error)
 
 
 def process_mirror_stats(present, mirrored, error):
@@ -505,30 +517,28 @@ def mirror_create(args):
     # When no directory is provided, the source dir is used
     path = args.directory or spack.caches.fetch_cache_location()
 
+    mirror_specs, mirror_fn = _specs_and_action(args)
+    mirror_fn(mirror_specs, path=path, skip_unstable_versions=args.skip_unstable_versions)
+
+
+def _specs_and_action(args):
+    include_fn = IncludeFilter(args)
+
     if args.all and not ev.active_environment():
-        create_mirror_for_all_specs(
-            path=path,
-            skip_unstable_versions=args.skip_unstable_versions,
-            selection_fn=not_excluded_fn(args),
-        )
-        return
+        mirror_specs = all_specs_with_all_versions()
+        mirror_fn = create_mirror_for_all_specs
+    elif args.all and ev.active_environment():
+        mirror_specs = concrete_specs_from_environment()
+        mirror_fn = create_mirror_for_individual_specs
+    else:
+        mirror_specs = concrete_specs_from_user(args)
+        mirror_fn = create_mirror_for_individual_specs
 
-    if args.all and ev.active_environment():
-        create_mirror_for_all_specs_inside_environment(
-            path=path,
-            skip_unstable_versions=args.skip_unstable_versions,
-            selection_fn=not_excluded_fn(args),
-        )
-        return
-
-    mirror_specs = concrete_specs_from_user(args)
-    create_mirror_for_individual_specs(
-        mirror_specs, path=path, skip_unstable_versions=args.skip_unstable_versions
-    )
+    mirror_specs, _ = lang.stable_partition(mirror_specs, predicate_fn=include_fn)
+    return mirror_specs, mirror_fn
 
 
-def create_mirror_for_all_specs(path, skip_unstable_versions, selection_fn):
-    mirror_specs = all_specs_with_all_versions(selection_fn=selection_fn)
+def create_mirror_for_all_specs(mirror_specs, path, skip_unstable_versions):
     mirror_cache, mirror_stats = spack.mirror.mirror_cache_and_stats(
         path, skip_unstable_versions=skip_unstable_versions
     )
@@ -540,11 +550,10 @@ def create_mirror_for_all_specs(path, skip_unstable_versions, selection_fn):
     process_mirror_stats(*mirror_stats.stats())
 
 
-def create_mirror_for_all_specs_inside_environment(path, skip_unstable_versions, selection_fn):
-    mirror_specs = concrete_specs_from_environment(selection_fn=selection_fn)
-    create_mirror_for_individual_specs(
-        mirror_specs, path=path, skip_unstable_versions=skip_unstable_versions
-    )
+def create_mirror_for_individual_specs(mirror_specs, path, skip_unstable_versions):
+    present, mirrored, error = spack.mirror.create(path, mirror_specs, skip_unstable_versions)
+    tty.msg("Summary for mirror in {}".format(path))
+    process_mirror_stats(present, mirrored, error)
 
 
 def mirror_destroy(args):

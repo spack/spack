@@ -47,6 +47,9 @@ class Globalarrays(AutotoolsPackage):
     depends_on("blas")
     depends_on("lapack")
 
+    depends_on("libfabric", when="armci=ofi")
+    depends_on("rdma-core", when="armci=openib")
+
     depends_on("scalapack", when="+scalapack")
 
     # See release https://github.com/GlobalArrays/ga/releases/tag/v5.7.1

@@ -132,7 +132,7 @@ class Hdf(AutotoolsPackage):
             libs += self.spec["zlib:transitive"].libs
             if "+szip" in self.spec:
                 libs += self.spec["szip:transitive"].libs
-            if "+external-xdr" in self.spec and self.spec["rpc"].name != "libc":
+            if "+external-xdr" in self.spec and self.spec["rpc"].name == "libtirpc":
                 libs += self.spec["rpc:transitive"].libs
 
         return libs
@@ -153,7 +153,7 @@ class Hdf(AutotoolsPackage):
             ):
                 flags.append("-Wno-error=implicit-function-declaration")
 
-            if self.spec.satisfies("%clang@16:"):
+            if self.spec.satisfies("%clang@16:") or self.spec.satisfies("%apple-clang@15:"):
                 flags.append("-Wno-error=implicit-int")
 
         return flags, None, None
@@ -178,7 +178,7 @@ class Hdf(AutotoolsPackage):
 
         if "~external-xdr" in self.spec:
             config_args.append("--enable-hdf4-xdr")
-        elif self.spec["rpc"].name != "libc":
+        elif self.spec["rpc"].name == "libtirpc":
             # We should not specify '--disable-hdf4-xdr' due to a bug in the
             # configure script.
             config_args.append("LIBS=%s" % self.spec["rpc"].libs.link_flags)

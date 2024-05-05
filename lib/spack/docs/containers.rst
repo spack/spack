@@ -203,6 +203,9 @@ The OS that are currently supported are summarized in the table below:
    * - Ubuntu 22.04
      - ``ubuntu:22.04``
      - ``spack/ubuntu-jammy``
+   * - Ubuntu 24.04
+     - ``ubuntu:24.04``
+     - ``spack/ubuntu-noble``
    * - CentOS 7
      - ``centos:7``
      - ``spack/centos7``
@@ -233,6 +236,12 @@ The OS that are currently supported are summarized in the table below:
    * - Fedora Linux 38
      - ``fedora:38``
      - ``spack/fedora38``
+   * - Fedora Linux 39
+     - ``fedora:39``
+     - ``spack/fedora39``
+   * - Fedora Linux 40
+     - ``fedora:40``
+     - ``spack/fedora40``
 
 
 
