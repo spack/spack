@@ -65,5 +65,6 @@ class PkgConfig(AutotoolsPackage):
         for strict_compiler in ("%oneapi", "%cce", "%apple-clang@15:", "clang@15:"):
             if spec.satisfies(strict_compiler):
                 config_args.append("CFLAGS=-Wno-error=int-conversion")
+                break
 
         return config_args
