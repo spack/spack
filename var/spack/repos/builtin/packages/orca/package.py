@@ -55,7 +55,13 @@ class Orca(Package):
     depends_on("libpciaccess", type="run")
 
     # Map Orca version with the required OpenMPI version
-    openmpi_versions = {"4.0.1.2": "2.0.2", "4.2.0": "3.1.4", "4.2.1": "3.1.4", "5.0.3": "4.1.2", "5.0.4": "4.1.2"}
+    openmpi_versions = {
+        "4.0.1.2": "2.0.2",
+        "4.2.0": "3.1.4",
+        "4.2.1": "3.1.4",
+        "5.0.3": "4.1.2",
+        "5.0.4": "4.1.2",
+    }
     for orca_version, openmpi_version in openmpi_versions.items():
         depends_on(
             "openmpi@{0}".format(openmpi_version), type="run", when="@{0}".format(orca_version)
