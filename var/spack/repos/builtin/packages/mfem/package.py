@@ -51,6 +51,9 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     # other version.
     version("develop", branch="master")
 
+    # FIXME: update to the official release link when v4.7 is released
+    version("4.7.0", branch=" mfem-4.7-dev")
+
     version(
         "4.6.0",
         sha256="5fa9465b5bec56bfb777a4d2826fba48d85fbace4aed8b64a2fd4059bf075b15",
