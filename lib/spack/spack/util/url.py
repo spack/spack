@@ -83,7 +83,7 @@ def is_path_instead_of_url(path_or_url):
         return not scheme
 
     # On Windows, we may have drive letters.
-    return "A" <= scheme <= "Z"
+    return "A" <= scheme.capitalize() <= "Z"
 
 
 def format(parsed_url):

@@ -2731,8 +2731,8 @@ class EnvironmentManifestFile(collections.abc.Mapping):
 
             include_url = urllib.parse.urlparse(config_path)
 
-            # Transform file:// or C:// URLs to direct includes.
-            if include_url.scheme in ("file", "c"):
+            # Transform file:// URLs to direct includes.
+            if include_url.scheme in ("file"):
                 config_path = urllib.request.url2pathname(include_url.path)
 
             # Any other URL should be fetched.
