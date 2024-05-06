@@ -15,7 +15,7 @@ concurrency:
 jobs:
   distros-clingo-sources:
     runs-on: ubuntu-latest
-    container: ${{ matrix.runner }}
+    container: ${{ matrix.image }}
     strategy:
       matrix:
         image: ["fedora:latest", "opensuse/leap:latest"]
