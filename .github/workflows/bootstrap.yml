@@ -46,11 +46,6 @@ jobs:
           git config --global --add safe.directory /__w/spack/spack
           useradd spack-test && mkdir -p ~spack-test
           chown -R spack-test . ~spack-test
-      - name: Setup repo
-        shell: runuser -u spack-test -- bash {0}
-        run: |
-          git --version
-          . .github/workflows/setup_git.sh
       - name: Bootstrap clingo
         shell: runuser -u spack-test -- bash {0}
         run: |
@@ -178,7 +173,7 @@ jobs:
           tree ~/.spack/bootstrap/store/
 
 # [1] Distros that have patched git to resolve CVE-2022-24765 (e.g. Ubuntu patching v2.25.1)
-#     introduce breaking behaviorso we have to set `safe.directory` in gitconfig ourselves.
+#     introduce breaking behavior, so we have to set `safe.directory` in gitconfig ourselves.
 #     See:
 #     - https://github.blog/2022-04-12-git-security-vulnerability-announced/
 #     - https://github.com/actions/checkout/issues/760
