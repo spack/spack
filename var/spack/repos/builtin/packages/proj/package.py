@@ -92,6 +92,11 @@ class Proj(CMakePackage, AutotoolsPackage):
 
     # https://proj.org/install.html#build-requirements
     with when("build_system=cmake"):
+        # CMake 3.19 refactored the FindTiff module interface, update older proj's
+        # to be compatible with this "new" interface
+        # patch replaces the TIFF_LIBRARY variable (no longer used) with TIFF_LIBRARIES
+        patch("proj-8.1-cmake-3.29-new-tiff-interface.patch", when="+tiff @:9.1.0 ^cmake@3.19:")
+        conflicts("cmake@3.19:", when="@:7")
         depends_on("cmake@3.9:", when="@6:", type="build")
         depends_on("cmake@3.5:", when="@5", type="build")
         depends_on("cmake@2.6:", when="@:4", type="build")
