@@ -3763,7 +3763,7 @@ class Solver:
     def __init__(self):
         self.driver = PyclingoDriver()
         self.selector = ReusableSpecsSelector(configuration=spack.config.CONFIG)
-        if spack.platforms.host().name != "cray":
+        if spack.platforms.host().name == "cray":
             msg = (
                 "The Cray platform, i.e. 'platform=cray', will be removed in Spack v0.23. "
                 "All Cray machines will be then detected as 'platform=linux'."
