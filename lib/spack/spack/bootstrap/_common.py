@@ -54,11 +54,15 @@ def _try_import_from_store(
     installed_specs = spack.store.STORE.db.query(query_spec, installed=True)
 
     for candidate_spec in installed_specs:
-        pkg = candidate_spec["python"].package
-        module_paths = [
-            os.path.join(candidate_spec.prefix, pkg.purelib),
-            os.path.join(candidate_spec.prefix, pkg.platlib),
-        ]
+        # previously bootstrapped specs may not have a python-venv dependency.
+        if candidate_spec.dependencies("python-venv"):
+            python, *_ = candidate_spec.dependencies("python-venv")
+        else:
+            python, *_ = candidate_spec.dependencies("python")
+        module_paths = {
+            os.path.join(candidate_spec.prefix, python.package.purelib),
+            os.path.join(candidate_spec.prefix, python.package.platlib),
+        }
         path_before = list(sys.path)
 
         # NOTE: try module_paths first and last, last allows an existing version in path
