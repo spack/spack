@@ -113,6 +113,7 @@ class Hipsolver(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("googletest@1.10.0:", type="test")
     depends_on("netlib-lapack@3.7.1:", type="test")
     patch("001-suite-sparse-include-path.patch", when="@6.1")
+
     def check(self):
         exe = join_path(self.build_directory, "clients", "staging", "hipsolver-test")
         self.run_test(exe, options=["--gtest_filter=-*known_bug*"])
