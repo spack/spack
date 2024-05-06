@@ -84,7 +84,7 @@ class AmrWind(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("openfast+cxx", when="+openfast")
     depends_on("openfast+netcdf", when="+openfast+netcdf")
     depends_on("openfast@2.6.0:3.4.1", when="@0.9.0:1 +openfast")
-    depends_on("openfast@3.5.3:", when="@2: +openfast")
+    depends_on("openfast@3.5:", when="@2: +openfast")
 
     for arch in CudaPackage.cuda_arch_values:
         depends_on("hypre+cuda cuda_arch=%s" % arch, when="+cuda+hypre cuda_arch=%s" % arch)
