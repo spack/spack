@@ -17,6 +17,7 @@ class PyObspy(PythonPackage):
 
     license("LGPL-3.0-only", checked_by="snehring")
 
+    version("1.4.1", sha256="9cf37b0ce03de43d80398703c006bfddbd709f32e8460a9404b27df998d3f747")
     version("1.4.0", sha256="336a6e1d9a485732b08173cb5dc1dd720a8e53f3b54c180a62bb8ceaa5fe5c06")
 
     depends_on("python@3.8:3", type=("build", "run"))
@@ -26,7 +27,8 @@ class PyObspy(PythonPackage):
     depends_on("py-numpy@1.20:", type=("build", "run"))
     # importing hann from scipy.signal is deprecated, removed in 1.13
     # to be fixed in 1.4.1
-    depends_on("py-scipy@1.7:1.12.0", type=("build", "run"))
+    depends_on("py-scipy@1.7:1", type=("build", "run"), when="@1.4.1:")
+    depends_on("py-scipy@1.7:1.12.0", type=("build", "run"), when="@1.4.0")
     depends_on("py-matplotlib@3.3:", type=("build", "run"))
     depends_on("py-lxml", type=("build", "run"))
     depends_on("py-sqlalchemy", type=("build", "run"))

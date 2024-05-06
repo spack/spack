@@ -25,7 +25,7 @@ class PyPyrocko(PythonPackage):
     depends_on("py-setuptools", type="build")
 
     depends_on("py-numpy@1.16:", type=("build", "run"))
-    depends_on("py-scipy@1.0:", type=("build", "run"))
+    depends_on("py-scipy@1:", type=("build", "run"))
     depends_on("py-pyyaml", type=("build", "run"))
     depends_on("py-matplotlib", type=("build", "run"))
     depends_on("py-requests", type=("build", "run"))
