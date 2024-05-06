@@ -12,8 +12,6 @@ class Mold(CMakePackage):
     homepage = "https://github.com/rui314/mold"
     url = "https://github.com/rui314/mold/archive/refs/tags/v1.11.0.tar.gz"
 
-    maintainers("jabcross")
-
     license("MIT")
 
     version("2.4.1", sha256="c9853d007d6a1b4f3e36b7314346751f4cc91bc43c76e30db51709b53b44dd68")
