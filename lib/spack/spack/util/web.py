@@ -61,7 +61,7 @@ class SpackHTTPDefaultErrorHandler(urllib.request.HTTPDefaultErrorHandler):
 
 
 dbg_msg_no_ssl_cert_config = (
-    "config:ssl_certs not in configuration. "
+    "config:ssl_certs not in configuration or not a valid absolute path. "
     "Default cert configuation and environment will be used."
 )
 
