@@ -17,6 +17,7 @@ class FenicsDolfinx(CMakePackage):
     license("LGPL-3.0-or-later")
 
     version("main", branch="main")
+    version("0.8.0", sha256="acf3104d9ecc0380677a6faf69eabfafc58d0cce43f7777e1307b95701c7cad9")
     version("0.7.2", sha256="7d9ce1338ce66580593b376327f23ac464a4ce89ef63c105efc1a38e5eae5c0b")
     version("0.6.0", sha256="eb8ac2bb2f032b0d393977993e1ab6b4101a84d54023a67206e3eac1a8d79b80")
     version(
@@ -80,12 +81,14 @@ class FenicsDolfinx(CMakePackage):
     depends_on("pugixml", when="@0.5.0:")
 
     depends_on("fenics-ufcx@main", when="@main")
+    depends_on("fenics-ufcx@0.8", when="@0.8")
     depends_on("fenics-ufcx@0.7", when="@0.7")
     depends_on("fenics-ufcx@0.6.0:0.6", when="@0.6.0:0.6")
     depends_on("fenics-ufcx@0.5.0", when="@0.5.1:0.5")
     depends_on("fenics-ufcx@0.4.2", when="@0.4.1")
 
     depends_on("fenics-basix@main", when="@main")
+    depends_on("fenics-basix@0.8", when="@0.8")
     depends_on("fenics-basix@0.7", when="@0.7")
     depends_on("fenics-basix@0.6.0:0.6", when="@0.6.0:0.6")
     depends_on("fenics-basix@0.5.1:0.5", when="@0.5.0:0.5")
