@@ -8,13 +8,14 @@ import re
 import sys
 
 import llnl.util.tty as tty
+from llnl.util.lang import classproperty
 
 import spack.build_environment
 import spack.util.executable
 from spack.package import *
 
 
-class Llvm(CMakePackage, CudaPackage):
+class Llvm(CMakePackage, CudaPackage, CompilerPackage):
     """The LLVM Project is a collection of modular and reusable compiler and
     toolchain technologies. Despite its name, LLVM has little to do
     with traditional virtual machines, though it does provide helpful
@@ -28,7 +29,7 @@ class Llvm(CMakePackage, CudaPackage):
     git = "https://github.com/llvm/llvm-project"
     maintainers("trws", "haampie", "skosukhin")
 
-    tags = ["e4s"]
+    tags = ["e4s", "compiler"]
 
     generator("ninja")
 
@@ -594,11 +595,36 @@ class Llvm(CMakePackage, CudaPackage):
             string=True,
         )
 
-    # The functions and attributes below implement external package
-    # detection for LLVM. See:
-    #
-    # https://spack.readthedocs.io/en/latest/packaging_guide.html#making-a-package-discoverable-with-spack-external-find
-    executables = ["clang", "flang", "ld.lld", "lldb"]
+    compiler_version_regex = (
+        # Normal clang compiler versions are left as-is
+        r"clang version ([^ )\n]+)-svn[~.\w\d-]*|"
+        # Don't include hyphenated patch numbers in the version
+        # (see https://github.com/spack/spack/pull/14365 for details)
+        r"clang version ([^ )\n]+?)-[~.\w\d-]*|"
+        r"clang version ([^ )\n]+)|"
+        # LLDB
+        r"lldb version ([^ )\n]+)|"
+        # LLD
+        r"LLD ([^ )\n]+) \(compatible with GNU linkers\)"
+    )
+    compiler_version_argument = "--version"
+    compiler_languages = ["c", "cxx", "fortran"]
+    c_names = ["clang"]
+    cxx_names = ["clang++"]
+    fortran_names = ["flang"]
+
+    @property
+    def supported_languages(self):
+        languages = []
+        if self.spec.satisfies("+clang"):
+            languages.extend(["c", "cxx"])
+        if self.spec.satisfies("+flang"):
+            languages.append("fortran")
+        return languages
+
+    @classproperty
+    def executables(cls):
+        return super().executables + ["ld.lld", "lldb"]
 
     @classmethod
     def filter_detected_exes(cls, prefix, exes_in_prefix):
@@ -615,26 +641,14 @@ class Llvm(CMakePackage, CudaPackage):
 
     @classmethod
     def determine_version(cls, exe):
-        version_regex = re.compile(
-            # Normal clang compiler versions are left as-is
-            r"clang version ([^ )\n]+)-svn[~.\w\d-]*|"
-            # Don't include hyphenated patch numbers in the version
-            # (see https://github.com/spack/spack/pull/14365 for details)
-            r"clang version ([^ )\n]+?)-[~.\w\d-]*|"
-            r"clang version ([^ )\n]+)|"
-            # LLDB
-            r"lldb version ([^ )\n]+)|"
-            # LLD
-            r"LLD ([^ )\n]+) \(compatible with GNU linkers\)"
-        )
         try:
             compiler = Executable(exe)
-            output = compiler("--version", output=str, error=str)
+            output = compiler(cls.compiler_version_argument, output=str, error=str)
             if "Apple" in output:
                 return None
             if "AMD" in output:
                 return None
-            match = version_regex.search(output)
+            match = re.search(cls.compiler_version_regex, output)
             if match:
                 return match.group(match.lastindex)
         except spack.util.executable.ProcessError:
@@ -646,21 +660,23 @@ class Llvm(CMakePackage, CudaPackage):
 
     @classmethod
     def determine_variants(cls, exes, version_str):
+        # Do not need to reuse more general logic from CompilerPackage
+        # because LLVM has kindly named compilers
         variants, compilers = ["+clang"], {}
         lld_found, lldb_found = False, False
         for exe in exes:
-            if "clang++" in exe:
+            name = os.path.basename(exe)
+            if "clang++" in name:
                 compilers["cxx"] = exe
-            elif "clang" in exe:
+            elif "clang" in name:
                 compilers["c"] = exe
-            elif "flang" in exe:
+            elif "flang" in name:
                 variants.append("+flang")
-                compilers["fc"] = exe
-                compilers["f77"] = exe
-            elif "ld.lld" in exe:
+                compilers["fortran"] = exe
+            elif "ld.lld" in name:
                 lld_found = True
                 compilers["ld"] = exe
-            elif "lldb" in exe:
+            elif "lldb" in name:
                 lldb_found = True
                 compilers["lldb"] = exe
 

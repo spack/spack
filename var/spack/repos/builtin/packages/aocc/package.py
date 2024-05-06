@@ -8,7 +8,7 @@ from llnl.util import tty
 from spack.package import *
 
 
-class Aocc(Package):
+class Aocc(Package, CompilerPackage):
     """
     The AOCC compiler system is a high performance, production quality code
     generation tool.  The AOCC environment provides various options to developers
@@ -104,3 +104,9 @@ class Aocc(Package):
             for compiler in ["clang", "clang++"]:
                 with open(join_path(self.prefix.bin, "{}.cfg".format(compiler)), "w") as f:
                     f.write(compiler_options)
+
+    compiler_version_argument = "--version"
+    compiler_version_regex = r"AOCC_(\d+[._]\d+[._]\d+)"
+    c_names = ["clang"]
+    cxx_names = ["clang++"]
+    fortran_names = ["flang"]

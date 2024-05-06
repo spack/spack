@@ -1694,7 +1694,7 @@ def mock_executable(tmp_path):
     """Factory to create a mock executable in a temporary directory that
     output a custom string when run.
     """
-    shebang = "#!/bin/sh\n" if sys.platform != "win32" else "@ECHO OFF"
+    shebang = "#!/bin/sh\n" if sys.platform != "win32" else "@ECHO OFF\n"
 
     def _factory(name, output, subdir=("bin",)):
         executable_dir = tmp_path.joinpath(*subdir)

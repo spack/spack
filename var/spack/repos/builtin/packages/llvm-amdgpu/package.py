@@ -2,15 +2,12 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-
 import os
-import re
 
 from spack.package import *
 
 
-class LlvmAmdgpu(CMakePackage):
+class LlvmAmdgpu(CMakePackage, CompilerPackage):
     """Toolkit for the construction of highly optimized compilers,
     optimizers, and run-time environments."""
 
@@ -247,18 +244,12 @@ class LlvmAmdgpu(CMakePackage):
             args.append("-DSANITIZER_AMDGPU:Bool=ON")
         return args
 
-    @classmethod
-    def determine_version(cls, path):
-        match = re.search(r"amdclang", path)
-        detected_version = None
-        if match:
-            version_query = Executable(path)("--version", output=str)
-            match = re.search(r"roc-(\d)\.(\d).(\d)", version_query)
-            if match:
-                detected_version = "{0}.{1}.{2}".format(
-                    int(match.group(1)), int(match.group(2)), int(match.group(3))
-                )
-        return detected_version
+    compiler_languages = ["c", "cxx", "fortran"]
+    c_names = ["amdclang"]
+    cxx_names = ["amdclang++"]
+    fortran_names = ["amdflang"]
+    compiler_version_argument = "--version"
+    compiler_version_regex = r"roc-(\d+[._]\d+[._]\d+)"
 
     # Make sure that the compiler paths are in the LD_LIBRARY_PATH
     def setup_run_environment(self, env):
