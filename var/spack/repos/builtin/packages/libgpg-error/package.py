@@ -16,6 +16,7 @@ class LibgpgError(AutotoolsPackage):
 
     license("GPL-2.0-or-later AND LGPL-2.1-or-later")
 
+    version("1.49", sha256="8b79d54639dbf4abc08b5406fb2f37e669a2dec091dd024fb87dd367131c63a9")
     version("1.48", sha256="89ce1ae893e122924b858de84dc4f67aae29ffa610ebf668d5aa539045663d6f")
     version("1.47", sha256="9e3c670966b96ecc746c28c2c419541e3bcb787d1a73930f5e5f5e1bcbbb9bdb")
     version("1.46", sha256="b7e11a64246bbe5ef37748de43b245abd72cfcd53c9ae5e7fc5ca59f1c81268d")
