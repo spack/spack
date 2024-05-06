@@ -66,13 +66,23 @@ dbg_msg_no_ssl_cert_config = (
 )
 
 
-def urllib_ssl_cert_handler():
-    """context for configuring ssl during urllib HTTPS operations"""
+def path_verified_ssl_certs(fetch_method):
     custom_cert_var = spack.config.get("config:ssl_certs")
     if custom_cert_var:
         # custom certs will be a location, so expand env variables, paths etc
         certs = spack.util.path.substitute_path_variables(custom_cert_var)
-        tty.debug("URLLIB: Looking for custom SSL certs at {}".format(certs))
+        tty.debug(f"{fetch_method}: Looking for custom SSL certs at {certs}")
+        if not os.path.isabs(certs):
+            tty.warn(f"{fetch_method}: SSL certs are not at an absolute path and will be ignored")
+        else:
+            return certs
+    return None
+
+
+def urllib_ssl_cert_handler():
+    """context for configuring ssl during urllib HTTPS operations"""
+    certs = path_verified_ssl_certs("URLLIB")
+    if certs:
         if os.path.isfile(certs):
             tty.debug("URLLIB: Custom SSL certs file found at {}".format(certs))
             return ssl.create_default_context(cafile=certs)
@@ -94,11 +104,8 @@ def append_curl_env_for_ssl_certs(curl):
     configure curl to use custom certs in a file at run time
     see: https://curl.se/docs/sslcerts.html item 4
     """
-    custom_cert_var = spack.config.get("config:ssl_certs")
-    if custom_cert_var:
-        # custom certs will be a location, so expand env variables, paths etc
-        certs = spack.util.path.substitute_path_variables(custom_cert_var)
-        tty.debug("CURL: Looking for custom SSL certs file at {}".format(certs))
+    certs = path_verified_ssl_certs("CURL")
+    if certs:
         if os.path.isfile(certs):
             tty.debug(
                 "CURL: Configuring curl to use custom"
