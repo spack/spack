@@ -21,14 +21,14 @@ jobs:
         image: ["fedora:latest", "opensuse/leap:latest"]
     steps:
       - name: Setup Fedora
-        if: ${{ matrix.image != 'fedora:latest' }}
+        if: ${{ matrix.image == 'fedora:latest' }}
         run: |
           dnf install -y \
               bzip2 curl file gcc-c++ gcc gcc-gfortran git gzip \
               make patch unzip which xz python3 python3-devel tree \
               cmake bison bison-devel libstdc++-static
       - name: Setup OpenSUSE
-        if: ${{ matrix.image != 'opensuse/leap:latest' }}
+        if: ${{ matrix.image == 'opensuse/leap:latest' }}
         run: |
           # Harden CI by applying the workaround described here: https://www.suse.com/support/kb/doc/?id=000019505
           zypper update -y || zypper update -y
