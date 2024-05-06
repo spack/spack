@@ -74,6 +74,7 @@ class Hipsolver(CMakePackage, CudaPackage, ROCmPackage):
     variant("asan", default=False, description="Build with address-sanitizer enabled or disabled")
 
     depends_on("cmake@3.5:", type="build")
+    depends_on("suite-sparse", type="build")
 
     depends_on("rocm-cmake@5.2.0:", type="build", when="@5.2.0:")
     depends_on("rocm-cmake@4.5.0:", type="build")
@@ -111,7 +112,7 @@ class Hipsolver(CMakePackage, CudaPackage, ROCmPackage):
 
     depends_on("googletest@1.10.0:", type="test")
     depends_on("netlib-lapack@3.7.1:", type="test")
-
+    patch("001-suite-sparse-include-path.patch", when="@6.1")
     def check(self):
         exe = join_path(self.build_directory, "clients", "staging", "hipsolver-test")
         self.run_test(exe, options=["--gtest_filter=-*known_bug*"])
@@ -135,6 +136,8 @@ class Hipsolver(CMakePackage, CudaPackage, ROCmPackage):
         args = [
             self.define("BUILD_CLIENTS_SAMPLES", "OFF"),
             self.define("BUILD_CLIENTS_TESTS", self.run_tests),
+            self.define("SUITE_SPARSE_PATH", self.spec["suite-sparse"].prefix),
+            self.define("ROCBLAS_PATH", self.spec["rocblas"].prefix),
         ]
 
         args.append(self.define_from_variant("USE_CUDA", "cuda"))
