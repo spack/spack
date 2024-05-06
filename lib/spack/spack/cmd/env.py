@@ -107,7 +107,7 @@ def env_create(args):
     env = _env_create(
         args.env_name,
         init_file=args.envfile,
-        dir=args.dir or "." in args.env_name or "/" in args.env_name,
+        dir=args.dir or os.path.sep in args.env_name or args.env_name in (".", ".."),
         with_view=with_view,
         keep_relative=args.keep_relative,
     )
@@ -147,7 +147,7 @@ def _env_create(
         env = ev.create_in_dir(
             name_or_path, init_file=init_file, with_view=with_view, keep_relative=keep_relative
         )
-        tty.msg(colorize(f"Created environment in: @c{{{cescape(env.path)}}}"))
+        tty.msg(colorize(f"Created anonymous environment in: @c{{{cescape(env.path)}}}"))
     tty.msg(f"Activate with: {colorize(f'@c{{spack env activate {cescape(name_or_path)}}}')}")
     return env
 
