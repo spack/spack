@@ -152,10 +152,10 @@ jobs:
           tree ~/.spack/bootstrap/store/
 
   macos-clingo-sources:
-    runs-on: ${{ matrix.macos-version }}
+    runs-on: ${{ matrix.runner }}
     strategy:
       matrix:
-        macos-version: ['macos-13', 'macos-14']
+        runner: ['macos-13', 'macos-14']
     steps:
       - name: Install dependencies
         run: |
@@ -173,109 +173,6 @@ jobs:
           spack bootstrap disable github-actions-v0.4
           spack external find --not-buildable cmake bison
           spack -d solve zlib
-          tree ~/.spack/bootstrap/store/
-
-  macos-binaries:
-    runs-on: ${{ matrix.macos-version }}
-    strategy:
-      matrix:
-        macos-version: ['macos-13', 'macos-14']
-    steps:
-      - name: Install dependencies
-        run: |
-          brew install tree
-          # Remove GnuPG since we want to bootstrap it
-          sudo rm -rf /usr/local/bin/gpg          
-      - name: Checkout
-        uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b
-      - uses: actions/setup-python@82c7e631bb3cdc910f68e0081d67478d79c6982d
-        with:
-          python-version: |
-            3.8
-            3.9
-            3.10
-            3.11
-            3.12
-      - name: Set bootstrap sources
-        run: |
-          source share/spack/setup-env.sh
-          spack bootstrap disable github-actions-v0.4
-          spack bootstrap disable spack-install
-      - name: Bootstrap clingo
-        run: |
-          set -e
-          for ver in '3.8' '3.9' '3.10' '3.11' '3.12' ; do
-            not_found=1
-            ver_dir="$(find $RUNNER_TOOL_CACHE/Python -wholename "*/${ver}.*/*/bin" | grep . || true)"
-            if [[ -d "$ver_dir" ]] ; then
-              echo "Testing $ver_dir"
-              if $ver_dir/python --version ; then
-                export PYTHON="$ver_dir/python"
-                not_found=0
-                old_path="$PATH"
-                export PATH="$ver_dir:$PATH"
-                ./bin/spack-tmpconfig -b ./.github/workflows/bootstrap-test.sh
-                export PATH="$old_path"
-              fi
-            fi
-            if (($not_found)) ; then
-              echo Required python version $ver not found in runner!
-              exit 1
-            fi
-          done
-      - name: Bootstrap GnuPG
-        run: |
-          source share/spack/setup-env.sh
-          spack -d gpg list
-          tree ~/.spack/bootstrap/store/
-
-  ubuntu-binaries:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b
-        with:
-          fetch-depth: 0
-      - uses: actions/setup-python@82c7e631bb3cdc910f68e0081d67478d79c6982d
-        with:
-          python-version: |
-            3.8
-            3.9
-            3.10
-            3.11
-            3.12
-      - name: Setup runner
-        run: |
-          sudo rm -rf $(which gpg) $(which gpg2)
-          source share/spack/setup-env.sh
-          spack bootstrap disable github-actions-v0.4
-          spack bootstrap disable spack-install
-      - name: Bootstrap clingo
-        run: |
-          set -e
-          for ver in '3.8' '3.9' '3.10' '3.11' '3.12' ; do
-            not_found=1
-            ver_dir="$(find $RUNNER_TOOL_CACHE/Python -wholename "*/${ver}.*/*/bin" | grep . || true)"
-            if [[ -d "$ver_dir" ]] ; then
-              echo "Testing $ver_dir"
-              if $ver_dir/python --version ; then
-                export PYTHON="$ver_dir/python"
-                not_found=0
-                old_path="$PATH"
-                export PATH="$ver_dir:$PATH"
-                ./bin/spack-tmpconfig -b ./.github/workflows/bootstrap-test.sh
-                export PATH="$old_path"
-              fi
-            fi
-            if (($not_found)) ; then
-              echo Required python version $ver not found in runner!
-              exit 1
-            fi
-          done
-      - name: Bootstrap GnuPG
-        run: |
-          source share/spack/setup-env.sh
-          spack -d gpg list
           tree ~/.spack/bootstrap/store/
 
   ubuntu-gnupg-sources:
@@ -335,6 +232,69 @@ jobs:
           spack -d gpg list
           tree ~/.spack/bootstrap/store/
 
+  core-binaries:
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      matrix:
+        runner: ['macos-13', 'macos-14', "ubuntu-latest"]
+    steps:
+      - name: Setup macOS
+        if: ${{ matrix.runner != 'ubuntu-latest' }}
+        run: |
+          brew install tree
+          # Remove GnuPG since we want to bootstrap it
+          sudo rm -rf /usr/local/bin/gpg
+      - name: Setup Ubuntu
+        if: ${{ matrix.runner == 'ubuntu-latest' }}
+        run: |
+          sudo rm -rf $(which gpg) $(which gpg2)
+          source share/spack/setup-env.sh
+          spack bootstrap disable github-actions-v0.4
+          spack bootstrap disable spack-install
+      - name: Checkout
+        uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@82c7e631bb3cdc910f68e0081d67478d79c6982d
+        with:
+          python-version: |
+            3.8
+            3.9
+            3.10
+            3.11
+            3.12
+      - name: Set bootstrap sources
+        run: |
+          source share/spack/setup-env.sh
+          spack bootstrap disable github-actions-v0.4
+          spack bootstrap disable spack-install
+      - name: Bootstrap clingo
+        run: |
+          set -e
+          for ver in '3.8' '3.9' '3.10' '3.11' '3.12' ; do
+            not_found=1
+            ver_dir="$(find $RUNNER_TOOL_CACHE/Python -wholename "*/${ver}.*/*/bin" | grep . || true)"
+            if [[ -d "$ver_dir" ]] ; then
+              echo "Testing $ver_dir"
+              if $ver_dir/python --version ; then
+                export PYTHON="$ver_dir/python"
+                not_found=0
+                old_path="$PATH"
+                export PATH="$ver_dir:$PATH"
+                ./bin/spack-tmpconfig -b ./.github/workflows/bootstrap-test.sh
+                export PATH="$old_path"
+              fi
+            fi
+            if (($not_found)) ; then
+              echo Required python version $ver not found in runner!
+              exit 1
+            fi
+          done
+      - name: Bootstrap GnuPG
+        run: |
+          source share/spack/setup-env.sh
+          spack -d gpg list
+          tree ~/.spack/bootstrap/store/
 
 # [1] Distros that have patched git to resolve CVE-2022-24765 (e.g. Ubuntu patching v2.25.1)
 #     introduce breaking behaviorso we have to set `safe.directory` in gitconfig ourselves.
