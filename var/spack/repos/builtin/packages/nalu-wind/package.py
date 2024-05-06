@@ -83,7 +83,7 @@ class NaluWind(CMakePackage, CudaPackage, ROCmPackage):
         )
     for _arch in ROCmPackage.amdgpu_targets:
         depends_on(
-            "trilinos@13.4.0.2022.10.27: ~shared+rocm amdgpu_target={0}".format(_arch),
+            "trilinos@13.4: ~shared+rocm amdgpu_target={0}".format(_arch),
             when="+rocm amdgpu_target={0}".format(_arch),
         )
         depends_on(
