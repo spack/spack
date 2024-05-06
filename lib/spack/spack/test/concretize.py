@@ -24,6 +24,7 @@ import spack.hash_types as ht
 import spack.platforms
 import spack.repo
 import spack.solver.asp
+import spack.util.libc
 import spack.variant as vt
 from spack.concretize import find_spec
 from spack.spec import CompilerSpec, Spec
@@ -1243,10 +1244,11 @@ class TestConcretize:
 
     @pytest.mark.regression("20055")
     @pytest.mark.only_clingo("Use case not supported by the original concretizer")
-    def test_custom_compiler_version(self, mutable_config, compiler_factory):
+    def test_custom_compiler_version(self, mutable_config, compiler_factory, monkeypatch):
         mutable_config.set(
             "compilers", [compiler_factory(spec="gcc@10foo", operating_system="redhat6")]
         )
+        monkeypatch.setattr(spack.compiler.Compiler, "real_version", "10.2.1")
         s = Spec("a %gcc@10foo os=redhat6").concretized()
         assert "%gcc@10foo" in s
 
@@ -2427,6 +2429,40 @@ class TestConcretize:
         s = Spec("mpich").concretized()
         assert s.external
 
+    @pytest.mark.regression("43875")
+    def test_concretize_missing_compiler(self, mutable_config, monkeypatch):
+        """Tests that Spack can concretize a spec with a missing compiler when the
+        option is active.
+        """
+
+        def _default_libc(self):
+            if self.cc is None:
+                return None
+            return Spec("glibc@=2.28")
+
+        monkeypatch.setattr(spack.concretize.Concretizer, "check_for_compiler_existence", False)
+        monkeypatch.setattr(spack.compiler.Compiler, "default_libc", property(_default_libc))
+        monkeypatch.setattr(
+            spack.util.libc, "libc_from_current_python_process", lambda: Spec("glibc@=2.28")
+        )
+        mutable_config.set("config:install_missing_compilers", True)
+        s = Spec("a %gcc@=13.2.0").concretized()
+        assert s.satisfies("%gcc@13.2.0")
+
+    @pytest.mark.regression("43267")
+    def test_spec_with_build_dep_from_json(self, tmp_path):
+        """Tests that we can correctly concretize a spec, when we express its dependency as a
+        concrete spec to be read from JSON.
+
+        The bug was triggered by missing virtuals on edges that were trimmed from pure build
+        dependencies.
+        """
+        build_dep = Spec("dttop").concretized()
+        json_file = tmp_path / "build.json"
+        json_file.write_text(build_dep.to_json())
+        s = Spec(f"dtuse ^{str(json_file)}").concretized()
+        assert s["dttop"].dag_hash() == build_dep.dag_hash()
+
 
 @pytest.fixture()
 def duplicates_test_repository():
@@ -2804,15 +2840,79 @@ def test_concretization_version_order():
     ]
 
 
-def mock_runtime_dependencies(*args, **kwargs):
-    """
-    mock function moved outside local definition to allow
-    multiprocessing pickling to work
-    ----------------- Captured stderr call -------------
-    AttributeError:
-      Can't pickle local object 'test_reuse_prefers_standard_over_git_versions.<locals>.<lambda>'
-    """
-    return True
+@pytest.mark.only_clingo("Original concretizer cannot reuse specs")
+@pytest.mark.parametrize(
+    "roots,reuse_yaml,expected,not_expected,expected_length",
+    [
+        (
+            ["mpileaks"],
+            {"roots": True, "include": ["^mpich"]},
+            ["^mpich"],
+            ["^mpich2", "^zmpi"],
+            2,
+        ),
+        (
+            ["mpileaks"],
+            {"roots": True, "include": ["externaltest"]},
+            ["externaltest"],
+            ["^mpich", "^mpich2", "^zmpi"],
+            1,
+        ),
+    ],
+)
+@pytest.mark.usefixtures("database", "mock_store")
+@pytest.mark.not_on_windows("Expected length is different on Windows")
+def test_filtering_reused_specs(
+    roots, reuse_yaml, expected, not_expected, expected_length, mutable_config, monkeypatch
+):
+    """Tests that we can select which specs are to be reused, using constraints as filters"""
+    # Assume all specs have a runtime dependency
+    monkeypatch.setattr(spack.solver.asp, "_has_runtime_dependencies", lambda x: True)
+    mutable_config.set("concretizer:reuse", reuse_yaml)
+    selector = spack.solver.asp.ReusableSpecsSelector(mutable_config)
+    specs = selector.reusable_specs(roots)
+
+    assert len(specs) == expected_length
+
+    for constraint in expected:
+        assert all(x.satisfies(constraint) for x in specs)
+
+    for constraint in not_expected:
+        assert all(not x.satisfies(constraint) for x in specs)
+
+
+@pytest.mark.usefixtures("database", "mock_store")
+@pytest.mark.parametrize(
+    "reuse_yaml,expected_length",
+    [({"from": [{"type": "local"}]}, 17), ({"from": [{"type": "buildcache"}]}, 0)],
+)
+@pytest.mark.not_on_windows("Expected length is different on Windows")
+def test_selecting_reused_sources(reuse_yaml, expected_length, mutable_config, monkeypatch):
+    """Tests that we can turn on/off sources of reusable specs"""
+    # Assume all specs have a runtime dependency
+    monkeypatch.setattr(spack.solver.asp, "_has_runtime_dependencies", lambda x: True)
+    mutable_config.set("concretizer:reuse", reuse_yaml)
+    selector = spack.solver.asp.ReusableSpecsSelector(mutable_config)
+    specs = selector.reusable_specs(["mpileaks"])
+    assert len(specs) == expected_length
+
+
+@pytest.mark.parametrize(
+    "specs,include,exclude,expected",
+    [
+        # "foo" discarded by include rules (everything compiled with GCC)
+        (["cmake@3.27.9 %gcc", "foo %clang"], ["%gcc"], [], ["cmake@3.27.9 %gcc"]),
+        # "cmake" discarded by exclude rules (everything compiled with GCC but cmake)
+        (["cmake@3.27.9 %gcc", "foo %gcc"], ["%gcc"], ["cmake"], ["foo %gcc"]),
+    ],
+)
+def test_spec_filters(specs, include, exclude, expected):
+    specs = [Spec(x) for x in specs]
+    expected = [Spec(x) for x in expected]
+    f = spack.solver.asp.SpecFilter(
+        factory=lambda: specs, is_usable=lambda x: True, include=include, exclude=exclude
+    )
+    assert f.selected_specs() == expected
 
 
 @pytest.mark.only_clingo("clingo only re-use feature being tested")

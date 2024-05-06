@@ -399,6 +399,10 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
     # protobuf definitions.
     patch("0008-Fix-protobuf-errors-when-using-system-protobuf.patch", when="@2.5:2.6")
 
+    # see https://github.com/tensorflow/tensorflow/issues/62490
+    # and https://github.com/abseil/abseil-cpp/issues/1665
+    patch("absl_neon.patch", when="@2.16.1: target=aarch64:")
+
     phases = ["configure", "build", "install"]
 
     # https://www.tensorflow.org/install/source
@@ -406,7 +410,7 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
         spec = self.spec
 
         # Please specify the location of python
-        env.set("PYTHON_BIN_PATH", spec["python"].command.path)
+        env.set("PYTHON_BIN_PATH", python.path)
 
         # Please input the desired Python library path to use
         env.set("PYTHON_LIB_PATH", python_platlib)

@@ -128,10 +128,10 @@ class Elfutils(AutotoolsPackage, SourcewarePackage):
             args.append("--with-zstd=%s" % spec["zstd"].prefix)
 
         if spec.satisfies("@0.183:"):
-            if spec["iconv"].name == "libc":
+            if spec["iconv"].name == "libiconv":
+                args.append(f"--with-libiconv-prefix={spec['iconv'].prefix}")
+            else:
                 args.append("--without-libiconv-prefix")
-            elif not is_system_path(spec["iconv"].prefix):
-                args.append("--with-libiconv-prefix=" + format(spec["iconv"].prefix))
 
         if "+nls" in spec:
             # Prior to 0.183, only msgfmt is used from gettext.

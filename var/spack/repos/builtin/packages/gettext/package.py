@@ -6,7 +6,6 @@
 import re
 
 from spack.package import *
-from spack.util.environment import is_system_path
 
 
 class Gettext(AutotoolsPackage, GNUMirrorPackage):
@@ -22,6 +21,7 @@ class Gettext(AutotoolsPackage, GNUMirrorPackage):
 
     license("GPL-3.0-or-later AND LGPL-2.1-or-later AND MIT")
 
+    version("0.22.5", sha256="fe10c37353213d78a5b83d48af231e005c4da84db5ce88037d88355938259640")
     version("0.22.4", sha256="29217f1816ee2e777fa9a01f9956a14139c0c23cc1b20368f06b2888e8a34116")
     version("0.22.3", sha256="b838228b3f8823a6c1eddf07297197c4db13f7e1b173b9ef93f3f945a63080b6")
     version("0.21.1", sha256="50dbc8f39797950aa2c98e939947c527e5ac9ebd2c1b99dd7b06ba33a6767ae6")
@@ -114,10 +114,10 @@ class Gettext(AutotoolsPackage, GNUMirrorPackage):
 
         config_args.extend(self.enable_or_disable("shared"))
 
-        if self.spec["iconv"].name == "libc":
+        if self.spec["iconv"].name == "libiconv":
+            config_args.append(f"--with-libiconv-prefix={self.spec['iconv'].prefix}")
+        else:
             config_args.append("--without-libiconv-prefix")
-        elif not is_system_path(self.spec["iconv"].prefix):
-            config_args.append("--with-libiconv-prefix=" + self.spec["iconv"].prefix)
 
         if "+curses" in spec:
             config_args.append("--with-ncurses-prefix={0}".format(spec["ncurses"].prefix))

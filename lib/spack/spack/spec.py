@@ -1030,16 +1030,13 @@ class _EdgeMap(collections.abc.Mapping):
         self.edges.clear()
 
 
-def _command_default_handler(descriptor, spec, cls):
+def _command_default_handler(spec: "Spec"):
     """Default handler when looking for the 'command' attribute.
 
     Tries to search for ``spec.name`` in the ``spec.home.bin`` directory.
 
     Parameters:
-        descriptor (ForwardQueryToPackage): descriptor that triggered the call
-        spec (Spec): spec that is being queried
-        cls (type(spec)): type of spec, to match the signature of the
-            descriptor ``__get__`` method
+        spec: spec that is being queried
 
     Returns:
         Executable: An executable of the command
@@ -1052,22 +1049,17 @@ def _command_default_handler(descriptor, spec, cls):
 
     if fs.is_exe(path):
         return spack.util.executable.Executable(path)
-    else:
-        msg = "Unable to locate {0} command in {1}"
-        raise RuntimeError(msg.format(spec.name, home.bin))
+    raise RuntimeError(f"Unable to locate {spec.name} command in {home.bin}")
 
 
-def _headers_default_handler(descriptor, spec, cls):
+def _headers_default_handler(spec: "Spec"):
     """Default handler when looking for the 'headers' attribute.
 
     Tries to search for ``*.h`` files recursively starting from
     ``spec.package.home.include``.
 
     Parameters:
-        descriptor (ForwardQueryToPackage): descriptor that triggered the call
-        spec (Spec): spec that is being queried
-        cls (type(spec)): type of spec, to match the signature of the
-            descriptor ``__get__`` method
+        spec: spec that is being queried
 
     Returns:
         HeaderList: The headers in ``prefix.include``
@@ -1080,12 +1072,10 @@ def _headers_default_handler(descriptor, spec, cls):
 
     if headers:
         return headers
-    else:
-        msg = "Unable to locate {0} headers in {1}"
-        raise spack.error.NoHeadersError(msg.format(spec.name, home))
+    raise spack.error.NoHeadersError(f"Unable to locate {spec.name} headers in {home}")
 
 
-def _libs_default_handler(descriptor, spec, cls):
+def _libs_default_handler(spec: "Spec"):
     """Default handler when looking for the 'libs' attribute.
 
     Tries to search for ``lib{spec.name}`` recursively starting from
@@ -1093,10 +1083,7 @@ def _libs_default_handler(descriptor, spec, cls):
     ``{spec.name}`` instead.
 
     Parameters:
-        descriptor (ForwardQueryToPackage): descriptor that triggered the call
-        spec (Spec): spec that is being queried
-        cls (type(spec)): type of spec, to match the signature of the
-            descriptor ``__get__`` method
+        spec: spec that is being queried
 
     Returns:
         LibraryList: The libraries found
@@ -1135,27 +1122,33 @@ def _libs_default_handler(descriptor, spec, cls):
         if libs:
             return libs
 
-    msg = "Unable to recursively locate {0} libraries in {1}"
-    raise spack.error.NoLibrariesError(msg.format(spec.name, home))
+    raise spack.error.NoLibrariesError(
+        f"Unable to recursively locate {spec.name} libraries in {home}"
+    )
 
 
 class ForwardQueryToPackage:
     """Descriptor used to forward queries from Spec to Package"""
 
-    def __init__(self, attribute_name, default_handler=None):
+    def __init__(
+        self,
+        attribute_name: str,
+        default_handler: Optional[Callable[["Spec"], Any]] = None,
+        _indirect: bool = False,
+    ) -> None:
         """Create a new descriptor.
 
         Parameters:
-            attribute_name (str): name of the attribute to be
-                searched for in the Package instance
-            default_handler (callable, optional): default function to be
-                called if the attribute was not found in the Package
-                instance
+            attribute_name: name of the attribute to be searched for in the Package instance
+            default_handler: default function to be called if the attribute was not found in the
+                Package instance
+            _indirect: temporarily added to redirect a query to another package.
         """
         self.attribute_name = attribute_name
         self.default = default_handler
+        self.indirect = _indirect
 
-    def __get__(self, instance, cls):
+    def __get__(self, instance: "SpecBuildInterface", cls):
         """Retrieves the property from Package using a well defined chain
         of responsibility.
 
@@ -1177,13 +1170,18 @@ class ForwardQueryToPackage:
         indicating a query failure, e.g. that library files were not found in a
         'libs' query.
         """
-        pkg = instance.package
+        # TODO: this indirection exist solely for `spec["python"].command` to actually return
+        # spec["python-venv"].command. It should be removed when `python` is a virtual.
+        if self.indirect and instance.indirect_spec:
+            pkg = instance.indirect_spec.package
+        else:
+            pkg = instance.wrapped_obj.package
         try:
             query = instance.last_query
         except AttributeError:
             # There has been no query yet: this means
             # a spec is trying to access its own attributes
-            _ = instance[instance.name]  # NOQA: ignore=F841
+            _ = instance.wrapped_obj[instance.wrapped_obj.name]  # NOQA: ignore=F841
             query = instance.last_query
 
         callbacks_chain = []
@@ -1195,7 +1193,8 @@ class ForwardQueryToPackage:
         callbacks_chain.append(lambda: getattr(pkg, self.attribute_name))
         # Final resort : default callback
         if self.default is not None:
-            callbacks_chain.append(lambda: self.default(self, instance, cls))
+            _default = self.default  # make mypy happy
+            callbacks_chain.append(lambda: _default(instance.wrapped_obj))
 
         # Trigger the callbacks in order, the first one producing a
         # value wins
@@ -1254,24 +1253,32 @@ QueryState = collections.namedtuple("QueryState", ["name", "extra_parameters", "
 class SpecBuildInterface(lang.ObjectWrapper):
     # home is available in the base Package so no default is needed
     home = ForwardQueryToPackage("home", default_handler=None)
-
-    command = ForwardQueryToPackage("command", default_handler=_command_default_handler)
-
     headers = ForwardQueryToPackage("headers", default_handler=_headers_default_handler)
-
     libs = ForwardQueryToPackage("libs", default_handler=_libs_default_handler)
+    command = ForwardQueryToPackage(
+        "command", default_handler=_command_default_handler, _indirect=True
+    )
 
-    def __init__(self, spec, name, query_parameters):
+    def __init__(self, spec: "Spec", name: str, query_parameters: List[str], _parent: "Spec"):
         super().__init__(spec)
         # Adding new attributes goes after super() call since the ObjectWrapper
         # resets __dict__ to behave like the passed object
         original_spec = getattr(spec, "wrapped_obj", spec)
         self.wrapped_obj = original_spec
-        self.token = original_spec, name, query_parameters
+        self.token = original_spec, name, query_parameters, _parent
         is_virtual = spack.repo.PATH.is_virtual(name)
         self.last_query = QueryState(
             name=name, extra_parameters=query_parameters, isvirtual=is_virtual
         )
+
+        # TODO: this ad-hoc logic makes `spec["python"].command` return
+        # `spec["python-venv"].command` and should be removed when `python` is a virtual.
+        self.indirect_spec = None
+        if spec.name == "python":
+            python_venvs = _parent.dependencies("python-venv")
+            if not python_venvs:
+                return
+            self.indirect_spec = python_venvs[0]
 
     def __reduce__(self):
         return SpecBuildInterface, self.token
@@ -3898,9 +3905,13 @@ class Spec:
         if not self._dependencies:
             return False
 
-        # If we arrived here, then rhs is abstract. At the moment we don't care about the edge
-        # structure of an abstract DAG, so we check if any edge could satisfy the properties
-        # we ask for.
+        # If we arrived here, the lhs root node satisfies the rhs root node. Now we need to check
+        # all the edges that have an abstract parent, and verify that they match some edge in the
+        # lhs.
+        #
+        # It might happen that the rhs brings in concrete sub-DAGs. For those we don't need to
+        # verify the edge properties, cause everything is encoded in the hash of the nodes that
+        # will be verified later.
         lhs_edges: Dict[str, Set[DependencySpec]] = collections.defaultdict(set)
         for rhs_edge in other.traverse_edges(root=False, cover="edges"):
             # If we are checking for ^mpi we need to verify if there is any edge
@@ -3908,6 +3919,10 @@ class Spec:
                 rhs_edge.update_virtuals(virtuals=(rhs_edge.spec.name,))
 
             if not rhs_edge.virtuals:
+                continue
+
+            # Skip edges from a concrete sub-DAG
+            if rhs_edge.parent.concrete:
                 continue
 
             if not lhs_edges:
@@ -4129,7 +4144,7 @@ class Spec:
             raise spack.error.SpecError("Spec version is not concrete: " + str(self))
         return self.versions[0]
 
-    def __getitem__(self, name):
+    def __getitem__(self, name: str):
         """Get a dependency from the spec by its name. This call implicitly
         sets a query state in the package being retrieved. The behavior of
         packages may be influenced by additional query parameters that are
@@ -4138,7 +4153,7 @@ class Spec:
         Note that if a virtual package is queried a copy of the Spec is
         returned while for non-virtual a reference is returned.
         """
-        query_parameters = name.split(":")
+        query_parameters: List[str] = name.split(":")
         if len(query_parameters) > 2:
             raise KeyError("key has more than one ':' symbol. At most one is admitted.")
 
@@ -4161,7 +4176,7 @@ class Spec:
         )
 
         try:
-            value = next(
+            child: Spec = next(
                 itertools.chain(
                     # Regular specs
                     (x for x in order() if x.name == name),
@@ -4178,9 +4193,9 @@ class Spec:
             raise KeyError(f"No spec with name {name} in {self}")
 
         if self._concrete:
-            return SpecBuildInterface(value, name, query_parameters)
+            return SpecBuildInterface(child, name, query_parameters, _parent=self)
 
-        return value
+        return child
 
     def __contains__(self, spec):
         """True if this spec or some dependency satisfies the spec.

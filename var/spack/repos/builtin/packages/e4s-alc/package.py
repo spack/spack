@@ -20,6 +20,7 @@ class E4sAlc(PythonPackage):
     license("MIT")
 
     version("main", branch="main")
+    version("1.0.2", commit="9eddfc61659ecab3c0253b2eac020ddb6e610b49")
     version("1.0.1", commit="262298128a4991ffc773b1bd835687fb6493311e")
 
     depends_on("python@3.7:", type=("build", "run"))
