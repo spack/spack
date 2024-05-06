@@ -683,10 +683,10 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage, CompilerPackage):
         """Get the right (but pessimistic) architecture specific flags supported by
         both host gcc and to-be-built gcc. For example: gcc@7 %gcc@12 target=znver3
         should pick -march=znver1, since that's what gcc@7 supports."""
-        archs = [spec.target] + spec.target.ancestors
-        for arch in archs:
+        microarchitectures = [spec.target] + spec.target.ancestors
+        for uarch in microarchitectures:
             try:
-                return arch.optimization_flags("gcc", spec.version)
+                return uarch.optimization_flags("gcc", str(spec.version))
             except UnsupportedMicroarchitecture:
                 pass
         # no arch specific flags in common, unlikely to happen.
