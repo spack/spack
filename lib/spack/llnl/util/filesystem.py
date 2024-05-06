@@ -187,7 +187,12 @@ def polite_filename(filename: str) -> str:
     return _polite_antipattern().sub("_", filename)
 
 
-def getuid():
+def getuid() -> Union[str, int]:
+    """Returns os getuid on non Windows
+    On Windows returns 0 for admin users, login string otherwise
+    This is in line with behavior from get_owner_uid which
+    always returns the login string on Windows
+    """
     if sys.platform == "win32":
         import ctypes
 
@@ -220,7 +225,7 @@ def msdos_escape_parens(path):
     if sys.platform == "win32":
         return path.replace("(", "^(").replace(")", "^)")
     else:
-        return cmd
+        return path
 
 
 @system_path_filter
@@ -563,7 +568,13 @@ def exploding_archive_handler(tarball_container, stage):
 
 
 @system_path_filter(arg_slice=slice(1))
-def get_owner_uid(path, err_msg=None):
+def get_owner_uid(path, err_msg=None) -> Union[str, int]:
+    """Returns owner UID of path destination
+    On non Windows this is the value of st_uid
+    On Windows this is the login string associated with the
+     owning user.
+
+    """
     if not os.path.exists(path):
         mkdirp(path, mode=stat.S_IRWXU)
 
