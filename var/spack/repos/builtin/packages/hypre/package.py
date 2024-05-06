@@ -244,7 +244,6 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
             else:
                 configure_args.append("--with-umpire")
 
-
         if spec.satisfies("+caliper"):
             configure_args.append("--with-caliper")
             configure_args.append("--with-caliper-include=%s" % spec["caliper"].prefix.include)
