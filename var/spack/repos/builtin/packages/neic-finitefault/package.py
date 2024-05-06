@@ -52,7 +52,8 @@ class NeicFinitefault(PythonPackage):
 
     depends_on("py-cartopy@0.21.1:0", type=("build", "run"))
     depends_on("py-ipykernel@6.15:6", type=("build", "run"))
-    depends_on("py-matplotlib@3.7.2:3", type=("build", "run"))
+    depends_on("py-matplotlib@3.8.3:3", type=("build", "run"))
+    depends_on("py-matplotlib@3.7.2:3", type=("build", "run"), when="@0.1.0")
     depends_on("py-netcdf4@1.6.4:1~mpi", type=("build", "run"))
     depends_on("py-numpy@1.25:1", type=("build", "run"))
     depends_on("py-obspy@1.4:1", type=("build", "run"))
