@@ -59,12 +59,10 @@ def _try_import_from_store(
             python, *_ = candidate_spec.dependencies("python-venv")
         else:
             python, *_ = candidate_spec.dependencies("python")
-        module_paths = list(
-            {
-                os.path.join(candidate_spec.prefix, python.package.purelib),
-                os.path.join(candidate_spec.prefix, python.package.platlib),
-            }
-        )
+        module_paths = [
+            os.path.join(candidate_spec.prefix, python.package.purelib),
+            os.path.join(candidate_spec.prefix, python.package.platlib),
+        ]
         path_before = list(sys.path)
 
         # NOTE: try module_paths first and last, last allows an existing version in path
