@@ -60,5 +60,5 @@ class PyNanobind(PythonPackage):
 
     @property
     def cmake_prefix_paths(self):
-        paths = [join_path(self.prefix, self.spec["python"].package.platlib, "nanobind", "cmake")]
+        paths = [join_path(python_platlib, "nanobind", "cmake")]
         return paths

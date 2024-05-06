@@ -662,6 +662,7 @@ def _execute_redistribute(
 @directive(("extendees", "dependencies"))
 def extends(spec, when=None, type=("build", "run"), patches=None):
     """Same as depends_on, but also adds this package to the extendee list.
+    In case of Python, also adds a dependency on python-venv.
 
     keyword arguments can be passed to extends() so that extension
     packages can pass parameters to the extendee's extension
@@ -676,6 +677,11 @@ def extends(spec, when=None, type=("build", "run"), patches=None):
 
         _depends_on(pkg, spec, when=when, type=type, patches=patches)
         spec_obj = spack.spec.Spec(spec)
+
+        # When extending python, also add a dependency on python-venv. This is done so that
+        # Spack environment views are Python virtual environments.
+        if spec_obj.name == "python" and not pkg.name == "python-venv":
+            _depends_on(pkg, "python-venv", when=when, type=("build", "run"))
 
         # TODO: the values of the extendees dictionary are not used. Remove in next refactor.
         pkg.extendees[spec_obj.name] = (spec_obj, None)
