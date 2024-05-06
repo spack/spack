@@ -580,7 +580,6 @@ def ci_rebuild(args):
     deps_install_args.append(slash_hash)
     root_install_args.append(slash_hash)
 
-
     commands = [
         # apparently there's a race when spack bootstraps? do it up front once
         [SPACK_COMMAND, "-e", unicode_escape(env.path), "bootstrap", "now"],

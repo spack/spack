@@ -4,11 +4,11 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
 
+import llnl.util.filesystem as fs
+
 import spack.builder
 from spack.build_systems import autotools, nmake
 from spack.package import *
-
-import llnl.util.filesystem as fs
 
 
 class Libxml2(AutotoolsPackage, NMakePackage):
@@ -256,9 +256,20 @@ class NMakeBuilder(BaseBuilder, nmake.NMakeBuilder):
                 "iconv=no",
                 "zlib=yes",
                 "lzma=yes",
-                "lib=%s" % ";".join((fs.windows_sfn(spec["zlib-api"].prefix.lib), fs.windows_sfn(spec["xz"].prefix.lib))),
+                "lib=%s"
+                % ";".join(
+                    (
+                        fs.windows_sfn(spec["zlib-api"].prefix.lib),
+                        fs.windows_sfn(spec["xz"].prefix.lib),
+                    )
+                ),
                 "include=%s"
-                % ";".join((fs.windows_sfn(spec["zlib-api"].prefix.include), fs.windows_sfn(spec["xz"].prefix.include))),
+                % ";".join(
+                    (
+                        fs.windows_sfn(spec["zlib-api"].prefix.include),
+                        fs.windows_sfn(spec["xz"].prefix.include),
+                    )
+                ),
             ]
             if "+python" in spec:
                 opts.append("python=yes")

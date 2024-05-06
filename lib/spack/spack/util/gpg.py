@@ -9,6 +9,7 @@ import os
 import re
 
 import llnl.util.filesystem
+
 import spack.error
 import spack.paths
 import spack.util.executable
