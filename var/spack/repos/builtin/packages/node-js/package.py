@@ -106,6 +106,12 @@ class NodeJs(Package):
         description="Build with Spack's c-ares instead of the bundled version",
     )
     variant(
+        "cares",
+        default=True,
+        when="platform=centos7",
+        description="Build with Spack's c-ares instead of the bundled version",
+    )
+    variant(
         "libuv",
         default=False,
         description="Build with Spack's libuv instead of the bundled version",
