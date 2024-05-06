@@ -88,7 +88,7 @@ jobs:
       - name: Setup macOS
         if: ${{ matrix.runner != 'ubuntu-latest' }}
         run: |
-          brew install cmake bison@2.7 tree
+          brew install cmake bison tree
       - name: Checkout
         uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b
         with:
@@ -99,7 +99,6 @@ jobs:
       - name: Bootstrap clingo
         run: |
           source share/spack/setup-env.sh
-          export PATH=/usr/local/opt/bison@2.7/bin:$PATH
           spack bootstrap disable github-actions-v0.5
           spack bootstrap disable github-actions-v0.4
           spack external find --not-buildable cmake bison
