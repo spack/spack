@@ -71,7 +71,7 @@ def urllib_ssl_cert_handler():
     custom_cert_var = spack.config.get("config:ssl_certs")
     if custom_cert_var:
         # custom certs will be a location, so expand env variables, paths etc
-        certs = spack.util.path.canonicalize_path(custom_cert_var)
+        certs = spack.util.path.substitute_path_variables(custom_cert_var)
         tty.debug("URLLIB: Looking for custom SSL certs at {}".format(certs))
         if os.path.isfile(certs):
             tty.debug("URLLIB: Custom SSL certs file found at {}".format(certs))
@@ -97,7 +97,7 @@ def append_curl_env_for_ssl_certs(curl):
     custom_cert_var = spack.config.get("config:ssl_certs")
     if custom_cert_var:
         # custom certs will be a location, so expand env variables, paths etc
-        certs = spack.util.path.canonicalize_path(custom_cert_var)
+        certs = spack.util.path.substitute_path_variables(custom_cert_var)
         tty.debug("CURL: Looking for custom SSL certs file at {}".format(certs))
         if os.path.isfile(certs):
             tty.debug(
