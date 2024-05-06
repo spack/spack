@@ -32,13 +32,6 @@ class ClingoBootstrap(Clingo):
         description="Enable a series of Spack-specific optimizations (PGO, LTO, mimalloc)",
     )
 
-    variant(
-        "force_setuptools",
-        default=False,
-        description="Force a dependency on setuptools to help the old concretizer",
-    )
-    depends_on("py-setuptools", type="build", when="+force_setuptools")
-
     # Enable LTO
     conflicts("~ipo", when="+optimized")
 
