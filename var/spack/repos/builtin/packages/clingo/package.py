@@ -47,7 +47,6 @@ class Clingo(CMakePackage):
     # See https://github.com/potassco/clingo/blob/v5.5.2/INSTALL.md
     depends_on("cmake@3.1:", type="build")
     depends_on("cmake@3.18:", type="build", when="@5.5:")
-    depends_on("py-setuptools", when="@5.6.2:", type="build")
 
     depends_on("doxygen", type="build", when="+docs")
 
@@ -77,12 +76,6 @@ class Clingo(CMakePackage):
     patch("vs2022.patch", when="%msvc@19.30:")
     patch("clingo_msc_1938_native_handle.patch", when="@:5.7.0 %msvc@19.38:")
 
-    # TODO: Simplify this after Spack 0.21 release. The old concretizer has problems with
-    # py-setuptools ^python@3.6, so we only apply the distutils -> setuptools patch for Python 3.12
-    with when("@:5.6.1 ^python@3.12:"):
-        patch("setuptools-2.patch")
-        depends_on("py-setuptools", type="build")
-
     def patch(self):
         # Doxygen is optional but can't be disabled with a -D, so patch
         # it out if it's really supposed to be disabled
@@ -104,23 +97,28 @@ class Clingo(CMakePackage):
         except UnsupportedCompilerFlag:
             InstallError("clingo requires a C++14-compliant C++ compiler")
 
-        args = ["-DCLINGO_BUILD_WITH_LUA=OFF"]
+        args = [self.define("CLINGO_BUILD_WITH_LUA", False)]
 
         if "+python" in self.spec:
+            suffix = python(
+                "-c", "import sysconfig; print(sysconfig.get_config_var('EXT_SUFFIX'))", output=str
+            ).strip()
             args += [
-                "-DCLINGO_REQUIRE_PYTHON=ON",
-                "-DCLINGO_BUILD_WITH_PYTHON=ON",
-                "-DPYCLINGO_USER_INSTALL=OFF",
-                "-DPYCLINGO_USE_INSTALL_PREFIX=ON",
+                self.define("CLINGO_REQUIRE_PYTHON", True),
+                self.define("CLINGO_BUILD_WITH_PYTHON", True),
+                self.define("PYCLINGO_USER_INSTALL", False),
+                self.define("PYCLINGO_USE_INSTALL_PREFIX", True),
+                self.define("PYCLINGO_INSTALL_DIR", python_platlib),
+                self.define("PYCLINGO_SUFFIX", suffix),
                 self.cmake_py_shared,
             ]
         else:
-            args += ["-DCLINGO_BUILD_WITH_PYTHON=OFF"]
+            args += [self.define("CLINGO_BUILD_WITH_PYTHON", False)]
 
         # Use LTO also for non-Intel compilers please. This can be removed when they
         # bump cmake_minimum_required to VERSION 3.9.
         if "+ipo" in self.spec:
-            args.append("-DCMAKE_POLICY_DEFAULT_CMP0069=NEW")
+            args.append(self.define("CMAKE_POLICY_DEFAULT_CMP0069", "NEW"))
 
         return args
 
