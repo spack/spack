@@ -2072,7 +2072,7 @@ class SpackSolverSetup:
             try:
                 with warnings.catch_warnings():
                     warnings.simplefilter("ignore")
-                    target.optimization_flags(compiler_name, compiler_version)
+                    target.optimization_flags(compiler_name, str(compiler_version))
                 supported.append(target)
             except archspec.cpu.UnsupportedMicroarchitecture:
                 continue
