@@ -88,6 +88,8 @@ def is_path_instead_of_url(path_or_url):
         if "bad path" in str(e).lower():
             # possibly a valid url
             is_path = False
+        else:
+            raise
     return is_path
 
 
