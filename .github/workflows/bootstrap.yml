@@ -175,7 +175,7 @@ jobs:
           spack -d solve zlib
           tree ~/.spack/bootstrap/store/
 
-  macos-clingo-binaries:
+  macos-binaries:
     runs-on: ${{ matrix.macos-version }}
     strategy:
       matrix:
@@ -184,11 +184,18 @@ jobs:
       - name: Install dependencies
         run: |
           brew install tree
+          # Remove GnuPG since we want to bootstrap it
+          sudo rm -rf /usr/local/bin/gpg          
       - name: Checkout
         uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b
+      - name: Set bootstrap sources 
+        run: |
+          source share/spack/setup-env.sh
+          spack bootstrap disable github-actions-v0.4
+          spack bootstrap disable spack-install
       - name: Bootstrap clingo
         run: |
-          set -ex
+          set -e
           for ver in '3.7' '3.8' '3.9' '3.10' '3.11' '3.12' ; do
             not_found=1
             ver_dir="$(find $RUNNER_TOOL_CACHE/Python -wholename "*/${ver}.*/*/bin" | grep . || true)"
@@ -205,6 +212,10 @@ jobs:
             fi
             # NOTE: test all pythons that exist, not all do on 12
           done
+      - name: Bootstrap GnuPG
+        run: |
+          spack -d gpg list
+          tree ~/.spack/bootstrap/store/
 
   ubuntu-clingo-binaries:
     runs-on: ubuntu-20.04
@@ -311,24 +322,6 @@ jobs:
           spack solve zlib
           spack bootstrap disable github-actions-v0.5
           spack bootstrap disable github-actions-v0.4
-          spack -d gpg list
-          tree ~/.spack/bootstrap/store/
-
-  macos-gnupg-binaries:
-    runs-on: macos-latest
-    steps:
-      - name: Install dependencies
-        run: |
-          brew install tree
-          # Remove GnuPG since we want to bootstrap it
-          sudo rm -rf /usr/local/bin/gpg
-      - name: Checkout
-        uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b
-      - name: Bootstrap GnuPG
-        run: |
-          source share/spack/setup-env.sh
-          spack bootstrap disable github-actions-v0.4
-          spack bootstrap disable spack-install
           spack -d gpg list
           tree ~/.spack/bootstrap/store/
 

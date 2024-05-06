@@ -1,6 +1,7 @@
 #!/bin/bash
-set -ex
+set -e
 source share/spack/setup-env.sh
+$PYTHON bin/spack bootstrap disable github-actions-v0.4
 $PYTHON bin/spack bootstrap disable spack-install
 $PYTHON bin/spack -d solve zlib
 tree $BOOTSTRAP/store
