@@ -949,7 +949,7 @@ class ConcreteSpecsByHash(collections.abc.Mapping):
     def __getitem__(self, dag_hash: str) -> spack.spec.Spec:
         return self.data[dag_hash]
 
-    def explicit_items(self) -> Tuple[str, spack.spec.Spec]:
+    def explicit_items(self) -> Iterator[Tuple[str, spack.spec.Spec]]:
         """Iterate on items that have been added explicitly, and not just as a dependency
         of other nodes.
         """
