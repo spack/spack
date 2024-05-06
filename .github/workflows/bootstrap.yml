@@ -13,16 +13,29 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  fedora-clingo-sources:
+  distros-clingo-sources:
     runs-on: ubuntu-latest
-    container: "fedora:latest"
+    container: ${{ matrix.runner }}
+    strategy:
+      matrix:
+        image: ["fedora:latest", "opensuse/leap:latest"]
     steps:
-      - name: Install dependencies
+      - name: Setup Fedora
+        if: ${{ matrix.image != 'fedora:latest' }}
         run: |
           dnf install -y \
               bzip2 curl file gcc-c++ gcc gcc-gfortran git gzip \
               make patch unzip which xz python3 python3-devel tree \
               cmake bison bison-devel libstdc++-static
+      - name: Setup OpenSUSE
+        if: ${{ matrix.image != 'opensuse/leap:latest' }}
+        run: |
+          # Harden CI by applying the workaround described here: https://www.suse.com/support/kb/doc/?id=000019505
+          zypper update -y || zypper update -y
+          zypper install -y \
+              bzip2 curl file gcc-c++ gcc gcc-fortran tar git gpg2 gzip \
+              make patch unzip which xz python3 python3-devel tree \
+              cmake bison
       - name: Checkout
         uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b
         with:
@@ -40,37 +53,6 @@ jobs:
           . .github/workflows/setup_git.sh
       - name: Bootstrap clingo
         shell: runuser -u spack-test -- bash {0}
-        run: |
-          source share/spack/setup-env.sh
-          spack bootstrap disable github-actions-v0.5
-          spack bootstrap disable github-actions-v0.4
-          spack external find cmake bison
-          spack -d solve zlib
-          tree ~/.spack/bootstrap/store/
-
-  opensuse-clingo-sources:
-    runs-on: ubuntu-latest
-    container: "opensuse/leap:latest"
-    steps:
-      - name: Install dependencies
-        run: |
-          # Harden CI by applying the workaround described here: https://www.suse.com/support/kb/doc/?id=000019505
-          zypper update -y || zypper update -y
-          zypper install -y \
-              bzip2 curl file gcc-c++ gcc gcc-fortran tar git gpg2 gzip \
-              make patch unzip which xz python3 python3-devel tree \
-              cmake bison
-      - name: Checkout
-        uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b
-        with:
-          fetch-depth: 0
-      - name: Setup repo
-        run: |
-          # See [1] below
-          git config --global --add safe.directory /__w/spack/spack
-          git --version
-          . .github/workflows/setup_git.sh
-      - name: Bootstrap clingo
         run: |
           source share/spack/setup-env.sh
           spack bootstrap disable github-actions-v0.5
