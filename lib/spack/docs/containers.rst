@@ -194,9 +194,6 @@ The OS that are currently supported are summarized in the table below:
    * - Operating System
      - Base Image
      - Spack Image
-   * - Ubuntu 18.04
-     - ``ubuntu:18.04``
-     - ``spack/ubuntu-bionic``
    * - Ubuntu 20.04
      - ``ubuntu:20.04``
      - ``spack/ubuntu-focal``
@@ -230,12 +227,6 @@ The OS that are currently supported are summarized in the table below:
    * - Rocky Linux 9
      - ``rockylinux:9``
      - ``spack/rockylinux9``
-   * - Fedora Linux 37
-     - ``fedora:37``
-     - ``spack/fedora37``
-   * - Fedora Linux 38
-     - ``fedora:38``
-     - ``spack/fedora38``
    * - Fedora Linux 39
      - ``fedora:39``
      - ``spack/fedora39``

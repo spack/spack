@@ -12,8 +12,8 @@ import spack.container
 @pytest.mark.parametrize(
     "image,spack_version,expected",
     [
-        ("ubuntu:18.04", "develop", ("spack/ubuntu-bionic", "develop")),
-        ("ubuntu:18.04", "0.14.0", ("spack/ubuntu-bionic", "0.14.0")),
+        ("ubuntu:22.04", "develop", ("spack/ubuntu-jammy", "develop")),
+        ("ubuntu:22.04", "0.14.0", ("spack/ubuntu-jammy", "0.14.0")),
     ],
 )
 def test_build_info(image, spack_version, expected):
@@ -21,7 +21,7 @@ def test_build_info(image, spack_version, expected):
     assert output == expected
 
 
-@pytest.mark.parametrize("image", ["ubuntu:18.04"])
+@pytest.mark.parametrize("image", ["ubuntu:22.04"])
 def test_package_info(image):
     pkg_manager = spack.container.images.os_package_manager_for(image)
     update, install, clean = spack.container.images.commands_for(pkg_manager)
