@@ -2729,7 +2729,7 @@ class EnvironmentManifestFile(collections.abc.Mapping):
             # allow paths to contain spack config/environment variables, etc.
             config_path = substitute_path_variables(config_path)
 
-            # If scheme is not valid, config_path is not a known url
+            # If scheme is not valid, config_path is not a url
             # of a type Spack is generally aware
             if spack.util.url.validate_scheme(config_path):
                 include_url = urllib.parse.urlparse(config_path)
