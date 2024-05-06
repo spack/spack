@@ -27,12 +27,12 @@ class Orca(Package):
     version(
         "5.0.4",
         sha256="c4ea5aea60da7bcb18a6b7042609206fbeb2a765c6fa958c5689d450b588b036",
-        url="file://{0}/orca_5_0_4_linux_x86-64_shared_openmpi411.tar.xz".format(os.getcwd()),
+        expand=False,
     )
     version(
         "5.0.3",
         sha256="b8b9076d1711150a6d6cb3eb30b18e2782fa847c5a86d8404b9339faef105043",
-        url="file://{0}/orca_5_0_3_linux_x86-64_shared_openmpi411.tar.xz".format(os.getcwd()),
+        expand=False,
     )
     version(
         "4.2.1",
@@ -68,8 +68,14 @@ class Orca(Package):
         )
 
     def url_for_version(self, version):
-        out = "file://{0}/orca_{1}_linux_x86-64_openmpi{2}.tar.zst"
-        return out.format(os.getcwd(), version.underscored, self.openmpi_versions[version.string])
+        openmpi_version = "".join(self.openmpi_versions[version.string].split("."))
+        url = "file://{0}/orca_{1}_linux_x86-64_shared_openmpi{2}.tar.xz"
+
+        if self.spec.satisfies("@:4.2.1"):
+            openmpi_version = self.openmpi_versions[version.string]
+            url = "file://{0}/orca_{1}_linux_x86-64_openmpi{2}.tar.zst"
+
+        return url.format(os.getcwd(), version.underscored, openmpi_version)
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
