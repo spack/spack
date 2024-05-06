@@ -14,7 +14,8 @@ class KokkosLegacy(Package):
     url = "https://github.com/kokkos/kokkos/archive/2.03.00.tar.gz"
     git = "https://github.com/kokkos/kokkos.git"
 
-    version("4.3.00", sha256="53cf30d3b44dade51d48efefdaee7a6cf109a091b702a443a2eda63992e5fe0d")
+    # This package has been archived. All new versions of Kokkos should go into
+    # the kokkos package itself.
     version(
         "2.9.00",
         sha256="e0621197791ed3a381b4f02c78fa529f3cff3abb74d52157b4add17e8aa04bc4",
