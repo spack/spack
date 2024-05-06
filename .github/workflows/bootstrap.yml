@@ -248,9 +248,6 @@ jobs:
         if: ${{ matrix.runner == 'ubuntu-latest' }}
         run: |
           sudo rm -rf $(which gpg) $(which gpg2)
-          source share/spack/setup-env.sh
-          spack bootstrap disable github-actions-v0.4
-          spack bootstrap disable spack-install
       - name: Checkout
         uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b
         with:
