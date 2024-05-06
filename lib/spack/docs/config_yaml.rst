@@ -160,7 +160,7 @@ in the subprocess calling ``curl``.
 If ``url_fetch_method:urllib`` then files and directories are supported i.e. 
 ``config:ssl_certs:$SSL_CERT_FILE`` or ``config:ssl_certs:$SSL_CERT_DIR``
 will work.
-In all cases the expanded path must be absolute for spack to use the certificats.
+In all cases the expanded path must be absolute for Spack to use the certificates.
 Certificates relative to an environment can be created by prepending the path variable
 with the Spack configuration variable``$env``.
 
