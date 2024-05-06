@@ -152,7 +152,10 @@ jobs:
           tree ~/.spack/bootstrap/store/
 
   macos-clingo-sources:
-    runs-on: macos-latest
+    runs-on: ${{ matrix.macos-version }}
+    strategy:
+      matrix:
+        macos-version: ['macos-13', 'macos-14']
     steps:
       - name: Install dependencies
         run: |
@@ -186,7 +189,7 @@ jobs:
       - name: Bootstrap clingo
         run: |
           set -ex
-          for ver in '3.7' '3.8' '3.9' '3.10' '3.11' ; do
+          for ver in '3.7' '3.8' '3.9' '3.10' '3.11' '3.12' ; do
             not_found=1
             ver_dir="$(find $RUNNER_TOOL_CACHE/Python -wholename "*/${ver}.*/*/bin" | grep . || true)"
             echo "Testing $ver_dir"
