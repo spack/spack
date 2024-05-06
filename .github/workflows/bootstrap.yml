@@ -175,54 +175,26 @@ jobs:
           spack -d solve zlib
           tree ~/.spack/bootstrap/store/
 
-  ubuntu-gnupg-sources:
-    runs-on: ubuntu-latest
-    container: "ubuntu:latest"
+  gnupg-sources:
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      matrix:
+        runner: [ 'macos-13', 'macos-14', "ubuntu-latest" ]
     steps:
-      - name: Install dependencies
-        env:
-          DEBIAN_FRONTEND: noninteractive
+      - name: Setup macOS
+        if: ${{ matrix.runner != 'ubuntu-latest' }}
         run: |
-          apt-get update -y && apt-get upgrade -y
-          apt-get install -y \
-              bzip2 curl file g++ gcc patchelf gfortran git gzip \
-              make patch unzip xz-utils python3 python3-dev tree \
-              gawk
+          brew install tree
+          # Remove GnuPG since we want to bootstrap it
+          sudo rm -rf /usr/local/bin/gpg
+      - name: Setup Ubuntu
+        if: ${{ matrix.runner == 'ubuntu-latest' }}
+        run: |
+          sudo rm -rf $(which gpg) $(which gpg2) $(which patchelf)
       - name: Checkout
         uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b
         with:
           fetch-depth: 0
-      - name: Setup non-root user
-        run: |
-          # See [1] below
-          git config --global --add safe.directory /__w/spack/spack
-          useradd spack-test && mkdir -p ~spack-test
-          chown -R spack-test . ~spack-test
-      - name: Setup repo
-        shell: runuser -u spack-test -- bash {0}
-        run: |
-          git --version
-          . .github/workflows/setup_git.sh
-      - name: Bootstrap GnuPG
-        shell: runuser -u spack-test -- bash {0}
-        run: |
-          source share/spack/setup-env.sh
-          spack solve zlib
-          spack bootstrap disable github-actions-v0.5
-          spack bootstrap disable github-actions-v0.4
-          spack -d gpg list
-          tree ~/.spack/bootstrap/store/
-
-  macos-gnupg-sources:
-    runs-on: macos-latest
-    steps:
-      - name: Install dependencies
-        run: |
-          brew install gawk tree
-          # Remove GnuPG since we want to bootstrap it
-          sudo rm -rf /usr/local/bin/gpg
-      - name: Checkout
-        uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b
       - name: Bootstrap GnuPG
         run: |
           source share/spack/setup-env.sh
@@ -232,7 +204,7 @@ jobs:
           spack -d gpg list
           tree ~/.spack/bootstrap/store/
 
-  core-binaries:
+  from-binaries:
     runs-on: ${{ matrix.runner }}
     strategy:
       matrix:
@@ -247,7 +219,7 @@ jobs:
       - name: Setup Ubuntu
         if: ${{ matrix.runner == 'ubuntu-latest' }}
         run: |
-          sudo rm -rf $(which gpg) $(which gpg2)
+          sudo rm -rf $(which gpg) $(which gpg2) $(which patchelf)
       - name: Checkout
         uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b
         with:
