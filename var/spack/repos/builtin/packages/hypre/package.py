@@ -266,7 +266,7 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
             else:
                 configure_args.append("--enable-cub")
             if "+cublas" in spec:
-                options.append("--enable-cublas")
+                conigure_args.append("--enable-cublas")
         else:
             configure_args.extend(["--without-cuda", "--disable-curand", "--disable-cusparse"])
             if spec.satisfies("@:2.20.99"):
@@ -314,7 +314,7 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
             configure_args.append("--with-magma")
 
         if "+gpu-aware-mpi" in spec:
-            options.append("--enable-gpu-aware-mpi")
+            configure_args.append("--enable-gpu-aware-mpi")
 
         configure_args.extend(self.enable_or_disable("fortran"))
 
