@@ -34,7 +34,7 @@ class HipTensor(CMakePackage, ROCmPackage):
 
     def setup_build_environment(self, env):
         if self.spec.satisfies("@6.1"):
-            env.set("CXX", self.spec["hipcc"].prifix.bin)
+            env.set("CXX", self.spec["hipcc"].prefix.bin.hipcc)
         else:
             env.set("CXX", self.spec["hip"].hipcc)
         if self.spec.satisfies("+asan"):
