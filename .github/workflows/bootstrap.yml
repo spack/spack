@@ -165,9 +165,3 @@ jobs:
           spack -d gpg list
           tree ~/.spack/bootstrap/store/
 
-# [1] Distros that have patched git to resolve CVE-2022-24765 (e.g. Ubuntu patching v2.25.1)
-#     introduce breaking behavior, so we have to set `safe.directory` in gitconfig ourselves.
-#     See:
-#     - https://github.blog/2022-04-12-git-security-vulnerability-announced/
-#     - https://github.com/actions/checkout/issues/760
-#     - http://changelogs.ubuntu.com/changelogs/pool/main/g/git/git_2.25.1-1ubuntu3.3/changelog

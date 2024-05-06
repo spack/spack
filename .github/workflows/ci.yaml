@@ -16,7 +16,7 @@ concurrency:
 
 jobs:
   prechecks:
-    needs: [ changes, bootstrap ]
+    needs: [ changes ]
     uses: ./.github/workflows/valid-style.yml
     secrets: inherit
     with:
@@ -69,8 +69,7 @@ jobs:
       #
   bootstrap:
     if: ${{ github.repository == 'spack/spack' && needs.changes.outputs.bootstrap == 'true' }}
-    # needs: [ prechecks, changes ]
-    needs: [ changes ]
+    needs: [ prechecks, changes ]
     uses: ./.github/workflows/bootstrap.yml
     secrets: inherit
   unit-tests:
