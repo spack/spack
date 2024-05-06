@@ -7,7 +7,6 @@ import hashlib
 import io
 import os
 import pathlib
-import re
 import tarfile
 from contextlib import closing, contextmanager
 from gzip import GzipFile
