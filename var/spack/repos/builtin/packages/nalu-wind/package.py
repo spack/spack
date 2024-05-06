@@ -53,31 +53,16 @@ class NaluWind(CMakePackage, CudaPackage, ROCmPackage):
     variant("gpu-aware-mpi", default=False, description="gpu-aware-mpi")
     variant("wind-utils", default=False, description="Build wind-utils")
     variant("umpire", default=False, description="Enable Umpire")
-    conflicts(
-        "+shared",
-        when="+cuda",
-        msg="invalid device functions are generated with shared libs and cuda",
-    )
-    conflicts(
-        "+shared",
-        when="+rocm",
-        msg="invalid device functions are generated with shared libs and rocm",
-    )
-    conflicts("+cuda", when="+rocm")
-    conflicts("+rocm", when="+cuda")
 
     depends_on("mpi")
     depends_on("yaml-cpp@0.5.3:")
     depends_on("openfast@4.0.0:+cxx+netcdf", when="+fsi")
-    depends_on("trilinos@13.4.1+exodus+zoltan+stk", when="@=2.0.0")
+    depends_on("trilinos@13.4.1", when="@=2.0.0")
     depends_on("hypre@2.29.0:", when="@2.0.0:+hypre")
     depends_on(
-        "trilinos@13:+exodus+tpetra+zoltan+stk~superlu-dist~superlu+hdf5+shards~hypre+gtest"
+        "trilinos@13:+exodus+tpetra+zoltan+stk~superlu-dist~superlu+hdf5+shards~hypre+gtest gotype=long cxxstd=17"
     )
     depends_on("trilinos~cuda~wrapper", when="~cuda")
-    # Cannot build Trilinos as a shared library with STK on Darwin
-    # https://github.com/trilinos/Trilinos/issues/2994
-    depends_on("trilinos~shared", when=(sys.platform == "darwin"))
     depends_on("openfast@2.6.0: +cxx", when="+openfast")
     depends_on("tioga@master:", when="+tioga")
     depends_on("hypre@2.18.2: ~int64+mpi~superlu-dist", when="+hypre")
@@ -98,9 +83,7 @@ class NaluWind(CMakePackage, CudaPackage, ROCmPackage):
         )
     for _arch in ROCmPackage.amdgpu_targets:
         depends_on(
-            "trilinos@13.4.0.2022.10.27: "
-            "~shared+exodus+tpetra+zoltan+stk~superlu-dist~superlu"
-            "+hdf5+shards~hypre+gtest+rocm amdgpu_target={0}".format(_arch),
+            "trilinos@13.4.0.2022.10.27: ~shared+rocm amdgpu_target={0}".format(_arch),
             when="+rocm amdgpu_target={0}".format(_arch),
         )
         depends_on(
@@ -114,16 +97,30 @@ class NaluWind(CMakePackage, CudaPackage, ROCmPackage):
     # indirect dependency needed to make original concretizer work
     depends_on("netcdf-c+parallel-netcdf")
     depends_on("boost +filesystem +iostreams cxxstd=14", when="+boost")
-    supported_cxxstd = ["17"]
-    variant(
-        "cxxstd", default="17", values=supported_cxxstd, multi=False, description="cxx standard"
+    depends_on("hypre+gpu-aware-mpi", when="+gpu-aware-mpi")
+    depends_on("hypre+umpire", when="+umpire")
+    depends_on("trilinos~shared", when="+trilinos-solvers")
+
+    conflicts(
+        "+shared",
+        when="+cuda",
+        msg="invalid device functions are generated with shared libs and cuda",
     )
-    for std in supported_cxxstd:
-        depends_on("trilinos cxxstd=%s" % std, when="cxxstd=%s" % std)
+    conflicts(
+        "+shared",
+        when="+rocm",
+        msg="invalid device functions are generated with shared libs and rocm",
+    )
+    conflicts("+cuda", when="+rocm")
+    conflicts("+rocm", when="+cuda")
+    conflicts("^hypre+cuda", when="~cuda")
+    conflicts("^hypre+rocm", when="~rocm")
+    conflicts("^hypre+sycl")
+    conflicts("^trilinos+cuda", when="~cuda")
+    conflicts("^trilinos+rocm", when="~rocm")
 
     def setup_build_environment(self, env):
-        if "~stk_simd" in self.spec:
-            env.append_flags("CXXFLAGS", "-DUSE_STK_SIMD_NONE")
+        env.append_flags("CXXFLAGS", "-DUSE_STK_SIMD_NONE")
         if "+cuda" in self.spec:
             env.set("CUDA_LAUNCH_BLOCKING", "1")
             env.set("CUDA_MANAGED_FORCE_DEVICE_ALLOC", "1")
@@ -145,7 +142,7 @@ class NaluWind(CMakePackage, CudaPackage, ROCmPackage):
             self.define_from_variant("ENABLE_CUDA", "cuda"),
             self.define_from_variant("ENABLE_WIND_UTILS", "wind-utils"),
             self.define_from_variant("ENABLE_BOOST", "boost"),
-            self.define_from_variant("CMAKE_CXX_STANDARD", "cxxstd"),
+            self.define_from_variant("CMAKE_CXX_STANDARD", "17"),
             self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
             self.define_from_variant("ENABLE_OPENFAST", "openfast"),
             self.define_from_variant("ENABLE_TIOGA", "tioga"),
