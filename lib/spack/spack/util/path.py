@@ -103,7 +103,7 @@ def win_exe_ext():
 
 def sanitize_win_longpath(path: str) -> str:
     """Strip Windows extended path prefix from strings
-    Returns santized string.
+    Returns sanitized string.
     no-op if extended path prefix is not present"""
     return path.strip("\\\\?\\")
 

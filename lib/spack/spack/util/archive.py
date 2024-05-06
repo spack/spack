@@ -196,39 +196,15 @@ def reproducible_tarfile_from_prefix(
             file_info = tarfile.TarInfo(path_to_name(entry.path))
 
             if entry.is_symlink():
-                def add_entry_to_tarfile(safe_link_path):
-                    """encapsulate logic around adding symlinks to a tarball"""
-                    file_info.linkname = safe_link_path
-                    # According to POSIX: "the value of the file mode bits returned in the
-                    # st_mode field of the stat structure is unspecified." So we set it to
-                    # something sensible without lstat'ing the link.
-                    file_info.mode = 0o755
-                    file_info.type = tarfile.SYMTYPE
-                    tar.addfile(file_info)
-
-                # Absolute links need to be made relative
-                #  - if links point inside the prefix
-                #    compute relative link as normal
-                #  - if link points outside the prefix
-                #    include as is, let relocation handle it
-
                 # strip off long path reg prefix on Windows
                 link_dest = sanitize_win_longpath(os.readlink(entry.path))
-                # if os.path.isabs(link_dest):
-                #     full_path = os.path.realpath(link_dest)
-                #     reg = re.compile(re.escape(prefix))
-                #     res = reg.match(full_path)
-                #     if res:
-                #         # need to compute relative path
-                #         add_entry_to_tarfile(
-                #             os.path.relpath(full_path, os.path.dirname(entry.path))
-                #         )
-                #     else:
-                #         add_entry_to_tarfile(full_path)
-                # # Relative links should stay relative
-                # # always leave as is
-                # else:
-                add_entry_to_tarfile(link_dest)
+                file_info.linkname = link_dest
+                # According to POSIX: "the value of the file mode bits returned in the
+                # st_mode field of the stat structure is unspecified." So we set it to
+                # something sensible without lstat'ing the link.
+                file_info.mode = 0o755
+                file_info.type = tarfile.SYMTYPE
+                tar.addfile(file_info)
 
             elif entry.is_file(follow_symlinks=False):
                 # entry.stat has zero (st_ino, st_dev, st_nlink) on Windows: use lstat.

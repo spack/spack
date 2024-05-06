@@ -1637,12 +1637,6 @@ def relocate_package(spec):
     # First match specific prefix paths. Possibly the *local* install prefix
     # of some dependency is in an upstream, so we cannot assume the original
     # spack store root can be mapped uniformly to the new spack store root.
-
-    # this logic is fundamentally wrong
-    # if in hdf5 we have bin/zlib.dll where zlib.dll points to
-    # <host-install-prefix>/zlib-hash/bin/zlib.dll
-    # the old dep prefix <host-install-hash>/bin/zlib.dll will now point
-    # to the hdf5 install hash (new_dep_prefix) which is wrong
     for dag_hash, new_dep_prefix in hashes_to_prefixes(spec).items():
         if dag_hash in hash_to_old_prefix:
             old_dep_prefix = hash_to_old_prefix[dag_hash]
@@ -1805,17 +1799,7 @@ def _tar_strip_component(tar: tarfile.TarFile, prefix: str):
         m.name = m.name[result.end() :]
         if m.linkname:
             if m.type == tarfile.SYMTYPE:
-                result = regex.match(m.linkname)
-                is_abs = os.path.isabs(m.linkname)
-                if result or is_abs:
-                    # absolute path outside of the install prefix
-                    # this cannot be extracted because we have no garuntee
-                    # the absolute path exists on the target system
-                    source = m.name
-                    target = m.linkname
-                    tty.warn(
-                        f'Symbolic link from "{source}" to "{target}" cannot be relocated'
-                    )
+                m.
             elif m.type == tarfile.LNKTYPE:
                 result = regex.match(m.linkname)
                 if result:
