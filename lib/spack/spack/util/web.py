@@ -116,7 +116,7 @@ def append_curl_env_for_ssl_certs(curl):
         elif os.path.isdir(certs):
             tty.warn(
                 "CURL config:ssl_certs"
-                " is a directory but cURL only supports files. Default certs will be used instead."
+                " is a directory but CURL only supports files. Default certs will be used instead."
             )
         else:
             tty.debug(
