@@ -142,12 +142,8 @@ user's prompt to begin with the environment name in brackets.
    $ spack env activate -p myenv
    [myenv] $ ...
 
-The ``activate`` command can also be used to create a new environment, if it is
-not already defined, by adding the ``--create`` flag. Managed and anonymous
-environments, anonymous environments are explained in the next section,
-can both be created using the same flags that `spack env create` accepts.
-If an environment already exists then spack will simply activate it and ignore the
-create specific flags.
+The ``activate`` command can also be used to create a new environment if it does not already
+exist.
 
 .. code-block:: console
    
@@ -176,21 +172,36 @@ environment will remove the view from the user environment.
 Anonymous Environments
 ^^^^^^^^^^^^^^^^^^^^^^
 
-Any directory can be treated as an environment if it contains a file
-``spack.yaml``. To load an anonymous environment, use:
+Apart from managed environments, Spack also supports anonymous environments.
+
+Anonymous environments can be placed in any directory of choice.
+
+.. note::
+
+   When uninstalling packages, Spack asks the user to confirm the removal of packages
+   that are still used in a managed environment. This is not the case for anonymous
+   environments.
+
+To create an anonymous environment, use one of the following commands:
 
 .. code-block:: console
 
-   $ spack env activate -d /path/to/directory
+   $ spack env create --dir my_env
+   $ spack env create ./my_env
 
-Anonymous specs can be created in place using the command:
+As a shorthand, you can also create an anonymous environment upon activation if it does not
+already exist:
 
 .. code-block:: console
 
-   $ spack env create -d .
+   $ spack env activate --create ./my_env
 
-In this case Spack simply creates a ``spack.yaml`` file in the requested
-directory.
+For convenience, Spack can also place an anonymous environment in a temporary directory for you:
+
+.. code-block:: console
+
+   $ spack env activate --temp
+
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Environment Sensitive Commands

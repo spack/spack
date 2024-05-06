@@ -16,7 +16,7 @@ import llnl.string as string
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
 from llnl.util.tty.colify import colify
-from llnl.util.tty.color import colorize
+from llnl.util.tty.color import cescape, colorize
 
 import spack.cmd
 import spack.cmd.common
@@ -61,14 +61,7 @@ subcommands = [
 #
 def env_create_setup_parser(subparser):
     """create a new environment"""
-    subparser.add_argument(
-        "env_name",
-        metavar="env",
-        help=(
-            "name of managed environment or directory of the anonymous env "
-            "(when using --dir/-d) to activate"
-        ),
-    )
+    subparser.add_argument("env_name", metavar="env", help="name or directory of environment")
     subparser.add_argument(
         "-d", "--dir", action="store_true", help="create an environment in a specific directory"
     )
@@ -114,7 +107,7 @@ def env_create(args):
     env = _env_create(
         args.env_name,
         init_file=args.envfile,
-        dir=args.dir,
+        dir=args.dir or os.path.sep in args.env_name or args.env_name in (".", ".."),
         with_view=with_view,
         keep_relative=args.keep_relative,
     )
@@ -123,34 +116,39 @@ def env_create(args):
     env.regenerate_views()
 
 
-def _env_create(name_or_path, *, init_file=None, dir=False, with_view=None, keep_relative=False):
+def _env_create(
+    name_or_path: str,
+    *,
+    init_file: Optional[str] = None,
+    dir: bool = False,
+    with_view: Optional[str] = None,
+    keep_relative: bool = False,
+):
     """Create a new environment, with an optional yaml description.
 
     Arguments:
-        name_or_path (str): name of the environment to create, or path to it
-        init_file (str or file): optional initialization file -- can be
-            a JSON lockfile (*.lock, *.json) or YAML manifest file
-        dir (bool): if True, create an environment in a directory instead
-            of a named environment
-        keep_relative (bool): if True, develop paths are copied verbatim into
-            the new environment file, otherwise they may be made absolute if the
-            new environment is in a different location
+        name_or_path: name of the environment to create, or path to it
+        init_file: optional initialization file -- can be a JSON lockfile (*.lock, *.json) or YAML
+            manifest file
+        dir: if True, create an environment in a directory instead of a managed environment
+        keep_relative: if True, develop paths are copied verbatim into the new environment file,
+            otherwise they may be made absolute if the new environment is in a different location
     """
     if not dir:
         env = ev.create(
             name_or_path, init_file=init_file, with_view=with_view, keep_relative=keep_relative
         )
-        tty.msg("Created environment '%s' in %s" % (name_or_path, env.path))
-        tty.msg("You can activate this environment with:")
-        tty.msg("  spack env activate %s" % (name_or_path))
-        return env
-
-    env = ev.create_in_dir(
-        name_or_path, init_file=init_file, with_view=with_view, keep_relative=keep_relative
-    )
-    tty.msg("Created environment in %s" % env.path)
-    tty.msg("You can activate this environment with:")
-    tty.msg("  spack env activate %s" % env.path)
+        tty.msg(
+            colorize(
+                f"Created environment @c{{{cescape(env.name)}}} in: @c{{{cescape(env.path)}}}"
+            )
+        )
+    else:
+        env = ev.create_in_dir(
+            name_or_path, init_file=init_file, with_view=with_view, keep_relative=keep_relative
+        )
+        tty.msg(colorize(f"Created anonymous environment in: @c{{{cescape(env.path)}}}"))
+    tty.msg(f"Activate with: {colorize(f'@c{{spack env activate {cescape(name_or_path)}}}')}")
     return env
 
 
