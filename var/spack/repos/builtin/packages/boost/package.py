@@ -192,6 +192,9 @@ class Boost(Package):
     # 1.84.0 dropped support for 98/03
     conflicts("cxxstd=98", when="@1.84.0:")
 
+    # Autotools packages are not available on Windows
+    conflicts("+icu", when="platform=windows")
+
     variant("debug", default=False, description="Switch to the debug version of Boost")
     variant("shared", default=True, description="Additionally build shared libraries")
     variant(
