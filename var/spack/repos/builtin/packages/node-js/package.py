@@ -108,7 +108,7 @@ class NodeJs(Package):
     variant(
         "cares",
         default=True,
-        when="platform=centos7",
+        when="os=centos7",
         description="Build with Spack's c-ares instead of the bundled version",
     )
     variant(
