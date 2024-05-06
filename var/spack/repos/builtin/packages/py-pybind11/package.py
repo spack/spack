@@ -102,7 +102,6 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
 
         with working_dir("spack-test", create=True):
             # test include helper points to right location
-            python = self.spec["python"].command
             py_inc = python(
                 "-c", "import pybind11 as py; print(py.get_include())", output=str
             ).strip()

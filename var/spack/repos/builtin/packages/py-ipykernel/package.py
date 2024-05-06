@@ -89,4 +89,4 @@ class PyIpykernel(PythonPackage):
     @run_after("install")
     def install_data(self):
         """install the Jupyter kernel spec"""
-        self.spec["python"].command("-m", "ipykernel", "install", "--prefix=" + self.prefix)
+        python("-m", "ipykernel", "install", "--prefix=" + self.prefix)

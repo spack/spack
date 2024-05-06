@@ -100,7 +100,6 @@ class PyLibensemble(PythonPackage):
         if not os.path.isfile(exe):
             raise SkipTest(f"{script} is missing")
 
-        python = self.spec["python"].command
         python(exe, "--comms", "local", "--nworkers", "2")
 
     def test_uniform_sampling(self):

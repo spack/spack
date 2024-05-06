@@ -188,9 +188,7 @@ class Qgis(CMakePackage):
     @run_before("cmake", when="^py-pyqt5")
     def fix_pyqt5_cmake(self):
         cmfile = FileFilter(join_path("cmake", "FindPyQt5.cmake"))
-        pyqtpath = join_path(
-            self.spec["py-pyqt5"].prefix, self.spec["python"].package.platlib, "PyQt5"
-        )
+        pyqtpath = join_path(self.spec["py-pyqt5"].package.module.python_platlib, "PyQt5")
         cmfile.filter(
             'SET(PYQT5_MOD_DIR "${Python_SITEARCH}/PyQt5")',
             'SET(PYQT5_MOD_DIR "' + pyqtpath + '")',
@@ -210,7 +208,7 @@ class Qgis(CMakePackage):
             pyqtx = "PyQt6"
 
         sip_inc_dir = join_path(
-            self.spec["qscintilla"].prefix, self.spec["python"].package.platlib, pyqtx, "bindings"
+            self.spec["qscintilla"].package.module.python_platlib, pyqtx, "bindings"
         )
         with open(join_path("python", "gui", "pyproject.toml.in"), "a") as tomlfile:
             tomlfile.write(f'\n[tool.sip.project]\nsip-include-dirs = ["{sip_inc_dir}"]\n')

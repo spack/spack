@@ -49,5 +49,4 @@ class PyGmxapi(PythonPackage):
     def install_test(self):
         with working_dir("spack-test", create=True):
             # test include helper points to right location
-            python = self.spec["python"].command
             python("-m", "pytest", "-x", os.path.join(self.build_directory, "test"))

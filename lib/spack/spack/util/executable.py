@@ -39,6 +39,20 @@ class Executable:
         """Add default argument(s) to the command."""
         self.exe.extend(args)
 
+    def with_default_args(self, *args):
+        """Same as add_default_arg, but returns a copy of the executable."""
+        new = self.copy()
+        new.add_default_arg(*args)
+        return new
+
+    def copy(self):
+        """Return a copy of this Executable."""
+        new = Executable(self.exe[0])
+        new.exe[:] = self.exe
+        new.default_env.update(self.default_env)
+        new.default_envmod.extend(self.default_envmod)
+        return new
+
     def add_default_env(self, key, value):
         """Set an environment variable when the command is run.
 

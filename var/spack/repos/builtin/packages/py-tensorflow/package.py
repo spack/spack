@@ -410,7 +410,7 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
         spec = self.spec
 
         # Please specify the location of python
-        env.set("PYTHON_BIN_PATH", spec["python"].command.path)
+        env.set("PYTHON_BIN_PATH", python.path)
 
         # Please input the desired Python library path to use
         env.set("PYTHON_LIB_PATH", python_platlib)

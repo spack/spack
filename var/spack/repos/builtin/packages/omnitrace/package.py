@@ -141,7 +141,3 @@ class Omnitrace(CMakePackage):
             files = glob.glob(pattern)
             if files:
                 env.set("TAU_MAKEFILE", files[0])
-
-    def setup_run_environment(self, env):
-        if "+python" in self.spec:
-            env.prepend_path("PYTHONPATH", join_path(self.prefix.lib, "python", "site-packages"))

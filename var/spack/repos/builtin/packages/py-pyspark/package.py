@@ -25,5 +25,5 @@ class PyPyspark(PythonPackage):
     depends_on("py-py4j@0.10.9", when="@3.0.1:3.1.3", type=("build", "run"))
 
     def setup_run_environment(self, env):
-        env.set("PYSPARK_PYTHON", self.spec["python"].command.path)
-        env.set("PYSPARK_DRIVER_PYTHON", self.spec["python"].command.path)
+        env.set("PYSPARK_PYTHON", python.path)
+        env.set("PYSPARK_DRIVER_PYTHON", python.path)

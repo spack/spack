@@ -120,9 +120,7 @@ class ClingoBootstrap(Clingo):
         )
         python_runtime_env.unset("SPACK_ENV")
         python_runtime_env.unset("SPACK_PYTHON")
-        self.spec["python"].command(
-            spack.paths.spack_script, "solve", "--fresh", "hdf5", extra_env=python_runtime_env
-        )
+        python(spack.paths.spack_script, "solve", "--fresh", "hdf5", extra_env=python_runtime_env)
 
         # Clean the build dir.
         rmtree(self.build_directory, ignore_errors=True)

@@ -1027,14 +1027,13 @@ class Opencv(CMakePackage, CudaPackage):
             )
 
         # Python
-        python_exe = spec["python"].command.path
         python_lib = spec["python"].libs[0]
         python_include_dir = spec["python"].headers.directories[0]
 
         if "+python3" in spec:
             args.extend(
                 [
-                    self.define("PYTHON3_EXECUTABLE", python_exe),
+                    self.define("PYTHON3_EXECUTABLE", python.path),
                     self.define("PYTHON3_LIBRARY", python_lib),
                     self.define("PYTHON3_INCLUDE_DIR", python_include_dir),
                     self.define("PYTHON2_EXECUTABLE", ""),

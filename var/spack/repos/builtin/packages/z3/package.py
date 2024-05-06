@@ -53,13 +53,6 @@ class Z3(CMakePackage):
         ]
 
         if spec.satisfies("+python"):
-            args.append(
-                self.define(
-                    "CMAKE_INSTALL_PYTHON_PKG_DIR",
-                    join_path(
-                        prefix.lib, "python%s" % spec["python"].version.up_to(2), "site-packages"
-                    ),
-                )
-            )
+            args.append(self.define("CMAKE_INSTALL_PYTHON_PKG_DIR", python_platlib))
 
         return args

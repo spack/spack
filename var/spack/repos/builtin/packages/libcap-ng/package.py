@@ -33,7 +33,7 @@ class LibcapNg(AutotoolsPackage):
 
     def setup_build_environment(self, env):
         if self.spec.satisfies("+python"):
-            env.set("PYTHON", self.spec["python"].command.path)
+            env.set("PYTHON", python.path)
 
     def configure_args(self):
         args = []
