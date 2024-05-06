@@ -178,9 +178,9 @@ Anonymous environments can be placed in any directory of choice.
 
 .. note::
 
-   The ``spack uninstall`` command asks for confirmation before uninstalling
-   packages that are referenced in managed environments. This is not the case
-   for packages in anonymous environments.
+   When uninstalling packages, Spack asks the user to confirm the removal of packages
+   that are still used in a managed environment. This is not the case for anonymous
+   environments.
 
 To create an anonymous environment, use one of the following commands:
 
