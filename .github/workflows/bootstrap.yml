@@ -199,8 +199,8 @@ jobs:
           for ver in '3.7' '3.8' '3.9' '3.10' '3.11' '3.12' ; do
             not_found=1
             ver_dir="$(find $RUNNER_TOOL_CACHE/Python -wholename "*/${ver}.*/*/bin" | grep . || true)"
-            echo "Testing $ver_dir"
             if [[ -d "$ver_dir" ]] ; then
+              echo "Testing $ver_dir"
               if $ver_dir/python --version ; then
                 export PYTHON="$ver_dir/python"
                 not_found=0
@@ -210,7 +210,7 @@ jobs:
                 export PATH="$old_path"
               fi
             fi
-            # NOTE: test all pythons that exist, not all do on 12
+            # NOTE: test all pythons that exist, not all do
           done
       - name: Bootstrap GnuPG
         run: |
@@ -231,12 +231,12 @@ jobs:
           . .github/workflows/setup_git.sh
       - name: Bootstrap clingo
         run: |
-          set -ex
+          set -e
           for ver in '3.7' '3.8' '3.9' '3.10' '3.11' '3.12' ; do
             not_found=1
             ver_dir="$(find $RUNNER_TOOL_CACHE/Python -wholename "*/${ver}.*/*/bin" | grep . || true)"
-            echo "Testing $ver_dir"
             if [[ -d "$ver_dir" ]] ; then
+              echo "Testing $ver_dir"
               if $ver_dir/python --version ; then
                 export PYTHON="$ver_dir/python"
                 not_found=0
