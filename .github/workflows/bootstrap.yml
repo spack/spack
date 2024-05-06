@@ -204,7 +204,7 @@ jobs:
       - name: Bootstrap clingo
         run: |
           set -e
-          for ver in '3.7' '3.8' '3.9' '3.10' '3.11' '3.12' ; do
+          for ver in '3.8' '3.9' '3.10' '3.11' '3.12' ; do
             not_found=1
             ver_dir="$(find $RUNNER_TOOL_CACHE/Python -wholename "*/${ver}.*/*/bin" | grep . || true)"
             if [[ -d "$ver_dir" ]] ; then
@@ -218,7 +218,10 @@ jobs:
                 export PATH="$old_path"
               fi
             fi
-            # NOTE: test all pythons that exist, not all do
+            if (($not_found)) ; then
+              echo Required python version $ver not found in runner!
+              exit 1
+            fi
           done
       - name: Bootstrap GnuPG
         run: |
@@ -226,13 +229,21 @@ jobs:
           spack -d gpg list
           tree ~/.spack/bootstrap/store/
 
-  ubuntu-clingo-binaries:
-    runs-on: ubuntu-20.04
+  ubuntu-binaries:
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b
         with:
           fetch-depth: 0
+      - uses: actions/setup-python@82c7e631bb3cdc910f68e0081d67478d79c6982d
+        with:
+          python-version: |
+            3.8
+            3.9
+            3.10
+            3.11
+            3.12
       - name: Setup repo
         run: |
           git --version
@@ -240,7 +251,7 @@ jobs:
       - name: Bootstrap clingo
         run: |
           set -e
-          for ver in '3.7' '3.8' '3.9' '3.10' '3.11' '3.12' ; do
+          for ver in '3.8' '3.9' '3.10' '3.11' '3.12' ; do
             not_found=1
             ver_dir="$(find $RUNNER_TOOL_CACHE/Python -wholename "*/${ver}.*/*/bin" | grep . || true)"
             if [[ -d "$ver_dir" ]] ; then
