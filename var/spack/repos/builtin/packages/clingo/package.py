@@ -47,7 +47,6 @@ class Clingo(CMakePackage):
     # See https://github.com/potassco/clingo/blob/v5.5.2/INSTALL.md
     depends_on("cmake@3.1:", type="build")
     depends_on("cmake@3.18:", type="build", when="@5.5:")
-    depends_on("py-setuptools", when="@5.6.2:", type="build")
 
     depends_on("doxygen", type="build", when="+docs")
 
