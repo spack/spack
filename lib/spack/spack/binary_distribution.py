@@ -1798,12 +1798,9 @@ def _tar_strip_component(tar: tarfile.TarFile, prefix: str):
             continue
         m.name = m.name[result.end() :]
         if m.linkname:
-            if m.type == tarfile.SYMTYPE:
-                m.
-            elif m.type == tarfile.LNKTYPE:
-                result = regex.match(m.linkname)
-                if result:
-                    m.linkname = m.linkname[result.end() :]
+            result = regex.match(m.linkname)
+            if result:
+                m.linkname = m.linkname[result.end() :]
         yield m
 
 
