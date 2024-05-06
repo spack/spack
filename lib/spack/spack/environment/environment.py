@@ -2728,11 +2728,11 @@ class EnvironmentManifestFile(collections.abc.Mapping):
         for i, config_path in enumerate(reversed(includes)):
             # allow paths to contain spack config/environment variables, etc.
             config_path = substitute_path_variables(config_path)
+            include_url = urllib.parse.urlparse(config_path)
 
             # If scheme is not valid, config_path is not a url
             # of a type Spack is generally aware
-            if spack.util.url.validate_scheme(config_path):
-                include_url = urllib.parse.urlparse(config_path)
+            if spack.util.url.validate_scheme(include_url.scheme):
                 # Transform file:// URLs to direct includes.
                 if include_url.scheme == "file":
                     config_path = urllib.request.url2pathname(include_url.path)
