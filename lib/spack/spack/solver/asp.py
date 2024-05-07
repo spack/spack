@@ -3246,13 +3246,16 @@ class SpecBuilder:
                 r"^.*_propagate$",
                 r"^.*_satisfies$",
                 r"^.*_set$",
+                r"^compatible_libc$",
                 r"^dependency_holds$",
+                r"^external_conditions_hold$",
                 r"^node_compiler$",
                 r"^package_hash$",
                 r"^root$",
                 r"^track_dependencies$",
                 r"^variant_default_value_from_cli$",
                 r"^virtual_node$",
+                r"^virtual_on_incoming_edges$",
                 r"^virtual_root$",
             ]
         )
