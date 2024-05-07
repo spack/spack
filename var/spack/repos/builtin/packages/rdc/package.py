@@ -51,7 +51,8 @@ class Rdc(CMakePackage):
     depends_on("cmake@3.15:", type="build")
     depends_on("grpc@1.28.1+shared", type="build", when="@:5.3")
     depends_on("grpc@1.44.0+shared", when="@5.4.0:5.4")
-    depends_on("grpc@1.55.0+shared", when="@5.5.0:")
+    depends_on("grpc@1.55.0+shared", when="@5.5.0:6.0")
+    depends_on("grpc@1.59.1+shared", when="@6.1:")
     depends_on("protobuf")
     depends_on("libcap")
 
