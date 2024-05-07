@@ -212,6 +212,9 @@ class Adios2(CMakePackage, CudaPackage, ROCmPackage):
     # See https://github.com/ornladios/ADIOS2/pull/2714
     patch("2.6-fix-gcc10-symbols.patch", when="@2.6.0")
 
+    # add missing include <cstdint>
+    patch("2.7-fix-missing-cstdint-include.patch", when="@2.7")
+
     # Add missing include <memory>
     # https://github.com/ornladios/adios2/pull/2710
     patch(
