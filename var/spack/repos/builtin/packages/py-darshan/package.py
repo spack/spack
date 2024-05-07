@@ -36,6 +36,8 @@ class PyDarshan(PythonPackage):
     depends_on("py-mako", type=("build", "run"))
     depends_on("py-humanize", when="@3.4.3.0:", type=("build", "run"))
     depends_on("py-pytest", type="test")
+    depends_on("py-packaging", type="test")
+    depends_on("py-lxml", type="test")
 
     # py-darshan depends on specific darshan-util versions corresponding
     # to the first 3 parts of the py-darshan version string
