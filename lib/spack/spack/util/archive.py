@@ -12,8 +12,7 @@ from contextlib import closing, contextmanager
 from gzip import GzipFile
 from typing import Callable, Dict, Tuple
 
-from spack.util.path import sanitize_win_longpath
-
+from llnl.util.symlink import readlink
 
 class ChecksumWriter(io.BufferedIOBase):
     """Checksum writer computes a checksum while writing to a file."""
@@ -196,7 +195,7 @@ def reproducible_tarfile_from_prefix(
 
             if entry.is_symlink():
                 # strip off long path reg prefix on Windows
-                link_dest = sanitize_win_longpath(os.readlink(entry.path))
+                link_dest = readlink(entry.path)
                 file_info.linkname = link_dest
                 # According to POSIX: "the value of the file mode bits returned in the
                 # st_mode field of the stat structure is unspecified." So we set it to

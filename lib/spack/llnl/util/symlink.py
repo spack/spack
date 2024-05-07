@@ -11,7 +11,7 @@ import tempfile
 
 from llnl.util import lang, tty
 
-from ..path import system_path_filter
+from ..path import sanitize_win_longpath, system_path_filter
 
 if sys.platform == "win32":
     from win32file import CreateHardLink
@@ -117,6 +117,13 @@ def islink(path: str) -> bool:
          bool - whether the path is any kind link or not.
     """
     return any([os.path.islink(path), _windows_is_junction(path), _windows_is_hardlink(path)])
+
+
+def readlink(path: str, *, dir_fd=None) -> bool:
+    """Override os.readlink to sanitize Windows long path prefixes read from link
+    Otherwise identical to os.readlink
+    """
+    return sanitize_win_longpath(os.readlink(path, dir_fd=dir_fd))
 
 
 def _windows_is_hardlink(path: str) -> bool:
