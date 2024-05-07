@@ -38,6 +38,7 @@ class PyDarshan(PythonPackage):
     depends_on("py-pytest", type="test")
     depends_on("py-packaging", type="test")
     depends_on("py-lxml", type="test")
+    depends_on("py-importlib-resources", when="^python@:3.8", type="test")
 
     # py-darshan depends on specific darshan-util versions corresponding
     # to the first 3 parts of the py-darshan version string
