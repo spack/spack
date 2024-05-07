@@ -14,9 +14,9 @@ rocm_arch="gfx908"
 spack_jobs=''
 # spack_jobs='-j 128'
 
-mfem='mfem@4.6.0'${compiler}
+mfem='mfem@4.7.0'${compiler}
 # mfem_dev='mfem@develop'${compiler}
-mfem_dev='mfem@4.6.0'${compiler}
+mfem_dev='mfem@4.7.0'${compiler}
 
 backends='+occa+raja+libceed'
 backends_specs='^occa~cuda ^raja~openmp'
@@ -31,7 +31,10 @@ petsc_spec_rocm='^petsc+rocm+mumps'
 strumpack_spec='^strumpack~slate~openmp~cuda'
 strumpack_cuda_spec='^strumpack+cuda~slate~openmp'
 strumpack_rocm_spec='^strumpack+rocm~slate~openmp~cuda'
-# superlu specs with cuda and rocm
+# superlu specs with cpu, cuda and rocm
+# - v8.2.1 on CPU stalls in ex11p; works when superlu::PARMETIS is replaced with
+#   superlu::METIS_AT_PLUS_A
+superlu_spec='^superlu-dist@8.1.2'
 superlu_cuda_spec='^superlu-dist+cuda'
 superlu_rocm_spec='^superlu-dist+rocm'
 
@@ -41,7 +44,8 @@ builds=(
     ${mfem}'~mpi~metis~zlib'
     ${mfem}"$backends"'+superlu-dist+strumpack+suite-sparse+petsc+slepc+gslib \
         +sundials+pumi+mpfr+netcdf+zlib+gnutls+libunwind+conduit+ginkgo+hiop \
-        '"$backends_specs $strumpack_spec $petsc_spec $conduit_spec"
+        '"$backends_specs $superlu_spec $strumpack_spec $petsc_spec"' \
+        '"$conduit_spec"
     ${mfem}'~mpi \
         '"$backends"'+suite-sparse+sundials+gslib+mpfr+netcdf \
         +zlib+gnutls+libunwind+conduit+ginkgo+hiop \
@@ -55,7 +59,8 @@ builds=(
     ${mfem_dev}'+shared~static \
         '"$backends"'+superlu-dist+strumpack+suite-sparse+petsc+slepc \
         +sundials+pumi+mpfr+netcdf+zlib+gnutls+libunwind+conduit+ginkgo+hiop \
-        '"$backends_specs $strumpack_spec $petsc_spec $conduit_spec"
+        '"$backends_specs $superlu_spec $strumpack_spec $petsc_spec"' \
+        '"$conduit_spec"
     # NOTE: Shared build with +gslib works on mac but not on linux
     # TODO: add back '+gslib' when the above NOTE is addressed.
     ${mfem_dev}'+shared~static~mpi \
@@ -67,7 +72,7 @@ builds=(
 builds2=(
     # preferred version
     ${mfem}"$backends $backends_specs"
-    ${mfem}'+superlu-dist'
+    ${mfem}'+superlu-dist'" $superlu_spec"
     ${mfem}'+strumpack'" $strumpack_spec"
     ${mfem}'+suite-sparse~mpi'
     ${mfem}'+suite-sparse'
@@ -93,7 +98,7 @@ builds2=(
     #
     # develop version
     ${mfem_dev}"$backends $backends_specs"
-    ${mfem_dev}'+superlu-dist'
+    ${mfem_dev}'+superlu-dist'" $superlu_spec"
     ${mfem_dev}'+strumpack'" $strumpack_spec"
     ${mfem_dev}'+suite-sparse~mpi'
     ${mfem_dev}'+suite-sparse'
@@ -244,6 +249,8 @@ run_builds=("${builds[@]}" "${builds2[@]}")
 
 # PETSc CUDA tests on Lassen need this:
 # export PETSC_OPTIONS="-use_gpu_aware_mpi 0"
+# STRUMPACK forces "^openblas threads=openmp" when using openblas:
+export OMP_NUM_THREADS=1
 
 # spack files to clean in "$mfem_src_dir" when using 'dev-build'
 clean_files=(
