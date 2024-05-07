@@ -27,7 +27,7 @@ import spack.util.git
 from spack.error import SpackError
 from spack.util.crypto import checksum
 from spack.util.log_parse import parse_log_events
-from spack.util.web import urllib_ssl_cert_handler
+from spack.util.web import ssl_create_default_context
 
 from .base import Reporter
 from .extract import extract_test_parts
@@ -428,7 +428,7 @@ class CDash(Reporter):
         # Compute md5 checksum for the contents of this file.
         md5sum = checksum(hashlib.md5, filename, block_size=8192)
 
-        opener = build_opener(HTTPSHandler(context=urllib_ssl_cert_handler()))
+        opener = build_opener(HTTPSHandler(context=ssl_create_default_context()))
         with open(filename, "rb") as f:
             params_dict = {
                 "build": self.buildname,

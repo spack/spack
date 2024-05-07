@@ -398,7 +398,7 @@ def create_opener():
     opener = urllib.request.OpenerDirector()
     for handler in [
         urllib.request.UnknownHandler(),
-        urllib.request.HTTPSHandler(),
+        urllib.request.HTTPSHandler(context=spack.util.web.ssl_create_default_context()),
         spack.util.web.SpackHTTPDefaultErrorHandler(),
         urllib.request.HTTPRedirectHandler(),
         urllib.request.HTTPErrorProcessor(),

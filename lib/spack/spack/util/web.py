@@ -12,12 +12,13 @@ import os.path
 import re
 import shutil
 import ssl
+import stat
 import sys
 import traceback
 import urllib.parse
 from html.parser import HTMLParser
 from pathlib import Path, PurePosixPath
-from typing import IO, Dict, Iterable, List, Optional, Set, Union
+from typing import IO, Dict, Iterable, List, Optional, Set, Tuple, Union
 from urllib.error import HTTPError, URLError
 from urllib.request import HTTPSHandler, Request, build_opener
 
@@ -30,7 +31,7 @@ import spack.error
 import spack.util.path
 import spack.util.url as url_util
 
-from .executable import CommandNotFoundError, which
+from .executable import CommandNotFoundError, Executable, which
 from .gcs import GCSBlob, GCSBucket, GCSHandler
 from .s3 import UrllibS3Handler, get_s3_session
 
@@ -60,64 +61,56 @@ class SpackHTTPDefaultErrorHandler(urllib.request.HTTPDefaultErrorHandler):
         raise DetailedHTTPError(req, code, msg, hdrs, fp)
 
 
-dbg_msg_no_ssl_cert_config = (
-    "config:ssl_certs not in configuration. "
-    "Default cert configuation and environment will be used."
-)
+def custom_ssl_certs() -> Optional[Tuple[bool, str]]:
+    """Returns a tuple (is_file, path) if custom SSL certifates are configured and valid."""
+    ssl_certs = spack.config.get("config:ssl_certs")
+    if not ssl_certs:
+        return None
+    path = spack.util.path.substitute_path_variables(ssl_certs)
+    if not os.path.isabs(path):
+        tty.debug(f"certs: relative path not allowed: {path}")
+        return None
+    try:
+        st = os.stat(path)
+    except OSError as e:
+        tty.debug(f"certs: error checking path {path}: {e}")
+        return None
+
+    file_type = stat.S_IFMT(st.st_mode)
+
+    if file_type != stat.S_IFREG and file_type != stat.S_IFDIR:
+        tty.debug(f"certs: not a file or directory: {path}")
+        return None
+
+    return (file_type == stat.S_IFREG, path)
 
 
-def urllib_ssl_cert_handler():
-    """context for configuring ssl during urllib HTTPS operations"""
-    custom_cert_var = spack.config.get("config:ssl_certs")
-    if custom_cert_var:
-        # custom certs will be a location, so expand env variables, paths etc
-        certs = spack.util.path.canonicalize_path(custom_cert_var)
-        tty.debug("URLLIB: Looking for custom SSL certs at {}".format(certs))
-        if os.path.isfile(certs):
-            tty.debug("URLLIB: Custom SSL certs file found at {}".format(certs))
-            return ssl.create_default_context(cafile=certs)
-        elif os.path.isdir(certs):
-            tty.debug("URLLIB: Custom SSL certs directory found at {}".format(certs))
-            return ssl.create_default_context(capath=certs)
-        else:
-            tty.debug("URLLIB: Custom SSL certs not found")
-            return ssl.create_default_context()
-    else:
-        tty.debug(dbg_msg_no_ssl_cert_config)
+def ssl_create_default_context():
+    """Create the default SSL context for urllib with custom certificates if configured."""
+    certs = custom_ssl_certs()
+    if certs is None:
         return ssl.create_default_context()
-
-
-# curl requires different strategies for custom certs at runtime depending on if certs
-# are stored as a file or a directory
-def append_curl_env_for_ssl_certs(curl):
-    """
-    configure curl to use custom certs in a file at run time
-    see: https://curl.se/docs/sslcerts.html item 4
-    """
-    custom_cert_var = spack.config.get("config:ssl_certs")
-    if custom_cert_var:
-        # custom certs will be a location, so expand env variables, paths etc
-        certs = spack.util.path.canonicalize_path(custom_cert_var)
-        tty.debug("CURL: Looking for custom SSL certs file at {}".format(certs))
-        if os.path.isfile(certs):
-            tty.debug(
-                "CURL: Configuring curl to use custom"
-                " certs from {} by setting "
-                "CURL_CA_BUNDLE".format(certs)
-            )
-            curl.add_default_env("CURL_CA_BUNDLE", certs)
-        elif os.path.isdir(certs):
-            tty.warn(
-                "CURL config:ssl_certs"
-                " is a directory but cURL only supports files. Default certs will be used instead."
-            )
-        else:
-            tty.debug(
-                "CURL config:ssl_certs "
-                "resolves to {}. This is not a file so default certs will be used.".format(certs)
-            )
+    is_file, path = certs
+    if is_file:
+        tty.debug(f"urllib: certs: using cafile {path}")
+        return ssl.create_default_context(cafile=path)
     else:
-        tty.debug(dbg_msg_no_ssl_cert_config)
+        tty.debug(f"urllib: certs: using capath {path}")
+        return ssl.create_default_context(capath=path)
+
+
+def set_curl_env_for_ssl_certs(curl: Executable) -> None:
+    """configure curl to use custom certs in a file at runtime. See:
+    https://curl.se/docs/sslcerts.html item 4"""
+    certs = custom_ssl_certs()
+    if certs is None:
+        return
+    is_file, path = certs
+    if not is_file:
+        tty.debug(f"curl: {path} is not a file: default certs will be used.")
+        return
+    tty.debug(f"curl: using CURL_CA_BUNDLE={path}")
+    curl.add_default_env("CURL_CA_BUNDLE", path)
 
 
 def _urlopen():
@@ -127,7 +120,7 @@ def _urlopen():
 
     # One opener with HTTPS ssl enabled
     with_ssl = build_opener(
-        s3, gcs, HTTPSHandler(context=urllib_ssl_cert_handler()), error_handler
+        s3, gcs, HTTPSHandler(context=ssl_create_default_context()), error_handler
     )
 
     # One opener with HTTPS ssl disabled
@@ -348,7 +341,7 @@ def _curl(curl=None):
         except CommandNotFoundError as exc:
             tty.error(str(exc))
             raise spack.error.FetchError("Missing required curl fetch method")
-    append_curl_env_for_ssl_certs(curl)
+    set_curl_env_for_ssl_certs(curl)
     return curl
 
 
