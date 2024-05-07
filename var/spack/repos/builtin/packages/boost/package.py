@@ -490,6 +490,18 @@ class Boost(Package):
             spec["python"].libs[0],
         )
 
+    def bjam_python_line_win(self, spec):
+        # avoid "ambiguous key" error
+        if spec.satisfies("@:1.58"):
+            return ""
+
+        return "using python : {0} : {1} : {2} : {3} ;\n".format(
+            spec["python"].version.up_to(2),
+            spec["python"].command.path.replace('\\', '/'),
+            spec["python"].prefix.include.replace('\\', '/'),
+            spec["python"].prefix.libs.replace('\\', '/'),
+        )
+
     def determine_bootstrap_options(self, spec, with_libs, options):
         boost_toolset_id = self.determine_toolset(spec)
 
@@ -508,6 +520,9 @@ class Boost(Package):
         else:
             options.append("--without-icu")
 
+        self.write_jam_file(spec, boost_toolset_id)
+
+    def write_jam_file(self, spec, boost_toolset_id=None):
         with open("user-config.jam", "w") as f:
             # Boost may end up using gcc even though clang+gfortran is set in
             # compilers.yaml. Make sure this does not happen:
@@ -530,7 +545,10 @@ class Boost(Package):
                 f.write(mpi_line + " ;\n")
 
             if "+python" in spec:
-                f.write(self.bjam_python_line(spec))
+                if spec.satisfies("platform=windows"):
+                    f.write(self.bjam_python_line_win(spec))
+                else:
+                    f.write(self.bjam_python_line(spec))
 
     def determine_b2_options(self, spec, options):
         if "+debug" in spec:
@@ -767,13 +785,16 @@ class Boost(Package):
                 return "64" in str(self.spec.target.family)
 
             b2_options = [f"--prefix={self.prefix}", f"address-model={64 if is_64bit() else 32}"]
-        else:
-            path_to_config = "--user-config=%s" % os.path.join(
-                self.stage.source_path, "user-config.jam"
-            )
-            b2_options = ["-j", "%s" % jobs]
-            b2_options.append(path_to_config)
+            if not self.spec.satisfies("+python"):
+                b2_options.append("--without-python")
 
+            self.write_jam_file(self.spec)
+        else:
+            b2_options = ["-j", "%s" % jobs]
+        path_to_config = "--user-config=%s" % os.path.join(
+            self.stage.source_path, "user-config.jam"
+        )
+        b2_options.append(path_to_config)
         threading_opts = self.determine_b2_options(spec, b2_options)
 
         # Create headers if building from a git checkout
