@@ -84,7 +84,7 @@ SECTION_SCHEMAS: Dict[str, Any] = {
 # Same as above, but including keys for environments
 # this allows us to unify config reading between configs and environments
 _ALL_SCHEMAS: Dict[str, Any] = copy.deepcopy(SECTION_SCHEMAS)
-_ALL_SCHEMAS.update({spack.schema.env.TOP_LEVEL_KEY: spack.schema.env.schema})
+# _ALL_SCHEMAS.update({spack.schema.env.TOP_LEVEL_KEY: spack.schema.env.schema})
 
 #: Path to the default configuration
 CONFIGURATION_DEFAULTS_PATH = ("defaults", os.path.join(spack.paths.etc_path, "defaults"))

@@ -36,6 +36,8 @@ properties: Dict[str, Any] = {
                 "specs": spec_list_schema,
                 "include_concrete": {"type": "array", "default": [], "items": {"type": "string"}},
             },
+            # nested environments
+            {"spack": {"$ref": "#/spack/properties"}},
         ),
     }
 }
