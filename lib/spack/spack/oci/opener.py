@@ -399,6 +399,7 @@ def create_opener():
     for handler in [
         urllib.request.UnknownHandler(),
         urllib.request.HTTPSHandler(),
+        urllib.request.HTTPHandler(),  # insecure registry
         spack.util.web.SpackHTTPDefaultErrorHandler(),
         urllib.request.HTTPRedirectHandler(),
         urllib.request.HTTPErrorProcessor(),
