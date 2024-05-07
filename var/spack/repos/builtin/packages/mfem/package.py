@@ -51,8 +51,12 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     # other version.
     version("develop", branch="master")
 
-    # FIXME: update to the official release link when v4.7 is released
-    version("4.7.0", branch="mfem-4.7-dev")
+    version(
+        "4.7.0",
+        sha256="5e889493f5f79848f7b2d16afaae307c59880ac2a7ff2315551c60ca54717751",
+        url="https://bit.ly/mfem-4-7",
+        extension="tar.gz",
+    )
 
     version(
         "4.6.0",
@@ -471,7 +475,9 @@ class Mfem(Package, CudaPackage, ROCmPackage):
         when="@4.6.0 +gslib+shared+miniapps",
         sha256="2a31682d876626529e2778a216d403648b83b90997873659a505d982d0e65beb",
     )
-    patch("mfem-hip.patch", when="+rocm ^hip@6.0:")
+    # FIXME: if we need this patch for v4.7.0, we need a new patch since this
+    #        one fails
+    patch("mfem-hip.patch", when="@4.6.0 +rocm ^hip@6.0:")
 
     phases = ["configure", "build", "install"]
 
