@@ -944,13 +944,25 @@ class ConcreteSpecsByHash(collections.abc.Mapping):
 
     def __init__(self) -> None:
         self.data: Dict[str, spack.spec.Spec] = {}
+        self.explicit: Set[str] = set()
 
     def __getitem__(self, dag_hash: str) -> spack.spec.Spec:
         return self.data[dag_hash]
 
+    def explicit_items(self) -> Iterator[Tuple[str, spack.spec.Spec]]:
+        """Iterate on items that have been added explicitly, and not just as a dependency
+        of other nodes.
+        """
+        for h, s in self.items():
+            # We need to make an exception for gcc-runtime, until we can splice it.
+            if h in self.explicit or s.name == "gcc-runtime":
+                yield h, s
+
     def add(self, spec: spack.spec.Spec) -> bool:
         """Adds a new concrete spec to the mapping. Returns True if the spec was just added,
         False if the spec was already in the mapping.
+
+        Calling this function marks the spec as added explicitly.
 
         Args:
             spec: spec to be added
@@ -966,6 +978,7 @@ class ConcreteSpecsByHash(collections.abc.Mapping):
             raise ValueError(msg)
 
         dag_hash = spec.dag_hash()
+        self.explicit.add(dag_hash)
         if dag_hash in self.data:
             return False
 
@@ -2349,7 +2362,7 @@ class SpackSolverSetup:
 
     def concrete_specs(self):
         """Emit facts for reusable specs"""
-        for h, spec in self.reusable_and_possible.items():
+        for h, spec in self.reusable_and_possible.explicit_items():
             # this indicates that there is a spec like this installed
             self.gen.fact(fn.installed_hash(spec.name, h))
             # this describes what constraints it imposes on the solve
