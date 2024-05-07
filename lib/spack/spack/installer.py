@@ -1698,10 +1698,6 @@ class PackageInstaller:
             spack.package_base.PackageBase._verbose = spack.build_environment.start_build_process(
                 pkg, build_process, install_args
             )
-            # Currently this is how RPATH-like behavior is achieved on Windows, after install
-            # establish runtime linkage via Windows Runtime link object
-            # Note: this is a no-op on non Windows platforms
-            pkg.windows_establish_runtime_linkage()
             # Note: PARENT of the build process adds the new package to
             # the database, so that we don't need to re-read from file.
             spack.store.STORE.db.add(pkg.spec, spack.store.STORE.layout, explicit=explicit)

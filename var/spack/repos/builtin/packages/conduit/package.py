@@ -443,7 +443,7 @@ class Conduit(CMakePackage):
             cfg.write("# Enable python module builds\n")
             cfg.write(cmake_cache_entry("ENABLE_PYTHON", "ON"))
             cfg.write("# python from spack \n")
-            cfg.write(cmake_cache_entry("PYTHON_EXECUTABLE", spec["python"].command.path))
+            cfg.write(cmake_cache_entry("PYTHON_EXECUTABLE", python.path))
             try:
                 cfg.write("# python module install dir\n")
                 cfg.write(cmake_cache_entry("PYTHON_MODULE_INSTALL_PREFIX", python_platlib))

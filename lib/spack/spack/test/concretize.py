@@ -1244,10 +1244,11 @@ class TestConcretize:
 
     @pytest.mark.regression("20055")
     @pytest.mark.only_clingo("Use case not supported by the original concretizer")
-    def test_custom_compiler_version(self, mutable_config, compiler_factory):
+    def test_custom_compiler_version(self, mutable_config, compiler_factory, monkeypatch):
         mutable_config.set(
             "compilers", [compiler_factory(spec="gcc@10foo", operating_system="redhat6")]
         )
+        monkeypatch.setattr(spack.compiler.Compiler, "real_version", "10.2.1")
         s = Spec("a %gcc@10foo os=redhat6").concretized()
         assert "%gcc@10foo" in s
 
@@ -2461,6 +2462,46 @@ class TestConcretize:
         json_file.write_text(build_dep.to_json())
         s = Spec(f"dtuse ^{str(json_file)}").concretized()
         assert s["dttop"].dag_hash() == build_dep.dag_hash()
+
+    @pytest.mark.regression("44040")
+    def test_exclude_specs_from_reuse(self, monkeypatch):
+        """Tests that we can exclude a spec from reuse when concretizing, and that the spec
+        is not added back to the solve as a dependency of another reusable spec.
+
+        The expected spec is:
+
+        o callpath@1.0
+        |\
+        | |\
+        o | | mpich@3.0.4
+        |/ /
+        | o dyninst@8.2
+        |/|
+        | |\
+        | | o libdwarf@20130729
+        | |/|
+        |/|/
+        | o libelf@0.8.13
+        |/
+        o glibc@2.31
+        """
+        # Prepare a mock mirror that returns an old version of dyninst
+        request_str = "callpath ^mpich"
+        reused = Spec(f"{request_str} ^dyninst@8.1.1").concretized()
+        monkeypatch.setattr(spack.solver.asp, "_specs_from_mirror", lambda: [reused])
+
+        # Exclude dyninst from reuse, so we expect that the old version is not taken into account
+        with spack.config.override(
+            "concretizer:reuse", {"from": [{"type": "buildcache", "exclude": ["dyninst"]}]}
+        ):
+            result = Spec(request_str).concretized()
+
+        assert result.dag_hash() != reused.dag_hash()
+        assert result["mpich"].dag_hash() == reused["mpich"].dag_hash()
+        assert result["dyninst"].dag_hash() != reused["dyninst"].dag_hash()
+        assert result["dyninst"].satisfies("@=8.2")
+        for dep in result["dyninst"].traverse(root=False):
+            assert dep.dag_hash() == reused[dep.name].dag_hash()
 
 
 @pytest.fixture()

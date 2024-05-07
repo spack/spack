@@ -60,7 +60,7 @@ def init(gnupghome=None, force=False):
 
     # Set the executable objects for "gpg" and "gpgconf"
     with spack.bootstrap.ensure_bootstrap_configuration():
-        spack.bootstrap.ensure_core_dependencies()
+        spack.bootstrap.ensure_gpg_in_path_or_raise()
         GPG, GPGCONF = _gpg(), _gpgconf()
 
     GPG.add_default_env("GNUPGHOME", GNUPGHOME)

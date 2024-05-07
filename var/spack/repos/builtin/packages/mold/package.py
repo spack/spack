@@ -16,6 +16,8 @@ class Mold(CMakePackage):
 
     license("MIT")
 
+    version("2.31.0", sha256="3dc3af83a5d22a4b29971bfad17261851d426961c665480e2ca294e5c74aa1e5")
+    version("2.30.0", sha256="6e5178ccafe828fdb4ba0dd841d083ff6004d3cb41e56485143eb64c716345fd")
     version("2.4.1", sha256="c9853d007d6a1b4f3e36b7314346751f4cc91bc43c76e30db51709b53b44dd68")
     version("2.4.0", sha256="be65f3d785d32ece7b3204ecaa57810847fdd25c232cf704cbfff2dafb1ac107")
     version("2.3.0", sha256="6cfc1af0214f993be1b0ae4a2f0278d32b7fc48155c15b2d03758f6d81e7250b")
