@@ -188,6 +188,7 @@ class SuiteSparse(Package):
             # even though this fix is ugly
             "BLAS=%s" % (spec["blas"].libs.ld_flags + (" -lstdc++" if "@4.5.1" in spec else "")),
             "LAPACK=%s" % spec["lapack"].libs.ld_flags,
+            "JOBS=%s" % make_jobs,
         ]
 
         # Recent versions require c11 but some demos do not get the c11 from
@@ -238,6 +239,7 @@ class SuiteSparse(Package):
                 # unintentional system blas/lapack packages
                 + " -DBLAS_LIBRARIES=%s" % spec["blas"].libs
                 + " -DLAPACK_LIBRARIES=%s" % spec["lapack"].libs
+                + " -DENABLE_CUDA=%s" % ("ON" if "+cuda" in spec else "OFF")
             ]
 
         if spec.satisfies("%gcc platform=darwin"):
@@ -309,5 +311,5 @@ class SuiteSparse(Package):
         query_parameters = self.spec.last_query.extra_parameters
         comps = all_comps if not query_parameters else query_parameters
         return find_libraries(
-            ["lib" + c for c in comps], root=self.prefix.lib, shared=True, recursive=False
+            ["lib" + c for c in comps], root=self.prefix, shared=True, recursive=True
         )
