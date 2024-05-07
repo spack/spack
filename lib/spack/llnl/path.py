@@ -104,4 +104,4 @@ def sanitize_win_longpath(path: str) -> str:
     """Strip Windows extended path prefix from strings
     Returns sanitized string.
     no-op if extended path prefix is not present"""
-    return path.strip("\\\\?\\")
+    return path.lstrip("\\\\?\\")
