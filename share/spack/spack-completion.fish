@@ -1538,7 +1538,7 @@ complete -c spack -n '__fish_spack_using_command env deactivate' -l pwsh -f -a s
 complete -c spack -n '__fish_spack_using_command env deactivate' -l pwsh -d 'print pwsh commands to activate the environment'
 
 # spack env create
-set -g __fish_spack_optspecs_spack_env_create h/help d/dir keep-relative without-view with-view=
+set -g __fish_spack_optspecs_spack_env_create h/help d/dir keep-relative without-view with-view= include-concrete=
 complete -c spack -n '__fish_spack_using_command_pos 0 env create' -f -a '(__fish_spack_environments)'
 complete -c spack -n '__fish_spack_using_command env create' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command env create' -s h -l help -d 'show this help message and exit'
@@ -1550,22 +1550,28 @@ complete -c spack -n '__fish_spack_using_command env create' -l without-view -f 
 complete -c spack -n '__fish_spack_using_command env create' -l without-view -d 'do not maintain a view for this environment'
 complete -c spack -n '__fish_spack_using_command env create' -l with-view -r -f -a with_view
 complete -c spack -n '__fish_spack_using_command env create' -l with-view -r -d 'specify that this environment should maintain a view at the specified path (by default the view is maintained in the environment directory)'
+complete -c spack -n '__fish_spack_using_command env create' -l include-concrete -r -f -a include_concrete
+complete -c spack -n '__fish_spack_using_command env create' -l include-concrete -r -d 'name of old environment to copy specs from'
 
 # spack env remove
-set -g __fish_spack_optspecs_spack_env_remove h/help y/yes-to-all
+set -g __fish_spack_optspecs_spack_env_remove h/help y/yes-to-all f/force
 complete -c spack -n '__fish_spack_using_command_pos_remainder 0 env remove' -f -a '(__fish_spack_environments)'
 complete -c spack -n '__fish_spack_using_command env remove' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command env remove' -s h -l help -d 'show this help message and exit'
 complete -c spack -n '__fish_spack_using_command env remove' -s y -l yes-to-all -f -a yes_to_all
 complete -c spack -n '__fish_spack_using_command env remove' -s y -l yes-to-all -d 'assume "yes" is the answer to every confirmation request'
+complete -c spack -n '__fish_spack_using_command env remove' -s f -l force -f -a force
+complete -c spack -n '__fish_spack_using_command env remove' -s f -l force -d 'remove the environment even if it is included in another environment'
 
 # spack env rm
-set -g __fish_spack_optspecs_spack_env_rm h/help y/yes-to-all
+set -g __fish_spack_optspecs_spack_env_rm h/help y/yes-to-all f/force
 complete -c spack -n '__fish_spack_using_command_pos_remainder 0 env rm' -f -a '(__fish_spack_environments)'
 complete -c spack -n '__fish_spack_using_command env rm' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command env rm' -s h -l help -d 'show this help message and exit'
 complete -c spack -n '__fish_spack_using_command env rm' -s y -l yes-to-all -f -a yes_to_all
 complete -c spack -n '__fish_spack_using_command env rm' -s y -l yes-to-all -d 'assume "yes" is the answer to every confirmation request'
+complete -c spack -n '__fish_spack_using_command env rm' -s f -l force -f -a force
+complete -c spack -n '__fish_spack_using_command env rm' -s f -l force -d 'remove the environment even if it is included in another environment'
 
 # spack env rename
 set -g __fish_spack_optspecs_spack_env_rename h/help d/dir f/force

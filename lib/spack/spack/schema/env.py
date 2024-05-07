@@ -35,6 +35,7 @@ properties: Dict[str, Any] = {
             {
                 "include": {"type": "array", "default": [], "items": {"type": "string"}},
                 "specs": spec_list_schema,
+                "include_concrete": {"type": "array", "default": [], "items": {"type": "string"}},
             },
         ),
     }
