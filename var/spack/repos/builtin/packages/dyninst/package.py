@@ -108,7 +108,7 @@ class Dyninst(CMakePackage):
     patch("v9.3.2-auto.patch", when="@9.3.2 %gcc@:4.7")
     patch("tribool.patch", when="@9.3.0:10.0.0 ^boost@1.69:")
 
-    requires("%gcc", msg="dyninst builds only with GCC")
+    requires("%gcc", when="@:13.0.0", msg="dyninst builds only with GCC")
 
     # No Mac support (including apple-clang)
     conflicts("platform=darwin", msg="macOS is not supported")
