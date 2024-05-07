@@ -70,7 +70,7 @@ spack:
   - cp2k +mpi
   - datatransferkit
   - dyninst
-  - ecp-data-vis-sdk ~cuda ~rocm +adios2 +ascent +cinema +darshan +faodel +hdf5 +paraview +pnetcdf +sz +unifyfs +veloc ~visit +vtkm +zfp  # +visit: ?
+  - ecp-data-vis-sdk ~cuda ~rocm +adios2 +ascent +cinema +darshan +faodel +hdf5 ~paraview +pnetcdf +sz +unifyfs +veloc ~visit +vtkm +zfp  # +visit: ?
   - exaworks
   - flecsi
   - flit
@@ -164,7 +164,7 @@ spack:
   - hdf5
   - libcatalyst
   - parallel-netcdf
-  - paraview
+  # - paraview
   - py-cinemasci
   - sz
   - unifyfs
@@ -241,7 +241,7 @@ spack:
   - umpire ~shared +cuda cuda_arch=75
   # INCLUDED IN ECP DAV CUDA
   - adios2 +cuda cuda_arch=75
-  - paraview +cuda cuda_arch=75
+  # - paraview +cuda cuda_arch=75
   - vtk-m +cuda cuda_arch=75
   - zfp +cuda cuda_arch=75
   # --
@@ -288,7 +288,7 @@ spack:
   - umpire ~shared +cuda cuda_arch=80
   # INCLUDED IN ECP DAV CUDA
   - adios2 +cuda cuda_arch=80
-  - paraview +cuda cuda_arch=80
+  # - paraview +cuda cuda_arch=80
   - vtk-m +cuda cuda_arch=80
   - zfp +cuda cuda_arch=80
   # --
