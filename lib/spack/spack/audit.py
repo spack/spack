@@ -258,40 +258,6 @@ def _search_duplicate_specs_in_externals(error_cls):
 
 
 @config_packages
-def _deprecated_preferences(error_cls):
-    """Search package preferences deprecated in v0.21 (and slated for removal in v0.23)"""
-    # TODO (v0.23): remove this audit as the attributes will not be allowed in config
-    errors = []
-    packages_yaml = spack.config.CONFIG.get_config("packages")
-
-    def make_error(attribute_name, config_data, summary):
-        s = io.StringIO()
-        s.write("Occurring in the following file:\n")
-        dict_view = syaml.syaml_dict((k, v) for k, v in config_data.items() if k == attribute_name)
-        syaml.dump_config(dict_view, stream=s, blame=True)
-        return error_cls(summary=summary, details=[s.getvalue()])
-
-    if "all" in packages_yaml and "version" in packages_yaml["all"]:
-        summary = "Using the deprecated 'version' attribute under 'packages:all'"
-        errors.append(make_error("version", packages_yaml["all"], summary))
-
-    for package_name in packages_yaml:
-        if package_name == "all":
-            continue
-
-        package_conf = packages_yaml[package_name]
-        for attribute in ("compiler", "providers", "target"):
-            if attribute not in package_conf:
-                continue
-            summary = (
-                f"Using the deprecated '{attribute}' attribute " f"under 'packages:{package_name}'"
-            )
-            errors.append(make_error(attribute, package_conf, summary))
-
-    return errors
-
-
-@config_packages
 def _avoid_mismatched_variants(error_cls):
     """Warns if variant preferences have mismatched types or names."""
     errors = []
