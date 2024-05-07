@@ -427,7 +427,7 @@ def make_argument_parser(**kwargs):
     parser.add_argument(
         "--color",
         action="store",
-        default=os.environ.get("SPACK_COLOR", "auto"),
+        default=None,
         choices=("always", "never", "auto"),
         help="when to colorize output (default: auto)",
     )
@@ -622,7 +622,8 @@ def setup_main_options(args):
     # with color
     color.try_enable_terminal_color_on_windows()
     # when to use color (takes always, auto, or never)
-    color.set_color_when(args.color)
+    if args.color is not None:
+        color.set_color_when(args.color)
 
 
 def allows_unknown_args(command):

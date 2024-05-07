@@ -59,6 +59,7 @@ The console can be reset later to plain text with '@.'.
 
 To output an @, use '@@'.  To output a } inside braces, use '}}'.
 """
+import os
 import re
 import sys
 from contextlib import contextmanager
@@ -101,9 +102,29 @@ COLOR_RE = re.compile(r"@(?:(@)|(\.)|([*_])?([a-zA-Z])?(?:{((?:[^}]|}})*)})?)")
 # Mapping from color arguments to values for tty.set_color
 color_when_values = {"always": True, "auto": None, "never": False}
 
-# Force color; None: Only color if stdout is a tty
-# True: Always colorize output, False: Never colorize output
-_force_color = None
+
+def _color_when_value(when):
+    """Raise a ValueError for an invalid color setting.
+
+    Valid values are 'always', 'never', and 'auto', or equivalently,
+    True, False, and None.
+    """
+    if when in color_when_values:
+        return color_when_values[when]
+    elif when not in color_when_values.values():
+        raise ValueError("Invalid color setting: %s" % when)
+    return when
+
+
+def _color_from_environ() -> Optional[bool]:
+    try:
+        return _color_when_value(os.environ.get("SPACK_COLOR", "auto"))
+    except ValueError:
+        return None
+
+
+#: When `None` colorize when stdout is tty, when `True` or `False` always or never colorize resp.
+_force_color = _color_from_environ()
 
 
 def try_enable_terminal_color_on_windows():
@@ -162,19 +183,6 @@ def try_enable_terminal_color_on_windows():
             from . import debug
 
             debug("Unable to support color on Windows terminal")
-
-
-def _color_when_value(when):
-    """Raise a ValueError for an invalid color setting.
-
-    Valid values are 'always', 'never', and 'auto', or equivalently,
-    True, False, and None.
-    """
-    if when in color_when_values:
-        return color_when_values[when]
-    elif when not in color_when_values.values():
-        raise ValueError("Invalid color setting: %s" % when)
-    return when
 
 
 def get_color_when():
