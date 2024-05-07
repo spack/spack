@@ -497,9 +497,9 @@ class Boost(Package):
 
         return "using python : {0} : {1} : {2} : {3} ;\n".format(
             spec["python"].version.up_to(2),
-            spec["python"].command.path.replace('\\', '/'),
-            spec["python"].prefix.include.replace('\\', '/'),
-            spec["python"].prefix.libs.replace('\\', '/'),
+            spec["python"].command.path.replace("\\", "/"),
+            spec["python"].prefix.include.replace("\\", "/"),
+            spec["python"].prefix.libs.replace("\\", "/"),
         )
 
     def determine_bootstrap_options(self, spec, with_libs, options):
@@ -542,7 +542,7 @@ class Boost(Package):
                 if "platform=cray" in spec:
                     mpi_line += " : <define>MPICH_SKIP_MPICXX"
                 elif spec.satisfies("platform=windows"):
-                    mpi_line = mpi_line.replace('\\', '/')
+                    mpi_line = mpi_line.replace("\\", "/")
 
                 f.write(mpi_line + " ;\n")
 
