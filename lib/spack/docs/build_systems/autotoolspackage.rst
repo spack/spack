@@ -144,7 +144,7 @@ example, the ``bash`` shell is used to run the ``autogen.sh`` script.
 
 .. code-block:: python
 
-   def autoreconf(self, spec, prefix):
+   def autoreconf(self, pkg, spec, prefix):
        which("bash")("autogen.sh")
 
 """""""""""""""""""""""""""""""""""""""
