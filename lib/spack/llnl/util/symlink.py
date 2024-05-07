@@ -119,13 +119,6 @@ def islink(path: str) -> bool:
     return any([os.path.islink(path), _windows_is_junction(path), _windows_is_hardlink(path)])
 
 
-def readlink(path: str, *, dir_fd=None) -> bool:
-    """Override os.readlink to sanitize Windows long path prefixes read from link
-    Otherwise identical to os.readlink
-    """
-    return sanitize_win_longpath(os.readlink(path, dir_fd=dir_fd))
-
-
 def _windows_is_hardlink(path: str) -> bool:
     """Determines if a path is a windows hard link. This is accomplished
     by looking at the number of links using os.stat. A non-hard-linked file
@@ -254,9 +247,9 @@ def _windows_create_junction(source: str, link: str):
     out, err = proc.communicate()
     tty.debug(out.decode())
     if proc.returncode != 0:
-        err = err.decode()
-        tty.error(err)
-        raise SymlinkError("Make junction command returned a non-zero return code.", err)
+        err_str = err.decode()
+        tty.error(err_str)
+        raise SymlinkError("Make junction command returned a non-zero return code.", err_str)
 
 
 def _windows_create_hard_link(path: str, link: str):
@@ -276,14 +269,14 @@ def _windows_create_hard_link(path: str, link: str):
         CreateHardLink(link, path)
 
 
-def readlink(path: str):
+def readlink(path: str, *, dir_fd=None):
     """Spack utility to override of os.readlink method to work cross platform"""
     if _windows_is_hardlink(path):
         return _windows_read_hard_link(path)
     elif _windows_is_junction(path):
         return _windows_read_junction(path)
     else:
-        return os.readlink(path)
+        return sanitize_win_longpath(os.readlink(path, dir_fd=dir_fd))
 
 
 def _windows_read_hard_link(link: str) -> str:
