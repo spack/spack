@@ -605,10 +605,7 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
 
         # Please specify optimization flags to use during compilation when
         # bazel option '--config=opt' is specified
-        env.set(
-            "CC_OPT_FLAGS",
-            spec.target.optimization_flags(spec.compiler.name, spec.compiler.version),
-        )
+        env.set("CC_OPT_FLAGS", spec.architecture.target.optimization_flags(spec.compiler))
 
         # Would you like to interactively configure ./WORKSPACE for
         # Android builds?
