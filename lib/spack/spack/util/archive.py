@@ -14,6 +14,7 @@ from typing import Callable, Dict, Tuple
 
 from llnl.util.symlink import readlink
 
+
 class ChecksumWriter(io.BufferedIOBase):
     """Checksum writer computes a checksum while writing to a file."""
 
