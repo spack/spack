@@ -541,6 +541,8 @@ class Boost(Package):
 
                 if "platform=cray" in spec:
                     mpi_line += " : <define>MPICH_SKIP_MPICXX"
+                elif spec.satisfies("platform=windows"):
+                    mpi_line = mpi_line.replace('\\', '/')
 
                 f.write(mpi_line + " ;\n")
 
