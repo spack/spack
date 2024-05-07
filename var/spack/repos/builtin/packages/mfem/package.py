@@ -1021,9 +1021,13 @@ class Mfem(Package, CudaPackage, ROCmPackage):
             ]
 
         if "+umpire" in spec:
+            umpire = spec["umpire"]
+            umpire_libs = umpire.libs
+            if "^fmt" in umpire:
+                umpire_libs += umpire["fmt"].libs
             options += [
-                "UMPIRE_OPT=-I%s" % spec["umpire"].prefix.include,
-                "UMPIRE_LIB=%s" % ld_flags_from_library_list(spec["umpire"].libs),
+                "UMPIRE_OPT=-I%s" % umpire.prefix.include,
+                "UMPIRE_LIB=%s" % ld_flags_from_library_list(umpire_libs),
             ]
 
         timer_ids = {"std": "0", "posix": "2", "mac": "4", "mpi": "6"}
