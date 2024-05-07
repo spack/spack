@@ -26,13 +26,11 @@ class Adios2(CMakePackage, CudaPackage, ROCmPackage):
 
     version("master", branch="master")
     version(
-        "2.10.0-rc1", sha256="8b72142bd5aabfb80c7963f524df11b8721c09ef20caea6df5fb00c31a7747c0"
-    )
-    version(
-        "2.9.2",
-        sha256="78309297c82a95ee38ed3224c98b93d330128c753a43893f63bbe969320e4979",
+        "2.10.0",
+        sha256="e5984de488bda546553dd2f46f047e539333891e63b9fe73944782ba6c2d95e4",
         preferred=True,
     )
+    version("2.9.2", sha256="78309297c82a95ee38ed3224c98b93d330128c753a43893f63bbe969320e4979")
     version("2.9.1", sha256="ddfa32c14494250ee8a48ef1c97a1bf6442c15484bbbd4669228a0f90242f4f9")
     version("2.9.0", sha256="69f98ef58c818bb5410133e1891ac192653b0ec96eb9468590140f2552b6e5d1")
     version("2.8.3", sha256="4906ab1899721c41dd918dddb039ba2848a1fb0cf84f3a563a1179b9d6ee0d9f")
@@ -84,6 +82,7 @@ class Adios2(CMakePackage, CudaPackage, ROCmPackage):
         when="+shared",
         description="Enable the DataMan engine for WAN transports",
     )
+    variant("campaign", default=False, when="@2.10:", description="Enable campaign management")
     variant("dataspaces", default=False, when="@2.5:", description="Enable support for DATASPACES")
     variant("ssc", default=True, when="@:2.7", description="Enable the SSC staging engine")
     variant("hdf5", default=False, description="Enable the HDF5 engine")
@@ -175,6 +174,8 @@ class Adios2(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("hdf5~mpi", when="+hdf5~mpi")
     depends_on("hdf5+mpi", when="+hdf5+mpi")
 
+    depends_on("sqlite@3", when="+campaign")
+
     depends_on("libpressio", when="+libpressio")
     depends_on("c-blosc", when="+blosc")
     depends_on("c-blosc2", when="+blosc2")
@@ -225,7 +226,7 @@ class Adios2(CMakePackage, CudaPackage, ROCmPackage):
 
     # cmake: find threads package first
     # https://github.com/ornladios/ADIOS2/pull/3893
-    patch("2.9.2-cmake-find-threads-package-first.patch", when="@2.9.2:")
+    patch("2.9.2-cmake-find-threads-package-first.patch", when="@2.9")
 
     @when("%fj")
     def patch(self):
@@ -253,6 +254,7 @@ class Adios2(CMakePackage, CudaPackage, ROCmPackage):
             from_variant("ADIOS2_USE_Blosc", "blosc"),
             from_variant("ADIOS2_USE_Blosc2", "blosc2"),
             from_variant("ADIOS2_USE_BZip2", "bzip2"),
+            from_variant("ADIOS2_USE_Campaign", "campaign"),
             from_variant("ADIOS2_USE_DataMan", "dataman"),
             from_variant("ADIOS2_USE_DataSpaces", "dataspaces"),
             from_variant("ADIOS2_USE_Fortran", "fortran"),

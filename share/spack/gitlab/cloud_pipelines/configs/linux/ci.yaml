@@ -71,7 +71,6 @@ ci:
 
     - match:
       - dealii
-      - mxnet
       - rocblas
       build-job:
         tags: [ "spack", "huge" ]

@@ -78,12 +78,14 @@ spack:
   - drishti
   - dxt-explorer
   - dyninst
+  - e4s-cl
   - ecp-data-vis-sdk ~cuda ~rocm +adios2 +ascent +cinema +darshan +faodel +hdf5 +paraview +pnetcdf +sz +unifyfs +veloc +visit +vtkm +zfp # adios2~cuda, ascent~cuda, darshan-runtime, darshan-util, faodel, hdf5, libcatalyst, parallel-netcdf, paraview~cuda, py-cinemasci, sz, unifyfs, veloc, visit, vtk-m, zfp
   - exaworks
   - flecsi
   - flit
   - flux-core
   - fortrilinos
+  - fpm
   - gasnet
   - ginkgo
   - globalarrays
@@ -103,7 +105,7 @@ spack:
   - kokkos +openmp
   - kokkos-kernels +openmp
   - laghos
-  - lammps
+  - lammps +amoeba +asphere +bocs +body +bpm +brownian +cg-dna +cg-spica +class2 +colloid +colvars +compress +coreshell +dielectric +diffraction +dipole +dpd-basic +dpd-meso +dpd-react +dpd-smooth +drude +eff +electrode +extra-compute +extra-dump +extra-fix +extra-molecule +extra-pair +fep +granular +interlayer +kspace +lepton +machdyn +manybody +mc +meam +mesont +misc +ml-iap +ml-pod +ml-snap +mofff +molecule +openmp-package +opt +orient +peri +phonon +plugin +poems +qeq +reaction +reaxff +replica +rigid +shock +sph +spin +srd +tally +uef +voronoi +yaff
   - lbann
   - legion
   - libnrm
@@ -119,6 +121,8 @@ spack:
   - mpifileutils ~xattr
   - nccmp
   - nco
+  - nekbone +mpi
+  - netcdf-fortran
   - netlib-scalapack
   - nrm
   - nvhpc
@@ -137,6 +141,7 @@ spack:
   - precice
   - pruners-ninja
   - pumi
+  - py-amrex
   - py-h5py
   - py-jupyterhub
   - py-libensemble
@@ -186,6 +191,7 @@ spack:
   # --
   # - geopm                           # geopm: https://github.com/spack/spack/issues/38795
   # - glvis                           # glvis: https://github.com/spack/spack/issues/42839
+  # - nek5000 +mpi +visit             # nek5000:  Error: AttributeError: 'str' object has no attribute 'propagate': 'VISIT_INSTALL="' + spec["visit"].prefix.bin + '"',
 
   # PYTHON PACKAGES
   - opencv +python3
@@ -207,6 +213,7 @@ spack:
   - py-seaborn
   - py-tensorflow
   - py-torch
+  - py-deephyper
 
   # # CUDA NOARCH
   # - bricks +cuda

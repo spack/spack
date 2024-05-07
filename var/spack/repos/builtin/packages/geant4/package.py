@@ -162,7 +162,7 @@ class Geant4(CMakePackage):
     patch("CLHEP-10.03.03.patch", level=1, when="@10.3")
     # Build failure on clang 15, ubuntu 22: see Geant4 problem report #2444
     # fixed by ascii-V10-07-03
-    patch("geant4-10.6.patch", level=1, when="@10.5:10.6")
+    patch("geant4-10.6.patch", level=1, when="@10.0:10.6")
     # These patches can be applied independent of the cxxstd value?
     patch("cxx17.patch", when="@10.3 cxxstd=17")
     patch("cxx17_geant4_10_0.patch", level=1, when="@10.4.0 cxxstd=17")

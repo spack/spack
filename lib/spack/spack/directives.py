@@ -27,6 +27,7 @@ The available directives are:
   * ``variant``
   * ``version``
   * ``requires``
+  * ``redistribute``
 
 """
 import collections
@@ -63,6 +64,7 @@ if TYPE_CHECKING:
 __all__ = [
     "DirectiveError",
     "DirectiveMeta",
+    "DisableRedistribute",
     "version",
     "conflicts",
     "depends_on",
@@ -75,6 +77,7 @@ __all__ = [
     "resource",
     "build_system",
     "requires",
+    "redistribute",
 ]
 
 #: These are variant names used by Spack internally; packages can't use them
@@ -598,9 +601,68 @@ def depends_on(
     return _execute_depends_on
 
 
+#: Store whether a given Spec source/binary should not be redistributed.
+class DisableRedistribute:
+    def __init__(self, source, binary):
+        self.source = source
+        self.binary = binary
+
+
+@directive("disable_redistribute")
+def redistribute(source=None, binary=None, when: WhenType = None):
+    """Can be used inside a Package definition to declare that
+    the package source and/or compiled binaries should not be
+    redistributed.
+
+    By default, Packages allow source/binary distribution (i.e. in
+    mirrors). Because of this, and because overlapping enable/
+    disable specs are not allowed, this directive only allows users
+    to explicitly disable redistribution for specs.
+    """
+
+    return lambda pkg: _execute_redistribute(pkg, source, binary, when)
+
+
+def _execute_redistribute(
+    pkg: "spack.package_base.PackageBase", source=None, binary=None, when: WhenType = None
+):
+    if source is None and binary is None:
+        return
+    elif (source is True) or (binary is True):
+        raise DirectiveError(
+            "Source/binary distribution are true by default, they can only "
+            "be explicitly disabled."
+        )
+
+    if source is None:
+        source = True
+    if binary is None:
+        binary = True
+
+    when_spec = _make_when_spec(when)
+    if not when_spec:
+        return
+    if source is False:
+        max_constraint = spack.spec.Spec(f"{pkg.name}@{when_spec.versions}")
+        if not max_constraint.satisfies(when_spec):
+            raise DirectiveError("Source distribution can only be disabled for versions")
+
+    if when_spec in pkg.disable_redistribute:
+        disable = pkg.disable_redistribute[when_spec]
+        if not source:
+            disable.source = True
+        if not binary:
+            disable.binary = True
+    else:
+        pkg.disable_redistribute[when_spec] = DisableRedistribute(
+            source=not source, binary=not binary
+        )
+
+
 @directive(("extendees", "dependencies"))
 def extends(spec, when=None, type=("build", "run"), patches=None):
     """Same as depends_on, but also adds this package to the extendee list.
+    In case of Python, also adds a dependency on python-venv.
 
     keyword arguments can be passed to extends() so that extension
     packages can pass parameters to the extendee's extension
@@ -615,6 +677,11 @@ def extends(spec, when=None, type=("build", "run"), patches=None):
 
         _depends_on(pkg, spec, when=when, type=type, patches=patches)
         spec_obj = spack.spec.Spec(spec)
+
+        # When extending python, also add a dependency on python-venv. This is done so that
+        # Spack environment views are Python virtual environments.
+        if spec_obj.name == "python" and not pkg.name == "python-venv":
+            _depends_on(pkg, "python-venv", when=when, type=("build", "run"))
 
         # TODO: the values of the extendees dictionary are not used. Remove in next refactor.
         pkg.extendees[spec_obj.name] = (spec_obj, None)
