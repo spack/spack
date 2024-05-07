@@ -70,7 +70,6 @@ class Libtheora(AutotoolsPackage, MSBuildPackage):
 
 
 class AutotoolsBuilder(AutotoolsBuilder):
-
     def configure_args(self):
         args = []
         args += self.enable_or_disable("doc")
