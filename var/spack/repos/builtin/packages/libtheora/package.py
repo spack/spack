@@ -70,17 +70,12 @@ class Libtheora(AutotoolsPackage, MSBuildPackage):
 
 
 class AutotoolsBuilder(AutotoolsBuilder):
+
     def configure_args(self):
         args = []
         args += self.enable_or_disable("doc")
         args += ["LIBS=-lm"]
         return args
-
-    def autoreconf(self, pkg, spec, prefix):
-        sh = which("sh")
-        # arguments are passed on to configure, let it just print its version
-        # and exit, so that configure can run in the configure build phase
-        sh("./autogen.sh", "-V")
 
 
 class MSBuildBuilder(MSBuildBuilder):
