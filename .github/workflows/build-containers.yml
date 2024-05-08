@@ -50,8 +50,6 @@ jobs:
                      [almalinux9, 'linux/amd64,linux/arm64,linux/ppc64le', 'almalinux:9'],
                      [rockylinux8, 'linux/amd64,linux/arm64', 'rockylinux:8'],
                      [rockylinux9, 'linux/amd64,linux/arm64', 'rockylinux:9'],
-                     [fedora37, 'linux/amd64,linux/arm64,linux/ppc64le', 'fedora:37'],
-                     [fedora38, 'linux/amd64,linux/arm64,linux/ppc64le', 'fedora:38'],
                      [fedora39, 'linux/amd64,linux/arm64,linux/ppc64le', 'fedora:39'],
                      [fedora40, 'linux/amd64,linux/arm64,linux/ppc64le', 'fedora:40']]
     name: Build ${{ matrix.dockerfile[0] }}
