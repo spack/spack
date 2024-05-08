@@ -180,7 +180,6 @@ ci:
 
     - match:
       - cmake
-      - openblas
       - plumed
       - wrf
       build-job:
@@ -242,7 +241,6 @@ ci:
       - mvapich2
       - netlib-scalapack
       - omega-h
-      - openblas
       - openjpeg
       - openmpi
       - openpmd-api
@@ -395,7 +393,6 @@ ci:
       - ncurses
       - ninja
       - numactl
-      - openblas
       - openjdk
       - openssh
       - openssl
