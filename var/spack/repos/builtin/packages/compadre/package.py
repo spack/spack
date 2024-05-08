@@ -31,6 +31,8 @@ class Compadre(CMakePackage):
     variant("mpi", default=False, description="Enable MPI support")
     depends_on("mpi", when="+mpi")
 
+    variant("tests", default=True, description="Enable tests and examples")
+
     # fixes duplicate symbol issue with static library build
     patch(
         "https://patch-diff.githubusercontent.com/raw/sandialabs/Compadre/pull/286.patch?full_index=1",
@@ -55,6 +57,10 @@ class Compadre(CMakePackage):
 
         if "+mpi" in spec:
             options.append("-DCompadre_USE_MPI:BOOL=ON")
+
+        if "~tests" in spec:
+            options.append("-DCompadre_EXAMPLES:BOOL=OFF")
+            options.append("-DCompadre_TESTS:BOOL=OFF")
 
         if "+shared" in spec:
             options.append("-DBUILD_SHARED_LIBS:BOOL=ON")
