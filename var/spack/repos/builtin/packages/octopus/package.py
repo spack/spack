@@ -301,6 +301,11 @@ class Octopus(AutotoolsPackage, CudaPackage):
             args.append(f"{cxxflags} {gcc10_extra}")
             args.append(f"{cflags} {gcc10_extra}")
 
+        # for octopus 14.1 and above autotools is deprecated in favour of cmake
+        # inorder to continue using autotools we pass `--enable-silent-deprecation`
+        if spec.satisfies("@14.1:"):
+            args.append("--enable-silent-deprecation")
+
         # Disable flags
         #
         # disable gdlib explicitly to avoid
