@@ -562,29 +562,28 @@ def ci_rebuild(args):
     if not config["verify_ssl"]:
         spack_cmd.append("-k")
 
-    install_args = ['--use-buildcache="package:never,dependencies:only"']
+    install_args = [f'--use-buildcache={spack_ci.win_quote("package:never,dependencies:only")}']
 
     can_verify = spack_ci.can_verify_binaries()
     verify_binaries = can_verify and spack_is_pr_pipeline is False
     if not verify_binaries:
         install_args.append("--no-check-signature")
 
-    slash_hash = '"/{}"'.format(job_spec.dag_hash())
+    slash_hash = spack_ci.win_quote(job_spec.dag_hash())
 
     # Arguments when installing the root from sources
     deps_install_args = install_args + ["--only=dependencies"]
     root_install_args = install_args + ["--keep-stage", "--only=package"]
+
     if cdash_handler:
         # Add additional arguments to `spack install` for CDash reporting.
         root_install_args.extend(cdash_handler.args())
-    deps_install_args.append(slash_hash)
-    root_install_args.append(slash_hash)
 
     commands = [
         # apparently there's a race when spack bootstraps? do it up front once
         [SPACK_COMMAND, "-e", unicode_escape(env.path), "bootstrap", "now"],
-        spack_cmd + deps_install_args,
-        spack_cmd + root_install_args,
+        spack_cmd + deps_install_args + [slash_hash],
+        spack_cmd + root_install_args + [slash_hash],
     ]
     tty.debug("Installing {0} from source".format(job_spec.name))
     install_exit_code = spack_ci.process_command("install", commands, repro_dir)
