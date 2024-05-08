@@ -28,6 +28,7 @@ class Hipsolver(CMakePackage, CudaPackage, ROCmPackage):
 
     version("develop", branch="develop")
     version("master", branch="master")
+    version("6.1.0", sha256="3cb89ca486cdbdfcb1a07c35ee65f60219ef7bc62a5b0f94ca1a3206a0106495")
     version("6.0.2", sha256="8215e55c3a5bc9c7eeb141cefdc6a6eeba94d8bc3aeae9e685ab7904965040d4")
     version("6.0.0", sha256="385849db02189d5e62096457e52ae899ae5c1ae7d409dc1da61f904d8861b48c")
     version("5.7.1", sha256="5592e965c0dc5722931302289643d1ece370220af2c7afc58af97b3395295658")
@@ -73,6 +74,7 @@ class Hipsolver(CMakePackage, CudaPackage, ROCmPackage):
     variant("asan", default=False, description="Build with address-sanitizer enabled or disabled")
 
     depends_on("cmake@3.5:", type="build")
+    depends_on("suite-sparse", type="build")
 
     depends_on("rocm-cmake@5.2.0:", type="build", when="@5.2.0:")
     depends_on("rocm-cmake@4.5.0:", type="build")
@@ -97,6 +99,7 @@ class Hipsolver(CMakePackage, CudaPackage, ROCmPackage):
         "5.7.1",
         "6.0.0",
         "6.0.2",
+        "6.1.0",
         "master",
         "develop",
     ]:
@@ -109,6 +112,7 @@ class Hipsolver(CMakePackage, CudaPackage, ROCmPackage):
 
     depends_on("googletest@1.10.0:", type="test")
     depends_on("netlib-lapack@3.7.1:", type="test")
+    patch("001-suite-sparse-include-path.patch", when="@6.1")
 
     def check(self):
         exe = join_path(self.build_directory, "clients", "staging", "hipsolver-test")
@@ -133,6 +137,8 @@ class Hipsolver(CMakePackage, CudaPackage, ROCmPackage):
         args = [
             self.define("BUILD_CLIENTS_SAMPLES", "OFF"),
             self.define("BUILD_CLIENTS_TESTS", self.run_tests),
+            self.define("SUITE_SPARSE_PATH", self.spec["suite-sparse"].prefix),
+            self.define("ROCBLAS_PATH", self.spec["rocblas"].prefix),
         ]
 
         args.append(self.define_from_variant("USE_CUDA", "cuda"))

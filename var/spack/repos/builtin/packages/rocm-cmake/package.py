@@ -21,6 +21,7 @@ class RocmCmake(CMakePackage):
     license("MIT")
 
     version("master", branch="master")
+    version("6.1.0", sha256="8b37d458e801b486521f12d18ca2103125173dd0f1130d37c8c36e795d34772b")
     version("6.0.2", sha256="7bd3ff971b1a898b8cf06b0ed9fac45891e2523ae651c3194ba36050ab45f869")
     version("6.0.0", sha256="82bd97ba23d1883ef38bb667e92f7367fedc50d6c11c82f54cced4ab04b0412d")
     version("5.7.1", sha256="4a4c6aa09576ccb834f869bdcb49e98cc0f0bac3678b802358065d1179a9d6f1")
@@ -42,7 +43,7 @@ class RocmCmake(CMakePackage):
 
     depends_on("cmake@3.6:", type="build")
 
-    for ver in ["5.5.0", "5.5.1", "5.6.0", "5.6.1", "5.7.0", "5.7.1", "6.0.0"]:
+    for ver in ["5.5.0", "5.5.1", "5.6.0", "5.6.1", "5.7.0", "5.7.1", "6.0.0", "6.0.2", "6.1.0"]:
         depends_on(f"rocm-core@{ver}", when=f"@{ver}")
 
     test_src_dir = "test"
