@@ -180,6 +180,7 @@ ci:
 
     - match:
       - cmake
+      - openblas
       - plumed
       - wrf
       build-job:
