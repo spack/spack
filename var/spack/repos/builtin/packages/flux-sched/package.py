@@ -187,7 +187,7 @@ class FluxSched(CMakePackage, AutotoolsPackage):
 class CMakeBuilder(CMakeBuilder):
     def cmake_args(self):
         if not os.path.exists(os.path.join(self.stage.source_path, "flux-sched.ver")):
-            return [f"-DFLUX_SCHED_VER={self.spec.version}"]
+            return [self.define("FLUX_SCHED_VER", self.spec.version)]
         return []
 
 
