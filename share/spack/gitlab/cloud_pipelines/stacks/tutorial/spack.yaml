@@ -23,7 +23,7 @@ spack:
         - lmod@8.7.18
         - environment-modules
         - macsio@1.1+scr ^scr@2.0.0~fortran ^silo~fortran ^hdf5~fortran
-        - julia@1.10
+        - julia@1.10 ^llvm ~clang ~gold ~lld ~lldb ~lua ~polly compiler-rt=none libcxx=none libunwind=none
       - ['%gcc@11']
   - gcc_old_packages:
     - zlib-ng%gcc@10
