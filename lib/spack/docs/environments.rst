@@ -189,18 +189,33 @@ environment will remove the view from the user environment.
 Independent Environments
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-Any directory can be treated as an environment if it contains a file
-``spack.yaml``. To load an independent environment, use:
+Apart from managed environments, Spack also supports independent environments,
+which can be located in any directory.
+
+.. note::
+
+   When uninstalling packages, Spack asks the user to confirm the removal of packages
+   that are still used in a managed environment. This is not the case for independent
+   environments.
+
+To create an independent environment, use one of the following commands:
 
 .. code-block:: console
 
    $ spack env activate -d /path/to/directory
 
-Independent environments can be created in place using the command:
+As a shorthand, you can also create an independent environment upon activation if it does not
+already exist:
 
 .. code-block:: console
 
-   $ spack env create -d .
+   $ spack env activate --create ./my_env
+
+For convenience, Spack can also place an independent environment in a temporary directory for you:
+
+.. code-block:: console
+
+   $ spack env activate --temp
 
 In this case Spack simply creates a ``spack.yaml`` file in the requested
 directory.
