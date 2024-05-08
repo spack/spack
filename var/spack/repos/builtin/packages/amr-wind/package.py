@@ -160,12 +160,12 @@ class AmrWind(CMakePackage, CudaPackage, ROCmPackage):
             args.append(self.define("UMPIRE_DIR", self.spec["umpire"].prefix))
 
         if "+helics" in self.spec:
-            cmake_options.append(self.define_from_variant("AMR_WIND_ENABLE_HELICS", "helics"))
-            cmake_options.append(self.define("HELICS_DIR", self.spec["helics"].prefix))
+            args.append(self.define_from_variant("AMR_WIND_ENABLE_HELICS", "helics"))
+            args.append(self.define("HELICS_DIR", self.spec["helics"].prefix))
 
         if "+waves2amr" in self.spec:
-            cmake_options.append(self.define_from_variant("AMR_WIND_ENABLE_W2A", "waves2amr"))
-            cmake_options.append(self.define("FFTW_DIR", self.spec["fftw"].prefix))
+            args.append(self.define_from_variant("AMR_WIND_ENABLE_W2A", "waves2amr"))
+            args.append(self.define("FFTW_DIR", self.spec["fftw"].prefix))
 
         if "+sycl" in self.spec:
             args.append(self.define("AMR_WIND_ENABLE_SYCL", True))
