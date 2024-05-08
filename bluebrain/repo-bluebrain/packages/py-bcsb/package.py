@@ -13,9 +13,8 @@ class PyBcsb(PythonPackage):
     git = "ssh://git@bbpgitlab.epfl.ch/viz/brayns/braynscircuitstudiobackend.git"
 
     version("develop", branch="develop")
-    version("2.3.0", tag="v2.3.0")
+    version("2.4.0", tag="v2.4.0")
     version("2.2.0", tag="v2.2.0")
-    version("2.1.2", tag="v2.1.2")
 
     depends_on("python@3.10:", type=("build", "run"))
     depends_on("py-setuptools", type=("build", "run"))
