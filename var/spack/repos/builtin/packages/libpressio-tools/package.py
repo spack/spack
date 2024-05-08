@@ -9,9 +9,12 @@ from spack.package import *
 class LibpressioTools(CMakePackage):
     """General Utilities for LibPressio"""
 
-    homepage = "https://github.com/robertu94/pressio-tools"
-    url = "https://github.com/robertu94/pressio-tools/archive/refs/tags/0.0.15.tar.gz"
-    git = "https://github.com/robertu94/pressio-tools"
+    depends_on('libpressio-adios1@0.0.2:', when="+adios1")
+    depends_on('lc-framework@1.1.1:+libpressio', when="+lc")
+    depends_on('dctz@0.2.2:+libpressio', when="+dctz")
+    depends_on('libpressio-predict@0.0.4:', when="+predict")
+    depends_on('libpressio-dataset@0.0.8:', when="+dataset")
+    depends_on('libpressio-jit@0.0.1:', when="+jit")
 
     maintainers("robertu94")
     tags = ["e4s"]
@@ -73,6 +76,12 @@ class LibpressioTools(CMakePackage):
     variant("adios2", default=False, description="depend on ADIOS2 for IO modules")
     variant("sperr", default=False, description="depend on sperr", when="@0.1.2:")
     variant("nvcomp", default=False, description="depend on nvcomp", when="@0.1.0:")
+    variant("adios1", default=False, description="depend on adios1", when="@0.4.3:")
+    variant("lc", default=False, description="depend on lc", when="@0.4.4:")
+    variant("dctz", default=False, description="depend on dctz", when="@0.4.5:")
+    variant("dataset", default=False, description="depend on libpressio-dataset", when="@0.4.6:")
+    variant("predict", default=False, description="depend on libpressio-predict", when="@0.4.6:")
+    variant("jit", default=False, description="depend on libpressio-jit", when="@0.4.6:")
     conflicts("+opt", "~mpi")
 
     def cmake_args(self):
@@ -91,6 +100,18 @@ class LibpressioTools(CMakePackage):
             args.append("-DLIBPRESSIO_TOOLS_HAS_SPERR=YES")
         if "+nvcomp" in self.spec:
             args.append("-DLIBPRESSIO_TOOLS_HAS_NVCOMP=YES")
+        if "+dctz" in self.spec:
+            args.append("-DLIBPRESSIO_TOOLS_HAS_DCTZ=YES")
+        if "+adios1" in self.spec:
+            args.append("-DLIBPRESSIO_TOOLS_HAS_ADIOS1=YES")
+        if "+lc" in self.spec:
+            args.append("-DLIBPRESSIO_TOOLS_HAS_LC=YES")
+        if "+predict" in self.spec:
+            args.append("-DLIBPRESSIO_TOOLS_HAS_PREDICT=YES")
+        if "+jit" in self.spec:
+            args.append("-DLIBPRESSIO_TOOLS_HAS_JIT=YES")
+        if "+dataset" in self.spec:
+            args.append("-DLIBPRESSIO_TOOLS_HAS_DATASET=YES")
         if self.run_tests:
             args.append("-DBUILD_TESTING=ON")
         else:
