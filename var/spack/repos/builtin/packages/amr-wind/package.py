@@ -63,10 +63,10 @@ class AmrWind(CMakePackage, CudaPackage, ROCmPackage):
     variant("umpire", default=False, description="Enable UMPIRE memory pooling")
     variant("sycl", default=False, description="Enable SYCL backend")
     variant("gpu-aware-mpi", default=False, description="Enable GPU aware MPI")
-    variant("helics", default=False,
-            description="Enable HELICS support for control interface")
-    variant("waves2amr", default=False,
-            description="Enable Waves2AMR support for ocean wave input")
+    variant("helics", default=False, description="Enable HELICS support for control interface")
+    variant(
+        "waves2amr", default=False, description="Enable Waves2AMR support for ocean wave input"
+    )
 
     depends_on("mpi", when="+mpi")
     depends_on("hdf5~mpi", when="+hdf5~mpi")
