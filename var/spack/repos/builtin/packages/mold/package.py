@@ -12,7 +12,7 @@ class Mold(CMakePackage):
     homepage = "https://github.com/rui314/mold"
     url = "https://github.com/rui314/mold/archive/refs/tags/v1.11.0.tar.gz"
 
-    maintainers("jabcross")
+    maintainers("msimberg")
 
     license("MIT")
 
