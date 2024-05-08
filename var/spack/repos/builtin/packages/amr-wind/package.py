@@ -91,7 +91,7 @@ class AmrWind(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("openfast@3.5:", when="@2: +openfast")
     depends_on("helics@:3.3.2", when="+helics")
     depends_on("helics@:3.3.2+mpi", when="+helics+mpi")
-    depends_on("fftw", when="+waves2amr")
+    depends_on("fftw", when="@2: +waves2amr")
 
     for arch in CudaPackage.cuda_arch_values:
         depends_on("hypre+cuda cuda_arch=%s" % arch, when="+cuda+hypre cuda_arch=%s" % arch)
@@ -104,6 +104,7 @@ class AmrWind(CMakePackage, CudaPackage, ROCmPackage):
 
     conflicts("+openmp", when="+cuda")
     conflicts("+shared", when="+cuda")
+    conflicts("@:1.4.0", when="+waves2amr")
 
     def setup_build_environment(self, env):
         # Avoid compile errors with Intel interprocedural optimization
