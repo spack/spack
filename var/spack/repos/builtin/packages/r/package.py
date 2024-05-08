@@ -23,6 +23,7 @@ class R(AutotoolsPackage):
     license("GPL-2.0-or-later")
 
     version("4.4.0", sha256="ace4125f9b976d2c53bcc5fca30c75e30d4edc401584859cbadb080e72b5f030")
+    version("4.3.3", sha256="80851231393b85bf3877ee9e39b282e750ed864c5ec60cbd68e6e139f0520330")
     version("4.3.2", sha256="b3f5760ac2eee8026a3f0eefcb25b47723d978038eee8e844762094c860c452a")
     version("4.3.1", sha256="8dd0bf24f1023c6f618c3b317383d291b4a494f40d73b983ac22ffea99e4ba99")
     version("4.3.0", sha256="45dcc48b6cf27d361020f77fde1a39209e997b81402b3663ca1c010056a6a609")
@@ -112,6 +113,13 @@ class R(AutotoolsPackage):
     # Make R use a symlink to which in Sys.which, otherwise an absolute path
     # gets stored as compressed byte code, which is not relocatable
     patch("relocate-which.patch")
+
+    # CVE-2024-27322 Patch only needed in R 4.3.3 and below; doesn't apply to R older than 3.5.0.
+    patch(
+        "https://github.com/r-devel/r-svn/commit/f7c46500f455eb4edfc3656c3fa20af61b16abb7.patch?full_index=1",
+        sha256="56c77763cb104aa9cb63420e585da63cb2c23bc03fa3ef9d088044eeff9d7380",
+        when="@3.5.0:4.3.3",
+    )
 
     build_directory = "spack-build"
 
