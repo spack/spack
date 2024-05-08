@@ -63,6 +63,10 @@ class AmrWind(CMakePackage, CudaPackage, ROCmPackage):
     variant("umpire", default=False, description="Enable UMPIRE memory pooling")
     variant("sycl", default=False, description="Enable SYCL backend")
     variant("gpu-aware-mpi", default=False, description="Enable GPU aware MPI")
+    variant("helics", default=False,
+            description="Enable HELICS support for control interface")
+    variant("waves2amr", default=False,
+            description="Enable Waves2AMR support for ocean wave input")
 
     depends_on("mpi", when="+mpi")
     depends_on("hdf5~mpi", when="+hdf5~mpi")
@@ -85,6 +89,9 @@ class AmrWind(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("openfast+netcdf", when="+openfast+netcdf")
     depends_on("openfast@2.6.0:3.4.1", when="@0.9.0:1 +openfast")
     depends_on("openfast@3.5:", when="@2: +openfast")
+    depends_on("helics@:3.3.2", when="+helics")
+    depends_on("helics@:3.3.2+mpi", when="+helics+mpi")
+    depends_on("fftw", when="+waves2amr")
 
     for arch in CudaPackage.cuda_arch_values:
         depends_on("hypre+cuda cuda_arch=%s" % arch, when="+cuda+hypre cuda_arch=%s" % arch)
@@ -151,6 +158,14 @@ class AmrWind(CMakePackage, CudaPackage, ROCmPackage):
         if "+umpire" in self.spec:
             args.append(self.define_from_variant("AMR_WIND_ENABLE_UMPIRE", "umpire"))
             args.append(self.define("UMPIRE_DIR", self.spec["umpire"].prefix))
+
+        if "+helics" in self.spec:
+            cmake_options.append(self.define_from_variant("AMR_WIND_ENABLE_HELICS", "helics"))
+            cmake_options.append(self.define("HELICS_DIR", self.spec["helics"].prefix))
+
+        if "+waves2amr" in self.spec:
+            cmake_options.append(self.define_from_variant("AMR_WIND_ENABLE_W2A", "waves2amr"))
+            cmake_options.append(self.define("FFTW_DIR", self.spec["fftw"].prefix))
 
         if "+sycl" in self.spec:
             args.append(self.define("AMR_WIND_ENABLE_SYCL", True))
