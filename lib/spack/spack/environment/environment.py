@@ -383,14 +383,6 @@ def create_in_dir(
 
     return env
 
-    # Must be done after environment is initialized
-    if include_concrete:
-        manifest.set_include_concrete(include_concrete)
-
-    if not keep_relative and init_file is not None and str(init_file).endswith(manifest_name):
-        init_file = pathlib.Path(init_file)
-        manifest.absolutify_dev_paths(init_file.parent)
-
 
 def _rewrite_relative_dev_paths_on_relocation(env, init_file_dir):
     """When initializing the environment from a manifest file and we plan
