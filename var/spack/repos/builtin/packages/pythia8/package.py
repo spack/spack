@@ -130,7 +130,9 @@ class Pythia8(AutotoolsPackage):
 
     @run_before("configure")
     def setup_cxxstd(self):
-        filter_file("-std=c++[0-9][0-9]", f"-std=c++{self.spec.variants['cxxstd'].value}", "configure")
+        filter_file(
+            "-std=c++[0-9][0-9]", f"-std=c++{self.spec.variants['cxxstd'].value}", "configure"
+        )
 
     def configure_args(self):
         args = []
