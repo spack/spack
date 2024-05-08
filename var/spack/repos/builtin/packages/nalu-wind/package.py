@@ -3,8 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import sys
-
 from spack.package import *
 
 
@@ -60,7 +58,8 @@ class NaluWind(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("trilinos@13.4.1", when="@=2.0.0")
     depends_on("hypre@2.29.0:", when="@2.0.0:+hypre")
     depends_on(
-        "trilinos@13:+exodus+tpetra+zoltan+stk~superlu-dist~superlu+hdf5+shards~hypre+gtest gotype=long cxxstd=17"
+        "trilinos@13:+exodus+tpetra+zoltan+stk~superlu-dist~superlu+hdf5+shards~hypre+gtest "
+        "gotype=long cxxstd=17"
     )
     depends_on("trilinos~cuda~wrapper", when="~cuda")
     depends_on("openfast@2.6.0: +cxx", when="+openfast")
