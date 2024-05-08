@@ -9,7 +9,6 @@ spack:
     all:
       require:
       - "target=x86_64_v3"
-      prefer:
       - "%oneapi"
       providers:
         blas: [openblas]
@@ -77,7 +76,7 @@ spack:
   - butterflypack
   - cabana
   - caliper
-  - chai ~benchmarks ~tests
+  - chai
   - charliecloud
   - conduit
   # - cp2k +mpi # dbcsr
@@ -134,6 +133,7 @@ spack:
   - precice
   - pruners-ninja
   - pumi
+  - py-amrex
   - py-h5py
   - py-jupyterhub
   - py-libensemble

@@ -163,7 +163,7 @@ class Podio(CMakePackage):
     patch("python-tests.patch", when="@:0.14.0")
 
     depends_on("root@6.08.06: cxxstd=17", when="cxxstd=17")
-    depends_on("root@6.28.04:", when="+rntuple")
+    depends_on("root@6.28.04: +root7", when="+rntuple")
     depends_on("root@6.28:", when="@0.17:")
     for cxxstd in ("17", "20"):
         depends_on("root cxxstd={}".format(cxxstd), when="cxxstd={}".format(cxxstd))

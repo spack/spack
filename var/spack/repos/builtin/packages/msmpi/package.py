@@ -41,14 +41,14 @@ class Msmpi(Package):
         return Version(ver_str.group(1)) if ver_str else None
 
     def setup_dependent_package(self, module, dependent_spec):
-        spec = self.spec
         # MSMPI does not vendor compiler wrappers, instead arguments should
         # be manually supplied to compiler by consuming package
         # Note: This is not typical of MPI installations
-        spec.mpicc = spack_cc
-        spec.mpicxx = spack_cxx
-        spec.mpifc = spack_fc
-        spec.mpif77 = spack_f77
+        dependent_module = dependent_spec.package.module
+        self.spec.mpicc = dependent_module.spack_cc
+        self.spec.mpicxx = dependent_module.spack_cxx
+        self.spec.mpifc = dependent_module.spack_fc
+        self.spec.mpif77 = dependent_module.spack_f77
 
 
 class GenericBuilder(GenericBuilder):

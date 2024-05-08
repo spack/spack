@@ -103,6 +103,13 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     variant("uvm", default=False, when="@13.2: +cuda", description="Turn on UVM for CUDA build")
     variant("wrapper", default=False, description="Use nvcc-wrapper for CUDA build")
 
+    # Makes the Teuchos Memory Management classes (Teuchos::RCP, Teuchos::Ptr, Teuchos::Array,
+    # Teuchos::ArrayView, and Teuchos::ArrayRCP) thread-safe. Requires at least the OMP kokkos
+    # backend to be enabled. Without, this seemingly does nothing
+    variant(
+        "threadsafe", default=False, when="+openmp", description="Enable threadsafe in Teuchos"
+    )
+
     # TPLs (alphabet order)
     variant("adios2", default=False, description="Enable ADIOS2")
     variant("boost", default=False, description="Compile with Boost")
@@ -393,7 +400,8 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     # ###################### Dependencies ##########################
 
     # External Kokkos
-    depends_on("kokkos@4.2.01", when="@15.1.0: +kokkos")
+    depends_on("kokkos@4.3.00", when="@master: +kokkos")
+    depends_on("kokkos@4.2.01", when="@15.1.0:15.1.1 +kokkos")
     depends_on("kokkos@4.1.00", when="@14.4.0:15.0.0 +kokkos")
 
     depends_on("kokkos +wrapper", when="trilinos@14.4.0: +kokkos +wrapper")
@@ -413,7 +421,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("binder@1.3:", when="@15: +python", type="build")
     depends_on("blas")
     depends_on("boost+graph+math+exception+stacktrace", when="+boost")
-    depends_on("boost+graph+math+exception+stacktrace", when="@:14.0.0 +stk")
+    depends_on("boost+graph+math+exception+stacktrace", when="@:13.4.0 +stk")
     depends_on("cgns", when="+exodus")
     depends_on("cmake@3.23:", type="build", when="@14.0.0:")
     depends_on("hdf5+hl", when="+hdf5")
@@ -633,6 +641,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
                 define_trilinos_enable(
                     "EXPLICIT_INSTANTIATION", "explicit_template_instantiation"
                 ),
+                define_from_variant("Trilinos_ENABLE_THREAD_SAFE", "threadsafe"),
             ]
         )
 

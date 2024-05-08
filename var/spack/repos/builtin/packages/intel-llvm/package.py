@@ -14,8 +14,6 @@ class IntelLlvm(CMakePackage):
     homepage = "https://github.com/intel/llvm"
     git = "https://github.com/intel/llvm.git"
 
-    family = "compiler"
-
     license("Apache-2.0")
 
     version("sycl", branch="sycl")
