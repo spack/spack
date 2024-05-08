@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,11 +16,35 @@ class RustBootstrap(Package):
 
     maintainers("alecbcs")
 
+    skip_version_audit = ["platform=windows"]
+
     # List binary rust releases for multiple operating systems and architectures.
     # These binary versions are not intended to stay up-to-date. Instead we
     # should update these binary releases as bootstrapping requirements are
     # modified by new releases of Rust.
     rust_releases = {
+        "1.75.0": {
+            "darwin": {
+                "x86_64": "ad066e4dec7ae5948c4e7afe68e250c336a5ab3d655570bb119b3eba9cf22851",
+                "aarch64": "878ecf81e059507dd2ab256f59629a4fb00171035d2a2f5638cb582d999373b1",
+            },
+            "linux": {
+                "x86_64": "473978b6f8ff216389f9e89315211c6b683cf95a966196e7914b46e8cf0d74f6",
+                "aarch64": "30828cd904fcfb47f1ac43627c7033c903889ea4aca538f53dcafbb3744a9a73",
+                "powerpc64le": "2599cdfea5860b4efbceb7bca69845a96ac1c96aa50cf8261151e82280b397a0",
+            },
+        },
+        "1.73.0": {
+            "darwin": {
+                "x86_64": "ece9646bb153d4bc0f7f1443989de0cbcd8989a7d0bf3b7fb9956e1223954f0c",
+                "aarch64": "9c96e4c57328fb438ee2d87aa75970ce89b4426b49780ccb3c16af0d7c617cc6",
+            },
+            "linux": {
+                "x86_64": "aa4cf0b7e66a9f5b7c623d4b340bb1ac2864a5f2c2b981f39f796245dc84f2cb",
+                "aarch64": "e54d7d886ba413ae573151f668e76ea537f9a44406d3d29598269a4a536d12f6",
+                "powerpc64le": "8fa215ee3e274fb64364e7084613bc570369488fa22cf5bc8e0fe6dc810fe2b9",
+            },
+        },
         "1.70.0": {
             "darwin": {
                 "x86_64": "e5819fdbfc7f1a4d5d82cb4c3b7662250748450b45a585433bfb75648bc45547",
@@ -88,6 +112,9 @@ class RustBootstrap(Package):
             version(release, sha256=rust_releases[release][os][target])
 
     def url_for_version(self, version):
+        if self.os not in ("linux", "darwin"):
+            return None
+
         # Allow maintainers to checksum multiple architectures via
         # `spack checksum rust-bootstrap@1.70.0-darwin-aarch64`.
         match = re.search(r"(\S+)-(\S+)-(\S+)", str(version))
@@ -104,4 +131,5 @@ class RustBootstrap(Package):
 
     def install(self, spec, prefix):
         install_script = Executable("./install.sh")
-        install_script(f"--prefix={prefix}")
+        install_args = [f"--prefix={prefix}", "--without=rust-docs"]
+        install_script(" ".join(install_args))

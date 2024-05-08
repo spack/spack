@@ -30,7 +30,7 @@ class PyEmodelGeneralisation(PythonPackage):
     depends_on("py-morph-tool@2.9:", type=("build", "run"))
     depends_on("neuron+python@8.0:", type=("build", "run"))
     depends_on("py-matplotlib@3.6.2:", type=("build", "run"))
-    depends_on("py-bluecellulab@1.7.6:", type=("build", "run"))
+    depends_on("py-bluecellulab@1.7.6:2.3.1", type=("build", "run"))
     depends_on("py-seaborn@0.12.2:", type=("build", "run"))
     depends_on("py-bluepyparallel@0.2.2:", type=("build", "run"))
     depends_on("py-xgboost@1.7.5:1", type=("build", "run"))
