@@ -28,6 +28,7 @@ class Rdc(CMakePackage):
 
     license("MIT")
 
+    version("6.1.0", sha256="a8ad5d880645c9e95c9c90b0c9026627b22467e3e879525fff38ccd924f36c39")
     version("6.0.2", sha256="00defa3b68c340d7f46b8cb06b37ab0602a7949bfddc884b01c163a1526502f8")
     version("6.0.0", sha256="5e3847a919d5f7efe99d8d76c96e78401659eccd1fb234b1b8cb4304096d6e89")
     version("5.7.1", sha256="5251eb3085f2019246b332e9552dfae1572cf64ddf58306b81cbe7108019ffee")
@@ -50,7 +51,8 @@ class Rdc(CMakePackage):
     depends_on("cmake@3.15:", type="build")
     depends_on("grpc@1.28.1+shared", type="build", when="@:5.3")
     depends_on("grpc@1.44.0+shared", when="@5.4.0:5.4")
-    depends_on("grpc@1.55.0+shared", when="@5.5.0:")
+    depends_on("grpc@1.55.0+shared", when="@5.5.0:6.0")
+    depends_on("grpc@1.59.1+shared", when="@6.1:")
     depends_on("protobuf")
     depends_on("libcap")
 
@@ -72,6 +74,7 @@ class Rdc(CMakePackage):
         "5.7.1",
         "6.0.0",
         "6.0.2",
+        "6.1.0",
     ]:
         depends_on(f"rocm-smi-lib@{ver}", type=("build", "link"), when=f"@{ver}")
 
@@ -93,10 +96,11 @@ class Rdc(CMakePackage):
         "5.7.1",
         "6.0.0",
         "6.0.2",
+        "6.1.0",
     ]:
         depends_on(f"hsa-rocr-dev@{ver}", when=f"@{ver}")
 
-    for ver in ["5.5.0", "5.5.1", "5.6.0", "5.6.1", "5.7.0", "5.7.1", "6.0.0", "6.0.2"]:
+    for ver in ["5.5.0", "5.5.1", "5.6.0", "5.6.1", "5.7.0", "5.7.1", "6.0.0", "6.0.2", "6.1.0"]:
         depends_on(f"rocm-core@{ver}", when=f"@{ver}")
 
     def patch(self):

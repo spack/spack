@@ -18,6 +18,7 @@ class RocmClangOcl(CMakePackage):
 
     maintainers("srekolam", "renjithravindrankannath")
     version("master", branch="master")
+    version("6.1.0", sha256="c983adad49ab5850307db1282f8bc957b9870d4ce37db8fbb43c52db6c90d0ed")
     version("6.0.2", sha256="a2f2fcb203737b1f436b4c2b78bbd696552f6de619ba0e7e8faf95a888869866")
     version("6.0.0", sha256="74b5a64c32f3c57e7e4de638fffabbf448ecdb3dd8e65678b7ba0633352b4ca3")
     version("5.7.1", sha256="32e4430d009cbbf5404ca9cbbb549b36897fa1826bc2285372e293cfe7531bf8")
@@ -57,6 +58,7 @@ class RocmClangOcl(CMakePackage):
         "5.7.1",
         "6.0.0",
         "6.0.2",
+        "6.1.0",
         "master",
     ]:
         depends_on(f"rocm-cmake@{ver}:", type="build", when=f"@{ver}")
@@ -64,7 +66,7 @@ class RocmClangOcl(CMakePackage):
 
         # support both builtin and standalone device libs
         depends_on(f"rocm-device-libs@{ver}", when=f"@{ver} ^llvm-amdgpu ~rocm-device-libs")
-    for ver in ["5.5.0", "5.5.1", "5.6.0", "5.6.1", "5.7.0", "5.7.1", "6.0.0", "6.0.2"]:
+    for ver in ["5.5.0", "5.5.1", "5.6.0", "5.6.1", "5.7.0", "5.7.1", "6.0.0", "6.0.2", "6.1.0"]:
         depends_on(f"rocm-core@{ver}", when=f"@{ver}")
 
     test_src_dir = "test"

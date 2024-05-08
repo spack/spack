@@ -24,6 +24,7 @@ class Hipfft(CMakePackage, CudaPackage, ROCmPackage):
     license("MIT")
 
     version("master", branch="master")
+    version("6.1.0", sha256="1a9cf598a932192f7f12b8987d96477f09186f9a95c5a28742f9caeb81640c95")
     version("6.0.2", sha256="c0a4bac5fa9a757a19a4995fa9571328b6ee0a71e93c66a880069794d65d284a")
     version("6.0.0", sha256="44f328b7862c066459089dfe62833cb7d626c6ceb71c57d8c7d6bba45dad491e")
     version("5.7.1", sha256="33452576649df479f084076c47d0b30f6f1da34864094bce767dd9bf609f04aa")

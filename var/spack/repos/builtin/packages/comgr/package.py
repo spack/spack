@@ -14,7 +14,14 @@ class Comgr(CMakePackage):
 
     homepage = "https://github.com/ROCm/ROCm-CompilerSupport"
     git = "https://github.com/ROCm/ROCm-CompilerSupport.git"
-    url = "https://github.com/ROCm/ROCm-CompilerSupport/archive/rocm-6.0.0.tar.gz"
+
+    def url_for_version(self, version):
+        if version <= Version("6.0.2"):
+            url = "https://github.com/ROCm/ROCm-CompilerSupport/archive/rocm-{0}.tar.gz"
+        else:
+            url = "https://github.com/ROCm/llvm-project/archive/rocm-{0}.tar.gz"
+        return url.format(version)
+
     tags = ["rocm"]
 
     maintainers("srekolam", "renjithravindrankannath", "haampie")
@@ -23,6 +30,7 @@ class Comgr(CMakePackage):
     license("NCSA")
 
     version("master", branch="amd-stg-open")
+    version("6.1.0", sha256="6bd9912441de6caf6b26d1323e1c899ecd14ff2431874a2f5883d3bc5212db34")
     version("6.0.2", sha256="737b110d9402509db200ee413fb139a78369cf517453395b96bda52d0aa362b9")
     version("6.0.0", sha256="04353d27a512642a5e5339532a39d0aabe44e0964985de37b150a2550385800a")
     version("5.7.1", sha256="3b9433b4a0527167c3e9dfc37a3c54e0550744b8d4a8e1be298c8d4bcedfee7c")
@@ -74,6 +82,7 @@ class Comgr(CMakePackage):
         "5.7.1",
         "6.0.0",
         "6.0.2",
+        "6.1.0",
         "master",
     ]:
         # llvm libs are linked statically, so this *could* be a build dep
@@ -83,10 +92,15 @@ class Comgr(CMakePackage):
         # that a conditional dependency
         depends_on(f"rocm-device-libs@{ver}", when=f"@{ver} ^llvm-amdgpu ~rocm-device-libs")
 
-    for ver in ["5.5.0", "5.5.1", "5.6.0", "5.6.1", "5.7.0", "5.7.1", "6.0.0"]:
+    for ver in ["5.5.0", "5.5.1", "5.6.0", "5.6.1", "5.7.0", "5.7.1", "6.0.0", "6.0.2", "6.1.0"]:
         depends_on(f"rocm-core@{ver}", when=f"@{ver}")
 
-    root_cmakelists_dir = join_path("lib", "comgr")
+    @property
+    def root_cmakelists_dir(self):
+        if self.spec.satisfies("@:6.0"):
+            return join_path("lib", "comgr")
+        else:
+            return join_path("amd", "comgr")
 
     def cmake_args(self):
         args = [self.define("BUILD_TESTING", self.run_tests)]

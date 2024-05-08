@@ -17,6 +17,7 @@ class HipTensor(CMakePackage, ROCmPackage):
     maintainers("srekolam", "afzpatel")
 
     version("master", branch="master")
+    version("6.1.0", sha256="9cc43b1b3394383f22f30e194d8753ca6ff1887c83ec1de5823cb2e94976eeed")
     version("6.0.2", sha256="6e6e7530eabbd1fb28b83efa5a49c19a6642d40e1554224ebb1e0a5999045e27")
     version("6.0.0", sha256="268d7f114784b7e824f89c21c65c2efedbb5486f09a356a56dca1b89bde1ef7a")
     version("5.7.1", sha256="96743d4e695fe865aef4097ae31d9b4e42a2d5a92135a005b0d187d9c0b17645")
@@ -24,11 +25,17 @@ class HipTensor(CMakePackage, ROCmPackage):
 
     variant("asan", default=False, description="Build with address-sanitizer enabled or disabled")
 
-    for ver in ["5.7.0", "5.7.1", "6.0.0", "6.0.2", "master"]:
+    for ver in ["5.7.0", "5.7.1", "6.0.0", "6.0.2", "6.1.0", "master"]:
         depends_on(f"composable-kernel@{ver}", when=f"@{ver}")
         depends_on(f"rocm-cmake@{ver}", when=f"@{ver}")
 
+    for ver in ["6.1.0"]:
+        depends_on(f"hipcc@{ver}", when=f"@{ver}")
+
     def setup_build_environment(self, env):
-        env.set("CXX", self.spec["hip"].hipcc)
+        if self.spec.satisfies("@6.1"):
+            env.set("CXX", self.spec["hipcc"].prefix.bin.hipcc)
+        else:
+            env.set("CXX", self.spec["hip"].hipcc)
         if self.spec.satisfies("+asan"):
             self.asan_on(env)

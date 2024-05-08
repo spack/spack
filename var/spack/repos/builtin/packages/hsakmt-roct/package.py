@@ -22,6 +22,7 @@ class HsakmtRoct(CMakePackage):
     maintainers("srekolam", "renjithravindrankannath")
 
     version("master", branch="master")
+    version("6.1.0", sha256="1085055068420821f7a7adb816692412b5fb38f89d67b9edb9995198f39e2f31")
     version("6.0.2", sha256="5354bda9382f80edad834463f2c684289841770a4f7b13f0f40bd8271cc4c71d")
     version("6.0.0", sha256="9f4e80bd0a714ce45326941b906a62298c62025eff186dc6c48282ce84c787c7")
     version("5.7.1", sha256="38bc3732886a52ca9cd477ec6fcde3ab17a0ba5dc8e2f7ac34c4de597bd00e8b")
@@ -52,7 +53,7 @@ class HsakmtRoct(CMakePackage):
     for ver in ["5.3.0", "5.4.0", "5.4.3"]:
         depends_on(f"llvm-amdgpu@{ver}", type="test", when=f"@{ver}")
 
-    for ver in ["5.5.0", "5.5.1", "5.6.0", "5.6.1", "5.7.0", "5.7.1", "6.0.0", "6.0.2"]:
+    for ver in ["5.5.0", "5.5.1", "5.6.0", "5.6.1", "5.7.0", "5.7.1", "6.0.0", "6.0.2", "6.1.0"]:
         depends_on(f"rocm-core@{ver}", when=f"@{ver}")
         depends_on(f"llvm-amdgpu@{ver}", type="test", when=f"@{ver}")
 

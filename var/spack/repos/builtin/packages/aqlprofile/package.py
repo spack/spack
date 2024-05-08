@@ -8,6 +8,20 @@ import os
 from spack.package import *
 
 _versions = {
+    "6.1.0": {
+        "apt": (
+            "0ef862503245f12721384443f8347528f3d5c2c7762289c770521f3235ba36c9",
+            "https://repo.radeon.com/rocm/apt/6.1/pool/main/h/hsa-amd-aqlprofile/hsa-amd-aqlprofile_1.0.0.60100.60100-82~20.04_amd64.deb",
+        ),
+        "yum": (
+            "bb08ec49987ef821278e24b9669ccea613a1475af4aedfcc3ac77146e6fbf229",
+            "https://repo.radeon.com/rocm/yum/6.1/main/hsa-amd-aqlprofile-1.0.0.60100.60100-82.el7.x86_64.rpm",
+        ),
+        "zyp": (
+            "6a20c8933a878dc3476fa5a45936d3d230d5c2c417e914a6460c2f576a3d6e35",
+            "https://repo.radeon.com/rocm/zyp/6.1/main/hsa-amd-aqlprofile-1.0.0.60100.60100-sles154.82.x86_64.rpm",
+        ),
+    },
     "6.0.2": {
         "apt": (
             "57efc4e8380d941fc9e3ba8353bc724913cd5b5be2c53fed016e92da63e31b2f",

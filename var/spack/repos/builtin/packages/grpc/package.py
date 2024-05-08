@@ -11,10 +11,11 @@ class Grpc(CMakePackage):
     maintainers("nazavode")
 
     homepage = "https://grpc.io"
-    url = "https://github.com/grpc/grpc/archive/v1.39.0.tar.gz"
+    url = "https://github.com/grpc/grpc/archive/v1.59.1.tar.gz"
 
     license("Apache-2.0 AND BSD-3-Clause AND MIT")
 
+    version("1.59.1", sha256="916f88a34f06b56432611aaa8c55befee96d0a7b7d7457733b9deeacbc016f99")
     version("1.55.0", sha256="9cf1a69a921534ac0b760dcbefb900f3c2f735f56070bf0536506913bb5bfd74")
     version("1.50.0", sha256="76900ab068da86378395a8e125b5cc43dfae671e09ff6462ddfef18676e2165a")
     version("1.47.0", sha256="271bdc890bf329a8de5b65819f0f9590a5381402429bca37625b63546ed19e54")
