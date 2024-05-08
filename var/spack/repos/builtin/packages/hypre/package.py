@@ -264,7 +264,7 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
                 configure_args.append("--with-cuda-home={0}".format(spec["cuda"].prefix))
             else:
                 configure_args.append("--enable-cub")
-            if "+cublas" in spec:
+            if spec.satisfies("+cublas"):
                 conigure_args.append("--enable-cublas")
         else:
             configure_args.extend(["--without-cuda", "--disable-curand", "--disable-cusparse"])
@@ -291,7 +291,7 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
                 rocm_arch_sorted = list(sorted(rocm_arch_vals, reverse=True))
                 rocm_arch = rocm_arch_sorted[0]
                 configure_args.append("--with-gpu-arch={0}".format(rocm_arch))
-            if "+rocblas" in spec:
+            if spec.satisfies("+rocblas"):
                 configure_args.append("--enable-rocblas")
         else:
             configure_args.extend(["--without-hip", "--disable-rocrand", "--disable-rocsparse"])
