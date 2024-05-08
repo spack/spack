@@ -24,18 +24,19 @@ class ParquetConverters(CMakePackage):
 
     depends_on("hdf5+mpi")
     depends_on("highfive+mpi")
-    depends_on("arrow+parquet@:0.12", when="@:0.5.5")
-    depends_on("arrow+parquet@0.15.1", when="@0.5.6:0.5.7")
-    depends_on("arrow+parquet@3.0.0:", when="@0.6.0:")
+    depends_on("arrow+parquet+snappy@:0.12", when="@:0.5.5")
+    depends_on("arrow+parquet+snappy@0.15.1", when="@0.5.6:0.5.7")
+    depends_on("arrow+parquet+snappy@3.0.0:", when="@0.6.0:")
     depends_on("nlohmann-json", when="@0.7.1:")
-    depends_on("snappy~shared")
-    depends_on("synapsetool+mpi")
+    depends_on("synapsetool+mpi", when="@:0.8")
     depends_on("mpi")
-    depends_on("range-v3@:0.10", when="@0.4:")
+    depends_on("range-v3@:0.10", when="@0.4:0.8")
+    depends_on("range-v3@0.11:", when="@0.9:")
+    depends_on("catch2", when="@0.9:")
 
     def cmake_args(self):
         return [
-            "-DCMAKE_C_COMPILER={0}".format(self.spec["mpi"].mpicc),
-            "-DCMAKE_CXX_COMPILER={0}".format(self.spec["mpi"].mpicxx),
-            "-DNEURONPARQUET_USE_MPI=ON",
+            self.define("CMAKE_C_COMPILER", self.spec["mpi"].mpicc),
+            self.define("CMAKE_CXX_COMPILER", self.spec["mpi"].mpicxx),
+            self.define("NEURONPARQUET_USE_MPI", True),
         ]
