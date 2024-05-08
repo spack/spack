@@ -254,8 +254,8 @@ def _search_duplicate_specs_in_externals(error_cls):
 
 @config_packages
 def _deprecated_preferences(error_cls):
-    """Search package preferences deprecated in v0.21 (and slated for removal in v0.22)"""
-    # TODO (v0.22): remove this audit as the attributes will not be allowed in config
+    """Search package preferences deprecated in v0.21 (and slated for removal in v0.23)"""
+    # TODO (v0.23): remove this audit as the attributes will not be allowed in config
     errors = []
     packages_yaml = spack.config.CONFIG.get_config("packages")
 
