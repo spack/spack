@@ -1174,7 +1174,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage, CompilerPackage):
             os.path.exists(os.path.join(header_dir, h))
             for h in libc.package_class.representative_headers
         ):
-            relocation_args.append(f"-isystem {header_dir}")
+            relocation_args.append(f"-idirafter {header_dir}")
         else:
             tty.warn(
                 f"Cannot relocate {specs_file} include directories, "
