@@ -8,6 +8,7 @@ from spack.package import *
 
 class Dctz(CMakePackage):
     """DCTZ is a compressor based on FFTs"""
+
     homepage = "https://github.com/swson/DCTZ"
     url = "https://github.com/robertu94/DCTZ/archive/refs/tags/0.2.2.tar.gz"
     git = "https://github.com/robertu94/DCTZ"
@@ -30,6 +31,6 @@ class Dctz(CMakePackage):
     def cmake_args(self):
         args = [
             self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
-            self.define_from_variant("DCTZ_HAVE_LIBPRESSIO", "libpressio")
+            self.define_from_variant("DCTZ_HAVE_LIBPRESSIO", "libpressio"),
         ]
         return args

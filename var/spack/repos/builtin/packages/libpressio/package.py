@@ -174,8 +174,12 @@ class Libpressio(CMakePackage, CudaPackage):
     version("0.27.0", sha256="387ee5958de2d986095cda2aaf39d0bf319d02eaeeea2a565aea97e6a6f31f36")
     version("0.26.0", sha256="c451591d106d1671c9ddbb5c304979dd2d083e0616b2aeede62e7a6b568f828c")
 
-    variant("pybind", default=False, description="build support for pybind metrics", when="@0.96.0:")
-    variant("openssl", default=False, description="build support for hashing options", when="@0.96.2:")
+    variant(
+        "pybind", default=False, description="build support for pybind metrics", when="@0.96.0:"
+    )
+    variant(
+        "openssl", default=False, description="build support for hashing options", when="@0.96.2:"
+    )
     variant("szx", default=False, description="build support for SZx", when="@0.87.0:")
     variant("blosc2", default=False, description="build support for blosc2", when="@0.98.0:")
     variant("matio", default=False, description="build support for matio", when="@0.99.0:")

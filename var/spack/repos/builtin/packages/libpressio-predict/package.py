@@ -22,7 +22,6 @@ class LibpressioPredict(CMakePackage):
     variant("bin", default=True, description="build the command line tools")
     variant("shared", default=True, description="build shared libaries")
 
-
     depends_on("libpressio-tools@0.4.2:", when="@:0.0.3")
     depends_on("libpressio@0.96.3:", when="@:0.0.2")
     depends_on("libpressio@0.96.5:", when="@0.0.3:")
@@ -32,7 +31,9 @@ class LibpressioPredict(CMakePackage):
         variant("khan2023", description="build support for secde from khan2023", default=False)
         variant("rahman2023", description="build support for secde from rahman2023", default=False)
         variant("sian2022", description="build support for secde from sian2022", default=False)
-        variant("python", description="build support for python fit/predict methods", default=False)
+        variant(
+            "python", description="build support for python fit/predict methods", default=False
+        )
         with when("+python"):
             depends_on("libpressio+pybind")
         with when("+rahman2023"):
@@ -61,4 +62,3 @@ class LibpressioPredict(CMakePackage):
             self.define("LIBPRESSIO_PREDICT_USE_MPI", self.spec.satisfies("^ mpi")),
         ]
         return args
-

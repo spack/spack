@@ -23,7 +23,5 @@ class LibpressioJit(CMakePackage):
     variant("poorjit", description="include the prototype poorjit compiler", default=True)
 
     def cmake_args(self):
-        args = [
-                self.define_from_variant("LIBPRESSIO_JIT_HAS_POORJIT", "poorjit")
-        ]
+        args = [self.define_from_variant("LIBPRESSIO_JIT_HAS_POORJIT", "poorjit")]
         return args

@@ -5,14 +5,17 @@
 
 from spack.package import *
 
-def try_le(x,y):
+
+def try_le(x, y):
     try:
         return int(x) < y
-    except:
+    except ValueError:
         False
 
+
 class LcFramework(CMakePackage, CudaPackage):
-    """a framework for automatically creating high-speed lossless and error-bounded lossy data compression and decompression algorithms."""
+    """a framework for automatically creating high-speed lossless and
+    error-bounded lossy data compression and decompression algorithms."""
 
     homepage = "https://userweb.cs.txstate.edu/~burtscher/LC/"
     url = "https://github.com/robertu94/LC-framework/archive/refs/tags/1.1.1.tar.gz"
@@ -28,18 +31,17 @@ class LcFramework(CMakePackage, CudaPackage):
     variant("libpressio", description="build a libpressio plugin for LC", default=False)
     conflicts("+cuda", when="@:1.2.1")
     for sm in [i for i in CudaPackage.cuda_arch_values if try_le(i, 60)]:
-        conflicts("cuda_arch={sm}".format(sm=sm), when="+cuda", msg="cuda_arch 60 or newer is required")
+        conflicts(
+            "cuda_arch={sm}".format(sm=sm), when="+cuda", msg="cuda_arch 60 or newer is required"
+        )
 
     depends_on("python", type=("build",))
     depends_on("libpressio@0.98.0:", when="+libpressio")
 
     def cmake_args(self):
-        args = [
-            self.define_from_variant("LC_BUILD_LIBPRESSIO_PLUGIN", "libpressio"),
-        ]
+        args = [self.define_from_variant("LC_BUILD_LIBPRESSIO_PLUGIN", "libpressio")]
         if "+cuda" in self.spec:
             args.append(self.define_from_variant("LC_BUILD_CUDA", "cuda"))
             args.append(self.builder.define_cuda_architectures(self))
 
         return args
-

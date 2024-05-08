@@ -36,7 +36,6 @@ class LibpressioDataset(CMakePackage):
         args = [
             self.define("BUILD_TESTING", self.run_tests),
             self.define_from_variant("LIBPRESSIO_DATASET_HAS_HDF5", "hdf5"),
-            self.define_from_variant("BUILD_SHARED_LIBS", "shared")
+            self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
         ]
         return args
-

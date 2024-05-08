@@ -20,8 +20,5 @@ class LibpressioAdios1(CMakePackage):
     depends_on("libpressio")
 
     def cmake_args(self):
-        args = [
-            "-DCMAKE_MODULE_PATH={}".format(self.spec["adios"].prefix.etc)
-        ]
+        args = ["-DCMAKE_MODULE_PATH={}".format(self.spec["adios"].prefix.etc)]
         return args
-

@@ -9,12 +9,12 @@ from spack.package import *
 class LibpressioTools(CMakePackage):
     """General Utilities for LibPressio"""
 
-    depends_on('libpressio-adios1@0.0.2:', when="+adios1")
-    depends_on('lc-framework@1.1.1:+libpressio', when="+lc")
-    depends_on('dctz@0.2.2:+libpressio', when="+dctz")
-    depends_on('libpressio-predict@0.0.4:', when="+predict")
-    depends_on('libpressio-dataset@0.0.8:', when="+dataset")
-    depends_on('libpressio-jit@0.0.1:', when="+jit")
+    depends_on("libpressio-adios1@0.0.2:", when="+adios1")
+    depends_on("lc-framework@1.1.1:+libpressio", when="+lc")
+    depends_on("dctz@0.2.2:+libpressio", when="+dctz")
+    depends_on("libpressio-predict@0.0.4:", when="+predict")
+    depends_on("libpressio-dataset@0.0.8:", when="+dataset")
+    depends_on("libpressio-jit@0.0.1:", when="+jit")
 
     maintainers("robertu94")
     tags = ["e4s"]

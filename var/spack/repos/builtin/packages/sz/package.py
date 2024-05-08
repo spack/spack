@@ -204,7 +204,7 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
             self.define("BUILD_TESTS", self.pkg.run_tests),
             self.define_from_variant("BUILD_PYTHON_WRAPPER", "python"),
             self.define_from_variant("BUILD_OPENMP", "openmp"),
-            self.define_from_variant("BUILD_SZ_EXAMPLES", "examples")
+            self.define_from_variant("BUILD_SZ_EXAMPLES", "examples"),
         ]
 
         if "+python" in self.spec:
