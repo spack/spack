@@ -22,6 +22,12 @@ class AmrWind(CMakePackage, CudaPackage, ROCmPackage):
 
     version("main", branch="main", submodules=True)
     version(
+        "1.4.0", tag="v1.4.0", commit="bdddf133e41a9b7b4c8ce28f1ea1bebec47678f5", submodules=True
+    )
+    version(
+        "1.3.1", tag="v1.3.1", commit="63692889143599de57232e64a9c7e4af8f0a2e1e", submodules=True
+    )
+    version(
         "1.3.0", tag="v1.3.0", commit="f74d7b3801f0492e586d440fac729d9dec595a8b", submodules=True
     )
     version(
@@ -43,31 +49,42 @@ class AmrWind(CMakePackage, CudaPackage, ROCmPackage):
         "0.9.0", tag="v0.9.0", commit="cf66ebe31fd5f27b76a83451cd22f346e7a67160", submodules=True
     )
 
-    variant("hypre", default=True, description="Enable Hypre integration")
+    variant("hypre", default=False, description="Enable Hypre integration")
     variant("ascent", default=False, description="Enable Ascent integration")
     variant("masa", default=False, description="Enable MASA integration")
     variant("mpi", default=True, description="Enable MPI support")
-    variant("netcdf", default=True, description="Enable NetCDF support")
+    variant("netcdf", default=False, description="Enable NetCDF support")
     variant("openfast", default=False, description="Enable OpenFAST integration")
     variant("openmp", default=False, description="Enable OpenMP for CPU builds")
     variant("shared", default=True, description="Build shared libraries")
     variant("tests", default=True, description="Activate regression tests")
     variant("tiny_profile", default=False, description="Activate tiny profile")
     variant("hdf5", default=False, description="Enable HDF5 plots with ZFP compression")
-    variant("umpire", default=False, description="Enable Umpire")
+    variant("umpire", default=False, description="Enable UMPIRE memory pooling")
     variant("sycl", default=False, description="Enable SYCL backend")
-    variant("gpu-aware-mpi", default=False, description="gpu-aware-mpi")
+    variant("gpu-aware-mpi", default=False, description="Enable GPU aware MPI")
 
-    depends_on("hypre~int64@2.20.0:", when="+hypre")
-    depends_on("hypre+mpi", when="+hypre+mpi")
+    depends_on("mpi", when="+mpi")
     depends_on("hdf5~mpi", when="+hdf5~mpi")
     depends_on("hdf5+mpi", when="+hdf5+mpi")
     depends_on("h5z-zfp", when="+hdf5")
     depends_on("zfp", when="+hdf5")
-    depends_on("hypre+umpire", when="+umpire")
-    depends_on("hypre+sycl", when="+sycl")
-    depends_on("hypre+gpu-aware-mpi", when="+gpu-aware-mpi")
+    depends_on("hypre~int64@2.20.0:", when="+hypre")
+    depends_on("hypre+mpi", when="+hypre+mpi")
+    depends_on("hypre+umpire", when="+hypre+umpire")
+    depends_on("hypre+sycl", when="+hypre+sycl")
+    depends_on("hypre+gpu-aware-mpi", when="+hypre+gpu-aware-mpi")
     depends_on("hypre@2.29.0:", when="@0.9.0:+hypre")
+    depends_on("masa", when="+masa")
+    depends_on("ascent~mpi", when="+ascent~mpi")
+    depends_on("ascent+mpi", when="+ascent+mpi")
+    depends_on("netcdf-c", when="+netcdf")
+    depends_on("py-matplotlib", when="+masa")
+    depends_on("py-pandas", when="+masa")
+    depends_on("openfast+cxx", when="+openfast")
+    depends_on("openfast+netcdf", when="+openfast+netcdf")
+    depends_on("openfast@2.6.0:3.4.1", when="@0.9.0:1 +openfast")
+    depends_on("openfast@3.5:", when="@2: +openfast")
 
     for arch in CudaPackage.cuda_arch_values:
         depends_on("hypre+cuda cuda_arch=%s" % arch, when="+cuda+hypre cuda_arch=%s" % arch)
@@ -75,19 +92,8 @@ class AmrWind(CMakePackage, CudaPackage, ROCmPackage):
         depends_on(
             "hypre+rocm amdgpu_target=%s" % arch, when="+rocm+hypre amdgpu_target=%s" % arch
         )
-    depends_on("masa", when="+masa")
-
-    # propagate variants to ascent
-    depends_on("ascent~mpi", when="+ascent~mpi")
-    depends_on("ascent+mpi", when="+ascent+mpi")
     for arch in CudaPackage.cuda_arch_values:
         depends_on("ascent+cuda cuda_arch=%s" % arch, when="+ascent+cuda cuda_arch=%s" % arch)
-
-    depends_on("mpi", when="+mpi")
-    depends_on("netcdf-c", when="+netcdf")
-    depends_on("openfast+cxx@2.6.0:3.4.1", when="@0.9.0:1.3.0,main+openfast")
-    depends_on("py-matplotlib", when="+masa")
-    depends_on("py-pandas", when="+masa")
 
     conflicts("+openmp", when="+cuda")
     conflicts("+shared", when="+cuda")
@@ -124,11 +130,11 @@ class AmrWind(CMakePackage, CudaPackage, ROCmPackage):
             args.append(define("MPI_HOME", self.spec["mpi"].prefix))
 
         if "+hdf5" in self.spec:
-            cmake_options.append(self.define("AMR_WIND_ENABLE_HDF5", True))
-            cmake_options.append(self.define("AMR_WIND_ENABLE_HDF5_ZFP", True))
+            args.append(self.define("AMR_WIND_ENABLE_HDF5", True))
+            args.append(self.define("AMR_WIND_ENABLE_HDF5_ZFP", True))
             # Help AMReX understand if HDF5 is parallel or not.
             # Building HDF5 with CMake as Spack does, causes this inspection to break.
-            cmake_options.append(self.define("HDF5_IS_PARALLEL", spec.satisfies("+mpi")))
+            args.append(self.define("HDF5_IS_PARALLEL", spec.satisfies("+mpi")))
 
         if "+cuda" in self.spec:
             amrex_arch = [
@@ -142,8 +148,12 @@ class AmrWind(CMakePackage, CudaPackage, ROCmPackage):
             targets = self.spec.variants["amdgpu_target"].value
             args.append("-DAMReX_AMD_ARCH=" + ";".join(str(x) for x in targets))
 
+        if "+umpire" in self.spec:
+            args.append(self.define_from_variant("AMR_WIND_ENABLE_UMPIRE", "umpire"))
+            args.append(self.define("UMPIRE_DIR", self.spec["umpire"].prefix))
+
         if "+sycl" in self.spec:
-            cmake_options.append(self.define("AMR_WIND_ENABLE_SYCL", True))
+            args.append(self.define("AMR_WIND_ENABLE_SYCL", True))
             requires(
                 "%dpcpp",
                 "%oneapi",

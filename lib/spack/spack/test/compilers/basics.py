@@ -943,3 +943,17 @@ def test_detection_requires_c_compiler(detected_versions, expected_length):
     """
     result = spack.compilers.make_compiler_list(detected_versions)
     assert len(result) == expected_length
+
+
+def test_compiler_environment(working_env):
+    """Test whether environment modifications from compilers are applied in compiler_environment"""
+    os.environ.pop("TEST", None)
+    compiler = Compiler(
+        "gcc@=13.2.0",
+        operating_system="ubuntu20.04",
+        target="x86_64",
+        paths=["/test/bin/gcc", "/test/bin/g++"],
+        environment={"set": {"TEST": "yes"}},
+    )
+    with compiler.compiler_environment():
+        assert os.environ["TEST"] == "yes"

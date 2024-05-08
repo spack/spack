@@ -17,6 +17,7 @@ class XorgCfFiles(AutotoolsPackage, XorgPackage):
 
     license("custom")
 
+    version("1.0.8", sha256="c6f1c9ffce96278a9d7c72d081e508d81c219dec69ae0dbaf8ae88f4bc9ef977")
     version("1.0.6", sha256="6d56094e5d1a6c7d7a9576ac3a0fc2c042344509ea900d59f4b23df668b96c7a")
 
     depends_on("pkgconfig", type="build")

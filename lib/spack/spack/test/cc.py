@@ -127,7 +127,7 @@ spack_cppflags = ["-g", "-O1", "-DVAR=VALUE"]
 spack_cflags = ["-Wall"]
 spack_cxxflags = ["-Werror"]
 spack_fflags = ["-w"]
-spack_ldflags = ["-L", "foo"]
+spack_ldflags = ["-Wl,--gc-sections", "-L", "foo"]
 spack_ldlibs = ["-lfoo"]
 
 lheaderpad = ["-Wl,-headerpad_max_install_names"]
@@ -279,7 +279,6 @@ def test_ld_flags(wrapper_environment, wrapper_flags):
         test_args,
         ["ld"]
         + test_include_paths
-        + [spack_ldflags[i] + spack_ldflags[i + 1] for i in range(0, len(spack_ldflags), 2)]
         + test_library_paths
         + ["--disable-new-dtags"]
         + test_rpaths
@@ -307,13 +306,14 @@ def test_cc_flags(wrapper_environment, wrapper_flags):
         [real_cc]
         + target_args
         + test_include_paths
-        + [spack_ldflags[i] + spack_ldflags[i + 1] for i in range(0, len(spack_ldflags), 2)]
+        + ["-Lfoo"]
         + test_library_paths
         + ["-Wl,--disable-new-dtags"]
         + test_wl_rpaths
         + test_args_without_paths
         + spack_cppflags
         + spack_cflags
+        + ["-Wl,--gc-sections"]
         + spack_ldlibs,
     )
 
@@ -325,12 +325,13 @@ def test_cxx_flags(wrapper_environment, wrapper_flags):
         [real_cc]
         + target_args
         + test_include_paths
-        + [spack_ldflags[i] + spack_ldflags[i + 1] for i in range(0, len(spack_ldflags), 2)]
+        + ["-Lfoo"]
         + test_library_paths
         + ["-Wl,--disable-new-dtags"]
         + test_wl_rpaths
         + test_args_without_paths
         + spack_cppflags
+        + ["-Wl,--gc-sections"]
         + spack_ldlibs,
     )
 
@@ -342,13 +343,14 @@ def test_fc_flags(wrapper_environment, wrapper_flags):
         [real_cc]
         + target_args
         + test_include_paths
-        + [spack_ldflags[i] + spack_ldflags[i + 1] for i in range(0, len(spack_ldflags), 2)]
+        + ["-Lfoo"]
         + test_library_paths
         + ["-Wl,--disable-new-dtags"]
         + test_wl_rpaths
         + test_args_without_paths
         + spack_fflags
         + spack_cppflags
+        + ["-Wl,--gc-sections"]
         + spack_ldlibs,
     )
 

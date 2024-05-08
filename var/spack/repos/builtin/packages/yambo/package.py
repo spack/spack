@@ -22,6 +22,7 @@ class Yambo(AutotoolsPackage):
 
     license("GPL-2.0-or-later")
 
+    version("5.2.1", sha256="0ac362854313927d75bbf87be98ff58447f3805f79724c38dc79df07f03a7046")
     version("5.1.1", sha256="c85036ca60507e627c47b6c6aee8241830349e88110e1ce9132ef03ab2c4e9f6")
     version("4.2.2", sha256="86b4ebe679387233266aba49948246c85a32b1e6840d024f162962bd0112448c")
     version("4.2.1", sha256="8ccd0ca75cc32d9266d4a37edd2a7396cf5038f3a68be07c0f0f77d1afc72bdc")
@@ -94,7 +95,7 @@ class Yambo(AutotoolsPackage):
             # As of version 4.2.1 there are hard-coded paths that make
             # the build process fail if the target prefix is not the
             # configure directory
-            "--prefix={0}".format(self.stage.source_path),
+            f"--prefix={self.stage.source_path}",
             "--disable-keep-objects",
             "--with-editor=none",
         ]
@@ -111,7 +112,7 @@ class Yambo(AutotoolsPackage):
         args.extend(self.enable_or_disable("openmp"))
 
         # LAPACK
-        if "+mpi" in spec:
+        if spec.satisfies("+mpi"):
             args.append(
                 "--with-scalapack-libs={0}".format(
                     spec["scalapack"].libs + spec["lapack"].libs + spec["blas"].libs
@@ -119,10 +120,7 @@ class Yambo(AutotoolsPackage):
             )
 
         args.extend(
-            [
-                "--with-blas-libs={0}".format(spec["blas"].libs),
-                "--with-lapack-libs={0}".format(spec["lapack"].libs),
-            ]
+            [f"--with-blas-libs={spec['blas'].libs}", f"--with-lapack-libs={spec['lapack'].libs}"]
         )
 
         # Netcdf
@@ -130,17 +128,17 @@ class Yambo(AutotoolsPackage):
             [
                 "--enable-netcdf-hdf5",
                 "--enable-hdf5-compression",
-                "--with-hdf5-libs={0}".format(spec["hdf5"].libs),
-                "--with-netcdf-path={0}".format(spec["netcdf-c"].prefix),
-                "--with-netcdff-path={0}".format(spec["netcdf-fortran"].prefix),
+                f"--with-hdf5-libs={spec['hdf5'].libs}",
+                f"--with-netcdf-path={spec['netcdf-c'].prefix}",
+                f"--with-netcdff-path={spec['netcdf-fortran'].prefix}",
             ]
         )
 
         args.extend(self.enable_or_disable("io"))
 
         # Other dependencies
-        args.append("--with-fft-path={0}".format(spec["fftw"].prefix))
-        args.append("--with-libxc-path={0}".format(spec["libxc"].prefix))
+        args.append(f"--with-fft-path={spec['fftw'].prefix}")
+        args.append(f"--with-libxc-path={spec['libxc'].prefix}")
 
         return args
 
