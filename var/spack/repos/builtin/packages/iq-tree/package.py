@@ -17,6 +17,9 @@ class IqTree(CMakePackage):
     license("GPL-2.0-or-later")
 
     version(
+        "2.3.2", tag="v2.3.1", commit="60f1aa68646ab84cc96b55a7548707adde15f47a", submodules=True
+    )
+    version(
         "2.3.1", tag="v2.3.1", commit="2914a2f7aac0a1a3c4fadde42c83e5dee315186d", submodules=True
     )
     version(
