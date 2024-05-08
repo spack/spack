@@ -14,6 +14,7 @@ class LibpmemobjCpp(CMakePackage):
     git = "https://github.com/pmem/libpmemobj-cpp.git"
 
     version("develop", branch="master")
+    version("1.13.0", sha256="1fd204303b86ff9974e39d6cdb4037556402df981bebcc824a9125e12bf48c80")
     version("1.12", sha256="5a7e082a862affbd87ff174b790be7db77f7d85d4c583acc34011f1104bc54a9")
     version("1.11", sha256="2818f3ce23c861222d2765c377e6d4ccf8a2e2f66e4d23e4e2c35f4246f4a403")
     version("1.10", sha256="bba31d9a1c21b38c20cbe2d2b152effef7e2debfa89a87e0c32de616c31d9191")

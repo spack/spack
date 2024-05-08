@@ -18,6 +18,7 @@ class Librsvg(AutotoolsPackage):
     version("2.51.0", sha256="89d32e38445025e1b1d9af3dd9d3aeb9f6fce527aeecbecf38b369b34c80c038")
     version("2.50.2", sha256="6211f271ce4cd44a7318190d36712e9cea384a933d3e3570004edeb210a056d3")
     version("2.50.0", sha256="b3fadba240f09b9c9898ab20cb7311467243e607cf8f928b7c5f842474ee3df4")
+    version("2.44.17", sha256="91bea64669203c677d5efbe21175aabbadf36754c7e7a1d1dc016dff4425273b")
     version("2.44.14", sha256="6a85a7868639cdd4aa064245cc8e9d864dad8b8e9a4a8031bb09a4796bc4e303")
     version("2.40.21", sha256="f7628905f1cada84e87e2b14883ed57d8094dca3281d5bcb24ece4279e9a92ba")
 

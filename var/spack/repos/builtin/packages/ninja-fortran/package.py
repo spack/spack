@@ -76,7 +76,7 @@ class NinjaFortran(Package):
     @on_package_attributes(run_tests=True)
     def configure_test(self):
         ninja = Executable("./ninja")
-        ninja("-j{0}".format(make_jobs), "ninja_test")
+        ninja(f"-j{make_jobs}", "ninja_test")
         ninja_test = Executable("./ninja_test")
         ninja_test()
 

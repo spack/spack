@@ -13,6 +13,7 @@ class Utf8proc(CMakePackage):
     homepage = "https://juliastrings.github.io/utf8proc/"
     url = "https://github.com/JuliaStrings/utf8proc/archive/v2.4.0.tar.gz"
 
+    version("2.9.0", sha256="18c1626e9fc5a2e192311e36b3010bfc698078f692888940f1fa150547abb0c1")
     version("2.8.0", sha256="a0a60a79fe6f6d54e7d411facbfcc867a6e198608f2cd992490e46f04b1bcecc")
     version("2.7.0", sha256="4bb121e297293c0fd55f08f83afab6d35d48f0af4ecc07523ad8ec99aa2b12a1")
     version("2.6.1", sha256="4c06a9dc4017e8a2438ef80ee371d45868bda2237a98b26554de7a95406b283b")

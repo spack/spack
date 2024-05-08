@@ -14,6 +14,7 @@ class Dnsmasq(MakefilePackage):
 
     license("GPL-2.0-or-later")
 
+    version("2.90", sha256="8f6666b542403b5ee7ccce66ea73a4a51cf19dd49392aaccd37231a2c51b303b")
     version("2.89", sha256="8651373d000cae23776256e83dcaa6723dee72c06a39362700344e0c12c4e7e4")
     version("2.81", sha256="3c28c68c6c2967c3a96e9b432c0c046a5df17a426d3a43cffe9e693cf05804d0")
     version("2.80", sha256="9e4a58f816ce0033ce383c549b7d4058ad9b823968d352d2b76614f83ea39adc")

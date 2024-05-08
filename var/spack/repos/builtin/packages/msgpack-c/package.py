@@ -23,8 +23,8 @@ class MsgpackC(CMakePackage):
 
     def cmake_args(self):
         args = [
-            "-DCMAKE_CXX_FLAGS=-Wno-implicit-fallthrough",
-            "-DCMAKE_C_FLAGS=-Wno-implicit-fallthrough",
+            self.define("CMAKE_CXX_FLAGS", "-Wno-implicit-fallthrough"),
+            self.define("CMAKE_C_FLAGS", "-Wno-implicit-fallthrough"),
             self.define("MSGPACK_BUILD_TESTS", self.run_tests),
         ]
         return args

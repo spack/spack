@@ -20,6 +20,7 @@ class Harfbuzz(MesonPackage, AutotoolsPackage):
 
     license("MIT")
 
+    version("8.4.0", sha256="af4ea73e25ab748c8c063b78c2f88e48833db9b2ac369e29bd115702e789755e")
     version("8.3.0", sha256="109501eaeb8bde3eadb25fab4164e993fbace29c3d775bcaa1c1e58e2f15f847")
     version("7.3.0", sha256="20770789749ac9ba846df33983dbda22db836c70d9f5d050cb9aa5347094a8fb")
     version("7.2.0", sha256="fc5560c807eae0efd5f95b5aa4c65800c7a8eed6642008a6b1e7e3ffff7873cc")
@@ -91,7 +92,7 @@ class Harfbuzz(MesonPackage, AutotoolsPackage):
     )
 
     def url_for_version(self, version):
-        if version > Version("2.3.1"):
+        if self.spec.satisfies("@2.3.2:"):
             url = "https://github.com/harfbuzz/harfbuzz/releases/download/{0}/harfbuzz-{0}.tar.xz"
         else:
             url = "http://www.freedesktop.org/software/harfbuzz/release/harfbuzz-{0}.tar.bz2"

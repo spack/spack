@@ -23,6 +23,7 @@ class Gmsh(CMakePackage):
     license("GPL-2.0-or-later")
 
     version("master", branch="master")
+    version("4.13.0", sha256="0208110adb1792d1c59dcbcbea5d5ecb1272dfef63f69ceedb91923c40e1a652")
     version("4.12.2", sha256="13e09d9ca8102e5c40171d6ee150c668742b98c3a6ca57f837f7b64e1e2af48f")
     version("4.12.0", sha256="2a6007872ba85abd9901914826f6986a2437ab7104f564ccefa1b7a3de742c17")
     version("4.10.3", sha256="a87d59ccea596d493d375b0d6bc380079a5e5a4baebf0d3383018b0cd6bd8e33")
@@ -141,37 +142,37 @@ class Gmsh(CMakePackage):
         ]
 
         # Use system versions of contrib libraries, when possible:
-        if "+external" in spec:
+        if spec.satisfies("+external"):
             options.append(self.define("ENABLE_SYSTEM_CONTRIB", True))
 
         # Make sure native file dialogs are used
         options.append("-DENABLE_NATIVE_FILE_CHOOSER=ON")
 
-        options.append("-DCMAKE_INSTALL_NAME_DIR:PATH=%s" % self.prefix.lib)
+        options.append(f"-DCMAKE_INSTALL_NAME_DIR:PATH={self.prefix.lib}")
 
         # Prevent GMsh from using its own strange directory structure on OSX
         options.append("-DENABLE_OS_SPECIFIC_INSTALL=OFF")
 
         # Make sure GMSH picks up correct BlasLapack by providing linker flags
-        if "~eigen" in spec:
+        if spec.satisfies("~eigen"):
             options.append("-DENABLE_BLAS_LAPACK=ON")
             blas_lapack = spec["lapack"].libs + spec["blas"].libs
-            options.append("-DBLAS_LAPACK_LIBRARIES={0}".format(blas_lapack.ld_flags))
+            options.append(f"-DBLAS_LAPACK_LIBRARIES={blas_lapack.ld_flags}")
 
-        if "+oce" in spec:
+        if spec.satisfies("+oce"):
             options.append("-DENABLE_OCC=ON")
-        elif "+opencascade" in spec:
+        elif spec.satisfies("+opencascade"):
             options.append("-DENABLE_OCC=ON")
         else:
             options.append("-DENABLE_OCC=OFF")
 
-        if "@:3.0.6" in spec:
+        if spec.satisfies("@:3.0.6"):
             options.append(self.define_from_variant("ENABLE_TETGEN", "tetgen"))
 
-        if "@:4.6" in spec:
+        if spec.satisfies("@:4.6"):
             options.append(self.define_from_variant("ENABLE_MMG3D", "mmg"))
 
-        if "+shared" in spec:
+        if spec.satisfies("+shared"):
             # Builds dynamic executable and installs shared library
             options.append(self.define("ENABLE_BUILD_SHARED", True))
             options.append(self.define("ENABLE_BUILD_DYNAMIC", True))
@@ -179,7 +180,7 @@ class Gmsh(CMakePackage):
             # Builds and installs static library
             options.append(self.define("ENABLE_BUILD_LIB", True))
 
-        if "+compression" in spec:
+        if spec.satisfies("+compression"):
             options.append(self.define("ENABLE_COMPRESSED_IO", True))
 
         return options

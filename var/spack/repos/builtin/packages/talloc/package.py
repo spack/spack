@@ -15,6 +15,7 @@ class Talloc(AutotoolsPackage):
 
     license("LGPL-3.0-or-later")
 
+    version("2.4.2", sha256="85ecf9e465e20f98f9950a52e9a411e14320bc555fa257d87697b7e7a9b1d8a6")
     version("2.4.0", sha256="6df36862c42466ef88f360444513870ef46934f9016c84383cc4008a7d0c46ba")
     version("2.3.1", sha256="ef4822d2fdafd2be8e0cabc3ec3c806ae29b8268e932c5e9a4cd5585f37f9f77")
     version("2.3.0", sha256="75d5bcb34482545a82ffb06da8f6c797f963a0da450d0830c669267b14992fc6")

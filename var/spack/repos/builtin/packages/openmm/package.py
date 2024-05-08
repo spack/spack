@@ -17,6 +17,7 @@ class Openmm(CMakePackage, CudaPackage):
     homepage = "https://openmm.org/"
     url = "https://github.com/openmm/openmm/archive/7.4.1.tar.gz"
 
+    version("8.1.1", sha256="347ad9f04dd88a673f7871127d9f23a75caf2c1a460a3f21f3328a24dc6547d0")
     version("8.0.0", sha256="dc63d7b47c8bb7b169c409cfd63d909ed0ce1ae114d37c627bf7a4231acf488e")
     version("7.7.0", sha256="51970779b8dc639ea192e9c61c67f70189aa294575acb915e14be1670a586c25")
     version("7.6.0", sha256="5a99c491ded9ba83ecc3fb1d8d22fca550f45da92e14f64f25378fda0048a89d")
@@ -49,7 +50,7 @@ class Openmm(CMakePackage, CudaPackage):
     )
 
     def patch(self):
-        install_string = 'set(PYTHON_SETUP_COMMAND "install ' '--prefix={0}")'.format(self.prefix)
+        install_string = f'set(PYTHON_SETUP_COMMAND "install --prefix={self.prefix}")'
 
         filter_file(
             r"set\(PYTHON_SETUP_COMMAND \"install.*",
