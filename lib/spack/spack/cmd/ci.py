@@ -569,7 +569,7 @@ def ci_rebuild(args):
     if not verify_binaries:
         install_args.append("--no-check-signature")
 
-    slash_hash = spack_ci.win_quote(job_spec.dag_hash())
+    slash_hash = spack_ci.win_quote("/" + job_spec.dag_hash())
 
     # Arguments when installing the root from sources
     deps_install_args = install_args + ["--only=dependencies"]
