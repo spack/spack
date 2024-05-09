@@ -37,19 +37,19 @@ class Miniforge3(Package):
 
     license("BSD-3-Clause")
 
-    variant("mamba", default=True, description="Enable mamba support.")
-
-    conflicts("+mamba", when="@:22.3.1-0")
-
     for ver, packages in _versions.items():
-        key = "{0}-{1}".format(platform.system(), platform.machine())
+        key = f"{platform.system()}-{platform.machine()}"
         pkg = packages.get(key)
         if pkg:
             version(ver, sha256=pkg[0], expand=False)
 
+    variant("mamba", default=True, description="Enable mamba support.")
+
+    conflicts("+mamba", when="@:22.3.1-0")
+
     def url_for_version(self, version):
-        url = "https://github.com/conda-forge/miniforge/releases/download/{0}/Miniforge3-{0}-{1}-{2}.sh"
-        return url.format(version, platform.system(), platform.machine())
+        script = f"Miniforge3-{version}-{platform.system()}-{platform.machine()}.sh"
+        return f"https://github.com/conda-forge/miniforge/releases/download/{version}/{script}"
 
     def install(self, spec, prefix):
         dir, script = split(self.stage.archive_file)
