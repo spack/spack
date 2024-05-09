@@ -38,7 +38,7 @@ class Mapl(CMakePackage):
     version("develop", branch="develop")
     version("main", branch="main")
 
-    version("2.46.0", sha256="583d0a4183daabc91cc555550c97db453a4f7e78a01e7fd09bfd0e0893410863")
+    version("2.46.0", sha256="726d9588b724bd43e5085d1a2f8d806d548f185ed6b22a1b13c0ed06212d7be2")
     # NOTE: Due to issues with CMake and ESMF, versions 2.44 and 2.45 of MAPL were not
     #       correctly installable with spack. The versions are still available in the
     #       repository, but we are skipping them in spack. There are references to these
