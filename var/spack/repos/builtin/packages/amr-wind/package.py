@@ -63,6 +63,10 @@ class AmrWind(CMakePackage, CudaPackage, ROCmPackage):
     variant("umpire", default=False, description="Enable UMPIRE memory pooling")
     variant("sycl", default=False, description="Enable SYCL backend")
     variant("gpu-aware-mpi", default=False, description="Enable GPU aware MPI")
+    variant("helics", default=False, description="Enable HELICS support for control interface")
+    variant(
+        "waves2amr", default=False, description="Enable Waves2AMR support for ocean wave input"
+    )
 
     depends_on("mpi", when="+mpi")
     depends_on("hdf5~mpi", when="+hdf5~mpi")
@@ -85,6 +89,9 @@ class AmrWind(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("openfast+netcdf", when="+openfast+netcdf")
     depends_on("openfast@2.6.0:3.4.1", when="@0.9.0:1 +openfast")
     depends_on("openfast@3.5:", when="@2: +openfast")
+    depends_on("helics@:3.3.2", when="+helics")
+    depends_on("helics@:3.3.2+mpi", when="+helics+mpi")
+    depends_on("fftw", when="@2: +waves2amr")
 
     for arch in CudaPackage.cuda_arch_values:
         depends_on("hypre+cuda cuda_arch=%s" % arch, when="+cuda+hypre cuda_arch=%s" % arch)
@@ -97,14 +104,16 @@ class AmrWind(CMakePackage, CudaPackage, ROCmPackage):
 
     conflicts("+openmp", when="+cuda")
     conflicts("+shared", when="+cuda")
+    conflicts("@:1.4.0", when="+waves2amr")
 
     def setup_build_environment(self, env):
         # Avoid compile errors with Intel interprocedural optimization
-        if "%intel" in self.spec:
+        if self.spec.satisfies("%intel"):
             env.append_flags("CXXFLAGS", "-no-ipo")
 
     def cmake_args(self):
         define = self.define
+        spec = self.spec
 
         vs = [
             "mpi",
@@ -126,34 +135,42 @@ class AmrWind(CMakePackage, CudaPackage, ROCmPackage):
             self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
         ]
 
-        if "+mpi" in self.spec:
-            args.append(define("MPI_HOME", self.spec["mpi"].prefix))
+        if spec.satisfies("+mpi"):
+            args.append(define("MPI_HOME", spec["mpi"].prefix))
 
-        if "+hdf5" in self.spec:
-            args.append(self.define("AMR_WIND_ENABLE_HDF5", True))
-            args.append(self.define("AMR_WIND_ENABLE_HDF5_ZFP", True))
+        if spec.satisfies("+hdf5"):
+            args.append(define("AMR_WIND_ENABLE_HDF5", True))
+            args.append(define("AMR_WIND_ENABLE_HDF5_ZFP", True))
             # Help AMReX understand if HDF5 is parallel or not.
             # Building HDF5 with CMake as Spack does, causes this inspection to break.
-            args.append(self.define("HDF5_IS_PARALLEL", spec.satisfies("+mpi")))
+            args.append(define("HDF5_IS_PARALLEL", spec.satisfies("+mpi")))
 
-        if "+cuda" in self.spec:
+        if spec.satisfies("+cuda"):
             amrex_arch = [
-                "{0:.1f}".format(float(i) / 10.0) for i in self.spec.variants["cuda_arch"].value
+                "{0:.1f}".format(float(i) / 10.0) for i in spec.variants["cuda_arch"].value
             ]
             if amrex_arch:
                 args.append(define("AMReX_CUDA_ARCH", amrex_arch))
 
-        if "+rocm" in self.spec:
-            args.append(define("CMAKE_CXX_COMPILER", self.spec["hip"].hipcc))
-            targets = self.spec.variants["amdgpu_target"].value
+        if spec.satisfies("+rocm"):
+            args.append(define("CMAKE_CXX_COMPILER", spec["hip"].hipcc))
+            targets = spec.variants["amdgpu_target"].value
             args.append("-DAMReX_AMD_ARCH=" + ";".join(str(x) for x in targets))
 
-        if "+umpire" in self.spec:
+        if spec.satisfies("+umpire"):
             args.append(self.define_from_variant("AMR_WIND_ENABLE_UMPIRE", "umpire"))
-            args.append(self.define("UMPIRE_DIR", self.spec["umpire"].prefix))
+            args.append(define("UMPIRE_DIR", spec["umpire"].prefix))
 
-        if "+sycl" in self.spec:
-            args.append(self.define("AMR_WIND_ENABLE_SYCL", True))
+        if spec.satisfies("+helics"):
+            args.append(self.define_from_variant("AMR_WIND_ENABLE_HELICS", "helics"))
+            args.append(define("HELICS_DIR", spec["helics"].prefix))
+
+        if spec.satisfies("+waves2amr"):
+            args.append(self.define_from_variant("AMR_WIND_ENABLE_W2A", "waves2amr"))
+            args.append(define("FFTW_DIR", spec["fftw"].prefix))
+
+        if spec.satisfies("+sycl"):
+            args.append(define("AMR_WIND_ENABLE_SYCL", True))
             requires(
                 "%dpcpp",
                 "%oneapi",
