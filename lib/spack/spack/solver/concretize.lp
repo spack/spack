@@ -1424,6 +1424,7 @@ opt_criterion(73, "deprecated versions used").
 #minimize{
     1@73+Priority,PackageNode
     : attr("deprecated", PackageNode, _),
+      not external(PackageNode),
       build_priority(PackageNode, Priority)
 }.
 
