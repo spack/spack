@@ -58,6 +58,14 @@ class Pythia8(AutotoolsPackage):
         deprecated=True,
     )
 
+    variant(
+        "cxxstd",
+        default="11",
+        values=("11", "17", "20", "23"),
+        multi=False,
+        description="Use the specified C++ standard when building",
+    )
+
     variant("shared", default=True, description="Build shared library")
     variant("gzip", default=False, description="Build with gzip support, for reading lhe.gz files")
     variant(
@@ -119,6 +127,12 @@ class Pythia8(AutotoolsPackage):
     conflicts("+hdf5", when="~mpich", msg="MPICH is required for reading HDF5 files")
 
     filter_compiler_wrappers("Makefile.inc", relative_root="share/Pythia8/examples")
+
+    @run_before("configure")
+    def setup_cxxstd(self):
+        filter_file(
+            r"-std=c\+\+[0-9][0-9]", f"-std=c++{self.spec.variants['cxxstd'].value}", "configure"
+        )
 
     def configure_args(self):
         args = []
