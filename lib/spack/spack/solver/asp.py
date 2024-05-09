@@ -1649,11 +1649,15 @@ class SpackSolverSetup:
         if isinstance(reuse_yaml, typing.Mapping):
             default_include = reuse_yaml.get("include", [])
             default_exclude = reuse_yaml.get("exclude", [])
+            libc_externals = list(all_libcs())
             for source in reuse_yaml.get("from", []):
                 if source["type"] != "external":
                     continue
 
                 include = source.get("include", default_include)
+                if include:
+                    # Since libcs are implicit externals, we need to implicitly include them
+                    include = include + libc_externals
                 exclude = source.get("exclude", default_exclude)
                 spec_filters.append(
                     SpecFilter(
