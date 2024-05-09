@@ -72,11 +72,11 @@ class Fastjet(AutotoolsPackage):
     )
     variant("atlas", default=False, description="Patch to make random generator thread_local")
 
-    cxxstds = ("11", "17", "20", "23")
     variant(
         "cxxstd",
         default="11",
-        values=cxxstds,
+        values=("11", "17", "20", "23"),
+        multi=False,
         description="Use the specified C++ standard when building",
     )
 
