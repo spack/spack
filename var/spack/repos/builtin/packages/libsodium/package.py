@@ -15,10 +15,14 @@ class Libsodium(AutotoolsPackage):
     decryption, signatures, password hashing and more."""
 
     homepage = "https://download.libsodium.org/doc/"
-    url = "https://download.libsodium.org/libsodium/releases/libsodium-1.0.13.tar.gz"
-    list_url = "https://download.libsodium.org/libsodium/releases/old"
+    url = "https://github.com/jedisct1/libsodium/releases/download/1.0.19-RELEASE/libsodium-1.0.19.tar.gz"
+    git = "https://github.com/jedisct1/libsodium.git"
 
     license("ISC")
+
+    version("master", branch="master")
+    version("stable", branch="stable")
+    version("next", branch="next")
 
     version("1.0.19", sha256="018d79fe0a045cca07331d37bd0cb57b2e838c51bc48fd837a1472e50068bbea")
     version("1.0.18", sha256="6f504490b342a4f8a4c4a02fc9b866cbef8622d5df4e5452b46be121e46636c1")
@@ -31,14 +35,6 @@ class Libsodium(AutotoolsPackage):
     version("1.0.1", sha256="c3090887a4ef9e2d63af1c1e77f5d5a0656fadb5105ebb9fb66a302210cb3af5")
     version("1.0.0", sha256="ced1fe3d2066953fea94f307a92f8ae41bf0643739a44309cbe43aa881dbc9a5")
     version("0.7.1", sha256="ef46bbb5bac263ef6d3fc00ccc11d4690aea83643412919fe15369b9870280a7")
-
-    def url_for_version(self, version):
-        url = "https://download.libsodium.org/libsodium/releases/"
-        if version < Version("1.0.16"):
-            url += "old/unsupported/"
-        elif version < Version("1.0.17"):
-            url += "old/"
-        return url + f"libsodium-{version}.tar.gz"
 
     def patch(self):
         # Necessary on ppc64le / aarch64, because Spack tries to execute these scripts
