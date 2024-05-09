@@ -58,11 +58,11 @@ class Pythia8(AutotoolsPackage):
         deprecated=True,
     )
 
-    cxxstds = ("11", "17", "20", "23")
     variant(
         "cxxstd",
         default="11",
-        values=cxxstds,
+        values=("11", "17", "20", "23"),
+        multi=False,
         description="Use the specified C++ standard when building",
     )
 
@@ -131,7 +131,7 @@ class Pythia8(AutotoolsPackage):
     @run_before("configure")
     def setup_cxxstd(self):
         filter_file(
-            "-std=c++[0-9][0-9]", f"-std=c++{self.spec.variants['cxxstd'].value}", "configure"
+            "-std=c\+\+[0-9][0-9]", f"-std=c++{self.spec.variants['cxxstd'].value}", "configure"
         )
 
     def configure_args(self):
