@@ -186,6 +186,10 @@ class FluxSched(CMakePackage, AutotoolsPackage):
 
 class CMakeBuilder(CMakeBuilder):
     def cmake_args(self):
+        ver_in_src = os.path.exists(os.path.join(self.stage.source_path, "flux-sched.ver"))
+        # flux-sched before v0.33 does not correctly set the version even when the file is present.
+        if self.spec.satisfies("@:0.33") or not ver_in_src:
+            return [self.define("FLUX_SCHED_VER", self.spec.version)]
         return []
 
 
