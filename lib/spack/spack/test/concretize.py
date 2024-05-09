@@ -2503,6 +2503,37 @@ class TestConcretize:
         for dep in result["dyninst"].traverse(root=False):
             assert dep.dag_hash() == reused[dep.name].dag_hash()
 
+    @pytest.mark.regression("44091")
+    @pytest.mark.parametrize(
+        "included_externals",
+        [
+            ["deprecated-versions"],
+            # Try the empty list, to ensure that in that case everything will be included
+            # since filtering should happen only when the list is non-empty
+            [],
+        ],
+    )
+    def test_include_specs_from_externals_and_libcs(
+        self, included_externals, mutable_config, tmp_path
+    ):
+        """Tests that whe we include specs from externals, we always include glibcs"""
+        mutable_config.set(
+            "packages",
+            {
+                "deprecated-versions": {
+                    "externals": [{"spec": "deprecated-versions@1.1.0", "prefix": str(tmp_path)}]
+                }
+            },
+        )
+        request_str = "deprecated-client"
+
+        with spack.config.override(
+            "concretizer:reuse", {"from": [{"type": "external", "include": included_externals}]}
+        ):
+            result = Spec(request_str).concretized()
+
+        assert result["deprecated-versions"].satisfies("@1.1.0")
+
 
 @pytest.fixture()
 def duplicates_test_repository():
