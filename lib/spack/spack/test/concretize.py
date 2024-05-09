@@ -2464,6 +2464,7 @@ class TestConcretize:
         assert s["dttop"].dag_hash() == build_dep.dag_hash()
 
     @pytest.mark.regression("44040")
+    @pytest.mark.only_clingo("Use case not supported by the original concretizer")
     def test_exclude_specs_from_reuse(self, monkeypatch):
         """Tests that we can exclude a spec from reuse when concretizing, and that the spec
         is not added back to the solve as a dependency of another reusable spec.
@@ -2513,10 +2514,11 @@ class TestConcretize:
             [],
         ],
     )
+    @pytest.mark.only_clingo("Use case not supported by the original concretizer")
     def test_include_specs_from_externals_and_libcs(
         self, included_externals, mutable_config, tmp_path
     ):
-        """Tests that whe we include specs from externals, we always include glibcs"""
+        """Tests that when we include specs from externals, we always include libcs."""
         mutable_config.set(
             "packages",
             {
@@ -2527,12 +2529,22 @@ class TestConcretize:
         )
         request_str = "deprecated-client"
 
+        # When using the external the version is selected even if deprecated
         with spack.config.override(
             "concretizer:reuse", {"from": [{"type": "external", "include": included_externals}]}
         ):
             result = Spec(request_str).concretized()
 
         assert result["deprecated-versions"].satisfies("@1.1.0")
+
+        # When excluding it, we pick the non-deprecated version
+        with spack.config.override(
+            "concretizer:reuse",
+            {"from": [{"type": "external", "exclude": ["deprecated-versions"]}]},
+        ):
+            result = Spec(request_str).concretized()
+
+        assert result["deprecated-versions"].satisfies("@1.0.0")
 
 
 @pytest.fixture()
