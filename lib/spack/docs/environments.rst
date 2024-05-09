@@ -189,7 +189,7 @@ environment will remove the view from the user environment.
 Independent Environments
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-Independent environment can be located in any directory outside of Spack.
+Independent environments can be located in any directory outside of Spack.
 
 .. note::
 
