@@ -19,6 +19,7 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
 
     license("BSL-1.0")
 
+    version("0.25.0", sha256="6646e12f88049116d84ce0caeedaa039a13caaa0431964caea4660b739767b2e")
     version("0.24.0", sha256="3b97c684107f892a633f598d94bcbd1e238d940e88e1c336f205e81b99326cc3")
     version("0.23.0", sha256="d1981e198ac4f8443770cebbeff7a132b8f6c1a42e32b0b06fea02cc9df99595")
     version("0.22.2", sha256="eeffa8584336b239aca167f0056e815b1b6d911e46cbb3cd6b8b811d101c1052")
@@ -115,6 +116,7 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
     # https://github.com/pika-org/pika/issues/686
     conflicts("^fmt@10:", when="@:0.15 +cuda")
     conflicts("^fmt@10:", when="@:0.15 +rocm")
+    depends_on("spdlog@1.9.2:", when="@0.25:")
     depends_on("hwloc@1.11.5:")
 
     depends_on("gperftools", when="malloc=tcmalloc")
