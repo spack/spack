@@ -143,7 +143,7 @@ class PythonExtension(spack.package_base.PackageBase):
         if not self.extendee_spec:
             return super().add_files_to_view(view, merge_map, skip_if_exists)
 
-        python, *_ = self.dependencies("python-venv") or self.dependencies("python")
+        python, *_ = self.spec.dependencies("python-venv") or self.spec.dependencies("python")
 
         if python.external:
             return super().add_files_to_view(view, merge_map, skip_if_exists)
