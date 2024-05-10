@@ -18,6 +18,7 @@ class PyTifffile(PythonPackage):
     version(
         "2022.10.10", sha256="50b61ba943b866d191295bc38a00191c9fdab23ece063544c7f1a264e3f6aa8e"
     )
+    version("2022.4.8", sha256="d4a4057e5cb7afe6e24cf7bde42a163970b593afe44c17249894ede755cf3faa")
     version("2021.11.2", sha256="153e31fa1d892f482fabb2ae9f2561fa429ee42d01a6f67e58cee13637d9285b")
     version("2020.10.1", sha256="799feeccc91965b69e1288c51a1d1118faec7f40b2eb89ad2979591b85324830")
     version("0.12.1", sha256="802367effe86b0d1e64cb5c2ed886771f677fa63260b945e51a27acccdc08fa1")
