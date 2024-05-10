@@ -213,7 +213,7 @@ default:
     - $ErrorActionPreference="SilentlyContinue"
     - python -m pip install psutil
     - python -c"import psutil;print(psutil.getloadavg())"
-    - (Get-WmiObject Win32_PhysicalMemory | measure-object Capacity -sum).sum/1gb
+    - (Get-WmiObject Win32_PhysicalMemory | measure-object Capacity -sum).sum
     - $ErrorActionPreference=$ErrorActionOld
 
   tags: ["spack", "public", "medium", "x86_64-win"]
