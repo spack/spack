@@ -36,10 +36,10 @@ class Qpdf(CMakePackage):
     depends_on("gnutls", when="crypto=gnutls")
 
     def cmake_args(self):
-
         args = []
         if not self.spec.satisfies("crypto=implicit"):
             crypto_type = self.spec.variants["crypto"].value.upper()
             args.append("USE_IMPLICIT_CRYPTO=0")
             args.append(f"REQUIRE_CRYPTO_{crypto_type}=1")
+
         return args
