@@ -10,29 +10,6 @@ import platform
 from spack.package import *
 
 
-# The viewer and trace viewer tar files and sha256sum depend on the
-# version and machine type.  Starting with 2019.08, the name of the
-# tar file contains the version number.
-def viewer_url(ver, mach):
-    ver2 = ("-" + ver) if ver >= "2019.08" else ""
-    return ("http://hpctoolkit.org/download/hpcviewer/{0}/hpcviewer{1}-linux.gtk.{2}.tgz").format(
-        ver, ver2, mach
-    )
-
-
-def trace_url(ver, mach):
-    ver2 = ("-" + ver) if ver >= "2019.08" else ""
-    return (
-        "http://hpctoolkit.org/download/hpcviewer/{0}/hpctraceviewer{1}-linux.gtk.{2}.tgz"
-    ).format(ver, ver2, mach)
-
-
-def darwin_url(ver, mach):
-    return (
-        "http://hpctoolkit.org/download/hpcviewer/{0}/hpcviewer-{0}-macosx.cocoa.{1}.zip"
-    ).format(ver, mach)
-
-
 class Hpcviewer(Package):
     """Binary distribution of hpcviewer and integrated hpctraceviewer for
     the Rice HPCToolkit (Linux x86_64, ppc64le and aarch64, and MacOSX
@@ -153,31 +130,35 @@ class Hpcviewer(Package):
 
     # Versions for MacOSX / Darwin
     if system == "darwin":
-        for key in darwin_sha.keys():
-            if key[1] == machine:
-                version(key[0], url=darwin_url(*key), sha256=darwin_sha[key])
+        for (ver, arch), sha in darwin_sha.items():
+            if arch == machine:
+                version(
+                    ver,
+                    url=f"http://hpctoolkit.org/download/hpcviewer/{ver}/hpcviewer-{ver}-macosx.cocoa.{arch}.zip",
+                    sha256=sha,
+                )
 
     # Versions for Linux and Cray front-end
     if system == "linux":
-        for key in viewer_sha.keys():
-            if key[1] == machine:
+        for (ver, arch), sha in viewer_sha.items():
+            if arch == machine:
                 version(
-                    key[0],
-                    url=viewer_url(*key),
-                    sha256=viewer_sha[key],
-                    deprecated=(key[0] <= "2020.99"),
+                    ver,
+                    url=f"http://hpctoolkit.org/download/hpcviewer/{ver}/hpcviewer-{ver}-linux.gtk.{arch}.tgz",
+                    sha256=sha,
+                    deprecated=(ver <= "2020.99"),
                 )
 
                 # Current versions include the viewer and trace viewer in
                 # one tar file.  Before 2020.07, the trace viewer was a
                 # separate tar file (resource).
-                if key in trace_sha:
+                if (ver, arch) in trace_sha:
                     resource(
                         name="hpctraceviewer",
-                        url=trace_url(*key),
-                        sha256=trace_sha[key],
+                        url=f"http://hpctoolkit.org/download/hpcviewer/{ver}/hpctraceviewer-{ver}-linux.gtk.{arch}.tgz",
+                        sha256=trace_sha[ver, arch],
                         placement="TRACE",
-                        when="@{0}".format(key[0]),
+                        when=f"@{ver}",
                     )
 
     depends_on("java@11:", type=("build", "run"), when="@2021.0:")
