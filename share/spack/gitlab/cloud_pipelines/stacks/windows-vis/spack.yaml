@@ -5,12 +5,6 @@
 
 spack:
   view: false
-
-  include:
-  - $spack/share/spack/gitlab/cloud_pipelines/configs/win64/x86_64
-  - $spack/share/spack/gitlab/cloud_pipelines/configs/win64
-  - $spack/share/spack/gitlab/cloud_pipelines/configs
-
   specs:
   - vtk
 
