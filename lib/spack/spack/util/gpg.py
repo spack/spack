@@ -8,6 +8,8 @@ import functools
 import os
 import re
 
+import llnl.util.filesystem
+
 import spack.error
 import spack.paths
 import spack.util.executable
@@ -385,7 +387,7 @@ def _socket_dir(gpgconf):
                 os.mkdir(var_run_user)
                 os.chmod(var_run_user, 0o777)
 
-            user_dir = os.path.join(var_run_user, str(os.getuid()))
+            user_dir = os.path.join(var_run_user, str(llnl.util.filesystem.getuid()))
 
             if not os.path.exists(user_dir):
                 os.mkdir(user_dir)
