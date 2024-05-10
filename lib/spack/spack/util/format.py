@@ -21,11 +21,6 @@ def get_version_lines(version_hashes_dict: dict, url_dict: Optional[dict] = None
     version_lines = []
 
     for v, h in version_hashes_dict.items():
-        # Extract the url for a version if url_dict is provided.
-        url = ""
-        if url_dict is not None and v in url_dict:
-            url = url_dict[v]
-
         version_lines.append(f'    version("{v}", sha256="{h}")')
 
     return "\n".join(version_lines)
