@@ -18,7 +18,9 @@ class Kakoune(MakefilePackage):
 
     license("Unlicense")
 
-    version("2024.05.09", sha256="2190bddfd3af590c0593c38537088976547506f47bd6eb6c0e22350dbd16a229")
+    version(
+        "2024.05.09", sha256="2190bddfd3af590c0593c38537088976547506f47bd6eb6c0e22350dbd16a229"
+    )
     version(
         "2023.08.05", sha256="3e45151e0addd3500de2d6a29b5aacf2267c42bb256d44a782e73defb29cda5c"
     )
@@ -37,4 +39,3 @@ class Kakoune(MakefilePackage):
     @property
     def install_targets(self):
         return ["-e", f"PREFIX={prefix}", "install"]
-
