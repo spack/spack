@@ -145,7 +145,7 @@ class NMakeBuilder(BaseBuilder):
         opts += self.nmake_install_args()
         if self.makefile_name:
             opts.append("/F{}".format(self.makefile_name))
-        opts.append(self.define("PREFIX", prefix))
+        opts.append(self.define("PREFIX", fs.windows_sfn(prefix)))
         with fs.working_dir(self.build_directory):
             inspect.getmodule(self.pkg).nmake(
                 *opts, *self.install_targets, ignore_quotes=self.ignore_quotes
