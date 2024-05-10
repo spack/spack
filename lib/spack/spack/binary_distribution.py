@@ -29,6 +29,7 @@ import llnl.util.filesystem as fsys
 import llnl.util.lang
 import llnl.util.tty as tty
 from llnl.util.filesystem import BaseDirectoryVisitor, mkdirp, visit_directory_tree
+from llnl.util.symlink import readlink
 
 import spack.caches
 import spack.cmd
@@ -658,7 +659,7 @@ def get_buildfile_manifest(spec):
     #   2. paths are used as strings.
     for rel_path in visitor.symlinks:
         abs_path = os.path.join(root, rel_path)
-        link = os.readlink(abs_path)
+        link = readlink(abs_path)
         if os.path.isabs(link) and link.startswith(spack.store.STORE.layout.root):
             data["link_to_relocate"].append(rel_path)
 
@@ -2001,6 +2002,7 @@ def install_root_node(spec, unsigned=False, force=False, sha256=None):
     with spack.util.path.filter_padding():
         tty.msg('Installing "{0}" from a buildcache'.format(spec.format()))
         extract_tarball(spec, download_result, force)
+        spec.package.windows_establish_runtime_linkage()
         spack.hooks.post_install(spec, False)
         spack.store.STORE.db.add(spec, spack.store.STORE.layout)
 
