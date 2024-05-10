@@ -25,6 +25,7 @@ spack:
           - hpe-mpi
           - intel-oneapi-mkl
           - intel-oneapi-tbb
+          - intel-oneapi-vtune
           - ispc
           - julia
           - likwid
@@ -115,6 +116,7 @@ spack:
     - hpe-mpi@2.27.p1.hmpt
     - intel-oneapi-mkl@2023.2.0
     - intel-oneapi-tbb@2021.10.0
+    - intel-oneapi-vtune@2023.2.0
     # For Ospray`
     - ispc
     - julia@1.9^[virtuals=blas,lapack] openblas
