@@ -37,9 +37,9 @@ class Qpdf(CMakePackage):
 
     def cmake_args(self):
 
-        if self.spec.satisfies("crypto=implicit"):
-            return []
-
-        else:
+        args = []
+        if not self.spec.satisfies("crypto=implicit"):
             crypto_type = self.spec.variants["crypto"].value.upper()
-            return ["USE_IMPLICIT_CRYPTO=0", f"REQUIRE_CRYPTO_{crypto_type}=1"]
+            args.append("USE_IMPLICIT_CRYPTO=0")
+            args.append(f"REQUIRE_CRYPTO_{crypto_type}=1")
+        return args
