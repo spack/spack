@@ -120,12 +120,6 @@ class PythonExtension(spack.package_base.PackageBase):
         """
         return []
 
-    @property
-    def python_spec(self):
-        """Get python-venv if it exists or python otherwise."""
-        python, *_ = self.spec.dependencies("python-venv") or self.spec.dependencies("python")
-        return python
-
     def view_file_conflicts(self, view, merge_map):
         """Report all file conflicts, excepting special cases for python.
         Specifically, this does not report errors for duplicate
@@ -146,8 +140,12 @@ class PythonExtension(spack.package_base.PackageBase):
     def add_files_to_view(self, view, merge_map, skip_if_exists=True):
         # Patch up shebangs if the package extends Python and we put a Python interpreter in the
         # view.
-        python = self.python_spec
-        if not self.extendee_spec or python.external:
+        if not self.extendee_spec:
+            return super().add_files_to_view(view, merge_map, skip_if_exists)
+
+        python, *_ = self.spec.dependencies("python-venv") or self.spec.dependencies("python")
+
+        if python.external:
             return super().add_files_to_view(view, merge_map, skip_if_exists)
 
         # We only patch shebangs in the bin directory.
@@ -367,6 +365,12 @@ class PythonPackage(PythonExtension):
             name = cls.pypi.split("/")[0]
             return f"https://pypi.org/simple/{name}/"
         return None
+
+    @property
+    def python_spec(self):
+        """Get python-venv if it exists or python otherwise."""
+        python, *_ = self.spec.dependencies("python-venv") or self.spec.dependencies("python")
+        return python
 
     @property
     def headers(self) -> HeaderList:
