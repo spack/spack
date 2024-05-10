@@ -45,6 +45,8 @@ class DlaFuture(CMakePackage, CudaPackage, ROCmPackage):
         description="Build C API compatible with ScaLAPACK",
     )
 
+    generator("ninja")
+
     depends_on("cmake@3.22:", type="build")
     depends_on("pkgconfig", type="build")
     depends_on("doxygen", type="build", when="+doc")
