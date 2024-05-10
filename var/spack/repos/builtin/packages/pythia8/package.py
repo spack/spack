@@ -138,6 +138,10 @@ class Pythia8(AutotoolsPackage):
             r"-std=c\+\+[0-9][0-9]", f"-std=c++{self.spec.variants['cxxstd'].value}", "configure"
         )
 
+    @when("@:8.311") 
+    def patch(self):
+        filter_file("\|;n'", "|'", "configure")
+
     def configure_args(self):
         args = []
 
