@@ -4474,10 +4474,11 @@ spack:
     with e:
         e.concretize()
 
-    user_specs = e.user_specs.specs
-    concretized_order = e.concretized_order
+    user_specs = e.all_user_specs()
+    concretized_user_specs = e.all_concretized_user_specs()
+    concretized_order = e.all_concretized_orders()
     environment_specs = e._get_environment_specs(False)
 
     for spec in ["libelf@0.8.10", "libdwarf", "mpileaks"]:
-        assert spec in environment_specs
+        assert Spec(spec) in environment_specs
     assert False

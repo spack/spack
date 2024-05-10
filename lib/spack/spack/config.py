@@ -1553,11 +1553,7 @@ def ensure_latest_format_fn(section: str) -> Callable[[YamlConfigDict], bool]:
     """
     # The line below is based on the fact that every module we need
     # is already imported at the top level
-    section_module = (
-        getattr(spack.schema, section)
-        if section != spack.schema.env.TOP_LEVEL_KEY
-        else spack.schema.env
-    )
+    section_module = getattr(spack.schema, section)
     update_fn = getattr(section_module, "update", lambda x: False)
     return update_fn
 

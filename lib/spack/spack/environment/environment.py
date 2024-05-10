@@ -907,6 +907,15 @@ class Environment:
         #: Repository for this environment (memoized)
         self._repo = None
 
+        #: Included environments
+        self.included_environments: List[Environment] = []
+
+        # TODO/TBD/TLD: Why not represent included spack.lock files as another
+        # TODO/TBD/TLD: ..included environment?
+        # TODO/TBD/TLD: ..1) must ensure a snapshot of the included concrete
+        # TODO/TBD/TLD:      specs is stashed in the root env's spack.lock file.
+        # TODO/TBD/TLD: ..1) must ensure a snapshot of the included concrete
+
         #: Environment paths for concrete (lockfile) included environments
         self.included_concrete_envs: List[str] = []
         #: First-level included concretized spec data from/to the lockfile.
@@ -1042,6 +1051,7 @@ class Environment:
         self.spec_lists = collections.OrderedDict()
         self.views = {}
 
+        # TBD/TLD: How would this be affected with included/nested envs?
         for item in spack.config.get("definitions", []):
             self._process_definition(item)
 
@@ -1052,18 +1062,42 @@ class Environment:
         )
         self.spec_lists[user_speclist_name] = user_specs
 
+        for manifest in self.manifest.included_manifest_paths:
+            tty.debug(f"Detected included environment at {manifest}")
+            manifest_dir = os.path.dirname(manifest)
+            self.included_environments.append(Environment(manifest_dir))
+
         self._process_view(spack.config.get("view", True))
         self._process_concrete_includes()
+
+    def all_user_specs(self) -> List[Spec]:
+        """Returns all of the user specs of the environment and its included
+        environment(s)."""
+        user_specs = self.user_specs[:]
+
+        # TODO/TBD/TLD: Is it appropriate/needed?
+        for included_env in self.included_environments:
+            user_specs.extend(included_env.user_specs)
+
+        return user_specs
 
     def all_concretized_user_specs(self) -> List[Spec]:
         """Returns all of the concretized user specs of the environment and
         its included environment(s)."""
         concretized_user_specs = self.concretized_user_specs[:]
-        for included_specs in self.included_concretized_user_specs.values():
-            for included in included_specs:
-                # Don't duplicate included spec(s)
-                if included not in concretized_user_specs:
-                    concretized_user_specs.append(included)
+
+        def include_specs(included_user_specs):
+            for included_specs in included_user_specs:
+                for included in included_specs:
+                    # Don't duplicate included spec(s)
+                    if included not in concretized_user_specs:
+                        concretized_user_specs.append(included)
+
+        include_specs(self.included_concretized_user_specs.values())
+
+        # TBD/TODO/TLD: Should included environments be processes separately?
+        # for included_env in self.included_environments:
+        #     include_specs(included_env.all_concretized_user_specs())
 
         return concretized_user_specs
 
@@ -1071,11 +1105,19 @@ class Environment:
         """Returns all of the concretized order of the environment and
         its included environment(s)."""
         concretized_order = self.concretized_order[:]
-        for included_concretized_order in self.included_concretized_order.values():
-            for included in included_concretized_order:
-                # Don't duplicate included spec(s)
-                if included not in concretized_order:
-                    concretized_order.append(included)
+
+        def include_order(included_concretized_order):
+            for included_order in included_concretized_order:
+                for included in included_order:
+                    # Don't duplicate included order/hash
+                    if included not in concretized_order:
+                        concretized_order.append(included)
+
+        include_order(self.included_concretized_order.values())
+
+        # TBD/TODO/TLD: Should included environments be processes separately?
+        # for included_env in self.included_environments:
+        #     include_order(included_env.all_concretized_orders())
 
         return concretized_order
 
@@ -1116,8 +1158,8 @@ class Environment:
                 for root_list in info["roots"]:
                     spec_list.add(root_list["spec"])
 
-                if "include_concrete" in info:
-                    add_root_specs(info["include_concrete"])
+                if included_concrete_name in info:
+                    add_root_specs(info[included_concrete_name])
 
         add_root_specs(self.included_concrete_spec_data)
         return spec_list
@@ -1236,10 +1278,10 @@ class Environment:
                     )
                     concrete_hash_seen.add(concrete_spec)
 
-            if "include_concrete" in lockfile_as_dict.keys():
-                self.included_concrete_spec_data[env_path]["include_concrete"] = lockfile_as_dict[
-                    "include_concrete"
-                ]
+            if included_concrete_name in lockfile_as_dict.keys():
+                self.included_concrete_spec_data[env_path][
+                    included_concrete_name
+                ] = lockfile_as_dict[included_concrete_name]
 
         self._read_lockfile_dict(self._to_lockfile_dict())
         self.write()
@@ -1433,6 +1475,12 @@ class Environment:
             List of specs that have been concretized. Each entry is a tuple of
             the user spec and the corresponding concretized spec.
         """
+        # TBD/TODO/TLD: What process should be followed in presence of included
+        # TBD/TODO/TLD: .. environments? Should they be processed separately (as
+        # TBD/TODO/TLD: .. in recursively)? Or collect all specs to process?
+        for env in self.included_environments:
+            env.concretize(force, tests)
+
         if force:
             # Clear previously concretized specs
             self.concretized_user_specs = []
@@ -2150,6 +2198,10 @@ class Environment:
                 )
             )
 
+        # TODO/TBD/TLD: Is it appropriate (beyond tests) to grab included?
+        for included_env in self.included_environments:
+            specs.extend(included_env._get_environment_specs())
+
         return specs
 
     def _to_lockfile_dict(self):
@@ -2760,13 +2812,13 @@ class EnvironmentManifestFile(collections.abc.Mapping):
         return manifest
 
     def __init__(self, manifest_dir: Union[pathlib.Path, str]) -> None:
-        self.manifest_dir = pathlib.Path(manifest_dir)
-        self.manifest_file = self.manifest_dir / manifest_name
-        self.scope_name = f"env:{environment_name(self.manifest_dir)}"
+        self.manifest_dir: pathlib.Path = pathlib.Path(manifest_dir)
+        self.manifest_file: pathlib.Path = self.manifest_dir / manifest_name
+        self.scope_name: str = f"env:{environment_name(self.manifest_dir)}"
         self.config_stage_dir = os.path.join(env_subdir_path(manifest_dir), "config")
 
-        #: Configuration scopes associated with this environment. Note that these are not
-        #: invalidated by a re-read of the manifest file.
+        #: Configuration scopes associated with this environment. Note that
+        #: these are not invalidated by a re-read of the manifest file.
         self._config_scopes: Optional[List[spack.config.ConfigScope]] = None
 
         if not self.manifest_file.exists():
@@ -2780,14 +2832,16 @@ class EnvironmentManifestFile(collections.abc.Mapping):
         self.pristine_yaml_content = raw
         #: YAML content with defaults added by Spack, if they're missing
         self.yaml_content = with_defaults_added
-        self.changed = False
+
+        self.changed: bool = False
 
     def _all_matches(self, user_spec: str) -> List[str]:
-        """Maps the input string to the first equivalent user spec in the manifest,
-        and returns it.
+        """Maps the input string to the equivalent manifest user specs
 
         Args:
             user_spec: user spec to be found
+
+        Returns: corresponding user spec(s) from the manifest
 
         Raises:
             ValueError: if no equivalent match is found
@@ -3018,6 +3072,16 @@ class EnvironmentManifestFile(collections.abc.Mapping):
         return str(self.manifest_file)
 
     @property
+    def included_manifest_paths(self) -> List[Union[pathlib.Path, str]]:
+        """List of included environment file paths."""
+        manifests = []
+        includes = self[TOP_LEVEL_KEY].get("include", [])
+        for path in includes:
+            if path.endswith(manifest_name):
+                manifests.append(path)
+        return manifests
+
+    @property
     def included_config_scopes(self) -> List[spack.config.ConfigScope]:
         """List of included configuration scopes from the manifest.
 
@@ -3066,9 +3130,9 @@ class EnvironmentManifestFile(collections.abc.Mapping):
                     # ones with the same name since there is a risk of
                     # losing changes (e.g., from 'spack config update').
                     tty.warn(
-                        "Will not re-stage configuration from {0} to avoid "
-                        "losing changes to the already staged file of the "
-                        "same name.".format(remote_path)
+                        f"Will not re-stage configuration from {remote_path} "
+                        "to avoid losing changes to the already staged file "
+                        "of the same name."
                     )
 
                     # Recognize the configuration stage directory
@@ -3083,7 +3147,7 @@ class EnvironmentManifestFile(collections.abc.Mapping):
                     )
                     if not staged_path:
                         raise SpackEnvironmentError(
-                            "Unable to fetch remote configuration {0}".format(config_path)
+                            f"Unable to fetch remote configuration {config_path}"
                         )
                     config_path = staged_path
 
@@ -3100,17 +3164,23 @@ class EnvironmentManifestFile(collections.abc.Mapping):
 
             if os.path.isdir(config_path):
                 # directories are treated as regular ConfigScopes
-                config_name = "env:%s:%s" % (env_name, os.path.basename(config_path))
-                tty.debug("Creating ConfigScope {0} for '{1}'".format(config_name, config_path))
+                config_name = f"env:{env_name}:{os.path.basename(config_path)}"
+                tty.debug(f"Creating ConfigScope {config_name} for '{config_path}'")
                 scope = spack.config.ConfigScope(config_name, config_path)
             elif os.path.exists(config_path):
-                # files are assumed to be SingleFileScopes
-                config_name = "env:%s:%s" % (env_name, config_path)
-                tty.debug(
-                    "Creating SingleFileScope {0} for '{1}'".format(config_name, config_path)
+                if config_path.endswith(manifest_name):
+                    # Scopes of included environments are managed by their
+                    # own environment manifest instance.
+                    continue
+
+                config_name = (
+                    f"env:{env_name}:{config_path}"
+                    if env_name != config_path
+                    else f"env:{env_name}"
                 )
+                tty.debug(f"Creating SingleFileScope {config_name} for '{config_path}'")
                 scope = spack.config.SingleFileScope(
-                    config_name, config_path, spack.schema.env.schema
+                    config_name, config_path, spack.schema.merged.schema
                 )
             else:
                 missing.append(config_path)
@@ -3119,8 +3189,8 @@ class EnvironmentManifestFile(collections.abc.Mapping):
             scopes.append(scope)
 
         if missing:
-            msg = "Detected {0} missing include path(s):".format(len(missing))
-            msg += "\n   {0}".format("\n   ".join(missing))
+            msg = f"Detected {len(missing)} missing include path(s):\n  "
+            msg += "\n   ".join(missing)
             raise spack.config.ConfigFileError(msg)
 
         return scopes
