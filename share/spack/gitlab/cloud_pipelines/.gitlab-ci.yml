@@ -193,6 +193,14 @@ default:
     - python -m pip install --user boto3
     - . .\share\spack\setup-env.ps1
     - spack external find --not-buildable cmake ninja win-wdk win-sdk wgl msmpi
+  after_script:
+    - $ErrorActionOld=$ErrorActionPreference
+    - $ErrorActionPreference="SilentlyContinue"
+    - python -m pip install psutil
+    - python -c"import psutil;print(psutil.getloadavg())"
+    - (Get-WmiObject Win32_PhysicalMemory | measure-object Capacity -sum).sum/1gb
+    - $ErrorActionPreference=$ErrorActionOld
+
   tags: ["spack", "public", "medium", "x86_64-win"]
   image: "ghcr.io/johnwparent/windows-server21h2:sha-8084f61"
 
