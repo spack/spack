@@ -4427,3 +4427,58 @@ def test_env_view_ignores_different_file_conflicts(tmp_path, install_mockery, mo
         prefix_dependent = e.matching_spec("view-ignore-conflict").prefix
     # The dependent's file is linked into the view
     assert os.readlink(tmp_path / "view" / "bin" / "x") == prefix_dependent.bin.x
+
+
+def test_env_include_env(
+    tmp_path,
+    mock_fetch,
+    mock_packages,
+    mock_archive,
+    install_mockery,
+    mutable_config,
+    environment_from_manifest,
+):
+    includes_dir = tmp_path / "includes"
+    included_env = includes_dir / ev.manifest_name
+    fs.mkdirp(includes_dir)
+    packages_yaml = includes_dir / "packages.yaml"
+    packages_yaml.write_text(
+        f"""\
+packages:
+  libelf:
+    version: ["0.8.10"]
+"""
+    )
+
+    included_env.write_text(
+        f"""\
+spack:
+  include:
+  -  {packages_yaml}
+
+  specs:
+  - libdwarf
+  - libelf
+  - mpileaks
+"""
+    )
+
+    e = environment_from_manifest(
+        f"""\
+spack:
+  include:
+  - {included_env}
+"""
+    )
+
+    with e:
+        e.concretize()
+
+    user_specs = e.all_user_specs()
+    concretized_user_specs = e.all_concretized_user_specs()
+    concretized_order = e.all_concretized_orders()
+    environment_specs = e._get_environment_specs(False)
+
+    for spec in ["libelf@0.8.10", "libdwarf", "mpileaks"]:
+        assert Spec(spec) in environment_specs
+    assert False
