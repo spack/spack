@@ -20,7 +20,7 @@ class Hpcviewer(Package):
     run hpcrun and hpcviewer on different machines.
     """
 
-    homepage = "http://hpctoolkit.org"
+    homepage = "https://hpctoolkit.org"
     maintainers("mwkrentel")
 
     skip_version_audit = ["platform=windows"]
@@ -134,8 +134,10 @@ class Hpcviewer(Package):
             if arch == machine:
                 version(
                     ver,
-                    url=f"http://hpctoolkit.org/download/hpcviewer/{ver}/hpcviewer-{ver}-macosx.cocoa.{arch}.zip",
+                    url=f"https://gitlab.com/hpctoolkit/hpcviewer/-/releases/{ver}/downloads/hpcviewer-macosx.cocoa.{arch}.zip",
                     sha256=sha,
+                    # Versions before 2022.01 are dead links
+                    deprecated=(ver < "2022.01"),
                 )
 
     # Versions for Linux and Cray front-end
@@ -144,9 +146,10 @@ class Hpcviewer(Package):
             if arch == machine:
                 version(
                     ver,
-                    url=f"http://hpctoolkit.org/download/hpcviewer/{ver}/hpcviewer-{ver}-linux.gtk.{arch}.tgz",
+                    url=f"https://gitlab.com/hpctoolkit/hpcviewer/-/releases/{ver}/downloads/hpcviewer-linux.gtk.{arch}.tgz",
                     sha256=sha,
-                    deprecated=(ver <= "2020.99"),
+                    # Versions before 2022.01 are dead links
+                    deprecated=(ver < "2022.01"),
                 )
 
                 # Current versions include the viewer and trace viewer in
@@ -155,7 +158,7 @@ class Hpcviewer(Package):
                 if (ver, arch) in trace_sha:
                     resource(
                         name="hpctraceviewer",
-                        url=f"http://hpctoolkit.org/download/hpcviewer/{ver}/hpctraceviewer-{ver}-linux.gtk.{arch}.tgz",
+                        url=f"https://gitlab.com/hpctoolkit/hpcviewer/-/releases/{ver}/downloads/hpctraceviewer-linux.gtk.{arch}.tgz",
                         sha256=trace_sha[ver, arch],
                         placement="TRACE",
                         when=f"@{ver}",
