@@ -242,8 +242,9 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
     # Optional dependencies
     with default_args(type=("build", "link", "run")):
         # cmake/public/cuda.cmake
-        depends_on("cuda@11:", when="@2:+cuda")
-        depends_on("cuda@10.2:", when="@1.11:1+cuda")
+        # https://github.com/pytorch/pytorch/issues/122169
+        depends_on("cuda@11:12.3", when="@2:+cuda")
+        depends_on("cuda@10.2:12.3", when="@1.11:1+cuda")
         # https://discuss.pytorch.org/t/compiling-1-10-1-from-source-with-gcc-11-and-cuda-11-5/140971
         depends_on("cuda@10.2:11.4", when="@1.10+cuda")
         depends_on("cuda@9.2:11.4", when="@1.6:1.9+cuda")
@@ -472,6 +473,13 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
             "caffe2/CMakeLists.txt",
         )
 
+    def torch_cuda_arch_list(self, env):
+        if "+cuda" in self.spec:
+            torch_cuda_arch = ";".join(
+                "{0:.1f}".format(float(i) / 10.0) for i in self.spec.variants["cuda_arch"].value
+            )
+            env.set("TORCH_CUDA_ARCH_LIST", torch_cuda_arch)
+
     def setup_build_environment(self, env):
         """Set environment variables used to control the build.
 
@@ -514,10 +522,8 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
         if "+cuda" in self.spec:
             env.set("CUDA_HOME", self.spec["cuda"].prefix)  # Linux/macOS
             env.set("CUDA_PATH", self.spec["cuda"].prefix)  # Windows
-            torch_cuda_arch = ";".join(
-                "{0:.1f}".format(float(i) / 10.0) for i in self.spec.variants["cuda_arch"].value
-            )
-            env.set("TORCH_CUDA_ARCH_LIST", torch_cuda_arch)
+            self.torch_cuda_arch_list(env)
+
             if self.spec.satisfies("%clang"):
                 for flag in self.spec.compiler_flags["cxxflags"]:
                     if "gcc-toolchain" in flag:
@@ -666,6 +672,9 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
         if self.spec.satisfies("%apple-clang@15:"):
             env.append_flags("LDFLAGS", "-Wl,-ld_classic")
 
+    def setup_run_environment(self, env):
+        self.torch_cuda_arch_list(env)
+
     @run_before("install")
     def build_amd(self):
         if "+rocm" in self.spec:
@@ -679,7 +688,5 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
 
     @property
     def cmake_prefix_paths(self):
-        cmake_prefix_paths = [
-            join_path(self.prefix, self.spec["python"].package.platlib, "torch", "share", "cmake")
-        ]
+        cmake_prefix_paths = [join_path(python_platlib, "torch", "share", "cmake")]
         return cmake_prefix_paths

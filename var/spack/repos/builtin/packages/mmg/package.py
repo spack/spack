@@ -32,6 +32,8 @@ class Mmg(CMakePackage):
 
     license("LGPL-3.0-or-later")
 
+    version("5.7.3", sha256="b0a9c5ad6789df369a68f94295df5b324b6348020b73bcc395d32fdd44abe706")
+    version("5.7.2", sha256="4c396dd44aec69e0a171a04f857e28aad2e0bbfb733b48b6d81a2c6868e86840")
     version("5.7.1", sha256="27c09477ebc080f54919f76f8533a343936677c81809fe37ce4e2d62fa97237b")
     version("5.6.0", sha256="bbf9163d65bc6e0f81dd3acc5a51e4a8c47a7fdae849abc26277e01154fe2437")
     version("5.5.2", sha256="58e3b866101e6f0686758e16bcf9fb5fb06c85184533fc5054ef1c8adfd4be73")
@@ -54,6 +56,7 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
         return [
             self.define_from_variant("USE_SCOTCH", "scotch"),
             self.define_from_variant("USE_VTK", "vtk"),
+            self.define("BUILD_SHARED_LIBS", shared_active),
             self.define("LIBMMG3D_SHARED", shared_active),
             self.define("LIBMMG2D_SHARED", shared_active),
             self.define("LIBMMGS_SHARED", shared_active),

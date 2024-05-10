@@ -1244,10 +1244,11 @@ class TestConcretize:
 
     @pytest.mark.regression("20055")
     @pytest.mark.only_clingo("Use case not supported by the original concretizer")
-    def test_custom_compiler_version(self, mutable_config, compiler_factory):
+    def test_custom_compiler_version(self, mutable_config, compiler_factory, monkeypatch):
         mutable_config.set(
             "compilers", [compiler_factory(spec="gcc@10foo", operating_system="redhat6")]
         )
+        monkeypatch.setattr(spack.compiler.Compiler, "real_version", "10.2.1")
         s = Spec("a %gcc@10foo os=redhat6").concretized()
         assert "%gcc@10foo" in s
 
@@ -2447,6 +2448,103 @@ class TestConcretize:
         mutable_config.set("config:install_missing_compilers", True)
         s = Spec("a %gcc@=13.2.0").concretized()
         assert s.satisfies("%gcc@13.2.0")
+
+    @pytest.mark.regression("43267")
+    def test_spec_with_build_dep_from_json(self, tmp_path):
+        """Tests that we can correctly concretize a spec, when we express its dependency as a
+        concrete spec to be read from JSON.
+
+        The bug was triggered by missing virtuals on edges that were trimmed from pure build
+        dependencies.
+        """
+        build_dep = Spec("dttop").concretized()
+        json_file = tmp_path / "build.json"
+        json_file.write_text(build_dep.to_json())
+        s = Spec(f"dtuse ^{str(json_file)}").concretized()
+        assert s["dttop"].dag_hash() == build_dep.dag_hash()
+
+    @pytest.mark.regression("44040")
+    @pytest.mark.only_clingo("Use case not supported by the original concretizer")
+    def test_exclude_specs_from_reuse(self, monkeypatch):
+        """Tests that we can exclude a spec from reuse when concretizing, and that the spec
+        is not added back to the solve as a dependency of another reusable spec.
+
+        The expected spec is:
+
+        o callpath@1.0
+        |\
+        | |\
+        o | | mpich@3.0.4
+        |/ /
+        | o dyninst@8.2
+        |/|
+        | |\
+        | | o libdwarf@20130729
+        | |/|
+        |/|/
+        | o libelf@0.8.13
+        |/
+        o glibc@2.31
+        """
+        # Prepare a mock mirror that returns an old version of dyninst
+        request_str = "callpath ^mpich"
+        reused = Spec(f"{request_str} ^dyninst@8.1.1").concretized()
+        monkeypatch.setattr(spack.solver.asp, "_specs_from_mirror", lambda: [reused])
+
+        # Exclude dyninst from reuse, so we expect that the old version is not taken into account
+        with spack.config.override(
+            "concretizer:reuse", {"from": [{"type": "buildcache", "exclude": ["dyninst"]}]}
+        ):
+            result = Spec(request_str).concretized()
+
+        assert result.dag_hash() != reused.dag_hash()
+        assert result["mpich"].dag_hash() == reused["mpich"].dag_hash()
+        assert result["dyninst"].dag_hash() != reused["dyninst"].dag_hash()
+        assert result["dyninst"].satisfies("@=8.2")
+        for dep in result["dyninst"].traverse(root=False):
+            assert dep.dag_hash() == reused[dep.name].dag_hash()
+
+    @pytest.mark.regression("44091")
+    @pytest.mark.parametrize(
+        "included_externals",
+        [
+            ["deprecated-versions"],
+            # Try the empty list, to ensure that in that case everything will be included
+            # since filtering should happen only when the list is non-empty
+            [],
+        ],
+    )
+    @pytest.mark.only_clingo("Use case not supported by the original concretizer")
+    def test_include_specs_from_externals_and_libcs(
+        self, included_externals, mutable_config, tmp_path
+    ):
+        """Tests that when we include specs from externals, we always include libcs."""
+        mutable_config.set(
+            "packages",
+            {
+                "deprecated-versions": {
+                    "externals": [{"spec": "deprecated-versions@1.1.0", "prefix": str(tmp_path)}]
+                }
+            },
+        )
+        request_str = "deprecated-client"
+
+        # When using the external the version is selected even if deprecated
+        with spack.config.override(
+            "concretizer:reuse", {"from": [{"type": "external", "include": included_externals}]}
+        ):
+            result = Spec(request_str).concretized()
+
+        assert result["deprecated-versions"].satisfies("@1.1.0")
+
+        # When excluding it, we pick the non-deprecated version
+        with spack.config.override(
+            "concretizer:reuse",
+            {"from": [{"type": "external", "exclude": ["deprecated-versions"]}]},
+        ):
+            result = Spec(request_str).concretized()
+
+        assert result["deprecated-versions"].satisfies("@1.0.0")
 
 
 @pytest.fixture()

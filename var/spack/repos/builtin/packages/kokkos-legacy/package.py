@@ -14,6 +14,8 @@ class KokkosLegacy(Package):
     url = "https://github.com/kokkos/kokkos/archive/2.03.00.tar.gz"
     git = "https://github.com/kokkos/kokkos.git"
 
+    # This package has been archived. All new versions of Kokkos should go into
+    # the kokkos package itself.
     version(
         "2.9.00",
         sha256="e0621197791ed3a381b4f02c78fa529f3cff3abb74d52157b4add17e8aa04bc4",
@@ -197,7 +199,7 @@ class KokkosLegacy(Package):
     # without specifying CUDA
     for p in gpu_values:
         conflicts(
-            "gpu_arch={0}".format(p),
+            f"gpu_arch={p}",
             when="~cuda",
             msg="Must specify CUDA backend to use a GPU architecture.",
         )
@@ -235,7 +237,7 @@ class KokkosLegacy(Package):
     def install(self, spec, prefix):
         generate = which(join_path(self.stage.source_path, "generate_makefile.bash"))
         with working_dir("build", create=True):
-            g_args = ["--prefix=%s" % prefix, "--with-hwloc=%s" % spec["hwloc"].prefix]
+            g_args = [f"--prefix={prefix}", f"--with-hwloc={spec['hwloc'].prefix}"]
             arch_args = []
             kokkos_options_args = []
             cuda_options_args = []
@@ -247,7 +249,7 @@ class KokkosLegacy(Package):
             # C++ standard
             cxxstandard = spec.variants["cxxstd"].value
             if cxxstandard != "none":
-                g_args.append("--cxxstandard=%s" % cxxstandard)
+                g_args.append(f"--cxxstandard={cxxstandard}")
 
             # Build Debug
             if "+debug" in spec:
@@ -261,9 +263,9 @@ class KokkosLegacy(Package):
             if "+pthreads" in spec:
                 g_args.append("--with-pthread")
             if "+qthreads" in spec:
-                g_args.append("--with-qthreads=%s" % spec["qthreads"].prefix)
+                g_args.append(f"--with-qthreads={spec['qthreads'].prefix}")
             if "+cuda" in spec:
-                g_args.append("--with-cuda=%s" % spec["cuda"].prefix)
+                g_args.append(f"--with-cuda={spec['cuda'].prefix}")
             # Host architectures
             host_arch = spec.variants["host_arch"].value
             # GPU architectures
@@ -274,7 +276,7 @@ class KokkosLegacy(Package):
                 arch_args.append(gpu_arch)
             # Combined architecture flags
             if arch_args:
-                g_args.append("--arch={0}".format(",".join(arch_args)))
+                g_args.append(f"--arch={','.join(arch_args)}")
 
             # CUDA options
             if "+force_uvm" in spec:
@@ -286,7 +288,7 @@ class KokkosLegacy(Package):
             if "+enable_lambda" in spec:
                 cuda_options_args.append("enable_lambda")
             if cuda_options_args:
-                g_args.append("--with-cuda-options={0}".format(",".join(cuda_options_args)))
+                g_args.append(f"--with-cuda-options={','.join(cuda_options_args)}")
 
             # Kokkos options
             if "+aggressive_vectorization" in spec:
@@ -304,7 +306,7 @@ class KokkosLegacy(Package):
             if "+enable_eti" in spec:
                 kokkos_options_args.append("enable_eti")
             if kokkos_options_args:
-                g_args.append("--with-options={0}".format(",".join(kokkos_options_args)))
+                g_args.append(f"--with-options={','.join(kokkos_options_args)}")
 
             generate(*g_args)
             make()

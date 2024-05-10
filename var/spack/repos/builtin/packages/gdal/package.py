@@ -9,7 +9,7 @@ import sys
 from spack.build_systems.autotools import AutotoolsBuilder
 from spack.build_systems.cmake import CMakeBuilder
 from spack.package import *
-from spack.util.environment import filter_system_paths, is_system_path
+from spack.util.environment import filter_system_paths
 
 
 class Gdal(CMakePackage, AutotoolsPackage, PythonExtension):
@@ -718,10 +718,10 @@ class AutotoolsBuilder(AutotoolsBuilder):
             self.with_or_without("php"),
         ]
         if "+iconv" in self.spec:
-            if self.spec["iconv"].name == "libc":
+            if self.spec["iconv"].name == "libiconv":
+                args.append(f"--with-libiconv-prefix={self.spec['iconv'].prefix}")
+            else:
                 args.append("--without-libiconv-prefix")
-            elif not is_system_path(self.spec["iconv"].prefix):
-                args.append("--with-libiconv-prefix=" + self.spec["iconv"].prefix)
 
         # Renamed or modified flags
         if self.spec.satisfies("@3:"):
@@ -755,7 +755,7 @@ class AutotoolsBuilder(AutotoolsBuilder):
 
         if "+hdf4" in self.spec:
             hdf4 = self.spec["hdf"]
-            if "+external-xdr" in hdf4 and hdf4["rpc"].name != "libc":
+            if "+external-xdr" in hdf4 and hdf4["rpc"].name == "libtirpc":
                 args.append("LIBS=" + hdf4["rpc"].libs.link_flags)
 
         # Remove empty strings

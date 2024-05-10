@@ -230,7 +230,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
 
     # Virtual dependencies
     # Git repository needs sowing to build Fortran interface
-    depends_on("sowing", when="@main")
+    depends_on("sowing@master", when="@main")
 
     # PETSc, hypre, superlu_dist when built with int64 use 32 bit integers
     # with BLAS/LAPACK

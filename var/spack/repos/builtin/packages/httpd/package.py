@@ -15,6 +15,7 @@ class Httpd(AutotoolsPackage):
 
     license("Apache-2.0")
 
+    version("2.4.59", sha256="ec51501ec480284ff52f637258135d333230a7d229c3afa6f6c2f9040e321323")
     version("2.4.55", sha256="11d6ba19e36c0b93ca62e47e6ffc2d2f2884942694bce0f23f39c71bdc5f69ac")
 
     # https://nvd.nist.gov/vuln/detail/CVE-2022-31813
@@ -50,7 +51,7 @@ class Httpd(AutotoolsPackage):
     def configure_args(self):
         spec = self.spec
         config_args = [
-            "--with-apr={0}".format(spec["apr"].prefix),
-            "--with-apr-util={0}".format(spec["apr-util"].prefix),
+            f"--with-apr={spec['apr'].prefix}",
+            f"--with-apr-util={spec['apr-util'].prefix}",
         ]
         return config_args
