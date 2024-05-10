@@ -23,7 +23,7 @@ class Ffmpeg(AutotoolsPackage):
     version(
         "6.1.1",
         sha256="5e3133939a61ef64ac9b47ffd29a5ea6e337a4023ef0ad972094b4da844e3a20",
-        preferred = True,
+        preferred=True,
     )
     version("6.0", sha256="47d062731c9f66a78380e35a19aac77cebceccd1c7cc309b9c82343ffc430c3d")
     version("5.1.4", sha256="c3c1e316bf91468738dd0aff6eb1faab409f1edcd34fd1a4213626439bc5d743")
