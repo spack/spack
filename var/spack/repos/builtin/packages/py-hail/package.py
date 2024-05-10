@@ -13,10 +13,14 @@ class PyHail(PythonPackage):
     pypi = "hail/hail-0.2.130-py3-none-any.whl"
 
     maintainers("teaguesterling")
-
     license("MIT", checked_by="teaguesterling")
 
-    version("0.2.130", sha256="c0f1f3ae52406a13eecb44ebe445be7d677d2c3b4e4e29269ecb53b7ac55168e", expand=False)
+    version(
+        "0.2.130", 
+        sha256="c0f1f3ae52406a13eecb44ebe445be7d677d2c3b4e4e29269ecb53b7ac55168e", 
+        expand=False
+    )
+    
     depends_on("python@3.9:", type=("build", "run"))
     depends_on("py-pip", type="build")
     depends_on("py-wheel", type="build")
