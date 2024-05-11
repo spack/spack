@@ -43,6 +43,7 @@ class LibpressioTools(CMakePackage):
 
     depends_on("libpressio-adios1@0.0.2:", when="+adios1")
     depends_on("lc-framework@1.1.1:+libpressio", when="+lc")
+
     depends_on("dctz@0.2.2:+libpressio", when="+dctz")
     depends_on("libpressio-predict@0.0.4:", when="+predict")
     depends_on("libpressio-dataset@0.0.8:", when="+dataset")
@@ -90,41 +91,25 @@ class LibpressioTools(CMakePackage):
     variant("dataset", default=False, description="depend on libpressio-dataset", when="@0.4.6:")
     variant("predict", default=False, description="depend on libpressio-predict", when="@0.4.6:")
     variant("jit", default=False, description="depend on libpressio-jit", when="@0.4.6:")
-    conflicts("+opt", "~mpi")
+    conflicts("+opt", when="~mpi", msg="opt support requires MPI")
 
     def cmake_args(self):
-        args = []
-        if "+mpi" in self.spec:
-            args.append("-DLIBPRESSIO_TOOLS_HAS_MPI=YES")
-        if "+opt" in self.spec:
-            args.append("-DLIBPRESSIO_TOOLS_HAS_OPT=YES")
-        if "+error_injector" in self.spec:
-            args.append("-DLIBPRESSIO_TOOLS_HAS_ERROR_INJECTOR=YES")
-        if "+tthresh" in self.spec:
-            args.append("-DLIBPRESSIO_TOOLS_HAS_TTHRESH=YES")
-        if "+rcpp" in self.spec:
-            args.append("-DLIBPRESSIO_TOOLS_HAS_RMETRIC=YES")
-        if "+sperr" in self.spec:
-            args.append("-DLIBPRESSIO_TOOLS_HAS_SPERR=YES")
-        if "+nvcomp" in self.spec:
-            args.append("-DLIBPRESSIO_TOOLS_HAS_NVCOMP=YES")
-        if "+dctz" in self.spec:
-            args.append("-DLIBPRESSIO_TOOLS_HAS_DCTZ=YES")
-        if "+adios1" in self.spec:
-            args.append("-DLIBPRESSIO_TOOLS_HAS_ADIOS1=YES")
-        if "+lc" in self.spec:
-            args.append("-DLIBPRESSIO_TOOLS_HAS_LC=YES")
-        if "+predict" in self.spec:
-            args.append("-DLIBPRESSIO_TOOLS_HAS_PREDICT=YES")
-        if "+jit" in self.spec:
-            args.append("-DLIBPRESSIO_TOOLS_HAS_JIT=YES")
-        if "+dataset" in self.spec:
-            args.append("-DLIBPRESSIO_TOOLS_HAS_DATASET=YES")
-        if self.run_tests:
-            args.append("-DBUILD_TESTING=ON")
-        else:
-            args.append("-DBUILD_TESTING=OFF")
-
+        args = [
+            self.define_from_variant("LIBPRESSIO_TOOLS_HAS_MPI", "mpi"),
+            self.define_from_variant("LIBPRESSIO_TOOLS_HAS_OPT", "opt"),
+            self.define_from_variant("LIBPRESSIO_TOOLS_HAS_ERROR_INJECTOR", "error_injector"),
+            self.define_from_variant("LIBPRESSIO_TOOLS_HAS_TTHRESH", "tthresh"),
+            self.define_from_variant("LIBPRESSIO_TOOLS_HAS_RMETRIC", "rcpp"),
+            self.define_from_variant("LIBPRESSIO_TOOLS_HAS_SPERR", "sperr"),
+            self.define_from_variant("LIBPRESSIO_TOOLS_HAS_NVCOMP", "nvcomp"),
+            self.define_from_variant("LIBPRESSIO_TOOLS_HAS_DCTZ", "dctz"),
+            self.define_from_variant("LIBPRESSIO_TOOLS_HAS_ADIOS1", "adios1"),
+            self.define_from_variant("LIBPRESSIO_TOOLS_HAS_LC", "lc"),
+            self.define_from_variant("LIBPRESSIO_TOOLS_HAS_PREDICT", "predict"),
+            self.define_from_variant("LIBPRESSIO_TOOLS_HAS_JIT", "jit"),
+            self.define_from_variant("LIBPRESSIO_TOOLS_HAS_DATASET", "dataset"),
+            self.define("BUILD_TESTING", self.run_tests),
+        ]
         return args
 
     @run_after("build")

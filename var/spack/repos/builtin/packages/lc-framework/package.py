@@ -37,6 +37,7 @@ class LcFramework(CMakePackage, CudaPackage):
 
     depends_on("python", type=("build",))
     depends_on("libpressio@0.98.0:", when="+libpressio")
+    depends_on("libpressio+cuda", when="+cuda+libpressio")
 
     def cmake_args(self):
         args = [self.define_from_variant("LC_BUILD_LIBPRESSIO_PLUGIN", "libpressio")]
