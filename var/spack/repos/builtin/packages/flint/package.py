@@ -6,7 +6,7 @@
 from spack.package import *
 
 
-class Flint(Package):
+class Flint(AutotoolsPackage):
     """FLINT (Fast Library for Number Theory)."""
 
     homepage = "https://www.flintlib.org"
@@ -16,6 +16,7 @@ class Flint(Package):
     license("LGPL-2.1-or-later")
 
     version("develop", branch="trunk")
+    version("3.0.1", sha256="7b311a00503a863881eb8177dbeb84322f29399f3d7d72f3b1a4c9ba1d5794b4")
     version("2.5.2", sha256="cbf1fe0034533c53c5c41761017065f85207a1b770483e98b2392315f6575e87")
     version("2.4.5", sha256="e489354df00f0d84976ccdd0477028693977c87ccd14f3924a89f848bb0e01e3")
 
@@ -25,28 +26,13 @@ class Flint(Package):
     # variant('mpir', default=False,
     #         description='Compile with the MPIR library')
 
-    # Build dependencies
-    depends_on("autoconf", type="build")
-
-    # Other dependencies
     depends_on("gmp")  # mpir is a drop-in replacement for this
     depends_on("mpfr")  # Could also be built against mpir
 
-    def install(self, spec, prefix):
-        options = []
-        options = [
-            "--prefix=%s" % prefix,
-            "--with-gmp=%s" % spec["gmp"].prefix,
-            "--with-mpfr=%s" % spec["mpfr"].prefix,
+    def configure_args(self):
+        spec = self.spec
+        return [
+            f"--prefix={prefix}",
+            f"--with-gmp={spec['gmp'].prefix}",
+            f"--with-mpfr={spec['mpfr'].prefix}",
         ]
-
-        # if '+mpir' in spec:
-        #     options.extend([
-        #         "--with-mpir=%s" % spec['mpir'].prefix
-        #     ])
-
-        configure(*options)
-        make()
-        if self.run_tests:
-            make("check")
-        make("install")

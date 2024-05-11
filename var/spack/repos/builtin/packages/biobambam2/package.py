@@ -13,6 +13,10 @@ class Biobambam2(AutotoolsPackage):
     url = "https://gitlab.com/german.tischler/biobambam2/-/archive/2.0.177-release-20201112105453/biobambam2-2.0.177-release-20201112105453.tar.gz"
 
     version(
+        "2.0.177-release-20201112105453",
+        sha256="ad0a418fb49a31996a105a1a275c0d1dfc8b84aa91d48fa1efb6ff4fe1e74181",
+    )  # FIXME
+    version(
         "2.0.177",
         sha256="ad0a418fb49a31996a105a1a275c0d1dfc8b84aa91d48fa1efb6ff4fe1e74181",
         url="https://gitlab.com/german.tischler/biobambam2/-/archive/2.0.177-release-20201112105453/biobambam2-2.0.177-release-20201112105453.tar.gz",
@@ -27,7 +31,7 @@ class Biobambam2(AutotoolsPackage):
     test_src_dir = "test"
 
     def configure_args(self):
-        args = ["--with-libmaus2={0}".format(self.spec["libmaus2"].prefix)]
+        args = [f"--with-libmaus2={self.spec['libmaus2'].prefix}"]
         return args
 
     @run_after("install")
