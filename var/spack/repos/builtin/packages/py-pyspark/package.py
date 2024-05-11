@@ -22,10 +22,17 @@ class PyPyspark(PythonPackage):
     version("3.1.2", sha256="5e25ebb18756e9715f4d26848cc7e558035025da74b4fc325a0ebc05ff538e65")
     version("3.0.1", sha256="38b485d3634a86c9a2923c39c8f08f003fdd0e0a3d7f07114b2fb4392ce60479")
 
+    variant("java", default=True)
+
     depends_on("py-setuptools", type="build")
-    depends_on("py-py4j@0.10.9.5", when="@3.3.0:", type=("build", "run"))
-    depends_on("py-py4j@0.10.9.3", when="@3.2.1", type=("build", "run"))
-    depends_on("py-py4j@0.10.9", when="@3.0.1:3.1.3", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        for dep, spec in [
+                ("0.10.9.5", "@3.3.0:"),
+                ("0.10.9.3", "@3.2.1"),
+                ("0.10.9", "@3.0.1:3.1.3")
+        ]:
+            depends_on(f"py-py4j+java@{dep}", when=f"+java{spec}")
+            depends_on(f"py-py4j~java@{dep}", when=f"~java{spec}")
 
     def setup_run_environment(self, env):
         env.set("PYSPARK_PYTHON", python.path)
