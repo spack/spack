@@ -19,14 +19,16 @@ class Dctz(CMakePackage):
 
     version("0.2.2", sha256="5d270199b93e81704292ad87787ce961b458865c6a60ef7da59d5073513f6cff")
 
+    variant("shared", description="build a shared library", default=True)
+    variant("libpressio", description="use libpressio support", default=True)
+
     depends_on("pkgconfig", type="build")
     depends_on("zlib")
     depends_on("fftw@3:")
     depends_on("libpressio@0.0.99:", when="+libpressio")
     depends_on("libstdcompat@0.0.21:", when="+libpressio")
 
-    variant("shared", description="build a shared library", default=True)
-    variant("libpressio", description="use libpressio support", default=True)
+
 
     def cmake_args(self):
         args = [

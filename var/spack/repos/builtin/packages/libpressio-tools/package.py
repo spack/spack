@@ -9,12 +9,6 @@ from spack.package import *
 class LibpressioTools(CMakePackage):
     """General Utilities for LibPressio"""
 
-    depends_on("libpressio-adios1@0.0.2:", when="+adios1")
-    depends_on("lc-framework@1.1.1:+libpressio", when="+lc")
-    depends_on("dctz@0.2.2:+libpressio", when="+dctz")
-    depends_on("libpressio-predict@0.0.4:", when="+predict")
-    depends_on("libpressio-dataset@0.0.8:", when="+dataset")
-    depends_on("libpressio-jit@0.0.1:", when="+jit")
 
     maintainers("robertu94")
     tags = ["e4s"]
@@ -39,6 +33,13 @@ class LibpressioTools(CMakePackage):
     version("0.0.17", sha256="cf76e8a929aa128d09f8f953171d5cf395223245bc81d2ea4e22099849e40b94")
     version("0.0.16", sha256="1299e441fb15666d1c8abfd40f3f52b1bf55b6bfda4bfcc71177eec37160a95e")
     version("0.0.15", sha256="bcdf865d77969a34e2d747034ceeccf5cb766a4c11bcc856630d837f442ee33e")
+
+    depends_on("libpressio-adios1@0.0.2:", when="+adios1")
+    depends_on("lc-framework@1.1.1:+libpressio", when="+lc")
+    depends_on("dctz@0.2.2:+libpressio", when="+dctz")
+    depends_on("libpressio-predict@0.0.4:", when="+predict")
+    depends_on("libpressio-dataset@0.0.8:", when="+dataset")
+    depends_on("libpressio-jit@0.0.1:", when="+jit")
 
     depends_on("mpi", when="+mpi")
     depends_on("libpressio+libdistributed+mpi", when="+mpi")

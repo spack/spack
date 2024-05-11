@@ -18,9 +18,10 @@ class LibpressioJit(CMakePackage):
 
     version("0.0.1", sha256="6aa771c624980589cc941e8cfca1c5fb6cea3fef2b060f58bfdf07109eda8c08")
 
+    variant("poorjit", description="include the prototype poorjit compiler", default=True)
+
     depends_on("poorjit", when="+poorjit")
     depends_on("libpressio@0.99.1:")
-    variant("poorjit", description="include the prototype poorjit compiler", default=True)
 
     def cmake_args(self):
         args = [self.define_from_variant("LIBPRESSIO_JIT_HAS_POORJIT", "poorjit")]

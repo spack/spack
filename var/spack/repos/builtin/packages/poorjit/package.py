@@ -16,9 +16,6 @@ class Poorjit(CMakePackage):
 
     maintainers("robertu94")
 
-    # FIXME: Add the SPDX identifier of the project's license below.
-    # See https://spdx.org/licenses/ for a list. Upon manually verifying
-    # the license, set checked_by to your Github username.
     license("BSD-4-Clause", checked_by="robertu94")
 
     version("0.0.2", sha256="d7d43ba3b343ac8a6b0fb4928d5882f64a8c13c6fccfc37e1a3f3cd581c2739a")
