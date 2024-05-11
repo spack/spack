@@ -35,6 +35,15 @@ class PerlDbdMysql(PerlPackage):
     depends_on("perl-devel-checklib", type="build", when="@4.050:")
     depends_on("perl-test-deep", type=("build", "run"))
     depends_on("perl-dbi", type=("build", "run"))
-    depends_on("mariadb-c-client")
-#    conflicts("mariadb")
-#    depends_on("zlib")
+    depends_on("mysql-client", type=("build", "link", "run"))
+    conflicts("mariadb-c-client")
+    conflicts("mariadb")
+
+    def configure_args(self):
+        mysql = self.spec['mysql-client'].prefix
+        mysql_config = mysql.bin.mysql_config
+        return [
+            f"--cflags=-I{mysql.include}",
+            f"--libs=-L{mysql.lib} -lmysqlclient",
+            f"--mysql_config={mysql_config}",
+        ]
