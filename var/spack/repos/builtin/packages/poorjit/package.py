@@ -9,7 +9,6 @@ from spack.package import *
 class Poorjit(CMakePackage):
     """A poorman's JIT library"""
 
-    # FIXME: Add a proper url for your package's homepage here.
     homepage = "https://github.com/robertu94/poorjit"
     url = "https://github.com/robertu94/poorjit/archive/refs/tags/0.0.2.tar.gz"
     git = "https://github.com/robertu94/poorjit"
