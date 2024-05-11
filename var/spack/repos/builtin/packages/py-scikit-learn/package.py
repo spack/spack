@@ -128,3 +128,13 @@ class PyScikitLearn(PythonPackage):
         with working_dir("spack-test", create=True):
             pytest = which("pytest")
             pytest(join_path(self.prefix, python_purelib, "sklearn"))
+
+    def patch(self):
+        if self.spec.satisfies("%gcc@14:"):
+            # https://src.fedoraproject.org/rpms/python-scikit-learn/blob/59e87ad9cef9bbcfe82418b460bc7177ffbc0de8/f/python-scikit-learn.spec#_51
+            filter_file(
+                "cdef inline {{INPUT_DTYPE_t}} rdist",
+                "cdef {{INPUT_DTYPE_t}} rdist",
+                "sklearn/metrics/_dist_metrics.pyx.tp",
+                string=True,
+            )
