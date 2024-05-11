@@ -458,7 +458,7 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
             make_defs += [f"FC={spack_fc}"]
 
         # force OpenBLAS to use externally defined parallel build
-        if spec.satisfies(":0.2.99"):
+        if spec.satisfies("@:0.2.99"):
             make_defs.append("MAKE_NO_J=1")  # flag defined by our make.patch
         else:
             make_defs.append("MAKE_NB_JOBS=0")  # flag provided by OpenBLAS
