@@ -15,6 +15,17 @@ class PerlDbdMysql(PerlPackage):
     license("GPL-1.0-or-later OR Artistic-1.0-Perl")
 
     version(
+        "5.005", 
+        sha256="1558c203b3911e273d3f83249535b312165be2ca8edba6b6c210645d769d0541",
+        url="https://cpan.metacpan.org/authors/id/D/DV/DVEEDEN/DBD-mysql-5.005.tar.gz"
+    )
+    version(
+        "4.052", 
+        sha256="a83f57af7817787de0ef56fb15fdfaf4f1c952c8f32ff907153b66d2da78ff5b",
+        url="https://cpan.metacpan.org/authors/id/D/DV/DVEEDEN/DBD-mysql-4.052.tar.gz"
+    )
+
+    version(
         "4.050",
         sha256="4f48541ff15a0a7405f76adc10f81627c33996fbf56c95c26c094444c0928d78",
         url="https://cpan.metacpan.org/authors/id/D/DV/DVEEDEN/DBD-mysql-4.050.tar.gz",
@@ -24,4 +35,6 @@ class PerlDbdMysql(PerlPackage):
     depends_on("perl-devel-checklib", type="build", when="@4.050:")
     depends_on("perl-test-deep", type=("build", "run"))
     depends_on("perl-dbi", type=("build", "run"))
-    depends_on("mysql-client")
+    depends_on("mariadb-c-client")
+#    conflicts("mariadb")
+#    depends_on("zlib")

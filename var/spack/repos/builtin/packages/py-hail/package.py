@@ -3,23 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-# ----------------------------------------------------------------------------
-# If you submit this package back to Spack as a pull request,
-# please first remove this boilerplate and all FIXME comments.
-#
-# This is a template package file for Spack.  We've put "FIXME"
-# next to all the things you'll want to change. Once you've handled
-# them, you can save this file and test your package like this:
-#
-#     spack install py-hail
-#
-# You can edit this file again by typing:
-#
-#     spack edit py-hail
-#
-# See the Spack documentation for more information on packaging.
-# ----------------------------------------------------------------------------
-
 from spack.package import *
 
 
@@ -30,7 +13,6 @@ class PyHail(PythonPackage):
     pypi = "hail/hail-0.2.130-py3-none-any.whl"
 
     maintainers("teaguesterling")
-
     license("MIT", checked_by="teaguesterling")
 
     version(
@@ -97,3 +79,8 @@ class PyHail(PythonPackage):
         depends_on("py-azure-mgmt-core")
         depends_on("py-typing-extensions")
 
+    def setup_run_environment(self, env):
+        #TODO: Add Spark configuration values to find HAIL Jars
+        #This would be needed if one was connecting to a Spark
+        #cluster that was started outside of HAIL
+        pass
