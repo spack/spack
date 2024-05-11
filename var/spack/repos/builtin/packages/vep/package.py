@@ -62,8 +62,8 @@ class Vep(Package):
     variant("fasta", default=True, when="+cache")
     variant(
         "species", 
-        values=["human", "mouse", "all"], 
-        default="human",
+        values=["homo_sapiens", "mouse", "all"], 
+        default="homo_sapiens",
         when="+cache",
         multi=True
     ) 
@@ -71,7 +71,7 @@ class Vep(Package):
         "assembly", 
         values=["grch37", "grch38"], 
         default="grch38",
-        when="+cache species=human"
+        when="+cache species=homo_sapiens"
     )
 
     def install_args(self):
@@ -85,7 +85,7 @@ class Vep(Package):
         if self.spec.satisfies("~bioperl"):
             args += ["--NO_BIOPERL"]
         if self.spec.satisfies("+cache"):
-            species = [f"{species}_refseq"
+            species = [f"{species}"
                 for species in self.spec.variants['species'].value
             ]
             auto += "c"
@@ -94,9 +94,11 @@ class Vep(Package):
                 "--CACHE_VERSION", f"{self.spec.version.up_to(1)}",
                 "--SPECIES", f"{','.join(species)}",
             ]
-            if self.spec.satisfies("species=human"):
+            if self.spec.satisfies("species=homo_sapiens"):
+                assembly = self.spec.variants['assembly'].value
+                assembly = assembly.upper().replace("H", "h")
                 args += [
-                    "--ASSEMBLY", f"{self.spec.variants['assembly'].value}"
+                    "--ASSEMBLY", f"{assembly}"
                 ]
         if self.spec.satisfies("+fasta"):
             auto += "f"
