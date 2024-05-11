@@ -9,11 +9,13 @@ from spack.package import *
 class LibpressioTools(CMakePackage):
     """General Utilities for LibPressio"""
 
+    url = "https://github.com/robertu94/pressio-tools/archive/refs/tags/0.4.7.tar.gz"
+    git = "https://github.com/robertu94/pressio-tools"
+    homepage = "https://github.com/robertu94/pressio-tools"
 
     maintainers("robertu94")
     tags = ["e4s"]
 
-    version("master", branch="master")
     version("0.3.0", sha256="2f309557df3e8df9e492691213933865a5dbfb051c03404e33918f4765223025")
     version("0.2.0", sha256="75048950f0dfa0e20f2651991875822f36fceb84bdda12d1c0361d49912392b8")
     version("0.1.6", sha256="a67a364f46dea29ff1b3e5c52c0a5abf2d9d53412fb8d424f6bd71252bfa7792")

@@ -28,8 +28,6 @@ class Dctz(CMakePackage):
     depends_on("libpressio@0.0.99:", when="+libpressio")
     depends_on("libstdcompat@0.0.21:", when="+libpressio")
 
-
-
     def cmake_args(self):
         args = [
             self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
