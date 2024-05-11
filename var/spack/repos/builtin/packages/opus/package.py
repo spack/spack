@@ -14,6 +14,7 @@ class Opus(AutotoolsPackage):
 
     license("BSD-3-Clause")
 
+    version("1.5.2", sha256="65c1d2f78b9f2fb20082c38cbe47c951ad5839345876e46941612ee87f9a7ce1")
     version("1.5.1", sha256="b84610959b8d417b611aa12a22565e0a3732097c6389d19098d844543e340f85")
     version("1.5", sha256="d8230bbeb99e6d558645aaad25d79de8f4f28fdcc55f8af230050586d62c4f2c")
     version("1.4", sha256="c9b32b4253be5ae63d1ff16eea06b94b5f0f2951b7a02aceef58e3a3ce49c51f")

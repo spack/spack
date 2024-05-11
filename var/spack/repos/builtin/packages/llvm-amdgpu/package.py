@@ -23,6 +23,7 @@ class LlvmAmdgpu(CMakePackage, CompilerPackage):
     license("Apache-2.0")
 
     version("master", branch="amd-stg-open")
+    version("6.1.0", sha256="6bd9912441de6caf6b26d1323e1c899ecd14ff2431874a2f5883d3bc5212db34")
     version("6.0.2", sha256="7d35acc84de1adee65406f92a369a30364703f84279241c444cd93a48c7eeb76")
     version("6.0.0", sha256="c673708d413d60ca8606ee75c77e9871b6953c59029c987b92f2f6e85f683626")
     version("5.7.1", sha256="6b54c422e45ad19c9bf5ab090ec21753e7f7d854ca78132c30eb146657b168eb")
@@ -96,7 +97,7 @@ class LlvmAmdgpu(CMakePackage, CompilerPackage):
     patch(
         "https://github.com/ROCm/llvm-project/commit/444d1d12bbc0269fed5451fb1a9110a049679ca5.patch?full_index=1",
         sha256="b4774ca19b030890d7b276d12c446400ccf8bc3aa724c7f2e9a73531a7400d69",
-        when="@6.0",
+        when="@6.0:",
     )
 
     conflicts("^cmake@3.19.0")
@@ -140,6 +141,7 @@ class LlvmAmdgpu(CMakePackage, CompilerPackage):
         when="@master +rocm-device-libs",
     )
     for d_version, d_shasum in [
+        ("6.1.0", "50386ebcb7ff24449afa2a10c76a059597464f877225c582ba3e097632a43f9c"),
         ("6.0.2", "e7ff4d7ac35a2dd8aad1cb40b96511a77a9c23fe4d1607902328e53728e05c28"),
         ("6.0.0", "99e8fa1af52d0bf382f28468e1a345af1ff3452c35914a6a7b5eeaf69fc568db"),
         ("5.7.1", "655e9bfef4b0b6ad3f9b89c934dc0a8377273bb0bccbda6c399ac5d5d2c1c04c"),
@@ -202,15 +204,17 @@ class LlvmAmdgpu(CMakePackage, CompilerPackage):
             self.define("LLVM_ENABLE_RTTI", "ON"),
             self.define("LLVM_TARGETS_TO_BUILD", "AMDGPU;X86"),
             self.define("LLVM_AMDGPU_ALLOW_NPI_TARGETS", "ON"),
-            self.define("LLVM_ENABLE_RUNTIMES", llvm_runtimes),
-            self.define("LLVM_ENABLE_PROJECTS", llvm_projects),
             self.define("PACKAGE_VENDOR", "AMD"),
             self.define("CLANG_ENABLE_AMDCLANG", "ON"),
         ]
 
         # Enable rocm-device-libs as a external project
         if "+rocm-device-libs" in self.spec:
-            dir = os.path.join(self.stage.source_path, "rocm-device-libs")
+            if self.spec.satisfies("@:6.0"):
+                dir = os.path.join(self.stage.source_path, "rocm-device-libs")
+            elif self.spec.satisfies("@6.1:"):
+                dir = os.path.join(self.stage.source_path, "amd/device-libs")
+
             args.extend(
                 [
                     self.define("LLVM_EXTERNAL_PROJECTS", "device-libs"),
@@ -233,15 +237,29 @@ class LlvmAmdgpu(CMakePackage, CompilerPackage):
         if self.spec.satisfies("@5.5.0:"):
             args.append("-DCLANG_DEFAULT_RTLIB=compiler-rt")
             args.append("-DCLANG_DEFAULT_UNWINDLIB=libgcc")
-        if self.spec.satisfies("@5.5.0:"):
-            args.append("-DCLANG_DEFAULT_RTLIB=compiler-rt")
-            args.append("-DCLANG_DEFAULT_UNWINDLIB=libgcc")
+        if self.spec.satisfies("@5.6.0:6.0"):
+            comgrinc_path = os.path.join(self.stage.source_path, "comgr/lib/comgr/include")
+        elif self.spec.satisfies("@6.1:"):
+            comgrinc_path = os.path.join(self.stage.source_path, "amd/comgr/include")
         if self.spec.satisfies("@5.6.0:"):
             hsainc_path = os.path.join(self.stage.source_path, "hsa-runtime/src/inc")
-            comgrinc_path = os.path.join(self.stage.source_path, "comgr/lib/comgr/include")
             args.append("-DSANITIZER_HSA_INCLUDE_PATH={0}".format(hsainc_path))
             args.append("-DSANITIZER_COMGR_INCLUDE_PATH={0}".format(comgrinc_path))
             args.append("-DSANITIZER_AMDGPU:Bool=ON")
+        if self.spec.satisfies("@:6.0"):
+            args.append(self.define("LLVM_ENABLE_PROJECTS", llvm_projects))
+            args.append(self.define("LLVM_ENABLE_RUNTIMES", llvm_runtimes))
+        elif self.spec.satisfies("@6.1:"):
+            llvm_projects.remove("compiler-rt")
+            llvm_runtimes.extend(["compiler-rt", "libunwind"])
+            args.append(self.define("LLVM_ENABLE_PROJECTS", llvm_projects))
+            args.append(self.define("LLVM_ENABLE_RUNTIMES", llvm_runtimes))
+            args.append(self.define("LLVM_ENABLE_LIBCXX", "OFF"))
+            args.append(self.define("CLANG_LINK_FLANG_LEGACY", False))
+            args.append(self.define("CMAKE_CXX_STANDARD", 17))
+            args.append(self.define("FLANG_INCLUDE_DOCS", False))
+            args.append(self.define("LLVM_BUILD_DOCS", "ON"))
+            args.append(self.define("CLANG_DEFAULT_PIE_ON_LINUX", "OFF"))
         return args
 
     compiler_languages = ["c", "cxx", "fortran"]

@@ -23,6 +23,7 @@ class Orca(Package):
 
     license("LGPL-2.1-or-later")
 
+    version("5.0.4", sha256="c4ea5aea60da7bcb18a6b7042609206fbeb2a765c6fa958c5689d450b588b036")
     version("5.0.3", sha256="b8b9076d1711150a6d6cb3eb30b18e2782fa847c5a86d8404b9339faef105043")
     version("4.2.1", sha256="a84b6d2706f0ddb2f3750951864502a5c49d081836b00164448b1d81c577f51a")
     version("4.2.0", sha256="01096466e41a5232e5a18af7400e48c02a6e489f0d5d668a90cdd2746e8e22e2")
@@ -32,7 +33,7 @@ class Orca(Package):
 
     # Map Orca version with the required OpenMPI version
     # OpenMPI@4.1.1 has issues in pmix environments, hence 4.1.2 here
-    openmpi_versions = {"4.2.0": "3.1.4", "4.2.1": "3.1.4", "5.0.3": "4.1.2"}
+    openmpi_versions = {"4.2.0": "3.1.4", "4.2.1": "3.1.4", "5.0.3": "4.1.2", "5.0.4": "4.1.2"}
     for orca_version, openmpi_version in openmpi_versions.items():
         depends_on(
             "openmpi@{0}".format(openmpi_version), type="run", when="@{0}".format(orca_version)
