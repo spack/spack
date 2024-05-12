@@ -26,7 +26,6 @@ class Openblas(CMakePackage, MakefilePackage):
     license("BSD-3-Clause")
 
     version("develop", branch="develop")
-    version("0.3.27", sha256="aa2d68b1564fe2b13bc292672608e9cdeeeb6dc34995512e65c3b10f4599e897")
     version("0.3.26", sha256="4e6e4f5cb14c209262e33e6816d70221a2fe49eb69eaf0a06f065598ac602c68")
     version("0.3.25", sha256="4c25cb30c4bb23eddca05d7d0a85997b8db6144f5464ba7f8c09ce91e2f35543")
     version("0.3.24", sha256="ceadc5065da97bd92404cac7254da66cc6eb192679cf1002098688978d4d5132")
@@ -276,7 +275,7 @@ class Openblas(CMakePackage, MakefilePackage):
     @property
     def parallel(self):
         # unclear whether setting `-j N` externally was supported before 0.3
-        return self.spec.satisfies("@0.3.0:")
+        return self.spec.version >= Version("0.3.0")
 
     @run_before("edit")
     def check_compilers(self):
@@ -403,7 +402,7 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
             # an optimized kernel at run time, including older CPUs, while
             # forcing it not to add flags for the current host compiler.
             args.append("DYNAMIC_ARCH=1")
-            if self.spec.satisfies("@0.3.12:"):
+            if self.spec.version >= Version("0.3.12"):
                 # These are necessary to prevent OpenBLAS from targeting the
                 # host architecture on newer version of OpenBLAS, but they
                 # cause build errors on 0.3.5 .
@@ -447,18 +446,17 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
 
     @property
     def make_defs(self):
-        spec = self.spec
         # Configure fails to pick up fortran from FC=/abs/path/to/fc, but
         # works fine with FC=/abs/path/to/gfortran.
         # When mixing compilers make sure that
         # $SPACK_ROOT/lib/spack/env/<compiler> have symlinks with reasonable
         # names and hack them inside lib/spack/spack/compilers/<compiler>.py
-        make_defs = [f"CC={spack_cc}"]
-        if "~fortran" not in spec:
-            make_defs += [f"FC={spack_fc}"]
+        make_defs = ["CC={0}".format(spack_cc)]
+        if "~fortran" not in self.spec:
+            make_defs += ["FC={0}".format(spack_fc)]
 
         # force OpenBLAS to use externally defined parallel build
-        if spec.satisfies("@:0.2.99"):
+        if self.spec.version < Version("0.3"):
             make_defs.append("MAKE_NO_J=1")  # flag defined by our make.patch
         else:
             make_defs.append("MAKE_NB_JOBS=0")  # flag provided by OpenBLAS
@@ -466,74 +464,74 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
         # Add target and architecture flags
         make_defs += self._microarch_target_args()
 
-        if spec.satisfies("+dynamic_dispatch"):
+        if self.spec.satisfies("+dynamic_dispatch"):
             make_defs += ["DYNAMIC_ARCH=1"]
 
         # Fortran-free compilation
-        if spec.satisfies("~fortran"):
+        if "~fortran" in self.spec:
             make_defs += ["NOFORTRAN=1"]
 
-        if spec.satisfies("~shared"):
-            if spec.satisfies("+pic"):
-                make_defs.append(f"CFLAGS={self.pkg.compiler.cc_pic_flag}")
-                if "~fortran" not in spec:
-                    make_defs.append(f"FFLAGS={self.pkg.compiler.f77_pic_flag}")
+        if "~shared" in self.spec:
+            if "+pic" in self.spec:
+                make_defs.append("CFLAGS={0}".format(self.pkg.compiler.cc_pic_flag))
+                if "~fortran" not in self.spec:
+                    make_defs.append("FFLAGS={0}".format(self.pkg.compiler.f77_pic_flag))
             make_defs += ["NO_SHARED=1"]
         # fix missing _dggsvd_ and _sggsvd_
-        if spec.satisfies("@0.2.16"):
+        if self.spec.satisfies("@0.2.16"):
             make_defs += ["BUILD_LAPACK_DEPRECATED=1"]
 
         # serial, but still thread-safe version
-        if spec.satisfies("@0.3.7:"):
-            if spec.satisfies("+locking"):
+        if self.spec.satisfies("@0.3.7:"):
+            if "+locking" in self.spec:
                 make_defs += ["USE_LOCKING=1"]
             else:
                 make_defs += ["USE_LOCKING=0"]
 
         # Add support for multithreading
-        if spec.satisfies("threads=openmp"):
+        if self.spec.satisfies("threads=openmp"):
             make_defs += ["USE_OPENMP=1", "USE_THREAD=1"]
-        elif spec.satisfies("threads=pthreads"):
+        elif self.spec.satisfies("threads=pthreads"):
             make_defs += ["USE_OPENMP=0", "USE_THREAD=1"]
         else:
             make_defs += ["USE_OPENMP=0", "USE_THREAD=0"]
 
         # 64bit ints
-        if spec.satisfies("+ilp64"):
+        if "+ilp64" in self.spec:
             make_defs += ["INTERFACE64=1"]
 
-        suffix = spec.variants["symbol_suffix"].value
+        suffix = self.spec.variants["symbol_suffix"].value
         if suffix != "none":
-            make_defs += [f"SYMBOLSUFFIX={suffix}"]
+            make_defs += ["SYMBOLSUFFIX={0}".format(suffix)]
 
         # Synchronize floating-point control and status register (FPCSR)
         # between threads (x86/x86_64 only).
-        if spec.satisfies("+consistent_fpcsr"):
+        if "+consistent_fpcsr" in self.spec:
             make_defs += ["CONSISTENT_FPCSR=1"]
 
         # Flang/f18 does not provide ETIME as an intrinsic.
         # Do not set TIMER variable if fortran is disabled.
-        if spec.satisfies("+fortran%clang"):
+        if self.spec.satisfies("+fortran%clang"):
             make_defs.append("TIMER=INT_CPU_TIME")
 
         # Prevent errors in `as` assembler from newer instructions
-        if spec.satisfies("%gcc@:4.8.4"):
+        if self.spec.satisfies("%gcc@:4.8.4"):
             make_defs.append("NO_AVX2=1")
 
         # Fujitsu Compiler dose not add  Fortran runtime in rpath.
-        if spec.satisfies("%fj"):
+        if self.spec.satisfies("%fj"):
             make_defs.append("LDFLAGS=-lfj90i -lfj90f -lfjsrcinfo -lelf")
 
         # Newer versions of openblas will try to find ranlib in the compiler's
         # prefix, for instance, .../lib/spack/env/gcc/ranlib, which will fail.
-        if spec.satisfies("@0.3.13:"):
+        if self.spec.satisfies("@0.3.13:"):
             make_defs.append("RANLIB=ranlib")
 
-        if spec.satisfies("+bignuma"):
+        if self.spec.satisfies("+bignuma"):
             make_defs.append("BIGNUMA=1")
 
         # Avoid that NUM_THREADS gets initialized with the host's number of CPUs.
-        if spec.satisfies("threads=openmp") or spec.satisfies("threads=pthreads"):
+        if self.spec.satisfies("threads=openmp") or self.spec.satisfies("threads=pthreads"):
             make_defs.append("NUM_THREADS=512")
 
         return make_defs
@@ -549,7 +547,7 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
 
     @property
     def install_targets(self):
-        make_args = ["install", f"PREFIX={self.prefix}"]
+        make_args = ["install", "PREFIX={0}".format(self.prefix)]
         return make_args + self.make_defs
 
     @run_after("install")
@@ -566,7 +564,7 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
         link_flags = spec["openblas"].libs.ld_flags
         if self.compiler.name == "intel":
             link_flags += " -lifcore"
-        if spec.satisfies("threads=pthreads"):
+        if self.spec.satisfies("threads=pthreads"):
             link_flags += " -lpthread"
         if spec.satisfies("threads=openmp"):
             link_flags += " -lpthread " + self.compiler.openmp_flag
@@ -578,18 +576,18 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
 class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
     def cmake_args(self):
         cmake_defs = [self.define("TARGET", "GENERIC")]
-        if spec.satisfies("+dynamic_dispatch"):
+        if self.spec.satisfies("+dynamic_dispatch"):
             cmake_defs += [self.define("DYNAMIC_ARCH", "ON")]
-        if spec.satisfies("platform=windows"):
+        if self.spec.satisfies("platform=windows"):
             cmake_defs += [
                 self.define("DYNAMIC_ARCH", "OFF"),
                 self.define("BUILD_WITHOUT_LAPACK", "ON"),
             ]
 
-        if spec.satisfies("~fortran"):
+        if "~fortran" in self.spec:
             cmake_defs += [self.define("NOFORTRAN", "ON")]
 
-        if spec.satisfies("+shared"):
+        if "+shared" in self.spec:
             cmake_defs += [self.define("BUILD_SHARED_LIBS", "ON")]
 
         if self.spec.satisfies("threads=openmp"):
