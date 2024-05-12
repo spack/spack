@@ -19,6 +19,7 @@ class Lucene(Package):
 
     license("BSD-2-Clause")
 
+    version("9.10.0", sha256="c57b75ee0ea12b54337967b7854ebd12af3d7bad27245c1dc12a167ce2b1f8a7")
     version("9.5.0", sha256="547277a2b6ce283422eccd14e9ee7ffb28b1af3975936959716c9b4d85843555")
     version("8.3.1", sha256="acd61ad458d16f3c98b9dd4653c6a34dd666a965842e461f7cdf8947fa041e1a")
     version("8.3.0", sha256="67c4f8081f24ff9f4eb4f2b999ac19f7a639b416e5b6f1c1c74e0524a481fc7e")

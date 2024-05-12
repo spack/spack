@@ -36,6 +36,8 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage, CompilerPackage):
 
     version("master", branch="master")
 
+    version("14.1.0", sha256="e283c654987afe3de9d8080bc0bd79534b5ca0d681a73a11ff2b5d3767426840")
+
     version("13.2.0", sha256="e275e76442a6067341a27f04c5c6b83d8613144004c0413528863dc6b5c743da")
     version("13.1.0", sha256="61d684f0aa5e76ac6585ad8898a2427aade8979ed5e7f85492286c4dfc13ee86")
 
@@ -1172,7 +1174,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage, CompilerPackage):
             os.path.exists(os.path.join(header_dir, h))
             for h in libc.package_class.representative_headers
         ):
-            relocation_args.append(f"-isystem {header_dir}")
+            relocation_args.append(f"-idirafter {header_dir}")
         else:
             tty.warn(
                 f"Cannot relocate {specs_file} include directories, "
