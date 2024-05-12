@@ -6,24 +6,49 @@
 from spack.package import *
 
 
-class PyHail(PythonPackage):
+class PyHail(MakefilePackage):
     """Cloud-native genomic dataframes and batch computing (Python API)"""
 
     homepage = "https://hail.is"
-    pypi = "hail/hail-0.2.130-py3-none-any.whl"
+    url = "https://github.com/hail-is/hail/archive/refs/tags/0.2.130.tar.gz"
+    git = "https://github.com/hail-is/hail.git"
 
     maintainers("teaguesterling")
     license("MIT", checked_by="teaguesterling")
 
     version(
-        "0.2.130",
-        sha256="c0f1f3ae52406a13eecb44ebe445be7d677d2c3b4e4e29269ecb53b7ac55168e",
-        expand=False
+        "0.2.130", 
+        commit="bea04d9c79b5ca739364e8c121132845475f617a",
+    #    sha256="0a80704e474cac72264db5dad27c876d7b0c8563a0fbfbdd47d465d33515d07f"
+    )
+    version(
+        "0.2.129", 
+        commit="41126be2df04e4ef823cefea40fba4cadbe5db8a",
+    #    sha256="9c5511cb92d5ec1f839960b78d3be25aedfd1ab97486ccf67ee102d2730a72a4"
+    )
+
+    variant("native", default=True)
+    variant(
+        "query_backend", 
+        values=["undefined", "spark", "batch"], 
+        default="spark"
     )
 
     depends_on("python@3.9:", type=("build", "run"))
     depends_on("py-pip", type="build")
     depends_on("py-wheel", type="build")
+    extends("python")
+
+    # Hail build requirements
+    with default_args(type=("build", "run")):
+        depends_on("gcc@5:")
+        depends_on("blas")
+        depends_on("lapack")
+        depends_on("lz4")
+        depends_on("java@8,11")
+        depends_on("scala@2.12")
+        depends_on("spark@3.3:")
+        depends_on("py-pyspark")
 
     # HAIL API requirements
     with default_args(type=("build", "run")):
@@ -43,11 +68,12 @@ class PyHail(PythonPackage):
     # Spark. If we implement building from source, this
     # will likely not be as much of an issue, but that
     # isn't working yet.
-    with default_args(type=("build", "run")):
-        depends_on("py-pyspark@3.3", when="@0.2.130")
+    #with default_args(type=("build", "run")):
+    #    depends_on("py-pyspark@3.3", when="@0.2.130")
+
 
     # hailtop requirements
-    with default_args(type=("build", "run")):
+    with default_args(type="run"):
         depends_on("py-aiodns@2")
         depends_on("py-aiohttp@3.9")
         depends_on("py-azure-identity@1.6:1")
@@ -78,6 +104,75 @@ class PyHail(PythonPackage):
     with default_args(type="run"):
         depends_on("py-azure-mgmt-core")
         depends_on("py-typing-extensions")
+
+    build_directory = "hail"
+
+    @property
+    def hail_pip_version(self):
+        # This is the same behavior is as is defined in hail/version.mk
+        return f"{self.spec.version.up_to(3)}"
+
+    @property
+    def build_wheel_file_path(self):
+        build_wheel_file_name = f"hail-{self.hail_pip_version}-py3-none-any.whl"
+        build_wheel_file_dir = self.build_directory.build.deploy.dist
+        return join_path(build_wheel_file_dir, build_wheel_file_name)
+
+    def patch(self):
+        version = self.spec.version
+        #filter_file(
+        #    "^REVISION :=",
+        #    f"REVISION := revision_not_available_from_archive",
+        #    "hail/version.mk"
+        #)
+        #filter_file(
+        #    "^SHORT_REVISION :=",
+        #    f"SHORT_REVISION := builtbyspack",
+        #    "hail/version.mk"
+        #)
+        #filter_file(
+        #    "^BRANCH :=",
+        #    f"BRANCH := tags/{version.up_to(3)}",
+        #    "hail/version.mk"
+        #)
+
+
+    @property
+    def build_targets(self):
+        spec = self.spec
+        variables = [
+            f"SCALA_VERSION={spec['scala'].version}",
+            f"SPARK_VERSION={spec['spark'].version}",
+        ]
+        if spec.satisfies("+native"):
+            variables += ["HAIL_COMPILE_NATIVES=1"]
+
+        # We're not using the documented target to 
+        # because it depends on pipto install and resolve 
+        # dependencies directly and does everythin in one step.
+        # The documented target is `install-on-cluster`
+        targets = [
+            # This may be too specific but it would detect failures
+            # and fail to build instead of taking a long time to build
+            # and then failing at install time.
+            self.build_wheel_file_path,
+        ]
+
+        return targets + variables
+
+    def install(self, spec, prefix):
+        spec = self.spec
+        pip = which("pip")
+
+        # This mimics the install-on-cluster target but avoids anything
+        # that utilizes pip to resolve dependencies
+        with working_dir(join_path(self.stage.source_path, "hail")):
+            pip("install", "--no-deps", self.build_wheel_file_path)
+
+        backend = spec.variants['query_backend'].value
+        if backend != "undefined":
+            hailctl = which("hailctl")  # Should be installed from above
+            hailctl("config", "set", "query/backend", f"{backend}")
 
     def setup_run_environment(self, env):
         #TODO: Add Spark configuration values to find HAIL Jars
