@@ -10,6 +10,7 @@ set -e
 # The best solution would be to have the compilers hash (or packages contents) be part of the
 # individual packages hashes. I don't see this at the moment.
 # Set to the latest tag including a recent oneapi compiler.
+# NOTE: If we update this spack version in the future make sure the compiler version also updates.
 spack_intel_compiler_commit="develop-2023-08-06"
 
 set_pcluster_defaults() {
@@ -23,10 +24,9 @@ set_pcluster_defaults() {
 
 setup_spack() {
     spack compiler add --scope site
-    spack external find --scope site
-    # Remove all autotools/buildtools packages. These versions need to be managed by spack or it will
+    # Do not add  autotools/buildtools packages. These versions need to be managed by spack or it will
     # eventually end up in a version mismatch (e.g. when compiling gmp).
-    spack tags build-tools | xargs -I {} spack config --scope site rm packages:{}
+    spack external find --scope site --tag core-packages
 }
 
 patch_compilers_yaml() {
@@ -99,7 +99,7 @@ install_compilers() {
     # The compilers needs to be in the same install tree as the rest of the software such that the path
     # relocation works correctly. This holds the danger that this part will fail when the current spack gets
     # incompatible with the one in $spack_intel_compiler_commit. Therefore, we make intel installations optional
-    # in package.yaml files.
+    # in package.yaml files and add a fallback `%gcc` version for each application.
     if [ "x86_64" == "$(arch)" ]; then
         (
             CURRENT_SPACK_ROOT=${SPACK_ROOT}
