@@ -30,7 +30,7 @@ class Pixman(AutotoolsPackage):
     depends_on("autoconf", type="build", when="@0.43:")
     depends_on("automake", type="build", when="@0.43:")
     depends_on("libtool", type="build", when="@0.43:")
-    
+
     depends_on("pkgconfig", type="build")
     depends_on("flex", type="build")
     depends_on("bison@3:", type="build")
