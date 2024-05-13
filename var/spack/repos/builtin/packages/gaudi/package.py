@@ -65,6 +65,11 @@ class Gaudi(CMakePackage):
         sha256="b05f6b7c1efb8c3af291c8d81fd1627e58af7c5f9a78a0098c6e3bfd7ec80c15",
         when="@37.1 ^catch2@3.1:",
     )
+    # add missing <list> include for newer compilers
+    patch(
+        "https://gitlab.cern.ch/gaudi/Gaudi/-/commit/54b727f08a685606420703098131b387d3026637.diff",
+        sha256="41aa1587a3e59d49e0fa9659577073c091871c2eca1b8b237c177ab98fbacf3f",
+    )
 
     # These dependencies are needed for a minimal Gaudi build
     depends_on("aida")
