@@ -430,7 +430,7 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
     # and https://github.com/abseil/abseil-cpp/issues/1665
     patch("absl_neon.patch", when="@2.16.1: target=aarch64:")
 
-    patch("Find_ROCm_Components_Individiually.patch", when="@2.16.0-rocm-enhanced +rocm")
+    patch("Find_ROCm_Components_Individiually.2.16.patch", when="@2.16.0-rocm-enhanced +rocm")
     patch("Find_ROCm_Components_Individiually.patch", when="@2.14.0-rocm-enhanced +rocm")
     patch("set_jit_trueLT_false.patch", when="@2.14.0-rocm-enhanced: +rocm")
 
