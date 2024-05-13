@@ -125,9 +125,6 @@ class Exawind(CMakePackage, CudaPackage, ROCmPackage):
             env.set("OMPI_CXX", self.spec["kokkos-nvcc-wrapper"].kokkos_cxx)
             env.set("MPICH_CXX", self.spec["kokkos-nvcc-wrapper"].kokkos_cxx)
             env.set("MPICXX_CXX", self.spec["kokkos-nvcc-wrapper"].kokkos_cxx)
-            if "+nalu_wind_gpu" in self.spec:
-                env.set("CUDA_LAUNCH_BLOCKING", "1")
-                env.set("CUDA_MANAGED_FORCE_DEVICE_ALLOC", "1")
         if "+rocm" in self.spec:
             env.set("OMPI_CXX", self.spec["hip"].hipcc)
             env.set("MPICH_CXX", self.spec["hip"].hipcc)
