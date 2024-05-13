@@ -98,7 +98,7 @@ class NaluWind(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("boost +filesystem +iostreams cxxstd=14", when="+boost")
     depends_on("hypre+gpu-aware-mpi", when="+gpu-aware-mpi")
     depends_on("hypre+umpire", when="+umpire")
-    depends_on("trilinos~shared", when="+trilinos-solvers")
+    depends_on("trilinos~shared", when="+trilinos-solvers platform=darwin")
 
     conflicts(
         "+shared",
@@ -119,14 +119,15 @@ class NaluWind(CMakePackage, CudaPackage, ROCmPackage):
     conflicts("^trilinos+rocm", when="~rocm")
 
     def setup_build_environment(self, env):
+        spec = self.spec
         env.append_flags("CXXFLAGS", "-DUSE_STK_SIMD_NONE")
-        if "+cuda" in self.spec:
+        if spec.satisfies("+cuda"):
             env.set("CUDA_LAUNCH_BLOCKING", "1")
             env.set("CUDA_MANAGED_FORCE_DEVICE_ALLOC", "1")
             env.set("OMPI_CXX", self.spec["kokkos-nvcc-wrapper"].kokkos_cxx)
             env.set("MPICH_CXX", self.spec["kokkos-nvcc-wrapper"].kokkos_cxx)
             env.set("MPICXX_CXX", self.spec["kokkos-nvcc-wrapper"].kokkos_cxx)
-        if "+rocm" in self.spec:
+        if spec.satisfies("+rocm"):
             env.append_flags("CXXFLAGS", "-fgpu-rdc")
 
     def cmake_args(self):
@@ -152,23 +153,23 @@ class NaluWind(CMakePackage, CudaPackage, ROCmPackage):
             self.define_from_variant("ENABLE_UMPIRE", "umpire"),
         ]
 
-        if "+openfast" in spec:
+        if spec.satisfies("+openfast"):
             args.append(self.define("OpenFAST_DIR", spec["openfast"].prefix))
 
-        if "+tioga" in spec:
+        if spec.satisfies("+tioga"):
             args.append(self.define("TIOGA_DIR", spec["tioga"].prefix))
 
-        if "+hypre" in spec:
+        if spec.satisfies("+hypre"):
             args.append(self.define("HYPRE_DIR", spec["hypre"].prefix))
 
-        if "+catalyst" in spec:
+        if spec.satisfies("+catalyst"):
             args.append(
                 self.define(
                     "PARAVIEW_CATALYST_INSTALL_PATH", spec["trilinos-catalyst-ioss-adapter"].prefix
                 )
             )
 
-        if "+fftw" in spec:
+        if spec.satisfies("+fftw"):
             args.append(self.define("FFTW_DIR", spec["fftw"].prefix))
 
         args.append(self.define("ENABLE_TESTS", self.run_tests))
@@ -180,10 +181,10 @@ class NaluWind(CMakePackage, CudaPackage, ROCmPackage):
                 ]
             )
 
-        if "+umpire" in spec:
+        if spec.satisfies("+umpire"):
             args.append(self.define("UMPIRE_DIR", spec["umpire"].prefix))
 
-        if "+rocm" in spec:
+        if spec.satisfies("+rocm"):
             args.append(self.define("CMAKE_CXX_COMPILER", spec["hip"].hipcc))
             args.append(self.define("ENABLE_ROCM", True))
             targets = spec.variants["amdgpu_target"].value
@@ -196,6 +197,6 @@ class NaluWind(CMakePackage, CudaPackage, ROCmPackage):
 
     @run_before("cmake")
     def add_submodules(self):
-        if self.run_tests or "+wind-utils" in self.spec:
+        if self.run_tests or self.spec.satisfies("+wind-utils"):
             git = which("git")
             git("submodule", "update", "--init", "--recursive")
