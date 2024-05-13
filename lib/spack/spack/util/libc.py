@@ -22,7 +22,7 @@ def _libc_from_ldd(ldd: str) -> Optional["spack.spec.Spec"]:
     except Exception:
         return None
 
-    if not re.search(r"\b(?:gnu|glibc|arm)\b", stdout, re.IGNORECASE):
+    if not re.search(r"\bFree Software Foundation\b", stdout):
         return None
 
     version_str = re.match(r".+\(.+\) (.+)", stdout)
@@ -75,7 +75,7 @@ def libc_from_dynamic_linker(dynamic_linker: str) -> Optional["spack.spec.Spec"]
             return spec
         except Exception:
             return None
-    elif re.search(r"\b(?:gnu|glibc|arm)\b", stdout, re.IGNORECASE):
+    elif re.search(r"\bFree Software Foundation\b", stdout):
         # output is like "ld.so (...) stable release version 2.33."
         match = re.search(r"version (\d+\.\d+(?:\.\d+)?)", stdout)
         if not match:
