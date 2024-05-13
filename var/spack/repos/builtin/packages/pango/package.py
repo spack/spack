@@ -19,7 +19,7 @@ class Pango(MesonPackage):
 
     license("LGPL-2.1-or-later")
 
-    version("1.90.0", sha256="f138f964a8390c8aecc6c79dc18756989cc2d4db624b12f94a01a92ec57111ff")
+    version("1.52.2", sha256="d0076afe01082814b853deec99f9349ece5f2ce83908b8e58ff736b41f78a96b")
     version("1.50.13", sha256="5cdcf6d761d26a3eb9412b6cb069b32bd1d9b07abf116321167d94c2189299fd")
     version("1.50.7", sha256="0477f369a3d4c695df7299a6989dc004756a7f4de27eecac405c6790b7e3ad33")
     version("1.49.4", sha256="1fda6c03161bd1eacfdc349244d26828c586d25bfc600b9cfe2494902fdf56cf")
