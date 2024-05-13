@@ -134,7 +134,8 @@ default:
     #   --config-scope "${SPACK_CI_CONFIG_ROOT}/${SPACK_TARGET_PLATFORM}"
     #   --config-scope "${SPACK_CI_CONFIG_ROOT}/${SPACK_TARGET_PLATFORM}/${SPACK_TARGET_ARCH}"
     #   audit configs
-    - python ${SPACK_CI_SCRIPTS_ROOT}/common/expand_vars.py
+    # Command below needs to be `spack python` due to naming differences accross platforms
+    - spack python ${SPACK_CI_SCRIPTS_ROOT}/common/expand_vars.py
       "${SPACK_CI_CONFIG_ROOT}/${PIPELINE_MIRROR_TEMPLATE}"
       "${SPACK_CI_CONFIG_ROOT}/mirrors.yaml"
     - spack config add -f "${SPACK_CI_CONFIG_ROOT}/mirrors.yaml"
