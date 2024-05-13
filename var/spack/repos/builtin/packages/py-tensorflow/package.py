@@ -744,7 +744,7 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
 
         if spec.satisfies("@2.16.0-rocm-enhanced +rocm"):
             filter_file(
-                "/usr/lib/llvm-17/bin/clang", spec["llvm-amdgpu"].prefix.bin + "/clang", ".bazelrc"
+                "/usr/lib/llvm-17/bin/clang", spec["llvm-amdgpu"].prefix.bin.clang, ".bazelrc"
             )
 
         filter_file("build:opt --copt=-march=native", "", ".tf_configure.bazelrc")
