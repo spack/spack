@@ -80,6 +80,8 @@ class Exawind(CMakePackage, CudaPackage, ROCmPackage):
     conflicts("^amr-wind+cuda", when="~amr_wind_gpu")
     conflicts("^amr-wind+rocm", when="~amr_wind_gpu")
     conflicts("^amr-wind+sycl", when="~amr_wind_gpu")
+    conflicts("^amr-wind+hypre", when="~amr_wind_gpu+nalu_wind_gpu")
+    conflicts("^amr-wind+hypre", when="+amr_wind_gpu~nalu_wind_gpu")
     conflicts("+sycl", when="+cuda")
     conflicts("+rocm", when="+cuda")
     conflicts("+sycl", when="+rocm")
