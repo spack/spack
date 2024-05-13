@@ -22,6 +22,12 @@ class AmrWind(CMakePackage, CudaPackage, ROCmPackage):
 
     version("main", branch="main", submodules=True)
     version(
+        "2.1.0", tag="v2.1.0", commit="bc787f21deca9239928182e27400133934c62658", submodules=True
+    )
+    version(
+        "2.0.0", tag="v2.0.0", commit="ea448365033fc6bc9ee0febeb369b377f4fd8240", submodules=True
+    )
+    version(
         "1.4.0", tag="v1.4.0", commit="bdddf133e41a9b7b4c8ce28f1ea1bebec47678f5", submodules=True
     )
     version(
@@ -91,7 +97,7 @@ class AmrWind(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("openfast@3.5:", when="@2: +openfast")
     depends_on("helics@:3.3.2", when="+helics")
     depends_on("helics@:3.3.2+mpi", when="+helics+mpi")
-    depends_on("fftw", when="@2: +waves2amr")
+    depends_on("fftw", when="@2.1: +waves2amr")
 
     for arch in CudaPackage.cuda_arch_values:
         depends_on("hypre+cuda cuda_arch=%s" % arch, when="+cuda+hypre cuda_arch=%s" % arch)
@@ -104,7 +110,7 @@ class AmrWind(CMakePackage, CudaPackage, ROCmPackage):
 
     conflicts("+openmp", when="+cuda")
     conflicts("+shared", when="+cuda")
-    conflicts("@:1.4.0", when="+waves2amr")
+    conflicts("@:2.0", when="+waves2amr")
 
     def setup_build_environment(self, env):
         # Avoid compile errors with Intel interprocedural optimization
