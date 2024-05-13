@@ -2451,7 +2451,8 @@ class PackageBase(WindowsRPath, PackageViewMixin, RedistributionMixin, metaclass
             rpaths.extend(
                 d.prefix.bin
                 for d in deps
-                if os.path.isdir(d.prefix.bin) and "windows-system" not in d.package.tags
+                if os.path.isdir(d.prefix.bin)
+                and "windows-system" not in getattr(d.package, "tags", [])
             )
         else:
             rpaths = [self.prefix.lib, self.prefix.lib64]
