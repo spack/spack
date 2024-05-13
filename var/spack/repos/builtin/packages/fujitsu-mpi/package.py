@@ -53,6 +53,16 @@ class FujitsuMpi(Package):
             self.spec.mpif77 = self.prefix.bin.mpifrt
             self.spec.mpifc = self.prefix.bin.mpifrt
 
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        if self.spec.satisfies("%gcc"):
+            env.set("MPI_C_COMPILER", self.prefix.bin.mpicc)
+            env.set("MPI_CXX_COMPILER", self.prefix.bin.mpicxx)
+            env.set("MPI_Fortran_COMPILER", self.prefix.bin.mpifort)
+        else:
+            env.set("MPI_C_COMPILER", self.prefix.bin.mpifcc)
+            env.set("MPI_CXX_COMPILER", self.prefix.bin.mpiFCC)
+            env.set("MPI_Fortran_COMPILER", self.prefix.bin.mpifrt)
+
     def setup_run_environment(self, env):
         # Because MPI are both compilers and runtimes, we set up the compilers
         # as part of run environment
