@@ -10,7 +10,6 @@ set -e
 # The best solution would be to have the compilers hash (or packages contents) be part of the
 # individual packages hashes. I don't see this at the moment.
 # Set to the latest tag including a recent oneapi compiler.
-# NOTE: If we update this spack version in the future make sure the compiler version also updates.
 spack_intel_compiler_commit="develop-2023-08-06"
 
 set_pcluster_defaults() {
@@ -82,7 +81,7 @@ install_compilers() {
     # packages will reference a wrong compiler path once the path changes.
 
     # `gcc@12.3.0%gcc@7.3.1` is created as part of building the pipeline containers.
-    # `ghcr.io/spack/pcluster-amazonlinux-2:v2024-01-29` produced the following hashes.
+    # `ghcr.io/spack/pcluster-amazonlinux-2:pr-52@sha256:27a2e9cc8ddbe25504caeac3d78ef556d913a2ff1bab0a7e713e98e35578bc36` produced the following hashes.
     if [ "x86_64" == "$(arch)" ]; then
         gcc_hash="vxlibl3ubl5ptwzb3zydgksfa5osdea6"
     else
@@ -101,22 +100,29 @@ install_compilers() {
     # incompatible with the one in $spack_intel_compiler_commit. Therefore, we make intel installations optional
     # in package.yaml files and add a fallback `%gcc` version for each application.
     if [ "x86_64" == "$(arch)" ]; then
+        # If we are inside a gitlab CI container
         (
-            CURRENT_SPACK_ROOT=${SPACK_ROOT}
-            DIR="$(mktemp -d)"
-            cd "${DIR}"
-            # This needs to include commit 361a185ddb such that `ifx` picks up the correct toolchain. Otherwise
-            # this leads to libstdc++.so errors during linking (e.g. slepc).
-            git clone --depth=1 -b ${spack_intel_compiler_commit} https://github.com/spack/spack.git \
-                && cd spack \
-                && curl -sL https://github.com/spack/spack/pull/40557.patch | patch -p1 \
-                && curl -sL https://github.com/spack/spack/pull/40561.patch | patch -p1 \
-                && cp "${CURRENT_SPACK_ROOT}/etc/spack/config.yaml" etc/spack/ \
-                && cp "${CURRENT_SPACK_ROOT}/etc/spack/compilers.yaml" etc/spack/ \
-                && cp "${CURRENT_SPACK_ROOT}/etc/spack/packages.yaml" etc/spack/ \
-                && . share/spack/setup-env.sh \
-                && spack install intel-oneapi-compilers-classic
-            rm -rf "${DIR}"
+            if [ -f "/bootstrap-compilers/spack/share/spack/setup-env.sh" ]; then
+
+                . /bootstrap-compilers/spack/share/spack/setup-env.sh \
+                  spack install intel-oneapi-compilers-classic
+            else
+                CURRENT_SPACK_ROOT=${SPACK_ROOT}
+                DIR="$(mktemp -d)"
+                cd "${DIR}"
+                # This needs to include commit 361a185ddb such that `ifx` picks up the correct toolchain. Otherwise
+                # this leads to libstdc++.so errors during linking (e.g. slepc).
+                git clone --depth=1 -b ${spack_intel_compiler_commit} https://github.com/spack/spack.git \
+                    && cd spack \
+                    && curl -sL https://github.com/spack/spack/pull/40557.patch | patch -p1 \
+                    && curl -sL https://github.com/spack/spack/pull/40561.patch | patch -p1 \
+                    && cp "${CURRENT_SPACK_ROOT}/etc/spack/config.yaml" etc/spack/ \
+                    && cp "${CURRENT_SPACK_ROOT}/etc/spack/compilers.yaml" etc/spack/ \
+                    && cp "${CURRENT_SPACK_ROOT}/etc/spack/packages.yaml" etc/spack/ \
+                    && . share/spack/setup-env.sh \
+                    && spack install intel-oneapi-compilers-classic
+                rm -rf "${DIR}"
+            fi
         )
         bash -c ". \"$(spack location -i intel-oneapi-compilers)\"/setvars.sh; spack compiler add --scope site" \
             || true
