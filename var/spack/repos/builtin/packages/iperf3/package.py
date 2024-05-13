@@ -12,8 +12,12 @@ class Iperf3(AutotoolsPackage):
     maintained project."""
 
     homepage = "https://software.es.net/iperf/"
-    url = "https://github.com/esnet/iperf/archive/3.6.tar.gz"
+    url = "https://downloads.es.net/pub/iperf/iperf-3.16.tar.gz"
 
     license("BSD-3-Clause-LBNL")
 
+    version("3.16", sha256="cc740c6bbea104398cc3e466befc515a25896ec85e44a662d5f4a767b9cf713e")
+    version("3.14", sha256="723fcc430a027bc6952628fa2a3ac77584a1d0bd328275e573fc9b206c155004")
+    version("3.12", sha256="72034ecfb6a7d6d67e384e19fb6efff3236ca4f7ed4c518d7db649c447e1ffd6")
+    version("3.9", sha256="24b63a26382325f759f11d421779a937b63ca1bc17c44587d2fcfedab60ac038")
     version("3.6", sha256="1ad23f70a8eb4b892a3cbb247cafa956e0f5c7d8b8601b1d9c8031c2a806f23f")
