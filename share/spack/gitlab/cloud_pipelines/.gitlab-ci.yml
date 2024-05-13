@@ -876,7 +876,7 @@ aws-pcluster-build-neoverse_v1:
 
 # Cray definitions
 .generate-cray:
-  extends: [ ".generate-common", ".base-job" ]
+  extends: [ ".generate-base", ".base-job" ]
   before_script:
     - echo $PATH
     - module avail
