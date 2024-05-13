@@ -19,6 +19,9 @@ class Pango(MesonPackage):
 
     license("LGPL-2.1-or-later")
 
+    # Do not upgrade to v1.90.x. It is a development release in preparation for
+    # v2.0 that will break API and ABI compatibility. For more information see
+    # https://download.gnome.org/sources/pango/1.90/pango-1.90.0.news
     version("1.52.2", sha256="d0076afe01082814b853deec99f9349ece5f2ce83908b8e58ff736b41f78a96b")
     version("1.50.13", sha256="5cdcf6d761d26a3eb9412b6cb069b32bd1d9b07abf116321167d94c2189299fd")
     version("1.50.7", sha256="0477f369a3d4c695df7299a6989dc004756a7f4de27eecac405c6790b7e3ad33")
