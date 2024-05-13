@@ -205,6 +205,12 @@ default:
   extends: [ ".base-job", ".generate-common" ]
   before_script:
     - python -m pip install --user boto3
+    - $ErrorActionOld=$ErrorActionPreference
+    - $ErrorActionPreference="SilentlyContinue"
+    - python -m pip install psutil
+    - python -c"import psutil;print(psutil.getloadavg())"
+    - (Get-WmiObject Win32_PhysicalMemory | measure-object Capacity -sum).sum/1kb
+    - $ErrorActionPreference=$ErrorActionOld
     - . .\share\spack\setup-env.ps1
     - spack external find --not-buildable cmake ninja win-wdk win-sdk wgl msmpi
   after_script:
@@ -876,11 +882,20 @@ aws-pcluster-build-neoverse_v1:
 
 # Cray definitions
 .generate-cray:
-  extends: [ ".generate-base", ".base-job" ]
+  extends: [ ".generate-common", ".base-job" ]
   before_script:
     - echo $PATH
     - module avail
     - module list
+    - uname -a || true
+    - grep -E 'vendor|model name' /proc/cpuinfo 2>/dev/null | sort -u || head -n10 /proc/cpuinfo 2>/dev/null || true
+    - nproc || true
+    - cat /proc/loadavg || true
+    - cat /proc/meminfo | grep 'MemTotal\|MemFree' || true
+    - . "./share/spack/setup-env.sh"
+  after_script:
+    - cat /proc/loadavg || true
+    - cat /proc/meminfo | grep 'MemTotal\|MemFree' || true
 
 .generate-cray-rhel:
   tags: [ "cray-rhel-zen4", "public" ]
