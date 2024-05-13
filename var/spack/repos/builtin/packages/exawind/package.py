@@ -21,28 +21,36 @@ class Exawind(CMakePackage, CudaPackage, ROCmPackage):
     version("master", branch="main", submodules=True, preferred=True)
     version("1.0.0", tag="v1.0.0", submodules=True)
 
-    variant("asan", default=False,
-            description="turn on address sanitizer")
-    variant("amr_wind_gpu", default=False,
-            description="Enable AMR-Wind on the GPU")
-    variant("nalu_wind_gpu", default=False,
-            description="Enable Nalu-Wind on the GPU")
-    variant("umpire", default=False,
-            description="Enable Umpire")
-    variant("sycl", default=False,
-            description="Enable SYCL backend for AMR-Wind")
-    variant("gpu-aware-mpi", default=False,
-            description="gpu-aware-mpi")
+    variant("amr_wind_gpu", default=False, description="Enable AMR-Wind on the GPU")
+    variant("nalu_wind_gpu", default=False, description="Enable Nalu-Wind on the GPU")
+    variant("umpire", default=False, description="Enable Umpire")
+    variant("sycl", default=False, description="Enable SYCL backend for AMR-Wind")
+    variant("gpu-aware-mpi", default=False, description="gpu-aware-mpi")
 
     for arch in CudaPackage.cuda_arch_values:
-        depends_on("amr-wind+cuda cuda_arch=%s" % arch, when="+amr_wind_gpu+cuda cuda_arch=%s" % arch)
-        depends_on("nalu-wind+cuda cuda_arch=%s" % arch, when="+nalu_wind_gpu+cuda cuda_arch=%s" % arch)
-        depends_on("trilinos+cuda cuda_arch=%s" % arch, when="+nalu_wind_gpu+cuda cuda_arch=%s" % arch)
+        depends_on(
+            "amr-wind+cuda cuda_arch=%s" % arch, when="+amr_wind_gpu+cuda cuda_arch=%s" % arch
+        )
+        depends_on(
+            "nalu-wind+cuda cuda_arch=%s" % arch, when="+nalu_wind_gpu+cuda cuda_arch=%s" % arch
+        )
+        depends_on(
+            "trilinos+cuda cuda_arch=%s" % arch, when="+nalu_wind_gpu+cuda cuda_arch=%s" % arch
+        )
 
     for arch in ROCmPackage.amdgpu_targets:
-        depends_on("amr-wind+rocm amdgpu_target=%s" % arch, when="+amr_wind_gpu+rocm amdgpu_target=%s" % arch)
-        depends_on("nalu-wind+rocm amdgpu_target=%s" % arch, when="+nalu_wind_gpu+rocm amdgpu_target=%s" % arch)
-        depends_on("trilinos+rocm amdgpu_target=%s" % arch, when="+nalu_wind_gpu+rocm amdgpu_target=%s" % arch)
+        depends_on(
+            "amr-wind+rocm amdgpu_target=%s" % arch,
+            when="+amr_wind_gpu+rocm amdgpu_target=%s" % arch,
+        )
+        depends_on(
+            "nalu-wind+rocm amdgpu_target=%s" % arch,
+            when="+nalu_wind_gpu+rocm amdgpu_target=%s" % arch,
+        )
+        depends_on(
+            "trilinos+rocm amdgpu_target=%s" % arch,
+            when="+nalu_wind_gpu+rocm amdgpu_target=%s" % arch,
+        )
 
     depends_on("nalu-wind+ninja+hypre+fsi+openfast+tioga")
     depends_on("amr-wind+ninja~hypre+netcdf+mpi+tiny_profile")
@@ -96,7 +104,7 @@ class Exawind(CMakePackage, CudaPackage, ROCmPackage):
             targets = self.spec.variants["amdgpu_target"].value
             args.append(self.define("EXAWIND_ENABLE_ROCM", True))
             args.append(self.define("CMAKE_CXX_COMPILER", self.spec["hip"].hipcc))
-            #Optimization to only build one specific target architecture:
+            # Optimization to only build one specific target architecture:
             args.append(self.define("CMAKE_HIP_ARCHITECTURES", ";".join(str(x) for x in targets)))
             args.append(self.define("AMDGPU_TARGETS", ";".join(str(x) for x in targets)))
             args.append(self.define("GPU_TARGETS", ";".join(str(x) for x in targets)))
