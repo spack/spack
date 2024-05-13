@@ -53,7 +53,7 @@ class Exawind(CMakePackage, CudaPackage, ROCmPackage):
         )
 
     depends_on("nalu-wind+hypre+fsi+openfast+tioga")
-    depends_on("amr-wind~hypre+netcdf+mpi+tiny_profile")
+    depends_on("amr-wind+netcdf+mpi+tiny_profile")
     depends_on("trilinos")
     depends_on("yaml-cpp@0.6:")
     depends_on("tioga~nodegid")
