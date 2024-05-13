@@ -220,7 +220,7 @@ def _compiler_config_from_external(config):
         operating_system = host_platform.operating_system("default_os")
         target = host_platform.target("default_target").microarchitecture
     else:
-        target = spec.target
+        target = spec.architecture.target
         if not target:
             host_platform = spack.platforms.host()
             target = host_platform.target("default_target").microarchitecture
