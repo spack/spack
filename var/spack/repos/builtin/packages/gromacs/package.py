@@ -10,7 +10,7 @@ import llnl.util.filesystem as fs
 from spack.package import *
 
 
-class Gromacs(CMakePackage, CudaPackage):
+class Gromacs(CMakePackage, CudaPackage, ROCmPackage):
     """GROMACS is a molecular dynamics package primarily designed for simulations
     of proteins, lipids and nucleic acids. It was originally developed in
     the Biophysical Chemistry department of University of Groningen, and is now
@@ -102,14 +102,28 @@ class Gromacs(CMakePackage, CudaPackage):
         when="@2022: +cuda+mpi",
         description="Enable multi-GPU FFT support with cuFFTMp",
     )
+
     variant(
         "heffte",
         default=False,
         when="@2021: +sycl+mpi",
         description="Enable multi-GPU FFT support with HeFFTe",
     )
+    variant(
+        "rocfft",
+        default=False,
+        when="@2022: +sycl +rocm",
+        description="Enable GPU FFT support with rocFFT",
+    )
+
     variant("opencl", default=False, description="Enable OpenCL support")
     variant("sycl", default=False, when="@2021:", description="Enable SYCL support")
+    variant(
+        "sycl",
+        default=True,
+        when="@2022: +rocm",
+        description="Enable ROCm support when using SYCL",
+    )
     variant(
         "intel-data-center-gpu-max",
         default=False,
@@ -284,7 +298,11 @@ class Gromacs(CMakePackage, CudaPackage):
     depends_on("pkgconfig", type="build")
 
     depends_on("cuda", when="+cuda")
-    depends_on("sycl", when="+sycl")
+    with when("+rocm"):
+        depends_on("sycl")
+        depends_on("hip")
+        depends_on("rocfft", when="+rocfft")
+
     depends_on("lapack")
     depends_on("blas")
     depends_on("gcc", when="%oneapi ~intel_provided_gcc")
@@ -449,6 +467,21 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
         # In other words, the mapping between package variants and the
         # GMX CMake variables is often non-trivial.
 
+        gmx_cc = spack_cc
+        gmx_cxx = spack_cxx
+        if "+rocm" in self.spec:
+            gmx_cc = os.path.join(self.spec["llvm"].prefix.bin, "clang")
+            gmx_cxx = os.path.join(self.spec["llvm"].prefix.bin, "clang++")
+            if not fs.is_exe(gmx_cc) or not fs.is_exe(gmx_cxx):
+                gmx_cc = path.join(self.spec["llvm"].prefix.bin, "amdclang")
+                gmx_cxx = path.join(self.spec["llvm"].prefix.bin, "amdclang++")
+                if not fs.is_exe(gmx_cc) or not fs.is_exe(gmx_cxx):
+                    raise InstallError(
+                        "concretized LLVM dependency must provide a "
+                        "valid clang/amdclang executable, found invalid: "
+                        "{0}/{1}".format(gmx_cc, gmx_cxx)
+                    )
+
         if "+mpi" in self.spec:
             options.append("-DGMX_MPI:BOOL=ON")
             if self.pkg.version < Version("2020"):
@@ -472,8 +505,8 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
             else:
                 options.extend(
                     [
-                        "-DCMAKE_C_COMPILER=%s" % spack_cc,
-                        "-DCMAKE_CXX_COMPILER=%s" % spack_cxx,
+                        "-DCMAKE_C_COMPILER=%s" % gmx_cc,
+                        "-DCMAKE_CXX_COMPILER=%s" % gmx_cxx,
                         "-DMPI_C_COMPILER=%s" % self.spec["mpi"].mpicc,
                         "-DMPI_CXX_COMPILER=%s" % self.spec["mpi"].mpicxx,
                     ]
@@ -481,12 +514,16 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
         else:
             options.extend(
                 [
-                    "-DCMAKE_C_COMPILER=%s" % spack_cc,
-                    "-DCMAKE_CXX_COMPILER=%s" % spack_cxx,
+                    "-DCMAKE_C_COMPILER=%s" % gmx_cc,
+                    "-DCMAKE_CXX_COMPILER=%s" % gmx_cxx,
                     "-DGMX_MPI:BOOL=OFF",
                     "-DGMX_THREAD_MPI:BOOL=ON",
                 ]
             )
+
+        # Here we cannot use spack_cc because we need also libstdc++ to be reachable
+        # Spack wrapper (spack_cc) hides includes/lib and CMake will fail
+        options.append("-DGMX_GPLUSPLUS_PATH=%s" % self.pkg.compiler.cxx)
 
         if self.spec.satisfies("%aocc"):
             options.append("-DCMAKE_CXX_FLAGS=--stdlib=libc++")
@@ -525,17 +562,33 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
                 options.append("-DGMX_GPU:STRING=CUDA")
             elif "+opencl" in self.spec:
                 options.append("-DGMX_GPU:STRING=OpenCL")
-            elif "+sycl" in self.spec:
-                options.append("-DGMX_GPU:STRING=SYCL")
             else:
                 options.append("-DGMX_GPU:STRING=OFF")
         else:
-            if "+cuda" in self.spec or "+opencl" in self.spec:
+            if "+cuda" in self.spec:
                 options.append("-DGMX_GPU:BOOL=ON")
-                if "+opencl" in self.spec:
-                    options.append("-DGMX_USE_OPENCL=ON")
+            elif "+opencl" in self.spec:
+                options.append("-DGMX_GPU:BOOL=ON")
+                options.append("-DGMX_USE_OPENCL=ON")
             else:
                 options.append("-DGMX_GPU:BOOL=OFF")
+
+        if "+sycl" in self.spec:
+            options.append("-DGMX_GPU:STRING=SYCL")
+            if "+rocm" in self.spec:
+                rocm_archs = ",".join(self.spec.variants["amdgpu_target"].value)
+                if self.pkg.version >= Version("2022") and self.pkg.version <= Version("2023"):
+                    options.append("-DGMX_SYCL_HIPSYCL:BOOL=ON")
+                    hipsycl_dir = os.path.join(self.spec["sycl"].prefix.lib, "cmake/hipSYCL/")
+                    options.append(f"-Dhipsycl_DIR:STRING={hipsycl_dir}")
+                    options.append(f"-DHIPSYCL_TARGETS:STRING=hip:{rocm_archs}")
+                elif self.pkg.version >= Version("2024") and self.spec["sycl"].version <= Version(
+                    "23.10.0"
+                ):
+                    options.append("-DGMX_SYCL:BOOL=ACPP")
+                    hipsycl_dir = os.path.join(self.spec["sycl"].prefix.lib, "cmake/AdaptiveCpp/")
+                    options.append(f"-Dacpp_DIR:STRING={hipsycl_dir}")
+                    options.append(f"-DACPP_TARGETS:STRING=hip:{rocm_archs}")
 
         if "+cuda" in self.spec:
             options.append("-DCUDA_TOOLKIT_ROOT_DIR:STRING=" + self.spec["cuda"].prefix)
@@ -562,6 +615,10 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
         if "+heffte" in self.spec:
             options.append("-DGMX_USE_HEFFTE=on")
             options.append(f'-DHeffte_ROOT={self.spec["heffte"].prefix}')
+            if "+rocm" in self.spec:
+                options.append("-DHeffte_ENABLE_ROCM:BOOL=ON")
+                rocm_path = os.path.split(self.spec["hip"].prefix[:-1])[0]
+                options.append(f"-DHeffte_ROCM_ROOT={rocm_path}")
 
         if "+intel-data-center-gpu-max" in self.spec:
             options.append("-DGMX_GPU_NB_CLUSTER_SIZE=8")
@@ -689,6 +746,9 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
                     "-DFFTWF_INCLUDE_DIR={0}".format(self.spec["acfl"].headers.directories[0])
                 )
                 options.append("-DFFTWF_LIBRARY={0}".format(self.spec["acfl"].libs.joined(";")))
+            elif "+rocfft" in self.spec:
+                # Use ROCm FFT library
+                options.append("-DGMX_GPU_FFT_LIBRARY=rocFFT")
 
         # Ensure that the GROMACS log files report how the code was patched
         # during the build, so that any problems are easier to diagnose.

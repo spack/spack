@@ -11,13 +11,13 @@ from llnl.util import filesystem
 from spack.package import *
 
 
-class Hipsycl(CMakePackage):
+class Hipsycl(CMakePackage, CudaPackage, ROCmPackage):
     """hipSYCL is an implementation of the SYCL standard programming model
     over NVIDIA CUDA/AMD HIP"""
 
-    homepage = "https://github.com/illuhad/hipSYCL"
-    url = "https://github.com/illuhad/hipSYCL/archive/v0.8.0.tar.gz"
-    git = "https://github.com/illuhad/hipSYCL.git"
+    homepage = "https://github.com/AdaptiveCpp/AdaptiveCpp"
+    url = "https://github.com/AdaptiveCpp/AdaptiveCpp/archive/v23.10.0.tar.gz"
+    git = "https://github.com/AdaptiveCpp/AdaptiveCpp.git"
 
     maintainers("nazavode")
 
@@ -35,7 +35,11 @@ class Hipsycl(CMakePackage):
     version("0.8.0", commit="2daf8407e49dd32ebd1c266e8e944e390d28b22a", submodules=True)
     version("develop", branch="develop", submodules=True)
 
-    variant("cuda", default=False, description="Enable CUDA backend for SYCL kernels")
+    variant("opencl", default=False, description="Enable OpenCL backend for SYCL kernels")
+    variant("sscp", default=False, description="Enable SSCP compiler")
+    variant(
+        "level_zero", default=False, description="Enable Intel Level Zero backend for SYCL kernels"
+    )
 
     depends_on("cmake@3.5:", type="build")
     depends_on("boost +filesystem", when="@:0.8")
@@ -53,6 +57,7 @@ class Hipsycl(CMakePackage):
     depends_on("cuda@9:", when="@0.8.1: +cuda ^llvm@10:")
     # hipSYCL@:0.8.0 requires cuda@9:10.0 due to a known bug
     depends_on("cuda@9:10.0", when="@:0.8.0 +cuda")
+    depends_on("llvm@9: +clang", when="+rocm")
 
     conflicts(
         "%gcc@:4",
@@ -76,16 +81,20 @@ class Hipsycl(CMakePackage):
         spec = self.spec
         args = [
             "-DWITH_CPU_BACKEND:Bool=TRUE",
-            # TODO: no ROCm stuff available in spack yet
-            "-DWITH_ROCM_BACKEND:Bool=FALSE",
+            "-DWITH_ROCM_BACKEND:Bool={0}".format("TRUE" if "+rocm" in spec else "FALSE"),
             "-DWITH_CUDA_BACKEND:Bool={0}".format("TRUE" if "+cuda" in spec else "FALSE"),
+            "-DWITH_LEVEL_ZERO_BACKEND:Bool={0}".format("TRUE" if "+intel" in spec else "FALSE"),
+            "-DWITH_OPENCL_BACKEND:Bool={0}".format("TRUE" if "+opencl" in spec else "FALSE"),
+            "-DWITH_SSCP_COMPILER:Bool={0}".format("TRUE" if "+sscp" in spec else "FALSE"),
             # prevent hipSYCL's cmake to look for other LLVM installations
             # if the specified one isn't compatible
             "-DDISABLE_LLVM_VERSION_CHECK:Bool=TRUE",
         ]
+        if self.version >= Version("23.10.0"):
+            args.append("-DACPP_VERSION_SUFFIX={0}".format(self.version))
         # LLVM directory containing all installed CMake files
         # (e.g.: configs consumed by client projects)
-        llvm_cmake_dirs = filesystem.find(spec["llvm"].prefix, "LLVMExports.cmake")
+        llvm_cmake_dirs = filesystem.find(spec["llvm"].prefix.lib, "LLVMExports.cmake")
         if len(llvm_cmake_dirs) != 1:
             raise InstallError(
                 "concretized llvm dependency must provide "
@@ -93,9 +102,10 @@ class Hipsycl(CMakePackage):
                 "files, found: {0}".format(llvm_cmake_dirs)
             )
         args.append("-DLLVM_DIR:String={0}".format(path.dirname(llvm_cmake_dirs[0])))
+
         # clang internal headers directory
         llvm_clang_include_dirs = filesystem.find(
-            spec["llvm"].prefix, "__clang_cuda_runtime_wrapper.h"
+            spec["llvm"].prefix.lib, "__clang_cuda_runtime_wrapper.h"
         )
         if len(llvm_clang_include_dirs) != 1:
             raise InstallError(
@@ -106,18 +116,32 @@ class Hipsycl(CMakePackage):
         args.append(
             "-DCLANG_INCLUDE_PATH:String={0}".format(path.dirname(llvm_clang_include_dirs[0]))
         )
-        # target clang++ executable
-        llvm_clang_bin = path.join(spec["llvm"].prefix.bin, "clang++")
+        # Find the right LLVM compiler
+        llvm_clang_bin = path.join(spec["llvm"].prefix.bin, "clang")
+        llvm_clang_bin_cpp = path.join(spec["llvm"].prefix.bin, "clang++")
         if not filesystem.is_exe(llvm_clang_bin):
-            raise InstallError(
-                "concretized llvm dependency must provide a "
-                "valid clang++ executable, found invalid: "
-                "{0}".format(llvm_clang_bin)
-            )
+            llvm_clang_bin = path.join(spec["llvm"].prefix.bin, "amdclang")
+            llvm_clang_bin_cpp = path.join(spec["llvm"].prefix.bin, "amdclang++")
+            if not filesystem.is_exe(llvm_clang_bin):
+                raise InstallError(
+                    "concretized LLVM dependency must provide a "
+                    "valid clang/amdclang executable, found invalid: "
+                    "{0}".format(llvm_clang_bin)
+                )
         args.append("-DCLANG_EXECUTABLE_PATH:String={0}".format(llvm_clang_bin))
+        args.append("-DCMAKE_C_COMPILER:String={0}".format(llvm_clang_bin))
+        args.append("-DCMAKE_CXX_COMPILER:String={0}".format(llvm_clang_bin_cpp))
+
         # explicit CUDA toolkit
         if "+cuda" in spec:
             args.append("-DCUDA_TOOLKIT_ROOT_DIR:String={0}".format(spec["cuda"].prefix))
+        if "+rocm" in spec:
+            # FIXME: here spec["rocm"].prefix does not work
+            # Instead (temporary solution: we use HIP prefix and
+            # remove the "hip/" part of the path which is the ROCm path
+            rocm_path = path.split(spec["hip"].prefix[:-1])[0]
+            args.append("-DROCM_PATH:String={0}".format(rocm_path))
+
         return args
 
     @run_after("install")
