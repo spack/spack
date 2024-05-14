@@ -161,7 +161,7 @@ class WindowsRPath:
 
         Performs symlinking to incorporate rpath dependencies to Windows runtime search paths
         """
-        if sys.platform == "win32":
+        if sys.platform == "win32" and not self.spec.external:
             self.win_rpath.add_library_dependent(*self.win_add_library_dependent())
             self.win_rpath.add_rpath(*self.win_add_rpath())
             self.win_rpath.establish_link()
