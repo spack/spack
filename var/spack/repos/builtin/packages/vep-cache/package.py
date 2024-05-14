@@ -16,7 +16,6 @@ class VepCache(Package):
         major = version.up_to(1)
         url = "https://raw.githubusercontent.com/Ensembl/ensembl-vep/release/{major}/INSTALL.pl"
         vep = Spec(f"vep+installer@{major}")
-#        vep.concretize(False)
         return vep.package.vep_installer_path if vep.installed else url
 
     maintainers("teaguesterling")
