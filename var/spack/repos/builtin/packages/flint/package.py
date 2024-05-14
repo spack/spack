@@ -34,7 +34,4 @@ class Flint(AutotoolsPackage):
 
     def configure_args(self):
         spec = self.spec
-        return [
-            f"--with-gmp={spec['gmp'].prefix}",
-            f"--with-mpfr={spec['mpfr'].prefix}",
-        ]
+        return [f"--with-gmp={spec['gmp'].prefix}", f"--with-mpfr={spec['mpfr'].prefix}"]
