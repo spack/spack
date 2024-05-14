@@ -213,10 +213,12 @@ def _root_spec(spec_str: str) -> str:
     Args:
         spec_str: spec to be bootstrapped. Must be without compiler and target.
     """
-    # Add a compiler requirement to the root spec.
+    # Add a compiler and platform requirement to the root spec.
     platform = str(spack.platforms.host())
     if platform == "darwin":
         spec_str += " %apple-clang"
+    elif platform == "windows":
+        spec_str += " %msvc platform=windows"
     elif platform == "linux":
         spec_str += " %gcc"
     elif platform == "freebsd":
