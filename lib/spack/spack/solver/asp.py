@@ -2981,8 +2981,8 @@ class CompilerParser:
         for c in all_compilers_in_config(configuration):
             if not c_compiler_runs(c):
                 tty.debug(
-                    f"the C compiler {c.cc} does not exist. The compiler {c.spec} will "
-                    f"not be used during concretization"
+                    f"the C compiler {c.cc} does not exist, or does not run correctly."
+                    f" The compiler {c.spec} will not be used during concretization."
                 )
                 continue
 
