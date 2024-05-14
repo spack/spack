@@ -944,13 +944,25 @@ class ConcreteSpecsByHash(collections.abc.Mapping):
 
     def __init__(self) -> None:
         self.data: Dict[str, spack.spec.Spec] = {}
+        self.explicit: Set[str] = set()
 
     def __getitem__(self, dag_hash: str) -> spack.spec.Spec:
         return self.data[dag_hash]
 
+    def explicit_items(self) -> Iterator[Tuple[str, spack.spec.Spec]]:
+        """Iterate on items that have been added explicitly, and not just as a dependency
+        of other nodes.
+        """
+        for h, s in self.items():
+            # We need to make an exception for gcc-runtime, until we can splice it.
+            if h in self.explicit or s.name == "gcc-runtime":
+                yield h, s
+
     def add(self, spec: spack.spec.Spec) -> bool:
         """Adds a new concrete spec to the mapping. Returns True if the spec was just added,
         False if the spec was already in the mapping.
+
+        Calling this function marks the spec as added explicitly.
 
         Args:
             spec: spec to be added
@@ -966,6 +978,7 @@ class ConcreteSpecsByHash(collections.abc.Mapping):
             raise ValueError(msg)
 
         dag_hash = spec.dag_hash()
+        self.explicit.add(dag_hash)
         if dag_hash in self.data:
             return False
 
@@ -1636,11 +1649,15 @@ class SpackSolverSetup:
         if isinstance(reuse_yaml, typing.Mapping):
             default_include = reuse_yaml.get("include", [])
             default_exclude = reuse_yaml.get("exclude", [])
+            libc_externals = list(all_libcs())
             for source in reuse_yaml.get("from", []):
                 if source["type"] != "external":
                     continue
 
                 include = source.get("include", default_include)
+                if include:
+                    # Since libcs are implicit externals, we need to implicitly include them
+                    include = include + libc_externals
                 exclude = source.get("exclude", default_exclude)
                 spec_filters.append(
                     SpecFilter(
@@ -2072,7 +2089,7 @@ class SpackSolverSetup:
             try:
                 with warnings.catch_warnings():
                     warnings.simplefilter("ignore")
-                    target.optimization_flags(compiler_name, compiler_version)
+                    target.optimization_flags(compiler_name, str(compiler_version))
                 supported.append(target)
             except archspec.cpu.UnsupportedMicroarchitecture:
                 continue
@@ -2349,7 +2366,7 @@ class SpackSolverSetup:
 
     def concrete_specs(self):
         """Emit facts for reusable specs"""
-        for h, spec in self.reusable_and_possible.items():
+        for h, spec in self.reusable_and_possible.explicit_items():
             # this indicates that there is a spec like this installed
             self.gen.fact(fn.installed_hash(spec.name, h))
             # this describes what constraints it imposes on the solve
@@ -3233,13 +3250,16 @@ class SpecBuilder:
                 r"^.*_propagate$",
                 r"^.*_satisfies$",
                 r"^.*_set$",
+                r"^compatible_libc$",
                 r"^dependency_holds$",
+                r"^external_conditions_hold$",
                 r"^node_compiler$",
                 r"^package_hash$",
                 r"^root$",
                 r"^track_dependencies$",
                 r"^variant_default_value_from_cli$",
                 r"^virtual_node$",
+                r"^virtual_on_incoming_edges$",
                 r"^virtual_root$",
             ]
         )
@@ -3763,6 +3783,12 @@ class Solver:
     def __init__(self):
         self.driver = PyclingoDriver()
         self.selector = ReusableSpecsSelector(configuration=spack.config.CONFIG)
+        if spack.platforms.host().name == "cray":
+            msg = (
+                "The Cray platform, i.e. 'platform=cray', will be removed in Spack v0.23. "
+                "All Cray machines will be then detected as 'platform=linux'."
+            )
+            warnings.warn(msg)
 
     @staticmethod
     def _check_input_and_extract_concrete_specs(specs):

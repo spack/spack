@@ -16,6 +16,9 @@ class Dcm2niix(CMakePackage):
     license("Zlib")
 
     version(
+        "1.0.20240202", sha256="ad8e4a5b97a682c32ef1d88283c15c7cb767c4092cb1754119f8e8b3d940fe91"
+    )
+    version(
         "1.0.20220720", sha256="a095545d6d70c5ce2efd90dcd58aebe536f135410c12165a9f231532ddab8991"
     )
     version(

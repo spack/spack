@@ -21,6 +21,7 @@ class Flatcc(CMakePackage):
 
     license("Apache-2.0")
 
+    version("0.6.1", sha256="2533c2f1061498499f15acc7e0937dcf35bc68e685d237325124ae0d6c600c2b")
     version("0.5.3", sha256="d7519a97569ebdc9d12b162be0f9861fdc2724244f68595264a411ac48e4e983")
     version("0.5.2", sha256="02dac93d3daf8d0a290aa8711a9b8a53f047436ec5331adb1972389061ec6615")
     version("0.5.1", sha256="8c4560ca32e3c555716d9363bed469e2c60e0f443ec32bc08e7abfe681e25ca9")
@@ -42,7 +43,7 @@ class Flatcc(CMakePackage):
         # allow flatcc to be built with more compilers
         args.append("-DFLATCC_ALLOW_WERROR=OFF")
 
-        if "+shared" in spec:
+        if spec.satisfies("+shared"):
             args.append("-DBUILD_SHARED_LIBS=ON")
             args.append("-DFLATCC_INSTALL=ON")
         else:
