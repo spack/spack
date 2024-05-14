@@ -23,7 +23,6 @@ class Exawind(CMakePackage, CudaPackage, ROCmPackage):
 
     variant("amr_wind_gpu", default=False, description="Enable AMR-Wind on the GPU")
     variant("nalu_wind_gpu", default=False, description="Enable Nalu-Wind on the GPU")
-    variant("umpire", default=False, description="Enable Umpire")
     variant("sycl", default=False, description="Enable SYCL backend for AMR-Wind")
     variant("gpu-aware-mpi", default=False, description="gpu-aware-mpi")
 
@@ -61,8 +60,6 @@ class Exawind(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("amr-wind+sycl", when="+amr_wind_gpu+sycl")
     depends_on("kokkos-nvcc-wrapper", type="build", when="+cuda")
     depends_on("mpi")
-    depends_on("nalu-wind+umpire", when="+umpire")
-    depends_on("amr-wind+umpire", when="+umpire ^amr-wind+hypre")
     depends_on("nalu-wind+gpu-aware-mpi", when="+gpu-aware-mpi")
     depends_on("amr-wind+gpu-aware-mpi", when="+gpu-aware-mpi")
     depends_on("nalu-wind@2.0.0:", when="@1.0.0:")
@@ -93,10 +90,6 @@ class Exawind(CMakePackage, CudaPackage, ROCmPackage):
         spec = self.spec
 
         args = [self.define("MPI_HOME", spec["mpi"].prefix)]
-
-        if spec.satisfies("+umpire"):
-            args.append(self.define_from_variant("EXAWIND_ENABLE_UMPIRE", "umpire"))
-            args.append(self.define("UMPIRE_DIR", self.spec["umpire"].prefix))
 
         if spec.satisfies("+cuda"):
             args.append(self.define("CMAKE_CXX_COMPILER", spec["mpi"].mpicxx))
