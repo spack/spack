@@ -27,6 +27,22 @@ class PyHail(MakefilePackage):
     #    sha256="9c5511cb92d5ec1f839960b78d3be25aedfd1ab97486ccf67ee102d2730a72a4"
     )
 
+    resource(
+        name="catch",
+        url="https://github.com/catchorg/Catch2/releases/download/v2.6.0/catch.hpp",
+        sha256="a86133b34d4721b6e1cf7171981ea469789f83f2475907b4033012577e4975fe",
+        destination="hail/src/main/resources/include/catch.hpp",
+        expand=False,
+    )
+
+    resource(
+        name="libsimdpp-2.1",
+        extension='tar.gz',
+        url="https://storage.googleapis.com/hail-common/libsimdpp-2.1.tar.gz",
+        sha256="b0e986b20bef77cd17004dd02db0c1ad9fab9c70d4e99594a9db1ee6a345be93",
+        destination="hail/src/main/c",
+    )
+
     variant("native", default=True)
     variant(
         "query_backend", 
@@ -37,7 +53,6 @@ class PyHail(MakefilePackage):
     depends_on("python@3.9:", type=("build", "run"))
     depends_on("py-pip", type="build")
     depends_on("py-wheel", type="build")
-    extends("python")
 
     # Hail build requirements
     with default_args(type=("build", "run")):
@@ -47,7 +62,7 @@ class PyHail(MakefilePackage):
         depends_on("lz4")
         depends_on("java@8,11")
         depends_on("scala@2.12")
-        depends_on("spark@3.3:")
+        depends_on("spark@3.3")
         depends_on("py-pyspark")
 
     # HAIL API requirements
@@ -73,7 +88,7 @@ class PyHail(MakefilePackage):
 
 
     # hailtop requirements
-    with default_args(type="run"):
+    with default_args(type=("build", "run")):
         depends_on("py-aiodns@2")
         depends_on("py-aiohttp@3.9")
         depends_on("py-azure-identity@1.6:1")
@@ -97,13 +112,20 @@ class PyHail(MakefilePackage):
         depends_on("py-tabulate@0.8.9:0")
         depends_on("py-uvloop@0.19.0:0")
         depends_on("py-jproperties@2.1.1:2")
+        # Undocumented
+        depends_on("py-azure-mgmt-core")
+        depends_on("py-typing-extensions")
 
     # Undocumented runtime requirements for hailtop
     # These are also required to use the HAIL API
     # but are not explicitly mentioned anywhere
-    with default_args(type="run"):
-        depends_on("py-azure-mgmt-core")
-        depends_on("py-typing-extensions")
+
+    patch("fix-lz4-import-builtins.patch")
+
+#    def edit(self, spec, prefix):
+#        super().edit(spec, prefix)
+#        with working_dir(self.build_directory):
+#            make("clean")
 
     build_directory = "hail"
 
@@ -114,28 +136,13 @@ class PyHail(MakefilePackage):
 
     @property
     def build_wheel_file_path(self):
-        build_wheel_file_name = f"hail-{self.hail_pip_version}-py3-none-any.whl"
-        build_wheel_file_dir = self.build_directory.build.deploy.dist
-        return join_path(build_wheel_file_dir, build_wheel_file_name)
+        wheel_file = f"hail-{self.hail_pip_version}-py3-none-any.whl"
+        wheel_dir = join_path("build", "deploy", "dist")
+        return join_path(wheel_dir, wheel_file)
 
-    def patch(self):
-        version = self.spec.version
-        #filter_file(
-        #    "^REVISION :=",
-        #    f"REVISION := revision_not_available_from_archive",
-        #    "hail/version.mk"
-        #)
-        #filter_file(
-        #    "^SHORT_REVISION :=",
-        #    f"SHORT_REVISION := builtbyspack",
-        #    "hail/version.mk"
-        #)
-        #filter_file(
-        #    "^BRANCH :=",
-        #    f"BRANCH := tags/{version.up_to(3)}",
-        #    "hail/version.mk"
-        #)
-
+    def setup_build_environment(self, env):
+        # HAIL build doesn't find lz4: https://discuss.hail.is/t/ld-pruning-repeated-errors/1838/14
+        env.append_flags("CXXFLAGS", f"-I{self.spec['lz4'].prefix.include}")
 
     @property
     def build_targets(self):
@@ -162,17 +169,19 @@ class PyHail(MakefilePackage):
 
     def install(self, spec, prefix):
         spec = self.spec
-        pip = which("pip")
+        python = which("pip")
+        wheel = self.build_wheel_file_path
 
         # This mimics the install-on-cluster target but avoids anything
         # that utilizes pip to resolve dependencies
         with working_dir(join_path(self.stage.source_path, "hail")):
-            pip("install", "--no-deps", self.build_wheel_file_path)
+            pip("install", "--use-pep517", "--no-deps", f"--prefix={prefix}", wheel)
 
         backend = spec.variants['query_backend'].value
         if backend != "undefined":
             hailctl = which("hailctl")  # Should be installed from above
-            hailctl("config", "set", "query/backend", f"{backend}")
+            if hailctl is not None:  # but it might not be
+                hailctl("config", "set", "query/backend", f"{backend}")
 
     def setup_run_environment(self, env):
         #TODO: Add Spark configuration values to find HAIL Jars
