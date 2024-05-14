@@ -73,7 +73,7 @@ class Neuron(BuiltinNeuron):
     )
 
     # standard deployment uses submodule to avoid compatibility issues
-    depends_on("nmodl", when="+coreneuron")
+    depends_on("nmodl", type=("build", "run"), when="+coreneuron")
     depends_on("libsonata-report", when="+report+coreneuron")
 
     # lazy users do not want to load a compiler module to compile things, and we need a
