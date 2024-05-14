@@ -330,7 +330,7 @@ class PyMatplotlib(PythonPackage):
                 if self.spec.satisfies("%clang") or self.spec.satisfies("%oneapi"):
                     config.write("enable_lto = False\n")
 
-    @run_after("install")
+    @run_after("install",when="@3.6:")
     def copy_reference_images(self):
         # https://matplotlib.org/devdocs/devel/testing.html#obtain-the-reference-images
         install_tree(
