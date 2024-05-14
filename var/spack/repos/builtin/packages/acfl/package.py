@@ -248,6 +248,7 @@ def get_gcc_prefix(spec):
     dirlist = next(os.walk(spec.prefix))[1]
     return join_path(spec.prefix, next(dir for dir in dirlist if dir.startswith("gcc")))
 
+
 def get_armpl_suffix(spec):
     suffix = ""
     if spec.satisfies("@24:"):
