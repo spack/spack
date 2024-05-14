@@ -118,12 +118,18 @@ class NaluWind(CMakePackage, CudaPackage, ROCmPackage):
     conflicts("^trilinos+cuda", when="~cuda")
     conflicts("^trilinos+rocm", when="~rocm")
 
+    def setup_dependent_run_environment(self, env, dependent_spec):
+        spec = self.spec
+        if spec.satisfies("+cuda") or spec.satisfies("+rocm"):
+            env.set("CUDA_LAUNCH_BLOCKING", "1")
+            env.set("CUDA_MANAGED_FORCE_DEVICE_ALLOC", "1")
+            env.set("HIP_LAUNCH_BLOCKING", "1")
+            env.set("HIP_MANAGED_FORCE_DEVICE_ALLOC", "1")
+
     def setup_build_environment(self, env):
         spec = self.spec
         env.append_flags("CXXFLAGS", "-DUSE_STK_SIMD_NONE")
         if spec.satisfies("+cuda"):
-            env.set("CUDA_LAUNCH_BLOCKING", "1")
-            env.set("CUDA_MANAGED_FORCE_DEVICE_ALLOC", "1")
             env.set("OMPI_CXX", self.spec["kokkos-nvcc-wrapper"].kokkos_cxx)
             env.set("MPICH_CXX", self.spec["kokkos-nvcc-wrapper"].kokkos_cxx)
             env.set("MPICXX_CXX", self.spec["kokkos-nvcc-wrapper"].kokkos_cxx)
