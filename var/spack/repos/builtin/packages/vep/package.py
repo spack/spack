@@ -81,35 +81,37 @@ class Vep(Package):
         args += ["--AUTO", auto]
         return args
 
+    def run_vep_installer(self):
+        with working_dir(self.stage.source_path):
+            # Run the customer VEP installer/downloader
+            installer_script = "./INSTALL.pl"
+            installer = which(installer_script)
+            installer(*self.installer_args())
+
+            # We save this so it can be used later to update caches
+            install(installer_script, self.vep_installer_path)
+
+            # This is required for any cache updating
+            install("convert_cache.pl", self.vep_scripts_path)
+
+
     def install(self, spec, prefix):
         mkdirp(self.prefix.bin)
         mkdirp(self.vep_lib_path)
         mkdirp(self.vep_share_path)
         mkdirp(self.vep_scripts_path)
-        with working_dir(self.stage.source_path):
 
-            # Run really weird and awkward VEP installer
-            if spec.satisfies("+installer"):
-                installer_script = "./INSTALL.pl"
-                installer = which(installer_script)
-                installer(*self.installer_args())
+        if spec.satisfies("+installer"):
+            # If we don't do this a bunch of perl libs will be missing
+            # TODO: Create spack packages for these
+            self.run_vep_installer()
 
-                # We save this so it can be used later to update caches
-                install(installer_script, self.vep_installer_path)
-
-            install_tree("modules", self.vep_lib_path)
-
-            # Install VEP script
-            # VEP requires specifying a bunch of paths when using the cache
-            # this is really difficult to do with spack's generated prefixes
-            # so we optionally have a wrapper that we can install in the 
-            # patch section
-            install("vep", prefix.bin.vep)
-            
-            # Manually install auxilary scripts if requested
-            if self.spec.satisfies("+utility_scripts"):
-                install("filter_vep", prefix.bin.filter_vep)
-                install("haplo", prefix.bin.haplo)
-                install("variant_recoder", prefix.bin.variant_recoder)
-                install("convert_cache.pl", self.vep_scripts_path)
+        install_tree("modules", self.vep_lib_path)
+        install("vep", prefix.bin.vep)
+        
+        # Manually install auxilary scripts if requested
+        if self.spec.satisfies("+utility_scripts"):
+            install("filter_vep", prefix.bin.filter_vep)
+            install("haplo", prefix.bin.haplo)
+            install("variant_recoder", prefix.bin.variant_recoder)
 
