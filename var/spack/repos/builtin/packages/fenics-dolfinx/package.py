@@ -60,17 +60,8 @@ class FenicsDolfinx(CMakePackage):
     depends_on("fenics-basix@0.7", when="@0.7")
     depends_on("fenics-basix@0.6", when="@0.6")
 
-    conflicts(
-        "%gcc@:9.10",
-        when="@0.6.0:",
-        msg="fenics-dolfinx requires GCC-10 or newer for C++20 support",
-    )
-    conflicts(
-        "%clang@:9.10",
-        when="@0.6.0:",
-        msg="fenics-dolfinx requires Clang-10 or newer for C++20 support",
-    )
-    conflicts("%gcc@:8", msg="fenics-dolfinx requires GCC-9 or newer for improved C++17 support")
+    conflicts("%gcc@:9.10", msg="fenics-dolfinx requires GCC-10 or newer for C++20 support")
+    conflicts("%clang@:9.10", msg="fenics-dolfinx requires Clang-10 or newer for C++20 support")
 
     root_cmakelists_dir = "cpp"
 

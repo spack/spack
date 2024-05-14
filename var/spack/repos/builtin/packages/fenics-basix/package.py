@@ -25,13 +25,7 @@ class FenicsBasix(CMakePackage):
     depends_on("blas")
     depends_on("lapack")
 
-    conflicts(
-        "%gcc@:9.10", when="@0.5.0:", msg="fenics-basix requires GCC-10 or newer for C++20 support"
-    )
-    conflicts(
-        "%clang@:9.10",
-        when="@0.5.0:",
-        msg="fenics-basix requires Clang-10 or newer for C++20 support",
-    )
+    conflicts("%gcc@:9.10", msg="fenics-basix requires GCC-10 or newer for C++20 support")
+    conflicts("%clang@:9.10", msg="fenics-basix requires Clang-10 or newer for C++20 support")
 
     root_cmakelists_dir = "cpp"
