@@ -2057,7 +2057,7 @@ def do_not_check_runtimes_on_reuse(monkeypatch):
 
 @pytest.fixture(autouse=True, scope="session")
 def _c_compiler_always_exists():
-    fn = spack.solver.asp.c_compiler_exists
-    spack.solver.asp.c_compiler_exists = _true
+    fn = spack.solver.asp.c_compiler_runs
+    spack.solver.asp.c_compiler_runs = _true
     yield
-    spack.solver.asp.c_compiler_exists = fn
+    spack.solver.asp.c_compiler_runs = fn

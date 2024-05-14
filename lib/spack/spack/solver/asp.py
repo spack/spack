@@ -314,8 +314,8 @@ def using_libc_compatibility() -> bool:
     return spack.platforms.host().name == "linux"
 
 
-def c_compiler_exists(compiler: spack.compiler.Compiler) -> bool:
-    return os.path.exists(compiler.cc)
+def c_compiler_runs(compiler: spack.compiler.Compiler) -> bool:
+    return compiler.compiler_verbose_output is not None
 
 
 def extend_flag_list(flag_list, new_flags):
@@ -2979,7 +2979,7 @@ class CompilerParser:
     def __init__(self, configuration) -> None:
         self.compilers: Set[KnownCompiler] = set()
         for c in all_compilers_in_config(configuration):
-            if not c_compiler_exists(c):
+            if not c_compiler_runs(c):
                 tty.debug(
                     f"the C compiler {c.cc} does not exist. The compiler {c.spec} will "
                     f"not be used during concretization"
