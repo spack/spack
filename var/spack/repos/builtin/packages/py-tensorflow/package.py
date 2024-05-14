@@ -379,10 +379,10 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
     conflicts("target=aarch64:", when="@:2.2")
     conflicts(
         "~rocm",
-        when="@2.7.4-rocm-enhanced,2.11.0-rocm-enhanced,2.14.0-rocm-enhanced,2.16.0-rocm-enhanced",
+        when="@2.7.4-rocm-enhanced,2.11.0-rocm-enhanced,2.14-rocm-enhanced,2.16-rocm-enhanced",
     )
     conflicts(
-        "+rocm", when="@:2.7.4-a,2.7.4.0:2.11.0-a,2.11.0.0:2.14.0-a,2.14.0.0:2.16.0-a,2.16.0.0:"
+        "+rocm", when="@:2.7.4-a,2.7.4.0:2.11.0-a,2.11.0.0:2.14-a,2.14-z:2.16-a,2.16-z:"
     )
     # wheel 0.40 upgrades vendored packaging, trips over tensorflow-io-gcs-filesystem identifier
     conflicts("^py-wheel@0.40:", when="@2.11:2.13")
@@ -430,9 +430,9 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
     # and https://github.com/abseil/abseil-cpp/issues/1665
     patch("absl_neon.patch", when="@2.16.1: target=aarch64:")
 
-    patch("Find_ROCm_Components_Individiually.2.16.patch", when="@2.16.0-rocm-enhanced +rocm")
-    patch("Find_ROCm_Components_Individiually.patch", when="@2.14.0-rocm-enhanced +rocm")
-    patch("set_jit_trueLT_false.patch", when="@2.14.0-rocm-enhanced: +rocm")
+    patch("Find_ROCm_Components_Individiually.2.16.patch", when="@2.16-rocm-enhanced +rocm")
+    patch("Find_ROCm_Components_Individiually.patch", when="@2.14-rocm-enhanced +rocm")
+    patch("set_jit_trueLT_false.patch", when="@2.14-rocm-enhanced: +rocm")
 
     phases = ["configure", "build", "install"]
 
@@ -742,7 +742,7 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
             with open(".tf_configure.bazelrc", mode="a") as f:
                 f.write('build --action_env LD_LIBRARY_PATH="' + slibs + '"')
 
-        if spec.satisfies("@2.16.0-rocm-enhanced +rocm"):
+        if spec.satisfies("@2.16-rocm-enhanced +rocm"):
             filter_file(
                 "/usr/lib/llvm-17/bin/clang", spec["llvm-amdgpu"].prefix.bin.clang, ".bazelrc"
             )
