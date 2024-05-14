@@ -259,7 +259,7 @@ def get_armpl_suffix(spec):
     return suffix
 
 
-class Acfl(Package):
+class Acfl(Package, CompilerPackage):
     """Arm Compiler combines the optimized tools and libraries from Arm
     with a modern LLVM-based compiler framework.
     """
