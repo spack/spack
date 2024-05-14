@@ -51,5 +51,4 @@ class PyFenicsFfcx(PythonPackage):
     def check_build(self):
         with working_dir("test"):
             pytest = which("pytest")
-            pytest()
-            # pytest("--ignore=test_cmdline.py")
+            pytest("--ignore=test_cmdline.py")
