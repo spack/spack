@@ -37,7 +37,7 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
 
     homepage = "https://www.tensorflow.org"
     url = "https://github.com/tensorflow/tensorflow/archive/v2.3.1.tar.gz"
-    git = "https://github.com/tensorflow/tensorflow-upstream.git"
+    git = "https://github.com/tensorflow/tensorflow.git"
 
     maintainers("adamjstewart", "aweits")
     import_modules = ["tensorflow"]
