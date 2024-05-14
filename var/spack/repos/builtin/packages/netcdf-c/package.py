@@ -460,7 +460,7 @@ class AutotoolsBuilder(BaseBuilder, autotools.AutotoolsBuilder):
                 # introduced by the configure script:
                 if "+szip" in hdf:
                     extra_libs.append(hdf["szip"].libs)
-                if "+external-xdr" in hdf:
+                if "+external-xdr ^libtirpc" in hdf:
                     extra_libs.append(hdf["rpc"].libs)
                 extra_libs.append(hdf["zlib-api"].libs)
 

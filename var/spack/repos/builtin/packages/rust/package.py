@@ -36,6 +36,7 @@ class Rust(Package):
     version("nightly")
 
     # Stable versions.
+    version("1.78.0", sha256="ff544823a5cb27f2738128577f1e7e00ee8f4c83f2a348781ae4fc355e91d5a9")
     version("1.76.0", sha256="9e5cff033a7f0d2266818982ad90e4d3e4ef8f8ee1715776c6e25073a136c021")
     version("1.75.0", sha256="5b739f45bc9d341e2d1c570d65d2375591e22c2d23ef5b8a37711a0386abc088")
     version("1.74.0", sha256="882b584bc321c5dcfe77cdaa69f277906b936255ef7808fcd5c7492925cf1049")
@@ -56,10 +57,12 @@ class Rust(Package):
     depends_on("cmake@3.13.4:", type="build")
     depends_on("curl+nghttp2")
     depends_on("libgit2")
+    depends_on("libssh2")
     depends_on("ninja", type="build")
     depends_on("openssl")
     depends_on("pkgconfig", type="build")
     depends_on("python", type="build")
+    depends_on("zlib-api")
 
     # Compiling Rust requires a previous version of Rust.
     # The easiest way to bootstrap a Rust environment is to
@@ -79,6 +82,9 @@ class Rust(Package):
     depends_on("rust-bootstrap@1.73:1.74", type="build", when="@1.74")
     depends_on("rust-bootstrap@1.74:1.75", type="build", when="@1.75")
 
+    # src/llvm-project/llvm/cmake/modules/CheckCompilerVersion.cmake
+    conflicts("%gcc@:7.3", when="@1.73:", msg="Host GCC version must be at least 7.4")
+
     extendable = True
     executables = ["^rustc$", "^cargo$"]
 
@@ -94,6 +100,11 @@ class Rust(Package):
         module.cargo = Executable(os.path.join(self.spec.prefix.bin, "cargo"))
 
     def setup_build_environment(self, env):
+        # Manually instruct Cargo dependency libssh2-sys to build with
+        # the Spack installed libssh2 package. For more info see
+        # https://github.com/alexcrichton/ssh2-rs/issues/173
+        env.set("LIBSSH2_SYS_USE_PKG_CONFIG", "1")
+
         # Manually inject the path of ar for build.
         ar = which("ar", required=True)
         env.set("AR", ar.path)

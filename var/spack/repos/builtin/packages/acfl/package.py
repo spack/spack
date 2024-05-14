@@ -3,7 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
-import re
 
 from spack.package import *
 
@@ -249,7 +248,6 @@ def get_gcc_prefix(spec):
     dirlist = next(os.walk(spec.prefix))[1]
     return join_path(spec.prefix, next(dir for dir in dirlist if dir.startswith("gcc")))
 
-
 def get_armpl_suffix(spec):
     suffix = ""
     if spec.satisfies("@24:"):
@@ -307,33 +305,15 @@ class Acfl(Package):
         )
         exe("--accept", "--force", "--install-to", prefix)
 
-    @classmethod
-    def determine_version(cls, exe):
-        regex_str = r"Arm C\/C\+\+\/Fortran Compiler version ([\d\.]+) " r"\(build number (\d+)\) "
-        version_regex = re.compile(regex_str)
-        try:
-            output = spack.compiler.get_compiler_version_output(exe, "--version")
-            match = version_regex.search(output)
-            if match:
-                if match.group(1).count(".") == 1:
-                    return match.group(1) + ".0." + match.group(2)
-                return match.group(1) + "." + match.group(2)
-        except spack.util.executable.ProcessError:
-            pass
-        except Exception as e:
-            tty.debug(e)
+    compiler_languages = ["c", "cxx", "fortran"]
+    c_names = ["armclang"]
+    cxx_names = ["armclang++"]
+    fortran_names = ["armflang"]
 
-    @classmethod
-    def determine_variants(cls, exes, version_str):
-        compilers = {}
-        for exe in exes:
-            if "armclang" in exe:
-                compilers["c"] = exe
-            if "armclang++" in exe:
-                compilers["cxx"] = exe
-            if "armflang" in exe:
-                compilers["fortran"] = exe
-        return "", {"compilers": compilers}
+    compiler_version_argument = "--version"
+    compiler_version_regex = (
+        r"Arm C\/C\+\+\/Fortran Compiler version ([\d\.]+) \(build number \d+\) "
+    )
 
     @property
     def cc(self):

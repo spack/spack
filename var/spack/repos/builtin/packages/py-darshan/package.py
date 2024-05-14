@@ -14,6 +14,7 @@ class PyDarshan(PythonPackage):
 
     maintainers("jeanbez", "shanedsnyder")
 
+    version("3.4.5.0", sha256="1419e246b2383d3e71da14942d6579a86fb298bf6dbbc3f507accefa614c6e50")
     version("3.4.4.0", sha256="2d218a1b2a450934698a78148c6603e453c246ec852679432bf217981668e56b")
     version("3.4.3.0", sha256="e0708fc5445f2d491ebd381a253cd67534cef13b963f1d749dd605a10f5c0f8f")
     version("3.4.2.0", sha256="eb00eb758c96899c0d523b71eb00caa3b967509c27fd504c579ac8c9b521845c")
@@ -21,7 +22,8 @@ class PyDarshan(PythonPackage):
     version("3.4.0.1", sha256="0142fc7c0b12a9e5c22358aa26cca7083d28af42aeea7dfcc5698c56b6aee6b7")
 
     depends_on("python@3.7:", type=("build", "run"))
-    depends_on("py-setuptools@:63", type="build")
+    depends_on("py-setuptools@:63", when="@:3.4.4", type="build")
+    depends_on("py-setuptools@64:", when="@3.4.5:", type="build")
     depends_on("py-pytest-runner", type="build")
     depends_on("py-cffi", type=("build", "run"))
     # NOTE: SciPy is an indirect dependency needed for interpolate usage in pandas
@@ -34,6 +36,9 @@ class PyDarshan(PythonPackage):
     depends_on("py-mako", type=("build", "run"))
     depends_on("py-humanize", when="@3.4.3.0:", type=("build", "run"))
     depends_on("py-pytest", type="test")
+    depends_on("py-packaging", type="test")
+    depends_on("py-lxml", type="test")
+    depends_on("py-importlib-resources", when="^python@:3.8", type="test")
 
     # py-darshan depends on specific darshan-util versions corresponding
     # to the first 3 parts of the py-darshan version string

@@ -20,6 +20,7 @@ class Namd(MakefilePackage, CudaPackage):
     url = "file://{0}/NAMD_2.12_Source.tar.gz".format(os.getcwd())
     git = "https://charm.cs.illinois.edu/gerrit/namd.git"
     manual_download = True
+    redistribute(source=False, binary=False)
 
     maintainers("jcphill")
 
@@ -133,7 +134,7 @@ class Namd(MakefilePackage, CudaPackage):
                 # this options are take from the default provided
                 # configuration files
                 # https://github.com/UIUC-PPL/charm/pull/2778
-                archopt = spec.target.optimization_flags(spec.compiler.name, spec.compiler.version)
+                archopt = spec.architecture.target.optimization_flags(spec.compiler)
 
                 if self.spec.satisfies("^charmpp@:6.10.1"):
                     optims_opts = {

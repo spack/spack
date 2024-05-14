@@ -169,6 +169,25 @@ def test_update_key_index(
     assert "index.json" in key_dir_list
 
 
+def test_buildcache_autopush(tmp_path, install_mockery, mock_fetch):
+    """Test buildcache with autopush"""
+    mirror_dir = tmp_path / "mirror"
+    mirror_autopush_dir = tmp_path / "mirror_autopush"
+
+    mirror("add", "--unsigned", "mirror", mirror_dir.as_uri())
+    mirror("add", "--autopush", "--unsigned", "mirror-autopush", mirror_autopush_dir.as_uri())
+
+    s = Spec("libdwarf").concretized()
+
+    # Install and generate build cache index
+    s.package.do_install()
+
+    metadata_file = spack.binary_distribution.tarball_name(s, ".spec.json")
+
+    assert not (mirror_dir / "build_cache" / metadata_file).exists()
+    assert (mirror_autopush_dir / "build_cache" / metadata_file).exists()
+
+
 def test_buildcache_sync(
     mutable_mock_env_path,
     install_mockery_mutable_config,
@@ -427,3 +446,10 @@ def test_push_and_install_with_mirror_marked_unsigned_does_not_require_extra_fla
 
     spec.package.do_uninstall(force=True)
     spec.package.do_install(**kwargs)
+
+
+def test_skip_no_redistribute(mock_packages, config):
+    specs = list(Spec("no-redistribute-dependent").concretized().traverse())
+    filtered = spack.cmd.buildcache._skip_no_redistribute_for_public(specs)
+    assert not any(s.name == "no-redistribute" for s in filtered)
+    assert any(s.name == "no-redistribute-dependent" for s in filtered)

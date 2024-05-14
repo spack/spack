@@ -48,6 +48,13 @@ class PyNetcdf4(PythonPackage):
     # following patch disables the usage of pkg-config at all.
     patch("disable_pkgconf.patch")
 
+    def flag_handler(self, name, flags):
+        if name == "cflags":
+            if self.spec.satisfies("%oneapi"):
+                flags.append("-Wno-error=int-conversion")
+
+        return flags, None, None
+
     def setup_build_environment(self, env):
         """Ensure installed netcdf and hdf5 libraries are used"""
         # Explicitly set these variables so setup.py won't erroneously pick up

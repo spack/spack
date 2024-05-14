@@ -17,12 +17,8 @@ class SuiteSparse(Package):
 
     license("Apache-2.0")
 
-    #    version("7.6.1", sha256="ab1992802723b09aca3cbb0f4dc9b2415a781b9ad984ed934c7d8a0dcc31bc42")
-    #    version("7.5.1", sha256="dccfb5f75aa83fe2edb4eb2462fc984a086c82bad8433f63c31048d84b565d74")
-    #    version("7.4.0", sha256="f9a5cc2316a967198463198f7bf10fb8c4332de6189b0e405419a7092bc921b7")
-    # these fail with hundreds of libcholmod.so.5.2.0: undefined reference to xxxx when builing
-    # the various cholmod_yyy_demo's or creating the static archive
     version("7.3.1", sha256="b512484396a80750acf3082adc1807ba0aabb103c2e09be5691f46f14d0a9718")
+    version("7.2.1", sha256="304e959a163ff74f8f4055dade3e0b5498d9aa3b1c483633bb400620f521509f")
     version("5.13.0", sha256="59c6ca2959623f0c69226cf9afb9a018d12a37fab3a8869db5f6d7f83b6b147d")
     version("5.12.0", sha256="5fb0064a3398111976f30c5908a8c0b40df44c6dd8f0cc4bfa7b9e45d8c647de")
     version("5.11.0", sha256="fdd957ed06019465f7de73ce931afaf5d40e96e14ae57d91f60868b8c123c4c8")
@@ -71,7 +67,7 @@ class SuiteSparse(Package):
     depends_on("gmp", when="@5.8.0:")
     depends_on("m4", type="build", when="@5.0.0:")
     depends_on("cmake", when="+graphblas @5.2.0:", type="build")
-    depends_on("cmake@3.22:", when="@7.3.1:", type="build")
+    depends_on("cmake@3.22:", when="@6:", type="build")
     depends_on("metis@5.1.0", when="@4.5.1:")
 
     with when("+tbb"):
@@ -235,11 +231,13 @@ class SuiteSparse(Package):
             make_args += [
                 "CMAKE_OPTIONS=-DCMAKE_INSTALL_PREFIX=%s" % prefix
                 + " -DCMAKE_LIBRARY_PATH=%s" % prefix.lib
-                + " -DBLA_VENDOR=OpenBLAS"
-                + " -DBLAS_INCLUDE_DIRS=%s" % (spec["blas"].prefix.include)  # for >= v7.4.0
-                + " -DLAPACK_INCLUDE_DIRS=%s" % (spec["lapack"].prefix.include)  # for >= v7.4.0
-                + " -DBLAS_LIBRARIES=%s" % (spec["blas"].prefix.include)  # for <= v7.3.1
-                + " -DLAPACK_LIBRARIES=%s" % (spec["lapack"].prefix.include)  # for <= v7.3.1
+                + " -DBLAS_ROOT=%s" % spec["blas"].prefix
+                + " -DLAPACK_ROOT=%s" % spec["lapack"].prefix
+                # *_LIBRARIES is critical to pick up static
+                # libraries (if intended) and also to avoid
+                # unintentional system blas/lapack packages
+                + " -DBLAS_LIBRARIES=%s" % spec["blas"].libs
+                + " -DLAPACK_LIBRARIES=%s" % spec["lapack"].libs
             ]
 
         if spec.satisfies("%gcc platform=darwin"):
@@ -267,13 +265,14 @@ class SuiteSparse(Package):
         targets.extend(["SPQR"])
         if spec.satisfies("+graphblas"):
             targets.append("GraphBLAS")
-        #        if spec.satisfies("@5.8.0:"):
-        #            targets.append("SLIP_LU")
-        #        fails with  make: *** SLIP_LU: No such file or directory.  Stop.
+        if spec.satisfies("@5.8.0:6"):
+            targets.append("SLIP_LU")
 
         # Finally make and install
-        make("-C", "SuiteSparse_config", *make_args)
-        #       make("-C", "SuiteSparse_config", "config", *make_args)
+        if spec.satisfies("@6:"):
+            make("-C", "SuiteSparse_config", *make_args)
+        else:
+            make("-C", "SuiteSparse_config", "config", *make_args)
         for target in targets:
             make("-C", target, "library", *make_args)
             make("-C", target, "install", *make_args)

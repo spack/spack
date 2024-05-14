@@ -246,6 +246,9 @@ class Mapl(CMakePackage):
     depends_on("py-numpy", when="+f2py")
     depends_on("perl")
 
+    # when using apple-clang version 15.x or newer, need to use the llvm-openmp library
+    depends_on("llvm-openmp", when="%apple-clang@15:", type=("build", "run"))
+
     def cmake_args(self):
         args = [
             self.define_from_variant("BUILD_WITH_FLAP", "flap"),
@@ -254,9 +257,6 @@ class Mapl(CMakePackage):
             self.define_from_variant("BUILD_SHARED_MAPL", "shared"),
             self.define_from_variant("USE_EXTDATA2G", "extdata2g"),
             self.define_from_variant("USE_F2PY", "f2py"),
-            "-DCMAKE_C_COMPILER=%s" % self.spec["mpi"].mpicc,
-            "-DCMAKE_CXX_COMPILER=%s" % self.spec["mpi"].mpicxx,
-            "-DCMAKE_Fortran_COMPILER=%s" % self.spec["mpi"].mpifc,
         ]
 
         if self.spec.satisfies("@2.22.0:"):

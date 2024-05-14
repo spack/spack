@@ -82,6 +82,7 @@ class Adios2(CMakePackage, CudaPackage, ROCmPackage):
         when="+shared",
         description="Enable the DataMan engine for WAN transports",
     )
+    variant("campaign", default=False, when="@2.10:", description="Enable campaign management")
     variant("dataspaces", default=False, when="@2.5:", description="Enable support for DATASPACES")
     variant("ssc", default=True, when="@:2.7", description="Enable the SSC staging engine")
     variant("hdf5", default=False, description="Enable the HDF5 engine")
@@ -173,6 +174,8 @@ class Adios2(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("hdf5~mpi", when="+hdf5~mpi")
     depends_on("hdf5+mpi", when="+hdf5+mpi")
 
+    depends_on("sqlite@3", when="+campaign")
+
     depends_on("libpressio", when="+libpressio")
     depends_on("c-blosc", when="+blosc")
     depends_on("c-blosc2", when="+blosc2")
@@ -208,6 +211,9 @@ class Adios2(CMakePackage, CudaPackage, ROCmPackage):
     # Fix unresolved symbols when built with gcc10.
     # See https://github.com/ornladios/ADIOS2/pull/2714
     patch("2.6-fix-gcc10-symbols.patch", when="@2.6.0")
+
+    # add missing include <cstdint>
+    patch("2.7-fix-missing-cstdint-include.patch", when="@2.7")
 
     # Add missing include <memory>
     # https://github.com/ornladios/adios2/pull/2710
@@ -251,6 +257,7 @@ class Adios2(CMakePackage, CudaPackage, ROCmPackage):
             from_variant("ADIOS2_USE_Blosc", "blosc"),
             from_variant("ADIOS2_USE_Blosc2", "blosc2"),
             from_variant("ADIOS2_USE_BZip2", "bzip2"),
+            from_variant("ADIOS2_USE_Campaign", "campaign"),
             from_variant("ADIOS2_USE_DataMan", "dataman"),
             from_variant("ADIOS2_USE_DataSpaces", "dataspaces"),
             from_variant("ADIOS2_USE_Fortran", "fortran"),

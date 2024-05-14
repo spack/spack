@@ -6,7 +6,6 @@
 import re
 
 from spack.package import *
-from spack.util.environment import is_system_path
 
 
 class Gnupg(AutotoolsPackage):
@@ -95,10 +94,10 @@ class Gnupg(AutotoolsPackage):
                     f"--with-npth-prefix={self.spec['npth'].prefix}",
                 ]
             )
-            if self.spec["iconv"].name == "libc":
-                args.append("--without-libiconv-prefix")
-            elif not is_system_path(self.spec["iconv"].prefix):
+            if self.spec["iconv"].name == "libiconv":
                 args.append(f"--with-libiconv-prefix={self.spec['iconv'].prefix}")
+            else:
+                args.append("--without-libiconv-prefix")
 
         if self.spec.satisfies("@:1"):
             args.extend(

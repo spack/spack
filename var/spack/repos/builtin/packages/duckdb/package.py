@@ -18,6 +18,7 @@ class Duckdb(MakefilePackage):
     maintainers("glentner", "teaguesterling")
 
     version("master", branch="master")
+    version("0.10.2", sha256="662a0ba5c35d678ab6870db8f65ffa1c72e6096ad525a35b41b275139684cea6")
     version("0.10.0", sha256="5a925b8607d00a97c1a3ffe6df05c0a62a4df063abd022ada82ac1e917792013")
     version(
         "0.9.2",
@@ -106,6 +107,8 @@ class Duckdb(MakefilePackage):
                 env.set(make_flag, "1")
             elif "~" + flag in self.spec:
                 env.set(make_flag, "0")
+        if self.spec.satisfies("@0.10.2:"):
+            env.set("OVERRIDE_GIT_DESCRIBE", f"v{self.spec.version}")
 
     def url_for_version(self, version):
         return "https://github.com/duckdb/duckdb/archive/refs/tags/v{0}.tar.gz".format(version)
@@ -114,9 +117,11 @@ class Duckdb(MakefilePackage):
         # DuckDB pulls its version from a git tag, which it can't find in the tarball
         # and thus defaults to something arbitrary and breaks extensions.
         # We use the Spack version to inject it in the right place during the build
+        # Patching is not needed for versions from 0.10.2 onward as we can
+        # set OVERRIDE_GIT_DESCRIBE to force the version when not building from a repo.
 
         version = self.spec.version
-        if not self.spec.satisfies("@0.10.0:"):
+        if self.spec.satisfies("@:0.9.2"):
             # Prior to version 0.10.0, this was sufficient
             filter_file(
                 r'(message\(STATUS "git hash \$\{GIT_COMMIT_HASH\}, '
@@ -124,7 +129,7 @@ class Duckdb(MakefilePackage):
                 'set(DUCKDB_VERSION "v{0}")\n\\1'.format(version),
                 "CMakeLists.txt",
             )
-        else:
+        elif not self.spec.satisfies("@0.10.0"):
             # Override the fallback values that are set when GIT_COMMIT_HASH doesn't work
             for i, n in enumerate(["MAJOR", "MINOR", "PATCH"]):
                 filter_file(
