@@ -108,7 +108,8 @@ class NodeJs(Package):
     variant(
         "cares",
         default=True,
-        when="os=centos7",
+        # for internal c-ares@1.27 or newer build fails on Centos7 due to older glibc
+        when="@18.20.0:18,20.12:20,21.7: os=centos7",
         description="Build with Spack's c-ares instead of the bundled version",
     )
     variant(
