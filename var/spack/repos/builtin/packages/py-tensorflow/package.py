@@ -46,7 +46,7 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
 
     version("2.16.1", sha256="c729e56efc945c6df08efe5c9f5b8b89329c7c91b8f40ad2bb3e13900bd4876d")
     version(
-        "2.16.0-rocm-enhanced",
+        "2.16-rocm-enhanced",
         git="https://github.com/ROCm/tensorflow-upstream.git",
         branch="r2.16-rocm-enhanced",
     )
@@ -54,7 +54,7 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
     version("2.15.0", sha256="9cec5acb0ecf2d47b16891f8bc5bc6fbfdffe1700bdadc0d9ebe27ea34f0c220")
     version("2.14.1", sha256="6b31ed347ed7a03c45b906aa41628ac91c3db7c84cb816971400d470e58ba494")
     version(
-        "2.14.0-rocm-enhanced",
+        "2.14-rocm-enhanced",
         git="https://github.com/ROCm/tensorflow-upstream.git",
         branch="r2.14-rocm-enhanced-nohipblaslt-build",
     )
