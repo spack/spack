@@ -1,0 +1,50 @@
+diff --git a/hail/src/main/c/Decoder.cpp b/hail/src/main/c/Decoder.cpp
+index a76895828..e001fa277 100644
+--- a/hail/src/main/c/Decoder.cpp
++++ b/hail/src/main/c/Decoder.cpp
+@@ -1,7 +1,7 @@
+ #include <jni.h>
+ #include <cstring>
+ #include "hail/Decoder.h"
+-#include "lz4.h"
++#include <lz4.h>
+ #include "hail/Utils.h"
+ #include <iostream>
+ 
+diff --git a/hail/src/main/c/Encoder.cpp b/hail/src/main/c/Encoder.cpp
+index 67146083e..8833276bd 100644
+--- a/hail/src/main/c/Encoder.cpp
++++ b/hail/src/main/c/Encoder.cpp
+@@ -3,7 +3,7 @@
+ #include <jni.h>
+ #include <cstring>
+ #include <cstdio>
+-#include "lz4.h"
++#include <lz4.h>
+ 
+ namespace hail {
+ //OutputStream
+diff --git a/hail/src/main/resources/include/hail/Decoder.h b/hail/src/main/resources/include/hail/Decoder.h
+index fe21a6ec1..ff105375f 100644
+--- a/hail/src/main/resources/include/hail/Decoder.h
++++ b/hail/src/main/resources/include/hail/Decoder.h
+@@ -1,6 +1,6 @@
+ #ifndef HAIL_DECODER_H
+ #define HAIL_DECODER_H 1
+-#include "lz4.h"
++#include <lz4.h>
+ #include "hail/Upcalls.h"
+ #include "hail/Utils.h"
+ #include "hail/NativeObj.h"
+diff --git a/hail/src/main/resources/include/hail/Encoder.h b/hail/src/main/resources/include/hail/Encoder.h
+index 34f2f4161..76b1b0301 100644
+--- a/hail/src/main/resources/include/hail/Encoder.h
++++ b/hail/src/main/resources/include/hail/Encoder.h
+@@ -1,6 +1,6 @@
+ #ifndef HAIL_ENCODER_H
+ #define HAIL_ENCODER_H 1
+-#include "lz4.h"
++#include <lz4.h>
+ #include "hail/Upcalls.h"
+ #include "hail/Utils.h"
+ #include "hail/NativeObj.h"
