@@ -25,7 +25,4 @@ class PyAstor(PythonPackage):
     # https://github.com/berkerpeksag/astor/issues/162
     # https://github.com/berkerpeksag/astor/pull/163
     # https://github.com/berkerpeksag/astor/pull/163/commits/30059dac4eb832e58ab2109db84508b294ba366d.patch
-    patch(
-        "30059dac4eb832e58ab2109db84508b294ba366d.patch",
-        when="@0.8.0",
-    )
+    patch("30059dac4eb832e58ab2109db84508b294ba366d.patch", when="@0.8.0")

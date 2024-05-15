@@ -216,15 +216,9 @@ class Wrf(Package):
     )
     # Add ARM compiler support
     # https://github.com/wrf-model/WRF/pull/1888/commits/4a084e03575da65f254917ef5d8eb39074abd3fc.patch
-    patch(
-        "4a084e03575da65f254917ef5d8eb39074abd3fc.patch",
-        when="@4.5: %arm",
-    )
+    patch("4a084e03575da65f254917ef5d8eb39074abd3fc.patch", when="@4.5: %arm")
     # https://github.com/wrf-model/WRF/pull/1888/commits/6087d9192f7f91967147e50f5bc8b9e49310cf98.patch
-    patch(
-        "6087d9192f7f91967147e50f5bc8b9e49310cf98.patch",
-        when="@4.5: %arm",
-    )
+    patch("6087d9192f7f91967147e50f5bc8b9e49310cf98.patch", when="@4.5: %arm")
 
     depends_on("pkgconfig", type=("build"))
     depends_on("libtirpc")

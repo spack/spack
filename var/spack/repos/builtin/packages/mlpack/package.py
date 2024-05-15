@@ -64,10 +64,7 @@ class Mlpack(CMakePackage):
         depends_on("r-pkgbuild")
 
     # https://github.com/mlpack/mlpack/pull/3502/commits/183396e51a6771d5d2b43f22b0d2a9a91785e533.patch
-    patch(
-        "183396e51a6771d5d2b43f22b0d2a9a91785e533.patch",
-        when="@4:4.2.0",
-    )
+    patch("183396e51a6771d5d2b43f22b0d2a9a91785e533.patch", when="@4:4.2.0")
 
     def cmake_args(self):
         args = [
