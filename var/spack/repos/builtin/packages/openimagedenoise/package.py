@@ -15,8 +15,6 @@ class Openimagedenoise(CMakePackage):
     homepage = "https://www.openimagedenoise.org/"
     url = "https://github.com/OpenImageDenoise/oidn/releases/download/v1.4.3/oidn-1.4.3.src.tar.gz"
 
-    # maintainers("github_user1", "github_user2")
-
     license("Apache-2.0")
 
     version("2.2.2", sha256="d26b75fa216165086f65bf48c80648290f2cfed7d3c4bfc1e86c247b46c96b7e")

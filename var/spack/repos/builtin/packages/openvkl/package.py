@@ -14,8 +14,6 @@ class Openvkl(CMakePackage):
     url = "https://www.github.com/OpenVKL/openvkl/archive/v1.0.0.tar.gz"
     git = "https://www.github.com/OpenVKL/openvkl.git"
 
-    # maintainers("github_user1", "github_user2")
-
     license("Apache-2.0")
 
     version("2.0.1", sha256="0c7faa9582a93e93767afdb15a6c9c9ba154af7ee83a6b553705797be5f8af62")

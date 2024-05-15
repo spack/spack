@@ -14,6 +14,7 @@ class PerlMoose(PerlPackage):
 
     license("GPL-1.0-or-later OR Artistic-1.0-Perl")
 
+    version("2.2207", sha256="7c2daddc49754ded93f65b8ce9e3ac9b6d11ab27d111ec77f95a8528cf4ac409")
     version("2.2203", sha256="fa7814acf4073fa434c148d403cbbf8a7b62f73ad396fa8869f3036d6e3241a7")
     version("2.2010", sha256="af0905b69f18c27de1177c9bc7778ee495d4ec91be1f223e8ca8333af4de08c5")
     version("2.2009", sha256="63ba8a5e27dbcbdbac2cd8f4162fff50a31e9829d8955a196a5898240c02d194")

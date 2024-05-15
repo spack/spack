@@ -17,6 +17,7 @@ class Libcap(MakefilePackage):
 
     license("BSD-3-Clause OR GPL-2.0-only")
 
+    version("2.69", sha256="3a99ec26452e328e0ea408efd67096ef914f4ee4788fa8e8e21f214e2bd670b9")
     version("2.68", sha256="046e55716e0643b565efcd1dab1d26c5625709fcd0b5c271290c7ea1524cf906")
     version("2.67", sha256="2d0b679a431c06afd8651a8ada906303eda8b3ac67c308e5fe1937eea5c018aa")
     version("2.66", sha256="5f65dc5b2e9f63a0748ea1b05be7965a38548db1cbfd53b30271ff02186b3a4a")
@@ -33,7 +34,7 @@ class Libcap(MakefilePackage):
             "USE_GPERF=no",
             "SHARED=yes",
             "lib=lib",
-            "prefix={}".format(prefix),
+            f"prefix={prefix}",
         ]
 
     def build(self, spec, prefix):
