@@ -76,14 +76,7 @@ def is_path_instead_of_url(path_or_url):
     """Historically some config files and spack commands used paths
     where urls should be used. This utility can be used to validate
     and promote paths to urls."""
-    scheme = urllib.parse.urlparse(path_or_url).scheme
-
-    # On non-Windows, no scheme means it's likely a path
-    if not sys.platform == "win32":
-        return not scheme
-
-    # On Windows, we may have drive letters.
-    return "A" <= scheme <= "Z"
+    return not validate_scheme(urllib.parse.urlparse(path_or_url).scheme)
 
 
 def format(parsed_url):

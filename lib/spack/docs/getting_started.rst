@@ -478,6 +478,13 @@ prefix, you can add them to the ``extra_attributes`` field. Similarly,
 all other fields from the compilers config can be added to the
 ``extra_attributes`` field for an external representing a compiler.
 
+Note that the format for the ``paths`` field in the
+``extra_attributes`` section is different than in the ``compilers``
+config. For compilers configured as external packages, the section is
+named ``compilers`` and the dictionary maps language names (``c``,
+``cxx``, ``fortran``) to paths, rather than using the names ``cc``,
+``fc``, and ``f77``.
+
 .. code-block:: yaml
 
    packages:
@@ -493,11 +500,10 @@ all other fields from the compilers config can be added to the
        - spec: llvm+clang@15.0.0 arch=linux-rhel8-skylake
          prefix: /usr
          extra_attributes:
-           paths:
-             cc: /usr/bin/clang-with-suffix
+           compilers:
+             c: /usr/bin/clang-with-suffix
              cxx: /usr/bin/clang++-with-extra-info
-             fc: /usr/bin/gfortran
-             f77: /usr/bin/gfortran
+             fortran: /usr/bin/gfortran
            extra_rpaths:
            - /usr/lib/llvm/
 
@@ -1572,12 +1578,15 @@ Microsoft Visual Studio
 """""""""""""""""""""""
 
 Microsoft Visual Studio provides the only Windows C/C++ compiler that is currently supported by Spack.
+Spack additionally requires that the Windows SDK (including WGL) to be installed as part of your
+visual studio installation as it is required to build many packages from source.
 
 We require several specific components to be included in the Visual Studio installation.
 One is the C/C++ toolset, which can be selected as "Desktop development with C++" or "C++ build tools,"
 depending on installation type (Professional, Build Tools, etc.)  The other required component is
 "C++ CMake tools for Windows," which can be selected from among the optional packages.
 This provides CMake and Ninja for use during Spack configuration.
+
 
 If you already have Visual Studio installed, you can make sure these components are installed by
 rerunning the installer.  Next to your installation, select "Modify" and look at the

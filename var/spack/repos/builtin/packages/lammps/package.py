@@ -5,8 +5,6 @@
 import datetime as dt
 import os
 
-import archspec
-
 from spack.package import *
 
 
@@ -822,9 +820,7 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage, PythonExtension):
             args.append(self.define("CMAKE_CXX_FLAGS_RELWITHDEBINFO", cxx_flags))
 
         # Overwrite generic cpu tune option
-        cmake_tune_flags = archspec.cpu.TARGETS[spec.target.name].optimization_flags(
-            spec.compiler.name, spec.compiler.version
-        )
+        cmake_tune_flags = spec.architecture.target.optimization_flags(spec.compiler)
         args.append(self.define("CMAKE_TUNE_FLAGS", cmake_tune_flags))
 
         args.append(self.define_from_variant("LAMMPS_SIZES", "lammps_sizes"))
