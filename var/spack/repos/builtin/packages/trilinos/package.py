@@ -6,6 +6,7 @@
 import os
 import pathlib
 import sys
+import re
 
 from spack.build_environment import dso_suffix
 from spack.error import NoHeadersError
@@ -604,6 +605,34 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
         spec = self.spec
         define = self.define
         define_from_variant = self.define_from_variant
+
+        if self.spec.satisfies("@master:"):
+            ver_in_src = os.path.exists(
+                os.path.join(self.stage.source_path, "packages", "kokkos", "CMakeLists.txt")
+            )
+            if ver_in_src:
+                with open(
+                    os.path.join(self.stage.source_path, "packages", "kokkos", "CMakeLists.txt")
+                ) as f:
+                    all_txt = "".join(f.readlines())
+                    regex = re.compile(r".*set\(Kokkos_VERSION_MAJOR (\d+)")
+                    m_maj = regex.search(all_txt).group(1)
+                    regex = re.compile(r".*set\(Kokkos_VERSION_MINOR (\d+)")
+                    m_min = regex.search(all_txt).group(1)
+                    regex = re.compile(r".*set\(Kokkos_VERSION_PATCH (\d+)")
+                    m_pat = regex.search(all_txt).group(1)
+                    KokkosVersionInTrilinosSource = Version(".".join([m_maj, m_min, m_pat]))
+                    KokkosVersionSpecified = spec["kokkos"].version
+                    assert KokkosVersionInTrilinosSource == KokkosVersionSpecified, (
+                        "For Trilinos@[master,develop], ^kokkos version in spec must "
+                        "match version in Trilinos source code. Specify ^kokkos@{0} ".format(
+                            KokkosVersionInTrilinosSource
+                        )
+                        + "for trilinos@[master,develop] instead of ^kokkos@{0}.\n".format(
+                            KokkosVersionSpecified
+                        )
+                        + "Trilinos recipe maintainers, please update the ^kokkos version range"
+                    )
 
         def _make_definer(prefix):
             def define_enable(suffix, value=None):
