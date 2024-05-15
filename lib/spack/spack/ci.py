@@ -44,8 +44,8 @@ import spack.util.web as web_util
 from spack import traverse
 from spack.error import SpackError
 from spack.reporters import CDash, CDashConfiguration
-from spack.reporters.cdash import build_stamp as cdash_build_stamp
 from spack.reporters.cdash import SPACK_CDASH_TIMEOUT
+from spack.reporters.cdash import build_stamp as cdash_build_stamp
 
 # See https://docs.gitlab.com/ee/ci/yaml/#retry for descriptions of conditions
 JOB_RETRY_CONDITIONS = [
