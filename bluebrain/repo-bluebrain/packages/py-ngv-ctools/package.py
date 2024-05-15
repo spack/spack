@@ -9,11 +9,11 @@ from spack.package import *
 class PyNgvCtools(PythonPackage):
     """C++ extensions tools for ngv building"""
 
-    homepage = "https://bbpgitlab.epfl.ch/nse/ngv-ctools"
-    git = "ssh://git@bbpgitlab.epfl.ch/nse/ngv-ctools.git"
+    homepage = "https://github.com/BlueBrain/ngv-ctools"
+    git = "https://github.com/BlueBrain/ngv-ctools.git"
+    pypi = "ngv-ctools/ngv_ctools-1.0.3.tar.gz"
 
-    version("develop", branch="main")
-    version("1.0.1", tag="ngv-ctools-v1.0.1")
+    version("1.0.3", sha256="2062074bd4a472c09bb583613fbb058f9b01ce8aa55ee4faacabc2ec9a49e25d")
 
     depends_on("py-setuptools@42.0:", type="build")
     depends_on("py-pybind11", type=("build", "link"))
