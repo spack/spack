@@ -41,7 +41,6 @@ setup_environment:
     # All directories below should change for pull requests (replacing the
     # date)
     DEPLOYMENT_ROOT: "$DEPLOYMENT_BASE/$DEPLOYMENT_DATE"
-    DEPLOYMENT_ROOT_SUFFIX: ""
     DEPLOYMENT_UPSTREAM: "$DEPLOYMENT_BASE/$DEPLOYMENT_DATE"
     DEPLOYMENT_PROPRIETARY_MIRROR: "$DEPLOYMENT_BASE/$DEPLOYMENT_DATE/mirror/proprietary"
     # Artifacts to be passed back from the child pipeline: needs GitLab
@@ -56,7 +55,6 @@ setup_environment:
         DEPLOYMENT_ARTIFACTS: "$DEPLOYMENT_ROOT/artifacts/$CI_PIPELINE_IID"
         DEPLOYMENT_BRANCH: "$CI_EXTERNAL_PULL_REQUEST_SOURCE_BRANCH_NAME"
         DEPLOYMENT_ROOT: "$DEPLOYMENT_BASE/pulls/$CI_EXTERNAL_PULL_REQUEST_IID"
-        DEPLOYMENT_ROOT_SUFFIX: "pulls/$CI_EXTERNAL_PULL_REQUEST_IID"
         DEPLOYMENT_PROPRIETARY_MIRROR: "$DEPLOYMENT_BASE/pulls/$CI_EXTERNAL_PULL_REQUEST_IID/mirror/proprietary"
         # Somewhat awkward, but "$DEPLOYMENT_ROOT/modules" is already used.
         MODULE_ROOT: "$DEPLOYMENT_ROOT/config/modules"
@@ -74,7 +72,6 @@ setup_environment:
     - echo "DEPLOYMENT_DATE=$DEPLOYMENT_DATE" >> deployment.env
     - echo "DEPLOYMENT_PROPRIETARY_MIRROR=$DEPLOYMENT_PROPRIETARY_MIRROR" >> deployment.env
     - echo "DEPLOYMENT_ROOT=$DEPLOYMENT_ROOT" >> deployment.env
-    - echo "DEPLOYMENT_ROOT_SUFFIX=$DEPLOYMENT_ROOT_SUFFIX" >> deployment.env
     - echo "DEPLOYMENT_UPSTREAM=$DEPLOYMENT_UPSTREAM" >> deployment.env
     - echo "MODULE_ROOT=$MODULE_ROOT" >> deployment.env
     - echo "OLD_DEPLOYMENT_MODULES=$OLD_DEPLOYMENT_MODULES" >> deployment.env
@@ -93,13 +90,6 @@ setup_environment:
 # pipelines run at the same time. SNAFU
 atomic_build:
   needs: [setup_environment]
-  rules:
-    # If the NEURON recipe has been modified then trigger the NEURON CI against
-    # the PR deployment directory.
-    - changes: [bluebrain/repo-patches/packages/neuron/package.py]
-      variables:
-        TRIGGER_CHILD_NEURON_PIPELINE: "1"
-    - when: always
   trigger:
     include: bluebrain/deployment/gitlab-ci.yml
     strategy: depend

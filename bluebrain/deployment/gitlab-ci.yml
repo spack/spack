@@ -406,20 +406,6 @@ check_python_modules:
   script:
     - spack-check "$DEPLOYMENT_ROOT/config/modules.sh"
 
-# If the NEURON recipe has been modified then trigger the NEURON CI
-check_neuron_ci:
-  needs: [update_config]
-  rules:
-    - if: $TRIGGER_CHILD_NEURON_PIPELINE
-  trigger:
-    project: hpc/cellular/nrn
-    strategy: depend
-  variables:
-    # Warning: inconsistent results possible if the head of $CI_COMMIT_BRANCH
-    # is no longer $CI_COMMIT_SHA.
-    SPACK_BRANCH: $CI_COMMIT_BRANCH
-    SPACK_DEPLOYMENT_SUFFIX: $DEPLOYMENT_ROOT_SUFFIX
-
 github_feedback:
   stage: .post
   rules:
