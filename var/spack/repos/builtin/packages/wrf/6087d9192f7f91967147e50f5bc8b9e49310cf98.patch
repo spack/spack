@@ -1,0 +1,31 @@
+From 6087d9192f7f91967147e50f5bc8b9e49310cf98 Mon Sep 17 00:00:00 2001
+From: Jun Tang <juntangc@amazon.com>
+Date: Sat, 1 Jul 2023 15:05:59 +0000
+Subject: [PATCH] add two flags for acfl default
+
+---
+ arch/configure.defaults | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/arch/configure.defaults b/arch/configure.defaults
+index 8151a37481..6915681dcb 100644
+--- a/arch/configure.defaults
++++ b/arch/configure.defaults
+@@ -2142,7 +2142,7 @@ LD              =      $(FC)
+ RWORDSIZE       =      CONFIGURE_RWORDSIZE
+ PROMOTION       =
+ ARCH_LOCAL      =
+-CFLAGS_LOCAL    =      -w -O3 -c
++CFLAGS_LOCAL    =      -w -O3 -c -Wno-implicit-function-declaration -Wno-int-conversion -Wno-implicit-int
+ LDFLAGS_LOCAL   =      -fopenmp
+ FCOPTIM         =      -Ofast -mcpu=native -funroll-loops
+ FCREDUCEDOPT    =      $(FCOPTIM)
+@@ -2161,7 +2161,7 @@ ARFLAGS         =      ru
+ M4              =      m4 -B 14000
+ RANLIB          =      ranlib
+ RLFLAGS         =
+-CC_TOOLS        =      $(SCC)
++CC_TOOLS        =      $(SCC) -Wno-implicit-function-declaration -Wno-int-conversion -Wno-implicit-int
+ 
+ ###########################################################
+ #ARCH    Linux aarch64, GCC compiler OpenMPI # serial smpar dmpar dm+sm

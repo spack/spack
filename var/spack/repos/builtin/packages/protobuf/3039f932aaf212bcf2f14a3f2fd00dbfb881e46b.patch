@@ -1,0 +1,50 @@
+From 3039f932aaf212bcf2f14a3f2fd00dbfb881e46b Mon Sep 17 00:00:00 2001
+From: Lourens Veen <l.veen@esciencecenter.nl>
+Date: Mon, 21 Nov 2022 09:15:34 +0100
+Subject: [PATCH] Fix shared object ABI exports (#5144)
+
+---
+ src/libprotobuf-lite.map | 2 ++
+ src/libprotobuf.map      | 2 ++
+ src/libprotoc.map        | 2 ++
+ 3 files changed, 6 insertions(+)
+
+diff --git a/src/libprotobuf-lite.map b/src/libprotobuf-lite.map
+index 391554669481..a1853ca6cbf2 100644
+--- a/src/libprotobuf-lite.map
++++ b/src/libprotobuf-lite.map
+@@ -3,6 +3,8 @@
+     extern "C++" {
+       *google*;
+     };
++    scc_info_*;
++    descriptor_table_*;
+ 
+   local:
+     *;
+diff --git a/src/libprotobuf.map b/src/libprotobuf.map
+index 391554669481..a1853ca6cbf2 100644
+--- a/src/libprotobuf.map
++++ b/src/libprotobuf.map
+@@ -3,6 +3,8 @@
+     extern "C++" {
+       *google*;
+     };
++    scc_info_*;
++    descriptor_table_*;
+ 
+   local:
+     *;
+diff --git a/src/libprotoc.map b/src/libprotoc.map
+index 391554669481..a1853ca6cbf2 100644
+--- a/src/libprotoc.map
++++ b/src/libprotoc.map
+@@ -3,6 +3,8 @@
+     extern "C++" {
+       *google*;
+     };
++    scc_info_*;
++    descriptor_table_*;
+ 
+   local:
+     *;

@@ -1,0 +1,284 @@
+From 759620a3b7b787c960a7e414ba26ab5497817d40 Mon Sep 17 00:00:00 2001
+From: Pei Jia <jiapei@longervision.com>
+Date: Sat, 9 Dec 2023 23:52:07 -0800
+Subject: [PATCH] It looks ffmpeg is a must for OSG? Now, compatible with
+ ffmpeg-6.0.1
+
+---
+ .../OpenCASCADE/ReaderWriterOpenCASCADE.cpp   |  2 +-
+ src/osgPlugins/ffmpeg/FFmpegDecoder.cpp       |  8 +++----
+ src/osgPlugins/ffmpeg/FFmpegDecoderAudio.cpp  | 14 ++++++-----
+ src/osgPlugins/ffmpeg/FFmpegDecoderAudio.hpp  |  1 +
+ src/osgPlugins/ffmpeg/FFmpegDecoderVideo.cpp  | 23 +++++++++++--------
+ src/osgPlugins/ffmpeg/FFmpegDecoderVideo.hpp  |  7 +++---
+ src/osgPlugins/ffmpeg/FFmpegHeaders.hpp       |  1 +
+ src/osgPlugins/ffmpeg/FFmpegPacket.hpp        |  2 +-
+ src/osgPlugins/ffmpeg/FFmpegParameters.hpp    |  4 ++--
+ src/osgPlugins/ffmpeg/ReaderWriterFFmpeg.cpp  |  3 ++-
+ 10 files changed, 37 insertions(+), 28 deletions(-)
+
+diff --git a/src/osgPlugins/OpenCASCADE/ReaderWriterOpenCASCADE.cpp b/src/osgPlugins/OpenCASCADE/ReaderWriterOpenCASCADE.cpp
+index 91a14220016..a43ca5d511e 100644
+--- a/src/osgPlugins/OpenCASCADE/ReaderWriterOpenCASCADE.cpp
++++ b/src/osgPlugins/OpenCASCADE/ReaderWriterOpenCASCADE.cpp
+@@ -211,7 +211,7 @@ osg::ref_ptr<osg::Geometry> ReaderWritterOpenCASCADE::OCCTKReader::_createGeomet
+                 {
+                     // populate vertex list
+                     // Ref: http://www.opencascade.org/org/forum/thread_16694/?forum=3
+-                    gp_Pnt pt = (triangulation->Nodes())(j).Transformed(transformation * location.Transformation());
++                    gp_Pnt pt = (triangulation->Node(j)).Transformed(transformation * location.Transformation());
+                     vertexList->push_back(osg::Vec3(pt.X(), pt.Y(), pt.Z()));
+ 
+                     // populate color list
+diff --git a/src/osgPlugins/ffmpeg/FFmpegDecoder.cpp b/src/osgPlugins/ffmpeg/FFmpegDecoder.cpp
+index 4de143d2279..dd58b662b5f 100644
+--- a/src/osgPlugins/ffmpeg/FFmpegDecoder.cpp
++++ b/src/osgPlugins/ffmpeg/FFmpegDecoder.cpp
+@@ -62,7 +62,7 @@ bool FFmpegDecoder::open(const std::string & filename, FFmpegParameters* paramet
+     {
+         // Open video file
+         AVFormatContext * p_format_context = 0;
+-        AVInputFormat *iformat = 0;
++        const AVInputFormat *iformat = 0;
+ 
+         if (filename.compare(0, 5, "/dev/")==0)
+         {
+@@ -304,9 +304,9 @@ bool FFmpegDecoder::readNextPacketNormal()
+         else
+         {
+             // Make the packet data available beyond av_read_frame() logical scope.
+-            if ((error = av_dup_packet(&packet)) < 0) {
+-                OSG_FATAL << "av_dup_packet() returned " << AvStrError(error) << std::endl;
+-                throw std::runtime_error("av_dup_packet() failed");
++            if ((error = av_packet_make_refcounted(&packet)) < 0) {
++                OSG_FATAL << "av_packet_make_refcounted() returned " << AvStrError(error) << std::endl;
++                throw std::runtime_error("av_packet_make_refcounted() failed");
+             }
+ 
+             m_pending_packet = FFmpegPacket(packet);
+diff --git a/src/osgPlugins/ffmpeg/FFmpegDecoderAudio.cpp b/src/osgPlugins/ffmpeg/FFmpegDecoderAudio.cpp
+index 636bddd2546..5e8db3dc0ba 100644
+--- a/src/osgPlugins/ffmpeg/FFmpegDecoderAudio.cpp
++++ b/src/osgPlugins/ffmpeg/FFmpegDecoderAudio.cpp
+@@ -40,17 +40,17 @@ static int decode_audio(AVCodecContext *avctx, int16_t *samples,
+     avpkt.size = buf_size;
+ 
+     AVFrame *frame = av_frame_alloc();
+-    int ret, got_frame = 0;
++    int ret;
+ 
+     if (!frame)
+         return AVERROR(ENOMEM);
+ 
+-    ret = avcodec_decode_audio4(avctx, frame, &got_frame, &avpkt);
++    ret = avcodec_receive_frame(avctx, frame);
+ 
+ #ifdef USE_AVRESAMPLE    // libav's AVFrame structure does not contain a 'channels' field
+-    if (ret >= 0 && got_frame) {
++    if (ret >= 0) {
+ #else
+-    if (ret >= 0 && got_frame && av_frame_get_channels(frame)>0) {
++    if (ret >= 0 && frame->channels>0) {
+ #endif
+         int ch, plane_size;
+         int planar = av_sample_fmt_is_planar(avctx->sample_fmt);
+@@ -151,7 +151,9 @@ void FFmpegDecoderAudio::open(AVStream * const stream, FFmpegParameters* paramet
+             return;
+ 
+         m_stream = stream;
+-        m_context = stream->codec;
++        m_codecpar = stream->codecpar;
++        const AVCodec* p_codec = avcodec_find_decoder(m_codecpar->codec_id);
++        m_context = avcodec_alloc_context3(p_codec);
+ 
+         m_in_sample_rate = m_context->sample_rate;
+         m_in_nb_channels = m_context->channels;
+@@ -214,7 +216,7 @@ printf("### CONVERTING from sample format %s TO %s\n\t\tFROM %d TO %d channels\n
+             throw std::runtime_error("invalid audio codec");;
+ 
+         // Find the decoder for the audio stream
+-        AVCodec * const p_codec = avcodec_find_decoder(m_context->codec_id);
++        p_codec = avcodec_find_decoder(m_context->codec_id);
+ 
+         if (p_codec == 0)
+             throw std::runtime_error("avcodec_find_decoder() failed");
+diff --git a/src/osgPlugins/ffmpeg/FFmpegDecoderAudio.hpp b/src/osgPlugins/ffmpeg/FFmpegDecoderAudio.hpp
+index 9f1b968ccbd..f2f9b3407fb 100644
+--- a/src/osgPlugins/ffmpeg/FFmpegDecoderAudio.hpp
++++ b/src/osgPlugins/ffmpeg/FFmpegDecoderAudio.hpp
+@@ -59,6 +59,7 @@ class FFmpegDecoderAudio : public OpenThreads::Thread
+     PacketQueue &                       m_packets;
+     FFmpegClocks &                      m_clocks;
+     AVStream *                          m_stream;
++    AVCodecParameters *                 m_codecpar;
+     AVCodecContext *                    m_context;
+     FFmpegPacket                        m_packet;
+     const uint8_t *                     m_packet_data;
+diff --git a/src/osgPlugins/ffmpeg/FFmpegDecoderVideo.cpp b/src/osgPlugins/ffmpeg/FFmpegDecoderVideo.cpp
+index 25df979a045..b5214e11f00 100644
+--- a/src/osgPlugins/ffmpeg/FFmpegDecoderVideo.cpp
++++ b/src/osgPlugins/ffmpeg/FFmpegDecoderVideo.cpp
+@@ -62,7 +62,9 @@ FFmpegDecoderVideo::~FFmpegDecoderVideo()
+ void FFmpegDecoderVideo::open(AVStream * const stream)
+ {
+     m_stream = stream;
+-    m_context = stream->codec;
++    m_codecpar = stream->codecpar;
++    const AVCodec* p_codec = avcodec_find_decoder(m_codecpar->codec_id);
++    m_context = avcodec_alloc_context3(p_codec);
+ 
+     // Trust the video size given at this point
+     // (avcodec_open seems to sometimes return a 0x0 size)
+@@ -99,11 +101,12 @@ void FFmpegDecoderVideo::open(AVStream * const stream)
+ 
+     // Allocate converted RGB frame
+     m_frame_rgba.reset(av_frame_alloc());
+-    m_buffer_rgba[0].resize(avpicture_get_size(AV_PIX_FMT_RGB24, width(), height()));
++    m_buffer_rgba[0].resize(av_image_get_buffer_size(AV_PIX_FMT_RGB24, width(), height(), 1));
+     m_buffer_rgba[1].resize(m_buffer_rgba[0].size());
+ 
+     // Assign appropriate parts of the buffer to image planes in m_frame_rgba
+-    avpicture_fill((AVPicture *) (m_frame_rgba).get(), &(m_buffer_rgba[0])[0], AV_PIX_FMT_RGB24, width(), height());
++    AVFrame *avf = m_frame_rgba.get();
++    av_image_fill_arrays(avf->data, avf->linesize, &(m_buffer_rgba[0])[0], AV_PIX_FMT_RGB24, width(), height(), 1);
+ 
+     // Override get_buffer()/release_buffer() from codec context in order to retrieve the PTS of each frame.
+     m_context->opaque = this;
+@@ -169,7 +172,7 @@ void FFmpegDecoderVideo::decodeLoop()
+             int frame_finished = 0;
+ 
+             // We want to use the entire packet since some codecs will require extra information for decoding
+-            const int bytes_decoded = avcodec_decode_video2(m_context, m_frame.get(), &frame_finished, &(packet.packet));
++            const int bytes_decoded = avcodec_receive_frame(m_context, m_frame.get());
+ 
+             if (bytes_decoded < 0)
+                 throw std::runtime_error("avcodec_decode_video failed()");
+@@ -283,7 +286,7 @@ void FFmpegDecoderVideo::findAspectRatio()
+     m_pixel_aspect_ratio = ratio;
+ }
+ 
+-int FFmpegDecoderVideo::convert(AVPicture *dst, int dst_pix_fmt, AVPicture *src,
++int FFmpegDecoderVideo::convert(AVFrame *dst, int dst_pix_fmt, AVFrame *src,
+             int src_pix_fmt, int src_width, int src_height)
+ {
+     osg::Timer_t startTick = osg::Timer::instance()->tick();
+@@ -334,11 +337,11 @@ void FFmpegDecoderVideo::publishFrame(const double delay, bool audio_disabled)
+         return;
+ #endif
+ 
+-    AVPicture * const src = (AVPicture *) m_frame.get();
+-    AVPicture * const dst = (AVPicture *) m_frame_rgba.get();
++    AVFrame * const src = (AVFrame *) m_frame.get();
++    AVFrame * const dst = (AVFrame *) m_frame_rgba.get();
+ 
+-    // Assign appropriate parts of the buffer to image planes in m_frame_rgba
+-    avpicture_fill((AVPicture *) (m_frame_rgba).get(), &(m_buffer_rgba[m_writeBuffer])[0], AV_PIX_FMT_RGB24, width(), height());
++    // Assign appropriate parts of the buffer to image planes in m_frame_rgba    
++    av_image_fill_arrays(dst->data, dst->linesize, &(m_buffer_rgba[m_writeBuffer])[0], AV_PIX_FMT_RGB24, width(), height(), 1);
+ 
+     // Convert YUVA420p (i.e. YUV420p plus alpha channel) using our own routine
+ 
+@@ -370,7 +373,7 @@ void FFmpegDecoderVideo::publishFrame(const double delay, bool audio_disabled)
+ 
+ 
+ 
+-void FFmpegDecoderVideo::yuva420pToRgba(AVPicture * const dst, AVPicture * const src, int width, int height)
++void FFmpegDecoderVideo::yuva420pToRgba(AVFrame * const dst, AVFrame * const src, int width, int height)
+ {
+     convert(dst, AV_PIX_FMT_RGB24, src, m_context->pix_fmt, width, height);
+ 
+diff --git a/src/osgPlugins/ffmpeg/FFmpegDecoderVideo.hpp b/src/osgPlugins/ffmpeg/FFmpegDecoderVideo.hpp
+index 778c1a9b8cb..ffbfaaf6a36 100644
+--- a/src/osgPlugins/ffmpeg/FFmpegDecoderVideo.hpp
++++ b/src/osgPlugins/ffmpeg/FFmpegDecoderVideo.hpp
+@@ -88,9 +88,9 @@ class FFmpegDecoderVideo : public OpenThreads::Thread
+     void findAspectRatio();
+     void publishFrame(double delay, bool audio_disabled);
+     double synchronizeVideo(double pts);
+-    void yuva420pToRgba(AVPicture *dst, AVPicture *src, int width, int height);
++    void yuva420pToRgba(AVFrame *dst, AVFrame *src, int width, int height);
+ 
+-    int convert(AVPicture *dst, int dst_pix_fmt, AVPicture *src,
++    int convert(AVFrame *dst, int dst_pix_fmt, AVFrame *src,
+                 int src_pix_fmt, int src_width, int src_height);
+ 
+ 
+@@ -100,8 +100,9 @@ class FFmpegDecoderVideo : public OpenThreads::Thread
+     PacketQueue &           m_packets;
+     FFmpegClocks &          m_clocks;
+     AVStream *              m_stream;
++    AVCodecParameters *     m_codecpar;
+     AVCodecContext *        m_context;
+-    AVCodec *               m_codec;
++    const AVCodec *         m_codec;
+     const uint8_t *         m_packet_data;
+     int                     m_bytes_remaining;
+     int64_t                 m_packet_pts;
+diff --git a/src/osgPlugins/ffmpeg/FFmpegHeaders.hpp b/src/osgPlugins/ffmpeg/FFmpegHeaders.hpp
+index fd9bd2c923d..4c107093106 100644
+--- a/src/osgPlugins/ffmpeg/FFmpegHeaders.hpp
++++ b/src/osgPlugins/ffmpeg/FFmpegHeaders.hpp
+@@ -44,6 +44,7 @@ extern "C"
+ #endif
+ 
+ #include <libavutil/mathematics.h>
++#include <libavutil/imgutils.h>
+ 
+ #ifdef USE_SWSCALE
+     #include <libswscale/swscale.h>
+diff --git a/src/osgPlugins/ffmpeg/FFmpegPacket.hpp b/src/osgPlugins/ffmpeg/FFmpegPacket.hpp
+index e06bd8bb6d3..94cc13b1b6b 100644
+--- a/src/osgPlugins/ffmpeg/FFmpegPacket.hpp
++++ b/src/osgPlugins/ffmpeg/FFmpegPacket.hpp
+@@ -42,7 +42,7 @@ namespace osgFFmpeg
+         void clear()
+         {
+             if (packet.data != 0)
+-                av_free_packet(&packet);
++                av_packet_unref(&packet);
+ 
+             release();
+         }
+diff --git a/src/osgPlugins/ffmpeg/FFmpegParameters.hpp b/src/osgPlugins/ffmpeg/FFmpegParameters.hpp
+index ebfc17f6b6d..1b8dd287eb5 100644
+--- a/src/osgPlugins/ffmpeg/FFmpegParameters.hpp
++++ b/src/osgPlugins/ffmpeg/FFmpegParameters.hpp
+@@ -20,7 +20,7 @@ class FFmpegParameters : public osg::Referenced
+ 
+     bool isFormatAvailable() const { return m_format!=NULL; }
+     
+-    AVInputFormat* getFormat() { return m_format; }
++    const AVInputFormat* getFormat() { return m_format; }
+     AVDictionary** getOptions() { return &m_options; }
+     void setContext(AVIOContext* context) { m_context = context; }
+     AVIOContext* getContext() { return m_context; }
+@@ -29,7 +29,7 @@ class FFmpegParameters : public osg::Referenced
+ 
+ protected:
+ 
+-    AVInputFormat* m_format;
++    const AVInputFormat* m_format;
+     AVIOContext* m_context;
+     AVDictionary* m_options;
+ };
+diff --git a/src/osgPlugins/ffmpeg/ReaderWriterFFmpeg.cpp b/src/osgPlugins/ffmpeg/ReaderWriterFFmpeg.cpp
+index f468ee81f27..2041bb55068 100644
+--- a/src/osgPlugins/ffmpeg/ReaderWriterFFmpeg.cpp
++++ b/src/osgPlugins/ffmpeg/ReaderWriterFFmpeg.cpp
+@@ -25,6 +25,7 @@
+     (LIBAVCODEC_VERSION_MAJOR==52 && LIBAVCODEC_VERSION_MINOR==20 && LIBAVCODEC_VERSION_MICRO >= 1)
+     #define USE_AV_LOCK_MANAGER
+ #endif
++#undef USE_AV_LOCK_MANAGER
+ 
+ extern "C" {
+ 
+@@ -118,7 +119,7 @@ class ReaderWriterFFmpeg : public osgDB::ReaderWriter
+         av_lockmgr_register(&lockMgr);
+ #endif
+         // Register all FFmpeg formats/codecs
+-        av_register_all();
++        // av_register_all();   // Omit after ffmpeg 4.0
+ 
+         avformat_network_init();
+     }
