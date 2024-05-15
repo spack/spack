@@ -311,5 +311,8 @@ class SuiteSparse(Package):
         return find_libraries(
             # Libraries may be installed under both `lib/` and `lib64/`,
             # don't force searching under `lib/` only.
-            ["lib" + c for c in comps], root=self.prefix, shared=True, recursive=True
+            ["lib" + c for c in comps],
+            root=self.prefix,
+            shared=True,
+            recursive=True,
         )
