@@ -8,13 +8,10 @@ ci:
       - fsutil 8dot3name set C:\ 0
       - . .\share\spack\setup-env.ps1
       - spack.ps1 compiler find
-      - spack.ps1 external find --not-buildable --path "C:/Program Files/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake" --path "C:/Program Files/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/Ninja" --path "C:/Program Files (x86)/Windows Kits/10/Lib/10.0.20348.0/um/x64" --path "C:/Program Files (x86)/Windows Kits/10/bin/10.0.20348.0/x64" cmake ninja win-sdk wgl
 
       script::
       - spack.ps1 env activate --without-view ${SPACK_CONCRETE_ENV_DIR}
-      - spack.ps1 config add "config:install_tree:projections:${SPACK_JOB_SPEC_PKG_NAME}:'morepadding/{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}'"
+      - spack.ps1 config add "config:install_tree:projections:${SPACK_JOB_SPEC_PKG_NAME}:'morepadding/{hash}'"
       - mkdir ${SPACK_ARTIFACTS_ROOT}/user_data
       - spack.ps1 --backtrace ci rebuild | Tee-Object -FilePath "${env:SPACK_ARTIFACTS_ROOT}/user_data/pipeline_out.txt" 2>&1 | Tee-Object -FilePath "${env:SPACK_ARTIFACTS_ROOT}/user_data/pipeline_err.txt"
-      image: "ghcr.io/johnwparent/windows-server21h2:sha-8084f61"
-  - signing-job-remove:
-      script:: [no-signing-on-windows]
+      image: "ghcr.io/johnwparent/windows-server21h2:sha-c749cf3"
