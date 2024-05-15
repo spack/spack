@@ -30,7 +30,6 @@ class PyTensorflowEstimator(Package):
     version("2.8.0", sha256="58a2c3562ca6491c257e9a4d9bd8825667883257edcdb452181efa691c586b17")
     version("2.7.0", sha256="e5164e802638d3cf110ecc17912be9d514a9d3354ec48e77200b9403dcc15965")
     version("2.6.0", sha256="947705c60c50da0b4a8ceec1bc058aaf6bf567a7efdcd50d5173ebf6bafcf30f")
-    version("2.5.0", sha256="66661f30ea05d57377c45267ca770935fb8c54f85b7901f0a7deb91766fe9f45")
     version("2.4.0", sha256="e6ea12014c3d8c89a81ace95f8f8b7c39ffcd3e4e4626709e4aee0010eefd962")
     version("2.3.0", sha256="75403e7de7e8ec30ec0781ede56ed84cbe5e90daad64a9c242cd489c8fe63a17")
     version("2.2.0", sha256="2d68cb6e6442e7dcbfa2e092aa25bdcb0eda420536a829b85d732854a4c85d46")
@@ -60,7 +59,6 @@ class PyTensorflowEstimator(Package):
             "2.8",
             "2.7",
             "2.6",
-            "2.5",
             "2.4",
             "2.3",
             "2.2",
