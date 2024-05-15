@@ -106,7 +106,7 @@ def clean(parser, args):
 
     # Then do the cleaning falling through the cases
     if args.specs:
-        specs = spack.cmd.parse_specs(args.specs, concretize=True)
+        specs = list(spack.cmd.matching_spec_from_env(x) for x in args.specs)
         for spec in specs:
             msg = "Cleaning build stage [{0}]"
             tty.msg(msg.format(spec.short_spec))
