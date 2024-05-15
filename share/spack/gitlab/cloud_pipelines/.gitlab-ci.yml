@@ -204,7 +204,6 @@ default:
 .generate-win64:
   extends: [ ".base-job", ".generate-common" ]
   before_script:
-    - python -m pip install --user boto3
     - $ErrorActionOld=$ErrorActionPreference
     - $ErrorActionPreference="SilentlyContinue"
     - python -m pip install psutil
