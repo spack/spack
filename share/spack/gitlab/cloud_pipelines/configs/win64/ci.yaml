@@ -7,7 +7,6 @@ ci:
       before_script::
       - fsutil 8dot3name set C:\ 0
       - . .\share\spack\setup-env.ps1
-      - spack.ps1 compiler find
 
       script::
       - spack.ps1 env activate --without-view ${SPACK_CONCRETE_ENV_DIR}
