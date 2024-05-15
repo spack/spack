@@ -58,7 +58,7 @@ MAP_PHASES_TO_CDASH = {
 # Initialize data structures common to each phase's report.
 CDASH_PHASES = set(MAP_PHASES_TO_CDASH.values())
 CDASH_PHASES.add("update")
-
+# CDash request timeout in seconds
 SPACK_CDASH_TIMEOUT = 45
 
 CDashConfiguration = collections.namedtuple(
