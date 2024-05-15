@@ -9,8 +9,9 @@ from spack.package import *
 
 
 class PyTensorflowEstimator(Package):
-    """TensorFlow Estimator is a high-level TensorFlow API that greatly
-    simplifies machine learning programming."""
+    """TensorFlow Estimator is a high-level API that encapsulates
+    model training, evaluation, prediction, and exporting.
+    """
 
     homepage = "https://github.com/tensorflow/estimator"
     url = "https://github.com/tensorflow/estimator/archive/v2.2.0.tar.gz"
@@ -36,31 +37,37 @@ class PyTensorflowEstimator(Package):
 
     extends("python")
 
-    # tensorflow_estimator/tools/pip_package/setup.py
-    for ver in ["2.15", "2.14", "2.13", "2.12", "2.11", "2.10", "2.9", "2.8", "2.7", "2.6"]:
-        depends_on("py-keras@" + ver, when="@" + ver, type=("build", "run"))
+    with default_args(type="build"):
+        depends_on("bazel@0.19.0:")
+        depends_on("py-pip")
+        depends_on("py-wheel")
 
-    for ver in [
-        "2.15",
-        "2.14",
-        "2.13",
-        "2.12",
-        "2.11",
-        "2.10",
-        "2.9",
-        "2.8",
-        "2.7",
-        "2.6",
-        "2.5",
-        "2.4",
-        "2.3",
-        "2.2",
-    ]:
-        depends_on("py-tensorflow@" + ver, when="@" + ver, type=("build", "run"))
-
-    depends_on("bazel@0.19.0:", type="build")
-    depends_on("py-pip", type="build")
-    depends_on("py-wheel", type="build")
+    # See expect_*_installed in tensorflow_estimator/python/estimator/BUILD
+    with default_args(type=("build", "run")):
+        depends_on("py-absl-py")
+        depends_on("py-h5py")
+        depends_on("py-numpy")
+        depends_on("py-pandas")
+        depends_on("py-six")
+        for ver in [
+            "2.15",
+            "2.14",
+            "2.13",
+            "2.12",
+            "2.11",
+            "2.10",
+            "2.9",
+            "2.8",
+            "2.7",
+            "2.6",
+            "2.5",
+            "2.4",
+            "2.3",
+            "2.2",
+        ]:
+            depends_on(f"py-tensorboard@{ver}", when=f"@{ver}")
+            depends_on(f"py-tensorflow@{ver}", when=f"@{ver}")
+            depends_on(f"py-keras@{ver}", when=f"@{ver}")
 
     def install(self, spec, prefix):
         self.tmp_path = tempfile.mkdtemp(prefix="spack")
