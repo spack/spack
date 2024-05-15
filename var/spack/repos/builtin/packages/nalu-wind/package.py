@@ -140,15 +140,15 @@ class NaluWind(CMakePackage, CudaPackage, ROCmPackage):
         spec = self.spec
 
         args = [
-            self.define_from_variant("CMAKE_POSITION_INDEPENDENT_CODE", "pic"),
             self.define("CMAKE_CXX_COMPILER", spec["mpi"].mpicxx),
             self.define("CMAKE_Fortran_COMPILER", spec["mpi"].mpifc),
             self.define("Trilinos_DIR", spec["trilinos"].prefix),
             self.define("YAML_DIR", spec["yaml-cpp"].prefix),
+            self.define("CMAKE_CXX_STANDARD", "17"),
+            self.define_from_variant("CMAKE_POSITION_INDEPENDENT_CODE", "pic"),
             self.define_from_variant("ENABLE_CUDA", "cuda"),
             self.define_from_variant("ENABLE_WIND_UTILS", "wind-utils"),
             self.define_from_variant("ENABLE_BOOST", "boost"),
-            self.define_from_variant("CMAKE_CXX_STANDARD", "17"),
             self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
             self.define_from_variant("ENABLE_OPENFAST", "openfast"),
             self.define_from_variant("ENABLE_TIOGA", "tioga"),
