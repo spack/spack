@@ -16,6 +16,7 @@ class Tkrzw(AutotoolsPackage):
     license("Apache-2.0")
 
     version("master", branch="master")
+    version("1.0.29", sha256="abaabd6fc89a19ed8a202ac3711bc3b0763d928bc3a8eeeea73a3679f7e7f790")
     version("0.9.44", sha256="088ac619fbf7fc22c110674b3f8fe8d8573a1d7088e5616b268fd9f68ba25650")
     version("0.9.43", sha256="60f7b579edb4f911ecaf35ff6c07f53b3d566424d8bf179b1991ade5071f0bbc")
     version("0.9.42", sha256="135fb404d5a1b0bcee717f8e648a6f5ff140ec30069fecfde3b380f611356535")
