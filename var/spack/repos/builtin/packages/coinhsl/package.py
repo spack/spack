@@ -36,12 +36,12 @@ class Coinhsl(MesonPackage, AutotoolsPackage):
     # Meson builds
     version(
         "2024.05.15",
-        sha256="d6d9089bb9cf3eb0e4af195f1a2f10cd61da42eddf8da73a12b8c62902bceee3",
+        sha256="2534807b4f6a4a69661c82dc0da7094f685f0fce6443a9147ee90a21caba9e63",
         preferred=True,
     )
     version(
         "archive-2024.05.15",
-        sha256="5ebdbf8a70a9e10863c5809cf53e4e236b07f65ab2e96cc367ba8131dc19e232",
+        sha256="1d907ce5d84331ce8f78125d5fc766184f0fce9a7b340db7f3c4821a7f4b7c4c",
     )
 
     with when("build_system=meson @2023:"):
