@@ -71,7 +71,6 @@ class ZlibNg(AutotoolsPackage, CMakePackage):
 
 
 class AutotoolsBuilder(autotools.AutotoolsBuilder):
-
     @run_before("configure")
     def pretend_gcc(self):
         # All nice things (PIC flags, symbol versioning) that happen to the compilers that are
