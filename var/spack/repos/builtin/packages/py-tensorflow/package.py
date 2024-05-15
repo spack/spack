@@ -8,12 +8,36 @@ import tempfile
 
 from spack.package import *
 
+rocm_dependencies = [
+    "hip",
+    "rocrand",
+    "rocblas",
+    "rocfft",
+    "hipfft",
+    "rccl",
+    "hipsparse",
+    "rocprim",
+    "llvm-amdgpu",
+    "hsa-rocr-dev",
+    "rocminfo",
+    "hipsolver",
+    "hiprand",
+    "rocsolver",
+    "hipsolver",
+    "hipblas",
+    "hipcub",
+    "rocm-core",
+    "roctracer-dev",
+    "miopen-hip",
+]
+
 
 class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
     """TensorFlow is an open source machine learning framework for everyone."""
 
     homepage = "https://www.tensorflow.org"
     url = "https://github.com/tensorflow/tensorflow/archive/v2.3.1.tar.gz"
+    git = "https://github.com/tensorflow/tensorflow.git"
 
     maintainers("adamjstewart", "aweits")
     import_modules = ["tensorflow"]
@@ -21,9 +45,19 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
     license("Apache-2.0")
 
     version("2.16.1", sha256="c729e56efc945c6df08efe5c9f5b8b89329c7c91b8f40ad2bb3e13900bd4876d")
+    version(
+        "2.16-rocm-enhanced",
+        git="https://github.com/ROCm/tensorflow-upstream.git",
+        branch="r2.16-rocm-enhanced",
+    )
     version("2.15.1", sha256="f36416d831f06fe866e149c7cd752da410a11178b01ff5620e9f265511ed57cf")
     version("2.15.0", sha256="9cec5acb0ecf2d47b16891f8bc5bc6fbfdffe1700bdadc0d9ebe27ea34f0c220")
     version("2.14.1", sha256="6b31ed347ed7a03c45b906aa41628ac91c3db7c84cb816971400d470e58ba494")
+    version(
+        "2.14-rocm-enhanced",
+        git="https://github.com/ROCm/tensorflow-upstream.git",
+        branch="r2.14-rocm-enhanced-nohipblaslt-build",
+    )
     version("2.14.0", sha256="ce357fd0728f0d1b0831d1653f475591662ec5bca736a94ff789e6b1944df19f")
     version("2.13.1", sha256="89c07aebd4f41fbe0d08cc88aef00305542134f2f16d3b62918dc3c1182f33e2")
     version("2.13.0", sha256="e58c939079588623e6fa1d054aec2f90f95018266e0a970fd353a5244f5173dc")
@@ -286,20 +320,9 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
     # depends_on('android-sdk', when='+android')
 
     with when("+rocm"):
-        depends_on("hip")
-        depends_on("rocrand")
-        depends_on("rocblas")
-        depends_on("rocfft")
-        depends_on("hipfft")
-        depends_on("rccl", when="+nccl")
-        depends_on("hipsparse")
-        depends_on("hipcub")
-        depends_on("rocsolver")
-        depends_on("rocprim")
-        depends_on("miopen-hip")
-        depends_on("llvm-amdgpu")
-        depends_on("hsa-rocr-dev")
-        depends_on("rocminfo")
+        for pkg_dep in rocm_dependencies:
+            depends_on(f"{pkg_dep}@6.0:", when="@2.14:")
+            depends_on(pkg_dep)
 
     # Check configure and configure.py to see when these variants are supported
     conflicts("+mkl", when="platform=darwin", msg="Darwin is not yet supported")
@@ -354,9 +377,11 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
     conflicts("platform=darwin target=aarch64:", when="@:2.4")
     # https://github.com/tensorflow/tensorflow/pull/39225
     conflicts("target=aarch64:", when="@:2.2")
-    conflicts("~rocm", when="@2.7.4-rocm-enhanced,2.11.0-rocm-enhanced")
-    conflicts("+rocm", when="@:2.7.4-a,2.7.4.0:2.11.0-a,2.11.0.0:")
-
+    conflicts(
+        "~rocm",
+        when="@2.7.4-rocm-enhanced,2.11.0-rocm-enhanced,2.14-rocm-enhanced,2.16-rocm-enhanced",
+    )
+    conflicts("+rocm", when="@:2.7.4-a,2.7.4.0:2.11.0-a,2.11.0.0:2.14-a,2.14-z:2.16-a,2.16-z:")
     # wheel 0.40 upgrades vendored packaging, trips over tensorflow-io-gcs-filesystem identifier
     conflicts("^py-wheel@0.40:", when="@2.11:2.13")
 
@@ -402,6 +427,10 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
     # see https://github.com/tensorflow/tensorflow/issues/62490
     # and https://github.com/abseil/abseil-cpp/issues/1665
     patch("absl_neon.patch", when="@2.16.1: target=aarch64:")
+
+    patch("Find_ROCm_Components_Individiually.2.16.patch", when="@2.16-rocm-enhanced +rocm")
+    patch("Find_ROCm_Components_Individiually.patch", when="@2.14-rocm-enhanced +rocm")
+    patch("set_jit_trueLT_false.patch", when="@2.14-rocm-enhanced: +rocm")
 
     phases = ["configure", "build", "install"]
 
@@ -512,6 +541,13 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
         # Do you wish to build TensorFlow with ROCm support?
         if "+rocm" in spec:
             env.set("TF_NEED_ROCM", "1")
+            env.set("TF_HIPBLASLT", "0")
+            env.set("MIOPEN_PATH", spec["miopen-hip"].prefix)
+            env.set("ROCTRACER_PATH", spec["roctracer-dev"].prefix)
+            env.set("LLVM_PATH", spec["llvm-amdgpu"].prefix)
+            for pkg_dep in rocm_dependencies:
+                pkg_dep_cap = pkg_dep.upper().replace("-", "_")
+                env.set(f"{pkg_dep_cap}_PATH", spec[pkg_dep].prefix)
         else:
             env.set("TF_NEED_ROCM", "0")
 
@@ -703,6 +739,11 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
 
             with open(".tf_configure.bazelrc", mode="a") as f:
                 f.write('build --action_env LD_LIBRARY_PATH="' + slibs + '"')
+
+        if spec.satisfies("@2.16-rocm-enhanced +rocm"):
+            filter_file(
+                "/usr/lib/llvm-17/bin/clang", spec["llvm-amdgpu"].prefix.bin.clang, ".bazelrc"
+            )
 
         filter_file("build:opt --copt=-march=native", "", ".tf_configure.bazelrc")
         filter_file("build:opt --host_copt=-march=native", "", ".tf_configure.bazelrc")
