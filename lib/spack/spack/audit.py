@@ -446,7 +446,7 @@ def _check_patch_urls(pkgs, error_cls):
                             f"patch URL in package {pkg_cls.name} must not be a pull request commit",
                             [patch.url],
                         )
-                    )                    
+                    )
                 elif re.match(github_patch_url_re, patch.url):
                     full_index_arg = "?full_index=1"
                     if not patch.url.endswith(full_index_arg):
