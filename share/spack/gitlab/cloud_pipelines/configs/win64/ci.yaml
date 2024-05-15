@@ -8,7 +8,7 @@ ci:
       - fsutil 8dot3name set C:\ 0
       - . .\share\spack\setup-env.ps1
       - spack.ps1 compiler find
-      - spack.ps1 external find --not-buildable  --path "C:/Program Files/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake" --path "C:/Program Files/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/Ninja" --path "C:/Program Files (x86)/Windows Kits/10/Lib/10.0.20348.0/um/x64" --path "C:/Program Files (x86)/Windows Kits/10/bin/10.0.20348.0/x64" cmake ninja win-sdk wgl
+      - spack.ps1 external find --not-buildable --path "C:/Program Files/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake" --path "C:/Program Files/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/Ninja" --path "C:/Program Files (x86)/Windows Kits/10/Lib/10.0.20348.0/um/x64" --path "C:/Program Files (x86)/Windows Kits/10/bin/10.0.20348.0/x64" cmake ninja win-sdk wgl
 
       script::
       - spack.ps1 env activate --without-view ${SPACK_CONCRETE_ENV_DIR}

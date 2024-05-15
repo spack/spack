@@ -211,7 +211,7 @@ default:
     - (Get-WmiObject Win32_PhysicalMemory | measure-object Capacity -sum).sum/1kb
     - $ErrorActionPreference=$ErrorActionOld
     - . .\share\spack\setup-env.ps1
-    - spack external find --not-buildable cmake ninja win-wdk win-sdk wgl msmpi
+    - spack external find --not-buildable --path "C:/Program Files/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake" --path "C:/Program Files/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/Ninja" --path "C:/Program Files (x86)/Windows Kits/10/Lib/10.0.20348.0/um/x64" --path "C:/Program Files (x86)/Windows Kits/10/bin/10.0.20348.0/x64" cmake ninja win-sdk wgl
   after_script:
     - $ErrorActionOld=$ErrorActionPreference
     - $ErrorActionPreference="SilentlyContinue"
