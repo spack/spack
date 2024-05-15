@@ -36,9 +36,11 @@ def get_config_hashes(env):
     # (not) config.yaml
 
     for section in ["packages", "repos", "concretize", "compilers"]:
-        data = spack.config.get_config(section)
+        data = spack.config.get(section)
         # Possible issue: if I convert the retrieved section to yaml, will
         # all the lines have a consistent order?
+        # Might be safer to just get all the files and hash them
+        import pdb; pdb.set_trace()
 
 def get_package_files(env):
     concrete_roots = list(y for x, y in env.concretized_specs())
@@ -64,6 +66,8 @@ def main():
         raise ValueError("An active env is required.")
 
     print("\n".join(get_package_files(env)))
+
+    get_config_hashes(env)
 
 
 if __name__ == "__main__":
