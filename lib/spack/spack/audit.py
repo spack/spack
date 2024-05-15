@@ -443,7 +443,8 @@ def _check_patch_urls(pkgs, error_cls):
                 if re.match(github_unstable_pull_commits_re, patch.url):
                     errors.append(
                         error_cls(
-                            f"patch URL in package {pkg_cls.name} must not be a pull request commit",
+                            f"patch URL in package {pkg_cls.name} "
+                            + "must not be a pull request commit",
                             [patch.url],
                         )
                     )
@@ -452,7 +453,8 @@ def _check_patch_urls(pkgs, error_cls):
                     if not patch.url.endswith(full_index_arg):
                         errors.append(
                             error_cls(
-                                f"patch URL in package {pkg_cls.name} must end with {full_index_arg}",
+                                f"patch URL in package {pkg_cls.name} "
+                                + f"must end with {full_index_arg}",
                                 [patch.url],
                             )
                         )
