@@ -38,7 +38,7 @@ spack:
           all: '{name}/{version}'
   specs:
     - boost+atomic+chrono+date_time+filesystem+json+locale+log+math+program_options+python+random+regex+serialization+shared+signals+stacktrace+system+test+timer+type_erasure
-    - caliper+cuda cuda_arch=70
+    - caliper+vtune+cuda cuda_arch=70
     - gmsh
     - hdf5+cxx+hl+mpi
     - highfive+mpi

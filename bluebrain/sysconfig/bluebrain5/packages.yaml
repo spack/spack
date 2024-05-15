@@ -9,8 +9,7 @@ packages:
   boost:
     variants: +filesystem+pic+serialization+test
   caliper:
-    # see https://github.com/LLNL/Caliper/issues/529
-    require: "@2.9.1"
+    require: "@2.11:"
   coreneuron:
     # Keep this aligned with NEURON, otherwise the Spack solver may decide that
     # rolling back to NEURON 8.2.2 with external CoreNEURON is a net win
