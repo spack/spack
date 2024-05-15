@@ -112,7 +112,7 @@ class Protobuf(CMakePackage):
     patch(
         "https://github.com/protocolbuffers/protobuf/pull/11032/commits/3039f932aaf212bcf2f14a3f2fd00dbfb881e46b.patch?full_index=1",
         when="@3.4:3.21",
-        sha256="ae8639a308294bed85d3f6ebb7e005ee4fde6b2884d41cb75543191c9c5c98ef",
+        sha256="cefc4bf4aadf9ca33a336b2aa6d0d82006b6563e85122ae8cfb70345f85321dd",
     )
 
     patch("msvc-abseil-target-namespace.patch", when="@3.22 %msvc")
