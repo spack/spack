@@ -44,6 +44,7 @@ import spack.util.web as web_util
 from spack import traverse
 from spack.error import SpackError
 from spack.reporters import CDash, CDashConfiguration
+from spack.reporters.cdash import SPACK_CDASH_TIMEOUT
 from spack.reporters.cdash import build_stamp as cdash_build_stamp
 
 # See https://docs.gitlab.com/ee/ci/yaml/#retry for descriptions of conditions
@@ -1506,7 +1507,7 @@ def download_and_extract_artifacts(url, work_dir):
     request = Request(url, headers=headers)
     request.get_method = lambda: "GET"
 
-    response = opener.open(request)
+    response = opener.open(request, timeout=SPACK_CDASH_TIMEOUT)
     response_code = response.getcode()
 
     if response_code != 200:
@@ -2254,7 +2255,7 @@ hash={spec.dag_hash()} arch={spec.architecture} ({self.build_group})"
 
         request = Request(url, data=enc_data, headers=headers)
 
-        response = opener.open(request)
+        response = opener.open(request, timeout=SPACK_CDASH_TIMEOUT)
         response_code = response.getcode()
 
         if response_code not in [200, 201]:
@@ -2300,7 +2301,7 @@ hash={spec.dag_hash()} arch={spec.architecture} ({self.build_group})"
         request = Request(url, data=enc_data, headers=headers)
         request.get_method = lambda: "PUT"
 
-        response = opener.open(request)
+        response = opener.open(request, timeout=SPACK_CDASH_TIMEOUT)
         response_code = response.getcode()
 
         if response_code != 200:
