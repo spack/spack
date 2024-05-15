@@ -51,7 +51,7 @@ class FakeWebResponder:
         self._content = content_to_read
         self._read = [False for c in content_to_read]
 
-    def open(self, request):
+    def open(self, request, data=None, timeout=object()):
         return self
 
     def getcode(self):
