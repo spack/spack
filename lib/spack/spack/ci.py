@@ -44,6 +44,7 @@ import spack.util.web as web_util
 from spack import traverse
 from spack.error import SpackError
 from spack.reporters import CDash, CDashConfiguration
+from spack.reporters.cdash import SPACK_CDASH_TIMEOUT
 from spack.reporters.cdash import build_stamp as cdash_build_stamp
 
 # See https://docs.gitlab.com/ee/ci/yaml/#retry for descriptions of conditions
@@ -1478,6 +1479,12 @@ def copy_test_logs_to_artifacts(test_stage, job_test_dir):
     copy_files_to_artifacts(os.path.join(test_stage, "*", "*.txt"), job_test_dir)
 
 
+def win_quote(quote_str: str) -> str:
+    if IS_WINDOWS:
+        quote_str = f'"{quote_str}"'
+    return quote_str
+
+
 def download_and_extract_artifacts(url, work_dir):
     """Look for gitlab artifacts.zip at the given url, and attempt to download
         and extract the contents into the given work_dir
@@ -1500,7 +1507,7 @@ def download_and_extract_artifacts(url, work_dir):
     request = Request(url, headers=headers)
     request.get_method = lambda: "GET"
 
-    response = opener.open(request)
+    response = opener.open(request, timeout=SPACK_CDASH_TIMEOUT)
     response_code = response.getcode()
 
     if response_code != 200:
@@ -1942,9 +1949,9 @@ def process_command(name, commands, repro_dir, run=True, exit_on_failure=True):
         # but we need to handle EXEs (git, etc) ourselves
         catch_exe_failure = (
             """
-if ($LASTEXITCODE -ne 0){
-    throw "Command {} has failed"
-}
+if ($LASTEXITCODE -ne 0){{
+    throw 'Command {} has failed'
+}}
 """
             if IS_WINDOWS
             else ""
@@ -2176,13 +2183,13 @@ class CDashHandler:
     def args(self):
         return [
             "--cdash-upload-url",
-            self.upload_url,
+            win_quote(self.upload_url),
             "--cdash-build",
-            self.build_name,
+            win_quote(self.build_name),
             "--cdash-site",
-            self.site,
+            win_quote(self.site),
             "--cdash-buildstamp",
-            self.build_stamp,
+            win_quote(self.build_stamp),
         ]
 
     @property  # type: ignore
@@ -2248,7 +2255,7 @@ hash={spec.dag_hash()} arch={spec.architecture} ({self.build_group})"
 
         request = Request(url, data=enc_data, headers=headers)
 
-        response = opener.open(request)
+        response = opener.open(request, timeout=SPACK_CDASH_TIMEOUT)
         response_code = response.getcode()
 
         if response_code not in [200, 201]:
@@ -2294,7 +2301,7 @@ hash={spec.dag_hash()} arch={spec.architecture} ({self.build_group})"
         request = Request(url, data=enc_data, headers=headers)
         request.get_method = lambda: "PUT"
 
-        response = opener.open(request)
+        response = opener.open(request, timeout=SPACK_CDASH_TIMEOUT)
         response_code = response.getcode()
 
         if response_code != 200:

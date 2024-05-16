@@ -27,6 +27,7 @@ class Whizard(AutotoolsPackage):
     license("GPL-2.0-or-later")
 
     version("master", branch="master")
+    version("3.1.4", sha256="9da9805251d786adaf4ad5a112f9c4ee61d515778af0d2623d6460c3f1f900cd")
     version("3.1.2", sha256="4f706f8ef02a580ae4dba867828691dfe0b3f9f9b8982b617af72eb8cd4c6fa3")
     version("3.1.1", sha256="dd48e4e39b8a4990be47775ec6171f89d8147cb2e9e293afc7051a7dbc5a23ef")
     version("3.1.0", sha256="9dc5e6d1a25d2fc708625f85010cb81b63559ff02cceb9b35024cf9f426c0ad9")
@@ -66,6 +67,7 @@ class Whizard(AutotoolsPackage):
     depends_on("hepmc3", when="hepmc=3")
     depends_on("lcio", when="+lcio")
     depends_on("pythia8", when="+pythia8")
+    depends_on("pythia8@:8.309", when="@:3.1.3+pythia8")
     depends_on("lhapdf", when="+lhapdf")
     depends_on("fastjet", when="+fastjet")
     depends_on(
@@ -78,7 +80,7 @@ class Whizard(AutotoolsPackage):
     # Fix for https://github.com/key4hep/key4hep-spack/issues/71
     # NOTE: This will become obsolete in a future release of whizard, so once
     # that happens, this needs to be adapted with a when clause
-    patch("parallel_build_fix.patch", when="@3:")
+    patch("parallel_build_fix.patch", when="@3:3.1.3")
     patch("parallel_build_fix_2.8.patch", when="@2.8")
     # Make sure that the patch actually has an effect by running autoreconf
     force_autoreconf = True
