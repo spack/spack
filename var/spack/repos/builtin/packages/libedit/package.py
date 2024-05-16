@@ -43,7 +43,7 @@ class Libedit(AutotoolsPackage):
     def configure_args(self):
         args = ["ac_cv_lib_curses_tgetent=no", "ac_cv_lib_termcap_tgetent=no"]
 
-        if "+termlib" in self.spec["ncurses"]:
+        if self.spec["ncurses"].satisfies("+termlib"):
             args.append("ac_cv_lib_ncurses_tgetent=no")
         else:
             args.append("ac_cv_lib_tinfo_tgetent=no")
