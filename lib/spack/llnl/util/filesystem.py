@@ -2533,6 +2533,9 @@ class WindowsSimulatedRPath:
         # install a symlink to each dependent library
 
         # do not rpath for system libraries included in the dag
+        # we should not be modifying libraries managed by the Windows system
+        # as this will negatively impact linker behavior and can result in permission
+        # errors if those system libs are not modifiable by Spack
         if "windows-system" not in getattr(self.pkg, "tags", []):
             for library, lib_dir in itertools.product(self.rpaths, self.library_dependents):
                 self._link(library, lib_dir)
