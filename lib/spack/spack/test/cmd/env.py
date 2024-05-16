@@ -15,6 +15,7 @@ import pytest
 import llnl.util.filesystem as fs
 import llnl.util.link_tree
 import llnl.util.tty as tty
+from llnl.util.symlink import readlink
 
 import spack.cmd.env
 import spack.config
@@ -4414,8 +4415,8 @@ def test_env_view_resolves_identical_file_conflicts(tmp_path, install_mockery, m
     #   view-file/bin/
     #     x                                          # expect this x to be linked
 
-    assert os.readlink(tmp_path / "view" / "bin" / "x") == bottom.bin.x
-    assert os.readlink(tmp_path / "view" / "bin" / "y") == top.bin.y
+    assert readlink(tmp_path / "view" / "bin" / "x") == bottom.bin.x
+    assert readlink(tmp_path / "view" / "bin" / "y") == top.bin.y
 
 
 def test_env_view_ignores_different_file_conflicts(tmp_path, install_mockery, mock_fetch):
@@ -4426,4 +4427,4 @@ def test_env_view_ignores_different_file_conflicts(tmp_path, install_mockery, mo
         install()
         prefix_dependent = e.matching_spec("view-ignore-conflict").prefix
     # The dependent's file is linked into the view
-    assert os.readlink(tmp_path / "view" / "bin" / "x") == prefix_dependent.bin.x
+    assert readlink(tmp_path / "view" / "bin" / "x") == prefix_dependent.bin.x

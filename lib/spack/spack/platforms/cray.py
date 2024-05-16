@@ -10,6 +10,7 @@ import re
 import archspec.cpu
 
 import llnl.util.tty as tty
+from llnl.util.symlink import readlink
 
 import spack.target
 import spack.version
@@ -133,7 +134,7 @@ class Cray(Platform):
         # Take the default version from known symlink path
         default_path = os.path.join(craype_dir, "default")
         if os.path.islink(default_path):
-            version = spack.version.Version(os.readlink(default_path))
+            version = spack.version.Version(readlink(default_path))
             return (craype_type, version)
 
         # If no default version, sort available versions and return latest
