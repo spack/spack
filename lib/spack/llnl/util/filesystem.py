@@ -843,7 +843,7 @@ def copy_tree(
             if islink(s):
                 link_target = resolve_link_target_relative_to_the_link(s)
                 if symlinks:
-                    target = os.readlink(s)
+                    target = readlink(s)
                     if os.path.isabs(target):
 
                         def escaped_path(path):
