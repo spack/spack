@@ -331,16 +331,23 @@ class PyMatplotlib(PythonPackage):
                     config.write("enable_lto = False\n")
 
     @run_after("install")
+    @on_package_attributes(run_tests=True)
     def copy_reference_images(self):
         # https://matplotlib.org/devdocs/devel/testing.html#obtain-the-reference-images
         install_tree(
             join_path("lib", "matplotlib", "tests", "baseline_images"),
             join_path(python_platlib, "matplotlib", "tests", "baseline_images"),
         )
-        for toolkit in ["axes_grid1", "axisartist", "mplot3d"]:
+        if self.spec.satisfies("@3.7:"):
+            for toolkit in ["axes_grid1", "axisartist", "mplot3d"]:
+                install_tree(
+                    join_path("lib", "mpl_toolkits", toolkit, "tests", "baseline_images"),
+                    join_path(python_platlib, "mpl_toolkits", toolkit, "tests", "baseline_images"),
+                )
+        else:
             install_tree(
-                join_path("lib", "mpl_toolkits", toolkit, "tests", "baseline_images"),
-                join_path(python_platlib, "mpl_toolkits", toolkit, "tests", "baseline_images"),
+                join_path("lib", "mpl_toolkits", "tests", "baseline_images"),
+                join_path(python_platlib, "mpl_toolkits", "tests", "baseline_images"),
             )
 
     @run_after("install")
@@ -348,5 +355,8 @@ class PyMatplotlib(PythonPackage):
     def install_test(self):
         # https://matplotlib.org/devdocs/devel/testing.html#run-the-tests
         python("-m", "pytest", "--pyargs", "matplotlib.tests")
-        for toolkit in ["axes_grid1", "axisartist", "mplot3d"]:
-            python("-m", "pytest", "--pyargs", f"mpl_toolkits.{toolkit}.tests")
+        if self.spec.satisfies("@3.7:"):
+            for toolkit in ["axes_grid1", "axisartist", "mplot3d"]:
+                python("-m", "pytest", "--pyargs", f"mpl_toolkits.{toolkit}.tests")
+        else:
+            python("-m", "pytest", "--pyargs", "mpl_toolkits.tests")
