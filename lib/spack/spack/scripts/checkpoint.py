@@ -104,6 +104,20 @@ def get_package_hashes(env):
     return path_to_hash
 
 
+def update_checkpoint(env):
+    new_state = Checkpoint.from_env(env)
+    new_state.write(env)
+
+
+def check_checkpoint(env):
+    prior_state = Checkpoint.from_save(env)
+    new_state = Checkpoint.from_env(env)
+    if prior_state != new_state:
+        return "unequal"
+    else:
+        return "equal"
+
+
 def main():
     parser = argparse.ArgumentParser(description="Checkpoint an active env")
     subparsers = parser.add_subparsers(dest="command", help="Subcommands")
@@ -119,15 +133,9 @@ def main():
         raise ValueError("An active env is required.")
 
     if args.command == "update":
-        new_state = Checkpoint.from_env(env)
-        new_state.write(env)
+        update_checkpoint(env)
     elif args.command == "check":
-        prior_state = Checkpoint.from_save(env)
-        new_state = Checkpoint.from_env(env)
-        if prior_state != new_state:
-            print("unequal")
-        else:
-            print("equal")
+        print(check_checkpoint(env))
 
 
 if __name__ == "__main__":
