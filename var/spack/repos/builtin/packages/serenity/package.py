@@ -51,7 +51,7 @@ class Serenity(CMakePackage):
     extends("python", when="+python")
 
     patch(
-        "https://github.com/qcserenity/serenity/commit/af9f76d013e240d971337a467a03640cb9aabfb7.patch",
+        "https://github.com/qcserenity/serenity/commit/af9f76d013e240d971337a467a03640cb9aabfb7.patch?full_index=1",
         sha256="45cce5e4d47b681891e78725b2cf5031d306337a5c7b8e62cd4891beb4a7b8b6",
         when="@1.6.1:",
     )
