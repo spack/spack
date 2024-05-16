@@ -684,7 +684,7 @@ def generate_gitlab_ci_yaml(
             "instead.",
         )
 
-    def ensure_expected_target_path(paths):
+    def ensure_expected_target_path(path):
         """Returns passed paths with all Windows path separators exchanged
         for posix separators only if copy_only_pipeline is enabled
 
@@ -696,7 +696,7 @@ def generate_gitlab_ci_yaml(
         TODO (johnwparent): Refactor config + cli read/write to deal only in posix
         style paths
         """
-        if copy_only_pipeline:
+        if copy_only_pipeline and path:
             path = path.replace("\\", "/")
         return path
 
