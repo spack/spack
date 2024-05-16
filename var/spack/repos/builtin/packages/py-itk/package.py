@@ -15,6 +15,8 @@ class PyItk(PythonPackage):
 
     homepage = "https://itk.org/"
 
+    skip_version_audit = ["platform=windows"]
+
     if sys.platform == "darwin":
         # version 5.1.1
         version(

@@ -5,6 +5,7 @@
 
 import os
 import pathlib
+import re
 import sys
 
 from spack.build_environment import dso_suffix
@@ -400,7 +401,8 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     # ###################### Dependencies ##########################
 
     # External Kokkos
-    depends_on("kokkos@4.2.01", when="@15.1.0: +kokkos")
+    depends_on("kokkos@4.3.01", when="@master: +kokkos")
+    depends_on("kokkos@4.2.01", when="@15.1.0:15.1.1 +kokkos")
     depends_on("kokkos@4.1.00", when="@14.4.0:15.0.0 +kokkos")
 
     depends_on("kokkos +wrapper", when="trilinos@14.4.0: +kokkos +wrapper")
@@ -420,7 +422,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("binder@1.3:", when="@15: +python", type="build")
     depends_on("blas")
     depends_on("boost+graph+math+exception+stacktrace", when="+boost")
-    depends_on("boost+graph+math+exception+stacktrace", when="@:14.0.0 +stk")
+    depends_on("boost+graph+math+exception+stacktrace", when="@:13.4.0 +stk")
     depends_on("cgns", when="+exodus")
     depends_on("cmake@3.23:", type="build", when="@14.0.0:")
     depends_on("hdf5+hl", when="+hdf5")
@@ -603,6 +605,30 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
         spec = self.spec
         define = self.define
         define_from_variant = self.define_from_variant
+
+        if self.spec.satisfies("@master: +kokkos"):
+            with open(
+                os.path.join(self.stage.source_path, "packages", "kokkos", "CMakeLists.txt")
+            ) as f:
+                all_txt = f.read()
+            r = dict(
+                re.findall(r".*set\s?\(\s?Kokkos_VERSION_(MAJOR|MINOR|PATCH)\s?(\d+)", all_txt)
+            )
+            kokkos_version_in_trilinos_source = Version(
+                ".".join([r["MAJOR"], r["MINOR"], r["PATCH"].zfill(2)])
+            )
+            kokkos_version_specified = spec["kokkos"].version
+            if kokkos_version_in_trilinos_source != kokkos_version_specified:
+                raise InstallError(
+                    "For Trilinos@[master,develop], ^kokkos version in spec must "
+                    "match version in Trilinos source code. Specify ^kokkos@{0} ".format(
+                        kokkos_version_in_trilinos_source
+                    )
+                    + "for trilinos@[master,develop] instead of ^kokkos@{0}.\n".format(
+                        kokkos_version_specified
+                    )
+                    + "Trilinos recipe maintainers, please update the ^kokkos version range"
+                )
 
         def _make_definer(prefix):
             def define_enable(suffix, value=None):

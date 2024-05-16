@@ -19,7 +19,13 @@ class TreeSitter(MakefilePackage):
 
     license("MIT")
 
+    version("0.22.2", sha256="0c829523b876d4a37e1bd46a655c133a93669c0fe98fcd84972b168849c27afc")
+    version("0.22.1", sha256="b21065e78da33e529893c954e712ad15d9ad44a594b74567321d4a3a007d6090")
+    version("0.22.0", sha256="1cc0c832c6cc3d04f0b702247fac3dac45f958b0ee1f946619b7ae7b67258060")
+    version("0.21.0", sha256="6bb60e5b63c1dc18aba57a9e7b3ea775b4f9ceec44cc35dac4634d26db4eb69c")
+    version("0.20.9", sha256="9b2fd489a7281e3a7e5e7cbbf3a974e5a6a115889ae65676d61b79bdae96464e")
     version("0.20.8", sha256="6181ede0b7470bfca37e293e7d5dc1d16469b9485d13f13a605baec4a8b1f791")
+    version("0.20.7", sha256="b355e968ec2d0241bbd96748e00a9038f83968f85d822ecb9940cbe4c42e182e")
     version("0.20.6", sha256="4d37eaef8a402a385998ff9aca3e1043b4a3bba899bceeff27a7178e1165b9de")
     version("0.20.4", sha256="979ad0b36eb90975baf0c65d155d106276cac08afb1c2fe0ad54d4b7d498ce39")
     version("0.20.3", sha256="ab52fe93e0c658cff656b9d10d67cdd29084247052964eba13ed6f0e9fa3bd36")

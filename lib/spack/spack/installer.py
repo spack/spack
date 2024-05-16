@@ -488,6 +488,10 @@ def _process_binary_cache_tarball(
 
     with timer.measure("install"), spack.util.path.filter_padding():
         binary_distribution.extract_tarball(pkg.spec, download_result, force=False, timer=timer)
+        pkg.windows_establish_runtime_linkage()
+
+        if hasattr(pkg, "_post_buildcache_install_hook"):
+            pkg._post_buildcache_install_hook()
 
         pkg.installed_from_binary_cache = True
         spack.store.STORE.db.add(pkg.spec, spack.store.STORE.layout, explicit=explicit)
@@ -976,7 +980,11 @@ class BuildTask:
         # a dependency of the build task. Here we add it to self.dependencies
         compiler_spec = self.pkg.spec.compiler
         arch_spec = self.pkg.spec.architecture
-        if not spack.compilers.compilers_for_spec(compiler_spec, arch_spec=arch_spec):
+        strict = spack.concretize.Concretizer().check_for_compiler_existence
+        if (
+            not spack.compilers.compilers_for_spec(compiler_spec, arch_spec=arch_spec)
+            and not strict
+        ):
             # The compiler is in the queue, identify it as dependency
             dep = spack.compilers.pkg_spec_for_compiler(compiler_spec)
             dep.constrain(f"platform={str(arch_spec.platform)}")
@@ -1691,10 +1699,6 @@ class PackageInstaller:
             spack.package_base.PackageBase._verbose = spack.build_environment.start_build_process(
                 pkg, build_process, install_args
             )
-            # Currently this is how RPATH-like behavior is achieved on Windows, after install
-            # establish runtime linkage via Windows Runtime link object
-            # Note: this is a no-op on non Windows platforms
-            pkg.windows_establish_runtime_linkage()
             # Note: PARENT of the build process adds the new package to
             # the database, so that we don't need to re-read from file.
             spack.store.STORE.db.add(pkg.spec, spack.store.STORE.layout, explicit=explicit)

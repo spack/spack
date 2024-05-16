@@ -14,6 +14,7 @@ class Imake(AutotoolsPackage, XorgPackage):
 
     license("custom")
 
+    version("1.0.10", sha256="9bbe76b6bb39caf34a437f50010f58a13d7dd6d512e00e765a2b7883e6ae613c")
     version("1.0.9", sha256="ca53ad18c683091490596d72fee8dbee4c6ddb7693709e25f26da140d29687c1")
     version("1.0.7", sha256="6bda266a07eb33445d513f1e3c82a61e4822ccb94d420643d58e1be5f881e5cb")
 
@@ -24,5 +25,5 @@ class Imake(AutotoolsPackage, XorgPackage):
     def configure_args(self):
         args = []
         cfgdir = self.spec["xorg-cf-files"].prefix.lib.X11.config
-        args.append("--with-config-dir={0}".format(cfgdir))
+        args.append(f"--with-config-dir={cfgdir}")
         return args

@@ -16,6 +16,7 @@ class Spot(AutotoolsPackage):
 
     license("MIT")
 
+    version("2.11.6", sha256="a692794f89c0db3956ba5919bdd5313e372e0de34000a9022f29e1c6e91c538a")
     version("2.11.5", sha256="3acfd5cd112d00576ac234baeb34e1c6adf8c03155d4cda973e6317ac8bd1774")
     version("2.11.4", sha256="91ecac6202819ea1de4534902ce457ec6eec0573d730584d6494d06b0bcaa0b4")
     version("2.9.4", sha256="e11208323baabe9b5f98098d4b9bb39803fb102a68abbbaf900f1fcd578f0f85")

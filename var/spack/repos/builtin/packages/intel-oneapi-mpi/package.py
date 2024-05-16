@@ -22,6 +22,12 @@ class IntelOneapiMpi(IntelOneApiLibraryPackage):
     homepage = "https://software.intel.com/content/www/us/en/develop/tools/oneapi/components/mpi-library.html"
 
     version(
+        "2021.12.1",
+        url="https://registrationcenter-download.intel.com/akdlm/IRC_NAS/56b2dd0e-954d-4330-b0a7-b22992f7e6b7/l_mpi_oneapi_p_2021.12.1.8_offline.sh",
+        sha256="6a4cd82ff1c64eac2a7ac3784ea2dc3a0e32740fb7e7bc6a1aa48740d5011b2f",
+        expand=False,
+    )
+    version(
         "2021.12.0",
         url="https://registrationcenter-download.intel.com/akdlm/IRC_NAS/749f02a5-acb8-4bbb-91db-501ff80d3f56/l_mpi_oneapi_p_2021.12.0.538_offline.sh",
         sha256="6ccfc35784ec86d898f4c1cedf82c4f71926123a12db64111f67e7d0286bbb2d",
@@ -151,11 +157,12 @@ class IntelOneapiMpi(IntelOneApiLibraryPackage):
             self.spec.mpifc = join_path(self.component_prefix.bin, "mpiifort")
 
     def setup_dependent_build_environment(self, env, dependent_spec):
-        env.set("I_MPI_CC", spack_cc)
-        env.set("I_MPI_CXX", spack_cxx)
-        env.set("I_MPI_F77", spack_f77)
-        env.set("I_MPI_F90", spack_fc)
-        env.set("I_MPI_FC", spack_fc)
+        dependent_module = dependent_spec.package.module
+        env.set("I_MPI_CC", dependent_module.spack_cc)
+        env.set("I_MPI_CXX", dependent_module.spack_cxx)
+        env.set("I_MPI_F77", dependent_module.spack_f77)
+        env.set("I_MPI_F90", dependent_module.spack_fc)
+        env.set("I_MPI_FC", dependent_module.spack_fc)
 
         # Set compiler wrappers for dependent build stage
         if "+generic-names" in self.spec:

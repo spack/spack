@@ -12,12 +12,20 @@ class RocmDeviceLibs(CMakePackage):
 
     homepage = "https://github.com/ROCm/ROCm-Device-Libs"
     git = "https://github.com/ROCm/ROCm-Device-Libs.git"
-    url = "https://github.com/ROCm/ROCm-Device-Libs/archive/rocm-6.0.2.tar.gz"
+
+    def url_for_version(self, version):
+        if version <= Version("6.0.2"):
+            url = "https://github.com/ROCm/ROCm-Device-Libs/archive/rocm-{0}.tar.gz"
+        else:
+            url = "https://github.com/ROCm/llvm-project/archive/rocm-{0}.tar.gz"
+        return url.format(version)
+
     tags = ["rocm"]
 
     maintainers("srekolam", "renjithravindrankannath", "haampie")
 
     version("master", branch="amd-stg-open")
+    version("6.1.0", sha256="6bd9912441de6caf6b26d1323e1c899ecd14ff2431874a2f5883d3bc5212db34")
     version("6.0.2", sha256="c6d88b9b46e39d5d21bd5a0c1eba887ec473a370b1ed0cebd1d2e910eedc5837")
     version("6.0.0", sha256="198df4550d4560537ba60ac7af9bde31d59779c8ec5d6309627f77a43ab6ef6f")
     version("5.7.1", sha256="703de8403c0bd0d80f37c970a698f10f148daf144d34f982e4484d04f7c7bbef")
@@ -66,12 +74,20 @@ class RocmDeviceLibs(CMakePackage):
         "5.7.1",
         "6.0.0",
         "6.0.2",
+        "6.1.0",
         "master",
     ]:
         depends_on(f"llvm-amdgpu@{ver}", when=f"@{ver}")
 
-    for ver in ["5.5.0", "5.5.1", "5.6.0", "5.6.1", "5.7.0", "5.7.1", "6.0.0", "6.0.2"]:
+    for ver in ["5.5.0", "5.5.1", "5.6.0", "5.6.1", "5.7.0", "5.7.1", "6.0.0", "6.0.2", "6.1.0"]:
         depends_on(f"rocm-core@{ver}", when=f"@{ver}")
+
+    @property
+    def root_cmakelists_dir(self):
+        if self.spec.satisfies("@:6.0"):
+            return "."
+        else:
+            return join_path("amd", "device-libs")
 
     def cmake_args(self):
         spec = self.spec
