@@ -478,6 +478,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     # FIXME: if we need this patch for v4.7.0, we need a new patch since this
     #        one fails
     patch("mfem-hip.patch", when="@4.6.0 +rocm ^hip@6.0:")
+    patch("mfem-4.7.patch", when="@4.7.0")
 
     phases = ["configure", "build", "install"]
 
@@ -982,8 +983,16 @@ class Mfem(Package, CudaPackage, ROCmPackage):
             if "%cce" in spec:
                 # We assume the proper Cray CCE module (cce) is loaded:
                 craylibs_path = env["CRAYLIBS_" + machine().upper()]
-                craylibs = ["libmodules", "libfi", "libcraymath", "libf", "libu", "libcsup"]
+                craylibs = ["libmodules", "libfi", "libcraymath", "libf", "libu", "libcsup", "libpgas-shmem"]
                 hip_libs += find_libraries(craylibs, craylibs_path)
+                craylibs_path2 = join_path(
+                    craylibs_path,
+                    "../../../cce-clang",
+                    machine(),
+                    "lib",
+                )
+                hip_libs += find_libraries("libunwind", craylibs_path2)
+
             if hip_headers:
                 options += ["HIP_OPT=%s" % hip_headers.cpp_flags]
             if hip_libs:
@@ -1028,11 +1037,15 @@ class Mfem(Package, CudaPackage, ROCmPackage):
 
         if "+umpire" in spec:
             umpire = spec["umpire"]
+            umpire_opts = umpire.headers
             umpire_libs = umpire.libs
+            if "^camp" in umpire:
+                umpire_opts += umpire["camp"].headers
             if "^fmt" in umpire:
+                umpire_opts += umpire["fmt"].headers
                 umpire_libs += umpire["fmt"].libs
             options += [
-                "UMPIRE_OPT=-I%s" % umpire.prefix.include,
+                "UMPIRE_OPT=%s" % umpire_opts.cpp_flags,
                 "UMPIRE_LIB=%s" % ld_flags_from_library_list(umpire_libs),
             ]
 
@@ -1102,7 +1115,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
             hiop_libs = hiop.libs
             hiop_hdrs += spec["lapack"].headers + spec["blas"].headers
             hiop_libs += spec["lapack"].libs + spec["blas"].libs
-            hiop_opt_libs = ["magma", "umpire"]
+            hiop_opt_libs = ["magma", "umpire", "hipblas", "hiprand"]
             for opt_lib in hiop_opt_libs:
                 if "^" + opt_lib in hiop:
                     hiop_hdrs += hiop[opt_lib].headers
@@ -1118,6 +1131,8 @@ class Mfem(Package, CudaPackage, ROCmPackage):
                     camp = raja["camp"]
                     hiop_hdrs += camp.headers
                     hiop_libs += find_optional_library("libcamp", camp.prefix)
+            if hiop.satisfies("@0.6:+cuda"):
+                hiop_libs += LibraryList(["cublas", "curand"])
             options += [
                 "HIOP_OPT=%s" % hiop_hdrs.cpp_flags,
                 "HIOP_LIB=%s" % ld_flags_from_library_list(hiop_libs),
