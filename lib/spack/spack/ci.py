@@ -684,7 +684,7 @@ def generate_gitlab_ci_yaml(
             "instead.",
         )
 
-    def ensure_expected_target_path(path):
+    def ensure_expected_target_path(paths):
         """Returns passed paths with all Windows path separators exchanged
         for posix separators only if copy_only_pipeline is enabled
 
@@ -1244,6 +1244,9 @@ def generate_gitlab_ci_yaml(
             "SPACK_REBUILD_EVERYTHING": str(rebuild_everything),
             "SPACK_REQUIRE_SIGNING": os.environ.get("SPACK_REQUIRE_SIGNING", "False"),
         }
+        output_vars = output_object["variables"]
+        for item, val in output_vars.items():
+            output_vars[item] = ensure_expected_target_path(val)
 
         # TODO: Remove this block in Spack 0.23
         if deprecated_mirror_config and remote_mirror_override:
@@ -1299,7 +1302,7 @@ def generate_gitlab_ci_yaml(
 
     sorted_output = {}
     for output_key, output_value in sorted(output_object.items()):
-        sorted_output[output_key] = ensure_expected_target_path(output_value)
+        sorted_output[output_key] = output_value
     if known_broken_specs_encountered:
         tty.error("This pipeline generated hashes known to be broken on develop:")
         display_broken_spec_messages(broken_specs_url, known_broken_specs_encountered)
