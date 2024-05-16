@@ -17,7 +17,9 @@ class Cdi(AutotoolsPackage):
 
     version("2.4.0", sha256="91fca015b04c6841b9eab8b49e7726d35e35b9ec4350922072ec6e9d5eb174ef")
 
-    variant("netcdf", default=True, description="This is needed to read/write NetCDF files with CDI")
+    variant(
+        "netcdf", default=True, description="This is needed to read/write NetCDF files with CDI"
+    )
 
     depends_on("netcdf-c", when="+netcdf")
 
