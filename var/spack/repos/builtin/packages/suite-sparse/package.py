@@ -309,5 +309,10 @@ class SuiteSparse(Package):
         query_parameters = self.spec.last_query.extra_parameters
         comps = all_comps if not query_parameters else query_parameters
         return find_libraries(
-            ["lib" + c for c in comps], root=self.prefix.lib, shared=True, recursive=False
+            # Libraries may be installed under both `lib/` and `lib64/`,
+            # don't force searching under `lib/` only.
+            ["lib" + c for c in comps],
+            root=self.prefix,
+            shared=True,
+            recursive=True,
         )
