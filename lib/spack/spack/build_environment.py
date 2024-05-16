@@ -731,7 +731,7 @@ def _static_to_shared_library(arch, compiler, static_lib, shared_lib=None, **kwa
 
 
 def _get_rpath_deps_from_spec(
-    spec: spack.package_base.PackageBase, transitive_rpaths: bool
+    spec: spack.spec.Spec, transitive_rpaths: bool
 ) -> List[spack.spec.Spec]:
     if not transitive_rpaths:
         return spec.dependencies(deptype=dt.LINK)
