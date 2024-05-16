@@ -18,6 +18,7 @@ class Imgui(Package):
 
     license("MIT")
 
+    version("1.90.6", sha256="70b4b05ac0938e82b4d5b8d59480d3e2ca63ca570dfb88c55023831f387237ad")
     version("1.85", sha256="7ed49d1f4573004fa725a70642aaddd3e06bb57fcfe1c1a49ac6574a3e895a77")
 
     def install(self, spec, prefix):
