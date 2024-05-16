@@ -7,6 +7,8 @@ import stat
 
 import pytest
 
+from llnl.util.symlink import readlink
+
 import spack.cmd.modules
 import spack.config
 import spack.error
@@ -78,7 +80,7 @@ def test_modules_default_symlink(
 
     link_path = os.path.join(os.path.dirname(mock_module_filename), "default")
     assert os.path.islink(link_path)
-    assert os.readlink(link_path) == mock_module_filename
+    assert readlink(link_path) == mock_module_filename
 
     generator.remove()
     assert not os.path.lexists(link_path)

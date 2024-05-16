@@ -22,7 +22,7 @@ import llnl.util.filesystem as fs
 import llnl.util.tty as tty
 import llnl.util.tty.color as clr
 from llnl.util.link_tree import ConflictingSpecsError
-from llnl.util.symlink import symlink
+from llnl.util.symlink import readlink, symlink
 
 import spack.compilers
 import spack.concretize
@@ -662,7 +662,7 @@ class ViewDescriptor:
         if not os.path.islink(self.root):
             return None
 
-        root = os.readlink(self.root)
+        root = readlink(self.root)
         if os.path.isabs(root):
             return root
 

@@ -15,6 +15,7 @@ import sys
 import pytest
 
 from llnl.util.filesystem import getuid, mkdirp, partition_path, touch, working_dir
+from llnl.util.symlink import readlink
 
 import spack.error
 import spack.paths
@@ -872,7 +873,7 @@ def _create_files_from_tree(base, tree):
 
 def _create_tree_from_dir_recursive(path):
     if os.path.islink(path):
-        return os.readlink(path)
+        return readlink(path)
     elif os.path.isdir(path):
         tree = {}
         for name in os.listdir(path):
