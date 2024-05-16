@@ -684,7 +684,7 @@ def generate_gitlab_ci_yaml(
             "instead.",
         )
 
-    def ensure_expected_target_paths(*lst_path):
+    def ensure_expected_target_path(path):
         """Returns passed paths with all Windows path separators exchanged
         for posix separators only if copy_only_pipeline is enabled
 
@@ -697,8 +697,8 @@ def generate_gitlab_ci_yaml(
         style paths
         """
         if copy_only_pipeline:
-            lst_path = [i.replace("\\", "/") for i in lst_path]
-        return lst_path if len(lst_path) > 1 else lst_path[0]
+            path = path.replace("\\", "/")
+        return path
 
     pipeline_mirrors = spack.mirror.MirrorCollection(binary=True)
     deprecated_mirror_config = False
@@ -823,7 +823,7 @@ def generate_gitlab_ci_yaml(
             if scope not in include_scopes and scope not in env_includes:
                 include_scopes.insert(0, scope)
         env_includes.extend(include_scopes)
-        env_yaml_root["spack"]["include"] = ensure_expected_target_paths(*env_includes)
+        env_yaml_root["spack"]["include"] = [ensure_expected_target_path(i) for i in env_includes]
 
         if "gitlab-ci" in env_yaml_root["spack"] and "ci" not in env_yaml_root["spack"]:
             env_yaml_root["spack"]["ci"] = env_yaml_root["spack"].pop("gitlab-ci")
@@ -1299,7 +1299,7 @@ def generate_gitlab_ci_yaml(
 
     sorted_output = {}
     for output_key, output_value in sorted(output_object.items()):
-        sorted_output[output_key] = ensure_expected_target_paths(output_value)
+        sorted_output[output_key] = ensure_expected_target_path(output_value)
     if known_broken_specs_encountered:
         tty.error("This pipeline generated hashes known to be broken on develop:")
         display_broken_spec_messages(broken_specs_url, known_broken_specs_encountered)
