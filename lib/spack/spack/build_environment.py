@@ -730,23 +730,28 @@ def _static_to_shared_library(arch, compiler, static_lib, shared_lib=None, **kwa
     return compiler(*compiler_args, output=compiler_output)
 
 
-def get_rpath_deps(pkg: spack.package_base.PackageBase) -> List[spack.spec.Spec]:
-    """Return immediate or transitive dependencies that need to be rpath'ed in topo order,
-    depending on the package. If a package occurs multiple times, the newest version is kept."""
-    if not pkg.transitive_rpaths:
-        return pkg.spec.dependencies(deptype=dt.LINK)
+def _get_rpath_deps_from_spec(
+    spec: spack.package_base.PackageBase, transitive_rpaths: bool
+) -> List[spack.spec.Spec]:
+    if not transitive_rpaths:
+        return spec.dependencies(deptype=dt.LINK)
 
     by_name: Dict[str, spack.spec.Spec] = {}
 
-    for dep in pkg.spec.traverse(root=False, deptype=dt.LINK, order="topo"):
+    for dep in spec.traverse(root=False, deptype=dt.LINK):
         lookup = by_name.get(dep.name)
         if lookup is None:
             by_name[dep.name] = dep
         elif lookup.version < dep.version:
-            del by_name[dep.name]
             by_name[dep.name] = dep
 
     return list(by_name.values())
+
+
+def get_rpath_deps(pkg: spack.package_base.PackageBase) -> List[spack.spec.Spec]:
+    """Return immediate or transitive dependencies (depending on the package) that need to be
+    rpath'ed. If a package occurs multiple times, the newest version is kept."""
+    return _get_rpath_deps_from_spec(pkg.spec, pkg.transitive_rpaths)
 
 
 def get_rpaths(pkg):
