@@ -3,6 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from platform import machine
+import os.path
+
 from spack.package import *
 
 
@@ -17,6 +20,7 @@ class SuiteSparse(Package):
 
     license("Apache-2.0")
 
+    version("7.7.0", sha256="529b067f5d80981f45ddf6766627b8fc5af619822f068f342aab776e683df4f3")
     version("7.3.1", sha256="b512484396a80750acf3082adc1807ba0aabb103c2e09be5691f46f14d0a9718")
     version("7.2.1", sha256="304e959a163ff74f8f4055dade3e0b5498d9aa3b1c483633bb400620f521509f")
     version("5.13.0", sha256="59c6ca2959623f0c69226cf9afb9a018d12a37fab3a8869db5f6d7f83b6b147d")
@@ -237,13 +241,24 @@ class SuiteSparse(Package):
                 # *_LIBRARIES is critical to pick up static
                 # libraries (if intended) and also to avoid
                 # unintentional system blas/lapack packages
-                + " -DBLAS_LIBRARIES=%s" % spec["blas"].libs
-                + " -DLAPACK_LIBRARIES=%s" % spec["lapack"].libs
+                + " -DBLAS_LIBRARIES=\"%s\"" % (";".join(spec["blas"].libs))
+                + " -DLAPACK_LIBRARIES=\"%s\"" % (";".join(spec["lapack"].libs))
                 + " -DENABLE_CUDA=%s" % ("ON" if "+cuda" in spec else "OFF")
+                + " -DSUITESPARSE_USE_OPENMP=%s" % ("ON" if "+openmp" in spec else "OFF")
+                # Older versions use the negative flag NOPENMP: "OFF" means use
+                # OpenMP:
+                + " -DNOPENMP=%s" % ("OFF" if "+openmp" in spec else "ON")
+                + " -DCMAKE_VERBOSE_MAKEFILE=ON"
             ]
 
         if spec.satisfies("%gcc platform=darwin"):
             make_args += ["LDLIBS=-lm"]
+
+        if "%cce" in spec:
+            # Assume the proper Cray CCE module (cce) is loaded:
+            craylibs_path = env["CRAYLIBS_" + machine().upper()]
+            env.setdefault("LDFLAGS", "")
+            env["LDFLAGS"] += " -Wl,-rpath," + craylibs_path
 
         make_args.append("INSTALL=%s" % prefix)
 
@@ -278,6 +293,16 @@ class SuiteSparse(Package):
         for target in targets:
             make("-C", target, "library", *make_args)
             make("-C", target, "install", *make_args)
+
+        # Starting with v7.4.0 headers are installed in a subdirectory called
+        # 'suitesparse' by default. For backward compatibility, after
+        # installation, we create links for all files from 'suitesparse' in the
+        # containing directory, '<prefix>/include':
+        if spec.satisfies("@7.4:"):
+            with working_dir(prefix.include):
+                for f in find("suitesparse", "*", recursive=False):
+                    sf = os.path.basename(f)
+                    symlink(join_path("suitesparse", sf), sf)
 
     @run_after("install")
     def fix_darwin_install(self):
