@@ -7,14 +7,11 @@ import argparse
 import inspect
 import json
 import os
-import pathlib
-import sys
 
 import spack
 import spack.environment as ev
 import spack.traverse as traverse
 import spack.util.crypto as crypto
-
 
 _checkpoint_file = "checkpoint.json"
 
@@ -44,28 +41,23 @@ class Checkpoint:
 
     @staticmethod
     def from_env(env):
-        data = [
-            _checksum(env.manifest_path),
-            get_config_hashes(),
-            get_package_hashes(env),
-        ]
+        data = [_checksum(env.manifest_path), get_config_hashes(), get_package_hashes(env)]
         return Checkpoint(data)
 
     def write(self, env):
         path = os.path.join(env.path, _checkpoint_file)
         with open(path, "w") as f:
             (manifest_checksum, cfg_hashes, pkg_hashes) = self.data
-            write_data = [
-                manifest_checksum,
-                list(cfg_hashes),
-                list(pkg_hashes),
-            ]
+            write_data = [manifest_checksum, list(cfg_hashes), list(pkg_hashes)]
             json.dump(write_data, f)
 
 
 def _get_config_scopes():
-    return [x for x in spack.config.CONFIG.scopes.values()
-            if not isinstance(x, spack.config.InternalConfigScope)]
+    return [
+        x
+        for x in spack.config.CONFIG.scopes.values()
+        if not isinstance(x, spack.config.InternalConfigScope)
+    ]
 
 
 def _checksum(path):
@@ -88,7 +80,6 @@ def get_config_hashes():
             cfg_path = scope.get_section_filename(section)
             if cfg_path and os.path.exists(cfg_path):
                 cfg_paths.add(cfg_path)
-
 
     path_to_hash = frozenset((x, _checksum(x)) for x in cfg_paths)
     return path_to_hash
@@ -117,9 +108,9 @@ def main():
     parser = argparse.ArgumentParser(description="Checkpoint an active env")
     subparsers = parser.add_subparsers(dest="command", help="Subcommands")
 
-    update_parser = subparsers.add_parser("update", help="Update checkpoint")
+    subparsers.add_parser("update", help="Update checkpoint")
 
-    check_parser = subparsers.add_parser("check", help="Check if env would reconcretize differently")
+    subparsers.add_parser("check", help="Check if env would reconcretize differently")
 
     args = parser.parse_args()
 
