@@ -1,3 +1,9 @@
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
+#
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+import argparse
 import inspect
 import json
 import os
@@ -10,24 +16,51 @@ import spack.traverse as traverse
 import spack.util.crypto as crypto
 
 
+_checkpoint_file = "checkpoint.json"
+
+
 class Checkpoint:
-    def __init__(self, env):
-        self.checksums = {}
+    def __init__(self, data):
+        self.data = data
 
-    def paths_of_interest(self):
-        return [
-            self.env.manifest_path,
-        ]
-
-    def calculate_checksums(self):
-        pass
+    def __eq__(self, other):
+        if not isinstance(other, Checkpoint):
+            raise ValueError(f"Can only compare to other {self.__class__}")
+        return self.data == other.data
 
     @staticmethod
-    def read(path):
-        pass
+    def from_save(env):
+        path = os.path.join(env.path, _checkpoint_file)
+        if not os.path.exists(path):
+            raise ValueError("A checkpoint does not yet exist")
+        with open(path, "r") as f:
+            (manifest_checksum, cfg_hashes, pkg_hashes) = json.load(f)
+            data = [
+                manifest_checksum,
+                frozenset(tuple(x) for x in cfg_hashes),
+                frozenset(tuple(x) for x in pkg_hashes),
+            ]
+        return Checkpoint(data)
 
-    def write(path):
-        pass
+    @staticmethod
+    def from_env(env):
+        data = [
+            _checksum(env.manifest_path),
+            get_config_hashes(),
+            get_package_hashes(env),
+        ]
+        return Checkpoint(data)
+
+    def write(self, env):
+        path = os.path.join(env.path, _checkpoint_file)
+        with open(path, "w") as f:
+            (manifest_checksum, cfg_hashes, pkg_hashes) = self.data
+            write_data = [
+                manifest_checksum,
+                list(cfg_hashes),
+                list(pkg_hashes),
+            ]
+            json.dump(write_data, f)
 
 
 def _get_config_scopes():
@@ -40,7 +73,7 @@ def _checksum(path):
     return crypto.checksum(fn, path)
 
 
-def get_config_hashes(env):
+def get_config_hashes():
     # packages.yaml
     # repos.yaml
     # concretize.yaml (could swap reuse behavior)
@@ -61,7 +94,7 @@ def get_config_hashes(env):
     return path_to_hash
 
 
-def get_package_files(env):
+def get_package_hashes(env):
     concrete_roots = list(y for x, y in env.concretized_specs())
 
     package_files = set()
@@ -76,19 +109,34 @@ def get_package_files(env):
 
         package_files.update(inspect.getfile(x) for x in inheritance_hierarchy[:cutoff])
 
-    return package_files
+    path_to_hash = frozenset((x, _checksum(x)) for x in package_files)
+    return path_to_hash
+
 
 def main():
-    env = ev.active_environment()
+    parser = argparse.ArgumentParser(description="Checkpoint an active env")
+    subparsers = parser.add_subparsers(dest="command", help="Subcommands")
 
+    update_parser = subparsers.add_parser("update", help="Update checkpoint")
+
+    check_parser = subparsers.add_parser("check", help="Check if env would reconcretize differently")
+
+    args = parser.parse_args()
+
+    env = ev.active_environment()
     if not env:
         raise ValueError("An active env is required.")
 
-    print("\n".join(get_package_files(env)))
-
-    cfg_hashes = get_config_hashes(env)
-    import pdb; pdb.set_trace()
-    print(list(cfg_hashes)[:2])
+    if args.command == "update":
+        new_state = Checkpoint.from_env(env)
+        new_state.write(env)
+    elif args.command == "check":
+        prior_state = Checkpoint.from_save(env)
+        new_state = Checkpoint.from_env(env)
+        if prior_state != new_state:
+            print("unequal")
+        else:
+            print("equal")
 
 
 if __name__ == "__main__":
