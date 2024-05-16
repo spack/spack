@@ -5,13 +5,11 @@
 import glob
 import itertools
 import os
-import re
 import sys
 
 from archspec.cpu import UnsupportedMicroarchitecture
 
 import llnl.util.tty as tty
-from llnl.util.lang import classproperty
 from llnl.util.symlink import readlink
 
 import spack.platforms
@@ -21,7 +19,7 @@ from spack.operating_systems.mac_os import macos_sdk_path, macos_version
 from spack.package import *
 
 
-class Gcc(AutotoolsPackage, GNUMirrorPackage):
+class Gcc(AutotoolsPackage, GNUMirrorPackage, CompilerPackage):
     """The GNU Compiler Collection includes front ends for C, C++, Objective-C,
     Fortran, Ada, and Go, as well as libraries for these languages."""
 
@@ -37,6 +35,8 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     license("GPL-2.0-or-later AND LGPL-2.1-or-later")
 
     version("master", branch="master")
+
+    version("14.1.0", sha256="e283c654987afe3de9d8080bc0bd79534b5ca0d681a73a11ff2b5d3767426840")
 
     version("13.2.0", sha256="e275e76442a6067341a27f04c5c6b83d8613144004c0413528863dc6b5c743da")
     version("13.1.0", sha256="61d684f0aa5e76ac6585ad8898a2427aade8979ed5e7f85492286c4dfc13ee86")
@@ -503,11 +503,36 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
 
     build_directory = "spack-build"
 
-    @classproperty
-    def executables(cls):
-        names = [r"gcc", r"[^\w]?g\+\+", r"gfortran", r"gdc", r"gccgo"]
-        suffixes = [r"", r"-mp-\d+\.\d", r"-\d+\.\d", r"-\d+", r"\d\d"]
-        return [r"".join(x) for x in itertools.product(names, suffixes)]
+    compiler_languages = ["c", "cxx", "fortran", "d", "go"]
+
+    @property
+    def supported_languages(self):
+        # This weirdness is because it could be called on an abstract spec
+        if "languages" not in self.spec.variants:
+            return self.compiler_languages
+        return [x for x in self.compiler_languages if x in self.spec.variants["languages"].value]
+
+    c_names = ["gcc"]
+    cxx_names = ["g++"]
+    fortran_names = ["gfortran"]
+    d_names = ["gdc"]
+    go_names = ["gccgo"]
+    compiler_prefixes = [r"\w+-\w+-\w+-"]
+    compiler_suffixes = [r"-mp-\d+(?:\.\d+)?", r"-\d+(?:\.\d+)?", r"\d\d"]
+    compiler_version_regex = r"(?<!clang version)\s?([0-9.]+)"
+    compiler_version_argument = ("-dumpfullversion", "-dumpversion")
+
+    @classmethod
+    def determine_version(cls, exe):
+        try:
+            output = spack.compiler.get_compiler_version_output(exe, "--version")
+        except Exception:
+            output = ""
+        # Apple's gcc is actually apple clang, so skip it.
+        if "Apple" in output:
+            return None
+
+        return super().determine_version(exe)
 
     @classmethod
     def filter_detected_exes(cls, prefix, exes_in_prefix):
@@ -538,57 +563,13 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         return result
 
     @classmethod
-    def determine_version(cls, exe):
-        try:
-            output = spack.compiler.get_compiler_version_output(exe, "--version")
-        except Exception:
-            output = ""
-        # Apple's gcc is actually apple clang, so skip it.
-        # Users can add it manually to compilers.yaml at their own risk.
-        if "Apple" in output:
-            return None
-
-        version_regex = re.compile(r"([\d\.]+)")
-        for vargs in ("-dumpfullversion", "-dumpversion"):
-            try:
-                output = spack.compiler.get_compiler_version_output(exe, vargs)
-                match = version_regex.search(output)
-                if match:
-                    return match.group(1)
-            except spack.util.executable.ProcessError:
-                pass
-            except Exception as e:
-                tty.debug(e)
-
-        return None
-
-    @classmethod
     def determine_variants(cls, exes, version_str):
-        languages, compilers = set(), {}
-        # There are often at least two copies (not symlinks) of each compiler executable in the
-        # same directory: one with a canonical name, e.g. "gfortran", and another one with the
-        # target prefix, e.g. "x86_64-pc-linux-gnu-gfortran". There also might be a copy of "gcc"
-        # with the version suffix, e.g. "x86_64-pc-linux-gnu-gcc-6.3.0". To ensure the consistency
-        # of values in the "compilers" dictionary (i.e. we prefer all of them to reference copies
-        # with canonical names if possible), we iterate over the executables in the reversed sorted
-        # order:
-        for exe in sorted(exes, reverse=True):
-            basename = os.path.basename(exe)
-            if "g++" in basename:
-                languages.add("c++")
-                compilers["cxx"] = exe
-            elif "gfortran" in basename:
-                languages.add("fortran")
-                compilers["fortran"] = exe
-            elif "gcc" in basename:
-                languages.add("c")
-                compilers["c"] = exe
-            elif "gccgo" in basename:
-                languages.add("go")
-                compilers["go"] = exe
-            elif "gdc" in basename:
-                languages.add("d")
-                compilers["d"] = exe
+        compilers = cls.determine_compiler_paths(exes=exes)
+
+        languages = set()
+        translation = {"cxx": "c++"}
+        for lang, compiler in compilers.items():
+            languages.add(translation.get(lang, lang))
         variant_str = "languages={0}".format(",".join(languages))
         return variant_str, {"compilers": compilers}
 
@@ -704,10 +685,10 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         """Get the right (but pessimistic) architecture specific flags supported by
         both host gcc and to-be-built gcc. For example: gcc@7 %gcc@12 target=znver3
         should pick -march=znver1, since that's what gcc@7 supports."""
-        archs = [spec.target] + spec.target.ancestors
-        for arch in archs:
+        microarchitectures = [spec.target] + spec.target.ancestors
+        for uarch in microarchitectures:
             try:
-                return arch.optimization_flags("gcc", spec.version)
+                return uarch.optimization_flags("gcc", str(spec.version))
             except UnsupportedMicroarchitecture:
                 pass
         # no arch specific flags in common, unlikely to happen.
@@ -1193,7 +1174,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
             os.path.exists(os.path.join(header_dir, h))
             for h in libc.package_class.representative_headers
         ):
-            relocation_args.append(f"-isystem {header_dir}")
+            relocation_args.append(f"-idirafter {header_dir}")
         else:
             tty.warn(
                 f"Cannot relocate {specs_file} include directories, "

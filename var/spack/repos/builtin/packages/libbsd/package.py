@@ -21,6 +21,7 @@ class Libbsd(AutotoolsPackage):
 
     license("BSD-3-Clause")
 
+    version("0.12.2", sha256="b88cc9163d0c652aaf39a99991d974ddba1c3a9711db8f1b5838af2a14731014")
     version("0.12.1", sha256="d7747f8ec1baa6ff5c096a9dd587c061233dec90da0f1aedd66d830f6db6996a")
     version("0.11.7", sha256="9baa186059ebbf25c06308e9f991fda31f7183c0f24931826d83aa6abd8a0261")
     version("0.11.6", sha256="19b38f3172eaf693e6e1c68714636190c7e48851e45224d720b3b5bc0499b5df")

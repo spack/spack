@@ -18,6 +18,7 @@ class Ace(MakefilePackage):
 
     license("DOC")
 
+    version("7.1.4", sha256="a2bc358401178dd8175f4d826e60d23d901bfe38bc2fa0ac9275d01d7fda34bc")
     version("7.1.3", sha256="4cb82d8daf83f3abe50ac460b4fac9a8da2512f08d8efb4d327dcacd0b3929b3")
     version("7.1.0", sha256="d78d9f3f2dee6ccb46a8c296367369349054fd475dff3c5b36e2dff3dee0bf8f")
     version("6.5.12", sha256="de96c68a6262d6b9ba76b5057c02c7e6964c070b1328a63bf70259e9530a7996")

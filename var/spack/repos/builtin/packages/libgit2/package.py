@@ -16,6 +16,7 @@ class Libgit2(CMakePackage):
     homepage = "https://libgit2.github.com/"
     url = "https://github.com/libgit2/libgit2/archive/v0.26.0.tar.gz"
 
+    version("1.8.0", sha256="9e1d6a880d59026b675456fbb1593c724c68d73c34c0d214d6eb848e9bbd8ae4")
     version("1.7.2", sha256="de384e29d7efc9330c6cdb126ebf88342b5025d920dcb7c645defad85195ea7f")
     version("1.7.0", sha256="d9d0f84a86bf98b73e68997f5c1543cc5067d0ca9c7a5acaba3e8d117ecefef3")
     version("1.6.4", sha256="d25866a4ee275a64f65be2d9a663680a5cf1ed87b7ee4c534997562c828e500d")
