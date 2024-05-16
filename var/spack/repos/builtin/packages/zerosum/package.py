@@ -52,8 +52,8 @@ class Zerosum(CMakePackage):
         args.append(self.define_from_variant("ZeroSum_WITH_OPENMP", "openmp"))
         args.append(self.define_from_variant("ZeroSum_WITH_OMPT", "ompt"))
         if "+cuda" in self.spec:
-            args.append("-DCUDAToolkit_ROOT={0}".format(spec["cuda"].prefix))
+            args.append("-DCUDAToolkit_ROOT={0}".format(self.spec["cuda"].prefix))
         if "+hip" in self.spec:
-            args.append("-DROCM_ROOT={0}".format(spec["hip"].prefix))
+            args.append("-DROCM_ROOT={0}".format(self.spec["hip"].prefix))
 
         return args
