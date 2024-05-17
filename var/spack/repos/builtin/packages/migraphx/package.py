@@ -52,13 +52,13 @@ class Migraphx(CMakePackage):
     patch(
         "https://github.com/ROCm/AMDMIGraphX/commit/728bea3489c97c9e1ddda0a0ae527ffd2d70cb97.patch?full_index=1",
         sha256="3a8afd32208aa4f59fb31f898d243287771ebd409c7af7a4a785c586081e3711",
-        when="@6.0:",
+        when="@6.0",
     )
 
     patch(
         "https://github.com/ROCm/AMDMIGraphX/commit/624f8ef549522f64fdddad7f49a2afe1890b0b79.patch?full_index=1",
         sha256="410d0fd49f5f65089cd4f540c530c85896708b4fd94c67d15c2c279158aea85d",
-        when="@6.0:",
+        when="@6.0",
     )
     patch("0003-add-half-include-directory-migraphx-6.0.patch", when="@6.0:")
 
