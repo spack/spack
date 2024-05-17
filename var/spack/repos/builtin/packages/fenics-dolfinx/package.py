@@ -44,6 +44,7 @@ class FenicsDolfinx(CMakePackage):
     depends_on("hdf5+mpi")
     depends_on("boost@1.7.0:+filesystem+program_options+timer")
     depends_on("pugixml")
+    depends_on("spdlog", when="@0.9:")
 
     depends_on("petsc+mpi+shared")
 
