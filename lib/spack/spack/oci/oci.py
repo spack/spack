@@ -11,7 +11,7 @@ import urllib.error
 import urllib.parse
 import urllib.request
 from http.client import HTTPResponse
-from typing import List, NamedTuple, Optional, Tuple
+from typing import List, NamedTuple, Tuple
 from urllib.request import Request
 
 import llnl.util.tty as tty
@@ -27,6 +27,7 @@ import spack.spec
 import spack.stage
 import spack.traverse
 import spack.util.crypto
+import spack.util.url
 
 from .image import Digest, ImageReference
 
@@ -70,36 +71,36 @@ def with_query_param(url: str, param: str, value: str) -> str:
 
 
 def list_tags(ref: ImageReference) -> List[str]:
-    """Retrieves the list of tags associated with an image
+    """Retrieves the list of tags associated with an image, handling pagination."""
+    tags = set()
+    fetch_url = ref.tags_url()
 
-    Fetches all tags from an image's tags_url, handling pagination of
-    results.
-
-    Args:
-        reg: The image reference.
-    Returns:
-        List of strings representing all tags associated with the image.
-
-    """
-    tags = []
-    fetch_url: Optional[str] = ref.tags_url()
-
-    while fetch_url:
+    while True:
+        # Fetch tags
         request = Request(url=fetch_url)
         response = spack.oci.opener.urlopen(request)
         spack.oci.opener.ensure_status(request, response, 200)
-        tags.extend(json.load(response)["tags"])
-        fetch_url = None
-        link_header = spack.util.web.get_header(response.headers, "Link")
-        if link_header:
-            uri_reference = link_header.split(";")[0].strip()
-            parsed = urllib.parse.urlparse(uri_reference)
-            query = urllib.parse.parse_qs(parsed.query)
-            if "last" in query:
-                last_tag = query["last"][0]
-                fetch_url = with_query_param(ref.tags_url(), "last", last_tag)
+        tags.update(json.load(response)["tags"])
 
-    return tags
+        # Check for pagination
+        link_header = response.headers["Link"]
+
+        if link_header is None:
+            break
+
+        rel_next_value = spack.util.url.parse_link_rel_next(link_header)
+
+        if rel_next_value is None:
+            break
+
+        rel_next = urllib.parse.urlparse(rel_next_value)
+
+        if rel_next.scheme not in ("https", ""):
+            break
+
+        fetch_url = ref.endpoint(rel_next_value)
+
+    return sorted(tags)
 
 
 def upload_blob(

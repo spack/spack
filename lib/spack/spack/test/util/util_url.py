@@ -207,3 +207,18 @@ def test_default_download_name_dot_dot():
     assert url_util.default_download_filename("https://example.com/.") == "_"
     assert url_util.default_download_filename("https://example.com/..") == "_."
     assert url_util.default_download_filename("https://example.com/.abcdef") == "_abcdef"
+
+
+def test_parse_link_rel_next():
+    parse = url_util.parse_link_rel_next
+    assert parse(r'</abc>; x=y; rel="next", </def>; x=y; rel="prev"') == "/abc"
+    assert parse(r'</abc>; rel="prev"; x=y, </def>; x=y; rel="next"') == "/def"
+
+    # example from RFC5988
+    assert (
+        parse(
+            r"""</TheBook/chapter2>; rel="previous"; title*=UTF-8'de'letztes%20Kapitel,"""
+            r"""</TheBook/chapter4>; rel="next"; title*=UTF-8'de'n%c3%a4chstes%20Kapitel"""
+        )
+        == "/TheBook/chapter4"
+    )
