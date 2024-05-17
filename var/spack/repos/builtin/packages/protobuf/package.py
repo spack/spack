@@ -110,7 +110,7 @@ class Protobuf(CMakePackage):
 
     # fix build on Centos 8, see also https://github.com/protocolbuffers/protobuf/issues/5144
     patch(
-        "https://github.com/protocolbuffers/protobuf/pull/11032/commits/3039f932aaf212bcf2f14a3f2fd00dbfb881e46b.patch?full_index=1",
+        "https://github.com/protocolbuffers/protobuf/commit/3039f932aaf212bcf2f14a3f2fd00dbfb881e46b.patch?full_index=1",
         when="@3.4:3.21",
         sha256="ae8639a308294bed85d3f6ebb7e005ee4fde6b2884d41cb75543191c9c5c98ef",
     )
