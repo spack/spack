@@ -43,7 +43,7 @@ import types
 from collections import defaultdict
 from enum import Flag, auto
 from itertools import chain
-from typing import List, Set, Tuple
+from typing import Dict, List, Set, Tuple
 
 import llnl.util.tty as tty
 from llnl.string import plural
@@ -730,12 +730,28 @@ def _static_to_shared_library(arch, compiler, static_lib, shared_lib=None, **kwa
     return compiler(*compiler_args, output=compiler_output)
 
 
-def get_rpath_deps(pkg):
-    """Return immediate or transitive RPATHs depending on the package."""
-    if pkg.transitive_rpaths:
-        return [d for d in pkg.spec.traverse(root=False, deptype=("link"))]
-    else:
-        return pkg.spec.dependencies(deptype="link")
+def _get_rpath_deps_from_spec(
+    spec: spack.spec.Spec, transitive_rpaths: bool
+) -> List[spack.spec.Spec]:
+    if not transitive_rpaths:
+        return spec.dependencies(deptype=dt.LINK)
+
+    by_name: Dict[str, spack.spec.Spec] = {}
+
+    for dep in spec.traverse(root=False, deptype=dt.LINK):
+        lookup = by_name.get(dep.name)
+        if lookup is None:
+            by_name[dep.name] = dep
+        elif lookup.version < dep.version:
+            by_name[dep.name] = dep
+
+    return list(by_name.values())
+
+
+def get_rpath_deps(pkg: spack.package_base.PackageBase) -> List[spack.spec.Spec]:
+    """Return immediate or transitive dependencies (depending on the package) that need to be
+    rpath'ed. If a package occurs multiple times, the newest version is kept."""
+    return _get_rpath_deps_from_spec(pkg.spec, pkg.transitive_rpaths)
 
 
 def get_rpaths(pkg):
