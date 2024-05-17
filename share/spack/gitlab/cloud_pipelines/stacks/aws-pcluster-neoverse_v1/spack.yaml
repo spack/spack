@@ -4,8 +4,8 @@ spack:
   definitions:
   - apps:
     - gromacs
-    # - mpas-model: Spack currently forces REAL(8) when using GCC. This conflicts with `precision=single`
-    # Fix proposed in https://github.com/spack/spack/pull/43547
+    - mpas-model
+    - mpich
     - openfoam
     # - quantum-espresso : %gcc@12.3.0 on neoverse_v1 fails.
     # Root cause: internal compiler error: in compute_live_loop_exits, at tree-ssa-loop-manip.cc:247
