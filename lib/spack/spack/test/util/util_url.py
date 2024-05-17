@@ -225,7 +225,7 @@ def test_parse_link_rel_next():
     )
 
     assert (
-        parse(r"""<https://example.com/example>; key=";;;"; rel="next" """)
+        parse(r"""<https://example.com/example>; key=";a=b, </c/d>; e=f"; rel="next" """)
         == "https://example.com/example"
     )
 
