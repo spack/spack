@@ -161,7 +161,11 @@ class WindowsRPath:
 
         Performs symlinking to incorporate rpath dependencies to Windows runtime search paths
         """
-        if sys.platform == "win32":
+        # If spec is an external, we should not be modifying its bin directory, as we would
+        # be doing in this method
+        # Spack should in general not modify things it has not installed
+        # we can reasonably expect externals to have their link interface properly established
+        if sys.platform == "win32" and not self.spec.external:
             self.win_rpath.add_library_dependent(*self.win_add_library_dependent())
             self.win_rpath.add_rpath(*self.win_add_rpath())
             self.win_rpath.establish_link()
@@ -2446,9 +2450,18 @@ class PackageBase(WindowsRPath, PackageViewMixin, RedistributionMixin, metaclass
 
         # on Windows, libraries of runtime interest are typically
         # stored in the bin directory
+        # Do not include Windows system libraries in the rpath interface
+        # these libraries are handled automatically by VS/VCVARS and adding
+        # Spack derived system libs into the link path or address space of a program
+        # can result in conflicting versions, which makes Spack packages less useable
         if sys.platform == "win32":
             rpaths = [self.prefix.bin]
-            rpaths.extend(d.prefix.bin for d in deps if os.path.isdir(d.prefix.bin))
+            rpaths.extend(
+                d.prefix.bin
+                for d in deps
+                if os.path.isdir(d.prefix.bin)
+                and "windows-system" not in getattr(d.package, "tags", [])
+            )
         else:
             rpaths = [self.prefix.lib, self.prefix.lib64]
             rpaths.extend(d.prefix.lib for d in deps if os.path.isdir(d.prefix.lib))
