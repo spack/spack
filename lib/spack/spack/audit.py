@@ -421,7 +421,7 @@ def _check_patch_urls(pkgs, error_cls):
         r"^https?://(?:patch-diff\.)?github(?:usercontent)?\.com/"
         r".+/.+/(?:commit|pull)/[a-fA-F0-9]+\.(?:patch|diff)"
     )
-    github_unstable_pull_commits_re = (
+    github_pull_commits_re = (
         r"^https?://(?:patch-diff\.)?github(?:usercontent)?\.com/"
         r".+/.+/pull/\d+/commits/[a-fA-F0-9]+\.(?:patch|diff)"
     )
@@ -440,11 +440,14 @@ def _check_patch_urls(pkgs, error_cls):
                 if not isinstance(patch, spack.patch.UrlPatch):
                     continue
 
-                if re.match(github_unstable_pull_commits_re, patch.url):
+                if re.match(github_pull_commits_re, patch.url):
+                    url = re.sub(r"/pull/\d+/commits/", r"/commit/", patch.url)
+                    url = re.sub(r"^(.*)(?<!full_index=1)$", r"\1?full_index=1", url)
                     errors.append(
                         error_cls(
                             f"patch URL in package {pkg_cls.name} "
-                            + "must not be a pull request commit",
+                            + "must not be a pull request commit; "
+                            + f"instead use {url}",
                             [patch.url],
                         )
                     )
