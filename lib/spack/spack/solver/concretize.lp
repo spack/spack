@@ -114,6 +114,7 @@ unification_set(SetID, VirtualNode)
 
 % Node attributes that have multiple node arguments (usually, only the first argument is a node)
 multiple_nodes_attribute("node_flag_source").
+multiple_nodes_attribute("node_flag_propagation_candidate").
 multiple_nodes_attribute("depends_on").
 multiple_nodes_attribute("virtual_on_edge").
 multiple_nodes_attribute("provider_set").
@@ -346,9 +347,11 @@ trigger_condition_holds(ID, RequestorNode) :-
   attr(Name, node(X, A1))             : condition_requirement(ID, Name, A1),             condition_nodes(ID, PackageNode, node(X, A1));
   attr(Name, node(X, A1), A2)         : condition_requirement(ID, Name, A1, A2),         condition_nodes(ID, PackageNode, node(X, A1));
   attr(Name, node(X, A1), A2, A3)     : condition_requirement(ID, Name, A1, A2, A3),     condition_nodes(ID, PackageNode, node(X, A1)), not multiple_nodes_attribute(Name);
-  attr(Name, node(X, A1), A2, A3, A4) : condition_requirement(ID, Name, A1, A2, A3, A4), condition_nodes(ID, PackageNode, node(X, A1));
+  attr(Name, node(X, A1), A2, A3, A4) : condition_requirement(ID, Name, A1, A2, A3, A4), condition_nodes(ID, PackageNode, node(X, A1)), not multiple_nodes_attribute(Name);
   % Special cases
   attr("node_flag_source", node(X, A1), A2, node(Y, A3)) : condition_requirement(ID, "node_flag_source", A1, A2, A3), condition_nodes(ID, PackageNode, node(X, A1)), condition_nodes(ID, PackageNode, node(Y, A3));
+  attr("node_flag_propagation_candidate", node(X, A1), A2, A3, node(Y, A4)) : condition_requirement(ID, "node_flag_propagation_candidate", A1, A2, A3, A4), condition_nodes(ID, PackageNode, node(X, A1)), condition_nodes(ID, PackageNode, node(Y, A4));
+  % if the structure of the program ever could change so that node_flag_source can be in a condition, we will need a case for it here.
   not cannot_hold(ID, PackageNode).
 
 condition_holds(ConditionID, node(X, Package))
@@ -392,7 +395,7 @@ imposed_nodes(ConditionID, PackageNode, node(X, A1))
 attr(Name, node(X, A1))             :- impose(ID, PackageNode), imposed_constraint(ID, Name, A1),             imposed_nodes(ID, PackageNode, node(X, A1)).
 attr(Name, node(X, A1), A2)         :- impose(ID, PackageNode), imposed_constraint(ID, Name, A1, A2),         imposed_nodes(ID, PackageNode, node(X, A1)), not multiple_nodes_attribute(Name).
 attr(Name, node(X, A1), A2, A3)     :- impose(ID, PackageNode), imposed_constraint(ID, Name, A1, A2, A3),     imposed_nodes(ID, PackageNode, node(X, A1)), not multiple_nodes_attribute(Name).
-attr(Name, node(X, A1), A2, A3, A4) :- impose(ID, PackageNode), imposed_constraint(ID, Name, A1, A2, A3, A4), imposed_nodes(ID, PackageNode, node(X, A1)).
+attr(Name, node(X, A1), A2, A3, A4) :- impose(ID, PackageNode), imposed_constraint(ID, Name, A1, A2, A3, A4), imposed_nodes(ID, PackageNode, node(X, A1)), not multiple_nodes_attribute(Name).
 
 % For node flag sources we need to look at the condition_set of the source, since it is the dependent
 % of the package on which I want to impose the constraint
@@ -400,6 +403,17 @@ attr("node_flag_source", node(X, A1), A2, node(Y, A3))
   :- impose(ID, node(X, A1)),
      imposed_constraint(ID, "node_flag_source", A1, A2, A3),
      condition_set(node(Y, A3), node(X, A1)).
+
+% For node flag propagation, we need to look at the condition_set of the source, since it is the ancestor
+% of the package on which we want to impose the constraint
+attr("node_flag_propagation_candidate", node(X, A1), A2, A3, node(Y, A4))
+  :- impose(ID, node(X, TriggerPkg)),
+     imposed_constraint(ID, "node_flag_propagation_candidate", A1, A2, A3, A4),
+     condition_set(node(X, TriggerPkg), node(X, A1)),
+     condition_set(node(X, TriggerPkg), node(Y, A4)),
+     condition_set(node(Y, A4), node(X, A1)).
+
+% if the structure of the program ever could change so that node_flag_source can be in a condition, we will need a case for it here.
 
 % Provider set is relevant only for literals, since it's the only place where `^[virtuals=foo] bar`
 % might appear in the HEAD of a rule
@@ -1241,45 +1255,15 @@ error(100, "Compiler {1}@{2} requested for {0} cannot be found. Set install_miss
 % Compiler flags
 %-----------------------------------------------------------------------------
 
-% propagate flags when compiler match
-can_inherit_flags(PackageNode, DependencyNode, FlagType)
-  :- same_compiler(PackageNode, DependencyNode),
-     not attr("node_flag_set", DependencyNode, FlagType, _),
-     flag_type(FlagType).
-
 same_compiler(PackageNode, DependencyNode)
   :- depends_on(PackageNode, DependencyNode),
      node_compiler(PackageNode, CompilerID),
      node_compiler(DependencyNode, CompilerID),
      compiler_id(CompilerID).
 
-node_flag_inherited(DependencyNode, FlagType, Flag)
-  :- attr("node_flag_set", PackageNode, FlagType, Flag),
-     can_inherit_flags(PackageNode, DependencyNode, FlagType),
-     attr("node_flag_propagate", PackageNode, FlagType).
-
-% Ensure propagation
-:- node_flag_inherited(PackageNode, FlagType, Flag),
-   can_inherit_flags(PackageNode, DependencyNode, FlagType),
-   attr("node_flag_propagate", PackageNode, FlagType).
-
-error(100, "{0} and {1} cannot both propagate compiler flags '{2}' to {3}", Source1, Source2, Package, FlagType) :-
-  depends_on(Source1, Package),
-  depends_on(Source2, Package),
-  attr("node_flag_propagate", Source1, FlagType),
-  attr("node_flag_propagate", Source2, FlagType),
-  can_inherit_flags(Source1, Package, FlagType),
-  can_inherit_flags(Source2, Package, FlagType),
-  Source1 < Source2.
-
 % remember where flags came from
 attr("node_flag_source", PackageNode, FlagType, PackageNode)
   :- attr("node_flag_set", PackageNode, FlagType, _).
-
-attr("node_flag_source", DependencyNode, FlagType, Q)
-  :- attr("node_flag_source", PackageNode, FlagType, Q),
-     node_flag_inherited(DependencyNode, FlagType, _),
-     attr("node_flag_propagate", PackageNode, FlagType).
 
 % compiler flags from compilers.yaml are put on nodes if compiler matches
 attr("node_flag", PackageNode, FlagType, Flag)
@@ -1301,7 +1285,6 @@ attr("node_flag_compiler_default", PackageNode)
 
 % if a flag is set to something or inherited, it's included
 attr("node_flag", PackageNode, FlagType, Flag) :- attr("node_flag_set", PackageNode, FlagType, Flag).
-attr("node_flag", PackageNode, FlagType, Flag) :- node_flag_inherited(PackageNode, FlagType, Flag).
 
 % if no node flags are set for a type, there are no flags.
 attr("no_flags", PackageNode, FlagType)

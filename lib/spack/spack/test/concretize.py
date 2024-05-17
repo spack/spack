@@ -422,29 +422,56 @@ class TestConcretize:
         "Optional compiler propagation isn't deprecated for original concretizer"
     )
     def test_concretize_compiler_flag_propagate(self):
-        spec = Spec("hypre cflags=='-g' ^openblas")
+        spec = Spec("callpath cflags=='-g'")
         spec.concretize()
 
-        assert spec.satisfies("^openblas cflags='-g'")
+        for dep in spec.traverse():
+            assert dep.satisfies("cflags='-g'")
 
     @pytest.mark.only_clingo(
         "Optional compiler propagation isn't deprecated for original concretizer"
     )
-    def test_concretize_compiler_flag_does_not_propagate(self):
+    def test_concretize_non_root_compiler_flag_propagate(self):
+        spec = Spec("callpath ^dyninst cflags=='-g'")
+        spec.concretize()
+        print(spec)
+
+        assert spec.satisfies("^libdwarf cflags='-g'")
+        assert spec.satisfies("^libelf cflags='-g'")
+
+    @pytest.mark.only_clingo(
+        "Optional compiler propagation isn't deprecated for original concretizer"
+    )
+    def test_concretize_not_compiler_flag_propagate(self):
         spec = Spec("hypre cflags='-g' ^openblas")
         spec.concretize()
 
-        assert not spec.satisfies("^openblas cflags='-g'")
+        for dep in spec.traverse(root=False):
+            assert not dep.satisfies("cflags='-g'")
 
     @pytest.mark.only_clingo(
         "Optional compiler propagation isn't deprecated for original concretizer"
     )
-    def test_concretize_propagate_compiler_flag_not_passed_to_dependent(self):
-        spec = Spec("hypre cflags=='-g' ^openblas cflags='-O3'")
+    def test_concretize_compiler_flag_propagate_not_passed_to_dependent(self):
+        spec = Spec("callpath cflags=='-g' ^dyninst cflags='-O3'")
         spec.concretize()
 
         assert set(spec.compiler_flags["cflags"]) == set(["-g"])
-        assert spec.satisfies("^openblas cflags='-O3'")
+        assert spec.satisfies("^dyninst cflags='-O3'")
+        assert spec.satisfies("^libelf cflags='-g'")
+
+    @pytest.mark.only_clingo(
+        "Optional compiler propagation isn't deprecated for original concretizer"
+    )
+    @pytest.mark.parametrize("spec_name", ["callpath", "mpich", "hypre"])
+    def test_concretize_specified_compiler_flag_propagate(self, spec_name):
+        spec = Spec(f"{spec_name} cflags=='-g' cxxflags='-O3'").concretized()
+
+        assert spec.satisfies("cflags='-g'")
+        assert spec.satisfies("cxxflags='-O3'")
+        for dep in spec.traverse(root=False):
+            assert dep.satisfies("cflags='-g'")
+            assert not dep.satisfies("cxxflags='-O3'")
 
     def test_mixing_compilers_only_affects_subdag(self):
         spack.config.set("packages:all:compiler", ["clang", "gcc"])

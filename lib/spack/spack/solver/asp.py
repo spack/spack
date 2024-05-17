@@ -301,7 +301,7 @@ def all_libcs() -> Set[spack.spec.Spec]:
     return {libc} if libc else set()
 
 
-def libc_is_compatible(lhs: spack.spec.Spec, rhs: spack.spec.Spec) -> List[spack.spec.Spec]:
+def libc_is_compatible(lhs: spack.spec.Spec, rhs: spack.spec.Spec) -> bool:
     return (
         lhs.name == rhs.name
         and lhs.external_path == rhs.external_path
@@ -312,6 +312,14 @@ def libc_is_compatible(lhs: spack.spec.Spec, rhs: spack.spec.Spec) -> List[spack
 def using_libc_compatibility() -> bool:
     """Returns True if we are currently using libc compatibility"""
     return spack.platforms.host().name == "linux"
+
+
+def specs_are_propagating_compiler_flags(specs):
+    for node in traverse.traverse_nodes(specs):
+        for _, flag_vals in node.compiler_flags.items():
+            if any(val.propagate for val in flag_vals):
+                return True
+    return False
 
 
 def extend_flag_list(flag_list, new_flags):
@@ -845,6 +853,9 @@ class PyclingoDriver:
         self.control.load(os.path.join(parent_dir, "display.lp"))
         if not setup.concretize_everything:
             self.control.load(os.path.join(parent_dir, "when_possible.lp"))
+
+        if specs_are_propagating_compiler_flags(specs):
+            self.control.load(os.path.join(parent_dir, "propagation.lp"))
 
         # Binary compatibility is based on libc on Linux, and on the os tag elsewhere
         if using_libc_compatibility():
@@ -1915,7 +1926,9 @@ class SpackSolverSetup:
                 clauses.append(f.node_flag(spec.name, flag_type, flag))
                 clauses.append(f.node_flag_source(spec.name, flag_type, spec.name))
                 if not spec.concrete and flag.propagate is True:
-                    clauses.append(f.node_flag_propagate(spec.name, flag_type))
+                    clauses.append(
+                        f.node_flag_propagation_candidate(spec.name, flag_type, flag, spec.name)
+                    )
 
         # dependencies
         if spec.concrete:
@@ -2729,7 +2742,7 @@ class _Head:
     node_compiler_version = fn.attr("node_compiler_version_set")
     node_flag = fn.attr("node_flag_set")
     node_flag_source = fn.attr("node_flag_source")
-    node_flag_propagate = fn.attr("node_flag_propagate")
+    node_flag_propagation_candidate = fn.attr("node_flag_propagation_candidate")
     variant_propagation_candidate = fn.attr("variant_propagation_candidate")
 
 
@@ -2746,7 +2759,7 @@ class _Body:
     node_compiler_version = fn.attr("node_compiler_version")
     node_flag = fn.attr("node_flag")
     node_flag_source = fn.attr("node_flag_source")
-    node_flag_propagate = fn.attr("node_flag_propagate")
+    node_flag_propagation_candidate = fn.attr("node_flag_propagation_candidate")
     variant_propagation_candidate = fn.attr("variant_propagation_candidate")
 
 
