@@ -211,6 +211,7 @@ def test_default_download_name_dot_dot():
 
 def test_parse_link_rel_next():
     parse = url_util.parse_link_rel_next
+    assert parse(r'</abc>; rel="next"') == "/abc"
     assert parse(r'</abc>; x=y; rel="next", </def>; x=y; rel="prev"') == "/abc"
     assert parse(r'</abc>; rel="prev"; x=y, </def>; x=y; rel="next"') == "/def"
 
@@ -227,3 +228,8 @@ def test_parse_link_rel_next():
         parse(r"""<https://example.com/example>; key=";;;"; rel="next" """)
         == "https://example.com/example"
     )
+
+    assert parse("https://example.com/example") is None
+    assert parse("<https://example.com/example; broken=broken") is None
+    assert parse("https://example.com/example; rel=prev") is None
+    assert parse("https://example.com/example; a=b; c=d; g=h") is None
