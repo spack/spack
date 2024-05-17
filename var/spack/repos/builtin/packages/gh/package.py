@@ -40,6 +40,7 @@ class Gh(Package):
     depends_on("go@1.18:", type="build", when="@2.10.0:")
     depends_on("go@1.19:", type="build", when="@2.21.0:")
     depends_on("go@1.21:", type="build", when="@2.33.0:")
+    depends_on("go@1.22:", type="build", when="@2.47.0:")
 
     phases = ["build", "install"]
 
