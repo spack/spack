@@ -50,6 +50,9 @@ class Zerosum(CMakePackage):
     # For that reason, we let the user know this support is not allowed.
     conflicts("+ompt", when="%gcc")
 
+    conflicts("platform=darwin", msg="zerosum runs only on Linux.")
+    conflicts("platform=windows", msg="zerosum runs only on Linux.")
+
     def cmake_args(self):
         args = [
             self.define_from_variant("ZeroSum_WITH_PerfStubs", "perfstubs"),
