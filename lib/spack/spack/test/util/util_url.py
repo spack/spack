@@ -217,8 +217,13 @@ def test_parse_link_rel_next():
     # example from RFC5988
     assert (
         parse(
-            r"""</TheBook/chapter2>; rel="previous"; title*=UTF-8'de'letztes%20Kapitel,"""
-            r"""</TheBook/chapter4>; rel="next"; title*=UTF-8'de'n%c3%a4chstes%20Kapitel"""
+            r"""</TheBook/chapter2>; title*=UTF-8'de'letztes%20Kapitel; rel="previous","""
+            r"""</TheBook/chapter4>; title*=UTF-8'de'n%c3%a4chstes%20Kapitel; rel="next" """
         )
         == "/TheBook/chapter4"
+    )
+
+    assert (
+        parse(r"""<https://example.com/example>; key=";;;"; rel="next" """)
+        == "https://example.com/example"
     )
