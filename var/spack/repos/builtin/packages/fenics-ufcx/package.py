@@ -14,7 +14,7 @@ class FenicsUfcx(CMakePackage):
     homepage = "https://github.com/FEniCS/ffcx"
     git = "https://github.com/FEniCS/ffcx.git"
     url = "https://github.com/FEniCS/ffcx/archive/v0.4.2.tar.gz"
-    maintainers("ma595", "jhale")
+    maintainers("ma595", "jhale", "garth-wells", "chrisrichardson")
 
     license("LGPL-3.0-or-later")
 
