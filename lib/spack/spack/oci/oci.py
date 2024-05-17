@@ -70,15 +70,16 @@ def with_query_param(url: str, param: str, value: str) -> str:
     )
 
 
-def list_tags(ref: ImageReference) -> List[str]:
+def list_tags(ref: ImageReference, _urlopen: spack.oci.opener.MaybeOpen = None) -> List[str]:
     """Retrieves the list of tags associated with an image, handling pagination."""
+    _urlopen = _urlopen or spack.oci.opener.urlopen
     tags = set()
     fetch_url = ref.tags_url()
 
     while True:
         # Fetch tags
         request = Request(url=fetch_url)
-        response = spack.oci.opener.urlopen(request)
+        response = _urlopen(request)
         spack.oci.opener.ensure_status(request, response, 200)
         tags.update(json.load(response)["tags"])
 

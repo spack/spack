@@ -151,7 +151,9 @@ class InMemoryOCIRegistry(DummyServer):
     A third option is to use the chunked upload, but this is not implemented here, because
     it's typically a major performance hit in upload speed, so we're not using it in Spack."""
 
-    def __init__(self, domain: str, allow_single_post: bool = True) -> None:
+    def __init__(
+        self, domain: str, allow_single_post: bool = True, tags_per_page: int = 100
+    ) -> None:
         super().__init__(domain)
         self.router.register("GET", r"/v2/", self.index)
         self.router.register("HEAD", r"/v2/(?P<name>.+)/blobs/(?P<digest>.+)", self.head_blob)
@@ -164,6 +166,9 @@ class InMemoryOCIRegistry(DummyServer):
 
         # If True, allow single POST upload, not all registries support this
         self.allow_single_post = allow_single_post
+
+        # How many tags are returned in a single request
+        self.tags_per_page = tags_per_page
 
         # Used for POST + PUT upload. This is a map from session ID to image name
         self.sessions: Dict[str, str] = {}
@@ -280,33 +285,34 @@ class InMemoryOCIRegistry(DummyServer):
         return MockHTTPResponse(201, "Created", headers={"Location": f"/v2/{name}/blobs/{digest}"})
 
     def list_tags(self, req: Request, name: str):
+        # Paginate using Link headers, this was added to the spec in the following commit:
+        # https://github.com/opencontainers/distribution-spec/commit/2ed79d930ecec11dd755dc8190409a3b10f01ca9
+
         # List all tags, exclude digests.
-        tags = [_tag for _name, _tag in self.manifests.keys() if _name == name and ":" not in _tag]
-        tags.sort()
+        all_tags = sorted(
+            _tag for _name, _tag in self.manifests.keys() if _name == name and ":" not in _tag
+        )
 
-        # Handle pagination as described in the distribution spec:
-        #     https://github.com/opencontainers/distribution-spec/blob/v1.0.1/spec.md#content-discovery
-        url = urllib.parse.urlparse(req.full_url)
-        query = urllib.parse.parse_qs(url.query)
-        n = int(query["n"][0]) if "n" in query else 3
-        last = query["last"][0] if "last" in query else None
+        query = urllib.parse.parse_qs(urllib.parse.urlparse(req.full_url).query)
 
-        index_of_first = 0
-        if last:
+        n = int(query["n"][0]) if "n" in query else self.tags_per_page
+
+        if "last" in query:
             try:
-                index_of_first = tags.index(last) + 1
+                offset = all_tags.index(query["last"][0]) + 1
             except ValueError:
                 return MockHTTPResponse(404, "Not found")
+        else:
+            offset = 0
 
-        slice_end = index_of_first + n
-        returned_tags = tags[index_of_first:slice_end]
+        tags = all_tags[offset : offset + n]
 
-        headers = None
-        if len(tags) > slice_end:
-            last_tag = returned_tags[-1]
-            headers = {"Link": f'</v2/{name}/tags/list?last={last_tag}&n={n}>; rel="next"'}
+        if offset + n < len(all_tags):
+            headers = {"Link": f'</v2/{name}/tags/list?last={tags[-1]}&n={n}>; rel="next"'}
+        else:
+            headers = None
 
-        return MockHTTPResponse.with_json(200, "OK", headers=headers, body={"tags": returned_tags})
+        return MockHTTPResponse.with_json(200, "OK", headers=headers, body={"tags": tags})
 
 
 class DummyServerUrllibHandler(urllib.request.BaseHandler):
