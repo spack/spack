@@ -14,10 +14,13 @@ class Kakoune(MakefilePackage):
         "https://github.com/mawww/kakoune/releases/download/v2021.11.08/kakoune-2021.11.08.tar.bz2"
     )
 
-    maintainers("Bambi")
+    maintainers("Bambi", "taliaferro")
 
     license("Unlicense")
 
+    version(
+        "2024.05.09", sha256="2190bddfd3af590c0593c38537088976547506f47bd6eb6c0e22350dbd16a229"
+    )
     version(
         "2023.08.05", sha256="3e45151e0addd3500de2d6a29b5aacf2267c42bb256d44a782e73defb29cda5c"
     )
@@ -33,5 +36,6 @@ class Kakoune(MakefilePackage):
 
     build_targets = ["all", "man"]
 
-    def edit(self, spec, prefix):
-        env["PREFIX"] = prefix
+    @property
+    def install_targets(self):
+        return ["-e", f"PREFIX={prefix}", "install"]
