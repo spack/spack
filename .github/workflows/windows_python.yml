@@ -15,7 +15,7 @@ jobs:
   unit-tests:
     runs-on: windows-latest
     steps:
-    - uses: actions/checkout@44c2b7a8a4ea60a981eaca3cf939b5f4305c123b
+    - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29
       with:
         fetch-depth: 0
     - uses: actions/setup-python@82c7e631bb3cdc910f68e0081d67478d79c6982d
@@ -41,7 +41,7 @@ jobs:
   unit-tests-cmd:
     runs-on: windows-latest
     steps:
-    - uses: actions/checkout@44c2b7a8a4ea60a981eaca3cf939b5f4305c123b
+    - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29
       with:
         fetch-depth: 0
     - uses: actions/setup-python@82c7e631bb3cdc910f68e0081d67478d79c6982d
@@ -67,7 +67,7 @@ jobs:
   build-abseil:
     runs-on: windows-latest
     steps:
-    - uses: actions/checkout@44c2b7a8a4ea60a981eaca3cf939b5f4305c123b
+    - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29
       with:
         fetch-depth: 0
     - uses: actions/setup-python@82c7e631bb3cdc910f68e0081d67478d79c6982d
