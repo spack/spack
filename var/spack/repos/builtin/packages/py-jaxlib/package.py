@@ -20,6 +20,7 @@ class PyJaxlib(PythonPackage, CudaPackage):
     license("Apache-2.0")
     maintainers("adamjstewart")
 
+    version("0.4.28", sha256="4dd11577d4ba5a095fbc35258ddd4e4c020829ed6e6afd498c9e38ccbcdfe20b")
     version("0.4.27", sha256="c2c82cd9ad3b395d5cbc0affa26a2938e52677a69ca8f0b9ef9922a52cac4f0c")
     version("0.4.26", sha256="ddc14da1eaa34f23430d40ad9b9585088575cac439a2fa1c6833a247e1b221fd")
     version("0.4.25", sha256="fc1197c401924942eb14185a61688d0c476e3e81ff71f9dc95e620b57c06eec8")
@@ -69,7 +70,8 @@ class PyJaxlib(PythonPackage, CudaPackage):
 
     with default_args(type="build"):
         # .bazelversion
-        depends_on("bazel@6.1.2", when="@0.4.11:")
+        depends_on("bazel@6.5.0", when="@0.4.28:")
+        depends_on("bazel@6.1.2", when="@0.4.11:0.4.27")
         depends_on("bazel@5.1.1", when="@0.3.7:0.4.10")
         depends_on("bazel@5.1.0", when="@0.3.5")
         depends_on("bazel@5.0.0", when="@0.3.0:0.3.2")
