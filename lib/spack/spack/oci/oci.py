@@ -88,6 +88,8 @@ def list_tags(ref: ImageReference) -> List[str]:
         if link_header is None:
             break
 
+        tty.debug(f"OCI tag pagination: {link_header}")
+
         rel_next_value = spack.util.url.parse_link_rel_next(link_header)
 
         if rel_next_value is None:
