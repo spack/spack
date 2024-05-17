@@ -21,6 +21,7 @@ class Fio(AutotoolsPackage):
 
     license("GPL-2.0-only")
 
+    version("3.37", sha256="b59099d42d5c62a8171974e54466a688c8da6720bf74a7f16bf24fb0e51ff92d")
     version("3.36", sha256="b34b8f3c5cd074c09ea487ffe3f444e95565c214b34a73042f35b00cbaab0e17")
     version("3.34", sha256="42ea28c78d269c4cc111b7516213f4d4b32986797a710b0ff364232cc7a3a0b7")
     version("3.33", sha256="f48b2547313ffd1799c58c6a170175176131bbd42bc847b5650784eaf6d914b3")
@@ -46,8 +47,9 @@ class Fio(AutotoolsPackage):
 
     def configure_args(self):
         config_args = []
+        spec = self.spec
 
-        if "+gui" in self.spec:
+        if spec.satisfies("+gui"):
             config_args.append("--enable-gfio")
 
         return config_args

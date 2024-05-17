@@ -2937,8 +2937,6 @@
           "ilrcpc",
           "flagm",
           "ssbs",
-          "paca",
-          "pacg",
           "dcpodp",
           "svei8mm",
           "svebf16",
@@ -3066,8 +3064,6 @@
 	  "flagm",
 	  "ssbs",
 	  "sb",
-	  "paca",
-	  "pacg",
 	  "dcpodp",
 	  "sve2",
 	  "sveaes",
@@ -3081,8 +3077,7 @@
 	  "svebf16",
 	  "i8mm",
 	  "bf16",
-	  "dgh",
-	  "bti"
+	  "dgh"
       ],
       "compilers" : {
           "gcc": [

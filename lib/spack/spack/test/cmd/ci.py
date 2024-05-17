@@ -760,7 +760,6 @@ def test_ci_rebuild_mock_success(
     rebuild_env = create_rebuild_env(tmpdir, pkg_name, broken_tests)
 
     monkeypatch.setattr(spack.cmd.ci, "SPACK_COMMAND", "echo")
-    monkeypatch.setattr(spack.cmd.ci, "MAKE_COMMAND", "echo")
 
     with rebuild_env.env_dir.as_cwd():
         activate_rebuild_env(tmpdir, pkg_name, rebuild_env)
@@ -843,7 +842,6 @@ def test_ci_rebuild(
         ci_cmd("rebuild", "--tests", fail_on_error=False)
 
     monkeypatch.setattr(spack.cmd.ci, "SPACK_COMMAND", "notcommand")
-    monkeypatch.setattr(spack.cmd.ci, "MAKE_COMMAND", "notcommand")
     monkeypatch.setattr(spack.cmd.ci, "INSTALL_FAIL_CODE", 127)
 
     with rebuild_env.env_dir.as_cwd():
