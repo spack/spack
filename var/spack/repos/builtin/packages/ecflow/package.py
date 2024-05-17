@@ -52,7 +52,8 @@ class Ecflow(CMakePackage):
     # See https://github.com/spack/spack/pull/22303 for reference
     depends_on(Boost.with_default_variants, when="@:4")
 
-    # Use newer boost with v5
+    # Use newer boost with v5 up to 1.84.0 - https://github.com/spack/spack/issues/44116
+    conflicts("boost@1.85:", when="@:5.11.4")
     depends_on(
         "boost@1.72:+chrono+date_time+exception+filesystem+program_options+python+regex+serialization+system+test+thread+timer",  # noqa
         when="@5:",
