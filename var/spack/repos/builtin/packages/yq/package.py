@@ -7,8 +7,8 @@ from spack.package import *
 
 
 class Yq(GoPackage):
-    """yq is a portable command-line YAML, JSON, XML, CSV, TOML and properties processor. 
-       This is different from the py-yq package that is a wrapper around jq."""
+    """yq is a portable command-line YAML, JSON, XML, CSV, TOML and properties processor.
+    This is different from the py-yq package that is a wrapper around jq."""
 
     homepage = "https://mikefarah.gitbook.io/yq"
     url = "https://github.com/mikefarah/yq/archive/refs/tags/v4.43.1.tar.gz"
@@ -21,5 +21,3 @@ class Yq(GoPackage):
     version("4.41.1", sha256="25d61e72887f57510f88d1a30d515c7e2d79e7c6dce5c96aea7c069fcbc089e7")
     version("4.40.7", sha256="c38024d40ee37d26caba1824965d9ea1d65468f48b2bacd45647ff4f547fa59f")
     version("4.35.2", sha256="8b17d710c56f764e9beff06d7a7b1c77d87c4ba4219ce4ce67e7ee29670f4f13")
-
-
