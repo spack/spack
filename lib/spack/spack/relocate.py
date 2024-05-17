@@ -566,7 +566,7 @@ def make_link_relative(new_links, orig_links):
         orig_links (list): original links
     """
     for new_link, orig_link in zip(new_links, orig_links):
-        target = os.readlink(orig_link)
+        target = readlink(orig_link)
         relative_target = os.path.relpath(target, os.path.dirname(orig_link))
         os.unlink(new_link)
         symlink(relative_target, new_link)
