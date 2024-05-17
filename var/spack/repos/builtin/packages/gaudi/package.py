@@ -69,6 +69,7 @@ class Gaudi(CMakePackage):
     patch(
         "https://gitlab.cern.ch/gaudi/Gaudi/-/commit/54b727f08a685606420703098131b387d3026637.diff",
         sha256="41aa1587a3e59d49e0fa9659577073c091871c2eca1b8b237c177ab98fbacf3f",
+        when="@:38.2",
     )
 
     # These dependencies are needed for a minimal Gaudi build

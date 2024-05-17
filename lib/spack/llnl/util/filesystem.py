@@ -843,7 +843,7 @@ def copy_tree(
             if islink(s):
                 link_target = resolve_link_target_relative_to_the_link(s)
                 if symlinks:
-                    target = os.readlink(s)
+                    target = readlink(s)
                     if os.path.isabs(target):
 
                         def escaped_path(path):
@@ -2531,8 +2531,14 @@ class WindowsSimulatedRPath:
 
         # for each binary install dir in self.pkg (i.e. pkg.prefix.bin, pkg.prefix.lib)
         # install a symlink to each dependent library
-        for library, lib_dir in itertools.product(self.rpaths, self.library_dependents):
-            self._link(library, lib_dir)
+
+        # do not rpath for system libraries included in the dag
+        # we should not be modifying libraries managed by the Windows system
+        # as this will negatively impact linker behavior and can result in permission
+        # errors if those system libs are not modifiable by Spack
+        if "windows-system" not in getattr(self.pkg, "tags", []):
+            for library, lib_dir in itertools.product(self.rpaths, self.library_dependents):
+                self._link(library, lib_dir)
 
 
 @system_path_filter
