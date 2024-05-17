@@ -14,8 +14,9 @@ class Cli11(CMakePackage):
     url = "https://github.com/CLIUtils/CLI11/archive/v1.9.1.tar.gz"
     maintainers("nightlark")
 
-    license("BitTorrent-1.0")
+    license("BSD-3-Clause")
 
+    version("2.4.1", sha256="73b7ec52261ce8fe980a29df6b4ceb66243bb0b779451dbd3d014cfec9fdbb58")
     version("2.3.2", sha256="aac0ab42108131ac5d3344a9db0fdf25c4db652296641955720a4fbe52334e22")
     version("2.3.1", sha256="378da73d2d1d9a7b82ad6ed2b5bda3e7bc7093c4034a1d680a2e009eb067e7b2")
     version("2.1.1", sha256="d69023d1d0ab6a22be86b4f59d449422bc5efd9121868f4e284d6042e52f682e")
@@ -26,5 +27,10 @@ class Cli11(CMakePackage):
     depends_on("cmake@3.4:", type="build")
 
     def cmake_args(self):
-        args = ["-DCLI11_BUILD_EXAMPLES=OFF", "-DCLI11_BUILD_DOCS=OFF", "-DCLI11_BUILD_TESTS=OFF"]
+        args = [
+            self.define("CLI11_BUILD_EXAMPLES", False),
+            self.define("CLI11_BUILD_DOCS", False),
+            self.define("CLI11_BUILD_TESTS", False),
+            self.define("CLI11_PRECOMPILED", True),
+        ]
         return args
