@@ -34,7 +34,7 @@ class Molgw(MakefilePackage):
 
     depends_on("blas")
     depends_on("lapack")
-    depends_on("libxc")
+    depends_on("libxc@5:")
     depends_on("libcint+pypzpx+coulomb_erf")
 
     depends_on("scalapack", when="+scalapack")
