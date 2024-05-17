@@ -983,14 +983,17 @@ class Mfem(Package, CudaPackage, ROCmPackage):
             if "%cce" in spec:
                 # We assume the proper Cray CCE module (cce) is loaded:
                 craylibs_path = env["CRAYLIBS_" + machine().upper()]
-                craylibs = ["libmodules", "libfi", "libcraymath", "libf", "libu", "libcsup", "libpgas-shmem"]
+                craylibs = [
+                    "libmodules",
+                    "libfi",
+                    "libcraymath",
+                    "libf",
+                    "libu",
+                    "libcsup",
+                    "libpgas-shmem",
+                ]
                 hip_libs += find_libraries(craylibs, craylibs_path)
-                craylibs_path2 = join_path(
-                    craylibs_path,
-                    "../../../cce-clang",
-                    machine(),
-                    "lib",
-                )
+                craylibs_path2 = join_path(craylibs_path, "../../../cce-clang", machine(), "lib")
                 hip_libs += find_libraries("libunwind", craylibs_path2)
 
             if hip_headers:

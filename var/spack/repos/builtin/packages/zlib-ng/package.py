@@ -70,15 +70,11 @@ class ZlibNg(AutotoolsPackage, CMakePackage):
     def libs(self):
         name = "libz" if self.spec.satisfies("+compat") else "libz-ng"
         shared = self.spec.satisfies("+shared")
-        libs = find_libraries(
-            name, root=self.prefix, recursive=True, shared=shared
-        )
+        libs = find_libraries(name, root=self.prefix, recursive=True, shared=shared)
         # With some compilers, e.g. cce@17, building a shared library may fail,
         # so the build system just builds a static version.
         if not libs and shared:
-            libs = find_libraries(
-                name, root=self.prefix, recursive=True, shared=False
-            )
+            libs = find_libraries(name, root=self.prefix, recursive=True, shared=False)
         return libs or None
 
     def flag_handler(self, name, flags):
@@ -88,7 +84,6 @@ class ZlibNg(AutotoolsPackage, CMakePackage):
 
 
 class AutotoolsBuilder(autotools.AutotoolsBuilder):
-
     @run_before("configure")
     def pretend_gcc(self):
         # All nice things (PIC flags, symbol versioning) that happen to the compilers that are

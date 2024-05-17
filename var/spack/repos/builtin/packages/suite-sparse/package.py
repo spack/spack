@@ -3,8 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from platform import machine
 import os.path
+from platform import machine
 
 from spack.package import *
 
@@ -241,8 +241,8 @@ class SuiteSparse(Package):
                 # *_LIBRARIES is critical to pick up static
                 # libraries (if intended) and also to avoid
                 # unintentional system blas/lapack packages
-                + " -DBLAS_LIBRARIES=\"%s\"" % (";".join(spec["blas"].libs))
-                + " -DLAPACK_LIBRARIES=\"%s\"" % (";".join(spec["lapack"].libs))
+                + ' -DBLAS_LIBRARIES="%s"' % (";".join(spec["blas"].libs))
+                + ' -DLAPACK_LIBRARIES="%s"' % (";".join(spec["lapack"].libs))
                 + " -DENABLE_CUDA=%s" % ("ON" if "+cuda" in spec else "OFF")
                 + " -DSUITESPARSE_USE_OPENMP=%s" % ("ON" if "+openmp" in spec else "OFF")
                 # Older versions use the negative flag NOPENMP: "OFF" means use

@@ -112,7 +112,7 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder, SetupEnviron
         if "+debug" in self.spec:
             options.extend(["-g", "-O0"])
         else:
-            options.append("-O2") # default in Makefile.in
+            options.append("-O2")  # default in Makefile.in
         return options
 
     @property
