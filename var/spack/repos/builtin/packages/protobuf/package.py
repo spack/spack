@@ -110,7 +110,10 @@ class Protobuf(CMakePackage):
 
     # fix build on Centos 8, see also https://github.com/protocolbuffers/protobuf/issues/5144
     # https://github.com/protocolbuffers/protobuf/pull/11032/commits/3039f932aaf212bcf2f14a3f2fd00dbfb881e46b.patch
-    patch("3039f932aaf212bcf2f14a3f2fd00dbfb881e46b.patch", when="@3.4:3.21")
+    patch(
+        "3039f932aaf212bcf2f14a3f2fd00dbfb881e46b.patch",
+        when="@3.4:3.21",
+    )
 
     patch("msvc-abseil-target-namespace.patch", when="@3.22 %msvc")
 

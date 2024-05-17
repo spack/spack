@@ -83,7 +83,10 @@ class Openscenegraph(CMakePackage):
     # patch submitted for inclusion in OpenSceneGraph for extending compatibility
     # with ffmpeg from versions up to 4 to versions 5 & 6
     # https://github.com/openscenegraph/OpenSceneGraph/pull/1281/commits/759620a3b7b787c960a7e414ba26ab5497817d40.patch
-    patch("759620a3b7b787c960a7e414ba26ab5497817d40.patch", when="@3.6:")
+    patch(
+        "759620a3b7b787c960a7e414ba26ab5497817d40.patch",
+        when="@3.6:",
+    )
     patch("glibc-jasper.patch", when="@3.4%gcc")
     # from gentoo: https://raw.githubusercontent.com/gentoo/gentoo/9523b20c27d12dd72d1fd5ced3ba4995099925a2/dev-games/openscenegraph/files/openscenegraph-3.6.5-openexr3.patch
     patch("openscenegraph-3.6.5-openexr3.patch", when="@3.6:")

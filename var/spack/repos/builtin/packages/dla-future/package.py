@@ -128,7 +128,10 @@ class DlaFuture(CMakePackage, CudaPackage, ROCmPackage):
             depends_on(f"umpire cuda_arch={arch}", when=f"cuda_arch={arch}")
 
     # https://github.com/eth-cscs/DLA-Future/pull/1063/commits/efc9c176a7a8c512b3f37d079dec8c25ac1b7389.patch
-    patch("efc9c176a7a8c512b3f37d079dec8c25ac1b7389.patch", when="@:0.3 %gcc@13:")
+    patch(
+        "efc9c176a7a8c512b3f37d079dec8c25ac1b7389.patch",
+        when="@:0.3 %gcc@13:",
+    )
     # https://github.com/spack/spack/issues/41511
     patch("hip_complex_operator_overloads.patch", when="+rocm")
 
