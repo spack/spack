@@ -127,9 +127,9 @@ class DlaFuture(CMakePackage, CudaPackage, ROCmPackage):
             depends_on(f"pika cuda_arch={arch}", when=f"cuda_arch={arch}")
             depends_on(f"umpire cuda_arch={arch}", when=f"cuda_arch={arch}")
 
-    # https://github.com/eth-cscs/DLA-Future/pull/1063/commits/efc9c176a7a8c512b3f37d079dec8c25ac1b7389.patch
     patch(
-        "efc9c176a7a8c512b3f37d079dec8c25ac1b7389.patch",
+        "https://github.com/eth-cscs/DLA-Future/pull/1063/commits/efc9c176a7a8c512b3f37d079dec8c25ac1b7389.patch?full_index=1",
+        sha256="7f382c872d89f22da1ad499e85ffe9881cc7404c8465e42877a210a09382e2ea",
         when="@:0.3 %gcc@13:",
     )
     # https://github.com/spack/spack/issues/41511

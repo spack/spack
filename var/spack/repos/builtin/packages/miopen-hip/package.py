@@ -57,9 +57,9 @@ class MiopenHip(CMakePackage):
     patch("miopen-hip-include-nlohmann-include-directory.patch", when="@5.4.0:5.7")
     patch("0002-add-include-dir-miopen-hip-6.0.0.patch", when="@6.0")
     patch("0002-add-include-dir-miopen-hip-6.1.0.patch", when="@6.1")
-    # https://github.com/ROCm/MIOpen/pull/2276/commits/f60aa1ff89f8fb596b4a6a4c70aa7d557803db87.patch
     patch(
-        "f60aa1ff89f8fb596b4a6a4c70aa7d557803db87.patch",
+        "https://github.com/ROCm/MIOpen/pull/2276/commits/f60aa1ff89f8fb596b4a6a4c70aa7d557803db87.patch?full_index=1",
+        sha256="c777d9f4cd2bbfec632b38620c0f70bb0cce8da1",
         when="@5.7",
     )
 
