@@ -19,7 +19,6 @@ class Zerosum(CMakePackage):
 
     license("MIT", checked_by="khuck")
 
-    # version("1.2.3", md5="0123456789abcdef0123456789abcdef")
     version("main", branch="main")
 
     variant("perfstubs", default=True, description="Enable PerfStubs support")
@@ -29,6 +28,14 @@ class Zerosum(CMakePackage):
     variant("hip", default=False, description="Enable HIP support")
     variant("sycl", default=False, description="Enable SYCL support")
     variant("openmp", default=True, description="Enable OpenMP support")
+    # GCC has no support for OMPT, and doesn't plan to add it any time soon.
+    # For that reason, we disable OMPT support by default.
+    variant("ompt", default=False, when="%gcc", description="Enable OpenMP Tools support")
+    # All other compilers default to having the support enabled.
+    # This works because Spack allows overriding of variants:
+    # "When a variant is defined multiple times, whether in the same package
+    # file or in a subclass and a superclass, the _last_ definition is used
+    # for all attributes except for the when clauses."
     variant("ompt", default=True, description="Enable OpenMP Tools support")
 
     depends_on("cmake", type="build")
@@ -39,21 +46,25 @@ class Zerosum(CMakePackage):
     depends_on("hip", when="+hip")
     depends_on("sycl", when="+sycl")
 
+    # GCC has no support for OMPT, and doesn't plan to add it any time soon.
+    # For that reason, we let the user know this support is not allowed.
     conflicts("+ompt", when="%gcc")
 
     def cmake_args(self):
-        args = []
-        args.append(self.define_from_variant("ZeroSum_WITH_PerfStubs", "perfstubs"))
-        args.append(self.define_from_variant("ZeroSum_WITH_HWLOC", "hwloc"))
-        args.append(self.define_from_variant("ZeroSum_WITH_MPI", "mpi"))
-        args.append(self.define_from_variant("ZeroSum_WITH_CUDA", "cuda"))
-        args.append(self.define_from_variant("ZeroSum_WITH_HIP", "hip"))
-        args.append(self.define_from_variant("ZeroSum_WITH_SYCL", "sycl"))
-        args.append(self.define_from_variant("ZeroSum_WITH_OPENMP", "openmp"))
-        args.append(self.define_from_variant("ZeroSum_WITH_OMPT", "ompt"))
+        args = [
+            self.define_from_variant("ZeroSum_WITH_PerfStubs", "perfstubs"),
+            self.define_from_variant("ZeroSum_WITH_HWLOC", "hwloc"),
+            self.define_from_variant("ZeroSum_WITH_MPI", "mpi"),
+            self.define_from_variant("ZeroSum_WITH_CUDA", "cuda"),
+            self.define_from_variant("ZeroSum_WITH_HIP", "hip"),
+            self.define_from_variant("ZeroSum_WITH_SYCL", "sycl"),
+            self.define_from_variant("ZeroSum_WITH_OPENMP", "openmp"),
+            self.define_from_variant("ZeroSum_WITH_OMPT", "ompt"),
+        ]
+
         if "+cuda" in self.spec:
-            args.append("-DCUDAToolkit_ROOT={0}".format(self.spec["cuda"].prefix))
+            args.append(self.define("CUDAToolkit_ROOT", self.spec["cuda"].prefix))
         if "+hip" in self.spec:
-            args.append("-DROCM_ROOT={0}".format(self.spec["hip"].prefix))
+            args.append(self.define("ROCM_ROOT}", self.spec["hip"].prefix))
 
         return args
