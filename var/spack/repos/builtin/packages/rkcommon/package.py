@@ -14,8 +14,6 @@ class Rkcommon(CMakePackage):
     url = "https://github.com/ospray/rkcommon/archive/v1.4.1.tar.gz"
     git = "https://github.com/ospray/rkcommon.git"
 
-    # maintainers("github_user1",o"github_user2")
-
     license("Apache-2.0")
 
     version("1.13.0", sha256="8ae9f911420085ceeca36e1f16d1316a77befbf6bf6de2a186d65440ac66ff1f")

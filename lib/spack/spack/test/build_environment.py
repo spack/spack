@@ -14,6 +14,7 @@ from llnl.util.filesystem import HeaderList, LibraryList
 
 import spack.build_environment
 import spack.config
+import spack.deptypes as dt
 import spack.package_base
 import spack.spec
 import spack.util.spack_yaml as syaml
@@ -716,3 +717,21 @@ def test_build_system_globals_only_set_on_root_during_build(default_mock_concret
     for depth, spec in root.traverse(depth=True, root=True):
         for variable in build_variables:
             assert hasattr(spec.package.module, variable) == should_be_set(depth)
+
+
+def test_rpath_with_duplicate_link_deps():
+    """If we have two instances of one package in the same link sub-dag, only the newest version is
+    rpath'ed. This is for runtime support without splicing."""
+    runtime_1 = spack.spec.Spec("runtime@=1.0")
+    runtime_2 = spack.spec.Spec("runtime@=2.0")
+    child = spack.spec.Spec("child@=1.0")
+    root = spack.spec.Spec("root@=1.0")
+
+    root.add_dependency_edge(child, depflag=dt.LINK, virtuals=())
+    root.add_dependency_edge(runtime_2, depflag=dt.LINK, virtuals=())
+    child.add_dependency_edge(runtime_1, depflag=dt.LINK, virtuals=())
+
+    rpath_deps = spack.build_environment._get_rpath_deps_from_spec(root, transitive_rpaths=True)
+    assert child in rpath_deps
+    assert runtime_2 in rpath_deps
+    assert runtime_1 not in rpath_deps

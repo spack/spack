@@ -14,7 +14,7 @@ from contextlib import contextmanager
 import pytest
 
 import llnl.util.filesystem as fs
-from llnl.util.symlink import islink, symlink
+from llnl.util.symlink import islink, readlink, symlink
 
 import spack.paths
 
@@ -181,7 +181,7 @@ class TestCopyTree:
 
             assert os.path.exists("dest/a/b2")
             with fs.working_dir("dest/a"):
-                assert os.path.exists(os.readlink("b2"))
+                assert os.path.exists(readlink("b2"))
 
             assert os.path.realpath("dest/f/2") == os.path.abspath("dest/a/b/2")
             assert os.path.realpath("dest/2") == os.path.abspath("dest/1")
@@ -281,7 +281,7 @@ class TestInstallTree:
             symlink("nonexistant.txt", "source/broken", allow_broken_symlinks=True)
             fs.install_tree("source", "dest", symlinks=True, allow_broken_symlinks=True)
             assert os.path.islink("dest/broken")
-            assert not os.path.exists(os.readlink("dest/broken"))
+            assert not os.path.exists(readlink("dest/broken"))
 
     def test_glob_src(self, stage):
         """Test using a glob as the source."""
