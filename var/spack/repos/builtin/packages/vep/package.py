@@ -7,21 +7,28 @@ from spack.package import *
 
 
 class Vep(Package):
-    """FIXME: Put a proper description of your package here."""
+    """
+    Ensembl Variant Effect Predictor (VEP) determines the effect of your variants 
+    (SNPs, insertions, deletions, CNVs or structural variants) on genes, transcripts, 
+    and protein sequence, as well as regulatory regions.
+    (Requires addtional data available via the `vep-cache` package)
+    """
 
     homepage = "https://useast.ensembl.org/info/docs/tools/vep/index.html"
     url = "https://github.com/Ensembl/ensembl-vep/archive/release/111.zip"
 
     maintainers("teaguesterling")
 
-    license("APACHE-2.0", checked_by="github_user1")
+    license("APACHE-2.0", checked_by="teaguesterling")
 
+    version("112.0", sha256="46dd08838fd94ecbfaa931266c78570748a3cb39668b6e43c3608e6cd0aff93f")
     version("111.0", sha256="9cb326a1fa0054ce1a417f8fd4f2325ba605c40ec10eefbf87f461c264a89407")
     version("110.0", sha256="391a1fe50139064c1044c09e013bb21437933d677537b5d3336807f3b131fb51")
     
     depends_on("gcc")
     depends_on("gmake")
     depends_on("perl@5.10:")
+
     extends("perl")
 
     depends_on("perl-archive-zip")
@@ -83,7 +90,8 @@ class Vep(Package):
 
     def run_vep_installer(self):
         with working_dir(self.stage.source_path):
-            # Run the customer VEP installer/downloader
+            # Run the customer VEP installer/downloader, which downloads
+            # copies a bunch of additional perl modules
             installer_script = "./INSTALL.pl"
             installer = which(installer_script)
             installer(*self.installer_args())

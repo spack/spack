@@ -6,15 +6,16 @@
 from spack.package import *
 
 class VepCache(Package):
-    """FIXME: Put a proper description of your package here."""
+    """Separate installation and management for the Ensembl Variant Effect Predictor (vep)"""
 
-    # FIXME: Add a proper url for your package's homepage here.
     homepage = "https://useast.ensembl.org/info/docs/tools/vep/index.html"
-    url = "https://raw.githubusercontent.com/Ensembl/ensembl-vep/release/111/INSTALL.pl"
+    url = "https://raw.githubusercontent.com/Ensembl/ensembl-vep/release/112/INSTALL.pl"
+    list_url = "https://github.com/Ensembl/ensembl-vep/tags"
+    #https://ftp.ensembl.org/pub/release-111/variation/indexed_vep_cache/homo_sapiens_vep_111_GRCh37.tar.gz
 
     def url_for_version(self, version):
         major = version.up_to(1)
-        url = "https://raw.githubusercontent.com/Ensembl/ensembl-vep/release/{major}/INSTALL.pl"
+        url = f"https://raw.githubusercontent.com/Ensembl/ensembl-vep/release/{major}/INSTALL.pl"
         vep = Spec(f"vep+installer@{major}")
         return vep.package.vep_installer_path if vep.installed else url
 
@@ -23,14 +24,15 @@ class VepCache(Package):
     license("APACHE-2.0", checked_by="github_user1")
 
     vep_versions = [
+        ("112", "f0f54759be885b3d0f10c2a1210c7d9b137ed548cecc0df6ed2d44df25c25b3a"),
         ("111", "1fa3510fdfb67d5c116dca9cd412744cb0dba9e0cd65e71761eabe385ca41aa1"),
-        ("110", "e04572d4bf98e1392e31a274f1bb67b26a60689025183308dd90cc5e27015392")
+        ("110", "e04572d4bf98e1392e31a274f1bb67b26a60689025183308dd90cc5e27015392"),
     ]
 
-    for num, sha in vep_versions:
-        version(num, sha256=sha, expand=False)
-        depends_on(f"vep+installer@{num}", type="build", when=f"@{num}")
-        depends_on(f"vep@{num}", type="run", when=f"@{num}")
+    for major, sha in vep_versions:
+        version(major, sha256=sha, expand=False)
+        depends_on(f"vep+installer@{major}", type="build", when=f"@{major}")
+        depends_on(f"vep@{major}", type="run", when=f"@{major}")
 
     variant("env", default=True)
     variant("fasta", default=True)
@@ -126,7 +128,6 @@ class VepCache(Package):
         auto = "cf" if self.spec.satisfies("+fasta") else "c"
         args = [
             "--AUTO", auto,
-            "--DESTDIR", f"{self.vep.vep_lib_path}",
             "--NO_UPDATE",
             "--NO_TEST",
         ]
