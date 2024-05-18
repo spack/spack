@@ -13,7 +13,7 @@ class AwscliV2(PythonPackage):
     url = "https://github.com/aws/aws-cli/archive/refs/tags/2.13.22.tar.gz"
     list_url = "https://github.com/aws/aws-cli/tags"
 
-    maintainers("climbfuji")
+    maintainers("climbfuji", "teaguesterling")
 
     version("2.15.53", sha256="a4f5fd4e09b8f2fb3d2049d0610c7b0993f9aafaf427f299439f05643b25eb4b")
     version("2.13.22", sha256="dd731a2ba5973f3219f24c8b332a223a29d959493c8a8e93746d65877d02afc1")

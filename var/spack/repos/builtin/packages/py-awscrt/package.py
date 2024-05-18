@@ -12,7 +12,7 @@ class PyAwscrt(PythonPackage):
     homepage = "https://docs.aws.amazon.com/sdkref/latest/guide/common-runtime.html"
     pypi = "awscrt/awscrt-0.16.16.tar.gz"
 
-    maintainers("climbfuji")
+    maintainers("climbfuji", "teaguesterling")
 
     license("Apache-2.0")
 
