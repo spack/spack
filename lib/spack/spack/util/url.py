@@ -10,9 +10,11 @@ Utility functions for parsing, formatting, and manipulating URLs.
 import itertools
 import os
 import posixpath
+import re
 import sys
 import urllib.parse
 import urllib.request
+from typing import Optional
 
 from llnl.path import convert_to_posix_path
 
@@ -261,3 +263,43 @@ def default_download_filename(url: str) -> str:
         valid_name = "_" + valid_name[1:]
 
     return valid_name
+
+
+def parse_link_rel_next(link_value: str) -> Optional[str]:
+    """Return the next link from a Link header value, if any."""
+
+    # Relaxed version of RFC5988
+    uri = re.compile(r"\s*<([^>]+)>\s*")
+    param_key = r"[^;=\s]+"
+    quoted_string = r"\"([^\"]+)\""
+    unquoted_param_value = r"([^;,\s]+)"
+    param = re.compile(rf";\s*({param_key})\s*=\s*(?:{quoted_string}|{unquoted_param_value})\s*")
+
+    data = link_value
+
+    # Parse a list of <url>; key=value; key=value, <url>; key=value; key=value, ... links.
+    while True:
+        uri_match = re.match(uri, data)
+        if not uri_match:
+            break
+        uri_reference = uri_match.group(1)
+        data = data[uri_match.end() :]
+
+        # Parse parameter list
+        while True:
+            param_match = re.match(param, data)
+            if not param_match:
+                break
+            key, quoted_value, unquoted_value = param_match.groups()
+            value = quoted_value or unquoted_value
+            data = data[param_match.end() :]
+
+            if key == "rel" and value == "next":
+                return uri_reference
+
+        if not data.startswith(","):
+            break
+
+        data = data[1:]
+
+    return None
