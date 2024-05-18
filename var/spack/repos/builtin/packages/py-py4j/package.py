@@ -15,6 +15,8 @@ class PyPy4j(PythonPackage):
 
     license("BSD-3-Clause")
 
+    maintainers("teaguesterling")
+
     version("0.10.9.5", sha256="276a4a3c5a2154df1860ef3303a927460e02e97b047dc0a47c1c3fb8cce34db6")
     version("0.10.9.3", sha256="0d92844da4cb747155b9563c44fc322c9a1562b3ef0979ae692dbde732d784dd")
     version("0.10.9", sha256="36ec57f43ff8ced260a18aa9a4e46c3500a730cac8860e259cbaa546c2b9db2f")

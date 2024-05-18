@@ -12,6 +12,8 @@ class PyPyspark(PythonPackage):
     homepage = "https://spark.apache.org"
     pypi = "pyspark/pyspark-3.0.1.tar.gz"
 
+    maintainers("teaguesterling")
+
     version("3.5.1", sha256="dd6569e547365eadc4f887bf57f153e4d582a68c4b490de475d55b9981664910")
     version("3.4.3", sha256="8d7025fa274830cb6c3bd592228be3d9345cb3b8b1e324018c2aa6e75f48a208")
     version("3.3.4", sha256="1f866be47130a522355240949ed50d9812a8f327bd7619f043ffe07fbcf7f7b6")
