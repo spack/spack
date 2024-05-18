@@ -324,7 +324,7 @@ class PyMatplotlib(PythonPackage):
                 "-Dsystem-qhull": True,
                 "-DrcParams-backend": spec.variants["backend"].value,
                 # Avoids error where link time opt is used for compile but not link
-                "-Db_lto": not (self.spec.satisfies("%clang") or self.spec.satisfies("%oneapi"))
+                "-Db_lto": not (self.spec.satisfies("%clang") or self.spec.satisfies("%oneapi")),
             },
         }
 
