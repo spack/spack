@@ -61,7 +61,7 @@ class Htslib(AutotoolsPackage):
     depends_on("automake", when="@1.2")
     depends_on("libtool", when="@1.2")
 
-    conflicts("zlib-ng", when="@1.12:")  # https://github.com/samtools/htslib/issues/1257
+    conflicts("zlib-ng", when="@:1.12")  # https://github.com/samtools/htslib/issues/1257
 
     @property
     def libs(self):
