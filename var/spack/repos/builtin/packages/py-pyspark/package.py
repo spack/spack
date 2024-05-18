@@ -27,10 +27,10 @@ class PyPyspark(PythonPackage):
     depends_on("py-setuptools", type="build")
     with default_args(type=("build", "run")):
         for py4j_version, pyspark_version in [
-                ("0.10.9.7", "3.5:"),
-                ("0.10.9.5", "3.3:"),
-                ("0.10.9.3", "3.2.1"),
-                ("0.10.9", "3.0.1:3.1.3")
+            ("0.10.9.7", "3.5:"),
+            ("0.10.9.5", "3.3:"),
+            ("0.10.9.3", "3.2.1"),
+            ("0.10.9", "3.0.1:3.1.3"),
         ]:
             depends_on(f"py-py4j+java@{py4j_version}", when=f"+java@{pyspark_version}")
             depends_on(f"py-py4j~java@{py4j_version}", when=f"~java@{pyspark_version}")

@@ -8,7 +8,7 @@ from spack.package import *
 
 
 class PyJproperties(PythonPackage):
-    """Java Property file parser and writer for Python """
+    """Java Property file parser and writer for Python"""
 
     # FIXME: Add a proper url for your package's homepage here.
     homepage = "https://github.com/Tblue/python-jproperties"

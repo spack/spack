@@ -14,19 +14,13 @@ class PyHail(MakefilePackage):
     # We can't use tarballs because HAIL needs to look up git commit metadata
     # to determine its version. We could patch this, but that is not yet
     # implemented.
-    #url = "https://github.com/hail-is/hail/archive/refs/tags/0.2.130.tar.gz"
+    # url = "https://github.com/hail-is/hail/archive/refs/tags/0.2.130.tar.gz"
 
     maintainers("teaguesterling")
     license("MIT", checked_by="teaguesterling")
 
-    version(
-        "0.2.130", 
-        commit="bea04d9c79b5ca739364e8c121132845475f617a",
-    )
-    version(
-        "0.2.129", 
-        commit="41126be2df04e4ef823cefea40fba4cadbe5db8a",
-    )
+    version("0.2.130", commit="bea04d9c79b5ca739364e8c121132845475f617a")
+    version("0.2.129", commit="41126be2df04e4ef823cefea40fba4cadbe5db8a")
 
     resource(
         name="catch",
@@ -38,18 +32,14 @@ class PyHail(MakefilePackage):
 
     resource(
         name="libsimdpp-2.1",
-        extension='tar.gz',
+        extension="tar.gz",
         url="https://storage.googleapis.com/hail-common/libsimdpp-2.1.tar.gz",
         sha256="b0e986b20bef77cd17004dd02db0c1ad9fab9c70d4e99594a9db1ee6a345be93",
         destination="hail/src/main/c",
     )
 
     variant("native", default=True)
-    variant(
-        "query_backend", 
-        values=["undefined", "spark", "batch"], 
-        default="spark"
-    )
+    variant("query_backend", values=["undefined", "spark", "batch"], default="spark")
 
     depends_on("python@3.9:", type=("build", "run"))
     depends_on("py-pip", type="build")
@@ -89,9 +79,8 @@ class PyHail(MakefilePackage):
     # Spark. If we implement building from source, this
     # will likely not be as much of an issue, but that
     # isn't working yet.
-    #with default_args(type=("build", "run")):
+    # with default_args(type=("build", "run")):
     #    depends_on("py-pyspark@3.3", when="@0.2.130")
-
 
     # hailtop requirements
     with default_args(type=("build", "run")):
@@ -124,7 +113,6 @@ class PyHail(MakefilePackage):
         depends_on("py-azure-mgmt-core")
         depends_on("py-typing-extensions")
 
-
     patch("fix-lz4-import-builtins.patch")
 
     build_directory = "hail"
@@ -154,22 +142,22 @@ class PyHail(MakefilePackage):
         if spec.satisfies("+native"):
             variables += ["HAIL_COMPILE_NATIVES=1"]
 
-        # We're not using the documented target to 
-        # because it depends on pipto install and resolve 
+        # We're not using the documented target to
+        # because it depends on pipto install and resolve
         # dependencies directly and does everythin in one step.
         # The documented target is `install-on-cluster`
         targets = [
             # This may be too specific but it would detect failures
             # and fail to build instead of taking a long time to build
             # and then failing at install time.
-            self.build_wheel_file_path,
+            self.build_wheel_file_path
         ]
 
         return targets + variables
 
     def install(self, spec, prefix):
         spec = self.spec
-        python = which("pip")
+        pip = which("pip")
         wheel = self.build_wheel_file_path
 
         # This mimics the install-on-cluster target but avoids anything
@@ -177,14 +165,14 @@ class PyHail(MakefilePackage):
         with working_dir(join_path(self.stage.source_path, "hail")):
             pip("install", "--use-pep517", "--no-deps", f"--prefix={prefix}", wheel)
 
-        backend = spec.variants['query_backend'].value
+        backend = spec.variants["query_backend"].value
         if backend != "undefined":
             hailctl = which("hailctl")  # Should be installed from above
             if hailctl is not None:  # but it might not be
                 hailctl("config", "set", "query/backend", f"{backend}")
 
     def setup_run_environment(self, env):
-        #TODO: Add Spark configuration values to find HAIL Jars
-        #This would be needed if one was connecting to a Spark
-        #cluster that was started outside of HAIL
+        # TODO: Add Spark configuration values to find HAIL Jars
+        # This would be needed if one was connecting to a Spark
+        # cluster that was started outside of HAIL
         pass
