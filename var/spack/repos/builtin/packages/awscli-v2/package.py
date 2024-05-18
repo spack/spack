@@ -11,10 +11,13 @@ class AwscliV2(PythonPackage):
 
     homepage = "https://docs.aws.amazon.com/cli"
     url = "https://github.com/aws/aws-cli/archive/refs/tags/2.13.22.tar.gz"
+    list_url = "https://github.com/aws/aws-cli/tags"
 
     maintainers("climbfuji")
 
+    version("2.15.53", sha256="a4f5fd4e09b8f2fb3d2049d0610c7b0993f9aafaf427f299439f05643b25eb4b")
     version("2.13.22", sha256="dd731a2ba5973f3219f24c8b332a223a29d959493c8a8e93746d65877d02afc1")
+    version("2.0.0dev0", sha256="994b27d2ab7721d9bae3016605ce7bad64bc2852872bba79c092e93d21529a99")
 
     depends_on("python@3.8:3.11", type=("build", "run"))
     depends_on("py-flit-core@3.7.1:3.8.0", type=("build"))
