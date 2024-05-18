@@ -10,8 +10,11 @@ class PyHail(MakefilePackage):
     """Cloud-native genomic dataframes and batch computing (Python API)"""
 
     homepage = "https://hail.is"
-    url = "https://github.com/hail-is/hail/archive/refs/tags/0.2.130.tar.gz"
     git = "https://github.com/hail-is/hail.git"
+    # We can't use tarballs because HAIL needs to look up git commit metadata
+    # to determine its version. We could patch this, but that is not yet
+    # implemented.
+    #url = "https://github.com/hail-is/hail/archive/refs/tags/0.2.130.tar.gz"
 
     maintainers("teaguesterling")
     license("MIT", checked_by="teaguesterling")
@@ -19,12 +22,10 @@ class PyHail(MakefilePackage):
     version(
         "0.2.130", 
         commit="bea04d9c79b5ca739364e8c121132845475f617a",
-    #    sha256="0a80704e474cac72264db5dad27c876d7b0c8563a0fbfbdd47d465d33515d07f"
     )
     version(
         "0.2.129", 
         commit="41126be2df04e4ef823cefea40fba4cadbe5db8a",
-    #    sha256="9c5511cb92d5ec1f839960b78d3be25aedfd1ab97486ccf67ee102d2730a72a4"
     )
 
     resource(
@@ -54,6 +55,8 @@ class PyHail(MakefilePackage):
     depends_on("py-pip", type="build")
     depends_on("py-wheel", type="build")
 
+    # HAIL spec, SPARK spec, SCALA spec
+    bundle_versions = [("0.2", "3.3", "2.12")]
     # Hail build requirements
     with default_args(type=("build", "run")):
         depends_on("gcc@5:")
@@ -61,11 +64,14 @@ class PyHail(MakefilePackage):
         depends_on("lapack")
         depends_on("lz4")
         depends_on("java@8,11")
-        depends_on("scala@2.12")
-        depends_on("spark@3.3")
-        depends_on("py-pyspark")
+        for hail, spark, scala in bundle_versions:
+            depends_on(f"scala@{scala}", when=f"@{hail}")
+            depends_on(f"spark@{spark}", when=f"@{hail}")
+            # This should match spark but isn't actually enforced
+            # by the PySpark package and they can conflit.
+            depends_on(f"py-pyspark@{spark}", when=f"@{hail}")
 
-    # HAIL API requirements
+    # HAIL API requirements are very specific
     with default_args(type=("build", "run")):
         depends_on("py-avro@1.10:1.11")
         depends_on("py-bokeh@:3.3")
@@ -112,20 +118,14 @@ class PyHail(MakefilePackage):
         depends_on("py-tabulate@0.8.9:0")
         depends_on("py-uvloop@0.19.0:0")
         depends_on("py-jproperties@2.1.1:2")
-        # Undocumented
+        # Undocumented runtime requirements for hailtop
+        # These are also required to use the HAIL API
+        # but are not explicitly mentioned anywhere
         depends_on("py-azure-mgmt-core")
         depends_on("py-typing-extensions")
 
-    # Undocumented runtime requirements for hailtop
-    # These are also required to use the HAIL API
-    # but are not explicitly mentioned anywhere
 
     patch("fix-lz4-import-builtins.patch")
-
-#    def edit(self, spec, prefix):
-#        super().edit(spec, prefix)
-#        with working_dir(self.build_directory):
-#            make("clean")
 
     build_directory = "hail"
 
