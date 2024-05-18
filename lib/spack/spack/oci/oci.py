@@ -11,7 +11,7 @@ import urllib.error
 import urllib.parse
 import urllib.request
 from http.client import HTTPResponse
-from typing import NamedTuple, Tuple
+from typing import List, NamedTuple, Tuple
 from urllib.request import Request
 
 import llnl.util.tty as tty
@@ -27,6 +27,7 @@ import spack.spec
 import spack.stage
 import spack.traverse
 import spack.util.crypto
+import spack.util.url
 
 from .image import Digest, ImageReference
 
@@ -67,6 +68,42 @@ def with_query_param(url: str, param: str, value: str) -> str:
     return urllib.parse.urlunparse(
         parsed._replace(query=urllib.parse.urlencode(query, doseq=True))
     )
+
+
+def list_tags(ref: ImageReference, _urlopen: spack.oci.opener.MaybeOpen = None) -> List[str]:
+    """Retrieves the list of tags associated with an image, handling pagination."""
+    _urlopen = _urlopen or spack.oci.opener.urlopen
+    tags = set()
+    fetch_url = ref.tags_url()
+
+    while True:
+        # Fetch tags
+        request = Request(url=fetch_url)
+        response = _urlopen(request)
+        spack.oci.opener.ensure_status(request, response, 200)
+        tags.update(json.load(response)["tags"])
+
+        # Check for pagination
+        link_header = response.headers["Link"]
+
+        if link_header is None:
+            break
+
+        tty.debug(f"OCI tag pagination: {link_header}")
+
+        rel_next_value = spack.util.url.parse_link_rel_next(link_header)
+
+        if rel_next_value is None:
+            break
+
+        rel_next = urllib.parse.urlparse(rel_next_value)
+
+        if rel_next.scheme not in ("https", ""):
+            break
+
+        fetch_url = ref.endpoint(rel_next_value)
+
+    return sorted(tags)
 
 
 def upload_blob(
