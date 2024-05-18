@@ -28,4 +28,5 @@ class PerlXmlLibxml(PerlPackage):
     depends_on("perl-xml-sax", type=("build", "run"))
     depends_on("perl-xml-sax-base", type=("build", "run"))
     depends_on("perl-alien-libxml2", type="build")
-    conflicts("%gcc@14", when="@:2.0209")
+
+    conflicts("%gcc@14:", when="@:2.0209")
