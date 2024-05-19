@@ -78,7 +78,7 @@ class PyProtobuf(PythonPackage):
         depends_on(f"protobuf@3.{ver}", when=f"@3.{ver}+cpp")
 
     conflicts("+cpp", when="^python@3.11:")
-    conflicts("gcc@14", when="@:4.24.3")  # TODO: Confirm
+    conflicts("%gcc@14", when="@:4.24.3")
 
     @property
     def build_directory(self):
