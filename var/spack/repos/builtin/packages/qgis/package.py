@@ -13,7 +13,7 @@ class Qgis(CMakePackage):
     """
 
     homepage = "https://qgis.org"
-    url = "https://qgis.org/downloads/qgis-3.28.11.tar.bz2"
+    url = "https://qgis.org/downloads/qgis-latest.tar.bz2"
 
     maintainers("adamjstewart", "Sinan81")
 
