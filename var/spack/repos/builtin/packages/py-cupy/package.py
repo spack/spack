@@ -18,6 +18,7 @@ class PyCupy(PythonPackage, CudaPackage, ROCmPackage):
     homepage = "https://cupy.dev/"
     pypi = "cupy/cupy-8.0.0.tar.gz"
 
+    version("13.1.0", sha256="5caf62288481a27713384523623045380ff42e618be4245f478238ed1786f32d")
     version("12.1.0", sha256="f6d31989cdb2d96581da12822e28b102f29e254427195c2017eac327869b7320")
     version("12.0.0", sha256="61ddbbef73d50d606bd5087570645f3c91ec9176c2566784c1d486d6a3404545")
     version("11.6.0", sha256="53dbb840072bb32d4bfbaa6bfa072365a30c98b1fcd1f43e48969071ad98f1a7")
@@ -42,13 +43,15 @@ class PyCupy(PythonPackage, CudaPackage, ROCmPackage):
 
     # Based on https://github.com/cupy/cupy/releases
     depends_on("cuda@:11.9", when="@:11 +cuda")
-    depends_on("cuda@:12.1", when="@12: +cuda")
+    depends_on("cuda@:12.1", when="@12:12.1.0 +cuda")
+    depends_on("cuda@:12.4", when="@13: +cuda")
 
     for a in CudaPackage.cuda_arch_values:
         depends_on("nccl +cuda cuda_arch={0}".format(a), when="+cuda cuda_arch={0}".format(a))
 
     depends_on("cudnn", when="+cuda")
-    depends_on("cutensor", when="+cuda")
+    depends_on("cutensor", when="@:12.1.0 +cuda")
+    depends_on("cutensor@2.0.1.2", when="@13.1: +cuda")
 
     for _arch in ROCmPackage.amdgpu_targets:
         arch_str = "amdgpu_target={0}".format(_arch)
