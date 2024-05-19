@@ -102,9 +102,7 @@ class Mesa(MesonPackage):
 
     # Provides
     provides("libglx", when="+glx")
-
     # provides('egl@1.5', when='+egl')
-    provides("libosmesa", when="+osmesa")
 
     # Variant dependencies
     with when("+llvm"):
