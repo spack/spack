@@ -20,10 +20,7 @@ class Genesis(AutotoolsPackage, CudaPackage):
 
     license("LGPL-3.0-or-later")
 
-    version(
-        "2.0.0",
-        tag="v2.0.0",
-    )
+    version("2.0.0", tag="v2.0.0")
     version(
         "1.7.1",
         sha256="2e86e09febe9a44e5843dc1bab4376a0fb7a50ca5e116f26f0b544f2f7b71d07",
@@ -154,10 +151,6 @@ class Genesis(AutotoolsPackage, CudaPackage):
             exe_name = self.spec["python"].command.path
             test_name = join_path(self.install_test_root, "tests", "regression_test", "test.py")
             bin_name = join_path(self.prefix.bin, "spdyn")
-            opts = [
-                test_name,
-                self.spec["mpi"].prefix.bin.mpirun + " -np 8 " + bin_name,
-            ]
+            opts = [test_name, self.spec["mpi"].prefix.bin.mpirun + " -np 8 " + bin_name]
             env["OMP_NUM_THREADS"] = "1"
             self.run_test(exe_name, options=opts, expected="Passed  63 / 63")
-
