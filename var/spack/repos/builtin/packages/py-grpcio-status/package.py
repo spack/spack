@@ -15,11 +15,13 @@ class PyGrpcioStatus(PythonPackage):
     license("Apache-2.0")
 
     version("1.60.1", sha256="61b5aab8989498e8aa142c20b88829ea5d90d18c18c853b9f9e6d407d37bf8b4")
+    version("1.56.2", sha256="a046b2c0118df4a5687f4585cca9d3c3bae5c498c4dff055dcb43fb06a1180c8")
 
     # https://github.com/grpc/grpc/blob/v1.60.1/src/python/grpcio_status/setup.py
 
     depends_on("py-protobuf@4.21.6:", type=("build", "run"))
     depends_on("py-grpcio@1.60.1:", when="@1.60.1", type=("build", "run"))
+    depends_on("py-grpcio@1.56.2:", when="@1.56.2", type=("build", "run"))
     depends_on("py-googleapis-common-protos@1.5.5:", type=("build", "run"))
 
     depends_on("py-setuptools", type="build")
