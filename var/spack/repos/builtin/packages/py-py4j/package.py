@@ -26,9 +26,8 @@ class PyPy4j(PythonPackage):
     version("0.10.4", sha256="406fbfdbcbbb398739f61fafd25724670a405a668eb08c1721d832eadce06aae")
     version("0.10.3", sha256="f4570108ad014dd52a65c2288418e31cb8227b5ecc39ad7fc7fe98314f7a26f2")
 
-    # Should this be True by default? It's required for py4j to work but wasn't originally the case
     variant(
-        "java", default=False, description="Require java via Spack instead of using system JRE"
+        "java", default=True, description="Require java via Spack instead of using system JRE"
     )
 
     depends_on("py-setuptools", type="build")
