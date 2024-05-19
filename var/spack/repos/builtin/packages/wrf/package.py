@@ -216,13 +216,13 @@ class Wrf(Package):
     )
     # Add ARM compiler support
     patch(
-        "https://github.com/wrf-model/WRF/pull/1888/commits/4a084e03575da65f254917ef5d8eb39074abd3fc.patch",
-        sha256="c522c4733720df9a18237c06d8ab6199fa9674d78375b644aec7017cb38af9c5",
+        "https://github.com/wrf-model/WRF/commit/4a084e03575da65f254917ef5d8eb39074abd3fc.patch?full_index=1",
+        sha256="2d06d709074ded9bd6842aa83c0dfdad5a4e4e2df99e2e5d4a82579f0486117e",
         when="@4.5: %arm",
     )
     patch(
-        "https://github.com/wrf-model/WRF/pull/1888/commits/6087d9192f7f91967147e50f5bc8b9e49310cf98.patch",
-        sha256="f82a18cf7334e0cbbfdf4ef3aa91ca26d4a372709f114ce0116b3fbb136ffac6",
+        "https://github.com/wrf-model/WRF/commit/6087d9192f7f91967147e50f5bc8b9e49310cf98.patch?full_index=1",
+        sha256="7c6487aefaa6cda0fff3976e78da07b09d2ba6c005d649f35a0f8f1694a0b2bb",
         when="@4.5: %arm",
     )
 

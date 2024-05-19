@@ -64,8 +64,8 @@ class Mlpack(CMakePackage):
         depends_on("r-pkgbuild")
 
     patch(
-        "https://github.com/mlpack/mlpack/pull/3502/commits/183396e51a6771d5d2b43f22b0d2a9a91785e533.patch?full_index=1",
-        sha256="eaa1791ca874201cca5fb661f44e0038f9996b2d02dac6c71d42935eac56a2b4",
+        "https://github.com/mlpack/mlpack/commit/183396e51a6771d5d2b43f22b0d2a9a91785e533.patch?full_index=1",
+        sha256="bd726818a8932888f8d38548cab7f8dde15bacfbd8c58a36ce6a3be8d459578d",
         when="@4:4.2.0",
     )
 
