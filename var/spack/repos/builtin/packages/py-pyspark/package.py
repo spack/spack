@@ -47,7 +47,7 @@ class PyPyspark(PythonPackage):
             ("0.10.9", "3.0.1:3.1.3"),
         ]:
             depends_on(f"py-py4j@{py4j_version}:", when=f"@{pyspark_version}")
-            depends_on(f"py-py4j+java", when="+java")
+            depends_on("py-py4j+java", when="+java")
 
     def setup_run_environment(self, env):
         env.set("PYSPARK_PYTHON", python.path)
