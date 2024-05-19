@@ -46,9 +46,11 @@ class PyPyspark(PythonPackage):
             ("0.10.9.3", "3.2.1"),
             ("0.10.9", "3.0.1:3.1.3"),
         ]:
-            depends_on(f"py-py4j+java@{py4j_version}", when=f"+java@{pyspark_version}")
-            depends_on(f"py-py4j~java@{py4j_version}", when=f"~java@{pyspark_version}")
+            depends_on(f"py-py4j@{py4j_version}:", when=f"@{pyspark_version}")
+            depends_on(f"py-py4j+java", when="+java")
 
     def setup_run_environment(self, env):
         env.set("PYSPARK_PYTHON", python.path)
         env.set("PYSPARK_DRIVER_PYTHON", python.path)
+        if self.spec.satisfies("+pandas ^java@11:"):
+            env.append_flags("SPARK_SUBMIT_OPTS", "-Dio.netty.tryReflectionSetAccessible=true")
