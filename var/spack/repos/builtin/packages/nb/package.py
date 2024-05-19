@@ -21,18 +21,32 @@ class Nb(Package):
 
     version("7.12.1", sha256="c9b30448751dd726469ed3fde29e618c5747eb4a16ceaaf86d773989a6cf13f3")
 
-    depends_on("bash")
+    variant("completions", default=True)
+
     depends_on("git")
+    depends_on("bash")
+    depends_on("bash-completion", when="+completions")
 
     def patch(self):
-        shebang_regex = "^#!\s?.*bash"
-        spack_bash_shebang = "#!{}".format(self.spec["bash"].command.path)
-        filter_file(shebang_regex, spack_bash_shebang, "nb")
-        filter_file(shebang_regex, spack_bash_shebang, "bin/bookmark")
-        filter_file(shebang_regex, spack_bash_shebang, "bin/notes")
+        filter_file(
+            "^#!\s?.*bash",
+            "#!{}".format(self.spec["bash"].command.path),
+            "nb",
+            "bin/bookmark",
+            "bin/notes",
+            "etc/nb-completion.bash",
+        )
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
         install("nb", join_path(prefix, "bin/nb"))
         install("bin/notes", join_path(prefix, "bin/notes"))
         install("bin/bookmark", join_path(prefix, "bin/bookmark"))
+
+        if self.spec.satisfies("+completions"):
+            install(
+                "etc/nb-completion.bash",
+                join_path(
+                    self.spec["bash-completion"].prefix, "share/bash-completion/completions/nb"
+                ),
+            )
