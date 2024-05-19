@@ -150,6 +150,16 @@ _versions = {
             "https://download.java.net/java/GA/jdk16.0.2/d4a915d82b4c4fbb9bde534da945d746/7/GPL/openjdk-16.0.2_linux-aarch64_bin.tar.gz",
         ),
     },
+    "15.0.2": {
+        "Linux-x86_64": (
+            "91ac6fc353b6bf39d995572b700e37a20e119a87034eeb939a6f24356fbcd207",
+            "https://download.java.net/java/GA/jdk15.0.2/0d1cfde4252546c6931946de8db48ee2/7/GPL/openjdk-15.0.2_linux-x64_bin.tar.gz",
+        ),
+        "Linux-aarch64": (
+            "3958f01858f9290c48c23e7804a0af3624e8eca6749b085c425df4c4f2f7dcbc",
+            "https://download.java.net/java/GA/jdk15.0.2/0d1cfde4252546c6931946de8db48ee2/7/GPL/openjdk-15.0.2_linux-aarch64_bin.tar.gz",
+        ),
+    },
     "11.0.20.1_1": {
         "Linux-x86_64": (
             "398a64bff002f0e3b0c01ecd24a1a32c83cb72a5255344219e9757d4ddd9f857",
@@ -357,6 +367,7 @@ class Openjdk(Package):
     provides("java@21", when="@21.0:21")
     provides("java@17", when="@17.0:17")
     provides("java@16", when="@16.0:16")
+    provides("java@15", when="@15.0:15")
     provides("java@11", when="@11.0:11")
     provides("java@10", when="@10.0:10")
     provides("java@9", when="@9.0:9")
