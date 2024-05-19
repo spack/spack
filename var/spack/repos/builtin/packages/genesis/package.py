@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,8 @@ class Genesis(AutotoolsPackage, CudaPackage):
     url = "https://www.r-ccs.riken.jp/labs/cbrt/wp-content/uploads/2022/02/genesis-2.0.0.tar.bz2"
     git = "https://github.com/genesis-release-r-ccs/genesis.git"
     maintainers = ["chig"]
+
+    license("LGPL-3.0-or-later")
 
     version(
         "2.0.0",

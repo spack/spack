@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -29,6 +29,7 @@ class Esmf(MakefilePackage):
     # Develop is a special name for spack and is always considered the newest version
     version("develop", branch="develop")
     # generate chksum with 'spack checksum esmf@x.y.z'
+    version("8.6.1", sha256="dc270dcba1c0b317f5c9c6a32ab334cb79468dda283d1e395d98ed2a22866364")
     version("8.6.0", sha256="ed057eaddb158a3cce2afc0712b49353b7038b45b29aee86180f381457c0ebe7")
     version("8.5.0", sha256="acd0b2641587007cc3ca318427f47b9cae5bfd2da8d2a16ea778f637107c29c4")
     version("8.4.2", sha256="969304efa518c7859567fa6e65efd960df2b4f6d72dbf2c3f29e39e4ab5ae594")
@@ -110,6 +111,8 @@ class Esmf(MakefilePackage):
     # Testing dependencies
     depends_on("perl", type="test")
 
+    conflicts("%aocc", when="@:8.3")
+
     # Make esmf build with newer intel versions
     patch("intel.patch", when="@:7.0 %intel@17:")
     # Make esmf build with newer gcc versions
@@ -135,6 +138,14 @@ class Esmf(MakefilePackage):
     # Skip info print of ESMF_CPP due to permission denied errors
     # https://github.com/spack/spack/issues/35957
     patch("esmf_cpp_info.patch")
+
+    # This is strictly required on Cray systems that use
+    # the Cray compiler wrappers, where we need to swap
+    # out the spack compiler wrappers in esmf.mk with the
+    # Cray wrappers. It doesn't hurt/have any effect on
+    # other systems where the logic in setup_build_environment
+    # below sets the compilers to the MPI wrappers.
+    filter_compiler_wrappers("esmf.mk", relative_root="lib")
 
     # Make script from mvapich2.patch executable
     @when("@:7.0")
@@ -225,6 +236,8 @@ class Esmf(MakefilePackage):
             env.set("ESMF_COMPILER", "nvhpc")
         elif self.compiler.name == "cce":
             env.set("ESMF_COMPILER", "cce")
+        elif self.compiler.name == "aocc":
+            env.set("ESMF_COMPILER", "aocc")
         else:
             msg = "The compiler you are building with, "
             msg += '"{0}", is not supported by ESMF.'
@@ -389,6 +402,11 @@ class Esmf(MakefilePackage):
         # Static-only option:
         if "~shared" in spec:
             env.set("ESMF_SHARED_LIB_BUILD", "OFF")
+
+        # https://github.com/JCSDA/spack-stack/issues/956
+        if "+shared" in spec:
+            if sys.platform == "darwin":
+                env.set("ESMF_TRACE_LIB_BUILD", "OFF")
 
     @run_after("install")
     def post_install(self):

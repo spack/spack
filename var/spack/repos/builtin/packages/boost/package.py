@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -26,7 +26,11 @@ class Boost(Package):
     list_depth = 1
     maintainers("hainest")
 
+    license("BSL-1.0")
+
     version("develop", branch="develop", submodules=True)
+    version("1.85.0", sha256="7009fe1faa1697476bdc7027703a2badb84e849b7b0baad5086b087b971f8617")
+    version("1.84.0", sha256="cc4b893acf645c9d4b698e9a0f08ca8846aa5d6c68275c14c3e7949c24109454")
     version("1.83.0", sha256="6478edfe2f3305127cffe8caf73ea0176c53769f4bf1585be237eb30798c3b8e")
     version("1.82.0", sha256="a6e1ab9b0860e6a2881dd7b21fe9f737a095e5f33a3a874afc6a345228597ee6")
     version("1.81.0", sha256="71feeed900fbccca04a3b4f2f84a7c217186f28a940ed8b7ed4725986baf99fa")
@@ -169,7 +173,7 @@ class Boost(Package):
 
     variant(
         "cxxstd",
-        default="98",
+        default="11",
         values=(
             "98",
             "11",
@@ -185,6 +189,10 @@ class Boost(Package):
         multi=False,
         description="Use the specified C++ standard when building.",
     )
+
+    # 1.84.0 dropped support for 98/03
+    conflicts("cxxstd=98", when="@1.84.0:")
+
     variant("debug", default=False, description="Switch to the debug version of Boost")
     variant("shared", default=True, description="Additionally build shared libraries")
     variant(
@@ -280,6 +288,13 @@ class Boost(Package):
     # (https://github.com/spack/spack/pull/32879#issuecomment-1265933265)
     conflicts("%oneapi", when="@1.80")
 
+    # Boost 1.85.0 stacktrace added a hard compilation error that has to
+    # explicitly be suppressed on some platforms:
+    # https://github.com/boostorg/stacktrace/pull/150. This conflict could be
+    # turned into a variant that allows users to opt-in when they know it is
+    # safe to do so on affected platforms.
+    conflicts("+clanglibcpp", when="@1.85: +stacktrace")
+
     # Patch fix from https://svn.boost.org/trac/boost/ticket/11856
     patch("boost_11856.patch", when="@1.60.0%gcc@4.4.7")
 
@@ -306,6 +321,9 @@ class Boost(Package):
 
     # Patch to workaround compiler bug
     patch("nvhpc-find_address.patch", when="@1.75.0:1.76%nvhpc")
+
+    # Patch to workaround gcc-8.3 compiler issue https://github.com/boostorg/mpl/issues/44
+    patch("boost_gcc83_cpp17_fix.patch", when="@1.69:%gcc@8.3")
 
     # Fix for version comparison on newer Clang on darwin
     # See: https://github.com/boostorg/build/issues/440
@@ -625,6 +643,13 @@ class Boost(Package):
             # change into boost compilation
             if spec.variants["cxxstd"].value == "11":
                 cxxflags.append("-std=c++11")
+
+        # See conflict above and
+        # https://github.com/boostorg/stacktrace/pull/150. This suppresses a
+        # compilation error that must be explicitly suppressed. Because of the
+        # conflict we can suppress the error without input from a user.
+        if spec.satisfies("@1.85: +stacktrace"):
+            cxxflags.append("-DBOOST_STACKTRACE_LIBCXX_RUNTIME_MAY_CAUSE_MEMORY_LEAK")
 
         if cxxflags:
             options.append('cxxflags="{0}"'.format(" ".join(cxxflags)))

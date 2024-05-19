@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,6 +19,8 @@ class Pulseaudio(AutotoolsPackage):
 
     homepage = "https://www.freedesktop.org/wiki/Software/PulseAudio/"
     url = "https://freedesktop.org/software/pulseaudio/releases/pulseaudio-13.0.tar.xz"
+
+    license("LGPL-2.1-or-later")
 
     version("13.0", sha256="961b23ca1acfd28f2bc87414c27bb40e12436efcf2158d29721b1e89f3f28057")
 

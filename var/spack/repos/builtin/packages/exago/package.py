@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -34,6 +34,9 @@ class Exago(CMakePackage, CudaPackage, ROCmPackage):
     )
     version(
         "1.3.0", tag="v1.3.0", commit="58b039d746a6eac8e84b0afc01354cd58caec485", submodules=True
+    )
+    version(
+        "1.2.0", tag="v1.2.0", commit="255a214ec747b7bdde7a6d8151c083067b4d0907", submodules=True
     )
     version(
         "1.1.2", tag="v1.1.2", commit="db3bb16e19c09e01402071623258dae4d13e5133", submodules=True
@@ -124,14 +127,15 @@ class Exago(CMakePackage, CudaPackage, ROCmPackage):
             when="+{0} build_type=RelWithDebInfo".format(pkg[1]),
         )
 
-    depends_on(
-        "{0} build_type=Release".format("hiop+ginkgo ^ginkgo"),
-        when="+{0} build_type=Release".format("hiop ^hiop+ginkgo"),
-    )
-    depends_on(
-        "{0} build_type=Debug".format("hiop+ginkgo ^ginkgo"),
-        when="+{0} build_type=RelWithDebInfo".format("hiop ^hiop+ginkgo"),
-    )
+    with when("+hiop"):
+        depends_on("hiop")
+        with when("build_type=Release"):
+            depends_on("hiop build_type=Release")
+            depends_on("ginkgo build_type=Release", when="^hiop+ginkgo")
+        with when("build_type=Debug"):
+            depends_on("hiop build_type=RelWithDebInfo")
+            depends_on("ginkgo build_type=Debug", when="^hiop+ginkgo")
+
     # depends_on("hpctoolkit", when="with_profiling=hpctoolkit")
     # depends_on("tau", when="with_profiling=tau")
     # ^ need to depend when both hpctoolkit and tau
@@ -152,7 +156,7 @@ class Exago(CMakePackage, CudaPackage, ROCmPackage):
     # This is duplicated from HiOp
     # RAJA > 0.14 and Umpire > 6.0 require c++ std 14
     # We are working on supporting newer Umpire/RAJA versions
-    depends_on("raja@0.14.0:0.14", when="@1.1.0:+raja")
+    depends_on("raja@0.14.0:0.14 +shared", when="@1.1.0:+raja")
     depends_on("umpire@6.0.0:6", when="@1.1.0:+raja")
     depends_on("camp@0.2.3:0.2", when="@1.1.0:+raja")
     # This is no longer a requirement in RAJA > 0.14
@@ -179,7 +183,11 @@ class Exago(CMakePackage, CudaPackage, ROCmPackage):
         depends_on("umpire {0}".format(rocm_dep), when="+raja {0}".format(rocm_dep))
         depends_on("camp {0}".format(rocm_dep), when="+raja {0}".format(rocm_dep))
 
+    # CMake patches to support ~python and ~testing
     patch("exago-1.6.0.patch", when="@1.6.0")
+    patch("exago-1.5.0.patch", when="@1.5.0:1.5.1")
+    patch("exago-1.3.0.patch", when="@1.3.0:1.4.1")
+    patch("exago-1.1.0.patch", when="@1.1.0:1.2.0")
 
     flag_handler = build_system_flags
 

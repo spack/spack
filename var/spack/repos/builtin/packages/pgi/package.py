@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,7 +9,7 @@ from spack.package import *
 from spack.util.prefix import Prefix
 
 
-class Pgi(Package):
+class Pgi(Package, CompilerPackage):
     """PGI optimizing multi-core x64 compilers for Linux, MacOS & Windows
     with support for debugging and profiling of local MPI processes.
 
@@ -57,6 +57,13 @@ class Pgi(Package):
             return "file://{0}/pgilinux-20{1}-{2}-x86-64.tar.gz".format(
                 os.getcwd(), version.up_to(1), version.joined
             )
+
+    compiler_languages = ["c", "cxx", "fortran"]
+    c_names = ["pgcc"]
+    cxx_names = ["pgc++", "pgCC"]
+    fortran_names = ["pgfortran"]  # older names long deprecated
+    compiler_version_argument = "-V"
+    compiler_version_regex = r"pg[^ ]* ([0-9.]+)-[0-9]+ (?:LLVM )?[^ ]+ target on "
 
     def install(self, spec, prefix):
         # Enable the silent installation feature

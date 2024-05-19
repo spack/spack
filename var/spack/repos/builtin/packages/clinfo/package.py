@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class Clinfo(MakefilePackage):
     url = "https://github.com/Oblomov/clinfo/archive/2.2.18.04.06.tar.gz"
 
     maintainers("matthiasdiener")
+
+    license("CC0-1.0")
 
     version(
         "3.0.21.02.21", sha256="e52f5c374a10364999d57a1be30219b47fb0b4f090e418f2ca19a0c037c1e694"

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -296,8 +296,8 @@ class LineAnnotationEmitter(emitter.Emitter):
         if marked(self.event.value):
             self.saved = self.event.value
 
-    def write_line_break(self):
-        super().write_line_break()
+    def write_line_break(self, data=None):
+        super().write_line_break(data)
         if self.saved is None:
             _ANNOTATIONS.append(colorize("@K{---}"))
             return

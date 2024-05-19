@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class LuaLuajit(LuaImplPackage):
 
     homepage = "https://www.luajit.org"
     url = "https://luajit.org/download/LuaJIT-2.0.5.tar.gz"
+
+    license("MIT")
 
     version(
         "2.1.0-beta3", sha256="1ad2e34b111c802f9d0cdf019e986909123237a28c746b21295b63c9e785d9c3"

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class Sam2p(Package):
     git = homepage
 
     maintainers("robertu94")
+
+    license("GPL-2.0-or-later")
 
     version("master", branch="master")
     version("2021-05-04", commit="f3e9cc0a2df1880a63f9f37c96e3595bca890cfa")

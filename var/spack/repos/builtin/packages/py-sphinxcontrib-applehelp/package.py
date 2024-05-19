@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,6 +19,8 @@ class PySphinxcontribApplehelp(PythonPackage):
     # 'sphinxcontrib-applehelp' requires 'sphinx' at run-time. Don't bother trying to
     # import any modules for this package.
     import_modules: List[str] = []
+
+    license("BSD-2-Clause")
 
     version("1.0.4", sha256="828f867945bbe39817c210a1abfd1bc4895c8b73fcaade56d45357a348a07d7e")
     version("1.0.2", sha256="a072735ec80e7675e3f432fcae8610ecf509c5f1869d17e2eecff44389cdbc58")

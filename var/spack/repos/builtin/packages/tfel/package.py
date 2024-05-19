@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -32,6 +32,8 @@ class Tfel(CMakePackage):
     git = "https://github.com/thelfer/tfel.git"
     maintainers("thelfer")
 
+    license("CECILL-2.1")
+
     # development branches
     version("master", branch="master")
     version("rliv-4.2", branch="rliv-4.2")
@@ -56,7 +58,7 @@ class Tfel(CMakePackage):
     version("4.0.2", sha256="f5c8a285e00f334fd3e1a95f9a393fed393990ee827dae3766da1decfaa1074e")
     version("4.0.1", sha256="f54741b7e654cb12511ca68c6494a4789ba41b5ada4cd345ad2bc7da631309d1")
     version("4.0.0", sha256="7a0c32c8a9cd2fd65cbcb54fff802f303665d7cba5d46f92ff3d55f057c92845")
-    version("3.4.5", sha256="8092db9571df3d256a56ff269691a871a68b9b19ce163461531879a36e05a100")
+    version("3.4.5", sha256="064d6926106e0052829182087a025f58fc3e98dfb69967e0795d9cdb4e1500b9")
     version("3.4.4", sha256="a518a7a761fec6c92fab6dc9df5694c28aad2554c7c649d707dfdc71fe93d2ca")
     version("3.4.3", sha256="e58515effe57d473385fe0b592d9e1d1286c0901496c61268d9efd92a2550849")
     version("3.4.2", sha256="f39e65b2282fd3b108081388f161ba662407b192fed68fafe324c7528026a202")
@@ -178,6 +180,8 @@ class Tfel(CMakePackage):
             args.append("-Denable-python-bindings=OFF")
 
         if ("+python" in self.spec) or ("+python_bindings" in self.spec):
+            # Note: calls find_package(PythonLibs) before find_package(PythonInterp), so these
+            # variables are required.
             python = self.spec["python"]
             args.append("-DPYTHON_LIBRARY={0}".format(python.libs[0]))
             args.append("-DPYTHON_INCLUDE_DIR={0}".format(python.headers.directories[0]))

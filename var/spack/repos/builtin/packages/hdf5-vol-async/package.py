@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,6 +22,8 @@ class Hdf5VolAsync(CMakePackage):
     maintainers("hyoklee", "houjun", "jeanbez")
 
     tags = ["e4s"]
+
+    license("BSD-3-Clause-LBNL")
 
     version("develop", branch="develop")
     version("1.7", tag="v1.7", commit="70a22cf9863a7c1386d97be865342deb751ca501")

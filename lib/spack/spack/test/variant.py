@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -734,3 +734,40 @@ def test_conditional_value_comparable_to_bool(other):
     value = spack.variant.Value("98", when="@1.0")
     comparison = value == other
     assert comparison is False
+
+
+@pytest.mark.regression("40405")
+def test_wild_card_valued_variants_equivalent_to_str():
+    """
+    There was a bug prioro to PR 40406 in that variants with wildcard values "*"
+    were being overwritten in the variant constructor.
+    The expected/appropriate behavior is for it to behave like value=str and this
+    test demonstrates that the two are now equivalent
+    """
+    str_var = spack.variant.Variant(
+        name="str_var",
+        default="none",
+        values=str,
+        description="str variant",
+        multi=True,
+        validator=None,
+    )
+
+    wild_var = spack.variant.Variant(
+        name="wild_var",
+        default="none",
+        values="*",
+        description="* variant",
+        multi=True,
+        validator=None,
+    )
+
+    several_arbitrary_values = ("doe", "re", "mi")
+    # "*" case
+    wild_output = wild_var.make_variant(several_arbitrary_values)
+    wild_var.validate_or_raise(wild_output)
+    # str case
+    str_output = str_var.make_variant(several_arbitrary_values)
+    str_var.validate_or_raise(str_output)
+    # equivalence each instance already validated
+    assert str_output.value == wild_output.value

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,7 +11,7 @@ import urllib.error
 import urllib.parse
 import urllib.request
 from http.client import HTTPResponse
-from typing import NamedTuple, Tuple
+from typing import List, NamedTuple, Tuple
 from urllib.request import Request
 
 import llnl.util.tty as tty
@@ -27,6 +27,7 @@ import spack.spec
 import spack.stage
 import spack.traverse
 import spack.util.crypto
+import spack.util.url
 
 from .image import Digest, ImageReference
 
@@ -67,6 +68,42 @@ def with_query_param(url: str, param: str, value: str) -> str:
     return urllib.parse.urlunparse(
         parsed._replace(query=urllib.parse.urlencode(query, doseq=True))
     )
+
+
+def list_tags(ref: ImageReference, _urlopen: spack.oci.opener.MaybeOpen = None) -> List[str]:
+    """Retrieves the list of tags associated with an image, handling pagination."""
+    _urlopen = _urlopen or spack.oci.opener.urlopen
+    tags = set()
+    fetch_url = ref.tags_url()
+
+    while True:
+        # Fetch tags
+        request = Request(url=fetch_url)
+        response = _urlopen(request)
+        spack.oci.opener.ensure_status(request, response, 200)
+        tags.update(json.load(response)["tags"])
+
+        # Check for pagination
+        link_header = response.headers["Link"]
+
+        if link_header is None:
+            break
+
+        tty.debug(f"OCI tag pagination: {link_header}")
+
+        rel_next_value = spack.util.url.parse_link_rel_next(link_header)
+
+        if rel_next_value is None:
+            break
+
+        rel_next = urllib.parse.urlparse(rel_next_value)
+
+        if rel_next.scheme not in ("https", ""):
+            break
+
+        fetch_url = ref.endpoint(rel_next_value)
+
+    return sorted(tags)
 
 
 def upload_blob(
@@ -134,7 +171,7 @@ def upload_blob(
             return True
 
         # Otherwise, do another PUT request.
-        spack.oci.opener.ensure_status(response, 202)
+        spack.oci.opener.ensure_status(request, response, 202)
         assert "Location" in response.headers
 
         # Can be absolute or relative, joining handles both
@@ -143,19 +180,16 @@ def upload_blob(
         )
         f.seek(0)
 
-        response = _urlopen(
-            Request(
-                url=upload_url,
-                method="PUT",
-                data=f,
-                headers={
-                    "Content-Type": "application/octet-stream",
-                    "Content-Length": str(file_size),
-                },
-            )
+        request = Request(
+            url=upload_url,
+            method="PUT",
+            data=f,
+            headers={"Content-Type": "application/octet-stream", "Content-Length": str(file_size)},
         )
 
-        spack.oci.opener.ensure_status(response, 201)
+        response = _urlopen(request)
+
+        spack.oci.opener.ensure_status(request, response, 201)
 
     # print elapsed time and # MB/s
     _log_upload_progress(digest, file_size, time.time() - start)
@@ -164,7 +198,7 @@ def upload_blob(
 
 def upload_manifest(
     ref: ImageReference,
-    oci_manifest: dict,
+    manifest: dict,
     tag: bool = True,
     _urlopen: spack.oci.opener.MaybeOpen = None,
 ):
@@ -172,7 +206,7 @@ def upload_manifest(
 
     Args:
         ref: The image reference.
-        oci_manifest: The OCI manifest or index.
+        manifest: The manifest or index.
         tag: When true, use the tag, otherwise use the digest,
             this is relevant for multi-arch images, where the
             tag is an index, referencing the manifests by digest.
@@ -182,23 +216,23 @@ def upload_manifest(
     """
     _urlopen = _urlopen or spack.oci.opener.urlopen
 
-    data = json.dumps(oci_manifest, separators=(",", ":")).encode()
+    data = json.dumps(manifest, separators=(",", ":")).encode()
     digest = Digest.from_sha256(hashlib.sha256(data).hexdigest())
     size = len(data)
 
     if not tag:
         ref = ref.with_digest(digest)
 
-    response = _urlopen(
-        Request(
-            url=ref.manifest_url(),
-            method="PUT",
-            data=data,
-            headers={"Content-Type": oci_manifest["mediaType"]},
-        )
+    request = Request(
+        url=ref.manifest_url(),
+        method="PUT",
+        data=data,
+        headers={"Content-Type": manifest["mediaType"]},
     )
 
-    spack.oci.opener.ensure_status(response, 201)
+    response = _urlopen(request)
+
+    spack.oci.opener.ensure_status(request, response, 201)
     return digest, size
 
 

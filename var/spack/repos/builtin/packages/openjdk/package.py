@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,6 +18,12 @@ from spack.util.prefix import Prefix
 #    format returned by platform.system() and 'arch' by platform.machine()
 
 _versions = {
+    "21.0.0_35": {
+        "Linux-x86_64": (
+            "82f64c53acaa045370d6762ebd7441b74e6fda14b464d54d1ff8ca941ec069e6",
+            "https://github.com/adoptium/temurin21-binaries/releases/download/jdk-21%2B35/OpenJDK21U-jdk_x64_linux_hotspot_21_35.tar.gz",
+        )
+    },
     "17.0.8.1_1": {
         "Linux-x86_64": (
             "c25dfbc334068a48c19c44ce39ad4b8427e309ae1cfa83f23c102e78b8a6dcc0",
@@ -334,7 +340,7 @@ _versions = {
 class Openjdk(Package):
     """The free and opensource java implementation"""
 
-    homepage = "https://jdk.java.net"
+    homepage = "https://openjdk.org/"
     preferred_prefix = "11."
 
     preferred_defined = False
@@ -348,6 +354,7 @@ class Openjdk(Package):
 
             version(ver, sha256=pkg[0], url=pkg[1], preferred=is_preferred)
 
+    provides("java@21", when="@21.0:21")
     provides("java@17", when="@17.0:17")
     provides("java@16", when="@16.0:16")
     provides("java@11", when="@11.0:11")
@@ -366,6 +373,8 @@ class Openjdk(Package):
     extendable = True
 
     executables = ["^java$"]
+
+    skip_version_audit = ["platform=windows"]
 
     @classmethod
     def determine_version(cls, exe):

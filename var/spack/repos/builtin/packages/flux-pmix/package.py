@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,6 +18,7 @@ class FluxPmix(AutotoolsPackage):
     maintainers("grondo")
 
     version("main", branch="main")
+    version("0.5.0", sha256="f382800b1a342df0268146ea7ce33011299bf0c69a46ac8a52e87de6026c9322")
     version("0.4.0", sha256="f7f58891fc9d9a97a0399b3ab186f2cae30a75806ba0b4d4c1307f07b3f6d1bc")
     version("0.3.0", sha256="88edb2afaeb6058b56ff915105a36972acc0d83204cff7f4a4d2f65a5dee9d34")
     version("0.2.0", sha256="d09f1fe6ffe54f83be4677e1e727640521d8110090515d94013eba0f58216934")

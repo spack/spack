@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -263,8 +263,8 @@ def _fmt_name_and_default(variant):
     return color.colorize(f"@c{{{variant.name}}} @C{{[{_fmt_value(variant.default)}]}}")
 
 
-def _fmt_when(when, indent):
-    return color.colorize(f"{indent * ' '}@B{{when}} {color.cescape(when)}")
+def _fmt_when(when: "spack.spec.Spec", indent: int):
+    return color.colorize(f"{indent * ' '}@B{{when}} {color.cescape(str(when))}")
 
 
 def _fmt_variant_description(variant, width, indent):
@@ -327,7 +327,7 @@ def _variants_by_name_when(pkg):
     """Adaptor to get variants keyed by { name: { when: { [Variant...] } }."""
     # TODO: replace with pkg.variants_by_name(when=True) when unified directive dicts are merged.
     variants = {}
-    for name, (variant, whens) in pkg.variants.items():
+    for name, (variant, whens) in sorted(pkg.variants.items()):
         for when in whens:
             variants.setdefault(name, {}).setdefault(when, []).append(variant)
     return variants
@@ -441,7 +441,7 @@ def print_versions(pkg, args):
                 return "No URL"
 
         url = get_url(preferred) if pkg.has_code else ""
-        line = version("    {0}".format(pad(preferred))) + color.cescape(url)
+        line = version("    {0}".format(pad(preferred))) + color.cescape(str(url))
         color.cwrite(line)
 
         print()
@@ -464,7 +464,7 @@ def print_versions(pkg, args):
                 continue
 
             for v, url in vers:
-                line = version("    {0}".format(pad(v))) + color.cescape(url)
+                line = version("    {0}".format(pad(v))) + color.cescape(str(url))
                 color.cprint(line)
 
 
@@ -474,17 +474,8 @@ def print_virtuals(pkg, args):
     color.cprint("")
     color.cprint(section_title("Virtual Packages: "))
     if pkg.provided:
-        inverse_map = {}
-        for spec, whens in pkg.provided.items():
-            for when in whens:
-                if when not in inverse_map:
-                    inverse_map[when] = set()
-                inverse_map[when].add(spec)
-        for when, specs in reversed(sorted(inverse_map.items())):
-            line = "    %s provides %s" % (
-                when.colorized(),
-                ", ".join(s.colorized() for s in specs),
-            )
+        for when, specs in reversed(sorted(pkg.provided.items())):
+            line = "    %s provides %s" % (when.cformat(), ", ".join(s.cformat() for s in specs))
             print(line)
 
     else:
@@ -503,7 +494,9 @@ def print_licenses(pkg, args):
         pad = padder(pkg.licenses, 4)
         for when_spec in pkg.licenses:
             license_identifier = pkg.licenses[when_spec]
-            line = license("    {0}".format(pad(license_identifier))) + color.cescape(when_spec)
+            line = license("    {0}".format(pad(license_identifier))) + color.cescape(
+                str(when_spec)
+            )
             color.cprint(line)
 
 

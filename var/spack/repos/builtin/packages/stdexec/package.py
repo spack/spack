@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,7 +22,7 @@ class Stdexec(CMakePackage):
     depends_on("cmake@3.23.1:", type="build")
 
     conflicts("%gcc@:10")
-    conflicts("%clang@:13")
+    conflicts("%clang@:12")
 
     def build(self, spec, prefix):
         pass

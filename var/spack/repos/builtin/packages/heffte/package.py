@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,8 @@ class Heffte(CMakePackage, CudaPackage, ROCmPackage):
     tags = ["e4s", "ecp"]
 
     test_requires_compiler = True
+
+    license("BSD-3-Clause")
 
     version("develop", branch="master")
     version("2.4.0", sha256="02310fb4f9688df02f7181667e61c3adb7e38baf79611d80919d47452ff7881d")
@@ -62,7 +64,7 @@ class Heffte(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("mpi", type=("build", "run"))
 
     depends_on("fftw@3.3.8:", when="+fftw", type=("build", "run"))
-    depends_on("intel-mkl@2018.0.128:", when="+mkl", type=("build", "run"))
+    depends_on("intel-oneapi-mkl", when="+mkl", type=("build", "run"))
     depends_on("cuda@8.0:", when="+cuda", type=("build", "run"))
     depends_on("hip@3.8.0:", when="+rocm", type=("build", "run"))
     depends_on("rocfft@3.8.0:", when="+rocm", type=("build", "run"))
@@ -112,7 +114,7 @@ class Heffte(CMakePackage, CudaPackage, ROCmPackage):
             if "none" not in rocm_arch:
                 args.append("-DCMAKE_CXX_FLAGS={0}".format(self.hip_flags(rocm_arch)))
 
-            # See https://github.com/ROCmSoftwarePlatform/rocFFT/issues/322
+            # See https://github.com/ROCm/rocFFT/issues/322
             if self.spec.satisfies("^cmake@3.21.0:3.21.2"):
                 args.append(self.define("__skip_rocmclang", "ON"))
 

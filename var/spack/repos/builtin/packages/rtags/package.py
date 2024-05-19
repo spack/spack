@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class Rtags(CMakePackage):
     homepage = "https://github.com/Andersbakken/rtags/"
     url = "https://github.com/Andersbakken/rtags/releases/download/v2.38/rtags-2.38.tar.gz"
     maintainers("vmiheer")
+
+    license("GPL-3.0-or-later")
 
     version("2.38", sha256="e19d9cf5823cccc43266ca57c19ae0bb879cbe138511cb3f0343958860481a5d")
     version("2.20", sha256="9d73399421327147dc47b0ae5b95e12e8355f30291ad1954a78c0ef68b4b501f")

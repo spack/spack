@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,8 +15,11 @@ class Opencv(CMakePackage, CudaPackage):
     homepage = "https://opencv.org/"
     url = "https://github.com/opencv/opencv/archive/4.5.0.tar.gz"
     git = "https://github.com/opencv/opencv.git"
+    find_python_hints = False  # opencv uses custom OpenCVDetectPython.cmake
 
     maintainers("bvanessen", "adamjstewart")
+
+    license("BSD-3-Clause")
 
     version("master", branch="master")
     version("4.8.0", sha256="cbf47ecc336d2bff36b0dcd7d6c179a9bb59e805136af6b9670ca944aef889bd")
@@ -1024,14 +1027,13 @@ class Opencv(CMakePackage, CudaPackage):
             )
 
         # Python
-        python_exe = spec["python"].command.path
         python_lib = spec["python"].libs[0]
         python_include_dir = spec["python"].headers.directories[0]
 
         if "+python3" in spec:
             args.extend(
                 [
-                    self.define("PYTHON3_EXECUTABLE", python_exe),
+                    self.define("PYTHON3_EXECUTABLE", python.path),
                     self.define("PYTHON3_LIBRARY", python_lib),
                     self.define("PYTHON3_INCLUDE_DIR", python_include_dir),
                     self.define("PYTHON2_EXECUTABLE", ""),

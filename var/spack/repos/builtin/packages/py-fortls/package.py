@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class PyFortls(PythonPackage):
     pypi = "fortls/fortls-2.13.0.tar.gz"
 
     maintainers("RMeli")
+
+    license("MIT")
 
     version("2.13.0", sha256="23c5013e8dd8e1d65bf07be610d0827bc48aa7331a7a7ce13612d4c646d0db31")
 
