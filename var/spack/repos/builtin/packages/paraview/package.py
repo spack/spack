@@ -187,8 +187,7 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
 
     depends_on("gl@3.2:", when="+opengl2")
     depends_on("gl@1.2:", when="~opengl2")
-    depends_on("glew", when="~egl")
-    depends_on("glew gl=egl", when="+egl")
+    depends_on("glew")
 
     depends_on("osmesa", when="+osmesa")
     for p in ["linux", "cray"]:
