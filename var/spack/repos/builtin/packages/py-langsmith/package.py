@@ -15,7 +15,7 @@ class PyLangsmith(PythonPackage):
 
     version(
         "0.1.1",
-        sha256="10ff2b977a41e3f6351d1a4239d9bd57af0547aa909e839d2791e16cc197a6f9",
+        sha256="09df0c2ca9085105f97a4e4f281b083e312c99d162f3fe2b2d5eefd5c3692e60",
         expand=False,
     )
     version("0.0.11", sha256="7c1be28257d6c7279c85f81e6d8359d1006af3b1238fc198d13ca75c8fe421c8")
