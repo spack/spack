@@ -37,7 +37,7 @@ class AwscliV2(PythonPackage):
     variant("examples", default=True, description="Install code examples")
 
     @when("~examples")
-    @run_after("install")
+    @run_after("install", when="~examples")
     def post_install(self):
         examples_dir = join_path(python_purelib, "awscli", "examples")
         remove_directory_contents(examples_dir)
