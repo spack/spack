@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -32,13 +32,11 @@ class Dedisp(MakefilePackage, CudaPackage):
         )
         makefile.filter(r"^\s*INSTALL_DIR\s*\?=.*", "INSTALL_DIR ?= " + prefix)
 
-    def install(self, spec, prefix):
+    @run_before("install")
+    def preinstall(self, spec, prefix):
         # The $PREFIX/dedisp/include and $PREFIX/dedisp/lib directories don't seem
         # to be created automatically by the software's Makefile so manually create them
-        libdir = join_path(prefix, "lib")
-        incdir = join_path(prefix, "include")
+        libdir = join_path(prefix, 'lib')
+        incdir = join_path(prefix, 'include')
         mkdirp(libdir)
         mkdirp(incdir)
-
-        make()
-        make("install")
