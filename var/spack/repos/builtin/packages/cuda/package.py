@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -25,6 +25,104 @@ from spack.package import *
 
 preferred_ver = "11.8.0"
 _versions = {
+    "12.4.0": {
+        "Linux-aarch64": (
+            "b12bfe6c36d32ecf009a6efb0024325c5fc389fca1143f5f377ae2555936e803",
+            "https://developer.download.nvidia.com/compute/cuda/12.4.0/local_installers/cuda_12.4.0_550.54.14_linux_sbsa.run",
+        ),
+        "Linux-x86_64": (
+            "e6a842f4eca9490575cdb68b6b1bb78d47b95a897de48dee292c431892e57d17",
+            "https://developer.download.nvidia.com/compute/cuda/12.4.0/local_installers/cuda_12.4.0_550.54.14_linux.run",
+        ),
+        "Linux-ppc64le": (
+            "ef9a712daccf2805b4422f2301ff0eaa5c3ad41ef5d64b8626773bce7d1f41fe",
+            "https://developer.download.nvidia.com/compute/cuda/12.4.0/local_installers/cuda_12.4.0_550.54.14_linux_ppc64le.run",
+        ),
+    },
+    "12.3.2": {
+        "Linux-aarch64": (
+            "761b84e292b94c4d330f445d36326dfff90a418e909fb0baf3d6f03e24106d08",
+            "https://developer.download.nvidia.com/compute/cuda/12.3.2/local_installers/cuda_12.3.2_545.23.08_linux_sbsa.run",
+        ),
+        "Linux-x86_64": (
+            "24b2afc9f770d8cf43d6fa7adc2ebfd47c4084db01bdda1ce3ce0a4d493ba65b",
+            "https://developer.download.nvidia.com/compute/cuda/12.3.2/local_installers/cuda_12.3.2_545.23.08_linux.run",
+        ),
+        "Linux-ppc64le": (
+            "b876936fc80de10653523eadd846065db346b38ba6296f2d365772259cb2f198",
+            "https://developer.download.nvidia.com/compute/cuda/12.3.2/local_installers/cuda_12.3.2_545.23.08_linux_ppc64le.run",
+        ),
+    },
+    "12.3.1": {
+        "Linux-aarch64": (
+            "bce6bb8b293c33c3ed0c1b65120c70587cc29e1b94ea8679ebb14c32b3858b5e",
+            "https://developer.download.nvidia.com/compute/cuda/12.3.1/local_installers/cuda_12.3.1_545.23.08_linux_sbsa.run",
+        ),
+        "Linux-x86_64": (
+            "b73d18ccd5ff85bbae32b425dfb82729612ede65b07a37cd5e2b574190614038",
+            "https://developer.download.nvidia.com/compute/cuda/12.3.1/local_installers/cuda_12.3.1_545.23.08_linux.run",
+        ),
+        "Linux-ppc64le": (
+            "9da7e6e2beadc933aab73de79a84e133ddf03226371d3d7af83502748a978568",
+            "https://developer.download.nvidia.com/compute/cuda/12.3.1/local_installers/cuda_12.3.1_545.23.08_linux_ppc64le.run",
+        ),
+    },
+    "12.3.0": {
+        "Linux-aarch64": (
+            "9a8fb8acf46b88faf0d711bda3149e1706efbbae02fcb40ab72addfd0e9ce5df",
+            "https://developer.download.nvidia.com/compute/cuda/12.3.0/local_installers/cuda_12.3.0_545.23.06_linux_sbsa.run",
+        ),
+        "Linux-x86_64": (
+            "7c13face3af64d6e1648d6e3101d31c8111e747143acb0077d973c1690820422",
+            "https://developer.download.nvidia.com/compute/cuda/12.3.0/local_installers/cuda_12.3.0_545.23.06_linux.run",
+        ),
+        "Linux-ppc64le": (
+            "de15c04380ec35b194c07503bf434837bac5b427cf77b19a63962b1653d195d5",
+            "https://developer.download.nvidia.com/compute/cuda/12.3.0/local_installers/cuda_12.3.0_545.23.06_linux_ppc64le.run",
+        ),
+    },
+    "12.2.2": {
+        "Linux-aarch64": (
+            "4113a15e6b27a02638c72edeb5f89de4c9ea312febba12fc4cefff2edc882268",
+            "https://developer.download.nvidia.com/compute/cuda/12.2.2/local_installers/cuda_12.2.2_535.104.05_linux_sbsa.run",
+        ),
+        "Linux-x86_64": (
+            "2b39aae3e7618d9f59a3c8fa1f1bc61f29c0b0e0df75fb05076badb352952ef2",
+            "https://developer.download.nvidia.com/compute/cuda/12.2.2/local_installers/cuda_12.2.2_535.104.05_linux.run",
+        ),
+        "Linux-ppc64le": (
+            "18848278e7f2bd4b4481f5665633d7e3d46e9a562d175d5ff278218188b01342",
+            "https://developer.download.nvidia.com/compute/cuda/12.2.2/local_installers/cuda_12.2.2_535.104.05_linux_ppc64le.run",
+        ),
+    },
+    "12.2.1": {
+        "Linux-aarch64": (
+            "a9ae6bd02684c7acfb229484368bf2691d592767ce1aed10ae9aed92c81b9f09",
+            "https://developer.download.nvidia.com/compute/cuda/12.2.1/local_installers/cuda_12.2.1_535.86.10_linux_sbsa.run",
+        ),
+        "Linux-x86_64": (
+            "c51e814eaa756160a73289b1f35880cc38c18e1ddedc87f46f7ff0d1696bdb95",
+            "https://developer.download.nvidia.com/compute/cuda/12.2.1/local_installers/cuda_12.2.1_535.86.10_linux.run",
+        ),
+        "Linux-ppc64le": (
+            "8f1aa60cc1e14fd7853eeecd53a78b7dfb2b2da0512a312cc35e4f5b79454f94",
+            "https://developer.download.nvidia.com/compute/cuda/12.2.1/local_installers/cuda_12.2.1_535.86.10_linux_ppc64le.run",
+        ),
+    },
+    "12.2.0": {
+        "Linux-aarch64": (
+            "9c90d79bb63952cd30f1f57f9f8fe11e7a8967bba6f824df45d3464b5d37e5d8",
+            "https://developer.download.nvidia.com/compute/cuda/12.2.0/local_installers/cuda_12.2.0_535.54.03_linux_sbsa.run",
+        ),
+        "Linux-x86_64": (
+            "ecf3d2afadcbac029f0f4505785810d52d006e4b87ba79ff3f984336a2bbf518",
+            "https://developer.download.nvidia.com/compute/cuda/12.2.0/local_installers/cuda_12.2.0_535.54.03_linux.run",
+        ),
+        "Linux-ppc64le": (
+            "f7b5fde5f727b51c380c6199200d0525e8585475944ff8ad2791d06734f54230",
+            "https://developer.download.nvidia.com/compute/cuda/12.2.0/local_installers/cuda_12.2.0_535.54.03_linux_ppc64le.run",
+        ),
+    },
     "12.1.1": {
         "Linux-aarch64": (
             "45ea4cd860f0a26d3db8ce032530f2ee0b55abdd587545213d395a73623b4278",
@@ -494,7 +592,7 @@ class Cuda(Package):
     maintainers("ax3l", "Rombur")
     executables = ["^nvcc$"]
 
-    skip_version_audit = ["platform=darwin"]
+    skip_version_audit = ["platform=darwin", "platform=windows"]
 
     for ver, packages in _versions.items():
         key = "{0}-{1}".format(platform.system(), platform.machine())
@@ -554,6 +652,8 @@ class Cuda(Package):
 
     def setup_dependent_build_environment(self, env, dependent_spec):
         env.set("CUDAHOSTCXX", dependent_spec.package.compiler.cxx)
+        env.set("CUDA_HOME", self.prefix)
+        env.set("NVHPC_CUDA_HOME", self.prefix)
 
     @property
     def cmake_prefix_paths(self):
@@ -565,6 +665,7 @@ class Cuda(Package):
 
     def setup_run_environment(self, env):
         env.set("CUDA_HOME", self.prefix)
+        env.set("NVHPC_CUDA_HOME", self.prefix)
 
     def install(self, spec, prefix):
         if os.path.exists("/tmp/cuda-installer.log"):

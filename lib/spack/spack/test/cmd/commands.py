@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,7 +7,6 @@ import filecmp
 import os
 import shutil
 import subprocess
-import sys
 
 import pytest
 
@@ -57,6 +56,24 @@ def test_subcommands():
     assert "spack view symlink" in out2
     assert "spack rm" in out2
     assert "spack compiler add" in out2
+
+
+@pytest.mark.not_on_windows("subprocess not supported on Windows")
+def test_override_alias():
+    """Test that spack commands cannot be overriden by aliases."""
+
+    install = spack.main.SpackCommand("install", subprocess=True)
+    instal = spack.main.SpackCommand("instal", subprocess=True)
+
+    out = install(fail_on_error=False, global_args=["-c", "config:aliases:install:find"])
+    assert "install requires a package argument or active environment" in out
+    assert "Alias 'install' (mapping to 'find') attempts to override built-in command" in out
+
+    out = install(fail_on_error=False, global_args=["-c", "config:aliases:foo bar:find"])
+    assert "Alias 'foo bar' (mapping to 'find') contains a space, which is not supported" in out
+
+    out = instal(fail_on_error=False, global_args=["-c", "config:aliases:instal:find"])
+    assert "install requires a package argument or active environment" not in out
 
 
 def test_rst():
@@ -219,7 +236,8 @@ def test_fish_completion():
 def test_update_completion_arg(shell, tmpdir, monkeypatch):
     """Test the update completion flag."""
 
-    mock_infile = tmpdir.join("spack-completion.in")
+    tmpdir.join(shell).mkdir()
+    mock_infile = tmpdir.join(shell).join(f"spack-completion.{shell}")
     mock_outfile = tmpdir.join(f"spack-completion.{shell}")
 
     mock_args = {
@@ -253,9 +271,7 @@ def test_update_completion_arg(shell, tmpdir, monkeypatch):
 
 
 # Note: this test is never expected to be supported on Windows
-@pytest.mark.skipif(
-    sys.platform == "win32", reason="shell completion script generator fails on windows"
-)
+@pytest.mark.not_on_windows("Shell completion script generator fails on windows")
 @pytest.mark.parametrize("shell", ["bash", "fish"])
 def test_updated_completion_scripts(shell, tmpdir):
     """Make sure our shell tab completion scripts remain up-to-date."""
@@ -267,7 +283,7 @@ def test_updated_completion_scripts(shell, tmpdir):
         "and adding the changed files to your pull request."
     )
 
-    header = os.path.join(spack.paths.share_path, shell, "spack-completion.in")
+    header = os.path.join(spack.paths.share_path, shell, f"spack-completion.{shell}")
     script = "spack-completion.{0}".format(shell)
     old_script = os.path.join(spack.paths.share_path, script)
     new_script = str(tmpdir.join(script))

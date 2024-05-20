@@ -1,12 +1,13 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
 import stat
-import sys
 
 import pytest
+
+from llnl.util.symlink import readlink
 
 import spack.cmd.modules
 import spack.config
@@ -18,7 +19,10 @@ import spack.spec
 from spack.modules.common import UpstreamModuleIndex
 from spack.spec import Spec
 
-pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="does not run on windows")
+pytestmark = [
+    pytest.mark.not_on_windows("does not run on windows"),
+    pytest.mark.usefixtures("mock_modules_root"),
+]
 
 
 def test_update_dictionary_extending_list():
@@ -76,7 +80,7 @@ def test_modules_default_symlink(
 
     link_path = os.path.join(os.path.dirname(mock_module_filename), "default")
     assert os.path.islink(link_path)
-    assert os.readlink(link_path) == mock_module_filename
+    assert readlink(link_path) == mock_module_filename
 
     generator.remove()
     assert not os.path.lexists(link_path)
@@ -175,13 +179,14 @@ def test_load_installed_package_not_in_repo(install_mockery, mock_fetch, monkeyp
     """Test that installed packages that have been removed are still loadable"""
     spec = Spec("trivial-install-test-package").concretized()
     spec.package.do_install()
+    spack.modules.module_types["tcl"](spec, "default", True).write()
 
     def find_nothing(*args):
         raise spack.repo.UnknownPackageError("Repo package access is disabled for test")
 
     # Mock deletion of the package
     spec._package = None
-    monkeypatch.setattr(spack.repo.path, "get", find_nothing)
+    monkeypatch.setattr(spack.repo.PATH, "get", find_nothing)
     with pytest.raises(spack.repo.UnknownPackageError):
         spec.package
 
@@ -195,7 +200,6 @@ def test_load_installed_package_not_in_repo(install_mockery, mock_fetch, monkeyp
 def test_check_module_set_name(mutable_config):
     """Tests that modules set name are validated correctly and an error is reported if the
     name we require does not exist or is reserved by the configuration."""
-
     # Minimal modules.yaml config.
     spack.config.set(
         "modules",

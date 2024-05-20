@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,10 +6,11 @@ import os
 import posixpath
 import sys
 
+from llnl.path import convert_to_posix_path
+
 import spack.paths
 import spack.util.executable
 from spack.spec import Spec
-from spack.util.path import convert_to_posix_path
 
 description = "generate Windows installer"
 section = "admin"

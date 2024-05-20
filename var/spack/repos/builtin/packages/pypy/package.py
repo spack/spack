@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class Pypy(Package):
     hg = "https://foss.heptapod.net/pypy/pypy"
 
     maintainers("adamjstewart")
+
+    license("MIT")
 
     version(
         "3.10-v7.3.12", sha256="86e4e4eacc36046c6182f43018796537fe33a60e1d2a2cc6b8e7f91a5dcb3e42"
@@ -36,7 +38,7 @@ class Pypy(Package):
 
     depends_on("libffi", when="+ctypes")
     depends_on("pkgconfig", when="+ctypes", type="build")
-    depends_on("zlib", when="+zlib")
+    depends_on("zlib-api", when="+zlib")
     depends_on("bzip2", when="+bz2")
     depends_on("expat", when="+pyexpat")
     depends_on("sqlite", when="+sqlite3")

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class Portcullis(AutotoolsPackage):
     homepage = "https://github.com/EI-CoreBioinformatics/portcullis"
     url = "https://github.com/EI-CoreBioinformatics/portcullis/archive/refs/tags/Release-1.1.2.tar.gz"
 
+    license("GPL-3.0-only")
+
     version("1.2.3", sha256="172452b5cef12a8dcc2c1c68527000743114136ee63a0dbe307ac4e2a816bc99")
     version("1.1.2", sha256="5c581a7f827ffeecfe68107b7fe27ed60108325fd2f86a79d93f61b328687749")
 
@@ -22,7 +24,7 @@ class Portcullis(AutotoolsPackage):
     depends_on("boost")
     depends_on("m4", type="build")
 
-    depends_on("zlib", type="build")
+    depends_on("zlib-api", type="build")
     depends_on("samtools", type="build")
 
     depends_on("python@3.4:", type=("build", "run"))

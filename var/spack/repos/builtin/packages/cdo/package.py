@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,6 +20,21 @@ class Cdo(AutotoolsPackage):
 
     maintainers("skosukhin", "Try2Code")
 
+    version(
+        "2.4.0",
+        sha256="a4790fb8cc07f353b11f9bbe49218b8e4be8e5ae56aade8420bad390510b4d2c",
+        url="https://code.mpimet.mpg.de/attachments/download/29313/cdo-2.4.0.tar.gz",
+    )
+    version(
+        "2.3.0",
+        sha256="10c878227baf718a6917837527d4426c2d0022cfac4457c65155b9c57f091f6b",
+        url="https://code.mpimet.mpg.de/attachments/download/29019/cdo-2.3.0.tar.gz",
+    )
+    version(
+        "2.2.2",
+        sha256="419c77315244019af41a296c05066f474cccbf94debfaae9e2106da51bc7c937",
+        url="https://code.mpimet.mpg.de/attachments/download/28882/cdo-2.2.2.tar.gz",
+    )
     version(
         "2.2.0",
         sha256="679c8d105706caffcba0960ec5ddc4a1332c1b40c52f82c3937356999d8fadf2",
@@ -167,12 +182,13 @@ class Cdo(AutotoolsPackage):
     # We also need the backend of netcdf to be thread safe.
     depends_on("hdf5+threadsafe", when="+netcdf")
 
+    # Same in case hdf5 is used in the frontend
+    depends_on("hdf5+threadsafe", when="+hdf5")
+
     depends_on("grib-api", when="grib2=grib-api")
     depends_on("eccodes", when="grib2=eccodes")
 
     depends_on("szip", when="+szip")
-
-    depends_on("hdf5+threadsafe", when="+hdf5")
 
     depends_on("udunits", when="+udunits2")
     depends_on("libxml2", when="+libxml2")

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class Mptensor(CMakePackage):
 
     homepage = "https://github.com/smorita/mptensor"
     url = "https://github.com/smorita/mptensor/archive/v0.3.0.tar.gz"
+
+    license("LGPL-3.0-or-later")
 
     version("0.3.0", sha256="819395a91551bddb77958615042fcb935a4b67ee37f912b9a2ca5b49c71befae")
 

@@ -1,10 +1,9 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import sys
 
-from spack.build_environment import MakeExecutable, determine_number_of_jobs
 from spack.package import *
 from spack.util.executable import which_string
 
@@ -23,8 +22,11 @@ class Ninja(Package):
 
     executables = ["^ninja$"]
 
+    license("Apache-2.0")
+
     version("kitware", branch="features-for-fortran", git="https://github.com/Kitware/ninja.git")
     version("master", branch="master")
+    version("1.12.0", sha256="8b2c86cd483dc7fcb7975c5ec7329135d210099a89bc7db0590a07b0bbfe49a5")
     version("1.11.1", sha256="31747ae633213f1eda3842686f83c2aa1412e0f5691d1c14dbbcc67fe7400cea")
     version("1.11.0", sha256="3c6ba2e66400fe3f1ae83deb4b235faf3137ec20bd5b08c29bfc368db143e4c6")
     version("1.10.2", sha256="ce35865411f0490368a8fc383f29071de6690cbadc27704734978221f25e2bed")
@@ -56,7 +58,7 @@ class Ninja(Package):
     @on_package_attributes(run_tests=True)
     def configure_test(self):
         ninja = Executable("./ninja")
-        ninja("-j{0}".format(make_jobs), "ninja_test")
+        ninja(f"-j{make_jobs}", "ninja_test")
         ninja_test = Executable("./ninja_test")
         ninja_test()
 

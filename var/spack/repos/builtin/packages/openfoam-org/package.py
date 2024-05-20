@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -67,6 +67,8 @@ class OpenfoamOrg(Package):
     url = "https://github.com/OpenFOAM/OpenFOAM-6/archive/version-6.tar.gz"
     git = "https://github.com/OpenFOAM/OpenFOAM-dev.git"
 
+    license("GPL-3.0-or-later")
+
     version("develop", branch="master")
     version("10", sha256="59d712ba798ca44b989b6ac50bcb7c534eeccb82bcf961e10ec19fc8d84000cf")
     version("9", sha256="0c48fb56e2fbb4dd534112811364d3b2dc12106e670a6486b361e4f864b435ee")
@@ -87,6 +89,8 @@ class OpenfoamOrg(Package):
         "source", default=True, description="Install library/application sources and tutorials"
     )
     variant("metis", default=False, description="With metis decomposition")
+    variant("scotch", default=True, description="With scotch/ptscotch decomposition")
+    variant("zoltan", default=False, description="Enable Zoltan renumbering and decomposition")
     variant(
         "precision",
         default="dp",
@@ -96,13 +100,14 @@ class OpenfoamOrg(Package):
     )
 
     depends_on("mpi")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("flex")
     depends_on("cmake", type="build")
 
     # Require scotch with ptscotch - corresponds to standard OpenFOAM setup
-    depends_on("scotch~metis+mpi~int64", when="~int64")
-    depends_on("scotch~metis+mpi+int64", when="+int64")
+    depends_on("scotch~metis+mpi~int64", when="+scotch~int64")
+    depends_on("scotch~metis+mpi+int64", when="+scotch+int64")
+    depends_on("zoltan+shared", when="+zoltan")
 
     depends_on("metis@5:", when="+metis")
     depends_on("metis+int64", when="+metis+int64")
@@ -117,7 +122,7 @@ class OpenfoamOrg(Package):
         sha256="05d17e17f94e6fe8188a9c0b91ed34c9b62259414589d908c152a4c40fe6b7e2",
         when="@7",
     )
-    patch("50-etc.patch", when="@5.0:5.9")
+    patch("50-etc.patch", when="@5.0")
     patch("41-etc.patch", when="@4.1")
     patch("41-site.patch", when="@4.1:")
     patch("240-etc.patch", when="@:2.4.0")
@@ -233,8 +238,24 @@ class OpenfoamOrg(Package):
         # to build correctly!
         parent = os.path.dirname(self.stage.source_path)
         original = os.path.basename(self.stage.source_path)
-        target = "OpenFOAM-{0}".format(self.version)
-        # Could also grep through etc/bashrc for WM_PROJECT_VERSION
+
+        # Grep for WM_PROJECT_VERSION in etc/bashrc
+        #   e.g. "export WM_PROJECT_VERSION=5.x"
+        #
+        # note: WM_PROJECT is assumed to be OpenFOAM and the project folder is assumed to
+        #       be "OpenFOAM-${WM_PROJECT_VERSION}"
+        target = None
+        with open(join_path(self.stage.source_path, "etc/bashrc"), "r") as bashrc_file:
+            import re
+
+            for line in bashrc_file.readlines():
+                m = re.match("export WM_PROJECT_VERSION=(.*)", line)
+                if m:
+                    target = f"OpenFOAM-{m.group(1)}"
+                    break
+        if target is None:
+            raise InstallError("Failed to infer projet directory name from build script.")
+
         with working_dir(parent):
             if original != target and not os.path.lexists(target):
                 os.rename(original, target)
@@ -259,6 +280,13 @@ class OpenfoamOrg(Package):
         rewrite_environ_files(  # Adjust etc/bashrc and etc/cshrc
             edits, posix=join_path("etc", "bashrc"), cshell=join_path("etc", "cshrc")
         )
+        if self.spec.satisfies("@10:") and "+zoltan" in self.spec:
+            filter_file("libzoltan.a", "libzoltan.so", join_path("src", "renumber", "Allwmake"))
+            filter_file(
+                "libzoltan.a",
+                "libzoltan.so",
+                join_path("src", "parallel", "decompose", "Allwmake"),
+            )
 
     def configure(self, spec, prefix):
         """Make adjustments to the OpenFOAM configuration files in their various
@@ -288,17 +316,28 @@ class OpenfoamOrg(Package):
         self.etc_config = {
             "CGAL": {},
             "scotch": {},
+            "zoltan": {},
             "metis": {},
             "paraview": [],
             "gperftools": [],  # Currently unused
         }
 
-        if True:
+        if "+scotch" in spec:
             self.etc_config["scotch"] = {
                 "SCOTCH_ARCH_PATH": spec["scotch"].prefix,
                 # For src/parallel/decompose/Allwmake
                 "SCOTCH_VERSION": "scotch-{0}".format(spec["scotch"].version),
             }
+
+        if "+zoltan" in spec:
+            if spec.satisfies("@:9"):
+                self.etc_prefs["ZOLTAN_ARCH_PATH"] = spec["zoltan"].prefix
+                self.etc_prefs["ZOLTAN_VERSION"] = "Zoltan-{0}".format(spec["zoltan"].version)
+            else:
+                self.etc_config["zoltan"] = {
+                    "ZOLTAN_ARCH_PATH": spec["zoltan"].prefix,
+                    "ZOLTAN_VERSION": "Zoltan-{0}".format(spec["zoltan"].version),
+                }
 
         if "+metis" in spec:
             self.etc_config["metis"] = {"METIS_ARCH_PATH": spec["metis"].prefix}

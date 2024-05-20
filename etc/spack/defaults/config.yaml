@@ -101,6 +101,12 @@ config:
   verify_ssl: true
 
 
+  # This is where custom certs for proxy/firewall are stored.
+  # It can be a path or environment variable. To match ssl env configuration
+  # the default is the environment variable SSL_CERT_FILE
+  ssl_certs: $SSL_CERT_FILE
+
+
   # Suppress gpg warnings from binary package verification
   # Only suppresses warnings, gpg failure will still fail the install
   # Potential rationale to set True: users have already explicitly trusted the
@@ -229,3 +235,11 @@ config:
   flags:
     # Whether to keep -Werror flags active in package builds.
     keep_werror: 'none'
+
+  # A mapping of aliases that can be used to define new commands. For instance,
+  # `sp: spec -I` will define a new command `sp` that will execute `spec` with
+  # the `-I` argument. Aliases cannot override existing commands.
+  aliases:
+    concretise: concretize
+    containerise: containerize
+    rm: remove

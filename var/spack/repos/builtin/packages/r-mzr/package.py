@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -40,6 +40,6 @@ class RMzr(RPackage):
     depends_on("r-ncdf4", type=("build", "run"), when="@2.16.2:")
     depends_on("r-rhdf5lib@1.1.4:", type=("build", "run"), when="@2.14.0:")
     depends_on("gmake", type="build")
-    depends_on("zlib")
+    depends_on("zlib-api")
 
     depends_on("r-zlibbioc", type=("build", "run"), when="@:2.28.0")

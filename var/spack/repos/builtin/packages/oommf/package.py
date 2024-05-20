@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -40,6 +40,8 @@ class Oommf(Package):
     url = "https://github.com/fangohr/oommf/archive/refs/tags/20a1_20180930_ext.tar.gz"
 
     maintainers("fangohr")
+
+    license("TCL")
 
     version(
         "20b0_20220930",
@@ -168,15 +170,15 @@ class Oommf(Package):
     def configure(self, spec, prefix):
         # change into directory with source code
         with working_dir(self.get_oommf_source_root()):
-            configure = Executable("./oommf.tcl pimake distclean")
-            configure()
-            configure2 = Executable("./oommf.tcl pimake upgrade")
-            configure2()
+            configure = Executable("./oommf.tcl")
+            configure("pimake", "distclean")
+            configure2 = Executable("./oommf.tcl")
+            configure2("pimake", "upgrade")
 
     def build(self, spec, prefix):
         with working_dir(self.get_oommf_source_root()):
-            make = Executable("./oommf.tcl pimake ")
-            make()
+            make = Executable("./oommf.tcl")
+            make("pimake")
 
     def install(self, spec, prefix):
         # keep a copy of all the tcl files and everything oommf created.

@@ -1,9 +1,7 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-
 from spack.package import *
 
 
@@ -18,6 +16,11 @@ class Meson(PythonPackage):
 
     maintainers("eli-schwartz", "michaelkuhn")
 
+    license("Apache-2.0")
+
+    version("1.3.2", sha256="683082fb3c5cddf203b21d29bdf4c227e2f7964da5324a15e1a5f7db94322b4b")
+    version("1.2.2", sha256="1caa0ef6082e311bdca9836e7907f548b8c3f041a42ed41f0ff916b83ac7dddd")
+    version("1.2.1", sha256="e1f3b32b636cc86496261bd89e63f00f206754697c7069788b62beed5e042713")
     version("1.2.0", sha256="603489f0aaa6305f806c6cc4a4455a965f22290fc74f65871f589b002110c790")
     version("1.1.1", sha256="1c3b9e1a3a36b51adb5de498d582fd5cbf6763fadbcf151de9f2a762e02bd2e6")
     version("1.1.0", sha256="f29a3e14062043d75e82d16f1e41856e6b1ed7a7c016e10c7b13afa7ee6364cc")
@@ -83,6 +86,9 @@ class Meson(PythonPackage):
     # https://github.com/mesonbuild/meson/pull/10909
     # https://github.com/mesonbuild/meson/pull/9850
     patch("oneapi.patch", when="@0.62:0.63 %oneapi")
+
+    # Python 3.12 detection support
+    patch("python-3.12-support.patch", when="@1.1:1.2.2")
 
     executables = ["^meson$"]
 

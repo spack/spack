@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ from typing import IO, Any, Callable, ContextManager, Dict, Generator, Optional,
 
 from llnl.util import lang, tty
 
-import spack.util.string
+from ..string import plural
 
 if sys.platform != "win32":
     import fcntl
@@ -143,7 +143,7 @@ class OpenFileTracker:
     def release_by_stat(self, stat):
         key = (stat.st_dev, stat.st_ino, os.getpid())
         open_file = self._descriptors.get(key)
-        assert open_file, "Attempted to close non-existing inode: %s" % stat.st_inode
+        assert open_file, "Attempted to close non-existing inode: %s" % stat.st_ino
 
         open_file.refs -= 1
         if not open_file.refs:
@@ -169,7 +169,7 @@ def _attempts_str(wait_time, nattempts):
     if nattempts <= 1:
         return ""
 
-    attempts = spack.util.string.plural(nattempts, "attempt")
+    attempts = plural(nattempts, "attempt")
     return " after {} and {}".format(lang.pretty_seconds(wait_time), attempts)
 
 
@@ -813,10 +813,6 @@ class LockDowngradeError(LockError):
     def __init__(self, path):
         msg = "Cannot downgrade lock from write to read on file: %s" % path
         super().__init__(msg)
-
-
-class LockLimitError(LockError):
-    """Raised when exceed maximum attempts to acquire a lock."""
 
 
 class LockTimeoutError(LockError):

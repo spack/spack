@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -50,21 +50,41 @@ class Ascent(CMakePackage, CudaPackage):
 
     maintainers("cyrush")
 
+    license("BSD-3-Clause")
+
     version("develop", branch="develop", submodules=True)
 
-    version("0.9.2", tag="v0.9.2", submodules=True, preferred=True)
+    version(
+        "0.9.2",
+        tag="v0.9.2",
+        commit="b842516d12640e4a0d9433a18c7249440ef6fc3d",
+        submodules=True,
+        preferred=True,
+    )
 
-    version("0.9.1", tag="v0.9.1", submodules=True)
+    version(
+        "0.9.1", tag="v0.9.1", commit="027a2fe184f65a4923817a8cdfed0b0c61c2c75a", submodules=True
+    )
 
-    version("0.9.0", tag="v0.9.0", submodules=True)
+    version(
+        "0.9.0", tag="v0.9.0", commit="a31c88c579c8d0026e0025de8bace0cf22f6305b", submodules=True
+    )
 
-    version("0.8.0", tag="v0.8.0", submodules=True)
+    version(
+        "0.8.0", tag="v0.8.0", commit="08504374908518e013d7fe8d8882cfb1c2378e3b", submodules=True
+    )
 
-    version("0.7.1", tag="v0.7.1", submodules=True)
+    version(
+        "0.7.1", tag="v0.7.1", commit="79d35b2f48e92eb151313f0217e9bd7c15779582", submodules=True
+    )
 
-    version("0.7.0", tag="v0.7.0", submodules=True)
+    version(
+        "0.7.0", tag="v0.7.0", commit="cfed1b0a469e4dcc970fd7e0bcd78b522d97ea53", submodules=True
+    )
 
-    version("0.6.0", tag="v0.6.0", submodules=True)
+    version(
+        "0.6.0", tag="v0.6.0", commit="9ade37b0a9ea495e45adb25cda7498c0bf9465c5", submodules=True
+    )
 
     ###########################################################################
     # package variants
@@ -165,7 +185,10 @@ class Ascent(CMakePackage, CudaPackage):
     # RAJA and Umpire
     #######################
     depends_on("raja", when="+raja")
+    depends_on("raja+openmp", when="+raja +openmp")
+    depends_on("raja~openmp", when="+raja ~openmp")
     depends_on("umpire", when="+umpire")
+    depends_on("umpire@:2023.06.0", when="@:0.9.2 +umpire")
 
     #######################
     # BabelFlow
@@ -176,37 +199,42 @@ class Ascent(CMakePackage, CudaPackage):
     #######################
     # VTK-m
     #######################
-    depends_on("vtk-m@2.0:", when="@0.9.2: +vtkh")
-    depends_on("vtk-m@1.9:1.9", when="@0.9.0: +vtkh")
+    with when("+vtkh"):
+        depends_on("vtk-m +doubleprecision ~64bitids")
+        depends_on("vtk-m@2.0:", when="@0.9.2:")
+        # 2.1 support needs commit e52b7bb8c9fd131f2fd49edf58037cc5ef77a166
+        depends_on("vtk-m@:2.0", when="@:0.9.2")
+        depends_on("vtk-m@1.9", when="@0.9.0:0.9.1")
 
-    depends_on("vtk-m~tbb", when="@0.9.0: +vtkh")
-    depends_on("vtk-m+openmp", when="@0.9.0: +vtkh+openmp")
-    depends_on("vtk-m~openmp", when="@0.9.0: +vtkh~openmp")
-    depends_on("vtk-m~cuda", when="@0.9.0: +vtkh~cuda")
-    depends_on("vtk-m+cuda", when="@0.9.0: +vtkh+cuda")
-    depends_on("vtk-m+fpic", when="@0.8.0: +vtkh")
-    depends_on("vtk-m~shared+fpic", when="@0.8.0: +vtkh~shared")
-    # Ascent defaults to C++11
-    depends_on("kokkos std=11", when="+vtkh ^vtk-m +kokkos")
+        depends_on("vtk-m~tbb", when="@0.9.0:")
+        depends_on("vtk-m+openmp", when="@0.9.0: +openmp")
+        depends_on("vtk-m~openmp", when="@0.9.0: ~openmp")
+        depends_on("vtk-m~cuda", when="@0.9.0: ~cuda")
+        depends_on("vtk-m+cuda", when="@0.9.0: +cuda")
+        depends_on("vtk-m+fpic", when="@0.8.0:")
+        depends_on("vtk-m~shared+fpic", when="@0.8.0: ~shared")
+        # Ascent defaults to C++11
+        depends_on("kokkos cxxstd=11", when="+vtkh ^vtk-m +kokkos")
 
-    #######################
-    # VTK-h
-    #######################
-    # Ascent 0.9.0 includes VTK-h, prior to 0.9.0
-    # VTK-h was developed externally
-    depends_on("vtk-h@:0.7", when="@:0.7 +vtkh")
-    depends_on("vtk-h@0.8.1:", when="@0.8:0.8 +vtkh")
-    # propagate relevent variants to vtk-h
-    depends_on("vtk-h+openmp", when="@:0.8.0 +vtkh+openmp")
-    depends_on("vtk-h~openmp", when="@:0.8.0 +vtkh~openmp")
-    depends_on("vtk-h+cuda", when="@:0.8.0 +vtkh+cuda")
-    depends_on("vtk-h~cuda", when="@:0.8.0 +vtkh~cuda")
+        #######################
+        # VTK-h
+        #######################
+        # Ascent 0.9.0 includes VTK-h, prior to 0.9.0
+        # VTK-h was developed externally
+        depends_on("vtk-h@:0.7", when="@:0.7")
+        depends_on("vtk-h@0.8.1:", when="@0.8:0.8")
+        # propagate relevant variants to vtk-h
+        depends_on("vtk-h+openmp", when="@:0.8.0 +openmp")
+        depends_on("vtk-h~openmp", when="@:0.8.0 ~openmp")
+        depends_on("vtk-h+cuda", when="@:0.8.0 +cuda")
+        depends_on("vtk-h~cuda", when="@:0.8.0 ~cuda")
+        depends_on("vtk-h+shared", when="@:0.8.0 +shared")
+        depends_on("vtk-h~shared", when="@:0.8.0 ~shared")
+        # When using VTK-h ascent also needs VTK-m
+        depends_on("vtk-m@:1.7", when="@:0.8.0")
+        depends_on("vtk-m+testlib", when="@:0.8.0 +test")
+
     propagate_cuda_arch("vtk-h", "@:0.8.0 +vtkh")
-    depends_on("vtk-h+shared", when="@:0.8.0 +vtkh+shared")
-    depends_on("vtk-h~shared", when="@:0.8.0 +vtkh~shared")
-    # When using VTK-h ascent also needs VTK-m
-    depends_on("vtk-m@:1.7", when="@:0.8.0 +vtkh")
-    depends_on("vtk-m+testlib", when="@:0.8.0 +vtkh+test^vtk-m")
 
     # mfem
     depends_on("mfem~threadsafe~openmp+conduit", when="+mfem")
@@ -467,7 +495,7 @@ class Ascent(CMakePackage, CudaPackage):
             cfg.write("# Enable python module builds\n")
             cfg.write(cmake_cache_entry("ENABLE_PYTHON", "ON"))
             cfg.write("# python from spack \n")
-            cfg.write(cmake_cache_entry("PYTHON_EXECUTABLE", spec["python"].command.path))
+            cfg.write(cmake_cache_entry("PYTHON_EXECUTABLE", python.path))
             try:
                 cfg.write("# python module install dir\n")
                 cfg.write(cmake_cache_entry("PYTHON_MODULE_INSTALL_PREFIX", python_platlib))

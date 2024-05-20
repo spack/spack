@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -28,8 +28,13 @@ class Plumed(AutotoolsPackage):
     git = "https://github.com/plumed/plumed2.git"
     maintainers("marcodelapierre")
 
+    license("LGPL-3.0-or-later")
+
     version("master", branch="master")
 
+    version("2.9.0", sha256="612d2387416b5f82dd8545709921440370e144fd46cef633654cf0ee43bac5f8")
+
+    version("2.8.3", sha256="e98da486e252cdf290b0b5b2f3f021409ea0d2d775ab609a6ad68fc1ab143a3b")
     version("2.8.2", sha256="a2064bacba1dde36b05aaf351ba4b7e6d30a165b332b0a83b7a6db04b477be9f")
     version("2.8.1", sha256="f56bc9266c8a47241385c595717c2734a9b67148a7f4122b808bc0733710173e")
     version("2.8.0", sha256="8357eca6f280125037ad4e7c427f96f2af2f60ddfedce1a2e36e1e1cc3bff32b")
@@ -182,7 +187,7 @@ class Plumed(AutotoolsPackage):
     )
 
     # Dependencies. LAPACK and BLAS are recommended but not essential.
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("blas")
     depends_on("lapack")
     # For libmatheval support through the 'function' module

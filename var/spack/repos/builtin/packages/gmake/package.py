@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,17 +6,18 @@
 import os
 import re
 
-from spack.build_environment import MakeExecutable, determine_number_of_jobs
 from spack.package import *
 
 
-class Gmake(AutotoolsPackage, GNUMirrorPackage):
+class Gmake(Package, GNUMirrorPackage):
     """GNU Make is a tool which controls the generation of executables and
     other non-source files of a program from the program's source files."""
 
     homepage = "https://www.gnu.org/software/make/"
     gnu_mirror_path = "make/make-4.2.1.tar.gz"
     maintainers("haampie")
+
+    license("GPL-3.0-only")
 
     # Stable releases
     version("4.4.1", sha256="dd16fb1d67bfab79a72f5e8390735c49e3e8e70b4945a15ab1f81ddb78658fb3")
@@ -65,17 +66,19 @@ class Gmake(AutotoolsPackage, GNUMirrorPackage):
         return match.group(1) if match else None
 
     def configure_args(self):
-        args = []
-        args.extend(self.with_or_without("guile"))
-        args.append("--disable-nls")
-        return args
-
-    def build(self, spec, prefix):
-        with working_dir(self.build_directory):
-            Executable(os.path.join(self.stage.source_path, "build.sh"))()
+        return [
+            "--with-guile" if self.spec.satisfies("+guile") else "--without-guile",
+            "--disable-nls",
+            # configure needs make to enable dependency tracking, disable explicitly
+            "--disable-dependency-tracking",
+        ]
 
     def install(self, spec, prefix):
-        with working_dir(self.build_directory):
+        configure = Executable(join_path(self.stage.source_path, "configure"))
+        build_sh = Executable(join_path(self.stage.source_path, "build.sh"))
+        with working_dir(self.build_directory, create=True):
+            configure(f"--prefix={prefix}", *self.configure_args())
+            build_sh()
             os.mkdir(prefix.bin)
             install("make", prefix.bin)
             os.symlink("make", prefix.bin.gmake)

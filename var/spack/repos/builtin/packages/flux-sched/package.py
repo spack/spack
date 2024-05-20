@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,11 +6,13 @@
 import os
 
 import spack.util.executable
+from spack.build_systems.autotools import AutotoolsBuilder
+from spack.build_systems.cmake import CMakeBuilder
 from spack.package import *
 
 
-class FluxSched(AutotoolsPackage):
-    """A scheduler for flux-core (pre-alpha)"""
+class FluxSched(CMakePackage, AutotoolsPackage):
+    """A scheduler for flux-core"""
 
     homepage = "https://github.com/flux-framework/flux-sched"
     url = "https://github.com/flux-framework/flux-sched/releases/download/v0.5.0/flux-sched-0.5.0.tar.gz"
@@ -19,7 +21,15 @@ class FluxSched(AutotoolsPackage):
 
     maintainers("grondo")
 
+    license("LGPL-3.0-only")
+
     version("master", branch="master")
+    version("0.33.1", sha256="d0a1e504226d69fa8a247e9090d94ccc5e5f5fb028aab805f9cd95379bd8b1b3")
+    version("0.33.0", sha256="d2e97121aed29bb1c6bfac602d890edb2f0a18d5303205b266a33c66fff1d61c")
+    version("0.32.0", sha256="f0b88881f0154057de3dd5485a3e1cfc0b9b64c98052bda7d5fed7c05b5e02f3")
+    version("0.31.0", sha256="4440156b7f2d43e3db2cbfa0dbc43671074c397525f6b97e3748c3d96a035cdb")
+    version("0.30.0", sha256="1ccb2e53f4caede0233f19b2707e868f0cee9d2c957a06f97c22936ba9a43552")
+    version("0.29.0", sha256="b93b18788e677535aa8ef945cdbeeced6d1408a4d16cb4a816ead53f31dd78d2")
     version("0.28.0", sha256="9431c671bed5d76fd95b4a4a7f36224d4bf76f416a2a1a5c4908f3ca790d434d")
     version("0.27.0", sha256="1e131924440c904fa0c925b7aa14c47b97f4e67b43af7efd2ebc0ef7ce90eb7c")
     version("0.26.0", sha256="184faec800cf45952ef79bda113f710bf91a05be584034d36a3234627d4a54c7")
@@ -81,6 +91,18 @@ class FluxSched(AutotoolsPackage):
     depends_on("automake", type="build", when="@master")
     depends_on("libtool", type="build", when="@master")
 
+    # Set default to cmake so master (and branches) use it
+    build_system(
+        conditional("cmake", when="@0.29.0:"),
+        conditional("autotools", when="@:0.28.0"),
+        default="cmake",
+    )
+
+    # Required dependencies
+    with when("build_system=cmake"):
+        generator("ninja")
+        depends_on("cmake@3.18:", type="build")
+
     # Disable t5000-valgrind.t by default due to false positives not yet
     # in the suppressions file. (This patch will be in v0.21.0)
     patch("no-valgrind.patch", when="@:0.20.0")
@@ -136,19 +158,6 @@ class FluxSched(AutotoolsPackage):
         filter_file("NULL", "nullptr", "resource/schema/sched_data.hpp")
         filter_file("size_t", "std::size_t", "resource/planner/planner.h")
 
-    def configure_args(self):
-        args = []
-        if self.spec.satisfies("@0.9.0:"):
-            args.append("CXXFLAGS=-Wno-uninitialized")
-        if self.spec.satisfies("%clang@12:"):
-            args.append("CXXFLAGS=-Wno-defaulted-function-deleted")
-        if self.spec.satisfies("%oneapi"):
-            args.append("CXXFLAGS=-Wno-tautological-constant-compare")
-        # flux-sched's ax_boost is sometimes weird about non-system locations
-        # explicitly setting the path guarantees success
-        args.append("--with-boost={0}".format(self.spec["boost"].prefix))
-        return args
-
     @property
     def lua_version(self):
         return self.spec["lua"].version.up_to(2)
@@ -173,3 +182,27 @@ class FluxSched(AutotoolsPackage):
         env.prepend_path("FLUX_MODULE_PATH", self.prefix.lib.flux.modules.sched)
         env.prepend_path("FLUX_EXEC_PATH", self.prefix.libexec.flux.cmd)
         env.prepend_path("FLUX_RC_EXTRA", self.prefix.etc.flux)
+
+
+class CMakeBuilder(CMakeBuilder):
+    def cmake_args(self):
+        ver_in_src = os.path.exists(os.path.join(self.stage.source_path, "flux-sched.ver"))
+        # flux-sched before v0.33 does not correctly set the version even when the file is present.
+        if self.spec.satisfies("@:0.33") or not ver_in_src:
+            return [self.define("FLUX_SCHED_VER", self.spec.version)]
+        return []
+
+
+class AutotoolsBuilder(AutotoolsBuilder):
+    def configure_args(self):
+        args = []
+        if self.spec.satisfies("@0.9.0:"):
+            args.append("CXXFLAGS=-Wno-uninitialized")
+        if self.spec.satisfies("%clang@12:"):
+            args.append("CXXFLAGS=-Wno-defaulted-function-deleted")
+        if self.spec.satisfies("%oneapi"):
+            args.append("CXXFLAGS=-Wno-tautological-constant-compare")
+        # flux-sched's ax_boost is sometimes weird about non-system locations
+        # explicitly setting the path guarantees success
+        args.append("--with-boost={0}".format(self.spec["boost"].prefix))
+        return args

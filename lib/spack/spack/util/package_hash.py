@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -337,7 +337,7 @@ def package_ast(spec, filter_multimethods=True, source=None):
     spec = spack.spec.Spec(spec)
 
     if source is None:
-        filename = spack.repo.path.filename_for_package_name(spec.name)
+        filename = spack.repo.PATH.filename_for_package_name(spec.name)
         with open(filename) as f:
             source = f.read()
 

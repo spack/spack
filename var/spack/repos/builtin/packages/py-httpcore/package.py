@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class PyHttpcore(PythonPackage):
 
     homepage = "https://github.com/encode/httpcore"
     pypi = "httpcore/httpcore-0.11.0.tar.gz"
+
+    license("BSD-3-Clause")
 
     version("0.16.3", sha256="c5d6f04e2fc530f39e0c077e6a30caa53f1451096120f1f38b954afd0b17c0cb")
     version("0.14.7", sha256="7503ec1c0f559066e7e39bc4003fd2ce023d01cf51793e3c173b864eb456ead1")

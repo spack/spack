@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,6 +19,8 @@ class Ftk(CMakePackage):
     # notify when the package is updated.
     maintainers("hguo")
 
+    license("MIT")
+
     version("master", branch="master")
     version("dev", branch="dev")
     version("0.0.7.1", sha256="6090fd436f971316062dbb4fcbf2c44603ed5c29341df8f2b80b85770a3bcda2")
@@ -28,14 +30,14 @@ class Ftk(CMakePackage):
     version("0.0.4", sha256="1674904da8d88dbd4c7d2b6a2629883f0444e70aefc99b48d285735d394897fa")
 
     # variants
-    variant("adios2", default=False)
-    variant("cuda", default=False)
-    variant("gmp", default=False)
-    variant("hdf5", default=False)
-    variant("metis", default=False)
-    variant("mpi", default=False)
-    variant("netcdf", default=False)
-    variant("vtk", default=False)
+    variant("adios2", default=False, description="Use ADIOS2")
+    variant("cuda", default=False, description="Use CUDA")
+    variant("gmp", default=False, description="Use GMP")
+    variant("hdf5", default=False, description="Use HDF5")
+    variant("metis", default=False, description="Use METIS")
+    variant("mpi", default=False, description="Use MPI")
+    variant("netcdf", default=False, description="Use NetCDF")
+    variant("vtk", default=False, description="Use VTK")
 
     # optional dependencies
     depends_on("adios2", when="+adios2")

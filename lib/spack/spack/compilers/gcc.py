@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -98,6 +98,28 @@ class Gcc(spack.compiler.Compiler):
             return "-std=c++1z"
         else:
             return "-std=c++17"
+
+    @property
+    def cxx20_flag(self):
+        if self.real_version < Version("8.0"):
+            raise spack.compiler.UnsupportedCompilerFlag(
+                self, "the C++20 standard", "cxx20_flag", "< 8.0"
+            )
+        elif self.real_version < Version("11.0"):
+            return "-std=c++2a"
+        else:
+            return "-std=c++20"
+
+    @property
+    def cxx23_flag(self):
+        if self.real_version < Version("11.0"):
+            raise spack.compiler.UnsupportedCompilerFlag(
+                self, "the C++23 standard", "cxx23_flag", "< 11.0"
+            )
+        elif self.real_version < Version("14.0"):
+            return "-std=c++2b"
+        else:
+            return "-std=c++23"
 
     @property
     def c99_flag(self):

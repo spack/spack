@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,8 @@ class Redset(CMakePackage):
 
     maintainers("CamStan", "gonsie")
 
+    license("MIT")
+
     version("main", branch="main")
     version("0.3.0", sha256="007ca5e7e5f4400e22ad7bca82e366cd51c73f28067c955cc16d7d0ff0c06a1b")
     version("0.2.0", sha256="0438b0ba56dafcd5694a8fceeb5a932901307353e056ab29817d30b8387f787f")
@@ -27,7 +29,7 @@ class Redset(CMakePackage):
     depends_on("mpi")
     depends_on("kvtree+mpi")
     depends_on("rankstr")
-    depends_on("zlib", type="link")
+    depends_on("zlib-api", type="link")
 
     depends_on("kvtree@:1.3.0", when="@:0.2.0")
     depends_on("kvtree@1.4.0:", when="@0.3.0:")

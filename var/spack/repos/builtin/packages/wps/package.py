@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -26,6 +26,7 @@ class Wps(Package):
     variant(
         "build_type",
         default="serial",
+        description="Build type",
         values=("serial", "serial_NO_GRIB2", "dmpar", "dmpar_NO_GRIB2"),
     )
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class Libssh2(AutotoolsPackage, CMakePackage):
     homepage = "https://www.libssh2.org/"
     url = "https://www.libssh2.org/download/libssh2-1.7.0.tar.gz"
 
+    license("BSD-3-Clause")
+
     version("1.11.0", sha256="3736161e41e2693324deb38c26cfdc3efe6209d634ba4258db1cecff6a5ad461")
     version("1.10.0", sha256="2d64e90f3ded394b91d3a2e774ca203a4179f69aebee03003e5a6fa621e41d51")
     version("1.9.0", sha256="d5fb8bd563305fd1074dda90bd053fb2d29fc4bce048d182f96eaa466dfadafd")
@@ -23,7 +25,12 @@ class Libssh2(AutotoolsPackage, CMakePackage):
 
     build_system("autotools", "cmake", default="autotools")
 
-    variant("crypto", default="openssl", values=("openssl", conditional("mbedtls", when="@1.8:")))
+    variant(
+        "crypto",
+        default="openssl",
+        description="The backend to use for cryptography",
+        values=("openssl", conditional("mbedtls", when="@1.8:")),
+    )
     variant("shared", default=True, description="Build shared libraries")
 
     with when("build_system=cmake"):
@@ -36,7 +43,7 @@ class Libssh2(AutotoolsPackage, CMakePackage):
         depends_on("openssl@:1", when="@:1.9")
 
     depends_on("mbedtls@:2 +pic", when="crypto=mbedtls")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("xz")
 
     # libssh2 adds its own deps in the pc file even when doing shared linking,

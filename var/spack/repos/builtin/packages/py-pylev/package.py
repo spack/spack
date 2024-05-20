@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,8 @@ class PyPylev(PythonPackage):
 
     homepage = "http://github.com/toastdriven/pylev"
     pypi = "pylev/pylev-1.4.0.tar.gz"
+
+    license("BSD-3-Clause")
 
     version("1.4.0", sha256="9e77e941042ad3a4cc305dcdf2b2dec1aec2fbe3dd9015d2698ad02b173006d1")
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,10 +12,12 @@ import pytest
 import llnl.util.filesystem as fs
 
 import spack.error
+import spack.mirror
 import spack.patch
 import spack.repo
 import spack.store
 import spack.util.spack_json as sjson
+from spack import binary_distribution
 from spack.package_base import (
     InstallError,
     PackageBase,
@@ -52,7 +54,7 @@ def test_uninstall_non_existing_package(install_mockery, mock_fetch, monkeypatch
 
     # Mock deletion of the package
     spec._package = None
-    monkeypatch.setattr(spack.repo.path, "get", find_nothing)
+    monkeypatch.setattr(spack.repo.PATH, "get", find_nothing)
     with pytest.raises(spack.repo.UnknownPackageError):
         spec.package
 
@@ -118,61 +120,28 @@ class RemovePrefixChecker:
         self.wrapped_rm_prefix()
 
 
-class MockStage:
-    def __init__(self, wrapped_stage):
-        self.wrapped_stage = wrapped_stage
-        self.test_destroyed = False
-
-    def __enter__(self):
-        self.create()
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        if exc_type is None:
-            self.destroy()
-
-    def destroy(self):
-        self.test_destroyed = True
-        self.wrapped_stage.destroy()
-
-    def create(self):
-        self.wrapped_stage.create()
-
-    def __getattr__(self, attr):
-        if attr == "wrapped_stage":
-            # This attribute may not be defined at some point during unpickling
-            raise AttributeError()
-        return getattr(self.wrapped_stage, attr)
-
-
 def test_partial_install_delete_prefix_and_stage(install_mockery, mock_fetch, working_env):
     s = Spec("canfail").concretized()
 
     instance_rm_prefix = s.package.remove_prefix
 
-    try:
-        s.package.remove_prefix = mock_remove_prefix
-        with pytest.raises(MockInstallError):
-            s.package.do_install()
-        assert os.path.isdir(s.package.prefix)
-        rm_prefix_checker = RemovePrefixChecker(instance_rm_prefix)
-        s.package.remove_prefix = rm_prefix_checker.remove_prefix
+    s.package.remove_prefix = mock_remove_prefix
+    with pytest.raises(MockInstallError):
+        s.package.do_install()
+    assert os.path.isdir(s.package.prefix)
+    rm_prefix_checker = RemovePrefixChecker(instance_rm_prefix)
+    s.package.remove_prefix = rm_prefix_checker.remove_prefix
 
-        # must clear failure markings for the package before re-installing it
-        spack.store.STORE.db.clear_failure(s, True)
+    # must clear failure markings for the package before re-installing it
+    spack.store.STORE.failure_tracker.clear(s, True)
 
-        s.package.set_install_succeed()
-        s.package.stage = MockStage(s.package.stage)
-
-        s.package.do_install(restage=True)
-        assert rm_prefix_checker.removed
-        assert s.package.stage.test_destroyed
-        assert s.package.spec.installed
-
-    finally:
-        s.package.remove_prefix = instance_rm_prefix
+    s.package.set_install_succeed()
+    s.package.do_install(restage=True)
+    assert rm_prefix_checker.removed
+    assert s.package.spec.installed
 
 
+@pytest.mark.not_on_windows("Fails spuriously on Windows")
 @pytest.mark.disable_clean_stage_check
 def test_failing_overwrite_install_should_keep_previous_installation(
     mock_fetch, install_mockery, working_env
@@ -288,7 +257,7 @@ def install_upstream(tmpdir_factory, gen_mock_layout, install_mockery):
     mock_db_root = str(tmpdir_factory.mktemp("mock_db_root"))
     prepared_db = spack.database.Database(mock_db_root)
     upstream_layout = gen_mock_layout("/a/")
-    spack.config.config.push_scope(
+    spack.config.CONFIG.push_scope(
         spack.config.InternalConfigScope(
             name="install-upstream-fixture",
             data={"upstreams": {"mock1": {"install_tree": prepared_db.root}}},
@@ -354,13 +323,11 @@ def test_partial_install_keep_prefix(install_mockery, mock_fetch, monkeypatch, w
     assert os.path.exists(s.package.prefix)
 
     # must clear failure markings for the package before re-installing it
-    spack.store.STORE.db.clear_failure(s, True)
+    spack.store.STORE.failure_tracker.clear(s, True)
 
     s.package.set_install_succeed()
-    s.package.stage = MockStage(s.package.stage)
     s.package.do_install(keep_prefix=True)
     assert s.package.spec.installed
-    assert not s.package.stage.test_destroyed
 
 
 def test_second_install_no_overwrite_first(install_mockery, mock_fetch, monkeypatch):
@@ -478,41 +445,15 @@ def test_nosource_pkg_install_post_install(install_mockery, mock_fetch, mock_pac
 def test_pkg_build_paths(install_mockery):
     # Get a basic concrete spec for the trivial install package.
     spec = Spec("trivial-install-test-package").concretized()
-
-    log_path = spec.package.log_path
-    assert log_path.endswith(_spack_build_logfile)
-
-    env_path = spec.package.env_path
-    assert env_path.endswith(_spack_build_envfile)
-
-    # Backward compatibility checks
-    log_dir = os.path.dirname(log_path)
-    fs.mkdirp(log_dir)
-    with fs.working_dir(log_dir):
-        # Start with the older of the previous log filenames
-        older_log = "spack-build.out"
-        fs.touch(older_log)
-        assert spec.package.log_path.endswith(older_log)
-
-        # Now check the newer log filename
-        last_log = "spack-build.txt"
-        fs.rename(older_log, last_log)
-        assert spec.package.log_path.endswith(last_log)
-
-        # Check the old environment file
-        last_env = "spack-build.env"
-        fs.rename(last_log, last_env)
-        assert spec.package.env_path.endswith(last_env)
-
-    # Cleanup
-    shutil.rmtree(log_dir)
+    assert spec.package.log_path.endswith(_spack_build_logfile)
+    assert spec.package.env_path.endswith(_spack_build_envfile)
 
 
 def test_pkg_install_paths(install_mockery):
     # Get a basic concrete spec for the trivial install package.
     spec = Spec("trivial-install-test-package").concretized()
 
-    log_path = os.path.join(spec.prefix, ".spack", _spack_build_logfile)
+    log_path = os.path.join(spec.prefix, ".spack", _spack_build_logfile + ".gz")
     assert spec.package.install_log_path == log_path
 
     env_path = os.path.join(spec.prefix, ".spack", _spack_build_envfile)
@@ -616,7 +557,7 @@ def test_log_install_with_build_files(install_mockery, monkeypatch):
 def test_unconcretized_install(install_mockery, mock_fetch, mock_packages):
     """Test attempts to perform install phases with unconcretized spec."""
     spec = Spec("trivial-install-test-package")
-    pkg_cls = spack.repo.path.get_pkg_class(spec.name)
+    pkg_cls = spack.repo.PATH.get_pkg_class(spec.name)
 
     with pytest.raises(ValueError, match="must have a concrete spec"):
         pkg_cls(spec).do_install()
@@ -644,3 +585,48 @@ def test_empty_install_sanity_check_prefix(
     spec = Spec("failing-empty-install").concretized()
     with pytest.raises(spack.build_environment.ChildError, match="Nothing was installed"):
         spec.package.do_install()
+
+
+def test_install_from_binary_with_missing_patch_succeeds(
+    temporary_store: spack.store.Store, mutable_config, tmp_path, mock_packages
+):
+    """If a patch is missing in the local package repository, but was present when building and
+    pushing the package to a binary cache, installation from that binary cache shouldn't error out
+    because of the missing patch."""
+    # Create a spec s with non-existing patches
+    s = Spec("trivial-install-test-package").concretized()
+    patches = ["a" * 64]
+    s_dict = s.to_dict()
+    s_dict["spec"]["nodes"][0]["patches"] = patches
+    s_dict["spec"]["nodes"][0]["parameters"]["patches"] = patches
+    s = Spec.from_dict(s_dict)
+
+    # Create an install dir for it
+    os.makedirs(os.path.join(s.prefix, ".spack"))
+    with open(os.path.join(s.prefix, ".spack", "spec.json"), "w") as f:
+        s.to_json(f)
+
+    # And register it in the database
+    temporary_store.db.add(s, directory_layout=temporary_store.layout, explicit=True)
+
+    # Push it to a binary cache
+    build_cache = tmp_path / "my_build_cache"
+    binary_distribution.push_or_raise(
+        s,
+        build_cache.as_uri(),
+        binary_distribution.PushOptions(unsigned=True, regenerate_index=True),
+    )
+
+    # Now re-install it.
+    s.package.do_uninstall()
+    assert not temporary_store.db.query_local_by_spec_hash(s.dag_hash())
+
+    # Source install: fails, we don't have the patch.
+    with pytest.raises(spack.error.SpecError, match="Couldn't find patch for package"):
+        s.package.do_install()
+
+    # Binary install: succeeds, we don't need the patch.
+    spack.mirror.add(spack.mirror.Mirror.from_local_path(str(build_cache)))
+    s.package.do_install(package_cache_only=True, dependencies_cache_only=True, unsigned=True)
+
+    assert temporary_store.db.query_local_by_spec_hash(s.dag_hash())

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,8 @@ class Shuffile(CMakePackage):
 
     maintainers("CamStan", "gonsie")
 
+    license("MIT")
+
     version("main", branch="main")
     version("0.3.0", sha256="3463ad4a23fd31aa9a3426346ada04399fb9369dd1f40d22df9f19f9c0c1f8ae")
     version("0.2.0", sha256="467ffef72214c109b69f09d03e42be5e9254f13751b09c71168c14fa99117521")
@@ -25,7 +27,7 @@ class Shuffile(CMakePackage):
 
     depends_on("mpi")
     depends_on("kvtree+mpi")
-    depends_on("zlib", type="link")
+    depends_on("zlib-api", type="link")
 
     depends_on("kvtree@:1.3.0", when="@:0.2.0")
     depends_on("kvtree@1.4.0:", when="@0.3.0:")

@@ -1,9 +1,11 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import pathlib
+import re
 import sys
 
 from spack.build_environment import dso_suffix
@@ -41,6 +43,9 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
 
     version("master", branch="master")
     version("develop", branch="develop")
+    version("15.1.1", sha256="2108d633d2208ed261d09b2d6b2fbae7a9cdc455dd963c9c94412d38d8aaefe4")
+    version("15.0.0", sha256="5651f1f967217a807f2c418a73b7e649532824dbf2742fa517951d6cc11518fb")
+    version("14.4.0", sha256="8e7d881cf6677aa062f7bfea8baa1e52e8956aa575d6a4f90f2b6f032632d4c6")
     version("14.2.0", sha256="c96606e5cd7fc9d25b9dc20719cd388658520d7cbbd2b4de77a118440d1e0ccb")
     version("14.0.0", sha256="054d2fabdf70fce0dfaeb20eed265bd7894045d3e00c3d1ddb72d1c77c339ca1")
     version("13.4.1", sha256="5465cbff3de7ef4ac7d40eeff9d99342c00d9d20eee0a5f64f0a523093f5f1b3")
@@ -72,7 +77,9 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     variant("complex", default=False, description="Enable complex numbers in Trilinos")
     variant("cuda_rdc", default=False, description="Turn on RDC for CUDA build")
     variant("rocm_rdc", default=False, description="Turn on RDC for ROCm build")
-    variant("cxxstd", default="14", values=["11", "14", "17"], multi=False)
+    variant(
+        "cxxstd", default="14", description="C++ standard", values=["11", "14", "17"], multi=False
+    )
     variant("debug", default=False, description="Enable runtime safety and debug checks")
     variant(
         "explicit_template_instantiation",
@@ -91,10 +98,18 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
         description="global ordinal type for Tpetra",
     )
     variant("openmp", default=False, description="Enable OpenMP")
-    variant("python", default=False, description="Build PyTrilinos wrappers")
+    variant("python", default=False, when="@15:", description="Build PyTrilinos2 wrappers")
+    variant("python", default=False, when="@:14", description="Build PyTrilinos wrappers")
     variant("shared", default=True, description="Enables the build of shared libraries")
     variant("uvm", default=False, when="@13.2: +cuda", description="Turn on UVM for CUDA build")
     variant("wrapper", default=False, description="Use nvcc-wrapper for CUDA build")
+
+    # Makes the Teuchos Memory Management classes (Teuchos::RCP, Teuchos::Ptr, Teuchos::Array,
+    # Teuchos::ArrayView, and Teuchos::ArrayRCP) thread-safe. Requires at least the OMP kokkos
+    # backend to be enabled. Without, this seemingly does nothing
+    variant(
+        "threadsafe", default=False, when="+openmp", description="Enable threadsafe in Teuchos"
+    )
 
     # TPLs (alphabet order)
     variant("adios2", default=False, description="Enable ADIOS2")
@@ -131,6 +146,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     variant("minitensor", default=False, description="Compile with MiniTensor")
     variant("muelu", default=True, description="Compile with Muelu")
     variant("nox", default=False, description="Compile with NOX")
+    variant("pamgen", default=False, description="Compile with Pamgen")
     variant("panzer", default=False, description="Compile with Panzer")
     variant("piro", default=False, description="Compile with Piro")
     variant("phalanx", default=False, description="Compile with Phalanx")
@@ -144,6 +160,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     variant("stratimikos", default=False, description="Compile with Stratimikos")
     variant("teko", default=False, description="Compile with Teko")
     variant("tempus", default=False, description="Compile with Tempus")
+    variant("test", default=False, description="Enable testing")
     variant("thyra", default=False, description="Compile with Thyra")
     variant("tpetra", default=True, description="Compile with Tpetra")
     variant("trilinoscouplings", default=False, description="Compile with TrilinosCouplings")
@@ -235,6 +252,9 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
         conflicts("@:12 gotype=long")
     with when("+piro"):
         conflicts("~stratimikos")
+        conflicts("~thyra")
+        conflicts("~tpetra")
+        conflicts("@15: ~teko")
         conflicts("~nox")
 
     # Tpetra stack
@@ -284,6 +304,10 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
         conflicts("~ifpack")
         conflicts("~aztec")
 
+    with when("+tempus"):
+        conflicts("~nox")
+        conflicts("~thyra")
+
     # Known requirements from tribits dependencies
     conflicts("~thyra", when="+stratimikos")
     conflicts("+adelus", when="~kokkos")
@@ -294,7 +318,6 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     conflicts("+minitensor", when="~boost")
     conflicts("+phalanx", when="~sacado")
     conflicts("+stokhos", when="~kokkos")
-    conflicts("+tempus", when="~nox")
 
     # Only allow DTK with Trilinos 12.14, 12.18
     conflicts("+dtk", when="~boost")
@@ -310,6 +333,9 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     conflicts("+strumpack", when="@:13.0")
     # Can only use one type of SuperLU
     conflicts("+superlu-dist", when="+superlu")
+    # Amesos and Ifpack only support up to SuperLU 4.x.y interfaces
+    conflicts("+amesos", when="+superlu@5:")
+    conflicts("+ifpack", when="+superlu@5:")
     # For Trilinos v11 we need to force SuperLUDist=OFF, since only the
     # deprecated SuperLUDist v3.3 together with an Amesos patch is working.
     conflicts("+superlu-dist", when="@11.4.1:11.14.3")
@@ -321,12 +347,6 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     # see https://trilinos.org/pipermail/trilinos-users/2015-March/004731.html
     # and https://trilinos.org/pipermail/trilinos-users/2015-March/004802.html
     conflicts("+superlu-dist", when="+complex+amesos2")
-    # https://github.com/trilinos/Trilinos/issues/2994
-    conflicts(
-        "+shared",
-        when="+stk platform=darwin",
-        msg="Cannot build Trilinos with STK as a shared library on Darwin.",
-    )
     conflicts("+adios2", when="@:12.14.1")
     conflicts("cxxstd=11", when="@13.2:")
     conflicts("cxxstd=14", when="@14:")
@@ -339,13 +359,11 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     conflicts("gotype=all", when="@12.15:")
 
     # CUDA without wrapper requires clang
-    for _compiler in spack.compilers.supported_compilers():
-        if _compiler != "clang":
-            conflicts(
-                "+cuda",
-                when="~wrapper %" + _compiler,
-                msg="trilinos~wrapper+cuda can only be built with the " "Clang compiler",
-            )
+    requires(
+        "%clang",
+        when="+cuda~wrapper",
+        msg="trilinos~wrapper+cuda can only be built with the Clang compiler",
+    )
     conflicts("+cuda_rdc", when="~cuda")
     conflicts("+rocm_rdc", when="~rocm")
     conflicts("+wrapper", when="~cuda")
@@ -355,6 +373,11 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     conflicts("@:13.0.1 +cuda", when="^cuda@11:")
     # Build hangs with CUDA 11.6 (see #28439)
     conflicts("+cuda +stokhos", when="^cuda@11.6:")
+    # superlu-dist defines a macro EMPTY which conflicts with a header in cuda
+    # used when building stokhos
+    # Fix: https://github.com/xiaoyeli/superlu_dist/commit/09cb1430f7be288fd4d75b8ed461aa0b7e68fefe
+    # is not tagged yet. See discussion here https://github.com/trilinos/Trilinos/issues/11839
+    conflicts("+cuda +stokhos +superlu-dist")
     # Cuda UVM must be enabled prior to 13.2
     # See https://github.com/spack/spack/issues/28869
     conflicts("~uvm", when="@:13.1 +cuda")
@@ -363,19 +386,49 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     conflicts("+stokhos", when="%xl")
     conflicts("+stokhos", when="%xl_r")
 
+    # Current Windows support, only have serial static builds
+    conflicts(
+        "+shared",
+        when="platform=windows",
+        msg="Only static builds are supported on Windows currently.",
+    )
+    conflicts(
+        "+mpi",
+        when="platform=windows",
+        msg="Only serial builds are supported on Windows currently.",
+    )
+
     # ###################### Dependencies ##########################
 
+    # External Kokkos
+    depends_on("kokkos@4.3.01", when="@master: +kokkos")
+    depends_on("kokkos@4.2.01", when="@15.1.0:15.1.1 +kokkos")
+    depends_on("kokkos@4.1.00", when="@14.4.0:15.0.0 +kokkos")
+
+    depends_on("kokkos +wrapper", when="trilinos@14.4.0: +kokkos +wrapper")
+    depends_on("kokkos ~wrapper", when="trilinos@14.4.0: +kokkos ~wrapper")
+
+    for a in CudaPackage.cuda_arch_values:
+        arch_str = "+cuda cuda_arch={0}".format(a)
+        kokkos_spec = "kokkos {0}".format(arch_str)
+        depends_on(kokkos_spec, when="@14.4.0: +kokkos {0}".format(arch_str))
+
+    for a in ROCmPackage.amdgpu_targets:
+        arch_str = "+rocm amdgpu_target={0}".format(a)
+        kokkos_spec = "kokkos {0}".format(arch_str)
+        depends_on(kokkos_spec, when="@14.4.0: +kokkos {0}".format(arch_str))
+
     depends_on("adios2", when="+adios2")
+    depends_on("binder@1.3:", when="@15: +python", type="build")
     depends_on("blas")
     depends_on("boost+graph+math+exception+stacktrace", when="+boost")
-    # Need to revisit the requirement of STK
-    depends_on("boost+graph+math+exception+stacktrace", when="+stk")
-
-    #
+    depends_on("boost+graph+math+exception+stacktrace", when="@:13.4.0 +stk")
     depends_on("cgns", when="+exodus")
     depends_on("cmake@3.23:", type="build", when="@14.0.0:")
     depends_on("hdf5+hl", when="+hdf5")
-    depends_on("hypre~internal-superlu~int64", when="+hypre")
+    for plat in ["cray", "darwin", "linux"]:
+        depends_on("hypre~internal-superlu~int64", when="+hypre platform=%s" % plat)
+    depends_on("hypre-cmake~int64", when="+hypre platform=windows")
     depends_on("kokkos-nvcc-wrapper", when="+wrapper")
     depends_on("lapack")
     # depends_on('perl', type=('build',)) # TriBITS finds but doesn't use...
@@ -383,12 +436,14 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("matio", when="+exodus")
     depends_on("metis", when="+zoltan")
     depends_on("mpi", when="+mpi")
+    depends_on("mpi", when="@15: +python")
     depends_on("netcdf-c", when="+exodus")
     depends_on("parallel-netcdf", when="+exodus+mpi")
     depends_on("parmetis", when="+mpi +zoltan")
     depends_on("parmetis", when="+scorec")
-    depends_on("py-mpi4py", when="+mpi+python", type=("build", "run"))
+    depends_on("py-mpi4py", when="+python", type=("build", "run"))
     depends_on("py-numpy", when="+python", type=("build", "run"))
+    depends_on("py-pybind11", when="@15: +python", type=("build", "link"))
     depends_on("python", when="+python")
     depends_on("python", when="@13.2: +ifpack +hypre", type="build")
     depends_on("python", when="@13.2: +ifpack2 +hypre", type="build")
@@ -397,9 +452,11 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("strumpack+shared", when="+strumpack")
     depends_on("suite-sparse", when="+suite-sparse")
     depends_on("superlu-dist", when="+superlu-dist")
-    depends_on("superlu@4.3 +pic", when="+superlu")
-    depends_on("swig", when="+python")
-    depends_on("zlib", when="+zoltan")
+    depends_on("superlu@3:5.2", when="@12.18.1: +superlu")
+    depends_on("superlu@3:5.1.1", when="@12.14.1 +superlu")
+    depends_on("superlu@3:4", when="@:12.12.1 +superlu")
+    depends_on("swig", when="@:14 +python")
+    depends_on("zlib-api", when="+zoltan")
 
     # Trilinos' Tribits config system is limited which makes it very tricky to
     # link Amesos with static MUMPS, see
@@ -429,6 +486,8 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
 
     # ###################### Patches ##########################
 
+    patch("shylu-node-optional.patch", when="@13:14.4.0 +shylu")
+
     patch("umfpack_from_suitesparse.patch", when="@11.14.1:12.8.1")
     for _compiler in ["xl", "xl_r", "clang"]:
         patch("xlf_seacas.patch", when="@12.10.1:12.12.1 %" + _compiler)
@@ -445,6 +504,11 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     # workaround an NVCC bug with c++14 (https://github.com/trilinos/Trilinos/issues/6954)
     # avoid calling deprecated functions with CUDA-11
     patch("fix_cxx14_cuda11.patch", when="@13.0.0:13.0.1 cxxstd=14 ^cuda@11:")
+    patch(
+        "0001-use-the-gcnArchName-inplace-of-gcnArch-as-gcnArch-is.patch",
+        when="@15.0.0 ^hip@6.0 +rocm",
+    )
+
     # Allow building with +teko gotype=long
     patch(
         "https://github.com/trilinos/Trilinos/commit/b17f20a0b91e0b9fc5b1b0af3c8a34e2a4874f3f.patch?full_index=1",
@@ -542,6 +606,30 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
         define = self.define
         define_from_variant = self.define_from_variant
 
+        if self.spec.satisfies("@master: +kokkos"):
+            with open(
+                os.path.join(self.stage.source_path, "packages", "kokkos", "CMakeLists.txt")
+            ) as f:
+                all_txt = f.read()
+            r = dict(
+                re.findall(r".*set\s?\(\s?Kokkos_VERSION_(MAJOR|MINOR|PATCH)\s?(\d+)", all_txt)
+            )
+            kokkos_version_in_trilinos_source = Version(
+                ".".join([r["MAJOR"], r["MINOR"], r["PATCH"].zfill(2)])
+            )
+            kokkos_version_specified = spec["kokkos"].version
+            if kokkos_version_in_trilinos_source != kokkos_version_specified:
+                raise InstallError(
+                    "For Trilinos@[master,develop], ^kokkos version in spec must "
+                    "match version in Trilinos source code. Specify ^kokkos@{0} ".format(
+                        kokkos_version_in_trilinos_source
+                    )
+                    + "for trilinos@[master,develop] instead of ^kokkos@{0}.\n".format(
+                        kokkos_version_specified
+                    )
+                    + "Trilinos recipe maintainers, please update the ^kokkos version range"
+                )
+
         def _make_definer(prefix):
             def define_enable(suffix, value=None):
                 key = prefix + suffix
@@ -578,8 +666,20 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
                 define_trilinos_enable(
                     "EXPLICIT_INSTANTIATION", "explicit_template_instantiation"
                 ),
+                define_from_variant("Trilinos_ENABLE_THREAD_SAFE", "threadsafe"),
             ]
         )
+
+        if spec.version >= Version("15"):
+            options.append(define_trilinos_enable("PyTrilinos2", "python"))
+        else:
+            options.append(define_trilinos_enable("PyTrilinos", "python"))
+
+        if "+test" in spec:
+            options.append(define_trilinos_enable("TESTS", True))
+            options.append(define("BUILD_TESTING", True))
+        else:
+            options.append(define_trilinos_enable("TESTS", False))
 
         if spec.version >= Version("13"):
             options.append(define_from_variant("CMAKE_CXX_STANDARD", "cxxstd"))
@@ -589,9 +689,11 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
             options.append(
                 define(
                     "Trilinos_CXX11_FLAGS",
-                    self.compiler.cxx14_flag
-                    if spec.variants["cxxstd"].value == "14"
-                    else self.compiler.cxx11_flag,
+                    (
+                        self.compiler.cxx14_flag
+                        if spec.variants["cxxstd"].value == "14"
+                        else self.compiler.cxx11_flag
+                    ),
                 )
             )
 
@@ -620,12 +722,11 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
                 define_trilinos_enable("ML"),
                 define_trilinos_enable("MueLu"),
                 define_trilinos_enable("NOX"),
-                define_trilinos_enable("Pamgen", False),
+                define_trilinos_enable("Pamgen"),
                 define_trilinos_enable("Panzer"),
                 define_trilinos_enable("Pike", False),
                 define_trilinos_enable("Piro"),
                 define_trilinos_enable("Phalanx"),
-                define_trilinos_enable("PyTrilinos", "python"),
                 define_trilinos_enable("ROL"),
                 define_trilinos_enable("Rythmos"),
                 define_trilinos_enable("Sacado"),
@@ -698,6 +799,15 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
                 ]
             )
 
+        if "@15: +python" in spec:
+            binder = spec["binder"].prefix.bin.binder
+            clang_include_dirs = spec["binder"].clang_include_dirs
+            libclang_include_dir = spec["binder"].libclang_include_dir
+            options.append(define("PyTrilinos2_BINDER_EXECUTABLE", binder))
+            options.append(define("PyTrilinos2_BINDER_clang_include_dirs", clang_include_dirs))
+            options.append(define("PyTrilinos2_BINDER_LibClang_include_dir", libclang_include_dir))
+            options.append(define_from_variant("PyTrilinos2_ENABLE_TESTS", "test"))
+
         if "+stratimikos" in spec:
             # Explicitly enable Thyra (ThyraCore is required). If you don't do
             # this, then you get "NOT setting ${pkg}_ENABLE_Thyra=ON since
@@ -744,6 +854,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
             ("HDF5", "hdf5", "hdf5"),
             ("HYPRE", "hypre", "hypre"),
             ("MUMPS", "mumps", "mumps"),
+            ("AMD", "suite-sparse", "suite-sparse"),
             ("UMFPACK", "suite-sparse", "suite-sparse"),
             ("SuperLU", "superlu", "superlu"),
             ("SuperLUDist", "superlu-dist", "superlu-dist"),
@@ -765,7 +876,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
             ("METIS", "metis"),
             ("Netcdf", "netcdf-c"),
             ("SCALAPACK", "scalapack"),
-            ("Zlib", "zlib"),
+            ("Zlib", "zlib-api"),
         ]
         if spec.satisfies("@12.12.1:"):
             tpl_dep_map.append(("Pnetcdf", "parallel-netcdf"))
@@ -774,6 +885,10 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
 
         for tpl_name, dep_name in tpl_dep_map:
             define_tpl(tpl_name, dep_name, dep_name in spec)
+
+        # External Kokkos
+        if spec.satisfies("@14.4.0 +kokkos"):
+            options.append(define_tpl_enable("Kokkos"))
 
         # MPI settings
         options.append(define_tpl_enable("MPI"))
@@ -787,7 +902,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
                     define("CMAKE_C_COMPILER", spec["mpi"].mpicc),
                     define("CMAKE_CXX_COMPILER", spec["mpi"].mpicxx),
                     define("CMAKE_Fortran_COMPILER", spec["mpi"].mpifc),
-                    define("MPI_BASE_DIR", spec["mpi"].prefix),
+                    define("MPI_BASE_DIR", str(pathlib.PurePosixPath(spec["mpi"].prefix))),
                 ]
             )
 
@@ -938,7 +1053,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
         # https://github.com/trilinos/Trilinos/issues/866
         # A workaround is to remove PyTrilinos from the COMPONENTS_LIST
         # and to remove -lpytrilonos from Makefile.export.Trilinos
-        if "+python" in self.spec:
+        if self.spec.satisfies("@:13.0.1 +python"):
             filter_file(
                 r"(SET\(COMPONENTS_LIST.*)(PyTrilinos;)(.*)",
                 (r"\1\3"),

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,7 +18,12 @@ class Emacs(AutotoolsPackage, GNUMirrorPackage):
 
     maintainers("alecbcs")
 
+    license("GPL-3.0-or-later")
+
     version("master", branch="master")
+    version("29.3", sha256="2de8df5cab8ac697c69a1c46690772b0cf58fe7529f1d1999582c67d927d22e4")
+    version("29.2", sha256="ac8773eb17d8b3c0c4a3bccbb478f7c359266b458563f9a5e2c23c53c05e4e59")
+    version("29.1", sha256="5b80e0475b0e619d2ad395ef5bc481b7cb9f13894ed23c301210572040e4b5b1")
     version("28.2", sha256="a6912b14ef4abb1edab7f88191bfd61c3edd7085e084de960a4f86485cb7cad8")
     version("28.1", sha256="1439bf7f24e5769f35601dbf332e74dfc07634da6b1e9500af67188a92340a28")
     version("27.2", sha256="80ff6118fb730a6d8c704dccd6915a6c0e0a166ab1daeef9fe68afa9073ddb73")
@@ -48,7 +53,7 @@ class Emacs(AutotoolsPackage, GNUMirrorPackage):
 
     depends_on("ncurses")
     depends_on("pcre")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("libxml2")
     depends_on("libtiff", when="+X")
     depends_on("libpng", when="+X")

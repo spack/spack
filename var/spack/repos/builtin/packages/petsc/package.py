@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,14 +14,24 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     """
 
     homepage = "https://petsc.org"
-    url = "https://ftp.mcs.anl.gov/pub/petsc/release-snapshots/petsc-3.15.0.tar.gz"
+    url = "https://web.cels.anl.gov/projects/petsc/download/release-snapshots/petsc-3.20.0.tar.gz"
     git = "https://gitlab.com/petsc/petsc.git"
     maintainers("balay", "barrysmith", "jedbrown")
 
     tags = ["e4s"]
 
     version("main", branch="main")
-
+    version("3.21.1", sha256="7ff8b692bceb7d7a8f51e2f45ccb20af00ba9395d7e1eee8816d46eb1c4c4b27")
+    version("3.21.0", sha256="1e0c2f92514c72f80d4a4d0e6439a3aba0ceda7a0bcbc7ad9c44ce4cd8b14c28")
+    version("3.20.6", sha256="20e6c260765f9593924bc5b1783bd152ec5c47246b47ce516cded7b505b34795")
+    version("3.20.5", sha256="fb4e637758737af910b05f30a785245633916cd0a929b7b6447ad1028da4ea5a")
+    version("3.20.4", sha256="b0d03a5595ee0a5696dd6683321e1dbfe9fea85238d3016a847b3d0bcdcfb3d9")
+    version("3.20.3", sha256="75a94fb44df0512f51ad093fa784e56b61f51b7ead5956fbe49185c203f8c245")
+    version("3.20.2", sha256="2a2d08b5f0e3d0198dae2c42ce1fd036f25c153ef2bb4a2d320ca141ac7cd30b")
+    version("3.20.1", sha256="3d54f13000c9c8ceb13ca4f24f93d838319019d29e6de5244551a3ec22704f32")
+    version("3.20.0", sha256="c152ccb12cb2353369d27a65470d4044a0c67e0b69814368249976f5bb232bd4")
+    version("3.19.6", sha256="6045e379464e91bb2ef776f22a08a1bc1ff5796ffd6825f15270159cbb2464ae")
+    version("3.19.5", sha256="511aa78cad36db2dfd298acf35e9f7afd2ecc1f089da5b0b5682507a31a5d6b2")
     version("3.19.4", sha256="7c941b71be52c3b764214e492df60109d12f97f7d854c97a44df0c4d958b3906")
     version("3.19.3", sha256="008239c016b869693ec8e81368a0b7638462e667d07f7d50ed5f9b75ccc58d17")
     version("3.19.2", sha256="114f363f779bb16839b25c0e70f8b0ae0d947d50e72f7c6cddcb11b001079b16")
@@ -84,6 +94,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     variant("double", default=True, description="Switches between single and double precision")
     variant("complex", default=False, description="Build with complex numbers")
     variant("debug", default=False, description="Compile in debug mode")
+    variant("sycl", default=False, description="Enable sycl build")
 
     variant("metis", default=True, description="Activates support for metis and parmetis")
     variant(
@@ -95,6 +106,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     variant("mmg", default=False, description="Activates support for MMG")
     variant("parmmg", default=False, description="Activates support for ParMMG (only parallel)")
     variant("tetgen", default=False, description="Activates support for Tetgen")
+    variant("zoltan", default=False, description="Activates support for Zoltan")
     # Mumps is disabled by default, because it depends on Scalapack
     # which is not portable to all HPC systems
     variant("mumps", default=False, description="Activates support for MUMPS (only parallel)")
@@ -139,6 +151,13 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     )
     variant("cgns", default=False, description="Activates support for CGNS (only parallel)")
     variant("memkind", default=False, description="Activates support for Memkind")
+    variant(
+        "memalign",
+        default="none",
+        description="Specify alignment of allocated arrays",
+        values=("4", "8", "16", "32", "64", "none"),
+        multi=False,
+    )
     variant("p4est", default=False, description="Activates support for P4Est (only parallel)")
     variant("saws", default=False, description="Activates support for Saws")
     variant("libyaml", default=False, description="Activates support for YAML")
@@ -147,8 +166,21 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     variant("kokkos", default=False, description="Activates support for kokkos and kokkos-kernels")
     variant("fortran", default=True, description="Activates fortran support")
 
-    # https://github.com/spack/spack/issues/37416
-    conflicts("^rocprim@5.3.0:5.3.2", when="+rocm")
+    with when("+rocm"):
+        # https://github.com/spack/spack/issues/37416
+        conflicts("^rocprim@5.3.0:5.3.2")
+        # hipsparse@5.6.0 broke hipsparseSpSV_solve() API, reverted in 5.6.1.
+        patch(
+            "https://gitlab.com/petsc/petsc/-/commit/ef7140cce45367033b48bbd2624dfd2b6aa4b997.diff",
+            when="@3.20.0",
+            sha256="ba327f8b2a0fa45209dfb7a4278f3e9a323965b5a668be204c1c77c17a963a7f",
+        )
+        patch("hip-5.6.0-for-3.18.diff", when="@3.18:3.19 ^hipsparse@5.6.0")
+        patch("hip-5.7-plus-for-3.18.diff", when="@3.18:3.19 ^hipsparse@5.7:")
+        patch(
+            "0001-Handle-the-hipsparse-api-changes-for-rocm-6.0.patch",
+            when="@3.20.2:3.20.4 ^hipsparse@6.0",
+        )
 
     # 3.8.0 has a build issue with MKL - so list this conflict explicitly
     conflicts("^intel-mkl", when="@3.8.0")
@@ -193,10 +225,12 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     patch("revert-3.18.0-ver-format-for-dealii.patch", when="@3.18.0")
 
     depends_on("diffutils", type="build")
+    # not listed as a "build" dependency - so that slepc build gets the same dependency
+    depends_on("gmake")
 
     # Virtual dependencies
     # Git repository needs sowing to build Fortran interface
-    depends_on("sowing", when="@main")
+    depends_on("sowing@master", when="@main")
 
     # PETSc, hypre, superlu_dist when built with int64 use 32 bit integers
     # with BLAS/LAPACK
@@ -204,16 +238,22 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     depends_on("lapack")
     depends_on("mpi", when="+mpi")
     depends_on("cuda", when="+cuda")
+    # Fixed in https://gitlab.com/petsc/petsc/-/merge_requests/7354
+    conflicts(
+        "^cuda@12.4:", when="@:3.20.5 +cuda", msg="Deprecation in CCCL 2.3 causes build failure."
+    )
     depends_on("hip", when="+rocm")
-    depends_on("hipblas", when="+rocm")
-    depends_on("hipsparse", when="+rocm")
-    depends_on("hipsolver", when="+rocm")
-    depends_on("rocsparse", when="+rocm")
-    depends_on("rocsolver", when="+rocm")
-    depends_on("rocblas", when="+rocm")
-    depends_on("rocrand", when="+rocm")
-    depends_on("rocthrust", when="+rocm")
-    depends_on("rocprim", when="+rocm")
+
+    with when("+rocm"):
+        depends_on("hipblas")
+        depends_on("hipsparse")
+        depends_on("hipsolver")
+        depends_on("rocsparse")
+        depends_on("rocsolver")
+        depends_on("rocblas")
+        depends_on("rocrand")
+        depends_on("rocthrust")
+        depends_on("rocprim")
 
     # Build dependencies
     depends_on("python@2.6:2.8,3.4:3.8", when="@:3.13", type="build")
@@ -238,9 +278,9 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     depends_on("hdf5+mpi", when="@3.13:+hdf5+mpi")
     depends_on("hdf5+mpi", when="+exodusii+mpi")
     depends_on("hdf5+mpi", when="+cgns+mpi")
-    depends_on("zlib", when="+hdf5")
-    depends_on("zlib", when="+libpng")
-    depends_on("zlib", when="+p4est")
+    depends_on("zlib-api", when="+hdf5")
+    depends_on("zlib-api", when="+libpng")
+    depends_on("zlib-api", when="+p4est")
     depends_on("parmetis+int64", when="+metis+mpi+int64")
     depends_on("parmetis~int64", when="+metis+mpi~int64")
     depends_on("valgrind", when="+valgrind")
@@ -248,6 +288,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     depends_on("mmg", when="+parmmg")
     depends_on("parmmg", when="+parmmg")
     depends_on("tetgen+pic", when="+tetgen")
+    depends_on("zoltan", when="+zoltan")
 
     depends_on("hypre+fortran", when="+hypre+fortran")
     depends_on("hypre~fortran", when="+hypre~fortran")
@@ -324,6 +365,9 @@ class Petsc(Package, CudaPackage, ROCmPackage):
             when="+kokkos +rocm amdgpu_target=%s" % rocm_arch,
         )
 
+    conflicts("~kokkos", when="+sycl", msg="+sycl requires +kokkos")
+    depends_on("kokkos+sycl", when="+sycl +kokkos")
+
     phases = ["configure", "build", "install"]
 
     # Using the following tarballs
@@ -332,13 +376,11 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     # * petsc-3.15 and newer (without docs)
     def url_for_version(self, version):
         if self.spec.satisfies("@3.13.0:3.14.6"):
-            return (
-                "http://ftp.mcs.anl.gov/pub/petsc/release-snapshots/petsc-lite-{0}.tar.gz".format(
-                    version
-                )
+            return "http://web.cels.anl.gov/projects/petsc/download/release-snapshots/petsc-lite-{0}.tar.gz".format(
+                version
             )
         else:
-            return "http://ftp.mcs.anl.gov/pub/petsc/release-snapshots/petsc-{0}.tar.gz".format(
+            return "http://web.cels.anl.gov/projects/petsc/download/release-snapshots/petsc-{0}.tar.gz".format(
                 version
             )
 
@@ -413,10 +455,24 @@ class Petsc(Package, CudaPackage, ROCmPackage):
         if "+knl" in spec:
             options.append("--with-avx-512-kernels")
             options.append("--with-memalign=64")
+        elif self.spec.variants["memalign"].value != "none":
+            alignement = self.spec.variants["memalign"].value
+            options.append(f"--with-memalign={alignement}")
+
         if "+X" in spec:
             options.append("--with-x=1")
         else:
             options.append("--with-x=0")
+
+        if "+sycl" in spec:
+            sycl_compatible_compilers = ["icpx"]
+            if not (os.path.basename(self.compiler.cxx) in sycl_compatible_compilers):
+                raise InstallError("PETSc's SYCL GPU Backend requires oneAPI CXX (icpx) compiler.")
+            options.append("--with-sycl=1")
+            options.append("--with-syclc=" + self.compiler.cxx)
+            options.append("SYCLPPFLAGS=-Wno-tautological-constant-compare")
+        else:
+            options.append("--with-sycl=0")
 
         if "trilinos" in spec:
             if spec.satisfies("^trilinos+boost"):
@@ -485,6 +541,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
             "mmg",
             "parmmg",
             ("tetgen", "tetgen", False, False),
+            "zoltan",
         ):
             # Cannot check `library in spec` because of transitive deps
             # Cannot check variants because parmetis keys on +metis

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,8 +7,6 @@
 import os
 import os.path
 import urllib.parse
-
-import pytest
 
 import spack.util.path
 import spack.util.url as url_util
@@ -198,89 +196,6 @@ def test_url_join_absolute_paths():
     assert url_util.join(*args, resolve_href=False) == "http://example.com/path/resource"
 
 
-@pytest.mark.parametrize(
-    "url,parts",
-    [
-        (
-            "ssh://user@host.xz:500/path/to/repo.git/",
-            ("ssh", "user", "host.xz", 500, "/path/to/repo.git"),
-        ),
-        (
-            "ssh://user@host.xz/path/to/repo.git/",
-            ("ssh", "user", "host.xz", None, "/path/to/repo.git"),
-        ),
-        (
-            "ssh://host.xz:500/path/to/repo.git/",
-            ("ssh", None, "host.xz", 500, "/path/to/repo.git"),
-        ),
-        ("ssh://host.xz/path/to/repo.git/", ("ssh", None, "host.xz", None, "/path/to/repo.git")),
-        (
-            "ssh://user@host.xz/path/to/repo.git/",
-            ("ssh", "user", "host.xz", None, "/path/to/repo.git"),
-        ),
-        ("ssh://host.xz/path/to/repo.git/", ("ssh", None, "host.xz", None, "/path/to/repo.git")),
-        (
-            "ssh://user@host.xz/~user/path/to/repo.git/",
-            ("ssh", "user", "host.xz", None, "~user/path/to/repo.git"),
-        ),
-        (
-            "ssh://host.xz/~user/path/to/repo.git/",
-            ("ssh", None, "host.xz", None, "~user/path/to/repo.git"),
-        ),
-        (
-            "ssh://user@host.xz/~/path/to/repo.git",
-            ("ssh", "user", "host.xz", None, "~/path/to/repo.git"),
-        ),
-        ("ssh://host.xz/~/path/to/repo.git", ("ssh", None, "host.xz", None, "~/path/to/repo.git")),
-        ("git@github.com:spack/spack.git", (None, "git", "github.com", None, "spack/spack.git")),
-        ("user@host.xz:/path/to/repo.git/", (None, "user", "host.xz", None, "/path/to/repo.git")),
-        ("host.xz:/path/to/repo.git/", (None, None, "host.xz", None, "/path/to/repo.git")),
-        (
-            "user@host.xz:~user/path/to/repo.git/",
-            (None, "user", "host.xz", None, "~user/path/to/repo.git"),
-        ),
-        (
-            "host.xz:~user/path/to/repo.git/",
-            (None, None, "host.xz", None, "~user/path/to/repo.git"),
-        ),
-        ("user@host.xz:path/to/repo.git", (None, "user", "host.xz", None, "path/to/repo.git")),
-        ("host.xz:path/to/repo.git", (None, None, "host.xz", None, "path/to/repo.git")),
-        (
-            "rsync://host.xz/path/to/repo.git/",
-            ("rsync", None, "host.xz", None, "/path/to/repo.git"),
-        ),
-        ("git://host.xz/path/to/repo.git/", ("git", None, "host.xz", None, "/path/to/repo.git")),
-        (
-            "git://host.xz/~user/path/to/repo.git/",
-            ("git", None, "host.xz", None, "~user/path/to/repo.git"),
-        ),
-        ("http://host.xz/path/to/repo.git/", ("http", None, "host.xz", None, "/path/to/repo.git")),
-        (
-            "https://host.xz/path/to/repo.git/",
-            ("https", None, "host.xz", None, "/path/to/repo.git"),
-        ),
-        ("https://github.com/spack/spack", ("https", None, "github.com", None, "/spack/spack")),
-        ("https://github.com/spack/spack/", ("https", None, "github.com", None, "/spack/spack")),
-        ("file:///path/to/repo.git/", ("file", None, None, None, "/path/to/repo.git")),
-        ("file://~/path/to/repo.git/", ("file", None, None, None, "~/path/to/repo.git")),
-        # bad ports should give us None
-        ("ssh://host.xz:port/path/to/repo.git/", None),
-        # bad ports should give us None
-        ("ssh://host-foo.xz:port/path/to/repo.git/", None),
-        # regular file paths should give us None
-        ("/path/to/repo.git/", None),
-        ("path/to/repo.git/", None),
-        ("~/path/to/repo.git", None),
-    ],
-)
-def test_git_url_parse(url, parts):
-    if parts is None:
-        with pytest.raises(ValueError):
-            url_util.parse_git_url(url)
-    else:
-        assert parts == url_util.parse_git_url(url)
-
-
 def test_default_download_name():
     url = "https://example.com:1234/path/to/file.txt;params?abc=def#file=blob.tar"
     filename = url_util.default_download_filename(url)
@@ -292,3 +207,29 @@ def test_default_download_name_dot_dot():
     assert url_util.default_download_filename("https://example.com/.") == "_"
     assert url_util.default_download_filename("https://example.com/..") == "_."
     assert url_util.default_download_filename("https://example.com/.abcdef") == "_abcdef"
+
+
+def test_parse_link_rel_next():
+    parse = url_util.parse_link_rel_next
+    assert parse(r'</abc>; rel="next"') == "/abc"
+    assert parse(r'</abc>; x=y; rel="next", </def>; x=y; rel="prev"') == "/abc"
+    assert parse(r'</abc>; rel="prev"; x=y, </def>; x=y; rel="next"') == "/def"
+
+    # example from RFC5988
+    assert (
+        parse(
+            r"""</TheBook/chapter2>; title*=UTF-8'de'letztes%20Kapitel; rel="previous","""
+            r"""</TheBook/chapter4>; title*=UTF-8'de'n%c3%a4chstes%20Kapitel; rel="next" """
+        )
+        == "/TheBook/chapter4"
+    )
+
+    assert (
+        parse(r"""<https://example.com/example>; key=";a=b, </c/d>; e=f"; rel="next" """)
+        == "https://example.com/example"
+    )
+
+    assert parse("https://example.com/example") is None
+    assert parse("<https://example.com/example; broken=broken") is None
+    assert parse("https://example.com/example; rel=prev") is None
+    assert parse("https://example.com/example; a=b; c=d; g=h") is None

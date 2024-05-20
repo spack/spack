@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,6 +8,7 @@ import re
 import sys
 import time
 from os.path import basename
+from pathlib import Path
 from subprocess import PIPE, Popen
 
 from llnl.util import tty
@@ -70,6 +71,11 @@ class Wrf(Package):
     tags = ["windows"]
 
     version(
+        "4.5.1",
+        sha256="9d557c34c105db4d41e727843ecb19199233c7cf82c5369b34a2ce8efe65e2d1",
+        url="https://github.com/wrf-model/WRF/releases/download/v4.5.1/v4.5.1.tar.gz",
+    )
+    version(
         "4.5.0",
         sha256="14fd78abd4e32c1d99e2e97df0370030a5c58ec84c343591bdc5e74f163c5525",
         url="https://github.com/wrf-model/WRF/releases/download/v4.5/v4.5.tar.gz",
@@ -96,15 +102,22 @@ class Wrf(Package):
         url="https://github.com/wrf-model/WRF/archive/V3.9.1.1.tar.gz",
     )
 
-    variant("build_type", default="dmpar", values=("serial", "smpar", "dmpar", "dm+sm"))
+    variant(
+        "build_type",
+        default="dmpar",
+        description="Build type",
+        values=("serial", "smpar", "dmpar", "dm+sm"),
+    )
     variant(
         "nesting",
         default="basic",
+        description="Nesting",
         values=("no_nesting", "basic", "preset_moves", "vortex_following"),
     )
     variant(
         "compile_type",
         default="em_real",
+        description="Compile type",
         values=(
             "em_real",
             "em_quarter_ss",
@@ -156,11 +169,19 @@ class Wrf(Package):
     patch("patches/4.2/var.gen_be.Makefile.patch", when="@4.2:")
     patch("patches/4.2/Makefile.patch", when="@4.2")
     patch("patches/4.2/tirpc_detect.patch", when="@4.2")
-    patch("patches/4.2/add_aarch64.patch", when="@4.2:")
+    patch("patches/4.2/add_aarch64.patch", when="@4.2:4.3.1 %gcc target=aarch64:")
+    patch("patches/4.2/add_aarch64_acfl.patch", when="@4.2:4.3.1 %arm target=aarch64:")
     patch("patches/4.2/configure_aocc_2.3.patch", when="@4.2 %aocc@:2.4.0")
-    patch("patches/4.2/configure_aocc_3.0.patch", when="@4.2: %aocc@3.0.0:3.2.0")
+    patch("patches/4.2/configure_aocc_3.0.patch", when="@4.2 %aocc@3.0.0:3.2.0")
     patch("patches/4.2/hdf5_fix.patch", when="@4.2: %aocc")
-    patch("patches/4.2/derf_fix.patch", when="@4.2 %aocc")
+    patch("patches/4.2/derf_fix.patch", when="@=4.2 %aocc")
+    patch(
+        "patches/4.2/add_tools_flags_acfl2304.patch",
+        when="@4.2:4.4.2 %arm@23.04.1: target=aarch64:",
+    )
+
+    patch("patches/4.3/add_aarch64.patch", when="@4.3.2:4.4.2 %gcc target=aarch64:")
+    patch("patches/4.3/add_aarch64_acfl.patch", when="@4.3.2:4.4.2 %arm target=aarch64:")
 
     patch("patches/4.4/arch.postamble.patch", when="@4.4:")
     patch("patches/4.4/configure.patch", when="@4.4:4.4.2")
@@ -195,13 +216,13 @@ class Wrf(Package):
     )
     # Add ARM compiler support
     patch(
-        "https://github.com/wrf-model/WRF/pull/1888/commits/4a084e03575da65f254917ef5d8eb39074abd3fc.patch",
-        sha256="c522c4733720df9a18237c06d8ab6199fa9674d78375b644aec7017cb38af9c5",
+        "https://github.com/wrf-model/WRF/commit/4a084e03575da65f254917ef5d8eb39074abd3fc.patch?full_index=1",
+        sha256="2d06d709074ded9bd6842aa83c0dfdad5a4e4e2df99e2e5d4a82579f0486117e",
         when="@4.5: %arm",
     )
     patch(
-        "https://github.com/wrf-model/WRF/pull/1888/commits/6087d9192f7f91967147e50f5bc8b9e49310cf98.patch",
-        sha256="f82a18cf7334e0cbbfdf4ef3aa91ca26d4a372709f114ce0116b3fbb136ffac6",
+        "https://github.com/wrf-model/WRF/commit/6087d9192f7f91967147e50f5bc8b9e49310cf98.patch?full_index=1",
+        sha256="7c6487aefaa6cda0fff3976e78da07b09d2ba6c005d649f35a0f8f1694a0b2bb",
         when="@4.5: %arm",
     )
 
@@ -217,7 +238,7 @@ class Wrf(Package):
     depends_on("netcdf-fortran")
     depends_on("jasper")
     depends_on("libpng")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("perl")
     depends_on("jemalloc", when="%aocc")
     # not sure if +fortran is required, but seems like a good idea
@@ -272,6 +293,26 @@ class Wrf(Package):
 
         filter_file("^#!/bin/csh -f", "#!/usr/bin/env csh", *files)
         filter_file("^#!/bin/csh", "#!/usr/bin/env csh", *files)
+
+    @run_before("configure", when="%aocc@4:")
+    def create_aocc_config(self):
+        param = {
+            "MPICC": self.spec["mpi"].mpicc,
+            "MPIFC": self.spec["mpi"].mpifc,
+            "CTSM_SUBST": (
+                "-DWRF_USE_CLM" if self.spec.satisfies("@:4.2.2") else "CONFIGURE_D_CTSM"
+            ),
+            "NETCDFPAR_BUILD": (
+                "CONFIGURE_NETCDFPAR_BUILD" if self.spec.satisfies("@4.4.0:") else ""
+            ),
+        }
+
+        zen_conf = (Path(__file__).parent / "aocc_config.inc").read_text().format(**param)
+
+        if self.spec.satisfies("@4.0:"):
+            filter_file("#insert new stanza here", zen_conf, "arch/configure.defaults")
+        else:
+            filter_file("#insert new stanza here", zen_conf, "arch/configure_new.defaults")
 
     def answer_configure_question(self, outputbuf):
         # Platform options question:

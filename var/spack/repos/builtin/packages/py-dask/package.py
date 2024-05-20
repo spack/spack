@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class PyDask(PythonPackage):
     pypi = "dask/dask-1.1.0.tar.gz"
 
     maintainers("skosukhin")
+
+    license("BSD-3-Clause")
 
     version("2023.4.1", sha256="9dc72ebb509f58f3fe518c12dd5a488c67123fdd66ccb0b968b34fd11e512153")
     version("2022.10.2", sha256="42cb43f601709575fa46ce09e74bea83fdd464187024f56954e09d9b428ceaab")
@@ -103,7 +105,7 @@ class PyDask(PythonPackage):
     depends_on("py-bokeh@2.4.2:2", type=("build", "run"), when="@2022.10.2:2023.3 +diagnostics")
     depends_on("py-bokeh@2.4.2:", type=("build", "run"), when="@2023.4.0: +diagnostics")
     depends_on("py-jinja2", type=("build", "run"), when="@2022.10.2: +diagnostics")
-    depends_on("py-jinja2@2.10.3", type=("build", "run"), when="@2023.4.0: +diagnostics")
+    depends_on("py-jinja2@2.10.3:", type=("build", "run"), when="@2023.4.0: +diagnostics")
 
     # Requirements for dask.delayed
     # The dependency on py-cloudpickle is non-optional starting version 2021.3.1

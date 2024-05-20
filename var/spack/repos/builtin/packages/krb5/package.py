@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,9 @@ class Krb5(AutotoolsPackage):
     list_url = "https://kerberos.org/dist/krb5/"
     list_depth = 1
 
+    license("MIT")
+
+    version("1.21.2", sha256="9560941a9d843c0243a71b17a7ac6fe31c7cebb5bce3983db79e52ae7e850491")
     version("1.20.1", sha256="704aed49b19eb5a7178b34b2873620ec299db08752d6a8574f95d41879ab8851")
     version("1.19.4", sha256="41f5981c5a4de0a26b3937e679a116cd5b3739641fd253124aac91f7179b54eb")
     version("1.19.3", sha256="56d04863cfddc9d9eb7af17556e043e3537d41c6e545610778676cf551b9dcd0")
@@ -34,13 +37,16 @@ class Krb5(AutotoolsPackage):
     depends_on("openssl@:1", when="@:1.19")
     depends_on("openssl")
     depends_on("gettext")
+    depends_on("perl", type="build")
     depends_on("findutils", type="build")
+    depends_on("pkgconfig", type="build", when="^openssl~shared")
 
     variant(
         "shared", default=True, description="install shared libraries if True, static if false"
     )
     # This patch is applied in newer upstream releases
     patch("mit-krb5-1.17-static-libs.patch", level=0, when="@:1.18.9")
+    patch("freebsd-link.patch", when="platform=freebsd")
 
     configure_directory = "src"
     build_directory = "src"
@@ -68,17 +74,23 @@ class Krb5(AutotoolsPackage):
         )
 
     def configure_args(self):
+        spec = self.spec
         args = ["--without-system-verto"]
 
-        if "~shared" in self.spec:
+        if spec.satisfies("~shared"):
             args.append("--enable-static")
             args.append("--disable-shared")
         else:
             args.append("--disable-static")
 
         # https://github.com/spack/spack/issues/34193
-        if "%gcc@10:" in self.spec:
+        if spec.satisfies("%gcc@10:"):
             args.append("CFLAGS=-fcommon")
+
+        if spec["openssl"].satisfies("~shared"):
+            pkgconf = which("pkg-config")
+            ssllibs = pkgconf("--static", "--libs", "openssl", output=str)
+            args.append(f"LDFLAGS={ssllibs}")
 
         return args
 

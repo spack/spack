@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,8 @@ class RGgforce(RPackage):
     extension system so using 'ggforce' should be a stable experience."""
 
     cran = "ggforce"
+
+    license("MIT")
 
     version("0.4.1", sha256="b44219fb63c45fa003c64bca323452f16dcace635204bc0127d3244c0f451873")
     version("0.3.3", sha256="2a283bb409da6b96929863a926b153bcc59b2c6f00551805db1d1d43e5929f2f")

@@ -1,4 +1,4 @@
-.. Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -250,9 +250,10 @@ Compiler configuration
 
 Spack has the ability to build packages with multiple compilers and
 compiler versions. Compilers can be made available to Spack by
-specifying them manually in ``compilers.yaml``, or automatically by
-running ``spack compiler find``, but for convenience Spack will
-automatically detect compilers the first time it needs them.
+specifying them manually in ``compilers.yaml`` or ``packages.yaml``,
+or automatically by running ``spack compiler find``, but for
+convenience Spack will automatically detect compilers the first time
+it needs them.
 
 .. _cmd-spack-compilers:
 
@@ -457,6 +458,54 @@ specification. The operations available to modify the environment are ``set``, `
          prepend_path: # Similar for append|remove_path
            LD_LIBRARY_PATH: /ld/paths/added/by/setvars/sh
 
+.. note::
+
+   Spack is in the process of moving compilers from a separate
+   attribute to be handled like all other packages. As part of this
+   process, the ``compilers.yaml`` section will eventually be replaced
+   by configuration in the ``packages.yaml`` section. This new
+   configuration is now available, although it is not yet the default
+   behavior.
+
+Compilers can also be configured as external packages in the
+``packages.yaml`` config file. Any external package for a compiler
+(e.g. ``gcc`` or ``llvm``) will be treated as a configured compiler
+assuming the paths to the compiler executables are determinable from
+the prefix.
+
+If the paths to the compiler executable are not determinable from the
+prefix, you can add them to the ``extra_attributes`` field. Similarly,
+all other fields from the compilers config can be added to the
+``extra_attributes`` field for an external representing a compiler.
+
+Note that the format for the ``paths`` field in the
+``extra_attributes`` section is different than in the ``compilers``
+config. For compilers configured as external packages, the section is
+named ``compilers`` and the dictionary maps language names (``c``,
+``cxx``, ``fortran``) to paths, rather than using the names ``cc``,
+``fc``, and ``f77``.
+
+.. code-block:: yaml
+
+   packages:
+     gcc:
+       external:
+       - spec: gcc@12.2.0 arch=linux-rhel8-skylake
+         prefix: /usr
+         extra_attributes:
+           environment:
+             set:
+               GCC_ROOT: /usr
+       external:
+       - spec: llvm+clang@15.0.0 arch=linux-rhel8-skylake
+         prefix: /usr
+         extra_attributes:
+           compilers:
+             c: /usr/bin/clang-with-suffix
+             cxx: /usr/bin/clang++-with-extra-info
+             fortran: /usr/bin/gfortran
+           extra_rpaths:
+           - /usr/lib/llvm/
 
 ^^^^^^^^^^^^^^^^^^^^^^^
 Build Your Own Compiler
@@ -623,7 +672,7 @@ Fortran.
 
       compilers:
       - compiler:
-        ...
+        # ...
         paths:
           cc: /usr/bin/clang
           cxx: /usr/bin/clang++
@@ -1529,12 +1578,15 @@ Microsoft Visual Studio
 """""""""""""""""""""""
 
 Microsoft Visual Studio provides the only Windows C/C++ compiler that is currently supported by Spack.
+Spack additionally requires that the Windows SDK (including WGL) to be installed as part of your
+visual studio installation as it is required to build many packages from source.
 
 We require several specific components to be included in the Visual Studio installation.
 One is the C/C++ toolset, which can be selected as "Desktop development with C++" or "C++ build tools,"
 depending on installation type (Professional, Build Tools, etc.)  The other required component is
 "C++ CMake tools for Windows," which can be selected from among the optional packages.
 This provides CMake and Ninja for use during Spack configuration.
+
 
 If you already have Visual Studio installed, you can make sure these components are installed by
 rerunning the installer.  Next to your installation, select "Modify" and look at the

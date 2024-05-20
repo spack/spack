@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,11 @@ class Mumps(Package):
     homepage = "https://graal.ens-lyon.fr/MUMPS/index.php"
     url = "https://graal.ens-lyon.fr/MUMPS/MUMPS_5.5.1.tar.gz"
 
+    maintainers("jcortial-safran")
+
+    version("5.6.2", sha256="13a2c1aff2bd1aa92fe84b7b35d88f43434019963ca09ef7e8c90821a8f1d59a")
+    version("5.6.1", sha256="1920426d543e34d377604070fde93b8d102aa38ebdf53300cbce9e15f92e2896")
+    version("5.6.0", sha256="3e08c1bdea7aaaba303d3cf03059f3b4336fa49bef93f4260f478f067f518289")
     version("5.5.1", sha256="1abff294fa47ee4cfd50dfd5c595942b72ebfcedce08142a75a99ab35014fa15")
     version("5.5.0", sha256="e54d17c5e42a36c40607a03279e0704d239d71d38503aab68ef3bfe0a9a79c13")
     version("5.4.1", sha256="93034a1a9fe0876307136dcde7e98e9086e199de76f1c47da822e7d4de987fa8")
@@ -130,16 +135,18 @@ class Mumps(Package):
                 [
                     "IMETIS = -I%s" % self.spec["parmetis"].prefix.include,
                     (
-                        "LMETIS = -L%s -l%s -L%s -l%s"
-                        % (
-                            self.spec["parmetis"].prefix.lib,
-                            "parmetis",
-                            self.spec["metis"].prefix.lib,
-                            "metis",
+                        (
+                            "LMETIS = -L%s -l%s -L%s -l%s"
+                            % (
+                                self.spec["parmetis"].prefix.lib,
+                                "parmetis",
+                                self.spec["metis"].prefix.lib,
+                                "metis",
+                            )
                         )
-                    )
-                    if not shared
-                    else "LMETIS =",
+                        if not shared
+                        else "LMETIS ="
+                    ),
                 ]
             )
 
@@ -148,9 +155,11 @@ class Mumps(Package):
             makefile_conf.extend(
                 [
                     "IMETIS = -I%s" % self.spec["metis"].prefix.include,
-                    ("LMETIS = -L%s -l%s" % (self.spec["metis"].prefix.lib, "metis"))
-                    if not shared
-                    else "LMETIS =",
+                    (
+                        ("LMETIS = -L%s -l%s" % (self.spec["metis"].prefix.lib, "metis"))
+                        if not shared
+                        else "LMETIS ="
+                    ),
                 ]
             )
 
@@ -223,7 +232,7 @@ class Mumps(Package):
         # As of version 5.2.0, MUMPS is able to take advantage
         # of the GEMMT BLAS extension. MKL and amdblis are the only
         # known BLAS implementation supported.
-        if "@5.2.0: ^mkl" in self.spec:
+        if self.spec["blas"].name in INTEL_MATH_LIBRARIES and self.spec.satisfies("@5.2.0:"):
             optf.append("-DGEMMT_AVAILABLE")
 
         if "@5.2.0: ^amdblis@3.0:" in self.spec:

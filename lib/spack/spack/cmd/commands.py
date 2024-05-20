@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -36,13 +36,13 @@ update_completion_args: Dict[str, Dict[str, Any]] = {
     "bash": {
         "aliases": True,
         "format": "bash",
-        "header": os.path.join(spack.paths.share_path, "bash", "spack-completion.in"),
+        "header": os.path.join(spack.paths.share_path, "bash", "spack-completion.bash"),
         "update": os.path.join(spack.paths.share_path, "spack-completion.bash"),
     },
     "fish": {
         "aliases": True,
         "format": "fish",
-        "header": os.path.join(spack.paths.share_path, "fish", "spack-completion.in"),
+        "header": os.path.join(spack.paths.share_path, "fish", "spack-completion.fish"),
         "update": os.path.join(spack.paths.share_path, "spack-completion.fish"),
     },
 }
@@ -796,7 +796,9 @@ def names(args: Namespace, out: IO) -> None:
     commands = copy.copy(spack.cmd.all_commands())
 
     if args.aliases:
-        commands.extend(spack.main.aliases.keys())
+        aliases = spack.config.get("config:aliases")
+        if aliases:
+            commands.extend(aliases.keys())
 
     colify(commands, output=out)
 
@@ -811,6 +813,11 @@ def bash(args: Namespace, out: IO) -> None:
     """
     parser = spack.main.make_argument_parser()
     spack.main.add_all_commands(parser)
+
+    aliases_config = spack.config.get("config:aliases")
+    if aliases_config:
+        aliases = ";".join(f"{key}:{val}" for key, val in aliases_config.items())
+        out.write(f'SPACK_ALIASES="{aliases}"\n\n')
 
     writer = BashCompletionWriter(parser.prog, out, args.aliases)
     writer.write(parser)

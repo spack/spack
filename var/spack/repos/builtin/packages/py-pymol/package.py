@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -58,7 +58,7 @@ class PyPymol(PythonPackage):
         script = join_path(python_platlib, "pymol", "__init__.py")
 
         shebang = "#!/bin/sh\n"
-        fdata = 'exec {0} {1} "$@"'.format(self.spec["python"].command, script)
+        fdata = f'exec {python.path} {script} "$@"'
         with open(fname, "w") as new:
             new.write(shebang + fdata)
         set_executable(fname)

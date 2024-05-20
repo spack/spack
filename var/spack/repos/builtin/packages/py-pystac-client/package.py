@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,8 @@ class PyPystacClient(PythonPackage):
 
     homepage = "https://github.com/stac-utils/pystac-client.git"
     pypi = "pystac-client/pystac-client-0.5.1.tar.gz"
+
+    license("Apache-2.0")
 
     version("0.5.1", sha256="f585bd9bcd52ee399c8a292dbb7e0405c0da359a73bc07c1ef82a65c17124d94")
 

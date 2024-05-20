@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,6 +18,8 @@ class Graphviz(AutotoolsPackage):
     homepage = "http://www.graphviz.org"
     git = "https://gitlab.com/graphviz/graphviz.git"
     url = "https://gitlab.com/graphviz/graphviz/-/archive/2.46.0/graphviz-2.46.0.tar.bz2"
+
+    license("EPL-1.0")
 
     version("8.0.5", sha256="c1901fe52483fad55fbf893ccd59a3dcaedd53f0d50b5aebbbf3deaba93b674d")
     version("8.0.1", sha256="19928f09f759676578b50101420b24475eb35f712ffbe8a97254f64b20fdbd03")
@@ -103,7 +105,7 @@ class Graphviz(AutotoolsPackage):
         depends_on(lang, when=("+" + lang))
 
     # Feature dependencies
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("groff", type="build", when="+doc")
     depends_on("ghostscript", type="build", when="+doc")
     depends_on("expat", when="+expat")
@@ -193,10 +195,14 @@ class Graphviz(AutotoolsPackage):
             "x",
         ]:
             args += self.with_or_without(var)
-        for var in ["zlib", "expat", "java"]:
+        for var in ("expat", "java"):
             if "+" + var in spec:
                 args.append("--with-{0}includedir={1}".format(var, spec[var].prefix.include))
                 args.append("--with-{0}libdir={1}".format(var, spec[var].prefix.lib))
+
+        if "+zlib" in spec:
+            args.append("--with-zlibincludedir={}".format(spec["zlib-api"].prefix.include))
+            args.append("--with-zliblibdir={}".format(spec["zlib-api"].prefix.lib))
 
         args.append("--{0}-gtk".format("with" if "+gtkplus" in spec else "without"))
 

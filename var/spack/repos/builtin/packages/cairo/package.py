@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,9 @@ class Cairo(AutotoolsPackage):
     homepage = "https://www.cairographics.org/"
     url = "https://www.cairographics.org/releases/cairo-1.16.0.tar.xz"
 
+    license("LGPL-2.1-or-later OR MPL-1.1", checked_by="tgamblin")
+
+    version("1.18.0", sha256="243a0736b978a33dee29f9cca7521733b78a65b5418206fef7bd1c3d4cf10b64")
     version(
         "1.17.4",
         sha256="74b24c1ed436bbe87499179a3b27c43f4143b8676d8ad237a6fa787401959705",
@@ -39,6 +42,8 @@ class Cairo(AutotoolsPackage):
     variant("fc", default=False, description="Enable cairo's Fontconfig font backend feature")
     variant("png", default=False, description="Enable cairo's PNG functions feature")
     variant("svg", default=False, description="Enable cairo's SVN functions feature")
+    variant("shared", default=True, description="Build shared libraries")
+    variant("pic", default=True, description="Enable position-independent code (PIC)")
 
     depends_on("libx11", when="+X")
     depends_on("libxext", when="+X")
@@ -54,13 +59,14 @@ class Cairo(AutotoolsPackage):
     depends_on("autoconf", type="build")
     depends_on("libtool", type="build")
     depends_on("m4", type="build")
-    depends_on("freetype", when="+ft")
+    depends_on("freetype build_system=autotools", when="+ft")
     depends_on("pkgconfig", type="build")
     depends_on("fontconfig@2.10.91:", when="+fc")  # Require newer version of fontconfig.
     depends_on("which", type="build")
 
     conflicts("+png", when="platform=darwin")
     conflicts("+svg", when="platform=darwin")
+    conflicts("+shared~pic")
 
     # patch from https://gitlab.freedesktop.org/cairo/cairo/issues/346
     patch("fontconfig.patch", when="@1.16.0:1.17.2")
@@ -84,6 +90,15 @@ class Cairo(AutotoolsPackage):
         args.extend(self.enable_or_disable("gobject"))
         args.extend(self.enable_or_disable("ft"))
         args.extend(self.enable_or_disable("fc"))
+        args.extend(self.enable_or_disable("shared"))
+        args.extend(self.with_or_without("pic"))
+
+        if self.spec.satisfies("+ft ^freetype~shared"):
+            pkgconf = which("pkg-config")
+            ldflags = pkgconf("--libs-only-L", "--static", "freetype2", output=str)
+            libs = pkgconf("--libs-only-l", "--static", "freetype2", output=str)
+            args.append(f"LDFLAGS={ldflags}")
+            args.append(f"LIBS={libs}")
 
         return args
 

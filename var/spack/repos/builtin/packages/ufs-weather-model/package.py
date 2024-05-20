@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,8 +19,18 @@ class UfsWeatherModel(CMakePackage):
 
     maintainers("t-brown")
 
-    version("2.0.0", tag="ufs-v2.0.0", submodules=True)
-    version("1.1.0", tag="ufs-v1.1.0", submodules=True)
+    version(
+        "2.0.0",
+        tag="ufs-v2.0.0",
+        commit="e3cb92f1cd8941c019ee5ef7da5c9aef67d55cf8",
+        submodules=True,
+    )
+    version(
+        "1.1.0",
+        tag="ufs-v1.1.0",
+        commit="5bea16b6d41d810dc2e45cba0fa3841f45ea7c7a",
+        submodules=True,
+    )
 
     variant(
         "32bit", default=True, description="Enable 32-bit single precision arithmetic in dycore"
@@ -58,6 +68,7 @@ class UfsWeatherModel(CMakePackage):
     depends_on("sp")
     depends_on("w3emc")
     depends_on("w3nco")
+    depends_on("python", type="build")
 
     def setup_build_environment(self, env):
         spec = self.spec

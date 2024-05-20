@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,6 @@ class Turbine(AutotoolsPackage):
     homepage = "http://swift-lang.org/Swift-T"
     url = "https://swift-lang.github.io/swift-t-downloads/spack/turbine-1.3.0.tar.gz"
     git = "https://github.com/swift-lang/swift-t.git"
-    configure_directory = "turbine/code"
 
     version("master", branch="master")
     version("1.3.0", sha256="9709e5dada91a7dce958a7967d6ff2bd39ccc9e7da62d05a875324b5089da393")
@@ -58,9 +57,14 @@ class Turbine(AutotoolsPackage):
             "--with-c-utils=" + self.spec["exmcutils"].prefix,
             "--with-adlb=" + self.spec["adlbx"].prefix,
             "--with-tcl=" + self.spec["tcl"].prefix,
-            "--with-mpi=" + self.spec["mpi"].prefix,
             "--disable-static-pkg",
         ]
+
+        if self.spec.satisfies("^intel-oneapi-mpi"):
+            args.append("--with-mpi=" + self.spec["intel-oneapi-mpi"].package.component_prefix)
+        else:
+            args.append("--with-mpi=" + self.spec["mpi"].prefix)
+
         if "+hdf5" in self.spec:
             args.append("--with-hdf5=ON")
         else:

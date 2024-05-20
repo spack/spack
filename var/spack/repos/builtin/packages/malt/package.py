@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,10 +15,13 @@ class Malt(CMakePackage):
 
     # Project infos
     homepage = "https://memtt.github.io/malt"
-    url = "https://github.com/memtt/malt/archive/v1.2.1.tar.gz"
+    url = "https://github.com/memtt/malt/archive/v1.2.2.tar.gz"
     maintainers("svalat")
 
+    license("CECILL-C")
+
     # Versions
+    version("1.2.2", sha256="e19f49ad97bf2deedf0557eb00267f4dcf1c932c494dd07ada07fcdf5421935f")
     version("1.2.1", sha256="0e4c0743561f9fcc04dc83457386167a9851fc9289765f8b4f9390384ae3618a")
 
     # Variants

@@ -1,10 +1,9 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import collections
 import os
-import sys
 
 import pytest
 
@@ -148,7 +147,7 @@ def test_test_spec_run_once(mock_packages, install_mockery, mock_test_stage):
         test_suite()
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Cannot find echo executable")
+@pytest.mark.not_on_windows("Cannot find echo executable")
 def test_test_spec_passes(mock_packages, install_mockery, mock_test_stage, monkeypatch):
     spec = spack.spec.Spec("simple-standalone-test").concretized()
     monkeypatch.setattr(spack.spec.Spec, "installed", _true)

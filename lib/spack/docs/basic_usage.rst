@@ -1,4 +1,4 @@
-.. Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -45,7 +45,8 @@ Listing available packages
 
 To install software with Spack, you need to know what software is
 available.  You can see a list of available package names at the
-:ref:`package-list` webpage, or using the ``spack list`` command.
+`packages.spack.io <https://packages.spack.io>`_ website, or
+using the ``spack list`` command.
 
 .. _cmd-spack-list:
 
@@ -60,7 +61,7 @@ can install:
    :ellipsis: 10
 
 There are thousands of them, so we've truncated the output above, but you
-can find a :ref:`full list here <package-list>`.
+can find a `full list here <https://packages.spack.io>`_.
 Packages are listed by name in alphabetical order.
 A pattern to match with no wildcards, ``*`` or ``?``,
 will be treated as though it started and ended with
@@ -864,7 +865,7 @@ There are several different ways to use Spack packages once you have
 installed them. As you've seen, spack packages are installed into long
 paths with hashes, and you need a way to get them into your path. The
 easiest way is to use :ref:`spack load <cmd-spack-load>`, which is
-described in the next section.
+described in this section.
 
 Some more advanced ways to use Spack packages include:
 
@@ -958,7 +959,86 @@ use ``spack find --loaded``.
 You can also use ``spack load --list`` to get the same output, but it
 does not have the full set of query options that ``spack find`` offers.
 
-We'll learn more about Spack's spec syntax in the next section.
+We'll learn more about Spack's spec syntax in :ref:`a later section <sec-specs>`.
+
+
+.. _extensions:
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Python packages and virtual environments
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Spack can install a large number of Python packages. Their names are
+typically prefixed with ``py-``. Installing and using them is no
+different from any other package:
+
+.. code-block:: console
+
+   $ spack install py-numpy
+   $ spack load py-numpy
+   $ python3
+   >>> import numpy
+
+The ``spack load`` command sets the ``PATH`` variable so that the right Python
+executable is used, and makes sure that ``numpy`` and its dependencies can be
+located in the ``PYTHONPATH``.
+
+Spack is different from other Python package managers in that it installs
+every package into its *own* prefix. This is in contrast to ``pip``, which
+installs all packages into the same prefix, be it in a virtual environment
+or not.
+
+For many users, **virtual environments** are more convenient than repeated
+``spack load`` commands, particularly when working with multiple Python
+packages. Fortunately Spack supports environments itself, which together
+with a view are no different from Python virtual environments.
+
+The recommended way of working with Python extensions such as ``py-numpy``
+is through :ref:`Environments <environments>`. The following example creates
+a Spack environment with ``numpy`` in the current working directory. It also
+puts a filesystem view in ``./view``, which is a more traditional combined
+prefix for all packages in the environment.
+
+.. code-block:: console
+
+   $ spack env create --with-view view --dir .
+   $ spack -e . add py-numpy
+   $ spack -e . concretize
+   $ spack -e . install
+
+Now you can activate the environment and start using the packages:
+
+.. code-block:: console
+
+   $ spack env activate .
+   $ python3
+   >>> import numpy
+
+The environment view is also a virtual environment, which is useful if you are
+sharing the environment with others who are unfamiliar with Spack. They can
+either use the Python executable directly:
+
+.. code-block:: console
+
+   $ ./view/bin/python3
+   >>> import numpy
+
+or use the activation script:
+
+.. code-block:: console
+
+   $ source ./view/bin/activate
+   $ python3
+   >>> import numpy
+
+In general, there should not be much difference between ``spack env activate``
+and using the virtual environment. The main advantage of ``spack env activate``
+is that it knows about more packages than just Python packages, and it may set
+additional runtime variables that are not covered by the virtual environment
+activation script.
+
+See :ref:`environments` for a more in-depth description of Spack
+environments and customizations to views.
 
 
 .. _sec-specs:
@@ -1118,6 +1198,9 @@ and ``3.4.2``.  Similarly, ``@4.2:`` means any version above and including
 ``4.2``.  As a short-hand, ``@3`` is equivalent to the range ``@3:3`` and
 includes any version with major version ``3``.
 
+Versions are ordered lexicograpically by its components. For more details
+on the order, see :ref:`the packaging guide <version-comparison>`.
+
 Notice that you can distinguish between the specific version ``@=3.2`` and
 the range ``@3.2``. This is useful for packages that follow a versioning
 scheme that omits the zero patch version number: ``3.2``, ``3.2.1``,
@@ -1128,6 +1211,10 @@ scheme that omits the zero patch version number: ``3.2``, ``3.2.1``,
 A version specifier can also be a list of ranges and specific versions,
 separated by commas.  For example, ``@1.0:1.5,=1.7.1`` matches any version
 in the range ``1.0:1.5`` and the specific version ``1.7.1``.
+
+^^^^^^^^^^^^
+Git versions
+^^^^^^^^^^^^
 
 For packages with a ``git`` attribute, ``git`` references
 may be specified instead of a numerical version i.e. branches, tags
@@ -1525,6 +1612,30 @@ any MPI implementation will do.  If another package depends on
 error.  Likewise, if you try to plug in some package that doesn't
 provide MPI, Spack will raise an error.
 
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Explicit binding of virtual dependencies
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+There are packages that provide more than just one virtual dependency. When interacting with them, users
+might want to utilize just a subset of what they could provide, and use other providers for virtuals they
+need.
+
+It is possible to be more explicit and tell Spack which dependency should provide which virtual, using a
+special syntax:
+
+.. code-block:: console
+
+   $ spack spec strumpack ^[virtuals=mpi] intel-parallel-studio+mkl ^[virtuals=lapack] openblas
+
+Concretizing the spec above produces the following DAG:
+
+.. figure:: images/strumpack_virtuals.svg
+   :scale: 60 %
+   :align: center
+
+where ``intel-parallel-studio`` *could* provide ``mpi``, ``lapack``, and ``blas`` but is used only for the former. The ``lapack``
+and ``blas`` dependencies are satisfied by ``openblas``.
+
 ^^^^^^^^^^^^^^^^^^^^^^^^
 Specifying Specs by Hash
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -1672,165 +1783,6 @@ The ``spack verify`` command also accepts the ``-l,--local`` option to
 check only local packages (as opposed to those used transparently from
 ``upstream`` spack instances) and the ``-j,--json`` option to output
 machine-readable json data for any errors.
-
-
-.. _extensions:
-
----------------------------
-Extensions & Python support
----------------------------
-
-Spack's installation model assumes that each package will live in its
-own install prefix.  However, certain packages are typically installed
-*within* the directory hierarchy of other packages.  For example,
-`Python <https://www.python.org>`_ packages are typically installed in the
-``$prefix/lib/python-2.7/site-packages`` directory.
-
-In Spack, installation prefixes are immutable, so this type of installation
-is not directly supported. However, it is possible to create views that
-allow you to merge install prefixes of multiple packages into a single new prefix.
-Views are a convenient way to get a more traditional filesystem structure.
-Using *extensions*, you can ensure that Python packages always share the
-same prefix in the view as Python itself. Suppose you have
-Python installed like so:
-
-.. code-block:: console
-
-   $ spack find python
-   ==> 1 installed packages.
-   -- linux-debian7-x86_64 / gcc@4.4.7 --------------------------------
-   python@2.7.8
-
-.. _cmd-spack-extensions:
-
-^^^^^^^^^^^^^^^^^^^^
-``spack extensions``
-^^^^^^^^^^^^^^^^^^^^
-
-You can find extensions for your Python installation like this:
-
-.. code-block:: console
-
-   $ spack extensions python
-   ==> python@2.7.8%gcc@4.4.7 arch=linux-debian7-x86_64-703c7a96
-   ==> 36 extensions:
-   geos          py-ipython     py-pexpect    py-pyside            py-sip
-   py-basemap    py-libxml2     py-pil        py-pytz              py-six
-   py-biopython  py-mako        py-pmw        py-rpy2              py-sympy
-   py-cython     py-matplotlib  py-pychecker  py-scientificpython  py-virtualenv
-   py-dateutil   py-mpi4py      py-pygments   py-scikit-learn
-   py-epydoc     py-mx          py-pylint     py-scipy
-   py-gnuplot    py-nose        py-pyparsing  py-setuptools
-   py-h5py       py-numpy       py-pyqt       py-shiboken
-
-   ==> 12 installed:
-   -- linux-debian7-x86_64 / gcc@4.4.7 --------------------------------
-   py-dateutil@2.4.0    py-nose@1.3.4       py-pyside@1.2.2
-   py-dateutil@2.4.0    py-numpy@1.9.1      py-pytz@2014.10
-   py-ipython@2.3.1     py-pygments@2.0.1   py-setuptools@11.3.1
-   py-matplotlib@1.4.2  py-pyparsing@2.0.3  py-six@1.9.0
-
-The extensions are a subset of what's returned by ``spack list``, and
-they are packages like any other.  They are installed into their own
-prefixes, and you can see this with ``spack find --paths``:
-
-.. code-block:: console
-
-   $ spack find --paths py-numpy
-   ==> 1 installed packages.
-   -- linux-debian7-x86_64 / gcc@4.4.7 --------------------------------
-       py-numpy@1.9.1  ~/spack/opt/linux-debian7-x86_64/gcc@4.4.7/py-numpy@1.9.1-66733244
-
-However, even though this package is installed, you cannot use it
-directly when you run ``python``:
-
-.. code-block:: console
-
-   $ spack load python
-   $ python
-   Python 2.7.8 (default, Feb 17 2015, 01:35:25)
-   [GCC 4.4.7 20120313 (Red Hat 4.4.7-11)] on linux2
-   Type "help", "copyright", "credits" or "license" for more information.
-   >>> import numpy
-   Traceback (most recent call last):
-     File "<stdin>", line 1, in <module>
-   ImportError: No module named numpy
-   >>>
-
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Using Extensions in Environments
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-The recommended way of working with extensions such as ``py-numpy``
-above is through :ref:`Environments <environments>`. For example,
-the following creates an environment in the current working directory
-with a filesystem view in the ``./view`` directory:
-
-.. code-block:: console
-
-   $ spack env create --with-view view --dir .
-   $ spack -e . add py-numpy
-   $ spack -e . concretize
-   $ spack -e . install
-
-We recommend environments for two reasons. Firstly, environments
-can be activated (requires :ref:`shell-support`):
-
-.. code-block:: console
-
-   $ spack env activate .
-
-which sets all the right environment variables such as ``PATH`` and
-``PYTHONPATH``. This ensures that
-
-.. code-block:: console
-
-   $ python
-   >>> import numpy
-
-works. Secondly, even without shell support, the view ensures
-that Python can locate its extensions:
-
-.. code-block:: console
-
-   $ ./view/bin/python
-   >>> import numpy
-
-See :ref:`environments` for a more in-depth description of Spack
-environments and customizations to views.
-
-^^^^^^^^^^^^^^^^^^^^
-Using ``spack load``
-^^^^^^^^^^^^^^^^^^^^
-
-A more traditional way of using Spack and extensions is ``spack load``
-(requires :ref:`shell-support`). This will add the extension to ``PYTHONPATH``
-in your current shell, and Python itself will be available in the ``PATH``:
-
-.. code-block:: console
-
-   $ spack load py-numpy
-   $ python
-   >>> import numpy
-
-The loaded packages can be checked using ``spack find --loaded``
-
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Loading Extensions via Modules
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Apart from ``spack env activate`` and ``spack load``, you can load numpy
-through your environment modules (using ``environment-modules`` or
-``lmod``). This will also add the extension to the ``PYTHONPATH`` in
-your current shell.
-
-.. code-block:: console
-
-   $ module load <name of numpy module>
-
-If you do not know the name of the specific numpy module you wish to
-load, you can use the ``spack module tcl|lmod loads`` command to get
-the name of the module from the Spack spec.
 
 -----------------------
 Filesystem requirements

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,10 @@ class BioconductorRsubread(RPackage):
     bioc = "rsubread"
 
     depends_on("r-matrix")
-    depends_on("zlib")
+    depends_on("zlib-api")
 
-    version("2.14.2", sha256="ac8be0fad0eb2743443e3a60a9a94eec78c746638aaccca70e7166d034dcebb5")
+    version(
+        "2.14.2",
+        sha256="ac8be0fad0eb2743443e3a60a9a94eec78c746638aaccca70e7166d034dcebb5",
+        deprecated=True,
+    )

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,10 +19,15 @@ class BioconductorEbseq(RPackage):
 
     homepage = "https://www.biostat.wisc.edu/~kendzior/EBSEQ/"
     url = "https://bioconductor.org/packages/release/bioc/src/contrib/EBSeq_1.40.0.tar.gz"
+    maintainers("pabloaledo")
 
     bioc = "ebseq"
 
-    version("1.40.0", sha256="a5d3a88743d61062c6d68a426b19c53a4afd2fa216abc884d42c187780994378")
+    version(
+        "1.40.0",
+        sha256="a5d3a88743d61062c6d68a426b19c53a4afd2fa216abc884d42c187780994378",
+        deprecated=True,
+    )
 
     depends_on("r-blockmodeling")
     depends_on("r-gplots")

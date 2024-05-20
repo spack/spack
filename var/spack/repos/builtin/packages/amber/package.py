@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -125,7 +125,7 @@ class Amber(Package, CudaPackage):
     variant("x11", description="Build programs that require X11", default=False)
     variant("update", description="Update the sources prior compilation", default=False)
 
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("bzip2")
     depends_on("flex", type="build")
     depends_on("bison", type="build")

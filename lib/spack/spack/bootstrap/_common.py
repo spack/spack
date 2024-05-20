@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,7 @@ import archspec.cpu
 import llnl.util.filesystem as fs
 from llnl.util import tty
 
+import spack.platforms
 import spack.store
 import spack.util.environment
 import spack.util.executable
@@ -53,10 +54,14 @@ def _try_import_from_store(
     installed_specs = spack.store.STORE.db.query(query_spec, installed=True)
 
     for candidate_spec in installed_specs:
-        pkg = candidate_spec["python"].package
+        # previously bootstrapped specs may not have a python-venv dependency.
+        if candidate_spec.dependencies("python-venv"):
+            python, *_ = candidate_spec.dependencies("python-venv")
+        else:
+            python, *_ = candidate_spec.dependencies("python")
         module_paths = [
-            os.path.join(candidate_spec.prefix, pkg.purelib),
-            os.path.join(candidate_spec.prefix, pkg.platlib),
+            os.path.join(candidate_spec.prefix, python.package.purelib),
+            os.path.join(candidate_spec.prefix, python.package.platlib),
         ]
         path_before = list(sys.path)
 
@@ -206,16 +211,16 @@ def _root_spec(spec_str: str) -> str:
     """Add a proper compiler and target to a spec used during bootstrapping.
 
     Args:
-        spec_str (str): spec to be bootstrapped. Must be without compiler and target.
+        spec_str: spec to be bootstrapped. Must be without compiler and target.
     """
-    # Add a proper compiler hint to the root spec. We use GCC for
-    # everything but MacOS and Windows.
-    if str(spack.platforms.host()) == "darwin":
+    # Add a compiler requirement to the root spec.
+    platform = str(spack.platforms.host())
+    if platform == "darwin":
         spec_str += " %apple-clang"
-    elif str(spack.platforms.host()) == "windows":
-        spec_str += " %msvc"
-    else:
+    elif platform == "linux":
         spec_str += " %gcc"
+    elif platform == "freebsd":
+        spec_str += " %clang"
 
     target = archspec.cpu.host().family
     spec_str += f" target={target}"

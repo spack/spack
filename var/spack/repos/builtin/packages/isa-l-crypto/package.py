@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -25,6 +25,8 @@ class IsaLCrypto(AutotoolsPackage):
     url = "https://github.com/intel/isa-l_crypto/archive/v2.22.0.tar.gz"
     git = "https://github.com/intel/isa-l_crypto.git"
     maintainers("hyoklee")
+
+    license("BSD-3-Clause")
 
     version("master", branch="master")
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ from llnl.util.lang import stable_partition
 
 import spack.cmd
 import spack.config
-import spack.dependency as dep
+import spack.deptypes as dt
 import spack.environment as ev
 import spack.mirror
 import spack.modules
@@ -67,12 +67,13 @@ class ConstraintAction(argparse.Action):
 
     def __call__(self, parser, namespace, values, option_string=None):
         # Query specs from command line
-        self.values = values
-        namespace.constraint = values
+        self.constraint = namespace.constraint = values
+        self.constraint_specs = namespace.constraint_specs = []
         namespace.specs = self._specs
 
     def _specs(self, **kwargs):
-        qspecs = spack.cmd.parse_specs(self.values)
+        # store parsed specs in spec.constraint after a call to specs()
+        self.constraint_specs[:] = spack.cmd.parse_specs(self.constraint)
 
         # If an environment is provided, we'll restrict the search to
         # only its installed packages.
@@ -81,12 +82,12 @@ class ConstraintAction(argparse.Action):
             kwargs["hashes"] = set(env.all_hashes())
 
         # return everything for an empty query.
-        if not qspecs:
+        if not self.constraint_specs:
             return spack.store.STORE.db.query(**kwargs)
 
         # Return only matching stuff otherwise.
         specs = {}
-        for spec in qspecs:
+        for spec in self.constraint_specs:
             for s in spack.store.STORE.db.query(spec, **kwargs):
                 # This is fast for already-concrete specs
                 specs[s.dag_hash()] = s
@@ -114,17 +115,41 @@ class SetParallelJobs(argparse.Action):
 
 
 class DeptypeAction(argparse.Action):
-    """Creates a tuple of valid dependency types from a deptype argument."""
+    """Creates a flag of valid dependency types from a deptype argument."""
 
     def __call__(self, parser, namespace, values, option_string=None):
-        deptype = dep.all_deptypes
-        if values:
-            deptype = tuple(x.strip() for x in values.split(","))
-            if deptype == ("all",):
-                deptype = "all"
-            deptype = dep.canonical_deptype(deptype)
-
+        if not values or values == "all":
+            deptype = dt.ALL
+        else:
+            deptype = dt.canonicalize(values.split(","))
         setattr(namespace, self.dest, deptype)
+
+
+class ConfigScope(argparse.Action):
+    """Pick the currently configured config scopes."""
+
+    def __init__(self, *args, **kwargs) -> None:
+        kwargs.setdefault("metavar", spack.config.SCOPES_METAVAR)
+        super().__init__(*args, **kwargs)
+
+    @property
+    def default(self):
+        return self._default() if callable(self._default) else self._default
+
+    @default.setter
+    def default(self, value):
+        self._default = value
+
+    @property
+    def choices(self):
+        return spack.config.scopes().keys()
+
+    @choices.setter
+    def choices(self, value):
+        pass
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        setattr(namespace, self.dest, values)
 
 
 def _cdash_reporter(namespace):
@@ -285,9 +310,8 @@ def deptype():
     return Args(
         "--deptype",
         action=DeptypeAction,
-        default=dep.all_deptypes,
-        help="comma-separated list of deptypes to traverse\n\ndefault=%s"
-        % ",".join(dep.all_deptypes),
+        default=dt.ALL,
+        help="comma-separated list of deptypes to traverse (default=%s)" % ",".join(dt.ALL_TYPES),
     )
 
 
@@ -361,10 +385,11 @@ def install_status():
         "--install-status",
         action="store_true",
         default=True,
-        help="show install status of packages\n\npackages can be: "
-        "installed [+], missing and needed by an installed package [-], "
-        "installed in an upstream instance [^], "
-        "or not installed (no annotation)",
+        help=(
+            "show install status of packages\n"
+            "[+] installed       [^] installed in an upstream\n"
+            " -  not installed   [-] missing dep of installed package\n"
+        ),
     )
 
 
@@ -538,16 +563,25 @@ def add_concretizer_args(subparser):
         help="reuse installed packages/buildcaches when possible",
     )
     subgroup.add_argument(
+        "--fresh-roots",
         "--reuse-deps",
         action=ConfigSetAction,
         dest="concretizer:reuse",
         const="dependencies",
         default=None,
-        help="reuse installed dependencies only",
+        help="concretize with fresh roots and reused dependencies",
+    )
+    subgroup.add_argument(
+        "--deprecated",
+        action=ConfigSetAction,
+        dest="config:deprecated",
+        const=True,
+        default=None,
+        help="allow concretizer to select deprecated versions",
     )
 
 
-def add_s3_connection_args(subparser, add_help):
+def add_connection_args(subparser, add_help):
     subparser.add_argument(
         "--s3-access-key-id", help="ID string to use to connect to this S3 mirror"
     )
@@ -563,6 +597,8 @@ def add_s3_connection_args(subparser, add_help):
     subparser.add_argument(
         "--s3-endpoint-url", help="endpoint URL to use to connect to this S3 mirror"
     )
+    subparser.add_argument("--oci-username", help="username to use to connect to this OCI mirror")
+    subparser.add_argument("--oci-password", help="password to use to connect to this OCI mirror")
 
 
 def use_buildcache(cli_arg_value):

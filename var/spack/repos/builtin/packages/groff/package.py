@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,7 +6,6 @@
 import re
 
 from spack.package import *
-from spack.util.environment import is_system_path
 
 
 class Groff(AutotoolsPackage, GNUMirrorPackage):
@@ -19,6 +18,8 @@ class Groff(AutotoolsPackage, GNUMirrorPackage):
     gnu_mirror_path = "groff/groff-1.22.3.tar.gz"
 
     tags = ["build-tools"]
+
+    license("GPL-3.0-or-later")
 
     version("1.22.4", sha256="e78e7b4cb7dec310849004fa88847c44701e8d133b5d4c13057d876c1bad0293")
     version("1.22.3", sha256="3a48a9d6c97750bfbd535feeb5be0111db6406ddb7bb79fc680809cda6d828a5")
@@ -78,10 +79,10 @@ class Groff(AutotoolsPackage, GNUMirrorPackage):
         args.extend(self.with_or_without("x"))
         if "@1.22.4:" in self.spec:
             args.extend(self.with_or_without("uchardet"))
-        if self.spec["iconv"].name == "libc":
+        if self.spec["iconv"].name == "libiconv":
+            args.append(f"--with-libiconv-prefix={self.spec['iconv'].prefix}")
+        else:
             args.append("--without-libiconv-prefix")
-        elif not is_system_path(self.spec["iconv"].prefix):
-            args.append("--with-libiconv-prefix={0}".format(self.spec["iconv"].prefix))
         return args
 
     def setup_run_environment(self, env):

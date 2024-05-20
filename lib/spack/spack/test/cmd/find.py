@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -64,6 +64,7 @@ def test_query_arguments():
         implicit=False,
         start_date="2018-02-23",
         end_date=None,
+        install_tree="all",
     )
 
     q_args = query_arguments(args)
@@ -75,6 +76,7 @@ def test_query_arguments():
     assert q_args["explicit"] is any
     assert "start_date" in q_args
     assert "end_date" not in q_args
+    assert q_args["install_tree"] == "all"
 
     # Check that explicit works correctly
     args.explicit = True
@@ -332,7 +334,7 @@ def test_find_command_basic_usage(database):
     assert "mpileaks" in output
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="envirnment is not yet supported on windows")
+@pytest.mark.not_on_windows("envirnment is not yet supported on windows")
 @pytest.mark.regression("9875")
 def test_find_prefix_in_env(
     mutable_mock_env_path, install_mockery, mock_fetch, mock_packages, mock_archive, config
@@ -345,6 +347,87 @@ def test_find_prefix_in_env(
         find("-l")
         find("-L")
         # Would throw error on regression
+
+
+def test_find_specs_include_concrete_env(mutable_mock_env_path, config, mutable_mock_repo, tmpdir):
+    path = tmpdir.join("spack.yaml")
+
+    with tmpdir.as_cwd():
+        with open(str(path), "w") as f:
+            f.write(
+                """\
+spack:
+  specs:
+  - mpileaks
+"""
+            )
+        env("create", "test1", "spack.yaml")
+
+    test1 = ev.read("test1")
+    test1.concretize()
+    test1.write()
+
+    with tmpdir.as_cwd():
+        with open(str(path), "w") as f:
+            f.write(
+                """\
+spack:
+  specs:
+  - libelf
+"""
+            )
+        env("create", "test2", "spack.yaml")
+
+    test2 = ev.read("test2")
+    test2.concretize()
+    test2.write()
+
+    env("create", "--include-concrete", "test1", "--include-concrete", "test2", "combined_env")
+
+    with ev.read("combined_env"):
+        output = find()
+
+    assert "No root specs" in output
+    assert "Included specs" in output
+    assert "mpileaks" in output
+    assert "libelf" in output
+
+
+def test_find_specs_nested_include_concrete_env(
+    mutable_mock_env_path, config, mutable_mock_repo, tmpdir
+):
+    path = tmpdir.join("spack.yaml")
+
+    with tmpdir.as_cwd():
+        with open(str(path), "w") as f:
+            f.write(
+                """\
+spack:
+  specs:
+  - mpileaks
+"""
+            )
+        env("create", "test1", "spack.yaml")
+
+    test1 = ev.read("test1")
+    test1.concretize()
+    test1.write()
+
+    env("create", "--include-concrete", "test1", "test2")
+    test2 = ev.read("test2")
+    test2.add("libelf")
+    test2.concretize()
+    test2.write()
+
+    env("create", "--include-concrete", "test2", "test3")
+
+    with ev.read("test3"):
+        output = find()
+
+    assert "No root specs" in output
+    assert "Included specs" in output
+    assert "mpileaks" in output
+    assert "libelf" in output
 
 
 def test_find_loaded(database, working_env):

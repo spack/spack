@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,8 +15,12 @@ class Daos(SConsPackage):
     git = "https://github.com/daos-stack/daos.git"
     maintainers("hyoklee")
 
+    license("BSD-2-Clause-Patent")
+
     version("master", branch="master", submodules=True)
-    version("2.2.0", tag="v2.2.0", submodules=True)
+    version(
+        "2.2.0", tag="v2.2.0", commit="d2a1f2790c946659c9398926254e6203fd957b7c", submodules=True
+    )
     variant(
         "debug", default=False, description="Enable debugging info and strict compile warnings"
     )

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,6 +19,8 @@ class Ferret(Package):
 
     maintainers("RemiLacroix-IDRIS")
 
+    license("Unlicense")
+
     version("7.6.0", sha256="69832d740bd44c9eadd198a5de4d96c4c01ae90ae28c2c3414c1bb9f43e475d1")
     version("7.5.0", sha256="2a038c547e6e80e6bd0645a374c3247360cf8c94ea56f6f3444b533257eb16db")
     version("7.4", sha256="5167bb9e6ef441ae9cf90da555203d2155e3fcf929e7b8dddb237de0d58c5e5f")
@@ -32,7 +34,7 @@ class Ferret(Package):
     depends_on("netcdf-c")
     depends_on("netcdf-fortran")
     depends_on("readline")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("libx11")
     depends_on("curl")
 
@@ -61,12 +63,17 @@ class Ferret(Package):
         else:
             return "https://github.com/NOAA-PMEL/Ferret/archive/v{0}.tar.gz".format(version)
 
+    def flag_handler(self, name, flags):
+        if name == "fflags" and self.spec.satisfies("%gcc@10:"):
+            flags.extend(["-fallow-argument-mismatch", "-fallow-invalid-boz"])
+        return (flags, None, None)
+
     def patch(self):
         spec = self.spec
         hdf5_prefix = spec["hdf5"].prefix
         netcdff_prefix = spec["netcdf-fortran"].prefix
         readline_prefix = spec["readline"].prefix
-        libz_prefix = spec["zlib"].prefix
+        libz_prefix = spec["zlib-api"].prefix
 
         work_dir = "FERRET" if "@:7.2" in spec else "."
         with working_dir(work_dir, create=False):

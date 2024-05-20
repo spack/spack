@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class Re2c(Package):
     url = "https://github.com/skvadrik/re2c/releases/download/1.2.1/re2c-1.2.1.tar.xz"
     tags = ["windows"]
 
+    license("Public-Domain")
+
     version("2.2", sha256="0fc45e4130a8a555d68e230d1795de0216dfe99096b61b28e67c86dfd7d86bda")
     version("2.1.1", sha256="036ee264fafd5423141ebd628890775aa9447a4c4068a6307385d7366fe711f8")
     version("2.1", sha256="8cba0d95c246c670de8f97f57def83a9c0f2113eaa6f7e4867a941f48f633540")
@@ -28,6 +30,10 @@ class Re2c(Package):
     phases = ["configure", "build", "install"]
 
     depends_on("cmake", when="platform=windows")
+    depends_on("gmake", when="platform=linux")
+    depends_on("gmake", when="platform=cray")
+    depends_on("gmake", when="platform=darwin")
+    depends_on("gmake", when="platform=freebsd")
 
     @property
     def make_tool(self):

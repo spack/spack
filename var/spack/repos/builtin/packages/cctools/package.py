@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -39,7 +39,7 @@ class Cctools(AutotoolsPackage):
     depends_on("gettext")  # Corrects python linking of -lintl flag.
     depends_on("swig")
     # depends_on('xrootd')
-    depends_on("zlib")
+    depends_on("zlib-api")
     patch("arm.patch", when="target=aarch64:")
     patch("cctools_7.0.18.python.patch", when="@7.0.18")
     patch("cctools_6.1.1.python.patch", when="@6.1.1")
@@ -90,7 +90,9 @@ class Cctools(AutotoolsPackage):
             args.append("--with-{0}-path=no".format(p))
 
         # point these bits at the Spack installations
-        for p in ["openssl", "perl", "readline", "swig", "zlib"]:
+        for p in ["openssl", "perl", "readline", "swig"]:
             args.append("--with-{0}-path={1}".format(p, self.spec[p].prefix))
+
+        args.append("--with-zlib-path={0}".format(self.spec["zlib-api"].prefix))
 
         return args

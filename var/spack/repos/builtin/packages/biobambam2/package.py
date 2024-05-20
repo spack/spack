@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -27,7 +27,7 @@ class Biobambam2(AutotoolsPackage):
     test_src_dir = "test"
 
     def configure_args(self):
-        args = ["--with-libmaus2={0}".format(self.spec["libmaus2"].prefix)]
+        args = [f"--with-libmaus2={self.spec['libmaus2'].prefix}"]
         return args
 
     @run_after("install")

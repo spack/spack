@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,6 +10,7 @@ import re
 import archspec.cpu
 
 import llnl.util.tty as tty
+from llnl.util.symlink import readlink
 
 import spack.target
 import spack.version
@@ -133,12 +134,14 @@ class Cray(Platform):
         # Take the default version from known symlink path
         default_path = os.path.join(craype_dir, "default")
         if os.path.islink(default_path):
-            version = spack.version.Version(os.readlink(default_path))
+            version = spack.version.Version(readlink(default_path))
             return (craype_type, version)
 
         # If no default version, sort available versions and return latest
         versions_available = [spack.version.Version(v) for v in os.listdir(craype_dir)]
         versions_available.sort(reverse=True)
+        if not versions_available:
+            return (craype_type, None)
         return (craype_type, versions_available[0])
 
     @classmethod
@@ -158,10 +161,15 @@ class Cray(Platform):
         system, as the Cray compiler wrappers and other components of the Cray
         programming environment are irrelevant without module support.
         """
-        craype_type, craype_version = cls.craype_type_and_version()
-        if craype_type == "EX" and craype_version >= spack.version.Version("21.10"):
+        if "opt/cray" not in os.environ.get("MODULEPATH", ""):
             return False
-        return "opt/cray" in os.environ.get("MODULEPATH", "")
+
+        craype_type, craype_version = cls.craype_type_and_version()
+        if craype_type == "XC":
+            return True
+        if craype_type == "EX" and craype_version < spack.version.Version("21.10"):
+            return True
+        return False
 
     def _default_target_from_env(self):
         """Set and return the default CrayPE target loaded in a clean login

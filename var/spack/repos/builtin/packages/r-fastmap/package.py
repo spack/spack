@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,8 @@ class RFastmap(RPackage):
     C++."""
 
     cran = "fastmap"
+
+    license("MIT")
 
     version("1.1.1", sha256="3623809dd016ae8abd235200ba7834effc4b916915a059deb76044137c5c7173")
     version("1.1.0", sha256="9113e526b4c096302cfeae660a06de2c4c82ae4e2d3d6ef53af6de812d4c822b")

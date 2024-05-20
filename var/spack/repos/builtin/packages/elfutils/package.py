@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -25,6 +25,9 @@ class Elfutils(AutotoolsPackage, SourcewarePackage):
 
     maintainers("mwkrentel")
 
+    license("GPL-3.0-or-later AND ( GPL-2.0-or-later OR LGPL-3.0-or-later )")
+
+    version("0.190", sha256="8e00a3a9b5f04bc1dc273ae86281d2d26ed412020b391ffcc23198f10231d692")
     version("0.189", sha256="39bd8f1a338e2b7cd4abc3ff11a0eddc6e690f69578a57478d8179b4148708c8")
     version("0.188", sha256="fb8b0e8d0802005b9a309c60c1d8de32dd2951b56f0c3a3cb56d21ce01595dff")
     version("0.187", sha256="e70b0dfbe610f90c4d1fe0d71af142a4e25c3c4ef9ebab8d2d72b65159d454c8")
@@ -48,6 +51,7 @@ class Elfutils(AutotoolsPackage, SourcewarePackage):
 
     # Native language support from libintl.
     variant("nls", default=True, description="Enable Native Language Support.")
+    variant("exeprefix", default=True, description="Add a prefix to generated executables.")
 
     # libdebuginfod support
     # NB: For 0.181 and newer, this enables _both_ the client and server
@@ -65,7 +69,7 @@ class Elfutils(AutotoolsPackage, SourcewarePackage):
 
     depends_on("bzip2", type="link")
     depends_on("xz", type="link")
-    depends_on("zlib", type="link")
+    depends_on("zlib-api", type="link")
     depends_on("zstd", type="link", when="@0.182:")
 
     depends_on("gettext", when="+nls")
@@ -84,10 +88,10 @@ class Elfutils(AutotoolsPackage, SourcewarePackage):
 
     provides("elf@1")
 
-    # libarchive with iconv doesn't configure.
+    # libarchive with iconv doesn't configure (still broken as of libarchive@3.7.1)
     # see https://github.com/spack/spack/issues/36710
     # and https://github.com/libarchive/libarchive/issues/1819
-    conflicts("^libarchive@3.6.2 +iconv", when="+debuginfod")
+    conflicts("^libarchive +iconv", when="+debuginfod")
 
     # https://sourceware.org/bugzilla/show_bug.cgi?id=24964
     conflicts("%apple-clang")
@@ -112,17 +116,22 @@ class Elfutils(AutotoolsPackage, SourcewarePackage):
         args = [
             "--with-bzlib=%s" % spec["bzip2"].prefix,
             "--with-lzma=%s" % spec["xz"].prefix,
-            "--with-zlib=%s" % spec["zlib"].prefix,
+            "--with-zlib=%s" % spec["zlib-api"].prefix,
         ]
+
+        if spec.satisfies("+exeprefix"):
+            args.append("--program-prefix='eu-'")
+        else:
+            args.append("--program-prefix=''")
 
         if "@0.182:" in spec:
             args.append("--with-zstd=%s" % spec["zstd"].prefix)
 
         if spec.satisfies("@0.183:"):
-            if spec["iconv"].name == "libc":
+            if spec["iconv"].name == "libiconv":
+                args.append(f"--with-libiconv-prefix={spec['iconv'].prefix}")
+            else:
                 args.append("--without-libiconv-prefix")
-            elif not is_system_path(spec["iconv"].prefix):
-                args.append("--with-libiconv-prefix=" + format(spec["iconv"].prefix))
 
         if "+nls" in spec:
             # Prior to 0.183, only msgfmt is used from gettext.

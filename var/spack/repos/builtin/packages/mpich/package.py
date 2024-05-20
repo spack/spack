@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -27,7 +27,11 @@ class Mpich(AutotoolsPackage, CudaPackage, ROCmPackage):
 
     keep_werror = "specific"
 
+    license("mpich2")
+
     version("develop", submodules=True)
+    version("4.2.1", sha256="23331b2299f287c3419727edc2df8922d7e7abbb9fd0ac74e03b9966f9ad42d7")
+    version("4.2.0", sha256="a64a66781b9e5312ad052d32689e23252f745b27ee8818ac2ac0c8209bc0b90e")
     version("4.1.2", sha256="3492e98adab62b597ef0d292fb2459b6123bc80070a8aa0a30be6962075a12f0")
     version("4.1.1", sha256="ee30471b35ef87f4c88f871a5e2ad3811cd9c4df32fd4f138443072ff4284ca2")
     version("4.1", sha256="8b1ec63bc44c7caa2afbb457bc5b3cd4a70dbe46baba700123d67c48dc5ab6a0")
@@ -55,13 +59,13 @@ class Mpich(AutotoolsPackage, CudaPackage, ROCmPackage):
     variant("hydra", default=True, description="Build the hydra process manager")
     variant("romio", default=True, description="Enable ROMIO MPI I/O implementation")
     variant("verbs", default=False, description="Build support for OpenFabrics verbs.")
-    variant("slurm", default=False, description="Enable SLURM support")
+    variant("slurm", default=False, description="Enable Slurm support")
     variant("wrapperrpath", default=True, description="Enable wrapper rpath")
     variant(
         "pmi",
-        default="pmi",
+        default="default",
         description="""PMI interface.""",
-        values=("off", "pmi", "pmi2", "pmix", "cray"),
+        values=("default", "pmi", "pmi2", "pmix", "cray"),
         multi=False,
     )
     variant(
@@ -70,16 +74,14 @@ class Mpich(AutotoolsPackage, CudaPackage, ROCmPackage):
         description="""Abstract Device Interface (ADI)
 implementation. The ch4 device is in experimental state for versions
 before 3.4.""",
-        values=("ch3", "ch4"),
+        values=("ch3", "ch4", "ch3:sock"),
         multi=False,
     )
     variant(
         "netmod",
         default="ofi",
         description="""Network module. Only single netmod builds are
-supported. For ch3 device configurations, this presumes the
-ch3:nemesis communication channel. ch3:sock is not supported by this
-spack package at this time.""",
+supported, and netmod is ignored if device is ch3:sock.""",
         values=("tcp", "mxm", "ofi", "ucx"),
         multi=False,
     )
@@ -96,15 +98,6 @@ spack package at this time.""",
     )
     variant("argobots", default=False, description="Enable Argobots support")
     variant("fortran", default=True, description="Enable Fortran support")
-
-    variant(
-        "two_level_namespace",
-        default=False,
-        description="""Build shared libraries and programs
-built with the mpicc/mpifort/etc. compiler wrappers
-with '-Wl,-commons,use_dylibs' and without
-'-Wl,-flat_namespace'.""",
-    )
 
     variant(
         "vci",
@@ -125,11 +118,17 @@ with '-Wl,-commons,use_dylibs' and without
         when="@3.4:",
         multi=False,
     )
-    depends_on("yaksa", when="@4.0: device=ch4 datatype-engine=auto")
-    depends_on("yaksa", when="@4.0: device=ch4 datatype-engine=yaksa")
-    depends_on("yaksa+cuda", when="+cuda ^yaksa")
-    depends_on("yaksa+rocm", when="+rocm ^yaksa")
+    for _yaksa_cond in (
+        "@4.0: device=ch4 datatype-engine=auto",
+        "@4.0: device=ch4 datatype-engine=yaksa",
+    ):
+        with when(_yaksa_cond):
+            depends_on("yaksa")
+            depends_on("yaksa+cuda", when="+cuda")
+            depends_on("yaksa+rocm", when="+rocm")
+
     conflicts("datatype-engine=yaksa", when="device=ch3")
+    conflicts("datatype-engine=yaksa", when="device=ch3:sock")
 
     variant(
         "hcoll",
@@ -140,12 +139,17 @@ with '-Wl,-commons,use_dylibs' and without
     )
     depends_on("hcoll", when="+hcoll")
 
+    variant("xpmem", default=False, when="@3.4:", description="Enable XPMEM support")
+    depends_on("xpmem", when="+xpmem")
+
     # Todo: cuda can be a conditional variant, but it does not seem to work when
     # overriding the variant from CudaPackage.
     conflicts("+cuda", when="@:3.3")
     conflicts("+cuda", when="device=ch3")
+    conflicts("+cuda", when="device=ch3:sock")
     conflicts("+rocm", when="@:4.0")
     conflicts("+rocm", when="device=ch3")
+    conflicts("+rocm", when="device=ch3:sock")
     conflicts("+cuda", when="+rocm", msg="CUDA must be disabled to support ROCm")
 
     provides("mpi@:4.0")
@@ -173,7 +177,7 @@ with '-Wl,-commons,use_dylibs' and without
     patch(
         "https://github.com/pmodels/mpich/commit/8a851b317ee57366cd15f4f28842063d8eff4483.patch?full_index=1",
         sha256="d2dafc020941d2d8cab82bc1047e4a6a6d97736b62b06e2831d536de1ac01fd0",
-        when="@3.3:3.3.99 +hwloc",
+        when="@3.3 +hwloc",
     )
 
     # fix MPI_Barrier segmentation fault
@@ -189,6 +193,26 @@ with '-Wl,-commons,use_dylibs' and without
         "https://github.com/pmodels/mpich/commit/b324d2de860a7a2848dc38aefb8c7627a72d2003.patch?full_index=1",
         sha256="5f48d2dd8cc9f681cf710b864f0d9b00c599f573a75b1e1391de0a3d697eba2d",
         when="@=3.3",
+    )
+
+    # Fix SLURM hostlist_t usage
+    # See https://github.com/pmodels/mpich/issues/6806
+    # and https://github.com/pmodels/mpich/pull/6820
+    patch(
+        "https://github.com/pmodels/mpich/commit/7a28682a805acfe84a4ea7b41cea079696407398.patch?full_index=1",
+        sha256="8cc80a8ffc3f1c907b1d8176129a0c1d01794a95adbed5b5357f50c13f6560e4",
+        when="@4.1:4.1.2 +slurm ^slurm@23-11-1-1:",
+    )
+    # backports of fix down to v3.3
+    patch(
+        "mpich40_slurm_hostlist.patch",
+        sha256="39aa1353305b7b03bc5c645c87d5299bd5d2ff676750898ba925f6cb9b716bdb",
+        when="@4.0 +slurm ^slurm@23-11-1-1:",
+    )
+    patch(
+        "mpich33_slurm_hostlist.patch",
+        sha256="d6ec26adcf2d08d0739be44ab65b928a7a88e9ff1375138a0593678eedd420ab",
+        when="@3.3:3.4 +slurm ^slurm@23-11-1-1:",
     )
 
     # Fix reduce operations for unsigned integers
@@ -210,6 +234,18 @@ with '-Wl,-commons,use_dylibs' and without
         # Apply the patch only when yaksa is used:
         patch("mpich34_yaksa_hindexed.patch", when="datatype-engine=yaksa")
         patch("mpich34_yaksa_hindexed.patch", when="datatype-engine=auto device=ch4")
+
+    # Fix false positive result of the configure time check for CFI support
+    # https://github.com/pmodels/mpich/pull/6537
+    # https://github.com/pmodels/mpich/issues/6505
+    with when("@3.2.2:4.1.1"):
+        # Apply the patch from the upstream repo in case we have to run the autoreconf stage:
+        patch(
+            "https://github.com/pmodels/mpich/commit/d901a0b731035297dd6598888c49322e2a05a4e0.patch?full_index=1",
+            sha256="de0de41ec42ac5f259ea02f195eea56fba84d72b0b649a44c947eab6632995ab",
+        )
+        # Apply the changes to the configure script to skip the autoreconf stage if possible:
+        patch("mpich32_411_CFI_configure.patch")
 
     depends_on("findutils", type="build")
     depends_on("pkgconfig", type="build")
@@ -246,14 +282,14 @@ with '-Wl,-commons,use_dylibs' and without
     # building from git requires regenerating autotools files
     depends_on("automake@1.15:", when="@develop", type="build")
     depends_on("libtool@2.4.4:", when="@develop", type="build")
-    depends_on("m4", when="@develop", type="build"),
+    depends_on("m4", when="@develop", type="build")
     depends_on("autoconf@2.67:", when="@develop", type="build")
 
     # building with "+hwloc' also requires regenerating autotools files
-    depends_on("automake@1.15:", when="@3.3:3.3.99 +hwloc", type="build")
-    depends_on("libtool@2.4.4:", when="@3.3:3.3.99 +hwloc", type="build")
-    depends_on("m4", when="@3.3:3.3.99 +hwloc", type="build"),
-    depends_on("autoconf@2.67:", when="@3.3:3.3.99 +hwloc", type="build")
+    depends_on("automake@1.15:", when="@3.3 +hwloc", type="build")
+    depends_on("libtool@2.4.4:", when="@3.3 +hwloc", type="build")
+    depends_on("m4", when="@3.3 +hwloc", type="build")
+    depends_on("autoconf@2.67:", when="@3.3 +hwloc", type="build")
 
     # MPICH's Yaksa submodule requires python to configure
     depends_on("python@3.0:", when="@develop", type="build")
@@ -268,6 +304,7 @@ with '-Wl,-commons,use_dylibs' and without
     conflicts("netmod=tcp", when="device=ch4")
     conflicts("pmi=pmi2", when="device=ch3 netmod=ofi")
     conflicts("pmi=pmix", when="device=ch3")
+    conflicts("pmi=pmix", when="device=ch3:sock")
     conflicts("pmi=pmix", when="+hydra")
     conflicts("pmi=cray", when="+hydra")
 
@@ -353,11 +390,15 @@ with '-Wl,-commons,use_dylibs' and without
             if re.search(r"--with-thread-package=argobots", output):
                 variants.append("+argobots")
 
-            if re.search(r"--with-pmi=no", output):
-                variants.append("pmi=off")
+            if re.search(r"--with-pmi=default", output):
+                variants.append("pmi=default")
             elif re.search(r"--with-pmi=simple", output):
                 variants.append("pmi=pmi")
             elif re.search(r"--with-pmi=pmi2/simple", output):
+                variants.append("pmi=pmi2")
+            elif re.search(r"--with-pmi=pmi", output):
+                variants.append("pmi=pmi")
+            elif re.search(r"--with-pmi=pmi2", output):
                 variants.append("pmi=pmi2")
             elif re.search(r"--with-pmix", output):
                 variants.append("pmi=pmix")
@@ -409,7 +450,7 @@ with '-Wl,-commons,use_dylibs' and without
         # their run environments the code to make the compilers available.
         # For Cray MPIs, the regular compiler wrappers *are* the MPI wrappers.
         # Cray MPIs always have cray in the module name, e.g. "cray-mpich"
-        if self.spec.satisfies("platform=cray"):
+        if self.spec.satisfies("platform=cray") and spack_cc is not None:
             # This is intended to support external MPICH instances registered
             # by Spack on Cray machines prior to a879c87; users defining an
             # external MPICH entry for Cray should generally refer to the
@@ -425,20 +466,19 @@ with '-Wl,-commons,use_dylibs' and without
             env.set("MPIF90", join_path(self.prefix.bin, "mpif90"))
 
     def setup_dependent_build_environment(self, env, dependent_spec):
-        self.setup_run_environment(env)
-
-        env.set("MPICH_CC", spack_cc)
-        env.set("MPICH_CXX", spack_cxx)
-        env.set("MPICH_F77", spack_f77)
-        env.set("MPICH_F90", spack_fc)
-        env.set("MPICH_FC", spack_fc)
+        dependent_module = dependent_spec.package.module
+        env.set("MPICH_CC", dependent_module.spack_cc)
+        env.set("MPICH_CXX", dependent_module.spack_cxx)
+        env.set("MPICH_F77", dependent_module.spack_f77)
+        env.set("MPICH_F90", dependent_module.spack_fc)
+        env.set("MPICH_FC", dependent_module.spack_fc)
 
     def setup_dependent_package(self, module, dependent_spec):
         spec = self.spec
 
         # For Cray MPIs, the regular compiler wrappers *are* the MPI wrappers.
         # Cray MPIs always have cray in the module name, e.g. "cray-mpich"
-        if self.spec.satisfies("platform=cray"):
+        if self.spec.satisfies("platform=cray") and spack_cc is not None:
             spec.mpicc = spack_cc
             spec.mpicxx = spack_cxx
             spec.mpifc = spack_fc
@@ -459,7 +499,7 @@ with '-Wl,-commons,use_dylibs' and without
     def autoreconf(self, spec, prefix):
         """Not needed usually, configure should be already there"""
         # If configure exists nothing needs to be done
-        if os.path.exists(self.configure_abs_path) and not spec.satisfies("@3.3:3.3.99 +hwloc"):
+        if os.path.exists(self.configure_abs_path) and not spec.satisfies("@3.3 +hwloc"):
             return
         # Else bootstrap with autotools
         bash = which("bash")
@@ -487,6 +527,7 @@ with '-Wl,-commons,use_dylibs' and without
     def configure_args(self):
         spec = self.spec
         config_args = [
+            "--disable-maintainer-mode",
             "--disable-silent-rules",
             "--enable-shared",
             "--with-pm={0}".format("hydra" if "+hydra" in spec else "no"),
@@ -495,6 +536,10 @@ with '-Wl,-commons,use_dylibs' and without
             "--enable-wrapper-rpath={0}".format("no" if "~wrapperrpath" in spec else "yes"),
             "--with-yaksa={0}".format(spec["yaksa"].prefix if "^yaksa" in spec else "embedded"),
         ]
+
+        # see https://github.com/pmodels/mpich/issues/5530
+        if spec.platform == "darwin":
+            config_args.append("--enable-two-level-namespace")
 
         # hwloc configure option changed in 4.0
         if spec.satisfies("@4.0:"):
@@ -518,16 +563,32 @@ with '-Wl,-commons,use_dylibs' and without
         else:
             config_args.append("--with-slurm=no")
 
-        if "pmi=off" in spec:
-            config_args.append("--with-pmi=no")
-        elif "pmi=pmi" in spec:
-            config_args.append("--with-pmi=simple")
-        elif "pmi=pmi2" in spec:
-            config_args.append("--with-pmi=pmi2/simple")
-        elif "pmi=pmix" in spec:
-            config_args.append("--with-pmix={0}".format(spec["pmix"].prefix))
-        elif "pmi=cray" in spec:
-            config_args.append("--with-pmi=cray")
+        # PMI options changed in 4.2.0
+        if spec.satisfies("@4.2:"):
+            # default (no option) is to build both PMIv1 and PMI2 client interfaces
+            if "pmi=pmi" in spec:
+                # make PMI1 the default client interface
+                config_args.append("--with-pmi=pmi")
+            elif "pmi=pmi2" in spec:
+                # make PMI2 the default client interface
+                config_args.append("--with-pmi=pmi2")
+            elif "pmi=pmix" in spec:
+                # use the PMIx client interface with an external PMIx library
+                config_args.append("--with-pmi=pmix")
+                config_args.append(f"--with-pmix={spec['pmix'].prefix}")
+            elif "pmi=cray" in spec:
+                # use PMI2 interface of the Cray PMI library
+                config_args.append("--with-pmi=pmi2")
+                config_args.append(f"--with-pmi2={spec['cray-pmi'].prefix}")
+        else:
+            if "pmi=pmi" in spec:
+                config_args.append("--with-pmi=simple")
+            elif "pmi=pmi2" in spec:
+                config_args.append("--with-pmi=pmi2/simple")
+            elif "pmi=pmix" in spec:
+                config_args.append(f"--with-pmix={spec['pmix'].prefix}")
+            elif "pmi=cray" in spec:
+                config_args.append("--with-pmi=cray")
 
         if "+cuda" in spec:
             config_args.append("--with-cuda={0}".format(spec["cuda"].prefix))
@@ -548,7 +609,10 @@ with '-Wl,-commons,use_dylibs' and without
         elif "device=ch3" in spec:
             device_config = "--with-device=ch3:nemesis:"
 
-        if "netmod=ucx" in spec:
+        # Do not apply any netmod if device is ch3:sock
+        if "device=ch3:sock" in spec:
+            device_config = "--with-device=ch3:sock"
+        elif "netmod=ucx" in spec:
             device_config += "ucx"
         elif "netmod=ofi" in spec:
             device_config += "ofi"
@@ -578,12 +642,8 @@ with '-Wl,-commons,use_dylibs' and without
             config_args.append("--with-thread-package=argobots")
             config_args.append("--with-argobots=" + spec["argobots"].prefix)
 
-        if "+two_level_namespace" in spec:
-            config_args.append("--enable-two-level-namespace")
-
         if "+vci" in spec:
             config_args.append("--enable-thread-cs=per-vci")
-            config_args.append("--with-ch4-max-vcis=default")
 
         if "datatype-engine=yaksa" in spec:
             config_args.append("--with-datatype-engine=yaksa")
@@ -594,6 +654,9 @@ with '-Wl,-commons,use_dylibs' and without
 
         if "+hcoll" in spec:
             config_args.append("--with-hcoll=" + spec["hcoll"].prefix)
+
+        if "+xpmem" in spec:
+            config_args.append("--with-xpmem=" + spec["xpmem"].prefix)
 
         return config_args
 

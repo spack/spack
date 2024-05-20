@@ -16,7 +16,8 @@ RUN {% if os_package_update %}{{ os_packages_build.update }} \
 
 # What we want to install and how we want to install it
 # is specified in a manifest file (spack.yaml)
-RUN mkdir {{ paths.environment }} \
+RUN mkdir -p {{ paths.environment }} && \
+set -o noclobber \
 {{ manifest }} > {{ paths.environment }}/spack.yaml
 
 # Install the software, remove unnecessary deps
@@ -39,9 +40,6 @@ RUN find -L {{ paths.view }}/* -type f -exec readlink -f '{}' \; | \
 RUN cd {{ paths.environment }} && \
     spack env activate --sh -d . > activate.sh
 
-{% if extra_instructions.build %}
-{{ extra_instructions.build }}
-{% endif %}
 {% endblock build_stage %}
 {% endif %}
 
@@ -51,15 +49,17 @@ FROM {{ run.image }}
 
 COPY --from=builder {{ paths.environment }} {{ paths.environment }}
 COPY --from=builder {{ paths.store }} {{ paths.store }}
-COPY --from=builder {{ paths.hidden_view }} {{ paths.hidden_view }}
-COPY --from=builder {{ paths.view }} {{ paths.view }}
+
+# paths.view is a symlink, so copy the parent to avoid dereferencing and duplicating it
+COPY --from=builder {{ paths.view_parent }} {{ paths.view_parent }}
 
 RUN { \
       echo '#!/bin/sh' \
       && echo '.' {{ paths.environment }}/activate.sh \
       && echo 'exec "$@"'; \
     } > /entrypoint.sh \
-&&  chmod a+x /entrypoint.sh
+&& chmod a+x /entrypoint.sh \
+&& ln -s {{ paths.view }} {{ paths.former_view }}
 
 {% block final_stage %}
 
@@ -67,10 +67,6 @@ RUN { \
 RUN {% if os_package_update %}{{ os_packages_final.update }} \
  && {% endif %}{{ os_packages_final.install }} {{ os_packages_final.list | join | replace('\n', ' ') }} \
  && {{ os_packages_final.clean }}
-{% endif %}
-{% if extra_instructions.final %}
-
-{{ extra_instructions.final }}
 {% endif %}
 {% endblock final_stage %}
 {% for label, value in labels.items() %}

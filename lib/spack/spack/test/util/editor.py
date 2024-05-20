@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ import spack.util.editor as ed
 
 pytestmark = [
     pytest.mark.usefixtures("working_env"),
-    pytest.mark.skipif(sys.platform == "win32", reason="editor not implemented on windows"),
+    pytest.mark.not_on_windows("editor not implemented on windows"),
 ]
 
 
@@ -33,7 +33,6 @@ def clean_env_vars():
 @pytest.fixture(autouse=True)
 def working_editor_test_env(working_env):
     """Don't leak environent variables between functions here."""
-    pass
 
 
 # parameterized fixture for editor var names

@@ -1,9 +1,9 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import spack.util.web
+import spack.url
 from spack.package import *
 
 
@@ -14,6 +14,10 @@ class Protobuf(CMakePackage):
     url = "https://github.com/protocolbuffers/protobuf/archive/v3.18.0.tar.gz"
     maintainers("hyoklee")
 
+    license("BSD-3-Clause")
+
+    version("3.25.3", sha256="da82be8acc5347c7918ef806ebbb621b24988f7e1a19b32cd7fc73bc29b59186")
+    version("3.24.3", sha256="2c23dee0bdbc36bd43ee457083f8f5560265d0815cc1c56033de3932843262fe")
     version("3.23.3", sha256="5e4b555f72a7e3f143a7aff7262292500bb02c49b174351684bb70fc7f2a6d33")
     version("3.22.2", sha256="2118051b4fb3814d59d258533a4e35452934b1ddb41230261c9543384cbb4dfc")
     version("3.21.12", sha256="930c2c3b5ecc6c9c12615cf5ad93f1cd6e12d0aba862b572e076259970ac3a53")
@@ -84,7 +88,7 @@ class Protobuf(CMakePackage):
     depends_on("abseil-cpp@20230125.3:", when="@3.22.5:")
     # https://github.com/protocolbuffers/protobuf/issues/11828#issuecomment-1433557509
     depends_on("abseil-cpp@20230125:", when="@3.22:")
-    depends_on("zlib")
+    depends_on("zlib-api")
 
     conflicts("%gcc@:4.6", when="@3.6.0:")  # Requires c++11
     conflicts("%gcc@:4.6", when="@3.2.0:3.3.0")  # Breaks
@@ -104,6 +108,13 @@ class Protobuf(CMakePackage):
         sha256="fa1abf042eddc1b3b43875dc018c651c90cd1c0c5299975a818a1610bee54ab8",
     )
 
+    # fix build on Centos 8, see also https://github.com/protocolbuffers/protobuf/issues/5144
+    patch(
+        "https://github.com/protocolbuffers/protobuf/commit/3039f932aaf212bcf2f14a3f2fd00dbfb881e46b.patch?full_index=1",
+        when="@3.4:3.21",
+        sha256="a779238fb7957514d4fb393410111419a964771e826ec2a8f09c21aa1efbb4d1",
+    )
+
     patch("msvc-abseil-target-namespace.patch", when="@3.22 %msvc")
 
     def fetch_remote_versions(self, *args, **kwargs):
@@ -113,9 +124,7 @@ class Protobuf(CMakePackage):
         return dict(
             map(
                 lambda u: (u, self.url_for_version(u)),
-                spack.util.web.find_versions_of_archive(
-                    self.all_urls, self.list_url, self.list_depth
-                ),
+                spack.url.find_versions_of_archive(self.all_urls, self.list_url, self.list_depth),
             )
         )
 

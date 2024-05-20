@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,9 +11,11 @@ import re
 import shutil
 import sys
 from contextlib import contextmanager
+from pathlib import Path
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
+from llnl.util.symlink import readlink
 
 import spack.config
 import spack.hash_types as ht
@@ -103,8 +105,8 @@ class DirectoryLayout:
         _check_concrete(spec)
 
         projection = spack.projections.get_projection(self.projections, spec)
-        path = spec.format(projection)
-        return path
+        path = spec.format_path(projection)
+        return str(Path(path))
 
     def write_spec(self, spec, path):
         """Write a spec out to a file."""
@@ -119,10 +121,8 @@ class DirectoryLayout:
         versioning. We use it in the case that an analysis later needs to
         easily access this information.
         """
-        from spack.util.environment import get_host_environment_metadata
-
         env_file = self.env_metadata_path(spec)
-        environ = get_host_environment_metadata()
+        environ = spack.spec.get_host_environment_metadata()
         with open(env_file, "w") as fd:
             sjson.dump(environ, fd)
 
@@ -182,7 +182,7 @@ class DirectoryLayout:
         base_dir = (
             self.path_for_spec(deprecator_spec)
             if deprecator_spec
-            else os.readlink(deprecated_spec.prefix)
+            else readlink(deprecated_spec.prefix)
         )
 
         yaml_path = os.path.join(

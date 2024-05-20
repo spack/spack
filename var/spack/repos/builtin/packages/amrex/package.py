@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,9 +21,20 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
 
     tags = ["ecp", "e4s"]
 
-    maintainers("WeiqunZhang", "asalmgren", "etpalmer63")
+    maintainers("WeiqunZhang", "asalmgren", "atmyers")
+
+    license("BSD-3-Clause")
 
     version("develop", branch="development")
+    version("24.05", sha256="f3db5ea2b81973e3e244c5cf39d5a5383a98f297f56ed91c8dcdd2e24f7b750e")
+    version("24.04", sha256="77a91e75ad0106324a44ca514e1e8abc54f2fc2d453406441c871075726a8167")
+    version("24.03", sha256="024876fe65838d1021fcbf8530b992bff8d9be1d3f08a1723c4e2e5f7c28b427")
+    version("24.02", sha256="286cc3ca29daa69c8eafc1cd7a572662dec9eb78631ac3d33a1260868fdc6996")
+    version("24.01", sha256="83dbd4dad6dc51fa4a80aad0347b15ee5a6d816cf4abcd87f7b0e2987d8131b7")
+    version("23.12", sha256="90e00410833d7a82bf6d9e71a70ce85d2bfb89770da7e34d0dda940f2bf5384a")
+    version("23.11", sha256="49b9fea10cd2a2b6cb0fedf7eac8f7889eacc68a05ae5ac7c5702bc0eb1b3848")
+    version("23.10", sha256="3c85aa0ad5f96303e797960a6e0aa37c427f6483f39cdd61dbc2f7ca16357714")
+    version("23.09", sha256="1a539c2628041b17ad910afd9270332060251c8e346b1482764fdb87a4f25053")
     version("23.08", sha256="a83b7249d65ad8b6ac1881377e5f814b6db8ed8410ea5562b8ae9d4ed1f37c29")
     version("23.07", sha256="4edb991da51bcaad040f852e42c82834d8605301aa7eeb01cd1512d389a58d90")
     version("23.06", sha256="3bddcb07cce3e65e06cac35005c30820d311ce47ae54b46e4af333fa272b236b")
@@ -75,7 +86,22 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
     version("18.09.1", sha256="a065ee4d1d98324b6c492ae20ea63ba12a4a4e23432bf5b3fe9788d44aa4398e")
 
     # Config options
-    variant("dimensions", default="3", description="Dimensionality", values=("1", "2", "3"))
+    variant(
+        "dimensions",
+        default="3",
+        values=("1", "2", "3"),
+        multi=False,
+        description="Dimensionality",
+        when="@:23.05",
+    )
+    variant(
+        "dimensions",
+        default="1,2,3",
+        values=("1", "2", "3"),
+        multi=True,
+        description="Dimensionality",
+        when="@23.06:",
+    )
     variant("shared", default=False, description="Build shared library")
     variant("mpi", default=True, description="Build with MPI support")
     variant("openmp", default=False, description="Build with OpenMP support")
@@ -144,7 +170,6 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("hypre@2.19.0:", type="link", when="@21.03: ~cuda +hypre")
     depends_on("hypre@2.20.0:", type="link", when="@21.03: +cuda +hypre")
     depends_on("petsc", type="link", when="+petsc")
-    depends_on("intel-oneapi-compilers@2023.0.0:", type="build", when="@23.01: +sycl")
     depends_on("intel-oneapi-mkl", type=("build", "link"), when="+sycl")
 
     # these versions of gcc have lambda function issues
@@ -234,6 +259,8 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
     #
     @when("@20.12:,develop")
     def cmake_args(self):
+        if self.spec.satisfies("@23.01: +sycl") and not self.spec.satisfies("%oneapi@2023.0.0:"):
+            raise InstallError("amrex +sycl requires %oneapi@2023.0.0:")
         args = [
             "-DUSE_XSDK_DEFAULTS=ON",
             self.define_from_variant("AMReX_SPACEDIM", "dimensions"),
@@ -275,11 +302,10 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
         if "+sycl" in self.spec:
             args.append("-DAMReX_GPU_BACKEND=SYCL")
             # SYCL GPU backend only supported with Intel's oneAPI or DPC++ compilers
-            sycl_compatible_compilers = ["dpcpp", "icpx"]
+            sycl_compatible_compilers = ["icpx"]
             if not (os.path.basename(self.compiler.cxx) in sycl_compatible_compilers):
                 raise InstallError(
-                    "AMReX's SYCL GPU Backend requires DPC++ (dpcpp)"
-                    + " or the oneAPI CXX (icpx) compiler."
+                    "AMReX's SYCL GPU Backend requires the oneAPI CXX (icpx) compiler."
                 )
 
         return args

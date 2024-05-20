@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -28,6 +28,7 @@ import llnl.util.tty as tty
 
 import spack.abi
 import spack.compilers
+import spack.config
 import spack.environment
 import spack.error
 import spack.platforms
@@ -37,7 +38,6 @@ import spack.target
 import spack.tengine
 import spack.util.path
 import spack.variant as vt
-from spack.config import config
 from spack.package_prefs import PackagePrefs, is_spec_buildable, spec_externals
 from spack.version import ClosedOpenRange, VersionList, ver
 
@@ -74,9 +74,13 @@ class Concretizer:
     #: during concretization. Used for testing and for mirror creation
     check_for_compiler_existence = None
 
+    #: Packages that the old concretizer cannot deal with correctly, and cannot build anyway.
+    #: Those will not be considered as providers for virtuals.
+    non_buildable_packages = {"glibc", "musl"}
+
     def __init__(self, abstract_spec=None):
         if Concretizer.check_for_compiler_existence is None:
-            Concretizer.check_for_compiler_existence = not config.get(
+            Concretizer.check_for_compiler_existence = not spack.config.get(
                 "config:install_missing_compilers", False
             )
         self.abstract_spec = abstract_spec
@@ -113,7 +117,11 @@ class Concretizer:
         pref_key = lambda spec: 0  # no-op pref key
 
         if spec.virtual:
-            candidates = spack.repo.path.providers_for(spec)
+            candidates = [
+                s
+                for s in spack.repo.PATH.providers_for(spec)
+                if s.name not in self.non_buildable_packages
+            ]
             if not candidates:
                 raise spack.error.UnsatisfiableProviderSpecError(candidates[0], spec)
 
@@ -155,7 +163,7 @@ class Concretizer:
             ),
         )
 
-    def choose_virtual_or_external(self, spec):
+    def choose_virtual_or_external(self, spec: spack.spec.Spec):
         """Given a list of candidate virtual and external packages, try to
         find one that is most ABI compatible.
         """
@@ -744,9 +752,11 @@ def concretize_specs_together(*abstract_specs, **kwargs):
 def _concretize_specs_together_new(*abstract_specs, **kwargs):
     import spack.solver.asp
 
+    allow_deprecated = spack.config.get("config:deprecated", False)
     solver = spack.solver.asp.Solver()
-    result = solver.solve(abstract_specs, tests=kwargs.get("tests", False))
-    result.raise_if_unsat()
+    result = solver.solve(
+        abstract_specs, tests=kwargs.get("tests", False), allow_deprecated=allow_deprecated
+    )
     return [s.copy() for s in result.specs]
 
 
@@ -823,7 +833,6 @@ class NoValidVersionError(spack.error.SpackError):
 
 
 class InsufficientArchitectureInfoError(spack.error.SpackError):
-
     """Raised when details on architecture cannot be collected from the
     system"""
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,8 +14,11 @@ import re
 import sys
 import urllib.parse
 import urllib.request
+from typing import Optional
 
-from spack.util.path import convert_to_posix_path, sanitize_filename
+from llnl.path import convert_to_posix_path
+
+from spack.util.path import sanitize_filename
 
 
 def validate_scheme(scheme):
@@ -75,14 +78,7 @@ def is_path_instead_of_url(path_or_url):
     """Historically some config files and spack commands used paths
     where urls should be used. This utility can be used to validate
     and promote paths to urls."""
-    scheme = urllib.parse.urlparse(path_or_url).scheme
-
-    # On non-Windows, no scheme means it's likely a path
-    if not sys.platform == "win32":
-        return not scheme
-
-    # On Windows, we may have drive letters.
-    return "A" <= scheme <= "Z"
+    return not validate_scheme(urllib.parse.urlparse(path_or_url).scheme)
 
 
 def format(parsed_url):
@@ -243,59 +239,6 @@ def _join(base_url, path, *extra, **kwargs):
     )
 
 
-git_re = (
-    r"^(?:([a-z]+)://)?"  # 1. optional scheme
-    r"(?:([^@]+)@)?"  # 2. optional user
-    r"([^:/~]+)?"  # 3. optional hostname
-    r"(?(1)(?::([^:/]+))?|:)"  # 4. :<optional port> if scheme else :
-    r"(.*[^/])/?$"  # 5. path
-)
-
-
-def parse_git_url(url):
-    """Parse git URL into components.
-
-    This parses URLs that look like:
-
-    * ``https://host.com:443/path/to/repo.git``, or
-    * ``git@host.com:path/to/repo.git``
-
-    Anything not matching those patterns is likely a local
-    file or invalid.
-
-    Returned components are as follows (optional values can be ``None``):
-
-    1. ``scheme`` (optional): git, ssh, http, https
-    2. ``user`` (optional): ``git@`` for github, username for http or ssh
-    3. ``hostname``: domain of server
-    4. ``port`` (optional): port on server
-    5. ``path``: path on the server, e.g. spack/spack
-
-    Returns:
-        (tuple): tuple containing URL components as above
-
-    Raises ``ValueError`` for invalid URLs.
-    """
-    match = re.match(git_re, url)
-    if not match:
-        raise ValueError("bad git URL: %s" % url)
-
-    # initial parse
-    scheme, user, hostname, port, path = match.groups()
-
-    # special handling for ~ paths (they're never absolute)
-    if path.startswith("/~"):
-        path = path[1:]
-
-    if port is not None:
-        try:
-            port = int(port)
-        except ValueError:
-            raise ValueError("bad port in git url: %s" % url)
-
-    return (scheme, user, hostname, port, path)
-
-
 def default_download_filename(url: str) -> str:
     """This method computes a default file name for a given URL.
     Note that it makes no request, so this is not the same as the
@@ -313,3 +256,43 @@ def default_download_filename(url: str) -> str:
         valid_name = "_" + valid_name[1:]
 
     return valid_name
+
+
+def parse_link_rel_next(link_value: str) -> Optional[str]:
+    """Return the next link from a Link header value, if any."""
+
+    # Relaxed version of RFC5988
+    uri = re.compile(r"\s*<([^>]+)>\s*")
+    param_key = r"[^;=\s]+"
+    quoted_string = r"\"([^\"]+)\""
+    unquoted_param_value = r"([^;,\s]+)"
+    param = re.compile(rf";\s*({param_key})\s*=\s*(?:{quoted_string}|{unquoted_param_value})\s*")
+
+    data = link_value
+
+    # Parse a list of <url>; key=value; key=value, <url>; key=value; key=value, ... links.
+    while True:
+        uri_match = re.match(uri, data)
+        if not uri_match:
+            break
+        uri_reference = uri_match.group(1)
+        data = data[uri_match.end() :]
+
+        # Parse parameter list
+        while True:
+            param_match = re.match(param, data)
+            if not param_match:
+                break
+            key, quoted_value, unquoted_value = param_match.groups()
+            value = quoted_value or unquoted_value
+            data = data[param_match.end() :]
+
+            if key == "rel" and value == "next":
+                return uri_reference
+
+        if not data.startswith(","):
+            break
+
+        data = data[1:]
+
+    return None

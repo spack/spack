@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -30,6 +30,8 @@ class PyDistributed(PythonPackage):
         "distributed.diagnostics",
     ]
 
+    license("BSD-3-Clause")
+
     version("2023.4.1", sha256="0140376338efdcf8db1d03f7c1fdbb5eab2a337b03e955d927c116824ee94ac5")
     version("2022.10.2", sha256="53f0a5bf6efab9a5ab3345cd913f6d3f3d4ea444ee2edbea331c7fef96fd67d0")
     version("2022.2.1", sha256="fb62a75af8ef33bbe1aa80a68c01a33a93c1cd5a332dd017ab44955bf7ecf65b")
@@ -48,7 +50,7 @@ class PyDistributed(PythonPackage):
     depends_on("py-click@8.0:", type=("build", "run"), when="@2023.4.1:")
     depends_on("py-cloudpickle@1.5.0:", type=("build", "run"))
     depends_on("py-jinja2", type=("build", "run"), when="@2022.2.1:")
-    depends_on("py-jinja2@2.10.3", type=("build", "run"), when="@2023.4.1:")
+    depends_on("py-jinja2@2.10.3:", type=("build", "run"), when="@2023.4.1:")
     depends_on("py-locket@1:", type=("build", "run"), when="@2022.2.1:")
     depends_on("py-msgpack@0.6.0:", type=("build", "run"))
     depends_on("py-msgpack@1.0.0:", type=("build", "run"), when="@2023.4.1:")

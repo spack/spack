@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -25,10 +25,10 @@ class MesaGlu(AutotoolsPackage):
         multi=False,
         description="The OpenGL provider to use",
     )
-    conflicts("osmesa", when="gl=glx")
-    conflicts("osmesa", when="gl=other")
-    conflicts("glx", when="gl=osmesa")
-    conflicts("glx", when="gl=other")
+    conflicts("^osmesa", when="gl=glx")
+    conflicts("^osmesa", when="gl=other")
+    conflicts("^glx", when="gl=osmesa")
+    conflicts("^glx", when="gl=other")
 
     depends_on("gl@3:")
     depends_on("osmesa", when="gl=osmesa")

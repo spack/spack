@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -86,7 +86,7 @@ class Rpm(AutotoolsPackage):
     # compression support -- there is no configure option for many of these
     # and they autodetect the libraries, so it's better to just make them
     # hard requirements to avoid linking against system libraries.
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("bzip2")
     depends_on("gzip")
     depends_on("xz")

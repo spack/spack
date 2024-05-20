@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -24,11 +24,29 @@ class Openssl(Package):  # Uses Fake Autotools, should subclass Package
     list_url = "https://www.openssl.org/source/old/"
     list_depth = 1
 
+    maintainers("AlexanderRichert-NOAA")
+
     tags = ["core-packages", "windows"]
 
     executables = ["openssl"]
 
-    version("3.1.2", sha256="a0ce69b8b97ea6a35b96875235aa453b966ba3cba8af2de23657d8b6767d6539")
+    license("Apache-2.0")
+
+    version("3.3.0", sha256="53e66b043322a606abf0087e7699a0e033a37fa13feb9742df35c3a33b18fb02")
+    version("3.2.1", sha256="83c7329fe52c850677d75e5d0b0ca245309b97e8ecbcfdc1dfdc4ab9fac35b39")
+    version("3.1.5", sha256="6ae015467dabf0469b139ada93319327be24b98251ffaeceda0221848dc09262")
+    version("3.0.13", sha256="88525753f79d3bec27d2fa7c66aa0b92b3aa9498dafd93d7cfa4b3780cdae313")
+
+    version(
+        "3.1.3",
+        sha256="f0316a2ebd89e7f2352976445458689f80302093788c466692fb2a188b2eacf6",
+        deprecated=True,
+    )
+    version(
+        "3.1.2",
+        sha256="a0ce69b8b97ea6a35b96875235aa453b966ba3cba8af2de23657d8b6767d6539",
+        deprecated=True,
+    )
     version(
         "3.1.1",
         sha256="b3aa61334233b852b63ddb048df181177c2c659eb9d4376008118f9c08d07674",
@@ -39,7 +57,16 @@ class Openssl(Package):  # Uses Fake Autotools, should subclass Package
         sha256="aaa925ad9828745c4cad9d9efeb273deca820f2cdcf2c3ac7d7c1212b7c497b4",
         deprecated=True,
     )
-    version("3.0.10", sha256="1761d4f5b13a1028b9b6f3d4b8e17feb0cedc9370f6afe61d7193d2cdce83323")
+    version(
+        "3.0.11",
+        sha256="b3425d3bb4a2218d0697eb41f7fc0cdede016ed19ca49d168b78e8d947887f55",
+        deprecated=True,
+    )
+    version(
+        "3.0.10",
+        sha256="1761d4f5b13a1028b9b6f3d4b8e17feb0cedc9370f6afe61d7193d2cdce83323",
+        deprecated=True,
+    )
     version(
         "3.0.9",
         sha256="eb1ab04781474360f77c318ab89d8c5a03abc38e63d65a603cabbf1b00a1dc90",
@@ -80,10 +107,16 @@ class Openssl(Package):  # Uses Fake Autotools, should subclass Package
         sha256="59eedfcb46c25214c9bd37ed6078297b4df01d012267fe9e9eee31f61bc70536",
         deprecated=True,
     )
-
-    # The latest stable version is the 1.1.1 series. This is also our Long Term
-    # Support (LTS) version, supported until 11th September 2023.
-    version("1.1.1v", sha256="d6697e2871e77238460402e9362d47d18382b15ef9f246aba6c7bd780d38a6b0")
+    version(
+        "1.1.1w",
+        sha256="cf3098950cb4d853ad95c0841f1f9c6d3dc102dccfcacd521d93925208b76ac8",
+        deprecated=True,
+    )
+    version(
+        "1.1.1v",
+        sha256="d6697e2871e77238460402e9362d47d18382b15ef9f246aba6c7bd780d38a6b0",
+        deprecated=True,
+    )
     version(
         "1.1.1u",
         sha256="e2f8d84b523eecd06c7be7626830370300fbcc15386bf5142d72758f6963ebc6",
@@ -189,8 +222,6 @@ class Openssl(Package):  # Uses Fake Autotools, should subclass Package
         sha256="2836875a0f89c03d0fdf483941512613a50cfb421d6fd94b9f41d7279d586a3d",
         deprecated=True,
     )
-
-    # The 1.1.0 series is out of support and should not be used.
     version(
         "1.1.0l",
         sha256="74a2f756c64fd7386a29184dc0344f4831192d61dc2481a93a4c5dd727f41148",
@@ -231,8 +262,6 @@ class Openssl(Package):  # Uses Fake Autotools, should subclass Package
         sha256="fc436441a2e05752d31b4e46115eb89709a28aef96d4fe786abe92409b2fd6f5",
         deprecated=True,
     )
-
-    # The 1.0.2 series is out of support and should not be used.
     version(
         "1.0.2u",
         sha256="ecd0c6ffb493dd06707d38b14bb4d8c2288bb7033735606569d8f90f89669d16",
@@ -313,8 +342,6 @@ class Openssl(Package):  # Uses Fake Autotools, should subclass Package
         sha256="671c36487785628a703374c652ad2cebea45fa920ae5681515df25d9f2c9a8c8",
         deprecated=True,
     )
-
-    # The 1.0.1 version is out of support and should not be used.
     version(
         "1.0.1u",
         sha256="4312b4ca1215b6f2c97007503d80db80d5157f76f8f7d3febbe6b4c56ff26739",
@@ -359,14 +386,18 @@ class Openssl(Package):  # Uses Fake Autotools, should subclass Package
         ),
     )
     variant("docs", default=False, description="Install docs and manpages")
-    variant("shared", default=False, description="Build shared library version")
+    variant("shared", default=True, description="Build shared library version")
     with when("platform=windows"):
         variant("dynamic", default=False, description="Link with MSVC's dynamic runtime library")
 
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("perl@5.14.0:", type=("build", "test"))
     depends_on("ca-certificates-mozilla", type="build", when="certs=mozilla")
     depends_on("nasm", when="platform=windows")
+
+    depends_on("gmake", type="build", when="platform=linux")
+    depends_on("gmake", type="build", when="platform=cray")
+    depends_on("gmake", type="build", when="platform=darwin")
 
     patch(
         "https://github.com/openssl/openssl/commit/f9e578e720bb35228948564192adbe3bc503d5fb.patch?full_index=1",
@@ -382,7 +413,12 @@ class Openssl(Package):  # Uses Fake Autotools, should subclass Package
 
     @property
     def libs(self):
-        return find_libraries(["libssl", "libcrypto"], root=self.prefix, recursive=True)
+        return find_libraries(
+            ["libssl", "libcrypto"],
+            root=self.prefix,
+            recursive=True,
+            shared=self.spec.variants["shared"].value,
+        )
 
     def handle_fetch_error(self, error):
         tty.warn(
@@ -403,7 +439,7 @@ class Openssl(Package):  # Uses Fake Autotools, should subclass Package
             # where it happens automatically?)
             env["KERNEL_BITS"] = "64"
 
-        options = ["zlib", "shared"]
+        options = ["zlib"]
         if spec.satisfies("@1.0"):
             options.append("no-krb5")
         # clang does not support the .arch directive in assembly files.
@@ -433,16 +469,20 @@ class Openssl(Package):  # Uses Fake Autotools, should subclass Package
             base_args.extend(
                 ['CC="%s"' % os.environ.get("CC"), 'CXX="%s"' % os.environ.get("CXX"), "VC-WIN64A"]
             )
-            if spec.satisfies("~shared"):
-                base_args.append("no-shared")
         else:
             base_args.extend(
                 [
-                    "-I{0}".format(self.spec["zlib"].prefix.include),
-                    "-L{0}".format(self.spec["zlib"].prefix.lib),
+                    "-I{0}".format(self.spec["zlib-api"].prefix.include),
+                    "-L{0}".format(self.spec["zlib-api"].prefix.lib),
                 ]
             )
             base_args.extend(options)
+
+        if spec.satisfies("~shared"):
+            base_args.append("no-shared")
+        else:
+            base_args.append("shared")
+
         # On Windows, we use perl for configuration and build through MSVC
         # nmake.
         if spec.satisfies("platform=windows"):

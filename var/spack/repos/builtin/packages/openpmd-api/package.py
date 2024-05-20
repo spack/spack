@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,15 +10,18 @@ class OpenpmdApi(CMakePackage):
     """C++ & Python API for Scientific I/O"""
 
     homepage = "https://www.openPMD.org"
-    url = "https://github.com/openPMD/openPMD-api/archive/0.15.1.tar.gz"
+    url = "https://github.com/openPMD/openPMD-api/archive/0.15.2.tar.gz"
     git = "https://github.com/openPMD/openPMD-api.git"
 
     maintainers("ax3l", "franzpoeschel")
 
     tags = ["e4s"]
 
+    license("LGPL-3.0-only")
+
     # C++17 up until here
     version("develop", branch="dev")
+    version("0.15.2", sha256="fbe3b356fe6f4589c659027c8056844692c62382e3ec53b953bed1c87e58ba13")
     version("0.15.1", sha256="0e81652152391ba4d2b62cfac95238b11233a4f89ff45e1fcffcc7bcd79dabe1")
     version("0.15.0", sha256="290e3a3c5814204ea6527d53423bfacf7a8dc490713227c9e0eaa3abf4756177")
     # C++14 up until here
@@ -34,8 +37,8 @@ class OpenpmdApi(CMakePackage):
     version("0.13.1", sha256="81ff79419982eb1b0865d1736f73f950f5d4c356d3c78200ceeab7f54dc07fd7")
     version("0.13.0", sha256="97c2e43d80ee5c5288f278bd54f0dcb40e7f48a575b278fcef9660214b779bb0")
     # C++11 up until here
-    version("0.12.0", tag="0.12.0-alpha")
-    version("0.11.1", tag="0.11.1-alpha")
+    version("0.12.0", tag="0.12.0-alpha", commit="23be484dd2570b5277779eafcc5f1eb70c6d98f2")
+    version("0.11.1", tag="0.11.1-alpha", commit="c40292aafbf564807710424d106304f9670a8304")
 
     variant("shared", default=True, description="Build a shared version of the library")
     variant("mpi", default=True, description="Enable parallel I/O")
@@ -70,8 +73,8 @@ class OpenpmdApi(CMakePackage):
         depends_on("py-pybind11@2.6.2:", type="link")
         depends_on("py-numpy@1.15.1:", type=["test", "run"])
         depends_on("py-mpi4py@2.1.0:", when="+mpi", type=["test", "run"])
-        depends_on("python@3.6:", type=["link", "test", "run"])
-        depends_on("python@3.7:", when="@0.15.0:", type=["link", "test", "run"])
+        depends_on("python@3.7:", type=["link", "test", "run"])
+        depends_on("python@3.8:", when="@0.15.2:", type=["link", "test", "run"])
 
     conflicts("^hdf5 api=v16", msg="openPMD-api requires HDF5 APIs for 1.8+")
 
@@ -120,13 +123,7 @@ class OpenpmdApi(CMakePackage):
 
         # switch internally shipped third-party libraries for spack
         if spec.satisfies("+python"):
-            py_exe_define = (
-                "Python_EXECUTABLE" if spec.version >= Version("0.13.0") else "PYTHON_EXECUTABLE"
-            )
-            args += [
-                self.define(py_exe_define, self.spec["python"].command.path),
-                self.define("openPMD_USE_INTERNAL_PYBIND11", False),
-            ]
+            args.append(self.define("openPMD_USE_INTERNAL_PYBIND11", False))
 
         args.append(self.define("openPMD_USE_INTERNAL_JSON", False))
         if spec.satisfies("@:0.14"):  # pre C++17 releases

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,8 +14,11 @@ class Thepeg(AutotoolsPackage):
 
     tags = ["hep"]
 
+    license("GPL-3.0-or-later")
+
     # The commented out versions exist, but may need patches
     # and/or recipe changes
+    version("2.3.0", sha256="ac35979ae89c29608ca92c156a49ff68aace7a5a12a0c92f0a01a833d2d34572")
     version("2.2.3", sha256="f21473197a761fc32917b08a8d24d2bfaf93ff57f3441fd605da99ac9de5d50b")
     version("2.2.2", sha256="97bf55d4391b0a070a3303d3845f8160afec403f1573dfb0e857709ad6262e3e")
     version("2.2.1", sha256="63abc7215e6ad45c11cf9dac013738e194cc38556a8368b850b70ab1b57ea58f")
@@ -73,7 +76,7 @@ class Thepeg(AutotoolsPackage):
     depends_on("automake", type="build")
     depends_on("libtool", type="build")
     depends_on("m4", type="build")
-    depends_on("zlib")
+    depends_on("zlib-api")
 
     variant("hepmc", default="2", values=("2", "3"), description="HepMC interface to build ")
     variant("rivet", default=True, description="Add rivet integration")
@@ -95,7 +98,7 @@ class Thepeg(AutotoolsPackage):
 
     def configure_args(self):
         args = ["--with-gsl=" + self.spec["gsl"].prefix, "--without-javagui"]
-        args += ["--with-zlib=" + self.spec["zlib"].prefix]
+        args += ["--with-zlib=" + self.spec["zlib-api"].prefix]
 
         if self.spec.satisfies("@:1.8"):
             args += ["--with-LHAPDF=" + self.spec["lhapdf"].prefix]

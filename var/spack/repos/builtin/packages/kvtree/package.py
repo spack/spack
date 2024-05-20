@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,8 @@ class Kvtree(CMakePackage):
 
     maintainers("CamStan", "gonsie")
 
+    license("MIT")
+
     version("main", branch="main")
     version("1.4.0", sha256="48a36fd578f0d1198a9c1512d6446c830b915ace5bb97539eec615495bee5a51")
     version("1.3.0", sha256="8281e075772d3534183c46133553d5765455d79ed98a895743663db891755ca9")
@@ -26,7 +28,7 @@ class Kvtree(CMakePackage):
     version("1.0.3", sha256="c742cdb1241ef4cb13767019204d5350a3c4383384bed9fb66680b93ff44b0d4")
     version("1.0.2", sha256="56fb5b747758c24a907a8380e8748d296900d94de9547bc15f6b427ac4ae2ec4")
 
-    depends_on("zlib", type="link")
+    depends_on("zlib-api", type="link")
 
     variant("mpi", default=True, description="Build with MPI message packing")
     depends_on("mpi", when="+mpi")
