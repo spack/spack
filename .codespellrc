@@ -1,5 +1,5 @@
 [codespell]
-skip = .git,*.pdf,*.svg,*.patch,*.py,*.diff,*.pub,foamEtcFile,patch.*
+skip = .git,*.pdf,*.svg,*.patch,*.py,*.diff,*.pub,foamEtcFile,patch.*,*.dat
 ignore-regex = \b(THIRDPARTY|ThirdParty)\b
 # precice - package
 ignore-words-list = bu,fo,nd,ot,te,pilon,namd,oce,ther,precice
