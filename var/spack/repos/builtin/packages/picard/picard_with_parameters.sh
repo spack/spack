@@ -44,7 +44,7 @@ for arg in "$@"; do
             jvm_mem_opts="$jvm_mem_opts $arg"
             ;;
          *)
-            if [[ ${pass_args} == '' ]] #needed to avoid preceeding space on first arg e.g. ' MarkDuplicates'
+            if [[ ${pass_args} == '' ]] #needed to avoid preceding space on first arg e.g. ' MarkDuplicates'
                 then
                     pass_args="$arg"
             else

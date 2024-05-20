@@ -134,7 +134,7 @@ adding the following to ``my_package``'s ``pyproject.toml`` will make the ``spac
 
 .. code-block:: toml
 
-   [project.entry_points."spack.extenions"]
+   [project.entry_points."spack.extensions"]
    my_package = "my_package:get_extension_path"
 
 The function ``my_package.get_extension_path`` in ``my_package/__init__.py`` might look like
