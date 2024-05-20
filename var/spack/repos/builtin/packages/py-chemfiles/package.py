@@ -24,5 +24,5 @@ class PyChemfiles(PythonPackage):
 
     depends_on("py-setuptools@44:", type="build")
     depends_on("py-wheel@0.36:", type="build")
-    depends_on("py-cmake", type="build")
-    depends_on("py-ninja", type="build")
+    depends_on("cmake", type="build")
+    depends_on("ninja", type="build")
