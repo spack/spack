@@ -60,9 +60,9 @@ class Hpx(CMakePackage, CudaPackage, ROCmPackage):
 
     variant(
         "max_cpu_count",
-        default="64",
+        default="auto",
         description="Max number of OS-threads for HPX applications",
-        values=lambda x: isinstance(x, str) and x.isdigit(),
+        values=lambda x: isinstance(x, str) and (x.isdigit() or x == "auto"),
     )
 
     instrumentation_values = ("apex", "google_perftools", "papi", "valgrind")
@@ -224,6 +224,9 @@ class Hpx(CMakePackage, CudaPackage, ROCmPackage):
     def cmake_args(self):
         spec, args = self.spec, []
 
+        format_max_cpu_count = lambda max_cpu_count: (
+            "" if max_cpu_count == "auto" else max_cpu_count
+        )
         args += [
             self.define("HPX_WITH_CXX{0}".format(spec.variants["cxxstd"].value), True),
             self.define_from_variant("HPX_WITH_MALLOC", "malloc"),
@@ -237,7 +240,10 @@ class Hpx(CMakePackage, CudaPackage, ROCmPackage):
             self.define("HPX_WITH_NETWORKING", "networking=none" not in spec),
             self.define("HPX_WITH_PARCELPORT_TCP", "networking=tcp" in spec),
             self.define("HPX_WITH_PARCELPORT_MPI", "networking=mpi" in spec),
-            self.define_from_variant("HPX_WITH_MAX_CPU_COUNT", "max_cpu_count"),
+            self.define(
+                "HPX_WITH_MAX_CPU_COUNT",
+                format_max_cpu_count(spec.variants["max_cpu_count"].value),
+            ),
             self.define_from_variant("HPX_WITH_GENERIC_CONTEXT_COROUTINES", "generic_coroutines"),
             self.define("BOOST_ROOT", spec["boost"].prefix),
             self.define("HWLOC_ROOT", spec["hwloc"].prefix),
