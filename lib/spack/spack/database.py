@@ -1647,7 +1647,16 @@ class Database:
         if install_tree in ("all", "local") or self.root == install_tree:
             local_results = set(self.query_local(*args, **kwargs))
 
-        results = list(local_results) + list(x for x in upstream_results if x not in local_results)
+        local_results_dict = { y.dag_hash(): y for y in local_results }
+        results = list(local_results) + list(
+            spec
+            for spec in upstream_results
+            if not (
+                spec.dag_hash() in local_results_dict.keys()
+                and spec.name == local_results_dict[spec.dag_hash()].name
+                and spec.version == local_results_dict[spec.dag_hash()].version
+            )
+        )
 
         return sorted(results)
 
