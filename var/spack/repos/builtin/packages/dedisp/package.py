@@ -36,7 +36,7 @@ class Dedisp(MakefilePackage, CudaPackage):
     def preinstall(self, spec, prefix):
         # The $PREFIX/dedisp/include and $PREFIX/dedisp/lib directories don't seem
         # to be created automatically by the software's Makefile so manually create them
-        libdir = join_path(prefix, 'lib')
-        incdir = join_path(prefix, 'include')
+        libdir = join_path(prefix, "lib")
+        incdir = join_path(prefix, "include")
         mkdirp(libdir)
         mkdirp(incdir)
