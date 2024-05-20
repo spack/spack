@@ -813,3 +813,33 @@ def test_deconcretize_then_concretize_does_not_error(mutable_mock_env_path, mock
     assert len(e.concrete_roots()) == 3
     all_root_hashes = set(x.dag_hash() for x in e.concrete_roots())
     assert len(all_root_hashes) == 2
+
+
+@pytest.mark.regression("44216")
+@pytest.mark.only_clingo()
+def test_root_version_weights_for_old_versions(mutable_mock_env_path, mock_packages):
+    """Tests that, when we select two old versions of root specs that have the same version
+    optimization penalty, both are considered.
+    """
+    mutable_mock_env_path.mkdir()
+    spack_yaml = mutable_mock_env_path / ev.manifest_name
+    spack_yaml.write_text(
+        """spack:
+      specs:
+      # allow any version, but the most recent
+      - bowtie@:1.3
+      # allows only the third most recent, so penalty is 2
+      - gcc@1
+      concretizer:
+        unify: true
+    """
+    )
+    e = ev.Environment(mutable_mock_env_path)
+    with e:
+        e.concretize()
+
+    bowtie = [x for x in e.concrete_roots() if x.name == "bowtie"][0]
+    gcc = [x for x in e.concrete_roots() if x.name == "gcc"][0]
+
+    assert bowtie.satisfies("@=1.3.0")
+    assert gcc.satisfies("@=1.0")
