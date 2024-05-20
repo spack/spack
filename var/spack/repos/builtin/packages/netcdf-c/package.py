@@ -370,7 +370,7 @@ class CMakeBuilder(BaseBuilder, cmake.CMakeBuilder):
         ncconfig_file = find(self.prefix, "nc-config", recursive=True)
         settingsconfig_file = find(self.prefix, "libnetcdf.settings", recursive=True)
 
-        files = pkgconfig_file + cmakeconfig_file + ncconfig_file + settingsconfig_file
+        files = pkgconfig_file + ncconfig_file + settingsconfig_file
         config = "shared" if self.spec.satisfies("+shared") else "static"
         filter_file(f"hdf5-{config}", "hdf5", *files, ignore_absent=True)
         filter_file(f"hdf5_hl-{config}", "hdf5_hl", *files, ignore_absent=True)
