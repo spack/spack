@@ -62,6 +62,7 @@ class Mesa(MesonPackage):
     depends_on("unwind")
     depends_on("expat")
     depends_on("zlib-api")
+    depends_on("libxml2")
 
     # Internal options
     variant("llvm", default=True, description="Enable LLVM.")
