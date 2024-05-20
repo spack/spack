@@ -50,7 +50,7 @@ class Gettext(AutotoolsPackage, GNUMirrorPackage):
     depends_on("libxml2", when="+libxml2")
     # Java runtime and compiler (e.g. GNU gcj or kaffe)
     # C# runtime and compiler (e.g. pnet or mono)
-    depends_on("tar", when="+tar")
+    depends_on("tar", when="+tar", type="run")
     # depends_on('gzip',     when='+gzip')
     depends_on("bzip2", when="+bzip2")
     depends_on("xz", when="+xz", type=("build", "link", "run"))
