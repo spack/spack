@@ -5,6 +5,7 @@
 
 from spack.package import *
 
+
 class Dedisp(MakefilePackage, CudaPackage):
     """GPU-based dedispersion package."""
 
@@ -23,18 +24,19 @@ class Dedisp(MakefilePackage, CudaPackage):
 
     def edit(self, spec, prefix):
         # Build process required some edits to Makefile.inc instead of using command-line flags
-        makefile = FileFilter('Makefile.inc')
+        makefile = FileFilter("Makefile.inc")
 
-        makefile.filter(r'^\s*CUDA_PATH\s*\?=.*',  'CUDA_PATH ?= '  + spec['cuda'].prefix)
-        makefile.filter(r'^\s*GPU_ARCH\s*\?=.*', 'GPU_ARCH ?= sm_' + spec.variants['cuda_arch'].value[0])
-        makefile.filter(r'^\s*INSTALL_DIR\s*\?=.*', 'INSTALL_DIR ?= ' + prefix)
+        makefile.filter(r"^\s*CUDA_PATH\s*\?=.*", "CUDA_PATH ?= " + spec["cuda"].prefix)
+        makefile.filter(
+            r"^\s*GPU_ARCH\s*\?=.*", "GPU_ARCH ?= sm_" + spec.variants["cuda_arch"].value[0]
+        )
+        makefile.filter(r"^\s*INSTALL_DIR\s*\?=.*", "INSTALL_DIR ?= " + prefix)
 
     def install(self, spec, prefix):
-
         # The $PREFIX/dedisp/include and $PREFIX/dedisp/lib directories don't seem
         # to be created automatically by the software's Makefile so manually create them
-        libdir = join_path(prefix, 'lib')
-        incdir = join_path(prefix, 'include')
+        libdir = join_path(prefix, "lib")
+        incdir = join_path(prefix, "include")
         mkdirp(libdir)
         mkdirp(incdir)
 

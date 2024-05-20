@@ -11,7 +11,7 @@ class Psrdada(AutotoolsPackage, CudaPackage):
 
     homepage = "https://psrdada.sourceforge.net/"
     git = "https://git.code.sf.net/p/psrdada/code"
-    
+
     maintainers("aweaver1fandm")
 
     version("master", branch="master", preferred=True)
