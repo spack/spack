@@ -17,6 +17,7 @@ class Re2c(Package):
 
     license("Public-Domain")
 
+    version("3.1", sha256="0ac299ad359e3f512b06a99397d025cfff81d3be34464ded0656f8a96676c029")
     version("2.2", sha256="0fc45e4130a8a555d68e230d1795de0216dfe99096b61b28e67c86dfd7d86bda")
     version("2.1.1", sha256="036ee264fafd5423141ebd628890775aa9447a4c4068a6307385d7366fe711f8")
     version("2.1", sha256="8cba0d95c246c670de8f97f57def83a9c0f2113eaa6f7e4867a941f48f633540")
@@ -60,7 +61,7 @@ class Re2c(Package):
     @when("platform=windows")
     def configure(self, spec, prefix):
         with working_dir(self.stage.source_path, create=True):
-            args = ["-G", "Ninja", "-DCMAKE_INSTALL_PREFIX=%s" % prefix]
+            args = ["-G", "Ninja", f"-DCMAKE_INSTALL_PREFIX={prefix}"]
             cmake(*args)
 
     def build(self, spec, prefix):

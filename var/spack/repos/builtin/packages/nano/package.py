@@ -16,6 +16,8 @@ class Nano(AutotoolsPackage):
 
     license("GPL-3.0-or-later")
 
+    # 8.x
+    version("8.0", sha256="c17f43fc0e37336b33ee50a209c701d5beb808adc2d9f089ca831b40539c9ac4")
     # 7.x
     version("7.2", sha256="86f3442768bd2873cec693f83cdf80b4b444ad3cc14760b74361474fc87a4526")
     # 6.x

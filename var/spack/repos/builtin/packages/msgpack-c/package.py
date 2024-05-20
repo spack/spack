@@ -14,6 +14,7 @@ class MsgpackC(CMakePackage):
 
     license("BSL-1.0")
 
+    version("6.1.1", sha256="d7b119f292365d41403b41b40c2fefd82ebd81241e3c658fafe0e638fa54604a")
     version("3.1.1", sha256="bda49f996a73d2c6080ff0523e7b535917cd28c8a79c3a5da54fc29332d61d1e")
     version("3.0.1", sha256="1b834ab0b5b41da1dbfb96dd4a673f6de7e79dbd7f212f45a553ff9cc54abf3b")
     version("1.4.1", sha256="74324d696f9abb75d8a7cd5e77add5062592b7eac386c8102de78a6cc5309886")
