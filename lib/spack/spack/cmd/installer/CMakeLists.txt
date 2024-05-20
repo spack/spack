@@ -11,7 +11,7 @@ if (SPACK_VERSION)
   set(SPACK_FILENAME "spack-${SPACK_VERSION}.tar.gz")
   set(SPACK_DIR "spack-${SPACK_VERSION}")
 
-  # SPACK DOWLOAD AND EXTRACTION-----------------------------------
+  # SPACK DOWNLOAD AND EXTRACTION-----------------------------------
   file(DOWNLOAD "${SPACK_DL}/${SPACK_FILENAME}"
     "${CMAKE_CURRENT_BINARY_DIR}/${SPACK_FILENAME}"
     STATUS download_status
@@ -54,7 +54,7 @@ endif()
 message(STATUS "Successfully downloaded ${GIT_FILENAME}")
 
 
-# PYTHON DOWLOAD AND EXTRACTION-----------------------------------
+# PYTHON DOWNLOAD AND EXTRACTION-----------------------------------
 file(DOWNLOAD "${PY_DOWNLOAD_LINK}/${PY_FILENAME}"
   "${CMAKE_CURRENT_BINARY_DIR}/${PY_FILENAME}"
   STATUS download_status

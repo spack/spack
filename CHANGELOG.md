@@ -631,7 +631,7 @@ Spack now supports Python 3.12 (#40155)
 
    Spack's traditional [package preferences](
      https://spack.readthedocs.io/en/latest/build_settings.html#package-preferences)
-   are soft, but we've added hard requriements to `packages.yaml` and `spack.yaml`
+   are soft, but we've added hard requirements to `packages.yaml` and `spack.yaml`
    (#32528, #32369). Package requirements use the same syntax as specs:
 
    ```yaml

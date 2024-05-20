@@ -58,9 +58,9 @@ class Amdfftw(FftwBase):
     variant(
         "amd-mpi-vader-limit", default=False, description="Build with amd-mpi-vader-limit support"
     )
-    variant("static", default=False, description="Build with static suppport")
-    variant("amd-trans", default=False, description="Build with amd-trans suppport")
-    variant("amd-app-opt", default=False, description="Build with amd-app-opt suppport")
+    variant("static", default=False, description="Build with static support")
+    variant("amd-trans", default=False, description="Build with amd-trans support")
+    variant("amd-app-opt", default=False, description="Build with amd-app-opt support")
 
     depends_on("texinfo")
 

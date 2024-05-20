@@ -935,7 +935,7 @@ string is split into a list of components based on delimiters such as
 ``.`` and ``-`` and string boundaries. The components are split into
 the **release** and a possible **pre-release** (if the last component
 is numeric and the second to last is a string ``alpha``, ``beta`` or ``rc``).
-The release components are ordered lexicographically, with comparsion
+The release components are ordered lexicographically, with comparison
 between different types of components as follows:
 
 #. The following special strings are considered larger than any other

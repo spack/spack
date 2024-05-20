@@ -73,11 +73,11 @@ Finally, to build the highest performing installation of Legion requires an appr
 
 * **`fortran`**: This variant supports `on` or `off` and enables building of Fortran language bindings for Legion. `default=off`
 
-[//]: <> (TOOD: More details here on Kokkos interop?)
+[//]: <> (TODO: More details here on Kokkos interop?)
 
 * **`kokkos`**: Enable support for interoperability with [Kokkos](https://github.com/kokkos) use in Legion tasks. `default=off`
 
-[//]: <> (TOOD: More details here on OpenMP interop?)
+[//]: <> (TODO: More details here on OpenMP interop?)
 
 * **`openmp`**: This variant enables OpenMP support within Legion tasks (and within the Realm runtime). Please note that the full OpenMP feature set (e.g. OpenMP 5.0) is not fully supported when enabling this feature.  `default=off`
 
