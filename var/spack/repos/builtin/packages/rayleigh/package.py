@@ -29,14 +29,21 @@ class Rayleigh(MakefilePackage):
     depends_on("fftw-api@3")
     depends_on("lapack")
 
-    def edit(self, spec, prefix):
+    def setup_build_environment(self, env):
+        spec = self.spec
         if spec.satisfies("^cray-mpich"):
             # The Cray wrapper takes care of linking MPI correctly for all compilers.
-            env["FC"] = "ftn"
+            env.set("FC", "ftn")
         else:
-            env["FC"] = spec["mpi"].mpifc
-        args = ["--prefix={}".format(prefix)]
+            env.set("FC", spec["mpi"].mpifc)
 
+    def edit(self, spec, prefix):
+        # /dev/null as input to prevent interactive questions in configure
+        configure("--prefix={}".format(prefix), *self.configure_args(), **{"input": os.devnull})
+
+    def configure_args(self):
+        spec = self.spec
+        args = []
         if spec.satisfies("^mkl"):
             args.append("--with-mkl={}".format(spec["mkl"].prefix))
         else:
@@ -59,6 +66,4 @@ class Rayleigh(MakefilePackage):
                 spec.target.optimization_flags(spec.compiler.name, str(spec.compiler.version))
             )
         )
-
-        # /dev/null as input to prevent interactive questions in configure
-        configure(*args, **{"input": os.devnull})
+        return args
