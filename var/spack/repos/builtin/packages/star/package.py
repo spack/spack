@@ -41,6 +41,8 @@ class Star(MakefilePackage):
     # required for certain steps in the makefile
     depends_on("xxd", type="build")
 
+    conflicts("zlib-ng")  # https://github.com/alexdobin/STAR/issues/2063
+
     build_directory = "source"
 
     def edit(self, spec, prefix):
