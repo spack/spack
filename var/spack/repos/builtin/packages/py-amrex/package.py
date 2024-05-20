@@ -46,10 +46,6 @@ class PyAmrex(PythonPackage, CudaPackage, ROCmPackage):
     depends_on("py-mpi4py@2.1.0:", type=("build", "run"), when="+mpi")
     depends_on("py-packaging@23:", type="build")
     depends_on("py-setuptools@42:", type="build")
-    # We just need a CMake binary, and py-cmake is notoriously hard to build on
-    # exotic architectures. So ignore the pyproject.toml declaration and use
-    # Spack's cmake package.
-    # depends_on('py-cmake@3.20:3', type='build')
     depends_on("cmake@3.20:3", type="build")
     depends_on("py-pybind11@2.11.1:", type="link")
 

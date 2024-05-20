@@ -25,7 +25,7 @@ class PyFlashAttn(PythonPackage):
 
     with default_args(type=("build", "run")):
         depends_on("py-torch+cuda")
-        depends_on("py-ninja")
+        depends_on("ninja")
         depends_on("py-einops")
         depends_on("py-packaging")
 

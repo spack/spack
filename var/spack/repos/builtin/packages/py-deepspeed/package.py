@@ -23,7 +23,7 @@ class PyDeepspeed(PythonPackage):
 
     depends_on("py-setuptools", type="build")
     depends_on("py-hjson", type=("build", "run"))
-    depends_on("py-ninja", type=("build", "run"))
+    depends_on("ninja", type=("build", "run"))
     depends_on("py-numpy", type=("build", "run"))
     depends_on("py-packaging@20:", type=("build", "run"))
     depends_on("py-psutil", type=("build", "run"))

@@ -30,7 +30,7 @@ class PyQiskitAer(PythonPackage, CudaPackage):
     depends_on("py-qiskit-terra@0.21.0:", type=("build", "run"), when="@0.11.1")
     depends_on("py-scipy@1.0:", type=("build", "run"))
     depends_on("py-scikit-build@0.11.0:", type="build")
-    depends_on("py-cmake@:3.16,3.18:", type="build")
+    depends_on("cmake@:3.16,3.18:", type="build")
     depends_on("mpi", when="+mpi")
     depends_on("nlohmann-json@3.1.1:")
     depends_on("spdlog@1.5.0:")
