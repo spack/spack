@@ -19,7 +19,7 @@ class PyGrpcioStatus(PythonPackage):
 
     # https://github.com/grpc/grpc/blob/v1.60.1/src/python/grpcio_status/setup.py
 
-    depends_on("py-protobuf@4.21.6:", type=("build", "run"))
+    depends_on("py-protobuf@4.21.6:5", type=("build", "run"))
     depends_on("py-grpcio@1.60.1:", when="@1.60.1", type=("build", "run"))
     depends_on("py-grpcio@1.56.2:", when="@1.56.2", type=("build", "run"))
     depends_on("py-googleapis-common-protos@1.5.5:", type=("build", "run"))
