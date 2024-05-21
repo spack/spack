@@ -1126,7 +1126,7 @@ _spack_env_view() {
 _spack_env_include() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --remove --concrete"
+        SPACK_COMPREPLY="-h --help --remove --concrete --prepend"
     else
         SPACK_COMPREPLY=""
     fi

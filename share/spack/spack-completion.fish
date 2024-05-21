@@ -1638,7 +1638,7 @@ complete -c spack -n '__fish_spack_using_command env view' -s h -l help -f -a he
 complete -c spack -n '__fish_spack_using_command env view' -s h -l help -d 'show this help message and exit'
 
 # spack env include
-set -g __fish_spack_optspecs_spack_env_include h/help remove concrete
+set -g __fish_spack_optspecs_spack_env_include h/help remove concrete prepend
 
 complete -c spack -n '__fish_spack_using_command env include' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command env include' -s h -l help -d 'show this help message and exit'
@@ -1646,6 +1646,8 @@ complete -c spack -n '__fish_spack_using_command env include' -l remove -f -a re
 complete -c spack -n '__fish_spack_using_command env include' -l remove -d 'Remove and included path(s) from the environment'
 complete -c spack -n '__fish_spack_using_command env include' -l concrete -f -a concrete
 complete -c spack -n '__fish_spack_using_command env include' -l concrete -d 'Include paths/environment names as concrete environments'
+complete -c spack -n '__fish_spack_using_command env include' -l prepend -f -a prepend
+complete -c spack -n '__fish_spack_using_command env include' -l prepend -d 'Prepend the includes instead of append'
 
 # spack env update
 set -g __fish_spack_optspecs_spack_env_update h/help y/yes-to-all

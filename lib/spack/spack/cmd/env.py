@@ -664,19 +664,24 @@ def env_view(args):
 
 def env_include_setup_parser(subparser):
     """Add/remove configuration scopes or concrete environments to the environment"""
-    subparser.add_argument("--remove",
-        action="store_true",
-        help="Remove and included path(s) from the environment",
+    subparser.add_argument(
+        "--remove", action="store_true", help="Remove and included path(s) from the environment"
     )
-    subparser.add_argument("--concrete",
+    subparser.add_argument(
+        "--concrete",
         action="store_true",
         help="Include paths/environment names as concrete environments",
     )
-    subparser.add_argument("includes",
+    subparser.add_argument(
+        "--prepend", action="store_true", help="Prepend the includes instead of append"
+    )
+    subparser.add_argument(
+        "includes",
         metavar="include",
         nargs="+",
         help="List of path(s) to configs or environments to include",
     )
+
 
 def env_include(args):
     env = ev.active_environment()
@@ -686,11 +691,12 @@ def env_include(args):
         return
 
     if args.remove:
-        env.manifest.remove_includes(args.includes, args.concrete)
+        env.manifest.remove_includes(args.includes, concrete=args.concrete)
     else:
-        env.manifest.add_includes(args.includes, args.concrete)
+        env.manifest.add_includes(args.includes, concrete=args.concrete, prepend=args.prepend)
 
     env.write()
+
 
 #
 # env status

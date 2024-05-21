@@ -4436,39 +4436,55 @@ def test_env_include_configs(tmp_path):
     config_dir = tmp_path / "configs"
     config_dir.mkdir(parents=True, exist_ok=False)
 
-    package_config = """
+    package_config_f = """
 packages:
   libelf:
     externals:
-    - spec: libelf@0.8.13
+    - spec: {spec}
       prefix: /usr
 """
-    with open(config_dir / "packages.yaml", "w") as fd:
-        spack.util.spack_yaml.dump(package_config, stream=fd)
+
+    for idx, spec in enumerate(["abseil-cpp@20240116.2", "libelf@0.8.13", "zlib@1.3.1"]):
+        (config_dir / f"{idx}").mkdir(parents=True, exist_ok=False)
+        with open(config_dir / f"{idx}" / "packages.yaml", "w") as fd:
+            spack.util.spack_yaml.dump(package_config_f.format(spec=spec), stream=fd)
 
     env("create", "test")
     test = ev.read("test")
     with test:
         add("libelf")
-        env("include", str(config_dir))
+        env("include", str(config_dir / "0"), str(config_dir / "1"))
+        env("include", "--prepend", str(config_dir / "2"))
     test.write()
 
     test = ev.read("test")
-    assert len(test.manifest.pristine_configuration.get("include", [])) == 1
-    assert str(config_dir) in test.manifest.pristine_configuration["include"]
+    assert len(test.manifest.pristine_configuration.get("include", [])) == 3
+    assert str(config_dir / "2") in test.manifest.pristine_configuration["include"][0]
+    assert str(config_dir / "0") in test.manifest.pristine_configuration["include"][1]
+    assert str(config_dir / "1") in test.manifest.pristine_configuration["include"][2]
 
 
 def test_env_include_concrete():
     """Test that adds concrete includes to an environment"""
-    t1, t2, _ = setup_combined_multiple_env()
+
+    # Create some environment
+    for idx, pacakge in enumerate(["abseil-cpp", "libelf", "zlib"]):
+        env("create", f"test{idx}")
+        e = ev.read(f"test{idx}")
+        with e:
+            add("zlib")
+        e.concretize()
+        e.write()
 
     env("create", "test")
     test = ev.read("test")
     with test:
-        env("include", "--concrete", "test1", ev.root("test2"))
+        env("include", "--concrete", "test0", ev.root("test1"))
+        env("include", "--concrete", "--prepend", "test2")
     test.write()
 
     test = ev.read("test")
-    assert len(test.manifest.pristine_configuration.get(ev.included_concrete_name, [])) == 2
-    assert ev.root("test1") in test.manifest.pristine_configuration[ev.included_concrete_name]
-    assert ev.root("test2") in test.manifest.pristine_configuration[ev.included_concrete_name]
+    assert len(test.manifest.pristine_configuration.get(ev.included_concrete_name, [])) == 3
+    assert ev.root("test2") == test.manifest.pristine_configuration[ev.included_concrete_name][0]
+    assert ev.root("test0") == test.manifest.pristine_configuration[ev.included_concrete_name][1]
+    assert ev.root("test1") == test.manifest.pristine_configuration[ev.included_concrete_name][2]
