@@ -1484,6 +1484,7 @@ complete -c spack -n '__fish_spack_using_command_pos 0 env' -f -a status -d 'pri
 complete -c spack -n '__fish_spack_using_command_pos 0 env' -f -a st -d 'print whether there is an active environment'
 complete -c spack -n '__fish_spack_using_command_pos 0 env' -f -a loads -d 'list modules for an installed environment \'(see spack module loads)\''
 complete -c spack -n '__fish_spack_using_command_pos 0 env' -f -a view -d 'manage a view associated with the environment'
+complete -c spack -n '__fish_spack_using_command_pos 0 env' -f -a include -d 'Add/remove configuration scopes or concrete environments to the environment'
 complete -c spack -n '__fish_spack_using_command_pos 0 env' -f -a update -d 'update environments to the latest format'
 complete -c spack -n '__fish_spack_using_command_pos 0 env' -f -a revert -d 'restore environments to their state before update'
 complete -c spack -n '__fish_spack_using_command_pos 0 env' -f -a depfile -d 'generate a depfile from the concrete environment specs'
@@ -1635,6 +1636,18 @@ set -g __fish_spack_optspecs_spack_env_view h/help
 complete -c spack -n '__fish_spack_using_command_pos 0 env view' -f -a 'regenerate enable disable'
 complete -c spack -n '__fish_spack_using_command env view' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command env view' -s h -l help -d 'show this help message and exit'
+
+# spack env include
+set -g __fish_spack_optspecs_spack_env_include h/help remove concrete prepend
+
+complete -c spack -n '__fish_spack_using_command env include' -s h -l help -f -a help
+complete -c spack -n '__fish_spack_using_command env include' -s h -l help -d 'show this help message and exit'
+complete -c spack -n '__fish_spack_using_command env include' -l remove -f -a remove
+complete -c spack -n '__fish_spack_using_command env include' -l remove -d 'Remove and included path(s) from the environment'
+complete -c spack -n '__fish_spack_using_command env include' -l concrete -f -a concrete
+complete -c spack -n '__fish_spack_using_command env include' -l concrete -d 'Include paths/environment names as concrete environments'
+complete -c spack -n '__fish_spack_using_command env include' -l prepend -f -a prepend
+complete -c spack -n '__fish_spack_using_command env include' -l prepend -d 'Prepend the includes instead of append'
 
 # spack env update
 set -g __fish_spack_optspecs_spack_env_update h/help y/yes-to-all
