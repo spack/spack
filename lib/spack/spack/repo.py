@@ -241,7 +241,7 @@ def get_all_package_diffs(type, rev1="HEAD^1", rev2="HEAD"):
 
     Arguments:
 
-        type (str): String containing one or more of 'A', 'B', 'C'
+        type (str): String containing one or more of 'A', 'R', 'C'
         rev1 (str): Revision to compare against, default is 'HEAD^'
         rev2 (str): Revision to compare to rev1, default is 'HEAD'
 
@@ -264,7 +264,7 @@ def get_all_package_diffs(type, rev1="HEAD^1", rev2="HEAD"):
     lines = [] if not out else re.split(r"\s+", out)
     changed = set()
     for path in lines:
-        pkg_name, _, _ = path.partition(os.sep)
+        pkg_name, _, _ = path.partition("/")
         if pkg_name not in added and pkg_name not in removed:
             changed.add(pkg_name)
 
