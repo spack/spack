@@ -23,6 +23,7 @@ class LinaroForge(Package):
     maintainers("kenche-linaro")
 
     if platform.machine() in ["aarch64", "arm64"]:
+        version("24.0", sha256="ee631177f5289127f0d3d99b600d437b4bd40c34c1c15388288b72543dc420ad")
         version(
             "23.1.2", sha256="8c01f4768a8f784f0bfa78c82dbd39e5077bbc6880b6f3c3704019eecfca5b3a"
         )
@@ -50,6 +51,7 @@ class LinaroForge(Package):
             "21.1.3", sha256="4a4ff7372aad5a31fc9e18b7b6c493691ab37d8d44a3158584e62d1ab82b0eeb"
         )
     elif platform.machine() == "ppc64le":
+        # N.B. support for ppc64le was dropped in 24.0
         version(
             "23.1.2", sha256="5c588a6b7391d75cced4016936d0c5a00023431269339432738ff33b860487b3"
         )
@@ -80,6 +82,7 @@ class LinaroForge(Package):
             "21.1.3", sha256="eecbc5686d60994c5468b2d7cd37bebe5d9ac0ba37bd1f98fbfc69b071db541e"
         )
     elif platform.machine() == "x86_64":
+        version("24.0", sha256="5976067e3de14d0838e1069021a4a4a96d048824454668779473ff0776d66a01")
         version(
             "23.1.2", sha256="675d2d8e4510afefa0405eecb46ac8bf440ff35a5a40d5507dc12d29678a22bf"
         )
