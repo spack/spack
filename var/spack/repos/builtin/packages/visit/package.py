@@ -109,12 +109,12 @@ class Visit(CMakePackage):
     conflicts("+gui", when="+osmesa")
 
     depends_on("cmake@3.14.7:", type="build")
-
     depends_on("mpi", when="+mpi")
+
+    requires("^[virtuals=gl] osmesa", when="+osmesa")
 
     # VTK flavors
     depends_on("vtk@8.1:8 +opengl2")
-    depends_on("vtk +osmesa", when="+osmesa")
     depends_on("vtk +qt", when="+gui")
     depends_on("vtk +python", when="+python")
     depends_on("vtk +mpi", when="+mpi")
@@ -130,6 +130,7 @@ class Visit(CMakePackage):
     depends_on("vtk", patches=[patch("vtk_wrapping_python_x11.patch")], when="+python ^vtk@8")
 
     depends_on("glu")
+    depends_on("gl")
 
     # VisIt doesn't work with later versions of qt.
     depends_on("qt+gui+opengl@5:5.14", when="+gui")
@@ -291,6 +292,7 @@ class Visit(CMakePackage):
                 self.define("VISIT_OSMESA_DIR", "IGNORE"),
                 self.define("OpenGL_GL_PREFERENCE", "LEGACY"),
                 self.define("OPENGL_INCLUDE_DIR", spec["gl"].headers.directories[0]),
+                self.define("OPENGL_gl_LIBRARY", spec["gl"].libs[0]),
                 self.define("OPENGL_glu_LIBRARY", spec["glu"].libs[0]),
             ]
         )
@@ -302,8 +304,6 @@ class Visit(CMakePackage):
                     self.define("OPENGL_gl_LIBRARY", spec["osmesa"].libs[0]),
                 ]
             )
-        else:
-            args.append(self.define("OPENGL_gl_LIBRARY", spec["gl"].libs[0]))
 
         if "+hdf5" in spec:
             args.append(self.define("HDF5_DIR", spec["hdf5"].prefix))
