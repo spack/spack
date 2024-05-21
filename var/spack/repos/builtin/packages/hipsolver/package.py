@@ -114,7 +114,17 @@ class Hipsolver(CMakePackage, CudaPackage, ROCmPackage):
 
     depends_on("googletest@1.10.0:", type="test")
     depends_on("netlib-lapack@3.7.1:", type="test")
-    patch("001-suite-sparse-include-path.patch", when="@6.1")
+    patch("001-suite-sparse-include-path.patch", when="@6.1.0")
+    patch("0001-suite-sparse-include-path-6.1.1.patch", when="@6.1.1:")
+
+    def patch(self):
+        if self.spec.satisfies("@6.1.1 +rocm"):
+            with working_dir("library/src/amd_detail"):
+                filter_file(
+                    "^#include <suitesparse/cholmod.h>",
+                    "#include <cholmod.h>",
+                    "hipsolver_sparse.cpp",
+                )
 
     def check(self):
         exe = join_path(self.build_directory, "clients", "staging", "hipsolver-test")
