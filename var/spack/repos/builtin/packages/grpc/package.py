@@ -62,7 +62,12 @@ class Grpc(CMakePackage):
     depends_on("openssl")
     depends_on("zlib-api")
     depends_on("c-ares")
-    depends_on("abseil-cpp", when="@1.27:")
+
+    with when("@1.27:"):
+        depends_on("abseil-cpp")
+        # missing includes: https://github.com/grpc/grpc/commit/bc044174401a0842b36b8682936fc93b5041cf88
+        depends_on("abseil-cpp@:20230802", when="@:1.61")
+
     depends_on("re2+pic@2023-09-01", when="@1.33.1:")
 
     def cmake_args(self):
