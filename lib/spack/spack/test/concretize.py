@@ -1914,11 +1914,11 @@ class TestConcretize:
             libc_offset = 1 if spack.solver.asp.using_libc_compatibility() else 0
             criteria = [
                 (num_specs - 1 - libc_offset, None, "number of packages to build (vs. reuse)"),
-                (2, 0, "version badness"),
+                (2, 0, "version badness (non roots)"),
             ]
 
             for criterion in criteria:
-                assert criterion in result.criteria, result_spec
+                assert criterion in result.criteria, criterion
             assert result_spec.satisfies("^b@1.0")
 
     @pytest.mark.only_clingo("Use case not supported by the original concretizer")
