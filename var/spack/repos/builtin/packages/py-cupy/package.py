@@ -36,10 +36,10 @@ class PyCupy(PythonPackage, CudaPackage, ROCmPackage):
     depends_on("py-fastrlock@0.5:", type=("build", "run"))
     depends_on("py-numpy@1.20:1.25", when="@:11", type=("build", "run"))
     depends_on("py-numpy@1.20:1.26", when="@12:", type=("build", "run"))
-    depends_on("py-numpy@1.22:1.29", when="@13:", type=("build", "run"))
+    depends_on("py-numpy@1.22:1.28", when="@13:", type=("build", "run"))
 
     depends_on("py-scipy@1.6:1.12", when="@:12+all", type=("build", "run"))
-    depends_on("py-scipy@1.7:1.14", when="@13:+all", type=("build", "run"))
+    depends_on("py-scipy@1.7:1.13", when="@13:+all", type=("build", "run"))
     depends_on("py-cython@0.29.22:2", when="+all", type=("build", "run"))
     depends_on("py-optuna@2:", when="+all", type=("build", "run"))
 
