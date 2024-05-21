@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import pathlib
 import re
 import subprocess
 import sys
@@ -151,7 +152,11 @@ class Msvc(Compiler):
     # compilers
     suffixes = []
 
-    is_supported_on_platform = lambda x: isinstance(x, spack.platforms.Windows)
+    #: List denoting supported platforms by compiler
+    supported_platforms = [spack.platforms.Windows, spack.platforms.Test]
+
+    #: compiler argument used for compiling and not linking
+    compile_only_arg = "/c"
 
     def __init__(self, *args, **kwargs):
         # This positional argument "paths" is later parsed and process by the base class
@@ -180,7 +185,7 @@ class Msvc(Compiler):
             arch = "amd64"
 
         self.vcvars_call = VCVarsInvocation(vcvars_script_path, arch, self.msvc_version)
-        env_cmds.append(self.vcvars_call)
+        env_cmds = [self.vcvars_call]
         # Below is a check for a valid fortran path
         # paths has c, cxx, fc, and f77 paths in that order
         # paths[2] refers to the fc path and is a generic check
@@ -227,7 +232,7 @@ class Msvc(Compiler):
     def msvc_version(self):
         """This is the VCToolset version *NOT* the actual version of the cl compiler
         For CL version, query `Msvc.cl_version`"""
-        return Version(re.search(Msvc.version_regex, self.cc).group(1))
+        return self._msvc_version(self.cc)
 
     @property
     def short_msvc_version(self):
@@ -249,20 +254,6 @@ class Msvc(Compiler):
         by `short_msvc_version`
         """
         return self.msvc_version[:2].joined.string[:3]
-
-    def _compiler_version(self, compiler):
-        """Returns version object for given compiler"""
-        # ignore_errors below is true here due to ifx's
-        # non zero return code if it is not provided
-        # and input file
-        return Version(
-            re.search(
-                Msvc.version_regex,
-                spack.compiler.get_compiler_version_output(
-                    compiler, version_arg=None, ignore_errors=True
-                ),
-            ).group(1)
-        )
 
     @property
     def cl_version(self):
@@ -297,17 +288,7 @@ class Msvc(Compiler):
             self.vcvars_call.sdk_ver = pkg.spec["win-sdk"].version.string
 
         out = self.msvc_compiler_environment()
-        int_env = dict(
-            (key, value)
-            for key, _, value in (line.partition("=") for line in out.splitlines())
-            if key and value
-        )
-
-        for env_var in int_env:
-            if os.pathsep not in int_env[env_var]:
-                env.set(env_var, int_env[env_var])
-            else:
-                env.set_path(env_var, int_env[env_var].split(os.pathsep))
+        self.parse_vars_output(out, env)
 
         # certain versions of ifx (2021.3.0:2023.1.0) do not play well with env:TMP
         # that has a "." character in the path
@@ -342,3 +323,76 @@ class Msvc(Compiler):
     @classmethod
     def f77_version(cls, f77):
         return cls.fc_version(f77)
+
+    @classmethod
+    def parse_vars_output(cls, out, env):
+        int_env = dict(
+            (key, value)
+            for key, _, value in (line.partition("=") for line in out.splitlines())
+            if key and value
+        )
+        for env_var in int_env:
+            if os.pathsep not in int_env[env_var]:
+                env.set(env_var, int_env[env_var])
+            else:
+                env.set_path(env_var, int_env[env_var].split(os.pathsep))
+
+    @classmethod
+    def _msvc_version(cls, cl):
+        return Version(re.search(cls.version_regex, cl).group(1))
+
+    @classmethod
+    def _compiler_version(self, compiler):
+        """Returns version object for given compiler"""
+        # ignore_errors below is true here due to ifx's
+        # non zero return code if it is not provided
+        # and input file
+        return Version(
+            re.search(
+                Msvc.version_regex,
+                spack.compiler.get_compiler_version_output(
+                    compiler, version_arg=None, ignore_errors=True
+                ),
+            ).group(1)
+        )
+
+    @classmethod
+    def vcvarsall_for_cl(cls, cl):
+        compiler_root = (
+            pathlib.Path(cl) / ".." / ".." / ".." / ".." / ".." / ".." / ".."
+        ).resolve()
+        return str(compiler_root / "Auxiliary" / "Build" / "vcvarsall.bat")
+
+    @classmethod
+    def oneapi_root(cls, fc):
+        return (pathlib.Path(fc) / ".." / ".." / "..").resolve()
+
+    @classmethod
+    def setvars_for_fc(cls, fc):
+        setvars_root = cls.oneapi_root(fc)
+        return str(setvars_root / "setvars.bat")
+
+    @classmethod
+    def setvars_for_fc_version(cls, fc):
+        setvars_root = cls.oneapi_root(fc)
+        return str(setvars_root / "compiler" / str(cls._compiler_version(fc)) / "env" / "vars.bat")
+
+    @classmethod
+    def _cmp_test_env(cls, cl):
+        env = spack.util.environment.EnvironmentModifications()
+        c_cxx = "cl.exe" in cl
+        # simplified arch, we have no spec to work with target,
+        # so use host of provided compiler (determined from path)
+        arch = "x64" if "x64" in cl else "x86"
+        if c_cxx:
+            env_cmd = CmdCall(
+                VCVarsInvocation(cls.vcvarsall_for_cl(cl), arch, cls._msvc_version(cl))
+            )
+        else:
+            oneapi_version_setvars = cls.setvars_for_fc_version(cl)
+            oneapi_root_setvars = cls.setvars_for_fc(cl)
+            env_cmd = CmdCall(
+                VarsInvocation(oneapi_version_setvars), VarsInvocation(oneapi_root_setvars)
+            )
+        cls.parse_vars_output(env_cmd(), env)
+        return env

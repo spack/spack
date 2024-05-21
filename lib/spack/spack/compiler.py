@@ -6,20 +6,23 @@
 import contextlib
 import itertools
 import os
+import pathlib
 import platform
 import re
 import shutil
 import sys
 import tempfile
-from typing import List, Optional, Sequence
+from typing import List, Optional, Sequence, overload
 
 import llnl.path
 import llnl.util.lang
 import llnl.util.tty as tty
-from llnl.util.filesystem import path_contains_subdirectory, paths_containing_libs
+from llnl.util.filesystem import path_contains_subdirectory, paths_containing_libs, temp_cwd
 
 import spack.error
 import spack.schema.environment
+import spack.paths
+import spack.platforms
 import spack.spec
 import spack.util.executable
 import spack.util.libc
@@ -181,6 +184,12 @@ def _parse_non_system_link_dirs(string: str) -> List[str]:
     return list(p for p in link_dirs if not in_system_subdirectory(p))
 
 
+def default_try_file_for_lang(lang):
+    ext = CompilerLang.ext_for_lang[lang]
+    cmp_shr = pathlib.Path(spack.paths.share_path) / "compiler"
+    return cmp_shr / lang / f"hello.{ext}"
+
+
 def in_system_subdirectory(path):
     system_dirs = [
         "/lib/",
@@ -233,8 +242,11 @@ class Compiler:
     # by any compiler
     _all_compiler_rpath_libraries = ["libc", "libc++", "libstdc++"]
 
-    #: Platform matcher for Platform objects supported by compiler
-    is_supported_on_platform = lambda x: True
+    #: List denoting supported platforms by compiler
+    supported_platforms: List[spack.platforms.Platform] = spack.platforms.platforms
+
+    #: compiler argument used for compiling and not linking
+    compile_only_arg = "-c"
 
     # Default flags used by a compiler to set an rpath
     @property
@@ -654,6 +666,65 @@ class Compiler:
             for prefix, name, suffix in itertools.product(prefixes, compiler_names, suffixes)
         ]
 
+    @classmethod
+    def _cmp_test_env(cls, cmp_pth):
+        return os.environ
+
+    @classmethod
+    def is_supported_on_platform(cls, plat):
+        return type(plat) in cls.supported_platforms
+
+    @overload
+    def try_compiler(self, lang, file=None, flags=[], definitions=[]):
+        cmp_pth = getattr(self, lang)
+        if cmp_pth:
+            return self.try_compiler(cmp_pth, file, lang, flags, definitions)
+        raise TryCompilerError(self.spec.name, file, lang, f"No compiler for lang {lang}")
+
+    @overload
+    @classmethod
+    def try_compiler(cls, compiler_path, file=None, lang=None, flags=[], definitions=[]):
+        """Try to use this compiler to compile a test file of specified language.
+        File is provided by caller or specified by language denotation.
+        Args:
+            compiler_path (str): path to compiler to be tested
+            file (str): path to file to be test compiled
+        Returns output of compilation if successful, Raises TryCompilerError otherwise
+        """
+
+        # if file is not set by caller, use default file for specified language
+        # if there is no specified language, we don't know what to compile, fail
+        determinable_file = file or lang
+        if not determinable_file:
+            err = "No file or language provided."
+            raise TryCompilerError(cls.__name__, file, lang, err)
+
+        test_file = file if file else default_try_file_for_lang(lang)
+        compiler = spack.util.executable.Executable(compiler_path)
+        compiler_env = cls._cmp_test_env(compiler_path)
+        compiler_invocation_args = {
+            "output": str,
+            "error": str,
+            "timeout": 120,
+            "fail_on_error": True,
+            "env": compiler_env,
+        }
+        compiler_args = [cls.compile_only_arg, test_file, *flags, *definitions]
+        try:
+            with temp_cwd():
+                result = compiler(*compiler_args, **compiler_invocation_args)
+            return result
+        except spack.util.executable.ProcessTimeoutError as e:
+            error = "Compilation attempt exceeded timeout 120s"
+            err = e
+        except spack.util.executable.ProcessError as e:
+            error = f"Experienced error while compiling: {str(e)}"
+            err = e
+        except Exception as e:
+            error = f"Experienced error attempting to execute compiler: {str(e)}"
+            err = e
+        raise TryCompilerError(cls.__name__, test_file, lang, error) from err
+
     def setup_custom_environment(self, pkg, env):
         """Set any environment variables necessary to use the compiler."""
         pass
@@ -704,6 +775,24 @@ class Compiler:
             # Restore environment regardless of whether inner code succeeded
             os.environ.clear()
             os.environ.update(backup_env)
+
+
+class CompilerLang:
+    CC = "cc"
+    CXX = "cxx"
+    FC = "fc"
+    F77 = "f77"
+    ext_for_lang = {CC: "c", CXX: "cxx", FC: "f", F77: "f77"}
+
+
+class TryCompilerError(spack.error.SpackError):
+    def __init__(self, compiler_name, file=None, lang=None, err=None):
+        lang = lang if lang else "unknown"
+        file = file if file else "unknown"
+        error_stmt = f"Unable to compile even a simple test file ({file})\
+with {compiler_name} for {lang} language"
+        long_error_stmt = "" if not err else "\n".join([error_stmt, err])
+        super().__init__(error_stmt, long_error_stmt)
 
 
 class CompilerAccessError(spack.error.SpackError):

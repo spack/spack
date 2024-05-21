@@ -58,6 +58,7 @@ import spack.build_systems.meson
 import spack.build_systems.python
 import spack.builder
 import spack.compilers
+import spack.compiler
 import spack.config
 import spack.deptypes as dt
 import spack.error
@@ -297,6 +298,17 @@ def _add_werror_handling(keep_werror, env):
         replace_flags.append(("-Werror", "-Wno-error"))
     env.set("SPACK_COMPILER_FLAGS_KEEP", "|".join(keep_flags))
     env.set("SPACK_COMPILER_FLAGS_REPLACE", " ".join(["|".join(item) for item in replace_flags]))
+
+
+def validate_compiler_for_pkg(pkg):
+    """Ensures selected compiler is actually capable of compiling
+    Fail early and provide an convenient warning in case it is not
+    """
+    compiler = pkg.compiler
+    for lang in ("cc", "cxx", "fc", "f77"):
+        comp = getattr(lang, compiler)
+        if comp:
+            compiler.try_compiler(lang)
 
 
 def set_compiler_environment_variables(pkg, env):
@@ -779,6 +791,7 @@ def setup_package(pkg, dirty, context: Context = Context.BUILD):
         context == Context.TEST and pkg.test_requires_compiler
     )
     if need_compiler:
+        validate_compiler_for_pkg(pkg)
         set_compiler_environment_variables(pkg, env_mods)
         set_wrapper_variables(pkg, env_mods)
 
