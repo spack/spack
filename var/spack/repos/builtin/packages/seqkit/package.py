@@ -15,7 +15,6 @@ class Seqkit(Package):
         "https://github.com/shenwei356/seqkit/releases/download/v0.10.1/seqkit_linux_amd64.tar.gz"
     )
 
-    version("2.8.2", sha256="a6515a64bf28ceba6922a3854d8ec898ca2ca637b4b00fc883c83076dfaf1ffa")
     version("0.10.1", sha256="82f1c86dc4bd196403a56c2bf3ec063e5674a71777e68d940c4cc3d8411d2e9d")
 
     def install(self, spec, prefix):
