@@ -15,7 +15,7 @@ class Tempo(AutotoolsPackage):
     # in terms of where the install go, hash length, etc. then it is likely
     # that running tempo will fail with an error similar to
     #
-    # more: cannot open /opt/spack/spack/opt/spack/linux-ubuntu22.04-zen3/gcc-11.3.0/tempo-master-lnizs: No such file or directory
+    # more: cannot open /...../gcc-11.3.0/tempo-master-lnizs: No such file or directory
     #
 
     homepage = "http://tempo.sourceforge.net/"
@@ -54,16 +54,19 @@ class Tempo(AutotoolsPackage):
             cp("-r", "clock", join_path(self.prefix, "clock"))
             cp("-r", "ephem", join_path(self.prefix, "ephem"))
             cp("-r", "tzpar", join_path(self.prefix, "tzpar"))
-    
+
     def setup_dependent_build_environment(self, env, dependent_spec):
         env.set("TEMPO", self.prefix)
 
     def setup_dependent_run_environment(self, env, dependent_spec):
         env.set("TEMPO", self.prefix)
-    
+
+        # For LWA-10-17-2020 version
+        env.set("TEMPO_DIR", self.prefix)
+
     def setup_run_environment(self, env):
         env.set("TEMPO", self.prefix)
-    
+
     def setup_dependent_run_environment(self, spack_env, dependent_spec):
         # For LWA-10-17-2020 version
         spack_env.set("TEMPO_DIR", self.prefix)
