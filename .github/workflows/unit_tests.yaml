@@ -91,7 +91,7 @@ jobs:
           UNIT_TEST_COVERAGE: ${{ matrix.python-version == '3.11' }}
       run: |
           share/spack/qa/run-unit-tests
-    - uses: codecov/codecov-action@6d798873df2b1b8e5846dba6fb86631229fbcb17
+    - uses: codecov/codecov-action@125fc84a9a348dbcf27191600683ec096ec9021c
       with:
         flags: unittests,linux,${{ matrix.concretizer }}
         token: ${{ secrets.CODECOV_TOKEN }}
@@ -124,7 +124,7 @@ jobs:
           COVERAGE: true
       run: |
           share/spack/qa/run-shell-tests
-    - uses: codecov/codecov-action@6d798873df2b1b8e5846dba6fb86631229fbcb17
+    - uses: codecov/codecov-action@125fc84a9a348dbcf27191600683ec096ec9021c
       with:
         flags: shelltests,linux
         token: ${{ secrets.CODECOV_TOKEN }}
@@ -185,7 +185,7 @@ jobs:
           SPACK_TEST_SOLVER: clingo
       run: |
           share/spack/qa/run-unit-tests
-    - uses: codecov/codecov-action@6d798873df2b1b8e5846dba6fb86631229fbcb17
+    - uses: codecov/codecov-action@125fc84a9a348dbcf27191600683ec096ec9021c
       with:
         flags: unittests,linux,clingo
         token: ${{ secrets.CODECOV_TOKEN }}
@@ -223,7 +223,7 @@ jobs:
         $(which spack) solve zlib
         common_args=(--dist loadfile --tx '4*popen//python=./bin/spack-tmpconfig python -u ./bin/spack python' -x)
         $(which spack) unit-test --verbose --cov --cov-config=pyproject.toml --cov-report=xml:coverage.xml "${common_args[@]}"
-    - uses: codecov/codecov-action@6d798873df2b1b8e5846dba6fb86631229fbcb17
+    - uses: codecov/codecov-action@125fc84a9a348dbcf27191600683ec096ec9021c
       with:
         flags: unittests,macos
         token: ${{ secrets.CODECOV_TOKEN }}
