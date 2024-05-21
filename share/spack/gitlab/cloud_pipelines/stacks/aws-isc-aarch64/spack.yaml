@@ -30,8 +30,6 @@ spack:
       variants: +pic +xz
     mesa:
       variants: ~llvm
-    mesa18:
-      variants: ~llvm
     mpich:
       variants: ~wrapperrpath netmod=ofi device=ch4
     ncurses:

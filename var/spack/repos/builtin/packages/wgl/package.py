@@ -14,7 +14,7 @@ class Wgl(Package):
 
     homepage = "https://learn.microsoft.com/en-us/windows/win32/opengl/wgl-and-windows-reference"
     has_code = False
-    tags = ["windows"]
+    tags = ["windows", "windows-system"]
     # hard code the extension as shared lib
     libraries = ["OpenGL32.Lib"]
 
@@ -35,6 +35,10 @@ class Wgl(Package):
     version("10.0.10586")
     version("10.0.26639")
     version("10.0.20348")
+
+    variant(
+        "plat", values=("x64", "x86", "arm", "arm64"), default="x64", description="Toolchain arch"
+    )
 
     # As per https://github.com/spack/spack/pull/31748 this provisory version represents
     # an arbitrary openGL version designed for maximum compatibility with calling packages
@@ -67,6 +71,16 @@ class Wgl(Package):
         version_match_pat = re.compile(r"[0-9][0-9].[0-9]+.[0-9][0-9][0-9][0-9][0-9]")
         ver_str = re.search(version_match_pat, lib)
         return ver_str if not ver_str else Version(ver_str.group())
+
+    @classmethod
+    def determine_variants(cls, libs, ver_str):
+        """Allow for determination of toolchain arch for detected WGL"""
+        variants = []
+        for lib in libs:
+            base, lib_name = os.path.split(lib)
+            _, arch = os.path.split(base)
+            variants.append("plat=%s" % arch)
+        return variants
 
     def _spec_arch_to_sdk_arch(self):
         spec_arch = str(self.spec.architecture.target.microarchitecture.family).lower()
