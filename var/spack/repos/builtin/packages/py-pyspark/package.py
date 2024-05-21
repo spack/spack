@@ -42,7 +42,7 @@ class PyPyspark(PythonPackage):
     with default_args(type=("build", "run")):
         depends_on("py-py4j~java", when="~java")
         for py4j_version, pyspark_version in [
-            ("0.10.9.7", "3.5:"),
+            ("0.10.9.7", "3.4:"),
             ("0.10.9.5", "3.3:"),
             ("0.10.9.3", "3.2.1"),
             ("0.10.9", "3.0.1:3.1.3"),
