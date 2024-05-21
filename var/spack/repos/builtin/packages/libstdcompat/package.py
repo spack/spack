@@ -16,6 +16,9 @@ class Libstdcompat(CMakePackage):
     maintainers("robertu94")
 
     version("master", branch="master")
+    version("0.0.21", sha256="67cfd57080a74752b4c239e031cc44734286589a89bb1cd51a8bd7039f87a3f3")
+    version("0.0.20", sha256="9fdc632eb135f57132953b512d8f9101e8eb4e6a88e6c3b838aaa9c51a2dbfd6")
+    version("0.0.19", sha256="584ee52b1f82671e5d8fde786c46aa7e98d30104674c6f4b75dbae8d83b13f21")
     version("0.0.17", sha256="8c8a3f2727dd28c51ab10e02a1114e39b683d6d9ea119d5c2a953f8c41d6bedd")
     version("0.0.16", sha256="1287251b694adb80210536ab6eb75c1ff2c4ed8b77023208a757ae27c9dae0bb")
     version("0.0.15", sha256="af374a8883a32d874f6cd18cce4e4344e32f9d60754be403a5ac7114feca2a28")
@@ -36,7 +39,7 @@ class Libstdcompat(CMakePackage):
 
     variant(
         "cpp_compat",
-        values=("11", "14", "17", "20", "auto"),
+        values=("11", "14", "17", "20", "23", "auto"),
         default="auto",
         multi=False,
         description="version of the c++ standard to use and depend on",
@@ -57,6 +60,17 @@ class Libstdcompat(CMakePackage):
     conflicts("cpp_compat=20", when="@:0.0.7")
 
     def max_cxx_version(self):
+        if self.spec.version >= Version("0.0.20"):
+            try:
+                self.compiler.cxx23_flag
+                return "23"
+            except Exception:
+                pass
+            try:
+                self.compiler.cxx20_flag
+                return "20"
+            except Exception:
+                pass
         try:
             self.compiler.cxx17_flag
             return "17"
