@@ -15,7 +15,7 @@ class PyScikitLearn(PythonPackage):
     git = "https://github.com/scikit-learn/scikit-learn.git"
 
     license("BSD-3-Clause")
-    maintainers("adamjstewart")
+    maintainers("adamjstewart", "rgommers")
 
     version("main", branch="main")
     version("master", branch="main", deprecated=True)
