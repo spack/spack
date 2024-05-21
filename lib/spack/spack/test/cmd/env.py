@@ -4428,3 +4428,47 @@ def test_env_view_ignores_different_file_conflicts(tmp_path, install_mockery, mo
         prefix_dependent = e.matching_spec("view-ignore-conflict").prefix
     # The dependent's file is linked into the view
     assert readlink(tmp_path / "view" / "bin" / "x") == prefix_dependent.bin.x
+
+
+def test_env_include_configs(tmp_path):
+    """Test that adds includes to an environment"""
+
+    config_dir = tmp_path / "configs"
+    config_dir.mkdir(parents=True, exist_ok=False)
+
+    package_config = """
+packages:
+  libelf:
+    externals:
+    - spec: libelf@0.8.13
+      prefix: /usr
+"""
+    with open(config_dir / "packages.yaml", "w") as fd:
+        spack.util.spack_yaml.dump(package_config, stream=fd)
+
+    env("create", "test")
+    test = ev.read("test")
+    with test:
+        add("libelf")
+        env("include", str(config_dir))
+    test.write()
+
+    test = ev.read("test")
+    assert len(test.manifest.pristine_configuration.get("include", [])) == 1
+    assert str(config_dir) in test.manifest.pristine_configuration["include"]
+
+
+def test_env_include_concrete():
+    """Test that adds concrete includes to an environment"""
+    t1, t2, _ = setup_combined_multiple_env()
+
+    env("create", "test")
+    test = ev.read("test")
+    with test:
+        env("include", "--concrete", "test1", ev.root("test2"))
+    test.write()
+
+    test = ev.read("test")
+    assert len(test.manifest.pristine_configuration.get(ev.included_concrete_name, [])) == 2
+    assert ev.root("test1") in test.manifest.pristine_configuration[ev.included_concrete_name]
+    assert ev.root("test2") in test.manifest.pristine_configuration[ev.included_concrete_name]
