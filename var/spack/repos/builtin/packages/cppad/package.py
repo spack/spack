@@ -9,6 +9,8 @@ from spack.package import *
 class Cppad(CMakePackage):
     """A Package for Differentiation of C++ Algorithms."""
 
+    maintainers("whart222")
+
     homepage = "https://www.coin-or.org/CppAD/"
     url = "https://github.com/coin-or/CppAD/archive/refs/tags/20240000.4.tar.gz"
     git = "https://github.com/coin-or/CppAD.git"
