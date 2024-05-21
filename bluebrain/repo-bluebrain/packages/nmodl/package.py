@@ -2,7 +2,6 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
 from spack.package import *
 
 
@@ -26,6 +25,7 @@ class Nmodl(CMakePackage):
     variant("python", default=False, description="Enable python bindings")
     variant("llvm", default=False, description="Enable llvm codegen")
     variant("llvm_cuda", default=False, description="Enable llvm codegen with CUDA backend")
+    variant("tests", default=False, description="Enable building tests")
 
     # Build with `ninja` instead of `make`
     generator("ninja")
@@ -56,6 +56,10 @@ class Nmodl(CMakePackage):
     depends_on("spdlog")
     depends_on("py-find-libpython", type=("run",))
 
+    depends_on("py-pytest@3.3.0:8.1.1", type=("build", "test"), when="+tests")
+    depends_on("py-pytest-cov", type=("build", "test"), when="+tests")
+    depends_on("py-numpy", type=("build", "test"), when="+tests")
+
     def cmake_args(self):
         # Do not use the cli11, fmt, pybind11 and spdlog submodule, use the one from
         # the Spack dependency graph.
@@ -69,7 +73,7 @@ class Nmodl(CMakePackage):
             # This recipe is used in CI pipelines that run the tests directly from
             # the build directory and not via Spack's --test=X option. Setting this
             # aims to override the implicit CMake argument that Spack injects.
-            self.define("BUILD_TESTING", True),
+            self.define_from_variant("BUILD_TESTING", "tests"),
             self.define("PYTHON_EXECUTABLE", python.command),
             self.define_from_variant("NMODL_ENABLE_PYTHON_BINDINGS", "python"),
             self.define_from_variant("NMODL_ENABLE_LEGACY_UNITS", "legacy-unit"),
