@@ -8,8 +8,6 @@ from spack.package import *
 class Grpc(CMakePackage):
     """A high performance, open-source universal RPC framework."""
 
-    maintainers("nazavode")
-
     homepage = "https://grpc.io"
     url = "https://github.com/grpc/grpc/archive/v1.59.1.tar.gz"
 
