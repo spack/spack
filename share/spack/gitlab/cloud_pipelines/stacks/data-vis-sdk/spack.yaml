@@ -12,8 +12,6 @@ spack:
       - one_of: ['@1.14', '@1.12']
     mesa:
       require: "+glx +osmesa +opengl ~opengles +llvm"
-    libosmesa:
-      require: "mesa +osmesa"
     libglx:
       require: "mesa +glx"
     ospray:

@@ -51,7 +51,6 @@ class Vtk(CMakePackage):
 
     # VTK7 defaults to OpenGL2 rendering backend
     variant("opengl2", default=True, description="Enable OpenGL2 backend")
-    variant("osmesa", default=False, description="Enable OSMesa support")
     variant("python", default=False, description="Enable Python support", when="@8:")
     variant("qt", default=False, description="Build with support for Qt")
     variant("xdmf", default=False, description="Build XDMF file support")
@@ -75,7 +74,7 @@ class Vtk(CMakePackage):
     patch("xdmf2-hdf51.13.2.patch", when="@9:9.2.2 +xdmf")
 
     # We cannot build with both osmesa and qt in spack
-    conflicts("+osmesa", when="+qt")
+    conflicts("^osmesa", when="+qt")
 
     conflicts("%gcc@13", when="@9.2")
 
@@ -128,13 +127,8 @@ class Vtk(CMakePackage):
     # the two patches are the same but for the path to the files they patch
     patch("vtk_alias_hdf5.patch", when="@9: platform=windows")
     patch("vtk_findproj_config.patch", when="platform=windows")
-    with when("~osmesa"):
-        depends_on("glx", when="platform=linux")
-        depends_on("glx", when="platform=cray")
-        depends_on("libxt", when="platform=linux")
-        depends_on("libxt", when="platform=cray")
-
-    depends_on("osmesa", when="+osmesa")
+    depends_on("libxt", when="^[virtuals=gl] glx platform=linux")
+    depends_on("libxt", when="^[virtuals=gl] glx platform=cray")
 
     # VTK will need Qt5OpenGL, and qt needs '-opengl' for that
     depends_on("qt+opengl", when="+qt")
@@ -417,7 +411,7 @@ class Vtk(CMakePackage):
 
         cmake_args.append("-DVTK_RENDERING_BACKEND:STRING=" + opengl_ver)
 
-        if "+osmesa" in spec:
+        if spec.satisfies("^[virtuals=gl] osmesa"):
             cmake_args.extend(
                 [
                     "-DVTK_USE_X:BOOL=OFF",
