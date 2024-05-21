@@ -9,10 +9,10 @@ from spack.package import *
 
 
 class Amduprof(Package):
-    """AMD uProf (“MICRO-prof”) is a software profiling analysis tool for x86
+    """AMD uProf ("MICRO-prof") is a software profiling analysis tool for x86
     applications running on Windows, Linux and FreeBSD operating systems and
-    provides event information unique to the AMD “Zen”-based processors and AMD
-    Instinct™ MI Series accelerators. AMD uProf enables the developer to better
+    provides event information unique to the AMD "Zen"-based processors and AMD
+    Instinct(tm) MI Series accelerators. AMD uProf enables the developer to better
     understand the limiters of application performance and evaluate
     improvements."""
 
