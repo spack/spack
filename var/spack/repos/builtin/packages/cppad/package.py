@@ -23,7 +23,7 @@ class Cppad(CMakePackage):
     def cmake_args(self):
         args = [
             self.define("cppad_prefix", self.prefix),
-            self.define("cmake_install_docdir", "share/cppad/doc"),
+            #self.define("cmake_install_docdir", "share/cppad/doc"),
         ]
         # This package does not obey CMAKE_INSTALL_PREFIX
         #args.append("-DCMAKE_INSTALL_PREFIX=%s" % self.prefix)
