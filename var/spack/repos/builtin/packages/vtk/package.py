@@ -124,6 +124,8 @@ class Vtk(CMakePackage):
     patch("vtk_movie_link_ogg.patch", when="@8.2")
     patch("vtk_use_sqlite_name_vtk_expects.patch", when="@8.2")
     patch("vtk_proj_include_no_strict.patch", when="@9: platform=windows")
+    # a patch with the same name is also applied to paraview
+    # the two patches are the same but for the path to the files they patch
     patch("vtk_alias_hdf5.patch", when="@9: platform=windows")
     patch("vtk_findproj_config.patch", when="platform=windows")
     with when("~osmesa"):
