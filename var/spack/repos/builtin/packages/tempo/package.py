@@ -66,7 +66,3 @@ class Tempo(AutotoolsPackage):
 
     def setup_run_environment(self, env):
         env.set("TEMPO", self.prefix)
-
-    def setup_dependent_run_environment(self, spack_env, dependent_spec):
-        # For LWA-10-17-2020 version
-        spack_env.set("TEMPO_DIR", self.prefix)
