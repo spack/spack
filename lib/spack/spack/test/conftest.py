@@ -2053,3 +2053,11 @@ def _true(x):
 @pytest.fixture()
 def do_not_check_runtimes_on_reuse(monkeypatch):
     monkeypatch.setattr(spack.solver.asp, "_has_runtime_dependencies", _true)
+
+
+@pytest.fixture(autouse=True, scope="session")
+def _c_compiler_always_exists():
+    fn = spack.solver.asp.c_compiler_runs
+    spack.solver.asp.c_compiler_runs = _true
+    yield
+    spack.solver.asp.c_compiler_runs = fn
