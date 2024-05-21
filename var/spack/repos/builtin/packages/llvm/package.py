@@ -539,6 +539,12 @@ class Llvm(CMakePackage, CudaPackage, CompilerPackage):
         patch("llvm13-14-thread.patch", when="@13:14")
         patch("llvm15-thread.patch", when="@15")
 
+        patch(
+            "https://github.com/llvm/llvm-project/commit/716bae0b48375ce59ff107df0997f279a41dfec9.patch",
+            sha256="341b2c4aefcea06ad3c085feacdfaa4f54b7ae776345513d193cf42439fcd5c9",
+            when="@14:15",
+        )
+
     # avoid build failed with Fujitsu compiler
     patch("llvm13-fujitsu.patch", when="@13 %fj")
 
@@ -864,12 +870,6 @@ class Llvm(CMakePackage, CudaPackage, CompilerPackage):
             )
 
         cmake_args.append(from_variant("LIBOMPTARGET_ENABLE_DEBUG", "libomptarget_debug"))
-
-        if spec.satisfies("@14:"):
-            # The hsa-rocr-dev package may be pulled in through hwloc, which can lead to cmake
-            # finding libhsa and enabling the AMDGPU plugin. Since we don't support this yet,
-            # disable explicitly. See commit a05a0c3c2f8eefc80d84b7a87a23a4452d4a3087.
-            cmake_args.append(define("LIBOMPTARGET_BUILD_AMDGPU_PLUGIN", False))
 
         if "+lldb" in spec:
             projects.append("lldb")
