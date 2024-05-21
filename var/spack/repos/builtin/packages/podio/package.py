@@ -105,7 +105,12 @@ class Podio(CMakePackage):
         return args
 
     def setup_run_environment(self, env):
-        env.prepend_path("PYTHONPATH", self.prefix.python)
+        if self.spec.satisfies("@:0.99"):
+            env.prepend_path("PYTHONPATH", self.prefix.python)
+        else:
+            pyver = self.spec["python"].version.up_to(2)
+            pydir = join_path(self.prefix.lib, f"python{pyver}", "site-packages")
+            env.prepend_path("PYTHONPATH", pydir)
         env.prepend_path("LD_LIBRARY_PATH", self.spec["podio"].libs.directories[0])
         if "+sio" in self.spec:
             # sio needs to be on LD_LIBRARY_PATH for ROOT to be able to
@@ -116,7 +121,12 @@ class Podio(CMakePackage):
         env.prepend_path("ROOT_INCLUDE_PATH", self.prefix.include)
 
     def setup_dependent_build_environment(self, env, dependent_spec):
-        env.prepend_path("PYTHONPATH", self.prefix.python)
+        if self.spec.satisfies("@:0.99"):
+            env.prepend_path("PYTHONPATH", self.prefix.python)
+        else:
+            pyver = self.spec["python"].version.up_to(2)
+            pydir = join_path(self.prefix.lib, f"python{pyver}", "site-packages")
+            env.prepend_path("PYTHONPATH", pydir)
         env.prepend_path("LD_LIBRARY_PATH", self.spec["podio"].libs.directories[0])
         env.prepend_path("ROOT_INCLUDE_PATH", self.prefix.include)
         if self.spec.satisfies("+sio @0.17:"):
