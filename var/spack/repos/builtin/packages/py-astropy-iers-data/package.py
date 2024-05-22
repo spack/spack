@@ -9,8 +9,8 @@ from spack.package import *
 class PyAstropyIersData(PythonPackage):
     """IERS Earth rotation and leap second table
 
-       Note: This package is not meant for standalone purposes
-       but is needed by AstroPy"""
+    Note: This package is not meant for standalone purposes
+    but is needed by AstroPy"""
 
     homepage = "https://github.com/astropy/astropy-iers-data"
     git = "https://github.com/astropy/astropy-iers-data.git"
