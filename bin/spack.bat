@@ -196,7 +196,7 @@ if NOT defined _sp_args (
 :: If args contain --bat, or -h/--help: just execute.
 if NOT "%_sp_args%"=="%_sp_args:--help=%" (
     goto :default_case
-) else if NOT "%_sp_args%"=="%_sp_args: -h=%" (
+) else if NOT "%_sp_args%"=="%_sp_args:-h=%" (
     goto :default_case
 ) else if NOT "%_sp_args%"=="%_sp_args:--bat=%" (
     goto :default_case
