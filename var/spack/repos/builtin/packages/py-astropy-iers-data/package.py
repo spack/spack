@@ -16,7 +16,7 @@ class PyAstropyIersData(PythonPackage):
     git = "https://github.com/astropy/astropy-iers-data.git"
 
     maintainers("aweaver1fandm")
-    
+
     version("main", branch="main", preferred=True)
 
     depends_on("python@3.8:")
