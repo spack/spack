@@ -290,7 +290,9 @@ class Legion(CMakePackage, ROCmPackage):
     depends_on("rust@1.74:", type="build", when="+prof")
 
     variant("gc", default=False, description="Enable garbage collector logging")
-    variant("sysomp", default=False, description="Use system OpenMP implementation instead of Realm's")
+    variant(
+        "sysomp", default=False, description="Use system OpenMP implementation instead of Realm's"
+    )
 
     def cmake_args(self):
         spec = self.spec
