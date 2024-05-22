@@ -26,16 +26,17 @@ class PyPyspark(PythonPackage):
 
     variant("java", default=True, description="Include Java requirements via py-py4j")
     variant("pandas", default=True, description="Include Pandas support")
-    variant("connect", default=True, description="Include SparkConnect support")
+    variant("connect", default=True, description="Include SparkConnect support", when="@3.4:")
 
     # Noted on https://spark.apache.org/docs/latest/api/python/getting_started/install.html#dependencies
     with default_args(type="run"):
-        depends_on("py-pandas@1.0.5:", when="+pandas")
         depends_on("py-pyarrow@4:", when="+pandas")
+        depends_on("py-pyarrow@1:", when="+pandas@:3.4")
+        depends_on("py-pandas@1.0.5:", when="+pandas")
         depends_on("py-numpy@1.15:", when="+pandas")
 
-        depends_on("py-grpcio@1.48:1.56", when="+connect")
-        depends_on("py-grpcio-status@1.48:1.56", when="+connect")
+        depends_on("py-grpcio@1.48:", when="+connect")
+        depends_on("py-grpcio-status@1.48:", when="+connect")
         depends_on("py-googleapis-common-protos@1.56.4:", when="+connect")
 
     depends_on("py-setuptools", type="build")
