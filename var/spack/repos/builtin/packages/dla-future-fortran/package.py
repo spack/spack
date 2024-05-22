@@ -3,8 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-# dlaf-no-license-check
-from spack import *
+from spack.package import *
 
 
 class DlaFutureFortran(CMakePackage):
