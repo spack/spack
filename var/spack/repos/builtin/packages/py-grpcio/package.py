@@ -14,6 +14,8 @@ class PyGrpcio(PythonPackage):
 
     license("Apache-2.0")
 
+    version("1.64.0", sha256="257baf07f53a571c215eebe9679c3058a313fd1d1f7c4eede5a8660108c52d9c")
+    version("1.63.0", sha256="f3023e14805c61bc439fb40ca545ac3d5740ce66120a678a3c6c2c55b70343d1")
     version("1.60.1", sha256="dd1d3a8d1d2e50ad9b59e10aa7f07c7d1be2b367f3f2d33c5fade96ed5460962")
     version("1.56.2", sha256="0ff789ae7d8ddd76d2ac02e7d13bfef6fc4928ac01e1dcaa182be51b6bcc0aaa")
     version("1.52.0", sha256="a5d4a83d29fc39af429c10b9b326c174fec49b73398e4a966a1f2a4f30aa4fdb")
@@ -40,8 +42,18 @@ class PyGrpcio(PythonPackage):
     version("1.16.0", sha256="d99db0b39b490d2469a8ef74197d5f211fa740fc9581dccecbb76c56d080fce1")
 
     depends_on("py-setuptools", type="build")
-    depends_on("py-six@1.5.2:", when="@:1.48", type=("build", "run"))
-    depends_on("py-cython@0.23:2", type="build")
+    with default_args(type=("build", "run")):
+        depends_on("py-coverage@4:")
+        depends_on("py-wheel@0.29:")
+        depends_on("py-cython@3:", when="@1.63.0:")
+        depends_on("py-cython@0.29.8:", when="@1.49.0:1.62")
+
+        depends_on("py-protobuf@5.26.1:5", when="@1.63.0:")
+        depends_on("py-protobuf@4.21.3:4", when="@1.49.0:1.62")
+        depends_on("py-protobuf@3.5.0:3", when="@1.35.0:1.48")
+
+        depends_on("py-six@1.10:", when="@:1.48")
+
     depends_on("openssl")
     depends_on("zlib-api")
     depends_on("c-ares")
