@@ -85,66 +85,6 @@ def license(s):
     return spack.spec.VERSION_COLOR + s + plain_format
 
 
-class VariantFormatter:
-    def __init__(self, pkg):
-        self.variants = pkg.variants
-        self.headers = ("Name [Default]", "When", "Allowed values", "Description")
-
-        # Don't let name or possible values be less than max widths
-        _, cols = tty.terminal_size()
-        max_name = min(self.column_widths[0], 30)
-        max_when = min(self.column_widths[1], 30)
-        max_vals = min(self.column_widths[2], 20)
-
-        # allow the description column to extend as wide as the terminal.
-        max_description = min(
-            self.column_widths[3],
-            # min width 70 cols, 14 cols of margins and column spacing
-            max(cols, 70) - max_name - max_vals - 14,
-        )
-        self.column_widths = (max_name, max_when, max_vals, max_description)
-
-        # Compute the format
-        self.fmt = "%%-%ss%%-%ss%%-%ss%%s" % (
-            self.column_widths[0] + 4,
-            self.column_widths[1] + 4,
-            self.column_widths[2] + 4,
-        )
-
-    def default(self, v):
-        s = "on" if v.default is True else "off"
-        if not isinstance(v.default, bool):
-            s = v.default
-        return s
-
-    @property
-    def lines(self):
-        if not self.variants:
-            yield "    None"
-            return
-
-        else:
-            yield "    " + self.fmt % self.headers
-            underline = tuple([w * "=" for w in self.column_widths])
-            yield "    " + self.fmt % underline
-            yield ""
-            for k, e in sorted(self.variants.items()):
-                v, w = e
-                name = textwrap.wrap(
-                    "{0} [{1}]".format(k, self.default(v)), width=self.column_widths[0]
-                )
-                if all(spec == spack.spec.Spec() for spec in w):
-                    w = "--"
-                when = textwrap.wrap(str(w), width=self.column_widths[1])
-                allowed = v.allowed_values.replace("True, False", "on, off")
-                allowed = textwrap.wrap(allowed, width=self.column_widths[2])
-                description = []
-                for d_line in v.description.split("\n"):
-                    description += textwrap.wrap(d_line, width=self.column_widths[3])
-                for t in zip_longest(name, when, allowed, description, fillvalue=""):
-                    yield "    " + self.fmt % t
-
-
 def print_dependencies(pkg, args):
     """output build, link, and run package dependencies"""
 
