@@ -141,7 +141,7 @@ class UfsWeatherModel(CMakePackage):
         "LND",
     ]:
         depends_on("parallelio@2.5.3: +fortran~pnetcdf~shared", when="@develop app=%s" % app)
-    depends_on("python@3.6:", when="@develop")
+    depends_on("python@3.6:", type="build", when="@develop")
     depends_on("sp@2.3.3:", when="@develop")
     depends_on("w3emc@2.9.2:", when="@develop")
 
