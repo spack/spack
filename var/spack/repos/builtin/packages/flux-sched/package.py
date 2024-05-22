@@ -57,6 +57,7 @@ class FluxSched(CMakePackage, AutotoolsPackage):
     # This workaround is documented in PR #3543
     build_directory = "spack-build"
 
+    variant("docs", default=False, description="Build flux manpages and docs")
     variant("cuda", default=False, description="Build dependencies with support for CUDA")
 
     # Needs to be seen if tis is needed once we remove the default variants
@@ -72,6 +73,7 @@ class FluxSched(CMakePackage, AutotoolsPackage):
     depends_on("yaml-cpp@0.6.3")
     depends_on("uuid")
     depends_on("pkgconfig")
+    depends_on("py-sphinx@1.6.3:", when="+docs", type="build")
 
     depends_on("flux-core", type=("build", "link", "run"))
     depends_on("flux-core+cuda", when="+cuda", type=("build", "run", "link"))
@@ -186,11 +188,18 @@ class FluxSched(CMakePackage, AutotoolsPackage):
 
 class CMakeBuilder(CMakeBuilder):
     def cmake_args(self):
+        args = []
         ver_in_src = os.path.exists(os.path.join(self.stage.source_path, "flux-sched.ver"))
         # flux-sched before v0.33 does not correctly set the version even when the file is present.
         if self.spec.satisfies("@:0.33") or not ver_in_src:
-            return [self.define("FLUX_SCHED_VER", self.spec.version)]
-        return []
+            # ref_version only exists on git versions
+            try:
+                ver = self.spec.version.ref_version
+            except AttributeError:
+                ver = self.spec.version
+            args.append(self.define("FLUX_SCHED_VER", ver))
+        args.append(self.define_from_variant("ENABLE_DOCS", "docs"))
+        return args
 
 
 class AutotoolsBuilder(AutotoolsBuilder):
