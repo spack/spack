@@ -34,9 +34,9 @@ class PyGoogleapisCommonProtos(PythonPackage):
         # https://github.com/googleapis/python-api-common-protos/blob/main/setup.py
         # May be able to rais max version to :5 in next release
         depends_on("py-protobuf@3.19.5:4", when="@1.58:")
-        depends_on("py-protobuf@3.15.0:4", when="@1.56:")
+        depends_on("py-protobuf@3.15.0:4", when="@1.56:1.57")
         depends_on("py-protobuf@3.12.0:4", when="@1.55")
-        depends_on("py-protobuf@3.6.0:", when="@1.6.0")
+        depends_on("py-protobuf@3.6.0:", when="@1.6.0:")
 
     # Explicitly incompatibile versions per setup.py
     conflicts("py-protobuf@3.20:3.21.1")
