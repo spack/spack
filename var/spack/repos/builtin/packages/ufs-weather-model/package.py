@@ -184,29 +184,34 @@ class UfsWeatherModel(CMakePackage):
             raise InstallError(msg.format(spec.platform, self.compiler.name))
 
     def cmake_args(self):
-        from_variant = self.define_from_variant
         args = [
-            from_variant("32BIT", "32bit"),
-            from_variant("CCPP_32BIT", "ccpp_32bit"),
             self.define("AVX2", False),  # use target settings from Spack
             self.define("SIMDMULTIARCH", False),  # use target settings from Spack
-            from_variant("DEBUG", "debug"),
-            from_variant("DEBUG_LINKMPI", "debug_linkmpi"),
-            from_variant("INLINE_POST", "inline_post"),
-            from_variant("MULTI_GASES", "multi_gases"),
-            from_variant("MOVING_NEST", "moving_nest"),
-            from_variant("OPENMP", "openmp"),
-            from_variant("PARALLEL_NETCDF", "parallel_netcdf"),
-            from_variant("JEDI_DRIVER", "jedi_driver"),
-            from_variant("CMEPS_AOFLUX", "cmeps_aoflux"),
-            from_variant("APP", "app"),
-            from_variant("CCPP_SUITES", "ccpp_suites").replace(";", ","),
-            from_variant("MPI", "mpi"),
-            from_variant("PDLIB", "pdlib"),
+            self.define_from_variant("CCPP_SUITES", "ccpp_suites").replace(";", ","),
         ]
+        variants = [
+            "32bit",
+            "app",
+            "ccpp_32bit",
+            "ccpp_suites",
+            "cmeps_aoflux",
+            "debug",
+            "debug_linkmpi",
+            "inline_post",
+            "jedi_driver",
+            "moving_nest",
+            "mpi",
+            "multi_gases",
+            "openmp",
+            "parallel_netcdf",
+            "pdlib",
+        ]
+        for variant in variants:
+            args.append(self.define_from_variant(variant.upper(), variant))
+
         if self.spec.satisfies("@:2.0.0"):
-            args.append(from_variant("CCPP", "ccpp"))
-            args.append(from_variant("QUAD_PRECISION", "quad_precision"))
+            args.append(self.define_from_variant("CCPP", "ccpp"))
+            args.append(self.define_from_variant("QUAD_PRECISION", "quad_precision"))
 
         return args
 
