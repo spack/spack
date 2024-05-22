@@ -359,7 +359,7 @@ class CMakeBuilder(BaseBuilder, cmake.CMakeBuilder):
     @run_after("install")
     def patch_hdf5_pkgconfigcmake(self):
         """
-        Incorrect hdf5 library names are put in the package config and config.cmake files
+        Incorrect hdf5 library names are put in the package config files
         due to incorrectly using hdf5 target names
         https://github.com/spack/spack/pull/42878
         """
