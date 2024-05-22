@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import json
 import sys
 import textwrap
 from itertools import zip_longest
@@ -19,6 +20,7 @@ import spack.spec
 import spack.version
 from spack.cmd.common import arguments
 from spack.package_base import preferred_version
+from spack.version import VersionList
 
 description = "get detailed information on a particular package"
 section = "basic"
@@ -59,6 +61,10 @@ def setup_parser(subparser):
     ]
     for opt, help_comment in options:
         subparser.add_argument(opt, action="store_true", help=help_comment)
+
+    subparser.add_argument(
+        "-j", "--json", action="store_true", default=False, dest="json", help="print as JSON"
+    )
 
     arguments.add_common_arguments(subparser, ["package"])
 
@@ -152,11 +158,10 @@ def print_dependencies(pkg, args):
             color.cprint("    None")
 
 
-def print_detectable(pkg, args):
-    """output information on external detection"""
-
-    color.cprint("")
-    color.cprint(section_title("Externally Detectable: "))
+def externally_detectable(pkg):
+    """returns external detection information"""
+    detectable = False
+    find_attributes = []
 
     # If the package has an 'executables' of 'libraries' field, it
     # can detect an installation
@@ -171,6 +176,21 @@ def print_detectable(pkg, args):
         # If the package does not define 'determine_version' nor
         # 'determine_variants', then it must use some custom detection
         # mechanism. In this case, just inform the user it's detectable somehow.
+        detectable = True
+
+    return detectable, find_attributes
+
+
+def print_detectable(pkg, args):
+    """output information on external detection"""
+
+    color.cprint("")
+    color.cprint(section_title("Externally Detectable: "))
+
+    # If the package has an 'executables' of 'libraries' field, it
+    # can detect an installation
+    detectable, find_attributes = externally_detectable(pkg)
+    if detectable:
         color.cprint(
             "    True{0}".format(
                 " (" + ", ".join(find_attributes) + ")" if find_attributes else ""
@@ -500,11 +520,7 @@ def print_licenses(pkg, args):
             color.cprint(line)
 
 
-def info(parser, args):
-    spec = spack.spec.Spec(args.package)
-    pkg_cls = spack.repo.PATH.get_pkg_class(spec.name)
-    pkg = pkg_cls(spec)
-
+def print_text(pkg, args):
     # Output core package information
     header = section_title("{0}:   ").format(pkg.build_system_class) + pkg.name
     color.cprint(header)
@@ -537,3 +553,53 @@ def info(parser, args):
             func(pkg, args)
 
     color.cprint("")
+
+
+def print_json(pkg, args, out):
+    out.write("[\n")
+    out.write(f' {{"name": "{pkg.name}",\n')
+    out.write(f'  "build_system": "{pkg.build_system_class}",\n')
+
+    if getattr(pkg, "homepage"):
+        out.write(f'  "homepage": "{pkg.homepage}",\n')
+
+    if (args.all or args.maintainers) and len(pkg.maintainers) > 0:
+        out.write(f'  "maintainers": {json.dumps(pkg.maintainers)},\n')
+
+    if args.all or args.detectable:
+        detectable, _ = externally_detectable(pkg)
+        out.write(f'  "externally_detectable": "{detectable}",\n')
+
+    if (args.all or args.tags) and hasattr(pkg, "tags"):
+        tags = sorted(pkg.tags)
+        out.write(f'  "tags": "{json.dumps(tags)}",\n')
+
+    if args.all or not args.no_versions:
+        preferred = VersionList(pkg.versions).preferred()
+        out.write(f'  "preferred_version": "{preferred}",\n')
+        versions = [str(v) for v in reversed(sorted(pkg.versions))]
+        out.write(f'  "versions": "{json.dumps(versions)}",\n')
+
+    # RESUME HERE
+    # if (args.all or not args.no_variants) and pkg.variants:
+    #     variants_by_name = _variants_by_name_when(pkg)
+    #
+    #    (args.all or args.phases, print_phases),
+    #    (args.all or not args.no_dependencies, print_dependencies),
+    #    (args.all or args.virtuals, print_virtuals),
+    #    (args.all or args.tests, print_tests),
+    #    (args.all or True, print_licenses),
+    out.write(" }\n]\n")
+
+
+def info(parser, args):
+    # Get the package class
+    spec = spack.spec.Spec(args.package)
+    pkg_cls = spack.repo.PATH.get_pkg_class(spec.name)
+    pkg = pkg_cls(spec)
+
+    # Print the formatted information
+    if args.json:
+        print_json(pkg, args, sys.stdout)
+    else:
+        print_text(pkg, args)
