@@ -15,4 +15,5 @@ class Cjson(CMakePackage):
 
     license("MIT")
 
+    version("1.7.17", sha256="51f3b07aece8d1786e74b951fd92556506586cb36670741b6bfb79bf5d484216")
     version("1.7.15", sha256="c55519316d940757ef93a779f1db1ca809dbf979c551861f339d35aaea1c907c")

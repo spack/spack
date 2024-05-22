@@ -16,6 +16,7 @@ class Htslib(AutotoolsPackage):
 
     license("MIT AND BSD-3-Clause-Modification")
 
+    version("1.20", sha256="e52d95b14da68e0cfd7d27faf56fef2f88c2eaf32a2be51c72e146e3aa928544")
     version("1.19.1", sha256="222d74d3574fb67b158c6988c980eeaaba8a0656f5e4ffb76b5fa57f035933ec")
     version("1.19", sha256="8751c40c4fa7d1f23a6864c5b20a73744f8be68239535ae7729c5f7d394d0736")
     version("1.18", sha256="f1ab53a593a2320a1bfadf4ef915dae784006c5b5c922c8a8174d7530a9af18f")
@@ -59,6 +60,8 @@ class Htslib(AutotoolsPackage):
     depends_on("autoconf", when="@1.2")
     depends_on("automake", when="@1.2")
     depends_on("libtool", when="@1.2")
+
+    conflicts("zlib-ng", when="@:1.12")  # https://github.com/samtools/htslib/issues/1257
 
     @property
     def libs(self):
