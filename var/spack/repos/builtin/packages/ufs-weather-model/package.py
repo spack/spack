@@ -106,12 +106,6 @@ class UfsWeatherModel(CMakePackage):
     )
     variant("mom6solo", default=False, description="Build MOM6 solo executable", when="@develop")
 
-    variant(
-        "cmake_platform",
-        default="auto",
-        description="Override CMAKE_Platform ('linux.intel', 'hera.gnu', 'acorn', etc.)",
-    )
-
     variant("app", default="ATM", description="UFS application", when="@develop")
 
     depends_on("bacio")
@@ -178,9 +172,7 @@ class UfsWeatherModel(CMakePackage):
 
         env.set("CCPP_SUITES", ",".join([x for x in spec.variants["ccpp_suites"].value if x]))
 
-        if spec.variants["cmake_platform"].value != "auto":
-            env.set("CMAKE_Platform", spec.variants["cmake_platform"].value)
-        elif spec.platform == "linux" and spec.satisfies("%intel"):
+        if spec.platform == "linux" and spec.satisfies("%intel"):
             env.set("CMAKE_Platform", "linux.intel")
         elif spec.platform == "linux" and spec.satisfies("%gcc"):
             env.set("CMAKE_Platform", "linux.gnu")
