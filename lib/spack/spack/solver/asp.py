@@ -3364,7 +3364,11 @@ class SpecBuilder:
             return sha[0]
         else:
             raise InternalConcretizerError(
-                f"Failure to fetch git sha from {package_class.git} --branch {branch}. Confirm network via staging this package, and post a bug report if that succeeds."
+                (
+                    f"Failure to fetch git sha from {package_class.git} --branch {branch_name}. "
+                    "Confirm network via staging this package, and post a bug report if that "
+                    "succeeds."
+                )
             )
 
     def version(self, node, version):
