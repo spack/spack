@@ -19,10 +19,9 @@ class PyAstropy(PythonPackage):
 
     license("BSD-3-Clause")
 
+    version("6.1", sha256="6c3b915f10b1576190730ddce45f6245f9927dda3de6e3f692db45779708950f")
     version("5.1", sha256="1db1b2c7eddfc773ca66fa33bd07b25d5b9c3b5eee2b934e0ca277fa5b1b7b7e")
-    version(
-        "4.0.1.post1", sha256="5c304a6c1845ca426e7bc319412b0363fccb4928cb4ba59298acd1918eec44b5"
-    )
+    version("4.0.1.post1", sha256="5c304a6c1845ca426e7bc319412b0363fccb4928cb4ba59298acd1918eec44b5")
     version("3.2.1", sha256="706c0457789c78285e5464a5a336f5f0b058d646d60f4e5f5ba1f7d5bf424b28")
     version("2.0.14", sha256="618807068609a4d8aeb403a07624e9984f566adc0dc0f5d6b477c3658f31aeb6")
     version("1.1.2", sha256="6f0d84cd7dfb304bb437dda666406a1d42208c16204043bc920308ff8ffdfad1")
@@ -31,12 +30,18 @@ class PyAstropy(PythonPackage):
     variant("all", default=False, when="@3.2:", description="Enable all functionality")
 
     # Required dependencies
+    depends_on("python@3.10:", when="@6.1:", type=("build", "run"))
     depends_on("python@3.8:", when="@5.1:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
     depends_on("py-cython@0.29.13:", type="build")
+    depends_on("py-cython@0.29.30", when="@5.1:6.0", type="build")
+    depends_on("py-cython@3.0.0", when="@6.1.0:", type="build")
+
     # in newer pip versions --install-option does not exist
     depends_on("py-pip@:23.0", type="build")
 
+    depends_on("py-astropy-iers-data", when="@6:", type=("build", "run"))
+    depends_on("py-numpy@1.23:", when="@6.1:", type=("build", "run"))
     depends_on("py-numpy@1.18:", when="@5.1:", type=("build", "run"))
     depends_on("py-numpy@1.16:", when="@4.0:", type=("build", "run"))
     depends_on("py-numpy@1.13:", when="@3.1:", type=("build", "run"))
@@ -48,7 +53,6 @@ class PyAstropy(PythonPackage):
     depends_on("py-pyyaml@3.13:", when="@5.1:", type=("build", "run"))
     depends_on("py-pyerfa@2.0:", when="@5.1:", type=("build", "run"))
     depends_on("py-setuptools-scm@6.2:", when="@5.1:", type="build")
-    depends_on("py-cython@0.29.30", when="@5.1:", type="build")
     depends_on("py-extension-helpers", when="@5.1:", type="build")
     depends_on("pkgconfig", type="build")
 
@@ -60,8 +64,10 @@ class PyAstropy(PythonPackage):
 
     # Optional dependencies
     with when("+all"):
+        depends_on("py-scipy@1.8:", when="@6:", type=("build", "run"))
         depends_on("py-scipy@1.3:", when="@5:", type=("build", "run"))
         depends_on("py-scipy@0.18:", type=("build", "run"))
+        depends_on("py-matplotlib@3.3:", when="@6:", type=("build", "run"))
         depends_on("py-matplotlib@3.1:", when="@5:", type=("build", "run"))
         depends_on("py-matplotlib@2.1:", when="@4:", type=("build", "run"))
         depends_on("py-matplotlib@2.0:", type=("build", "run"))
@@ -85,6 +91,8 @@ class PyAstropy(PythonPackage):
         depends_on("py-ipython", type=("build", "run"))
         depends_on("py-pytest@7:", when="@5.0.2:", type=("build", "run"))
         depends_on("py-pytest", type=("build", "run"))
+        depends_on("py-fsspec+http@2023.4:", when="@6.1:", type=("build", "run"))
+        depends_on("py-s3fs@2023.4:", when="@6.1:", type=("build", "run"))
         depends_on("py-typing-extensions@3.10.0.1:", when="@5.0.2:", type=("build", "run"))
 
         # Historical optional dependencies
