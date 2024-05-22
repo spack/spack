@@ -16,6 +16,7 @@ class PyGrpcio(PythonPackage):
 
     version("1.64.0", sha256="257baf07f53a571c215eebe9679c3058a313fd1d1f7c4eede5a8660108c52d9c")
     version("1.63.0", sha256="f3023e14805c61bc439fb40ca545ac3d5740ce66120a678a3c6c2c55b70343d1")
+    version("1.62.2", sha256="c77618071d96b7a8be2c10701a98537823b9c65ba256c0b9067e0594cdbd954d")
     version("1.60.1", sha256="dd1d3a8d1d2e50ad9b59e10aa7f07c7d1be2b367f3f2d33c5fade96ed5460962")
     version("1.56.2", sha256="0ff789ae7d8ddd76d2ac02e7d13bfef6fc4928ac01e1dcaa182be51b6bcc0aaa")
     version("1.52.0", sha256="a5d4a83d29fc39af429c10b9b326c174fec49b73398e4a966a1f2a4f30aa4fdb")
