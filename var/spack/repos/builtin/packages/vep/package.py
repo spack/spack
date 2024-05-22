@@ -53,6 +53,9 @@ class Vep(Package):
     variant("bundled_bioperl", default=False)
     variant("bundled_htslib", default=False)
 
+    conflicts("zlib-ng", when="+gzip")
+    conflicts("zlib-ng", when="+bundled_htslib")
+
     @property
     def vep_lib_path(self):
         return self.prefix.lib.perl5
