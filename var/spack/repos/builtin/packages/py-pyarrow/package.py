@@ -64,6 +64,8 @@ class PyPyarrow(PythonPackage, CudaPackage):
 
     depends_on("py-numpy@1.16.6:", type=("build", "run"), when="@3:")
     depends_on("py-numpy@1.14:", type=("build", "run"), when="@0.15:")
+    # Oldest supported numpy prior to Python 3.9 is 1.25
+    depends_on("py-numpy@:1.25", type=("build", "run"), when="^python@3.8")
 
     arrow_versions = (
         "@0.9.0",
