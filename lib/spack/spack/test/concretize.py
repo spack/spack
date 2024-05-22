@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import copy
 import os
+import pathlib
 import sys
 
 import jinja2
@@ -28,7 +29,7 @@ import spack.util.libc
 import spack.variant as vt
 from spack.concretize import find_spec
 from spack.spec import CompilerSpec, Spec
-from spack.version import Version, ver
+from spack.version import GitVersion, Version, ver
 
 
 def check_spec(abstract, concrete):
@@ -2996,3 +2997,17 @@ def test_spec_filters(specs, include, exclude, expected):
         factory=lambda: specs, is_usable=lambda x: True, include=include, exclude=exclude
     )
     assert f.selected_specs() == expected
+
+
+def test_branch_based_versions_pin_to_commits(
+    mock_git_version_info, mock_packages, monkeypatch, do_not_check_runtimes_on_reuse
+):
+    """Check that hashes compare properly to versions"""
+    repo_path, filename, commits = mock_git_version_info
+    monkeypatch.setattr(
+        spack.package_base.PackageBase, "git", pathlib.Path(repo_path).as_uri(), raising=False
+    )
+
+    breakpoint()
+    spec = Spec("git-test-commit").concretized()
+    assert isinstance(spec.verison, GitVersion)
