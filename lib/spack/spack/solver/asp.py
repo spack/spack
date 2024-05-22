@@ -86,7 +86,6 @@ OutputConfiguration = collections.namedtuple(
     "OutputConfiguration", ["timers", "stats", "out", "setup_only"]
 )
 
-git = spack.util.git.git(required=True)
 #: Default output configuration for a solve
 DEFAULT_OUTPUT_CONFIGURATION = OutputConfiguration(
     timers=False, stats=False, out=None, setup_only=False
@@ -3355,7 +3354,9 @@ class SpecBuilder:
     def _retrieve_latest_hash(self, branch_name, package_class):
         # remote git operations can sometimes have banners so we must parse the output for a sha
         query = (
-            git("ls-remote", "-h", package_class.git, branch_name, output=str, error=str)
+            spack.util.git.git(required=True)(
+                "ls-remote", "-h", package_class.git, branch_name, output=str, error=str
+            )
             .strip()
             .split()
         )
