@@ -28,6 +28,8 @@ class Glib(MesonPackage, AutotoolsPackage):
 
     license("LGPL-2.1-or-later")
 
+    version("2.80.2", sha256="b9cfb6f7a5bd5b31238fd5d56df226b2dda5ea37611475bf89f6a0f9400fe8bd")
+    version("2.79.3", sha256="00d1a313677ed5f5c5e6f7a77ca66e31cf7aa1e3d6b92b6041a16d7a024580c6")
     version("2.78.3", sha256="609801dd373796e515972bf95fc0b2daa44545481ee2f465c4f204d224b2bc21")
     version("2.78.0", sha256="44eaab8b720877ce303c5540b657b126f12dc94972d9880b52959f43fb537b30")
     version("2.76.6", sha256="1136ae6987dcbb64e0be3197a80190520f7acab81e2bfb937dc85c11c8aa9f04")
@@ -134,6 +136,7 @@ class Glib(MesonPackage, AutotoolsPackage):
     )
 
     with when("build_system=meson"):
+        depends_on("meson@1.2.0:", when="@2.79:", type="build")
         depends_on("meson@0.60.0:", when="@2.73:", type="build")
         depends_on("meson@0.52.0:", when="@2.71:2.72", type="build")
         depends_on("meson@0.49.2:", when="@2.61.2:2.70", type="build")
@@ -144,8 +147,9 @@ class Glib(MesonPackage, AutotoolsPackage):
     depends_on("zlib-api")
     depends_on("gettext")
     depends_on("perl", type=("build", "run"))
-    # Uses distutils in gio/gdbus-2.0/codegen/utils.py
+    # Uses distutils (@:2.78) or packaging (@2.79:) in gio/gdbus-2.0/codegen/utils.py
     depends_on("python@:3.11", type=("build", "run"), when="@2.53.4:")
+    depends_on("py-packaging", type="build", when="@2.79.0:")
     depends_on("pcre2", when="@2.73.2:")
     depends_on("pcre2@10.34:", when="@2.74:")
     depends_on("pcre+utf", when="@2.48:2.73.1")
