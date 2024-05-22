@@ -23,8 +23,8 @@ you can add it as an entry to ``upstreams.yaml`` at any of the
       install_tree: /path/to/another/spack/opt/spack
 
 ``install_tree`` must point to the ``opt/spack`` directory inside of the
- Spack base directory, or the location of the ``install_tree`` defined
- in :ref:`config.yaml <config-yaml>`.
+Spack base directory, or the location of the ``install_tree`` defined
+in :ref:`config.yaml <config-yaml>`.
 
 Once the upstream Spack instance has been added, ``spack find`` will
 automatically check the upstream instance when querying installed packages,
