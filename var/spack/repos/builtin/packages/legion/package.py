@@ -289,9 +289,11 @@ class Legion(CMakePackage, ROCmPackage):
 
     depends_on("rust@1.74:", type="build", when="+prof")
 
+    variant("gc", default=False, description="Enable garbage collector logging")
+    variant("sysomp", default=False, description="Use system OpenMP implementation instead of Realm's")
+
     def cmake_args(self):
         spec = self.spec
-        cmake_cxx_flags = []
         from_variant = self.define_from_variant
         options = [from_variant("CMAKE_CXX_STANDARD", "cxxstd")]
 
@@ -415,9 +417,6 @@ class Legion(CMakePackage, ROCmPackage):
             options.append("-DLegion_BUILD_BINDINGS=ON")
             options.append("-DLegion_REDOP_COMPLEX=ON")  # required for bindings
 
-        if spec.variants["build_type"].value == "Debug":
-            cmake_cxx_flags.extend(["-DDEBUG_REALM", "-DDEBUG_LEGION", "-ggdb"])
-
         maxdims = int(spec.variants["max_dims"].value)
         # TODO: sanity check if maxdims < 0 || > 9???
         options.append("-DLegion_MAX_DIM=%d" % maxdims)
@@ -447,6 +446,13 @@ class Legion(CMakePackage, ROCmPackage):
         # This disables Legion's CMake build system's logic for targeting the native
         # CPU architecture in favor of Spack-provided compiler flags
         options.append("-DBUILD_MARCH:STRING=")
+
+        if "+openmp" in spec and "+sysomp" in spec:
+            options.append("-DLegion_OpenMP_SYSTEM_RUNTIME=ON")
+
+        if "+gc" in spec:
+            options.append("-DCMAKE_CXX_FLAGS=-DLEGION_GC")
+
         return options
 
     def build(self, spec, prefix):
