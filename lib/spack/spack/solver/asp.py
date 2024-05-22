@@ -43,6 +43,7 @@ import spack.spec
 import spack.store
 import spack.util.crypto
 import spack.util.elf
+import spack.util.git
 import spack.util.libc
 import spack.util.path
 import spack.util.timer
@@ -50,6 +51,7 @@ import spack.variant
 import spack.version as vn
 import spack.version.git_ref_lookup
 from spack import traverse
+from spack.version.common import COMMIT_VERSION
 
 from .core import (
     AspFunction,
@@ -84,6 +86,7 @@ OutputConfiguration = collections.namedtuple(
     "OutputConfiguration", ["timers", "stats", "out", "setup_only"]
 )
 
+git = spack.util.git.git(required=True)
 #: Default output configuration for a solve
 DEFAULT_OUTPUT_CONFIGURATION = OutputConfiguration(
     timers=False, stats=False, out=None, setup_only=False
@@ -890,7 +893,10 @@ class PyclingoDriver:
 
         if result.satisfiable:
             # get the best model
-            builder = SpecBuilder(specs, hash_lookup=setup.reusable_and_possible)
+            # TODO Pin branches here
+            builder = SpecBuilder(
+                specs, pin_branches=True, hash_lookup=setup.reusable_and_possible
+            )
             min_cost, best_model = min(models)
 
             # first check for errors
@@ -3286,7 +3292,7 @@ class SpecBuilder:
         """
         return NodeArgument(id="0", pkg=pkg)
 
-    def __init__(self, specs, hash_lookup=None):
+    def __init__(self, specs, pin_branches=False, hash_lookup=None):
         self._specs = {}
         self._result = None
         self._command_line_specs = specs
@@ -3296,6 +3302,7 @@ class SpecBuilder:
         # Pass in as arguments reusable specs and plug them in
         # from this dictionary during reconstruction
         self._hash_lookup = hash_lookup or {}
+        self._pin_branches = pin_branches
 
     def hash(self, node, h):
         if node not in self._specs:
@@ -3340,7 +3347,33 @@ class SpecBuilder:
 
         self._specs[node].update_variant_validate(name, value)
 
+    def _associated_branch(self, version_string, package_class):
+        version = vn.Version(version_string)
+        version_dict = package_class.versions.get(version, {})
+        return version_dict.get("branch", None)
+
+    def _retrieve_latest_hash(self, branch_name, package_class):
+        # remote git operations can sometimes have banners so we must parse the output for a sha
+        query = (
+            git("ls-remote", "-h", package_class.git, branch_name, output=str, error=str)
+            .strip()
+            .split()
+        )
+        sha = [hunk for hunk in query if bool(COMMIT_VERSION.match(hunk))]
+        if len(sha) == 1:
+            return sha[0]
+        else:
+            raise InternalConcretizerError(
+                f"Failure to fetch git sha from {package_class.git} --branch {branch}. Confirm network via staging this package, and post a bug report if that succeeds."
+            )
+
     def version(self, node, version):
+        if self._pin_branches:
+            pkg = self._specs[node].package_class
+            branch = self._associated_branch(version, pkg)
+            if branch:
+                hash = self._retrieve_latest_hash(branch, pkg)
+                version = f"git.{hash}={version}"
         self._specs[node].versions = vn.VersionList([vn.Version(version)])
 
     def node_compiler_version(self, node, compiler, version):

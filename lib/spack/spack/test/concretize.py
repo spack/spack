@@ -3000,7 +3000,7 @@ def test_spec_filters(specs, include, exclude, expected):
 
 
 def test_branch_based_versions_pin_to_commits(
-    mock_git_version_info, mock_packages, monkeypatch, do_not_check_runtimes_on_reuse
+    mock_git_version_info, database, mock_packages, monkeypatch, do_not_check_runtimes_on_reuse
 ):
     """Check that hashes compare properly to versions"""
     repo_path, filename, commits = mock_git_version_info
@@ -3008,6 +3008,5 @@ def test_branch_based_versions_pin_to_commits(
         spack.package_base.PackageBase, "git", pathlib.Path(repo_path).as_uri(), raising=False
     )
 
-    breakpoint()
-    spec = Spec("git-test-commit").concretized()
-    assert isinstance(spec.verison, GitVersion)
+    spec = Spec("git-test-commit@main").concretized()
+    assert isinstance(spec.versions.concrete, GitVersion)
