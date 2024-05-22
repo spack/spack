@@ -58,8 +58,8 @@ class MiopenHip(CMakePackage):
     patch("0002-add-include-dir-miopen-hip-6.0.0.patch", when="@6.0")
     patch("0002-add-include-dir-miopen-hip-6.1.0.patch", when="@6.1")
     patch(
-        "https://github.com/ROCm/MIOpen/pull/2276/commits/f60aa1ff89f8fb596b4a6a4c70aa7d557803db87.patch?full_index=1",
-        sha256="c777d9f4cd2bbfec632b38620c0f70bb0cce8da1",
+        "https://github.com/ROCm/MIOpen/commit/f60aa1ff89f8fb596b4a6a4c70aa7d557803db87.patch?full_index=1",
+        sha256="7f382c872d89f22da1ad499e85ffe9881cc7404c8465e42877a210a09382e2ea",
         when="@5.7",
     )
 
