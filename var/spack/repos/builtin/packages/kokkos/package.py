@@ -51,6 +51,7 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
     version("3.0.00", sha256="c00613d0194a4fbd0726719bbed8b0404ed06275f310189b3493f5739042a92b")
 
     depends_on("cmake@3.16:", type="build")
+    conflicts("cmake@3.28", when="@:4.2.01 +cuda")
 
     devices_variants = {
         "cuda": [False, "Whether to build CUDA backend"],
