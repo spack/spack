@@ -19,7 +19,7 @@ class DlaFutureFortran(CMakePackage):
 
     license("BSD-3-Clause")
 
-    version("main")
+    version("main", branch="main")
     version("0.1.0", sha256="9fd8a105cbb2f3e1daf8a49910f98fce68ca0b954773dba98a91464cf2e7c1da")
 
     variant("shared", default=True, description="Build shared libraries.")
