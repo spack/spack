@@ -212,9 +212,9 @@ class Vtk(CMakePackage):
     # vtk@9 does not compile with gcc 13 or 14
     # https://gitlab.kitware.com/vtk/vtk/-/issues/18782
     patch(
-        "https://gitlab.kitware.com/vtk/vtk/-/merge_requests/9996.patch",
-        sha256="48755539f47c51ed1efdc028da17aae580f816cd29f97f9adc479f90228fe3e4",
-        when="@9 %gcc@13:14"
+        "https://gitlab.kitware.com/vtk/vtk/-/merge_requests/9996.diff",
+        sha256="dab51ffd0d62b00c089c1245e6b105f740106b53893305c87193d4ba03a948e0",
+        when="@9.1:9.2 %gcc@13:"
     )
 
     @when("@9.2:")
