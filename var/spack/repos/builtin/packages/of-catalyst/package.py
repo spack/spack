@@ -32,7 +32,11 @@ class OfCatalyst(CMakePackage):
 
     depends_on("openfoam@1806", when="@1806", type=("build", "link", "run"))
     depends_on("openfoam@develop", when="@develop", type=("build", "link", "run"))
-    depends_on("paraview@5.5:+osmesa~qt", when="+full")
+
+    with when("+full"):
+        depends_on("paraview@5.5: ~qt")
+        depends_on("gl")
+        requires("^[virtuals=gl] osmesa")
 
     root_cmakelists_dir = "src/catalyst"
 

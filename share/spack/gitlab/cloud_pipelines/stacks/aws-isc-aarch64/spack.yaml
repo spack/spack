@@ -79,7 +79,7 @@ spack:
     - openfoam
     - osu-micro-benchmarks
     - parallel
-    - paraview
+    # - paraview
     - picard
     - quantum-espresso
     - raja
