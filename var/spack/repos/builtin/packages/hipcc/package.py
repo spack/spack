@@ -13,12 +13,19 @@ class Hipcc(CMakePackage):
 
     homepage = "https://github.com/ROCm/hipcc"
     git = "https://github.com/ROCm/hipcc.git"
-    url = "https://github.com/ROCm/HIPCC/archive/refs/tags/rocm-6.0.2.tar.gz"
+
+    def url_for_version(self, version):
+        if version <= Version("6.0.2"):
+            url = "https://github.com/ROCm/HIPCC/archive/rocm-{0}.tar.gz"
+        else:
+            url = "https://github.com/ROCm/llvm-project/archive/rocm-{0}.tar.gz"
+        return url.format(version)
 
     maintainers("srekolam", "renjithravindrankannath", "afzpatel")
 
     license("MIT")
 
+    version("6.1.0", sha256="6bd9912441de6caf6b26d1323e1c899ecd14ff2431874a2f5883d3bc5212db34")
     version("6.0.2", sha256="d6209b14fccdd00d7231dec4b4f962aa23914b9dde389ba961370e8ba918bde5")
     version("6.0.0", sha256="e9cfaaecaf0e6ed363946439197f340c115e8e1189f96dbd716cf20245c29255")
     version("5.7.1", sha256="d47d27ef2b5de7f49cdfd8547832ac9b437a32e6fc6f0e9c1646f4b704c90aee")
@@ -26,11 +33,28 @@ class Hipcc(CMakePackage):
 
     depends_on("numactl")
 
-    patch("0014-remove-compiler-rt-linkage-for-host.6.0.patch", when="@6.0:")
+    patch("0014-remove-compiler-rt-linkage-for-host.6.0.patch", when="@6.0")
+    patch("0014-remove-compiler-rt-linkage-for-host.6.1.patch", when="@6.1:")
+
+    @property
+    def root_cmakelists_dir(self):
+        if self.spec.satisfies("@:6.0"):
+            return "."
+        else:
+            return join_path("amd", "hipcc")
 
     def patch(self):
         numactl = self.spec["numactl"].prefix.lib
-        with working_dir("bin"):
-            filter_shebang("hipconfig")
-        with working_dir("src"):
-            filter_file(" -lnuma", f" -L{numactl} -lnuma", "hipBin_amd.h")
+        if self.spec.satisfies("@:6.0"):
+            with working_dir("bin"):
+                filter_shebang("hipconfig")
+        else:
+            with working_dir("amd/hipcc/bin"):
+                filter_shebang("hipconfig")
+
+        if self.spec.satisfies("@:6.0"):
+            with working_dir("src"):
+                filter_file(" -lnuma", f" -L{numactl} -lnuma", "hipBin_amd.h")
+        else:
+            with working_dir("amd/hipcc/src"):
+                filter_file(" -lnuma", f" -L{numactl} -lnuma", "hipBin_amd.h")

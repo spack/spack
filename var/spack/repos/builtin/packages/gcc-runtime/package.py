@@ -23,7 +23,7 @@ class GccRuntime(Package):
     tags = ["runtime"]
 
     # gcc-runtime versions are declared dynamically
-    skip_version_audit = ["platform=linux", "platform=darwin"]
+    skip_version_audit = ["platform=linux", "platform=darwin", "platform=windows"]
 
     maintainers("haampie")
 
@@ -52,6 +52,9 @@ class GccRuntime(Package):
     provides("libgfortran@3", when="%gcc@:6")
     provides("libgfortran@4", when="%gcc@7")
     provides("libgfortran@5", when="%gcc@8:")
+
+    depends_on("libc", type="link", when="platform=linux")
+    depends_on("libc", type="link", when="platform=cray")
 
     def install(self, spec, prefix):
         if spec.platform in ["linux", "cray", "freebsd"]:

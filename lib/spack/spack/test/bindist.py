@@ -22,6 +22,7 @@ import pytest
 import archspec.cpu
 
 from llnl.util.filesystem import join_path, visit_directory_tree
+from llnl.util.symlink import readlink
 
 import spack.binary_distribution as bindist
 import spack.caches
@@ -390,11 +391,11 @@ def test_built_spec_cache(mirror_dir):
         assert any([r["spec"] == s for r in results])
 
 
-def fake_dag_hash(spec):
+def fake_dag_hash(spec, length=None):
     # Generate an arbitrary hash that is intended to be different than
     # whatever a Spec reported before (to test actions that trigger when
     # the hash changes)
-    return "tal4c7h4z0gqmixb1eqa92mjoybxn5l6"
+    return "tal4c7h4z0gqmixb1eqa92mjoybxn5l6"[:length]
 
 
 @pytest.mark.usefixtures(
@@ -1062,10 +1063,10 @@ def test_tarball_common_prefix(dummy_prefix, tmpdir):
         assert set(os.listdir(os.path.join("prefix2", "share"))) == {"file"}
 
         # Relative symlink should still be correct
-        assert os.readlink(os.path.join("prefix2", "bin", "relative_app_link")) == "app"
+        assert readlink(os.path.join("prefix2", "bin", "relative_app_link")) == "app"
 
         # Absolute symlink should remain absolute -- this is for relocation to fix up.
-        assert os.readlink(os.path.join("prefix2", "bin", "absolute_app_link")) == os.path.join(
+        assert readlink(os.path.join("prefix2", "bin", "absolute_app_link")) == os.path.join(
             dummy_prefix, "bin", "app"
         )
 

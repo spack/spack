@@ -150,7 +150,7 @@ class Wgrib2(MakefilePackage):
             makefile.filter(r"^%s=.*" % makefile_option, "{}={}".format(makefile_option, value))
 
     def setup_build_environment(self, env):
-        if self.spec.compiler.name in "intel":
+        if self.spec.compiler.name in ["oneapi", "intel"]:
             comp_sys = "intel_linux"
         elif self.spec.compiler.name in ["gcc", "clang", "apple-clang"]:
             comp_sys = "gnu_linux"

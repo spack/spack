@@ -127,16 +127,32 @@ trigger_node(TriggerID, Node, Node) :-
   trigger_condition_holds(TriggerID, Node),
   literal(TriggerID).
 
-% Since we trigger the existence of literal nodes from a condition, we need to construct
-% the condition_set/2 manually below
+% Since we trigger the existence of literal nodes from a condition, we need to construct the condition_set/2
 mentioned_in_literal(Root, Mentioned) :- mentioned_in_literal(TriggerID, Root, Mentioned), solve_literal(TriggerID).
-condition_set(node(min_dupe_id, Root), node(min_dupe_id, Mentioned)) :-  mentioned_in_literal(Root, Mentioned).
+condition_set(node(min_dupe_id, Root), node(min_dupe_id, Root)) :-  mentioned_in_literal(Root, Root).
+
+1 { condition_set(node(min_dupe_id, Root), node(0..Y-1, Mentioned)) : max_dupes(Mentioned, Y) } 1 :-
+  mentioned_in_literal(Root, Mentioned), Mentioned != Root.
 
 % Discriminate between "roots" that have been explicitly requested, and roots that are deduced from "virtual roots"
 explicitly_requested_root(node(min_dupe_id, Package)) :-
   solve_literal(TriggerID),
   trigger_and_effect(Package, TriggerID, EffectID),
   imposed_constraint(EffectID, "root", Package).
+
+
+% Keep track of which nodes are associated with which root DAG
+associated_with_root(RootNode, RootNode) :- attr("root", RootNode).
+
+associated_with_root(RootNode, ChildNode) :-
+   depends_on(ParentNode, ChildNode),
+   associated_with_root(RootNode, ParentNode).
+
+% We cannot have a node in the root condition set, that is not associated with that root
+:- attr("root", RootNode),
+   condition_set(RootNode, node(X, Package)),
+   not virtual(Package),
+   not associated_with_root(RootNode, node(X, Package)).
 
 #defined concretize_everything/0.
 #defined literal/1.
@@ -891,12 +907,8 @@ error(100, "{0} variant '{1}' cannot have values '{2}' and '{3}' as they come fr
      Set1 < Set2, % see[1]
      build(node(ID, Package)).
 
-% variant_set is an explicitly set variant value. If it's not 'set',
-% we revert to the default value. If it is set, we force the set value
-attr("variant_value", PackageNode, Variant, Value)
- :- attr("node", PackageNode),
-    node_has_variant(PackageNode, Variant),
-    attr("variant_set", PackageNode, Variant, Value).
+:- attr("variant_set", node(ID, Package), Variant, Value),
+   not attr("variant_value", node(ID, Package), Variant, Value).
 
 % The rules below allow us to prefer default values for variants
 % whenever possible. If a variant is set in a spec, or if it is
@@ -981,14 +993,13 @@ pkg_fact(Package, variant_single_value("dev_path"))
 % Platform semantics
 %-----------------------------------------------------------------------------
 
-% if no platform is set, fall back to the default
-error(100, "platform '{0}' is not allowed on the current host", Platform)
-  :- attr("node_platform", _, Platform), not allowed_platform(Platform).
+% NOTE: Currently we have a single allowed platform per DAG, therefore there is no
+% need to have additional optimization criteria. If we ever add cross-platform dags,
+% this needs to be changed.
+:- 2 { allowed_platform(Platform) }, internal_error("More than one allowed platform detected").
 
-attr("node_platform", PackageNode, Platform)
- :- attr("node", PackageNode),
-    not attr("node_platform_set", PackageNode),
-    node_platform_default(Platform).
+1 { attr("node_platform", PackageNode, Platform) : allowed_platform(Platform) } 1
+  :- attr("node", PackageNode).
 
 % setting platform on a node is a hard constraint
 attr("node_platform", PackageNode, Platform)
@@ -1012,14 +1023,6 @@ error(100, "Cannot select '{0} os={1}' (operating system '{1}' is not buildable)
     attr("node_os", node(X, Package), OS),
     not buildable_os(OS).
 
-% can't have dependencies on incompatible OS's
-error(100, "{0} and dependency {1} have incompatible operating systems 'os={2}' and 'os={3}'", Package, Dependency, PackageNodeOS, DependencyOS)
-  :- depends_on(node(X, Package), node(Y, Dependency)),
-     attr("node_os", node(X, Package), PackageNodeOS),
-     attr("node_os", node(Y, Dependency), DependencyOS),
-     not os_compatible(PackageNodeOS, DependencyOS),
-     build(node(X, Package)).
-
 % give OS choice weights according to os declarations
 node_os_weight(PackageNode, Weight)
  :- attr("node", PackageNode),
@@ -1031,13 +1034,6 @@ os_compatible(OS, OS) :- os(OS).
 
 % Transitive compatibility among operating systems
 os_compatible(OS1, OS3) :- os_compatible(OS1, OS2), os_compatible(OS2, OS3).
-
-% We can select only operating systems compatible with the ones
-% for which we can build software. We need a cardinality constraint
-% since we might have more than one "buildable_os(OS)" fact.
-:- not 1 { os_compatible(CurrentOS, ReusedOS) : buildable_os(CurrentOS) },
-   attr("node_os", Package, ReusedOS),
-   internal_error("Reused OS incompatible with build OS").
 
 % If an OS is set explicitly respect the value
 attr("node_os", PackageNode, OS) :- attr("node_os_set", PackageNode, OS), attr("node", PackageNode).
@@ -1085,6 +1081,9 @@ error(100, "{0} compiler '{2}@{3}' incompatible with 'target={1}'", Package, Tar
      compiler_name(CompilerID, Compiler),
      compiler_version(CompilerID, Version),
      build(node(X, Package)).
+
+#defined compiler_supports_target/2.
+#defined compiler_available/1.
 
 % if a target is set explicitly, respect it
 attr("node_target", PackageNode, Target)
@@ -1425,6 +1424,7 @@ opt_criterion(73, "deprecated versions used").
 #minimize{
     1@73+Priority,PackageNode
     : attr("deprecated", PackageNode, _),
+      not external(PackageNode),
       build_priority(PackageNode, Priority)
 }.
 
@@ -1432,11 +1432,11 @@ opt_criterion(73, "deprecated versions used").
 % 1. Version weight
 % 2. Number of variants with a non default value, if not set
 % for the root package.
-opt_criterion(70, "version weight").
+opt_criterion(70, "version badness (roots)").
 #minimize{ 0@270: #true }.
 #minimize{ 0@70: #true }.
 #minimize {
-    Weight@70+Priority
+    Weight@70+Priority,PackageNode
     : attr("root", PackageNode),
       version_weight(PackageNode, Weight),
       build_priority(PackageNode, Priority)
@@ -1526,13 +1526,14 @@ opt_criterion(30, "non-preferred OS's").
 }.
 
 % Choose more recent versions for nodes
-opt_criterion(25, "version badness").
+opt_criterion(25, "version badness (non roots)").
 #minimize{ 0@225: #true }.
 #minimize{ 0@25: #true }.
 #minimize{
     Weight@25+Priority,node(X, Package)
     : version_weight(node(X, Package), Weight),
       build_priority(node(X, Package), Priority),
+      not attr("root", node(X, Package)),
       not runtime(Package)
 }.
 

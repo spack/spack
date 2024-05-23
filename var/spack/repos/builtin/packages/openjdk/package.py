@@ -18,6 +18,12 @@ from spack.util.prefix import Prefix
 #    format returned by platform.system() and 'arch' by platform.machine()
 
 _versions = {
+    "21.0.0_35": {
+        "Linux-x86_64": (
+            "82f64c53acaa045370d6762ebd7441b74e6fda14b464d54d1ff8ca941ec069e6",
+            "https://github.com/adoptium/temurin21-binaries/releases/download/jdk-21%2B35/OpenJDK21U-jdk_x64_linux_hotspot_21_35.tar.gz",
+        )
+    },
     "17.0.8.1_1": {
         "Linux-x86_64": (
             "c25dfbc334068a48c19c44ce39ad4b8427e309ae1cfa83f23c102e78b8a6dcc0",
@@ -142,6 +148,16 @@ _versions = {
         "Linux-aarch64": (
             "1ffb9c7748334945d9056b3324de3f797d906fce4dad86beea955153aa1e28fe",
             "https://download.java.net/java/GA/jdk16.0.2/d4a915d82b4c4fbb9bde534da945d746/7/GPL/openjdk-16.0.2_linux-aarch64_bin.tar.gz",
+        ),
+    },
+    "15.0.2": {
+        "Linux-x86_64": (
+            "91ac6fc353b6bf39d995572b700e37a20e119a87034eeb939a6f24356fbcd207",
+            "https://download.java.net/java/GA/jdk15.0.2/0d1cfde4252546c6931946de8db48ee2/7/GPL/openjdk-15.0.2_linux-x64_bin.tar.gz",
+        ),
+        "Linux-aarch64": (
+            "3958f01858f9290c48c23e7804a0af3624e8eca6749b085c425df4c4f2f7dcbc",
+            "https://download.java.net/java/GA/jdk15.0.2/0d1cfde4252546c6931946de8db48ee2/7/GPL/openjdk-15.0.2_linux-aarch64_bin.tar.gz",
         ),
     },
     "11.0.20.1_1": {
@@ -348,8 +364,10 @@ class Openjdk(Package):
 
             version(ver, sha256=pkg[0], url=pkg[1], preferred=is_preferred)
 
+    provides("java@21", when="@21.0:21")
     provides("java@17", when="@17.0:17")
     provides("java@16", when="@16.0:16")
+    provides("java@15", when="@15.0:15")
     provides("java@11", when="@11.0:11")
     provides("java@10", when="@10.0:10")
     provides("java@9", when="@9.0:9")
@@ -366,6 +384,8 @@ class Openjdk(Package):
     extendable = True
 
     executables = ["^java$"]
+
+    skip_version_audit = ["platform=windows"]
 
     @classmethod
     def determine_version(cls, exe):

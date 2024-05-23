@@ -161,7 +161,11 @@ class WindowsRPath:
 
         Performs symlinking to incorporate rpath dependencies to Windows runtime search paths
         """
-        if sys.platform == "win32":
+        # If spec is an external, we should not be modifying its bin directory, as we would
+        # be doing in this method
+        # Spack should in general not modify things it has not installed
+        # we can reasonably expect externals to have their link interface properly established
+        if sys.platform == "win32" and not self.spec.external:
             self.win_rpath.add_library_dependent(*self.win_add_library_dependent())
             self.win_rpath.add_rpath(*self.win_add_rpath())
             self.win_rpath.establish_link()
@@ -468,7 +472,41 @@ def _names(when_indexed_dictionary):
     return sorted(all_names)
 
 
-class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
+class RedistributionMixin:
+    """Logic for determining whether a Package is source/binary
+    redistributable.
+    """
+
+    #: Store whether a given Spec source/binary should not be
+    #: redistributed.
+    disable_redistribute: Dict["spack.spec.Spec", "spack.directives.DisableRedistribute"]
+
+    # Source redistribution must be determined before concretization
+    # (because source mirrors work with un-concretized Specs).
+    @classmethod
+    def redistribute_source(cls, spec):
+        """Whether it should be possible to add the source of this
+        package to a Spack mirror.
+        """
+        for when_spec, disable_redistribute in cls.disable_redistribute.items():
+            if disable_redistribute.source and spec.satisfies(when_spec):
+                return False
+
+        return True
+
+    @property
+    def redistribute_binary(self):
+        """Whether it should be possible to create a binary out of an
+        installed instance of this package.
+        """
+        for when_spec, disable_redistribute in self.__class__.disable_redistribute.items():
+            if disable_redistribute.binary and self.spec.satisfies(when_spec):
+                return False
+
+        return True
+
+
+class PackageBase(WindowsRPath, PackageViewMixin, RedistributionMixin, metaclass=PackageMeta):
     """This is the superclass for all spack packages.
 
     ***The Package class***
@@ -1206,7 +1244,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         """Return the install test root directory."""
         tty.warn(
             "The 'pkg.install_test_root' property is deprecated with removal "
-            "expected v0.22. Use 'install_test_root(pkg)' instead."
+            "expected v0.23. Use 'install_test_root(pkg)' instead."
         )
         return install_test_root(self)
 
@@ -1864,7 +1902,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         """
         msg = (
             "'pkg.cache_extra_test_sources(srcs) is deprecated with removal "
-            "expected in v0.22. Use 'cache_extra_test_sources(pkg, srcs)' "
+            "expected in v0.23. Use 'cache_extra_test_sources(pkg, srcs)' "
             "instead."
         )
         warnings.warn(msg)
@@ -2412,9 +2450,18 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
 
         # on Windows, libraries of runtime interest are typically
         # stored in the bin directory
+        # Do not include Windows system libraries in the rpath interface
+        # these libraries are handled automatically by VS/VCVARS and adding
+        # Spack derived system libs into the link path or address space of a program
+        # can result in conflicting versions, which makes Spack packages less useable
         if sys.platform == "win32":
             rpaths = [self.prefix.bin]
-            rpaths.extend(d.prefix.bin for d in deps if os.path.isdir(d.prefix.bin))
+            rpaths.extend(
+                d.prefix.bin
+                for d in deps
+                if os.path.isdir(d.prefix.bin)
+                and "windows-system" not in getattr(d.package, "tags", [])
+            )
         else:
             rpaths = [self.prefix.lib, self.prefix.lib64]
             rpaths.extend(d.prefix.lib for d in deps if os.path.isdir(d.prefix.lib))
@@ -2521,7 +2568,12 @@ class PackageStillNeededError(InstallError):
     """Raised when package is still needed by another on uninstall."""
 
     def __init__(self, spec, dependents):
-        super().__init__("Cannot uninstall %s" % spec)
+        spec_fmt = spack.spec.DEFAULT_FORMAT + " /{hash:7}"
+        dep_fmt = "{name}{@versions} /{hash:7}"
+        super().__init__(
+            f"Cannot uninstall {spec.format(spec_fmt)}, "
+            f"needed by {[dep.format(dep_fmt) for dep in dependents]}"
+        )
         self.spec = spec
         self.dependents = dependents
 

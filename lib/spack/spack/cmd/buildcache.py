@@ -13,7 +13,6 @@ import os
 import shutil
 import sys
 import tempfile
-import urllib.request
 from typing import Dict, List, Optional, Tuple, Union
 
 import llnl.util.tty as tty
@@ -54,6 +53,7 @@ from spack.oci.image import (
 from spack.oci.oci import (
     copy_missing_layers_with_retry,
     get_manifest_and_config_with_retry,
+    list_tags,
     upload_blob_with_retry,
     upload_manifest_with_retry,
 )
@@ -132,6 +132,11 @@ def setup_parser(subparser: argparse.ArgumentParser):
         default=None,
         help="when pushing to an OCI registry, tag an image containing all root specs and their "
         "runtime dependencies",
+    )
+    push.add_argument(
+        "--private",
+        action="store_true",
+        help="for a private mirror, include non-redistributable packages",
     )
     arguments.add_common_arguments(push, ["specs", "jobs"])
     push.set_defaults(func=push_fn)
@@ -367,6 +372,25 @@ def _make_pool() -> MaybePool:
         return NoPool()
 
 
+def _skip_no_redistribute_for_public(specs):
+    remaining_specs = list()
+    removed_specs = list()
+    for spec in specs:
+        if spec.package.redistribute_binary:
+            remaining_specs.append(spec)
+        else:
+            removed_specs.append(spec)
+    if removed_specs:
+        colified_output = tty.colify.colified(list(s.name for s in removed_specs), indent=4)
+        tty.debug(
+            "The following specs will not be added to the binary cache"
+            " because they cannot be redistributed:\n"
+            f"{colified_output}\n"
+            "You can use `--private` to include them."
+        )
+    return remaining_specs
+
+
 def push_fn(args):
     """create a binary package and push it to a mirror"""
     if args.spec_file:
@@ -417,6 +441,8 @@ def push_fn(args):
         root="package" in args.things_to_install,
         dependencies="dependencies" in args.things_to_install,
     )
+    if not args.private:
+        specs = _skip_no_redistribute_for_public(specs)
 
     # When pushing multiple specs, print the url once ahead of time, as well as how
     # many specs are being pushed.
@@ -830,10 +856,7 @@ def _config_from_tag(image_ref: ImageReference, tag: str) -> Optional[dict]:
 
 
 def _update_index_oci(image_ref: ImageReference, tmpdir: str, pool: MaybePool) -> None:
-    request = urllib.request.Request(url=image_ref.tags_url())
-    response = spack.oci.opener.urlopen(request)
-    spack.oci.opener.ensure_status(request, response, 200)
-    tags = json.load(response)["tags"]
+    tags = list_tags(image_ref)
 
     # Fetch all image config files in parallel
     spec_dicts = pool.starmap(

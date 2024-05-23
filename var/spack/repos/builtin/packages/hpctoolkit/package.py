@@ -143,7 +143,7 @@ class Hpctoolkit(AutotoolsPackage, MesonPackage):
             depends_on("libtool", type="build")
 
         with when("@2024.02:"):
-            depends_on("pkgconf", type="build")
+            depends_on("pkgconfig", type="build")
             depends_on("cmake", type="build")
 
     boost_libs = (
@@ -234,6 +234,7 @@ class Hpctoolkit(AutotoolsPackage, MesonPackage):
 
     # Fix a bug where make would mistakenly overwrite hpcrun-fmt.h.
     # https://gitlab.com/hpctoolkit/hpctoolkit/-/merge_requests/751
+    @when("@:2022")
     def patch(self):
         with working_dir(join_path("src", "lib", "prof-lean")):
             if os.access("hpcrun-fmt.txt", os.F_OK):

@@ -18,14 +18,15 @@ class Molgw(MakefilePackage):
     MOLGW employs standard Gaussian basis set.
     """
 
-    homepage = "https://github.com/bruneval/molgw"
-    url = "https://github.com/bruneval/molgw/archive/v3.2.tar.gz"
-    git = "https://github.com/bruneval/molgw.git"
+    homepage = "https://github.com/molgw/molgw"
+    url = "https://github.com/molgw/molgw/archive/v3.3.tar.gz"
+    git = "https://github.com/molgw/molgw.git"
 
     maintainers("bruneval")
 
     license("GPL-3.0-only")
 
+    version("3.3", sha256="ff1c8eb736049e52608d4554a2d435ee9d15e47c4a9934d41712962748929e81")
     version("3.2", sha256="a3f9a99db52d95ce03bc3636b5999e6d92b503ec2f4afca33d030480c3e10242")
 
     variant("openmp", default=False, description="Build with OpenMP support")
@@ -50,7 +51,7 @@ class Molgw(MakefilePackage):
 
     def _get_mkl_ld_flags(self, spec):
         mklroot = str(getenv("MKLROOT"))
-        command = [mklroot + "/bin/intel64/mkl_link_tool", "-libs", "--quiet"]
+        command = [mklroot + "/bin/mkl_link_tool", "-libs", "--quiet"]
 
         if "+openmp" not in spec:
             command.extend(["--parallel=no"])
@@ -82,7 +83,11 @@ class Molgw(MakefilePackage):
         flags["PREFIX"] = prefix
 
         # Set LAPACK and SCALAPACK
-        if spec["lapack"].name not in INTEL_MATH_LIBRARIES:
+        if (
+            spec["scalapack"].name in INTEL_MATH_LIBRARIES
+            or spec["lapack"].name in INTEL_MATH_LIBRARIES
+            or spec["blas"].name in INTEL_MATH_LIBRARIES
+        ):
             flags["LAPACK"] = self._get_mkl_ld_flags(spec)
         else:
             flags["LAPACK"] = spec["lapack"].libs.ld_flags + " " + spec["blas"].libs.ld_flags
@@ -109,7 +114,11 @@ class Molgw(MakefilePackage):
         if "+scalapack" in spec:
             flags["CPPFLAGS"] = flags.get("CPPFLAGS", "") + " -DHAVE_SCALAPACK -DHAVE_MPI "
 
-        if spec["lapack"].name in INTEL_MATH_LIBRARIES:
+        if (
+            spec["lapack"].name in INTEL_MATH_LIBRARIES
+            or spec["scalapack"].name in INTEL_MATH_LIBRARIES
+            or spec["blas"].name in INTEL_MATH_LIBRARIES
+        ):
             flags["CPPFLAGS"] = flags.get("CPPFLAGS", "") + " -DHAVE_MKL "
 
         # Write configuration file

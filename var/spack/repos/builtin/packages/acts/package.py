@@ -42,6 +42,7 @@ class Acts(CMakePackage, CudaPackage):
     # Supported Acts versions
     version("main", branch="main")
     version("master", branch="main", deprecated=True)  # For compatibility
+    version("34.0.0", commit="daafd83adf0ce50f9667f3c9d4791a459e39fd1b", submodules=True)
     version("33.1.0", commit="00591a593a648430820e980b031301d25c18f1c7", submodules=True)
     version("33.0.0", commit="f6ed9013e76120137ae456583a04b554d88d9452", submodules=True)
     version("32.1.0", commit="5333c67b49b4bfcd45558090e4ba37b4f86b82db", submodules=True)

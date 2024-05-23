@@ -21,6 +21,7 @@ class PyOnnx(PythonPackage):
 
     license("Apache-2.0")
 
+    version("1.16.0", sha256="237c6987c6c59d9f44b6136f5819af79574f8d96a760a1fa843bede11f3822f7")
     version("1.15.0", sha256="b18461a7d38f286618ca2a6e78062a2a9c634ce498e631e708a8041b00094825")
     version("1.14.1", sha256="70903afe163643bd71195c78cedcc3f4fa05a2af651fd950ef3acbb15175b2d1")
     version("1.14.0", sha256="43b85087c6b919de66872a043c7f4899fe6f840e11ffca7e662b2ce9e4cc2927")
@@ -54,6 +55,7 @@ class PyOnnx(PythonPackage):
     depends_on("py-protobuf+cpp", type=("build", "run"))
     depends_on("py-numpy", type=("build", "run"))
     depends_on("py-numpy@1.16.6:", type=("build", "run"), when="@1.8.1:1.13")
+    depends_on("py-numpy@1.20:", type=("build", "run"), when="@1.16.0:")
 
     # Historical dependencies
     depends_on("py-six", type=("build", "run"), when="@:1.8.1")

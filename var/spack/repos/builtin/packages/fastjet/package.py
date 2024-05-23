@@ -72,6 +72,14 @@ class Fastjet(AutotoolsPackage):
     )
     variant("atlas", default=False, description="Patch to make random generator thread_local")
 
+    variant(
+        "cxxstd",
+        default="11",
+        values=("11", "17", "20", "23"),
+        multi=False,
+        description="Use the specified C++ standard when building",
+    )
+
     available_plugins = (
         conditional("atlascone", when="@2.4.0:"),
         conditional("cdfcones", when="@2.1.0:"),
@@ -126,3 +134,8 @@ class Fastjet(AutotoolsPackage):
             extra_args += ["--enable-thread-safety"]
 
         return extra_args
+
+    def flag_handler(self, name, flags):
+        if name == "cxxflags":
+            flags.append(f"-std=c++{self.spec.variants['cxxstd'].value}")
+        return (None, flags, None)
