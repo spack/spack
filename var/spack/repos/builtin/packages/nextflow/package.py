@@ -182,6 +182,7 @@ class Nextflow(Package):
         deprecated=True,
     )
 
+    depends_on("java@17", when="@24", type="run")
     depends_on("java", type="run")
 
     def install(self, spec, prefix):
