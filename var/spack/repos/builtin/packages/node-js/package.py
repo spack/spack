@@ -54,7 +54,7 @@ class NodeJs(Package):
     version(
         "20.13.1",
         preferred=True,
-        sha256="a85ee53aa0a5c2f5ca94fa414cdbceb91eb7d18a77fc498358512c14cc6c6991"
+        sha256="a85ee53aa0a5c2f5ca94fa414cdbceb91eb7d18a77fc498358512c14cc6c6991",
     )
     version("20.12.2", sha256="bc57ee721a12cc8be55bb90b4a9a2f598aed5581d5199ec3bd171a4781bfecda")
     version("18.20.2", sha256="68c165b9ceb7bc69dcdc75c6099723edb5ff0509215959af0775ed426174c404")
