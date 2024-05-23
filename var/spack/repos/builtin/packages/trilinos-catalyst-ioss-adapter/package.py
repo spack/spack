@@ -18,7 +18,7 @@ class TrilinosCatalystIossAdapter(CMakePackage):
     depends_on("bison", type="build")
     depends_on("flex", type="build")
     depends_on("paraview+mpi+python")
-    depends_on("gl")
+    depends_on("gl", type="run")
     requires("^[virtuals=gl] osmesa", msg="OSMesa is required for paraview")
     depends_on("py-numpy", type=("build", "run"))
     # Here we avoid paraview trying to use netcdf-c~parallel-netcdf
