@@ -39,7 +39,7 @@ class PyPyspark(PythonPackage):
             depends_on("py-grpcio@1.56:", when="+connect")
             depends_on("py-grpcio-status@1.56:", when="+connect")
             depends_on("py-googleapis-common-protos@1.56.4:", when="+connect")
-            
+
         with when("@3.4:"):
             depends_on("py-grpcio@1.48.1:", when="+connect")
             depends_on("py-grpcio-status@1.48.1:", when="+connect")

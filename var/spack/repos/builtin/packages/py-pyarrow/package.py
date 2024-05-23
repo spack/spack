@@ -66,7 +66,6 @@ class PyPyarrow(PythonPackage, CudaPackage):
     # Prior to python 3.9 numpy must be >=0.14,<1.25
     depends_on("py-numpy@0.14:1.24", when="^python@:3.8")
     depends_on("py-numpy@1.25:", when="^python@3.9:")
-    
 
     arrow_versions = (
         "@0.9.0",
