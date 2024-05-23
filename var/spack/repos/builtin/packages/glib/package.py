@@ -136,7 +136,7 @@ class Glib(MesonPackage, AutotoolsPackage):
 
     with when("build_system=meson"):
         depends_on("meson@1.2.0:", when="@2.79:", type="build")
-        depends_on("meson@0.60.0:", when="@2.73:", type="build")
+        depends_on("meson@0.60.0:", when="@2.73:2.78", type="build")
         depends_on("meson@0.52.0:", when="@2.71:2.72", type="build")
         depends_on("meson@0.49.2:", when="@2.61.2:2.70", type="build")
         depends_on("meson@0.48.0:", when="@:2.61.1", type="build")
