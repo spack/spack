@@ -2999,6 +2999,7 @@ def test_spec_filters(specs, include, exclude, expected):
     assert f.selected_specs() == expected
 
 
+@pytest.mark.only_clingo("Feature not implemented in the original concretizer")
 def test_branch_based_versions_pin_to_commits(
     mock_git_version_info, database, mock_packages, monkeypatch, do_not_check_runtimes_on_reuse
 ):
