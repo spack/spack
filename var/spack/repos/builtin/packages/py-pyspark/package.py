@@ -35,9 +35,15 @@ class PyPyspark(PythonPackage):
         depends_on("py-pandas@1.0.5:", when="+pandas")
         depends_on("py-numpy@1.15:", when="+pandas")
 
-        depends_on("py-grpcio@1.48:", when="+connect")
-        depends_on("py-grpcio-status@1.48:", when="+connect")
-        depends_on("py-googleapis-common-protos@1.56.4:", when="+connect")
+        with when("@3.5.1:"):
+            depends_on("py-grpcio@1.56:", when="+connect")
+            depends_on("py-grpcio-status@1.56:", when="+connect")
+            depends_on("py-googleapis-common-protos@1.56.4:", when="+connect")
+            
+        with when("@3.4:"):
+            depends_on("py-grpcio@1.48.1:", when="+connect")
+            depends_on("py-grpcio-status@1.48.1:", when="+connect")
+            depends_on("py-googleapis-common-protos@1.56.4:", when="+connect")
 
     depends_on("py-setuptools", type="build")
     with default_args(type=("build", "run")):
