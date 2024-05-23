@@ -92,7 +92,7 @@ class Emacs(AutotoolsPackage, GNUMirrorPackage):
             args = ["--without-x"]
 
         if sys.platform == "darwin":
-            if "+gui" in spec:
+            if spec.satisfies("+gui"):
                 # Do not build the self-contained "nextstep/Emacs.app"
                 args.append("--disable-ns-self-contained")
             else:
