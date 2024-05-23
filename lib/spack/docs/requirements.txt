@@ -1,6 +1,6 @@
 sphinx==7.2.6
 sphinxcontrib-programoutput==0.17
-sphinx_design==0.5.0
+sphinx_design==0.6.0
 sphinx-rtd-theme==2.0.0
 python-levenshtein==0.25.1
 docutils==0.20.1
