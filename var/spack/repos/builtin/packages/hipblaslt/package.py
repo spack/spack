@@ -45,14 +45,17 @@ class Hipblaslt(CMakePackage):
 
     # Sets the proper for clang++ and clang-offload-blunder.
     # Also adds hipblas and msgpack include directories
-    patch("001_Set_LLVM_Paths_And_Add_Includes.patch")
+    patch("001_Set_LLVM_Paths_And_Add_Includes.patch", when="@6.0")
+    # Below patch sets the proper path for clang++ and clang-offload-blunder.
+    # Also adds hipblas and msgpack include directories for 6.1.0 release.
+    patch("0001-Set-LLVM_Path-Add-Hiblas-Include-to-CmakeLists-6.1.Patch", when="@6.1")
 
     def setup_build_environment(self, env):
         env.set("CXX", self.spec["hip"].hipcc)
 
     def cmake_args(self):
         args = [
-            self.define("Tensile_CODE_OBJECT_VERSION", "V3"),
+            self.define("Tensile_CODE_OBJECT_VERSION", "default"),
             self.define("MSGPACK_DIR", self.spec["msgpack-c"].prefix),
             self.define_from_variant("ADDRESS_SANITIZER", "asan"),
             self.define("BUILD_CLIENTS_TESTS", self.run_tests),
