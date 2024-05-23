@@ -55,14 +55,18 @@ class Hipsparselt(CMakePackage, ROCmPackage):
     depends_on("py-joblib")
     depends_on("googletest@1.10.0:", type="test")
 
-    patch("0001-update-llvm-path-add-hipsparse-include-dir-for-spack.patch", when="@6.0:")
+    patch("0001-update-llvm-path-add-hipsparse-include-dir-for-spack.patch", when="@6.0")
+    # Below patch sets the proper path for clang++,lld and clang-offload-blunder inside the
+    # tensorlite subdir of hipblas . Also adds hipsparse and msgpack include directories
+    # for 6.1.0 release.
+    patch("0001-update-llvm-path-add-hipsparse-include-dir-for-spack-6.1.patch", when="@6.1")
 
     def setup_build_environment(self, env):
         env.set("CXX", self.spec["hip"].hipcc)
 
     def cmake_args(self):
         args = [
-            self.define("Tensile_CODE_OBJECT_VERSION", "V3"),
+            self.define("Tensile_CODE_OBJECT_VERSION", "default"),
             self.define("MSGPACK_DIR", self.spec["msgpack-c"].prefix),
             self.define_from_variant("BUILD_ADDRESS_SANITIZER", "asan"),
             self.define("BUILD_CLIENTS_TESTS", self.run_tests),
