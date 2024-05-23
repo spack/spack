@@ -13,7 +13,6 @@ import spack.bootstrap
 import spack.config
 import spack.relocate
 from spack.util.elf import ElfParsingError, parse_elf
-from spack.util.executable import Executable
 
 
 def is_shared_library_elf(filepath):
