@@ -1939,6 +1939,11 @@ class SpackSolverSetup:
             for virtual in virtuals:
                 clauses.append(fn.attr("virtual_on_incoming_edges", spec.name, virtual))
 
+        # If the spec is external and concrete, we allow all the libcs on the system
+        if spec.external and spec.concrete and using_libc_compatibility():
+            for libc in self.libcs:
+                clauses.append(fn.attr("compatible_libc", spec.name, libc.name, libc.version))
+
         # add all clauses from dependencies
         if transitive:
             # TODO: Eventually distinguish 2 deps on the same pkg (build and link)
