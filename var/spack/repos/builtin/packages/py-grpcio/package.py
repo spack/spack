@@ -47,7 +47,8 @@ class PyGrpcio(PythonPackage):
         depends_on("py-coverage@4:")
         depends_on("py-wheel@0.29:")
         depends_on("py-cython@3:", when="@1.63.0:")
-        depends_on("py-cython@0.29.8:", when="@1.49.0:1.62")
+        depends_on("py-cython@0.29.8:2", when="@1.56.0:1.62")
+        depends_on("py-cython@0.29.8:", when="@1.49.0:1.55")
 
         depends_on("py-protobuf@5.26.1:5", when="@1.63.0:")
         depends_on("py-protobuf@4.21.3:4", when="@1.49.0:1.62")
