@@ -25,8 +25,10 @@ class Libfabric(AutotoolsPackage):
 
     version("main", branch="main")
     version("1.21.0", sha256="0c1b7b830d9147f661e5d7f359250b85b5a9885c330464cd3b5e5d35b86551c7")
+    version("1.20.2", sha256="75b89252a0b8b3eae8e60f7098af1598445a99a99e8fc1ff458e2fd5d4ef8cde")
     version("1.20.1", sha256="fd88d65c3139865d42a6eded24e121aadabd6373239cef42b76f28630d6eed76")
     version("1.20.0", sha256="7fbbaeb0e15c7c4553c0ac5f54e4ef7aecaff8a669d4ba96fa04b0fc780b9ddc")
+    version("1.19.1", sha256="b8839e56d80470a917453a7d8ad9cb717f6683fee28cf93de5f3a056ed4f04c8")
     version("1.19.0", sha256="f14c764be9103e80c46223bde66e530e5954cb28b3835b57c8e728479603ef9e")
     version("1.18.2", sha256="64d7837853ca84d2a413fdd96534b6a81e6e777cc13866e28cf86cd0ccf1b93e")
     version("1.18.1", sha256="4615ae1e22009e59c72ae03c20adbdbd4a3dce95aeefbc86cc2bf1acc81c9e38")
