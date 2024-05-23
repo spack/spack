@@ -68,6 +68,8 @@ class CMakeBuilder(cmake.CMakeBuilder):
             ),
             self.define_from_variant("GPERFTOOLS_BUILD_DEBUGALLOC", "debugalloc"),
             self.define_from_variant("gperftools_enable_libunwind", "libunwind"),
+            self.define("gperftools_build_benchmark", False),
+            self.define("BUILD_TESTING", False),
         ]
 
 
