@@ -96,11 +96,10 @@ class Npm(Package):
         if spec.satisfies("@:9.4.1"):
             node("bin/npm-cli.js", "install", "-ddd", "--global", f"--prefix={prefix}", ".")
         else:
-            which("rm")("-rf", "node_modules","package-lock.json")
-            node("bin/npm-cli.js", "cache", "clean", "--force")
+            node("bin/npm-cli.js", "install ", "--package-lock-only")
             node(
                 "bin/npm-cli.js",
-                "install",
+                "ci",
                 "-ddd",
                 "--global",
                 f"--prefix={prefix}",
