@@ -39,7 +39,7 @@ class PyGoogleapisCommonProtos(PythonPackage):
         depends_on("py-protobuf@3.6.0:", when="@1.6.0:")
 
     # Explicitly incompatibile versions per setup.py
-    conflicts("py-protobuf@3.20:3.21.1")
+    conflicts("py-protobuf@3.20:3.20.1")
     conflicts("py-protobuf@4.21.1:4.21.5")
 
     with when("+grpc"), default_args(type="run"):
