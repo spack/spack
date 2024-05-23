@@ -99,6 +99,7 @@ class Npm(Package):
             node(
                 "bin/npm-cli.js",
                 "install",
+                "--verbose",
                 "-ddd",
                 "--global",
                 f"--prefix={prefix}",
