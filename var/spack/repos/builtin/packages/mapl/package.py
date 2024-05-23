@@ -224,6 +224,10 @@ class Mapl(CMakePackage):
         values=("Debug", "Release", "Aggressive"),
     )
 
+    # https://github.com/JCSDA/spack-stack/issues/769
+    conflicts("+pflogger", when="@:2.40.3 %intel@2021.7:")
+    conflicts("+extdata2g", when="@:2.40.3 %intel@2021.7:")
+
     depends_on("cmake@3.17:", type="build")
     depends_on("mpi")
     depends_on("hdf5")
