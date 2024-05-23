@@ -171,7 +171,7 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
 
     # VTK-m and transitively ParaView does not support Tesla Arch
     for _arch in range(10, 14):
-        conflicts("cuda_arch=%d" % _arch, when="+cuda", msg="ParaView requires cuda_arch >= 20")
+        conflicts(f"cuda_arch={_arch}", when="+cuda", msg="ParaView requires cuda_arch >= 20")
 
     # Starting from cmake@3.18, CUDA architecture managament can be delegated to CMake.
     # Hence, it is possible to rely on it instead of relying on custom logic updates from VTK-m for
