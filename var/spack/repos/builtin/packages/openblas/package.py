@@ -26,7 +26,6 @@ class Openblas(CMakePackage, MakefilePackage):
     license("BSD-3-Clause")
 
     version("develop", branch="develop")
-    version("0.3.27", sha256="aa2d68b1564fe2b13bc292672608e9cdeeeb6dc34995512e65c3b10f4599e897")
     version("0.3.26", sha256="4e6e4f5cb14c209262e33e6816d70221a2fe49eb69eaf0a06f065598ac602c68")
     version("0.3.25", sha256="4c25cb30c4bb23eddca05d7d0a85997b8db6144f5464ba7f8c09ce91e2f35543")
     version("0.3.24", sha256="ceadc5065da97bd92404cac7254da66cc6eb192679cf1002098688978d4d5132")
@@ -452,9 +451,9 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
         # When mixing compilers make sure that
         # $SPACK_ROOT/lib/spack/env/<compiler> have symlinks with reasonable
         # names and hack them inside lib/spack/spack/compilers/<compiler>.py
-        make_defs = [f"CC={spack_cc}"]
+        make_defs = ["CC={0}".format(spack_cc)]
         if "~fortran" not in self.spec:
-            make_defs += [f"FC={spack_fc}"]
+            make_defs += ["FC={0}".format(spack_fc)]
 
         # force OpenBLAS to use externally defined parallel build
         if self.spec.version < Version("0.3"):
@@ -474,9 +473,9 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
 
         if "~shared" in self.spec:
             if "+pic" in self.spec:
-                make_defs.append(f"CFLAGS={self.pkg.compiler.cc_pic_flag}")
+                make_defs.append("CFLAGS={0}".format(self.pkg.compiler.cc_pic_flag))
                 if "~fortran" not in self.spec:
-                    make_defs.append(f"FFLAGS={self.pkg.compiler.f77_pic_flag}")
+                    make_defs.append("FFLAGS={0}".format(self.pkg.compiler.f77_pic_flag))
             make_defs += ["NO_SHARED=1"]
         # fix missing _dggsvd_ and _sggsvd_
         if self.spec.satisfies("@0.2.16"):
@@ -503,7 +502,7 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
 
         suffix = self.spec.variants["symbol_suffix"].value
         if suffix != "none":
-            make_defs += [f"SYMBOLSUFFIX={suffix}"]
+            make_defs += ["SYMBOLSUFFIX={0}".format(suffix)]
 
         # Synchronize floating-point control and status register (FPCSR)
         # between threads (x86/x86_64 only).
@@ -548,7 +547,7 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
 
     @property
     def install_targets(self):
-        make_args = ["install", f"PREFIX={self.prefix}"]
+        make_args = ["install", "PREFIX={0}".format(self.prefix)]
         return make_args + self.make_defs
 
     @run_after("install")
