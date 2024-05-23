@@ -50,11 +50,12 @@ class NodeJs(Package):
     )
 
     # LTS (recommended for most users) - even major number
+    version("20.12.2", sha256="bc57ee721a12cc8be55bb90b4a9a2f598aed5581d5199ec3bd171a4781bfecda")
     version(
-        "20.12.2",
-        sha256="bc57ee721a12cc8be55bb90b4a9a2f598aed5581d5199ec3bd171a4781bfecda",
+        "18.20.2",
+        preferred=True,
+        sha256="68c165b9ceb7bc69dcdc75c6099723edb5ff0509215959af0775ed426174c404",
     )
-    version("18.20.2", preferred=True, sha256="68c165b9ceb7bc69dcdc75c6099723edb5ff0509215959af0775ed426174c404")
     version("18.12.1", sha256="ba8174dda00d5b90943f37c6a180a1d37c861d91e04a4cb38dc1c0c74981c186")
     version("16.20.2", sha256="33188eb11b977113adb65b2e09d71bddd63f12168ba73ceadae6c27938dc9e93")
     version("16.18.1", sha256="3d24c9c3a953afee43edc44569045eda56cd45cd58b0539922d17da62736189c")
