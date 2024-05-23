@@ -22,6 +22,7 @@ class NodeJs(Package):
     license("Unicode-TOU")
 
     # Current (latest features) - odd major number
+    version("22.2.0", sha256="2210ce0a40aa6aec3cc118228fdad6536607002319b1fde24260d179118c1055")
     version("21.7.3", sha256="ce1f61347671ef219d9c2925313d629d3fef98fc8d7f5ef38dd4656f7d0f58e7")
     version(
         "19.9.0",
@@ -51,10 +52,11 @@ class NodeJs(Package):
 
     # LTS (recommended for most users) - even major number
     version(
-        "20.12.2",
+        "20.13.1",
         preferred=True,
-        sha256="bc57ee721a12cc8be55bb90b4a9a2f598aed5581d5199ec3bd171a4781bfecda"
+        sha256="a85ee53aa0a5c2f5ca94fa414cdbceb91eb7d18a77fc498358512c14cc6c6991"
     )
+    version("20.12.2", sha256="bc57ee721a12cc8be55bb90b4a9a2f598aed5581d5199ec3bd171a4781bfecda")
     version("18.20.2", sha256="68c165b9ceb7bc69dcdc75c6099723edb5ff0509215959af0775ed426174c404")
     version("18.12.1", sha256="ba8174dda00d5b90943f37c6a180a1d37c861d91e04a4cb38dc1c0c74981c186")
     version("16.20.2", sha256="33188eb11b977113adb65b2e09d71bddd63f12168ba73ceadae6c27938dc9e93")
