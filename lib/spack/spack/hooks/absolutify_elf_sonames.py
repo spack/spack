@@ -13,7 +13,6 @@ import spack.bootstrap
 import spack.config
 import spack.relocate
 from spack.util.elf import ElfParsingError, parse_elf
-from spack.util.executable import Executable
 
 
 def is_shared_library_elf(filepath):
@@ -149,10 +148,9 @@ def post_install(spec, explicit=None):
         return
 
     # Should failing to locate patchelf be a hard error?
-    patchelf_path = spack.relocate._patchelf()
-    if not patchelf_path:
+    patchelf = spack.relocate._patchelf()
+    if not patchelf:
         return
-    patchelf = Executable(patchelf_path)
 
     fixes = find_and_patch_sonames(spec.prefix, spec.package.non_bindable_shared_objects, patchelf)
 
