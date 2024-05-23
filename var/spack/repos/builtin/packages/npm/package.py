@@ -18,6 +18,7 @@ class Npm(Package):
 
     license("Artistic-2.0")
 
+    version("10.8.0", sha256="00f8f31f9847fec0e5615b5571555c3e766a4601431c0817bf6e4b73668571ae")
     version("10.5.2", sha256="df0a1f7691654b94786013e5d5b80a873a7ffbae9c82c3bec8b5db76bc3b7dfd")
     version("9.9.3", sha256="d835b2d7293ce928e98bc967a05a3ef5ac48d4ea10bb8fb1a1dd1049dc5ef06e")
     version("9.3.1", sha256="41caa26a340b0562bc5429d28792049c980fe3e872b42b82cad94e8f70e37f40")
@@ -95,6 +96,7 @@ class Npm(Package):
         if spec.satisfies("@:9.4.1"):
             node("bin/npm-cli.js", "install", "-ddd", "--global", f"--prefix={prefix}", ".")
         else:
+            node("bin/npm-cli.js", "cache", "clean", "--force")
             node(
                 "bin/npm-cli.js",
                 "install",
