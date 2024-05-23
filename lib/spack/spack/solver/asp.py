@@ -3347,11 +3347,14 @@ class SpecBuilder:
         self._specs[node].update_variant_validate(name, value)
 
     def _associated_branch(self, version_string, package_class):
-        version = vn.Version(version_string)
-        version_dict = package_class.versions.get(version, {})
-        return version_dict.get("branch", None)
+        if hasattr(package_class, "git"):
+            version = vn.Version(version_string)
+            version_dict = package_class.versions.get(version, {})
+            return version_dict.get("branch", None)
+        else:
+            return None
 
-    def _retrieve_latest_hash(self, branch_name, package_class):
+    def _retrieve_latest_git_hash(self, branch_name, package_class):
         # remote git operations can sometimes have banners so we must parse the output for a sha
         query = (
             spack.util.git.git(required=True)(
@@ -3377,7 +3380,7 @@ class SpecBuilder:
             pkg = self._specs[node].package_class
             branch = self._associated_branch(version, pkg)
             if branch:
-                hash = self._retrieve_latest_hash(branch, pkg)
+                hash = self._retrieve_latest_git_hash(branch, pkg)
                 version = f"git.{hash}={version}"
         self._specs[node].versions = vn.VersionList([vn.Version(version)])
 
