@@ -15,7 +15,7 @@ class DlaFutureFortran(CMakePackage):
     url = "https://github.com/eth-cscs/DLA-Future-Fortran/archive/v0.0.0.tar.gz"
     git = "https://github.com/eth-cscs/DLA-Future-Fortran.git"
 
-    maintainers("RMeli", "rasolca")
+    maintainers("RMeli", "rasolca", "aurianer")
 
     license("BSD-3-Clause")
 
@@ -29,6 +29,7 @@ class DlaFutureFortran(CMakePackage):
     depends_on("cmake@3.22:", type="build")
 
     depends_on("dla-future@0.4.1: +scalapack")
+    depends_on("dla-future +shared", when="+shared")
 
     depends_on("mpi", when="+test")
     depends_on("py-fypp", when="+test", type="build")
