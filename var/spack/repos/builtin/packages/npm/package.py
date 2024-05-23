@@ -108,7 +108,7 @@ class Npm(Package):
             )
 
     def setup_build_environment(self, env):
-        env.set("DISABLE_V8_COMPILE_CACHE","1")
+        env.set("DISABLE_V8_COMPILE_CACHE", "1")
 
     def setup_dependent_build_environment(self, env, dependent_spec):
         npm_config_cache_dir = "%s/npm-cache" % dependent_spec.prefix
