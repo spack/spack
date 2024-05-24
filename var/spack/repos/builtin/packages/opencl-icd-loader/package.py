@@ -62,5 +62,5 @@ class OpenclIcdLoader(CMakePackage):
 
     def cmake_args(self):
         headers_include_dir = self.spec["opencl-c-headers"].prefix.include
-        args = [f"-DOPENCL_ICD_LOADER_HEADERS_DIR={headers_include_dir}"]
+        args = [self.define("OPENCL_ICD_LOADER_HEADERS_DIR", headers_include_dir)]
         return args
