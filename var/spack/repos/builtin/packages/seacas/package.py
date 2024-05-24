@@ -234,10 +234,13 @@ class Seacas(CMakePackage):
     # if fmt@9.1.0%gcc is mixed with an %apple-clang seacas build
     # it triggers a bug in apple-clang w.r.t how symbols are mangled
     # https://github.com/spack/spack/issues/44330
-    conflicts("fmt@9%gcc", msg="""Cannot mix gcc/apple-clang toolchains 
+    conflicts(
+        "fmt@9%gcc",
+        msg="""Cannot mix gcc/apple-clang toolchains 
               for this library combination. 
-              See https://github.com/spack/spack/issues/44330""",              
-              when="%apple-clang")
+              See https://github.com/spack/spack/issues/44330""",
+        when="%apple-clang",
+    )
 
     depends_on("catch2@3:", when="@2024-03-11:+tests")
 
