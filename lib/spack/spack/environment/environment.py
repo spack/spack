@@ -2467,6 +2467,24 @@ def _equiv_dict(first, second):
     return same_values and same_keys_with_same_overrides
 
 
+def unique_roots(concretized_specs):
+    """For a list of user/concretized spec pairs, return the list of
+    entries filtering out any that appear as a dependency of any of
+    the others.
+    """
+    concretized_specs = list(concretized_specs)
+    concretized_roots = list(y for x, y in concretized_specs)
+
+    unique = list()
+
+    for i, root in enumerate(concretized_roots):
+        others = concretized_roots[:i] + concretized_roots[i+1:]
+        if not any(root in x for x in others):
+            unique.append(concretized_specs[i])
+
+    return unique
+
+
 def display_specs(concretized_specs):
     """Displays the list of specs returned by `Environment.concretize()`.
 
@@ -2484,7 +2502,7 @@ def display_specs(concretized_specs):
             hashes=True,
         )
 
-    for user_spec, concrete_spec in concretized_specs:
+    for user_spec, concrete_spec in unique_roots(concretized_specs):
         tty.msg("Concretized {0}".format(user_spec))
         sys.stdout.write(_tree_to_display(concrete_spec))
         print("")

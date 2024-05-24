@@ -843,3 +843,25 @@ def test_root_version_weights_for_old_versions(mutable_mock_env_path, mock_packa
 
     assert bowtie.satisfies("@=1.3.0")
     assert gcc.satisfies("@=1.0")
+
+
+def test_unique_roots(mutable_mock_env_path, mock_packages):
+    mutable_mock_env_path.mkdir()
+    spack_yaml = mutable_mock_env_path / ev.manifest_name
+    spack_yaml.write_text("""\
+spack:
+  specs:
+  - mpileaks
+  - callpath
+  - dependent-install
+  - dependency-install
+  concretizer:
+    unify: true
+"""
+    )
+    e = ev.Environment(mutable_mock_env_path)
+    with e:
+        e.concretize()
+
+    filtered = ev.unique_roots(e.concretized_specs())
+    assert len(filtered) == 2
