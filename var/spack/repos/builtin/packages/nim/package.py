@@ -18,22 +18,10 @@ class Nim(Package):
 
     license("MIT")
 
-    version(
-        "2.0.4",
-        sha256="71526bd07439dc8e378fa1a6eb407eda1298f1f3d4df4476dca0e3ca3cbe3f09",
-    )
-    version(
-        "1.9.3",
-        sha256="d8de7515db767f853d9b44730f88ee113bfe9c38dcccd5afabc773e2e13bf87c",
-    )
-    version(
-        "1.4.4",
-        sha256="6d73729def143f72fc2491ca937a9cab86d2a8243bd845a5d1403169ad20660e",
-    )
-    version(
-        "1.4.2",
-        sha256="03a47583777dd81380a3407aa6a788c9aa8a67df4821025770c9ac4186291161",
-    )
+    version("2.0.4", sha256="71526bd07439dc8e378fa1a6eb407eda1298f1f3d4df4476dca0e3ca3cbe3f09")
+    version("1.9.3", sha256="d8de7515db767f853d9b44730f88ee113bfe9c38dcccd5afabc773e2e13bf87c")
+    version("1.4.4", sha256="6d73729def143f72fc2491ca937a9cab86d2a8243bd845a5d1403169ad20660e")
+    version("1.4.2", sha256="03a47583777dd81380a3407aa6a788c9aa8a67df4821025770c9ac4186291161")
     version(
         "0.20.0",
         sha256="51f479b831e87b9539f7264082bb6a64641802b54d2691b3c6e68ac7e2699a90",
