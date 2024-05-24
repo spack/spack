@@ -17,9 +17,8 @@ class PyPandas(PythonPackage):
 
     skip_modules = ["pandas.tests", "pandas.plotting._matplotlib", "pandas.core._numba.kernels"]
 
-    maintainers("adamjstewart")
-
     license("Apache-2.0")
+    maintainers("adamjstewart", "rgommers")
 
     version("2.2.2", sha256="9e79019aba43cb4fda9e4d983f8e88ca0373adbb697ae9c6c43093218de28b54")
     version("2.2.1", sha256="0ab90f87093c13f3e8fa45b48ba9f39181046e8f3317d3aadb2fffbb1b978572")
