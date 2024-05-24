@@ -236,8 +236,8 @@ class Seacas(CMakePackage):
     # https://github.com/spack/spack/issues/44330
     conflicts(
         "fmt@9%gcc",
-        msg="""Cannot mix gcc/apple-clang toolchains 
-              for this library combination. 
+        msg="""Cannot mix gcc/apple-clang toolchains
+              for this library combination.
               See https://github.com/spack/spack/issues/44330""",
         when="%apple-clang",
     )
