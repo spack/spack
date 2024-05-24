@@ -224,6 +224,8 @@ class IntelOneapiMkl(IntelOneApiLibraryPackage):
                     "^intel-oneapi-mpi",
                     "^intel-mpi",
                     "^mpich",
+                    "^mvapich",
+                    "^mvapich2",
                     "^cray-mpich",
                     "mpi_family=mpich",
                 ]
