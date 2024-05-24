@@ -101,6 +101,8 @@ class Proj(CMakePackage, AutotoolsPackage):
         depends_on("cmake@3.5:", when="@5", type="build")
         depends_on("cmake@2.6:", when="@:4", type="build")
         # tiff does not set TIFF_INCLUDE_DIR tested by proj
+        # version 9.2 contains this patch:
+        # https://github.com/OSGeo/PROJ/blob/9.2/src/lib_proj.cmake#L458
         patch("tiff_target.patch", when="@8.1:9.1.1+tiff")
 
     with when("build_system=autotools"):
