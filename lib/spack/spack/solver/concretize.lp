@@ -1345,8 +1345,10 @@ build(PackageNode) :- not attr("hash", PackageNode, _), attr("node", PackageNode
 % topmost-priority criterion to reuse what is installed.
 %
 % The priority ranges are:
-%   200+        Shifted priorities for build nodes; correspond to priorities 0 - 99.
-%   100 - 199   Unshifted priorities. Currently only includes minimizing #builds.
+%   1000+       Optimizations for concretization errors
+%   300 - 1000  Highest priority optimizations for valid solutions
+%   200 - 299   Shifted priorities for build nodes; correspond to priorities 0 - 99.
+%   100 - 199   Unshifted priorities. Currently only includes minimizing #builds and minimizing dupes.
 %   0   -  99   Priorities for non-built nodes.
 build_priority(PackageNode, 200) :- build(PackageNode), attr("node", PackageNode).
 build_priority(PackageNode, 0)   :- not build(PackageNode), attr("node", PackageNode).
@@ -1394,6 +1396,16 @@ build_priority(PackageNode, 0)   :- not build(PackageNode), attr("node", Package
 %   2. a `#minimize{ 0@2 : #true }.` statement that ensures the criterion
 %      is displayed (clingo doesn't display sums over empty sets by default)
 
+% A condition group specifies one or more specs that must be satisfied.
+% Specs declared first are preferred, so we assign increasing weights and
+% minimize the weights.
+opt_criterion(310, "requirement weight").
+#minimize{ 0@310: #true }.
+#minimize {
+    Weight@310,PackageNode,Group
+    : requirement_weight(PackageNode, Group, Weight)
+}.
+
 % Try hard to reuse installed packages (i.e., minimize the number built)
 opt_criterion(110, "number of packages to build (vs. reuse)").
 #minimize { 0@110: #true }.
@@ -1404,18 +1416,6 @@ opt_criterion(100, "number of nodes from the same package").
 #minimize { ID@100,Package : attr("node", node(ID, Package)) }.
 #minimize { ID@100,Package : attr("virtual_node", node(ID, Package)) }.
 #defined optimize_for_reuse/0.
-
-% A condition group specifies one or more specs that must be satisfied.
-% Specs declared first are preferred, so we assign increasing weights and
-% minimize the weights.
-opt_criterion(75, "requirement weight").
-#minimize{ 0@275: #true }.
-#minimize{ 0@75: #true }.
-#minimize {
-    Weight@75+Priority,PackageNode,Group
-    : requirement_weight(PackageNode, Group, Weight),
-      build_priority(PackageNode, Priority)
-}.
 
 % Minimize the number of deprecated versions being used
 opt_criterion(73, "deprecated versions used").
