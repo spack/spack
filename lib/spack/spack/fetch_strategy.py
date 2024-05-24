@@ -1318,9 +1318,7 @@ class S3FetchStrategy(URLFetchStrategy):
         parsed_url = urllib.parse.urlparse(self.url)
         if parsed_url.scheme != "s3":
             raise spack.error.FetchError("S3FetchStrategy can only fetch from s3:// urls.")
-        import pdb
 
-        pdb.set_trace()
         tty.debug("Fetching {0}".format(self.url))
 
         basename = os.path.basename(parsed_url.path)

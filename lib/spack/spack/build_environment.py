@@ -57,8 +57,8 @@ import spack.build_systems.cmake
 import spack.build_systems.meson
 import spack.build_systems.python
 import spack.builder
-import spack.compilers
 import spack.compiler
+import spack.compilers
 import spack.config
 import spack.deptypes as dt
 import spack.error

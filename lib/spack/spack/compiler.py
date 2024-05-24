@@ -20,9 +20,9 @@ import llnl.util.tty as tty
 from llnl.util.filesystem import path_contains_subdirectory, paths_containing_libs, temp_cwd
 
 import spack.error
-import spack.schema.environment
 import spack.paths
 import spack.platforms
+import spack.schema.environment
 import spack.spec
 import spack.util.executable
 import spack.util.libc
