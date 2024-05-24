@@ -19,7 +19,7 @@ class PyAstropy(PythonPackage):
 
     license("BSD-3-Clause")
 
-    version("6.1", sha256="6c3b915f10b1576190730ddce45f6245f9927dda3de6e3f692db45779708950f")
+    version("6.1.0", sha256="6c3b915f10b1576190730ddce45f6245f9927dda3de6e3f692db45779708950f")
     version("5.1", sha256="1db1b2c7eddfc773ca66fa33bd07b25d5b9c3b5eee2b934e0ca277fa5b1b7b7e")
     version(
         "4.0.1.post1", sha256="5c304a6c1845ca426e7bc319412b0363fccb4928cb4ba59298acd1918eec44b5"
@@ -32,7 +32,7 @@ class PyAstropy(PythonPackage):
     variant("all", default=False, when="@3.2:", description="Enable all functionality")
 
     # Required dependencies
-    depends_on("python@3.10:", when="@6.1:", type=("build", "run"))
+    depends_on("python@3.10:", when="@6.1.0:", type=("build", "run"))
     depends_on("python@3.8:", when="@5.1:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
     depends_on("py-cython@0.29.13:", type="build")
@@ -54,6 +54,7 @@ class PyAstropy(PythonPackage):
     depends_on("py-packaging@19.0:", when="@5.1:", type=("build", "run"))
     depends_on("py-pyyaml@3.13:", when="@5.1:", type=("build", "run"))
     depends_on("py-pyerfa@2.0:", when="@5.1:", type=("build", "run"))
+    depends_on("py-pyerfa@2.0.1.1:", when="@6.1.0:", type=("build", "run"))
     depends_on("py-setuptools-scm@6.2:", when="@5.1:", type="build")
     depends_on("py-extension-helpers", when="@5.1:", type="build")
     depends_on("pkgconfig", type="build")
