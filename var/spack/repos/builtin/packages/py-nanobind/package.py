@@ -57,6 +57,7 @@ class PyNanobind(PythonPackage):
     depends_on("python@3.8:", type=("build", "run"))
     depends_on("py-setuptools@42:", type="build")
     depends_on("py-scikit-build", type="build")
+    depends_on("typing_extensions", when="@2:", type="build")
 
     depends_on("cmake@3.17:", type="build")
     depends_on("ninja", type="build")
