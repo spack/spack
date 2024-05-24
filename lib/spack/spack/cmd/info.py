@@ -7,7 +7,8 @@ import io
 import json
 import sys
 import textwrap
-from typing import NamedTuple
+from argparse import ArgumentParser, Namespace
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import llnl.util.tty as tty
 import llnl.util.tty.color as color
@@ -20,7 +21,7 @@ import spack.repo
 import spack.spec
 import spack.version
 from spack.cmd.common import arguments
-from spack.package_base import preferred_version
+from spack.package_base import preferred_version, PackageBase
 
 description = "get detailed information on a particular package"
 section = "basic"
@@ -31,8 +32,10 @@ plain_format = "@."
 
 isatty = sys.stdout.isatty()
 
+OutputList = List[Tuple[str, str]]
 
-def padder(str_list, extra=0):
+
+def padder(str_list: List[str], extra: int = 0) -> str:
     """Return a function to pad elements of a list."""
     length = max(len(str(s)) for s in str_list) + extra
 
@@ -44,7 +47,7 @@ def padder(str_list, extra=0):
     return pad
 
 
-def setup_parser(subparser):
+def setup_parser(subparser: ArgumentParser) -> None:
     subparser.add_argument(
         "-a", "--all", action="store_true", default=False, help="output all package information"
     )
@@ -71,19 +74,19 @@ def setup_parser(subparser):
     arguments.add_common_arguments(subparser, ["package"])
 
 
-def section_title(s):
+def section_title(s: str) -> str:
     return header_color + s + plain_format
 
 
-def version(s):
+def version(s: str) -> str:
     return spack.spec.VERSION_COLOR + s + plain_format
 
 
-def license(s):
+def license(s: str) -> str:
     return spack.spec.VERSION_COLOR + s + plain_format
 
 
-def _dump(args, data, separator=None):
+def _dump(args: Namespace, data: Optional[Any], separator: Optional[str] = None) -> str:
     """format the data for output"""
     if args.json:
         return json.dumps(data)
@@ -103,25 +106,23 @@ def _dump(args, data, separator=None):
     raise RuntimeError(f"Unsupported type ({type(data)}) for {data}")
 
 
-def _heading(args, text):
+def _heading(args: Namespace, text: str) -> str:
     return (f'"{text.lower()}"').replace(" ", "_") if args.json else section_title(f"{text}:  ")
 
 
-def dependencies(pkg, args):
+def dependencies(pkg: type[PackageBase], args: Namespace) -> OutputList:
     """output build, link, and run package dependencies"""
     output = []
     for deptype in ("build", "link", "run"):
-        heading = f'"{deptype.capitalize()} Dependencies"'
+        heading = _heading(args, f"{deptype.capitalize()} Dependencies")
         deps = sorted(pkg.dependencies_of_type(dt.flag_from_string(deptype)))
-        if args.json:
-            output.append((heading, _dump(args, deps)))
-        else:
-            output.extend([("", ""), (heading, ""), ("    ", _dump(args, deps))])
+
+        output.extend(_add_section(args, heading, deps, blank=False))
 
     return output
 
 
-def externally_detectable(pkg):
+def externally_detectable(pkg: type[PackageBase]) -> Tuple[bool, List[str]]:
     """returns external detection information"""
     can_detect = False
     find_attributes = []
@@ -144,7 +145,7 @@ def externally_detectable(pkg):
     return can_detect, find_attributes
 
 
-def detectable(pkg, args):
+def detectable(pkg: type[PackageBase], args: Namespace) -> OutputList:
     """output information on external detection"""
 
     can_detect, find_attributes = externally_detectable(pkg)
@@ -159,48 +160,45 @@ def detectable(pkg, args):
         values = "True{0}".format(
             " (" + ", ".join(find_attributes) + ")" if find_attributes else ""
         )
+    else:
+        values = str(values).capitalize()
     output.append(("    ", _dump(args, values)))
     return output
 
 
-def maintainers(pkg, args):
+def maintainers(pkg: type[PackageBase], args: Namespace) -> OutputList:
     """output package maintainers"""
     output = []
     if len(pkg.maintainers) > 0:
         heading = _heading(args, "Maintainers")
-        # mnt = ", ".join(["@" + m for m in pkg.maintainers])
-        # output.extend([("", ""), (heading, _dump(args, mnt))])
-        output.extend([("", ""), (heading, _dump(args, pkg.maintainers))])
+        mnt = pkg.maintainers if args.json else " ".join(["@@" + m for m in pkg.maintainers])
+        output.extend([("", ""), (heading, _dump(args, mnt))])
 
     return output
 
 
-def phases(pkg, args):
+def phases(pkg: type[PackageBase], args: Namespace) -> OutputList:
     """output installation phases"""
 
     output = []
     if hasattr(pkg.builder, "phases") and pkg.builder.phases:
         heading = _heading(args, "Installation Phases")
-        if args.json:
-            output.append((heading, _dump(args, pkg.builder.phases)))
-        else:
-            output.extend([("", ""), (heading, ""), ("    ", _dump(args, pkg.builder.phases))])
+        output.extend(_add_section(args, heading, pkg.builder.phases, blank=False))
     return output
 
 
-def tags(pkg, args):
+def tags(pkg: type[PackageBase], args: Namespace) -> OutputList:
     """output package tags"""
     heading = _heading(args, "Tags")
-    tags = sorted(pkg.tags) if hasattr(pkg, "tags") else None
-    if args.json:
-        return [(heading, _dump(args, tags))]
-
-    return [("", ""), (heading, ""), ("    ", _dump(args, tags))]
+    none = None if args.json else "    None"
+    tags = sorted(pkg.tags) if hasattr(pkg, "tags") else none
+    return _add_section(args, heading, tags)
 
 
-def tests(pkg, args):
+def tests(pkg: type[PackageBase], args: Namespace) -> OutputList:
     """output relevant build-time and stand-alone tests"""
     output = []
+    none = None if args.json else "    None"
 
     # Some built-in base packages (e.g., Autotools) define callback (e.g.,
     # check) inherited by descendant packages. These checks may not result
@@ -220,45 +218,40 @@ def tests(pkg, args):
                 if getattr(pkg, name, False):
                     names.append(name)
 
-        names = sorted(names) if names else None
-        if args.json:
-            output.append((heading, _dump(args, names)))
-        else:
-            output.extend([("", ""), (heading, ""), ("    ", _dump(args, names))])
+        names = sorted(names) if names else none
+        output.extend(_add_section(args, heading, names))
+
+    blank = len(names) == 0
 
     # PackageBase defines an empty install/smoke test but we want to know
     # if it has been overridden and, therefore, assumed to be implemented.
     heading = _heading(args, "Stand-Alone Test Methods")
-    names = spack.install_test.test_function_names(pkg, add_virtuals=True)
-    if args.json:
-        output.append((heading, _dump(args, names)))
-    else:
-        output.extend([("", ""), (heading, ""), ("    ", _dump(args, names))])
+    tests = spack.install_test.test_function_names(pkg, add_virtuals=True)
+    output.extend(_add_section(args, heading, tests, blank=blank))
 
     return output
 
 
-def _fmt_value(v):
+def _fmt_value(v: Any) -> str:
     if v is None or isinstance(v, bool):
         return str(v).lower()
     else:
         return str(v)
 
 
-def _fmt_name_and_default(variant):
+def _fmt_name_and_default(variant: "spack.variant.Variant") -> str:
     """Print colorized name [default] for a variant."""
     # TODO/TLD: Resolve @ format issue
     # return color.colorize(f"@c{{{variant.name}}} @C{{[{_fmt_value(variant.default)}]}}")
     return color.colorize(f"@@c{{{variant.name}}} @@C{{[{_fmt_value(variant.default)}]}}")
 
 
-def _fmt_when(when: "spack.spec.Spec", indent: int):
+def _fmt_when(when: "spack.spec.Spec", indent: int) -> str:
     # TODO/TLD: Resolve @ format issue
-    # return color.colorize(f"{indent * ' '}@B{{when}} {color.cescape(str(when))}")
-    return color.colorize(f"{indent * ' '}@@B{{when}} {color.cescape(str(when))}")
+    return color.colorize(f"{indent * ' '}@B{{when}} {color.cescape(str(when))}")
 
 
-def _fmt_variant_description(variant, width, indent):
+def _fmt_variant_description(variant: "spack.variant.Variant", width: int, indent: int) -> str:
     """Format a variant's description, preserving explicit line breaks."""
     # TODO/TLD: shouldn't this be separate lines?
     return "\n".join(
@@ -269,7 +262,9 @@ def _fmt_variant_description(variant, width, indent):
     )
 
 
-def _fmt_variant(variant, max_name_default_len, indent, when=None):
+def _fmt_variant(
+    variant: Any, max_name_default_len: int, indent: int, when: Optional["spack.spec.Spec"] = None
+) -> List[str]:
     lines = []
 
     _, cols = tty.terminal_size()
@@ -309,16 +304,14 @@ def _fmt_variant(variant, max_name_default_len, indent, when=None):
     description_indent = indent + 4
     if when is not None and when != spack.spec.Spec():
         lines.append(_fmt_when(when, description_indent - 2))
-        lines.append("")
 
     # description, preserving explicit line breaks from the way it's written in the package file
     # TODO/TLD: shouldn't this be an extension of separate lines?
     lines.append(_fmt_variant_description(variant, cols - 2, description_indent))
-    lines.append("")
     return lines
 
 
-def _variants_by_name_when(pkg):
+def _variants_by_name_when(pkg: type[PackageBase]) -> Dict[str, Any]:
     """Adaptor to get variants keyed by { name: { when: { [Variant...] } }."""
     # TODO: replace with pkg.variants_by_name(when=True) when unified directive dicts are merged.
     variants = {}
@@ -328,7 +321,7 @@ def _variants_by_name_when(pkg):
     return variants
 
 
-def _variants_by_when_name(pkg):
+def _variants_by_when_name(pkg: type[PackageBase]) -> Dict[str, Any]:
     """Adaptor to get variants keyed by { when: { name: Variant } }"""
     # TODO: replace with pkg.variants when unified directive dicts are merged.
     variants = {}
@@ -338,7 +331,7 @@ def _variants_by_when_name(pkg):
     return variants
 
 
-def variants_default_heading_len(pkg):
+def variants_default_heading_len(pkg: type[PackageBase]) -> Tuple[Dict[str, Any], int]:
     """Retrieves variants by name and calculate max length of the 'name [default]' output
 
     Args:
@@ -366,24 +359,18 @@ def _unconstrained_ver_first(item):
     return (spack.version.any_version not in spec.versions, spec)
 
 
-# TODO/TLD: Change structure so get "properties" output in json
-# TODO/TLD: should default be str or bool?
-# TODO/TLD: what should "when" be if n/a?
-class VariantInfo(NamedTuple):
-    """Data class for version info
+class VariantInfo:
+    """Essentially a data class for variant info so json reports the property"""
 
-    Args:
-        when: str
-        name: str
-        default: str
-    """
-
-    when: str
-    name: str
-    default: str
+    def __init__(self, when: str, name: str, default: str):
+        self.when = when
+        self.name = name
+        self.default = default
 
 
-def variants_grouped_by_when(pkg, args):
+def variants_grouped_by_when(
+    pkg: type[PackageBase], args: Namespace
+) -> List[Union["VariantInfo", str]]:
     """return variants grouped by when"""
     variants = _variants_by_when_name(pkg)
 
@@ -392,9 +379,7 @@ def variants_grouped_by_when(pkg, args):
         for when, variants_by_name in sorted(variants.items(), key=_unconstrained_ver_first):
             for name, variant in sorted(variants_by_name.items()):
                 assert name == variant.name
-                data.append(
-                    VariantInfo(when=str(when), name=name, default=_fmt_value(variant.default))
-                )
+                data.append(VariantInfo(str(when), name, _fmt_value(variant.default)))
         return data
 
     lines = []
@@ -419,7 +404,7 @@ def variants_grouped_by_when(pkg, args):
     return lines
 
 
-def variants_by_name(pkg, args):
+def variants_by_name(pkg: type[PackageBase], args: Namespace) -> List[str]:
     """output variants already sorted by name"""
     variants, max_name_len = variants_default_heading_len(pkg)
 
@@ -432,16 +417,17 @@ def variants_by_name(pkg, args):
         for when, variants in sorted(when_variants.items(), key=_unconstrained_ver_first):
             for variant in variants:
                 lines.append(_fmt_variant(variant, max_name_len, indent, when))
-                lines.append("")
+                # lines.append("")
     return lines
 
 
-def variants(pkg, args):
+def variants(pkg: type[PackageBase], args: Namespace) -> OutputList:
     """output variants"""
     heading = _heading(args, "Variants")
+    none = None if args.json else "    None"
 
     if not pkg.variants:
-        return [(heading, _dump(args, None))]
+        return [(heading, _dump(args, none))]
 
     output = []
     if not args.json:
@@ -455,18 +441,20 @@ def variants(pkg, args):
     if args.json:
         output.append((heading, _dump(args, variants)))
     else:
-        for line in variants:
-            output.append(("", line))
+        for info in variants:
+            output.append(("", info))
 
     return output
 
 
-def _add_section(args, heading: str, values):
+def _add_section(args, heading: str, values, blank: bool = True):
     """Add section output for a single set of values that can be output together.
 
     Args:
         heading: heading, formatted appropriately if on its own line
         values: values that can be output together (json dump or on the line following the heading)
+        blank: add a blank line to non-JSON output only if ``True``
+
 
     Returns: a list of tuples representing (heading, values) lines
     """
@@ -474,28 +462,26 @@ def _add_section(args, heading: str, values):
     if args.json:
         output.append((heading, _dump(args, values)))
     else:
-        output.extend([("", ""), (heading, ""), ("    ", _dump(args, values))])
+        if blank:
+            output.append(("", ""))
+        output.extend([(heading, ""), ("", _dump(args, values))])
     return output
 
 
-class VersionData(NamedTuple):
-    """Data class for version info
+class VersionInfo:
+    """Essentially a data class for version info so json reports the property"""
 
-    Args:
-        version: version string
-        url: url string
-    """
-
-    version: str
-    url: str
+    def __init__(self, version: str, url: str):
+        self.version = version
+        self.url = url
 
 
-def versions(pkg, args):
+def versions(pkg: type[PackageBase], args: Namespace) -> OutputList:
     """output versions"""
     output = []
 
     headings = [
-        _heading(args, "Preferred version"),
+        _heading(args, "Preferred version(s)"),
         _heading(args, "Safe versions"),
         _heading(args, "Deprecated versions"),
     ]
@@ -503,7 +489,7 @@ def versions(pkg, args):
     none = None if args.json else version("    None")
     if not pkg.versions:
         for heading in headings:
-            _add_section(args, heading, none)
+            output.extend(_add_section(args, heading, none))
         return output
 
     pad = padder(pkg.versions, 4)
@@ -530,35 +516,38 @@ def versions(pkg, args):
         else:
             safe.append((v, url))
 
-    if not preferred:
+    if len(preferred) == 0:
         preferred.append((calc_preferred, calc_url))
 
     for i, vers in enumerate([preferred, safe, deprecated]):
         if not vers:
-            _add_section(args, headings[i], none)
+            output.extend(_add_section(args, headings[i], none))
             continue
 
         if args.json:
             data = []
             for v, url in vers:
-                data.append(VersionData(version=str(v), url=str(url)))
-            _add_section(args, headings[i], data)
+                data.append(VersionInfo(str(v), str(url)))
+            output.extend(_add_section(args, headings[i], data))
             continue
 
-        output.append([("", ""), (headings[i], "")])
+        if i > 0:
+            output.append(("", ""))
+        output.append((headings[i], ""))
+
         for v, url in vers:
-            flag = "*" if v == calc_preferred else " "
-            _add_section(args, "", version(pad(v)) + flag + color.cescape(str(url)))
+            output.append(("", "    " + version(pad(v)) + color.cescape(str(url))))
 
     return output
 
 
-def virtuals(pkg, args):
+def virtuals(pkg: type[PackageBase], args: Namespace) -> OutputList:
     """output virtual packages"""
 
     heading = _heading(args, "Virtual Packages")
-    if not pkg.provided:
-        return [(heading, _dump(args, None))]
+    if not pkg.provided or len(pkg.provided) == 0:
+        none = None if args.json else "    None"
+        return _add_section(args, heading, none, blank=False)
 
     if args.json:
         provides = []
@@ -578,7 +567,7 @@ def virtuals(pkg, args):
     return output
 
 
-def licenses(pkg, args):
+def licenses(pkg: type[PackageBase], args: Namespace) -> OutputList:
     """output project licenses."""
 
     heading = _heading(args, "Licenses")
@@ -593,19 +582,19 @@ def licenses(pkg, args):
         return [(heading, _dump(args, lics))]
 
     pad = padder(pkg.licenses, 4)
-    output = [("", ""), (heading, "")]
+    output = [(heading, "")]
     for license_id, when_spec in lics:
-        output.append(("    ", license(f"    {pad(license_id)}{color.cescape(str(when_spec))}")))
+        output.append(("", license(f"    {pad(license_id)}{color.cescape(str(when_spec))}")))
 
     return output
 
 
-def _description(pkg):
+def _description(pkg) -> str:
     """The description of the package or `None`"""
-    return "    None" if pkg.__doc__ else color.cescape(pkg.format_doc(indent=4))
+    return color.cescape(pkg.format_doc(indent=4)) if pkg.__doc__ else "None"
 
 
-def content(pkg, args):
+def content(pkg: type[PackageBase], args: Namespace) -> OutputList:
     """Extract the relevant info content to be output.
 
     Args:
@@ -634,7 +623,7 @@ def content(pkg, args):
         )
 
     if getattr(pkg, "homepage"):
-        output.append((_heading(args, "Homepage"), _dump(args, pkg.homepage)))
+        output.extend([(_heading(args, "Homepage"), _dump(args, pkg.homepage))])
 
     sections = [
         (args.all or args.maintainers, maintainers),
@@ -655,13 +644,18 @@ def content(pkg, args):
     return output
 
 
-def print_text(content):
+def print_text(content) -> None:
     for heading, value in content:
-        color.cprint(f"{heading}{value}")
-    color.cprint("")
+        # TBD/TLD: What is the *right* way to work around the colorize problem?
+        line = f"{heading}{value}"
+        if "when" in value:
+            print(line)
+        else:
+            color.cprint(line)
+    print("")
 
 
-def print_json(content):
+def print_json(content) -> None:
     sys.stdout.write("[\n {\n")
 
     # Output core package information
@@ -673,7 +667,7 @@ def print_json(content):
     sys.stdout.write(" }\n]\n")
 
 
-def info(parser, args):
+def info(parser, args: Namespace) -> None:
     # Get the package class
     spec = spack.spec.Spec(args.package)
     pkg_cls = spack.repo.PATH.get_pkg_class(spec.name)
