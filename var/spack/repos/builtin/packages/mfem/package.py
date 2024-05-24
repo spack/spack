@@ -219,6 +219,14 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     variant("examples", default=False, description="Build and install examples")
     variant("miniapps", default=False, description="Build and install miniapps")
     variant("exceptions", default=False, description="Enable the use of exceptions")
+    variant(
+        "precision",
+        default="double",
+        values=("single", "double"),
+        multi=False,
+        description="Floating point precision",
+        when="@4.7.0:",
+    )
 
     conflicts("+shared", when="@:3.3.2")
     conflicts("~static~shared")
@@ -344,7 +352,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     # The PETSc tests in MFEM will fail if PETSc is not configured with
     # MUMPS (and SuiteSparse in older versions). On the other hand, PETSc built
     # with MUMPS is not strictly required, so we do not require it here.
-    depends_on("petsc@3.8:+mpi+double+hypre", when="+petsc")
+    depends_on("petsc@3.8:+mpi+hypre", when="+petsc")
     depends_on("slepc@3.8.0:", when="+slepc")
     # If petsc is built with +cuda, propagate cuda_arch to petsc and slepc
     for sm_ in CudaPackage.cuda_arch_values:
@@ -454,6 +462,18 @@ class Mfem(Package, CudaPackage, ROCmPackage):
         depends_on(
             "amgx~mpi cuda_arch={0}".format(sm_), when="+amgx~mpi cuda_arch={0}".format(sm_)
         )
+
+    # double precision requirements, may be incomplete:
+    for using_double_cond in ["@:4.6", "precision=double"]:
+        with when(using_double_cond):
+            depends_on("hypre precision=double", when="+mpi")
+            depends_on("petsc+double", when="+petsc")
+            depends_on("mumps+double", when="+mumps")
+    # single precision requirements:
+    with when("precision=single"):
+        depends_on("hypre precision=single", when="+mpi")
+        depends_on("petsc~double", when="+petsc")
+        depends_on("mumps+float", when="+mumps")
 
     patch("mfem_ppc_build.patch", when="@3.2:3.3.0 arch=ppc64le")
     patch("mfem-3.4.patch", when="@3.4.0")
@@ -629,6 +649,8 @@ class Mfem(Package, CudaPackage, ROCmPackage):
             "MFEM_USE_EXCEPTIONS=%s" % yes_no("+exceptions"),
             "MFEM_USE_MUMPS=%s" % yes_no("+mumps"),
         ]
+        if spec.satisfies("@4.7.0:"):
+            options += ["MFEM_PRECISION=%s" % spec.variants["precision"].value]
 
         # Determine C++ standard to use:
         cxxstd = None
