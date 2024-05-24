@@ -227,6 +227,19 @@ class Mfem(Package, CudaPackage, ROCmPackage):
         description="Floating point precision",
         when="@4.7.0:",
     )
+    variant(
+        "cxxstd",
+        default="auto",
+        values=(
+            "auto",
+            conditional("98", when="@:3"),
+            "11",
+            "14",
+            "17"
+        ),
+        multi=False,
+        description="C++ language standard",
+    )
 
     conflicts("+shared", when="@:3.3.2")
     conflicts("~static~shared")
@@ -305,6 +318,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     depends_on("sundials@5.0.0:5+mpi+hypre", when="@4.0.1-xsdk:4.4+sundials+mpi")
     depends_on("sundials@5.0.0:6.7.0", when="@4.5.0:+sundials~mpi")
     depends_on("sundials@5.0.0:6.7.0+mpi+hypre", when="@4.5.0:+sundials+mpi")
+    conflicts("cxxstd=11", when="^sundials@6.4.0:")
     for sm_ in CudaPackage.cuda_arch_values:
         depends_on(
             "sundials@5.4.0:+cuda cuda_arch={0}".format(sm_),
@@ -376,6 +390,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     depends_on("conduit+mpi", when="+conduit+mpi")
     depends_on("libfms@0.2.0:", when="+fms")
     depends_on("ginkgo@1.4.0:", when="+ginkgo")
+    conflicts("cxxstd=11", when="^ginkgo")
     for sm_ in CudaPackage.cuda_arch_values:
         depends_on(
             "ginkgo+cuda cuda_arch={0}".format(sm_), when="+ginkgo+cuda cuda_arch={0}".format(sm_)
@@ -417,6 +432,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     depends_on("raja@0.13.0", when="@4.3.0+raja")
     depends_on("raja@0.14.0:2022.03", when="@4.4.0:4.5.0+raja")
     depends_on("raja@2022.10.3:", when="@4.5.2:+raja")
+    conflicts("cxxstd=11", when="^raja@2022.03.0:")
     for sm_ in CudaPackage.cuda_arch_values:
         depends_on(
             "raja+cuda cuda_arch={0}".format(sm_), when="+raja+cuda cuda_arch={0}".format(sm_)
@@ -444,6 +460,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
 
     depends_on("umpire@2.0.0:2.1.0", when="@:4.3.0+umpire")
     depends_on("umpire@3.0.0:", when="@4.4.0:+umpire")
+    conflicts("cxxstd=11", when="^umpire@2022.03.0:")
     for sm_ in CudaPackage.cuda_arch_values:
         depends_on(
             "umpire+cuda cuda_arch={0}".format(sm_), when="+umpire+cuda cuda_arch={0}".format(sm_)
@@ -519,7 +536,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     # likely to be up to date in supporting *all* of MFEM's
     # configuration options. So, don't use CMake
     #
-    def configure(self, spec, prefix):
+    def get_make_config_options(self, spec, prefix):
         def yes_no(varstr):
             return "YES" if varstr in self.spec else "NO"
 
@@ -664,6 +681,11 @@ class Mfem(Package, CudaPackage, ROCmPackage):
             cxxstd = "14"
         if self.spec.satisfies("^ginkgo"):
             cxxstd = "14"
+        cxxstd_req = spec.variants["cxxstd"].value
+        if cxxstd_req != "auto":
+            # Constraints for valid standard level should be imposed during
+            # concretization based on 'conflicts' or other directives.
+            cxxstd = cxxstd_req
         cxxstd_flag = None
         if cxxstd:
             if "+cuda" in spec:
@@ -1174,6 +1196,10 @@ class Mfem(Package, CudaPackage, ROCmPackage):
                 "MUMPS_LIB=%s" % ld_flags_from_library_list(mumps.libs),
             ]
 
+        return options
+
+    def configure(self, spec, prefix):
+        options = self.get_make_config_options(spec, prefix)
         make("config", *options, parallel=False)
         make("info", parallel=False)
 
