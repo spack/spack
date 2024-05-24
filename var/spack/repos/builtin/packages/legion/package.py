@@ -339,9 +339,9 @@ class Legion(CMakePackage, ROCmPackage):
         if spec.satisfies("+privilege_checks"):
             # default is off.
             options.append("-DLegion_PRIVILEGE_CHECKS=ON")
-        if "output_level" in spec:
-            level = str.upper(spec.variants["output_level"].value)
-            options.append("-DLegion_OUTPUT_LEVEL=%s" % level)
+
+        options.append(f"-DLegion_OUTPUT_LEVEL={str.upper(spec.variants['output_level'].value)}")
+
         if spec.satisfies("+spy"):
             # default is off.
             options.append("-DLegion_SPY=ON")
