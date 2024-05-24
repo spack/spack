@@ -5,8 +5,6 @@
 import datetime as dt
 import os
 
-import archspec
-
 from spack.package import *
 
 
@@ -23,7 +21,7 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage, PythonExtension):
 
     maintainers("rbberger")
 
-    license("GPL-2.0-or-later")
+    license("GPL-2.0-only")
 
     # rules for new versions and deprecation
     # * new stable versions should be added to stable_versions set
@@ -31,11 +29,24 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage, PythonExtension):
     #   marked deprecated=True
     # * patch releases older than a stable release should be marked deprecated=True
     version("develop", branch="develop")
+    version(
+        "20240207.1", sha256="3ba62c2a1ed463fceedf313a1c3ea2997994aa102379a8d35b525ea424f56776"
+    )
+    version(
+        "20240207",
+        sha256="d518f32de4eb2681f2543be63926411e72072dd7d67c1670c090b5baabed98ac",
+        deprecated=True,
+    )
     version("20231121", sha256="704d8a990874a425bcdfe0245faf13d712231ba23f014a3ebc27bc14398856f1")
+    version(
+        "20230802.3",
+        sha256="6666e28cb90d3ff01cbbda6c81bdb85cf436bbb41604a87f2ab2fa559caa8510",
+        preferred=True,
+    )
     version(
         "20230802.2",
         sha256="3bcecabc9cad08d0a4e4d989b52d29c58505f7ead8ebacf43c9db8d9fd3d564a",
-        preferred=True,
+        deprecated=True,
     )
     version(
         "20230802.1",
@@ -357,6 +368,7 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage, PythonExtension):
     )
 
     stable_versions = {
+        "20230802.3",
         "20230802.2",
         "20230802.1",
         "20230802",
@@ -632,13 +644,15 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage, PythonExtension):
     depends_on("py-numpy", when="+python", type=("build", "run"))
     depends_on("py-mpi4py", when="+python+mpi", type=("build", "run"))
     depends_on("py-setuptools@42:", when="@20220217:+python", type=("build", "run"))
-    depends_on("n2p2@2.1.4:", when="+user-hdnnp")
-    depends_on("n2p2@2.1.4:", when="+ml-hdnnp")
-    depends_on("n2p2+shared", when="+lib ^n2p2")
+    for _n2p2_cond in ("+user-hdnnp", "+ml-hdnnp"):
+        with when(_n2p2_cond):
+            depends_on("n2p2@2.1.4:")
+            depends_on("n2p2+shared", when="+lib")
     depends_on("vtk", when="+user-vtk")
     depends_on("vtk", when="+vtk")
     depends_on("hipcub", when="~kokkos +rocm")
-    depends_on("llvm-amdgpu +openmp", when="+rocm +openmp", type="build")
+    depends_on("llvm-amdgpu ", when="+rocm", type="build")
+    depends_on("rocm-openmp-extras", when="+rocm +openmp", type="build")
 
     # propagate CUDA and ROCm architecture when +kokkos
     for arch in CudaPackage.cuda_arch_values:
@@ -806,9 +820,7 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage, PythonExtension):
             args.append(self.define("CMAKE_CXX_FLAGS_RELWITHDEBINFO", cxx_flags))
 
         # Overwrite generic cpu tune option
-        cmake_tune_flags = archspec.cpu.TARGETS[spec.target.name].optimization_flags(
-            spec.compiler.name, spec.compiler.version
-        )
+        cmake_tune_flags = spec.architecture.target.optimization_flags(spec.compiler)
         args.append(self.define("CMAKE_TUNE_FLAGS", cmake_tune_flags))
 
         args.append(self.define_from_variant("LAMMPS_SIZES", "lammps_sizes"))
@@ -859,6 +871,11 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage, PythonExtension):
 
         if "+rocm" in spec:
             args.append(self.define("CMAKE_CXX_COMPILER", spec["hip"].hipcc))
+            if "@:20231121" in spec:
+                if "^hip@:5.4" in spec:
+                    args.append(self.define("HIP_PATH", f"{spec['hip'].prefix}/hip"))
+                elif "^hip@5.5:" in spec:
+                    args.append(self.define("HIP_PATH", spec["hip"].prefix))
 
         return args
 

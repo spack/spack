@@ -6,6 +6,7 @@
 import json
 import os
 import shutil
+from urllib.parse import urlparse, urlunparse
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
@@ -13,6 +14,7 @@ import llnl.util.tty.color as clr
 
 import spack.binary_distribution as bindist
 import spack.ci as spack_ci
+import spack.cmd
 import spack.cmd.buildcache as buildcache
 import spack.config as cfg
 import spack.environment as ev
@@ -29,12 +31,18 @@ section = "build"
 level = "long"
 
 SPACK_COMMAND = "spack"
-MAKE_COMMAND = "make"
 INSTALL_FAIL_CODE = 1
+FAILED_CREATE_BUILDCACHE_CODE = 100
 
 
 def deindent(desc):
     return desc.replace("    ", "")
+
+
+def unicode_escape(path: str) -> str:
+    """Returns transformed path with any unicode
+    characters replaced with their corresponding escapes"""
+    return path.encode("unicode-escape").decode("utf-8")
 
 
 def setup_parser(subparser):
@@ -157,7 +165,9 @@ def setup_parser(subparser):
         description=deindent(ci_reproduce.__doc__),
         help=spack.cmd.first_line(ci_reproduce.__doc__),
     )
-    reproduce.add_argument("job_url", help="URL of job artifacts bundle")
+    reproduce.add_argument(
+        "job_url", help="URL of GitLab job web page or artifact", type=_gitlab_artifacts_url
+    )
     reproduce.add_argument(
         "--runtime",
         help="Container runtime to use.",
@@ -546,75 +556,35 @@ def ci_rebuild(args):
     # No hash match anywhere means we need to rebuild spec
 
     # Start with spack arguments
-    spack_cmd = [SPACK_COMMAND, "--color=always", "--backtrace", "--verbose"]
+    spack_cmd = [SPACK_COMMAND, "--color=always", "--backtrace", "--verbose", "install"]
 
     config = cfg.get("config")
     if not config["verify_ssl"]:
         spack_cmd.append("-k")
 
-    install_args = []
+    install_args = [f'--use-buildcache={spack_ci.win_quote("package:never,dependencies:only")}']
 
     can_verify = spack_ci.can_verify_binaries()
     verify_binaries = can_verify and spack_is_pr_pipeline is False
     if not verify_binaries:
         install_args.append("--no-check-signature")
 
-    slash_hash = "/{}".format(job_spec.dag_hash())
-
-    # Arguments when installing dependencies from cache
-    deps_install_args = install_args
+    slash_hash = spack_ci.win_quote("/" + job_spec.dag_hash())
 
     # Arguments when installing the root from sources
-    root_install_args = install_args + [
-        "--keep-stage",
-        "--only=package",
-        "--use-buildcache=package:never,dependencies:only",
-    ]
+    deps_install_args = install_args + ["--only=dependencies"]
+    root_install_args = install_args + ["--keep-stage", "--only=package"]
+
     if cdash_handler:
         # Add additional arguments to `spack install` for CDash reporting.
         root_install_args.extend(cdash_handler.args())
-    root_install_args.append(slash_hash)
-
-    # ["x", "y"] -> "'x' 'y'"
-    args_to_string = lambda args: " ".join("'{}'".format(arg) for arg in args)
 
     commands = [
         # apparently there's a race when spack bootstraps? do it up front once
-        [SPACK_COMMAND, "-e", env.path, "bootstrap", "now"],
-        [
-            SPACK_COMMAND,
-            "-e",
-            env.path,
-            "env",
-            "depfile",
-            "-o",
-            "Makefile",
-            "--use-buildcache=package:never,dependencies:only",
-            slash_hash,  # limit to spec we're building
-        ],
-        [
-            # --output-sync requires GNU make 4.x.
-            # Old make errors when you pass it a flag it doesn't recognize,
-            # but it doesn't error or warn when you set unrecognized flags in
-            # this variable.
-            "export",
-            "GNUMAKEFLAGS=--output-sync=recurse",
-        ],
-        [
-            MAKE_COMMAND,
-            "SPACK={}".format(args_to_string(spack_cmd)),
-            "SPACK_COLOR=always",
-            "SPACK_INSTALL_FLAGS={}".format(args_to_string(deps_install_args)),
-            "-j$(nproc)",
-            "install-deps/{}".format(
-                spack.environment.depfile.MakefileSpec(job_spec).safe_format(
-                    "{name}-{version}-{hash}"
-                )
-            ),
-        ],
-        spack_cmd + ["install"] + root_install_args,
+        [SPACK_COMMAND, "-e", unicode_escape(env.path), "bootstrap", "now"],
+        spack_cmd + deps_install_args + [slash_hash],
+        spack_cmd + root_install_args + [slash_hash],
     ]
-
     tty.debug("Installing {0} from source".format(job_spec.name))
     install_exit_code = spack_ci.process_command("install", commands, repro_dir)
 
@@ -702,11 +672,9 @@ def ci_rebuild(args):
                 cdash_handler.report_skipped(job_spec, reports_dir, reason=msg)
                 cdash_handler.copy_test_results(reports_dir, job_test_dir)
 
-    # If the install succeeded, create a buildcache entry for this job spec
-    # and push it to one or more mirrors.  If the install did not succeed,
-    # print out some instructions on how to reproduce this build failure
-    # outside of the pipeline environment.
     if install_exit_code == 0:
+        # If the install succeeded, push it to one or more mirrors. Failure to push to any mirror
+        # will result in a non-zero exit code. Pushing is best-effort.
         mirror_urls = [buildcache_mirror_url]
 
         # TODO: Remove this block in Spack 0.23
@@ -718,13 +686,12 @@ def ci_rebuild(args):
             destination_mirror_urls=mirror_urls,
             sign_binaries=spack_ci.can_sign_binaries(),
         ):
-            msg = tty.msg if result.success else tty.warn
-            msg(
-                "{} {} to {}".format(
-                    "Pushed" if result.success else "Failed to push",
-                    job_spec.format("{name}{@version}{/hash:7}", color=clr.get_color_when()),
-                    result.url,
-                )
+            if not result.success:
+                install_exit_code = FAILED_CREATE_BUILDCACHE_CODE
+            (tty.msg if result.success else tty.error)(
+                f'{"Pushed" if result.success else "Failed to push"} '
+                f'{job_spec.format("{name}{@version}{/hash:7}", color=clr.get_color_when())} '
+                f"to {result.url}"
             )
 
         # If this is a develop pipeline, check if the spec that we just built is
@@ -745,22 +712,22 @@ def ci_rebuild(args):
                     tty.warn(msg.format(broken_spec_path, err))
 
     else:
+        # If the install did not succeed, print out some instructions on how to reproduce this
+        # build failure outside of the pipeline environment.
         tty.debug("spack install exited non-zero, will not create buildcache")
 
         api_root_url = os.environ.get("CI_API_V4_URL")
         ci_project_id = os.environ.get("CI_PROJECT_ID")
         ci_job_id = os.environ.get("CI_JOB_ID")
 
-        repro_job_url = "{0}/projects/{1}/jobs/{2}/artifacts".format(
-            api_root_url, ci_project_id, ci_job_id
-        )
-
+        repro_job_url = f"{api_root_url}/projects/{ci_project_id}/jobs/{ci_job_id}/artifacts"
         # Control characters cause this to be printed in blue so it stands out
-        reproduce_msg = """
+        print(
+            f"""
 
 \033[34mTo reproduce this build locally, run:
 
-    spack ci reproduce-build {0} [--working-dir <dir>] [--autostart]
+    spack ci reproduce-build {repro_job_url} [--working-dir <dir>] [--autostart]
 
 If this project does not have public pipelines, you will need to first:
 
@@ -768,11 +735,8 @@ If this project does not have public pipelines, you will need to first:
 
 ... then follow the printed instructions.\033[0;0m
 
-""".format(
-            repro_job_url
+"""
         )
-
-        print(reproduce_msg)
 
     rebuild_timer.stop()
     try:
@@ -792,11 +756,6 @@ def ci_reproduce(args):
     artifacts of the provided gitlab pipeline rebuild job's URL will be used to derive
     instructions for reproducing the build locally
     """
-    job_url = args.job_url
-    work_dir = args.working_dir
-    autostart = args.autostart
-    runtime = args.runtime
-
     # Allow passing GPG key for reprocuding protected CI jobs
     if args.gpg_file:
         gpg_key_url = url_util.path_to_file_url(args.gpg_file)
@@ -805,7 +764,47 @@ def ci_reproduce(args):
     else:
         gpg_key_url = None
 
-    return spack_ci.reproduce_ci_job(job_url, work_dir, autostart, gpg_key_url, runtime)
+    return spack_ci.reproduce_ci_job(
+        args.job_url, args.working_dir, args.autostart, gpg_key_url, args.runtime
+    )
+
+
+def _gitlab_artifacts_url(url: str) -> str:
+    """Take a URL either to the URL of the job in the GitLab UI, or to the artifacts zip file,
+    and output the URL to the artifacts zip file."""
+    parsed = urlparse(url)
+
+    if not parsed.scheme or not parsed.netloc:
+        raise ValueError(url)
+
+    parts = parsed.path.split("/")
+
+    if len(parts) < 2:
+        raise ValueError(url)
+
+    # Just use API endpoints verbatim, they're probably generated by Spack.
+    if parts[1] == "api":
+        return url
+
+    # If it's a URL to the job in the Gitlab UI, we may need to append the artifacts path.
+    minus_idx = parts.index("-")
+
+    # Remove repeated slashes in the remainder
+    rest = [p for p in parts[minus_idx + 1 :] if p]
+
+    # Now the format is jobs/X or jobs/X/artifacts/download
+    if len(rest) < 2 or rest[0] != "jobs":
+        raise ValueError(url)
+
+    if len(rest) == 2:
+        # replace jobs/X with jobs/X/artifacts/download
+        rest.extend(("artifacts", "download"))
+
+    # Replace the parts and unparse.
+    parts[minus_idx + 1 :] = rest
+
+    # Don't allow fragments / queries
+    return urlunparse(parsed._replace(path="/".join(parts), fragment="", query=""))
 
 
 def ci(parser, args):

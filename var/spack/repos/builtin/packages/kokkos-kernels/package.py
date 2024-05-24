@@ -19,12 +19,15 @@ class KokkosKernels(CMakePackage, CudaPackage):
 
     maintainers("lucbv", "srajama1", "brian-kelley")
 
-    license("BSD-3-Clause")
+    license("Apache-2.0 WITH LLVM-exception")
 
     # generate checksum for each release tarball with the following command
     # openssl sha256 kokkos-kernels-x.y.z.tar.gz
     version("develop", branch="develop")
     version("master", branch="master")
+    version("4.3.01", sha256="749553a6ea715ba1e56fa0b13b42866bb9880dba7a94e343eadf40d08c68fab8")
+    version("4.3.00", sha256="03c3226ee97dbca4fa56fe69bc4eefa0673e23c37f2741943d9362424a63950e")
+    version("4.2.01", sha256="058052b3a40f5d4e447b7ded5c480f1b0d4aa78373b0bc7e43804d0447c34ca8")
     version("4.2.00", sha256="c65df9a101dbbef2d8fd43c60c9ea85f2046bb3535fa1ad16e7c661ddd60401e")
     version("4.1.00", sha256="d6a4108444ea226e43bf6a9c0dfc557f223a72b1142bf81aa78dd60e16ac2d56")
     version("4.0.01", sha256="3f493fcb0244b26858ceb911be64092fbf7785616ad62c81abde0ea1ce86688a")
@@ -46,6 +49,9 @@ class KokkosKernels(CMakePackage, CudaPackage):
     depends_on("kokkos")
     depends_on("kokkos@master", when="@master")
     depends_on("kokkos@develop", when="@develop")
+    depends_on("kokkos@4.3.01", when="@4.3.01")
+    depends_on("kokkos@4.3.00", when="@4.3.00")
+    depends_on("kokkos@4.2.01", when="@4.2.01")
     depends_on("kokkos@4.2.00", when="@4.2.00")
     depends_on("kokkos@4.1.00", when="@4.1.00")
     depends_on("kokkos@4.0.01", when="@4.0.01")
@@ -133,20 +139,24 @@ class KokkosKernels(CMakePackage, CudaPackage):
         variant(eti, default=deflt, description=eti, values=vals, multi=True)
 
     tpls = {
-        # variant name   #deflt   #spack name   #root var name #docstring
-        "blas": (False, "blas", "BLAS", "Link to system BLAS"),
-        "lapack": (False, "lapack", "LAPACK", "Link to system LAPACK"),
-        "mkl": (False, "mkl", "MKL", "Link to system MKL"),
-        "cublas": (False, "cuda", None, "Link to CUDA BLAS library"),
-        "cusparse": (False, "cuda", None, "Link to CUDA sparse library"),
-        "superlu": (False, "superlu", "SUPERLU", "Link to SuperLU library"),
-        "cblas": (False, "cblas", "CBLAS", "Link to CBLAS library"),
-        "lapacke": (False, "clapack", "LAPACKE", "Link to LAPACKE library"),
+        # variant name   #deflt   #spack name  #root var name  #supporting versions  #docstring
+        "blas": (False, "blas", "BLAS", "@3.0.00:", "Link to system BLAS"),
+        "lapack": (False, "lapack", "LAPACK", "@3.0.00:", "Link to system LAPACK"),
+        "mkl": (False, "mkl", "MKL", "@3.0.00:", "Link to system MKL"),
+        "cublas": (False, "cuda", None, "@3.0.00:", "Link to CUDA BLAS library"),
+        "cusparse": (False, "cuda", None, "@3.0.00:", "Link to CUDA sparse library"),
+        "superlu": (False, "superlu", "SUPERLU", "@3.1.00:", "Link to SuperLU library"),
+        "cblas": (False, "cblas", "CBLAS", "@3.1.00:", "Link to CBLAS library"),
+        "lapacke": (False, "clapack", "LAPACKE", "@3.1.00:", "Link to LAPACKE library"),
+        "rocblas": (False, "rocblas", "ROCBLAS", "@3.6.00:", "Link to AMD BLAS library"),
+        "rocsparse": (False, "rocsparse", "ROCSPARSE", "@3.6.00:", "Link to AMD sparse library"),
+        "cusolver": (False, "cuda", None, "@4.3.00:", "Link to CUDA solver library"),
+        "rocsolver": (False, "rocsolver", "ROCSOLVER", "@4.3.00:", "Link to AMD solver library"),
     }
 
     for tpl in tpls:
-        deflt_bool, spackname, rootname, descr = tpls[tpl]
-        variant(tpl, default=deflt_bool, description=descr)
+        deflt_bool, spackname, rootname, condition, descr = tpls[tpl]
+        variant(tpl, default=deflt_bool, when=f"{condition}", description=descr)
         depends_on(spackname, when="+%s" % tpl)
 
     variant("shared", default=True, description="Build shared libraries")
@@ -172,7 +182,7 @@ class KokkosKernels(CMakePackage, CudaPackage):
         for tpl in self.tpls:
             on_flag = "+%s" % tpl
             off_flag = "~%s" % tpl
-            dflt, spackname, rootname, descr = self.tpls[tpl]
+            dflt, spackname, rootname, condition, descr = self.tpls[tpl]
             if on_flag in self.spec:
                 options.append("-DKokkosKernels_ENABLE_TPL_%s=ON" % tpl.upper())
                 if rootname:

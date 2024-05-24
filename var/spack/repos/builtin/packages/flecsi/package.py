@@ -21,10 +21,8 @@ class Flecsi(CMakePackage, CudaPackage, ROCmPackage):
 
     tags = ["e4s"]
 
-    version("develop", branch="develop")
-    version(
-        "2.2.1", tag="v2.2.1", commit="84b5b232aebab40610f57387778db80f6c8c84c5", preferred=True
-    )
+    version("develop", branch="develop", deprecated=True)
+    version("2.2.1", tag="v2.2.1", commit="84b5b232aebab40610f57387778db80f6c8c84c5")
     version("2.2.0", tag="v2.2.0", commit="dd531ac16c5df124d76e385c6ebe9b9589c2d3ad")
     version("2.1.0", tag="v2.1.0", commit="533df139c267e2a93c268dfe68f9aec55de11cf0")
     version("2.0.0", tag="v2.0.0", commit="5ceebadf75d1c98999ea9e9446926722d061ec22")
@@ -93,7 +91,7 @@ class Flecsi(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("legion+shared", when="backend=legion @:1")
     depends_on("legion+hdf5", when="backend=legion +hdf5 @:1")
     depends_on("legion build_type=Debug", when="backend=legion +debug_backend")
-    depends_on("legion@cr", when="backend=legion @:1")
+    depends_on("legion@cr-20191217", when="backend=legion @:1")
     depends_on("hpx@1.4.1 cxxstd=17 malloc=system max_cpu_count=128", when="backend=hpx @:1")
     depends_on("hpx build_type=Debug", when="backend=hpx +debug_backend")
     depends_on("googletest@1.8.1+gmock", when="@:1")
@@ -102,7 +100,7 @@ class Flecsi(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("llvm", when="+flecstan @:1")
     depends_on("pfunit@3.0:3", when="@:1")
     depends_on("py-gcovr", when="+coverage @:1")
-    depends_on("openmpi+legacylaunchers", when="+unit_tests ^openmpi")
+    depends_on("openmpi+legacylaunchers", when="+unit_tests ^[virtuals=mpi] openmpi")
 
     # FleCSI@2.x
     depends_on("cmake@3.15:", when="@2.0:")
@@ -113,7 +111,9 @@ class Flecsi(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("kokkos +cuda +cuda_constexpr +cuda_lambda", when="+kokkos +cuda @2.0:")
     depends_on("kokkos +rocm", when="+kokkos +rocm @2.0:")
     depends_on("kokkos +openmp", when="+kokkos +openmp @2.0:")
-    depends_on("legion@cr", when="backend=legion @2.0:")
+    depends_on("legion@cr-20210122", when="backend=legion @2.0:2.2.1")
+    depends_on("legion@cr-20230307", when="backend=legion @2.2.0:2.2.1")
+    depends_on("legion@24.03.0:", when="backend=legion @2.2.2:")
     depends_on("legion+shared", when="backend=legion +shared @2.0:")
     depends_on("legion+hdf5", when="backend=legion +hdf5 @2.0:")
     depends_on("legion+kokkos", when="backend=legion +kokkos @2.0:")
@@ -123,8 +123,8 @@ class Flecsi(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("hdf5@1.10.7:", when="backend=legion +hdf5 @2.0:")
     depends_on("hpx@1.9.1: cxxstd=17 malloc=system", when="backend=hpx @2.0:")
     depends_on("mpi", when="@2.0:")
-    depends_on("mpich@3.4.1:", when="@2.0: ^mpich")
-    depends_on("openmpi@4.1.0:", when="@2.0: ^openmpi")
+    depends_on("mpich@3.4.1:", when="@2.0: ^[virtuals=mpi] mpich")
+    depends_on("openmpi@4.1.0:", when="@2.0: ^[virtuals=mpi] openmpi")
 
     # FleCSI 2.2+ documentation dependencies
     depends_on("py-sphinx", when="+doc")

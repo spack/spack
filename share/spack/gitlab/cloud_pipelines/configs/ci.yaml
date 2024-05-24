@@ -13,7 +13,7 @@ ci:
       before_script-:
       - - cat /proc/loadavg || true
         - cat /proc/meminfo | grep 'MemTotal\|MemFree' || true
-      - - spack list --count  # ensure that spack's cache is populated
+      - - touch ${SPACK_USER_CACHE_PATH}/cache/*/*  # bump mtime of cache so it is not invalidated
       - - spack env activate --without-view ${SPACK_CONCRETE_ENV_DIR}
         - spack compiler list
         - if [ -n "$SPACK_BUILD_JOBS" ]; then spack config add "config:build_jobs:$SPACK_BUILD_JOBS"; fi
@@ -26,13 +26,13 @@ ci:
       script::
       - - spack config blame mirrors
         - spack --color=always --backtrace ci rebuild --tests > >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_out.txt) 2> >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_err.txt >&2)
-      - - spack python ${CI_PROJECT_DIR}/share/spack/gitlab/cloud_pipelines/scripts/common/aggregate_package_logs.spack.py
-          --prefix /home/software/spack:${CI_PROJECT_DIR}/opt/spack
-          --log install_times.json
-          ${SPACK_ARTIFACTS_ROOT}/user_data/install_times.json
       after_script:
       - - cat /proc/loadavg || true
         - cat /proc/meminfo | grep 'MemTotal\|MemFree' || true
+      - - time ./bin/spack python ${CI_PROJECT_DIR}/share/spack/gitlab/cloud_pipelines/scripts/common/aggregate_package_logs.spack.py
+          --prefix /home/software/spack:${CI_PROJECT_DIR}/opt/spack
+          --log install_times.json
+          ${SPACK_ARTIFACTS_ROOT}/user_data/install_times.json || true
       variables:
         CI_JOB_SIZE: "default"
         CI_GPG_KEY_ROOT: /mnt/key
@@ -119,7 +119,7 @@ ci:
         # Disable local configs to avoid issues on shell runners
         SPACK_DISABLE_LOCAL_CONFIG: "1"
       before_script:
-      - - export SPACK_USER_CACHE_PATH="${CI_PROJECT_DIR}/_user_cache/"
+      - - export SPACK_USER_CACHE_PATH="${CI_PROJECT_DIR}/tmp/_user_cache/"
       - - uname -a || true
         - grep -E "vendor|model name" /proc/cpuinfo 2>/dev/null | sort -u || head -n10 /proc/cpuinfo 2>/dev/null || true
         - nproc || true

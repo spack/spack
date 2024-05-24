@@ -16,6 +16,7 @@ from llnl.util.filesystem import mkdirp, working_dir
 import spack
 import spack.binary_distribution
 import spack.ci as ci
+import spack.cmd.ci
 import spack.config
 import spack.environment as ev
 import spack.hash_types as ht
@@ -25,6 +26,7 @@ import spack.repo as repo
 import spack.util.gpg
 import spack.util.spack_yaml as syaml
 import spack.util.url as url_util
+from spack.cmd.ci import FAILED_CREATE_BUILDCACHE_CODE
 from spack.schema.buildcache_spec import schema as specfile_schema
 from spack.schema.ci import schema as ci_schema
 from spack.schema.database_index import schema as db_idx_schema
@@ -46,6 +48,8 @@ pytestmark = [pytest.mark.not_on_windows("does not run on windows"), pytest.mark
 @pytest.fixture()
 def ci_base_environment(working_env, tmpdir):
     os.environ["CI_PROJECT_DIR"] = tmpdir.strpath
+    os.environ["CI_PIPELINE_ID"] = "7192"
+    os.environ["CI_JOB_NAME"] = "mock"
 
 
 @pytest.fixture(scope="function")
@@ -113,13 +117,13 @@ and then 'd', 'b', and 'a' to be put in the next three stages, respectively.
     with repo.use_repositories(builder.root):
         spec_a = Spec("a").concretized()
 
-        spec_a_label = ci._spec_deps_key(spec_a)
-        spec_b_label = ci._spec_deps_key(spec_a["b"])
-        spec_c_label = ci._spec_deps_key(spec_a["c"])
-        spec_d_label = ci._spec_deps_key(spec_a["d"])
-        spec_e_label = ci._spec_deps_key(spec_a["e"])
-        spec_f_label = ci._spec_deps_key(spec_a["f"])
-        spec_g_label = ci._spec_deps_key(spec_a["g"])
+        spec_a_label = ci._spec_ci_label(spec_a)
+        spec_b_label = ci._spec_ci_label(spec_a["b"])
+        spec_c_label = ci._spec_ci_label(spec_a["c"])
+        spec_d_label = ci._spec_ci_label(spec_a["d"])
+        spec_e_label = ci._spec_ci_label(spec_a["e"])
+        spec_f_label = ci._spec_ci_label(spec_a["f"])
+        spec_g_label = ci._spec_ci_label(spec_a["g"])
 
         spec_labels, dependencies, stages = ci.stage_spec_jobs([spec_a])
 
@@ -756,7 +760,6 @@ def test_ci_rebuild_mock_success(
     rebuild_env = create_rebuild_env(tmpdir, pkg_name, broken_tests)
 
     monkeypatch.setattr(spack.cmd.ci, "SPACK_COMMAND", "echo")
-    monkeypatch.setattr(spack.cmd.ci, "MAKE_COMMAND", "echo")
 
     with rebuild_env.env_dir.as_cwd():
         activate_rebuild_env(tmpdir, pkg_name, rebuild_env)
@@ -773,6 +776,43 @@ def test_ci_rebuild_mock_success(
         else:
             # No installation means no package to test and no test log to copy
             assert "Cannot copy test logs" in out
+
+
+def test_ci_rebuild_mock_failure_to_push(
+    tmpdir,
+    working_env,
+    mutable_mock_env_path,
+    install_mockery_mutable_config,
+    mock_gnupghome,
+    mock_stage,
+    mock_fetch,
+    mock_binary_index,
+    ci_base_environment,
+    monkeypatch,
+):
+    pkg_name = "trivial-install-test-package"
+    rebuild_env = create_rebuild_env(tmpdir, pkg_name)
+
+    # Mock the install script succuess
+    def mock_success(*args, **kwargs):
+        return 0
+
+    monkeypatch.setattr(spack.ci, "process_command", mock_success)
+
+    # Mock failure to push to the build cache
+    def mock_push_or_raise(*args, **kwargs):
+        raise spack.binary_distribution.PushToBuildCacheError(
+            "Encountered problem pushing binary <url>: <expection>"
+        )
+
+    monkeypatch.setattr(spack.binary_distribution, "push_or_raise", mock_push_or_raise)
+
+    with rebuild_env.env_dir.as_cwd():
+        activate_rebuild_env(tmpdir, pkg_name, rebuild_env)
+
+        expect = f"Command exited with code {FAILED_CREATE_BUILDCACHE_CODE}"
+        with pytest.raises(spack.main.SpackCommandError, match=expect):
+            ci_cmd("rebuild", fail_on_error=True)
 
 
 @pytest.mark.skip(reason="fails intermittently and covered by gitlab ci")
@@ -802,7 +842,6 @@ def test_ci_rebuild(
         ci_cmd("rebuild", "--tests", fail_on_error=False)
 
     monkeypatch.setattr(spack.cmd.ci, "SPACK_COMMAND", "notcommand")
-    monkeypatch.setattr(spack.cmd.ci, "MAKE_COMMAND", "notcommand")
     monkeypatch.setattr(spack.cmd.ci, "INSTALL_FAIL_CODE", 127)
 
     with rebuild_env.env_dir.as_cwd():
@@ -1062,7 +1101,7 @@ spack:
 
 
 @pytest.mark.disable_clean_stage_check
-def test_push_mirror_contents(
+def test_push_to_build_cache(
     tmpdir,
     mutable_mock_env_path,
     install_mockery_mutable_config,
@@ -1123,7 +1162,7 @@ spack:
             install_cmd("--add", "--keep-stage", json_path)
 
             for s in concrete_spec.traverse():
-                ci.push_mirror_contents(s, mirror_url, True)
+                ci.push_to_build_cache(s, mirror_url, True)
 
             buildcache_path = os.path.join(mirror_dir.strpath, "build_cache")
 
@@ -1216,21 +1255,16 @@ spack:
             assert len(dl_dir_list) == 2
 
 
-def test_push_mirror_contents_exceptions(monkeypatch, capsys):
-    def failing_access(*args, **kwargs):
+def test_push_to_build_cache_exceptions(monkeypatch, tmp_path, capsys):
+    def _push_to_build_cache(spec, sign_binaries, mirror_url):
         raise Exception("Error: Access Denied")
 
-    monkeypatch.setattr(spack.ci, "_push_mirror_contents", failing_access)
+    monkeypatch.setattr(spack.ci, "_push_to_build_cache", _push_to_build_cache)
 
-    # Input doesn't matter, as wwe are faking exceptional output
-    url = "fakejunk"
-    ci.push_mirror_contents(None, url, None)
-
-    captured = capsys.readouterr()
-    std_out = captured[0]
-    expect_msg = "Permission problem writing to {0}".format(url)
-
-    assert expect_msg in std_out
+    # Input doesn't matter, as we are faking exceptional output
+    url = tmp_path.as_uri()
+    ci.push_to_build_cache(None, url, None)
+    assert f"Permission problem writing to {url}" in capsys.readouterr().err
 
 
 @pytest.mark.parametrize("match_behavior", ["first", "merge"])
@@ -1460,26 +1494,24 @@ def test_ci_rebuild_index(
     working_dir = tmpdir.join("working_dir")
 
     mirror_dir = working_dir.join("mirror")
-    mirror_url = "file://{0}".format(mirror_dir.strpath)
+    mirror_url = url_util.path_to_file_url(str(mirror_dir))
 
-    spack_yaml_contents = """
+    spack_yaml_contents = f"""
 spack:
- specs:
-   - callpath
- mirrors:
-   test-mirror: {0}
- ci:
-   pipeline-gen:
-   - submapping:
-     - match:
-         - patchelf
-       build-job:
-         tags:
-           - donotcare
-         image: donotcare
-""".format(
-        mirror_url
-    )
+  specs:
+  - callpath
+  mirrors:
+    test-mirror: {mirror_url}
+  ci:
+    pipeline-gen:
+    - submapping:
+      - match:
+        - patchelf
+        build-job:
+          tags:
+          - donotcare
+          image: donotcare
+"""
 
     filename = str(tmpdir.join("spack.yaml"))
     with open(filename, "w") as f:
@@ -2026,6 +2058,43 @@ spack:
     # Make sure we tell the suer where it is when not in interactive mode
     expect_out = "$ {0}/start.sh".format(os.path.realpath(working_dir.strpath))
     assert expect_out in rep_out
+
+
+@pytest.mark.parametrize(
+    "url_in,url_out",
+    [
+        (
+            "https://example.com/api/v4/projects/1/jobs/2/artifacts",
+            "https://example.com/api/v4/projects/1/jobs/2/artifacts",
+        ),
+        (
+            "https://example.com/spack/spack/-/jobs/123456/artifacts/download",
+            "https://example.com/spack/spack/-/jobs/123456/artifacts/download",
+        ),
+        (
+            "https://example.com/spack/spack/-/jobs/123456",
+            "https://example.com/spack/spack/-/jobs/123456/artifacts/download",
+        ),
+        (
+            "https://example.com/spack/spack/-/jobs/////123456////?x=y#z",
+            "https://example.com/spack/spack/-/jobs/123456/artifacts/download",
+        ),
+    ],
+)
+def test_reproduce_build_url_validation(url_in, url_out):
+    assert spack.cmd.ci._gitlab_artifacts_url(url_in) == url_out
+
+
+def test_reproduce_build_url_validation_fails():
+    """Wrong URLs should cause an exception"""
+    with pytest.raises(SystemExit):
+        ci_cmd("reproduce-build", "example.com/spack/spack/-/jobs/123456/artifacts/download")
+
+    with pytest.raises(SystemExit):
+        ci_cmd("reproduce-build", "https://example.com/spack/spack/-/issues")
+
+    with pytest.raises(SystemExit):
+        ci_cmd("reproduce-build", "https://example.com/spack/spack/-")
 
 
 @pytest.mark.parametrize(

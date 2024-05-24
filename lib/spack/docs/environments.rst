@@ -142,12 +142,8 @@ user's prompt to begin with the environment name in brackets.
    $ spack env activate -p myenv
    [myenv] $ ...
 
-The ``activate`` command can also be used to create a new environment, if it is
-not already defined, by adding the ``--create`` flag. Managed and anonymous
-environments, anonymous environments are explained in the next section,
-can both be created using the same flags that `spack env create` accepts.
-If an environment already exists then spack will simply activate it and ignore the
-create specific flags.
+The ``activate`` command can also be used to create a new environment if it does not already
+exist.
 
 .. code-block:: console
    
@@ -176,21 +172,36 @@ environment will remove the view from the user environment.
 Anonymous Environments
 ^^^^^^^^^^^^^^^^^^^^^^
 
-Any directory can be treated as an environment if it contains a file
-``spack.yaml``. To load an anonymous environment, use:
+Apart from managed environments, Spack also supports anonymous environments.
+
+Anonymous environments can be placed in any directory of choice.
+
+.. note::
+
+   When uninstalling packages, Spack asks the user to confirm the removal of packages
+   that are still used in a managed environment. This is not the case for anonymous
+   environments.
+
+To create an anonymous environment, use one of the following commands:
 
 .. code-block:: console
 
-   $ spack env activate -d /path/to/directory
+   $ spack env create --dir my_env
+   $ spack env create ./my_env
 
-Anonymous specs can be created in place using the command:
+As a shorthand, you can also create an anonymous environment upon activation if it does not
+already exist:
 
 .. code-block:: console
 
-   $ spack env create -d .
+   $ spack env activate --create ./my_env
 
-In this case Spack simply creates a ``spack.yaml`` file in the requested
-directory.
+For convenience, Spack can also place an anonymous environment in a temporary directory for you:
+
+.. code-block:: console
+
+   $ spack env activate --temp
+
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Environment Sensitive Commands
@@ -416,6 +427,23 @@ that git clone if ``foo`` is in the environment.
 Further development on ``foo`` can be tested by reinstalling the environment,
 and eventually committed and pushed to the upstream git repo.
 
+If the package being developed supports out-of-source builds then users can use the
+``--build_directory`` flag to control the location and name of the build directory. 
+This is a shortcut to set the ``package_attributes:build_directory`` in the
+``packages`` configuration (see :ref:`assigning-package-attributes`).
+The supplied location will become the build-directory for that package in all future builds.
+
+.. warning::
+   Potential pitfalls of setting the build directory
+    Spack does not check for out-of-source build compatibility with the packages and
+    so the onerous of making sure the package supports out-of-source builds is on
+    the user.
+    For example, most ``autotool`` and ``makefile`` packages do not support out-of-source builds
+    while all ``CMake`` packages do.
+    Understanding these nuances are on the software developers and we strongly encourage
+    developers to only redirect the build directory if they understand their package's
+    build-system.
+
 ^^^^^^^
 Loading
 ^^^^^^^
@@ -431,6 +459,125 @@ This creates a file called ``loads`` in the environment directory.
 Sourcing that file in Bash will make the environment available to the
 user; and can be included in ``.bashrc`` files, etc.  The ``loads``
 file may also be copied out of the environment, renamed, etc.
+
+
+.. _environment_include_concrete:
+
+------------------------------
+Included Concrete Environments
+------------------------------
+
+Spack environments can create an environment based off of information in already
+established environments. You can think of it as a combination of existing
+environments. It will gather information from the existing environment's
+``spack.lock`` and use that during the creation of this included concrete
+environment. When an included concrete environment is created it will generate
+a ``spack.lock`` file for the newly created environment.
+
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Creating included environments
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+To create a combined concrete environment, you must have at least one existing
+concrete environment. You will use the command ``spack env create`` with the
+argument ``--include-concrete`` followed by the name or path of the environment
+you'd like to include. Here is an example of how to create a combined environment
+from the command line.
+
+.. code-block:: console
+
+   $ spack env create myenv
+   $ spack -e myenv add python
+   $ spack -e myenv concretize
+   $ spack env create --include-concrete myenv included_env
+
+
+You can also include an environment directly in the ``spack.yaml`` file. It
+involves adding the ``include_concrete`` heading in the yaml followed by the
+absolute path to the independent environments.
+
+.. code-block:: yaml
+
+   spack:
+     specs: []
+     concretizer:
+         unify: true
+     include_concrete:
+     - /absolute/path/to/environment1
+     - /absolute/path/to/environment2
+
+
+Once the ``spack.yaml`` has been updated you must concretize the environment to
+get the concrete specs from the included environments.
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Updating an included environment
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+If changes were made to the base environment and you want that reflected in the
+included environment you will need to reconcretize both the base environment and the
+included environment for the change to be implemented. For example:
+
+.. code-block:: console
+
+   $ spack env create myenv
+   $ spack -e myenv add python
+   $ spack -e myenv concretize
+   $ spack env create --include-concrete myenv included_env
+
+
+   $ spack -e myenv find
+   ==> In environment myenv
+   ==> Root specs
+   python
+
+   ==> 0 installed packages
+
+
+   $ spack -e included_env find
+   ==> In environment included_env
+   ==> No root specs
+   ==> Included specs
+   python
+
+   ==> 0 installed packages
+
+Here we see that ``included_env`` has access to the python package through
+the ``myenv`` environment. But if we were to add another spec to ``myenv``,
+``included_env`` will not be able to access the new information.
+
+.. code-block:: console
+
+   $ spack -e myenv add perl
+   $ spack -e myenv concretize
+   $ spack -e myenv find
+   ==> In environment myenv
+   ==> Root specs
+   perl  python
+
+   ==> 0 installed packages
+
+
+   $ spack -e included_env find
+   ==> In environment included_env
+   ==> No root specs
+   ==> Included specs
+   python
+
+   ==> 0 installed packages
+
+It isn't until you run the ``spack concretize`` command that the combined
+environment will get the updated information from the reconcretized base environmennt.
+
+.. code-block:: console
+
+   $ spack -e included_env concretize
+   $ spack -e included_env find
+   ==> In environment included_env
+   ==> No root specs
+   ==> Included specs
+   perl  python
+
+   ==> 0 installed packages
 
 .. _environment-configuration:
 
@@ -472,11 +619,11 @@ a ``packages.yaml`` file) could contain:
 .. code-block:: yaml
 
    spack:
-     ...
+     # ...
      packages:
        all:
          compiler: [intel]
-     ...
+     # ...
 
 This configuration sets the default compiler for all packages to
 ``intel``.
@@ -783,6 +930,7 @@ For example, the following environment has three root packages:
 This allows for a much-needed reduction in redundancy between packages
 and constraints.
 
+
 ----------------
 Filesystem Views
 ----------------
@@ -822,7 +970,7 @@ directories.
 .. code-block:: yaml
 
    spack:
-     ...
+     # ...
      view:
        mpis:
          root: /path/to/view
@@ -866,7 +1014,7 @@ automatically named ``default``, so that
 .. code-block:: yaml
 
    spack:
-     ...
+     # ...
      view: True
 
 is equivalent to
@@ -874,7 +1022,7 @@ is equivalent to
 .. code-block:: yaml
 
    spack:
-     ...
+     # ...
      view:
        default:
          root: .spack-env/view
@@ -884,7 +1032,7 @@ and
 .. code-block:: yaml
 
    spack:
-     ...
+     # ...
      view: /path/to/view
 
 is equivalent to
@@ -892,7 +1040,7 @@ is equivalent to
 .. code-block:: yaml
 
    spack:
-     ...
+     # ...
      view:
        default:
          root: /path/to/view
@@ -934,6 +1082,17 @@ function, as shown in the example below:
      zlib: "{name}-{version}"
      ^mpi: "{name}-{version}/{^mpi.name}-{^mpi.version}-{compiler.name}-{compiler.version}"
      all: "{name}-{version}/{compiler.name}-{compiler.version}"
+
+Projections also permit environment and spack configuration variable
+expansions as shown below:
+
+.. code-block:: yaml
+
+   projections:
+     all: "{name}-{version}/{compiler.name}-{compiler.version}/$date/$SYSTEM_ENV_VARIBLE"
+
+where ``$date`` is the spack configuration variable that will expand with the ``YYYY-MM-DD``
+format and ``$SYSTEM_ENV_VARIABLE`` is an environment variable defined in the shell.
 
 The entries in the projections configuration file must all be either
 specs or the keyword ``all``. For each spec, the projection used will
@@ -1005,7 +1164,7 @@ other targets to depend on the environment installation.
 
 A typical workflow is as follows:
 
-.. code:: console
+.. code-block:: console
 
    spack env create -d .
    spack -e . add perl
@@ -1098,7 +1257,7 @@ its dependencies. This can be useful when certain flags should only apply to
 dependencies. Below we show a use case where a spec is installed with verbose
 output (``spack install --verbose``) while its dependencies are installed silently:
 
-.. code:: console
+.. code-block:: console
 
    $ spack env depfile -o Makefile
 
@@ -1120,7 +1279,7 @@ This can be accomplished through the generated ``[<prefix>/]SPACK_PACKAGE_IDS``
 variable. Assuming we have an active and concrete environment, we generate the
 associated ``Makefile`` with a prefix ``example``:
 
-.. code:: console
+.. code-block:: console
 
    $ spack env depfile -o env.mk --make-prefix example
 

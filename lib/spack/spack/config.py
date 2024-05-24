@@ -63,10 +63,11 @@ from spack.error import SpackError
 from spack.util.cpus import cpus_available
 
 #: Dict from section names -> schema for that section
-SECTION_SCHEMAS = {
+SECTION_SCHEMAS: Dict[str, Any] = {
     "compilers": spack.schema.compilers.schema,
     "concretizer": spack.schema.concretizer.schema,
     "definitions": spack.schema.definitions.schema,
+    "view": spack.schema.view.schema,
     "develop": spack.schema.develop.schema,
     "mirrors": spack.schema.mirrors.schema,
     "repos": spack.schema.repos.schema,
@@ -81,7 +82,7 @@ SECTION_SCHEMAS = {
 
 # Same as above, but including keys for environments
 # this allows us to unify config reading between configs and environments
-_ALL_SCHEMAS = copy.deepcopy(SECTION_SCHEMAS)
+_ALL_SCHEMAS: Dict[str, Any] = copy.deepcopy(SECTION_SCHEMAS)
 _ALL_SCHEMAS.update({spack.schema.env.TOP_LEVEL_KEY: spack.schema.env.schema})
 
 #: Path to the default configuration
@@ -106,7 +107,7 @@ CONFIG_DEFAULTS = {
 
 #: metavar to use for commands that accept scopes
 #: this is shorter and more readable than listing all choices
-SCOPES_METAVAR = "{defaults,system,site,user}[/PLATFORM] or env:ENVIRONMENT"
+SCOPES_METAVAR = "{defaults,system,site,user,command_line}[/PLATFORM] or env:ENVIRONMENT"
 
 #: Base name for the (internal) overrides scope.
 _OVERRIDES_BASE_NAME = "overrides-"
@@ -763,6 +764,31 @@ def _add_platform_scope(
     cfg.push_scope(scope_type(plat_name, plat_path))
 
 
+def config_paths_from_entry_points() -> List[Tuple[str, str]]:
+    """Load configuration paths from entry points
+
+    A python package can register entry point metadata so that Spack can find
+    its configuration by adding the following to the project's pyproject.toml:
+
+    .. code-block:: toml
+
+       [project.entry-points."spack.config"]
+       baz = "baz:get_spack_config_path"
+
+    The function ``get_spack_config_path`` returns the path to the package's
+    spack configuration scope
+
+    """
+    config_paths: List[Tuple[str, str]] = []
+    for entry_point in lang.get_entry_points(group="spack.config"):
+        hook = entry_point.load()
+        if callable(hook):
+            config_path = hook()
+            if config_path and os.path.exists(config_path):
+                config_paths.append(("plugin-%s" % entry_point.name, str(config_path)))
+    return config_paths
+
+
 def _add_command_line_scopes(
     cfg: Union[Configuration, lang.Singleton], command_line_scopes: List[str]
 ) -> None:
@@ -814,6 +840,9 @@ def create() -> Configuration:
     # Site configuration is per spack instance, for sites or projects
     # No site-level configs should be checked into spack by default.
     configuration_paths.append(("site", os.path.join(spack.paths.etc_path)))
+
+    # Python package's can register configuration scopes via entry_points
+    configuration_paths.extend(config_paths_from_entry_points())
 
     # User configuration can override both spack defaults and site config
     # This is disabled if user asks for no local configuration.
@@ -1096,7 +1125,7 @@ def read_config_file(
             data = syaml.load_config(f)
 
         if data:
-            if not schema:
+            if schema is None:
                 key = next(iter(data))
                 schema = _ALL_SCHEMAS[key]
             validate(data, schema)
@@ -1533,8 +1562,9 @@ def ensure_latest_format_fn(section: str) -> Callable[[YamlConfigDict], bool]:
 def use_configuration(
     *scopes_or_paths: Union[ConfigScope, str]
 ) -> Generator[Configuration, None, None]:
-    """Use the configuration scopes passed as arguments within the
-    context manager.
+    """Use the configuration scopes passed as arguments within the context manager.
+
+    This function invalidates caches, and is therefore very slow.
 
     Args:
         *scopes_or_paths: scope objects or paths to be used

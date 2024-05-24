@@ -5,15 +5,16 @@
 """Schema for config.yaml configuration file.
 
 .. literalinclude:: _spack_root/lib/spack/spack/schema/config.py
-   :lines: 13-
+   :lines: 17-
 """
+from typing import Any, Dict
 
 from llnl.util.lang import union_dicts
 
 import spack.schema.projections
 
 #: Properties for inclusion in other schemas
-properties = {
+properties: Dict[str, Any] = {
     "config": {
         "type": "object",
         "default": {},
@@ -62,6 +63,7 @@ properties = {
                 "oneOf": [{"type": "string"}, {"type": "array", "items": {"type": "string"}}]
             },
             "stage_name": {"type": "string"},
+            "develop_stage_link": {"type": "string"},
             "test_stage": {"type": "string"},
             "extensions": {"type": "array", "items": {"type": "string"}},
             "template_dirs": {"type": "array", "items": {"type": "string"}},
@@ -71,6 +73,7 @@ properties = {
             "environments_root": {"type": "string"},
             "connect_timeout": {"type": "integer", "minimum": 0},
             "verify_ssl": {"type": "boolean"},
+            "ssl_certs": {"type": "string"},
             "suppress_gpg_warnings": {"type": "boolean"},
             "install_missing_compilers": {"type": "boolean"},
             "debug": {"type": "boolean"},

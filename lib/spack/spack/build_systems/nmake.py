@@ -77,7 +77,11 @@ class NMakeBuilder(BaseBuilder):
     @property
     def build_directory(self):
         """Return the directory containing the makefile."""
-        return self.pkg.stage.source_path if not self.makefile_root else self.makefile_root
+        return (
+            fs.windows_sfn(self.pkg.stage.source_path)
+            if not self.makefile_root
+            else fs.windows_sfn(self.makefile_root)
+        )
 
     @property
     def std_nmake_args(self):
@@ -141,7 +145,7 @@ class NMakeBuilder(BaseBuilder):
         opts += self.nmake_install_args()
         if self.makefile_name:
             opts.append("/F{}".format(self.makefile_name))
-        opts.append(self.define("PREFIX", prefix))
+        opts.append(self.define("PREFIX", fs.windows_sfn(prefix)))
         with fs.working_dir(self.build_directory):
             inspect.getmodule(self.pkg).nmake(
                 *opts, *self.install_targets, ignore_quotes=self.ignore_quotes

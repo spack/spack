@@ -6,12 +6,12 @@
 """Schema for projections.yaml configuration file.
 
 .. literalinclude:: _spack_root/lib/spack/spack/schema/projections.py
-   :lines: 13-
+   :lines: 14-
 """
-
+from typing import Any, Dict
 
 #: Properties for inclusion in other schemas
-properties = {
+properties: Dict[str, Any] = {
     "projections": {"type": "object", "patternProperties": {r"all|\w[\w-]*": {"type": "string"}}}
 }
 

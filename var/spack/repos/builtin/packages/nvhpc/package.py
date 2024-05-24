@@ -21,6 +21,30 @@ from spack.util.prefix import Prefix
 #  - package key must be in the form '{os}-{arch}' where 'os' is in the
 #    format returned by platform.system() and 'arch' by platform.machine()
 _versions = {
+    "24.3": {
+        "Linux-aarch64": (
+            "6385847de5f8725e5c56d2abf70c90fed5490f2e71a7bd13d3f4ada8720ef036",
+            "https://developer.download.nvidia.com/hpc-sdk/24.3/nvhpc_2024_243_Linux_aarch64_cuda_multi.tar.gz",
+        ),
+        "Linux-x86_64": (
+            "a9fe5ec878e9c4cc332de732c6739f97ac064ce76ad3d0af6d282658d27124cb",
+            "https://developer.download.nvidia.com/hpc-sdk/24.3/nvhpc_2024_243_Linux_x86_64_cuda_multi.tar.gz",
+        ),
+    },
+    "24.1": {
+        "Linux-aarch64": (
+            "8c2ce561d5901a03eadce7f07dce5fbc55e8e88c87b74cf60e01e2eca231c41c",
+            "https://developer.download.nvidia.com/hpc-sdk/24.1/nvhpc_2024_241_Linux_aarch64_cuda_multi.tar.gz",
+        ),
+        "Linux-ppc64le": (
+            "e7330eb35e23dcd9b0b3bedc67c0d5443c4fd76b59caa894a76ecb0d17f71f43",
+            "https://developer.download.nvidia.com/hpc-sdk/24.1/nvhpc_2024_241_Linux_ppc64le_cuda_multi.tar.gz",
+        ),
+        "Linux-x86_64": (
+            "27992e5fd56af8738501830daddc5e9510ebd553326fea8730236fee4f0f1dd8",
+            "https://developer.download.nvidia.com/hpc-sdk/24.1/nvhpc_2024_241_Linux_x86_64_cuda_multi.tar.gz",
+        ),
+    },
     "23.11": {
         "Linux-aarch64": (
             "cf744498d1d74ba0af4294388706644ad3669eb0cacea3b69e23739afa2806a0",
@@ -346,7 +370,7 @@ _versions = {
 }
 
 
-class Nvhpc(Package):
+class Nvhpc(Package, CompilerPackage):
     """The NVIDIA HPC SDK is a comprehensive suite of compilers, libraries
     and tools essential to maximizing developer productivity and the
     performance and portability of HPC applications. The NVIDIA HPC
@@ -364,7 +388,9 @@ class Nvhpc(Package):
     maintainers("samcmill")
     tags = ["e4s"]
 
-    skip_version_audit = ["platform=darwin"]
+    skip_version_audit = ["platform=darwin", "platform=windows"]
+
+    redistribute(source=False, binary=False)
 
     for ver, packages in _versions.items():
         key = "{0}-{1}".format(platform.system(), platform.machine())
@@ -392,6 +418,20 @@ class Nvhpc(Package):
     provides("mpi", when="+mpi")
 
     requires("%gcc", msg="nvhpc must be installed with %gcc")
+
+    # For now we only detect compiler components
+    # It will require additional work to detect mpi/lapack/blas components
+    compiler_languages = ["c", "cxx", "fortran"]
+    c_names = ["nvc"]
+    cxx_names = ["nvc++"]
+    fortran_names = ["nvfortran"]
+    compiler_version_argument = "--version"
+    compiler_version_regex = r"nv[^ ]* (?:[^ ]+ Dev-r)?([0-9.]+)(?:-[0-9]+)?"
+
+    @classmethod
+    def determine_variants(cls, exes, version_str):
+        # TODO: use other exes to determine default_cuda/install_type/blas/lapack/mpi variants
+        return "~blas~lapack~mpi", {"compilers": cls.determine_compiler_paths(exes=exes)}
 
     def _version_prefix(self):
         return join_path(self.prefix, "Linux_%s" % self.spec.target.family, self.version)

@@ -13,7 +13,6 @@ import os
 import shutil
 import sys
 import tempfile
-import urllib.request
 from typing import Dict, List, Optional, Tuple, Union
 
 import llnl.util.tty as tty
@@ -54,6 +53,7 @@ from spack.oci.image import (
 from spack.oci.oci import (
     copy_missing_layers_with_retry,
     get_manifest_and_config_with_retry,
+    list_tags,
     upload_blob_with_retry,
     upload_manifest_with_retry,
 )
@@ -132,6 +132,11 @@ def setup_parser(subparser: argparse.ArgumentParser):
         default=None,
         help="when pushing to an OCI registry, tag an image containing all root specs and their "
         "runtime dependencies",
+    )
+    push.add_argument(
+        "--private",
+        action="store_true",
+        help="for a private mirror, include non-redistributable packages",
     )
     arguments.add_common_arguments(push, ["specs", "jobs"])
     push.set_defaults(func=push_fn)
@@ -275,23 +280,37 @@ def setup_parser(subparser: argparse.ArgumentParser):
 
     # Sync buildcache entries from one mirror to another
     sync = subparsers.add_parser("sync", help=sync_fn.__doc__)
-    sync.add_argument(
-        "--manifest-glob", help="a quoted glob pattern identifying copy manifest files"
+
+    sync_manifest_source = sync.add_argument_group(
+        "Manifest Source",
+        "Specify a list of build cache objects to sync using manifest file(s)."
+        'This option takes the place of the "source mirror" for synchronization'
+        'and optionally takes a "destination mirror" ',
     )
-    sync.add_argument(
+    sync_manifest_source.add_argument(
+        "--manifest-glob", help="a quoted glob pattern identifying CI rebuild manifest files"
+    )
+    sync_source_mirror = sync.add_argument_group(
+        "Named Source",
+        "Specify a single registered source mirror to synchronize from. This option requires"
+        "the specification of a destination mirror.",
+    )
+    sync_source_mirror.add_argument(
         "src_mirror",
         metavar="source mirror",
-        type=arguments.mirror_name_or_url,
         nargs="?",
+        type=arguments.mirror_name_or_url,
         help="source mirror name, path, or URL",
     )
+
     sync.add_argument(
         "dest_mirror",
         metavar="destination mirror",
-        type=arguments.mirror_name_or_url,
         nargs="?",
+        type=arguments.mirror_name_or_url,
         help="destination mirror name, path, or URL",
     )
+
     sync.set_defaults(func=sync_fn)
 
     # Update buildcache index without copying any additional packages
@@ -353,6 +372,25 @@ def _make_pool() -> MaybePool:
         return NoPool()
 
 
+def _skip_no_redistribute_for_public(specs):
+    remaining_specs = list()
+    removed_specs = list()
+    for spec in specs:
+        if spec.package.redistribute_binary:
+            remaining_specs.append(spec)
+        else:
+            removed_specs.append(spec)
+    if removed_specs:
+        colified_output = tty.colify.colified(list(s.name for s in removed_specs), indent=4)
+        tty.debug(
+            "The following specs will not be added to the binary cache"
+            " because they cannot be redistributed:\n"
+            f"{colified_output}\n"
+            "You can use `--private` to include them."
+        )
+    return remaining_specs
+
+
 def push_fn(args):
     """create a binary package and push it to a mirror"""
     if args.spec_file:
@@ -403,6 +441,8 @@ def push_fn(args):
         root="package" in args.things_to_install,
         dependencies="dependencies" in args.things_to_install,
     )
+    if not args.private:
+        specs = _skip_no_redistribute_for_public(specs)
 
     # When pushing multiple specs, print the url once ahead of time, as well as how
     # many specs are being pushed.
@@ -594,6 +634,15 @@ def _put_manifest(
     base_manifest, base_config = base_images[architecture]
     env = _retrieve_env_dict_from_config(base_config)
 
+    # If the base image uses `vnd.docker.distribution.manifest.v2+json`, then we use that too.
+    # This is because Singularity / Apptainer is very strict about not mixing them.
+    base_manifest_mediaType = base_manifest.get(
+        "mediaType", "application/vnd.oci.image.manifest.v1+json"
+    )
+    use_docker_format = (
+        base_manifest_mediaType == "application/vnd.docker.distribution.manifest.v2+json"
+    )
+
     spack.user_environment.environment_modifications_for_specs(*specs).apply_modifications(env)
 
     # Create an oci.image.config file
@@ -625,8 +674,8 @@ def _put_manifest(
     # Upload the config file
     upload_blob_with_retry(image_ref, file=config_file, digest=config_file_checksum)
 
-    oci_manifest = {
-        "mediaType": "application/vnd.oci.image.manifest.v1+json",
+    manifest = {
+        "mediaType": base_manifest_mediaType,
         "schemaVersion": 2,
         "config": {
             "mediaType": base_manifest["config"]["mediaType"],
@@ -637,7 +686,11 @@ def _put_manifest(
             *(layer for layer in base_manifest["layers"]),
             *(
                 {
-                    "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+                    "mediaType": (
+                        "application/vnd.docker.image.rootfs.diff.tar.gzip"
+                        if use_docker_format
+                        else "application/vnd.oci.image.layer.v1.tar+gzip"
+                    ),
                     "digest": str(checksums[s.dag_hash()].compressed_digest),
                     "size": checksums[s.dag_hash()].size,
                 }
@@ -646,11 +699,11 @@ def _put_manifest(
         ],
     }
 
-    if annotations:
-        oci_manifest["annotations"] = annotations
+    if not use_docker_format and annotations:
+        manifest["annotations"] = annotations
 
     # Finally upload the manifest
-    upload_manifest_with_retry(image_ref, oci_manifest=oci_manifest)
+    upload_manifest_with_retry(image_ref, manifest=manifest)
 
     # delete the config file
     os.unlink(config_file)
@@ -803,10 +856,7 @@ def _config_from_tag(image_ref: ImageReference, tag: str) -> Optional[dict]:
 
 
 def _update_index_oci(image_ref: ImageReference, tmpdir: str, pool: MaybePool) -> None:
-    request = urllib.request.Request(url=image_ref.tags_url())
-    response = spack.oci.opener.urlopen(request)
-    spack.oci.opener.ensure_status(request, response, 200)
-    tags = json.load(response)["tags"]
+    tags = list_tags(image_ref)
 
     # Fetch all image config files in parallel
     spec_dicts = pool.starmap(
@@ -1057,7 +1107,17 @@ def sync_fn(args):
     requires an active environment in order to know which specs to sync
     """
     if args.manifest_glob:
-        manifest_copy(glob.glob(args.manifest_glob))
+        # Passing the args.src_mirror here because it is not possible to
+        # have the destination be required when specifying a named source
+        # mirror and optional for the --manifest-glob argument. In the case
+        # of manifest glob sync, the source mirror positional argument is the
+        # destination mirror if it is specified. If there are two mirrors
+        # specified, the second is ignored and the first is the override
+        # destination.
+        if args.dest_mirror:
+            tty.warn(f"Ignoring unused arguemnt: {args.dest_mirror.name}")
+
+        manifest_copy(glob.glob(args.manifest_glob), args.src_mirror)
         return 0
 
     if args.src_mirror is None or args.dest_mirror is None:
@@ -1108,7 +1168,7 @@ def sync_fn(args):
         shutil.rmtree(tmpdir)
 
 
-def manifest_copy(manifest_file_list):
+def manifest_copy(manifest_file_list, dest_mirror=None):
     """Read manifest files containing information about specific specs to copy
     from source to destination, remove duplicates since any binary packge for
     a given hash should be the same as any other, and copy all files specified
@@ -1122,10 +1182,17 @@ def manifest_copy(manifest_file_list):
                 # Last duplicate hash wins
                 deduped_manifest[spec_hash] = copy_list
 
+    build_cache_dir = bindist.build_cache_relative_path()
     for spec_hash, copy_list in deduped_manifest.items():
         for copy_file in copy_list:
-            tty.debug("copying {0} to {1}".format(copy_file["src"], copy_file["dest"]))
-            copy_buildcache_file(copy_file["src"], copy_file["dest"])
+            dest = copy_file["dest"]
+            if dest_mirror:
+                src_relative_path = os.path.join(
+                    build_cache_dir, copy_file["src"].rsplit(build_cache_dir, 1)[1].lstrip("/")
+                )
+                dest = url_util.join(dest_mirror.push_url, src_relative_path)
+            tty.debug("copying {0} to {1}".format(copy_file["src"], dest))
+            copy_buildcache_file(copy_file["src"], dest)
 
 
 def update_index(mirror: spack.mirror.Mirror, update_keys=False):
@@ -1152,14 +1219,18 @@ def update_index(mirror: spack.mirror.Mirror, update_keys=False):
             url, bindist.build_cache_relative_path(), bindist.build_cache_keys_relative_path()
         )
 
-        bindist.generate_key_index(keys_url)
+        try:
+            bindist.generate_key_index(keys_url)
+        except bindist.CannotListKeys as e:
+            # Do not error out if listing keys went wrong. This usually means that the _gpg path
+            # does not exist. TODO: distinguish between this and other errors.
+            tty.warn(f"did not update the key index: {e}")
 
 
 def update_index_fn(args):
     """update a buildcache index"""
-    update_index(args.mirror, update_keys=args.keys)
+    return update_index(args.mirror, update_keys=args.keys)
 
 
 def buildcache(parser, args):
-    if args.func:
-        args.func(args)
+    return args.func(args)

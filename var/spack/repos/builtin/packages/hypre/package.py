@@ -26,6 +26,7 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
     license("MIT")
 
     version("develop", branch="master")
+    version("2.31.0", sha256="9a7916e2ac6615399de5010eb39c604417bb3ea3109ac90e199c5c63b0cb4334")
     version("2.30.0", sha256="8e2af97d9a25bf44801c6427779f823ebc6f306438066bba7fcbc2a5f9b78421")
     version("2.29.0", sha256="98b72115407a0e24dbaac70eccae0da3465f8f999318b2c9241631133f42d511")
     version("2.28.0", sha256="2eea68740cdbc0b49a5e428f06ad7af861d1e169ce6a12d2cf0aa2fc28c4a2ae")
@@ -71,6 +72,7 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
     variant("int64", default=False, description="Use 64bit integers")
     variant("mixedint", default=False, description="Use 64bit integers while reducing memory use")
     variant("complex", default=False, description="Use complex values")
+    variant("gpu-aware-mpi", default=False, description="Use gpu-aware mpi")
     variant("mpi", default=True, description="Enable MPI support")
     variant("openmp", default=False, description="Enable OpenMP support")
     variant("debug", default=False, description="Build debug instead of optimized version")
@@ -81,6 +83,8 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
     variant("sycl", default=False, description="Enable SYCL support")
     variant("magma", default=False, description="Enable MAGMA interface")
     variant("caliper", default=False, description="Enable Caliper support")
+    variant("rocblas", default=False, description="Enable rocBLAS")
+    variant("cublas", default=False, description="Enable cuBLAS")
 
     # Patch to add gptune hookup codes
     patch("ij_gptune.patch", when="+gptune@2.19.0")
@@ -112,6 +116,8 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
     depends_on("rocprim", when="+rocm")
     depends_on("hipblas", when="+rocm +superlu-dist")
     depends_on("umpire", when="+umpire")
+    depends_on("umpire+rocm", when="+umpire+rocm")
+    depends_on("umpire+cuda", when="+umpire+cuda")
     depends_on("caliper", when="+caliper")
 
     gpu_pkgs = ["magma", "umpire"]
@@ -163,6 +169,9 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
 
     # Option added in v2.29.0
     conflicts("+magma", when="@:2.28")
+
+    conflicts("+cublas", when="~cuda", msg="cuBLAS requires CUDA to be enabled")
+    conflicts("+rocblas", when="~rocm", msg="rocBLAS requires ROCm to be enabled")
 
     configure_directory = "src"
 
@@ -255,6 +264,8 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
                 configure_args.append("--with-cuda-home={0}".format(spec["cuda"].prefix))
             else:
                 configure_args.append("--enable-cub")
+            if spec.satisfies("+cublas"):
+                conigure_args.append("--enable-cublas")
         else:
             configure_args.extend(["--without-cuda", "--disable-curand", "--disable-cusparse"])
             if spec.satisfies("@:2.20.99"):
@@ -280,16 +291,17 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
                 rocm_arch_sorted = list(sorted(rocm_arch_vals, reverse=True))
                 rocm_arch = rocm_arch_sorted[0]
                 configure_args.append("--with-gpu-arch={0}".format(rocm_arch))
+            if spec.satisfies("+rocblas"):
+                configure_args.append("--enable-rocblas")
         else:
             configure_args.extend(["--without-hip", "--disable-rocrand", "--disable-rocsparse"])
 
         if spec.satisfies("+sycl"):
             configure_args.append("--with-sycl")
-            sycl_compatible_compilers = ["dpcpp", "icpx"]
+            sycl_compatible_compilers = ["icpx"]
             if not (os.path.basename(self.compiler.cxx) in sycl_compatible_compilers):
                 raise InstallError(
-                    "Hypre's SYCL GPU Backend requires DPC++ (dpcpp)"
-                    + " or the oneAPI CXX (icpx) compiler."
+                    "Hypre's SYCL GPU Backend requires the oneAPI CXX (icpx) compiler."
                 )
 
         if spec.satisfies("+unified-memory"):
@@ -299,6 +311,9 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
             configure_args.append("--with-magma-include=%s" % spec["magma"].prefix.include)
             configure_args.append("--with-magma-lib=%s" % spec["magma"].libs)
             configure_args.append("--with-magma")
+
+        if "+gpu-aware-mpi" in spec:
+            configure_args.append("--enable-gpu-aware-mpi")
 
         configure_args.extend(self.enable_or_disable("fortran"))
 

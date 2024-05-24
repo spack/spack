@@ -18,10 +18,23 @@ class Bazel(Package):
     homepage = "https://bazel.build/"
     url = "https://github.com/bazelbuild/bazel/releases/download/3.1.0/bazel-3.1.0-dist.zip"
 
+    maintainers("LydDeb")
+
     tags = ["build-tools"]
 
     license("Apache-2.0")
 
+    version("7.0.2", sha256="dea2b90575d43ef3e41c402f64c2481844ecbf0b40f8548b75a204a4d504e035")
+    version("7.0.1", sha256="596b13e071d27c43343ec8f5d263cb5312fafe7ef8702401f7ed492f182f4e6c")
+    version("7.0.0", sha256="477e54f6374001f439a9471ba1de9d7824daf129db95510849ecc5e19ce88170")
+    version("6.5.0", sha256="fc89da919415289f29e4ff18a5e01270ece9a6fe83cb60967218bac4a3bb3ed2")
+    version("6.4.0", sha256="bd88ff602c8bbb29ee82ba2a6b12ad092d51ec668c6577f9628f18e48ff4e51e")
+    version("6.3.2", sha256="8cd7feac58193be2bcba451ba6688a46824d37ca6359ff58e0d44eb98f042948")
+    version("6.3.1", sha256="2676319e86c5aeab142dccd42434364a33aa330a091c13562b7de87a10e68775")
+    version("6.3.0", sha256="902198981b1d26112fc05913e79f1b3e9772c3f95594caf85619d041ba06ede0")
+    version("6.2.1", sha256="4cf4d264bff388ee0012735728630d23832d3c9d021383b2fadceadb0775dd6b")
+    version("6.2.0", sha256="f1e8f788637ac574d471d619d2096baaca04a19b57a034399e079633db441945")
+    version("6.1.2", sha256="6fb3ee22fe9fa86d82e173572d504c089f10825d749725592626e090b38c9679")
     version("6.1.1", sha256="6b900f26d676c7eca1d2e7dff9b71890dabd3ff59cab2a2d2178bc8a0395342a")
     version("6.1.0", sha256="c4b85675541cf66ee7cb71514097fdd6c5fc0e02527243617a4f20ca6b4f2932")
     version("6.0.0", sha256="7bc0c5145c19a56d82a08fce6908c5e1a0e75e4fbfb3b6f12b4deae7f4b38cbc")
@@ -33,6 +46,7 @@ class Bazel(Package):
     version("5.1.1", sha256="7f5d3bc1d344692b2400f3765fd4b5c0b636eb4e7a8a7b17923095c7b56a4f78")
     version("5.1.0", sha256="4de301f509fc6d0cbc697b2017384ecdc94df8f36245bbcbedc7ea6780acc9f5")
     version("5.0.0", sha256="072dd62d237dbc11e0bac02e118d8c2db4d0ba3ba09f1a0eb1e2a460fb8419db")
+    version("4.2.4", sha256="d5ba2ef28da5275f22e832aaa7f9319c61ea5db9b6a3e23b28a6a64ad03078f3")
     version("4.2.3", sha256="b0e84d0538f3ec2b95a49bae31a5066f0967281a3ca99965016fbe178acd2d3d")
     version("4.2.2", sha256="9981d0d53a356c4e87962847750a97c9e8054e460854748006c80f0d7e2b2d33")
     version("4.2.1", sha256="12ea7aa11e2bdb12de1dceb9939a22e96f5a480437cb17c123379d8e0fdf5e82")
@@ -66,7 +80,6 @@ class Bazel(Package):
     )
 
     # https://bazel.build/install/compile-source#bootstrap-unix-prereq
-    depends_on("java", type=("build", "run"))
     depends_on("java@11", when="@5.3:", type=("build", "run"))
     depends_on("java@8,11", when="@3.3:5.2", type=("build", "run"))
     depends_on("java@8", when="@0.6:3.2", type=("build", "run"))
@@ -84,10 +97,11 @@ class Bazel(Package):
     patch("compile-0.29.patch")
 
     # Disable dependency search
-    patch("cppcompileaction-0.3.2.patch", when="+nodepfail")
+    patch("cppcompileaction-7.0.0.patch", when="@7: +nodepfail")
+    patch("cppcompileaction-0.3.2.patch", when="@:6 +nodepfail")
 
     # https://github.com/bazelbuild/bazel/issues/17956
-    patch("apple-clang-14.0.3.patch", when="@:5.4.0,6.0:6.1")
+    patch("apple-clang-14.0.3.patch", when="@:4.2.3,5:6.1.1")
 
     # https://github.com/bazelbuild/bazel/issues/17958
     patch(
@@ -117,8 +131,43 @@ class Bazel(Package):
     # Bazel-4.0.0 does not compile with gcc-11
     # Newer versions of grpc and abseil dependencies are needed but are not in bazel-4.0.0
     conflicts("@4.0.0", when="%gcc@11:")
+    # https://github.com/bazelbuild/bazel/issues/18642
+    conflicts("@:6", when="%gcc@13:")
 
     executables = ["^bazel$"]
+
+    # Download resources to perform offline build with bazel.
+    # The following URLs and sha256 are in the file distdir_deps.bzl at the root of bazel sources.
+    resource_dictionary = {}
+    resource_dictionary["bazel_skylib"] = {
+        "url": "https://github.com/bazelbuild/bazel-skylib/releases/download/1.0.1/bazel-skylib-1.0.1.tar.gz",
+        "sha256": "f1c8360c01fcf276778d3519394805dc2a71a64274a3a0908bc9edff7b5aebc8",
+        "when": "@4:6",
+    }
+    resource_dictionary["zulu_11_56_19"] = {
+        "url": "https://mirror.bazel.build/cdn.azul.com/zulu/bin/zulu11.56.19-ca-jdk11.0.15-linux_x64.tar.gz",
+        "sha256": "e064b61d93304012351242bf0823c6a2e41d9e28add7ea7f05378b7243d34247",
+        "when": "@6",
+    }
+    resource_dictionary["zulu_11_50_19"] = {
+        "url": "https://mirror.bazel.build/openjdk/azul-zulu11.50.19-ca-jdk11.0.12/zulu11.50.19-ca-jdk11.0.12-linux_x64.tar.gz",
+        "sha256": "b8e8a63b79bc312aa90f3558edbea59e71495ef1a9c340e38900dd28a1c579f3",
+        "when": "@5",
+    }
+    resource_dictionary["zulu_11_37_17"] = {
+        "url": "https://mirror.bazel.build/openjdk/azul-zulu11.37.17-ca-jdk11.0.6/zulu11.37.17-ca-jdk11.0.6-linux_x64.tar.gz",
+        "sha256": "360626cc19063bc411bfed2914301b908a8f77a7919aaea007a977fa8fb3cde1",
+        "when": "@4",
+    }
+    for resource_name in resource_dictionary.keys():
+        resource(
+            when=resource_dictionary[resource_name]["when"],
+            name=resource_name,
+            url=resource_dictionary[resource_name]["url"],
+            sha256=resource_dictionary[resource_name]["sha256"],
+            destination="archive",
+            expand=False,
+        )
 
     @classmethod
     def determine_version(cls, exe):
@@ -132,13 +181,23 @@ class Bazel(Package):
         env.set("BAZEL_LINKOPTS", "")
         env.set("BAZEL_LINKLIBS", "-lstdc++")
 
-        env.set(
-            "EXTRA_BAZEL_ARGS",
-            # Spack's logs don't handle colored output well
-            "--color=no --host_javabase=@local_jdk//:jdk"
-            # Enable verbose output for failures
-            " --verbose_failures --jobs={0}".format(make_jobs),
+        # .WARNING: Option 'host_javabase' is deprecated
+        # Use local java installation
+        args = "--color=no --define=ABSOLUTE_JAVABASE={0} --verbose_failures --jobs={1}".format(
+            self.spec["java"].prefix, make_jobs
         )
+
+        resource_stages = self.stage[1:]
+        for _resource in resource_stages:
+            try:
+                resource_name = _resource.resource.name
+                if self.spec.satisfies(self.resource_dictionary[resource_name]["when"]):
+                    archive_path = _resource.source_path
+                    args += " --distdir={0}".format(archive_path)
+            except AttributeError:
+                continue
+
+        env.set("EXTRA_BAZEL_ARGS", args)
 
     @run_before("install")
     def bootstrap(self):

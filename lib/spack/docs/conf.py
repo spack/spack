@@ -199,6 +199,7 @@ nitpick_ignore = [
     ("py:class", "contextlib.contextmanager"),
     ("py:class", "module"),
     ("py:class", "_io.BufferedReader"),
+    ("py:class", "_io.BytesIO"),
     ("py:class", "unittest.case.TestCase"),
     ("py:class", "_frozen_importlib_external.SourceFileLoader"),
     ("py:class", "clingo.Control"),

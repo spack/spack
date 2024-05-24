@@ -19,6 +19,7 @@ class LinuxHeaders(PackageNoDep):
 
     license("GPL-2.0-only")
 
+    version("6.8.9", sha256="f905f1238ea7a8e85314bacf283302e8097006010d25fcea726d0de0ea5bc9b6")
     version("6.5.2", sha256="2027e14057d568ad3ddc100dadf4c8853a49b031270478a61d88f6011572650f")
     version("6.2.8", sha256="fed0ad87d42f83a70ce019ff2800bc30a855e672e72bf6d54a014d98d344f665")
     version("4.9.10", sha256="bd6e05476fd8d9ea4945e11598d87bc97806bbc8d03556abbaaf809707661525")

@@ -176,7 +176,7 @@ def setup_parser(subparser):
         dest="install_source",
         help="install source files in prefix",
     )
-    arguments.add_common_arguments(subparser, ["no_checksum", "deprecated"])
+    arguments.add_common_arguments(subparser, ["no_checksum"])
     subparser.add_argument(
         "-v",
         "--verbose",
@@ -326,9 +326,6 @@ def install(parser, args):
     if args.no_checksum:
         spack.config.set("config:checksum", False, scope="command_line")
 
-    if args.deprecated:
-        spack.config.set("config:deprecated", True, scope="command_line")
-
     if args.log_file and not args.log_format:
         msg = "the '--log-format' must be specified when using '--log-file'"
         tty.die(msg)
@@ -423,10 +420,9 @@ def install_with_active_env(env: ev.Environment, args, install_kwargs, reporter_
         with reporter_factory(specs_to_install):
             env.install_specs(specs_to_install, **install_kwargs)
     finally:
-        # TODO: this is doing way too much to trigger
-        # views and modules to be generated.
-        with env.write_transaction():
-            env.write(regenerate=True)
+        if env.views:
+            with env.write_transaction():
+                env.write(regenerate=True)
 
 
 def concrete_specs_from_cli(args, install_kwargs):

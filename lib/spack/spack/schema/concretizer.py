@@ -2,20 +2,47 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
 """Schema for concretizer.yaml configuration file.
 
 .. literalinclude:: _spack_root/lib/spack/spack/schema/concretizer.py
-   :lines: 13-
+   :lines: 12-
 """
+from typing import Any, Dict
 
-properties = {
+LIST_OF_SPECS = {"type": "array", "items": {"type": "string"}}
+
+properties: Dict[str, Any] = {
     "concretizer": {
         "type": "object",
         "additionalProperties": False,
         "properties": {
             "reuse": {
-                "oneOf": [{"type": "boolean"}, {"type": "string", "enum": ["dependencies"]}]
+                "oneOf": [
+                    {"type": "boolean"},
+                    {"type": "string", "enum": ["dependencies"]},
+                    {
+                        "type": "object",
+                        "properties": {
+                            "roots": {"type": "boolean"},
+                            "include": LIST_OF_SPECS,
+                            "exclude": LIST_OF_SPECS,
+                            "from": {
+                                "type": "array",
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "type": {
+                                            "type": "string",
+                                            "enum": ["local", "buildcache", "external"],
+                                        },
+                                        "include": LIST_OF_SPECS,
+                                        "exclude": LIST_OF_SPECS,
+                                    },
+                                },
+                            },
+                        },
+                    },
+                ]
             },
             "enable_node_namespace": {"type": "boolean"},
             "targets": {
@@ -34,6 +61,7 @@ properties = {
                     "strategy": {"type": "string", "enum": ["none", "minimal", "full"]}
                 },
             },
+            "os_compatible": {"type": "object", "additionalProperties": {"type": "array"}},
         },
     }
 }

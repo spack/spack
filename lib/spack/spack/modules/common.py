@@ -83,6 +83,17 @@ _valid_tokens = (
 )
 
 
+_FORMAT_STRING_RE = re.compile(r"({[^}]*})")
+
+
+def _format_env_var_name(spec, var_name_fmt):
+    """Format the variable name, but uppercase any formatted fields."""
+    fmt_parts = _FORMAT_STRING_RE.split(var_name_fmt)
+    return "".join(
+        spec.format(part).upper() if _FORMAT_STRING_RE.match(part) else part for part in fmt_parts
+    )
+
+
 def _check_tokens_are_valid(format_string, message):
     """Checks that the tokens used in the format string are valid in
     the context of module file and environment variable naming.
@@ -121,43 +132,26 @@ def update_dictionary_extending_lists(target, update):
             target[key] = update[key]
 
 
-def dependencies(spec, request="all"):
-    """Returns the list of dependent specs for a given spec, according to the
-    request passed as parameter.
+def dependencies(spec: spack.spec.Spec, request: str = "all") -> List[spack.spec.Spec]:
+    """Returns the list of dependent specs for a given spec.
 
     Args:
         spec: spec to be analyzed
-        request: either 'none', 'direct' or 'all'
+        request: one of "none", "run", "direct", "all"
 
     Returns:
-        list of dependencies
-
-        The return list will be empty if request is 'none', will contain
-        the direct dependencies if request is 'direct', or the entire DAG
-        if request is 'all'.
+        list of requested dependencies
     """
-    if request not in ("none", "direct", "all"):
-        message = "Wrong value for argument 'request' : "
-        message += "should be one of ('none', 'direct', 'all')"
-        raise tty.error(message + " [current value is '%s']" % request)
-
     if request == "none":
         return []
+    elif request == "run":
+        return spec.dependencies(deptype=dt.RUN)
+    elif request == "direct":
+        return spec.dependencies(deptype=dt.RUN | dt.LINK)
+    elif request == "all":
+        return list(spec.traverse(order="topo", deptype=dt.LINK | dt.RUN, root=False))
 
-    if request == "direct":
-        return spec.dependencies(deptype=("link", "run"))
-
-    # FIXME : during module file creation nodes seem to be visited multiple
-    # FIXME : times even if cover='nodes' is given. This work around permits
-    # FIXME : to get a unique list of spec anyhow. Do we miss a merge
-    # FIXME : step among nodes that refer to the same package?
-    seen = set()
-    seen_add = seen.add
-    deps = sorted(
-        spec.traverse(order="post", cover="nodes", deptype=("link", "run"), root=False),
-        reverse=True,
-    )
-    return [d for d in deps if not (d in seen or seen_add(d))]
+    raise ValueError(f'request "{request}" is not one of "none", "direct", "run", "all"')
 
 
 def merge_config_rules(configuration, spec):
@@ -754,20 +748,12 @@ class BaseContext(tengine.Context):
         exclude = self.conf.exclude_env_vars
 
         # We may have tokens to substitute in environment commands
-
-        # Prepare a suitable transformation dictionary for the names
-        # of the environment variables. This means turn the valid
-        # tokens uppercase.
-        transform = {}
-        for token in _valid_tokens:
-            transform[token] = lambda s, string: str.upper(string)
-
         for x in env:
             # Ensure all the tokens are valid in this context
             msg = "some tokens cannot be expanded in an environment variable name"
+
             _check_tokens_are_valid(x.name, message=msg)
-            # Transform them
-            x.name = self.spec.format(x.name, transform=transform)
+            x.name = _format_env_var_name(self.spec, x.name)
             if self.modification_needs_formatting(x):
                 try:
                     # Not every command has a value

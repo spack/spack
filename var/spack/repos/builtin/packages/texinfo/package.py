@@ -25,6 +25,7 @@ class Texinfo(AutotoolsPackage, GNUMirrorPackage):
 
     license("GPL-3.0-or-later")
 
+    version("7.1", sha256="dd5710b3a53ac002644677a06145748e260592a35be182dc830ebebb79c5d5a0")
     version("7.0.3", sha256="3cc5706fb086b895e1dc2b407aade9f95a3a233ff856273e2b659b089f117683")
     version("7.0", sha256="9261d4ee11cdf6b61895e213ffcd6b746a61a64fe38b9741a3aaa73125b35170")
     version("6.8", sha256="8e09cf753ad1833695d2bac0f57dc3bd6bcbbfbf279450e1ba3bc2d7fb297d08")
@@ -67,7 +68,7 @@ class Texinfo(AutotoolsPackage, GNUMirrorPackage):
     def build_targets(self):
         targets = []
         if self.spec.satisfies("@7.0:"):
-            targets.append("CFLAGS={}".format(self.compiler.c11_flag))
+            targets.append(f"CFLAGS={self.compiler.c11_flag}")
         return targets
 
     def setup_build_environment(self, env):

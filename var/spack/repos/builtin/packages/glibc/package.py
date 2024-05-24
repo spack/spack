@@ -25,10 +25,19 @@ class Glibc(AutotoolsPackageNoDep, GNUMirrorPackageNoDep):
     maintainers("haampie")
 
     build_directory = "build"
+    tags = ["runtime"]
+
+    # This is used when the package is external and we need to find the actual default include path
+    # which may be in a multiarch subdir.
+    representative_headers = ["ieee754.h"]
 
     license("LGPL-2.1-or-later")
 
+    provides("libc")
+    provides("iconv")
+
     version("master", branch="master")
+    version("2.39", sha256="97f84f3b7588cd54093a6f6389b0c1a81e70d99708d74963a2e3eab7c7dc942d")
     version("2.38", sha256="16e51e0455e288f03380b436e41d5927c60945abd86d0c9852b84be57dd6ed5e")
     version("2.37", sha256="e3a790c2f84eed5c5d569ed6172c253c607dd3962135437da413aa39aa4fd352")
     version("2.36", sha256="02efa6ffbbaf3e10e88f16818a862608d04b0ef838c66f6025ae120530792c9c")
@@ -177,6 +186,8 @@ class Glibc(AutotoolsPackageNoDep, GNUMirrorPackageNoDep):
 
         # See 2d7ed98add14f75041499ac189696c9bd3d757fe
         depends_on("gmake@:4.3", type="build", when="@:2.36")
+        # Since f2873d2da0ac9802e0b570e8e0b9e7e04a82bf55
+        depends_on("gmake@4.0:", type="build", when="@2.28:")
 
         # From 2.29: generates locale/C-translit.h
         # before that it's a test dependency.
@@ -269,3 +280,11 @@ class Glibc(AutotoolsPackageNoDep, GNUMirrorPackageNoDep):
             ldef("-i","zh_CN","-f","GB18030","zh_CN.GB18030")
             ldef("-i","zh_HK","-f","BIG5-HKSCS","zh_HK.BIG5-HKSCS")
             ldef("-i","zh_TW","-f","UTF-8","zh_TW.UTF-8")
+
+    @property
+    def libs(self):
+        return LibraryList([])
+
+    @property
+    def headers(self):
+        return HeaderList([])

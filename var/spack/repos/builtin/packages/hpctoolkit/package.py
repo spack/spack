@@ -32,6 +32,7 @@ class Hpctoolkit(AutotoolsPackage, MesonPackage):
 
     version("develop", branch="develop")
     version("2024.01.stable", branch="release/2024.01")
+    version("2024.01.1", tag="2024.01.1", commit="0672b9a9a2a1e3846c5e2059fb73a07a129f22cd")
     version("2023.08.stable", branch="release/2023.08")
     version("2023.08.1", tag="2023.08.1", commit="753a72affd584a5e72fe153d1e8c47a394a3886e")
     version("2023.03.stable", branch="release/2023.03")
@@ -142,7 +143,7 @@ class Hpctoolkit(AutotoolsPackage, MesonPackage):
             depends_on("libtool", type="build")
 
         with when("@2024.02:"):
-            depends_on("pkgconf", type="build")
+            depends_on("pkgconfig", type="build")
             depends_on("cmake", type="build")
 
     boost_libs = (
@@ -155,22 +156,27 @@ class Hpctoolkit(AutotoolsPackage, MesonPackage):
     depends_on("binutils@:2.33.1 +libiberty~nls", type="link", when="@:2020.03")
     depends_on("boost" + boost_libs)
     depends_on("bzip2+shared", type="link")
-    depends_on("dyninst@12.1.0:", when="@2022.0:")
-    depends_on("dyninst@10.2.0:", when="@2021.0:2021.12")
-    depends_on("dyninst@9.3.2:", when="@:2020")
+    depends_on("dyninst@12.1.0:", when="@2024.01:")
+    depends_on("dyninst@12.1.0:12", when="@2022:2023.08")
+    depends_on("dyninst@10.2.0:12", when="@2021")
+    depends_on("dyninst@9.3.2:12", when="@:2020")
     depends_on("elfutils~nls", type="link")
     depends_on("gotcha@1.0.3:", when="@:2020.09")
-    depends_on("intel-tbb+shared")
+    depends_on("tbb")
+    depends_on("intel-tbb+shared", when="^[virtuals=tbb] intel-tbb")
     depends_on("libdwarf", when="@:2022.06")
     depends_on("libiberty+pic", when="@2022.10:")
-    depends_on("libmonitor+hpctoolkit~dlopen", when="@2021.00:")
+    depends_on("libmonitor+hpctoolkit~dlopen", when="@2021.00:2024")
     depends_on("libmonitor+hpctoolkit+dlopen", when="@:2020")
-    depends_on("libmonitor@2023.02.13:", when="@2023.01:")
-    depends_on("libmonitor@2021.11.08:", when="@2022.01:")
-    depends_on("libunwind@1.4: +xz+pic")
+    depends_on("libmonitor@2023.02.13:", when="@2023.01:2024")
+    depends_on("libmonitor@2021.11.08:", when="@2022.01:2024")
+    depends_on("libunwind@1.4: +xz")
+    depends_on("libunwind +pic libs=static", when="@:2023.08")
     depends_on("mbedtls+pic", when="@:2022.03")
     depends_on("xerces-c transcoder=iconv")
-    depends_on("xz+pic libs=static", type="link")
+    depends_on("xxhash@0.8.1:", when="@develop")
+    depends_on("xz", type="link")
+    depends_on("xz+pic libs=static", type="link", when="@:2023.08")
     depends_on("yaml-cpp@0.7.0: +shared", when="@2022.10:")
 
     depends_on("zlib-api")
@@ -223,8 +229,12 @@ class Hpctoolkit(AutotoolsPackage, MesonPackage):
     depends_on("python@3.4:", type="build", when="@2020.03:2020.08")
     patch("python3.patch", when="@2020.03:2020.08")
 
+    # HIP header files require HIP_PLATFORM_AMD to be set for AMD GPUs
+    patch("define-hip-platform-as-amd.patch", when="^hip@6:")
+
     # Fix a bug where make would mistakenly overwrite hpcrun-fmt.h.
     # https://gitlab.com/hpctoolkit/hpctoolkit/-/merge_requests/751
+    @when("@:2022")
     def patch(self):
         with working_dir(join_path("src", "lib", "prof-lean")):
             if os.access("hpcrun-fmt.txt", os.F_OK):
