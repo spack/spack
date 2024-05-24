@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,8 +15,10 @@ class Evtgen(CMakePackage):
 
     tags = ["hep"]
 
-    maintainers = ["vvolkl"]
+    maintainers("vvolkl")
 
+    version("02.02.01", sha256="1fcae56c6b27b89c4a2f4b224d27980607442185f5570e961f6334a3543c6e77")
+    version("02.02.00", sha256="0c626e51cb17e799ad0ffd0beea5cb94d7ac8a5f8777b746aa1944dd26071ecf")
     version("02.00.00", sha256="02372308e1261b8369d10538a3aa65fe60728ab343fcb64b224dac7313deb719")
     # switched to cmake in 02.00.00
     version(
@@ -35,6 +37,7 @@ class Evtgen(CMakePackage):
 
     depends_on("hepmc", when="~hepmc3")
     depends_on("hepmc3", when="+hepmc3")
+    depends_on("pythia8@:8.309", when="@:02.02.00 +pythia8")
     depends_on("pythia8", when="+pythia8")
     depends_on("tauola~hepmc3", when="+tauola~hepmc3")
     depends_on("photos~hepmc3", when="+photos~hepmc3")
@@ -51,6 +54,16 @@ class Evtgen(CMakePackage):
     )
     conflicts("+hepmc3", when="@:01", msg="hepmc3 support was added in 02.00.00")
 
+    @property
+    def root_cmakelists_dir(self):
+        # deal with inconsistent intermediate folders of tarballs
+        # 02.00.00 only has 'R02-00-00'
+        # but 02.02.00 has 'EvtGen/R02-02-00'
+        if self.spec.satisfies("@02.02.00:"):
+            return "R" + str(self.version).replace(".", "-")
+        else:
+            return ""
+
     def cmake_args(self):
         args = []
 
@@ -66,7 +79,7 @@ class Evtgen(CMakePackage):
         # the `-undefined dynamic_lookup` flag enables weak linking on Mac
         # Patch taken from CMS recipe:
         # https://github.com/cms-sw/cmsdist/blob/IB/CMSSW_12_1_X/master/evtgen.spec#L48
-        if not self.spec.satisfies("platform=darwin"):
+        if not self.spec.satisfies("%gcc platform=darwin"):
             return
 
         filter_file("-shared", "-dynamiclib -undefined dynamic_lookup", "make.inc")

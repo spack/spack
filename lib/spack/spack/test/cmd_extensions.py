@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,8 +13,6 @@ import spack.cmd
 import spack.config
 import spack.extensions
 import spack.main
-
-is_windows = sys.platform == "win32"
 
 
 class Extension:
@@ -105,9 +103,9 @@ def hello_world_with_module_in_root(extension_creator):
 
     @contextlib.contextmanager
     def _hwwmir(extension_name=None):
-        with extension_creator(
-            extension_name
-        ) if extension_name else extension_creator() as extension:
+        with (
+            extension_creator(extension_name) if extension_name else extension_creator()
+        ) as extension:
             # Note that the namespace of the extension is derived from the
             # fixture.
             extension.add_command(
@@ -228,14 +226,17 @@ def test_missing_command():
     ],
     ids=["no_stem", "vacuous", "leading_hyphen", "basic_good", "trailing_slash", "hyphenated"],
 )
-def test_extension_naming(extension_path, expected_exception, config):
+def test_extension_naming(tmpdir, extension_path, expected_exception, config):
     """Ensure that we are correctly validating configured extension paths
     for conformity with the rules: the basename should match
     ``spack-<name>``; <name> may have embedded hyphens but not begin with one.
     """
-    with spack.config.override("config:extensions", [extension_path]):
-        with pytest.raises(expected_exception):
-            spack.cmd.get_module("no-such-command")
+    # NOTE: if the directory is a valid extension directory name the "vacuous" test will
+    # fail because it resolves to current working directory
+    with tmpdir.as_cwd():
+        with spack.config.override("config:extensions", [extension_path]):
+            with pytest.raises(expected_exception):
+                spack.cmd.get_module("no-such-command")
 
 
 def test_missing_command_function(extension_creator, capsys):
@@ -271,7 +272,7 @@ def test_variable_in_extension_path(config, working_env):
     os.environ["_MY_VAR"] = os.path.join("my", "var")
     ext_paths = [os.path.join("~", "${_MY_VAR}", "spack-extension-1")]
     # Home env variable is USERPROFILE on Windows
-    home_env = "USERPROFILE" if is_windows else "HOME"
+    home_env = "USERPROFILE" if sys.platform == "win32" else "HOME"
     expected_ext_paths = [
         os.path.join(os.environ[home_env], os.environ["_MY_VAR"], "spack-extension-1")
     ]

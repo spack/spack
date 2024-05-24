@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,9 @@ class Krims(CMakePackage):
     url = "https://github.com/lazyten/krims/archive/v0.2.1.tar.gz"
     git = "https://github.com/lazyten/krims.git"
 
-    maintainers = ["mfherbst"]
+    maintainers("mfherbst")
+
+    license("LGPL-3.0-or-later")
 
     #
     # Versions

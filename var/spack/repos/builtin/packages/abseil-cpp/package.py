@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,8 +12,26 @@ class AbseilCpp(CMakePackage):
     homepage = "https://abseil.io/"
     url = "https://github.com/abseil/abseil-cpp/archive/refs/tags/20211102.0.tar.gz"
 
-    maintainers = ["jcftang"]
+    maintainers("jcftang")
+    tags = ["windows"]
 
+    license("Apache-2.0")
+
+    version(
+        "20240116.2", sha256="733726b8c3a6d39a4120d7e45ea8b41a434cdacde401cba500f14236c49b39dc"
+    )
+    version(
+        "20240116.1", sha256="3c743204df78366ad2eaf236d6631d83f6bc928d1705dd0000b872e53b73dc6a"
+    )
+    version(
+        "20230802.1", sha256="987ce98f02eefbaf930d6e38ab16aa05737234d7afbab2d5c4ea7adbe50c28ed"
+    )
+    version(
+        "20230125.3", sha256="5366d7e7fa7ba0d915014d387b66d0d002c03236448e1ba9ef98122c13b35c36"
+    )
+    version(
+        "20230125.2", sha256="9a2b5752d7bfade0bdeee2701de17c9480620f8b237e1964c1b9967c75374906"
+    )
     version(
         "20220623.0", sha256="4208129b49006089ba1d6710845a45e31c59b0ab6bff9e5788a87f55c5abd602"
     )
@@ -54,16 +72,18 @@ class AbseilCpp(CMakePackage):
 
     variant(
         "cxxstd",
-        values=("11", "14", "17", "20"),
-        default="11",
+        values=(conditional("11", when="@:2022"), "14", "17", "20"),
+        default="14",
         description="C++ standard used during compilation",
     )
 
+    depends_on("cmake@3.10:", when="@20220907:", type="build")
+    depends_on("cmake@3.5:", when="@20190312:", type="build")
+    depends_on("cmake@3.1:", type="build")
+
     def cmake_args(self):
-        shared = "ON" if "+shared" in self.spec else "OFF"
-        cxxstd = self.spec.variants["cxxstd"].value
         return [
-            self.define("BUILD_TESTING", "OFF"),
-            self.define("BUILD_SHARED_LIBS:Bool", shared),
-            self.define("CMAKE_CXX_STANDARD", cxxstd),
+            self.define("BUILD_TESTING", False),
+            self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
+            self.define_from_variant("CMAKE_CXX_STANDARD", "cxxstd"),
         ]

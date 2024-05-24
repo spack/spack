@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,23 +14,21 @@ or user preferences.
 TODO: make this customizable and allow users to configure
       concretization  policies.
 """
-from __future__ import print_function
-
 import functools
-import os.path
 import platform
 import tempfile
 from contextlib import contextmanager
 from itertools import chain
+from typing import Union
 
 import archspec.cpu
 
-import llnl.util.filesystem as fs
 import llnl.util.lang
 import llnl.util.tty as tty
 
 import spack.abi
 import spack.compilers
+import spack.config
 import spack.environment
 import spack.error
 import spack.platforms
@@ -38,17 +36,19 @@ import spack.repo
 import spack.spec
 import spack.target
 import spack.tengine
+import spack.util.path
 import spack.variant as vt
-from spack.config import config
 from spack.package_prefs import PackagePrefs, is_spec_buildable, spec_externals
-from spack.version import Version, VersionList, VersionRange, ver
+from spack.version import ClosedOpenRange, VersionList, ver
 
 #: impements rudimentary logic for ABI compatibility
-_abi = llnl.util.lang.Singleton(lambda: spack.abi.ABI())
+_abi: Union[spack.abi.ABI, llnl.util.lang.Singleton] = llnl.util.lang.Singleton(
+    lambda: spack.abi.ABI()
+)
 
 
 @functools.total_ordering
-class reverse_order(object):
+class reverse_order:
     """Helper for creating key functions.
 
     This is a wrapper that inverts the sense of the natural
@@ -65,7 +65,7 @@ class reverse_order(object):
         return other.value < self.value
 
 
-class Concretizer(object):
+class Concretizer:
     """You can subclass this class to override some of the default
     concretization strategies, or you can override all of them.
     """
@@ -74,9 +74,13 @@ class Concretizer(object):
     #: during concretization. Used for testing and for mirror creation
     check_for_compiler_existence = None
 
+    #: Packages that the old concretizer cannot deal with correctly, and cannot build anyway.
+    #: Those will not be considered as providers for virtuals.
+    non_buildable_packages = {"glibc", "musl"}
+
     def __init__(self, abstract_spec=None):
         if Concretizer.check_for_compiler_existence is None:
-            Concretizer.check_for_compiler_existence = not config.get(
+            Concretizer.check_for_compiler_existence = not spack.config.get(
                 "config:install_missing_compilers", False
             )
         self.abstract_spec = abstract_spec
@@ -91,7 +95,7 @@ class Concretizer(object):
         if not dev_info:
             return False
 
-        path = os.path.normpath(os.path.join(env.path, dev_info["path"]))
+        path = spack.util.path.canonicalize_path(dev_info["path"], default_wd=env.path)
 
         if "dev_path" in spec.variants:
             assert spec.variants["dev_path"].value == path
@@ -113,7 +117,11 @@ class Concretizer(object):
         pref_key = lambda spec: 0  # no-op pref key
 
         if spec.virtual:
-            candidates = spack.repo.path.providers_for(spec)
+            candidates = [
+                s
+                for s in spack.repo.PATH.providers_for(spec)
+                if s.name not in self.non_buildable_packages
+            ]
             if not candidates:
                 raise spack.error.UnsatisfiableProviderSpecError(candidates[0], spec)
 
@@ -135,7 +143,7 @@ class Concretizer(object):
 
             externals = spec_externals(cspec)
             for ext in externals:
-                if ext.satisfies(spec):
+                if ext.intersects(spec):
                     usable.append(ext)
 
         # If nothing is in the usable list now, it's because we aren't
@@ -155,7 +163,7 @@ class Concretizer(object):
             ),
         )
 
-    def choose_virtual_or_external(self, spec):
+    def choose_virtual_or_external(self, spec: spack.spec.Spec):
         """Given a list of candidate virtual and external packages, try to
         find one that is most ABI compatible.
         """
@@ -201,7 +209,7 @@ class Concretizer(object):
 
         # List of versions we could consider, in sorted order
         pkg_versions = spec.package_class.versions
-        usable = [v for v in pkg_versions if any(v.satisfies(sv) for sv in spec.versions)]
+        usable = [v for v in pkg_versions if any(v.intersects(sv) for sv in spec.versions)]
 
         yaml_prefs = PackagePrefs(spec.name, "version")
 
@@ -217,7 +225,7 @@ class Concretizer(object):
             # Respect order listed in packages.yaml
             -yaml_prefs(v),
             # The preferred=True flag (packages or packages.yaml or both?)
-            pkg_versions.get(Version(v)).get("preferred", False),
+            pkg_versions.get(v).get("preferred", False),
             # ------- Regular case: use latest non-develop version by default.
             # Avoid @develop version, which would otherwise be the "largest"
             # in straight version comparisons
@@ -244,11 +252,12 @@ class Concretizer(object):
                 raise NoValidVersionError(spec)
             else:
                 last = spec.versions[-1]
-                if isinstance(last, VersionRange):
-                    if last.end:
-                        spec.versions = ver([last.end])
+                if isinstance(last, ClosedOpenRange):
+                    range_as_version = VersionList([last]).concrete_range_as_version
+                    if range_as_version:
+                        spec.versions = ver([range_as_version])
                     else:
-                        spec.versions = ver([last.start])
+                        raise NoValidVersionError(spec)
                 else:
                     spec.versions = ver([last])
 
@@ -345,7 +354,7 @@ class Concretizer(object):
                     new_target_arch = spack.spec.ArchSpec((None, None, str(new_target)))
                     curr_target_arch = spack.spec.ArchSpec((None, None, str(curr_target)))
 
-                    if not new_target_arch.satisfies(curr_target_arch):
+                    if not new_target_arch.intersects(curr_target_arch):
                         # new_target is an incorrect guess based on preferences
                         # and/or default
                         valid_target_ranges = str(curr_target).split(",")
@@ -735,7 +744,7 @@ def concretize_specs_together(*abstract_specs, **kwargs):
     Returns:
         List of concretized specs
     """
-    if spack.config.get("config:concretizer") == "original":
+    if spack.config.get("config:concretizer", "clingo") == "original":
         return _concretize_specs_together_original(*abstract_specs, **kwargs)
     return _concretize_specs_together_new(*abstract_specs, **kwargs)
 
@@ -743,46 +752,29 @@ def concretize_specs_together(*abstract_specs, **kwargs):
 def _concretize_specs_together_new(*abstract_specs, **kwargs):
     import spack.solver.asp
 
+    allow_deprecated = spack.config.get("config:deprecated", False)
     solver = spack.solver.asp.Solver()
-    solver.tests = kwargs.get("tests", False)
-
-    result = solver.solve(abstract_specs)
-    result.raise_if_unsat()
+    result = solver.solve(
+        abstract_specs, tests=kwargs.get("tests", False), allow_deprecated=allow_deprecated
+    )
     return [s.copy() for s in result.specs]
 
 
 def _concretize_specs_together_original(*abstract_specs, **kwargs):
-    def make_concretization_repository(abstract_specs):
-        """Returns the path to a temporary repository created to contain
-        a fake package that depends on all of the abstract specs.
-        """
-        tmpdir = tempfile.mkdtemp()
-        repo_path, _ = spack.repo.create_repo(tmpdir)
-
-        debug_msg = "[CONCRETIZATION]: Creating helper repository in {0}"
-        tty.debug(debug_msg.format(repo_path))
-
-        pkg_dir = os.path.join(repo_path, "packages", "concretizationroot")
-        fs.mkdirp(pkg_dir)
-        environment = spack.tengine.make_environment()
-        template = environment.get_template("misc/coconcretization.pyt")
-
-        # Split recursive specs, as it seems the concretizer has issue
-        # respecting conditions on dependents expressed like
-        # depends_on('foo ^bar@1.0'), see issue #11160
-        split_specs = [
-            dep.copy(deps=False) for spec in abstract_specs for dep in spec.traverse(root=True)
-        ]
-
-        with open(os.path.join(pkg_dir, "package.py"), "w") as f:
-            f.write(template.render(specs=[str(s) for s in split_specs]))
-
-        return spack.repo.Repo(repo_path)
-
     abstract_specs = [spack.spec.Spec(s) for s in abstract_specs]
-    concretization_repository = make_concretization_repository(abstract_specs)
+    tmpdir = tempfile.mkdtemp()
+    builder = spack.repo.MockRepositoryBuilder(tmpdir)
+    # Split recursive specs, as it seems the concretizer has issue
+    # respecting conditions on dependents expressed like
+    # depends_on('foo ^bar@1.0'), see issue #11160
+    split_specs = [
+        dep.copy(deps=False) for spec1 in abstract_specs for dep in spec1.traverse(root=True)
+    ]
+    builder.add_package(
+        "concretizationroot", dependencies=[(str(x), None, None) for x in split_specs]
+    )
 
-    with spack.repo.additional_repository(concretization_repository):
+    with spack.repo.use_repositories(builder.root, override=False):
         # Spec from a helper package that depends on all the abstract_specs
         concretization_root = spack.spec.Spec("concretizationroot")
         concretization_root.concretize(tests=kwargs.get("tests", False))
@@ -810,9 +802,7 @@ class NoCompilersForArchError(spack.error.SpackError):
             " operating systems and targets:\n\t" + "\n\t".join(available_os_target_strs)
         )
 
-        super(NoCompilersForArchError, self).__init__(
-            err_msg, "Run 'spack compiler find' to add compilers."
-        )
+        super().__init__(err_msg, "Run 'spack compiler find' to add compilers.")
 
 
 class UnavailableCompilerVersionError(spack.error.SpackError):
@@ -824,7 +814,7 @@ class UnavailableCompilerVersionError(spack.error.SpackError):
         if arch:
             err_msg += " for operating system {0} and target {1}.".format(arch.os, arch.target)
 
-        super(UnavailableCompilerVersionError, self).__init__(
+        super().__init__(
             err_msg,
             "Run 'spack compiler find' to add compilers or "
             "'spack compilers' to see which compilers are already recognized"
@@ -837,18 +827,17 @@ class NoValidVersionError(spack.error.SpackError):
     particular spec."""
 
     def __init__(self, spec):
-        super(NoValidVersionError, self).__init__(
+        super().__init__(
             "There are no valid versions for %s that match '%s'" % (spec.name, spec.versions)
         )
 
 
 class InsufficientArchitectureInfoError(spack.error.SpackError):
-
     """Raised when details on architecture cannot be collected from the
     system"""
 
     def __init__(self, spec, archs):
-        super(InsufficientArchitectureInfoError, self).__init__(
+        super().__init__(
             "Cannot determine necessary architecture information for '%s': %s"
             % (spec.name, str(archs))
         )
@@ -864,4 +853,4 @@ class NoBuildError(spack.error.SpecError):
             "The spec\n    '%s'\n    is configured as not buildable, "
             "and no matching external installs were found"
         )
-        super(NoBuildError, self).__init__(msg % spec)
+        super().__init__(msg % spec)

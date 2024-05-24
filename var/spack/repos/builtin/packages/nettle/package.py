@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,10 @@ class Nettle(AutotoolsPackage, GNUMirrorPackage):
     homepage = "https://www.lysator.liu.se/~nisse/nettle/"
     gnu_mirror_path = "nettle/nettle-3.3.tar.gz"
 
+    license("GPL-2.0-or-later OR LGPL-3.0-or-later")
+
+    version("3.9.1", sha256="ccfeff981b0ca71bbd6fbcb054f407c60ffb644389a5be80d6716d5b550c6ce3")
+    version("3.8.1", sha256="364f3e2b77cd7dcde83fd7c45219c834e54b0c75e428b6f894a23d12dd41cbfe")
     version("3.4.1", sha256="f941cf1535cd5d1819be5ccae5babef01f6db611f9b5a777bae9c7604b8a92ad")
     version("3.4", sha256="ae7a42df026550b85daca8389b6a60ba6313b0567f374392e54918588a411e94")
     version("3.3", sha256="46942627d5d0ca11720fec18d81fc38f7ef837ea4197c1f630e71ce0d470b11e")
@@ -23,5 +27,10 @@ class Nettle(AutotoolsPackage, GNUMirrorPackage):
     depends_on("gmp")
     depends_on("m4", type="build")
 
+    def flag_handler(self, name, flags):
+        if name == "cflags":
+            flags.append(self.compiler.c99_flag)
+        return (flags, None, None)
+
     def configure_args(self):
-        return ["CFLAGS={0}".format(self.compiler.c99_flag)]
+        return ["--disable-openssl"]

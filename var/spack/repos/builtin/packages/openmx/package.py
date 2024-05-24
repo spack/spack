@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -79,7 +79,7 @@ class Openmx(MakefilePackage):
         if "%fj" in spec:
             common_option.append("-Dkcomp  -Kfast")
             cc_option.append("-Dnosse -Nclang")
-            fc_option.append(self.compiler.openmp_flag)
+            fc_option.extend([self.compiler.openmp_flag, "-Ccpp"])
         else:
             common_option.append("-O3")
             if "%gcc" in spec:

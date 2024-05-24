@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,9 +20,9 @@ datadir = os.path.join(spack.paths.test_path, "data", "unparse")
 
 def compare_sans_name(eq, spec1, spec2):
     content1 = ph.canonical_source(spec1)
-    content1 = content1.replace(spack.repo.path.get_pkg_class(spec1.name).__name__, "TestPackage")
+    content1 = content1.replace(spack.repo.PATH.get_pkg_class(spec1.name).__name__, "TestPackage")
     content2 = ph.canonical_source(spec2)
-    content2 = content2.replace(spack.repo.path.get_pkg_class(spec2.name).__name__, "TestPackage")
+    content2 = content2.replace(spack.repo.PATH.get_pkg_class(spec2.name).__name__, "TestPackage")
     if eq:
         assert content1 == content2
     else:
@@ -31,38 +31,35 @@ def compare_sans_name(eq, spec1, spec2):
 
 def compare_hash_sans_name(eq, spec1, spec2):
     content1 = ph.canonical_source(spec1)
-    pkg_cls1 = spack.repo.path.get_pkg_class(spec1.name)
+    pkg_cls1 = spack.repo.PATH.get_pkg_class(spec1.name)
     content1 = content1.replace(pkg_cls1.__name__, "TestPackage")
     hash1 = pkg_cls1(spec1).content_hash(content=content1)
 
     content2 = ph.canonical_source(spec2)
-    pkg_cls2 = spack.repo.path.get_pkg_class(spec2.name)
+    pkg_cls2 = spack.repo.PATH.get_pkg_class(spec2.name)
     content2 = content2.replace(pkg_cls2.__name__, "TestPackage")
     hash2 = pkg_cls2(spec2).content_hash(content=content2)
 
-    if eq:
-        assert hash1 == hash2
-    else:
-        assert hash1 != hash2
+    assert (hash1 == hash2) == eq
 
 
 def test_hash(mock_packages, config):
-    ph.package_hash("hash-test1@1.2")
+    ph.package_hash(Spec("hash-test1@=1.2"))
 
 
 def test_different_variants(mock_packages, config):
-    spec1 = Spec("hash-test1@1.2 +variantx")
-    spec2 = Spec("hash-test1@1.2 +varianty")
+    spec1 = Spec("hash-test1@=1.2 +variantx")
+    spec2 = Spec("hash-test1@=1.2 +varianty")
     assert ph.package_hash(spec1) == ph.package_hash(spec2)
 
 
 def test_all_same_but_name(mock_packages, config):
-    spec1 = Spec("hash-test1@1.2")
-    spec2 = Spec("hash-test2@1.2")
+    spec1 = Spec("hash-test1@=1.2")
+    spec2 = Spec("hash-test2@=1.2")
     compare_sans_name(True, spec1, spec2)
 
-    spec1 = Spec("hash-test1@1.2 +varianty")
-    spec2 = Spec("hash-test2@1.2 +varianty")
+    spec1 = Spec("hash-test1@=1.2 +varianty")
+    spec2 = Spec("hash-test2@=1.2 +varianty")
     compare_sans_name(True, spec1, spec2)
 
 
@@ -70,26 +67,26 @@ def test_all_same_but_archive_hash(mock_packages, config):
     """
     Archive hash is not intended to be reflected in Package hash.
     """
-    spec1 = Spec("hash-test1@1.3")
-    spec2 = Spec("hash-test2@1.3")
+    spec1 = Spec("hash-test1@=1.3")
+    spec2 = Spec("hash-test2@=1.3")
     compare_sans_name(True, spec1, spec2)
 
 
 def test_all_same_but_patch_contents(mock_packages, config):
-    spec1 = Spec("hash-test1@1.1")
-    spec2 = Spec("hash-test2@1.1")
+    spec1 = Spec("hash-test1@=1.1")
+    spec2 = Spec("hash-test2@=1.1")
     compare_sans_name(True, spec1, spec2)
 
 
 def test_all_same_but_patches_to_apply(mock_packages, config):
-    spec1 = Spec("hash-test1@1.4")
-    spec2 = Spec("hash-test2@1.4")
+    spec1 = Spec("hash-test1@=1.4")
+    spec2 = Spec("hash-test2@=1.4")
     compare_sans_name(True, spec1, spec2)
 
 
 def test_all_same_but_install(mock_packages, config):
-    spec1 = Spec("hash-test1@1.5")
-    spec2 = Spec("hash-test2@1.5")
+    spec1 = Spec("hash-test1@=1.5")
+    spec2 = Spec("hash-test2@=1.5")
     compare_sans_name(False, spec1, spec2)
 
 
@@ -102,14 +99,14 @@ def test_content_hash_all_same_but_patch_contents(mock_packages, config):
 def test_content_hash_not_concretized(mock_packages, config):
     """Check that Package.content_hash() works on abstract specs."""
     # these are different due to the package hash
-    spec1 = Spec("hash-test1@1.1")
-    spec2 = Spec("hash-test2@1.3")
+    spec1 = Spec("hash-test1@=1.1")
+    spec2 = Spec("hash-test2@=1.3")
     compare_hash_sans_name(False, spec1, spec2)
 
     # at v1.1 these are actually the same package when @when's are removed
     # and the name isn't considered
-    spec1 = Spec("hash-test1@1.1")
-    spec2 = Spec("hash-test2@1.1")
+    spec1 = Spec("hash-test1@=1.1")
+    spec2 = Spec("hash-test2@=1.1")
     compare_hash_sans_name(True, spec1, spec2)
 
     # these end up being different b/c we can't eliminate much of the package.py
@@ -238,7 +235,7 @@ class HasManyMetadataAttributes:
     url = "https://example.com/foo.tar.gz"
     git = "https://example.com/foo/bar.git"
 
-    maintainers = ["alice", "bob"]
+    maintainers("alice", "bob")
     tags = ["foo", "bar", "baz"]
 
     depends_on("foo")
@@ -340,15 +337,15 @@ def test_remove_complex_package_logic_filtered():
         ("grads", "rrlmwml3f2frdnqavmro3ias66h5b2ce"),
         ("llvm", "nufffum5dabmaf4l5tpfcblnbfjknvd3"),
         # has @when("@4.1.0") and raw unicode literals
-        ("mfem", "tiiv7uq7v2xtv24vdij5ptcv76dpazrw"),
-        ("mfem@4.0.0", "tiiv7uq7v2xtv24vdij5ptcv76dpazrw"),
-        ("mfem@4.1.0", "gxastq64to74qt4he4knpyjfdhh5auel"),
+        ("mfem", "lbhr43gm5zdye2yhqznucxb4sg6vhryl"),
+        ("mfem@4.0.0", "lbhr43gm5zdye2yhqznucxb4sg6vhryl"),
+        ("mfem@4.1.0", "vjdjdgjt6nyo7ited2seki5epggw5gza"),
         # has @when("@1.5.0:")
         ("py-torch", "qs7djgqn7dy7r3ps4g7hv2pjvjk4qkhd"),
         ("py-torch@1.0", "qs7djgqn7dy7r3ps4g7hv2pjvjk4qkhd"),
         ("py-torch@1.6", "p4ine4hc6f2ik2f2wyuwieslqbozll5w"),
         # has a print with multiple arguments
-        ("legion", "zdpawm4avw3fllxcutvmqb5c3bj5twqt"),
+        ("legion", "efpfd2c4pzhsbyc3o7plqcmtwm6b57yh"),
         # has nested `with when()` blocks and loops
         ("trilinos", "vqrgscjrla4hi7bllink7v6v6dwxgc2p"),
     ],
@@ -398,40 +395,6 @@ class Pkg:
 """
 
 
-def test_multimethod_resolution():
-    # all are false but the default
-    filtered = ph.canonical_source("pkg@4.0", source=many_multimethods)
-    assert "ONE" in filtered
-    assert "TWO" not in filtered
-    assert "THREE" not in filtered
-    assert "FOUR" not in filtered
-    assert "FIVE" in filtered
-
-    # we know first @when overrides default and others are false
-    filtered = ph.canonical_source("pkg@1.0", source=many_multimethods)
-    assert "ONE" not in filtered
-    assert "TWO" in filtered
-    assert "THREE" not in filtered
-    assert "FOUR" not in filtered
-    assert "FIVE" in filtered
-
-    # we know last @when overrides default and others are false
-    filtered = ph.canonical_source("pkg@3.0", source=many_multimethods)
-    assert "ONE" not in filtered
-    assert "TWO" not in filtered
-    assert "THREE" not in filtered
-    assert "FOUR" in filtered
-    assert "FIVE" in filtered
-
-    # we don't know if default or THREE will win, include both
-    filtered = ph.canonical_source("pkg@2.0", source=many_multimethods)
-    assert "ONE" in filtered
-    assert "TWO" not in filtered
-    assert "THREE" in filtered
-    assert "FOUR" not in filtered
-    assert "FIVE" in filtered
-
-
 more_dynamic_multimethods = """\
 class Pkg:
     @when(sys.platform == "darwin")
@@ -460,36 +423,31 @@ class Pkg:
 """
 
 
-def test_more_dynamic_multimethod_resolution():
-    # we know the first one is the only one that can win.
-    filtered = ph.canonical_source("pkg@4.0", source=more_dynamic_multimethods)
-    assert "ONE" in filtered
-    assert "TWO" not in filtered
-    assert "THREE" not in filtered
-    assert "FOUR" not in filtered
-    assert "FIVE" in filtered
-
-    # now we have to include ONE and TWO because ONE may win dynamically.
-    filtered = ph.canonical_source("pkg@1.0", source=more_dynamic_multimethods)
-    assert "ONE" in filtered
-    assert "TWO" in filtered
-    assert "THREE" not in filtered
-    assert "FOUR" not in filtered
-    assert "FIVE" in filtered
-
-    # we know FOUR is true and TWO and THREE are false, but ONE may
-    # still win dynamically.
-    filtered = ph.canonical_source("pkg@3.0", source=more_dynamic_multimethods)
-    assert "ONE" in filtered
-    assert "TWO" not in filtered
-    assert "THREE" not in filtered
-    assert "FOUR" in filtered
-    assert "FIVE" in filtered
-
-    # TWO and FOUR can't be satisfied, but ONE or THREE could win
-    filtered = ph.canonical_source("pkg@2.0", source=more_dynamic_multimethods)
-    assert "ONE" in filtered
-    assert "TWO" not in filtered
-    assert "THREE" in filtered
-    assert "FOUR" not in filtered
-    assert "FIVE" in filtered
+@pytest.mark.parametrize(
+    "spec_str,source,expected,not_expected",
+    [
+        # all are false but the default
+        ("pkg@4.0", many_multimethods, ["ONE", "FIVE"], ["TWO", "THREE", "FOUR"]),
+        # we know first @when overrides default and others are false
+        ("pkg@1.0", many_multimethods, ["TWO", "FIVE"], ["ONE", "THREE", "FOUR"]),
+        # we know last @when overrides default and others are false
+        ("pkg@3.0", many_multimethods, ["FOUR", "FIVE"], ["ONE", "TWO", "THREE"]),
+        # we don't know if default or THREE will win, include both
+        ("pkg@2.0", many_multimethods, ["ONE", "THREE", "FIVE"], ["TWO", "FOUR"]),
+        # we know the first one is the only one that can win.
+        ("pkg@4.0", more_dynamic_multimethods, ["ONE", "FIVE"], ["TWO", "THREE", "FOUR"]),
+        # now we have to include ONE and TWO because ONE may win dynamically.
+        ("pkg@1.0", more_dynamic_multimethods, ["ONE", "TWO", "FIVE"], ["THREE", "FOUR"]),
+        # we know FOUR is true and TWO and THREE are false, but ONE may
+        # still win dynamically.
+        ("pkg@3.0", more_dynamic_multimethods, ["ONE", "FOUR", "FIVE"], ["TWO", "THREE"]),
+        # TWO and FOUR can't be satisfied, but ONE or THREE could win
+        ("pkg@2.0", more_dynamic_multimethods, ["ONE", "THREE", "FIVE"], ["TWO", "FOUR"]),
+    ],
+)
+def test_multimethod_resolution(spec_str, source, expected, not_expected):
+    filtered = ph.canonical_source(Spec(spec_str), source=source)
+    for item in expected:
+        assert item in filtered
+    for item in not_expected:
+        assert item not in filtered

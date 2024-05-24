@@ -1,8 +1,9 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
 import sys
 
 from spack.package import *
@@ -15,7 +16,15 @@ class Emacs(AutotoolsPackage, GNUMirrorPackage):
     git = "git://git.savannah.gnu.org/emacs.git"
     gnu_mirror_path = "emacs/emacs-24.5.tar.gz"
 
+    maintainers("alecbcs")
+
+    license("GPL-3.0-or-later")
+
     version("master", branch="master")
+    version("29.3", sha256="2de8df5cab8ac697c69a1c46690772b0cf58fe7529f1d1999582c67d927d22e4")
+    version("29.2", sha256="ac8773eb17d8b3c0c4a3bccbb478f7c359266b458563f9a5e2c23c53c05e4e59")
+    version("29.1", sha256="5b80e0475b0e619d2ad395ef5bc481b7cb9f13894ed23c301210572040e4b5b1")
+    version("28.2", sha256="a6912b14ef4abb1edab7f88191bfd61c3edd7085e084de960a4f86485cb7cad8")
     version("28.1", sha256="1439bf7f24e5769f35601dbf332e74dfc07634da6b1e9500af67188a92340a28")
     version("27.2", sha256="80ff6118fb730a6d8c704dccd6915a6c0e0a166ab1daeef9fe68afa9073ddb73")
     version("27.1", sha256="ffbfa61dc951b92cf31ebe3efc86c5a9d4411a1222b8a4ae6716cfd0e2a584db")
@@ -34,14 +43,18 @@ class Emacs(AutotoolsPackage, GNUMirrorPackage):
         values=("gtk", "athena"),
         description="Select an X toolkit (gtk, athena)",
     )
-    variant("tls", default=False, description="Build Emacs with gnutls")
-    variant("native", default=False, description="enable native compilation of elisp")
+    variant("gui", default=False, description="Enable GUI build on Mac")
+    variant("tls", default=True, description="Build Emacs with gnutls")
+    variant("native", default=False, when="@28:", description="enable native compilation of elisp")
+    variant("treesitter", default=False, when="@29:", description="Build with tree-sitter support")
+    variant("json", default=False, when="@27:", description="Build with json support")
 
     depends_on("pkgconfig", type="build")
+    depends_on("gzip", type="build")
 
     depends_on("ncurses")
     depends_on("pcre")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("libxml2")
     depends_on("libtiff", when="+X")
     depends_on("libpng", when="+X")
@@ -52,15 +65,16 @@ class Emacs(AutotoolsPackage, GNUMirrorPackage):
     depends_on("gtkplus", when="+X toolkit=gtk")
     depends_on("gnutls", when="+tls")
     depends_on("jpeg")
+    depends_on("tree-sitter", when="+treesitter")
     depends_on("m4", type="build", when="@master:")
     depends_on("autoconf", type="build", when="@master:")
     depends_on("automake", type="build", when="@master:")
     depends_on("libtool", type="build", when="@master:")
     depends_on("texinfo", type="build", when="@master:")
     depends_on("gcc@11: +strip languages=jit", when="+native")
+    depends_on("jansson@2.7:", when="+json")
 
     conflicts("@:26.3", when="platform=darwin os=catalina")
-    conflicts("+native", when="@:27", msg="native compilation require @master")
 
     @when("platform=darwin")
     def setup_build_environment(self, env):
@@ -78,33 +92,56 @@ class Emacs(AutotoolsPackage, GNUMirrorPackage):
         else:
             args = ["--without-x"]
 
-        # On OS X/macOS, do not build "nextstep/Emacs.app", because
-        # doing so throws an error at build-time
         if sys.platform == "darwin":
-            args.append("--without-ns")
+            if spec.satisfies("+gui"):
+                # Do not build the self-contained "nextstep/Emacs.app"
+                args.append("--disable-ns-self-contained")
+            else:
+                # Do not build "nextstep/Emacs.app" at all
+                args.append("--without-ns")
 
-        if "+native" in spec:
-            args.append("--with-native-compilation")
-
-        if "+tls" in spec:
-            args.append("--with-gnutls")
-        else:
-            args.append("--without-gnutls")
+        args += self.with_or_without("native-compilation", variant="native")
+        args += self.with_or_without("gnutls", variant="tls")
+        args += self.with_or_without("tree-sitter", variant="treesitter")
+        args += self.with_or_without("json")
 
         return args
 
-    def _test_check_versions(self):
-        """Perform version checks on installed package binaries."""
-        checks = ["ctags", "ebrowse", "emacs", "emacsclient", "etags"]
+    @run_after("install")
+    def move_macos_app(self):
+        """Move the Emacs.app build on MacOS to <prefix>/Applications.
+        From there users can move it or link it in ~/Applications."""
+        if sys.platform == "darwin" and "+gui" in self.spec:
+            apps_dir = join_path(self.prefix, "Applications")
+            mkdir(apps_dir)
+            move("nextstep/Emacs.app", apps_dir)
 
-        for exe in checks:
-            expected = str(self.spec.version)
-            reason = "test version of {0} is {1}".format(exe, expected)
-            self.run_test(
-                exe, ["--version"], expected, installed=True, purpose=reason, skip_missing=True
-            )
+    def run_version_check(self, bin):
+        """Runs and checks output of the installed binary."""
+        exe_path = join_path(self.prefix.bin, bin)
+        if not os.path.exists(exe_path):
+            raise SkipTest(f"{exe_path} is not installed")
 
-    def test(self):
-        """Perform smoke tests on the installed package."""
-        # Simple version check tests on known binaries
-        self._test_check_versions()
+        exe = which(exe_path)
+        out = exe("--version", output=str.split, error=str.split)
+        assert str(self.spec.version) in out
+
+    def test_ctags(self):
+        """check ctags version"""
+        self.run_version_check("ctags")
+
+    def test_ebrowse(self):
+        """check ebrowse version"""
+        self.run_version_check("ebrowse")
+
+    def test_emacs(self):
+        """check emacs version"""
+        self.run_version_check("emacs")
+
+    def test_emacsclient(self):
+        """check emacsclient version"""
+        self.run_version_check("emacsclient")
+
+    def test_etags(self):
+        """check etags version"""
+        self.run_version_check("etags")

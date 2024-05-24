@@ -1,7 +1,9 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+import re
 
 from spack.package import *
 
@@ -18,6 +20,13 @@ class Coreutils(AutotoolsPackage, GNUMirrorPackage):
 
     tags = ["core-packages"]
 
+    executables = [r"^md5sum$"]
+
+    license("GPL-3.0-or-later")
+
+    version("9.4", sha256="ea613a4cf44612326e917201bbbcdfbd301de21ffc3b59b6e5c07e040b275e52")
+    version("9.3", sha256="adbcfcfe899235b71e8768dcf07cd532520b7f54f9a8064843f8d199a904bbaa")
+    version("9.2", sha256="6885ff47b9cdb211de47d368c17853f406daaf98b148aaecdf10de29cc04b0b3")
     version("9.1", sha256="61a1f410d78ba7e7f37a5a4f50e6d1320aca33375484a3255eddf17a38580423")
     version("9.0", sha256="ce30acdf4a41bc5bb30dd955e9eaa75fa216b4e3deb08889ed32433c7b3b97ce")
     version("8.32", sha256="4458d8de7849df44ccab15e16b1548b285224dbba5f08fac070c1c0e0bcc4cfa")
@@ -54,3 +63,9 @@ class Coreutils(AutotoolsPackage, GNUMirrorPackage):
             configure_args.append("gl_cv_func_ftello_works=yes")
 
         return configure_args
+
+    @classmethod
+    def determine_version(cls, exe):
+        output = Executable(exe)("--version", output=str, error=str)
+        match = re.search(r"\(GNU coreutils\)\s+([\d\.]+)", output)
+        return match.group(1) if match else None

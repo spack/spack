@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,10 +8,12 @@ import inspect
 import platform
 import sys
 
+import spack.build_systems.cmake
+import spack.build_systems.makefile
 from spack.package import *
 
 
-class IntelTbb(CMakePackage):
+class IntelTbb(CMakePackage, MakefilePackage):
     """Widely used C++ template library for task parallelism.
     Intel Threading Building Blocks (Intel TBB) lets you easily write parallel
     C++ programs that take full advantage of multicore performance, that are
@@ -21,20 +23,26 @@ class IntelTbb(CMakePackage):
     homepage = "https://www.threadingbuildingblocks.org/"
     url_prefix = "https://github.com/oneapi-src/oneTBB/"
     url = url_prefix + "archive/v2020.1.tar.gz"
+    git = "https://github.com/oneapi-src/oneTBB.git"
 
-    maintainers = ["rscohn2"]
+    maintainers("rscohn2")
 
     # Note: when adding new versions, please check and update the
     # patches, filters and url_for_version() below as needed.
 
+    license("Apache-2.0")
+
+    version("master", branch="master")
+    version("2021.9.0", sha256="1ce48f34dada7837f510735ff1172f6e2c261b09460e3bf773b49791d247d24e")
+    version("2021.8.0", sha256="eee380323bb7ce864355ed9431f85c43955faaae9e9bce35c62b372d7ffd9f8b")
+    version("2021.7.0", sha256="2cae2a80cda7d45dc7c072e4295c675fff5ad8316691f26f40539f7e7e54c0cc")
+    version("2021.6.0", sha256="4897dd106d573e9dacda8509ca5af1a0e008755bf9c383ef6777ac490223031f")
+    version("2021.5.0", sha256="e5b57537c741400cf6134b428fc1689a649d7d38d9bb9c1b6d64f092ea28178a")
+    version("2021.4.0", sha256="021796c7845e155e616f5ecda16daa606ebb4c6f90b996e5c08aebab7a8d3de3")
     version("2021.3.0", sha256="8f616561603695bbb83871875d2c6051ea28f8187dbe59299961369904d1d49e")
     version("2021.2.0", sha256="cee20b0a71d977416f3e3b4ec643ee4f38cedeb2a9ff015303431dd9d8d79854")
     version("2021.1.1", sha256="b182c73caaaabc44ddc5ad13113aca7e453af73c1690e4061f71dfe4935d74e8")
-    version(
-        "2020.3",
-        sha256="ebc4f6aa47972daed1f7bf71d100ae5bf6931c2e3144cf299c8cc7d041dca2f3",
-        preferred=True,
-    )
+    version("2020.3", sha256="ebc4f6aa47972daed1f7bf71d100ae5bf6931c2e3144cf299c8cc7d041dca2f3")
     version("2020.2", sha256="4804320e1e6cbe3a5421997b52199e3c1a3829b2ecb6489641da4b8e32faf500")
     version("2020.1", sha256="7c96a150ed22bc3c6628bc3fef9ed475c00887b26d37bca61518d76a56510971")
     version("2020.0", sha256="57714f2d2cf33935db33cee93af57eb3ecd5a7bef40c1fb7ca4a41d79684b118")
@@ -71,6 +79,12 @@ class IntelTbb(CMakePackage):
     version("4.4.2", sha256="1ab10e70354685cee3ddf614f3e291434cea86c8eb62031e025f4052278152ad")
     version("4.4.1", sha256="05737bf6dd220b31aad63d77ca59c742271f81b4cc6643aa6f93d37450ae32b5")
     version("4.4", sha256="93c74b6054c69c86fa49d0fce7c50061fc907cb198a7237b8dd058298fd40c0e")
+
+    build_system(
+        conditional("makefile", when="@:2020.3"),
+        conditional("cmake", when="@2021:"),
+        default="cmake",
+    )
 
     provides("tbb")
 
@@ -112,6 +126,10 @@ class IntelTbb(CMakePackage):
     patch("gcc_generic-pedantic-2019.patch", level=1, when="@2019.1:2019.5")
     patch("gcc_generic-pedantic-4.4.patch", level=1, when="@:2019.0")
 
+    # Patch and conflicts for GCC 13 support (#1031).
+    patch("gcc_13-2021-v2.patch", when="@2021.1:")
+    conflicts("%gcc@13", when="@:2021.3")
+
     # Patch cmakeConfig.cmake.in to find the libraries where we install them.
     patch("tbb_cmakeConfig-2019.5.patch", level=0, when="@2019.5:2021.0")
     patch("tbb_cmakeConfig.patch", level=0, when="@2017.7:2019.4")
@@ -127,6 +145,9 @@ class IntelTbb(CMakePackage):
     # https://github.com/oneapi-src/oneTBB/pull/258
     # https://github.com/oneapi-src/oneTBB/commit/86f6dcdc17a8f5ef2382faaef860cfa5243984fe.patch?full_index=1
     patch("macos-arm64.patch", when="@:2021.0")
+
+    # build older tbb with %oneapi
+    patch("intel-tbb.2020.3-icx.patch", when="@2020.3 %oneapi")
 
     # Support for building with %nvhpc
     # 1) remove flags nvhpc compilers do not recognize
@@ -159,12 +180,54 @@ class IntelTbb(CMakePackage):
             name = "{0}".format(version)
         return url.format(name)
 
+    @property
+    def libs(self):
+        shared = True if "+shared" in self.spec else False
+        return find_libraries("libtbb*", root=self.prefix, shared=shared, recursive=True)
+
+
+class SetupEnvironment:
     # We set OS here in case the user has it set to something else
     # that TBB doesn't expect.
     def setup_build_environment(self, env):
         env.set("OS", platform.system())
 
-    @when("@:2020.3")
+
+class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder, SetupEnvironment):
+    def cmake_args(self):
+        spec = self.spec
+        options = [
+            self.define("CMAKE_HWLOC_2_INCLUDE_PATH", spec["hwloc"].prefix.include),
+            self.define("CMAKE_HWLOC_2_LIBRARY_PATH", spec["hwloc"].libs),
+            self.define("-DTBB_CPF", True),
+            self.define("TBB_STRICT", False),
+        ]
+        if spec.variants["cxxstd"].value != "default":
+            options.append(self.define("CMAKE_CXX_STANDARD", spec.variants["cxxstd"].value))
+        return options
+
+    @run_after("install")
+    def install_pkgconfig(self):
+        # pkg-config generation is introduced in May 5, 2021.
+        # It must not be overwritten by spack-generated tbb.pc.
+        # https://github.com/oneapi-src/oneTBB/commit/478de5b1887c928e52f029d706af6ea640a877be
+        if self.spec.satisfies("@:2021.2.0"):
+            mkdirp(self.prefix.lib.pkgconfig)
+
+            with open(join_path(self.prefix.lib.pkgconfig, "tbb.pc"), "w") as f:
+                f.write("prefix={0}\n".format(self.prefix))
+                f.write("exec_prefix=${prefix}\n")
+                f.write("libdir={0}\n".format(self.prefix.lib))
+                f.write("includedir={0}\n".format(self.prefix.include))
+                f.write("\n")
+                f.write("Name: Threading Building Blocks\n")
+                f.write("Description: Intel's parallelism library for C++\n")
+                f.write("Version: {0}\n".format(self.spec.version))
+                f.write("Cflags: -I${includedir}\n")
+                f.write("Libs: -L${libdir} -ltbb -latomic\n")
+
+
+class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder, SetupEnvironment):
     def coerce_to_spack(self, tbb_build_subdir):
         for compiler in ["icc", "gcc", "clang"]:
             fs = glob.glob(join_path(tbb_build_subdir, "*.%s.inc" % compiler))
@@ -181,16 +244,7 @@ class IntelTbb(CMakePackage):
                     else:
                         of.write(lin)
 
-    @when("@:2020.3")
-    def cmake(self, spec, prefix):
-        return
-
-    @when("@:2020.3")
-    def cmake_args(self):
-        return
-
-    @when("@:2020.3")
-    def build(self, spec, prefix):
+    def build(self, pkg, spec, prefix):
         # Deactivate use of RTM with GCC when on an OS with a very old
         # assembler.
         if (
@@ -212,7 +266,7 @@ class IntelTbb(CMakePackage):
         #
         self.coerce_to_spack("build")
 
-        if spec.satisfies("%clang") or spec.satisfies("%apple-clang"):
+        if spec.satisfies("%clang") or spec.satisfies("%apple-clang") or spec.satisfies("%rocmcc"):
             tbb_compiler = "clang"
         elif spec.satisfies("%intel"):
             tbb_compiler = "icc"
@@ -237,8 +291,7 @@ class IntelTbb(CMakePackage):
         make_opts.append("compiler={0}".format(tbb_compiler))
         make(*make_opts)
 
-    @when("@:2020.3")
-    def install(self, spec, prefix):
+    def install(self, pkg, spec, prefix):
         mkdirp(prefix)
         mkdirp(prefix.lib)
 
@@ -254,7 +307,7 @@ class IntelTbb(CMakePackage):
             # install debug libs if they exist
             install(join_path("build", "*debug", lib_name + "_debug.*"), prefix.lib)
 
-        if spec.satisfies("@2017.8,2018.1:", strict=True):
+        if spec.satisfies("@2017.8,2018.1:"):
             # Generate and install the CMake Config file.
             cmake_args = (
                 "-DTBB_ROOT={0}".format(prefix),
@@ -265,46 +318,8 @@ class IntelTbb(CMakePackage):
             with working_dir(join_path(self.stage.source_path, "cmake")):
                 inspect.getmodule(self).cmake(*cmake_args)
 
-    @when("@:2020.3")
     @run_after("install")
     def darwin_fix(self):
         # Replace @rpath in ids with full path
         if sys.platform == "darwin":
             fix_darwin_install_name(self.prefix.lib)
-
-    @property
-    def libs(self):
-        shared = True if "+shared" in self.spec else False
-        return find_libraries("libtbb*", root=self.prefix, shared=shared, recursive=True)
-
-    @when("@2021.1.1:")
-    def cmake_args(self):
-        spec = self.spec
-        options = []
-        options.append("-DCMAKE_HWLOC_2_INCLUDE_PATH=%s" % spec["hwloc"].prefix.include)
-        options.append("-DCMAKE_HWLOC_2_LIBRARY_PATH=%s" % spec["hwloc"].libs)
-        options.append("-DTBB_CPF=ON")
-        options.append("-DTBB_STRICT=OFF")
-        if spec.variants["cxxstd"].value != "default":
-            options.append("-DCMAKE_CXX_STANDARD=%s" % spec.variants["cxxstd"].value)
-        return options
-
-    @run_after("install")
-    def install_pkgconfig(self):
-        # pkg-config generation is introduced in May 5, 2021.
-        # It must not be overwritten by spack-generated tbb.pc.
-        # https://github.com/oneapi-src/oneTBB/commit/478de5b1887c928e52f029d706af6ea640a877be
-        if self.spec.satisfies("@:2021.2.0", strict=True):
-            mkdirp(self.prefix.lib.pkgconfig)
-
-            with open(join_path(self.prefix.lib.pkgconfig, "tbb.pc"), "w") as f:
-                f.write("prefix={0}\n".format(self.prefix))
-                f.write("exec_prefix=${prefix}\n")
-                f.write("libdir={0}\n".format(self.prefix.lib))
-                f.write("includedir={0}\n".format(self.prefix.include))
-                f.write("\n")
-                f.write("Name: Threading Building Blocks\n")
-                f.write("Description: Intel's parallelism library for C++\n")
-                f.write("Version: {0}\n".format(self.spec.version))
-                f.write("Cflags: -I${includedir}\n")
-                f.write("Libs: -L${libdir} -ltbb -latomic\n")

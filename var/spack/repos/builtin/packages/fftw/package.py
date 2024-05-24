@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -25,6 +25,7 @@ class FftwBase(AutotoolsPackage):
     )
     variant("openmp", default=False, description="Enable OpenMP support.")
     variant("mpi", default=True, description="Activate MPI support")
+    variant("shared", default=True, description="Build shared libraries")
 
     depends_on("mpi", when="+mpi")
     depends_on("llvm-openmp", when="%apple-clang +openmp")
@@ -41,7 +42,6 @@ class FftwBase(AutotoolsPackage):
 
     @property
     def libs(self):
-
         # Reduce repetitions of entries
         query_parameters = list(llnl.util.lang.dedupe(self.spec.last_query.extra_parameters))
 
@@ -63,6 +63,13 @@ class FftwBase(AutotoolsPackage):
             libraries.append("libfftw3" + sfx)
 
         return find_libraries(libraries, root=self.prefix, recursive=True)
+
+    def flag_handler(self, name, flags):
+        if name == "cflags":
+            if self.spec.satisfies("%clang@15:"):
+                flags.append("-Wno-error=int-conversion")
+
+        return flags, None, None
 
     def patch(self):
         # If fftw/config.h exists in the source tree, it will take precedence
@@ -98,7 +105,9 @@ class FftwBase(AutotoolsPackage):
 
     def configure(self, spec, prefix):
         # Base options
-        options = ["--prefix={0}".format(prefix), "--enable-shared", "--enable-threads"]
+        options = ["--prefix={0}".format(prefix), "--enable-threads"]
+        options.extend(self.enable_or_disable("shared"))
+
         if not self.compiler.f77 or not self.compiler.fc:
             options.append("--disable-fortran")
         if spec.satisfies("@:2"):
@@ -209,6 +218,8 @@ class Fftw(FftwBase):
     homepage = "https://www.fftw.org"
     url = "https://www.fftw.org/fftw-3.3.4.tar.gz"
     list_url = "https://www.fftw.org/download.html"
+
+    license("GPL-2.0-or-later")
 
     version("3.3.10", sha256="56c932549852cddcfafdab3820b0200c7742675be92179e59e6215b340e26467")
     version("3.3.9", sha256="bf2c7ce40b04ae811af714deb512510cc2c17b9ab9d6ddcf49fe4487eea7af3d")

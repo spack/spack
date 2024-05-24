@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,117 +6,11 @@
 """This module contains additional behavior that can be attached to any given
 package.
 """
-import collections
 import os
-import sys
-from typing import Callable, DefaultDict, Dict, List  # novm
-
-if sys.version_info >= (3, 5):
-    CallbackDict = DefaultDict[str, List[Callable]]
-else:
-    CallbackDict = None
 
 import llnl.util.filesystem
 
-__all__ = [
-    "filter_compiler_wrappers",
-    "PackageMixinsMeta",
-]
-
-
-class PackageMixinsMeta(type):
-    """This metaclass serves the purpose of implementing a declarative syntax
-    for package mixins.
-
-    Mixins are implemented below in the form of a function. Each one of them
-    needs to register a callable that takes a single argument to be run
-    before or after a certain phase. This callable is basically a method that
-    gets implicitly attached to the package class by calling the mixin.
-    """
-
-    _methods_to_be_added = {}  # type: Dict[str, Callable]
-    _add_method_before = collections.defaultdict(list)  # type: CallbackDict
-    _add_method_after = collections.defaultdict(list)  # type: CallbackDict
-
-    @staticmethod
-    def register_method_before(fn, phase):  # type: (Callable, str) -> None
-        """Registers a method to be run before a certain phase.
-
-        Args:
-            fn: function taking a single argument (self)
-            phase (str): phase before which fn must run
-        """
-        PackageMixinsMeta._methods_to_be_added[fn.__name__] = fn
-        PackageMixinsMeta._add_method_before[phase].append(fn)
-
-    @staticmethod
-    def register_method_after(fn, phase):  # type: (Callable, str) -> None
-        """Registers a method to be run after a certain phase.
-
-        Args:
-            fn: function taking a single argument (self)
-            phase (str): phase after which fn must run
-        """
-        PackageMixinsMeta._methods_to_be_added[fn.__name__] = fn
-        PackageMixinsMeta._add_method_after[phase].append(fn)
-
-    def __init__(cls, name, bases, attr_dict):
-
-        # Add the methods to the class being created
-        if PackageMixinsMeta._methods_to_be_added:
-            attr_dict.update(PackageMixinsMeta._methods_to_be_added)
-            PackageMixinsMeta._methods_to_be_added.clear()
-
-        attr_fmt = "_InstallPhase_{0}"
-
-        # Copy the phases that needs it to the most derived classes
-        # in order not to interfere with other packages in the hierarchy
-        phases_to_be_copied = list(PackageMixinsMeta._add_method_before.keys())
-        phases_to_be_copied += list(PackageMixinsMeta._add_method_after.keys())
-
-        for phase in phases_to_be_copied:
-
-            attr_name = attr_fmt.format(phase)
-
-            # Here we want to get the attribute directly from the class (not
-            # from the instance), so that we can modify it and add the mixin
-            # method to the pipeline.
-            phase = getattr(cls, attr_name)
-
-            # Due to MRO, we may have taken a method from a parent class
-            # and modifying it may influence other packages in unwanted
-            # manners. Solve the problem by copying the phase into the most
-            # derived class.
-            setattr(cls, attr_name, phase.copy())
-
-        # Insert the methods in the appropriate position
-        # in the installation pipeline.
-
-        for phase in PackageMixinsMeta._add_method_before:
-
-            attr_name = attr_fmt.format(phase)
-            phase_obj = getattr(cls, attr_name)
-            fn_list = PackageMixinsMeta._add_method_after[phase]
-
-            for f in fn_list:
-                phase_obj.run_before.append(f)
-
-        # Flush the dictionary for the next class
-        PackageMixinsMeta._add_method_before.clear()
-
-        for phase in PackageMixinsMeta._add_method_after:
-
-            attr_name = attr_fmt.format(phase)
-            phase_obj = getattr(cls, attr_name)
-            fn_list = PackageMixinsMeta._add_method_after[phase]
-
-            for f in fn_list:
-                phase_obj.run_after.append(f)
-
-        # Flush the dictionary for the next class
-        PackageMixinsMeta._add_method_after.clear()
-
-        super(PackageMixinsMeta, cls).__init__(name, bases, attr_dict)
+import spack.builder
 
 
 def filter_compiler_wrappers(*files, **kwargs):
@@ -165,9 +59,10 @@ def filter_compiler_wrappers(*files, **kwargs):
 
     find_kwargs = {"recursive": kwargs.get("recursive", False)}
 
-    def _filter_compiler_wrappers_impl(self):
+    def _filter_compiler_wrappers_impl(pkg_or_builder):
+        pkg = getattr(pkg_or_builder, "pkg", pkg_or_builder)
         # Compute the absolute path of the search root
-        root = os.path.join(self.prefix, relative_root) if relative_root else self.prefix
+        root = os.path.join(pkg.prefix, relative_root) if relative_root else pkg.prefix
 
         # Compute the absolute path of the files to be filtered and
         # remove links from the list.
@@ -177,10 +72,10 @@ def filter_compiler_wrappers(*files, **kwargs):
         x = llnl.util.filesystem.FileFilter(*abs_files)
 
         compiler_vars = [
-            ("CC", self.compiler.cc),
-            ("CXX", self.compiler.cxx),
-            ("F77", self.compiler.f77),
-            ("FC", self.compiler.fc),
+            ("CC", pkg.compiler.cc),
+            ("CXX", pkg.compiler.cxx),
+            ("F77", pkg.compiler.f77),
+            ("FC", pkg.compiler.fc),
         ]
 
         # Some paths to the compiler wrappers might be substrings of the others.
@@ -198,7 +93,7 @@ def filter_compiler_wrappers(*files, **kwargs):
         replacements = []
 
         for idx, (env_var, compiler_path) in enumerate(compiler_vars):
-            if env_var in os.environ:
+            if env_var in os.environ and compiler_path is not None:
                 # filter spack wrapper and links to spack wrapper in case
                 # build system runs realpath
                 wrapper = os.environ[env_var]
@@ -209,11 +104,11 @@ def filter_compiler_wrappers(*files, **kwargs):
             x.filter(wrapper_path, compiler_path, **filter_kwargs)
 
         # Remove this linking flag if present (it turns RPATH into RUNPATH)
-        x.filter("{0}--enable-new-dtags".format(self.compiler.linker_arg), "", **filter_kwargs)
+        x.filter("{0}--enable-new-dtags".format(pkg.compiler.linker_arg), "", **filter_kwargs)
 
         # NAG compiler is usually mixed with GCC, which has a different
         # prefix for linker arguments.
-        if self.compiler.name == "nag":
+        if pkg.compiler.name == "nag":
             x.filter("-Wl,--enable-new-dtags", "", **filter_kwargs)
 
-    PackageMixinsMeta.register_method_after(_filter_compiler_wrappers_impl, after)
+    spack.builder.run_after(after)(_filter_compiler_wrappers_impl)

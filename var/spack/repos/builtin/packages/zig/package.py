@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,16 @@ class Zig(CMakePackage):
     homepage = "https://ziglang.org/"
     git = "https://github.com/ziglang/zig.git"
 
-    version("0.7.1", tag="0.7.1")
+    maintainers("alalazo")
+
+    license("MIT")
+
+    version("0.12.0", tag="0.12.0", commit="a685ab1499d6560c523f0dbce2890dc140671e43")
+    version("0.11.0", tag="0.11.0", commit="67709b638224ac03820226c6744d8b6ead59184c")
+    version("0.10.1", tag="0.10.1", commit="b57081f039bd3f8f82210e8896e336e3c3a6869b")
+    version(
+        "0.9.1", tag="0.9.1", commit="6d44a6222d6eba600deb7f16c124bfa30628fb60", deprecated=True
+    )
 
     variant(
         "build_type",
@@ -22,6 +31,20 @@ class Zig(CMakePackage):
         description="CMake build type",
     )
 
-    depends_on("llvm@11.0.0: targets=all")
+    depends_on("llvm targets=all")
+    depends_on("llvm@13", when="@0.9.1")
+    depends_on("llvm@15", when="@0.10.1")
+    depends_on("llvm@16", when="@0.11.0")
+    depends_on("llvm@17", when="@0.12.0")
+
+    depends_on("git", type="build")
+    depends_on("ccache")
 
     provides("ziglang")
+
+    def cmake_args(self):
+        return [
+            self.define("ZIG_USE_CCACHE", True),
+            self.define("ZIG_STATIC_LLVM", True),
+            self.define("ZIG_STATIC_ZLIB", True),
+        ]

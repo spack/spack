@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,15 +19,20 @@ class Pumi(CMakePackage):
     homepage = "https://www.scorec.rpi.edu/pumi"
     git = "https://github.com/SCOREC/core.git"
 
-    maintainers = ["cwsmith"]
+    maintainers("cwsmith")
 
     tags = ["e4s"]
+
+    license("BSD-3-Clause")
 
     # We will use the scorec/core master branch as the 'nightly' version
     # of pumi in spack.  The master branch is more stable than the
     # scorec/core develop branch and we prefer not to expose spack users
     # to the added instability.
     version("master", submodules=True, branch="master")
+    version(
+        "2.2.8", submodules=True, commit="736bb87ccd8db51fc499a1b91e53717a88841b1f"
+    )  # tag 2.2.8
     version(
         "2.2.7", submodules=True, commit="a295720d7b4828282484f2b78bac1f6504512de4"
     )  # tag 2.2.7
@@ -84,7 +89,6 @@ class Pumi(CMakePackage):
             "-DCMAKE_C_COMPILER=%s" % spec["mpi"].mpicc,
             "-DCMAKE_CXX_COMPILER=%s" % spec["mpi"].mpicxx,
             self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
-            "-DCMAKE_Fortran_COMPILER=%s" % spec["mpi"].mpifc,
             self.define_from_variant("PUMI_FORTRAN_INTERFACE", "fortran"),
             "-DMDS_ID_TYPE=%s" % ("long" if "+int64" in spec else "int"),
             "-DSKIP_SIMMETRIX_VERSION_CHECK=%s"
@@ -92,17 +96,19 @@ class Pumi(CMakePackage):
             self.define_from_variant("IS_TESTING", "testing"),
             "-DMESHES=%s" % join_path(self.stage.source_path, "pumi-meshes"),
         ]
+        if spec.satisfies("fortran"):
+            args += ["-DCMAKE_Fortran_COMPILER=%s" % spec["mpi"].mpifc]
         if spec.satisfies("@2.2.3"):
             args += ["-DCMAKE_CXX_STANDARD=11"]
-        if self.spec.satisfies("simmodsuite=base"):
+        if self.spec.variants["simmodsuite"].value != "none":
             args.append("-DENABLE_SIMMETRIX=ON")
-        if self.spec.satisfies("simmodsuite=kernels") or self.spec.satisfies("simmodsuite=full"):
-            args.append("-DENABLE_SIMMETRIX=ON")
-            args.append("-DSIM_PARASOLID=ON")
-            args.append("-DSIM_ACIS=ON")
-            args.append("-DSIM_DISCRETE=ON")
-            mpi_id = spec["mpi"].name + spec["mpi"].version.string
+            mpi_id = spec["mpi"].name + spec["mpi"].version.up_to(1).string
             args.append("-DSIM_MPI=" + mpi_id)
+            if self.spec.variants["simmodsuite"].value in ["kernels", "full"]:
+                args.append("-DENABLE_SIMMETRIX=ON")
+                args.append("-DSIM_PARASOLID=ON")
+                args.append("-DSIM_ACIS=ON")
+                args.append("-DSIM_DISCRETE=ON")
         return args
 
     def test(self):

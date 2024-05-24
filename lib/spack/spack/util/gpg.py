@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,7 +8,8 @@ import functools
 import os
 import re
 
-import spack.bootstrap
+import llnl.util.filesystem
+
 import spack.error
 import spack.paths
 import spack.util.executable
@@ -47,6 +48,8 @@ def init(gnupghome=None, force=False):
             global objects are set already
     """
     global GPG, GPGCONF, SOCKET_DIR, GNUPGHOME
+    import spack.bootstrap
+
     if force:
         clear()
 
@@ -239,7 +242,7 @@ def trust(keyfile):
     keys = _get_unimported_public_keys(output)
 
     # Import them
-    GPG("--import", keyfile)
+    GPG("--batch", "--import", keyfile)
 
     # Set trust to ultimate
     key_to_fpr = dict(public_keys_to_fingerprint())
@@ -285,7 +288,7 @@ def sign(key, file, output, clearsign=False):
             signature, if False creates a detached signature
     """
     signopt = "--clearsign" if clearsign else "--detach-sign"
-    GPG(signopt, "--armor", "--default-key", key, "--output", output, file)
+    GPG(signopt, "--armor", "--local-user", key, "--output", output, file)
 
 
 @_autoinit
@@ -333,7 +336,7 @@ def _verify_exe_or_raise(exe):
         raise SpackGPGError(msg)
 
     output = exe("--version", output=str)
-    match = re.search(r"^gpg(conf)? \(GnuPG\) (.*)$", output, re.M)
+    match = re.search(r"^gpg(conf)? \(GnuPG(?:/MacGPG2)?\) (.*)$", output, re.M)
     if not match:
         raise SpackGPGError('Could not determine "{0}" version'.format(exe.name))
 
@@ -384,7 +387,7 @@ def _socket_dir(gpgconf):
                 os.mkdir(var_run_user)
                 os.chmod(var_run_user, 0o777)
 
-            user_dir = os.path.join(var_run_user, str(os.getuid()))
+            user_dir = os.path.join(var_run_user, str(llnl.util.filesystem.getuid()))
 
             if not os.path.exists(user_dir):
                 os.mkdir(user_dir)

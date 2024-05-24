@@ -1,10 +1,12 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import glob
 import os
+
+import llnl.util.tty as tty
 
 from spack.package import *
 
@@ -20,8 +22,12 @@ class Likwid(Package):
     homepage = "https://hpc.fau.de/research/tools/likwid/"
     url = "https://github.com/RRZE-HPC/likwid/archive/v5.0.0.tar.gz"
     git = "https://github.com/RRZE-HPC/likwid.git"
-    maintainers = ["TomTheBear"]
+    maintainers("TomTheBear")
 
+    license("GPL-3.0-only")
+
+    version("5.3.0", sha256="c290e554c4253124ac2ab8b056e14ee4d23966b8c9fbfa10ba81f75ae543ce4e")
+    version("5.2.2", sha256="7dda6af722e04a6c40536fc9f89766ce10f595a8569b29e80563767a6a8f940e")
     version("5.2.1", sha256="1b8e668da117f24302a344596336eca2c69d2bc2f49fa228ca41ea0688f6cbc2")
     version("5.2.0", sha256="aa6dccacfca59e52d8f3be187ffcf292b2a2fa1f51a81bf8912b9d48e5a257e0")
     version("5.1.1", sha256="faec7c62987967232f476a6ff0ee85af686fd24b5a360126896b7f435d1f943f")
@@ -55,8 +61,21 @@ class Likwid(Package):
         when="@5.1.0",
         sha256="62da145da0a09de21020f9726290e1daf7437691bab8a92d7254bc192d5f3061",
     )
+    patch(
+        "https://github.com/RRZE-HPC/likwid/releases/download/v5.2.0/likwid-icx-mem-group-fix.patch",
+        sha256="af4ce278ef20cd1df26d8749a6b0e2716e4286685dae5a5e1eb4af8c383f7d10",
+        when="@5.2.0:5.2.2",
+    )
     variant("fortran", default=True, description="with fortran interface")
     variant("cuda", default=False, description="with Nvidia GPU profiling support")
+    variant("rocm", default=False, description="with AMD GPU profiling support")
+
+    variant(
+        "accessmode",
+        default="perf_event",
+        values=("perf_event", "accessdaemon"),
+        description="the default mode for MSR access",
+    )
 
     # NOTE: There is no way to use an externally provided hwloc with Likwid.
     # The reason is that the internal hwloc is patched to contain extra
@@ -68,6 +87,10 @@ class Likwid(Package):
     depends_on("lua", when="@5.0.2:")
     depends_on("cuda", when="@5: +cuda")
     depends_on("hwloc", when="@5.2.0:")
+    depends_on("rocprofiler-dev", when="@5.3: +rocm")
+    depends_on("rocm-core", when="@5.3: +rocm")
+    depends_on("rocm-smi", when="@5.3: +rocm")
+    depends_on("rocm-smi-lib", when="@5.3: +rocm")
 
     # TODO: check
     # depends_on('gnuplot', type='run')
@@ -85,6 +108,31 @@ class Likwid(Package):
         if "+cuda" in self.spec:
             libs = find_libraries(
                 "libcupti", root=self.spec["cuda"].prefix, shared=True, recursive=True
+            )
+            for lib in libs.directories:
+                env.append_path("LD_LIBRARY_PATH", lib)
+        if "+rocm" in self.spec:
+            libs = find_libraries(
+                "librocprofiler64.so.1",
+                root=self.spec["rocprofiler-dev"].prefix,
+                shared=True,
+                recursive=True,
+            )
+            for lib in libs.directories:
+                env.append_path("LD_LIBRARY_PATH", lib)
+            libs = find_libraries(
+                "libhsa-runtime64.so",
+                root=self.spec["rocm-core"].prefix,
+                shared=True,
+                recursive=True,
+            )
+            for lib in libs.directories:
+                env.append_path("LD_LIBRARY_PATH", lib)
+            libs = find_libraries(
+                "librocm_smi64.so",
+                root=self.spec["rocm-smi-lib"].prefix,
+                shared=True,
+                recursive=True,
             )
             for lib in libs.directories:
                 env.append_path("LD_LIBRARY_PATH", lib)
@@ -120,11 +168,17 @@ class Likwid(Package):
         )
         filter_file("^PREFIX .*", "PREFIX = " + prefix, "config.mk")
 
-        # FIXME: once https://github.com/spack/spack/issues/4432 is
-        # resolved, install as root by default and remove this
-        filter_file("^ACCESSMODE .*", "ACCESSMODE = perf_event", "config.mk")
-        filter_file("^BUILDFREQ .*", "BUILDFREQ = false", "config.mk")
-        filter_file("^BUILDDAEMON .*", "BUILDDAEMON = false", "config.mk")
+        filter_file(
+            "^ACCESSMODE .*",
+            "ACCESSMODE = {}".format(spec.variants["accessmode"].value),
+            "config.mk",
+        )
+        if "accessmode=accessdaemon" in spec:
+            # Disable the chown, see the `spack_perms_fix` template and script
+            filter_file("^INSTALL_CHOWN .*", "INSTALL_CHOWN =", "config.mk")
+        else:
+            filter_file("^BUILDFREQ .*", "BUILDFREQ = false", "config.mk")
+            filter_file("^BUILDDAEMON .*", "BUILDDAEMON = false", "config.mk")
 
         if "+fortran" in self.spec:
             filter_file("^FORTRAN_INTERFACE .*", "FORTRAN_INTERFACE = true", "config.mk")
@@ -149,6 +203,13 @@ class Likwid(Package):
         else:
             filter_file("^NVIDIA_INTERFACE.*", "NVIDIA_INTERFACE = false", "config.mk")
 
+        if "+rocm" in self.spec:
+            env["ROCM_HOME"] = spec["rocm-core"].prefix
+            filter_file("^ROCM_INTERFACE.*", "ROCM_INTERFACE = true", "config.mk")
+            filter_file("^BUILDAPPDAEMON.*", "BUILDAPPDAEMON = true", "config.mk")
+        else:
+            filter_file("^ROCM_INTERFACE.*", "ROCM_INTERFACE = false", "config.mk")
+
         if spec.satisfies("^lua"):
             filter_file(
                 "^#LUA_INCLUDE_DIR.*",
@@ -167,12 +228,18 @@ class Likwid(Package):
                 "HWLOC_INCLUDE_DIR = {0}".format(spec["hwloc"].prefix.include),
                 "config.mk",
             )
-            filter_file(
-                "^#HWLOC_LIB_DIR.*",
-                "HWLOC_LIB_DIR = {0}".format(spec["hwloc"].prefix.lib),
-                "config.mk",
-            )
-            filter_file("^#HWLOC_LIB_NAME.*", "HWLOC_LIB_NAME = hwloc", "config.mk")
+            ll = spec["hwloc"].libs
+            if len(ll.directories) > 0 and len(ll.names) > 0:
+                filter_file(
+                    "^#HWLOC_LIB_DIR.*",
+                    "HWLOC_LIB_DIR = {0}".format(ll.directories[0]),
+                    "config.mk",
+                )
+                filter_file(
+                    "^#HWLOC_LIB_NAME.*", "HWLOC_LIB_NAME = {0}".format(ll.names[0]), "config.mk"
+                )
+            else:
+                raise InstallError("Failed to find library path and/or name of hwloc dependency")
 
         # https://github.com/RRZE-HPC/likwid/issues/287
         if self.spec.satisfies("@:5.0.2 %gcc@10:"):
@@ -181,3 +248,33 @@ class Likwid(Package):
         env["PWD"] = os.getcwd()
         make()
         make("install")
+
+    # Until tty output works better from build steps, this ends up in
+    # the build log.  See https://github.com/spack/spack/pull/10412.
+    @run_after("install")
+    def caveats(self):
+        if "accessmode=accessdaemon" in self.spec:
+            perm_script = "spack_perms_fix.sh"
+            perm_script_path = join_path(self.spec.prefix, perm_script)
+            daemons = glob.glob(join_path(self.spec.prefix, "sbin", "*"))
+            with open(perm_script_path, "w") as f:
+                env = spack.tengine.make_environment(dirs=self.package_dir)
+                t = env.get_template(perm_script + ".j2")
+                f.write(
+                    t.render({"prefix": self.spec.prefix, "chowns": daemons, "chmods": daemons})
+                )
+            tty.warn(
+                """
+            For full functionality, you'll need to chown and chmod some files
+            after installing the package.  This has security implications.
+
+            We've installed a script that will make the necessary changes;
+            read through it and then execute it as root (e.g. via sudo).
+
+            The script is named:
+
+            {0}
+            """.format(
+                    perm_script_path
+                )
+            )

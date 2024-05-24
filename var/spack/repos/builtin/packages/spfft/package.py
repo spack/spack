@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,18 +7,21 @@
 from spack.package import *
 
 
-class Spfft(CMakePackage, CudaPackage):
+class Spfft(CMakePackage, CudaPackage, ROCmPackage):
     """Sparse 3D FFT library with MPI, OpenMP, CUDA and ROCm support."""
 
     homepage = "https://github.com/eth-cscs/SpFFT"
     url = "https://github.com/eth-cscs/SpFFT/archive/v0.9.8.zip"
     git = "https://github.com/eth-cscs/SpFFT.git"
 
-    maintainers = ["AdhocMan", "haampie"]
+    maintainers("AdhocMan", "haampie")
+
+    license("BSD-3-Clause")
 
     version("develop", branch="develop")
     version("master", branch="master")
 
+    version("1.1.0", sha256="231454a3142bc56249b1b551ac5175882311365509cc111d7ad0e91ed5537102")
     version("1.0.6", sha256="e1b927c61f8abbb4a9937653f917169e6253e8c40b850df491594310943ca14b")
     version("1.0.5", sha256="2a59d856286ea8559f00a32fc38f9f7546209cfa90112232a5288a69689a6e05")
     version("1.0.4", sha256="41e63880d95343da0d8c3dbe5bfb3d46a1d612199cc9cc13a936f1628a7fdb8e")
@@ -48,35 +51,21 @@ class Spfft(CMakePackage, CudaPackage):
     depends_on("fftw-api@3")
     depends_on("mpi", when="+mpi")
     depends_on("cmake@3.11:", type="build")
+    depends_on("cmake@3.18:", type="build", when="@1.1.0:")
+    depends_on("cmake@3.21:", type="build", when="@1.1.0: +rocm")
 
-    # ROCM variants + dependencies
-    variant("rocm", default=False, description="Use ROCm backend")
+    depends_on("cuda@9:10", when="@:0.9.11 +cuda")
+    depends_on("cuda@9:", when="@0.9.12:1.0.6 +cuda")
+    depends_on("cuda@11:", when="@1.1.0: +cuda")
 
-    depends_on("cuda@:10", when="@:0.9.11 +cuda")
+    # Workaround for compiler bug in ROCm 4.5+ added in SpFFT 1.0.6
+    conflicts("+rocm", when="@:1.0.5")
 
     with when("+rocm"):
-        # FindHIP cmake script only works for < 4.1
-        depends_on("hip@:4.0", when="@:1.0.1")
-        # Workaround for compiler bug in ROCm 4.5 added in SpFFT 1.0.6
-        depends_on("hip@:4.3.1", when="@:1.0.5")
-        depends_on("hip")
         depends_on("rocfft")
-        # rocFFT and hipFFT have split with latest versions
-        depends_on("hipfft", when="^rocfft@4.1.0:")
-
-        amdgpu_targets = (
-            "gfx701",
-            "gfx801",
-            "gfx802",
-            "gfx803",
-            "gfx900",
-            "gfx906",
-            "gfx908",
-            "gfx1010",
-            "gfx1011",
-            "gfx1012",
-        )
-        variant("amdgpu_target", default="gfx803,gfx900,gfx906", multi=True, values=amdgpu_targets)
+        depends_on("hipfft")
+        # hip 6.0 requires v1.1.0 and later
+        conflicts("^hip@6.0.0:", when="@:1.0.6 +rocm")
 
     # Fix compilation error in some cases due to missing include statement
     # before version 1.0.3
@@ -100,7 +89,13 @@ class Spfft(CMakePackage, CudaPackage):
             if cuda_arch[0] != "none":
                 args += [self.define("CMAKE_CUDA_ARCHITECTURES", cuda_arch)]
 
-        if spec.satisfies("+rocm"):
+        if spec.satisfies("@1.1.0: +rocm"):
+            # v1.1.0 switched to CMake HIP language feature
+            args += ["-DSPFFT_GPU_BACKEND=ROCM"]
+            rocm_arch = self.spec.variants["amdgpu_target"].value
+            if rocm_arch[0] != "none":
+                args += [self.define("CMAKE_HIP_ARCHITECTURES", rocm_arch)]
+        elif spec.satisfies("+rocm"):
             archs = ",".join(self.spec.variants["amdgpu_target"].value)
             args += [
                 "-DSPFFT_GPU_BACKEND=ROCM",

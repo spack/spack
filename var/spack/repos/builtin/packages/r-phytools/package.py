@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -30,6 +30,10 @@ class RPhytools(RPackage):
 
     cran = "phytools"
 
+    license("GPL-2.0-or-later")
+
+    version("1.5-1", sha256="f8be59abbff1f5032be4523c361da53b0d5b71677fedebba6d7cbae2dca7e101")
+    version("1.2-0", sha256="ba3c684118c0eaab4601b21988c553ce7ee019df1714d2ac8d4451075f843b86")
     version("1.0-3", sha256="bfe2aec6aae8235264c1494eee42be494fed81a676c6de9e39c57a6e3682b37d")
     version("1.0-1", sha256="b7bf5d35ec4205115112481f6761de3e276e6b086a3e5249621ad63aa23a1ac8")
     version("0.7-70", sha256="e3432c3b006e5cc6f1292bebd81ebc20044edf1f56c3d27a3497f738eb99f0d3")
@@ -39,15 +43,19 @@ class RPhytools(RPackage):
     depends_on("r@3.2.0:", type=("build", "run"))
     depends_on("r@3.5.0:", type=("build", "run"), when="@0.7-70:")
     depends_on("r-ape@4.0:", type=("build", "run"))
+    depends_on("r-ape@5.7:", type=("build", "run"), when="@1.5-1:")
     depends_on("r-maps", type=("build", "run"))
     depends_on("r-clustergeneration", type=("build", "run"))
     depends_on("r-coda", type=("build", "run"))
     depends_on("r-combinat", type=("build", "run"))
+    depends_on("r-doparallel", type=("build", "run"), when="@1.5-1:")
     depends_on("r-expm", type=("build", "run"))
+    depends_on("r-foreach", type=("build", "run"), when="@1.5-1:")
     depends_on("r-mass", type=("build", "run"))
     depends_on("r-mnormt", type=("build", "run"))
     depends_on("r-nlme", type=("build", "run"))
     depends_on("r-numderiv", type=("build", "run"))
+    depends_on("r-optimparallel", type=("build", "run"), when="@1.2-0:")
     depends_on("r-phangorn@2.3.1:", type=("build", "run"))
     depends_on("r-plotrix", type=("build", "run"))
     depends_on("r-scatterplot3d", type=("build", "run"))

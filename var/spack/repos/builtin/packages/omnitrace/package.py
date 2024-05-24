@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,9 +13,19 @@ class Omnitrace(CMakePackage):
 
     homepage = "https://amdresearch.github.io/omnitrace"
     git = "https://github.com/AMDResearch/omnitrace.git"
-    maintainers = ["jrmadsen"]
+    maintainers("jrmadsen")
+
+    license("MIT")
 
     version("main", branch="main", submodules=True)
+    version("1.7.4", commit="12001d9633328f9f56210c7ebffce065bff06310", submodules=True)
+    version("1.7.3", commit="2ebfe3fc30f977559142509edc4ea190c975992a", submodules=True)
+    version("1.7.2", commit="a41a5c155e0d3780de4c83a76f28d7c8ffa6414f", submodules=True)
+    version("1.7.1", commit="67f7471253b8e031e476d80d2bc00e569285c1bf", submodules=True)
+    version("1.7.0", commit="2a387f909935d06c6a4874a5b11f38fb8521800e", submodules=True)
+    version("1.6.0", commit="15e6e6d979fcd5f549d952862400f292ec735b8c", submodules=True)
+    version("1.5.0", commit="2718596e5a6808a9278c3f6c8fddfaf977d3bcb6", submodules=True)
+    version("1.4.0", commit="23fb3946c7f4c0702b1b168e1d78b8b62597e3f1", submodules=True)
     version("1.3.1", commit="641225f88304909fd2ca5407aec062d0fdf0ed8b", submodules=True)
     version("1.3.0", commit="4dd144a32c8b83c44e132ef53f2b44fe4b4d5569", submodules=True)
     version("1.2.0", commit="f82845388aab108ed1d1fc404f433a0def391bb3", submodules=True)
@@ -81,11 +91,6 @@ class Omnitrace(CMakePackage):
     depends_on("caliper", when="+caliper")
     depends_on("python@3:", when="+python", type=("build", "run"))
 
-    def __init__(self, *args, **kwargs):
-        super(Omnitrace, self).__init__(*args, **kwargs)
-        # default to a release build
-        self.variants["build_type"][0].default = "Release"
-
     def cmake_args(self):
         spec = self.spec
 
@@ -121,11 +126,6 @@ class Omnitrace(CMakePackage):
             tau_root = spec["tau"].prefix
             args.append(self.define("TAU_ROOT_DIR", tau_root))
 
-        if "+python" in spec:
-            pyexe = spec["python"].command.path
-            args.append(self.define("PYTHON_EXECUTABLE", pyexe))
-            args.append(self.define("Python3_EXECUTABLE", pyexe))
-
         if "+mpi" in spec:
             args.append(self.define("MPI_C_COMPILER", spec["mpi"].mpicc))
             args.append(self.define("MPI_CXX_COMPILER", spec["mpi"].mpicxx))
@@ -141,7 +141,3 @@ class Omnitrace(CMakePackage):
             files = glob.glob(pattern)
             if files:
                 env.set("TAU_MAKEFILE", files[0])
-
-    def setup_run_environment(self, env):
-        if "+python" in self.spec:
-            env.prepend_path("PYTHONPATH", join_path(self.prefix.lib, "python", "site-packages"))

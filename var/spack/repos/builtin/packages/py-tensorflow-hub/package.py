@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,14 +15,17 @@ class PyTensorflowHub(Package):
     homepage = "https://github.com/tensorflow/hub"
     url = "https://github.com/tensorflow/hub/archive/refs/tags/v0.12.0.tar.gz"
 
-    maintainers = ["aweits"]
+    maintainers("aweits")
+
+    license("Apache-2.0")
 
     version("0.12.0", sha256="b192ef3a9a6cbeaee46142d64b47b979828dbf41fc56d48c6587e08f6b596446")
     version("0.11.0", sha256="4715a4212b45531a7c25ada7207d850467d1b5480f1940f16623f8770ad64df4")
 
     extends("python")
 
-    depends_on("bazel", type="build")
+    # TODO: Directories have changed in Bazel 7, need to update manual install logic
+    depends_on("bazel@:6", type="build")
     depends_on("py-pip", type="build")
     depends_on("py-wheel", type="build")
     depends_on("py-setuptools", type="build")
@@ -30,11 +33,8 @@ class PyTensorflowHub(Package):
     depends_on("py-numpy@1.12.0:", type=("build", "run"))
     depends_on("py-protobuf@3.8.0:", type=("build", "run"))
 
-    patch(
-        "https://github.com/tensorflow/hub/commit/049192a7edd3e80eebf1735b93f57c7965381bdb.patch?full_index=1",
-        sha256="c8b59d17511a8ebd2a58717723b9b77514a12b43bb2e6acec6d0c1062df6e457",
-        when="@:0.12",
-    )
+    # Deal with vendored zlib.
+    patch("0001-zlib-bump-over-CVE-use-fossils-url-which-is-more-sta.patch", when="@:0.12")
 
     def install(self, spec, prefix):
         tmp_path = tempfile.mkdtemp(prefix="spack")
@@ -52,14 +52,7 @@ class PyTensorflowHub(Package):
             "--jobs={0}".format(make_jobs),
             # Enable verbose output for failures
             "--verbose_failures",
-            # Show (formatted) subcommands being executed
-            "--subcommands=pretty_print",
             "--spawn_strategy=local",
-            # Ask bazel to explain what it's up to
-            # Needs a filename as argument
-            "--explain=explainlogfile.txt",
-            # Increase verbosity of explanation,
-            "--verbose_explanations",
             # bazel uses system PYTHONPATH instead of spack paths
             "--action_env",
             "PYTHONPATH={0}".format(env["PYTHONPATH"]),

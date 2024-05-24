@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,9 @@ class Cub(Package):
     url = "https://github.com/NVIDIA/cub/archive/1.12.0.zip"
     git = "https://github.com/NVIDIA/cub.git"
 
+    license("BSD-3-Clause")
+
+    version("2.1.0", sha256="8ec47307f5e99379ac1cf6722cd5a24fc15b84b0f5361bebd453645a5e4bb34d")
     version("1.16.0", sha256="a9e327d46c82025d17ed3ab5a10da006bcdaef5dcbd294b332ef0a572f58445b")
     version("1.15.0", sha256="dcb75744650deb42e9123509482e0f84944c1dbd60d5cd909a416d953d3a6903")
     version("1.14.0", sha256="d83ac193b6acdb9281ca130fbe9590728c018c98f38916f903181b6f9410a829")
@@ -38,6 +41,9 @@ class Cub(Package):
     version("1.7.2", sha256="09b478d4df8e6c62f8425d23ade9e2a52bc279a20057c7d22ce2160f3923764a")
     version("1.7.1", sha256="50b8777b83093fdfdab429a61fccdbfbbb991b3bbc08385118e5ad58e8f62e1d")
     version("1.4.1", sha256="7c3784cf59f02d4a88099d6a11e357032bac9eac2b9c78aaec947d1270e21871")
+
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        env.set("CUB_DIR", self.prefix.include.cub.cmake)
 
     def install(self, spec, prefix):
         mkdirp(prefix.include)

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,11 +6,13 @@
 from spack.package import *
 
 
-class JsonC(CMakePackage):
+class JsonC(CMakePackage, AutotoolsPackage):
     """A JSON implementation in C."""
 
     homepage = "https://github.com/json-c/json-c/wiki"
     url = "https://s3.amazonaws.com/json-c_releases/releases/json-c-0.15.tar.gz"
+
+    license("MIT")
 
     version("0.16", sha256="8e45ac8f96ec7791eaf3bb7ee50e9c2100bbbc87b8d0f1d030c5ba8a0288d96b")
     version("0.15", sha256="b8d80a1ddb718b3ba7492916237bbf86609e9709fb007e7f7d4322f02341a4c6")
@@ -20,7 +22,13 @@ class JsonC(CMakePackage):
     version("0.12", sha256="000c01b2b3f82dcb4261751eb71f1b084404fb7d6a282f06074d3c17078b9f3f")
     version("0.11", sha256="28dfc65145dc0d4df1dfe7701ac173c4e5f9347176c8983edbfac9149494448c")
 
-    depends_on("autoconf", when="@:0.13.1", type="build")
+    build_system(
+        conditional("cmake", when="@0.14:"),
+        conditional("autotools", when="@:0.13.1"),
+        default="cmake",
+    )
+
+    depends_on("autoconf", when="build_system=autotools", type="build")
 
     parallel = False
 
@@ -32,22 +40,16 @@ class JsonC(CMakePackage):
             "Makefile.in",
         )
 
-    @when("@:0.13.1")
-    def cmake(self, spec, prefix):
-        configure_args = ["--prefix=" + prefix]
-        configure(*configure_args)
-
-    @when("@:0.13.1")
-    def build(self, spec, prefix):
-        make()
-
-    @when("@:0.13.1")
-    def install(self, spec, prefix):
-        make("install")
-
     @when("%cce@11.0.3:")
     def patch(self):
         filter_file("-Werror", "", "CMakeLists.txt")
+
+    def flag_handler(self, name, flags):
+        iflags = []
+        if name == "cflags":
+            if self.spec.satisfies("%oneapi"):
+                iflags.append("-Wno-error=implicit-function-declaration")
+        return (iflags, None, None)
 
     @run_after("install")
     def darwin_fix(self):

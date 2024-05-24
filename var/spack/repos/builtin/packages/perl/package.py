@@ -1,29 +1,19 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-#
-# Author: Milton Woods <milton.woods@bom.gov.au>
-# Date: March 22, 2017
-# Author: George Hartzell <hartzell@alerce.com>
-# Date: July 21, 2016
-# Author: Justin Too <justin@doubleotoo.com>
-# Date: September 6, 2015
-#
 import os
-import platform
 import re
 import sys
 from contextlib import contextmanager
 
+from llnl.util.filesystem import windows_sfn
 from llnl.util.lang import match_predicate
 from llnl.util.symlink import symlink
 
 from spack.operating_systems.mac_os import macos_version
 from spack.package import *
-
-is_windows = sys.platform == "win32"
 
 
 class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
@@ -33,91 +23,195 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
     homepage = "https://www.perl.org"
     # URL must remain http:// so Spack can bootstrap curl
     url = "http://www.cpan.org/src/5.0/perl-5.34.0.tar.gz"
+    tags = ["windows", "build-tools"]
+
+    maintainers("LydDeb")
+
+    license("Artistic-1.0-Perl OR GPL-1.0-or-later")
 
     executables = [r"^perl(-?\d+.*)?$"]
 
     # see https://www.cpan.org/src/README.html for
     # explanation of version numbering scheme
 
-    # Development releases (odd numbers)
-    version("5.35.0", sha256="d6c0eb4763d1c73c1d18730664d43fcaf6100c31573c3b81e1504ec8f5b22708")
-    version("5.33.3", sha256="4f4ba0aceb932e6cf7c05674d05e51ef759d1c97f0685dee65a8f3d190f737cd")
-    version("5.31.7", sha256="d05c4e72128f95ef6ffad42728ecbbd0d9437290bf0f88268b51af011f26b57d")
-    version("5.31.4", sha256="418a7e6fe6485cc713a86d1227ef112f0bb3f80322e3b715ffe42851d97804a5")
+    # Maintenance releases (even numbers, preferred)
+    version(
+        "5.38.2",
+        sha256="a0a31534451eb7b83c7d6594a497543a54d488bc90ca00f5e34762577f40655e",
+        preferred=True,
+    )
+    version(
+        "5.38.0",
+        sha256="213ef58089d2f2c972ea353517dc60ec3656f050dcc027666e118b508423e517",
+        preferred=True,
+    )
+    version(
+        "5.36.3",
+        sha256="f2a1ad88116391a176262dd42dfc52ef22afb40f4c0e9810f15d561e6f1c726a",
+        preferred=True,
+    )
+    version(
+        "5.36.1",
+        sha256="68203665d8ece02988fc77dc92fccbb297a83a4bb4b8d07558442f978da54cc1",
+        preferred=True,
+    )
+    version(
+        "5.36.0",
+        sha256="e26085af8ac396f62add8a533c3a0ea8c8497d836f0689347ac5abd7b7a4e00a",
+        preferred=True,
+    )
 
-    # Maintenance releases (even numbers, recommended)
+    # End of life releases (deprecated)
     version(
         "5.34.1",
         sha256="357951a491b0ba1ce3611263922feec78ccd581dddc24a446b033e25acf242a1",
-        preferred=True,
+        deprecated=True,
     )
     version(
         "5.34.0",
         sha256="551efc818b968b05216024fb0b727ef2ad4c100f8cb6b43fab615fa78ae5be9a",
-        preferred=True,
+        deprecated=True,
     )
     version(
         "5.32.1",
         sha256="03b693901cd8ae807231b1787798cf1f2e0b8a56218d07b7da44f784a7caeb2c",
-        preferred=True,
+        deprecated=True,
     )
     version(
         "5.32.0",
         sha256="efeb1ce1f10824190ad1cadbcccf6fdb8a5d37007d0100d2d9ae5f2b5900c0b4",
-        preferred=True,
+        deprecated=True,
     )
     version(
         "5.30.3",
         sha256="32e04c8bb7b1aecb2742a7f7ac0eabac100f38247352a73ad7fa104e39e7406f",
-        preferred=True,
+        deprecated=True,
     )
     version(
         "5.30.2",
         sha256="66db7df8a91979eb576fac91743644da878244cf8ee152f02cd6f5cd7a731689",
-        preferred=True,
+        deprecated=True,
     )
     version(
         "5.30.1",
         sha256="bf3d25571ff1ee94186177c2cdef87867fd6a14aa5a84f0b1fb7bf798f42f964",
-        preferred=True,
+        deprecated=True,
     )
     version(
         "5.30.0",
         sha256="851213c754d98ccff042caa40ba7a796b2cee88c5325f121be5cbb61bbf975f2",
-        preferred=True,
+        deprecated=True,
+    )
+    version(
+        "5.28.0",
+        sha256="7e929f64d4cb0e9d1159d4a59fc89394e27fa1f7004d0836ca0d514685406ea8",
+        deprecated=True,
+    )
+    version(
+        "5.26.2",
+        sha256="572f9cea625d6062f8a63b5cee9d3ee840800a001d2bb201a41b9a177ab7f70d",
+        deprecated=True,
+    )
+    version(
+        "5.24.1",
+        sha256="e6c185c9b09bdb3f1b13f678999050c639859a7ef39c8cad418448075f5918af",
+        deprecated=True,
+    )
+    version(
+        "5.22.4",
+        sha256="ba9ef57c2b709f2dad9c5f6acf3111d9dfac309c484801e0152edbca89ed61fa",
+        deprecated=True,
+    )
+    version(
+        "5.22.3",
+        sha256="1b351fb4df7e62ec3c8b2a9f516103595b2601291f659fef1bbe3917e8410083",
+        deprecated=True,
+    )
+    version(
+        "5.22.2",
+        sha256="81ad196385aa168cb8bd785031850e808c583ed18a7901d33e02d4f70ada83c2",
+        deprecated=True,
+    )
+    version(
+        "5.22.1",
+        sha256="2b475d0849d54c4250e9cba4241b7b7291cffb45dfd083b677ca7b5d38118f27",
+        deprecated=True,
+    )
+    version(
+        "5.22.0",
+        sha256="0c690807f5426bbd1db038e833a917ff00b988bf03cbf2447fa9ffdb34a2ab3c",
+        deprecated=True,
+    )
+    version(
+        "5.20.3",
+        sha256="3524e3a76b71650ab2f794fd68e45c366ec375786d2ad2dca767da424bbb9b4a",
+        deprecated=True,
+    )
+    version(
+        "5.18.4",
+        sha256="01a4e11a9a34616396c4a77b3cef51f76a297e1a2c2c490ae6138bf0351eb29f",
+        deprecated=True,
+    )
+    version(
+        "5.16.3",
+        sha256="69cf08dca0565cec2c5c6c2f24b87f986220462556376275e5431cc2204dedb6",
+        deprecated=True,
     )
 
-    # End of life releases
-    version("5.28.0", sha256="7e929f64d4cb0e9d1159d4a59fc89394e27fa1f7004d0836ca0d514685406ea8")
-    version("5.26.2", sha256="572f9cea625d6062f8a63b5cee9d3ee840800a001d2bb201a41b9a177ab7f70d")
-    version("5.24.1", sha256="e6c185c9b09bdb3f1b13f678999050c639859a7ef39c8cad418448075f5918af")
-    version("5.22.4", sha256="ba9ef57c2b709f2dad9c5f6acf3111d9dfac309c484801e0152edbca89ed61fa")
-    version("5.22.3", sha256="1b351fb4df7e62ec3c8b2a9f516103595b2601291f659fef1bbe3917e8410083")
-    version("5.22.2", sha256="81ad196385aa168cb8bd785031850e808c583ed18a7901d33e02d4f70ada83c2")
-    version("5.22.1", sha256="2b475d0849d54c4250e9cba4241b7b7291cffb45dfd083b677ca7b5d38118f27")
-    version("5.22.0", sha256="0c690807f5426bbd1db038e833a917ff00b988bf03cbf2447fa9ffdb34a2ab3c")
-    version("5.20.3", sha256="3524e3a76b71650ab2f794fd68e45c366ec375786d2ad2dca767da424bbb9b4a")
-    version("5.18.4", sha256="01a4e11a9a34616396c4a77b3cef51f76a297e1a2c2c490ae6138bf0351eb29f")
-    version("5.16.3", sha256="69cf08dca0565cec2c5c6c2f24b87f986220462556376275e5431cc2204dedb6")
+    # Development releases (odd numbers)
+    version("5.39.10", sha256="4b7ffb3e068583fa5c8413390c998b2c15214f205ce737acc485b40932b9f419")
+    version(
+        "5.37.9",
+        sha256="9884fa8a4958bf9434b50f01cbfd187f9e2738f38fe1ae37f844e9950c5117c1",
+        deprecated=True,
+    )
+    version(
+        "5.35.0",
+        sha256="d6c0eb4763d1c73c1d18730664d43fcaf6100c31573c3b81e1504ec8f5b22708",
+        deprecated=True,
+    )
+    version(
+        "5.33.3",
+        sha256="4f4ba0aceb932e6cf7c05674d05e51ef759d1c97f0685dee65a8f3d190f737cd",
+        deprecated=True,
+    )
+    version(
+        "5.31.7",
+        sha256="d05c4e72128f95ef6ffad42728ecbbd0d9437290bf0f88268b51af011f26b57d",
+        deprecated=True,
+    )
+    version(
+        "5.31.4",
+        sha256="418a7e6fe6485cc713a86d1227ef112f0bb3f80322e3b715ffe42851d97804a5",
+        deprecated=True,
+    )
 
     extendable = True
 
-    if not is_windows:
+    if sys.platform != "win32":
+        depends_on("gmake", type="build")
+        depends_on("gdbm@:1.23")
         # Bind us below gdbm-1.20 due to API change: https://github.com/Perl/perl5/issues/18915
-        depends_on("gdbm@:1.19")
+        depends_on("gdbm@:1.19", when="@:5.35")
         # :5.28 needs gdbm@:1:14.1: https://rt-archive.perl.org/perl5/Ticket/Display.html?id=133295
         depends_on("gdbm@:1.14.1", when="@:5.28.0")
         depends_on("berkeley-db")
         depends_on("bzip2")
-        depends_on("zlib")
+        depends_on("zlib-api")
         # :5.24.1 needs zlib@:1.2.8: https://rt.cpan.org/Public/Bug/Display.html?id=120134
-        depends_on("zlib@:1.2.8", when="@5.20.3:5.24.1")
+        conflicts("^zlib@1.2.9:", when="@5.20.3:5.24.1")
 
     conflicts("@5.34.1:", when="%msvc@:19.29.30136")
     # there has been a long fixed issue with 5.22.0 with regard to the ccflags
     # definition.  It is well documented here:
     # https://rt.perl.org/Public/Bug/Display.html?id=126468
     patch("protect-quotes-in-ccflags.patch", when="@5.22.0")
+
+    # Support zlib-ng 2.1.2 and above for recent Perl
+    # Restrict zlib-ng to older versions for older Perl
+    # See https://github.com/pmqs/Compress-Raw-Zlib/issues/24
+    patch("zlib-ng.patch", when="@5.38 ^zlib-ng@2.1.2:")
+    conflicts("^zlib-ng@2.1.2:", when="@:5.37")
 
     # Fix the Time-Local testase http://blogs.perl.org/users/tom_wyant/2020/01/my-y2020-bug.html
     patch(
@@ -161,10 +255,10 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
     # having it in core increases the "energy of activation" for doing
     # things cleanly.
     variant("cpanm", default=True, description="Optionally install cpanm with the core packages.")
-
     variant("shared", default=True, description="Build a shared libperl.so library")
-
     variant("threads", default=True, description="Build perl with threads support")
+    variant("open", default=True, description="Support open.pm")
+    variant("opcode", default=True, description="Support Opcode.pm")
 
     resource(
         name="cpanm",
@@ -180,6 +274,10 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         # https://github.com/Perl/perl5/issues/15544 long PATH(>1000 chars) fails a test
         os.chmod("lib/perlbug.t", 0o644)
         filter_file("!/$B/", "! (/(?:$B|PATH)/)", "lib/perlbug.t")
+        # Several non-existent flags cause Intel@19.1.3 to fail
+        with when("%intel@19.1.3"):
+            os.chmod("hints/linux.sh", 0o644)
+            filter_file("-we147 -mp -no-gcc", "", "hints/linux.sh")
 
     @classmethod
     def determine_version(cls, exe):
@@ -213,28 +311,51 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
                 variants += "+cpanm"
             else:
                 variants += "~cpanm"
+            # this is just to detect incomplete installs
+            # normally perl installs open.pm
+            perl(
+                "-e",
+                "use open OUT => qw(:raw)",
+                output=os.devnull,
+                error=os.devnull,
+                fail_on_error=False,
+            )
+            variants += "+open" if perl.returncode == 0 else "~open"
+            # this is just to detect incomplete installs
+            # normally perl installs Opcode.pm
+            perl("-e", "use Opcode", output=os.devnull, error=os.devnull, fail_on_error=False)
+            variants += "+opcode" if perl.returncode == 0 else "~opcode"
             return variants
 
     # On a lustre filesystem, patch may fail when files
     # aren't writeable so make pp.c user writeable
     # before patching. This should probably walk the
     # source and make everything writeable in the future.
+    # The patch "zlib-ng.patch" also fail. So, apply chmod
+    # to Makefile.PL and Zlib.xs too.
     def do_stage(self, mirror_only=False):
         # Do Spack's regular stage
-        super(Perl, self).do_stage(mirror_only)
-        # Add write permissions on file to be patched
-        filename = join_path(self.stage.source_path, "pp.c")
-        perm = os.stat(filename).st_mode
-        os.chmod(filename, perm | 0o200)
+        super().do_stage(mirror_only)
+        # Add write permissions on files to be patched
+        files_to_chmod = [
+            join_path(self.stage.source_path, "pp.c"),
+            join_path(self.stage.source_path, "cpan/Compress-Raw-Zlib/Makefile.PL"),
+            join_path(self.stage.source_path, "cpan/Compress-Raw-Zlib/Zlib.xs"),
+        ]
+        for filename in files_to_chmod:
+            try:
+                perm = os.stat(filename).st_mode
+                os.chmod(filename, perm | 0o200)
+            except IOError:
+                continue
 
-    @property
     def nmake_arguments(self):
         args = []
         if self.spec.satisfies("%msvc"):
-            args.append("CCTYPE=%s" % self.compiler.msvc_version)
+            args.append("CCTYPE=%s" % self.compiler.short_msvc_version)
         else:
             raise RuntimeError("Perl unsupported for non MSVC compilers on Windows")
-        args.append("INST_TOP=%s" % self.prefix.replace("/", "\\"))
+        args.append("INST_TOP=%s" % windows_sfn(self.prefix.replace("/", "\\")))
         args.append("INST_ARCH=\\$(ARCHNAME)")
         if self.spec.satisfies("~shared"):
             args.append("ALL_STATIC=%s" % "define")
@@ -245,7 +366,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         return args
 
     def is_64bit(self):
-        return platform.machine().endswith("64")
+        return "64" in str(self.spec.target.family)
 
     def configure_args(self):
         spec = self.spec
@@ -293,13 +414,19 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         return config_args
 
     def configure(self, spec, prefix):
-        if is_windows:
+        if sys.platform == "win32":
             return
         configure = Executable("./Configure")
+        # The Configure script plays with file descriptors and runs make towards the end,
+        # which results in job tokens not being released under the make jobserver. So, we
+        # disable the jobserver here, and let the Configure script execute make
+        # sequentially. There is barely any parallelism anyway; the most parallelism is
+        # in the build phase, in which the jobserver is enabled again, since we invoke make.
+        configure.add_default_env("MAKEFLAGS", "")
         configure(*self.configure_args())
 
     def build(self, spec, prefix):
-        if is_windows:
+        if sys.platform == "win32":
             pass
         else:
             make()
@@ -307,24 +434,26 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
     @run_after("build")
     @on_package_attributes(run_tests=True)
     def build_test(self):
-        if is_windows:
+        if sys.platform == "win32":
             win32_dir = os.path.join(self.stage.source_path, "win32")
+            win32_dir = windows_sfn(win32_dir)
             with working_dir(win32_dir):
                 nmake("test", ignore_quotes=True)
         else:
             make("test")
 
     def install(self, spec, prefix):
-        if is_windows:
+        if sys.platform == "win32":
             win32_dir = os.path.join(self.stage.source_path, "win32")
+            win32_dir = windows_sfn(win32_dir)
             with working_dir(win32_dir):
-                nmake("install", *self.nmake_arguments, ignore_quotes=True)
+                nmake("install", *self.nmake_arguments(), ignore_quotes=True)
         else:
             make("install")
 
     @run_after("install")
     def symlink_windows(self):
-        if not is_windows:
+        if sys.platform != "win32":
             return
         win_install_path = os.path.join(self.prefix.bin, "MSWin32")
         if self.is_64bit():
@@ -347,9 +476,10 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         spec = self.spec
         maker = make
         cpan_dir = join_path("cpanm", "cpanm")
-        if is_windows:
+        if sys.platform == "win32":
             maker = nmake
             cpan_dir = join_path(self.stage.source_path, cpan_dir)
+            cpan_dir = windows_sfn(cpan_dir)
         if "+cpanm" in spec:
             with working_dir(cpan_dir):
                 perl = spec["perl"].command
@@ -357,25 +487,24 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
                 maker()
                 maker("install")
 
-    def _setup_dependent_env(self, env, dependent_spec, deptypes):
+    def _setup_dependent_env(self, env, dependent_spec):
         """Set PATH and PERL5LIB to include the extension and
         any other perl extensions it depends on,
         assuming they were installed with INSTALL_BASE defined."""
         perl_lib_dirs = []
-        for d in dependent_spec.traverse(deptype=deptypes):
-            if d.package.extends(self.spec):
-                perl_lib_dirs.append(d.prefix.lib.perl5)
+        if dependent_spec.package.extends(self.spec):
+            perl_lib_dirs.append(dependent_spec.prefix.lib.perl5)
         if perl_lib_dirs:
             perl_lib_path = ":".join(perl_lib_dirs)
             env.prepend_path("PERL5LIB", perl_lib_path)
-        if is_windows:
+        if sys.platform == "win32":
             env.append_path("PATH", self.prefix.bin)
 
     def setup_dependent_build_environment(self, env, dependent_spec):
-        self._setup_dependent_env(env, dependent_spec, deptypes=("build", "run"))
+        self._setup_dependent_env(env, dependent_spec)
 
     def setup_dependent_run_environment(self, env, dependent_spec):
-        self._setup_dependent_env(env, dependent_spec, deptypes=("run",))
+        self._setup_dependent_env(env, dependent_spec)
 
     def setup_dependent_package(self, module, dependent_spec):
         """Called before perl modules' install() methods.
@@ -386,7 +515,6 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         # If system perl is used through packages.yaml
         # there cannot be extensions.
         if dependent_spec.package.is_extension:
-
             # perl extension builds can have a global perl
             # executable function
             module.perl = self.spec["perl"].command
@@ -394,12 +522,8 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
             # Add variables for library directory
             module.perl_lib_dir = dependent_spec.prefix.lib.perl5
 
-            # Make the site packages directory for extensions,
-            # if it does not exist already.
-            mkdirp(module.perl_lib_dir)
-
     def setup_build_environment(self, env):
-        if is_windows:
+        if sys.platform == "win32":
             env.append_path("PATH", self.prefix.bin)
             return
 
@@ -416,8 +540,8 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         env.set("BZIP2_INCLUDE", spec["bzip2"].prefix.include)
         env.set("BZIP2_LIB", spec["bzip2"].libs.directories[0])
         env.set("BUILD_ZLIB", 0)
-        env.set("ZLIB_INCLUDE", spec["zlib"].prefix.include)
-        env.set("ZLIB_LIB", spec["zlib"].libs.directories[0])
+        env.set("ZLIB_INCLUDE", spec["zlib-api"].prefix.include)
+        env.set("ZLIB_LIB", spec["zlib-api"].libs.directories[0])
 
     @run_after("install")
     def filter_config_dot_pm(self):
@@ -427,7 +551,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         frustrates filter_file on some filesystems (NFSv4), so make them
         temporarily writable.
         """
-        if is_windows:
+        if sys.platform == "win32":
             return
         kwargs = {"ignore_absent": True, "backup": False, "string": False}
 
@@ -484,28 +608,6 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
 
         return match_predicate(ignore_arg, patterns)
 
-    def activate(self, ext_pkg, view, **args):
-        ignore = self.perl_ignore(ext_pkg, args)
-        args.update(ignore=ignore)
-
-        super(Perl, self).activate(ext_pkg, view, **args)
-
-        extensions_layout = view.extensions_layout
-        exts = extensions_layout.extension_map(self.spec)
-        exts[ext_pkg.name] = ext_pkg.spec
-
-    def deactivate(self, ext_pkg, view, **args):
-        ignore = self.perl_ignore(ext_pkg, args)
-        args.update(ignore=ignore)
-
-        super(Perl, self).deactivate(ext_pkg, view, **args)
-
-        extensions_layout = view.extensions_layout
-        exts = extensions_layout.extension_map(self.spec)
-        # Make deactivate idempotent
-        if ext_pkg.name in exts:
-            del exts[ext_pkg.name]
-
     @property
     def command(self):
         """Returns the Perl command, which may vary depending on the version
@@ -517,7 +619,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         """
         for ver in ("", self.spec.version):
             ext = ""
-            if is_windows:
+            if sys.platform == "win32":
                 ext = ".exe"
             path = os.path.join(self.prefix.bin, "{0}{1}{2}".format(self.spec.name, ver, ext))
             if os.path.exists(path):
@@ -526,16 +628,19 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
             msg = "Unable to locate {0} command in {1}"
             raise RuntimeError(msg.format(self.spec.name, self.prefix.bin))
 
-    def test(self):
-        """Smoke tests"""
-        exe = self.spec["perl"].command.name
+    def test_version(self):
+        """check version"""
+        perl = self.spec["perl"].command
+        out = perl("--version", output=str.split, error=str.split)
+        expected = ["perl", str(self.spec.version)]
+        for expect in expected:
+            assert expect in out
 
-        reason = "test: checking version is {0}".format(self.spec.version)
-        self.run_test(
-            exe, "--version", ["perl", str(self.spec.version)], installed=True, purpose=reason
-        )
-
-        reason = "test: ensuring perl runs"
+    def test_hello(self):
+        """ensure perl runs hello world"""
         msg = "Hello, World!"
-        options = ["-e", 'use warnings; use strict;\nprint("%s\n");' % msg]
-        self.run_test(exe, options, msg, installed=True, purpose=reason)
+        options = ["-e", "use warnings; use strict;\nprint('%s\n');" % msg]
+
+        perl = self.spec["perl"].command
+        out = perl(*options, output=str.split, error=str.split)
+        assert msg in out

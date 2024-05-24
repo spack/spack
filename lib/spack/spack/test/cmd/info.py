@@ -1,10 +1,9 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import argparse
-import sys
 
 import pytest
 
@@ -12,8 +11,6 @@ import spack.cmd.info
 from spack.main import SpackCommand
 
 info = SpackCommand("info")
-
-pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="Not yet implemented on Windows")
 
 
 @pytest.fixture(scope="module")
@@ -28,7 +25,7 @@ def parser():
 def print_buffer(monkeypatch):
     buffer = []
 
-    def _print(*args):
+    def _print(*args, **kwargs):
         buffer.extend(args)
 
     monkeypatch.setattr(spack.cmd.info.color, "cprint", _print, raising=False)
@@ -36,14 +33,15 @@ def print_buffer(monkeypatch):
 
 
 @pytest.mark.parametrize(
-    "pkg", ["openmpi", "trilinos", "boost", "python", "dealii", "xsdk"]  # a BundlePackage
+    "pkg", ["openmpi", "trilinos", "boost", "python", "dealii", "xsdk", "gasnet", "warpx"]
 )
-def test_it_just_runs(pkg):
-    info(pkg)
+@pytest.mark.parametrize("extra_args", [[], ["--variants-by-name"]])
+def test_it_just_runs(pkg, extra_args):
+    info(pkg, *extra_args)
 
 
 def test_info_noversion(mock_packages, print_buffer):
-    """Check that a mock package with no versions or variants outputs None."""
+    """Check that a mock package with no versions outputs None."""
     info("noversion")
 
     line_iter = iter(print_buffer)
@@ -52,18 +50,14 @@ def test_info_noversion(mock_packages, print_buffer):
             has = [desc in line for desc in ["Preferred", "Safe", "Deprecated"]]
             if not any(has):
                 continue
-        elif "Variants" not in line:
+        else:
             continue
 
         assert "None" in next(line_iter).strip()
 
 
 @pytest.mark.parametrize(
-    "pkg_query,expected",
-    [
-        ("zlib", "False"),
-        ("gcc", "True (version, variants)"),
-    ],
+    "pkg_query,expected", [("zlib", "False"), ("gcc", "True (version, variants)")]
 )
 def test_is_externally_detectable(pkg_query, expected, parser, print_buffer):
     args = parser.parse_args(["--detectable", pkg_query])
@@ -85,7 +79,8 @@ def test_is_externally_detectable(pkg_query, expected, parser, print_buffer):
         "gcc",  # This should ensure --test's c_names processing loop covered
     ],
 )
-def test_info_fields(pkg_query, parser, print_buffer):
+@pytest.mark.parametrize("extra_args", [[], ["--variants-by-name"]])
+def test_info_fields(pkg_query, extra_args, parser, print_buffer):
     expected_fields = (
         "Description:",
         "Homepage:",
@@ -95,9 +90,10 @@ def test_info_fields(pkg_query, parser, print_buffer):
         "Installation Phases:",
         "Virtual Packages:",
         "Tags:",
+        "Licenses:",
     )
 
-    args = parser.parse_args(["--all", pkg_query])
+    args = parser.parse_args(["--all", pkg_query] + extra_args)
     spack.cmd.info.info(parser, args)
 
     for text in expected_fields:

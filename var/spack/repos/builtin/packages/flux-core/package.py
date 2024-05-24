@@ -1,10 +1,11 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
 
+import spack.util.executable
 from spack.package import *
 
 
@@ -16,10 +17,34 @@ class FluxCore(AutotoolsPackage):
     git = "https://github.com/flux-framework/flux-core.git"
     tags = ["radiuss", "e4s"]
 
-    maintainers = ["grondo"]
+    maintainers("grondo")
+
+    license("LGPL-3.0-only")
 
     version("master", branch="master")
-
+    version("0.61.2", sha256="06f38143723e3f8331f55893ad8f74d43eb0588078f91abb603690c3e5f5112c")
+    version("0.61.1", sha256="59cc730b34b732a1d00355bb5589bf2d26bf522b4a31ebfabff70ddb3afb51d6")
+    version("0.61.0", sha256="02cedc6abb12816cbb01f2195c1acf7b6552c1d8b9029f899148df48a7cd05e2")
+    version("0.60.0", sha256="f96025204a20f94c2821db47fe010b2c19e076ef93281ac7d308e82853e135ff")
+    version("0.59.0", sha256="465d24294b92962d156ad49768ea804ff848d5c0b3470d80e07ebf24cd255f2d")
+    version("0.58.0", sha256="3125ace7d4d3c99b362290344f97db74c06c37b5510cfcb746e1bf48e1dc1389")
+    version("0.57.0", sha256="a412b8370b5236605a5261c892f48d65c1357a83c88446cd1723236f58a807ce")
+    version("0.56.0", sha256="dfce5aa21bcb1f990397343cdff8a60542b2d18cbd929e46bdb444d21a961efb")
+    version("0.55.0", sha256="2925b8a084e9d1069a96de7689b515ad6f2051ecfb9fbbe4d2643507de7ccd30")
+    version("0.54.0", sha256="721fc3fff64b3b167ae55d0e29379ff3211729248ef97e3b9855816219063b42")
+    version("0.53.0", sha256="2f14d032a2d54f34e066c8a15c79917089e9f7f8558baa03dbfe63dbf56918b7")
+    version("0.52.0", sha256="dca434238405e4cae4686c8143f2cc79919bfd9e26b09c980e1e5f69ffd0c448")
+    version("0.51.0", sha256="e57b71b708482f20d2a2195a000c0c3b9176faa6aaadfad4d2117f8671ca67ce")
+    version("0.50.0", sha256="77414299a7ca081199aa0f57bcaea3e05860e2095df73c0f6b7672b88fadf683")
+    version("0.49.0", sha256="9b8d7af1d8aaa7ee110bcb9815b6b8647af686de949097c9bb2a0269d5551051")
+    version("0.48.0", sha256="32c1bfdde44123e90606422807d381406874bb6dbec170ddb493f905208cc275")
+    version("0.47.0", sha256="c13c8df3dd3db565ff7a3db727f087b7c1a3946b98c4b945ac43fe44a4c534c3")
+    version("0.46.1", sha256="a7873fd49889c11f12e62d59eb992d4a089ddfde8566789f79eca1dfae1a5ffa")
+    version("0.45.0", sha256="6550fe682c1686745e1d9c201daf18f9c57691468124565c9252d27823d2fe46")
+    version("0.44.0", sha256="6786b258657675ed573907a2a6012f68f2dd5053d7d09eb76b4e7f9943d6d466")
+    version("0.43.0", sha256="4b9816d04e8b5b248a8d5e3dac3f9822f8f89831e340f36745e01512d768597b")
+    version("0.42.0", sha256="ac64055976cd7cda26e2991174b9a58048bd4fb75c5c2012023050d76c718445")
+    version("0.41.0", sha256="3f3a6a8a1e7d2f326b0e684dcf70e4489076b3f52dd14480e2f33cfdaeba690a")
     version("0.40.0", sha256="b15996b6165f037e5a6c42ea277e2c1c56a4f4b6bf47334105e324dcfefbf6fa")
     version("0.39.0", sha256="ad55529fc3f056ac167b53b5bd489167c2ef218c3c49e721ad507a8ea9c409db")
     version("0.38.0", sha256="69d150c3d48b5985bca606e1a4de12282eb76233b6b730de1a9fff4136faf65f")
@@ -103,13 +128,18 @@ class FluxCore(AutotoolsPackage):
     # This workaround is documented in PR #3543
     build_directory = "spack-build"
 
-    variant("docs", default=False, description="Build flux manpages")
+    variant("docs", default=False, description="Build flux manpages and docs")
     variant("cuda", default=False, description="Build dependencies with support for CUDA")
+    variant("security", default=False, description="Build with flux-security")
 
-    depends_on("libarchive", when="@0.38.0:")
-    depends_on("ncurses@6.2", when="@0.32.0:")
+    # Restrict flux to Linux based platforms where builds are possible.
+    conflicts("platform=darwin", msg="flux-core does not support MacOS based platforms.")
+    conflicts("platform=windows", msg="flux-core does not support Windows based platforms.")
+
+    depends_on("libarchive+iconv", when="@0.38.0:")
+    depends_on("ncurses@6.2:", when="@0.32.0:")
     depends_on("libzmq@4.0.4:")
-    depends_on("czmq@3.0.1:")
+    depends_on("czmq@3.0.1:", when="@:0.54.0")
     depends_on("hwloc@1.11.1:1", when="@:0.17.0")
     depends_on("hwloc@1.11.1:", when="@0.17.0:")
     depends_on("hwloc +cuda", when="+cuda")
@@ -122,17 +152,28 @@ class FluxCore(AutotoolsPackage):
     # `link` dependency on python due to Flux's `pymod` module
     depends_on("python@3.6:", when="@0.17:", type=("build", "link", "run"))
     depends_on("python@2.7:", type=("build", "link", "run"))
+    # Use of distutils in configure script dropped in v0.55
+    depends_on("python@:3.11", when="@:0.54", type=("build", "link", "run"))
     depends_on("py-cffi@1.1:", type=("build", "run"))
     depends_on("py-six@1.9:", when="@:0.24", type=("build", "run"))
     depends_on("py-pyyaml@3.10:", type=("build", "run"))
-    depends_on("py-jsonschema@2.3:", type=("build", "run"))
+    depends_on("py-jsonschema@2.3:", type=("build", "run"), when="@:0.58.0")
+    depends_on("py-ply", type=("build", "run"), when="@0.46.1:")
     depends_on("jansson")
     depends_on("jansson@2.10:", when="@0.21.0:")
     depends_on("pkgconfig")
     depends_on("lz4")
-
+    depends_on("sqlite")
+    # Before this version, czmq brings it in
+    depends_on("uuid", when="@0.55.0:")
     depends_on("asciidoc", type="build", when="+docs")
-    depends_on("py-docutils", type="build", when="@0.32.0:")
+    depends_on("py-docutils", type="build", when="@0.32.0: +docs")
+
+    # Flux security variant
+    # Note that if you install with this variant, it is
+    # recommended to create a view and then a broker.toml that
+    # has the path to flux-imp generated by flux-security
+    depends_on("flux-security", when="+security")
 
     # Need autotools when building on master:
     depends_on("autoconf", type="build", when="@master")
@@ -173,9 +214,13 @@ class FluxCore(AutotoolsPackage):
         with working_dir(self.stage.source_path):
             # Allow git-describe to get last tag so flux-version works:
             git = which("git")
-            git("fetch", "--unshallow")
-            git("config", "remote.origin.fetch", "+refs/heads/*:refs/remotes/origin/*")
-            git("fetch", "origin")
+            # When using spack develop, this will already be unshallow
+            try:
+                git("fetch", "--unshallow")
+                git("config", "remote.origin.fetch", "+refs/heads/*:refs/remotes/origin/*")
+                git("fetch", "origin")
+            except spack.util.executable.ProcessError:
+                git("fetch")
 
     def autoreconf(self, spec, prefix):
         self.setup()
@@ -223,6 +268,8 @@ class FluxCore(AutotoolsPackage):
         args = ["--enable-pylint=no"]
         if "+docs" not in self.spec:
             args.append("--disable-docs")
+        if "+security" in self.spec:
+            args.append("--with-flux-security")
         return args
 
     def flag_handler(self, name, flags):

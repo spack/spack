@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,8 +12,21 @@ class Silo(AutotoolsPackage):
     data to binary, disk files."""
 
     homepage = "https://wci.llnl.gov/simulation/computer-codes/silo"
+    git = "https://github.com/LLNL/Silo.git"
     url = "https://wci.llnl.gov/sites/wci/files/2021-01/silo-4.10.2.tgz"
+    maintainers("patrickb314")
 
+    version(
+        "4.11.1",
+        preferred=True,
+        sha256="49eddc00304aa4a19074b099559edbdcaa3532c98df32f99aa62b9ec3ea7cee2",
+        url="https://github.com/LLNL/Silo/releases/download/4.11.1/silo-4.11.1.tar.xz",
+    )
+    version(
+        "4.11.1-bsd",
+        sha256="51ccfdf3c09dfc98c7858a0a6f08cc3b2a07ee3c4142ee6482ba7b24e314c2aa",
+        url="https://github.com/LLNL/Silo/releases/download/4.11.1/silo-4.11.1-bsd.tar.xz",
+    )
     version(
         "4.11",
         sha256="ab936c1f4fc158d9fdc4415965f7d9def7f4abeca596fe5a25bd8485654898ac",
@@ -46,19 +59,21 @@ class Silo(AutotoolsPackage):
     variant("hzip", default=True, description="Enable hzip support")
     variant("fpzip", default=True, description="Enable fpzip support")
 
+    depends_on("perl", type="build")
     depends_on("m4", type="build", when="+shared")
     depends_on("autoconf", type="build", when="+shared")
     depends_on("autoconf-archive", type="build", when="+shared")
     depends_on("automake", type="build", when="+shared")
     depends_on("libtool", type="build", when="+shared")
     depends_on("mpi", when="+mpi")
-    depends_on("hdf5@1.8:", when="+hdf5")
+    depends_on("hdf5@1.8:1.10", when="@:4.10+hdf5")
+    depends_on("hdf5@1.12:", when="@4.11:+hdf5")
     depends_on("qt+gui~framework@4.8:4.9", when="+silex")
     depends_on("libx11", when="+silex")
     # Xmu dependency is required on Ubuntu 18-20
     depends_on("libxmu", when="+silex")
     depends_on("readline")
-    depends_on("zlib")
+    depends_on("zlib-api")
 
     patch("remove-mpiposix.patch", when="@4.8:4.10.2")
 
@@ -73,16 +88,22 @@ class Silo(AutotoolsPackage):
 
     # The previously used AX_CHECK_COMPILER_FLAGS macro was dropped from
     # autoconf-archive in 2011
-    patch("configure-AX_CHECK_COMPILE_FLAG.patch")
+    patch("configure-AX_CHECK_COMPILE_FLAG.patch", when="@:4.11-bsd")
 
     # API changes in hdf5-1.13 cause breakage
     # See https://github.com/LLNL/Silo/pull/260
-    patch("hdf5-113.patch", when="@4.11: +hdf5 ^hdf5@1.13:")
-    conflicts("hdf5@1.13:", when="@:4.10.2-bsd")
+    patch("hdf5-113.patch", when="@4.11:4.11-bsd +hdf5 ^hdf5@1.13:")
+    conflicts("^hdf5@1.13:", when="@:4.10.2-bsd")
 
     # hzip and fpzip are not available in the BSD releases
     conflicts("+hzip", when="@4.10.2-bsd,4.11-bsd")
     conflicts("+fpzip", when="@4.10.2-bsd,4.11-bsd")
+
+    # zfp include missing
+    patch("zfp_error.patch", when="@4.11:4.11-bsd +hdf5")
+
+    # use /usr/bin/env perl for portability
+    patch("mkinc-usr-bin-env-perl.patch", when="@:4.11-bsd")
 
     def flag_handler(self, name, flags):
         spec = self.spec
@@ -90,7 +111,6 @@ class Silo(AutotoolsPackage):
             if "+hdf5" in spec:
                 if spec["hdf5"].satisfies("~shared"):
                     flags.append("-ldl")
-            flags.append(spec["readline"].libs.search_flags)
 
         if "+pic" in spec:
             if name == "cflags":
@@ -100,6 +120,9 @@ class Silo(AutotoolsPackage):
             elif name == "fcflags":
                 flags.append(self.compiler.fc_pic_flag)
         if name == "cflags" or name == "cxxflags":
+            if spec.satisfies("%oneapi"):
+                flags.append("-Wno-error=int")
+                flags.append("-Wno-error=int-conversion")
             if "+hdf5" in spec:
                 # @:4.10 can use up to the 1.10 API
                 if "@:4.10" in spec:
@@ -182,17 +205,15 @@ class Silo(AutotoolsPackage):
 
         # Do not specify the prefix of zlib if it is in a system directory
         # (see https://github.com/spack/spack/pull/21900).
-        zlib_prefix = self.spec["zlib"].prefix
+        zlib_prefix = self.spec["zlib-api"].prefix
         if is_system_path(zlib_prefix):
             config_args.append("--with-zlib=yes")
         else:
-            config_args.append(
-                "--with-zlib=%s,%s" % (zlib_prefix.include, zlib_prefix.lib),
-            )
+            config_args.append("--with-zlib=%s,%s" % (zlib_prefix.include, zlib_prefix.lib))
 
         if "+hdf5" in spec:
             config_args.append(
-                "--with-hdf5=%s,%s" % (spec["hdf5"].prefix.include, spec["hdf5"].prefix.lib),
+                "--with-hdf5=%s,%s" % (spec["hdf5"].prefix.include, spec["hdf5"].prefix.lib)
             )
 
         if "+silex" in spec:

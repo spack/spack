@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class Wxparaver(AutotoolsPackage):
     homepage = "https://tools.bsc.es/paraver"
     url = "https://ftp.tools.bsc.es/wxparaver/wxparaver-4.9.2-src.tar.bz2"
 
+    license("LGPL-2.1-or-later")
+
     version("4.9.2", sha256="83289584040bcedf8cab1b2ae3545191c8bdef0e11ab62b06e54cbf111f2127a")
     version("4.9.1", sha256="e89fdf563d1fc73ed0018cf0e25b458b6617ec33325ed3fdbf06397c556f3a8e")
     version("4.9.0", sha256="1f9964d7987032d01a354327845bf53ae369be5d8acf7d4e85bec81699a6ddf6")
@@ -29,7 +31,7 @@ class Wxparaver(AutotoolsPackage):
     depends_on("wxwidgets@2.8:")  # NOTE: using external for this one is usually simpler
     depends_on("wxpropgrid@1.4:")
     depends_on("libxml2")
-    depends_on("zlib")
+    depends_on("zlib-api")
 
     def configure_args(self):
         spec = self.spec

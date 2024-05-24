@@ -1,12 +1,12 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from __future__ import print_function
-
 import os
 import re
+import sys
+import urllib.parse
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import mkdirp
@@ -15,19 +15,11 @@ import spack.repo
 import spack.stage
 import spack.util.web
 from spack.spec import Spec
-from spack.url import (
-    UndetectableNameError,
-    UndetectableVersionError,
-    parse_name,
-    parse_version,
-)
+from spack.url import UndetectableNameError, UndetectableVersionError, parse_name, parse_version
 from spack.util.editor import editor
 from spack.util.executable import ProcessError, which
-from spack.util.naming import (
-    mod_to_class,
-    simplify_name,
-    valid_fully_qualified_module_name,
-)
+from spack.util.format import get_version_lines
+from spack.util.naming import mod_to_class, simplify_name, valid_fully_qualified_module_name
 
 description = "create a new package file"
 section = "packaging"
@@ -35,7 +27,7 @@ level = "short"
 
 
 package_template = '''\
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -69,7 +61,12 @@ class {class_name}({base_class_name}):
 
     # FIXME: Add a list of GitHub accounts to
     # notify when the package is updated.
-    # maintainers = ["github_user1", "github_user2"]
+    # maintainers("github_user1", "github_user2")
+
+    # FIXME: Add the SPDX identifier of the project's license below.
+    # See https://spdx.org/licenses/ for a list. Upon manually verifying
+    # the license, set checked_by to your Github username.
+    license("UNKNOWN", checked_by="github_user1")
 
 {versions}
 
@@ -79,7 +76,7 @@ class {class_name}({base_class_name}):
 '''
 
 
-class BundlePackageTemplate(object):
+class BundlePackageTemplate:
     """
     Provides the default values to be used for a bundle package file template.
     """
@@ -130,7 +127,7 @@ class PackageTemplate(BundlePackageTemplate):
     url_line = '    url = "{url}"'
 
     def __init__(self, name, url, versions):
-        super(PackageTemplate, self).__init__(name, versions)
+        super().__init__(name, versions)
 
         self.url_def = self.url_line.format(url=url)
 
@@ -176,6 +173,14 @@ class AutoreconfPackageTemplate(PackageTemplate):
         return args"""
 
 
+class CargoPackageTemplate(PackageTemplate):
+    """Provides appropriate overrides for cargo-based packages"""
+
+    base_class_name = "CargoPackage"
+
+    body_def = ""
+
+
 class CMakePackageTemplate(PackageTemplate):
     """Provides appropriate overrides for CMake-based packages"""
 
@@ -188,6 +193,14 @@ class CMakePackageTemplate(PackageTemplate):
         # FIXME: If not needed delete this function
         args = []
         return args"""
+
+
+class GoPackageTemplate(PackageTemplate):
+    """Provides appropriate overrides for Go-module-based packages"""
+
+    base_class_name = "GoPackage"
+
+    body_def = ""
 
 
 class LuaPackageTemplate(PackageTemplate):
@@ -208,7 +221,7 @@ class LuaPackageTemplate(PackageTemplate):
             # Make it more obvious that we are renaming the package
             tty.msg("Changing package name from {0} to lua-{0}".format(name))
             name = "lua-{0}".format(name)
-        super(LuaPackageTemplate, self).__init__(name, url, *args, **kwargs)
+        super().__init__(name, url, *args, **kwargs)
 
 
 class MesonPackageTemplate(PackageTemplate):
@@ -316,7 +329,7 @@ class RacketPackageTemplate(PackageTemplate):
             tty.msg("Changing package name from {0} to rkt-{0}".format(name))
             name = "rkt-{0}".format(name)
         self.body_def = self.body_def.format(name[4:])
-        super(RacketPackageTemplate, self).__init__(name, url, *args, **kwargs)
+        super().__init__(name, url, *args, **kwargs)
 
 
 class PythonPackageTemplate(PackageTemplate):
@@ -335,6 +348,7 @@ class PythonPackageTemplate(PackageTemplate):
     # FIXME: Add a build backend, usually defined in pyproject.toml. If no such file
     # exists, use setuptools.
     # depends_on("py-setuptools", type="build")
+    # depends_on("py-hatchling", type="build")
     # depends_on("py-flit-core", type="build")
     # depends_on("py-poetry-core", type="build")
 
@@ -342,17 +356,11 @@ class PythonPackageTemplate(PackageTemplate):
     # depends_on("py-foo", type=("build", "run"))"""
 
     body_def = """\
-    def global_options(self, spec, prefix):
-        # FIXME: Add options to pass to setup.py
+    def config_settings(self, spec, prefix):
+        # FIXME: Add configuration settings to be passed to the build backend
         # FIXME: If not needed, delete this function
-        options = []
-        return options
-
-    def install_options(self, spec, prefix):
-        # FIXME: Add options to pass to setup.py install
-        # FIXME: If not needed, delete this function
-        options = []
-        return options"""
+        settings = {}
+        return settings"""
 
     def __init__(self, name, url, *args, **kwargs):
         # If the user provided `--name py-numpy`, don't rename it py-py-numpy
@@ -408,7 +416,7 @@ class PythonPackageTemplate(PackageTemplate):
                 + self.url_line
             )
 
-        super(PythonPackageTemplate, self).__init__(name, url, *args, **kwargs)
+        super().__init__(name, url, *args, **kwargs)
 
 
 class RPackageTemplate(PackageTemplate):
@@ -447,7 +455,7 @@ class RPackageTemplate(PackageTemplate):
         if bioc:
             self.url_line = '    url = "{0}"\n' '    bioc = "{1}"'.format(url, r_name)
 
-        super(RPackageTemplate, self).__init__(name, url, *args, **kwargs)
+        super().__init__(name, url, *args, **kwargs)
 
 
 class PerlmakePackageTemplate(PackageTemplate):
@@ -474,7 +482,7 @@ class PerlmakePackageTemplate(PackageTemplate):
             tty.msg("Changing package name from {0} to perl-{0}".format(name))
             name = "perl-{0}".format(name)
 
-        super(PerlmakePackageTemplate, self).__init__(name, *args, **kwargs)
+        super().__init__(name, *args, **kwargs)
 
 
 class PerlbuildPackageTemplate(PerlmakePackageTemplate):
@@ -507,7 +515,7 @@ class OctavePackageTemplate(PackageTemplate):
             tty.msg("Changing package name from {0} to octave-{0}".format(name))
             name = "octave-{0}".format(name)
 
-        super(OctavePackageTemplate, self).__init__(name, *args, **kwargs)
+        super().__init__(name, *args, **kwargs)
 
 
 class RubyPackageTemplate(PackageTemplate):
@@ -535,7 +543,7 @@ class RubyPackageTemplate(PackageTemplate):
             tty.msg("Changing package name from {0} to ruby-{0}".format(name))
             name = "ruby-{0}".format(name)
 
-        super(RubyPackageTemplate, self).__init__(name, *args, **kwargs)
+        super().__init__(name, *args, **kwargs)
 
 
 class MakefilePackageTemplate(PackageTemplate):
@@ -580,32 +588,34 @@ class SIPPackageTemplate(PackageTemplate):
             tty.msg("Changing package name from {0} to py-{0}".format(name))
             name = "py-{0}".format(name)
 
-        super(SIPPackageTemplate, self).__init__(name, *args, **kwargs)
+        super().__init__(name, *args, **kwargs)
 
 
 templates = {
-    "autotools": AutotoolsPackageTemplate,
     "autoreconf": AutoreconfPackageTemplate,
-    "cmake": CMakePackageTemplate,
-    "bundle": BundlePackageTemplate,
-    "qmake": QMakePackageTemplate,
-    "maven": MavenPackageTemplate,
-    "scons": SconsPackageTemplate,
-    "waf": WafPackageTemplate,
+    "autotools": AutotoolsPackageTemplate,
     "bazel": BazelPackageTemplate,
+    "bundle": BundlePackageTemplate,
+    "cargo": CargoPackageTemplate,
+    "cmake": CMakePackageTemplate,
+    "generic": PackageTemplate,
+    "go": GoPackageTemplate,
+    "intel": IntelPackageTemplate,
+    "lua": LuaPackageTemplate,
+    "makefile": MakefilePackageTemplate,
+    "maven": MavenPackageTemplate,
+    "meson": MesonPackageTemplate,
+    "octave": OctavePackageTemplate,
+    "perlbuild": PerlbuildPackageTemplate,
+    "perlmake": PerlmakePackageTemplate,
     "python": PythonPackageTemplate,
+    "qmake": QMakePackageTemplate,
     "r": RPackageTemplate,
     "racket": RacketPackageTemplate,
-    "perlmake": PerlmakePackageTemplate,
-    "perlbuild": PerlbuildPackageTemplate,
-    "octave": OctavePackageTemplate,
     "ruby": RubyPackageTemplate,
-    "makefile": MakefilePackageTemplate,
-    "intel": IntelPackageTemplate,
-    "meson": MesonPackageTemplate,
-    "lua": LuaPackageTemplate,
+    "scons": SconsPackageTemplate,
     "sip": SIPPackageTemplate,
-    "generic": PackageTemplate,
+    "waf": WafPackageTemplate,
 }
 
 
@@ -622,7 +632,7 @@ def setup_parser(subparser):
         "--template",
         metavar="TEMPLATE",
         choices=sorted(templates.keys()),
-        help="build system template to use. options: %(choices)s",
+        help="build system template to use\n\noptions: %(choices)s",
     )
     subparser.add_argument(
         "-r", "--repo", help="path to a repository where the package should be created"
@@ -630,7 +640,7 @@ def setup_parser(subparser):
     subparser.add_argument(
         "-N",
         "--namespace",
-        help="specify a namespace for the package. must be the namespace of "
+        help="specify a namespace for the package\n\nmust be the namespace of "
         "a repository registered with Spack",
     )
     subparser.add_argument(
@@ -688,6 +698,8 @@ class BuildSystemGuesser:
         clues = [
             (r"/CMakeLists\.txt$", "cmake"),
             (r"/NAMESPACE$", "r"),
+            (r"/Cargo\.toml$", "cargo"),
+            (r"/go\.mod$", "go"),
             (r"/configure$", "autotools"),
             (r"/configure\.(in|ac)$", "autoreconf"),
             (r"/Makefile\.am$", "autoreconf"),
@@ -723,7 +735,7 @@ class BuildSystemGuesser:
                 output = tar("--exclude=*/*/*", "-tf", stage.archive_file, output=str)
             except ProcessError:
                 output = ""
-        lines = output.split("\n")
+        lines = output.splitlines()
 
         # Determine the build system based on the files contained
         # in the archive.
@@ -815,7 +827,7 @@ def get_versions(args, name):
     # Default version with hash
     hashed_versions = """\
     # FIXME: Add proper versions and checksums here.
-    # version("1.2.3", "0123456789abcdef0123456789abcdef")"""
+    # version("1.2.3", md5="0123456789abcdef0123456789abcdef")"""
 
     # Default version without hash
     unhashed_versions = """\
@@ -827,8 +839,8 @@ def get_versions(args, name):
 
     valid_url = True
     try:
-        spack.util.url.require_url_format(args.url)
-        if args.url.startswith("file://"):
+        parsed = urllib.parse.urlparse(args.url)
+        if not parsed.scheme or parsed.scheme == "file":
             valid_url = False  # No point in spidering these
     except (ValueError, TypeError):
         valid_url = False
@@ -836,7 +848,12 @@ def get_versions(args, name):
     if args.url is not None and args.template != "bundle" and valid_url:
         # Find available versions
         try:
-            url_dict = spack.util.web.find_versions_of_archive(args.url)
+            url_dict = spack.url.find_versions_of_archive(args.url)
+            if len(url_dict) > 1 and not args.batch and sys.stdin.isatty():
+                url_dict_filtered = spack.stage.interactive_version_filter(url_dict)
+                if url_dict_filtered is None:
+                    exit(0)
+                url_dict = url_dict_filtered
         except UndetectableVersionError:
             # Use fake versions
             tty.warn("Couldn't detect version in: {0}".format(args.url))
@@ -847,13 +864,11 @@ def get_versions(args, name):
             version = parse_version(args.url)
             url_dict = {version: args.url}
 
-        versions = spack.stage.get_checksums_for_versions(
-            url_dict,
-            name,
-            first_stage_function=guesser,
-            keep_stage=args.keep_stage,
-            batch=(args.batch or len(url_dict) == 1),
+        version_hashes = spack.stage.get_checksums_for_versions(
+            url_dict, name, first_stage_function=guesser, keep_stage=args.keep_stage
         )
+
+        versions = get_version_lines(version_hashes, url_dict)
     else:
         versions = unhashed_versions
 
@@ -888,7 +903,7 @@ def get_build_system(template, url, guesser):
         # Use whatever build system the guesser detected
         selected_template = guesser.build_system
         if selected_template == "generic":
-            tty.warn("Unable to detect a build system. " "Using a generic package template.")
+            tty.warn("Unable to detect a build system. Using a generic package template.")
         else:
             msg = "This package looks like it uses the {0} build system"
             tty.msg(msg.format(selected_template))
@@ -927,11 +942,11 @@ def get_repository(args, name):
             )
     else:
         if spec.namespace:
-            repo = spack.repo.path.get_repo(spec.namespace, None)
+            repo = spack.repo.PATH.get_repo(spec.namespace, None)
             if not repo:
                 tty.die("Unknown namespace: '{0}'".format(spec.namespace))
         else:
-            repo = spack.repo.path.first_repo()
+            repo = spack.repo.PATH.first_repo()
 
     # Set the namespace on the spec if it's not there already
     if not spec.namespace:

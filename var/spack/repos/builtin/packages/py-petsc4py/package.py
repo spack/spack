@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,12 +10,41 @@ class PyPetsc4py(PythonPackage):
     """This package provides Python bindings for the PETSc package."""
 
     homepage = "https://gitlab.com/petsc/petsc4py"
-    url = "https://ftp.mcs.anl.gov/pub/petsc/release-snapshots/petsc4py-3.15.0.tar.gz"
+    url = (
+        "https://web.cels.anl.gov/projects/petsc/download/release-snapshots/petsc4py-3.20.0.tar.gz"
+    )
     git = "https://gitlab.com/petsc/petsc.git"
 
-    maintainers = ["balay"]
+    maintainers("balay")
+
+    license("BSD-2-Clause")
 
     version("main", branch="main")
+    version("3.21.1", sha256="ea8c6afb16541167d39f87d5fcad98c32d856fe8a2173504ef2a31c16647d53d")
+    version("3.21.0", sha256="b2000a3f8ef60920e1f82fa4772372d7941bc737bcc421a234a2507097a44d00")
+    version("3.20.6", sha256="bcc4cb35231ba6664309ea195cc8ce8a9bb61f3e24b39be480eee59c52139dc2")
+    version("3.20.5", sha256="2f40a6a7bfdaa2bca7c1f3e739ab7c74aba8d95db05aa1d120826eec904bbc16")
+    version("3.20.4", sha256="3ebdb4c605ad59d71b7b7adc5f06b6d2a7ce9225c9b56e672923cb5bd6e43440")
+    version("3.20.3", sha256="8e10884df5ca38191b71294dc7e89f7479b18cca83fedfe27f89105e57c40785")
+    version("3.20.2", sha256="d3f24aa6612ded3e9b9ae11d5533f319d1df1705bea6d81385fea023d01175c9")
+    version("3.20.1", sha256="dcc9092040d13130496f1961b79c36468f383b6ede398080e004f1966c06ad38")
+    version("3.20.0", sha256="c2461eef3977ae5c214ad252520adbb92ec3a31d00e79391dd92535077bbf03e")
+    version("3.19.6", sha256="bd7891b651eb83504c744e70706818cf63ecbabee3206c1fed7c3013873802b9")
+    version("3.19.5", sha256="e059fdb8b23936c3182c9226924029dbdc8f1f72a623be0fe8c2caf8646c7a45")
+    version("3.19.4", sha256="5621ddee63d0c631d2e8fed2d5d9763b183ad164c227dde8d3abcdb6c35c5ffb")
+    version("3.19.3", sha256="dcbadebf0c4fe78b4dc13b8cd910577b9cacf65636ea980523e61d95c6959e5b")
+    version("3.19.2", sha256="5f207eb95f87ddafa32229681a95af61912871cd7fbd38780bc63019dad3e7b8")
+    version("3.19.1", sha256="d04def9995ed6395e125c605da169438d77d410d5019dc57be42e428ade30190")
+    version("3.19.0", sha256="d1660092c9be9547e9a17d3d5bb139eaad737c3e1c4ef2ee41c71c8dc3bb9955")
+    version("3.18.6", sha256="e4976e42895955cbb2c56f1b0f791c838338348a10664b8dcfc3fe56198bf943")
+    version("3.18.5", sha256="625cbb99d7d3000ad05afe60585c6aa24ca650894b09a1989127febb64b65470")
+    version("3.18.4", sha256="84a055b7f38d1200a8c486c89db05ce0724fe28da56afb656660cef054384e24")
+    version("3.18.3", sha256="853ab9620c4832cbfe1f490edde827a505c8a376cc1a7b4fa6406faac9059433")
+    version("3.18.2", sha256="1b6761b02ec6ef9099e2a048e234065c1c4096ace01e52e353624b80417cceec")
+    version("3.18.1", sha256="6d9d9632e2da0920c4e3905b7bac919837bdd85ecfaf1b9e461ba7e05ec4a5ce")
+    version("3.18.0", sha256="76bad2d35f380f698f5649c3f38eabd153b9b19b1fe3ce3a1d3de9aa5824a4d2")
+    version("3.17.5", sha256="e435d927bf22950c71c30bda538e1ae75f48f6931a63205c6fbeff6cf4393f09")
+    version("3.17.4", sha256="216c3da074557946615d37d0826bc89f1f2e599323e2dacbdc45326d78bd50c6")
     version("3.17.3", sha256="c588ab4a17deebe7f0a57f966b3368d88f01d1a1c09f220f63fe8e3b37a32899")
     version("3.17.2", sha256="7e256e13013ce12c8e52edee35920e3d2c1deaae1b71597a3064201eba7abc1c")
     version("3.17.1", sha256="f73a6eb0b453ec2500c9b353dc8427f205bcc12910b263bc4351fea3c6e0af71")
@@ -38,20 +67,13 @@ class PyPetsc4py(PythonPackage):
     version("3.13.0", sha256="0e11679353c0c2938336a3c8d1a439b853e20d3bccd7d614ad1dbea3ec5cb31f")
     version("3.12.0", sha256="4c94a1dbbf244b249436b266ac5fa4e67080d205420805deab5ec162b979df8d")
     version("3.11.0", sha256="ec114b303aadaee032c248a02021e940e43c6437647af0322d95354e6f2c06ad")
-    version("3.10.1", sha256="11b59693af0e2067f029924dd6b5220f7a7ec00089f6e2c2361332d6123ea6f7")
-    version("3.10.0", sha256="4e58b9e7d4343adcf905751261b789c8c3489496f8de5c3fc3844664ef5ec5a3")
-    version("3.9.1", sha256="8b7f56e0904c57cca08d1c24a1d8151d1554f06c9c5a31b16fb6db3bc928bbd8")
-    version("3.9.0", sha256="ae077dffd455014de16b6ed4ba014ac9e10227dc6b93f919a4229e8e1c870aec")
-    version("3.8.1", sha256="f6260a52dab02247f5b8d686a0587441b1a2048dff52263f1db42e75d2e3f330")
-    version("3.8.0", sha256="3445da12becf23ade4d40cdd04c746581982ab6a27f55fbb5cd29bc5560df4b1")
-    version("3.7.0", sha256="c04931a5ba3fd7c8c8d165aa7908688921ce3cf4cf8725d0cba73380c2107386")
 
     variant("mpi", default=True, description="Activates MPI support")
 
-    patch("ldshared.patch", when="@:99")
-    patch("ldshared-dev.patch", when="@main")
+    patch("ldshared.patch", when="@:3.18")
 
-    depends_on("py-cython", type="build", when="@main")
+    depends_on("py-cython@0.29.32:", when="^python@3.11:", type="build")
+    depends_on("py-cython@0.24:", type="build")
     depends_on("python@2.6:2.8,3.3:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
     depends_on("py-numpy", type=("build", "run"))
@@ -60,20 +82,10 @@ class PyPetsc4py(PythonPackage):
     depends_on("petsc+mpi", when="+mpi")
     depends_on("petsc~mpi", when="~mpi")
     depends_on("petsc@main", when="@main")
-    depends_on("petsc@3.17.0:3.17", when="@3.17.0:3.17")
-    depends_on("petsc@3.16.0:3.16", when="@3.16.0:3.16")
-    depends_on("petsc@3.15.0:3.15", when="@3.15.0:3.15")
+    for ver in ["3.21", "3.20", "3.19", "3.18", "3.17", "3.16", "3.15", "3.13", "3.12", "3.11"]:
+        depends_on(f"petsc@{ver}", when=f"@{ver}")
     depends_on("petsc@3.14.2:3.14", when="@3.14.1:3.14")
     depends_on("petsc@3.14.0:3.14.1", when="@3.14.0")
-    depends_on("petsc@3.13.0:3.13", when="@3.13.0:3.13")
-    depends_on("petsc@3.12.0:3.12", when="@3.12.0:3.12")
-    depends_on("petsc@3.11.0:3.11", when="@3.11.0:3.11")
-    depends_on("petsc@3.10.3:3.10", when="@3.10.1:3.10")
-    depends_on("petsc@3.10:3.10.2", when="@3.10.0")
-    depends_on("petsc@3.9.0:3.9", when="@3.9.0:3.9")
-    depends_on("petsc@3.8.0:3.8", when="@3.8.0:3.8")
-    depends_on("petsc@3.7.0:3.7", when="@3.7.0:3.7")
-    depends_on("petsc@3.6.0:3.6", when="@3.6.0:3.6")
 
     @property
     def build_directory(self):
@@ -83,3 +95,8 @@ class PyPetsc4py(PythonPackage):
             return os.path.join(self.stage.source_path, "src", "binding", "petsc4py")
         else:
             return self.stage.source_path
+
+    @run_before("install")
+    def cythonize(self):
+        with working_dir(self.build_directory):
+            python(join_path("conf", "cythonize.py"))

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -23,57 +23,29 @@ class Julia(MakefilePackage):
     url = "https://github.com/JuliaLang/julia/releases/download/v1.7.0/julia-1.7.0.tar.gz"
     git = "https://github.com/JuliaLang/julia.git"
 
-    maintainers = ["glennpj", "vchuravy", "haampie"]
+    maintainers("vchuravy", "haampie", "giordano")
 
     version("master", branch="master")
-    version("1.8.0-rc1", sha256="ed0395880c32c48a284b115279d27d79ab1ca6fb53a4b97a8d25eba54ec97306")
-    version(
-        "1.7.3",
-        sha256="06df2a81e6a18d0333ffa58d36f6eb84934c38984898f9e0c3072c8facaa7306",
-        preferred=True,
-    )
+    version("1.10.2", sha256="e3d20c02975da054aeb18d32ed84c5d760d54d2563e45e25017684a5a105d185")
+    version("1.9.3", sha256="8d7dbd8c90e71179e53838cdbe24ff40779a90d7360e29766609ed90d982081d")
+    version("1.9.2", sha256="015438875d591372b80b09d01ba899657a6517b7c72ed41222298fef9d4ad86b")
+    version("1.9.0", sha256="48f4c8a7d5f33d0bc6ce24226df20ab49e385c2d0c3767ec8dfdb449602095b2")
+    version("1.8.5", sha256="d31026cc6b275d14abce26fd9fd5b4552ac9d2ce8bde4291e494468af5743031")
+    version("1.8.4", sha256="b7b8ee64fb947db8d61104f231e1b25342fe330d29e0d2273f93c264f32c5333")
+    version("1.8.3", sha256="4d8d460fcae5c6f8306a3e3c14371635c1a26f47c3ce62b2950cf9234b6ec849")
+    version("1.8.2", sha256="3e2cea35bf5df963ed7b75a83e8febfc000acf1e664ecd657a0772508eb1fb5d")
+    version("1.8.1", sha256="066f4ca7a2ad39b003e2af77dbecfbfb9b0a1cb1664033f657ffdbe2f374d956")
+    version("1.8.0", sha256="0fa980286d6d912f24ed9f90a02930560d985e0ada8233a4ae5610884feb2438")
+
+    version("1.7.3", sha256="06df2a81e6a18d0333ffa58d36f6eb84934c38984898f9e0c3072c8facaa7306")
     version("1.7.2", sha256="0847943dd65001f3322b00c7dc4e12f56e70e98c6b798ccbd4f02d27ce161fef")
     version("1.7.1", sha256="17d298e50e4e3dd897246ccebd9f40ce5b89077fa36217860efaec4576aa718e")
     version("1.7.0", sha256="8e870dbef71bc72469933317a1a18214fd1b4b12f1080784af7b2c56177efcb4")
-    version(
-        "1.6.6",
-        sha256="a8023708cadb2649395769810e6cec8afc8e352aa6d407189b6c88b86d7f5090",
-        preferred=True,
-    )
+
+    version("1.6.7", sha256="74af1dc7b5841757a06a899923a62cac04665c09829324e8bf53cfb66f7b3d61")
+    version("1.6.6", sha256="a8023708cadb2649395769810e6cec8afc8e352aa6d407189b6c88b86d7f5090")
     version("1.6.5", sha256="b70ae299ff6b63a9e9cbf697147a48a31b4639476d1947cb52e4201e444f23cb")
     version("1.6.4", sha256="a4aa921030250f58015201e28204bff604a007defc5a379a608723e6bb1808d4")
-
-    # We've deprecated these versions, so that we can remove them in Spack 0.18
-    # They are still available in Spack 0.17. Julia 0.17.0 is the first version that
-    # can be built enitrely from Spack packages, without a network connection during
-    # the build.
-    for v in [
-        "1.6.3",
-        "1.6.2",
-        "1.6.1",
-        "1.6.0",
-        "1.5.4",
-        "1.5.3",
-        "1.5.2",
-        "1.5.1",
-        "1.5.0",
-        "1.4.2",
-        "1.4.1",
-        "1.4.0",
-        "1.3.1",
-        "1.2.0",
-        "1.1.1",
-        "1.0.0",
-        "0.6.2",
-        "0.5.2",
-        "0.5.1",
-        "0.5.0",
-        "0.4.7",
-        "0.4.6",
-        "0.4.5",
-        "0.4.3",
-    ]:
-        version(v, deprecated=True)
 
     variant("precompile", default=True, description="Improve julia startup time")
     variant("openlibm", default=True, description="Use openlibm instead of libm")
@@ -84,10 +56,40 @@ class Julia(MakefilePackage):
     depends_on(
         "llvm"
         " targets=amdgpu,bpf,nvptx,webassembly"
-        " version_suffix=jl +link_llvm_dylib ~internal_unwind"
+        " version_suffix=jl +link_llvm_dylib libunwind=none"
     )
     depends_on("libuv", when="@:1.7")
-    depends_on("libuv-julia", when="@1.8:")
+    depends_on("libuv-julia@1.42.0", when="@1.8.0:1.8.1")
+    depends_on("libuv-julia@1.44.2", when="@1.8.2:1.9")
+    depends_on("libuv-julia@1.44.3", when="@1.10.0:")
+    depends_on("suite-sparse@5.4:5.10", when="@1.6:1.9")
+
+    with when("@1.10.0:1.10"):
+        # libssh2.so.1, libpcre2-8.so.0, libmbedtls.so.14, libmbedcrypto.so.7, libmbedx509.so.1,
+        # libopenlibm.so.4, libblastrampoline.so.5, libgit2.so.1.6, libnghttp2.so.14,
+        # libcurl.so.4
+        depends_on("libblastrampoline@5.8.0:5")
+        depends_on("libgit2@1.6.4:1.6")
+        depends_on("libssh2@1.11.0:1.11")
+        depends_on("llvm@15.0.7 +lld shlib_symbol_version=JL_LLVM_15.0")
+        depends_on("mbedtls@2.28.2:2.28")
+        depends_on("openlibm@0.8.1:0.8", when="+openlibm")
+        depends_on("nghttp2@1.52.0:1.52")
+        depends_on("curl@8.4.0:")
+        depends_on("suite-sparse@7.2.1")
+
+    with when("@1.9.0:1.9"):
+        # libssh2.so.1, libpcre2-8.so.0, mbedtls.so.14, mbedcrypto.so.7, mbedx509.so.1
+        # openlibm.so.4, libblastrampoline.so.5, libgit2.so.1.5, libnghttp2.so.14,
+        # libcurl.so.4
+        depends_on("libblastrampoline@5.4.0:5")
+        depends_on("libgit2@1.5.0:1.5")
+        depends_on("libssh2@1.10.0:1.10")
+        depends_on("llvm@14.0.6 +lld shlib_symbol_version=JL_LLVM_14.0")
+        depends_on("mbedtls@2.28.0:2.28")
+        depends_on("openlibm@0.8.1:0.8", when="+openlibm")
+        depends_on("nghttp2@1.48.0:1.48")
+        depends_on("curl@7.84.0:")
 
     with when("@1.8.0:1.8"):
         # libssh2.so.1, libpcre2-8.so.0, mbedtls.so.14, mbedcrypto.so.7, mbedx509.so.1
@@ -96,11 +98,11 @@ class Julia(MakefilePackage):
         depends_on("libblastrampoline@5.1.0:5")
         depends_on("libgit2@1.3.0:1.3")
         depends_on("libssh2@1.10.0:1.10")
-        depends_on("libuv-julia@1.44.1")
-        depends_on("llvm@13.0.1 shlib_symbol_version=jl")
+        depends_on("llvm@13.0.1 shlib_symbol_version=JL_LLVM_13.0")
         depends_on("mbedtls@2.28.0:2.28")
         depends_on("openlibm@0.8.1:0.8", when="+openlibm")
         depends_on("nghttp2@1.47.0:1.47")
+        depends_on("curl@7.84.0:")
 
     with when("@1.7.0:1.7"):
         # libssh2.so.1, libpcre2-8.so.0, mbedtls.so.13, mbedcrypto.so.5, mbedx509.so.1
@@ -112,6 +114,7 @@ class Julia(MakefilePackage):
         depends_on("llvm@12.0.1")
         depends_on("mbedtls@2.24.0:2.24")
         depends_on("openlibm@0.7.0:0.7", when="+openlibm")
+        depends_on("curl@7.73.0:")
 
     with when("@1.6.0:1.6"):
         # libssh2.so.1, libpcre2-8.so.0, mbedtls.so.13, mbedcrypto.so.5, mbedx509.so.1
@@ -122,6 +125,7 @@ class Julia(MakefilePackage):
         depends_on("llvm@11.0.1")
         depends_on("mbedtls@2.24.0:2.24")
         depends_on("openlibm@0.7.0:0.7", when="+openlibm")
+        depends_on("curl@7.73.0:")
 
     # Patches for llvm
     depends_on("llvm", patches="llvm7-symver-jlprefix.patch", when="@:1.7")
@@ -137,7 +141,7 @@ class Julia(MakefilePackage):
         "llvm",
         when="^llvm@12.0.1",
         patches=patch(
-            "https://github.com/JuliaLang/llvm-project/compare/fed41342a82f5a3a9201819a82bf7a48313e296b...980d2f60a8524c5546397db9e8bbb7d6ea56c1b7.patch",
+            "https://raw.githubusercontent.com/spack/patches/24ff44c4c5439400747941473c0298a74c1fbcb1/julia/10cb42f80c2eaad3e9c87cb818b6676f1be26737bdf972c77392d71707386aa4.patch",
             sha256="10cb42f80c2eaad3e9c87cb818b6676f1be26737bdf972c77392d71707386aa4",
         ),
     )
@@ -145,8 +149,24 @@ class Julia(MakefilePackage):
         "llvm",
         when="^llvm@13.0.1",
         patches=patch(
-            "https://github.com/JuliaLang/llvm-project/compare/75e33f71c2dae584b13a7d1186ae0a038ba98838...2f4460bd46aa80d4fe0d80c3dabcb10379e8d61b.patch",
+            "https://raw.githubusercontent.com/spack/patches/24ff44c4c5439400747941473c0298a74c1fbcb1/julia/45f72c59ae5cf45461e9cd8b224ca49b739d885c79b3786026433c6c22f83b5f.patch",
             sha256="45f72c59ae5cf45461e9cd8b224ca49b739d885c79b3786026433c6c22f83b5f",
+        ),
+    )
+    depends_on(
+        "llvm",
+        when="^llvm@14.0.6",
+        patches=patch(
+            "https://raw.githubusercontent.com/spack/patches/24ff44c4c5439400747941473c0298a74c1fbcb1/julia/f3def26930832532bbcd861d41b31ae03db993bc2b3510f89ef831a30bd3e099.patch",
+            sha256="f3def26930832532bbcd861d41b31ae03db993bc2b3510f89ef831a30bd3e099",
+        ),
+    )
+    depends_on(
+        "llvm",
+        when="^llvm@15.0.7",
+        patches=patch(
+            "https://raw.githubusercontent.com/spack/patches/24ff44c4c5439400747941473c0298a74c1fbcb1/julia/25cdc0271e7722d4a7cc6f72abcb17bfe205fc741bbe3716a21759c3eee7d32c.patch",
+            sha256="25cdc0271e7722d4a7cc6f72abcb17bfe205fc741bbe3716a21759c3eee7d32c",
         ),
     )
 
@@ -169,9 +189,12 @@ class Julia(MakefilePackage):
     )
 
     # patchelf 0.13 is required because the rpath patch uses --add-rpath
-    depends_on("patchelf@0.13:", type="build")
+    # patchelf 0.18 breaks (at least) libjulia-internal.so
+    depends_on("patchelf@0.13:0.17", type="build")
     depends_on("perl", type="build")
     depends_on("libwhich", type="build")
+    depends_on("which", type="build")  # for detecting 7z, lld, dsymutil
+    depends_on("python", type="build")
 
     depends_on("blas")  # note: for now openblas is fixed...
     depends_on("curl tls=mbedtls +nghttp2 +libssh2")
@@ -191,11 +214,36 @@ class Julia(MakefilePackage):
     depends_on("suite-sparse +pic")
     depends_on("unwind")
     depends_on("utf8proc")
-    depends_on("zlib +shared +pic +optimize")
+    depends_on("zlib-api")
+    depends_on("zlib +shared +pic +optimize", when="^[virtuals=zlib-api] zlib")
 
     # Patches for julia
     patch("julia-1.6-system-libwhich-and-p7zip-symlink.patch", when="@1.6.0:1.6")
-    patch("use-add-rpath.patch")
+    patch("use-add-rpath.patch", when="@:1.8.0")
+    patch("use-add-rpath-2.patch", when="@1.8.1:1.8")
+
+    # Fix the path to Spack llvm's lld and dsymutil
+    patch(
+        "https://github.com/JuliaLang/julia/commit/55c13d234c1523861b278f7989b1af105ef0e88f.patch?full_index=1",
+        sha256="00569f40e1845329060a714813e509677949e633a0e833c40a3c70dcf9269cc1",
+        when="@1.9:1.10",
+    )
+
+    # Fix libstdc++ not being found (https://github.com/JuliaLang/julia/issues/47987)
+    patch(
+        "https://github.com/JuliaLang/julia/pull/48342.patch?full_index=1",
+        sha256="10f7cab89c8353b2648a968d2c8e8ed8bd90961df3227084f1d69d3d482933d7",
+        when="@1.8.4:1.8.5",
+    )
+
+    # Fix printing of `BigFloat`s when using MPFR 4.2.0, but the patch is
+    # applicable to previous versions of the library too
+    # (https://github.com/JuliaLang/julia/issues/49895).
+    patch(
+        "https://github.com/JuliaLang/julia/pull/49909.patch?full_index=1",
+        sha256="7fa53516b97d83ccf06f6d387c04d337849808f7e8ee2bdc2e79894d84578afc",
+        when="@1.6.4:1.9.0",
+    )
 
     # Fix gfortran abi detection https://github.com/JuliaLang/julia/pull/44026
     patch("fix-gfortran.patch", when="@1.7.0:1.7.2")
@@ -209,7 +257,11 @@ class Julia(MakefilePackage):
 
     # Make sure Julia sets -DNDEBUG when including LLVM header files.
     patch("llvm-NDEBUG.patch", when="@1.7.0:1.7")
-    patch("llvm-NDEBUG-1.8.patch", when="@1.8.0:1.8")
+
+    # suite-sparse@7.2.1 sometimes builds cuda stub libraries and Julia build
+    # system deals with them, but we don't compile them, so we remove the code
+    # which is creating symlinks to those libraries.
+    patch("julia-1.10-rm-suite-sparse-cuda-stubs.patch", when="@1.10.0:1.10")
 
     def patch(self):
         # The system-libwhich-libblastrampoline.patch causes a rebuild of docs as it
@@ -239,17 +291,19 @@ class Julia(MakefilePackage):
             "mpfr",
             "nghttp2",
             "openblas",
-            "openlibm",
             "pcre2",
             "suite-sparse",
             "utf8proc",
-            "zlib",
         ]
+        if "+openlibm" in self.spec:
+            pkgs.append("openlibm")
         if self.spec.satisfies("@1.7.0:"):
             pkgs.append("libblastrampoline")
         for pkg in pkgs:
             for dir in self.spec[pkg].libs.directories:
                 env.prepend_path(linker_var, dir)
+        for dir in self.spec["zlib-api"].libs.directories:
+            env.prepend_path(linker_var, dir)
 
     def edit(self, spec, prefix):
         # TODO: use a search query for blas / lapack?
@@ -285,6 +339,7 @@ class Julia(MakefilePackage):
             "USE_SYSTEM_LIBUNWIND:=1",
             "USE_SYSTEM_LIBUV:=1",
             "USE_SYSTEM_LIBWHICH:=1",
+            "USE_SYSTEM_LLD:=1",  # @1.9:
             "USE_SYSTEM_LLVM:=1",
             "USE_SYSTEM_MBEDTLS:=1",
             "USE_SYSTEM_MPFR:=1",
@@ -302,10 +357,22 @@ class Julia(MakefilePackage):
             "override USE_LLVM_SHLIB:=1",
             # make rebuilds a bit faster for now, not sure if this should be kept
             "JULIA_PRECOMPILE:={0}".format("1" if spec.variants["precompile"].value else "0"),
+            # we want to use `patchelf --add-rpath` instead of `patchelf --set-rpath`
+            "override PATCHELF_SET_RPATH_ARG:=--add-rpath",  # @1.9:
+            # Otherwise, Julia tries to download and build ittapi
+            "USE_INTEL_JITEVENTS:=0",  # @1.9:
         ]
 
         options.append("USEGCC:={}".format("1" if "%gcc" in spec else "0"))
         options.append("USECLANG:={}".format("1" if "%clang" in spec else "0"))
+
+        options.extend(
+            [
+                "override CC:={0}".format(spack_cc),
+                "override CXX:={0}".format(spack_cxx),
+                "override FC:={0}".format(spack_fc),
+            ]
+        )
 
         # libm or openlibm?
         if spec.variants["openlibm"].value:

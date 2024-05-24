@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,9 +14,13 @@ class Thepeg(AutotoolsPackage):
 
     tags = ["hep"]
 
+    license("GPL-3.0-or-later")
+
     # The commented out versions exist, but may need patches
     # and/or recipe changes
+    version("2.3.0", sha256="ac35979ae89c29608ca92c156a49ff68aace7a5a12a0c92f0a01a833d2d34572")
     version("2.2.3", sha256="f21473197a761fc32917b08a8d24d2bfaf93ff57f3441fd605da99ac9de5d50b")
+    version("2.2.2", sha256="97bf55d4391b0a070a3303d3845f8160afec403f1573dfb0e857709ad6262e3e")
     version("2.2.1", sha256="63abc7215e6ad45c11cf9dac013738e194cc38556a8368b850b70ab1b57ea58f")
     version("2.2.0", sha256="d3e1474811b7d9f61a4a98db1e9d60d8ef8f913a50de4cae4dc2cc4f98e6fbf8")
     # version('2.1.7', sha256='2e15727afc1fbfb158fa42ded31c4b1e5b51c25ed6bb66a38233e1fc594329c8')
@@ -65,22 +69,36 @@ class Thepeg(AutotoolsPackage):
     depends_on("hepmc3", when="hepmc=3")
     conflicts("hepmc=3", when="@:2.1", msg="HepMC3 support was added in 2.2.0")
     depends_on("fastjet", when="@2.0.0:")
-    depends_on("rivet", when="@2.0.3:")
+    depends_on("rivet", when="@2.0.3: +rivet")
     depends_on("boost +test", when="@2.1.1:")
 
     depends_on("autoconf", type="build")
     depends_on("automake", type="build")
     depends_on("libtool", type="build")
     depends_on("m4", type="build")
-    depends_on("zlib")
+    depends_on("zlib-api")
 
     variant("hepmc", default="2", values=("2", "3"), description="HepMC interface to build ")
+    variant("rivet", default=True, description="Add rivet integration")
+    variant(
+        "libs",
+        default="shared",
+        values=("shared", "static"),
+        multi=True,
+        description="Build shared libs, static libs or both",
+    )
 
     install_targets = ["install-strip"]
 
+    def flag_handler(self, name, flags):
+        if name in ("cxxflags", "cflags", "fflags", "cppflags"):
+            flags.append("-O2")
+
+        return (None, None, flags)
+
     def configure_args(self):
         args = ["--with-gsl=" + self.spec["gsl"].prefix, "--without-javagui"]
-        args += ["--with-zlib=" + self.spec["zlib"].prefix]
+        args += ["--with-zlib=" + self.spec["zlib-api"].prefix]
 
         if self.spec.satisfies("@:1.8"):
             args += ["--with-LHAPDF=" + self.spec["lhapdf"].prefix]
@@ -98,12 +116,12 @@ class Thepeg(AutotoolsPackage):
         if self.spec.satisfies("@2.0.0:"):
             args += ["--with-fastjet=" + self.spec["fastjet"].prefix]
 
-        if self.spec.satisfies("@2.0.3:"):
+        if self.spec.satisfies("@2.0.3: +rivet"):
             args += ["--with-rivet=" + self.spec["rivet"].prefix]
 
         if self.spec.satisfies("@2.1.1:"):
             args += ["--with-boost=" + self.spec["boost"].prefix]
 
-        args += ["CFLAGS=-O2", "CXXFLAGS=-O2", "FFLAGS=-O2"]
+        args += self.enable_or_disable("libs")
 
         return args

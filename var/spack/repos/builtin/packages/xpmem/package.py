@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,7 +18,9 @@ class Xpmem(AutotoolsPackage):
     url = "https://github.com/hjelmn/xpmem/archive/v2.6.3.tar.gz"
     git = "https://github.com/hjelmn/xpmem.git"
 
-    maintainers = ["skosukhin"]
+    maintainers("skosukhin")
+
+    license("LGPL-2.1-or-later")
 
     version("master", branch="master")
 
@@ -64,13 +66,7 @@ class Xpmem(AutotoolsPackage):
     conflicts("+kernel-module", when="platform=darwin")
 
     # All compilers except for gcc are in conflict with +kernel-module:
-    for __compiler in spack.compilers.supported_compilers():
-        if __compiler != "gcc":
-            conflicts(
-                "+kernel-module",
-                when="%{0}".format(__compiler),
-                msg="Linux kernel module must be compiled with gcc",
-            )
+    requires("%gcc", when="+kernel-module", msg="Linux kernel module must be compiled with gcc")
 
     def autoreconf(self, spec, prefix):
         Executable("./autogen.sh")()
@@ -88,7 +84,7 @@ class Xpmem(AutotoolsPackage):
         if "~kernel-module" in self.spec:
             # The kernel module is enabled by default. An attempt of explicit
             # enabling with '--enable-kernel-module' disables the module.
-            args.extend("--disable-kernel-module")
+            args.append("--disable-kernel-module")
 
         if self.spec.satisfies("@:2.6.5"):
             fmt = self.spec.format
@@ -109,5 +105,5 @@ class Xpmem(AutotoolsPackage):
             # Override the hardcoded prefix for 'cray-xpmem.conf'
             make(
                 "ldsoconfdir={0}".format(self.spec.prefix.etc.join("ld.so.conf.d")),
-                *self.install_targets
+                *self.install_targets,
             )

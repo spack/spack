@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,6 +21,8 @@ class PyPymol(PythonPackage):
 
     depends_on("python+tkinter@2.7:", type=("build", "link", "run"), when="@2.3.0:2.4.0")
     depends_on("python+tkinter@3.6:", type=("build", "link", "run"), when="@2.5.0:")
+    # in newer pip versions --install-option does not exist
+    depends_on("py-pip@:23.0", type="build")
     depends_on("gl")
     depends_on("glew")
     depends_on("libpng")
@@ -56,7 +58,7 @@ class PyPymol(PythonPackage):
         script = join_path(python_platlib, "pymol", "__init__.py")
 
         shebang = "#!/bin/sh\n"
-        fdata = 'exec {0} {1} "$@"'.format(self.spec["python"].command, script)
+        fdata = f'exec {python.path} {script} "$@"'
         with open(fname, "w") as new:
             new.write(shebang + fdata)
         set_executable(fname)

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,8 @@ class Foundationdb(CMakePackage):
     homepage = "https://www.foundationdb.org/"
     url = "https://github.com/apple/foundationdb/archive/6.3.3.tar.gz"
 
+    license("Apache-2.0")
+
     version("6.3.4", sha256="80a3d7f005b42e7b63abd27728f4d7f4088eea65aafb6942424c97a704b60fd4")
     version("6.3.3", sha256="1fd46c2281ea283d17fc5044c57a3dbef371a3ed31733abf38610c459a4ed79d")
     version("6.3.2", sha256="e930510937f8db3aba73262494eedcafb75cd3f523a8b5cd8254250af5da6086")
@@ -30,8 +32,7 @@ class Foundationdb(CMakePackage):
     # for instance depends_on('boost +filesystem')
     # See https://github.com/spack/spack/pull/22303 for reference
     depends_on(Boost.with_default_variants)
-    generator = "Ninja"
-    depends_on("ninja", type="build")
+    generator("ninja")
 
     def cmake_args(self):
         args = ["-DUSE_WERROR=ON"]

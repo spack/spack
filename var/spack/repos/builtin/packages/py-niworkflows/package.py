@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,8 @@ class PyNiworkflows(PythonPackage):
 
     homepage = "https://github.com/nipreps/niworkflows"
     pypi = "niworkflows/niworkflows-1.4.0.tar.gz"
+
+    license("Apache-2.0")
 
     version("1.4.0", sha256="d4e59070fde0290e0bfeece120ff1d2ff1f9573e3f2e6a719fe463c913af25ec")
     version("1.3.5", sha256="92e24f3462fb3ad4d8ee724506fba05da2b3ca0626850dd2e637a553e17d69b8")
@@ -26,8 +28,7 @@ class PyNiworkflows(PythonPackage):
     depends_on("py-setuptools@30.4.0:", type="build")
     depends_on("py-attrs", when="@1.1.4:", type=("build", "run"))
     depends_on("py-jinja2", type=("build", "run"))
-    depends_on("py-matplotlib@2.2.0:", when="^python@3.6:", type=("build", "run"))
-    depends_on("py-matplotlib@2.2.0:3.1", when="^python@:3.5", type=("build", "run"))
+    depends_on("py-matplotlib@2.2.0:", type=("build", "run"))
     depends_on("py-nibabel@3.0.1:", when="@1.1.6:", type=("build", "run"))
     depends_on("py-nibabel@2.4.1:", type=("build", "run"))
     depends_on("py-nilearn@0.2.6:0.4,0.5.2:", type=("build", "run"))

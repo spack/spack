@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,12 +18,17 @@ class EtsfIo(Package):
     homepage = "https://github.com/ElectronicStructureLibrary/libetsf_io"
     url = "https://launchpad.net/etsf-io/1.0/1.0.4/+download/etsf_io-1.0.4.tar.gz"
 
+    license("LGPL-2.1-or-later")
+
     version("1.0.4", sha256="3140c2cde17f578a0e6b63acb27a5f6e9352257a1371a17b9c15c3d0ef078fa4")
 
     variant("mpi", default=True, description="Add MPI support")
 
     depends_on("netcdf-fortran")
     depends_on("hdf5+mpi~cxx", when="+mpi")  # required for NetCDF-4 support
+
+    patch("tests_module.patch")
+    patch("tests_init.patch")
 
     def install(self, spec, prefix):
         options = ["--prefix=%s" % prefix]
@@ -48,3 +53,11 @@ class EtsfIo(Package):
         make()
         make("check")
         make("install")
+
+    def test_etsf_io_help(self):
+        """check etsf_io can execute (--help)"""
+
+        path = self.spec["etsf-io"].prefix.bin.etsf_io
+        etsfio = which(path)
+        out = etsfio("--help", output=str.split, error=str.split)
+        assert "Usage: etsf_io" in out

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,12 @@ class Rocksdb(MakefilePackage):
     url = "https://github.com/facebook/rocksdb/archive/v6.5.3.tar.gz"
     git = "https://github.com/facebook/rocksdb.git"
 
+    license("Apache-2.0 OR GPL-2.0-only")
+
     version("master", git=git, branch="master", submodules=True)
+    version("8.6.7", sha256="cdb2fc3c6a556f20591f564cb8e023e56828469aa3f76e1d9535c443ba1f0c1a")
+    version("8.1.1", sha256="9102704e169cfb53e7724a30750eeeb3e71307663852f01fa08d5a320e6155a8")
+    version("7.7.3", sha256="b8ac9784a342b2e314c821f6d701148912215666ac5e9bdbccd93cf3767cb611")
     version("7.2.2", sha256="c4ea6bd2e3ffe3f0f8921c699234d59108c9122d61b0ba2aa78358642a7b614e")
     version("6.20.3", sha256="c6502c7aae641b7e20fafa6c2b92273d935d2b7b2707135ebd9a67b092169dca")
     version("6.19.3", sha256="5c19ffefea2bbe4c275d0c60194220865f508f371c64f42e802b4a85f065af5b")
@@ -33,12 +38,14 @@ class Rocksdb(MakefilePackage):
     variant("zlib", default=True, description="Enable zlib compression support")
     variant("zstd", default=False, description="Enable zstandard compression support")
     variant("tbb", default=False, description="Enable Intel TBB support")
+    variant("werror", default=False, description="Build with -Werror")
+    variant("rtti", default=False, description="Build with RTTI")
 
     depends_on("bzip2", when="+bz2")
     depends_on("gflags")
     depends_on("lz4", when="+lz4")
     depends_on("snappy", when="+snappy")
-    depends_on("zlib", when="+zlib")
+    depends_on("zlib-api", when="+zlib")
     depends_on("zstd", when="+zstd")
     depends_on("tbb", when="+tbb")
 
@@ -63,8 +70,8 @@ class Rocksdb(MakefilePackage):
             cflags.append("-Wno-error=redundant-move")
 
         if "+zlib" in self.spec:
-            cflags.append("-I" + self.spec["zlib"].prefix.include)
-            ldflags.append(self.spec["zlib"].libs.ld_flags)
+            cflags.append("-I" + self.spec["zlib-api"].prefix.include)
+            ldflags.append(self.spec["zlib-api"].libs.ld_flags)
         else:
             env["ROCKSDB_DISABLE_ZLIB"] = "YES"
 
@@ -92,6 +99,12 @@ class Rocksdb(MakefilePackage):
 
         env["CFLAGS"] = " ".join(cflags)
         env["PLATFORM_FLAGS"] = " ".join(ldflags)
+
+        if "~werror" in self.spec:
+            env["DISABLE_WARNING_AS_ERROR"] = "1"
+
+        if "+rtti" in self.spec:
+            env["USE_RTTI"] = "1"
 
         if self.spec.satisfies("@6.13.2:"):
             env["PREFIX"] = self.spec.prefix

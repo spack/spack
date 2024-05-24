@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,6 +6,8 @@
 import os
 from fnmatch import fnmatch
 from os.path import join
+
+from llnl.util.symlink import readlink
 
 from spack.package import *
 
@@ -17,6 +19,8 @@ class Kaldi(Package):  # Does not use Autotools
 
     homepage = "https://github.com/kaldi-asr/kaldi"
     git = "https://github.com/kaldi-asr/kaldi.git"
+
+    license("Apache-2.0")
 
     version("master")
     version("2021-11-16", commit="6e03a3f5f99d6d8c22494d90b7e7f9ceb0117ac8")
@@ -103,7 +107,7 @@ class Kaldi(Package):  # Does not use Autotools
                 for name in files:
                     if name.endswith("." + dso_suffix):
                         fpath = join(root, name)
-                        src = os.readlink(fpath)
+                        src = readlink(fpath)
                         install(src, prefix.lib)
 
             for root, dirs, files in os.walk("."):

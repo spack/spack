@@ -1,9 +1,10 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack.package import *
+from spack.util.executable import which_string
 
 
 class NinjaFortran(Package):
@@ -11,6 +12,8 @@ class NinjaFortran(Package):
 
     homepage = "https://github.com/Kitware/ninja"
     url = "https://github.com/Kitware/ninja/archive/v1.9.0.g99df1.kitware.dyndep-1.jobserver-1.tar.gz"
+
+    license("Apache-2.0")
 
     # Each version is a fork off of a specific commit of ninja
     # Hashes don't sort properly, so added "artificial" tweak-level version
@@ -73,7 +76,7 @@ class NinjaFortran(Package):
     @on_package_attributes(run_tests=True)
     def configure_test(self):
         ninja = Executable("./ninja")
-        ninja("-j{0}".format(make_jobs), "ninja_test")
+        ninja(f"-j{make_jobs}", "ninja_test")
         ninja_test = Executable("./ninja_test")
         ninja_test()
 
@@ -86,3 +89,12 @@ class NinjaFortran(Package):
         # instead of 'ninja'. Install both for uniformity.
         with working_dir(prefix.bin):
             symlink("ninja", "ninja-build")
+
+    def setup_dependent_package(self, module, dspec):
+        name = "ninja"
+
+        module.ninja = MakeExecutable(
+            which_string(name, path=[self.spec.prefix.bin], required=True),
+            determine_number_of_jobs(parallel=dspec.package.parallel),
+            supports_jobserver=True,  # This fork supports jobserver
+        )

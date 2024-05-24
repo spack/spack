@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class PyLazyarray(PythonPackage):
 
     homepage = "https://lazyarray.readthedocs.io/en/latest/"
     pypi = "lazyarray/lazyarray-0.2.8.tar.gz"
+
+    license("BSD-3-Clause")
 
     version("0.5.2", sha256="fe31804d82115ed7c382840a1708f498419ec1455cac084707ece9908310c7d1")
     version("0.5.1", sha256="76964dd1384a6d020ae0e70806983d15d8fcd731734063f716696ebe300ab0af")
@@ -28,10 +30,8 @@ class PyLazyarray(PythonPackage):
     depends_on("python@2.7:3.9", type=("build", "run"), when="@0.3:0.3.4")
     depends_on("python@3.4:3.9", type=("build", "run"), when="@0.4:0.5.1")
     depends_on("python@3.6:", type=("build", "run"), when="@0.5.2:")
-    depends_on("py-numpy@1.3:", type=("build", "run"), when="@:0.2.10^python@:2")
-    depends_on("py-numpy@1.5:", type=("build", "run"), when="@:0.2.10^python@3:")
-    depends_on("py-numpy@1.8:", type=("build", "run"), when="@0.3:0.3.4^python@:2")
-    depends_on("py-numpy@1.12:", type=("build", "run"), when="@0.3:0.5.1^python@3:")
+    depends_on("py-numpy@1.5:", type=("build", "run"), when="@:0.2.10")
+    depends_on("py-numpy@1.12:", type=("build", "run"), when="@0.3:0.5.1")
     depends_on("py-numpy@1.13:", type=("build", "run"), when="@0.5.2:")
 
     depends_on("py-setuptools", type="build")

@@ -1,20 +1,21 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import errno
+import json
 import os
-import platform
 import shutil
-import sys
 
 import pytest
 
 import spack.binary_distribution
+import spack.cmd.buildcache
 import spack.environment as ev
 import spack.main
 import spack.spec
+import spack.util.url
 from spack.spec import Spec
 
 buildcache = spack.main.SpackCommand("buildcache")
@@ -25,7 +26,7 @@ gpg = spack.main.SpackCommand("gpg")
 mirror = spack.main.SpackCommand("mirror")
 uninstall = spack.main.SpackCommand("uninstall")
 
-pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="does not run on windows")
+pytestmark = pytest.mark.not_on_windows("does not run on windows")
 
 
 @pytest.fixture()
@@ -47,11 +48,8 @@ def mock_get_specs_multiarch(database, monkeypatch):
     monkeypatch.setattr(spack.binary_distribution, "update_cache_and_get_specs", lambda: specs)
 
 
-@pytest.mark.skipif(
-    platform.system().lower() != "linux", reason="implementation for MacOS still missing"
-)
-@pytest.mark.db
-def test_buildcache_preview_just_runs(database):
+def test_buildcache_preview_just_runs():
+    # TODO: remove in Spack 0.21
     buildcache("preview", "mpileaks")
 
 
@@ -83,7 +81,7 @@ def tests_buildcache_create(install_mockery, mock_fetch, monkeypatch, tmpdir):
     pkg = "trivial-install-test-package"
     install(pkg)
 
-    buildcache("create", "-d", str(tmpdir), "--unsigned", pkg)
+    buildcache("push", "--unsigned", str(tmpdir), pkg)
 
     spec = Spec(pkg).concretized()
     tarball_path = spack.binary_distribution.tarball_path_name(spec, ".spack")
@@ -103,7 +101,7 @@ def tests_buildcache_create_env(
         add(pkg)
         install()
 
-        buildcache("create", "-d", str(tmpdir), "--unsigned")
+        buildcache("push", "--unsigned", str(tmpdir))
 
     spec = Spec(pkg).concretized()
     tarball_path = spack.binary_distribution.tarball_path_name(spec, ".spack")
@@ -116,7 +114,7 @@ def test_buildcache_create_fails_on_noargs(tmpdir):
     """Ensure that buildcache create fails when given no args or
     environment."""
     with pytest.raises(spack.main.SpackCommandError):
-        buildcache("create", "-d", str(tmpdir), "--unsigned")
+        buildcache("push", "--unsigned", str(tmpdir))
 
 
 def test_buildcache_create_fail_on_perm_denied(install_mockery, mock_fetch, monkeypatch, tmpdir):
@@ -125,7 +123,7 @@ def test_buildcache_create_fail_on_perm_denied(install_mockery, mock_fetch, monk
 
     tmpdir.chmod(0)
     with pytest.raises(OSError) as error:
-        buildcache("create", "-d", str(tmpdir), "--unsigned", "trivial-install-test-package")
+        buildcache("push", "--unsigned", str(tmpdir), "trivial-install-test-package")
     assert error.value.errno == errno.EACCES
     tmpdir.chmod(0o700)
 
@@ -157,11 +155,11 @@ def test_update_key_index(
     # Put installed package in the buildcache, which, because we're signing
     # it, should result in the public key getting pushed to the buildcache
     # as well.
-    buildcache("create", "-a", "-d", mirror_dir.strpath, s.name)
+    buildcache("push", mirror_dir.strpath, s.name)
 
     # Now make sure that when we pass the "--keys" argument to update-index
     # it causes the index to get update.
-    buildcache("update-index", "--keys", "-d", mirror_dir.strpath)
+    buildcache("update-index", "--keys", mirror_dir.strpath)
 
     key_dir_list = os.listdir(os.path.join(mirror_dir.strpath, "build_cache", "_pgp"))
 
@@ -169,6 +167,25 @@ def test_update_key_index(
     mirror("rm", "test-mirror")
 
     assert "index.json" in key_dir_list
+
+
+def test_buildcache_autopush(tmp_path, install_mockery, mock_fetch):
+    """Test buildcache with autopush"""
+    mirror_dir = tmp_path / "mirror"
+    mirror_autopush_dir = tmp_path / "mirror_autopush"
+
+    mirror("add", "--unsigned", "mirror", mirror_dir.as_uri())
+    mirror("add", "--autopush", "--unsigned", "mirror-autopush", mirror_autopush_dir.as_uri())
+
+    s = Spec("libdwarf").concretized()
+
+    # Install and generate build cache index
+    s.package.do_install()
+
+    metadata_file = spack.binary_distribution.tarball_name(s, ".spec.json")
+
+    assert not (mirror_dir / "build_cache" / metadata_file).exists()
+    assert (mirror_autopush_dir / "build_cache" / metadata_file).exists()
 
 
 def test_buildcache_sync(
@@ -211,27 +228,25 @@ def test_buildcache_sync(
     # Install a package and put it in the buildcache
     s = Spec(out_env_pkg).concretized()
     install(s.name)
-    buildcache("create", "-u", "-f", "-a", "--mirror-url", src_mirror_url, s.name)
+    buildcache("push", "-u", "-f", src_mirror_url, s.name)
 
     env("create", "test")
     with ev.read("test"):
         add(in_env_pkg)
         install()
-        buildcache("create", "-u", "-f", "-a", "--mirror-url", src_mirror_url, in_env_pkg)
+        buildcache("push", "-u", "-f", src_mirror_url, in_env_pkg)
 
         # Now run the spack buildcache sync command with all the various options
         # for specifying mirrors
 
         # Use urls to specify mirrors
-        buildcache(
-            "sync", "--src-mirror-url", src_mirror_url, "--dest-mirror-url", dest_mirror_url
-        )
+        buildcache("sync", src_mirror_url, dest_mirror_url)
 
         verify_mirror_contents()
         shutil.rmtree(dest_mirror_dir)
 
         # Use local directory paths to specify fs locations
-        buildcache("sync", "--src-directory", src_mirror_dir, "--dest-directory", dest_mirror_dir)
+        buildcache("sync", src_mirror_dir, dest_mirror_dir)
 
         verify_mirror_contents()
         shutil.rmtree(dest_mirror_dir)
@@ -239,10 +254,71 @@ def test_buildcache_sync(
         # Use mirror names to specify mirrors
         mirror("add", "src", src_mirror_url)
         mirror("add", "dest", dest_mirror_url)
+        mirror("add", "ignored", "file:///dummy/io")
 
-        buildcache("sync", "--src-mirror-name", "src", "--dest-mirror-name", "dest")
+        buildcache("sync", "src", "dest")
 
         verify_mirror_contents()
+        shutil.rmtree(dest_mirror_dir)
+
+        def manifest_insert(manifest, spec, dest_url):
+            manifest[spec.dag_hash()] = [
+                {
+                    "src": spack.util.url.join(
+                        src_mirror_url,
+                        spack.binary_distribution.build_cache_relative_path(),
+                        spack.binary_distribution.tarball_name(spec, ".spec.json"),
+                    ),
+                    "dest": spack.util.url.join(
+                        dest_url,
+                        spack.binary_distribution.build_cache_relative_path(),
+                        spack.binary_distribution.tarball_name(spec, ".spec.json"),
+                    ),
+                },
+                {
+                    "src": spack.util.url.join(
+                        src_mirror_url,
+                        spack.binary_distribution.build_cache_relative_path(),
+                        spack.binary_distribution.tarball_path_name(spec, ".spack"),
+                    ),
+                    "dest": spack.util.url.join(
+                        dest_url,
+                        spack.binary_distribution.build_cache_relative_path(),
+                        spack.binary_distribution.tarball_path_name(spec, ".spack"),
+                    ),
+                },
+            ]
+
+        manifest_file = os.path.join(tmpdir.strpath, "manifest_dest.json")
+        with open(manifest_file, "w") as fd:
+            test_env = ev.active_environment()
+
+            manifest = {}
+            for spec in test_env.specs_by_hash.values():
+                manifest_insert(manifest, spec, dest_mirror_url)
+            json.dump(manifest, fd)
+
+        buildcache("sync", "--manifest-glob", manifest_file)
+
+        verify_mirror_contents()
+        shutil.rmtree(dest_mirror_dir)
+
+        manifest_file = os.path.join(tmpdir.strpath, "manifest_bad_dest.json")
+        with open(manifest_file, "w") as fd:
+            manifest = {}
+            for spec in test_env.specs_by_hash.values():
+                manifest_insert(
+                    manifest, spec, spack.util.url.join(dest_mirror_url, "invalid_path")
+                )
+            json.dump(manifest, fd)
+
+        # Trigger the warning
+        output = buildcache("sync", "--manifest-glob", manifest_file, "dest", "ignored")
+
+        assert "Ignoring unused arguemnt: ignored" in output
+
+        verify_mirror_contents()
+        shutil.rmtree(dest_mirror_dir)
 
 
 def test_buildcache_create_install(
@@ -258,10 +334,122 @@ def test_buildcache_create_install(
     pkg = "trivial-install-test-package"
     install(pkg)
 
-    buildcache("create", "-d", str(tmpdir), "--unsigned", pkg)
+    buildcache("push", "--unsigned", str(tmpdir), pkg)
 
     spec = Spec(pkg).concretized()
     tarball_path = spack.binary_distribution.tarball_path_name(spec, ".spack")
     tarball = spack.binary_distribution.tarball_name(spec, ".spec.json")
     assert os.path.exists(os.path.join(str(tmpdir), "build_cache", tarball_path))
     assert os.path.exists(os.path.join(str(tmpdir), "build_cache", tarball))
+
+
+@pytest.mark.parametrize(
+    "things_to_install,expected",
+    [
+        (
+            "",
+            [
+                "dttop",
+                "dtbuild1",
+                "dtbuild2",
+                "dtlink2",
+                "dtrun2",
+                "dtlink1",
+                "dtlink3",
+                "dtlink4",
+                "dtrun1",
+                "dtlink5",
+                "dtrun3",
+                "dtbuild3",
+            ],
+        ),
+        (
+            "dependencies",
+            [
+                "dtbuild1",
+                "dtbuild2",
+                "dtlink2",
+                "dtrun2",
+                "dtlink1",
+                "dtlink3",
+                "dtlink4",
+                "dtrun1",
+                "dtlink5",
+                "dtrun3",
+                "dtbuild3",
+            ],
+        ),
+        ("package", ["dttop"]),
+    ],
+)
+def test_correct_specs_are_pushed(
+    things_to_install, expected, tmpdir, monkeypatch, default_mock_concretization, temporary_store
+):
+    # Concretize dttop and add it to the temporary database (without prefixes)
+    spec = default_mock_concretization("dttop")
+    temporary_store.db.add(spec, directory_layout=None)
+    slash_hash = "/{0}".format(spec.dag_hash())
+
+    packages_to_push = []
+
+    def fake_push(node, push_url, options):
+        assert isinstance(node, Spec)
+        packages_to_push.append(node.name)
+
+    monkeypatch.setattr(spack.binary_distribution, "push_or_raise", fake_push)
+
+    buildcache_create_args = ["create", "--unsigned"]
+
+    if things_to_install != "":
+        buildcache_create_args.extend(["--only", things_to_install])
+
+    buildcache_create_args.extend([str(tmpdir), slash_hash])
+
+    buildcache(*buildcache_create_args)
+
+    # Order is not guaranteed, so we can't just compare lists
+    assert set(packages_to_push) == set(expected)
+
+    # Ensure no duplicates
+    assert len(set(packages_to_push)) == len(packages_to_push)
+
+
+@pytest.mark.parametrize("signed", [True, False])
+def test_push_and_install_with_mirror_marked_unsigned_does_not_require_extra_flags(
+    tmp_path, mutable_database, mock_gnupghome, signed
+):
+    """Tests whether marking a mirror as unsigned makes it possible to push and install to/from
+    it without requiring extra flags on the command line (and no signing keys configured)."""
+
+    # Create a named mirror with signed set to True or False
+    add_flag = "--signed" if signed else "--unsigned"
+    mirror("add", add_flag, "my-mirror", str(tmp_path))
+    spec = mutable_database.query_local("libelf", installed=True)[0]
+
+    # Push
+    if signed:
+        # Need to pass "--unsigned" to override the mirror's default
+        args = ["push", "--update-index", "--unsigned", "my-mirror", f"/{spec.dag_hash()}"]
+    else:
+        # No need to pass "--unsigned" if the mirror is unsigned
+        args = ["push", "--update-index", "my-mirror", f"/{spec.dag_hash()}"]
+
+    buildcache(*args)
+
+    # Install
+    if signed:
+        # Need to pass "--no-check-signature" to avoid install errors
+        kwargs = {"cache_only": True, "unsigned": True}
+    else:
+        # No need to pass "--no-check-signature" if the mirror is unsigned
+        kwargs = {"cache_only": True}
+
+    spec.package.do_uninstall(force=True)
+    spec.package.do_install(**kwargs)
+
+
+def test_skip_no_redistribute(mock_packages, config):
+    specs = list(Spec("no-redistribute-dependent").concretized().traverse())
+    filtered = spack.cmd.buildcache._skip_no_redistribute_for_public(specs)
+    assert not any(s.name == "no-redistribute" for s in filtered)
+    assert any(s.name == "no-redistribute-dependent" for s in filtered)

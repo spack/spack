@@ -1,22 +1,27 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import spack.build_systems.cmake
+import spack.build_systems.makefile
 from spack.package import *
 
 
-class Scotch(CMakePackage):
+class Scotch(CMakePackage, MakefilePackage):
     """Scotch is a software package for graph and mesh/hypergraph
-    partitioning, graph clustering, and sparse matrix ordering."""
+    partitioning, graph clustering, and sparse matrix ordering.
+    """
 
     homepage = "https://gitlab.inria.fr/scotch/scotch"
     git = "https://gitlab.inria.fr/scotch/scotch.git"
     url = "https://gitlab.inria.fr/scotch/scotch/-/archive/v7.0.1/scotch-v7.0.1.tar.gz"
     list_url = "https://gforge.inria.fr/frs/?group_id=248"
 
-    maintainers = ["pghysels"]
+    maintainers("pghysels")
 
+    version("7.0.4", sha256="8ef4719d6a3356e9c4ca7fefd7e2ac40deb69779a5c116f44da75d13b3d2c2c3")
+    version("7.0.3", sha256="5b5351f0ffd6fcae9ae7eafeccaa5a25602845b9ffd1afb104db932dd4d4f3c5")
     version("7.0.1", sha256="0618e9bc33c02172ea7351600fce4fccd32fe00b3359c4aabb5e415f17c06fed")
     version("6.1.3", sha256="4e54f056199e6c23d46581d448fcfe2285987e5554a0aa527f7931684ef2809e")
     version("6.1.2", sha256="9c2c75c75f716914a2bd1c15dffac0e29a2f8069b2df1ad2b6207c984b699450")
@@ -32,24 +37,34 @@ class Scotch(CMakePackage):
     version("6.0.0", sha256="8206127d038bda868dda5c5a7f60ef8224f2e368298fbb01bf13fa250e378dd4")
     version("5.1.10b", sha256="54c9e7fafefd49d8b2017d179d4f11a655abe10365961583baaddc4eeb6a9add")
 
-    variant("mpi", default=True, description="Activate the compilation of parallel libraries")
+    build_system(conditional("cmake", when="@7:"), "makefile", default="cmake")
+    variant("threads", default=True, description="use POSIX Pthreads within Scotch and PT-Scotch")
     variant(
-        "compression", default=True, description="Activate the posibility to use compressed files"
+        "mpi_thread",
+        default=False,
+        description="use multi-threaded algorithms in conjunction with MPI",
     )
-    variant(
-        "esmumps", default=False, description="Activate the compilation of esmumps needed by mumps"
-    )
+    variant("mpi", default=True, description="Compile parallel libraries")
+    variant("compression", default=True, description="May use compressed files")
+    variant("esmumps", default=False, description="Compile esmumps (needed by mumps)")
     variant("shared", default=True, description="Build a shared version of the library")
     variant(
         "metis", default=False, description="Expose vendored METIS/ParMETIS libraries and wrappers"
     )
     variant("int64", default=False, description="Use int64_t for SCOTCH_Num typedef")
+    variant("noarch", default=False, description="Unset SPACK_TARGET_ARGS")
+    variant(
+        "link_error_lib",
+        default=False,
+        when="@7.0.1",
+        description="Link error handling library to libscotch/libptscotch",
+    )
 
     # Does not build with flex 2.6.[23]
     depends_on("flex@:2.6.1,2.6.4:", type="build")
-    depends_on("bison", type="build")
+    depends_on("bison@3.4:", type="build")
     depends_on("mpi", when="+mpi")
-    depends_on("zlib", when="+compression")
+    depends_on("zlib-api", when="+compression")
 
     # Version-specific patches
     patch("nonthreaded-6.0.4.patch", when="@6.0.4")
@@ -57,14 +72,16 @@ class Scotch(CMakePackage):
     patch("metis-headers-6.0.4.patch", when="@6.0.4")
 
     patch("libscotchmetis-return-6.0.5a.patch", when="@6.0.5a")
+    patch("libscotch-scotcherr-link-7.0.1.patch", when="@7.0.1 +link_error_lib")
+
+    # Avoid OpenMPI segfaults by using MPI_Comm_F2C for parmetis communicator
+    patch("parmetis-mpi.patch", when="@6.1.1:7.0.3 +metis ^openmpi")
 
     # Vendored dependency of METIS/ParMETIS conflicts with standard
     # installations
-    conflicts("^metis", when="+metis")
-    conflicts("^parmetis", when="+metis")
+    conflicts("metis", when="+metis")
+    conflicts("parmetis", when="+metis")
 
-    # NOTE: In cross-compiling environment parallel build
-    # produces weird linker errors.
     parallel = False
 
     # NOTE: Versions of Scotch up to version 6.0.0 don't include support for
@@ -80,7 +97,6 @@ class Scotch(CMakePackage):
 
     @property
     def libs(self):
-
         shared = "+shared" in self.spec
         libraries = ["libscotch", "libscotcherr"]
         zlibs = []
@@ -96,27 +112,40 @@ class Scotch(CMakePackage):
 
         scotchlibs = find_libraries(libraries, root=self.prefix, recursive=True, shared=shared)
         if "+compression" in self.spec:
-            zlibs = self.spec["zlib"].libs
+            zlibs = self.spec["zlib-api"].libs
 
         return scotchlibs + zlibs
 
-    @when("@:6")
-    def patch(self):
-        self.configure()
 
-    # NOTE: Configuration of Scotch is achieved by writing a 'Makefile.inc'
-    # file that contains all of the configuration variables and their desired
-    # values for the installation.  This function writes this file based on
-    # the given installation variants.
-    @when("@:6")
-    def configure(self):
-        makefile_inc = []
-        cflags = [
-            "-O3",
-            "-DCOMMON_RANDOM_FIXED_SEED",
-            "-DSCOTCH_DETERMINISTIC",
-            "-DSCOTCH_RENAME",
+class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
+    def cmake_args(self):
+        spec = self.spec
+        args = [
+            self.define_from_variant("BUILD_LIBSCOTCHMETIS", "metis"),
+            self.define_from_variant("INSTALL_METIS_HEADERS", "metis"),
+            self.define_from_variant("BUILD_LIBESMUMPS", "esmumps"),
+            self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
+            self.define_from_variant("BUILD_PTSCOTCH", "mpi"),
+            self.define_from_variant("THREADS", "threads"),
+            self.define_from_variant("MPI_THREAD_MULTIPLE", "mpi_thread"),
         ]
+
+        if "+int64" in spec:
+            args.append("-DINTSIZE=64")
+
+        return args
+
+    @when("+noarch")
+    def setup_build_environment(self, env):
+        env.unset("SPACK_TARGET_ARGS")
+
+
+class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
+    build_directory = "src"
+
+    def edit(self, pkg, spec, prefix):
+        makefile_inc = []
+        cflags = ["-O3", "-DCOMMON_RANDOM_FIXED_SEED", "-DSCOTCH_DETERMINISTIC", "-DSCOTCH_RENAME"]
 
         if "+int64" in self.spec:
             # SCOTCH_Num typedef: size of integers in arguments
@@ -140,7 +169,7 @@ class Scotch(CMakePackage):
                 makefile_inc.extend(
                     [
                         "LIB       = .dylib",
-                        "CLIBFLAGS = -dynamiclib {0}".format(self.compiler.cc_pic_flag),
+                        "CLIBFLAGS = -dynamiclib {0}".format(pkg.compiler.cc_pic_flag),
                         "RANLIB    = echo",
                         "AR        = $(CC)",
                         (
@@ -155,13 +184,13 @@ class Scotch(CMakePackage):
                 makefile_inc.extend(
                     [
                         "LIB       = .so",
-                        "CLIBFLAGS = -shared {0}".format(self.compiler.cc_pic_flag),
+                        "CLIBFLAGS = -shared {0}".format(pkg.compiler.cc_pic_flag),
                         "RANLIB    = echo",
                         "AR        = $(CC)",
                         "ARFLAGS   = -shared $(LDFLAGS) -o",
                     ]
                 )
-            cflags.append(self.compiler.cc_pic_flag)
+            cflags.append(pkg.compiler.cc_pic_flag)
         else:
             makefile_inc.extend(
                 [
@@ -175,9 +204,9 @@ class Scotch(CMakePackage):
 
         # Compiler-Specific Options #
 
-        if self.compiler.name == "gcc":
+        if pkg.compiler.name == "gcc":
             cflags.append("-Drestrict=__restrict")
-        elif self.compiler.name == "intel":
+        elif pkg.compiler.name == "intel":
             cflags.append("-Drestrict=")
 
         mpicc_path = self.spec["mpi"].mpicc if "+mpi" in self.spec else "mpicc"
@@ -191,7 +220,7 @@ class Scotch(CMakePackage):
 
         if "+compression" in self.spec:
             cflags.append("-DCOMMON_FILE_COMPRESS_GZ")
-            ldflags.append(" {0} ".format(self.spec["zlib"].libs.joined()))
+            ldflags.append(" {0} ".format(self.spec["zlib-api"].libs.joined()))
 
         cflags.append("-DCOMMON_PTHREAD")
 
@@ -230,8 +259,8 @@ class Scotch(CMakePackage):
             with open("Makefile.inc", "w") as fh:
                 fh.write("\n".join(makefile_inc))
 
-    @when("@:6")
-    def install(self, spec, prefix):
+    @property
+    def build_targets(self):
         targets = ["scotch"]
         if "+mpi" in self.spec:
             targets.append("ptscotch")
@@ -241,65 +270,4 @@ class Scotch(CMakePackage):
                 targets.append("esmumps")
                 if "+mpi" in self.spec:
                     targets.append("ptesmumps")
-
-        with working_dir("src"):
-            for target in targets:
-                # It seems that building ptesmumps in parallel fails, for
-                # version prior to 6.0.0 there is no separated targets force
-                # ptesmumps, this library is built by the ptscotch target. This
-                # should explain the test for the can_make_parallel variable
-                can_make_parallel = not (
-                    target == "ptesmumps"
-                    or (self.spec.version < Version("6.0.0") and target == "ptscotch")
-                )
-                make(target, parallel=can_make_parallel)
-
-        lib_ext = dso_suffix if "+shared" in self.spec else "a"
-        # It seems easier to remove metis wrappers from the folder that will be
-        # installed than to tweak the Makefiles
-        if "+metis" not in self.spec:
-            with working_dir("lib"):
-                force_remove("libscotchmetis.{0}".format(lib_ext))
-                force_remove("libptscotchparmetis.{0}".format(lib_ext))
-
-            with working_dir("include"):
-                force_remove("metis.h")
-                force_remove("parmetis.h")
-
-        if "~esmumps" in self.spec and self.spec.version < Version("6.0.0"):
-            with working_dir("lib"):
-                force_remove("libesmumps.{0}".format(lib_ext))
-                force_remove("libptesmumps.{0}".format(lib_ext))
-
-            with working_dir("include"):
-                force_remove("esmumps.h")
-
-        install_tree("bin", prefix.bin)
-        install_tree("lib", prefix.lib)
-        install_tree("include", prefix.include)
-        install_tree("man/man1", prefix.share.man.man1)
-
-    @when("@:6")
-    def cmake(self, spec, prefix):
-        self.configure()
-
-    @when("@:6")
-    def build(self, spec, prefix):
-        pass
-
-    def cmake_args(self):
-        spec = self.spec
-        args = [
-            self.define_from_variant("BUILD_LIBSCOTCHMETIS", "metis"),
-            self.define_from_variant("INSTALL_METIS_HEADERS", "metis"),
-            self.define_from_variant("BUILD_LIBESMUMPS", "esmumps"),
-            self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
-            self.define_from_variant("BUILD_PTSCOTCH", "mpi"),
-        ]
-
-        # TODO should we enable/disable THREADS?
-
-        if "+int64" in spec:
-            args.append("-DINTSIZE=64")
-
-        return args
+        return targets

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -27,6 +27,8 @@ class Minigmg(Package):
     )
     url = "https://crd.lbl.gov/assets/Uploads/FTG/Projects/miniGMG/miniGMG.tar.gz"
 
+    license("BSD-3-Clause-LBNL")
+
     version("master", sha256="1c2d27496a881f655f5e849d6a7a132625e535739f82575991c511cc2cf899ac")
 
     variant(
@@ -52,7 +54,6 @@ class Minigmg(Package):
     patch("inline_static.patch")
 
     def install(self, spec, prefix):
-
         cc = Executable(spec["mpi"].mpicc)
 
         args = []

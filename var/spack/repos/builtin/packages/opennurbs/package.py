@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,9 @@ class Opennurbs(Package):
     homepage = "https://github.com/OpenNURBS/OpenNURBS"
     git = "https://github.com/OpenNURBS/OpenNURBS.git"
 
-    maintainers = ["jrood-nrel"]
+    maintainers("jrood-nrel")
+
+    license("Zlib")
 
     version("develop", branch="develop")
 

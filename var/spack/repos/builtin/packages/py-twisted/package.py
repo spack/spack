@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class PyTwisted(PythonPackage):
     homepage = "https://twistedmatrix.com/"
     pypi = "Twisted/Twisted-21.7.0.tar.gz"
 
+    license("Unlicense")
+
     version("21.7.0", sha256="2cd652542463277378b0d349f47c62f20d9306e57d1247baabd6d1d38a109006")
     version("15.4.0", sha256="78862662fa9ae29654bc2b9d349c3f1d887e6b2ed978512c4442d53ea861f05c")
     version("15.3.0", sha256="025729751cf898842262375a40f70ae1d246daea88369eab9f6bb96e528bf285")
@@ -21,8 +23,7 @@ class PyTwisted(PythonPackage):
     depends_on("py-setuptools", type="build")
     depends_on("py-setuptools@35.0.2:", type="build", when="@21.7.0:")
 
-    depends_on("py-zope-interface@3.6.0:", type=("build", "run"), when="^python@:2")
-    depends_on("py-zope-interface@4.0.2:", type=("build", "run"), when="^python@3:")
+    depends_on("py-zope-interface@4.0.2:", type=("build", "run"))
     depends_on("py-zope-interface@4.4.2:", type=("build", "run"), when="@21.7.0:")
 
     depends_on("py-incremental@21.3.0:", type=("build", "run"), when="@21.7.0:")

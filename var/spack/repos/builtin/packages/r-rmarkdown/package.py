@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,11 @@ class RRmarkdown(RPackage):
 
     cran = "rmarkdown"
 
+    license("GPL-3.0-only")
+
+    version("2.21", sha256="c25b20a422d11a115c93460f41c488874002154abb349b14e0d6518682fdac28")
+    version("2.17", sha256="aa576c458ec4c2e8468aaa4e3f60202d8d9c7ef54fa01d6b2d243bffee08c4be")
+    version("2.16", sha256="d3d34e0419c419d3ab20eb60952a0f0f4c391d202277af55dcd673d25561fa71")
     version("2.14", sha256="e9ec17afa4d9d6e8cf555b56e0c00acc189d8ec0b4406680b14d71d62f0c3220")
     version("2.11", sha256="9371255300e7ea4cd936978ad2ca3d205d8605e09f4913cb0d4725005a7a9775")
     version("2.9", sha256="6ce5af8b9a7c282619f74d3999d27ec4de12d3f93cde8fd12cc4c19f02ea8668")
@@ -27,7 +32,9 @@ class RRmarkdown(RPackage):
     depends_on("r@3.0:", type=("build", "run"))
     depends_on("r-bslib@0.2.5.1:", type=("build", "run"), when="@2.14:")
     depends_on("r-evaluate@0.13:", type=("build", "run"))
+    depends_on("r-fontawesome@0.5.0:", type=("build", "run"), when="@2.21:")
     depends_on("r-htmltools@0.3.5:", type=("build", "run"))
+    depends_on("r-htmltools@0.5.1:", type=("build", "run"), when="@2.16:")
     depends_on("r-jquerylib", type=("build", "run"), when="@2.11:")
     depends_on("r-jsonlite", type=("build", "run"))
     depends_on("r-knitr@1.22:", type=("build", "run"))
@@ -38,6 +45,7 @@ class RRmarkdown(RPackage):
     depends_on("r-xfun@0.15:", type=("build", "run"), when="@2.6:")
     depends_on("r-xfun@0.21:", type=("build", "run"), when="@2.8:")
     depends_on("r-xfun@0.30:", type=("build", "run"), when="@2.14:")
+    depends_on("r-xfun@0.36:", type=("build", "run"), when="@2.21:")
     depends_on("r-yaml@2.1.19:", type=("build", "run"))
     depends_on("pandoc@1.12.3:")
     depends_on("pandoc@1.14:", when="@2.6:")

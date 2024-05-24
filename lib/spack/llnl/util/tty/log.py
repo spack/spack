@@ -1,12 +1,10 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 """Utility classes for logging the output of blocks of code.
 """
-from __future__ import unicode_literals
-
 import atexit
 import ctypes
 import errno
@@ -21,14 +19,12 @@ import threading
 import traceback
 from contextlib import contextmanager
 from threading import Thread
-from types import ModuleType  # novm
-from typing import Optional  # novm
-
-from six import StringIO, string_types
+from types import ModuleType
+from typing import Optional
 
 import llnl.util.tty as tty
 
-termios = None  # type: Optional[ModuleType]
+termios: Optional[ModuleType] = None
 try:
     import termios as term_mod
 
@@ -69,7 +65,7 @@ def _strip(line):
     return _escape.sub("", line)
 
 
-class keyboard_input(object):
+class keyboard_input:
     """Context manager to disable line editing and echoing.
 
     Use this with ``sys.stdin`` for keyboard input, e.g.::
@@ -163,10 +159,7 @@ class keyboard_input(object):
     def _get_canon_echo_flags(self):
         """Get current termios canonical and echo settings."""
         cfg = termios.tcgetattr(self.stream)
-        return (
-            bool(cfg[3] & termios.ICANON),
-            bool(cfg[3] & termios.ECHO),
-        )
+        return (bool(cfg[3] & termios.ICANON), bool(cfg[3] & termios.ECHO))
 
     def _enable_keyboard_input(self):
         """Disable canonical input and echoing on ``self.stream``."""
@@ -241,8 +234,7 @@ class keyboard_input(object):
         """If termios was available, restore old settings."""
         if self.old_cfg:
             self._restore_default_terminal_settings()
-            if sys.version_info >= (3,):
-                atexit.unregister(self._restore_default_terminal_settings)
+            atexit.unregister(self._restore_default_terminal_settings)
 
         # restore SIGSTP and SIGCONT handlers
         if self.old_handlers:
@@ -250,7 +242,7 @@ class keyboard_input(object):
                 signal.signal(signum, old_handler)
 
 
-class Unbuffered(object):
+class Unbuffered:
     """Wrapper for Python streams that forces them to be unbuffered.
 
     This is implemented by forcing a flush after each write.
@@ -295,7 +287,7 @@ def _file_descriptors_work(*streams):
         return False
 
 
-class FileWrapper(object):
+class FileWrapper:
     """Represents a file. Can be an open stream, a path to a file (not opened
     yet), or neither. When unwrapped, it returns an open file (or file-like)
     object.
@@ -309,7 +301,7 @@ class FileWrapper(object):
 
         self.file_like = file_like
 
-        if isinstance(file_like, string_types):
+        if isinstance(file_like, str):
             self.open = True
         elif _file_descriptors_work(file_like):
             self.open = False
@@ -323,12 +315,9 @@ class FileWrapper(object):
     def unwrap(self):
         if self.open:
             if self.file_like:
-                if sys.version_info < (3,):
-                    self.file = open(self.file_like, "w")
-                else:
-                    self.file = open(self.file_like, "w", encoding="utf-8")  # novm
+                self.file = open(self.file_like, "w", encoding="utf-8")
             else:
-                self.file = StringIO()
+                self.file = io.StringIO()
             return self.file
         else:
             # We were handed an already-open file object. In this case we also
@@ -340,7 +329,7 @@ class FileWrapper(object):
             self.file.close()
 
 
-class MultiProcessFd(object):
+class MultiProcessFd:
     """Return an object which stores a file descriptor and can be passed as an
     argument to a function run with ``multiprocessing.Process``, such that
     the file descriptor is available in the subprocess."""
@@ -440,7 +429,7 @@ def log_output(*args, **kwargs):
         return nixlog(*args, **kwargs)
 
 
-class nixlog(object):
+class nixlog:
     """
     Under the hood, we spawn a daemon and set up a pipe between this
     process and the daemon.  The daemon writes our output to both the
@@ -699,13 +688,10 @@ class StreamWrapper:
         self.sys_attr = sys_attr
         self.saved_stream = None
         if sys.platform.startswith("win32"):
-            if sys.version_info < (3, 5):
-                libc = ctypes.CDLL(ctypes.util.find_library("c"))
+            if hasattr(sys, "gettotalrefcount"):  # debug build
+                libc = ctypes.CDLL("ucrtbased")
             else:
-                if hasattr(sys, "gettotalrefcount"):  # debug build
-                    libc = ctypes.CDLL("ucrtbased")
-                else:
-                    libc = ctypes.CDLL("api-ms-win-crt-stdio-l1-1-0")
+                libc = ctypes.CDLL("api-ms-win-crt-stdio-l1-1-0")
 
             kernel32 = ctypes.WinDLL("kernel32")
 
@@ -764,7 +750,7 @@ class StreamWrapper:
                 os.close(self.saved_stream)
 
 
-class winlog(object):
+class winlog:
     """
     Similar to nixlog, with underlying
     functionality ported to support Windows.
@@ -794,7 +780,7 @@ class winlog(object):
             raise RuntimeError("file argument must be set by __init__ ")
 
         # Open both write and reading on logfile
-        if type(self.logfile) == StringIO:
+        if isinstance(self.logfile, io.StringIO):
             self._ioflag = True
             # cannot have two streams on tempfile, so we must make our own
             sys.stdout = self.logfile
@@ -927,13 +913,10 @@ def _writer_daemon(
     if sys.version_info < (3, 8) or sys.platform != "darwin":
         os.close(write_fd)
 
-    # Use line buffering (3rd param = 1) since Python 3 has a bug
+    # 1. Use line buffering (3rd param = 1) since Python 3 has a bug
     # that prevents unbuffered text I/O.
-    if sys.version_info < (3,):
-        in_pipe = os.fdopen(read_multiprocess_fd.fd, "r", 1)
-    else:
-        # Python 3.x before 3.7 does not open with UTF-8 encoding by default
-        in_pipe = os.fdopen(read_multiprocess_fd.fd, "r", 1, encoding="utf-8")
+    # 2. Python 3.x before 3.7 does not open with UTF-8 encoding by default
+    in_pipe = os.fdopen(read_multiprocess_fd.fd, "r", 1, encoding="utf-8")
 
     if stdin_multiprocess_fd:
         stdin = os.fdopen(stdin_multiprocess_fd.fd)
@@ -1023,7 +1006,7 @@ def _writer_daemon(
 
     finally:
         # send written data back to parent if we used a StringIO
-        if isinstance(log_file, StringIO):
+        if isinstance(log_file, io.StringIO):
             control_pipe.send(log_file.getvalue())
         log_file_wrapper.close()
         close_connection_and_file(read_multiprocess_fd, in_pipe)

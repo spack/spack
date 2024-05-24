@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,9 +15,10 @@ class Kassiopeia(CMakePackage):
 
     tags = ["hep"]
 
-    maintainers = ["wdconinc"]
+    maintainers("wdconinc")
 
     version("main", branch="main")
+    version("3.8.2", sha256="9da59697365540a8b0d66e9a63f57aff6d868f7c5b39dfec28bb11ec83f31527")
     version("3.8.0", sha256="ae44c2d485fadaa6f562388064a211ae51b7d06bab7add2723ab0c8b21eb7e8f")
     version("3.7.7", sha256="b5f62b2e796fac57698794b46b63acbc47ce02010bd1f716996918a550b22a21")
     version("3.7.6", sha256="fa20cf0f29ee2312bf96b07661d7b5c9303782d907671acd01032cc1f13edd55")
@@ -40,7 +41,7 @@ class Kassiopeia(CMakePackage):
     variant("boost", default=False, description="Build Boost dependent modules")
 
     depends_on("cmake@3.13:", type="build")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("root@6.0.0:", when="+root")
     depends_on("vtk@6.1:", when="+vtk")
     depends_on("mpi", when="+mpi")
@@ -62,7 +63,10 @@ class Kassiopeia(CMakePackage):
         if "+root" in self.spec:
             cxxstd = self.spec["root"].variants["cxxstd"].value
         else:
-            cxxstd = "14"
+            if self.spec.satisfies("@:3.8.1"):
+                cxxstd = "14"
+            else:
+                cxxstd = "17"
         args = [
             self.define_from_variant("KASPER_USE_BOOST", "boost"),
             self.define_from_variant("KASPER_USE_VTK", "vtk"),

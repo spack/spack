@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,13 @@ class SuiteSparse(Package):
     url = "https://github.com/DrTimothyAldenDavis/SuiteSparse/archive/v4.5.3.tar.gz"
     git = "https://github.com/DrTimothyAldenDavis/SuiteSparse.git"
 
+    license("Apache-2.0")
+
+    version("7.3.1", sha256="b512484396a80750acf3082adc1807ba0aabb103c2e09be5691f46f14d0a9718")
+    version("7.2.1", sha256="304e959a163ff74f8f4055dade3e0b5498d9aa3b1c483633bb400620f521509f")
+    version("5.13.0", sha256="59c6ca2959623f0c69226cf9afb9a018d12a37fab3a8869db5f6d7f83b6b147d")
+    version("5.12.0", sha256="5fb0064a3398111976f30c5908a8c0b40df44c6dd8f0cc4bfa7b9e45d8c647de")
+    version("5.11.0", sha256="fdd957ed06019465f7de73ce931afaf5d40e96e14ae57d91f60868b8c123c4c8")
     version("5.10.1", sha256="acb4d1045f48a237e70294b950153e48dce5b5f9ca8190e86c2b8c54ce00a7ee")
     version("5.10.0", sha256="4bcc974901c0173acf80c41ee0fd779eb7dce2871d4afa24a5d15b1a468f93e5")
     version("5.9.0", sha256="7bdd4811f1cf0767c5fdb5e435817fdadee50b0acdb598f4882ae7b8291a7f24")
@@ -34,7 +41,6 @@ class SuiteSparse(Package):
     version("4.5.5", sha256="80d1d9960a6ec70031fecfe9adfe5b1ccd8001a7420efb50d6fa7326ef14af91")
     version("4.5.3", sha256="b6965f9198446a502cde48fb0e02236e75fa5700b94c7306fc36599d57b563f4")
 
-    variant("tbb", default=False, description="Build with Intel TBB")
     variant(
         "pic",
         default=True,
@@ -48,21 +54,34 @@ class SuiteSparse(Package):
         description="Build with GraphBLAS (takes a long time to compile)",
     )
 
-    depends_on("mpfr@4.0.0:", type=("build", "link"), when="@5.8.0:")
-    depends_on("gmp", type=("build", "link"), when="@5.8.0:")
+    # In @4.5.1. TBB support in SPQR seems to be broken as TBB-related linking
+    # flags does not seem to be used, which leads to linking errors on Linux.
+    # Support for TBB has been removed in version 5.11
+    variant("tbb", default=False, description="Build with Intel TBB", when="@4.5.3:5.10")
+
     depends_on("blas")
     depends_on("lapack")
-    depends_on("m4", type="build", when="@5.0.0:")
-    depends_on("cmake", when="+graphblas @5.2.0:", type="build")
-
-    depends_on("metis@5.1.0", when="@4.5.1:")
-    # in @4.5.1. TBB support in SPQR seems to be broken as TBB-related linkng
-    # flags does not seem to be used, which leads to linking errors on Linux.
-    depends_on("tbb", when="@4.5.3:+tbb")
-
     depends_on("cuda", when="+cuda")
 
-    patch("tbb_453.patch", when="@4.5.3:4.5.5+tbb")
+    depends_on("mpfr@4.0.0:", when="@5.8.0:")
+    depends_on("gmp", when="@5.8.0:")
+    depends_on("m4", type="build", when="@5.0.0:")
+    depends_on("cmake", when="+graphblas @5.2.0:", type="build")
+    depends_on("cmake@3.22:", when="@6:", type="build")
+    depends_on("metis@5.1.0", when="@4.5.1:")
+
+    with when("+tbb"):
+        depends_on("tbb")
+        patch("tbb_453.patch", when="@4.5.3:4.5.5")
+        # The @2021.x versions of tbb dropped the task_scheduler_init.h header and
+        # related stuff (which have long been deprecated).  This appears to be
+        # rather problematic for suite-sparse (see e.g.
+        # https://github.com/DrTimothyAldenDavis/SuiteSparse/blob/master/SPQR/Source/spqr_parallel.cpp)
+        depends_on("intel-tbb@:2020 build_system=makefile", when="^[virtuals=tbb] intel-tbb")
+        conflicts(
+            "^intel-oneapi-tbb@2021:",
+            msg="suite-sparse needs task_scheduler_init.h dropped in recent tbb libs",
+        )
 
     # This patch removes unsupported flags for pgi compiler
     patch("pgi.patch", when="%pgi")
@@ -81,21 +100,11 @@ class SuiteSparse(Package):
         "%gcc@:4.8", when="@5.2.0:", msg="gcc version must be at least 4.9 for suite-sparse@5.2.0:"
     )
 
-    # The @2021.x versions of tbb dropped the task_scheduler_init.h header and
-    # related stuff (which have long been deprecated).  This appears to be
-    # rather problematic for suite-sparse (see e.g.
-    # https://github.com/DrTimothyAldenDavis/SuiteSparse/blob/master/SPQR/Source/spqr_parallel.cpp)
-    # Have Spack complain if +tbb and trying to use a 2021.x version of tbb
-    conflicts(
-        "+tbb",
-        when="^intel-oneapi-tbb@2021:",
-        msg="suite-sparse needs task_scheduler_init.h dropped in " "recent tbb libs",
-    )
-    conflicts(
-        "+tbb",
-        when="^intel-tbb@2021:",
-        msg="suite-sparse needs task_scheduler_init.h dropped in " "recent tbb libs",
-    )
+    def flag_handler(self, name, flags):
+        if name in ("cflags", "cxxflags"):
+            if self.spec.satisfies("^openblas ~shared threads=openmp"):
+                flags.append(self.compiler.openmp_flag)
+        return (flags, None, None)
 
     def symbol_suffix_blas(self, spec, args):
         """When using BLAS with a special symbol suffix we use defines to
@@ -213,10 +222,7 @@ class SuiteSparse(Package):
 
         # Intel TBB in SuiteSparseQR
         if "+tbb" in spec:
-            make_args += [
-                "SPQR_CONFIG=-DHAVE_TBB",
-                "TBB=%s" % spec["tbb"].libs.ld_flags,
-            ]
+            make_args += ["SPQR_CONFIG=-DHAVE_TBB", "TBB=%s" % spec["tbb"].libs.ld_flags]
 
         if "@5.3:" in spec:
             # Without CMAKE_LIBRARY_PATH defined, the CMake file in the
@@ -225,7 +231,17 @@ class SuiteSparse(Package):
             make_args += [
                 "CMAKE_OPTIONS=-DCMAKE_INSTALL_PREFIX=%s" % prefix
                 + " -DCMAKE_LIBRARY_PATH=%s" % prefix.lib
+                + " -DBLAS_ROOT=%s" % spec["blas"].prefix
+                + " -DLAPACK_ROOT=%s" % spec["lapack"].prefix
+                # *_LIBRARIES is critical to pick up static
+                # libraries (if intended) and also to avoid
+                # unintentional system blas/lapack packages
+                + " -DBLAS_LIBRARIES=%s" % spec["blas"].libs
+                + " -DLAPACK_LIBRARIES=%s" % spec["lapack"].libs
             ]
+
+        if spec.satisfies("%gcc platform=darwin"):
+            make_args += ["LDLIBS=-lm"]
 
         make_args.append("INSTALL=%s" % prefix)
 
@@ -243,18 +259,20 @@ class SuiteSparse(Package):
             "KLU",
             "UMFPACK",
             "RBio",
-            "SPQR",
         ]
         if spec.satisfies("+cuda"):
             targets.extend(["SuiteSparse_GPURuntime", "GPUQREngine"])
         targets.extend(["SPQR"])
         if spec.satisfies("+graphblas"):
             targets.append("GraphBLAS")
-        if spec.satisfies("@5.8.0:"):
+        if spec.satisfies("@5.8.0:6"):
             targets.append("SLIP_LU")
 
         # Finally make and install
-        make("-C", "SuiteSparse_config", "library", "config")
+        if spec.satisfies("@6:"):
+            make("-C", "SuiteSparse_config", *make_args)
+        else:
+            make("-C", "SuiteSparse_config", "config", *make_args)
         for target in targets:
             make("-C", target, "library", *make_args)
             make("-C", target, "install", *make_args)
@@ -291,5 +309,10 @@ class SuiteSparse(Package):
         query_parameters = self.spec.last_query.extra_parameters
         comps = all_comps if not query_parameters else query_parameters
         return find_libraries(
-            ["lib" + c for c in comps], root=self.prefix.lib, shared=True, recursive=False
+            # Libraries may be installed under both `lib/` and `lib64/`,
+            # don't force searching under `lib/` only.
+            ["lib" + c for c in comps],
+            root=self.prefix,
+            shared=True,
+            recursive=True,
         )

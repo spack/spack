@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class FastGlobalFileStatus(AutotoolsPackage):
     homepage = "https://github.com/LLNL/FastGlobalFileStatus"
     url = "https://github.com/LLNL/FastGlobalFileStatus/files/2271592/fastglobalfilestatus-1.1.tar.gz"
     git = "https://github.com/LLNL/FastGlobalFileStatus.git"
-    maintainers = ["lee218llnl"]
+    maintainers("lee218llnl")
 
     version("master", branch="master")
     version(
@@ -25,7 +25,7 @@ class FastGlobalFileStatus(AutotoolsPackage):
 
     depends_on("mrnet")
     # we depend on mpa@master for bug fixes since mpa 1.1
-    depends_on("mount-point-attributes@master")
+    depends_on("mount-point-attributes@1.1.1:")
     depends_on("mpi")
     depends_on("openssl")
     depends_on("elf")

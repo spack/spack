@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,8 +14,20 @@ class Libdrm(Package):
     url = "https://dri.freedesktop.org/libdrm/libdrm-2.4.101.tar.xz"
     list_url = "https://dri.freedesktop.org/libdrm/"
 
-    maintainers = ["wdconinc"]
+    maintainers("wdconinc")
 
+    license("MIT")
+
+    version("2.4.120", sha256="3bf55363f76c7250946441ab51d3a6cc0ae518055c0ff017324ab76cdefb327a")
+    version("2.4.119", sha256="0a49f12f09b5b6e68eaaaff3f02ca7cff9aa926939b212d343161d3e8ac56291")
+    version("2.4.118", sha256="a777bd85f2b5fc9c57f886c82058300578317cafdbc77d0a769d7e9a9567ab88")
+    version("2.4.117", sha256="a2888d69e3eb1c8a77adc08a75a60fbae01f0d208d26f034d1a12e362361242b")
+    version("2.4.116", sha256="46c53f40735ea3d26d614297f155f6131a510624a24274f654f6469ca905339a")
+    version("2.4.115", sha256="554cfbfe0542bddb391b4e3e05bfbbfc3e282b955bd56218d21c0616481f65eb")
+    version("2.4.114", sha256="3049cf843a47d12e5eeefbc3be3496d782fa09f42346bf0b7defe3d1e598d026")
+    version("2.4.113", sha256="7fd7eb2967f63beb4606f22d50e277d993480d05ef75dd88a9bd8e677323e5e1")
+    version("2.4.112", sha256="00b07710bd09b35cd8d80eaf4f4497fe27f4becf467a9830f1f5e8324f8420ff")
+    version("2.4.111", sha256="1ad7164f77424de6f4ecba7c262bde196a214c6e19a6fbf497f0815f4d7ab2a9")
     version("2.4.110", sha256="eecee4c4b47ed6d6ce1a9be3d6d92102548ea35e442282216d47d05293cf9737")
     version("2.4.109", sha256="629352e08c1fe84862ca046598d8a08ce14d26ab25ee1f4704f993d074cb7f26")
     version("2.4.108", sha256="a1d7948cbc536763fde14b4beb5e4da7867607966d4cf46301087e8b8fe3d6a0")
@@ -35,7 +47,8 @@ class Libdrm(Package):
 
     # 2.4.90 is the first version to use meson, spack defaults to meson since
     # 2.4.101.
-    depends_on("meson", type="build", when="@2.4.101:")
+    depends_on("meson@0.53:", type="build", when="@2.4.101:")
+    depends_on("meson@0.59:", type="build", when="@2.4.117:")
 
     # >= 2.4.104 uses reStructuredText for man pages.
     with when("@2.4.104: +docs"):
@@ -54,7 +67,10 @@ class Libdrm(Package):
             return self.list_url + "libdrm-%s.tar.xz" % version
 
     def meson_args(self):
-        return ["-Dman-pages=" + ("true" if "+docs" in self.spec else "false")]
+        if self.version <= Version("2.4.112"):
+            return ["-Dman-pages=" + ("true" if "+docs" in self.spec else "false")]
+        else:
+            return ["-Dman-pages=" + ("enabled" if "+docs" in self.spec else "disabled")]
 
     def install(self, spec, prefix):
         with working_dir("spack-build", create=True):

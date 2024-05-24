@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class PyDvc(PythonPackage):
 
     homepage = "https://www.dvc.org"
     pypi = "dvc/dvc-1.11.10.tar.gz"
+
+    license("Apache-2.0")
 
     version("2.1.0", sha256="46cfbf0db27107fb3a2d5c643e3a948bb24539bf165ef70e77ce64283959e481")
     version("1.11.10", sha256="6b53ebf1bd5619836f131181402bb21f7b44109166e9db8f8d6a0d8c7ce9458d")
@@ -49,7 +51,6 @@ class PyDvc(PythonPackage):
     depends_on("py-networkx@2.1:", when="@1.11.7:", type=("build", "run"))
     depends_on("py-psutil@5.8.0:", type=("build", "run"), when="@2.1.0:")
     depends_on("py-pydot@1.2.4:", type=("build", "run"))
-    depends_on("py-dataclasses@0.7", when="^python@:3.6", type=("build", "run"))
     depends_on("py-flatten-dict@0.3.0:0", type=("build", "run"))
     depends_on("py-tabulate@0.8.7:", type=("build", "run"))
     depends_on("py-pygtrie@2.3.2", type=("build", "run"))

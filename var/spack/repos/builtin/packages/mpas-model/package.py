@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,7 +16,7 @@ class MpasModel(MakefilePackage):
 
     homepage = "https://mpas-dev.github.io/"
     url = "https://github.com/MPAS-Dev/MPAS-Model/archive/v7.0.tar.gz"
-    maintainers = ["t-brown"]
+    maintainers("t-brown")
 
     version("7.3", sha256="a6a9570911b47aa3607036c1ab5a9ae770f9f3a85cea2710f08bb3b35c08facf")
     version("7.2", sha256="3158c22e4a33ae00ce20b65f6ad189c0b7839587dee124d685b02f9df9cf27a7")
@@ -104,31 +104,14 @@ class MpasModel(MakefilePackage):
         fflags = [self.compiler.openmp_flag]
         cppflags = ["-D_MPI"]
         if satisfies("%gcc"):
-            fflags.extend(
-                [
-                    "-ffree-line-length-none",
-                    "-fconvert=big-endian",
-                    "-ffree-form",
-                    "-fdefault-real-8",
-                    "-fdefault-double-8",
-                ]
-            )
+            fflags.extend(["-ffree-line-length-none", "-fconvert=big-endian", "-ffree-form"])
+            if satisfies("precision=double"):
+                fflags.extend(["-fdefault-real-8", "-fdefault-double-8"])
             cppflags.append("-DUNDERSCORE")
         elif satisfies("%fj"):
-            fflags.extend(
-                [
-                    "-Free",
-                    "-Fwide",
-                    "-CcdRR8",
-                ]
-            )
+            fflags.extend(["-Free", "-Fwide", "-CcdRR8"])
         elif satisfies("%intel"):
-            fflags.extend(
-                [
-                    "-convert big_endian",
-                    "-FR",
-                ]
-            )
+            fflags.extend(["-convert big_endian", "-FR"])
             if satisfies("precision=double"):
                 fflags.extend(["-r8"])
 
@@ -174,6 +157,8 @@ class MpasModel(MakefilePackage):
         make(*self.target("init_atmosphere", "all"), parallel=True)
         mkdir("bin")
         copy("init_atmosphere_model", "bin")
+        copy("namelist.init_atmosphere", "bin")
+        copy("streams.init_atmosphere", "bin")
         make(*self.target("init_atmosphere", "clean"))
         make(*self.target("atmosphere", "all"), parallel=True)
         copy("atmosphere_model", "bin")

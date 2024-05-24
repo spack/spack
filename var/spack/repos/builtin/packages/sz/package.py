@@ -1,22 +1,25 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
+import spack.build_systems.autotools
+import spack.build_systems.cmake
 from spack.package import *
 
 
-class Sz(CMakePackage):
+class Sz(CMakePackage, AutotoolsPackage):
     """Error-bounded Lossy Compressor for HPC Data"""
 
     homepage = "https://szcompressor.org"
     url = "https://github.com/szcompressor/SZ/releases/download/v2.1.11/SZ-2.1.11.tar.gz"
     git = "https://github.com/szcompressor/sz"
-    maintainers = ["disheng222", "robertu94"]
+    maintainers("disheng222", "robertu94")
 
     tags = ["e4s"]
 
     version("master", branch="master")
+    version("2.1.12.5", sha256="32a820daf6019156a777300389d2392e4498a5c9daffce7be754cd0a5ba8729c")
+    version("2.1.12.4", sha256="4ae242e8821a96b7a4571bb5df6a3c78742d375f80cccbd5d46c4bac255b3c08")
     version("2.1.12.2", sha256="427e263e1fed1b0a56e13e0aff8e6a19c6d78d5f35dd16856876c70ab6066dc6")
     version("2.1.12", sha256="3712b2cd7170d1511569e48a208f02dfb72ecd7ad053c321e2880b9083e150de")
     version("2.1.11.1", sha256="e6fa5c969b012782b1e5e9fbd1cd7d1c0ace908d9ec982e78b2910ec5c2161ac")
@@ -43,6 +46,14 @@ class Sz(CMakePackage):
     version("1.4.10.0", sha256="cf23cf1ffd7c69c3d3128ae9c356b6acdc03a38f92c02db5d9bfc04f3fabc506")
     version("1.4.9.2", sha256="9dc785274d068d04c2836955fc93518a9797bfd409b46fea5733294b7c7c18f8")
 
+    build_system(
+        conditional("autotools", when="@:2.1.8.0"),
+        conditional("cmake", when="@2.1.8.1:"),
+        default="cmake",
+    )
+
+    variant("openmp", default=False, description="build the multithreaded version using openmp")
+    variant("examples", default=False, description="build examples")
     variant("python", default=False, description="builds the python wrapper")
     variant("netcdf", default=False, description="build the netcdf reader")
     variant("hdf5", default=False, description="build the hdf5 filter")
@@ -57,7 +68,7 @@ class Sz(CMakePackage):
     # with Fujitsu compiler.
     patch("fix_optimization.patch", when="@2.0.2.0:%fj")
 
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("zstd")
 
     extends("python", when="+python")
@@ -69,87 +80,19 @@ class Sz(CMakePackage):
     depends_on("cmake@3.13:", type="build")
     depends_on("cunit", type="test")
 
+    conflicts("%clang@15:", when="@:2.1.12.4+hdf5")
+
     patch("ctags-only-if-requested.patch", when="@2.1.8.1:2.1.8.3")
 
-    @property
-    def build_directory(self):
-        """autotools needs a different build directory to work"""
-        if self.version >= Version("2.1.8.1"):
-            return "spack-build"
-        else:
-            return "."
+    def flag_handler(self, name, flags):
+        if name == "cflags":
+            if self.spec.satisfies("%oneapi"):
+                flags.append("-Wno-error=implicit-function-declaration")
+        return (flags, None, None)
 
-    @when("@:2.1.8.0")
-    def cmake(self, spec, prefix):
-        """use autotools before 2.1.8.1"""
-        configure_args = ["--prefix=" + prefix]
-        if "+fortran" in spec:
-            configure_args.append("--enable-fortran")
-        else:
-            configure_args.append("--disable-fortran")
-        configure(*configure_args)
-        # at least the v2.0.2.0 tarball contains object files
-        # which need to be cleaned out
-        make("clean")
-
-    def cmake_args(self):
-        """configure the package with CMake for version 2.1.8.1 and later"""
-        args = []
-
-        if "+python" in self.spec:
-            args.append("-DBUILD_PYTHON_WRAPPER=ON")
-            args.append("-DSZ_PYTHON_SITELIB={0}".format(python_platlib))
-        else:
-            args.append("-DBUILD_PYTHON_WRAPPER=OFF")
-
-        if "+netcdf" in self.spec:
-            args.append("-DBUILD_NETCDF_READER=ON")
-        else:
-            args.append("-DBUILD_NETCDF_READER=OFF")
-
+    def setup_run_environment(self, env):
         if "+hdf5" in self.spec:
-            args.append("-DBUILD_HDF5_FILTER=ON")
-        else:
-            args.append("-DBUILD_HDF5_FILTER=OFF")
-
-        if "+pastri" in self.spec:
-            args.append("-DBUILD_PASTRI=ON")
-        else:
-            args.append("-DBUILD_PASTRI=OFF")
-
-        if "+time_compression" in self.spec:
-            args.append("-DBUILD_TIMECMPR=ON")
-        else:
-            args.append("-DBUILD_TIMECMPR=OFF")
-
-        if "+random_access" in self.spec:
-            args.append("-DBUILD_RANDOMACCESS=ON")
-        else:
-            args.append("-DBUILD_RANDOMACCESS=OFF")
-
-        if "+fortran" in self.spec:
-            args.append("-DBUILD_FORTRAN=ON")
-        else:
-            args.append("-DBUILD_FORTRAN=OFF")
-
-        if "+shared" in self.spec:
-            args.append("-DBUILD_SHARED_LIBS=ON")
-        else:
-            args.append("-DBUILD_SHARED_LIBS=OFF")
-
-        if "+stats" in self.spec:
-            args.append("-DBUILD_STATS=ON")
-        else:
-            args.append("-DBUILD_STATS=OFF")
-
-        args.append(self.define("BUILD_TESTS", self.run_tests))
-
-        return args
-
-    @run_after("build")
-    @on_package_attributes(run_tests=True)
-    def test_build(self):
-        make("test")
+            env.prepend_path("HDF5_PLUGIN_PATH", self.prefix.lib64)
 
     def _test_2d_float(self):
         """This test performs simple 2D compression/decompression (float)"""
@@ -232,3 +175,39 @@ class Sz(CMakePackage):
         self._test_2d_float()
         # run 3D compression and decompression (float)
         self._test_3d_float()
+
+
+class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
+    build_directory = "."
+
+    def configure_args(self):
+        return self.enable_or_disable("fortran")
+
+    @run_before("build")
+    def make_clean(self):
+        # at least the v2.0.2.0 tarball contains object files
+        # which need to be cleaned out
+        make("clean")
+
+
+class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
+    def cmake_args(self):
+        result = [
+            self.define_from_variant("BUILD_NETCDF_READER", "netcdf"),
+            self.define_from_variant("BUILD_HDF5_FILTER", "hdf5"),
+            self.define_from_variant("BUILD_PASTRI", "pastri"),
+            self.define_from_variant("BUILD_TIMECPR", "time_compression"),
+            self.define_from_variant("BUILD_RANDOMACCESS", "random_access"),
+            self.define_from_variant("BUILD_FORTRAN", "fortran"),
+            self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
+            self.define_from_variant("BUILD_STATS", "stats"),
+            self.define("BUILD_TESTS", self.pkg.run_tests),
+            self.define_from_variant("BUILD_PYTHON_WRAPPER", "python"),
+            self.define_from_variant("BUILD_OPENMP", "openmp"),
+            self.define_from_variant("BUILD_SZ_EXAMPLES", "examples"),
+        ]
+
+        if "+python" in self.spec:
+            result.append(self.define("SZ_PYTHON_SITELIB", python_platlib))
+
+        return result

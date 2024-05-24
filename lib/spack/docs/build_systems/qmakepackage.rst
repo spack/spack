@@ -1,13 +1,13 @@
-.. Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 .. _qmakepackage:
 
-------------
-QMakePackage
-------------
+-----
+QMake
+-----
 
 Much like Autotools and CMake, QMake is a build-script generator
 designed by the developers of Qt. In its simplest form, Spack's
@@ -29,7 +29,7 @@ variables or edit ``*.pro`` files to get things working properly.
 Phases
 ^^^^^^
 
-The ``QMakePackage`` base class comes with the following phases:
+The ``QMakeBuilder`` and ``QMakePackage`` base classes come with the following phases:
 
 #. ``qmake`` - generate Makefiles
 #. ``build`` - build the project
@@ -83,7 +83,7 @@ base class already contains:
 
 .. code-block:: python
 
-   depends_on('qt', type='build')
+   depends_on("qt", type="build")
 
 
 If you want to specify a particular version requirement, or need to
@@ -91,7 +91,7 @@ link to the ``qt`` libraries, you can override this in your package:
 
 .. code-block:: python
 
-   depends_on('qt@5.6.0:')
+   depends_on("qt@5.6.0:")
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 Passing arguments to qmake
@@ -103,7 +103,7 @@ override the ``qmake_args`` method like so:
 .. code-block:: python
 
    def qmake_args(self):
-       return ['-recursive']
+       return ["-recursive"]
 
 
 This method can be used to pass flags as well as variables.
@@ -118,7 +118,7 @@ sub-directory by adding the following to the package:
 
 .. code-block:: python
 
-   build_directory = 'src'
+   build_directory = "src"
 
 
 ^^^^^^^^^^^^^^^^^^^^^^

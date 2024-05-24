@@ -1,14 +1,13 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-
 import numbers
 
 import pytest
 
 import spack.error
+import spack.variant
 from spack.variant import (
     BoolValuedVariant,
     DuplicateVariantError,
@@ -24,9 +23,8 @@ from spack.variant import (
 )
 
 
-class TestMultiValuedVariant(object):
+class TestMultiValuedVariant:
     def test_initialization(self):
-
         # Basic properties
         a = MultiValuedVariant("foo", "bar,baz")
         assert repr(a) == "MultiValuedVariant('foo', 'bar,baz')"
@@ -71,7 +69,6 @@ class TestMultiValuedVariant(object):
         assert eval(repr(d)) == a
 
     def test_satisfies(self):
-
         a = MultiValuedVariant("foo", "bar,baz")
         b = MultiValuedVariant("foo", "bar")
         c = MultiValuedVariant("fee", "bar,baz")
@@ -105,7 +102,6 @@ class TestMultiValuedVariant(object):
         assert not d.satisfies(almost_d_bv)
 
     def test_compatible(self):
-
         a = MultiValuedVariant("foo", "bar,baz")
         b = MultiValuedVariant("foo", "True")
         c = MultiValuedVariant("fee", "bar,baz")
@@ -140,7 +136,6 @@ class TestMultiValuedVariant(object):
         assert not c.compatible(b_bv)
 
     def test_constrain(self):
-
         # Try to constrain on a value with less constraints than self
         a = MultiValuedVariant("foo", "bar,baz")
         b = MultiValuedVariant("foo", "bar")
@@ -190,7 +185,6 @@ class TestMultiValuedVariant(object):
         assert not a.constrain(d_bv)
 
     def test_yaml_entry(self):
-
         a = MultiValuedVariant("foo", "bar,baz,barbaz")
         b = MultiValuedVariant("foo", "bar, baz,  barbaz")
         expected = ("foo", sorted(["bar", "baz", "barbaz"]))
@@ -204,9 +198,8 @@ class TestMultiValuedVariant(object):
         assert a.yaml_entry() == expected
 
 
-class TestSingleValuedVariant(object):
+class TestSingleValuedVariant:
     def test_initialization(self):
-
         # Basic properties
         a = SingleValuedVariant("foo", "bar")
         assert repr(a) == "SingleValuedVariant('foo', 'bar')"
@@ -263,7 +256,6 @@ class TestSingleValuedVariant(object):
         assert not e.satisfies(almost_e_bv)
 
     def test_compatible(self):
-
         a = SingleValuedVariant("foo", "bar")
         b = SingleValuedVariant("fee", "bar")
         c = SingleValuedVariant("foo", "baz")
@@ -318,7 +310,6 @@ class TestSingleValuedVariant(object):
         assert not e.compatible(almost_e_bv)
 
     def test_constrain(self):
-
         # Try to constrain on a value equal to self
         a = SingleValuedVariant("foo", "bar")
         b = SingleValuedVariant("foo", "bar")
@@ -365,7 +356,7 @@ class TestSingleValuedVariant(object):
         assert a.yaml_entry() == expected
 
 
-class TestBoolValuedVariant(object):
+class TestBoolValuedVariant:
     def test_initialization(self):
         # Basic properties - True value
         for v in (True, "True", "TRUE", "TrUe"):
@@ -450,7 +441,6 @@ class TestBoolValuedVariant(object):
         assert d.satisfies(d_sv)
 
     def test_compatible(self):
-
         a = BoolValuedVariant("foo", True)
         b = BoolValuedVariant("fee", True)
         c = BoolValuedVariant("foo", False)
@@ -524,7 +514,6 @@ class TestBoolValuedVariant(object):
             assert not a.constrain(v)
 
     def test_yaml_entry(self):
-
         a = BoolValuedVariant("foo", "True")
         expected = ("foo", True)
         assert a.yaml_entry() == expected
@@ -536,16 +525,16 @@ class TestBoolValuedVariant(object):
 
 def test_from_node_dict():
     a = MultiValuedVariant.from_node_dict("foo", ["bar"])
-    assert type(a) == MultiValuedVariant
+    assert type(a) is MultiValuedVariant
 
     a = MultiValuedVariant.from_node_dict("foo", "bar")
-    assert type(a) == SingleValuedVariant
+    assert type(a) is SingleValuedVariant
 
     a = MultiValuedVariant.from_node_dict("foo", "true")
-    assert type(a) == BoolValuedVariant
+    assert type(a) is BoolValuedVariant
 
 
-class TestVariant(object):
+class TestVariant:
     def test_validation(self):
         a = Variant(
             "foo", default="", description="", values=("bar", "baz", "foobar"), multi=False
@@ -595,7 +584,7 @@ class TestVariant(object):
         assert a.allowed_values == "bar, baz, foobar"
 
 
-class TestVariantMapTest(object):
+class TestVariantMapTest:
     def test_invalid_values(self):
         # Value with invalid type
         a = VariantMap(None)
@@ -649,11 +638,11 @@ class TestVariantMapTest(object):
         b["foobar"] = SingleValuedVariant("foobar", "fee")
         b["shared"] = BoolValuedVariant("shared", True)
 
-        assert not a.satisfies(b)
-        assert b.satisfies(a)
+        assert a.intersects(b)
+        assert b.intersects(a)
 
-        assert not a.satisfies(b, strict=True)
-        assert not b.satisfies(a, strict=True)
+        assert not a.satisfies(b)
+        assert not b.satisfies(a)
 
         # foo=bar,baz foobar=fee feebar=foo shared=True
         c = VariantMap(None)
@@ -737,3 +726,48 @@ def test_disjoint_set_fluent_methods():
         assert "none" not in d
         assert "none" not in [x for x in d]
         assert "none" not in d.feature_values
+
+
+@pytest.mark.regression("32694")
+@pytest.mark.parametrize("other", [True, False])
+def test_conditional_value_comparable_to_bool(other):
+    value = spack.variant.Value("98", when="@1.0")
+    comparison = value == other
+    assert comparison is False
+
+
+@pytest.mark.regression("40405")
+def test_wild_card_valued_variants_equivalent_to_str():
+    """
+    There was a bug prioro to PR 40406 in that variants with wildcard values "*"
+    were being overwritten in the variant constructor.
+    The expected/appropriate behavior is for it to behave like value=str and this
+    test demonstrates that the two are now equivalent
+    """
+    str_var = spack.variant.Variant(
+        name="str_var",
+        default="none",
+        values=str,
+        description="str variant",
+        multi=True,
+        validator=None,
+    )
+
+    wild_var = spack.variant.Variant(
+        name="wild_var",
+        default="none",
+        values="*",
+        description="* variant",
+        multi=True,
+        validator=None,
+    )
+
+    several_arbitrary_values = ("doe", "re", "mi")
+    # "*" case
+    wild_output = wild_var.make_variant(several_arbitrary_values)
+    wild_var.validate_or_raise(wild_output)
+    # str case
+    str_output = str_var.make_variant(several_arbitrary_values)
+    str_var.validate_or_raise(str_output)
+    # equivalence each instance already validated
+    assert str_output.value == wild_output.value

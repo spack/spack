@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,7 @@ class Crmc(CMakePackage):
     # url = "https://devel-ik.fzk.de/wsvn/mc/crmc/tags/crmc.v1.7.0/?op=dl"
     url = "https://lcgpackages.web.cern.ch/lcgpackages/tarFiles/sources/MCGeneratorsTarFiles/crmc.v1.7.0.tar.gz"
 
+    version("2.0.1", sha256="c607733c7534b188c9aede9e18cd7d4eac4f0a37d6728c1f406c434f74aed743")
     # Version 1.7.0 has issues linking phojet, devs contacted but no response
     # version('1.7.0', sha256='59086f4e654d775a4f6c3974ae89bbfd995391c4677f266881604878b47563d1')
     version("1.6.0", sha256="ae2ba5aa2a483d20aa60bef35080f555b365715d1a8fae54b473c275813345c1")
@@ -23,7 +24,7 @@ class Crmc(CMakePackage):
     version("1.5.6", sha256="a546a9352dcbdb8a1df3d63530eacf16f8b64a190e224b72afd434f78388a8a0")
 
     depends_on("hepmc")
-    depends_on("boost")
+    depends_on("boost+filesystem+iostreams+system+program_options")
     depends_on("root")
 
     patch(
@@ -50,6 +51,6 @@ class Crmc(CMakePackage):
         ]
         if self.spec.satisfies("@1.6.0:"):
             args.append("-D__HIJING__=ON")
-        if self.spec.satisfies("%gcc@9:"):
+        if self.spec.satisfies("%gcc@9:") or self.spec.satisfies("%clang@13:"):
             args.append("-DCMAKE_Fortran_FLAGS=-fallow-argument-mismatch")
         return args

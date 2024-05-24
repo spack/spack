@@ -1,22 +1,25 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import collections
 import getpass
+import io
 import os
-import sys
 import tempfile
+from datetime import date
 
 import pytest
-from six import StringIO
 
-from llnl.util.filesystem import getuid, mkdirp, touch
+import llnl.util.tty as tty
+from llnl.util.filesystem import getuid, join_path, mkdirp, touch, touchp
 
 import spack.config
+import spack.directory_layout
 import spack.environment as ev
 import spack.main
+import spack.package_base
 import spack.paths
 import spack.repo
 import spack.schema.compilers
@@ -25,6 +28,7 @@ import spack.schema.env
 import spack.schema.mirrors
 import spack.schema.packages
 import spack.schema.repos
+import spack.store
 import spack.util.path as spack_path
 import spack.util.spack_yaml as syaml
 
@@ -69,12 +73,12 @@ def env_yaml(tmpdir):
     with open(env_yaml, "w") as f:
         f.write(
             """\
-env:
+spack:
     config:
         verify_ssl: False
         dirty: False
     packages:
-        libelf:
+        all:
             compiler: [ 'gcc@4.5.3' ]
     repos:
         - /x/y/z
@@ -140,10 +144,7 @@ a_comps = {
         {
             "compiler": {
                 "paths": {"cc": "/gcc422", "cxx": "/g++422", "f77": "gfortran", "fc": "gfortran"},
-                "flags": {
-                    "cppflags": "-O0 -fpic",
-                    "fflags": "-f77",
-                },
+                "flags": {"cppflags": "-O0 -fpic", "fflags": "-f77"},
                 "modules": None,
                 "spec": "gcc@4.2.2",
                 "operating_system": "CNL10",
@@ -186,10 +187,7 @@ b_comps = {
         {
             "compiler": {
                 "paths": {"cc": "/icc123", "cxx": "/icp123", "f77": "ifort", "fc": "ifort"},
-                "flags": {
-                    "cppflags": "-O3",
-                    "fflags": "-f77rtl",
-                },
+                "flags": {"cppflags": "-O3", "fflags": "-f77rtl"},
                 "modules": None,
                 "spec": "icc@12.3",
                 "operating_system": "CNL10",
@@ -237,7 +235,7 @@ def test_write_key_to_disk(mock_low_high_config, compiler_specs):
     spack.config.set("compilers", b_comps["compilers"], scope="high")
 
     # Clear caches so we're forced to read from disk.
-    spack.config.config.clear_caches()
+    spack.config.CONFIG.clear_caches()
 
     # Same check again, to ensure consistency.
     check_compiler_config(a_comps["compilers"], *compiler_specs.a)
@@ -250,7 +248,7 @@ def test_write_to_same_priority_file(mock_low_high_config, compiler_specs):
     spack.config.set("compilers", b_comps["compilers"], scope="low")
 
     # Clear caches so we're forced to read from disk.
-    spack.config.config.clear_caches()
+    spack.config.CONFIG.clear_caches()
 
     # Same check again, to ensure consistency.
     check_compiler_config(a_comps["compilers"], *compiler_specs.a)
@@ -279,6 +277,32 @@ def test_add_config_path(mutable_config):
     compilers = spack.config.get("packages")["all"]["compiler"]
     assert "gcc" in compilers
 
+    # Try quotes to escape brackets
+    path = "config:install_tree:projections:cmake:\
+'{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}'"
+    spack.config.add(path)
+    set_value = spack.config.get("config")["install_tree"]["projections"]["cmake"]
+    assert set_value == "{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}"
+
+    path = 'modules:default:tcl:all:environment:set:"{name}_ROOT":"{prefix}"'
+    spack.config.add(path)
+    set_value = spack.config.get("modules")["default"]["tcl"]["all"]["environment"]["set"]
+    assert r"{name}_ROOT" in set_value
+    assert set_value[r"{name}_ROOT"] == r"{prefix}"
+    assert spack.config.get('modules:default:tcl:all:environment:set:"{name}_ROOT"') == r"{prefix}"
+
+    # NOTE:
+    # The config path: "config:install_tree:root:<path>" is unique in that it can accept multiple
+    # schemas (such as a dropped "root" component) which is atypical and may lead to passing tests
+    # when the behavior is in reality incorrect.
+    # the config path below is such that no subkey accepts a string as a valid entry in our schema
+
+    # try quotes to escape colons
+    path = "config:build_stage:'C:\\path\\to\\config.yaml'"
+    spack.config.add(path)
+    set_value = spack.config.get("config")["build_stage"]
+    assert "C:\\path\\to\\config.yaml" in set_value
+
 
 @pytest.mark.regression("17543,23259")
 def test_add_config_path_with_enumerated_type(mutable_config):
@@ -293,7 +317,6 @@ def test_add_config_path_with_enumerated_type(mutable_config):
 
 
 def test_add_config_filename(mock_low_high_config, tmpdir):
-
     config_yaml = tmpdir.join("config-filename.yaml")
     config_yaml.ensure()
     with config_yaml.open("w") as f:
@@ -315,7 +338,7 @@ def test_write_list_in_memory(mock_low_high_config):
     assert config == repos_high["repos"] + repos_low["repos"]
 
 
-class MockEnv(object):
+class MockEnv:
     def __init__(self, path):
         self.path = path
 
@@ -371,11 +394,22 @@ def test_substitute_config_variables(mock_low_high_config, monkeypatch):
     spack.config.set(
         "modules:default", {"roots": {"lmod": os.path.join("foo", "bar", "baz")}}, scope="low"
     )
-    spack.config.config.clear_caches()
+    spack.config.CONFIG.clear_caches()
     path = spack.config.get("modules:default:roots:lmod")
     assert spack_path.canonicalize_path(path) == os.path.normpath(
         os.path.join(mock_low_high_config.scopes["low"].path, os.path.join("foo", "bar", "baz"))
     )
+
+    # test architecture information is in replacements
+    assert spack_path.canonicalize_path(
+        os.path.join("foo", "$platform", "bar")
+    ) == os.path.abspath(os.path.join("foo", "test", "bar"))
+
+    host_target = spack.platforms.host().target("default_target")
+    host_target_family = str(host_target.microarchitecture.family)
+    assert spack_path.canonicalize_path(
+        os.path.join("foo", "$target_family", "bar")
+    ) == os.path.abspath(os.path.join("foo", host_target_family, "bar"))
 
 
 packages_merge_low = {"packages": {"foo": {"variants": ["+v1"]}, "bar": {"variants": ["+v2"]}}}
@@ -430,9 +464,16 @@ def test_substitute_tempdir(mock_low_high_config):
     )
 
 
-PAD_STRING = spack.util.path.SPACK_PATH_PADDING_CHARS
-MAX_PATH_LEN = spack.util.path.get_system_path_max()
-MAX_PADDED_LEN = MAX_PATH_LEN - spack.util.path.SPACK_MAX_INSTALL_PATH_LENGTH
+def test_substitute_date(mock_low_high_config):
+    test_path = os.path.join("hello", "world", "on", "$date")
+    new_path = spack_path.canonicalize_path(test_path)
+    assert "$date" in test_path
+    assert date.today().strftime("%Y-%m-%d") in new_path
+
+
+PAD_STRING = spack_path.SPACK_PATH_PADDING_CHARS
+MAX_PATH_LEN = spack_path.get_system_path_max()
+MAX_PADDED_LEN = MAX_PATH_LEN - spack_path.SPACK_MAX_INSTALL_PATH_LENGTH
 reps = [PAD_STRING for _ in range((MAX_PADDED_LEN // len(PAD_STRING) + 1) + 2)]
 full_padded_string = os.path.join(os.sep + "path", os.sep.join(reps))[:MAX_PADDED_LEN]
 
@@ -451,7 +492,7 @@ full_padded_string = os.path.join(os.sep + "path", os.sep.join(reps))[:MAX_PADDE
     ],
 )
 def test_parse_install_tree(config_settings, expected, mutable_config):
-    expected_root = expected[0] or spack.store.default_install_tree_root
+    expected_root = expected[0] or spack.store.DEFAULT_INSTALL_TREE_ROOT
     expected_unpadded_root = expected[1] or expected_root
     expected_proj = expected[2] or spack.directory_layout.default_projections
 
@@ -468,7 +509,35 @@ def test_parse_install_tree(config_settings, expected, mutable_config):
     assert projections == expected_proj
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Padding unsupported on Windows")
+def test_change_or_add(mutable_config, mock_packages):
+    spack.config.add("packages:a:version:['1.0']", scope="user")
+
+    spack.config.add("packages:b:version:['1.1']", scope="system")
+
+    class ChangeTest:
+        def __init__(self, pkg_name, new_version):
+            self.pkg_name = pkg_name
+            self.new_version = new_version
+
+        def find_fn(self, section):
+            return self.pkg_name in section
+
+        def change_fn(self, section):
+            pkg_section = section.get(self.pkg_name, {})
+            pkg_section["version"] = self.new_version
+            section[self.pkg_name] = pkg_section
+
+    change1 = ChangeTest("b", ["1.2"])
+    spack.config.change_or_add("packages", change1.find_fn, change1.change_fn)
+    assert "b" not in mutable_config.get("packages", scope="user")
+    assert mutable_config.get("packages")["b"]["version"] == ["1.2"]
+
+    change2 = ChangeTest("c", ["1.0"])
+    spack.config.change_or_add("packages", change2.find_fn, change2.change_fn)
+    assert "c" in mutable_config.get("packages", scope="user")
+
+
+@pytest.mark.not_on_windows("Padding unsupported on Windows")
 @pytest.mark.parametrize(
     "config_settings,expected",
     [
@@ -506,7 +575,7 @@ def test_parse_install_tree(config_settings, expected, mutable_config):
     ],
 )
 def test_parse_install_tree_padded(config_settings, expected, mutable_config):
-    expected_root = expected[0] or spack.store.default_install_tree_root
+    expected_root = expected[0] or spack.store.DEFAULT_INSTALL_TREE_ROOT
     expected_unpadded_root = expected[1] or expected_root
     expected_proj = expected[2] or spack.directory_layout.default_projections
 
@@ -563,21 +632,9 @@ def test_read_config_override_list(mock_low_high_config, write_config_file):
 
 def test_ordereddict_merge_order():
     """ "Test that source keys come before dest keys in merge_yaml results."""
-    source = syaml.syaml_dict(
-        [
-            ("k1", "v1"),
-            ("k2", "v2"),
-            ("k3", "v3"),
-        ]
-    )
+    source = syaml.syaml_dict([("k1", "v1"), ("k2", "v2"), ("k3", "v3")])
 
-    dest = syaml.syaml_dict(
-        [
-            ("k4", "v4"),
-            ("k3", "WRONG"),
-            ("k5", "v5"),
-        ]
-    )
+    dest = syaml.syaml_dict([("k4", "v4"), ("k3", "WRONG"), ("k5", "v5")])
 
     result = spack.config.merge_yaml(dest, source)
     assert "WRONG" not in result.values()
@@ -634,11 +691,7 @@ def test_mark_internal():
             "int": 6,
             "numbers": [1, 2, 3],
             "string": "foo",
-            "dict": {
-                "more_numbers": [1, 2, 3],
-                "another_string": "foo",
-                "another_int": 7,
-            },
+            "dict": {"more_numbers": [1, 2, 3], "another_string": "foo", "another_int": 7},
         }
     }
 
@@ -677,13 +730,7 @@ def test_internal_config_from_data():
     # add an internal config initialized from an inline dict
     config.push_scope(
         spack.config.InternalConfigScope(
-            "_builtin",
-            {
-                "config": {
-                    "verify_ssl": False,
-                    "build_jobs": 6,
-                }
-            },
+            "_builtin", {"config": {"verify_ssl": False, "build_jobs": 6}}
         )
     )
 
@@ -696,13 +743,7 @@ def test_internal_config_from_data():
     # push one on top and see what happens.
     config.push_scope(
         spack.config.InternalConfigScope(
-            "higher",
-            {
-                "config": {
-                    "checksum": True,
-                    "verify_ssl": True,
-                }
-            },
+            "higher", {"config": {"checksum": True, "verify_ssl": True}}
         )
     )
 
@@ -828,9 +869,9 @@ def test_bad_config_section(mock_low_high_config):
         spack.config.get("foobar")
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Not supported on Windows (yet)")
+@pytest.mark.not_on_windows("chmod not supported on Windows")
 @pytest.mark.skipif(getuid() == 0, reason="user is root")
-def test_bad_command_line_scopes(tmpdir, mock_low_high_config):
+def test_bad_command_line_scopes(tmpdir, config):
     cfg = spack.config.Configuration()
 
     with tmpdir.as_cwd():
@@ -866,18 +907,18 @@ config:
 
 def test_nested_override():
     """Ensure proper scope naming of nested overrides."""
-    base_name = spack.config.overrides_base_name
+    base_name = spack.config._OVERRIDES_BASE_NAME
 
     def _check_scopes(num_expected, debug_values):
         scope_names = [
-            s.name for s in spack.config.config.scopes.values() if s.name.startswith(base_name)
+            s.name for s in spack.config.CONFIG.scopes.values() if s.name.startswith(base_name)
         ]
 
         for i in range(num_expected):
             name = "{0}{1}".format(base_name, i)
             assert name in scope_names
 
-            data = spack.config.config.get_config("config", name)
+            data = spack.config.CONFIG.get_config("config", name)
             assert data["debug"] == debug_values[i]
 
     # Check results from single and nested override
@@ -890,23 +931,23 @@ def test_nested_override():
 
 def test_alternate_override(monkeypatch):
     """Ensure proper scope naming of override when conflict present."""
-    base_name = spack.config.overrides_base_name
+    base_name = spack.config._OVERRIDES_BASE_NAME
 
     def _matching_scopes(regexpr):
         return [spack.config.InternalConfigScope("{0}1".format(base_name))]
 
     # Check that the alternate naming works
-    monkeypatch.setattr(spack.config.config, "matching_scopes", _matching_scopes)
+    monkeypatch.setattr(spack.config.CONFIG, "matching_scopes", _matching_scopes)
 
     with spack.config.override("config:debug", False):
         name = "{0}2".format(base_name)
 
         scope_names = [
-            s.name for s in spack.config.config.scopes.values() if s.name.startswith(base_name)
+            s.name for s in spack.config.CONFIG.scopes.values() if s.name.startswith(base_name)
         ]
         assert name in scope_names
 
-        data = spack.config.config.get_config("config", name)
+        data = spack.config.CONFIG.get_config("config", name)
         assert data["debug"] is False
 
 
@@ -930,13 +971,13 @@ config:
 
 
 def test_single_file_scope(config, env_yaml):
-    scope = spack.config.SingleFileScope("env", env_yaml, spack.schema.env.schema, ["env"])
+    scope = spack.config.SingleFileScope("env", env_yaml, spack.schema.env.schema, ["spack"])
 
     with spack.config.override(scope):
         # from the single-file config
         assert spack.config.get("config:verify_ssl") is False
         assert spack.config.get("config:dirty") is False
-        assert spack.config.get("packages:libelf:compiler") == ["gcc@4.5.3"]
+        assert spack.config.get("packages:all:compiler") == ["gcc@4.5.3", "gcc", "clang"]
 
         # from the lower config scopes
         assert spack.config.get("config:checksum") is True
@@ -955,23 +996,23 @@ def test_single_file_scope_section_override(tmpdir, config):
     with open(env_yaml, "w") as f:
         f.write(
             """\
-env:
+spack:
     config:
         verify_ssl: False
     packages::
-        libelf:
+        all:
             compiler: [ 'gcc@4.5.3' ]
     repos:
         - /x/y/z
 """
         )
 
-    scope = spack.config.SingleFileScope("env", env_yaml, spack.schema.env.schema, ["env"])
+    scope = spack.config.SingleFileScope("env", env_yaml, spack.schema.env.schema, ["spack"])
 
     with spack.config.override(scope):
         # from the single-file config
         assert spack.config.get("config:verify_ssl") is False
-        assert spack.config.get("packages:libelf:compiler") == ["gcc@4.5.3"]
+        assert spack.config.get("packages:all:compiler") == ["gcc@4.5.3"]
 
         # from the lower config scopes
         assert spack.config.get("config:checksum") is True
@@ -991,7 +1032,7 @@ def test_write_empty_single_file_scope(tmpdir):
 
 def check_schema(name, file_contents):
     """Check a Spack YAML schema against some data"""
-    f = StringIO(file_contents)
+    f = io.StringIO(file_contents)
     data = syaml.load_config(f)
     spack.config.validate(data, name)
 
@@ -1027,7 +1068,7 @@ def test_bad_env_yaml(tmpdir):
         check_schema(
             spack.schema.env.schema,
             """\
-env:
+spack:
     foobar:
         verify_ssl: False
         dirty: False
@@ -1154,7 +1195,7 @@ def test_set_dict_override(mock_low_high_config, write_config_file):
 
 
 def test_set_bad_path(config):
-    with pytest.raises(syaml.SpackYAMLError, match="Illegal leading"):
+    with pytest.raises(ValueError):
         with spack.config.override(":bad:path", ""):
             pass
 
@@ -1169,19 +1210,19 @@ def test_license_dir_config(mutable_config, mock_packages):
     """Ensure license directory is customizable"""
     expected_dir = spack.paths.default_license_dir
     assert spack.config.get("config:license_dir") == expected_dir
-    assert spack.package.Package.global_license_dir == expected_dir
-    assert spack.repo.path.get_pkg_class("a").global_license_dir == expected_dir
+    assert spack.package_base.PackageBase.global_license_dir == expected_dir
+    assert spack.repo.PATH.get_pkg_class("a").global_license_dir == expected_dir
 
     rel_path = os.path.join(os.path.sep, "foo", "bar", "baz")
     spack.config.set("config:license_dir", rel_path)
     assert spack.config.get("config:license_dir") == rel_path
-    assert spack.package.Package.global_license_dir == rel_path
-    assert spack.repo.path.get_pkg_class("a").global_license_dir == rel_path
+    assert spack.package_base.PackageBase.global_license_dir == rel_path
+    assert spack.repo.PATH.get_pkg_class("a").global_license_dir == rel_path
 
 
 @pytest.mark.regression("22547")
 def test_single_file_scope_cache_clearing(env_yaml):
-    scope = spack.config.SingleFileScope("env", env_yaml, spack.schema.env.schema, ["env"])
+    scope = spack.config.SingleFileScope("env", env_yaml, spack.schema.env.schema, ["spack"])
     # Check that we can retrieve data from the single file scope
     before = scope.get_section("config")
     assert before
@@ -1233,23 +1274,30 @@ def test_user_config_path_is_default_when_env_var_is_empty(working_env):
     assert os.path.expanduser("~%s.spack" % os.sep) == spack.paths._get_user_config_path()
 
 
+def test_default_install_tree(monkeypatch, default_config):
+    s = spack.spec.Spec("nonexistent@x.y.z %none@a.b.c arch=foo-bar-baz")
+    monkeypatch.setattr(s, "dag_hash", lambda length: "abc123")
+    _, _, projections = spack.store.parse_install_tree(spack.config.get("config"))
+    assert s.format(projections["all"]) == "foo-bar-baz/none-a.b.c/nonexistent-x.y.z-abc123"
+
+
 def test_local_config_can_be_disabled(working_env):
     os.environ["SPACK_DISABLE_LOCAL_CONFIG"] = "true"
-    cfg = spack.config._config()
+    cfg = spack.config.create()
     assert "defaults" in cfg.scopes
     assert "system" not in cfg.scopes
     assert "site" in cfg.scopes
     assert "user" not in cfg.scopes
 
     os.environ["SPACK_DISABLE_LOCAL_CONFIG"] = ""
-    cfg = spack.config._config()
+    cfg = spack.config.create()
     assert "defaults" in cfg.scopes
     assert "system" not in cfg.scopes
     assert "site" in cfg.scopes
     assert "user" not in cfg.scopes
 
     del os.environ["SPACK_DISABLE_LOCAL_CONFIG"]
-    cfg = spack.config._config()
+    cfg = spack.config.create()
     assert "defaults" in cfg.scopes
     assert "system" in cfg.scopes
     assert "site" in cfg.scopes
@@ -1265,3 +1313,182 @@ def test_user_cache_path_is_overridable(working_env):
 def test_user_cache_path_is_default_when_env_var_is_empty(working_env):
     os.environ["SPACK_USER_CACHE_PATH"] = ""
     assert os.path.expanduser("~%s.spack" % os.sep) == spack.paths._get_user_cache_path()
+
+
+github_url = "https://github.com/fake/fake/{0}/develop"
+gitlab_url = "https://gitlab.fake.io/user/repo/-/blob/config/defaults"
+
+
+@pytest.mark.parametrize(
+    "url,isfile",
+    [
+        (github_url.format("tree"), False),
+        ("{0}/README.md".format(github_url.format("blob")), True),
+        ("{0}/etc/fake/defaults/packages.yaml".format(github_url.format("blob")), True),
+        (gitlab_url, False),
+        (None, False),
+    ],
+)
+def test_config_collect_urls(mutable_empty_config, mock_spider_configs, url, isfile):
+    with spack.config.override("config:url_fetch_method", "curl"):
+        urls = spack.config.collect_urls(url)
+        if url:
+            if isfile:
+                expected = 1 if url.endswith(".yaml") else 0
+                assert len(urls) == expected
+            else:
+                # Expect multiple configuration files for a "directory"
+                assert len(urls) > 1
+        else:
+            assert not urls
+
+
+@pytest.mark.parametrize(
+    "url,isfile,fail",
+    [
+        (github_url.format("tree"), False, False),
+        (gitlab_url, False, False),
+        ("{0}/README.md".format(github_url.format("blob")), True, True),
+        ("{0}/compilers.yaml".format(gitlab_url), True, False),
+        (None, False, True),
+    ],
+)
+def test_config_fetch_remote_configs(
+    tmpdir, mutable_empty_config, mock_collect_urls, mock_curl_configs, url, isfile, fail
+):
+    def _has_content(filename):
+        # The first element of all configuration files for this test happen to
+        # be the basename of the file so this check leverages that feature. If
+        # that changes, then this check will need to change accordingly.
+        element = "{0}:".format(os.path.splitext(os.path.basename(filename))[0])
+        with open(filename, "r") as fd:
+            for line in fd:
+                if element in line:
+                    return True
+        tty.debug("Expected {0} in '{1}'".format(element, filename))
+        return False
+
+    dest_dir = join_path(tmpdir.strpath, "defaults")
+    if fail:
+        msg = "Cannot retrieve configuration"
+        with spack.config.override("config:url_fetch_method", "curl"):
+            with pytest.raises(spack.config.ConfigFileError, match=msg):
+                spack.config.fetch_remote_configs(url, dest_dir)
+    else:
+        with spack.config.override("config:url_fetch_method", "curl"):
+            path = spack.config.fetch_remote_configs(url, dest_dir)
+            assert os.path.exists(path)
+            if isfile:
+                # Ensure correct file is "fetched"
+                assert os.path.basename(path) == os.path.basename(url)
+                # Ensure contents of the file has expected config element
+                assert _has_content(path)
+            else:
+                for filename in os.listdir(path):
+                    assert _has_content(join_path(path, filename))
+
+
+@pytest.fixture(scope="function")
+def mock_collect_urls(mock_config_data, monkeypatch):
+    """Mock the collection of URLs to avoid mocking spider."""
+
+    _, config_files = mock_config_data
+
+    def _collect(base_url):
+        if not base_url:
+            return []
+
+        ext = os.path.splitext(base_url)[1]
+        if ext:
+            return [base_url] if ext == ".yaml" else []
+
+        return [join_path(base_url, f) for f in config_files]
+
+    monkeypatch.setattr(spack.config, "collect_urls", _collect)
+
+    yield
+
+
+@pytest.mark.parametrize(
+    "url,skip",
+    [(github_url.format("tree"), True), ("{0}/compilers.yaml".format(gitlab_url), True)],
+)
+def test_config_fetch_remote_configs_skip(
+    tmpdir, mutable_empty_config, mock_collect_urls, mock_curl_configs, url, skip
+):
+    """Ensure skip fetching remote config file if it already exists when
+    required and not skipping if replacing it."""
+
+    def check_contents(filename, expected):
+        with open(filename, "r") as fd:
+            lines = fd.readlines()
+            if expected:
+                assert lines[0] == "compilers:"
+            else:
+                assert not lines
+
+    dest_dir = join_path(tmpdir.strpath, "defaults")
+    filename = "compilers.yaml"
+
+    # Create a stage directory with an empty configuration file
+    path = join_path(dest_dir, filename)
+    touchp(path)
+
+    # Do NOT replace the existing cached configuration file if skipping
+    expected = None if skip else "compilers:"
+
+    with spack.config.override("config:url_fetch_method", "curl"):
+        path = spack.config.fetch_remote_configs(url, dest_dir, skip)
+        result_filename = path if path.endswith(".yaml") else join_path(path, filename)
+        check_contents(result_filename, expected)
+
+
+def test_config_file_dir_failure(tmpdir, mutable_empty_config):
+    with pytest.raises(spack.config.ConfigFileError, match="not a file"):
+        spack.config.read_config_file(tmpdir.strpath)
+
+
+@pytest.mark.not_on_windows("chmod not supported on Windows")
+def test_config_file_read_perms_failure(tmpdir, mutable_empty_config):
+    """Test reading a configuration file without permissions to ensure
+    ConfigFileError is raised."""
+    filename = join_path(tmpdir.strpath, "test.yaml")
+    touch(filename)
+    os.chmod(filename, 0o200)
+
+    with pytest.raises(spack.config.ConfigFileError, match="not readable"):
+        spack.config.read_config_file(filename)
+
+
+def test_config_file_read_invalid_yaml(tmpdir, mutable_empty_config):
+    """Test reading a configuration file with invalid (unparseable) YAML
+    raises a ConfigFileError."""
+    filename = join_path(tmpdir.strpath, "test.yaml")
+    with open(filename, "w") as f:
+        f.write("spack:\nview")
+
+    with pytest.raises(spack.config.ConfigFileError, match="parsing YAML"):
+        spack.config.read_config_file(filename)
+
+
+@pytest.mark.parametrize(
+    "path,it_should_work,expected_parsed",
+    [
+        ("x:y:z", True, ["x:", "y:", "z"]),
+        ("x+::y:z", True, ["x+::", "y:", "z"]),
+        ('x:y:"{z}"', True, ["x:", "y:", '"{z}"']),
+        ('x:"y"+:z', True, ["x:", '"y"+:', "z"]),
+        ('x:"y"trail:z', False, None),
+        ("x:y:[1.0]", True, ["x:", "y:", "[1.0]"]),
+        ("x:y:['1.0']", True, ["x:", "y:", "['1.0']"]),
+        ("x:{y}:z", True, ["x:", "{y}:", "z"]),
+        ("x:'{y}':z", True, ["x:", "'{y}':", "z"]),
+        ("x:{y}", True, ["x:", "{y}"]),
+    ],
+)
+def test_config_path_dsl(path, it_should_work, expected_parsed):
+    if it_should_work:
+        assert spack.config.ConfigPath._validate(path) == expected_parsed
+    else:
+        with pytest.raises(ValueError):
+            spack.config.ConfigPath._validate(path)

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -23,7 +23,7 @@ class Mvapich2x(AutotoolsPackage):
     homepage = "https://mvapich.cse.ohio-state.edu"
     url = "http://mvapich.cse.ohio-state.edu/download/mvapich/spack-mirror/mvapich2x/mvapich2x-2.3.tar.gz"
 
-    maintainers = ["natshineman", "harisubramoni", "ndcontini"]
+    maintainers("natshineman", "harisubramoni", "ndcontini")
 
     version(
         "2.3",
@@ -218,13 +218,13 @@ class Mvapich2x(AutotoolsPackage):
 
     def setup_dependent_build_environment(self, env, dependent_spec):
         self.setup_compiler_environment(env)
-
         # use the Spack compiler wrappers under MPI
-        env.set("MPICH_CC", spack_cc)
-        env.set("MPICH_CXX", spack_cxx)
-        env.set("MPICH_F77", spack_f77)
-        env.set("MPICH_F90", spack_fc)
-        env.set("MPICH_FC", spack_fc)
+        dependent_module = dependent_spec.package.module
+        env.set("MPICH_CC", dependent_module.spack_cc)
+        env.set("MPICH_CXX", dependent_module.spack_cxx)
+        env.set("MPICH_F77", dependent_module.spack_f77)
+        env.set("MPICH_F90", dependent_module.spack_fc)
+        env.set("MPICH_FC", dependent_module.spack_fc)
 
     def setup_compiler_environment(self, env):
         # For Cray MPIs, the regular compiler wrappers *are* the MPI wrappers.
@@ -245,6 +245,8 @@ class Mvapich2x(AutotoolsPackage):
         ]
 
     def configure_args(self):
+        spec = self.spec
+
         args = [
             "--enable-ucr",
             "--disable-static",
@@ -256,4 +258,8 @@ class Mvapich2x(AutotoolsPackage):
         args.extend(self.distribution_options)
         args.append(self.construct_cflags)
         args.append(self.construct_ldflags)
+
+        # prevents build error regarding gfortran not allowing mismatched arguments
+        if spec.satisfies("%gcc@10.0.0:"):
+            args.extend(["FFLAGS=-fallow-argument-mismatch", "FCFLAGS=-fallow-argument-mismatch"])
         return args

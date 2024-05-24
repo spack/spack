@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,10 +16,12 @@ class XxdStandalone(MakefilePackage):
     homepage = "https://www.vim.org/"
     url = "https://github.com/vim/vim/archive/v8.2.1201.tar.gz"
 
-    maintainers = ["haampie"]
+    maintainers("haampie")
     build_targets = ["-C", os.path.join("src", "xxd")]
 
     provides("xxd")
+
+    license("Vim")
 
     version("8.2.1201", sha256="39032fe866f44724b104468038dc9ac4ff2c00a4b18c9a1e2c27064ab1f1143d")
 

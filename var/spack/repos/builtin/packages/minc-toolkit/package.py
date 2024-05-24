@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,8 @@ class MincToolkit(CMakePackage):
 
     homepage = "https://github.com/BIC-MNI/minc-toolkit-v2"
     git = "https://github.com/BIC-MNI/minc-toolkit-v2.git"
+
+    license("GPL-3.0-only")
 
     version("1.9.18.2", commit="b98e4972bdac2b78e3c1e412d75c97e2e7c5f6b9", submodules=True)
     version("1.9.18.1", commit="38597c464b6e93eda680ab4a9e903366d53d7737", submodules=True)
@@ -27,9 +29,9 @@ class MincToolkit(CMakePackage):
     depends_on("perl-text-format", type=("build", "run"))
     depends_on("perl-getopt-tabular", type=("build", "run"))
     depends_on("perl-mni-perllib", type=("build", "run"))
-    depends_on("flex", type="build")
+    depends_on("flex", type=("build", "run"))  # e.g minccalc depends on libfl.so
     depends_on("bison", type="build")
-    depends_on("zlib", type="link")
+    depends_on("zlib-api", type="link")
     depends_on("freeglut", when="+visualisation")
 
     def cmake_args(self):
@@ -43,3 +45,6 @@ class MincToolkit(CMakePackage):
             # should be packaged separately with newer ITK
             "-DMT_BUILD_ELASTIX=OFF",
         ]
+
+    def setup_run_environment(self, env):
+        env.set("MINC_TOOLKIT", self.prefix)

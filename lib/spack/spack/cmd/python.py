@@ -1,9 +1,7 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-from __future__ import print_function
 
 import argparse
 import code
@@ -30,6 +28,12 @@ def setup_parser(subparser):
         help="print the Python version number and exit",
     )
     subparser.add_argument("-c", dest="python_command", help="command to execute")
+    subparser.add_argument(
+        "-u",
+        dest="unbuffered",
+        action="store_true",
+        help="for compatibility with xdist, do not use without adding -u to the interpreter",
+    )
     subparser.add_argument(
         "-i",
         dest="python_interpreter",
@@ -112,34 +116,50 @@ def ipython_interpreter(args):
 
 def python_interpreter(args):
     """A python interpreter is the default interpreter"""
-    # Fake a main python shell by setting __name__ to __main__.
-    console = code.InteractiveConsole({"__name__": "__main__", "spack": spack})
-    if "PYTHONSTARTUP" in os.environ:
-        startup_file = os.environ["PYTHONSTARTUP"]
-        if os.path.isfile(startup_file):
-            with open(startup_file) as startup:
-                console.runsource(startup.read(), startup_file, "exec")
 
-    if args.python_command:
-        console.runsource(args.python_command)
-    elif args.python_args:
+    if args.python_args and not args.python_command:
         sys.argv = args.python_args
-        with open(args.python_args[0]) as file:
-            console.runsource(file.read(), args.python_args[0], "exec")
+        runpy.run_path(args.python_args[0], run_name="__main__")
     else:
-        # Provides readline support, allowing user to use arrow keys
-        console.push("import readline")
-        # Provide tabcompletion
-        console.push("from rlcompleter import Completer")
-        console.push("readline.set_completer(Completer(locals()).complete)")
-        console.push('readline.parse_and_bind("tab: complete")')
+        # Fake a main python shell by setting __name__ to __main__.
+        console = code.InteractiveConsole({"__name__": "__main__", "spack": spack})
+        if "PYTHONSTARTUP" in os.environ:
+            startup_file = os.environ["PYTHONSTARTUP"]
+            if os.path.isfile(startup_file):
+                with open(startup_file) as startup:
+                    console.runsource(startup.read(), startup_file, "exec")
+        if args.python_command:
+            propagate_exceptions_from(console)
+            console.runsource(args.python_command)
+        else:
+            # Provides readline support, allowing user to use arrow keys
+            console.push("import readline")
+            # Provide tabcompletion
+            console.push("from rlcompleter import Completer")
+            console.push("readline.set_completer(Completer(locals()).complete)")
+            console.push('readline.parse_and_bind("tab: complete")')
 
-        console.interact(
-            "Spack version %s\nPython %s, %s %s"
-            % (
-                spack.spack_version,
-                platform.python_version(),
-                platform.system(),
-                platform.machine(),
+            console.interact(
+                "Spack version %s\nPython %s, %s %s"
+                % (
+                    spack.spack_version,
+                    platform.python_version(),
+                    platform.system(),
+                    platform.machine(),
+                )
             )
-        )
+
+
+def propagate_exceptions_from(console):
+    """Set sys.excepthook to let uncaught exceptions return 1 to the shell.
+
+    Args:
+        console (code.InteractiveConsole): the console that needs a change in sys.excepthook
+    """
+    console.push("import sys")
+    console.push("_wrapped_hook = sys.excepthook")
+    console.push("def _hook(exc_type, exc_value, exc_tb):")
+    console.push("    _wrapped_hook(exc_type, exc_value, exc_tb)")
+    console.push("    sys.exit(1)")
+    console.push("")
+    console.push("sys.excepthook = _hook")

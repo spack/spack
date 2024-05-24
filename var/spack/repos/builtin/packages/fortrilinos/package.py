@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,25 +14,27 @@ class Fortrilinos(CMakePackage):
     configuration. For example, MPI is enabled if and only if the linked
     Trilinos version has it, so this package does not provide an indepdent
     variant. Instead, use ``fortrilinos ^trilinos~mpi`` to disable MPI support.
-
-    Since Trilinos enables a bunch of upstream dependencies by default, it
-    might be worthwhile to disable them::
-
-        spack install fortrilinos \
-            ^trilinos@12.18.1+nox+stratimikos \
-            ~boost~exodus~glm~gtest~hdf5~hypre~matio~metis~mumps~netcdf~suite-sparse
     """
 
     homepage = "https://trilinos.github.io/ForTrilinos/"
-    url = "https://github.com/trilinos/ForTrilinos/archive/v2.0.0.tar.gz"
+    url = (
+        "https://github.com/trilinos/ForTrilinos/releases/download/v2.1.0/ForTrilinos-2.1.0.tar.gz"
+    )
     git = "https://github.com/trilinos/ForTrilinos.git"
 
-    maintainers = ["sethrj", "aprokop"]
+    maintainers("sethrj", "aprokop")
 
     tags = ["e4s"]
     test_requires_compiler = True
 
-    version("2.0.0", sha256="9af3b3eea9934e44d74654a5fa822de08bd0efa43e06e4a4e35a777781f542d6")
+    license("BSD-3-Clause")
+
+    version("2.3.0", sha256="7be5efecaea61ad773d3fe182aa28735ebc3e7af821e1805ad284e4ed4e31a49")
+    version("2.2.0", sha256="9e73fc71066bfaf7cde040e1467baf7a1ec797ff2874add49f9741e93f9fffb5")
+    version("2.1.0", sha256="2c62bb6106ae86a804497d549080cb6877c5d860b6bf2e72ec5cbcbbe63e3b5b")
+    version("2.0.1", sha256="291a62c885cd4ffd76cbebafa02789649bd4fa73f1005cf8da51fd153acb9e1a")
+    version("2.0.0", sha256="4382a21864e70e9059654c0529cac95548768fe02855c5f3624e454807dff018")
+
     # Note: spack version comparison implies Version('2.0.0') <
     # Version('2.0.0-dev1'), so this is the best workaround I could find.
     version(
@@ -51,7 +53,10 @@ class Fortrilinos(CMakePackage):
     variant("shared", default=True, description="Build shared libraries")
 
     # Trilinos version dependencies
-    depends_on("trilinos@13.0.0:", when="@2.0.0:")
+    depends_on("trilinos@14.0", when="@2.3")
+    depends_on("trilinos@13.4", when="@2.2")
+    depends_on("trilinos@13.2", when="@2.1.0:2.1")
+    depends_on("trilinos@13:13.2", when="@2.0")
     depends_on("trilinos@12.18.1", when="@2.0.dev3")
     depends_on("trilinos@12.18.1", when="@2.0.dev2")
 
@@ -90,27 +95,20 @@ class Fortrilinos(CMakePackage):
         install test subdirectory for use during `spack test run`."""
         self.cache_extra_test_sources([self.examples_src_dir])
 
-    def test(self):
-        """Perform stand-alone/smoke tests using installed package."""
+    def test_installation(self):
+        """build and run ctest against the installed software"""
         cmake_args = [
             self.define("CMAKE_PREFIX_PATH", self.prefix),
             self.define("CMAKE_CXX_COMPILER", self.compiler.cxx),
             self.define("CMAKE_Fortran_COMPILER", self.compiler.fc),
             self.cached_tests_work_dir,
         ]
-        self.run_test(
-            "cmake", cmake_args, purpose="test: calling cmake", work_dir=self.cached_tests_work_dir
-        )
+        cmake = which(self.spec["cmake"].prefix.bin.cmake)
+        ctest = which("ctest")
+        make = which("make")
 
-        self.run_test(
-            "make", [], purpose="test: calling make", work_dir=self.cached_tests_work_dir
-        )
-
-        self.run_test(
-            "ctest",
-            ["-V"],
-            ["100% tests passed"],
-            installed=False,
-            purpose="test: testing the installation",
-            work_dir=self.cached_tests_work_dir,
-        )
+        with working_dir(self.cached_tests_work_dir, create=True):
+            cmake(*cmake_args)
+            make()
+            out = ctest("-V", output=str.split, error=str.split)
+            assert "100% tests passed" in out

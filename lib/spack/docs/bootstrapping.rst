@@ -1,4 +1,4 @@
-.. Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,15 +15,13 @@ is an entire command dedicated to the management of every aspect of bootstrappin
 
 .. command-output:: spack bootstrap --help
 
-The first thing to know to understand bootstrapping in Spack is that each of
-Spack's dependencies is bootstrapped lazily; i.e. the first time it is needed and
-can't be found. You can readily check if any prerequisite for using Spack
-is missing by running:
+Spack is configured to bootstrap its dependencies lazily by default; i.e. the first time they are needed and
+can't be found. You can readily check if any prerequisite for using Spack is missing by running:
 
 .. code-block:: console
 
    % spack bootstrap status
-   Spack v0.17.1 - python@3.8
+   Spack v0.19.0 - python@3.8
 
    [FAIL] Core Functionalities
      [B] MISSING "clingo": required to concretize specs
@@ -34,9 +32,14 @@ is missing by running:
 
    Spack will take care of bootstrapping any missing dependency marked as [B]. Dependencies marked as [-] are instead required to be found on the system.
 
+   % echo $?
+   1
+
 In the case of the output shown above Spack detected that both ``clingo`` and ``gnupg``
 are missing and it's giving detailed information on why they are needed and whether
-they can be bootstrapped. Running a command that concretize a spec, like:
+they can be bootstrapped. The return code of this command summarizes the results, if any
+dependencies are missing the return code is ``1``, otherwise ``0``. Running a command that
+concretizes a spec, like:
 
 .. code-block:: console
 
@@ -46,7 +49,22 @@ they can be bootstrapped. Running a command that concretize a spec, like:
    ==> Installing "clingo-bootstrap@spack%apple-clang@12.0.0~docs~ipo+python build_type=Release arch=darwin-catalina-x86_64" from a buildcache
    [ ... ]
 
-triggers the bootstrapping of clingo from pre-built binaries as expected.
+automatically triggers the bootstrapping of clingo from pre-built binaries as expected.
+
+Users can also bootstrap all the dependencies needed by Spack in a single command, which
+might be useful to setup containers or other similar environments:
+
+.. code-block:: console
+
+   $ spack bootstrap now
+   ==> Bootstrapping clingo from pre-built binaries
+   ==> Fetching https://mirror.spack.io/bootstrap/github-actions/v0.3/build_cache/linux-centos7-x86_64-gcc-10.2.1-clingo-bootstrap-spack-shqedxgvjnhiwdcdrvjhbd73jaevv7wt.spec.json
+   ==> Fetching https://mirror.spack.io/bootstrap/github-actions/v0.3/build_cache/linux-centos7-x86_64/gcc-10.2.1/clingo-bootstrap-spack/linux-centos7-x86_64-gcc-10.2.1-clingo-bootstrap-spack-shqedxgvjnhiwdcdrvjhbd73jaevv7wt.spack
+   ==> Installing "clingo-bootstrap@spack%gcc@10.2.1~docs~ipo+python+static_libstdcpp build_type=Release arch=linux-centos7-x86_64" from a buildcache
+   ==> Bootstrapping patchelf from pre-built binaries
+   ==> Fetching https://mirror.spack.io/bootstrap/github-actions/v0.3/build_cache/linux-centos7-x86_64-gcc-10.2.1-patchelf-0.15.0-htk62k7efo2z22kh6kmhaselru7bfkuc.spec.json
+   ==> Fetching https://mirror.spack.io/bootstrap/github-actions/v0.3/build_cache/linux-centos7-x86_64/gcc-10.2.1/patchelf-0.15.0/linux-centos7-x86_64-gcc-10.2.1-patchelf-0.15.0-htk62k7efo2z22kh6kmhaselru7bfkuc.spack
+   ==> Installing "patchelf@0.15.0%gcc@10.2.1 ldflags="-static-libstdc++ -static-libgcc"  arch=linux-centos7-x86_64" from a buildcache
 
 -----------------------
 The Bootstrapping store
@@ -69,7 +87,7 @@ You can check what is installed in the bootstrapping store at any time using:
 
 .. code-block:: console
 
-   % spack find -b
+   % spack -b find
    ==> Showing internal bootstrap store at "/Users/spack/.spack/bootstrap/store"
    ==> 11 installed packages
    -- darwin-catalina-x86_64 / apple-clang@12.0.0 ------------------
@@ -83,7 +101,7 @@ In case it is needed you can remove all the software in the current bootstrappin
    % spack clean -b
    ==> Removing bootstrapped software and configuration in "/Users/spack/.spack/bootstrap"
 
-   % spack find -b
+   % spack -b find
    ==> Showing internal bootstrap store at "/Users/spack/.spack/bootstrap/store"
    ==> 0 installed packages
 
@@ -107,19 +125,19 @@ If need be, you can disable bootstrapping altogether by running:
 
 in which case it's your responsibility to ensure Spack runs in an
 environment where all its prerequisites are installed. You can
-also configure Spack to skip certain bootstrapping methods by *untrusting*
-them. For instance:
+also configure Spack to skip certain bootstrapping methods by disabling
+them specifically:
 
 .. code-block:: console
 
-   % spack bootstrap untrust github-actions
-   ==> "github-actions" is now untrusted and will not be used for bootstrapping
+   % spack bootstrap disable github-actions
+   ==> "github-actions" is now disabled and will not be used for bootstrapping
 
 tells Spack to skip trying to bootstrap from binaries. To add the "github-actions" method back you can:
 
 .. code-block:: console
 
-   % spack bootstrap trust github-actions
+   % spack bootstrap enable github-actions
 
 There is also an option to reset the bootstrapping configuration to Spack's defaults:
 

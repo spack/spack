@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class DocbookXml(Package):
     list_url = "https://www.oasis-open.org/docbook/xml/"
     list_depth = 1
 
+    license("MIT")
+
     version("4.5", sha256="4e4e037a2b83c98c6c94818390d4bdd3f6e10f6ec62dd79188594e26190dc7b4")
     version("4.4", sha256="02f159eb88c4254d95e831c51c144b1863b216d909b5ff45743a1ce6f5273090")
     version("4.3", sha256="23068a94ea6fd484b004c5a73ec36a66aa47ea8f0d6b62cc1695931f5c143464")
@@ -26,7 +28,7 @@ class DocbookXml(Package):
 
     @property
     def catalog(self):
-        return join_path(self.prefix, "catalog")
+        return join_path(self.prefix, "xml-catalog")
 
     @run_after("install")
     def config_docbook(self):
@@ -338,6 +340,50 @@ class DocbookXml(Package):
             "file://{0}".format(docbook),
             catalog,
         )
+
+        # map all versions to current version
+        dtversions = ["4.1", "4.1.1", "4.1.2", "4.2", "4.3", "4.4", "4.5"]
+        for dtversion in dtversions:
+            xmlcatalog(
+                "--noout",
+                "--add",
+                "public",
+                "-//OASIS//DTD DocBook XML V{0}//EN".format(dtversion),
+                "http://www.oasis-open.org/docbook/xml/{0}/docbookx.dtd".format(dtversion),
+                docbook,
+            )
+            xmlcatalog(
+                "--noout",
+                "--add",
+                "rewriteSystem",
+                "http://www.oasis-open.org/docbook/xml/{0}".format(dtversion),
+                "file://{0}".format(prefix),
+                docbook,
+            )
+            xmlcatalog(
+                "--noout",
+                "--add",
+                "rewriteURI",
+                "http://www.oasis-open.org/docbook/xml/{0}".format(dtversion),
+                "file://{0}".format(prefix),
+                docbook,
+            )
+            xmlcatalog(
+                "--noout",
+                "--add",
+                "delegateSystem",
+                "http://www.oasis-open.org/docbook/xml/{0}".format(dtversion),
+                "file://{0}".format(docbook),
+                catalog,
+            )
+            xmlcatalog(
+                "--noout",
+                "--add",
+                "delegateURI",
+                "http://www.oasis-open.org/docbook/xml/{0}".format(dtversion),
+                "file://{0}".format(docbook),
+                catalog,
+            )
 
     def setup_run_environment(self, env):
         catalog = self.catalog

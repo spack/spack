@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,8 +17,16 @@ class Clhep(CMakePackage):
 
     tags = ["hep"]
 
-    maintainers = ["drbenmorgan"]
+    maintainers("drbenmorgan")
 
+    version("2.4.7.1", sha256="1c8304a7772ac6b99195f1300378c6e3ddf4ad07c85d64a04505652abb8a55f9")
+    version("2.4.7.0", sha256="7fa460030bc1a804ea7da8cce7611b93261493bbb66c3cfd3ceec935d7e1b8d3")
+    version("2.4.6.4", sha256="49c89330f1903ef707d3c5d79c16a7c5a6f2c90fc290e2034ee3834809489e57")
+    version("2.4.6.3", sha256="fcd007f11b10ba4af28d027222b63148d0eb44ff7a082eee353bdf921f9c684a")
+    version("2.4.6.2", sha256="aded73e49bac85a5b4e86f64a0ee3d6f3cfe5551b0f7731c78b6d8f9dac6e8dc")
+    version("2.4.6.0", sha256="e8d16debb84ced28e40e9ae84789cf5a0adad45f9213fbac3ce7583e06caa7b1")
+    version("2.4.5.4", sha256="983fb4ea1fe423217fe9debc709569495a62a3b4540eb790d557c5a34dffbbb6")
+    version("2.4.5.3", sha256="45f63eeb097f02fe67b86a7dadbf10d409b401c28a1a3e172db36252c3097c13")
     version("2.4.5.1", sha256="2517c9b344ad9f55974786ae6e7a0ef8b22f4abcbf506df91194ea2299ce3813")
     version("2.4.4.0", sha256="5df78c11733a091da9ae5a24ce31161d44034dd45f20455587db85f1ca1ba539")
     version("2.4.1.3", sha256="27c257934929f4cb1643aa60aeaad6519025d8f0a1c199bc3137ad7368245913")
@@ -43,23 +51,36 @@ class Clhep(CMakePackage):
     version("2.2.0.8", sha256="f735e236b1f023ba7399269733b2e84eaed4de615081555b1ab3af25a1e92112")
     version("2.2.0.5", sha256="92e8b5d32ae96154edd27d0c641ba048ad33cb69dd4f1cfb72fc578770a34818")
     version("2.2.0.4", sha256="9bf7fcd9892313c8d1436bc4a4a285a016c4f8e81e1fc65bdf6783207ae57550")
+    version("2.1.2.3", sha256="4353231be09c134507092161cd3ced27a065ca0ebb31ee0256e60a8163c47c3b")
 
     variant(
         "cxxstd",
         default="11",
-        values=("11", "14", "17"),
+        values=(
+            "11",
+            "14",
+            conditional("17", when="@2.3.4.3:"),
+            conditional("20", when="@2.4.6.4:"),
+        ),
         multi=False,
         description="Use the specified C++ standard when building.",
     )
 
-    conflicts("cxxstd=17", when="@:2.3.4.2")
-
     depends_on("cmake@2.8.12.2:", when="@2.2.0.4:2.3.0.0", type="build")
     depends_on("cmake@3.2:", when="@2.3.0.1:", type="build")
 
+    variant("cms", default=False, description="Apply CMS-specific changes")
+
     root_cmakelists_dir = "CLHEP"  # Extra directory layer.
 
+    patch("clhep-cms.patch", when="+cms", level=0)
+
     def patch(self):
+        # Patched line removed since 2.3.2.2
+        # https://gitlab.cern.ch/CLHEP/CLHEP/-/commit/5da6830d69c71dc178632f7f5121a3a00e379f94
+        if self.spec.satisfies("@2.3.2.2:"):
+            return
+
         filter_file(
             "SET CMP0042 OLD",
             "SET CMP0042 NEW",

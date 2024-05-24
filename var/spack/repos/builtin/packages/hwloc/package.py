@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,7 +8,7 @@ import sys
 from spack.package import *
 
 
-class Hwloc(AutotoolsPackage):
+class Hwloc(AutotoolsPackage, CudaPackage, ROCmPackage):
     """The Hardware Locality (hwloc) software project.
 
     The Portable Hardware Locality (hwloc) software package
@@ -26,14 +26,17 @@ class Hwloc(AutotoolsPackage):
 
     homepage = "https://www.open-mpi.org/projects/hwloc/"
     url = "https://download.open-mpi.org/release/hwloc/v2.0/hwloc-2.0.2.tar.gz"
-    list_url = "http://www.open-mpi.org/software/hwloc/"
-    list_depth = 2
     git = "https://github.com/open-mpi/hwloc.git"
 
-    maintainers = ["bgoglin"]
+    maintainers("bgoglin")
     executables = ["^hwloc-bind$"]
 
+    license("BSD-3-Clause")
+
     version("master", branch="master")
+    version("2.9.1", sha256="a440e2299f7451dc10a57ddbfa3f116c2a6c4be1bb97c663edd3b9c7b3b3b4cf")
+    version("2.9.0", sha256="9d7d3450e0a5fea4cb80ca07dc8db939abb7ab62e2a7bb27f9376447658738ec")
+    version("2.8.0", sha256="20b2bd4df436827d8e50f7afeafb6f967259f2fb374ce7330244f8d0ed2dde6f")
     version("2.7.1", sha256="4cb0a781ed980b03ad8c48beb57407aa67c4b908e45722954b9730379bc7f6d5")
     version("2.7.0", sha256="d9b23e9b0d17247e8b50254810427ca8a9857dc868e2e3a049f958d7c66af374")
     version("2.6.0", sha256="9aa7e768ed4fd429f488466a311ef2191054ea96ea1a68657bc06ffbb745e59f")
@@ -65,7 +68,6 @@ class Hwloc(AutotoolsPackage):
 
     variant("nvml", default=False, description="Support NVML device discovery")
     variant("gl", default=False, description="Support GL device discovery")
-    variant("cuda", default=False, description="Support CUDA devices")
     variant("libxml2", default=True, description="Build with libxml2")
     variant("libudev", default=False, description="Build with libudev")
     variant(
@@ -73,7 +75,13 @@ class Hwloc(AutotoolsPackage):
         default=(sys.platform != "darwin"),
         description="Support analyzing devices on PCI bus",
     )
-    variant("shared", default=True, description="Build shared libraries")
+    variant(
+        "libs",
+        default="shared,static",
+        values=("shared", "static"),
+        multi=True,
+        description="Build shared libs, static libs or both",
+    )
     variant(
         "cairo", default=False, description="Enable the Cairo back-end of hwloc's lstopo command"
     )
@@ -125,11 +133,11 @@ class Hwloc(AutotoolsPackage):
         depends_on("rocm-opencl", when="+opencl")
         # Avoid a circular dependency since the openmp
         # variant of llvm-amdgpu depends on hwloc.
-        depends_on("llvm-amdgpu~openmp", when="+opencl")
+        depends_on("llvm-amdgpu", when="+opencl")
 
     with when("+oneapi-level-zero"):
         depends_on("oneapi-level-zero")
-        # oneapi-level-zero isn't available until version 2.5.0
+        # LevelZero support isn't available until hwloc version 2.5.0
         conflicts("@:2.4.99", msg="hwloc supports Intel OneAPI Level Zero only since 2.5.0")
 
     @classmethod
@@ -139,10 +147,13 @@ class Hwloc(AutotoolsPackage):
         return match.group(1) if match else None
 
     def url_for_version(self, version):
-        return "http://www.open-mpi.org/software/hwloc/v%s/downloads/hwloc-%s.tar.gz" % (
-            version.up_to(2),
-            version,
-        )
+        url = "https://download.open-mpi.org/release/hwloc/v{0}/hwloc-{1}.tar.gz"
+        return url.format(version.up_to(2), version)
+
+    @property
+    def libs(self):
+        libs = find_libraries("libhwloc", root=self.prefix, shared=True, recursive=True)
+        return LibraryList(libs)
 
     def configure_args(self):
         args = []
@@ -164,12 +175,10 @@ class Hwloc(AutotoolsPackage):
             args.append("--disable-rsmi")
 
         if "+rocm" in self.spec:
-            args.append("--with-rocm={0}".format(self.spec["rocm"].prefix))
-            args.append("--with-rocm-version={0}".format(self.spec["rocm"].version))
+            args.append("--with-rocm={0}".format(self.spec["hip"].prefix))
+            args.append("--with-rocm-version={0}".format(self.spec["hip"].version))
 
-        if "+netloc" in self.spec:
-            args.append("--enable-netloc")
-
+        args.extend(self.enable_or_disable("netloc"))
         args.extend(self.enable_or_disable("cairo"))
         args.extend(self.enable_or_disable("nvml"))
         args.extend(self.enable_or_disable("gl"))
@@ -177,8 +186,7 @@ class Hwloc(AutotoolsPackage):
         args.extend(self.enable_or_disable("libxml2"))
         args.extend(self.enable_or_disable("libudev"))
         args.extend(self.enable_or_disable("pci"))
-        args.extend(self.enable_or_disable("shared"))
-        args.extend(self.enable_or_disable("oneapi-level-zero"))
+        args.extend(self.enable_or_disable("libs"))
 
         if "+cuda" in self.spec:
             args.append("--with-cuda={0}".format(self.spec["cuda"].prefix))

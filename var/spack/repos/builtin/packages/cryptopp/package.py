@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,10 @@ class Cryptopp(MakefilePackage):
     homepage = "https://www.cryptopp.com"
     url = "https://www.cryptopp.com/cryptopp700.zip"
 
+    license("BSL-1.0")
+
+    version("8.9.0", sha256="4cc0ccc324625b80b695fcd3dee63a66f1a460d3e51b71640cdbfc4cd1a3779c")
+    version("8.7.0", sha256="d0d3a28fcb5a1f6ed66b3adf57ecfaed234a7e194e42be465c2ba70c744538dd")
     version("7.0.0", sha256="a4bc939910edd3d29fb819a6fc0dfdc293f686fa62326f61c56d72d0a366ceb0")
     version("6.1.0", sha256="21289d2511101a9350c87c8eb1f4982d4a266e8037b19dab79a32cc13ea108c7")
     version("6.0.0", sha256="64ac2db96b3f1b7a23675e2be95d16c96055edffa2d5e2de6245fdb6baa92dda")
@@ -36,7 +40,7 @@ class Cryptopp(MakefilePackage):
     def build(self, spec, prefix):
         cxx_flags = []
 
-        if "+shared" in spec:
+        if spec.satisfies("+shared"):
             cxx_flags.append(self.compiler.cxx_pic_flag)
 
         target = self.spec.target
@@ -48,7 +52,7 @@ class Cryptopp(MakefilePackage):
             cxx_flags.append("-DCRYPTOPP_DISABLE_SSE2")
 
         make_target = "dynamic" if "+shared" in spec else "static"
-        make(make_target, "CXXFLAGS={0}".format(" ".join(cxx_flags)))
+        make(make_target, f"CXXFLAGS={' '.join(cxx_flags)}")
 
     def install(self, spec, prefix):
-        make("install", "PREFIX={0}".format(prefix))
+        make("install", f"PREFIX={prefix}")

@@ -1,9 +1,7 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-
 import glob
 import inspect
 import os
@@ -26,11 +24,13 @@ from llnl.util.filesystem import (
 
 import spack.error
 from spack.build_environment import dso_suffix
-from spack.package_base import InstallError, PackageBase, run_after
+from spack.package_base import InstallError
 from spack.util.environment import EnvironmentModifications
 from spack.util.executable import Executable
 from spack.util.prefix import Prefix
 from spack.version import Version, ver
+
+from .generic import Package
 
 # A couple of utility functions that might be useful in general. If so, they
 # should really be defined elsewhere, unless deemed heretical.
@@ -86,7 +86,7 @@ def _expand_fields(s):
     return s
 
 
-class IntelPackage(PackageBase):
+class IntelPackage(Package):
     """Specialized class for licensed Intel software.
 
     This class provides two phases that can be overridden:
@@ -98,9 +98,6 @@ class IntelPackage(PackageBase):
     only thing necessary will be to override setup_run_environment
     to set the appropriate environment variables.
     """
-
-    #: Phases of an Intel package
-    phases = ["configure", "install"]
 
     #: This attribute is used in UI queries that need to know the build
     #: system base class
@@ -145,7 +142,7 @@ class IntelPackage(PackageBase):
         # The Intel libraries are provided without requiring a license as of
         # version 2017.2. Trying to specify one anyway will fail. See:
         # https://software.intel.com/en-us/articles/free-ipsxe-tools-and-libraries
-        return self._has_compilers or self.version < ver("2017.2")
+        return self._has_compilers or self.version < Version("2017.2")
 
     #: Comment symbol used in the license.lic file
     license_comment = "#"
@@ -221,7 +218,7 @@ class IntelPackage(PackageBase):
             "+inspector": " intel-inspector",
             "+itac": " intel-itac intel-ta intel-tc" " intel-trace-analyzer intel-trace-collector",
             # Trace Analyzer and Collector
-            "+vtune": " intel-vtune"
+            "+vtune": " intel-vtune",
             # VTune, ..-profiler since 2020, ..-amplifier before
         }.items():
             if variant in self.spec:
@@ -344,7 +341,7 @@ class IntelPackage(PackageBase):
                     v_year = year
                     break
 
-        return ver("%s.%s" % (v_year, v_tail))
+        return Version("%s.%s" % (v_year, v_tail))
 
     # ---------------------------------------------------------------------
     # Directory handling common to all Intel components
@@ -767,9 +764,9 @@ class IntelPackage(PackageBase):
         elif matches:
             # TODO: Confirm that this covers clang (needed on Linux only)
             gcc_version = Version(matches.groups()[1])
-            if gcc_version >= ver("4.7"):
+            if gcc_version >= Version("4.7"):
                 abi = "gcc4.7"
-            elif gcc_version >= ver("4.4"):
+            elif gcc_version >= Version("4.4"):
                 abi = "gcc4.4"
             else:
                 abi = "gcc4.1"  # unlikely, one hopes.
@@ -849,6 +846,7 @@ class IntelPackage(PackageBase):
             "^mpich@2:" in spec_root
             or "^cray-mpich" in spec_root
             or "^mvapich2" in spec_root
+            or "^mvapich" in spec_root
             or "^intel-mpi" in spec_root
             or "^intel-oneapi-mpi" in spec_root
             or "^intel-parallel-studio" in spec_root
@@ -860,10 +858,7 @@ class IntelPackage(PackageBase):
             raise_lib_error("Cannot find a BLACS library for the given MPI.")
 
         int_suff = "_" + self.intel64_int_suffix
-        scalapack_libnames = [
-            "libmkl_scalapack" + int_suff,
-            blacs_lib + int_suff,
-        ]
+        scalapack_libnames = ["libmkl_scalapack" + int_suff, blacs_lib + int_suff]
         sca_libs = find_libraries(
             scalapack_libnames, root=self.component_lib_dir("mkl"), shared=("+shared" in self.spec)
         )
@@ -1025,7 +1020,7 @@ class IntelPackage(PackageBase):
             # Intel MPI since 2019 depends on libfabric which is not in the
             # lib directory but in a directory of its own which should be
             # included in the rpath
-            if self.version_yearlike >= ver("2019"):
+            if self.version_yearlike >= Version("2019"):
                 d = ancestor(self.component_lib_dir("mpi"))
                 if "+external-libfabric" in self.spec:
                     result += self.spec["libfabric"].libs
@@ -1104,6 +1099,7 @@ class IntelPackage(PackageBase):
                 "CMAKE_PREFIX_PATH": self.normalize_path("mkl"),
                 "CMAKE_LIBRARY_PATH": self.component_lib_dir("mkl"),
                 "CMAKE_INCLUDE_PATH": self.component_include_dir("mkl"),
+                "PKG_CONFIG_PATH": os.path.join(self.normalize_path("mkl"), "bin", "pkgconfig"),
             }
 
             env.set("MKLROOT", env_mods["MKLROOT"])
@@ -1111,6 +1107,7 @@ class IntelPackage(PackageBase):
             env.append_path("CMAKE_PREFIX_PATH", env_mods["CMAKE_PREFIX_PATH"])
             env.append_path("CMAKE_LIBRARY_PATH", env_mods["CMAKE_LIBRARY_PATH"])
             env.append_path("CMAKE_INCLUDE_PATH", env_mods["CMAKE_INCLUDE_PATH"])
+            env.append_path("PKG_CONFIG_PATH", env_mods["PKG_CONFIG_PATH"])
 
             debug_print("adding/modifying build env:", env_mods)
 
@@ -1162,9 +1159,7 @@ class IntelPackage(PackageBase):
         #
         # Ideally, we just tell the installer to look around on the system.
         # Thankfully, we neither need to care nor emulate where it looks:
-        license_type = {
-            "ACTIVATION_TYPE": "exist_lic",
-        }
+        license_type = {"ACTIVATION_TYPE": "exist_lic"}
 
         # However (and only), if the spack-internal Intel license file has been
         # populated beyond its templated explanatory comments, proffer it to
@@ -1184,12 +1179,13 @@ class IntelPackage(PackageBase):
         debug_print(license_type)
         return license_type
 
-    def configure(self, spec, prefix):
+    @spack.builder.run_before("install")
+    def configure(self):
         """Generates the silent.cfg file to pass to installer.sh.
 
         See https://software.intel.com/en-us/articles/configuration-file-format
         """
-
+        prefix = self.prefix
         # Both tokens AND values of the configuration file are validated during
         # the run of the underlying binary installer. Any unknown token or
         # unacceptable value will cause that installer to fail.  Notably, this
@@ -1270,7 +1266,7 @@ class IntelPackage(PackageBase):
         for f in glob.glob("%s/intel*log" % tmpdir):
             install(f, dst)
 
-    @run_after("install")
+    @spack.builder.run_after("install")
     def validate_install(self):
         # Sometimes the installer exits with an error but doesn't pass a
         # non-zero exit code to spack. Check for the existence of a 'bin'
@@ -1278,7 +1274,7 @@ class IntelPackage(PackageBase):
         if not os.path.exists(self.prefix.bin):
             raise InstallError("The installer has failed to install anything.")
 
-    @run_after("install")
+    @spack.builder.run_after("install")
     def configure_rpath(self):
         if "+rpath" not in self.spec:
             return
@@ -1296,7 +1292,7 @@ class IntelPackage(PackageBase):
             with open(compiler_cfg, "w") as fh:
                 fh.write("-Xlinker -rpath={0}\n".format(compilers_lib_dir))
 
-    @run_after("install")
+    @spack.builder.run_after("install")
     def configure_auto_dispatch(self):
         if self._has_compilers:
             if "auto_dispatch=none" in self.spec:
@@ -1320,7 +1316,7 @@ class IntelPackage(PackageBase):
                 with open(compiler_cfg, "a") as fh:
                     fh.write("-ax{0}\n".format(",".join(ad)))
 
-    @run_after("install")
+    @spack.builder.run_after("install")
     def filter_compiler_wrappers(self):
         if ("+mpi" in self.spec or self.provides("mpi")) and "~newdtags" in self.spec:
             bin_dir = self.component_bin_dir("mpi")
@@ -1328,7 +1324,7 @@ class IntelPackage(PackageBase):
                 f = os.path.join(bin_dir, f)
                 filter_file("-Xlinker --enable-new-dtags", " ", f, string=True)
 
-    @run_after("install")
+    @spack.builder.run_after("install")
     def uninstall_ism(self):
         # The "Intel(R) Software Improvement Program" [ahem] gets installed,
         # apparently regardless of PHONEHOME_SEND_USAGE_DATA.
@@ -1360,7 +1356,7 @@ class IntelPackage(PackageBase):
         debug_print(d)
         return d
 
-    @run_after("install")
+    @spack.builder.run_after("install")
     def modify_LLVMgold_rpath(self):
         """Add libimf.so and other required libraries to the RUNPATH of LLVMgold.so.
 
@@ -1391,6 +1387,3 @@ class IntelPackage(PackageBase):
                     ]
                 )
                 patchelf("--set-rpath", rpath, lib)
-
-    # Check that self.prefix is there after installation
-    run_after("install")(PackageBase.sanity_check_prefix)

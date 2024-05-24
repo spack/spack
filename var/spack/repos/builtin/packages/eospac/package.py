@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class Eospac(Package):
 
     homepage = "https://laws.lanl.gov/projects/data/eos.html"
     list_url = "https://laws.lanl.gov/projects/data/eos/eospacReleases.php"
-    maintainers = ["KineticTheory"]
+    maintainers("KineticTheory")
 
     # - An EOSPAC release labeled "beta" doesn't always imply that the release
     #   is less suitable for production.  According to the current EOSPAC
@@ -23,8 +23,33 @@ class Eospac(Package):
     # - alpha and beta versions are marked with 'deprecated=True' to help
     #   spack's version comparison.
     version(
-        "6.5.0",
+        "6.5.9",
         preferred=True,
+        sha256="54df29b1dc3b35c654ef2ebfbfa42d960a230cfb2d3c04a75ba93d3a789a312a",
+        url="https://laws.lanl.gov/projects/data/eos/get_file.php?package=eospac&filename=eospac_v6.5.9_4c633156bacc7b721bdd2735e40e09984a4d60a3.tgz",
+    )
+    version(
+        "6.5.8",
+        sha256="4e2c5db150bf7f45b5615c034848b9256f8659bcde95f097e446c226c70c6d96",
+        url="https://laws.lanl.gov/projects/data/eos/get_file.php?package=eospac&filename=eospac_v6.5.8_052127ccd65148632bd1258764f455c692a4dfc1.tgz",
+    )
+    version(
+        "6.5.7",
+        sha256="e59bd449bf97ce977309c6fc8a54fa30f4db9b2ca3e21f996095d78e23799e42",
+        url="https://laws.lanl.gov/projects/data/eos/get_file.php?package=eospac&filename=eospac_v6.5.7_9a867a15ae4137d22e1b52199d6a46b486fc4376.tgz",
+    )
+    version(
+        "6.5.6",
+        sha256="49bae52a0c1dc249ca75d47fc1ff9d6367221aa5a5a9c4664efaea6f0292eaff",
+        url="https://laws.lanl.gov/projects/data/eos/get_file.php?package=eospac&filename=eospac_v6.5.6_a523d0d98e0323fc0e3aa1c6ad540ebc741c3982.tgz",
+    )
+    version(
+        "6.5.5",
+        sha256="2b8129e02dce0d87f0006c82a0849172c3bc13c346485c54e6400a522f8fd754",
+        url="https://laws.lanl.gov/projects/data/eos/get_file.php?package=eospac&filename=eospac_v6.5.5_dcc5ca928b63c0add278107bef33a6bdd8befe44.tgz",
+    )
+    version(
+        "6.5.0",
         sha256="4e539418f773a5bd00dc49a5000ca857e5228cc5e83f198d46827a5671d34cff",
         url="https://laws.lanl.gov/projects/data/eos/get_file.php?package=eospac&filename=eospac_v6.5.0_6b10f4ccc1fc333b5d6023b93ab194ab0621d5ae.tgz",
     )
@@ -49,6 +74,7 @@ class Eospac(Package):
         "6.4.2beta",
         sha256="635b94f1ec7558deca92a3858c92db0f4437170252bb114cbdb809b74b6ee870",
         url="http://laws.lanl.gov/projects/data/eos/get_file.php?package=eospac&filename=eospac_v6.4.2beta_a62baf70708536f6fb5486e315c730fa76c1f6b5.tgz",
+        deprecated=True,
     )
     version(
         "6.4.1",
@@ -108,6 +134,12 @@ class Eospac(Package):
     # This patch corrects EOSPAC's selection of compiler flags when
     # compilers are specified using absolute pathnames.
     patch("cpuinfo_comp_flags_key.patch", when="@:6.4.1,6.4.2beta")
+    # This patchset corrects EOSPAC's selection of compiler flags when
+    # intel-classic@2021 is used.
+    patch("650-ic2021.patch", when="@6.5.0%intel")
+    patch("642-ic2021.patch", when="@6.4.2%intel")
+    patch("641-ic2021.patch", when="@6.4.1%intel")
+    patch("640-ic2021.patch", when="@6.4.0%intel")
 
     # GPU offload is only available for version 6.5+
     variant("offload", default=False, description="Build GPU offload library instead of standard")
@@ -129,6 +161,8 @@ class Eospac(Package):
             #   but gcc@10 flipped to default fno-common
             if "%gcc@10:" in spec:
                 compilerArgs.append("CFLAGS=-fcommon")
+            if self.run_tests:
+                make("check", *compilerArgs)
             make(
                 "install",
                 "prefix={0}".format(prefix),
@@ -136,7 +170,7 @@ class Eospac(Package):
                 "INSTALLED_INCLUDE_DIR={0}".format(prefix.include),
                 "INSTALLED_EXAMPLE_DIR={0}".format(prefix.example),
                 "INSTALLED_BIN_DIR={0}".format(prefix.bin),
-                *compilerArgs
+                *compilerArgs,
             )
         # fix conflict with linux's getopt for 6.4.0beta.2
         if spec.satisfies("@6.4.0beta.2"):

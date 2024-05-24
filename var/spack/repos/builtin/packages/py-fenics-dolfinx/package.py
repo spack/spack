@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,54 +7,61 @@ from spack.package import *
 
 
 class PyFenicsDolfinx(PythonPackage):
-    """Python interface library to Next generation FEniCS problem solving
+    """Python interface to the next generation FEniCS problem solving
     environment"""
 
     homepage = "https://github.com/FEniCS/dolfinx"
     url = "https://github.com/FEniCS/dolfinx/archive/v0.1.0.tar.gz"
     git = "https://github.com/FEniCS/dolfinx.git"
-    maintainers = ["chrisrichardson", "garth-wells", "nate-sime"]
+    maintainers("chrisrichardson", "garth-wells", "nate-sime", "jhale")
+
+    license("LGPL-3.0-only")
 
     version("main", branch="main")
-    version("0.4.1", sha256="68dcf29a26c750fcea5e02d8d58411e3b054313c3bf6fcbc1d0f08dd2851117f")
-    version("0.3.0", sha256="4857d0fcb44a4e9bf9eb298ba5377abdee17a7ad0327448bdd06cce73d109bed")
-    version("0.2.0", sha256="4c9b5a5c7ef33882c99299c9b4d98469fb7aa470a37a91bc5be3bb2fc5b863a4")
-    version("0.1.0", sha256="0269379769b5b6d4d1864ded64402ecaea08054c2a5793c8685ea15a59af5e33")
+    version("0.8.0", sha256="acf3104d9ecc0380677a6faf69eabfafc58d0cce43f7777e1307b95701c7cad9")
+    version("0.7.2", sha256="7d9ce1338ce66580593b376327f23ac464a4ce89ef63c105efc1a38e5eae5c0b")
+    version("0.6.0", sha256="eb8ac2bb2f032b0d393977993e1ab6b4101a84d54023a67206e3eac1a8d79b80")
 
-    depends_on("cmake@3.18:", type="build")
+    depends_on("cmake@3.19:", type="build")
     depends_on("hdf5", type="build")
-    depends_on("pkgconfig", type=("build", "run"))
-    depends_on("python@3.7:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
+    depends_on("pkgconfig", type="build")
+
+    depends_on("python@3.9:", when="@0.8:", type=("build", "run"))
+    depends_on("python@3.8:", when="@0.7", type=("build", "run"))
+    depends_on("python@3.8:3.10", when="@0.6.0", type=("build", "run"))
 
     depends_on("fenics-dolfinx@main", when="@main")
-    depends_on("fenics-dolfinx@0.4.1", when="@0.4.1")
-    depends_on("fenics-dolfinx@0.3.0", when="@0.3.0")
-    depends_on("fenics-dolfinx@0.2.0", when="@0.2.0")
-    depends_on("fenics-dolfinx@0.1.0", when="@0.1.0")
+    depends_on("fenics-dolfinx@0.8.0", when="@0.8.0")
+    depends_on("fenics-dolfinx@0.7.2", when="@0.7.2")
+    depends_on("fenics-dolfinx@0.6.0", when="@0.6.0")
+
+    depends_on("py-fenics-basix@main", type=("build", "run"), when="@main")
+    depends_on("py-fenics-basix@0.8", type=("build", "link"), when="@0.8")
 
     depends_on("fenics-basix@main", type=("build", "link"), when="@main")
-    depends_on("fenics-basix@0.4.2", type=("build", "link"), when="@0.4.1")
-    depends_on("fenics-basix@0.3.0", type=("build", "link"), when="@0.3.0")
-    depends_on("fenics-basix@0.2.0", type=("build", "link"), when="@0.2.0")
-    depends_on("fenics-basix@0.1.0", type=("build", "link"), when="@0.1.0")
-    depends_on("py-fenics-ffcx@main", type="run", when="@main")
-    depends_on("py-fenics-ffcx@0.4.2", type="run", when="@0.4.1")
-    depends_on("py-fenics-ffcx@0.3.0", type="run", when="@0.3.0")
-    depends_on("py-fenics-ffcx@0.2.0", type="run", when="@0.2.0")
-    depends_on("py-fenics-ffcx@0.1.0", type="run", when="@0.1.0")
-    depends_on("py-fenics-ufl@main", type="run", when="@main")
-    depends_on("py-fenics-ufl@2022.1.0", type="run", when="@0.4.1")
-    depends_on("py-fenics-ufl@2021.1.0", type="run", when="@0.1:0.3.99")
+    depends_on("fenics-basix@0.8", type=("build", "link"), when="@0.8")
+    depends_on("fenics-basix@0.7", type=("build", "link"), when="@0.7")
+    depends_on("fenics-basix@0.6", type=("build", "link"), when="@0.6")
 
-    depends_on("py-numpy@1.21:", type=("build", "run"), when="@main")
-    depends_on("py-numpy", type=("build", "run"))
+    depends_on("py-fenics-ffcx@main", type=("build", "run"), when="@main")
+    depends_on("py-fenics-ffcx@0.8", type=("build", "run"), when="@0.8")
+    depends_on("py-fenics-ffcx@0.7", type=("build", "run"), when="@0.7")
+    depends_on("py-fenics-ffcx@0.6", type=("build", "run"), when="@0.6")
 
+    depends_on("py-fenics-ufl@main", type=("build", "run"), when="@main")
+    depends_on("py-fenics-ufl@2024.1", type=("build", "run"), when="@0.8")
+    depends_on("py-fenics-ufl@2023.2", type=("build", "run"), when="@0.7")
+    depends_on("py-fenics-ufl@2023.1", type=("build", "run"), when="@0.6")
+
+    depends_on("py-numpy@1.21:", type=("build", "run"))
     depends_on("py-mpi4py", type=("build", "run"))
     depends_on("py-petsc4py", type=("build", "run"))
-    depends_on("py-pybind11@2.6.2:", type=("build", "run"))
-    depends_on("xtensor@0.23.10:", type="build")
+    depends_on("py-cffi", type=("build", "run"))
 
-    depends_on("py-cffi", type="run")
+    depends_on("py-nanobind@1.8:", when="@0.8:", type="build")
+    depends_on("py-scikit-build-core+pyproject@0.5:", when="@0.8:", type="build")
+
+    depends_on("py-pybind11@2.7.0:", when="@:0.7", type=("build", "run"))
+    depends_on("py-setuptools@42:", when="@:0.7", type="build")
 
     build_directory = "python"

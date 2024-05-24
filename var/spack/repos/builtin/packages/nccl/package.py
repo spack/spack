@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,9 +14,23 @@ class Nccl(MakefilePackage, CudaPackage):
     homepage = "https://github.com/NVIDIA/nccl"
     url = "https://github.com/NVIDIA/nccl/archive/v2.7.3-1.tar.gz"
 
-    maintainers = ["adamjstewart"]
+    maintainers("adamjstewart")
     libraries = ["libnccl.so"]
 
+    version("2.21.5-1", sha256="1923596984d85e310b5b6c52b2c72a1b93da57218f2bc5a5c7ac3d59297a3303")
+    version("2.20.3-1", sha256="19456bd63ca7d23a8319cbbdbaaf6c25949dd51161a9f8809f6b7453282983dd")
+    version("2.19.3-1", sha256="1c5474553afedb88e878c772f13d6f90b9226b3f2971dfa6f873adb9443100c2")
+    version("2.18.5-1", sha256="16ac98f3e926c024ce48e10ab220e19ce734adc48c423cfd55ad6f509bd1179f")
+    version("2.18.3-1", sha256="6477d83c9edbb34a0ebce6d751a1b32962bc6415d75d04972b676c6894ceaef9")
+    version("2.18.1-1", sha256="0e4ede5cf8df009bff5aeb3a9f194852c03299ae5664b5a425b43358e7a9eef2")
+    version("2.17.1-1", sha256="1311a6fd7cd44ad6d4523ba03065ce694605843fd30a5c0f77aa3d911abe706d")
+    version("2.16.2-1", sha256="7f7c738511a8876403fc574d13d48e7c250d934d755598d82e14bab12236fc64")
+    version("2.15.5-1", sha256="f4ac3c74d469c9cd718f82e1477759785db9b9f8cc9d9ecc103485805b8394a3")
+    version("2.14.3-1", sha256="0fffb6f91e029ea4d95efabd7bddc6eecf8bf136e4f46bf812bff7d8eee53c79")
+    version("2.13.4-1", sha256="d5f5243200d4e40683c56f04435bfd6defa379cb4f2b8c07b0f191df0f66c3d9")
+    version("2.12.12-1", sha256="49b4fbfeebf1f62f6ceb69e72504045d8d1b4e7609e3c2477906f3004c7e2d82")
+    version("2.12.10-1", sha256="7f53ed9f1af25bf5290e774d4fbe7a8fc71bcad34ab943602d36e4d0a8d30d16")
+    version("2.12.7-1", sha256="928d02e61637128f53320a89088c9c2e597fe9d25548dfaf06238bf5a87420fd")
     version("2.11.4-1", sha256="db4e9a0277a64f9a31ea9b5eea22e63f10faaed36dded4587bbc8a0d8eceed10")
     version("2.10.3-1", sha256="55de166eb7dcab9ecef2629cdb5fb0c5ebec4fae03589c469ebe5dcb5716b3c5")
     version("2.9.9-1", sha256="01629a1bdadbadb2828e26023ba7685bbc07678468cb7df63cc96460f5337e08")
@@ -37,20 +51,10 @@ class Nccl(MakefilePackage, CudaPackage):
     version("2.4.2-1", sha256="e3dd04b22eb541394bd818e5f78ac23a09cc549690d5d55d6fccc1a36155385a")
     version("2.3.7-1", sha256="e6eff80d9d2db13c61f8452e1400ca2f098d2dfe42857cb23413ce081c5b9e9b")
     version("2.3.5-5", sha256="bac9950b4d3980c25baa8e3e4541d2dfb4d21edf32ad3b89022d04920357142f")
-    version(
-        "1.3.4-1",
-        sha256="11e4eb44555bb28b9cbad973dacb4640b82710c9769e719afc2013b63ffaf884",
-        deprecated=True,
-    )
-    version(
-        "1.3.0-1",
-        sha256="53f36151061907bdcafad1c26c1d9370a0a8400f561a83704a5138213ba51003",
-        deprecated=True,
-    )
 
     variant("cuda", default=True, description="Build with CUDA")
 
-    depends_on("rdma-core", when="@2.3.5-5:")
+    depends_on("rdma-core")
 
     # https://github.com/NVIDIA/nccl/issues/244
     patch("so_reuseport.patch", when="@2.3.7-1:2.4.8-1")

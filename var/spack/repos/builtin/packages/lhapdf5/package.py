@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class Lhapdf5(AutotoolsPackage):
 
     homepage = "https://lhapdf.hepforge.org/lhapdf5/"
     url = "https://lhapdf.hepforge.org/downloads?f=old/lhapdf-5.9.1.tar.gz"
+
+    license("GPL-2.0-or-later")
 
     version("5.9.1", sha256="86b9b046d7f25627ce2aab6847ef1c5534972f4bae18de98225080cf5086919c")
     version("5.9.0", sha256="64b9018ce6102ae7b6a92c990ca6afa841fb992d87b1abf5756c3d04c4d46b9c")
@@ -27,17 +29,8 @@ class Lhapdf5(AutotoolsPackage):
     version("5.8.0", sha256="8381ea5f785dde95772a2b6d5890f1cb72012e223e6861823fd81b09eedaa7a3")
     version("5.7.1", sha256="40529629351598317fbf7b5905661e51b23778019d50451eee78d7b1118e2559")
 
-    variant("python2", default=False, description="Enable Python2 extension")
-
-    depends_on("python@2.3:2.7", when="+python2")
-
     def setup_build_environment(self, env):
         env.append_flags("FFLAGS", "-std=legacy")
-        if self.spec.satisfies("+python2"):
-            env.append_flags("PYTHON", join_path(self.spec["python"].prefix.bin, "python"))
 
     def configure_args(self):
-        args = []
-        if self.spec.satisfies("-python2"):
-            args.append("--disable-pyext")
-        return args
+        return ["--disable-pyext"]

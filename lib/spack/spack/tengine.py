@@ -1,16 +1,15 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import itertools
 import textwrap
-from typing import List  # novm
-
-import six
+from typing import List, Optional, Tuple
 
 import llnl.util.lang
 
 import spack.config
+import spack.extensions
 from spack.util.path import canonicalize_path
 
 
@@ -21,7 +20,7 @@ class ContextMeta(type):
 
     #: Keeps track of the context properties that have been added
     #: by the class that is being defined
-    _new_context_properties = []  # type: List[str]
+    _new_context_properties: List[str] = []
 
     def __new__(cls, name, bases, attr_dict):
         # Merge all the context properties that are coming from base classes
@@ -56,7 +55,7 @@ class ContextMeta(type):
 context_property = ContextMeta.context_property
 
 
-class Context(six.with_metaclass(ContextMeta, object)):
+class Context(metaclass=ContextMeta):
     """Base class for context classes that are used with the template
     engine.
     """
@@ -67,17 +66,17 @@ class Context(six.with_metaclass(ContextMeta, object)):
         return dict(d)
 
 
-def make_environment(dirs=None):
-    """Returns an configured environment for template rendering."""
+@llnl.util.lang.memoized
+def make_environment(dirs: Optional[Tuple[str, ...]] = None):
+    """Returns a configured environment for template rendering."""
+    # Import at this scope to avoid slowing Spack startup down
+    import jinja2
+
     if dirs is None:
         # Default directories where to search for templates
         builtins = spack.config.get("config:template_dirs", ["$spack/share/spack/templates"])
         extensions = spack.extensions.get_template_dirs()
-        dirs = [canonicalize_path(d) for d in itertools.chain(builtins, extensions)]
-
-    # avoid importing this at the top level as it's used infrequently and
-    # slows down startup a bit.
-    import jinja2
+        dirs = tuple(canonicalize_path(d) for d in itertools.chain(builtins, extensions))
 
     # Loader for the templates
     loader = jinja2.FileSystemLoader(dirs)
@@ -101,9 +100,15 @@ def quote(text):
     return ['"{0}"'.format(line) for line in text]
 
 
+def curly_quote(text):
+    """Encloses each line of text in curly braces"""
+    return ["{{{0}}}".format(line) for line in text]
+
+
 def _set_filters(env):
     """Sets custom filters to the template engine environment"""
     env.filters["textwrap"] = textwrap.wrap
     env.filters["prepend_to_line"] = prepend_to_line
     env.filters["join"] = "\n".join
     env.filters["quote"] = quote
+    env.filters["curly_quote"] = curly_quote

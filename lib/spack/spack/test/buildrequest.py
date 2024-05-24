@@ -1,21 +1,14 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import sys
-
 import pytest
 
+import spack.deptypes as dt
 import spack.installer as inst
 import spack.repo
 import spack.spec
-
-# Spack functionality tested here should work on Windows,
-# however, tests are currently failing because support
-# for Spack on Windows has not been extended to this
-# module yet.
-pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="does not run on windows")
 
 
 def test_build_request_errors(install_mockery):
@@ -23,7 +16,7 @@ def test_build_request_errors(install_mockery):
         inst.BuildRequest("abc", {})
 
     spec = spack.spec.Spec("trivial-install-test-package")
-    pkg_cls = spack.repo.path.get_pkg_class(spec.name)
+    pkg_cls = spack.repo.PATH.get_pkg_class(spec.name)
     with pytest.raises(ValueError, match="must have a concrete spec"):
         inst.BuildRequest(pkg_cls(spec), {})
 
@@ -62,3 +55,36 @@ def test_build_request_strings(install_mockery):
     istr = str(request)
     assert "package=dependent-install" in istr
     assert "install_args=" in istr
+
+
+@pytest.mark.parametrize(
+    "package_cache_only,dependencies_cache_only,package_deptypes,dependencies_deptypes",
+    [
+        (False, False, dt.BUILD | dt.LINK | dt.RUN, dt.BUILD | dt.LINK | dt.RUN),
+        (True, False, dt.LINK | dt.RUN, dt.BUILD | dt.LINK | dt.RUN),
+        (False, True, dt.BUILD | dt.LINK | dt.RUN, dt.LINK | dt.RUN),
+        (True, True, dt.LINK | dt.RUN, dt.LINK | dt.RUN),
+    ],
+)
+def test_build_request_deptypes(
+    install_mockery,
+    package_cache_only,
+    dependencies_cache_only,
+    package_deptypes,
+    dependencies_deptypes,
+):
+    s = spack.spec.Spec("dependent-install").concretized()
+
+    build_request = inst.BuildRequest(
+        s.package,
+        {
+            "package_cache_only": package_cache_only,
+            "dependencies_cache_only": dependencies_cache_only,
+        },
+    )
+
+    actual_package_deptypes = build_request.get_depflags(s.package)
+    actual_dependency_deptypes = build_request.get_depflags(s["dependency-install"].package)
+
+    assert actual_package_deptypes == package_deptypes
+    assert actual_dependency_deptypes == dependencies_deptypes

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,17 +6,13 @@
 """Schema for repos.yaml configuration file.
 
 .. literalinclude:: _spack_root/lib/spack/spack/schema/repos.py
-   :lines: 13-
+   :lines: 14-
 """
-
+from typing import Any, Dict
 
 #: Properties for inclusion in other schemas
-properties = {
-    "repos": {
-        "type": "array",
-        "default": [],
-        "items": {"type": "string"},
-    },
+properties: Dict[str, Any] = {
+    "repos": {"type": "array", "default": [], "items": {"type": "string"}}
 }
 
 

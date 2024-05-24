@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,26 +8,24 @@
 The YAML and JSON formats preserve DAG information in the spec.
 
 """
-from __future__ import print_function
-
 import ast
 import collections
+import collections.abc
+import gzip
 import inspect
+import json
 import os
 
 import pytest
 
-from llnl.util.compat import Iterable, Mapping
-
 import spack.hash_types as ht
 import spack.paths
+import spack.repo
 import spack.spec
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
 import spack.version
-from spack import repo
 from spack.spec import Spec, save_dependency_specfiles
-from spack.util.mock_package import MockPackageMultiRepo
 from spack.util.spack_yaml import SpackYAMLError, syaml_dict
 
 
@@ -41,12 +39,6 @@ def check_json_round_trip(spec):
     json_text = spec.to_json()
     spec_from_json = Spec.from_json(json_text)
     assert spec.eq_dag(spec_from_json)
-
-
-def test_simple_spec():
-    spec = Spec("mpileaks")
-    check_yaml_round_trip(spec)
-    check_json_round_trip(spec)
 
 
 def test_read_spec_from_signed_json():
@@ -70,22 +62,13 @@ def test_read_spec_from_signed_json():
         check_spec(s)
 
 
-def test_normal_spec(mock_packages):
-    spec = Spec("mpileaks+debug~opt")
-    spec.normalize()
-    check_yaml_round_trip(spec)
-    check_json_round_trip(spec)
-
-
 @pytest.mark.parametrize(
     "invalid_yaml", ["playing_playlist: {{ action }} playlist {{ playlist_name }}"]
 )
 def test_invalid_yaml_spec(invalid_yaml):
-    with pytest.raises(SpackYAMLError) as e:
+    with pytest.raises(SpackYAMLError, match="error parsing YAML") as e:
         Spec.from_yaml(invalid_yaml)
-    exc_msg = str(e.value)
-    assert exc_msg.startswith("error parsing YAML spec:")
-    assert invalid_yaml in exc_msg
+    assert invalid_yaml in str(e)
 
 
 @pytest.mark.parametrize("invalid_json, error_message", [("{13:", "Expecting property name")])
@@ -97,37 +80,28 @@ def test_invalid_json_spec(invalid_json, error_message):
     assert error_message in exc_msg
 
 
-def test_external_spec(config, mock_packages):
-    spec = Spec("externaltool")
-    spec.concretize()
-    check_yaml_round_trip(spec)
-    check_json_round_trip(spec)
-
-    spec = Spec("externaltest")
-    spec.concretize()
-    check_yaml_round_trip(spec)
-    check_json_round_trip(spec)
-
-
-def test_ambiguous_version_spec(mock_packages):
-    spec = Spec("mpileaks@1.0:5.0,6.1,7.3+debug~opt")
-    spec.normalize()
-    check_yaml_round_trip(spec)
-    check_json_round_trip(spec)
-
-
-def test_concrete_spec(config, mock_packages):
-    spec = Spec("mpileaks+debug~opt")
-    spec.concretize()
-    check_yaml_round_trip(spec)
-    check_json_round_trip(spec)
-
-
-def test_yaml_multivalue(config, mock_packages):
-    spec = Spec('multivalue-variant foo="bar,baz"')
-    spec.concretize()
-    check_yaml_round_trip(spec)
-    check_json_round_trip(spec)
+@pytest.mark.parametrize(
+    "abstract_spec",
+    [
+        # Externals
+        "externaltool",
+        "externaltest",
+        # Ambiguous version spec
+        "mpileaks@1.0:5.0,6.1,7.3+debug~opt",
+        # Variants
+        "mpileaks+debug~opt",
+        'multivalue-variant foo="bar,baz"',
+        # Virtuals on edges
+        "callpath",
+        "mpileaks",
+    ],
+)
+def test_roundtrip_concrete_specs(abstract_spec, default_mock_concretization):
+    check_yaml_round_trip(Spec(abstract_spec))
+    check_json_round_trip(Spec(abstract_spec))
+    concrete_spec = default_mock_concretization(abstract_spec)
+    check_yaml_round_trip(concrete_spec)
+    check_json_round_trip(concrete_spec)
 
 
 def test_yaml_subdag(config, mock_packages):
@@ -149,12 +123,12 @@ def test_using_ordered_dict(mock_packages):
     """
 
     def descend_and_check(iterable, level=0):
-        if isinstance(iterable, Mapping):
+        if isinstance(iterable, collections.abc.Mapping):
             assert isinstance(iterable, syaml_dict)
             return descend_and_check(iterable.values(), level=level + 1)
         max_level = level
         for value in iterable:
-            if isinstance(value, Iterable) and not isinstance(value, str):
+            if isinstance(value, collections.abc.Iterable) and not isinstance(value, str):
                 nlevel = descend_and_check(value, level=level + 1)
                 if nlevel > max_level:
                     max_level = nlevel
@@ -224,7 +198,7 @@ def test_ordered_read_not_required_for_consistent_dag_hash(config, mock_packages
         round_trip_reversed_json_spec = Spec.from_yaml(reversed_json_string)
 
         # Strip spec if we stripped the yaml
-        spec = spec.copy(deps=ht.dag_hash.deptype)
+        spec = spec.copy(deps=ht.dag_hash.depflag)
 
         # specs are equal to the original
         assert spec == round_trip_yaml_spec
@@ -252,13 +226,7 @@ def test_ordered_read_not_required_for_consistent_dag_hash(config, mock_packages
         assert spec.dag_hash() == round_trip_reversed_json_spec.dag_hash()
 
 
-@pytest.mark.parametrize(
-    "module",
-    [
-        spack.spec,
-        spack.version,
-    ],
-)
+@pytest.mark.parametrize("module", [spack.spec, spack.version])
 def test_hashes_use_no_python_dicts(module):
     """Coarse check to make sure we don't use dicts in Spec.to_node_dict().
 
@@ -345,25 +313,21 @@ def check_specs_equal(original_spec, spec_yaml_path):
 def test_save_dependency_spec_jsons_subset(tmpdir, config):
     output_path = str(tmpdir.mkdir("spec_jsons"))
 
-    default = ("build", "link")
+    builder = spack.repo.MockRepositoryBuilder(tmpdir.mkdir("mock-repo"))
+    builder.add_package("g")
+    builder.add_package("f")
+    builder.add_package("e")
+    builder.add_package("d", dependencies=[("f", None, None), ("g", None, None)])
+    builder.add_package("c")
+    builder.add_package("b", dependencies=[("d", None, None), ("e", None, None)])
+    builder.add_package("a", dependencies=[("b", None, None), ("c", None, None)])
 
-    mock_repo = MockPackageMultiRepo()
-    g = mock_repo.add_package("g", [], [])
-    f = mock_repo.add_package("f", [], [])
-    e = mock_repo.add_package("e", [], [])
-    d = mock_repo.add_package("d", [f, g], [default, default])
-    c = mock_repo.add_package("c", [], [])
-    b = mock_repo.add_package("b", [d, e], [default, default])
-    mock_repo.add_package("a", [b, c], [default, default])
-
-    with repo.use_repositories(mock_repo):
-        spec_a = Spec("a")
-        spec_a.concretize()
+    with spack.repo.use_repositories(builder.root):
+        spec_a = Spec("a").concretized()
         b_spec = spec_a["b"]
         c_spec = spec_a["c"]
-        spec_a_json = spec_a.to_json()
 
-        save_dependency_specfiles(spec_a_json, output_path, ["b", "c"])
+        save_dependency_specfiles(spec_a, output_path, [Spec("b"), Spec("c")])
 
         assert check_specs_equal(b_spec, os.path.join(output_path, "b.json"))
         assert check_specs_equal(c_spec, os.path.join(output_path, "c.json"))
@@ -482,15 +446,7 @@ ordered_spec = collections.OrderedDict(
                 ]
             ),
         ),
-        (
-            "compiler",
-            collections.OrderedDict(
-                [
-                    ("name", "apple-clang"),
-                    ("version", "13.0.0"),
-                ]
-            ),
-        ),
+        ("compiler", collections.OrderedDict([("name", "apple-clang"), ("version", "13.0.0")])),
         ("name", "zlib"),
         ("namespace", "builtin"),
         (
@@ -514,14 +470,38 @@ ordered_spec = collections.OrderedDict(
 )
 
 
-@pytest.mark.regression("31092")
-def test_strify_preserves_order():
-    """Ensure that ``spack_json._strify()`` dumps dictionaries in the right order.
+@pytest.mark.parametrize(
+    "specfile,expected_hash,reader_cls",
+    [
+        # First version supporting JSON format for specs
+        ("specfiles/hdf5.v013.json.gz", "vglgw4reavn65vx5d4dlqn6rjywnq76d", spack.spec.SpecfileV1),
+        # Introduces full hash in the format, still has 3 hashes
+        ("specfiles/hdf5.v016.json.gz", "stp45yvzte43xdauknaj3auxlxb4xvzs", spack.spec.SpecfileV1),
+        # Introduces "build_specs", see https://github.com/spack/spack/pull/22845
+        ("specfiles/hdf5.v017.json.gz", "xqh5iyjjtrp2jw632cchacn3l7vqzf3m", spack.spec.SpecfileV2),
+        # Use "full hash" everywhere, see https://github.com/spack/spack/pull/28504
+        ("specfiles/hdf5.v019.json.gz", "iulacrbz7o5v5sbj7njbkyank3juh6d3", spack.spec.SpecfileV3),
+        # Add properties on edges, see https://github.com/spack/spack/pull/34821
+        ("specfiles/hdf5.v020.json.gz", "vlirlcgazhvsvtundz4kug75xkkqqgou", spack.spec.SpecfileV4),
+    ],
+)
+def test_load_json_specfiles(specfile, expected_hash, reader_cls):
+    fullpath = os.path.join(spack.paths.test_path, "data", specfile)
+    with gzip.open(fullpath, "rt", encoding="utf-8") as f:
+        data = json.load(f)
 
-    ``_strify()`` is used in ``spack_json.dump()``, which is used in
-    ``Spec.dag_hash()``, so if this goes wrong, ``Spec`` hashes can vary between python
-    versions.
+    s1 = Spec.from_dict(data)
+    s2 = reader_cls.load(data)
 
-    """
-    strified = sjson._strify(ordered_spec)
-    assert list(ordered_spec.items()) == list(strified.items())
+    assert s2.dag_hash() == expected_hash
+    assert s1.dag_hash() == s2.dag_hash()
+    assert s1 == s2
+    assert Spec.from_json(s2.to_json()).dag_hash() == s2.dag_hash()
+
+    openmpi_edges = s2.edges_to_dependencies(name="openmpi")
+    assert len(openmpi_edges) == 1
+
+    # The virtuals attribute must be a tuple, when read from a
+    # JSON or YAML file, not a list
+    for edge in s2.traverse_edges():
+        assert isinstance(edge.virtuals, tuple), edge

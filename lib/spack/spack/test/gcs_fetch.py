@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,6 +8,7 @@ import os
 import pytest
 
 import spack.config
+import spack.error
 import spack.fetch_strategy
 import spack.stage
 
@@ -32,7 +33,7 @@ def test_gcsfetchstrategy_bad_url(tmpdir, _fetch_method):
         with spack.stage.Stage(fetcher, path=testpath) as stage:
             assert stage is not None
             assert fetcher.archive_file is None
-            with pytest.raises(spack.fetch_strategy.FetchError):
+            with pytest.raises(spack.error.FetchError):
                 fetcher.fetch()
 
 

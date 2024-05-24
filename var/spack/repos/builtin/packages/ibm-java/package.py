@@ -1,10 +1,12 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
 import platform
+
+from llnl.util.symlink import readlink
 
 from spack.package import *
 
@@ -16,7 +18,7 @@ class IbmJava(Package):
     (and even current) versions may not be available."""
 
     homepage = "https://developer.ibm.com/javasdk/"
-    maintainers = ["mwkrentel"]
+    maintainers("mwkrentel")
 
     # Note: IBM is fairly aggressive about taking down old versions,
     # so we may need to update this frequently.  Also, old revs may
@@ -56,7 +58,7 @@ class IbmJava(Package):
     # There are separate tar files for big and little-endian machine
     # types.  And no, this won't work cross platform.
 
-    for (ver, mach, sha) in version_list:
+    for ver, mach, sha in version_list:
         if mach == platform.machine():
             version(ver, sha256=sha, expand=False)
 
@@ -94,7 +96,7 @@ class IbmJava(Package):
         # The archive.bin file is quite fussy and doesn't work as a
         # symlink.
         if os.path.islink(archive):
-            targ = os.readlink(archive)
+            targ = readlink(archive)
             os.unlink(archive)
             copy(targ, archive)
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,14 +8,19 @@ import sys
 
 import pytest
 
+import archspec.cpu
+
+import llnl.util.filesystem as fs
+
+import spack.compilers
 import spack.concretize
 import spack.operating_systems
 import spack.platforms
-import spack.spec
 import spack.target
+from spack.spec import ArchSpec, Spec
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def current_host_platform():
     """Return the platform of the current host as detected by the
     'platform' stdlib package.
@@ -28,27 +33,29 @@ def current_host_platform():
         current_platform = spack.platforms.Darwin()
     elif "Windows" in platform.system():
         current_platform = spack.platforms.Windows()
+    elif "FreeBSD" in platform.system():
+        current_platform = spack.platforms.FreeBSD()
     return current_platform
 
 
 # Valid keywords for os=xxx or target=xxx
-valid_keywords = ["fe", "be", "frontend", "backend"]
+VALID_KEYWORDS = ["fe", "be", "frontend", "backend"]
+
+TEST_PLATFORM = spack.platforms.Test()
 
 
-@pytest.fixture(
-    params=([x for x in spack.platforms.Test().targets] + valid_keywords + ["default_target"])
-)
+@pytest.fixture(params=([str(x) for x in TEST_PLATFORM.targets] + VALID_KEYWORDS), scope="module")
 def target_str(request):
     """All the possible strings that can be used for targets"""
-    return str(request.param)
+    return request.param
 
 
 @pytest.fixture(
-    params=([x for x in spack.platforms.Test().operating_sys] + valid_keywords + ["default_os"])
+    params=([str(x) for x in TEST_PLATFORM.operating_sys] + VALID_KEYWORDS), scope="module"
 )
 def os_str(request):
     """All the possible strings that can be used for operating systems"""
-    return str(request.param)
+    return request.param
 
 
 def test_platform(current_host_platform):
@@ -57,21 +64,23 @@ def test_platform(current_host_platform):
     assert str(detected_platform) == str(current_host_platform)
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Not supported on Windows (yet)")
 def test_user_input_combination(config, target_str, os_str):
     """Test for all the valid user input combinations that both the target and
     the operating system match.
     """
-    platform = spack.platforms.Test()
-    spec_str = "libelf"
-    if os_str != "default_os":
-        spec_str += " os={0}".format(os_str)
-    if target_str != "default_target":
-        spec_str += " target={0}".format(target_str)
-    spec = spack.spec.Spec(spec_str).concretized()
+    spec_str = "libelf os={} target={}".format(os_str, target_str)
+    spec = Spec(spec_str)
+    assert spec.architecture.os == str(TEST_PLATFORM.operating_system(os_str))
+    assert spec.architecture.target == TEST_PLATFORM.target(target_str)
 
-    assert spec.architecture.os == str(platform.operating_system(os_str))
-    assert spec.architecture.target == platform.target(target_str)
+
+def test_default_os_and_target(default_mock_concretization):
+    """Test that is we don't specify `os=` or `target=` we get the default values
+    after concretization.
+    """
+    spec = default_mock_concretization("libelf")
+    assert spec.architecture.os == str(TEST_PLATFORM.operating_system("default_os"))
+    assert spec.architecture.target == TEST_PLATFORM.target("default_target")
 
 
 def test_operating_system_conversion_to_dict():
@@ -110,59 +119,67 @@ def test_target_container_semantic(cpu_flag, target_name):
     ],
 )
 def test_arch_spec_container_semantic(item, architecture_str):
-    architecture = spack.spec.ArchSpec(architecture_str)
+    architecture = ArchSpec(architecture_str)
     assert item in architecture
 
 
 @pytest.mark.parametrize(
     "compiler_spec,target_name,expected_flags",
     [
-        # Check compilers with version numbers from a single toolchain
+        # Homogeneous compilers
         ("gcc@4.7.2", "ivybridge", "-march=core-avx-i -mtune=core-avx-i"),
-        # Check mixed toolchains
-        ("clang@8.0.0", "broadwell", ""),
         ("clang@3.5", "x86_64", "-march=x86-64 -mtune=generic"),
-        # Check Apple's Clang compilers
         ("apple-clang@9.1.0", "x86_64", "-march=x86-64"),
+        # Mixed toolchain
+        ("clang@8.0.0", "broadwell", ""),
     ],
 )
 @pytest.mark.filterwarnings("ignore:microarchitecture specific")
-def test_optimization_flags(compiler_spec, target_name, expected_flags, config):
+def test_optimization_flags(compiler_spec, target_name, expected_flags, compiler_factory):
     target = spack.target.Target(target_name)
-    compiler = spack.compilers.compilers_for_spec(compiler_spec).pop()
+    compiler_dict = compiler_factory(spec=compiler_spec, operating_system="")["compiler"]
+    if compiler_spec == "clang@8.0.0":
+        compiler_dict["paths"] = {
+            "cc": "/path/to/clang-8",
+            "cxx": "/path/to/clang++-8",
+            "f77": "/path/to/gfortran-9",
+            "fc": "/path/to/gfortran-9",
+        }
+    compiler = spack.compilers.compiler_from_dict(compiler_dict)
+
     opt_flags = target.optimization_flags(compiler)
     assert opt_flags == expected_flags
 
 
 @pytest.mark.parametrize(
-    "compiler,real_version,target_str,expected_flags",
+    "compiler_str,real_version,target_str,expected_flags",
     [
-        (spack.spec.CompilerSpec("gcc@9.2.0"), None, "haswell", "-march=haswell -mtune=haswell"),
+        ("gcc@=9.2.0", None, "haswell", "-march=haswell -mtune=haswell"),
         # Check that custom string versions are accepted
-        (
-            spack.spec.CompilerSpec("gcc@foo"),
-            "9.2.0",
-            "icelake",
-            "-march=icelake-client -mtune=icelake-client",
-        ),
+        ("gcc@=10foo", "9.2.0", "icelake", "-march=icelake-client -mtune=icelake-client"),
         # Check that we run version detection (4.4.0 doesn't support icelake)
-        (
-            spack.spec.CompilerSpec("gcc@4.4.0-special"),
-            "9.2.0",
-            "icelake",
-            "-march=icelake-client -mtune=icelake-client",
-        ),
+        ("gcc@=4.4.0-special", "9.2.0", "icelake", "-march=icelake-client -mtune=icelake-client"),
         # Check that the special case for Apple's clang is treated correctly
         # i.e. it won't try to detect the version again
-        (spack.spec.CompilerSpec("apple-clang@9.1.0"), None, "x86_64", "-march=x86-64"),
+        ("apple-clang@=9.1.0", None, "x86_64", "-march=x86-64"),
     ],
 )
 def test_optimization_flags_with_custom_versions(
-    compiler, real_version, target_str, expected_flags, monkeypatch, config
+    compiler_str,
+    real_version,
+    target_str,
+    expected_flags,
+    monkeypatch,
+    mutable_config,
+    compiler_factory,
 ):
     target = spack.target.Target(target_str)
+    compiler_dict = compiler_factory(spec=compiler_str, operating_system="redhat6")
+    mutable_config.set("compilers", [compiler_dict])
     if real_version:
         monkeypatch.setattr(spack.compiler.Compiler, "get_real_version", lambda x: real_version)
+    compiler = spack.compilers.compiler_from_dict(compiler_dict["compiler"])
+
     opt_flags = target.optimization_flags(compiler)
     assert opt_flags == expected_flags
 
@@ -176,9 +193,9 @@ def test_optimization_flags_with_custom_versions(
     ],
 )
 def test_satisfy_strict_constraint_when_not_concrete(architecture_tuple, constraint_tuple):
-    architecture = spack.spec.ArchSpec(architecture_tuple)
-    constraint = spack.spec.ArchSpec(constraint_tuple)
-    assert not architecture.satisfies(constraint, strict=True)
+    architecture = ArchSpec(architecture_tuple)
+    constraint = ArchSpec(constraint_tuple)
+    assert not architecture.satisfies(constraint)
 
 
 @pytest.mark.parametrize(
@@ -196,15 +213,37 @@ def test_satisfy_strict_constraint_when_not_concrete(architecture_tuple, constra
     ],
 )
 @pytest.mark.usefixtures("mock_packages", "config")
-def test_concretize_target_ranges(root_target_range, dep_target_range, result):
-    # use foobar=bar to make the problem simpler for the old concretizer
-    # the new concretizer should not need that help
-    spec_str = "a %%gcc@10 foobar=bar target=%s ^b target=%s" % (
-        root_target_range,
-        dep_target_range,
-    )
-    spec = spack.spec.Spec(spec_str)
+@pytest.mark.only_clingo("Fixing the parser broke this test for the original concretizer.")
+@pytest.mark.skipif(
+    str(archspec.cpu.host().family) != "x86_64", reason="tests are for x86_64 uarch ranges"
+)
+def test_concretize_target_ranges(root_target_range, dep_target_range, result, monkeypatch):
+    spec = Spec(f"a %gcc@10 foobar=bar target={root_target_range} ^b target={dep_target_range}")
     with spack.concretize.disable_compiler_existence_check():
         spec.concretize()
+    assert spec.target == spec["b"].target == result
 
-    assert str(spec).count("arch=test-debian6-%s" % result) == 2
+
+@pytest.mark.parametrize(
+    "versions,default,expected",
+    [
+        (["21.11", "21.9"], "21.11", False),
+        (["21.11", "21.9"], "21.9", True),
+        (["21.11", "21.9"], None, False),
+    ],
+)
+@pytest.mark.skipif(sys.platform == "win32", reason="Cray does not use windows")
+def test_cray_platform_detection(versions, default, expected, tmpdir, monkeypatch, working_env):
+    ex_path = str(tmpdir.join("fake_craype_dir"))
+    fs.mkdirp(ex_path)
+
+    with fs.working_dir(ex_path):
+        for version in versions:
+            fs.touch(version)
+        if default:
+            os.symlink(default, "default")
+
+    monkeypatch.setattr(spack.platforms.cray, "_ex_craype_dir", ex_path)
+    os.environ["MODULEPATH"] = "/opt/cray/pe"
+
+    assert spack.platforms.cray.Cray.detect() == expected

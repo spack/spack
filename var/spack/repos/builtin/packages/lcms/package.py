@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class Lcms(AutotoolsPackage):
     homepage = "https://www.littlecms.com"
     url = "http://downloads.sourceforge.net/project/lcms/lcms/2.9/lcms2-2.9.tar.gz"
 
+    license("MIT")
+
     version("2.13.1", sha256="d473e796e7b27c5af01bd6d1552d42b45b43457e7182ce9903f38bb748203b88")
     version("2.9", sha256="48c6fdf98396fa245ed86e622028caf49b96fa22f3e5734f853f806fbc8e7d20")
     version("2.8", sha256="66d02b229d2ea9474e62c2b6cd6720fde946155cd1d0d2bffdab829790a0fb22")
@@ -25,7 +27,7 @@ class Lcms(AutotoolsPackage):
 
     depends_on("jpeg")
     depends_on("libtiff")
-    depends_on("zlib")
+    depends_on("zlib-api")
 
     @property
     def libs(self):

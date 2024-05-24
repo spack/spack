@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -53,12 +53,16 @@ class FoamExtend(Package):
     and owner of the OPENFOAM trademark.
     """
 
-    homepage = "http://www.extend-project.de/"
+    homepage = "https://sourceforge.net/projects/foam-extend/"
 
+    license("GPL-3.0-only")
+
+    version("5.0", git="http://git.code.sf.net/p/foam-extend/foam-extend-5.0.git")
+    version("4.1", git="http://git.code.sf.net/p/foam-extend/foam-extend-4.1.git")
     version("4.0", git="http://git.code.sf.net/p/foam-extend/foam-extend-4.0.git")
     version("3.2", git="http://git.code.sf.net/p/foam-extend/foam-extend-3.2.git")
-    version("3.1", git="http://git.code.sf.net/p/foam-extend/foam-extend-3.1.git")
-    version("3.0", git="http://git.code.sf.net/p/foam-extend/foam-extend-3.0.git")
+    version("3.1", git="http://git.code.sf.net/p/foam-extend/foam-extend-3.1.git", deprecated=True)
+    version("3.0", git="http://git.code.sf.net/p/foam-extend/foam-extend-3.0.git", deprecated=True)
 
     # variant('int64', default=False,
     #         description='Compile with 64-bit label')
@@ -75,7 +79,7 @@ class FoamExtend(Package):
 
     depends_on("mpi")
     depends_on("python")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("flex", type="build")
     depends_on("cmake", type="build")
 
@@ -86,16 +90,14 @@ class FoamExtend(Package):
     # mgridgen is statically linked
     depends_on("parmgridgen", when="+parmgridgen", type="build")
     depends_on("paraview@:5.0.1", when="+paraview")
+    depends_on("mesquite")
 
     # General patches
     common = ["spack-Allwmake", "README-spack"]
     assets = []  # type: List[str]
 
     # Some user config settings
-    config = {
-        "label-size": False,  # <- No int32/int64 support
-        "mplib": "USERMPI",  # USERMPI
-    }
+    config = {"label-size": False, "mplib": "USERMPI"}  # <- No int32/int64 support  # USERMPI
 
     # The openfoam architecture, compiler information etc
     _foam_arch = None
@@ -203,10 +205,28 @@ class FoamExtend(Package):
         """Relative location of architecture-specific libraries"""
         return join_path("lib", self.foam_arch)
 
+    def rename_source(self):
+        """The github tarfiles have weird names that do not correspond to the
+        canonical name. We need to rename these, but leave a symlink for
+        spack to work with.
+        """
+        # Note that this particular Foam-Extned requires absolute directories
+        # to build correctly!
+        parent = os.path.dirname(self.stage.source_path)
+        original = os.path.basename(self.stage.source_path)
+        target = "foam-extend-{0}".format(self.version)
+        # Could also grep through etc/bashrc for WM_PROJECT_VERSION
+        with working_dir(parent):
+            if original != target and not os.path.lexists(target):
+                os.rename(original, target)
+                os.symlink(target, original)
+                tty.info("renamed {0} -> {1}".format(original, target))
+
     def patch(self):
         """Adjust OpenFOAM build for spack.
         Where needed, apply filter as an alternative to normal patching."""
         add_extra_files(self, self.common, self.assets)
+        self.rename_source()
 
         # Adjust ParMGridGen - this is still a mess
         files = [
@@ -251,9 +271,7 @@ class FoamExtend(Package):
         """
         # Content for etc/prefs.{csh,sh}
         self.etc_prefs = {
-            "000": {  # Sort first
-                "compilerInstall": "System",
-            },
+            "000": {"compilerInstall": "System"},  # Sort first
             "001": {},
             "cmake": {
                 "CMAKE_DIR": spec["cmake"].prefix,
@@ -263,17 +281,14 @@ class FoamExtend(Package):
                 "PYTHON_DIR": spec["python"].home,
                 "PYTHON_BIN_DIR": spec["python"].home.bin,
             },
-            "flex": {
-                "FLEX_SYSTEM": 1,
-                "FLEX_DIR": spec["flex"].prefix,
-            },
-            "bison": {
-                "BISON_SYSTEM": 1,
-                "BISON_DIR": spec["flex"].prefix,
-            },
-            "zlib": {
-                "ZLIB_SYSTEM": 1,
-                "ZLIB_DIR": spec["zlib"].prefix,
+            "flex": {"FLEX_SYSTEM": 1, "FLEX_DIR": spec["flex"].prefix},
+            "bison": {"BISON_SYSTEM": 1, "BISON_DIR": spec["flex"].prefix},
+            "zlib": {"ZLIB_SYSTEM": 1, "ZLIB_DIR": spec["zlib-api"].prefix},
+            "mesquite": {
+                "MESQUITE_SYSTEM": 1,
+                "MESQUITE_DIR": spec["mesquite"].prefix,
+                "MESQUITE_INCLUDE_DIR": spec["mesquite"].prefix.include,
+                "NESQUITE_LIB_DIR": spec["mesquite"].prefix.lib,
             },
         }
         # Adjust configuration via prefs - sort second

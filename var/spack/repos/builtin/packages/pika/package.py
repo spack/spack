@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,8 +15,32 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
     homepage = "https://github.com/pika-org/pika/"
     url = "https://github.com/pika-org/pika/archive/0.0.0.tar.gz"
     git = "https://github.com/pika-org/pika.git"
-    maintainers = ["msimberg", "albestro", "teonnik", "aurianer"]
+    maintainers("msimberg", "albestro", "teonnik", "aurianer")
 
+    license("BSL-1.0")
+
+    version("0.25.0", sha256="6646e12f88049116d84ce0caeedaa039a13caaa0431964caea4660b739767b2e")
+    version("0.24.0", sha256="3b97c684107f892a633f598d94bcbd1e238d940e88e1c336f205e81b99326cc3")
+    version("0.23.0", sha256="d1981e198ac4f8443770cebbeff7a132b8f6c1a42e32b0b06fea02cc9df99595")
+    version("0.22.2", sha256="eeffa8584336b239aca167f0056e815b1b6d911e46cbb3cd6b8b811d101c1052")
+    version("0.22.1", sha256="b0de0649bee336847622f97b59b34a80cb3cfd9a931bbdb38299bc4904f19b92")
+    version("0.22.0", sha256="75f8932f3a233958c69802b483335eeeb39032ea66f12442f6f77048e259bdea")
+    version("0.21.0", sha256="0ab24966e6ae026b355147f02354af4bd2117c342915fe844addf8e493735a33")
+    version("0.20.0", sha256="f338cceea66a0e3954806b2aca08f6560bba524ecea222f04bc18b483851c877")
+    version("0.19.1", sha256="674675abf0dd4c6f5a0b2fa3db944b277ed65c62f654029d938a8cab608a9c1d")
+    version("0.19.0", sha256="f45cc16e4e50cbb183ed743bdc8b775d49776ee33c13ea39a650f4230a5744cb")
+    version("0.18.0", sha256="f34890e0594eeca6ac57f2b988d0807b502782817e53a7f7043c3f921b08c99f")
+    version("0.17.0", sha256="717429fc1bc986d62cbec190a69939e91608122d09d54bda1b028871c9ca9ad4")
+    version("0.16.0", sha256="59f2baec91cc9bf71ca96d21d0da1ec0092bf59da106efa51789089e0d7adcbb")
+    version("0.15.1", sha256="b68b87cf956ad1448f5c2327a72ba4d9fb339ecabeabb0a87b8ea819457e293b")
+    version("0.15.0", sha256="4ecd5b64bd8067283a161e1aeacfbab7658d89fe1504b788fd3236298fe66b00")
+    version("0.14.0", sha256="c0fc10a3c2c24bccbdc292c22a3373a2ad579583ee9d8bd31aaf1755e49958a4")
+    version("0.13.0", sha256="67e0843141fb711787e71171a7a669c9cdb9587e4afd851ee2b0339a62b9a254")
+    version("0.12.0", sha256="daa1422eb73d6a897ce7b8ff8022e09e7b0fec83d92728ed941a92e57dec5da3")
+    version("0.11.0", sha256="3c3d94ca1a3960884bad7272bb9434d61723f4047ebdb097fcf522c6301c3fda")
+    version("0.10.0", sha256="3b443b8f0f75b9a558accbaef0334a113a71b0205770e6c7ff02ea2d7c6aca5b")
+    version("0.9.0", sha256="c349b2a96476d6974d2421288ca4d2e14ef9e5897d44cd7d5343165faa2d1299")
+    version("0.8.0", sha256="058e82d7c8f95badabe52bbb4682d55aadf340d67ced1226c0673b4529adc182")
     version("0.7.0", sha256="e1bf978c88515f7af28ee47f98b795ffee521c15b39877ea4cfb405f31d507ed")
     version("0.6.0", sha256="cb4ebd7b92da39ec4df7b0d05923b94299d6ee2f2f49752923ffa2266ca76568")
     version("0.5.0", sha256="c43de7e92d04bea0ce59716756ef5f3a5a54f9e4affed872c1468632ad855f7c")
@@ -26,10 +50,9 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
     version("0.1.0", sha256="aa0ae2396cd264d821a73c4c7ecb118729bb3de042920c9248909d33755e7327")
     version("main", branch="main")
 
-    generator = "Ninja"
+    generator("ninja")
 
-    map_cxxstd = lambda cxxstd: "2a" if cxxstd == "20" else cxxstd
-    cxxstds = ("17", "20")
+    cxxstds = ("17", "20", "23")
     variant(
         "cxxstd",
         default="17",
@@ -39,7 +62,7 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
 
     variant(
         "malloc",
-        default="tcmalloc",
+        default="mimalloc",
         description="Define which allocator will be linked in",
         values=("system", "jemalloc", "mimalloc", "tbbmalloc", "tcmalloc"),
     )
@@ -57,36 +80,76 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
     variant("examples", default=False, description="Build and install examples")
     variant("mpi", default=False, description="Enable MPI support")
     variant("apex", default=False, description="Enable APEX support", when="@0.2:")
+    variant("tracy", default=False, description="Enable Tracy support", when="@0.7:")
+    variant(
+        "sanitizers",
+        default=False,
+        description="Enable support for sanitizers. "
+        "Specific sanitizers must be explicitly enabled with -fsanitize=*.",
+    )
+    variant(
+        "stdexec",
+        default=False,
+        description="Use stdexec for sender/receiver functionality",
+        when="@0.9:",
+    )
 
     # Build dependencies
     depends_on("git", type="build")
-    depends_on("ninja", type="build")
     depends_on("cmake@3.18:", type="build")
+    depends_on("cmake@3.22:", when="@0.8:", type="build")
 
     conflicts("%gcc@:6")
     conflicts("%clang@:6")
     # Pika is requiring the std::filesystem support starting from version 0.2.0
     conflicts("%gcc@:8", when="@0.2:")
     conflicts("%clang@:8", when="@0.2:")
+    conflicts("+stdexec", when="cxxstd=17")
+    conflicts("cxxstd=23", when="^cmake@:3.20.2")
+    # nvcc version <= 11 does not support C++20 and newer
+    for cxxstd in filter(lambda x: x != "17", cxxstds):
+        requires("%nvhpc", when=f"cxxstd={cxxstd} ^cuda@:11")
 
-    # Other dependecies
-    depends_on("hwloc@1.11.5:")
+    # Other dependencies
     depends_on("boost@1.71:")
+    depends_on("fmt@9:", when="@0.11:")
+    # https://github.com/pika-org/pika/issues/686
+    conflicts("^fmt@10:", when="@:0.15 +cuda")
+    conflicts("^fmt@10:", when="@:0.15 +rocm")
+    depends_on("spdlog@1.9.2:", when="@0.25:")
+    depends_on("hwloc@1.11.5:")
 
     depends_on("gperftools", when="malloc=tcmalloc")
     depends_on("jemalloc", when="malloc=jemalloc")
     depends_on("mimalloc", when="malloc=mimalloc")
     depends_on("tbb", when="malloc=tbbmalloc")
 
-    depends_on("mpi", when="+mpi")
-    depends_on("cuda@11:", when="+cuda")
     depends_on("apex", when="+apex")
+    depends_on("cuda@11:", when="+cuda")
+    depends_on("hip@5.2:", when="@0.8: +rocm")
+    depends_on("hipblas", when="@:0.8 +rocm")
+    depends_on("mpi", when="+mpi")
+    depends_on("stdexec", when="+stdexec")
     depends_on("rocblas", when="+rocm")
-    depends_on("hipblas", when="+rocm")
     depends_on("rocsolver", when="@0.5: +rocm")
+    depends_on("tracy-client", when="+tracy")
+    conflicts("^tracy-client@0.9:", when="@:0.9")
+    depends_on("whip@0.1: +rocm", when="@0.9: +rocm")
+    depends_on("whip@0.1: +cuda", when="@0.9: +cuda")
+
+    with when("+rocm"):
+        for val in ROCmPackage.amdgpu_targets:
+            depends_on(f"whip@0.1: amdgpu_target={val}", when=f"@0.9: amdgpu_target={val}")
+            depends_on(f"rocsolver amdgpu_target={val}", when=f"@0.5: amdgpu_target={val}")
+            depends_on(f"rocblas amdgpu_target={val}", when=f"amdgpu_target={val}")
+
+    with when("+cuda"):
+        for val in CudaPackage.cuda_arch_values:
+            depends_on(f"whip@0.1: cuda_arch={val}", when=f"@0.9: cuda_arch={val}")
 
     for cxxstd in cxxstds:
-        depends_on("boost cxxstd={0}".format(map_cxxstd(cxxstd)), when="cxxstd={0}".format(cxxstd))
+        depends_on(f"boost cxxstd={cxxstd}", when=f"cxxstd={cxxstd}")
+        depends_on(f"fmt cxxstd={cxxstd}", when=f"@0.11: cxxstd={cxxstd}")
 
     # COROUTINES
     # ~generic_coroutines conflict is not fully implemented
@@ -101,6 +164,24 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
     # Patches
     patch("transform_mpi_includes.patch", when="@0.3.0 +mpi")
     patch("mimalloc_no_version_requirement.patch", when="@:0.5 malloc=mimalloc")
+    patch("generic_context_allocate_guard_0_13_14.patch", when="@0.13:0.14 platform=darwin")
+    patch("generic_context_allocate_guard_0_10_12.patch", when="@0.10:0.12 platform=darwin")
+    patch("posix_stack_non_executable_0_13.patch", when="@0.13 platform=darwin")
+    patch("posix_stack_non_executable_0_6_0_12.patch", when="@0.6:0.12 platform=darwin")
+    patch("posix_stack_non_executable_0_1_0_5.patch", when="@:0.5 platform=darwin")
+
+    # Fix missing template instantiation on macOS
+    patch(
+        "https://github.com/pika-org/pika/commit/dd1dfb85781ec2e76fa37ce7311323e69fbe42a1.patch?full_index=1",
+        sha256="2944f746f5ae4385aba11b7c4a2f991abc108b08ea3dc394bf61c20fc7a2c4f2",
+        when="@0.7.0 platform=darwin",
+    )
+
+    # Fix constexpr/fmt bug on macOS
+    # Upstream patch is
+    # https://github.com/pika-org/pika/commit/33655188fe4b9bcfad1e98a05e9ebcc22afc7ef8.patch,
+    # but it requires changes to apply to 0.11.0.
+    patch("thread_id_fmt.patch", when="@0.11 platform=darwin")
 
     def cmake_args(self):
         spec, args = self.spec, []
@@ -113,16 +194,30 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
             self.define_from_variant("PIKA_WITH_HIP", "rocm"),
             self.define_from_variant("PIKA_WITH_MPI", "mpi"),
             self.define_from_variant("PIKA_WITH_APEX", "apex"),
+            self.define_from_variant("PIKA_WITH_TRACY", "tracy"),
+            self.define_from_variant("PIKA_WITH_SANITIZERS", "sanitizers"),
             self.define("PIKA_WITH_TESTS", self.run_tests),
             self.define_from_variant("PIKA_WITH_GENERIC_CONTEXT_COROUTINES", "generic_coroutines"),
             self.define("BOOST_ROOT", spec["boost"].prefix),
             self.define("HWLOC_ROOT", spec["hwloc"].prefix),
         ]
 
-        # HIP support requires compiling with hipcc
-        if "+rocm" in self.spec:
-            args += [self.define("CMAKE_CXX_COMPILER", self.spec["hip"].hipcc)]
-            if self.spec.satisfies("^cmake@3.21:"):
-                args += [self.define("__skip_rocmclang", True)]
+        if spec.satisfies("@0.14:"):
+            args.append(self.define_from_variant("PIKA_WITH_STDEXEC", "stdexec"))
+        else:
+            args.append(
+                self.define_from_variant("PIKA_WITH_P2300_REFERENCE_IMPLEMENTATION", "stdexec")
+            )
+
+        # HIP support requires compiling with hipcc for < 0.8.0
+        if spec.satisfies("@:0.7 +rocm"):
+            args.append(self.define("CMAKE_CXX_COMPILER", spec["hip"].hipcc))
+            if spec.satisfies("^cmake@3.21.0:3.21.2"):
+                args.append(self.define("__skip_rocmclang", True))
+        if spec.satisfies("@0.8: +rocm"):
+            rocm_archs = spec.variants["amdgpu_target"].value
+            if "none" not in rocm_archs:
+                rocm_archs = ";".join(rocm_archs)
+                args.append(self.define("CMAKE_HIP_ARCHITECTURES", rocm_archs))
 
         return args

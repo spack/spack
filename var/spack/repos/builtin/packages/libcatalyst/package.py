@@ -1,7 +1,11 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+import subprocess
+
+import llnl.util.tty as tty
 
 from spack.package import *
 
@@ -11,32 +15,59 @@ class Libcatalyst(CMakePackage):
     scientific data producers) to analyze and visualize data in situ."""
 
     homepage = "https://gitlab.kitware.com/paraview/catalyst"
-    url = "https://gitlab.kitware.com/paraview/catalyst/-/archive/{0}/catalyst-{0}.tar.bz2"
+    git = "https://gitlab.kitware.com/paraview/catalyst.git"
+    url = "https://gitlab.kitware.com/api/v4/projects/5912/packages/generic/catalyst/v2.0.0/catalyst-v2.0.0.tar.gz"
 
-    maintainers = ["mathstuf"]
+    license("BSD-3-Clause")
 
-    # master as of 2021-05-12
-    version(
-        "2021-05-12", sha256="5a01f12b271d9d9e9b89f31d45a5f4b8426904483639d38754893adfd3547bab"
-    )
+    maintainers("mathstuf", "ayenpure")
+    version("master", branch="master")
+    version("2.0.0", sha256="5842b690bd8afa635414da9b9c5e5d79fa37879b0d382428d0d8e26ba5374828")
 
     variant("mpi", default=False, description="Enable MPI support")
-    variant("python3", default=False, description="Enable Python3 support")
+    variant("conduit", default=False, description="Use external Conduit for Catalyst")
+    variant("fortran", default=False, description="Enable Fortran wrapping")
+    variant("python", default=False, description="Enable Python wrapping")
 
     depends_on("mpi", when="+mpi")
-
-    # TODO: catalyst doesn't support an external conduit
-    # depends_on('conduit')
-
-    def url_for_version(self, version):
-        _urlfmt = self.url
-        return _urlfmt.format(version)
+    depends_on("conduit", when="+conduit")
+    depends_on("cmake@3.26:", type="build")
+    depends_on("python@3:", when="+python")
+    depends_on("py-numpy", when="+python", type=("build", "link", "run"))
 
     def cmake_args(self):
         """Populate cmake arguments for libcatalyst."""
         args = [
             "-DCATALYST_BUILD_TESTING=OFF",
             self.define_from_variant("CATALYST_USE_MPI", "mpi"),
+            self.define_from_variant("CATALYST_WITH_EXTERNAL_CONDUIT", "conduit"),
+            self.define_from_variant("CATALYST_WRAP_FORTRAN", "fortran"),
+            self.define_from_variant("CATALYST_WRAP_PYTHON", "python"),
         ]
 
         return args
+
+    def setup_run_environment(self, env):
+        spec = self.spec
+        if spec.satisfies("+conduit"):
+            env.prepend_path("CMAKE_PREFIX_PATH", spec["conduit"].prefix)
+
+    @on_package_attributes(run_tests=True)
+    @run_after("install")
+    def build_test(self):
+        testdir = "smoke_test_build"
+        cmakeExampleDir = join_path(self.stage.source_path, "examples")
+        cmake_args = [
+            cmakeExampleDir,
+            "-DBUILD_SHARED_LIBS=ON",
+            self.define("CMAKE_PREFIX_PATH", self.prefix),
+        ]
+        cmake = which(self.spec["cmake"].prefix.bin.cmake)
+
+        with working_dir(testdir, create=True):
+            cmake(*cmake_args)
+            cmake(*(["--build", "."]))
+            tty.info("Running Catalyst test")
+
+            res = subprocess.run(["adaptor0/adaptor0_test", "catalyst"])
+            assert res.returncode == 0

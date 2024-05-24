@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,10 @@ class RReadr(RPackage):
 
     cran = "readr"
 
+    license("MIT")
+
+    version("2.1.4", sha256="98144fa48c4fa61ef8c73ede8f87a2d2c5c44e9502b7875b266eb79984fbeb0d")
+    version("2.1.3", sha256="d70dd55e80e87cf1387811fcdc3da92987a892ee75dae02f77ff074142618263")
     version("2.1.2", sha256="94afd03a1fa4abcf2985ec903bbf5995d7c590e1a50512ed80d081ef4fe10c1b")
     version("2.1.1", sha256="03937918a547e3a1587295f5e5f8c7f6865a4d04047d2b20c8d0f0701f1cbc84")
     version("2.0.2", sha256="98b05ed751dda2bcf7a29d070ce3d3e8475e0138a3e3ec68941dc45218db7615")
@@ -25,8 +29,11 @@ class RReadr(RPackage):
 
     depends_on("r@3.0.2:", type=("build", "run"))
     depends_on("r@3.1:", type=("build", "run"), when="@1.3.0:")
+    depends_on("r@3.4:", type=("build", "run"), when="@2.1.3:")
+    depends_on("r@3.5:", type=("build", "run"), when="@2.1.4:")
     depends_on("r-cli", type=("build", "run"), when="@1.4.0:")
     depends_on("r-cli@3.0.0:", type=("build", "run"), when="@2.1.2:")
+    depends_on("r-cli@3.2.0:", type=("build", "run"), when="@2.1.3:")
     depends_on("r-clipr", type=("build", "run"), when="@1.2.0:")
     depends_on("r-crayon", type=("build", "run"), when="@1.3.1:")
     depends_on("r-hms@0.4.1:", type=("build", "run"))
@@ -38,6 +45,7 @@ class RReadr(RPackage):
     depends_on("r-vroom@1.5.2:", type=("build", "run"), when="@2.0.0")
     depends_on("r-vroom@1.5.4:", type=("build", "run"), when="@2.0.1:")
     depends_on("r-vroom@1.5.6:", type=("build", "run"), when="@2.1.1:")
+    depends_on("r-vroom@1.6.0:", type=("build", "run"), when="@2.1.3:")
     depends_on("r-cpp11", type=("build", "run"), when="@1.4.0:")
     depends_on("r-tzdb@0.1.1:", type=("build", "run"), when="@2:")
 

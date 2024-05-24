@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -23,7 +23,204 @@ from spack.package import *
 #  - package key must be in the form '{os}-{arch}' where 'os' is in the
 #    format returned by platform.system() and 'arch' by platform.machine()
 
+preferred_ver = "11.8.0"
 _versions = {
+    "12.4.1": {
+        "Linux-aarch64": (
+            "b0fbc77effa225498974625b6b08b3f6eff4a37e379f5b60f1d3827b215ad19b",
+            "https://developer.download.nvidia.com/compute/cuda/12.4.1/local_installers/cuda_12.4.1_550.54.15_linux_sbsa.run",
+        ),
+        "Linux-x86_64": (
+            "367d2299b3a4588ab487a6d27276ca5d9ead6e394904f18bccb9e12433b9c4fb",
+            "https://developer.download.nvidia.com/compute/cuda/12.4.1/local_installers/cuda_12.4.1_550.54.15_linux.run",
+        ),
+        "Linux-ppc64le": (
+            "677f44da10dd81396cb53a32c4e26eccdc24912063cb2e3beb3bbcb1658ef451",
+            "https://developer.download.nvidia.com/compute/cuda/12.4.1/local_installers/cuda_12.4.1_550.54.15_linux_ppc64le.run",
+        ),
+    },
+    "12.4.0": {
+        "Linux-aarch64": (
+            "b12bfe6c36d32ecf009a6efb0024325c5fc389fca1143f5f377ae2555936e803",
+            "https://developer.download.nvidia.com/compute/cuda/12.4.0/local_installers/cuda_12.4.0_550.54.14_linux_sbsa.run",
+        ),
+        "Linux-x86_64": (
+            "e6a842f4eca9490575cdb68b6b1bb78d47b95a897de48dee292c431892e57d17",
+            "https://developer.download.nvidia.com/compute/cuda/12.4.0/local_installers/cuda_12.4.0_550.54.14_linux.run",
+        ),
+        "Linux-ppc64le": (
+            "ef9a712daccf2805b4422f2301ff0eaa5c3ad41ef5d64b8626773bce7d1f41fe",
+            "https://developer.download.nvidia.com/compute/cuda/12.4.0/local_installers/cuda_12.4.0_550.54.14_linux_ppc64le.run",
+        ),
+    },
+    "12.3.2": {
+        "Linux-aarch64": (
+            "761b84e292b94c4d330f445d36326dfff90a418e909fb0baf3d6f03e24106d08",
+            "https://developer.download.nvidia.com/compute/cuda/12.3.2/local_installers/cuda_12.3.2_545.23.08_linux_sbsa.run",
+        ),
+        "Linux-x86_64": (
+            "24b2afc9f770d8cf43d6fa7adc2ebfd47c4084db01bdda1ce3ce0a4d493ba65b",
+            "https://developer.download.nvidia.com/compute/cuda/12.3.2/local_installers/cuda_12.3.2_545.23.08_linux.run",
+        ),
+        "Linux-ppc64le": (
+            "b876936fc80de10653523eadd846065db346b38ba6296f2d365772259cb2f198",
+            "https://developer.download.nvidia.com/compute/cuda/12.3.2/local_installers/cuda_12.3.2_545.23.08_linux_ppc64le.run",
+        ),
+    },
+    "12.3.1": {
+        "Linux-aarch64": (
+            "bce6bb8b293c33c3ed0c1b65120c70587cc29e1b94ea8679ebb14c32b3858b5e",
+            "https://developer.download.nvidia.com/compute/cuda/12.3.1/local_installers/cuda_12.3.1_545.23.08_linux_sbsa.run",
+        ),
+        "Linux-x86_64": (
+            "b73d18ccd5ff85bbae32b425dfb82729612ede65b07a37cd5e2b574190614038",
+            "https://developer.download.nvidia.com/compute/cuda/12.3.1/local_installers/cuda_12.3.1_545.23.08_linux.run",
+        ),
+        "Linux-ppc64le": (
+            "9da7e6e2beadc933aab73de79a84e133ddf03226371d3d7af83502748a978568",
+            "https://developer.download.nvidia.com/compute/cuda/12.3.1/local_installers/cuda_12.3.1_545.23.08_linux_ppc64le.run",
+        ),
+    },
+    "12.3.0": {
+        "Linux-aarch64": (
+            "9a8fb8acf46b88faf0d711bda3149e1706efbbae02fcb40ab72addfd0e9ce5df",
+            "https://developer.download.nvidia.com/compute/cuda/12.3.0/local_installers/cuda_12.3.0_545.23.06_linux_sbsa.run",
+        ),
+        "Linux-x86_64": (
+            "7c13face3af64d6e1648d6e3101d31c8111e747143acb0077d973c1690820422",
+            "https://developer.download.nvidia.com/compute/cuda/12.3.0/local_installers/cuda_12.3.0_545.23.06_linux.run",
+        ),
+        "Linux-ppc64le": (
+            "de15c04380ec35b194c07503bf434837bac5b427cf77b19a63962b1653d195d5",
+            "https://developer.download.nvidia.com/compute/cuda/12.3.0/local_installers/cuda_12.3.0_545.23.06_linux_ppc64le.run",
+        ),
+    },
+    "12.2.2": {
+        "Linux-aarch64": (
+            "4113a15e6b27a02638c72edeb5f89de4c9ea312febba12fc4cefff2edc882268",
+            "https://developer.download.nvidia.com/compute/cuda/12.2.2/local_installers/cuda_12.2.2_535.104.05_linux_sbsa.run",
+        ),
+        "Linux-x86_64": (
+            "2b39aae3e7618d9f59a3c8fa1f1bc61f29c0b0e0df75fb05076badb352952ef2",
+            "https://developer.download.nvidia.com/compute/cuda/12.2.2/local_installers/cuda_12.2.2_535.104.05_linux.run",
+        ),
+        "Linux-ppc64le": (
+            "18848278e7f2bd4b4481f5665633d7e3d46e9a562d175d5ff278218188b01342",
+            "https://developer.download.nvidia.com/compute/cuda/12.2.2/local_installers/cuda_12.2.2_535.104.05_linux_ppc64le.run",
+        ),
+    },
+    "12.2.1": {
+        "Linux-aarch64": (
+            "a9ae6bd02684c7acfb229484368bf2691d592767ce1aed10ae9aed92c81b9f09",
+            "https://developer.download.nvidia.com/compute/cuda/12.2.1/local_installers/cuda_12.2.1_535.86.10_linux_sbsa.run",
+        ),
+        "Linux-x86_64": (
+            "c51e814eaa756160a73289b1f35880cc38c18e1ddedc87f46f7ff0d1696bdb95",
+            "https://developer.download.nvidia.com/compute/cuda/12.2.1/local_installers/cuda_12.2.1_535.86.10_linux.run",
+        ),
+        "Linux-ppc64le": (
+            "8f1aa60cc1e14fd7853eeecd53a78b7dfb2b2da0512a312cc35e4f5b79454f94",
+            "https://developer.download.nvidia.com/compute/cuda/12.2.1/local_installers/cuda_12.2.1_535.86.10_linux_ppc64le.run",
+        ),
+    },
+    "12.2.0": {
+        "Linux-aarch64": (
+            "9c90d79bb63952cd30f1f57f9f8fe11e7a8967bba6f824df45d3464b5d37e5d8",
+            "https://developer.download.nvidia.com/compute/cuda/12.2.0/local_installers/cuda_12.2.0_535.54.03_linux_sbsa.run",
+        ),
+        "Linux-x86_64": (
+            "ecf3d2afadcbac029f0f4505785810d52d006e4b87ba79ff3f984336a2bbf518",
+            "https://developer.download.nvidia.com/compute/cuda/12.2.0/local_installers/cuda_12.2.0_535.54.03_linux.run",
+        ),
+        "Linux-ppc64le": (
+            "f7b5fde5f727b51c380c6199200d0525e8585475944ff8ad2791d06734f54230",
+            "https://developer.download.nvidia.com/compute/cuda/12.2.0/local_installers/cuda_12.2.0_535.54.03_linux_ppc64le.run",
+        ),
+    },
+    "12.1.1": {
+        "Linux-aarch64": (
+            "45ea4cd860f0a26d3db8ce032530f2ee0b55abdd587545213d395a73623b4278",
+            "https://developer.download.nvidia.com/compute/cuda/12.1.1/local_installers/cuda_12.1.1_530.30.02_linux_sbsa.run",
+        ),
+        "Linux-x86_64": (
+            "d74022d41d80105319dfa21beea39b77a5b9919539c0487a05caaf2446d6a70e",
+            "https://developer.download.nvidia.com/compute/cuda/12.1.1/local_installers/cuda_12.1.1_530.30.02_linux.run",
+        ),
+        "Linux-ppc64le": (
+            "c5950381f2c01fd52692372fc8e51d599e940ada2af2c82c3cc854ecff933eae",
+            "https://developer.download.nvidia.com/compute/cuda/12.1.1/local_installers/cuda_12.1.1_530.30.02_linux_ppc64le.run",
+        ),
+    },
+    "12.1.0": {
+        "Linux-aarch64": (
+            "1d0dd884f5257c12471dc455dc1a4aee8d620191737c0b2e40f016d8adc9d009",
+            "https://developer.download.nvidia.com/compute/cuda/12.1.0/local_installers/cuda_12.1.0_530.30.02_linux_sbsa.run",
+        ),
+        "Linux-x86_64": (
+            "68699036c12d71adb9ad2799dce2ff070270fab4488b90920b9756ab3f52c41c",
+            "https://developer.download.nvidia.com/compute/cuda/12.1.0/local_installers/cuda_12.1.0_530.30.02_linux.run",
+        ),
+        "Linux-ppc64le": (
+            "8d75bd9da953a51062b89b8c752cffcf02b02c85cb461291d354ac2cffb2da48",
+            "https://developer.download.nvidia.com/compute/cuda/12.1.0/local_installers/cuda_12.1.0_530.30.02_linux_ppc64le.run",
+        ),
+    },
+    "12.0.1": {
+        "Linux-aarch64": (
+            "835270a8db419b9dbaefc1bab8fe5caf6f2caf381975c4b0d35cc0718c26074a",
+            "https://developer.download.nvidia.com/compute/cuda/12.0.1/local_installers/cuda_12.0.1_525.85.12_linux_sbsa.run",
+        ),
+        "Linux-x86_64": (
+            "1b205a06272f1463f477276fdab903f3f666917c068e520738001e69c7a1875b",
+            "https://developer.download.nvidia.com/compute/cuda/12.0.1/local_installers/cuda_12.0.1_525.85.12_linux.run",
+        ),
+        "Linux-ppc64le": (
+            "1e81040223c25fd72895a1348e32463d7d0f5a7e74b5d2ace897220cb6d4d849",
+            "https://developer.download.nvidia.com/compute/cuda/12.0.1/local_installers/cuda_12.0.1_525.85.12_linux_ppc64le.run",
+        ),
+    },
+    "12.0.0": {
+        "Linux-aarch64": (
+            "cd13e9c65d4c8f895a968706f46064d536be09f9706bce081cc864b7e4fa4544",
+            "https://developer.download.nvidia.com/compute/cuda/12.0.0/local_installers/cuda_12.0.0_525.60.13_linux_sbsa.run",
+        ),
+        "Linux-x86_64": (
+            "905e9b9516900839fb76064719db752439f38b8cb730b49335d8bd53ddfad392",
+            "https://developer.download.nvidia.com/compute/cuda/12.0.0/local_installers/cuda_12.0.0_525.60.13_linux.run",
+        ),
+        "Linux-ppc64le": (
+            "117fe045c71668e45d41c6119b6f27875370c78e33fc56795b6fe014c796ec60",
+            "https://developer.download.nvidia.com/compute/cuda/12.0.0/local_installers/cuda_12.0.0_525.60.13_linux_ppc64le.run",
+        ),
+    },
+    "11.8.0": {
+        "Linux-aarch64": (
+            "e6e9a8d31163c9776b5e313fd7590877c5684e1ecddee741154f95704d4ed27c",
+            "https://developer.download.nvidia.com/compute/cuda/11.8.0/local_installers/cuda_11.8.0_520.61.05_linux_sbsa.run",
+        ),
+        "Linux-x86_64": (
+            "9223c4af3aebe4a7bbed9abd9b163b03a1b34b855fbc2b4a0d1b706ac09a5a16",
+            "https://developer.download.nvidia.com/compute/cuda/11.8.0/local_installers/cuda_11.8.0_520.61.05_linux.run",
+        ),
+        "Linux-ppc64le": (
+            "f917fb7617033223938543ad3ae923190d99507acc08a399d752a2868e87349d",
+            "https://developer.download.nvidia.com/compute/cuda/11.8.0/local_installers/cuda_11.8.0_520.61.05_linux_ppc64le.run",
+        ),
+    },
+    "11.7.1": {
+        "Linux-aarch64": (
+            "1607b98c30cb8efa52b9c8f564ec92d26ee1922cb677740aafacce313e544ecd",
+            "https://developer.download.nvidia.com/compute/cuda/11.7.1/local_installers/cuda_11.7.1_515.65.01_linux_sbsa.run",
+        ),
+        "Linux-x86_64": (
+            "52286a29706549b7d0feeb0e7e3eca1b15287c436a69fa880ad385b1be3e04db",
+            "https://developer.download.nvidia.com/compute/cuda/11.7.1/local_installers/cuda_11.7.1_515.65.01_linux.run",
+        ),
+        "Linux-ppc64le": (
+            "f59fc381cbd903da55bfea9f81534bd4d20e3db716c332be3d2c4804efc2ec6b",
+            "https://developer.download.nvidia.com/compute/cuda/11.7.1/local_installers/cuda_11.7.1_515.65.01_linux_ppc64le.run",
+        ),
+    },
     "11.7.0": {
         "Linux-aarch64": (
             "e777839a618ca9a3d5ad42ded43a1b6392af2321a7327635a4afcc986876a21b",
@@ -406,14 +603,19 @@ class Cuda(Package):
 
     homepage = "https://developer.nvidia.com/cuda-zone"
 
-    maintainers = ["ax3l", "Rombur"]
+    maintainers("ax3l", "Rombur")
     executables = ["^nvcc$"]
+
+    skip_version_audit = ["platform=darwin", "platform=windows"]
 
     for ver, packages in _versions.items():
         key = "{0}-{1}".format(platform.system(), platform.machine())
         pkg = packages.get(key)
         if pkg:
-            version(ver, sha256=pkg[0], url=pkg[1], expand=False)
+            if ver == preferred_ver:
+                version(ver, sha256=pkg[0], url=pkg[1], expand=False, preferred=True)
+            else:
+                version(ver, sha256=pkg[0], url=pkg[1], expand=False)
 
     # macOS Mojave drops NVIDIA graphics card support -- official NVIDIA
     # drivers do not exist for Mojave. See
@@ -464,9 +666,20 @@ class Cuda(Package):
 
     def setup_dependent_build_environment(self, env, dependent_spec):
         env.set("CUDAHOSTCXX", dependent_spec.package.compiler.cxx)
+        env.set("CUDA_HOME", self.prefix)
+        env.set("NVHPC_CUDA_HOME", self.prefix)
+
+    @property
+    def cmake_prefix_paths(self):
+        cmake_prefix_paths = [self.prefix]
+        if self.spec.satisfies("target=x86_64:"):
+            cub_path = self.prefix.targets + "/x86_64-linux/lib/cmake"
+            cmake_prefix_paths.append(cub_path)
+        return cmake_prefix_paths
 
     def setup_run_environment(self, env):
         env.set("CUDA_HOME", self.prefix)
+        env.set("NVHPC_CUDA_HOME", self.prefix)
 
     def install(self, spec, prefix):
         if os.path.exists("/tmp/cuda-installer.log"):
@@ -547,3 +760,6 @@ class Cuda(Package):
             if "compat" not in parts and "stubs" not in parts:
                 filtered_libs.append(lib)
         return LibraryList(filtered_libs)
+
+    # Avoid binding stub libraries by absolute path
+    non_bindable_shared_objects = ["stubs"]

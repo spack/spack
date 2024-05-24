@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class Numactl(AutotoolsPackage):
     url = "https://github.com/numactl/numactl/archive/v2.0.11.tar.gz"
 
     force_autoreconf = True
+
+    license("LGPL-2.1-only")
 
     version("2.0.14", sha256="1ee27abd07ff6ba140aaf9bc6379b37825e54496e01d6f7343330cf1a4487035")
     version("2.0.12", sha256="7c3e819c2bdeb883de68bafe88776a01356f7ef565e75ba866c4b49a087c6bdf")
@@ -31,14 +33,13 @@ class Numactl(AutotoolsPackage):
 
     # Numactl has hardcoded minimum versions for libtool,
     # libtool@develop returns UNKOWN as a version tag and fails
-    conflicts("libtool@develop")
+    conflicts("^libtool@develop")
 
     # Numerous errors when trying to build on darwin
     conflicts("platform=darwin")
 
     def autoreconf(self, spec, prefix):
-        bash = which("bash")
-        bash("./autogen.sh")
+        Executable("./autogen.sh")()
 
     @when("%nvhpc")
     def patch(self):

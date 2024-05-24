@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,11 +10,11 @@ import llnl.util.tty as tty
 from llnl.util.tty.color import cprint, get_color_when
 
 import spack.cmd
-import spack.cmd.common.arguments as arguments
 import spack.environment as ev
 import spack.solver.asp as asp
 import spack.util.environment
 import spack.util.spack_json as sjson
+from spack.cmd.common import arguments
 
 description = "compare two specs"
 section = "basic"
@@ -29,7 +29,7 @@ def setup_parser(subparser):
         action="store_true",
         default=False,
         dest="dump_json",
-        help="Dump json output instead of pretty printing.",
+        help="dump json output instead of pretty printing",
     )
     subparser.add_argument(
         "--first",
@@ -44,9 +44,20 @@ def setup_parser(subparser):
         action="append",
         help="select the attributes to show (defaults to all)",
     )
+    subparser.add_argument(
+        "--ignore", action="append", help="omit diffs related to these dependencies"
+    )
 
 
-def compare_specs(a, b, to_string=False, color=None):
+def shift(asp_function):
+    """Transforms ``attr("foo", "bar")`` into ``foo("bar")``."""
+    if not asp_function.args:
+        raise ValueError(f"Can't shift ASP function with no arguments: {str(asp_function)}")
+    first, *rest = asp_function.args
+    return asp.AspFunction(first, rest)
+
+
+def compare_specs(a, b, to_string=False, color=None, ignore_packages=None):
     """
     Generate a comparison, including diffs (for each side) and an intersection.
 
@@ -65,28 +76,28 @@ def compare_specs(a, b, to_string=False, color=None):
     if color is None:
         color = get_color_when()
 
+    a = a.copy()
+    b = b.copy()
+
+    if ignore_packages:
+        for pkg_name in ignore_packages:
+            a.trim(pkg_name)
+            b.trim(pkg_name)
+
     # Prepare a solver setup to parse differences
     setup = asp.SpackSolverSetup()
 
     # get facts for specs, making sure to include build dependencies of concrete
     # specs and to descend into dependency hashes so we include all facts.
     a_facts = set(
-        t
-        for t in setup.spec_clauses(
-            a,
-            body=True,
-            expand_hashes=True,
-            concrete_build_deps=True,
-        )
+        shift(func)
+        for func in setup.spec_clauses(a, body=True, expand_hashes=True, concrete_build_deps=True)
+        if func.name == "attr"
     )
     b_facts = set(
-        t
-        for t in setup.spec_clauses(
-            b,
-            body=True,
-            expand_hashes=True,
-            concrete_build_deps=True,
-        )
+        shift(func)
+        for func in setup.spec_clauses(b, body=True, expand_hashes=True, concrete_build_deps=True)
+        if func.name == "attr"
     )
 
     # We want to present them to the user as simple key: values
@@ -198,14 +209,18 @@ def diff(parser, args):
     if len(args.specs) != 2:
         tty.die("You must provide two specs to diff.")
 
-    specs = [
-        spack.cmd.disambiguate_spec(spec, env, first=args.load_first)
-        for spec in spack.cmd.parse_specs(args.specs)
-    ]
+    specs = []
+    for spec in spack.cmd.parse_specs(args.specs):
+        # If the spec has a hash, check it before disambiguating
+        spec.replace_hash()
+        if spec.concrete:
+            specs.append(spec)
+        else:
+            specs.append(spack.cmd.disambiguate_spec(spec, env, first=args.load_first))
 
     # Calculate the comparison (c)
     color = False if args.dump_json else get_color_when()
-    c = compare_specs(specs[0], specs[1], to_string=True, color=color)
+    c = compare_specs(specs[0], specs[1], to_string=True, color=color, ignore_packages=args.ignore)
 
     # Default to all attributes
     attributes = args.attribute or ["all"]

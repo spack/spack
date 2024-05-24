@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,8 @@ class PyChalice(PythonPackage):
 
     homepage = "https://github.com/aws/chalice"
     url = "https://github.com/aws/chalice/archive/1.20.0.tar.gz"
+
+    license("Apache-2.0")
 
     version("1.20.0", sha256="0504fa8492379a658b123a7aa173b008be1a01c5a06d65f8ef1f1e6b87515e33")
     version("1.19.0", sha256="6d2f9e2d39e836c9cf32451a39443bb8d08d8dfd5ddc75792519ec97817b4fdd")
@@ -27,12 +29,10 @@ class PyChalice(PythonPackage):
     depends_on("py-setuptools", type="build")
     depends_on("py-click@7.0:8.0", type=("build", "run"))
     depends_on("py-botocore@1.12.86:2.0.0", type=("build", "run"))
-    depends_on("py-typing@3.6.4", type=("build", "run"), when="^python@:3.6")
     depends_on("py-mypy-extensions@0.4.3", type=("build", "run"))
     depends_on("py-six@1.10.0:2.0.0", type=("build", "run"))
     depends_on("py-pip@9:20.0", type=("build", "run"))
     depends_on("py-attrs@19.3.0:20.0.0", type=("build", "run"))
-    depends_on("py-enum34", type=("build", "run"), when="@1.5:^python@:3.3")
     depends_on("py-jmespath@0.9.3:1.0.0", type=("build", "run"))
     depends_on("py-pyyaml@5.3.1:6.0.0", type=("build", "run"))
     depends_on("py-wheel", type=("build", "run"))

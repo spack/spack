@@ -1,18 +1,32 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
+import spack.build_systems.autotools
+import spack.build_systems.meson
 from spack.package import *
 
 
-class Harfbuzz(MesonPackage):
+class Harfbuzz(MesonPackage, AutotoolsPackage):
     """The Harfbuzz package contains an OpenType text shaping engine."""
 
     homepage = "https://github.com/harfbuzz/harfbuzz"
     url = "https://github.com/harfbuzz/harfbuzz/releases/download/2.9.1/harfbuzz-2.9.1.tar.xz"
     git = "https://github.com/harfbuzz/harfbuzz.git"
 
+    build_system(
+        conditional("autotools", when="@:2.9"), conditional("meson", when="@3:"), default="meson"
+    )
+
+    license("MIT")
+
+    version("8.4.0", sha256="af4ea73e25ab748c8c063b78c2f88e48833db9b2ac369e29bd115702e789755e")
+    version("8.3.0", sha256="109501eaeb8bde3eadb25fab4164e993fbace29c3d775bcaa1c1e58e2f15f847")
+    version("7.3.0", sha256="20770789749ac9ba846df33983dbda22db836c70d9f5d050cb9aa5347094a8fb")
+    version("7.2.0", sha256="fc5560c807eae0efd5f95b5aa4c65800c7a8eed6642008a6b1e7e3ffff7873cc")
+    version("6.0.0", sha256="1d1010a1751d076d5291e433c138502a794d679a7498d1268ee21e2d4a140eb4")
+    version("5.3.1", sha256="4a6ce097b75a8121facc4ba83b5b083bfec657f45b003cd5a3424f2ae6b4434d")
+    version("5.1.0", sha256="2edb95db668781aaa8d60959d21be2ff80085f31b12053cdd660d9a50ce84f05")
     version("4.2.1", sha256="bd17916513829aeff961359a5ccebba6de2f4bf37a91faee3ac29c120e3d7ee1")
     version("4.1.0", sha256="f7984ff4241d4d135f318a93aa902d910a170a8265b7eaf93b5d9a504eed40c8")
     version("4.0.1", sha256="98f68777272db6cd7a3d5152bac75083cd52a26176d87bc04c8b3929d33bce49")
@@ -57,6 +71,12 @@ class Harfbuzz(MesonPackage):
     )
 
     variant("graphite2", default=False, description="enable support for graphite2 font engine")
+    variant(
+        "coretext",
+        default=False,
+        when="platform=darwin",
+        description="Enable CoreText shaper backend on macOS",
+    )
 
     depends_on("pkgconfig", type="build")
     depends_on("glib")
@@ -64,7 +84,7 @@ class Harfbuzz(MesonPackage):
     depends_on("icu4c")
     depends_on("freetype")
     depends_on("cairo+pdf+ft")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("graphite2", when="+graphite2")
 
     conflicts(
@@ -72,7 +92,7 @@ class Harfbuzz(MesonPackage):
     )
 
     def url_for_version(self, version):
-        if version > Version("2.3.1"):
+        if self.spec.satisfies("@2.3.2:"):
             url = "https://github.com/harfbuzz/harfbuzz/releases/download/{0}/harfbuzz-{0}.tar.xz"
         else:
             url = "http://www.freedesktop.org/software/harfbuzz/release/harfbuzz-{0}.tar.bz2"
@@ -92,54 +112,44 @@ class Harfbuzz(MesonPackage):
     def setup_run_environment(self, env):
         env.prepend_path("GI_TYPELIB_PATH", join_path(self.prefix.lib, "girepository-1.0"))
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
-        env.prepend_path("XDG_DATA_DIRS", self.prefix.share)
-        env.prepend_path("GI_TYPELIB_PATH", join_path(self.prefix.lib, "girepository-1.0"))
-
     def setup_dependent_run_environment(self, env, dependent_spec):
         env.prepend_path("XDG_DATA_DIRS", self.prefix.share)
         env.prepend_path("GI_TYPELIB_PATH", join_path(self.prefix.lib, "girepository-1.0"))
 
+    def patch(self):
+        change_sed_delimiter("@", ";", "src/Makefile.in")
+
+
+class SetupEnvironment:
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        env.prepend_path("XDG_DATA_DIRS", self.prefix.share)
+        env.prepend_path("GI_TYPELIB_PATH", join_path(self.prefix.lib, "girepository-1.0"))
+
+
+class MesonBuilder(spack.build_systems.meson.MesonBuilder, SetupEnvironment):
     def meson_args(self):
-        args = []
+        graphite2 = "enabled" if self.pkg.spec.satisfies("+graphite2") else "disabled"
+        coretext = "enabled" if self.pkg.spec.satisfies("+coretext") else "disabled"
+        return [
+            # disable building of gtk-doc files following #9885 and #9771
+            "-Ddocs=disabled",
+            f"-Dgraphite2={graphite2}",
+            f"-Dcoretext={coretext}",
+        ]
 
-        # disable building of gtk-doc files following #9885 and #9771
-        args.append("-Ddocs=disabled")
-        args.append(
-            "-Dgraphite2=" + ("enabled" if self.spec.satisfies("+graphite2") else "disabled")
-        )
 
-        return args
-
-    @when("@:2.9")
+class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder, SetupEnvironment):
     def configure_args(self):
         args = []
 
         # disable building of gtk-doc files following #9771
         args.append("--disable-gtk-doc-html")
         true = which("true")
-        args.append("GTKDOC_CHECK={0}".format(true))
-        args.append("GTKDOC_CHECK_PATH={0}".format(true))
-        args.append("GTKDOC_MKPDF={0}".format(true))
-        args.append("GTKDOC_REBASE={0}".format(true))
+        args.append(f"GTKDOC_CHECK={true}")
+        args.append(f"GTKDOC_CHECK_PATH={true}")
+        args.append(f"GTKDOC_MKPDF={true}")
+        args.append(f"GTKDOC_REBASE={true}")
         args.extend(self.with_or_without("graphite2"))
+        args.extend(self.with_or_without("coretext"))
 
         return args
-
-    def patch(self):
-        change_sed_delimiter("@", ";", "src/Makefile.in")
-
-    @when("@:2.9")
-    def meson(self, spec, prefix):
-        """Run the AutotoolsPackage configure phase"""
-        configure("--prefix=" + prefix, *self.configure_args())
-
-    @when("@:2.9")
-    def build(self, spec, prefix):
-        """Run the AutotoolsPackage build phase"""
-        make()
-
-    @when("@:2.9")
-    def install(self, spec, prefix):
-        """Run the AutotoolsPackage install phase"""
-        make("install")

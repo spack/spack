@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,17 +12,20 @@ class PyGrpcioTools(PythonPackage):
     homepage = "https://grpc.io/"
     pypi = "grpcio-tools/grpcio-tools-1.42.0.tar.gz"
 
+    version("1.48.1", sha256="1178f2ea531f80cc2027ec64728df6ffc8e98cf1df61652a496eafd612127183")
     version("1.42.0", sha256="d0a0daa82eb2c2fb8e12b82a458d1b7c5516fe1135551da92b1a02e2cba93422")
     version("1.39.0", sha256="39dfe7415bc0d3860fdb8dd90607594b046b88b57dbe64284efa4820f951c805")
 
     depends_on("python@3.6:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
+    depends_on("py-protobuf@3.12.0:3", when="@1.48.1:", type=("build", "run"))
     depends_on("py-protobuf@3.5.0.post1:3", type=("build", "run"))
-    depends_on("py-grpcio@1.42.0:", type=("build", "run"), when="@1.42.0:")
-    depends_on("py-grpcio@1.39.0:", type=("build", "run"), when="@1.39.0:1.41")
+    depends_on("py-grpcio@1.48.1:", when="@1.48.1:", type=("build", "run"))
+    depends_on("py-grpcio@1.42.0:", when="@1.42.0:", type=("build", "run"))
+    depends_on("py-grpcio@1.39.0:", when="@1.39.0:1.41", type=("build", "run"))
     depends_on("py-cython@0.23:", type="build")
     depends_on("openssl")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("c-ares")
     depends_on("re2+shared")
 
@@ -38,8 +41,10 @@ class PyGrpcioTools(PythonPackage):
 
         for dep in self.spec.dependencies(deptype="link"):
             query = self.spec[dep.name]
-            env.prepend_path("LIBRARY_PATH", query.libs.directories[0])
-            env.prepend_path("CPATH", query.headers.directories[0])
+            for p in query.libs.directories:
+                env.prepend_path("LIBRARY_PATH", p)
+            for p in query.headers.directories:
+                env.prepend_path("CPATH", p)
 
     def patch(self):
         if self.spec.satisfies("%fj"):
@@ -53,7 +58,7 @@ class PyGrpcioTools(PythonPackage):
         )
         filter_file(
             r"(\s+ZLIB_INCLUDE = ).*",
-            r"\1('{0}',)".format(self.spec["zlib"].prefix.include),
+            r"\1('{0}',)".format(self.spec["zlib-api"].prefix.include),
             "setup.py",
         )
         filter_file(

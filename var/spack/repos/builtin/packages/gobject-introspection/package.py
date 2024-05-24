@@ -1,26 +1,38 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
+import spack.build_systems.autotools
 import spack.hooks.sbang as sbang
 from spack.package import *
 
 
-class GobjectIntrospection(MesonPackage):
+class GobjectIntrospection(MesonPackage, AutotoolsPackage):
     """The GObject Introspection is used to describe the program APIs and
     collect them in a uniform, machine readable format.Cairo is a 2D graphics
-    library with support for multiple output"""
+    library with support for multiple output
+    """
 
     homepage = "https://wiki.gnome.org/Projects/GObjectIntrospection"
     url = "https://download.gnome.org/sources/gobject-introspection/1.72/gobject-introspection-1.72.0.tar.xz"
 
-    maintainers = ["michaelkuhn"]
+    maintainers("michaelkuhn")
 
+    license("LGPL-2.0-or-later AND GPL-2.0-or-later AND MIT")
+
+    version("1.78.1", sha256="bd7babd99af7258e76819e45ba4a6bc399608fe762d83fde3cac033c50841bb4")
+    version("1.76.1", sha256="196178bf64345501dcdc4d8469b36aa6fe80489354efe71cb7cb8ab82a3738bf")
+    version("1.72.1", sha256="012e313186e3186cf0fde6decb57d970adf90e6b1fac5612fe69cbb5ba99543a")
     version("1.72.0", sha256="02fe8e590861d88f83060dd39cda5ccaa60b2da1d21d0f95499301b186beaabc")
     version("1.56.1", sha256="5b2875ccff99ff7baab63a34b67f8c920def240e178ff50add809e267d9ea24b")
     version("1.49.2", sha256="73d59470ba1a546b293f54d023fd09cca03a951005745d86d586b9e3a8dde9ac")
     version("1.48.0", sha256="fa275aaccdbfc91ec0bc9a6fd0562051acdba731e7d584b64a277fec60e75877")
+
+    build_system(
+        conditional("autotools", when="@:1.60"),
+        conditional("meson", when="@1.61:"),
+        default="meson",
+    )
 
     depends_on("pkgconfig", type="build")
     depends_on("bison", type="build")
@@ -30,12 +42,16 @@ class GobjectIntrospection(MesonPackage):
     depends_on("sed", when="platform=darwin", type="build")
 
     depends_on("cairo+gobject")
-    depends_on("glib@2.49.2:", when="@1.49.2:")
-    # version 1.48.0 build fails with glib 2.49.4
+    depends_on("glib@2.78:", when="@1.78")
+    depends_on("glib@2.76:", when="@1.76")
+    depends_on("glib@2.58:", when="@1.72")
+    depends_on("glib@2.56:", when="@1.56")
+    depends_on("glib@2.49.2:", when="@1.49.2")
     depends_on("glib@2.48.1", when="@1.48.0")
+
     depends_on("libffi")
     # https://gitlab.gnome.org/GNOME/gobject-introspection/-/merge_requests/283
-    depends_on("libffi@:3.3", when="@:1.70")  # libffi 3.4 caused seg faults
+    depends_on("libffi@:3.3", when="@:1.72")  # libffi 3.4 caused seg faults
     depends_on("python")
 
     # This package creates several scripts from
@@ -65,8 +81,8 @@ class GobjectIntrospection(MesonPackage):
     # https://gitlab.gnome.org/GNOME/gobject-introspection/-/issues/325
     patch(
         "https://gitlab.gnome.org/GNOME/gobject-introspection/-/commit/"
-        "1f9284228092b2a7200e8a78bc0ea6702231c6db.patch",
-        sha256="7700828b638c85255c87fcc317ea7e9572ff443f65c86648796528885e5b4cea",
+        "1f9284228092b2a7200e8a78bc0ea6702231c6db.diff",
+        sha256="dcb9e7c956dff49c3a73535829382e8662fa6bd13bdfb416e8eac47b2604fa0a",
         when="@:1.63.1",
     )
 
@@ -94,22 +110,9 @@ class GobjectIntrospection(MesonPackage):
     def parallel(self):
         return not self.spec.satisfies("%fj")
 
-    def meson_args(self):
-        return []
 
-    @when("@:1.60")
-    def meson(self, spec, prefix):
-        """Run the AutotoolsPackage configure phase"""
-        configure("--prefix={0}".format(prefix))
-
-    @when("@:1.60")
-    def build(self, spec, prefix):
-        """Run the AutotoolsPackage build phase"""
+class AutotoolsBuilderPackage(spack.build_systems.autotools.AutotoolsBuilder):
+    @run_before("build")
+    def filter_file_to_avoid_overly_long_shebangs(self):
         # we need to filter this file to avoid an overly long hashbang line
         filter_file("#!/usr/bin/env @PYTHON@", "#!@PYTHON@", "tools/g-ir-tool-template.in")
-        make()
-
-    @when("@:1.60")
-    def install(self, spec, prefix):
-        """Run the AutotoolsPackage install phase"""
-        make("install", parallel=False)

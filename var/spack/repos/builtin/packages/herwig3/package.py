@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,10 @@ class Herwig3(AutotoolsPackage):
 
     tags = ["hep"]
 
+    license("GPL-3.0-only")
+
     version("7.2.3", sha256="5599899379b01b09e331a2426d78d39b7f6ec126db2543e9d340aefe6aa50f84")
+    version("7.2.2", sha256="53e06b386df5bc20fe268b6c8ba50f1e62b6744e577d383ec836ea3fc672c383")
     version("7.2.1", sha256="d4fff32f21c5c08a4b2e563c476b079859c2c8e3b78d853a8a60da96d5eea686")
 
     depends_on("autoconf", type="build")
@@ -24,6 +27,7 @@ class Herwig3(AutotoolsPackage):
     depends_on("lhapdf")
     depends_on("lhapdfsets", type="build")
     depends_on("thepeg@2.2.1", when="@7.2.1")
+    depends_on("thepeg@2.2.2", when="@7.2.2")
     depends_on("thepeg@2.2.3", when="@7.2.3")
     depends_on("evtgen")
 
@@ -31,14 +35,21 @@ class Herwig3(AutotoolsPackage):
     depends_on("python", type=("build", "run"))
     depends_on("gsl")
     depends_on("fastjet")
-    depends_on("vbfnlo@3:")
+    depends_on("vbfnlo@3:", when="+vbfnlo")
     depends_on("madgraph5amc")
+    depends_on("njet", when="+njet")
+    depends_on("py-gosam")
     depends_on("njet")
-    depends_on("py-gosam", when="^python@2.7.0:2.7")
     depends_on("gosam-contrib")
-    depends_on("openloops")
+
+    # OpenLoops fail to build on PPC64: error: detected recursion whilst expanding macro "vector"
+    depends_on("openloops", when="target=aarch64:")
+    depends_on("openloops", when="target=x86_64:")
 
     force_autoreconf = True
+
+    variant("vbfnlo", default=True, description="Use VBFNLO")
+    variant("njet", default=True, description="Use NJet")
 
     def autoreconf(self, spec, prefix):
         autoreconf("--install", "--verbose", "--force")
@@ -53,13 +64,15 @@ class Herwig3(AutotoolsPackage):
             "--with-madgraph=" + self.spec["madgraph5amc"].prefix,
             "--with-openloops=" + self.spec["openloops"].prefix,
             "--with-gosam-contrib=" + self.spec["gosam-contrib"].prefix,
-            "--with-njet=" + self.spec["njet"].prefix,
-            "--with-vbfnlo=" + self.spec["vbfnlo"].prefix,
             "--with-evtgen=" + self.spec["evtgen"].prefix,
+            "--with-gosam=" + self.spec["py-gosam"].prefix,
         ]
 
-        if self.spec.satisfies("^python@2.7.0:2.7"):
-            args.append("--with-gosam=" + self.spec["gosam"].prefix)
+        if self.spec.satisfies("+njet"):
+            args.append("--with-njet=" + self.spec["njet"].prefix)
+
+        if self.spec.satisfies("+vbfnlo"):
+            args.append("--with-vbfnlo=" + self.spec["vbfnlo"].prefix)
 
         return args
 
@@ -78,10 +91,6 @@ class Herwig3(AutotoolsPackage):
 
     def build(self, spec, prefix):
         make()
-        with working_dir("MatrixElement/FxFx"):
-            make()
 
     def install(self, spec, prefix):
         make("install")
-        with working_dir("MatrixElement/FxFx"):
-            make("install")

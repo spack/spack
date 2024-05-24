@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class Plplot(CMakePackage):
     homepage = "http://plplot.sourceforge.net/"
     url = "https://sourceforge.net/projects/plplot/files/plplot/5.13.0%20Source/plplot-5.13.0.tar.gz/download"
 
+    license("LGPL-2.0-or-later")
+
     version("5.15.0", sha256="b92de4d8f626a9b20c84fc94f4f6a9976edd76e33fb1eae44f6804bdcc628c7b")
     version("5.14.0", sha256="331009037c9cad9fcefacd7dbe9c7cfae25e766f5590f9efd739a294c649df97")
     version("5.13.0", sha256="ec36bbee8b03d9d1c98f8fd88f7dc3415560e559b53eb1aa991c2dcf61b25d2b")
@@ -21,9 +23,8 @@ class Plplot(CMakePackage):
     variant("java", default=False, description="Enable Java binding")
     variant("lua", default=False, description="Enable Lua binding")
     variant("pango", default=False, description="Enable Pango")
-    variant("python", default=False, description="Enable Python binding")
     variant("qt", default=False, description="Enable QT binding")
-    variant("tcl", default=True, description="Enable TCL binding")
+    variant("tcl", default=True, description="Enable Tcl binding")
     variant("wx", default=False, description="Enable WxWidgets")
     variant("wxold", default=False, description="Use WxWidgets old interface")
 
@@ -33,8 +34,6 @@ class Plplot(CMakePackage):
     depends_on("java", when="+java")
     depends_on("lua", when="+lua")
     depends_on("pango", when="+pango")
-    depends_on("py-numpy", type=("build", "run"), when="+python")
-    depends_on("python@2.7:2.8", type=("build", "run"), when="+python")
     depends_on("qt", when="+qt")
     depends_on("tcl", when="+tcl")
     depends_on("wxwidgets", when="+wx")
@@ -61,11 +60,6 @@ class Plplot(CMakePackage):
         else:
             args += ["-DENABLE_lua=OFF"]
 
-        if "+python" in self.spec:
-            args += ["-DENABLE_python=ON"]
-        else:
-            args += ["-DENABLE_python=OFF"]
-
         if "+qt" in self.spec:
             args += ["-DENABLE_qt=ON"]
         else:
@@ -80,22 +74,16 @@ class Plplot(CMakePackage):
                 "-DTCL_LIBRARY={0}".format(
                     LibraryList(
                         find_libraries(
-                            "libtcl*",
-                            self.spec["tcl"].prefix,
-                            shared=True,
-                            recursive=True,
+                            "libtcl*", self.spec["tcl"].prefix, shared=True, recursive=True
                         )
-                    ),
+                    )
                 ),
                 "-DTCL_STUB_LIBRARY={0}".format(
                     LibraryList(
                         find_libraries(
-                            "libtclstub*",
-                            self.spec["tcl"].prefix,
-                            shared=False,
-                            recursive=True,
+                            "libtclstub*", self.spec["tcl"].prefix, shared=False, recursive=True
                         )
-                    ),
+                    )
                 ),
             ]
         else:

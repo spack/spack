@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,8 @@ class DocbookXsl(Package):
 
     homepage = "https://github.com/docbook/xslt10-stylesheets"
     url = "https://github.com/docbook/xslt10-stylesheets/releases/download/release%2F1.79.2/docbook-xsl-1.79.2.tar.bz2"
+
+    license("custom")
 
     version("1.79.2", sha256="316524ea444e53208a2fb90eeb676af755da96e1417835ba5f5eb719c81fa371")
     version(
@@ -29,7 +31,7 @@ class DocbookXsl(Package):
 
     @property
     def catalog(self):
-        return join_path(self.prefix, "catalog")
+        return join_path(self.prefix, "xsl-catalog")
 
     @run_after("install")
     def config_docbook(self):
@@ -62,7 +64,7 @@ class DocbookXsl(Package):
                         "--add",
                         docbook_rewrite,
                         "http://{0}/release/xsl/{1}".format(docbook_url, docbook_version),
-                        prefix,
+                        "file://{0}".format(prefix),
                         catalog,
                     )
 

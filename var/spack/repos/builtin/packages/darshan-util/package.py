@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,19 +13,20 @@ class DarshanUtil(AutotoolsPackage):
     log files produced by Darshan (runtime)."""
 
     homepage = "https://www.mcs.anl.gov/research/projects/darshan/"
-    url = "https://ftp.mcs.anl.gov/pub/darshan/releases/darshan-3.1.0.tar.gz"
+    url = "https://web.cels.anl.gov/projects/darshan/releases/darshan-3.4.0.tar.gz"
     git = "https://github.com/darshan-hpc/darshan.git"
 
-    maintainers = ["shanedsnyder", "carns"]
+    maintainers("shanedsnyder", "carns")
 
     tags = ["e4s"]
 
     version("main", branch="main", submodules="True")
-    version(
-        "3.4.0",
-        sha256="7cc88b7c130ec3b574f6b73c63c3c05deec67b1350245de6d39ca91d4cff0842",
-        preferred=True,
-    )
+    version("3.4.5", sha256="1c017ac635fab5ee0e87a6b52c5c7273962813569495cb1dd3b7cfa6e19f6ed0")
+    version("3.4.4", sha256="d9c9df5aca94dc5ca3d56fd763bec2f74771d35126d61cb897373d2166ccd867")
+    version("3.4.3", sha256="dca5f9f9b0ead55a8724b218071ecbb5c4f2ef6027eaade3a6477256930ccc2c")
+    version("3.4.2", sha256="b095c3b7c059a8eba4beb03ec092b60708780a3cae3fc830424f6f9ada811c6b")
+    version("3.4.1", sha256="77c0a4675d94a0f9df5710e5b8658cc9ef0f0981a6dafb114d0389b1af64774c")
+    version("3.4.0", sha256="7cc88b7c130ec3b574f6b73c63c3c05deec67b1350245de6d39ca91d4cff0842")
     version(
         "3.4.0-pre1", sha256="57d0fd40329b9f8a51bdc9d7635b646692b341d80339115ab203357321706c09"
     )
@@ -46,10 +47,17 @@ class DarshanUtil(AutotoolsPackage):
     version("3.0.0", sha256="95232710f5631bbf665964c0650df729c48104494e887442596128d189da43e0")
 
     variant("bzip2", default=False, description="Enable bzip2 compression")
-    variant("apmpi", default=False, description="Compile with AutoPerf MPI module support")
-    variant("apxc", default=False, description="Compile with AutoPerf XC module support")
+    variant(
+        "apmpi",
+        default=False,
+        description="Compile with AutoPerf MPI module support",
+        when="@3.3:",
+    )
+    variant(
+        "apxc", default=False, description="Compile with AutoPerf XC module support", when="@3.3:"
+    )
 
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("bzip2", when="+bzip2", type=("build", "link", "run"))
     depends_on("autoconf", type="build", when="@main")
     depends_on("automake", type="build", when="@main")
@@ -62,13 +70,6 @@ class DarshanUtil(AutotoolsPackage):
 
     patch("retvoid.patch", when="@3.2.0:3.2.1")
 
-    conflicts(
-        "+apmpi", when="@:3.2.1", msg="+apmpi variant only available starting from version 3.3.0"
-    )
-    conflicts(
-        "+apxc", when="@:3.2.1", msg="+apxc variant only available starting from version 3.3.0"
-    )
-
     @property
     def configure_directory(self):
         return "darshan-util"
@@ -78,7 +79,7 @@ class DarshanUtil(AutotoolsPackage):
         extra_args = []
 
         extra_args.append("CC=%s" % self.compiler.cc)
-        extra_args.append("--with-zlib=%s" % spec["zlib"].prefix)
+        extra_args.append("--with-zlib=%s" % spec["zlib-api"].prefix)
         if "+apmpi" in spec:
             if self.version < Version("3.3.2"):
                 extra_args.append("--enable-autoperf-apmpi")
@@ -93,46 +94,37 @@ class DarshanUtil(AutotoolsPackage):
         return extra_args
 
     @property
-    def basepath(self):
-        return join_path("darshan-test", "example-output")
+    def tests_log_path(self):
+        if self.version < Version("3.4.1"):
+            return join_path(
+                "darshan-test",
+                "example-output",
+                "mpi-io-test-x86_64-{0}.darshan".format(self.version),
+            )
+        else:
+            return join_path(
+                "darshan-util", "pydarshan", "darshan", "tests", "input", "sample.darshan"
+            )
 
     @run_after("install")
     def _copy_test_inputs(self):
-        # add darshan-test/example-output/mpi-io-test-spack-expected.txt"
-        test_inputs = [
-            join_path(self.basepath, "mpi-io-test-x86_64-{0}.darshan".format(self.spec.version))
-        ]
+        test_inputs = [self.tests_log_path]
         self.cache_extra_test_sources(test_inputs)
 
-    def _test_parser(self):
-        purpose = "Verify darshan-parser can parse an example log \
-                   from the current version and check some expected counter values"
-        # Switch to loading the expected strings from the darshan source in future
+    def test_parser(self):
+        """process example log and check counters"""
+
+        # TODO: Switch to loading the expected strings from the darshan source in future
         # filename = self.test_suite.current_test_cache_dir.
         #            join(join_path(self.basepath, "mpi-io-test-spack-expected.txt"))
         # expected_output = self.get_escaped_text_output(filename)
+
         expected_output = [
             r"POSIX\s+-1\s+\w+\s+POSIX_OPENS\s+\d+",
             r"MPI-IO\s+-1\s+\w+\s+MPIIO_INDEP_OPENS\s+\d+",
             r"STDIO\s+0\s+\w+\s+STDIO_OPENS\s+\d+",
         ]
-        logname = self.test_suite.current_test_cache_dir.join(
-            join_path(self.basepath, "mpi-io-test-x86_64-{0}.darshan".format(self.spec.version))
-        )
-        exe = "darshan-parser"
-        options = [logname]
-        status = [0]
-        installed = True
-        self.run_test(
-            exe,
-            options,
-            expected_output,
-            status,
-            installed,
-            purpose,
-            skip_missing=False,
-            work_dir=None,
-        )
-
-    def test(self):
-        self._test_parser()
+        logname = self.test_suite.current_test_cache_dir.join(self.tests_log_path)
+        parser = which(join_path(self.prefix.bin, "darshan-parser"))
+        out = parser(logname, output=str.split, error=str.split)
+        check_outputs(expected_output, out)

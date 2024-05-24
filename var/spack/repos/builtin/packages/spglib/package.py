@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,13 +9,29 @@ from spack.package import *
 class Spglib(CMakePackage):
     """C library for finding and handling crystal symmetries."""
 
-    homepage = "https://atztogo.github.io/spglib/"
-    url = "https://github.com/atztogo/spglib/archive/v1.10.3.tar.gz"
+    homepage = "https://spglib.readthedocs.io/"
+    url = "https://github.com/spglib/spglib/archive/v2.0.2.tar.gz"
+
+    maintainers("RMeli")
 
     patch("fix_cmake_install.patch", when="@:1.10.3")
     # patch by Krishnendu Ghosh
     patch("fix_cpp.patch", when="@:1.10.3")
 
+    license("BSD-3-Clause")
+
+    version("2.4.0", sha256="e33694b189c6864f719a59c31e2af55301a524fb68ba9fb65f08e95af471847d")
+    version("2.3.1", sha256="c295dbea7d2fc9e50639aa14331fef277878c35f00ef0766e688bfbb7b17d44c")
+    version("2.3.0", sha256="c05eb869018efe2efe5dcb2654cda19c5dd4c07434874205fa542f7766f7548e")
+    version("2.2.0", sha256="ac929e20ec9d4621411e2cdec59b1442e02506c1e546005bbe2c7f781e9bd49a")
+    version("2.1.0", sha256="31bca273a1bc54e1cff4058eebe7c0a35d5f9b489579e84667d8e005c73dcc13")
+    version("2.0.2", sha256="10e44a35099a0a5d0fc6ee0cdb39d472c23cb98b1f5167c0e2b08f6069f3db1e")
+    version("2.0.1", sha256="d7407c0d67174a0c5e41a82ed62948c43fcaf1b5529f97238d7fadd1123ffe22")
+    version("2.0.0", sha256="426c4004e84fdb732d86aa5fcada5257ca8bc7a6915c06ced27565176c16ee96")
+    version("1.16.5", sha256="1bbde03b6b78da756c07f458bd90d84f3c253841b9b0632db5b72c5961e87aef")
+    version("1.16.4", sha256="7a1cdfdb104040e696e887999fd53d83931ba1285aa8fc3c703dcafc38fb1009")
+    version("1.16.3", sha256="1dfe313b460f71de90ee8a01d9f2cd250cd59e16836e1bf64924500dd2aa7dc6")
+    version("1.16.2", sha256="5723789bee7371ebba91d78c729d2a608f198fad5e1c95eebe18fda9f2914ec8")
     version("1.16.1", sha256="e90682239e4ef63b492fa4e44f7dbcde2e2fe2e688579d96b01f2730dfdf5b2e")
     version("1.16.0", sha256="969311a2942fef77ee79ac9faab089b68e256f21713194969197e7f2bdb14772")
     version("1.15.1", sha256="b6dc2c8adcc7d0edee7a076e765c28b2941b2aeba590d213a0b4893c8af0c026")
@@ -37,6 +53,21 @@ class Spglib(CMakePackage):
     version("1.10.1", sha256="8ed979cda82f6d440567197ec191bffcb82ee83c5bfe8a484c5a008dd00273f0")
     version("1.10.0", sha256="117fff308731784bea2ddaf3d076f0ecbf3981b31ea1c1bfd5ce4f057a5325b1")
 
+    variant("openmp", default=True, description="Build with OpenMP support", when="@1.16.2:")
+    variant("fortran", default=True, description="Build Fortran interface", when="@1.16.4:")
+    variant("tests", default=False, description="Build with tests", when="@2.1.0:")
+
+    depends_on("cmake@3.15:", type="build", when="@2.1.0:")
+    depends_on("cmake@3.24:", type="build", when="+tests")
+
     @property
     def libs(self):
         return find_libraries("libsymspg", root=self.prefix, shared=True, recursive=True)
+
+    def cmake_args(self):
+        pfx = "SPGLIB_" if self.spec.satisfies("@2.1.0:") else ""
+        return [
+            self.define_from_variant(pfx + "USE_OMP", "openmp"),
+            self.define_from_variant(pfx + "WITH_Fortran", "fortran"),
+            self.define_from_variant(pfx + "WITH_TESTS", "tests"),
+        ]

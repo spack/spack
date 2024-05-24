@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,8 @@ class SingularityBase(MakefilePackage):
     variant("network", default=True, description="install network plugins")
 
     depends_on("pkgconfig", type="build")
+    depends_on("conmon", type=("build", "run"))
+    depends_on("squashfs", type=("build", "run"))
     depends_on("go@1.16:")
     depends_on("uuid")
     depends_on("libgpg-error")
@@ -24,6 +26,10 @@ class SingularityBase(MakefilePackage):
     depends_on("git", when="@develop")  # mconfig uses it for version info
     depends_on("shadow", type="run", when="@3.3:")
     depends_on("cryptsetup", type=("build", "run"), when="@3.4:")
+    depends_on("libfuse", type=("build", "run"), when="@4.0:")
+    depends_on("autoconf", type="build", when="@4.0:")
+    depends_on("automake", type="build", when="@4.0:")
+    depends_on("libtool", type="build", when="@4.0:")
 
     conflicts("platform=darwin", msg="singularity requires a Linux VM on Windows & Mac")
 
@@ -51,7 +57,7 @@ class SingularityBase(MakefilePackage):
     # Unpack the tarball as usual, then move the src dir into
     # its home within GOPATH.
     def do_stage(self, mirror_only=False):
-        super(SingularityBase, self).do_stage(mirror_only)
+        super().do_stage(mirror_only)
         if not os.path.exists(self.singularity_gopath_dir):
             # Move the expanded source to its destination
             tty.debug(
@@ -68,16 +74,23 @@ class SingularityBase(MakefilePackage):
     def build_directory(self):
         return self.singularity_gopath_dir
 
+    # Allow overriding config options
+    @property
+    def config_options(self):
+        # Using conmon from spack
+        return ["--without-conmon"]
+
     # Hijack the edit stage to run mconfig.
     def edit(self, spec, prefix):
         with working_dir(self.build_directory):
-            confstring = "./mconfig --prefix=%s" % prefix
+            _config_options = ["--prefix=%s" % prefix]
+            _config_options += self.config_options
             if "~suid" in spec:
-                confstring += " --without-suid"
+                _config_options += ["--without-suid"]
             if "~network" in spec:
-                confstring += " --without-network"
-            configure = Executable(confstring)
-            configure()
+                _config_options += ["--without-network"]
+            configure = Executable("./mconfig")
+            configure(*_config_options)
 
     # Set these for use by MakefilePackage's default build/install methods.
     build_targets = ["-C", "builddir", "parallel=False"]
@@ -181,15 +194,27 @@ class Singularityce(SingularityBase):
     See package definition or `spack-build-out.txt` build log for details,
     e.g.
 
-    tail -15 $(spack location -i singularity)/.spack/spack-build-out.txt
+    tail -15 $(spack location -i singularityce)/.spack/spack-build-out.txt
     """
 
     homepage = "https://sylabs.io/singularity/"
     url = "https://github.com/sylabs/singularity/releases/download/v3.9.1/singularity-ce-3.9.1.tar.gz"
     git = "https://github.com/sylabs/singularity.git"
 
-    maintainers = ["alalazo"]
+    license("Apache-2.0")
+
+    maintainers("alalazo")
     version("master", branch="master")
 
+    version("4.1.0", sha256="119667f18e76a750b7d4f8612d7878c18a824ee171852795019aa68875244813")
+    version("4.0.3", sha256="b3789c9113edcac62032ce67cd1815cab74da6c33c96da20e523ffb54cdcedf3")
+    version("3.11.5", sha256="5acfbb4a109d9c63a25c230e263f07c1e83f6c726007fbcd97a533f03d33a86a")
+    version("3.11.4", sha256="751dbea64ec16fd7e7af1e36953134c778c404909f9d27ba89006644160b2fde")
+    version("3.11.3", sha256="a77ede063fd115f85f98f82d2e30459b5565db7d098665497bcd684bf8edaec9")
+    version("3.10.3", sha256="f87d8e212ce209c5212d6faf253b97a24b5d0b6e6b17b5e58b316cdda27a332f")
+    version("3.10.2", sha256="b4f279856ea4bf28a1f34f89320c02b545d6e57d4143679920e1ac4267f540e1")
+    version("3.10.1", sha256="e3af12edc0260bc3a3a481459a3a4457de9235025e6b37288da80e3cdc011a7a")
+    version("3.10.0", sha256="5e22e6cdad66c331668f6cff4544c83917bb3db90da3cf92403a394c5bf8cc8f")
+    version("3.9.9", sha256="1381433d64138c08e93ffacdfb4844e82c2288f1e39a9d2c631a1c4021381f2a")
     version("3.9.1", sha256="1ba3bb1719a420f48e9b0a6afdb5011f6c786d0f107ef272528c632fff9fd153")
     version("3.8.0", sha256="5fa2c0e7ef2b814d8aa170826b833f91e5031a85d85cd1292a234e6c55da1be1")

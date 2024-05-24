@@ -1,9 +1,7 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-
 from spack.package import *
 
 
@@ -16,8 +14,24 @@ class Meson(PythonPackage):
 
     tags = ["build-tools"]
 
-    maintainers = ["michaelkuhn"]
+    maintainers("eli-schwartz", "michaelkuhn")
 
+    license("Apache-2.0")
+
+    version("1.3.2", sha256="683082fb3c5cddf203b21d29bdf4c227e2f7964da5324a15e1a5f7db94322b4b")
+    version("1.2.2", sha256="1caa0ef6082e311bdca9836e7907f548b8c3f041a42ed41f0ff916b83ac7dddd")
+    version("1.2.1", sha256="e1f3b32b636cc86496261bd89e63f00f206754697c7069788b62beed5e042713")
+    version("1.2.0", sha256="603489f0aaa6305f806c6cc4a4455a965f22290fc74f65871f589b002110c790")
+    version("1.1.1", sha256="1c3b9e1a3a36b51adb5de498d582fd5cbf6763fadbcf151de9f2a762e02bd2e6")
+    version("1.1.0", sha256="f29a3e14062043d75e82d16f1e41856e6b1ed7a7c016e10c7b13afa7ee6364cc")
+    version("1.0.2", sha256="1f1239c3091668643f7d2086663d6afd8cc87fbab84fe7462bc18b9ba6d65de8")
+    version("1.0.1", sha256="4ab3a5c0060dc22bdefb04507efc6c38acb910e91bcd467a38e1fa211e5a6cfe")
+    version("1.0.0", sha256="a2ada84d43c7e57400daee80a880a1f5003d062b2cb6c9be1747b0db38f2eb8d")
+    version("0.64.1", sha256="1d12a4bc1cf3ab18946d12cf0b6452e5254ada1ad50aacc97f87e2cccd7da315")
+    version("0.64.0", sha256="6477993d781b6efea93091616a6d6a0766c0e026076dbeb11249bf1c9b49a347")
+    version("0.63.3", sha256="7c516c2099b762203e8a0a22412aa465b7396e6f9b1ab728bad6e6db44dc2659")
+    version("0.63.2", sha256="023a3f7c74e68991154c3205a6975705861eedbf8130e013d15faa1df1af216e")
+    version("0.63.1", sha256="f355829f0e8c714423f03a06604c04c216d4cbe3586f3154cb2181076b19207a")
     version("0.62.2", sha256="97108f4d9bb16bc758c44749bd25ec7d42c6a762961efbed8b7589a2a3551ea6")
     version("0.62.1", sha256="9fb52e66dbc613479a5f70e46cc2e8faf5aa65e09313f2c71fa63b8afd018107")
     version("0.62.0", sha256="72ac3bab701dfd597604de29cc74baaa1cc0ad8ca26ae23d5288de26abfe1c80")
@@ -54,7 +68,9 @@ class Meson(PythonPackage):
     depends_on("python@3.7:", when="@0.62.0:", type=("build", "run"))
     depends_on("python@3.6:", when="@0.57.0:", type=("build", "run"))
     depends_on("python@3.5:", type=("build", "run"))
+    depends_on("py-setuptools@42:", when="@0.62.0:", type=("build", "run"))
     depends_on("py-setuptools", type=("build", "run"))
+    depends_on("ninja@1.8.2:", when="@0.62.0:", type="run")
     depends_on("ninja", type="run")
 
     # By default, Meson strips the rpath on installation. This patch disables
@@ -63,13 +79,16 @@ class Meson(PythonPackage):
     patch("rpath-0.49.patch", when="@0.49:0.53")
     patch("rpath-0.54.patch", when="@0.54:0.55")
     patch("rpath-0.56.patch", when="@0.56:0.57")
-    patch("rpath-0.58.patch", when="@0.58:")
-    # Help meson recognize Intel OneAPI compilers
-    patch(
-        "https://patch-diff.githubusercontent.com/raw/mesonbuild/meson/pull/9850.patch?full_index=1",
-        sha256="9c874726ce0a06922580d3e3d6adbe74e5144b3a661ef1059f32c9c1bc478b65",
-        when="@0.60.0:",
-    )
+    patch("rpath-0.58.patch", when="@0.58:0.63")
+    patch("rpath-0.64.patch", when="@0.64:")
+
+    # Intel OneAPI compiler support
+    # https://github.com/mesonbuild/meson/pull/10909
+    # https://github.com/mesonbuild/meson/pull/9850
+    patch("oneapi.patch", when="@0.62:0.63 %oneapi")
+
+    # Python 3.12 detection support
+    patch("python-3.12-support.patch", when="@1.1:1.2.2")
 
     executables = ["^meson$"]
 
@@ -81,3 +100,6 @@ class Meson(PythonPackage):
         # https://github.com/pybind/pybind11/issues/595
         if self.spec.satisfies("platform=darwin"):
             env.set("STRIP", "strip -x")
+
+    def setup_dependent_package(self, module, dspec):
+        module.meson = Executable(self.spec.prefix.bin.meson)

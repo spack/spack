@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,18 +21,33 @@ class Phist(CMakePackage):
     """
 
     homepage = "https://bitbucket.org/essex/phist/"
-    url = "https://bitbucket.org/essex/phist/get/phist-1.9.6.tar.gz"
+    url = "https://bitbucket.org/essex/phist/get/phist-1.11.2.tar.gz"
     git = "https://bitbucket.org/essex/phist.git"
 
-    maintainers = ["jthies"]
+    maintainers("jthies")
     tags = ["e4s"]
 
     # phist is a required part of spack GitLab CI pipelines. In them, mpich is requested
     # to provide 'mpi' like this: spack install phist ^mpich %gcc@7.5.0
     # Failure of this command to succeed breaks spack's gitlab CI pipelines!
 
+    license("BSD-3-Clause")
+
     version("develop", branch="devel")
     version("master", branch="master")
+
+    # compatible with trilinos@14:
+    version("1.12.0", sha256="0f02e39b16d14cf7c47a3c468e788c7c0e71857eb1c0a4edb601e1e5b67e8668")
+
+    # compatible with python@3.11: and cray-libsci as BLAS/LAPACK provider
+    version("1.11.2", sha256="e23f76307c26b930f7331a734b0a864ea6d7fb4a13c12f3c5d70c2c41481747b")
+
+    # updated lapack interface to work with openblas and netlib-lapack
+    version("1.11.0", sha256="36e6cc41a13884ba0a26f7be03e3f1882b1a2d14ca04353a609c0eec0cfb7a77")
+
+    # updated the Trilinos interface to work with trilinos@13:
+    # without using deprecated interfaces in tpetra
+    version("1.10.0", sha256="3ec660c85d37818ee219edc80e977140dfb062bdca1f38623c94a45d13634bd1")
 
     # phist-1.9.6 updated from the older "use mpi" to the newer "use mpi_f08" (MPI3.1):
     # The motivation was fixing it on Cray: https://github.com/spack/spack/issues/26002
@@ -41,23 +56,7 @@ class Phist(CMakePackage):
     # https://stackoverflow.com/questions/65750862
     version("1.9.6", sha256="98ed5ccb22bb98d5b6bf9de0c9960105473e5244978853070b9a3c44138db662")
 
-    # As spack GitLab CI pipelines use ^mpich %gcc@7.5.0, @1.9.6 with it can't be used:
-    # A conflict would be possible, but when %gcc@10: or another compiler is available,
-    # clingo can select the other compiler despite a request for %gcc@7.5.0 in place,
-    # at least when the version is requested: spack solve phist@1.9.6 ^mpich %gcc@7.5.0
-    # With conflicts('mpich', when='@1.9.6:%gcc@:9'), this is the result:
-    # spack solve phist@1.9.6 ^mpich %gcc@7.5.0|grep -e phist -e mpich|sed 's/+.*//'
-    # phist@1.9.6%gcc@11.2.0
-    # ^mpich@3.4.2%gcc@7.5.0~argobots
-    # A mismatch of gfortan between gcc@7.5.0(for mpich) and @10:(phist) would not work,
-    # and also does not solve the build problem.
-    # Instead, a check with a helpful error message is added to the build (see below).
-    # and we use preferred=True to select 1.9.5 by default:
-    version(
-        "1.9.5",
-        sha256="24faa3373003f185c82a658c510e36cba9acc4110eb60cbfded9de370ae9ea32",
-        preferred=True,
-    )
+    version("1.9.5", sha256="24faa3373003f185c82a658c510e36cba9acc4110eb60cbfded9de370ae9ea32")
     version("1.9.4", sha256="9dde3ca0480358fa0877ec8424aaee4011c5defc929219a5930388a7cdb4c8a6")
     version("1.9.3", sha256="3ab7157e9f535a4c8537846cb11b516271ef13f82d0f8ebb7f96626fb9ab86cf")
     version("1.9.2", sha256="289678fa7172708f5d32d6bd924c8fdfe72b413bba5bbb8ce6373c85c5ec5ae5")
@@ -137,6 +136,16 @@ class Phist(CMakePackage):
         description="generate Fortran 2003 bindings (requires Python3 and " "a Fortran compiler)",
     )
 
+    # Trilinos 14 had some tpetra/kokkos API changes that are reflected in the phist 1.12 tag
+    conflicts("^trilinos@14:", when="@:1.11.2")
+    # Build error with cray-libsci because they define macro 'I', workaround in phist-1.11.2
+    conflicts("^cray-libsci", when="@:1.11.1")
+    # phist@1.11.2 got rid of some deprecated python code + a patch below
+    conflicts("^python@3.11:", when="@:1.11.1")
+    # The builtin kernels switched from the 'mpi' to the 'mpi_f08' module in
+    # phist 1.9.6, which causes compile-time errors with mpich and older
+    # GCC versions.
+    conflicts("kernel_lib=builtin", when="@1.9.6: ^mpich %gcc@:10")
     # in older versions, it is not possible to completely turn off OpenMP
     conflicts("~openmp", when="@:1.7.3")
     # in older versions, it is not possible to turn off the use of host-
@@ -148,11 +157,19 @@ class Phist(CMakePackage):
 
     # ###################### Patches ##########################
 
+    # remove 'rU' file mode in a python script
+    patch("remove_rU_mode_in_python_script.patch", when="@:1.12.0 +fortran ^python@3.11:")
+    # Avoid trying to compile some SSE code if SSE is not available
+    # This patch will be part of phist 1.11.3 and greater and only affects
+    # the 'builtin' kernel_lib.
+    patch("avoid-sse.patch", when="@:1.11.2 kernel_lib=builtin")
     # Only applies to 1.9.4: While SSE instructions are handled correctly,
     # build fails on ppc64le unless -DNO_WARN_X86_INTRINSICS is defined.
     patch("ppc64_sse.patch", when="@1.9.4")
     patch("update_tpetra_gotypes.patch", when="@1.6:1.8")
     patch("sbang.patch", when="+fortran")
+    patch("fortran-fixes-pre-1.11.patch", when="+fortran @1.7.0:1.10.0")
+    patch("lapack-fixes-pre-1.11.patch", when="@:1.10.0")
 
     # ###################### Dependencies ##########################
 
@@ -181,6 +198,11 @@ class Phist(CMakePackage):
     # The test_install compiles the examples and needs pkgconfig for it
     depends_on("pkgconfig", type="test")
 
+    # in 1.10 we removed some use of deprecated Trilinos interfaces
+    # (some functions in tpetra were renamed)
+    conflicts("^trilinos@13.4:", when="@:1.9 kernel_lib=tpetra")
+    conflicts("^trilinos@:13.2", when="@1.10: kernel_lib=tpetra")
+
     # Fortran 2003 bindings were included in version 1.7, previously they
     # required a separate package
     conflicts("+fortran", when="@:1.6")
@@ -195,7 +217,7 @@ class Phist(CMakePackage):
     # the phist repo came with it's own FindMPI.cmake before, which may cause some other
     # MPI installation to be used than the one spack wants.
     def patch(self):
-        if self.spec.satisfies("@1.9.6"):
+        if self.spec.satisfies("@1.9.6:1.10.0"):
             filter_file("USE mpi", "use mpi_f08", "src/kernels/builtin/crsmat_module.F90")
             # filter_file('use mpi', 'use mpi_f08', -> Needs more fixes
             #            'fortran_bindings/phist_testing.F90')
@@ -215,13 +237,20 @@ class Phist(CMakePackage):
         test.filter("1 2 3 12", "1 2 3")
         test.filter("12/", "6/")
         test.filter("TEST_DRIVERS_NUM_THREADS 6", "TEST_DRIVERS_NUM_THREADS 3")
+        # Avoid finding external modules like:
+        #    /opt/rocm/llvm/include/iso_fortran_env.mod
+        filter_file(
+            "use iso_fortran_env",
+            "use, intrinsic :: iso_fortran_env",
+            "drivers/matfuncs/matpde3d.F90",
+        )
 
     def setup_build_environment(self, env):
         env.set("SPACK_SBANG", sbang.sbang_install_path())
 
     def cmake_args(self):
         spec = self.spec
-        define = CMakePackage.define
+        define = self.define
 
         if spec.satisfies("kernel_lib=builtin") and spec.satisfies("~mpi"):
             raise InstallError("~mpi not possible with kernel_lib=builtin!")
@@ -235,6 +264,7 @@ class Phist(CMakePackage):
         lapacke_include_dir = spec["lapack:c"].headers.directories[0]
 
         args = [
+            "-DCMAKE_FIND_DEBUG_MODE=On",
             "-DPHIST_USE_CCACHE=OFF",
             "-DPHIST_KERNEL_LIB=%s" % kernel_lib,
             "-DPHIST_OUTLEV=%s" % outlev,

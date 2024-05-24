@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,6 +19,8 @@ class Openloops(Package):
     url = "https://openloops.hepforge.org/downloads?f=OpenLoops-2.1.1.tar.gz"
 
     tags = ["hep"]
+
+    license("GPL-3.0-only")
 
     version("2.1.2", sha256="f52575cae3d70b6b51a5d423e9cd0e076ed5961afcc015eec00987e64529a6ae")
     version("2.1.1", sha256="f1c47ece812227eab584e2c695fef74423d2f212873f762b8658f728685bcb91")
@@ -263,6 +265,8 @@ class Openloops(Package):
             f.write("process_lib_dir = {0}\n".format(self.spec.prefix.proclib))
             f.write("cc = {0}\n".format(env["SPACK_CC"]))
             f.write("cxx = {0}\n".format(env["SPACK_CXX"]))
+            if not self.compiler.fc:
+                raise InstallError(f"{self.spec.compiler} has no Fortran compiler in spack!")
             f.write("fortran_compiler = {0}\n".format(env["SPACK_FC"]))
             if self.spec.satisfies("@1.3.1") and not is_intel:
                 f.write("gfortran_f_flags = -ffree-line-length-none\n")

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,9 @@ class PyRioxarray(PythonPackage):
     homepage = "https://github.com/corteva/rioxarray"
     pypi = "rioxarray/rioxarray-0.4.1.post0.tar.gz"
 
-    maintainers = ["adamjstewart"]
+    maintainers("adamjstewart")
+
+    license("Apache-2.0")
 
     version(
         "0.4.1.post0", sha256="f043f846724a58518f87dd3fa84acbe39e15a1fac7e64244be3d5dacac7fe62b"

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,7 +6,6 @@
 import os
 import os.path
 import platform
-import sys
 
 import pytest
 
@@ -17,7 +16,7 @@ from spack.util.executable import which
 
 debug = SpackCommand("debug")
 
-pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="does not run on windows")
+pytestmark = pytest.mark.not_on_windows("does not run on windows")
 
 
 @pytest.mark.db
@@ -27,7 +26,9 @@ def test_create_db_tarball(tmpdir, database):
 
         # get the first non-dotfile to avoid coverage files in the directory
         files = os.listdir(os.getcwd())
-        tarball_name = next(f for f in files if not f.startswith("."))
+        tarball_name = next(
+            f for f in files if not f.startswith(".") and not f.startswith("tests")
+        )
 
         # debug command made an archive
         assert os.path.exists(tarball_name)

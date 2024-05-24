@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,7 +19,9 @@ class Bohrium(CMakePackage, CudaPackage):
     url = "https://github.com/bh107/bohrium/archive/v0.9.0.tar.gz"
     git = "https://github.com/bh107/bohrium.git"
 
-    maintainers = ["mfherbst"]
+    maintainers("mfherbst")
+
+    license("LGPL-3.0-only")
 
     #
     # Versions
@@ -95,7 +97,7 @@ class Bohrium(CMakePackage, CudaPackage):
     depends_on("py-pip", type="build", when="+python")
     depends_on("py-wheel", type="build", when="+python")
 
-    depends_on("zlib", when="+proxy")
+    depends_on("zlib-api", when="+proxy")
 
     depends_on("libsigsegv")
 
@@ -117,8 +119,6 @@ class Bohrium(CMakePackage, CudaPackage):
         # different hosts.
 
         args = [
-            # Choose a particular python version
-            "-DPYTHON_EXECUTABLE:FILEPATH=" + spec["python"].command.path,
             #
             # Hard-disable Jupyter, since this would override a config
             # file in the user's home directory in some cases during
@@ -143,10 +143,7 @@ class Bohrium(CMakePackage, CudaPackage):
         #
         # Vector engines
         #
-        args += [
-            "-DVE_OPENCL=" + str("+opencl" in spec),
-            "-DVE_CUDA=" + str("+cuda" in spec),
-        ]
+        args += ["-DVE_OPENCL=" + str("+opencl" in spec), "-DVE_CUDA=" + str("+cuda" in spec)]
 
         if "+openmp" in spec:
             args += [
@@ -259,10 +256,6 @@ class Bohrium(CMakePackage, CudaPackage):
         cxx("-o", "test_cxxadd", file_cxxadd, *cxx_flags)
         test_cxxadd = Executable("./test_cxxadd")
 
-        # Build python test commandline
-        file_pyadd = join_path(os.path.dirname(self.module.__file__), "pyadd.py")
-        test_pyadd = Executable(spec["python"].command.path + " " + file_pyadd)
-
         # Run tests for each available stack
         for bh_stack in stacks:
             tty.info("Testing with bohrium stack '" + bh_stack + "'")
@@ -273,5 +266,6 @@ class Bohrium(CMakePackage, CudaPackage):
 
             # Python test (if +python)
             if "+python" in spec:
-                py_output = test_pyadd(output=str, env=test_env)
+                file_pyadd = join_path(os.path.dirname(self.module.__file__), "pyadd.py")
+                py_output = python(file_pyadd, output=str, env=test_env)
                 compare_output(py_output, "Success!\n")

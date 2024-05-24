@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,10 @@ class RGeomorph(RPackage):
 
     cran = "geomorph"
 
+    license("GPL-3.0-or-later")
+
+    version("4.0.5", sha256="900d41f95a610b026763797f290ce94c10827a59b05030ed01c841c59264313b")
+    version("4.0.4", sha256="dfded29070bc06bf1dc0d6fedaa16fea9f8eef76f0a7443a11f2835c328c6b0a")
     version("4.0.3", sha256="8fd77bedf2ee85f1e4aaac4b22253810d12dba0b79d78d67695d237b7184e263")
     version("4.0.1", sha256="9d54fba96dd8b8f2dcc8d0e4c427f6232bed1934da41f25084c16ec0b2c71117")
     version("3.3.2", sha256="5f1d17cb98c54e40c4bbc650f7ccb5cb26e8d63934f810644facc69e91c1b7b7")
@@ -27,10 +31,10 @@ class RGeomorph(RPackage):
     depends_on("r+X", type=("build", "run"))
     depends_on("r@3.1.0:", type=("build", "run"))
     depends_on("r@3.5.0:", type=("build", "run"), when="@3.3.2:")
+    depends_on("r-matrix", type=("build", "run"))
     depends_on("r-rrpp", type=("build", "run"), when="@3.0.7:")
     depends_on("r-rrpp@1.0.0:", type=("build", "run"), when="@4.0.1:")
     depends_on("r-rgl", type=("build", "run"))
-    depends_on("r-matrix", type=("build", "run"), when="@:3.1.1,4.0.1:")
     depends_on("r-jpeg", type=("build", "run"))
     depends_on("r-ape", type=("build", "run"))
     depends_on("r-ggplot2", type=("build", "run"), when="@4.0.1:")

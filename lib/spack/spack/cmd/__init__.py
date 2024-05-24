@@ -1,22 +1,15 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from __future__ import print_function
-
 import argparse
 import os
 import re
-import shlex
 import sys
-from textwrap import dedent
-from typing import List, Tuple
+from typing import List, Union
 
-import ruamel.yaml as yaml
-import six
-from ruamel.yaml.error import MarkedYAMLError
-
+import llnl.string
 import llnl.util.tty as tty
 from llnl.util.filesystem import join_path
 from llnl.util.lang import attr_setdefault, index_by
@@ -27,12 +20,14 @@ import spack.config
 import spack.environment as ev
 import spack.error
 import spack.extensions
+import spack.parser
 import spack.paths
 import spack.spec
 import spack.store
+import spack.traverse as traverse
 import spack.user_environment as uenv
 import spack.util.spack_json as sjson
-import spack.util.string
+import spack.util.spack_yaml as syaml
 
 # cmd has a submodule called "list" so preserve the python list module
 python_list = list
@@ -150,95 +145,37 @@ def get_command(cmd_name):
     return getattr(get_module(cmd_name), pname)
 
 
-class _UnquotedFlags(object):
-    """Use a heuristic in `.extract()` to detect whether the user is trying to set
-    multiple flags like the docker ENV attribute allows (e.g. 'cflags=-Os -pipe').
+def quote_kvp(string: str) -> str:
+    """For strings like ``name=value`` or ``name==value``, quote and escape the value if needed.
 
-    If the heuristic finds a match (which can be checked with `__bool__()`), a warning
-    message explaining how to quote multiple flags correctly can be generated with
-    `.report()`.
+    This is a compromise to respect quoting of key-value pairs on the CLI. The shell
+    strips quotes from quoted arguments, so we cannot know *exactly* how CLI arguments
+    were quoted. To compensate, we re-add quotes around anything staritng with ``name=``
+    or ``name==``, and we assume the rest of the argument is the value. This covers the
+    common cases of passign flags, e.g., ``cflags="-O2 -g"`` on the command line.
     """
+    match = spack.parser.SPLIT_KVP.match(string)
+    if not match:
+        return string
 
-    flags_arg_pattern = re.compile(
-        r'^({0})=([^\'"].*)$'.format(
-            "|".join(spack.spec.FlagMap.valid_compiler_flags()),
-        )
-    )
-
-    def __init__(self, all_unquoted_flag_pairs):
-        # type: (List[Tuple[re.Match, str]]) -> None
-        self._flag_pairs = all_unquoted_flag_pairs
-
-    def __bool__(self):
-        # type: () -> bool
-        return bool(self._flag_pairs)
-
-    @classmethod
-    def extract(cls, sargs):
-        # type: (str) -> _UnquotedFlags
-        all_unquoted_flag_pairs = []  # type: List[Tuple[re.Match, str]]
-        prev_flags_arg = None
-        for arg in shlex.split(sargs):
-            if prev_flags_arg is not None:
-                all_unquoted_flag_pairs.append((prev_flags_arg, arg))
-            prev_flags_arg = cls.flags_arg_pattern.match(arg)
-        return cls(all_unquoted_flag_pairs)
-
-    def report(self):
-        # type: () -> str
-        single_errors = [
-            "({0}) {1} {2} => {3}".format(
-                i + 1,
-                match.group(0),
-                next_arg,
-                '{0}="{1} {2}"'.format(match.group(1), match.group(2), next_arg),
-            )
-            for i, (match, next_arg) in enumerate(self._flag_pairs)
-        ]
-        return dedent(
-            """\
-        Some compiler or linker flags were provided without quoting their arguments,
-        which now causes spack to try to parse the *next* argument as a spec component
-        such as a variant instead of an additional compiler or linker flag. If the
-        intent was to set multiple flags, try quoting them together as described below.
-
-        Possible flag quotation errors (with the correctly-quoted version after the =>):
-        {0}"""
-        ).format("\n".join(single_errors))
+    key, delim, value = match.groups()
+    return f"{key}{delim}{spack.parser.quote_if_needed(value)}"
 
 
-def parse_specs(args, **kwargs):
+def parse_specs(
+    args: Union[str, List[str]], concretize: bool = False, tests: bool = False
+) -> List[spack.spec.Spec]:
     """Convenience function for parsing arguments from specs.  Handles common
     exceptions and dies if there are errors.
     """
-    concretize = kwargs.get("concretize", False)
-    normalize = kwargs.get("normalize", False)
-    tests = kwargs.get("tests", False)
+    args = [args] if isinstance(args, str) else args
+    arg_string = " ".join([quote_kvp(arg) for arg in args])
 
-    sargs = args
-    if not isinstance(args, six.string_types):
-        sargs = " ".join(args)
-    unquoted_flags = _UnquotedFlags.extract(sargs)
-
-    try:
-        specs = spack.spec.parse(sargs)
-        for spec in specs:
-            if concretize:
-                spec.concretize(tests=tests)  # implies normalize
-            elif normalize:
-                spec.normalize(tests=tests)
-        return specs
-
-    except spack.error.SpecError as e:
-
-        msg = e.message
-        if e.long_message:
-            msg += e.long_message
-        if unquoted_flags:
-            msg += "\n\n"
-            msg += unquoted_flags.report()
-
-        raise spack.error.SpackError(msg)
+    specs = spack.parser.parse(arg_string)
+    for spec in specs:
+        if concretize:
+            spec.concretize(tests=tests)
+    return specs
 
 
 def matching_spec_from_env(spec):
@@ -282,26 +219,31 @@ def disambiguate_spec_from_hashes(spec, hashes, local=False, installed=True, fir
             See ``spack.database.Database._query`` for details.
     """
     if local:
-        matching_specs = spack.store.db.query_local(spec, hashes=hashes, installed=installed)
+        matching_specs = spack.store.STORE.db.query_local(spec, hashes=hashes, installed=installed)
     else:
-        matching_specs = spack.store.db.query(spec, hashes=hashes, installed=installed)
+        matching_specs = spack.store.STORE.db.query(spec, hashes=hashes, installed=installed)
     if not matching_specs:
         tty.die("Spec '%s' matches no installed packages." % spec)
 
     elif first:
         return matching_specs[0]
 
-    elif len(matching_specs) > 1:
-        format_string = "{name}{@version}{%compiler}{arch=architecture}"
-        args = ["%s matches multiple packages." % spec, "Matching packages:"]
-        args += [
-            colorize("  @K{%s} " % s.dag_hash(7)) + s.cformat(format_string)
-            for s in matching_specs
-        ]
-        args += ["Use a more specific spec."]
-        tty.die(*args)
+    ensure_single_spec_or_die(spec, matching_specs)
 
     return matching_specs[0]
+
+
+def ensure_single_spec_or_die(spec, matching_specs):
+    if len(matching_specs) <= 1:
+        return
+
+    format_string = "{name}{@version}{%compiler.name}{@compiler.version}{arch=architecture}"
+    args = ["%s matches multiple packages." % spec, "Matching packages:"]
+    args += [
+        colorize("  @K{%s} " % s.dag_hash(7)) + s.cformat(format_string) for s in matching_specs
+    ]
+    args += ["Use a more specific spec (e.g., prepend '/' to the hash)."]
+    tty.die(*args)
 
 
 def gray_hash(spec, length):
@@ -346,10 +288,10 @@ def iter_groups(specs, indent, all_headers):
             print()
 
         header = "%s{%s} / %s{%s}" % (
-            spack.spec.architecture_color,
+            spack.spec.ARCHITECTURE_COLOR,
             architecture if architecture else "no arch",
-            spack.spec.compiler_color,
-            compiler if compiler else "no compiler",
+            spack.spec.COMPILER_COLOR,
+            f"{compiler.display_str}" if compiler else "no compiler",
         )
 
         # Sometimes we want to display specs that are not yet concretized.
@@ -387,13 +329,12 @@ def display_specs(specs, args=None, **kwargs):
         deps (bool): Display dependencies with specs
         long (bool): Display short hashes with specs
         very_long (bool): Display full hashes with specs (supersedes ``long``)
-        namespace (bool): Print namespaces along with names
+        namespaces (bool): Print namespaces along with names
         show_flags (bool): Show compiler flags with specs
         variants (bool): Show variants with specs
         indent (int): indent each line this much
         groups (bool): display specs grouped by arch/compiler (default True)
-        decorators (dict): dictionary mappng specs to decorators
-        header_callback (typing.Callable): called at start of arch/compiler groups
+        decorator (typing.Callable): function to call to decorate specs
         all_headers (bool): show headers even when arch/compiler aren't defined
         output (typing.IO): A file object to write to. Default is ``sys.stdout``
 
@@ -411,7 +352,7 @@ def display_specs(specs, args=None, **kwargs):
     paths = get_arg("paths", False)
     deps = get_arg("deps", False)
     hashes = get_arg("long", False)
-    namespace = get_arg("namespace", False)
+    namespaces = get_arg("namespaces", False)
     flags = get_arg("show_flags", False)
     full_compiler = get_arg("show_full_compiler", False)
     variants = get_arg("variants", False)
@@ -432,7 +373,7 @@ def display_specs(specs, args=None, **kwargs):
 
     format_string = get_arg("format", None)
     if format_string is None:
-        nfmt = "{fullname}" if namespace else "{name}"
+        nfmt = "{fullname}" if namespaces else "{name}"
         ffmt = ""
         if full_compiler or flags:
             ffmt += "{%compiler.name}"
@@ -442,15 +383,13 @@ def display_specs(specs, args=None, **kwargs):
         vfmt = "{variants}" if variants else ""
         format_string = nfmt + "{@version}" + ffmt + vfmt
 
-    transform = {"package": decorator, "fullpackage": decorator}
-
     def fmt(s, depth=0):
         """Formatter function for all output specs"""
         string = ""
         if hashes:
             string += gray_hash(s, hlen) + " "
         string += depth * "    "
-        string += s.cformat(format_string, transform=transform)
+        string += decorator(s, s.cformat(format_string))
         return string
 
     def format_list(specs):
@@ -458,11 +397,12 @@ def display_specs(specs, args=None, **kwargs):
         # create the final, formatted versions of all specs
         formatted = []
         for spec in specs:
-            formatted.append((fmt(spec), spec))
             if deps:
-                for depth, dep in spec.traverse(root=False, depth=True):
-                    formatted.append((fmt(dep, depth), dep))
+                for depth, dep in traverse.traverse_tree([spec], depth_first=False):
+                    formatted.append((fmt(dep.spec, depth), dep.spec))
                 formatted.append(("", None))  # mark newlines
+            else:
+                formatted.append((fmt(spec), spec))
 
         # unless any of these are set, we can just colify and be done.
         if not any((deps, paths)):
@@ -476,7 +416,7 @@ def display_specs(specs, args=None, **kwargs):
         out = ""
         # getting lots of prefixes requires DB lookups. Ensure
         # all spec.prefix calls are in one transaction.
-        with spack.store.db.read_transaction():
+        with spack.store.STORE.db.read_transaction():
             for string, spec in formatted:
                 if not string:
                     # print newline from above
@@ -508,7 +448,7 @@ def filter_loaded_specs(specs):
     return [x for x in specs if x.dag_hash() in hashes]
 
 
-def print_how_many_pkgs(specs, pkg_type=""):
+def print_how_many_pkgs(specs, pkg_type="", suffix=""):
     """Given a list of specs, this will print a message about how many
     specs are in that list.
 
@@ -519,7 +459,7 @@ def print_how_many_pkgs(specs, pkg_type=""):
             category, e.g. if pkg_type is "installed" then the message
             would be "3 installed packages"
     """
-    tty.msg("%s" % spack.util.string.plural(len(specs), pkg_type + " package"))
+    tty.msg("%s" % llnl.string.plural(len(specs), pkg_type + " package") + suffix)
 
 
 def spack_is_git_repo():
@@ -536,9 +476,9 @@ def is_git_repo(path):
         # we might be in a git worktree
         try:
             with open(dotgit_path, "rb") as f:
-                dotgit_content = yaml.load(f)
+                dotgit_content = syaml.load(f)
             return os.path.isdir(dotgit_content.get("gitdir", dotgit_path))
-        except MarkedYAMLError:
+        except syaml.SpackYAMLError:
             pass
     return False
 
@@ -548,7 +488,7 @@ class PythonNameError(spack.error.SpackError):
 
     def __init__(self, name):
         self.name = name
-        super(PythonNameError, self).__init__("{0} is not a permissible Python name.".format(name))
+        super().__init__("{0} is not a permissible Python name.".format(name))
 
 
 class CommandNameError(spack.error.SpackError):
@@ -556,9 +496,7 @@ class CommandNameError(spack.error.SpackError):
 
     def __init__(self, name):
         self.name = name
-        super(CommandNameError, self).__init__(
-            "{0} is not a permissible Spack command name.".format(name)
-        )
+        super().__init__("{0} is not a permissible Spack command name.".format(name))
 
 
 ########################################
@@ -589,14 +527,14 @@ def require_active_env(cmd_name):
 
     if env:
         return env
-    else:
-        tty.die(
-            "`spack %s` requires an environment" % cmd_name,
-            "activate an environment first:",
-            "    spack env activate ENV",
-            "or use:",
-            "    spack -e ENV %s ..." % cmd_name,
-        )
+
+    tty.die(
+        "`spack %s` requires an environment" % cmd_name,
+        "activate an environment first:",
+        "    spack env activate ENV",
+        "or use:",
+        "    spack -e ENV %s ..." % cmd_name,
+    )
 
 
 def find_environment(args):
@@ -640,3 +578,8 @@ def find_environment(args):
         return ev.Environment(env)
 
     raise ev.SpackEnvironmentError("no environment in %s" % env)
+
+
+def first_line(docstring):
+    """Return the first line of the docstring."""
+    return docstring.split("\n")[0]

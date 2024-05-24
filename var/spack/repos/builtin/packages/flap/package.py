@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,9 @@ class Flap(CMakePackage):
     url = "https://github.com/szaghi/FLAP.git"
     git = "https://github.com/szaghi/FLAP.git"
 
-    maintainers = ["fluidnumerics-joe"]
+    maintainers("fluidnumerics-joe")
+
+    license("GPL-3.0-only")
 
     version("master", branch="master", submodules=True)
 

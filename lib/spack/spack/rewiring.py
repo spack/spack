@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,7 +9,7 @@ import shutil
 import tempfile
 from collections import OrderedDict
 
-from llnl.util.symlink import symlink
+from llnl.util.symlink import readlink, symlink
 
 import spack.binary_distribution as bindist
 import spack.error
@@ -26,7 +26,7 @@ def _relocate_spliced_links(links, orig_prefix, new_prefix):
     in our case. This still needs to be called after the copy to destination
     because it expects the new directory structure to be in place."""
     for link in links:
-        link_target = os.readlink(os.path.join(orig_prefix, link))
+        link_target = readlink(os.path.join(orig_prefix, link))
         link_target = re.sub("^" + orig_prefix, new_prefix, link_target)
         new_link_path = os.path.join(new_prefix, link)
         os.unlink(new_link_path)
@@ -80,8 +80,8 @@ def rewire_node(spec, explicit):
         if "macho" in platform.binary_formats:
             relocate.relocate_macho_binaries(
                 bins_to_relocate,
-                str(spack.store.layout.root),
-                str(spack.store.layout.root),
+                str(spack.store.STORE.layout.root),
+                str(spack.store.STORE.layout.root),
                 prefix_to_prefix,
                 False,
                 spec.build_spec.prefix,
@@ -90,8 +90,8 @@ def rewire_node(spec, explicit):
         if "elf" in platform.binary_formats:
             relocate.relocate_elf_binaries(
                 bins_to_relocate,
-                str(spack.store.layout.root),
-                str(spack.store.layout.root),
+                str(spack.store.STORE.layout.root),
+                str(spack.store.STORE.layout.root),
                 prefix_to_prefix,
                 False,
                 spec.build_spec.prefix,
@@ -114,26 +114,26 @@ def rewire_node(spec, explicit):
     # (spliced) spec into spec.json, without this, Database.add would fail on
     # the next line (because it checks the spec.json in the prefix against the
     # spec being added to look for mismatches)
-    spack.store.layout.write_spec(spec, spack.store.layout.spec_file_path(spec))
+    spack.store.STORE.layout.write_spec(spec, spack.store.STORE.layout.spec_file_path(spec))
     # add to database, not sure about explicit
-    spack.store.db.add(spec, spack.store.layout, explicit=explicit)
+    spack.store.STORE.db.add(spec, spack.store.STORE.layout, explicit=explicit)
 
     # run post install hooks
-    spack.hooks.post_install(spec)
+    spack.hooks.post_install(spec, explicit)
 
 
 class RewireError(spack.error.SpackError):
     """Raised when something goes wrong with rewiring."""
 
     def __init__(self, message, long_msg=None):
-        super(RewireError, self).__init__(message, long_msg)
+        super().__init__(message, long_msg)
 
 
 class PackageNotInstalledError(RewireError):
     """Raised when the build_spec for a splice was not installed."""
 
     def __init__(self, spliced_spec, build_spec, dep):
-        super(PackageNotInstalledError, self).__init__(
+        super().__init__(
             """Rewire of {0}
             failed due to missing install of build spec {1}
             for spec {2}""".format(

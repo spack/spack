@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,53 +18,37 @@ class Orca(Package):
     set up a mirror, see https://spack.readthedocs.io/en/latest/mirrors.html"""
 
     homepage = "https://cec.mpg.de"
-    url = "file://{0}/orca_4_0_1_2_linux_x86-64_openmpi202.tar.zst".format(os.getcwd())
+    maintainers("snehring")
     manual_download = True
 
-    version(
-        "4.2.1",
-        sha256="9bbb3bfdca8220b417ee898b27b2885508d8c82799adfa63dde9e72eab49a6b2",
-        expand=False,
-    )
-    version(
-        "4.2.0",
-        sha256="55a5ca5aaad03396ac5ada2f14b61ffa735fdc2d98355e272465e07a6749d399",
-        expand=False,
-    )
-    version(
-        "4.0.1.2",
-        sha256="cea442aa99ec0d7ffde65014932196b62343f7a6191b4bfc438bfb38c03942f7",
-        expand=False,
-    )
+    license("LGPL-2.1-or-later")
 
-    depends_on("zstd", type="build")
+    version("5.0.4", sha256="c4ea5aea60da7bcb18a6b7042609206fbeb2a765c6fa958c5689d450b588b036")
+    version("5.0.3", sha256="b8b9076d1711150a6d6cb3eb30b18e2782fa847c5a86d8404b9339faef105043")
+    version("4.2.1", sha256="a84b6d2706f0ddb2f3750951864502a5c49d081836b00164448b1d81c577f51a")
+    version("4.2.0", sha256="01096466e41a5232e5a18af7400e48c02a6e489f0d5d668a90cdd2746e8e22e2")
+
+    depends_on("libevent", type="run")
+    depends_on("libpciaccess", type="run")
 
     # Map Orca version with the required OpenMPI version
-    openmpi_versions = {"4.0.1.2": "2.0.2", "4.2.0": "3.1.4", "4.2.1": "3.1.4"}
+    # OpenMPI@4.1.1 has issues in pmix environments, hence 4.1.2 here
+    openmpi_versions = {"4.2.0": "3.1.4", "4.2.1": "3.1.4", "5.0.3": "4.1.2", "5.0.4": "4.1.2"}
     for orca_version, openmpi_version in openmpi_versions.items():
         depends_on(
             "openmpi@{0}".format(openmpi_version), type="run", when="@{0}".format(orca_version)
         )
 
     def url_for_version(self, version):
-        out = "file://{0}/orca_{1}_linux_x86-64_openmpi{2}.tar.zst"
-        return out.format(os.getcwd(), version.underscored, self.openmpi_versions[version.string])
+        openmpi_version = self.openmpi_versions[str(version.dotted)].replace(".", "")
+        if openmpi_version == "412":
+            openmpi_version = "411"
+        return f"file://{os.getcwd()}/orca_{version.underscored}_linux_x86-64_shared_openmpi{openmpi_version}.tar.xz"
 
     def install(self, spec, prefix):
-        # we have to extract the archive ourself
-        # fortunately it's just full of a bunch of binaries
-
-        vername = os.path.basename(self.stage.archive_file).split(".")[0]
-
-        zstd = which("zstd")
-        zstd("-d", self.stage.archive_file, "-o", vername + ".tar")
-
-        tar = which("tar")
-        tar("-xvf", vername + ".tar")
-
-        # there are READMEs in there but they don't hurt anyone
         mkdirp(prefix.bin)
-        install_tree(vername, prefix.bin)
+
+        install_tree(".", prefix.bin)
 
         # Check "mpirun" usability when building against OpenMPI
         # with Slurm scheduler and add a "mpirun" wrapper that
@@ -72,3 +56,9 @@ class Orca(Package):
         if "^openmpi ~legacylaunchers schedulers=slurm" in self.spec:
             mpirun_srun = join_path(os.path.dirname(__file__), "mpirun_srun.sh")
             install(mpirun_srun, prefix.bin.mpirun)
+
+    def setup_run_environment(self, env):
+        env.prepend_path("LD_LIBRARY_PATH", self.prefix.bin)
+        env.prepend_path("LD_LIBRARY_PATH", self.spec["libevent"].prefix.lib)
+        env.prepend_path("LD_LIBRARY_PATH", self.spec["libpciaccess"].prefix.lib)
+        env.prepend_path("LD_LIBRARY_PATH", self.spec["openmpi"].prefix.lib)

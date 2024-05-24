@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -41,7 +41,9 @@ class Dray(Package, CudaPackage):
     git = "https://github.com/LLNL/devil_ray.git"
     url = "https://github.com/LLNL/devil_ray/releases/download/v0.1.2/dray-v0.1.2.tar.gz"
 
-    maintainers = ["cyrush"]
+    maintainers("cyrush")
+
+    license("BSD-3-Clause")
 
     version("develop", branch="develop", submodules="True")
     version("0.1.8", sha256="ae78ca6a5a31f06f6400a4a1ff6fc1d75347c8b41027a80662179f5b877eee30")
@@ -79,9 +81,10 @@ class Dray(Package, CudaPackage):
     depends_on("apcomp~shared", when="~shared")
     depends_on("apcomp+shared", when="+shared")
 
-    depends_on("raja@0.12.0:")
+    depends_on("raja@0.14.0:0.14", when="@0.1.8:")
     depends_on("raja@:0.14", when="@0.1.7:")
     depends_on("raja@:0.13", when="@:0.1.6")
+    depends_on("raja@0.12.0:")
     depends_on("raja~cuda", when="~cuda")
     depends_on("raja+cuda", when="+cuda")
     propagate_cuda_arch("raja")

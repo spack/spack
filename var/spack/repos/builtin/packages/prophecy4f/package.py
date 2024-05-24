@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,9 @@ class Prophecy4f(MakefilePackage):
     homepage = "https://prophecy4f.hepforge.org/"
     url = "https://prophecy4f.hepforge.org/downloads/?f=Prophecy4f-3.0.2.tar.gz"
 
-    maintainers = ["haralmha", "vvolkl"]
+    maintainers("haralmha", "vvolkl")
+
+    tags = ["hep"]
 
     version("3.0.2", sha256="01e6ad4d7e913082c1dcabd589173f5d962086dd7860c710f14a0528d8d80eb7")
 
@@ -29,5 +31,7 @@ class Prophecy4f(MakefilePackage):
 
     def install(self, spec, prefix):
         mkdir(prefix.bin)
+        mkdir(prefix.share)
+        mkdir(prefix.share.prophecy4f)
         install("Prophecy4f", prefix.bin)
         install("defaultinput", prefix)

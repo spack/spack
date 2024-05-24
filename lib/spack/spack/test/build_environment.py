@@ -1,30 +1,29 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
+import inspect
 import os
 import platform
 import posixpath
-import sys
 
 import pytest
 
+from llnl.path import Path, convert_to_platform_path
 from llnl.util.filesystem import HeaderList, LibraryList
 
 import spack.build_environment
 import spack.config
+import spack.deptypes as dt
+import spack.package_base
 import spack.spec
 import spack.util.spack_yaml as syaml
-from spack.build_environment import (
-    _static_to_shared_library,
-    determine_number_of_jobs,
-    dso_suffix,
-)
+from spack.build_environment import UseMode, _static_to_shared_library, dso_suffix
+from spack.context import Context
 from spack.paths import build_env_path
+from spack.util.cpus import determine_number_of_jobs
 from spack.util.environment import EnvironmentModifications
 from spack.util.executable import Executable
-from spack.util.path import Path, convert_to_platform_path
 
 
 def os_pathsep_join(path, *pths):
@@ -65,7 +64,8 @@ def build_environment(working_env):
     os.environ["SPACK_LINKER_ARG"] = "-Wl,"
     os.environ["SPACK_DTAGS_TO_ADD"] = "--disable-new-dtags"
     os.environ["SPACK_DTAGS_TO_STRIP"] = "--enable-new-dtags"
-    os.environ["SPACK_SYSTEM_DIRS"] = "/usr/include /usr/lib"
+    os.environ["SPACK_SYSTEM_DIRS"] = "/usr/include|/usr/lib"
+    os.environ["SPACK_MANAGED_DIRS"] = f"{prefix}/opt/spack"
     os.environ["SPACK_TARGET_ARGS"] = ""
 
     if "SPACK_DEPENDENCIES" in os.environ:
@@ -106,7 +106,7 @@ def ensure_env_variables(config, mock_packages, monkeypatch, working_env):
 
 @pytest.fixture
 def mock_module_cmd(monkeypatch):
-    class Logger(object):
+    class Logger:
         def __init__(self, fn=None):
             self.fn = fn
             self.calls = []
@@ -122,7 +122,7 @@ def mock_module_cmd(monkeypatch):
     return mock_module_cmd
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Static to Shared not supported on Win (yet)")
+@pytest.mark.not_on_windows("Static to Shared not supported on Win (yet)")
 def test_static_to_shared_library(build_environment):
     os.environ["SPACK_TEST_COMMAND"] = "dump-args"
 
@@ -130,13 +130,13 @@ def test_static_to_shared_library(build_environment):
         "linux": (
             "/bin/mycc -shared"
             " -Wl,--disable-new-dtags"
-            " -Wl,-soname,{2} -Wl,--whole-archive {0}"
+            " -Wl,-soname -Wl,{2} -Wl,--whole-archive {0}"
             " -Wl,--no-whole-archive -o {1}"
         ),
         "darwin": (
             "/bin/mycc -dynamiclib"
             " -Wl,--disable-new-dtags"
-            " -install_name {1} -Wl,-force_load,{0} -o {1}"
+            " -install_name {1} -Wl,-force_load -Wl,{0} -o {1}"
         ),
     }
 
@@ -159,7 +159,6 @@ def test_static_to_shared_library(build_environment):
 @pytest.mark.regression("8345")
 @pytest.mark.usefixtures("config", "mock_packages")
 def test_cc_not_changed_by_modules(monkeypatch, working_env):
-
     s = spack.spec.Spec("cmake")
     s.concretize()
     pkg = s.package
@@ -175,6 +174,14 @@ def test_cc_not_changed_by_modules(monkeypatch, working_env):
 
     assert os.environ["CC"] != "NOT_THIS_PLEASE"
     assert os.environ["ANOTHER_VAR"] == "THIS_IS_SET"
+
+
+def test_setup_dependent_package_inherited_modules(
+    config, working_env, mock_packages, install_mockery, mock_fetch
+):
+    # This will raise on regression
+    s = spack.spec.Spec("cmake-client-inheritor").concretized()
+    s.package.do_install()
 
 
 @pytest.mark.parametrize(
@@ -278,6 +285,24 @@ def test_compiler_config_modifications(
             assert os.environ[name] == value
             continue
         assert name not in os.environ
+
+
+def test_external_config_env(mock_packages, mutable_config, working_env):
+    cmake_config = {
+        "externals": [
+            {
+                "spec": "cmake@1.0",
+                "prefix": "/fake/path",
+                "extra_attributes": {"environment": {"set": {"TEST_ENV_VAR_SET": "yes it's set"}}},
+            }
+        ]
+    }
+    spack.config.set("packages:cmake", cmake_config)
+
+    cmake_client = spack.spec.Spec("cmake-client").concretized()
+    spack.build_environment.setup_package(cmake_client.package, False)
+
+    assert os.environ["TEST_ENV_VAR_SET"] == "yes it's set"
 
 
 @pytest.mark.regression("9107")
@@ -427,20 +452,20 @@ dt-diamond-left:
     assert not (set(os.path.normpath(x) for x in link_dirs[:-2]) & external_lib_paths)
 
 
-def test_parallel_false_is_not_propagating(config, mock_packages):
-    class AttributeHolder(object):
-        pass
+def test_parallel_false_is_not_propagating(default_mock_concretization):
+    """Test that parallel=False is not propagating to dependencies"""
+    # a foobar=bar (parallel = False)
+    # |
+    # b (parallel =True)
+    s = default_mock_concretization("a foobar=bar")
 
-    # Package A has parallel = False and depends on B which instead
-    # can be built in parallel
-    s = spack.spec.Spec("a foobar=bar")
-    s.concretize()
+    spack.build_environment.set_package_py_globals(s.package, context=Context.BUILD)
+    assert s["a"].package.module.make_jobs == 1
 
-    for spec in s.traverse():
-        expected_jobs = spack.config.get("config:build_jobs") if s.package.parallel else 1
-        m = AttributeHolder()
-        spack.build_environment._set_variables_for_single_module(s.package, m)
-        assert m.make_jobs == expected_jobs
+    spack.build_environment.set_package_py_globals(s["b"].package, context=Context.BUILD)
+    assert s["b"].package.module.make_jobs == spack.build_environment.determine_number_of_jobs(
+        parallel=s["b"].package.parallel
+    )
 
 
 @pytest.mark.parametrize(
@@ -457,7 +482,7 @@ def test_setting_dtags_based_on_config(config_setting, expected_flag, config, mo
     pkg = s.package
 
     env = EnvironmentModifications()
-    with spack.config.override("config:shared_linking", config_setting):
+    with spack.config.override("config:shared_linking", {"type": config_setting, "bind": False}):
         spack.build_environment.set_compiler_environment_variables(pkg, env)
         modifications = env.group_by_name()
         assert "SPACK_DTAGS_TO_STRIP" in modifications
@@ -471,28 +496,62 @@ def test_setting_dtags_based_on_config(config_setting, expected_flag, config, mo
 
 def test_build_jobs_sequential_is_sequential():
     assert (
-        determine_number_of_jobs(parallel=False, command_line=8, config_default=8, max_cpus=8) == 1
+        determine_number_of_jobs(
+            parallel=False,
+            max_cpus=8,
+            config=spack.config.Configuration(
+                spack.config.InternalConfigScope("command_line", {"config": {"build_jobs": 8}}),
+                spack.config.InternalConfigScope("defaults", {"config": {"build_jobs": 8}}),
+            ),
+        )
+        == 1
     )
 
 
 def test_build_jobs_command_line_overrides():
     assert (
-        determine_number_of_jobs(parallel=True, command_line=10, config_default=1, max_cpus=1)
+        determine_number_of_jobs(
+            parallel=True,
+            max_cpus=1,
+            config=spack.config.Configuration(
+                spack.config.InternalConfigScope("command_line", {"config": {"build_jobs": 10}}),
+                spack.config.InternalConfigScope("defaults", {"config": {"build_jobs": 1}}),
+            ),
+        )
         == 10
     )
     assert (
-        determine_number_of_jobs(parallel=True, command_line=10, config_default=100, max_cpus=100)
+        determine_number_of_jobs(
+            parallel=True,
+            max_cpus=100,
+            config=spack.config.Configuration(
+                spack.config.InternalConfigScope("command_line", {"config": {"build_jobs": 10}}),
+                spack.config.InternalConfigScope("defaults", {"config": {"build_jobs": 100}}),
+            ),
+        )
         == 10
     )
 
 
 def test_build_jobs_defaults():
     assert (
-        determine_number_of_jobs(parallel=True, command_line=None, config_default=1, max_cpus=10)
+        determine_number_of_jobs(
+            parallel=True,
+            max_cpus=10,
+            config=spack.config.Configuration(
+                spack.config.InternalConfigScope("defaults", {"config": {"build_jobs": 1}})
+            ),
+        )
         == 1
     )
     assert (
-        determine_number_of_jobs(parallel=True, command_line=None, config_default=100, max_cpus=10)
+        determine_number_of_jobs(
+            parallel=True,
+            max_cpus=10,
+            config=spack.config.Configuration(
+                spack.config.InternalConfigScope("defaults", {"config": {"build_jobs": 100}})
+            ),
+        )
         == 10
     )
 
@@ -513,3 +572,166 @@ def test_dirty_disable_module_unload(config, mock_packages, working_env, mock_mo
     assert mock_module_cmd.calls
     assert any(("unload", "cray-libsci") == item[0] for item in mock_module_cmd.calls)
     assert any(("unload", "cray-mpich") == item[0] for item in mock_module_cmd.calls)
+
+
+class TestModuleMonkeyPatcher:
+    def test_getting_attributes(self, default_mock_concretization):
+        s = default_mock_concretization("libelf")
+        module_wrapper = spack.build_environment.ModuleChangePropagator(s.package)
+        assert module_wrapper.Libelf == s.package.module.Libelf
+
+    def test_setting_attributes(self, default_mock_concretization):
+        s = default_mock_concretization("libelf")
+        module = s.package.module
+        module_wrapper = spack.build_environment.ModuleChangePropagator(s.package)
+
+        # Setting an attribute has an immediate effect
+        module_wrapper.SOME_ATTRIBUTE = 1
+        assert module.SOME_ATTRIBUTE == 1
+
+        # We can also propagate the settings to classes in the MRO
+        module_wrapper.propagate_changes_to_mro()
+        for cls in inspect.getmro(type(s.package)):
+            current_module = cls.module
+            if current_module == spack.package_base:
+                break
+            assert current_module.SOME_ATTRIBUTE == 1
+
+
+def test_effective_deptype_build_environment(default_mock_concretization):
+    s = default_mock_concretization("dttop")
+
+    #  [    ]  dttop@1.0                    #
+    #  [b   ]      ^dtbuild1@1.0            # <- direct build dep
+    #  [b   ]          ^dtbuild2@1.0        # <- indirect build-only dep is dropped
+    #  [bl  ]          ^dtlink2@1.0         # <- linkable, and runtime dep of build dep
+    #  [  r ]          ^dtrun2@1.0          # <- non-linkable, exectuable runtime dep of build dep
+    #  [bl  ]      ^dtlink1@1.0             # <- direct build dep
+    #  [bl  ]          ^dtlink3@1.0         # <- linkable, and runtime dep of build dep
+    #  [b   ]              ^dtbuild2@1.0    # <- indirect build-only dep is dropped
+    #  [bl  ]              ^dtlink4@1.0     # <- linkable, and runtime dep of build dep
+    #  [  r ]      ^dtrun1@1.0              # <- run-only dep is pruned (should it be in PATH?)
+    #  [bl  ]          ^dtlink5@1.0         # <- children too
+    #  [  r ]          ^dtrun3@1.0          # <- children too
+    #  [b   ]              ^dtbuild3@1.0    # <- children too
+
+    expected_flags = {
+        "dttop": UseMode.ROOT,
+        "dtbuild1": UseMode.BUILDTIME_DIRECT,
+        "dtlink1": UseMode.BUILDTIME_DIRECT | UseMode.BUILDTIME,
+        "dtlink3": UseMode.BUILDTIME | UseMode.RUNTIME,
+        "dtlink4": UseMode.BUILDTIME | UseMode.RUNTIME,
+        "dtrun2": UseMode.RUNTIME | UseMode.RUNTIME_EXECUTABLE,
+        "dtlink2": UseMode.RUNTIME,
+    }
+
+    for spec, effective_type in spack.build_environment.effective_deptypes(
+        s, context=Context.BUILD
+    ):
+        assert effective_type & expected_flags.pop(spec.name) == effective_type
+    assert not expected_flags, f"Missing {expected_flags.keys()} from effective_deptypes"
+
+
+def test_effective_deptype_run_environment(default_mock_concretization):
+    s = default_mock_concretization("dttop")
+
+    #  [    ]  dttop@1.0                    #
+    #  [b   ]      ^dtbuild1@1.0            # <- direct build-only dep is pruned
+    #  [b   ]          ^dtbuild2@1.0        # <- children too
+    #  [bl  ]          ^dtlink2@1.0         # <- children too
+    #  [  r ]          ^dtrun2@1.0          # <- children too
+    #  [bl  ]      ^dtlink1@1.0             # <- runtime, not executable
+    #  [bl  ]          ^dtlink3@1.0         # <- runtime, not executable
+    #  [b   ]              ^dtbuild2@1.0    # <- indirect build only dep is pruned
+    #  [bl  ]              ^dtlink4@1.0     # <- runtime, not executable
+    #  [  r ]      ^dtrun1@1.0              # <- runtime and executable
+    #  [bl  ]          ^dtlink5@1.0         # <- runtime, not executable
+    #  [  r ]          ^dtrun3@1.0          # <- runtime and executable
+    #  [b   ]              ^dtbuild3@1.0    # <- indirect build-only dep is pruned
+
+    expected_flags = {
+        "dttop": UseMode.ROOT,
+        "dtlink1": UseMode.RUNTIME,
+        "dtlink3": UseMode.BUILDTIME | UseMode.RUNTIME,
+        "dtlink4": UseMode.BUILDTIME | UseMode.RUNTIME,
+        "dtrun1": UseMode.RUNTIME | UseMode.RUNTIME_EXECUTABLE,
+        "dtlink5": UseMode.RUNTIME,
+        "dtrun3": UseMode.RUNTIME | UseMode.RUNTIME_EXECUTABLE,
+    }
+
+    for spec, effective_type in spack.build_environment.effective_deptypes(s, context=Context.RUN):
+        assert effective_type & expected_flags.pop(spec.name) == effective_type
+    assert not expected_flags, f"Missing {expected_flags.keys()} from effective_deptypes"
+
+
+def test_monkey_patching_works_across_virtual(default_mock_concretization):
+    """Assert that a monkeypatched attribute is found regardless we access through the
+    real name or the virtual name.
+    """
+    s = default_mock_concretization("mpileaks ^mpich")
+    s["mpich"].foo = "foo"
+    assert s["mpich"].foo == "foo"
+    assert s["mpi"].foo == "foo"
+
+
+def test_clear_compiler_related_runtime_variables_of_build_deps(default_mock_concretization):
+    """Verify that Spack drops CC, CXX, FC and F77 from the dependencies related build environment
+    variable changes if they are set in setup_run_environment. Spack manages those variables
+    elsewhere."""
+    s = default_mock_concretization("build-env-compiler-var-a")
+    ctx = spack.build_environment.SetupContext(s, context=Context.BUILD)
+    result = {}
+    ctx.get_env_modifications().apply_modifications(result)
+    assert "CC" not in result
+    assert "CXX" not in result
+    assert "FC" not in result
+    assert "F77" not in result
+    assert result["ANOTHER_VAR"] == "this-should-be-present"
+
+
+@pytest.mark.parametrize("context", [Context.BUILD, Context.RUN])
+def test_build_system_globals_only_set_on_root_during_build(default_mock_concretization, context):
+    """Test whether when setting up a build environment, the build related globals are set only
+    in the top level spec.
+
+    TODO: Since module instances are globals themselves, and Spack defines properties on them, they
+    persist across tests. In principle this is not terrible, cause the variables are mostly static.
+    But obviously it can lead to very hard to find bugs... We should get rid of those globals and
+    define them instead as a property on the package instance.
+    """
+    root = spack.spec.Spec("mpileaks").concretized()
+    build_variables = ("std_cmake_args", "std_meson_args", "std_pip_args")
+
+    # See todo above, we clear out any properties that may have been set by the previous test.
+    # Commenting this loop will make the test fail. I'm leaving it here as a reminder that those
+    # globals were always a bad idea, and we should pass them to the package instance.
+    for spec in root.traverse():
+        for variable in build_variables:
+            spec.package.module.__dict__.pop(variable, None)
+
+    spack.build_environment.SetupContext(root, context=context).set_all_package_py_globals()
+
+    # Excpect the globals to be set at the root in a build context only.
+    should_be_set = lambda depth: context == Context.BUILD and depth == 0
+
+    for depth, spec in root.traverse(depth=True, root=True):
+        for variable in build_variables:
+            assert hasattr(spec.package.module, variable) == should_be_set(depth)
+
+
+def test_rpath_with_duplicate_link_deps():
+    """If we have two instances of one package in the same link sub-dag, only the newest version is
+    rpath'ed. This is for runtime support without splicing."""
+    runtime_1 = spack.spec.Spec("runtime@=1.0")
+    runtime_2 = spack.spec.Spec("runtime@=2.0")
+    child = spack.spec.Spec("child@=1.0")
+    root = spack.spec.Spec("root@=1.0")
+
+    root.add_dependency_edge(child, depflag=dt.LINK, virtuals=())
+    root.add_dependency_edge(runtime_2, depflag=dt.LINK, virtuals=())
+    child.add_dependency_edge(runtime_1, depflag=dt.LINK, virtuals=())
+
+    rpath_deps = spack.build_environment._get_rpath_deps_from_spec(root, transitive_rpaths=True)
+    assert child in rpath_deps
+    assert runtime_2 in rpath_deps
+    assert runtime_1 not in rpath_deps

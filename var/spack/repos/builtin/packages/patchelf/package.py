@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,8 +16,21 @@ class Patchelf(AutotoolsPackage):
     list_url = "https://nixos.org/releases/patchelf/"
     list_depth = 1
 
-    maintainers = ["haampie"]
+    maintainers("haampie")
 
+    license("GPL-3.0-or-later")
+
+    version("0.18.0", sha256="64de10e4c6b8b8379db7e87f58030f336ea747c0515f381132e810dbf84a86e7")
+    # patchelf 0.18 breaks libraries:
+    # https://github.com/spack/spack/issues/39252
+    # https://github.com/spack/spack/pull/40938
+    version(
+        "0.17.2",
+        sha256="20427b718dd130e4b66d95072c2a2bd5e17232e20dad58c1bea9da81fae330e0",
+        preferred=True,
+    )
+    version("0.16.1", sha256="1a562ed28b16f8a00456b5f9ee573bb1af7c39c1beea01d94fc0c7b3256b0406")
+    version("0.15.0", sha256="53a8d58ed4e060412b8fdcb6489562b3c62be6f65cee5af30eba60f4423bfa0f")
     version("0.14.5", sha256="113ada3f1ace08f0a7224aa8500f1fa6b08320d8f7df05ff58585286ec5faa6f")
     version("0.14.3", sha256="8fabf4210499744ced101612cd5c9fd12b94af67a16297cb5d3ff682c007ffdb")
     version("0.14.2", sha256="3dbced63d02076221397d3fa45ef6cf6776e7c6d45ea5c4e86c91604dfc87a80")
@@ -34,6 +47,9 @@ class Patchelf(AutotoolsPackage):
     conflicts("%gcc@:4.6", when="@0.10:", msg="Requires C++11 support")
     conflicts("%gcc@:6", when="@0.14:", msg="Requires C++17 support")
     conflicts("%clang@:3", when="@0.14:", msg="Requires C++17 support")
+
+    # GCC 7.5 doesn't have __cpp_deduction_guides >= 201606
+    patch("513.patch", when="@0.18: %gcc@:7")
 
     def url_for_version(self, version):
         if version < Version("0.12"):
@@ -53,29 +69,20 @@ class Patchelf(AutotoolsPackage):
             )
         )
 
-    def test(self):
+    def test_version(self):
+        """ensure patchelf version match"""
         # Check patchelf in prefix and reports the correct version
-        reason = "test: ensuring patchelf version is {0}".format(self.spec.version)
-        self.run_test(
-            "patchelf",
-            options="--version",
-            expected=["patchelf %s" % self.spec.version],
-            installed=True,
-            purpose=reason,
-        )
+        patchelf = which(self.prefix.bin.patchelf)
+        out = patchelf("--version", output=str.split, error=str.split)
+        expected = f"patchelf {self.spec.version}"
+        assert expected in out, f"Expected '{expected}' in output"
 
-        # Check the rpath is changed
+    def test_rpath_change(self):
+        """ensure patchelf can change rpath"""
         currdir = os.getcwd()
         hello_file = self.test_suite.current_test_data_dir.join("hello")
-        self.run_test(
-            "patchelf",
-            ["--set-rpath", currdir, hello_file],
-            purpose="test: ensuring that patchelf can change rpath",
-        )
 
-        self.run_test(
-            "patchelf",
-            options=["--print-rpath", hello_file],
-            expected=[currdir],
-            purpose="test: ensuring that patchelf changed rpath",
-        )
+        patchelf = which(self.prefix.bin.patchelf)
+        patchelf("--set-rpath", currdir, hello_file)
+        out = patchelf("--print-rpath", hello_file, output=str.split, error=str.split)
+        assert currdir in out, f"Expected '{currdir}' in output"

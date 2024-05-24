@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -33,6 +33,7 @@ class FujitsuFftw(FftwBase):
     homepage = "https://github.com/fujitsu/fftw3"
     url = "https://github.com/fujitsu/fftw3/archive/sve-v1.0.0.tar.gz"
 
+    version("1.1.0", sha256="47b01a20846802041a9533a115f816b973cc9b15b3e827a2f0caffaae34a6c9d")
     version("1.0.0", sha256="b5931e352355d8d1ffeb215922f4b96de11b8585c423fceeaffbf3d5436f6f2f")
 
     variant("shared", default=True, description="Builds a shared version of the library")
@@ -49,16 +50,7 @@ class FujitsuFftw(FftwBase):
         when="%fj",
         msg="ARM-SVE vector instructions only works in single or double precision",
     )
-    conflicts("%arm")
-    conflicts("%cce")
-    conflicts("%apple-clang")
-    conflicts("%clang")
-    conflicts("%gcc")
-    conflicts("%intel")
-    conflicts("%nag")
-    conflicts("%pgi")
-    conflicts("%xl")
-    conflicts("%xl_r")
+    requires("%fj")
 
     def autoreconf(self, spec, prefix):
         if spec.target != "a64fx":
@@ -94,6 +86,11 @@ class FujitsuFftw(FftwBase):
         else:
             options.append("--disable-openmp")
 
+        if "+threads" in spec:
+            options.append("--enable-threads")
+        else:
+            options.append("--disable-threads")
+
         if "+mpi" in spec:
             options.append("--enable-mpi")
         else:
@@ -111,7 +108,6 @@ class FujitsuFftw(FftwBase):
         # Different precisions must be configured and compiled one at a time
         configure = Executable("../configure")
         for precision in self.selected_precisions:
-
             opts = (enable_precision[precision] or []) + options[:]
             with working_dir(precision, create=True):
                 configure(*opts)

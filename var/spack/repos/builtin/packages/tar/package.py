@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,6 +18,8 @@ class Tar(AutotoolsPackage, GNUMirrorPackage):
     executables = [r"^tar$"]
 
     tags = ["core-packages"]
+
+    license("GPL-3.0-or-later")
 
     version("1.34", sha256="03d908cf5768cfe6b7ad588c921c6ed21acabfb2b79b788d1330453507647aed")
     version("1.32", sha256="b59549594d91d84ee00c99cf2541a3330fed3a42c440503326dab767f2fbb96c")
@@ -62,23 +64,28 @@ class Tar(AutotoolsPackage, GNUMirrorPackage):
         return match.group(1) if match else None
 
     def configure_args(self):
+        spec = self.spec
         # Note: compression programs are passed by abs path,
         # so that tar can locate them when invoked without spack load.
         args = [
-            "--with-libiconv-prefix={0}".format(self.spec["iconv"].prefix),
-            "--with-xz={0}".format(self.spec["xz"].prefix.bin.xz),
-            "--with-lzma={0}".format(self.spec["xz"].prefix.bin.lzma),
-            "--with-bzip2={0}".format(self.spec["bzip2"].prefix.bin.bzip2),
+            "--with-xz={0}".format(spec["xz"].prefix.bin.xz),
+            "--with-lzma={0}".format(spec["xz"].prefix.bin.lzma),
+            "--with-bzip2={0}".format(spec["bzip2"].prefix.bin.bzip2),
         ]
 
-        if "^zstd" in self.spec:
-            args.append("--with-zstd={0}".format(self.spec["zstd"].prefix.bin.zstd))
+        if spec["iconv"].name == "libiconv":
+            args.append(f"--with-libiconv-prefix={spec['iconv'].prefix}")
+        else:
+            args.append("--without-libiconv-prefix")
+
+        if "^zstd" in spec:
+            args.append("--with-zstd={0}".format(spec["zstd"].prefix.bin.zstd))
 
         # Choose gzip/pigz
-        zip = self.spec.variants["zip"].value
+        zip = spec.variants["zip"].value
         if zip == "gzip":
-            gzip_path = self.spec["gzip"].prefix.bin.gzip
+            gzip_path = spec["gzip"].prefix.bin.gzip
         elif zip == "pigz":
-            gzip_path = self.spec["pigz"].prefix.bin.pigz
+            gzip_path = spec["pigz"].prefix.bin.pigz
         args.append("--with-gzip={}".format(gzip_path))
         return args

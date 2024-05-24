@@ -1,18 +1,18 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import collections
 import functools as ft
 import itertools
 import os
 import re
 import shutil
+import stat
 import sys
+from typing import Optional
 
 from llnl.util import tty
-from llnl.util.compat import filter, map, zip
 from llnl.util.filesystem import (
     mkdirp,
     remove_dead_links,
@@ -21,6 +21,7 @@ from llnl.util.filesystem import (
 )
 from llnl.util.lang import index_by, match_predicate
 from llnl.util.link_tree import (
+    ConflictingSpecsError,
     DestinationMergeVisitor,
     LinkTree,
     MergeConflictSummary,
@@ -31,17 +32,16 @@ from llnl.util.symlink import symlink
 from llnl.util.tty.color import colorize
 
 import spack.config
+import spack.paths
 import spack.projections
+import spack.relocate
 import spack.schema.projections
 import spack.spec
 import spack.store
 import spack.util.spack_json as s_json
 import spack.util.spack_yaml as s_yaml
-from spack.directory_layout import (
-    ExtensionAlreadyInstalledError,
-    YamlViewExtensionsLayout,
-)
 from spack.error import SpackError
+from spack.hooks import sbang
 
 __all__ = ["FilesystemView", "YamlFilesystemView"]
 
@@ -61,50 +61,47 @@ def view_hardlink(src, dst, **kwargs):
     os.link(src, dst)
 
 
-def view_copy(src, dst, view, spec=None):
+def view_copy(src: str, dst: str, view, spec: Optional[spack.spec.Spec] = None):
     """
     Copy a file from src to dst.
 
     Use spec and view to generate relocations
     """
-    shutil.copy2(src, dst)
-    if spec and not spec.external:
-        # Not metadata, we have to relocate it
+    shutil.copy2(src, dst, follow_symlinks=False)
 
-        # Get information on where to relocate from/to
+    # No need to relocate if no metadata or external.
+    if not spec or spec.external:
+        return
 
-        # This is vestigial code for the *old* location of sbang. Previously,
-        # sbang was a bash script, and it lived in the spack prefix. It is
-        # now a POSIX script that lives in the install prefix. Old packages
-        # will have the old sbang location in their shebangs.
-        # TODO: Not sure which one to use...
-        import spack.hooks.sbang as sbang
+    # Order of this dict is somewhat irrelevant
+    prefix_to_projection = {
+        s.prefix: view.get_projection_for_spec(s)
+        for s in spec.traverse(root=True, order="breadth")
+        if not s.external
+    }
 
-        # Break a package include cycle
-        import spack.relocate
+    src_stat = os.lstat(src)
 
-        orig_sbang = "#!/bin/bash {0}/bin/sbang".format(spack.paths.spack_root)
-        new_sbang = sbang.sbang_shebang_line()
+    # TODO: change this into a bulk operation instead of a per-file operation
 
-        prefix_to_projection = collections.OrderedDict(
-            {spec.prefix: view.get_projection_for_spec(spec)}
+    if stat.S_ISLNK(src_stat.st_mode):
+        spack.relocate.relocate_links(links=[dst], prefix_to_prefix=prefix_to_projection)
+    elif spack.relocate.is_binary(dst):
+        spack.relocate.relocate_text_bin(binaries=[dst], prefixes=prefix_to_projection)
+    else:
+        prefix_to_projection[spack.store.STORE.layout.root] = view._root
+
+        # This is vestigial code for the *old* location of sbang.
+        prefix_to_projection[f"#!/bin/bash {spack.paths.spack_root}/bin/sbang"] = (
+            sbang.sbang_shebang_line()
         )
 
-        for dep in spec.traverse():
-            if not dep.external:
-                prefix_to_projection[dep.prefix] = view.get_projection_for_spec(dep)
+        spack.relocate.relocate_text(files=[dst], prefixes=prefix_to_projection)
 
-        if spack.relocate.is_binary(dst):
-            spack.relocate.relocate_text_bin(binaries=[dst], prefixes=prefix_to_projection)
-        else:
-            prefix_to_projection[spack.store.layout.root] = view._root
-            prefix_to_projection[orig_sbang] = new_sbang
-            spack.relocate.relocate_text(files=[dst], prefixes=prefix_to_projection)
-        try:
-            stat = os.stat(src)
-            os.chown(dst, stat.st_uid, stat.st_gid)
-        except OSError:
-            tty.debug("Can't change the permissions for %s" % dst)
+    try:
+        os.chown(dst, src_stat.st_uid, src_stat.st_gid)
+    except OSError:
+        tty.debug(f"Can't change the permissions for {dst}")
 
 
 def view_func_parser(parsed_name):
@@ -116,7 +113,7 @@ def view_func_parser(parsed_name):
     elif parsed_name in ("add", "symlink", "soft"):
         return view_symlink
     else:
-        raise ValueError("invalid link type for view: '%s'" % parsed_name)
+        raise ValueError(f"invalid link type for view: '{parsed_name}'")
 
 
 def inverse_view_func_parser(view_type):
@@ -130,7 +127,7 @@ def inverse_view_func_parser(view_type):
     return link_name
 
 
-class FilesystemView(object):
+class FilesystemView:
     """
     Governs a filesystem view that is located at certain root-directory.
 
@@ -166,9 +163,6 @@ class FilesystemView(object):
         """
         Add given specs to view.
 
-        The supplied specs might be standalone packages or extensions of
-        other packages.
-
         Should accept `with_dependencies` as keyword argument (default
         True) to indicate wether or not dependencies should be activated as
         well.
@@ -176,13 +170,7 @@ class FilesystemView(object):
         Should except an `exclude` keyword argument containing a list of
         regexps that filter out matching spec names.
 
-        This method should make use of `activate_{extension,standalone}`.
-        """
-        raise NotImplementedError
-
-    def add_extension(self, spec):
-        """
-        Add (link) an extension in this view. Does not add dependencies.
+        This method should make use of `activate_standalone`.
         """
         raise NotImplementedError
 
@@ -202,9 +190,6 @@ class FilesystemView(object):
         """
         Removes given specs from view.
 
-        The supplied spec might be a standalone package or an extension of
-        another package.
-
         Should accept `with_dependencies` as keyword argument (default
         True) to indicate wether or not dependencies should be deactivated
         as well.
@@ -216,13 +201,7 @@ class FilesystemView(object):
         Should except an `exclude` keyword argument containing a list of
         regexps that filter out matching spec names.
 
-        This method should make use of `deactivate_{extension,standalone}`.
-        """
-        raise NotImplementedError
-
-    def remove_extension(self, spec):
-        """
-        Remove (unlink) an extension from this view.
+        This method should make use of `deactivate_standalone`.
         """
         raise NotImplementedError
 
@@ -277,7 +256,7 @@ class YamlFilesystemView(FilesystemView):
     """
 
     def __init__(self, root, layout, **kwargs):
-        super(YamlFilesystemView, self).__init__(root, layout, **kwargs)
+        super().__init__(root, layout, **kwargs)
 
         # Super class gets projections from the kwargs
         # YAML specific to get projections from YAML file
@@ -292,11 +271,10 @@ class YamlFilesystemView(FilesystemView):
             # Ensure projections are the same from each source
             # Read projections file from view
             if self.projections != self.read_projections():
-                msg = "View at %s has projections file" % self._root
-                msg += " which does not match projections passed manually."
-                raise ConflictingProjectionsError(msg)
-
-        self.extensions_layout = YamlViewExtensionsLayout(self, layout)
+                raise ConflictingProjectionsError(
+                    f"View at {self._root} has projections file"
+                    " which does not match projections passed manually."
+                )
 
         self._croot = colorize_root(self._root) + " "
 
@@ -332,65 +310,24 @@ class YamlFilesystemView(FilesystemView):
                 self.print_conflict(v, s)
             return
 
-        extensions = set(filter(lambda s: s.package.is_extension, specs))
-        standalones = specs - extensions
-
-        set(map(self._check_no_ext_conflicts, extensions))
-        # fail on first error, otherwise link extensions as well
-        if all(map(self.add_standalone, standalones)):
-            all(map(self.add_extension, extensions))
-
-    def add_extension(self, spec):
-        if not spec.package.is_extension:
-            tty.error(self._croot + "Package %s is not an extension." % spec.name)
-            return False
-
-        if spec.external:
-            tty.warn(self._croot + "Skipping external package: %s" % colorize_spec(spec))
-            return True
-
-        if not spec.package.is_activated(self):
-            spec.package.do_activate(self, verbose=self.verbose, with_dependencies=False)
-
-        # make sure the meta folder is linked as well (this is not done by the
-        # extension-activation mechnism)
-        if not self.check_added(spec):
-            self.link_meta_folder(spec)
-
-        return True
+        for s in specs:
+            self.add_standalone(s)
 
     def add_standalone(self, spec):
-        if spec.package.is_extension:
-            tty.error(self._croot + "Package %s is an extension." % spec.name)
-            return False
-
         if spec.external:
-            tty.warn(self._croot + "Skipping external package: %s" % colorize_spec(spec))
+            tty.warn(f"{self._croot}Skipping external package: {colorize_spec(spec)}")
             return True
 
         if self.check_added(spec):
-            tty.warn(self._croot + "Skipping already linked package: %s" % colorize_spec(spec))
+            tty.warn(f"{self._croot}Skipping already linked package: {colorize_spec(spec)}")
             return True
-
-        if spec.package.extendable:
-            # Check for globally activated extensions in the extendee that
-            # we're looking at.
-            activated = [p.spec for p in spack.store.db.activated_extensions_for(spec)]
-            if activated:
-                tty.error(
-                    "Globally activated extensions cannot be used in "
-                    "conjunction with filesystem views. "
-                    "Please deactivate the following specs: "
-                )
-                spack.cmd.display_specs(activated, flags=True, variants=True, long=False)
-                return False
 
         self.merge(spec)
 
         self.link_meta_folder(spec)
 
         if self.verbose:
-            tty.info(self._croot + "Linked package: %s" % colorize_spec(spec))
+            tty.info(f"{self._croot}Linked package: {colorize_spec(spec)}")
         return True
 
     def merge(self, spec, ignore=None):
@@ -444,7 +381,7 @@ class YamlFilesystemView(FilesystemView):
             # check if this spec owns a file of that name (through the
             # manifest in the metadata dir, which we have in the view).
             manifest_file = os.path.join(
-                self.get_path_meta_folder(spec), spack.store.layout.manifest_file_name
+                self.get_path_meta_folder(spec), spack.store.STORE.layout.manifest_file_name
             )
             try:
                 with open(manifest_file, "r") as f:
@@ -458,7 +395,7 @@ class YamlFilesystemView(FilesystemView):
 
         for file in files:
             if not os.path.lexists(file):
-                tty.warn("Tried to remove %s which does not exist" % file)
+                tty.warn(f"Tried to remove {file} which does not exist")
                 continue
 
             # remove if file is not owned by any other package in the view
@@ -469,7 +406,7 @@ class YamlFilesystemView(FilesystemView):
             # we are currently removing, as we remove files before unlinking the
             # metadata directory.
             if len([s for s in specs if needs_file(s, file)]) <= 1:
-                tty.debug("Removing file " + file)
+                tty.debug(f"Removing file {file}")
                 os.remove(file)
 
     def check_added(self, spec):
@@ -533,40 +470,23 @@ class YamlFilesystemView(FilesystemView):
 
         # Remove the packages from the view
         for spec in to_deactivate_sorted:
-            if spec.package.is_extension:
-                self.remove_extension(spec, with_dependents=with_dependents)
-            else:
-                self.remove_standalone(spec)
+            self.remove_standalone(spec)
 
         self._purge_empty_directories()
-
-    def remove_extension(self, spec, with_dependents=True):
-        """
-        Remove (unlink) an extension from this view.
-        """
-        if not self.check_added(spec):
-            tty.warn(self._croot + "Skipping package not linked in view: %s" % spec.name)
-            return
-
-        if spec.package.is_activated(self):
-            spec.package.do_deactivate(
-                self, verbose=self.verbose, remove_dependents=with_dependents
-            )
-        self.unlink_meta_folder(spec)
 
     def remove_standalone(self, spec):
         """
         Remove (unlink) a standalone package from this view.
         """
         if not self.check_added(spec):
-            tty.warn(self._croot + "Skipping package not linked in view: %s" % spec.name)
+            tty.warn(f"{self._croot}Skipping package not linked in view: {spec.name}")
             return
 
         self.unmerge(spec)
         self.unlink_meta_folder(spec)
 
         if self.verbose:
-            tty.info(self._croot + "Removed package: %s" % colorize_spec(spec))
+            tty.info(f"{self._croot}Removed package: {colorize_spec(spec)}")
 
     def get_projection_for_spec(self, spec):
         """
@@ -575,27 +495,29 @@ class YamlFilesystemView(FilesystemView):
         Relies on the ordering of projections to avoid ambiguity.
         """
         spec = spack.spec.Spec(spec)
-        # Extensions are placed by their extendee, not by their own spec
         locator_spec = spec
+
         if spec.package.extendee_spec:
             locator_spec = spec.package.extendee_spec
 
         proj = spack.projections.get_projection(self.projections, locator_spec)
         if proj:
-            return os.path.join(self._root, locator_spec.format(proj))
+            return os.path.join(self._root, locator_spec.format_path(proj))
         return self._root
 
     def get_all_specs(self):
         md_dirs = []
         for root, dirs, files in os.walk(self._root):
-            if spack.store.layout.metadata_dir in dirs:
-                md_dirs.append(os.path.join(root, spack.store.layout.metadata_dir))
+            if spack.store.STORE.layout.metadata_dir in dirs:
+                md_dirs.append(os.path.join(root, spack.store.STORE.layout.metadata_dir))
 
         specs = []
         for md_dir in md_dirs:
             if os.path.exists(md_dir):
                 for name_dir in os.listdir(md_dir):
-                    filename = os.path.join(md_dir, name_dir, spack.store.layout.spec_file_name)
+                    filename = os.path.join(
+                        md_dir, name_dir, spack.store.STORE.layout.spec_file_name
+                    )
                     spec = get_spec_from_file(filename)
                     if spec:
                         specs.append(spec)
@@ -613,18 +535,18 @@ class YamlFilesystemView(FilesystemView):
         "Get path to meta folder for either spec or spec name."
         return os.path.join(
             self.get_projection_for_spec(spec),
-            spack.store.layout.metadata_dir,
+            spack.store.STORE.layout.metadata_dir,
             getattr(spec, "name", spec),
         )
 
     def get_spec(self, spec):
         dotspack = self.get_path_meta_folder(spec)
-        filename = os.path.join(dotspack, spack.store.layout.spec_file_name)
+        filename = os.path.join(dotspack, spack.store.STORE.layout.spec_file_name)
 
         return get_spec_from_file(filename)
 
     def link_meta_folder(self, spec):
-        src = spack.store.layout.metadata_path(spec)
+        src = spack.store.STORE.layout.metadata_path(spec)
         tgt = self.get_path_meta_folder(spec)
 
         tree = LinkTree(src)
@@ -638,9 +560,9 @@ class YamlFilesystemView(FilesystemView):
         linked = tty.color.colorize("   (@gLinked@.)", color=color)
         specified = tty.color.colorize("(@rSpecified@.)", color=color)
         cprint(
-            self._croot + "Package conflict detected:\n"
-            "%s %s\n" % (linked, colorize_spec(spec_active))
-            + "%s %s" % (specified, colorize_spec(spec_specified))
+            f"{self._croot}Package conflict detected:\n"
+            f"{linked} {colorize_spec(spec_active)}\n"
+            f"{specified} {colorize_spec(spec_specified)}"
         )
 
     def print_status(self, *specs, **kwargs):
@@ -652,14 +574,14 @@ class YamlFilesystemView(FilesystemView):
 
         for s, v in zip(specs, in_view):
             if not v:
-                tty.error(self._croot + "Package not linked: %s" % s.name)
+                tty.error(f"{self._croot}Package not linked: {s.name}")
             elif s != v:
                 self.print_conflict(v, s, level="warn")
 
         in_view = list(filter(None, in_view))
 
         if len(specs) > 0:
-            tty.msg("Packages linked in %s:" % self._croot[:-1])
+            tty.msg(f"Packages linked in {self._croot[:-1]}:")
 
             # Make a dict with specs keyed by architecture and compiler.
             index = index_by(specs, ("architecture", "compiler"))
@@ -669,20 +591,19 @@ class YamlFilesystemView(FilesystemView):
                 if i > 0:
                     print()
 
-                header = "%s{%s} / %s{%s}" % (
-                    spack.spec.architecture_color,
-                    architecture,
-                    spack.spec.compiler_color,
-                    compiler,
+                header = (
+                    f"{spack.spec.ARCHITECTURE_COLOR}{{{architecture}}} "
+                    f"/ {spack.spec.COMPILER_COLOR}{{{compiler}}}"
                 )
                 tty.hline(colorize(header), char="-")
 
                 specs = index[(architecture, compiler)]
                 specs.sort()
 
-                format_string = "{name}{@version}"
-                format_string += "{%compiler}{compiler_flags}{variants}"
-                abbreviated = [s.cformat(format_string) for s in specs]
+                abbreviated = [
+                    s.cformat("{name}{@version}{%compiler}{compiler_flags}{variants}")
+                    for s in specs
+                ]
 
                 # Print one spec per line along with prefix path
                 width = max(len(s) for s in abbreviated)
@@ -712,44 +633,42 @@ class YamlFilesystemView(FilesystemView):
         assert os.path.exists(path)
         shutil.rmtree(path)
 
-    def _check_no_ext_conflicts(self, spec):
-        """
-        Check that there is no extension conflict for specs.
-        """
-        extendee = spec.package.extendee_spec
-        try:
-            self.extensions_layout.check_extension_conflict(extendee, spec)
-        except ExtensionAlreadyInstalledError:
-            # we print the warning here because later on the order in which
-            # packages get activated is not clear (set-sorting)
-            tty.warn(self._croot + "Skipping already activated package: %s" % spec.name)
-
 
 class SimpleFilesystemView(FilesystemView):
-    """A simple and partial implementation of FilesystemView focused on
-    performance and immutable views, where specs cannot be removed after they
-    were added."""
+    """A simple and partial implementation of FilesystemView focused on performance and immutable
+    views, where specs cannot be removed after they were added."""
 
     def __init__(self, root, layout, **kwargs):
-        super(SimpleFilesystemView, self).__init__(root, layout, **kwargs)
+        super().__init__(root, layout, **kwargs)
 
-    def add_specs(self, *specs, **kwargs):
+    def _sanity_check_view_projection(self, specs):
+        """A very common issue is that we end up with two specs of the same package, that project
+        to the same prefix. We want to catch that as early as possible and give a sensible error to
+        the user. Here we use the metadata dir (.spack) projection as a quick test to see whether
+        two specs in the view are going to clash. The metadata dir is used because it's always
+        added by Spack with identical files, so a guaranteed clash that's easily verified."""
+        seen = {}
+        for current_spec in specs:
+            metadata_dir = self.relative_metadata_dir_for_spec(current_spec)
+            conflicting_spec = seen.get(metadata_dir)
+            if conflicting_spec:
+                raise ConflictingSpecsError(current_spec, conflicting_spec)
+            seen[metadata_dir] = current_spec
+
+    def add_specs(self, *specs: spack.spec.Spec) -> None:
+        """Link a root-to-leaf topologically ordered list of specs into the view."""
         assert all((s.concrete for s in specs))
         if len(specs) == 0:
             return
 
         # Drop externals
-        for s in specs:
-            if s.external:
-                tty.warn("Skipping external package: " + s.short_spec)
         specs = [s for s in specs if not s.external]
 
-        if kwargs.get("exclude", None):
-            specs = set(filter_exclude(specs, kwargs["exclude"]))
+        self._sanity_check_view_projection(specs)
 
         # Ignore spack meta data folder.
         def skip_list(file):
-            return os.path.basename(file) == spack.store.layout.metadata_dir
+            return os.path.basename(file) == spack.store.STORE.layout.metadata_dir
 
         visitor = SourceMergeVisitor(ignore=skip_list)
 
@@ -769,44 +688,59 @@ class SimpleFilesystemView(FilesystemView):
         # Inform about file-file conflicts.
         if visitor.file_conflicts:
             if self.ignore_conflicts:
-                tty.debug("{0} file conflicts".format(len(visitor.file_conflicts)))
+                tty.debug(f"{len(visitor.file_conflicts)} file conflicts")
             else:
                 raise MergeConflictSummary(visitor.file_conflicts)
 
-        tty.debug(
-            "Creating {0} dirs and {1} links".format(len(visitor.directories), len(visitor.files))
-        )
+        tty.debug(f"Creating {len(visitor.directories)} dirs and {len(visitor.files)} links")
 
         # Make the directory structure
         for dst in visitor.directories:
             os.mkdir(os.path.join(self._root, dst))
 
-        # Then group the files to be linked by spec...
-        # For compatibility, we have to create a merge_map dict mapping
-        # full_src => full_dst
-        files_per_spec = itertools.groupby(visitor.files.items(), key=lambda item: item[1][0])
-
-        for (spec, (src_root, rel_paths)) in zip(specs, files_per_spec):
-            merge_map = dict()
-            for dst_rel, (_, src_rel) in rel_paths:
-                full_src = os.path.join(src_root, src_rel)
-                full_dst = os.path.join(self._root, dst_rel)
-                merge_map[full_src] = full_dst
+        # Link the files using a "merge map": full src => full dst
+        merge_map_per_prefix = self._source_merge_visitor_to_merge_map(visitor)
+        for spec in specs:
+            merge_map = merge_map_per_prefix.get(spec.package.view_source(), None)
+            if not merge_map:
+                # Not every spec may have files to contribute.
+                continue
             spec.package.add_files_to_view(self, merge_map, skip_if_exists=False)
 
         # Finally create the metadata dirs.
         self.link_metadata(specs)
 
+    def _source_merge_visitor_to_merge_map(self, visitor: SourceMergeVisitor):
+        # For compatibility with add_files_to_view, we have to create a
+        # merge_map of the form join(src_root, src_rel) => join(dst_root, dst_rel),
+        # but our visitor.files format is dst_rel => (src_root, src_rel).
+        # We exploit that visitor.files is an ordered dict, and files per source
+        # prefix are contiguous.
+        source_root = lambda item: item[1][0]
+        per_source = itertools.groupby(visitor.files.items(), key=source_root)
+        return {
+            src_root: {
+                os.path.join(src_root, src_rel): os.path.join(self._root, dst_rel)
+                for dst_rel, (_, src_rel) in group
+            }
+            for src_root, group in per_source
+        }
+
+    def relative_metadata_dir_for_spec(self, spec):
+        return os.path.join(
+            self.get_relative_projection_for_spec(spec),
+            spack.store.STORE.layout.metadata_dir,
+            spec.name,
+        )
+
     def link_metadata(self, specs):
         metadata_visitor = SourceMergeVisitor()
 
         for spec in specs:
-            src_prefix = os.path.join(spec.package.view_source(), spack.store.layout.metadata_dir)
-            proj = os.path.join(
-                self.get_relative_projection_for_spec(spec),
-                spack.store.layout.metadata_dir,
-                spec.name,
+            src_prefix = os.path.join(
+                spec.package.view_source(), spack.store.STORE.layout.metadata_dir
             )
+            proj = self.relative_metadata_dir_for_spec(spec)
             metadata_visitor.set_projection(proj)
             visit_directory_tree(src_prefix, metadata_visitor)
 
@@ -833,7 +767,7 @@ class SimpleFilesystemView(FilesystemView):
             spec = spec.package.extendee_spec
 
         p = spack.projections.get_projection(self.projections, spec)
-        return spec.format(p) if p else ""
+        return spec.format_path(p) if p else ""
 
     def get_projection_for_spec(self, spec):
         """
@@ -842,14 +776,13 @@ class SimpleFilesystemView(FilesystemView):
         Relies on the ordering of projections to avoid ambiguity.
         """
         spec = spack.spec.Spec(spec)
-        # Extensions are placed by their extendee, not by their own spec
-        locator_spec = spec
-        if spec.package.extendee_spec:
-            locator_spec = spec.package.extendee_spec
 
-        proj = spack.projections.get_projection(self.projections, locator_spec)
+        if spec.package.extendee_spec:
+            spec = spec.package.extendee_spec
+
+        proj = spack.projections.get_projection(self.projections, spec)
         if proj:
-            return os.path.join(self._root, locator_spec.format(proj))
+            return os.path.join(self._root, spec.format_path(proj))
         return self._root
 
 

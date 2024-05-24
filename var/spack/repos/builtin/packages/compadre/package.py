@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,27 +15,30 @@ class Compadre(CMakePackage):
     constitute the rows of some globally sparse matrix.
     """
 
-    homepage = "https://github.com/SNLComputation/compadre"
-    git = "https://github.com/SNLComputation/compadre.git"
-    url = "https://github.com/SNLComputation/compadre/archive/v1.3.0.tar.gz"
-    maintainers = ["kuberry"]
+    homepage = "https://github.com/sandialabs/compadre"
+    git = "https://github.com/sandialabs/compadre.git"
+    url = "https://github.com/sandialabs/compadre/archive/v1.3.0.tar.gz"
+    maintainers("kuberry")
 
-    version("master", branch="master", preferred=True)
-    version("1.3.0", "f711a840fd921e84660451ded408023ec3bcfc98fd0a7dc4a299bfae6ab489c2")
+    version("master", branch="master")
+    version("1.5.0", sha256="b7dd6020cc5a7969de817d5c7f6c5acceaad0f08dcfd3d7cacfa9f42e4c8b335")
+    version("1.4.1", sha256="2e1e7d8e30953f76b6dc3a4c86ec8103d4b29447194cb5d5abb74b8e4099bdd9")
+    version("1.3.0", sha256="f711a840fd921e84660451ded408023ec3bcfc98fd0a7dc4a299bfae6ab489c2")
 
-    depends_on("kokkos@3.3.01:main")
-    depends_on("kokkos-kernels@3.3.01:main")
+    depends_on("kokkos-kernels@3.3.01:4")
     depends_on("cmake@3.13:", type="build")
-
-    variant(
-        "build_type",
-        default="Release",
-        description="CMake build type",
-        values=("Debug", "Release", "RelWithDebInfo", "MinSizeRel"),
-    )
 
     variant("mpi", default=False, description="Enable MPI support")
     depends_on("mpi", when="+mpi")
+
+    variant("tests", default=True, description="Enable tests and examples")
+
+    # fixes duplicate symbol issue with static library build
+    patch(
+        "https://patch-diff.githubusercontent.com/raw/sandialabs/Compadre/pull/286.patch?full_index=1",
+        sha256="e267b74f8ecb8dd23970848ed919d29b7d442f619ce80983e02a19f1d9582c61",
+        when="@1.5.0",
+    )
 
     def cmake_args(self):
         spec = self.spec
@@ -54,6 +57,10 @@ class Compadre(CMakePackage):
 
         if "+mpi" in spec:
             options.append("-DCompadre_USE_MPI:BOOL=ON")
+
+        if "~tests" in spec:
+            options.append("-DCompadre_EXAMPLES:BOOL=OFF")
+            options.append("-DCompadre_TESTS:BOOL=OFF")
 
         if "+shared" in spec:
             options.append("-DBUILD_SHARED_LIBS:BOOL=ON")

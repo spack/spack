@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -27,6 +27,11 @@ create = SpackCommand("create")
             [r"TestNamedPackage(Package)", r"def install(self"],
         ),
         (["file://example.tar.gz"], "example", [r"Example(Package)", r"def install(self"]),
+        (
+            ["-n", "test-license"],
+            "test-license",
+            [r'license("UNKNOWN", checked_by="github_user1")'],
+        ),
         # Template-specific cases
         (
             ["-t", "autoreconf", "/test-autoreconf"],
@@ -91,12 +96,7 @@ create = SpackCommand("create")
         (
             ["-t", "python", "/test-python"],
             "py-test-python",
-            [
-                r"PyTestPython(PythonPackage)",
-                r'depends_on("py-',
-                r"def global_options(self",
-                r"def install_options(self",
-            ],
+            [r"PyTestPython(PythonPackage)", r'depends_on("py-', r"def config_settings(self"],
         ),
         (
             ["-t", "qmake", "/test-qmake"],
@@ -143,11 +143,7 @@ def test_create_template(mock_test_repo, args, name, expected):
 
 
 @pytest.mark.parametrize(
-    "name,expected",
-    [
-        (" ", "name must be provided"),
-        ("bad#name", "name can only contain"),
-    ],
+    "name,expected", [(" ", "name must be provided"), ("bad#name", "name can only contain")]
 )
 def test_create_template_bad_name(mock_test_repo, name, expected):
     """Test template creation with bad name options."""
@@ -184,11 +180,7 @@ def test_build_system_guesser_octave():
 
 
 @pytest.mark.parametrize(
-    "url,expected",
-    [
-        ("testname", "testname"),
-        ("file://example.com/archive.tar.gz", "archive"),
-    ],
+    "url,expected", [("testname", "testname"), ("file://example.com/archive.tar.gz", "archive")]
 )
 def test_get_name_urls(url, expected):
     """Test get_name with different URLs."""

@@ -1,24 +1,19 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from __future__ import division
-
+import collections.abc
 import contextlib
 import functools
 import inspect
+import itertools
 import os
 import re
 import sys
 import traceback
 from datetime import datetime, timedelta
-from typing import List, Tuple
-
-import six
-from six import string_types
-
-from llnl.util.compat import MutableMapping, MutableSequence, zip_longest
+from typing import Any, Callable, Iterable, List, Tuple
 
 # Ignore emacs backups when listing modules
 ignore_modules = [r"^\.#", "~$"]
@@ -103,36 +98,6 @@ def caller_locals():
         del stack
 
 
-def get_calling_module_name():
-    """Make sure that the caller is a class definition, and return the
-    enclosing module's name.
-    """
-    # Passing zero here skips line context for speed.
-    stack = inspect.stack(0)
-    try:
-        # Make sure locals contain __module__
-        caller_locals = stack[2][0].f_locals
-    finally:
-        del stack
-
-    if "__module__" not in caller_locals:
-        raise RuntimeError(
-            "Must invoke get_calling_module_name() " "from inside a class definition!"
-        )
-
-    module_name = caller_locals["__module__"]
-    base_name = module_name.split(".")[-1]
-    return base_name
-
-
-def attr_required(obj, attr_name):
-    """Ensure that a class has a required attribute."""
-    if not hasattr(obj, attr_name):
-        raise RequiredAttributeError(
-            "No required attribute '%s' in class '%s'" % (attr_name, obj.__class__.__name__)
-        )
-
-
 def attr_setdefault(obj, name, value):
     """Like dict.setdefault, but for objects."""
     if not hasattr(obj, name):
@@ -200,14 +165,9 @@ def memoized(func):
             return ret
         except TypeError as e:
             # TypeError is raised when indexing into a dict if the key is unhashable.
-            raise six.raise_from(
-                UnhashableArguments(
-                    "args + kwargs '{}' was not hashable for function '{}'".format(
-                        key, func.__name__
-                    ),
-                ),
-                e,
-            )
+            raise UnhashableArguments(
+                "args + kwargs '{}' was not hashable for function '{}'".format(key, func.__name__)
+            ) from e
 
     return _memoized_function
 
@@ -245,6 +205,7 @@ def decorator_with_or_without_args(decorator):
         @decorator
 
     """
+
     # See https://stackoverflow.com/questions/653368 for more on this
     @functools.wraps(decorator)
     def new_dec(*args, **kwargs):
@@ -312,7 +273,7 @@ def lazy_eq(lseq, rseq):
     # zip_longest is implemented in native code, so use it for speed.
     # use zip_longest instead of zip because it allows us to tell
     # which iterator was longer.
-    for left, right in zip_longest(liter, riter, fillvalue=done):
+    for left, right in itertools.zip_longest(liter, riter, fillvalue=done):
         if (left is done) or (right is done):
             return False
 
@@ -332,7 +293,7 @@ def lazy_lt(lseq, rseq):
     liter = lseq()
     riter = rseq()
 
-    for left, right in zip_longest(liter, riter, fillvalue=done):
+    for left, right in itertools.zip_longest(liter, riter, fillvalue=done):
         if (left is done) or (right is done):
             return left is done  # left was shorter than right
 
@@ -482,7 +443,7 @@ def lazy_lexicographic_ordering(cls, set_hash=True):
 
 
 @lazy_lexicographic_ordering
-class HashableMap(MutableMapping):
+class HashableMap(collections.abc.MutableMapping):
     """This is a hashable, comparable dictionary.  Hash is performed on
     a tuple of the values in the dictionary."""
 
@@ -522,42 +483,6 @@ class HashableMap(MutableMapping):
         return clone
 
 
-def in_function(function_name):
-    """True if the caller was called from some function with
-    the supplied Name, False otherwise."""
-    stack = inspect.stack()
-    try:
-        for elt in stack[2:]:
-            if elt[3] == function_name:
-                return True
-        return False
-    finally:
-        del stack
-
-
-def check_kwargs(kwargs, fun):
-    """Helper for making functions with kwargs.  Checks whether the kwargs
-    are empty after all of them have been popped off.  If they're
-    not, raises an error describing which kwargs are invalid.
-
-    Example::
-
-       def foo(self, **kwargs):
-           x = kwargs.pop('x', None)
-           y = kwargs.pop('y', None)
-           z = kwargs.pop('z', None)
-           check_kwargs(kwargs, self.foo)
-
-       # This raises a TypeError:
-       foo(w='bad kwarg')
-    """
-    if kwargs:
-        raise TypeError(
-            "'%s' is an invalid keyword argument for function %s()."
-            % (next(iter(kwargs)), fun.__name__)
-        )
-
-
 def match_predicate(*args):
     """Utility function for making string matching predicates.
 
@@ -574,7 +499,7 @@ def match_predicate(*args):
 
     def match(string):
         for arg in args:
-            if isinstance(arg, string_types):
+            if isinstance(arg, str):
                 if re.search(arg, string):
                     return True
             elif isinstance(arg, list) or isinstance(arg, tuple):
@@ -749,12 +674,31 @@ def pretty_string_to_date(date_str, now=None):
     raise ValueError(msg)
 
 
-class RequiredAttributeError(ValueError):
-    def __init__(self, message):
-        super(RequiredAttributeError, self).__init__(message)
+def pretty_seconds_formatter(seconds):
+    if seconds >= 1:
+        multiplier, unit = 1, "s"
+    elif seconds >= 1e-3:
+        multiplier, unit = 1e3, "ms"
+    elif seconds >= 1e-6:
+        multiplier, unit = 1e6, "us"
+    else:
+        multiplier, unit = 1e9, "ns"
+    return lambda s: "%.3f%s" % (multiplier * s, unit)
 
 
-class ObjectWrapper(object):
+def pretty_seconds(seconds):
+    """Seconds to string with appropriate units
+
+    Arguments:
+        seconds (float): Number of seconds
+
+    Returns:
+        str: Time string with units
+    """
+    return pretty_seconds_formatter(seconds)(seconds)
+
+
+class ObjectWrapper:
     """Base class that wraps an object. Derived classes can add new behavior
     while staying undercover.
 
@@ -781,7 +725,7 @@ class ObjectWrapper(object):
         self.__dict__ = wrapped_object.__dict__
 
 
-class Singleton(object):
+class Singleton:
     """Simple wrapper for lazily initialized singleton objects."""
 
     def __init__(self, factory):
@@ -806,7 +750,7 @@ class Singleton(object):
         # 'instance'/'_instance' to be defined or it will enter an infinite
         # loop, so protect against that here.
         if name in ["_instance", "instance"]:
-            raise AttributeError()
+            raise AttributeError(f"cannot create {name}")
         return getattr(self.instance, name)
 
     def __getitem__(self, name):
@@ -828,25 +772,28 @@ class Singleton(object):
         return repr(self.instance)
 
 
-class LazyReference(object):
-    """Lazily evaluated reference to part of a singleton."""
+def get_entry_points(*, group: str):
+    """Wrapper for ``importlib.metadata.entry_points``
 
-    def __init__(self, ref_function):
-        self.ref_function = ref_function
+    Args:
+        group: entry points to select
 
-    def __getattr__(self, name):
-        if name == "ref_function":
-            raise AttributeError()
-        return getattr(self.ref_function(), name)
+    Returns:
+        EntryPoints for ``group`` or empty list if unsupported
+    """
 
-    def __getitem__(self, name):
-        return self.ref_function()[name]
+    try:
+        import importlib.metadata  # type: ignore  # novermin
+    except ImportError:
+        return []
 
-    def __str__(self):
-        return str(self.ref_function())
-
-    def __repr__(self):
-        return repr(self.ref_function())
+    try:
+        return importlib.metadata.entry_points(group=group)
+    except TypeError:
+        # Prior to Python 3.10, entry_points accepted no parameters and always
+        # returned a dictionary of entry points, keyed by group.  See
+        # https://docs.python.org/3/library/importlib.metadata.html#entry-points
+        return importlib.metadata.entry_points().get(group, [])
 
 
 def load_module_from_file(module_name, module_path):
@@ -867,32 +814,28 @@ def load_module_from_file(module_name, module_path):
         ImportError: when the module can't be loaded
         FileNotFoundError: when module_path doesn't exist
     """
+    import importlib.util
+
     if module_name in sys.modules:
         return sys.modules[module_name]
 
     # This recipe is adapted from https://stackoverflow.com/a/67692/771663
-    if sys.version_info[0] == 3 and sys.version_info[1] >= 5:
-        import importlib.util
 
-        spec = importlib.util.spec_from_file_location(module_name, module_path)  # novm
-        module = importlib.util.module_from_spec(spec)  # novm
-        # The module object needs to exist in sys.modules before the
-        # loader executes the module code.
-        #
-        # See https://docs.python.org/3/reference/import.html#loading
-        sys.modules[spec.name] = module
+    spec = importlib.util.spec_from_file_location(module_name, module_path)
+    module = importlib.util.module_from_spec(spec)
+    # The module object needs to exist in sys.modules before the
+    # loader executes the module code.
+    #
+    # See https://docs.python.org/3/reference/import.html#loading
+    sys.modules[spec.name] = module
+    try:
+        spec.loader.exec_module(module)
+    except BaseException:
         try:
-            spec.loader.exec_module(module)
-        except BaseException:
-            try:
-                del sys.modules[spec.name]
-            except KeyError:
-                pass
-            raise
-    elif sys.version_info[0] == 2:
-        import imp
-
-        module = imp.load_source(module_name, module_path)
+            del sys.modules[spec.name]
+        except KeyError:
+            pass
+        raise
     return module
 
 
@@ -919,25 +862,6 @@ def uniq(sequence):
             uniq_list.append(element)
             last = element
     return uniq_list
-
-
-def star(func):
-    """Unpacks arguments for use with Multiprocessing mapping functions"""
-
-    def _wrapper(args):
-        return func(*args)
-
-    return _wrapper
-
-
-class Devnull(object):
-    """Null stream with less overhead than ``os.devnull``.
-
-    See https://stackoverflow.com/a/2929954.
-    """
-
-    def write(self, *_):
-        pass
 
 
 def elide_list(line_list, max_num=10):
@@ -977,7 +901,38 @@ def enum(**kwargs):
     return type("Enum", (object,), kwargs)
 
 
-class TypedMutableSequence(MutableSequence):
+def stable_partition(
+    input_iterable: Iterable, predicate_fn: Callable[[Any], bool]
+) -> Tuple[List[Any], List[Any]]:
+    """Partition the input iterable according to a custom predicate.
+
+    Args:
+        input_iterable: input iterable to be partitioned.
+        predicate_fn: predicate function accepting an iterable item
+            as argument.
+
+    Return:
+        Tuple of the list of elements evaluating to True, and
+        list of elements evaluating to False.
+    """
+    true_items, false_items = [], []
+    for item in input_iterable:
+        if predicate_fn(item):
+            true_items.append(item)
+            continue
+        false_items.append(item)
+    return true_items, false_items
+
+
+def ensure_last(lst, *elements):
+    """Performs a stable partition of lst, ensuring that ``elements``
+    occur at the end of ``lst`` in specified order. Mutates ``lst``.
+    Raises ``ValueError`` if any ``elements`` are not already in ``lst``."""
+    for elt in elements:
+        lst.append(lst.pop(lst.index(elt)))
+
+
+class TypedMutableSequence(collections.abc.MutableSequence):
     """Base class that behaves like a list, just with a different type.
 
     Client code can inherit from this base class:
@@ -1016,27 +971,24 @@ class TypedMutableSequence(MutableSequence):
         return str(self.data)
 
 
-class GroupedExceptionHandler(object):
+class GroupedExceptionHandler:
     """A generic mechanism to coalesce multiple exceptions and preserve tracebacks."""
 
     def __init__(self):
-        self.exceptions = []  # type: List[Tuple[str, Exception, List[str]]]
+        self.exceptions: List[Tuple[str, Exception, List[str]]] = []
 
     def __bool__(self):
         """Whether any exceptions were handled."""
         return bool(self.exceptions)
 
-    def forward(self, context):
-        # type: (str) -> GroupedExceptionForwarder
+    def forward(self, context: str, base: type = BaseException) -> "GroupedExceptionForwarder":
         """Return a contextmanager which extracts tracebacks and prefixes a message."""
-        return GroupedExceptionForwarder(context, self)
+        return GroupedExceptionForwarder(context, self, base)
 
-    def _receive_forwarded(self, context, exc, tb):
-        # type: (str, Exception, List[str]) -> None
+    def _receive_forwarded(self, context: str, exc: Exception, tb: List[str]):
         self.exceptions.append((context, exc, tb))
 
-    def grouped_message(self, with_tracebacks=True):
-        # type: (bool) -> str
+    def grouped_message(self, with_tracebacks: bool = True) -> str:
         """Print out an error message coalescing all the forwarded errors."""
         each_exception_message = [
             "{0} raised {1}: {2}{3}".format(
@@ -1050,32 +1002,30 @@ class GroupedExceptionHandler(object):
         return "due to the following failures:\n{0}".format("\n".join(each_exception_message))
 
 
-class GroupedExceptionForwarder(object):
+class GroupedExceptionForwarder:
     """A contextmanager to capture exceptions and forward them to a
     GroupedExceptionHandler."""
 
-    def __init__(self, context, handler):
-        # type: (str, GroupedExceptionHandler) -> None
+    def __init__(self, context: str, handler: GroupedExceptionHandler, base: type):
         self._context = context
         self._handler = handler
+        self._base = base
 
     def __enter__(self):
         return None
 
     def __exit__(self, exc_type, exc_value, tb):
         if exc_value is not None:
-            self._handler._receive_forwarded(
-                self._context,
-                exc_value,
-                traceback.format_tb(tb),
-            )
+            if not issubclass(exc_type, self._base):
+                return False
+            self._handler._receive_forwarded(self._context, exc_value, traceback.format_tb(tb))
 
         # Suppress any exception from being re-raised:
         # https://docs.python.org/3/reference/datamodel.html#object.__exit__.
         return True
 
 
-class classproperty(object):
+class classproperty:
     """Non-data descriptor to evaluate a class-level property. The function that performs
     the evaluation is injected at creation time and take an instance (could be None) and
     an owner (i.e. the class that originated the instance)

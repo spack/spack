@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,8 @@ class PyWatchdog(PythonPackage):
 
     homepage = "https://github.com/gorakhargosh/watchdog"
     pypi = "watchdog/watchdog-0.10.3.tar.gz"
+
+    license("Apache-2.0")
 
     version("2.1.6", sha256="a36e75df6c767cbf46f61a91c70b3ba71811dfa0aca4a324d9407a06a8b7a2e7")
     version("0.10.3", sha256="4214e1379d128b0588021880ccaf40317ee156d4603ac388b9adcf29165e0c04")
@@ -39,8 +41,7 @@ class PyWatchdog(PythonPackage):
 
     depends_on("py-pyyaml@3.9:", type=("build", "run"), when="@0.7.1")
     depends_on("py-pyyaml@3.10:", type=("build", "run"), when="@0.8.0:0.8.3")
-    depends_on("py-pyyaml@:3.12", type=("build", "run"), when="@0.9.0 ^python@3.2")
-    depends_on("py-pyyaml@3.10:", type=("build", "run"), when="@0.9.0 ^python@2.6:2,3.3:")
+    depends_on("py-pyyaml@3.10:", type=("build", "run"), when="@0.9.0")
     depends_on("py-pyyaml@3.10:", type=("build", "run"), when="@0.10.0: +watchmedo")
     depends_on("py-pyyaml@3.10:", type=("build", "run"), when="@2.1.6: +watchmedo")
 
@@ -56,7 +57,3 @@ class PyWatchdog(PythonPackage):
     #            when='@0.10.0:0.10.1 platform=darwin')
     # depends_on('py-pyobjc-framework-fsevents@4.2.2:',
     #            when='@0.10.0:0.10.1 platform=darwin')
-
-    # Missing dependencies
-    conflicts("platform=darwin", when="@:0.9.0 ^python@:2.6")
-    # depends_on('py-select-backport@0.2:', when='@:0.9.0 ^python@:2.6 platform=darwin')
