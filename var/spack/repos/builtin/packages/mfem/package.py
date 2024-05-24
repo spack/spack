@@ -230,13 +230,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     variant(
         "cxxstd",
         default="auto",
-        values=(
-            "auto",
-            conditional("98", when="@:3"),
-            "11",
-            "14",
-            "17"
-        ),
+        values=("auto", conditional("98", when="@:3"), "11", "14", "17"),
         multi=False,
         description="C++ language standard",
     )
