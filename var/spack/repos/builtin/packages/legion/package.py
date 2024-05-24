@@ -411,14 +411,13 @@ class Legion(CMakePackage, ROCmPackage):
         else:
             options.append("-DLegion_USE_ZLIB=OFF")
 
-        if spec.satisfies("+redop_complex"):
-            # default is off.
-            options.append("-DLegion_REDOP_COMPLEX=ON")
-
         if spec.satisfies("+bindings"):
             # default is off.
             options.append("-DLegion_BUILD_BINDINGS=ON")
-            options.append("-DLegion_REDOP_COMPLEX=ON")  # required for bindings
+
+        if spec.satisfies("+redop_complex") or spec.satisfies("+bindings"):
+            # default is off; required for bindings.
+            options.append("-DLegion_REDOP_COMPLEX=ON")
 
         maxdims = int(spec.variants["max_dims"].value)
         # TODO: sanity check if maxdims < 0 || > 9???
