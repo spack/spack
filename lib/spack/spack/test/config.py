@@ -1514,4 +1514,4 @@ packages:
 
     with spack.config.use_configuration(tmpdir.strpath):
         compilers = spack.compilers.get_compiler_config_from_packages(spack.config.CONFIG)
-        assert spack.spec.Spec(compilers[0]['compiler']['spec']).satisfies("gcc@8.5.0")
+        assert spack.spec.Spec(compilers[0]["compiler"]["spec"]).satisfies("gcc@8.5.0")
