@@ -1492,3 +1492,26 @@ def test_config_path_dsl(path, it_should_work, expected_parsed):
     else:
         with pytest.raises(ValueError):
             spack.config.ConfigPath._validate(path)
+
+
+def test_compiler_parsing_errors(tmpdir):
+    content = """\
+packages:
+  gcc:
+    externals:
+    - spec: gcc@8.5.0 languages='c,c++,fortran'
+      prefix: /usr
+      extra_attributes:
+        compilers:
+          c: /usr/bin/gcc
+          cxx: /usr/bin/g++
+          fortran: /usr/bin/gfortran
+"""
+
+    testscope = join_path(tmpdir.strpath, "packages.yaml")
+    with open(testscope, "w") as f:
+        f.write(content)
+
+    with spack.config.use_configuration(tmpdir.strpath):
+        compilers = spack.compilers.get_compiler_config_from_packages(spack.config.CONFIG)
+        assert spack.spec.Spec(compilers[0]['compiler']['spec']).satisfies("gcc@8.5.0")
