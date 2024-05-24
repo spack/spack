@@ -2,7 +2,6 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import shutil
 
 from spack.package import *
 
@@ -59,4 +58,4 @@ class Nim(Package):
         koch("nimble")
 
         bash("./install.sh", prefix)
-        shutil.copy(join_path("bin", "nimble"), join_path(prefix, "bin"))
+        install(join_path("bin", "nimble"), join_path(prefix, "bin"))
