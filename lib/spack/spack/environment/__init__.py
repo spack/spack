@@ -528,5 +528,6 @@ __all__ = [
     "root",
     "spack_env_var",
     "spack_env_view_var",
+    "unique_roots",
     "update_yaml",
 ]

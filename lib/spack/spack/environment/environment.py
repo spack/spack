@@ -2478,7 +2478,7 @@ def unique_roots(concretized_specs):
     unique = list()
 
     for i, root in enumerate(concretized_roots):
-        others = concretized_roots[:i] + concretized_roots[i+1:]
+        others = concretized_roots[:i] + concretized_roots[i + 1 :]
         if not any(root in x for x in others):
             unique.append(concretized_specs[i])
 

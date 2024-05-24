@@ -848,7 +848,8 @@ def test_root_version_weights_for_old_versions(mutable_mock_env_path, mock_packa
 def test_unique_roots(mutable_mock_env_path, mock_packages):
     mutable_mock_env_path.mkdir()
     spack_yaml = mutable_mock_env_path / ev.manifest_name
-    spack_yaml.write_text("""\
+    spack_yaml.write_text(
+        """\
 spack:
   specs:
   - mpileaks
