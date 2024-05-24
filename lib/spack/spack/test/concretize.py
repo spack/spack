@@ -1914,11 +1914,11 @@ class TestConcretize:
             libc_offset = 1 if spack.solver.asp.using_libc_compatibility() else 0
             criteria = [
                 (num_specs - 1 - libc_offset, None, "number of packages to build (vs. reuse)"),
-                (2, 0, "version badness"),
+                (2, 0, "version badness (non roots)"),
             ]
 
             for criterion in criteria:
-                assert criterion in result.criteria, result_spec
+                assert criterion in result.criteria, criterion
             assert result_spec.satisfies("^b@1.0")
 
     @pytest.mark.only_clingo("Use case not supported by the original concretizer")
@@ -2545,6 +2545,30 @@ class TestConcretize:
             result = Spec(request_str).concretized()
 
         assert result["deprecated-versions"].satisfies("@1.0.0")
+
+    @pytest.mark.regression("44085")
+    @pytest.mark.only_clingo("Use case not supported by the original concretizer")
+    def test_can_reuse_concrete_externals_for_dependents(self, mutable_config, tmp_path):
+        """Test that external specs that are in the DB can be reused. This means they are
+        preferred to concretizing another external from packages.yaml
+        """
+        packages_yaml = {
+            "externaltool": {"externals": [{"spec": "externaltool@2.0", "prefix": "/fake/path"}]}
+        }
+        mutable_config.set("packages", packages_yaml)
+        # Concretize with gcc@9 to get a suboptimal spec, since we have gcc@10 available
+        external_spec = Spec("externaltool@2 %gcc@9").concretized()
+        assert external_spec.external
+
+        root_specs = [Spec("sombrero")]
+        with spack.config.override("concretizer:reuse", True):
+            solver = spack.solver.asp.Solver()
+            setup = spack.solver.asp.SpackSolverSetup()
+            result, _, _ = solver.driver.solve(setup, root_specs, reuse=[external_spec])
+
+        assert len(result.specs) == 1
+        sombrero = result.specs[0]
+        assert sombrero["externaltool"].dag_hash() == external_spec.dag_hash()
 
 
 @pytest.fixture()
