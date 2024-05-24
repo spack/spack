@@ -30,6 +30,7 @@ class Cmake(Package):
 
     version("master", branch="master")
     version("3.29.2", sha256="36db4b6926aab741ba6e4b2ea2d99c9193222132308b4dc824d4123cb730352e")
+    version("3.28.4", sha256="eb9c787e078848dc493f4f83f8a4bbec857cd1f38ab6425ce8d2776a9f6aa6fb")
     version("3.27.9", sha256="609a9b98572a6a5ea477f912cffb973109ed4d0a6a6b3f9e2353d2cdc048708e")
     version("3.26.6", sha256="070b9a2422e666d2c1437e2dab239a236e8a63622d0a8d0ffe9e389613d2b76a")
     version("3.25.3", sha256="cc995701d590ca6debc4245e9989939099ca52827dd46b5d3592f093afe1901c")
@@ -65,6 +66,18 @@ class Cmake(Package):
         )
         version(
             "3.29.0", sha256="a0669630aae7baa4a8228048bf30b622f9e9fd8ee8cedb941754e9e38686c778"
+        )
+        version(
+            "3.28.3", sha256="72b7570e5c8593de6ac4ab433b73eab18c5fb328880460c86ce32608141ad5c1"
+        )
+        version(
+            "3.28.2", sha256="1466f872dc1c226f373cf8fba4230ed216a8f108bd54b477b5ccdfd9ea2d124a"
+        )
+        version(
+            "3.28.1", sha256="15e94f83e647f7d620a140a7a5da76349fc47a1bfed66d0f5cdee8e7344079ad"
+        )
+        version(
+            "3.28.0", sha256="e1dcf9c817ae306e73a45c2ba6d280c65cf4ec00dd958eb144adaf117fb58e71"
         )
         version(
             "3.27.8", sha256="fece24563f697870fbb982ea8bf17482c9d5f855d8c9bf0b82463d76c9e8d0cc"

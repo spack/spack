@@ -85,7 +85,7 @@ spack:
     - openfoam
     - osu-micro-benchmarks
     - parallel
-    - paraview
+    # - paraview
     - picard
     - quantum-espresso
 # Build broken for gcc@7.3.1 x86_64_v4 (error: '_mm512_loadu_epi32' was not declared in this scope)
