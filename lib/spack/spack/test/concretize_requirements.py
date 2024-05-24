@@ -1176,3 +1176,46 @@ def test_forward_multi_valued_variant_using_requires(
 
     for constraint in not_expected:
         assert not s.satisfies(constraint)
+
+
+def test_strong_preferences_higher_priority_than_reuse(concretize_scope, mock_packages):
+    """Tests that strong preferences have a higher priority than reusing specs."""
+    reused_spec = Spec("adios2~bzip2").concretized()
+    reuse_nodes = list(reused_spec.traverse())
+    root_specs = [Spec("ascent+adios2")]
+
+    # Check that without further configuration adios2 is reused
+    with spack.config.override("concretizer:reuse", True):
+        solver = spack.solver.asp.Solver()
+        setup = spack.solver.asp.SpackSolverSetup()
+        result, _, _ = solver.driver.solve(setup, root_specs, reuse=reuse_nodes)
+        ascent = result.specs[0]
+    assert ascent["adios2"].dag_hash() == reused_spec.dag_hash(), ascent
+
+    # If we stick a preference, adios2 is not reused
+    update_packages_config(
+        """
+    packages:
+      adios2:
+        prefer:
+        - "+bzip2"
+"""
+    )
+    with spack.config.override("concretizer:reuse", True):
+        solver = spack.solver.asp.Solver()
+        setup = spack.solver.asp.SpackSolverSetup()
+        result, _, _ = solver.driver.solve(setup, root_specs, reuse=reuse_nodes)
+        ascent = result.specs[0]
+
+    assert ascent["adios2"].dag_hash() != reused_spec.dag_hash()
+    assert ascent["adios2"].satisfies("+bzip2")
+
+    # A preference is still preference, so we can override from input
+    with spack.config.override("concretizer:reuse", True):
+        solver = spack.solver.asp.Solver()
+        setup = spack.solver.asp.SpackSolverSetup()
+        result, _, _ = solver.driver.solve(
+            setup, [Spec("ascent+adios2 ^adios2~bzip2")], reuse=reuse_nodes
+        )
+        ascent = result.specs[0]
+    assert ascent["adios2"].dag_hash() == reused_spec.dag_hash(), ascent
