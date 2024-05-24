@@ -232,6 +232,10 @@ class Openblas(CMakePackage, MakefilePackage):
 
     # See https://github.com/spack/spack/issues/3036
     conflicts("%intel@16", when="@0.2.15:0.2.19")
+
+    # See https://github.com/OpenMathLib/OpenBLAS/issues/4713
+    conflicts("%oneapi", when="@0.3.27")
+
     conflicts(
         "+consistent_fpcsr",
         when="threads=none",
