@@ -256,6 +256,7 @@ class Llvm(CMakePackage, CudaPackage, CompilerPackage):
         description="Enable zstd support for static analyzer / lld",
     )
 
+    provides("libllvm@18", when="@18.1.0:18")
     provides("libllvm@17", when="@17.0.0:17")
     provides("libllvm@16", when="@16.0.0:16")
     provides("libllvm@15", when="@15.0.0:15")
