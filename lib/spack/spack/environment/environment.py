@@ -1952,9 +1952,15 @@ class Environment:
             install_args.get("overwrite", []) + self._dev_specs_that_need_overwrite()
         )
 
-        installs = [(spec.package, {**install_args, "explicit": spec in roots}) for spec in specs]
+        install_args["explicit"] = (
+            install_args.get("explicit", [])
+            + [s.dag_hash() for s in specs]
+            + [s.dag_hash() for s in roots]
+        )
 
-        PackageInstaller(installs).install()
+        installs = [spec.package for spec in specs]
+
+        PackageInstaller(installs, install_args).install()
 
     def all_specs_generator(self) -> Iterable[Spec]:
         """Returns a generator for all concrete specs"""
