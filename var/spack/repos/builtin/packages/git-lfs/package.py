@@ -26,8 +26,8 @@ class GitLfs(MakefilePackage):
 
     license("MIT")
 
-    version("3.5.1", sha256="d682a12c0bc48d08d28834dd0d575c91d53dd6c6db63c45c2db7c3dd2fb69ea4") 
-    version("3.4.1", sha256="2a36239d7968ae18e1ba2820dc664c4ef753f10bf424f98bccaf44d527f19a17") 
+    version("3.5.1", sha256="d682a12c0bc48d08d28834dd0d575c91d53dd6c6db63c45c2db7c3dd2fb69ea4")
+    version("3.4.1", sha256="2a36239d7968ae18e1ba2820dc664c4ef753f10bf424f98bccaf44d527f19a17")
     version("3.3.0", sha256="d5eeb9ee33188d3dd6a391f8a39b96d271f10295129789e5b3a1ac0e9f5114f5")
     version("3.1.2", sha256="5c9bc449068d0104ea124c25f596af16da85e7b5bf256bc544d8ce5f4fe231f2")
     version("2.13.3", sha256="f8bd7a06e61e47417eb54c3a0db809ea864a9322629b5544b78661edab17b950")
