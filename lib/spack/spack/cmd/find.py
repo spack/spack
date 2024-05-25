@@ -293,23 +293,24 @@ def display_env(env, args, decorator, results):
         )
         print()
 
-    if args.show_concretized:
+    if args.show_concretized and not args.constraint:
         tty.msg("Concretized roots")
         cmd.display_specs(env.specs_by_hash.values(), args, decorator=decorator)
         print()
 
-    # Display a header for the installed packages section IF there are installed
-    # packages. If there aren't any, we'll just end up printing "0 installed packages"
-    # later.
-    if results and not args.only_roots:
-        tty.msg("Installed packages")
-
 
 def find(parser, args):
-    q_args = query_arguments(args)
-    results = args.specs(**q_args)
-
     env = ev.active_environment()
+
+    if args.show_concretized and args.constraint:
+        if not env:
+            tty.die("-c/specs given but no active environment to search")
+        init_specs = spack.cmd.parse_specs(args.constraint)
+        results = env.all_matching_specs(*init_specs)
+    else:
+        q_args = query_arguments(args)
+        results = args.specs(**q_args)
+
     if not env and args.only_roots:
         tty.die("-r / --only-roots requires an active environment")
 
@@ -340,12 +341,28 @@ def find(parser, args):
             if env:
                 display_env(env, args, decorator, results)
 
+        not_installed = list()
+        installed = list()
+        for x in results:
+            if x.installed:
+                installed.append(x)
+            else:
+                not_installed.append(x)
+
         count_suffix = " (not shown)"
         if not args.only_roots:
-            cmd.display_specs(results, args, decorator=decorator, all_headers=True)
             count_suffix = ""
+            if installed:
+                tty.msg("Installed packages")
+                cmd.display_specs(installed, args, decorator=decorator, all_headers=True)
+            if not_installed:
+                tty.msg("Concretized but not installed")
+                cmd.display_specs(not_installed, args, decorator=decorator, all_headers=True)
 
         # print number of installed packages last (as the list may be long)
         if sys.stdout.isatty() and args.groups:
+            if args.show_concretized:
+                spack.cmd.print_how_many_pkgs(not_installed, "concretized-but-not-installed", suffix=count_suffix)
+
             pkg_type = "loaded" if args.loaded else "installed"
-            spack.cmd.print_how_many_pkgs(results, pkg_type, suffix=count_suffix)
+            spack.cmd.print_how_many_pkgs(installed, pkg_type, suffix=count_suffix)
