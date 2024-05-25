@@ -119,6 +119,13 @@ class Doxygen(CMakePackage):
         when="@1.9.4 %gcc@12:",
     )
 
+    # https://github.com/doxygen/doxygen/pull/10896: use correct option name with system sqlite3
+    patch(
+        "https://github.com/doxygen/doxygen/commit/83de58c5f4f685a129127c2501f4fccd9557f6c4.patch?full_index=1",
+        sha256="8b46b763b3f0a2726f765141cbfa3eb6efd746531a4d689531e42ff56fc334e2",
+        when="@1.10:1.11.0",
+    )
+
     # Some GCC 7.x get stuck in an infinite loop
     conflicts("%gcc@7.0:7.9", when="@1.9:")
 
