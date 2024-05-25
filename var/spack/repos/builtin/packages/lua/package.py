@@ -6,6 +6,8 @@
 import glob
 import os
 
+from llnl.util.symlink import readlink
+
 import spack.build_environment
 from spack.package import *
 from spack.util.executable import Executable
@@ -79,7 +81,7 @@ class LuaImplPackage(MakefilePackage):
                 assert len(luajits) >= 1
                 luajit = luajits[0]
                 if os.path.islink(luajit):
-                    luajit = os.readlink(luajit)
+                    luajit = readlink(luajit)
                 symlink(luajit, "lua")
 
         with working_dir(self.prefix.include):
