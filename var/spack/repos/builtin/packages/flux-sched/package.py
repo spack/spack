@@ -73,6 +73,7 @@ class FluxSched(CMakePackage, AutotoolsPackage):
     depends_on("yaml-cpp@0.6.3")
     depends_on("uuid")
     depends_on("pkgconfig")
+    depends_on("gcc@9.4:")
 
     depends_on("flux-core", type=("build", "link", "run"))
     depends_on("flux-core+cuda", when="+cuda", type=("build", "run", "link"))
