@@ -6,7 +6,7 @@
 from spack.package import *
 
 
-class XcbProto(AutotoolsPackage):
+class XcbProto(AutotoolsPackage, XorgPackage):
     """xcb-proto provides the XML-XCB protocol descriptions that libxcb uses to
     generate the majority of its code and API."""
 
