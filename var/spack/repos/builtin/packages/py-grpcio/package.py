@@ -19,7 +19,12 @@ class PyGrpcio(PythonPackage):
     version("1.62.2", sha256="c77618071d96b7a8be2c10701a98537823b9c65ba256c0b9067e0594cdbd954d")
     version("1.60.1", sha256="dd1d3a8d1d2e50ad9b59e10aa7f07c7d1be2b367f3f2d33c5fade96ed5460962")
     version("1.56.2", sha256="0ff789ae7d8ddd76d2ac02e7d13bfef6fc4928ac01e1dcaa182be51b6bcc0aaa")
-    version("1.52.0", sha256="a5d4a83d29fc39af429c10b9b326c174fec49b73398e4a966a1f2a4f30aa4fdb")
+    version(
+        "1.52.0",
+        sha256="a5d4a83d29fc39af429c10b9b326c174fec49b73398e4a966a1f2a4f30aa4fdb",
+        deprecated=True,
+        # https://github.com/grpc/grpc/issues/32306
+    )
     version("1.48.1", sha256="660217eccd2943bf23ea9a36e2a292024305aec04bf747fbcff1f5032b83610e")
     version("1.43.0", sha256="735d9a437c262ab039d02defddcb9f8f545d7009ae61c0114e19dda3843febe5")
     version("1.42.0", sha256="4a8f2c7490fe3696e0cdd566e2f099fb91b51bc75446125175c55581c2f7bc11")
@@ -40,19 +45,25 @@ class PyGrpcio(PythonPackage):
     version("1.28.1", sha256="cbc322c5d5615e67c2a15be631f64e6c2bab8c12505bc7c150948abdaa0bdbac")
     version("1.27.2", sha256="5ae532b93cf9ce5a2a549b74a2c35e3b690b171ece9358519b3039c7b84c887e")
     version("1.25.0", sha256="c948c034d8997526011960db54f512756fb0b4be1b81140a15b4ef094c6594a4")
-    version("1.16.0", sha256="d99db0b39b490d2469a8ef74197d5f211fa740fc9581dccecbb76c56d080fce1")
+    version(
+        "1.16.0",
+        sha256="d99db0b39b490d2469a8ef74197d5f211fa740fc9581dccecbb76c56d080fce1",
+        deprecated=True,
+        # Released 6ish years ago and does not install for python 3.8 with gcc11
+    )
 
     depends_on("py-setuptools", type="build")
     with default_args(type=("build", "run")):
         depends_on("py-coverage@4:")
         depends_on("py-wheel@0.29:")
+
         depends_on("py-cython@3:", when="@1.63.0:")
         depends_on("py-cython@0.29.8:2", when="@1.56.0:1.62")
         depends_on("py-cython@0.29.8:", when="@1.49.0:1.55")
 
         depends_on("py-protobuf@5.26.1:5", when="@1.63.0:")
         depends_on("py-protobuf@4.21.3:4", when="@1.49.0:1.62")
-        depends_on("py-protobuf@3.5.0:3", when="@1.35.0:1.48")
+        depends_on("py-protobuf@3.5.0:3", when="@:1.48")
 
         depends_on("py-six@1.10:", when="@:1.48")
 
