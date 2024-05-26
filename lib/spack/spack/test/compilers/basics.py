@@ -82,21 +82,6 @@ def test_get_compiler_duplicates(mutable_config, compiler_factory):
     assert len(duplicates) == 1
 
 
-@pytest.mark.parametrize(
-    "input_version,expected_version,expected_error",
-    [(None, None, "Couldn't get version for compiler /usr/bin/gcc"), ("4.9", "4.9", None)],
-)
-def test_version_detection_is_empty(
-    make_args_for_version, input_version, expected_version, expected_error
-):
-    args = make_args_for_version(version=input_version)
-    result, error = spack.compilers.detect_version(args)
-    if not error:
-        assert result.id.version == expected_version
-
-    assert error == expected_error
-
-
 def test_compiler_flags_from_config_are_grouped():
     compiler_entry = {
         "spec": "intel@17.0.2",
@@ -906,51 +891,30 @@ def test_compiler_executable_verification_success(tmpdir):
 
 
 @pytest.mark.parametrize(
-    "detected_versions,expected_length",
+    "compilers_extra_attributes,expected_length",
     [
         # If we detect a C compiler we expect the result to be valid
-        (
-            [
-                spack.compilers.DetectVersionArgs(
-                    id=spack.compilers.CompilerID(
-                        os="ubuntu20.04", compiler_name="clang", version="12.0.0"
-                    ),
-                    variation=spack.compilers.NameVariation(prefix="", suffix="-12"),
-                    language="cc",
-                    path="/usr/bin/clang-12",
-                ),
-                spack.compilers.DetectVersionArgs(
-                    id=spack.compilers.CompilerID(
-                        os="ubuntu20.04", compiler_name="clang", version="12.0.0"
-                    ),
-                    variation=spack.compilers.NameVariation(prefix="", suffix="-12"),
-                    language="cxx",
-                    path="/usr/bin/clang++-12",
-                ),
-            ],
-            1,
-        ),
+        ({"c": "/usr/bin/clang-12", "cxx": "/usr/bin/clang-12"}, 1),
         # If we detect only a C++ compiler we expect the result to be discarded
-        (
-            [
-                spack.compilers.DetectVersionArgs(
-                    id=spack.compilers.CompilerID(
-                        os="ubuntu20.04", compiler_name="clang", version="12.0.0"
-                    ),
-                    variation=spack.compilers.NameVariation(prefix="", suffix="-12"),
-                    language="cxx",
-                    path="/usr/bin/clang++-12",
-                )
-            ],
-            0,
-        ),
+        ({"cxx": "/usr/bin/clang-12"}, 0),
     ],
 )
-def test_detection_requires_c_compiler(detected_versions, expected_length):
+def test_detection_requires_c_compiler(compilers_extra_attributes, expected_length):
     """Tests that compilers automatically added to the configuration have
     at least a C compiler.
     """
-    result = spack.compilers.make_compiler_list(detected_versions)
+    packages_yaml = {
+        "llvm": {
+            "externals": [
+                {
+                    "spec": "clang@12.0.0",
+                    "prefix": "/usr",
+                    "extra_attributes": {"compilers": compilers_extra_attributes},
+                }
+            ]
+        }
+    }
+    result = spack.compilers.CompilerConfigFactory.from_packages_yaml(packages_yaml)
     assert len(result) == expected_length
 
 
