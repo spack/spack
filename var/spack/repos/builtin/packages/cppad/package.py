@@ -34,13 +34,15 @@ class Cppad(CMakePackage):
     )
 
     def cmake_args(self):
+        # NOTE: This package does not obey CMAKE_INSTALL_PREFIX
         args = [
             self.define("cppad_prefix", self.prefix),
+            self.define("CMAKE_BUILD_TYPE", "Release")
+
+            #
+            # Installing documents sometimes fails.
+            #
             # self.define("cmake_install_docdir", "share/cppad/doc"),
         ]
-        # This package does not obey CMAKE_INSTALL_PREFIX
-        # args.append("-DCMAKE_INSTALL_PREFIX=%s" % self.prefix)
-
-        args.append("-DCMAKE_BUILD_TYPE=Release")
 
         return args
