@@ -200,9 +200,10 @@ class DetectablePackageMeta(type):
         if hasattr(cls, "executables") or hasattr(cls, "libraries"):
             # Append a tag to each detectable package, so that finding them is faster
             if hasattr(cls, "tags"):
-                getattr(cls, "tags").append(DetectablePackageMeta.TAG)
+                if DetectablePackageMeta.TAG not in cls.tags:
+                    cls.tags.append(DetectablePackageMeta.TAG)
             else:
-                setattr(cls, "tags", [DetectablePackageMeta.TAG])
+                cls.tags = [DetectablePackageMeta.TAG]
 
             @classmethod
             def platform_executables(cls):

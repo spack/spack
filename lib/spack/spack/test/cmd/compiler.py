@@ -131,7 +131,7 @@ def test_removing_compilers_from_multiple_scopes(mutable_config, mock_packages):
 
 
 @pytest.mark.not_on_windows("Cannot execute bash script on Windows")
-def test_compiler_add(mutable_config, mock_packages, mock_executable):
+def test_compiler_add(mutable_config, mock_executable):
     """Tests that we can add a compiler to configuration."""
     expected_version = "4.5.3"
     gcc_path = mock_executable(
@@ -162,44 +162,6 @@ done
 
 @pytest.mark.not_on_windows("Cannot execute bash script on Windows")
 @pytest.mark.regression("17590")
-@pytest.mark.parametrize("mixed_toolchain", [True, False])
-def test_compiler_find_mixed_suffixes(
-    mixed_toolchain, no_compilers_yaml, working_env, compilers_dir
-):
-    """Ensure that we'll mix compilers with different suffixes when necessary."""
-    os.environ["PATH"] = str(compilers_dir)
-    output = compiler(
-        "find", "--scope=site", "--mixed-toolchain" if mixed_toolchain else "--no-mixed-toolchain"
-    )
-
-    assert "clang@11.0.0" in output
-    assert "gcc@8.4.0" in output
-
-    config = spack.compilers.get_compiler_config(
-        no_compilers_yaml, scope="site", init_config=False
-    )
-    clang = next(c["compiler"] for c in config if c["compiler"]["spec"] == "clang@=11.0.0")
-    gcc = next(c["compiler"] for c in config if c["compiler"]["spec"] == "gcc@=8.4.0")
-
-    gfortran_path = str(compilers_dir / "gfortran-8")
-
-    assert clang["paths"] == {
-        "cc": str(compilers_dir / "clang"),
-        "cxx": str(compilers_dir / "clang++"),
-        "f77": gfortran_path if mixed_toolchain else None,
-        "fc": gfortran_path if mixed_toolchain else None,
-    }
-
-    assert gcc["paths"] == {
-        "cc": str(compilers_dir / "gcc-8"),
-        "cxx": str(compilers_dir / "g++-8"),
-        "f77": gfortran_path,
-        "fc": gfortran_path,
-    }
-
-
-@pytest.mark.not_on_windows("Cannot execute bash script on Windows")
-@pytest.mark.regression("17590")
 def test_compiler_find_prefer_no_suffix(no_compilers_yaml, working_env, compilers_dir):
     """Ensure that we'll pick 'clang' over 'clang-gpu' when there is a choice."""
     clang_path = compilers_dir / "clang"
@@ -209,13 +171,15 @@ def test_compiler_find_prefer_no_suffix(no_compilers_yaml, working_env, compiler
     os.environ["PATH"] = str(compilers_dir)
     output = compiler("find", "--scope=site")
 
-    assert "clang@11.0.0" in output
-    assert "gcc@8.4.0" in output
+    assert "clang@=11.0.0" in output
+    assert "gcc@=8.4.0" in output
 
-    config = spack.compilers.get_compiler_config(
-        no_compilers_yaml, scope="site", init_config=False
+    compiler_config = spack.compilers.get_compiler_config_from_packages(
+        no_compilers_yaml, scope="site"
     )
-    clang = next(c["compiler"] for c in config if c["compiler"]["spec"] == "clang@=11.0.0")
+    clang = next(
+        c["compiler"] for c in compiler_config if c["compiler"]["spec"] == "clang@=11.0.0"
+    )
 
     assert clang["paths"]["cc"] == str(compilers_dir / "clang")
     assert clang["paths"]["cxx"] == str(compilers_dir / "clang++")
@@ -229,14 +193,14 @@ def test_compiler_find_path_order(no_compilers_yaml, working_env, compilers_dir)
     for name in ("gcc-8", "g++-8", "gfortran-8"):
         shutil.copy(compilers_dir / name, new_dir / name)
     # Set PATH to have the new folder searched first
-    os.environ["PATH"] = "{}:{}".format(str(new_dir), str(compilers_dir))
+    os.environ["PATH"] = f"{str(new_dir)}:{str(compilers_dir)}"
 
     compiler("find", "--scope=site")
 
-    config = spack.compilers.get_compiler_config(
-        no_compilers_yaml, scope="site", init_config=False
+    compiler_config = spack.compilers.get_compiler_config_from_packages(
+        no_compilers_yaml, scope="site"
     )
-    gcc = next(c["compiler"] for c in config if c["compiler"]["spec"] == "gcc@=8.4.0")
+    gcc = next(c["compiler"] for c in compiler_config if c["compiler"]["spec"] == "gcc@=8.4.0")
     assert gcc["paths"] == {
         "cc": str(new_dir / "gcc-8"),
         "cxx": str(new_dir / "g++-8"),

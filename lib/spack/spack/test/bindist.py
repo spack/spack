@@ -8,7 +8,9 @@ import gzip
 import io
 import json
 import os
+import pathlib
 import platform
+import shutil
 import sys
 import tarfile
 import urllib.error
@@ -16,12 +18,11 @@ import urllib.request
 import urllib.response
 from pathlib import Path, PurePath
 
-import py
 import pytest
 
 import archspec.cpu
 
-from llnl.util.filesystem import join_path, visit_directory_tree
+from llnl.util.filesystem import copy_tree, join_path, visit_directory_tree
 from llnl.util.symlink import readlink
 
 import spack.binary_distribution as bindist
@@ -81,72 +82,67 @@ def test_mirror(mirror_dir):
 
 
 @pytest.fixture(scope="module")
-def config_directory(tmpdir_factory):
-    tmpdir = tmpdir_factory.mktemp("test_configs")
-    # restore some sane defaults for packages and config
-    config_path = py.path.local(spack.paths.etc_path)
-    modules_yaml = config_path.join("defaults", "modules.yaml")
-    os_modules_yaml = config_path.join(
-        "defaults", "%s" % platform.system().lower(), "modules.yaml"
-    )
-    packages_yaml = config_path.join("defaults", "packages.yaml")
-    config_yaml = config_path.join("defaults", "config.yaml")
-    repos_yaml = config_path.join("defaults", "repos.yaml")
-    tmpdir.ensure("site", dir=True)
-    tmpdir.ensure("user", dir=True)
-    tmpdir.ensure("site/%s" % platform.system().lower(), dir=True)
-    modules_yaml.copy(tmpdir.join("site", "modules.yaml"))
-    os_modules_yaml.copy(tmpdir.join("site/%s" % platform.system().lower(), "modules.yaml"))
-    packages_yaml.copy(tmpdir.join("site", "packages.yaml"))
-    config_yaml.copy(tmpdir.join("site", "config.yaml"))
-    repos_yaml.copy(tmpdir.join("site", "repos.yaml"))
-    yield tmpdir
-    tmpdir.remove()
+def config_directory(tmp_path_factory):
+    # Copy defaults to a temporary "site" scope
+    defaults_dir = tmp_path_factory.mktemp("test_configs")
+    config_path = pathlib.Path(spack.paths.etc_path)
+    copy_tree(str(config_path / "defaults"), str(defaults_dir / "site"))
+
+    # Create a "user" scope
+    (defaults_dir / "user").mkdir()
+
+    # Detect compilers
+    cfg_scopes = [
+        spack.config.ConfigScope(name, str(defaults_dir / name))
+        for name in [f"site/{platform.system().lower()}", "site", "user"]
+    ]
+    with spack.config.use_configuration(*cfg_scopes):
+        _ = spack.compilers.find_compilers(scope="site")
+
+    yield defaults_dir
+
+    shutil.rmtree(str(defaults_dir))
 
 
 @pytest.fixture(scope="function")
-def default_config(tmpdir, config_directory, monkeypatch, install_mockery_mutable_config):
+def default_config(tmp_path, config_directory, monkeypatch, install_mockery_mutable_config):
     # This fixture depends on install_mockery_mutable_config to ensure
     # there is a clear order of initialization. The substitution of the
     # config scopes here is done on top of the substitution that comes with
     # install_mockery_mutable_config
-    mutable_dir = tmpdir.mkdir("mutable_config").join("tmp")
-    config_directory.copy(mutable_dir)
+    mutable_dir = tmp_path / "mutable_config" / "tmp"
+    mutable_dir.mkdir(parents=True)
+    copy_tree(str(config_directory), str(mutable_dir))
 
-    cfg = spack.config.Configuration(
-        *[
-            spack.config.ConfigScope(name, str(mutable_dir))
-            for name in ["site/%s" % platform.system().lower(), "site", "user"]
-        ]
-    )
+    scopes = [
+        spack.config.ConfigScope(name, str(mutable_dir / name))
+        for name in [f"site/{platform.system().lower()}", "site", "user"]
+    ]
 
-    spack.config.CONFIG, old_config = cfg, spack.config.CONFIG
-    spack.config.CONFIG.set("repos", [spack.paths.mock_packages_path])
-    njobs = spack.config.get("config:build_jobs")
-    if not njobs:
-        spack.config.set("config:build_jobs", 4, scope="user")
-    extensions = spack.config.get("config:template_dirs")
-    if not extensions:
-        spack.config.set(
-            "config:template_dirs",
-            [os.path.join(spack.paths.share_path, "templates")],
-            scope="user",
-        )
+    with spack.config.use_configuration(*scopes):
+        spack.config.CONFIG.set("repos", [spack.paths.mock_packages_path])
+        njobs = spack.config.get("config:build_jobs")
+        if not njobs:
+            spack.config.set("config:build_jobs", 4, scope="user")
+        extensions = spack.config.get("config:template_dirs")
+        if not extensions:
+            spack.config.set(
+                "config:template_dirs",
+                [os.path.join(spack.paths.share_path, "templates")],
+                scope="user",
+            )
 
-    mutable_dir.ensure("build_stage", dir=True)
-    build_stage = spack.config.get("config:build_stage")
-    if not build_stage:
-        spack.config.set(
-            "config:build_stage", [str(mutable_dir.join("build_stage"))], scope="user"
-        )
-    timeout = spack.config.get("config:connect_timeout")
-    if not timeout:
-        spack.config.set("config:connect_timeout", 10, scope="user")
+        (mutable_dir / "build_stage").mkdir()
+        build_stage = spack.config.get("config:build_stage")
+        if not build_stage:
+            spack.config.set(
+                "config:build_stage", [str(mutable_dir / "build_stage")], scope="user"
+            )
+        timeout = spack.config.get("config:connect_timeout")
+        if not timeout:
+            spack.config.set("config:connect_timeout", 10, scope="user")
 
-    yield spack.config.CONFIG
-
-    spack.config.CONFIG = old_config
-    mutable_dir.remove()
+        yield spack.config.CONFIG
 
 
 @pytest.fixture(scope="function")

@@ -4973,9 +4973,9 @@ class Spec:
                 v.attach_lookup(spack.version.git_ref_lookup.GitRefLookup(self.fullname))
 
 
-def parse_with_version_concrete(string: str, compiler: bool = False):
+def parse_with_version_concrete(spec_like: Union[str, Spec], compiler: bool = False):
     """Same as Spec(string), but interprets @x as @=x"""
-    s: Union[CompilerSpec, Spec] = CompilerSpec(string) if compiler else Spec(string)
+    s: Union[CompilerSpec, Spec] = CompilerSpec(spec_like) if compiler else Spec(spec_like)
     interpreted_version = s.versions.concrete_range_as_version
     if interpreted_version:
         s.versions = vn.VersionList([interpreted_version])

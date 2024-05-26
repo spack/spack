@@ -12,7 +12,7 @@ import os.path
 import re
 import sys
 import warnings
-from typing import Dict, List, Optional, Set, Tuple
+from typing import Dict, Iterable, List, Optional, Set, Tuple
 
 import llnl.util.filesystem
 import llnl.util.lang
@@ -187,7 +187,7 @@ def libraries_in_windows_paths(path_hints: Optional[List[str]] = None) -> Dict[s
     return path_to_dict(search_paths)
 
 
-def _group_by_prefix(paths: Set[str]) -> Dict[str, Set[str]]:
+def _group_by_prefix(paths: List[str]) -> Dict[str, Set[str]]:
     groups = collections.defaultdict(set)
     for p in paths:
         groups[os.path.dirname(p)].add(p)
@@ -243,7 +243,9 @@ class Finder:
             return []
 
         result = []
-        for candidate_path, items_in_prefix in sorted(_group_by_prefix(set(paths)).items()):
+        for candidate_path, items_in_prefix in _group_by_prefix(
+            llnl.util.lang.dedupe(paths)
+        ).items():
             # TODO: multiple instances of a package can live in the same
             # prefix, and a package implementation can return multiple specs
             # for one prefix, but without additional details (e.g. about the
@@ -385,7 +387,7 @@ class LibrariesFinder(Finder):
 
 
 def by_path(
-    packages_to_search: List[str],
+    packages_to_search: Iterable[str],
     *,
     path_hints: Optional[List[str]] = None,
     max_workers: Optional[int] = None,

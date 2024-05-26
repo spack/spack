@@ -11,6 +11,7 @@ import pytest
 from llnl.util.filesystem import getuid, touch
 
 import spack
+import spack.cmd.external
 import spack.detection
 import spack.detection.path
 from spack.main import SpackCommand
@@ -114,10 +115,10 @@ def test_find_external_cmd_not_buildable(mutable_config, working_env, mock_execu
     "names,tags,exclude,expected",
     [
         # find --all
-        (None, ["detectable"], [], ["builtin.mock.find-externals1"]),
+        (None, ["detectable"], [], ["builtin.mock.find-externals1", "builtin.mock.gcc"]),
         # find --all --exclude find-externals1
-        (None, ["detectable"], ["builtin.mock.find-externals1"], []),
-        (None, ["detectable"], ["find-externals1"], []),
+        (None, ["detectable"], ["builtin.mock.find-externals1"], ["builtin.mock.gcc"]),
+        (None, ["detectable"], ["find-externals1"], ["builtin.mock.gcc"]),
         # find cmake (and cmake is not detectable)
         (["cmake"], ["detectable"], [], []),
     ],
