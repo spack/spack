@@ -37,8 +37,7 @@ class Cppad(CMakePackage):
         # NOTE: This package does not obey CMAKE_INSTALL_PREFIX
         args = [
             self.define("cppad_prefix", self.prefix),
-            self.define("CMAKE_BUILD_TYPE", "Release")
-
+            self.define("CMAKE_BUILD_TYPE", "Release"),
             #
             # Installing documents sometimes fails.
             #
