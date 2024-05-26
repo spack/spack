@@ -16,7 +16,7 @@ class UtilMacros(AutotoolsPackage, XorgPackage):
 
     # note: url_for_version can only return a single url, no mirrors
     def url_for_version(self, version):
-        if version < Version("1.20"):
+        if self.spec.satisfies("@:1.19"):
             return self.urls[0].replace("xz", "bz2")
 
     maintainers("robert-mijakovic", "wdconinc")
