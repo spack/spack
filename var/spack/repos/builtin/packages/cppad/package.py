@@ -24,7 +24,7 @@ class Cppad(CMakePackage):
     )
     version(
         "20180000.0",
-        sha256="1c355713e720fc5226ff3d6db2909922d46cd7ee0d36ee7985882f86905f655a",
+        sha256="a5226e4c5aa2ad6d95668f987b39939315bf134a0a793231984e6d42d6488cca",
         deprecated=True,
     )
     version(
