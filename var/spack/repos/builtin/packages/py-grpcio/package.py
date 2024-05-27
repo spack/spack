@@ -66,7 +66,7 @@ class PyGrpcio(PythonPackage):
         depends_on("py-cython@0.29.8:", when="@1.49.0:1.55")
         # States dependency in setup.py >=0.23
         # Package states >=0.23 but doesn't compile w/ >=3
-        depends_on("py-cython@0.23:2", when="@:1.48")  
+        depends_on("py-cython@0.23:2", when="@:1.48")
 
         depends_on("py-protobuf@5.26.1:5", when="@1.63.0:")
         depends_on("py-protobuf@4.21.3:4", when="@1.49.0:1.62")
