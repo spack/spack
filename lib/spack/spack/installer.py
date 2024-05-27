@@ -600,9 +600,7 @@ def dump_packages(spec: "spack.spec.Spec", path: str) -> None:
         if node is spec:
             spack.repo.PATH.dump_provenance(node, dest_pkg_dir)
         elif source_pkg_dir:
-            fs.install_tree(
-                source_pkg_dir, dest_pkg_dir, allow_broken_symlinks=(sys.platform != "win32")
-            )
+            fs.install_tree(source_pkg_dir, dest_pkg_dir)
 
 
 def get_dependent_ids(spec: "spack.spec.Spec") -> List[str]:
@@ -2380,9 +2378,7 @@ class BuildProcessInstaller:
         src_target = os.path.join(pkg.spec.prefix, "share", pkg.name, "src")
         tty.debug(f"{self.pre} Copying source to {src_target}")
 
-        fs.install_tree(
-            pkg.stage.source_path, src_target, allow_broken_symlinks=(sys.platform != "win32")
-        )
+        fs.install_tree(pkg.stage.source_path, src_target)
 
     def _real_install(self) -> None:
         import spack.builder

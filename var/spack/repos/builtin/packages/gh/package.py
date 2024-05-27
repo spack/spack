@@ -16,6 +16,7 @@ class Gh(Package):
 
     license("MIT")
 
+    version("2.49.2", sha256="e839ea302ad99b70ce3efcb903f938ecbbb919798e49bc2f2034ad506ae0b0f5")
     version("2.43.1", sha256="1ea3f451fb7002c1fb95a7fab21e9ab16591058492628fe264c5878e79ec7c90")
     version("2.32.1", sha256="1d569dc82eb6520e6a8959568c2db84fea3bbaab2604c8dd5901849d320e1eae")
     version("2.28.0", sha256="cf3c0fb7f601d717d8b5177707a197c49fd426f5dc3c9aa52a932e96ba7166af")
@@ -39,6 +40,7 @@ class Gh(Package):
     depends_on("go@1.18:", type="build", when="@2.10.0:")
     depends_on("go@1.19:", type="build", when="@2.21.0:")
     depends_on("go@1.21:", type="build", when="@2.33.0:")
+    depends_on("go@1.22:", type="build", when="@2.47.0:")
 
     phases = ["build", "install"]
 
