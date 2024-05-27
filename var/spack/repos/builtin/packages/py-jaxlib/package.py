@@ -36,16 +36,6 @@ class PyJaxlib(PythonPackage, CudaPackage):
     version("0.4.6", sha256="2c9bf8962815bc54ef524e33dc8eda9d165d379fe87e0df210f316adead27787")
     version("0.4.4", sha256="881f402c7983b56b185e182d5315dd64c9f5320be96213d0415996ece1826806")
     version("0.4.3", sha256="2104735dc22be2b105e5517bd5bc6ae97f40e8e9e54928cac1585c6112a3d910")
-    version(
-        "0.3.22",
-        sha256="680a6f5265ba26d5515617a95ae47244005366f879a5c321782fde60f34e6d0d",
-        deprecated=True,
-    )
-    version(
-        "0.1.74",
-        sha256="bbc78c7a4927012dcb1b7cd135c7521f782d7dad516a2401b56d3190f81afe35",
-        deprecated=True,
-    )
 
     variant("cuda", default=True, description="Build with CUDA enabled")
     variant("nccl", default=True, description="Build with NCCL enabled", when="+cuda")
@@ -56,12 +46,9 @@ class PyJaxlib(PythonPackage, CudaPackage):
         depends_on("cuda@12.1:", when="@0.4.26:")
         depends_on("cuda@11.8:", when="@0.4.11:")
         depends_on("cuda@11.4:", when="@0.4.0:0.4.7")
-        depends_on("cuda@11.1:", when="@0.3")
-        depends_on("cuda@11.1:11.7.0", when="@0.1")
         depends_on("cudnn@8.9:8", when="@0.4.26:")
         depends_on("cudnn@8.8:", when="@0.4.11:")
         depends_on("cudnn@8.2:", when="@0.4:0.4.7")
-        depends_on("cudnn@8.0.5:")
 
     with when("+nccl"):
         depends_on("nccl@2.18:", when="@0.4.26:")
@@ -73,10 +60,6 @@ class PyJaxlib(PythonPackage, CudaPackage):
         depends_on("bazel@6.5.0", when="@0.4.28:")
         depends_on("bazel@6.1.2", when="@0.4.11:0.4.27")
         depends_on("bazel@5.1.1", when="@0.3.7:0.4.10")
-        depends_on("bazel@5.1.0", when="@0.3.5")
-        depends_on("bazel@5.0.0", when="@0.3.0:0.3.2")
-        depends_on("bazel@4.2.1", when="@0.1.75:0.1.76")
-        depends_on("bazel@4.1.0", when="@0.1.70:0.1.74")
 
         # jaxlib/setup.py
         depends_on("py-setuptools")
@@ -97,14 +80,9 @@ class PyJaxlib(PythonPackage, CudaPackage):
         depends_on("py-numpy@1.22:", when="@0.4.14:")
         depends_on("py-numpy@1.21:", when="@0.4.7:")
         depends_on("py-numpy@1.20:", when="@0.3:")
-        depends_on("py-numpy@1.18:")
         depends_on("py-ml-dtypes@0.2:", when="@0.4.14:")
         depends_on("py-ml-dtypes@0.1:", when="@0.4.9:")
         depends_on("py-ml-dtypes@0.0.3:", when="@0.4.7:")
-
-        # Historical dependencies
-        depends_on("py-absl-py", when="@:0.3")
-        depends_on("py-flatbuffers@1.12:2", when="@0.1")
 
     conflicts(
         "cuda_arch=none",
