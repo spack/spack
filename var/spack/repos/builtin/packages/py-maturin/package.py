@@ -38,3 +38,5 @@ class PyMaturin(PythonPackage):
             ("1.59", "0.13.3"),
         ]:
             depends_on(f"rust@{rust}:", when=f"@{maturin}:")
+
+    conflicts("python@:3.10")
