@@ -54,6 +54,9 @@ _source_path_subdir = "spack-src"
 # The temporary stage name prefix.
 stage_prefix = "spack-stage-"
 
+# The temporary resource name prefix.
+resource_prefix = "resource-"
+
 
 def compute_stage_name(spec):
     """Determine stage name given a spec"""
@@ -953,6 +956,19 @@ def purge():
     if os.path.isdir(root):
         for stage_dir in os.listdir(root):
             if stage_dir.startswith(stage_prefix) or stage_dir == ".lock":
+                stage_path = os.path.join(root, stage_dir)
+                if os.path.isdir(stage_path):
+                    remove_linked_tree(stage_path)
+                else:
+                    os.remove(stage_path)
+
+
+def purge_resources():
+    """Remove all resource directories in the top-level stage path."""
+    root = get_stage_root()
+    if os.path.isdir(root):
+        for stage_dir in os.listdir(root):
+            if stage_dir.startswith(resource_prefix):
                 stage_path = os.path.join(root, stage_dir)
                 if os.path.isdir(stage_path):
                     remove_linked_tree(stage_path)

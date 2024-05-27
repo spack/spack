@@ -127,7 +127,7 @@ def clean(parser, args):
 
     if args.resources:
         tty.msg("Removing cached resources")
-        spack.caches.FETCH_CACHE.destroy()
+        spack.stage.purge_resources()
 
     if args.failures:
         tty.msg("Removing install failure marks")
