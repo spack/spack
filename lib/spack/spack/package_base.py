@@ -1883,7 +1883,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, RedistributionMixin, metaclass
         """
         explicit = kwargs.get("explicit", True)
         if isinstance(explicit, bool):
-            kwargs["explicit"] = [self.spec.dag_hash()] if explicit else []
+            kwargs["explicit"] = {self.spec.dag_hash()} if explicit else set()
         PackageInstaller([self], kwargs).install()
 
     # TODO (post-34236): Update tests and all packages that use this as a

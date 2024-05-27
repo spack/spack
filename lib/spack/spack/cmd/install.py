@@ -61,7 +61,6 @@ def install_kwargs_from_args(args):
         "dependencies_use_cache": cache_opt(args.use_cache, dep_use_bc),
         "dependencies_cache_only": cache_opt(args.cache_only, dep_use_bc),
         "include_build_deps": args.include_build_deps,
-        "explicit": [],
         "stop_at": args.until,
         "unsigned": args.unsigned,
         "install_deps": ("dependencies" in args.things_to_install),
