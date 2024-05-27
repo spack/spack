@@ -41,6 +41,9 @@ def setup_parser(subparser):
         "-d", "--downloads", action="store_true", help="remove cached downloads"
     )
     subparser.add_argument(
+        "-r", "--resources", action="store_true", help="remove cached resources"
+    )
+    subparser.add_argument(
         "-f",
         "--failures",
         action="store_true",
@@ -68,7 +71,7 @@ def setup_parser(subparser):
         "-a",
         "--all",
         action=AllClean,
-        help="equivalent to -sdfmp (does not include --bootstrap)",
+        help="equivalent to -sdrfmp (does not include --bootstrap)",
         nargs=0,
     )
     arguments.add_common_arguments(subparser, ["specs"])
@@ -96,6 +99,7 @@ def clean(parser, args):
             args.specs,
             args.stage,
             args.downloads,
+            args.resources,
             args.failures,
             args.misc_cache,
             args.python_cache,
@@ -119,6 +123,10 @@ def clean(parser, args):
 
     if args.downloads:
         tty.msg("Removing cached downloads")
+        spack.caches.FETCH_CACHE.destroy()
+
+    if args.resources:
+        tty.msg("Removing cached resources")
         spack.caches.FETCH_CACHE.destroy()
 
     if args.failures:
