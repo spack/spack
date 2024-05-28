@@ -220,9 +220,7 @@ class Hpctoolkit(AutotoolsPackage, MesonPackage):
         "^hip@5.3:", when="@:2022.12", msg="rocm 5.3 requires hpctoolkit 2023.03.01 or later"
     )
 
-    conflicts(
-        "^hip@6:", when="@:2023", msg="rocm 6.0 requires hpctoolkit 2024.01.1 or later"
-    )
+    conflicts("^hip@6:", when="@:2023", msg="rocm 6.0 requires hpctoolkit 2024.01.1 or later")
 
     # Fix the build for old revs with gcc 10.x and 11.x.
     patch("gcc10-enum.patch", when="@2020.01.01:2020.08 %gcc@10.0:")
