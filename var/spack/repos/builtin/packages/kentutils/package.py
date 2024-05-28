@@ -17,7 +17,7 @@ class Kentutils(MakefilePackage):
     # This version isn't present in the archive any more
     # Might be worth changing url to: https://github.com/ucscGenomeBrowser/kent-core/tags/...
     version(
-        "459", 
+        "459",
         sha256="0b6e89a183e6385c713cf010a7aeead9da6626d8d2f78c363a4f1bc56ccccebb",
         deprecated=True,
     )
