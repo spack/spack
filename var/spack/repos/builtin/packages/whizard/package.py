@@ -80,6 +80,7 @@ class Whizard(AutotoolsPackage):
         when="+openloops",
     )
     depends_on("texlive", when="+latex")
+    depends_on("ghostscript", when="+latex")
     depends_on("zlib-api")
 
     # Fix for https://github.com/key4hep/key4hep-spack/issues/71
@@ -159,8 +160,8 @@ class Whizard(AutotoolsPackage):
 
         if "+openloops" in spec:
             args.append(f"--with-openloops={spec['openloops'].prefix}")
-        if "+openmp" not in spec:
-            args.append("--disable-openmp")
+        if "+openmp" in spec:
+            args.append("--enable-fc-openmp")
         return args
 
     def url_for_version(self, version):
