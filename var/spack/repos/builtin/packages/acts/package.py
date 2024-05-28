@@ -478,6 +478,8 @@ class Acts(CMakePackage, CudaPackage):
             cuda_arch = spec.variants["cuda_arch"].value
             if cuda_arch != "none":
                 args.append(f"-DCUDA_FLAGS=-arch=sm_{cuda_arch[0]}")
+                arch_str = ";".join(self.spec.variants["cuda_arch"].value)
+                args.append(self.define("CMAKE_CUDA_ARCHITECTURES", arch_str))
 
         args.append(self.define_from_variant("CMAKE_CXX_STANDARD", "cxxstd"))
 
