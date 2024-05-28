@@ -9,7 +9,7 @@ from spack.package import *
 class Libxi(AutotoolsPackage, XorgPackage):
     """libXi - library for the X Input Extension."""
 
-    homepage = "https://cgit.freedesktop.org/xorg/lib/libXi"
+    homepage = "https://gitlab.freedesktop.org/xorg/lib/libXi"
     xorg_mirror_path = "lib/libXi-1.7.6.tar.gz"
 
     license("MIT AND X11")

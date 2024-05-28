@@ -13,7 +13,7 @@ class Xmodmap(AutotoolsPackage, XorgPackage):
     session startup script to configure the keyboard according to personal
     tastes."""
 
-    homepage = "https://cgit.freedesktop.org/xorg/app/xmodmap"
+    homepage = "https://gitlab.freedesktop.org/xorg/app/xmodmap"
     xorg_mirror_path = "app/xmodmap-1.0.9.tar.gz"
 
     license("MIT")

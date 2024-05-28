@@ -9,7 +9,7 @@ from spack.package import *
 class X11perf(AutotoolsPackage, XorgPackage):
     """Simple X server performance benchmarker."""
 
-    homepage = "https://cgit.freedesktop.org/xorg/app/x11perf"
+    homepage = "https://gitlab.freedesktop.org/xorg/app/x11perf"
     xorg_mirror_path = "app/x11perf-1.6.0.tar.gz"
 
     version("1.6.1", sha256="a1874618df0e30ae1a9b2470fb50e77a40c4a6f6ddf87a5c154f7a3b913ac0b3")

@@ -9,7 +9,7 @@ from spack.package import *
 class Libxdamage(AutotoolsPackage, XorgPackage):
     """This package contains the library for the X Damage extension."""
 
-    homepage = "https://cgit.freedesktop.org/xorg/lib/libXdamage"
+    homepage = "https://gitlab.freedesktop.org/xorg/lib/libXdamage"
     xorg_mirror_path = "lib/libXdamage-1.1.4.tar.gz"
 
     license("MIT")

@@ -9,7 +9,7 @@ from spack.package import *
 class Xdriinfo(AutotoolsPackage, XorgPackage):
     """xdriinfo - query configuration information of X11 DRI drivers."""
 
-    homepage = "https://cgit.freedesktop.org/xorg/app/xdriinfo"
+    homepage = "https://gitlab.freedesktop.org/xorg/app/xdriinfo"
     xorg_mirror_path = "app/xdriinfo-1.0.5.tar.gz"
 
     license("custom")

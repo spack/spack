@@ -10,7 +10,7 @@ class Xgamma(AutotoolsPackage, XorgPackage):
     """xgamma allows X users to query and alter the gamma correction of a
     monitor via the X video mode extension (XFree86-VidModeExtension)."""
 
-    homepage = "https://cgit.freedesktop.org/xorg/app/xgamma"
+    homepage = "https://gitlab.freedesktop.org/xorg/app/xgamma"
     xorg_mirror_path = "app/xgamma-1.0.6.tar.gz"
 
     license("custom")

@@ -11,7 +11,7 @@ class Xmessage(AutotoolsPackage, XorgPackage):
     on an "okay" button to dismiss it or can select one of several buttons
     to answer a question.  xmessage can also exit after a specified time."""
 
-    homepage = "https://cgit.freedesktop.org/xorg/app/xmessage"
+    homepage = "https://gitlab.freedesktop.org/xorg/app/xmessage"
     xorg_mirror_path = "app/xmessage-1.0.4.tar.gz"
 
     license("MIT")

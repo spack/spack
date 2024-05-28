@@ -9,7 +9,7 @@ from spack.package import *
 class Xeyes(AutotoolsPackage, XorgPackage):
     """xeyes - a follow the mouse X demo, using the X SHAPE extension"""
 
-    homepage = "https://cgit.freedesktop.org/xorg/app/xeyes"
+    homepage = "https://gitlab.freedesktop.org/xorg/app/xeyes"
     xorg_mirror_path = "app/xeyes-1.1.1.tar.gz"
 
     license("MIT")

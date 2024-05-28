@@ -9,7 +9,7 @@ from spack.package import *
 class Xrdb(AutotoolsPackage, XorgPackage):
     """xrdb - X server resource database utility."""
 
-    homepage = "https://cgit.freedesktop.org/xorg/app/xrdb"
+    homepage = "https://gitlab.freedesktop.org/xorg/app/xrdb"
     xorg_mirror_path = "app/xrdb-1.1.0.tar.gz"
 
     license("MIT")

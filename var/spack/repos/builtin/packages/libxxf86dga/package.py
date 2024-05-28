@@ -9,7 +9,7 @@ from spack.package import *
 class Libxxf86dga(AutotoolsPackage, XorgPackage):
     """libXxf86dga - Client library for the XFree86-DGA extension."""
 
-    homepage = "https://cgit.freedesktop.org/xorg/lib/libXxf86dga"
+    homepage = "https://gitlab.freedesktop.org/xorg/lib/libXxf86dga"
     xorg_mirror_path = "lib/libXxf86dga-1.1.4.tar.gz"
 
     license("MIT")

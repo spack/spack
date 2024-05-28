@@ -10,7 +10,7 @@ class Xgc(AutotoolsPackage, XorgPackage):
     """xgc is an X11 graphics demo that shows various features of the X11
     core protocol graphics primitives."""
 
-    homepage = "https://cgit.freedesktop.org/xorg/app/xgc"
+    homepage = "https://gitlab.freedesktop.org/xorg/app/xgc"
     xorg_mirror_path = "app/xgc-1.0.5.tar.gz"
 
     version("1.0.6", sha256="8b5cfc547c04a2bd0807be700349522c0e717e34387019dd209eefa83cfa74f0")

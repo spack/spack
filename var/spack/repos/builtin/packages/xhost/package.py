@@ -10,7 +10,7 @@ class Xhost(AutotoolsPackage, XorgPackage):
     """xhost is used to manage the list of host names or user names
     allowed to make connections to the X server."""
 
-    homepage = "https://cgit.freedesktop.org/xorg/app/xhost"
+    homepage = "https://gitlab.freedesktop.org/xorg/app/xhost"
     xorg_mirror_path = "app/xhost-1.0.7.tar.gz"
 
     license("MIT")

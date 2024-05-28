@@ -10,7 +10,7 @@ class Xvidtune(AutotoolsPackage, XorgPackage):
     """xvidtune is a client interface to the X server video mode
     extension (XFree86-VidModeExtension)."""
 
-    homepage = "https://cgit.freedesktop.org/xorg/app/xvidtune"
+    homepage = "https://gitlab.freedesktop.org/xorg/app/xvidtune"
     xorg_mirror_path = "app/xvidtune-1.0.3.tar.gz"
 
     license("MIT")

@@ -9,7 +9,7 @@ from spack.package import *
 class Xdm(AutotoolsPackage, XorgPackage):
     """X Display Manager / XDMCP server."""
 
-    homepage = "https://cgit.freedesktop.org/xorg/app/xdm"
+    homepage = "https://gitlab.freedesktop.org/xorg/app/xdm"
     xorg_mirror_path = "app/xdm-1.1.11.tar.gz"
 
     license("MIT")

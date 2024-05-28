@@ -10,7 +10,7 @@ class Xvinfo(AutotoolsPackage, XorgPackage):
     """xvinfo prints out the capabilities of any video adaptors associated
     with the display that are accessible through the X-Video extension."""
 
-    homepage = "https://cgit.freedesktop.org/xorg/app/xvinfo"
+    homepage = "https://gitlab.freedesktop.org/xorg/app/xvinfo"
     xorg_mirror_path = "app/xvinfo-1.1.3.tar.gz"
 
     license("MIT")

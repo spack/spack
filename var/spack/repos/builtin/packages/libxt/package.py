@@ -9,7 +9,7 @@ from spack.package import *
 class Libxt(AutotoolsPackage, XorgPackage):
     """libXt - X Toolkit Intrinsics library."""
 
-    homepage = "https://cgit.freedesktop.org/xorg/lib/libXt"
+    homepage = "https://gitlab.freedesktop.org/xorg/lib/libXt"
     xorg_mirror_path = "lib/libXt-1.1.5.tar.gz"
 
     license("MIT")

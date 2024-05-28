@@ -10,7 +10,7 @@ class Xlsfonts(AutotoolsPackage, XorgPackage):
     """xlsfonts lists fonts available from an X server via the X11
     core protocol."""
 
-    homepage = "https://cgit.freedesktop.org/xorg/app/xlsfonts"
+    homepage = "https://gitlab.freedesktop.org/xorg/app/xlsfonts"
     xorg_mirror_path = "app/xlsfonts-1.0.5.tar.gz"
 
     version("1.0.7", sha256="b92d4954eaf525674ff83f7e85240ef166c240a774277f71c30674f9f7794171")

@@ -9,7 +9,7 @@ from spack.package import *
 class Xmag(AutotoolsPackage, XorgPackage):
     """xmag displays a magnified snapshot of a portion of an X11 screen."""
 
-    homepage = "https://cgit.freedesktop.org/xorg/app/xmag"
+    homepage = "https://gitlab.freedesktop.org/xorg/app/xmag"
     xorg_mirror_path = "app/xmag-1.0.6.tar.gz"
 
     license("custom")

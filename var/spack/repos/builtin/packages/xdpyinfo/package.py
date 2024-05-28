@@ -14,7 +14,7 @@ class Xdpyinfo(AutotoolsPackage, XorgPackage):
     and the server, and the different types of screens, visuals, and X11
     protocol extensions that are available."""
 
-    homepage = "https://cgit.freedesktop.org/xorg/app/xdpyinfo"
+    homepage = "https://gitlab.freedesktop.org/xorg/app/xdpyinfo"
     xorg_mirror_path = "app/xdpyinfo-1.3.2.tar.gz"
 
     license("custom")

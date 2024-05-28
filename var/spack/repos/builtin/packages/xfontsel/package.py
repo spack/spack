@@ -11,7 +11,7 @@ class Xfontsel(AutotoolsPackage, XorgPackage):
     protocol fonts known to your X server, examine samples of each, and
     retrieve the X Logical Font Description ("XLFD") full name for a font."""
 
-    homepage = "https://cgit.freedesktop.org/xorg/app/xfontsel"
+    homepage = "https://gitlab.freedesktop.org/xorg/app/xfontsel"
     xorg_mirror_path = "app/xfontsel-1.0.5.tar.gz"
 
     license("MIT")

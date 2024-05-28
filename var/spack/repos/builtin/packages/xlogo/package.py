@@ -9,7 +9,7 @@ from spack.package import *
 class Xlogo(AutotoolsPackage, XorgPackage):
     """The xlogo program simply displays the X Window System logo."""
 
-    homepage = "https://cgit.freedesktop.org/xorg/app/xlogo"
+    homepage = "https://gitlab.freedesktop.org/xorg/app/xlogo"
     xorg_mirror_path = "app/xlogo-1.0.4.tar.gz"
 
     version("1.0.6", sha256="0b0dbd90f53103b9241cc3a68c232213cec5c1d9a839604e59d128e4d81d1a4d")

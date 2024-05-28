@@ -18,7 +18,7 @@ class Libxtst(AutotoolsPackage, XorgPackage):
     The RECORD extension supports the recording and reporting of all
     core X protocol and arbitrary X extension protocol."""
 
-    homepage = "https://cgit.freedesktop.org/xorg/lib/libXtst"
+    homepage = "https://gitlab.freedesktop.org/xorg/lib/libXtst"
     xorg_mirror_path = "lib/libXtst-1.2.2.tar.gz"
 
     license("MIT")

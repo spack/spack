@@ -9,7 +9,7 @@ from spack.package import *
 class Xcursorgen(AutotoolsPackage, XorgPackage):
     """xcursorgen prepares X11 cursor sets for use with libXcursor."""
 
-    homepage = "https://cgit.freedesktop.org/xorg/app/xcursorgen"
+    homepage = "https://gitlab.freedesktop.org/xorg/app/xcursorgen"
     xorg_mirror_path = "app/xcursorgen-1.0.6.tar.gz"
 
     version("1.0.8", sha256="b8bb2756918343b8bc15a4ce875e9efb6c4e7777adba088280e53dd09753b6ac")

@@ -12,7 +12,7 @@ class Xstdcmap(AutotoolsPackage, XorgPackage):
     create standard colormap definitions in order to facilitate sharing of
     scarce colormap resources among clients using PseudoColor visuals."""
 
-    homepage = "https://cgit.freedesktop.org/xorg/app/xstdcmap"
+    homepage = "https://gitlab.freedesktop.org/xorg/app/xstdcmap"
     xorg_mirror_path = "app/xstdcmap-1.0.3.tar.gz"
 
     version("1.0.5", sha256="70bd5909d6f1b4d9b038593f72ce70b0095a6f773e1dd8059136bbeb021b8771")

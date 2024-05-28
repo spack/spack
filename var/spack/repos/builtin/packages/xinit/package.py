@@ -11,7 +11,7 @@ class Xinit(AutotoolsPackage, XorgPackage):
     first client program on systems that are not using a display manager
     such as xdm."""
 
-    homepage = "https://cgit.freedesktop.org/xorg/app/xinit"
+    homepage = "https://gitlab.freedesktop.org/xorg/app/xinit"
     xorg_mirror_path = "app/xinit-1.3.4.tar.gz"
 
     license("MIT")
