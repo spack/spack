@@ -1,8 +1,8 @@
 diff --git a/openmp/libomptarget/plugins/amdgpu/impl/hsa_api.h b/openmp/libomptarget/plugins/amdgpu/impl/hsa_api.h
-index a293bdc83d14..f7812c80ad3e 100644
+index a293bdc83d14..c23d0c90d682 100644
 --- a/openmp/libomptarget/plugins/amdgpu/impl/hsa_api.h
 +++ b/openmp/libomptarget/plugins/amdgpu/impl/hsa_api.h
-@@ -8,7 +8,15 @@
+@@ -8,7 +8,17 @@
  #ifndef AMDGPU_HSA_API_H_INCLUDED
  #define AMDGPU_HSA_API_H_INCLUDED
  
@@ -14,7 +14,9 @@ index a293bdc83d14..f7812c80ad3e 100644
  #include "hsa.h"
  #include "hsa_ext_amd.h"
 +#endif
++#else
 +#include "hsa/hsa.h"
++#include "hsa/hsa_ext_amd.h"
 +#endif
  
  #endif
