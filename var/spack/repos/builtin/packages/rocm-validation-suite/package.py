@@ -53,6 +53,9 @@ class RocmValidationSuite(CMakePackage):
         when="@5.6",
     )
     patch("008-correcting-library-and-include-path-WITHOUT-RVS-BUILD-TESTS.patch", when="@5.7")
+
+    # Replacing ROCM_PATH with corresponding package prefix path.
+    # Adding missing package package prefix paths.
     patch("009-replacing-rocm-path-with-package-path.patch", when="@6.0")
     patch("009-replacing-rocm-path-with-package-path-6.1.patch", when="@6.1")
     depends_on("cmake@3.5:", type="build")
