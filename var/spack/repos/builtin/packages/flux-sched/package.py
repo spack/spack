@@ -74,7 +74,7 @@ class FluxSched(CMakePackage, AutotoolsPackage):
     depends_on("yaml-cpp@0.6.3")
     depends_on("uuid")
     depends_on("pkgconfig")
-    requires("%gcc@9.4:") 
+    requires("%gcc@9.4:")
     depends_on("py-sphinx@1.6.3:", when="+docs", type="build")
 
     depends_on("flux-core", type=("build", "link", "run"))
