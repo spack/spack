@@ -161,7 +161,7 @@ class Whizard(AutotoolsPackage):
         if "+openloops" in spec:
             args.append(f"--with-openloops={spec['openloops'].prefix}")
         if "+openmp" in spec:
-            args.append(f"--enable-fc-openmp")
+            args.append("--enable-fc-openmp")
         return args
 
     def url_for_version(self, version):
