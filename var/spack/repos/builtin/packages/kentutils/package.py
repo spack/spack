@@ -12,13 +12,13 @@ class Kentutils(MakefilePackage):
     homepage = "https://genome.cse.ucsc.edu/"
     url = "https://hgdownload.cse.ucsc.edu/admin/exe/userApps.archive/userApps.v453.src.tgz"
 
-    version("459", sha256="0b6e89a183e6385c713cf010a7aeead9da6626d8d2f78c363a4f1bc56ccccebb")
-    # The above archive only goes back to v305. v302 is left for now but deprecated. Suggest
-    # this is dropped on next update (v302 is from 2014!) and the `requires()` removed.
+    version("465", sha256="eef17b1f3182d1d9dc99b5c73a6b0468d5d3bd80470f25d3f7706cc1372e04b0")
+    version("460", sha256="b955e56ee880074521ef1ab1371491f47e66dc6fdd93b05328386dd675a635fa")
+    # This version isn't present in the archive any more
+    # Might be worth changing url to: https://github.com/ucscGenomeBrowser/kent-core/tags/...
     version(
-        "302.1",
-        commit="d8376c5d52a161f2267346ed3dc94b5dce74c2f9",
-        git="https://github.com/ENCODE-DCC/kentUtils.git",
+        "459", 
+        sha256="0b6e89a183e6385c713cf010a7aeead9da6626d8d2f78c363a4f1bc56ccccebb",
         deprecated=True,
     )
 
@@ -29,8 +29,6 @@ class Kentutils(MakefilePackage):
     depends_on("zlib-api")
     depends_on("freetype")
     depends_on("libiconv")
-
-    requires("%gcc", when="@302.1")
 
     def flag_handler(self, name, flags):
         if name == "ldflags":
