@@ -3003,11 +3003,13 @@ def test_spec_filters(specs, include, exclude, expected):
 def test_branch_based_versions_pin_to_commits(
     mock_git_version_info, database, mock_packages, monkeypatch, do_not_check_runtimes_on_reuse
 ):
-    """Check that hashes compare properly to versions"""
     repo_path, filename, commits = mock_git_version_info
     monkeypatch.setattr(
         spack.package_base.PackageBase, "git", pathlib.Path(repo_path).as_uri(), raising=False
     )
 
     spec = Spec("git-test-commit@main").concretized()
+    # assure it is not a StandardVersion post solve
     assert isinstance(spec.versions.concrete, GitVersion)
+    # last main commit was 3'rd in the list (see mock_git_version_info)
+    assert spec.format("{version}") == f"git.{commits[2]}=main"
