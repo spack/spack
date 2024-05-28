@@ -25,19 +25,19 @@ class XcbProto(AutotoolsPackage, XorgPackage):
     version(
         "1.13",
         sha256="0698e8f596e4c0dbad71d3dc754d95eb0edbb42df5464e0f782621216fa33ba7",
-        url="http://xcb.freedesktop.org/dist/xcb-proto-1.13.tar.gz",
+        url="https://xcb.freedesktop.org/dist/xcb-proto-1.13.tar.gz",
         deprecated=True,
     )
     version(
         "1.12",
         sha256="cfa49e65dd390233d560ce4476575e4b76e505a0e0bacdfb5ba6f8d0af53fd59",
-        url="http://xcb.freedesktop.org/dist/xcb-proto-1.12.tar.gz",
+        url="https://xcb.freedesktop.org/dist/xcb-proto-1.12.tar.gz",
         deprecated=True,
     )
     version(
         "1.11",
         sha256="d12152193bd71aabbdbb97b029717ae6d5d0477ab239614e3d6193cc0385d906",
-        url="http://xcb.freedesktop.org/dist/xcb-proto-1.11.tar.gz",
+        url="https://xcb.freedesktop.org/dist/xcb-proto-1.11.tar.gz",
         deprecated=True,
     )
 
