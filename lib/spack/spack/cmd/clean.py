@@ -35,13 +35,10 @@ class AllClean(argparse.Action):
 
 def setup_parser(subparser):
     subparser.add_argument(
-        "-s", "--stage", action="store_true", help="remove all temporary build stages (default)"
+        "-s", "--stage", action="store_true", help="remove all temporary build & resource stages (default)"
     )
     subparser.add_argument(
         "-d", "--downloads", action="store_true", help="remove cached downloads"
-    )
-    subparser.add_argument(
-        "-r", "--resources", action="store_true", help="remove cached resources"
     )
     subparser.add_argument(
         "-f",
@@ -99,7 +96,6 @@ def clean(parser, args):
             args.specs,
             args.stage,
             args.downloads,
-            args.resources,
             args.failures,
             args.misc_cache,
             args.python_cache,
@@ -118,16 +114,12 @@ def clean(parser, args):
             spec.package.do_clean()
 
     if args.stage:
-        tty.msg("Removing all temporary build stages")
+        tty.msg("Removing all temporary build and resource stages")
         spack.stage.purge()
 
     if args.downloads:
         tty.msg("Removing cached downloads")
         spack.caches.FETCH_CACHE.destroy()
-
-    if args.resources:
-        tty.msg("Removing cached resources")
-        spack.stage.purge_resources()
 
     if args.failures:
         tty.msg("Removing install failure marks")
