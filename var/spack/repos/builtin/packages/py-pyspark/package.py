@@ -27,9 +27,9 @@ class PyPyspark(PythonPackage):
     depends_on("py-setuptools", type="build")
     with default_args(type=("build", "run")):
         for dep, spec in [
-                ("0.10.9.5", "@3.3.0:"),
-                ("0.10.9.3", "@3.2.1"),
-                ("0.10.9", "@3.0.1:3.1.3")
+            ("0.10.9.5", "@3.3.0:"),
+            ("0.10.9.3", "@3.2.1"),
+            ("0.10.9", "@3.0.1:3.1.3"),
         ]:
             depends_on(f"py-py4j+java@{dep}", when=f"+java{spec}")
             depends_on(f"py-py4j~java@{dep}", when=f"~java{spec}")

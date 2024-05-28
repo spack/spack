@@ -18,7 +18,7 @@ class PyHail(PythonPackage):
     version(
         "0.2.130",
         sha256="c0f1f3ae52406a13eecb44ebe445be7d677d2c3b4e4e29269ecb53b7ac55168e",
-        expand=False
+        expand=False,
     )
 
     depends_on("python@3.9:", type=("build", "run"))
@@ -80,7 +80,7 @@ class PyHail(PythonPackage):
         depends_on("py-typing-extensions")
 
     def setup_run_environment(self, env):
-        #TODO: Add Spark configuration values to find HAIL Jars
-        #This would be needed if one was connecting to a Spark
-        #cluster that was started outside of HAIL
+        # TODO: Add Spark configuration values to find HAIL Jars
+        # This would be needed if one was connecting to a Spark
+        # cluster that was started outside of HAIL
         pass

@@ -4,7 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+
 from spack.package import *
+
 
 class VepCache(Package):
     """Separate installation and management for the Ensembl Variant Effect Predictor (vep)"""
@@ -39,9 +41,10 @@ class VepCache(Package):
     ]
     # We only need (and can) specify an assembly for humans
     vep_assembly_choices = [
-        assembly for species, assemblies in vep_species
-                 for assembly in assemblies
-                 if species == "homo_sapiens"
+        assembly
+        for species, assemblies in vep_species
+        for assembly in assemblies
+        if species == "homo_sapiens"
     ]
 
     @staticmethod
@@ -61,9 +64,9 @@ class VepCache(Package):
             "+indexed" if indexed else "~indexed",  # Only need the appropriate indexed version
             f"species={species}",  # Only need the requested species
             # We only need to match the specified assembly for human assemblies
-            f"assemlby={assembly}" if species == "homo_sapiens" else ""
+            f"assemlby={assembly}" if species == "homo_sapiens" else "",
         ]
-            
+
         return {
             "name": filename,
             "url": url,
@@ -72,26 +75,22 @@ class VepCache(Package):
             "expand": False,  # We'll expand this where it needs to go latere
         }
 
-
     for major, sha in vep_versions:
         version(major, sha256=sha, expand=False)
         depends_on(f"vep+installer@{major}", type="build", when=f"@{major}")
         depends_on(f"vep@{major}", type="run", when=f"@{major}")
         for species, assemblies in vep_species:
             for assembly in assemblies:
-                resource(**vep_cache_resource_args(
-                    version=major, 
-                    species=species,
-                    assembly=assembly,
-                    indexed=True,
-                ))
-                resource(**vep_cache_resource_args(
-                    version=major, 
-                    species=species,
-                    assembly=assembly,
-                    indexed=False
-                ))
-
+                resource(
+                    **vep_cache_resource_args(
+                        version=major, species=species, assembly=assembly, indexed=True
+                    )
+                )
+                resource(
+                    **vep_cache_resource_args(
+                        version=major, species=species, assembly=assembly, indexed=False
+                    )
+                )
 
     variant("installer", default=True, description="Use built-in VEP installer to download")
     variant("indexed", default=True, description="Use indexed cache")
@@ -119,7 +118,7 @@ class VepCache(Package):
 
     @property
     def vep(self):
-        return self.spec['vep'].package
+        return self.spec["vep"].package
 
     @property
     def vep_cache_path(self):
@@ -139,9 +138,9 @@ class VepCache(Package):
             cache_version = vep_version
 
         indexed = satisfies("+indexed")
-        cache_type = variants['type'].value
-        species_name = variants['species'].value
-        assembly_name = variants['assembly'].value
+        cache_type = variants["type"].value
+        species_name = variants["species"].value
+        assembly_name = variants["assembly"].value
 
         species = f"{species_name}"
         suffix = "" if cache_type == "ensembl" else f"_{cache_type}"
@@ -169,7 +168,7 @@ class VepCache(Package):
             "assembly": f"{assembly}",
             "indexed": indexed,
             "dir": cache_dir,
-            "full_path": join_path(root, cache_dir)
+            "full_path": join_path(root, cache_dir),
         }
 
     def setup_run_environment(self, env):
@@ -177,11 +176,11 @@ class VepCache(Package):
             cache = self.vep_cache_config
             env.set("VEP_OFFLINE", "1")
             env.set("VEP_CACHE", "1")
-            env.set("VEP_DIR", cache['user_root'])
-            env.set("VEP_SPECIES", cache['species'])
-            env.set("VEP_CACHE_VERSION", cache['version'])
+            env.set("VEP_DIR", cache["user_root"])
+            env.set("VEP_SPECIES", cache["species"])
+            env.set("VEP_CACHE_VERSION", cache["version"])
             if cache["assembly"] is not None:
-                env.set("VEP_ASSEMBLY", cache['assembly'])
+                env.set("VEP_ASSEMBLY", cache["assembly"])
             if cache["type"] == "refseq":
                 env.set("VEP_REFSEQ", "1")
             if cache["type"] == "merged":
@@ -192,22 +191,21 @@ class VepCache(Package):
     def cache_installer_args(self):
         cache = self.vep_cache_config
         args = [
-            "--CACHEDIR", cache['dir'],
-            "--CACHE_VERSION", cache['version'],
-            "--SPECIES", ','.join(cache['cache_species']),
+            "--CACHEDIR",
+            cache["dir"],
+            "--CACHE_VERSION",
+            cache["version"],
+            "--SPECIES",
+            ",".join(cache["cache_species"]),
         ]
-        if cache['assembly'] is not None:
-            args += ["--ASSEMBLY", cache['assembly']]
+        if cache["assembly"] is not None:
+            args += ["--ASSEMBLY", cache["assembly"]]
 
         return args
 
     def installer_args(self):
         auto = "cf" if self.spec.satisfies("+fasta") else "c"
-        args = [
-            "--AUTO", auto,
-            "--NO_UPDATE",
-            "--NO_TEST",
-        ]
+        args = ["--AUTO", auto, "--NO_UPDATE", "--NO_TEST"]
         args += self.cache_installer_args()
         return args
 
@@ -218,12 +216,9 @@ class VepCache(Package):
     @property
     def stub_file_name(self):
         cache = self.vep_cache_config
-        return "_".join([
-            ".vep-cache",
-            cache["version"],
-            cache["cache_species"],
-            cache["assembly"],
-        ])
+        return "_".join(
+            [".vep-cache", cache["version"], cache["cache_species"], cache["assembly"]]
+        )
 
     def patch(self):
         with open(self.stub_file_name, "w") as f:
@@ -245,6 +240,3 @@ class VepCache(Package):
                 tar = which("tar")
                 tar("xzvf", tarball, "-C", cache["root"])
         install(self.stub_file_name, prefix)
-
-
-

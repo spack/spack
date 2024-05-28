@@ -15,14 +15,14 @@ class PerlDbdMysql(PerlPackage):
     license("GPL-1.0-or-later OR Artistic-1.0-Perl")
 
     version(
-        "5.005", 
+        "5.005",
         sha256="1558c203b3911e273d3f83249535b312165be2ca8edba6b6c210645d769d0541",
-        url="https://cpan.metacpan.org/authors/id/D/DV/DVEEDEN/DBD-mysql-5.005.tar.gz"
+        url="https://cpan.metacpan.org/authors/id/D/DV/DVEEDEN/DBD-mysql-5.005.tar.gz",
     )
     version(
-        "4.052", 
+        "4.052",
         sha256="a83f57af7817787de0ef56fb15fdfaf4f1c952c8f32ff907153b66d2da78ff5b",
-        url="https://cpan.metacpan.org/authors/id/D/DV/DVEEDEN/DBD-mysql-4.052.tar.gz"
+        url="https://cpan.metacpan.org/authors/id/D/DV/DVEEDEN/DBD-mysql-4.052.tar.gz",
     )
 
     version(
@@ -40,7 +40,7 @@ class PerlDbdMysql(PerlPackage):
     conflicts("mariadb")
 
     def configure_args(self):
-        mysql = self.spec['mysql-client'].prefix
+        mysql = self.spec["mysql-client"].prefix
         mysql_config = mysql.bin.mysql_config
         return [
             f"--cflags=-I{mysql.include}",
