@@ -893,9 +893,7 @@ class PyclingoDriver:
         if result.satisfiable:
             # get the best model
             # TODO Pin branches here
-            builder = SpecBuilder(
-                specs, pin_branches=True, hash_lookup=setup.reusable_and_possible
-            )
+            builder = SpecBuilder(specs, hash_lookup=setup.reusable_and_possible)
             min_cost, best_model = min(models)
 
             # first check for errors
@@ -3291,7 +3289,7 @@ class SpecBuilder:
         """
         return NodeArgument(id="0", pkg=pkg)
 
-    def __init__(self, specs, pin_branches=False, hash_lookup=None):
+    def __init__(self, specs, hash_lookup=None):
         self._specs = {}
         self._result = None
         self._command_line_specs = specs
@@ -3301,7 +3299,6 @@ class SpecBuilder:
         # Pass in as arguments reusable specs and plug them in
         # from this dictionary during reconstruction
         self._hash_lookup = hash_lookup or {}
-        self._pin_branches = pin_branches
 
     def hash(self, node, h):
         if node not in self._specs:
@@ -3376,12 +3373,11 @@ class SpecBuilder:
             )
 
     def version(self, node, version):
-        if self._pin_branches:
-            pkg = self._specs[node].package_class
-            branch = self._associated_branch(version, pkg)
-            if branch:
-                hash = self._retrieve_latest_git_hash(branch, pkg)
-                version = f"git.{hash}={version}"
+        pkg = self._specs[node].package_class
+        branch = self._associated_branch(version, pkg)
+        if branch:
+            hash = self._retrieve_latest_git_hash(branch, pkg)
+            version = f"git.{hash}={version}"
         self._specs[node].versions = vn.VersionList([vn.Version(version)])
 
     def node_compiler_version(self, node, compiler, version):
