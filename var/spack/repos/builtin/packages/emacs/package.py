@@ -43,6 +43,7 @@ class Emacs(AutotoolsPackage, GNUMirrorPackage):
         values=("gtk", "athena"),
         description="Select an X toolkit (gtk, athena)",
     )
+    variant("gui", default=False, description="Enable GUI build on Mac")
     variant("tls", default=True, description="Build Emacs with gnutls")
     variant("native", default=False, when="@28:", description="enable native compilation of elisp")
     variant("treesitter", default=False, when="@29:", description="Build with tree-sitter support")
@@ -91,10 +92,13 @@ class Emacs(AutotoolsPackage, GNUMirrorPackage):
         else:
             args = ["--without-x"]
 
-        # On OS X/macOS, do not build "nextstep/Emacs.app", because
-        # doing so throws an error at build-time
         if sys.platform == "darwin":
-            args.append("--without-ns")
+            if spec.satisfies("+gui"):
+                # Do not build the self-contained "nextstep/Emacs.app"
+                args.append("--disable-ns-self-contained")
+            else:
+                # Do not build "nextstep/Emacs.app" at all
+                args.append("--without-ns")
 
         args += self.with_or_without("native-compilation", variant="native")
         args += self.with_or_without("gnutls", variant="tls")
@@ -102,6 +106,15 @@ class Emacs(AutotoolsPackage, GNUMirrorPackage):
         args += self.with_or_without("json")
 
         return args
+
+    @run_after("install")
+    def move_macos_app(self):
+        """Move the Emacs.app build on MacOS to <prefix>/Applications.
+        From there users can move it or link it in ~/Applications."""
+        if sys.platform == "darwin" and "+gui" in self.spec:
+            apps_dir = join_path(self.prefix, "Applications")
+            mkdir(apps_dir)
+            move("nextstep/Emacs.app", apps_dir)
 
     def run_version_check(self, bin):
         """Runs and checks output of the installed binary."""

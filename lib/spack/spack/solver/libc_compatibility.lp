@@ -10,12 +10,13 @@
 %=============================================================================
 
 % A package cannot be reused if the libc is not compatible with it
-:- provider(node(X, LibcPackage), node(0, "libc")),
-   attr("version", node(X, LibcPackage), LibcVersion),
-   attr("hash", node(R, ReusedPackage), Hash),
-   % Libc packages can be reused without the "compatible_libc" attribute
-   ReusedPackage != LibcPackage,
-   not attr("compatible_libc", node(R, ReusedPackage), LibcPackage, LibcVersion).
+error(100, "Cannot reuse {0} since we cannot determine libc compatibility", ReusedPackage)
+  :- provider(node(X, LibcPackage), node(0, "libc")),
+     attr("version", node(X, LibcPackage), LibcVersion),
+     attr("hash", node(R, ReusedPackage), Hash),
+     % Libc packages can be reused without the "compatible_libc" attribute
+     ReusedPackage != LibcPackage,
+     not attr("compatible_libc", node(R, ReusedPackage), LibcPackage, LibcVersion).
 
 % Check whether the DAG has any built package
 has_built_packages() :- build(X), not external(X).

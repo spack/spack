@@ -314,6 +314,10 @@ def using_libc_compatibility() -> bool:
     return spack.platforms.host().name == "linux"
 
 
+def c_compiler_runs(compiler: spack.compiler.Compiler) -> bool:
+    return compiler.compiler_verbose_output is not None
+
+
 def extend_flag_list(flag_list, new_flags):
     """Extend a list of flags, preserving order and precedence.
 
@@ -1935,6 +1939,11 @@ class SpackSolverSetup:
             for virtual in virtuals:
                 clauses.append(fn.attr("virtual_on_incoming_edges", spec.name, virtual))
 
+        # If the spec is external and concrete, we allow all the libcs on the system
+        if spec.external and spec.concrete and using_libc_compatibility():
+            for libc in self.libcs:
+                clauses.append(fn.attr("compatible_libc", spec.name, libc.name, libc.version))
+
         # add all clauses from dependencies
         if transitive:
             # TODO: Eventually distinguish 2 deps on the same pkg (build and link)
@@ -2975,6 +2984,13 @@ class CompilerParser:
     def __init__(self, configuration) -> None:
         self.compilers: Set[KnownCompiler] = set()
         for c in all_compilers_in_config(configuration):
+            if using_libc_compatibility() and not c_compiler_runs(c):
+                tty.debug(
+                    f"the C compiler {c.cc} does not exist, or does not run correctly."
+                    f" The compiler {c.spec} will not be used during concretization."
+                )
+                continue
+
             if using_libc_compatibility() and not c.default_libc:
                 warnings.warn(
                     f"cannot detect libc from {c.spec}. The compiler will not be used "

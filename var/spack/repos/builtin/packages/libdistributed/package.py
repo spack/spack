@@ -17,6 +17,7 @@ class Libdistributed(CMakePackage):
     maintainers("robertu94")
 
     version("master", branch="master")
+    version("0.4.3", sha256="fbfb473ab6da18880d64a36cf2134c18938a57fe958b822606927b2132783c0d")
     version("0.4.2", sha256="ffb5e0aea2cd5ccbd7af2471059d6e70fa5ac2d6ce64fb71c6d434544c01be95")
     version("0.4.1", sha256="62bbd4cbaf396cea7f33d62d5e79086a56ee1396d070ad3c4fd9720c50d242c0")
     version("0.4.0", sha256="7895d268c4f9b5444e4378f60b5a28198720bc48633d0e5d072c39e3366b096c")

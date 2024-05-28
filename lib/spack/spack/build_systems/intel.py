@@ -846,6 +846,7 @@ class IntelPackage(Package):
             "^mpich@2:" in spec_root
             or "^cray-mpich" in spec_root
             or "^mvapich2" in spec_root
+            or "^mvapich" in spec_root
             or "^intel-mpi" in spec_root
             or "^intel-oneapi-mpi" in spec_root
             or "^intel-parallel-studio" in spec_root

@@ -31,10 +31,11 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
 
     version("master", branch="master", submodules=True)
     version(
-        "5.12.0",
-        sha256="d289afe7b48533e2ca4a39a3b48d3874bfe67cf7f37fdd2131271c57e64de20d",
+        "5.12.1",
+        sha256="927f880c13deb6dde4172f4727d2b66f5576e15237b35778344f5dd1ddec863e",
         preferred=True,
     )
+    version("5.12.0", sha256="d289afe7b48533e2ca4a39a3b48d3874bfe67cf7f37fdd2131271c57e64de20d")
     version("5.11.2", sha256="5c5d2f922f30d91feefc43b4a729015dbb1459f54c938896c123d2ac289c7a1e")
     version("5.11.1", sha256="5cc2209f7fa37cd3155d199ff6c3590620c12ca4da732ef7698dec37fa8dbb34")
     version("5.11.0", sha256="9a0b8fe8b1a2cdfd0ace9a87fa87e0ec21ee0f6f0bcb1fdde050f4f585a25165")
@@ -66,8 +67,6 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
     variant("python", default=False, description="Enable Python support", when="@5.6:")
     variant("fortran", default=False, description="Enable Fortran support")
     variant("mpi", default=True, description="Enable MPI support")
-    variant("osmesa", default=False, description="Enable OSMesa support")
-    variant("egl", default=False, description="Enable EGL in the OpenGL library being used")
     variant("qt", default=False, description="Enable Qt (gui) support")
     variant("opengl2", default=True, description="Enable OpenGL2 backend")
     variant("examples", default=False, description="Build examples")
@@ -187,16 +186,12 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
 
     depends_on("gl@3.2:", when="+opengl2")
     depends_on("gl@1.2:", when="~opengl2")
-    depends_on("glew", when="~egl")
-    depends_on("glew gl=egl", when="+egl")
+    depends_on("glew")
 
-    depends_on("osmesa", when="+osmesa")
     for p in ["linux", "cray"]:
-        depends_on("glx", when="~egl ~osmesa platform={}".format(p))
-        depends_on("libxt", when="~egl ~osmesa platform={}".format(p))
-    conflicts("+qt", when="+osmesa")
-    conflicts("+qt", when="+egl")
-    conflicts("+egl", when="+osmesa")
+        depends_on("libxt", when=f"platform={p} ^[virtuals=gl] glx")
+
+    requires("^[virtuals=gl] glx", when="+qt", msg="Qt support requires GLX")
 
     depends_on("ospray@2.1:2", when="+raytracing")
     depends_on("openimagedenoise", when="+raytracing")
@@ -307,6 +302,9 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
     # https://gitlab.kitware.com/vtk/vtk/-/merge_requests/9690
     patch("vtk-xdmf2-hdf51.13.1.patch", when="@5.8:5.10")
     patch("vtk-xdmf2-hdf51.13.2.patch", when="@5.8:5.11.0")
+    # a patch with the same name is also applied to vtk
+    # the two patches are the same but for the path to the files they patch
+    patch("vtk_alias_hdf5.patch", when="@5.9.0: platform=windows")
 
     # Fix VTK to work with external freetype using CONFIG mode for find_package
     patch("FindFreetype.cmake.patch", when="@5.10.1:")
@@ -373,7 +371,7 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
                 if self.spec["hdf5"].satisfies("@1.12:"):
                     flags.append("-DH5_USE_110_API")
 
-        return (flags, None, None)
+        return flags, None, None
 
     def setup_run_environment(self, env):
         # paraview 5.5 and later
@@ -421,19 +419,17 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
 
         def variant_bool(feature, on="ON", off="OFF"):
             """Ternary for spec variant to ON/OFF string"""
-            if feature in spec:
+            if spec.satisfies(feature):
                 return on
             return off
 
-        def nvariant_bool(feature):
-            """Negated ternary for spec variant to OFF/ON string"""
-            return variant_bool(feature, on="OFF", off="ON")
-
         def use_x11():
             """Return false if osmesa or egl are requested"""
-            if "+osmesa" in spec or "+egl" in spec:
-                return "OFF"
-            if spec.satisfies("platform=windows"):
+            if (
+                spec.satisfies("^[virtuals=gl] osmesa")
+                or spec.satisfies("^[virtuals=gl] egl")
+                or spec.satisfies("platform=windows")
+            ):
                 return "OFF"
             return "ON"
 
@@ -441,7 +437,7 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
         includes = variant_bool("+development_files")
 
         cmake_args = [
-            "-DVTK_OPENGL_HAS_OSMESA:BOOL=%s" % variant_bool("+osmesa"),
+            "-DVTK_OPENGL_HAS_OSMESA:BOOL=%s" % variant_bool("^[virtuals=gl] osmesa"),
             "-DVTK_USE_X:BOOL=%s" % use_x11(),
             "-DPARAVIEW_INSTALL_DEVELOPMENT_FILES:BOOL=%s" % includes,
             "-DBUILD_TESTING:BOOL=OFF",
@@ -450,7 +446,7 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
             self.define_from_variant("VISIT_BUILD_READER_Silo", "visitbridge"),
         ]
 
-        if "+egl" in spec:
+        if spec.satisfies("^[virtuals=gl] egl"):
             cmake_args.append("-DVTK_OPENGL_HAS_EGL:BOOL=ON")
 
         if spec.satisfies("@5.12:"):
@@ -527,7 +523,7 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
 
         # The assumed qt version changed to QT5 (as of paraview 5.2.1),
         # so explicitly specify which QT major version is actually being used
-        if "+qt" in spec:
+        if spec.satisfies("+qt"):
             cmake_args.extend(["-DPARAVIEW_QT_VERSION=%s" % spec["qt"].version[0]])
 
         if "+fortran" in spec:

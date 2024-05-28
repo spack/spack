@@ -30,7 +30,7 @@ class PyLineProfiler(PythonPackage):
     depends_on("py-cython@3.0.3:", type="build", when="@4.1.2:")
     depends_on("py-ipython@0.13:", type=("build", "run"))
     depends_on("cmake", type="build", when="@3")
-    depends_on("py-ninja", type="build", when="@3")
+    depends_on("ninja", type="build", when="@3")
     depends_on("py-scikit-build@0.9.0:", type="build", when="@3")
 
     patch("gettimeofday_py39.patch", when="@:2.1.2 ^python@3.9:")
