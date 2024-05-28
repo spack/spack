@@ -539,7 +539,7 @@ class Llvm(CMakePackage, CudaPackage, CompilerPackage):
         patch("llvm12-thread.patch", when="@12")
         patch("llvm13-14-thread.patch", when="@13:14")
         patch("llvm15-thread.patch", when="@15")
-        
+
         patch("llvm14-15-libomptarget-hsa.patch", when="@14:15")
 
     # avoid build failed with Fujitsu compiler
