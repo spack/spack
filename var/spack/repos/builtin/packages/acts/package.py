@@ -241,7 +241,9 @@ class Acts(CMakePackage, CudaPackage):
     )
     variant("fatras_geant4", default=False, description="Build Geant4 Fatras package")
     variant("geomodel", default=False, description="Build GeoModel plugin", when="@33:")
-    variant("identification", default=False, description="Build the Identification plugin", when="@:34")
+    variant(
+        "identification", default=False, description="Build the Identification plugin", when="@:34"
+    )
     variant("json", default=False, description="Build the Json plugin")
     variant("legacy", default=False, description="Build the Legacy package")
     variant("mlpack", default=False, description="Build MLpack plugin", when="@25:31")
@@ -261,7 +263,9 @@ class Acts(CMakePackage, CudaPackage):
         when="@19.3:",
     )
     variant("sycl", default=False, description="Build the SyCL plugin", when="@1:34")
-    variant("tgeo", default=False, description="Build the TGeo plugin", when="@:34 +identification")
+    variant(
+        "tgeo", default=False, description="Build the TGeo plugin", when="@:34 +identification"
+    )
     variant("tgeo", default=False, description="Build the TGeo plugin", when="@35:")
 
     # Variants that only affect Acts examples for now
