@@ -798,16 +798,7 @@ class PyclingoDriver:
         # This attribute will be reset at each call to solve
         self.control = None
 
-    def solve(
-        self,
-        setup,
-        specs,
-        reuse=None,
-        output=None,
-        control=None,
-        allow_deprecated=False,
-        pin_branches=True,
-    ):
+    def solve(self, setup, specs, reuse=None, output=None, control=None, allow_deprecated=False):
         """Set up the input and solve for dependencies of ``specs``.
 
         Arguments:
@@ -901,8 +892,10 @@ class PyclingoDriver:
 
         if result.satisfiable:
             # get the best model
-            pin = spack.config.get("concretizer:pin_git_branches")
-            builder = SpecBuilder(specs, pin_branches=pin, hash_lookup=setup.reusable_and_possible)
+            # TODO Pin branches here
+            builder = SpecBuilder(
+                specs, pin_branches=True, hash_lookup=setup.reusable_and_possible
+            )
             min_cost, best_model = min(models)
 
             # first check for errors

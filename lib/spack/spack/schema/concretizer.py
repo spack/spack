@@ -44,7 +44,6 @@ properties: Dict[str, Any] = {
                     },
                 ]
             },
-            "pin_git_branches": {"type": "boolean"},
             "enable_node_namespace": {"type": "boolean"},
             "targets": {
                 "type": "object",

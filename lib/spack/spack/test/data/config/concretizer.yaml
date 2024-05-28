@@ -1,6 +1,5 @@
 concretizer:
   reuse: True
-  pin_git_branches: True
   targets:
     granularity: microarchitectures
     host_compatible: false

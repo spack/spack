@@ -36,12 +36,6 @@ concretizer:
   # on each root spec, allowing different versions and variants of the same package in
   # an environment.
   unify: true
-  # When "true" the concretizer will fetch the latest git commit sha for any version
-  # that is paired with a git branch in the concretizer solution and pin the version and git sha together
-  # (foo@git.[sha]=[version]).  This ensures that each branch based install has provenance that distinguishes
-  # the installations directly to the git history, and it will prevent reuse vor branch based versions 
-  # unless the git sha is the same. The operation is done with `git ls-remote`.
-  pin_git_branches: true
   # Option to deal with possible duplicate nodes (i.e. different nodes from the same package) in the DAG.
   duplicates:
     # "none": allows a single node for any package in the DAG.

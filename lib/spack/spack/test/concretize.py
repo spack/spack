@@ -3001,12 +3001,7 @@ def test_spec_filters(specs, include, exclude, expected):
 
 @pytest.mark.only_clingo("Feature not implemented in the original concretizer")
 def test_branch_based_versions_pin_to_commits(
-    default_config,
-    mock_git_version_info,
-    database,
-    mock_packages,
-    monkeypatch,
-    do_not_check_runtimes_on_reuse,
+    mock_git_version_info, database, mock_packages, monkeypatch, do_not_check_runtimes_on_reuse
 ):
     """Check that hashes compare properly to versions"""
     repo_path, filename, commits = mock_git_version_info
@@ -3014,6 +3009,5 @@ def test_branch_based_versions_pin_to_commits(
         spack.package_base.PackageBase, "git", pathlib.Path(repo_path).as_uri(), raising=False
     )
 
-    assert spack.config.get("concretizer:pin_git_branches")
     spec = Spec("git-test-commit@main").concretized()
     assert isinstance(spec.versions.concrete, GitVersion)
