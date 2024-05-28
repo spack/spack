@@ -187,26 +187,58 @@ def polite_filename(filename: str) -> str:
     return _polite_antipattern().sub("_", filename)
 
 
-def getuid():
+def getuid() -> Union[str, int]:
+    """Returns os getuid on non Windows
+    On Windows returns 0 for admin users, login string otherwise
+    This is in line with behavior from get_owner_uid which
+    always returns the login string on Windows
+    """
     if sys.platform == "win32":
         import ctypes
 
+        # If not admin, use the string name of the login as a unique ID
         if ctypes.windll.shell32.IsUserAnAdmin() == 0:
-            return 1
+            return os.getlogin()
         return 0
     else:
         return os.getuid()
 
 
+def _win_rename(src, dst):
+    # os.replace will still fail if on Windows (but not POSIX) if the dst
+    # is a symlink to a directory (all other cases have parity Windows <-> Posix)
+    if os.path.islink(dst) and os.path.isdir(os.path.realpath(dst)):
+        if os.path.samefile(src, dst):
+            # src and dst are the same
+            # do nothing and exit early
+            return
+        # If dst exists and is a symlink to a directory
+        # we need to remove dst and then perform rename/replace
+        # this is safe to do as there's no chance src == dst now
+        os.remove(dst)
+    os.replace(src, dst)
+
+
+@system_path_filter
+def msdos_escape_parens(path):
+    """MS-DOS interprets parens as grouping parameters even in a quoted string"""
+    if sys.platform == "win32":
+        return path.replace("(", "^(").replace(")", "^)")
+    else:
+        return path
+
+
 @system_path_filter
 def rename(src, dst):
     # On Windows, os.rename will fail if the destination file already exists
+    # os.replace is the same as os.rename on POSIX and is MoveFileExW w/
+    # the MOVEFILE_REPLACE_EXISTING flag on Windows
+    # Windows invocation is abstracted behind additonal logic handling
+    # remaining cases of divergent behavior accross platforms
     if sys.platform == "win32":
-        # Windows path existence checks will sometimes fail on junctions/links/symlinks
-        # so check for that case
-        if os.path.exists(dst) or islink(dst):
-            os.remove(dst)
-    os.rename(src, dst)
+        _win_rename(src, dst)
+    else:
+        os.replace(src, dst)
 
 
 @system_path_filter
@@ -536,7 +568,13 @@ def exploding_archive_handler(tarball_container, stage):
 
 
 @system_path_filter(arg_slice=slice(1))
-def get_owner_uid(path, err_msg=None):
+def get_owner_uid(path, err_msg=None) -> Union[str, int]:
+    """Returns owner UID of path destination
+    On non Windows this is the value of st_uid
+    On Windows this is the login string associated with the
+     owning user.
+
+    """
     if not os.path.exists(path):
         mkdirp(path, mode=stat.S_IRWXU)
 
@@ -805,7 +843,7 @@ def copy_tree(
             if islink(s):
                 link_target = resolve_link_target_relative_to_the_link(s)
                 if symlinks:
-                    target = os.readlink(s)
+                    target = readlink(s)
                     if os.path.isabs(target):
 
                         def escaped_path(path):
@@ -1217,10 +1255,12 @@ def windows_sfn(path: os.PathLike):
     import ctypes
 
     k32 = ctypes.WinDLL("kernel32", use_last_error=True)
+    # Method with null values returns size of short path name
+    sz = k32.GetShortPathNameW(path, None, 0)
     # stub Windows types TCHAR[LENGTH]
-    TCHAR_arr = ctypes.c_wchar * len(path)
+    TCHAR_arr = ctypes.c_wchar * sz
     ret_str = TCHAR_arr()
-    k32.GetShortPathNameW(path, ret_str, len(path))
+    k32.GetShortPathNameW(path, ctypes.byref(ret_str), sz)
     return ret_str.value
 
 
@@ -2410,9 +2450,10 @@ class WindowsSimulatedRPath:
         """
         for pth in dest:
             if os.path.isfile(pth):
-                self._additional_library_dependents.add(pathlib.Path(pth).parent)
+                new_pth = pathlib.Path(pth).parent
             else:
-                self._additional_library_dependents.add(pathlib.Path(pth))
+                new_pth = pathlib.Path(pth)
+            self._additional_library_dependents.add(new_pth)
 
     @property
     def rpaths(self):
@@ -2490,8 +2531,14 @@ class WindowsSimulatedRPath:
 
         # for each binary install dir in self.pkg (i.e. pkg.prefix.bin, pkg.prefix.lib)
         # install a symlink to each dependent library
-        for library, lib_dir in itertools.product(self.rpaths, self.library_dependents):
-            self._link(library, lib_dir)
+
+        # do not rpath for system libraries included in the dag
+        # we should not be modifying libraries managed by the Windows system
+        # as this will negatively impact linker behavior and can result in permission
+        # errors if those system libs are not modifiable by Spack
+        if "windows-system" not in getattr(self.pkg, "tags", []):
+            for library, lib_dir in itertools.product(self.rpaths, self.library_dependents):
+                self._link(library, lib_dir)
 
 
 @system_path_filter

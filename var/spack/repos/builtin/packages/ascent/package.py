@@ -185,7 +185,10 @@ class Ascent(CMakePackage, CudaPackage):
     # RAJA and Umpire
     #######################
     depends_on("raja", when="+raja")
+    depends_on("raja+openmp", when="+raja +openmp")
+    depends_on("raja~openmp", when="+raja ~openmp")
     depends_on("umpire", when="+umpire")
+    depends_on("umpire@:2023.06.0", when="@:0.9.2 +umpire")
 
     #######################
     # BabelFlow
@@ -492,7 +495,7 @@ class Ascent(CMakePackage, CudaPackage):
             cfg.write("# Enable python module builds\n")
             cfg.write(cmake_cache_entry("ENABLE_PYTHON", "ON"))
             cfg.write("# python from spack \n")
-            cfg.write(cmake_cache_entry("PYTHON_EXECUTABLE", spec["python"].command.path))
+            cfg.write(cmake_cache_entry("PYTHON_EXECUTABLE", python.path))
             try:
                 cfg.write("# python module install dir\n")
                 cfg.write(cmake_cache_entry("PYTHON_MODULE_INSTALL_PREFIX", python_platlib))

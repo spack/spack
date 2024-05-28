@@ -129,7 +129,7 @@ read through it and then execute it:
 If you have to give others access, please customize the group membership of the package
 files as documented here:
 
-    https://spack.readthedocs.io/en/latest/build_settings.html#package-permissions""".format(
+    https://spack.readthedocs.io/en/latest/packages_yaml.html#package-permissions""".format(
                 perm_script_path
             )
         )

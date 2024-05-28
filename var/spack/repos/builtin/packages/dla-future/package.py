@@ -16,6 +16,7 @@ class DlaFuture(CMakePackage, CudaPackage, ROCmPackage):
 
     license("BSD-3-Clause")
 
+    version("0.4.1", sha256="ba95f26475ad68da1f3a24d091dc1b925525e269e4c83c1eaf1d37d29b526666")
     version("0.4.0", sha256="34fd0da0d1a72b6981bed0bba029ba0947e0d0d99beb3e0aad0a478095c9527d")
     version("0.3.1", sha256="350a7fd216790182aa52639a3d574990a9d57843e02b92d87b854912f4812bfe")
     version("0.3.0", sha256="9887ac0b466ca03d704a8738bc89e68550ed33509578c576390e98e76b64911b")
@@ -43,6 +44,8 @@ class DlaFuture(CMakePackage, CudaPackage, ROCmPackage):
         when="@0.2.0:",
         description="Build C API compatible with ScaLAPACK",
     )
+
+    generator("ninja")
 
     depends_on("cmake@3.22:", type="build")
     depends_on("pkgconfig", type="build")
@@ -125,8 +128,8 @@ class DlaFuture(CMakePackage, CudaPackage, ROCmPackage):
             depends_on(f"umpire cuda_arch={arch}", when=f"cuda_arch={arch}")
 
     patch(
-        "https://github.com/eth-cscs/DLA-Future/pull/1063/commits/efc9c176a7a8c512b3f37d079dec8c25ac1b7389.patch?full_index=1",
-        sha256="7f382c872d89f22da1ad499e85ffe9881cc7404c8465e42877a210a09382e2ea",
+        "https://github.com/eth-cscs/DLA-Future/commit/efc9c176a7a8c512b3f37d079dec8c25ac1b7389.patch?full_index=1",
+        sha256="f40e4a734650f56c39379717a682d00d6400a7a102d90821542652824a8f64cd",
         when="@:0.3 %gcc@13:",
     )
     # https://github.com/spack/spack/issues/41511

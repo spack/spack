@@ -12,12 +12,13 @@ import os.path
 import re
 import shutil
 import ssl
+import stat
 import sys
 import traceback
 import urllib.parse
 from html.parser import HTMLParser
 from pathlib import Path, PurePosixPath
-from typing import IO, Dict, Iterable, List, Optional, Set, Union
+from typing import IO, Dict, Iterable, List, Optional, Set, Tuple, Union
 from urllib.error import HTTPError, URLError
 from urllib.request import HTTPSHandler, Request, build_opener
 
@@ -27,9 +28,10 @@ from llnl.util.filesystem import mkdirp, rename, working_dir
 
 import spack.config
 import spack.error
+import spack.util.path
 import spack.util.url as url_util
 
-from .executable import CommandNotFoundError, which
+from .executable import CommandNotFoundError, Executable, which
 from .gcs import GCSBlob, GCSBucket, GCSHandler
 from .s3 import UrllibS3Handler, get_s3_session
 
@@ -59,6 +61,58 @@ class SpackHTTPDefaultErrorHandler(urllib.request.HTTPDefaultErrorHandler):
         raise DetailedHTTPError(req, code, msg, hdrs, fp)
 
 
+def custom_ssl_certs() -> Optional[Tuple[bool, str]]:
+    """Returns a tuple (is_file, path) if custom SSL certifates are configured and valid."""
+    ssl_certs = spack.config.get("config:ssl_certs")
+    if not ssl_certs:
+        return None
+    path = spack.util.path.substitute_path_variables(ssl_certs)
+    if not os.path.isabs(path):
+        tty.debug(f"certs: relative path not allowed: {path}")
+        return None
+    try:
+        st = os.stat(path)
+    except OSError as e:
+        tty.debug(f"certs: error checking path {path}: {e}")
+        return None
+
+    file_type = stat.S_IFMT(st.st_mode)
+
+    if file_type != stat.S_IFREG and file_type != stat.S_IFDIR:
+        tty.debug(f"certs: not a file or directory: {path}")
+        return None
+
+    return (file_type == stat.S_IFREG, path)
+
+
+def ssl_create_default_context():
+    """Create the default SSL context for urllib with custom certificates if configured."""
+    certs = custom_ssl_certs()
+    if certs is None:
+        return ssl.create_default_context()
+    is_file, path = certs
+    if is_file:
+        tty.debug(f"urllib: certs: using cafile {path}")
+        return ssl.create_default_context(cafile=path)
+    else:
+        tty.debug(f"urllib: certs: using capath {path}")
+        return ssl.create_default_context(capath=path)
+
+
+def set_curl_env_for_ssl_certs(curl: Executable) -> None:
+    """configure curl to use custom certs in a file at runtime. See:
+    https://curl.se/docs/sslcerts.html item 4"""
+    certs = custom_ssl_certs()
+    if certs is None:
+        return
+    is_file, path = certs
+    if not is_file:
+        tty.debug(f"curl: {path} is not a file: default certs will be used.")
+        return
+    tty.debug(f"curl: using CURL_CA_BUNDLE={path}")
+    curl.add_default_env("CURL_CA_BUNDLE", path)
+
+
 def _urlopen():
     s3 = UrllibS3Handler()
     gcs = GCSHandler()
@@ -66,7 +120,7 @@ def _urlopen():
 
     # One opener with HTTPS ssl enabled
     with_ssl = build_opener(
-        s3, gcs, HTTPSHandler(context=ssl.create_default_context()), error_handler
+        s3, gcs, HTTPSHandler(context=ssl_create_default_context()), error_handler
     )
 
     # One opener with HTTPS ssl disabled
@@ -206,9 +260,7 @@ def push_to_url(local_file_path, remote_path, keep_original=True, extra_args=Non
             os.remove(local_file_path)
 
     else:
-        raise NotImplementedError(
-            "Unrecognized URL scheme: {SCHEME}".format(SCHEME=remote_url.scheme)
-        )
+        raise NotImplementedError(f"Unrecognized URL scheme: {remote_url.scheme}")
 
 
 def base_curl_fetch_args(url, timeout=0):
@@ -289,6 +341,7 @@ def _curl(curl=None):
         except CommandNotFoundError as exc:
             tty.error(str(exc))
             raise spack.error.FetchError("Missing required curl fetch method")
+    set_curl_env_for_ssl_certs(curl)
     return curl
 
 
@@ -535,7 +588,7 @@ def list_url(url, recursive=False):
     if local_path:
         if recursive:
             # convert backslash to forward slash as required for URLs
-            return [str(PurePosixPath(Path(p))) for p in list(_iter_local_prefix(local_path))]
+            return [str(PurePosixPath(Path(p))) for p in _iter_local_prefix(local_path)]
         return [
             subpath
             for subpath in os.listdir(local_path)
@@ -647,6 +700,7 @@ def _spider(url: urllib.parse.ParseResult, collect_nested: bool, _visited: Set[s
             raw_link = metadata_parser.fragments.pop()
             abs_link = url_util.join(response_url, raw_link.strip(), resolve_href=True)
 
+            fragment_response_url = None
             try:
                 # This seems to be text/html, though text/fragment+html is also used
                 fragment_response_url, _, fragment_response = read_from_url(abs_link, "text/html")

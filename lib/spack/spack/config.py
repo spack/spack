@@ -107,7 +107,7 @@ CONFIG_DEFAULTS = {
 
 #: metavar to use for commands that accept scopes
 #: this is shorter and more readable than listing all choices
-SCOPES_METAVAR = "{defaults,system,site,user}[/PLATFORM] or env:ENVIRONMENT"
+SCOPES_METAVAR = "{defaults,system,site,user,command_line}[/PLATFORM] or env:ENVIRONMENT"
 
 #: Base name for the (internal) overrides scope.
 _OVERRIDES_BASE_NAME = "overrides-"
@@ -1562,8 +1562,9 @@ def ensure_latest_format_fn(section: str) -> Callable[[YamlConfigDict], bool]:
 def use_configuration(
     *scopes_or_paths: Union[ConfigScope, str]
 ) -> Generator[Configuration, None, None]:
-    """Use the configuration scopes passed as arguments within the
-    context manager.
+    """Use the configuration scopes passed as arguments within the context manager.
+
+    This function invalidates caches, and is therefore very slow.
 
     Args:
         *scopes_or_paths: scope objects or paths to be used

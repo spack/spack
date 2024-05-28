@@ -39,6 +39,7 @@ class Gftl(CMakePackage):
     version("develop", branch="develop")
     version("main", branch="main")
 
+    version("1.13.0", sha256="d8ef4bca5fb67e63dcd69e5377a0cef8336b00178a97450e79010552000d0a52")
     version("1.12.0", sha256="b50e17cb2109372819b3ee676e6e61fd3a517dc4c1ea293937c8a83f03b0cbd6")
     version("1.11.0", sha256="b28935bc077749823b1505ad8c1208360a5ba7e961d7593c17a33b11455a32a4")
     version("1.10.0", sha256="d6086e8cba2497bacdae66d301f7cdacaed9138a0055f33f8ca1b778a0cf0dc5")

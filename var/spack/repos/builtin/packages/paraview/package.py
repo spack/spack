@@ -31,13 +31,11 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
 
     version("master", branch="master", submodules=True)
     version(
-        "5.12.0-RC3", sha256="6aaa46ff295126707294482e6ba24bd0ec0d68cf6bb5f56f145f8bcc53fc3f70"
-    )
-    version(
-        "5.11.2",
-        sha256="5c5d2f922f30d91feefc43b4a729015dbb1459f54c938896c123d2ac289c7a1e",
+        "5.12.0",
+        sha256="d289afe7b48533e2ca4a39a3b48d3874bfe67cf7f37fdd2131271c57e64de20d",
         preferred=True,
     )
+    version("5.11.2", sha256="5c5d2f922f30d91feefc43b4a729015dbb1459f54c938896c123d2ac289c7a1e")
     version("5.11.1", sha256="5cc2209f7fa37cd3155d199ff6c3590620c12ca4da732ef7698dec37fa8dbb34")
     version("5.11.0", sha256="9a0b8fe8b1a2cdfd0ace9a87fa87e0ec21ee0f6f0bcb1fdde050f4f585a25165")
     version("5.10.1", sha256="520e3cdfba4f8592be477314c2f6c37ec73fb1d5b25ac30bdbd1c5214758b9c2")
@@ -209,6 +207,7 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("expat")
     depends_on("eigen@3:")
     depends_on("freetype")
+    depends_on("freetype@:2.10.2", when="@:5.8")
     # depends_on('hdf5+mpi', when='+mpi')
     # depends_on('hdf5~mpi', when='~mpi')
     depends_on("hdf5+hl+mpi", when="+hdf5+mpi")
@@ -236,8 +235,10 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("protobuf@3.4:3.18", when="@:5.10%xl")
     depends_on("protobuf@3.4:3.18", when="@:5.10%xl_r")
     # protobuf requires newer abseil-cpp, which in turn requires C++14,
-    # but paraview uses C++11 by default. Use for 5.11+ until ParaView updates
+    # but paraview uses C++11 by default. Use for 5.8+ until ParaView updates
     # its C++ standard level.
+    depends_on("protobuf@3.4:3.21", when="@5.8:%gcc")
+    depends_on("protobuf@3.4:3.21", when="@5.8:%clang")
     depends_on("protobuf@3.4:3.21", when="@5.11:")
     depends_on("protobuf@3.4:3.21", when="@master")
     depends_on("libxml2")
@@ -288,7 +289,7 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
     patch("vtkm-findmpi-downstream.patch", when="@5.9.0")
 
     # Include limits header wherever needed to fix compilation with GCC 11
-    patch("paraview-gcc11-limits.patch", when="@5.9.1 %gcc@11.1.0:")
+    patch("paraview-gcc11-limits.patch", when="@5.8:5.9 %gcc@11.1.0:")
 
     # Fix IOADIOS2 module to work with kits
     # https://gitlab.kitware.com/vtk/vtk/-/merge_requests/8653
@@ -301,10 +302,11 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
     # intel oneapi doesn't compile some code in catalyst
     patch("catalyst-etc_oneapi_fix.patch", when="@5.10.0:5.10.1%oneapi")
 
-    # Patch for paraview 5.10: +hdf5 ^hdf5@1.13.2:
+    # Patch for paraview 5.8: ^hdf5@1.13.2:
+    # Even with ~hdf5, hdf5 is part of the dependency tree due to netcdf-c
     # https://gitlab.kitware.com/vtk/vtk/-/merge_requests/9690
-    patch("vtk-xdmf2-hdf51.13.1.patch", when="@5.10.0:5.10")
-    patch("vtk-xdmf2-hdf51.13.2.patch", when="@5.10:5.11.0")
+    patch("vtk-xdmf2-hdf51.13.1.patch", when="@5.8:5.10")
+    patch("vtk-xdmf2-hdf51.13.2.patch", when="@5.8:5.11.0")
 
     # Fix VTK to work with external freetype using CONFIG mode for find_package
     patch("FindFreetype.cmake.patch", when="@5.10.1:")
@@ -313,7 +315,9 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
     # https://gitlab.kitware.com/vtk/vtk/-/merge_requests/10113
     patch("adios2-remove-deprecated-functions.patch", when="@5.10:5.11 ^adios2@2.9:")
 
-    patch("exodusII-netcdf4.9.0.patch", when="@:5.10.2")
+    patch("exodusII-netcdf4.9.0.patch", when="@5.10.0:5.10.2")
+
+    patch("kits_with_catalyst_5_12.patch", when="@5.12.0")
 
     generator("ninja", "make", default="ninja")
     # https://gitlab.kitware.com/paraview/paraview/-/issues/21223
@@ -368,6 +372,7 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
             elif self.spec.satisfies("@5.10: +hdf5"):
                 if self.spec["hdf5"].satisfies("@1.12:"):
                     flags.append("-DH5_USE_110_API")
+
         return (flags, None, None)
 
     def setup_run_environment(self, env):
