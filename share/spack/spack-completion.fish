@@ -1451,7 +1451,7 @@ complete -c spack -n '__fish_spack_using_command docs' -s h -l help -d 'show thi
 
 # spack edit
 set -g __fish_spack_optspecs_spack_edit h/help b/build-system c/command d/docs t/test m/module r/repo= N/namespace=
-complete -c spack -n '__fish_spack_using_command_pos 0 edit' -f -a '(__fish_spack_packages)'
+complete -c spack -n '__fish_spack_using_command_pos_remainder 0 edit' -f -a '(__fish_spack_packages)'
 complete -c spack -n '__fish_spack_using_command edit' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command edit' -s h -l help -d 'show this help message and exit'
 complete -c spack -n '__fish_spack_using_command edit' -s b -l build-system -f -a path
