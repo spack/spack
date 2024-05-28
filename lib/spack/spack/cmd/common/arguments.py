@@ -579,6 +579,24 @@ def add_concretizer_args(subparser):
         default=None,
         help="allow concretizer to select deprecated versions",
     )
+    subgroup.add_argument(
+        "-P",
+        "--pin",
+        action=ConfigSetAction,
+        dest="concretizer:pin_git_branches",
+        const=True,
+        default=None,
+        help="pin all git branch versions to the latest sha in the git history",
+    )
+    subgroup.add_argument(
+        "-r",
+        "--release",
+        action=ConfigSetAction,
+        dest="concretizer:pin_git_branches",
+        const=False,
+        default=None,
+        help="do not pin all git branch versions to the latest sha in the git history",
+    )
 
 
 def add_connection_args(subparser, add_help):
