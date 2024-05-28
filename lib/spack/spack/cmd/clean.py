@@ -68,7 +68,7 @@ def setup_parser(subparser):
         "-a",
         "--all",
         action=AllClean,
-        help="equivalent to -sdrfmp (does not include --bootstrap)",
+        help="equivalent to -sdfmp (does not include --bootstrap)",
         nargs=0,
     )
     arguments.add_common_arguments(subparser, ["specs"])
