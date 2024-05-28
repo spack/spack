@@ -64,7 +64,7 @@ from spack.install_test import (
     install_test_root,
 )
 from spack.installer import InstallError, PackageInstaller
-from spack.stage import DevelopStage, ResourceStage, Stage, StageComposite, compute_stage_name
+from spack.stage import DevelopStage, ResourceStage, Stage, StageComposite, compute_stage_name, resource_prefix
 from spack.util.executable import ProcessError, which
 from spack.util.package_hash import package_hash
 from spack.version import GitVersion, StandardVersion
@@ -1840,7 +1840,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, RedistributionMixin, metaclass
         return sorted(resources, key=lambda res: len(res.destination))
 
     def _resource_stage(self, resource):
-        pieces = ["resource", resource.name, self.spec.dag_hash()]
+        pieces = [resource_prefix, resource.name, self.spec.dag_hash()]
         resource_stage_folder = "-".join(pieces)
         return resource_stage_folder
 
