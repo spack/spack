@@ -143,9 +143,7 @@ def _bootstrap_config_scopes() -> Sequence["spack.config.ConfigScope"]:
 def _add_compilers_if_missing() -> None:
     arch = spack.spec.ArchSpec.frontend_arch()
     if not spack.compilers.compilers_for_arch(arch):
-        compiler_pkgs = spack.repo.PATH.packages_with_tags("compiler")
-        detected_packages = spack.detection.by_path(compiler_pkgs, max_workers=1)
-        _ = spack.detection.update_configuration(detected_packages, buildable=True)
+        spack.compilers.find_compilers()
 
 
 @contextlib.contextmanager
