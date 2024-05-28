@@ -15,9 +15,9 @@ class UtilMacros(AutotoolsPackage, XorgPackage):
     xorg_mirror_path = "util/util-macros-1.19.1.tar.xz"
 
     # note: url_for_version can only return a single url, no mirrors
-    @when("@:1.19")
     def url_for_version(self, version):
-        return self.urls[0].replace("xz", "bz2")
+        if self.spec.satisfies("@:1.19"):
+            return spack.url.substitute_version(self.urls[0].replace("xz", "bz2"), version)
 
     maintainers("robert-mijakovic", "wdconinc")
 
