@@ -3373,10 +3373,10 @@ class SpecBuilder:
             )
 
     def version(self, node, version):
-        pkg = self._specs[node].package_class
-        branch = self._associated_branch(version, pkg)
+        pkg_cls = self._specs[node].package_class
+        branch = self._associated_branch(version, pkg_cls)
         if branch:
-            hash = self._retrieve_latest_git_hash(branch, pkg)
+            hash = self._retrieve_latest_git_hash(branch, pkg_cls)
             version = f"git.{hash}={version}"
         self._specs[node].versions = vn.VersionList([vn.Version(version)])
 
