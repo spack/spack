@@ -2049,8 +2049,7 @@ class SpackSolverSetup:
             version = s.versions.concrete
 
             if version is None or (
-                not isinstance(version, vn.GitVersion)
-                and any((v == version) for v in self.possible_versions[s.name])
+                any((v == version) for v in self.possible_versions[s.name])
             ):
                 continue
 
