@@ -482,12 +482,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
             env.set("OMPI_CXX", spack_cxx)
             env.set("MPICXX_CXX", spack_cxx)
 
-    def configure_options(self, spec, prefix):
-        """Returns a list of options for configuring mfem"""
-
-        def yes_no(varstr):
-            return "YES" if varstr in self.spec else "NO"
-
+    def is_sys_lib_path(self, dir):
         # See also find_system_libraries in lib/spack/llnl/util/filesystem.py
         # where the same list of paths is used.
         sys_lib_paths = [
@@ -500,50 +495,56 @@ class Mfem(Package, CudaPackage, ROCmPackage):
             "/usr/lib/x86_64-linux-gnu",
         ]
 
-        def is_sys_lib_path(dir):
-            return dir in sys_lib_paths
+        return dir in sys_lib_paths
 
-        xcompiler = ""
-        xlinker = "-Wl,"
+    # Similar to spec[pkg].libs.ld_flags but prepends rpath flags too.
+    # Also does not add system library paths as defined by 'sys_lib_paths'
+    # above -- this is done to avoid issues like this:
+    # https://github.com/mfem/mfem/issues/1088.
+    def ld_flags_from_library_list(self, libs_list):
+        flags = [
+            "%s-rpath,%s" % (self.xlinker, dir)
+            for dir in libs_list.directories
+            if not self.is_sys_lib_path(dir)
+        ]
+        flags += ["-L%s" % dir for dir in libs_list.directories if not self.is_sys_lib_path(dir)]
+        flags += [libs_list.link_flags]
+        return " ".join(flags)
+
+    def ld_flags_from_dirs(self, pkg_dirs_list, pkg_libs_list):
+        flags = [
+            "%s-rpath,%s" % (self.xlinker, dir) for dir in pkg_dirs_list if not self.is_sys_lib_path(dir)
+        ]
+        flags += ["-L%s" % dir for dir in pkg_dirs_list if not self.is_sys_lib_path(dir)]
+        flags += ["-l%s" % lib for lib in pkg_libs_list]
+        return " ".join(flags)
+
+    def find_optional_library(self, name, prefix):
+        for shared in [True, False]:
+            for path in ["lib64", "lib"]:
+                lib = find_libraries(
+                    name, join_path(prefix, path), shared=shared, recursive=False
+                )
+                if lib:
+                    return lib
+        return LibraryList([])
+
+    xcompiler = ""
+    xlinker = "-Wl,"
+
+    def configure_options(self, spec, prefix):
+        """Returns a list of options for configuring mfem. Can be overridden/extended in a derived class"""
+
+        def yes_no(varstr):
+            return "YES" if varstr in self.spec else "NO"
+
         if "+cuda" in spec:
-            xcompiler = "-Xcompiler="
-            xlinker = "-Xlinker="
+            self.xcompiler = "-Xcompiler="
+            self.xlinker = "-Xlinker="
         cuda_arch = None if "~cuda" in spec else spec.variants["cuda_arch"].value
 
         # We need to add rpaths explicitly to allow proper export of link flags
         # from within MFEM.
-
-        # Similar to spec[pkg].libs.ld_flags but prepends rpath flags too.
-        # Also does not add system library paths as defined by 'sys_lib_paths'
-        # above -- this is done to avoid issues like this:
-        # https://github.com/mfem/mfem/issues/1088.
-        def ld_flags_from_library_list(libs_list):
-            flags = [
-                "%s-rpath,%s" % (xlinker, dir)
-                for dir in libs_list.directories
-                if not is_sys_lib_path(dir)
-            ]
-            flags += ["-L%s" % dir for dir in libs_list.directories if not is_sys_lib_path(dir)]
-            flags += [libs_list.link_flags]
-            return " ".join(flags)
-
-        def ld_flags_from_dirs(pkg_dirs_list, pkg_libs_list):
-            flags = [
-                "%s-rpath,%s" % (xlinker, dir) for dir in pkg_dirs_list if not is_sys_lib_path(dir)
-            ]
-            flags += ["-L%s" % dir for dir in pkg_dirs_list if not is_sys_lib_path(dir)]
-            flags += ["-l%s" % lib for lib in pkg_libs_list]
-            return " ".join(flags)
-
-        def find_optional_library(name, prefix):
-            for shared in [True, False]:
-                for path in ["lib64", "lib"]:
-                    lib = find_libraries(
-                        name, join_path(prefix, path), shared=shared, recursive=False
-                    )
-                    if lib:
-                        return lib
-            return LibraryList([])
 
         # Determine how to run MPI tests, e.g. when using '--test=root', when
         # Spack is run inside a batch system job.
@@ -650,7 +651,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
                 if not opt_flag_found:
                     cxxflags.append("-O2")
 
-            cxxflags = [(xcompiler + flag) for flag in cxxflags]
+            cxxflags = [(self.xcompiler + flag) for flag in cxxflags]
             if "+cuda" in spec:
                 cxxflags += [
                     "-x=cu --expt-extended-lambda -arch=sm_%s" % cuda_arch,
@@ -677,7 +678,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
         if "~static" in spec:
             options += ["STATIC=NO"]
         if "+shared" in spec:
-            options += ["SHARED=YES", "PICFLAG=%s" % (xcompiler + self.compiler.cxx_pic_flag)]
+            options += ["SHARED=YES", "PICFLAG=%s" % (self.xcompiler + self.compiler.cxx_pic_flag)]
 
         if "+mpi" in spec:
             options += ["MPICXX=%s" % spec["mpi"].mpicxx]
@@ -693,16 +694,16 @@ class Mfem(Package, CudaPackage, ROCmPackage):
                     hypre_rocm_libs += hypre["rocsparse"].libs
                 if "^rocrand" in hypre:
                     hypre_rocm_libs += hypre["rocrand"].libs
-                hypre_gpu_libs = " " + ld_flags_from_library_list(hypre_rocm_libs)
+                hypre_gpu_libs = " " + self.ld_flags_from_library_list(hypre_rocm_libs)
             options += [
                 "HYPRE_OPT=-I%s" % hypre.prefix.include,
-                "HYPRE_LIB=%s%s" % (ld_flags_from_library_list(all_hypre_libs), hypre_gpu_libs),
+                "HYPRE_LIB=%s%s" % (self.ld_flags_from_library_list(all_hypre_libs), hypre_gpu_libs),
             ]
 
         if "+metis" in spec:
             options += [
                 "METIS_OPT=-I%s" % spec["metis"].prefix.include,
-                "METIS_LIB=%s" % ld_flags_from_library_list(spec["metis"].libs),
+                "METIS_LIB=%s" % self.ld_flags_from_library_list(spec["metis"].libs),
             ]
 
         if "+lapack" in spec:
@@ -710,7 +711,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
             options += [
                 # LAPACK_OPT is not used
                 "LAPACK_LIB=%s"
-                % ld_flags_from_library_list(lapack_blas)
+                % self.ld_flags_from_library_list(lapack_blas)
             ]
 
         if "+superlu-dist" in spec:
@@ -720,18 +721,18 @@ class Mfem(Package, CudaPackage, ROCmPackage):
                 % (spec["superlu-dist"].prefix.include, spec["parmetis"].prefix.include),
                 "SUPERLU_LIB=%s %s"
                 % (
-                    ld_flags_from_dirs(
+                    self.ld_flags_from_dirs(
                         [spec["superlu-dist"].prefix.lib, spec["parmetis"].prefix.lib],
                         ["superlu_dist", "parmetis"],
                     ),
-                    ld_flags_from_library_list(lapack_blas),
+                    self.ld_flags_from_library_list(lapack_blas),
                 ),
             ]
 
         if "+strumpack" in spec:
             strumpack = spec["strumpack"]
             sp_opt = ["-I%s" % strumpack.prefix.include]
-            sp_lib = [ld_flags_from_library_list(strumpack.libs)]
+            sp_lib = [self.ld_flags_from_library_list(strumpack.libs)]
             # Parts of STRUMPACK use fortran, so we need to link with the
             # fortran library and also the MPI fortran library:
             if "~shared" in strumpack:
@@ -742,33 +743,33 @@ class Mfem(Package, CudaPackage, ROCmPackage):
                         gfortran("-print-file-name=libgfortran.%s" % libext, output=str).strip()
                     )
                     gfortran_lib = LibraryList(libfile)
-                    sp_lib += [ld_flags_from_library_list(gfortran_lib)]
+                    sp_lib += [self.ld_flags_from_library_list(gfortran_lib)]
                 if "+mpi" in strumpack:
                     mpi = strumpack["mpi"]
                     if ("^mpich" in strumpack) or ("^mvapich2" in strumpack):
-                        sp_lib += [ld_flags_from_dirs([mpi.prefix.lib], ["mpifort"])]
+                        sp_lib += [self.ld_flags_from_dirs([mpi.prefix.lib], ["mpifort"])]
                     elif "^openmpi" in strumpack:
-                        sp_lib += [ld_flags_from_dirs([mpi.prefix.lib], ["mpi_mpifh"])]
+                        sp_lib += [self.ld_flags_from_dirs([mpi.prefix.lib], ["mpi_mpifh"])]
                     elif "^spectrum-mpi" in strumpack:
-                        sp_lib += [ld_flags_from_dirs([mpi.prefix.lib], ["mpi_ibm_mpifh"])]
+                        sp_lib += [self.ld_flags_from_dirs([mpi.prefix.lib], ["mpi_ibm_mpifh"])]
             if "+openmp" in strumpack:
                 # The '+openmp' in the spec means strumpack will TRY to find
                 # OpenMP; if not found, we should not add any flags -- how do
                 # we figure out if strumpack found OpenMP?
                 if not self.spec.satisfies("%apple-clang"):
-                    sp_opt += [xcompiler + self.compiler.openmp_flag]
+                    sp_opt += [self.xcompiler + self.compiler.openmp_flag]
             if "^parmetis" in strumpack:
                 parmetis = strumpack["parmetis"]
                 sp_opt += [parmetis.headers.cpp_flags]
-                sp_lib += [ld_flags_from_library_list(parmetis.libs)]
+                sp_lib += [self.ld_flags_from_library_list(parmetis.libs)]
             if "^netlib-scalapack" in strumpack:
                 scalapack = strumpack["scalapack"]
                 sp_opt += ["-I%s" % scalapack.prefix.include]
-                sp_lib += [ld_flags_from_dirs([scalapack.prefix.lib], ["scalapack"])]
+                sp_lib += [self.ld_flags_from_dirs([scalapack.prefix.lib], ["scalapack"])]
             elif "^scalapack" in strumpack:
                 scalapack = strumpack["scalapack"]
                 sp_opt += [scalapack.headers.cpp_flags]
-                sp_lib += [ld_flags_from_library_list(scalapack.libs)]
+                sp_lib += [self.ld_flags_from_library_list(scalapack.libs)]
             if "+butterflypack" in strumpack:
                 bp = strumpack["butterflypack"]
                 sp_opt += ["-I%s" % bp.prefix.include]
@@ -778,14 +779,14 @@ class Mfem(Package, CudaPackage, ROCmPackage):
                     shared=("+shared" in bp),
                     recursive=True,
                 )
-                sp_lib += [ld_flags_from_library_list(bp_libs)]
+                sp_lib += [self.ld_flags_from_library_list(bp_libs)]
             if "+zfp" in strumpack:
                 zfp = strumpack["zfp"]
                 sp_opt += ["-I%s" % zfp.prefix.include]
                 zfp_lib = find_libraries(
                     "libzfp", zfp.prefix, shared=("+shared" in zfp), recursive=True
                 )
-                sp_lib += [ld_flags_from_library_list(zfp_lib)]
+                sp_lib += [self.ld_flags_from_library_list(zfp_lib)]
             if "+cuda" in strumpack:
                 # assuming also ('+cuda' in spec)
                 sp_lib += ["-lcusolver", "-lcublas"]
@@ -798,14 +799,14 @@ class Mfem(Package, CudaPackage, ROCmPackage):
             ss_spec = "suite-sparse:" + self.suitesparse_components
             options += [
                 "SUITESPARSE_OPT=-I%s" % spec[ss_spec].prefix.include,
-                "SUITESPARSE_LIB=%s" % ld_flags_from_library_list(spec[ss_spec].libs),
+                "SUITESPARSE_LIB=%s" % self.ld_flags_from_library_list(spec[ss_spec].libs),
             ]
 
         if "+sundials" in spec:
             sun_spec = "sundials:" + self.sundials_components
             options += [
                 "SUNDIALS_OPT=%s" % spec[sun_spec].headers.cpp_flags,
-                "SUNDIALS_LIB=%s" % ld_flags_from_library_list(spec[sun_spec].libs),
+                "SUNDIALS_LIB=%s" % self.ld_flags_from_library_list(spec[sun_spec].libs),
             ]
 
         if "+petsc" in spec:
@@ -813,7 +814,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
             if "+shared" in petsc:
                 options += [
                     "PETSC_OPT=%s" % petsc.headers.cpp_flags,
-                    "PETSC_LIB=%s" % ld_flags_from_library_list(petsc.libs),
+                    "PETSC_LIB=%s" % self.ld_flags_from_library_list(petsc.libs),
                 ]
             else:
                 options += ["PETSC_DIR=%s" % petsc.prefix]
@@ -822,7 +823,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
             slepc = spec["slepc"]
             options += [
                 "SLEPC_OPT=%s" % slepc.headers.cpp_flags,
-                "SLEPC_LIB=%s" % ld_flags_from_library_list(slepc.libs),
+                "SLEPC_LIB=%s" % self.ld_flags_from_library_list(slepc.libs),
             ]
 
         if "+pumi" in spec:
@@ -843,16 +844,16 @@ class Mfem(Package, CudaPackage, ROCmPackage):
             pumi_dep_zoltan = ""
             pumi_dep_parmetis = ""
             if "+zoltan" in spec["pumi"]:
-                pumi_dep_zoltan = ld_flags_from_dirs([spec["zoltan"].prefix.lib], ["zoltan"])
+                pumi_dep_zoltan = self.ld_flags_from_dirs([spec["zoltan"].prefix.lib], ["zoltan"])
                 if "+parmetis" in spec["zoltan"]:
-                    pumi_dep_parmetis = ld_flags_from_dirs(
+                    pumi_dep_parmetis = self.ld_flags_from_dirs(
                         [spec["parmetis"].prefix.lib], ["parmetis"]
                     )
             options += [
                 "PUMI_OPT=-I%s" % spec["pumi"].prefix.include,
                 "PUMI_LIB=%s %s %s"
                 % (
-                    ld_flags_from_dirs([spec["pumi"].prefix.lib], pumi_libs),
+                    self.ld_flags_from_dirs([spec["pumi"].prefix.lib], pumi_libs),
                     pumi_dep_zoltan,
                     pumi_dep_parmetis,
                 ),
@@ -861,16 +862,16 @@ class Mfem(Package, CudaPackage, ROCmPackage):
         if "+gslib" in spec:
             options += [
                 "GSLIB_OPT=-I%s" % spec["gslib"].prefix.include,
-                "GSLIB_LIB=%s" % ld_flags_from_dirs([spec["gslib"].prefix.lib], ["gs"]),
+                "GSLIB_LIB=%s" % self.ld_flags_from_dirs([spec["gslib"].prefix.lib], ["gs"]),
             ]
 
         if "+netcdf" in spec:
-            lib_flags = ld_flags_from_dirs([spec["netcdf-c"].prefix.lib], ["netcdf"])
+            lib_flags = self.ld_flags_from_dirs([spec["netcdf-c"].prefix.lib], ["netcdf"])
             hdf5 = spec["hdf5:hl"]
             if hdf5.satisfies("~shared"):
                 hdf5_libs = hdf5.libs
                 hdf5_libs += LibraryList(find_system_libraries("libdl"))
-                lib_flags += " " + ld_flags_from_library_list(hdf5_libs)
+                lib_flags += " " + self.ld_flags_from_library_list(hdf5_libs)
             options += [
                 "NETCDF_OPT=-I%s" % spec["netcdf-c"].prefix.include,
                 "NETCDF_LIB=%s" % lib_flags,
@@ -882,35 +883,35 @@ class Mfem(Package, CudaPackage, ROCmPackage):
             else:
                 options += [
                     "ZLIB_OPT=-I%s" % spec["zlib-api"].prefix.include,
-                    "ZLIB_LIB=%s" % ld_flags_from_library_list(spec["zlib-api"].libs),
+                    "ZLIB_LIB=%s" % self.ld_flags_from_library_list(spec["zlib-api"].libs),
                 ]
 
         if "+mpfr" in spec:
             options += [
                 "MPFR_OPT=-I%s" % spec["mpfr"].prefix.include,
-                "MPFR_LIB=%s" % ld_flags_from_dirs([spec["mpfr"].prefix.lib], ["mpfr"]),
+                "MPFR_LIB=%s" % self.ld_flags_from_dirs([spec["mpfr"].prefix.lib], ["mpfr"]),
             ]
 
         if "+gnutls" in spec:
             options += [
                 "GNUTLS_OPT=-I%s" % spec["gnutls"].prefix.include,
-                "GNUTLS_LIB=%s" % ld_flags_from_dirs([spec["gnutls"].prefix.lib], ["gnutls"]),
+                "GNUTLS_LIB=%s" % self.ld_flags_from_dirs([spec["gnutls"].prefix.lib], ["gnutls"]),
             ]
 
         if "+libunwind" in spec:
             libunwind = spec["unwind"]
             headers = find_headers("libunwind", libunwind.prefix.include)
             headers.add_macro("-g")
-            libs = find_optional_library("libunwind", libunwind.prefix)
+            libs = self.find_optional_library("libunwind", libunwind.prefix)
             # When mfem uses libunwind, it also needs 'libdl'.
             libs += LibraryList(find_system_libraries("libdl"))
             options += [
                 "LIBUNWIND_OPT=%s" % headers.cpp_flags,
-                "LIBUNWIND_LIB=%s" % ld_flags_from_library_list(libs),
+                "LIBUNWIND_LIB=%s" % self.ld_flags_from_library_list(libs),
             ]
 
         if "+openmp" in spec:
-            options += ["OPENMP_OPT=%s" % (xcompiler + self.compiler.openmp_flag)]
+            options += ["OPENMP_OPT=%s" % (self.xcompiler + self.compiler.openmp_flag)]
 
         if "+cuda" in spec:
             options += [
@@ -920,19 +921,19 @@ class Mfem(Package, CudaPackage, ROCmPackage):
             # Check if we are using a CUDA installation where the math libs are
             # in a separate directory:
             culibs = ["libcusparse"]
-            cuda_libs = find_optional_library(culibs, spec["cuda"].prefix)
+            cuda_libs = self.find_optional_library(culibs, spec["cuda"].prefix)
             if not cuda_libs:
                 p0 = os.path.realpath(join_path(spec["cuda"].prefix, "bin", "nvcc"))
                 p0 = os.path.dirname(p0)
                 p1 = os.path.dirname(p0)
                 while p1 != p0:
-                    cuda_libs = find_optional_library(culibs, join_path(p1, "math_libs"))
+                    cuda_libs = self.find_optional_library(culibs, join_path(p1, "math_libs"))
                     if cuda_libs:
                         break
                     p0, p1 = p1, os.path.dirname(p1)
                 if not cuda_libs:
                     raise InstallError("Required CUDA libraries not found: %s" % culibs)
-                options += ["CUDA_LIB=%s" % ld_flags_from_library_list(cuda_libs)]
+                options += ["CUDA_LIB=%s" % self.ld_flags_from_library_list(cuda_libs)]
 
         if "+rocm" in spec:
             amdgpu_target = ",".join(spec.variants["amdgpu_target"].value)
@@ -973,12 +974,12 @@ class Mfem(Package, CudaPackage, ROCmPackage):
             if hip_headers:
                 options += ["HIP_OPT=%s" % hip_headers.cpp_flags]
             if hip_libs:
-                options += ["HIP_LIB=%s" % ld_flags_from_library_list(hip_libs)]
+                options += ["HIP_LIB=%s" % self.ld_flags_from_library_list(hip_libs)]
 
         if "+occa" in spec:
             options += [
                 "OCCA_OPT=-I%s" % spec["occa"].prefix.include,
-                "OCCA_LIB=%s" % ld_flags_from_dirs([spec["occa"].prefix.lib], ["occa"]),
+                "OCCA_LIB=%s" % self.ld_flags_from_dirs([spec["occa"].prefix.lib], ["occa"]),
             ]
 
         if "+raja" in spec:
@@ -990,10 +991,10 @@ class Mfem(Package, CudaPackage, ROCmPackage):
             if raja.satisfies("^camp"):
                 camp = raja["camp"]
                 raja_opt += " -I%s" % camp.prefix.include
-                raja_lib += find_optional_library("libcamp", camp.prefix)
+                raja_lib += self.find_optional_library("libcamp", camp.prefix)
             options += [
                 "RAJA_OPT=%s" % raja_opt,
-                "RAJA_LIB=%s" % ld_flags_from_library_list(raja_lib),
+                "RAJA_LIB=%s" % self.ld_flags_from_library_list(raja_lib),
             ]
 
         if "+amgx" in spec:
@@ -1001,7 +1002,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
             if "+shared" in amgx:
                 options += [
                     "AMGX_OPT=-I%s" % amgx.prefix.include,
-                    "AMGX_LIB=%s" % ld_flags_from_library_list(amgx.libs),
+                    "AMGX_LIB=%s" % self.ld_flags_from_library_list(amgx.libs),
                 ]
             else:
                 options += ["AMGX_DIR=%s" % amgx.prefix]
@@ -1009,13 +1010,13 @@ class Mfem(Package, CudaPackage, ROCmPackage):
         if "+libceed" in spec:
             options += [
                 "CEED_OPT=-I%s" % spec["libceed"].prefix.include,
-                "CEED_LIB=%s" % ld_flags_from_dirs([spec["libceed"].prefix.lib], ["ceed"]),
+                "CEED_LIB=%s" % self.ld_flags_from_dirs([spec["libceed"].prefix.lib], ["ceed"]),
             ]
 
         if "+umpire" in spec:
             options += [
                 "UMPIRE_OPT=-I%s" % spec["umpire"].prefix.include,
-                "UMPIRE_LIB=%s" % ld_flags_from_library_list(spec["umpire"].libs),
+                "UMPIRE_LIB=%s" % self.ld_flags_from_library_list(spec["umpire"].libs),
             ]
 
         timer_ids = {"std": "0", "posix": "2", "mac": "4", "mpi": "6"}
@@ -1061,14 +1062,14 @@ class Mfem(Package, CudaPackage, ROCmPackage):
 
             options += [
                 "CONDUIT_OPT=%s" % conduit_opt_flags,
-                "CONDUIT_LIB=%s" % ld_flags_from_library_list(libs),
+                "CONDUIT_LIB=%s" % self.ld_flags_from_library_list(libs),
             ]
 
         if "+fms" in spec:
             libfms = spec["libfms"]
             options += [
                 "FMS_OPT=%s" % libfms.headers.cpp_flags,
-                "FMS_LIB=%s" % ld_flags_from_library_list(libfms.libs),
+                "FMS_LIB=%s" % self.ld_flags_from_library_list(libfms.libs),
             ]
 
         if "+ginkgo" in spec:
@@ -1099,10 +1100,10 @@ class Mfem(Package, CudaPackage, ROCmPackage):
                 if raja.satisfies("^camp"):
                     camp = raja["camp"]
                     hiop_hdrs += camp.headers
-                    hiop_libs += find_optional_library("libcamp", camp.prefix)
+                    hiop_libs += self.find_optional_library("libcamp", camp.prefix)
             options += [
                 "HIOP_OPT=%s" % hiop_hdrs.cpp_flags,
-                "HIOP_LIB=%s" % ld_flags_from_library_list(hiop_libs),
+                "HIOP_LIB=%s" % self.ld_flags_from_library_list(hiop_libs),
             ]
 
         if "+mumps" in spec:
@@ -1110,10 +1111,10 @@ class Mfem(Package, CudaPackage, ROCmPackage):
             mumps_opt = ["-I%s" % mumps.prefix.include]
             if "+openmp" in mumps:
                 if not self.spec.satisfies("%apple-clang"):
-                    mumps_opt += [xcompiler + self.compiler.openmp_flag]
+                    mumps_opt += [self.xcompiler + self.compiler.openmp_flag]
             options += [
                 "MUMPS_OPT=%s" % " ".join(mumps_opt),
-                "MUMPS_LIB=%s" % ld_flags_from_library_list(mumps.libs),
+                "MUMPS_LIB=%s" % self.ld_flags_from_library_list(mumps.libs),
             ]
 
         return options
