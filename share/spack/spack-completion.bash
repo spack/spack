@@ -761,7 +761,7 @@ _spack_compiler() {
 _spack_compiler_find() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --mixed-toolchain --no-mixed-toolchain --scope"
+        SPACK_COMPREPLY="-h --help --mixed-toolchain --no-mixed-toolchain --scope -j --jobs"
     else
         SPACK_COMPREPLY=""
     fi
@@ -770,7 +770,7 @@ _spack_compiler_find() {
 _spack_compiler_add() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --mixed-toolchain --no-mixed-toolchain --scope"
+        SPACK_COMPREPLY="-h --help --mixed-toolchain --no-mixed-toolchain --scope -j --jobs"
     else
         SPACK_COMPREPLY=""
     fi
