@@ -2571,9 +2571,12 @@ class TestConcretize:
         assert sombrero["externaltool"].dag_hash() == external_spec.dag_hash()
 
     @pytest.mark.only_clingo("Original concretizer cannot reuse")
-    def test_cannot_reuse_host_incompatible_libc(self, mutable_config):
+    def test_cannot_reuse_host_incompatible_libc(self):
         """Test whether reuse concretization correctly fails to reuse a spec with a host
         incompatible libc."""
+        if not spack.solver.asp.using_libc_compatibility():
+            pytest.skip("This test requires libc nodes")
+
         # We install b@1 ^glibc@2.30, and b@0 ^glibc@2.28. The former is not host compatible, the
         # latter is.
         fst = Spec("b@1").concretized()
@@ -2581,8 +2584,6 @@ class TestConcretize:
         fst.dependencies("glibc")[0].versions = VersionList(["=2.30"])
         fst._mark_concrete(True)
         snd = Spec("b@0").concretized()
-
-        mutable_config.set("concretizer:reuse", True)
 
         # The spec b@1 ^glibc@2.30 is "more optimal" than b@0 ^glibc@2.28, but due to glibc
         # incompatibility, it should not be reused.
