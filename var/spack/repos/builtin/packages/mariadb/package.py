@@ -68,7 +68,7 @@ class Mariadb(CMakePackage):
     depends_on("krb5")
 
     conflicts("%gcc@9.1.0:", when="@:5.5")
-    conflicts("%gcc@13:", when="@:10.8.8")  # https://github.com/spack/spack/issues/41377
+    conflicts("%gcc@13:", when="@:10.8.7")  # https://github.com/spack/spack/issues/41377
 
     # patch needed for cmake-3.20
     patch(
