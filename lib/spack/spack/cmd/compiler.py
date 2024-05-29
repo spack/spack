@@ -50,6 +50,7 @@ def setup_parser(subparser):
         default=lambda: spack.config.default_modify_scope("compilers"),
         help="configuration scope to modify",
     )
+    arguments.add_common_arguments(find_parser, ["jobs"])
 
     # Remove
     remove_parser = sp.add_parser("remove", aliases=["rm"], help="remove compiler by spec")
@@ -84,7 +85,7 @@ def compiler_find(args):
     if new_compilers:
         n = len(new_compilers)
         s = "s" if n > 1 else ""
-        filename = spack.config.CONFIG.get_config_filename(args.scope, "compilers")
+        filename = spack.config.CONFIG.get_config_filename(args.scope, "packages")
         tty.msg(f"Added {n:d} new compiler{s} to {filename}")
         compiler_strs = sorted(f"{c.spec}" for c in new_compilers)
         colify(reversed(compiler_strs), indent=4)
