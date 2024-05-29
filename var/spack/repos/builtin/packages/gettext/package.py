@@ -62,7 +62,7 @@ class Gettext(AutotoolsPackage, GNUMirrorPackage):
     # depends_on('cvs')
 
     conflicts("+shared~pic")
-    conflicts("%gcc4.8.5 operating_system=centos7", when="@0.22:")  # Doesn't compile in centos7 with OS gcc
+    conflicts("%gcc4.8.5 operating_system=centos7", when="@0.22:")  # c++stdlib bug in centos7
 
     patch("test-verify-parallel-make-check.patch", when="@:0.19.8.1")
     patch("nvhpc-builtin.patch", when="@:0.21.0 %nvhpc")
