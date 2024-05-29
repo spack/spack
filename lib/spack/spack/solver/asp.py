@@ -3353,30 +3353,29 @@ class SpecBuilder:
 
     def _retrieve_latest_git_hash(self, branch_name, package_class):
         # remote git operations can sometimes have banners so we must parse the output for a sha
-        query = (
-            spack.util.git.git(required=True)(
-                "ls-remote", "-h", package_class.git, branch_name, output=str, error=str
-            )
-            .strip()
-            .split()
+        query = spack.util.git.git(required=True)(
+            "ls-remote", "-h", package_class.git, branch_name, output=str, error=os.devnull
         )
-        sha = [hunk for hunk in query if bool(COMMIT_VERSION.match(hunk))]
-        if len(sha) == 1:
-            return sha[0]
-        else:
-            raise InternalConcretizerError(
-                (
-                    f"Failure to fetch git sha from {package_class.git} --branch {branch_name}. "
-                    "Confirm network via staging this package, and post a bug report if that "
-                    "succeeds."
-                )
-            )
+        sha, ref = query.strip().split()
+        assert COMMIT_VERSION.match(sha)
+        return sha
 
     def version(self, node, version):
         pkg_cls = self._specs[node].package_class
         branch = self._associated_branch(version, pkg_cls)
         if branch:
-            hash = self._retrieve_latest_git_hash(branch, pkg_cls)
+            try:
+                hash = self._retrieve_latest_git_hash(branch, pkg_cls)
+            except (ProcessError, ValueError, AssertionError):
+                raise InternalConcretizerError(
+                    (
+                        f"Failure to fetch git sha when running `git ls-remote {pkg_cls.git} {branch}`\n"
+                        "Confirm network connectivty by running this command followed by:\n"
+                        f"\t`spack fetch {pkg_cls.name}@{str(version)}`"
+                        "Post a bug report if both of these operations succeed."
+                    )
+                )
+
             version = f"git.{hash}={version}"
         self._specs[node].versions = vn.VersionList([vn.Version(version)])
 
