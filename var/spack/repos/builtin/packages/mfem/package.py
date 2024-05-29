@@ -533,7 +533,8 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     xlinker = "-Wl,"
 
     def configure_options(self, spec, prefix):
-        """Returns a list of options for configuring mfem. Can be overridden/extended in a derived class"""
+        """Returns a list of options for configuring mfem.
+        Can be overridden/extended in a derived class"""
 
         def yes_no(varstr):
             return "YES" if varstr in self.spec else "NO"
