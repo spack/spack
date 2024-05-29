@@ -852,7 +852,8 @@ class RepoPath:
 
     def get_pkg_class(self, pkg_name):
         """Find a class for the spec's package and return the class object."""
-        return self.repo_for_pkg(pkg_name).get_pkg_class(pkg_name)
+        with _switch_global_repo(self):
+            return self.repo_for_pkg(pkg_name).get_pkg_class(pkg_name)
 
     @autospec
     def dump_provenance(self, spec, path):
@@ -1405,6 +1406,16 @@ PATH: Union[RepoPath, llnl.util.lang.Singleton] = llnl.util.lang.Singleton(_path
 # Add the finder to sys.meta_path
 REPOS_FINDER = ReposFinder()
 sys.meta_path.append(REPOS_FINDER)
+
+
+@contextlib.contextmanager
+def _switch_global_repo(repository: RepoPath):
+    global PATH
+    old, PATH = PATH, repository
+    try:
+        yield repository
+    finally:
+        PATH = old
 
 
 def all_package_names(include_virtuals=False):

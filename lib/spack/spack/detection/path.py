@@ -301,19 +301,17 @@ class Finder:
         return result
 
     def find(
-        self, *, pkg_name: str, initial_guess: Optional[List[str]] = None
+        self, *, pkg_name: str, repository, initial_guess: Optional[List[str]] = None
     ) -> List[DetectedPackage]:
         """For a given package, returns a list of detected specs.
 
         Args:
             pkg_name: package being detected
-            initial_guess: initial list of paths to search from the caller
-                           if None, default paths are searched. If this
-                           is an empty list, nothing will be searched.
+            repository: repository to retrieve the package
+            initial_guess: initial list of paths to search from the caller if None, default paths
+                are searched. If this is an empty list, nothing will be searched.
         """
-        import spack.repo
-
-        pkg_cls = spack.repo.PATH.get_pkg_class(pkg_name)
+        pkg_cls = repository.get_pkg_class(pkg_name)
         patterns = self.search_patterns(pkg=pkg_cls)
         if not patterns:
             return []
@@ -401,6 +399,8 @@ def by_path(
         path_hints: initial list of paths to be searched
         max_workers: maximum number of workers to search for packages in parallel
     """
+    import spack.repo
+
     # TODO: Packages should be able to define both .libraries and .executables in the future
     # TODO: determine_spec_details should get all relevant libraries and executables in one call
     executables_finder, libraries_finder = ExecutablesFinder(), LibrariesFinder()
@@ -410,10 +410,16 @@ def by_path(
     with concurrent.futures.ProcessPoolExecutor(max_workers=max_workers) as executor:
         for pkg in packages_to_search:
             executable_future = executor.submit(
-                executables_finder.find, pkg_name=pkg, initial_guess=path_hints
+                executables_finder.find,
+                pkg_name=pkg,
+                initial_guess=path_hints,
+                repository=spack.repo.PATH,
             )
             library_future = executor.submit(
-                libraries_finder.find, pkg_name=pkg, initial_guess=path_hints
+                libraries_finder.find,
+                pkg_name=pkg,
+                initial_guess=path_hints,
+                repository=spack.repo.PATH,
             )
             detected_specs_by_package[pkg] = executable_future, library_future
 
