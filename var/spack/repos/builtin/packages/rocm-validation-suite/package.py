@@ -56,6 +56,8 @@ class RocmValidationSuite(CMakePackage):
 
     # Replacing ROCM_PATH with corresponding package prefix path.
     # Adding missing package package prefix paths.
+    # It expects rocm components headers and libraries in /opt/rocm
+    # It doesn't find package to include the library and include path without this patch.
     patch("009-replacing-rocm-path-with-package-path.patch", when="@6.0")
     patch("009-replacing-rocm-path-with-package-path-6.1.patch", when="@6.1")
     depends_on("cmake@3.5:", type="build")
