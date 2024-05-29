@@ -2440,7 +2440,7 @@ class SpackSolverSetup:
 
         if using_libc_compatibility():
             for libc in self.libcs:
-                self.gen.fact(fn.allowed_libc(libc.name, libc.version))
+                self.gen.fact(fn.host_libc(libc.name, libc.version))
 
         if not allow_deprecated:
             self.gen.fact(fn.deprecated_versions_not_allowed())
