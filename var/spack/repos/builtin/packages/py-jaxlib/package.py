@@ -7,8 +7,31 @@ import tempfile
 
 from spack.package import *
 
+rocm_dependencies = [
+    "hip",
+    "rocrand",
+    "rocblas",
+    "rocfft",
+    "hipfft",
+    "rccl",
+    "hipsparse",
+    "rocprim",
+    "llvm-amdgpu",
+    "hsa-rocr-dev",
+    "rocminfo",
+    "hipsolver",
+    "hiprand",
+    "rocsolver",
+    "hipsolver",
+    "hipblas",
+    "hipcub",
+    "rocm-core",
+    "roctracer-dev",
+    "miopen-hip",
+]
 
-class PyJaxlib(PythonPackage, CudaPackage):
+
+class PyJaxlib(PythonPackage, CudaPackage, ROCmPackage):
     """XLA library for Jax"""
 
     homepage = "https://github.com/google/jax"
@@ -20,8 +43,18 @@ class PyJaxlib(PythonPackage, CudaPackage):
     license("Apache-2.0")
     maintainers("adamjstewart")
 
+    version(
+        "0.4.28-rocm-enhanced",
+        sha256="4dd11577d4ba5a095fbc35258ddd4e4c020829ed6e6afd498c9e38ccbcdfe20b",
+        url="https://github.com/ROCm/jax/archive/refs/tags/jaxlib-v0.4.28.tar.gz",
+    )
     version("0.4.28", sha256="4dd11577d4ba5a095fbc35258ddd4e4c020829ed6e6afd498c9e38ccbcdfe20b")
     version("0.4.27", sha256="c2c82cd9ad3b395d5cbc0affa26a2938e52677a69ca8f0b9ef9922a52cac4f0c")
+    version(
+        "0.4.26-rocm-enhanced",
+        sha256="5cc3a93c1c748e640b7375236bf66372a687ee1e75bcd72e0c5d717b81ecf298",
+        url="https://github.com/ROCm/jax/archive/refs/tags/jaxlib-v0.4.26.tar.gz",
+    )
     version("0.4.26", sha256="ddc14da1eaa34f23430d40ad9b9585088575cac439a2fa1c6833a247e1b221fd")
     version("0.4.25", sha256="fc1197c401924942eb14185a61688d0c476e3e81ff71f9dc95e620b57c06eec8")
     version("0.4.24", sha256="c4e6963c2c36f634a9a1765e476a1ed4e6c4a7954465ebf72e29f344c28ddc28")
@@ -84,6 +117,11 @@ class PyJaxlib(PythonPackage, CudaPackage):
         depends_on("py-ml-dtypes@0.1:", when="@0.4.9:")
         depends_on("py-ml-dtypes@0.0.3:", when="@0.4.7:")
 
+    depends_on("py-nanobind", when="+rocm")
+
+    for pkg_dep in rocm_dependencies:
+        depends_on(f"{pkg_dep}@6.0:", when="+rocm")
+
     conflicts(
         "cuda_arch=none",
         when="+cuda",
@@ -93,6 +131,24 @@ class PyJaxlib(PythonPackage, CudaPackage):
 
     # https://github.com/google/jax/issues/19992
     conflicts("@0.4.4:", when="target=ppc64le:")
+
+    conflicts("~rocm", when="@0.4.26-rocm-enhanced,0.4.28-rocm-enhanced")
+    conflicts("+rocm", when="@:0.4.26-a,0.4.26-z:0.4.28-a,0.4.28-z:")
+
+    for d_version, d_commit, d_shasum in [
+        ("0.4.28-rocm-enhanced", "d60579f54a0b6c37d1caf11dc3eb34488cf6922a", "5f080c7cb35f05c4269c0ca553f275abe5182674e85d2edea59448885d717c7c"),
+        ("0.4.26-rocm-enhanced", "4e8e23f16bc925b6f27817de098a8e1e81296bb5", "fa6e7d17acc362b56c57c43224e6e3eca8569adae864e2fa191cc9d13edf4309"),
+    ]:
+        resource(
+            name="xla",
+            url=f"https://github.com/openxla/xla/archive/{d_commit}.tar.gz",
+            sha256=d_shasum,
+            expand=True,
+            destination="",
+            placement="xla",
+            when="+rocm",
+        )
+    patch("Find_ROCm_Components_Individiually.patch", when="+rocm")
 
     def patch(self):
         self.tmp_path = tempfile.mkdtemp(prefix="spack")
@@ -127,6 +183,17 @@ build --local_cpu_resources={make_jobs}
             string=True,
         )
 
+    def setup_build_environment(self, env):
+        spec = self.spec
+        if "+rocm" in spec:
+            env.set("TF_NEED_ROCM", "1")
+            env.set("TF_HIPBLASLT", "0")
+            env.set("MIOPEN_PATH", spec["miopen-hip"].prefix)
+            env.set("ROCTRACER_PATH", spec["roctracer-dev"].prefix)
+            for pkg_dep in rocm_dependencies:
+                pkg_dep_cap = pkg_dep.upper().replace("-", "_")
+                env.set(f"{pkg_dep_cap}_PATH", spec[pkg_dep].prefix)
+
     def install(self, spec, prefix):
         args = []
         args.append("build/build.py")
@@ -142,6 +209,12 @@ build --local_cpu_resources={make_jobs}
             "--bazel_startup_options="
             "--output_user_root={0}".format(self.wrapped_package_object.buildtmp)
         )
+        if "+rocm" in spec:
+            args.append(
+                "--bazel_options=--override_repository=xla={0}/xla".format(self.stage.source_path)
+            )
+            args.append("--enable_rocm")
+
         python(*args)
         with working_dir(self.wrapped_package_object.tmp_path):
             args = std_pip_args + ["--prefix=" + self.prefix, "."]
