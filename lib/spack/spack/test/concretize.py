@@ -2915,36 +2915,35 @@ def test_spec_filters(specs, include, exclude, expected):
     assert f.selected_specs() == expected
 
 
-@pytest.mark.only_clingo("clingo only re-use feature being tested")
+@pytest.mark.only_clingo("clingo only reuse feature being tested")
 @pytest.mark.regression("38484")
 def test_git_ref_version_can_be_reused(
     install_mockery_mutable_config, do_not_check_runtimes_on_reuse
 ):
-    first_spec = spack.spec.Spec("zlib-ng@git.2.1.5=2.1.5").concretized()
+    first_spec = spack.spec.Spec("git-ref-package@git.2.1.5=2.1.5").concretized()
     first_spec.package.do_install(fake=True, explicit=True)
 
     with spack.config.override("concretizer:reuse", True):
-        second_spec = spack.spec.Spec("zlib-ng@git.2.1.5=2.1.5~opt").concretized()
-        # is_installed(first_spec)
+        second_spec = spack.spec.Spec("git-ref-package@git.2.1.5=2.1.5~opt").concretized()
         assert second_spec.dag_hash() != first_spec.dag_hash()
 
 
-@pytest.mark.only_clingo("clingo only re-use feature being tested")
+@pytest.mark.only_clingo("clingo only reuse feature being tested")
 def test_reuse_prefers_standard_over_git_versions(
     install_mockery_mutable_config, do_not_check_runtimes_on_reuse
 ):
     """
-    order matters in this test. typically re-use would pick the last installed match
+    order matters in this test. typically reuse would pick the last installed match
     but we want to prefer the standard version over git ref based versions
-    so install git ref last and ensure it is not picked up by re-use
+    so install git ref last and ensure it is not picked up by reuse
     """
-    standard_spec = spack.spec.Spec("zlib-ng@2.1.5").concretized()
+    standard_spec = spack.spec.Spec("git-ref-package@2.1.5").concretized()
     standard_spec.package.do_install(fake=True, explicit=True)
 
-    git_spec = spack.spec.Spec("zlib-ng@git.2.1.5=2.1.5").concretized()
+    git_spec = spack.spec.Spec("git-ref-package@git.2.1.5=2.1.5").concretized()
     git_spec.package.do_install(fake=True, explicit=True)
 
     with spack.config.override("concretizer:reuse", True):
-        test_spec = spack.spec.Spec("zlib-ng@2").concretized()
+        test_spec = spack.spec.Spec("git-ref-package@2").concretized()
         assert git_spec.dag_hash() != test_spec.dag_hash()
         assert standard_spec.dag_hash() == test_spec.dag_hash()
