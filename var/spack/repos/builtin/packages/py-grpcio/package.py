@@ -51,7 +51,7 @@ class PyGrpcio(PythonPackage):
     version("1.25.0", sha256="c948c034d8997526011960db54f512756fb0b4be1b81140a15b4ef094c6594a4")
     version(
         "1.16.0",
-        sha256="d99db0b39b490d2469a8ef74197d5f211fa740fc9581dccecbb76c56d080fce1",
+        sha256="0cc5f2d3ee21c642d8982f197c83053fd3a8cbcd6a60240d8c87c6c256b10d57",
         deprecated=True,
         # Released 6ish years ago and does not install for python 3.8 with gcc11
     )
