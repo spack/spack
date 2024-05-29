@@ -111,7 +111,7 @@ class IntelOneapiMkl(IntelOneApiLibraryPackage):
         expand=False,
     )
 
-    variant("gfortran", default=False, description="Compatibility with Gnu Fortran")
+    variant("gfortran", default=False, description="Compatibility with GNU Fortran")
 
     variant("shared", default=True, description="Builds shared library")
     variant("ilp64", default=False, description="Build with ILP64 support")
