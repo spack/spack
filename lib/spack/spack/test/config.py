@@ -492,7 +492,7 @@ full_padded_string = os.path.join(os.sep + "path", os.sep.join(reps))[:MAX_PADDE
     ],
 )
 def test_parse_install_tree(config_settings, expected, mutable_config):
-    expected_root = expected[0] or spack.store.DEFAULT_INSTALL_TREE_ROOT
+    expected_root = expected[0] or mutable_config.get("config:install_tree:root")
     expected_unpadded_root = expected[1] or expected_root
     expected_proj = expected[2] or spack.directory_layout.default_projections
 
@@ -575,7 +575,7 @@ def test_change_or_add(mutable_config, mock_packages):
     ],
 )
 def test_parse_install_tree_padded(config_settings, expected, mutable_config):
-    expected_root = expected[0] or spack.store.DEFAULT_INSTALL_TREE_ROOT
+    expected_root = expected[0] or mutable_config.get("config:install_tree:root")
     expected_unpadded_root = expected[1] or expected_root
     expected_proj = expected[2] or spack.directory_layout.default_projections
 
@@ -761,25 +761,20 @@ def test_internal_config_from_data():
     assert config.get("config:checksum", scope="higher") is True
 
 
-def test_keys_are_ordered():
+def test_keys_are_ordered(configuration_dir):
     """Test that keys in Spack YAML files retain their order from the file."""
     expected_order = (
-        "bin",
-        "man",
-        "share/man",
-        "share/aclocal",
-        "lib",
-        "lib64",
-        "include",
-        "lib/pkgconfig",
-        "lib64/pkgconfig",
-        "share/pkgconfig",
-        "",
+        "./bin",
+        "./man",
+        "./share/man",
+        "./share/aclocal",
+        "./lib/pkgconfig",
+        "./lib64/pkgconfig",
+        "./share/pkgconfig",
+        "./",
     )
 
-    config_scope = spack.config.ConfigScope(
-        "modules", os.path.join(spack.paths.test_path, "data", "config")
-    )
+    config_scope = spack.config.ConfigScope("modules", configuration_dir.join("site"))
 
     data = config_scope.get_section("modules")
 
