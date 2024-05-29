@@ -513,7 +513,9 @@ class Mfem(Package, CudaPackage, ROCmPackage):
 
     def ld_flags_from_dirs(self, pkg_dirs_list, pkg_libs_list):
         flags = [
-            "%s-rpath,%s" % (self.xlinker, dir) for dir in pkg_dirs_list if not self.is_sys_lib_path(dir)
+            "%s-rpath,%s" % (self.xlinker, dir)
+            for dir in pkg_dirs_list
+            if not self.is_sys_lib_path(dir)
         ]
         flags += ["-L%s" % dir for dir in pkg_dirs_list if not self.is_sys_lib_path(dir)]
         flags += ["-l%s" % lib for lib in pkg_libs_list]
@@ -522,9 +524,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     def find_optional_library(self, name, prefix):
         for shared in [True, False]:
             for path in ["lib64", "lib"]:
-                lib = find_libraries(
-                    name, join_path(prefix, path), shared=shared, recursive=False
-                )
+                lib = find_libraries(name, join_path(prefix, path), shared=shared, recursive=False)
                 if lib:
                     return lib
         return LibraryList([])
@@ -697,7 +697,8 @@ class Mfem(Package, CudaPackage, ROCmPackage):
                 hypre_gpu_libs = " " + self.ld_flags_from_library_list(hypre_rocm_libs)
             options += [
                 "HYPRE_OPT=-I%s" % hypre.prefix.include,
-                "HYPRE_LIB=%s%s" % (self.ld_flags_from_library_list(all_hypre_libs), hypre_gpu_libs),
+                "HYPRE_LIB=%s%s"
+                % (self.ld_flags_from_library_list(all_hypre_libs), hypre_gpu_libs),
             ]
 
         if "+metis" in spec:
