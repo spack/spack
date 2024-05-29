@@ -128,7 +128,6 @@ class Vtk(CMakePackage):
     patch("vtk_alias_hdf5.patch", when="@9: platform=windows")
     patch("vtk_findproj_config.patch", when="platform=windows")
     depends_on("libxt", when="^[virtuals=gl] glx platform=linux")
-    depends_on("libxt", when="^[virtuals=gl] glx platform=cray")
 
     # VTK will need Qt5OpenGL, and qt needs '-opengl' for that
     depends_on("qt+opengl", when="+qt")

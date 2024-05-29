@@ -293,7 +293,6 @@ class Curl(NMakePackage, AutotoolsPackage):
         description="Build shared libs, static libs or both",
     )
 
-    conflicts("platform=cray", when="tls=secure_transport", msg="Only supported on macOS")
     conflicts("platform=linux", when="tls=secure_transport", msg="Only supported on macOS")
 
     depends_on("gnutls", when="tls=gnutls")

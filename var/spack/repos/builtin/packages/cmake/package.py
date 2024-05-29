@@ -422,7 +422,6 @@ class Cmake(Package):
     depends_on("ninja", when="platform=windows")
     depends_on("gmake", when="platform=linux")
     depends_on("gmake", when="platform=darwin")
-    depends_on("gmake", when="platform=cray")
     depends_on("gmake", when="platform=freebsd")
 
     # We default ownlibs to true because it greatly speeds up the CMake
