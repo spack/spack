@@ -136,8 +136,16 @@ class PyJaxlib(PythonPackage, CudaPackage, ROCmPackage):
     conflicts("+rocm", when="@:0.4.26-a,0.4.26-z:0.4.28-a,0.4.28-z:")
 
     for d_version, d_commit, d_shasum in [
-        ("0.4.28-rocm-enhanced", "d60579f54a0b6c37d1caf11dc3eb34488cf6922a", "5f080c7cb35f05c4269c0ca553f275abe5182674e85d2edea59448885d717c7c"),
-        ("0.4.26-rocm-enhanced", "4e8e23f16bc925b6f27817de098a8e1e81296bb5", "fa6e7d17acc362b56c57c43224e6e3eca8569adae864e2fa191cc9d13edf4309"),
+        (
+            "0.4.28-rocm-enhanced",
+            "d60579f54a0b6c37d1caf11dc3eb34488cf6922a",
+            "5f080c7cb35f05c4269c0ca553f275abe5182674e85d2edea59448885d717c7c",
+        ),
+        (
+            "0.4.26-rocm-enhanced",
+            "4e8e23f16bc925b6f27817de098a8e1e81296bb5",
+            "fa6e7d17acc362b56c57c43224e6e3eca8569adae864e2fa191cc9d13edf4309",
+        ),
     ]:
         resource(
             name="xla",
