@@ -5,6 +5,8 @@
 
 from os.path import dirname, isdir
 
+from llnl.util import tty
+
 from spack.package import *
 
 
@@ -208,8 +210,11 @@ class IntelOneapiMkl(IntelOneApiLibraryPackage):
         # cmake for the library list and they have to be consistent.
         # https://github.com/spack/spack/pull/43673 for discussion
         if self.spec.satisfies("+gfortran"):
+            depends_on("fortran", type="build")
             libs.append(self._xlp64_lib("libmkl_gf"))
         else:
+            if self.spec.satisfies("^[virtuals=fortran-rt] gcc-runtime"):
+                tty.warn("Use intel-oneapi-mkl +gfortran for GNU Fortran support")
             libs.append(self._xlp64_lib("libmkl_intel"))
 
         if self.spec.satisfies("threads=tbb"):
