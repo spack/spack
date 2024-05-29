@@ -2570,6 +2570,7 @@ class TestConcretize:
         sombrero = result.specs[0]
         assert sombrero["externaltool"].dag_hash() == external_spec.dag_hash()
 
+    @pytest.mark.only_clingo("Original concretizer cannot reuse")
     def test_cannot_reuse_host_incompatible_libc(self, mutable_config):
         """Test whether reuse concretization correctly fails to reuse a spec with a host
         incompatible libc."""
