@@ -274,19 +274,9 @@ class Hdf5(CMakePackage):
 
     # The parallel compiler wrappers (i.e. h5pcc, h5pfc, etc.) reference MPI
     # compiler wrappers and do not need to be changed.
-    # These do not exist on Windows.
-    # Enable only for supported target platforms.
-    for spack_spec_target_platform in ["linux", "darwin", "cray"]:
-        filter_compiler_wrappers(
-            "h5cc",
-            "h5hlcc",
-            "h5fc",
-            "h5hlfc",
-            "h5c++",
-            "h5hlc++",
-            relative_root="bin",
-            when=f"platform={spack_spec_target_platform}",
-        )
+    filter_compiler_wrappers(
+        "h5cc", "h5hlcc", "h5fc", "h5hlfc", "h5c++", "h5hlc++", relative_root="bin"
+    )
 
     def url_for_version(self, version):
         url = (
