@@ -381,11 +381,7 @@ def set_compiler_environment_variables(pkg, env):
     _add_werror_handling(keep_werror, env)
 
     # Set the target parameters that the compiler will add
-    # Don't set on cray platform because the targeting module handles this
-    if spec.satisfies("platform=cray"):
-        isa_arg = ""
-    else:
-        isa_arg = spec.architecture.target.optimization_flags(compiler)
+    isa_arg = spec.architecture.target.optimization_flags(compiler)
     env.set("SPACK_TARGET_ARGS", isa_arg)
 
     # Trap spack-tracked compiler flags as appropriate.
