@@ -202,8 +202,6 @@ class Totalview(Package):
             arg_list.extend(["-platform", "linux-x86-64"])
         elif spec.target.family == "x86_64" and spec.platform == "darwin":
             arg_list.extend(["-platform", "darwin-x86"])
-        elif spec.target.family == "x86_64" and spec.platform == "cray":
-            arg_list.extend(["-platform", "linux-x86-64"])
         elif spec.target.family == "x86":
             arg_list.extend(["-platform", "linux-x86"])
         elif spec.target.family == "aarch64":

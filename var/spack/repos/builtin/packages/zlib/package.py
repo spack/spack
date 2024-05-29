@@ -106,7 +106,7 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder, SetupEnviron
                         r"\1 {0}".format(self.pkg.compiler.cc_pic_flag),
                         "Makefile",
                     )
-                if any(self.spec.satisfies("platform={0}".format(p)) for p in ["linux", "cray"]):
+                if self.spec.satisfies("platform=linux"):
                     # Without the following, the shared library will not have a soname entry.
                     # Currently, we support linux and cray platforms only.
                     filter_file(

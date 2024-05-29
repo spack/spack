@@ -149,7 +149,7 @@ class Adios2(CMakePackage, CudaPackage, ROCmPackage):
     conflicts("+rocm", when="~kokkos", msg="ADIOS2 does not support HIP without Kokkos")
     conflicts("+sycl", when="~kokkos", msg="ADIOS2 does not support SYCL without Kokkos")
 
-    for _platform in ["linux", "darwin", "cray"]:
+    for _platform in ["linux", "darwin"]:
         depends_on("pkgconfig", type="build", when=f"platform={_platform}")
         variant(
             "pic",

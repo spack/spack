@@ -97,7 +97,7 @@ class Vtk(CMakePackage):
     # Broken downstream FindMPI
     patch("vtkm-findmpi-downstream.patch", when="@9.0.0")
 
-    for plat in ["linux", "darwin", "freebsd", "cray"]:
+    for plat in ["linux", "darwin", "freebsd"]:
         # use internal FindHDF5
         patch("internal_findHDF5.patch", when=f"@:8 platform={plat}")
 
