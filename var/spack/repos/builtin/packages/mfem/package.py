@@ -482,14 +482,9 @@ class Mfem(Package, CudaPackage, ROCmPackage):
             env.set("OMPI_CXX", spack_cxx)
             env.set("MPICXX_CXX", spack_cxx)
 
-    #
-    # Note: Although MFEM does support CMake configuration, MFEM
-    # development team indicates that vanilla GNU Make is the
-    # preferred mode of configuration of MFEM and the mode most
-    # likely to be up to date in supporting *all* of MFEM's
-    # configuration options. So, don't use CMake
-    #
-    def configure(self, spec, prefix):
+    def configure_options(self, spec, prefix):
+        """Returns a list of options for configuring mfem"""
+
         def yes_no(varstr):
             return "YES" if varstr in self.spec else "NO"
 
@@ -1121,7 +1116,17 @@ class Mfem(Package, CudaPackage, ROCmPackage):
                 "MUMPS_LIB=%s" % ld_flags_from_library_list(mumps.libs),
             ]
 
-        make("config", *options, parallel=False)
+        return options
+
+    #
+    # Note: Although MFEM does support CMake configuration, MFEM
+    # development team indicates that vanilla GNU Make is the
+    # preferred mode of configuration of MFEM and the mode most
+    # likely to be up to date in supporting *all* of MFEM's
+    # configuration options. So, don't use CMake
+    #
+    def configure(self, spec, prefix):
+        make("config", *self.configure_options(spec, prefix), parallel=False)
         make("info", parallel=False)
 
     def build(self, spec, prefix):
