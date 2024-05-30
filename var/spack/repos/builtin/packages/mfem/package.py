@@ -534,52 +534,16 @@ class Mfem(Package, CudaPackage, ROCmPackage):
         def yes_no(varstr):
             return "YES" if varstr in self.spec else "NO"
 
-        # See also find_system_libraries in lib/spack/llnl/util/filesystem.py
-        # where the same list of paths is used.
-        sys_lib_paths = [
-            "/lib64",
-            "/lib",
-            "/usr/lib64",
-            "/usr/lib",
-            "/usr/local/lib64",
-            "/usr/local/lib",
-            "/usr/lib/x86_64-linux-gnu",
-        ]
-
-        def is_sys_lib_path(dir):
-            return dir in sys_lib_paths
-
-        xcompiler = ""
-        xlinker = "-Wl,"
-        if "+cuda" in spec:
-            xcompiler = "-Xcompiler="
-            xlinker = "-Xlinker="
-        cuda_arch = None if "~cuda" in spec else spec.variants["cuda_arch"].value
+        xcompiler = "" if "~cuda" in spec else "-Xcompiler="
 
         # We need to add rpaths explicitly to allow proper export of link flags
         # from within MFEM.
 
-        # Similar to spec[pkg].libs.ld_flags but prepends rpath flags too.
-        # Also does not add system library paths as defined by 'sys_lib_paths'
-        # above -- this is done to avoid issues like this:
-        # https://github.com/mfem/mfem/issues/1088.
         def ld_flags_from_library_list(libs_list):
-            flags = [
-                "%s-rpath,%s" % (xlinker, dir)
-                for dir in libs_list.directories
-                if not is_sys_lib_path(dir)
-            ]
-            flags += ["-L%s" % dir for dir in libs_list.directories if not is_sys_lib_path(dir)]
-            flags += [libs_list.link_flags]
-            return " ".join(flags)
+            return self.ld_flags_from_library_list(libs_list)
 
         def ld_flags_from_dirs(pkg_dirs_list, pkg_libs_list):
-            flags = [
-                "%s-rpath,%s" % (xlinker, dir) for dir in pkg_dirs_list if not is_sys_lib_path(dir)
-            ]
-            flags += ["-L%s" % dir for dir in pkg_dirs_list if not is_sys_lib_path(dir)]
-            flags += ["-l%s" % lib for lib in pkg_libs_list]
-            return " ".join(flags)
+            return self.ld_flags_from_dirs(pkg_dirs_list, pkg_libs_list)
 
         def find_optional_library(name, prefix):
             for shared in [True, False]:
@@ -686,6 +650,8 @@ class Mfem(Package, CudaPackage, ROCmPackage):
                 cxxstd_flag = "-std=c++" + cxxstd
             else:
                 cxxstd_flag = getattr(self.compiler, "cxx" + cxxstd + "_flag")
+
+        cuda_arch = None if "~cuda" in spec else spec.variants["cuda_arch"].value
 
         cxxflags = spec.compiler_flags["cxxflags"].copy()
 
@@ -1354,3 +1320,51 @@ class Mfem(Package, CudaPackage, ROCmPackage):
             if os.access(f, os.R_OK):
                 return FileList(f)
         return FileList(find(self.prefix, "test.mk", recursive=True))
+
+    # See also find_system_libraries in lib/spack/llnl/util/filesystem.py
+    # where the similar list of paths is used.
+    sys_lib_paths = [
+        "/lib64",
+        "/lib",
+        "/usr/lib64",
+        "/usr/lib",
+        "/usr/local/lib64",
+        "/usr/local/lib",
+        "/usr/lib/x86_64-linux-gnu",
+    ]
+
+    def is_sys_lib_path(self, dir):
+        return dir in self.sys_lib_paths
+
+    @property
+    def xlinker(self):
+        return "-Wl," if "~cuda" in self.spec else "-Xcompiler="
+
+    # Similar to spec[pkg].libs.ld_flags but prepends rpath flags too.
+    # Also does not add system library paths as defined by 'sys_lib_paths'
+    # above -- this is done to avoid issues like this:
+    # https://github.com/mfem/mfem/issues/1088.
+    def ld_flags_from_library_list(self, libs_list):
+        flags = [
+            "%s-rpath,%s" % (self.xlinker, dir)
+            for dir in libs_list.directories
+            if not self.is_sys_lib_path(dir)
+        ]
+        flags += [
+            "-L%s" % dir for dir in libs_list.directories
+            if not self.is_sys_lib_path(dir)
+        ]
+        flags += [libs_list.link_flags]
+        return " ".join(flags)
+
+    def ld_flags_from_dirs(self, pkg_dirs_list, pkg_libs_list):
+        flags = [
+            "%s-rpath,%s" % (self.xlinker, dir) for dir in pkg_dirs_list
+            if not self.is_sys_lib_path(dir)
+        ]
+        flags += [
+            "-L%s" % dir for dir in pkg_dirs_list
+            if not self.is_sys_lib_path(dir)
+        ]
+        flags += ["-l%s" % lib for lib in pkg_libs_list]
+        return " ".join(flags)
