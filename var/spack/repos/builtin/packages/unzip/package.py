@@ -28,7 +28,7 @@ class Unzip(MakefilePackage):
         cflags.append("-Wno-error=implicit-int")
         cflags.append("-DLARGE_FILE_SUPPORT")
 
-        make_args.append('LOC="{}"'.format(" ".join(cflags)))
+        make_args.append(f"LOC=\"{' '.join(cflags)}\"")
         return make_args
 
     @property
@@ -37,8 +37,8 @@ class Unzip(MakefilePackage):
         return self.get_make_args() + [target]
 
     def url_for_version(self, version):
-        return "http://downloads.sourceforge.net/infozip/unzip{0}.tar.gz".format(version.joined)
+        return f"http://downloads.sourceforge.net/infozip/unzip{version.joined}.tar.gz"
 
     @property
     def install_targets(self):
-        return self.get_make_args() + ["prefix={0}".format(self.prefix), "install"]
+        return self.get_make_args() + [f"prefix={self.prefix}", "install"]

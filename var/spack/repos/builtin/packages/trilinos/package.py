@@ -450,7 +450,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("scalapack", when="+mumps")
     depends_on("scalapack", when="+strumpack+mpi")
     depends_on("strumpack+shared", when="+strumpack")
-    depends_on("suite-sparse", when="+suite-sparse")
+    depends_on("suite-sparse@:7.3.1", when="+suite-sparse")
     depends_on("superlu-dist", when="+superlu-dist")
     depends_on("superlu@3:5.2", when="@12.18.1: +superlu")
     depends_on("superlu@3:5.1.1", when="@12.14.1 +superlu")
