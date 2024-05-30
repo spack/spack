@@ -22,10 +22,8 @@ class PyBlosc2(PythonPackage):
     depends_on("py-setuptools", type="build")
     depends_on("py-scikit-build", type="build")
     depends_on("py-cython", type="build")
-    # FIXME: why doesn't this work?
-    # depends_on("py-cmake", type="build")
     depends_on("cmake@3.11:", type="build")
-    depends_on("py-ninja", type="build")
+    depends_on("ninja", type="build")
     depends_on("py-numpy@1.20.3:", type=("build", "link", "run"))
     depends_on("py-ndindex@1.4:", when="@2.2:", type=("build", "run"))
     depends_on("py-msgpack", type=("build", "run"))

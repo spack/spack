@@ -174,18 +174,6 @@ preextend() {
     unset IFS
 }
 
-# eval this because SPACK_MANAGED_DIRS and SPACK_SYSTEM_DIRS are inputs we don't wanna loop over.
-# moving the eval inside the function would eval it every call.
-eval "\
-path_order() {
-case \"\$1\" in
-    $SPACK_MANAGED_DIRS) return 0 ;;
-    $SPACK_SYSTEM_DIRS) return 2 ;;
-    /*) return 1 ;;
-esac
-}
-"
-
 # Fail with a clear message if the input contains any bell characters.
 if eval "[ \"\${*#*${lsep}}\" != \"\$*\" ]"; then
     die "Compiler command line contains our separator ('${lsep}'). Cannot parse."
@@ -197,6 +185,18 @@ for param in $params; do
         die "Spack compiler must be run from Spack! Input '$param' is missing."
     fi
 done
+
+# eval this because SPACK_MANAGED_DIRS and SPACK_SYSTEM_DIRS are inputs we don't wanna loop over.
+# moving the eval inside the function would eval it every call.
+eval "\
+path_order() {
+case \"\$1\" in
+    $SPACK_MANAGED_DIRS) return 0 ;;
+    $SPACK_SYSTEM_DIRS) return 2 ;;
+    /*) return 1 ;;
+esac
+}
+"
 
 # Check if optional parameters are defined
 # If we aren't asking for debug flags, don't add them
@@ -755,7 +755,7 @@ esac
 
 # Linker flags
 case "$mode" in
-    ld|ccld)
+    ccld)
         extend spack_flags_list SPACK_LDFLAGS
         ;;
 esac

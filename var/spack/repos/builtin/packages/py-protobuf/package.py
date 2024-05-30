@@ -17,6 +17,8 @@ class PyProtobuf(PythonPackage):
     homepage = "https://developers.google.com/protocol-buffers/"
     pypi = "protobuf/protobuf-3.11.0.tar.gz"
 
+    version("5.26.1", sha256="8ca2a1d97c290ec7b16e4e5dff2e5ae150cc1582f55b5ab300d45cb0dfa90e51")
+    version("4.25.3", sha256="25b5d0b42fd000320bd7830b349e3b696435f3b329810427a6bcce6a5492cc5c")
     version("4.24.3", sha256="12e9ad2ec079b833176d2921be2cb24281fa591f0b119b208b788adc48c2561d")
     version("4.23.3", sha256="7a92beb30600332a52cdadbedb40d33fd7c8a0d7f549c440347bc606fb3fe34b")
     version("4.21.9", sha256="61f21493d96d2a77f9ca84fefa105872550ab5ef71d21c458eb80edcf4885a99")
@@ -42,6 +44,7 @@ class PyProtobuf(PythonPackage):
     version("3.15.6", sha256="2b974519a2ae83aa1e31cff9018c70bbe0e303a46a598f982943c49ae1d4fcd3")
     version("3.15.5", sha256="be8a929c6178bb6cbe9e2c858be62fa08966a39ae758a8493a88f0ed1efb6097")
     version("3.15.1", sha256="824dbae3390fcc3ea1bf96748e6da951a601802894cf7e1465e72b4732538cab")
+    version("3.13.0", sha256="6a82e0c8bb2bf58f606040cc5814e07715b2094caeba281e2e7d0b0e2e397db5")
     version("3.12.2", sha256="49ef8ab4c27812a89a76fa894fe7a08f42f2147078392c0dee51d4a444ef6df5")
     version("3.11.2", sha256="3d7a7d8d20b4e7a8f63f62de2d192cfd8b7a53c56caba7ece95367ca2b80c574")
     version("3.11.1", sha256="aecdf12ef6dc7fd91713a6da93a86c2f2a8fe54840a3b1670853a2b7402e77c9")
@@ -75,6 +78,7 @@ class PyProtobuf(PythonPackage):
         depends_on(f"protobuf@3.{ver}", when=f"@3.{ver}+cpp")
 
     conflicts("+cpp", when="^python@3.11:")
+    conflicts("%gcc@14", when="@:4.24.3")
 
     @property
     def build_directory(self):

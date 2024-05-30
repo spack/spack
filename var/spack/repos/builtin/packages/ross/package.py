@@ -17,6 +17,7 @@ class Ross(CMakePackage):
 
     version("develop", branch="develop")
     version("master", branch="master")
+    version("8.0.0", sha256="5339c9afcf77821fb6ebbcd93b8a1e651c7883e94dff250528815a08f84f1694")
     version("7.2.0", sha256="c937f4c7baa1918b6cd08f4eafae8cab44eddcd4aaa1175c23ff8562583ad726")
     version("7.1.1", sha256="550e3288cefedcbc7e6ca16cfbee0477b70399d63e94f554b60b32d714029722")
     version("7.1.0", sha256="478063f36d96466faef3db3cc15e1c0e1a8b60b9152fcce0eedf367be8252733")
@@ -32,8 +33,8 @@ class Ross(CMakePackage):
         args = []
 
         args.append("-DBUILD_SHARED_LIBS=ON")
-        args.append("-DARCH=%s" % self.spec.target)
-        args.append("-DCMAKE_C_COMPILER=%s" % self.spec["mpi"].mpicc)
-        args.append("-DCMAKE_CXX_COMPILER=%s" % self.spec["mpi"].mpicxx)
+        args.append(f"-DARCH={self.spec.target}")
+        args.append(f"-DCMAKE_C_COMPILER={self.spec['mpi'].mpicc}")
+        args.append(f"-DCMAKE_CXX_COMPILER={self.spec['mpi'].mpicxx}")
 
         return args

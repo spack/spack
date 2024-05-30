@@ -8,7 +8,6 @@ import itertools
 import os
 import platform
 import re
-import shlex
 import shutil
 import sys
 import tempfile
@@ -21,6 +20,7 @@ from llnl.util.filesystem import path_contains_subdirectory, paths_containing_li
 
 import spack.compilers
 import spack.error
+import spack.schema.environment
 import spack.spec
 import spack.util.executable
 import spack.util.libc
@@ -180,21 +180,6 @@ def _parse_non_system_link_dirs(string: str) -> List[str]:
     # a system directory as a subdirectory
     link_dirs = filter_system_paths(link_dirs)
     return list(p for p in link_dirs if not in_system_subdirectory(p))
-
-
-def _parse_dynamic_linker(output: str):
-    """Parse -dynamic-linker /path/to/ld.so from compiler output"""
-    for line in reversed(output.splitlines()):
-        if "-dynamic-linker" not in line:
-            continue
-        args = shlex.split(line)
-
-        for idx in reversed(range(1, len(args))):
-            arg = args[idx]
-            if arg == "-dynamic-linker" or args == "--dynamic-linker":
-                return args[idx + 1]
-            elif arg.startswith("--dynamic-linker=") or arg.startswith("-dynamic-linker="):
-                return arg.split("=", 1)[1]
 
 
 def in_system_subdirectory(path):
@@ -452,7 +437,7 @@ class Compiler:
         if not output:
             return None
 
-        dynamic_linker = _parse_dynamic_linker(output)
+        dynamic_linker = spack.util.libc.parse_dynamic_linker(output)
 
         if not dynamic_linker:
             return None
@@ -699,8 +684,8 @@ class Compiler:
 
     @contextlib.contextmanager
     def compiler_environment(self):
-        # yield immediately if no modules
-        if not self.modules:
+        # Avoid modifying os.environ if possible.
+        if not self.modules and not self.environment:
             yield
             return
 
@@ -710,20 +695,12 @@ class Compiler:
         try:
             # load modules and set env variables
             for module in self.modules:
-                # On cray, mic-knl module cannot be loaded without cce module
-                # See: https://github.com/spack/spack/issues/3153
-                if os.environ.get("CRAY_CPU_TARGET") == "mic-knl":
-                    spack.util.module_cmd.load_module("cce")
                 spack.util.module_cmd.load_module(module)
 
             # apply other compiler environment changes
-            env = spack.util.environment.EnvironmentModifications()
-            env.extend(spack.schema.environment.parse(self.environment))
-            env.apply_modifications()
+            spack.schema.environment.parse(self.environment).apply_modifications()
 
             yield
-        except BaseException:
-            raise
         finally:
             # Restore environment regardless of whether inner code succeeded
             os.environ.clear()

@@ -20,6 +20,7 @@ class SpanLite(CMakePackage):
 
     license("BSL-1.0")
 
+    version("0.11.0", sha256="ef4e028e18ff21044da4b4641ca1bc8a2e2d656e2028322876c0e1b9b6904f9d")
     version("0.10.3", sha256="04ac8148760369f11d4cdbc7969d66cb3d372357b6b5c7744841a60551ccb50b")
     version("0.9.2", sha256="7562802aac9b78e0140c3d59933cf4dc5825c0712c63daad2f7fff8c67e62eb4")
     version("0.8.1", sha256="2136dba54988c16b03f7c652ea977205bf624bfde90c24331177027d6529386d")
@@ -33,7 +34,7 @@ class SpanLite(CMakePackage):
     def cmake_args(self):
         return [
             "-DSPAN_LITE_EXPORT_PACKAGE=ON",
-            "-DSPAN_LITE_OPT_BUILD_TESTS=%s" % ("ON" if self.run_tests else "OFF"),
+            f"-DSPAN_LITE_OPT_BUILD_TESTS={'ON' if self.run_tests else 'OFF'}",
             "-DSPAN_LITE_OPT_BUILD_EXAMPLES=OFF",
         ]
 

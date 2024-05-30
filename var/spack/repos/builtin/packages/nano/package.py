@@ -16,6 +16,8 @@ class Nano(AutotoolsPackage):
 
     license("GPL-3.0-or-later")
 
+    # 8.x
+    version("8.0", sha256="c17f43fc0e37336b33ee50a209c701d5beb808adc2d9f089ca831b40539c9ac4")
     # 7.x
     version("7.2", sha256="86f3442768bd2873cec693f83cdf80b4b444ad3cc14760b74361474fc87a4526")
     # 6.x
@@ -80,6 +82,7 @@ class Nano(AutotoolsPackage):
     version("2.6.2", sha256="22f79cc635458e0c0d110d211576f1edc03b112a62d73b914826a46547a6ac27")
     version("2.6.1", sha256="45721fa6d6128068895ad71a6967ff7398d11b064b3f888e5073c97a2b6e9a81")
 
+    depends_on("pkgconfig", type="build")
     depends_on("ncurses")
 
     def url_for_version(self, version):

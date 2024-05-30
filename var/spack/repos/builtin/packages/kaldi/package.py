@@ -7,6 +7,8 @@ import os
 from fnmatch import fnmatch
 from os.path import join
 
+from llnl.util.symlink import readlink
+
 from spack.package import *
 
 
@@ -105,7 +107,7 @@ class Kaldi(Package):  # Does not use Autotools
                 for name in files:
                     if name.endswith("." + dso_suffix):
                         fpath = join(root, name)
-                        src = os.readlink(fpath)
+                        src = readlink(fpath)
                         install(src, prefix.lib)
 
             for root, dirs, files in os.walk("."):
