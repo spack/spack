@@ -24,7 +24,6 @@ class MSBuildPackage(spack.package_base.PackageBase):
     build_system("msbuild")
     conflicts("platform=linux", when="build_system=msbuild")
     conflicts("platform=darwin", when="build_system=msbuild")
-    conflicts("platform=cray", when="build_system=msbuild")
 
 
 @spack.builder.builder("msbuild")

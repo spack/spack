@@ -287,7 +287,7 @@ class Qt(Package):
         "fj": ("clang",),
         "gcc": ("g++",),
     }
-    platform_mapping = {"darwin": ("macx"), "cray": ("linux")}
+    platform_mapping = {"darwin": ("macx")}
 
     def url_for_version(self, version):
         # URL keeps getting more complicated with every release
