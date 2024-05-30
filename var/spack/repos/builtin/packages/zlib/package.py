@@ -108,7 +108,6 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder, SetupEnviron
                     )
                 if self.spec.satisfies("platform=linux"):
                     # Without the following, the shared library will not have a soname entry.
-                    # Currently, we support linux and cray platforms only.
                     filter_file(
                         r"^(LDSHARED *= *).*$",
                         # Note that we should use '-Wl,` and not self.pkg.compiler.linker_arg
