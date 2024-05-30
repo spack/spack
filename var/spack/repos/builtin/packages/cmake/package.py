@@ -422,7 +422,6 @@ class Cmake(Package):
     depends_on("ninja", when="platform=windows")
     depends_on("gmake", when="platform=linux")
     depends_on("gmake", when="platform=darwin")
-    depends_on("gmake", when="platform=cray")
     depends_on("gmake", when="platform=freebsd")
 
     # We default ownlibs to true because it greatly speeds up the CMake
@@ -469,7 +468,7 @@ class Cmake(Package):
     with when("~ownlibs"):
         depends_on("expat")
         # expat/zlib are used in CMake/CTest, so why not require them in libarchive.
-        for plat in ["darwin", "cray", "linux"]:
+        for plat in ["darwin", "linux"]:
             with when("platform=%s" % plat):
                 depends_on("libarchive@3.1.0: xar=expat compression=zlib")
                 depends_on("libarchive@3.3.3:", when="@3.15.0:")

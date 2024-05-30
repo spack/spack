@@ -250,9 +250,6 @@ class Tau(Package):
         if "+x86_64" in spec:
             options.append("-arch=x86_64")
 
-        if ("platform=cray" in self.spec) and ("+x86_64" not in spec):
-            options.append("-arch=craycnl")
-
         if "+pdt" in spec:
             options.append("-pdt=%s" % spec["pdt"].prefix)
             if spec["pdt"].satisfies("%intel"):

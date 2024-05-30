@@ -31,7 +31,6 @@ class Re2c(Package):
 
     depends_on("cmake", when="platform=windows")
     depends_on("gmake", when="platform=linux")
-    depends_on("gmake", when="platform=cray")
     depends_on("gmake", when="platform=darwin")
     depends_on("gmake", when="platform=freebsd")
 
