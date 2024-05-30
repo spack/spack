@@ -76,18 +76,14 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
         when="@1.12: platform=darwin",
     )
     variant("nccl", default=True, description="Use NCCL", when="+cuda platform=linux")
-    variant("nccl", default=True, description="Use NCCL", when="+cuda platform=cray")
     variant("nccl", default=True, description="Use NCCL", when="+rocm platform=linux")
-    variant("nccl", default=True, description="Use NCCL", when="+rocm platform=cray")
     # Requires AVX2: https://discuss.pytorch.org/t/107518
     variant("nnpack", default=True, description="Use NNPACK", when="target=x86_64_v3:")
     variant("numa", default=True, description="Use NUMA", when="platform=linux")
-    variant("numa", default=True, description="Use NUMA", when="platform=cray")
     variant("numpy", default=True, description="Use NumPy")
     variant("openmp", default=True, description="Use OpenMP for parallel code")
     variant("qnnpack", default=True, description="Use QNNPACK (quantized 8-bit operators)")
     variant("valgrind", default=True, description="Use Valgrind", when="@1.8: platform=linux")
-    variant("valgrind", default=True, description="Use Valgrind", when="@1.8: platform=cray")
     variant("xnnpack", default=True, description="Use XNNPACK", when="@1.5:")
     variant("mkldnn", default=True, description="Use MKLDNN")
     variant("distributed", default=not is_darwin, description="Use distributed")

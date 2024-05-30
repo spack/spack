@@ -187,9 +187,7 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("gl@3.2:", when="+opengl2")
     depends_on("gl@1.2:", when="~opengl2")
     depends_on("glew")
-
-    for p in ["linux", "cray"]:
-        depends_on("libxt", when=f"platform={p} ^[virtuals=gl] glx")
+    depends_on("libxt", when="platform=linux ^[virtuals=gl] glx")
 
     requires("^[virtuals=gl] glx", when="+qt", msg="Qt support requires GLX")
 

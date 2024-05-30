@@ -384,33 +384,16 @@ class Mvapich2(AutotoolsPackage):
         env.set("MPICH_FC", dependent_module.spack_fc)
 
     def setup_compiler_environment(self, env):
-        # For Cray MPIs, the regular compiler wrappers *are* the MPI wrappers.
-        # Cray MPIs always have cray in the module name, e.g. "cray-mvapich"
-        if self.spec.satisfies("platform=cray") and spack_cc is not None:
-            env.set("MPICC", spack_cc)
-            env.set("MPICXX", spack_cxx)
-            env.set("MPIF77", spack_fc)
-            env.set("MPIF90", spack_fc)
-        else:
-            env.set("MPICC", join_path(self.prefix.bin, "mpicc"))
-            env.set("MPICXX", join_path(self.prefix.bin, "mpicxx"))
-            env.set("MPIF77", join_path(self.prefix.bin, "mpif77"))
-            env.set("MPIF90", join_path(self.prefix.bin, "mpif90"))
+        env.set("MPICC", join_path(self.prefix.bin, "mpicc"))
+        env.set("MPICXX", join_path(self.prefix.bin, "mpicxx"))
+        env.set("MPIF77", join_path(self.prefix.bin, "mpif77"))
+        env.set("MPIF90", join_path(self.prefix.bin, "mpif90"))
 
     def setup_dependent_package(self, module, dependent_spec):
-        # For Cray MPIs, the regular compiler wrappers *are* the MPI wrappers.
-        # Cray MPIs always have cray in the module name, e.g. "cray-mvapich"
-        if self.spec.satisfies("platform=cray") and spack_cc is not None:
-            self.spec.mpicc = spack_cc
-            self.spec.mpicxx = spack_cxx
-            self.spec.mpifc = spack_fc
-            self.spec.mpif77 = spack_f77
-        else:
-            self.spec.mpicc = join_path(self.prefix.bin, "mpicc")
-            self.spec.mpicxx = join_path(self.prefix.bin, "mpicxx")
-            self.spec.mpifc = join_path(self.prefix.bin, "mpif90")
-            self.spec.mpif77 = join_path(self.prefix.bin, "mpif77")
-
+        self.spec.mpicc = join_path(self.prefix.bin, "mpicc")
+        self.spec.mpicxx = join_path(self.prefix.bin, "mpicxx")
+        self.spec.mpifc = join_path(self.prefix.bin, "mpif90")
+        self.spec.mpif77 = join_path(self.prefix.bin, "mpif77")
         self.spec.mpicxx_shared_libs = [
             os.path.join(self.prefix.lib, "libmpicxx.{0}".format(dso_suffix)),
             os.path.join(self.prefix.lib, "libmpi.{0}".format(dso_suffix)),

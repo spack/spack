@@ -1024,7 +1024,7 @@ class Openmpi(AutotoolsPackage, CudaPackage):
             config_args.extend(self.with_or_without("fabrics"))
 
         if spec.satisfies("@2.0.0:"):
-            if "fabrics=xpmem platform=cray" in spec:
+            if "fabrics=xpmem" in spec:
                 config_args.append("--with-cray-xpmem")
             else:
                 config_args.append("--without-cray-xpmem")

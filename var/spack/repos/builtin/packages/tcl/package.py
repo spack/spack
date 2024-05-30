@@ -56,7 +56,8 @@ class Tcl(AutotoolsPackage, NMakePackage, SourceforgePackage, TclHelper):
 
     depends_on("zlib-api")
 
-    filter_compiler_wrappers("tclConfig.sh", relative_root="lib")
+    if sys.platform != "win32":
+        filter_compiler_wrappers("tclConfig.sh", relative_root="lib")
 
     build_system("autotools", "nmake")
     patch("tcl-quote-cc-path.patch", when="platform=windows")

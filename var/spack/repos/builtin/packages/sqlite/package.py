@@ -54,7 +54,7 @@ class Sqlite(AutotoolsPackage, NMakePackage):
     # is enabled, see https://blade.tencent.com/magellan/index_en.html
 
     # no hard readline dep on Windows + no variant support, makefile has minimal to no options
-    for plat in ["linux", "darwin", "cray", "freebsd"]:
+    for plat in ["linux", "darwin", "freebsd"]:
         variant(
             "column_metadata",
             default=True,

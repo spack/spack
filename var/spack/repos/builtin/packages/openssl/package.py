@@ -396,7 +396,6 @@ class Openssl(Package):  # Uses Fake Autotools, should subclass Package
     depends_on("nasm", when="platform=windows")
 
     depends_on("gmake", type="build", when="platform=linux")
-    depends_on("gmake", type="build", when="platform=cray")
     depends_on("gmake", type="build", when="platform=darwin")
 
     patch(

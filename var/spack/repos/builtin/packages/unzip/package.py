@@ -20,11 +20,6 @@ class Unzip(MakefilePackage):
     # There is no problem with it on gcc, so make it a catch all
     patch("configure-cflags.patch")
 
-    # The Cray cc wrapper doesn't handle the '-s' flag (strip) cleanly.
-    @when("platform=cray")
-    def patch(self):
-        filter_file(r"^LFLAGS2=.*", "LFLAGS2=", join_path("unix", "configure"))
-
     def get_make_args(self):
         make_args = ["-f", join_path("unix", "Makefile")]
 

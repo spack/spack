@@ -221,7 +221,6 @@ class FontUtil(AutotoolsPackage, XorgPackage):
             when="fonts=" + f,
         )
 
-        conflicts("fonts=font-bh-ttf", when="platform=cray")
         conflicts("fonts=font-bh-ttf", when="arch=linux-rhel7-broadwell")
 
         if f != "font-bh-ttf":

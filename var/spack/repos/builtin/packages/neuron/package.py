@@ -157,10 +157,7 @@ class Neuron(CMakePackage):
 
         spec = self.spec
 
-        if "cray" in spec.architecture:
-            cc_compiler = "cc"
-            cxx_compiler = "CC"
-        elif spec.satisfies("+mpi"):
+        if spec.satisfies("+mpi"):
             cc_compiler = spec["mpi"].mpicc
             cxx_compiler = spec["mpi"].mpicxx
         else:

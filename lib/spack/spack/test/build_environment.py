@@ -556,24 +556,6 @@ def test_build_jobs_defaults():
     )
 
 
-def test_dirty_disable_module_unload(config, mock_packages, working_env, mock_module_cmd):
-    """Test that on CRAY platform 'module unload' is not called if the 'dirty'
-    option is on.
-    """
-    s = spack.spec.Spec("a").concretized()
-
-    # If called with "dirty" we don't unload modules, so no calls to the
-    # `module` function on Cray
-    spack.build_environment.setup_package(s.package, dirty=True)
-    assert not mock_module_cmd.calls
-
-    # If called without "dirty" we unload modules on Cray
-    spack.build_environment.setup_package(s.package, dirty=False)
-    assert mock_module_cmd.calls
-    assert any(("unload", "cray-libsci") == item[0] for item in mock_module_cmd.calls)
-    assert any(("unload", "cray-mpich") == item[0] for item in mock_module_cmd.calls)
-
-
 class TestModuleMonkeyPatcher:
     def test_getting_attributes(self, default_mock_concretization):
         s = default_mock_concretization("libelf")

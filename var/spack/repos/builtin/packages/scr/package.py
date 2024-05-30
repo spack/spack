@@ -302,9 +302,6 @@ class Scr(CMakePackage):
             # PDSH required before this point
             args.append(self.define("WITH_PDSH_PREFIX", spec["pdsh"].prefix))
 
-            if "platform=cray" in spec:
-                args.append(self.define("SCR_LINK_STATIC", False))
-
         return args
 
     @run_after("install")

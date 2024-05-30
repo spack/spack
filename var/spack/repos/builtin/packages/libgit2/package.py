@@ -90,7 +90,6 @@ class Libgit2(CMakePackage):
     # Runtime Dependencies
     depends_on("libssh2", when="+ssh")
     depends_on("openssl", when="https=system platform=linux")
-    depends_on("openssl", when="https=system platform=cray")
     depends_on("openssl", when="https=openssl")
     depends_on("curl", when="+curl")
     depends_on("pcre", when="@0.99:")
@@ -105,7 +104,7 @@ class Libgit2(CMakePackage):
     def cmake_args(self):
         args = []
         if "https=system" in self.spec:
-            if "platform=linux" in self.spec or "platform=cray" in self.spec:
+            if "platform=linux" in self.spec:
                 args.append("-DUSE_HTTPS=OpenSSL")
             elif "platform=darwin" in self.spec:
                 args.append("-DUSE_HTTPS=SecureTransport")

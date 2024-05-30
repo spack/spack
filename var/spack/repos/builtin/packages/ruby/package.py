@@ -37,7 +37,7 @@ class Ruby(AutotoolsPackage, NMakePackage):
 
     build_system("autotools", "nmake", default="autotools")
 
-    for _platform_condition in ("platform=linux", "platform=darwin", "platform=cray"):
+    for _platform_condition in ("platform=linux", "platform=darwin"):
         with when(_platform_condition):
             variant("openssl", default=True, description="Enable OpenSSL support")
             variant("readline", default=False, description="Enable Readline support")

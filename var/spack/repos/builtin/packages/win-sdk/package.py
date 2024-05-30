@@ -55,7 +55,7 @@ class WinSdk(Package):
 
     # For now we don't support Windows development env
     # on other platforms
-    for plat in ["linux", "darwin", "cray"]:
+    for plat in ["linux", "darwin"]:
         conflicts("platform=%s" % plat)
 
     @classmethod

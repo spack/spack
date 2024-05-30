@@ -2,15 +2,11 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import os
 import platform
-import sys
 
 import pytest
 
 import archspec.cpu
-
-import llnl.util.filesystem as fs
 
 import spack.compilers
 import spack.concretize
@@ -25,9 +21,8 @@ def current_host_platform():
     """Return the platform of the current host as detected by the
     'platform' stdlib package.
     """
-    if os.path.exists("/opt/cray/pe"):
-        current_platform = spack.platforms.Cray()
-    elif "Linux" in platform.system():
+    current_platform = None
+    if "Linux" in platform.system():
         current_platform = spack.platforms.Linux()
     elif "Darwin" in platform.system():
         current_platform = spack.platforms.Darwin()
@@ -222,28 +217,3 @@ def test_concretize_target_ranges(root_target_range, dep_target_range, result, m
     with spack.concretize.disable_compiler_existence_check():
         spec.concretize()
     assert spec.target == spec["b"].target == result
-
-
-@pytest.mark.parametrize(
-    "versions,default,expected",
-    [
-        (["21.11", "21.9"], "21.11", False),
-        (["21.11", "21.9"], "21.9", True),
-        (["21.11", "21.9"], None, False),
-    ],
-)
-@pytest.mark.skipif(sys.platform == "win32", reason="Cray does not use windows")
-def test_cray_platform_detection(versions, default, expected, tmpdir, monkeypatch, working_env):
-    ex_path = str(tmpdir.join("fake_craype_dir"))
-    fs.mkdirp(ex_path)
-
-    with fs.working_dir(ex_path):
-        for version in versions:
-            fs.touch(version)
-        if default:
-            os.symlink(default, "default")
-
-    monkeypatch.setattr(spack.platforms.cray, "_ex_craype_dir", ex_path)
-    os.environ["MODULEPATH"] = "/opt/cray/pe"
-
-    assert spack.platforms.cray.Cray.detect() == expected

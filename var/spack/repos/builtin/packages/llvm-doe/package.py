@@ -183,7 +183,6 @@ class LlvmDoe(CMakePackage, CudaPackage):
 
     # code signing is only necessary on macOS",
     conflicts("+code_signing", when="platform=linux")
-    conflicts("+code_signing", when="platform=cray")
 
     conflicts(
         "+code_signing",
@@ -547,7 +546,7 @@ class LlvmDoe(CMakePackage, CudaPackage):
         if self.compiler.name == "gcc":
             cmake_args.append(define("GCC_INSTALL_PREFIX", self.compiler.prefix))
 
-        # if spec.satisfies("platform=cray") or spec.satisfies("platform=linux"):
+        # if spec.satisfies("platform=linux"):
         #     cmake_args.append("-DCMAKE_BUILD_WITH_INSTALL_RPATH=1")
 
         if self.spec.satisfies("~code_signing platform=darwin"):

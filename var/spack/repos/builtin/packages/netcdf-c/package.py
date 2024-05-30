@@ -164,7 +164,7 @@ class NetcdfC(CMakePackage, AutotoolsPackage):
 
     # The man files are included in the release tarballs starting version 4.5.0 but they are not
     # needed for the Windows platform:
-    for __p in ["darwin", "cray", "linux"]:
+    for __p in ["darwin", "linux"]:
         with when("platform={0}".format(__p)):
             # It is possible to install the package with CMake and without M4 on a non-Windows
             # platform but some of the man files will not be installed in that case (even if they
@@ -250,7 +250,7 @@ class NetcdfC(CMakePackage, AutotoolsPackage):
     depends_on("zlib@1.2.5:", when="^[virtuals=zlib-api] zlib")
 
     # Use the vendored bzip2 on Windows:
-    for __p in ["darwin", "cray", "linux"]:
+    for __p in ["darwin", "linux"]:
         depends_on("bzip2", when="@4.9.0:+shared platform={0}".format(__p))
     del __p
 
