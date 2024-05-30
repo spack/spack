@@ -14,13 +14,14 @@ class MiopenHip(CMakePackage):
 
     homepage = "https://github.com/ROCm/MIOpen"
     git = "https://github.com/ROCm/MIOpen.git"
-    url = "https://github.com/ROCm/MIOpen/archive/rocm-6.0.2.tar.gz"
+    url = "https://github.com/ROCm/MIOpen/archive/rocm-6.1.1.tar.gz"
     tags = ["rocm"]
 
     maintainers("srekolam", "renjithravindrankannath")
     libraries = ["libMIOpen"]
 
     license("MIT")
+    version("6.1.1", sha256="cf568ea16dd23b32fe89e250bb33ed4722fea8aa7f407cc66ff37c37aab037ce")
     version("6.1.0", sha256="3b373117eaeaf618aab9b39bb22e9950fd49bd0e264c8587b0c51fa348afe0d1")
     version("6.0.2", sha256="e6f671bd6af59f7470f42cda2ff9e77441d8f6c2105772bbf855d31da1085ffa")
     version("6.0.0", sha256="a0718a48353be30ff98118ade511f0c1b454e394d8f934aefe7dd6946562b2e9")
@@ -82,6 +83,7 @@ class MiopenHip(CMakePackage):
         "6.0.0",
         "6.0.2",
         "6.1.0",
+        "6.1.1",
     ]:
         depends_on(f"rocm-cmake@{ver}:", type="build", when=f"@{ver}")
         depends_on(f"hip@{ver}", when=f"@{ver}")
@@ -91,15 +93,15 @@ class MiopenHip(CMakePackage):
     for ver in ["5.1.0", "5.1.3", "5.2.0", "5.2.1", "5.2.3", "5.3.0", "5.3.3"]:
         depends_on(f"mlirmiopen@{ver}", when=f"@{ver}")
 
-    for ver in ["5.5.1", "5.6.0", "5.6.1", "5.7.0", "5.7.1", "6.0.0", "6.0.2", "6.1.0"]:
+    for ver in ["5.5.1", "5.6.0", "5.6.1", "5.7.0", "5.7.1", "6.0.0", "6.0.2", "6.1.0", "6.1.1"]:
         depends_on("nlohmann-json", type="link")
         depends_on(f"composable-kernel@{ver}", when=f"@{ver}")
     for ver in ["5.4.0", "5.4.3", "5.5.0"]:
         depends_on("nlohmann-json", type="link")
         depends_on(f"rocmlir@{ver}", when=f"@{ver}")
-    for ver in ["6.0.0", "6.0.2", "6.1.0"]:
+    for ver in ["6.0.0", "6.0.2", "6.1.0", "6.1.1"]:
         depends_on("roctracer-dev@" + ver, when="@" + ver)
-    for ver in ["6.1.0"]:
+    for ver in ["6.1.0", "6.1.1"]:
         depends_on("googletest")
 
     def setup_build_environment(self, env):
