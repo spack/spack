@@ -250,9 +250,6 @@ class Tau(Package):
         if "+x86_64" in spec:
             options.append("-arch=x86_64")
 
-        if ("platform=cray" in self.spec) and ("+x86_64" not in spec):
-            options.append("-arch=craycnl")
-
         if "+pdt" in spec:
             options.append("-pdt=%s" % spec["pdt"].prefix)
             if spec["pdt"].satisfies("%intel"):
@@ -307,8 +304,8 @@ class Tau(Package):
                 env["F77"] = spec["mpi"].mpif77
                 env["FC"] = spec["mpi"].mpifc
             if spec["mpi"].name == "intel-oneapi-mpi":
-                options.append("-mpiinc=%s" % spec["mpi"].package.component_prefix)
-                options.append("-mpilib=%s" % spec["mpi"].package.component_prefix)
+                options.append("-mpiinc=%s/include" % spec["mpi"].package.component_prefix)
+                options.append("-mpilib=%s/lib" % spec["mpi"].package.component_prefix)
             else:
                 options.append("-mpiinc=%s" % spec["mpi"].prefix.include)
                 options.append("-mpilib=%s" % spec["mpi"].prefix.lib)

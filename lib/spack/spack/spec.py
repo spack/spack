@@ -2816,9 +2816,7 @@ class Spec:
 
         # Check if we can produce an optimized binary (will throw if
         # there are declared inconsistencies)
-        # No need on platform=cray because of the targeting modules
-        if not self.satisfies("platform=cray"):
-            self.architecture.target.optimization_flags(self.compiler)
+        self.architecture.target.optimization_flags(self.compiler)
 
     def _patches_assigned(self):
         """Whether patches have been assigned to this spec by the concretizer."""

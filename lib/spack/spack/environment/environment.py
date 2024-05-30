@@ -22,7 +22,7 @@ import llnl.util.filesystem as fs
 import llnl.util.tty as tty
 import llnl.util.tty.color as clr
 from llnl.util.link_tree import ConflictingSpecsError
-from llnl.util.symlink import symlink
+from llnl.util.symlink import readlink, symlink
 
 import spack.compilers
 import spack.concretize
@@ -662,7 +662,7 @@ class ViewDescriptor:
         if not os.path.islink(self.root):
             return None
 
-        root = os.readlink(self.root)
+        root = readlink(self.root)
         if os.path.isabs(root):
             return root
 
@@ -1948,13 +1948,19 @@ class Environment:
         specs = specs if specs is not None else roots
 
         # Extend the set of specs to overwrite with modified dev specs and their parents
-        install_args["overwrite"] = (
-            install_args.get("overwrite", []) + self._dev_specs_that_need_overwrite()
+        overwrite: Set[str] = set()
+        overwrite.update(install_args.get("overwrite", []), self._dev_specs_that_need_overwrite())
+        install_args["overwrite"] = overwrite
+
+        explicit: Set[str] = set()
+        explicit.update(
+            install_args.get("explicit", []),
+            (s.dag_hash() for s in specs),
+            (s.dag_hash() for s in roots),
         )
+        install_args["explicit"] = explicit
 
-        installs = [(spec.package, {**install_args, "explicit": spec in roots}) for spec in specs]
-
-        PackageInstaller(installs).install()
+        PackageInstaller([spec.package for spec in specs], install_args).install()
 
     def all_specs_generator(self) -> Iterable[Spec]:
         """Returns a generator for all concrete specs"""

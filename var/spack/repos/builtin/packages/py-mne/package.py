@@ -69,7 +69,6 @@ class PyMne(PythonPackage):
         depends_on("py-matplotlib@3.0.3:", type=("build", "run"))  # *
         depends_on("py-pyqt5@5.10:,:5.15.1,5.15.4:", when="platform=linux", type=("build", "run"))
         depends_on("py-pyqt5@5.10:,:5.13", when="platform=darwin", type=("build", "run"))
-        depends_on("py-pyqt5@5.10:,:5.15.2,5.15.4:", when="platform=cray", type=("build", "run"))
         depends_on("py-pyqt5@5.10:,:5.15.2,5.15.4:", when="platform=win32", type=("build", "run"))
         depends_on("py-pyqt5-sip", type=("build", "run"))
         depends_on("py-sip", type=("build", "run"))

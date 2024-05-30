@@ -75,15 +75,19 @@ class Rust(Package):
     depends_on("rust-bootstrap@nightly", type="build", when="@nightly")
 
     # Stable version dependencies
+    depends_on("rust-bootstrap", type="build")
     depends_on("rust-bootstrap@1.59:1.60", type="build", when="@1.60")
     depends_on("rust-bootstrap@1.64:1.65", type="build", when="@1.65")
     depends_on("rust-bootstrap@1.69:1.70", type="build", when="@1.70")
     depends_on("rust-bootstrap@1.72:1.73", type="build", when="@1.73")
     depends_on("rust-bootstrap@1.73:1.74", type="build", when="@1.74")
     depends_on("rust-bootstrap@1.74:1.75", type="build", when="@1.75")
+    depends_on("rust-bootstrap@1.77:1.78", type="build", when="@1.78")
 
     # src/llvm-project/llvm/cmake/modules/CheckCompilerVersion.cmake
     conflicts("%gcc@:7.3", when="@1.73:", msg="Host GCC version must be at least 7.4")
+    # https://github.com/rust-lang/llvm-project/commit/4d039a7a71899038b3bc6ed6fe5a8a48d915caa0
+    conflicts("%gcc@13:", when="@:1.63", msg="Rust<1.64 not compatible with GCC>=13")
 
     extendable = True
     executables = ["^rustc$", "^cargo$"]

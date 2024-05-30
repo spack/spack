@@ -60,8 +60,4 @@ class Pdc(CMakePackage):
             self.define("PDC_ENABLE_MPI", "ON"),
             self.define("CMAKE_C_COMPILER", self.spec["mpi"].mpicc),
         ]
-
-        if self.spec.satisfies("platform=cray"):
-            args.append("-DRANKSTR_LINK_STATIC=ON")
-
         return args

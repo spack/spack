@@ -17,6 +17,7 @@ class Madx(CMakePackage):
     maintainers("wdconinc")
 
     # Supported MAD-X versions
+    version("5.09.03", sha256="cd57f9451e3541a820814ad9ef72b6e01d09c6f3be56802fa2e95b1742db7797")
     version("5.09.00", sha256="fc2823cdb90a53c1422cca93a48b003c97c1e72641d9e925cd8f59b08f795c7a")
     version("5.08.01", sha256="89c943fcb474344a4f7d28de98e8eae0aec40f779bf908daff79043bf3520555")
     version("5.08.00", sha256="0b3fe2aca8899289ef7bfb98d745f13b8c4082e239f54f2662c9cad8d1e63a53")

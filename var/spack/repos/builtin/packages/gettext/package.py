@@ -50,7 +50,7 @@ class Gettext(AutotoolsPackage, GNUMirrorPackage):
     depends_on("libxml2", when="+libxml2")
     # Java runtime and compiler (e.g. GNU gcj or kaffe)
     # C# runtime and compiler (e.g. pnet or mono)
-    depends_on("tar", when="+tar")
+    depends_on("tar", when="+tar", type="run")
     # depends_on('gzip',     when='+gzip')
     depends_on("bzip2", when="+bzip2")
     depends_on("xz", when="+xz", type=("build", "link", "run"))
@@ -62,6 +62,8 @@ class Gettext(AutotoolsPackage, GNUMirrorPackage):
     # depends_on('cvs')
 
     conflicts("+shared~pic")
+    # https://savannah.gnu.org/bugs/?65811
+    conflicts("%gcc@:5", when="@0.22:")
 
     patch("test-verify-parallel-make-check.patch", when="@:0.19.8.1")
     patch("nvhpc-builtin.patch", when="@:0.21.0 %nvhpc")
@@ -78,12 +80,13 @@ class Gettext(AutotoolsPackage, GNUMirrorPackage):
         # From the configure script: "we don't want to use an external libxml, because its
         # dependencies and their dynamic relocations have an impact on the startup time", well,
         # *we* do.
-        filter_file(
-            "gl_cv_libxml_force_included=yes",
-            "gl_cv_libxml_force_included=no",
-            "libtextstyle/configure",
-            string=True,
-        )
+        if self.spec.satisfies("@:19"):  # libtextstyle/configure not present
+            filter_file(
+                "gl_cv_libxml_force_included=yes",
+                "gl_cv_libxml_force_included=no",
+                "libtextstyle/configure",
+                string=True,
+            )
 
     def flag_handler(self, name, flags):
         # this goes together with gl_cv_libxml_force_included=no

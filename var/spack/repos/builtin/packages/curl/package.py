@@ -281,7 +281,7 @@ class Curl(NMakePackage, AutotoolsPackage):
     variant("librtmp", default=False, description="enable Rtmp support")
     variant("ldap", default=False, description="enable ldap support")
     variant("libidn2", default=False, description="enable libidn2 support")
-    for plat in ["darwin", "cray", "linux"]:
+    for plat in ["darwin", "linux"]:
         with when("platform=%s" % plat):
             # curl queries pkgconfig for openssl compilation flags
             depends_on("pkgconfig", type="build")
@@ -293,7 +293,6 @@ class Curl(NMakePackage, AutotoolsPackage):
         description="Build shared libs, static libs or both",
     )
 
-    conflicts("platform=cray", when="tls=secure_transport", msg="Only supported on macOS")
     conflicts("platform=linux", when="tls=secure_transport", msg="Only supported on macOS")
 
     depends_on("gnutls", when="tls=gnutls")
