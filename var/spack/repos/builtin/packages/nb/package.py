@@ -29,7 +29,7 @@ class Nb(Package):
 
     def patch(self):
         filter_file(
-            "^#!\s?.*bash",
+            r"^#!\s?.*bash",
             "#!{}".format(self.spec["bash"].command.path),
             "nb",
             "bin/bookmark",
