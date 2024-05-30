@@ -690,7 +690,7 @@ To resolve this problem, please try the following:
 
         # Defensively look that the name passed as argument is among
         # variants
-        if variant not in self.pkg.variants_by_name():
+        if not self.pkg.has_variant(variant):
             msg = '"{0}" is not a variant of "{1}"'
             raise KeyError(msg.format(variant, self.pkg.name))
 

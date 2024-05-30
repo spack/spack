@@ -753,8 +753,21 @@ class PackageBase(WindowsRPath, PackageViewMixin, RedistributionMixin, metaclass
         return _names(cls.variants)
 
     @classmethod
-    def variants_by_name(cls, when: bool = False):
-        return _by_name(cls.variants, when)
+    def has_variant(cls, name):
+        return any(name in dictionary for dictionary in cls.variants.values())
+
+    @classmethod
+    def variant_definitions(cls, name: str):
+        """Iterator over (when_spec, Variant) for all variant definitions for a particular name."""
+        found = False
+        for when, variants_by_name in cls.variants.items():
+            variant_def = variants_by_name.get(name)
+            if variant_def:
+                found = True
+                yield when, variant_def
+
+        if not found:
+            raise KeyError(f"No such variant '{name}' in package '{cls.name}'")
 
     @classmethod
     def variants_for_spec(
@@ -763,22 +776,21 @@ class PackageBase(WindowsRPath, PackageViewMixin, RedistributionMixin, metaclass
         """Get any variant definitions for the variant 'name' that apply to the provided spec.
 
         Arguments:
-            name: name of variant of interest.
+            variant_name: name of variant of interest
             spec: any variants whose ``when`` clause intersects this spec will be returned.
         """
-        possible_variants = []
-        for when, variants_by_name in cls.variants.items():
-            pkg_variant = variants_by_name.get(variant_name)
-            if pkg_variant and when.intersects(spec):
-                possible_variants.append(pkg_variant)
-        return possible_variants
+        return [
+            variant_def
+            for when, variant_def in cls.variant_definitions(variant_name)
+            if when.intersects(spec)
+        ]
 
     def variant_descriptor(self, name):
         """Get the variant descriptor for a variant on this package's spec."""
         if name not in self.spec.variants:
             raise ValueError(f"No variant '{name}' on spec: {self.spec}")
 
-        for when, variants_by_name in self.variants.items():
+        for when, variants_by_name in reversed(list(self.variants.items())):
             if self.spec.satisfies(when) and name in variants_by_name:
                 return variants_by_name[name]
 

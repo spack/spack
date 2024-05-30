@@ -1371,7 +1371,7 @@ class TestConcretize:
     )
     def test_error_message_for_inconsistent_variants(self, spec_str):
         s = Spec(spec_str)
-        with pytest.raises(RuntimeError, match="not found in package"):
+        with pytest.raises(KeyError, match="No such variant"):
             s.concretize()
 
     @pytest.mark.regression("22533")

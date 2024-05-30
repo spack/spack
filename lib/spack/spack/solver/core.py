@@ -88,7 +88,8 @@ class AspFunction(AspObject):
             return clingo().Number(arg)
         elif isinstance(arg, AspFunction):
             return clingo().Function(arg.name, [self._argify(x) for x in arg.args], positive=True)
-        return clingo().String(str(arg))
+        else:
+            return clingo().String(str(arg))
 
     def symbol(self):
         """Return a clingo symbol for this function"""

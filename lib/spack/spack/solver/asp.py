@@ -1488,12 +1488,10 @@ class SpackSolverSetup:
         self.define_auto_variant("patches", multi=True)
 
         # all other variants
-        for name, conditions in sorted(pkg.variants_by_name(when=True).items()):
+        for name in pkg.variant_names():
             self.gen.h3(f"Variant {name} in package {pkg.name}")
-
-            for when, variant_defs in conditions.items():
-                assert len(variant_defs) == 1, "Impossible to have multiple variants when and name"
-                self.define_variant(pkg, name, when, variant_defs[0])
+            for when, variant_def in pkg.variant_definitions(name):
+                self.define_variant(pkg, name, when, variant_def)
 
     def _get_condition_id(
         self,

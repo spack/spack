@@ -670,7 +670,7 @@ def _ensure_env_methods_are_ported_to_builders(pkgs, error_cls):
         pkg_cls = spack.repo.PATH.get_pkg_class(pkg_name)
 
         buildsystem_names = set()
-        build_system_variants = pkg_cls.variants_by_name()["build_system"]
+        build_system_variants = [vdef for _, vdef in pkg_cls.variant_definitions("build_system")]
         buildsystem_names = set(
             getattr(v, "value", v) for variant in build_system_variants for v in variant.values
         )
@@ -1004,9 +1004,9 @@ def _ensure_variant_defaults_are_parsable(pkgs, error_cls):
     errors = []
     for pkg_name in pkgs:
         pkg_cls = spack.repo.PATH.get_pkg_class(pkg_name)
-        for vname, variants in pkg_cls.variants_by_name().items():
-            for variant in variants:
-                check_variant(pkg_cls, variant)
+        for vname in pkg_cls.variant_names():
+            for _, variant_def in pkg_cls.variant_definitions(vname):
+                check_variant(pkg_cls, variant_def)
 
     return errors
 
@@ -1017,8 +1017,8 @@ def _ensure_variants_have_descriptions(pkgs, error_cls):
     errors = []
     for pkg_name in pkgs:
         pkg_cls = spack.repo.PATH.get_pkg_class(pkg_name)
-        for name, variants in pkg_cls.variants_by_name().items():
-            for variant in variants:
+        for name in pkg_cls.variant_names():
+            for when, variant in pkg_cls.variant_definitions(name):
                 if not variant.description:
                     msg = f"Variant '{name}' in package '{pkg_name}' is missing a description"
                     errors.append(error_cls(msg, []))
@@ -1079,13 +1079,13 @@ def _version_constraints_are_satisfiable_by_some_version_in_repo(pkgs, error_cls
 
 def _analyze_variants_in_directive(pkg, constraint, directive, error_cls):
     errors = []
-    variants_by_name = pkg.variants_by_name()
+    variant_names = pkg.variant_names()
 
     for name, v in constraint.variants.items():
         summary = f"{pkg.name}: wrong variant in '{directive}' directive"
         filename = spack.repo.PATH.filename_for_package_name(pkg.name)
 
-        if name not in variants_by_name:
+        if name not in variant_names:
             msg = f"variant {name} does not exist in {pkg.name}"
             errors.append(error_cls(summary=summary, details=[msg, f"in {filename}"]))
             continue

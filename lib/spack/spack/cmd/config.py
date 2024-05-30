@@ -534,7 +534,7 @@ def config_prefer_upstream(args):
         # Get and list all the variants that differ from the default.
         variants = []
         for var_name, variant in spec.variants.items():
-            if var_name in ["patches"] or var_name not in spec.package.variants_by_name():
+            if var_name in ["patches"] or not spec.package.has_variant(var_name):
                 continue
 
             variant_desc = spec.package.variant_descriptor(var_name)
