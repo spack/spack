@@ -103,7 +103,7 @@ class Hpl(AutotoolsPackage):
     def configure_args(self):
         filter_file(r"^libs10=.*", "libs10=%s" % self.spec["blas"].libs.ld_flags, "configure")
 
-        cc, cflags, ldflags = self.spec['mpi'].mpicc, ["-O3"], []
+        cc, cflags, ldflags = self.spec["mpi"].mpicc, ["-O3"], []
         if "+openmp" in self.spec:
             cflags.append(self.compiler.openmp_flag)
 
@@ -120,9 +120,7 @@ class Hpl(AutotoolsPackage):
             if "%aocc@4:" in self.spec:
                 ldflags.append("-lamdalloc")
 
-        return [f"CC={cc}",
-                f"CFLAGS={' '.join(cflags)}",
-                f"LDFLAGS={' '.join(ldflags)}"]
+        return [f"CC={cc}", f"CFLAGS={' '.join(cflags)}", f"LDFLAGS={' '.join(ldflags)}"]
 
     @when("@:2.2")
     def install(self, spec, prefix):
