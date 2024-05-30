@@ -18,7 +18,10 @@ class PasswordStore(MakefilePackage):
 
     version("1.7.4", sha256="cfa9faf659f2ed6b38e7a7c3fb43e177d00edbacc6265e6e32215ff40e3793c0")
 
+    variant("completion", default=True, description="install BASH completion scripts")
+
     depends_on("bash")
+    depends_on("bash-completion", when="+completion")
     depends_on("gnupg")
     depends_on("git")
     depends_on("tree")
@@ -31,6 +34,12 @@ class PasswordStore(MakefilePackage):
 
     def setup_build_environment(self, env):
         env.set("PREFIX", prefix)
+        env.set(
+            "BASHCOMPDIR",
+            self.spec["bash-completion"].prefix + "/share/bash-completion/completions",
+        )
+        if self.spec.satisfies("+completion"):
+            env.set("WITH_BASHCOMP", "yes")
 
     def edit(self, spec, prefix):
         """
