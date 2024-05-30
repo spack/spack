@@ -79,7 +79,7 @@ class Gettext(AutotoolsPackage, GNUMirrorPackage):
         # From the configure script: "we don't want to use an external libxml, because its
         # dependencies and their dynamic relocations have an impact on the startup time", well,
         # *we* do.
-        if self.spec.satisfies("@:20"):   # libtextstyle/configure not present <0.20
+        if self.spec.satisfies("@:20"):  # libtextstyle/configure not present <0.20
             filter_file(
                 "gl_cv_libxml_force_included=yes",
                 "gl_cv_libxml_force_included=no",
