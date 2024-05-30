@@ -15,13 +15,15 @@ class RoctracerDev(CMakePackage, ROCmPackage):
 
     homepage = "https://github.com/ROCm/roctracer"
     git = "https://github.com/ROCm/roctracer.git"
-    url = "https://github.com/ROCm/roctracer/archive/rocm-6.0.2.tar.gz"
+    url = "https://github.com/ROCm/roctracer/archive/rocm-6.1.1.tar.gz"
     tags = ["rocm"]
 
     maintainers("srekolam", "renjithravindrankannath")
     libraries = ["libroctracer64"]
 
     license("MIT")
+    version("6.1.1", sha256="9cb77fd700a0d615056f0db1e9500b73bd0352214f33bdac520e25b9125a926a")
+    version("6.1.0", sha256="3f8e296c4d04123a7177d815ca166e978b085ad7c816ac298e6bb47a299fa187")
     version("6.0.2", sha256="1e0105b32fdd9c010aab304bb2ca1a5a38ba323cea610afe1135657edda8f26e")
     version("6.0.0", sha256="941166a0363c5689bfec118d54e986c43fb1ec8cbf18d95721d9a824bd52c0f8")
     version("5.7.1", sha256="ec0453adac7e62b142eb0df1e1e2506863aac4c3f2ce9d117c3184c08c0c6b48")
@@ -40,6 +42,8 @@ class RoctracerDev(CMakePackage, ROCmPackage):
         version("5.2.0", sha256="9747356ce61c57d22c2e0a6c90b66a055e435d235ba3459dc3e3f62aabae6a03")
         version("5.1.3", sha256="45f19875c15eb609b993788b47fd9c773b4216074749d7744f3a671be17ef33c")
         version("5.1.0", sha256="58b535f5d6772258190e4adcc23f37c916f775057a91b960e1f2ee1f40ed5aac")
+
+    variant("asan", default=False, description="Build with address-sanitizer enabled or disabled")
 
     depends_on("cmake@3:", type="build")
     depends_on("python@3:", type="build")
@@ -63,6 +67,8 @@ class RoctracerDev(CMakePackage, ROCmPackage):
         "5.7.1",
         "6.0.0",
         "6.0.2",
+        "6.1.0",
+        "6.1.1",
     ]:
         depends_on(f"hsakmt-roct@{ver}", when=f"@{ver}")
         depends_on(f"hsa-rocr-dev@{ver}", when=f"@{ver}")
@@ -71,7 +77,18 @@ class RoctracerDev(CMakePackage, ROCmPackage):
     for ver in ["5.1.0", "5.1.3", "5.2.0", "5.2.1", "5.2.3", "5.3.0", "5.3.3", "5.4.0", "5.4.3"]:
         depends_on(f"rocprofiler-dev@{ver}", when=f"@{ver}")
 
-    for ver in ["5.5.0", "5.5.1", "5.6.0", "5.6.1", "5.7.0", "5.7.1", "6.0.0", "6.0.2"]:
+    for ver in [
+        "5.5.0",
+        "5.5.1",
+        "5.6.0",
+        "5.6.1",
+        "5.7.0",
+        "5.7.1",
+        "6.0.0",
+        "6.0.2",
+        "6.1.0",
+        "6.1.1",
+    ]:
         depends_on(f"rocm-core@{ver}", when=f"@{ver}")
 
     patch("0001-include-rocprofiler-dev-path.patch", when="@5.3:5.4")
@@ -101,6 +118,10 @@ class RoctracerDev(CMakePackage, ROCmPackage):
                 "hsaap.py",
             )
 
+    def setup_build_environment(self, env):
+        if self.spec.satisfies("+asan"):
+            self.asan_on(env)
+
     def cmake_args(self):
         args = [
             self.define("HIP_VDI", "1"),
@@ -114,3 +135,9 @@ class RoctracerDev(CMakePackage, ROCmPackage):
             args.append("-DCMAKE_INSTALL_LIBDIR=lib")
 
         return args
+
+    @run_after("install")
+    def post_install(self):
+        if self.spec.satisfies("@6.0:"):
+            install_tree(self.prefix.include.roctracer, self.prefix.roctracer.include)
+            install_tree(self.prefix.lib, self.prefix.roctracer.lib)

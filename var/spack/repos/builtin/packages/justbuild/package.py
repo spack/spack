@@ -24,6 +24,9 @@ class Justbuild(Package):
     license("Apache-2.0")
 
     version("master", branch="master")
+    version("1.3.1", tag="v1.3.1", commit="b248838ed0f01bc5824caee3a555e7fd22d5ad10")
+    version("1.3.0", tag="v1.3.0", commit="a7be2417f358049e6a0e28e01bc4020d8de2fdc5")
+    version("1.2.5", tag="v1.2.5", commit="0f7447e3f50e68ecfe00b2db06fb5f154842ac5a")
     version("1.2.4", tag="v1.2.4", commit="215e6afab93d28aeea54cb2c657afda0e5453307")
     version("1.2.3", tag="v1.2.3", commit="45e9c1c85399f00372ad8b72894979a0002d8f95")
     version("1.2.2", tag="v1.2.2", commit="e1ee04684c34ae30ac3c91b6753e99a81a9dc51c")

@@ -21,6 +21,7 @@ class Miniamr(MakefilePackage):
     license("LGPL-3.0-only")
 
     version("master", branch="master")
+    version("1.7.0", sha256="f11aee04bc59f46c6894a07d365c9c3006c58739ac6abd2d9663843c01a8b62b")
     version("1.6.6", sha256="a7f79fae49e433ef8350cbd34cbf57c486089cf7ac0d1f1f3b23c820d3e5bb9f")
     version("1.6.5", sha256="c70f0f648c73ea4497817ceee158334eeb901fc5c32cf804deef3226cd9cf26a")
     version("1.6.4", sha256="807d50608b69fb1a61924718964be96c0a2f9fa2e37fdc027bc3f0f116544732")
@@ -35,8 +36,8 @@ class Miniamr(MakefilePackage):
     @property
     def build_targets(self):
         targets = []
-        targets.append("CC={0}".format(self.spec["mpi"].mpicc))
-        targets.append("LD={0}".format(self.spec["mpi"].mpicc))
+        targets.append(f"CC={self.spec['mpi'].mpicc}")
+        targets.append(f"LD={self.spec['mpi'].mpicc}")
         targets.append("LDLIBS=-lm")
         targets.append("--directory=ref")
 

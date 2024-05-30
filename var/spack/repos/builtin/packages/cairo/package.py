@@ -15,6 +15,7 @@ class Cairo(AutotoolsPackage):
 
     license("LGPL-2.1-or-later OR MPL-1.1", checked_by="tgamblin")
 
+    version("1.18.0", sha256="243a0736b978a33dee29f9cca7521733b78a65b5418206fef7bd1c3d4cf10b64")
     version(
         "1.17.4",
         sha256="74b24c1ed436bbe87499179a3b27c43f4143b8676d8ad237a6fa787401959705",
@@ -58,7 +59,7 @@ class Cairo(AutotoolsPackage):
     depends_on("autoconf", type="build")
     depends_on("libtool", type="build")
     depends_on("m4", type="build")
-    depends_on("freetype", when="+ft")
+    depends_on("freetype build_system=autotools", when="+ft")
     depends_on("pkgconfig", type="build")
     depends_on("fontconfig@2.10.91:", when="+fc")  # Require newer version of fontconfig.
     depends_on("which", type="build")

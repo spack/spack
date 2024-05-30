@@ -16,6 +16,7 @@ class Icu4c(AutotoolsPackage):
 
     license("Unicode-TOU")
 
+    version("74.2", sha256="68db082212a96d6f53e35d60f47d38b962e9f9d207a74cfac78029ae8ff5e08c")
     version("67.1", sha256="94a80cd6f251a53bd2a997f6f1b5ac6653fe791dfab66e1eb0227740fb86d5dc")
     version("66.1", sha256="52a3f2209ab95559c1cf0a14f24338001f389615bf00e2585ef3dbc43ecf0a2e")
     version("65.1", sha256="53e37466b3d6d6d01ead029e3567d873a43a5d1c668ed2278e253b683136d948")
@@ -61,9 +62,7 @@ class Icu4c(AutotoolsPackage):
         if name == "cxxflags":
             # Control of the C++ Standard is via adding the required "-std"
             # flag to CXXFLAGS in env
-            flags.append(
-                getattr(self.compiler, "cxx{0}_flag".format(self.spec.variants["cxxstd"].value))
-            )
+            flags.append(getattr(self.compiler, f"cxx{self.spec.variants['cxxstd'].value}_flag"))
         return (None, flags, None)
 
     # Need to make sure that locale is UTF-8 in order to process source
@@ -75,14 +74,14 @@ class Icu4c(AutotoolsPackage):
     def configure_args(self):
         args = []
 
-        if "python" in self.spec:
+        if self.spec.satisfies("^python"):
             # Make sure configure uses Spack's python package
             # Without this, configure could pick a broken global installation
-            args.append("PYTHON={0}".format(self.spec["python"].command))
+            args.append(f"PYTHON={self.spec['python'].command}")
 
         # The --enable-rpath option is only needed on MacOS, and it
         # breaks the build for xerces-c on Linux.
-        if "platform=darwin" in self.spec:
+        if self.spec.satisfies("platform=darwin"):
             args.append("--enable-rpath")
 
         return args

@@ -12,7 +12,7 @@ class HipifyClang(CMakePackage):
 
     homepage = "https://github.com/ROCm/HIPIFY"
     git = "https://github.com/ROCm/HIPIFY.git"
-    url = "https://github.com/ROCm/HIPIFY/archive/rocm-6.0.2.tar.gz"
+    url = "https://github.com/ROCm/HIPIFY/archive/rocm-6.1.1.tar.gz"
     tags = ["rocm"]
 
     maintainers("srekolam", "renjithravindrankannath")
@@ -20,6 +20,8 @@ class HipifyClang(CMakePackage):
     license("MIT")
 
     version("master", branch="master")
+    version("6.1.1", sha256="240b83ccbe1b6514a6af6c2261e306948ce6c2b1c4d1056e830bbaebddeabd82")
+    version("6.1.0", sha256="dc61b476081750130c62c7540fce49ee3a45a2b74e185d20049382574c1842d1")
     version("6.0.2", sha256="21e46276677ec8c00e61c0cbf5fa42185517f6af0d4845ea877fd40eb35198c4")
     version("6.0.0", sha256="91bed2b72a6684a04e078e50b12b36b93f64ff96523283f4e5d9a33c11e6b967")
     version("5.7.1", sha256="43121e62233dab010ab686d6805bc2d3163f0dc5e89cc503d50c4bcd59eeb394")
@@ -39,11 +41,14 @@ class HipifyClang(CMakePackage):
         version("5.1.3", sha256="6354b08b8ab2f4c481398fb768652bae00bb78c4cec7a11d5f6c7e4cb831ddf1")
         version("5.1.0", sha256="ba792294cbdcc880e0f02e38ee352dff8d4a2c183430e13d1c5ed176bd46cfc5")
 
+    variant("asan", default=False, description="Build with address-sanitizer enabled or disabled")
+
     # the patch was added to install the targets in the correct directory structure
     # this will fix the issue https://github.com/spack/spack/issues/30711
 
     patch("0001-install-hipify-clang-in-bin-dir-and-llvm-clangs-head.patch", when="@5.1.0:5.5")
-    patch("0002-install-hipify-clang-in-bin-dir-and-llvm-clangs-head.patch", when="@5.6:")
+    patch("0002-install-hipify-clang-in-bin-dir-and-llvm-clangs-head.patch", when="@5.6:6.0")
+    patch("0003-install-hipify-clang-in-bin-dir-and-llvm-clangs-head.patch", when="@6.1:")
 
     depends_on("cmake@3.5:", type="build")
     for ver in [
@@ -64,11 +69,24 @@ class HipifyClang(CMakePackage):
         "5.7.1",
         "6.0.0",
         "6.0.2",
+        "6.1.0",
+        "6.1.1",
         "master",
     ]:
         depends_on(f"llvm-amdgpu@{ver}", when=f"@{ver}")
 
-    for ver in ["5.5.0", "5.5.1", "5.6.0", "5.6.1", "5.7.0", "5.7.1", "6.0.0", "6.0.2"]:
+    for ver in [
+        "5.5.0",
+        "5.5.1",
+        "5.6.0",
+        "5.6.1",
+        "5.7.0",
+        "5.7.1",
+        "6.0.0",
+        "6.0.2",
+        "6.1.0",
+        "6.1.1",
+    ]:
         depends_on(f"rocm-core@{ver}", when=f"@{ver}")
 
     def setup_run_environment(self, env):
@@ -80,4 +98,6 @@ class HipifyClang(CMakePackage):
         args = []
         if self.spec.satisfies("@5.5"):
             args.append(self.define("SWDEV_375013", "ON"))
+        if self.spec.satisfies("@5.7.0:"):
+            args.append(self.define_from_variant("ADDRESS_SANITIZER", "asan"))
         return args

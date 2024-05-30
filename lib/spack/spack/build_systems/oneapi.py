@@ -14,7 +14,7 @@ from llnl.util.filesystem import HeaderList, LibraryList, find_libraries, join_p
 from llnl.util.link_tree import LinkTree
 
 from spack.build_environment import dso_suffix
-from spack.directives import conflicts, variant
+from spack.directives import conflicts, license, redistribute, variant
 from spack.package_base import InstallError
 from spack.util.environment import EnvironmentModifications
 from spack.util.executable import Executable
@@ -26,18 +26,18 @@ class IntelOneApiPackage(Package):
     """Base class for Intel oneAPI packages."""
 
     homepage = "https://software.intel.com/oneapi"
+    license("https://intel.ly/393CijO")
 
     # oneAPI license does not allow mirroring outside of the
     # organization (e.g. University/Company).
-    redistribute_source = False
+    redistribute(source=False, binary=False)
 
     for c in [
         "target=ppc64:",
         "target=ppc64le:",
         "target=aarch64:",
-        "platform=darwin:",
-        "platform=cray:",
-        "platform=windows:",
+        "platform=darwin",
+        "platform=windows",
     ]:
         conflicts(c, msg="This package in only available for x86_64 and Linux")
 

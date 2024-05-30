@@ -16,7 +16,7 @@ class Hipfft(CMakePackage, CudaPackage, ROCmPackage):
 
     homepage = "https://github.com/ROCm/hipFFT"
     git = "https://github.com/ROCm/hipFFT.git"
-    url = "https://github.com/ROCm/hipfft/archive/rocm-6.0.2.tar.gz"
+    url = "https://github.com/ROCm/hipfft/archive/rocm-6.1.1.tar.gz"
     tags = ["rocm"]
 
     maintainers("renjithravindrankannath", "srekolam")
@@ -24,6 +24,8 @@ class Hipfft(CMakePackage, CudaPackage, ROCmPackage):
     license("MIT")
 
     version("master", branch="master")
+    version("6.1.1", sha256="df84e488098d457a7411f6b459537fa5c5ee160027efc3a9a076980bbe57c4d3")
+    version("6.1.0", sha256="1a9cf598a932192f7f12b8987d96477f09186f9a95c5a28742f9caeb81640c95")
     version("6.0.2", sha256="c0a4bac5fa9a757a19a4995fa9571328b6ee0a71e93c66a880069794d65d284a")
     version("6.0.0", sha256="44f328b7862c066459089dfe62833cb7d626c6ceb71c57d8c7d6bba45dad491e")
     version("5.7.1", sha256="33452576649df479f084076c47d0b30f6f1da34864094bce767dd9bf609f04aa")
@@ -59,6 +61,7 @@ class Hipfft(CMakePackage, CudaPackage, ROCmPackage):
     variant("rocm", default=True, description="Enable ROCm support")
     conflicts("+cuda +rocm", msg="CUDA and ROCm support are mutually exclusive")
     conflicts("~cuda ~rocm", msg="CUDA or ROCm support is required")
+    variant("asan", default=False, description="Build with address-sanitizer enabled or disabled")
 
     depends_on("cmake@3.5:", type="build")
 
@@ -82,6 +85,8 @@ class Hipfft(CMakePackage, CudaPackage, ROCmPackage):
         "5.7.1",
         "6.0.0",
         "6.0.2",
+        "6.1.0",
+        "6.1.1",
     ]:
         depends_on(f"rocm-cmake@{ver}:", type="build", when=f"@{ver}")
         depends_on(f"rocfft@{ver}", when=f"+rocm @{ver}")
@@ -90,6 +95,10 @@ class Hipfft(CMakePackage, CudaPackage, ROCmPackage):
         depends_on(f"rocfft amdgpu_target={tgt}", when=f"+rocm amdgpu_target={tgt}")
     # https://github.com/ROCm/rocFFT/pull/85)
     patch("001-remove-submodule-and-sync-shared-files-from-rocFFT.patch", when="@6.0.0")
+
+    def setup_build_environment(self, env):
+        if self.spec.satisfies("+asan"):
+            self.asan_on(env)
 
     def cmake_args(self):
         args = [self.define("BUILD_CLIENTS_SAMPLES", "OFF")]

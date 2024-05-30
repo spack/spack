@@ -164,7 +164,7 @@ class NetcdfC(CMakePackage, AutotoolsPackage):
 
     # The man files are included in the release tarballs starting version 4.5.0 but they are not
     # needed for the Windows platform:
-    for __p in ["darwin", "cray", "linux"]:
+    for __p in ["darwin", "linux"]:
         with when("platform={0}".format(__p)):
             # It is possible to install the package with CMake and without M4 on a non-Windows
             # platform but some of the man files will not be installed in that case (even if they
@@ -250,7 +250,7 @@ class NetcdfC(CMakePackage, AutotoolsPackage):
     depends_on("zlib@1.2.5:", when="^[virtuals=zlib-api] zlib")
 
     # Use the vendored bzip2 on Windows:
-    for __p in ["darwin", "cray", "linux"]:
+    for __p in ["darwin", "linux"]:
         depends_on("bzip2", when="@4.9.0:+shared platform={0}".format(__p))
     del __p
 
@@ -367,9 +367,9 @@ class CMakeBuilder(BaseBuilder, cmake.CMakeBuilder):
         settingsconfig_file = find(self.prefix, "libnetcdf.settings", recursive=True)
 
         files = pkgconfig_file + cmakeconfig_file + ncconfig_file + settingsconfig_file
-
-        filter_file("hdf5-shared", "hdf5", *files, ignore_absent=True)
-        filter_file("hdf5_hl-shared", "hdf5_hl", *files, ignore_absent=True)
+        config = "shared" if self.spec.satisfies("+shared") else "static"
+        filter_file(f"hdf5-{config}", "hdf5", *files, ignore_absent=True)
+        filter_file(f"hdf5_hl-{config}", "hdf5_hl", *files, ignore_absent=True)
 
 
 class AutotoolsBuilder(BaseBuilder, autotools.AutotoolsBuilder):
@@ -460,7 +460,7 @@ class AutotoolsBuilder(BaseBuilder, autotools.AutotoolsBuilder):
                 # introduced by the configure script:
                 if "+szip" in hdf:
                     extra_libs.append(hdf["szip"].libs)
-                if "+external-xdr" in hdf:
+                if "+external-xdr ^libtirpc" in hdf:
                     extra_libs.append(hdf["rpc"].libs)
                 extra_libs.append(hdf["zlib-api"].libs)
 

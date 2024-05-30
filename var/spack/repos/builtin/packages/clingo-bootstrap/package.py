@@ -32,13 +32,6 @@ class ClingoBootstrap(Clingo):
         description="Enable a series of Spack-specific optimizations (PGO, LTO, mimalloc)",
     )
 
-    variant(
-        "force_setuptools",
-        default=False,
-        description="Force a dependency on setuptools to help the old concretizer",
-    )
-    depends_on("py-setuptools", type="build", when="+force_setuptools")
-
     # Enable LTO
     conflicts("~ipo", when="+optimized")
 
@@ -64,12 +57,6 @@ class ClingoBootstrap(Clingo):
         "%clang",
         when="platform=linux",
         msg="GCC or clang are required to bootstrap clingo on Linux",
-    )
-    requires(
-        "%gcc",
-        "%clang",
-        when="platform=cray",
-        msg="GCC or clang are required to bootstrap clingo on Cray",
     )
     conflicts("%gcc@:5", msg="C++14 support is required to bootstrap clingo")
 
@@ -127,9 +114,7 @@ class ClingoBootstrap(Clingo):
         )
         python_runtime_env.unset("SPACK_ENV")
         python_runtime_env.unset("SPACK_PYTHON")
-        self.spec["python"].command(
-            spack.paths.spack_script, "solve", "--fresh", "hdf5", extra_env=python_runtime_env
-        )
+        python(spack.paths.spack_script, "solve", "--fresh", "hdf5", extra_env=python_runtime_env)
 
         # Clean the build dir.
         rmtree(self.build_directory, ignore_errors=True)

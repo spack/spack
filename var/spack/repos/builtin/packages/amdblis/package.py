@@ -55,6 +55,9 @@ class Amdblis(BlisBase):
     variant("aocl_gemm", default=False, when="@4.1:", description="aocl_gemm support")
     variant("suphandling", default=True, description="Small Unpacked Kernel handling")
 
+    variant("logging", default=False, description="Enable AOCL DTL Logging")
+    variant("tracing", default=False, description="Enable AOCL DTL Tracing")
+
     def configure_args(self):
         spec = self.spec
         args = super().configure_args()
@@ -94,6 +97,20 @@ class Amdblis(BlisBase):
 
         if spec.satisfies("@3.1:"):
             args.append("--disable-aocl-dynamic")
+
+        if spec.satisfies("+logging"):
+            filter_file(
+                "#define AOCL_DTL_LOG_ENABLE         0",
+                "#define AOCL_DTL_LOG_ENABLE         1",
+                f"{self.stage.source_path}/aocl_dtl/aocldtlcf.h",
+            )
+
+        if spec.satisfies("+tracing"):
+            filter_file(
+                "#define AOCL_DTL_TRACE_ENABLE       0",
+                "#define AOCL_DTL_TRACE_ENABLE       1",
+                f"{self.stage.source_path}/aocl_dtl/aocldtlcf.h",
+            )
 
         return args
 

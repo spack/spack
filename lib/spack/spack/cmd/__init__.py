@@ -334,8 +334,7 @@ def display_specs(specs, args=None, **kwargs):
         variants (bool): Show variants with specs
         indent (int): indent each line this much
         groups (bool): display specs grouped by arch/compiler (default True)
-        decorators (dict): dictionary mappng specs to decorators
-        header_callback (typing.Callable): called at start of arch/compiler groups
+        decorator (typing.Callable): function to call to decorate specs
         all_headers (bool): show headers even when arch/compiler aren't defined
         output (typing.IO): A file object to write to. Default is ``sys.stdout``
 
@@ -384,15 +383,13 @@ def display_specs(specs, args=None, **kwargs):
         vfmt = "{variants}" if variants else ""
         format_string = nfmt + "{@version}" + ffmt + vfmt
 
-    transform = {"package": decorator, "fullpackage": decorator}
-
     def fmt(s, depth=0):
         """Formatter function for all output specs"""
         string = ""
         if hashes:
             string += gray_hash(s, hlen) + " "
         string += depth * "    "
-        string += s.cformat(format_string, transform=transform)
+        string += decorator(s, s.cformat(format_string))
         return string
 
     def format_list(specs):
@@ -451,7 +448,7 @@ def filter_loaded_specs(specs):
     return [x for x in specs if x.dag_hash() in hashes]
 
 
-def print_how_many_pkgs(specs, pkg_type=""):
+def print_how_many_pkgs(specs, pkg_type="", suffix=""):
     """Given a list of specs, this will print a message about how many
     specs are in that list.
 
@@ -462,7 +459,7 @@ def print_how_many_pkgs(specs, pkg_type=""):
             category, e.g. if pkg_type is "installed" then the message
             would be "3 installed packages"
     """
-    tty.msg("%s" % llnl.string.plural(len(specs), pkg_type + " package"))
+    tty.msg("%s" % llnl.string.plural(len(specs), pkg_type + " package") + suffix)
 
 
 def spack_is_git_repo():

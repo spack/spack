@@ -26,7 +26,11 @@ class Nettle(AutotoolsPackage, GNUMirrorPackage):
 
     depends_on("gmp")
     depends_on("m4", type="build")
-    depends_on("openssl")
+
+    def flag_handler(self, name, flags):
+        if name == "cflags":
+            flags.append(self.compiler.c99_flag)
+        return (flags, None, None)
 
     def configure_args(self):
-        return ["CFLAGS={0}".format(self.compiler.c99_flag)]
+        return ["--disable-openssl"]
