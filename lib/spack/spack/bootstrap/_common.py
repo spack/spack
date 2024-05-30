@@ -224,7 +224,6 @@ def _root_spec(spec_str: str) -> str:
         spec_str += " %gcc"
     elif platform == "freebsd":
         spec_str += " %clang"
-    # Note: this may be too restrictive for freebsd
     spec_str += f" platform={platform}"
     target = archspec.cpu.host().family
     spec_str += f" target={target}"
