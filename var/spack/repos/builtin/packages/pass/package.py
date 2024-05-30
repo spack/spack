@@ -6,13 +6,13 @@
 from spack.package import *
 
 
-class PasswordStore(MakefilePackage):
-    """the standard unix password manager"""
+class Pass(MakefilePackage):
+    """A minimal password manager following the UNIX philosphy."""
 
     homepage = "https://www.passwordstore.org/"
     url = "https://git.zx2c4.com/password-store/snapshot/password-store-1.7.4.tar.xz"
 
-    maintainers("taliaferro")
+    maintainers("alecbcs", "taliaferro")
 
     license("GPL-2.0", checked_by="taliaferro")
 
