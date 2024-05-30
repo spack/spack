@@ -30,4 +30,3 @@ class Seqfu(Package):
 
         make(parallel=False)
         install_tree("bin", join_path(prefix, "bin"))
-
