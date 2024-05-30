@@ -62,7 +62,8 @@ class Gettext(AutotoolsPackage, GNUMirrorPackage):
     # depends_on('cvs')
 
     conflicts("+shared~pic")
-    conflicts("%gcc4.8.5 operating_system=centos7", when="@0.22:")  # c++stdlib bug in centos7
+    # https://savannah.gnu.org/bugs/?65811
+    conflicts("%gcc@:5", when="@0.22:")
 
     patch("test-verify-parallel-make-check.patch", when="@:0.19.8.1")
     patch("nvhpc-builtin.patch", when="@:0.21.0 %nvhpc")
@@ -79,7 +80,7 @@ class Gettext(AutotoolsPackage, GNUMirrorPackage):
         # From the configure script: "we don't want to use an external libxml, because its
         # dependencies and their dynamic relocations have an impact on the startup time", well,
         # *we* do.
-        if self.spec.satisfies("@:20"):  # libtextstyle/configure not present <0.20
+        if self.spec.satisfies("@:19"):  # libtextstyle/configure not present
             filter_file(
                 "gl_cv_libxml_force_included=yes",
                 "gl_cv_libxml_force_included=no",
