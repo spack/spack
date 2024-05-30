@@ -2927,7 +2927,8 @@ def test_git_ref_version_can_be_reused(
         # reproducer of the issue is that spack will solve when there is a change to the base spec
         second_spec = spack.spec.Spec("git-ref-package@git.2.1.5=2.1.5+opt").concretized()
         assert second_spec.dag_hash() != first_spec.dag_hash()
-        # we also want to confirm that reuse actually works so leave variant off to let solver reuse
+        # we also want to confirm that reuse actually works so leave variant off to
+        # let solver reuse
         third_spec = spack.spec.Spec("git-ref-package@git.2.1.5=2.1.5")
         assert first_spec.satisfies(third_spec)
         third_spec.concretize()
