@@ -15,7 +15,6 @@ from typing import Any, List, Optional, Type
 
 import llnl.util.lang as lang
 import llnl.util.tty.color
-from llnl.string import comma_or
 
 import spack.error as error
 import spack.parser
@@ -812,11 +811,18 @@ def prevalidate_variant_value(
     if value == "*" or variant.name in reserved_names:
         return []
 
+    # raise if there is no definition at all
+    if not pkg_cls.has_variant(variant.name):
+        raise UnknownVariantError(
+            f"No such variant '{variant.name}' in package {pkg_cls.name}", [variant.name]
+        )
+
     # do as much prevalidation as we can -- check only those
     # variants whose when constraint intersects this spec
     errors = []
     possible_definitions = []
     valid_definitions = []
+
     for when, pkg_variant_def in pkg_cls.variant_definitions(variant.name):
         if spec and not spec.intersects(when):
             continue
@@ -872,15 +878,9 @@ class DuplicateVariantError(error.SpecError):
 class UnknownVariantError(error.SpecError):
     """Raised when an unknown variant occurs in a spec."""
 
-    def __init__(self, spec, variants):
-        self.unknown_variants = variants
-        variant_str = "variant" if len(variants) == 1 else "variants"
-        msg = (
-            'trying to set {0} "{1}" in package "{2}", but the package'
-            " has no such {0} [happened when validating '{3}']"
-        )
-        msg = msg.format(variant_str, comma_or(variants), spec.name, spec.root)
+    def __init__(self, msg: str, unknown_variants: List[str]):
         super().__init__(msg)
+        self.unknown_variants = unknown_variants
 
 
 class InconsistentValidationError(error.SpecError):
@@ -910,15 +910,6 @@ class InvalidVariantValueCombinationError(error.SpecError):
 
 class InvalidVariantValueError(error.SpecError):
     """Raised when variants have invalid values."""
-
-
-class InvalidVariantForSpecError(error.SpecError):
-    """Raised when an invalid conditional variant is specified."""
-
-    def __init__(self, variant, when, spec):
-        msg = "Invalid variant {0} for spec {1}.\n"
-        msg += "{0} is only available for {1.name} when satisfying one of {2}."
-        super().__init__(msg.format(variant, spec, when))
 
 
 class UnsatisfiableVariantSpecError(error.UnsatisfiableSpecError):

@@ -1070,7 +1070,7 @@ class TestSpecSemantics:
     @pytest.mark.regression("13124")
     def test_error_message_unknown_variant(self):
         s = Spec("mpileaks +unknown")
-        with pytest.raises(UnknownVariantError, match=r"package has no such"):
+        with pytest.raises(UnknownVariantError):
             s.concretize()
 
     @pytest.mark.regression("18527")

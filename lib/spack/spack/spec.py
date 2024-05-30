@@ -2968,7 +2968,9 @@ class Spec:
         # but are not necessarily recorded by the package's class
         not_existing = set(spec.variants) - (set(pkg_variants) | set(vt.reserved_names))
         if not_existing:
-            raise vt.UnknownVariantError(spec, not_existing)
+            raise vt.UnknownVariantError(
+                f"No such variant {not_existing} for spec: '{spec}'", list(not_existing)
+            )
 
     def update_variant_validate(self, variant_name, values):
         """If it is not already there, adds the variant named ``variant_name`` to
@@ -4503,30 +4505,40 @@ def substitute_abstract_variants(spec: Spec):
     Args:
         spec: spec on which to operate the substitution
     """
-    # This method needs to be best effort so that it works in matrix exlusion
+    # This method needs to be best effort so that it works in matrix exclusion
     # in $spack/lib/spack/spack/spec_list.py
-    failed = []
+    unknown = []
     for name, v in spec.variants.items():
         if name == "dev_path":
             spec.variants.substitute(vt.SingleValuedVariant(name, v._original_value))
             continue
         elif name in vt.reserved_names:
             continue
-        elif name not in spec.package_class.variant_names():
-            failed.append(name)
+
+        pkg_variants = spec.package_class.variants_for_spec(name, spec)
+        if not pkg_variants:
+            if name not in spec.package_class.variant_names():
+                unknown.append(name)
+            else:
+                whens = [str(when) for when, _ in spec.package_class.variant_definitions(name)]
+                raise InvalidVariantForSpecError(v.name, f"({', '.join(whens)})", spec)
             continue
 
-        pkg_variant, *rest = spec.package_class.variants_for_spec(name, spec)
+        pkg_variant, *rest = pkg_variants
         if rest:
-            continue  # can't substitute with  multiple possible definitions
+            continue
 
         new_variant = pkg_variant.make_variant(v._original_value)
         pkg_variant.validate_or_raise(new_variant, spec.package_class)
         spec.variants.substitute(new_variant)
 
-    # Raise all errors at once
-    if failed:
-        raise vt.UnknownVariantError(spec, failed)
+    if unknown:
+        variants = llnl.string.plural(len(unknown), "variant")
+        raise vt.UnknownVariantError(
+            f"Tried to set {variants} {llnl.string.comma_and(unknown)}. "
+            f"{spec.name} has no such {variants}",
+            unknown_variants=unknown,
+        )
 
 
 def parse_with_version_concrete(spec_like: Union[str, Spec], compiler: bool = False):
@@ -4954,6 +4966,15 @@ class SpecParseError(spack.error.SpecError):
                 "    %s^" % (" " * self.pos),
             ]
         )
+
+
+class InvalidVariantForSpecError(spack.error.SpecError):
+    """Raised when an invalid conditional variant is specified."""
+
+    def __init__(self, variant, when, spec):
+        msg = f"Invalid variant {variant} for spec {spec}.\n"
+        msg += f"{variant} is only available for {spec.name} when satisfying one of {when}."
+        super().__init__(msg)
 
 
 class UnsupportedPropagationError(spack.error.SpecError):

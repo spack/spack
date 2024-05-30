@@ -759,15 +759,10 @@ class PackageBase(WindowsRPath, PackageViewMixin, RedistributionMixin, metaclass
     @classmethod
     def variant_definitions(cls, name: str):
         """Iterator over (when_spec, Variant) for all variant definitions for a particular name."""
-        found = False
         for when, variants_by_name in cls.variants.items():
             variant_def = variants_by_name.get(name)
             if variant_def:
-                found = True
                 yield when, variant_def
-
-        if not found:
-            raise KeyError(f"No such variant '{name}' in package '{cls.name}'")
 
     @classmethod
     def variants_for_spec(
