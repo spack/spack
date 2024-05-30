@@ -13,8 +13,11 @@ class PyJunit2html(PythonPackage):
 
     homepage = "https://gitlab.com/inorton/junit2html"
 
-    pypi = "junit2html/junit2html-31.0.2-py3-none-any.whl"
+    url = "https://gitlab.com/inorton/junit2html/-/archive/v31.0.2/junit2html-v31.0.2.tar.gz"
 
     maintainers("LydDeb")
 
-    version("31.0.2", sha256="c7fd1f253d423f0df031d0cee8ef7d4d98d9f8bf6383a2d40dca639686814866")
+    version("31.0.2", sha256="8d90ae83163dde6bf0bde9c3e8d21c0ab0796de7c5f33917cfdbb9d319212213")
+
+    depends_on("py-setuptools", type=("build"))
+    depends_on("py-jinja2@3.0:", type=("build", "run"))
