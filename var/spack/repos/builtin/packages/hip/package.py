@@ -316,7 +316,7 @@ class Hip(CMakePackage):
                 "rocminfo": rocm_prefix,
                 "comgr": rocm_prefix,
                 "rocm-device-libs": rocm_prefix,
-                "hipify-clang" = rocm_prefix,
+                "hipify-clang" : rocm_prefix,
             }
 
             if self.spec.satisfies("@5.7:"):
@@ -332,7 +332,7 @@ class Hip(CMakePackage):
                 "rocm-device-libs": self.spec["llvm-amdgpu"].prefix,
                 "hipify-clang": self.spec["hipify-clang"].prefix,
             }
-            paths["bitcode"] = paths["rocm-device-libs"].amdgcn.bitcode
+        paths["bitcode"] = paths["rocm-device-libs"].amdgcn.bitcode
 
         return paths
 
