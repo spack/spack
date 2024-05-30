@@ -21,6 +21,7 @@ class Groff(AutotoolsPackage, GNUMirrorPackage):
 
     license("GPL-3.0-or-later")
 
+    version("1.23.0", sha256="6b9757f592b7518b4902eb6af7e54570bdccba37a871fddb2d30ae3863511c13")
     version("1.22.4", sha256="e78e7b4cb7dec310849004fa88847c44701e8d133b5d4c13057d876c1bad0293")
     version("1.22.3", sha256="3a48a9d6c97750bfbd535feeb5be0111db6406ddb7bb79fc680809cda6d828a5")
 

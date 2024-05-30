@@ -16,6 +16,7 @@ class Iperf3(AutotoolsPackage):
 
     license("BSD-3-Clause-LBNL")
 
+    version("3.17.1", sha256="84404ca8431b595e86c473d8f23d8bb102810001f15feaf610effd3b318788aa")
     version("3.17", sha256="077ede831b11b733ecf8b273abd97f9630fd7448d3ec1eaa789f396d82c8c943")
     version("3.16", sha256="cc740c6bbea104398cc3e466befc515a25896ec85e44a662d5f4a767b9cf713e")
     version("3.14", sha256="723fcc430a027bc6952628fa2a3ac77584a1d0bd328275e573fc9b206c155004")

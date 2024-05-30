@@ -14,6 +14,7 @@ class Flatbuffers(CMakePackage):
 
     license("Apache-2.0")
 
+    version("24.3.25", sha256="4157c5cacdb59737c5d627e47ac26b140e9ee28b1102f812b36068aab728c1ed")
     version("24.3.7", sha256="bfff9d2150fcff88f844e8c608b02b2a0e94c92aea39b04c0624783464304784")
     version("2.0.6", sha256="e2dc24985a85b278dd06313481a9ca051d048f9474e0f199e372fea3ea4248c9")
     version("2.0.0", sha256="9ddb9031798f4f8754d00fca2f1a68ecf9d0f83dfac7239af1311e4fd9a565c4")

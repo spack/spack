@@ -42,7 +42,7 @@ class Zip(MakefilePackage):
         return match.group(1) if match else None
 
     def url_for_version(self, version):
-        return "http://downloads.sourceforge.net/infozip/zip{0}.tar.gz".format(version.joined)
+        return f"http://downloads.sourceforge.net/infozip/zip{version.joined}.tar.gz"
 
     def build(self, spec, prefix):
         make("-f", "unix/Makefile", "CC=" + spack_cc, "generic")
