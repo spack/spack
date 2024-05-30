@@ -2048,9 +2048,7 @@ class SpackSolverSetup:
             # best possible, so they're guaranteed to be used preferentially.
             version = s.versions.concrete
 
-            if version is None or (
-                any((v == version) for v in self.possible_versions[s.name])
-            ):
+            if version is None or (any((v == version) for v in self.possible_versions[s.name])):
                 continue
 
             if require_checksum and not _is_checksummed_git_version(version):

@@ -2935,9 +2935,7 @@ def test_git_ref_version_can_be_reused(
 
 
 @pytest.mark.only_clingo("clingo only reuse feature being tested")
-@pytest.mark.parametrize(
-    "standard_version",["2.0.0", "2.1.5", "2.1.6"]
-)
+@pytest.mark.parametrize("standard_version", ["2.0.0", "2.1.5", "2.1.6"])
 def test_reuse_prefers_standard_over_git_versions(
     standard_version, install_mockery_mutable_config, do_not_check_runtimes_on_reuse
 ):
