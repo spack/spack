@@ -1350,21 +1350,16 @@ class Mfem(Package, CudaPackage, ROCmPackage):
             for dir in libs_list.directories
             if not self.is_sys_lib_path(dir)
         ]
-        flags += [
-            "-L%s" % dir for dir in libs_list.directories
-            if not self.is_sys_lib_path(dir)
-        ]
+        flags += ["-L%s" % dir for dir in libs_list.directories if not self.is_sys_lib_path(dir)]
         flags += [libs_list.link_flags]
         return " ".join(flags)
 
     def ld_flags_from_dirs(self, pkg_dirs_list, pkg_libs_list):
         flags = [
-            "%s-rpath,%s" % (self.xlinker, dir) for dir in pkg_dirs_list
+            "%s-rpath,%s" % (self.xlinker, dir)
+            for dir in pkg_dirs_list
             if not self.is_sys_lib_path(dir)
         ]
-        flags += [
-            "-L%s" % dir for dir in pkg_dirs_list
-            if not self.is_sys_lib_path(dir)
-        ]
+        flags += ["-L%s" % dir for dir in pkg_dirs_list if not self.is_sys_lib_path(dir)]
         flags += ["-l%s" % lib for lib in pkg_libs_list]
         return " ".join(flags)
