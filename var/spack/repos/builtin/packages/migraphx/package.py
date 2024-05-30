@@ -13,13 +13,14 @@ class Migraphx(CMakePackage):
 
     homepage = "https://github.com/ROCm/AMDMIGraphX"
     git = "https://github.com/ROCm/AMDMIGraphX.git"
-    url = "https://github.com/ROCm/AMDMIGraphX/archive/rocm-6.0.2.tar.gz"
+    url = "https://github.com/ROCm/AMDMIGraphX/archive/rocm-6.1.1.tar.gz"
     tags = ["rocm"]
 
     maintainers("srekolam", "renjithravindrankannath")
     libraries = ["libmigraphx"]
 
     license("MIT")
+    version("6.1.1", sha256="e14a62678e97356236b45921e24f28ff430d670fb70456c3e5ebfeeb22160811")
     version("6.1.0", sha256="2ba44146397624845c64f3898bb1b08837ad7a49f133329e58eb04c05d1f36ac")
     version("6.0.2", sha256="13f393f8fdf25275994dda07091a93eec867233cd2f99f9cb0df16fbabd53483")
     version("6.0.0", sha256="7bb3f5011da9b1f3b79707b06118c523c1259215f650c2ffa5622a7e1d88868f")
@@ -51,13 +52,13 @@ class Migraphx(CMakePackage):
     patch(
         "https://github.com/ROCm/AMDMIGraphX/commit/728bea3489c97c9e1ddda0a0ae527ffd2d70cb97.patch?full_index=1",
         sha256="3a8afd32208aa4f59fb31f898d243287771ebd409c7af7a4a785c586081e3711",
-        when="@6.0:",
+        when="@6.0",
     )
 
     patch(
         "https://github.com/ROCm/AMDMIGraphX/commit/624f8ef549522f64fdddad7f49a2afe1890b0b79.patch?full_index=1",
         sha256="410d0fd49f5f65089cd4f540c530c85896708b4fd94c67d15c2c279158aea85d",
-        when="@6.0:",
+        when="@6.0",
     )
     patch("0003-add-half-include-directory-migraphx-6.0.patch", when="@6.0:")
 
@@ -92,6 +93,7 @@ class Migraphx(CMakePackage):
         "6.0.0",
         "6.0.2",
         "6.1.0",
+        "6.1.1",
     ]:
         depends_on(f"rocm-cmake@{ver}:", type="build", when=f"@{ver}")
         depends_on(f"hip@{ver}", when=f"@{ver}")
@@ -99,7 +101,7 @@ class Migraphx(CMakePackage):
         depends_on(f"rocblas@{ver}", when=f"@{ver}")
         depends_on(f"miopen-hip@{ver}", when=f"@{ver}")
 
-    for ver in ["6.0.0", "6.0.2", "6.1.0"]:
+    for ver in ["6.0.0", "6.0.2", "6.1.0", "6.1.1"]:
         depends_on(f"rocmlir@{ver}", when=f"@{ver}")
 
     @property

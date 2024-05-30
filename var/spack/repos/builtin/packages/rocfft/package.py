@@ -13,13 +13,14 @@ class Rocfft(CMakePackage):
 
     homepage = "https://github.com/ROCm/rocFFT/"
     git = "https://github.com/ROCm/rocFFT.git"
-    url = "https://github.com/ROCm/rocfft/archive/rocm-6.0.0.tar.gz"
+    url = "https://github.com/ROCm/rocfft/archive/rocm-6.1.1.tar.gz"
     tags = ["rocm"]
 
     maintainers("cgmb", "srekolam", "renjithravindrankannath", "haampie")
     libraries = ["librocfft"]
 
     license("MIT")
+    version("6.1.1", sha256="d517a931d49a1e59df4e494ab2b68e301fe7ebf39723863985567467f111111c")
     version("6.1.0", sha256="9e6643174a2b0f376127f43454e78d4feba6fac695d4cda9796da50005ecac66")
     version("6.0.2", sha256="d3e1f7a4dc661f1e5ffce02e2e01ae6c3c339bac8e93deaf175e4c03ddfea459")
     version("6.0.0", sha256="fb8ba56572702e77e4383d922cd1fee4ad3fa5f63a5ebdb3d9c354439a446992")
@@ -85,6 +86,7 @@ class Rocfft(CMakePackage):
         "6.0.0",
         "6.0.2",
         "6.1.0",
+        "6.1.1",
     ]:
         depends_on(f"hip@{ver}", when=f"@{ver}")
         depends_on(f"rocm-cmake@{ver}:", type="build", when=f"@{ver}")

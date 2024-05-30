@@ -14,9 +14,11 @@ class Rocmlir(CMakePackage):
 
     homepage = "https://github.com/ROCm/rocMLIR"
     git = "https://github.com/ROCm/rocMLIR.git"
-    url = "https://github.com/ROCm/rocMLIR/archive/refs/tags/rocm-6.1.0.tar.gz"
+    url = "https://github.com/ROCm/rocMLIR/archive/refs/tags/rocm-6.1.1.tar.gz"
 
-    maintainers("srekolam")
+    maintainers("srekolam", "afzpatel", "renjithravindrankannath")
+
+    version("6.1.1", sha256="0847fd2325fb287538442cf09daf7fa76e7926a40eafd27049e0b5320371c1b5")
     version("6.1.0", sha256="dd800783f1ce66ce7c560d5193d053ddf3797abae5ec9375c9842243f5a8ca0b")
     version("6.0.2", sha256="6ed039e8045169bb64c10fb063c2e1753b8d52d6d56c60e001c929082be1f20b")
     version("6.0.0", sha256="128915abdceaf5cef26a717d154f2b2f9466f6904f4490f158038878cedbf618")
@@ -51,7 +53,7 @@ class Rocmlir(CMakePackage):
     depends_on("half")
     depends_on("pkgconfig", type="build")
 
-    for ver in ["5.3.0", "5.4.0", "5.4.3", "5.5.0", "5.5.1", "6.0.0", "6.0.2", "6.1.0"]:
+    for ver in ["5.3.0", "5.4.0", "5.4.3", "5.5.0", "5.5.1", "6.0.0", "6.0.2", "6.1.0", "6.1.1"]:
         depends_on(f"hip@{ver}", when=f"@{ver}")
         depends_on(f"llvm-amdgpu@{ver}", when=f"@{ver}")
         depends_on(f"hsa-rocr-dev@{ver}", when=f"@{ver}")

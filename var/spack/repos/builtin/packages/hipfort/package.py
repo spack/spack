@@ -11,12 +11,13 @@ class Hipfort(CMakePackage):
 
     homepage = "https://github.com/ROCm/hipfort"
     git = "https://github.com/ROCm/hipfort.git"
-    url = "https://github.com/ROCm/hipfort/archive/rocm-6.0.2.tar.gz"
+    url = "https://github.com/ROCm/hipfort/archive/rocm-6.1.1.tar.gz"
     tags = ["rocm"]
 
     license("MIT")
 
     maintainers("cgmb", "srekolam", "renjithravindrankannath")
+    version("6.1.1", sha256="646f7077399db7a70d7102fda8307d0a11039f616399a4a06a64fd824336419f")
     version("6.1.0", sha256="70d3ccc9f3536f62686e73934f5972ed011c4df7654ed1f8e6d2d42c4289f47e")
     version("6.0.2", sha256="b60ada7474b71c1d82c700b0159bc0756dbb2808375054903710280b1677f199")
     version("6.0.0", sha256="151cf11648885db799aade0d00a7882589e7195643b02beaa251f1b2a43aceed")
@@ -62,6 +63,7 @@ class Hipfort(CMakePackage):
         "6.0.0",
         "6.0.2",
         "6.1.0",
+        "6.1.1",
     ]:
         depends_on(f"hip@{ver}", type="build", when=f"@{ver}")
 

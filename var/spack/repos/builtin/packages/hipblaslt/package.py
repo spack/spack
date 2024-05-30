@@ -11,13 +11,14 @@ class Hipblaslt(CMakePackage):
     and extends functionalities beyond a traditional BLAS library"""
 
     homepage = "https://github.com/ROCm/hipBLASLt"
-    url = "https://github.com/ROCm/hipBLASLt/archive/refs/tags/rocm-6.0.2.tar.gz"
+    url = "https://github.com/ROCm/hipBLASLt/archive/refs/tags/rocm-6.1.1.tar.gz"
     git = "https://github.com/ROCm/hipBLASLt.git"
 
     maintainers("srekolam", "afzpatel", "renjithravindrankannath")
 
     license("MIT")
-
+    version("6.1.1", sha256="1e21730ade59b5e32432fa0981383f689a380b1ffc92fe950822722da9521a72")
+    version("6.1.0", sha256="90fc2f2c9e11c87e0529e824e4b0561dbc850f8ffa21be6932ae63cbaa27cdf0")
     version("6.0.2", sha256="e281a1a7760fab8c3e0baafe17950cf43c422184e3226e3c14eb06e50c69d421")
     version("6.0.0", sha256="6451b6fdf7f24787628190bbe8f2208c929546b68b692d8355d2f18bea7ca7db")
 
@@ -31,7 +32,7 @@ class Hipblaslt(CMakePackage):
     )
     variant("asan", default=False, description="Build with address-sanitizer enabled or disabled")
 
-    for ver in ["6.0.0", "6.0.2"]:
+    for ver in ["6.0.0", "6.0.2", "6.1.0", "6.1.1"]:
         depends_on(f"hip@{ver}", when=f"@{ver}")
         depends_on(f"hipblas@{ver}", when=f"@{ver}")
         depends_on(f"rocm-openmp-extras@{ver}", type="test", when=f"@{ver}")
@@ -44,14 +45,17 @@ class Hipblaslt(CMakePackage):
 
     # Sets the proper for clang++ and clang-offload-blunder.
     # Also adds hipblas and msgpack include directories
-    patch("001_Set_LLVM_Paths_And_Add_Includes.patch")
+    patch("001_Set_LLVM_Paths_And_Add_Includes.patch", when="@6.0")
+    # Below patch sets the proper path for clang++ and clang-offload-blunder.
+    # Also adds hipblas and msgpack include directories for 6.1.0 release.
+    patch("0001-Set-LLVM_Path-Add-Hiblas-Include-to-CmakeLists-6.1.Patch", when="@6.1")
 
     def setup_build_environment(self, env):
         env.set("CXX", self.spec["hip"].hipcc)
 
     def cmake_args(self):
         args = [
-            self.define("Tensile_CODE_OBJECT_VERSION", "V3"),
+            self.define("Tensile_CODE_OBJECT_VERSION", "default"),
             self.define("MSGPACK_DIR", self.spec["msgpack-c"].prefix),
             self.define_from_variant("ADDRESS_SANITIZER", "asan"),
             self.define("BUILD_CLIENTS_TESTS", self.run_tests),

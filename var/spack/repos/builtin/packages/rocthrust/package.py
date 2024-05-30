@@ -14,10 +14,11 @@ class Rocthrust(CMakePackage):
 
     homepage = "https://github.com/ROCm/rocThrust"
     git = "https://github.com/ROCm/rocThrust.git"
-    url = "https://github.com/ROCm/rocThrust/archive/rocm-6.0.0.tar.gz"
+    url = "https://github.com/ROCm/rocThrust/archive/rocm-6.1.1.tar.gz"
     tags = ["rocm"]
 
     maintainers("cgmb", "srekolam", "renjithravindrankannath")
+    version("6.1.1", sha256="03420d8af687107775a1fbd3db5e8c9872c7c738747de77a5e8c0b3466a3321a")
     version("6.1.0", sha256="8c36fb7b34758579601365a450700899133da5802e5c8370654051b190bd6e1c")
     version("6.0.2", sha256="8de9414f6b921ff549ba102239fcf65f5cc70ece5eec9753de5ec91870e6934d")
     version("6.0.0", sha256="a3fdafe4b6124118e07f23a3b0270d91740da324f61aaa3e8c034da08d9312b1")
@@ -71,6 +72,7 @@ class Rocthrust(CMakePackage):
         "6.0.0",
         "6.0.2",
         "6.1.0",
+        "6.1.1",
     ]:
         depends_on(f"hip@{ver}", when=f"@{ver}")
         depends_on(f"rocprim@{ver}", when=f"@{ver}")

@@ -16,12 +16,13 @@ class RocmValidationSuite(CMakePackage):
     compatible platform."""
 
     homepage = "https://github.com/ROCm/ROCmValidationSuite"
-    url = "https://github.com/ROCm/ROCmValidationSuite/archive/rocm-6.1.0.tar.gz"
+    url = "https://github.com/ROCm/ROCmValidationSuite/archive/rocm-6.1.1.tar.gz"
     tags = ["rocm"]
 
     license("MIT")
 
     maintainers("srekolam", "renjithravindrankannath")
+    version("6.1.1", sha256="72d1a40bce5b68f7d5959e10c07576234640b9c9fcb24d6301a76336629d9962")
     version("6.1.0", sha256="712f49bfe3a62c9f9cc6f9dc1c593b57e0b45158bb270d685d1141c9a9e90387")
     version("6.0.2", sha256="8286d00ce290eeace3697138da9d7a9669f54152e5febcd9e5c5156ae79f0c0c")
     version("6.0.0", sha256="a84e36b5e50e70ba033fb6bc6fa99da2e32bf7eaef2098df3164365a77a8f14c")
@@ -89,6 +90,7 @@ class RocmValidationSuite(CMakePackage):
         "6.0.0",
         "6.0.2",
         "6.1.0",
+        "6.1.1",
     ]:
         depends_on(f"hip@{ver}", when=f"@{ver}")
         depends_on(f"rocminfo@{ver}", when=f"@{ver}")
