@@ -61,6 +61,7 @@ class PasswordStore(MakefilePackage):
             "src/platform/darwin.sh",
             "src/platform/freebsd.sh",
             "src/platform/openbsd.sh",
+            "src/platform/cygwin.sh",
         )
 
         platform_files.filter("^#!.*$", f"#! {bash_exec}")
