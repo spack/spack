@@ -316,7 +316,7 @@ class Hip(CMakePackage):
                 "rocminfo": rocm_prefix,
                 "comgr": rocm_prefix,
                 "rocm-device-libs": rocm_prefix,
-                "hipify-clang" : rocm_prefix,
+                "hipify-clang": rocm_prefix,
             }
 
             if self.spec.satisfies("@5.7:"):
