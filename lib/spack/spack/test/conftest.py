@@ -12,6 +12,7 @@ import itertools
 import json
 import os
 import os.path
+import pathlib
 import re
 import shutil
 import stat
@@ -32,6 +33,7 @@ import llnl.util.tty as tty
 from llnl.util.filesystem import copy_tree, mkdirp, remove_linked_tree, touchp, working_dir
 
 import spack.binary_distribution
+import spack.bootstrap.core
 import spack.caches
 import spack.cmd.buildcache
 import spack.compiler
@@ -682,36 +684,34 @@ def configuration_dir(tmpdir_factory, linux_os):
     directory path.
     """
     tmpdir = tmpdir_factory.mktemp("configurations")
+    install_tree_root = tmpdir_factory.mktemp("opt")
+    modules_root = tmpdir_factory.mktemp("share")
+    tcl_root = modules_root.ensure("modules", dir=True)
+    lmod_root = modules_root.ensure("lmod", dir=True)
 
     # <test_path>/data/config has mock config yaml files in it
     # copy these to the site config.
-    test_config = py.path.local(spack.paths.test_path).join("data", "config")
-    test_config.copy(tmpdir.join("site"))
+    test_config = pathlib.Path(spack.paths.test_path) / "data" / "config"
+    shutil.copytree(test_config, tmpdir.join("site"))
 
     # Create temporary 'defaults', 'site' and 'user' folders
     tmpdir.ensure("user", dir=True)
 
-    # Slightly modify config.yaml and compilers.yaml
-    if sys.platform == "win32":
-        locks = False
-    else:
-        locks = True
-
+    # Fill out config.yaml, compilers.yaml and modules.yaml templates.
     solver = os.environ.get("SPACK_TEST_SOLVER", "clingo")
-    config_yaml = test_config.join("config.yaml")
-    modules_root = tmpdir_factory.mktemp("share")
-    tcl_root = modules_root.ensure("modules", dir=True)
-    lmod_root = modules_root.ensure("lmod", dir=True)
-    content = "".join(config_yaml.read()).format(solver, locks, str(tcl_root), str(lmod_root))
-    t = tmpdir.join("site", "config.yaml")
-    t.write(content)
+    locks = sys.platform != "win32"
+    config = tmpdir.join("site", "config.yaml")
+    config_template = test_config / "config.yaml"
+    config.write(config_template.read_text().format(install_tree_root, solver, locks))
 
-    compilers_yaml = test_config.join("compilers.yaml")
-    content = "".join(compilers_yaml.read()).format(
-        linux_os=linux_os, target=str(archspec.cpu.host().family)
-    )
-    t = tmpdir.join("site", "compilers.yaml")
-    t.write(content)
+    target = str(archspec.cpu.host().family)
+    compilers = tmpdir.join("site", "compilers.yaml")
+    compilers_template = test_config / "compilers.yaml"
+    compilers.write(compilers_template.read_text().format(linux_os=linux_os, target=target))
+
+    modules = tmpdir.join("site", "modules.yaml")
+    modules_template = test_config / "modules.yaml"
+    modules.write(modules_template.read_text().format(tcl_root, lmod_root))
     yield tmpdir
 
 
@@ -1702,7 +1702,7 @@ def mock_executable(tmp_path):
         executable_path = executable_dir / name
         if sys.platform == "win32":
             executable_path = executable_dir / (name + ".bat")
-        executable_path.write_text(f"{ shebang }{ output }\n")
+        executable_path.write_text(f"{shebang}{output}\n")
         executable_path.chmod(0o755)
         return executable_path
 
