@@ -15,6 +15,7 @@ class Gmp(AutotoolsPackage, GNUMirrorPackage):
 
     license("LGPL-3.0-or-later OR GPL-2.0-or-later")
 
+    version("6.3.0", sha256="ac28211a7cfb609bae2e2c8d6058d66c8fe96434f740cf6fe2e47b000d1c20cb")
     version("6.2.1", sha256="eae9326beb4158c386e39a356818031bd28f3124cf915f8c5b1dc4c7a36b4d7c")
     version("6.2.0", sha256="f51c99cb114deb21a60075ffb494c1a210eb9d7cb729ed042ddb7de9534451ea")
     version("6.1.2", sha256="5275bb04f4863a13516b2f39392ac5e272f5e1bb8057b18aec1c9b79d73d8fb2")

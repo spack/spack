@@ -23,6 +23,7 @@ class Wxwidgets(AutotoolsPackage):
     git = "https://github.com/wxWidgets/wxWidgets.git"
 
     version("develop", branch="master")
+    version("3.2.5", sha256="0ad86a3ad3e2e519b6a705248fc9226e3a09bbf069c6c692a02acf7c2d1c6b51")
     version("3.2.4", sha256="0640e1ab716db5af2ecb7389dbef6138d7679261fbff730d23845ba838ca133e")
     version("3.2.2.1", sha256="dffcb6be71296fff4b7f8840eb1b510178f57aa2eb236b20da41182009242c02")
     version("3.2.2", sha256="8edf18672b7bc0996ee6b7caa2bee017a9be604aad1ee471e243df7471f5db5d")

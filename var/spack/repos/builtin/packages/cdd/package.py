@@ -31,6 +31,6 @@ class Cdd(Package):
 
     def install(self, spec, prefix):
         # The Makefile isn't portable; use our own instead
-        makeargs = ["-f", "Makefile.spack", "PREFIX=%s" % prefix]
+        makeargs = ["-f", "Makefile.spack", f"PREFIX={prefix}"]
         make(*makeargs)
         make("install", *makeargs)
