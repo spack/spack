@@ -286,7 +286,7 @@ def _avoid_mismatched_variants(error_cls):
             pkg_cls = spack.repo.PATH.get_pkg_class(pkg_name)
             for variant in current_spec.variants.values():
                 # Variant does not exist at all
-                if variant.name not in pkg_cls.variants:
+                if variant.name not in pkg_cls.variant_names():
                     summary = (
                         f"Setting a preference for the '{pkg_name}' package to the "
                         f"non-existing variant '{variant.name}'"
