@@ -53,7 +53,7 @@ class XcbProto(AutotoolsPackage, XorgPackage):
 
     patch("xcb-proto-1.12-schema-1.patch", when="@1.12")
 
-    when("+use_spack_interpreter")
+    @when("+use_spack_interpreter")
     def setup_build_environment(self, env):
         env.set("PYTHON", sys.executable)
 
