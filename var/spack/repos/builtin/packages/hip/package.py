@@ -412,6 +412,8 @@ class Hip(CMakePackage):
             env.set("ROCM_PATH", paths["rocm-path"])
             if self.spec.satisfies("@5.4:"):
                 env.set("HIPIFY_CLANG_PATH", paths["hipify-clang"])
+            if self.spec.satisfies("@6.1:"):
+                env.prepend_path("LD_LIBRARY_PATH", self.spec["hsa-rocr-dev"].prefix.lib)
 
             # hipcc recognizes HIP_PLATFORM == hcc and HIP_COMPILER == clang, even
             # though below we specified HIP_PLATFORM=rocclr and HIP_COMPILER=clang
