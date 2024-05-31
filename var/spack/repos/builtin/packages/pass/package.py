@@ -27,6 +27,7 @@ class Pass(MakefilePackage):
     depends_on("util-linux")  # for GNU getopt
     depends_on("libqrencode")
     depends_on("openssl")  # used for base64 only
+
     depends_on("xclip", when="+xclip")
 
     def setup_build_environment(self, env):
@@ -60,4 +61,3 @@ class Pass(MakefilePackage):
         platform_files.filter('^GPG="gpg"$', f'GPG="{gpg_exec}"')
         platform_files.filter('^GETOPT=".*"$', f'GETOPT="{getopt_exec}"')
         platform_files.filter('^BASE64=".*"$', f'BASE64="{openssl_exec} base64"')
-
