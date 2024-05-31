@@ -24,10 +24,7 @@ class Pass(MakefilePackage):
     depends_on("tree")
     depends_on("util-linux")  # for GNU getopt
     depends_on("libqrencode")
-    depends_on("openssl")  # not listed as a dependency, but used for base64
-
-    # documentation also lists dependencies on xclip, wl-clipboard, etc. but
-    # those are platform-dependent
+    depends_on("openssl")  # used for base64 only
 
     def setup_build_environment(self, env):
         env.set("PREFIX", prefix)
