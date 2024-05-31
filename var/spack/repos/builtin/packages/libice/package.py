@@ -24,7 +24,6 @@ class Libice(AutotoolsPackage, XorgPackage):
     # technically libbsd is only required when glibc < 2.36 which provides arc4random_buf,
     # but spack doesn't currently have a good way to model this so we depend on it unconditionally
     depends_on("libbsd", when="platform=linux")
-    depends_on("libbsd", when="platform=cray")
 
     depends_on("xproto")
     depends_on("xtrans")

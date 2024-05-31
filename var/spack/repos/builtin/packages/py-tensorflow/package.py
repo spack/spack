@@ -331,11 +331,6 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
         when="platform=darwin",
         msg="Currently jemalloc is only support on Linux platform",
     )
-    conflicts(
-        "+jemalloc",
-        when="platform=cray",
-        msg="Currently jemalloc is only support on Linux platform",
-    )
     conflicts("+opencl", when="platform=windows")
     conflicts("+computecpp", when="~opencl")
     conflicts(
@@ -358,21 +353,12 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
         when="platform=darwin",
         msg="Currently TensorRT is only supported on Linux platform",
     )
-    conflicts(
-        "+tensorrt",
-        when="platform=cray",
-        msg="Currently TensorRT is only supported on Linux platform",
-    )
     conflicts("+nccl", when="~cuda~rocm")
     conflicts(
         "+nccl", when="platform=darwin", msg="Currently NCCL is only supported on Linux platform"
     )
-    conflicts(
-        "+nccl", when="platform=cray", msg="Currently NCCL is only supported on Linux platform"
-    )
     conflicts("+mpi", when="platform=windows")
     conflicts("+ios", when="platform=linux", msg="iOS support only available on macOS")
-    conflicts("+ios", when="platform=cray", msg="iOS support only available on macOS")
     # https://github.com/tensorflow/tensorflow/pull/45404
     conflicts("platform=darwin target=aarch64:", when="@:2.4")
     # https://github.com/tensorflow/tensorflow/pull/39225

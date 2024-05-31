@@ -10,7 +10,7 @@ from spack.package import *
 
 
 def is_CrayXC():
-    return (spack.platforms.host().name in ["linux", "cray"]) and (
+    return spack.platforms.host().name == "linux" and (
         os.environ.get("CRAYPE_NETWORK_TARGET") == "aries"
     )
 

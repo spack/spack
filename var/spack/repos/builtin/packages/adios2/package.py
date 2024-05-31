@@ -26,10 +26,11 @@ class Adios2(CMakePackage, CudaPackage, ROCmPackage):
 
     version("master", branch="master")
     version(
-        "2.10.0",
-        sha256="e5984de488bda546553dd2f46f047e539333891e63b9fe73944782ba6c2d95e4",
+        "2.10.1",
+        sha256="ce776f3a451994f4979c6bd6d946917a749290a37b7433c0254759b02695ad85",
         preferred=True,
     )
+    version("2.10.0", sha256="e5984de488bda546553dd2f46f047e539333891e63b9fe73944782ba6c2d95e4")
     version("2.9.2", sha256="78309297c82a95ee38ed3224c98b93d330128c753a43893f63bbe969320e4979")
     version("2.9.1", sha256="ddfa32c14494250ee8a48ef1c97a1bf6442c15484bbbd4669228a0f90242f4f9")
     version("2.9.0", sha256="69f98ef58c818bb5410133e1891ac192653b0ec96eb9468590140f2552b6e5d1")
@@ -148,7 +149,7 @@ class Adios2(CMakePackage, CudaPackage, ROCmPackage):
     conflicts("+rocm", when="~kokkos", msg="ADIOS2 does not support HIP without Kokkos")
     conflicts("+sycl", when="~kokkos", msg="ADIOS2 does not support SYCL without Kokkos")
 
-    for _platform in ["linux", "darwin", "cray"]:
+    for _platform in ["linux", "darwin"]:
         depends_on("pkgconfig", type="build", when=f"platform={_platform}")
         variant(
             "pic",
