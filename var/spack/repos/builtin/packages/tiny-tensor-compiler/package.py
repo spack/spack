@@ -31,7 +31,7 @@ class TinyTensorCompiler(CMakePackage):
     depends_on("cmake@3.23.0:", type="build")
     depends_on("double-batched-fft-library ~sycl ~level-zero ~opencl@0.5.1:", type="link")
     depends_on("oneapi-level-zero@1.13:", when="+level-zero")
-    depends_on("opencl-c-headers@2022.01.04:", when="+opencl", type="link")
+    depends_on("opencl-c-headers@2022.01.04:", when="+opencl")
     depends_on("opencl-icd-loader@2022.01.04:", when="+opencl", type="link")
     depends_on("re2c@3.0:", type="build")
     depends_on("bison@3.8.2:", type="build")
