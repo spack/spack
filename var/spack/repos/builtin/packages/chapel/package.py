@@ -49,6 +49,8 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
 
     version("2.0.0", sha256="a8cab99fd034c7b7229be8d4626ec95cf02072646fb148c74b4f48c460c6059c")
 
+    patch("fix_spack_cc_wrapper_in_cray_prgenv.patch", when="@2.0.0")
+
     compilers = (
         "allinea",
         "clang",

@@ -1,0 +1,82 @@
+diff --git a/third-party/gmp/gmp-src/configure b/third-party/gmp/gmp-src/configure
+index 7910aa0970..f2535dd18a 100755
+--- a/third-party/gmp/gmp-src/configure
++++ b/third-party/gmp/gmp-src/configure
+@@ -21272,8 +21272,8 @@ if { { eval echo "\"\$as_me\":${as_lineno-$LINENO}: \"$ac_compile\""; } >&5
+     -L* | -R* | -l*)
+        # Some compilers place space between "-{L,R}" and the path.
+        # Remove the space.
+-       if test x-L = "$p" ||
+-          test x-R = "$p"; then
++       if test x-L = x"$p" ||
++          test x-R = x"$p" || test x-l = x"$p"; then
+ 	 prev=$p
+ 	 continue
+        fi
+diff --git a/third-party/hwloc/hwloc-src/configure b/third-party/hwloc/hwloc-src/configure
+index f918598357..51d728f144 100755
+--- a/third-party/hwloc/hwloc-src/configure
++++ b/third-party/hwloc/hwloc-src/configure
+@@ -16640,8 +16640,8 @@ if { { eval echo "\"\$as_me\":${as_lineno-$LINENO}: \"$ac_compile\""; } >&5
+     -L* | -R* | -l*)
+        # Some compilers place space between "-{L,R}" and the path.
+        # Remove the space.
+-       if test x-L = "$p" ||
+-          test x-R = "$p"; then
++       if test x-L = x"$p" ||
++          test x-R = x"$p" || test x-l = x"$p"; then
+ 	 prev=$p
+ 	 continue
+        fi
+diff --git a/third-party/libunwind/libunwind-src/configure b/third-party/libunwind/libunwind-src/configure
+index 164431c2db..d37a32497f 100755
+--- a/third-party/libunwind/libunwind-src/configure
++++ b/third-party/libunwind/libunwind-src/configure
+@@ -14751,8 +14751,8 @@ if { { eval echo "\"\$as_me\":${as_lineno-$LINENO}: \"$ac_compile\""; } >&5
+     -L* | -R* | -l*)
+        # Some compilers place space between "-{L,R}" and the path.
+        # Remove the space.
+-       if test x-L = "$p" ||
+-          test x-R = "$p"; then
++       if test x-L = x"$p" ||
++          test x-R = x"$p" || test x-l = x"$p"; then
+ 	 prev=$p
+ 	 continue
+        fi
+diff --git a/third-party/qthread/qthread-src/configure b/third-party/qthread/qthread-src/configure
+index 5e87b10852..5bad78d5e1 100755
+--- a/third-party/qthread/qthread-src/configure
++++ b/third-party/qthread/qthread-src/configure
+@@ -19780,8 +19780,8 @@ if { { eval echo "\"\$as_me\":${as_lineno-$LINENO}: \"$ac_compile\""; } >&5
+     -L* | -R* | -l*)
+        # Some compilers place space between "-{L,R}" and the path.
+        # Remove the space.
+-       if test x-L = "$p" ||
+-          test x-R = "$p"; then
++       if test x-L = x"$p" ||
++          test x-R = x"$p" || test x-l = x"$p"; then
+ 	 prev=$p
+ 	 continue
+        fi
+diff --git a/util/chplenv/chpl_llvm.py b/util/chplenv/chpl_llvm.py
+index f0fd495f28..95dc9c3f67 100755
+--- a/util/chplenv/chpl_llvm.py
++++ b/util/chplenv/chpl_llvm.py
+@@ -866,13 +866,14 @@ def get_clang_prgenv_args():
+         os.environ['PE_CHAPEL_PKGCONFIG_LIBS'] = gather_pe_chpl_pkgconfig_libs()
+
+         # Use cc --cray-print-opts=... to get arguments from compiler driver
+-
++        # find the actual cc in case something like spack has wrapped it
++        real_cc = os.path.join(os.environ["CRAYPE_DIR"], "bin", "cc")
+         # Get compilation arguments
+-        opts = run_command(['cc', '--cray-print-opts=cflags'])
++        opts = run_command([real_cc, '--cray-print-opts=cflags'])
+         comp_args.extend(opts.split())
+
+         # Get link arguments
+-        opts = run_command(['cc', '--cray-print-opts=libs'])
++        opts = run_command([real_cc, '--cray-print-opts=libs'])
+         link_args.extend(opts.split())
+
+     return (comp_args, link_args)
