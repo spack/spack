@@ -21,11 +21,8 @@ class Nb(Package):
 
     version("7.12.1", sha256="c9b30448751dd726469ed3fde29e618c5747eb4a16ceaaf86d773989a6cf13f3")
 
-    variant("completions", default=True)
-
     depends_on("git")
     depends_on("bash")
-    depends_on("bash-completion", when="+completions")
 
     def patch(self):
         filter_file(
@@ -39,14 +36,13 @@ class Nb(Package):
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
+        mkdirp(prefix + "/share/bash-completion/completions")
         install("nb", join_path(prefix, "bin/nb"))
         install("bin/notes", join_path(prefix, "bin/notes"))
         install("bin/bookmark", join_path(prefix, "bin/bookmark"))
-
-        if self.spec.satisfies("+completions"):
-            install(
-                "etc/nb-completion.bash",
-                join_path(
-                    self.spec["bash-completion"].prefix, "share/bash-completion/completions/nb"
-                ),
-            )
+        install(
+            "etc/nb-completion.bash",
+            join_path(
+                prefix, "share/bash-completion/completions/nb"
+            ),
+        )
