@@ -77,6 +77,31 @@ submapping_schema = {
     },
 }
 
+dynamic_mapping_schema = {
+    "type": "object",
+    "additionalProperties": False,
+    "required": ["dynamic-mapping"],
+    "properties": {
+        "dynamic-mapping": {
+            "required": ["endpoint"],
+            "properties": {
+                "endpoint": {"type": "string", "patternProperties": r"http(s)?://[\w\d\-_\.]+"},
+                "timeout": {"type": "integer", "minimum": 0},
+                "verify_ssl": {"type": "boolean", "default": False},
+                "header": {"type": "object"},
+                "fields": {
+                    "type": "object",
+                    "properties": {
+                        "allow": {"type": "array", "items": {"type": "string"}},
+                        "require": {"type": "array", "items": {"type": "string"}},
+                        "ignore": {"type": "array", "items": {"type": "string"}},
+                    },
+                },
+            },
+        }
+    },
+}
+
 named_attributes_schema = {
     "oneOf": [
         {
@@ -128,7 +153,7 @@ named_attributes_schema = {
 
 pipeline_gen_schema = {
     "type": "array",
-    "items": {"oneOf": [submapping_schema, named_attributes_schema]},
+    "items": {"oneOf": [submapping_schema, named_attributes_schema, dynamic_mapping_schema]},
 }
 
 core_shared_properties = union_dicts(
