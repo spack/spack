@@ -16,12 +16,13 @@ class RocmValidationSuite(CMakePackage):
     compatible platform."""
 
     homepage = "https://github.com/ROCm/ROCmValidationSuite"
-    url = "https://github.com/ROCm/ROCmValidationSuite/archive/rocm-6.1.0.tar.gz"
+    url = "https://github.com/ROCm/ROCmValidationSuite/archive/rocm-6.1.1.tar.gz"
     tags = ["rocm"]
 
     license("MIT")
 
     maintainers("srekolam", "renjithravindrankannath")
+    version("6.1.1", sha256="72d1a40bce5b68f7d5959e10c07576234640b9c9fcb24d6301a76336629d9962")
     version("6.1.0", sha256="712f49bfe3a62c9f9cc6f9dc1c593b57e0b45158bb270d685d1141c9a9e90387")
     version("6.0.2", sha256="8286d00ce290eeace3697138da9d7a9669f54152e5febcd9e5c5156ae79f0c0c")
     version("6.0.0", sha256="a84e36b5e50e70ba033fb6bc6fa99da2e32bf7eaef2098df3164365a77a8f14c")
@@ -53,6 +54,11 @@ class RocmValidationSuite(CMakePackage):
         when="@5.6",
     )
     patch("008-correcting-library-and-include-path-WITHOUT-RVS-BUILD-TESTS.patch", when="@5.7")
+
+    # Replacing ROCM_PATH with corresponding package prefix path.
+    # Adding missing package package prefix paths.
+    # It expects rocm components headers and libraries in /opt/rocm
+    # It doesn't find package to include the library and include path without this patch.
     patch("009-replacing-rocm-path-with-package-path.patch", when="@6.0")
     patch("009-replacing-rocm-path-with-package-path-6.1.patch", when="@6.1")
     depends_on("cmake@3.5:", type="build")
@@ -84,6 +90,7 @@ class RocmValidationSuite(CMakePackage):
         "6.0.0",
         "6.0.2",
         "6.1.0",
+        "6.1.1",
     ]:
         depends_on(f"hip@{ver}", when=f"@{ver}")
         depends_on(f"rocminfo@{ver}", when=f"@{ver}")
@@ -115,8 +122,7 @@ class RocmValidationSuite(CMakePackage):
             self.define("HSA_PATH", self.spec["hsa-rocr-dev"].prefix),
             self.define("ROCM_SMI_DIR", self.spec["rocm-smi-lib"].prefix),
             self.define("ROCBLAS_DIR", self.spec["rocblas"].prefix),
-            self.define("YAML_INC_DIR", self.spec["yaml-cpp"].prefix.include),
-            self.define("YAML_LIB_DIR", self.spec["yaml-cpp"].prefix.lib64),
+            self.define("YAML_CPP_INCLUDE_DIRS", self.spec["yaml-cpp"].prefix.include),
             self.define("UT_INC", self.spec["googletest"].prefix.include),
         ]
         libloc = self.spec["googletest"].prefix.lib64
@@ -127,4 +133,8 @@ class RocmValidationSuite(CMakePackage):
         if not os.path.isdir(libloc):
             libloc = self.spec["hsakmt-roct"].prefix.lib
         args.append(self.define("HSAKMT_LIB_DIR", libloc))
+        libloc = self.spec["yaml-cpp"].prefix.lib64
+        if not os.path.isdir(libloc):
+            libloc = self.spec["yaml-cpp"].prefix.lib
+        args.append(self.define("YAML_CPP_LIB_PATH", libloc))
         return args

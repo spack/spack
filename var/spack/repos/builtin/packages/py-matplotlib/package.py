@@ -250,7 +250,6 @@ class PyMatplotlib(PythonPackage):
 
     msg = "MacOSX backend requires macOS 10.12+"
     conflicts("platform=linux", when="backend=macosx", msg=msg)
-    conflicts("platform=cray", when="backend=macosx", msg=msg)
     conflicts("platform=windows", when="backend=macosx", msg=msg)
 
     conflicts("^tk@8.6.0:8.6.1")

@@ -342,9 +342,6 @@ class Boost(Package):
     # Patch: https://github.com/boostorg/process/commit/6a4d2ff72114ef47c7afaf92e1042aca3dfa41b0.patch
     patch("1.72_boost_process.patch", level=2, when="@1.72.0")
 
-    # Fix the bootstrap/bjam build for Cray
-    patch("bootstrap-path.patch", when="@1.39.0: platform=cray")
-
     # Patch fix for warnings from commits 2d37749, af1dc84, c705bab, and
     # 0134441 on https://github.com/boostorg/system.
     patch("system-non-virtual-dtor-include.patch", when="@1.69.0", level=2)
@@ -528,10 +525,6 @@ class Boost(Package):
                 # wrappers.  Since Boost doesn't use the MPI C++ bindings,
                 # that can be used as a compiler option instead.
                 mpi_line = "using mpi : %s" % spec["mpi"].mpicxx
-
-                if "platform=cray" in spec:
-                    mpi_line += " : <define>MPICH_SKIP_MPICXX"
-
                 f.write(mpi_line + " ;\n")
 
             if "+python" in spec:

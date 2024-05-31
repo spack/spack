@@ -243,7 +243,6 @@ class Python(Package):
     variant("tix", default=False, description="Build Tix module", when="+tkinter")
     variant("crypt", default=True, description="Build crypt module", when="@:3.12 platform=linux")
     variant("crypt", default=True, description="Build crypt module", when="@:3.12 platform=darwin")
-    variant("crypt", default=True, description="Build crypt module", when="@:3.12 platform=cray")
 
     if sys.platform != "win32":
         depends_on("gmake", type="build")
