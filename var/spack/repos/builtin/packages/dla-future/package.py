@@ -52,7 +52,7 @@ class DlaFuture(CMakePackage, CudaPackage, ROCmPackage):
     variant(
         "mpi-gpu-force-contiguous",
         default=True,
-        when="@0:5:0: +mpi-gpu-aware",
+        when="@0.5.0: +mpi-gpu-aware",
         description="Force communication buffers to be contiguous before communicating.",
     )
 
