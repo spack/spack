@@ -46,17 +46,8 @@ class DlaFuture(CMakePackage, CudaPackage, ROCmPackage):
         description="Build C API compatible with ScaLAPACK",
     )
 
-    variant(
-        "mpi-gpu-aware",
-        default=False,
-        when="@0.5.0:",
-        description="Use GPU-aware MPI.",
-    )
-    conflicts(
-        "+mpi-gpu-aware",
-        when="~cuda ~rocm",
-        msg="GPU-aware MPI requires +cuda or +rocm",
-    )
+    variant("mpi-gpu-aware", default=False, when="@0.5.0:", description="Use GPU-aware MPI.")
+    conflicts("+mpi-gpu-aware", when="~cuda ~rocm", msg="GPU-aware MPI requires +cuda or +rocm")
 
     variant(
         "mpi-gpu-force-contiguous",
@@ -239,7 +230,11 @@ class DlaFuture(CMakePackage, CudaPackage, ROCmPackage):
         args.append(self.define_from_variant("DLAF_WITH_SCALAPACK", "scalapack"))
 
         args.append(self.define_from_variant("DLAF_WITH_MPI_GPU_AWARE", "mpi-gpu-aware"))
-        args.append(self.define_from_variant("DLAF_WITH_MPI_GPU_FORCE_CONTIGUOUS", "mpi-gpu-force-contiguous"))
+        args.append(
+            self.define_from_variant(
+                "DLAF_WITH_MPI_GPU_FORCE_CONTIGUOUS", "mpi-gpu-force-contiguous"
+            )
+        )
 
         # CUDA/HIP
         args.append(self.define_from_variant("DLAF_WITH_CUDA", "cuda"))
