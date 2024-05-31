@@ -46,14 +46,14 @@ class DlaFuture(CMakePackage, CudaPackage, ROCmPackage):
         description="Build C API compatible with ScaLAPACK",
     )
 
-    variant("mpi-gpu-aware", default=False, when="@0.5.0:", description="Use GPU-aware MPI.")
-    conflicts("+mpi-gpu-aware", when="~cuda ~rocm", msg="GPU-aware MPI requires +cuda or +rocm")
+    variant("mpi_gpu_aware", default=False, when="@0.5.0:", description="Use GPU-aware MPI.")
+    conflicts("+mpi_gpu_aware", when="~cuda ~rocm", msg="GPU-aware MPI requires +cuda or +rocm")
 
     variant(
-        "mpi-gpu-force-contiguous",
+        "mpi_gpu_force_contiguous",
         default=True,
-        when="@0.5.0: +mpi-gpu-aware",
-        description="Force communication buffers to be contiguous before communicating.",
+        when="@0.5.0: +mpi_gpu_aware",
+        description="Force GPU communication buffers to be contiguous before communicating.",
     )
 
     generator("ninja")
@@ -229,10 +229,10 @@ class DlaFuture(CMakePackage, CudaPackage, ROCmPackage):
 
         args.append(self.define_from_variant("DLAF_WITH_SCALAPACK", "scalapack"))
 
-        args.append(self.define_from_variant("DLAF_WITH_MPI_GPU_AWARE", "mpi-gpu-aware"))
+        args.append(self.define_from_variant("DLAF_WITH_MPI_GPU_AWARE", "mpi_gpu_aware"))
         args.append(
             self.define_from_variant(
-                "DLAF_WITH_MPI_GPU_FORCE_CONTIGUOUS", "mpi-gpu-force-contiguous"
+                "DLAF_WITH_MPI_GPU_FORCE_CONTIGUOUS", "mpi_gpu_force_contiguous"
             )
         )
 
