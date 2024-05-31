@@ -36,10 +36,9 @@ class Pass(MakefilePackage):
         env.set("PREFIX", prefix)
         env.set(
             "BASHCOMPDIR",
-            self.spec["bash-completion"].prefix + "/share/bash-completion/completions",
+            self.prefix + "/share/bash-completion/completions",
         )
-        if self.spec.satisfies("+completion"):
-            env.set("WITH_BASHCOMP", "yes")
+        env.set("WITH_BASHCOMP", "yes")
 
     def edit(self, spec, prefix):
         """
