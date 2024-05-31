@@ -53,6 +53,7 @@ class Tamaas(SConsPackage):
         depends_on("py-scipy", when="+solvers", type="run")
         depends_on("py-pybind11", type="build")
         depends_on("py-wheel", type="build")
+        depends_on("py-pip", type="build")
 
     def build_args(self, spec, prefix):
         args = [
@@ -77,3 +78,17 @@ class Tamaas(SConsPackage):
             args += ["PYBIND11_ROOT={}".format(spec["py-pybind11"].prefix)]
 
         return args
+
+    def install(self, spec, prefix):
+        """Install the package."""
+        args = self.install_args(spec, prefix)
+
+        scons("install-lib", *args)
+
+        if spec.satisfies("+python"):
+            args = (
+                ["-m", "pip"]
+                + std_pip_args
+                + ["--prefix=" + prefix, "build-release/python"]
+            )
+            python(*args)
