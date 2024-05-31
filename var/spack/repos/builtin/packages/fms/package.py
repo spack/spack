@@ -19,7 +19,15 @@ class Fms(CMakePackage):
     license("LGPL-3.0-or-later")
 
     maintainers("AlexanderRichert-NOAA", "Hang-Lei-NOAA", "edwardhartnett", "rem1776", "climbfuji")
+    version(
+        "2024.01.01", sha256="41c8686bad2b1aed76275e35cbe1af855f7dfce9b6d8907744ea2e8174758f6a"
+    )
+    version("2024.01", sha256="29ac23a5a2a4765ae66d218bb261cb04f7ad44618205ab0924c4e66c9ef8fa38")
     version("2023.04", sha256="feb895ea2b3269ca66df296199a36af335f0dc281e2dab2f1bfebb19fd9c22c4")
+    version("2023.03", sha256="008a9ff394efe6a8adbcf37dd45ca103e00ae25748fc2960b7bc54f2f3b08d85")
+    version(
+        "2023.02.01", sha256="1597f7a485d02e401ce76444b2401060d74bd032cbb060cef917f001b4ff14bc"
+    )
     version("2023.02", sha256="dc029ffadfd82c334f104268bedd8635c77976485f202f0966ae4cf06d2374be")
     version(
         "2023.01.01", sha256="f83e2814a1e3ba439ab847ec8bb251f3889d5ca14fb20849507590adbbe8e899"
