@@ -46,6 +46,10 @@ class Tamaas(SConsPackage):
     conflicts("%clang@:5")
     conflicts("%intel")
 
+    # MPI type-traits issues (constexpr vs static const) in recent gcc
+    # fixed for tamaas versions > 2.6.0
+    patch("recent_compilers.patch", when="@:2.6.0%gcc@11:")
+
     with when("+python"):
         extends("python")
         depends_on("python@3.7:", type=("build", "run"))
