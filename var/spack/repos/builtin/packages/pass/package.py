@@ -19,7 +19,7 @@ class Pass(MakefilePackage):
     version("1.7.4", sha256="cfa9faf659f2ed6b38e7a7c3fb43e177d00edbacc6265e6e32215ff40e3793c0")
 
     depends_on("bash")
-    depends_on("bash-completion", when="+completion")
+    depends_on("bash-completion")
     depends_on("gnupg")
     depends_on("git")
     depends_on("tree")
