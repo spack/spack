@@ -35,6 +35,8 @@ class RocmOpencl(CMakePackage):
     license("MIT")
 
     version("master", branch="main")
+    version("6.1.1", sha256="2db02f335c9d6fa69befcf7c56278e5cecfe3db0b457eaaa41206c2585ef8256")
+    version("6.1.0", sha256="49b23eef621f4e8e528bb4de8478a17436f42053a2f7fde21ff221aa683205c7")
     version("6.0.2", sha256="cb8ac610c8d4041b74fb3129c084f1e7b817ce1a5a9943feca1fa7531dc7bdcc")
     version("6.0.0", sha256="798b55b5b5fb90dd19db54f136d8d8e1da9ae1e408d5b12b896101d635f97e50")
     version("5.7.1", sha256="c78490335233a11b4d8a5426ace7417c555f5e2325de10422df06c0f0f00f7eb")
@@ -87,12 +89,12 @@ class RocmOpencl(CMakePackage):
     patch(
         "https://github.com/ROCm/clr/commit/c4f773db0b4ccbbeed4e3d6c0f6bff299c2aa3f0.patch?full_index=1",
         sha256="5bb9b0e08888830ccf3a0a658529fe25f4ee62b5b8890f349bf2cc914236eb2f",
-        when="@5.7:",
+        when="@5.7:6.0",
     )
     patch(
         "https://github.com/ROCm/clr/commit/7868876db742fb4d44483892856a66d2993add03.patch?full_index=1",
         sha256="7668b2a710baf4cb063e6b00280fb75c4c3e0511575e8298a9c7ae5143f60b33",
-        when="@5.7:",
+        when="@5.7:6.0",
     )
 
     # Patch to set package installation path for OpenCL.
@@ -116,15 +118,29 @@ class RocmOpencl(CMakePackage):
         "5.7.1",
         "6.0.0",
         "6.0.2",
+        "6.1.0",
+        "6.1.1",
         "master",
     ]:
         depends_on(f"comgr@{ver}", type="build", when=f"@{ver}")
         depends_on(f"hsa-rocr-dev@{ver}", type="link", when=f"@{ver}")
 
-    for ver in ["6.0.0", "6.0.2"]:
+    for ver in ["6.0.0", "6.0.2", "6.1.0", "6.1.1"]:
         depends_on(f"aqlprofile@{ver}", type="link", when=f"@{ver}")
 
-    for ver in ["5.5.0", "5.5.1", "5.6.0", "5.6.1", "5.7.0", "5.7.1", "6.0.0", "6.0.2"]:
+    for ver in [
+        "5.5.0",
+        "5.5.1",
+        "5.6.0",
+        "5.6.1",
+        "5.7.0",
+        "5.7.1",
+        "6.0.0",
+        "6.0.2",
+        "6.1.0",
+        "6.1.1",
+    ]:
+
         depends_on(f"rocm-core@{ver}", when=f"@{ver}")
 
     @classmethod
