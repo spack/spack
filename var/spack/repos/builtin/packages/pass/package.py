@@ -28,7 +28,6 @@ class Pass(MakefilePackage):
 
     def setup_build_environment(self, env):
         env.set("PREFIX", prefix)
-        env.set("BASHCOMPDIR", self.prefix + "/share/bash-completion/completions")
         env.set("WITH_BASHCOMP", "yes")
 
     def edit(self, spec, prefix):
