@@ -18,6 +18,8 @@ class Pass(MakefilePackage):
 
     version("1.7.4", sha256="cfa9faf659f2ed6b38e7a7c3fb43e177d00edbacc6265e6e32215ff40e3793c0")
 
+    variant("xclip", default=False, description="install the X11 clipboard provider")
+
     depends_on("bash")
     depends_on("gnupg")
     depends_on("git")
@@ -25,6 +27,7 @@ class Pass(MakefilePackage):
     depends_on("util-linux")  # for GNU getopt
     depends_on("libqrencode")
     depends_on("openssl")  # used for base64 only
+    depends_on("xclip", when="+xclip")
 
     def setup_build_environment(self, env):
         env.set("PREFIX", prefix)
@@ -57,3 +60,4 @@ class Pass(MakefilePackage):
         platform_files.filter('^GPG="gpg"$', f'GPG="{gpg_exec}"')
         platform_files.filter('^GETOPT=".*"$', f'GETOPT="{getopt_exec}"')
         platform_files.filter('^BASE64=".*"$', f'BASE64="{openssl_exec} base64"')
+
