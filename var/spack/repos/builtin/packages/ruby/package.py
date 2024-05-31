@@ -24,6 +24,7 @@ class Ruby(AutotoolsPackage, NMakePackage):
 
     license("Ruby AND BSD-2-Clause AND MIT", checked_by="tgamblin")
 
+    version("3.3.2", sha256="3be1d100ebf2a0ce60c2cd8d22cd9db4d64b3e04a1943be2c4ff7b520f2bcb5b")
     version("3.3.0", sha256="96518814d9832bece92a85415a819d4893b307db5921ae1f0f751a9a89a56b7d")
     version("3.1.0", sha256="50a0504c6edcb4d61ce6b8cfdbddaa95707195fab0ecd7b5e92654b2a9412854")
     version("3.0.2", sha256="5085dee0ad9f06996a8acec7ebea4a8735e6fac22f22e2d98c3f2bc3bef7e6f1")
