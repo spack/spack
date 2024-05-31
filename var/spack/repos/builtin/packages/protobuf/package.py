@@ -110,9 +110,9 @@ class Protobuf(CMakePackage):
 
     # fix build on Centos 8, see also https://github.com/protocolbuffers/protobuf/issues/5144
     patch(
-        "https://github.com/protocolbuffers/protobuf/commit/3039f932aaf212bcf2f14a3f2fd00dbfb881e46b.patch?full_index=1",
+        "https://github.com/protocolbuffers/protobuf/commit/462964ed322503af52638d54c00a0a67d7133349.patch?full_index=1",
         when="@3.4:3.21",
-        sha256="a779238fb7957514d4fb393410111419a964771e826ec2a8f09c21aa1efbb4d1",
+        sha256="9b6dcfa30dd3ae0abb66ab0f252a4fc1e1cc82a9820d2bdb72da35c4f80c3603",
     )
 
     patch("msvc-abseil-target-namespace.patch", when="@3.22 %msvc")
