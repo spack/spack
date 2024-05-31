@@ -17,7 +17,9 @@ class Tamaas(SConsPackage):
     maintainers("prs513rosewood")
 
     version("master", branch="master")
-    version("2.6.0", sha256="e3a262e5b893aa1e23554b6bd6b41af68c841ef4ffd862bb8e50a1a17ac15af6")
+    version("2.7.1", sha256="d7de6db3f5532bb9c8ab7e8cca1cdb5c133050dd5720249dde07027b0d41641f")
+    version("2.7.0", sha256="bc5717c1ead621cb9c18a073fdafbe8778fd160ad23d80c98283445d79066579")
+    version("2.6.0", sha256="4aafa0f727f43afc6ae45705ae80cf113a6a95e728bdf536c22b3b39be87f153")
     version(
         "2.5.0.post1", sha256="28e52dc5b8a5f77588c73a6ef396c44c6a8e9d77e3e4929a4ab07232dc9bc565"
     )
@@ -90,9 +92,5 @@ class Tamaas(SConsPackage):
         scons("install-lib", *args)
 
         if spec.satisfies("+python"):
-            args = (
-                ["-m", "pip"]
-                + std_pip_args
-                + ["--prefix=" + prefix, "build-release/python"]
-            )
+            args = ["-m", "pip"] + std_pip_args + ["--prefix=" + prefix, "build-release/python"]
             python(*args)
