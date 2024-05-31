@@ -117,14 +117,6 @@ class Hipsolver(CMakePackage, CudaPackage, ROCmPackage):
     patch("001-suite-sparse-include-path.patch", when="@6.1.0")
     patch("0001-suite-sparse-include-path-6.1.1.patch", when="@6.1.1:")
 
-    def patch(self):
-        if self.spec.satisfies("@6.1.1 +rocm"):
-            with working_dir("library/src/amd_detail"):
-                filter_file(
-                    "^#include <suitesparse/cholmod.h>",
-                    "#include <cholmod.h>",
-                    "hipsolver_sparse.cpp",
-                )
 
     def check(self):
         exe = join_path(self.build_directory, "clients", "staging", "hipsolver-test")
@@ -168,5 +160,8 @@ class Hipsolver(CMakePackage, CudaPackage, ROCmPackage):
             args.append(self.define("BUILD_FILE_REORG_BACKWARD_COMPATIBILITY", True))
         if self.spec.satisfies("@5.3.0:"):
             args.append(self.define("CMAKE_INSTALL_LIBDIR", "lib"))
-
+        libloc = self.spec["suite-sparse"].prefix.lib64
+        if not os.path.isdir(libloc):
+            libloc = self.spec["suite-sparse"].prefix.lib
+        args.append(self.define("SUITE_SPARSE_LIBDIR", libloc))
         return args
