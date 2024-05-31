@@ -41,8 +41,5 @@ class Nb(Package):
         install("bin/notes", join_path(prefix, "bin/notes"))
         install("bin/bookmark", join_path(prefix, "bin/bookmark"))
         install(
-            "etc/nb-completion.bash",
-            join_path(
-                prefix, "share/bash-completion/completions/nb"
-            ),
+            "etc/nb-completion.bash", join_path(prefix, "share/bash-completion/completions/nb")
         )
