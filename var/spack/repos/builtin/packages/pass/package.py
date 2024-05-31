@@ -45,10 +45,10 @@ class Pass(MakefilePackage):
         it looks for getopt in /opt/homebrew.) We can hardcode those paths here.
         """
 
-        bash_exec = self.spec["bash"].prefix + "/bin/bash"
-        gpg_exec = self.spec["gnupg"].prefix + "/bin/gpg"
-        getopt_exec = self.spec["util-linux"].prefix + "/bin/getopt"
-        base64_exec = self.spec["openssl"].prefix + "/bin/openssl base64"
+        bash_exec = self.spec["bash"].command
+        gpg_exec = self.spec["gnupg"].prefix.bin.gpg
+        getopt_exec = self.spec["util-linux"].prefix.bin.getopt
+        openssl_exec = self.spec["openssl"].command
 
         platform_files = FileFilter(
             "src/password-store.sh",
@@ -61,4 +61,4 @@ class Pass(MakefilePackage):
         platform_files.filter("^#!.*$", f"#! {bash_exec}")
         platform_files.filter('^GPG="gpg"$', f'GPG="{gpg_exec}"')
         platform_files.filter('^GETOPT=".*"$', f'GETOPT="{getopt_exec}"')
-        platform_files.filter('^BASE64=".*"$', f'BASE64="{base64_exec}"')
+        platform_files.filter('^BASE64=".*"$', f'BASE64="{openssl_exec} base64"')
