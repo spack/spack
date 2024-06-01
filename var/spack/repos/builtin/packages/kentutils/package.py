@@ -65,7 +65,7 @@ class Kentutils(MakefilePackage):
         src_prefix = "kent/src"
 
         # I'm not sure if all dependents look for inc or some look in .../include
-        install_tree(join_path(src_prefix, inc), join_path(prefix, inc))
+        install_tree(join_path(src_prefix, "inc"), join_path(prefix, "inc"))
 
         libs = [
             f"lib/{self.machtype}/jkweb.a",
@@ -73,14 +73,14 @@ class Kentutils(MakefilePackage):
             f"lib/{self.machtype}/jkhgap.a",
             f"lib/{self.machtype}/jkhgapcgi.a",
             f"parasol/lib/{self.machtype}/paralib.a",
-            f"hg/altSplice/lib/{self.machtype}/libSpliceGraph.a"
+            f"hg/altSplice/lib/{self.machtype}/libSpliceGraph.a",
             "htslib/libhts.a"
         ]
 
         for lib in libs:
             src = join_path(src_prefix, lib)
             dest = join_path(prefix, lib)
-            mkdirp(os.oath.dirname(dest))
+            mkdirp(os.path.dirname(dest))
             install(src, dest)
 
     def install(self, spec, prefix):
