@@ -1026,7 +1026,6 @@ class SpackSolverSetup:
     """Class to set up and run a Spack concretization solve."""
 
     def __init__(self, tests: bool = False, prefer_older=False):
-        
         # these are all initialized in setup()
         self.gen: "ProblemInstanceBuilder" = ProblemInstanceBuilder()
         self.possible_virtuals: Set[str] = set()
@@ -1094,7 +1093,9 @@ class SpackSolverSetup:
                 list(sorted(group, reverse=True, key=lambda x: vn.ver(x.version)))
             )
 
-        for weight, declared_version in enumerate(reversed(most_to_least_preferred) if self.prefer_older else most_to_least_preferred):
+        for weight, declared_version in enumerate(
+            reversed(most_to_least_preferred) if self.prefer_older else most_to_least_preferred
+        ):
             self.gen.fact(
                 fn.pkg_fact(
                     pkg.name,
