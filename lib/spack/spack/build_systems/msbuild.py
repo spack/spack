@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -24,7 +24,6 @@ class MSBuildPackage(spack.package_base.PackageBase):
     build_system("msbuild")
     conflicts("platform=linux", when="build_system=msbuild")
     conflicts("platform=darwin", when="build_system=msbuild")
-    conflicts("platform=cray", when="build_system=msbuild")
 
 
 @spack.builder.builder("msbuild")
@@ -69,7 +68,7 @@ class MSBuildBuilder(BaseBuilder):
     @property
     def build_directory(self):
         """Return the directory containing the MSBuild solution or vcxproj."""
-        return self.pkg.stage.source_path
+        return fs.windows_sfn(self.pkg.stage.source_path)
 
     @property
     def toolchain_version(self):

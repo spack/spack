@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class RMapproj(RPackage):
     Converts latitude/longitude into projected coordinates."""
 
     cran = "mapproj"
+
+    license("LPL-1.02")
 
     version("1.2.11", sha256="db2d201cc939de26717566066bf44225a967ccde6fc34731af845f03c086347d")
     version("1.2.9", sha256="da28fab490072e0b2ff5e124092d6b3146e4c01b2386e23a2ea4b0e9fc72df82")

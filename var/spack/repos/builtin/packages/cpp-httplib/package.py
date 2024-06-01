@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,9 @@ class CppHttplib(CMakePackage):
     homepage = "https://github.com/yhirose/cpp-httplib/"
     url = "https://github.com/yhirose/cpp-httplib/archive/v0.5.10.tar.gz"
 
+    license("MIT")
+
+    version("0.15.3", sha256="2121bbf38871bb2aafb5f7f2b9b94705366170909f434428352187cb0216124e")
     version("0.12.5", sha256="b488f3fa9c6bf35608c3d9a5b69be52e016bbf2fbfe67e5ee684eadb2655493e")
     version("0.12.3", sha256="175ced3c9cdaf221e9edf210297568d8f7d402a41d6db01254ac9e0b25487c54")
     version("0.5.9", sha256="c9e7aef3b0d4e80ee533d10413508d8a6e09a67d0d59646c43111f3993de006e")

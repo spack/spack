@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class Xauth(AutotoolsPackage, XorgPackage):
 
     homepage = "https://cgit.freedesktop.org/xorg/app/xauth"
     xorg_mirror_path = "app/xauth-1.0.9.tar.gz"
+
+    license("custom")
 
     version("1.1.2", sha256="84d27a1023d8da524c134f424b312e53cb96e08871f96868aa20316bfcbbc054")
     version("1.1.1", sha256="0f558ef33e76843cf16a78cd3910ef8ec0809bea85d14e091c559dcec092c671")

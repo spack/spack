@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,6 +21,8 @@ class _7zip(SourceforgePackage, Package):
 
     executables = ["7z"]
 
+    license("LGPL-2.0-only")
+
     version("21.07", sha256="213d594407cb8efcba36610b152ca4921eda14163310b43903d13e68313e1e39")
 
     variant(
@@ -35,7 +37,6 @@ class _7zip(SourceforgePackage, Package):
 
     conflicts("platform=linux")
     conflicts("platform=darwin")
-    conflicts("platform=cray")
 
     # TODO: Patch on WinSDK version 10.0.20348.0 when SDK is introduced to Spack
     # This patch solves a known bug in that SDK version on the 7zip side

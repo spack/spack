@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class Thrust(Package):
 
     homepage = "https://thrust.github.io"
     url = "https://github.com/NVIDIA/thrust/archive/1.12.0.tar.gz"
+
+    license("BSL-1.0")
 
     version("1.16.0", sha256="93b9553e3ee544e05395022bea67e6d600f8f3eb680950ec7cf73c0f55162487")
     version("1.15.0", sha256="0eeaf5a77cd7cb143f3443bd96b215ae1c4eacf18a712762e6a5c85213f80cc2")

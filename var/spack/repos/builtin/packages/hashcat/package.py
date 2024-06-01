@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class Hashcat(MakefilePackage):
 
     homepage = "https://hashcat.net/hashcat/"
     url = "https://github.com/hashcat/hashcat/archive/v6.1.1.tar.gz"
+
+    license("MIT")
 
     version("6.2.6", sha256="b25e1077bcf34908cc8f18c1a69a2ec98b047b2cbcf0f51144dcf3ba1e0b7b2a")
     version("6.1.1", sha256="39c140bbb3c0bdb1564bfa9b9a1cff49115a42f4c9c19e9b066b617aea309f80")

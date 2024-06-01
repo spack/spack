@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class RGower(RPackage):
     parallel on systems supporting OpenMP."""
 
     cran = "gower"
+
+    license("GPL-3.0-only")
 
     version("1.0.1", sha256="296a9d8e5efa8c3a8cc6b92cf38880915753afdef30281629af9dc8eae8315fc")
     version("1.0.0", sha256="671cb7baafe05140d822e8f26f9cd3576fc3bf4c6572b7223fb54da754ea385d")

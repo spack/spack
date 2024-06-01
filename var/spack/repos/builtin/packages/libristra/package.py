@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -26,8 +26,8 @@ class Libristra(CMakePackage):
     depends_on("cmake@3.12:")
     depends_on("mpi")
     depends_on("boost@1.70.0: cxxstd=17 +program_options")
-    depends_on("lua@5.3.5~shared", when="~shared_lua")
-    depends_on("lua@5.3.5+shared", when="+shared_lua")
+    depends_on("lua@5.3.5:~shared", when="~shared_lua")
+    depends_on("lua@5.3.5:+shared", when="+shared_lua")
     # TODO: might want to move paraview out of libristra
     depends_on("paraview", when="+paraview")
     # We explicitly depend on gtest and can no longer rely on others for it

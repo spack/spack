@@ -1,13 +1,13 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
 """Schema for gitlab-ci.yaml configuration file.
 
 .. literalinclude:: ../spack/schema/ci.py
-   :lines: 13-
+   :lines: 16-
 """
+from typing import Any, Dict
 
 from llnl.util.lang import union_dicts
 
@@ -164,7 +164,7 @@ ci_properties = {
 }
 
 #: Properties for inclusion in other schemas
-properties = {
+properties: Dict[str, Any] = {
     "ci": {
         "oneOf": [
             # TODO: Replace with core-shared-properties in Spack 0.23

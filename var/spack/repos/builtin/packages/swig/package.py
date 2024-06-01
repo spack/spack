@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -26,6 +26,8 @@ class Swig(AutotoolsPackage, SourceforgePackage):
     tags = ["e4s", "build-tools"]
 
     executables = ["^swig$"]
+
+    license("GPL-3.0-only")
 
     version("master", git="https://github.com/swig/swig.git")
     version(
@@ -146,7 +148,7 @@ class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
     def create_symlink(self):
         # CMake compatibility: see https://github.com/spack/spack/pull/6240
         with working_dir(self.prefix.bin):
-            os.symlink("swig", "swig{0}".format(self.spec.version.up_to(2)))
+            os.symlink("swig", "swig{0}.0".format(self.spec.version.up_to(1)))
 
     @when(Swig.AUTOCONF_VERSIONS)
     def autoreconf(self, pkg, spec, prefix):

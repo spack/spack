@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class GoogleCrc32c(CMakePackage):
     url = "https://github.com/google/crc32c/archive/refs/tags/1.1.2.tar.gz"
 
     maintainers("marcusboden")
+
+    license("BSD-3-Clause")
 
     version("1.1.2", sha256="ac07840513072b7fcebda6e821068aa04889018f24e10e46181068fb214d7e56")
 

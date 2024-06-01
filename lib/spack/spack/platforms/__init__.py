@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,17 +6,17 @@ import contextlib
 
 from ._functions import _host, by_name, platforms, prevent_cray_detection, reset
 from ._platform import Platform
-from .cray import Cray
 from .darwin import Darwin
+from .freebsd import FreeBSD
 from .linux import Linux
 from .test import Test
 from .windows import Windows
 
 __all__ = [
     "Platform",
-    "Cray",
     "Darwin",
     "Linux",
+    "FreeBSD",
     "Test",
     "Windows",
     "platforms",

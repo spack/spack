@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class Spath(CMakePackage):
     tags = ["ecp"]
 
     maintainers("CamStan", "gonsie")
+
+    license("MIT")
 
     version("main", branch="main")
     version("0.3.0", sha256="cb155a31cebde8b7bf397123de3be290fd99d3863509b4ba9b0252caba660082")
@@ -39,8 +41,5 @@ class Spath(CMakePackage):
 
         if spec.satisfies("@0.1.0:"):
             args.append(self.define_from_variant("BUILD_SHARED_LIBS", "shared"))
-        else:
-            if spec.satisfies("platform=cray"):
-                args.append(self.define("SPATH_LINK_STATIC", True))
 
         return args

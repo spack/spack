@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,6 +20,8 @@ class RGeometry(RPackage):
     this."""
 
     cran = "geometry"
+
+    license("GPL-3.0-or-later")
 
     version("0.4.7", sha256="96204205f51b4d63c2e7a7b00365def27d131f3c9ec66db56b510046e5d2013b")
     version("0.4.6.1", sha256="52c87a43cdf414c08b8183441c44497039cba92a9cff719debf09ad8d5d7f472")

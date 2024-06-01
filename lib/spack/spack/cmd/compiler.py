@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -46,9 +46,8 @@ def setup_parser(subparser):
     find_parser.add_argument("add_paths", nargs=argparse.REMAINDER)
     find_parser.add_argument(
         "--scope",
-        choices=arguments.ConfigScopeChoices(),
-        metavar=spack.config.SCOPES_METAVAR,
-        default=spack.config.default_modify_scope("compilers"),
+        action=arguments.ConfigScope,
+        default=lambda: spack.config.default_modify_scope("compilers"),
         help="configuration scope to modify",
     )
 
@@ -59,32 +58,20 @@ def setup_parser(subparser):
     )
     remove_parser.add_argument("compiler_spec")
     remove_parser.add_argument(
-        "--scope",
-        choices=arguments.ConfigScopeChoices(),
-        metavar=spack.config.SCOPES_METAVAR,
-        default=None,
-        help="configuration scope to modify",
+        "--scope", action=arguments.ConfigScope, default=None, help="configuration scope to modify"
     )
 
     # List
     list_parser = sp.add_parser("list", help="list available compilers")
     list_parser.add_argument(
-        "--scope",
-        choices=arguments.ConfigScopeChoices(),
-        metavar=spack.config.SCOPES_METAVAR,
-        default=spack.config.default_list_scope(),
-        help="configuration scope to read from",
+        "--scope", action=arguments.ConfigScope, help="configuration scope to read from"
     )
 
     # Info
     info_parser = sp.add_parser("info", help="show compiler paths")
     info_parser.add_argument("compiler_spec")
     info_parser.add_argument(
-        "--scope",
-        choices=arguments.ConfigScopeChoices(),
-        metavar=spack.config.SCOPES_METAVAR,
-        default=spack.config.default_list_scope(),
-        help="configuration scope to read from",
+        "--scope", action=arguments.ConfigScope, help="configuration scope to read from"
     )
 
 
@@ -102,7 +89,7 @@ def compiler_find(args):
         paths, scope=None, mixed_toolchain=args.mixed_toolchain
     )
     if new_compilers:
-        spack.compilers.add_compilers_to_config(new_compilers, scope=args.scope, init_config=False)
+        spack.compilers.add_compilers_to_config(new_compilers, scope=args.scope)
         n = len(new_compilers)
         s = "s" if n > 1 else ""
 

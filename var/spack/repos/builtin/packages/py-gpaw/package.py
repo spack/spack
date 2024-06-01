@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class PyGpaw(PythonPackage):
 
     homepage = "https://wiki.fysik.dtu.dk/gpaw/index.html"
     pypi = "gpaw/gpaw-1.3.0.tar.gz"
+
+    license("GPL-3.0-only")
 
     version("21.1.0", sha256="96843b68e04bd1c12606036c9f99b0ddfa5e6ee08ce46835e6bb347a6bd560a3")
     version("20.10.0", sha256="77c3d3918f5cc118e448f8063af4807d163b31d502067f5cbe31fc756eb3971d")
@@ -57,7 +59,7 @@ class PyGpaw(PythonPackage):
 
         python_include = spec["python"].headers.directories[0]
         numpy_include = join_path(
-            spec["py-numpy"].prefix, spec["python"].package.platlib, "numpy", "core", "include"
+            spec["py-numpy"].package.module.python_platlib, "numpy", "core", "include"
         )
 
         libs = blas.libs + lapack.libs + libxc.libs

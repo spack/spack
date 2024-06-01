@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -284,6 +284,13 @@ def test_add_config_path(mutable_config):
     set_value = spack.config.get("config")["install_tree"]["projections"]["cmake"]
     assert set_value == "{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}"
 
+    path = 'modules:default:tcl:all:environment:set:"{name}_ROOT":"{prefix}"'
+    spack.config.add(path)
+    set_value = spack.config.get("modules")["default"]["tcl"]["all"]["environment"]["set"]
+    assert r"{name}_ROOT" in set_value
+    assert set_value[r"{name}_ROOT"] == r"{prefix}"
+    assert spack.config.get('modules:default:tcl:all:environment:set:"{name}_ROOT"') == r"{prefix}"
+
     # NOTE:
     # The config path: "config:install_tree:root:<path>" is unique in that it can accept multiple
     # schemas (such as a dropped "root" component) which is atypical and may lead to passing tests
@@ -485,7 +492,7 @@ full_padded_string = os.path.join(os.sep + "path", os.sep.join(reps))[:MAX_PADDE
     ],
 )
 def test_parse_install_tree(config_settings, expected, mutable_config):
-    expected_root = expected[0] or spack.store.DEFAULT_INSTALL_TREE_ROOT
+    expected_root = expected[0] or mutable_config.get("config:install_tree:root")
     expected_unpadded_root = expected[1] or expected_root
     expected_proj = expected[2] or spack.directory_layout.default_projections
 
@@ -500,6 +507,34 @@ def test_parse_install_tree(config_settings, expected, mutable_config):
     assert root == expected_root
     assert unpadded_root == expected_unpadded_root
     assert projections == expected_proj
+
+
+def test_change_or_add(mutable_config, mock_packages):
+    spack.config.add("packages:a:version:['1.0']", scope="user")
+
+    spack.config.add("packages:b:version:['1.1']", scope="system")
+
+    class ChangeTest:
+        def __init__(self, pkg_name, new_version):
+            self.pkg_name = pkg_name
+            self.new_version = new_version
+
+        def find_fn(self, section):
+            return self.pkg_name in section
+
+        def change_fn(self, section):
+            pkg_section = section.get(self.pkg_name, {})
+            pkg_section["version"] = self.new_version
+            section[self.pkg_name] = pkg_section
+
+    change1 = ChangeTest("b", ["1.2"])
+    spack.config.change_or_add("packages", change1.find_fn, change1.change_fn)
+    assert "b" not in mutable_config.get("packages", scope="user")
+    assert mutable_config.get("packages")["b"]["version"] == ["1.2"]
+
+    change2 = ChangeTest("c", ["1.0"])
+    spack.config.change_or_add("packages", change2.find_fn, change2.change_fn)
+    assert "c" in mutable_config.get("packages", scope="user")
 
 
 @pytest.mark.not_on_windows("Padding unsupported on Windows")
@@ -540,7 +575,7 @@ def test_parse_install_tree(config_settings, expected, mutable_config):
     ],
 )
 def test_parse_install_tree_padded(config_settings, expected, mutable_config):
-    expected_root = expected[0] or spack.store.DEFAULT_INSTALL_TREE_ROOT
+    expected_root = expected[0] or mutable_config.get("config:install_tree:root")
     expected_unpadded_root = expected[1] or expected_root
     expected_proj = expected[2] or spack.directory_layout.default_projections
 
@@ -726,25 +761,20 @@ def test_internal_config_from_data():
     assert config.get("config:checksum", scope="higher") is True
 
 
-def test_keys_are_ordered():
+def test_keys_are_ordered(configuration_dir):
     """Test that keys in Spack YAML files retain their order from the file."""
     expected_order = (
-        "bin",
-        "man",
-        "share/man",
-        "share/aclocal",
-        "lib",
-        "lib64",
-        "include",
-        "lib/pkgconfig",
-        "lib64/pkgconfig",
-        "share/pkgconfig",
-        "",
+        "./bin",
+        "./man",
+        "./share/man",
+        "./share/aclocal",
+        "./lib/pkgconfig",
+        "./lib64/pkgconfig",
+        "./share/pkgconfig",
+        "./",
     )
 
-    config_scope = spack.config.ConfigScope(
-        "modules", os.path.join(spack.paths.test_path, "data", "config")
-    )
+    config_scope = spack.config.ConfigScope("modules", configuration_dir.join("site"))
 
     data = config_scope.get_section("modules")
 
@@ -942,7 +972,7 @@ def test_single_file_scope(config, env_yaml):
         # from the single-file config
         assert spack.config.get("config:verify_ssl") is False
         assert spack.config.get("config:dirty") is False
-        assert spack.config.get("packages:all:compiler") == ["gcc@4.5.3"]
+        assert spack.config.get("packages:all:compiler") == ["gcc@4.5.3", "gcc", "clang"]
 
         # from the lower config scopes
         assert spack.config.get("config:checksum") is True
@@ -1160,7 +1190,7 @@ def test_set_dict_override(mock_low_high_config, write_config_file):
 
 
 def test_set_bad_path(config):
-    with pytest.raises(syaml.SpackYAMLError, match="Illegal leading"):
+    with pytest.raises(ValueError):
         with spack.config.override(":bad:path", ""):
             pass
 
@@ -1239,11 +1269,11 @@ def test_user_config_path_is_default_when_env_var_is_empty(working_env):
     assert os.path.expanduser("~%s.spack" % os.sep) == spack.paths._get_user_config_path()
 
 
-def test_default_install_tree(monkeypatch):
+def test_default_install_tree(monkeypatch, default_config):
     s = spack.spec.Spec("nonexistent@x.y.z %none@a.b.c arch=foo-bar-baz")
-    monkeypatch.setattr(s, "dag_hash", lambda: "abc123")
-    projection = spack.config.get("config:install_tree:projections:all", scope="defaults")
-    assert s.format(projection) == "foo-bar-baz/none-a.b.c/nonexistent-x.y.z-abc123"
+    monkeypatch.setattr(s, "dag_hash", lambda length: "abc123")
+    _, _, projections = spack.store.parse_install_tree(spack.config.get("config"))
+    assert s.format(projections["all"]) == "foo-bar-baz/none-a.b.c/nonexistent-x.y.z-abc123"
 
 
 def test_local_config_can_be_disabled(working_env):
@@ -1434,3 +1464,26 @@ def test_config_file_read_invalid_yaml(tmpdir, mutable_empty_config):
 
     with pytest.raises(spack.config.ConfigFileError, match="parsing YAML"):
         spack.config.read_config_file(filename)
+
+
+@pytest.mark.parametrize(
+    "path,it_should_work,expected_parsed",
+    [
+        ("x:y:z", True, ["x:", "y:", "z"]),
+        ("x+::y:z", True, ["x+::", "y:", "z"]),
+        ('x:y:"{z}"', True, ["x:", "y:", '"{z}"']),
+        ('x:"y"+:z', True, ["x:", '"y"+:', "z"]),
+        ('x:"y"trail:z', False, None),
+        ("x:y:[1.0]", True, ["x:", "y:", "[1.0]"]),
+        ("x:y:['1.0']", True, ["x:", "y:", "['1.0']"]),
+        ("x:{y}:z", True, ["x:", "{y}:", "z"]),
+        ("x:'{y}':z", True, ["x:", "'{y}':", "z"]),
+        ("x:{y}", True, ["x:", "{y}"]),
+    ],
+)
+def test_config_path_dsl(path, it_should_work, expected_parsed):
+    if it_should_work:
+        assert spack.config.ConfigPath._validate(path) == expected_parsed
+    else:
+        with pytest.raises(ValueError):
+            spack.config.ConfigPath._validate(path)

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class Rankstr(CMakePackage):
     tags = ["ecp"]
 
     maintainers("CamStan", "gonsie")
+
+    license("MIT")
 
     version("main", branch="main")
     version("0.3.0", sha256="5e6378a8fe155b4c6c5cf45db8aaf0562d88e93471d0e12c1e922252ffcce5e6")
@@ -34,8 +36,5 @@ class Rankstr(CMakePackage):
 
         if spec.satisfies("@0.1.0:"):
             args.append(self.define_from_variant("BUILD_SHARED_LIBS", "shared"))
-        else:
-            if spec.satisfies("platform=cray"):
-                args.append(self.define("RANKSTR_LINK_STATIC", True))
 
         return args

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class Siesta(MakefilePackage):
     """
 
     homepage = "https://departments.icmab.es/leem/siesta/"
+
+    license("GPL-3.0-or-later")
 
     version("4.0.2", sha256="bafbda19358f0c1dd39bb1253c92ee548791a1c0f648977051d2657216874f7e")
     version(

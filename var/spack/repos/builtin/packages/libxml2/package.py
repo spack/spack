@@ -1,9 +1,12 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
 
+import llnl.util.filesystem as fs
+
+import spack.builder
 from spack.build_systems import autotools, nmake
 from spack.package import *
 
@@ -24,6 +27,8 @@ class Libxml2(AutotoolsPackage, NMakePackage):
             url = "https://download.gnome.org/sources/libxml2/{0}/libxml2-{1}.tar.xz"
             return url.format(version.up_to(2), version)
         return "http://xmlsoft.org/sources/libxml2-{0}.tar.gz".format(version)
+
+    license("MIT")
 
     version("2.10.3", sha256="5d2cc3d78bec3dbe212a9d7fa629ada25a7da928af432c93060ff5c17ee28a9c")
     version("2.10.2", sha256="d240abe6da9c65cb1900dd9bf3a3501ccf88b3c2a1cb98317d03f272dda5b265")
@@ -197,7 +202,7 @@ class Libxml2(AutotoolsPackage, NMakePackage):
             xmllint("--dtdvalid", dtd_path, data_dir.join("info.xml"))
 
 
-class RunAfter:
+class BaseBuilder(metaclass=spack.builder.PhaseCallbacksMeta):
     @run_after("install")
     @on_package_attributes(run_tests=True)
     def import_module_test(self):
@@ -206,7 +211,7 @@ class RunAfter:
                 python("-c", "import libxml2")
 
 
-class AutotoolsBuilder(autotools.AutotoolsBuilder, RunAfter):
+class AutotoolsBuilder(BaseBuilder, autotools.AutotoolsBuilder):
     def configure_args(self):
         spec = self.spec
 
@@ -232,7 +237,7 @@ class AutotoolsBuilder(autotools.AutotoolsBuilder, RunAfter):
         return args
 
 
-class NMakeBuilder(nmake.NMakeBuilder, RunAfter):
+class NMakeBuilder(BaseBuilder, nmake.NMakeBuilder):
     phases = ("configure", "build", "install")
 
     @property
@@ -241,19 +246,30 @@ class NMakeBuilder(nmake.NMakeBuilder, RunAfter):
 
     @property
     def build_directory(self):
-        return os.path.join(self.stage.source_path, "win32")
+        return fs.windows_sfn(os.path.join(self.stage.source_path, "win32"))
 
     def configure(self, pkg, spec, prefix):
         with working_dir(self.build_directory):
             opts = [
-                "prefix=%s" % prefix,
+                "prefix=%s" % fs.windows_sfn(prefix),
                 "compiler=msvc",
                 "iconv=no",
                 "zlib=yes",
                 "lzma=yes",
-                "lib=%s" % ";".join((spec["zlib-api"].prefix.lib, spec["xz"].prefix.lib)),
+                "lib=%s"
+                % ";".join(
+                    (
+                        fs.windows_sfn(spec["zlib-api"].prefix.lib),
+                        fs.windows_sfn(spec["xz"].prefix.lib),
+                    )
+                ),
                 "include=%s"
-                % ";".join((spec["zlib-api"].prefix.include, spec["xz"].prefix.include)),
+                % ";".join(
+                    (
+                        fs.windows_sfn(spec["zlib-api"].prefix.include),
+                        fs.windows_sfn(spec["xz"].prefix.include),
+                    )
+                ),
             ]
             if "+python" in spec:
                 opts.append("python=yes")

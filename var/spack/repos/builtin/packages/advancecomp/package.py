@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,9 @@ class Advancecomp(AutotoolsPackage):
     homepage = "https://www.advancemame.it"
     url = "https://github.com/amadvance/advancecomp/archive/v2.1.tar.gz"
 
+    license("GPL-3.0-or-later")
+
+    version("2.6", sha256="799397b10d087d0147d6af117a5a473120f1369f0a3a3d68bf953abc0b749b75")
     version("2.5", sha256="b6b4333453f028565896dd3547bc930f062df82832d7992cc130ca951c2890a1")
     version("2.1", sha256="6113c2b6272334af710ba486e8312faa3cee5bd6dc8ca422d00437725e2b602a")
     version("2.0", sha256="caa63332cd141db17988eb89c662cf76bdde72f60d4de7cb0fe8c7e51eb40eb7")

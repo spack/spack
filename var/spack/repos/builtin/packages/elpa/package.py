@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,18 +20,20 @@ class Elpa(AutotoolsPackage, CudaPackage, ROCmPackage):
     url = "https://elpa.mpcdf.mpg.de/software/tarball-archive/Releases/2015.11.001/elpa-2015.11.001.tar.gz"
     git = "https://gitlab.mpcdf.mpg.de/elpa/elpa.git"
 
+    license("LGPL-3.0-only")
+
     version("master", branch="master")
 
+    version(
+        "2023.11.001-patched",
+        sha256="62ee109afc06539507f459c08b958dc4db65b757dbd77f927678c77f7687415e",
+        url="https://elpa.mpcdf.mpg.de/software/tarball-archive/Releases/2023.11.001/elpa-2023.11.001-patched.tar.gz",
+    )
     version(
         "2023.05.001", sha256="ec64be5d6522810d601a3b8e6a31720e3c3eb4af33a434d8a64570d76e6462b6"
     )
     version(
         "2022.11.001", sha256="75db3ac146f9a6a1598e3418ddcab2be2f40a30ef9ec4c00a3b5d3808c99c430"
-    )
-    version(
-        "2022.11.001.rc2",
-        sha256="13d67e7d69894c631b48e4fcac905b51c4e41554c7eb4731e98c4e205f0fab9f",
-        deprecated=True,
     )
     version(
         "2021.11.001", sha256="fb361da6c59946661b73e51538d419028f763d7cb9dacf9d8cd5c9cd3fb7802f"
@@ -46,6 +48,9 @@ class Elpa(AutotoolsPackage, CudaPackage, ROCmPackage):
 
     variant("openmp", default=True, description="Activates OpenMP support")
     variant("mpi", default=True, description="Activates MPI support")
+    variant("gpu_streams", default=True, description="Activates GPU streams support")
+
+    patch("fujitsu.patch", when="%fj")
 
     depends_on("autoconf", type="build", when="@master")
     depends_on("automake", type="build", when="@master")
@@ -72,6 +77,12 @@ class Elpa(AutotoolsPackage, CudaPackage, ROCmPackage):
     )
     conflicts("+mpi", when="+rocm", msg="ROCm support and MPI are not yet compatible")
 
+    conflicts(
+        "+gpu_streams",
+        when="+openmp",
+        msg="GPU streams currently not supported in combination with OpenMP",
+    )
+
     def url_for_version(self, version):
         return "https://elpa.mpcdf.mpg.de/software/tarball-archive/Releases/{0}/elpa-{0}.tar.gz".format(
             str(version)
@@ -89,7 +100,7 @@ class Elpa(AutotoolsPackage, CudaPackage, ROCmPackage):
 
         # upstream sometimes adds tarball suffixes not part of the internal version
         elpa_version = str(self.spec.version)
-        for vsuffix in ("_bugfix",):
+        for vsuffix in ("_bugfix", "-patched"):
             if elpa_version.endswith(vsuffix):  # implementation of py3.9 removesuffix
                 elpa_version = elpa_version[: -len(vsuffix)]
 
@@ -111,6 +122,9 @@ class Elpa(AutotoolsPackage, CudaPackage, ROCmPackage):
 
         options += self.with_or_without("mpi")
 
+        # New options use the "-kernels" suffix
+        kernels = "-kernels" if spec.satisfies("@2023.11:") else ""
+
         # TODO: --disable-sse-assembly, --enable-sparc64, --enable-neon-arch64
         # Don't include vsx; as of 2022.05 it fails (reported upstream).
         # Altivec SSE intrinsics are used anyway.
@@ -118,18 +132,18 @@ class Elpa(AutotoolsPackage, CudaPackage, ROCmPackage):
 
         for feature in simd_features:
             msg = "--enable-{0}" if feature in spec.target else "--disable-{0}"
-            options.append(msg.format(feature))
+            options.append(msg.format(feature + kernels))
 
         if spec.target.family != "x86_64":
             options.append("--disable-sse-assembly")
 
-        if "%aocc" in spec:
+        if "%aocc" in spec or "%fj" in spec:
             options.append("--disable-shared")
             options.append("--enable-static")
 
         # If no features are found, enable the generic ones
         if not any(f in spec.target for f in simd_features):
-            options.append("--enable-generic")
+            options.append("--enable-generic" + kernels)
 
         if self.compiler.name == "gcc":
             options.extend(["CFLAGS=-O3", "FCFLAGS=-O3 -ffree-line-length-none"])
@@ -137,12 +151,23 @@ class Elpa(AutotoolsPackage, CudaPackage, ROCmPackage):
         if "%aocc" in spec:
             options.extend(["FCFLAGS=-O3", "CFLAGS=-O3"])
 
+        if "%fj" in spec:
+            options.append("--disable-Fortran2008-features")
+            options.append("--enable-FUGAKU")
+            if "+openmp" in spec:
+                options.extend(["FCFLAGS=-Kparallel"])
+
         cuda_flag = "nvidia-gpu"
         if "+cuda" in spec:
             prefix = spec["cuda"].prefix
-            options.append("--enable-{0}".format(cuda_flag))
+            # Can't yet be changed to the new option --enable-nvidia-gpu-kernels
+            # https://github.com/marekandreas/elpa/issues/55
+            options.append(f"--enable-{cuda_flag}")
             options.append("--with-cuda-path={0}".format(prefix))
             options.append("--with-cuda-sdk-path={0}".format(prefix))
+
+            if spec.satisfies("+gpu_streams"):
+                options.append("--enable-gpu-streams=nvidia")
 
             cuda_arch = spec.variants["cuda_arch"].value[0]
 
@@ -151,20 +176,32 @@ class Elpa(AutotoolsPackage, CudaPackage, ROCmPackage):
                     "--with-{0}-compute-capability=sm_{1}".format(cuda_flag.upper(), cuda_arch)
                 )
         else:
-            options.append("--disable-{0}".format(cuda_flag))
+            options.append(f"--disable-{cuda_flag}" + kernels)
 
         if "+rocm" in spec:
+            # Can't yet be changed to the new option --enable-amd-gpu-kernels
+            # https://github.com/marekandreas/elpa/issues/55
             options.append("--enable-amd-gpu")
             options.append("CXX={0}".format(self.spec["hip"].hipcc))
+
+            if spec.satisfies("+gpu_streams"):
+                options.append("--enable-gpu-streams=amd")
+
         elif "@2021.05.001:" in self.spec:
-            options.append("--disable-amd-gpu")
+            options.append("--disable-amd-gpu" + kernels)
 
         options += self.enable_or_disable("openmp")
 
-        options += [
-            "LDFLAGS={0}".format(spec["lapack"].libs.search_flags),
-            "LIBS={0} {1}".format(spec["lapack"].libs.link_flags, spec["blas"].libs.link_flags),
-        ]
+        # Additional linker search paths and link libs
+        ldflags = [spec["blas"].libs.search_flags, spec["lapack"].libs.search_flags]
+        libs = [spec["lapack"].libs.link_flags, spec["blas"].libs.link_flags]
+
+        # If using blas with openmp support, link with openmp
+        # Needed for Spack-provided OneAPI MKL and for many externals
+        if self.spec["blas"].satisfies("threads=openmp"):
+            ldflags.append(self.compiler.openmp_flag)
+
+        options += [f'LDFLAGS={" ".join(ldflags)}', f'LIBS={" ".join(libs)}']
 
         if "+mpi" in self.spec:
             options += [

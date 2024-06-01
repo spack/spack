@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -30,6 +30,8 @@ class KimApi(CMakePackage):
 
     maintainers("ellio167")
 
+    license("CDDL-1.0")
+
     version("develop", branch="devel")
     version("2.2.1", sha256="1d5a12928f7e885ebe74759222091e48a7e46f77e98d9147e26638c955efbc8e")
     version("2.1.3", sha256="88a5416006c65a2940d82fad49de0885aead05bfa8b59f87d287db5516b9c467")
@@ -47,3 +49,7 @@ class KimApi(CMakePackage):
             filter_file(
                 "-std=gnu", "", "examples/simulators/simulator-model-example/CMakeLists.txt"
             )
+
+    def cmake_args(self):
+        args = [self.define("CMAKE_INSTALL_SYSCONFDIR", self.prefix.etc)]
+        return args

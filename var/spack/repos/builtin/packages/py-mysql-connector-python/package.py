@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class PyMysqlConnectorPython(PythonPackage):
     homepage = "https://github.com/mysql/mysql-connector-python"
     url = "https://github.com/mysql/mysql-connector-python/archive/8.0.13.tar.gz"
     git = "https://github.com/mysql/mysql-connector-python.git"
+
+    license("Artistic-1.0-Perl")
 
     version("8.0.13", sha256="d4c0834c583cdb90c0aeae90b1917d58355a4bf9b0266c16fd58874a5607f9d4")
 

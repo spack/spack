@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -53,6 +53,8 @@ class Dihydrogen(CachedCMakePackage, CudaPackage, ROCmPackage):
     tags = ["ecp", "radiuss"]
 
     maintainers("benson31", "bvanessen")
+
+    license("Apache-2.0")
 
     version("develop", branch="develop")
     version("master", branch="master")
@@ -130,7 +132,7 @@ class Dihydrogen(CachedCMakePackage, CudaPackage, ROCmPackage):
     depends_on("catch2@3.0.1:", type=("build", "test"), when="+developer")
     depends_on("cmake@3.21.0:", type="build")
     depends_on("cuda@11.0:", when="+cuda")
-    depends_on("spdlog@1.11.0", when="@:0.1,0.2:")
+    depends_on("spdlog@1.11.0:1.12.0", when="@:0.1,0.2:")
 
     with when("@0.3.0:"):
         depends_on("hydrogen +al")
@@ -255,13 +257,6 @@ class Dihydrogen(CachedCMakePackage, CudaPackage, ROCmPackage):
         entries.append(cmake_cache_string("CMAKE_CXX_STANDARD", "17"))
         entries.append(cmake_cache_option("BUILD_SHARED_LIBS", "+shared" in spec))
         entries.append(cmake_cache_option("CMAKE_EXPORT_COMPILE_COMMANDS", True))
-
-        # It's possible this should have a `if "platform=cray" in
-        # spec:` in front of it, but it's not clear to me when this is
-        # set. In particular, I don't actually see this blurb showing
-        # up on Tioga builds. Which is causing the obvious problem
-        # (namely, the one this was added to supposedly solve in the
-        # first place.
         entries.append(cmake_cache_option("MPI_ASSUME_NO_BUILTIN_MPI", True))
 
         if spec.satisfies("%clang +distconv platform=darwin"):

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,9 @@ class Rsync(AutotoolsPackage):
     homepage = "https://rsync.samba.org"
     url = "https://download.samba.org/pub/rsync/src/rsync-3.2.4.tar.gz"
 
+    license("GPL-3.0-or-later")
+
+    version("3.3.0", sha256="7399e9a6708c32d678a72a63219e96f23be0be2336e50fd1348498d07041df90")
     version("3.2.7", sha256="4e7d9d3f6ed10878c58c5fb724a67dacf4b6aac7340b13e488fb2dc41346f2bb")
     version("3.2.6", sha256="fb3365bab27837d41feaf42e967c57bd3a47bc8f10765a3671efd6a3835454d3")
     version("3.2.5", sha256="2ac4d21635cdf791867bc377c35ca6dda7f50d919a58be45057fd51600c69aba")

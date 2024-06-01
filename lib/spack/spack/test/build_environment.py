@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,7 @@ from llnl.util.filesystem import HeaderList, LibraryList
 
 import spack.build_environment
 import spack.config
+import spack.deptypes as dt
 import spack.package_base
 import spack.spec
 import spack.util.spack_yaml as syaml
@@ -63,7 +64,8 @@ def build_environment(working_env):
     os.environ["SPACK_LINKER_ARG"] = "-Wl,"
     os.environ["SPACK_DTAGS_TO_ADD"] = "--disable-new-dtags"
     os.environ["SPACK_DTAGS_TO_STRIP"] = "--enable-new-dtags"
-    os.environ["SPACK_SYSTEM_DIRS"] = "/usr/include /usr/lib"
+    os.environ["SPACK_SYSTEM_DIRS"] = "/usr/include|/usr/lib"
+    os.environ["SPACK_MANAGED_DIRS"] = f"{prefix}/opt/spack"
     os.environ["SPACK_TARGET_ARGS"] = ""
 
     if "SPACK_DEPENDENCIES" in os.environ:
@@ -285,6 +287,24 @@ def test_compiler_config_modifications(
         assert name not in os.environ
 
 
+def test_external_config_env(mock_packages, mutable_config, working_env):
+    cmake_config = {
+        "externals": [
+            {
+                "spec": "cmake@1.0",
+                "prefix": "/fake/path",
+                "extra_attributes": {"environment": {"set": {"TEST_ENV_VAR_SET": "yes it's set"}}},
+            }
+        ]
+    }
+    spack.config.set("packages:cmake", cmake_config)
+
+    cmake_client = spack.spec.Spec("cmake-client").concretized()
+    spack.build_environment.setup_package(cmake_client.package, False)
+
+    assert os.environ["TEST_ENV_VAR_SET"] == "yes it's set"
+
+
 @pytest.mark.regression("9107")
 def test_spack_paths_before_module_paths(config, mock_packages, monkeypatch, working_env):
     s = spack.spec.Spec("cmake")
@@ -439,10 +459,10 @@ def test_parallel_false_is_not_propagating(default_mock_concretization):
     # b (parallel =True)
     s = default_mock_concretization("a foobar=bar")
 
-    spack.build_environment.set_package_py_globals(s.package)
+    spack.build_environment.set_package_py_globals(s.package, context=Context.BUILD)
     assert s["a"].package.module.make_jobs == 1
 
-    spack.build_environment.set_package_py_globals(s["b"].package)
+    spack.build_environment.set_package_py_globals(s["b"].package, context=Context.BUILD)
     assert s["b"].package.module.make_jobs == spack.build_environment.determine_number_of_jobs(
         parallel=s["b"].package.parallel
     )
@@ -534,24 +554,6 @@ def test_build_jobs_defaults():
         )
         == 10
     )
-
-
-def test_dirty_disable_module_unload(config, mock_packages, working_env, mock_module_cmd):
-    """Test that on CRAY platform 'module unload' is not called if the 'dirty'
-    option is on.
-    """
-    s = spack.spec.Spec("a").concretized()
-
-    # If called with "dirty" we don't unload modules, so no calls to the
-    # `module` function on Cray
-    spack.build_environment.setup_package(s.package, dirty=True)
-    assert not mock_module_cmd.calls
-
-    # If called without "dirty" we unload modules on Cray
-    spack.build_environment.setup_package(s.package, dirty=False)
-    assert mock_module_cmd.calls
-    assert any(("unload", "cray-libsci") == item[0] for item in mock_module_cmd.calls)
-    assert any(("unload", "cray-mpich") == item[0] for item in mock_module_cmd.calls)
 
 
 class TestModuleMonkeyPatcher:
@@ -667,3 +669,51 @@ def test_clear_compiler_related_runtime_variables_of_build_deps(default_mock_con
     assert "FC" not in result
     assert "F77" not in result
     assert result["ANOTHER_VAR"] == "this-should-be-present"
+
+
+@pytest.mark.parametrize("context", [Context.BUILD, Context.RUN])
+def test_build_system_globals_only_set_on_root_during_build(default_mock_concretization, context):
+    """Test whether when setting up a build environment, the build related globals are set only
+    in the top level spec.
+
+    TODO: Since module instances are globals themselves, and Spack defines properties on them, they
+    persist across tests. In principle this is not terrible, cause the variables are mostly static.
+    But obviously it can lead to very hard to find bugs... We should get rid of those globals and
+    define them instead as a property on the package instance.
+    """
+    root = spack.spec.Spec("mpileaks").concretized()
+    build_variables = ("std_cmake_args", "std_meson_args", "std_pip_args")
+
+    # See todo above, we clear out any properties that may have been set by the previous test.
+    # Commenting this loop will make the test fail. I'm leaving it here as a reminder that those
+    # globals were always a bad idea, and we should pass them to the package instance.
+    for spec in root.traverse():
+        for variable in build_variables:
+            spec.package.module.__dict__.pop(variable, None)
+
+    spack.build_environment.SetupContext(root, context=context).set_all_package_py_globals()
+
+    # Excpect the globals to be set at the root in a build context only.
+    should_be_set = lambda depth: context == Context.BUILD and depth == 0
+
+    for depth, spec in root.traverse(depth=True, root=True):
+        for variable in build_variables:
+            assert hasattr(spec.package.module, variable) == should_be_set(depth)
+
+
+def test_rpath_with_duplicate_link_deps():
+    """If we have two instances of one package in the same link sub-dag, only the newest version is
+    rpath'ed. This is for runtime support without splicing."""
+    runtime_1 = spack.spec.Spec("runtime@=1.0")
+    runtime_2 = spack.spec.Spec("runtime@=2.0")
+    child = spack.spec.Spec("child@=1.0")
+    root = spack.spec.Spec("root@=1.0")
+
+    root.add_dependency_edge(child, depflag=dt.LINK, virtuals=())
+    root.add_dependency_edge(runtime_2, depflag=dt.LINK, virtuals=())
+    child.add_dependency_edge(runtime_1, depflag=dt.LINK, virtuals=())
+
+    rpath_deps = spack.build_environment._get_rpath_deps_from_spec(root, transitive_rpaths=True)
+    assert child in rpath_deps
+    assert runtime_2 in rpath_deps
+    assert runtime_1 not in rpath_deps

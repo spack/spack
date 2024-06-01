@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,6 +21,9 @@ class Lmod(AutotoolsPackage):
     homepage = "https://www.tacc.utexas.edu/research-development/tacc-projects/lmod"
     url = "https://github.com/TACC/Lmod/archive/8.5.6.tar.gz"
 
+    license("MIT")
+
+    version("8.7.37", sha256="171529152fedfbb3c45d27937b0eaa1ee62b5e5cdac3086f44a6d56e5d1d7da4")
     version("8.7.24", sha256="8451267652059b6507b652e1b563929ecf9b689ffb20830642085eb6a55bd539")
     version("8.7.20", sha256="c04deff7d2ca354610a362459a7aa9a1c642a095e45a4b0bb2471bb3254e85f4")
     version("8.7.18", sha256="b9912caca1557dd0c17113bceb1a4952e0ae75331d38df6361601db3f80366af")
@@ -83,14 +86,15 @@ class Lmod(AutotoolsPackage):
                 filter_file(r"^#!.*tclsh", "#!@path_to_tclsh@", tclscript)
 
     def configure_args(self):
+        spec = self.spec
         args = []
 
-        if "+auto_swap" in self.spec:
+        if spec.satisfies("+auto_swap"):
             args.append("--with-autoSwap=yes")
         else:
             args.append("--with-autoSwap=no")
 
-        if "+redirect" in self.spec:
+        if spec.satisfies("+redirect"):
             args.append("--with-redirect=yes")
         else:
             args.append("--with-redirect=no")

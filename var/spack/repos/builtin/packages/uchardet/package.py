@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,7 +16,10 @@ class Uchardet(CMakePackage):
     url = "https://www.freedesktop.org/software/uchardet/releases/uchardet-0.0.6.tar.xz"
     git = "https://gitlab.freedesktop.org/uchardet/uchardet.git"
 
+    license("MPL-1.1")
+
     version("master", branch="master")
+    version("0.0.8", sha256="8351328cdfbcb2432e63938721dd781eb8c11ebc56e3a89d0f84576b96002c61")
     version("0.0.7", sha256="8351328cdfbcb2432e63938721dd781eb8c11ebc56e3a89d0f84576b96002c61")
     version("0.0.6", sha256="8351328cdfbcb2432e63938721dd781eb8c11ebc56e3a89d0f84576b96002c61")
     version("0.0.5", sha256="7c5569c8ee1a129959347f5340655897e6a8f81ec3344de0012a243f868eabd1")

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -61,7 +61,6 @@ def install_kwargs_from_args(args):
         "dependencies_use_cache": cache_opt(args.use_cache, dep_use_bc),
         "dependencies_cache_only": cache_opt(args.cache_only, dep_use_bc),
         "include_build_deps": args.include_build_deps,
-        "explicit": True,  # Use true as a default for install command
         "stop_at": args.until,
         "unsigned": args.unsigned,
         "install_deps": ("dependencies" in args.things_to_install),
@@ -162,8 +161,8 @@ def setup_parser(subparser):
         "--no-check-signature",
         action="store_true",
         dest="unsigned",
-        default=False,
-        help="do not check signatures of binary packages",
+        default=None,
+        help="do not check signatures of binary packages (override mirror config)",
     )
     subparser.add_argument(
         "--show-log-on-error",
@@ -176,7 +175,7 @@ def setup_parser(subparser):
         dest="install_source",
         help="install source files in prefix",
     )
-    arguments.add_common_arguments(subparser, ["no_checksum", "deprecated"])
+    arguments.add_common_arguments(subparser, ["no_checksum"])
     subparser.add_argument(
         "-v",
         "--verbose",
@@ -290,11 +289,11 @@ def require_user_confirmation_for_overwrite(concrete_specs, args):
 def _dump_log_on_error(e: spack.build_environment.InstallError):
     e.print_context()
     assert e.pkg, "Expected InstallError to include the associated package"
-    if not os.path.exists(e.pkg.build_log_path):
+    if not os.path.exists(e.pkg.log_path):
         tty.error("'spack install' created no log.")
     else:
         sys.stderr.write("Full build log:\n")
-        with open(e.pkg.build_log_path, errors="replace") as log:
+        with open(e.pkg.log_path, errors="replace") as log:
             shutil.copyfileobj(log, sys.stderr)
 
 
@@ -325,9 +324,6 @@ def install(parser, args):
 
     if args.no_checksum:
         spack.config.set("config:checksum", False, scope="command_line")
-
-    if args.deprecated:
-        spack.config.set("config:deprecated", True, scope="command_line")
 
     if args.log_file and not args.log_format:
         msg = "the '--log-format' must be specified when using '--log-file'"
@@ -423,10 +419,9 @@ def install_with_active_env(env: ev.Environment, args, install_kwargs, reporter_
         with reporter_factory(specs_to_install):
             env.install_specs(specs_to_install, **install_kwargs)
     finally:
-        # TODO: this is doing way too much to trigger
-        # views and modules to be generated.
-        with env.write_transaction():
-            env.write(regenerate=True)
+        if env.views:
+            with env.write_transaction():
+                env.write(regenerate=True)
 
 
 def concrete_specs_from_cli(args, install_kwargs):
@@ -477,6 +472,7 @@ def install_without_active_env(args, install_kwargs, reporter_factory):
             require_user_confirmation_for_overwrite(concrete_specs, args)
             install_kwargs["overwrite"] = [spec.dag_hash() for spec in concrete_specs]
 
-        installs = [(s.package, install_kwargs) for s in concrete_specs]
-        builder = PackageInstaller(installs)
+        installs = [s.package for s in concrete_specs]
+        install_kwargs["explicit"] = [s.dag_hash() for s in concrete_specs]
+        builder = PackageInstaller(installs, install_kwargs)
         builder.install()

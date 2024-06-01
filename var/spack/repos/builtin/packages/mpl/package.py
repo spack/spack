@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class Mpl(CMakePackage):
     git = "https://github.com/rabauke/mpl.git"
     url = "https://github.com/rabauke/mpl/archive/refs/tags/v0.3.0.tar.gz"
     maintainers("rabauke")
+
+    license("BSD-3-Clause")
 
     version("develop", branch="master")
     version("0.3.0", tag="v0.3.0", commit="e6bd4926914127f3609a14474aa4a9c4fabbff0b")

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -91,7 +91,6 @@ def setup_parser(subparser):
 
 
 def _process_result(result, show, required_format, kwargs):
-    result.raise_if_unsat()
     opt, _, _ = min(result.answers)
     if ("opt" in show) and (not required_format):
         tty.msg("Best of %d considered solutions." % result.nmodels)
@@ -127,10 +126,7 @@ def _process_result(result, show, required_format, kwargs):
         print()
 
     if result.unsolved_specs and "solutions" in show:
-        tty.msg("Unsolved specs")
-        for spec in result.unsolved_specs:
-            print(spec)
-        print()
+        tty.msg(asp.Result.format_unsolved(result.unsolved_specs))
 
 
 def solve(parser, args):
