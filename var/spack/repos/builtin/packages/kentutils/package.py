@@ -52,7 +52,6 @@ class Kentutils(MakefilePackage):
 
     # MySQL pointer/integer conversion issue
     patch("fix-mysql-options-gcc13.patch", when="%gcc@13: +force_mysql")
-    #conflicts("%gcc@13:", when="+force_mysql")
 
     def flag_handler(self, name, flags):
         if name == "ldflags":
