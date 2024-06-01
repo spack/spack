@@ -28,10 +28,13 @@ class PerlBioBigfile(PerlPackage):
 
     depends_on("perl-module-build", type="build")
     depends_on("gmake", type="build")
-    depends_on("perl-bioperl", type=("build", "run"))
-    depends_on("perl-io-string", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("perl-bioperl")
+        depends_on("perl-io-string")
+        depends_on("kentutils")
 
-    depends_on("kent-core")
+    def setup_build_environment(self, env):
+        kent_src = self.spec["kentutils"]
+        env.set("KENT_SRC", kent_src.prefix)
+        env.set("MACHTYPE", kent_src.pkg.machtype)
 
-    def setup_build_environment(self, spec, env):
-        env.set("KENT_SRC", self.spec["kent-core"].prefix)

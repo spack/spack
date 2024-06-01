@@ -33,17 +33,31 @@ class PerlDbdMysql(PerlPackage):
     version("4.043", sha256="629f865e8317f52602b2f2efd2b688002903d2e4bbcba5427cb6188b043d6f99")
 
     depends_on("perl-devel-checklib", type="build", when="@4.050:")
-    depends_on("perl-test-deep", type=("build", "run"))
-    depends_on("perl-dbi", type=("build", "run"))
-    depends_on("mysql-client", type=("build", "link", "run"))
-    conflicts("mariadb-c-client")
-    conflicts("mariadb")
+
+    with default_args(type=("build", "link", "run")):
+        depends_on("mysql+client_only@8")  # Does it's own version check, mariadb doesn't conform
+        depends_on("zlib-api")
+        depends_on("binutils")
+
+    with default_args(type=("build", "run")):
+        depends_on("perl-test-deep")
+        depends_on("perl-dbi")
 
     def configure_args(self):
-        mysql = self.spec["mysql-client"].prefix
-        mysql_config = mysql.bin.mysql_config
+        zlib = self.spec['zlib-api']
         return [
-            f"--cflags=-I{mysql.include}",
-            f"--libs=-L{mysql.lib} -lmysqlclient",
-            f"--mysql_config={mysql_config}",
+            zlib.libs.ld_flags,
         ]
+
+
+#    def setup_build_env(self, env):
+#        env.append_path("PATH", self.spec["mysql_client"].prefix.bin.mysql_config)
+
+#    def configure_args(self):
+#        mysql = self.spec["mysql-client"].prefix
+#        mysql_config = mysql.bin.mysql_config
+#        return [
+#            f"--cflags=-I{mysql.include}",
+#            f"--libs=-L{mysql.lib} -lmysqlclient",
+#            f"--mysql_config={mysql_config}",
+#        ]
