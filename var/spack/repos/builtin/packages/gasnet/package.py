@@ -165,9 +165,11 @@ class Gasnet(Package, CudaPackage, ROCmPackage):
 
             if "+cuda" in spec:
                 options.append("--enable-kind-cuda-uva")
+                options.append("--with-cuda-home=" + spec["cuda"].prefix)
 
             if "+rocm" in spec:
                 options.append("--enable-kind-hip")
+                options.append("--with-hip-home=" + spec["hip"].prefix)
 
             if "+level_zero" in spec:
                 options.append("--enable-kind-ze")
