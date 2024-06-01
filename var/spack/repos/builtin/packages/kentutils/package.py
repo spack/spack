@@ -26,6 +26,7 @@ class Kentutils(MakefilePackage):
 
     variant("libs", default=True, description="Install jk*.a libraries")
     variant("force_mysql", default=False, description="Force MySQL over MariaDB")
+    variant("htslib", default=False, description="Use bundled lib")
 
     with default_args(type=("build", "link", "run")):
         depends_on("libpng")
@@ -35,6 +36,7 @@ class Kentutils(MakefilePackage):
         depends_on("zlib-api")
         depends_on("freetype")
         depends_on("libiconv")
+        depends_on("htslib", when="~htslib")
 
     # The bgzip.c bug present in other packages is present in kent/src/htslib/bgzf.c
     # Conflicting line: assert(compressBound(BGZF_BLOCK_SIZE) < BGZF_MAX_BLOCK_SIZE);
@@ -48,10 +50,18 @@ class Kentutils(MakefilePackage):
     # MariaDB can take a very long time to compile if you just need the c client
     conflicts("mariadb", when="+force_mysql")
 
+    # MySQL pointer/integer conversion issue
+    patch("fix-mysql-options-gcc13.patch", when="%gcc@13: +force_mysql")
+    #conflicts("%gcc@13:", when="+force_mysql")
+
     def flag_handler(self, name, flags):
         if name == "ldflags":
             flags.append(f'{self.spec["libiconv"].libs.ld_flags}')
+            flags.append(f'{self.spec["zlib-api"].libs.ld_flags}')
         return (flags, None, None)
+
+    def setup_build_environment(self, env):
+        env.set("ZLIB", f'{self.spec["zlib-api"].libs.ld_flags}')
 
     @property
     def machtype(self):
