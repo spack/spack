@@ -111,6 +111,8 @@ class IntelOneapiMkl(IntelOneApiLibraryPackage):
         expand=False,
     )
 
+    variant("gfortran", default=False, description="Compatibility with GNU Fortran")
+
     variant("shared", default=True, description="Builds shared library")
     variant("ilp64", default=False, description="Build with ILP64 support")
     variant(
@@ -200,10 +202,16 @@ class IntelOneapiMkl(IntelOneApiLibraryPackage):
         if self.spec.satisfies("+cluster"):
             libs.extend([self._xlp64_lib("libmkl_scalapack"), "libmkl_cdft_core"])
 
-        if self.spec.satisfies("%oneapi") or self.spec.satisfies("%intel"):
-            libs.append(self._xlp64_lib("libmkl_intel"))
-        else:
+        # Explicit variant for compatibility with gfortran, otherwise
+        # support intel fortran. Be aware that some dependencies may
+        # be using this logic and other dependencies might be using
+        # cmake for the library list and they have to be consistent.
+        # https://github.com/spack/spack/pull/43673 for discussion
+        if self.spec.satisfies("+gfortran"):
+            depends_on("fortran", type="build")
             libs.append(self._xlp64_lib("libmkl_gf"))
+        else:
+            libs.append(self._xlp64_lib("libmkl_intel"))
 
         if self.spec.satisfies("threads=tbb"):
             libs.append("libmkl_tbb_thread")

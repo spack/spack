@@ -274,7 +274,7 @@ class Julia(MakefilePackage):
     def setup_build_environment(self, env):
         # this is a bit ridiculous, but we are setting runtime linker paths to
         # dependencies so that libwhich can locate them.
-        if self.spec.satisfies("platform=linux") or self.spec.satisfies("platform=cray"):
+        if self.spec.satisfies("platform=linux"):
             linker_var = "LD_LIBRARY_PATH"
         elif self.spec.satisfies("platform=darwin"):
             linker_var = "DYLD_FALLBACK_LIBRARY_PATH"
