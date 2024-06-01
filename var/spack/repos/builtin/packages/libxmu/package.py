@@ -25,7 +25,7 @@ class Libxmu(AutotoolsPackage, XorgPackage):
     version("1.1.2", sha256="e5fd4bacef068f9509b8226017205040e38d3fba8d2de55037200e7176c13dba")
 
     depends_on("libxt")
-    depends_on("libxt@1.1:", when="@1.2.0:")
+    depends_on("libxt@1.1:", when="@1.2:")
     depends_on("libxext")
     depends_on("libx11")
 
