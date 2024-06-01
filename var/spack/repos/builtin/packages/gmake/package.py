@@ -75,9 +75,14 @@ class Gmake(Package, GNUMirrorPackage):
 
     def install(self, spec, prefix):
         configure = Executable(join_path(self.stage.source_path, "configure"))
-        build_sh = Executable(join_path(self.stage.source_path, "build.sh"))
         with working_dir(self.build_directory, create=True):
             configure(f"--prefix={prefix}", *self.configure_args())
+            if spec.satisfies("@:4.2.1"):
+                # older configure creates build.sh in current directory
+                build_sh = Executable(join_path(".", "build.sh"))
+            else:
+                # newer configure creates build.sh in source directory
+                build_sh = Executable(join_path(self.stage.source_path, "build.sh"))
             build_sh()
             os.mkdir(prefix.bin)
             install("make", prefix.bin)
