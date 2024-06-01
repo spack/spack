@@ -13,7 +13,9 @@ class Kentutils(MakefilePackage):
     url = "https://hgdownload.cse.ucsc.edu/admin/exe/userApps.archive/userApps.v453.src.tgz"
 
     version("465", sha256="eef17b1f3182d1d9dc99b5c73a6b0468d5d3bd80470f25d3f7706cc1372e04b0")
+    version("464", sha256="24e20fe68e2a2894d802c87662f69a62f71b3c15fafb2e4d6c3c425c63638bb2")
     version("460", sha256="b955e56ee880074521ef1ab1371491f47e66dc6fdd93b05328386dd675a635fa")
+    version("455", sha256="e458cadad7c4a5c1b8385edafffa1b29380ac725a0c20535bf5a3bab99fe80db")
     # This version isn't present in the archive any more
     # Might be worth changing url to: https://github.com/ucscGenomeBrowser/kent-core/tags/...
     version(
@@ -52,41 +54,37 @@ class Kentutils(MakefilePackage):
         return (flags, None, None)
 
     @property
-    def kent_platform(self):
-        # There has to be an easier way to get this
-        return self.spec.architecture.target.microarchitecture.family.name
-
-    @property
     def machtype(self):
         # This is hard-coded in the Makefile and included here for reference
+        # and to make it adjustable if we need to adjust this in the future
         return "local"
 
     def install_libs_from_stage(self, prefix):
         # Dependent packages expect things in the source tree, but we don't
         # want to copy all of the compilation artifacts in so we'll do them
         # manually instead of leaving the build directory around
+        import os
+
         src_prefix = "kent/src"
 
-        lib_dir = join_path("lib", self.machtype)
-        parasol = join_path("parasol/lib", self.machtype)
-        altsplice = join_path("hg/altSplice/lib", self.machtype)
-        htslib = "htslib"
+        # I'm not sure if all dependents look for inc or some look in .../include
+        install_tree(join_path(src_prefix, "inc"), join_path(prefix, "inc"))
 
-        for lib_prefix in [lib_dir, parasol, altsplice, htslib, "include"]:
-            mkdirp(join_path(prefix, lib_prefix))
-
-        install_tree(join_path(src_prefix, "inc"), prefix.include)
-        
-        lib_names = ["jkweb.a", "jkOwnLib.a", "jkhgap.a", "jkhgapcgi.a"]
-        libs = [join_path(lib_dir, name) for name in lib_names]
-        libs += [
-            join_path(parasol, "paralib.a"),
-            join_path(altsplice, "libSpliceGraph.a"),
-            join_path(htslib, "libhts.a"),
+        libs = [
+            f"lib/{self.machtype}/jkweb.a",
+            f"lib/{self.machtype}/jkOwnLib.a",
+            f"lib/{self.machtype}/jkhgap.a",
+            f"lib/{self.machtype}/jkhgapcgi.a",
+            f"parasol/lib/{self.machtype}/paralib.a",
+            f"hg/altSplice/lib/{self.machtype}/libSpliceGraph.a",
+            "htslib/libhts.a",
         ]
 
         for lib in libs:
-            install(join_path("kent/src", lib), join_path(prefix, lib))
+            src = join_path(src_prefix, lib)
+            dest = join_path(prefix, lib)
+            mkdirp(os.path.dirname(dest))
+            install(src, dest)
 
     def install(self, spec, prefix):
         install_tree("bin", prefix.bin)

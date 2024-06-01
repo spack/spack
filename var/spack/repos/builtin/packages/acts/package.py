@@ -42,6 +42,8 @@ class Acts(CMakePackage, CudaPackage):
     # Supported Acts versions
     version("main", branch="main")
     version("master", branch="main", deprecated=True)  # For compatibility
+    version("35.0.0", commit="352b423ec31934f825deb9897780246d60ffc44e", submodules=True)
+    version("34.1.0", commit="8e1b7a659d912cd98db9d700906ff59e708da574", submodules=True)
     version("34.0.0", commit="daafd83adf0ce50f9667f3c9d4791a459e39fd1b", submodules=True)
     version("33.1.0", commit="00591a593a648430820e980b031301d25c18f1c7", submodules=True)
     version("33.0.0", commit="f6ed9013e76120137ae456583a04b554d88d9452", submodules=True)
@@ -198,7 +200,13 @@ class Acts(CMakePackage, CudaPackage):
         "examples",
         default=False,
         description="Build the examples",
-        when="@17: +fatras +identification +json +tgeo",
+        when="@17:34 +fatras +identification +json +tgeo",
+    )
+    variant(
+        "examples",
+        default=False,
+        description="Build the examples",
+        when="@35: +fatras +json +tgeo",
     )
     variant("integration_tests", default=False, description="Build the integration tests")
     variant("unit_tests", default=False, description="Build the unit tests")
@@ -233,7 +241,9 @@ class Acts(CMakePackage, CudaPackage):
     )
     variant("fatras_geant4", default=False, description="Build Geant4 Fatras package")
     variant("geomodel", default=False, description="Build GeoModel plugin", when="@33:")
-    variant("identification", default=False, description="Build the Identification plugin")
+    variant(
+        "identification", default=False, description="Build the Identification plugin", when="@:34"
+    )
     variant("json", default=False, description="Build the Json plugin")
     variant("legacy", default=False, description="Build the Legacy package")
     variant("mlpack", default=False, description="Build MLpack plugin", when="@25:31")
@@ -252,8 +262,11 @@ class Acts(CMakePackage, CudaPackage):
         description="Enable memory profiling using gperftools",
         when="@19.3:",
     )
-    variant("sycl", default=False, description="Build the SyCL plugin", when="@1:")
-    variant("tgeo", default=False, description="Build the TGeo plugin", when="+identification")
+    variant("sycl", default=False, description="Build the SyCL plugin", when="@1:34")
+    variant(
+        "tgeo", default=False, description="Build the TGeo plugin", when="@:34 +identification"
+    )
+    variant("tgeo", default=False, description="Build the TGeo plugin", when="@35:")
 
     # Variants that only affect Acts examples for now
     variant(
@@ -478,6 +491,8 @@ class Acts(CMakePackage, CudaPackage):
             cuda_arch = spec.variants["cuda_arch"].value
             if cuda_arch != "none":
                 args.append(f"-DCUDA_FLAGS=-arch=sm_{cuda_arch[0]}")
+                arch_str = ";".join(self.spec.variants["cuda_arch"].value)
+                args.append(self.define("CMAKE_CUDA_ARCHITECTURES", arch_str))
 
         args.append(self.define_from_variant("CMAKE_CXX_STANDARD", "cxxstd"))
 

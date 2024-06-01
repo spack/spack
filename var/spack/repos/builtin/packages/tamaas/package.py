@@ -17,7 +17,9 @@ class Tamaas(SConsPackage):
     maintainers("prs513rosewood")
 
     version("master", branch="master")
-    version("2.6.0", sha256="e3a262e5b893aa1e23554b6bd6b41af68c841ef4ffd862bb8e50a1a17ac15af6")
+    version("2.7.1", sha256="d7de6db3f5532bb9c8ab7e8cca1cdb5c133050dd5720249dde07027b0d41641f")
+    version("2.7.0", sha256="bc5717c1ead621cb9c18a073fdafbe8778fd160ad23d80c98283445d79066579")
+    version("2.6.0", sha256="4aafa0f727f43afc6ae45705ae80cf113a6a95e728bdf536c22b3b39be87f153")
     version(
         "2.5.0.post1", sha256="28e52dc5b8a5f77588c73a6ef396c44c6a8e9d77e3e4929a4ab07232dc9bc565"
     )
@@ -46,6 +48,10 @@ class Tamaas(SConsPackage):
     conflicts("%clang@:5")
     conflicts("%intel")
 
+    # MPI type-traits issues (constexpr vs static const) in recent gcc
+    # fixed for tamaas versions > 2.6.0
+    patch("recent_compilers.patch", when="@:2.6.0%gcc@11:")
+
     with when("+python"):
         extends("python")
         depends_on("python@3.7:", type=("build", "run"))
@@ -53,6 +59,7 @@ class Tamaas(SConsPackage):
         depends_on("py-scipy", when="+solvers", type="run")
         depends_on("py-pybind11", type="build")
         depends_on("py-wheel", type="build")
+        depends_on("py-pip", type="build")
 
     def build_args(self, spec, prefix):
         args = [
@@ -77,3 +84,13 @@ class Tamaas(SConsPackage):
             args += ["PYBIND11_ROOT={}".format(spec["py-pybind11"].prefix)]
 
         return args
+
+    def install(self, spec, prefix):
+        """Install the package."""
+        args = self.install_args(spec, prefix)
+
+        scons("install-lib", *args)
+
+        if spec.satisfies("+python"):
+            args = ["-m", "pip"] + std_pip_args + ["--prefix=" + prefix, "build-release/python"]
+            python(*args)

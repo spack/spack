@@ -12,12 +12,13 @@ class RocmBandwidthTest(CMakePackage):
 
     homepage = "https://github.com/ROCm/rocm_bandwidth_test"
     git = "https://github.com/ROCm/rocm_bandwidth_test.git"
-    url = "https://github.com/ROCm/rocm_bandwidth_test/archive/rocm-6.0.0.tar.gz"
+    url = "https://github.com/ROCm/rocm_bandwidth_test/archive/rocm-6.1.1.tar.gz"
     tags = ["rocm"]
 
     maintainers("srekolam", "renjithravindrankannath")
 
     version("master", branch="master")
+    version("6.1.1", sha256="01da756228f2bfb5e25ddb74b75a5939693b1b4f4559f37cfc85729e36a98450")
     version("6.1.0", sha256="b06522efbd1a55247412c8f535321058e2463eab4abd25505c37e8c67941ae26")
     version("6.0.2", sha256="af95fe84729701184aeb14917cee0d8d77ab1858ddcced01eb7380401e2134ae")
     version("6.0.0", sha256="9023401bd6a896059545b8e6263c6730afd89d7d45c0f5866261c300415532a6")
@@ -59,12 +60,24 @@ class RocmBandwidthTest(CMakePackage):
         "6.0.0",
         "6.0.2",
         "6.1.0",
+        "6.1.1",
         "master",
     ]:
         depends_on(f"hsa-rocr-dev@{ver}", when=f"@{ver}")
         depends_on(f"hsakmt-roct@{ver}", when=f"@{ver}")
 
-    for ver in ["5.5.0", "5.5.1", "5.6.0", "5.6.1", "5.7.0", "5.7.1", "6.0.0", "6.0.2", "6.1.0"]:
+    for ver in [
+        "5.5.0",
+        "5.5.1",
+        "5.6.0",
+        "5.6.1",
+        "5.7.0",
+        "5.7.1",
+        "6.0.0",
+        "6.0.2",
+        "6.1.0",
+        "6.1.1",
+    ]:
         depends_on(f"rocm-core@{ver}", when=f"@{ver}")
 
     build_targets = ["package"]
