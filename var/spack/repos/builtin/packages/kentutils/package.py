@@ -14,6 +14,7 @@ class Kentutils(MakefilePackage):
 
     version("465", sha256="eef17b1f3182d1d9dc99b5c73a6b0468d5d3bd80470f25d3f7706cc1372e04b0")
     version("460", sha256="b955e56ee880074521ef1ab1371491f47e66dc6fdd93b05328386dd675a635fa")
+    version("455", sha256="e458cadad7c4a5c1b8385edafffa1b29380ac725a0c20535bf5a3bab99fe80db")
     # This version isn't present in the archive any more
     # Might be worth changing url to: https://github.com/ucscGenomeBrowser/kent-core/tags/...
     version(
@@ -62,6 +63,7 @@ class Kentutils(MakefilePackage):
         # want to copy all of the compilation artifacts in so we'll do them
         # manually instead of leaving the build directory around
         import os
+
         src_prefix = "kent/src"
 
         # I'm not sure if all dependents look for inc or some look in .../include
@@ -74,7 +76,7 @@ class Kentutils(MakefilePackage):
             f"lib/{self.machtype}/jkhgapcgi.a",
             f"parasol/lib/{self.machtype}/paralib.a",
             f"hg/altSplice/lib/{self.machtype}/libSpliceGraph.a",
-            "htslib/libhts.a"
+            "htslib/libhts.a",
         ]
 
         for lib in libs:
