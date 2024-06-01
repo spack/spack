@@ -1025,7 +1025,8 @@ ConditionSpecCache = Dict[str, Dict[ConditionSpecKey, ConditionIdFunctionPair]]
 class SpackSolverSetup:
     """Class to set up and run a Spack concretization solve."""
 
-    def __init__(self, tests: bool = False):
+    def __init__(self, tests: bool = False, prefer_older=False):
+        
         # these are all initialized in setup()
         self.gen: "ProblemInstanceBuilder" = ProblemInstanceBuilder()
         self.possible_virtuals: Set[str] = set()
@@ -1057,6 +1058,8 @@ class SpackSolverSetup:
 
         # whether to add installed/binary hashes to the solve
         self.tests = tests
+
+        self.prefer_older = prefer_older
 
         # If False allows for input specs that are not solved
         self.concretize_everything = True
@@ -1091,7 +1094,7 @@ class SpackSolverSetup:
                 list(sorted(group, reverse=True, key=lambda x: vn.ver(x.version)))
             )
 
-        for weight, declared_version in enumerate(most_to_least_preferred):
+        for weight, declared_version in enumerate(reversed(most_to_least_preferred) if self.prefer_older else most_to_least_preferred):
             self.gen.fact(
                 fn.pkg_fact(
                     pkg.name,
@@ -3800,6 +3803,8 @@ class Solver:
         self.driver = PyclingoDriver()
         self.selector = ReusableSpecsSelector(configuration=spack.config.CONFIG)
 
+        self.prefer_older = spack.config.get("concretizer:prefer_older", False)
+
     @staticmethod
     def _check_input_and_extract_concrete_specs(specs):
         reusable = []
@@ -3838,7 +3843,7 @@ class Solver:
         specs = [s.lookup_hash() for s in specs]
         reusable_specs = self._check_input_and_extract_concrete_specs(specs)
         reusable_specs.extend(self.selector.reusable_specs(specs))
-        setup = SpackSolverSetup(tests=tests)
+        setup = SpackSolverSetup(tests=tests, prefer_older=self.prefer_older)
         output = OutputConfiguration(timers=timers, stats=stats, out=out, setup_only=setup_only)
         result, _, _ = self.driver.solve(
             setup, specs, reuse=reusable_specs, output=output, allow_deprecated=allow_deprecated
@@ -3867,7 +3872,7 @@ class Solver:
         specs = [s.lookup_hash() for s in specs]
         reusable_specs = self._check_input_and_extract_concrete_specs(specs)
         reusable_specs.extend(self.selector.reusable_specs(specs))
-        setup = SpackSolverSetup(tests=tests)
+        setup = SpackSolverSetup(tests=tests, prefer_older=self.prefer_older)
 
         # Tell clingo that we don't have to solve all the inputs at once
         setup.concretize_everything = False
