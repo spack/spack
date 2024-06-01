@@ -1,6 +1,6 @@
 diff --git a/kent/src/inc/common.mk.orig b/kent/src/inc/common.mk
 index 83803ad..8c90e3a 100644
---- a/kent/src/inc/common.mk.orig
+--- a/kent/src/inc/common.mk
 +++ b/kent/src/inc/common.mk
 @@ -226,6 +226,8 @@ ifeq (${ZLIB},)
    ZLIB=-lz
