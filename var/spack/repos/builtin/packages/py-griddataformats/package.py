@@ -24,8 +24,8 @@ class PyGriddataformats(PythonPackage):
 
     depends_on("py-setuptools", type="build")
     depends_on("python@3.8:3.11", when="@1.0.1", type=("build", "run"))
-    depends_on("python@3.9:3.12", when="@1.0.2", type=("build", "run"))
+    depends_on("python@3.9:3.12", when="@1.0.2:", type=("build", "run"))
     depends_on("py-numpy@1.19:", when="@1.0.1", type=("build", "run"))
-    depends_on("py-numpy@1.21:", when="@1.0.2", type=("build", "run"))
+    depends_on("py-numpy@1.21:", when="@1.0.2:", type=("build", "run"))
     depends_on("py-scipy", type=("build", "run"))
     depends_on("py-mrcfile", type=("build", "run"))
