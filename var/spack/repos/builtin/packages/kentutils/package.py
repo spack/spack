@@ -58,6 +58,8 @@ class Kentutils(MakefilePackage):
     def flag_handler(self, name, flags):
         if name == "ldflags":
             flags.append(f'{self.spec["libiconv"].libs.ld_flags}')
+        elif name == "cflags" and self.spec.satisfies("+libs"):
+            flags.append("-fPIC")
         return (flags, None, None)
 
     @property
