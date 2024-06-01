@@ -57,11 +57,7 @@ class Kentutils(MakefilePackage):
     def flag_handler(self, name, flags):
         if name == "ldflags":
             flags.append(f'{self.spec["libiconv"].libs.ld_flags}')
-            flags.append(f'{self.spec["zlib-api"].libs.ld_flags}')
         return (flags, None, None)
-
-    def setup_build_environment(self, env):
-        env.set("ZLIB", f'{self.spec["zlib-api"].libs.ld_flags}')
 
     @property
     def machtype(self):
