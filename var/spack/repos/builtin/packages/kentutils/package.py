@@ -51,7 +51,9 @@ class Kentutils(MakefilePackage):
     conflicts("mariadb", when="+force_mysql")
 
     # MySQL pointer/integer conversion issue
-    patch("fix-mysql-options-gcc13.patch", when="%gcc@13: +force_mysql")
+    patch("fix-mysql-options-gcc13.patch", when="%gcc@13: ^mysql")
+    # MySQL build flags improperly states the zlib-api library
+    patch("mysql-zlib-workaround.patch", when="%gcc ^mysql")
 
     def flag_handler(self, name, flags):
         if name == "ldflags":
