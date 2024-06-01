@@ -81,7 +81,7 @@ class Gmake(Package, GNUMirrorPackage):
                 # older configure creates build.sh in current directory
                 build_sh = Executable(join_path(".", "build.sh"))
             else:
-                # newer configure creates build.sh in source directory
+                # newer configure uses build.sh in source directory
                 build_sh = Executable(join_path(self.stage.source_path, "build.sh"))
             build_sh()
             os.mkdir(prefix.bin)
