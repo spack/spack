@@ -80,12 +80,12 @@ class Gasnet(Package, CudaPackage, ROCmPackage):
         "conduits",
         values=any_combination_of("smp", "mpi", "ibv", "udp", "ofi", "ucx").with_default("smp"),
         description="The hardware-dependent network backends to enable.\n"
-        + "(smp) = SMP conduit for single-node operation ;\n"
-        + "(ibv) = Native InfiniBand verbs conduit ;\n"
-        + "(ofi) = OFI conduit over libfabric, for HPE Cray Slingshot and Intel Omni-Path ;\n"
-        + "(udp) = Portable UDP conduit, for Ethernet networks ;\n"
-        + "(mpi) = Low-performance/portable MPI conduit ;\n"
-        + "(ucx) = EXPERIMENTAL UCX conduit for Mellanox IB/RoCE ConnectX-5+ ;\n"
+        + "(smp) = SMP conduit for single-node operation\n"
+        + "(ibv) = Native InfiniBand verbs conduit\n"
+        + "(ofi) = OFI conduit over libfabric, for HPE Cray Slingshot and Intel Omni-Path\n"
+        + "(udp) = Portable UDP conduit, for Ethernet networks\n"
+        + "(mpi) = Low-performance/portable MPI conduit\n"
+        + "(ucx) = EXPERIMENTAL UCX conduit for Mellanox IB/RoCE ConnectX-5+\n"
         + "For detailed recommendations, consult https://gasnet.lbl.gov",
     )
 
