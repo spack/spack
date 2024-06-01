@@ -34,7 +34,7 @@ class Kentutils(MakefilePackage):
         depends_on("freetype")
         depends_on("libiconv")
 
-    # The bgzip.c bug present inother packages is present in kent/src/htslib/bgzf.c
+    # The bgzip.c bug present in other packages is present in kent/src/htslib/bgzf.c
     # Conflicting line: assert(compressBound(BGZF_BLOCK_SIZE) < BGZF_MAX_BLOCK_SIZE);
     # We can patch this by removing the assertion, but there are still performance issues
     # See: https://github.com/samtools/htslib/issues/1257
@@ -58,14 +58,13 @@ class Kentutils(MakefilePackage):
 
     @property
     def machtype(self):
-        # This is hard-coded in the Makefile, but doesn't cover all files
-        # for those we need to use the platform
+        # This is hard-coded in the Makefile and included here for reference
         return "local"
 
     def install_libs_from_stage(self, prefix):
         # Dependent packages expect things in the source tree, but we don't
-        # want to copy all of the compilation artifacts in
-        # Would it be better to just patch an install target into the makefile?
+        # want to copy all of the compilation artifacts in so we'll do them
+        # manually instead of leaving the build directory around
         src_prefix = "kent/src"
 
         lib_dir = join_path("lib", self.machtype)
