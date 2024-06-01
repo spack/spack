@@ -22,18 +22,73 @@ class Kentutils(MakefilePackage):
         deprecated=True,
     )
 
-    depends_on("libpng")
-    depends_on("openssl")
-    depends_on("libuuid")
-    depends_on("mariadb")
-    depends_on("zlib-api")
-    depends_on("freetype")
-    depends_on("libiconv")
+    variant("libs", default=True, description="Install jk*.a libraries")
+    variant("force_mysql", default=False, description="Force MySQL over MariaDB")
+
+    with default_args(type=("build", "link", "run")):
+        depends_on("libpng")
+        depends_on("openssl")
+        depends_on("libuuid")
+        depends_on("mysql-client")
+        depends_on("zlib-api")
+        depends_on("freetype")
+        depends_on("libiconv")
+
+    # The bgzip.c bug present in other packages is present in kent/src/htslib/bgzf.c
+    # Conflicting line: assert(compressBound(BGZF_BLOCK_SIZE) < BGZF_MAX_BLOCK_SIZE);
+    # We can patch this by removing the assertion, but there are still performance issues
+    # See: https://github.com/samtools/htslib/issues/1257
+    conflicts("zlib-ng")
+
+    # Does not add a link to mysql_config, which is required for compilation
+    conflicts("mariadb-c-client")
+
+    # MariaDB can take a very long time to compile if you just need the c client
+    conflicts("mariadb", when="+force_mysql")
 
     def flag_handler(self, name, flags):
         if name == "ldflags":
             flags.append(f'{self.spec["libiconv"].libs.ld_flags}')
         return (flags, None, None)
 
+    @property
+    def kent_platform(self):
+        # There has to be an easier way to get this
+        return self.spec.architecture.target.microarchitecture.family.name
+
+    @property
+    def machtype(self):
+        # This is hard-coded in the Makefile and included here for reference
+        return "local"
+
+    def install_libs_from_stage(self, prefix):
+        # Dependent packages expect things in the source tree, but we don't
+        # want to copy all of the compilation artifacts in so we'll do them
+        # manually instead of leaving the build directory around
+        src_prefix = "kent/src"
+
+        lib_dir = join_path("lib", self.machtype)
+        parasol = join_path("parasol/lib", self.machtype)
+        altsplice = join_path("hg/altSplice/lib", self.machtype)
+        htslib = "htslib"
+
+        for lib_prefix in [lib_dir, parasol, altsplice, htslib, "include"]:
+            mkdirp(join_path(prefix, lib_prefix))
+
+        install_tree(join_path(src_prefix, "inc"), prefix.include)
+        
+        lib_names = ["jkweb.a", "jkOwnLib.a", "jkhgap.a", "jkhgapcgi.a"]
+        libs = [join_path(lib_dir, name) for name in lib_names]
+        libs += [
+            join_path(parasol, "paralib.a"),
+            join_path(altsplice, "libSpliceGraph.a"),
+            join_path(htslib, "libhts.a"),
+        ]
+
+        for lib in libs:
+            install(join_path("kent/src", lib), join_path(prefix, lib))
+
     def install(self, spec, prefix):
         install_tree("bin", prefix.bin)
+        if spec.satisfies("+libs"):
+            self.install_libs_from_stage(prefix)
