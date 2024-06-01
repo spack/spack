@@ -28,13 +28,15 @@ class PerlBioBigfile(PerlPackage):
 
     depends_on("perl-module-build", type="build")
     depends_on("gmake", type="build")
-    with default_args(type=("build", "run")):
+
+    with default_args(type=("build", "link", "run")):
         depends_on("perl-bioperl")
         depends_on("perl-io-string")
         depends_on("kentutils")
+        depends_on("openssl")
 
     def setup_build_environment(self, env):
         kent_src = self.spec["kentutils"]
         env.set("KENT_SRC", kent_src.prefix)
-        env.set("MACHTYPE", kent_src.pkg.machtype)
+        env.set("MACHTYPE", kent_src.package.machtype)
 
