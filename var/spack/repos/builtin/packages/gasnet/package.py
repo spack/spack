@@ -43,9 +43,9 @@ class Gasnet(Package, CudaPackage, ROCmPackage):
     version("2022.9.2", sha256="2352d52f395a9aa14cc57d82957d9f1ebd928d0a0021fd26c5f1382a06cd6f1d")
     version("2022.9.0", sha256="6873ff4ad8ebee49da4378f2d78095a6ccc31333d6ae4cd739b9f772af11f936")
     version(
-        "2022.3.0", 
+        "2022.3.0",
         deprecated=True,
-        sha256="91b59aa84c0680c807e00d3d1d8fa7c33c1aed50b86d1616f93e499620a9ba09"
+        sha256="91b59aa84c0680c807e00d3d1d8fa7c33c1aed50b86d1616f93e499620a9ba09",
     )
     version(
         "2021.9.0",
@@ -130,7 +130,7 @@ class Gasnet(Package, CudaPackage, ROCmPackage):
 
     conflicts("^hip@:4.4.0", when="+rocm")
 
-    conflicts("^hip@6:", when="@:2024.4+rocm") # Bug 4686
+    conflicts("^hip@6:", when="@:2024.4+rocm")  # Bug 4686
 
     depends_on("oneapi-level-zero@1.8.0:", when="+level_zero")
 
