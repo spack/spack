@@ -123,6 +123,7 @@ class Gasnet(Package, CudaPackage, ROCmPackage):
     )
 
     depends_on("mpi", when="conduits=mpi")
+    depends_on("libfabric", when="conduits=ofi")
 
     depends_on("autoconf@2.69", type="build", when="@master:")
     depends_on("automake@1.16:", type="build", when="@master:")
