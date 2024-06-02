@@ -7,8 +7,8 @@
 from spack.package import *
 
 
-class PerlBioDBBigfile(PerlPackage):
-    """Bio::BigFile -- Low-level interface to BigWig & BigBed files for perl"""
+class PerlBioDbBigfile(PerlPackage):
+    """Bio::DB::BigFile -- Low-level interface to BigWig & BigBed files for perl"""
 
     homepage = "https://metacpan.org/pod/Bio::DB::BigFile"
     url = "https://cpan.metacpan.org/authors/id/L/LD/LDS/Bio-BigFile-1.07.tar.gz"
