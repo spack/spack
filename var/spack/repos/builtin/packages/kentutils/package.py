@@ -102,7 +102,7 @@ class Kentutils(MakefilePackage):
     def lib_dir(self):
         return join_path(self.prefix, self.machlib)
 
-    def install_libs_from_stage(self, prefix):
+    def install_libs_from_stage(self, spec, prefix):
         # Dependent packages expect things in the source tree, but we don't
         # want to copy all of the compilation artifacts in so we'll do them
         # manually instead of leaving the build directory around
@@ -120,7 +120,7 @@ class Kentutils(MakefilePackage):
                 install(src, dest)
 
         install_kent("inc", tree=True)
-        if self.satisfies("+htslib"):
+        if spec.satisfies("+htslib"):
             install_kent("htslib/htslib", tree=True)
 
         for lib in self.libs:
@@ -129,4 +129,4 @@ class Kentutils(MakefilePackage):
     def install(self, spec, prefix):
         install_tree("bin", prefix.bin)
         if spec.satisfies("+libs"):
-            self.install_libs_from_stage(prefix)
+            self.install_libs_from_stage(spec, prefix)
