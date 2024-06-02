@@ -3,8 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from collections import defaultdict, namedtuple
-from typing import Union
+from abc import ABC
+from collections import defaultdict
+from typing import Any, Callable, Iterable, List, Optional, Tuple, Union
 
 import spack.deptypes as dt
 import spack.spec
@@ -12,72 +13,82 @@ import spack.spec
 # Export only the high-level API.
 __all__ = ["traverse_edges", "traverse_nodes", "traverse_tree"]
 
-#: Data class that stores a directed edge together with depth at
-#: which the target vertex was found. It is passed to ``accept``
-#: and ``neighbors`` of visitors, so they can decide whether to
-#: follow the edge or not.
-EdgeAndDepth = namedtuple("EdgeAndDepth", ["edge", "depth"])
+EdgeAndDepth = Tuple["spack.spec.DependencySpec", int]
+Key = Callable[["spack.spec.Spec"], Any]
 
 
-def sort_edges(edges):
+def sort_edges(edges: List["spack.spec.DependencySpec"]) -> List["spack.spec.DependencySpec"]:
     edges.sort(key=lambda edge: (edge.spec.name or "", edge.spec.abstract_hash or ""))
     return edges
 
 
-class BaseVisitor:
-    """A simple visitor that accepts all edges unconditionally and follows all
-    edges to dependencies of a given ``deptype``."""
+class AbstractVisitor(ABC):
+    """Abstract base class for visitors that traverse the DAG."""
 
-    def __init__(self, depflag: dt.DepFlag = dt.ALL):
-        self.depflag = depflag
-
-    def accept(self, item):
+    def accept(self, item: EdgeAndDepth) -> bool:
         """
         Arguments:
-            item (EdgeAndDepth): Provides the depth and the edge through which the
-                node was discovered
+            item: the edge through which this node was reached at what depth.
 
         Returns:
-            bool: Returns ``True`` if the node is accepted. When ``False``, this
-                indicates that the node won't be yielded by iterators and dependencies
-                are not followed.
+            Iff True, the node is yielded by iterators and dependencies are followed.
         """
         return True
 
-    def neighbors(self, item):
-        return sort_edges(item.edge.spec.edges_to_dependencies(depflag=self.depflag))
+    def neighbors(self, item: EdgeAndDepth) -> List["spack.spec.DependencySpec"]:
+        raise NotImplementedError
 
 
-class ReverseVisitor:
+class AbstractDFSVisitor(AbstractVisitor):
+    """Abstract base class for visitors that traverse the DAG in depth-first fashion."""
+
+    def pre(self, item: EdgeAndDepth) -> None:
+        pass
+
+    def post(self, item: EdgeAndDepth) -> None:
+        pass
+
+
+class DefaultVisitor(AbstractVisitor):
+    def __init__(self, depflag: dt.DepFlag = dt.ALL) -> None:
+        self.depflag = depflag
+
+    def neighbors(self, item: EdgeAndDepth) -> List["spack.spec.DependencySpec"]:
+        return sort_edges(item[0].spec.edges_to_dependencies(depflag=self.depflag))
+
+
+class ReverseVisitor(AbstractVisitor):
     """A visitor that reverses the arrows in the DAG, following dependents."""
 
-    def __init__(self, visitor, depflag: dt.DepFlag = dt.ALL):
+    def __init__(self, visitor: AbstractVisitor, depflag: dt.DepFlag = dt.ALL) -> None:
         self.visitor = visitor
         self.depflag = depflag
 
-    def accept(self, item):
+    def accept(self, item: EdgeAndDepth) -> bool:
         return self.visitor.accept(item)
 
-    def neighbors(self, item):
+    def neighbors(self, item: EdgeAndDepth) -> List["spack.spec.DependencySpec"]:
         """Return dependents, note that we actually flip the edge direction to allow
         generic programming"""
-        spec = item.edge.spec
+        spec = item[0].spec
         return sort_edges(
             [edge.flip() for edge in spec.edges_from_dependents(depflag=self.depflag)]
         )
 
 
-class CoverNodesVisitor:
+class CoverNodesVisitor(AbstractVisitor):
     """A visitor that traverses each node once."""
 
-    def __init__(self, visitor, key=id, visited=None):
+    def __init__(
+        self, visitor: AbstractVisitor, key: Key = id, visited: Optional[set] = None
+    ) -> None:
         self.visitor = visitor
         self.key = key
         self.visited = set() if visited is None else visited
 
-    def accept(self, item):
+    def accept(self, item: EdgeAndDepth) -> bool:
         # Covering nodes means: visit nodes once and only once.
-        key = self.key(item.edge.spec)
+        key = self.key(item[0].spec)
 
         if key in self.visited:
             return False
@@ -86,24 +97,26 @@ class CoverNodesVisitor:
         self.visited.add(key)
         return accept
 
-    def neighbors(self, item):
+    def neighbors(self, item: EdgeAndDepth) -> List["spack.spec.DependencySpec"]:
         return self.visitor.neighbors(item)
 
 
-class CoverEdgesVisitor:
+class CoverEdgesVisitor(AbstractVisitor):
     """A visitor that traverses all edges once."""
 
-    def __init__(self, visitor, key=id, visited=None):
+    def __init__(
+        self, visitor: AbstractVisitor, key: Key = id, visited: Optional[set] = None
+    ) -> None:
         self.visitor = visitor
         self.visited = set() if visited is None else visited
         self.key = key
 
-    def accept(self, item):
+    def accept(self, item: EdgeAndDepth) -> bool:
         return self.visitor.accept(item)
 
-    def neighbors(self, item):
+    def neighbors(self, item: EdgeAndDepth) -> List["spack.spec.DependencySpec"]:
         # Covering edges means: drop dependencies of visited nodes.
-        key = self.key(item.edge.spec)
+        key = self.key(item[0].spec)
 
         if key in self.visited:
             return []
@@ -112,7 +125,7 @@ class CoverEdgesVisitor:
         return self.visitor.neighbors(item)
 
 
-class TopoVisitor:
+class TopoVisitor(AbstractDFSVisitor):
     """Visitor that can be used in :py:func:`depth-first traversal
     <spack.traverse.traverse_depth_first_with_visitor>` to generate
     a topologically ordered list of specs.
@@ -132,42 +145,39 @@ class TopoVisitor:
     edges, with the property that for each vertex all in-edges precede all out-edges.
     """
 
-    def __init__(self, visitor, key=id, root=True, all_edges=False):
+    def __init__(
+        self, visitor: AbstractVisitor, key: Key = id, root: bool = True, all_edges: bool = False
+    ):
         """
         Arguments:
             visitor: visitor that implements accept(), pre(), post() and neighbors()
             key: uniqueness key for nodes
-            root (bool): Whether to include the root node.
-            all_edges (bool): when ``False`` (default): Each node is reached once,
-                and ``map(lambda edge: edge.spec, visitor.edges)`` is topologically
-                ordered. When ``True``, every edge is listed, ordered such that for
-                each node all in-edges precede all out-edges.
+            root: Whether to include the root node.
+            all_edges: when ``False`` (default): Each node is reached once, and
+                ``map(lambda edge: edge.spec, visitor.edges)`` is topologically ordered. When
+                ``True``, every edge is listed, ordered such that for each node all in-edges
+                precede all out-edges.
         """
-        self.visited = set()
+        self.visited: set = set()
         self.visitor = visitor
         self.key = key
         self.root = root
-        self.reverse_order = []
+        self.reverse_order: List[spack.spec.DependencySpec] = []
         self.all_edges = all_edges
 
-    def accept(self, item):
-        if self.key(item.edge.spec) not in self.visited:
+    def accept(self, item: EdgeAndDepth) -> bool:
+        if self.key(item[0].spec) not in self.visited:
             return True
-        if self.all_edges and (self.root or item.depth > 0):
-            self.reverse_order.append(item.edge)
+        if self.all_edges and (self.root or item[1] > 0):
+            self.reverse_order.append(item[0])
         return False
 
-    def pre(self, item):
-        # You could add a temporary marker for cycle detection
-        # that's cleared in `post`, but we assume no cycles.
-        pass
+    def post(self, item: EdgeAndDepth) -> None:
+        self.visited.add(self.key(item[0].spec))
+        if self.root or item[1] > 0:
+            self.reverse_order.append(item[0])
 
-    def post(self, item):
-        self.visited.add(self.key(item.edge.spec))
-        if self.root or item.depth > 0:
-            self.reverse_order.append(item.edge)
-
-    def neighbors(self, item):
+    def neighbors(self, item: EdgeAndDepth) -> List["spack.spec.DependencySpec"]:
         return self.visitor.neighbors(item)
 
     @property
@@ -204,7 +214,7 @@ def get_visitor_from_args(
     """
     if not isinstance(depflag, dt.DepFlag):
         depflag = dt.canonicalize(depflag)
-    visitor = visitor or BaseVisitor(depflag)
+    visitor = visitor or DefaultVisitor(depflag)
     if cover == "nodes":
         visitor = CoverNodesVisitor(visitor, key, visited)
     elif cover == "edges":
@@ -217,38 +227,40 @@ def get_visitor_from_args(
 def with_artificial_edges(specs):
     """Initialize a list of edges from an imaginary root node to the root specs."""
     return [
-        EdgeAndDepth(
-            edge=spack.spec.DependencySpec(parent=None, spec=s, depflag=0, virtuals=()), depth=0
-        )
-        for s in specs
+        (spack.spec.DependencySpec(parent=None, spec=s, depflag=0, virtuals=()), 0) for s in specs
     ]
 
 
-def traverse_depth_first_edges_generator(edges, visitor, post_order=False, root=True, depth=False):
+def traverse_depth_first_edges_generator(
+    edges: List[EdgeAndDepth],
+    visitor,
+    post_order: bool = False,
+    root: bool = True,
+    depth: bool = False,
+):
     """Generator that takes explores a DAG in depth-first fashion starting from
     a list of edges. Note that typically DFS would take a vertex not a list of edges,
     but the API is like this so we don't have to create an artificial root node when
     traversing from multiple roots in a DAG.
 
     Arguments:
-        edges (list): List of EdgeAndDepth instances
+        edges: List of EdgeAndDepth instances
         visitor: class instance implementing accept() and neigbors()
-        post_order (bool): Whether to yield nodes when backtracking
-        root (bool): whether to yield at depth 0
-        depth (bool): when ``True`` yield a tuple of depth and edge, otherwise only the
-            edge.
+        post_order: Whether to yield nodes when backtracking
+        root: whether to yield at depth 0
+        depth: when ``True`` yield a tuple of depth and edge, otherwise only the edge.
     """
     for edge in edges:
         if not visitor.accept(edge):
             continue
 
-        yield_me = root or edge.depth > 0
+        yield_me = root or edge[1] > 0
 
         # Pre
         if yield_me and not post_order:
-            yield (edge.depth, edge.edge) if depth else edge.edge
+            yield (edge[1], edge[0]) if depth else edge[0]
 
-        neighbors = [EdgeAndDepth(edge=n, depth=edge.depth + 1) for n in visitor.neighbors(edge)]
+        neighbors = [(n, edge[1] + 1) for n in visitor.neighbors(edge)]
 
         # This extra branch is just for efficiency.
         if len(neighbors) > 0:
@@ -259,10 +271,12 @@ def traverse_depth_first_edges_generator(edges, visitor, post_order=False, root=
 
         # Post
         if yield_me and post_order:
-            yield (edge.depth, edge.edge) if depth else edge.edge
+            yield (edge[1], edge[0]) if depth else edge[0]
 
 
-def traverse_breadth_first_edges_generator(queue, visitor, root=True, depth=False):
+def traverse_breadth_first_edges_generator(
+    queue: List[EdgeAndDepth], visitor, root: bool = True, depth: bool = False
+):
     while len(queue) > 0:
         edge = queue.pop(0)
 
@@ -270,18 +284,18 @@ def traverse_breadth_first_edges_generator(queue, visitor, root=True, depth=Fals
         if not visitor.accept(edge):
             continue
 
-        if root or edge.depth > 0:
-            yield (edge.depth, edge.edge) if depth else edge.edge
+        if root or edge[1] > 0:
+            yield (edge[1], edge[0]) if depth else edge[0]
 
         for e in visitor.neighbors(edge):
-            queue.append(EdgeAndDepth(e, edge.depth + 1))
+            queue.append((e, edge[1] + 1))
 
 
-def traverse_breadth_first_with_visitor(specs, visitor):
+def traverse_breadth_first_with_visitor(specs: List[EdgeAndDepth], visitor: AbstractVisitor):
     """Performs breadth first traversal for a list of specs (not a generator).
 
     Arguments:
-        specs (list): List of Spec instances.
+        specs: List of Spec instances.
         visitor: object that implements accept and neighbors interface, see
             for example BaseVisitor.
     """
@@ -294,26 +308,21 @@ def traverse_breadth_first_with_visitor(specs, visitor):
             continue
 
         for e in visitor.neighbors(edge):
-            queue.append(EdgeAndDepth(e, edge.depth + 1))
+            queue.append((e, edge[1] + 1))
 
 
-def traverse_depth_first_with_visitor(edges, visitor):
+def traverse_depth_first_with_visitor(edges: List[EdgeAndDepth], visitor: AbstractDFSVisitor):
     """Traverse a DAG in depth-first fashion using a visitor, starting from
     a list of edges. Note that typically DFS would take a vertex not a list of edges,
     but the API is like this so we don't have to create an artificial root node when
-    traversing from multiple roots in a DAG.
-
-    Arguments:
-        edges (list): List of EdgeAndDepth instances
-        visitor: class instance implementing accept(), pre(), post() and neighbors()
-    """
+    traversing from multiple roots in a DAG."""
     for edge in edges:
         if not visitor.accept(edge):
             continue
 
         visitor.pre(edge)
 
-        neighbors = [EdgeAndDepth(edge=e, depth=edge.depth + 1) for e in visitor.neighbors(edge)]
+        neighbors = [(e, edge[1] + 1) for e in visitor.neighbors(edge)]
 
         traverse_depth_first_with_visitor(neighbors, visitor)
 
@@ -323,12 +332,15 @@ def traverse_depth_first_with_visitor(edges, visitor):
 # Helper functions for generating a tree using breadth-first traversal
 
 
-def breadth_first_to_tree_edges(roots, deptype="all", key=id):
-    """This produces an adjacency list (with edges) and a map of parents.
-    There may be nodes that are reached through multiple edges. To print as
-    a tree, one should use the parents dict to verify if the path leading to
-    the node is through the correct parent. If not, the branch should be
-    truncated."""
+def breadth_first_to_tree_edges(
+    roots: Iterable["spack.spec.Spec"],
+    deptype: Union[dt.DepFlag, dt.DepTypes] = dt.ALL,
+    key: Key = id,
+):
+    """This produces an adjacency list (with edges) and a map of parents. There may be nodes that
+    are reached through multiple edges. To print as a tree, one should use the parents dict to
+    verify if the path leading to the node is through the correct parent. If not, the branch should
+    be truncated."""
     edges = defaultdict(list)
     parents = dict()
 
@@ -342,7 +354,11 @@ def breadth_first_to_tree_edges(roots, deptype="all", key=id):
     return edges, parents
 
 
-def breadth_first_to_tree_nodes(roots, deptype="all", key=id):
+def breadth_first_to_tree_nodes(
+    roots: Iterable["spack.spec.Spec"],
+    deptype: Union[dt.DepFlag, dt.DepTypes] = dt.ALL,
+    key: Key = id,
+):
     """This produces a list of edges that forms a tree; every node has no more
     that one incoming edge."""
     edges = defaultdict(list)
@@ -355,8 +371,8 @@ def breadth_first_to_tree_nodes(roots, deptype="all", key=id):
 
 
 def traverse_breadth_first_tree_edges(parent_id, edges, parents, key=id, depth=0):
-    """Do a depth-first search on edges generated by bread-first traversal,
-    which can be used to produce a tree."""
+    """Do a depth-first search on edges generated by breadth-first traversal, which can be used to
+    produce a tree."""
     for edge in edges[parent_id]:
         yield (depth, edge)
 
@@ -366,26 +382,23 @@ def traverse_breadth_first_tree_edges(parent_id, edges, parents, key=id, depth=0
         if parents[child_id] != parent_id:
             continue
 
-        # yield from ... in Python 3.
-        for item in traverse_breadth_first_tree_edges(child_id, edges, parents, key, depth + 1):
-            yield item
+        yield from traverse_breadth_first_tree_edges(child_id, edges, parents, key, depth + 1)
 
 
 def traverse_breadth_first_tree_nodes(parent_id, edges, key=id, depth=0):
     for edge in edges[parent_id]:
         yield (depth, edge)
-        for item in traverse_breadth_first_tree_nodes(key(edge.spec), edges, key, depth + 1):
-            yield item
+        yield from traverse_breadth_first_tree_nodes(key(edge.spec), edges, key, depth + 1)
 
 
 # Topologic order
 def traverse_edges_topo(
-    specs,
-    direction="children",
-    deptype: Union[dt.DepFlag, dt.DepTypes] = "all",
-    key=id,
-    root=True,
-    all_edges=False,
+    specs: Iterable["spack.spec.Spec"],
+    direction: str = "children",
+    deptype: Union[dt.DepFlag, dt.DepTypes] = dt.ALL,
+    key: Key = id,
+    root: bool = True,
+    all_edges: bool = False,
 ):
     """
     Returns a list of edges in topological order, in the sense that all in-edges of a
@@ -394,50 +407,49 @@ def traverse_edges_topo(
     directed from dependency to dependent.
 
     Arguments:
-        specs (list): List of root specs (considered to be depth 0)
-        direction (str): ``children`` (edges are directed from dependent to dependency)
+        specs: List of root specs (considered to be depth 0)
+        direction: ``children`` (edges are directed from dependent to dependency)
             or ``parents`` (edges are flipped / directed from dependency to dependent)
         deptype: allowed dependency types
         key: function that takes a spec and outputs a key for uniqueness test.
-        root (bool): Yield the root nodes themselves
-        all_edges (bool): When ``False`` only one in-edge per node is returned, when
-            ``True`` all reachable edges are returned.
+        root: Yield the root nodes themselves
+        all_edges: When ``False`` only one in-edge per node is returned, when ``True`` all
+            reachable edges are returned.
     """
     if not isinstance(deptype, dt.DepFlag):
         deptype = dt.canonicalize(deptype)
-    visitor: Union[BaseVisitor, ReverseVisitor, TopoVisitor] = BaseVisitor(deptype)
-    if direction == "parents":
-        visitor = ReverseVisitor(visitor, deptype)
-    visitor = TopoVisitor(visitor, key=key, root=root, all_edges=all_edges)
-    traverse_depth_first_with_visitor(with_artificial_edges(specs), visitor)
-    return visitor.edges
+    default = DefaultVisitor(deptype)
+    with_dir = ReverseVisitor(default, deptype) if direction == "parents" else default
+    topo = TopoVisitor(with_dir, key=key, root=root, all_edges=all_edges)
+    traverse_depth_first_with_visitor(with_artificial_edges(specs), topo)
+    return topo.edges
 
 
 # High-level API: traverse_edges, traverse_nodes, traverse_tree.
 
 
 def traverse_edges(
-    specs,
-    root=True,
-    order="pre",
-    cover="nodes",
-    direction="children",
-    deptype: Union[dt.DepFlag, dt.DepTypes] = "all",
-    depth=False,
-    key=id,
-    visited=None,
+    specs: Iterable["spack.spec.Spec"],
+    root: bool = True,
+    order: str = "pre",
+    cover: str = "nodes",
+    direction: str = "children",
+    deptype: Union[dt.DepFlag, dt.DepTypes] = dt.ALL,
+    depth: bool = False,
+    key: Key = id,
+    visited: Optional[set] = None,
 ):
     """
     Generator that yields edges from the DAG, starting from a list of root specs.
 
     Arguments:
 
-        specs (list): List of root specs (considered to be depth 0)
-        root (bool): Yield the root nodes themselves
-        order (str): What order of traversal to use in the DAG. For depth-first
+        specs: List of root specs (considered to be depth 0)
+        root: Yield the root nodes themselves
+        order: What order of traversal to use in the DAG. For depth-first
             search this can be ``pre`` or ``post``. For BFS this should be ``breadth``.
             For topological order use ``topo``
-        cover (str): Determines how extensively to cover the dag.  Possible values:
+        cover: Determines how extensively to cover the dag.  Possible values:
             ``nodes`` -- Visit each unique node in the dag only once.
             ``edges`` -- If a node has been visited once but is reached along a
             new path, it's accepted, but not recurisvely followed. This traverses
@@ -445,15 +457,15 @@ def traverse_edges(
             ``paths`` -- Explore every unique path reachable from the root.
             This descends into visited subtrees and will accept nodes multiple
             times if they're reachable by multiple paths.
-        direction (str): ``children`` or ``parents``. If ``children``, does a traversal
+        direction: ``children`` or ``parents``. If ``children``, does a traversal
             of this spec's children.  If ``parents``, traverses upwards in the DAG
             towards the root.
         deptype: allowed dependency types
-        depth (bool): When ``False``, yield just edges. When ``True`` yield
+        depth: When ``False``, yield just edges. When ``True`` yield
             the tuple (depth, edge), where depth corresponds to the depth
             at which edge.spec was discovered.
         key: function that takes a spec and outputs a key for uniqueness test.
-        visited (set or None): a set of nodes not to follow
+        visited: a set of nodes not to follow
 
     Returns:
         A generator that yields ``DependencySpec`` if depth is ``False``
@@ -482,29 +494,29 @@ def traverse_edges(
     elif order == "breadth":
         return traverse_breadth_first_edges_generator(root_edges, visitor, root, depth)
 
-    raise ValueError("Unknown order {}".format(order))
+    raise ValueError(f"Unknown order {order}")
 
 
 def traverse_nodes(
-    specs,
-    root=True,
-    order="pre",
-    cover="nodes",
-    direction="children",
-    deptype: Union[dt.DepFlag, dt.DepTypes] = "all",
-    depth=False,
-    key=id,
-    visited=None,
+    specs: Iterable["spack.spec.Spec"],
+    root: bool = True,
+    order: str = "pre",
+    cover: str = "nodes",
+    direction: str = "children",
+    deptype: Union[dt.DepFlag, dt.DepTypes] = dt.ALL,
+    depth: bool = False,
+    key: Key = id,
+    visited: Optional[set] = None,
 ):
     """
     Generator that yields specs from the DAG, starting from a list of root specs.
 
     Arguments:
-        specs (list): List of root specs (considered to be depth 0)
-        root (bool): Yield the root nodes themselves
-        order (str): What order of traversal to use in the DAG. For depth-first
+        specs: List of root specs (considered to be depth 0)
+        root: Yield the root nodes themselves
+        order: What order of traversal to use in the DAG. For depth-first
             search this can be ``pre`` or ``post``. For BFS this should be ``breadth``.
-        cover (str): Determines how extensively to cover the dag.  Possible values:
+        cover: Determines how extensively to cover the dag.  Possible values:
             ``nodes`` -- Visit each unique node in the dag only once.
             ``edges`` -- If a node has been visited once but is reached along a
             new path, it's accepted, but not recurisvely followed. This traverses
@@ -512,15 +524,15 @@ def traverse_nodes(
             ``paths`` -- Explore every unique path reachable from the root.
             This descends into visited subtrees and will accept nodes multiple
             times if they're reachable by multiple paths.
-        direction (str): ``children`` or ``parents``. If ``children``, does a traversal
+        direction: ``children`` or ``parents``. If ``children``, does a traversal
             of this spec's children.  If ``parents``, traverses upwards in the DAG
             towards the root.
         deptype: allowed dependency types
-        depth (bool): When ``False``, yield just edges. When ``True`` yield
+        depth: When ``False``, yield just edges. When ``True`` yield
             the tuple ``(depth, edge)``, where depth corresponds to the depth
             at which ``edge.spec`` was discovered.
         key: function that takes a spec and outputs a key for uniqueness test.
-        visited (set or None): a set of nodes not to follow
+        visited: a set of nodes not to follow
 
     Yields:
         By default :class:`~spack.spec.Spec`, or a tuple ``(depth, Spec)`` if depth is
@@ -531,7 +543,11 @@ def traverse_nodes(
 
 
 def traverse_tree(
-    specs, cover="nodes", deptype: Union[dt.DepFlag, dt.DepTypes] = "all", key=id, depth_first=True
+    specs: Iterable["spack.spec.Spec"],
+    cover: str = "nodes",
+    deptype: Union[dt.DepFlag, dt.DepTypes] = dt.ALL,
+    key: Key = id,
+    depth_first: bool = True,
 ):
     """
     Generator that yields ``(depth, DependencySpec)`` tuples in the depth-first
@@ -539,8 +555,8 @@ def traverse_tree(
 
     Arguments:
 
-        specs (list): List of root specs (considered to be depth 0)
-        cover (str): Determines how extensively to cover the dag.  Possible values:
+        specs: List of root specs (considered to be depth 0)
+        cover: Determines how extensively to cover the dag.  Possible values:
             ``nodes`` -- Visit each unique node in the dag only once.
             ``edges`` -- If a node has been visited once but is reached along a
             new path, it's accepted, but not recurisvely followed. This traverses
@@ -550,7 +566,7 @@ def traverse_tree(
             times if they're reachable by multiple paths.
         deptype: allowed dependency types
         key: function that takes a spec and outputs a key for uniqueness test.
-        depth_first (bool): Explore the tree in depth-first or breadth-first order.
+        depth_first: Explore the tree in depth-first or breadth-first order.
             When setting ``depth_first=True`` and ``cover=nodes``, each spec only
             occurs once at the shallowest level, which is useful when rendering
             the tree in a terminal.

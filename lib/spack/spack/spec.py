@@ -1454,7 +1454,9 @@ class Spec:
             raise spack.error.SpecError(err_msg.format(name, len(deps)))
         return deps[0]
 
-    def edges_from_dependents(self, name=None, depflag: dt.DepFlag = dt.ALL):
+    def edges_from_dependents(
+        self, name=None, depflag: dt.DepFlag = dt.ALL
+    ) -> List[DependencySpec]:
         """Return a list of edges connecting this node in the DAG
         to parents.
 
@@ -1464,7 +1466,9 @@ class Spec:
         """
         return [d for d in self._dependents.select(parent=name, depflag=depflag)]
 
-    def edges_to_dependencies(self, name=None, depflag: dt.DepFlag = dt.ALL):
+    def edges_to_dependencies(
+        self, name=None, depflag: dt.DepFlag = dt.ALL
+    ) -> List[DependencySpec]:
         """Return a list of edges connecting this node in the DAG
         to children.
 

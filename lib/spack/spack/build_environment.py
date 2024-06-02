@@ -828,7 +828,7 @@ def setup_package(pkg, dirty, context: Context = Context.BUILD):
     return env_base
 
 
-class EnvironmentVisitor:
+class EnvironmentVisitor(traverse.AbstractVisitor):
     def __init__(self, *roots: spack.spec.Spec, context: Context):
         # For the roots (well, marked specs) we follow different edges
         # than for their deps, depending on the context.
@@ -846,7 +846,7 @@ class EnvironmentVisitor:
             self.root_depflag = dt.RUN | dt.LINK
 
     def neighbors(self, item):
-        spec = item.edge.spec
+        spec = item[0].spec
         if spec.dag_hash() in self.root_hashes:
             depflag = self.root_depflag
         else:
