@@ -25,21 +25,32 @@ class Vep(Package):
     version("111.0", sha256="9cb326a1fa0054ce1a417f8fd4f2325ba605c40ec10eefbf87f461c264a89407")
     version("110.0", sha256="391a1fe50139064c1044c09e013bb21437933d677537b5d3336807f3b131fb51")
 
-    depends_on("gcc")
-    depends_on("gmake")
-    depends_on("perl@5.10:")
-
     extends("perl")
 
-    depends_on("perl-archive-zip")
-    depends_on("perl-dbd-mysql")
-    depends_on("perl-dbi")
-    depends_on("perl-bio-db-hts")
-    depends_on("perl-json", when="+json")
-    depends_on("perl-set-intervaltree", when="+nearest")
-    depends_on("perl-perlio-gzip", when="+gzip")
-    depends_on("perl-bioperl@1.6:", when="~bundled_bioperl")
-    depends_on("htslib@1.9", when="~bundled_htslib")
+    with default_args(type="build"):
+        depends_on("gcc", when="+vep_installer")
+        depends_on("gmake")
+
+    with default_args(type=("build", "run")):
+        depends_on("perl@5.10:")
+        depends_on("perl-archive-zip")
+        depends_on("perl-dbd-mysql")
+        depends_on("perl-dbi")
+        depends_on("perl-bio-db-hts")
+        depends_on("perl-json", when="+json")
+        depends_on("perl-set-intervaltree", when="+nearest")
+        depends_on("perl-perlio-gzip", when="+gzip")
+        depends_on("perl-bioperl@1.6:", when="~bundled_bioperl")
+        depends_on("htslib@1.9:", when="~bundled_htslib")
+
+    # This is a workaround for the VEP installer which downloads
+    # and manually installs dependent packages
+    with default_args(type=("build", "run"), when="~vep_installer"):
+        for ver in ["110", "111", "112"]:
+            depends_on(f"perl-bio-ensembl@{ver}", when=f"@{ver}")
+            depends_on(f"perl-bio-ensembl-variation@{ver}", when=f"@{ver}")
+            depends_on(f"perl-bio-ensembl-funcgen@{ver}", when=f"@{ver}")
+            depends_on(f"perl-bio-ensembl-io@{ver}", when=f"@{ver}")
 
     variant("vep_installer", default=False)
     variant("utility_scripts", default=True)
@@ -56,15 +67,6 @@ class Vep(Package):
     # These should probably move futher up the dependency stack
     conflicts("zlib-ng", when="+gzip")
     conflicts("zlib-ng", when="+bundled_htslib")
-
-    # This is a workaround for the VEP installer which downloads
-    # and manually installs dependent packages
-    with default_args(type=("build", "run"), when="~vep_installer"):
-        for ver in ["110", "111", "112"]:
-            depends_on(f"perl-bio-ensembl@{ver}", when=f"@{ver}")
-            depends_on(f"perl-bio-ensembl-variation@{ver}", when=f"@{ver}")
-            depends_on(f"perl-bio-ensembl-funcgen@{ver}", when=f"@{ver}")
-            depends_on(f"perl-bio-ensembl-io@{ver}", when=f"@{ver}")
 
     @property
     def vep_lib_path(self):
@@ -84,7 +86,7 @@ class Vep(Package):
 
     def setup_run_environment(self, env):
         env.set("VEP_HOME", self.home)
-        if self.spec.satisfies("+htslib"):
+        if self.spec.satisfies("+bundled_htslib"):
             env.prepend_path("PATH", self.vep_lib_path.htslib)
 
     def installer_args(self):
@@ -114,7 +116,7 @@ class Vep(Package):
         # This is required for any cache updating via the installer
         install("convert_cache.pl", self.vep_scripts_path)
 
-        # Resolve dependencies via VEP installer
+        # Resolve dependencies via VEP installer if desired
         if spec.satisfies("+vep_installer"):
             # If we don't do this a bunch of perl libs will be missing
             # Run the customer VEP installer/downloader, which downloads
