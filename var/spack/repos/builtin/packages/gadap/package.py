@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class Gadap(AutotoolsPackage):
     url = "http://cola.gmu.edu/grads/Supplibs/2.1/src/gadap-2.0.tar.gz"
 
     maintainers("vanderwb")
+
+    license("GPL-2.0-only")
 
     version("2.0", sha256="ae9a989ca00ec29fb40616383d170883f07c022456db338399982a8a94ec0100")
 

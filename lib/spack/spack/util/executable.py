@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -35,9 +35,23 @@ class Executable:
         if not self.exe:
             raise ProcessError("Cannot construct executable for '%s'" % name)
 
-    def add_default_arg(self, arg):
-        """Add a default argument to the command."""
-        self.exe.append(arg)
+    def add_default_arg(self, *args):
+        """Add default argument(s) to the command."""
+        self.exe.extend(args)
+
+    def with_default_args(self, *args):
+        """Same as add_default_arg, but returns a copy of the executable."""
+        new = self.copy()
+        new.add_default_arg(*args)
+        return new
+
+    def copy(self):
+        """Return a copy of this Executable."""
+        new = Executable(self.exe[0])
+        new.exe[:] = self.exe
+        new.default_env.update(self.default_env)
+        new.default_envmod.extend(self.default_envmod)
+        return new
 
     def add_default_env(self, key, value):
         """Set an environment variable when the command is run.
@@ -330,8 +344,11 @@ def which_string(*args, **kwargs):
         for candidate_item in candidate_items:
             for directory in search_paths:
                 exe = directory / candidate_item
-                if exe.is_file() and os.access(str(exe), os.X_OK):
-                    return str(exe)
+                try:
+                    if exe.is_file() and os.access(str(exe), os.X_OK):
+                        return str(exe)
+                except OSError:
+                    pass
 
     if required:
         raise CommandNotFoundError("spack requires '%s'. Make sure it is in your path." % args[0])

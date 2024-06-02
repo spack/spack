@@ -1,4 +1,4 @@
-.. Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -55,6 +55,7 @@ or refer to the full manual below.
    getting_started
    basic_usage
    replace_conda_homebrew
+   frequently_asked_questions
 
 .. toctree::
    :maxdepth: 2
@@ -70,7 +71,7 @@ or refer to the full manual below.
 
    configuration
    config_yaml
-   bootstrapping
+   packages_yaml
    build_settings
    environments
    containers
@@ -78,6 +79,7 @@ or refer to the full manual below.
    module_file_support
    repositories
    binary_caches
+   bootstrapping
    command_index
    chain
    extensions

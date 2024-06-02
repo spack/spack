@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,8 +6,9 @@
 """Schema for mirrors.yaml configuration file.
 
 .. literalinclude:: _spack_root/lib/spack/spack/schema/mirrors.py
-   :lines: 12-69
+   :lines: 13-
 """
+from typing import Any, Dict
 
 #: Common properties for connection specification
 connection = {
@@ -42,14 +43,16 @@ mirror_entry = {
     "properties": {
         "source": {"type": "boolean"},
         "binary": {"type": "boolean"},
+        "signed": {"type": "boolean"},
         "fetch": fetch_and_push,
         "push": fetch_and_push,
+        "autopush": {"type": "boolean"},
         **connection,  # type: ignore
     },
 }
 
 #: Properties for inclusion in other schemas
-properties = {
+properties: Dict[str, Any] = {
     "mirrors": {
         "type": "object",
         "default": {},

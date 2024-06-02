@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,6 +22,8 @@ class Warpx(CMakePackage):
 
     maintainers("ax3l", "dpgrote", "MaxThevenet", "RemiLehe")
     tags = ["e4s", "ecp"]
+
+    license("BSD-3-Clause-LBNL")
 
     # NOTE: if you update the versions here, also see py-warpx
     version("develop", branch="development")
@@ -223,6 +225,10 @@ class Warpx(CMakePackage):
         if "+sensei" in spec:
             args.append(self.define("SENSEI_DIR", spec["sensei"].prefix.lib.cmake))
 
+        # WarpX uses CCache by default, interfering with Spack wrappers
+        ccache_var = "CCACHE_PROGRAM" if spec.satisfies("@:24.01") else "WarpX_CCACHE"
+        args.append(self.define(ccache_var, False))
+
         return args
 
     @property
@@ -248,7 +254,7 @@ class Warpx(CMakePackage):
     def _get_input_options(self, dim, post_install):
         spec = self.spec
         examples_dir = join_path(
-            self.install_test_root if post_install else self.stage.source_path,
+            install_test_root(self) if post_install else self.stage.source_path,
             self.examples_src_dir,
         )
         inputs_nD = {"1": "inputs_1d", "2": "inputs_2d", "3": "inputs_3d", "rz": "inputs_rz"}
@@ -283,7 +289,7 @@ class Warpx(CMakePackage):
     def copy_test_sources(self):
         """Copy the example input files after the package is installed to an
         install test subdirectory for use during `spack test run`."""
-        self.cache_extra_test_sources([self.examples_src_dir])
+        cache_extra_test_sources(self, [self.examples_src_dir])
 
     def test(self):
         """Perform smoke tests on the installed package."""

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -24,6 +24,8 @@ class PyWarpx(PythonPackage):
     maintainers("ax3l", "dpgrote", "RemiLehe")
 
     tags = ["e4s", "ecp"]
+
+    license("BSD-3-Clause-LBNL")
 
     # NOTE: if you update the versions here, also see warpx
     version("develop", branch="development")
@@ -89,9 +91,7 @@ class PyWarpx(PythonPackage):
     depends_on("py-picmistandard@0.0.18", type=("build", "run"), when="@22.01")
     depends_on("py-setuptools@42:", type="build")
     # Since we use PYWARPX_LIB_DIR to pull binaries out of the
-    # 'warpx' spack package, we don't need py-cmake as declared
-    # depends_on('py-cmake@3.15:3', type='build')
-    # depends_on('py-cmake@3.18:3', type='build', when='@22.01:')
+    # 'warpx' spack package, we don't need cmake as declared
     depends_on("warpx +lib ~mpi +shared", type=("build", "link"), when="~mpi")
     depends_on("warpx +lib +mpi +shared", type=("build", "link"), when="+mpi")
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,6 +18,8 @@ class Atlas(Package):
     """
 
     homepage = "http://math-atlas.sourceforge.net/"
+
+    license("Apache-2.0")
 
     # Developer (unstable)
     version("3.11.41", sha256="477d567a8d683e891d786e9e8bb6ad6659daa9ba18e8dd0e2f70b7a54095f8de")
@@ -57,6 +59,12 @@ class Atlas(Package):
         default=-1,
         multi=False,
         description="Number of threads to tune to, " "-1 for autodetect, 0 for no threading",
+    )
+
+    conflicts(
+        "platform=windows",
+        msg="Atlas requires cygwin to build on Windows, which is unsupported by Spack. "
+        "See https://math-atlas.sourceforge.net/atlas_install/node55.html",
     )
 
     provides("blas")
@@ -109,11 +117,11 @@ class Atlas(Package):
 
         # Lapack resource to provide full lapack build. Note that
         # ATLAS only provides a few LAPACK routines natively.
-        options.append("--with-netlib-lapack-tarfile=%s" % self.stage[1].archive_file)
+        options.append(f"--with-netlib-lapack-tarfile={self.stage[1].archive_file}")
 
         with working_dir("spack-build", create=True):
             configure = Executable("../configure")
-            configure("--prefix=%s" % prefix, *options)
+            configure(f"--prefix={prefix}", *options)
             make()
             make("check")
             make("ptcheck")
@@ -147,7 +155,7 @@ class Atlas(Package):
         source_file = join_path(os.path.dirname(self.module.__file__), "test_cblas_dgemm.c")
         blessed_file = join_path(os.path.dirname(self.module.__file__), "test_cblas_dgemm.output")
 
-        include_flags = ["-I%s" % self.spec.prefix.include]
+        include_flags = [f"-I{self.spec.prefix.include}"]
         link_flags = self.spec["atlas"].libs.ld_flags.split()
 
         output = compile_c_and_execute(source_file, include_flags, link_flags)

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,8 @@ class GslLite(CMakePackage):
     url = "https://github.com/gsl-lite/gsl-lite/archive/refs/tags/v0.38.1.tar.gz"
 
     maintainers("AlexanderRichert-NOAA", "climbfuji", "edwardhartnett", "Hang-Lei-NOAA")
+
+    license("MIT")
 
     version("0.41.0", sha256="4682d8a60260321b92555760be3b9caab60e2a71f95eddbdfb91e557ee93302a")
     version("0.40.0", commit="d6c8af99a1d95b3db36f26b4f22dc3bad89952de")

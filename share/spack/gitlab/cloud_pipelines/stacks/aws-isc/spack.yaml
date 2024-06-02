@@ -21,7 +21,7 @@ spack:
       version:
         - 1.8.20
     elfutils:
-      variants: +bzip2 ~nls +xz
+      variants: ~nls
     hdf5:
       variants: +fortran +hl +shared
     libfabric:
@@ -29,8 +29,6 @@ spack:
     libunwind:
       variants: +pic +xz
     mesa:
-      variants: ~llvm
-    mesa18:
       variants: ~llvm
     mpich:
       variants: ~wrapperrpath netmod=ofi device=ch4
@@ -87,7 +85,7 @@ spack:
     - openfoam
     - osu-micro-benchmarks
     - parallel
-    - paraview
+    # - paraview
     - picard
     - quantum-espresso
 # Build broken for gcc@7.3.1 x86_64_v4 (error: '_mm512_loadu_epi32' was not declared in this scope)

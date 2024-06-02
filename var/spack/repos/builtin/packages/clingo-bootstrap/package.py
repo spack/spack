@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -58,12 +58,6 @@ class ClingoBootstrap(Clingo):
         when="platform=linux",
         msg="GCC or clang are required to bootstrap clingo on Linux",
     )
-    requires(
-        "%gcc",
-        "%clang",
-        when="platform=cray",
-        msg="GCC or clang are required to bootstrap clingo on Cray",
-    )
     conflicts("%gcc@:5", msg="C++14 support is required to bootstrap clingo")
 
     # On Darwin we bootstrap with Apple Clang
@@ -115,13 +109,12 @@ class ClingoBootstrap(Clingo):
 
         # Run spack solve --fresh hdf5 with instrumented clingo.
         python_runtime_env = EnvironmentModifications()
-        for s in self.spec.traverse(deptype=("run", "link"), order="post"):
-            python_runtime_env.extend(spack.user_environment.environment_modifications_for_spec(s))
+        python_runtime_env.extend(
+            spack.user_environment.environment_modifications_for_specs(self.spec)
+        )
         python_runtime_env.unset("SPACK_ENV")
         python_runtime_env.unset("SPACK_PYTHON")
-        self.spec["python"].command(
-            spack.paths.spack_script, "solve", "--fresh", "hdf5", extra_env=python_runtime_env
-        )
+        python(spack.paths.spack_script, "solve", "--fresh", "hdf5", extra_env=python_runtime_env)
 
         # Clean the build dir.
         rmtree(self.build_directory, ignore_errors=True)

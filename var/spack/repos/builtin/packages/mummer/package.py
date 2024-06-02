@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,8 @@ class Mummer(Package):
 
     homepage = "http://mummer.sourceforge.net/"
     url = "https://sourceforge.net/projects/mummer/files/mummer/3.23/MUMmer3.23.tar.gz/download"
+
+    license("Artistic-1.0")
 
     version("3.23", sha256="1efad4f7d8cee0d8eaebb320a2d63745bb3a160bb513a15ef7af46f330af662f")
 

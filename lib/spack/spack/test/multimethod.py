@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -69,9 +69,15 @@ def test_no_version_match(pkg_name):
         ("", "boolean_false_first", "True"),
     ],
 )
-def test_multimethod_calls(pkg_name, constraint_str, method_name, expected_result):
-    s = spack.spec.Spec(pkg_name + constraint_str).concretized()
-    msg = "Method {0} from {1} is giving a wrong result".format(method_name, s)
+def test_multimethod_calls(
+    pkg_name, constraint_str, method_name, expected_result, compiler_factory
+):
+    # Add apple-clang, as it is required by one of the tests
+    with spack.config.override(
+        "compilers", [compiler_factory(spec="apple-clang@9.1.0", operating_system="elcapitan")]
+    ):
+        s = spack.spec.Spec(pkg_name + constraint_str).concretized()
+    msg = f"Method {method_name} from {s} is giving a wrong result"
     assert getattr(s.package, method_name)() == expected_result, msg
 
 

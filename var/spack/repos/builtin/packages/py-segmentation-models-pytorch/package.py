@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,8 @@ class PySegmentationModelsPytorch(PythonPackage):
 
     homepage = "https://github.com/qubvel/segmentation_models.pytorch"
     pypi = "segmentation_models_pytorch/segmentation_models_pytorch-0.2.0.tar.gz"
+
+    license("MIT")
 
     version("0.3.3", sha256="b3b21ab4cd26a6b2b9e7a6ed466ace6452eb26ed3c31ae491ea2d7cbb01e384b")
     version("0.3.2", sha256="8372733e57a10cb8f6b9e18a20577fbb3fb83549b6945664dc774a9b6d3ecd13")

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class Demuxlet(AutotoolsPackage):
     git = "https://github.com/statgen/demuxlet.git"
 
     maintainers("snehring")
+
+    license("Apache-2.0")
 
     version("20210211", commit="f5044eb9ed5c6678aa3a80a8f2be7db7748ee732")
 

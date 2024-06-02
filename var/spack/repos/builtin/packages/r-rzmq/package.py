@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class RRzmq(RPackage):
     <http://www.zeromq.org/> for more information)."""
 
     cran = "rzmq"
+
+    license("GPL-3.0-only")
 
     version("0.9.8", sha256="815a7eb502b1da3a84246b2dfb6594ca3f241a8675783e6bcdbbf9c952ec1c53")
     version("0.9.7", sha256="5f47b67b75fd4a230780406f7a55a3708ce8c014cff755a809a6bfa1a6925a45")

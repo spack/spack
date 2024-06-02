@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -23,9 +23,9 @@ class Ape(Package):
         args = []
         args.extend(
             [
-                "--prefix=%s" % prefix,
-                "--with-gsl-prefix=%s" % spec["gsl"].prefix,
-                "--with-libxc-prefix=%s" % spec["libxc"].prefix,
+                f"--prefix={prefix}",
+                f"--with-gsl-prefix={spec['gsl'].prefix}",
+                f"--with-libxc-prefix={spec['libxc'].prefix}",
             ]
         )
 

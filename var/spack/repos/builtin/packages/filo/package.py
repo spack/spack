@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class Filo(CMakePackage):
 
     tags = ["ecp"]
 
+    license("MIT")
+
     version("main", branch="main")
 
     depends_on("mpi")
@@ -24,8 +26,6 @@ class Filo(CMakePackage):
     def cmake_args(self):
         args = []
         args.append("-DMPI_C_COMPILER=%s" % self.spec["mpi"].mpicc)
-        if self.spec.satisfies("platform=cray"):
-            args.append("-DFILO_LINK_STATIC=ON")
         args.append("-DWITH_AXL_PREFIX=%s" % self.spec["axl"].prefix)
         args.append("-DWITH_KVTREE_PREFIX=%s" % self.spec["kvtree"].prefix)
         args.append("-DWITH_SPATH_PREFIX=%s" % self.spec["spath"].prefix)

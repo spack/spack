@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -98,7 +98,7 @@ SPACK_PATH_PADDING_CHARS = "__spack_path_placeholder__"
 
 
 def win_exe_ext():
-    return ".exe"
+    return r"(?:\.bat|\.exe)"
 
 
 def sanitize_filename(filename: str) -> str:

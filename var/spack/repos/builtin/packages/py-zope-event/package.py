@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,8 @@ class PyZopeEvent(PythonPackage):
 
     homepage = "https://github.com/zopefoundation/zope.event"
     pypi = "zope.event/zope.event-4.3.0.tar.gz"
+
+    license("ZPL-2.1")
 
     version("4.6", sha256="81d98813046fc86cc4136e3698fee628a3282f9c320db18658c21749235fce80")
     version("4.5.0", sha256="5e76517f5b9b119acf37ca8819781db6c16ea433f7e2062c4afc2b6fbedb1330")

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class Cgdb(AutotoolsPackage):
     homepage = "https://cgdb.github.io"
     url = "https://cgdb.me/files/cgdb-0.7.1.tar.gz"
     git = "https://github.com/cgdb/cgdb.git"
+
+    license("GPL-2.0-or-later")
 
     version("master", branch="master", submodules=False, preferred=True)
     version("0.7.1", sha256="bb723be58ec68cb59a598b8e24a31d10ef31e0e9c277a4de07b2f457fe7de198")

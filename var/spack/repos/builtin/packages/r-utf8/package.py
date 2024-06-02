@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class RUtf8(RPackage):
     validate, normalize, encode, format, and display."""
 
     cran = "utf8"
+
+    license("Apache-2.0 OR custom")
 
     version("1.2.3", sha256="c0a88686591f4ad43b52917d0964e9df4c62d8858fe25135a1bf357dfcbd6347")
     version("1.2.2", sha256="a71aee87d43a9bcf29249c7a5a2e9ca1d2a836e8d5ee3a264d3062f25378d8f4")

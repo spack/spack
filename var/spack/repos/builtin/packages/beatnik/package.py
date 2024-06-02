@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,8 +14,9 @@ class Beatnik(CMakePackage, CudaPackage, ROCmPackage):
 
     maintainers("patrickb314", "JStewart28")
 
-    # Add proper versions and checksums here. Will add 1.0 when a proper SHA is available
-    # version("1.0", sha256="XXX")
+    license("BSD-3-Clause")
+
+    version("1.0", commit="ae31ef9cb44678d5ace77994b45b0778defa3d2f")
     version("develop", branch="develop")
     version("main", branch="main")
 
@@ -26,8 +27,16 @@ class Beatnik(CMakePackage, CudaPackage, ROCmPackage):
 
     # Dependencies for all Beatnik versions
     depends_on("mpi")
-    depends_on("mpi +cuda", when="+cuda")
-    depends_on("mpi +rocm", when="+rocm")
+    with when("+cuda"):
+        depends_on("mpich +cuda", when="^[virtuals=mpi] mpich")
+        depends_on("mvapich +cuda", when="^[virtuals=mpi] mvapich")
+        depends_on("mvapich2 +cuda", when="^[virtuals=mpi] mvapich2")
+        depends_on("mvapich2-gdr +cuda", when="^[virtuals=mpi] mvapich2-gdr")
+        depends_on("openmpi +cuda", when="^[virtuals=mpi] openmpi")
+
+    with when("+rocm"):
+        depends_on("mpich +rocm", when="^[virtuals=mpi] mpich")
+        depends_on("mvapich2-gdr +rocm", when="^[virtuals=mpi] mvapich2-gdr")
 
     # Kokkos dependencies
     depends_on("kokkos @4:")
@@ -55,6 +64,7 @@ class Beatnik(CMakePackage, CudaPackage, ROCmPackage):
     conflicts("mpich ~rocm", when="+rocm")
     conflicts("openmpi ~cuda", when="+cuda")
     conflicts("^intel-mpi")  # Heffte won't build with intel MPI because of needed C++ MPI support
+    conflicts("^spectrum-mpi", when="^cuda@11.3:")  # cuda-aware spectrum is broken with cuda 11.3:
 
     # Propagate CUDA and AMD GPU targets to cabana
     for cuda_arch in CudaPackage.cuda_arch_values:

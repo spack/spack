@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class PyHumanize(PythonPackage):
 
     homepage = "https://github.com/python-humanize/humanize"
     pypi = "humanize/humanize-0.5.1.tar.gz"
+
+    license("MIT")
 
     version("4.6.0", sha256="5f1f22bc65911eb1a6ffe7659bd6598e33dcfeeb904eb16ee1e705a09bf75916")
     version("4.4.0", sha256="efb2584565cc86b7ea87a977a15066de34cdedaf341b11c851cfcfd2b964779c")

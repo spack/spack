@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class PyQdldl(PythonPackage):
     pypi = "qdldl/qdldl-0.1.5.post3.tar.gz"
 
     maintainers("meyersbs")
+
+    license("Apache-2.0")
 
     version(
         "0.1.5.post3", sha256="69c092f6e1fc23fb779a80a62e6fcdfe2eba05c925860248c4d6754f4736938f"

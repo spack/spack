@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -50,8 +50,8 @@ def test_negative_integers_not_allowed_for_parallel_jobs(job_parser):
     [
         (['coreutils cflags="-O3 -g"'], ["-O3", "-g"], [False, False], []),
         (['coreutils cflags=="-O3 -g"'], ["-O3", "-g"], [True, True], []),
-        (["coreutils", "cflags=-O3 -g"], ["-O3"], [False], ["g"]),
-        (["coreutils", "cflags==-O3 -g"], ["-O3"], [True], ["g"]),
+        (["coreutils", "cflags=-O3 -g"], ["-O3", "-g"], [False, False], []),
+        (["coreutils", "cflags==-O3 -g"], ["-O3", "-g"], [True, True], []),
         (["coreutils", "cflags=-O3", "-g"], ["-O3"], [False], ["g"]),
     ],
 )
@@ -123,17 +123,24 @@ def test_root_and_dep_match_returns_root(mock_packages, mutable_mock_env_path):
 
 
 @pytest.mark.parametrize(
-    "arg,config", [("--reuse", True), ("--fresh", False), ("--reuse-deps", "dependencies")]
+    "arg,conf",
+    [
+        ("--reuse", True),
+        ("--fresh", False),
+        ("--reuse-deps", "dependencies"),
+        ("--fresh-roots", "dependencies"),
+    ],
 )
-def test_concretizer_arguments(mutable_config, mock_packages, arg, config):
+def test_concretizer_arguments(mutable_config, mock_packages, arg, conf):
     """Ensure that ConfigSetAction is doing the right thing."""
     spec = spack.main.SpackCommand("spec")
 
-    assert spack.config.get("concretizer:reuse", None) is None
+    assert spack.config.get("concretizer:reuse", None, scope="command_line") is None
 
     spec(arg, "zlib")
 
-    assert spack.config.get("concretizer:reuse", None) == config
+    assert spack.config.get("concretizer:reuse", None) == conf
+    assert spack.config.get("concretizer:reuse", None, scope="command_line") == conf
 
 
 def test_use_buildcache_type():

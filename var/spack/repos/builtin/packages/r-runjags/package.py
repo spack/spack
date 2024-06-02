@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,6 +21,8 @@ class RRunjags(RPackage):
     DuMouchel prior and the half-Cauchy prior."""
 
     cran = "runjags"
+
+    license("GPL-2.0-only")
 
     version("2.2.1-7", sha256="e81fdb15e59cdceda125d6ae7cf0cde93361ba80b123d51afd1ecdc993f25016")
     version("2.2.0-3", sha256="1b1fc0b0cfecf9ecdecc3abcba804cdc114b3c5352d5cc801602deeca90db528")

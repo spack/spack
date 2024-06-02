@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class Sloccount(MakefilePackage):
 
     homepage = "https://dwheeler.com/sloccount/"
     url = "https://dwheeler.com/sloccount/sloccount-2.26.tar.gz"
+
+    license("GPL-2.0-or-later")
 
     version("2.26", sha256="fa7fa2bbf2f627dd2d0fdb958bd8ec4527231254c120a8b4322405d8a4e3d12b")
 

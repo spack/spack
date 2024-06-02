@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -23,7 +23,12 @@ class Slate(CMakePackage, CudaPackage, ROCmPackage):
     tags = ["e4s"]
     test_requires_compiler = True
 
+    license("BSD-3-Clause")
+
     version("master", branch="master")
+    version(
+        "2023.11.05", sha256="d3d925adec137ef4b7d876b2d7d0f8f2ff9d8485fa4125454a42f5da4ac026f3"
+    )
     version(
         "2023.08.25", sha256="0894d8669ed88358cc7c4cb7b77d8467336613245a7b843f3504e9224632ce0e"
     )
@@ -45,6 +50,8 @@ class Slate(CMakePackage, CudaPackage, ROCmPackage):
     version(
         "2020.10.00", sha256="ff58840cdbae2991d100dfbaf3ef2f133fc2f43fc05f207dc5e38a41137882ab"
     )
+
+    patch("omp.patch", when="@2023.11.05")
 
     variant(
         "mpi", default=True, description="Build with MPI support (without MPI is experimental)."
@@ -75,14 +82,19 @@ class Slate(CMakePackage, CudaPackage, ROCmPackage):
     for val in ROCmPackage.amdgpu_targets:
         depends_on("blaspp +rocm amdgpu_target=%s" % val, when="amdgpu_target=%s" % val)
         depends_on("lapackpp +rocm amdgpu_target=%s" % val, when="amdgpu_target=%s" % val)
+    depends_on("lapackpp@2023.11.05:", when="@2023.11.05:")
     depends_on("lapackpp@2023.08.25:", when="@2023.08.25:")
     depends_on("lapackpp@2022.07.00:", when="@2022.07.00:")
     depends_on("lapackpp@2022.05.00:", when="@2022.05.00:")
     depends_on("lapackpp@2021.04.00:", when="@2021.05.01:")
     depends_on("lapackpp@2020.10.02", when="@2020.10.00")
     depends_on("lapackpp@master", when="@master")
-    depends_on("scalapack", type="test")
+    depends_on("scalapack", when="@:2022.07.00", type="test")
+    depends_on("python", type="test")
     depends_on("hipify-clang", when="@:2021.05.02 +rocm ^hip@5:")
+    depends_on("comgr", when="+rocm")
+    depends_on("rocblas", when="+rocm")
+    depends_on("rocsolver", when="+rocm")
 
     requires("%oneapi", when="+sycl", msg="slate+sycl must be compiled with %oneapi")
 
@@ -99,6 +111,7 @@ class Slate(CMakePackage, CudaPackage, ROCmPackage):
     conflicts("+rocm", when="+sycl", msg=backend_msg)
     conflicts("+cuda", when="+sycl", msg=backend_msg)
     conflicts("+sycl", when="@:2022.07.00", msg="SYCL support requires SLATE version 2023.08.25")
+    conflicts("^hip@5.6.0:", when="@:2023.08.25", msg="Incompatible version of HIP/ROCm")
 
     def cmake_args(self):
         spec = self.spec
@@ -127,8 +140,8 @@ class Slate(CMakePackage, CudaPackage, ROCmPackage):
             archs = ";".join(spec.variants["amdgpu_target"].value)
             config.append("-DCMAKE_HIP_ARCHITECTURES=%s" % archs)
 
-        if self.run_tests:
-            config.append("-DSCALAPACK_LIBRARIES=%s" % spec["scalapack"].libs.joined(";"))
+        slibs = spec["scalapack"].libs.joined(";") if "scalapack" in spec else "none"
+        config.append(f"-DSCALAPACK_LIBRARIES={slibs}")
         return config
 
     @run_after("install")
@@ -156,9 +169,11 @@ class Slate(CMakePackage, CudaPackage, ROCmPackage):
         test_dir = join_path(self.test_suite.current_test_cache_dir, "examples", "build")
         with working_dir(test_dir, create=True):
             cmake_bin = join_path(self.spec["cmake"].prefix.bin, "cmake")
-            deps = "blaspp lapackpp mpi"
+            # This package must directly depend on all packages listed here.
+            # Otherwise, it will not work when some packages are external to spack.
+            deps = "slate blaspp lapackpp mpi"
             if self.spec.satisfies("+rocm"):
-                deps += " rocblas hip llvm-amdgpu comgr hsa-rocr-dev rocsolver"
+                deps += " rocblas hip llvm-amdgpu comgr hsa-rocr-dev rocsolver "
             prefixes = ";".join([self.spec[x].prefix for x in deps.split()])
             self.run_test(cmake_bin, ["-DCMAKE_PREFIX_PATH=" + prefixes, ".."])
             make()

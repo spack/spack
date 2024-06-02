@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,9 @@ class AuditUserspace(AutotoolsPackage):
     homepage = "https://github.com/linux-audit/audit-userspace"
     url = "https://github.com/linux-audit/audit-userspace/archive/v2.8.5.tar.gz"
 
+    license("LGPL-2.1-or-later")
+
+    version("4.0.1", sha256="f964610dc0c1e68075d5ae4b14d6280d1164b6eca3a4a13721d1a711681403d9")
     version("3.1.1", sha256="6a97cc472920639d736e9927353be05e323f351067fcf6e5d34439cafa0e9006")
     version("2.8.5", sha256="835ffdd65056ba0c26509dbf48882713b00dbe70e1d8cf25d538501136c2e3e9")
     version("2.8.4", sha256="089dfdceb38edf056202a6de4892fd0c9aaa964c08bd7806c5d0c7c33f09e18d")
