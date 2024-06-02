@@ -140,7 +140,7 @@ class Upcxx(Package, CudaPackage, ROCmPackage):
     # UPC++ always relies on GASNet-EX.
     # This variant allows overriding with a particular version of GASNet-EX sources,
     # although this is not officially supported and some combinations might be rejected.
-    # Original default was to use the embedded version of GASNet-EX, 
+    # Original default was to use the embedded version of GASNet-EX,
     # but currently there are newer versions in Spack so we default to that instead.
     variant("gasnet", default=True, description="Override embedded GASNet-EX with Spack's")
     depends_on("gasnet conduits=none", when="+gasnet")
@@ -252,9 +252,7 @@ class Upcxx(Package, CudaPackage, ROCmPackage):
         if "+rocm" in spec:
             options.append("--enable-hip")
             options.append("--with-hip-home=" + spec["hip"].prefix)
-            options.append(
-                "--with-ldflags=" + self.compiler.cc_rpath_arg + spec["hip"].prefix.lib
-            )
+            options.append("--with-ldflags=" + self.compiler.cc_rpath_arg + spec["hip"].prefix.lib)
 
         if "+level_zero" in spec:
             options.append("--enable-ze")
