@@ -60,16 +60,12 @@ class PerlBioDBBigfile(PerlPackage):
             # with kentutils, which has a different directory structure
             htslib = kent_src.htslib
 
-        freetype = spec["freetype"].prefix
-        libpng = spec["libpng"].prefix
-        bzip2 = spec["bzip2"].prefix
-
         incs = [
             # This is usually set by Build.PL from KENT_SRC
             f"-I{kent_src.prefix.inc}",
-            # Build system looks for tbx.h instead of htslib/tbx.h 
+            # Build system looks for tbx.h instead of htslib/tbx.h
             # so we need to give it some special help for HTSLIB
-            f"-I{htslib.htslib}"
+            f"-I{htslib.htslib}",
         ]
         libs = [
             # This is usually set by Build.PL from KENT_SRC
@@ -102,5 +98,4 @@ class PerlBioDBBigfile(PerlPackage):
         # args and needs some extra coaxing to pass tests
         # (The package builds fine without this but the tests fail)
         args = [f"'{arg}'" for arg in self.build_pl_args()]
-        env.set("PERL_MB_OPT", " ".join(args)) 
-
+        env.set("PERL_MB_OPT", " ".join(args))
