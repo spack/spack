@@ -49,6 +49,10 @@ class Htslib(AutotoolsPackage):
         default=True,
         description="use libdeflate for faster crc and deflate algorithms",
     )
+    variant("s3", default=False, description="enable s3 url support")
+    variant("plugins", default=False, description="enable support for separately compiled plugins")
+    variant("year2038", default=False, description="enable support for timestamps beyond 2038")
+    variant("pic", default=True, description="Compile with PIC support")
 
     depends_on("zlib-api")
     depends_on("bzip2", when="@1.4:")
@@ -76,6 +80,11 @@ class Htslib(AutotoolsPackage):
             url = "https://github.com/samtools/htslib/releases/download/{0}/htslib-{0}.tar.bz2"
             return url.format(version.dotted)
 
+    def flag_handler(self, name, flags):
+        if name == "cflags" and self.spec.satisfies("+pic"):
+            flags.append("-fPIC")
+        return (flags, None, None)
+
     def configure_args(self):
         spec = self.spec
         args = []
@@ -83,7 +92,15 @@ class Htslib(AutotoolsPackage):
         if spec.satisfies("@1.3:"):
             args.extend(self.enable_or_disable("libcurl"))
 
+        if spec.satisfies("@1.5:"):
+            args.extend(self.enable_or_disable("s3"))
+            args.extend(self.enable_or_disable("gcs"))
+            args.extend(self.enable_or_disable("plugins"))
+
         if spec.satisfies("@1.8:"):
             args.extend(self.enable_or_disable("libdeflate"))
+
+        if spec.satisfies("@1.19:"):
+            args.extend(self.enable_or_disable("year2038"))
 
         return args
