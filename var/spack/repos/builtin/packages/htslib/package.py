@@ -49,6 +49,7 @@ class Htslib(AutotoolsPackage):
         default=True,
         description="use libdeflate for faster crc and deflate algorithms",
     )
+    variant("gcs", default=False, description="enable gcs url support")
     variant("s3", default=False, description="enable s3 url support")
     variant("plugins", default=False, description="enable support for separately compiled plugins")
     variant("year2038", default=False, description="enable support for timestamps beyond 2038")
