@@ -7,7 +7,7 @@ from spack.package import *
 
 
 class Kentutils(MakefilePackage):
-    """Jim Kent command line bioinformatic utilities"""
+    """Jim Kent command line bioinformatic utilities and libraries"""
 
     homepage = "https://genome.cse.ucsc.edu/"
     url = "https://hgdownload.cse.ucsc.edu/admin/exe/userApps.archive/userApps.v453.src.tgz"
@@ -26,7 +26,7 @@ class Kentutils(MakefilePackage):
 
     variant("libs", default=True, description="Install jk*.a libraries")
     variant("force_mysql", default=False, description="Force MySQL over MariaDB")
-    variant("htslib", default=False, description="Use bundled lib")
+    variant("htslib", default=False, description="Build and use bundled htslib", sticky=True)
 
     with default_args(type=("build", "link", "run")):
         depends_on("libpng")
@@ -36,7 +36,7 @@ class Kentutils(MakefilePackage):
         depends_on("zlib-api")
         depends_on("freetype")
         depends_on("libiconv")
-        depends_on("htslib", when="~htslib")
+        depends_on("htslib+pic", when="~htslib+libs")
 
     # The bgzip.c bug present in other packages is present in kent/src/htslib/bgzf.c
     # Conflicting line: assert(compressBound(BGZF_BLOCK_SIZE) < BGZF_MAX_BLOCK_SIZE);
@@ -68,6 +68,40 @@ class Kentutils(MakefilePackage):
         # and to make it adjustable if we need to adjust this in the future
         return "local"
 
+    @property
+    def headers(self):
+        headers = []
+        if self.spec.satisfies("+libs"):
+            headers.extend(find_headers("*", self.prefix.inc, recursive=True))
+        if self.spec.satisfies("+htslib+libs"):
+            headers.extend(find_headers("*", self.prefix.htslib, recursive=True))
+        return HeaderList(headers)
+
+    @property
+    def libs(self):
+        libs = []
+        if self.spec.satisfies("~libs"):
+            libs.extend(
+                [
+                    f"{self.machlib}/jkweb.a",
+                    f"{self.machlib}/jkOwnLib.a",
+                    f"{self.machlib}/jkhgap.a",
+                    f"{self.machlib}/jkhgapcgi.a",
+                    f"hg/altSplice/{self.machlib}/libSpliceGraph.a",
+                ]
+            )
+        if self.spec.satisfies("+htslib+libs"):
+            libs.append("htslib/libhts.a")
+        return LibraryList(libs)
+
+    @property
+    def machlib(self):
+        return f"lib/{self.machtype}"
+
+    @property
+    def lib_dir(self):
+        return join_path(self.prefix, self.machlib)
+
     def install_libs_from_stage(self, prefix):
         # Dependent packages expect things in the source tree, but we don't
         # want to copy all of the compilation artifacts in so we'll do them
@@ -76,24 +110,21 @@ class Kentutils(MakefilePackage):
 
         src_prefix = "kent/src"
 
-        # I'm not sure if all dependents look for inc or some look in .../include
-        install_tree(join_path(src_prefix, "inc"), join_path(prefix, "inc"))
-
-        libs = [
-            f"lib/{self.machtype}/jkweb.a",
-            f"lib/{self.machtype}/jkOwnLib.a",
-            f"lib/{self.machtype}/jkhgap.a",
-            f"lib/{self.machtype}/jkhgapcgi.a",
-            f"parasol/lib/{self.machtype}/paralib.a",
-            f"hg/altSplice/lib/{self.machtype}/libSpliceGraph.a",
-            "htslib/libhts.a",
-        ]
-
-        for lib in libs:
-            src = join_path(src_prefix, lib)
-            dest = join_path(prefix, lib)
+        def install_kent(path, tree):
+            src = join_path(src_prefix, path)
+            dest = join_path(prefix, path)
             mkdirp(os.path.dirname(dest))
-            install(src, dest)
+            if tree:
+                install_tree(src, dest)
+            else:
+                install(src, dest)
+
+        install_kent("inc", tree=True)
+        if self.satisfies("+htslib"):
+            install_kent("htslib/htslib", tree=True)
+
+        for lib in self.libs:
+            install_kent(lib, tree=False)
 
     def install(self, spec, prefix):
         install_tree("bin", prefix.bin)
