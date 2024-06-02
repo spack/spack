@@ -7,8 +7,8 @@
 from spack.package import *
 
 
-class PerlBioDbBigfile(PerlPackage):
-    """Bio::DB::BigFile -- Low-level interface to BigWig & BigBed files for perl"""
+class PerlBioDBBigfile(PerlPackage):
+    """Bio::BigFile -- Low-level interface to BigWig & BigBed files for perl"""
 
     homepage = "https://metacpan.org/pod/Bio::DB::BigFile"
     url = "https://cpan.metacpan.org/authors/id/L/LD/LDS/Bio-BigFile-1.07.tar.gz"
@@ -29,14 +29,78 @@ class PerlBioDbBigfile(PerlPackage):
     depends_on("perl-module-build", type="build")
     depends_on("gmake", type="build")
 
-    with default_args(type=("build", "link", "run")):
-        depends_on("perl-bioperl")
-        depends_on("perl-io-string")
+    with default_args(type=("build", "link")):
         depends_on("kentutils")
+        depends_on("htslib", when="^kentutils~htslib")
+        depends_on("freetype")
+        depends_on("libpng+pic")
+        depends_on("bzip2")
         depends_on("openssl")
 
+    with default_args(type=("build", "run")):
+        depends_on("perl-bioperl")
+        depends_on("perl-io-string")
+
+    def build_pl_args(self):
+        # Need to tell the linker exactly where to find these
+        # dependencies as the perl build system hasn't been told
+        # they are needed. It explicitly searches for kentutils
+        # The includes will be recongized by CFLAGS but not the
+        # LIBS, which results in failures only once you try to
+        # to run the tests
+
+        spec = self.spec
+        kent = spec["kentutils"]
+        kent_src = kent.prefix
+
+        if spec.satisfies("^kentutils~htslib"):
+            htslib = spec["htslib"].prefix.include
+        else:
+            # We have to handle the possibility that HTSLIB was bundled
+            # with kentutils, which has a different directory structure
+            htslib = kent_src.htslib
+
+        freetype = spec["freetype"].prefix
+        libpng = spec["libpng"].prefix
+        bzip2 = spec["bzip2"].prefix
+
+        incs = [
+            # This is usually set by Build.PL from KENT_SRC
+            f"-I{kent_src.prefix.inc}",
+            # Build system looks for tbx.h instead of htslib/tbx.h 
+            # so we need to give it some special help for HTSLIB
+            f"-I{htslib.htslib}"
+        ]
+        libs = [
+            # This is usually set by Build.PL from KENT_SRC
+            join_path(kent.package.lib_dir, "jkweb.a"),
+            # These are being set in Build.PL so we need to reset here
+            "-lz",
+            "-lssl",
+            # These are expected as dependencies from kentutils
+            "-lfreetype",
+            "-lpng",
+            "-lbz2",
+            # This is an undocumented dependency
+            "-lhts",
+        ]
+
+        return [
+            f"--extra_compiler_flags={' '.join(incs)}",
+            f"--extra_linker_flags={' '.join(libs)}",
+        ]
+
     def setup_build_environment(self, env):
-        kent_src = self.spec["kentutils"]
-        env.set("KENT_SRC", kent_src.prefix)
-        env.set("MACHTYPE", kent_src.package.machtype)
+        # These variables are exected by by the Build.PL file
+        # even though we override the results via PERL_MB_OPT
+        kent = self.spec["kentutils"]
+        env.set("KENT_SRC", kent.prefix)
+        env.set("MACHTYPE", kent.package.machtype)
+
+        # Overriding this explicitly as an environmental variable
+        # as the Build.PL script doesn't honnor the command line
+        # args and needs some extra coaxing to pass tests
+        # (The package builds fine without this but the tests fail)
+        args = [f"'{arg}'" for arg in self.build_pl_args()]
+        env.set("PERL_MB_OPT", " ".join(args)) 
 
