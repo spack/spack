@@ -86,7 +86,7 @@ class Kentutils(MakefilePackage):
     @property
     def local_libs(self):
         libs = []
-        if self.spec.satisfies("~libs"):
+        if self.spec.satisfies("+libs"):
             libs.extend(
                 [
                     f"{self.machlib}/jkweb.a",
