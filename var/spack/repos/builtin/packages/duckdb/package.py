@@ -18,6 +18,8 @@ class Duckdb(MakefilePackage):
     maintainers("glentner", "teaguesterling")
 
     version("master", branch="master")
+    version("1.0.0", sha256="04e472e646f5cadd0a3f877a143610674b0d2bcf9f4102203ac3c3d02f1c5f26")
+    version("0.10.3", sha256="7855587b3491dd488993287caee28720bee43ae28e92e8f41ea4631e9afcbf88")
     version("0.10.2", sha256="662a0ba5c35d678ab6870db8f65ffa1c72e6096ad525a35b41b275139684cea6")
     version("0.10.0", sha256="5a925b8607d00a97c1a3ffe6df05c0a62a4df063abd022ada82ac1e917792013")
     version(
@@ -82,6 +84,9 @@ class Duckdb(MakefilePackage):
     variant("jdbc", default=False, description="Build JDBC driver (may not work)")
     variant("odbc", default=False, description="Build with ODBC driver (may not work)")
     variant("python", default=False, description="Build with Python driver (may not work)")
+
+    # Observed failure in AVX2-specific codeblock but this is pro
+    conflicts("@1.0.0", when="target=x86_64_v3:", msg="Bug in AVX2-specific block")
 
     def setup_build_environment(self, env):
         if "+ninjabuild" in self.spec:
