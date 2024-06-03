@@ -57,7 +57,7 @@ class PerlBioDbBigfile(PerlPackage):
         else:
             # We have to handle the possibility that HTSLIB was bundled
             # with kentutils, which has a different directory structure
-            htslib = kent_src.htslib
+            htslib = kent.prefix.htslib
 
         incs = [
             # This is usually set by Build.PL from KENT_SRC
