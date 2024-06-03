@@ -120,6 +120,8 @@ class Legion(CMakePackage, ROCmPackage):
     depends_on("python@3.8:", when="+python")
     depends_on("py-cffi", when="+python")
     depends_on("py-numpy", when="+python")
+    depends_on("py-pip", when="+python", type="build")
+
     depends_on("papi", when="+papi")
     depends_on("zlib-api", when="+zlib")
 
@@ -288,13 +290,17 @@ class Legion(CMakePackage, ROCmPackage):
 
     depends_on("rust@1.74:", type="build", when="+prof")
 
+    variant("gc", default=False, description="Enable garbage collector logging")
+    variant(
+        "sysomp", default=False, description="Use system OpenMP implementation instead of Realm's"
+    )
+
     def cmake_args(self):
         spec = self.spec
-        cmake_cxx_flags = []
         from_variant = self.define_from_variant
         options = [from_variant("CMAKE_CXX_STANDARD", "cxxstd")]
 
-        if "network=gasnet" in spec:
+        if spec.satisfies("network=gasnet"):
             options.append("-DLegion_NETWORKS=gasnetex")
             if spec.variants["gasnet_root"].value != "none":
                 gasnet_dir = spec.variants["gasnet_root"].value
@@ -313,109 +319,105 @@ class Legion(CMakePackage, ROCmPackage):
             else:
                 options.append("-DGASNet_CONDUIT=%s" % gasnet_conduit)
 
-            if "+gasnet_debug" in spec:
+            if spec.satisfies("+gasnet_debug"):
                 options.append("-DLegion_EMBED_GASNet_CONFIGURE_ARGS=--enable-debug")
-        elif "network=mpi" in spec:
+        elif spec.satisfies("network=mpi"):
             options.append("-DLegion_NETWORKS=mpi")
-        elif "network=ucx" in spec:
+        elif spec.satisfies("network=ucx"):
             options.append("-DLegion_NETWORKS=ucx")
         else:
             options.append("-DLegion_EMBED_GASNet=OFF")
 
-        if "+shared" in spec:
+        if spec.satisfies("+shared"):
             options.append("-DBUILD_SHARED_LIBS=ON")
         else:
             options.append("-DBUILD_SHARED_LIBS=OFF")
 
-        if "+bounds_checks" in spec:
+        if spec.satisfies("+bounds_checks"):
             # default is off.
             options.append("-DLegion_BOUNDS_CHECKS=ON")
-        if "+privilege_checks" in spec:
+        if spec.satisfies("+privilege_checks"):
             # default is off.
             options.append("-DLegion_PRIVILEGE_CHECKS=ON")
-        if "output_level" in spec:
-            level = str.upper(spec.variants["output_level"].value)
-            options.append("-DLegion_OUTPUT_LEVEL=%s" % level)
-        if "+spy" in spec:
+
+        options.append(f"-DLegion_OUTPUT_LEVEL={str.upper(spec.variants['output_level'].value)}")
+
+        if spec.satisfies("+spy"):
             # default is off.
             options.append("-DLegion_SPY=ON")
 
-        if "+cuda" in spec:
+        if spec.satisfies("+cuda"):
             cuda_arch = spec.variants["cuda_arch"].value
             options.append("-DLegion_USE_CUDA=ON")
             options.append("-DLegion_GPU_REDUCTIONS=ON")
             options.append("-DLegion_CUDA_ARCH=%s" % cuda_arch)
-            if "+cuda_hijack" in spec:
+            if spec.satisfies("+cuda_hijack"):
                 options.append("-DLegion_HIJACK_CUDART=ON")
             else:
                 options.append("-DLegion_HIJACK_CUDART=OFF")
 
-            if "+cuda_unsupported_compiler" in spec:
+            if spec.satisfies("+cuda_unsupported_compiler"):
                 options.append("-DCUDA_NVCC_FLAGS:STRING=--allow-unsupported-compiler")
 
-        if "+rocm" in spec:
+        if spec.satisfies("+rocm"):
             options.append("-DLegion_USE_HIP=ON")
             options.append("-DLegion_GPU_REDUCTIONS=ON")
             options.append(from_variant("Legion_HIP_TARGET", "hip_target"))
             options.append(from_variant("Legion_HIP_ARCH", "amdgpu_target"))
             options.append(from_variant("Legion_HIJACK_HIP", "hip_hijack"))
-            if "@23.03.0:23.12.0" in spec:
+            if spec.satisfies("@23.03.0:23.12.0"):
                 options.append(self.define("HIP_PATH", f"{spec['hip'].prefix}/hip"))
             else:
                 options.append(self.define("ROCM_PATH", spec["hip"].prefix))
 
-        if "+fortran" in spec:
+        if spec.satisfies("+fortran"):
             # default is off.
             options.append("-DLegion_USE_Fortran=ON")
 
-        if "+hdf5" in spec:
+        if spec.satisfies("+hdf5"):
             # default is off.
             options.append("-DLegion_USE_HDF5=ON")
 
-        if "+hwloc" in spec:
+        if spec.satisfies("+hwloc"):
             # default is off.
             options.append("-DLegion_USE_HWLOC=ON")
 
-        if "+kokkos" in spec:
+        if spec.satisfies("+kokkos"):
             # default is off.
             options.append("-DLegion_USE_Kokkos=ON")
             os.environ["KOKKOS_CXX_COMPILER"] = spec["kokkos"].kokkos_cxx
 
-        if "+libdl" in spec:
+        if spec.satisfies("+libdl"):
             # default is on.
             options.append("-DLegion_USE_LIBDL=ON")
         else:
             options.append("-DLegion_USE_LIBDL=OFF")
 
-        if "+openmp" in spec:
+        if spec.satisfies("+openmp"):
             # default is off.
             options.append("-DLegion_USE_OpenMP=ON")
 
-        if "+papi" in spec:
+        if spec.satisfies("+papi"):
             # default is off.
             options.append("-DLegion_USE_PAPI=ON")
 
-        if "+python" in spec:
+        if spec.satisfies("+python"):
             # default is off.
             options.append("-DLegion_USE_Python=ON")
 
-        if "+zlib" in spec:
+        if spec.satisfies("+zlib"):
             # default is on.
             options.append("-DLegion_USE_ZLIB=ON")
         else:
             options.append("-DLegion_USE_ZLIB=OFF")
 
-        if "+redop_complex" in spec:
-            # default is off.
-            options.append("-DLegion_REDOP_COMPLEX=ON")
-
-        if "+bindings" in spec:
+        if spec.satisfies("+bindings"):
             # default is off.
             options.append("-DLegion_BUILD_BINDINGS=ON")
-            options.append("-DLegion_REDOP_COMPLEX=ON")  # required for bindings
 
-        if spec.variants["build_type"].value == "Debug":
-            cmake_cxx_flags.extend(["-DDEBUG_REALM", "-DDEBUG_LEGION", "-ggdb"])
+        if spec.satisfies("+redop_complex") or spec.satisfies("+bindings"):
+            # default is off; required for bindings.
+            options.append("-DLegion_REDOP_COMPLEX=ON")
 
         maxdims = int(spec.variants["max_dims"].value)
         # TODO: sanity check if maxdims < 0 || > 9???
@@ -446,6 +448,13 @@ class Legion(CMakePackage, ROCmPackage):
         # This disables Legion's CMake build system's logic for targeting the native
         # CPU architecture in favor of Spack-provided compiler flags
         options.append("-DBUILD_MARCH:STRING=")
+
+        if spec.satisfies("+openmp +sysomp"):
+            options.append("-DLegion_OpenMP_SYSTEM_RUNTIME=ON")
+
+        if spec.satisfies("+gc"):
+            options.append("-DCMAKE_CXX_FLAGS=-DLEGION_GC")
+
         return options
 
     def build(self, spec, prefix):

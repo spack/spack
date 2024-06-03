@@ -29,6 +29,8 @@ class Cmake(Package):
     license("BSD-3-Clause")
 
     version("master", branch="master")
+    version("3.29.2", sha256="36db4b6926aab741ba6e4b2ea2d99c9193222132308b4dc824d4123cb730352e")
+    version("3.28.4", sha256="eb9c787e078848dc493f4f83f8a4bbec857cd1f38ab6425ce8d2776a9f6aa6fb")
     version("3.27.9", sha256="609a9b98572a6a5ea477f912cffb973109ed4d0a6a6b3f9e2353d2cdc048708e")
     version("3.26.6", sha256="070b9a2422e666d2c1437e2dab239a236e8a63622d0a8d0ffe9e389613d2b76a")
     version("3.25.3", sha256="cc995701d590ca6debc4245e9989939099ca52827dd46b5d3592f093afe1901c")
@@ -59,6 +61,24 @@ class Cmake(Package):
     version("2.8.10.2", sha256="ce524fb39da06ee6d47534bbcec6e0b50422e18b62abc4781a4ba72ea2910eb1")
 
     with default_args(deprecated=True):
+        version(
+            "3.29.1", sha256="7fb02e8f57b62b39aa6b4cf71e820148ba1a23724888494735021e32ab0eefcc"
+        )
+        version(
+            "3.29.0", sha256="a0669630aae7baa4a8228048bf30b622f9e9fd8ee8cedb941754e9e38686c778"
+        )
+        version(
+            "3.28.3", sha256="72b7570e5c8593de6ac4ab433b73eab18c5fb328880460c86ce32608141ad5c1"
+        )
+        version(
+            "3.28.2", sha256="1466f872dc1c226f373cf8fba4230ed216a8f108bd54b477b5ccdfd9ea2d124a"
+        )
+        version(
+            "3.28.1", sha256="15e94f83e647f7d620a140a7a5da76349fc47a1bfed66d0f5cdee8e7344079ad"
+        )
+        version(
+            "3.28.0", sha256="e1dcf9c817ae306e73a45c2ba6d280c65cf4ec00dd958eb144adaf117fb58e71"
+        )
         version(
             "3.27.8", sha256="fece24563f697870fbb982ea8bf17482c9d5f855d8c9bf0b82463d76c9e8d0cc"
         )
@@ -402,7 +422,6 @@ class Cmake(Package):
     depends_on("ninja", when="platform=windows")
     depends_on("gmake", when="platform=linux")
     depends_on("gmake", when="platform=darwin")
-    depends_on("gmake", when="platform=cray")
     depends_on("gmake", when="platform=freebsd")
 
     # We default ownlibs to true because it greatly speeds up the CMake
@@ -449,7 +468,7 @@ class Cmake(Package):
     with when("~ownlibs"):
         depends_on("expat")
         # expat/zlib are used in CMake/CTest, so why not require them in libarchive.
-        for plat in ["darwin", "cray", "linux"]:
+        for plat in ["darwin", "linux"]:
             with when("platform=%s" % plat):
                 depends_on("libarchive@3.1.0: xar=expat compression=zlib")
                 depends_on("libarchive@3.3.3:", when="@3.15.0:")

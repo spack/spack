@@ -61,7 +61,7 @@ jobs:
           ./share/spack/qa/validate_last_exit.ps1
           spack -d audit externals
           ./share/spack/qa/validate_last_exit.ps1
-    - uses: codecov/codecov-action@6d798873df2b1b8e5846dba6fb86631229fbcb17
+    - uses: codecov/codecov-action@125fc84a9a348dbcf27191600683ec096ec9021c
       if: ${{ inputs.with_coverage == 'true' }}
       with:
         flags: unittests,audits

@@ -421,6 +421,10 @@ def _check_patch_urls(pkgs, error_cls):
         r"^https?://(?:patch-diff\.)?github(?:usercontent)?\.com/"
         r".+/.+/(?:commit|pull)/[a-fA-F0-9]+\.(?:patch|diff)"
     )
+    github_pull_commits_re = (
+        r"^https?://(?:patch-diff\.)?github(?:usercontent)?\.com/"
+        r".+/.+/pull/\d+/commits/[a-fA-F0-9]+\.(?:patch|diff)"
+    )
     # Only .diff URLs have stable/full hashes:
     # https://forum.gitlab.com/t/patches-with-full-index/29313
     gitlab_patch_url_re = (
@@ -436,14 +440,24 @@ def _check_patch_urls(pkgs, error_cls):
                 if not isinstance(patch, spack.patch.UrlPatch):
                     continue
 
-                if re.match(github_patch_url_re, patch.url):
+                if re.match(github_pull_commits_re, patch.url):
+                    url = re.sub(r"/pull/\d+/commits/", r"/commit/", patch.url)
+                    url = re.sub(r"^(.*)(?<!full_index=1)$", r"\1?full_index=1", url)
+                    errors.append(
+                        error_cls(
+                            f"patch URL in package {pkg_cls.name} "
+                            + "must not be a pull request commit; "
+                            + f"instead use {url}",
+                            [patch.url],
+                        )
+                    )
+                elif re.match(github_patch_url_re, patch.url):
                     full_index_arg = "?full_index=1"
                     if not patch.url.endswith(full_index_arg):
                         errors.append(
                             error_cls(
-                                "patch URL in package {0} must end with {1}".format(
-                                    pkg_cls.name, full_index_arg
-                                ),
+                                f"patch URL in package {pkg_cls.name} "
+                                + f"must end with {full_index_arg}",
                                 [patch.url],
                             )
                         )
@@ -451,9 +465,7 @@ def _check_patch_urls(pkgs, error_cls):
                     if not patch.url.endswith(".diff"):
                         errors.append(
                             error_cls(
-                                "patch URL in package {0} must end with .diff".format(
-                                    pkg_cls.name
-                                ),
+                                f"patch URL in package {pkg_cls.name} must end with .diff",
                                 [patch.url],
                             )
                         )

@@ -32,8 +32,8 @@ class PyDlioProfilerPy(PythonPackage):
     depends_on("yaml-cpp@0.6.3", when="@0.0.2:")
     depends_on("py-setuptools@42:", type="build")
     depends_on("py-pybind11", type=("build", "run"))
-    depends_on("py-ninja", type="build")
-    depends_on("py-cmake@3.12:", type="build")
+    depends_on("ninja", type="build")
+    depends_on("cmake@3.12:", type="build")
 
     def setup_build_environment(self, env):
         env.set("DLIO_PROFILER_DIR", self.prefix)

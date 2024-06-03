@@ -37,7 +37,6 @@ class _7zip(SourceforgePackage, Package):
 
     conflicts("platform=linux")
     conflicts("platform=darwin")
-    conflicts("platform=cray")
 
     # TODO: Patch on WinSDK version 10.0.20348.0 when SDK is introduced to Spack
     # This patch solves a known bug in that SDK version on the 7zip side
