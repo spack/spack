@@ -18,6 +18,9 @@ class PyAiohttp(PythonPackage):
 
     license("Apache-2.0")
 
+    version("3.9.5", sha256="edea7d15772ceeb29db4aff55e482d4bcfb6ae160ce144f2682de02f6d693551")
+    version("3.9.4", sha256="6ff71ede6d9a5a58cfb7b6fffc83ab5d4a63138276c771ac91ceaaddf5459644")
+    version("3.9.0", sha256="09f23292d29135025e19e8ff4f0a68df078fe4ee013bca0105b2e803989de92d")
     version("3.8.4", sha256="bf2e1a9162c1e441bf805a1fd166e249d574ca04e03b34f97e2928769e91ab5c")
     version("3.8.1", sha256="fc5471e1a54de15ef71c1bc6ebe80d4dc681ea600e68bfd1cbce40427f0b7578")
     version("3.8.0", sha256="d3b19d8d183bcfd68b25beebab8dc3308282fe2ca3d6ea3cb4cd101b3c279f8d")
