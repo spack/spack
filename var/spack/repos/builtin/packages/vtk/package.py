@@ -214,7 +214,7 @@ class Vtk(CMakePackage):
     patch(
         "https://gitlab.kitware.com/vtk/vtk/-/merge_requests/9996.diff",
         sha256="dab51ffd0d62b00c089c1245e6b105f740106b53893305c87193d4ba03a948e0",
-        when="@9.1:9.2 %gcc@13:"
+        when="@9.1:9.2 %gcc@13:",
     )
 
     @when("@9.2:")
