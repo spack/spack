@@ -10,7 +10,7 @@ import re
 import subprocess
 import sys
 from shutil import copy
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 from spack_repo.builtin.build_systems.generic import Package
 
@@ -37,6 +37,50 @@ def make_pyvenv_cfg(python_pkg: Package, venv_prefix: str) -> str:
     ]
 
     return "\n".join(lines) + "\n"
+
+
+def find_python_in_prefix(spec: "spack.spec.Spec", prefix: Optional[str] = None) -> Executable:
+    """Finds a python command in a prefix, given a Spec for the python installation.
+
+    The python command may vary depending on the version of Python and how it was
+    installed. In general, Python 3 only comes with a ``python3`` command. However, some
+    package managers will symlink ``python`` to ``python3``, while others may contain
+    ``python3.11``, ``python3.10``, and ``python3.9`` in the same directory.
+
+    Returns:
+        Executable: the Python command
+
+    """
+    prefix = Prefix(prefix or spec.prefix)
+
+    # We need to be careful here. If the user is using an externally
+    # installed python, several different commands could be located
+    # in the same directory. Be as specific as possible. Search for:
+    #
+    # * python3.11
+    # * python3
+    # * python
+    #
+    # in that order if using python@3.11.0, for example.
+
+    # in that order if using python@3.11.0, for example.
+    suffixes = [spec.version.up_to(2), spec.version.up_to(1), ""]
+    file_extension = "" if sys.platform != "win32" else ".exe"
+    patterns = [f"python{ver}{file_extension}" for ver in suffixes]
+    root = prefix.bin if sys.platform != "win32" else prefix
+
+    path = find_first(root, files=patterns)
+    if path is not None:
+        return Executable(path)
+
+    else:
+        # Give a last try at rhel8 platform python
+        if spec.external and prefix == "/usr" and spec.satisfies("os=rhel8"):
+            path = os.path.join(prefix, "libexec", "platform-python")
+            if os.path.exists(path):
+                return Executable(path)
+
+    raise RuntimeError(f"Unable to locate python command in {prefix} or its subdirectories")
 
 
 class Python(Package):
@@ -908,46 +952,9 @@ class Python(Package):
     # ========================================================================
 
     @property
-    def command(self):
-        """Returns the Python command, which may vary depending
-        on the version of Python and how it was installed.
-
-        In general, Python 3 only comes with a ``python3`` command. However, some
-        package managers will symlink ``python`` to ``python3``, while others
-        may contain ``python3.11``, ``python3.10``, and ``python3.9`` in the
-        same directory.
-
-        Returns:
-            Executable: the Python command
-        """
-        # We need to be careful here. If the user is using an externally
-        # installed python, several different commands could be located
-        # in the same directory. Be as specific as possible. Search for:
-        #
-        # * python3.11
-        # * python3
-        # * python
-        #
-        # in that order if using python@3.11.0, for example.
-        suffixes = [self.spec.version.up_to(2), self.spec.version.up_to(1), ""]
-        file_extension = "" if sys.platform != "win32" else ".exe"
-        patterns = [f"python{ver}{file_extension}" for ver in suffixes]
-        root = self.prefix.bin if sys.platform != "win32" else self.prefix
-        path = find_first(root, files=patterns)
-
-        if path is not None:
-            return Executable(path)
-
-        else:
-            # Give a last try at rhel8 platform python
-            if self.spec.external and self.prefix == "/usr" and self.spec.satisfies("os=rhel8"):
-                path = os.path.join(self.prefix, "libexec", "platform-python")
-                if os.path.exists(path):
-                    return Executable(path)
-
-        raise RuntimeError(
-            f"cannot to locate the '{self.name}' command in {root} or its subdirectories"
-        )
+    def command(self) -> Executable:
+        """Returns the Python command, using ``find_python_in_prefix``."""
+        return find_python_in_prefix(self.spec)
 
     @property
     def config_vars(self):
