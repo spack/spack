@@ -1280,10 +1280,8 @@ print(json.dumps(config))
         if os.path.lexists(pyvenv_cfg):
             return
 
-        # if this is a copy view, the realpath of python will be in the view
-        python_path = find_python_in_prefix(self.spec, projection).path
-        copy_view = not os.path.commonpath((os.path.realpath(python_path), projection))
-        if copy_view:  # don't put a pyvenv.cfg in a copy view
+        # don't put a pyvenv.cfg in a copy view
+        if view.link_type == "copy":
             return
 
         with open(pyvenv_cfg, "w") as cfg_file:
