@@ -235,7 +235,7 @@ class Seacas(CMakePackage):
     # it triggers a bug in apple-clang w.r.t how symbols are mangled
     # https://github.com/spack/spack/issues/44330
     conflicts(
-        "fmt@9%gcc",
+        "^fmt@9%gcc",
         msg="""Cannot mix gcc/apple-clang toolchains
               for this library combination.
               See https://github.com/spack/spack/issues/44330""",
