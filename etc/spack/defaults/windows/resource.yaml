@@ -7,9 +7,9 @@ bootstrap-resource:
       providers:
         - name: Spack Bootstrap Resource Repo
           endpoint: https://spack.github.io/windows-bootstrap-resources/resources/gpg4win/gpg4win.tar.gz
-          sha256: notasha
+          sha256: 249ab87bd06abea3140054089bad44d9a5d1531413590576da609142db2673ec
     file:
       providers:
         - name: Spack Bootstrap Resource Repo
           endpoint: https://spack.github.io/windows-bootstrap-resources/resources/file/file.tar.gz
-          sha256: notasha
+          sha256: 11b8f3abf647c711bc50ef8451c8d6e955f11c4afd8b0a98f2ac65e9b6e10d5e

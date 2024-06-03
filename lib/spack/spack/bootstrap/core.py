@@ -34,6 +34,7 @@ import uuid
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
 from llnl.util import tty
+from llnl.util.filesystem import remove_linked_tree
 from llnl.util.lang import GroupedExceptionHandler
 
 import spack.binary_distribution
@@ -78,7 +79,7 @@ ConfigDictionary = Dict[str, Any]
 def win_insert_resource_into_environment(name):
     resource_root = windows_resource_root() / name
     env = spack.util.environment.EnvironmentModifications()
-    env.append_path("PATH", str(resource_root))
+    env.append_path("PATH", str(resource_root / "bin"))
     env.apply_modifications()
 
 
@@ -493,9 +494,9 @@ class BootstrapResource:
             url=conf["endpoint"], checksum=conf["sha256"]
         )
         stage = spack.stage.Stage(fetcher, path=str(windows_resource_root()))
-        resource = spack.resource.Resource(name, fetcher, destination=stage.path)
+        resource = spack.resource.Resource(name, fetcher, destination=stage.path, placement=None)
         self.stage = spack.stage.ResourceStage(
-            fetcher, stage, resource, path=str(windows_resource_root())
+            fetcher, stage, resource, path=str(windows_resource_root()), keep=True
         )
 
     def acquire_resource(self):
@@ -503,9 +504,8 @@ class BootstrapResource:
         with self.stage as s:
             s.fetch()
             s.expand_archive()
-            shutil.copytree(
-                pathlib.Path(s.path) / self._name, windows_resource_root() / self._name
-            )
+            remove_linked_tree(windows_resource_root() / spack.stage._source_path_subdir)
+            os.remove(s.fetcher.archive_file)
         return True
 
 
