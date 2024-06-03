@@ -39,15 +39,10 @@ class PerlDbdMysql(PerlPackage):
         # strict checking. This could probably be patched in the future.
         depends_on("mysql@8", when="@5")
         depends_on("mysql@4:", when="@4")
-        depends_on("zlib-api")
-        depends_on("binutils")
 
     with default_args(type=("build", "run")):
         depends_on("perl-test-deep")
         depends_on("perl-dbi")
-
-    def setup_build_env(self, env):
-        env.append_path("PATH", self.spec["mysql_client"].prefix.bin.mysql_config)
 
     def configure_args(self):
         # Work around mysql_config providing incorrect linker args
