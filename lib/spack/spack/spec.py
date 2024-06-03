@@ -1287,6 +1287,102 @@ class SpecBuildInterface(lang.ObjectWrapper):
         return self.wrapped_obj.copy(*args, **kwargs)
 
 
+def tree(
+    specs: List["spack.spec.Spec"],
+    *,
+    color: Optional[bool] = None,
+    depth: bool = False,
+    hashes: bool = False,
+    hashlen: Optional[int] = None,
+    cover: str = "nodes",
+    indent: int = 0,
+    format: str = DEFAULT_FORMAT,
+    deptypes: Union[Tuple[str, ...], str] = "all",
+    show_types: bool = False,
+    depth_first: bool = False,
+    recurse_dependencies: bool = True,
+    status_fn: Optional[Callable[["Spec"], InstallStatus]] = None,
+    prefix: Optional[Callable[["Spec"], str]] = None,
+    key=id,
+) -> str:
+    """Prints out specs and their dependencies, tree-formatted with indentation.
+
+    Status function may either output a boolean or an InstallStatus
+
+    Args:
+        color: if True, always colorize the tree. If False, don't colorize the tree. If None,
+            use the default from llnl.tty.color
+        depth: print the depth from the root
+        hashes: if True, print the hash of each node
+        hashlen: length of the hash to be printed
+        cover: either "nodes" or "edges"
+        indent: extra indentation for the tree being printed
+        format: format to be used to print each node
+        deptypes: dependency types to be represented in the tree
+        show_types: if True, show the (merged) dependency type of a node
+        depth_first: if True, traverse the DAG depth first when representing it as a tree
+        recurse_dependencies: if True, recurse on dependencies
+        status_fn: optional callable that takes a node as an argument and return its
+            installation status
+        prefix: optional callable that takes a node as an argument and return its
+            installation prefix
+    """
+    out = ""
+
+    if color is None:
+        color = clr.get_color_when()
+
+    for d, dep_spec in traverse.traverse_tree(
+        sorted(specs), cover=cover, deptype=deptypes, depth_first=depth_first, key=key
+    ):
+        node = dep_spec.spec
+
+        if prefix is not None:
+            out += prefix(node)
+        out += " " * indent
+
+        if depth:
+            out += "%-4d" % d
+
+        if status_fn:
+            status = status_fn(node)
+            if status in list(InstallStatus):
+                out += clr.colorize(status.value, color=color)
+            elif status:
+                out += clr.colorize("@g{[+]}  ", color=color)
+            else:
+                out += clr.colorize("@r{[-]}  ", color=color)
+
+        if hashes:
+            out += clr.colorize("@K{%s}  ", color=color) % node.dag_hash(hashlen)
+
+        if show_types:
+            if cover == "nodes":
+                # when only covering nodes, we merge dependency types
+                # from all dependents before showing them.
+                depflag = 0
+                for ds in node.edges_from_dependents():
+                    depflag |= ds.depflag
+            else:
+                # when covering edges or paths, we show dependency
+                # types only for the edge through which we visited
+                depflag = dep_spec.depflag
+
+            type_chars = dt.flag_to_chars(depflag)
+            out += "[%s]  " % type_chars
+
+        out += "    " * d
+        if d > 0:
+            out += "^"
+        out += node.format(format, color=color) + "\n"
+
+        # Check if we wanted just the first line
+        if not recurse_dependencies:
+            break
+
+    return out
+
+
 @lang.lazy_lexicographic_ordering(set_hash=False)
 class Spec:
     #: Cache for spec's prefix, computed lazily in the corresponding property
@@ -4604,13 +4700,14 @@ class Spec:
         recurse_dependencies: bool = True,
         status_fn: Optional[Callable[["Spec"], InstallStatus]] = None,
         prefix: Optional[Callable[["Spec"], str]] = None,
+        key=id,
     ) -> str:
-        """Prints out this spec and its dependencies, tree-formatted
-        with indentation.
+        """Prints out this spec and its dependencies, tree-formatted with indentation.
 
-        Status function may either output a boolean or an InstallStatus
+        See multi-spec ``spack.spec.tree()`` function for details.
 
         Args:
+            specs: List of specs to format.
             color: if True, always colorize the tree. If False, don't colorize the tree. If None,
                 use the default from llnl.tty.color
             depth: print the depth from the root
@@ -4628,60 +4725,23 @@ class Spec:
             prefix: optional callable that takes a node as an argument and return its
                 installation prefix
         """
-        out = ""
-
-        if color is None:
-            color = clr.get_color_when()
-
-        for d, dep_spec in traverse.traverse_tree(
-            [self], cover=cover, deptype=deptypes, depth_first=depth_first
-        ):
-            node = dep_spec.spec
-
-            if prefix is not None:
-                out += prefix(node)
-            out += " " * indent
-
-            if depth:
-                out += "%-4d" % d
-
-            if status_fn:
-                status = status_fn(node)
-                if status in list(InstallStatus):
-                    out += clr.colorize(status.value, color=color)
-                elif status:
-                    out += clr.colorize("@g{[+]}  ", color=color)
-                else:
-                    out += clr.colorize("@r{[-]}  ", color=color)
-
-            if hashes:
-                out += clr.colorize("@K{%s}  ", color=color) % node.dag_hash(hashlen)
-
-            if show_types:
-                if cover == "nodes":
-                    # when only covering nodes, we merge dependency types
-                    # from all dependents before showing them.
-                    depflag = 0
-                    for ds in node.edges_from_dependents():
-                        depflag |= ds.depflag
-                else:
-                    # when covering edges or paths, we show dependency
-                    # types only for the edge through which we visited
-                    depflag = dep_spec.depflag
-
-                type_chars = dt.flag_to_chars(depflag)
-                out += "[%s]  " % type_chars
-
-            out += "    " * d
-            if d > 0:
-                out += "^"
-            out += node.format(format, color=color) + "\n"
-
-            # Check if we wanted just the first line
-            if not recurse_dependencies:
-                break
-
-        return out
+        return tree(
+            [self],
+            color=color,
+            depth=depth,
+            hashes=hashes,
+            hashlen=hashlen,
+            cover=cover,
+            indent=indent,
+            format=format,
+            deptypes=deptypes,
+            show_types=show_types,
+            depth_first=depth_first,
+            recurse_dependencies=recurse_dependencies,
+            status_fn=status_fn,
+            prefix=prefix,
+            key=key,
+        )
 
     def __repr__(self):
         return str(self)
