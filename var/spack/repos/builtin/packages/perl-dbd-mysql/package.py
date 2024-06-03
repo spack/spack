@@ -35,29 +35,16 @@ class PerlDbdMysql(PerlPackage):
     depends_on("perl-devel-checklib", type="build", when="@4.050:")
 
     with default_args(type=("build", "link", "run")):
-        depends_on("mysql+client_only@8")  # Does it's own version check, mariadb doesn't conform
-        depends_on("zlib-api")
-        depends_on("binutils")
+        # Does it's own version check and mariadb doesn't conform to it's
+        # strict checking. This could probably be patched in the future.
+        depends_on("mysql@4:", when="@4")
+        depends_on("mysql@8", when="@5")
 
     with default_args(type=("build", "run")):
         depends_on("perl-test-deep")
         depends_on("perl-dbi")
 
     def configure_args(self):
-        zlib = self.spec['zlib-api']
-        return [
-            zlib.libs.ld_flags,
-        ]
-
-
-#    def setup_build_env(self, env):
-#        env.append_path("PATH", self.spec["mysql_client"].prefix.bin.mysql_config)
-
-#    def configure_args(self):
-#        mysql = self.spec["mysql-client"].prefix
-#        mysql_config = mysql.bin.mysql_config
-#        return [
-#            f"--cflags=-I{mysql.include}",
-#            f"--libs=-L{mysql.lib} -lmysqlclient",
-#            f"--mysql_config={mysql_config}",
-#        ]
+        # Work around mysql_config providing incorrect linker args
+        mysql = self.spec["mysql-client"].prefix
+        return [f"--cflags=-I{mysql.include}", f"--libs=-L{mysql.lib} -lmysqlclient"]
