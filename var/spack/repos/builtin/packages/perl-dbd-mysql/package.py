@@ -37,8 +37,8 @@ class PerlDbdMysql(PerlPackage):
     with default_args(type=("build", "link", "run")):
         # Does it's own version check and mariadb doesn't conform to it's
         # strict checking. This could probably be patched in the future.
-        depends_on("mysql@8", when="@5")
-        depends_on("mysql@4:", when="@4")
+        depends_on("mysql+client_only@8", when="@5")
+        depends_on("mysql+client_only@4:", when="@4")
 
     with default_args(type=("build", "run")):
         depends_on("perl-test-deep")
