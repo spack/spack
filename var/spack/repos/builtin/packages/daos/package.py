@@ -36,7 +36,7 @@ class Daos(SConsPackage):
     depends_on("isa-l-crypto@2.23.0:")
     depends_on("libfabric@1.15.1:")
     depends_on("libfuse@3.6.1:")
-    depends_on("libuuid")
+    depends_on("uuid")
     depends_on("libunwind")
     depends_on("libyaml")
     depends_on("mercury@2.2.0:+boostsys")
