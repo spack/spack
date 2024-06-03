@@ -22,6 +22,9 @@ class Blaspp(CMakePackage, CudaPackage, ROCmPackage):
 
     version("master", branch="master")
     version(
+        "2024.05.31", sha256="72dfc03ec07c0826e0466dc2c204b460caa929d53ad4f050cb132d92670be7ce"
+    )
+    version(
         "2023.11.05", sha256="62dfc03ec07c0826e0466dc2c204b460caa929d53ad4f050cb132d92670be7ce"
     )
     version(
