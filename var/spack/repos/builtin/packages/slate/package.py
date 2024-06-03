@@ -27,7 +27,7 @@ class Slate(CMakePackage, CudaPackage, ROCmPackage):
 
     version("master", branch="master")
     version(
-        "2024.05.31", sha256="d3d925adec137ef4b7d876b2d7d0f8f2ff9d8485fa4125454a42f5da4ac026f3"
+        "2024.05.31", sha256="9c5d4d6779d8935b6fe41031b46e11ab92102f13c5f684022287c8616661b775"
     )
     version(
         "2023.11.05", sha256="d3d925adec137ef4b7d876b2d7d0f8f2ff9d8485fa4125454a42f5da4ac026f3"
