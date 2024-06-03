@@ -235,6 +235,9 @@ class Charmpp(Package):
                 {
                     ("linux", "arm", "mpi"): "mpi-linux-arm7",
                     ("linux", "aarch64", "mpi"): "mpi-linux-arm8",
+                    ("darwin", "arm", "multicore"): "multicore-darwin-arm8",
+                    ("darwin", "arm", "netlrts"): "netlrts-darwin-arm8",
+                    ("darwin", "arm", "mpi"): "mpi-darwin-arm8",
                 }
             )
 
