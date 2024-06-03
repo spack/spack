@@ -6,7 +6,6 @@ import contextlib
 
 from ._functions import _host, by_name, platforms, prevent_cray_detection, reset
 from ._platform import Platform
-from .cray import Cray
 from .darwin import Darwin
 from .freebsd import FreeBSD
 from .linux import Linux
@@ -15,7 +14,6 @@ from .windows import Windows
 
 __all__ = [
     "Platform",
-    "Cray",
     "Darwin",
     "Linux",
     "FreeBSD",
