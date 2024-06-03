@@ -86,7 +86,9 @@ class Duckdb(MakefilePackage):
     variant("python", default=False, description="Build with Python driver (may not work)")
 
     # Observed failure in AVX2-specific codeblock but this is pro
-    conflicts("@1.0.0", when="target=x86_64_v3:", msg="Bug in AVX2-specific block")
+    conflicts(
+        "@1.0.0", when="target=x86_64_v3:", msg="https://github.com/duckdb/duckdb/issues/12362"
+    )
 
     def setup_build_environment(self, env):
         if "+ninjabuild" in self.spec:
