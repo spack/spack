@@ -12,10 +12,7 @@ class PyVlConvertPython(PythonPackage):
     homepage = "https://github.com/vega/vl-convert"
     pypi = "vl_convert_python/vl_convert_python-1.4.0.tar.gz"
 
-    version(
-        "1.4.0",
-        sha256="264d6f2338c7d3474e60c6907cca016b880b0c1c9be302bb84abc6690188a7e9",
-    )
+    version("1.4.0", sha256="264d6f2338c7d3474e60c6907cca016b880b0c1c9be302bb84abc6690188a7e9")
 
     version(
         "1.3.0",
