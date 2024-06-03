@@ -32,13 +32,17 @@ class PerlDbdMysql(PerlPackage):
     )
     version("4.043", sha256="629f865e8317f52602b2f2efd2b688002903d2e4bbcba5427cb6188b043d6f99")
 
+    variant("force_clientonly", default=True, description="Use the client_only mysql variant")
+
     depends_on("perl-devel-checklib", type="build", when="@4.050:")
 
     with default_args(type=("build", "link", "run")):
         # Does it's own version check and mariadb doesn't conform to it's
         # strict checking. This could probably be patched in the future.
-        depends_on("mysql+client_only@8", when="@5")
-        depends_on("mysql+client_only@4:", when="@4")
+        depends_on("mysql+client_only@8", when="@5+force_clientonly")
+        depends_on("mysql@8", when="@5~force_clientonly")
+        depends_on("mysql+client_only@4:", when="@4+force_clientonly")
+        depends_on("mysql@4:", when="@4~force_clientonly")
 
     with default_args(type=("build", "run")):
         depends_on("perl-test-deep")
