@@ -53,7 +53,6 @@ class Clingo(CMakePackage):
         depends_on("bison@2.5:", type="build", when="platform=linux")
         depends_on("bison@2.5:", type="build", when="platform=darwin")
         depends_on("bison@2.5:", type="build", when="platform=freebsd")
-        depends_on("bison@2.5:", type="build", when="platform=cray")
 
     with when("platform=windows"):
         depends_on("re2c@0.13:", type="build")
@@ -67,7 +66,6 @@ class Clingo(CMakePackage):
         depends_on("py-cffi", type=("build", "run"), when="@5.5.0: platform=linux")
         depends_on("py-cffi", type=("build", "run"), when="@5.5.0: platform=darwin")
         depends_on("py-cffi", type=("build", "run"), when="@5.5.0: platform=freebsd")
-        depends_on("py-cffi", type=("build", "run"), when="@5.5.0: platform=cray")
 
     patch("python38.patch", when="@5.3:5.4.0")
     patch("size-t.patch", when="%msvc")

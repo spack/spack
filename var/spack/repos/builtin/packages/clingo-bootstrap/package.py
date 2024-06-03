@@ -58,12 +58,6 @@ class ClingoBootstrap(Clingo):
         when="platform=linux",
         msg="GCC or clang are required to bootstrap clingo on Linux",
     )
-    requires(
-        "%gcc",
-        "%clang",
-        when="platform=cray",
-        msg="GCC or clang are required to bootstrap clingo on Cray",
-    )
     conflicts("%gcc@:5", msg="C++14 support is required to bootstrap clingo")
 
     # On Darwin we bootstrap with Apple Clang

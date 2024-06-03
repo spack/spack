@@ -100,9 +100,6 @@ class Axl(CMakePackage):
             args.append(self.define_from_variant("ENABLE_IBM_BBAPI", "bbapi"))
             args.append(self.define_from_variant("ENABLE_CRAY_DW", "dw"))
             args.append(self.define_from_variant("BUILD_SHARED_LIBS", "shared"))
-        else:
-            if spec.satisfies("platform=cray"):
-                args.append(self.define("AXL_LINK_STATIC", True))
 
         if spec.satisfies("@0.6.0:"):
             args.append(self.define_from_variant("ENABLE_PTHREADS", "pthreads"))

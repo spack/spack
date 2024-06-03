@@ -15,6 +15,7 @@ class NlohmannJson(CMakePackage):
 
     license("MIT")
 
+    version("3.11.3", sha256="0d8ef5af7f9794e3263480193c491549b2ba6cc74bb018906202ada498a79406")
     version("3.11.2", sha256="d69f9deb6a75e2580465c6c4c5111b89c4dc2fa94e3a85fcd2ffcd9a143d9273")
     # v3.11.0 & v3.11.1 omitted; released with significant regressions
     version("3.10.5", sha256="5daca6ca216495edf89d167f808d1d03c4a4d929cef7da5e10f135ae1540c7e4")

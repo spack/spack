@@ -11,12 +11,13 @@ class HipTensor(CMakePackage, ROCmPackage):
 
     homepage = "https://github.com/ROCm/hipTensor"
     git = "https://github.com/ROCm/hipTensor.git"
-    url = "https://github.com/ROCm/hipTensor/archive/refs/tags/rocm-6.0.2.tar.gz"
+    url = "https://github.com/ROCm/hipTensor/archive/refs/tags/rocm-6.1.1.tar.gz"
     tags = ["rocm"]
 
     maintainers("srekolam", "afzpatel")
 
     version("master", branch="master")
+    version("6.1.1", sha256="09bcdbf6b1d20dc4d75932abd335a9a534b16a8343858121daa5813a38f5ad3a")
     version("6.1.0", sha256="9cc43b1b3394383f22f30e194d8753ca6ff1887c83ec1de5823cb2e94976eeed")
     version("6.0.2", sha256="6e6e7530eabbd1fb28b83efa5a49c19a6642d40e1554224ebb1e0a5999045e27")
     version("6.0.0", sha256="268d7f114784b7e824f89c21c65c2efedbb5486f09a356a56dca1b89bde1ef7a")
@@ -25,11 +26,11 @@ class HipTensor(CMakePackage, ROCmPackage):
 
     variant("asan", default=False, description="Build with address-sanitizer enabled or disabled")
 
-    for ver in ["5.7.0", "5.7.1", "6.0.0", "6.0.2", "6.1.0", "master"]:
+    for ver in ["5.7.0", "5.7.1", "6.0.0", "6.0.2", "6.1.0", "6.1.1", "master"]:
         depends_on(f"composable-kernel@{ver}", when=f"@{ver}")
         depends_on(f"rocm-cmake@{ver}", when=f"@{ver}")
 
-    for ver in ["6.1.0"]:
+    for ver in ["6.1.0", "6.1.1"]:
         depends_on(f"hipcc@{ver}", when=f"@{ver}")
 
     def setup_build_environment(self, env):

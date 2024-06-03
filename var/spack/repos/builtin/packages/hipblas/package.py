@@ -24,6 +24,7 @@ class Hipblas(CMakePackage, CudaPackage, ROCmPackage):
 
     version("develop", branch="develop")
     version("master", branch="master")
+    version("6.1.1", sha256="087ea82dff13c8162bf93343b174b18f1d58681711bce4fb7c8dc7212020c099")
     version("6.1.0", sha256="5f8193c4ef0508967e608a8adf86d63066a984c5803a4d05dd617021d6298091")
     version("6.0.2", sha256="10c1b6c1deb0f225c0fb6b2bb88398a32cd0d32d3ffce9b5c8df9db2cf88d25c")
     version("6.0.0", sha256="8fbd0c244fe82eded866e06d2399b1d91ab5d43d2ebcb73382c7ce1ae48d9cb3")
@@ -73,7 +74,7 @@ class Hipblas(CMakePackage, CudaPackage, ROCmPackage):
 
     depends_on("rocm-cmake@5.2.0:", type="build", when="@5.2.0:5.7")
     depends_on("rocm-cmake@4.5.0:", type="build")
-    for ver in ["6.0.0", "6.0.2", "6.1.0"]:
+    for ver in ["6.0.0", "6.0.2", "6.1.0", "6.1.1"]:
         depends_on(f"rocm-cmake@{ver}", when=f"+rocm @{ver}")
 
     depends_on("hip +cuda", when="+cuda")
@@ -97,6 +98,7 @@ class Hipblas(CMakePackage, CudaPackage, ROCmPackage):
         "6.0.0",
         "6.0.2",
         "6.1.0",
+        "6.1.1",
         "master",
         "develop",
     ]:
