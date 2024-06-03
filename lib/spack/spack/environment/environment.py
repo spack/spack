@@ -24,6 +24,7 @@ import llnl.util.tty.color as clr
 from llnl.util.link_tree import ConflictingSpecsError
 from llnl.util.symlink import readlink, symlink
 
+import spack.cmd
 import spack.compilers
 import spack.concretize
 import spack.config
@@ -2473,27 +2474,21 @@ def _equiv_dict(first, second):
     return same_values and same_keys_with_same_overrides
 
 
-def display_specs(concretized_specs):
-    """Displays the list of specs returned by `Environment.concretize()`.
+def display_specs(specs):
+    """Displays a list of specs traversed breadth-first, covering nodes, with install status.
 
     Args:
-        concretized_specs (list): list of specs returned by
-            `Environment.concretize()`
+        specs (list): list of specs
     """
-
-    def _tree_to_display(spec):
-        return spec.tree(
-            recurse_dependencies=True,
-            format=spack.spec.DISPLAY_FORMAT,
-            status_fn=spack.spec.Spec.install_status,
-            hashlen=7,
-            hashes=True,
-        )
-
-    for user_spec, concrete_spec in concretized_specs:
-        tty.msg("Concretized {0}".format(user_spec))
-        sys.stdout.write(_tree_to_display(concrete_spec))
-        print("")
+    tree_string = spack.spec.tree(
+        specs,
+        format=spack.spec.DISPLAY_FORMAT,
+        hashes=True,
+        hashlen=7,
+        status_fn=spack.spec.Spec.install_status,
+        key=traverse.by_dag_hash,
+    )
+    print(tree_string)
 
 
 def _concretize_from_constraints(spec_constraints, tests=False):
