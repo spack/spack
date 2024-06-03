@@ -16,4 +16,4 @@ class Libuuid(AutotoolsPackage, SourceforgePackage):
 
     provides("uuid")
 
-    patch("fix-flock-sys-file-issue.patch", when="%gcc@14:")  # This may be OS specific as well
+    patch("fix-flock-sys-file-issue.patch", when="%gcc@13:")  # This may be OS specific as well
