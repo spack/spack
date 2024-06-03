@@ -23,7 +23,6 @@ class PyJproperties(PythonPackage):
     version("1.0.1", sha256="327e14082653a4f2212ff81a96fbf141382f727f421e8afc933bf56ff7c010f4")
 
     depends_on("python@2.7,3:", type=("build", "run"))
-
+    depends_on("py-six@1.13:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
 
-    depends_on("py-six@1.13:", type=("build", "run"))
