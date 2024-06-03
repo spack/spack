@@ -511,7 +511,9 @@ class BootstrapResource:
 
 def ensure_resource(name):
     """Acquires resource from configured sources"""
-    cmd = spack.util.executable.which(name)
+    path = os.environ.get("PATH", "")
+    path = os.pathsep.join([windows_resource_root() / name / "bin", path])
+    cmd = spack.util.executable.which(name, path=path)
     if cmd:
         tty.debug(f"Resource {name} already available on system path at: {cmd.path}")
         return
