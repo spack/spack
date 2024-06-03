@@ -25,4 +25,3 @@ class PyJproperties(PythonPackage):
     depends_on("python@2.7,3:", type=("build", "run"))
     depends_on("py-six@1.13:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
-
