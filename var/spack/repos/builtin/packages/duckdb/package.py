@@ -85,9 +85,11 @@ class Duckdb(MakefilePackage):
     variant("odbc", default=False, description="Build with ODBC driver (may not work)")
     variant("python", default=False, description="Build with Python driver (may not work)")
 
-    # Observed failure in AVX2-specific codeblock but this is pro
+    # Observed failure in an AVX2-specific codeblock on x86_64_v4 target
     conflicts(
-        "@1.0.0", when="target=x86_64_v3:", msg="https://github.com/duckdb/duckdb/issues/12362"
+        "@1.0.0",
+        when="target=x86_64_v3:",
+        msg="See: https://github.com/duckdb/duckdb/issues/12362",
     )
 
     def setup_build_environment(self, env):
