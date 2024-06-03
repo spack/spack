@@ -51,7 +51,6 @@ class PerlBioDbBigfile(PerlPackage):
 
         spec = self.spec
         kent = spec["kentutils"]
-        kent_src = kent.prefix
 
         if spec.satisfies("^kentutils~htslib"):
             htslib = spec["htslib"].prefix.include
@@ -62,7 +61,7 @@ class PerlBioDbBigfile(PerlPackage):
 
         incs = [
             # This is usually set by Build.PL from KENT_SRC
-            f"-I{kent_src.prefix.inc}",
+            f"-I{kent.prefix.inc}",
             # Build system looks for tbx.h instead of htslib/tbx.h
             # so we need to give it some special help for HTSLIB
             f"-I{htslib.htslib}",
