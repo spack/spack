@@ -122,7 +122,7 @@ class CMakeBuilder(CMakeBuilder):
     def cmake_args(self):
         args = [self.define_from_variant(var) for var in VARIANTS]
         args.append("-Dsphinx=OFF")
-        args += [self.define_from_variant("tiff-opengt", "opengl")]
+        args += [self.define_from_variant("tiff-opengl", "opengl")]
         args += [self.define_from_variant("BUILD_SHARED_LIBS", "shared")]
         args += [self.define_from_variant("CMAKE_POSITION_INDEPENDENT_CODE", "pic")]
 
