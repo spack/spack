@@ -28,12 +28,13 @@ class Mold(CMakePackage):
     version("1.7.1", sha256="fa2558664db79a1e20f09162578632fa856b3cde966fbcb23084c352b827dfa9")
 
     depends_on("mimalloc")
+    depends_on("blake3", when="@2.2:")
+    depends_on("openssl", when="@:2.1")
     depends_on("zlib-api")
-    depends_on("openssl")
     depends_on("tbb")
 
     def cmake_args(self):
-        args = []
-        args.append(self.define("MOLD_USE_SYSTEM_MIMALLOC", True))
-
-        return args
+        return [
+            self.define("MOLD_USE_SYSTEM_MIMALLOC", True),
+            self.define("MOLD_USE_SYSTEM_TBB", True),
+        ]
