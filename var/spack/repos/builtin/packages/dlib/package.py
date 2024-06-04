@@ -70,7 +70,7 @@ class Dlib(CMakePackage, CudaPackage):
             self.define_from_variant("DLIB_WEBP_SUPPORT", "webp"),
             self.define_from_variant("DLIB_USE_CUDA", "cuda"),
         ]
-        self.spec.satisfies("+cuda"):
+        if spec.satisfies("+cuda"):
             args.append(
                 self.define(
                     "DLIB_USE_CUDA_COMPUTE_CAPABILITIES", self.spec.variants["cuda_arch"].value
