@@ -11,6 +11,7 @@ from .core import (
     ensure_core_dependencies,
     ensure_gpg_in_path_or_raise,
     ensure_patchelf_in_path_or_raise,
+    win_ensure_or_acquire_resource,
 )
 from .environment import BootstrapEnvironment, ensure_environment_dependencies
 from .status import status_message
@@ -24,6 +25,7 @@ __all__ = [
     "ensure_patchelf_in_path_or_raise",
     "all_core_root_specs",
     "ensure_environment_dependencies",
+    "win_ensure_or_acquire_resource",
     "BootstrapEnvironment",
     "status_message",
     "store_path",

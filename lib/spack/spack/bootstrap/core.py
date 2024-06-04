@@ -27,8 +27,6 @@ import functools
 import json
 import os
 import os.path
-import pathlib
-import shutil
 import sys
 import uuid
 from typing import Any, Callable, Dict, List, Optional, Tuple
@@ -509,13 +507,14 @@ class BootstrapResource:
         return True
 
 
-def ensure_resource(name):
+def win_ensure_or_acquire_resource(name):
     """Acquires resource from configured sources"""
     path = os.environ.get("PATH", "")
-    path = os.pathsep.join([windows_resource_root() / name / "bin", path])
+    path = os.pathsep.join([str(windows_resource_root() / name / "bin"), path])
     cmd = spack.util.executable.which(name, path=path)
     if cmd:
         tty.debug(f"Resource {name} already available on system path at: {cmd.path}")
+        win_insert_resource_into_environment(name)
         return
     if not cmd and not spack.config.get("bootstrap:bootstrap-resource:enable"):
         raise RuntimeError(
@@ -634,8 +633,8 @@ before proceeding with Spack or provide the path to a non standard install with 
 
 
 def ensure_win_resources() -> None:
-    ensure_resource("file")
-    ensure_resource("gpg")
+    win_ensure_or_acquire_resource("file")
+    win_ensure_or_acquire_resource("gpg")
 
 
 def ensure_core_dependencies() -> None:

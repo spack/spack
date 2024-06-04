@@ -8,6 +8,7 @@ import functools
 import os
 import re
 from typing import List
+import sys
 
 import llnl.util.filesystem
 
@@ -63,7 +64,10 @@ def init(gnupghome=None, force=False):
 
     # Set the executable objects for "gpg" and "gpgconf"
     with spack.bootstrap.ensure_bootstrap_configuration():
-        spack.bootstrap.ensure_gpg_in_path_or_raise()
+        if sys.platform == "win23":
+            spack.bootstrap.win_ensure_or_acquire_resource("gpg")
+        else:
+            spack.bootstrap.ensure_gpg_in_path_or_raise()
         GPG, GPGCONF = _gpg(), _gpgconf()
 
     GPG.add_default_env("GNUPGHOME", GNUPGHOME)
