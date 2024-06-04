@@ -6,7 +6,7 @@
 from spack.package import *
 
 
-class Muparser(Package):
+class Muparser(CMakePackage, Package):
     """C++ math expression parser library."""
 
     homepage = "https://beltoforion.de/en/muparser/"
@@ -22,19 +22,39 @@ class Muparser(Package):
     # https://github.com/beltoforion/muparser/pull/46
     patch("auto_ptr.patch", when="@2.2.5")
 
+    variant(
+        "samples",
+        default=True,
+        description="enable samples"
+    )
+    variant(
+        "openmp",
+        default=True,
+        description="enable OpenMP support",
+    )
+    variant(
+        "wide_char",
+        default=False,
+        description="enable wide character strings in place of ASCII",
+    )
+    variant(
+        "shared",
+        default=True,
+        description="enable shared libs"
+    )
+
     depends_on("cmake@3.1.0:", when="@2.2.6:", type="build")
 
-    # Cmake build since 2.2.6
-    @when("@2.2.6:")
-    def install(self, spec, prefix):
-        cmake_args = ["-DENABLE_SAMPLES=OFF", "-DENABLE_OPENMP=OFF", "-DBUILD_SHARED_LIBS=ON"]
+    # Non-CMake build system is not supported by windows
+    conflicts("platform=windows", when="@2.2.5")
 
-        cmake_args.extend(std_cmake_args)
-
-        with working_dir("spack-build", create=True):
-            cmake("..", *cmake_args)
-            make()
-            make("install")
+    def cmake_args(self):
+        return [
+            self.define_from_variant("ENABLE_SAMPLES", "samples"),
+            self.define_from_variant("ENABLE_OPENMP", "openmp"),
+            self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
+            self.define_from_variant("ENABLE_WIDE_CHAR", "wide_char"),
+        ]
 
     @when("@2.2.5")
     def install(self, spec, prefix):
