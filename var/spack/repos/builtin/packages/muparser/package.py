@@ -22,26 +22,12 @@ class Muparser(CMakePackage, Package):
     # https://github.com/beltoforion/muparser/pull/46
     patch("auto_ptr.patch", when="@2.2.5")
 
+    variant("samples", default=True, description="enable samples")
+    variant("openmp", default=True, description="enable OpenMP support")
     variant(
-        "samples",
-        default=True,
-        description="enable samples"
+        "wide_char", default=False, description="enable wide character strings in place of ASCII"
     )
-    variant(
-        "openmp",
-        default=True,
-        description="enable OpenMP support",
-    )
-    variant(
-        "wide_char",
-        default=False,
-        description="enable wide character strings in place of ASCII",
-    )
-    variant(
-        "shared",
-        default=True,
-        description="enable shared libs"
-    )
+    variant("shared", default=True, description="enable shared libs")
 
     depends_on("cmake@3.1.0:", when="@2.2.6:", type="build")
 
