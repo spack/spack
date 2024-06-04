@@ -23,7 +23,7 @@ class PyYour(PythonPackage):
     depends_on("python@3.8:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
 
-    depends_on("py-astropy@4.0:", type=("build", "run"))
+    depends_on("py-astropy@6.1.0:", type=("build", "run"))
     depends_on("py-matplotlib@3.2.1:", type=("build", "run"))
     depends_on("py-numpy@1.18.4:", type=("build", "run"))
     depends_on("py-h5py@2.10:", type=("build", "run"))
@@ -32,7 +32,3 @@ class PyYour(PythonPackage):
     depends_on("py-numba@0.48:", type=("build", "run"))
     depends_on("py-pandas@1.0.3:", type=("build", "run"))
     depends_on("py-rich@8:", type=("build", "run"))
-
-    def setup_run_environment(self, env):
-        env.prepend_path("PATH", self.prefix.bin)
-        env.prepend_path("PATH", self.spec["python"].prefix.bin)
