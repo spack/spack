@@ -267,6 +267,12 @@ class Legion(CMakePackage, ROCmPackage):
     variant(
         "redop_complex", default=False, description="Use reduction operators for complex types."
     )
+    requires("+redop_complex", when="+bindings")
+    variant(
+        "redop_half",
+        default=False,
+        description="Use reduction operators for half precision types.",
+    )
 
     variant(
         "max_dims",
@@ -415,9 +421,13 @@ class Legion(CMakePackage, ROCmPackage):
             # default is off.
             options.append("-DLegion_BUILD_BINDINGS=ON")
 
-        if spec.satisfies("+redop_complex") or spec.satisfies("+bindings"):
-            # default is off; required for bindings.
+        if spec.satisfies("+redop_complex"):
+            # default is off
             options.append("-DLegion_REDOP_COMPLEX=ON")
+
+        if spec.satisfies("+redop_half"):
+            # default is off
+            options.append("-DLegion_REDOP_HALF=ON")
 
         maxdims = int(spec.variants["max_dims"].value)
         # TODO: sanity check if maxdims < 0 || > 9???
