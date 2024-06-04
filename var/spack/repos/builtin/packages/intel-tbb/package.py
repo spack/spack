@@ -199,8 +199,9 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder, SetupEnvironment):
         options = [
             self.define("CMAKE_HWLOC_2_INCLUDE_PATH", spec["hwloc"].prefix.include),
             self.define("CMAKE_HWLOC_2_LIBRARY_PATH", spec["hwloc"].libs),
-            self.define("-DTBB_CPF", True),
+            self.define("TBB_CPF", True),
             self.define("TBB_STRICT", False),
+            self.define("TBB_TEST", False),
         ]
         if spec.variants["cxxstd"].value != "default":
             options.append(self.define("CMAKE_CXX_STANDARD", spec.variants["cxxstd"].value))
