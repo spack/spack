@@ -297,7 +297,7 @@ class MvapichPlus(AutotoolsPackage):
         # Until we can pass variants such as +fortran through virtual
         # dependencies depends_on('mpi'), require Fortran compiler to
         # avoid delayed build errors in dependents.
-        subprocess.run("find . -name CMakeCache.txt -exec rm {} \;", shell=True)
+        #subprocess.run("find . -name CMakeCache.txt -exec rm {} \;", shell=True)
         if (self.compiler.f77 is None) or (self.compiler.fc is None):
             raise InstallError("Mvapich2 requires both C and Fortran compilers!")
 
