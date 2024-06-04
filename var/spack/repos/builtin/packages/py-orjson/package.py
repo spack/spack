@@ -22,7 +22,9 @@ class PyOrjson(PythonPackage):
     with default_args(type="build"):
         with when("@3.8"):
             depends_on("rust@1.60:")
+            depends_on("python@3.7:")
             depends_on("py-maturin@0.13:0.14")
         with when("@03.9:"):
             depends_on("rust@1.72:")
+            depends_on("python@3.8:")
             depends_on("py-maturin@1")
