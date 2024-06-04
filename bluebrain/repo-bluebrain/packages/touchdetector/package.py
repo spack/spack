@@ -78,7 +78,7 @@ class Touchdetector(CMakePackage):
     conflicts("boost@1.79.0", when="@:5.6.1")
 
     depends_on("mvdtool@2.1.0:", when="@:5.5")
-    depends_on("highfive+mpi", when="@5.3.0:5.6.1")
+    depends_on("highfive+mpi", when="@5.3.0:")
     depends_on("boost@1.50:", when="@:5.6.1")
 
     patch("no-wall.patch", when="@5:5.4.999")
