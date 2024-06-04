@@ -30,6 +30,7 @@ class PyHumanize(PythonPackage):
     version("1.0.0", sha256="38ace9b66bcaeb7f8186b9dbf0b3448e00148e5b4fbaf726f96c789e52c3e741")
     version("0.5.1", sha256="a43f57115831ac7c70de098e6ac46ac13be00d69abbf60bdcac251344785bb19")
 
+    depends_on("python@3.8:", when="@4.6:")
     depends_on("py-hatch-vcs", when="@4.6:", type=("build", "run"))
     depends_on("py-hatchling", when="@4.6:", type=("build", "run"))
 
