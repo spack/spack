@@ -95,6 +95,9 @@ class Podio(CMakePackage):
 
     conflicts("+rntuple", when="@:0.16", msg="rntuple support requires at least podio@0.17")
 
+    # See https://github.com/AIDASoft/podio/pull/580 that landed after 0.99
+    extends("python", when="@0.99:")
+
     def cmake_args(self):
         args = [
             self.define_from_variant("ENABLE_SIO", "sio"),
@@ -105,7 +108,10 @@ class Podio(CMakePackage):
         return args
 
     def setup_run_environment(self, env):
-        env.prepend_path("PYTHONPATH", self.prefix.python)
+        if self.spec.satisfies("@:0.99"):
+            # After 0.99 podio installs its python bindings into a more standard place
+            env.prepend_path("PYTHONPATH", self.prefix.python)
+
         env.prepend_path("LD_LIBRARY_PATH", self.spec["podio"].libs.directories[0])
         if "+sio" in self.spec:
             # sio needs to be on LD_LIBRARY_PATH for ROOT to be able to
@@ -116,7 +122,9 @@ class Podio(CMakePackage):
         env.prepend_path("ROOT_INCLUDE_PATH", self.prefix.include)
 
     def setup_dependent_build_environment(self, env, dependent_spec):
-        env.prepend_path("PYTHONPATH", self.prefix.python)
+        if self.spec.satisfies("@:0.99"):
+            env.prepend_path("PYTHONPATH", self.prefix.python)
+
         env.prepend_path("LD_LIBRARY_PATH", self.spec["podio"].libs.directories[0])
         env.prepend_path("ROOT_INCLUDE_PATH", self.prefix.include)
         if self.spec.satisfies("+sio @0.17:"):
