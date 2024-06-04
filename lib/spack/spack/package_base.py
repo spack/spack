@@ -621,10 +621,6 @@ class PackageBase(WindowsRPath, PackageViewMixin, RedistributionMixin, metaclass
     #: By default do not run tests within package's install()
     run_tests = False
 
-    #: Keep -Werror flags, matches config:flags:keep_werror to override config
-    # NOTE: should be type Optional[Literal['all', 'specific', 'none']] in 3.8+
-    keep_werror: Optional[str] = None
-
     #: Most packages are NOT extendable. Set to True if you want extensions.
     extendable = False
 
@@ -929,6 +925,32 @@ class PackageBase(WindowsRPath, PackageViewMixin, RedistributionMixin, metaclass
         return os.path.join(
             self.global_license_dir, self.name, os.path.basename(self.license_files[0])
         )
+
+    # NOTE: return type should be Optional[Literal['all', 'specific', 'none']] in
+    # Python 3.8+, but we still support 3.6.
+    @property
+    def keep_werror(self) -> Optional[str]:
+        """Keep ``-Werror`` flags, matches ``config:flags:keep_werror`` to override config.
+
+        Valid return values are:
+        * ``"all"``: keep all ``-Werror`` flags.
+        * ``"specific"``: keep only ``-Werror=specific-warning`` flags.
+        * ``"none"``: filter out all ``-Werror*`` flags.
+        * ``None``: respect the user's configuration (``"none"`` by default).
+        """
+        if self.spec.satisfies("%nvhpc@:23.3") or self.spec.satisfies("%pgi"):
+            # Filtering works by replacing -Werror with -Wno-error, but older nvhpc and
+            # PGI do not understand -Wno-error, so we disable filtering.
+            return "all"
+
+        elif self.spec.satisfies("%nvhpc@23.4:"):
+            # newer nvhpc supports -Wno-error but can't disable specific warnings with
+            # -Wno-error=warning. Skip -Werror=warning, but still filter -Werror.
+            return "specific"
+
+        else:
+            # use -Werror disablement by default for other compilers
+            return None
 
     @property
     def version(self):
