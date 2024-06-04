@@ -931,8 +931,8 @@ class PackageBase(WindowsRPath, PackageViewMixin, RedistributionMixin, metaclass
         Valid return values are:
         * ``"all"``: keep all ``-Werror`` flags.
         * ``"specific"``: keep only ``-Werror=specific-warning`` flags.
-        * ``"none"``: filter out all ``-Werror*`` flags (this is the default).
-        * ``None``: respect the user's configuration.
+        * ``"none"``: filter out all ``-Werror*`` flags.
+        * ``None``: respect the user's configuration (``"none"`` by default).
         """
         if self.spec.satisfies("%nvhpc@:23.3") or self.spec.satisfies("%pgi"):
             # Filtering works by replacing -Werror with -Wno-error, but older nvhpc and
