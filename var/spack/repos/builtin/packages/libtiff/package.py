@@ -57,7 +57,7 @@ class Libtiff(CMakePackage, AutotoolsPackage):
     version("3.9.7", sha256="f5d64dd4ce61c55f5e9f6dc3920fbe5a41e02c2e607da7117a35eb5c320cef6a")
 
     # GUI
-    variant("opengl", default=False, description="build tiffgt viewer", when="@4.5:")
+    variant("opengl", default=False, description="use OpenGL (required for tiffgt viewer)", when="@4.5,4.7:")
 
     # Internal codecs
     variant("ccitt", default=True, description="support for CCITT Group 3 & 4 algorithms")
