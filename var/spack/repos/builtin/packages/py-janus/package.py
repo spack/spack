@@ -20,4 +20,5 @@ class PyJanus(PythonPackage):
     version("0.7.0", sha256="f10dcf5776e8d49cc30ec86d5eb7268eeec39abaa24fe0332ee8fb8fa3611845")
 
     depends_on("python@3.7:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
+    depends_on("py-setuptools@51:", type="build")
+    depends_on("py-wheel@0.36:", type="build")
