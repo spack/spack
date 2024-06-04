@@ -33,6 +33,9 @@ class IntelTbb(CMakePackage, MakefilePackage):
     license("Apache-2.0")
 
     version("master", branch="master")
+    version("2021.12.0", sha256="c7bb7aa69c254d91b8f0041a71c5bcc3936acb64408a1719aec0b2b7639dd84f")
+    version("2021.11.0", sha256="782ce0cab62df9ea125cdea253a50534862b563f1d85d4cda7ad4e77550ac363")
+    version("2021.10.0", sha256="487023a955e5a3cc6d3a0d5f89179f9b6c0ae7222613a7185b0227ba0c83700b")
     version("2021.9.0", sha256="1ce48f34dada7837f510735ff1172f6e2c261b09460e3bf773b49791d247d24e")
     version("2021.8.0", sha256="eee380323bb7ce864355ed9431f85c43955faaae9e9bce35c62b372d7ffd9f8b")
     version("2021.7.0", sha256="2cae2a80cda7d45dc7c072e4295c675fff5ad8316691f26f40539f7e7e54c0cc")
@@ -127,7 +130,7 @@ class IntelTbb(CMakePackage, MakefilePackage):
     patch("gcc_generic-pedantic-4.4.patch", level=1, when="@:2019.0")
 
     # Patch and conflicts for GCC 13 support (#1031).
-    patch("gcc_13-2021-v2.patch", when="@2021.1:")
+    patch("gcc_13-2021-v2.patch", when="@2021.1:2021.9")
     conflicts("%gcc@13", when="@:2021.3")
 
     # Patch cmakeConfig.cmake.in to find the libraries where we install them.
@@ -199,8 +202,9 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder, SetupEnvironment):
         options = [
             self.define("CMAKE_HWLOC_2_INCLUDE_PATH", spec["hwloc"].prefix.include),
             self.define("CMAKE_HWLOC_2_LIBRARY_PATH", spec["hwloc"].libs),
-            self.define("-DTBB_CPF", True),
+            self.define("TBB_CPF", True),
             self.define("TBB_STRICT", False),
+            self.define("TBB_TEST", False),
         ]
         if spec.variants["cxxstd"].value != "default":
             options.append(self.define("CMAKE_CXX_STANDARD", spec.variants["cxxstd"].value))
