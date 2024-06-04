@@ -38,10 +38,10 @@ from llnl.util.link_tree import MergeConflictError
 
 import spack.cmd
 import spack.environment as ev
+import spack.filesystem_view as fsv
 import spack.schema.projections
 import spack.store
 from spack.config import validate
-from spack.filesystem_view import YamlFilesystemView, view_func_parser
 from spack.util import spack_yaml as s_yaml
 
 description = "project packages to a compact naming scheme on the filesystem"
@@ -193,17 +193,13 @@ def view(parser, args):
         ordered_projections = {}
 
     # What method are we using for this view
-    if args.action in actions_link:
-        link_fn = view_func_parser(args.action)
-    else:
-        link_fn = view_func_parser("symlink")
-
-    view = YamlFilesystemView(
+    link_type = args.action if args.action in actions_link else "symlink"
+    view = fsv.YamlFilesystemView(
         path,
         spack.store.STORE.layout,
         projections=ordered_projections,
         ignore_conflicts=getattr(args, "ignore_conflicts", False),
-        link=link_fn,
+        link_type=link_type,
         verbose=args.verbose,
     )
 

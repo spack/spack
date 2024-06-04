@@ -31,6 +31,7 @@ import spack.config
 import spack.deptypes as dt
 import spack.error
 import spack.fetch_strategy
+import spack.filesystem_view as fsv
 import spack.hash_types as ht
 import spack.hooks
 import spack.main
@@ -53,7 +54,6 @@ import spack.util.spack_yaml as syaml
 import spack.util.url
 import spack.version
 from spack import traverse
-from spack.filesystem_view import SimpleFilesystemView, inverse_view_func_parser, view_func_parser
 from spack.installer import PackageInstaller
 from spack.schema.env import TOP_LEVEL_KEY
 from spack.spec import Spec
@@ -607,7 +607,7 @@ class ViewDescriptor:
         self.projections = projections
         self.select = select
         self.exclude = exclude
-        self.link_type = view_func_parser(link_type)
+        self.link_type = fsv.canonicalize_link_type(link_type)
         self.link = link
 
     def select_fn(self, spec):
@@ -641,7 +641,7 @@ class ViewDescriptor:
         if self.exclude:
             ret["exclude"] = self.exclude
         if self.link_type:
-            ret["link_type"] = inverse_view_func_parser(self.link_type)
+            ret["link_type"] = self.link_type
         if self.link != default_view_link:
             ret["link"] = self.link
         return ret
@@ -691,7 +691,7 @@ class ViewDescriptor:
         to exist on the filesystem."""
         return self._view(self.root).get_projection_for_spec(spec)
 
-    def view(self, new: Optional[str] = None) -> SimpleFilesystemView:
+    def view(self, new: Optional[str] = None) -> fsv.SimpleFilesystemView:
         """
         Returns a view object for the *underlying* view directory. This means that the
         self.root symlink is followed, and that the view has to exist on the filesystem
@@ -711,14 +711,14 @@ class ViewDescriptor:
             )
         return self._view(path)
 
-    def _view(self, root: str) -> SimpleFilesystemView:
+    def _view(self, root: str) -> fsv.SimpleFilesystemView:
         """Returns a view object for a given root dir."""
-        return SimpleFilesystemView(
+        return fsv.SimpleFilesystemView(
             root,
             spack.store.STORE.layout,
             ignore_conflicts=True,
             projections=self.projections,
-            link=self.link_type,
+            link_type=self.link_type,
         )
 
     def __contains__(self, spec):
