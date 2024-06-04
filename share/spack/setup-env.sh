@@ -102,7 +102,7 @@ _spack_shell_wrapper() {
                 if [ -d "$LOC" ] ; then
                     cd "$LOC"
                 else
-                    cd "$(dirname ${LOC})"
+                    return 1
                 fi
             fi
             return
