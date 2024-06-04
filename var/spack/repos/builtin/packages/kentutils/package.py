@@ -33,7 +33,7 @@ class Kentutils(MakefilePackage):
     with default_args(type=("build", "link", "run")):
         depends_on("libpng")
         depends_on("openssl")
-        depends_on("libuuid")
+        depends_on("uuid")
         depends_on("mysql-client")
         depends_on("zlib-api")
         depends_on("freetype")
