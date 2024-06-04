@@ -791,7 +791,11 @@ class TryCompilerError(spack.error.SpackError):
         file = file if file else "unknown"
         error_stmt = f"Unable to compile even a simple test file ({file})\
 with {compiler_name} for {lang} language"
-        long_error_stmt = "" if not err else "\n".join([error_stmt, err])
+        file_content = ""
+        if file:
+            with open(file, "r") as f:
+                file_content = f.read()
+        long_error_stmt = "" if not err else "\n".join([error_stmt, err, file_content])
         super().__init__(error_stmt, long_error_stmt)
 
 
