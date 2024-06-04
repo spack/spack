@@ -26,5 +26,5 @@ class PyUvloop(PythonPackage):
 
     with default_args(type="build"):
         depends_on("py-setuptools")
-        depends_on("py-steuptools@60:", when="@0.18:")
+        depends_on("py-setuptools@60:", when="@0.18:")
         depends_on("py-cython@0.29.36:0.29", when="@0.17:")  # May have been required for 0.16:
