@@ -130,6 +130,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage, CompilerPackage):
         description="Compilers and runtime libraries to build",
     )
     variant("binutils", default=False, description="Build via binutils")
+    variant("mold", default=False, description="Use mold as the linker by default", when="@12:")
     variant(
         "piclibs", default=False, description="Build PIC versions of libgfortran.a and libstdc++.a"
     )
@@ -194,6 +195,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage, CompilerPackage):
     depends_on(
         "binutils+gas+ld+plugins~libiberty", when="+binutils", type=("build", "link", "run")
     )
+    depends_on("mold", when="+mold")
     depends_on("zip", type="build", when="languages=java")
 
     # The server is sometimes a bit slow to respond
@@ -977,6 +979,14 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage, CompilerPackage):
             # programs search path
             if self.spec.satisfies("+binutils"):
                 f.write(f"*self_spec:\n+ -B{self.spec['binutils'].prefix.bin}\n\n")
+
+            # set -fuse-ld=mold as the default linker when +mold
+            if self.spec.satisfies("+mold"):
+                f.write(
+                    f"*self_spec:\n+ -B{self.spec['mold'].prefix.bin} "
+                    "%{!fuse-ld*:-fuse-ld=mold}\n\n"
+                )
+
         set_install_permissions(specs_file)
         tty.info(f"Wrote new spec file to {specs_file}")
 
