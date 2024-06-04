@@ -29,4 +29,3 @@ class PyJproperties(PythonPackage):
         depends_on("py-six@1.12:1", when="@2.1.0")
         depends_on("py-six@1.13:1", when="@2.1.1")
         depends_on("py-setuptools-scm@3.3:3", when="@2.1.1")
-    
