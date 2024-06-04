@@ -59,6 +59,7 @@ class Bison(AutotoolsPackage, GNUMirrorPackage):
 
     depends_on("gettext", when="+color")
     depends_on("m4@1.4.6:", type=("build", "run"))
+    depends_on("diffutils", type="build")
 
     patch("pgi.patch", when="@3.0.4")
     # The NVIDIA compilers do not currently support some GNU builtins.

@@ -21,6 +21,25 @@ from spack.package import *
 from spack.util.prefix import Prefix
 
 
+def make_pyvenv_cfg(python_spec: "spack.spec.Spec", venv_prefix: str) -> str:
+    """Make a pyvenv_cfg file for a given (real) python command and venv prefix."""
+    python_cmd = python_spec.command.path
+    lines = [
+        # directory containing python command
+        f"home = {os.path.dirname(python_cmd)}",
+        # venv should not allow site packages from the real python to be loaded
+        "include-system-site-packages = false",
+        # version of the python command
+        f"version = {python_spec.version}",
+        # the path to the python command
+        f"executable = {python_cmd}",
+        # command "used" to create the pyvenv.cfg
+        f"command = {python_cmd} -m venv --without-pip {venv_prefix}",
+    ]
+
+    return "\n".join(lines) + "\n"
+
+
 class Python(Package):
     """The Python programming language."""
 
@@ -45,10 +64,12 @@ class Python(Package):
     version("3.12.1", sha256="d01ec6a33bc10009b09c17da95cc2759af5a580a7316b3a446eb4190e13f97b2")
     version("3.12.0", sha256="51412956d24a1ef7c97f1cb5f70e185c13e3de1f50d131c0aac6338080687afb")
     version(
-        "3.11.7",
-        sha256="068c05f82262e57641bd93458dfa883128858f5f4997aad7a36fd25b13b29209",
+        "3.11.9",
+        sha256="e7de3240a8bc2b1e1ba5c81bf943f06861ff494b69fda990ce2722a504c6153d",
         preferred=True,
     )
+    version("3.11.8", sha256="d3019a613b9e8761d260d9ebe3bd4df63976de30464e5c0189566e1ae3f61889")
+    version("3.11.7", sha256="068c05f82262e57641bd93458dfa883128858f5f4997aad7a36fd25b13b29209")
     version("3.11.6", sha256="c049bf317e877cbf9fce8c3af902436774ecef5249a29d10984ca3a37f7f4736")
     version("3.11.5", sha256="a12a0a013a30b846c786c010f2c19dd36b7298d888f7c4bd1581d90ce18b5e58")
     version("3.11.4", sha256="85c37a265e5c9dd9f75b35f954e31fbfc10383162417285e30ad25cc073a0d63")
@@ -241,7 +262,6 @@ class Python(Package):
     variant("tix", default=False, description="Build Tix module", when="+tkinter")
     variant("crypt", default=True, description="Build crypt module", when="@:3.12 platform=linux")
     variant("crypt", default=True, description="Build crypt module", when="@:3.12 platform=darwin")
-    variant("crypt", default=True, description="Build crypt module", when="@:3.12 platform=cray")
 
     if sys.platform != "win32":
         depends_on("gmake", type="build")
@@ -1243,6 +1263,33 @@ print(json.dumps(config))
         module.python_include = join_path(dependent_spec.prefix, self.include)
         module.python_platlib = join_path(dependent_spec.prefix, self.platlib)
         module.python_purelib = join_path(dependent_spec.prefix, self.purelib)
+
+    def add_files_to_view(self, view, merge_map, skip_if_exists=True):
+        """Make the view a virtual environment if it isn't one already.
+
+        If `python-venv` is linked into the view, it will already be a virtual
+        environment. If not, then this is an older python that doesn't use the
+        python-venv support, or we may be using python packages that
+        use ``depends_on("python")`` but not ``extends("python")``.
+
+        We used to copy the python interpreter in, but we can get the same effect in a
+        simpler way by adding a ``pyvenv.cfg`` to the environment.
+
+        """
+        super().add_files_to_view(view, merge_map, skip_if_exists=skip_if_exists)
+
+        # location of python inside the view, where we will put the venv config
+        projection = view.get_projection_for_spec(self.spec)
+        pyvenv_cfg = os.path.join(projection, "pyvenv.cfg")
+        if os.path.lexists(pyvenv_cfg):
+            return
+
+        # don't put a pyvenv.cfg in a copy view
+        if view.link_type == "copy":
+            return
+
+        with open(pyvenv_cfg, "w") as cfg_file:
+            cfg_file.write(make_pyvenv_cfg(self.spec["python"], projection))
 
     def test_hello_world(self):
         """run simple hello world program"""

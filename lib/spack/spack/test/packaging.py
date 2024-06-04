@@ -16,7 +16,7 @@ from collections import OrderedDict
 import pytest
 
 from llnl.util import filesystem as fs
-from llnl.util.symlink import symlink
+from llnl.util.symlink import readlink, symlink
 
 import spack.binary_distribution as bindist
 import spack.cmd.buildcache as buildcache
@@ -181,12 +181,12 @@ def test_relocate_links(tmpdir):
         relocate_links(["to_self", "to_dependency", "to_system"], prefix_to_prefix)
 
         # These two are relocated
-        assert os.readlink("to_self") == str(tmpdir.join("new_prefix_a", "file"))
-        assert os.readlink("to_dependency") == str(tmpdir.join("new_prefix_b", "file"))
+        assert readlink("to_self") == str(tmpdir.join("new_prefix_a", "file"))
+        assert readlink("to_dependency") == str(tmpdir.join("new_prefix_b", "file"))
 
         # These two are not.
-        assert os.readlink("to_system") == system_path
-        assert os.readlink("to_self_but_relative") == "relative"
+        assert readlink("to_system") == system_path
+        assert readlink("to_self_but_relative") == "relative"
 
 
 def test_needs_relocation():
