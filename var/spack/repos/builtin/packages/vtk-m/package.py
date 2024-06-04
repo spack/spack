@@ -134,6 +134,10 @@ class VtkM(CMakePackage, CudaPackage, ROCmPackage):
     conflicts("+cuda~cuda_native~kokkos", msg="Cannot have +cuda without a cuda device")
     conflicts("+cuda~cuda_native", when="@:1.5", msg="Cannot have +cuda without a cuda device")
 
+    # CCCL/Thrust incompatibility
+    # See https://gitlab.kitware.com/vtk/vtk-m/-/issues/818
+    conflicts("^cuda@12.5:", when="@:2.1.0")
+
     conflicts("+cuda", when="cuda_arch=none", msg="vtk-m +cuda requires that cuda_arch be set")
 
     # Patch
