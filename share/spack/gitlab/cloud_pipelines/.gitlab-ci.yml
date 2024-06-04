@@ -1,4 +1,4 @@
-stages: [ "generate", "build", "publish" ]
+stages: [ "generate", "build" ]
 
 variables:
   SPACK_DISABLE_LOCAL_CONFIG: "1"
@@ -258,36 +258,6 @@ default:
 .build:
   extends: [ ".base-job" ]
   stage: build
-
-protected-publish:
-  # Copy binaries from stack-specific mirrors to a root mirror
-  stage: publish
-  only:
-  - /^develop$/
-  - /^releases\/v.*/
-  - /^v.*/
-  - /^develop-[\d]{4}-[\d]{2}-[\d]{2}$/
-  image: "ghcr.io/spack/python-aws-bash:0.0.1"
-  tags: ["spack", "public", "medium", "aws", "x86_64"]
-  retry:
-    max: 2
-    when: ["runner_system_failure", "stuck_or_timeout_failure"]
-  variables:
-    SPACK_COPY_BUILDCACHE: "${PROTECTED_MIRROR_PUSH_DOMAIN}/${CI_COMMIT_REF_NAME}"
-    SPACK_PIPELINE_TYPE: "spack_protected_branch"
-    KUBERNETES_CPU_REQUEST: 4000m
-    KUBERNETES_MEMORY_REQUEST: 16G
-  script:
-    - . "./share/spack/setup-env.sh"
-    - spack --version
-    - export COPY_SPECS_DIR=${CI_PROJECT_DIR}/jobs_scratch_dir/specs_to_copy
-    - spack buildcache sync --manifest-glob "${COPY_SPECS_DIR}/*.json"
-    - curl -fLsS https://spack.github.io/keys/spack-public-binary-key.pub -o /tmp/spack-public-binary-key.pub
-    - aws s3 cp /tmp/spack-public-binary-key.pub "${SPACK_COPY_BUILDCACHE}/build_cache/_pgp/spack-public-binary-key.pub"
-    - spack buildcache update-index --keys "${SPACK_COPY_BUILDCACHE}"
-  id_tokens:
-    GITLAB_OIDC_TOKEN:
-      aud: "protected_binary_mirror"
 
 ########################################
 # TEMPLATE FOR ADDING ANOTHER PIPELINE
