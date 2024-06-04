@@ -93,6 +93,7 @@ class Proj(CMakePackage, AutotoolsPackage):
         # to be compatible with this "new" interface
         # patch replaces the TIFF_LIBRARY variable (no longer used) with TIFF_LIBRARIES
         patch("proj-8.1-cmake-3.29-new-tiff-interface.patch", when="+tiff @8:9.1.0 ^cmake@3.19:")
+        patch("proj-7-cmake-3.29-new-tiff-interface.patch", when="+tiff @7 ^cmake@3.19:")
         patch("proj.cmakelists.5.0.patch", when="@5.0")
         patch("proj.cmakelists.5.1.patch", when="@5.1:5.2")
         conflicts("cmake@3.19:", when="@:7")
