@@ -95,7 +95,7 @@ class Podio(CMakePackage):
 
     conflicts("+rntuple", when="@:0.16", msg="rntuple support requires at least podio@0.17")
 
-    # See https://github.com/AIDASoft/podio/pull/580 that landed after 0.99
+    # See https://github.com/AIDASoft/podio/pull/599 that landed after 0.99
     extends("python", when="@0.99:")
 
     def cmake_args(self):
