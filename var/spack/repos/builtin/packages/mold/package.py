@@ -31,6 +31,7 @@ class Mold(CMakePackage):
     depends_on("blake3", when="@2.2:")
     depends_on("openssl", when="@:2.1")
     depends_on("zlib-api")
+    depends_on("zstd")
     depends_on("tbb")
 
     def cmake_args(self):
