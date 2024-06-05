@@ -91,6 +91,7 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
         values=("single", "double", "longdouble"),
         multi=False,
         description="Floating point precision",
+        when="@2.12.1:",
     )
 
     # Patch to add gptune hookup codes
