@@ -35,7 +35,7 @@ class FluxSecurity(AutotoolsPackage):
     depends_on("pkgconfig")
     depends_on("libsodium@1.0.14:")
     depends_on("jansson")
-    depends_on("libuuid")
+    depends_on("uuid")
     depends_on("munge")
     depends_on("libpam")
 

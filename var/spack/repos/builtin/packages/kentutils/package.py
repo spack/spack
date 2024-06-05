@@ -24,7 +24,7 @@ class Kentutils(MakefilePackage):
 
     depends_on("libpng")
     depends_on("openssl")
-    depends_on("libuuid")
+    depends_on("uuid")
     depends_on("mariadb")
     depends_on("zlib-api")
     depends_on("freetype")
