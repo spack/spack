@@ -65,10 +65,10 @@ CALLBACKS = {}
 #: Map a group of checks to the list of related audit tags
 GROUPS = collections.defaultdict(list)
 
-# TODO: turn this on (or remove the strict option entirely and make
-# prevalidate_variant_value always strict) when we're ready to correct packages with
-# invalid variant specifications, e.g. @9:+foo when foo only exists for pkg@:8, or
-# ~cuda~cudnn, where cudnn doesn't exist when ~cuda.
+# TODO: remove the strict option entirely and make prevalidate_variant_value
+# always strict) when we're ready to correct packages with invalid variant
+# specifications, e.g. @9:+foo when foo only exists for pkg@:8, or ~cuda~cudnn,
+# where cudnn doesn't exist when ~cuda.
 strict_variants = False
 
 
