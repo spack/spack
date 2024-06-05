@@ -124,18 +124,20 @@ class Provenance(enum.IntEnum):
 
 
 @contextmanager
-def spec_with_name(*spec_name_tuples: Tuple[Optional["spack.spec.Spec"], Optional[str]]):
-    """Context manager to temporarily set names on specs"""
-    old_names = [spec.name if spec else None for spec, _ in spec_name_tuples]
-    for spec, name in spec_name_tuples:
-        if spec:
-            spec.name = name
+def named_spec(
+    spec: Optional["spack.spec.Spec"], name: Optional[str]
+) -> Iterator[Optional["spack.spec.Spec"]]:
+    """Context manager to temporarily set the name of a spec"""
+    if spec is None or name is None:
+        yield spec
+        return
+
+    old_name = spec.name
+    spec.name = name
     try:
-        yield
+        yield spec
     finally:
-        for (spec, _), old_name in zip(spec_name_tuples, old_names):
-            if spec:
-                spec.name = old_name
+        spec.name = old_name
 
 
 class RequirementKind(enum.Enum):
@@ -1563,7 +1565,7 @@ class SpackSolverSetup:
             if not imposed_name:
                 raise ValueError(f"Must provide a name for imposed constraint: '{imposed_spec}'")
 
-        with spec_with_name((required_spec, required_name), (imposed_spec, imposed_name)):
+        with named_spec(required_spec, required_name), named_spec(imposed_spec, imposed_name):
             # Check if we can emit the requirements before updating the condition ID counter.
             # In this way, if a condition can't be emitted but the exception is handled in the
             # caller, we won't emit partial facts.
