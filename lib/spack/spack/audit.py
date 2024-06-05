@@ -977,9 +977,9 @@ def _ensure_variant_defaults_are_parsable(pkgs, error_cls):
 
     def check_variant(pkg_name, variant):
         default_is_parsable = (
-            # Permitting a default that is an instance on 'int' permits
-            # to have foo=false or foo=0. Other falsish values are
-            # not allowed, since they can't be parsed from cli ('foo=')
+            # bool is a subclass of int in python. Permitting a default that is an instance
+            # of 'int' means both foo=false and foo=0 are accepted. Other falsish values are
+            # not allowed, since they can't be parsed from CLI ('foo=')
             isinstance(variant.default, int)
             or variant.default
         )
