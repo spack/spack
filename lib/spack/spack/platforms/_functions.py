@@ -3,11 +3,13 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import contextlib
+from typing import Sequence, Type
 
 import llnl.util.lang
 
 import spack.util.environment
 
+from ._platform import Platform
 from .darwin import Darwin
 from .freebsd import FreeBSD
 from .linux import Linux
@@ -15,7 +17,7 @@ from .test import Test
 from .windows import Windows
 
 #: List of all the platform classes known to Spack
-platforms = [Darwin, Linux, Windows, FreeBSD, Test]
+platforms: Sequence[Type[Platform]] = [Darwin, Linux, Windows, FreeBSD, Test]
 
 
 @llnl.util.lang.memoized
