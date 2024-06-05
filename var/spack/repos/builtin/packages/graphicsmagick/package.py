@@ -20,6 +20,7 @@ class Graphicsmagick(AutotoolsPackage):
 
     license("MIT")
 
+    version("1.3.43", sha256="2b88580732cd7e409d9e22c6116238bef4ae06fcda11451bf33d259f9cbf399f")
     version("1.3.34", sha256="df009d5173ed0d6a0c6457234256c5a8aeaace782afa1cbab015d5a12bd4f7a4")
     version("1.3.33", sha256="130cb330a633580b5124eba5c125bbcbc484298423a97b9bed37ccd50d6dc778")
     version("1.3.32", sha256="b842a5a0d6c84fd6c5f161b5cd8e02bbd210b0c0b6728dd762b7c53062ba94e1")

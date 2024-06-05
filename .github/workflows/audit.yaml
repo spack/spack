@@ -28,7 +28,7 @@ jobs:
       run:
         shell: ${{ matrix.system.shell }}
     steps:
-    - uses: actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633
+    - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29
     - uses: actions/setup-python@82c7e631bb3cdc910f68e0081d67478d79c6982d
       with:
         python-version: ${{inputs.python_version}}
@@ -61,7 +61,7 @@ jobs:
           ./share/spack/qa/validate_last_exit.ps1
           spack -d audit externals
           ./share/spack/qa/validate_last_exit.ps1
-    - uses: codecov/codecov-action@84508663e988701840491b86de86b666e8a86bed
+    - uses: codecov/codecov-action@125fc84a9a348dbcf27191600683ec096ec9021c
       if: ${{ inputs.with_coverage == 'true' }}
       with:
         flags: unittests,audits

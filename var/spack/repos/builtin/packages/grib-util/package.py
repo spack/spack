@@ -18,6 +18,8 @@ class GribUtil(CMakePackage):
     maintainers("AlexanderRichert-NOAA", "Hang-Lei-NOAA", "edwardhartnett")
 
     version("develop", branch="develop")
+    version("1.4.0", tag="v1.4.0", commit="eeacc9ec93dfe6379f576191883c84a4a1202cc8")
+    version("1.3.0", commit="9d3c68a")
     version("1.2.4", sha256="f021d6df3186890b0b1781616dabf953581d71db63e7c2913360336985ccaec7")
     version("1.2.3", sha256="b17b08e12360bb8ad01298e615f1b4198e304b0443b6db35fe990a817e648ad5")
 
@@ -31,6 +33,7 @@ class GribUtil(CMakePackage):
     requires("^w3emc precision=4,d", when="^w3emc@2.10:")
     depends_on("w3nco", when="@:1.2.3")
     depends_on("g2")
+    depends_on("g2@3.4.9:", when="@1.4:")
     depends_on("g2c@1.8: +utils", when="+tests")
     depends_on("bacio")
     depends_on("ip")

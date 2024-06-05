@@ -37,10 +37,10 @@ class Lftp(AutotoolsPackage):
             "--with-zlib={0}".format(self.spec["zlib-api"].prefix),
             "--disable-dependency-tracking",
         ]
-        if self.spec["iconv"].name == "libc":
-            args.append("--without-libiconv-prefix")
+        if self.spec["iconv"].name == "libiconv":
+            args.append(f"--with-libiconv-prefix={self.spec['iconv'].prefix}")
         elif not is_system_path(self.spec["iconv"].prefix):
-            args.append("--with-libiconv-prefix={0}".format(self.spec["iconv"].prefix))
+            args.append("--without-libiconv-prefix")
         if "intl" not in self.spec["gettext"].libs.names:
             args.append("--without-libintl-prefix")
         elif not is_system_path(self.spec["gettext"].prefix):

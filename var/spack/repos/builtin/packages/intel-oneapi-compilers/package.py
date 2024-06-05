@@ -222,12 +222,21 @@ versions = [
 
 
 @IntelOneApiPackage.update_description
-class IntelOneapiCompilers(IntelOneApiPackage):
+class IntelOneapiCompilers(IntelOneApiPackage, CompilerPackage):
     """Intel oneAPI Compilers. Includes: icc, icpc, ifort, icx, icpx, and ifx."""
 
     maintainers("rscohn2")
 
     homepage = "https://software.intel.com/content/www/us/en/develop/tools/oneapi.html"
+
+    compiler_languages = ["c", "cxx", "fortran"]
+    c_names = ["icx"]
+    cxx_names = ["icpx"]
+    fortran_names = ["ifx"]
+    compiler_version_argument = "--version"
+    compiler_version_regex = (
+        r"(?:(?:oneAPI DPC\+\+(?:\/C\+\+)? Compiler)|(?:\(IFORT\))|(?:\(IFX\))) (\S+)"
+    )
 
     # See https://github.com/spack/spack/issues/39252
     depends_on("patchelf@:0.17", type="build")

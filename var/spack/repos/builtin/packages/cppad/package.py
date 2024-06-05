@@ -14,9 +14,15 @@ class Cppad(CMakePackage):
     git = "https://github.com/coin-or/CppAD.git"
 
     version("develop", branch="master")
+    version(
+        "20180000.0", sha256="1c355713e720fc5226ff3d6db2909922d46cd7ee0d36ee7985882f86905f655a"
+    )
     version("20170114", sha256="fa3980a882be2a668a7522146273a1b4f1d8dabe66ad4aafa8964c8c1fd6f957")
 
     def cmake_args(self):
         # This package does not obey CMAKE_INSTALL_PREFIX
-        args = ["-Dcppad_prefix=%s" % (self.prefix), "-Dcmake_install_docdir=share/cppad/doc"]
+        args = [
+            self.define("cppad_prefix", self.prefix),
+            self.define("cmake_install_docdir", "share/cppad/doc"),
+        ]
         return args

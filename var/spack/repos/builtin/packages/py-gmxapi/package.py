@@ -28,7 +28,7 @@ class PyGmxapi(PythonPackage):
 
     depends_on("gromacs@2022.1:~mdrun_only+shared")
     depends_on("mpi")
-    depends_on("py-cmake@3.16:", type="build")
+    depends_on("cmake@3.16:", type="build")
     depends_on("py-importlib-metadata", type="test", when="^python@:3.7")
     depends_on("py-mpi4py", type=("build", "run"))
     depends_on("py-networkx@2.0:", type=("build", "run"))
@@ -49,5 +49,4 @@ class PyGmxapi(PythonPackage):
     def install_test(self):
         with working_dir("spack-test", create=True):
             # test include helper points to right location
-            python = self.spec["python"].command
             python("-m", "pytest", "-x", os.path.join(self.build_directory, "test"))
