@@ -1039,9 +1039,7 @@ class Openmpi(AutotoolsPackage, CudaPackage):
             config_args.extend(self.with_or_without("schedulers"))
 
         if spec.satisfies("schedulers=lsf"):
-            config_args.append(
-                "--with-lsf-libdir={0}".format(spec["lsf"].libs.directories[0])
-            )
+            config_args.append("--with-lsf-libdir={0}".format(spec["lsf"].libs.directories[0]))
 
         config_args.extend(self.enable_or_disable("memchecker"))
         if spec.satisfies("+memchecker"):
