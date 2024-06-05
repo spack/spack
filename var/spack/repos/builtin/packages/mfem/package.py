@@ -536,13 +536,9 @@ class Mfem(Package, CudaPackage, ROCmPackage):
         xcompiler = "" if "~cuda" in spec else "-Xcompiler="
 
         # We need to add rpaths explicitly to allow proper export of link flags
-        # from within MFEM.
-
-        def ld_flags_from_library_list(libs_list):
-            return self.ld_flags_from_library_list(libs_list)
-
-        def ld_flags_from_dirs(pkg_dirs_list, pkg_libs_list):
-            return self.ld_flags_from_dirs(pkg_dirs_list, pkg_libs_list)
+        # from within MFEM. We use the following two functions to do that.
+        ld_flags_from_library_list = self.ld_flags_from_library_list
+        ld_flags_from_dirs = self.ld_flags_from_dirs
 
         def find_optional_library(name, prefix):
             for shared in [True, False]:
