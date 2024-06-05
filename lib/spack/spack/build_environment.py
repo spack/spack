@@ -741,7 +741,7 @@ def get_rpaths(pkg):
     # module show output.
     if pkg.compiler.modules and len(pkg.compiler.modules) > 1:
         mod_rpath = path_from_modules([pkg.compiler.modules[1]])
-        if mod_rpath is not None:
+        if mod_rpath:
             rpaths.append(mod_rpath)
     return list(dedupe(filter_system_paths(rpaths)))
 
