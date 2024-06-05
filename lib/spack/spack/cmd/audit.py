@@ -69,10 +69,10 @@ def configs(parser, args):
 
 
 def packages(parser, args):
-    spack.audit.strict_variants = args.strict_variants
-    pkgs = args.name or spack.repo.PATH.all_package_names()
-    reports = spack.audit.run_group(args.subcommand, pkgs=pkgs)
-    _process_reports(reports)
+    with spack.audit.strict_variants():
+        pkgs = args.name or spack.repo.PATH.all_package_names()
+        reports = spack.audit.run_group(args.subcommand, pkgs=pkgs)
+        _process_reports(reports)
 
 
 def packages_https(parser, args):
