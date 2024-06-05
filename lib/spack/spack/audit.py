@@ -975,40 +975,37 @@ def _issues_in_depends_on_directive(pkgs, error_cls):
 def _ensure_variant_defaults_are_parsable(pkgs, error_cls):
     """Ensures that variant defaults are present and parsable from cli"""
 
-    def check_variant(pkg_name, variant):
-        default_is_parsable = (
-            # bool is a subclass of int in python. Permitting a default that is an instance
-            # of 'int' means both foo=false and foo=0 are accepted. Other falsish values are
-            # not allowed, since they can't be parsed from CLI ('foo=')
-            isinstance(variant.default, int)
-            or variant.default
-        )
+    def check_variant(pkg_cls, variant, vname):
+        # bool is a subclass of int in python. Permitting a default that is an instance
+        # of 'int' means both foo=false and foo=0 are accepted. Other falsish values are
+        # not allowed, since they can't be parsed from CLI ('foo=')
+        default_is_parsable = isinstance(variant.default, int) or variant.default
+
         if not default_is_parsable:
-            msg = f"Variant '{vname}' of package '{pkg_name}' has an unparsable default value"
-            errors.append(error_cls(msg, []))
-            return
+            msg = f"Variant '{vname}' of package '{pkg_cls.name}' has an unparsable default value"
+            return [error_cls(msg, [])]
 
         try:
             vspec = variant.make_default()
         except spack.variant.MultipleValuesInExclusiveVariantError:
-            msg = f"Can't create default value for variant '{vname}' in package '{pkg_name}'"
-            errors.append(error_cls(msg, []))
-            return
+            msg = f"Can't create default value for variant '{vname}' in package '{pkg_cls.name}'"
+            return [error_cls(msg, [])]
 
         try:
             variant.validate_or_raise(vspec, pkg_cls=pkg_cls)
         except spack.variant.InvalidVariantValueError:
             msg = "Default value of variant '{vname}' in package '{pkg.name}' is invalid"
             question = "Is it among the allowed values?"
-            errors.append(error_cls(msg, [question]))
+            return [error_cls(msg, [question])]
+
+        return []
 
     errors = []
     for pkg_name in pkgs:
         pkg_cls = spack.repo.PATH.get_pkg_class(pkg_name)
         for vname in pkg_cls.variant_names():
             for _, variant_def in pkg_cls.variant_definitions(vname):
-                check_variant(pkg_cls, variant_def)
-
+                errors.extend(check_variant(pkg_cls, variant_def, vname))
     return errors
 
 
