@@ -233,23 +233,24 @@ class SuiteSparse(Package):
             # Without CMAKE_LIBRARY_PATH defined, the CMake file in the
             # Mongoose directory finds libsuitesparseconfig.so in system
             # directories like /usr/lib.
-            make_args += [
-                f"CMAKE_OPTIONS=-DCMAKE_INSTALL_PREFIX={prefix}"
-                + f" -DCMAKE_LIBRARY_PATH={prefix.lib}"
-                + f" -DBLAS_ROOT={spec['blas'].prefix}"
-                + f" -DLAPACK_ROOT={spec['lapack'].prefix}"
+            cmake_args = [
+                f"-DCMAKE_INSTALL_PREFIX={prefix}",
+                f"-DCMAKE_LIBRARY_PATH={prefix.lib}",
+                f"-DBLAS_ROOT={spec['blas'].prefix}",
+                f"-DLAPACK_ROOT={spec['lapack'].prefix}",
                 # *_LIBRARIES is critical to pick up static
                 # libraries (if intended) and also to avoid
                 # unintentional system blas/lapack packages
-                + f' -DBLAS_LIBRARIES="{";".join(spec["blas"].libs)}"'
-                + f' -DLAPACK_LIBRARIES="{";".join(spec["lapack"].libs)}"'
-                + " -DENABLE_CUDA=%s" % ("ON" if "+cuda" in spec else "OFF")
-                + " -DSUITESPARSE_USE_OPENMP=%s" % ("ON" if "+openmp" in spec else "OFF")
-                # Older versions use the negative flag NOPENMP: "OFF" means use
-                # OpenMP:
-                + " -DNOPENMP=%s" % ("OFF" if "+openmp" in spec else "ON")
-                + " -DCMAKE_VERBOSE_MAKEFILE=ON"
+                f'-DBLAS_LIBRARIES="{";".join(spec["blas"].libs)}"',
+                f'-DLAPACK_LIBRARIES="{";".join(spec["lapack"].libs)}"',
+                f"-DENABLE_CUDA={'ON' if '+cuda' in spec else 'OFF'}",
+                "-DCMAKE_VERBOSE_MAKEFILE=ON",
             ]
+            if spec.satisfies("@:7.3"):
+                cmake_args += [f"-DNOPENMP={'OFF' if '+openmp' in spec else 'ON'}"]
+            else:
+                cmake_args += [f"-DSUITESPARSE_USE_OPENMP={'ON' if '+openmp' in spec else 'OFF'}"]
+            make_args += [f"CMAKE_OPTIONS={' '.join(cmake_args)}"]
 
         if spec.satisfies("%gcc platform=darwin"):
             make_args += ["LDLIBS=-lm"]
