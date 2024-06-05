@@ -444,6 +444,12 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
 
     depends_on("llvm@16", when="llvm=spack ^cuda@12:")
 
+    # This is because certain systems have binutils installed as a system package
+    # but do not include the headers. Spack incorrectly supplies those external
+    # packages as proper dependencies for LLVM, but then LLVM will fail to build
+    # with an error about missing plugin-api.h
+    depends_on("binutils+gold+ld+plugins+headers", when="llvm=bundled")
+
     depends_on("m4")
 
     depends_on("gmp", when="gmp=spack", type=("build", "link", "run"))
