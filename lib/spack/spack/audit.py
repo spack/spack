@@ -1078,11 +1078,10 @@ def _version_constraints_are_satisfiable_by_some_version_in_repo(pkgs, error_cls
 def _analyze_variants_in_directive(pkg, constraint, directive, error_cls):
     errors = []
     variant_names = pkg.variant_names()
+    summary = f"{pkg.name}: wrong variant in '{directive}' directive"
+    filename = spack.repo.PATH.filename_for_package_name(pkg.name)
 
     for name, v in constraint.variants.items():
-        summary = f"{pkg.name}: wrong variant in '{directive}' directive"
-        filename = spack.repo.PATH.filename_for_package_name(pkg.name)
-
         if name not in variant_names:
             msg = f"variant {name} does not exist in {pkg.name}"
             errors.append(error_cls(summary=summary, details=[msg, f"in {filename}"]))
