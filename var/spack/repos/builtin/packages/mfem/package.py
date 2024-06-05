@@ -6,7 +6,6 @@
 import os
 import shutil
 import sys
-from platform import machine
 
 from spack.package import *
 
@@ -986,7 +985,14 @@ class Mfem(Package, CudaPackage, ROCmPackage):
                 hip_headers += spec["hipblas"].headers
             if "%cce" in spec:
                 # We assume the proper Cray CCE module (cce) is loaded:
-                craylibs_path = env["CRAYLIBS_" + machine().upper()]
+                proc = str(spec.target.family)
+                craylibs_var = "CRAYLIBS_" + proc.upper()
+                craylibs_path = env.get(craylibs_var, None)
+                if not craylibs_path:
+                    raise InstallError(
+                        f"The environment variable {craylibs_var} is not defined.\n"
+                        "\tMake sure the 'cce' module is in the compiler spec."
+                    )
                 craylibs = [
                     "libmodules",
                     "libfi",
@@ -997,7 +1003,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
                     "libpgas-shmem",
                 ]
                 hip_libs += find_libraries(craylibs, craylibs_path)
-                craylibs_path2 = join_path(craylibs_path, "../../../cce-clang", machine(), "lib")
+                craylibs_path2 = join_path(craylibs_path, "../../../cce-clang", proc, "lib")
                 hip_libs += find_libraries("libunwind", craylibs_path2)
 
             if hip_headers:
