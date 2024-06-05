@@ -880,9 +880,7 @@ class PyclingoDriver:
 
         if result.satisfiable:
             # get the best model
-            builder = SpecBuilder(
-                specs, setup.variant_defs_by_id, hash_lookup=setup.reusable_and_possible
-            )
+            builder = SpecBuilder(specs, hash_lookup=setup.reusable_and_possible)
             min_cost, best_model = min(models)
 
             # first check for errors
@@ -1133,7 +1131,6 @@ class SpackSolverSetup:
         self.default_targets: List = []
         self.compiler_version_constraints: Set = set()
         self.post_facts: List = []
-        self.variant_defs_by_id: Dict[int, spack.variant.Variant] = {}
         self.variant_ids_by_def_id: Dict[int, int] = {}
 
         self.reusable_and_possible: ConcreteSpecsByHash = ConcreteSpecsByHash()
@@ -1388,9 +1385,6 @@ class SpackSolverSetup:
         # higher variant id definitions take precedence when variants intersect.
         vid = next(self._id_counter)
 
-        # used to find the variant definition from an id selected by the solver
-        self.variant_defs_by_id[vid] = variant_def
-
         # used to find a variant id from its variant definition (for variant values on specs)
         self.variant_ids_by_def_id[id(variant_def)] = vid
 
@@ -1403,17 +1397,16 @@ class SpackSolverSetup:
             cond_id = self.condition(when, required_name=pkg.name, msg=msg)
             pkg_fact(fn.variant_condition(name, vid, cond_id))
 
+        # record type so we can construct the variant when we read it back in
+        pkg_fact(fn.variant_type(vid, variant_def.variant_type))
+
         if variant_def.sticky:
             pkg_fact(fn.variant_sticky(vid))
 
         # define defaults for this variant definition
-        if variant_def.multi:
-            defaults = variant_def.make_default().value
-            for val in sorted(defaults):
-                pkg_fact(fn.variant_default_value_from_package_py(vid, val))
-        else:
-            pkg_fact(fn.variant_single_value(vid))
-            pkg_fact(fn.variant_default_value_from_package_py(vid, variant_def.default))
+        defaults = variant_def.make_default().value if variant_def.multi else [variant_def.default]
+        for val in sorted(defaults):
+            pkg_fact(fn.variant_default_value_from_package_py(vid, val))
 
         # define possible values for this variant definition
         values = variant_def.values
@@ -1477,19 +1470,10 @@ class SpackSolverSetup:
     def define_auto_variant(self, name: str, multi: bool):
         self.gen.h3(f"Special variant: {name}")
         vid = next(self._id_counter)
-        self.variant_defs_by_id[vid] = spack.variant.Variant(
-            name, None, f"special {name} variant", values=str, multi=multi
-        )
         self.gen.fact(fn.auto_variant(name, vid))
-        if not multi:
-            self.gen.fact(fn.auto_variant_single_value(vid))
+        self.gen.fact(fn.auto_variant_type(vid, "multi" if multi else "single"))
 
     def variant_rules(self, pkg: "Type[spack.package_base.PackageBase]"):
-        # special variants
-        self.define_auto_variant("dev_path", multi=False)
-        self.define_auto_variant("patches", multi=True)
-
-        # all other variants
         for name in pkg.variant_names():
             self.gen.h3(f"Variant {name} in package {pkg.name}")
             for when, variant_def in pkg.variant_definitions(name):
@@ -2696,6 +2680,10 @@ class SpackSolverSetup:
             self.gen.h2("Package preferences: %s" % pkg)
             self.preferred_variants(pkg)
 
+        self.gen.h1("Special variants")
+        self.define_auto_variant("dev_path", multi=False)
+        self.define_auto_variant("patches", multi=True)
+
         self.gen.h1("Develop specs")
         # Inject dev_path from environment
         for ds in dev_specs:
@@ -3502,11 +3490,7 @@ class SpecBuilder:
         return NodeArgument(id="0", pkg=pkg)
 
     def __init__(
-        self,
-        specs: List[spack.spec.Spec],
-        variant_defs_by_id: Dict[int, spack.variant.Variant],
-        *,
-        hash_lookup: Optional[ConcreteSpecsByHash] = None,
+        self, specs: List[spack.spec.Spec], *, hash_lookup: Optional[ConcreteSpecsByHash] = None
     ):
         self._specs: Dict[NodeArgument, spack.spec.Spec] = {}
         self._result = None
@@ -3514,10 +3498,6 @@ class SpecBuilder:
         self._flag_sources: Dict[Tuple[NodeArgument, str], Set[str]] = collections.defaultdict(
             lambda: set()
         )
-
-        # we need variant definitions by id in order to reconstruct the variant
-        # definitions selected by the solver (they solver picks an ID)
-        self.variant_defs_by_id = variant_defs_by_id
 
         # Pass in as arguments reusable specs and plug them in
         # from this dictionary during reconstruction
@@ -3552,12 +3532,11 @@ class SpecBuilder:
     def node_target(self, node, target):
         self._arch(node).target = target
 
-    def variant_value_id(self, node, name, value, variant_id):
+    def variant_selected(self, node, name, value, variant_type, variant_id):
         spec = self._specs[node]
         variant = spec.variants.get(name)
         if not variant:
-            variant_def = self.variant_defs_by_id[int(variant_id)]
-            spec.variants[name] = variant_def.make_variant(value)
+            spec.variants[name] = spack.variant.make_variant(variant_type, name, value)
         else:
             variant.append(value)
 

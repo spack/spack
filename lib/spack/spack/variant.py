@@ -54,6 +54,26 @@ class ValidValue:
 always_true = lambda x: True
 
 
+def variant_class_for_type(variant_type: str) -> type:
+    """Associates string representation of variant type with classes."""
+    variant_class = {
+        "multi": MultiValuedVariant,
+        "bool": BoolValuedVariant,
+        "single": SingleValuedVariant,
+    }.get(variant_type)
+
+    if variant_class is None:
+        raise ValueError(f"Invalid variant type: {variant_type}")
+
+    return variant_class
+
+
+def make_variant(variant_type: str, name: str, value: Any) -> "AbstractVariant":
+    """Make concrete variant instance given a type, name, and value."""
+    cls = variant_class_for_type(variant_type)
+    return cls(name, value)
+
+
 class Variant:
     """Represents a variant in a package, as declared in the
     variant directive.
@@ -201,16 +221,17 @@ class Variant:
             MultiValuedVariant or SingleValuedVariant or BoolValuedVariant:
                 instance of the proper variant
         """
-        return self.variant_cls(self.name, value)
+        return make_variant(self.variant_type, self.name, value)
 
     @property
-    def variant_cls(self):
-        """Proper variant class to be used for this configuration."""
+    def variant_type(self) -> str:
+        """String representation of the type of this variant (single/multi/bool)"""
         if self.multi:
-            return MultiValuedVariant
+            return "multi"
         elif self.values == (True, False):
-            return BoolValuedVariant
-        return SingleValuedVariant
+            return "bool"
+        else:
+            return "single"
 
     def __eq__(self, other):
         return (

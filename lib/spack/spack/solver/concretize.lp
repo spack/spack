@@ -891,30 +891,32 @@ variant_value_from_disjoint_sets(node(NodeID, Package), VariantName, Value1, Set
 % -- Associate definition's arity with the node
 variant_single_value(node(NodeID, Package), VariantName) :-
   node_has_variant(node(NodeID, Package), VariantName, VariantID),
-  pkg_fact(Package, variant_single_value(VariantID)).
+  not pkg_fact(Package, variant_type(VariantID, "multi")).
 
 % C: Determining variant values on each node
 
 % if a variant is sticky, but not set, its value is the default value
-attr("variant_value_id", node(ID, Package), Variant, Value, VariantID) :-
+attr("variant_selected", node(ID, Package), Variant, Value, VariantType, VariantID) :-
   node_has_variant(node(ID, Package), Variant, VariantID),
   variant_default_value(node(ID, Package), Variant, Value),
   pkg_fact(Package, variant_sticky(VariantID)),
+  pkg_fact(Package, variant_type(VariantID, VariantType)),
   not attr("variant_set", node(ID, Package), Variant),
   build(node(ID, Package)).
 
 % we can choose variant values from all the possible values for the node
 {
-  attr("variant_value_id", PackageNode, Variant, Value, VariantID)
+  attr("variant_selected", PackageNode, Variant, Value, VariantType, VariantID)
   : variant_possible_value(PackageNode, Variant, Value)
 } :-
-  attr("node", PackageNode),
-  node_has_variant(PackageNode, Variant, VariantID),
-  build(PackageNode).
+  attr("node", node(ID, Package)),
+  node_has_variant(node(ID, Package), Variant, VariantID),
+  pkg_fact(Package, variant_type(VariantID, VariantType)),
+  build(node(ID, Package)).
 
-% VariantID is only needed for reconstruction on the python side, so we can ignore it here
+% variant_selected is only needed for reconstruction on the python side, so we can ignore it here
 attr("variant_value", PackageNode, Variant, Value) :-
-  attr("variant_value_id", PackageNode, Variant, Value, VariantID).
+  attr("variant_selected", PackageNode, Variant, Value, VariantType, VariantID).
 
 % a variant cannot be set if it is not a variant on the package
 error(100, "Cannot set variant '{0}' for package '{1}' because the variant condition cannot be satisfied for the given spec", Variant, Package)
@@ -1017,8 +1019,9 @@ node_has_variant(PackageNode, Variant, VariantID)
   :- attr("variant_set", PackageNode, Variant, _), auto_variant(Variant, VariantID).
 
 variant_single_value(PackageNode, Variant)
-  :- auto_variant_single_value(VariantID),
-     node_has_variant(PackageNode, Variant, VariantID), auto_variant(Variant, VariantID).
+  :- node_has_variant(PackageNode, Variant, VariantID),
+     auto_variant(Variant, VariantID),
+     not auto_variant_type(VariantID, "multi").
 
 % suppress warnings about this atom being unset.  It's only set if some
 % spec or some package sets it, and without this, clingo will give
@@ -1055,7 +1058,7 @@ propagate(ChildNode, PropagatedAttribute, edge_types(DepType1, DepType2)) :-
 %----
 
 % If a variant is propagated, and can be accepted, set its value
-attr("variant_value_id", node(ID, Package), Variant, Value, VariantID) :-
+attr("variant_selected", node(ID, Package), Variant, Value, VariantID) :-
   propagate(node(ID, Package), variant_value(Variant, Value)),
   node_has_variant(node(ID, Package), Variant, VariantID),
   pkg_fact(Package, variant_possible_value(Variant, Value)),
@@ -1068,7 +1071,7 @@ variant_is_propagated(PackageNode, Variant) :-
   not attr("variant_set", PackageNode, Variant).
 
 :- variant_is_propagated(PackageNode, Variant),
-   attr("variant_value", PackageNode, Variant, Value),
+   attr("variant_selected", PackageNode, Variant, Value, _),
    not propagate(PackageNode, variant_value(Variant, Value)).
 
 %----
