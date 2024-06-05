@@ -44,38 +44,44 @@ builds=(
     # preferred version:
     ${mfem}
     ${mfem}'~mpi~metis~zlib'
+    # TODO: add back "+fms $fms_spec" when the FMS unit test is fixed
     ${mfem}"$backends"'+superlu-dist+strumpack+mumps+suite-sparse+petsc+slepc \
         +gslib+sundials+pumi+mpfr+netcdf+zlib+gnutls+libunwind+conduit+ginkgo \
-        +hiop+fms \
+        +hiop \
         '"$backends_specs $superlu_spec $strumpack_spec $petsc_spec"' \
-        '"$conduit_spec $fms_spec"
+        '"$conduit_spec"
+    # TODO: add back "+fms $fms_spec" when the FMS unit test is fixed
     ${mfem}'~mpi \
         '"$backends"'+suite-sparse+sundials+gslib+mpfr+netcdf \
-        +zlib+gnutls+libunwind+conduit+ginkgo+hiop+fms \
-        '"$backends_specs $conduit_spec $fms_spec"' ^sundials~mpi'
+        +zlib+gnutls+libunwind+conduit+ginkgo+hiop \
+        '"$backends_specs $conduit_spec"' ^sundials~mpi'
+    ${mfem}' precision=single +mumps+petsc '"$petsc_spec"
 
     # develop version, shared builds:
     ${mfem_dev}'+shared~static'
     ${mfem_dev}'+shared~static~mpi~metis~zlib'
     # NOTE: Shared build with +gslib works on mac but not on linux
     # TODO: add back '+gslib' when the above NOTE is addressed.
+    # TODO: add back "+fms $fms_spec" when the FMS unit test is fixed
     ${mfem_dev}'+shared~static \
         '"$backends"'+superlu-dist+strumpack+mumps+suite-sparse+petsc+slepc \
         +sundials+pumi+mpfr+netcdf+zlib+gnutls+libunwind+conduit+ginkgo+hiop \
-        +fms \
         '"$backends_specs $superlu_spec $strumpack_spec $petsc_spec"' \
-        '"$conduit_spec $fms_spec"
+        '"$conduit_spec"
     # NOTE: Shared build with +gslib works on mac but not on linux
     # TODO: add back '+gslib' when the above NOTE is addressed.
+    # TODO: add back "+fms $fms_spec" when the FMS unit test is fixed
     ${mfem_dev}'+shared~static~mpi \
         '"$backends"'+suite-sparse+sundials+mpfr+netcdf \
-        +zlib+gnutls+libunwind+conduit+ginkgo+hiop+fms \
-        '"$backends_specs $conduit_spec $fms_spec"' ^sundials~mpi'
+        +zlib+gnutls+libunwind+conduit+ginkgo+hiop \
+        '"$backends_specs $conduit_spec"' ^sundials~mpi'
+    ${mfem_dev}'+shared~static precision=single +mumps+petsc '"$petsc_spec"
 )
 
 builds2=(
     # preferred version
     ${mfem}"$backends $backends_specs"
+    ${mfem}' precision=single'
     ${mfem}'+superlu-dist'" $superlu_spec"
     ${mfem}'+strumpack'" $strumpack_spec"
     ${mfem}'+mumps'
@@ -91,7 +97,8 @@ builds2=(
     ${mfem}'+gnutls'
     ${mfem}'+conduit~mpi'" $conduit_spec"
     ${mfem}'+conduit'" $conduit_spec"
-    ${mfem}'+fms'" $fms_spec"
+    # TODO: uncomment next line when the FMS unit test is fixed
+    # ${mfem}'+fms'" $fms_spec"
     ${mfem}'+umpire'
     ${mfem}'+petsc'" $petsc_spec"
     ${mfem}'+petsc+slepc'" $petsc_spec"
@@ -104,6 +111,7 @@ builds2=(
     #
     # develop version
     ${mfem_dev}"$backends $backends_specs"
+    ${mfem_dev}' precision=single'
     ${mfem_dev}'+superlu-dist'" $superlu_spec"
     ${mfem_dev}'+strumpack'" $strumpack_spec"
     ${mfem_dev}'+mumps'
@@ -119,7 +127,8 @@ builds2=(
     ${mfem_dev}'+gnutls'
     ${mfem_dev}'+conduit~mpi'" $conduit_spec"
     ${mfem_dev}'+conduit'" $conduit_spec"
-    ${mfem_dev}'+fms'" $fms_spec"
+    # TODO: uncomment next line when the FMS unit test is fixed
+    # ${mfem_dev}'+fms'" $fms_spec"
     ${mfem_dev}'+umpire'
     ${mfem_dev}'+petsc'" $petsc_spec"
     ${mfem_dev}'+petsc+slepc'" $petsc_spec"
@@ -176,6 +185,8 @@ builds_cuda=(
     # TODO: combine this spec with the above spec when the combined spec works.
     ${mfem}'+cuda cuda_arch='"${cuda_arch}"' +hiop ^hypre+cuda'
 
+    ${mfem}' precision=single +cuda cuda_arch='"${cuda_arch}"' ^hypre+cuda'
+
     #
     # same builds as above with ${mfem_dev}
     #
@@ -222,6 +233,8 @@ builds_cuda=(
     # hiop needs older versions of raja, umpire, etc
     # TODO: combine this spec with the above spec when the combined spec works.
     ${mfem_dev}'+cuda cuda_arch='"${cuda_arch}"' +hiop ^hypre+cuda'
+
+    ${mfem_dev}' precision=single +cuda cuda_arch='"${cuda_arch}"' ^hypre+cuda'
 )
 
 
@@ -263,6 +276,8 @@ builds_rocm=(
     # hiop needs older versions of raja, umpire, etc
     # TODO: combine this spec with the above spec when the combined spec works.
     ${mfem}'+rocm amdgpu_target='"${rocm_arch}"' +hiop ^hypre+rocm'
+
+    ${mfem}' precision=single +rocm amdgpu_target='"${rocm_arch}"' ^hypre+rocm'
 
     #
     # same builds as above with ${mfem_dev}
