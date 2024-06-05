@@ -8,6 +8,7 @@ system and configuring Spack to use multiple compilers.
 """
 import collections
 import os
+import sys
 import warnings
 from typing import Dict, List, Optional
 
@@ -20,11 +21,11 @@ import llnl.util.tty as tty
 import spack.compiler
 import spack.config
 import spack.error
-import spack.operating_systems
 import spack.paths
 import spack.platforms
 import spack.spec
 import spack.version
+from spack.operating_systems import windows_os
 from spack.util.environment import get_path
 from spack.util.naming import mod_to_class
 
@@ -287,6 +288,8 @@ def find_compilers(
     if path_hints is None:
         path_hints = get_path("PATH")
     default_paths = fs.search_paths_for_executables(*path_hints)
+    if sys.platform == "win32":
+        default_paths.extend(windows_os.WindowsOs().compiler_search_paths)
     compiler_pkgs = spack.repo.PATH.packages_with_tags(COMPILER_TAG, full=True)
     detected_packages = spack.detection.by_path(
         compiler_pkgs, path_hints=default_paths, max_workers=max_workers
