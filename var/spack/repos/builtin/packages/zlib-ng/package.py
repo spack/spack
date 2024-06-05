@@ -69,17 +69,15 @@ class ZlibNg(AutotoolsPackage, CMakePackage):
     @property
     def libs(self):
         name = "libz" if self.spec.satisfies("+compat") else "libz-ng"
-        shared = self.spec.satisfies("+shared")
-        libs = find_libraries(name, root=self.prefix, recursive=True, shared=shared)
-        # With some compilers, e.g. cce@17, building a shared library may fail,
-        # so the build system just builds a static version.
-        if not libs and shared:
-            libs = find_libraries(name, root=self.prefix, recursive=True, shared=False)
-        return libs or None
+        return find_libraries(
+            name, root=self.prefix, recursive=True, shared=self.spec.satisfies("+shared")
+        )
 
     def flag_handler(self, name, flags):
         if name == "cflags" and self.spec.satisfies("+pic build_system=autotools"):
             flags.append(self.compiler.cc_pic_flag)
+        if name == "ldflags" and self.spec.satisfies("%cce@17"):
+            flags.append("-Wl,--undefined-version")
         return (flags, None, None)
 
 
