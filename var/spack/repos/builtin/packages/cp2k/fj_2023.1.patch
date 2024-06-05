@@ -1,0 +1,32 @@
+diff -Nur cp2k-2023.1.org/src/fm/cp_fm_elpa.F cp2k-2023.1.OK/src/fm/cp_fm_elpa.F
+--- cp2k-2023.1.org/src/fm/cp_fm_elpa.F	2023-07-20 17:03:27.000000000 +0900
++++ cp2k-2023.1/src/fm/cp_fm_elpa.F	2023-09-20 09:00:41.000000000 +0900
+@@ -189,7 +189,9 @@
+ ! **************************************************************************************************
+    SUBROUTINE finalize_elpa_library()
+ #if defined(__ELPA)
+-      CALL elpa_uninit()
++      USE ISO_C_BINDING, ONLY: C_INT
++      INTEGER(KIND=C_INT)                 :: error_elpa
++      CALL elpa_uninit(error_elpa)
+ #else
+       CPABORT("Finalization of ELPA library requested but not enabled during build")
+ #endif
+@@ -324,6 +326,8 @@
+ ! **************************************************************************************************
+    SUBROUTINE cp_fm_diag_elpa_base(matrix, eigenvectors, eigenvalues, rdinfo)
+ 
++      USE ISO_C_BINDING, ONLY: C_INT
++      INTEGER(KIND=C_INT)                 :: error_elpa
+       TYPE(cp_fm_type), INTENT(IN)                       :: matrix, eigenvectors
+       REAL(KIND=dp), DIMENSION(:), INTENT(OUT)           :: eigenvalues
+       TYPE(cp_fm_redistribute_info), INTENT(IN)          :: rdinfo
+@@ -473,7 +477,7 @@
+       ! the full eigenvalues vector is needed
+       ALLOCATE (eval(n))
+ 
+-      elpa_obj => elpa_allocate()
++      elpa_obj => elpa_allocate(error_elpa)
+ 
+       CALL elpa_obj%set("na", n, success)
+       CPASSERT(success == elpa_ok)

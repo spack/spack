@@ -176,7 +176,9 @@ class Cp2k(MakefilePackage, CMakePackage, CudaPackage, ROCmPackage):
         depends_on("pkgconfig", type="build")
         # please set variants: smm=blas by configuring packages.yaml or install
         # cp2k with option smm=blas on aarch64
-        conflicts("target=aarch64:", msg="libxsmm is not available on arm")
+        conflicts(
+            "libxsmm@:1.17", when="target=aarch64:", msg="old libxsmm is not available on arm"
+        )
 
     with when("+libint"):
         depends_on("pkgconfig", type="build", when="@7.0:")
@@ -208,7 +210,7 @@ class Cp2k(MakefilePackage, CMakePackage, CudaPackage, ROCmPackage):
     with when("+cosma"):
         depends_on("cosma+scalapack")
         depends_on("cosma@2.5.1:", when="@9:")
-        depends_on("cosma@2.6.3:", when="@2023.2:")
+        depends_on("cosma@2.6.3:", when="@2023.1:")
         depends_on("cosma+cuda", when="+cuda")
         depends_on("cosma+rocm", when="+rocm")
 
@@ -243,7 +245,8 @@ class Cp2k(MakefilePackage, CMakePackage, CudaPackage, ROCmPackage):
     # like ELPA, SCALAPACK are independent and Spack will ensure that
     # a consistent/compatible combination is pulled into the dependency graph.
     with when("+sirius"):
-        depends_on("sirius+fortran+shared")
+        depends_on("sirius+fortran")
+        depends_on("sirius+scalapack", when="+mpi")
         depends_on("sirius+cuda", when="+cuda")
         depends_on("sirius+rocm", when="+rocm")
         depends_on("sirius+openmp", when="+openmp")
@@ -251,6 +254,7 @@ class Cp2k(MakefilePackage, CMakePackage, CudaPackage, ROCmPackage):
         depends_on("sirius@7.0.0:7.0", when="@8:8.2")
         depends_on("sirius@7.2", when="@8.3:8.9")
         depends_on("sirius@7.3:", when="@9.1")
+        depends_on("sirius@7.3.2", when="@2023.1")
         depends_on("sirius@7.4:7.5", when="@2023.2")
         depends_on("sirius@7.5:", when="@2024.1:")
 
@@ -344,6 +348,8 @@ class Cp2k(MakefilePackage, CMakePackage, CudaPackage, ROCmPackage):
     # after NDEBUG support was dropped in https://github.com/cp2k/cp2k/pull/3172
     # The patch applies https://github.com/cp2k/cp2k/pull/3251 to version 2024.1
     patch("cmake-relwithdebinfo-2024.1.patch", when="@2024.1 build_system=cmake")
+    # Fix to build with Fujitsu compiler
+    patch("fj_2023.1.patch", when="@2023.1 %fj")
 
     # Patch for an undefined constant due to incompatible changes in ELPA
     @when("@9.1:2022.2 +elpa")
@@ -381,6 +387,7 @@ class MakefileBuilder(makefile.MakefileBuilder):
             "cce": ["-O2"],
             "xl": ["-O3"],
             "aocc": ["-O2"],
+            "fj": ["-Kfast"],
         }
 
         dflags = ["-DNDEBUG"] if spec.satisfies("@:2023.2") else []
@@ -431,6 +438,9 @@ class MakefileBuilder(makefile.MakefileBuilder):
         elif "%xl" in spec:
             fcflags += ["-qpreprocess", "-qstrict", "-q64"]
             ldflags += ["-Wl,--allow-multiple-definition"]
+        elif "%fj" in spec:
+            fcflags += ["-X08"]
+            ldflags += ["--linkfortran"]
 
         if "%gcc@10: +mpi" in spec and spec["mpi"].name in ["mpich", "cray-mpich"]:
             fcflags += [
@@ -463,7 +473,14 @@ class MakefileBuilder(makefile.MakefileBuilder):
         if "+plumed" in spec:
             dflags.extend(["-D__PLUMED2"])
             cppflags.extend(["-D__PLUMED2"])
+
             libs.extend([join_path(spec["plumed"].prefix.lib, "libplumed.{0}".format(dso_suffix))])
+
+            gsl = spec["gsl"]
+            cppflags.extend(["-D__GSL"])
+            fcflags += ["-I{0}".format(gsl.prefix.include.gsl)]
+            ldflags += [gsl.libs.search_flags]
+            libs += gsl.libs
 
         cc = spack_cc if "~mpi" in spec else spec["mpi"].mpicc
         cxx = spack_cxx if "~mpi" in spec else spec["mpi"].mpicxx
@@ -478,7 +495,10 @@ class MakefileBuilder(makefile.MakefileBuilder):
         lapack = spec["lapack"].libs
         blas = spec["blas"].libs
         ldflags.append((lapack + blas).search_flags)
-        libs.extend([str(x) for x in (fftw.libs, lapack, blas)])
+
+        libs += fftw.libs
+        libs += lapack
+        libs += blas
 
         if spec.satisfies("platform=darwin"):
             cppflags.extend(["-D__NO_STATM_ACCESS"])
@@ -487,12 +507,6 @@ class MakefileBuilder(makefile.MakefileBuilder):
             cppflags += ["-D__MKL"]
         elif spec["blas"].name == "accelerate":
             cppflags += ["-D__ACCELERATE"]
-
-        if "+cosma" in spec:
-            # add before ScaLAPACK to override the p?gemm symbols
-            cosma = spec["cosma"].libs
-            ldflags.append(cosma.search_flags)
-            libs.extend(cosma)
 
         # MPI
         if "+mpi" in spec:
@@ -520,9 +534,11 @@ class MakefileBuilder(makefile.MakefileBuilder):
                 scalapack = spec["scalapack"].libs
                 ldflags.append(scalapack.search_flags)
 
-            libs.extend(scalapack)
-            libs.extend(mpi)
-            libs.extend(pkg.compiler.stdcxx_libs)
+            libs += scalapack
+            libs += mpi
+
+            if not "%fj" in spec:
+                libs += self.compiler.stdcxx_libs
 
             if "+mpi_f08" in spec:
                 cppflags.append("-D__MPI_F08")
@@ -530,7 +546,7 @@ class MakefileBuilder(makefile.MakefileBuilder):
             if "wannier90" in spec:
                 cppflags.append("-D__WANNIER90")
                 wannier = join_path(spec["wannier90"].libs.directories[0], "libwannier.a")
-                libs.append(wannier)
+                libs += wannier
 
         if "+libint" in spec:
             cppflags += ["-D__LIBINT"]
@@ -571,18 +587,14 @@ class MakefileBuilder(makefile.MakefileBuilder):
         if "+pexsi" in spec:
             cppflags.append("-D__LIBPEXSI")
             fcflags.append("-I" + join_path(spec["pexsi"].prefix, "fortran"))
-            libs.extend(
-                [
-                    join_path(spec["pexsi"].libs.directories[0], "libpexsi.a"),
-                    join_path(spec["superlu-dist"].libs.directories[0], "libsuperlu_dist.a"),
-                    join_path(
-                        spec["parmetis"].libs.directories[0], "libparmetis.{0}".format(dso_suffix)
-                    ),
-                    join_path(
-                        spec["metis"].libs.directories[0], "libmetis.{0}".format(dso_suffix)
-                    ),
-                ]
-            )
+            libs += [
+                join_path(spec["pexsi"].libs.directories[0], "libpexsi.a"),
+                join_path(spec["superlu-dist"].libs.directories[0], "libsuperlu_dist.a"),
+                join_path(
+                    spec["parmetis"].libs.directories[0], "libparmetis.{0}".format(dso_suffix)
+                ),
+                join_path(spec["metis"].libs.directories[0], "libmetis.{0}".format(dso_suffix)),
+            ]
 
         if "+elpa" in spec:
             elpa = spec["elpa"]
@@ -591,15 +603,16 @@ class MakefileBuilder(makefile.MakefileBuilder):
 
             fcflags += ["-I{0}".format(join_path(elpa_incdir, "modules"))]
 
-            # Currently AOCC support only static libraries of ELPA
-            if "%aocc" in spec:
-                libs.append(
+            # Currently AOCC and FJ support only static libraries of ELPA
+            if "%aocc" or "%fj" in spec:
+                libs += [
                     join_path(
                         elpa.prefix.lib, ("libelpa{elpa_suffix}.a".format(elpa_suffix=elpa_suffix))
                     )
-                )
+                ]
+
             else:
-                libs.append(
+                libs += [
                     join_path(
                         elpa.libs.directories[0],
                         (
@@ -608,7 +621,7 @@ class MakefileBuilder(makefile.MakefileBuilder):
                             )
                         ),
                     )
-                )
+                ]
 
             if spec.satisfies("@:4"):
                 if elpa.satisfies("@:2014.5"):
@@ -630,7 +643,26 @@ class MakefileBuilder(makefile.MakefileBuilder):
             sirius = spec["sirius"]
             cppflags.append("-D__SIRIUS")
             fcflags += ["-I{0}".format(sirius.prefix.include.sirius)]
-            libs += list(sirius.libs)
+            ldflags += [sirius.libs.search_flags]
+            libs += sirius.libs
+
+            spfft = spec["spfft"]
+            cppflags.append("-D__SPFFT")
+            fcflags += ["-I{0}".format(spfft.prefix.include.spfft)]
+            ldflags += [spfft.libs.search_flags]
+            libs += spfft.libs
+
+            spla = spec["spla"]
+            cppflags.append("-D__SPLA")
+            fcflags += ["-I{0}".format(spla.prefix.include.spla)]
+            ldflags += [spla.libs.search_flags]
+            libs += spla.libs
+
+            hdf5 = spec["hdf5"]
+            cppflags.append("-D__HDF5")
+            fcflags += ["-I{0}".format(hdf5.prefix.include)]
+            ldflags += [hdf5.libs.search_flags]
+            libs += hdf5.libs
 
         gpuver = ""
         if spec.satisfies("+cuda"):
@@ -711,13 +743,12 @@ class MakefileBuilder(makefile.MakefileBuilder):
                     "exist. Note that it must be absolute path."
                 )
             cppflags.extend(["-D__HAS_smm_dnn", "-D__HAS_smm_vec"])
-            libs.append("-lsmm")
+            libs += LibraryList(env["LIBSMM_PATH"])
 
         elif "smm=libxsmm" in spec:
             cppflags += ["-D__LIBXSMM"]
-            cppflags += pkgconf("--cflags-only-other", "libxsmmf", output=str).split()
-            fcflags += pkgconf("--cflags-only-I", "libxsmmf", output=str).split()
-            libs += pkgconf("--libs", "libxsmmf", output=str).split()
+            fcflags += pkgconf("--cflags", "libxsmmext", output=str).split()
+            libs += pkgconf("--libs", "libxsmm", "libxsmmf", "libxsmmext", output=str).split()
 
         if "+libvori" in spec:
             cppflags += ["-D__LIBVORI"]
@@ -731,6 +762,31 @@ class MakefileBuilder(makefile.MakefileBuilder):
             spglib = spec["spglib"].libs
             ldflags += [spglib.search_flags]
             libs += spglib
+
+        if "+cosma" in spec:
+            cppflags += ["-D__COSMA"]
+            # add before ScaLAPACK to override the p?gemm symbols
+            cosma = spec["cosma"].libs
+            ldflags.append(cosma.search_flags)
+            libs += LibraryList(
+                [
+                    join_path(spec["cosma"].libs.directories[0], "libcosma_prefixed_pxgemm.a"),
+                    join_path(spec["cosma"].libs.directories[0], "libcosma_pxgemm_cpp.a"),
+                    join_path(spec["cosma"].libs.directories[0], "libcosma.a"),
+                ]
+            )
+
+        # costa linker options
+        if "+cosma" in spec or "+sirius" in spec:
+            costa = spec["costa"].libs
+            ldflags.append(costa.search_flags)
+            libs += LibraryList(
+                [
+                    join_path(spec["costa"].libs.directories[0], "libcosta_prefixed_scalapack.a"),
+                    join_path(spec["costa"].libs.directories[0], "libcosta_scalapack.a"),
+                    join_path(spec["costa"].libs.directories[0], "libcosta.a"),
+                ]
+            )
 
         dflags.extend(cppflags)
         cflags.extend(cppflags)
@@ -747,9 +803,17 @@ class MakefileBuilder(makefile.MakefileBuilder):
                 mkf.write("include {0}\n".format(spec["plumed"].package.plumed_inc))
 
             mkf.write("\n# COMPILER, LINKER, TOOLS\n\n")
-            mkf.write(
-                "FC  = {0}\n" "CC  = {1}\n" "CXX = {2}\n" "LD  = {3}\n".format(fc, cc, cxx, fc)
-            )
+            if "%fj" in spec:
+                mkf.write(
+                    "FC  = {0}\n"
+                    "CC  = {1}\n"
+                    "CXX = {2}\n"
+                    "LD  = {3}\n".format(fc, cc, cxx, cxx)
+                )
+            else:
+                mkf.write(
+                    "FC  = {0}\n" "CC  = {1}\n" "CXX = {2}\n" "LD  = {3}\n".format(fc, cc, cxx, fc)
+                )
 
             if "%intel" in spec:
                 intel_bin_dir = ancestor(pkg.compiler.cc)
@@ -789,6 +853,14 @@ class MakefileBuilder(makefile.MakefileBuilder):
 
             if "%intel" in spec:
                 mkf.write(fflags("LDFLAGS_C", ldflags + ["-nofor-main"]))
+
+            if "%fj" in spec:
+                mkf.write("\n# the compiler runs out of memory when optimizing the following:\n")
+                mkf.write("mp2_eri.o: mp2_eri.F\n")
+                mkf.write("\t$(TOOLSRC)/build_utils/fypp $(FYPPFLAGS) $< $*.F90\n")
+                mkf.write(
+                    '\t$(FC) -c $(FCFLAGS) -O0 -D__SHORT_FILE__="\\"$(subst $(SRCDIR)/,,$<)\\"" -I\'$(dir $<)\' $(OBJEXTSINCL) $*.F90 $(FCLOGPIPE)\n'
+                )
 
             mkf.write("# CP2K-specific flags\n\n")
             mkf.write("GPUVER = {0}\n".format(gpuver))
