@@ -2990,7 +2990,7 @@ class CompilerParser:
     def __init__(self, configuration) -> None:
         self.compilers: Set[KnownCompiler] = set()
         for c in all_compilers_in_config(configuration):
-            if using_libc_compatibility() and not c_compiler_runs(c):
+            if not compiler_runs_for_lang(c):
                 tty.debug(
                     f"the C compiler {c.cc} does not exist, or does not run correctly."
                     f" The compiler {c.spec} will not be used during concretization."
