@@ -37,8 +37,11 @@ def module(
     # function to have the module commands work properly.
     #
     # Added caveat: `modulecmd` needs to be in PATH.
-    if b"BASH_FUNC_module()" not in environb:
-        environb[b"BASH_FUNC_module()"] = b"() { eval `modulecmd bash $*`\n}"
+    #
+    # Bash 4 uses (), 5 uses %%
+    for suffix in (b"%%", b"()"):
+        if b"BASH_FUNC_module" + suffix not in environb:
+            environb[b"BASH_FUNC_module" + suffix] = b"() { eval `modulecmd bash $*`\n}"
 
     if args[0] in module_change_commands:
         # Suppress module output
