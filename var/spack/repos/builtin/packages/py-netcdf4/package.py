@@ -48,6 +48,13 @@ class PyNetcdf4(PythonPackage):
     # following patch disables the usage of pkg-config at all.
     patch("disable_pkgconf.patch")
 
+    # https://github.com/Unidata/netcdf4-python/pull/1322
+    patch(
+        "https://github.com/Unidata/netcdf4-python/commit/49dcd0b5bd25824c254770c0d41445133fc13a46.patch?full_index=1",
+        sha256="71eefe1d3065ad050fb72eb61d916ae1374a3fafd96ddaee6499cda952d992c4",
+        when="@1.6: %gcc@14:",
+    )
+
     def flag_handler(self, name, flags):
         if name == "cflags":
             if self.spec.satisfies("%oneapi"):
