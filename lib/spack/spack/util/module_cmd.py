@@ -68,11 +68,6 @@ def module(
         environb.update(new_environb)  # novermin
 
     else:
-        # See note above
-        environ = dict(os.environ)
-        if "BASH_FUNC_module()" not in environ:
-            environ["BASH_FUNC_module()"] = "() { eval `modulecmd bash $*`\n}"
-
         # Simply execute commands that don't change state and return output
         module_p = subprocess.Popen(
             module_cmd,
@@ -81,6 +76,8 @@ def module(
             shell=True,
             executable="/bin/bash",
         )
+        # Decode and str to return a string object in both python 2 and 3
+        return str(module_p.communicate()[0].decode())
 
 
 def load_module(mod):
