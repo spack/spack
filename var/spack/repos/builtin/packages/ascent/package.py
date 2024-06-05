@@ -55,11 +55,15 @@ class Ascent(CMakePackage, CudaPackage):
     version("develop", branch="develop", submodules=True)
 
     version(
-        "0.9.2",
-        tag="v0.9.2",
-        commit="b842516d12640e4a0d9433a18c7249440ef6fc3d",
+        "0.9.3",
+        tag="v0.9.3",
+        commit="e69d6ec77938846caae8fea7ed988b1151ac9b81",
         submodules=True,
         preferred=True,
+    )
+
+    version(
+        "0.9.2", tag="v0.9.2", commit="b842516d12640e4a0d9433a18c7249440ef6fc3d", submodules=True
     )
 
     version(
@@ -189,6 +193,7 @@ class Ascent(CMakePackage, CudaPackage):
     depends_on("raja~openmp", when="+raja ~openmp")
     depends_on("umpire", when="+umpire")
     depends_on("umpire@:2023.06.0", when="@:0.9.2 +umpire")
+    depends_on("umpire@2024.02:", when="@0.9.3: +umpire")
 
     #######################
     # BabelFlow
