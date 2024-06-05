@@ -984,7 +984,7 @@ def _ensure_variant_defaults_are_parsable(pkgs, error_cls):
             or variant.default
         )
         if not default_is_parsable:
-            msg = f"Variant '{vname}' of package '{pkg_name}' has a bad default value"
+            msg = f"Variant '{vname}' of package '{pkg_name}' has an unparsable default value"
             errors.append(error_cls(msg, []))
             return
 
