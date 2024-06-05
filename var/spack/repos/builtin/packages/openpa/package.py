@@ -14,6 +14,7 @@ class Openpa(AutotoolsPackage):
 
     license("mpich2")
 
+    version("1.0.5", sha256="4a18c054970970a1baf477504053a49149f962329b70b481c2ec93e157c9093b")
     version("1.0.4", sha256="9e5904b3bbdcb24e8429c12d613422e716a3479f3e0aeefbd9ce546852899e3a")
     version("1.0.3", sha256="b73943f341b0d4475109f8f341a5229258e43510b62cb5d488cf7f0e84fa5557")
     version("1.0.2", sha256="13b5ef8ea3502822ab03861bf9d047c3bda722b22605edf3f508fb355746db4f")

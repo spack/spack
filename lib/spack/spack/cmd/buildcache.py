@@ -13,7 +13,6 @@ import os
 import shutil
 import sys
 import tempfile
-import urllib.request
 from typing import Dict, List, Optional, Tuple, Union
 
 import llnl.util.tty as tty
@@ -54,6 +53,7 @@ from spack.oci.image import (
 from spack.oci.oci import (
     copy_missing_layers_with_retry,
     get_manifest_and_config_with_retry,
+    list_tags,
     upload_blob_with_retry,
     upload_manifest_with_retry,
 )
@@ -856,10 +856,7 @@ def _config_from_tag(image_ref: ImageReference, tag: str) -> Optional[dict]:
 
 
 def _update_index_oci(image_ref: ImageReference, tmpdir: str, pool: MaybePool) -> None:
-    request = urllib.request.Request(url=image_ref.tags_url())
-    response = spack.oci.opener.urlopen(request)
-    spack.oci.opener.ensure_status(request, response, 200)
-    tags = json.load(response)["tags"]
+    tags = list_tags(image_ref)
 
     # Fetch all image config files in parallel
     spec_dicts = pool.starmap(

@@ -153,7 +153,7 @@ class SuiteSparse(Package):
         )
 
         for symbol in symbols:
-            args.append("CFLAGS+=-D{0}={1}{2}".format(symbol, symbol, suffix))
+            args.append(f"CFLAGS+=-D{symbol}={symbol}{suffix}")
 
     def install(self, spec, prefix):
         # The build system of SuiteSparse is quite old-fashioned.
@@ -175,24 +175,24 @@ class SuiteSparse(Package):
             # completely disabled. See
             # [SuiteSparse/SuiteSparse_config/SuiteSparse_config.mk] for more.
             "CUDA=no",
-            "CUDA_PATH=%s" % (spec["cuda"].prefix if "+cuda" in spec else ""),
-            "CFOPENMP=%s" % (self.compiler.openmp_flag if "+openmp" in spec else ""),
-            "CFLAGS=-O3 %s" % cc_pic_flag,
+            f"CUDA_PATH={spec['cuda'].prefix if '+cuda' in spec else ''}",
+            f"CFOPENMP={self.compiler.openmp_flag if '+openmp' in spec else ''}",
+            f"CFLAGS=-O3 {cc_pic_flag}",
             # Both FFLAGS and F77FLAGS are used in SuiteSparse makefiles;
             # FFLAGS is used in CHOLMOD, F77FLAGS is used in AMD and UMFPACK.
-            "FFLAGS=%s" % f77_pic_flag,
-            "F77FLAGS=%s" % f77_pic_flag,
+            f"FFLAGS={f77_pic_flag}",
+            f"F77FLAGS={f77_pic_flag}",
             # use Spack's metis in CHOLMOD/Partition module,
             # otherwise internal Metis will be compiled
-            "MY_METIS_LIB=%s" % spec["metis"].libs.ld_flags,
-            "MY_METIS_INC=%s" % spec["metis"].prefix.include,
+            f"MY_METIS_LIB={spec['metis'].libs.ld_flags}",
+            f"MY_METIS_INC={spec['metis'].prefix.include}",
             # Make sure Spack's Blas/Lapack is used. Otherwise System's
             # Blas/Lapack might be picked up. Need to add -lstdc++, following
             # with the TCOV path of SparseSuite 4.5.1's Suitesparse_config.mk,
             # even though this fix is ugly
-            "BLAS=%s" % (spec["blas"].libs.ld_flags + (" -lstdc++" if "@4.5.1" in spec else "")),
-            "LAPACK=%s" % spec["lapack"].libs.ld_flags,
-            "JOBS=%s" % make_jobs,
+            f"BLAS={spec['blas'].libs.ld_flags + (' -lstdc++' if '@4.5.1' in spec else '')}",
+            f"LAPACK={spec['lapack'].libs.ld_flags}",
+            f"JOBS={make_jobs}",
         ]
 
         # Recent versions require c11 but some demos do not get the c11 from
@@ -201,7 +201,7 @@ class SuiteSparse(Package):
         # not an issue because c11 or newer is their default. However, for some
         # compilers (e.g. xlc) the c11 flag is necessary.
         if spec.satisfies("@5.4:5.7.1") and ("%xl" in spec or "%xl_r" in spec):
-            make_args += ["CFLAGS+=%s" % self.compiler.c11_flag]
+            make_args += [f"CFLAGS+={self.compiler.c11_flag}"]
 
         # 64bit blas in UMFPACK:
         if (
@@ -227,22 +227,22 @@ class SuiteSparse(Package):
 
         # Intel TBB in SuiteSparseQR
         if "+tbb" in spec:
-            make_args += ["SPQR_CONFIG=-DHAVE_TBB", "TBB=%s" % spec["tbb"].libs.ld_flags]
+            make_args += ["SPQR_CONFIG=-DHAVE_TBB", f"TBB={spec['tbb'].libs.ld_flags}"]
 
         if "@5.3:" in spec:
             # Without CMAKE_LIBRARY_PATH defined, the CMake file in the
             # Mongoose directory finds libsuitesparseconfig.so in system
             # directories like /usr/lib.
             make_args += [
-                "CMAKE_OPTIONS=-DCMAKE_INSTALL_PREFIX=%s" % prefix
-                + " -DCMAKE_LIBRARY_PATH=%s" % prefix.lib
-                + " -DBLAS_ROOT=%s" % spec["blas"].prefix
-                + " -DLAPACK_ROOT=%s" % spec["lapack"].prefix
+                f"CMAKE_OPTIONS=-DCMAKE_INSTALL_PREFIX={prefix}"
+                + f" -DCMAKE_LIBRARY_PATH={prefix.lib}"
+                + f" -DBLAS_ROOT={spec['blas'].prefix}"
+                + f" -DLAPACK_ROOT={spec['lapack'].prefix}"
                 # *_LIBRARIES is critical to pick up static
                 # libraries (if intended) and also to avoid
                 # unintentional system blas/lapack packages
-                + ' -DBLAS_LIBRARIES="%s"' % (";".join(spec["blas"].libs))
-                + ' -DLAPACK_LIBRARIES="%s"' % (";".join(spec["lapack"].libs))
+                + f' -DBLAS_LIBRARIES="{";".join(spec["blas"].libs)}"'
+                + f' -DLAPACK_LIBRARIES="{";".join(spec["lapack"].libs)}"'
                 + " -DENABLE_CUDA=%s" % ("ON" if "+cuda" in spec else "OFF")
                 + " -DSUITESPARSE_USE_OPENMP=%s" % ("ON" if "+openmp" in spec else "OFF")
                 # Older versions use the negative flag NOPENMP: "OFF" means use
@@ -260,7 +260,7 @@ class SuiteSparse(Package):
             env.setdefault("LDFLAGS", "")
             env["LDFLAGS"] += " -Wl,-rpath," + craylibs_path
 
-        make_args.append("INSTALL=%s" % prefix)
+        make_args.append(f"INSTALL={prefix}")
 
         # Filter the targets we're interested in
         targets = [

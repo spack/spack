@@ -11,13 +11,14 @@ class RocmClangOcl(CMakePackage):
 
     homepage = "https://github.com/ROCm/clang-ocl"
     git = "https://github.com/ROCm/clang-ocl.git"
-    url = "https://github.com/ROCm/clang-ocl/archive/rocm-6.0.0.tar.gz"
+    url = "https://github.com/ROCm/clang-ocl/archive/rocm-6.1.1.tar.gz"
     tags = ["rocm"]
 
     license("MIT")
 
     maintainers("srekolam", "renjithravindrankannath")
     version("master", branch="master")
+    version("6.1.1", sha256="21b8a6d521a8e584e18851d27b5ef328a63ea7ee9eb3cc52508b9bfcf975e119")
     version("6.1.0", sha256="c983adad49ab5850307db1282f8bc957b9870d4ce37db8fbb43c52db6c90d0ed")
     version("6.0.2", sha256="a2f2fcb203737b1f436b4c2b78bbd696552f6de619ba0e7e8faf95a888869866")
     version("6.0.0", sha256="74b5a64c32f3c57e7e4de638fffabbf448ecdb3dd8e65678b7ba0633352b4ca3")
@@ -59,14 +60,26 @@ class RocmClangOcl(CMakePackage):
         "6.0.0",
         "6.0.2",
         "6.1.0",
+        "6.1.1",
         "master",
     ]:
         depends_on(f"rocm-cmake@{ver}:", type="build", when=f"@{ver}")
         depends_on(f"llvm-amdgpu@{ver}", when=f"@{ver}")
-
         # support both builtin and standalone device libs
         depends_on(f"rocm-device-libs@{ver}", when=f"@{ver} ^llvm-amdgpu ~rocm-device-libs")
-    for ver in ["5.5.0", "5.5.1", "5.6.0", "5.6.1", "5.7.0", "5.7.1", "6.0.0", "6.0.2", "6.1.0"]:
+
+    for ver in [
+        "5.5.0",
+        "5.5.1",
+        "5.6.0",
+        "5.6.1",
+        "5.7.0",
+        "5.7.1",
+        "6.0.0",
+        "6.0.2",
+        "6.1.0",
+        "6.1.1",
+    ]:
         depends_on(f"rocm-core@{ver}", when=f"@{ver}")
 
     test_src_dir = "test"

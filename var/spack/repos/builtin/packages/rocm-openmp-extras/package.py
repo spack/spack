@@ -33,6 +33,7 @@ aomp = [
     "1b2c0934ef16e17b2377944fae8c9b3db6dc64b7e43932ddfe2eeefdf6821410",
     "d6e13a15d5d25990d4bacbac8fabe2eb07973829f2e69abbc628e0736f95caf9",
     "832b7c48149a730619b577a2863b8d1bf1b2551eda5b815e1865a044929ab9fa",
+    "62a5036a2299ed2e3053ee00b7ea1800469cd545fea486fa17266a8b3acfaf5d",
 ]
 
 devlib = [
@@ -54,6 +55,7 @@ devlib = [
     "198df4550d4560537ba60ac7af9bde31d59779c8ec5d6309627f77a43ab6ef6f",
     "c6d88b9b46e39d5d21bd5a0c1eba887ec473a370b1ed0cebd1d2e910eedc5837",
     "6bd9912441de6caf6b26d1323e1c899ecd14ff2431874a2f5883d3bc5212db34",
+    "f1a67efb49f76a9b262e9735d3f75ad21e3bd6a05338c9b15c01e6c625c4460d",
 ]
 
 llvm = [
@@ -75,6 +77,7 @@ llvm = [
     "c673708d413d60ca8606ee75c77e9871b6953c59029c987b92f2f6e85f683626",
     "7d35acc84de1adee65406f92a369a30364703f84279241c444cd93a48c7eeb76",
     "6bd9912441de6caf6b26d1323e1c899ecd14ff2431874a2f5883d3bc5212db34",
+    "f1a67efb49f76a9b262e9735d3f75ad21e3bd6a05338c9b15c01e6c625c4460d",
 ]
 
 flang = [
@@ -96,6 +99,7 @@ flang = [
     "fcb319ddb2aa3004a6ae60370ab4425f529336b1cee50f29200e697e61b53586",
     "8e6469415880bb068d788596b3ed713a24495eb42788f98cca92e73a2998f703",
     "51ecd2c154568c971f5b46ff0e1e1b57063afe28d128fc88c503de88f7240267",
+    "1bcaa73e73a688cb092f01987cf3ec9ace4aa1fcaab2b812888c610722c4501d",
 ]
 
 extras = [
@@ -117,6 +121,7 @@ extras = [
     "f37e1107e4da5b083e794244f3d0c9fd073ccb6fd6015e635349d8f0d679c4b8",
     "b2e117d703cefdc2858adaeee5bad95e9b6dab6263a9c13891a79a7b1e2defb6",
     "57d6d9d26c0cb6ea7f8373996c41165f463ae7936d32e5793822cfae03900f8f",
+    "3dc837fbfcac64e000e1b5518e4f8a6b260eaf1a3e74152d8b8c22f128f575b7",
 ]
 
 versions = [
@@ -138,6 +143,7 @@ versions = [
     "6.0.0",
     "6.0.2",
     "6.1.0",
+    "6.1.1",
 ]
 versions_dict = dict()  # type: Dict[str,Dict[str,str]]
 components = ["aomp", "devlib", "llvm", "flang", "extras"]
@@ -155,12 +161,13 @@ class RocmOpenmpExtras(Package):
     """OpenMP support for ROCm LLVM."""
 
     homepage = tools_url + "/aomp"
-    url = tools_url + "/aomp/archive/rocm-6.0.2.tar.gz"
+    url = tools_url + "/aomp/archive/rocm-6.1.1.tar.gz"
     tags = ["rocm"]
 
     license("Apache-2.0")
 
     maintainers("srekolam", "renjithravindrankannath", "estewart08")
+    version("6.1.1", sha256=versions_dict["6.1.1"]["aomp"])
     version("6.1.0", sha256=versions_dict["6.1.0"]["aomp"])
     version("6.0.2", sha256=versions_dict["6.0.2"]["aomp"])
     version("6.0.0", sha256=versions_dict["6.0.0"]["aomp"])
@@ -192,7 +199,18 @@ class RocmOpenmpExtras(Package):
     depends_on("libdrm", when="@5.7:6.0")
     depends_on("numactl", when="@5.7:6.0")
 
-    for ver in ["5.5.0", "5.5.1", "5.6.0", "5.6.1", "5.7.0", "5.7.1", "6.0.0", "6.0.2", "6.1.0"]:
+    for ver in [
+        "5.5.0",
+        "5.5.1",
+        "5.6.0",
+        "5.6.1",
+        "5.7.0",
+        "5.7.1",
+        "6.0.0",
+        "6.0.2",
+        "6.1.0",
+        "6.1.1",
+    ]:
         depends_on(f"rocm-core@{ver}", when=f"@{ver}")
 
     for ver in [
@@ -257,7 +275,7 @@ class RocmOpenmpExtras(Package):
             placement="llvm-project",
             when=f"@{ver}",
         )
-    for ver in ["6.1.0"]:
+    for ver in ["6.1.0", "6.1.1"]:
         depends_on(f"hsakmt-roct@{ver}", when=f"@{ver}")
         depends_on(f"comgr@{ver}", when=f"@{ver}")
         depends_on(f"hsa-rocr-dev@{ver}", when=f"@{ver}")
@@ -461,7 +479,7 @@ class RocmOpenmpExtras(Package):
         gfx_list = gfx_list.replace(" ", ";")
         openmp_extras_prefix = self.spec["rocm-openmp-extras"].prefix
         devlibs_prefix = self.spec["llvm-amdgpu"].prefix
-        if self.spec.satisfies("@6.1"):
+        if self.spec.satisfies("@6.1:"):
             devlibs_src = "{0}/rocm-openmp-extras/llvm-project/amd/device-libs".format(src)
         else:
             devlibs_src = "{0}/rocm-openmp-extras/rocm-device-libs".format(src)

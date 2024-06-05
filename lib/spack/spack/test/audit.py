@@ -19,6 +19,8 @@ import spack.config
         (["missing-dependency"], ["PKG-DIRECTIVES", "PKG-PROPERTIES"]),
         # The package use a non existing variant in a depends_on directive
         (["wrong-variant-in-depends-on"], ["PKG-DIRECTIVES", "PKG-PROPERTIES"]),
+        # This package has a GitHub pull request commit patch URL
+        (["invalid-github-pull-commits-patch-url"], ["PKG-DIRECTIVES", "PKG-PROPERTIES"]),
         # This package has a GitHub patch URL without full_index=1
         (["invalid-github-patch-url"], ["PKG-DIRECTIVES", "PKG-PROPERTIES"]),
         # This package has invalid GitLab patch URLs

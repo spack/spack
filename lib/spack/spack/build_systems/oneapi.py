@@ -36,9 +36,8 @@ class IntelOneApiPackage(Package):
         "target=ppc64:",
         "target=ppc64le:",
         "target=aarch64:",
-        "platform=darwin:",
-        "platform=cray:",
-        "platform=windows:",
+        "platform=darwin",
+        "platform=windows",
     ]:
         conflicts(c, msg="This package in only available for x86_64 and Linux")
 
