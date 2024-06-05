@@ -9,7 +9,7 @@ import re
 import subprocess
 import sys
 import tempfile
-from typing import Dict, List
+from typing import Dict, List, Sequence, Type
 
 import archspec.cpu
 
@@ -153,7 +153,10 @@ class Msvc(Compiler):
     suffixes = []
 
     #: List denoting supported platforms by compiler
-    supported_platforms = [spack.platforms.Windows, spack.platforms.Test]
+    supported_platforms: Sequence[Type[spack.platforms.Platform]] = [
+        spack.platforms.Windows,
+        spack.platforms.Test,
+    ]
 
     #: compiler argument used for compiling and not linking
     compile_only_arg = "/c"
