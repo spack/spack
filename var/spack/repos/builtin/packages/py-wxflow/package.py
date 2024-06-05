@@ -27,9 +27,3 @@ class PyWxflow(PythonPackage):
     depends_on("py-numpy@1.21.6:", type=("build", "run"))
     depends_on("py-pyyaml@6:", type=("build", "run"))
     depends_on("py-jinja2@3.1.2:", type=("build", "run"))
-
-    def config_settings(self, spec, prefix):
-        # FIXME: Add configuration settings to be passed to the build backend
-        # FIXME: If not needed, delete this function
-        settings = {}
-        return settings
