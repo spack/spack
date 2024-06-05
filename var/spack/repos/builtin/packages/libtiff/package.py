@@ -145,6 +145,7 @@ class AutotoolsBuilder(AutotoolsBuilder):
 
         args.append("--disable-sphinx")
 
+        args.extend(self.enable_or_disable("opengl"))
         args.extend(self.enable_or_disable("shared"))
         args.extend(self.with_or_without("pic"))
 
