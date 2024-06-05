@@ -12,7 +12,7 @@ import re
 import shutil
 import sys
 import tempfile
-from typing import List, Optional, Sequence, overload
+from typing import List, Optional, Sequence, Type
 
 import llnl.path
 import llnl.util.lang
@@ -243,7 +243,7 @@ class Compiler:
     _all_compiler_rpath_libraries = ["libc", "libc++", "libstdc++"]
 
     #: List denoting supported platforms by compiler
-    supported_platforms: List[spack.platforms.Platform] = spack.platforms.platforms
+    supported_platforms: Sequence[Type[spack.platforms.Platform]] = spack.platforms.platforms
 
     #: compiler argument used for compiling and not linking
     compile_only_arg = "-c"
@@ -465,36 +465,46 @@ class Compiler:
 
     @property
     def compiler_verbose_output(self) -> Optional[str]:
-        """Verbose output from compiling a dummy C source file. Output is cached."""
+        """Verbose output from compiling a stub C source file. Output is cached."""
         if not hasattr(self, "_compile_c_source_output"):
-            self._compile_c_source_output = self._compile_dummy_c_source()
+            self._compile_c_source_output = self._compile_stub_c_source()
         return self._compile_c_source_output
 
-    def _compile_dummy_c_source(self) -> Optional[str]:
-        cc = self.cc if self.cc else self.cxx
-        if not cc or not self.verbose_flag:
+    def _compile_stub_c_source(self) -> Optional[str]:
+        lang = "cc" if self.cc else "cxx"
+        if not self.verbose_flag or not (self.cc or self.cxx):
             return None
+        flags = [self.verbose_flag]
+        for flag_type in ["cflags" if lang == "cc" else "cxxflags", "cppflags", "ldflags"]:
+            flags.extend(self.flags.get(flag_type, []))
+        cmp_args = ["-o", "output"]
+        return self.try_compiler(lang, cmp_args=cmp_args, flags=flags)
 
-        try:
-            tmpdir = tempfile.mkdtemp(prefix="spack-implicit-link-info")
-            fout = os.path.join(tmpdir, "output")
-            fin = os.path.join(tmpdir, "main.c")
+    # def _compile_dummy_c_source(self) -> Optional[str]:
+    #     cc = self.cc if self.cc else self.cxx
+    #     if not cc or not self.verbose_flag:
+    #         return None
 
-            with open(fin, "w") as csource:
-                csource.write(
-                    "int main(int argc, char* argv[]) { (void)argc; (void)argv; return 0; }\n"
-                )
-            cc_exe = spack.util.executable.Executable(cc)
-            for flag_type in ["cflags" if cc == self.cc else "cxxflags", "cppflags", "ldflags"]:
-                cc_exe.add_default_arg(*self.flags.get(flag_type, []))
+    #     try:
+    #         tmpdir = tempfile.mkdtemp(prefix="spack-implicit-link-info")
+    #         fout = os.path.join(tmpdir, "output")
+    #         fin = os.path.join(tmpdir, "main.c")
 
-            with self.compiler_environment():
-                return cc_exe(self.verbose_flag, fin, "-o", fout, output=str, error=str)
-        except spack.util.executable.ProcessError as pe:
-            tty.debug("ProcessError: Command exited with non-zero status: " + pe.long_message)
-            return None
-        finally:
-            shutil.rmtree(tmpdir, ignore_errors=True)
+    #         with open(fin, "w") as csource:
+    #             csource.write(
+    #                 "int main(int argc, char* argv[]) { (void)argc; (void)argv; return 0; }\n"
+    #             )
+    #         cc_exe = spack.util.executable.Executable(cc)
+    #         for flag_type in ["cflags" if cc == self.cc else "cxxflags", "cppflags", "ldflags"]:
+    #             cc_exe.add_default_arg(*self.flags.get(flag_type, []))
+
+    #         with self.compiler_environment():
+    #             return cc_exe(self.verbose_flag, fin, "-o", fout, output=str, error=str)
+    #     except spack.util.executable.ProcessError as pe:
+    #         tty.debug("ProcessError: Command exited with non-zero status: " + pe.long_message)
+    #         return None
+    #     finally:
+    #         shutil.rmtree(tmpdir, ignore_errors=True)
 
     @property
     def verbose_flag(self) -> Optional[str]:
@@ -667,23 +677,12 @@ class Compiler:
         ]
 
     @classmethod
-    def _cmp_test_env(cls, cmp_pth):
-        return os.environ
-
-    @classmethod
     def is_supported_on_platform(cls, plat):
         return type(plat) in cls.supported_platforms
 
-    @overload
-    def try_compiler(self, lang, file=None, flags=[], definitions=[]):
-        cmp_pth = getattr(self, lang)
-        if cmp_pth:
-            return self.try_compiler(cmp_pth, file, lang, flags, definitions)
-        raise TryCompilerError(self.spec.name, file, lang, f"No compiler for lang {lang}")
-
-    @overload
-    @classmethod
-    def try_compiler(cls, compiler_path, file=None, lang=None, flags=[], definitions=[]):
+    def try_compiler(
+        self, lang, file=None, cmp_args=[], flags=[], definitions=[]
+    ):
         """Try to use this compiler to compile a test file of specified language.
         File is provided by caller or specified by language denotation.
         Args:
@@ -697,22 +696,25 @@ class Compiler:
         determinable_file = file or lang
         if not determinable_file:
             err = "No file or language provided."
-            raise TryCompilerError(cls.__name__, file, lang, err)
-
+            raise TryCompilerError(self.__name__, file, lang, err)
+        compiler_path = getattr(self, lang)
+        if not compiler_path:
+            err = f"No compiler for language: {lang}"
+            raise TryCompilerError(self.__name__, file, lang, err)
         test_file = file if file else default_try_file_for_lang(lang)
         compiler = spack.util.executable.Executable(compiler_path)
-        compiler_env = cls._cmp_test_env(compiler_path)
         compiler_invocation_args = {
             "output": str,
             "error": str,
             "timeout": 120,
             "fail_on_error": True,
-            "env": compiler_env,
         }
-        compiler_args = [cls.compile_only_arg, test_file, *flags, *definitions]
+        compiler_args = [self.compile_only_arg] if not cmp_args else cmp_args
+        compiler_args = [*compiler_args, test_file, *flags, *definitions]
         try:
             with temp_cwd():
-                result = compiler(*compiler_args, **compiler_invocation_args)
+                with self.compiler_environment():
+                    result = compiler(*compiler_args, **compiler_invocation_args)
             return result
         except spack.util.executable.ProcessTimeoutError as e:
             error = "Compilation attempt exceeded timeout 120s"
@@ -723,7 +725,7 @@ class Compiler:
         except Exception as e:
             error = f"Experienced error attempting to execute compiler: {str(e)}"
             err = e
-        raise TryCompilerError(cls.__name__, test_file, lang, error) from err
+        raise TryCompilerError(self.__name__, test_file, lang, error) from err
 
     def setup_custom_environment(self, pkg, env):
         """Set any environment variables necessary to use the compiler."""
