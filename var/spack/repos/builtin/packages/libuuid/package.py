@@ -16,4 +16,4 @@ class Libuuid(AutotoolsPackage, SourceforgePackage):
 
     provides("uuid")
 
-    conflicts("%gcc@14")  # This may be OS specific as well
+    conflicts("%gcc@14:")
