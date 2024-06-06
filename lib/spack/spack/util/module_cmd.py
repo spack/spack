@@ -27,21 +27,13 @@ def module(
     module_template: Optional[str] = None,
     environb: Optional[MutableMapping[bytes, bytes]] = None,
 ):
-    module_cmd = module_template or ("module " + " ".join(args))
-    environb = dict(environb or os.environb)
-
-    # Bash allows to export functions into the environment, and
-    # subprocesses executing Bash can make use of these.
-    #
-    # If the user runs a different shell, emulate the exported module
-    # function to have the module commands work properly.
-    #
-    # Added caveat: `modulecmd` needs to be in PATH.
-    #
-    # Bash 4 uses (), 5 uses %%
-    for suffix in (b"%%", b"()"):
-        if b"BASH_FUNC_module" + suffix not in environb:
-            environb[b"BASH_FUNC_module" + suffix] = b"() { eval `modulecmd bash $*`\n}"
+    if module_template:
+        module_cmd = module_template
+    else:
+        # Test first for LMOD, then fall back to envrionment modules
+        mod_cmd = os.environ.get("LMOD_CMD", "modulecmd")
+        module_cmd = f"eval $({mod_cmd} bash {' '.join(args)})"
+    environb = environb or os.environb
 
     if args[0] in module_change_commands:
         # Suppress module output
