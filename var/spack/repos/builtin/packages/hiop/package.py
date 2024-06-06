@@ -75,7 +75,7 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
     variant("jsrun", default=False, description="Enable/Disable jsrun command for testing")
     variant("shared", default=False, description="Enable/Disable shared libraries")
     variant("mpi", default=True, description="Enable/Disable MPI")
-    variant("raja", default=False, description="Enable/Disable RAJA")
+    variant("raja", default=False, when="@0.3.99:", description="Enable/Disable RAJA")
     variant("kron", default=False, description="Enable/Disable Kron reduction")
     variant("sparse", default=False, description="Enable/Disable Sparse linear algebra")
     variant(
@@ -138,10 +138,11 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
 
     # RAJA > 0.14 and Umpire > 6.0 require c++ std 14
     # We are working on supporting newer Umpire/RAJA versions
-    depends_on("raja@0.14.0:0.14", when="@0.3.99:+raja")
-    depends_on("umpire@6.0.0:6", when="@0.3.99:+raja")
+    depends_on("raja@0.14", when="@0.5:+raja")
+    depends_on("raja@:0.13", when="@0.3.99:0.4+raja")
+    depends_on("umpire@6", when="@0.5:+raja")
+    depends_on("umpire@:5", when="@0.3.99:0.4+raja")
     depends_on("camp@0.2.3:0.2", when="@0.3.99:+raja")
-    conflicts("+raja", when="@:0.3.0", msg="RAJA support requires HiOp > v0.3")
 
     # This is no longer a requirement in RAJA > 0.14
     depends_on("umpire+cuda~shared", when="+raja+cuda ^raja@:0.14")
