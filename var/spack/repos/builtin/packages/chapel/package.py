@@ -489,8 +489,6 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
 
     def setup_chpl_comm(self, env, spec):
         env.set("CHPL_COMM", spec.variants["comm"].value)
-        if spec.variants["comm_substrate"].value != "unset":
-            env.set("CHPL_COMM_SUBSTRATE", spec.variants["comm_substrate"].value)
 
     def setup_chpl_llvm(self, env):
         if self.spec.variants["llvm"].value == "spack":
