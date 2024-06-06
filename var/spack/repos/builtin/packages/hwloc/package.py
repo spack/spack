@@ -78,12 +78,7 @@ class Hwloc(AutotoolsPackage, CudaPackage, ROCmPackage):
     variant("nvml", default=False, description="Support NVML device discovery")
     variant("gl", default=False, description="Support GL device discovery")
     variant("libxml2", default=True, description="Build with libxml2")
-    variant(
-        "libudev",
-        default=False,
-        when="@1.11.0:",
-        description="Build with libudev",
-    )
+    variant("libudev", default=False, when="@1.11.0:", description="Build with libudev")
     variant(
         "pci",
         default=(sys.platform != "darwin"),
@@ -97,22 +92,15 @@ class Hwloc(AutotoolsPackage, CudaPackage, ROCmPackage):
         description="Build shared libs, static libs or both",
     )
     variant(
-        "cairo",
-        default=False,
-        description="Enable the Cairo back-end of hwloc's lstopo command",
+        "cairo", default=False, description="Enable the Cairo back-end of hwloc's lstopo command"
     )
     variant(
-        "netloc",
-        default=False,
-        when="@2.0.0:2.9.3",
-        description="Enable netloc [requires MPI]",
+        "netloc", default=False, when="@2.0.0:2.9.3", description="Enable netloc [requires MPI]"
     )
     variant("opencl", default=False, description="Support an OpenCL library at run time")
     variant("rocm", default=False, description="Support ROCm devices")
     variant(
-        "oneapi-level-zero",
-        default=False,
-        description="Support Intel OneAPI Level Zero devices",
+        "oneapi-level-zero", default=False, description="Support Intel OneAPI Level Zero devices"
     )
 
     depends_on("pkgconfig", type="build")
