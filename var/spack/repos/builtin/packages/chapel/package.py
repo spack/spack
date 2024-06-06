@@ -490,6 +490,17 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
         env.set("CHPL_HOST_COMPILER", self.compiler_map[self.spec.compiler.name])
         env.set("CHPL_TARGET_COMPILER", self.compiler_map[self.spec.compiler.name])
 
+        # Undo spack compiler wrappers:
+        # the C/C++ compilers must work post-install
+        if is_CrayEX() and os.environ.get("CRAYPE_DIR"):
+            real_cc = join_path(os.environ["CRAYPE_DIR"], "bin", "cc")
+            real_cxx = join_path(os.environ["CRAYPE_DIR"], "bin", "CC")
+        else:
+            real_cc = self.compiler.cc
+            real_cxx = self.compiler.cxx
+        env.set("CHPL_TARGET_CC", real_cc)
+        env.set("CHPL_TARGET_CXX", real_cxx)
+
     def setup_chpl_comm(self, env, spec):
         env.set("CHPL_COMM", spec.variants["comm"].value)
 
