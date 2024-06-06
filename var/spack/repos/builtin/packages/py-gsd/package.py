@@ -15,13 +15,14 @@ class PyGsd(PythonPackage):
     trajectory output with a script. Read a GSD trajectory with a visualization
     tool to explore the behavior of the simulation."""
 
-    homepage = "https://gsd.readthedocs.io/en/stable/#"
+    homepage = "https://gsd.readthedocs.io/en/stable/"
     pypi = "gsd/gsd-1.9.3.tar.gz"
 
     maintainers("RMeli")
 
     license("BSD-2-Clause")
 
+    version("3.2.1", sha256="cf05148e23f169a00c073eb7d8151e8b521e0f962ce460b55d812cae5be326aa")
     version("3.2.0", sha256="cf3c8419ec66085b2b9853577058861d9e738bfe397b0170ead821b866ab49b9")
     version("3.1.1", sha256="6802b79d7f078536faf5a96ac300518613dd285cf3bc21ed81e1f2d0f7155bf5")
     version("3.1.0", sha256="35a70419c6a519825afd9d5e47a570d98cec7273c39f43e2ab0aa3e7166ad198")
