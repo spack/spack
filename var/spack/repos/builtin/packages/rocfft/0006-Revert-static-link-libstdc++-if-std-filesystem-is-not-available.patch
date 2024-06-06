@@ -1,0 +1,146 @@
+From 8c3c58654482fc0b3f05168eaa60befc6016c041 Mon Sep 17 00:00:00 2001
+From: Renjith Ravindran <Renjith.RavindranKannath@amd.com>
+Date: Thu, 6 Jun 2024 21:58:33 +0000
+Subject: [PATCH] Revert statically link libstdc++ when std::filesystem is not
+ available
+
+---
+ clients/tests/CMakeLists.txt |  3 ---
+ cmake/std-filesystem.cmake   | 47 ------------------------------------
+ library/src/CMakeLists.txt   | 14 +++--------
+ 3 files changed, 3 insertions(+), 61 deletions(-)
+ delete mode 100644 cmake/std-filesystem.cmake
+
+diff --git a/clients/tests/CMakeLists.txt b/clients/tests/CMakeLists.txt
+index e155b17..d0b95b4 100644
+--- a/clients/tests/CMakeLists.txt
++++ b/clients/tests/CMakeLists.txt
+@@ -219,9 +219,6 @@ target_link_libraries( rocfft-test
+   ${rocfft-test_link_libs}
+   )
+ 
+-include( ../../cmake/std-filesystem.cmake )
+-target_link_std_experimental_filesystem( rocfft-test )
+-
+ if( USE_CUDA )
+   target_include_directories( rocfft-test
+     PRIVATE
+diff --git a/cmake/std-filesystem.cmake b/cmake/std-filesystem.cmake
+deleted file mode 100644
+index b938367..0000000
+--- a/cmake/std-filesystem.cmake
++++ /dev/null
+@@ -1,47 +0,0 @@
+-# Copyright (C) 2023 Advanced Micro Devices, Inc. All rights reserved.
+-#
+-# Permission is hereby granted, free of charge, to any person obtaining a copy
+-# of this software and associated documentation files (the "Software"), to deal
+-# in the Software without restriction, including without limitation the rights
+-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+-# copies of the Software, and to permit persons to whom the Software is
+-# furnished to do so, subject to the following conditions:
+-#
+-# The above copyright notice and this permission notice shall be included in
+-# all copies or substantial portions of the Software.
+-#
+-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
+-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+-# THE SOFTWARE.
+-
+-include(CheckCXXSourceCompiles)
+-
+-set(HAVE_STD_FILESYSTEM_TEST [[
+-  #include <filesystem>
+-
+-  int main()
+-  {
+-  std::filesystem::path p{"/"};
+-  return 0;
+-  }
+-  ]])
+-
+-set(CMAKE_REQUIRED_FLAGS -std=c++17)
+-check_cxx_source_compiles("${HAVE_STD_FILESYSTEM_TEST}" HAVE_STD_FILESYSTEM)
+-
+-if(NOT HAVE_STD_FILESYSTEM)
+-  message(STATUS "std::filesystem include not present, will use std::experimental::filesystem")
+-endif()
+-
+-# Link to the experimental filesystem library if it's not available
+-# in the standard library.  Experimental filesystem library is not
+-# ABI-compatible with later libstdc++ so link that statically too.
+-function(target_link_std_experimental_filesystem target)
+-  if(NOT HAVE_STD_FILESYSTEM)
+-    target_link_options( ${target} PRIVATE "SHELL:-lstdc++fs -static-libstdc++ -Xlinker --exclude-libs=ALL")
+-  endif()
+-endfunction()
+diff --git a/library/src/CMakeLists.txt b/library/src/CMakeLists.txt
+index 391fa86..8d22b8f 100644
+--- a/library/src/CMakeLists.txt
++++ b/library/src/CMakeLists.txt
+@@ -263,8 +263,6 @@ else()
+   set(ROCFFT_SQLITE_LIB sqlite3)
+ endif()
+ 
+-include( ../../cmake/std-filesystem.cmake )
+-
+ # RTC stuff is used by both core library and helpers, so create
+ # separate libraries
+ #
+@@ -301,8 +299,6 @@ add_library( rocfft-rtc-cache OBJECT
+   rtc_cache.cpp
+ )
+ target_link_libraries( rocfft-rtc-cache PUBLIC ${ROCFFT_SQLITE_LIB} )
+-target_link_std_experimental_filesystem( rocfft-rtc-cache )
+-
+ # generating kernels from TreeNodes and launching them
+ add_library( rocfft-rtc-launch OBJECT
+   rtc_kernel.cpp
+@@ -457,14 +453,15 @@ foreach( target rocfft rocfft_offline_tuner rocfft_solmap_convert rocfft_aot_hel
+     rocfft-rtc-common
+     )
+ 
+-  target_link_std_experimental_filesystem(${target})
++  if( NOT WIN32 )
++    target_link_libraries( ${target} PRIVATE -lstdc++fs )
++  endif()
+ 
+   target_compile_options( ${target} PRIVATE ${WARNING_FLAGS} )
+   if( ${CMAKE_BUILD_TYPE} STREQUAL Debug )
+     target_compile_options(${target} PRIVATE -Og)
+   endif()
+ endforeach()
+-
+ target_link_libraries( rocfft PRIVATE
+   generator
+   rocfft-function-pool
+@@ -472,22 +469,17 @@ target_link_libraries( rocfft PRIVATE
+   rocfft-solution-map
+   rocfft-tuning-helper
+   )
+-target_link_std_experimental_filesystem( rocfft )
+-
+ target_link_libraries( rocfft_config_search PRIVATE
+   ${ROCFFT_HOST_LINK_LIBS}
+   generator
+   rocfft-rtc-launch
+   rocfft-function-pool
+   )
+-target_link_std_experimental_filesystem( rocfft_config_search )
+-
+ target_link_libraries( rocfft_aot_helper PRIVATE
+   generator
+   rocfft-function-pool
+   rocfft-solution-map
+   )
+-target_link_std_experimental_filesystem( rocfft_aot_helper )
+ 
+  # build executable rocfft-offline-tuner
+ if( ROCFFT_BUILD_OFFLINE_TUNER )
+-- 
+2.17.1
+
