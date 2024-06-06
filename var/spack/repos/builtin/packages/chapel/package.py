@@ -180,10 +180,11 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
     variant(
         "comm_substrate",
         default="unset",
-        description="Build Chapel with mulit-locale support using the "
+        description="Build Chapel with GASNet multi-locale support using the "
         "supplied CHPL_COMM_SUBSTRATE",
         values=("ibv", "ofi", "udp", "unset"),
         multi=False,
+        sticky=True, # never allow the concretizer to choose this
     )
 
     variant(
@@ -416,6 +417,9 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
     conflicts("rocm", when="cuda", msg="Chapel must be built with either CUDA or ROCm, not both")
     conflicts("rocm", when="@:2.0.0", msg="ROCm support in spack requires Chapel 2.0.0 or later")
 
+    conflicts("comm_substrate=unset", when="comm=gasnet",
+              msg="comm=gasnet requires you to also set comm_substrate= to the appropriate network")
+
     conflicts(
         "^python@3.12:",
         when="@:2.1.0",
@@ -485,7 +489,7 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
 
     def setup_chpl_comm(self, env, spec):
         env.set("CHPL_COMM", spec.variants["comm"].value)
-        if spec.variants["comm_substrate"].value != "none":
+        if spec.variants["comm_substrate"].value != "unset":
             env.set("CHPL_COMM_SUBSTRATE", spec.variants["comm_substrate"].value)
 
     def setup_chpl_llvm(self, env):
