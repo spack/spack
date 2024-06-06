@@ -19,4 +19,5 @@ class Libxfce4util(AutotoolsPackage):
 
     version("4.16.0", sha256="60598d745d1fc81ff5ad3cecc3a8d1b85990dd22023e7743f55abd87d8b55b83")
 
-    depends_on("glib@2.50:")
+    depends_on("glib@2.50:", type=("build", "link", "run"))
+    depends_on("intltool@0.35.0:", type="build")
