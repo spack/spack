@@ -110,8 +110,8 @@ class Rocfft(CMakePackage):
         when="@6.0.0",
     )
 
-    #Statically linking libstdc++ is failing on Cetos 8. Reverting below commit
-    #https://github.com/ROCm/rocFFT/commit/14a57bc071ce17da86db5970657e3ddff158f265
+    # Statically linking libstdc++ is failing on Centos 8. Reverting below commit
+    # https://github.com/ROCm/rocFFT/commit/14a57bc071ce17da86db5970657e3ddff158f265
     patch(
         "0006-Revert-static-link-libstdc++-if-std-filesystem-is-not-available.patch",
         when="@6.1.0:",
