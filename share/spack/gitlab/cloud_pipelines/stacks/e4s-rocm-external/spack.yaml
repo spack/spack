@@ -225,7 +225,6 @@ spack:
   - legion +rocm amdgpu_target=gfx908
   - magma ~cuda +rocm amdgpu_target=gfx908
   - mfem +rocm amdgpu_target=gfx908
-  - petsc +rocm amdgpu_target=gfx908
   - raja ~openmp +rocm amdgpu_target=gfx908
   # - slate +rocm amdgpu_target=gfx908          # slate: hip/device_gescale_row_col.hip.cc:58:49: error: use of overloaded operator '*' is ambiguous (with operand types 'HIP_vector_type<double, 2>' and 'const HIP_vector_type<double, 2>')
   - slepc +rocm amdgpu_target=gfx908 ^petsc +rocm amdgpu_target=gfx908
@@ -249,6 +248,7 @@ spack:
   # - exago +mpi +python +raja +hiop +rocm amdgpu_target=gfx908 ~ipopt cxxflags="-Wno-error=non-pod-varargs" ^hiop@1.0.0 ~sparse +mpi +raja +rocm amdgpu_target=gfx908 # raja: https://github.com/spack/spack/issues/44593
   # - lbann ~cuda +rocm amdgpu_target=gfx908    # aluminum: https://github.com/spack/spack/issues/38807
   # - papi +rocm amdgpu_target=gfx908           # papi: https://github.com/spack/spack/issues/27898
+  # - petsc +rocm amdgpu_target=gfx908          # petsc: https://github.com/spack/spack/issues/44600
 
   # ROCM 90a
   - amrex +rocm amdgpu_target=gfx90a
@@ -267,7 +267,6 @@ spack:
   - legion +rocm amdgpu_target=gfx90a
   - magma ~cuda +rocm amdgpu_target=gfx90a
   - mfem +rocm amdgpu_target=gfx90a
-  - petsc +rocm amdgpu_target=gfx90a
   - raja ~openmp +rocm amdgpu_target=gfx90a
   # - slate +rocm amdgpu_target=gfx90a          # slate: hip/device_gescale_row_col.hip.cc:58:49: error: use of overloaded operator '*' is ambiguous (with operand types 'HIP_vector_type<double, 2>' and 'const HIP_vector_type<double, 2>')
   - slepc +rocm amdgpu_target=gfx90a ^petsc +rocm amdgpu_target=gfx90a
@@ -291,6 +290,7 @@ spack:
   # - exago +mpi +python +raja +hiop +rocm amdgpu_target=gfx90a ~ipopt cxxflags="-Wno-error=non-pod-varargs" ^hiop@1.0.0 ~sparse +mpi +raja +rocm amdgpu_target=gfx90a # raja: https://github.com/spack/spack/issues/44593
   # - lbann ~cuda +rocm amdgpu_target=gfx90a    # aluminum: https://github.com/spack/spack/issues/38807
   # - papi +rocm amdgpu_target=gfx90a           # papi: https://github.com/spack/spack/issues/27898
+  # - petsc +rocm amdgpu_target=gfx90a          # petsc: https://github.com/spack/spack/issues/44600
 
   ci:
     pipeline-gen:
