@@ -233,12 +233,19 @@ fi
 
 command="${0##*/}"
 comp="CC"
+vcheck_flags=""
 case "$command" in
     cpp)
         mode=cpp
         debug_flags="-g"
         ;;
     cc|c89|c99|gcc|clang|armclang|icc|icx|pgcc|nvc|xlc|xlc_r|fcc|amdclang|cl.exe|craycc)
+        # Edge case for Intel's oneAPI compilers when using the legacy classic compilers:
+        # Pass flags to disable deprecation warnings to vcheck mode, since the warnings
+        # to stderr confuse tools that parse the output of compiler version checks.
+        if [[ ${SPACK_CFLAGS} == *"-diag-disable=10441"* ]]; then
+            vcheck_flags="-diag-disable=10441"
+        fi
         command="$SPACK_CC"
         language="C"
         comp="CC"
@@ -246,6 +253,12 @@ case "$command" in
         debug_flags="-g"
         ;;
     c++|CC|g++|clang++|armclang++|icpc|icpx|pgc++|nvc++|xlc++|xlc++_r|FCC|amdclang++|crayCC)
+        # Edge case for Intel's oneAPI compilers when using the legacy classic compilers:
+        # Pass flags to disable deprecation warnings to vcheck mode, since the warnings
+        # to stderr confuse tools that parse the output of compiler version checks.
+        if [[ ${SPACK_CXXFLAGS} == *"-diag-disable=10441"* ]]; then
+            vcheck_flags="-diag-disable=10441"
+        fi
         command="$SPACK_CXX"
         language="C++"
         comp="CXX"
@@ -253,6 +266,12 @@ case "$command" in
         debug_flags="-g"
         ;;
     ftn|f90|fc|f95|gfortran|flang|armflang|ifort|ifx|pgfortran|nvfortran|xlf90|xlf90_r|nagfor|frt|amdflang|crayftn)
+        # Edge case for Intel's oneAPI compilers when using the legacy classic compilers:
+        # Pass flags to disable deprecation warnings to vcheck mode, since the warnings
+        # to stderr confuse tools that parse the output of compiler version checks.
+        if [[ ${SPACK_FFLAGS} == *"-diag-disable=10448"* ]]; then
+            vcheck_flags="-diag-disable=10448"
+        fi
         command="$SPACK_FC"
         language="Fortran 90"
         comp="FC"
@@ -365,7 +384,7 @@ unset IFS
 export PATH="$new_dirs"
 
 if [ "$mode" = vcheck ]; then
-    exec "${command}" "$@"
+    exec "${command}" ${vcheck_flags} "$@"
 fi
 
 # Darwin's linker has a -r argument that merges object files together.
