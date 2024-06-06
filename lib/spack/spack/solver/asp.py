@@ -317,8 +317,15 @@ def using_libc_compatibility() -> bool:
     return spack.platforms.host().name == "linux"
 
 
-def c_compiler_runs(compiler: spack.compiler.Compiler) -> bool:
-    return compiler.compiler_verbose_output is not None
+def compiler_runs_for_lang(compiler) -> bool:
+    for lang in ["cc", "cxx", "fc", "f77"]:
+        comp_v_out_for_lang = compiler.try_compiler(lang)
+        if not comp_v_out_for_lang:
+            tty.debug(
+                f"the {lang} compiler {getattr(compiler, lang)} does not exist, or does not run correctly."
+                f" The compiler {compiler.spec} will not be used during concretization."
+            )
+        return comp_v_out_for_lang is not None
 
 
 def extend_flag_list(flag_list, new_flags):
@@ -2991,10 +2998,6 @@ class CompilerParser:
         self.compilers: Set[KnownCompiler] = set()
         for c in all_compilers_in_config(configuration):
             if not compiler_runs_for_lang(c):
-                tty.debug(
-                    f"the C compiler {c.cc} does not exist, or does not run correctly."
-                    f" The compiler {c.spec} will not be used during concretization."
-                )
                 continue
 
             if using_libc_compatibility() and not c.default_libc:
