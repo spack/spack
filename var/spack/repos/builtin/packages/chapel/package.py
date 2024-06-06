@@ -187,6 +187,18 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
         sticky=True,  # never allow the concretizer to choose this
     )
 
+    # Chapel depends on GASNet whenever comm=gasnet.
+    # The default (and recommendation) is to use the embedded copy of GASNet.
+    # This variant allows overriding with a particular version of GASNet sources,
+    # although this is not officially supported and some combinations might be rejected.
+    variant(
+        "gasnet",
+        description="Control the GASNet library version used",
+        default="bundled",
+        values=("bundled", "spack"),
+        multi=False,
+    )
+
     variant(
         "gasnet_segment",
         default="unset",
@@ -461,6 +473,8 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
 
     depends_on("gmp", when="gmp=spack", type=("build", "link", "run"))
 
+    depends_on("gasnet conduits=none", when="gasnet=spack")
+
     depends_on("python@3.7:")
     depends_on("cmake@3.16:")
 
@@ -470,6 +484,7 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
             env.unset(var)
 
     def configure(self, spec, prefix):
+        self.setup_gasnet()
         configure("--prefix={0}".format(prefix))
 
     def build(self, spec, prefix):
@@ -503,6 +518,13 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
 
     def setup_chpl_comm(self, env, spec):
         env.set("CHPL_COMM", spec.variants["comm"].value)
+
+    def setup_gasnet(self):
+        if self.spec.variants["gasnet"].value == "spack":
+            dst = join_path(self.stage.source_path, "third-party", "gasnet", "gasnet-src")
+            remove_directory_contents(dst)
+            os.rmdir(dst)
+            symlink(self.spec["gasnet"].prefix.src, dst)
 
     def setup_chpl_llvm(self, env):
         if self.spec.variants["llvm"].value == "spack":
