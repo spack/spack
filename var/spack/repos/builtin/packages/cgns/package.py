@@ -73,6 +73,11 @@ class Cgns(CMakePackage):
     # https://bugs.gentoo.org/662210
     patch("no-matherr.patch", when="@:3.3.1 +tools")
 
+    # patch for gcc14 due to using internal tk type/function,
+    # copied from https://github.com/CGNS/CGNS/pull/757
+    # (adjusted an include from tk-private/generic/tkInt.h to tkInt.h)
+    patch("gcc14.patch", when="@:4.4.0 %gcc@14:")
+
     def cmake_args(self):
         spec = self.spec
         options = []
