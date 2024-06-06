@@ -19,27 +19,6 @@ from spack.compiler import Compiler
 from spack.util.executable import Executable, ProcessError
 
 
-@pytest.fixture()
-def make_args_for_version(monkeypatch):
-    def _factory(version, path="/usr/bin/gcc"):
-        class MockOs:
-            pass
-
-        compiler_name = "gcc"
-        compiler_cls = spack.compilers.class_for_compiler_name(compiler_name)
-        monkeypatch.setattr(compiler_cls, "cc_version", lambda x: version)
-
-        compiler_id = spack.compilers.CompilerID(
-            os=MockOs, compiler_name=compiler_name, version=None
-        )
-        variation = spack.compilers.NameVariation(prefix="", suffix="")
-        return spack.compilers.DetectVersionArgs(
-            id=compiler_id, variation=variation, language="cc", path=path
-        )
-
-    return _factory
-
-
 def test_multiple_conflicting_compiler_definitions(mutable_config):
     compiler_def = {
         "compiler": {
