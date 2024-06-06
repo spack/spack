@@ -1964,7 +1964,9 @@ def pytest_runtest_setup(item):
 @pytest.fixture(scope="function")
 def disable_parallel_buildcache_push(monkeypatch):
     """Disable process pools in tests."""
-    monkeypatch.setattr(spack.cmd.buildcache, "_make_pool", spack.cmd.buildcache.NoPool)
+    monkeypatch.setattr(
+        spack.cmd.buildcache, "_make_concurrent_executor", spack.cmd.buildcache.SequentialExecutor
+    )
 
 
 def _root_path(x, y, *, path):
