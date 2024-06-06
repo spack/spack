@@ -17,6 +17,7 @@ class Cmor(AutotoolsPackage):
 
     license("BSD-3-Clause")
 
+    version("3.8.0", sha256="5f5a44e660104916dd0a3d0d942234db375d2a4ffb4f4113ec88cfdd93f99ef4")
     version("3.7.2", sha256="5e19a9be8e6a8bd18a2035772732c34b87b3448319bf0b8fa12ccd4a351b8e86")
     version("3.6.1", sha256="991035a41424f72ea6f0f85653fc13730eb035e63c7dff6ca740aa7a70976fb4")
     version("3.6.0", sha256="1608904a35106e83d365f27522209c325bd4bfc19d022b1a8abfb12cdf85fe20")
@@ -46,22 +47,23 @@ class Cmor(AutotoolsPackage):
 
     @run_before("configure")
     def validate(self):
-        if "+fortran" in self.spec and not self.compiler.fc:
+        if self.spec.satisfies("+fortran") and not self.compiler.fc:
             msg = "cannot build a fortran variant without a fortran compiler"
             raise RuntimeError(msg)
 
     def configure_args(self):
-        extra_args = ["--disable-debug"]
+        spec = self.spec
+        args = ["--disable-debug"]
 
-        if "+fortran" in self.spec:
-            extra_args.append("--enable-fortran")
+        if spec.satisfies("+fortran"):
+            args.append("--enable-fortran")
         else:
-            extra_args.append("--disable-fortran")
+            args.append("--disable-fortran")
 
-        if "+python" in self.spec:
-            extra_args.append("--with-python={0}".format(self.spec["python"].prefix))
+        if spec.satisfies("+python"):
+            args.append(f"--with-python={self.spec['python'].prefix}")
 
-        return extra_args
+        return args
 
     def check(self):
         """tests need downloaded files, testcases have manual instructions for that."""
@@ -70,6 +72,6 @@ class Cmor(AutotoolsPackage):
     def install(self, spec, prefix):
         make("install")
 
-        if "+python" in spec:
+        if spec.satisfies("+python"):
             args = std_pip_args + ["--prefix=" + prefix, "."]
             pip(*args)

@@ -349,6 +349,87 @@ def test_find_prefix_in_env(
         # Would throw error on regression
 
 
+def test_find_specs_include_concrete_env(mutable_mock_env_path, config, mutable_mock_repo, tmpdir):
+    path = tmpdir.join("spack.yaml")
+
+    with tmpdir.as_cwd():
+        with open(str(path), "w") as f:
+            f.write(
+                """\
+spack:
+  specs:
+  - mpileaks
+"""
+            )
+        env("create", "test1", "spack.yaml")
+
+    test1 = ev.read("test1")
+    test1.concretize()
+    test1.write()
+
+    with tmpdir.as_cwd():
+        with open(str(path), "w") as f:
+            f.write(
+                """\
+spack:
+  specs:
+  - libelf
+"""
+            )
+        env("create", "test2", "spack.yaml")
+
+    test2 = ev.read("test2")
+    test2.concretize()
+    test2.write()
+
+    env("create", "--include-concrete", "test1", "--include-concrete", "test2", "combined_env")
+
+    with ev.read("combined_env"):
+        output = find()
+
+    assert "No root specs" in output
+    assert "Included specs" in output
+    assert "mpileaks" in output
+    assert "libelf" in output
+
+
+def test_find_specs_nested_include_concrete_env(
+    mutable_mock_env_path, config, mutable_mock_repo, tmpdir
+):
+    path = tmpdir.join("spack.yaml")
+
+    with tmpdir.as_cwd():
+        with open(str(path), "w") as f:
+            f.write(
+                """\
+spack:
+  specs:
+  - mpileaks
+"""
+            )
+        env("create", "test1", "spack.yaml")
+
+    test1 = ev.read("test1")
+    test1.concretize()
+    test1.write()
+
+    env("create", "--include-concrete", "test1", "test2")
+    test2 = ev.read("test2")
+    test2.add("libelf")
+    test2.concretize()
+    test2.write()
+
+    env("create", "--include-concrete", "test2", "test3")
+
+    with ev.read("test3"):
+        output = find()
+
+    assert "No root specs" in output
+    assert "Included specs" in output
+    assert "mpileaks" in output
+    assert "libelf" in output
+
+
 def test_find_loaded(database, working_env):
     output = find("--loaded", "--group")
     assert output == ""

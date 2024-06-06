@@ -96,6 +96,8 @@ class Clang(Compiler):
 
     openmp_flag = "-fopenmp"
 
+    # C++ flags based on CMake Modules/Compiler/Clang.cmake
+
     @property
     def cxx11_flag(self):
         if self.real_version < Version("3.3"):
@@ -121,6 +123,24 @@ class Clang(Compiler):
         return "-std=c++17"
 
     @property
+    def cxx20_flag(self):
+        if self.real_version < Version("5.0"):
+            raise UnsupportedCompilerFlag(self, "the C++20 standard", "cxx20_flag", "< 5.0")
+        elif self.real_version < Version("11.0"):
+            return "-std=c++2a"
+        else:
+            return "-std=c++20"
+
+    @property
+    def cxx23_flag(self):
+        if self.real_version < Version("12.0"):
+            raise UnsupportedCompilerFlag(self, "the C++23 standard", "cxx23_flag", "< 12.0")
+        elif self.real_version < Version("17.0"):
+            return "-std=c++2b"
+        else:
+            return "-std=c++23"
+
+    @property
     def c99_flag(self):
         return "-std=c99"
 
@@ -142,7 +162,10 @@ class Clang(Compiler):
     def c23_flag(self):
         if self.real_version < Version("9.0"):
             raise UnsupportedCompilerFlag(self, "the C23 standard", "c23_flag", "< 9.0")
-        return "-std=c2x"
+        elif self.real_version < Version("18.0"):
+            return "-std=c2x"
+        else:
+            return "-std=c23"
 
     @property
     def cc_pic_flag(self):

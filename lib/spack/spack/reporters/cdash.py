@@ -58,7 +58,8 @@ MAP_PHASES_TO_CDASH = {
 # Initialize data structures common to each phase's report.
 CDASH_PHASES = set(MAP_PHASES_TO_CDASH.values())
 CDASH_PHASES.add("update")
-
+# CDash request timeout in seconds
+SPACK_CDASH_TIMEOUT = 45
 
 CDashConfiguration = collections.namedtuple(
     "CDashConfiguration", ["upload_url", "packages", "build", "site", "buildstamp", "track"]
@@ -447,7 +448,7 @@ class CDash(Reporter):
                 # By default, urllib2 only support GET and POST.
                 # CDash expects this file to be uploaded via PUT.
                 request.get_method = lambda: "PUT"
-                response = opener.open(request)
+                response = opener.open(request, timeout=SPACK_CDASH_TIMEOUT)
                 if self.current_package_name not in self.buildIds:
                     resp_value = response.read()
                     if isinstance(resp_value, bytes):

@@ -36,6 +36,9 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage, CompilerPackage):
 
     version("master", branch="master")
 
+    version("14.1.0", sha256="e283c654987afe3de9d8080bc0bd79534b5ca0d681a73a11ff2b5d3767426840")
+
+    version("13.3.0", sha256="0845e9621c9543a13f484e94584a49ffc0129970e9914624235fc1d061a0c083")
     version("13.2.0", sha256="e275e76442a6067341a27f04c5c6b83d8613144004c0413528863dc6b5c743da")
     version("13.1.0", sha256="61d684f0aa5e76ac6585ad8898a2427aade8979ed5e7f85492286c4dfc13ee86")
 
@@ -127,6 +130,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage, CompilerPackage):
         description="Compilers and runtime libraries to build",
     )
     variant("binutils", default=False, description="Build via binutils")
+    variant("mold", default=False, description="Use mold as the linker by default", when="@12:")
     variant(
         "piclibs", default=False, description="Build PIC versions of libgfortran.a and libstdc++.a"
     )
@@ -191,6 +195,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage, CompilerPackage):
     depends_on(
         "binutils+gas+ld+plugins~libiberty", when="+binutils", type=("build", "link", "run")
     )
+    depends_on("mold", when="+mold")
     depends_on("zip", type="build", when="languages=java")
 
     # The server is sometimes a bit slow to respond
@@ -420,6 +425,11 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage, CompilerPackage):
             sha256="2df7ef067871a30b2531a2013b3db661ec9e61037341977bfc451e30bf2c1035",
             when="@13.2.0 target=aarch64:",
         )
+        patch(
+            "https://raw.githubusercontent.com/Homebrew/formula-patches/82b5c1cd38826ab67ac7fc498a8fe74376a40f4a/gcc/gcc-14.1.0.diff",
+            sha256="1529cff128792fe197ede301a81b02036c8168cb0338df21e4bc7aafe755305a",
+            when="@14.1.0 target=aarch64:",
+        )
         conflicts("+bootstrap", when="@11.3.0,13.1: target=aarch64:")
 
         # Use -headerpad_max_install_names in the build,
@@ -550,10 +560,8 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage, CompilerPackage):
             ]
             if any(x in basename for x in substring_to_be_filtered):
                 continue
-            # Filter out links in favor of real executables on
-            # all systems but Cray
-            host_platform = str(spack.platforms.host())
-            if os.path.islink(exe) and host_platform != "cray":
+            # Filter out links in favor of real executables
+            if os.path.islink(exe):
                 continue
 
             result.append(exe)
@@ -966,11 +974,19 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage, CompilerPackage):
 
             # rpath
             if rpath_dir:
-                f.write(f"*link_libgcc:\n+ -rpath={rpath_dir}\n\n")
+                f.write(f"*link_libgcc:\n+ -rpath {rpath_dir}\n\n")
 
             # programs search path
             if self.spec.satisfies("+binutils"):
                 f.write(f"*self_spec:\n+ -B{self.spec['binutils'].prefix.bin}\n\n")
+
+            # set -fuse-ld=mold as the default linker when +mold
+            if self.spec.satisfies("+mold"):
+                f.write(
+                    f"*self_spec:\n+ -B{self.spec['mold'].prefix.bin} "
+                    "%{!fuse-ld*:-fuse-ld=mold}\n\n"
+                )
+
         set_install_permissions(specs_file)
         tty.info(f"Wrote new spec file to {specs_file}")
 
@@ -1172,7 +1188,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage, CompilerPackage):
             os.path.exists(os.path.join(header_dir, h))
             for h in libc.package_class.representative_headers
         ):
-            relocation_args.append(f"-isystem {header_dir}")
+            relocation_args.append(f"-idirafter {header_dir}")
         else:
             tty.warn(
                 f"Cannot relocate {specs_file} include directories, "

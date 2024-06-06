@@ -28,7 +28,7 @@ import spack.util.libc
 import spack.variant as vt
 from spack.concretize import find_spec
 from spack.spec import CompilerSpec, Spec
-from spack.version import Version, ver
+from spack.version import Version, VersionList, ver
 
 
 def check_spec(abstract, concrete):
@@ -1914,11 +1914,11 @@ class TestConcretize:
             libc_offset = 1 if spack.solver.asp.using_libc_compatibility() else 0
             criteria = [
                 (num_specs - 1 - libc_offset, None, "number of packages to build (vs. reuse)"),
-                (2, 0, "version badness"),
+                (2, 0, "version badness (non roots)"),
             ]
 
             for criterion in criteria:
-                assert criterion in result.criteria, result_spec
+                assert criterion in result.criteria, criterion
             assert result_spec.satisfies("^b@1.0")
 
     @pytest.mark.only_clingo("Use case not supported by the original concretizer")
@@ -2464,6 +2464,7 @@ class TestConcretize:
         assert s["dttop"].dag_hash() == build_dep.dag_hash()
 
     @pytest.mark.regression("44040")
+    @pytest.mark.only_clingo("Use case not supported by the original concretizer")
     def test_exclude_specs_from_reuse(self, monkeypatch):
         """Tests that we can exclude a spec from reuse when concretizing, and that the spec
         is not added back to the solve as a dependency of another reusable spec.
@@ -2502,6 +2503,95 @@ class TestConcretize:
         assert result["dyninst"].satisfies("@=8.2")
         for dep in result["dyninst"].traverse(root=False):
             assert dep.dag_hash() == reused[dep.name].dag_hash()
+
+    @pytest.mark.regression("44091")
+    @pytest.mark.parametrize(
+        "included_externals",
+        [
+            ["deprecated-versions"],
+            # Try the empty list, to ensure that in that case everything will be included
+            # since filtering should happen only when the list is non-empty
+            [],
+        ],
+    )
+    @pytest.mark.only_clingo("Use case not supported by the original concretizer")
+    def test_include_specs_from_externals_and_libcs(
+        self, included_externals, mutable_config, tmp_path
+    ):
+        """Tests that when we include specs from externals, we always include libcs."""
+        mutable_config.set(
+            "packages",
+            {
+                "deprecated-versions": {
+                    "externals": [{"spec": "deprecated-versions@1.1.0", "prefix": str(tmp_path)}]
+                }
+            },
+        )
+        request_str = "deprecated-client"
+
+        # When using the external the version is selected even if deprecated
+        with spack.config.override(
+            "concretizer:reuse", {"from": [{"type": "external", "include": included_externals}]}
+        ):
+            result = Spec(request_str).concretized()
+
+        assert result["deprecated-versions"].satisfies("@1.1.0")
+
+        # When excluding it, we pick the non-deprecated version
+        with spack.config.override(
+            "concretizer:reuse",
+            {"from": [{"type": "external", "exclude": ["deprecated-versions"]}]},
+        ):
+            result = Spec(request_str).concretized()
+
+        assert result["deprecated-versions"].satisfies("@1.0.0")
+
+    @pytest.mark.regression("44085")
+    @pytest.mark.only_clingo("Use case not supported by the original concretizer")
+    def test_can_reuse_concrete_externals_for_dependents(self, mutable_config, tmp_path):
+        """Test that external specs that are in the DB can be reused. This means they are
+        preferred to concretizing another external from packages.yaml
+        """
+        packages_yaml = {
+            "externaltool": {"externals": [{"spec": "externaltool@2.0", "prefix": "/fake/path"}]}
+        }
+        mutable_config.set("packages", packages_yaml)
+        # Concretize with gcc@9 to get a suboptimal spec, since we have gcc@10 available
+        external_spec = Spec("externaltool@2 %gcc@9").concretized()
+        assert external_spec.external
+
+        root_specs = [Spec("sombrero")]
+        with spack.config.override("concretizer:reuse", True):
+            solver = spack.solver.asp.Solver()
+            setup = spack.solver.asp.SpackSolverSetup()
+            result, _, _ = solver.driver.solve(setup, root_specs, reuse=[external_spec])
+
+        assert len(result.specs) == 1
+        sombrero = result.specs[0]
+        assert sombrero["externaltool"].dag_hash() == external_spec.dag_hash()
+
+    @pytest.mark.only_clingo("Original concretizer cannot reuse")
+    def test_cannot_reuse_host_incompatible_libc(self):
+        """Test whether reuse concretization correctly fails to reuse a spec with a host
+        incompatible libc."""
+        if not spack.solver.asp.using_libc_compatibility():
+            pytest.skip("This test requires libc nodes")
+
+        # We install b@1 ^glibc@2.30, and b@0 ^glibc@2.28. The former is not host compatible, the
+        # latter is.
+        fst = Spec("b@1").concretized()
+        fst._mark_concrete(False)
+        fst.dependencies("glibc")[0].versions = VersionList(["=2.30"])
+        fst._mark_concrete(True)
+        snd = Spec("b@0").concretized()
+
+        # The spec b@1 ^glibc@2.30 is "more optimal" than b@0 ^glibc@2.28, but due to glibc
+        # incompatibility, it should not be reused.
+        solver = spack.solver.asp.Solver()
+        setup = spack.solver.asp.SpackSolverSetup()
+        result, _, _ = solver.driver.solve(setup, [Spec("b")], reuse=[fst, snd])
+        assert len(result.specs) == 1
+        assert result.specs[0] == snd
 
 
 @pytest.fixture()

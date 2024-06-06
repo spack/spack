@@ -37,7 +37,7 @@ jobs:
               make patch unzip which xz python3 python3-devel tree \
               cmake bison
       - name: Checkout
-        uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b
+        uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29
         with:
           fetch-depth: 0
       - name: Bootstrap clingo
@@ -60,7 +60,7 @@ jobs:
         run: |
           brew install cmake bison tree
       - name: Checkout
-        uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b
+        uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29
         with:
           fetch-depth: 0
       - uses: actions/setup-python@82c7e631bb3cdc910f68e0081d67478d79c6982d
@@ -84,15 +84,13 @@ jobs:
       - name: Setup macOS
         if: ${{ matrix.runner != 'ubuntu-latest' }}
         run: |
-          brew install tree
-          # Remove GnuPG since we want to bootstrap it
-          sudo rm -rf /usr/local/bin/gpg
+          brew install tree gawk
+          sudo rm -rf $(command -v gpg gpg2)
       - name: Setup Ubuntu
         if: ${{ matrix.runner == 'ubuntu-latest' }}
-        run: |
-          sudo rm -rf $(which gpg) $(which gpg2) $(which patchelf)
+        run: sudo rm -rf $(command -v gpg gpg2 patchelf)
       - name: Checkout
-        uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b
+        uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29
         with:
           fetch-depth: 0
       - name: Bootstrap GnuPG
@@ -121,7 +119,7 @@ jobs:
         run: |
           sudo rm -rf $(which gpg) $(which gpg2) $(which patchelf)
       - name: Checkout
-        uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b
+        uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29
         with:
           fetch-depth: 0
       - uses: actions/setup-python@82c7e631bb3cdc910f68e0081d67478d79c6982d
