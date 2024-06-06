@@ -75,12 +75,12 @@ class GeopmService(AutotoolsPackage):
     depends_on("py-pygments@2.13.0:", type="build", when="+docs")
 
     # Other Python dependencies - from service/setup.py
-    depends_on("py-dasbus@1.6.0:", type=("build", "run"))
-    depends_on("py-cffi@1.14.5:", type="run")
-    depends_on("py-psutil@5.8.0:", type="run")
-    depends_on("py-jsonschema@3.2.0:", type="run")
-    depends_on("py-pyyaml@6.0:", type="run")
     depends_on("py-setuptools@53.0.0:", type="build")
+    depends_on("py-dasbus@1.6.0:", type=("build", "run"))
+    depends_on("py-psutil@5.8.0:", type=("build", "run"))
+    depends_on("py-jsonschema@3.2.0:", type=("build", "run"))
+    depends_on("py-pyyaml@6.0:", type=("build", "run"))
+    depends_on("py-cffi@1.14.5:", type="run")
 
     # Other dependencies
     depends_on("bash-completion")
