@@ -19,6 +19,7 @@ class PyMpi4py(PythonPackage):
     license("BSD-2-Clause")
 
     version("master", branch="master")
+    version("3.1.6", sha256="c8fa625e0f92b082ef955bfb52f19fa6691d29273d7d71135d295aa143dee6cb")
     version("3.1.5", sha256="a706e76db9255135c2fb5d1ef54cb4f7b0e4ad9e33cbada7de27626205f2a153")
     version("3.1.4", sha256="17858f2ebc623220d0120d1fa8d428d033dde749c4bc35b33d81a66ad7f93480")
     version("3.1.3", sha256="f1e9fae1079f43eafdd9f817cdb3fd30d709edc093b5d5dada57a461b2db3008")
@@ -32,7 +33,8 @@ class PyMpi4py(PythonPackage):
     version("1.3.1", sha256="e7bd2044aaac5a6ea87a87b2ecc73b310bb6efe5026031e33067ea3c2efc3507")
 
     depends_on("py-setuptools@40.9:", type="build")
-    depends_on("py-cython@0.27:2", type="build")
+    depends_on("py-cython@0.27:2", when="@:3.1.6", type="build")
+    depends_on("py-cython@0.27:3", when="@master", type="build")
     depends_on("mpi")
 
     def setup_build_environment(self, env):

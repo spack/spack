@@ -47,11 +47,11 @@ class PyH5py(PythonPackage):
 
     # Build dependencies
     # h5py@3.11 can build with cython@3.x
-    depends_on("py-cython@0.29.31:", type="build", when="@3.11:")
-    depends_on("py-cython@0.29.31:0", type="build", when="@3.9:")
+    depends_on("py-cython@0.29.31:3", type="build", when="@3.11:")
+    depends_on("py-cython@0.29.31:0", type="build", when="@3.9:3.10")
     depends_on("py-cython@0.29.15:0", type=("build"), when="@3:3.7 ^python@3.9.0:")
     depends_on("py-cython@0.29.14:0", type=("build"), when="@3:3.7 ^python@3.8.0:3.8")
-    depends_on("py-cython@0.29:0", type=("build"), when="@3:")
+    depends_on("py-cython@0.29:0", type=("build"), when="@3.0:3.10")
     depends_on("py-cython@0.23:0", type="build", when="@:2")
     depends_on("py-pkgconfig", type="build")
     depends_on("py-setuptools@61:", type="build", when="@3.8.0:")
