@@ -2,6 +2,7 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 import os
 import platform
 
@@ -33,26 +34,35 @@ class Pmix(AutotoolsPackage):
     homepage = "https://pmix.org"
     url = "https://github.com/pmix/pmix/releases/download/v3.1.3/pmix-3.1.3.tar.bz2"
     git = "https://github.com/openpmix/openpmix.git"
+
     maintainers("rhc54")
 
     license("BSD-3-Clause-Open-MPI")
 
     # Branches 4.2 & 5.0 will also need submodules
     version("master", branch="master", submodules=True)
+    version("5.0.2", sha256="28227ff2ba925da2c3fece44502f23a91446017de0f5a58f5cea9370c514b83c")
     version("5.0.1", sha256="d4371792d4ba4c791e1010100b4bf9a65500ababaf5ff25d681f938527a67d4a")
     version("5.0.0", sha256="92a85c4946346816c297ac244fbaf4f723bba87fb7e4424a057c2dabd569928d")
+    version("4.2.9", sha256="6b11f4fd5c9d7f8e55fc6ebdee9af04b839f44d06044e58cea38c87c168784b3")
+    version("4.2.8", sha256="09b442878e233f3d7f11168e129b32e5c8573c3ab6aaa9f86cf2d59c31a43dc9")
+    version("4.2.7", sha256="ac9cf58a0bf01bfacd51d342100234f04c740ec14257e4492d1dd0207ff2a917")
     version("4.2.6", sha256="10b0d5a7fca70272e9427c677557578ac452cea02aeb00e30dec2116d20c3cd0")
     version("4.2.5", sha256="a89c2c5dc69715a4df1e76fdc4318299386c184623a1d0d5eb1fb062e14b0d2b")
     version("4.2.4", sha256="c4699543f2278d3a78bdac72b4b2da9cd92d11d18478d66522b8991764b021c8")
     version("4.2.3", sha256="c3d9d6885ae39c15627a86dc4718e050baf604acda71b8b9e2ee3b12ad5c2d2a")
     version("4.2.2", sha256="935b2f492e4bc409017f1425a83366aa72a7039605ea187c9fac7bb1371cd73c")
     version("4.2.1", sha256="3c992fa0d653b56e0e409bbaec9de8fc1b82c948364dbb28545442315ed2a179")
+    version("4.1.3", sha256="c96a12bb5e565867b27f526611182801ecc0cb9dcb0146b195e77ed511eef9dd")
     version("4.1.2", sha256="670d3a02b39fb2126fe8084174cf03c484e027b5921b5c98a851108134e2597a")
     version("4.1.1", sha256="0527a15d616637b95975d238bbc100b244894518fbba822cd8f46589ca61ccec")
     version("4.1.0", sha256="145f05a6c621bfb3fc434776b615d7e6d53260cc9ba340a01f55b383e07c842e")
+    version("4.0.1", sha256="073818c6cef5e05d20c034a11889d2556bd621abd149783758694cab066f7460")
+    version("3.2.5", sha256="db6528e22231e8c88068392779438f0ac6f8f965b25f030b221c00d779088c8d")
     version("3.2.3", sha256="9b835f23c2f94a193c14012ee68b3657a61c568598cdd1212a3716b32d41a135")
     version("3.2.2", sha256="7e7fafe2b338dab42a94002d99330a5bb0ebbdd06381ec65953a87c94db3dd23")
     version("3.2.1", sha256="7e5db8ada5828cf85c12f70db6bfcf777d13e5c4c73b2206bb5e394d47066a2b")
+    version("3.1.7", sha256="283b074d6212522436f5e0dccada6c70a24c7b6ae579740e2b36879be0dea604")
     version("3.1.6", sha256="3df0e0cb0cae67b59edba1d90f55d73467be8404874fe89056690739e039a840")
     version("3.1.5", sha256="88934195174455df478b996313095df25b51d0caf5a5cce01b22f0ccdc6c5cf7")
     version("3.1.3", sha256="118acb9c4e10c4e481406dcffdfa762f314af50db75336bf8460e53b56dc439d")
@@ -78,10 +88,10 @@ class Pmix(AutotoolsPackage):
         "restful",
         default=False,
         when="@4:",
-        description="allow a PMIx server to request services from " "a system-level REST server",
+        description="Allow a PMIx server to request services from " "a system-level REST server",
     )
 
-    variant("python", default=False, when="@4.1.2:", description="Enable python bindigs")
+    variant("python", default=False, when="@4.1.2:", description="Enable python bindings")
 
     variant("docs", default=False, description="Build manpages")
 
