@@ -473,14 +473,20 @@ class Mfem(Package, CudaPackage, ROCmPackage):
             "amgx~mpi cuda_arch={0}".format(sm_), when="+amgx~mpi cuda_arch={0}".format(sm_)
         )
 
-    # double precision requirements, may be incomplete:
     for using_double_cond in ["@:4.6", "precision=double"]:
         with when(using_double_cond):
+            # This set of depens_on() directives enforces some, but not all,
+            # requirements in optional packages in order to have a successful
+            # build. This incompleteness may cause certain specs to concretize
+            # fine but fail at build time.
             depends_on("hypre precision=double", when="+mpi")
             depends_on("petsc+double", when="+petsc")
             depends_on("mumps+double", when="+mumps")
-    # single precision requirements:
     with when("precision=single"):
+        # This set of depens_on() directives enforces some, but not all,
+        # requirements in optional packages in order to have a successful
+        # build. This incompleteness may cause certain specs to concretize
+        # fine but fail at build time.
         depends_on("hypre precision=single", when="+mpi")
         depends_on("petsc~double", when="+petsc")
         depends_on("mumps+float", when="+mumps")
