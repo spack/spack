@@ -83,6 +83,8 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
     variant("sycl", default=False, description="Enable SYCL support")
     variant("magma", default=False, description="Enable MAGMA interface")
     variant("caliper", default=False, description="Enable Caliper support")
+    variant("rocblas", default=False, description="Enable rocBLAS")
+    variant("cublas", default=False, description="Enable cuBLAS")
 
     # Patch to add gptune hookup codes
     patch("ij_gptune.patch", when="+gptune@2.19.0")
@@ -114,6 +116,8 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
     depends_on("rocprim", when="+rocm")
     depends_on("hipblas", when="+rocm +superlu-dist")
     depends_on("umpire", when="+umpire")
+    depends_on("umpire+rocm", when="+umpire+rocm")
+    depends_on("umpire+cuda", when="+umpire+cuda")
     depends_on("caliper", when="+caliper")
 
     gpu_pkgs = ["magma", "umpire"]
@@ -165,6 +169,9 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
 
     # Option added in v2.29.0
     conflicts("+magma", when="@:2.28")
+
+    conflicts("+cublas", when="~cuda", msg="cuBLAS requires CUDA to be enabled")
+    conflicts("+rocblas", when="~rocm", msg="rocBLAS requires ROCm to be enabled")
 
     configure_directory = "src"
 
@@ -257,6 +264,8 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
                 configure_args.append("--with-cuda-home={0}".format(spec["cuda"].prefix))
             else:
                 configure_args.append("--enable-cub")
+            if spec.satisfies("+cublas"):
+                conigure_args.append("--enable-cublas")
         else:
             configure_args.extend(["--without-cuda", "--disable-curand", "--disable-cusparse"])
             if spec.satisfies("@:2.20.99"):
@@ -282,6 +291,8 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
                 rocm_arch_sorted = list(sorted(rocm_arch_vals, reverse=True))
                 rocm_arch = rocm_arch_sorted[0]
                 configure_args.append("--with-gpu-arch={0}".format(rocm_arch))
+            if spec.satisfies("+rocblas"):
+                configure_args.append("--enable-rocblas")
         else:
             configure_args.extend(["--without-hip", "--disable-rocrand", "--disable-rocsparse"])
 
@@ -302,7 +313,7 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
             configure_args.append("--with-magma")
 
         if "+gpu-aware-mpi" in spec:
-            options.append("--enable-gpu-aware-mpi")
+            configure_args.append("--enable-gpu-aware-mpi")
 
         configure_args.extend(self.enable_or_disable("fortran"))
 

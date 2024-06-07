@@ -115,7 +115,6 @@ class Spack(Package):
     depends_on("binutils", type="run", when="@:0.20")
     depends_on("gnupg", type="run")
     depends_on("patchelf", type="run", when="platform=linux")
-    depends_on("patchelf", type="run", when="platform=cray")
 
     # See https://github.com/spack/spack/pull/24686
     # and #25595, #25726, #25853, #25923, #25924 upstream in python/cpython

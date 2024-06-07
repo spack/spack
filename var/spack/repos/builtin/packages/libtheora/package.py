@@ -76,12 +76,6 @@ class AutotoolsBuilder(AutotoolsBuilder):
         args += ["LIBS=-lm"]
         return args
 
-    def autoreconf(self, pkg, spec, prefix):
-        sh = which("sh")
-        # arguments are passed on to configure, let it just print its version
-        # and exit, so that configure can run in the configure build phase
-        sh("./autogen.sh", "-V")
-
 
 class MSBuildBuilder(MSBuildBuilder):
     def is_64bit(self):

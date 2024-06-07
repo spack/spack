@@ -11,14 +11,23 @@ class Xrootd(CMakePackage):
     """The XROOTD project aims at giving high performance, scalable fault
     tolerant access to data repositories of many kinds."""
 
-    homepage = "http://xrootd.org"
+    homepage = "https://xrootd.slac.stanford.edu"
     url = "https://xrootd.slac.stanford.edu/download/v5.5.1/xrootd-5.5.1.tar.gz"
     list_url = "https://xrootd.slac.stanford.edu/dload.html"
+    git = "https://github.com/xrootd/xrootd.git"
 
     maintainers("gartung", "greenc-FNAL", "marcmengel", "vitodb", "wdconinc")
 
     license("LGPL-3.0-only")
 
+    version("5.6.9", sha256="44196167fbcf030d113e3749dfdecab934c43ec15e38e77481e29aac191ca3a8")
+    version("5.6.8", sha256="19268fd9f0307d936da3598a5eb8471328e059c58f60d91d1ce7305ca0d57528")
+    version("5.6.7", sha256="4089ce3a69fcf6566d320ef1f4a73a1d6332e6835b7566e17548569bdea78a8d")
+    version("5.6.6", sha256="b265a75be750472561df9ff321dd0b2102bd64ca19451d312799f501edc597ba")
+    version("5.6.5", sha256="600874e7c5cdb11d20d6bd6c549b04a3c5beb230d755829726cd15fab99073b1")
+    version("5.6.4", sha256="52f041ab2eaa4bf7c6087a7246c3d5f90fbab0b0622b57c018b65f60bf677fad")
+    version("5.6.3", sha256="72000835497f6337c3c6a13c6d39a51fa6a5f3a1ccd34214f2d92f7d47cc6b6c")
+    version("5.6.2", sha256="7d7c262714268b92dbe370a9ae72275cc07f0cdbed400afd9989c366fed04c00")
     version("5.6.1", sha256="9afc48ab0fb3ba69611b1edc1b682a185d49b45caf197323eecd1146d705370c")
     version("5.6.0", sha256="cda0d32d29f94220be9b6627a80386eb33fac2dcc25c8104569eaa4ea3563009")
     version("5.5.5", sha256="0710caae527082e73d3bf8f9d1dffe95808afd3fcaaaa15ab0b937b8b226bc1f")

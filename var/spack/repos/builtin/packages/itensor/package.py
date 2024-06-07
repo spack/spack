@@ -17,6 +17,7 @@ class Itensor(MakefilePackage):
 
     license("Apache-2.0")
 
+    version("3.2.0", sha256="cb2b041514857639cf9e7c326bfeef152d45228b26243dbb9d1a0f82189f1014")
     version("3.1.11", sha256="bc6c48d34c4d4281d15116d7d95d7e6e2b6878b9a60ce33372b8967a96826e95")
     version("3.1.10", sha256="68c149e23a1ab936ef8175ea11fedc0ec64031c3686ede93c3a5ab0c893774f6")
     version("3.1.9", sha256="4dd71b251b63fb7775ef854212df6f1d5d3ac4d6d1905dc03b1e6d2a0a620a17")
@@ -62,7 +63,7 @@ class Itensor(MakefilePackage):
         copy("options.mk.sample", mf)
 
         # 1.CCCOM
-        ccopts = "CCCOM={0}{1}".format(spack_cxx, self.getcopts(spec))
+        ccopts = f"CCCOM={spack_cxx}{self.getcopts(spec)}"
         filter_file(r"^CCCOM.+", ccopts, mf)
 
         # 2.BLAS/LAPACK
@@ -90,7 +91,7 @@ class Itensor(MakefilePackage):
 
         # 3.HDF5
         if "+hdf5" in spec:
-            hdf5p = "HDF5_PREFIX={0}".format(spec["hdf5"].prefix.lib)
+            hdf5p = f"HDF5_PREFIX={spec['hdf5'].prefix.lib}"
             filter_file("^#HDF5.+", hdf5p, mf)
 
         # 4.openmp
@@ -99,7 +100,7 @@ class Itensor(MakefilePackage):
             filter_file("-fopenmp", self.compiler.openmp_flag, mf)
 
         # 5.prefix
-        filter_file(r"^PREFIX.+", "PREFIX={0}".format(os.getcwd()), mf)
+        filter_file(r"^PREFIX.+", f"PREFIX={os.getcwd()}", mf)
 
         # 5.shared
         if "+shared" in spec:
@@ -111,7 +112,7 @@ class Itensor(MakefilePackage):
         copy(mf, "options.mk.build")
 
         # 1.CCCOM
-        ccopts = "CCCOM={0}".format(self.compiler.cxx)
+        ccopts = f"CCCOM={self.compiler.cxx}"
         ccopts += " " + " ".join(spec.compiler_flags["cxxflags"])
         if spec.satisfies("%fj"):
             ccopts += " " + env["FCC_ENV"]
@@ -125,10 +126,10 @@ class Itensor(MakefilePackage):
         filter_file(r"^BLAS_LAPACK_LIBFLAGS=", vlib, mf)
 
         # 3.prefix
-        filter_file(r"^PREFIX.+", "PREFIX={0}".format(prefix), mf)
+        filter_file(r"^PREFIX.+", f"PREFIX={prefix}", mf)
 
         # tutorial/project_template/Makefile
         mf2 = join_path("tutorial", "project_template", "Makefile")
-        filter_file(r"^LIBRARY_DIR.+", "LIBRARY_DIR={0}".format(prefix), mf2)
+        filter_file(r"^LIBRARY_DIR.+", f"LIBRARY_DIR={prefix}", mf2)
 
         install_tree(".", prefix)

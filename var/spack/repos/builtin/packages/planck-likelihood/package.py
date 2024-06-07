@@ -80,9 +80,9 @@ class PlanckLikelihood(Package):
         filter_file("^\t@", "\t", "Makefile")
 
         makeflags = [
-            "PREFIX=%s" % prefix,
+            f"PREFIX={prefix}",
             "COLORS=0",
-            "CFITSIOPATH=%s" % spec["cfitsio"].prefix,
+            f"CFITSIOPATH={spec['cfitsio'].prefix}",
             "CC=cc",
             "FC=fc",
             "IFORTLIBPATH=",
@@ -90,9 +90,9 @@ class PlanckLikelihood(Package):
             "GFORTRANLIBPATH=",
             "GFORTRANRUNTIME=-lgfortran -lgomp",
             "LAPACKLIBPATH=",
-            "LAPACK=%s" % (spec["lapack"].libs + spec["blas"].libs).ld_flags,
-            "COPENMP=%s" % self.compiler.openmp_flag,
-            "FOPENMP=%s" % self.compiler.openmp_flag,
+            f"LAPACK={(spec['lapack'].libs + spec['blas'].libs).ld_flags}",
+            f"COPENMP={self.compiler.openmp_flag}",
+            f"FOPENMP={self.compiler.openmp_flag}",
         ]
 
         # Build

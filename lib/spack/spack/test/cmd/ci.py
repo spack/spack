@@ -117,13 +117,13 @@ and then 'd', 'b', and 'a' to be put in the next three stages, respectively.
     with repo.use_repositories(builder.root):
         spec_a = Spec("a").concretized()
 
-        spec_a_label = ci._spec_deps_key(spec_a)
-        spec_b_label = ci._spec_deps_key(spec_a["b"])
-        spec_c_label = ci._spec_deps_key(spec_a["c"])
-        spec_d_label = ci._spec_deps_key(spec_a["d"])
-        spec_e_label = ci._spec_deps_key(spec_a["e"])
-        spec_f_label = ci._spec_deps_key(spec_a["f"])
-        spec_g_label = ci._spec_deps_key(spec_a["g"])
+        spec_a_label = ci._spec_ci_label(spec_a)
+        spec_b_label = ci._spec_ci_label(spec_a["b"])
+        spec_c_label = ci._spec_ci_label(spec_a["c"])
+        spec_d_label = ci._spec_ci_label(spec_a["d"])
+        spec_e_label = ci._spec_ci_label(spec_a["e"])
+        spec_f_label = ci._spec_ci_label(spec_a["f"])
+        spec_g_label = ci._spec_ci_label(spec_a["g"])
 
         spec_labels, dependencies, stages = ci.stage_spec_jobs([spec_a])
 
@@ -760,7 +760,6 @@ def test_ci_rebuild_mock_success(
     rebuild_env = create_rebuild_env(tmpdir, pkg_name, broken_tests)
 
     monkeypatch.setattr(spack.cmd.ci, "SPACK_COMMAND", "echo")
-    monkeypatch.setattr(spack.cmd.ci, "MAKE_COMMAND", "echo")
 
     with rebuild_env.env_dir.as_cwd():
         activate_rebuild_env(tmpdir, pkg_name, rebuild_env)
@@ -843,7 +842,6 @@ def test_ci_rebuild(
         ci_cmd("rebuild", "--tests", fail_on_error=False)
 
     monkeypatch.setattr(spack.cmd.ci, "SPACK_COMMAND", "notcommand")
-    monkeypatch.setattr(spack.cmd.ci, "MAKE_COMMAND", "notcommand")
     monkeypatch.setattr(spack.cmd.ci, "INSTALL_FAIL_CODE", 127)
 
     with rebuild_env.env_dir.as_cwd():

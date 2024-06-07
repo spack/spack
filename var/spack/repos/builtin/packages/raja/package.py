@@ -252,6 +252,9 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
         # Default entries are already defined in CachedCMakePackage, inherit them:
         entries = super().initconfig_compiler_entries()
 
+        if "+rocm" in spec:
+            entries.insert(0, cmake_cache_path("CMAKE_CXX_COMPILER", spec["hip"].hipcc))
+
         llnl_link_helpers(entries, spec, compiler)
 
         return entries

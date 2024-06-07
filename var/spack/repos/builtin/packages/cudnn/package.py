@@ -298,7 +298,7 @@ class Cudnn(Package):
     # need to use modified URLs like in url_for_version.
     maintainers("adamjstewart", "bvanessen")
 
-    skip_version_audit = ["platform=darwin"]
+    skip_version_audit = ["platform=darwin", "platform=windows"]
 
     license("MIT")
 

@@ -17,6 +17,7 @@ class Zig(CMakePackage):
 
     license("MIT")
 
+    version("0.12.0", tag="0.12.0", commit="a685ab1499d6560c523f0dbce2890dc140671e43")
     version("0.11.0", tag="0.11.0", commit="67709b638224ac03820226c6744d8b6ead59184c")
     version("0.10.1", tag="0.10.1", commit="b57081f039bd3f8f82210e8896e336e3c3a6869b")
     version(
@@ -34,6 +35,7 @@ class Zig(CMakePackage):
     depends_on("llvm@13", when="@0.9.1")
     depends_on("llvm@15", when="@0.10.1")
     depends_on("llvm@16", when="@0.11.0")
+    depends_on("llvm@17", when="@0.12.0")
 
     depends_on("git", type="build")
     depends_on("ccache")

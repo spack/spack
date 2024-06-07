@@ -59,7 +59,7 @@ class Wayland(MesonPackage, AutotoolsPackage):
         depends_on("doxygen", type="build")
         depends_on("xmlto", type="build")
         depends_on("libxslt", type="build")
-        depends_on("graphviz+libgd", type="build")
+        depends_on("graphviz+expat+libgd", type="build")
 
     @when("build_system=autotools")
     def configure_args(self):

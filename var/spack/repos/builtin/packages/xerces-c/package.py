@@ -20,6 +20,7 @@ class XercesC(AutotoolsPackage):
 
     license("Apache-2.0")
 
+    version("3.2.5", sha256="1db4028c9b7f1f778efbf4a9462d65e13f9938f2c22f9e9994e12c49ba97e252")
     version("3.2.4", sha256="74aa626fc71e729ee227602870dd29a5a01cd8c9c1c7330837a51da2eb5722cc")
     version("3.2.3", sha256="45c2329e684405f2b8854ecbddfb8d5b055cdf0fe4d35736cc352c504989bbb6")
     version("3.2.2", sha256="1f2a4d1dbd0086ce0f52b718ac0fa4af3dc1ce7a7ff73a581a05fbe78a82bce0")

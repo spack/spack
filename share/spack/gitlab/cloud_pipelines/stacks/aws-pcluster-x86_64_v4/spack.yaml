@@ -2,14 +2,24 @@ spack:
   view: false
 
   definitions:
+  - apps:
+    - gromacs %intel
+    - lammps %intel
+    - mpas-model %intel
+    - openfoam %gcc
+    - palace %oneapi
+    - quantum-espresso %intel
+    # - wrf : While building hdf5 cmake errors out with Detecting Fortran/C Interface: Failed to compile
+    # Root cause: ifort cannot deal with arbitrarily long file names.
 
-  - optimized_configs:
-    - palace target=x86_64_v4
-    - palace target=x86_64_v3
+  - targets:
+      - 'target=x86_64_v4'
+      - 'target=x86_64_v3'
 
   specs:
-  - $optimized_configs
-
+  - matrix:
+      - [$apps]
+      - [$targets]
   ci:
     pipeline-gen:
     - build-job:
@@ -28,5 +38,6 @@ spack:
           # Do not distribute Intel & ARM binaries
           - - for i in $(aws s3 ls --recursive ${SPACK_REMOTE_MIRROR_OVERRIDE}/build_cache/ | grep intel-oneapi | awk '{print $4}' | sed -e 's?^.*build_cache/??g'); do aws s3 rm ${SPACK_REMOTE_MIRROR_OVERRIDE}/build_cache/$i; done
             - for i in $(aws s3 ls --recursive ${SPACK_REMOTE_MIRROR_OVERRIDE}/build_cache/ | grep armpl | awk '{print $4}' | sed -e 's?^.*build_cache/??g'); do aws s3 rm ${SPACK_REMOTE_MIRROR_OVERRIDE}/build_cache/$i; done
+
   cdash:
     build-group: AWS Packages

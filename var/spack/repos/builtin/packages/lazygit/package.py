@@ -17,4 +17,5 @@ class Lazygit(GoPackage):
 
     license("MIT")
 
+    version("0.41.0", sha256="f2176fa253588fe4b7118bf83f4316ae3ecb914ae1e99aad8c474e23cea49fb8")
     version("0.40.2", sha256="146bd63995fcf2f2373bbc2143b3565b7a2be49a1d4e385496265ac0f69e4128")

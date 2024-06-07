@@ -130,8 +130,8 @@ class HdfEos2(AutotoolsPackage):
         # Add flags to LDFLAGS for any dependencies that need it
         extra_ldflags = []
         # hdf might have link dependency on rpc, if so need to add flags
-        if "rpc" in self.spec:
-            tmp = self.spec["rpc"].libs.ld_flags
+        if self.spec.satisfies("^libtirpc"):
+            tmp = self.spec["libtirpc"].libs.ld_flags
             extra_ldflags.append(tmp)
         # Set LDFLAGS
         env.set("LDFLAGS", " ".join(extra_ldflags))
@@ -159,5 +159,16 @@ class HdfEos2(AutotoolsPackage):
             extra_args.append("--with-szlib={0}".format(self.spec["szip"].prefix))
         if "zlib" in self.spec:
             extra_args.append("--with-zlib={0}".format(self.spec["zlib-api"].prefix))
+
+        # https://forum.hdfgroup.org/t/help-building-hdf4-with-clang-error-implicit-declaration-of-function-test-mgr-szip-is-invalid-in-c99/7680
+        # -fPIC: https://github.com/spack/spack/issues/43792
+        if self.spec.satisfies("%apple-clang"):
+            extra_args.append(
+                "CFLAGS=-Wno-error=implicit-function-declaration {0}".format(
+                    self.compiler.cc_pic_flag
+                )
+            )
+        else:
+            extra_args.append("CFLAGS={0}".format(self.compiler.cc_pic_flag))
 
         return extra_args

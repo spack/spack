@@ -26,7 +26,7 @@ class Fontconfig(AutotoolsPackage):
     # freetype2 21.0.15+ provided by freetype 2.8.1+
     depends_on("freetype@2.8.1:", when="@2.13:")
     depends_on("freetype")
-    depends_on("gperf", type="build", when="@2.12.2:")
+    depends_on("gperf", type="build", when="@2.11.1:")
     depends_on("libxml2@2.6:")
     depends_on("pkgconfig@0.9:", type="build")
     depends_on("font-util")

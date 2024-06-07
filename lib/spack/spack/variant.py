@@ -638,6 +638,9 @@ class VariantMap(lang.HashableMap):
         return clone
 
     def __str__(self):
+        if not self:
+            return ""
+
         # print keys in order
         sorted_keys = sorted(self.keys())
 

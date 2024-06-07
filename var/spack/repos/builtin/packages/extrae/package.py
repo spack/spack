@@ -42,6 +42,7 @@ class Extrae(AutotoolsPackage):
 
     license("LGPL-2.1-or-later")
 
+    version("4.1.2", sha256="adbc1d3aefde7649262426d471237dc96f070b93be850a6f15280ed86fd0b952")
     version("4.0.6", sha256="b5060336cac57f1345faa09009b1940edf1e6991aae05cc10d0b714d31360a92")
     version("4.0.5", sha256="8f5eefa95f2e94a3b5f9b7f7cbaaed523862f190575ee797113b1e97deff1586")
     version("4.0.4", sha256="003bede870de6d88b705c1a13eabe63b6beb928d8f389f5dd70ca5db8450a1f9")

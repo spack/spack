@@ -37,11 +37,16 @@ class Gasnet(Package, CudaPackage, ROCmPackage):
     version("main", branch="stable")
     version("master", branch="master")
 
+    version("2024.5.0", sha256="f945e80f71d340664766b66290496d230e021df5e5cd88f404d101258446daa9")
     version("2023.9.0", sha256="2d9f15a794e10683579ce494cd458b0dd97e2d3327c4d17e1fea79bd95576ce6")
     version("2023.3.0", sha256="e1fa783d38a503cf2efa7662be591ca5c2bb98d19ac72a9bc6da457329a9a14f")
     version("2022.9.2", sha256="2352d52f395a9aa14cc57d82957d9f1ebd928d0a0021fd26c5f1382a06cd6f1d")
     version("2022.9.0", sha256="6873ff4ad8ebee49da4378f2d78095a6ccc31333d6ae4cd739b9f772af11f936")
-    version("2022.3.0", sha256="91b59aa84c0680c807e00d3d1d8fa7c33c1aed50b86d1616f93e499620a9ba09")
+    version(
+        "2022.3.0",
+        deprecated=True,
+        sha256="91b59aa84c0680c807e00d3d1d8fa7c33c1aed50b86d1616f93e499620a9ba09",
+    )
     version(
         "2021.9.0",
         deprecated=True,
@@ -75,12 +80,12 @@ class Gasnet(Package, CudaPackage, ROCmPackage):
         "conduits",
         values=any_combination_of("smp", "mpi", "ibv", "udp", "ofi", "ucx").with_default("smp"),
         description="The hardware-dependent network backends to enable.\n"
-        + "(smp) = SMP conduit for single-node operation ;\n"
-        + "(ibv) = Native InfiniBand verbs conduit ;\n"
-        + "(ofi) = OFI conduit over libfabric, for HPE Cray Slingshot and Intel Omni-Path ;\n"
-        + "(udp) = Portable UDP conduit, for Ethernet networks ;\n"
-        + "(mpi) = Low-performance/portable MPI conduit ;\n"
-        + "(ucx) = EXPERIMENTAL UCX conduit for Mellanox IB/RoCE ConnectX-5+ ;\n"
+        + "(smp) = SMP conduit for single-node operation\n"
+        + "(ibv) = Native InfiniBand verbs conduit\n"
+        + "(ofi) = OFI conduit over libfabric, for HPE Cray Slingshot and Intel Omni-Path\n"
+        + "(udp) = Portable UDP conduit, for Ethernet networks\n"
+        + "(mpi) = Low-performance/portable MPI conduit\n"
+        + "(ucx) = EXPERIMENTAL UCX conduit for Mellanox IB/RoCE ConnectX-5+\n"
         + "For detailed recommendations, consult https://gasnet.lbl.gov",
     )
 
@@ -118,11 +123,14 @@ class Gasnet(Package, CudaPackage, ROCmPackage):
     )
 
     depends_on("mpi", when="conduits=mpi")
+    depends_on("libfabric", when="conduits=ofi")
 
     depends_on("autoconf@2.69", type="build", when="@master:")
     depends_on("automake@1.16:", type="build", when="@master:")
 
     conflicts("^hip@:4.4.0", when="+rocm")
+
+    conflicts("^hip@6:", when="@:2024.4+rocm")  # Bug 4686
 
     depends_on("oneapi-level-zero@1.8.0:", when="+level_zero")
 
@@ -157,9 +165,11 @@ class Gasnet(Package, CudaPackage, ROCmPackage):
 
             if "+cuda" in spec:
                 options.append("--enable-kind-cuda-uva")
+                options.append("--with-cuda-home=" + spec["cuda"].prefix)
 
             if "+rocm" in spec:
                 options.append("--enable-kind-hip")
+                options.append("--with-hip-home=" + spec["hip"].prefix)
 
             if "+level_zero" in spec:
                 options.append("--enable-kind-ze")

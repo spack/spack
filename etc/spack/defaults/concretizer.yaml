@@ -15,7 +15,7 @@ concretizer:
   # as possible, rather than building. If `false`, we'll always give you a fresh
   # concretization. If `dependencies`, we'll only reuse dependencies but
   # give you a fresh concretization for your root specs.
-  reuse: dependencies
+  reuse: true
   # Options that tune which targets are considered for concretization. The
   # concretization process is very sensitive to the number targets, and the time
   # needed to reach a solution increases noticeably with the number of targets

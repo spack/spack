@@ -19,6 +19,7 @@ class Assimp(CMakePackage):
     license("BSD-3-Clause")
 
     version("master", branch="master")
+    version("5.4.0", sha256="a90f77b0269addb2f381b00c09ad47710f2aab6b1d904f5e9a29953c30104d3f")
     version("5.3.1", sha256="a07666be71afe1ad4bc008c2336b7c688aca391271188eb9108d0c6db1be53f1")
     version("5.2.5", sha256="b5219e63ae31d895d60d98001ee5bb809fb2c7b2de1e7f78ceeb600063641e1a")
     version("5.2.4", sha256="6a4ff75dc727821f75ef529cea1c4fc0a7b5fc2e0a0b2ff2f6b7993fe6cb54ba")
@@ -37,6 +38,9 @@ class Assimp(CMakePackage):
     )
 
     variant("shared", default=True, description="Enables the build of shared libraries")
+
+    depends_on("cmake@3.10:", type="build", when="@5.1:")
+    depends_on("cmake@3.22:", type="build", when="@5.4:")
 
     depends_on("pkgconfig", type="build")
     depends_on("zlib-api")
