@@ -19,6 +19,7 @@ class Libxfce4util(AutotoolsPackage):
 
     version("4.16.0", sha256="60598d745d1fc81ff5ad3cecc3a8d1b85990dd22023e7743f55abd87d8b55b83")
 
+    variant("xfce4", default=True, description="Match XFCE4 versions")
     variant("glibtop", default=True, description="Build with glibtop support")
     variant("introspection", default=True, description="Build with gobject-introspection support")
     variant("vala", default=True, description="Build with vala support")
@@ -27,9 +28,9 @@ class Libxfce4util(AutotoolsPackage):
         depends_on("libgtop", when="+glibtop")
         depends_on("gobject-introspection", when="+introspection")
         depends_on("vala", when="+vala")
-
-    with when("@4.16"):
         depends_on("intltool@0.35.0:", type="build")
+
+    with when("@4.16:"):
         with default_args(type=("run", "link", "build")):
             depends_on("glib@2.50:")
             depends_on("gobject-introspection@1.60:", when="+introspection")
@@ -43,6 +44,9 @@ class Libxfce4util(AutotoolsPackage):
 
         return args
 
-    def setup_dependent_build_environment(self, env, dep_spec):
-        if self.spec.satisfies("+introspection") and dep_spec.satisfies("+introspection"):
-            env.append_path("XDG_DATA_DIRS", self.prefix.share)
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        env.prepend_path("XDG_DATA_DIRS", self.prefix.share)
+
+    def setup_dependent_run_environment(self, env, dependent_spec):
+        env.prepend_path("XDG_DATA_DIRS", self.prefix.share)
+
