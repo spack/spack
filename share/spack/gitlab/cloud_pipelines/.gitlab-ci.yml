@@ -187,7 +187,7 @@ default:
 
 .generate-x86_64:
   extends: [ ".generate-base" ]
-  tags: ["spack", "public", "medium", "x86_64"]
+  tags: ["spack", "public", "medium", "x86_64_v3"]
 
 .generate-aarch64:
   extends: [ ".generate-base" ]
