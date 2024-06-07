@@ -10,15 +10,19 @@ from spack.package import *
 from spack.util.environment import set_env
 
 
+@llnl.util.lang.memoized
 def is_CrayEX():
     # Credit to upcxx package for this hpe-cray-ex detection function
-    if spack.platforms.host().name in ["linux", "cray"]:
+    if spack.platforms.host().name == "linux":
         target = os.environ.get("CRAYPE_NETWORK_TARGET")
         if target in ["ofi", "ucx"]:  # normal case
             return True
         elif target is None:  # but some systems lack Cray PrgEnv
             fi_info = which("fi_info")
-            if fi_info and fi_info("-l", output=str).find("cxi") >= 0:
+            if (
+                fi_info
+                and fi_info("-l", output=str, error=str, fail_on_error=False).find("cxi") >= 0
+            ):
                 return True
     return False
 
