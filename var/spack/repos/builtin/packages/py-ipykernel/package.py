@@ -15,6 +15,13 @@ class PyIpykernel(PythonPackage):
 
     license("BSD-3-Clause")
 
+    version("6.29.4", sha256="3d44070060f9475ac2092b760123fadf105d2e2493c24848b6691a7c4f42af5c")
+    version("6.28.0", sha256="69c11403d26de69df02225916f916b37ea4b9af417da0a8c827f84328d88e5f3")
+    version("6.27.1", sha256="7d5d594b6690654b4d299edba5e872dc17bb7396a8d0609c97cb7b8a1c605de6")
+    version("6.26.0", sha256="553856658eb8430bbe9653ea041a41bff63e9606fc4628873fc92a6cf3abd404")
+    version("6.25.2", sha256="f468ddd1f17acb48c8ce67fcfa49ba6d46d4f9ac0438c1f441be7c3d1372230b")
+    version("6.24.0", sha256="29cea0a716b1176d002a61d0b0c851f34536495bc4ef7dd0222c88b41b816123")
+    version("6.23.3", sha256="dd4e18116357f36a1e459b3768412371bee764c51844cbf25c4ed1eb9cae4a54")
     version("6.23.1", sha256="1aba0ae8453e15e9bc6b24e497ef6840114afcdb832ae597f32137fa19d42a6f")
     version("6.22.0", sha256="302558b81f1bc22dc259fb2a0c5c7cf2f4c0bdb21b50484348f7bafe7fb71421")
     version("6.16.0", sha256="7fe42c0d58435e971dc15fd42189f20d66bf35f3056bda4f6554271bc1fa3d0d")
@@ -70,6 +77,7 @@ class PyIpykernel(PythonPackage):
     depends_on("py-matplotlib-inline@0.1:", when="@6.11:", type=("build", "run"))
     depends_on("py-matplotlib-inline@0.1.0:0.1", when="@6:6.10", type=("build", "run"))
     depends_on("py-appnope", when="@5.1.3: platform=darwin", type=("build", "run"))
+    depends_on("py-pyzmq@24:", when="@6.28:", type=("build", "run"))
     depends_on("py-pyzmq@20:", when="@6.22:", type=("build", "run"))
     depends_on("py-pyzmq@17:", when="@6.15:", type=("build", "run"))
     depends_on("py-psutil", when="@6.9.2:", type=("build", "run"))
