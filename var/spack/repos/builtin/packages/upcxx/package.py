@@ -9,12 +9,14 @@ import re
 from spack.package import *
 
 
+@llnl.util.lang.memoized
 def is_CrayXC():
     return spack.platforms.host().name == "linux" and (
         os.environ.get("CRAYPE_NETWORK_TARGET") == "aries"
     )
 
 
+@llnl.util.lang.memoized
 def is_CrayEX():
     if spack.platforms.host().name == "linux":
         target = os.environ.get("CRAYPE_NETWORK_TARGET")
@@ -30,6 +32,7 @@ def is_CrayEX():
     return False
 
 
+@llnl.util.lang.memoized
 def cross_detect():
     if is_CrayXC():
         if which("srun"):
