@@ -72,32 +72,34 @@ class Spla(CMakePackage):
     patch("0001-amd_blis.patch", when="@1.3.0:1.4.0 ^amdblis")
 
     def cmake_args(self):
+        spec = self.spec
+
         args = [
             self.define_from_variant("SPLA_FORTRAN", "fortran"),
             self.define_from_variant("SPLA_STATIC", "static"),
         ]
 
-        if "+cuda" in self.spec:
+        if "+cuda" in spec:
             args += ["-DSPLA_GPU_BACKEND=CUDA"]
-        elif "+rocm" in self.spec:
+        elif "+rocm" in spec:
             args += ["-DSPLA_GPU_BACKEND=ROCM"]
         else:
             args += ["-DSPLA_GPU_BACKEND=OFF"]
 
         # v1.6.0: No longer has custom BLAS detection and only uses the FindBLAS CMake module.
-        if self.spec.satisfies("@:1.5.5"):
+        if spec.satisfies("@:1.5.5"):
             args += self.define_from_variant("SPLA_OMP", "openmp")
-            if self.spec["blas"].name == "openblas":
+            if spec["blas"].name == "openblas":
                 args += ["-DSPLA_HOST_BLAS=OPENBLAS"]
-            elif self.spec["blas"].name in ["amdblis", "blis"]:
+            elif spec["blas"].name in ["amdblis", "blis"]:
                 args += ["-DSPLA_HOST_BLAS=BLIS"]
-            elif self.spec["blas"].name == "atlas":
+            elif spec["blas"].name == "atlas":
                 args += ["-DSPLA_HOST_BLAS=ATLAS"]
-            elif self.spec["blas"].name == "intel-mkl":
+            elif spec["blas"].name == "intel-mkl":
                 args += ["-DSPLA_HOST_BLAS=MKL"]
-            elif self.spec["blas"].name == "netlib-lapack":
+            elif spec["blas"].name == "netlib-lapack":
                 args += ["-DSPLA_HOST_BLAS=GENERIC"]
-            elif self.spec["blas"].name == "cray-libsci":
+            elif spec["blas"].name == "cray-libsci":
                 args += ["-DSPLA_HOST_BLAS=CRAY_LIBSCI"]
         else:
             args += self.define("BLAS_LIBRARIES", spec["blas"].libs.joined(";"))
