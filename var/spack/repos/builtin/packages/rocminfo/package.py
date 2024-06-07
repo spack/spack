@@ -28,25 +28,15 @@ class Rocminfo(CMakePackage):
     version("5.6.0", sha256="87d98a736e4f7510d1475d35717842068d826096a0af7c15a395bcf9d36d7fa0")
     version("5.5.1", sha256="bcab27bb3595d5a4c981e2416458d169e85c27e603c22e743d9240473bfbe98a")
     version("5.5.0", sha256="b6107d362b70e20a10911741eb44247139b4eb43489f7fa648daff880b6de37f")
-    version("5.4.3", sha256="72159eed31f8deee0df9228b9e306a18fe9efdd4d6c0eead871cad4617874170")
-    version("5.4.0", sha256="79123b92992cce75ae679caf9a6bf57b16d24e96e54b36eb002511f3800e29c6")
-    version("5.3.3", sha256="77e6adc81da6c1d153517e1d28db774205531a2ec188e6518f998328ef7897c6")
-    version("5.3.0", sha256="c279da1d946771d120611b64974fde751534e787a394ceb6b8e0b743c143d782")
     with default_args(deprecated=True):
-        version("5.2.3", sha256="38fe8db21077100ee2242bd087371f6b8e0078d3a269e145d3a4ab314d0b8902")
-        version("5.2.1", sha256="e8a3b3228387d164e21de060e18ac018eecb5e9abe0ae45830c51ead4b7f1004")
-        version("5.2.0", sha256="e721eb81efd384abd22ff01cdcbb6245b11084dc11a867c74c8ad6b028aa0404")
-        version("5.1.3", sha256="7aecd7b189e129b77c8f2af70be2926a0f3a5ee89814879bc8477924a7e6f2ae")
-        version("5.1.0", sha256="76f6cc9e69d9fc7e692e5c7db35e89079d3b1d2d47632e4742d612e743c396d3")
+        version("5.4.3", sha256="72159eed31f8deee0df9228b9e306a18fe9efdd4d6c0eead871cad4617874170")
+        version("5.4.0", sha256="79123b92992cce75ae679caf9a6bf57b16d24e96e54b36eb002511f3800e29c6")
+        version("5.3.3", sha256="77e6adc81da6c1d153517e1d28db774205531a2ec188e6518f998328ef7897c6")
+        version("5.3.0", sha256="c279da1d946771d120611b64974fde751534e787a394ceb6b8e0b743c143d782")
 
     depends_on("cmake@3:", type="build")
 
     for ver in [
-        "5.1.0",
-        "5.1.3",
-        "5.2.0",
-        "5.2.1",
-        "5.2.3",
         "5.3.0",
         "5.3.3",
         "5.4.0",

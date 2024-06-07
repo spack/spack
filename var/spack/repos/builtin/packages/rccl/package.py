@@ -31,16 +31,11 @@ class Rccl(CMakePackage):
     version("5.6.0", sha256="cce13c8a9e233e7ddf91a67b1626b7aaeaf818fefe61af8de6b6b6ff47cb358c")
     version("5.5.1", sha256="f6b9dc6dafeb49d95c085825876b09317d8252771c746ccf5aa19a9204a404b2")
     version("5.5.0", sha256="be2964b408741d046bcd606d339a233d1d1deac7b841647ec53d6d62d71452ba")
-    version("5.4.3", sha256="a2524f602bd7b3b6afeb8ba9aff660216ee807fa836e46442d068b5ed5f51a4d")
-    version("5.4.0", sha256="213f4f3d75389be588673e43f563e5c0d6908798228b0b6a71f27138fd4ed0c7")
-    version("5.3.3", sha256="8995a2d010ad0748fc85ac06e8da7e8d110ba996db04d42b77526c9c059c05bb")
-    version("5.3.0", sha256="51da5099fa58c2be882319cebe9ceabe2062feebcc0c5849e8c109030882c10a")
     with default_args(deprecated=True):
-        version("5.2.3", sha256="ecba09f4c95b4b2dae81b88231a972ac956d29909b5e712e21cf2a74bd251ff4")
-        version("5.2.1", sha256="cfd17dc003f19900e44928d81111570d3720d4905321f2a18c909909c4bee822")
-        version("5.2.0", sha256="6ee3a04da0d16eb53f768a088633a7d8ecc4416a2d0c07f7ba8426ab7892b060")
-        version("5.1.3", sha256="56491257f27b48bf85f4b91434a2a6e49a448337c889db181b02c8a4a260a4bc")
-        version("5.1.0", sha256="02b0180857e615326f9cab775573436b9162899ad8e526830f54392b8a51b1f5")
+        version("5.4.3", sha256="a2524f602bd7b3b6afeb8ba9aff660216ee807fa836e46442d068b5ed5f51a4d")
+        version("5.4.0", sha256="213f4f3d75389be588673e43f563e5c0d6908798228b0b6a71f27138fd4ed0c7")
+        version("5.3.3", sha256="8995a2d010ad0748fc85ac06e8da7e8d110ba996db04d42b77526c9c059c05bb")
+        version("5.3.0", sha256="51da5099fa58c2be882319cebe9ceabe2062feebcc0c5849e8c109030882c10a")
 
     amdgpu_targets = ROCmPackage.amdgpu_targets
 
@@ -51,7 +46,6 @@ class Rccl(CMakePackage):
         sticky=True,
     )
 
-    patch("0002-Fix-numactl-rocm-smi-path-issue.patch", when="@:5.2.1")
     patch("0003-Fix-numactl-rocm-smi-path-issue.patch", when="@5.2.3:5.6")
     patch("0004-Set-rocm-core-path-for-version-file.patch", when="@6.0:")
 
@@ -60,11 +54,6 @@ class Rccl(CMakePackage):
     depends_on("numactl@2:")
 
     for ver in [
-        "5.1.0",
-        "5.1.3",
-        "5.2.0",
-        "5.2.1",
-        "5.2.3",
         "5.3.0",
         "5.3.3",
         "5.4.0",
@@ -86,11 +75,6 @@ class Rccl(CMakePackage):
         depends_on(f"hsa-rocr-dev@{ver}", when=f"@{ver}")
 
     for ver in [
-        "5.1.0",
-        "5.1.3",
-        "5.2.0",
-        "5.2.1",
-        "5.2.3",
         "5.3.0",
         "5.3.3",
         "5.4.0",
@@ -155,9 +139,6 @@ class Rccl(CMakePackage):
         return args
 
     def test(self):
-        if self.spec.satisfies("@:5.3.0"):
-            print("Skipping: stand-alone tests")
-            return
         test_dir = join_path(self.spec["rccl"].prefix, "bin")
         with working_dir(test_dir, create=True):
             self.run_test("UnitTests")

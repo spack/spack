@@ -29,8 +29,9 @@ class ComposableKernel(CMakePackage):
     version("5.6.0", commit="f5ec04f091fa5c48c67d7bacec36a414d0be06a5")
     version("5.5.1", commit="ac9e01e2cc3721be24619807adc444e1f59a9d25")
     version("5.5.0", commit="8b76b832420a3d69708401de6607a033163edcce")
-    version("5.4.3", commit="bb3d9546f186e39cefedc3e7f01d88924ba20168")
-    version("5.4.0", commit="236bd148b98c7f1ec61ee850fcc0c5d433576305")
+    with default_args(deprecated=True):
+        version("5.4.3", commit="bb3d9546f186e39cefedc3e7f01d88924ba20168")
+        version("5.4.0", commit="236bd148b98c7f1ec61ee850fcc0c5d433576305")
 
     amdgpu_targets = ROCmPackage.amdgpu_targets
     variant(

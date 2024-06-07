@@ -33,16 +33,11 @@ class LlvmAmdgpu(CMakePackage, CompilerPackage):
     version("5.6.0", sha256="e922bd492b54d99e56ed88c81e2009ed6472059a180b10cc56ce1f9bd2d7b6ed")
     version("5.5.1", sha256="7d7181f20f89cb0715191aa32914186c67a34258c13457055570d47e15296553")
     version("5.5.0", sha256="5dc6c99f612b69ff73145bee17524e3712990100e16445b71634106acf7927cf")
-    version("5.4.3", sha256="a844d3cc01613f6284a75d44db67c495ac1e9b600eacbb1eb13d2649f5d5404d")
-    version("5.4.0", sha256="ff54f45a17723892cd775c1eaff9e5860527fcfd33d98759223c70e3362335bf")
-    version("5.3.3", sha256="5296d5e474811c7d1e456cb6d5011db248b79b8d0512155e8a6c2aa5b5f12d38")
-    version("5.3.0", sha256="4e3fcddb5b8ea8dcaa4417e0e31a9c2bbdc9e7d4ac3401635a636df32905c93e")
     with default_args(deprecated=True):
-        version("5.2.3", sha256="1b852711aec3137b568fb65f93606d37fdcd62e06f5da3766f2ffcd4e0c646df")
-        version("5.2.1", sha256="3644e927d943d61e22672422591c47a62ff83e3d87ced68439822156d8f79abf")
-        version("5.2.0", sha256="0f892174111b78a02d1a00f8f46d9f80b9abb95513a7af38ecf2a5a0882fe87f")
-        version("5.1.3", sha256="d236a2064363c0278f7ba1bb2ff1545ee4c52278c50640e8bb2b9cfef8a2f128")
-        version("5.1.0", sha256="db5d45c4a7842a908527c1b7b8d4a40c688225a41d23cfa382eab23edfffdd10")
+        version("5.4.3", sha256="a844d3cc01613f6284a75d44db67c495ac1e9b600eacbb1eb13d2649f5d5404d")
+        version("5.4.0", sha256="ff54f45a17723892cd775c1eaff9e5860527fcfd33d98759223c70e3362335bf")
+        version("5.3.3", sha256="5296d5e474811c7d1e456cb6d5011db248b79b8d0512155e8a6c2aa5b5f12d38")
+        version("5.3.0", sha256="4e3fcddb5b8ea8dcaa4417e0e31a9c2bbdc9e7d4ac3401635a636df32905c93e")
 
     variant(
         "rocm-device-libs",
@@ -64,7 +59,6 @@ class LlvmAmdgpu(CMakePackage, CompilerPackage):
         description="Link LLVM tools against the LLVM shared library",
     )
 
-    provides("libllvm@14", when="@5:5.2")
     provides("libllvm@15", when="@5.3:5.4")
     provides("libllvm@16", when="@5.5:5.6")
     provides("libllvm@17", when="@5.7:")
@@ -120,11 +114,6 @@ class LlvmAmdgpu(CMakePackage, CompilerPackage):
         ("5.4.0", "d68813ded47179c39914c8d1b76af3dad8c714b10229d1e2246af67609473951"),
         ("5.3.3", "963c9a0561111788b55a8c3b492e2a5737047914752376226c97a28122a4d768"),
         ("5.3.0", "f7e1665a1650d3d0481bec68252e8a5e68adc2c867c63c570f6190a1d2fe735c"),
-        ("5.2.3", "16b7fc7db4759bd6fb54852e9855fa16ead76c97871d7e1e9392e846381d611a"),
-        ("5.2.1", "e5855387ce73ed483ed0d03dbfef31f297c6ca66cf816f6816fd5ee373fc8225"),
-        ("5.2.0", "901674bc941115c72f82c5def61d42f2bebee687aefd30a460905996f838e16c"),
-        ("5.1.3", "c41958560ec29c8bf91332b9f668793463904a2081c330c0d828bf2f91d4f04e"),
-        ("5.1.0", "47dbcb41fb4739219cadc9f2b5f21358ed2f9895ce786d2f7a1b2c4fd044d30f"),
     ]:
         resource(
             name="rocm-device-libs",

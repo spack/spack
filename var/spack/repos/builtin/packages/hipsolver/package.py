@@ -38,16 +38,11 @@ class Hipsolver(CMakePackage, CudaPackage, ROCmPackage):
     version("5.6.0", sha256="11fa51d210853d93d24d55b20367738e49711793412f58e8d7689710b92ae16c")
     version("5.5.1", sha256="826bd64a4887176595bb7319d9a3612e7327602efe1f42aa3f2ad0e783d1a180")
     version("5.5.0", sha256="0f45be0f90907381ae3e82424599e2ca2112d6411b4a64c72558d63f00409b83")
-    version("5.4.3", sha256="02a1bffecc494393f49f97174db7d2c101db557d32404923a44520876e682e3a")
-    version("5.4.0", sha256="d53d81c55b458ba5e6ea0ec6bd24bcc79ab06789730391da82d8c33b936339d9")
-    version("5.3.3", sha256="f5a487a1c7225ab748996ac4d837ac7ab26b43618c4ed97a124f8fac1d67786e")
-    version("5.3.0", sha256="6e920a59ddeefd52c9a6d164c33bc097726529e1ede3c417c711697956655b15")
     with default_args(deprecated=True):
-        version("5.2.3", sha256="a57d883fdd09c6c7f9856fcfcabee6fa7ff9beed33d2f1a465bf28d38ea6f364")
-        version("5.2.1", sha256="e000b08cf7bfb5f8f6d65d163ebeeb3274172b9f474228b810bde5e6f87f2b37")
-        version("5.2.0", sha256="96927410e0a2cc0f50172604ef6437e15d2cf4b62d22b2035f13aae21f43dc82")
-        version("5.1.3", sha256="96faa799a2db8078b72f9c3b5c199179875a7c20dc1064371b22a6a63397c145")
-        version("5.1.0", sha256="697ba2b2814e7ac6f79680e6455b4b5e0def1bee2014b6940f47be7d13c0ae74")
+        version("5.4.3", sha256="02a1bffecc494393f49f97174db7d2c101db557d32404923a44520876e682e3a")
+        version("5.4.0", sha256="d53d81c55b458ba5e6ea0ec6bd24bcc79ab06789730391da82d8c33b936339d9")
+        version("5.3.3", sha256="f5a487a1c7225ab748996ac4d837ac7ab26b43618c4ed97a124f8fac1d67786e")
+        version("5.3.0", sha256="6e920a59ddeefd52c9a6d164c33bc097726529e1ede3c417c711697956655b15")
 
     # default to an 'auto' variant until amdgpu_targets can be given a better default than 'none'
     amdgpu_targets = ROCmPackage.amdgpu_targets
@@ -83,11 +78,6 @@ class Hipsolver(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("hip +cuda", when="+cuda")
 
     for ver in [
-        "5.1.0",
-        "5.1.3",
-        "5.2.0",
-        "5.2.1",
-        "5.2.3",
         "5.3.0",
         "5.3.3",
         "5.4.0",
@@ -157,9 +147,7 @@ class Hipsolver(CMakePackage, CudaPackage, ROCmPackage):
 
         # FindHIP.cmake is still used for +cuda
         if self.spec.satisfies("+cuda"):
-            if self.spec["hip"].satisfies("@:5.1"):
-                args.append(self.define("CMAKE_MODULE_PATH", self.spec["hip"].prefix.cmake))
-            else:
+            if self.spec["hip"].satisfies("@5.2:"):
                 args.append(
                     self.define("CMAKE_MODULE_PATH", self.spec["hip"].prefix.lib.cmake.hip)
                 )

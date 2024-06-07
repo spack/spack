@@ -36,16 +36,11 @@ class Mivisionx(CMakePackage):
     version("5.6.0", sha256="34c184e202b1a6da2398b66e33c384d5bafd8f8291089c18539715c5cb73eb1f")
     version("5.5.1", sha256="e8209f87a57c4222003a936240e7152bbfa496862113358f29d4c3e80d4cdf56")
     version("5.5.0", sha256="af266550ecccad80f08954f23e47e8264eb338b0928a5314bd6efca349fc5a14")
-    version("5.4.3", sha256="4da82974962a70c326ce2427c664517b1efdff436efe222e6bc28817c222a082")
-    version("5.4.0", sha256="caa28a30972704ddbf1a87cefdc0b0a35381d369961c43973d473a1573bd35cc")
-    version("5.3.3", sha256="378fafcb327e17e0e11fe1d1029d1740d84aaef0fd59614ed7376499b3d716f6")
-    version("5.3.0", sha256="58e68f1c78bbe5694e42bf61be177f9e94bfd3e0c113ec6284493c8684836c58")
     with default_args(deprecated=True):
-        version("5.2.3", sha256="bbcdb5808d2bc880486dffa89f4111fb4b1d6dfe9b11fcd46fbd17939d057cf0")
-        version("5.2.1", sha256="201996b31f59a8d5e4cc3f17d17a5b81158a34d2a1c833b65ccc3dceb21d176f")
-        version("5.2.0", sha256="fee620a1edd3bce18b2cec9ef26ec2afe0a85d6da8a37ed713ab0d1342382503")
-        version("5.1.3", sha256="62591d5caedc13832c3ccef629a88d9c2a43c884daad1124ddcb9c5f7d5470e9")
-        version("5.1.0", sha256="e082415cc2fb859c53a6d6e5d72ca4529f6b4d56a4abe274dc374faaa5910513")
+        version("5.4.3", sha256="4da82974962a70c326ce2427c664517b1efdff436efe222e6bc28817c222a082")
+        version("5.4.0", sha256="caa28a30972704ddbf1a87cefdc0b0a35381d369961c43973d473a1573bd35cc")
+        version("5.3.3", sha256="378fafcb327e17e0e11fe1d1029d1740d84aaef0fd59614ed7376499b3d716f6")
+        version("5.3.0", sha256="58e68f1c78bbe5694e42bf61be177f9e94bfd3e0c113ec6284493c8684836c58")
 
     # Adding 2 variants OPENCL ,HIP which HIP as default. earlier to 5.0.0,OPENCL
     # was the default but has change dto HIP from 5.0.0 onwards.
@@ -70,25 +65,6 @@ class Mivisionx(CMakePackage):
     conflicts("+add_tests", when="@:5.4")
 
     def patch(self):
-        if self.spec.satisfies("@:5.1 + hip"):
-            filter_file(
-                r"${ROCM_PATH}/miopen",
-                self.spec["miopen-hip"].prefix.miopen,
-                "amd_openvx_extensions/CMakeLists.txt",
-                string=True,
-            )
-            filter_file(
-                r"${ROCM_PATH}/bin",
-                self.spec["hip"].prefix.bin,
-                "amd_openvx/openvx/hipvx/CMakeLists.txt",
-                string=True,
-            )
-            filter_file(
-                r"${ROCM_PATH}/bin",
-                self.spec["hip"].prefix.bin,
-                "amd_openvx_extensions/amd_nn/nn_hip/CMakeLists.txt",
-                string=True,
-            )
         if self.spec.satisfies("@5.1.3: + hip"):
             filter_file(
                 r"${ROCM_PATH}/include/miopen/config.h",
@@ -202,13 +178,6 @@ class Mivisionx(CMakePackage):
     depends_on("ffmpeg@4.4", type="build", when="@5.4:")
     depends_on("protobuf@:3", type="build")
     depends_on(
-        "opencv@:3.4"
-        "+calib3d+features2d+highgui+imgcodecs+imgproc"
-        "+video+videoio+flann+photo+objdetect",
-        type="build",
-        when="@:5.2",
-    )
-    depends_on(
         "opencv@4.5:"
         "+calib3d+features2d+highgui+imgcodecs+imgproc"
         "+video+videoio+flann+photo+objdetect+png+jpeg",
@@ -233,32 +202,14 @@ class Mivisionx(CMakePackage):
     # HIP as backend did not build for older releases 5.1.0 where
     # OPENCL was default backend.
     conflicts("+opencl+hip")
-    conflicts("+hip", when="@:5.1.0")
 
     with when("+opencl"):
-        for ver in [
-            "5.1.0",
-            "5.1.3",
-            "5.2.0",
-            "5.2.1",
-            "5.2.3",
-            "5.3.0",
-            "5.3.3",
-            "5.4.0",
-            "5.4.3",
-            "5.5.0",
-            "5.5.1",
-        ]:
+        for ver in ["5.3.0", "5.3.3", "5.4.0", "5.4.3", "5.5.0", "5.5.1"]:
             depends_on(f"rocm-opencl@{ver}", when=f"@{ver}")
             depends_on(f"miopengemm@{ver}", when=f"@{ver}")
             depends_on(f"miopen-opencl@{ver}", when=f"@{ver}")
     with when("+hip"):
         for ver in [
-            "5.1.0",
-            "5.1.3",
-            "5.2.0",
-            "5.2.1",
-            "5.2.3",
             "5.3.0",
             "5.3.3",
             "5.4.0",
