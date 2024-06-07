@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
+import pathlib
 import re
 
 import spack.build_systems.autotools
@@ -170,9 +171,17 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
 
     @classmethod
     def determine_variants(cls, exes, version_str):
-        variants = "+gold" if "gold" in os.listdir(os.path.dirname(exes[0])) else "~gold"
-        # 29350: llvm needs +headers for plugin-api.h which most distros don't install:
-        return "~headers" + variants
+        bin_dir = pathlib.Path(exes[0]).parent
+        include_dir = bin_dir.parent / "include"
+        plugin_h = include_dir / "plugin-api.h"
+
+        variants = "+gold" if find(str(bin_dir), "gold", recursive=False) else "~gold"
+        if find(str(include_dir), str(plugin_h), recursive=False):
+            variants += "+headers"
+        else:
+            variants += "~headers"
+
+        return variants
 
     def flag_handler(self, name, flags):
         spec = self.spec
