@@ -88,7 +88,7 @@ class Spla(CMakePackage):
 
         # v1.6.0: No longer has custom BLAS detection and only uses the FindBLAS CMake module.
         if spec.satisfies("@:1.5.5"):
-            args += self.define_from_variant("SPLA_OMP", "openmp")
+            args += [self.define_from_variant("SPLA_OMP", "openmp")]
             if spec["blas"].name == "openblas":
                 args += ["-DSPLA_HOST_BLAS=OPENBLAS"]
             elif spec["blas"].name in ["amdblis", "blis"]:
