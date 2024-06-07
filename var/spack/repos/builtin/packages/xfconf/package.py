@@ -18,10 +18,14 @@ class Xfconf(AutotoolsPackage):
     license("LGPLv2.1", checked_by="teaguesterling")  # https://wiki.xfce.org/licenses/audit
 
     version("4.16.0", sha256="652a119007c67d9ba6c0bc7a740c923d33f32d03dc76dfc7ba682584e72a5425")
+    variant("xfce4", default=True, description="Match XFCE4 versions")
+
+    depends_on("intltool@0.35.0:", type="build")
+    depends_on("libxfce4util+xfce4@4.16", when="+xfce4@4.16")
 
     with when("@4.16"):
-        depends_on("intltool@0.35.0:", type="build")
+
         with default_args(type=("build", "link", "run")):
-            depends_on("libxfce4util@4.16")
+            depends_on("libxfce4util@4.16:")
             depends_on("glib@2.50:")
 
