@@ -2941,7 +2941,7 @@ def test_reuse_prefers_standard_over_git_versions(
     standard_version, install_mockery_mutable_config, do_not_check_runtimes_on_reuse
 ):
     """
-    order matters in this test. typically reuse would pick the last installed match
+    order matters in this test. typically reuse would pick the highest versioned installed match
     but we want to prefer the standard version over git ref based versions
     so install git ref last and ensure it is not picked up by reuse
     """
