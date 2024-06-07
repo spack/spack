@@ -542,6 +542,10 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
                 value = "system"
             env.set(var, value)
 
+    def prepend_cpath_include(self, env, prefix):
+        if prefix != "/usr":
+            env.prepend_path("CPATH", prefix.include)
+
     def setup_env_vars(self, env):
         for v in self.spec.variants.keys():
             self.setup_if_not_unset(env, "CHPL_" + v.upper(), self.spec.variants[v].value)
@@ -557,23 +561,23 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
             env.set("CHPL_GMP", "system")
             # TODO: why must we add to CPATH to find gmp.h
             # TODO: why must we add to LIBRARY_PATH to find lgmp
-            env.prepend_path("CPATH", self.spec["gmp"].prefix.include)
+            self.prepend_cpath_include(env, self.spec["gmp"].prefix)
             env.prepend_path("LIBRARY_PATH", self.spec["gmp"].prefix.lib)
         else:
             env.set("CHPL_GMP", self.spec.variants["gmp"].value)
 
         if "yaml" in self.get_package_modules:
             env.prepend_path("PKG_CONFIG_PATH", self.spec["libyaml"].prefix.lib.pkgconfig)
-            env.prepend_path("CPATH", self.spec["libyaml"].prefix.include)
+            self.prepend_cpath_include(env, self.spec["libyaml"].prefix)
 
         if "zmq" in self.get_package_modules:
-            env.prepend_path("CPATH", self.spec["libzmq"].prefix.include)
+            self.prepend_cpath_include(env, self.spec["libzmq"].prefix)
             env.prepend_path("LD_LIBRARY_PATH", self.spec["libzmq"].prefix.lib)
             env.prepend_path("PKG_CONFIG_PATH", self.spec["libzmq"].prefix.lib.pkgconfig)
             env.prepend_path("PKG_CONFIG_PATH", self.spec["libsodium"].prefix.lib.pkgconfig)
 
         if "curl" in self.get_package_modules:
-            env.prepend_path("CPATH", self.spec["curl"].prefix.include)
+            self.prepend_cpath_include(env, self.spec["curl"].prefix)
             env.prepend_path("LD_LIBRARY_PATH", self.spec["curl"].prefix.lib)
             env.prepend_path("PKG_CONFIG_PATH", self.spec["curl"].prefix.lib.pkgconfig)
 
@@ -594,7 +598,7 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
                 "CHPL_LLVM_CONFIG",
                 "{0}/{1}".format(self.spec["llvm-amdgpu"].prefix, "bin/llvm-config"),
             )
-            env.prepend_path("CPATH", self.spec["hip"].prefix.include)
+            self.prepend_cpath_include(env, self.spec["hip"].prefix)
             env.set("CHPL_ROCM_PATH", self.spec["llvm-amdgpu"].prefix)
             env.prepend_path("LIBRARY_PATH", self.spec["hip"].prefix.lib)
             env.prepend_path("LIBRARY_PATH", self.spec["hsa-rocr-dev"].prefix.lib)
