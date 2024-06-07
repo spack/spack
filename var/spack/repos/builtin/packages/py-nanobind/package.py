@@ -24,6 +24,9 @@ class PyNanobind(PythonPackage):
 
     version("master", branch="master", submodules=True)
     version(
+        "2.0.0", tag="v2.0.0", commit="8d7f1ee0621c17fa370b704b2100ffa0243d5bfb", submodules=True
+    )
+    version(
         "1.9.2", tag="v1.9.2", commit="80a30c8efb093b14f0e744bc7f6a9ef34beb3f7f", submodules=True
     )
     version(
@@ -54,6 +57,7 @@ class PyNanobind(PythonPackage):
     depends_on("python@3.8:", type=("build", "run"))
     depends_on("py-setuptools@42:", type="build")
     depends_on("py-scikit-build", type="build")
+    depends_on("py-typing-extensions", when="@2:", type="build")
 
     depends_on("cmake@3.17:", type="build")
     depends_on("ninja", type="build")
