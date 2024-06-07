@@ -12,12 +12,19 @@ class Ffmpeg(AutotoolsPackage):
 
     homepage = "https://ffmpeg.org"
     url = "https://ffmpeg.org/releases/ffmpeg-4.1.1.tar.bz2"
+    git = "https://git.ffmpeg.org/ffmpeg.git"
 
     maintainers("xjrc")
 
     license("GPL-2.0-or-later AND LGPL-2.1-or-later")
 
-    version("6.1.1", sha256="5e3133939a61ef64ac9b47ffd29a5ea6e337a4023ef0ad972094b4da844e3a20")
+    version("master", branch="master")
+    version("7.0", sha256="a24d9074bf5523a65aaa9e7bd02afe4109ce79d69bd77d104fed3dab4b934d7a")
+    version(
+        "6.1.1",
+        sha256="5e3133939a61ef64ac9b47ffd29a5ea6e337a4023ef0ad972094b4da844e3a20",
+        preferred=True,
+    )
     version("6.0", sha256="47d062731c9f66a78380e35a19aac77cebceccd1c7cc309b9c82343ffc430c3d")
     version("5.1.4", sha256="c3c1e316bf91468738dd0aff6eb1faab409f1edcd34fd1a4213626439bc5d743")
     version("5.1.3", sha256="5d5bef6a11f0c500588f9870ec965a30acc0d54d8b1e535da6554a32902d236d")
@@ -92,6 +99,8 @@ class Ffmpeg(AutotoolsPackage):
     depends_on("iconv")
     depends_on("yasm@1.2.0:")
     depends_on("zlib-api")
+
+    depends_on("pkgconfig", type="build")
 
     depends_on("aom", when="+libaom")
     depends_on("bzip2", when="+bzlib")

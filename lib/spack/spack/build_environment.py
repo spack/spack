@@ -91,7 +91,7 @@ from spack.util.environment import (
 )
 from spack.util.executable import Executable
 from spack.util.log_parse import make_log_context, parse_log_events
-from spack.util.module_cmd import load_module, module, path_from_modules
+from spack.util.module_cmd import load_module, path_from_modules
 
 #
 # This can be set by the user to globally disable parallel builds.
@@ -190,14 +190,6 @@ class MakeExecutable(Executable):
         return super().__call__(*args, **kwargs)
 
 
-def _on_cray():
-    host_platform = spack.platforms.host()
-    host_os = host_platform.operating_system("default_os")
-    on_cray = str(host_platform) == "cray"
-    using_cnl = re.match(r"cnl\d+", str(host_os))
-    return on_cray, using_cnl
-
-
 def clean_environment():
     # Stuff in here sanitizes the build environment to eliminate
     # anything the user has set that may interfere. We apply it immediately
@@ -240,17 +232,6 @@ def clean_environment():
     for varname in os.environ.keys():
         if varname.endswith("_ROOT") and varname != "SPACK_ROOT":
             env.unset(varname)
-
-    # On Cray "cluster" systems, unset CRAY_LD_LIBRARY_PATH to avoid
-    # interference with Spack dependencies.
-    # CNL requires these variables to be set (or at least some of them,
-    # depending on the CNL version).
-    on_cray, using_cnl = _on_cray()
-    if on_cray and not using_cnl:
-        env.unset("CRAY_LD_LIBRARY_PATH")
-        for varname in os.environ.keys():
-            if "PKGCONF" in varname:
-                env.unset(varname)
 
     # Unset the following variables because they can affect installation of
     # Autotools and CMake packages.
@@ -381,11 +362,7 @@ def set_compiler_environment_variables(pkg, env):
     _add_werror_handling(keep_werror, env)
 
     # Set the target parameters that the compiler will add
-    # Don't set on cray platform because the targeting module handles this
-    if spec.satisfies("platform=cray"):
-        isa_arg = ""
-    else:
-        isa_arg = spec.architecture.target.optimization_flags(compiler)
+    isa_arg = spec.architecture.target.optimization_flags(compiler)
     env.set("SPACK_TARGET_ARGS", isa_arg)
 
     # Trap spack-tracked compiler flags as appropriate.
@@ -832,14 +809,6 @@ def setup_package(pkg, dirty, context: Context = Context.BUILD):
         tty.debug("setup_package: loading compiler modules")
         for mod in pkg.compiler.modules:
             load_module(mod)
-
-    # kludge to handle cray mpich and libsci being automatically loaded by
-    # PrgEnv modules on cray platform. Module unload does no damage when
-    # unnecessary
-    on_cray, _ = _on_cray()
-    if on_cray and not dirty:
-        for mod in ["cray-mpich", "cray-libsci"]:
-            module("unload", mod)
 
     if target and target.module_name:
         load_module(target.module_name)

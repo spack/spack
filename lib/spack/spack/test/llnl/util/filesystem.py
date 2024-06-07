@@ -278,8 +278,8 @@ class TestInstallTree:
     def test_allow_broken_symlinks(self, stage):
         """Test installing with a broken symlink."""
         with fs.working_dir(str(stage)):
-            symlink("nonexistant.txt", "source/broken", allow_broken_symlinks=True)
-            fs.install_tree("source", "dest", symlinks=True, allow_broken_symlinks=True)
+            symlink("nonexistant.txt", "source/broken")
+            fs.install_tree("source", "dest", symlinks=True)
             assert os.path.islink("dest/broken")
             assert not os.path.exists(readlink("dest/broken"))
 
