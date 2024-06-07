@@ -102,6 +102,6 @@ class Spla(CMakePackage):
             elif spec["blas"].name == "cray-libsci":
                 args += ["-DSPLA_HOST_BLAS=CRAY_LIBSCI"]
         else:
-            args += self.define("BLAS_LIBRARIES", spec["blas"].libs.joined(";"))
+            args += [self.define("BLAS_LIBRARIES", spec["blas"].libs.joined(";"))]
 
         return args
