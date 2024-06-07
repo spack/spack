@@ -511,9 +511,6 @@ class Mfem(Package, CudaPackage, ROCmPackage):
         when="@4.6.0 +gslib+shared+miniapps",
         sha256="2a31682d876626529e2778a216d403648b83b90997873659a505d982d0e65beb",
     )
-    # FIXME: if we need this patch for v4.7.0, we need a new patch since this
-    #        one fails
-    patch("mfem-hip.patch", when="@4.6.0 +rocm ^hip@6.0:")
     patch("mfem-4.7.patch", when="@4.7.0")
 
     phases = ["configure", "build", "install"]
@@ -959,7 +956,6 @@ class Mfem(Package, CudaPackage, ROCmPackage):
             options += ["HIP_CXX=%s" % spec["hip"].hipcc, "HIP_ARCH=%s" % amdgpu_target]
             hip_headers = HeaderList([])
             hip_libs = LibraryList([])
-            hip_libs += find_libraries("libamdhip64", spec["hip"].prefix.lib)
             # To use a C++ compiler that supports -xhip flag one can use
             # something like this:
             #   options += [
