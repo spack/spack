@@ -18,6 +18,8 @@ class Squashfuse(AutotoolsPackage):
     license("BSD-2-Clause")
 
     version("master", branch="master")
+    version("0.5.2", sha256="54e4baaa20796e86a214a1f62bab07c7c361fb7a598375576d585712691178f5")
+    version("0.5.1", sha256="4dd81ea10323078193e5435ad8481b59f3ac8539648ddc732bcaea50b13966c9")
     version("0.5.0", sha256="d7602c7a3b1d0512764547d27cb8cc99d1b21181e1c9819e76461ee96c2ab4d9")
     version("0.4.0", sha256="646e31449b7914d2404933aea88f8d5f72c5d135d7deae3370ccb394c40d114a")
     version("0.2.0", sha256="e8eea1b013b41d0a320e5a07b131bc70df14e6b3f2d3a849bdee66d100186f4f")

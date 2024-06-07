@@ -14,6 +14,8 @@ class PyNumexpr(PythonPackage):
 
     license("MIT")
 
+    version("2.9.0", sha256="4df4163fcab20030137e8f2aa23e88e1e42e6fe702387cfd95d7675e1d84645e")
+    version("2.8.8", sha256="10b377c6ec6d9c01349d00e16dd82e6a6f4439c8c2b1945e490df1436c1825f5")
     version("2.8.4", sha256="0e21addd25db5f62d60d97e4380339d9c1fb2de72c88b070c279776ee6455d10")
     version("2.8.3", sha256="389ceefca74eff30ec3fd03fc4c3b7ab3df8f22d1f235117a392ce702ed208c0")
     version("2.7.3", sha256="00d6b1518605afe0ed10417e0ff07123e5d531c02496c6eed7dd4b9923238e1e")
@@ -26,6 +28,7 @@ class PyNumexpr(PythonPackage):
     version("2.4.6", sha256="2681faf55a3f19ba4424cc3d6f0a10610ebd49f029f8453f0ba64dd5c0fe4e0f")
 
     depends_on("python@3.7:", when="@2.8.3:", type=("build", "run"))
+    depends_on("python@3.9:", when="@2.8.7:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
 
     depends_on("py-numpy@1.13.3:", type=("build", "run"), when="@2.8.3:")
