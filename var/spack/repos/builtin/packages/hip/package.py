@@ -37,16 +37,11 @@ class Hip(CMakePackage):
     version("5.6.0", sha256="a8237768c1ae70029d972376f8d279f4de18a1e6106fff6215d1e16847bc375e")
     version("5.5.1", sha256="1f5f6bb72d8d64335ccc8242ef2e2ea8efeb380cce2997f475b1ee77528d9fb4")
     version("5.5.0", sha256="5b0d0253e62f85cc21d043513f7c11c64e4a4ec416159668f0b160d732d09a3c")
-    version("5.4.3", sha256="23e51d3af517cd63019f8d199e46b84d5a18251d148e727f3985e8d99ccb0e58")
-    version("5.4.0", sha256="e290f835d69ef23e8b5833a7e616b0a989ff89ada4412d9742430819546efc6c")
-    version("5.3.3", sha256="51d4049dc37d261afb9e1270e60e112708ff06b470721ff21023e16e040e4403")
-    version("5.3.0", sha256="05225832fb5a4d24f49a773ac27e315239943a6f24291a50d184e2913f2cdbe0")
     with default_args(deprecated=True):
-        version("5.2.3", sha256="5b83d1513ea4003bfad5fe8fa741434104e3e49a87e1d7fad49e5a8c1d06e57b")
-        version("5.2.1", sha256="7d4686a2f8a9124bb21f7f3958e451c57019f48a0cbb42ffdc56ed02860a46c3")
-        version("5.2.0", sha256="a6e0515d4d25865c037b546035df9c51f0882cd2700e759c266ff7e199f37c3a")
-        version("5.1.3", sha256="ce755ee6e407904eba3f6b3c9efcdd48eb4f58a26b06e1892166d05f19a75973")
-        version("5.1.0", sha256="47e542183699f4005c48631d96f6a1fbdf27e07ad3402ccd7b5f707c2c602266")
+        version("5.4.3", sha256="23e51d3af517cd63019f8d199e46b84d5a18251d148e727f3985e8d99ccb0e58")
+        version("5.4.0", sha256="e290f835d69ef23e8b5833a7e616b0a989ff89ada4412d9742430819546efc6c")
+        version("5.3.3", sha256="51d4049dc37d261afb9e1270e60e112708ff06b470721ff21023e16e040e4403")
+        version("5.3.0", sha256="05225832fb5a4d24f49a773ac27e315239943a6f24291a50d184e2913f2cdbe0")
 
     variant("rocm", default=True, description="Enable ROCm support")
     variant("cuda", default=False, description="Build with CUDA")
@@ -65,11 +60,6 @@ class Hip(CMakePackage):
         depends_on("gl@4.5:")
         depends_on("py-cppheaderparser", type="build", when="@5.3.3:")
         for ver in [
-            "5.1.0",
-            "5.1.3",
-            "5.2.0",
-            "5.2.1",
-            "5.2.3",
             "5.3.0",
             "5.3.3",
             "5.4.0",
@@ -140,11 +130,6 @@ class Hip(CMakePackage):
         ("5.4.0", "c4b79738eb6e669160382b6c47d738ac59bd493fc681ca400ff012a2e8212955"),
         ("5.3.3", "36acce92af39b0fa06002e164f5a7f5a9c7daa19bf96645361325775a325499d"),
         ("5.3.0", "81e9bd5209a7b400c986f9bf1d7079bcf7169bbcb06fc4fe843644559a4d612e"),
-        ("5.2.3", "5031d07554ce07620e24e44d482cbc269fa972e3e35377e935d2694061ff7c04"),
-        ("5.2.1", "4feaa3883cbc54ddcd5d2d5becbe0f3fe3edd5b3b468dc73b5104893029eefac"),
-        ("5.2.0", "8774958bebc29a4b7eb9dc2d38808d79d9a24bf9c1f44e801ff99d2d5ba82240"),
-        ("5.1.3", "707f2217f0e7aeb62d7b76830a271056d665542bf5f7a54e40adf4d5f299ca93"),
-        ("5.1.0", "77984854bfe00f938353fe4c7604d09967eaf5c609d05f1e6423d3c3dea86e61"),
     ]:
         resource(
             name="hipamd",
@@ -163,11 +148,6 @@ class Hip(CMakePackage):
         ("5.4.0", "a294639478e76c75dac0e094b418f9bd309309b07faf6af126cdfad9aab3c5c7"),
         ("5.3.3", "cab394e6ef16c35bab8de29a66b96a7dc0e7d1297aaacba3718fa1d369233c9f"),
         ("5.3.0", "d251e2efe95dc12f536ce119b2587bed64bbda013969fa72be58062788044a9e"),
-        ("5.2.3", "932ea3cd268410010c0830d977a30ef9c14b8c37617d3572a062b5d4595e2b94"),
-        ("5.2.1", "eb4ff433f8894ca659802f81792646034f8088b47aca6ad999292bcb8d6381d5"),
-        ("5.2.0", "80f73387effdcd987a150978775a87049a976aa74f5770d4420847b004dd59f0"),
-        ("5.1.3", "44a7fac721abcd93470e1a7e466bdea0c668c253dee93e4f1ea9a72dbce4ba31"),
-        ("5.1.0", "362d81303048cf7ed5d2f69fb65ed65425bc3da4734fff83e3b8fbdda51b0927"),
     ]:
         resource(
             name="opencl",
@@ -185,11 +165,6 @@ class Hip(CMakePackage):
         ("5.4.0", "46a1579310b3ab9dc8948d0fb5bed4c6b312f158ca76967af7ab69e328d43138"),
         ("5.3.3", "f8133a5934f9c53b253d324876d74f08a19e2f5b073bc94a62fe64b0d2183a18"),
         ("5.3.0", "2bf14116b5e2270928265f5d417b3d0f0f2e13cbc8ec5eb8c80d4d4a58ff7e94"),
-        ("5.2.3", "0493c414d4db1af8e1eb30a651d9512044644244488ebb13478c2138a7612998"),
-        ("5.2.1", "465ca9fa16869cd89dab8c2d66d9b9e3c14f744bbedaa1d215b0746d77a500ba"),
-        ("5.2.0", "37f5fce04348183bce2ece8bac1117f6ef7e710ca68371ff82ab08e93368bafb"),
-        ("5.1.3", "ddee63cdc6515c90bab89572b13e1627b145916cb8ede075ef8446cbb83f0a48"),
-        ("5.1.0", "f4f265604b534795a275af902b2c814f416434d9c9e16db81b3ed5d062187dfa"),
     ]:
         resource(
             name="rocclr",
@@ -272,27 +247,11 @@ class Hip(CMakePackage):
             placement="hip-tests",
             when=f"@{d_version}",
         )
-    patch(
-        "0011-Improve-compilation-without-git-repo-and-remove-compiler-rt-linkage-for-host"
-        ".5.0.2.patch",
-        when="@5.0.2:5.1.3",
-    )
 
     # Improve compilation without git repo and remove compiler rt linkage
     # for host and correction in CMake target path variable and
     # correcting the CMake path variable.
-    patch(
-        "0012-Improve-compilation-without-git-repo-and-remove-compiler-rt-linkage-for-host"
-        ".5.2.0.patch",
-        when="@5.2.0",
-    )
-    patch(
-        "0012-Improve-compilation-without-git-repo-and-remove-compiler-rt-linkage-for-host"
-        ".5.2.1.patch",
-        when="@5.2.1:5.2.3",
-    )
     patch("0013-remove-compiler-rt-linkage-for-host.5.3.0.patch", when="@5.3.0:5.4")
-
     patch("0014-hip-test-file-reorg-5.4.0.patch", when="@5.4.0:5.5")
     patch("0016-hip-sample-fix-hipMalloc-call.patch", when="@5.4.3:5.5")
     patch("0014-remove-compiler-rt-linkage-for-host.5.5.0.patch", when="@5.5")
@@ -363,10 +322,8 @@ class Hip(CMakePackage):
                 "rocminfo": rocm_prefix,
                 "comgr": rocm_prefix,
                 "rocm-device-libs": rocm_prefix,
+                "hipify-clang": rocm_prefix,
             }
-
-            if self.spec.satisfies("@5.4:"):
-                paths["hipify-clang"] = rocm_prefix
 
             if self.spec.satisfies("@5.7:"):
                 paths["hip-path"] = rocm_prefix
@@ -379,14 +336,9 @@ class Hip(CMakePackage):
                 "rocminfo": self.spec["rocminfo"].prefix,
                 "comgr": self.spec["comgr"].prefix,
                 "rocm-device-libs": self.spec["llvm-amdgpu"].prefix,
+                "hipify-clang": self.spec["hipify-clang"].prefix,
             }
-
-            if self.spec.satisfies("@5.4:"):
-                paths["hipify-clang"] = self.spec["hipify-clang"].prefix
-        if "@:3.8.0" in self.spec:
-            paths["bitcode"] = paths["rocm-device-libs"].lib
-        else:
-            paths["bitcode"] = paths["rocm-device-libs"].amdgcn.bitcode
+        paths["bitcode"] = paths["rocm-device-libs"].amdgcn.bitcode
 
         return paths
 
@@ -588,18 +540,14 @@ class Hip(CMakePackage):
     def cache_test_sources(self):
         """Copy the tests source files after the package is installed to an
         install test subdirectory for use during `spack test run`."""
-        if self.spec.satisfies("@:5.1.0"):
-            return
-        elif self.spec.satisfies("@5.1:5.5"):
+        if self.spec.satisfies("@5.1:5.5"):
             self.cache_extra_test_sources([self.test_src_dir_old])
         elif self.spec.satisfies("@5.6:"):
             self.cache_extra_test_sources([self.test_src_dir])
 
     def test_samples(self):
         # configure, build and run all hip samples
-        if self.spec.satisfies("@:5.1.0"):
-            raise SkipTest("Test is only available for specs after version 5.1.0")
-        elif self.spec.satisfies("@5.1:5.5"):
+        if self.spec.satisfies("@5.1:5.5"):
             test_dir = join_path(self.test_suite.current_test_cache_dir, self.test_src_dir_old)
         elif self.spec.satisfies("@5.6:"):
             test_dir = join_path(self.test_suite.current_test_cache_dir, self.test_src_dir)
