@@ -14,7 +14,7 @@ import llnl.util.tty as tty
 from spack.package import *
 
 
-class Openmpi(AutotoolsPackage, CudaPackage):
+class Openmpi(AutotoolsPackage, CudaPackage, ROCmPackage):
     """An open source Message Passing Interface implementation.
 
     The Open MPI Project is an open source Message Passing Interface
@@ -575,6 +575,7 @@ class Openmpi(AutotoolsPackage, CudaPackage):
     depends_on("hwloc@:1", when="@:3 ~internal-hwloc")
 
     depends_on("hwloc +cuda", when="+cuda ~internal-hwloc")
+    depends_on("hwloc +rocm", when="+rocm ~internal-hwloc")
     depends_on("java", when="+java")
     depends_on("sqlite", when="+sqlite3")
     depends_on("zlib-api", when="@3:")
@@ -591,6 +592,7 @@ class Openmpi(AutotoolsPackage, CudaPackage):
         depends_on("ucx")
         depends_on("ucx +thread_multiple", when="+thread_multiple")
         depends_on("ucx +thread_multiple", when="@3.0.0:")
+        depends_on("ucx +rocm", when="+rocm")
         depends_on("ucx@1.9.0:", when="@4.0.6:4.0")
         depends_on("ucx@1.9.0:", when="@4.1.1:4.1")
         depends_on("ucx@1.9.0:", when="@5.0.0:")
@@ -622,6 +624,9 @@ class Openmpi(AutotoolsPackage, CudaPackage):
     depends_on("openssh", type="run", when="+rsh")
 
     depends_on("cuda", type=("build", "link", "run"), when="@5: +cuda")
+    depends_on("hip", type=("build", "link", "run"), when="@5: +rocm")
+
+    requires("fabrics=ucx", when="+rocm")
 
     conflicts("+cxx_exceptions", when="%nvhpc", msg="nvc does not ignore -fexceptions, but errors")
 
@@ -629,6 +634,8 @@ class Openmpi(AutotoolsPackage, CudaPackage):
     # parent package we must express as a conflict rather than a conditional
     # variant.
     conflicts("+cuda", when="@:1.6")
+    # Same goes with ROCm support added in 5.0
+    conflicts("+rocm", when="@:4")
     # PSM2 support was added in 1.10.0
     conflicts("fabrics=psm2", when="@:1.8")
     # MXM support was added in 1.5.4
@@ -739,6 +746,15 @@ class Openmpi(AutotoolsPackage, CudaPackage):
                 variants.append("+cuda")
             else:
                 variants.append("~cuda")
+
+            # rocm
+            match = re.search(
+                r'parameter "mpi_built_with_rocm_support" ' + r'\(current value: "(\S+)"', output
+            )
+            if match and is_enabled(match.group(1)):
+                variants.append("+rocm")
+            else:
+                variants.append("~rocm")
 
             # wrapper-rpath
             if version in spack.version.ver("1.7.4:"):
@@ -1125,6 +1141,13 @@ class Openmpi(AutotoolsPackage, CudaPackage):
                     config_args.append("CFLAGS=-D__LP64__")
         elif spec.satisfies("@1.7:"):
             config_args.append("--without-cuda")
+
+        # ROCm support
+        # See https://docs.open-mpi.org/en/v5.0.x/tuning-apps/networking/rocm.html
+        if "+rocm" in spec:
+            config_args.append("--with-rocm={0}".format(spec["hip"].prefix))
+        elif spec.satisfies("@5:"):
+            config_args.append("--without-rocm")
 
         if spec.satisfies("%nvhpc@:20.11"):
             # Workaround compiler issues
