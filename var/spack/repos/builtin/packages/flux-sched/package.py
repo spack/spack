@@ -24,6 +24,7 @@ class FluxSched(CMakePackage, AutotoolsPackage):
     license("LGPL-3.0-only")
 
     version("master", branch="master")
+    version("0.35.0", sha256="38fde51464f4e34ecbd1e4fbbf00267f96b639db5987257a7ad07f811e2f09d2")
     version("0.34.0", sha256="10c03d78fa2302de7ddf9599ea59fb7a2dc7ccf6f526fd9fbfc9e3ff6ba39713")
     version("0.33.1", sha256="d0a1e504226d69fa8a247e9090d94ccc5e5f5fb028aab805f9cd95379bd8b1b3")
     version("0.33.0", sha256="d2e97121aed29bb1c6bfac602d890edb2f0a18d5303205b266a33c66fff1d61c")
