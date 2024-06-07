@@ -30,16 +30,11 @@ class Rocfft(CMakePackage):
     version("5.6.0", sha256="e3d4a6c1bdac78f9a22033f57011af783d560308103f73542f9e0e4dd133d38a")
     version("5.5.1", sha256="57423a64f5cdb1c37ff0891b6c17b59f73198d46be42db4ae23781ef2c0cd49d")
     version("5.5.0", sha256="9288152e66504b06082e4eed8cdb791b4f9ae2836b3defbeb4d2b54901b96485")
-    version("5.4.3", sha256="ed9664adc9825c237327497bc4b23f020d50be7645647f14a45f4d943dd506e7")
-    version("5.4.0", sha256="d35a67332f4425fba1824eed78cf98d5c9a17a422614ff3f4cba2461df952336")
-    version("5.3.3", sha256="678c18710578c1fb36a0009311bb79de7607c3468f9102cfba56a866ebb7ff78")
-    version("5.3.0", sha256="d655c5541c4aff4267e80e36d002fc3a55c2f84a0ae8631197c12af3bf03fa7d")
     with default_args(deprecated=True):
-        version("5.2.3", sha256="0cee37886f01f1afb3ae5dad1164c819573c13c6675bff4eb668de334adbff27")
-        version("5.2.1", sha256="6302349b6cc610a9a939377e2c7ffba946656a8d43f2e438ff0b3088f0f963ad")
-        version("5.2.0", sha256="ebba280b7879fb4bc529a68072b98d4e815201f90d24144d672094bc241743d4")
-        version("5.1.3", sha256="b4fcd03c1b07d465bb307ec33cc7fb50036dff688e497c5e52b2dec37f4cb618")
-        version("5.1.0", sha256="dc11c9061753ae43a9d5db9c4674aa113a8adaf50818b2701cbb940894147f68")
+        version("5.4.3", sha256="ed9664adc9825c237327497bc4b23f020d50be7645647f14a45f4d943dd506e7")
+        version("5.4.0", sha256="d35a67332f4425fba1824eed78cf98d5c9a17a422614ff3f4cba2461df952336")
+        version("5.3.3", sha256="678c18710578c1fb36a0009311bb79de7607c3468f9102cfba56a866ebb7ff78")
+        version("5.3.0", sha256="d655c5541c4aff4267e80e36d002fc3a55c2f84a0ae8631197c12af3bf03fa7d")
 
     amdgpu_targets = ROCmPackage.amdgpu_targets
 
@@ -68,11 +63,6 @@ class Rocfft(CMakePackage):
     depends_on("rocrand", type="test")
 
     for ver in [
-        "5.1.0",
-        "5.1.3",
-        "5.2.0",
-        "5.2.1",
-        "5.2.3",
         "5.3.0",
         "5.3.3",
         "5.4.0",
@@ -91,8 +81,6 @@ class Rocfft(CMakePackage):
         depends_on(f"hip@{ver}", when=f"@{ver}")
         depends_on(f"rocm-cmake@{ver}:", type="build", when=f"@{ver}")
 
-    # Patch to add spack build test support. No longer required from 5.2
-    patch("0003-Fix-clients-fftw3-include-dirs-rocm-4.5.patch", when="@:5.1")
     # Patch to add install prefix header location for sqlite for 5.4
     patch("0004-fix-missing-sqlite-include-paths.patch", when="@5.4.0:5.5")
     # Patch to fix the build issue when --test=root is enabled
