@@ -27,6 +27,7 @@ class Dftbplus(CMakePackage, MakefilePackage):
     license("CC-BY-SA-4.0")
 
     version("main", branch="main")
+    version("24.1", sha256="3bc405d1ab834b6b145ca671fb44565ec50a6f576e9e18e7a1ae2c613a311321")
     version("23.1", sha256="e2d0471c2fd3aaf174a9aac44fd8e7de2668d182201779626d6e62754adc4cf9")
     version("22.2", sha256="0140f5f2e24d3071e5e7aede2ed6216a6f46d55216b0d69da17af917c62e98ed")
     version("22.1", sha256="02daca6f4c6372656598f3ba0311110c8e473c87c8d934d7bb276feaa4cc1c82")
