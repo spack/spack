@@ -627,14 +627,11 @@ class Hdf5(CMakePackage):
             with working_dir(self.prefix.bin):
                 # CMake's FindHDF5 relies only on h5cc so it doesn't find the HL
                 # component unless it uses h5hlcc so we symlink h5cc to h5hlcc etc
-                symlink_files = {
-                                  "h5cc":  "h5lcc",
-                                  "h5c++": "h5lc++"
-                 }
-                 for old, new in symlink_files.items():
-                     if os.path.isfile(old):
-                         os.remove(old)
-                         symlink(new, old)
+                symlink_files = {"h5cc":  "h5lcc", "h5c++": "h5lc++"}
+                for old, new in symlink_files.items():
+                    if os.path.isfile(old):
+                        os.remove(old)
+                        symlink(new, old)
 
     @property
     @llnl.util.lang.memoized
