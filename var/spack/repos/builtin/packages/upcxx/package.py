@@ -22,7 +22,8 @@ def is_CrayEX():
             return True
         elif target is None:  # but some systems lack Cray PrgEnv
             fi_info = which("fi_info")
-            if fi_info and fi_info("-l", output=str).find("cxi") >= 0:
+            if fi_info and \
+               fi_info("-l", output=str, error=str, fail_on_error=False).find("cxi") >= 0:
                 return True
     return False
 
