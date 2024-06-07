@@ -71,13 +71,14 @@ jobs:
           IS_WINDOWS: ${{ matrix.runner == 'windows-latest' }}
           SETUP_SCRIPT_EXT: ${{ env.IS_WINDOWS && 'ps1' || 'sh' }}
           SETUP_SCRIPT_SOURCE: ${{ env.IS_WINDOWS && './' || 'source ' }}
+          HOME: ${{ env.IS_WINDOWS && '$env:userprofile' || '~' }}
         run: |
           ${{ env.SETUP_SCRIPT_SOURCE }}share/spack/setup-env.${{ env.SETUP_SCRIPT_EXT }}
           spack bootstrap disable github-actions-v0.5
           spack bootstrap disable github-actions-v0.4
           spack external find --not-buildable cmake bison
           spack -d solve zlib
-          tree ~/.spack/bootstrap/store/
+          tree ${{ env.HOME }}/.spack/bootstrap/store/
 
   gnupg-sources:
     runs-on: ${{ matrix.runner }}
