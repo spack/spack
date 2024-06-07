@@ -87,6 +87,7 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
         description="Enable support for sanitizers. "
         "Specific sanitizers must be explicitly enabled with -fsanitize=*.",
     )
+    variant("valgrind", default=False, description="Enable support for valgrind")
     variant(
         "stdexec",
         default=False,
@@ -136,6 +137,8 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
     conflicts("^tracy-client@0.9:", when="@:0.9")
     depends_on("whip@0.1: +rocm", when="@0.9: +rocm")
     depends_on("whip@0.1: +cuda", when="@0.9: +cuda")
+
+    depends_on("valgrind", when="+valgrind")
 
     with when("+rocm"):
         for val in ROCmPackage.amdgpu_targets:
@@ -196,6 +199,7 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
             self.define_from_variant("PIKA_WITH_APEX", "apex"),
             self.define_from_variant("PIKA_WITH_TRACY", "tracy"),
             self.define_from_variant("PIKA_WITH_SANITIZERS", "sanitizers"),
+            self.define_from_variant("PIKA_WITH_VALGRIND", "valgrind"),
             self.define("PIKA_WITH_TESTS", self.run_tests),
             self.define_from_variant("PIKA_WITH_GENERIC_CONTEXT_COROUTINES", "generic_coroutines"),
             self.define("BOOST_ROOT", spec["boost"].prefix),
