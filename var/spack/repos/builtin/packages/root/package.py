@@ -550,7 +550,6 @@ class Root(CMakePackage):
 
         # Options controlling gross build / config behavior.
         options += [
-            define("exceptions", True),
             define("explicitlink", True),
             define("fail-on-missing", True),
             define_from_variant("fortran"),
@@ -573,13 +572,15 @@ class Root(CMakePackage):
         if self.spec.satisfies("@:6.28"):
             options.append(define("cxxmodules", False))
 
+        if self.spec.satisfies("@:6.30"):
+            options.append(define("exceptions", True))
+
         # Options related to ROOT's ability to download and build its own
         # dependencies. Per Spack convention, this should generally be avoided.
 
         afterimage_enabled = ("+x" in self.spec) if "platform=darwin" not in self.spec else True
 
         options += [
-            define("builtin_afterimage", afterimage_enabled),
             define("builtin_cfitsio", False),
             define("builtin_davix", False),
             define("builtin_fftw3", False),
@@ -603,6 +604,9 @@ class Root(CMakePackage):
             define("builtin_xxhash", self.spec.satisfies("@6.12.02:6.12")),
             define("builtin_zlib", False),
         ]
+
+        if self.spec.satisfies("@:6.32"):
+            options.append(define("builtin_afterimage", afterimage_enabled))
 
         # Features
         options += [
@@ -642,7 +646,6 @@ class Root(CMakePackage):
             define_from_variant("memstat"),  # See conflicts
             define("minimal", False),
             define_from_variant("minuit"),
-            define_from_variant("minuit2", "minuit"),
             define_from_variant("mlp"),
             define("monalisa", False),
             define_from_variant("mysql"),
@@ -706,6 +709,9 @@ class Root(CMakePackage):
 
         if self.spec.satisfies("@6.25.02:"):
             options.append(define_from_variant("tmva-sofie"))
+
+        if self.spec.satisfies("@:6.30"):
+            options.append(define_from_variant("minuit2", "minuit"))
 
         # #################### Compiler options ####################
 
