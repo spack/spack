@@ -77,13 +77,8 @@ jobs:
     needs: [ prechecks, changes ]
     uses: ./.github/workflows/unit_tests.yaml
     secrets: inherit
-  windows:
-    if: ${{ github.repository == 'spack/spack' && needs.changes.outputs.core == 'true' }}
-    needs: [ prechecks ]
-    uses: ./.github/workflows/windows_python.yml
-    secrets: inherit
   all:
-    needs: [ windows, unit-tests, bootstrap ]
+    needs: [ unit-tests, bootstrap ]
     runs-on: ubuntu-latest
     steps:
     - name: Success
