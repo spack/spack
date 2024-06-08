@@ -11,11 +11,12 @@ class Thunar(AutotoolsPackage):
     """Thunar File Manager"""
 
     homepage = "https://docs.xfce.org/xfce/thunar/start"
-    url = "https://archive.xfce.org/xfce/4.14pre3/src/Thunar-1.8.8.tar.bz2"
+    url = "https://archive.xfce.org/xfce/4.16/src/thunar-4.16.0.tar.bz2"
 
     maintainers("teaguesterling")
     license("GPLv2", checked_by="teaguesterling")  # https://wiki.xfce.org/licenses/audit
 
+    version("4.16.0", sha256="6277c448116a91ebfa564972645d8d79ef69864992a02bb164b7b13f98fdfd9b")
     version("1.8.8", sha256="a03761de4a43c36b9daa6029e6e3263a23c8ce429d78a9f9156ab48efdb2800c")
 
     variant("xfce4", default=True, description="Match XFCE4 versions")
@@ -53,11 +54,21 @@ class Thunar(AutotoolsPackage):
     depends_on("libxfce4util+xfce4@4.16", when="+xfce4")
     depends_on("xfconf+xfce4@4.16", when="+xfce4")
     depends_on("libxfce4ui+xfce4@4.16", when="+xfce4")
-    depends_on("exo+xfce4@0.12.7", when="+xfce4")
-    depends_on("xfce4-panel@4.13.7", when="+xfce4")
+    depends_on("exo+xfce4@4.16.0", when="+xfce4")
+    depends_on("xfce4-panel@4.16.0", when="+xfce4")
 
-    with when("@1.8.8:"):
-        with default_args(type=("build", "link", "run")):
+    with default_args(type=("build", "link", "run")):
+        with when("@4.16.0:"):
+            depends_on("libxfce4util@4.16:")
+            depends_on("xfconf@4.16:")
+            depends_on("libxfce4ui@4.16:")
+            depends_on("exo@4.16.0:")
+            depends_on("xfce4-panel@4.16.0:")
+            depends_on("glib@2.50:")
+            depends_on("gtkplus@3.22:")
+            depends_on("gobject-introspection@1.60:", when="+introspection")
+
+        with when("@1.8.8:"):
             depends_on("libxfce4util@4.16:")
             depends_on("xfconf@4.16:")
             depends_on("libxfce4ui@4.16:")
