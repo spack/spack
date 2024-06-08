@@ -242,13 +242,18 @@ class SuiteSparse(Package):
                 # unintentional system blas/lapack packages
                 f'-DBLAS_LIBRARIES="{";".join(spec["blas"].libs)}"',
                 f'-DLAPACK_LIBRARIES="{";".join(spec["lapack"].libs)}"',
-                f"-DENABLE_CUDA={'ON' if '+cuda' in spec else 'OFF'}",
                 "-DCMAKE_VERBOSE_MAKEFILE=ON",
             ]
             if spec.satisfies("@:7.3"):
-                cmake_args += [f"-DNOPENMP={'OFF' if '+openmp' in spec else 'ON'}"]
+                cmake_args += [
+                    f"-DNOPENMP={'OFF' if '+openmp' in spec else 'ON'}",
+                    f"-DENABLE_CUDA={'ON' if '+cuda' in spec else 'OFF'}",
+                ]
             else:
-                cmake_args += [f"-DSUITESPARSE_USE_OPENMP={'ON' if '+openmp' in spec else 'OFF'}"]
+                cmake_args += [
+                    f"-DSUITESPARSE_USE_OPENMP={'ON' if '+openmp' in spec else 'OFF'}",
+                    f"-DSUITESPARSE_USE_CUDA={'ON' if '+cuda' in spec else 'OFF'}",
+                ]
             make_args += [f"CMAKE_OPTIONS={' '.join(cmake_args)}"]
 
         if spec.satisfies("%gcc platform=darwin"):
