@@ -15,11 +15,13 @@ class Mbedtls(MakefilePackage):
 
     homepage = "https://tls.mbed.org"
     url = "https://github.com/ARMmbed/mbedtls/archive/mbedtls-2.2.1.tar.gz"
+
     maintainers("haampie")
 
     license("Apache-2.0 OR GPL-2.0-or-later")
 
     # version 3.x
+    version("3.6.0", sha256="b527b4e859c1dd38c0f3ecc4fd784ce53326f19996f9328af75ce46f88136627")
     version("3.3.0", sha256="a22ff38512697b9cd8472faa2ea2d35e320657f6d268def3a64765548b81c3ec")
     version(
         "3.2.1",
@@ -38,6 +40,7 @@ class Mbedtls(MakefilePackage):
     )
 
     # version 2.x
+    version("2.28.8", sha256="98b91415d86311b9c08f383906f58332429605895b53bb598d61b0bc29128a1d")
     version("2.28.2", sha256="1db6d4196178fa9f8264bef5940611cd9febcd5d54ec05f52f1e8400f792b5a4")
     version(
         "2.28.1",
