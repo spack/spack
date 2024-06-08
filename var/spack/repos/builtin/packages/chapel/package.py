@@ -497,7 +497,6 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
 
     def configure(self, spec, prefix):
         self.setup_gasnet()
-        configure("--prefix={0}".format(prefix))
 
     def build(self, spec, prefix):
         make()
