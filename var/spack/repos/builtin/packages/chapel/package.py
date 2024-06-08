@@ -44,7 +44,7 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
 
     # A list of GitHub accounts to notify when the package is updated.
     # TODO: add chapel-project github account
-    maintainers("arezaii")
+    maintainers("arezaii", "bonachea")
 
     # See https://spdx.org/licenses/ for a list.
     license("Apache-2.0")
