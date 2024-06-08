@@ -432,8 +432,8 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
 
     conflicts("platform=windows")  # Support for windows is through WSL only
 
-    conflicts("rocm", when="cuda", msg="Chapel must be built with either CUDA or ROCm, not both")
-    conflicts("rocm", when="@:2.0.0", msg="ROCm support in spack requires Chapel 2.0.0 or later")
+    conflicts("+rocm", when="+cuda", msg="Chapel must be built with either CUDA or ROCm, not both")
+    conflicts("+rocm", when="@:2.0.0", msg="ROCm support in spack requires Chapel 2.0.0 or later")
 
     conflicts(
         "comm_substrate=unset",
@@ -448,8 +448,8 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
     )
 
     with when("llvm=none"):
-        conflicts("cuda", msg="Cuda support requires building with LLVM")
-        conflicts("rocm", msg="ROCm support requires building with LLVM")
+        conflicts("+cuda", msg="Cuda support requires building with LLVM")
+        conflicts("+rocm", msg="ROCm support requires building with LLVM")
 
     # Add dependencies
 
@@ -592,14 +592,14 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
             env.prepend_path("LD_LIBRARY_PATH", self.spec["curl"].prefix.lib)
             env.prepend_path("PKG_CONFIG_PATH", self.spec["curl"].prefix.lib.pkgconfig)
 
-        if self.spec.variants["cuda"].value:
+        if self.spec.satisfies("+cuda"):
             # TODO: why must we add to LD_LIBRARY_PATH to find libcudart?
             env.prepend_path("LD_LIBRARY_PATH", self.spec["cuda"].prefix.lib64)
             env.set("CHPL_LOCALE_MODEL", "gpu")
             env.set("CHPL_GPU", "nvidia")
             env.set("CHPL_TARGET_COMPILER", "llvm")
 
-        if self.spec.variants["rocm"].value:
+        if self.spec.satisfies("+rocm"):
             env.set("CHPL_LOCALE_MODEL", "gpu")
             env.set("CHPL_GPU", "amd")
             env.set("CHPL_TARGET_COMPILER", "llvm")
@@ -660,7 +660,7 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
         expected = f"version {self._output_version_long}"
         exes = ["chpl"]
 
-        if self.spec.variants["chpldoc"].value:
+        if self.spec.satisfies("+chpldoc"):
             exes.append("chpldoc")
 
         for exe in exes:
@@ -714,7 +714,7 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
         with working_dir(self.test_suite.current_test_cache_dir):
             with set_env(CHPL_CHECK_HOME=self.test_suite.current_test_cache_dir):
                 with test_part(self, "test_hello", purpose="test hello world"):
-                    if self.spec.variants["cuda"].value or self.spec.variants["rocm"].value:
+                    if self.spec.satisfies("+cuda") or self.spec.satisfies("+rocm"):
                         with set_env(COMP_FLAGS="--no-checks --no-compiler-driver"):
                             res = self.check_chpl_install()
                             assert res and res.returncode == 0
@@ -726,7 +726,7 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
     # support for CHPL_CHECK_HOME and chpldoc is finicky about CHPL_HOME
     def test_chpldoc(self):
         """Run the chpldoc test"""
-        if not self.spec.variants["chpldoc"].value:
+        if not self.spec.satisfies("+chpldoc"):
             print("Skipping chpldoc test as chpldoc variant is not set")
             return
         with working_dir(self.test_suite.current_test_cache_dir):
@@ -740,7 +740,7 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
     # to match the compiler's directory and the test suite's directory
     # def test_package_modules(self):
     #     """Test that the package modules are available"""
-    #     # if not self.spec.variants["module_tests"].value:
+    #     # if not self.spec.satisfies("+module_tests"):
     #     #     print("Skipping module tests as module_tests variant is not set")
     #     #     return
     #     tests_to_run = []
@@ -814,11 +814,11 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
     #     self.test_version()
     #     with set_env(CHPL_HOME=self.stage.source_path):
     #         with working_dir(self.stage.source_path):
-    #             if self.spec.variants["cuda"].value or self.spec.variants["rocm"].value:
+    #             if self.spec.satisfies("+cuda") or self.spec.satisfies("+rocm"):
     #                 with set_env(COMP_FLAGS="--no-checks --no-compiler-driver"):
     #                     self.run_local_make_check()
     #             else:  # Not GPU
     #                 self.run_local_make_check()
-    #             if self.spec.variants["chpldoc"].value:
+    #             if self.spec.satisfie("+chpldoc"):
     #                 make("check-chpldoc")
     #     self.test_package_modules()
