@@ -224,11 +224,23 @@ class Cp2k(MakefilePackage, CMakePackage, CudaPackage, ROCmPackage):
         depends_on("elpa@2023.05.001:", when="@2023.2:")
 
     with when("+dlaf"):
-        depends_on("dla-future@0.2.1: +scalapack")
-        depends_on("dla-future ~cuda", when="~cuda")
-        depends_on("dla-future ~rocm", when="~rocm")
-        depends_on("dla-future +cuda", when="+cuda")
-        depends_on("dla-future +rocm", when="+rocm")
+        with when("@:2024.1"):
+            depends_on("dla-future@0.2.1: +scalapack")
+            depends_on("dla-future ~cuda", when="~cuda")
+            depends_on("dla-future ~rocm", when="~rocm")
+            depends_on("dla-future +cuda", when="+cuda")
+            depends_on("dla-future +rocm", when="+rocm")
+
+        with when("@master"):
+            depends_on("dla-future-fortran@0.1.0:")
+
+            # Use a direct dependency on dla-future so that constraints can be expressed
+            # WARN: In the concretizer output, dla-future will appear as dependency of CP2K
+            #       instead of dla-future-fortran
+            depends_on("dla-future ~cuda", when="~cuda")
+            depends_on("dla-future ~rocm", when="~rocm")
+            depends_on("dla-future +cuda", when="+cuda")
+            depends_on("dla-future +rocm", when="+rocm")
 
     with when("+plumed"):
         depends_on("plumed+shared")
