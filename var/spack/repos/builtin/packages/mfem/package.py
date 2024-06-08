@@ -1342,7 +1342,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
 
     @property
     def xlinker(self):
-        return "-Wl," if "~cuda" in self.spec else "-Xcompiler="
+        return "-Wl," if "~cuda" in self.spec else "-Xlinker="
 
     # Similar to spec[pkg].libs.ld_flags but prepends rpath flags too.
     # Also does not add system library paths as defined by 'sys_lib_paths'
