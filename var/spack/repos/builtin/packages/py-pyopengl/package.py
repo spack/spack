@@ -20,7 +20,6 @@ class PyPyopengl(PythonPackage):
     variant("glut", default=True, description="Enable OpenGL Utility Toolkit (GLUT) binding.")
 
     conflicts("osmesa", when="^glx")
-    conflicts("glx", when="^osmesa")
 
     depends_on("py-setuptools", type="build")
     # actually installing PyOpenGL itself just requires python
