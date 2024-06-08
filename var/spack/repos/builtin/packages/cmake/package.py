@@ -88,6 +88,16 @@ class Cmake(Package):
         version(
             "3.28.0", sha256="e1dcf9c817ae306e73a45c2ba6d280c65cf4ec00dd958eb144adaf117fb58e71"
         )
+        # used in py-cmake, to be removed in Spack 0.23
+        version(
+            "3.22.2", sha256="3c1c478b9650b107d452c5bd545c72e2fad4e37c09b89a1984b9a2f46df6aced"
+        )
+        version(
+            "3.21.4", sha256="d9570a95c215f4c9886dd0f0564ca4ef8d18c30750f157238ea12669c2985978"
+        )
+        version(
+            "3.18.0", sha256="83b4ffcb9482a73961521d2bafe4a16df0168f03f56e6624c419c461e5317e29"
+        )
 
     variant(
         "build_type",
