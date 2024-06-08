@@ -40,7 +40,8 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
 
     test_requires_compiler = True
 
-    executables = ["^chpl$", "^chpldoc$"]
+    # TODO: Re-enable these once we add determine_version and determine_variants
+    # executables = ["^chpl$", "^chpldoc$"]
 
     # A list of GitHub accounts to notify when the package is updated.
     # TODO: add chapel-project github account
