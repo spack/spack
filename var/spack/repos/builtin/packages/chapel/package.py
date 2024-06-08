@@ -676,17 +676,9 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
                 assert expected in output
 
     def check(self):
-        # TODO: This is here because it's hard to have our make test target work
-        # with the spack test framework. Our make test target relies on using
-        # `start_test` and it really expects to be ran from the source directory
-        # but spack creates a test cache directory and runs the tests from there.
-        # we could conceivably just copy most everything over to the cache directory,
-        # but the other issue is that these tests take a long time to run and
-        # it's not likely users are going to want to wait 30 minutes or maybe some
-        # number of hours for the tests to run. So we're going to skip this for now
-        # and just rely on minimal hello world and version number tests.
-        # We can't just run make check here because chpl isn't yet installed
-        # and we need it to be in the PATH for make check to work
+        # TODO: we skip the self-check because it's ran by default but:
+        #       - make check doesn't work at build time b/c the PATH isn't yet updated
+        #       - make test is a long running operation
         pass
 
     def check_chpl_install_gasnet(self):
