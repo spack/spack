@@ -30,6 +30,8 @@ class Thunar(AutotoolsPackage):
     variant("libnotify", default=True, description="Build with libnotify support")
     variant("freetype", default=True, description="Build with freetype support")
 
+    extendable = True
+
     # Base requirements
     depends_on("intltool@0.39.0:", type="build")
     with default_args(type=("build", "link", "run")):
