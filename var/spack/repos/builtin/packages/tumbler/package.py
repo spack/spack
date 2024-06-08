@@ -30,7 +30,7 @@ class Tumbler(AutotoolsPackage):
     # variant("libgsf", default=True, description="Build with odf support")
     # variant("libopenraw-gnome", default=True, description="Build with raw image support")
 
-    conflicts("%gcc@13:", when="@:4.16", msg="GCC 13+ fails on implicit pointer casting")
+    conflicts("%gcc@13:", when="@:4.18", msg="GCC 13+ fails on implicit pointer casting")
 
     # Base requirements
     depends_on("intltool@0.35.0:", type="build")
