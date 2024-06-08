@@ -24,11 +24,11 @@ class PyPyopengl(PythonPackage):
     depends_on("py-setuptools", type="build")
     # actually installing PyOpenGL itself just requires python
     # but tests (and possibly dependent packages) need OpenGL libraries
-    depends_on("gl", type=("test", "run"))
-    depends_on("glu", when="+glu", type=("test", "run"))
-    depends_on("freeglut+shared", when="+glut", type=("test", "run"))
+    depends_on("gl", type="link")
+    depends_on("glu", when="+glu", type="link")
+    depends_on("freeglut+shared", when="+glut", type="link")
 
-    def setup_build_environment(self, env):
+    def setup_run_environment(self, env):
         # PyOpenGL uses ctypes.cdll (or similar), which searches LD_LIBRARY_PATH
         lib_dirs = self.spec["gl"].libs.directories
         if "^glx" in self.spec:
@@ -47,11 +47,8 @@ class PyPyopengl(PythonPackage):
         else:
             env.prepend_path("LD_LIBRARY_PATH", libs)
 
-    def setup_run_environment(self, env):
-        self.setup_build_environment(env)
-
-    def setup_dependent_build_environment(self, env, dependent_spec):
-        self.setup_build_environment(env)
+    def setup_dependent_build_environment_(self, env, dependent_spec):
+        self.setup_run_environment(env)
 
     # only test import available module
     @property
