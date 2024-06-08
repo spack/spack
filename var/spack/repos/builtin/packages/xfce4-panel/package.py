@@ -11,12 +11,13 @@ class Xfce4Panel(AutotoolsPackage):
     """Panel manager for Xfce4"""
 
     homepage = "https://docs.xfce.org/xfce/xfce4-panel/start"
-    url = "https://archive.xfce.org/xfce/4.14pre3/src/xfce4-panel-4.13.7.tar.bz2"
+    url = "https://archive.xfce.org/xfce/4.16/src/xfce4-panel-4.16.0.tar.bz2"
 
     maintainers("teaguesterling")
 
     license("GPLv2 OR LGPLv2", checked_by="teaguesterling")  # https://wiki.xfce.org/licenses/audit
 
+    version("4.16.0", sha256="5e979aeeb37d306d72858b1bc67448222ea7a68de01409055b846cd31f3cc53d")
     version("4.13.7", sha256="888e30417342b05d566f5ef5a85791b05117fadbbc2f00bc5f29a30d6ba42ba9")
 
     variant("xfce4", default=True, description="Match XFCE4 versions")
@@ -42,14 +43,21 @@ class Xfce4Panel(AutotoolsPackage):
     depends_on("intltool@0.51.0:", type="build")
 
     depends_on("libxfce4ui+xfce4@4.16", when="+xfce4")
-    depends_on("exo+xfce4@0.12.7", when="+xfce4")
+    depends_on("exo+xfce4@4.16.0", when="+xfce4")
     depends_on("garcon+xfce4@0.8.0", when="+xfce4")
 
-    with when("@4.13.7:"):
-        with default_args(type=("build", "link", "run")):
+    with default_args(type=("build", "link", "run")):
+        with when("@4.16.0:"):
             depends_on("libxfce4ui@4.16:")
             depends_on("garcon@0.8.0:")
-            depends_on("exo@0.12.7:")
+            depends_on("exo@4.16.0:")
+            depends_on("glib@2.50:")
+            depends_on("gtkplus@3.22:")
+            depends_on("gobject-introspection@1.60:", when="+introspection")
+        with when("@4.13.7:"):
+            depends_on("libxfce4ui@4.16:")
+            depends_on("garcon@0.8.0:")
+            depends_on("exo@0.23.7:")
             depends_on("glib@2.50:")
             depends_on("gtkplus@3.22:")
 
