@@ -7,27 +7,38 @@
 from spack.package import *
 
 
-class Libwnck(AutotoolsPackage):
+class Libwnck(MesonPackage, AutotoolsPackage):
     """Window Navigator Construction Kit"""
 
     homepage = "https://gitlab.gnome.org/GNOME/libwnck"
     url = "https://download.gnome.org/sources/libwnck/3.4/libwnck-3.4.9.tar.xz"
 
+    def url_for_version(self, version):
+        base = "https://download.gnome.org/sources/libwnck"
+        dirname = version.up_to(1) if version >= Version("40") else version.up_to(2)
+        filename = f"libwnck-{version.up_to(3)}.tar.xz"
+        return f"{base}/{dirname}/{filename}"
+
     license("GPLv2", checked_by="teaguesterling")
 
+    version("43.0", sha256="905bcdb85847d6b8f8861e56b30cd6dc61eae67ecef4cd994a9f925a26a2c1fe")
+    version("40.1", sha256="03134fa114ef3fbe34075aa83678f58aa2debe9fcef4ea23c0779e28601d6611")
+    version("3.36.0", sha256="bc508150b3ed5d22354b0e6774ad4eee465381ebc0ace45eb0e2d3a4186c925f")
+    version("3.31.4", sha256="45b3f64bb881bab5666d93bc8ad7fef96c2820b0a3dfd117026b0d121767dd26")
+    version("3.24.1", sha256="afa6dc283582ffec15c3374790bcbcb5fb422bd38356d72deeef35bf7f9a1f04")
+    version("3.20.1", sha256="1cb03716bc477058dfdf3ebfa4f534de3b13b1aa067fcd064d0b7813291cba72")
+    version("3.14.1", sha256="bb643c9c423c8aa79c59973ce27ce91d3b180d1e9907902278fb79391f52befa")
     version("3.4.9", sha256="96e6353f2701a1ea565ece54d791a7bebef1832d96126f7377c54bb3516682c4")
-    version("3.4.8", sha256="37ccf62a09d49ab6709c6515cf623a363140514db5d002da2a0e35b9e00e466a")
-    version("3.4.7", sha256="d48ac9c7f50c0d563097f63d07bcc83744c7d92a1b4ef65e5faeab32b5ccb723")
-    version("3.4.6", sha256="e3ae2d25b684910f49fc548dc96b8a54b77c431d94ad1fd5a37cbecab7bb1851")
-    version("3.4.5", sha256="560f9709405fb33500c2f79efabdb1c4056866dec281f354ad3da97181fbf381")
-    version("3.4.4", sha256="a545a23ea7681fafae033b4f68b69ef022d446a9325286291bb8882b9016a130")
-    version("3.4.3", sha256="e468118927d50231df250d1f00106b32139aaad1ee9249a4ef316e5526d17d1d")
-    version("3.4.2", sha256="1d055d0d7bd1069d97416985d11241eaea48aedb4311a22ff0d3404871707051")
-    version("3.4.0", sha256="34a97edf601ee066204bb640b23f58d6897e0f559ce1816b3c1d206d70ea62ad")
 
     variant("introspection", default=True, description="Build with gobject-introspection support")
     variant("notification", default=True, description="Build with startup-notification support")
     variant("tools", default=True, description="Install WNCK tools")
+
+    build_system(
+        conditional("meson", when="@3.31:"),
+        conditional("autotools", when="@:3.24"),
+        default="meson",
+    )
 
     depends_on("intltool@0.40.6:", type="build")
     with default_args(type=("build", "link", "run")):
@@ -37,7 +48,6 @@ class Libwnck(AutotoolsPackage):
         depends_on("glib@2")
         depends_on("gdk-pixbuf")
         depends_on("gtkplus@3.22:")
-
 
     def configure_args(self):
         args = []
