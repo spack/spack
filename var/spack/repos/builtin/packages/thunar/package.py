@@ -12,23 +12,26 @@ class Thunar(AutotoolsPackage):
 
     homepage = "https://docs.xfce.org/xfce/thunar/start"
     url = "https://archive.xfce.org/xfce/4.16/src/thunar-4.16.0.tar.bz2"
+    list_url = "https://archive.xfce.org/xfce/"
+    list_depth = 2
 
     maintainers("teaguesterling")
     license("GPLv2", checked_by="teaguesterling")  # https://wiki.xfce.org/licenses/audit
 
+    version("4.18.0", sha256="d1f4b080c97b9e390eff199aaaac7562fb20f031686f8d5ee5207e953bfc2feb")
     version("4.16.0", sha256="6277c448116a91ebfa564972645d8d79ef69864992a02bb164b7b13f98fdfd9b")
-    version("1.8.8", sha256="a03761de4a43c36b9daa6029e6e3263a23c8ce429d78a9f9156ab48efdb2800c")
 
-    variant("xfce4", default=True, description="Match XFCE4 versions")
     variant("introspection", default=True, description="Build with gobject-introspection support")
-    variant("notification", default=True, description="Build with startup-notification support")
+    variant("notifications", default=True, description="Build with startup-notification support")
+    variant("jpeg", default=True, description="Build with libjpeg support")
     variant("exif", default=True, description="Build with libexif support")
     variant("gdbus", default=True, description="Build with gdbus support")
-    variant("notify", default=True, description="Build with libnotify support")
-    variant("jpeg", default=True, description="Build with libjpeg support")
+    variant("gio-unix", default=True, description="Build with gio-unix support")
+    variant("libnotify", default=True, description="Build with libnotify support")
     variant("freetype", default=True, description="Build with freetype support")
 
     # Base requirements
+    depends_on("intltool@0.39.0:", type="build")
     with default_args(type=("build", "link", "run")):
         depends_on("libxfce4util")
         depends_on("xfconf")
@@ -38,49 +41,38 @@ class Thunar(AutotoolsPackage):
         depends_on("libpng")
         depends_on("glib@2:")
         depends_on("gtkplus@3:")
-
         depends_on("libexif", when="+exif")
         depends_on("dbus-glib", when="+gdbus")
-        depends_on("libnotify", when="+notify")
-
-        depends_on("startup-notification", when="+notification")
-
-    depends_on("libxfce4util+introspection", when="+introspection")
-    depends_on("libxfce4ui+introspection", when="+introspection")
-    depends_on("xfce4-panel+introspection", when="+introspection")
-    depends_on("gobject-introspection", when="+introspection")
-    depends_on("intltool@0.39.0:", type="build")
-
-    depends_on("libxfce4util+xfce4@4.16", when="+xfce4")
-    depends_on("xfconf+xfce4@4.16", when="+xfce4")
-    depends_on("libxfce4ui+xfce4@4.16", when="+xfce4")
-    depends_on("exo+xfce4@4.16.0", when="+xfce4")
-    depends_on("xfce4-panel@4.16.0", when="+xfce4")
-
-    with default_args(type=("build", "link", "run")):
+        depends_on("libnotify", when="+libnotify")
+        depends_on("libjpeg", when="+jpeg")
+        depends_on("freetype", when="+freetype")
+        depends_on("startup-notification", when="+notifications")
+        with when("+introspection"):
+            depends_on("libxfce4util+introspection")
+            depends_on("libxfce4ui+introspection")
+            depends_on("xfce4-panel+introspection")
+            depends_on("gobject-introspection")
+        with when("@4.18.0:"):
+            depends_on("glib@2.66:")
+            depends_on("gtkplus@3.24:")
+            depends_on("gobject-introspection@1.66:", when="+introspection")
         with when("@4.16.0:"):
-            depends_on("libxfce4util@4.16:")
-            depends_on("xfconf@4.16:")
-            depends_on("libxfce4ui@4.16:")
-            depends_on("exo@4.16.0:")
-            depends_on("xfce4-panel@4.16.0:")
             depends_on("glib@2.50:")
             depends_on("gtkplus@3.22:")
             depends_on("gobject-introspection@1.60:", when="+introspection")
 
-        with when("@1.8.8:"):
-            depends_on("libxfce4util@4.16:")
-            depends_on("xfconf@4.16:")
-            depends_on("libxfce4ui@4.16:")
-            depends_on("glib@2.50:")
-            depends_on("gtkplus@3.22:")
-            depends_on("exo@0.12.7:")
-            depends_on("xfce4-panel@4.13.7:")
-
-            depends_on("gobject-introspection@1.60:", when="+introspection")
+    def setup_build_environment(self, env):
+        if self.spec.satisfies("@4.18"):
+            # Fails to check in xcfe4 include subdirectory for the libxfce4kbd-private-3 tree
+            env.append_flags("CPPFLAGS", f"-I{self.spec['libxfce4ui'].home.include.xfce4}")
 
     def configure_args(self):
         args = []
         args += self.enable_or_disable("introspection")
+        args += self.enable_or_disable("notifications")
+        args += self.enable_or_disable("exif")
+        args += self.enable_or_disable("gio-unix")
+        args += [
+            "--with-custom-thunarx-dirs-enabled",
+        ]
         return args
-

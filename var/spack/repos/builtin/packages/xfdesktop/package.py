@@ -12,15 +12,20 @@ class Xfdesktop(AutotoolsPackage):
 
     homepage = "https://docs.xfce.org/xfce/xfdesktop/start"
     url = "https://archive.xfce.org/xfce/4.16/src/xfdesktop-4.16.0.tar.bz2"
+    list_url = "https://archive.xfce.org/xfce/"
+    list_depth = 2
 
     maintainers("teaguesterling")
 
     license("GPLv2", checked_by="teaguesterling")  # https://wiki.xfce.org/licenses/audit
 
+    version(
+        "4.18.0", sha256="661783e7e6605459926d80bca46d25ce2197c221456457a863ea9d0252120d14"
+    )
     version("4.16.0", sha256="934ba5affecff21e62d9fac1dd50c50cd94b3a807fefa5f5bff59f3d6f155bae")
 
     variant("libnotify", default=True, description="Build with libnotify support")
-    variant("thunarx", default=True, description="Build with thunarx support")  # TODO
+    variant("thunarx", default=False, description="Build with thunarx support")  # TODO
 
     # Base requirements
     depends_on("intltool@0.35.0:", type="build")
@@ -35,12 +40,10 @@ class Xfdesktop(AutotoolsPackage):
 
         depends_on("libnotify", when="+libnotify")
 
-    with default_args(type=("build", "link", "run")):
+        with when("@4.18.0:"):
+            depends_on("glib@2.66:")
+            depends_on("gtkplus@3.24:")
         with when("@4.16.0:"):
-            depends_on("xfconf@4.16:")
-            depends_on("libxfce4ui@4.16:")
-            depends_on("exo@4.16.0:")
-            depends_on("garcon@0.8.0:")
             depends_on("glib@2.50:")
             depends_on("gtkplus@3.22:")
 

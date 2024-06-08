@@ -13,17 +13,12 @@ class Vala(AutotoolsPackage):
     applications and libraries written in C."""
 
     homepage = "https://gitlab.gnome.org/GNOME/vala"
-    url = "https://download.gnome.org/sources/vala/0.56/vala-0.56.17.tar.xz"
-
+    url = "https://download.gnome.org/sources/vala/0.48/vala-0.48.25.tar.xz"
 
     maintainers("benkirk")
 
     license("LGPL-2.0-or-later")
 
-    def url_for_version(self, version):
-        return f"https://download.gnome.org/sources/vala/{version.up_to(2)}/vala-{version.up_to(3)}.tar.xz"
-
-    version("0.56.17", sha256="26100c4e4ef0049c619275f140d97cf565883d00c7543c82bcce5a426934ed6a")
     version("0.48.25", sha256="50cb3c5eccddc7fd4368bfa96414a556045e79d2b15a68918c727b8c83b18a24")
     version("0.48.24", sha256="3649ef84573b6865fc3470640ee603720099eb915b39faad19b7498de1a7df24")
     version("0.48.23", sha256="de3cc858d995e07474219e25a3e1f0ed998070d2e206d3a313d4379a5f77a06a")
@@ -44,8 +39,6 @@ class Vala(AutotoolsPackage):
     depends_on("flex")
     depends_on("bison")
     depends_on("graphviz", when="+doc")
-
-    conflicts("%gcc@13:", when="@:0.48")
 
     def configure_args(self):
         args = []

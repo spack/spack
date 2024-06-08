@@ -11,46 +11,43 @@ class Libxfce4ui(AutotoolsPackage):
 
     homepage = "https://docs.xfce.org/xfce/libxfce4ui/start"
     url = "https://archive.xfce.org/xfce/4.16/src/libxfce4ui-4.16.0.tar.bz2"
+    list_url = "https://archive.xfce.org/xfce/"
+    list_depth = 2
 
     maintainers("teaguesterling")
 
     license("LGPLv2", checked_by="teaguesterling")  # https://wiki.xfce.org/licenses/audit
 
+    version("4.18.0", sha256="532247c4387c17bb9ef94a73147039b8d013c3131c95cdbd2fa85fbcc848d06b")
     version("4.16.0", sha256="8b06c9e94f4be88a9d87c47592411b6cbc32073e7af9cbd64c7b2924ec90ceaa")
 
-    variant("xfce4", default=True, description="Match all XFCE4 versions")
     variant("glibtop", default=True, description="Build with glibtop support")
     variant("introspection", default=True, description="Build with gobject-introspection support")
     variant("vala", default=True, description="Build with vala support")
     variant("notification", default=True, description="Build with startup-notification support")
 
+    depends_on("intltool@0.35.0:", type="build")
     with default_args(type=("build", "link", "run")):
         depends_on("libxfce4util")
         depends_on("xfconf")
         depends_on("glib@2:")
         depends_on("gtkplus@3:")
-
-        depends_on("libgtop", when="+glibtop")
-        depends_on("gobject-introspection", when="+introspection")
-        depends_on("vala", when="+vala")
+        depends_on("libgtop@2", when="+glibtop")
         depends_on("startup-notification", when="+notification")
-
         depends_on("libxfce4util+glibtop", when="+glibtop")
-        depends_on("libxfce4util+introspection", when="+introspection")
-        depends_on("libxfce4util+vala", when="+vala")
-
-        depends_on("libxfce4util+xfce4@4.16", when="+xfce4@4.16")
-        depends_on("xfconf+xfce4@4.16", when="+xfce4@4.16")
-
-        depends_on("intltool@0.35.0:", type="build")
-
-    # Specific verisions
-    with when("@4.16:"):
-        with default_args(type=("build", "link", "run")):
-            depends_on("xfconf@4.12:")
+        with when("+introspection"):
+            depends_on("gobject-introspection")
+            depends_on("libxfce4util+introspection")
+        with when("+vala"):
+            depends_on("vala")
+            depends_on("libxfce4util+vala")
+        with when("@4.18:"):
+            depends_on("glib@2.66:")
+            depends_on("gtkplus@3.24:")
+            depends_on("gobject-introspection@1.66:", when="+introspection")
+        with when("@4.16:"):
             depends_on("glib@2.50:")
             depends_on("gtkplus@3.22:")
-            depends_on("libgtop@2", when="+glibtop")
             depends_on("gobject-introspection@1.60:", when="+introspection")
 
     def configure_args(self):
@@ -68,4 +65,3 @@ class Libxfce4ui(AutotoolsPackage):
 
     def setup_dependent_run_environment(self, env, dependent_spec):
         env.prepend_path("XDG_DATA_DIRS", self.prefix.share)
-

@@ -12,6 +12,8 @@ class Libwnck(MesonPackage, AutotoolsPackage):
 
     homepage = "https://gitlab.gnome.org/GNOME/libwnck"
     url = "https://download.gnome.org/sources/libwnck/3.4/libwnck-3.4.9.tar.xz"
+    list_url = "https://download.gnome.org/sources/libwnck/"
+    list_depth = 2
 
     def url_for_version(self, version):
         base = "https://download.gnome.org/sources/libwnck"
