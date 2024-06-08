@@ -36,6 +36,17 @@ class Openssl(Package):  # Uses Fake Autotools, should subclass Package
     version("3.1.5", sha256="6ae015467dabf0469b139ada93319327be24b98251ffaeceda0221848dc09262")
     version("3.0.13", sha256="88525753f79d3bec27d2fa7c66aa0b92b3aa9498dafd93d7cfa4b3780cdae313")
 
+    version(
+        "1.1.1w",
+        sha256="cf3098950cb4d853ad95c0841f1f9c6d3dc102dccfcacd521d93925208b76ac8",
+        deprecated=True,
+    )
+    version(
+        "1.0.2u",
+        sha256="ecd0c6ffb493dd06707d38b14bb4d8c2288bb7033735606569d8f90f89669d16",
+        deprecated=True,
+    )
+
     # On Cray DVS mounts, we can't make symlinks to /etc/ssl/openssl.cnf,
     # either due to a bug or because DVS is not intended to be POSIX compliant.
     # Therefore, stick to system agnostic certs=mozilla.
@@ -99,6 +110,8 @@ class Openssl(Package):  # Uses Fake Autotools, should subclass Package
             env["KERNEL_BITS"] = "64"
 
         options = ["zlib"]
+        if spec.satisfies("@1.0"):
+            options.append("no-krb5")
         # clang does not support the .arch directive in assembly files.
         if "clang" in self.compiler.cc and spec.target.family == "aarch64":
             options.append("no-asm")
