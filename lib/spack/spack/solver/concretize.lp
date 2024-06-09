@@ -906,8 +906,8 @@ attr("variant_selected", node(ID, Package), Variant, Value, VariantType, Variant
 
 % we can choose variant values from all the possible values for the node
 {
-  attr("variant_selected", PackageNode, Variant, Value, VariantType, VariantID)
-  : variant_possible_value(PackageNode, Variant, Value)
+  attr("variant_selected", node(ID, Package), Variant, Value, VariantType, VariantID)
+  : variant_possible_value(node(ID, Package), Variant, Value)
 } :-
   attr("node", node(ID, Package)),
   node_has_variant(node(ID, Package), Variant, VariantID),
