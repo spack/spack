@@ -21,7 +21,6 @@ class Xfconf(AutotoolsPackage):
 
     version("4.18.0", sha256="2e8c50160bf800a807aea094fc9dad81f9f361f42db56607508ed5b4855d2906")
     version("4.16.0", sha256="652a119007c67d9ba6c0bc7a740c923d33f32d03dc76dfc7ba682584e72a5425")
-    variant("xfce4", default=True, description="Match XFCE4 versions")
 
     depends_on("intltool@0.35.0:", type="build")
     with default_args(type=("build", "link", "run")):
