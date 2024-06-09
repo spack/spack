@@ -32,8 +32,6 @@ class Xfce4Settings(AutotoolsPackage):
         depends_on("libxfce4ui")
         depends_on("garcon")
         depends_on("exo")
-        # depends_on("glib@2:")
-        # depends_on("gtkplus@3:")
         depends_on("dbus-glib")
         depends_on("libxi")
         depends_on("libxrandr")
@@ -48,11 +46,9 @@ class Xfce4Settings(AutotoolsPackage):
     with default_args(type=("build", "link", "run")):
         with when("@4.18.0:"):
             depends_on("glib@2.66:")
-            #            depends_on("gtkplus@3.24:")
             depends_on("gobject-introspection@1.66:", when="+introspection")
         with when("@4.16.0:"):
             depends_on("glib@2.50:")
-            #            depends_on("gtkplus@3.22:")
             depends_on("gobject-introspection@1.60:", when="+introspection")
 
     def configure_args(self):
