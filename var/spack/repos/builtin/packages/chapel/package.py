@@ -477,6 +477,7 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
     depends_on("m4")
 
     depends_on("gmp", when="gmp=spack", type=("build", "link", "run"))
+    depends_on("hwloc", when="hwloc=spack", type=("build", "link", "run", "test"))
 
     depends_on("gasnet conduits=none", when="gasnet=spack")
 
