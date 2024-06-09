@@ -274,7 +274,7 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
         "hwloc",
         description="Build with hwloc support",
         default="bundled",
-        values=("bundled", "none"),
+        values=("bundled", "none", "spack"),
         multi=False,
     )
 
