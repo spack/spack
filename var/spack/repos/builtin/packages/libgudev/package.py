@@ -22,7 +22,3 @@ class Libgudev(MesonPackage):
     with default_args(when="@238", type=("build", "link", "run")):
         depends_on("glib@2.38:")
         depends_on("systemd@251:")  # For libuvdev
-
-    def meson_args(self):
-        args = []
-        return args
