@@ -35,7 +35,7 @@ class Oce(Package):
 
     with when("+tbb"):
         depends_on("tbb")
-        depends_on("intel-tbb@:2020 build_system=makefile", when="^intel-tbb")
+        depends_on("intel-tbb@:2020 build_system=makefile", when="^[virtuals=tbb] intel-tbb")
         conflicts("^intel-oneapi-tbb@2021.1:")
 
     # There is a bug in OCE which appears with Clang (version?) or GCC 6.0

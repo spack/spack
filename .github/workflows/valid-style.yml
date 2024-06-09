@@ -18,8 +18,8 @@ jobs:
   validate:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
-    - uses: actions/setup-python@0a5c61591373683505ea898e09a3ea4f39ef2b9c
+    - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29
+    - uses: actions/setup-python@82c7e631bb3cdc910f68e0081d67478d79c6982d
       with:
         python-version: '3.11'
         cache: 'pip'
@@ -35,10 +35,10 @@ jobs:
   style:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
+    - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29
       with:
         fetch-depth: 0
-    - uses: actions/setup-python@0a5c61591373683505ea898e09a3ea4f39ef2b9c
+    - uses: actions/setup-python@82c7e631bb3cdc910f68e0081d67478d79c6982d
       with:
         python-version: '3.11'
         cache: 'pip'
@@ -56,6 +56,7 @@ jobs:
           share/spack/qa/run-style-tests
   audit:
     uses: ./.github/workflows/audit.yaml
+    secrets: inherit
     with:
       with_coverage: ${{ inputs.with_coverage }}
       python_version: '3.11'
@@ -69,7 +70,7 @@ jobs:
           dnf install -y \
               bzip2 curl file gcc-c++ gcc gcc-gfortran git gnupg2 gzip \
               make patch tcl unzip which xz
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # @v2
+      - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29
       - name: Setup repo and non-root user
         run: |
           git --version

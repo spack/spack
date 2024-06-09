@@ -10,11 +10,11 @@ class PyPillowBase(PythonPackage):
     """Base class for Pillow and its fork Pillow-SIMD."""
 
     maintainers("adamjstewart")
-
+    license("HPND")
     provides("pil")
 
     # These defaults correspond to Pillow defaults
-    # https://pillow.readthedocs.io/en/stable/installation.html#external-libraries
+    # https://pillow.readthedocs.io/en/stable/installation/building-from-source.html
     VARIANTS_IN_SETUP_CFG = (
         "zlib",
         "jpeg",
@@ -40,18 +40,24 @@ class PyPillowBase(PythonPackage):
     variant("raqm", when="@8.2:", default=False, description="RAQM support")
 
     # Required dependencies
-    # https://pillow.readthedocs.io/en/latest/installation.html#python-support
-    depends_on("python@3.8:3.11", when="@10:", type=("build", "link", "run"))
-    depends_on("python@3.7:3.11", when="@9.3:9.5", type=("build", "link", "run"))
-    depends_on("python@3.7:3.10", when="@9.0:9.2", type=("build", "link", "run"))
-    depends_on("python@3.6:3.10", when="@8.3.2:8.4", type=("build", "link", "run"))
-    depends_on("python@3.6:3.9", when="@8:8.3.1", type=("build", "link", "run"))
-    depends_on("python@3.5:3.8", when="@7.0:7.2", type=("build", "link", "run"))
-    depends_on("python@2.7:2.8,3.5:3.8", when="@6.2.1:6.2.2", type=("build", "link", "run"))
-    depends_on("py-setuptools", type="build")
+    # https://pillow.readthedocs.io/en/stable/installation/python-support.html
+    with default_args(type=("build", "link", "run")):
+        depends_on("python@3.8:3.12", when="@10.1:")
+        depends_on("python@3.8:3.11", when="@10.0")
+        depends_on("python@3.7:3.11", when="@9.3:9.5")
+        depends_on("python@3.7:3.10", when="@9.0:9.2")
+        depends_on("python@3.6:3.10", when="@8.3.2:8.4")
+        depends_on("python@3.6:3.9", when="@8:8.3.1")
+        depends_on("python@3.5:3.8", when="@7.0:7.2")
+        depends_on("python@2.7:2.8,3.5:3.8", when="@6.2.1:6.2.2")
+
+    # pyproject.toml
+    with default_args(type="build"):
+        depends_on("py-setuptools@67.8:", when="@10:")
+        depends_on("py-setuptools")
 
     # Optional dependencies
-    # https://pillow.readthedocs.io/en/latest/installation.html#external-libraries
+    # https://pillow.readthedocs.io/en/stable/installation/building-from-source.html
     depends_on("zlib-api", when="+zlib")
     depends_on("jpeg", when="+jpeg")
     depends_on("libtiff", when="+tiff")
@@ -95,7 +101,7 @@ class PyPillowBase(PythonPackage):
             setup.write("[install]\n")
 
     def setup_build_environment(self, env):
-        env.set("MAX_CONCURRENCY", str(make_jobs))
+        env.set("MAX_CONCURRENCY", make_jobs)
 
 
 class PyPillow(PyPillowBase):
@@ -105,10 +111,12 @@ class PyPillow(PyPillowBase):
     capabilities."""
 
     homepage = "https://python-pillow.org/"
-    pypi = "Pillow/Pillow-7.2.0.tar.gz"
+    pypi = "pillow/pillow-10.2.0.tar.gz"
 
-    license("HPND")
-
+    version("10.3.0", sha256="9d2455fbf44c914840c793e89aa82d0e1763a14253a000743719ae5946814b2d")
+    version("10.2.0", sha256="e87f0b2c78157e12d7686b27d63c070fd65d994e8ddae6f328e0dcf4a0cd007e")
+    version("10.1.0", sha256="e6bf8de6c36ed96c86ea3b6e1d5273c53f46ef518a062464cd7ef5dd2cf92e38")
+    version("10.0.1", sha256="d72967b06be9300fed5cfbc8b5bafceec48bf7cdc7dab66b1d2549035287191d")
     version("10.0.0", sha256="9c82b5b3e043c7af0d95792d0d20ccf68f61a1fec6b3530e718b688422727396")
     version("9.5.0", sha256="bf548479d336726d7a0eceb6e767e179fbde37833ae42794602631a070d630f1")
     version("9.4.0", sha256="a1c2d7780448eb93fbcc3789bf3916aa5720d942e37945f4056680317f1cd23e")
@@ -126,6 +134,10 @@ class PyPillow(PyPillowBase):
     version("6.2.1", sha256="bf4e972a88f8841d8fdc6db1a75e0f8d763e66e3754b03006cbc3854d89f1cb1")
 
     for ver in [
+        "10.3.0",
+        "10.2.0",
+        "10.1.0",
+        "10.0.1",
         "10.0.0",
         "9.5.0",
         "9.4.0",
@@ -143,3 +155,11 @@ class PyPillow(PyPillowBase):
         "6.2.1",
     ]:
         provides("pil@" + ver, when="@" + ver)
+
+    def url_for_version(self, version):
+        url = "https://files.pythonhosted.org/packages/source/{0}/{0}illow/{0}illow-{1}.tar.gz"
+        if version >= Version("10.2"):
+            letter = "p"
+        else:
+            letter = "P"
+        return url.format(letter, version)

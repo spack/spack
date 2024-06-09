@@ -7,6 +7,8 @@ import sys
 
 from spack.package import *
 
+is_windows = sys.platform == "win32"
+
 
 class Cgns(CMakePackage):
     """The CFD General Notation System (CGNS) provides a general, portable,
@@ -71,6 +73,11 @@ class Cgns(CMakePackage):
     # https://bugs.gentoo.org/662210
     patch("no-matherr.patch", when="@:3.3.1 +tools")
 
+    # patch for gcc14 due to using internal tk type/function,
+    # copied from https://github.com/CGNS/CGNS/pull/757
+    # (adjusted an include from tk-private/generic/tkInt.h to tkInt.h)
+    patch("gcc14.patch", when="@:4.4.0 %gcc@14:")
+
     def cmake_args(self):
         spec = self.spec
         options = []
@@ -93,7 +100,7 @@ class Cgns(CMakePackage):
             ]
         )
 
-        if "+mpi" in spec:
+        if "+mpi" in spec and not is_windows:
             options.extend(
                 [
                     "-DCMAKE_C_COMPILER=%s" % spec["mpi"].mpicc,

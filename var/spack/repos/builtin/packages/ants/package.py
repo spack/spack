@@ -19,6 +19,7 @@ class Ants(CMakePackage):
     git = "https://github.com/ANTsX/ANTs.git"
     url = "https://github.com/ANTsX/ANTs/archive/v2.2.0.tar.gz"
 
+    version("2.5.1", sha256="8e3a7c0d3dab05883cba466aff262d78d832f679491318b94ce49b606565cebe")
     version("2.4.3", sha256="13ba78917aca0b20e69f4c43da607f8fe8c810edba23b6f5fd64fbd81b70a79a")
     version("2.4.0", sha256="a8ff78f4d2b16e495f340c9b0647f56c92cc4fc40b6ae04a60b941e5e239f9be")
     version("20220205", commit="6f07ac55569d0d085d2adf7888d1c7a2bd563bfe", deprecated=True)

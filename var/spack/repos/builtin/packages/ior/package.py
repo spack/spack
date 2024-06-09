@@ -14,6 +14,7 @@ class Ior(AutotoolsPackage):
     url = "https://github.com/hpc/ior/archive/3.2.1.tar.gz"
 
     version("develop", git="https://github.com/hpc/ior.git", branch="main")
+    version("4.0.0", sha256="cb17f6b0d17fb98dae28abaa116fd3adde411f52d45ff9efb125efc791b97463")
     version(
         "3.3.0",
         sha256="701f2167f81ef963e227d4c036c4a947a98b5642b7c14c87c8ae657849891528",

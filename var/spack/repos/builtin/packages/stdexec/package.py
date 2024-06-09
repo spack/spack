@@ -22,7 +22,7 @@ class Stdexec(CMakePackage):
     depends_on("cmake@3.23.1:", type="build")
 
     conflicts("%gcc@:10")
-    conflicts("%clang@:13")
+    conflicts("%clang@:12")
 
     def build(self, spec, prefix):
         pass

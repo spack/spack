@@ -21,6 +21,12 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     tags = ["e4s"]
 
     version("main", branch="main")
+    version("3.21.2", sha256="a1ac62b6204bdf2f7f9b637abf45e6cff24d372d4d3d3702c50e157bdb56eb21")
+    version("3.21.1", sha256="7ff8b692bceb7d7a8f51e2f45ccb20af00ba9395d7e1eee8816d46eb1c4c4b27")
+    version("3.21.0", sha256="1e0c2f92514c72f80d4a4d0e6439a3aba0ceda7a0bcbc7ad9c44ce4cd8b14c28")
+    version("3.20.6", sha256="20e6c260765f9593924bc5b1783bd152ec5c47246b47ce516cded7b505b34795")
+    version("3.20.5", sha256="fb4e637758737af910b05f30a785245633916cd0a929b7b6447ad1028da4ea5a")
+    version("3.20.4", sha256="b0d03a5595ee0a5696dd6683321e1dbfe9fea85238d3016a847b3d0bcdcfb3d9")
     version("3.20.3", sha256="75a94fb44df0512f51ad093fa784e56b61f51b7ead5956fbe49185c203f8c245")
     version("3.20.2", sha256="2a2d08b5f0e3d0198dae2c42ce1fd036f25c153ef2bb4a2d320ca141ac7cd30b")
     version("3.20.1", sha256="3d54f13000c9c8ceb13ca4f24f93d838319019d29e6de5244551a3ec22704f32")
@@ -173,7 +179,8 @@ class Petsc(Package, CudaPackage, ROCmPackage):
         patch("hip-5.6.0-for-3.18.diff", when="@3.18:3.19 ^hipsparse@5.6.0")
         patch("hip-5.7-plus-for-3.18.diff", when="@3.18:3.19 ^hipsparse@5.7:")
         patch(
-            "Handle-hipsparse-api-changes-for-rocm-6.0.patch", when="@3.20.2:3.20.3 ^hipsparse@6.0"
+            "0001-Handle-the-hipsparse-api-changes-for-rocm-6.0.patch",
+            when="@3.20.2:3.20.4 ^hipsparse@6.0",
         )
 
     # 3.8.0 has a build issue with MKL - so list this conflict explicitly
@@ -224,7 +231,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
 
     # Virtual dependencies
     # Git repository needs sowing to build Fortran interface
-    depends_on("sowing", when="@main")
+    depends_on("sowing@master", when="@main")
 
     # PETSc, hypre, superlu_dist when built with int64 use 32 bit integers
     # with BLAS/LAPACK
@@ -232,6 +239,10 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     depends_on("lapack")
     depends_on("mpi", when="+mpi")
     depends_on("cuda", when="+cuda")
+    # Fixed in https://gitlab.com/petsc/petsc/-/merge_requests/7354
+    conflicts(
+        "^cuda@12.4:", when="@:3.20.5 +cuda", msg="Deprecation in CCCL 2.3 causes build failure."
+    )
     depends_on("hip", when="+rocm")
 
     with when("+rocm"):

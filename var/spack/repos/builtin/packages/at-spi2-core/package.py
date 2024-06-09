@@ -18,6 +18,7 @@ class AtSpi2Core(MesonPackage):
 
     license("LGPL-2.1-or-later")
 
+    version("2.51.91", sha256="1344bd5c1732b55fcf3df9e3b87569f60984ae83ce75881b5a057c69f8d73e34")
     version("2.48.3", sha256="37316df43ca9989ce539d54cf429a768c28bb38a0b34950beadd0421827edf55")
     version("2.48.0", sha256="905a5b6f1790b68ee803bffa9f5fab4ceb591fb4fae0b2f8c612c54f1d4e8a30")
     version("2.47.90", sha256="71189c21af7bd084a12ab85b229c2d798936470b12fb0c3f177e37181fb6c00c")
@@ -28,7 +29,9 @@ class AtSpi2Core(MesonPackage):
 
     depends_on("meson@0.46.0:", type="build")
     depends_on("glib@2.56.1:")
+    depends_on("glib@2.68.1:", when="@2.51.91:")
     depends_on("dbus@1.12.8:")
+    depends_on("dbus@1.12.20:", when="@2.51.91:")
     depends_on("gettext")
     depends_on("libx11")
     depends_on("libxi")
@@ -39,6 +42,7 @@ class AtSpi2Core(MesonPackage):
     depends_on("pkgconfig", type="build")
     depends_on("python", type="build")
     depends_on("gobject-introspection")
+    depends_on("gobject-introspection@1.68.0:", when="@2.51.91:")
 
     @when("@2.40.1:")
     def patch(self):

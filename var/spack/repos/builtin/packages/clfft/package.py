@@ -35,6 +35,12 @@ class Clfft(CMakePackage):
 
     root_cmakelists_dir = "src"
 
+    def flag_handler(self, name, flags):
+        if name == "cxxflags":
+            # https://github.com/clMathLibraries/clFFT/issues/237
+            flags.append("-fpermissive")
+        return (flags, None, None)
+
     def cmake_args(self):
         args = [
             self.define_from_variant("BUILD_CLIENT", "client"),

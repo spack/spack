@@ -18,6 +18,7 @@ class Samtools(Package):
 
     license("MIT")
 
+    version("1.19.2", sha256="71f60499668e4c08e7d745fbff24c15cc8a0977abab1acd5d2bb419bdb065e96")
     version("1.19", sha256="fa6b3b18e20851b6f3cb55afaf3205d02fcb79dae3b849fcf52e8fc10ff08b83")
     version("1.18", sha256="d686ffa621023ba61822a2a50b70e85d0b18e79371de5adb07828519d3fc06e1")
     version("1.17", sha256="3adf390b628219fd6408f14602a4c4aa90e63e18b395dad722ab519438a2a729")
@@ -49,6 +50,7 @@ class Samtools(Package):
     depends_on("python", type="run")
 
     # htslib became standalone @1.3.1, must use corresponding version
+    depends_on("htslib@1.19.1", when="@1.19.2")
     depends_on("htslib@1.19", when="@1.19")
     depends_on("htslib@1.18", when="@1.18")
     depends_on("htslib@1.17", when="@1.17")

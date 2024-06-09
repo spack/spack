@@ -23,6 +23,8 @@ class RRcpp(RPackage):
 
     cran = "Rcpp"
 
+    version("1.0.12", sha256="0c7359cc43beee02761aa3df2baccede1182d29d28c9cd49964b609305062bd0")
+    version("1.0.11", sha256="df757c3068599c6c05367900bcad93547ba3422d59802dbaca20fd74d4d2fa5f")
     version("1.0.10", sha256="1e65e24a9981251ab5fc4f9fd65fe4eab4ba0255be3400a8c5abe20b62b5d546")
     version("1.0.9", sha256="807cec06dc4a96d54904360f6144466f084a7ed411ce5d2eea486a9b3c229176")
     version("1.0.8.3", sha256="9da5b84cdaf56e972b41e669d496b1ece2e91bcd435505c68b9f2bd98375f8bf")

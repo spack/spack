@@ -18,6 +18,7 @@ class Libecpint(CMakePackage):
     license("MIT")
 
     version("master", branch="master")
+    version("1.0.7", sha256="e9c60fddb2614f113ab59ec620799d961db73979845e6e637c4a6fb72aee51cc")
     version("1.0.5", sha256="3ad5ff342b1bc870f5992c296e8bd8aa590c21a9b14333958c601f8916d6f532")
     version("1.0.4", sha256="fad9d1ac98f8dcd40f7bee69aef653bfa3079f016e43277cbd554e06890aa186")
     version("1.0.3", sha256="13c3f7d1cf35355e37a903196d5cace60f6a72ae041e8b3502dfabdd19dde17a")

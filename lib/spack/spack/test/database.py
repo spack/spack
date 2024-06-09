@@ -56,11 +56,31 @@ def upstream_and_downstream_db(tmpdir, gen_mock_layout):
     yield upstream_write_db, upstream_db, upstream_layout, downstream_db, downstream_layout
 
 
+@pytest.mark.parametrize(
+    "install_tree,result",
+    [("all", ["b", "c"]), ("upstream", ["c"]), ("local", ["b"]), ("{u}", ["c"]), ("{d}", ["b"])],
+)
+def test_query_by_install_tree(
+    install_tree, result, upstream_and_downstream_db, mock_packages, monkeypatch, config
+):
+    up_write_db, up_db, up_layout, down_db, down_layout = upstream_and_downstream_db
+
+    # Set the upstream DB to contain "c" and downstream to contain "b")
+    b = spack.spec.Spec("b").concretized()
+    c = spack.spec.Spec("c").concretized()
+    up_write_db.add(c, up_layout)
+    up_db._read()
+    down_db.add(b, down_layout)
+
+    specs = down_db.query(install_tree=install_tree.format(u=up_db.root, d=down_db.root))
+    assert [s.name for s in specs] == result
+
+
 def test_spec_installed_upstream(
     upstream_and_downstream_db, mock_custom_repository, config, monkeypatch
 ):
     """Test whether Spec.installed_upstream() works."""
-    (upstream_write_db, upstream_db, upstream_layout, downstream_db, downstream_layout) = (
+    upstream_write_db, upstream_db, upstream_layout, downstream_db, downstream_layout = (
         upstream_and_downstream_db
     )
 
@@ -86,7 +106,7 @@ def test_spec_installed_upstream(
 
 @pytest.mark.usefixtures("config")
 def test_installed_upstream(upstream_and_downstream_db, tmpdir):
-    (upstream_write_db, upstream_db, upstream_layout, downstream_db, downstream_layout) = (
+    upstream_write_db, upstream_db, upstream_layout, downstream_db, downstream_layout = (
         upstream_and_downstream_db
     )
 
@@ -124,7 +144,7 @@ def test_installed_upstream(upstream_and_downstream_db, tmpdir):
 
 @pytest.mark.usefixtures("config")
 def test_removed_upstream_dep(upstream_and_downstream_db, tmpdir):
-    (upstream_write_db, upstream_db, upstream_layout, downstream_db, downstream_layout) = (
+    upstream_write_db, upstream_db, upstream_layout, downstream_db, downstream_layout = (
         upstream_and_downstream_db
     )
 
@@ -156,7 +176,7 @@ def test_add_to_upstream_after_downstream(upstream_and_downstream_db, tmpdir):
     DB. When a package is recorded as installed in both, the results should
     refer to the downstream DB.
     """
-    (upstream_write_db, upstream_db, upstream_layout, downstream_db, downstream_layout) = (
+    upstream_write_db, upstream_db, upstream_layout, downstream_db, downstream_layout = (
         upstream_and_downstream_db
     )
 
@@ -1086,3 +1106,31 @@ def test_database_construction_doesnt_use_globals(tmpdir, config, nullify_global
     lock_cfg = lock_cfg or spack.database.lock_configuration(config)
     db = spack.database.Database(str(tmpdir), lock_cfg=lock_cfg)
     assert os.path.exists(db.database_directory)
+
+
+def test_database_read_works_with_trailing_data(tmp_path, default_mock_concretization):
+    # Populate a database
+    root = str(tmp_path)
+    db = spack.database.Database(root)
+    spec = default_mock_concretization("a")
+    db.add(spec, directory_layout=None)
+    specs_in_db = db.query_local()
+    assert spec in specs_in_db
+
+    # Append anything to the end of the database file
+    with open(db._index_path, "a") as f:
+        f.write(json.dumps({"hello": "world"}))
+
+    # Read the database and check that it ignores the trailing data
+    assert spack.database.Database(root).query_local() == specs_in_db
+
+
+def test_database_errors_with_just_a_version_key(tmp_path):
+    root = str(tmp_path)
+    db = spack.database.Database(root)
+    next_version = f"{spack.database._DB_VERSION}.next"
+    with open(db._index_path, "w") as f:
+        f.write(json.dumps({"database": {"version": next_version}}))
+
+    with pytest.raises(spack.database.InvalidDatabaseVersionError):
+        spack.database.Database(root).query_local()

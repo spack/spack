@@ -15,11 +15,12 @@ class Mkfontscale(AutotoolsPackage, XorgPackage):
 
     license("MIT")
 
+    version("1.2.3", sha256="3a026b468874eb672a1d0a57dbd3ddeda4f0df09886caf97d30097b70c2df3f8")
     version("1.2.2", sha256="4a5af55e670713024639a7f7d10826d905d86faf574cd77e0f5aef2d00e70168")
     version("1.1.2", sha256="8bba59e60fbc4cb082092cf6b67e810b47b4fe64fbc77dbea1d7e7d55312b2e4")
 
     depends_on("libfontenc")
-    depends_on("freetype")
+    depends_on("freetype build_system=autotools")
 
     depends_on("xproto@7.0.25:")
     depends_on("pkgconfig", type="build")

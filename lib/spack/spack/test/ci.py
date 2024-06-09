@@ -51,7 +51,7 @@ class FakeWebResponder:
         self._content = content_to_read
         self._read = [False for c in content_to_read]
 
-    def open(self, request):
+    def open(self, request, data=None, timeout=object()):
         return self
 
     def getcode(self):
@@ -448,7 +448,7 @@ def test_ci_process_command_fail(repro_dir, monkeypatch):
 def test_ci_create_buildcache(tmpdir, working_env, config, mock_packages, monkeypatch):
     """Test that create_buildcache returns a list of objects with the correct
     keys and types."""
-    monkeypatch.setattr(spack.ci, "push_mirror_contents", lambda a, b, c: True)
+    monkeypatch.setattr(spack.ci, "_push_to_build_cache", lambda a, b, c: True)
 
     results = ci.create_buildcache(
         None, destination_mirror_urls=["file:///fake-url-one", "file:///fake-url-two"]

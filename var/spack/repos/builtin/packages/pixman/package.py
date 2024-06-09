@@ -74,4 +74,8 @@ class Pixman(AutotoolsPackage):
             if self.spec.target.family == "aarch64":
                 args.append("--disable-arm-a64-neon")
 
+        # The Fujitsu compiler does not support assembler macros.
+        if self.spec.satisfies("%fj"):
+            args.append("--disable-arm-a64-neon")
+
         return args

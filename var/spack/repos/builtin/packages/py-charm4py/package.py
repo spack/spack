@@ -36,7 +36,7 @@ class PyCharm4py(PythonPackage):
     depends_on("py-setuptools", type="build")
     # in newer pip versions --install-option does not exist
     depends_on("py-pip@:23.0", type="build")
-    depends_on("py-cython", type="build")
+    depends_on("py-cython@:2", type="build")
     depends_on("py-cffi@1.7:", type="build")
     depends_on("py-numpy@1.10.0:", type=("build", "run"))
     depends_on("py-greenlet", type=("build", "run"))

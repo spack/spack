@@ -17,6 +17,9 @@ class ScitokensCpp(CMakePackage):
 
     license("Apache-2.0")
 
+    version("1.1.1", sha256="a9091b888fc778282caf2a6808c86f685d2411557673152d58fe53932a6c7212")
+    version("1.1.0", sha256="9c4afd6638e94855ede52ecfc3d4f05082f2bdf151a9ab8dafcc2bb7cd4d9039")
+    version("1.0.2", sha256="cdc1e80e0cba9ca0e16de2efa10ec5e38765792bf5107024bfb66ddad5a16a85")
     version("1.0.1", sha256="d4660521fa17189e7a7858747d066052dd8ea8f430ce7649911c157d4423c412")
     version("1.0.0", sha256="88376c5cd065aac8d92445184a02ccf5186dc4890ccd7518e88be436978675c0")
     version("0.7.3", sha256="7d3c438596588cd74cf1af8255c55f44ca86a34293b81415ee24b33de64f886a")
@@ -41,7 +44,9 @@ class ScitokensCpp(CMakePackage):
     depends_on("pkgconfig", type="build")
     depends_on("uuid", type="build")
 
+    # Some jwt-cpp releases introduce breaking API changes
     conflicts("^jwt-cpp@0.5:", when="@:0.7")
+    conflicts("^jwt-cpp@0.7:", when="@:1.1")
 
     # https://github.com/scitokens/scitokens-cpp/issues/72
     @when("@0.7.0 ^openssl@3:")

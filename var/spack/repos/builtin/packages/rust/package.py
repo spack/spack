@@ -36,6 +36,8 @@ class Rust(Package):
     version("nightly")
 
     # Stable versions.
+    version("1.78.0", sha256="ff544823a5cb27f2738128577f1e7e00ee8f4c83f2a348781ae4fc355e91d5a9")
+    version("1.76.0", sha256="9e5cff033a7f0d2266818982ad90e4d3e4ef8f8ee1715776c6e25073a136c021")
     version("1.75.0", sha256="5b739f45bc9d341e2d1c570d65d2375591e22c2d23ef5b8a37711a0386abc088")
     version("1.74.0", sha256="882b584bc321c5dcfe77cdaa69f277906b936255ef7808fcd5c7492925cf1049")
     version("1.73.0", sha256="96d62e6d1f2d21df7ac8acb3b9882411f9e7c7036173f7f2ede9e1f1f6b1bb3a")
@@ -55,10 +57,12 @@ class Rust(Package):
     depends_on("cmake@3.13.4:", type="build")
     depends_on("curl+nghttp2")
     depends_on("libgit2")
+    depends_on("libssh2")
     depends_on("ninja", type="build")
     depends_on("openssl")
     depends_on("pkgconfig", type="build")
     depends_on("python", type="build")
+    depends_on("zlib-api")
 
     # Compiling Rust requires a previous version of Rust.
     # The easiest way to bootstrap a Rust environment is to
@@ -71,12 +75,19 @@ class Rust(Package):
     depends_on("rust-bootstrap@nightly", type="build", when="@nightly")
 
     # Stable version dependencies
+    depends_on("rust-bootstrap", type="build")
     depends_on("rust-bootstrap@1.59:1.60", type="build", when="@1.60")
     depends_on("rust-bootstrap@1.64:1.65", type="build", when="@1.65")
     depends_on("rust-bootstrap@1.69:1.70", type="build", when="@1.70")
     depends_on("rust-bootstrap@1.72:1.73", type="build", when="@1.73")
     depends_on("rust-bootstrap@1.73:1.74", type="build", when="@1.74")
     depends_on("rust-bootstrap@1.74:1.75", type="build", when="@1.75")
+    depends_on("rust-bootstrap@1.77:1.78", type="build", when="@1.78")
+
+    # src/llvm-project/llvm/cmake/modules/CheckCompilerVersion.cmake
+    conflicts("%gcc@:7.3", when="@1.73:", msg="Host GCC version must be at least 7.4")
+    # https://github.com/rust-lang/llvm-project/commit/4d039a7a71899038b3bc6ed6fe5a8a48d915caa0
+    conflicts("%gcc@13:", when="@:1.63", msg="Rust<1.64 not compatible with GCC>=13")
 
     extendable = True
     executables = ["^rustc$", "^cargo$"]
@@ -93,6 +104,11 @@ class Rust(Package):
         module.cargo = Executable(os.path.join(self.spec.prefix.bin, "cargo"))
 
     def setup_build_environment(self, env):
+        # Manually instruct Cargo dependency libssh2-sys to build with
+        # the Spack installed libssh2 package. For more info see
+        # https://github.com/alexcrichton/ssh2-rs/issues/173
+        env.set("LIBSSH2_SYS_USE_PKG_CONFIG", "1")
+
         # Manually inject the path of ar for build.
         ar = which("ar", required=True)
         env.set("AR", ar.path)
@@ -164,6 +180,9 @@ class Rust(Package):
 
         # Compile tools into flag for configure.
         flags.append(f"--tools={','.join(tools)}")
+
+        # Use vendored resources to perform offline build.
+        flags.append("--enable-vendor")
 
         configure(*flags)
 

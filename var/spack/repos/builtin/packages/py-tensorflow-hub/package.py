@@ -24,7 +24,8 @@ class PyTensorflowHub(Package):
 
     extends("python")
 
-    depends_on("bazel", type="build")
+    # TODO: Directories have changed in Bazel 7, need to update manual install logic
+    depends_on("bazel@:6", type="build")
     depends_on("py-pip", type="build")
     depends_on("py-wheel", type="build")
     depends_on("py-setuptools", type="build")

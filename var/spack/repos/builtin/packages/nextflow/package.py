@@ -15,6 +15,16 @@ class Nextflow(Package):
     maintainers("dialvarezs", "marcodelapierre")
 
     version(
+        "24.04.1",
+        sha256="d1199179e31d0701d86e6c38afa9ccade93f62d545e800824be7767a130510ba",
+        expand=False,
+    )
+    version(
+        "23.10.1",
+        sha256="9abc54f1ffb2b834a8135d44300404552d1e27719659cbb635199898677b660a",
+        expand=False,
+    )
+    version(
         "23.10.0",
         sha256="4b7fba61ecc6d53a6850390bb435455a54ae4d0c3108199f88b16b49e555afdd",
         expand=False,
@@ -172,7 +182,8 @@ class Nextflow(Package):
         deprecated=True,
     )
 
-    depends_on("java")
+    depends_on("java@17", when="@24", type="run")
+    depends_on("java", type="run")
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)

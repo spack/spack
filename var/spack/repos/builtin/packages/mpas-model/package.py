@@ -104,15 +104,9 @@ class MpasModel(MakefilePackage):
         fflags = [self.compiler.openmp_flag]
         cppflags = ["-D_MPI"]
         if satisfies("%gcc"):
-            fflags.extend(
-                [
-                    "-ffree-line-length-none",
-                    "-fconvert=big-endian",
-                    "-ffree-form",
-                    "-fdefault-real-8",
-                    "-fdefault-double-8",
-                ]
-            )
+            fflags.extend(["-ffree-line-length-none", "-fconvert=big-endian", "-ffree-form"])
+            if satisfies("precision=double"):
+                fflags.extend(["-fdefault-real-8", "-fdefault-double-8"])
             cppflags.append("-DUNDERSCORE")
         elif satisfies("%fj"):
             fflags.extend(["-Free", "-Fwide", "-CcdRR8"])

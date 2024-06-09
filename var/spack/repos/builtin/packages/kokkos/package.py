@@ -21,12 +21,15 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
 
     test_requires_compiler = True
 
-    maintainers("janciesko", "crtrott")
+    maintainers("cedricchevalier19", "nmm0", "lucbv")
 
-    license("BSD-3-Clause")
+    license("Apache-2.0 WITH LLVM-exception")
 
     version("master", branch="master")
     version("develop", branch="develop")
+    version("4.3.01", sha256="5998b7c732664d6b5e219ccc445cd3077f0e3968b4be480c29cd194b4f45ec70")
+    version("4.3.00", sha256="53cf30d3b44dade51d48efefdaee7a6cf109a091b702a443a2eda63992e5fe0d")
+    version("4.2.01", sha256="cbabbabba021d00923fb357d2e1b905dda3838bd03c885a6752062fe03c67964")
     version("4.2.00", sha256="ac08765848a0a6ac584a0a46cd12803f66dd2a2c2db99bb17c06ffc589bf5be8")
     version("4.1.00", sha256="cf725ea34ba766fdaf29c884cfe2daacfdc6dc2d6af84042d1c78d0f16866275")
     version("4.0.01", sha256="bb942de8afdd519fd6d5d3974706bfc22b6585a62dd565c12e53bdb82cd154f0")
@@ -48,6 +51,7 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
     version("3.0.00", sha256="c00613d0194a4fbd0726719bbed8b0404ed06275f310189b3493f5739042a92b")
 
     depends_on("cmake@3.16:", type="build")
+    conflicts("cmake@3.28", when="@:4.2.01 +cuda")
 
     devices_variants = {
         "cuda": [False, "Whether to build CUDA backend"],
@@ -63,7 +67,6 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
     conflicts("+openmptarget", when="@:3.5")
 
     # https://github.com/spack/spack/issues/29052
-    conflicts("@:3.5 +sycl", when="%dpcpp@2022:")
     conflicts("@:3.5 +sycl", when="%oneapi@2022:")
 
     tpls_variants = {
@@ -354,6 +357,17 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
 
         if self.spec.satisfies("%oneapi") or self.spec.satisfies("%intel"):
             options.append(self.define("CMAKE_CXX_FLAGS", "-fp-model=precise"))
+
+        # Kokkos 4.2.00+ changed the default to Kokkos_ENABLE_IMPL_CUDA_MALLOC_ASYNC=on
+        # which breaks GPU-aware with Cray-MPICH
+        # See https://github.com/kokkos/kokkos/pull/6402
+        # TODO: disable this once Cray-MPICH is fixed
+        if (
+            self.spec.satisfies("@4.2.00:")
+            and "mpi" in self.spec
+            and self.spec["mpi"].name == "cray-mpich"
+        ):
+            options.append(self.define("Kokkos_ENABLE_IMPL_CUDA_MALLOC_ASYNC", False))
 
         # Remove duplicate options
         return lang.dedupe(options)

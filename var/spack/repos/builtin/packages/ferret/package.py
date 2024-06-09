@@ -63,6 +63,11 @@ class Ferret(Package):
         else:
             return "https://github.com/NOAA-PMEL/Ferret/archive/v{0}.tar.gz".format(version)
 
+    def flag_handler(self, name, flags):
+        if name == "fflags" and self.spec.satisfies("%gcc@10:"):
+            flags.extend(["-fallow-argument-mismatch", "-fallow-invalid-boz"])
+        return (flags, None, None)
+
     def patch(self):
         spec = self.spec
         hdf5_prefix = spec["hdf5"].prefix

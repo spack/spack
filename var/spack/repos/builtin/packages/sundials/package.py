@@ -28,6 +28,7 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
     # Versions
     # ==========================================================================
     version("develop", branch="develop")
+    version("7.0.0", sha256="d762a7950ef4097fbe9d289f67a8fb717a0b9f90f87ed82170eb5c36c0a07989")
     version("6.7.0", sha256="5f113a1564a9d2d98ff95249f4871a4c815a05dbb9b8866a82b13ab158c37adb")
     version("6.6.2", sha256="08f8223a5561327e44c072e46faa7f665c0c0bc8cd7e45d23f486c3d24c65009")
     version("6.6.1", sha256="21f71e4aef95b18f954c8bbdc90b62877443950533d595c68051ab768b76984b")
@@ -84,10 +85,10 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
         values=("99", "11", "14", "17"),
     )
 
-    # Logging
+    # Logging (default=0 when "@6.2.0:6.7.0", default=2 when "@7.0.0:")
     variant(
         "logging-level",
-        default="0",
+        default="2",
         description="logging level\n 0 = no logging,\n 1 = errors,\n "
         "2 = errors + warnings,\n 3 = errors + "
         "warnings + info,\n 4 = errors + warnings + info + debugging, "
@@ -97,12 +98,12 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
         when="@6.2.0:",
     )
 
-    # MPI logging
+    # MPI logging (option removed in 7.0)
     variant(
         "logging-mpi",
         default="OFF",
         description="enable MPI support in the logger",
-        when="@6.2.0:",
+        when="@6.2.0:6.7.0",
     )
 
     # Real type
@@ -165,10 +166,11 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
     variant("examples", default=True, description="Enable examples")
     variant("examples-install", default=True, description="Install examples")
 
-    # Generic (std-c) math libraries (UNIX only)
+    # Generic (std-c) math libraries (UNIX only) (option removed in 7.0)
     variant(
         "generic-math",
         default=True,
+        when="@:6.7.0",
         description="Use generic (std-c) math libraries on unix systems",
     )
 
@@ -282,12 +284,16 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
     # ==========================================================================
     # Patches
     # ==========================================================================
+    # https://github.com/LLNL/sundials/pull/434
+    # https://github.com/LLNL/sundials/pull/437
+    patch("sundials-hip-platform.patch", when="@7.0.0 +rocm")
+
     # https://github.com/spack/spack/issues/29526
     patch("nvector-pic.patch", when="@6.1.0:6.2.0 +rocm")
 
     # Backward compatibility is stopped from ROCm 6.0
     # Need to follow the changes similar to PR https://github.com/LLNL/RAJA/pull/1568
-    patch("Change-HIP_PLATFORM-from-HCC-to-AMD-and-NVCC-to-NVIDIA.patch", when="^hip@6.0.0 +rocm")
+    patch("Change-HIP_PLATFORM-from-HCC-to-AMD-and-NVCC-to-NVIDIA.patch", when="^hip@6.0 +rocm")
 
     # remove OpenMP header file and function from hypre vector test code
     patch("test_nvector_parhyp.patch", when="@2.7.0:3.0.0")

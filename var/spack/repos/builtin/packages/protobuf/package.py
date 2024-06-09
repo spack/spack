@@ -16,6 +16,7 @@ class Protobuf(CMakePackage):
 
     license("BSD-3-Clause")
 
+    version("3.25.3", sha256="da82be8acc5347c7918ef806ebbb621b24988f7e1a19b32cd7fc73bc29b59186")
     version("3.24.3", sha256="2c23dee0bdbc36bd43ee457083f8f5560265d0815cc1c56033de3932843262fe")
     version("3.23.3", sha256="5e4b555f72a7e3f143a7aff7262292500bb02c49b174351684bb70fc7f2a6d33")
     version("3.22.2", sha256="2118051b4fb3814d59d258533a4e35452934b1ddb41230261c9543384cbb4dfc")
@@ -109,9 +110,9 @@ class Protobuf(CMakePackage):
 
     # fix build on Centos 8, see also https://github.com/protocolbuffers/protobuf/issues/5144
     patch(
-        "https://github.com/protocolbuffers/protobuf/pull/11032/commits/3039f932aaf212bcf2f14a3f2fd00dbfb881e46b.patch?full_index=1",
-        when="@:3.21",
-        sha256="cefc4bf4aadf9ca33a336b2aa6d0d82006b6563e85122ae8cfb70345f85321dd",
+        "https://github.com/protocolbuffers/protobuf/commit/462964ed322503af52638d54c00a0a67d7133349.patch?full_index=1",
+        when="@3.4:3.21",
+        sha256="9b6dcfa30dd3ae0abb66ab0f252a4fc1e1cc82a9820d2bdb72da35c4f80c3603",
     )
 
     patch("msvc-abseil-target-namespace.patch", when="@3.22 %msvc")

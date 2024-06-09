@@ -16,6 +16,9 @@ class Armadillo(CMakePackage):
 
     license("Apache-2.0")
 
+    version("12.8.3", sha256="2922589f6387796504b340da6bb954bef3d87574c298515893289edd2d890151")
+    version("12.8.2", sha256="03b62f8c09e4f5d74643b478520741b8e27b55e7e4525978fcae2f5d791ac3bf")
+    version("12.8.1", sha256="2781dd3a6cc5f9a49c91a4519dde2b1c24335a5bfe0cc1c9881b6363142452b4")
     version("12.4.0", sha256="9905282781ced3f99769b0e45a705ecb50192ca1622300707b3302ea167dc883")
     version("12.2.0", sha256="b0dce042297e865add3351dad77f78c2c7638d6632f58357b015e50edcbd2186")
     version("12.0.1", sha256="230a5c75daad52dc47e1adce8f5a50f9aa4e4354e0f1bb18ea84efa2e70e20df")
@@ -38,6 +41,14 @@ class Armadillo(CMakePackage):
     # E.g. `/path/linux-x86_64/dir` -> `/path/1-x86_64/dir` if/when a linux
     # platform's compiler is adding `#define linux 1`.
     patch("undef_linux.patch", when="platform=linux")
+
+    def flag_handler(self, name, flags):
+        spec = self.spec
+        if name == "ldflags":
+            if spec.satisfies("%apple-clang@15:"):
+                flags.append("-Wl,-ld_classic")
+
+        return (flags, None, None)
 
     def patch(self):
         # Do not include Find{BLAS_type} because we are specifying the

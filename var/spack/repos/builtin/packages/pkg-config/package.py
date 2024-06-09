@@ -53,12 +53,18 @@ class PkgConfig(AutotoolsPackage):
         env.append_path("ACLOCAL_PATH", self.prefix.share.aclocal)
 
     def configure_args(self):
+        spec = self.spec
         config_args = ["--enable-shared"]
 
-        if "+internal_glib" in self.spec:
+        if spec.satisfies("+internal_glib"):
             # There's a bootstrapping problem here;
             # glib uses pkg-config as well, so break
             # the cycle by using the internal glib.
             config_args.append("--with-internal-glib")
+
+        for strict_compiler in ("%oneapi", "%cce", "%apple-clang@15:", "%clang@15:"):
+            if spec.satisfies(strict_compiler):
+                config_args.append("CFLAGS=-Wno-error=int-conversion")
+                break
 
         return config_args

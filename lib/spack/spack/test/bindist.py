@@ -19,7 +19,10 @@ from pathlib import Path, PurePath
 import py
 import pytest
 
+import archspec.cpu
+
 from llnl.util.filesystem import join_path, visit_directory_tree
+from llnl.util.symlink import readlink
 
 import spack.binary_distribution as bindist
 import spack.caches
@@ -34,7 +37,7 @@ import spack.util.gpg
 import spack.util.spack_yaml as syaml
 import spack.util.url as url_util
 import spack.util.web as web_util
-from spack.binary_distribution import get_buildfile_manifest
+from spack.binary_distribution import CannotListKeys, GenerateIndexError, get_buildfile_manifest
 from spack.directory_layout import DirectoryLayout
 from spack.paths import test_path
 from spack.spec import Spec
@@ -388,11 +391,11 @@ def test_built_spec_cache(mirror_dir):
         assert any([r["spec"] == s for r in results])
 
 
-def fake_dag_hash(spec):
+def fake_dag_hash(spec, length=None):
     # Generate an arbitrary hash that is intended to be different than
     # whatever a Spec reported before (to test actions that trigger when
     # the hash changes)
-    return "tal4c7h4z0gqmixb1eqa92mjoybxn5l6"
+    return "tal4c7h4z0gqmixb1eqa92mjoybxn5l6"[:length]
 
 
 @pytest.mark.usefixtures(
@@ -463,50 +466,57 @@ def test_generate_index_missing(monkeypatch, tmpdir, mutable_config):
         assert "libelf" not in cache_list
 
 
-def test_generate_indices_key_error(monkeypatch, capfd):
+def test_generate_key_index_failure(monkeypatch):
+    def list_url(url, recursive=False):
+        if "fails-listing" in url:
+            raise Exception("Couldn't list the directory")
+        return ["first.pub", "second.pub"]
+
+    def push_to_url(*args, **kwargs):
+        raise Exception("Couldn't upload the file")
+
+    monkeypatch.setattr(web_util, "list_url", list_url)
+    monkeypatch.setattr(web_util, "push_to_url", push_to_url)
+
+    with pytest.raises(CannotListKeys, match="Encountered problem listing keys"):
+        bindist.generate_key_index("s3://non-existent/fails-listing")
+
+    with pytest.raises(GenerateIndexError, match="problem pushing .* Couldn't upload"):
+        bindist.generate_key_index("s3://non-existent/fails-uploading")
+
+
+def test_generate_package_index_failure(monkeypatch, capfd):
     def mock_list_url(url, recursive=False):
-        print("mocked list_url({0}, {1})".format(url, recursive))
-        raise KeyError("Test KeyError handling")
+        raise Exception("Some HTTP error")
 
     monkeypatch.setattr(web_util, "list_url", mock_list_url)
 
     test_url = "file:///fake/keys/dir"
 
-    # Make sure generate_key_index handles the KeyError
-    bindist.generate_key_index(test_url)
+    with pytest.raises(GenerateIndexError, match="Unable to generate package index"):
+        bindist.generate_package_index(test_url)
 
-    err = capfd.readouterr()[1]
-    assert "Warning: No keys at {0}".format(test_url) in err
-
-    # Make sure generate_package_index handles the KeyError
-    bindist.generate_package_index(test_url)
-
-    err = capfd.readouterr()[1]
-    assert "Warning: No packages at {0}".format(test_url) in err
+    assert (
+        f"Warning: Encountered problem listing packages at {test_url}: Some HTTP error"
+        in capfd.readouterr().err
+    )
 
 
 def test_generate_indices_exception(monkeypatch, capfd):
     def mock_list_url(url, recursive=False):
-        print("mocked list_url({0}, {1})".format(url, recursive))
         raise Exception("Test Exception handling")
 
     monkeypatch.setattr(web_util, "list_url", mock_list_url)
 
-    test_url = "file:///fake/keys/dir"
+    url = "file:///fake/keys/dir"
 
-    # Make sure generate_key_index handles the Exception
-    bindist.generate_key_index(test_url)
+    with pytest.raises(GenerateIndexError, match=f"Encountered problem listing keys at {url}"):
+        bindist.generate_key_index(url)
 
-    err = capfd.readouterr()[1]
-    expect = "Encountered problem listing keys at {0}".format(test_url)
-    assert expect in err
+    with pytest.raises(GenerateIndexError, match="Unable to generate package index"):
+        bindist.generate_package_index(url)
 
-    # Make sure generate_package_index handles the Exception
-    bindist.generate_package_index(test_url)
-
-    err = capfd.readouterr()[1]
-    expect = "Encountered problem listing packages at {0}".format(test_url)
-    assert expect in err
+    assert f"Encountered problem listing packages at {url}" in capfd.readouterr().err
 
 
 @pytest.mark.usefixtures("mock_fetch", "install_mockery")
@@ -573,11 +583,20 @@ def test_update_sbang(tmpdir, test_mirror):
         uninstall_cmd("-y", "/%s" % new_spec.dag_hash())
 
 
-def test_install_legacy_buildcache_layout(install_mockery_mutable_config):
+@pytest.mark.skipif(
+    str(archspec.cpu.host().family) != "x86_64",
+    reason="test data uses gcc 4.5.0 which does not support aarch64",
+)
+def test_install_legacy_buildcache_layout(
+    mutable_config, compiler_factory, install_mockery_mutable_config
+):
     """Legacy buildcache layout involved a nested archive structure
     where the .spack file contained a repeated spec.json and another
     compressed archive file containing the install tree.  This test
     makes sure we can still read that layout."""
+    mutable_config.set(
+        "compilers", [compiler_factory(spec="gcc@4.5.0", operating_system="debian6")]
+    )
     legacy_layout_dir = os.path.join(test_path, "data", "mirrors", "legacy_layout")
     mirror_url = "file://{0}".format(legacy_layout_dir)
     filename = (
@@ -1044,10 +1063,10 @@ def test_tarball_common_prefix(dummy_prefix, tmpdir):
         assert set(os.listdir(os.path.join("prefix2", "share"))) == {"file"}
 
         # Relative symlink should still be correct
-        assert os.readlink(os.path.join("prefix2", "bin", "relative_app_link")) == "app"
+        assert readlink(os.path.join("prefix2", "bin", "relative_app_link")) == "app"
 
         # Absolute symlink should remain absolute -- this is for relocation to fix up.
-        assert os.readlink(os.path.join("prefix2", "bin", "absolute_app_link")) == os.path.join(
+        assert readlink(os.path.join("prefix2", "bin", "absolute_app_link")) == os.path.join(
             dummy_prefix, "bin", "app"
         )
 

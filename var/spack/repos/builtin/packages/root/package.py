@@ -35,6 +35,9 @@ class Root(CMakePackage):
     version("develop", branch="master")
 
     # Production version
+    version("6.32.00", sha256="12f203681a59041c474ce9523761e6f0e8861b3bee78df5f799a8db55189e5d2")
+    version("6.30.06", sha256="300db7ed1b678ed2fb9635ca675921a1945c7c2103da840033b493091f55700c")
+    version("6.30.04", sha256="2b4180b698f39cc65d91084d833a884515b325bc5f673c8e39abe818b025d8cc")
     version("6.30.02", sha256="7965a456d1ad1ee0d5fe4769bf5a8fec291af684ed93db0f3080a9c362435183")
     version("6.30.00", sha256="0592c066954cfed42312957c9cb251654456064fe2d8dabdcb8826f1c0099d71")
     version("6.28.10", sha256="69d6fdeb607e6b20bd02c757fa6217024c0b6132c1e9b1dff4d85d9a2bb7e51e")
@@ -129,6 +132,12 @@ class Root(CMakePackage):
             "https://github.com/root-project/root/pull/14387.patch?full_index=1",
             sha256="559495f7bdd6b7674d3b1019da9b76e8b374f6dca3dbe72fb1320b0be2b00e53",
             when="@6.30:6.30.3 ~aqua",
+        )
+        # Fix build issues with libAfterImage for macOS
+        patch(
+            "https://github.com/root-project/root/pull/15044.patch?full_index=1",
+            sha256="e68be5fe7b1ec873da134bd39c5c72730c4ca06d51b52eb436ae44fe81cd472d",
+            when="@:6.30.04 +x",
         )
 
     # ###################### Variants ##########################
@@ -259,6 +268,11 @@ class Root(CMakePackage):
     depends_on("cmake@3.19:", type="build", when="@6.28.00: platform=darwin")
     depends_on("pkgconfig", type="build")
 
+    # 6.32.00 requires sys/random.h
+    depends_on("libc", when="@6.32.00:")
+    depends_on("glibc@2.25:", when="^[virtuals=libc] glibc")
+    depends_on("musl@1.1.20:", when="^[virtuals=libc] musl")
+
     depends_on("freetype")
     depends_on("jpeg")
     depends_on("libice")
@@ -351,6 +365,8 @@ class Root(CMakePackage):
     depends_on("libxml2", when="+xml")
     depends_on("xrootd", when="+xrootd")
     depends_on("xrootd@:4", when="@:6.22.03 +xrootd")
+
+    depends_on("googletest", when="@6.28.00:", type="test")
 
     # ###################### Conflicts ######################
 

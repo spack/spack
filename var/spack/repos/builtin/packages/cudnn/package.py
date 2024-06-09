@@ -298,7 +298,7 @@ class Cudnn(Package):
     # need to use modified URLs like in url_for_version.
     maintainers("adamjstewart", "bvanessen")
 
-    skip_version_audit = ["platform=darwin"]
+    skip_version_audit = ["platform=darwin", "platform=windows"]
 
     license("MIT")
 
@@ -380,12 +380,6 @@ class Cudnn(Package):
 
         if "target=ppc64le: platform=linux" in self.spec:
             env.set("cuDNN_ROOT", os.path.join(self.prefix, "targets", "ppc64le-linux"))
-
-    def setup_dependent_build_environment(self, env, dependent_spec):
-        self.setup_run_environment(env)
-
-    def setup_dependent_run_environment(self, env, dependent_spec):
-        self.setup_run_environment(env)
 
     def install(self, spec, prefix):
         install_tree(".", prefix)

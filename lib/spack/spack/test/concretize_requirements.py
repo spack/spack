@@ -1133,3 +1133,89 @@ def test_conflict_packages_yaml(packages_yaml, spec_str, concretize_scope, mock_
     update_packages_config(packages_yaml)
     with pytest.raises(UnsatisfiableSpecError):
         Spec(spec_str).concretized()
+
+
+@pytest.mark.parametrize(
+    "spec_str,expected,not_expected",
+    [
+        (
+            "forward-multi-value +cuda cuda_arch=10 ^dependency-mv~cuda",
+            ["cuda_arch=10", "^dependency-mv~cuda"],
+            ["cuda_arch=11", "^dependency-mv cuda_arch=10", "^dependency-mv cuda_arch=11"],
+        ),
+        (
+            "forward-multi-value +cuda cuda_arch=10 ^dependency-mv+cuda",
+            ["cuda_arch=10", "^dependency-mv cuda_arch=10"],
+            ["cuda_arch=11", "^dependency-mv cuda_arch=11"],
+        ),
+        (
+            "forward-multi-value +cuda cuda_arch=11 ^dependency-mv+cuda",
+            ["cuda_arch=11", "^dependency-mv cuda_arch=11"],
+            ["cuda_arch=10", "^dependency-mv cuda_arch=10"],
+        ),
+        (
+            "forward-multi-value +cuda cuda_arch=10,11 ^dependency-mv+cuda",
+            ["cuda_arch=10,11", "^dependency-mv cuda_arch=10,11"],
+            [],
+        ),
+    ],
+)
+def test_forward_multi_valued_variant_using_requires(
+    spec_str, expected, not_expected, config, mock_packages
+):
+    """Tests that a package can forward multivalue variants to dependencies, using
+    `requires` directives of the form:
+
+        for _val in ("shared", "static"):
+            requires(f"^some-virtual-mv libs={_val}", when=f"libs={_val} ^some-virtual-mv")
+    """
+    s = Spec(spec_str).concretized()
+
+    for constraint in expected:
+        assert s.satisfies(constraint)
+
+    for constraint in not_expected:
+        assert not s.satisfies(constraint)
+
+
+def test_strong_preferences_higher_priority_than_reuse(concretize_scope, mock_packages):
+    """Tests that strong preferences have a higher priority than reusing specs."""
+    reused_spec = Spec("adios2~bzip2").concretized()
+    reuse_nodes = list(reused_spec.traverse())
+    root_specs = [Spec("ascent+adios2")]
+
+    # Check that without further configuration adios2 is reused
+    with spack.config.override("concretizer:reuse", True):
+        solver = spack.solver.asp.Solver()
+        setup = spack.solver.asp.SpackSolverSetup()
+        result, _, _ = solver.driver.solve(setup, root_specs, reuse=reuse_nodes)
+        ascent = result.specs[0]
+    assert ascent["adios2"].dag_hash() == reused_spec.dag_hash(), ascent
+
+    # If we stick a preference, adios2 is not reused
+    update_packages_config(
+        """
+    packages:
+      adios2:
+        prefer:
+        - "+bzip2"
+"""
+    )
+    with spack.config.override("concretizer:reuse", True):
+        solver = spack.solver.asp.Solver()
+        setup = spack.solver.asp.SpackSolverSetup()
+        result, _, _ = solver.driver.solve(setup, root_specs, reuse=reuse_nodes)
+        ascent = result.specs[0]
+
+    assert ascent["adios2"].dag_hash() != reused_spec.dag_hash()
+    assert ascent["adios2"].satisfies("+bzip2")
+
+    # A preference is still preference, so we can override from input
+    with spack.config.override("concretizer:reuse", True):
+        solver = spack.solver.asp.Solver()
+        setup = spack.solver.asp.SpackSolverSetup()
+        result, _, _ = solver.driver.solve(
+            setup, [Spec("ascent+adios2 ^adios2~bzip2")], reuse=reuse_nodes
+        )
+        ascent = result.specs[0]
+    assert ascent["adios2"].dag_hash() == reused_spec.dag_hash(), ascent

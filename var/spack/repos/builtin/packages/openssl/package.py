@@ -32,9 +32,16 @@ class Openssl(Package):  # Uses Fake Autotools, should subclass Package
 
     license("Apache-2.0")
 
-    version("3.1.3", sha256="f0316a2ebd89e7f2352976445458689f80302093788c466692fb2a188b2eacf6")
-    version("3.0.11", sha256="b3425d3bb4a2218d0697eb41f7fc0cdede016ed19ca49d168b78e8d947887f55")
+    version("3.3.0", sha256="53e66b043322a606abf0087e7699a0e033a37fa13feb9742df35c3a33b18fb02")
+    version("3.2.1", sha256="83c7329fe52c850677d75e5d0b0ca245309b97e8ecbcfdc1dfdc4ab9fac35b39")
+    version("3.1.5", sha256="6ae015467dabf0469b139ada93319327be24b98251ffaeceda0221848dc09262")
+    version("3.0.13", sha256="88525753f79d3bec27d2fa7c66aa0b92b3aa9498dafd93d7cfa4b3780cdae313")
 
+    version(
+        "3.1.3",
+        sha256="f0316a2ebd89e7f2352976445458689f80302093788c466692fb2a188b2eacf6",
+        deprecated=True,
+    )
     version(
         "3.1.2",
         sha256="a0ce69b8b97ea6a35b96875235aa453b966ba3cba8af2de23657d8b6767d6539",
@@ -48,6 +55,11 @@ class Openssl(Package):  # Uses Fake Autotools, should subclass Package
     version(
         "3.1.0",
         sha256="aaa925ad9828745c4cad9d9efeb273deca820f2cdcf2c3ac7d7c1212b7c497b4",
+        deprecated=True,
+    )
+    version(
+        "3.0.11",
+        sha256="b3425d3bb4a2218d0697eb41f7fc0cdede016ed19ca49d168b78e8d947887f55",
         deprecated=True,
     )
     version(
@@ -384,7 +396,6 @@ class Openssl(Package):  # Uses Fake Autotools, should subclass Package
     depends_on("nasm", when="platform=windows")
 
     depends_on("gmake", type="build", when="platform=linux")
-    depends_on("gmake", type="build", when="platform=cray")
     depends_on("gmake", type="build", when="platform=darwin")
 
     patch(

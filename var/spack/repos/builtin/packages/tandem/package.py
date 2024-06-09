@@ -7,7 +7,7 @@
 from spack.package import *
 
 
-class Tandem(CMakePackage):
+class Tandem(CMakePackage, CudaPackage, ROCmPackage):
     """Tandem is a scientific software for SEAS modelling and for solving Poisson
     and linear elasticity problems. It implements the Symmetric Interior Penalty
     Galerkin (SIPG) method using unstructured simplicial meshes (triangle meshes
@@ -21,6 +21,9 @@ class Tandem(CMakePackage):
     version("main", branch="main", submodules=True)
 
     # we cannot use the tar.gz file because it does not contains submodules
+    version(
+        "1.1.0", tag="v1.1.0", commit="17c42dc9ae0ec519dcc1b5732681b2e4054666f1", submodules=True
+    )
     version("1.0", tag="v1.0", commit="eccab10cbdf5842ed9903fac7a023be5e2779f36", submodules=True)
     patch("fix_v1.0_compilation.diff", when="@1.0")
 
@@ -41,6 +44,13 @@ class Tandem(CMakePackage):
     variant("libxsmm", default=False, description="Install libxsmm-generator")
 
     depends_on("mpi")
+
+    for var in ["openmpi", "mpich", "mvapich", "mvapich2", "mvapich2-gdr"]:
+        depends_on(f"{var} +cuda", when=f"+cuda ^[virtuals=mpi] {var}")
+
+    for var in ["mpich", "mvapich2-gdr"]:
+        depends_on(f"{var} +rocm", when=f"+rocm ^[virtuals=mpi] {var}")
+
     depends_on("parmetis +int64 +shared")
     depends_on("metis +int64 +shared")
     depends_on("libxsmm@1.17 +generator", when="+libxsmm target=x86_64:")
@@ -50,6 +60,9 @@ class Tandem(CMakePackage):
     depends_on("zlib-api")
     depends_on("petsc@3.14.6:3.18.5 +int64 +mumps +scalapack memalign=32")
     depends_on("petsc@3.14.6:3.18.5 +int64 +mumps +scalapack +knl", when="target=skylake:")
+    depends_on("petsc@3.14.6:3.18.5 +int64 +mumps +scalapack memalign=32 +cuda", when="+cuda")
+    depends_on("petsc@3.14.6:3.18.5 +int64 +mumps +scalapack memalign=32 +rocm", when="+rocm")
+
     # see https://github.com/TEAR-ERC/tandem/issues/45
     conflicts("%intel")
 

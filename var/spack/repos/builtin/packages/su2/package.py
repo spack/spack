@@ -18,6 +18,8 @@ class Su2(MesonPackage):
 
     license("BSD-3-Clause")
 
+    version("8.0.1", commit="8ef4b1be045122b2fdb485bfb5fe4eecd1bc4246", submodules=True)
+    version("8.0.0", commit="1fe59817e984f67ff55146d90d0059e27b772891", submodules=True)
     version("7.5.1", commit="09ba9e3a9605c02d38290e34f42aa6982cb4dd05", submodules=True)
     version("7.5.0", commit="8e8ea59fe6225c8ec4e94d0e0a4b6690ea4294e5", submodules=True)
     version("7.4.0", commit="745e5d922c63c8ec6963b31808c20df2e3bfd075", submodules=True)
@@ -75,6 +77,9 @@ class Su2(MesonPackage):
     # Remove the part that fixes the meson version to 0.61.1.
     # This fix is considered meaningless and will be removed in the next version(@7.6:) of SU2.
     patch("meson_version.patch", when="@7.4.0:7.5.1")
+
+    # Remove the timestamp check of preconfigure.py for version(@8:)
+    patch("remove_preconfigure_timestamp_check.patch", when="@8.0.0:")
 
     def patch(self):
         if self.spec.satisfies("+autodiff") or self.spec.satisfies("+directdiff"):

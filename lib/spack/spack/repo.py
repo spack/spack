@@ -25,7 +25,7 @@ import sys
 import traceback
 import types
 import uuid
-from typing import Any, Dict, List, Tuple, Union
+from typing import Any, Dict, List, Set, Tuple, Union
 
 import llnl.path
 import llnl.util.filesystem as fs
@@ -241,7 +241,7 @@ def get_all_package_diffs(type, rev1="HEAD^1", rev2="HEAD"):
 
     Arguments:
 
-        type (str): String containing one or more of 'A', 'B', 'C'
+        type (str): String containing one or more of 'A', 'R', 'C'
         rev1 (str): Revision to compare against, default is 'HEAD^'
         rev2 (str): Revision to compare to rev1, default is 'HEAD'
 
@@ -264,7 +264,7 @@ def get_all_package_diffs(type, rev1="HEAD^1", rev2="HEAD"):
     lines = [] if not out else re.split(r"\s+", out)
     changed = set()
     for path in lines:
-        pkg_name, _, _ = path.partition(os.sep)
+        pkg_name, _, _ = path.partition("/")
         if pkg_name not in added and pkg_name not in removed:
             changed.add(pkg_name)
 
@@ -727,13 +727,13 @@ class RepoPath:
         return self.repos[0] if self.repos else None
 
     @llnl.util.lang.memoized
+    def _all_package_names_set(self, include_virtuals):
+        return {name for repo in self.repos for name in repo.all_package_names(include_virtuals)}
+
+    @llnl.util.lang.memoized
     def _all_package_names(self, include_virtuals):
         """Return all unique package names in all repositories."""
-        all_pkgs = set()
-        for repo in self.repos:
-            for name in repo.all_package_names(include_virtuals):
-                all_pkgs.add(name)
-        return sorted(all_pkgs, key=lambda n: n.lower())
+        return sorted(self._all_package_names_set(include_virtuals), key=lambda n: n.lower())
 
     def all_package_names(self, include_virtuals=False):
         return self._all_package_names(include_virtuals)
@@ -746,19 +746,17 @@ class RepoPath:
         for name in self.all_package_names():
             yield self.package_path(name)
 
-    def packages_with_tags(self, *tags, full=False):
-        """Returns a list of packages matching any of the tags in input.
+    def packages_with_tags(self, *tags: str, full: bool = False) -> Set[str]:
+        """Returns a set of packages matching any of the tags in input.
 
         Args:
             full: if True the package names in the output are fully-qualified
         """
-        r = set()
-        for repo in self.repos:
-            current = repo.packages_with_tags(*tags)
-            if full:
-                current = [f"{repo.namespace}.{x}" for x in current]
-            r |= set(current)
-        return sorted(r)
+        return {
+            f"{repo.namespace}.{pkg}" if full else pkg
+            for repo in self.repos
+            for pkg in repo.packages_with_tags(*tags)
+        }
 
     def all_package_classes(self):
         for name in self.all_package_names():
@@ -796,7 +794,11 @@ class RepoPath:
 
     @autospec
     def providers_for(self, vpkg_spec):
-        providers = self.provider_index.providers_for(vpkg_spec)
+        providers = [
+            spec
+            for spec in self.provider_index.providers_for(vpkg_spec)
+            if spec.name in self._all_package_names_set(include_virtuals=False)
+        ]
         if not providers:
             raise UnknownPackageError(vpkg_spec.fullname)
         return providers
@@ -1169,15 +1171,10 @@ class Repo:
         for name in self.all_package_names():
             yield self.package_path(name)
 
-    def packages_with_tags(self, *tags):
+    def packages_with_tags(self, *tags: str) -> Set[str]:
         v = set(self.all_package_names())
-        index = self.tag_index
-
-        for t in tags:
-            t = t.lower()
-            v &= set(index[t])
-
-        return sorted(v)
+        v.intersection_update(*(self.tag_index[tag.lower()] for tag in tags))
+        return v
 
     def all_package_classes(self):
         """Iterator over all package *classes* in the repository.

@@ -203,7 +203,7 @@ class Mysql(CMakePackage):
         copy(dtrace, dtrace_copy)
         filter_file(
             "^#!/usr/bin/python",
-            "#!/usr/bin/env {0}".format(os.path.basename(self.spec["python"].command)),
+            "#!/usr/bin/env {0}".format(os.path.basename(str(self.spec["python"].command))),
             dtrace_copy,
         )
         # To have our own copy of dtrace in PATH, we need to

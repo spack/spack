@@ -32,6 +32,7 @@ class Hpctoolkit(AutotoolsPackage, MesonPackage):
 
     version("develop", branch="develop")
     version("2024.01.stable", branch="release/2024.01")
+    version("2024.01.1", tag="2024.01.1", commit="0672b9a9a2a1e3846c5e2059fb73a07a129f22cd")
     version("2023.08.stable", branch="release/2023.08")
     version("2023.08.1", tag="2023.08.1", commit="753a72affd584a5e72fe153d1e8c47a394a3886e")
     version("2023.03.stable", branch="release/2023.03")
@@ -142,7 +143,7 @@ class Hpctoolkit(AutotoolsPackage, MesonPackage):
             depends_on("libtool", type="build")
 
         with when("@2024.02:"):
-            depends_on("pkgconf", type="build")
+            depends_on("pkgconfig", type="build")
             depends_on("cmake", type="build")
 
     boost_libs = (
@@ -165,14 +166,15 @@ class Hpctoolkit(AutotoolsPackage, MesonPackage):
     depends_on("intel-tbb+shared", when="^[virtuals=tbb] intel-tbb")
     depends_on("libdwarf", when="@:2022.06")
     depends_on("libiberty+pic", when="@2022.10:")
-    depends_on("libmonitor+hpctoolkit~dlopen", when="@2021.00:")
+    depends_on("libmonitor+hpctoolkit~dlopen", when="@2021.00:2024")
     depends_on("libmonitor+hpctoolkit+dlopen", when="@:2020")
-    depends_on("libmonitor@2023.02.13:", when="@2023.01:")
-    depends_on("libmonitor@2021.11.08:", when="@2022.01:")
+    depends_on("libmonitor@2023.02.13:", when="@2023.01:2024")
+    depends_on("libmonitor@2021.11.08:", when="@2022.01:2024")
     depends_on("libunwind@1.4: +xz")
     depends_on("libunwind +pic libs=static", when="@:2023.08")
     depends_on("mbedtls+pic", when="@:2022.03")
     depends_on("xerces-c transcoder=iconv")
+    depends_on("xxhash@0.8.1:", when="@develop")
     depends_on("xz", type="link")
     depends_on("xz+pic libs=static", type="link", when="@:2023.08")
     depends_on("yaml-cpp@0.7.0: +shared", when="@2022.10:")
@@ -218,6 +220,8 @@ class Hpctoolkit(AutotoolsPackage, MesonPackage):
         "^hip@5.3:", when="@:2022.12", msg="rocm 5.3 requires hpctoolkit 2023.03.01 or later"
     )
 
+    conflicts("^hip@6:", when="@:2023", msg="rocm 6.0 requires hpctoolkit 2024.01.1 or later")
+
     # Fix the build for old revs with gcc 10.x and 11.x.
     patch("gcc10-enum.patch", when="@2020.01.01:2020.08 %gcc@10.0:")
     patch("511afd95b01d743edc5940c84e0079f462b2c23e.patch", when="@2019.08.01:2021.03 %gcc@11.0:")
@@ -227,8 +231,12 @@ class Hpctoolkit(AutotoolsPackage, MesonPackage):
     depends_on("python@3.4:", type="build", when="@2020.03:2020.08")
     patch("python3.patch", when="@2020.03:2020.08")
 
+    # hsa include path is hsa-rocr-dev-prefix-path/include
+    patch("correcting-hsa-include-path.patch", when="@2024.01 ^hip@6.0:")
+
     # Fix a bug where make would mistakenly overwrite hpcrun-fmt.h.
     # https://gitlab.com/hpctoolkit/hpctoolkit/-/merge_requests/751
+    @when("@:2022")
     def patch(self):
         with working_dir(join_path("src", "lib", "prof-lean")):
             if os.access("hpcrun-fmt.txt", os.F_OK):

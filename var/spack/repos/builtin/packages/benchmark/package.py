@@ -18,6 +18,7 @@ class Benchmark(CMakePackage):
     # first properly installed CMake config packages in
     # 1.2.0 release: https://github.com/google/benchmark/issues/363
     version("main", branch="main")
+    version("1.8.4", sha256="3e7059b6b11fb1bbe28e33e02519398ca94c1818874ebed18e504dc6f709be45")
     version("1.8.3", sha256="6bc180a57d23d4d9515519f92b0c83d61b05b5bab188961f36ac7b06b0d9e9ce")
     version("1.8.2", sha256="2aab2980d0376137f969d92848fbb68216abb07633034534fc8c65cc4e7a0e93")
     version("1.8.1", sha256="e9ff65cecfed4f60c893a1e8a1ba94221fad3b27075f2f80f47eb424b0f8c9bd")
@@ -44,14 +45,24 @@ class Benchmark(CMakePackage):
         description="The build type to build",
         values=("Debug", "Release", "RelWithDebInfo", "MinSizeRel", "Coverage"),
     )
+    variant(
+        "performance_counters",
+        default=True,
+        when="@1.5.4:",
+        description="Enable performance counters provided by libpfm",
+    )
 
     depends_on("cmake@2.8.11:", type="build", when="@:1.1.0")
     depends_on("cmake@2.8.12:", type="build", when="@1.2.0:1.4")
     depends_on("cmake@3.5.1:", type="build", when="@1.5.0:")
+    depends_on("libpfm4", type=("build", "link"), when="+performance_counters")
 
     def cmake_args(self):
         # No need for testing for the install
-        args = ["-DBENCHMARK_ENABLE_TESTING=OFF"]
+        args = [
+            self.define("BENCHMARK_ENABLE_TESTING", False),
+            self.define_from_variant("BENCHMARK_ENABLE_LIBPFM", "performance_counters"),
+        ]
         return args
 
     def patch(self):

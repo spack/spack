@@ -5,22 +5,21 @@
 import glob
 import itertools
 import os
-import re
 import sys
 
 from archspec.cpu import UnsupportedMicroarchitecture
 
 import llnl.util.tty as tty
-from llnl.util.lang import classproperty
+from llnl.util.symlink import readlink
 
 import spack.platforms
 import spack.util.executable
-from spack.build_environment import dso_suffix
+import spack.util.libc
 from spack.operating_systems.mac_os import macos_sdk_path, macos_version
 from spack.package import *
 
 
-class Gcc(AutotoolsPackage, GNUMirrorPackage):
+class Gcc(AutotoolsPackage, GNUMirrorPackage, CompilerPackage):
     """The GNU Compiler Collection includes front ends for C, C++, Objective-C,
     Fortran, Ada, and Go, as well as libraries for these languages."""
 
@@ -37,6 +36,9 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
 
     version("master", branch="master")
 
+    version("14.1.0", sha256="e283c654987afe3de9d8080bc0bd79534b5ca0d681a73a11ff2b5d3767426840")
+
+    version("13.3.0", sha256="0845e9621c9543a13f484e94584a49ffc0129970e9914624235fc1d061a0c083")
     version("13.2.0", sha256="e275e76442a6067341a27f04c5c6b83d8613144004c0413528863dc6b5c743da")
     version("13.1.0", sha256="61d684f0aa5e76ac6585ad8898a2427aade8979ed5e7f85492286c4dfc13ee86")
 
@@ -128,6 +130,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         description="Compilers and runtime libraries to build",
     )
     variant("binutils", default=False, description="Build via binutils")
+    variant("mold", default=False, description="Use mold as the linker by default", when="@12:")
     variant(
         "piclibs", default=False, description="Build PIC versions of libgfortran.a and libstdc++.a"
     )
@@ -192,6 +195,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     depends_on(
         "binutils+gas+ld+plugins~libiberty", when="+binutils", type=("build", "link", "run")
     )
+    depends_on("mold", when="+mold")
     depends_on("zip", type="build", when="languages=java")
 
     # The server is sometimes a bit slow to respond
@@ -309,14 +313,10 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
             destination="newlibsource",
             fetch_options=timeout,
         )
-        # nvptx-tools does not seem to work as a dependency,
-        # but does fine when the source is inside the gcc build directory
-        # nvptx-tools doesn't have any releases, so grabbing the last commit
-        resource(
-            name="nvptx-tools",
-            git="https://github.com/MentorEmbedded/nvptx-tools",
-            commit="d0524fbdc86dfca068db5a21cc78ac255b335be5",
-        )
+
+        nvptx_tools_ver = "2023-09-13"
+        depends_on("nvptx-tools@" + nvptx_tools_ver, type="build")
+
         # NVPTX offloading supported in 7 and later by limited languages
         conflicts("@:6", msg="NVPTX only supported in gcc 7 and above")
         conflicts("languages=ada")
@@ -425,6 +425,11 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
             sha256="2df7ef067871a30b2531a2013b3db661ec9e61037341977bfc451e30bf2c1035",
             when="@13.2.0 target=aarch64:",
         )
+        patch(
+            "https://raw.githubusercontent.com/Homebrew/formula-patches/82b5c1cd38826ab67ac7fc498a8fe74376a40f4a/gcc/gcc-14.1.0.diff",
+            sha256="1529cff128792fe197ede301a81b02036c8168cb0338df21e4bc7aafe755305a",
+            when="@14.1.0 target=aarch64:",
+        )
         conflicts("+bootstrap", when="@11.3.0,13.1: target=aarch64:")
 
         # Use -headerpad_max_install_names in the build,
@@ -490,13 +495,52 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         when="@9.5.0:10.4.0,11.1.0:11.2.0",
     )
 
+    # patch ICE on aarch64 in tree-vect-slp, cf: https://gcc.gnu.org/bugzilla/show_bug.cgi?id=111478
+    # patch taken from releases/gcc-12 branch
+    patch(
+        "https://github.com/gcc-mirror/gcc/commit/9d033155254ac6df5f47ab32896dbf336f991589.patch?full_index=1",
+        sha256="8b76fe575ef095b48ac45e8b56544c331663f840ce4b63abdb61510bf3647597",
+        when="@12.3.0 target=aarch64:",
+    )
+    # patch taken from releases/gcc-13 branch
+    patch(
+        "https://github.com/gcc-mirror/gcc/commit/7c67939ec384425a3d7383dfb4fb39aa7e9ad20a.patch?full_index=1",
+        sha256="f0826d7a9c9808af40f3434918f24ad942f1c6a6daec73f11cf52c544cf5fc01",
+        when="@13.2.0 target=aarch64:",
+    )
+
     build_directory = "spack-build"
 
-    @classproperty
-    def executables(cls):
-        names = [r"gcc", r"[^\w]?g\+\+", r"gfortran", r"gdc", r"gccgo"]
-        suffixes = [r"", r"-mp-\d+\.\d", r"-\d+\.\d", r"-\d+", r"\d\d"]
-        return [r"".join(x) for x in itertools.product(names, suffixes)]
+    compiler_languages = ["c", "cxx", "fortran", "d", "go"]
+
+    @property
+    def supported_languages(self):
+        # This weirdness is because it could be called on an abstract spec
+        if "languages" not in self.spec.variants:
+            return self.compiler_languages
+        return [x for x in self.compiler_languages if x in self.spec.variants["languages"].value]
+
+    c_names = ["gcc"]
+    cxx_names = ["g++"]
+    fortran_names = ["gfortran"]
+    d_names = ["gdc"]
+    go_names = ["gccgo"]
+    compiler_prefixes = [r"\w+-\w+-\w+-"]
+    compiler_suffixes = [r"-mp-\d+(?:\.\d+)?", r"-\d+(?:\.\d+)?", r"\d\d"]
+    compiler_version_regex = r"(?<!clang version)\s?([0-9.]+)"
+    compiler_version_argument = ("-dumpfullversion", "-dumpversion")
+
+    @classmethod
+    def determine_version(cls, exe):
+        try:
+            output = spack.compiler.get_compiler_version_output(exe, "--version")
+        except Exception:
+            output = ""
+        # Apple's gcc is actually apple clang, so skip it.
+        if "Apple" in output:
+            return None
+
+        return super().determine_version(exe)
 
     @classmethod
     def filter_detected_exes(cls, prefix, exes_in_prefix):
@@ -516,10 +560,8 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
             ]
             if any(x in basename for x in substring_to_be_filtered):
                 continue
-            # Filter out links in favor of real executables on
-            # all systems but Cray
-            host_platform = str(spack.platforms.host())
-            if os.path.islink(exe) and host_platform != "cray":
+            # Filter out links in favor of real executables
+            if os.path.islink(exe):
                 continue
 
             result.append(exe)
@@ -527,57 +569,13 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         return result
 
     @classmethod
-    def determine_version(cls, exe):
-        try:
-            output = spack.compiler.get_compiler_version_output(exe, "--version")
-        except Exception:
-            output = ""
-        # Apple's gcc is actually apple clang, so skip it.
-        # Users can add it manually to compilers.yaml at their own risk.
-        if "Apple" in output:
-            return None
-
-        version_regex = re.compile(r"([\d\.]+)")
-        for vargs in ("-dumpfullversion", "-dumpversion"):
-            try:
-                output = spack.compiler.get_compiler_version_output(exe, vargs)
-                match = version_regex.search(output)
-                if match:
-                    return match.group(1)
-            except spack.util.executable.ProcessError:
-                pass
-            except Exception as e:
-                tty.debug(e)
-
-        return None
-
-    @classmethod
     def determine_variants(cls, exes, version_str):
-        languages, compilers = set(), {}
-        # There are often at least two copies (not symlinks) of each compiler executable in the
-        # same directory: one with a canonical name, e.g. "gfortran", and another one with the
-        # target prefix, e.g. "x86_64-pc-linux-gnu-gfortran". There also might be a copy of "gcc"
-        # with the version suffix, e.g. "x86_64-pc-linux-gnu-gcc-6.3.0". To ensure the consistency
-        # of values in the "compilers" dictionary (i.e. we prefer all of them to reference copies
-        # with canonical names if possible), we iterate over the executables in the reversed sorted
-        # order:
-        for exe in sorted(exes, reverse=True):
-            basename = os.path.basename(exe)
-            if "g++" in basename:
-                languages.add("c++")
-                compilers["cxx"] = exe
-            elif "gfortran" in basename:
-                languages.add("fortran")
-                compilers["fortran"] = exe
-            elif "gcc" in basename:
-                languages.add("c")
-                compilers["c"] = exe
-            elif "gccgo" in basename:
-                languages.add("go")
-                compilers["go"] = exe
-            elif "gdc" in basename:
-                languages.add("d")
-                compilers["d"] = exe
+        compilers = cls.determine_compiler_paths(exes=exes)
+
+        languages = set()
+        translation = {"cxx": "c++"}
+        for lang, compiler in compilers.items():
+            languages.add(translation.get(lang, lang))
         variant_str = "languages={0}".format(",".join(languages))
         return variant_str, {"compilers": compilers}
 
@@ -693,10 +691,10 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         """Get the right (but pessimistic) architecture specific flags supported by
         both host gcc and to-be-built gcc. For example: gcc@7 %gcc@12 target=znver3
         should pick -march=znver1, since that's what gcc@7 supports."""
-        archs = [spec.target] + spec.target.ancestors
-        for arch in archs:
+        microarchitectures = [spec.target] + spec.target.ancestors
+        for uarch in microarchitectures:
             try:
-                return arch.optimization_flags("gcc", spec.version)
+                return uarch.optimization_flags("gcc", str(spec.version))
             except UnsupportedMicroarchitecture:
                 pass
         # no arch specific flags in common, unlikely to happen.
@@ -860,6 +858,28 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
 
         return options
 
+    # Copy nvptx-tools into the GCC install prefix
+    def copy_nvptx_tools(self):
+        nvptx_tools_bin_path = self.spec["nvptx-tools"].prefix.bin
+        gcc_bin_path = self.prefix.bin
+        mkdirp(gcc_bin_path)
+        copy_list = ["as", "ld", "nm", "run", "run-single"]
+        for file in copy_list:
+            fullname = f"nvptx-none-{file}"
+            copy(join_path(nvptx_tools_bin_path, fullname), join_path(gcc_bin_path, fullname))
+        link_list = ["ar", "ranlib"]
+        for file in link_list:
+            fullname = f"nvptx-none-{file}"
+            orig_target = readlink(join_path(nvptx_tools_bin_path, fullname))
+            symlink(orig_target, join_path(gcc_bin_path, fullname))
+        util_dir_path = join_path(self.prefix, "nvptx-none", "bin")
+        mkdirp(util_dir_path)
+        util_list = ["ar", "as", "ld", "nm", "ranlib"]
+        for file in util_list:
+            rel_target = join_path("..", "..", "bin", f"nvptx-none-{file}")
+            dest_link = join_path(util_dir_path, file)
+            symlink(rel_target, dest_link)
+
     # run configure/make/make(install) for the nvptx-none target
     # before running the host compiler phases
     @run_before("configure")
@@ -882,11 +902,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
             "--with-cuda-driver-lib={0}".format(spec["cuda"].libs.directories[0]),
         ]
 
-        with working_dir("nvptx-tools"):
-            configure = Executable("./configure")
-            configure(*options)
-            make()
-            make("install")
+        self.copy_nvptx_tools()
 
         pattern = join_path(self.stage.source_path, "newlibsource", "*")
         files = glob.glob(pattern)
@@ -928,76 +944,51 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     @property
     def spec_dir(self):
         # e.g. lib/gcc/x86_64-unknown-linux-gnu/4.9.2
-        spec_dir = glob.glob("{0}/gcc/*/*".format(self.prefix.lib))
+        spec_dir = glob.glob(f"{self.prefix.lib}/gcc/*/*")
         return spec_dir[0] if spec_dir else None
 
     @run_after("install")
-    def write_rpath_specs(self):
-        """Generate a spec file so the linker adds a rpath to the libs
-        the compiler used to build the executable.
-
-        .. caution::
-
-           The custom spec file by default with *always* pass ``-Wl,-rpath
-           ...`` to the linker, which will cause the linker to *ignore* the
-           value of ``LD_RUN_PATH``, which otherwise would be saved to the
-           binary as the default rpath. See the mitigation below for how to
-           temporarily disable this behavior.
-
-        Structure the specs file so that users can define a custom spec file
-        to suppress the spack-linked rpaths to facilitate rpath adjustment
-        for relocatable binaries. The custom spec file
-        :file:`{norpath}.spec` will have a single
-        line followed by two blanks lines::
-
-            *link_libgcc_rpath:
-
-
-
-        It can be passed to the GCC linker using the argument
-        ``--specs=norpath.spec`` to disable the automatic rpath and restore
-        the behavior of ``LD_RUN_PATH``."""
+    def write_specs_file(self):
+        """(1) inject an rpath to its runtime library dir, (2) add a default programs search path
+        to <binutils>/bin."""
         if not self.spec_dir:
-            tty.warn(
-                "Could not install specs for {0}.".format(self.spec.format("{name}{@version}"))
-            )
+            tty.warn(f"Could not install specs for {self.spec.format('{name}{@version}')}.")
             return
-
-        gcc = self.spec["gcc"].command
-        lines = gcc("-dumpspecs", output=str).splitlines(True)
-        specs_file = join_path(self.spec_dir, "specs")
-
-        # Save a backup
-        with open(specs_file + ".orig", "w") as out:
-            out.writelines(lines)
 
         # Find which directories have shared libraries
-        rpath_libdirs = []
-        for dir in ["lib", "lib64"]:
+        for dir in ["lib64", "lib"]:
             libdir = join_path(self.prefix, dir)
-            if glob.glob(join_path(libdir, "*." + dso_suffix)):
-                rpath_libdirs.append(libdir)
-
-        if not rpath_libdirs:
-            # No shared libraries
+            if glob.glob(join_path(libdir, "libgcc_s.*")):
+                rpath_dir = libdir
+                break
+        else:
             tty.warn("No dynamic libraries found in lib/lib64")
-            return
+            rpath_dir = None
 
-        # Overwrite the specs file
-        with open(specs_file, "w") as out:
-            for line in lines:
-                out.write(line)
-                if line.startswith("*link_libgcc:"):
-                    # Insert at start of line following link_libgcc, which gets
-                    # inserted into every call to the linker
-                    out.write("%(link_libgcc_rpath) ")
+        specs_file = join_path(self.spec_dir, "specs")
+        with open(specs_file, "w") as f:
+            # can't extend the builtins without dumping them first
+            f.write(self.spec["gcc"].command("-dumpspecs", output=str, error=os.devnull).strip())
 
-            # Add easily-overridable rpath string at the end
-            out.write("*link_libgcc_rpath:\n")
-            out.write(" ".join("-rpath " + lib for lib in rpath_libdirs))
-            out.write("\n")
+            f.write("\n\n# Generated by Spack\n\n")
+
+            # rpath
+            if rpath_dir:
+                f.write(f"*link_libgcc:\n+ -rpath {rpath_dir}\n\n")
+
+            # programs search path
+            if self.spec.satisfies("+binutils"):
+                f.write(f"*self_spec:\n+ -B{self.spec['binutils'].prefix.bin}\n\n")
+
+            # set -fuse-ld=mold as the default linker when +mold
+            if self.spec.satisfies("+mold"):
+                f.write(
+                    f"*self_spec:\n+ -B{self.spec['mold'].prefix.bin} "
+                    "%{!fuse-ld*:-fuse-ld=mold}\n\n"
+                )
+
         set_install_permissions(specs_file)
-        tty.info("Wrote new spec file to {0}".format(specs_file))
+        tty.info(f"Wrote new spec file to {specs_file}")
 
     def setup_run_environment(self, env):
         # Search prefix directory for possibly modified compiler names
@@ -1115,7 +1106,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
                 )
 
     @classmethod
-    def runtime_constraints(cls, *, compiler, pkg):
+    def runtime_constraints(cls, *, spec, pkg):
         """Callback function to inject runtime-related rules into the solver.
 
         Rule-injection is obtained through method calls of the ``pkg`` argument.
@@ -1124,7 +1115,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         we'll document the behavior at https://spack.readthedocs.io/en/latest/
 
         Args:
-            compiler: compiler object (node attribute) currently considered
+            spec: spec that will inject runtime dependencies
             pkg: object used to forward information to the solver
         """
         pkg("*").depends_on(
@@ -1134,11 +1125,85 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
             description="If any package uses %gcc, it depends on gcc-runtime",
         )
         pkg("*").depends_on(
-            f"gcc-runtime@{str(compiler.version)}:",
-            when=f"%{str(compiler.spec)}",
+            f"gcc-runtime@{str(spec.version)}:",
+            when=f"%{str(spec)}",
             type="link",
-            description=f"If any package uses %{str(compiler.spec)}, "
-            f"it depends on gcc-runtime@{str(compiler.version)}:",
+            description=f"If any package uses %{str(spec)}, "
+            f"it depends on gcc-runtime@{str(spec.version)}:",
         )
+
+        gfortran_str = "libgfortran@5"
+        if spec.satisfies("gcc@:6"):
+            gfortran_str = "libgfortran@3"
+        elif spec.satisfies("gcc@7"):
+            gfortran_str = "libgfortran@4"
+
+        for fortran_virtual in ("fortran-rt", gfortran_str):
+            pkg("*").depends_on(
+                fortran_virtual,
+                when=f"%{str(spec)}",
+                languages=["fortran"],
+                type="link",
+                description=f"Add a dependency on '{gfortran_str}' for nodes compiled with "
+                f"{str(spec)} and using the 'fortran' language",
+            )
         # The version of gcc-runtime is the same as the %gcc used to "compile" it
-        pkg("gcc-runtime").requires(f"@={str(compiler.version)}", when=f"%{str(compiler.spec)}")
+        pkg("gcc-runtime").requires(f"@={str(spec.version)}", when=f"%{str(spec)}")
+
+    def _post_buildcache_install_hook(self):
+        if not self.spec.satisfies("platform=linux"):
+            return
+
+        # Setting up the runtime environment shouldn't be necessary here.
+        relocation_args = []
+        gcc = self.spec["gcc"].command
+        specs_file = os.path.join(self.spec_dir, "specs")
+        dryrun = gcc("test.c", "-###", output=os.devnull, error=str).strip()
+        if not dryrun:
+            tty.warn(f"Cannot relocate {specs_file}, compiler might not be working properly")
+            return
+        dynamic_linker = spack.util.libc.parse_dynamic_linker(dryrun)
+        if not dynamic_linker:
+            tty.warn(f"Cannot relocate {specs_file}, compiler might not be working properly")
+            return
+
+        libc = spack.util.libc.libc_from_dynamic_linker(dynamic_linker)
+
+        # We search for crt1.o ourselves because `gcc -print-prile-name=crt1.o` can give a rather
+        # convoluted relative path from a different prefix.
+        startfile_prefix = spack.util.libc.startfile_prefix(libc.external_path, dynamic_linker)
+
+        gcc_can_locate = lambda p: os.path.isabs(
+            gcc(f"-print-file-name={p}", output=str, error=os.devnull).strip()
+        )
+
+        if not gcc_can_locate("crt1.o"):
+            relocation_args.append(f"-B{startfile_prefix}")
+
+        # libc headers may also be in a multiarch subdir.
+        header_dir = spack.util.libc.libc_include_dir_from_startfile_prefix(
+            libc.external_path, startfile_prefix
+        )
+        if header_dir and all(
+            os.path.exists(os.path.join(header_dir, h))
+            for h in libc.package_class.representative_headers
+        ):
+            relocation_args.append(f"-idirafter {header_dir}")
+        else:
+            tty.warn(
+                f"Cannot relocate {specs_file} include directories, "
+                f"compiler might not be working properly"
+            )
+
+        # Delete current spec files.
+        try:
+            os.unlink(specs_file)
+        except OSError:
+            pass
+
+        # Write a new one and append flags for libc
+        self.write_specs_file()
+
+        if relocation_args:
+            with open(specs_file, "a") as f:
+                f.write(f"*self_spec:\n+ {' '.join(relocation_args)}\n\n")

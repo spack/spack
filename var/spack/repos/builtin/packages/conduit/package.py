@@ -45,6 +45,9 @@ class Conduit(CMakePackage):
     # is to bridge any spack dependencies that are still using the name master
     version("master", branch="develop", submodules=True)
     # note: 2021-05-05 latest tagged release is now preferred instead of develop
+    version("0.9.2", sha256="45d5a4eccd0fc978d153d29c440c53c483b8f29dfcf78ddcc9aa15c59b257177")
+    version("0.9.1", sha256="a3f1168738dcf72f8ebf83299850301aaf56e803f40618fc1230a755d0d05363")
+    version("0.9.0", sha256="844e012400ab820967eef6cec15e1aa9a68cb05119d0c1f292d3c01630111a58")
     version("0.8.8", sha256="99811e9c464b6f841f52fcd47e982ae47cbb01cba334cff43eabe13eea58c0df")
     version("0.8.7", sha256="f3bf44d860783f4e0d61517c5e280c88144af37414569f4cf86e2d29b3ba5293")
     version("0.8.6", sha256="8ca5d37033143ed7181c7286dd25a3f6126ba0358889066f13a2b32f68fc647e")
@@ -117,8 +120,10 @@ class Conduit(CMakePackage):
     #######################
     # CMake
     #######################
-    # cmake 3.14.1 or newer
+    # cmake 3.14.1 or newer basic requirement
     depends_on("cmake@3.14.1:", type="build")
+    # cmake 3.21.0 or newer for conduit 0.9.0
+    depends_on("cmake@3.21.0:", type="build", when="@0.9.0:")
 
     #######################
     # Python
@@ -127,6 +132,7 @@ class Conduit(CMakePackage):
     extends("python", when="+python")
     depends_on("py-numpy", when="+python", type=("build", "run"))
     depends_on("py-mpi4py", when="+python+mpi", type=("build", "run"))
+    depends_on("py-pip", when="+python", type="build")
 
     #######################
     # I/O Packages
@@ -438,7 +444,7 @@ class Conduit(CMakePackage):
             cfg.write("# Enable python module builds\n")
             cfg.write(cmake_cache_entry("ENABLE_PYTHON", "ON"))
             cfg.write("# python from spack \n")
-            cfg.write(cmake_cache_entry("PYTHON_EXECUTABLE", spec["python"].command.path))
+            cfg.write(cmake_cache_entry("PYTHON_EXECUTABLE", python.path))
             try:
                 cfg.write("# python module install dir\n")
                 cfg.write(cmake_cache_entry("PYTHON_MODULE_INSTALL_PREFIX", python_platlib))

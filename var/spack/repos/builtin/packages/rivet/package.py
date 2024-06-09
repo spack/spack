@@ -54,7 +54,7 @@ class Rivet(AutotoolsPackage):
 
     depends_on("hepmc", when="hepmc=2")
     depends_on("hepmc3", when="hepmc=3")
-    depends_on("fastjet")
+    depends_on("fastjet plugins=cxx")
     depends_on("fastjet@3.4.0:", when="@3.1.7:")
     depends_on("fjcontrib")
     depends_on("python", type=("build", "run"))

@@ -34,13 +34,11 @@ class Superlu(CMakePackage, Package):
     version(
         "4.3",
         sha256="169920322eb9b9c6a334674231479d04df72440257c17870aaa0139d74416781",
-        deprecated=True,
         url="https://crd-legacy.lbl.gov/~xiaoye/SuperLU/superlu_4.3.tar.gz",
     )
     version(
         "4.2",
         sha256="5a06e19bf5a597405dfeea39fe92aa8c5dd41da73c72c7187755a75f581efb28",
-        deprecated=True,
         url="https://crd-legacy.lbl.gov/~xiaoye/SuperLU/superlu_4.2.tar.gz",
     )
 

@@ -14,8 +14,7 @@ class Mruby(Package):
     url = "https://github.com/mruby/mruby/archive/refs/tags/3.0.0.tar.gz"
     git = "https://github.com/mruby/mruby.git"
 
-    maintainers = ["mdorier"]
-
+    maintainers("mdorier")
     license("MIT")
 
     version("master", branch="master")

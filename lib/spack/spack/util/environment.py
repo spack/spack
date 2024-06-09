@@ -36,6 +36,8 @@ else:
 
 SYSTEM_DIRS = [os.path.join(p, s) for s in SUFFIXES for p in SYSTEM_PATHS] + SYSTEM_PATHS
 
+#: used in the compiler wrapper's `/usr/lib|/usr/lib64|...)` case entry
+SYSTEM_DIR_CASE_ENTRY = "|".join(sorted(f'"{d}{suff}"' for d in SYSTEM_DIRS for suff in ("", "/")))
 
 _SHELL_SET_STRINGS = {
     "sh": "export {0}={1};\n",
@@ -642,8 +644,8 @@ class EnvironmentModifications:
             elif isinstance(envmod, AppendFlagsEnv):
                 rev.remove_flags(envmod.name, envmod.value)
             else:
-                tty.warn(
-                    f"Skipping reversal of unreversable operation {type(envmod)} {envmod.name}"
+                tty.debug(
+                    f"Skipping reversal of irreversible operation {type(envmod)} {envmod.name}"
                 )
 
         return rev

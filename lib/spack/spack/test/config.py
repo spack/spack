@@ -492,7 +492,7 @@ full_padded_string = os.path.join(os.sep + "path", os.sep.join(reps))[:MAX_PADDE
     ],
 )
 def test_parse_install_tree(config_settings, expected, mutable_config):
-    expected_root = expected[0] or spack.store.DEFAULT_INSTALL_TREE_ROOT
+    expected_root = expected[0] or mutable_config.get("config:install_tree:root")
     expected_unpadded_root = expected[1] or expected_root
     expected_proj = expected[2] or spack.directory_layout.default_projections
 
@@ -575,7 +575,7 @@ def test_change_or_add(mutable_config, mock_packages):
     ],
 )
 def test_parse_install_tree_padded(config_settings, expected, mutable_config):
-    expected_root = expected[0] or spack.store.DEFAULT_INSTALL_TREE_ROOT
+    expected_root = expected[0] or mutable_config.get("config:install_tree:root")
     expected_unpadded_root = expected[1] or expected_root
     expected_proj = expected[2] or spack.directory_layout.default_projections
 
@@ -761,25 +761,20 @@ def test_internal_config_from_data():
     assert config.get("config:checksum", scope="higher") is True
 
 
-def test_keys_are_ordered():
+def test_keys_are_ordered(configuration_dir):
     """Test that keys in Spack YAML files retain their order from the file."""
     expected_order = (
-        "bin",
-        "man",
-        "share/man",
-        "share/aclocal",
-        "lib",
-        "lib64",
-        "include",
-        "lib/pkgconfig",
-        "lib64/pkgconfig",
-        "share/pkgconfig",
-        "",
+        "./bin",
+        "./man",
+        "./share/man",
+        "./share/aclocal",
+        "./lib/pkgconfig",
+        "./lib64/pkgconfig",
+        "./share/pkgconfig",
+        "./",
     )
 
-    config_scope = spack.config.ConfigScope(
-        "modules", os.path.join(spack.paths.test_path, "data", "config")
-    )
+    config_scope = spack.config.ConfigScope("modules", configuration_dir.join("site"))
 
     data = config_scope.get_section("modules")
 
@@ -977,7 +972,7 @@ def test_single_file_scope(config, env_yaml):
         # from the single-file config
         assert spack.config.get("config:verify_ssl") is False
         assert spack.config.get("config:dirty") is False
-        assert spack.config.get("packages:all:compiler") == ["gcc@4.5.3"]
+        assert spack.config.get("packages:all:compiler") == ["gcc@4.5.3", "gcc", "clang"]
 
         # from the lower config scopes
         assert spack.config.get("config:checksum") is True
@@ -1276,7 +1271,7 @@ def test_user_config_path_is_default_when_env_var_is_empty(working_env):
 
 def test_default_install_tree(monkeypatch, default_config):
     s = spack.spec.Spec("nonexistent@x.y.z %none@a.b.c arch=foo-bar-baz")
-    monkeypatch.setattr(s, "dag_hash", lambda: "abc123")
+    monkeypatch.setattr(s, "dag_hash", lambda length: "abc123")
     _, _, projections = spack.store.parse_install_tree(spack.config.get("config"))
     assert s.format(projections["all"]) == "foo-bar-baz/none-a.b.c/nonexistent-x.y.z-abc123"
 

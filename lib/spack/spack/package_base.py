@@ -64,7 +64,7 @@ from spack.install_test import (
     install_test_root,
 )
 from spack.installer import InstallError, PackageInstaller
-from spack.stage import DIYStage, ResourceStage, Stage, StageComposite, compute_stage_name
+from spack.stage import DevelopStage, ResourceStage, Stage, StageComposite, compute_stage_name
 from spack.util.executable import ProcessError, which
 from spack.util.package_hash import package_hash
 from spack.version import GitVersion, StandardVersion
@@ -161,7 +161,11 @@ class WindowsRPath:
 
         Performs symlinking to incorporate rpath dependencies to Windows runtime search paths
         """
-        if sys.platform == "win32":
+        # If spec is an external, we should not be modifying its bin directory, as we would
+        # be doing in this method
+        # Spack should in general not modify things it has not installed
+        # we can reasonably expect externals to have their link interface properly established
+        if sys.platform == "win32" and not self.spec.external:
             self.win_rpath.add_library_dependent(*self.win_add_library_dependent())
             self.win_rpath.add_rpath(*self.win_add_rpath())
             self.win_rpath.establish_link()
@@ -468,7 +472,41 @@ def _names(when_indexed_dictionary):
     return sorted(all_names)
 
 
-class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
+class RedistributionMixin:
+    """Logic for determining whether a Package is source/binary
+    redistributable.
+    """
+
+    #: Store whether a given Spec source/binary should not be
+    #: redistributed.
+    disable_redistribute: Dict["spack.spec.Spec", "spack.directives.DisableRedistribute"]
+
+    # Source redistribution must be determined before concretization
+    # (because source mirrors work with un-concretized Specs).
+    @classmethod
+    def redistribute_source(cls, spec):
+        """Whether it should be possible to add the source of this
+        package to a Spack mirror.
+        """
+        for when_spec, disable_redistribute in cls.disable_redistribute.items():
+            if disable_redistribute.source and spec.satisfies(when_spec):
+                return False
+
+        return True
+
+    @property
+    def redistribute_binary(self):
+        """Whether it should be possible to create a binary out of an
+        installed instance of this package.
+        """
+        for when_spec, disable_redistribute in self.__class__.disable_redistribute.items():
+            if disable_redistribute.binary and self.spec.satisfies(when_spec):
+                return False
+
+        return True
+
+
+class PackageBase(WindowsRPath, PackageViewMixin, RedistributionMixin, metaclass=PackageMeta):
     """This is the superclass for all spack packages.
 
     ***The Package class***
@@ -566,6 +604,8 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     provided: Dict["spack.spec.Spec", Set["spack.spec.Spec"]]
     provided_together: Dict["spack.spec.Spec", List[Set[str]]]
     patches: Dict["spack.spec.Spec", List["spack.patch.Patch"]]
+    variants: Dict[str, Tuple["spack.variant.Variant", "spack.spec.Spec"]]
+    languages: Dict["spack.spec.Spec", Set[str]]
 
     #: By default, packages are not virtual
     #: Virtual packages override this attribute
@@ -580,10 +620,6 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
 
     #: By default do not run tests within package's install()
     run_tests = False
-
-    #: Keep -Werror flags, matches config:flags:keep_werror to override config
-    # NOTE: should be type Optional[Literal['all', 'specific', 'none']] in 3.8+
-    keep_werror: Optional[str] = None
 
     #: Most packages are NOT extendable. Set to True if you want extensions.
     extendable = False
@@ -890,6 +926,32 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
             self.global_license_dir, self.name, os.path.basename(self.license_files[0])
         )
 
+    # NOTE: return type should be Optional[Literal['all', 'specific', 'none']] in
+    # Python 3.8+, but we still support 3.6.
+    @property
+    def keep_werror(self) -> Optional[str]:
+        """Keep ``-Werror`` flags, matches ``config:flags:keep_werror`` to override config.
+
+        Valid return values are:
+        * ``"all"``: keep all ``-Werror`` flags.
+        * ``"specific"``: keep only ``-Werror=specific-warning`` flags.
+        * ``"none"``: filter out all ``-Werror*`` flags.
+        * ``None``: respect the user's configuration (``"none"`` by default).
+        """
+        if self.spec.satisfies("%nvhpc@:23.3") or self.spec.satisfies("%pgi"):
+            # Filtering works by replacing -Werror with -Wno-error, but older nvhpc and
+            # PGI do not understand -Wno-error, so we disable filtering.
+            return "all"
+
+        elif self.spec.satisfies("%nvhpc@23.4:"):
+            # newer nvhpc supports -Wno-error but can't disable specific warnings with
+            # -Wno-error=warning. Skip -Werror=warning, but still filter -Werror.
+            return "specific"
+
+        else:
+            # use -Werror disablement by default for other compilers
+            return None
+
     @property
     def version(self):
         if not self.spec.versions.concrete:
@@ -1074,7 +1136,12 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         # If it's a dev package (not transitively), use a DIY stage object
         dev_path_var = self.spec.variants.get("dev_path", None)
         if dev_path_var:
-            return DIYStage(dev_path_var.value)
+            dev_path = dev_path_var.value
+            link_format = spack.config.get("config:develop_stage_link")
+            if not link_format:
+                link_format = "build-{arch}-{hash:7}"
+            stage_link = self.spec.format_path(link_format)
+            return DevelopStage(compute_stage_name(self.spec), dev_path, stage_link)
 
         # To fetch the current version
         source_stage = self._make_root_stage(self.fetcher)
@@ -1199,7 +1266,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         """Return the install test root directory."""
         tty.warn(
             "The 'pkg.install_test_root' property is deprecated with removal "
-            "expected v0.22. Use 'install_test_root(pkg)' instead."
+            "expected v0.23. Use 'install_test_root(pkg)' instead."
         )
         return install_test_root(self)
 
@@ -1406,7 +1473,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
             return
 
         checksum = spack.config.get("config:checksum")
-        fetch = self.stage.managed_by_spack
+        fetch = self.stage.needs_fetching
         if (
             checksum
             and fetch
@@ -1479,9 +1546,6 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         if self.has_code:
             self.do_fetch(mirror_only)
             self.stage.expand_archive()
-
-            if not os.listdir(self.stage.path):
-                raise spack.error.FetchError("Archive was empty for %s" % self.name)
         else:
             # Support for post-install hooks requires a stage.source_path
             fsys.mkdirp(self.stage.source_path)
@@ -1515,7 +1579,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         # If we encounter an archive that failed to patch, restage it
         # so that we can apply all the patches again.
         if os.path.isfile(bad_file):
-            if self.stage.managed_by_spack:
+            if self.stage.requires_patch_success:
                 tty.debug("Patching failed last time. Restaging.")
                 self.stage.restage()
             else:
@@ -1536,6 +1600,8 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
             tty.msg("No patches needed for {0}".format(self.name))
             return
 
+        errors = []
+
         # Apply all the patches for specs that match this one
         patched = False
         for patch in patches:
@@ -1545,12 +1611,16 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
                 tty.msg("Applied patch {0}".format(patch.path_or_url))
                 patched = True
             except spack.error.SpackError as e:
-                tty.debug(e)
-
                 # Touch bad file if anything goes wrong.
-                tty.msg("Patch %s failed." % patch.path_or_url)
                 fsys.touch(bad_file)
-                raise
+                error_msg = f"Patch {patch.path_or_url} failed."
+                if self.stage.requires_patch_success:
+                    tty.msg(error_msg)
+                    raise
+                else:
+                    tty.debug(error_msg)
+                    tty.debug(e)
+                    errors.append(e)
 
         if has_patch_fun:
             try:
@@ -1568,24 +1638,29 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
                     # printed a message for each patch.
                     tty.msg("No patches needed for {0}".format(self.name))
             except spack.error.SpackError as e:
-                tty.debug(e)
-
                 # Touch bad file if anything goes wrong.
-                tty.msg("patch() function failed for {0}".format(self.name))
                 fsys.touch(bad_file)
-                raise
+                error_msg = f"patch() function failed for {self.name}"
+                if self.stage.requires_patch_success:
+                    tty.msg(error_msg)
+                    raise
+                else:
+                    tty.debug(error_msg)
+                    tty.debug(e)
+                    errors.append(e)
 
-        # Get rid of any old failed file -- patches have either succeeded
-        # or are not needed.  This is mostly defensive -- it's needed
-        # if the restage() method doesn't clean *everything* (e.g., for a repo)
-        if os.path.isfile(bad_file):
-            os.remove(bad_file)
+        if not errors:
+            # Get rid of any old failed file -- patches have either succeeded
+            # or are not needed.  This is mostly defensive -- it's needed
+            # if we didn't restage
+            if os.path.isfile(bad_file):
+                os.remove(bad_file)
 
-        # touch good or no patches file so that we skip next time.
-        if patched:
-            fsys.touch(good_file)
-        else:
-            fsys.touch(no_patches_file)
+            # touch good or no patches file so that we skip next time.
+            if patched:
+                fsys.touch(good_file)
+            else:
+                fsys.touch(no_patches_file)
 
     @classmethod
     def all_patches(cls):
@@ -1828,7 +1903,10 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
             verbose (bool): Display verbose build output (by default,
                 suppresses it)
         """
-        PackageInstaller([(self, kwargs)]).install()
+        explicit = kwargs.get("explicit", True)
+        if isinstance(explicit, bool):
+            kwargs["explicit"] = {self.spec.dag_hash()} if explicit else set()
+        PackageInstaller([self], kwargs).install()
 
     # TODO (post-34236): Update tests and all packages that use this as a
     # TODO (post-34236): package method to the routine made available to
@@ -1849,7 +1927,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         """
         msg = (
             "'pkg.cache_extra_test_sources(srcs) is deprecated with removal "
-            "expected in v0.22. Use 'cache_extra_test_sources(pkg, srcs)' "
+            "expected in v0.23. Use 'cache_extra_test_sources(pkg, srcs)' "
             "instead."
         )
         warnings.warn(msg)
@@ -2397,9 +2475,18 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
 
         # on Windows, libraries of runtime interest are typically
         # stored in the bin directory
+        # Do not include Windows system libraries in the rpath interface
+        # these libraries are handled automatically by VS/VCVARS and adding
+        # Spack derived system libs into the link path or address space of a program
+        # can result in conflicting versions, which makes Spack packages less useable
         if sys.platform == "win32":
             rpaths = [self.prefix.bin]
-            rpaths.extend(d.prefix.bin for d in deps if os.path.isdir(d.prefix.bin))
+            rpaths.extend(
+                d.prefix.bin
+                for d in deps
+                if os.path.isdir(d.prefix.bin)
+                and "windows-system" not in getattr(d.package, "tags", [])
+            )
         else:
             rpaths = [self.prefix.lib, self.prefix.lib64]
             rpaths.extend(d.prefix.lib for d in deps if os.path.isdir(d.prefix.lib))
@@ -2506,7 +2593,12 @@ class PackageStillNeededError(InstallError):
     """Raised when package is still needed by another on uninstall."""
 
     def __init__(self, spec, dependents):
-        super().__init__("Cannot uninstall %s" % spec)
+        spec_fmt = spack.spec.DEFAULT_FORMAT + " /{hash:7}"
+        dep_fmt = "{name}{@versions} /{hash:7}"
+        super().__init__(
+            f"Cannot uninstall {spec.format(spec_fmt)}, "
+            f"needed by {[dep.format(dep_fmt) for dep in dependents]}"
+        )
         self.spec = spec
         self.dependents = dependents
 

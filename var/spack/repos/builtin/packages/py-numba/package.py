@@ -28,6 +28,8 @@ class PyNumba(PythonPackage):
     version("0.50.1", sha256="89e81b51b880f9b18c82b7095beaccc6856fcf84ba29c4f0ced42e4e5748a3a7")
     version("0.48.0", sha256="9d21bc77e67006b5723052840c88cc59248e079a907cc68f1a1a264e1eaba017")
 
+    variant("tbb", default=False, description="Build with Intel Threading Building Blocks")
+
     depends_on("python@3.8:3.11", when="@0.57:", type=("build", "run"))
     depends_on("python@3.7:3.10", when="@0.55:0.56", type=("build", "run"))
     depends_on("python@3.7:3.9", when="@0.54", type=("build", "run"))
@@ -53,6 +55,12 @@ class PyNumba(PythonPackage):
     depends_on("py-llvmlite@0.31", when="@0.48", type=("build", "run"))
     depends_on("py-importlib-metadata", when="@0.56:^python@:3.8", type=("build", "run"))
 
+    depends_on("tbb", when="+tbb")
+    conflicts("~tbb", when="@:0.50")  # No way to disable TBB
     # Version 6.0.0 of llvm had a hidden symbol which breaks numba at runtime.
     # See https://reviews.llvm.org/D44140
     conflicts("^llvm@6.0.0")
+
+    def setup_build_environment(self, env):
+        if self.spec.satisfies("~tbb"):
+            env.set("NUMBA_DISABLE_TBB", "yes")

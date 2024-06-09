@@ -26,6 +26,10 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
     license("BSD-3-Clause")
 
     version("develop", branch="development")
+    version("24.06", sha256="103a97163d81716165fcff1af56df61741608b56f90730a725e9e4eb797bebf0")
+    version("24.05", sha256="f3db5ea2b81973e3e244c5cf39d5a5383a98f297f56ed91c8dcdd2e24f7b750e")
+    version("24.04", sha256="77a91e75ad0106324a44ca514e1e8abc54f2fc2d453406441c871075726a8167")
+    version("24.03", sha256="024876fe65838d1021fcbf8530b992bff8d9be1d3f08a1723c4e2e5f7c28b427")
     version("24.02", sha256="286cc3ca29daa69c8eafc1cd7a572662dec9eb78631ac3d33a1260868fdc6996")
     version("24.01", sha256="83dbd4dad6dc51fa4a80aad0347b15ee5a6d816cf4abcd87f7b0e2987d8131b7")
     version("23.12", sha256="90e00410833d7a82bf6d9e71a70ce85d2bfb89770da7e34d0dda940f2bf5384a")
@@ -299,11 +303,10 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
         if "+sycl" in self.spec:
             args.append("-DAMReX_GPU_BACKEND=SYCL")
             # SYCL GPU backend only supported with Intel's oneAPI or DPC++ compilers
-            sycl_compatible_compilers = ["dpcpp", "icpx"]
+            sycl_compatible_compilers = ["icpx"]
             if not (os.path.basename(self.compiler.cxx) in sycl_compatible_compilers):
                 raise InstallError(
-                    "AMReX's SYCL GPU Backend requires DPC++ (dpcpp)"
-                    + " or the oneAPI CXX (icpx) compiler."
+                    "AMReX's SYCL GPU Backend requires the oneAPI CXX (icpx) compiler."
                 )
 
         return args

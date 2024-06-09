@@ -20,6 +20,7 @@ class Tmux(AutotoolsPackage):
 
     license("ISC")
 
+    version("3.4", sha256="551ab8dea0bf505c0ad6b7bb35ef567cdde0ccb84357df142c254f35a23e19aa")
     version("3.3a", sha256="e4fd347843bd0772c4f48d6dde625b0b109b7a380ff15db21e97c11a4dcdf93f")
     version("3.2a", sha256="551553a4f82beaa8dadc9256800bcc284d7c000081e47aa6ecbb6ff36eacd05f")
     version("3.2", sha256="664d345338c11cbe429d7ff939b92a5191e231a7c1ef42f381cebacb1e08a399")
@@ -56,6 +57,8 @@ class Tmux(AutotoolsPackage):
 
     depends_on("automake", when="@master")
     depends_on("autoconf", when="@master")
+
+    depends_on("yacc", type="build", when="@3:")
 
     conflicts("+static", when="platform=darwin", msg="Static build not supported on MacOS")
 

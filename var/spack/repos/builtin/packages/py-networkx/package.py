@@ -17,6 +17,7 @@ class PyNetworkx(PythonPackage):
     license("BSD-3-Clause")
 
     version("3.1", sha256="de346335408f84de0eada6ff9fafafff9bcda11f0a0dfaa931133debb146ab61")
+    version("3.0", sha256="9a9992345353618ae98339c2b63d8201c381c2944f38a2ab49cb45a4c667e412")
     version("2.8.6", sha256="bd2b7730300860cbd2dafe8e5af89ff5c9a65c3975b352799d87a6238b4301a6")
     version("2.7.1", sha256="d1194ba753e5eed07cdecd1d23c5cd7a3c772099bd8dbd2fea366788cf4de7ba")
     version("2.6.3", sha256="c0946ed31d71f1b732b5aaa6da5a0388a345019af232ce2f49c766e2d6795c51")

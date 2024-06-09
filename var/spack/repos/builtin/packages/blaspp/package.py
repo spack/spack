@@ -22,6 +22,9 @@ class Blaspp(CMakePackage, CudaPackage, ROCmPackage):
 
     version("master", branch="master")
     version(
+        "2024.05.31", sha256="24f325d2e1c2cc4275324bd88406555688379480877d19553656a0328287927a"
+    )
+    version(
         "2023.11.05", sha256="62dfc03ec07c0826e0466dc2c204b460caa929d53ad4f050cb132d92670be7ce"
     )
     version(
@@ -79,9 +82,7 @@ class Blaspp(CMakePackage, CudaPackage, ROCmPackage):
 
     requires("%oneapi", when="+sycl", msg="blaspp+sycl must be compiled with %oneapi")
 
-    patch(
-        "0001-fix-blaspp-build-error-with-rocm-6.0.0.patch", when="@2023.06.00: ^hip@6.0.0 +rocm"
-    )
+    patch("0001-fix-blaspp-build-error-with-rocm-6.0.0.patch", when="@2023.06.00: ^hip@6.0 +rocm")
 
     def cmake_args(self):
         spec = self.spec

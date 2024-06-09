@@ -25,6 +25,7 @@ class QuantumEspresso(CMakePackage, Package):
     license("GPL-2.0-only")
 
     version("develop", branch="develop")
+    version("7.3.1", sha256="2c58b8fadfe4177de5a8b69eba447db5e623420b070dea6fd26c1533b081d844")
     version("7.3", sha256="edc2a0f3315c69966df4f82ec86ab9f682187bc9430ef6d2bacad5f27f08972c")
     version("7.2", sha256="b348a4a7348b66a73545d9ca317a2645755c98d343c1cfe8def475ad030808c0")
     version("7.1", sha256="d56dea096635808843bd5a9be2dee3d1f60407c01dbeeda03f8256a3bcfc4eb6")
@@ -294,6 +295,11 @@ class QuantumEspresso(CMakePackage, Package):
     )
 
     conflicts("@6.5:", when="+environ", msg="6.4.x is the latest QE series supported by Environ")
+
+    # 7.3 - a compile-time problem fixed in 7.3.1
+    patch_url = "https://gitlab.com/QEF/q-e/-/commit/b98ff7539e5731728d2d49ac01021a57f2594027.diff"
+    patch_checksum = "04c125d249d1f076abe04bc4de39bd3b44a41a78d6233b638a17bd96f91443d5"
+    patch(patch_url, sha256=patch_checksum, when="@=7.3+elpa build_system=cmake")
 
     # QE 7.1 fix post-processing install part 1/2
     # see: https://gitlab.com/QEF/q-e/-/merge_requests/2005

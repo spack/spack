@@ -14,8 +14,6 @@ class Mxnet(CMakePackage, CudaPackage, PythonExtension):
     list_url = "https://mxnet.apache.org/get_started/download"
     git = "https://github.com/apache/mxnet.git"
 
-    maintainers("adamjstewart")
-
     license("Apache-2.0")
 
     version("master", branch="master", submodules=True)

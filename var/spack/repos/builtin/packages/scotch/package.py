@@ -39,7 +39,11 @@ class Scotch(CMakePackage, MakefilePackage):
 
     build_system(conditional("cmake", when="@7:"), "makefile", default="cmake")
     variant("threads", default=True, description="use POSIX Pthreads within Scotch and PT-Scotch")
-    variant("mpi_thread", default=False, description="use multi-threaded algorithms")
+    variant(
+        "mpi_thread",
+        default=False,
+        description="use multi-threaded algorithms in conjunction with MPI",
+    )
     variant("mpi", default=True, description="Compile parallel libraries")
     variant("compression", default=True, description="May use compressed files")
     variant("esmumps", default=False, description="Compile esmumps (needed by mumps)")
@@ -48,6 +52,7 @@ class Scotch(CMakePackage, MakefilePackage):
         "metis", default=False, description="Expose vendored METIS/ParMETIS libraries and wrappers"
     )
     variant("int64", default=False, description="Use int64_t for SCOTCH_Num typedef")
+    variant("noarch", default=False, description="Unset SPACK_TARGET_ARGS")
     variant(
         "link_error_lib",
         default=False,
@@ -68,6 +73,9 @@ class Scotch(CMakePackage, MakefilePackage):
 
     patch("libscotchmetis-return-6.0.5a.patch", when="@6.0.5a")
     patch("libscotch-scotcherr-link-7.0.1.patch", when="@7.0.1 +link_error_lib")
+
+    # Avoid OpenMPI segfaults by using MPI_Comm_F2C for parmetis communicator
+    patch("parmetis-mpi.patch", when="@6.1.1:7.0.3 +metis ^openmpi")
 
     # Vendored dependency of METIS/ParMETIS conflicts with standard
     # installations
@@ -126,6 +134,10 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
             args.append("-DINTSIZE=64")
 
         return args
+
+    @when("+noarch")
+    def setup_build_environment(self, env):
+        env.unset("SPACK_TARGET_ARGS")
 
 
 class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):

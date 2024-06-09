@@ -8,9 +8,13 @@ import os
 import re
 import sys
 
+from llnl.util.filesystem import windows_sfn
+
 from spack.build_systems.autotools import AutotoolsBuilder
 from spack.build_systems.nmake import NMakeBuilder
 from spack.package import *
+
+is_windows = sys.platform == "win32"
 
 
 class Curl(NMakePackage, AutotoolsPackage):
@@ -28,6 +32,8 @@ class Curl(NMakePackage, AutotoolsPackage):
 
     license("curl")
 
+    version("8.7.1", sha256="05bbd2b698e9cfbab477c33aa5e99b4975501835a41b7ca6ca71de03d8849e76")
+    version("8.6.0", sha256="b4785f2d8877fa92c0e45d7155cf8cc6750dbda961f4b1a45bcbec990cf2fa9b")
     version("8.4.0", sha256="e5250581a9c032b1b6ed3cf2f9c114c811fc41881069e9892d115cc73f9e88c6")
 
     # Deprecated versions due to CVEs
@@ -275,19 +281,18 @@ class Curl(NMakePackage, AutotoolsPackage):
     variant("librtmp", default=False, description="enable Rtmp support")
     variant("ldap", default=False, description="enable ldap support")
     variant("libidn2", default=False, description="enable libidn2 support")
-    for plat in ["darwin", "cray", "linux"]:
+    for plat in ["darwin", "linux"]:
         with when("platform=%s" % plat):
-            variant(
-                "libs",
-                default="shared,static",
-                values=("shared", "static"),
-                multi=True,
-                description="Build shared libs, static libs or both",
-            )
             # curl queries pkgconfig for openssl compilation flags
             depends_on("pkgconfig", type="build")
+    variant(
+        "libs",
+        default="shared,static" if not is_windows else "shared",
+        values=("shared", "static"),
+        multi=not is_windows,
+        description="Build shared libs, static libs or both",
+    )
 
-    conflicts("platform=cray", when="tls=secure_transport", msg="Only supported on macOS")
     conflicts("platform=linux", when="tls=secure_transport", msg="Only supported on macOS")
 
     depends_on("gnutls", when="tls=gnutls")
@@ -308,6 +313,10 @@ class Curl(NMakePackage, AutotoolsPackage):
     depends_on("libssh", when="+libssh")
     depends_on("krb5", when="+gssapi")
     depends_on("rtmpdump", when="+librtmp")
+
+    # https://github.com/curl/curl/issues/12832
+    # https://github.com/curl/curl/issues/13508
+    depends_on("perl", type="build", when="@8.6:8.7.1")
 
     # https://github.com/curl/curl/pull/9054
     patch("easy-lock-sched-header.patch", when="@7.84.0")
@@ -352,6 +361,13 @@ class Curl(NMakePackage, AutotoolsPackage):
         if name == "cflags" and self.spec.compiler.name in ["intel", "oneapi"]:
             build_system_flags = ["-we147"]
         return flags, None, build_system_flags
+
+
+class BuildEnvironment:
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        if self.spec.satisfies("libs=static"):
+            env.append_flags("CFLAGS", "-DCURL_STATICLIB")
+            env.append_flags("CXXFLAGS", "-DCURL_STATICLIB")
 
 
 class AutotoolsBuilder(AutotoolsBuilder):
@@ -440,12 +456,12 @@ class AutotoolsBuilder(AutotoolsBuilder):
                 return "--without-darwinssl"
 
 
-class NMakeBuilder(NMakeBuilder):
+class NMakeBuilder(BuildEnvironment, NMakeBuilder):
     phases = ["install"]
 
     def nmake_args(self):
         args = []
-        mode = "dll" if "libs=dll" in self.spec else "static"
+        mode = "dll" if self.spec.satisfies("libs=shared") else "static"
         args.append("mode=%s" % mode)
         args.append("WITH_ZLIB=%s" % mode)
         args.append("ZLIB_PATH=%s" % self.spec["zlib-api"].prefix)
@@ -469,7 +485,8 @@ class NMakeBuilder(NMakeBuilder):
         # The trailing path seperator is REQUIRED for cURL to install
         # otherwise cURLs build system will interpret the path as a file
         # and the install will fail with ambiguous errors
-        args.append("WITH_PREFIX=%s" % self.prefix + "\\")
+        inst_prefix = self.prefix + "\\"
+        args.append(f"WITH_PREFIX={windows_sfn(inst_prefix)}")
         return args
 
     def install(self, pkg, spec, prefix):
@@ -484,8 +501,18 @@ class NMakeBuilder(NMakeBuilder):
         env["CC"] = ""
         env["CXX"] = ""
         winbuild_dir = os.path.join(self.stage.source_path, "winbuild")
+        winbuild_dir = windows_sfn(winbuild_dir)
         with working_dir(winbuild_dir):
             nmake("/f", "Makefile.vc", *self.nmake_args(), ignore_quotes=True)
         with working_dir(os.path.join(self.stage.source_path, "builds")):
             install_dir = glob.glob("libcurl-**")[0]
             install_tree(install_dir, self.prefix)
+        if spec.satisfies("libs=static"):
+            # curl is named libcurl_a when static on Windows
+            # Consumers look for just libcurl
+            # make a symlink to make consumers happy
+            libcurl_a = os.path.join(prefix.lib, "libcurl_a.lib")
+            libcurl = os.path.join(self.prefix.lib, "libcurl.lib")
+            # safeguard against future curl releases that do this for us
+            if os.path.exists(libcurl_a) and not os.path.exists(libcurl):
+                symlink(libcurl_a, libcurl)

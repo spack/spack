@@ -16,7 +16,7 @@ class DarshanRuntime(AutotoolsPackage):
     systems where you intend to instrument MPI applications."""
 
     homepage = "https://www.mcs.anl.gov/research/projects/darshan/"
-    url = "https://ftp.mcs.anl.gov/pub/darshan/releases/darshan-3.1.0.tar.gz"
+    url = "https://web.cels.anl.gov/projects/darshan/releases/darshan-3.4.0.tar.gz"
     git = "https://github.com/darshan-hpc/darshan.git"
 
     maintainers("shanedsnyder", "carns")
@@ -25,6 +25,7 @@ class DarshanRuntime(AutotoolsPackage):
     test_requires_compiler = True
 
     version("main", branch="main", submodules=True)
+    version("3.4.5", sha256="1c017ac635fab5ee0e87a6b52c5c7273962813569495cb1dd3b7cfa6e19f6ed0")
     version("3.4.4", sha256="d9c9df5aca94dc5ca3d56fd763bec2f74771d35126d61cb897373d2166ccd867")
     version("3.4.3", sha256="dca5f9f9b0ead55a8724b218071ecbb5c4f2ef6027eaade3a6477256930ccc2c")
     version("3.4.2", sha256="b095c3b7c059a8eba4beb03ec092b60708780a3cae3fc830424f6f9ada811c6b")

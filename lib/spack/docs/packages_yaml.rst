@@ -647,6 +647,8 @@ manually placed files within the install prefix are owned by the
 assigned group. If no group is assigned, Spack will allow the OS
 default behavior to go as expected.
 
+.. _assigning-package-attributes:
+
 ----------------------------
 Assigning Package Attributes
 ----------------------------

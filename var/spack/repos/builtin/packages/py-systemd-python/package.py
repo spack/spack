@@ -14,7 +14,10 @@ class PySystemdPython(PythonPackage):
 
     license("LGPL-2.1-or-later")
 
+    version("235", sha256="4e57f39797fd5d9e2d22b8806a252d7c0106c936039d1e71c8c6b8008e695c0a")
     version("234", sha256="fd0e44bf70eadae45aadc292cb0a7eb5b0b6372cd1b391228047d33895db83e7")
 
     # pip silently replaces distutils with setuptools
     depends_on("py-setuptools", type="build")
+    depends_on("pkgconfig", type="build")
+    # depends on system installed systemd and systemd-devel packages

@@ -24,6 +24,7 @@ class MariadbCClient(CMakePackage):
 
     license("LGPL-2.1-or-later")
 
+    version("3.3.8", sha256="f9f076b4aa9fb22cc94b24f82c80f9ef063805ecd6533a2eb5d5060cf93833e8")
     version("3.3.7", sha256="975a9a862fed80f84e0206373f7ef05537aada5b65d99b71b36ab892b44240bf")
     version("3.3.5", sha256="ca72eb26f6db2befa77e48ff966f71bcd3cb44b33bd8bbb810b65e6d011c1e5c")
     version("3.3.4", sha256="486e5fdf976a8e7fadf583ae912128655e013ac575fa79b2d1af0fb8827a78ed")

@@ -6,6 +6,7 @@
 import os
 import re
 import shutil
+import sys
 
 import llnl.util.lang
 import llnl.util.tty as tty
@@ -32,6 +33,9 @@ class Hdf5(CMakePackage):
     test_requires_compiler = True
 
     license("custom")
+
+    depends_on("cxx", type="build", when="+cxx")
+    depends_on("fortran", type="build", when="+fortran")
 
     # The 'develop' version is renamed so that we could uninstall (or patch) it
     # without affecting other develop version.
@@ -109,14 +113,17 @@ class Hdf5(CMakePackage):
     depends_on("cmake@3.12:", type="build")
     depends_on("cmake@3.18:", type="build", when="@1.13:")
 
-    depends_on("mpi", when="+mpi")
+    with when("+mpi"):
+        depends_on("mpi")
+        depends_on("mpich+fortran", when="+fortran ^[virtuals=mpi] mpich")
+
     depends_on("java", type=("build", "run"), when="+java")
     depends_on("szip", when="+szip")
     depends_on("zlib-api")
 
     # The compiler wrappers (h5cc, h5fc, etc.) run 'pkg-config'.
     # Skip this on Windows since pkgconfig is autotools
-    for plat in ["cray", "darwin", "linux"]:
+    for plat in ["darwin", "linux"]:
         depends_on("pkgconfig", when=f"platform={plat}", type="run")
 
     conflicts("+mpi", "^mpich@4.0:4.0.3")
@@ -169,6 +176,15 @@ class Hdf5(CMakePackage):
     # 3. Parallel features are not supported via CXX API, but for the reasons
     #    described in #2 we allow for such combination.
     # conflicts('+mpi+cxx')
+
+    # Patch needed for HDF5 1.14.3 to fix signaling FPE checks from triggering
+    # at dynamic type system initialization. The type system's builtin types
+    # were refactored in 1.14.3 and switched from compile-time to run-time
+    # initialization. This patch suppresses floating point exception checks
+    # that would otherwise be triggered by this code. Later HDF5 versions
+    # will include the patch code changes.
+    # See https://github.com/HDFGroup/hdf5/pull/3837
+    patch("hdf5_1_14_3_fpe.patch", when="@1.14.3")
 
     # There are known build failures with intel@18.0.1. This issue is
     # discussed and patch is provided at
@@ -261,16 +277,10 @@ class Hdf5(CMakePackage):
     # compiler wrappers and do not need to be changed.
     # These do not exist on Windows.
     # Enable only for supported target platforms.
-    for spack_spec_target_platform in ["linux", "darwin", "cray"]:
+
+    if sys.platform != "win32":
         filter_compiler_wrappers(
-            "h5cc",
-            "h5hlcc",
-            "h5fc",
-            "h5hlfc",
-            "h5c++",
-            "h5hlc++",
-            relative_root="bin",
-            when=f"platform={spack_spec_target_platform}",
+            "h5cc", "h5hlcc", "h5fc", "h5hlfc", "h5c++", "h5hlc++", relative_root="bin"
         )
 
     def url_for_version(self, version):

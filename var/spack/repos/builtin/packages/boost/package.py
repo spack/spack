@@ -29,8 +29,9 @@ class Boost(Package):
     license("BSL-1.0")
 
     version("develop", branch="develop", submodules=True)
-    version("1.83.0", sha256="6478edfe2f3305127cffe8caf73ea0176c53769f4bf1585be237eb30798c3b8e")
+    version("1.85.0", sha256="7009fe1faa1697476bdc7027703a2badb84e849b7b0baad5086b087b971f8617")
     version("1.84.0", sha256="cc4b893acf645c9d4b698e9a0f08ca8846aa5d6c68275c14c3e7949c24109454")
+    version("1.83.0", sha256="6478edfe2f3305127cffe8caf73ea0176c53769f4bf1585be237eb30798c3b8e")
     version("1.82.0", sha256="a6e1ab9b0860e6a2881dd7b21fe9f737a095e5f33a3a874afc6a345228597ee6")
     version("1.81.0", sha256="71feeed900fbccca04a3b4f2f84a7c217186f28a940ed8b7ed4725986baf99fa")
     version("1.80.0", sha256="1e19565d82e43bc59209a168f5ac899d3ba471d55c7610c677d4ccf2c9c500c0")
@@ -287,6 +288,13 @@ class Boost(Package):
     # (https://github.com/spack/spack/pull/32879#issuecomment-1265933265)
     conflicts("%oneapi", when="@1.80")
 
+    # Boost 1.85.0 stacktrace added a hard compilation error that has to
+    # explicitly be suppressed on some platforms:
+    # https://github.com/boostorg/stacktrace/pull/150. This conflict could be
+    # turned into a variant that allows users to opt-in when they know it is
+    # safe to do so on affected platforms.
+    conflicts("+clanglibcpp", when="@1.85: +stacktrace")
+
     # Patch fix from https://svn.boost.org/trac/boost/ticket/11856
     patch("boost_11856.patch", when="@1.60.0%gcc@4.4.7")
 
@@ -314,6 +322,9 @@ class Boost(Package):
     # Patch to workaround compiler bug
     patch("nvhpc-find_address.patch", when="@1.75.0:1.76%nvhpc")
 
+    # Patch to workaround gcc-8.3 compiler issue https://github.com/boostorg/mpl/issues/44
+    patch("boost_gcc83_cpp17_fix.patch", when="@1.69:%gcc@8.3")
+
     # Fix for version comparison on newer Clang on darwin
     # See: https://github.com/boostorg/build/issues/440
     # See: https://github.com/macports/macports-ports/pull/6726
@@ -330,9 +341,6 @@ class Boost(Package):
     # See: https://github.com/boostorg/process/issues/116
     # Patch: https://github.com/boostorg/process/commit/6a4d2ff72114ef47c7afaf92e1042aca3dfa41b0.patch
     patch("1.72_boost_process.patch", level=2, when="@1.72.0")
-
-    # Fix the bootstrap/bjam build for Cray
-    patch("bootstrap-path.patch", when="@1.39.0: platform=cray")
 
     # Patch fix for warnings from commits 2d37749, af1dc84, c705bab, and
     # 0134441 on https://github.com/boostorg/system.
@@ -517,10 +525,6 @@ class Boost(Package):
                 # wrappers.  Since Boost doesn't use the MPI C++ bindings,
                 # that can be used as a compiler option instead.
                 mpi_line = "using mpi : %s" % spec["mpi"].mpicxx
-
-                if "platform=cray" in spec:
-                    mpi_line += " : <define>MPICH_SKIP_MPICXX"
-
                 f.write(mpi_line + " ;\n")
 
             if "+python" in spec:
@@ -632,6 +636,13 @@ class Boost(Package):
             # change into boost compilation
             if spec.variants["cxxstd"].value == "11":
                 cxxflags.append("-std=c++11")
+
+        # See conflict above and
+        # https://github.com/boostorg/stacktrace/pull/150. This suppresses a
+        # compilation error that must be explicitly suppressed. Because of the
+        # conflict we can suppress the error without input from a user.
+        if spec.satisfies("@1.85: +stacktrace"):
+            cxxflags.append("-DBOOST_STACKTRACE_LIBCXX_RUNTIME_MAY_CAUSE_MEMORY_LEAK")
 
         if cxxflags:
             options.append('cxxflags="{0}"'.format(" ".join(cxxflags)))

@@ -13,11 +13,12 @@ class Dlib(CMakePackage):
     url = "https://github.com/davisking/dlib/archive/v19.19.tar.gz"
     git = "https://github.com/davisking/dlib"
 
-    maintainer = ["robertu94"]
+    maintainers("robertu94")
 
     license("BSL-1.0")
 
     version("master", branch="master")
+    version("19.24.4", sha256="d881911d68972d11563bb9db692b8fcea0ac1b3fd2e3f03fa0b94fde6c739e43")
     version("19.22", sha256="5f44b67f762691b92f3e41dcf9c95dd0f4525b59cacb478094e511fdacb5c096")
     version("19.21", sha256="116f52e58be04b47dab52057eaad4b5c4d5c3032d927fe23d55b0741fc4107a0")
     version("19.20", sha256="fc3f0986350e8e53aceadf95a71d2f413f1eedc469abda99a462cb528741d411")
@@ -34,7 +35,9 @@ class Dlib(CMakePackage):
     depends_on("libx11")
 
     def cmake_args(self):
+        spec = self.spec
         args = []
-        if "+shared" in self.spec:
-            args.append("-DBUILD_SHARED_LIBS=ON")
+        if spec.satisfies("+shared"):
+            args.append(self.define("BUILD_SHARED_LIBS", "ON"))
+
         return args

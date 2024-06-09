@@ -18,6 +18,7 @@ class Jags(AutotoolsPackage):
 
     license("GPL-2.0-or-later")
 
+    version("4.3.2", sha256="871f556af403a7c2ce6a0f02f15cf85a572763e093d26658ebac55c4ab472fc8")
     version("4.3.0", sha256="8ac5dd57982bfd7d5f0ee384499d62f3e0bb35b5f1660feb368545f1186371fc")
     version("4.2.0", sha256="af3e9d2896d3e712f99e2a0c81091c6b08f096650af6aa9d0c631c0790409cf7")
 

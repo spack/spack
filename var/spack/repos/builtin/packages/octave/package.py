@@ -30,6 +30,8 @@ class Octave(AutotoolsPackage, GNUMirrorPackage):
 
     license("GPL-3.0-or-later")
 
+    version("9.1.0", sha256="3f8c6c6ecfa249a47c97e18e651be4db8499be2f5de1a095a3eea53efc01d6a1")
+    version("8.4.0", sha256="6b38dd9751678424aeb3a9d666432b1f378eb3971a21290a90cd3d35119d56ad")
     version("8.2.0", sha256="57d17f918a940d38ca3348211e110b34d735a322a87db71c177c4692a49a9c84")
     version("8.1.0", sha256="8052074d17b0ef643d037de8ab389672c752bb201ee9cea4dfa69858fb6a213f")
     version("7.3.0", sha256="6e14a4649d70af45ab660f8cbbf645aaf1ec33f25f88bfda4697cb17e440c4f5")
@@ -67,9 +69,10 @@ class Octave(AutotoolsPackage, GNUMirrorPackage):
     variant("gnuplot", default=False, description="Use gnuplot")
     variant("magick", default=False, description="Use magick")
     variant("hdf5", default=False, description="Use HDF5")
-    variant("jdk", default=False, description="Use JDK")
+    variant("jdk", default=False, description="Use Java")
     variant("llvm", default=False, description="Use LLVM")
     variant("opengl", default=False, description="Use OpenGL")
+    variant("pcre2", default=True, when="@8:", description="Use PCRE2 instead of PCRE")
     variant("qhull", default=False, description="Use qhull")
     variant("qrupdate", default=False, description="Use qrupdate")
     variant("qscintilla", default=False, description="Use QScintill")
@@ -82,7 +85,9 @@ class Octave(AutotoolsPackage, GNUMirrorPackage):
     depends_on("lapack")
     # Octave does not configure with sed from darwin:
     depends_on("sed", when=sys.platform == "darwin", type="build")
-    depends_on("pcre")
+    depends_on("pcre", when="@:7")
+    depends_on("pcre", when="~pcre2")
+    depends_on("pcre2", when="+pcre2")
     depends_on("pkgconfig", type="build")
     depends_on("texinfo", type="build")
 
@@ -348,6 +353,8 @@ class Octave(AutotoolsPackage, GNUMirrorPackage):
         else:
             config_args.append("--without-z")
 
+        if spec.satisfies("~pcre2"):
+            config_args.append("--without-pcre2")
         # If 64-bit BLAS is used:
         if (
             spec.satisfies("^openblas+ilp64")
