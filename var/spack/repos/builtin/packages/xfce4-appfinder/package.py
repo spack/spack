@@ -34,6 +34,3 @@ class Xfce4Appfinder(AutotoolsPackage):
             depends_on("glib@2.66:")
         with when("@4.16.0:"):
             depends_on("glib@2.50:")
-
-
-

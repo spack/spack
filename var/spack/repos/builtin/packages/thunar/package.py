@@ -74,7 +74,5 @@ class Thunar(AutotoolsPackage):
         args += self.enable_or_disable("notifications")
         args += self.enable_or_disable("exif")
         args += self.enable_or_disable("gio-unix")
-        args += [
-            "--with-custom-thunarx-dirs-enabled",
-        ]
+        args += ["--with-custom-thunarx-dirs-enabled"]
         return args

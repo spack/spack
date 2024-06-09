@@ -19,9 +19,7 @@ class Xfdesktop(AutotoolsPackage):
 
     license("GPLv2", checked_by="teaguesterling")  # https://wiki.xfce.org/licenses/audit
 
-    version(
-        "4.18.0", sha256="661783e7e6605459926d80bca46d25ce2197c221456457a863ea9d0252120d14"
-    )
+    version("4.18.0", sha256="661783e7e6605459926d80bca46d25ce2197c221456457a863ea9d0252120d14")
     version("4.16.0", sha256="934ba5affecff21e62d9fac1dd50c50cd94b3a807fefa5f5bff59f3d6f155bae")
 
     variant("libnotify", default=True, description="Build with libnotify support")

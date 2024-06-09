@@ -53,4 +53,3 @@ class Xfce4Panel(AutotoolsPackage):
         args = []
         args += self.enable_or_disable("introspection")
         return args
-
