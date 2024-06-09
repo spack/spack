@@ -393,7 +393,7 @@ class Openjdk(Package):
     """The free and opensource java implementation"""
 
     homepage = "https://openjdk.org/"
-    preferred_prefix = "11."
+    preferred_prefix = "17."
 
     preferred_defined = False
     for ver, packages in _versions.items():
