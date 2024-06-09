@@ -39,7 +39,7 @@ class Exo(AutotoolsPackage):
 
     depends_on("intltool@0.51.0:", type="build")
     with default_args(type=("build", "link", "run")):
-        with when("@4.16.0:"):
+        with when("@4.18.0:"):
             depends_on("glib@2.66:")
             depends_on("gtkplus@3.24:")
             depends_on("gobject-introspection@1.66:", when="+introspection")
