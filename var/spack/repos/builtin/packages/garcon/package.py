@@ -26,7 +26,7 @@ class Garcon(AutotoolsPackage):
 
     # Base requirements
     depends_on("intltool@0.51.0:", type="build")
-    with default_args(type=("build", "run")):
+    with default_args(type=("build", "link", "run")):
         depends_on("libxfce4util")
         depends_on("xfconf")
         depends_on("libxfce4ui")
