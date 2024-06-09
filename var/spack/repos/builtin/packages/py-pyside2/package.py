@@ -22,16 +22,16 @@ class PyPyside2(PythonPackage):
     version("develop", tag="dev")
     version("5.15.14", sha256="32651194f6a6b7bce42f04e68b1401ad2087e4789a4c8f3fb8649e86189c6372")
     # untested
-    #version("5.15.13", sha256="7a57797b20268d6ebcb39deba48c754a69abf9221aee03e1f3dca6f6565b7da9")
-    #version("5.15.12", sha256="9c53a111ca5779064593e690db0da43ce0d5dad25369931b7a4f593886259ff4")
-    #version("5.15.11", sha256="da567cd3b7854d27a0b4afe3e89de8b2f98b7a6d57393be56f1fc13f770faf29")
-    #version("5.15.10", sha256="2af691d3613a41f83a60439b46568fc2c696dbfae42f7cd7b07152d115ead33a")
-    #version("5.15.8", sha256="23436302c8deb5b4cbc769b205d09604e38ba83b40708efccb7bd8c9af6f6b5d")
-    #version("5.15.7", sha256="f61210ae24e6882d5d0ca0059229e5dc4f35e2bca92dd6caf96c0f41943a8294")
-    #version("5.15.6", sha256="171ee058d056599b8e9e8605fe3dae5dabdab7764285b21b28f64760a0f6779d")
-    #version("5.15.5", sha256="3920a4fb353300260c9bc46ff70f1fb975c5e7efa22e9d51222588928ce19b33")
-    #version("5.15.4", sha256="3c68ed0def4111ef5d0641370306338d277ae8983a77eaf22f223ddd3a14450b")
-    #version("5.15.3", sha256="7ff5f1cc4291fffb6d5a3098b3090abe4d415da2adec740b4e901893d95d7137")
+    # version("5.15.13", sha256="7a57797b20268d6ebcb39deba48c754a69abf9221aee03e1f3dca6f6565b7da9")
+    # version("5.15.12", sha256="9c53a111ca5779064593e690db0da43ce0d5dad25369931b7a4f593886259ff4")
+    # version("5.15.11", sha256="da567cd3b7854d27a0b4afe3e89de8b2f98b7a6d57393be56f1fc13f770faf29")
+    # version("5.15.10", sha256="2af691d3613a41f83a60439b46568fc2c696dbfae42f7cd7b07152d115ead33a")
+    # version("5.15.8", sha256="23436302c8deb5b4cbc769b205d09604e38ba83b40708efccb7bd8c9af6f6b5d")
+    # version("5.15.7", sha256="f61210ae24e6882d5d0ca0059229e5dc4f35e2bca92dd6caf96c0f41943a8294")
+    # version("5.15.6", sha256="171ee058d056599b8e9e8605fe3dae5dabdab7764285b21b28f64760a0f6779d")
+    # version("5.15.5", sha256="3920a4fb353300260c9bc46ff70f1fb975c5e7efa22e9d51222588928ce19b33")
+    # version("5.15.4", sha256="3c68ed0def4111ef5d0641370306338d277ae8983a77eaf22f223ddd3a14450b")
+    # version("5.15.3", sha256="7ff5f1cc4291fffb6d5a3098b3090abe4d415da2adec740b4e901893d95d7137")
     version(
         "5.15.2.1",
         tag="v5.15.2.1",
@@ -65,7 +65,9 @@ class PyPyside2(PythonPackage):
 
     # see https://wiki.qt.io/Qt_for_Python#Python_compatibility_matrix
     depends_on("python@2.7.0:2.7,3.5.0:3.5,3.6.1:3.8", when="@:5.15.0", type=("build", "run"))
-    depends_on("python@2.7.0:2.7,3.5.0:3.5,3.6.1:3.9", when="@5.15.1:5.15.7", type=("build", "run"))
+    depends_on(
+        "python@2.7.0:2.7,3.5.0:3.5,3.6.1:3.9", when="@5.15.1:5.15.7", type=("build", "run")
+    )
     depends_on("python@2.7:3.10", when="@5.15.8", type=("build", "run"))
     depends_on("python@3.5:3.10", when="@5.15.9:5.15.10", type=("build", "run"))
     depends_on("python@3.6:3.11", when="@5.15.11:5.15.15", type=("build", "run"))
