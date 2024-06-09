@@ -36,7 +36,3 @@ class ThunarVolman(AutotoolsPackage):
             depends_on("glib@2.66:")
             depends_on("gtkplus@3.24:")
             depends_on("libgudev@145:")
-
-    def configure_args(self):
-        args = []
-        return args
