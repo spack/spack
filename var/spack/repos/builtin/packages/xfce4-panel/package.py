@@ -25,6 +25,8 @@ class Xfce4Panel(AutotoolsPackage):
     variant("introspection", default=True, description="Build with gobject-introspection support")
     variant("notification", default=True, description="Build with startup-notification support")
 
+    patch("fix-libxfce4util-gir.patch", when="@4.16.0")  # Capitalization difference causes error
+
     # Base requirements
     depends_on("intltool@0.51.0:", type="build")
     with default_args(type=("build", "link", "run")):
