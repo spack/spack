@@ -16,4 +16,3 @@ class Libxcvt(MesonPackage):
     license("MIT", checked_by="teaguesterling")
 
     version("0.1.2", sha256="590e5a6da87ace7aa7857026b207a2c4d378620035441e20ea97efedd15d6d4a")
-
