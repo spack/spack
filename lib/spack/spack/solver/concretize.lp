@@ -864,6 +864,9 @@ variant_defined(PackageNode, Name) :- variant_definition(PackageNode, Name, _).
 % -- Associate the definition's default values with the node
 % note that the package.py variant defaults are associated with a particular definition, but
 % packages.yaml and CLI are associated with just the variant name.
+% Also, settings specified on the CLI apply to all duplicates, but always have
+% `min_dupe_id` as their node id.
+% TODO: min_dupe_id for CLI preferences could probably be more elegant.
 variant_default_value(node(NodeID, Package), VariantName, Value) :-
   node_has_variant(node(NodeID, Package), VariantName, VariantID),
   pkg_fact(Package, variant_default_value_from_package_py(VariantID, Value)),
