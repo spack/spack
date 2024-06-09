@@ -1378,9 +1378,6 @@ class SpackSolverSetup:
     ):
         pkg_fact = lambda f: self.gen.fact(fn.pkg_fact(pkg.name, f))
 
-        # tell the solver there is a variant with a particular name
-        pkg_fact(fn.variant(name))
-
         # Every variant id has a unique definition (conditional or unconditional), and
         # higher variant id definitions take precedence when variants intersect.
         vid = next(self._id_counter)
