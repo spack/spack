@@ -74,12 +74,12 @@ _strict_variants = False
 
 
 @contextlib.contextmanager
-def strict_variants():
+def strict_variants(enabled):
     global _strict_variants
 
     old = _strict_variants
     try:
-        _strict_variants = True
+        _strict_variants = enabled
         yield
     finally:
         _strict_variants = old
