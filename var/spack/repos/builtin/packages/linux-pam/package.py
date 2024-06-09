@@ -26,6 +26,7 @@ class LinuxPam(AutotoolsPackage):
     depends_on("autoconf", type="build")
     depends_on("automake", type="build")
     depends_on("libtool", type="build")
+    depends_on("gettext", type="build")
 
     def configure_args(self):
         config_args = ["--includedir=" + self.prefix.include.security]
