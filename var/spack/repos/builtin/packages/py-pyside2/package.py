@@ -121,6 +121,9 @@ class PyPyside2(PythonPackage):
         if spec.satisfies("@:5.15.2 ^python@3.10:"):
             args.append("--limited-api=yes")
 
+        # fix rpaths
+        args.append("--rpath={0}".format(':'.join(self.rpath)))
+
         if self.run_tests:
             args.append("--build-tests")
         return args
