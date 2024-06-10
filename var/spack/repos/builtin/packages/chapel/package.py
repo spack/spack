@@ -471,7 +471,7 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
         when="llvm=spack +cuda",
     )
 
-    depends_on("cuda@11:", when="+cuda", type=("build", "link", "run", "test"));
+    depends_on("cuda@11:", when="+cuda", type=("build", "link", "run", "test"))
 
     # This is because certain systems have binutils installed as a system package
     # but do not include the headers. Spack incorrectly supplies those external
