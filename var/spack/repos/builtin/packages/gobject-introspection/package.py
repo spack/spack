@@ -20,7 +20,6 @@ class GobjectIntrospection(MesonPackage, AutotoolsPackage):
 
     license("LGPL-2.0-or-later AND GPL-2.0-or-later AND MIT")
 
-    version("1.80.1", sha256="a1df7c424e15bda1ab639c00e9051b9adf5cea1a9e512f8a603b53cd199bc6d8")
     version("1.78.1", sha256="bd7babd99af7258e76819e45ba4a6bc399608fe762d83fde3cac033c50841bb4")
     version("1.76.1", sha256="196178bf64345501dcdc4d8469b36aa6fe80489354efe71cb7cb8ab82a3738bf")
     version("1.72.1", sha256="012e313186e3186cf0fde6decb57d970adf90e6b1fac5612fe69cbb5ba99543a")
