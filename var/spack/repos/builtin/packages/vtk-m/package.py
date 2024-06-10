@@ -139,6 +139,10 @@ class VtkM(CMakePackage, CudaPackage, ROCmPackage):
     # Patch
     patch("diy-include-cstddef.patch", when="@1.5.3:1.8.0")
 
+    # VTK-M PR#3215
+    # https://gitlab.kitware.com/vtk/vtk-m/-/merge_requests/3215
+    patch("vtkm-mr3215-ext-geom-fix.patch", when="@2.1")
+
     # VTK-M PR#2972
     # https://gitlab.kitware.com/vtk/vtk-m/-/merge_requests/2972
     patch("vtkm-cuda-swap-conflict-pr2972.patch", when="@1.9 +cuda ^cuda@12:")
