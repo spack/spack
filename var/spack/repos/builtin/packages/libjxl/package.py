@@ -17,6 +17,9 @@ class Libjxl(CMakePackage):
 
     version("main", branch="main", submodules=True)
     version(
+        "0.10.2", tag="v0.10.2", commit="e1489592a770b989303b0edc5cc1dc447bbe0515", submodules=True
+    )
+    version(
         "0.7.0", tag="v0.7.0", commit="f95da131cf7c7ccd4da256356fde2fec1fa23bb5", submodules=True
     )
     version(
@@ -40,6 +43,7 @@ class Libjxl(CMakePackage):
         args = [
             self.define("JPEGXL_FORCE_SYSTEM_BROTLI", True),
             self.define("JPEGXL_FORCE_SYSTEM_HWY", True),
+            self.define("BUILD_TESTING", self.run_tests),
         ]
 
         if self.run_tests:
