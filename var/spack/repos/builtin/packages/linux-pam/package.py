@@ -29,7 +29,7 @@ class LinuxPam(AutotoolsPackage):
 
     def flag_handler(self, name, flags):
         if name == "ldflags":
-            flags.append("-lintl") # spack/spack#44637
+            flags.append("-lintl")  # spack/spack#44637
         return (flags, None, None)
 
     def configure_args(self):
