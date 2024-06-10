@@ -86,9 +86,9 @@ class Verilator(AutotoolsPackage):
     filter_compiler_wrappers("verilated.mk", relative_root="include")
     filter_compiler_wrappers("verilated.mk", relative_root="share/verilator/include")
 
+    @when("@:5.022")
     def setup_run_environment(self, env):
-        if self.spec.satisfies("@:5.022"):
-            env.prepend_path("VERILATOR_ROOT", self.prefix)
+        env.prepend_path("VERILATOR_ROOT", self.prefix)
 
     def autoreconf(self, spec, prefix):
         autoconf()
