@@ -10,6 +10,7 @@ import sys
 from typing import List
 
 import llnl.util.filesystem as fs
+from llnl.string import plural
 from llnl.util import lang, tty
 
 import spack.build_environment
@@ -375,7 +376,9 @@ def _maybe_add_and_concretize(args, env, specs):
         # `spack concretize`
         tests = compute_tests_install_kwargs(env.user_specs, args.test)
         concretized_specs = env.concretize(tests=tests)
-        ev.display_specs(concretized_specs)
+        if concretized_specs:
+            tty.msg(f"Concretized {plural(len(concretized_specs), 'spec')}")
+            ev.display_specs([concrete for _, concrete in concretized_specs])
 
         # save view regeneration for later, so that we only do it
         # once, as it can be slow.
