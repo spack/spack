@@ -70,7 +70,7 @@ jobs:
         env:
           SETUP_SCRIPT_EXT: ${{ matrix.runner == 'windows-latest' && 'ps1' || 'sh' }}
           SETUP_SCRIPT_SOURCE: ${{ matrix.runner == 'windows-latest' && './' || 'source ' }}
-          HOME: ${{ matrix.runner == 'windows-latest' && '$env:userprofile' || '~' }}
+          HOME: ${{ matrix.runner == 'windows-latest' && '$env:userprofile' || '$HOME' }}
         run: |
           ${{ env.SETUP_SCRIPT_SOURCE }}share/spack/setup-env.${{ env.SETUP_SCRIPT_EXT }}
           spack bootstrap disable github-actions-v0.5
