@@ -22,5 +22,5 @@ class Libgtop(AutotoolsPackage):
 
     with default_args(type=("build", "link", "run")):
         #depends_on("glib@2.80.2:", when="@2.41.3")  # can be uncommented once glib@2.80 is added
-        depends_on("glib@2.65:", when="@2.40")
+        depends_on("glib@2.65:", when="@2.40:")
         depends_on("gettext@:0.19", when="@:2.40.0")
