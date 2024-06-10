@@ -28,7 +28,6 @@ class Glib(MesonPackage, AutotoolsPackage):
 
     license("LGPL-2.1-or-later")
 
-    version("2.79.3", sha256="00d1a313677ed5f5c5e6f7a77ca66e31cf7aa1e3d6b92b6041a16d7a024580c6")
     version("2.78.3", sha256="609801dd373796e515972bf95fc0b2daa44545481ee2f465c4f204d224b2bc21")
     version("2.78.0", sha256="44eaab8b720877ce303c5540b657b126f12dc94972d9880b52959f43fb537b30")
     version("2.76.6", sha256="1136ae6987dcbb64e0be3197a80190520f7acab81e2bfb937dc85c11c8aa9f04")
