@@ -75,18 +75,20 @@ class Verilator(AutotoolsPackage):
     depends_on("libtool", type="build")
     depends_on("help2man", type="build")
     depends_on("bison", type="build")
-    depends_on("flex")
-    depends_on("ccache", type=("build", "run"), when="@5.018:")
+    depends_on("flex", type=("build", "link"))
     depends_on("perl", type=("build", "run"))
+    depends_on("ccache", type=("build", "run"), when="@5.018:")
 
     conflicts("%gcc@:6", msg="C++14 support required")
 
     # we need to fix the CXX and LINK paths, as they point to the spack
     # wrapper scripts which aren't usable without spack
     filter_compiler_wrappers("verilated.mk", relative_root="include")
+    filter_compiler_wrappers("verilated.mk", relative_root="share/verilator/include")
 
     def setup_run_environment(self, env):
-        env.prepend_path("VERILATOR_ROOT", self.prefix)
+        if self.spec.satisfies("@:5.022"):
+            env.prepend_path("VERILATOR_ROOT", self.prefix)
 
     def autoreconf(self, spec, prefix):
         autoconf()
