@@ -40,6 +40,7 @@ class Root(CMakePackage):
     version("6.30.04", sha256="2b4180b698f39cc65d91084d833a884515b325bc5f673c8e39abe818b025d8cc")
     version("6.30.02", sha256="7965a456d1ad1ee0d5fe4769bf5a8fec291af684ed93db0f3080a9c362435183")
     version("6.30.00", sha256="0592c066954cfed42312957c9cb251654456064fe2d8dabdcb8826f1c0099d71")
+    version("6.28.12", sha256="fcd325267d238e9c6008f56a3a7e7c87fd864b1e633b0ffcf1f82b7e7ad3d249")
     version("6.28.10", sha256="69d6fdeb607e6b20bd02c757fa6217024c0b6132c1e9b1dff4d85d9a2bb7e51e")
     version("6.28.06", sha256="af3b673b9aca393a5c9ae1bf86eab2672aaf1841b658c5c6e7a30ab93c586533")
     version("6.28.04", sha256="70f7f86a0cd5e3f2a0befdc59942dd50140d990ab264e8e56c7f17f6bfe9c965")
@@ -54,6 +55,7 @@ class Root(CMakePackage):
     version("6.26.00", sha256="5fb9be71fdf0c0b5e5951f89c2f03fcb5e74291d043f6240fb86f5ca977d4b31")
     version("6.24.08", sha256="882c41fe36e94456fb10443d08ef9152375a90d1f910a10add1793d6e838bc44")
     version("6.24.06", sha256="907f69f4baca1e4f30eeb4979598ca7599b6aa803ca046e80e25b6bbaa0ef522")
+    version("6.24.04", sha256="4a416f3d7aa25dba46d05b641505eb074c5f07b3ec1d21911451046adaea3ee7")
     version("6.24.02", sha256="0507e1095e279ccc7240f651d25966024325179fa85a1259b694b56723ad7c1c")
     version("6.24.00", sha256="9da30548a289211c3122d47dacb07e85d35e61067fac2be6c5a5ff7bda979989")
     version("6.22.08", sha256="6f061ff6ef8f5ec218a12c4c9ea92665eea116b16e1cd4df4f96f00c078a2f6f")
@@ -119,6 +121,18 @@ class Root(CMakePackage):
     patch("protobuf-config.patch", level=0, when="@:6.30.02 ^protobuf ^cmake@3.9:")
 
     patch("webgui.patch", level=0, when="@6.26.00:6.26.10,6.28.00:6.28.08,6.30.00 +webgui")
+
+    # Back-ported patches fixing segfault in weighted likelihood fits
+    patch(
+        "https://github.com/root-project/root/commit/2f00d6df258906c1f6fe848135a88b836db3077f.patch?full_index=1",
+        sha256="8da36032082e65ae246c03558a4c3fd67b157d1d0c6d20adac9de263279d1db6",
+        when="@6.28:6.28.12",
+    )
+    patch(
+        "https://github.com/root-project/root/commit/14838b35600b08278e69bc3d8d8669773bc11399.patch?full_index=1",
+        sha256="4647898ef28cb1adbaacdeedb04b417d69ccbaf02fc2b3aab20e07c0b2a96a0f",
+        when="@6.30:6.30.04",
+    )
 
     if sys.platform == "darwin":
         # Resolve non-standard use of uint, _cf_
@@ -536,7 +550,6 @@ class Root(CMakePackage):
 
         # Options controlling gross build / config behavior.
         options += [
-            define("exceptions", True),
             define("explicitlink", True),
             define("fail-on-missing", True),
             define_from_variant("fortran"),
@@ -556,8 +569,11 @@ class Root(CMakePackage):
             define("CLING_CXX_PATH", self.compiler.cxx),
         ]
 
-        if self.spec.satisfies("@:6.28.99"):
+        if self.spec.satisfies("@:6.28"):
             options.append(define("cxxmodules", False))
+
+        if self.spec.satisfies("@:6.30"):
+            options.append(define("exceptions", True))
 
         # Options related to ROOT's ability to download and build its own
         # dependencies. Per Spack convention, this should generally be avoided.
@@ -565,7 +581,6 @@ class Root(CMakePackage):
         afterimage_enabled = ("+x" in self.spec) if "platform=darwin" not in self.spec else True
 
         options += [
-            define("builtin_afterimage", afterimage_enabled),
             define("builtin_cfitsio", False),
             define("builtin_davix", False),
             define("builtin_fftw3", False),
@@ -589,6 +604,9 @@ class Root(CMakePackage):
             define("builtin_xxhash", self.spec.satisfies("@6.12.02:6.12")),
             define("builtin_zlib", False),
         ]
+
+        if self.spec.satisfies("@:6.32"):
+            options.append(define("builtin_afterimage", afterimage_enabled))
 
         # Features
         options += [
@@ -628,7 +646,6 @@ class Root(CMakePackage):
             define_from_variant("memstat"),  # See conflicts
             define("minimal", False),
             define_from_variant("minuit"),
-            define_from_variant("minuit2", "minuit"),
             define_from_variant("mlp"),
             define("monalisa", False),
             define_from_variant("mysql"),
@@ -692,6 +709,9 @@ class Root(CMakePackage):
 
         if self.spec.satisfies("@6.25.02:"):
             options.append(define_from_variant("tmva-sofie"))
+
+        if self.spec.satisfies("@:6.30"):
+            options.append(define_from_variant("minuit2", "minuit"))
 
         # #################### Compiler options ####################
 
@@ -760,7 +780,9 @@ class Root(CMakePackage):
         env.set("CLING_STANDARD_PCH", "none")
         env.set("CPPYY_API_PATH", "none")
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
+    def setup_dependent_build_environment(
+        self, env: spack.util.environment.EnvironmentModifications, dependent_spec
+    ):
         env.set("ROOTSYS", self.prefix)
         env.set("ROOT_VERSION", "v{0}".format(self.version.up_to(1)))
         env.prepend_path("PYTHONPATH", self.prefix.lib.root)
@@ -773,7 +795,9 @@ class Root(CMakePackage):
             # Newer deployment targets cause fatal errors in rootcling
             env.unset("MACOSX_DEPLOYMENT_TARGET")
 
-    def setup_dependent_run_environment(self, env, dependent_spec):
+    def setup_dependent_run_environment(
+        self, env: spack.util.environment.EnvironmentModifications, dependent_spec
+    ):
         env.set("ROOTSYS", self.prefix)
         env.set("ROOT_VERSION", "v{0}".format(self.version.up_to(1)))
         env.prepend_path("PYTHONPATH", self.prefix.lib.root)
