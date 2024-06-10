@@ -14,10 +14,13 @@ class Lcov(MakefilePackage):
 
     homepage = "http://ltp.sourceforge.net/coverage/lcov.php"
     url = "https://github.com/linux-test-project/lcov/releases/download/v2.0/lcov-2.0.tar.gz"
+    git = "https://github.com/linux-test-project/lcov.git"
+
     maintainers("KineticTheory")
 
     license("GPL-2.0-or-later")
 
+    version("master", branch="master")
     version("2.0", sha256="1857bb18e27abe8bcec701a907d5c47e01db4d4c512fc098d1a6acd29267bf46")
     version("1.16", sha256="987031ad5528c8a746d4b52b380bc1bffe412de1f2b9c2ba5224995668e3240b")
     version("1.15", sha256="c1cda2fa33bec9aa2c2c73c87226cfe97de0831887176b45ee523c5e30f8053a")
