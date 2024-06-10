@@ -19,6 +19,7 @@ class Spla(CMakePackage):
 
     license("BSD-3-Clause")
 
+    version("1.6.0", sha256="917c24e2a768499967eba47b2cc2475df9fabee327b7821d24970b6a08055c09")
     version("1.5.5", sha256="bc0c366e228344b1b2df55b9ce750d73c1165380e512da5a04d471db126d66ce")
     version("1.5.4", sha256="de30e427d24c741e2e4fcae3d7668162056ac2574afed6522c0bb49d6f1d0f79")
     version("1.5.3", sha256="527c06e316ce46ec87309a16bfa4138b1abad23fd276fe789c78a2de84f05637")
@@ -35,7 +36,7 @@ class Spla(CMakePackage):
     version("develop", branch="develop")
     version("master", branch="master")
 
-    variant("openmp", default=True, description="Build with OpenMP support")
+    variant("openmp", default=True, when="@:1.6", description="Build with OpenMP support")
     variant("static", default=False, description="Build as static library")
     variant("cuda", default=False, description="CUDA backend")
     variant("rocm", default=False, description="ROCm backend")
@@ -57,10 +58,11 @@ class Spla(CMakePackage):
     depends_on("hip", when="+rocm")
 
     # Propagate openmp to blas
-    depends_on("openblas threads=openmp", when="+openmp ^[virtuals=blas] openblas")
-    depends_on("amdblis threads=openmp", when="+openmp ^[virtuals=blas] amdblis")
-    depends_on("blis threads=openmp", when="+openmp ^[virtuals=blas] blis")
-    depends_on("intel-mkl threads=openmp", when="+openmp ^[virtuals=blas] intel-mkl")
+    with when("@:1.5.5"):
+        depends_on("openblas threads=openmp", when="+openmp ^[virtuals=blas] openblas")
+        depends_on("amdblis threads=openmp", when="+openmp ^[virtuals=blas] amdblis")
+        depends_on("blis threads=openmp", when="+openmp ^[virtuals=blas] blis")
+        depends_on("intel-mkl threads=openmp", when="+openmp ^[virtuals=blas] intel-mkl")
 
     # Fix CMake find module for AMD BLIS,
     # which uses a different library name for the multi-threaded version
@@ -80,17 +82,25 @@ class Spla(CMakePackage):
         else:
             args += ["-DSPLA_GPU_BACKEND=OFF"]
 
-        if self.spec["blas"].name == "openblas":
-            args += ["-DSPLA_HOST_BLAS=OPENBLAS"]
-        elif self.spec["blas"].name in ["amdblis", "blis"]:
-            args += ["-DSPLA_HOST_BLAS=BLIS"]
-        elif self.spec["blas"].name == "atlas":
-            args += ["-DSPLA_HOST_BLAS=ATLAS"]
-        elif self.spec["blas"].name == "intel-mkl":
-            args += ["-DSPLA_HOST_BLAS=MKL"]
-        elif self.spec["blas"].name == "netlib-lapack":
-            args += ["-DSPLA_HOST_BLAS=GENERIC"]
-        elif self.spec["blas"].name == "cray-libsci":
-            args += ["-DSPLA_HOST_BLAS=CRAY_LIBSCI"]
+        if "@:1.5.5" in self.spec:
+            if self.spec["blas"].name == "openblas":
+                args += ["-DSPLA_HOST_BLAS=OPENBLAS"]
+            elif self.spec["blas"].name in ["amdblis", "blis"]:
+                args += ["-DSPLA_HOST_BLAS=BLIS"]
+            elif self.spec["blas"].name == "atlas":
+                args += ["-DSPLA_HOST_BLAS=ATLAS"]
+            elif self.spec["blas"].name == "intel-mkl":
+                args += ["-DSPLA_HOST_BLAS=MKL"]
+            elif self.spec["blas"].name == "netlib-lapack":
+                args += ["-DSPLA_HOST_BLAS=GENERIC"]
+            elif self.spec["blas"].name == "cray-libsci":
+                args += ["-DSPLA_HOST_BLAS=CRAY_LIBSCI"]
+        else:
+            if self.spec["blas"].name == "openblas":
+                args += ["-DBLA_VENDOR=OpenBLAS"]
+            elif self.spec["blas"].name in ["amdblis", "blis"]:
+                args += ["-DBLA_VENDOR=FLAME"]
+            elif self.spec["blas"].name == "atlas":
+                args += ["-DBLA_VENDOR=ATLAS"]
 
         return args
