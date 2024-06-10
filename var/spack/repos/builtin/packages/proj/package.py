@@ -92,7 +92,9 @@ class Proj(CMakePackage, AutotoolsPackage):
         # CMake 3.19 refactored the FindTiff module interface, update older proj's
         # to be compatible with this "new" interface
         # patch replaces the TIFF_LIBRARY variable (no longer used) with TIFF_LIBRARIES
-        patch("proj-8.1-cmake-3.29-new-tiff-interface.patch", when="+tiff @8:9.1.0 ^cmake@3.19:3.27")
+        patch(
+            "proj-8.1-cmake-3.29-new-tiff-interface.patch", when="+tiff @8:9.1.0 ^cmake@3.19:3.27"
+        )
         patch("proj-7-cmake-3.29-new-tiff-interface.patch", when="+tiff @7 ^cmake@3.19:")
         # tiff does not set TIFF_INCLUDE_DIR tested by proj
         # version 9.2 contains this patch:
