@@ -291,11 +291,20 @@ def find_compilers(
     if sys.platform == "win32":
         default_paths.extend(windows_os.WindowsOs().compiler_search_paths)
     compiler_pkgs = spack.repo.PATH.packages_with_tags(COMPILER_TAG, full=True)
+
     detected_packages = spack.detection.by_path(
         compiler_pkgs, path_hints=default_paths, max_workers=max_workers
     )
+
+    valid_compilers = {}
+    for name, detected in detected_packages.items():
+        compilers = [x for x in detected if CompilerConfigFactory.from_external_spec(x.spec)]
+        if not compilers:
+            continue
+        valid_compilers[name] = compilers
+
     new_compilers = spack.detection.update_configuration(
-        detected_packages, buildable=True, scope=scope
+        valid_compilers, buildable=True, scope=scope
     )
     return [
         _compiler_from_config_entry(c["compiler"])
@@ -730,7 +739,7 @@ class CompilerConfigFactory:
             if s.name not in compiler_package_names:
                 continue
 
-            candidate = CompilerConfigFactory._from_external_spec(s)
+            candidate = CompilerConfigFactory.from_external_spec(s)
             if candidate is None:
                 continue
 
@@ -776,7 +785,7 @@ class CompilerConfigFactory:
         return result
 
     @staticmethod
-    def _from_external_spec(spec: "spack.spec.Spec") -> Optional[dict]:
+    def from_external_spec(spec: "spack.spec.Spec") -> Optional[dict]:
         spec = spack.spec.parse_with_version_concrete(spec)
         extra_attributes = getattr(spec, _EXTRA_ATTRIBUTES_KEY, None)
         if extra_attributes is None:
