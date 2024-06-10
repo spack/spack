@@ -15,6 +15,7 @@ class Lcov(MakefilePackage):
     homepage = "http://ltp.sourceforge.net/coverage/lcov.php"
     url = "https://github.com/linux-test-project/lcov/releases/download/v2.0/lcov-2.0.tar.gz"
     git = "https://github.com/linux-test-project/lcov.git"
+
     maintainers("KineticTheory")
 
     license("GPL-2.0-or-later")
