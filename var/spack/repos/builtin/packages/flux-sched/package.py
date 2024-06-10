@@ -185,6 +185,9 @@ class FluxSched(CMakePackage, AutotoolsPackage):
 
         env.prepend_path("FLUX_MODULE_PATH", self.prefix.lib.flux.modules)
         env.prepend_path("FLUX_MODULE_PATH", self.prefix.lib.flux.modules.sched)
+        # On some systems modules are in lib64 and lib
+        env.prepend_path("FLUX_MODULE_PATH", self.prefix.lib64.flux.modules)
+        env.prepend_path("FLUX_MODULE_PATH", self.prefix.lib64.flux.modules.sched)
         env.prepend_path("FLUX_EXEC_PATH", self.prefix.libexec.flux.cmd)
         env.prepend_path("FLUX_RC_EXTRA", self.prefix.etc.flux)
 
