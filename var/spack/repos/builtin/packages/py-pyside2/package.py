@@ -122,7 +122,7 @@ class PyPyside2(PythonPackage):
             args.append("--limited-api=yes")
 
         # fix rpaths
-        args.append("--rpath={0}".format(':'.join(self.rpath)))
+        args.append("--rpath={0}".format(":".join(self.rpath)))
 
         if self.run_tests:
             args.append("--build-tests")
