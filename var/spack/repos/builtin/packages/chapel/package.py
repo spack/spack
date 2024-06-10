@@ -450,9 +450,6 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
         conflicts("cuda", msg="Cuda support requires building with LLVM")
         conflicts("rocm", msg="ROCm support requires building with LLVM")
 
-    # Based on docs https://chapel-lang.org/docs/technotes/gpu.html#requirements
-    requires("llvm=bundled", when="^cuda@12:")
-
     # Add dependencies
 
     depends_on("doxygen@1.8.17:", when="+chpldoc")
@@ -466,7 +463,15 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
 
     depends_on("llvm@14:17", when="llvm=spack")
 
-    depends_on("llvm@16", when="llvm=spack ^cuda@12:")
+    # Based on docs https://chapel-lang.org/docs/technotes/gpu.html#requirements
+    depends_on("llvm@16:", when="llvm=spack ^cuda@12:")
+    requires(
+        "^llvm targets=all",
+        msg="llvm=spack +cuda requires LLVM support the nvptx target",
+        when="llvm=spack +cuda",
+    )
+
+    depends_on("cuda@11:", when="+cuda", type=("build", "link", "run", "test"));
 
     # This is because certain systems have binutils installed as a system package
     # but do not include the headers. Spack incorrectly supplies those external
