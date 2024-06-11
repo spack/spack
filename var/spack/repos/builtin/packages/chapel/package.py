@@ -293,15 +293,6 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
     )
 
     variant(
-        "package_modules",
-        description="Include package module dependencies with spack",
-        values=disjoint_sets(("none",), ("all",), package_module_dict.keys())
-        .with_error("'none' or 'all' cannot be activated along with other package_modules")
-        .with_default("all")
-        .with_non_feature_values("none", "all"),
-    )
-
-    variant(
         "re2",
         description="Build with re2 support",
         default="bundled",
@@ -357,6 +348,15 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
         values=("bundled", "none", "system"),
         multi=False,
     )
+
+    # Add dependencies for package modules
+    for name, dep in package_module_dict.items():
+        variant(
+            name,
+            description="Build with support for the Chapel {0} package module".format(name),
+            default=True,
+        )
+        depends_on(dep, when="+{0}".format(name))
 
     # TODO: for CHPL_X_CC and CHPL_X_CXX, can we capture an arbitrary path, possibly
     # with arguments?
@@ -426,10 +426,6 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
     # Add dependencies
 
     depends_on("doxygen@1.8.17:", when="+chpldoc")
-
-    for opt, dep in package_module_dict.items():
-        depends_on(dep, when="package_modules={0}".format(opt), type=("run", "build", "link"))
-        depends_on(dep, when="package_modules=all", type=("run", "build", "link"))
 
     # TODO: llvm version requirements when llvm=system, these are conditional
     # on the version of Chapel
@@ -545,17 +541,17 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
         else:
             env.set("CHPL_GMP", self.spec.variants["gmp"].value)
 
-        if "yaml" in self.get_package_modules:
+        if self.spec.satisfies("+yaml"):
             env.prepend_path("PKG_CONFIG_PATH", self.spec["libyaml"].prefix.lib.pkgconfig)
             self.prepend_cpath_include(env, self.spec["libyaml"].prefix)
 
-        if "zmq" in self.get_package_modules:
+        if self.spec.satisfies("+zmq"):
             self.prepend_cpath_include(env, self.spec["libzmq"].prefix)
             env.prepend_path("LD_LIBRARY_PATH", self.spec["libzmq"].prefix.lib)
             env.prepend_path("PKG_CONFIG_PATH", self.spec["libzmq"].prefix.lib.pkgconfig)
             env.prepend_path("PKG_CONFIG_PATH", self.spec["libsodium"].prefix.lib.pkgconfig)
 
-        if "curl" in self.get_package_modules:
+        if self.spec.satisfies("+curl"):
             self.prepend_cpath_include(env, self.spec["curl"].prefix)
             env.prepend_path("LD_LIBRARY_PATH", self.spec["curl"].prefix.lib)
             env.prepend_path("PKG_CONFIG_PATH", self.spec["curl"].prefix.lib.pkgconfig)
@@ -594,18 +590,6 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
         env.prepend_path(
             "PATH", join_path(self.prefix.share, "chapel", self._output_version_short, "util")
         )
-
-    @property
-    @llnl.util.lang.memoized
-    def get_package_modules(self):
-        test_modules = set()
-        for module in self.spec.variants["package_modules"].value:
-            if module == "all":
-                for m in self.package_module_dict.keys():
-                    test_modules.add(m)
-            elif module != "none":
-                test_modules.add(module)
-        return test_modules
 
     @property
     @llnl.util.lang.memoized
@@ -708,15 +692,15 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
     #         with set_env(CHPL_HOME=join_path(self.spec.prefix.share,
     #                      "chapel", self._output_version_short)):
     #             with test_part(self, "test_package_modules", purpose="test package modules"):
-    #                 if "yaml" in self.get_package_modules:
+    #                 if self.spec.satisfies("+yaml"):
     #                     tests_to_run.append("test/library/packages/Yaml/writeAndParse.chpl")
-    #                 if "zmq" in self.get_package_modules:
+    #                 if self.spec.satisfies("+zmq"):
     #                     tests_to_run.append("test/library/packages/ZMQ/weather.chpl")
-    #                 if "ssl" in self.get_package_modules:
+    #                 if self.spec.satisfies("+ssl"):
     #                     tests_to_run.append("test/library/packages/Crypto/")
     #                 # TODO: These tests fail with llvm, unable to find C variable CURLPAUSE_CONT
     #                 if (
-    #                     "curl" in self.get_package_modules
+    #                     self.spec.satisfies("+curl")
     #                     and self.spec.variants["llvm"].value == "none"
     #                 ):
     #                     with set_env(CHPL_NIGHTLY_TEST_CONFIG_NAME="networking-packages"):
@@ -729,9 +713,9 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
     #                         res = subprocess.run(["util/start_test",
     #                                               "test/library/packages/URL/"])
     #                         assert res.returncode == 0
-    #                 if "hdf5" in self.get_package_modules:
+    #                 if self.spec.satisfies("+hdf5"):
     #                     tests_to_run.append("test/library/packages/HDF5/")
-    #                 if "protobuf" in self.get_package_modules:
+    #                 if self.spec.satisfies("+protobuf"):
     #                     tests_to_run.append("test/library/packages/ProtobufProtocolSupport/")
     #                 if len(tests_to_run) > 0:
     #                     with set_env(CHPL_HOME=self.test_suite.current_test_cache_dir):
