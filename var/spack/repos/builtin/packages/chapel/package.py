@@ -160,6 +160,8 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
     # TODO: refactor this somehow, this is a separate documentation tool, not a variant of chapel
     variant("chpldoc", default=False, description="Build chpldoc in addition to chpl")
 
+    variant("developer", default=False, description="Enable Chapel developer mode")
+
     variant(
         "comm",
         default="none",
@@ -533,6 +535,9 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
         # TODO: a function to set defaults for things where we removed variants
         # We'll set to GPU later if +rocm or +cuda requested
         env.set("CHPL_LOCALE_MODEL", "flat")
+
+        if self.spec.satisfies("+developer"):
+            env.set("CHPL_DEVELOPER", "true")
 
         if self.spec.variants["gmp"].value == "spack":
             env.set("CHPL_GMP", "system")
