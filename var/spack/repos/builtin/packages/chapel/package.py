@@ -350,13 +350,15 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
     )
 
     # Add dependencies for package modules
-    for name, dep in package_module_dict.items():
+    for variant_name, dep in package_module_dict.items():
         variant(
-            name,
-            description="Build with support for the Chapel {0} package module".format(name),
+            variant_name,
+            description="Build with support for the Chapel {0} package module".format(
+                variant_name
+            ),
             default=True,
         )
-        depends_on(dep, when="+{0}".format(name))
+        depends_on(dep, when="+{0}".format(variant_name))
 
     # TODO: for CHPL_X_CC and CHPL_X_CXX, can we capture an arbitrary path, possibly
     # with arguments?
