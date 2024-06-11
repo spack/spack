@@ -204,6 +204,12 @@ pkg_fact(Package, version_declared(Version, Weight)) :- pkg_fact(Package, versio
    not attr("hash", node(ID, Package), _),
    internal_error("Reuse version weight used for built package").
 
+:- pkg_fact(Package, version_declared(Version, Weight, "installed_git_version")),
+   attr("version", node(ID, Package), Version),
+   version_weight(node(ID, Package), Weight),
+   not attr("hash", node(ID, Package), _),
+   internal_error("Reuse version weight used for built package").
+
 % versions are declared w/priority -- declared with priority implies declared
 pkg_fact(Package, version_declared(Version)) :- pkg_fact(Package, version_declared(Version, _)).
 
@@ -250,6 +256,12 @@ possible_version_weight(node(ID, Package), Weight)
 :- attr("version", node(ID, Package), Version),
    version_weight(node(ID, Package), Weight),
    pkg_fact(Package, version_declared(Version, Weight, "installed")),
+   build(node(ID, Package)),
+   internal_error("Reuse version weight used for build package").
+
+:- attr("version", node(ID, Package), Version),
+   version_weight(node(ID, Package), Weight),
+   pkg_fact(Package, version_declared(Version, Weight, "installed_git_version")),
    build(node(ID, Package)),
    internal_error("Reuse version weight used for build package").
 
