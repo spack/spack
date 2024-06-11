@@ -7,7 +7,7 @@ import os
 import subprocess
 
 from spack.package import *
-from spack.util.environment import set_env
+from spack.util.environment import is_system_path, set_env
 
 
 @llnl.util.lang.memoized
@@ -520,7 +520,7 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
             env.set(var, value)
 
     def prepend_cpath_include(self, env, prefix):
-        if prefix != "/usr":
+        if not is_system_path(prefix):
             env.prepend_path("CPATH", prefix.include)
 
     def setup_env_vars(self, env):
