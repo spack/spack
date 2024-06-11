@@ -98,12 +98,32 @@ class SetupEnvironment:
 
 class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder, SetupEnvironment):
     @property
-    def build_targets(self):
+    def compile_options(self):
         options = []
         if "+shared" in self.spec:
-            options.append("COPTIONS={0}".format(self.pkg.compiler.cc_pic_flag))
+            options.append(self.pkg.compiler.cc_pic_flag)
+        if self.spec.satisfies("%cce@17:"):
+            options.append("-std=c89")
+        return options
+
+    @property
+    def optimize_options(self):
+        options = []
         if "+debug" in self.spec:
-            options.append("OPTFLAGS=-g -O0")
+            options.extend(["-g", "-O0"])
+        else:
+            options.append("-O2")  # default in Makefile.in
+        return options
+
+    @property
+    def build_targets(self):
+        options = []
+        copts = self.compile_options
+        oopts = self.optimize_options
+        if copts:
+            options.append("COPTIONS={0}".format(" ".join(copts)))
+        if oopts:
+            options.append("OPTFLAGS={0}".format(" ".join(oopts)))
         return options
 
     def install(self, pkg, spec, prefix):
@@ -156,6 +176,8 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder, SetupEnviron
 
         # Set up and run tests on installation
         ccompile(
+            *self.compile_options,
+            *self.optimize_options,
             "-I%s" % prefix.include,
             "-L%s" % prefix.lib,
             (pkg.compiler.cc_rpath_arg + prefix.lib if "+shared" in spec else ""),

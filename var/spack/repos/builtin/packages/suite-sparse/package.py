@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os.path
+
 from spack.package import *
 
 
@@ -189,6 +191,7 @@ class SuiteSparse(Package):
             # even though this fix is ugly
             f"BLAS={spec['blas'].libs.ld_flags + (' -lstdc++' if '@4.5.1' in spec else '')}",
             f"LAPACK={spec['lapack'].libs.ld_flags}",
+            f"JOBS={make_jobs}",
         ]
 
         # Recent versions require c11 but some demos do not get the c11 from
@@ -229,20 +232,44 @@ class SuiteSparse(Package):
             # Without CMAKE_LIBRARY_PATH defined, the CMake file in the
             # Mongoose directory finds libsuitesparseconfig.so in system
             # directories like /usr/lib.
-            make_args += [
-                f"CMAKE_OPTIONS=-DCMAKE_INSTALL_PREFIX={prefix}"
-                + f" -DCMAKE_LIBRARY_PATH={prefix.lib}"
-                + f" -DBLAS_ROOT={spec['blas'].prefix}"
-                + f" -DLAPACK_ROOT={spec['lapack'].prefix}"
+            cmake_args = [
+                f"-DCMAKE_INSTALL_PREFIX={prefix}",
+                f"-DCMAKE_LIBRARY_PATH={prefix.lib}",
+                f"-DBLAS_ROOT={spec['blas'].prefix}",
+                f"-DLAPACK_ROOT={spec['lapack'].prefix}",
                 # *_LIBRARIES is critical to pick up static
                 # libraries (if intended) and also to avoid
                 # unintentional system blas/lapack packages
-                + f" -DBLAS_LIBRARIES={spec['blas'].libs}"
-                + f" -DLAPACK_LIBRARIES={spec['lapack'].libs}"
+                f'-DBLAS_LIBRARIES="{";".join(spec["blas"].libs)}"',
+                f'-DLAPACK_LIBRARIES="{";".join(spec["lapack"].libs)}"',
+                "-DCMAKE_VERBOSE_MAKEFILE=ON",
             ]
+            if spec.satisfies("@:7.3"):
+                cmake_args += [
+                    f"-DNOPENMP={'OFF' if '+openmp' in spec else 'ON'}",
+                    f"-DENABLE_CUDA={'ON' if '+cuda' in spec else 'OFF'}",
+                ]
+            else:
+                cmake_args += [
+                    f"-DSUITESPARSE_USE_OPENMP={'ON' if '+openmp' in spec else 'OFF'}",
+                    f"-DSUITESPARSE_USE_CUDA={'ON' if '+cuda' in spec else 'OFF'}",
+                ]
+            make_args += [f"CMAKE_OPTIONS={' '.join(cmake_args)}"]
 
         if spec.satisfies("%gcc platform=darwin"):
             make_args += ["LDLIBS=-lm"]
+
+        if "%cce" in spec:
+            # Assume the proper Cray CCE module (cce) is loaded:
+            craylibs_var = "CRAYLIBS_" + str(spec.target.family).upper()
+            craylibs_path = env.get(craylibs_var, None)
+            if not craylibs_path:
+                raise InstallError(
+                    f"The environment variable {craylibs_var} is not defined.\n"
+                    "\tMake sure the 'cce' module is in the compiler spec."
+                )
+            env.setdefault("LDFLAGS", "")
+            env["LDFLAGS"] += " -Wl,-rpath," + craylibs_path
 
         make_args.append(f"INSTALL={prefix}")
 
@@ -277,6 +304,16 @@ class SuiteSparse(Package):
         for target in targets:
             make("-C", target, "library", *make_args)
             make("-C", target, "install", *make_args)
+
+        # Starting with v7.4.0 headers are installed in a subdirectory called
+        # 'suitesparse' by default. For backward compatibility, after
+        # installation, we create links for all files from 'suitesparse' in the
+        # containing directory, '<prefix>/include':
+        if spec.satisfies("@7.4:"):
+            with working_dir(prefix.include):
+                for f in find("suitesparse", "*", recursive=False):
+                    sf = os.path.basename(f)
+                    symlink(join_path("suitesparse", sf), sf)
 
     @run_after("install")
     def fix_darwin_install(self):

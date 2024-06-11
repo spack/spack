@@ -613,6 +613,10 @@ class Petsc(Package, CudaPackage, ROCmPackage):
         if "superlu-dist" in spec:
             if spec.satisfies("@3.10.3:3.15"):
                 options.append("--with-cxx-dialect=C++11")
+            if spec["superlu-dist"].satisfies("+rocm"):
+                # Suppress HIP header warning message, otherwise the PETSc
+                # configuration fails:
+                options.append("CXXPPFLAGS=-DROCM_NO_WRAPPER_HEADER_WARNING")
 
         if "+mkl-pardiso" in spec:
             options.append("--with-mkl_pardiso-dir=%s" % spec["mkl"].prefix)
