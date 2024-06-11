@@ -129,8 +129,8 @@ class Legion(CMakePackage, ROCmPackage):
     # but this might be helpful for other use cases down the road.  Legion's
     # current development policy is C++11 or greater so we capture that aspect
     # here.
-    cpp_stds = ["11", "14", "17", "20"]
-    variant("cxxstd", default="11", description="C++ standard", values=cpp_stds, multi=False)
+    cpp_stds = (conditional("11", "14", when="@:24.03.0"), "17", "20")
+    variant("cxxstd", default="17", description="C++ standard", values=cpp_stds, multi=False)
 
     # Network transport layer: the underlying data transport API should be used for
     # distributed data movement.  For Legion, gasnet is the currently the most
