@@ -462,6 +462,27 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
     depends_on("python@3.7:")
     depends_on("cmake@3.16:")
 
+    # ensure we can map the spack compiler name to one of the ones we recognize
+    requires(
+        "%aocc",
+        "%apple-clang",
+        "%arm",
+        "%clang",
+        "%cce",
+        "%cray-prgenv-cray",
+        "%cray-prgenv-gnu",
+        "%cray-prgenv-intel",
+        "%cray-prgenv-pgi",
+        "%dpcpp",
+        "%gcc",
+        "%intel",
+        "%llvm",
+        "%oneapi",
+        "%pgi",
+        "%rocmcc",
+        policy="one_of",
+    )
+
     def unset_chpl_env_vars(self, env):
         # Clean the environment from any pre-set CHPL_ variables that affect the build
         for var in self.chpl_env_vars:
@@ -478,10 +499,6 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
                 env.set("CHPL_HOST_PLATFORM", "hpe-cray-ex")
 
     def setup_chpl_compilers(self, env):
-        if self.compiler_map.get(self.spec.compiler.name) is None:
-            raise InstallError(
-                "Chapel did not recognize the {0} compiler".format(self.spec.compiler.name)
-            )
         env.set("CHPL_HOST_COMPILER", self.compiler_map[self.spec.compiler.name])
         env.set("CHPL_TARGET_COMPILER", self.compiler_map[self.spec.compiler.name])
 
