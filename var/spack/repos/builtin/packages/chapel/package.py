@@ -475,6 +475,7 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
     depends_on("jemalloc", when="host_jemalloc=spack", type=("build", "link", "run", "test"))
 
     depends_on("gasnet conduits=none", when="gasnet=spack")
+    depends_on("gasnet@2024.5.0: conduits=none", when="@2.1.0: gasnet=spack")
 
     depends_on("python@3.7:")
     depends_on("cmake@3.16:")
