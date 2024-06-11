@@ -291,23 +291,42 @@ class Warpx(CMakePackage):
         install test subdirectory for use during `spack test run`."""
         cache_extra_test_sources(self, [self.examples_src_dir])
 
-    def test(self):
-        """Perform smoke tests on the installed package."""
+    def test_warpx_1d(self):
+        """Run warpx 1d test"""
         if "+app" not in self.spec:
-            print("WarpX smoke tests skipped: requires variant +app")
-            return
+            raise SkipTest("Package must be installed with +app")
 
-        # our executable names are a variant-dependent and naming evolves
-        for dim in self.spec.variants["dims"].value:
-            exe_nD = {"1": "warpx.1d", "2": "warpx.2d", "3": "warpx.3d", "rz": "warpx.rz"}
-            exe = find(self.prefix.bin, exe_nD[dim] + ".*", recursive=False)[0]
+        exe = find(self.prefix.bin, "warpx.1d.*", recursive=False)[0]
+        cli_args = self._get_input_options("1", True)
+        warpx = which(exe)
+        warpx(*cli_args)
 
-            cli_args = self._get_input_options(dim, True)
-            self.run_test(
-                exe,
-                cli_args,
-                [],
-                installed=True,
-                purpose="Smoke test for WarpX",
-                skip_missing=False,
-            )
+    def test_warpx_2d(self):
+        """Run warpx 2d test"""
+        if "+app" not in self.spec:
+            raise SkipTest("Package must be installed with +app")
+
+        exe = find(self.prefix.bin, "warpx.2d.*", recursive=False)[0]
+        cli_args = self._get_input_options("2", True)
+        warpx = which(exe)
+        warpx(*cli_args)
+
+    def test_warpx_3d(self):
+        """Run warpx 3d test"""
+        if "+app" not in self.spec:
+            raise SkipTest("Package must be installed with +app")
+
+        exe = find(self.prefix.bin, "warpx.3d.*", recursive=False)[0]
+        cli_args = self._get_input_options("3", True)
+        warpx = which(exe)
+        warpx(*cli_args)
+
+    def test_warpx_rz(self):
+        """Run warpx rz test"""
+        if "+app" not in self.spec:
+            raise SkipTest("Package must be installed with +app")
+
+        exe = find(self.prefix.bin, "warpx.rz.*", recursive=False)[0]
+        cli_args = self._get_input_options("rz", True)
+        warpx = which(exe)
+        warpx(*cli_args)
