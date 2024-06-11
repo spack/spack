@@ -64,7 +64,7 @@ def init(gnupghome=None, force=False):
 
     # Set the executable objects for "gpg" and "gpgconf"
     with spack.bootstrap.ensure_bootstrap_configuration():
-        if sys.platform == "win23":
+        if sys.platform == "win32":
             spack.bootstrap.win_ensure_or_acquire_resource("gpg")
         else:
             spack.bootstrap.ensure_gpg_in_path_or_raise()
