@@ -104,8 +104,6 @@ class Fms(CMakePackage):
     depends_on("netcdf-fortran")
     depends_on("mpi")
     depends_on("libyaml", when="+yaml")
-
-    # when using apple-clang version 15.x or newer, need to use the llvm-openmp library when +openmp
     depends_on("llvm-openmp", when="+openmp %apple-clang@15:", type=("build", "run"))
 
     def cmake_args(self):
