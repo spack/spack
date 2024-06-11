@@ -27,6 +27,11 @@ class LinuxPam(AutotoolsPackage):
     depends_on("automake", type="build")
     depends_on("libtool", type="build")
 
+    def flag_handler(self, name, flags):
+        if name == "ldflags":
+            flags.append("-lintl")  # spack/spack#44637
+        return (flags, None, None)
+
     def configure_args(self):
         config_args = ["--includedir=" + self.prefix.include.security]
         return config_args
