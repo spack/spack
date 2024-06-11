@@ -50,7 +50,7 @@ subcommands = [
     ["status", "st"],
     "loads",
     "view",
-    "include",
+    # "include",
     "update",
     "revert",
     "depfile",

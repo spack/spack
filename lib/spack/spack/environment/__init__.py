@@ -480,6 +480,8 @@ from .environment import (
     default_view_name,
     display_specs,
     environment_dir_from_name,
+    environment_name,
+    env_root_path,
     exists,
     included_concrete_name,
     initialize_environment_dir,
