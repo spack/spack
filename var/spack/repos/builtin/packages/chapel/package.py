@@ -502,10 +502,6 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
         for var in self.chpl_env_vars:
             env.unset(var)
 
-    def configure(self, spec, prefix):
-        self.setup_gasnet()
-        configure("--prefix={0}".format(prefix))
-
     def build(self, spec, prefix):
         make()
         if spec.variants["chpldoc"].value:
@@ -538,12 +534,12 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
     def setup_chpl_comm(self, env, spec):
         env.set("CHPL_COMM", spec.variants["comm"].value)
 
+    @run_before("configure", when="gasnet=spack")
     def setup_gasnet(self):
-        if self.spec.variants["gasnet"].value == "spack":
-            dst = join_path(self.stage.source_path, "third-party", "gasnet", "gasnet-src")
-            remove_directory_contents(dst)
-            os.rmdir(dst)
-            symlink(self.spec["gasnet"].prefix.src, dst)
+        dst = join_path(self.stage.source_path, "third-party", "gasnet", "gasnet-src")
+        remove_directory_contents(dst)
+        os.rmdir(dst)
+        symlink(self.spec["gasnet"].prefix.src, dst)
 
     def setup_chpl_llvm(self, env):
         if self.spec.variants["llvm"].value == "spack":
