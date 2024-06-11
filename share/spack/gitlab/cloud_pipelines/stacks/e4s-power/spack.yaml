@@ -168,7 +168,6 @@ spack:
   - hdf5
   - libcatalyst
   - parallel-netcdf
-  - paraview
   - py-cinemasci
   - sz
   - unifyfs

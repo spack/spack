@@ -18,11 +18,39 @@ from spack.util.prefix import Prefix
 #    format returned by platform.system() and 'arch' by platform.machine()
 
 _versions = {
+    "21.0.3_9": {
+        "Linux-x86_64": (
+            "fffa52c22d797b715a962e6c8d11ec7d79b90dd819b5bc51d62137ea4b22a340",
+            "https://github.com/adoptium/temurin21-binaries/releases/download/jdk-21.0.3%2B9/OpenJDK21U-jdk_x64_linux_hotspot_21.0.3_9.tar.gz",
+        ),
+        "Linux-aarch64": (
+            "7d3ab0e8eba95bd682cfda8041c6cb6fa21e09d0d9131316fd7c96c78969de31",
+            "https://github.com/adoptium/temurin21-binaries/releases/download/jdk-21.0.3%2B9/OpenJDK21U-jdk_aarch64_linux_hotspot_21.0.3_9.tar.gz",
+        ),
+        "Darwin-aarch64": (
+            "b6be6a9568be83695ec6b7cb977f4902f7be47d74494c290bc2a5c3c951e254f",
+            "https://github.com/adoptium/temurin21-binaries/releases/download/jdk-21.0.3%2B9/OpenJDK21U-jdk_aarch64_mac_hotspot_21.0.3_9.tar.gz",
+        ),
+    },
     "21.0.0_35": {
         "Linux-x86_64": (
             "82f64c53acaa045370d6762ebd7441b74e6fda14b464d54d1ff8ca941ec069e6",
             "https://github.com/adoptium/temurin21-binaries/releases/download/jdk-21%2B35/OpenJDK21U-jdk_x64_linux_hotspot_21_35.tar.gz",
         )
+    },
+    "17.0.11_9": {
+        "Linux-x86_64": (
+            "aa7fb6bb342319d227a838af5c363bfa1b4a670c209372f9e6585bd79da6220c",
+            "https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.11%2B9/OpenJDK17U-jdk_x64_linux_hotspot_17.0.11_9.tar.gz",
+        ),
+        "Linux-aarch64": (
+            "a900acf3ae56b000afc35468a083b6d6fd695abec87a8abdb02743d5c72f6d6d",
+            "https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.11%2B9/OpenJDK17U-jdk_aarch64_linux_hotspot_17.0.11_9.tar.gz",
+        ),
+        "Darwin-aarch64": (
+            "09a162c58dd801f7cfacd87e99703ed11fb439adc71cfa14ceb2d3194eaca01c",
+            "https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.11%2B9/OpenJDK17U-jdk_aarch64_mac_hotspot_17.0.11_9.tar.gz",
+        ),
     },
     "17.0.8.1_1": {
         "Linux-x86_64": (
@@ -158,6 +186,20 @@ _versions = {
         "Linux-aarch64": (
             "3958f01858f9290c48c23e7804a0af3624e8eca6749b085c425df4c4f2f7dcbc",
             "https://download.java.net/java/GA/jdk15.0.2/0d1cfde4252546c6931946de8db48ee2/7/GPL/openjdk-15.0.2_linux-aarch64_bin.tar.gz",
+        ),
+    },
+    "11.0.23_9": {
+        "Linux-x86_64": (
+            "23e47ea7a3015be3240f21185fd902adebdcf76530757c9b482c7eb5bd3417c2",
+            "https://github.com/adoptium/temurin11-binaries/releases/download/jdk-11.0.23%2B9/OpenJDK11U-jdk_x64_linux_hotspot_11.0.23_9.tar.gz",
+        ),
+        "Linux-aarch64": (
+            "e00476a7be3c4adfa9b3d55d30768967fd246a8352e518894e183fa444d4d3ce",
+            "https://github.com/adoptium/temurin11-binaries/releases/download/jdk-11.0.23%2B9/OpenJDK11U-jdk_aarch64_linux_hotspot_11.0.23_9.tar.gz",
+        ),
+        "Darwin-aarch64": (
+            "49122443bdeab2c9f468bd400f58f85a9ea462846faa79084fd6fd786d9b492d",
+            "https://github.com/adoptium/temurin11-binaries/releases/download/jdk-11.0.23%2B9/OpenJDK11U-jdk_aarch64_mac_hotspot_11.0.23_9.tar.gz",
         ),
     },
     "11.0.20.1_1": {

@@ -426,7 +426,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("cgns", when="+exodus")
     depends_on("cmake@3.23:", type="build", when="@14.0.0:")
     depends_on("hdf5+hl", when="+hdf5")
-    for plat in ["cray", "darwin", "linux"]:
+    for plat in ["darwin", "linux"]:
         depends_on("hypre~internal-superlu~int64", when="+hypre platform=%s" % plat)
     depends_on("hypre-cmake~int64", when="+hypre platform=windows")
     depends_on("kokkos-nvcc-wrapper", when="+wrapper")
@@ -450,7 +450,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("scalapack", when="+mumps")
     depends_on("scalapack", when="+strumpack+mpi")
     depends_on("strumpack+shared", when="+strumpack")
-    depends_on("suite-sparse", when="+suite-sparse")
+    depends_on("suite-sparse@:7.3.1", when="+suite-sparse")
     depends_on("superlu-dist", when="+superlu-dist")
     depends_on("superlu@3:5.2", when="@12.18.1: +superlu")
     depends_on("superlu@3:5.1.1", when="@12.14.1 +superlu")

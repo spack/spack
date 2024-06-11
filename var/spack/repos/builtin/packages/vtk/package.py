@@ -97,7 +97,7 @@ class Vtk(CMakePackage):
     # Broken downstream FindMPI
     patch("vtkm-findmpi-downstream.patch", when="@9.0.0")
 
-    for plat in ["linux", "darwin", "freebsd", "cray"]:
+    for plat in ["linux", "darwin", "freebsd"]:
         # use internal FindHDF5
         patch("internal_findHDF5.patch", when=f"@:8 platform={plat}")
 
@@ -128,7 +128,6 @@ class Vtk(CMakePackage):
     patch("vtk_alias_hdf5.patch", when="@9: platform=windows")
     patch("vtk_findproj_config.patch", when="platform=windows")
     depends_on("libxt", when="^[virtuals=gl] glx platform=linux")
-    depends_on("libxt", when="^[virtuals=gl] glx platform=cray")
 
     # VTK will need Qt5OpenGL, and qt needs '-opengl' for that
     depends_on("qt+opengl", when="+qt")
@@ -207,6 +206,14 @@ class Vtk(CMakePackage):
         "https://gitlab.kitware.com/vtk/vtk/-/commit/5a1c96e12e9b4a660d326be3bed115a2ceadb573.diff",
         sha256="c446a90459b108082db5b28d9aeda99d030e636325e01929beba062cafb16b76",
         when="@9.1",
+    )
+
+    # vtk@9 does not compile with gcc 13 or 14
+    # https://gitlab.kitware.com/vtk/vtk/-/issues/18782
+    patch(
+        "https://gitlab.kitware.com/vtk/vtk/-/merge_requests/9996.diff",
+        sha256="dab51ffd0d62b00c089c1245e6b105f740106b53893305c87193d4ba03a948e0",
+        when="@9.1:9.2 %gcc@13:",
     )
 
     @when("@9.2:")
