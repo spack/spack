@@ -57,22 +57,6 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
 
     patch("fix_spack_cc_wrapper_in_cray_prgenv.patch", when="@2.0.0:")
 
-    compilers = (
-        "allinea",
-        "clang",
-        "cray-prgenv-allinea",
-        "cray-prgenv-cray",
-        "cray-prgenv-gnu",
-        "cray-prgenv-intel",
-        "cray-prgenv-pgi",
-        "gnu",
-        "ibm",
-        "intel",
-        "llvm",
-        "pgi",
-        "unset",
-    )
-
     launcher_names = (
         "amudprun",
         "aprun",
@@ -238,15 +222,6 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
         multi=False,
     )
 
-    # Feedback that it's hard to imagine any circumstance where host_compiler or
-    # target_compiler could meaningfully differ from what Spack already knows about
-    # variant(
-    #     "host_compiler",
-    #     values=compilers,
-    #     description="Compiler suite for building the Chapel compiler on CHPL_HOST_PLATFORM",
-    #     default="unset",
-    # )
-
     variant(
         "host_jemalloc",
         values=("bundled", "none", "system", "unset"),
@@ -341,16 +316,6 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
         values=("x86_64", "aarch64", "arm64", "unset"),
         multi=False,
     )
-
-    # Feedback that it's hard to imagine any circumstance where host_compiler or
-    # target_compiler could meaningfully differ from what Spack already knows about
-    # variant(
-    #     "target_compiler",
-    #     values=compilers,
-    #     description="Compiler suite for building runtime libraries and "
-    #     "generated code on CHPL_TARGET_PLATFORM",
-    #     default="unset",
-    # )
 
     variant(
         "target_cpu",
