@@ -116,6 +116,8 @@ class Provenance(enum.IntEnum):
     PACKAGE_PY = enum.auto()
     # An installed spec
     INSTALLED = enum.auto()
+    # lower provenance for installed git refs so concretizer prefers StandardVersion installs
+    INSTALLED_GIT_VERSION = enum.auto()
     # A runtime injected from another package (e.g. a compiler)
     RUNTIME = enum.auto()
 
@@ -2072,7 +2074,7 @@ class SpackSolverSetup:
             # best possible, so they're guaranteed to be used preferentially.
             version = s.versions.concrete
 
-            if version is None or any(v == version for v in self.possible_versions[s.name]):
+            if version is None or (any((v == version) for v in self.possible_versions[s.name])):
                 continue
 
             if require_checksum and not _is_checksummed_git_version(version):
@@ -2386,9 +2388,16 @@ class SpackSolverSetup:
             # - Add OS to possible OS's
             for dep in spec.traverse():
                 self.possible_versions[dep.name].add(dep.version)
-                self.declared_versions[dep.name].append(
-                    DeclaredVersion(version=dep.version, idx=0, origin=Provenance.INSTALLED)
-                )
+                if isinstance(dep.version, vn.GitVersion):
+                    self.declared_versions[dep.name].append(
+                        DeclaredVersion(
+                            version=dep.version, idx=0, origin=Provenance.INSTALLED_GIT_VERSION
+                        )
+                    )
+                else:
+                    self.declared_versions[dep.name].append(
+                        DeclaredVersion(version=dep.version, idx=0, origin=Provenance.INSTALLED)
+                    )
                 self.possible_oses.add(dep.os)
 
     def define_concrete_input_specs(self, specs, possible):
