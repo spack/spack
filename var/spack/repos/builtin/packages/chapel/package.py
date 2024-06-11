@@ -204,7 +204,7 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
         "gmp",
         description="Build with gmp support",
         default="spack",
-        values=("bundled", "none", "spack", "system"),
+        values=("bundled", "none", "spack"),
         multi=False,
     )
 
@@ -226,10 +226,10 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
 
     variant(
         "host_jemalloc",
-        values=("bundled", "none", "system", "unset"),
+        values=("bundled", "none", "spack", "unset"),
         default="unset",
         multi=False,
-        description="Selects between no jemalloc, bundled jemalloc, or system jemalloc",
+        description="Selects between no jemalloc, bundled jemalloc, or spack supplied jemalloc",
     )
 
     variant(
@@ -281,7 +281,7 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
         "libfabric",
         default="unset",
         description="When building with ofi support, specify libfabric option",
-        values=("bundled", "system", "unset"),
+        values=("bundled", "spack", "unset"),
         multi=False,
     )
 
@@ -347,7 +347,7 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
         "unwind",
         description="Build with unwind library for stack tracing",
         default="none",
-        values=("bundled", "none", "system"),
+        values=("bundled", "none", "spack"),
         multi=False,
     )
 
@@ -431,9 +431,7 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
 
     depends_on("doxygen@1.8.17:", when="+chpldoc")
 
-    # TODO: llvm version requirements when llvm=system, these are conditional
-    # on the version of Chapel
-
+    # TODO: map Chapel versions to supported LLVM versions
     depends_on("llvm@14:17", when="llvm=spack")
 
     # Based on docs https://chapel-lang.org/docs/technotes/gpu.html#requirements
@@ -456,6 +454,8 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
 
     depends_on("gmp", when="gmp=spack", type=("build", "link", "run"))
     depends_on("hwloc", when="hwloc=spack", type=("build", "link", "run", "test"))
+    depends_on("libfabric", when="libfabric=spack", type=("build", "link", "run", "test"))
+    depends_on("libunwind", when="unwind=spack", type=("build", "link", "run", "test"))
 
     depends_on("gasnet conduits=none", when="gasnet=spack")
 
@@ -528,7 +528,6 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
             env.set(
                 "CHPL_LLVM_CONFIG", "{0}/{1}".format(self.spec["llvm"].prefix, "bin/llvm-config")
             )
-            env.set("CHPL_LLVM", "system")
         else:
             env.set("CHPL_LLVM", self.spec.variants["llvm"].value)
 
@@ -557,7 +556,6 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
             env.set("CHPL_DEVELOPER", "true")
 
         if self.spec.variants["gmp"].value == "spack":
-            env.set("CHPL_GMP", "system")
             # TODO: why must we add to CPATH to find gmp.h
             # TODO: why must we add to LIBRARY_PATH to find lgmp
             self.prepend_cpath_include(env, self.spec["gmp"].prefix)
