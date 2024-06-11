@@ -116,7 +116,7 @@ class Open3d(CMakePackage, CudaPackage):
 
     @run_after("install")
     @on_package_attributes(run_tests=True)
-    def test(self):
+    def check_import(self):
         if "+python" in self.spec:
             self.run_test(
                 python.path,

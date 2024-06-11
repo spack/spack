@@ -42,5 +42,5 @@ class LibpressioRmetric(CMakePackage):
 
     @run_after("build")
     @on_package_attributes(run_tests=True)
-    def test(self):
+    def check_test(self):
         make("test")
