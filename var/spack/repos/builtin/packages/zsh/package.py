@@ -17,6 +17,8 @@ class Zsh(AutotoolsPackage):
 
     license("custom")
 
+    version("5.9", sha256="9b8d1ecedd5b5e81fbf1918e876752a7dd948e05c1a0dba10ab863842d45acd5")
+    version("5.8.1", sha256="b6973520bace600b4779200269b1e5d79e5f505ac4952058c11ad5bbf0dd9919")
     version("5.8", sha256="dcc4b54cc5565670a65581760261c163d720991f0d06486da61f8d839b52de27")
     version("5.7.1", sha256="7260292c2c1d483b2d50febfa5055176bd512b32a8833b116177bf5f01e77ee8")
     version("5.6.2", sha256="a50bd66c0557e8eca3b8fa24e85d0de533e775d7a22df042da90488623752e9e")

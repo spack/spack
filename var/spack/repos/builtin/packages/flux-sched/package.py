@@ -24,6 +24,8 @@ class FluxSched(CMakePackage, AutotoolsPackage):
     license("LGPL-3.0-only")
 
     version("master", branch="master")
+    version("0.35.0", sha256="38fde51464f4e34ecbd1e4fbbf00267f96b639db5987257a7ad07f811e2f09d2")
+    version("0.34.0", sha256="10c03d78fa2302de7ddf9599ea59fb7a2dc7ccf6f526fd9fbfc9e3ff6ba39713")
     version("0.33.1", sha256="d0a1e504226d69fa8a247e9090d94ccc5e5f5fb028aab805f9cd95379bd8b1b3")
     version("0.33.0", sha256="d2e97121aed29bb1c6bfac602d890edb2f0a18d5303205b266a33c66fff1d61c")
     version("0.32.0", sha256="f0b88881f0154057de3dd5485a3e1cfc0b9b64c98052bda7d5fed7c05b5e02f3")
@@ -57,6 +59,7 @@ class FluxSched(CMakePackage, AutotoolsPackage):
     # This workaround is documented in PR #3543
     build_directory = "spack-build"
 
+    variant("docs", default=False, description="Build flux manpages and docs")
     variant("cuda", default=False, description="Build dependencies with support for CUDA")
 
     # Needs to be seen if tis is needed once we remove the default variants
@@ -72,6 +75,8 @@ class FluxSched(CMakePackage, AutotoolsPackage):
     depends_on("yaml-cpp@0.6.3")
     depends_on("uuid")
     depends_on("pkgconfig")
+    conflicts("%gcc@:9.3", when="@0.34:")
+    depends_on("py-sphinx@1.6.3:", when="+docs", type="build")
 
     depends_on("flux-core", type=("build", "link", "run"))
     depends_on("flux-core+cuda", when="+cuda", type=("build", "run", "link"))
@@ -180,13 +185,27 @@ class FluxSched(CMakePackage, AutotoolsPackage):
 
         env.prepend_path("FLUX_MODULE_PATH", self.prefix.lib.flux.modules)
         env.prepend_path("FLUX_MODULE_PATH", self.prefix.lib.flux.modules.sched)
+        # On some systems modules are in lib64 and lib
+        env.prepend_path("FLUX_MODULE_PATH", self.prefix.lib64.flux.modules)
+        env.prepend_path("FLUX_MODULE_PATH", self.prefix.lib64.flux.modules.sched)
         env.prepend_path("FLUX_EXEC_PATH", self.prefix.libexec.flux.cmd)
         env.prepend_path("FLUX_RC_EXTRA", self.prefix.etc.flux)
 
 
 class CMakeBuilder(CMakeBuilder):
     def cmake_args(self):
-        return []
+        args = []
+        ver_in_src = os.path.exists(os.path.join(self.stage.source_path, "flux-sched.ver"))
+        # flux-sched before v0.33 does not correctly set the version even when the file is present.
+        if self.spec.satisfies("@:0.33") or not ver_in_src:
+            # ref_version only exists on git versions
+            try:
+                ver = self.spec.version.ref_version
+            except AttributeError:
+                ver = self.spec.version
+            args.append(self.define("FLUX_SCHED_VER", ver))
+        args.append(self.define_from_variant("ENABLE_DOCS", "docs"))
+        return args
 
 
 class AutotoolsBuilder(AutotoolsBuilder):

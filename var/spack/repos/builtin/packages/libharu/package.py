@@ -41,8 +41,8 @@ class Libharu(AutotoolsPackage):
         spec = self.spec
         args = []
 
-        args.append("--with-zlib={0}".format(spec["zlib-api"].prefix))
-        args.append("--with-png={0}".format(spec["libpng"].prefix))
+        args.append(f"--with-zlib={spec['zlib-api'].prefix}")
+        args.append(f"--with-png={spec['libpng'].prefix}")
 
         return args
 

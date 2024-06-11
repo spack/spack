@@ -9,8 +9,7 @@ from spack.package import *
 class SerenityLibint(CMakePackage):
     """Serenity fork of libint, which is difficult to reproduce from libint itself"""
 
-    homepage = "https://thclab.uni-muenster.de/serenity/libint"
-    url = "https://thclab.uni-muenster.de/serenity/libint/-/raw/e3eb756c/libint-2.7.0-beta.6.tgz"
+    url = "https://www.uni-muenster.de/Chemie.oc/THCLAB/libint/libint-2.7.0-beta.6.tgz"
 
     license("LGPL-3.0-or-later")
 

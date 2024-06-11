@@ -16,7 +16,7 @@ import llnl.util.filesystem as fs
 import llnl.util.lang
 import llnl.util.tty as tty
 from llnl.util.lang import memoized
-from llnl.util.symlink import symlink
+from llnl.util.symlink import readlink, symlink
 
 import spack.paths
 import spack.platforms
@@ -25,6 +25,7 @@ import spack.spec
 import spack.store
 import spack.util.elf as elf
 import spack.util.executable as executable
+import spack.util.path
 
 from .relocate_text import BinaryFilePrefixReplacer, TextFilePrefixReplacer
 
@@ -565,7 +566,7 @@ def make_link_relative(new_links, orig_links):
         orig_links (list): original links
     """
     for new_link, orig_link in zip(new_links, orig_links):
-        target = os.readlink(orig_link)
+        target = readlink(orig_link)
         relative_target = os.path.relpath(target, os.path.dirname(orig_link))
         os.unlink(new_link)
         symlink(relative_target, new_link)
@@ -613,7 +614,7 @@ def relocate_links(links, prefix_to_prefix):
     """Relocate links to a new install prefix."""
     regex = re.compile("|".join(re.escape(p) for p in prefix_to_prefix.keys()))
     for link in links:
-        old_target = os.readlink(link)
+        old_target = readlink(link)
         match = regex.match(old_target)
 
         # No match.

@@ -29,6 +29,7 @@ class Yosys(MakefilePackage):
 
     version("master", branch="master")
 
+    version("0.41", sha256="b0037d0a5864550a07a72ba81346e52a7d5f76b3027ef1d7c71b975d2c8bd2b2")
     version("0.40", sha256="c1d42ad90d587b587210b40cf3c5584e41e20f656e8630c33b6583322e8b764e")
     version("0.39", sha256="a66d95747b21d03e5b9c274d3f7cb0f7dd99610891dd66920bfaee25bc30dad1")
     version("0.38", sha256="5f3d7bb12c5371db00586700a658a9196008a9457839f046403a660fe0c7a1df")

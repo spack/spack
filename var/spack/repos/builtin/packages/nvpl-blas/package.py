@@ -23,6 +23,7 @@ class NvplBlas(Package):
     license("UNKNOWN")
 
     version("0.1.0", sha256="4ccc894593cbcbfaa1a4f3c54505982691971667acf191c9ab0f4252a37c8063")
+    version("0.2.0.1", sha256="ba29f6a9d3831b6ae5c9265b4d124c13b9b9e0faea025359b02b41ad230975c2")
 
     provides("blas")
 
@@ -41,6 +42,10 @@ class NvplBlas(Package):
     conflicts("%clang@:13")
 
     conflicts("threads=openmp", when="%clang")
+
+    def url_for_version(self, version):
+        url = "https://developer.download.nvidia.com/compute/nvpl/redist/nvpl_blas/linux-sbsa/nvpl_blas-linux-sbsa-{0}-archive.tar.xz"
+        return url.format(version)
 
     @property
     def blas_headers(self):

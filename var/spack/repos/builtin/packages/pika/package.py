@@ -19,6 +19,7 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
 
     license("BSL-1.0")
 
+    version("0.25.0", sha256="6646e12f88049116d84ce0caeedaa039a13caaa0431964caea4660b739767b2e")
     version("0.24.0", sha256="3b97c684107f892a633f598d94bcbd1e238d940e88e1c336f205e81b99326cc3")
     version("0.23.0", sha256="d1981e198ac4f8443770cebbeff7a132b8f6c1a42e32b0b06fea02cc9df99595")
     version("0.22.2", sha256="eeffa8584336b239aca167f0056e815b1b6d911e46cbb3cd6b8b811d101c1052")
@@ -86,6 +87,7 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
         description="Enable support for sanitizers. "
         "Specific sanitizers must be explicitly enabled with -fsanitize=*.",
     )
+    variant("valgrind", default=False, description="Enable support for valgrind")
     variant(
         "stdexec",
         default=False,
@@ -115,6 +117,7 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
     # https://github.com/pika-org/pika/issues/686
     conflicts("^fmt@10:", when="@:0.15 +cuda")
     conflicts("^fmt@10:", when="@:0.15 +rocm")
+    depends_on("spdlog@1.9.2:", when="@0.25:")
     depends_on("hwloc@1.11.5:")
 
     depends_on("gperftools", when="malloc=tcmalloc")
@@ -134,6 +137,8 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
     conflicts("^tracy-client@0.9:", when="@:0.9")
     depends_on("whip@0.1: +rocm", when="@0.9: +rocm")
     depends_on("whip@0.1: +cuda", when="@0.9: +cuda")
+
+    depends_on("valgrind", when="+valgrind")
 
     with when("+rocm"):
         for val in ROCmPackage.amdgpu_targets:
@@ -194,6 +199,7 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
             self.define_from_variant("PIKA_WITH_APEX", "apex"),
             self.define_from_variant("PIKA_WITH_TRACY", "tracy"),
             self.define_from_variant("PIKA_WITH_SANITIZERS", "sanitizers"),
+            self.define_from_variant("PIKA_WITH_VALGRIND", "valgrind"),
             self.define("PIKA_WITH_TESTS", self.run_tests),
             self.define_from_variant("PIKA_WITH_GENERIC_CONTEXT_COROUTINES", "generic_coroutines"),
             self.define("BOOST_ROOT", spec["boost"].prefix),

@@ -15,6 +15,7 @@ class Pugixml(CMakePackage):
 
     license("MIT")
 
+    version("1.14", sha256="2f10e276870c64b1db6809050a75e11a897a8d7456c4be5c6b2e35a11168a015")
     version("1.13", sha256="40c0b3914ec131485640fa57e55bf1136446026b41db91c1bef678186a12abbe")
     version("1.11.4", sha256="8ddf57b65fb860416979a3f0640c2ad45ddddbbafa82508ef0a0af3ce7061716")
     version("1.11", sha256="26913d3e63b9c07431401cf826df17ed832a20d19333d043991e611d23beaa2c")

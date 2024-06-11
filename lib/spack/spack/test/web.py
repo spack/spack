@@ -415,7 +415,7 @@ def test_ssl_urllib(
 
         assert mock_cert == spack.config.get("config:ssl_certs", None)
 
-        ssl_context = spack.util.web.urllib_ssl_cert_handler()
+        ssl_context = spack.util.web.ssl_create_default_context()
         assert ssl_context.verify_mode == ssl.CERT_REQUIRED
 
 

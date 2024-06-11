@@ -16,6 +16,7 @@ class Mercurial(PythonPackage):
 
     license("GPL-2.0-or-later")
 
+    version("6.7.3", sha256="00196944ea92738809317dc7a8ed7cb21287ca0a00a85246e66170955dcd9031")
     version("6.6.3", sha256="f75d6a4a75823a1b7d713a4967eca2f596f466e58fc6bc06d72642932fd7e307")
     version("6.4.5", sha256="b0b4b00b8b2639c8be387394796f0425beb339314df7e72937f8ddd2a41b1b8a")
     version("6.3.3", sha256="13c97ff589c7605e80a488f336852ce1d538c5d4143cfb33be69bdaddd9157bd")

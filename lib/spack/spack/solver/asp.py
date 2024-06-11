@@ -316,6 +316,10 @@ def using_libc_compatibility() -> bool:
     return spack.platforms.host().name == "linux"
 
 
+def c_compiler_runs(compiler: spack.compiler.Compiler) -> bool:
+    return compiler.compiler_verbose_output is not None
+
+
 def extend_flag_list(flag_list, new_flags):
     """Extend a list of flags, preserving order and precedence.
 
@@ -946,13 +950,25 @@ class ConcreteSpecsByHash(collections.abc.Mapping):
 
     def __init__(self) -> None:
         self.data: Dict[str, spack.spec.Spec] = {}
+        self.explicit: Set[str] = set()
 
     def __getitem__(self, dag_hash: str) -> spack.spec.Spec:
         return self.data[dag_hash]
 
+    def explicit_items(self) -> Iterator[Tuple[str, spack.spec.Spec]]:
+        """Iterate on items that have been added explicitly, and not just as a dependency
+        of other nodes.
+        """
+        for h, s in self.items():
+            # We need to make an exception for gcc-runtime, until we can splice it.
+            if h in self.explicit or s.name == "gcc-runtime":
+                yield h, s
+
     def add(self, spec: spack.spec.Spec) -> bool:
         """Adds a new concrete spec to the mapping. Returns True if the spec was just added,
         False if the spec was already in the mapping.
+
+        Calling this function marks the spec as added explicitly.
 
         Args:
             spec: spec to be added
@@ -968,6 +984,7 @@ class ConcreteSpecsByHash(collections.abc.Mapping):
             raise ValueError(msg)
 
         dag_hash = spec.dag_hash()
+        self.explicit.add(dag_hash)
         if dag_hash in self.data:
             return False
 
@@ -1638,11 +1655,15 @@ class SpackSolverSetup:
         if isinstance(reuse_yaml, typing.Mapping):
             default_include = reuse_yaml.get("include", [])
             default_exclude = reuse_yaml.get("exclude", [])
+            libc_externals = list(all_libcs())
             for source in reuse_yaml.get("from", []):
                 if source["type"] != "external":
                     continue
 
                 include = source.get("include", default_include)
+                if include:
+                    # Since libcs are implicit externals, we need to implicitly include them
+                    include = include + libc_externals
                 exclude = source.get("exclude", default_exclude)
                 spec_filters.append(
                     SpecFilter(
@@ -1919,6 +1940,11 @@ class SpackSolverSetup:
         else:
             for virtual in virtuals:
                 clauses.append(fn.attr("virtual_on_incoming_edges", spec.name, virtual))
+
+        # If the spec is external and concrete, we allow all the libcs on the system
+        if spec.external and spec.concrete and using_libc_compatibility():
+            for libc in self.libcs:
+                clauses.append(fn.attr("compatible_libc", spec.name, libc.name, libc.version))
 
         # add all clauses from dependencies
         if transitive:
@@ -2351,7 +2377,7 @@ class SpackSolverSetup:
 
     def concrete_specs(self):
         """Emit facts for reusable specs"""
-        for h, spec in self.reusable_and_possible.items():
+        for h, spec in self.reusable_and_possible.explicit_items():
             # this indicates that there is a spec like this installed
             self.gen.fact(fn.installed_hash(spec.name, h))
             # this describes what constraints it imposes on the solve
@@ -2423,7 +2449,7 @@ class SpackSolverSetup:
 
         if using_libc_compatibility():
             for libc in self.libcs:
-                self.gen.fact(fn.allowed_libc(libc.name, libc.version))
+                self.gen.fact(fn.host_libc(libc.name, libc.version))
 
         if not allow_deprecated:
             self.gen.fact(fn.deprecated_versions_not_allowed())
@@ -2967,6 +2993,13 @@ class CompilerParser:
     def __init__(self, configuration) -> None:
         self.compilers: Set[KnownCompiler] = set()
         for c in all_compilers_in_config(configuration):
+            if using_libc_compatibility() and not c_compiler_runs(c):
+                tty.debug(
+                    f"the C compiler {c.cc} does not exist, or does not run correctly."
+                    f" The compiler {c.spec} will not be used during concretization."
+                )
+                continue
+
             if using_libc_compatibility() and not c.default_libc:
                 warnings.warn(
                     f"cannot detect libc from {c.spec}. The compiler will not be used "
@@ -3242,13 +3275,16 @@ class SpecBuilder:
                 r"^.*_propagate$",
                 r"^.*_satisfies$",
                 r"^.*_set$",
+                r"^compatible_libc$",
                 r"^dependency_holds$",
+                r"^external_conditions_hold$",
                 r"^node_compiler$",
                 r"^package_hash$",
                 r"^root$",
                 r"^track_dependencies$",
                 r"^variant_default_value_from_cli$",
                 r"^virtual_node$",
+                r"^virtual_on_incoming_edges$",
                 r"^virtual_root$",
             ]
         )
