@@ -69,7 +69,7 @@ index 7042279663..dc2d773bc4 100644
     /// Return the array #I.
     inline int *GetI() { return I; }
 diff --git a/tests/unit/general/test_umpire_mem.cpp b/tests/unit/general/test_umpire_mem.cpp
-index 84457669ec..d54eec090c 100644
+index 84457669ec..d4a7b85093 100644
 --- a/tests/unit/general/test_umpire_mem.cpp
 +++ b/tests/unit/general/test_umpire_mem.cpp
 @@ -18,12 +18,13 @@
@@ -87,3 +87,16 @@ index 84457669ec..d54eec090c 100644
  #endif
  
  using namespace mfem;
+@@ -45,10 +46,12 @@ static bool is_pinned_host(void * h_p)
+    unsigned flags;
+ #ifdef MFEM_USE_CUDA
+    auto err = cudaHostGetFlags(&flags, h_p);
++   cudaGetLastError(); // also resets last error
+    if (err == cudaSuccess) { return true; }
+    else if (err == cudaErrorInvalidValue) { return false; }
+ #elif defined(MFEM_USE_HIP)
+    auto err = hipHostGetFlags(&flags, h_p);
++   hipGetLastError(); // also resets last error
+    if (err == hipSuccess) { return true; }
+    else if (err == hipErrorInvalidValue) { return false; }
+ #endif
