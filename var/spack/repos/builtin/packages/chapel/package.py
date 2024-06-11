@@ -275,7 +275,13 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
         "hwloc",
         description="Build with hwloc support",
         default="bundled",
-        values=("bundled", "none", "spack"),
+        values=(
+            "bundled",
+            "none",
+            # CHPL_HWLOC=system existed back to at least 2017,
+            # but it was buggy and unsupported until version 2.1
+            conditional("spack", when="@2.1:"),
+        ),
         multi=False,
     )
 
