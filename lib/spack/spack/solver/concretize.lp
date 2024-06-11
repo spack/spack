@@ -256,6 +256,7 @@ possible_version_weight(node(ID, Package), Weight)
 :- attr("version", node(ID, Package), Version),
    version_weight(node(ID, Package), Weight),
    not pkg_fact(Package, version_declared(Version, Weight, "installed")),
+   not pkg_fact(Package, version_declared(Version, Weight, "installed_git_version")),
    not build(node(ID, Package)),
    internal_error("Build version weight used for reused package").
 
