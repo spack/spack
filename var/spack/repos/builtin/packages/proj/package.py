@@ -25,6 +25,10 @@ class Proj(CMakePackage, AutotoolsPackage):
 
     license("MIT")
 
+    version("9.4.1", sha256="ffe20170ee2b952207adf8a195e2141eab12cda181e49fdeb54425d98c7171d7")
+    version("9.4.0", sha256="3643b19b1622fe6b2e3113bdb623969f5117984b39f173b4e3fb19a8833bd216")
+    version("9.3.1", sha256="b0f919cb9e1f42f803a3e616c2b63a78e4d81ecfaed80978d570d3a5e29d10bc")
+    version("9.3.0", sha256="91a3695a004ea28db0448a34460bed4cc3b130e5c7d74339ec999efdab0e547d")
     version("9.2.1", sha256="15ebf4afa8744b9e6fccb5d571fc9f338dc3adcf99907d9e62d1af815d4971a1")
     version("9.2.0", sha256="dea816f5aa732ae6b2ee3977b9bdb28b1d848cf56a1aad8faf6708b89f0ed50e")
     version("9.1.1", sha256="003cd4010e52bb5eb8f7de1c143753aa830c8902b6ed01209f294846e40e6d39")
@@ -56,8 +60,8 @@ class Proj(CMakePackage, AutotoolsPackage):
     version("4.7.0", sha256="fc5440002a496532bfaf423c28bdfaf9e26cc96c84ccefcdefde911efbd98986")
     version("4.6.1", sha256="76d174edd4fdb4c49c1c0ed8308a469216c01e7177a4510b1b303ef3c5f97b47")
 
-    variant("tiff", default=True, description="Enable TIFF support")
-    variant("curl", default=True, description="Enable curl support")
+    variant("tiff", default=True, when="@7:", description="Enable TIFF support")
+    variant("curl", default=True, when="@7:", description="Enable curl support")
     variant("shared", default=True, description="Enable shared libraries")
     variant("pic", default=False, description="Enable position-independent code (PIC)")
 
@@ -89,20 +93,14 @@ class Proj(CMakePackage, AutotoolsPackage):
 
     # https://proj.org/install.html#build-requirements
     with when("build_system=cmake"):
-        # CMake 3.19 refactored the FindTiff module interface, update older proj's
-        # to be compatible with this "new" interface
-        # patch replaces the TIFF_LIBRARY variable (no longer used) with TIFF_LIBRARIES
-        patch(
-            "proj-8.1-cmake-3.29-new-tiff-interface.patch", when="+tiff @8:9.1.0 ^cmake@3.19:3.27"
-        )
-        patch("proj-7-cmake-3.29-new-tiff-interface.patch", when="+tiff @7 ^cmake@3.19:")
-        # tiff does not set TIFF_INCLUDE_DIR tested by proj
-        # version 9.2 contains this patch:
-        # https://github.com/OSGeo/PROJ/blob/9.2/src/lib_proj.cmake#L458
-        patch("tiff_target.patch", when="+tiff @8:9.1.1 ^cmake@3.28:")
+        # https://github.com/OSGeo/PROJ/pull/3374
+        patch("proj-8-tiff.patch", when="@8:9.1")
+        patch("proj-7-tiff.patch", when="@7")
+        # https://github.com/spack/spack/pull/41065
         patch("proj.cmakelists.5.0.patch", when="@5.0")
         patch("proj.cmakelists.5.1.patch", when="@5.1:5.2")
-        conflicts("cmake@3.19:", when="@:7")
+
+        depends_on("cmake@3.16:", when="@9.4:", type="build")
         depends_on("cmake@3.9:", when="@6:", type="build")
         depends_on("cmake@3.5:", when="@5", type="build")
         depends_on("cmake@2.6:", when="@:4", type="build")
