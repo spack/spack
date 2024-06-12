@@ -2,6 +2,7 @@ import spack.environment as ev
 import spack.config as config
 from spack.spec import Spec
 import argparse
+from collections import defaultdict
 
 
 def _collect_always_constraints(pkg_name, pkg_conf):
@@ -70,7 +71,9 @@ def main():
     args = parser.parse_args()
 
     e = ev.active_environment()
-    aggregated_constraints = dict((x.name, Spec(x)) for x in e.user_specs)
+    aggregated_constraints = defaultdict(list)
+    for spec in e.user_specs:
+        aggregated_constraints[spec.name].append((spec.copy(), "Environment speclist"))
 
     conf = config.get("packages")
     for pkg_name, pkg_conf in conf.items():
@@ -79,14 +82,22 @@ def main():
         if "require" not in pkg_conf:
             continue
         for constraint_spec in _collect_always_constraints(pkg_name, pkg_conf):
-            if constraint_spec.name not in aggregated_constraints:
-                aggregated_constraints[pkg_name] = constraint_spec
-            else:
-                _merge_constraint(aggregated_constraints[constraint_spec.name], constraint_spec)
+            aggregated_constraints[pkg_name].append((constraint_spec, "require: from packages.yaml"))
 
-    ordered = list(aggregated_constraints.values())
+    for pkg_name, dev_conf in config.get("develop", dict()).items():
+        aggregated_constraints[pkg_name].append((Spec(dev_conf["spec"]), "Develop spec"))
+
+    merged_constraints = dict()
+    for pkg_name, per_pkg_constraints in aggregated_constraints.items():
+        base_spec, reason = per_pkg_constraints[0]
+        accumulated = base_spec.copy()
+        for next_constraint in per_pkg_constraints[1:]:
+            _merge_constraint(accumulated, next_constraint[0])
+        merged_constraints[pkg_name] = accumulated
+
+    ordered = list(merged_constraints.values())
     if args.organizing_root:
-        ordered = _order_by_root(aggregated_constraints[args.organizing_root], aggregated_constraints)
+        ordered = _order_by_root(merged_constraints[args.organizing_root], merged_constraints)
 
     print("Aggregated constraints:")
     print("\t" + "\n\t".join(str(x) for x in ordered))
