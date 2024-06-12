@@ -18,7 +18,7 @@ class PyJaxlib(PythonPackage, CudaPackage):
     buildtmp = ""
 
     license("Apache-2.0")
-    maintainers("adamjstewart")
+    maintainers("adamjstewart", "jonas-eschle")
 
     version("0.4.29", sha256="3a8005f4f62d35a5aad7e3dbd596890b47c81cc6e34fcfe3dcb93b3ca7cb1246")
     version("0.4.28", sha256="4dd11577d4ba5a095fbc35258ddd4e4c020829ed6e6afd498c9e38ccbcdfe20b")
@@ -47,9 +47,10 @@ class PyJaxlib(PythonPackage, CudaPackage):
         depends_on("cuda@12.1:", when="@0.4.26:")
         depends_on("cuda@11.8:", when="@0.4.11:")
         depends_on("cuda@11.4:", when="@0.4.0:0.4.7")
-        depends_on("cudnn@8.9:8", when="@0.4.26:")
-        depends_on("cudnn@8.8:", when="@0.4.11:")
-        depends_on("cudnn@8.2:", when="@0.4:0.4.7")
+        depends_on("cudnn@9", when="@0.4.29:")
+        depends_on("cudnn@8.9:8", when="@0.4.26:0.4.28")
+        depends_on("cudnn@8.8:8", when="@0.4.11:0.4.25")
+        depends_on("cudnn@8.2:8", when="@0.4:0.4.7")
 
     with when("+nccl"):
         depends_on("nccl@2.18:", when="@0.4.26:")
