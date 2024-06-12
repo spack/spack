@@ -51,6 +51,7 @@ class NaluWind(CMakePackage, CudaPackage, ROCmPackage):
     variant("gpu-aware-mpi", default=False, description="gpu-aware-mpi")
     variant("wind-utils", default=False, description="Build wind-utils")
     variant("umpire", default=False, description="Enable Umpire")
+    variant("tests", default=False, description="Enable regression tests and clone the mesh submodule")
 
     depends_on("mpi")
     depends_on("yaml-cpp@0.5.3:")
@@ -118,6 +119,14 @@ class NaluWind(CMakePackage, CudaPackage, ROCmPackage):
     conflicts("^trilinos+cuda", when="~cuda")
     conflicts("^trilinos+rocm", when="~rocm")
 
+    def submodules(package):
+        submodules = []
+        if package.spec.satisfies("+wind-utils"):
+            submodules.append("wind-utils")
+        if package.spec.satisfies("+tests"):
+            submodules.append("meshes")
+        return submodules
+
     def setup_dependent_run_environment(self, env, dependent_spec):
         spec = self.spec
         if spec.satisfies("+cuda") or spec.satisfies("+rocm"):
@@ -157,6 +166,8 @@ class NaluWind(CMakePackage, CudaPackage, ROCmPackage):
             self.define_from_variant("ENABLE_PARAVIEW_CATALYST", "catalyst"),
             self.define_from_variant("ENABLE_FFTW", "fftw"),
             self.define_from_variant("ENABLE_UMPIRE", "umpire"),
+            self.define_from_variant("ENABLE_TESTS", "tests"),
+
         ]
 
         if spec.satisfies("+openfast"):
