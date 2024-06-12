@@ -32,12 +32,20 @@ class PyRios(PythonPackage):
     version("1.4.10", sha256="6324acccc6018f9e06c40370bc366dc459890e8c09d26e0ebd245f6fd46dad71")
 
     # In 1.4.x, parallel processing was an extra add-on
-    variant("parallel", default=True, when="@1.4.16:1.4.99",
-            description="Enables the 1.4.x parallel processing module (deprecated)")
+    variant(
+        "parallel",
+        default=True,
+        when="@1.4.16:1.4.99",
+        description="Enables the 1.4.x parallel processing module (deprecated)"
+    )
     # In 2.x, there is substantial concurrency always built-in, but using it
     # across multiple machines requires an extra dependency.
-    variant("multimachine", default=False, when="@2.0.0:",
-            description="Enable compute worker kinds that run across multiple machines")
+    variant(
+        "multimachine",
+        default=False,
+        when="@2.0.0:",
+        description="Enable compute worker kinds that run across multiple machines"
+    )
 
     # pip silently replaces distutils with setuptools
     depends_on("py-setuptools", type="build")
