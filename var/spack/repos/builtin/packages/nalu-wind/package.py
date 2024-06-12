@@ -63,7 +63,7 @@ class NaluWind(CMakePackage, CudaPackage, ROCmPackage):
     )
     depends_on("trilinos~cuda~wrapper", when="~cuda")
     depends_on("openfast@2.6.0: +cxx", when="+openfast")
-    depends_on("tioga@master:", when="+tioga")
+    depends_on("tioga@1.0.0:", when="+tioga")
     depends_on("hypre@2.18.2: ~int64+mpi~superlu-dist", when="+hypre")
     depends_on("trilinos+muelu+belos+amesos2+ifpack2", when="+trilinos-solvers")
     conflicts(
