@@ -23,8 +23,8 @@ class NaluWind(CMakePackage, CudaPackage, ROCmPackage):
 
     tags = ["ecp", "ecp-apps"]
 
-    version("master", branch="master")
-    version("2.0.0", tag="v2.0.0")
+    version("master", branch="master", submodules=submodules)
+    version("2.0.0", tag="v2.0.0", submodules=submodules)
 
     variant("pic", default=True, description="Position independent code")
     variant(
