@@ -27,10 +27,9 @@ def _collect_always_constraints(pkg_name, pkg_conf) -> List[Spec]:
         elif "one_of" in requirement:
             result = requirement["one_of"]
         elif "spec" in requirement:
-            result = requirement["spec"]
+            result = [requirement["spec"]]
         else:
-            # Should not happen
-            result = []
+            raise ValueError(f"Unexpected requirement {str(requirement)}")
 
         if len(result) == 1:
             # For one_of/any_of with >1 possibility, it's hard to
