@@ -576,9 +576,14 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
             # TODO: why must we add to LIBRARY_PATH to find lgmp
             self.prepend_cpath_include(env, self.spec["gmp"].prefix)
             env.prepend_path("LIBRARY_PATH", self.spec["gmp"].prefix.lib)
+            # Need this for the test env, where it does not appear automatic:
+            env.prepend_path("PKG_CONFIG_PATH", self.spec["gmp"].prefix.lib.pkgconfig)
 
         if self.spec.variants["hwloc"].value == "spack":
             env.prepend_path("LD_LIBRARY_PATH", self.spec["hwloc"].prefix.lib)
+            # Need this for the test env, where it does not appear automatic:
+            env.prepend_path("PKG_CONFIG_PATH", self.spec["hwloc"].prefix.lib.pkgconfig)
+            env.prepend_path("PKG_CONFIG_PATH", self.spec["libpciaccess"].prefix.lib.pkgconfig)
 
         if self.spec.variants["unwind"].value == "spack":
             # chapel package would not build without cpath, missing libunwind.h
