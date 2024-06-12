@@ -452,7 +452,7 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
 
     depends_on("m4")
 
-    depends_on("gmp", when="gmp=spack", type=("build", "link", "run"))
+    depends_on("gmp", when="gmp=spack", type=("build", "link", "run", "test"))
     depends_on("hwloc", when="hwloc=spack", type=("build", "link", "run", "test"))
     depends_on("libfabric", when="libfabric=spack", type=("build", "link", "run", "test"))
     depends_on("libunwind", when="unwind=spack", type=("build", "link", "run", "test"))
@@ -560,8 +560,14 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
             # TODO: why must we add to LIBRARY_PATH to find lgmp
             self.prepend_cpath_include(env, self.spec["gmp"].prefix)
             env.prepend_path("LIBRARY_PATH", self.spec["gmp"].prefix.lib)
-        else:
-            env.set("CHPL_GMP", self.spec.variants["gmp"].value)
+
+        if self.spec.variants["hwloc"].value == "spack":
+            env.prepend_path("LD_LIBRARY_PATH", self.spec["hwloc"].prefix.lib)
+
+        if self.spec.variants["unwind"].value == "spack":
+            # chapel package would not build without cpath, missing libunwind.h
+            self.prepend_cpath_include(env, self.spec["libunwind"].prefix)
+            env.prepend_path("LD_LIBRARY_PATH", self.spec["libunwind"].prefix.lib)
 
         if self.spec.satisfies("+yaml"):
             env.prepend_path("PKG_CONFIG_PATH", self.spec["libyaml"].prefix.lib.pkgconfig)
