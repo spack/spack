@@ -1,6 +1,6 @@
 import argparse
-from collections import defaultdict
 import sys
+from collections import defaultdict
 from typing import List
 
 import spack.config as config
@@ -66,12 +66,12 @@ def _merge_constraint(dst_spec, extra_spec):
 
 
 def _top_level_constraints_error(pkg_name, constraints):
-    formatted_constraints = "\n\t".join(
-        f"{spec} ({reason})" for spec, reason in constraints
-    )
-    print(f"""Conflicting user-specified constraints for {pkg_name}:
+    formatted_constraints = "\n\t".join(f"{spec} ({reason})" for spec, reason in constraints)
+    print(
+        f"""Conflicting user-specified constraints for {pkg_name}:
 \t{formatted_constraints}
-""")
+"""
+    )
 
 
 def main():
