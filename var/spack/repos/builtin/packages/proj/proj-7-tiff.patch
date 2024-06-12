@@ -10,9 +10,9 @@
 +      # Hack needed for ubuntu:18.04 mingw64 cross compiling to avoid
 +      # -isystem to be emitted (similar to https://discourse.cmake.org/t/use-of-isystem/1574)
 +      target_include_directories(proj PRIVATE ${TIFF_INCLUDE_DIRS})
-+      target_link_libraries(proj PRIVATE ${TIFF_LIBRARIES})
++      target_link_libraries(proj ${TIFF_LIBRARIES})
 +  else()
-+      target_link_libraries(proj PRIVATE TIFF::TIFF)
++      target_link_libraries(proj TIFF::TIFF)
 +  endif()
  endif()
  
