@@ -431,8 +431,10 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
 
     depends_on("doxygen@1.8.17:", when="+chpldoc")
 
-    # TODO: map Chapel versions to supported LLVM versions
-    depends_on("llvm@14:17", when="llvm=spack")
+    # TODO: keep up to date with util/chplenv/chpl_llvm.py
+    with when("llvm=spack"):
+        depends_on("llvm@11:17", when="@:2.0.1")
+        depends_on("llvm@11:18", when="@2.1.0:")
 
     # Based on docs https://chapel-lang.org/docs/technotes/gpu.html#requirements
     depends_on("llvm@16:", when="llvm=spack ^cuda@12:")
@@ -528,8 +530,6 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
             env.set(
                 "CHPL_LLVM_CONFIG", "{0}/{1}".format(self.spec["llvm"].prefix, "bin/llvm-config")
             )
-        else:
-            env.set("CHPL_LLVM", self.spec.variants["llvm"].value)
 
     def setup_if_not_unset(self, env, var, value):
         if value != "unset":
@@ -784,13 +784,7 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
     #     """Run the self-check after installing the package"""
     #     path_put_first("PATH", [self.prefix.bin])
     #     self.test_version()
-    #     with set_env(CHPL_HOME=self.stage.source_path):
-    #         with working_dir(self.stage.source_path):
-    #             if self.spec.satisfies("+cuda") or self.spec.satisfies("+rocm"):
-    #                 with set_env(COMP_FLAGS="--no-checks --no-compiler-driver"):
-    #                     self.run_local_make_check()
-    #             else:  # Not GPU
-    #                 self.run_local_make_check()
-    #             if self.spec.satisfie("+chpldoc"):
-    #                 make("check-chpldoc")
+    #     self.test_hello()
+    #     if self.spec.satisfies("+chpldoc"):
+    #       make("check-chpldoc")
     #     self.test_package_modules()
