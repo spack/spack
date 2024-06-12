@@ -37,13 +37,14 @@ import io
 import multiprocessing
 import os
 import re
+import stat
 import sys
 import traceback
 import types
 from collections import defaultdict
 from enum import Flag, auto
 from itertools import chain
-from typing import Dict, List, Set, Tuple
+from typing import Dict, List, Optional, Set, Tuple
 
 import archspec.cpu
 
@@ -74,6 +75,7 @@ import spack.stage
 import spack.store
 import spack.subprocess_context
 import spack.util.executable
+import spack.util.libc
 from spack import traverse
 from spack.context import Context
 from spack.error import InstallError, NoHeadersError, NoLibrariesError
@@ -435,6 +437,35 @@ def optimization_flags(compiler, target):
     return result
 
 
+class FilterDefaultDynamicLinkerSearchPaths:
+    """Remove rpaths to directories that are default search paths of the dynamic linker."""
+
+    def __init__(self, dynamic_linker: Optional[str]) -> None:
+        # Idenitify directories by (inode, device) tuple, which handles symlinks too.
+        self.default_path_identifiers: Set[Tuple[int, int]] = set()
+        if not dynamic_linker:
+            return
+        for path in spack.util.libc.default_search_paths_from_dynamic_linker(dynamic_linker):
+            try:
+                s = os.stat(path)
+                if stat.S_ISDIR(s.st_mode):
+                    self.default_path_identifiers.add((s.st_ino, s.st_dev))
+            except OSError:
+                continue
+
+    def is_dynamic_loader_default_path(self, p: str) -> bool:
+        try:
+            s = os.stat(p)
+            return (s.st_ino, s.st_dev) in self.default_path_identifiers
+        except OSError:
+            return False
+
+    def __call__(self, dirs: List[str]) -> List[str]:
+        if not self.default_path_identifiers:
+            return dirs
+        return [p for p in dirs if not self.is_dynamic_loader_default_path(p)]
+
+
 def set_wrapper_variables(pkg, env):
     """Set environment variables used by the Spack compiler wrapper (which have the prefix
     `SPACK_`) and also add the compiler wrappers to PATH.
@@ -508,17 +539,17 @@ def set_wrapper_variables(pkg, env):
     def update_compiler_args_for_dep(dep):
         if dep in link_deps and (not is_system_path(dep.prefix)):
             query = pkg.spec[dep.name]
-            dep_link_dirs = list()
+            dep_link_dirs = []
             try:
                 # In some circumstances (particularly for externals) finding
                 # libraries packages can be time consuming, so indicate that
                 # we are performing this operation (and also report when it
                 # finishes).
-                tty.debug("Collecting libraries for {0}".format(dep.name))
+                tty.debug(f"Collecting libraries for {dep.name}")
                 dep_link_dirs.extend(query.libs.directories)
-                tty.debug("Libraries for {0} have been collected.".format(dep.name))
+                tty.debug(f"Libraries for {dep.name} have been collected.")
             except NoLibrariesError:
-                tty.debug("No libraries found for {0}".format(dep.name))
+                tty.debug(f"No libraries found for {dep.name}")
 
             for default_lib_dir in ["lib", "lib64"]:
                 default_lib_prefix = os.path.join(dep.prefix, default_lib_dir)
@@ -532,7 +563,7 @@ def set_wrapper_variables(pkg, env):
             try:
                 _prepend_all(include_dirs, query.headers.directories)
             except NoHeadersError:
-                tty.debug("No headers found for {0}".format(dep.name))
+                tty.debug(f"No headers found for {dep.name}")
 
     for dspec in pkg.spec.traverse(root=False, order="post"):
         if dspec.external:
@@ -552,9 +583,18 @@ def set_wrapper_variables(pkg, env):
         lib_path = os.path.join(pkg.prefix, libdir)
         rpath_dirs.insert(0, lib_path)
 
+    filter_default_dynamic_linker_search_paths = FilterDefaultDynamicLinkerSearchPaths(
+        pkg.compiler.default_dynamic_linker
+    )
+
     link_dirs = list(dedupe(filter_system_paths(link_dirs)))
     include_dirs = list(dedupe(filter_system_paths(include_dirs)))
     rpath_dirs = list(dedupe(filter_system_paths(rpath_dirs)))
+    rpath_dirs = filter_default_dynamic_linker_search_paths(rpath_dirs)
+
+    implicit_rpaths = filter_default_dynamic_linker_search_paths(pkg.compiler.implicit_rpaths())
+    if implicit_rpaths:
+        env.set("SPACK_COMPILER_IMPLICIT_RPATHS", ":".join(implicit_rpaths))
 
     # Spack managed directories include the stage, store and upstream stores. We extend this with
     # their real paths to make it more robust (e.g. /tmp vs /private/tmp on macOS).
@@ -840,10 +880,6 @@ def setup_package(pkg, dirty, context: Context = Context.BUILD):
             load_module(mod)
 
     load_external_modules(pkg)
-
-    implicit_rpaths = pkg.compiler.implicit_rpaths()
-    if implicit_rpaths:
-        env_mods.set("SPACK_COMPILER_IMPLICIT_RPATHS", ":".join(implicit_rpaths))
 
     # Make sure nothing's strange about the Spack environment.
     validate(env_mods, tty.warn)
