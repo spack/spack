@@ -2850,7 +2850,9 @@ class RequirementParser:
         for item in preferences:
             spec, condition, message = self._parse_prefer_conflict_item(item)
             if not message:
-                message = f"Preference from config for {pkg.name} encoded as a requirement: {str(spec)}"
+                message = (
+                    f"Preference from config for {pkg.name} encoded as a requirement: {str(spec)}"
+                )
             result.append(
                 # A strong preference is defined as:
                 #
@@ -2953,7 +2955,10 @@ class RequirementParser:
 
                 message = requirement.get("message")
                 if not message:
-                    message = f"Requirement from config (packages.yaml) for {pkg_name}: {str(constraints)}"
+                    message = (
+                        "Requirement from config (packages.yaml) "
+                        f"for {pkg_name}: {str(constraints)}"
+                    )
 
                 rules.append(
                     RequirementRule(
