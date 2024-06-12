@@ -45,7 +45,11 @@ class Proj(CMakePackage, AutotoolsPackage):
     version("7.2.0", sha256="2957798e5fe295ff96a2af1889d0428e486363d210889422f76dd744f7885763")
     version("7.1.0", sha256="876151e2279346f6bdbc63bd59790b48733496a957bccd5e51b640fdd26eaa8d")
     version("7.0.1", sha256="a7026d39c9c80d51565cfc4b33d22631c11e491004e19020b3ff5a0791e1779f")
-    version("7.0.0", sha256="ee0e14c1bd2f9429b1a28999240304c0342ed739ebaea3d4ff44c585b1097be8")
+    version(
+        "7.0.0",
+        sha256="ee0e14c1bd2f9429b1a28999240304c0342ed739ebaea3d4ff44c585b1097be8",
+        deprecated=True,
+    )
     version("6.3.2", sha256="cb776a70f40c35579ae4ba04fb4a388c1d1ce025a1df6171350dc19f25b80311")
     version("6.3.1", sha256="6de0112778438dcae30fcc6942dee472ce31399b9e5a2b67e8642529868c86f8")
     version("6.2.0", sha256="b300c0f872f632ad7f8eb60725edbf14f0f8f52db740a3ab23e7b94f1cd22a50")
