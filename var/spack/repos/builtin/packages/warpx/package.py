@@ -314,8 +314,8 @@ class Warpx(CMakePackage):
 
     def test_warpx_3d(self):
         """Run warpx 3d test"""
-        self.run_warpx("3")  
+        self.run_warpx("3")
 
     def test_warpx_rz(self):
         """Run warpx rz test"""
-        self.run_warpx("rz")  
+        self.run_warpx("rz")
