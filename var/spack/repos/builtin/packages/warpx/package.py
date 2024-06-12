@@ -291,42 +291,31 @@ class Warpx(CMakePackage):
         install test subdirectory for use during `spack test run`."""
         cache_extra_test_sources(self, [self.examples_src_dir])
 
-    def test_warpx_1d(self):
-        """Run warpx 1d test"""
+    def run_warpx(self, dim):
         if "+app" not in self.spec:
             raise SkipTest("Package must be installed with +app")
-
-        exe = find(self.prefix.bin, "warpx.1d.*", recursive=False)[0]
-        cli_args = self._get_input_options("1", True)
+        if dim not in self.spec.variants["dims"].value:
+            raise SkipTest(f"Package must be installed with {dim} in dims")
+        dim_arg = f"{dim}d" if dim.isdigit() else dim
+        if self.spec.satisfies("@:23.05") and not dim.isdigit():
+            dim_arg = dim_arg.upper()
+        exe = find(self.prefix.bin, f"warpx.{dim_arg}.*", recursive=False)[0]
+        cli_args = self._get_input_options(dim, True)
         warpx = which(exe)
         warpx(*cli_args)
+
+    def test_warpx_1d(self):
+        """Run warpx 1d test"""
+        self.run_warpx("1")
 
     def test_warpx_2d(self):
         """Run warpx 2d test"""
-        if "+app" not in self.spec:
-            raise SkipTest("Package must be installed with +app")
-
-        exe = find(self.prefix.bin, "warpx.2d.*", recursive=False)[0]
-        cli_args = self._get_input_options("2", True)
-        warpx = which(exe)
-        warpx(*cli_args)
+        self.run_warpx("2")
 
     def test_warpx_3d(self):
         """Run warpx 3d test"""
-        if "+app" not in self.spec:
-            raise SkipTest("Package must be installed with +app")
-
-        exe = find(self.prefix.bin, "warpx.3d.*", recursive=False)[0]
-        cli_args = self._get_input_options("3", True)
-        warpx = which(exe)
-        warpx(*cli_args)
+        self.run_warpx("3")  
 
     def test_warpx_rz(self):
         """Run warpx rz test"""
-        if "+app" not in self.spec:
-            raise SkipTest("Package must be installed with +app")
-
-        exe = find(self.prefix.bin, "warpx.rz.*", recursive=False)[0]
-        cli_args = self._get_input_options("rz", True)
-        warpx = which(exe)
-        warpx(*cli_args)
+        self.run_warpx("rz")  
