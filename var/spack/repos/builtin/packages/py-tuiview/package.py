@@ -15,7 +15,7 @@ class PyTuiview(PythonPackage):
     url = (
         "https://github.com/ubarsc/tuiview/releases/download/tuiview-1.2.13/TuiView-1.2.13.tar.gz"
     )
-    
+
     maintainers("neilflood", "gillins")
 
     version("1.2.14", sha256="80cf4ac607b37bb9d7348b3d40e1e18910323f7ad47e79ae850cbb4750775f7c")
