@@ -17,7 +17,7 @@ def submodules(package):
     if package.spec.satisfies("+wind-utils"):
         submodules.append("wind-utils")
     if package.spec.satisfies("+tests"):
-        submodules.append("meshes")
+        submodules.append("reg_tests/mesh")
     return submodules
 
 class NaluWind(CMakePackage, CudaPackage, ROCmPackage):
