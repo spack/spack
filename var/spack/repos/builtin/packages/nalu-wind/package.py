@@ -11,7 +11,14 @@ def _parse_float(val):
         return float(val) > 0.0
     except ValueError:
         return False
-
+        
+def submodules(package):
+    submodules = []
+    if package.spec.satisfies("+wind-utils"):
+        submodules.append("wind-utils")
+    if package.spec.satisfies("+tests"):
+        submodules.append("meshes")
+    return submodules
 
 class NaluWind(CMakePackage, CudaPackage, ROCmPackage):
     """Nalu-Wind: Wind energy focused variant of Nalu."""
@@ -120,14 +127,6 @@ class NaluWind(CMakePackage, CudaPackage, ROCmPackage):
     conflicts("^hypre+sycl")
     conflicts("^trilinos+cuda", when="~cuda")
     conflicts("^trilinos+rocm", when="~rocm")
-
-    def submodules(package):
-        submodules = []
-        if package.spec.satisfies("+wind-utils"):
-            submodules.append("wind-utils")
-        if package.spec.satisfies("+tests"):
-            submodules.append("meshes")
-        return submodules
 
     def setup_dependent_run_environment(self, env, dependent_spec):
         spec = self.spec
