@@ -3,6 +3,7 @@ import sys
 from collections import defaultdict
 from typing import List
 
+import spack.concretize
 import spack.config as config
 import spack.environment as ev
 import spack.error
@@ -74,6 +75,11 @@ def _top_level_constraints_error(pkg_name, constraints):
     )
 
 
+def _check_normalized_constraints(specs):
+    with spack.concretize._as_unified(specs) as root:
+        root.normalize()
+
+
 def main():
     parser = argparse.ArgumentParser(description="Combine user specs and requirements")
     parser.add_argument("--organizing-root", help="Use this to order output specs")
@@ -113,6 +119,8 @@ def main():
                 _top_level_constraints_error(pkg_name, per_pkg_constraints)
                 sys.exit(1)
         merged_constraints[pkg_name] = accumulated
+
+    _check_normalized_constraints(merged_constraints.values())
 
     ordered = list(merged_constraints.values())
     if args.organizing_root:
