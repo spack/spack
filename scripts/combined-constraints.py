@@ -90,17 +90,29 @@ def main():
     for spec in e.user_specs:
         aggregated_constraints[spec.name].append((spec.copy(), "Environment speclist"))
 
-    conf = config.get("packages")
-    for pkg_name, pkg_conf in conf.items():
+    # Collect requirements and non-buildable externals
+    for pkg_name, pkg_conf in config.get("packages", dict()).items():
         if pkg_name == "all":
             continue
         if "require" not in pkg_conf:
             continue
         for constraint_spec in _collect_always_constraints(pkg_name, pkg_conf):
             aggregated_constraints[pkg_name].append(
-                (constraint_spec, "require: from packages.yaml")
+                (constraint_spec, "requirement from packages.yaml")
             )
 
+        if not pkg_conf.get("buildable", True):
+            externals = pkg_conf.get("externals", [])
+            if len(externals) == 1:
+                # If a package isn't buildable, and there's one spec for it, then
+                # all of its constraints must apply (there is one possible exception
+                # to this rule: if reuse is enabled and already-built instances of
+                # the spec are available)
+                aggregated_constraints[pkg_name].append(
+                    (externals[0]["spec"], "external from packages.yaml")
+                )
+
+    # Collect develop specs
     for pkg_name, dev_conf in config.get("develop", dict()).items():
         aggregated_constraints[pkg_name].append((Spec(dev_conf["spec"]), "Develop spec"))
 
@@ -120,7 +132,8 @@ def main():
                 sys.exit(1)
         merged_constraints[pkg_name] = accumulated
 
-    _check_normalized_constraints(merged_constraints.values())
+    if e.unify:
+        _check_normalized_constraints(merged_constraints.values())
 
     ordered = list(merged_constraints.values())
     if args.organizing_root:
