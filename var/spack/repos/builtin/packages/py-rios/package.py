@@ -43,5 +43,5 @@ class PyRios(PythonPackage):
     depends_on("py-setuptools", type="build")
     depends_on("py-numpy", type=("build", "run"))
     depends_on("gdal+python", type=("build", "run"))
-    depends_on("py-cloudpickle", type=("build", "run"), when="@1.4.16:1.4.99+parallel")
+    depends_on("py-cloudpickle", type="run", when="@1.4.16:1.4.99+parallel")
     depends_on("py-cloudpickle", type="run", when="@2.0.0:+multimachine")
