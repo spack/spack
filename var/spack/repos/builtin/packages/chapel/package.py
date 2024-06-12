@@ -458,6 +458,7 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
     depends_on("hwloc", when="hwloc=spack", type=("build", "link", "run", "test"))
     depends_on("libfabric", when="libfabric=spack", type=("build", "link", "run", "test"))
     depends_on("libunwind", when="unwind=spack", type=("build", "link", "run", "test"))
+    depends_on("jemalloc", when="host_jemalloc=spack", type=("build", "link", "run", "test"))
 
     depends_on("gasnet conduits=none", when="gasnet=spack")
 
