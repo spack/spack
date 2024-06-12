@@ -36,7 +36,7 @@ class PyRios(PythonPackage):
         "parallel",
         default=True,
         when="@1.4.16:1.4.99",
-        description="Enables the 1.4.x parallel processing module (deprecated)"
+        description="Enables the 1.4.x parallel processing module (deprecated)",
     )
     # In 2.x, there is substantial concurrency always built-in, but using it
     # across multiple machines requires an extra dependency.
@@ -44,7 +44,7 @@ class PyRios(PythonPackage):
         "multimachine",
         default=False,
         when="@2.0.0:",
-        description="Enable compute worker kinds that run across multiple machines"
+        description="Enable compute worker kinds that run across multiple machines",
     )
 
     # pip silently replaces distutils with setuptools
