@@ -931,11 +931,10 @@ class PyclingoDriver:
         result.raise_if_unsat()
 
         if result.satisfiable and result.unsolved_specs and setup.concretize_everything:
-            unsolved_str = Result.format_unsolved(result.unsolved_specs)
-            raise InternalConcretizerError(
-                "Internal Spack error: the solver completed but produced specs"
-                " that do not satisfy the request. Please report a bug at "
-                f"https://github.com/spack/spack/issues\n\t{unsolved_str}"
+            tty.error(
+                "resolved spec does not satisfy input spec, which may be caused by a bug in the "
+                "solver. Please open an issue at https://github.com/spack/spack/issues\n\t"
+                f"{Result.format_unsolved(result.unsolved_specs)}"
             )
 
         return result, timer, self.control.statistics

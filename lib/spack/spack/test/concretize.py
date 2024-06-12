@@ -2203,10 +2203,8 @@ class TestConcretize:
         assert result.specs
 
     @pytest.mark.regression("38664")
-    def test_unsolved_specs_raises_error(self, monkeypatch, mock_packages, config):
-        """Check that the solver raises an exception when input specs are not
-        satisfied.
-        """
+    def test_unsolved_specs_logs_error(self, monkeypatch, mock_packages, config, capfd):
+        """Check that the solver logs an error when input specs are not satisfied."""
         specs = [Spec("zlib")]
         solver = spack.solver.asp.Solver()
         setup = spack.solver.asp.SpackSolverSetup()
@@ -2215,11 +2213,9 @@ class TestConcretize:
 
         monkeypatch.setattr(spack.solver.asp.Result, "unsolved_specs", simulate_unsolved_property)
 
-        with pytest.raises(
-            spack.solver.asp.InternalConcretizerError,
-            match="the solver completed but produced specs",
-        ):
-            solver.driver.solve(setup, specs, reuse=[])
+        solver.driver.solve(setup, specs, reuse=[])
+
+        assert "resolved spec does not satisfy input spec" in capfd.readouterr().err
 
     @pytest.mark.regression("43141")
     @pytest.mark.only_clingo("Use case not supported by the original concretizer")
