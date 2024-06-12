@@ -87,8 +87,9 @@ class GeopmService(AutotoolsPackage):
         depends_on("py-cffi@1.14.5:", type="run")
 
     # Other dependencies
+    for ver in ["3.1.0", "develop"]:
+        depends_on(f"py-geopmdpy@{ver}", type="run", when=f"@{ver}")
     depends_on("py-setuptools-scm@7.0.3:", when="@3.1:", type="build")
-    depends_on("py-geopmdpy@3.1:", type="run", when="@3.1:")
     depends_on("bash-completion")
     depends_on("unzip")
     depends_on("systemd", when="+systemd")
