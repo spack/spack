@@ -51,7 +51,9 @@ class NaluWind(CMakePackage, CudaPackage, ROCmPackage):
     variant("gpu-aware-mpi", default=False, description="gpu-aware-mpi")
     variant("wind-utils", default=False, description="Build wind-utils")
     variant("umpire", default=False, description="Enable Umpire")
-    variant("tests", default=False, description="Enable regression tests and clone the mesh submodule")
+    variant(
+        "tests", default=False, description="Enable regression tests and clone the mesh submodule"
+    )
 
     depends_on("mpi")
     depends_on("yaml-cpp@0.5.3:")
@@ -167,7 +169,6 @@ class NaluWind(CMakePackage, CudaPackage, ROCmPackage):
             self.define_from_variant("ENABLE_FFTW", "fftw"),
             self.define_from_variant("ENABLE_UMPIRE", "umpire"),
             self.define_from_variant("ENABLE_TESTS", "tests"),
-
         ]
 
         if spec.satisfies("+openfast"):
