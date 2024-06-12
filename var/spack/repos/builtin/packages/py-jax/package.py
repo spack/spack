@@ -24,6 +24,7 @@ class PyJax(PythonPackage):
     license("Apache-2.0")
     maintainers("adamjstewart", "jonas-eschle")
 
+    version("0.4.29", sha256="12904571eaefddcdc8c3b8d4936482b783d5a216e99ef5adcd3522fdfb4fc186")
     version("0.4.28", sha256="dcf0a44aff2e1713f0a2b369281cd5b79d8c18fc1018905c4125897cb06b37e9")
     version("0.4.27", sha256="f3d7f19bdc0a17ccdb305086099a5a90c704f904d4272a70debe06ae6552998c")
     version("0.4.26", sha256="2cce025d0a279ec630d550524749bc8efe25d2ff47240d2a7d4cfbc5090c5383")
@@ -56,6 +57,7 @@ class PyJax(PythonPackage):
     with default_args(type=("build", "run")):
         # setup.py
         depends_on("python@3.9:", when="@0.4.14:")
+        depends_on("py-ml-dtypes@0.4:", when="@0.4.29:")
         depends_on("py-ml-dtypes@0.2:", when="@0.4.14:")
         depends_on("py-ml-dtypes@0.1:", when="@0.4.9:")
         depends_on("py-ml-dtypes@0.0.3:", when="@0.4.7:")
@@ -71,6 +73,7 @@ class PyJax(PythonPackage):
         # jax/_src/lib/__init__.py
         # https://github.com/google/jax/commit/8be057de1f50756fe7522f7e98b2f30fad56f7e4
         for v in [
+            "0.4.29",
             "0.4.28",
             "0.4.27",
             "0.4.26",
