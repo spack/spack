@@ -1,11 +1,13 @@
-import spack.environment as ev
-import spack.config as config
-from spack.spec import Spec
 import argparse
 from collections import defaultdict
+from typing import List
+
+import spack.config as config
+import spack.environment as ev
+from spack.spec import Spec
 
 
-def _collect_always_constraints(pkg_name, pkg_conf):
+def _collect_always_constraints(pkg_name, pkg_conf) -> List[Spec]:
     collected = []
     if "require" not in pkg_conf:
         return []
@@ -66,8 +68,8 @@ def _merge_constraint(dst_spec, extra_spec):
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Combine user specs and requirements')
-    parser.add_argument('--organizing-root', help='Use this to order output specs')
+    parser = argparse.ArgumentParser(description="Combine user specs and requirements")
+    parser.add_argument("--organizing-root", help="Use this to order output specs")
     args = parser.parse_args()
 
     e = ev.active_environment()
@@ -82,7 +84,9 @@ def main():
         if "require" not in pkg_conf:
             continue
         for constraint_spec in _collect_always_constraints(pkg_name, pkg_conf):
-            aggregated_constraints[pkg_name].append((constraint_spec, "require: from packages.yaml"))
+            aggregated_constraints[pkg_name].append(
+                (constraint_spec, "require: from packages.yaml")
+            )
 
     for pkg_name, dev_conf in config.get("develop", dict()).items():
         aggregated_constraints[pkg_name].append((Spec(dev_conf["spec"]), "Develop spec"))
