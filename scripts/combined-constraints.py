@@ -1,9 +1,11 @@
 import argparse
 from collections import defaultdict
+import sys
 from typing import List
 
 import spack.config as config
 import spack.environment as ev
+import spack.error
 from spack.spec import Spec
 
 
@@ -60,11 +62,16 @@ def _merge_constraint(dst_spec, extra_spec):
     # that don't define a numbered-version equivalency like @...=1.0
     dst_spec.attach_git_version_lookup()
     extra_spec.attach_git_version_lookup()
-    try:
-        dst_spec.constrain(extra_spec)
-    except:
-        print(f"Failure to constrain {dst_spec} by {extra_spec}")
-        raise
+    dst_spec.constrain(extra_spec)
+
+
+def _top_level_constraints_error(pkg_name, constraints):
+    formatted_constraints = "\n\t".join(
+        f"{spec} ({reason})" for spec, reason in constraints
+    )
+    print(f"""Conflicting user-specified constraints for {pkg_name}:
+\t{formatted_constraints}
+""")
 
 
 def main():
@@ -96,7 +103,11 @@ def main():
         base_spec, reason = per_pkg_constraints[0]
         accumulated = base_spec.copy()
         for next_constraint in per_pkg_constraints[1:]:
-            _merge_constraint(accumulated, next_constraint[0])
+            try:
+                _merge_constraint(accumulated, next_constraint[0])
+            except spack.error.UnsatisfiableSpecError:
+                _top_level_constraints_error(pkg_name, per_pkg_constraints)
+                sys.exit(1)
         merged_constraints[pkg_name] = accumulated
 
     ordered = list(merged_constraints.values())
