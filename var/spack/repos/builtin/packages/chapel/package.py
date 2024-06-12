@@ -423,6 +423,20 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
         msg="Chapel versions prior to 2.1.0 may produce SyntaxWarnings with Python >= 3.12",
     )
 
+    conflicts(
+        "host_jemalloc=spack",
+        when="platform=linux",
+        msg="Only bundled jemalloc may be used on Linux systems, see "
+        "https://chapel-lang.org/docs/usingchapel/chplenv.html#chpl-host-jemalloc",
+    )
+
+    conflicts(
+        "host_jemalloc=bundled",
+        when="platform=darwin",
+        msg="Only system jemalloc may be used on Darwin (MacOS) systems, see "
+        "https://chapel-lang.org/docs/usingchapel/chplenv.html#chpl-host-jemalloc",
+    )
+
     with when("llvm=none"):
         conflicts("+cuda", msg="Cuda support requires building with LLVM")
         conflicts("+rocm", msg="ROCm support requires building with LLVM")
