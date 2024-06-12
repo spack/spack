@@ -389,6 +389,7 @@ complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a gc -d 'remove spe
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a gpg -d 'handle GPG actions for spack'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a graph -d 'generate graphs of package dependency relationships'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a help -d 'get help on spack and its commands'
+complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a include -d 'manage included configs and concrete environments in the active environment'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a info -d 'get detailed information on a particular package'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a install -d 'build and install packages'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a license -d 'list and check license headers on files in spack'
@@ -1484,7 +1485,6 @@ complete -c spack -n '__fish_spack_using_command_pos 0 env' -f -a status -d 'pri
 complete -c spack -n '__fish_spack_using_command_pos 0 env' -f -a st -d 'print whether there is an active environment'
 complete -c spack -n '__fish_spack_using_command_pos 0 env' -f -a loads -d 'list modules for an installed environment \'(see spack module loads)\''
 complete -c spack -n '__fish_spack_using_command_pos 0 env' -f -a view -d 'manage a view associated with the environment'
-complete -c spack -n '__fish_spack_using_command_pos 0 env' -f -a include -d 'Add/remove configuration scopes or concrete environments to the environment'
 complete -c spack -n '__fish_spack_using_command_pos 0 env' -f -a update -d 'update environments to the latest format'
 complete -c spack -n '__fish_spack_using_command_pos 0 env' -f -a revert -d 'restore environments to their state before update'
 complete -c spack -n '__fish_spack_using_command_pos 0 env' -f -a depfile -d 'generate a depfile from the concrete environment specs'
@@ -1636,18 +1636,6 @@ set -g __fish_spack_optspecs_spack_env_view h/help
 complete -c spack -n '__fish_spack_using_command_pos 0 env view' -f -a 'regenerate enable disable'
 complete -c spack -n '__fish_spack_using_command env view' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command env view' -s h -l help -d 'show this help message and exit'
-
-# spack env include
-set -g __fish_spack_optspecs_spack_env_include h/help remove concrete prepend
-
-complete -c spack -n '__fish_spack_using_command env include' -s h -l help -f -a help
-complete -c spack -n '__fish_spack_using_command env include' -s h -l help -d 'show this help message and exit'
-complete -c spack -n '__fish_spack_using_command env include' -l remove -f -a remove
-complete -c spack -n '__fish_spack_using_command env include' -l remove -d 'Remove and included path(s) from the environment'
-complete -c spack -n '__fish_spack_using_command env include' -l concrete -f -a concrete
-complete -c spack -n '__fish_spack_using_command env include' -l concrete -d 'Include paths/environment names as concrete environments'
-complete -c spack -n '__fish_spack_using_command env include' -l prepend -f -a prepend
-complete -c spack -n '__fish_spack_using_command env include' -l prepend -d 'Prepend the includes instead of append'
 
 # spack env update
 set -g __fish_spack_optspecs_spack_env_update h/help y/yes-to-all
@@ -1962,6 +1950,35 @@ complete -c spack -n '__fish_spack_using_command help' -s a -l all -f -a all
 complete -c spack -n '__fish_spack_using_command help' -s a -l all -d 'list all available commands and options'
 complete -c spack -n '__fish_spack_using_command help' -l spec -f -a guide
 complete -c spack -n '__fish_spack_using_command help' -l spec -d 'help on the package specification syntax'
+
+# spack include
+set -g __fish_spack_optspecs_spack_include h/help concrete
+complete -c spack -n '__fish_spack_using_command_pos 0 include' -f -a add -d 'Add include(s) to the active environment'
+complete -c spack -n '__fish_spack_using_command_pos 0 include' -f -a remove -d 'Remove include(s) from the active environment'
+complete -c spack -n '__fish_spack_using_command_pos 0 include' -f -a list -d 'List include(s) in the active environment'
+complete -c spack -n '__fish_spack_using_command include' -s h -l help -f -a help
+complete -c spack -n '__fish_spack_using_command include' -s h -l help -d 'show this help message and exit'
+complete -c spack -n '__fish_spack_using_command include' -l concrete -f -a concrete
+complete -c spack -n '__fish_spack_using_command include' -l concrete -d 'Include paths/names are concrete environment(s)'
+
+# spack include add
+set -g __fish_spack_optspecs_spack_include_add h/help
+
+complete -c spack -n '__fish_spack_using_command include add' -s h -l help -f -a help
+complete -c spack -n '__fish_spack_using_command include add' -s h -l help -d 'show this help message and exit'
+
+# spack include remove
+set -g __fish_spack_optspecs_spack_include_remove h/help
+
+complete -c spack -n '__fish_spack_using_command include remove' -s h -l help -f -a help
+complete -c spack -n '__fish_spack_using_command include remove' -s h -l help -d 'show this help message and exit'
+
+# spack include list
+set -g __fish_spack_optspecs_spack_include_list h/help expand no-expand
+complete -c spack -n '__fish_spack_using_command include list' -s h -l help -f -a help
+complete -c spack -n '__fish_spack_using_command include list' -s h -l help -d 'show this help message and exit'
+complete -c spack -n '__fish_spack_using_command include list' -l expand -f -a expand
+complete -c spack -n '__fish_spack_using_command include list' -l no-expand -f -a expand
 
 # spack info
 set -g __fish_spack_optspecs_spack_info h/help a/all detectable maintainers no-dependencies no-variants no-versions phases tags tests virtuals variants-by-name
