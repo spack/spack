@@ -98,6 +98,10 @@ def main():
     for pkg_name, dev_conf in config.get("develop", dict()).items():
         aggregated_constraints[pkg_name].append((Spec(dev_conf["spec"]), "Develop spec"))
 
+    # TODO: if there are constraints on virtuals, and a provider is in the
+    # list of aggregated constraints, the virtual constraints should be
+    # moved to the provider here.
+
     merged_constraints = dict()
     for pkg_name, per_pkg_constraints in aggregated_constraints.items():
         base_spec, reason = per_pkg_constraints[0]
