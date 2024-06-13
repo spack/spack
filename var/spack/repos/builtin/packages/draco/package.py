@@ -20,6 +20,8 @@ class Draco(CMakePackage):
     license("BSD-3-Clause-Open-MPI")
 
     version("develop", branch="develop")
+    version("7.16.0", sha256="c9ac89b59b9d870157df411bc2be01d130eb9ab98b5c0ad4b64baba61f6c7d74")
+    version("7.15.0", sha256="eb7b241ea91f07194204068d7d6b394f423be57f5fe52a6364dec8f6b4880167")
     version("7.14.1", sha256="b05c75f1b8ea1d4fac4900d897fb1c948b470826b174ed8b97b32c6da9f030bf")
     version("7.14.0", sha256="c8abf293d81c1b8020907557c20d8d2f2edf9ac7ae60a534eab052a8c3b7f99d")
     version("7.13.0", sha256="07a443df71d8d3720ced98f86821f714d2bfaa9f17a177c7f0465a59a1e9e719")
@@ -108,17 +110,16 @@ class Draco(CMakePackage):
                 "-DUSE_QT={0}".format("ON" if "+qt" in self.spec else "OFF"),
             ]
         )
+        if spec.satisfies('@7.15.0:'):
+            options.extend(['-DUSE_GPU={0}'.format('ON' if '+cuda' in self.spec else 'OFF')])
+        else:
+            options.extend(['-DUSE_CUDA={0}'.format('ON' if '+cuda' in self.spec else 'OFF')])
         if "+fast_fma" in self.spec:
-            options.extend(
-                [
-                    "-DDRACO_ROUNDOFF_MODE={0}".format(
-                        "FAST" if "build_type=Release" in self.spec else "ACCURATE"
-                    )
-                ]
-            )
+            options.extend(['-DDRACO_ROUNDOFF_MODE={0}'.format(
+                'FAST' if 'build_type=Release' in self.spec else 'ACCURATE')])
         return options
 
     def check(self):
         """Run ctest after building project."""
         with working_dir(self.build_directory):
-            ctest("--output-on-failure")
+            ctest('--output-on-failure')
