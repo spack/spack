@@ -339,7 +339,10 @@ def find(parser, args):
     if args.loaded:
         results = spack.cmd.filter_loaded_specs(results)
 
-    status_fn = spack.spec.Spec.install_status if args.install_status else None
+    if args.install_status or args.show_concretized:
+        status_fn = spack.spec.Spec.install_status
+    else:
+        status_fn = None
 
     # Display the result
     if args.json:
@@ -349,31 +352,18 @@ def find(parser, args):
             if env:
                 display_env(env, args, decorator, results)
 
-        not_installed = list()
-        installed = list()
-        for x in results:
-            if x.installed:
-                installed.append(x)
-            else:
-                not_installed.append(x)
-
         count_suffix = " (not shown)"
         if not args.only_roots:
             count_suffix = ""
             kwargs = {"decorator": decorator, "all_headers": True, "status_fn": status_fn}
-            if installed:
-                tty.msg("Installed packages")
-                cmd.display_specs(installed, args, **kwargs)
-            if not_installed:
-                tty.msg("Concretized but not installed")
-                cmd.display_specs(not_installed, args, **kwargs)
+            cmd.display_specs(results, args, **kwargs)
 
         # print number of installed packages last (as the list may be long)
         if sys.stdout.isatty() and args.groups:
             if args.show_concretized:
                 spack.cmd.print_how_many_pkgs(
-                    not_installed, "concretized-but-not-installed", suffix=count_suffix
+                    list(x for x in results if not x.installed), "concretized-but-not-installed", suffix=count_suffix
                 )
 
             pkg_type = "loaded" if args.loaded else "installed"
-            spack.cmd.print_how_many_pkgs(installed, pkg_type, suffix=count_suffix)
+            spack.cmd.print_how_many_pkgs(list(x for x in results if x.installed), pkg_type, suffix=count_suffix)
