@@ -125,7 +125,7 @@ class Mivisionx(CMakePackage):
                 "tests/amd_migraphx_tests/resnet50/CMakeLists.txt",
                 string=True,
             )
-            if self.spec.satisfies("@:6.1.0"):
+	    if self.spec.satisfies("@5.5.0:6.0.0"):
                 filter_file(
                     r"${ROCM_PATH}/include/mivisionx",
                     "{0}/include/mivisionx".format(self.spec.prefix),
