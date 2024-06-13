@@ -5,7 +5,7 @@
  typelibsdir = $(libdir)/girepository-1.0
  typelibs_DATA = $(gir_DATA:.gir=.typelib)
 -TOOL_SUBSTITUTIONS = -e s,@libdir\@,$(libdir), -e s,@datarootdir\@,$(datarootdir), -e s,@PYTHON_CMD\@,\/usr\/bin\/env\ $(PYTHON), -e s,@GIR_DIR\@,$(GIR_DIR),g
-+TOOL_SUBSTITUTIONS = -e s,@libdir\@,$(libdir), -e s,@datarootdir\@,$(datarootdir), -e s,@PYTHON\@,\/usr\/bin\/env\ $(PYTHON), -e "1i\#!/bin/bash $(SPACK_SBANG)" -e s,@GIR_DIR\@,$(GIR_DIR),g
++TOOL_SUBSTITUTIONS = -e s,@libdir\@,$(libdir), -e s,@datarootdir\@,$(datarootdir), -e s,@PYTHON_CMD\@,\/usr\/bin\/env\ $(PYTHON), -e s,@GIR_DIR\@,$(GIR_DIR),g -e "1i\#!/bin/bash $(SPACK_SBANG)"
  g_ir_compiler_SOURCES = tools/compiler.c
  g_ir_compiler_CPPFLAGS = -DGIREPO_DEFAULT_SEARCH_PATH="\"$(libdir)\"" \
  			 -I$(top_srcdir)/girepository
