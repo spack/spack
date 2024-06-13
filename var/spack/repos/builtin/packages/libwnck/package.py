@@ -34,12 +34,12 @@ class Libwnck(MesonPackage, AutotoolsPackage):
     variant("introspection", default=True, description="Build with gobject-introspection support")
     # Defaulting to false until startup-notification build issue is resolved
     variant(
-        "startup_notification", 
-        default=False, 
+        "startup_notification",
+        default=False,
         description="Build with startup-notification support",
     )
     variant("gtk_doc", default=False, description="Build documentation")
-    
+
     build_system(
         conditional("meson", when="@3.31:"),
         conditional("autotools", when="@:3.24"),
@@ -52,12 +52,12 @@ class Libwnck(MesonPackage, AutotoolsPackage):
         depends_on("intltool@0.40.6:", when="@:3.24")
         depends_on("cmake", when="build_system=meson")
         depends_on("gtk-doc@1.9:", when="+gtk_doc")
-        
+
     with default_args(type=("build", "link", "run")):
         depends_on("glib@2")
         depends_on("gdk-pixbuf")
         depends_on("gtkplus@3.22:")
-        
+
         depends_on("libxres", when="+xres")
         depends_on("gobject-introspection", when="+introspection")
         depends_on("startup-notification", when="+startup_notification")
