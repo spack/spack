@@ -59,6 +59,7 @@ class IntelXed(Package):
         when="@:2022.06",
     )
 
+    variant("optimize", default=True, description="Build with -O2")
     variant("debug", default=False, description="Enable debug symbols")
     variant("pic", default=False, description="Compile with position independent code.")
 
@@ -69,26 +70,10 @@ class IntelXed(Package):
     patch("2019-python3.patch", when="@10.2019.03")
     patch("libxed-ild.patch", when="@12.0:2022.12")
 
-    requires("target=x86_64:", msg="intel-xed only runs on x86/x86_64")
+    requires("target=x86_64:,aarch64:", msg="intel-xed only builds on x86-64 or aarch64")
 
-    mycflags = []  # type: List[str]
-
-    # Save CFLAGS for use in install.
-    def flag_handler(self, name, flags):
-        if name == "cflags":
-            self.mycflags = flags
-
-            if "+pic" in self.spec:
-                flags.append(self.compiler.cc_pic_flag)
-
-        return (flags, None, None)
-
-    def install(self, spec, prefix):
-        # XED needs PYTHONPATH to find the mbuild directory.
-        mbuild_dir = join_path(self.stage.source_path, "..", "mbuild")
-        python_path = os.getenv("PYTHONPATH", "")
-        os.environ["PYTHONPATH"] = mbuild_dir + ":" + python_path
-
+    @when("@2023.04.16")
+    def patch(self):
         # In 2023.04.16, the xed source directory must be exactly 'xed',
         # so add a symlink, but don't fail if the link already exists.
         # See: https://github.com/intelxed/xed/issues/300
@@ -98,45 +83,38 @@ class IntelXed(Package):
         except OSError:
             pass
 
+    def setup_build_environment(self, env):
+        # XED needs PYTHONPATH to find the mbuild directory.
+        env.prepend_path("PYTHONPATH", self.mdir)
+
+    def install(self, spec, prefix):
         mfile = Executable(join_path(".", "mfile.py"))
 
-        args = ["-j", str(make_jobs), "--cc=%s" % spack_cc, "--no-werror"]
+        args = [
+            "-j",
+            str(make_jobs),
+            f"--cc={spack_cc}",
+            "--no-werror",
+            f"--prefix={prefix}",
+            "--install-dir=" + join_path(prefix, "share", "xed"),
+        ]
 
+        if "+optimize" in spec:
+            args.append("--opt=2")
         if "+debug" in spec:
             args.append("--debug")
-
-        # If an optimization flag (-O...) is specified in CFLAGS, use
-        # that, else set default opt level.
-        for flag in self.mycflags:
-            if flag.startswith("-O"):
-                break
-        else:
-            args.append("--opt=2")
+        if "+pic" in spec:
+            args.extend(
+                [
+                    f"--extra-cxxflags={self.compiler.cc_pic_flag}",
+                    f"--extra-ccflags={self.compiler.cxx_pic_flag}",
+                ]
+            )
 
         # Build and install static libxed.a.
         mfile("--clean")
-        mfile(*args)
-
-        mkdirp(prefix.include)
-        mkdirp(prefix.lib)
-        mkdirp(prefix.bin)
-
-        install(join_path("obj", "lib*.a"), prefix.lib)
+        mfile("--static", *args, "install")
 
         # Build and install shared libxed.so and examples (to get the CLI).
         mfile("--clean")
-        mfile("examples", "--shared", *args)
-
-        install(join_path("obj", "lib*.so"), prefix.lib)
-
-        # Starting with 11.x, the install files are moved or copied into
-        # subdirs of obj/wkit.
-        if spec.satisfies("@11.0:"):
-            wkit = join_path("obj", "wkit")
-            install(join_path(wkit, "bin", "xed"), prefix.bin)
-            install(join_path(wkit, "include", "xed", "*.h"), prefix.include)
-        else:
-            # Old 2019.03.01 paths.
-            install(join_path("obj", "examples", "xed"), prefix.bin)
-            install(join_path("include", "public", "xed", "*.h"), prefix.include)
-            install(join_path("obj", "*.h"), prefix.include)
+        mfile("--shared", *args, "examples", "install")
