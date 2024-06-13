@@ -88,6 +88,12 @@ class GobjectIntrospection(MesonPackage, AutotoolsPackage):
         when="@:1.63.1",
     )
 
+    conflicts(
+        "^python@3.11:",
+        when="@:2.60",
+        msg="Versions prior to 2.72 not compatible with Python 3.11 or later.",
+    )
+
     def url_for_version(self, version):
         url = "https://download.gnome.org/sources/gobject-introspection/{0}/gobject-introspection-{1}.tar.xz"
         return url.format(version.up_to(2), version)
