@@ -24,7 +24,6 @@ class Libwnck(MesonPackage, AutotoolsPackage):
     version("43.0", sha256="905bcdb85847d6b8f8861e56b30cd6dc61eae67ecef4cd994a9f925a26a2c1fe")
     version("40.1", sha256="03134fa114ef3fbe34075aa83678f58aa2debe9fcef4ea23c0779e28601d6611")
     version("3.36.0", sha256="bc508150b3ed5d22354b0e6774ad4eee465381ebc0ace45eb0e2d3a4186c925f")
-    version("3.31.4", sha256="45b3f64bb881bab5666d93bc8ad7fef96c2820b0a3dfd117026b0d121767dd26")
     version("3.24.1", sha256="afa6dc283582ffec15c3374790bcbcb5fb422bd38356d72deeef35bf7f9a1f04")
     version("3.20.1", sha256="1cb03716bc477058dfdf3ebfa4f534de3b13b1aa067fcd064d0b7813291cba72")
     version("3.14.1", sha256="bb643c9c423c8aa79c59973ce27ce91d3b180d1e9907902278fb79391f52befa")
@@ -48,11 +47,11 @@ class Libwnck(MesonPackage, AutotoolsPackage):
     )
 
     with default_args(type="build"):
-        depends_on("pkgconfig")
+        depends_on("pkgconfig@0.9.0:")
         depends_on("gettext", when="@3.31:")
         depends_on("intltool@0.40.6:", when="@:3.24")
         depends_on("cmake", when="build_system=meson")
-        depends_on("gtk-doc", when="+gtk_doc")
+        depends_on("gtk-doc@1.9:", when="+gtk_doc")
         
     with default_args(type=("build", "link", "run")):
         depends_on("glib@2")
