@@ -16,7 +16,7 @@ class Camp(CMakePackage, CudaPackage, ROCmPackage):
     git = "https://github.com/LLNL/camp.git"
     url = "https://github.com/LLNL/camp/archive/v0.1.0.tar.gz"
 
-    maintainers("trws","adrienbernede")
+    maintainers("trws", "adrienbernede")
 
     license("BSD-3-Clause")
 

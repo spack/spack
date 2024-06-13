@@ -26,7 +26,7 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
     git = "https://github.com/LLNL/RAJA.git"
     tags = ["radiuss", "e4s"]
 
-    maintainers("davidbeckingsale","adrienbernede")
+    maintainers("davidbeckingsale", "adrienbernede")
 
     license("BSD-3-Clause")
 

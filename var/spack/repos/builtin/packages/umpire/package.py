@@ -21,7 +21,7 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
     git = "https://github.com/LLNL/Umpire.git"
     tags = ["radiuss", "e4s"]
 
-    maintainers("davidbeckingsale")
+    maintainers("davidbeckingsale", "adrienbernede")
 
     license("MIT")
 
