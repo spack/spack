@@ -336,6 +336,7 @@ def display_specs(specs, args=None, **kwargs):
         groups (bool): display specs grouped by arch/compiler (default True)
         decorator (typing.Callable): function to call to decorate specs
         all_headers (bool): show headers even when arch/compiler aren't defined
+        status_fn (typing.Callable): if provided, prepend install-status info
         output (typing.IO): A file object to write to. Default is ``sys.stdout``
 
     """
