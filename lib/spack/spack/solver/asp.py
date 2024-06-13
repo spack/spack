@@ -1395,7 +1395,7 @@ class SpackSolverSetup:
             pkg_fact(fn.variant_condition(name, vid, cond_id))
 
         # record type so we can construct the variant when we read it back in
-        pkg_fact(fn.variant_type(vid, variant_def.variant_type))
+        self.gen.fact(fn.variant_type(vid, variant_def.variant_type))
 
         if variant_def.sticky:
             pkg_fact(fn.variant_sticky(vid))
@@ -1468,7 +1468,7 @@ class SpackSolverSetup:
         self.gen.h3(f"Special variant: {name}")
         vid = next(self._id_counter)
         self.gen.fact(fn.auto_variant(name, vid))
-        self.gen.fact(fn.auto_variant_type(vid, "multi" if multi else "single"))
+        self.gen.fact(fn.variant_type(vid, "multi" if multi else "single"))
 
     def variant_rules(self, pkg: "Type[spack.package_base.PackageBase]"):
         for name in pkg.variant_names():

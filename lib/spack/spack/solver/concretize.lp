@@ -894,7 +894,7 @@ variant_value_from_disjoint_sets(node(NodeID, Package), VariantName, Value1, Set
 % -- Associate definition's arity with the node
 variant_single_value(node(NodeID, Package), VariantName) :-
   node_has_variant(node(NodeID, Package), VariantName, VariantID),
-  not pkg_fact(Package, variant_type(VariantID, "multi")).
+  not variant_type(VariantID, "multi").
 
 % C: Determining variant values on each node
 
@@ -903,7 +903,7 @@ attr("variant_selected", node(ID, Package), Variant, Value, VariantType, Variant
   node_has_variant(node(ID, Package), Variant, VariantID),
   variant_default_value(node(ID, Package), Variant, Value),
   pkg_fact(Package, variant_sticky(VariantID)),
-  pkg_fact(Package, variant_type(VariantID, VariantType)),
+  variant_type(VariantID, VariantType),
   not attr("variant_set", node(ID, Package), Variant),
   build(node(ID, Package)).
 
@@ -914,7 +914,7 @@ attr("variant_selected", node(ID, Package), Variant, Value, VariantType, Variant
 } :-
   attr("node", node(ID, Package)),
   node_has_variant(node(ID, Package), Variant, VariantID),
-  pkg_fact(Package, variant_type(VariantID, VariantType)),
+  variant_type(VariantID, VariantType),
   build(node(ID, Package)).
 
 % variant_selected is only needed for reconstruction on the python side, so we can ignore it here
@@ -1024,7 +1024,7 @@ node_has_variant(PackageNode, Variant, VariantID)
 variant_single_value(PackageNode, Variant)
   :- node_has_variant(PackageNode, Variant, VariantID),
      auto_variant(Variant, VariantID),
-     not auto_variant_type(VariantID, "multi").
+     not variant_type(VariantID, "multi").
 
 % suppress warnings about this atom being unset.  It's only set if some
 % spec or some package sets it, and without this, clingo will give
