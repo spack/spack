@@ -59,7 +59,7 @@ class Libwnck(MesonPackage, AutotoolsPackage):
         depends_on("gdk-pixbuf")
         depends_on("gtkplus@3.22:")
         
-        depends_on("xres", when="+xres")
+        depends_on("libxres", when="+xres")
         depends_on("gobject-introspection", when="+introspection")
         depends_on("startup-notification", when="+startup_notification")
 
