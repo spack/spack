@@ -24,6 +24,7 @@ class Turbovnc(CMakePackage):
     generator("ninja")
 
     variant("novnc", default=True, description="Build with noVNC support")
+    variant("bundledX", default=True, description="Build with bundled X")
 
     with default_args(type="build"):
         depends_on("ninja")
@@ -51,6 +52,7 @@ class Turbovnc(CMakePackage):
     depends_on("xproto")
     depends_on("xkbcomp")
 
+    depends_on("fontconfig")
     depends_on("libice")
     depends_on("libsm")
     depends_on("zlib-api")
@@ -59,26 +61,25 @@ class Turbovnc(CMakePackage):
     depends_on("python")
     depends_on("python@3:", when="+novnc")
 
+    depends_on("xkeyboard-config")
     with default_args(type="run"):
         depends_on("xauth")
-        depends_on("xkeyboard-config")
 
     def cmake_args(self):
         spec = self.spec
         jpeg = spec["libjpeg-turbo"]
         ssl = spec["openssl"]
-        xkb = spec["xkbcomp"]
+        xkb = spec["xkeyboard-config"]
         args = [
             f"-DTVNC_INCLUDEJRE=1",
+            f"-DTVNC_DLOPENSSL=1",
+            f"-DTVNC_SYSTEMX11=0",
+            f"-DTVNC_STATIC_XORG_PATHS=0",
+            f"-DTVNC_SYSTEMLIBS=1",
             f"-DTJPEG_INCLUDE_DIR={jpeg.home.include}",
             f"-DTJPEG_LIBRARY=-L{jpeg.home.lib} -lturbojpeg",
-            f"-DTVNC_DLOPENSSL={ssl.home.libs.search_flags}",
-            f"-DXKB_BASE_DIRECTORY={xkb.home.share}",
-            f"-DXKB_BIN_DIRECTORY={xkb.home.bin}",
-            # TODO
-#            f"-DTVNC_STATIC_XORG_PATHS={}",
-#            f"-DTVNC_SYSTEMLIBS={}",
-#            f"-DTVNC_SYSTEMX11={}",
+#            f"-DXKB_BASE_DIRECTORY={xkb.home.share}",
+#            f"-DXKB_BIN_DIRECTORY={xkb.home.bin}",
 #            f"-DXORG_DRI_DRIVER_PATH={}",
 #            f"-DXORG_FONT_PATH={}",
 #            f"-DXORG_REGISTRY_PATH={}",
