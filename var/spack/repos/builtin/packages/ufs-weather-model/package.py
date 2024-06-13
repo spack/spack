@@ -193,7 +193,6 @@ class UfsWeatherModel(CMakePackage):
             "32bit",
             "app",
             "ccpp_32bit",
-            "ccpp_suites",
             "cmeps_aoflux",
             "debug",
             "debug_linkmpi",

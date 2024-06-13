@@ -986,6 +986,11 @@ class Openmpi(AutotoolsPackage, CudaPackage):
         spec = self.spec
         config_args = ["--enable-shared", "--disable-silent-rules", "--disable-sphinx"]
 
+        # Work around incompatibility with new apple-clang linker
+        # https://github.com/open-mpi/ompi/issues/12427
+        if spec.satisfies("@5: %apple-clang@15:"):
+            config_args.append("--with-wrapper-fcflags=-Wl,-ld_classic")
+
         # All rpath flags should be appended with self.compiler.cc_rpath_arg.
         # Later, we might need to update share/openmpi/mpic++-wrapper-data.txt
         # and mpifort-wrapper-data.txt (see filter_rpaths()).
@@ -1024,7 +1029,7 @@ class Openmpi(AutotoolsPackage, CudaPackage):
             config_args.extend(self.with_or_without("fabrics"))
 
         if spec.satisfies("@2.0.0:"):
-            if "fabrics=xpmem platform=cray" in spec:
+            if "fabrics=xpmem" in spec:
                 config_args.append("--with-cray-xpmem")
             else:
                 config_args.append("--without-cray-xpmem")

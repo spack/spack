@@ -220,6 +220,8 @@ class Hpctoolkit(AutotoolsPackage, MesonPackage):
         "^hip@5.3:", when="@:2022.12", msg="rocm 5.3 requires hpctoolkit 2023.03.01 or later"
     )
 
+    conflicts("^hip@6:", when="@:2023", msg="rocm 6.0 requires hpctoolkit 2024.01.1 or later")
+
     # Fix the build for old revs with gcc 10.x and 11.x.
     patch("gcc10-enum.patch", when="@2020.01.01:2020.08 %gcc@10.0:")
     patch("511afd95b01d743edc5940c84e0079f462b2c23e.patch", when="@2019.08.01:2021.03 %gcc@11.0:")
@@ -229,8 +231,8 @@ class Hpctoolkit(AutotoolsPackage, MesonPackage):
     depends_on("python@3.4:", type="build", when="@2020.03:2020.08")
     patch("python3.patch", when="@2020.03:2020.08")
 
-    # HIP header files require HIP_PLATFORM_AMD to be set for AMD GPUs
-    patch("define-hip-platform-as-amd.patch", when="^hip@6:")
+    # hsa include path is hsa-rocr-dev-prefix-path/include
+    patch("correcting-hsa-include-path.patch", when="@2024.01 ^hip@6.0:")
 
     # Fix a bug where make would mistakenly overwrite hpcrun-fmt.h.
     # https://gitlab.com/hpctoolkit/hpctoolkit/-/merge_requests/751
