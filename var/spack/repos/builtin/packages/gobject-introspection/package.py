@@ -75,7 +75,8 @@ class GobjectIntrospection(MesonPackage, AutotoolsPackage):
     #   extra sed expression in its TOOL_SUBSTITUTION that results in
     #   an `#!/bin/bash /path/to/spack/bin/sbang` unconditionally being
     #   inserted into the scripts as they're generated.
-    patch("sbang.patch", when="@:1.60")
+    patch("sbang.patch", when="@:1.60.0")
+    patch("sbang-1.60.2.patch", when="@:1.60.2")
 
     # Drop deprecated xml.etree.ElementTree.Element.getchildren() which leads
     # to compilation issues with Python 3.9.
