@@ -1383,6 +1383,20 @@ def tree(
     return out
 
 
+def _unique_roots(specs: List["spack.spec.Spec"]):
+    """For a list of specs, filter out any that appear as a dependency
+    of any of the others.
+    """
+    unique = list()
+
+    for i, root in enumerate(specs):
+        others = specs[:i] + specs[i + 1 :]
+        if not any(root in x for x in others):
+            unique.append(specs[i])
+
+    return unique
+
+
 @lang.lazy_lexicographic_ordering(set_hash=False)
 class Spec:
     #: Cache for spec's prefix, computed lazily in the corresponding property

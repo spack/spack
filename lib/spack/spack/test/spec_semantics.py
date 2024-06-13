@@ -18,6 +18,7 @@ from spack.spec import (
     SpecFormatSigilError,
     SpecFormatStringError,
     UnsupportedCompilerError,
+    _unique_roots,
 )
 from spack.variant import (
     InvalidVariantValueError,
@@ -1538,3 +1539,10 @@ def test_old_format_strings_trigger_error(default_mock_concretization):
     s = Spec("a").concretized()
     with pytest.raises(SpecFormatStringError):
         s.format("${PACKAGE}-${VERSION}-${HASH}")
+
+
+def test_unique_roots(mock_packages, config):
+    spec1, spec2 = [x.concretized() for x in [Spec("mpileaks"), Spec("dependent-install")]]
+
+    filtered = _unique_roots([spec1, spec1["callpath"], spec2, spec2["dependency-install"]])
+    assert len(filtered) == 2
