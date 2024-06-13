@@ -31,7 +31,8 @@ class Libwnck(MesonPackage, AutotoolsPackage):
     version("3.4.9", sha256="96e6353f2701a1ea565ece54d791a7bebef1832d96126f7377c54bb3516682c4")
 
     variant("introspection", default=True, description="Build with gobject-introspection support")
-    variant("notification", default=True, description="Build with startup-notification support")
+    # Defaulting to false until startup-notification build issue is resolved
+    variant("notification", default=False, description="Build with startup-notification support")
     variant("tools", default=True, description="Install WNCK tools")
 
     build_system(
@@ -61,3 +62,7 @@ class Libwnck(MesonPackage, AutotoolsPackage):
         args += self.enable_or_disable("notification")
 
         return args
+
+    def setup_dependent_build_environment(self, env, dep_spec):
+        if self.spec.satisfies("+introspection") and dep_spec.satisfies("+introspection"):
+            env.append_path("XDG_DATA_DIRS", self.prefix.share)
