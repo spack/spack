@@ -100,6 +100,33 @@ class Mivisionx(CMakePackage):
                 "rocAL/rocAL/rocAL_hip/CMakeLists.txt",
                 string=True,
             )
+        if self.spec.satisfies("@5.5.0:6.0.0 +add_tests"):
+            filter_file(
+                r"${ROCM_PATH}/include/mivisionx",
+                "{0}/include/mivisionx".format(self.spec.prefix),
+                "samples/inference/mv_objdetect/CMakeLists.txt",
+                string=True,
+            )
+            filter_file(
+                r"${ROCM_PATH}/lib",
+                "{0}/lib".format(self.spec.prefix),
+                "samples/inference/mv_objdetect/CMakeLists.txt",
+                string=True,
+            )
+        if self.spec.satisfies("@6.1.0: +add_tests"):
+            filter_file(
+                r"${ROCM_PATH}/include/mivisionx",
+                "{0}/include/mivisionx".format(self.spec.prefix),
+                "samples/mv_objdetect/CMakeLists.txt",
+                string=True,
+            )
+            filter_file(
+                r"${ROCM_PATH}/lib",
+                "{0}/lib".format(self.spec.prefix),
+                "samples/mv_objdetect/CMakeLists.txt",
+                string=True,
+            )
+
         if self.spec.satisfies("+add_tests"):
             filter_file(
                 r"${ROCM_PATH}/include/mivisionx",
@@ -125,32 +152,6 @@ class Mivisionx(CMakePackage):
                 "tests/amd_migraphx_tests/resnet50/CMakeLists.txt",
                 string=True,
             )
-            if self.spec.satisfies("@5.5.0:6.0.0"):
-                filter_file(
-                    r"${ROCM_PATH}/include/mivisionx",
-                    "{0}/include/mivisionx".format(self.spec.prefix),
-                    "samples/inference/mv_objdetect/CMakeLists.txt",
-                    string=True,
-                )
-                filter_file(
-                    r"${ROCM_PATH}/lib",
-                    "{0}/lib".format(self.spec.prefix),
-                    "samples/inference/mv_objdetect/CMakeLists.txt",
-                    string=True,
-                )
-            filter_file(
-                r"${ROCM_PATH}/include/mivisionx",
-                "{0}/include/mivisionx".format(self.spec.prefix),
-                "samples/mv_objdetect/CMakeLists.txt",
-                string=True,
-            )
-            filter_file(
-                r"${ROCM_PATH}/lib",
-                "{0}/lib".format(self.spec.prefix),
-                "samples/mv_objdetect/CMakeLists.txt",
-                string=True,
-            )
-
             filter_file(
                 r"${ROCM_PATH}/include/mivisionx",
                 "{0}/include/mivisionx".format(self.spec.prefix),
@@ -201,6 +202,7 @@ class Mivisionx(CMakePackage):
     )
     depends_on("openssl")
     depends_on("libjpeg-turbo@2.0.6+partial_decoder", type="build")
+    depends_on("rpp@1.2.0", when="@5.5:5.6")
     depends_on("lmdb", when="@5.5:")
     depends_on("py-setuptools", when="@5.6:")
     depends_on("py-wheel", when="@5.6:")
@@ -271,11 +273,14 @@ class Mivisionx(CMakePackage):
         "6.1.1",
     ]:
         depends_on(f"rocm-core@{ver}", when=f"@{ver}")
-        depends_on(f"rpp@{ver}", when=f"@{ver}")
         depends_on("python@3.5:", type="build")
+    for ver in ["5.7.0", "5.7.1", "6.0.0", "6.0.2", "6.1.0", "6.1.1"]:
+        depends_on(f"rpp@{ver}", when=f"@{ver}")
 
     def setup_run_environment(self, env):
         env.set("MIVISIONX_MODEL_COMPILER_PATH", self.spec.prefix.libexec.mivisionx.model_compiler)
+        if self.spec.satisfies("@6.1:"):
+            env.prepend_path("LD_LIBRARY_PATH", self.spec["hsa-rocr-dev"].prefix.lib)
 
     def flag_handler(self, name, flags):
         spec = self.spec
