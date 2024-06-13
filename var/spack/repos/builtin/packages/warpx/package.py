@@ -291,23 +291,31 @@ class Warpx(CMakePackage):
         install test subdirectory for use during `spack test run`."""
         cache_extra_test_sources(self, [self.examples_src_dir])
 
-    def test(self):
-        """Perform smoke tests on the installed package."""
+    def run_warpx(self, dim):
         if "+app" not in self.spec:
-            print("WarpX smoke tests skipped: requires variant +app")
-            return
+            raise SkipTest("Package must be installed with +app")
+        if dim not in self.spec.variants["dims"].value:
+            raise SkipTest(f"Package must be installed with {dim} in dims")
+        dim_arg = f"{dim}d" if dim.isdigit() else dim
+        if self.spec.satisfies("@:23.05") and not dim.isdigit():
+            dim_arg = dim_arg.upper()
+        exe = find(self.prefix.bin, f"warpx.{dim_arg}.*", recursive=False)[0]
+        cli_args = self._get_input_options(dim, True)
+        warpx = which(exe)
+        warpx(*cli_args)
 
-        # our executable names are a variant-dependent and naming evolves
-        for dim in self.spec.variants["dims"].value:
-            exe_nD = {"1": "warpx.1d", "2": "warpx.2d", "3": "warpx.3d", "rz": "warpx.rz"}
-            exe = find(self.prefix.bin, exe_nD[dim] + ".*", recursive=False)[0]
+    def test_warpx_1d(self):
+        """Run warpx 1d test"""
+        self.run_warpx("1")
 
-            cli_args = self._get_input_options(dim, True)
-            self.run_test(
-                exe,
-                cli_args,
-                [],
-                installed=True,
-                purpose="Smoke test for WarpX",
-                skip_missing=False,
-            )
+    def test_warpx_2d(self):
+        """Run warpx 2d test"""
+        self.run_warpx("2")
+
+    def test_warpx_3d(self):
+        """Run warpx 3d test"""
+        self.run_warpx("3")
+
+    def test_warpx_rz(self):
+        """Run warpx rz test"""
+        self.run_warpx("rz")
