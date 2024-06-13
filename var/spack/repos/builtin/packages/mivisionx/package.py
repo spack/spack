@@ -271,7 +271,7 @@ class Mivisionx(CMakePackage):
         "6.1.1",
     ]:
         depends_on(f"rocm-core@{ver}", when=f"@{ver}")
-        depends_on(f"rpp@{ver}", when="@{ver}")
+        depends_on(f"rpp@{ver}", when=f"@{ver}")
         depends_on("python@3.5:", type="build")
 
     def setup_run_environment(self, env):
