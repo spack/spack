@@ -231,7 +231,7 @@ class VtkM(CMakePackage, CudaPackage, ROCmPackage):
         spec = self.spec
 
         if "+examples" not in spec:
-            raise SkipTest("Package must be installed with 'examples'")
+            raise SkipTest("Package must be installed with +examples")
 
         testdir = "smoke_test_build"
         with working_dir(testdir, create=True):
@@ -246,7 +246,4 @@ class VtkM(CMakePackage, CudaPackage, ROCmPackage):
     @run_after("install")
     @on_package_attributes(run_tests=True)
     def build_test(self):
-        self.test_smoke_test()
-
-    def test_build(self):
         self.test_smoke_test()
