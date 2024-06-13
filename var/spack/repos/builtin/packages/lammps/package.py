@@ -657,7 +657,7 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage, PythonExtension):
     # propagate CUDA and ROCm architecture when +kokkos
     for arch in CudaPackage.cuda_arch_values:
         depends_on(
-            "kokkos+cuda+wrapper cuda_arch=%s" % arch, 
+            "kokkos+cuda+wrapper cuda_arch=%s" % arch,
             when="+kokkos+cuda cuda_arch=%s" % arch
         )
 
