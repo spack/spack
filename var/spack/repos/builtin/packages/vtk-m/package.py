@@ -192,6 +192,22 @@ class VtkM(CMakePackage, CudaPackage, ROCmPackage):
                 # vtk-m detectes tbb via TBB_ROOT env var
                 os.environ["TBB_ROOT"] = spec["tbb"].prefix
 
+            # mpi support
+            if "+mpi" in spec:
+                options.append(self.define("MPI_C_COMPILER", spec["mpi"].mpicc))
+                options.append(self.define("MPI_CXX_COMPILER", spec["mpi"].mpicxx))
+                # Workaround for Crusher +MPI +ROCM
+                if "+rocm" in spec:
+                    # Special handling for crusher
+                    if "CRAY_MPICH_ROOTDIR" in os.environ:
+                        cray_mpich_root = os.environ.get("CRAY_MPICH_ROOTDIR")
+                        options.append(self.define("CMAKE_HIP_FLAGS",
+                            "-I{0} -L{1} -lmpi -L{2}/gtl/lib -lmpi_gtl_hsa".format(
+                                spec["mpi"].prefix.include,
+                                spec["mpi"].prefix.lib,
+                                cray_mpich_root,
+                        )))
+
             # Support for relocatable code
             if "~shared" in spec and "+fpic" in spec:
                 options.append("-DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=ON")
