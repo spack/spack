@@ -189,7 +189,6 @@ goto :end_switch
 
 :case_load
 if NOT defined _sp_args (
-   python "%spack%" "%_sp_subcommand%" --help
    exit /B 0
 )
 
