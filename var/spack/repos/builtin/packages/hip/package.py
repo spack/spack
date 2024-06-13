@@ -569,7 +569,7 @@ class Hip(CMakePackage):
             )
             args.append(self.define("HIP_RUNTIME", "rocclr"))
             args.append(self.define("HIP_PLATFORM", "amd"))
-            if "@5.6.0:" in self.spec:
+            if self.spec.satisfies("@5.6.0:"):
                 args.append(self.define("HIP_LLVM_ROOT", self.spec["llvm-amdgpu"].prefix))
 
         if self.spec.satisfies("+cuda"):
