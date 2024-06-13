@@ -47,9 +47,9 @@ class Turbovnc(CMakePackage):
     depends_on("libxext")
     depends_on("libxfixes")
     depends_on("libxi")
-    dpendds_on("libxkbcommon")
     depends_on("libxt")
     depends_on("xproto")
+    depends_on("xkbcomp")
 
     depends_on("libice")
     depends_on("libsm")
@@ -67,7 +67,7 @@ class Turbovnc(CMakePackage):
         spec = self.spec
         jpeg = spec["libjpeg-turbo"]
         ssl = spec["openssl"]
-        xkb = spec["libxkbcommon"]
+        xkb = spec["xkbcomp"]
         args = [
             f"-DTVNC_INCLUDEJRE=1",
             f"-DTJPEG_INCLUDE_DIR={jpeg.home.include}",
