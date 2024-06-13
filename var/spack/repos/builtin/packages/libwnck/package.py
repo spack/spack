@@ -31,7 +31,7 @@ class Libwnck(MesonPackage, AutotoolsPackage):
     version("3.4.9", sha256="96e6353f2701a1ea565ece54d791a7bebef1832d96126f7377c54bb3516682c4")
 
     variant("install_tools", default=True, description="Install WNCK tools")
-    variant("xres", default=True, descrption="Build with xres support")
+    variant("xres", default=True, description="Build with xres support")
     variant("introspection", default=True, description="Build with gobject-introspection support")
     # Defaulting to false until startup-notification build issue is resolved
     variant(
