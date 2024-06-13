@@ -47,6 +47,7 @@ class Turbovnc(CMakePackage):
     depends_on("libxext")
     depends_on("libxfixes")
     depends_on("libxi")
+    dpendds_on("libxkbcommon")
     depends_on("libxt")
     depends_on("xproto")
 
@@ -58,20 +59,26 @@ class Turbovnc(CMakePackage):
     depends_on("python")
     depends_on("python@3:", when="+novnc")
 
+    with default_args(type="run"):
+        depends_on("xauth")
+        depends_on("xkeyboard-config")
+
     def cmake_args(self):
         spec = self.spec
-        jpeg = spec['libjpeg-turbo']
-        ssl = spec['openssl']
+        jpeg = spec["libjpeg-turbo"]
+        ssl = spec["openssl"]
+        xkb = spec["libxkbcommon"]
         args = [
             f"-DTVNC_INCLUDEJRE=1",
-            f"-DTJPEG_INCLUDE_DIR={jpeg.prefix.include}",
-            f"-DTJPEG_LIBRARY=-L{jpeg.prefix.lib} -lturbojpeg",
-            f"-DTVNC_DLOPENSSL={ssl.package.libs.search_flags}",
+            f"-DTJPEG_INCLUDE_DIR={jpeg.home.include}",
+            f"-DTJPEG_LIBRARY=-L{jpeg.home.lib} -lturbojpeg",
+            f"-DTVNC_DLOPENSSL={ssl.home.libs.search_flags}",
+            f"-DXKB_BASE_DIRECTORY={xkb.home.share}",
+            f"-DXKB_BIN_DIRECTORY={xkb.home.bin}",
+            # TODO
 #            f"-DTVNC_STATIC_XORG_PATHS={}",
 #            f"-DTVNC_SYSTEMLIBS={}",
 #            f"-DTVNC_SYSTEMX11={}",
-#            f"-DXKB_BASE_DIRECTORY={}",
-#            f"-DXKB_BIN_DIRECTORY={}",
 #            f"-DXORG_DRI_DRIVER_PATH={}",
 #            f"-DXORG_FONT_PATH={}",
 #            f"-DXORG_REGISTRY_PATH={}",
