@@ -16,6 +16,9 @@ class PyTuiview(PythonPackage):
         "https://github.com/ubarsc/tuiview/releases/download/tuiview-1.2.13/TuiView-1.2.13.tar.gz"
     )
 
+    maintainers("neilflood", "gillins")
+
+    version("1.2.14", sha256="80cf4ac607b37bb9d7348b3d40e1e18910323f7ad47e79ae850cbb4750775f7c")
     version("1.2.13", sha256="48c8d4175c324f70941dc49c5a119882c9d501bd20bc13c76bc2455dee5236a5")
     version("1.2.12", sha256="3f0c1673f2f861db01726f3d7f6f1dde4a42ec57894a79b89457c398768dd25f")
     version("1.2.11", sha256="81f870ad98ec1e3175f25028d261135b6198fa85038bfaa900789e04e3cf8517")
