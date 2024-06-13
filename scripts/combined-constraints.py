@@ -89,10 +89,23 @@ def main():
     for spec in e.user_specs:
         aggregated_constraints[spec.name].append((spec.copy(), "Environment speclist"))
 
-    # Collect requirements and non-buildable externals
+    # Collect requirements and perform init pass to collect non-buildable
+    not_buildable = set()
+    virt_to_providers = defaultdict(set)
+    provider_to_virtuals = defaultdict(set)
     for pkg_name, pkg_conf in config.get("packages", dict()).items():
         if pkg_name == "all":
             continue
+
+        if not pkg_conf.get("buildable", True):
+            not_buildable.add(pkg_name)
+        provided = Spec(pkg_name).package_class.provided
+        if provided:
+            for when_spec, virtuals in provided.items():
+                for v in virtuals:
+                    virt_to_providers[v.name].add(pkg_name)
+                provider_to_virtuals[pkg_name].update(v.name for v in virtuals)
+
         if "require" not in pkg_conf:
             continue
         for constraint_spec in _collect_always_constraints(pkg_name, pkg_conf):
@@ -100,16 +113,40 @@ def main():
                 (constraint_spec, "requirement from packages.yaml")
             )
 
-        if not pkg_conf.get("buildable", True):
-            externals = pkg_conf.get("externals", [])
-            if len(externals) == 1:
-                # If a package isn't buildable, and there's one spec for it, then
-                # all of its constraints must apply (there is one possible exception
-                # to this rule: if reuse is enabled and already-built instances of
-                # the spec are available)
-                aggregated_constraints[pkg_name].append(
-                    (externals[0]["spec"], "external from packages.yaml")
-                )
+    for virt, providers in virt_to_providers.items():
+        if len(providers) > 1:
+            print(
+                f"Multiple providers detected for {virt}: {str(providers)}\n"
+                "This script cannot handle merging constraints when there "
+                "are multiple possible providers for a given virtual"
+            )
+            sys.exit(1)
+
+    def _not_buildable(pkg_name):
+        if pkg_name in not_buildable:
+            return True
+
+        if provider_to_virtuals.get(pkg_name, set()) & not_buildable:
+            return True
+
+        return False
+
+    # Collect non-buildable externals, but only where 1 spec is available
+    # (in which case, the details on the external are effectively
+    # mandatory constraints)
+    for pkg_name, pkg_conf in config.get("packages", dict()).items():
+        if pkg_name == "all":
+            continue
+
+        externals = pkg_conf.get("externals", [])
+        if len(externals) == 1 and _not_buildable(pkg_name):
+            # If a package isn't buildable, and there's one spec for it, then
+            # all of its constraints must apply (there is one possible exception
+            # to this rule: if reuse is enabled and already-built instances of
+            # the spec are available)
+            aggregated_constraints[pkg_name].append(
+                (Spec(externals[0]["spec"]), "external from packages.yaml")
+            )
 
     # Collect develop specs
     for pkg_name, dev_conf in config.get("develop", dict()).items():
