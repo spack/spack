@@ -137,7 +137,6 @@ class Mivisionx(CMakePackage):
                     "{0}/lib".format(self.spec.prefix),
                     "samples/inference/mv_objdetect/CMakeLists.txt",
                     string=True,
-                    when="@:6.1",
                 )
             filter_file(
                 r"${ROCM_PATH}/include/mivisionx",
