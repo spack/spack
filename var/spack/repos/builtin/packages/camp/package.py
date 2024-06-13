@@ -16,11 +16,17 @@ class Camp(CMakePackage, CudaPackage, ROCmPackage):
     git = "https://github.com/LLNL/camp.git"
     url = "https://github.com/LLNL/camp/archive/v0.1.0.tar.gz"
 
-    maintainers("trws")
+    maintainers("trws", "adrienbernede")
 
     license("BSD-3-Clause")
 
     version("main", branch="main", submodules=False)
+    version(
+        "2024.02.1",
+        tag="v2024.02.",
+        commit="79c320fa09db987923b56884afdc9f82f4b70fc4",
+        submodules=False,
+    )
     version(
         "2024.02.0",
         tag="v2024.02.0",
@@ -49,6 +55,7 @@ class Camp(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("cub", when="+cuda")
 
     depends_on("blt", type="build")
+    depends_on("blt@0.6.2:", type="build", when="@2024.02.1:")
     depends_on("blt@0.6.1:", type="build", when="@2024.02.0:")
     depends_on("blt@0.5.0:0.5.3", type="build", when="@2022.03.0:2023.06.0")
 

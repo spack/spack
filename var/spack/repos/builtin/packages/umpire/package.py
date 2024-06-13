@@ -21,11 +21,17 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
     git = "https://github.com/LLNL/Umpire.git"
     tags = ["radiuss", "e4s"]
 
-    maintainers("davidbeckingsale")
+    maintainers("davidbeckingsale", "adrienbernede")
 
     license("MIT")
 
     version("develop", branch="develop", submodules=False)
+    version(
+        "2024.02.1",
+        tag="v2024.02.1",
+        commit="3058d562fc707650e904f9321b1ee9bcebad3ae2",
+        submodules=False,
+    )
     version(
         "2024.02.0",
         tag="v2024.02.0",
