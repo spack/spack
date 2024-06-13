@@ -65,7 +65,7 @@ class Turbovnc(CMakePackage):
         args = [
             f"-DTVNC_INCLUDEJRE=1",
             f"-DTJPEG_INCLUDE_DIR={jpeg.prefix.include}",
-            f"-DTJPEG_LIBRARY={jpeg.package.libs.search_flags}",
+            f"-DTJPEG_LIBRARY={jpeg.prefix.lib}",
             f"-DTVNC_DLOPENSSL={ssl.package.libs.search_flags}",
 #            f"-DTVNC_STATIC_XORG_PATHS={}",
 #            f"-DTVNC_SYSTEMLIBS={}",
