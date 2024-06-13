@@ -1,0 +1,7 @@
+[codespell]
+skip = .git,*.pdf,*.svg,*.patch,*.py,*.diff,*.pub,foamEtcFile,patch.*,*.dat
+ignore-regex = \b(THIRDPARTY|ThirdParty)\b
+# default (34) + do not spit out warnings about non-utf-8 encoding
+quiet-level = 35
+# precice - package
+ignore-words-list = bu,fo,nd,ot,te,pilon,namd,oce,ther,precice

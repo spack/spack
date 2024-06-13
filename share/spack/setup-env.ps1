@@ -12,7 +12,7 @@ Pop-Location
 Set-Variable -Name python_pf_ver -Value (Get-Command -Name python -ErrorAction SilentlyContinue).Path
 
 # If python_pf_ver is not defined, we cannot find Python on the Path
-# We next look for Spack vendored copys
+# We next look for Spack vendored copies
 if ($null -eq $python_pf_ver)
 {
     $python_pf_ver_list = Resolve-Path -Path "$PWD\Python*"

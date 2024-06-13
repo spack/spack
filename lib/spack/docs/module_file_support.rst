@@ -287,7 +287,7 @@ variables for themselves, or need to have variables of their own dependencies se
 
 In practice however, ``run`` is often sufficient, and may make ``module load`` snappier.
 
-The ``all`` option is discouraged and seldomly used.
+The ``all`` option is discouraged and seldom used.
 
 A common complaint about autoloading is the large number of modules that are visible to the user.
 Spack has a solution for this as well: ``hide_implicits: true``. This ensures that only those

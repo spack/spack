@@ -227,7 +227,7 @@ function check_sp_flags -d "check spack flags for h/V flags"
     # Check if inputs contain h or V flags.
     #
 
-    # combine argument array into single string (space seperated), to be passed
+    # combine argument array into single string (space separated), to be passed
     # to regular expression matching (`string match -r`)
     set -l _a "$argv"
 
@@ -246,7 +246,7 @@ end
 
 
 
-function match_flag -d "checks all combinations of flags ocurring inside of a string"
+function match_flag -d "checks all combinations of flags occurring inside of a string"
 
     # Remove leading and trailing spaces -- but we need to insert a "guard" (x)
     # so that eg. `string trim -h` doesn't trigger the help string for `string trim`
@@ -288,7 +288,7 @@ function check_env_activate_flags -d "check spack env subcommand flags for -h, -
     # Check if inputs contain -h/--help, --sh, --csh, or --fish
     #
 
-    # combine argument array into single string (space seperated), to be passed
+    # combine argument array into single string (space separated), to be passed
     # to regular expression matching (`string match -r`)
     set -l _a "$argv"
 
@@ -336,7 +336,7 @@ function check_env_deactivate_flags -d "check spack env subcommand flags for --s
     # Check if inputs contain --sh, --csh, or --fish
     #
 
-    # combine argument array into single string (space seperated), to be passed
+    # combine argument array into single string (space separated), to be passed
     # to regular expression matching (`string match -r`)
     set -l _a "$argv"
 
@@ -456,7 +456,7 @@ function spack_runner -d "Runner function for the `spack` wrapper"
 
         # CASE: spack subcommand is `env`. Here we get the spack runtime to
         # supply the appropriate shell commands for setting the environment
-        # varibles. These commands are then run by fish (using the `capture_all`
+        # variables. These commands are then run by fish (using the `capture_all`
         # function, instead of a command substitution).
 
         case "env"
@@ -600,7 +600,7 @@ set -l stat $status
 
 
 #
-# Delete temprary global variabels allocated in `allocated_sp_shared`.
+# Delete temporary global variables allocated in `allocated_sp_shared`.
 #
 
 delete_sp_shared
@@ -644,7 +644,7 @@ function spack_pathadd -d "Add path to specified variable (defaults to PATH)"
     #  -> Notes: [1] (cf. EOF).
     if test -d "$pa_new_path"
 
-        # combine argument array into single string (space seperated), to be
+        # combine argument array into single string (space separated), to be
         # passed to regular expression matching (`string match -r`)
         set -l _a "$pa_oldvalue"
 

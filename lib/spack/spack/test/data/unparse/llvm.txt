@@ -496,7 +496,7 @@ class Llvm(CMakePackage, CudaPackage):
 
             except ProcessError:
                 # Newer LLVM versions have a simple script that sets up
-                # automatically when run with sudo priviliges
+                # automatically when run with sudo privileges
                 setup = Executable("./lldb/scripts/macos-setup-codesign.sh")
                 try:
                     setup()
@@ -688,10 +688,10 @@ class Llvm(CMakePackage, CudaPackage):
         if self.spec.satisfies("~code_signing platform=darwin"):
             cmake_args.append(define("LLDB_USE_SYSTEM_DEBUGSERVER", True))
 
-        # Semicolon seperated list of projects to enable
+        # Semicolon separated list of projects to enable
         cmake_args.append(define("LLVM_ENABLE_PROJECTS", projects))
 
-        # Semicolon seperated list of runtimes to enable
+        # Semicolon separated list of runtimes to enable
         if runtimes:
             cmake_args.append(define("LLVM_ENABLE_RUNTIMES", runtimes))
 

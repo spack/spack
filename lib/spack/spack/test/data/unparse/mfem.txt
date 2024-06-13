@@ -7,7 +7,7 @@
 
 ``mfem`` was chosen because it's one of the most complex packages in Spack, because it
 uses ``@when`` functions, because it has ``configure()`` calls with star-args in
-different locations, and beacuse it has a function with embedded unicode that needs to
+different locations, and because it has a function with embedded unicode that needs to
 be unparsed consistently between Python versions.
 
 """

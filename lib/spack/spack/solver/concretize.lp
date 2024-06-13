@@ -1336,7 +1336,7 @@ build(PackageNode) :- not attr("hash", PackageNode, _), attr("node", PackageNode
 
 % Minimizing builds is tricky. We want a minimizing criterion
 
-% because we want to reuse what is avaialble, but
+% because we want to reuse what is available, but
 % we also want things that are built to stick to *default preferences* from
 % the package and from the user. We therefore treat built specs differently and apply
 % a different set of optimization criteria to them. Spack's *first* priority is to
