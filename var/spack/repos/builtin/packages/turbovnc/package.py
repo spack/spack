@@ -53,7 +53,7 @@ class Turbovnc(CMakePackage):
     depends_on("libice")
     depends_on("libsm")
     depends_on("zlib-api")
-    depends_on("libxz")
+    depends_on("xz")
     depends_on("lua")
     depends_on("python")
     depends_on("python@3:", when="+novnc")
