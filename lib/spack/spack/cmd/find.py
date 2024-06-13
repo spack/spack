@@ -362,8 +362,12 @@ def find(parser, args):
         if sys.stdout.isatty() and args.groups:
             if args.show_concretized:
                 spack.cmd.print_how_many_pkgs(
-                    list(x for x in results if not x.installed), "concretized-but-not-installed", suffix=count_suffix
+                    list(x for x in results if not x.installed),
+                    "concretized-but-not-installed",
+                    suffix=count_suffix,
                 )
 
             pkg_type = "loaded" if args.loaded else "installed"
-            spack.cmd.print_how_many_pkgs(list(x for x in results if x.installed), pkg_type, suffix=count_suffix)
+            spack.cmd.print_how_many_pkgs(
+                list(x for x in results if x.installed), pkg_type, suffix=count_suffix
+            )
