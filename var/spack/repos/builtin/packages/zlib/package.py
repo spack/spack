@@ -26,7 +26,7 @@ class Zlib(MakefilePackage, Package):
     git = "https://github.com/madler/zlib.git"
 
     tags = ["core-packages"]
-    libraries = ["libz"]
+    libraries = ["libz", "zlib", "zlibstatic", "zlibd", "zlibstaticd"]
 
     version("1.3.1", sha256="9a93b2b7dfdac77ceba5a558a580e74667dd6fede4585b91eefb60f03b72df23")
     version("1.3", sha256="ff0ba4c292013dbc27530b3a81e1f9a813cd39de01ca5e0f8bf355702efa593e")
@@ -69,7 +69,14 @@ class Zlib(MakefilePackage, Package):
 
     @classmethod
     def determine_version(cls, lib):
-        match = re.search(r"lib\S\.so\.(\d+)\.(\d+)\.(\d+)", lib)
+for ext in library_extensions:
+    if ext == "dylib":
+        pattern = re.compile(fr"lib\S\.(\d+\.\d+\.\d+)\.{ext}")
+    else:
+        pattern = re.compile(fr"lib\S\.{ext}\.(\d+\.\d+\.\d+)")
+    match = re.search(pattern, lib)
+    if match:
+        return match.group(1)
         if match:
             ver = "{0}.{1}.{2}".format(
                 int(match.group(1)), int(match.group(2)), int(match.group(3))
