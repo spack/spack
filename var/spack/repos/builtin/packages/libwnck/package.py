@@ -42,17 +42,17 @@ class Libwnck(MesonPackage, AutotoolsPackage):
     )
 
     with default_args(type="build"):
+        depends_on("pkgconfig")
         depends_on("intltool@0.40.6:")
         depends_on("cmake", when="build_system=meson")
-        depends_on("pkgconfig", when="build_system=autotools")
         
     with default_args(type=("build", "link", "run")):
-        depends_on("gobject-introspection", when="+introspection")
-        depends_on("startup-notification", when="+notification")
-
         depends_on("glib@2")
         depends_on("gdk-pixbuf")
         depends_on("gtkplus@3.22:")
+        
+        depends_on("gobject-introspection", when="+introspection")
+        depends_on("startup-notification", when="+notification")
 
     def configure_args(self):
         args = []
