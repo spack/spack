@@ -15,7 +15,7 @@ _versions = {
         "Linux-aarch64": "24cc2a0308dfe412c02c7d41d4b07ec12dacb021ebf8c719de38eb77d22f68c1",
     },
     "9.2.0.82-11": {
-        "Linux-x86_64": "99dcb3fa2bf7eed7f35b0f8e58e7d1f04d9a52e01e382efc1de16fed230d3b26",
+        "Linux-x86_64": "99dcb3fa2bf7eed7f35b0f8e58e7d1f04d9a52e01e382efc1de16fed230d3b26"
     },
     # cuDNN 8.9.7
     "8.9.7.29-12": {
