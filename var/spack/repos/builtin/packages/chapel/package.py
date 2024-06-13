@@ -174,7 +174,7 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
         default="unset",
         description="Build Chapel with GASNet multi-locale support using the "
         "supplied CHPL_COMM_SUBSTRATE",
-        values=("ibv", "ofi", "udp", "unset"),
+        values=("ibv", "ofi", "udp", "smp", "unset"),
         multi=False,
         sticky=True,  # never allow the concretizer to choose this
     )
