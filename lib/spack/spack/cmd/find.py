@@ -371,7 +371,9 @@ def find(parser, args):
         # print number of installed packages last (as the list may be long)
         if sys.stdout.isatty() and args.groups:
             if args.show_concretized:
-                spack.cmd.print_how_many_pkgs(not_installed, "concretized-but-not-installed", suffix=count_suffix)
+                spack.cmd.print_how_many_pkgs(
+                    not_installed, "concretized-but-not-installed", suffix=count_suffix
+                )
 
             pkg_type = "loaded" if args.loaded else "installed"
             spack.cmd.print_how_many_pkgs(installed, pkg_type, suffix=count_suffix)

@@ -389,13 +389,10 @@ def display_specs(specs, args=None, **kwargs):
         string = ""
 
         if status_fn:
-            status = status_fn(s)
-            if status in list(spack.spec.InstallStatus):
-                string += colorize(status.value)
-            elif status:
-                string += colorize("@g{[+]}  ")
-            else:
-                string += colorize("@r{[-]}  ")
+            # This was copied from spec.tree's colorization logic
+            # then shortened because it seems like status_fn should
+            # always return an InstallStatus
+            string += colorize(status_fn(s).value)
 
         if hashes:
             string += gray_hash(s, hlen) + " "
