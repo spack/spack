@@ -302,11 +302,14 @@ def display_env(env, args, decorator, results):
 def find(parser, args):
     env = ev.active_environment()
 
-    if args.show_concretized and args.constraint:
+    if args.show_concretized:
         if not env:
             tty.die("-c/specs given but no active environment to search")
-        init_specs = spack.cmd.parse_specs(args.constraint)
-        results = env.all_matching_specs(*init_specs)
+        if args.constraint:
+            init_specs = spack.cmd.parse_specs(args.constraint)
+            results = env.all_matching_specs(*init_specs)
+        else:
+            results = env.all_specs()
     else:
         q_args = query_arguments(args)
         results = args.specs(**q_args)
