@@ -359,6 +359,7 @@ def display_specs(specs, args=None, **kwargs):
     groups = get_arg("groups", True)
     all_headers = get_arg("all_headers", False)
     output = get_arg("output", sys.stdout)
+    status_fn = get_arg("status_fn", None)
 
     decorator = get_arg("decorator", None)
     if decorator is None:
@@ -386,6 +387,16 @@ def display_specs(specs, args=None, **kwargs):
     def fmt(s, depth=0):
         """Formatter function for all output specs"""
         string = ""
+
+        if status_fn:
+            status = status_fn(s)
+            if status in list(spack.spec.InstallStatus):
+                string += colorize(status.value)
+            elif status:
+                string += colorize("@g{[+]}  ")
+            else:
+                string += colorize("@r{[-]}  ")
+
         if hashes:
             string += gray_hash(s, hlen) + " "
         string += depth * "    "

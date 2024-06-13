@@ -46,6 +46,9 @@ def setup_parser(subparser):
         help="output specs as machine-readable json records",
     )
 
+    install_status_group = subparser.add_mutually_exclusive_group()
+    arguments.add_common_arguments(install_status_group, ["install_status", "no_install_status"])
+
     subparser.add_argument(
         "-d", "--deps", action="store_true", help="output dependencies along with found specs"
     )
@@ -336,6 +339,8 @@ def find(parser, args):
     if args.loaded:
         results = spack.cmd.filter_loaded_specs(results)
 
+    status_fn = spack.spec.Spec.install_status if args.install_status else None
+
     # Display the result
     if args.json:
         cmd.display_specs_as_json(results, deps=args.deps)
@@ -355,12 +360,13 @@ def find(parser, args):
         count_suffix = " (not shown)"
         if not args.only_roots:
             count_suffix = ""
+            kwargs = {"decorator": decorator, "all_headers": True, "status_fn": status_fn}
             if installed:
                 tty.msg("Installed packages")
-                cmd.display_specs(installed, args, decorator=decorator, all_headers=True)
+                cmd.display_specs(installed, args, **kwargs)
             if not_installed:
                 tty.msg("Concretized but not installed")
-                cmd.display_specs(not_installed, args, decorator=decorator, all_headers=True)
+                cmd.display_specs(not_installed, args, **kwargs)
 
         # print number of installed packages last (as the list may be long)
         if sys.stdout.isatty() and args.groups:
