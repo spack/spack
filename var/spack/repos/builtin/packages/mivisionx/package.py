@@ -53,7 +53,8 @@ class Mivisionx(CMakePackage):
 
     patch("0001-add-half-include-path.patch", when="@5.5")
     patch("0001-add-half-include-path-5.6.patch", when="@5.6:")
-    patch("0002-add-half-include-path-for-tests.patch", when="@5.5: +add_tests")
+    patch("0002-add-half-include-path-for-tests.patch", when="@5.5:6.0 +add_tests")
+    patch("0002-add-half-include-path-for-tests-6.1.0.patch", when="@6.1.0: +add_tests")
 
     patch(
         "https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX/commit/da24882438b91a0ae1feee23206b75c1a1256887.patch?full_index=1",
@@ -124,18 +125,33 @@ class Mivisionx(CMakePackage):
                 "tests/amd_migraphx_tests/resnet50/CMakeLists.txt",
                 string=True,
             )
+            if self.spec.satisfies("@:6.1.0"):
+                filter_file(
+                    r"${ROCM_PATH}/include/mivisionx",
+                    "{0}/include/mivisionx".format(self.spec.prefix),
+                    "samples/inference/mv_objdetect/CMakeLists.txt",
+                    string=True,
+                )
+                filter_file(
+                    r"${ROCM_PATH}/lib",
+                    "{0}/lib".format(self.spec.prefix),
+                    "samples/inference/mv_objdetect/CMakeLists.txt",
+                    string=True,
+                    when="@:6.1",
+                )
             filter_file(
                 r"${ROCM_PATH}/include/mivisionx",
                 "{0}/include/mivisionx".format(self.spec.prefix),
-                "samples/inference/mv_objdetect/CMakeLists.txt",
+                "samples/mv_objdetect/CMakeLists.txt",
                 string=True,
             )
             filter_file(
                 r"${ROCM_PATH}/lib",
                 "{0}/lib".format(self.spec.prefix),
-                "samples/inference/mv_objdetect/CMakeLists.txt",
+                "samples/mv_objdetect/CMakeLists.txt",
                 string=True,
             )
+
             filter_file(
                 r"${ROCM_PATH}/include/mivisionx",
                 "{0}/include/mivisionx".format(self.spec.prefix),
