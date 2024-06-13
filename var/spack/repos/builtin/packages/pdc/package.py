@@ -14,13 +14,14 @@ class Pdc(CMakePackage):
     metadata operations to find data objects."""
 
     homepage = "https://pdc.readthedocs.io/en/latest/"
-    url = "https://github.com/hpc-io/pdc/archive/refs/tags/0.4.tar.gz"
+    url = "https://github.com/hpc-io/pdc/archive/refs/tags/0.5.tar.gz"
     git = "https://github.com/hpc-io/pdc.git"
 
     maintainers("houjun", "sbyna", "jeanbez")
 
     license("BSD-3-Clause-LBNL")
 
+    version("0.5", sha256="d8ee6ad31670882dec8a9a131cd491a7134953acf3d18abf288605f3cc517636")
     version("0.4", sha256="eb2c2b69e5cdbca3210b8d72a646c16a2aa004ca08792f28cc6290a9a3ad6c8a")
     version("0.3", sha256="14a3abd5e1e604f9527105709fca545bcdebe51abd2b89884db74d48a38b5443")
     version(
