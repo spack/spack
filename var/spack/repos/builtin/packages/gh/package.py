@@ -16,6 +16,7 @@ class Gh(Package):
 
     license("MIT")
 
+    version("2.50.0", sha256="683d0dee90e1d24a6673d13680e0d41963ddc6dd88580ab5119acec790d1b4d7")
     version("2.49.2", sha256="e839ea302ad99b70ce3efcb903f938ecbbb919798e49bc2f2034ad506ae0b0f5")
     version("2.43.1", sha256="1ea3f451fb7002c1fb95a7fab21e9ab16591058492628fe264c5878e79ec7c90")
     version("2.32.1", sha256="1d569dc82eb6520e6a8959568c2db84fea3bbaab2604c8dd5901849d320e1eae")
