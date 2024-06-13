@@ -40,7 +40,11 @@ class Libwnck(MesonPackage, AutotoolsPackage):
         default="meson",
     )
 
-    depends_on("intltool@0.40.6:", type="build")
+    with default_args(type="build"):
+        depends_on("intltool@0.40.6:")
+        depends_on("cmake", when="build_system=meson")
+        depends_on("pkgconfig")
+        
     with default_args(type=("build", "link", "run")):
         depends_on("gobject-introspection", when="+introspection")
         depends_on("startup-notification", when="+notification")
