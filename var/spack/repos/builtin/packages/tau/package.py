@@ -178,6 +178,9 @@ class Tau(Package):
         msg="Using ROCm, select either +rocprofiler, +roctracer or +rocprofv2",
     )
 
+    # https://github.com/UO-OACISS/tau2/commit/1d2cb6b
+    patch("tau-rocm-disable-llvm-plugin.patch", when="@2.33.2 +rocm")
+
     filter_compiler_wrappers("Makefile", relative_root="include")
     filter_compiler_wrappers("Makefile.tau*", relative_root="lib")
     filter_compiler_wrappers("Makefile.tau*", relative_root="lib64")
