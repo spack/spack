@@ -30,12 +30,17 @@ class Libwnck(MesonPackage, AutotoolsPackage):
     version("3.14.1", sha256="bb643c9c423c8aa79c59973ce27ce91d3b180d1e9907902278fb79391f52befa")
     version("3.4.9", sha256="96e6353f2701a1ea565ece54d791a7bebef1832d96126f7377c54bb3516682c4")
 
+    variant("install_tools", default=True, description="Install WNCK tools")
+    variant("xres", default=True, descrption="Build with xres support")
     variant("introspection", default=True, description="Build with gobject-introspection support")
     # Defaulting to false until startup-notification build issue is resolved
-    variant("notification", default=False, description="Build with startup-notification support")
-    variant("xres", default=True, descrption="Build with xres support")
-    variant("tools", default=True, description="Install WNCK tools")
-
+    variant(
+        "startup_notification", 
+        default=False, 
+        description="Build with startup-notification support",
+    )
+    variant("gtk_doc", default=False, description="Build documentation")
+    
     build_system(
         conditional("meson", when="@3.31:"),
         conditional("autotools", when="@:3.24"),
@@ -47,6 +52,7 @@ class Libwnck(MesonPackage, AutotoolsPackage):
         depends_on("gettext", when="@3.31:")
         depends_on("intltool@0.40.6:", when="@:3.24")
         depends_on("cmake", when="build_system=meson")
+        depends_on("gtk-doc", when="+gtk_doc")
         
     with default_args(type=("build", "link", "run")):
         depends_on("glib@2")
@@ -55,15 +61,15 @@ class Libwnck(MesonPackage, AutotoolsPackage):
         
         depends_on("xres", when="+xres")
         depends_on("gobject-introspection", when="+introspection")
-        depends_on("startup-notification", when="+notification")
+        depends_on("startup-notification", when="+startup_notification")
 
     def configure_args(self):
         args = []
 
         args += self.enable_or_disable("introspection")
-        args += self.enable_or_disable("tools")
-        args += self.enable_or_disable("notification")
-        args += self.enable_or_disable("xres")
+        args += self.enable_or_disable("install_tools")
+        args += self.enable_or_disable("startup_notification")
+        args += self.enable_or_disable("gtk_doc")
 
         return args
 
