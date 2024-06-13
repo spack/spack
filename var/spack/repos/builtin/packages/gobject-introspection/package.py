@@ -76,7 +76,7 @@ class GobjectIntrospection(MesonPackage, AutotoolsPackage):
     #   an `#!/bin/bash /path/to/spack/bin/sbang` unconditionally being
     #   inserted into the scripts as they're generated.
     patch("sbang.patch", when="@:1.60.0")
-    patch("sbang-1.60.2.patch", when="@:1.60.2")
+    patch("sbang-1.60.2.patch", when="@1.60.2")  # Not sure of the upper bound
 
     # Drop deprecated xml.etree.ElementTree.Element.getchildren() which leads
     # to compilation issues with Python 3.9.
