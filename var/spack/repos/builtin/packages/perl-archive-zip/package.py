@@ -16,4 +16,5 @@ class PerlArchiveZip(PerlPackage):
 
     version("1.68", sha256="984e185d785baf6129c6e75f8eb44411745ac00bf6122fb1c8e822a3861ec650")
 
+    depends_on("perl-carp")
     depends_on("perl-compress-raw-zlib")
