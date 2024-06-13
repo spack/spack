@@ -33,6 +33,7 @@ class Libwnck(MesonPackage, AutotoolsPackage):
     variant("introspection", default=True, description="Build with gobject-introspection support")
     # Defaulting to false until startup-notification build issue is resolved
     variant("notification", default=False, description="Build with startup-notification support")
+    variant("xres", default=True, descrption="Build with xres support")
     variant("tools", default=True, description="Install WNCK tools")
 
     build_system(
@@ -43,7 +44,8 @@ class Libwnck(MesonPackage, AutotoolsPackage):
 
     with default_args(type="build"):
         depends_on("pkgconfig")
-        depends_on("intltool@0.40.6:")
+        depends_on("gettext", when="@3.31:")
+        depends_on("intltool@0.40.6:", when="@:3.24")
         depends_on("cmake", when="build_system=meson")
         
     with default_args(type=("build", "link", "run")):
@@ -51,6 +53,7 @@ class Libwnck(MesonPackage, AutotoolsPackage):
         depends_on("gdk-pixbuf")
         depends_on("gtkplus@3.22:")
         
+        depends_on("xres", when="+xres")
         depends_on("gobject-introspection", when="+introspection")
         depends_on("startup-notification", when="+notification")
 
@@ -60,6 +63,7 @@ class Libwnck(MesonPackage, AutotoolsPackage):
         args += self.enable_or_disable("introspection")
         args += self.enable_or_disable("tools")
         args += self.enable_or_disable("notification")
+        args += self.enable_or_disable("xres")
 
         return args
 
