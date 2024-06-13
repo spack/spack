@@ -32,10 +32,9 @@ class Libwnck(MesonPackage, AutotoolsPackage):
     variant("install_tools", default=True, description="Install WNCK tools")
     variant("xres", default=True, description="Build with xres support")
     variant("introspection", default=True, description="Build with gobject-introspection support")
-    # Defaulting to false until startup-notification build issue is resolved
     variant(
         "startup_notification",
-        default=False,
+        default=True,
         description="Build with startup-notification support",
     )
     variant("gtk_doc", default=False, description="Build documentation")
