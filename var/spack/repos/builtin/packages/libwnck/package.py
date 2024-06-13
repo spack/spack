@@ -33,9 +33,7 @@ class Libwnck(MesonPackage, AutotoolsPackage):
     variant("xres", default=True, description="Build with xres support")
     variant("introspection", default=True, description="Build with gobject-introspection support")
     variant(
-        "startup_notification",
-        default=True,
-        description="Build with startup-notification support",
+        "startup_notification", default=True, description="Build with startup-notification support"
     )
     variant("gtk_doc", default=False, description="Build documentation")
 
