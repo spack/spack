@@ -88,4 +88,6 @@ class Turbovnc(CMakePackage):
 #            f"-DXORG_FONT_PATH={}",
 #            f"-DXORG_REGISTRY_PATH={}",
         ]
+        if self.spec.satisfies("+novnc"):
+            args.append("-DTVNC_BUILDWEBSERVER=1")
         return args
