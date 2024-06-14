@@ -18,23 +18,23 @@
 { attr("virtual_node", node(0..X-1, Package)) } :- max_dupes(Package, X), virtual(Package).
 
 % Integrity constraints on DAG nodes
-:- attr("root", PackageNode), not attr("node", PackageNode).
-:- attr("version", PackageNode, _), not attr("node", PackageNode), not attr("virtual_node", PackageNode).
-:- attr("node_version_satisfies", PackageNode, _), not attr("node", PackageNode), not attr("virtual_node", PackageNode).
-:- attr("hash", PackageNode, _), not attr("node", PackageNode).
-:- attr("node_platform", PackageNode, _), not attr("node", PackageNode).
-:- attr("node_os", PackageNode, _), not attr("node", PackageNode).
-:- attr("node_target", PackageNode, _), not attr("node", PackageNode).
-:- attr("node_compiler_version", PackageNode, _, _), not attr("node", PackageNode).
-:- attr("variant_value", PackageNode, _, _), not attr("node", PackageNode).
-:- attr("node_flag_compiler_default", PackageNode), not attr("node", PackageNode).
-:- attr("node_flag", PackageNode, _, _), not attr("node", PackageNode).
-:- attr("no_flags", PackageNode, _), not attr("node", PackageNode).
-:- attr("external_spec_selected", PackageNode, _), not attr("node", PackageNode).
-:- attr("depends_on", ParentNode, _, _), not attr("node", ParentNode).
-:- attr("depends_on", _, ChildNode, _), not attr("node", ChildNode).
-:- attr("node_flag_source", ParentNode, _, _), not attr("node", ParentNode).
-:- attr("node_flag_source", _, _, ChildNode), not attr("node", ChildNode).
+:- attr("root", PackageNode), not attr("node", PackageNode), internal_error("root without node").
+:- attr("version", PackageNode, _), not attr("node", PackageNode), not attr("virtual_node", PackageNode), internal_error("version without node").
+:- attr("node_version_satisfies", PackageNode, _), not attr("node", PackageNode), not attr("virtual_node", PackageNode), internal_error("version satisfies without node").
+:- attr("hash", PackageNode, _), not attr("node", PackageNode), internal_error("hash without node").
+:- attr("node_platform", PackageNode, _), not attr("node", PackageNode), internal_error("platform without node").
+:- attr("node_os", PackageNode, _), not attr("node", PackageNode), internal_error("os without node").
+:- attr("node_target", PackageNode, _), not attr("node", PackageNode), internal_error("target without node").
+:- attr("node_compiler_version", PackageNode, _, _), not attr("node", PackageNode), internal_error("compiler without node").
+:- attr("variant_value", PackageNode, _, _), not attr("node", PackageNode), internal_error("variant without node").
+:- attr("node_flag_compiler_default", PackageNode), not attr("node", PackageNode), internal_error("compiler flag default without node").
+:- attr("node_flag", PackageNode, _, _), not attr("node", PackageNode), internal_error("compiler flag without node").
+:- attr("no_flags", PackageNode, _), not attr("node", PackageNode), internal_error("empty compiler flag without node").
+:- attr("external_spec_selected", PackageNode, _), not attr("node", PackageNode), internal_error("external spec without node").
+:- attr("depends_on", ParentNode, _, _), not attr("node", ParentNode), internal_error("depends on without node for parent").
+:- attr("depends_on", _, ChildNode, _), not attr("node", ChildNode), internal_error("depends on without node for child").
+:- attr("node_flag_source", ParentNode, _, _), not attr("node", ParentNode), internal_error("node flag source without flag node").
+:- attr("node_flag_source", _, _, ChildNode), not attr("node", ChildNode), internal_error("node flag source without source node").
 :- attr("virtual_node", VirtualNode), not provider(_, VirtualNode), internal_error("virtual node with no provider").
 :- provider(_, VirtualNode), not attr("virtual_node", VirtualNode), internal_error("provider with no virtual node").
 :- provider(PackageNode, _), not attr("node", PackageNode), internal_error("provider with no real node").

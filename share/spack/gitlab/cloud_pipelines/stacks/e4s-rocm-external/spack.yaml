@@ -7,7 +7,12 @@ spack:
 
   packages:
     all:
-      require: '%gcc target=x86_64_v3'
+      require:
+      - one_of:
+        - '%gcc target=x86_64_v3'
+        - '%rocmcc target=x86_64_v3'
+      - spec: '+rocm'
+        when: 'rocm=*'
       providers:
         blas: [openblas]
       variants: +mpi
@@ -140,9 +145,12 @@ spack:
       - spec: llvm-amdgpu@5.7.1
         prefix: /opt/rocm-5.7.1/llvm
         extra_attributes:
-          compilers:
-            c: /opt/rocm-5.7.1/llvm/bin/clang++
-            cxx: /opt/rocm-5.7.1/llvm/bin/clang++
+          # These will change to new cleaner format soon
+          paths:
+            cc: /opt/rocm-5.7.1/bin/amdclang
+            cxx: /opt/rocm-5.7.1/bin/amdclang++
+            fc: /opt/rocm-5.7.1/bin/amdflang
+            f77: /opt/rocm-5.7.1/bin/amdflang
     hsakmt-roct:
       buildable: false
       externals:
@@ -175,7 +183,12 @@ spack:
     rocrand:
       buildable: false
       externals:
-      - spec: rocrand@5.7.1
+      - spec: rocrand@5.7.1 amdgpu_target=gfx908,gfx90a
+        prefix: /opt/rocm-5.7.1
+    hiprand:
+      buildable: false
+      externals:
+      - spec: hiprand@5.7.1 amdgpu_target=gfx908,gfx90a
         prefix: /opt/rocm-5.7.1
     hipsolver:
       buildable: false
@@ -203,94 +216,57 @@ spack:
       - spec: rocprofiler-dev@5.7.1
         prefix: /opt/rocm-5.7.1
 
+  definitions:
+  - per_arch_specs:
+    - adios2 +kokkos
+    - amrex
+    - arborx
+    - cabana
+    - caliper
+    - chai
+    # - cp2k +mpi  # cptk: Error KeyError: 'No spec with name rocm in ... "-L{}".format(spec["rocm"].libs.directories[0])
+    - ecp-data-vis-sdk +paraview +vtkm
+    - exago +mpi +python +raja +hiop ~ipopt cxxflags="-Wno-error=non-pod-varargs" ^hiop ~sparse +mpi +raja
+    - gasnet
+    - ginkgo
+    - heffte
+    - hpx
+    - hypre
+    - kokkos
+    - legion
+    - magma ~cuda
+    - mfem
+    - petsc
+    - raja ~openmp
+    # - slate  # slate: hip/device_gescale_row_col.hip.cc:58:49: error: use of overloaded operator '*' is ambiguous (with operand types 'HIP_vector_type<double, 2>' and 'const HIP_vector_type<double, 2>')
+    - slepc
+    - strumpack ~slate
+    - sundials
+    - superlu-dist
+    - tasmanian ~openmp
+    - trilinos +amesos +amesos2 +anasazi +aztec +belos +boost +epetra +epetraext +ifpack ~ifpack2 +intrepid +intrepid2 +isorropia +kokkos +ml +minitensor +muelu +nox +piro +phalanx +rol +rythmos +sacado +stk +shards +shylu ~stokhos +stratimikos +teko +tempus +tpetra +trilinoscouplings +zoltan +zoltan2 +superlu-dist gotype=long_long
+    - umpire
+    - upcxx
+    # INCLUDED IN ECP DAV ROCM
+    # - hdf5
+    # - hdf5-vol-async
+    # - hdf5-vol-cache
+    # - hdf5-vol-log
+    # - libcatalyst
+    - paraview
+    # vtk-m ~openmp  # vtk-m: https://github.com/spack/spack/issues/40268
+    # --
+    # - lbann ~cuda  # aluminum: https://github.com/spack/spack/issues/38807
+    # - papi  # papi: https://github.com/spack/spack/issues/27898
+
   specs:
   # ROCM NOARCH
-  - hpctoolkit +rocm
-  - tau +mpi +rocm +syscall  # tau: has issue with `spack env depfile` build
-
-  # ROCM 908
-  - adios2 +kokkos +rocm amdgpu_target=gfx908
-  - amrex +rocm amdgpu_target=gfx908
-  - arborx +rocm amdgpu_target=gfx908
-  - cabana +rocm amdgpu_target=gfx908
-  - caliper +rocm amdgpu_target=gfx908
-  - chai +rocm amdgpu_target=gfx908
-  # - cp2k +mpi +rocm amdgpu_target=gfx908 # cp2k: Error: KeyError: 'No spec with name rocm in... "-L{}".format(spec["rocm"].libs.directories[0]),
-  - ecp-data-vis-sdk +paraview +vtkm +rocm amdgpu_target=gfx908
-  - exago +mpi +python +raja +hiop +rocm amdgpu_target=gfx908 ~ipopt cxxflags="-Wno-error=non-pod-varargs" ^hiop@1.0.0 ~sparse +mpi +raja +rocm amdgpu_target=gfx908
-  - gasnet +rocm amdgpu_target=gfx908
-  - ginkgo +rocm amdgpu_target=gfx908
-  - heffte +rocm amdgpu_target=gfx908
-  - hpx +rocm amdgpu_target=gfx908
-  - hypre +rocm amdgpu_target=gfx908
-  - kokkos +rocm amdgpu_target=gfx908
-  - legion +rocm amdgpu_target=gfx908
-  - magma ~cuda +rocm amdgpu_target=gfx908
-  - mfem +rocm amdgpu_target=gfx908
-  - petsc +rocm amdgpu_target=gfx908
-  - raja ~openmp +rocm amdgpu_target=gfx908
-  # - slate +rocm amdgpu_target=gfx908          # slate: hip/device_gescale_row_col.hip.cc:58:49: error: use of overloaded operator '*' is ambiguous (with operand types 'HIP_vector_type<double, 2>' and 'const HIP_vector_type<double, 2>')
-  - slepc +rocm amdgpu_target=gfx908 ^petsc +rocm amdgpu_target=gfx908
-  - strumpack ~slate +rocm amdgpu_target=gfx908
-  - sundials +rocm amdgpu_target=gfx908
-  - superlu-dist +rocm amdgpu_target=gfx908
-  - tasmanian ~openmp +rocm amdgpu_target=gfx908
-  - trilinos +amesos +amesos2 +anasazi +aztec +belos +boost +epetra +epetraext +ifpack ~ifpack2 +intrepid +intrepid2 +isorropia +kokkos +ml +minitensor +muelu +nox +piro +phalanx +rol +rythmos +sacado +stk +shards +shylu ~stokhos +stratimikos +teko +tempus +tpetra +trilinoscouplings +zoltan +zoltan2 +superlu-dist gotype=long_long +rocm amdgpu_target=gfx908
-  - umpire +rocm amdgpu_target=gfx908
-  - upcxx +rocm amdgpu_target=gfx908
-  # INCLUDED IN ECP DAV ROCM
-  # - hdf5
-  # - hdf5-vol-async
-  # - hdf5-vol-cache
-  # - hdf5-vol-log
-  # - libcatalyst
-  - paraview +rocm amdgpu_target=gfx908
-  # - vtk-m ~openmp +rocm amdgpu_target=gfx908  # vtk-m: https://github.com/spack/spack/issues/40268
-  # --
-  # - lbann ~cuda +rocm amdgpu_target=gfx908    # aluminum: https://github.com/spack/spack/issues/38807
-  # - papi +rocm amdgpu_target=gfx908           # papi: https://github.com/spack/spack/issues/27898
-
-  # ROCM 90a
-  - adios2 +kokkos +rocm amdgpu_target=gfx90a
-  - amrex +rocm amdgpu_target=gfx90a
-  - arborx +rocm amdgpu_target=gfx90a
-  - cabana +rocm amdgpu_target=gfx90a
-  - caliper +rocm amdgpu_target=gfx90a
-  - chai +rocm amdgpu_target=gfx90a
-  # - cp2k +mpi +rocm amdgpu_target=gfx90a # cp2k: Error: KeyError: 'No spec with name rocm in... "-L{}".format(spec["rocm"].libs.directories[0]),
-  - ecp-data-vis-sdk +paraview +vtkm +rocm amdgpu_target=gfx90a
-  - exago +mpi +python +raja +hiop +rocm amdgpu_target=gfx90a ~ipopt cxxflags="-Wno-error=non-pod-varargs" ^hiop@1.0.0 ~sparse +mpi +raja +rocm amdgpu_target=gfx90a  
-  - gasnet +rocm amdgpu_target=gfx90a
-  - ginkgo +rocm amdgpu_target=gfx90a
-  - heffte +rocm amdgpu_target=gfx90a
-  - hpx +rocm amdgpu_target=gfx90a
-  - hypre +rocm amdgpu_target=gfx90a
-  - kokkos +rocm amdgpu_target=gfx90a
-  - legion +rocm amdgpu_target=gfx90a
-  - magma ~cuda +rocm amdgpu_target=gfx90a
-  - mfem +rocm amdgpu_target=gfx90a
-  - petsc +rocm amdgpu_target=gfx90a
-  - raja ~openmp +rocm amdgpu_target=gfx90a
-  # - slate +rocm amdgpu_target=gfx90a          # slate: hip/device_gescale_row_col.hip.cc:58:49: error: use of overloaded operator '*' is ambiguous (with operand types 'HIP_vector_type<double, 2>' and 'const HIP_vector_type<double, 2>')
-  - slepc +rocm amdgpu_target=gfx90a ^petsc +rocm amdgpu_target=gfx90a
-  - strumpack ~slate +rocm amdgpu_target=gfx90a
-  - sundials +rocm amdgpu_target=gfx90a
-  - superlu-dist +rocm amdgpu_target=gfx90a
-  - tasmanian ~openmp +rocm amdgpu_target=gfx90a
-  - trilinos +amesos +amesos2 +anasazi +aztec +belos +boost +epetra +epetraext +ifpack ~ifpack2 +intrepid +intrepid2 +isorropia +kokkos +ml +minitensor +muelu +nox +piro +phalanx +rol +rythmos +sacado +stk +shards +shylu ~stokhos +stratimikos +teko +tempus +tpetra +trilinoscouplings +zoltan +zoltan2 +superlu-dist gotype=long_long +rocm amdgpu_target=gfx90a
-  - umpire +rocm amdgpu_target=gfx90a
-  - upcxx +rocm amdgpu_target=gfx90a
-  # INCLUDED IN ECP DAV ROCM
-  # - hdf5
-  # - hdf5-vol-async
-  # - hdf5-vol-cache
-  # - hdf5-vol-log
-  # - libcatalyst
-  - paraview +rocm amdgpu_target=gfx90a
-  # - vtk-m ~openmp +rocm amdgpu_target=gfx90a  # vtk-m: https://github.com/spack/spack/issues/40268
-  # --
-  # - lbann ~cuda +rocm amdgpu_target=gfx90a    # aluminum: https://github.com/spack/spack/issues/38807
-  # - papi +rocm amdgpu_target=gfx90a           # papi: https://github.com/spack/spack/issues/27898
+  - hpctoolkit ++rocm
+  - tau +mpi ++rocm +syscall  # tau: has issue with `spack env depfile` build
+  - matrix:
+    - [$per_arch_specs]
+    - [++rocm]
+    - [amdgpu_target==gfx908, amdgpu_target==gfx90a]
 
   ci:
     pipeline-gen:

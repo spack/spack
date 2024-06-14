@@ -227,7 +227,7 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
         "+rocm", when="@:20.11", msg="AMReX HIP support needs AMReX newer than version 20.11"
     )
     conflicts(
-        "%rocm@4.2.0:4.2",
+        "%rocmcc@4.2.0:4.2",
         when="+rocm",
         msg="AMReX does not support rocm-4.2 due to a compiler bug",
     )
