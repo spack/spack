@@ -22,6 +22,14 @@ class Xfce4Session(AutotoolsPackage):
     version("4.18.0", sha256="38badb500b272012f494543a60a9c0563c381647cc95bed73b68aec0b0b89a7f")
     version("4.16.0", sha256="22f273f212481d71e0b5618c62710cd85f69aea74f5ea5c0093f7918b07d17b7")
 
+    variant(
+        "icon-themes",
+        description="Default icon themes to include",
+        default="hicolor",
+        values=["hicolor", "adwaita"],
+        multi=True,
+    )
+
     with default_args(type=("build", "link", "run")):
         depends_on("libxfce4ui")
         depends_on("libwnck@3.10:")
@@ -35,6 +43,10 @@ class Xfce4Session(AutotoolsPackage):
             depends_on("glib@2.66:")
         with when("@4.16.0:"):
             depends_on("glib@2.50:")
+
+    with default_args(type="run"):
+        depends_on("adwaita-icon-theme", when="icon-themes=adwaita")
+        depends_on("hicolor-icon-theme", when="icon-themes=hicolor")
 
     def configure_args(self):
         args = []
