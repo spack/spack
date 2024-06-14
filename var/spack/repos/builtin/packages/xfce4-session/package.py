@@ -26,6 +26,7 @@ class Xfce4Session(AutotoolsPackage):
         depends_on("libxfce4ui")
         depends_on("libwnck@3.10:")
         depends_on("dbus-glib")
+        depends_on("iceauth")
         depends_on("perl-xml-parser")
 
     depends_on("intltool@0.39.0:", type="build")
