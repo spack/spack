@@ -11,7 +11,7 @@ class Xclock(AutotoolsPackage, XorgPackage):
     the time in analog or digital form, continuously updated at a
     frequency which may be specified by the user."""
 
-    homepage = "https://cgit.freedesktop.org/xorg/app/xclock"
+    homepage = "https://gitlab.freedesktop.org/xorg/app/xclock"
     xorg_mirror_path = "app/xclock-1.0.7.tar.gz"
 
     license("MIT")

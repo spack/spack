@@ -9,7 +9,7 @@ from spack.package import *
 class Libxres(AutotoolsPackage, XorgPackage):
     """libXRes - X-Resource extension client library."""
 
-    homepage = "https://cgit.freedesktop.org/xorg/lib/libXRes"
+    homepage = "https://gitlab.freedesktop.org/xorg/lib/libXRes"
     xorg_mirror_path = "lib/libXres-1.0.7.tar.gz"
 
     license("custom")

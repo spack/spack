@@ -9,7 +9,7 @@ from spack.package import *
 class Libxfontcache(AutotoolsPackage, XorgPackage):
     """Xfontcache - X-TrueType font cache extension client library."""
 
-    homepage = "https://cgit.freedesktop.org/xorg/lib/libXfontcache"
+    homepage = "https://gitlab.freedesktop.org/xorg/lib/libXfontcache"
     xorg_mirror_path = "lib/libXfontcache-1.0.5.tar.gz"
 
     license("BSD-2-Clause")

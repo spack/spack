@@ -9,7 +9,7 @@ from spack.package import *
 class Xedit(AutotoolsPackage, XorgPackage):
     """Xedit is a simple text editor for X."""
 
-    homepage = "https://cgit.freedesktop.org/xorg/app/xedit"
+    homepage = "https://gitlab.freedesktop.org/xorg/app/xedit"
     xorg_mirror_path = "app/xedit-1.2.2.tar.gz"
 
     license("BSD-3-Clause")

@@ -11,7 +11,7 @@ class Libxau(AutotoolsPackage, XorgPackage):
     Authorization Protocol. This is useful for restricting client
     access to the display."""
 
-    homepage = "https://cgit.freedesktop.org/xorg/lib/libXau/"
+    homepage = "https://gitlab.freedesktop.org/xorg/lib/libXau/"
     xorg_mirror_path = "lib/libXau-1.0.8.tar.gz"
 
     license("MIT")

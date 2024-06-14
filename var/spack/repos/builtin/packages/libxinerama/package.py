@@ -9,7 +9,7 @@ from spack.package import *
 class Libxinerama(AutotoolsPackage, XorgPackage):
     """libXinerama - API for Xinerama extension to X11 Protocol."""
 
-    homepage = "https://cgit.freedesktop.org/xorg/lib/libXinerama"
+    homepage = "https://gitlab.freedesktop.org/xorg/lib/libXinerama"
     xorg_mirror_path = "lib/libXinerama-1.1.3.tar.gz"
 
     license("MIT")

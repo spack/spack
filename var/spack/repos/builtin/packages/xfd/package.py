@@ -10,7 +10,7 @@ class Xfd(AutotoolsPackage, XorgPackage):
     """xfd - display all the characters in a font using either the
     X11 core protocol or libXft2."""
 
-    homepage = "https://cgit.freedesktop.org/xorg/app/xfd"
+    homepage = "https://gitlab.freedesktop.org/xorg/app/xfd"
     xorg_mirror_path = "app/xfd-1.1.2.tar.gz"
 
     license("X11")

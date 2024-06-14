@@ -9,7 +9,7 @@ from spack.package import *
 class Libxp(AutotoolsPackage, XorgPackage):
     """libXp - X Print Client Library."""
 
-    homepage = "https://cgit.freedesktop.org/xorg/lib/libXp"
+    homepage = "https://gitlab.freedesktop.org/xorg/lib/libXp"
     xorg_mirror_path = "lib/libXp-1.0.3.tar.gz"
 
     maintainers("wdconinc")

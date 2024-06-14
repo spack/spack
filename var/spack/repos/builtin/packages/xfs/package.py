@@ -9,7 +9,7 @@ from spack.package import *
 class Xfs(AutotoolsPackage, XorgPackage):
     """X Font Server."""
 
-    homepage = "https://cgit.freedesktop.org/xorg/app/xfs"
+    homepage = "https://gitlab.freedesktop.org/xorg/app/xfs"
     xorg_mirror_path = "app/xfs-1.1.4.tar.gz"
 
     license("X11")

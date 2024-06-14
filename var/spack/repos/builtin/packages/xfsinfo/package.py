@@ -13,7 +13,7 @@ class Xfsinfo(AutotoolsPackage, XorgPackage):
     clients and the server, and the font catalogues and alternate servers
     that are available."""
 
-    homepage = "https://cgit.freedesktop.org/xorg/app/xfsinfo"
+    homepage = "https://gitlab.freedesktop.org/xorg/app/xfsinfo"
     xorg_mirror_path = "app/xfsinfo-1.0.5.tar.gz"
 
     version("1.0.7", sha256="df874933710c9c38640496a2121d73272501b9620bdb95784e9e67b913788151")

@@ -9,7 +9,7 @@ from spack.package import *
 class Xditview(AutotoolsPackage, XorgPackage):
     """xditview displays ditroff output on an X display."""
 
-    homepage = "https://cgit.freedesktop.org/xorg/app/xditview"
+    homepage = "https://gitlab.freedesktop.org/xorg/app/xditview"
     xorg_mirror_path = "app/xditview-1.0.4.tar.gz"
 
     license("X11")

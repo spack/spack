@@ -9,7 +9,7 @@ from spack.package import *
 class Xwd(AutotoolsPackage, XorgPackage):
     """xwd - dump an image of an X window."""
 
-    homepage = "https://cgit.freedesktop.org/xorg/app/xwd"
+    homepage = "https://gitlab.freedesktop.org/xorg/app/xwd"
     xorg_mirror_path = "app/xwd-1.0.6.tar.gz"
 
     license("custom")

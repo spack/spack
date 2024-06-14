@@ -11,7 +11,7 @@ class Xcompmgr(AutotoolsPackage, XorgPackage):
     XFIXES, DAMAGE, RENDER, and COMPOSITE extensions.  It enables basic
     eye-candy effects."""
 
-    homepage = "https://cgit.freedesktop.org/xorg/app/xcompmgr"
+    homepage = "https://gitlab.freedesktop.org/xorg/app/xcompmgr"
     xorg_mirror_path = "app/xcompmgr-1.1.7.tar.gz"
 
     license("MIT")

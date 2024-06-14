@@ -9,7 +9,7 @@ from spack.package import *
 class Xsm(AutotoolsPackage, XorgPackage):
     """X Session Manager."""
 
-    homepage = "https://cgit.freedesktop.org/xorg/app/xsm"
+    homepage = "https://gitlab.freedesktop.org/xorg/app/xsm"
     xorg_mirror_path = "app/xsm-1.0.3.tar.gz"
 
     version("1.0.5", sha256="e8a2f64b5a37be39a81877cd4069745a226a31493080f03ae74b76fb3f17b7a6")

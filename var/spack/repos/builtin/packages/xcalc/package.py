@@ -10,7 +10,7 @@ class Xcalc(AutotoolsPackage, XorgPackage):
     """xcalc is a scientific calculator X11 client that can emulate a TI-30
     or an HP-10C."""
 
-    homepage = "https://cgit.freedesktop.org/xorg/app/xcalc"
+    homepage = "https://gitlab.freedesktop.org/xorg/app/xcalc"
     xorg_mirror_path = "app/xcalc-1.0.6.tar.gz"
 
     license("MIT")

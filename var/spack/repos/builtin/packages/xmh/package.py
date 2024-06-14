@@ -11,7 +11,7 @@ class Xmh(AutotoolsPackage, XorgPackage):
     MH Message Handling System.  To actually do things with your
     mail, it makes calls to the MH package."""
 
-    homepage = "https://cgit.freedesktop.org/xorg/app/xmh"
+    homepage = "https://gitlab.freedesktop.org/xorg/app/xmh"
     xorg_mirror_path = "app/xmh-1.0.3.tar.gz"
 
     version("1.0.5", sha256="3ab74096031ba89bcc88a46dbfa652837c4aeb6a36168ff9799782efe88128b8")

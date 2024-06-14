@@ -9,7 +9,7 @@ from spack.package import *
 class Libxevie(AutotoolsPackage, XorgPackage):
     """Xevie - X Event Interception Extension (XEvIE)."""
 
-    homepage = "https://cgit.freedesktop.org/xorg/lib/libXevie"
+    homepage = "https://gitlab.freedesktop.org/xorg/lib/libXevie"
     xorg_mirror_path = "lib/libXevie-1.0.3.tar.gz"
 
     license("MIT")

@@ -9,7 +9,7 @@ from spack.package import *
 class Xtrap(AutotoolsPackage, XorgPackage):
     """XTrap sample clients."""
 
-    homepage = "https://cgit.freedesktop.org/xorg/app/xtrap"
+    homepage = "https://gitlab.freedesktop.org/xorg/app/xtrap"
     xorg_mirror_path = "app/xtrap-1.0.2.tar.gz"
 
     version("1.0.3", sha256="c6b86b921a748acbf1d82590fbd9c4575f970220760088f0e0efac6fd93d6dc3")

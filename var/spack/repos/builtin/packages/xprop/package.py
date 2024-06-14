@@ -10,7 +10,7 @@ class Xprop(AutotoolsPackage, XorgPackage):
     """xprop is a command line tool to display and/or set window and font
     properties of an X server."""
 
-    homepage = "https://cgit.freedesktop.org/xorg/app/xprop"
+    homepage = "https://gitlab.freedesktop.org/xorg/app/xprop"
     xorg_mirror_path = "app/xprop-1.2.2.tar.gz"
 
     license("MIT")

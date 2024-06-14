@@ -9,7 +9,7 @@ from spack.package import *
 class Libxscrnsaver(AutotoolsPackage, XorgPackage):
     """XScreenSaver - X11 Screen Saver extension client library"""
 
-    homepage = "https://cgit.freedesktop.org/xorg/lib/libXScrnSaver"
+    homepage = "https://gitlab.freedesktop.org/xorg/lib/libXScrnSaver"
     xorg_mirror_path = "lib/libXScrnSaver-1.2.2.tar.gz"
 
     license("MIT")

@@ -10,7 +10,7 @@ class Xauth(AutotoolsPackage, XorgPackage):
     """The xauth program is used to edit and display the authorization
     information used in connecting to the X server."""
 
-    homepage = "https://cgit.freedesktop.org/xorg/app/xauth"
+    homepage = "https://gitlab.freedesktop.org/xorg/app/xauth"
     xorg_mirror_path = "app/xauth-1.0.9.tar.gz"
 
     license("custom")

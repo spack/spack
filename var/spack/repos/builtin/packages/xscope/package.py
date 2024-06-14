@@ -9,7 +9,7 @@ from spack.package import *
 class Xscope(AutotoolsPackage, XorgPackage):
     """XSCOPE -- a program to monitor X11/Client conversations."""
 
-    homepage = "https://cgit.freedesktop.org/xorg/app/xscope"
+    homepage = "https://gitlab.freedesktop.org/xorg/app/xscope"
     xorg_mirror_path = "app/xscope-1.4.1.tar.gz"
 
     license("MIT")

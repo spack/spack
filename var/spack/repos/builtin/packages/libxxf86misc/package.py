@@ -9,7 +9,7 @@ from spack.package import *
 class Libxxf86misc(AutotoolsPackage, XorgPackage):
     """libXxf86misc - Extension library for the XFree86-Misc X extension."""
 
-    homepage = "https://cgit.freedesktop.org/xorg/lib/libXxf86misc"
+    homepage = "https://gitlab.freedesktop.org/xorg/lib/libXxf86misc"
     xorg_mirror_path = "lib/libXxf86misc-1.0.3.tar.gz"
 
     maintainers("wdconinc")

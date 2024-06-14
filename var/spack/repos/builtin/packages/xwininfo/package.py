@@ -10,7 +10,7 @@ class Xwininfo(AutotoolsPackage, XorgPackage):
     """xwininfo prints information about windows on an X server. Various
     information is displayed depending on which options are selected."""
 
-    homepage = "https://cgit.freedesktop.org/xorg/app/xwininfo"
+    homepage = "https://gitlab.freedesktop.org/xorg/app/xwininfo"
     xorg_mirror_path = "app/xwininfo-1.1.3.tar.gz"
 
     license("MIT")
