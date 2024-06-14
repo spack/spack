@@ -40,6 +40,7 @@ class Turbovnc(CMakePackage):
     depends_on("openssl")
     depends_on("xkbcomp")
     depends_on("xkbdata")
+    depends_on("xkeyboard-config")
 
     depends_on("libcap")
     depends_on("krb5")
@@ -51,7 +52,7 @@ class Turbovnc(CMakePackage):
     depends_on("libxfixes")
     depends_on("libxi")
     depends_on("libxt")
-    depends_on("xproto")
+#    depends_on("xproto")
 
     depends_on("fontconfig")
     depends_on("libice")
