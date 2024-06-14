@@ -9,7 +9,7 @@ from spack.package import *
 class Libxrandr(AutotoolsPackage, XorgPackage):
     """libXrandr - X Resize, Rotate and Reflection extension library."""
 
-    homepage = "https://cgit.freedesktop.org/xorg/lib/libXrandr"
+    homepage = "https://gitlab.freedesktop.org/xorg/lib/libXrandr"
     xorg_mirror_path = "lib/libXrandr-1.5.0.tar.gz"
 
     license("MIT")
