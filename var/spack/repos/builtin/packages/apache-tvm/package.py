@@ -8,7 +8,7 @@ from spack.package import *
 
 
 class ApacheTvm(CMakePackage, CudaPackage):
-    """ "Apache TVM is an open source machine learning compiler framework for
+    """Apache TVM is an open source machine learning compiler framework for
     CPUs, GPUs, and machine learning accelerators. It aims to enable machine
     learning engineers to optimize and run computations efficiently on any
     hardware backend."""
