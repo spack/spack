@@ -522,7 +522,11 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
 
         # Undo spack compiler wrappers:
         # the C/C++ compilers must work post-install
-        if is_CrayEX() and os.environ.get("CRAYPE_DIR"):
+        if self.spec.satisfies("+cuda") or self.spec.satisfies("+rocm"):
+            env.set("CHPL_TARGET_COMPILER", "llvm")
+            real_cc = join_path(self.spec["llvm"].prefix, "bin", "clang")
+            real_cxx = join_path(self.spec["llvm"].prefix, "bin", "clang++")
+        elif is_CrayEX() and os.environ.get("CRAYPE_DIR"):
             real_cc = join_path(os.environ["CRAYPE_DIR"], "bin", "cc")
             real_cxx = join_path(os.environ["CRAYPE_DIR"], "bin", "CC")
         else:
@@ -610,12 +614,10 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
             env.prepend_path("LD_LIBRARY_PATH", self.spec["cuda"].prefix.lib64)
             env.set("CHPL_LOCALE_MODEL", "gpu")
             env.set("CHPL_GPU", "nvidia")
-            env.set("CHPL_TARGET_COMPILER", "llvm")
 
         if self.spec.satisfies("+rocm"):
             env.set("CHPL_LOCALE_MODEL", "gpu")
             env.set("CHPL_GPU", "amd")
-            env.set("CHPL_TARGET_COMPILER", "llvm")
             env.set("CHPL_HOST_COMPILER", "llvm")
             env.set("CHPL_GPU_ARCH", self.spec.variants["amdgpu_target"].value[0])
             env.set(
