@@ -7,7 +7,7 @@ import os.path
 from spack.package import *
 
 
-class Elsi(CMakePackage):
+class Elsi(CMakePackage, CudaPackage):
     """ELSI provides a unified interface for electronic structure
     codes to a variety of eigenvalue solvers."""
 
@@ -33,27 +33,51 @@ class Elsi(CMakePackage):
     variant("enable_sips", default=False, description="Enable SLEPc-SIPs support")
     variant("use_external_elpa", default=False, description="Build ELPA using SPACK")
     variant("use_external_ntpoly", default=False, description="Build NTPoly using SPACK")
-    variant("use_external_omm", default=False, description="Use external libOMM and MatrixSwitch")
     variant("use_external_superlu", default=False, description="Use external SuperLU DIST")
     variant(
         "use_mpi_iallgather", default=True, description="Use non-blocking collective MPI functions"
     )
+    variant("tests", default=False, description="Enable Fortran tests")
+    variant("tests_c", default=False, description="Enable C tests")
+    variant("internal_elpa_version", default="2024", values=("2024", "2023_11", "2023", "2021", "2020"), description="Internal ELPA version", multi=False)
 
     # Basic dependencies
     depends_on("blas", type="link")
     depends_on("lapack", type="link")
-    depends_on("cmake", type="build")
-    depends_on("mpi")
     depends_on("scalapack", type="link")
+    depends_on("mpi")
 
     # Library dependencies
-    depends_on("elpa", when="+use_external_elpa")
+    with when("+use_external_elpa"):
+        depends_on("elpa+cuda", when="+cuda")
+        depends_on("elpa~cuda", when="~cuda")
     depends_on("ntpoly", when="+use_external_ntpoly")
-    depends_on("slepc", when="+enable_sips")
-    depends_on("petsc", when="+enable_sips")
-    depends_on("superlu-dist", when="+use_external_superlu")
+    with when("+enable_sips"):
+        depends_on("slepc+cuda", when="+cuda")
+        depends_on("slepc~cuda", when="~cuda")
+        depends_on("petsc+cuda", when="+cuda")
+        depends_on("petsc~cuda", when="~cuda")
+    with when("+use_external_superlu"):
+        depends_on("superlu-dist+cuda", when="+cuda")
+        depends_on("superlu-dist~cuda", when="~cuda")
+
 
     def cmake_args(self):
+        libs_names = ["scalapack", "lapack", "blas"]
+
+        # External libraries
+        if self.spec.satisfies("+use_external_elpa"):
+            libs_names.append("elpa")
+        if self.spec.satisfies("+use_external_ntpoly"):
+            libs_names.append("ntpoly")
+        if self.spec.satisfies("+use_external_superlu"):
+            libs_names.append("superlu-dist")
+
+        lib_paths, libs = [], []
+        for lib in libs_names:
+            lib_paths.extend([name.replace("-L", "") for name in self.spec[lib].libs.search_flags.split()])
+            libs.extend([os.path.basename(name) for name in self.spec[lib].libs.libraries])
+
         args = [
             # Compiler Information (ELSI wants these explicitly set)
             self.define("CMAKE_Fortran_COMPILER", self.spec["mpi"].mpifc),
@@ -64,9 +88,14 @@ class Elsi(CMakePackage):
             self.define_from_variant("ENABLE_SIPS", "enable_sips"),
             self.define_from_variant("USE_EXTERNAL_ELPA", "use_external_elpa"),
             self.define_from_variant("USE_EXTERNAL_NTPOLY", "use_external_ntpoly"),
-            self.define_from_variant("USE_EXTERNAL_OMM", "use_external_omm"),
             self.define_from_variant("USE_EXTERNAL_SUPERLU", "use_external_superlu"),
             self.define_from_variant("USE_MPI_IALLGATHER", "use_mpi_iallgather"),
+            self.define_from_variant("ENABLE_TESTS", "tests"),
+            self.define_from_variant("ENABLE_C_TESTS", "tests_c"),
+            self.define_from_variant("USE_GPU_CUDA", "cuda"),
+            self.define("LIB_PATHS", ';'.join(lib_paths)),
+            self.define("LIBS", ';'.join(libs)),
+            self.define(f"USE_ELPA_{self.spec.variants['internal_elpa_version'].value}", True),
         ]
 
         if self.spec.variants["elpa2_kernel"].value != "none":
