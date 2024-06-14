@@ -28,16 +28,11 @@ class Rocthrust(CMakePackage):
     version("5.6.0", sha256="e52a27bcb4add38a5f0f3a5c7e409c230bf4ba9afae19bd2e06c2be00d39db59")
     version("5.5.1", sha256="66f126e5ea46ca761533411f81e83402773f95d3184cb7645ca73df227413023")
     version("5.5.0", sha256="c031f71cd4b6eaf98664fd2ad50fc18f7ccbfa67be415dca425169d2d1c81e9e")
-    version("5.4.3", sha256="d133e14ea6d27d358d1bd4d31b79fb1562d1aea7c400e5a2d28d0f159cb6c8a8")
-    version("5.4.0", sha256="a4799fb1086da3f70c9b95effb1f5f9033c861685e960a8759278463cc55a971")
-    version("5.3.3", sha256="0c2fc8d437efaf5c4c859d97adb049d4025025d0be0e0908f59a8112508234e5")
-    version("5.3.0", sha256="0e11b12f208d2751e3e507e3a32403c9bd45da4e191671d765d33abd727d9b96")
     with default_args(deprecated=True):
-        version("5.2.3", sha256="0f5ef39c5faab31eb34b48391d58096463969c133ca7ed09ab4e43caa5461b29")
-        version("5.2.1", sha256="5df35ff0970b83d68b69a07ae9ebb62955faac7401c91daa7929664fdd09d69b")
-        version("5.2.0", sha256="afa126218485586682c78e97df8025ae4efd32f3751c340e84c436e08868c326")
-        version("5.1.3", sha256="8d92de1e69815d92a423b7657f2f37c90f1d427f5bc92915c202d4c266254dad")
-        version("5.1.0", sha256="fee779ae3d55b97327d87beca784fc090fa02bc95238d9c3bf3021e266e73979")
+        version("5.4.3", sha256="d133e14ea6d27d358d1bd4d31b79fb1562d1aea7c400e5a2d28d0f159cb6c8a8")
+        version("5.4.0", sha256="a4799fb1086da3f70c9b95effb1f5f9033c861685e960a8759278463cc55a971")
+        version("5.3.3", sha256="0c2fc8d437efaf5c4c859d97adb049d4025025d0be0e0908f59a8112508234e5")
+        version("5.3.0", sha256="0e11b12f208d2751e3e507e3a32403c9bd45da4e191671d765d33abd727d9b96")
 
     amdgpu_targets = ROCmPackage.amdgpu_targets
 
@@ -54,11 +49,6 @@ class Rocthrust(CMakePackage):
     depends_on("googletest@1.10.0:", type="test")
 
     for ver in [
-        "5.1.0",
-        "5.1.3",
-        "5.2.0",
-        "5.2.1",
-        "5.2.3",
         "5.3.0",
         "5.3.3",
         "5.4.0",
@@ -87,7 +77,7 @@ class Rocthrust(CMakePackage):
 
     def cmake_args(self):
         args = [
-            self.define("CMAKE_MODULE_PATH", "{0}/cmake".format(self.spec["hip"].prefix)),
+            self.define("CMAKE_MODULE_PATH", "{0}/lib/cmake/hip".format(self.spec["hip"].prefix)),
             self.define("BUILD_TEST", self.run_tests),
         ]
 

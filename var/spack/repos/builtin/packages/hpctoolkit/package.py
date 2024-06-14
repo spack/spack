@@ -213,6 +213,12 @@ class Hpctoolkit(AutotoolsPackage, MesonPackage):
     conflicts("^xz@5.2.7:5.2.8", msg="avoid xz 5.2.7:5.2.8 (broken symbol versions)")
     conflicts("^intel-xed@2023.08:", when="@:2023.09")
 
+    # https://gitlab.com/hpctoolkit/hpctoolkit/-/issues/831
+    conflicts(
+        "^elfutils@0.191:",
+        msg="avoid elfutils 0.191 (known critical errors in hpcstruct for CUDA binaries)",
+    )
+
     conflicts("+cray", when="@2022.10.01", msg="hpcprof-mpi is not available in 2022.10.01")
     conflicts("+mpi", when="@2022.10.01", msg="hpcprof-mpi is not available in 2022.10.01")
 
