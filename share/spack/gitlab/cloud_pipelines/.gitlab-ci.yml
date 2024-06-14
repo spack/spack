@@ -485,28 +485,6 @@ build_systems-build:
 
 ###########################################
 # Build tests for different developer tools
-###########################################
-.developer-tools:
-  extends: [ ".linux_x86_64_v3" ]
-  variables:
-    SPACK_CI_STACK_NAME: developer-tools
-
-developer-tools-generate:
-  extends: [ ".developer-tools", ".generate-x86_64"]
-
-developer-tools-build:
-  extends: [ ".developer-tools", ".build" ]
-  trigger:
-    include:
-      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
-        job: developer-tools-generate
-    strategy: depend
-  needs:
-    - artifacts: True
-      job: developer-tools-generate
-
-###########################################
-# Build tests for different developer tools
 # manylinux2014
 ###########################################
 .developer-tools-manylinux2014:
