@@ -39,7 +39,13 @@ class Elsi(CMakePackage, CudaPackage):
     )
     variant("tests", default=False, description="Enable Fortran tests")
     variant("tests_c", default=False, description="Enable C tests")
-    variant("internal_elpa_version", default="2024", values=("2024", "2023_11", "2023", "2021", "2020"), description="Internal ELPA version", multi=False)
+    variant(
+        "internal_elpa_version",
+        default="2024",
+        values=("2024", "2023_11", "2023", "2021", "2020"),
+        description="Internal ELPA version",
+        multi=False,
+    )
 
     # Basic dependencies
     depends_on("blas", type="link")
@@ -61,7 +67,6 @@ class Elsi(CMakePackage, CudaPackage):
         depends_on("superlu-dist+cuda", when="+cuda")
         depends_on("superlu-dist~cuda", when="~cuda")
 
-
     def cmake_args(self):
         libs_names = ["scalapack", "lapack", "blas"]
 
@@ -75,7 +80,9 @@ class Elsi(CMakePackage, CudaPackage):
 
         lib_paths, libs = [], []
         for lib in libs_names:
-            lib_paths.extend([name.replace("-L", "") for name in self.spec[lib].libs.search_flags.split()])
+            lib_paths.extend(
+                [name.replace("-L", "") for name in self.spec[lib].libs.search_flags.split()]
+            )
             libs.extend([os.path.basename(name) for name in self.spec[lib].libs.libraries])
 
         args = [
@@ -93,8 +100,8 @@ class Elsi(CMakePackage, CudaPackage):
             self.define_from_variant("ENABLE_TESTS", "tests"),
             self.define_from_variant("ENABLE_C_TESTS", "tests_c"),
             self.define_from_variant("USE_GPU_CUDA", "cuda"),
-            self.define("LIB_PATHS", ';'.join(lib_paths)),
-            self.define("LIBS", ';'.join(libs)),
+            self.define("LIB_PATHS", ";".join(lib_paths)),
+            self.define("LIBS", ";".join(libs)),
             self.define(f"USE_ELPA_{self.spec.variants['internal_elpa_version'].value}", True),
         ]
 
