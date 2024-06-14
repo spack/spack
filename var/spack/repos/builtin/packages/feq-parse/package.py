@@ -18,6 +18,8 @@ class FeqParse(CMakePackage):
 
     license("Apache-2.0")
 
+    version("2.2.1", sha256="d25f81c0e514cf9fad77190d9edf994b94eaebd414cf639cfaa690a9a1cc9cbf")
+    version("2.2.0", sha256="962fca2de745bc3b436cb2299c917184ce2d9ac5edf95aad3c103efb63ed311a")
     version("2.1.0", sha256="f3fd51c24c563fe1d0dcb880bc16a62c9e08fe0cdd6f58df08f0db0ed34c289a")
     version("2.0.3", sha256="a1c42507801adc55a63a9a904807058079d54e002e10f2b29a916b06fc815f80")
     version("2.0.1", sha256="08dd08bd100a0a2eb672a5b2792ad56a337df575c634aac0d7a300d7e484b21c")

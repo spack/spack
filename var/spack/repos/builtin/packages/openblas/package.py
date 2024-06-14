@@ -26,6 +26,7 @@ class Openblas(CMakePackage, MakefilePackage):
     license("BSD-3-Clause")
 
     version("develop", branch="develop")
+    version("0.3.27", sha256="aa2d68b1564fe2b13bc292672608e9cdeeeb6dc34995512e65c3b10f4599e897")
     version("0.3.26", sha256="4e6e4f5cb14c209262e33e6816d70221a2fe49eb69eaf0a06f065598ac602c68")
     version("0.3.25", sha256="4c25cb30c4bb23eddca05d7d0a85997b8db6144f5464ba7f8c09ce91e2f35543")
     version("0.3.24", sha256="ceadc5065da97bd92404cac7254da66cc6eb192679cf1002098688978d4d5132")
@@ -221,6 +222,13 @@ class Openblas(CMakePackage, MakefilePackage):
         when="@0.3.24 target=a64fx",
     )
 
+    # Disable -fp-model=fast default on OneAPI (https://github.com/OpenMathLib/OpenBLAS/issues/4713)
+    patch(
+        "https://github.com/OpenMathLib/OpenBLAS/commit/834e633d796ba94ecb892acb32b6cdcee4e3771d.patch?full_index=1",
+        sha256="3e165d8cba4023cb2082b241eee41287dd6cbb66078c5e3cb5d246081b361ff3",
+        when="@0.3.27 %oneapi",
+    )
+
     # See https://github.com/spack/spack/issues/19932#issuecomment-733452619
     # Notice: fixed on Amazon Linux GCC 7.3.1 (which is an unofficial version
     # as GCC only has major.minor releases. But the bound :7.3.0 doesn't hurt)
@@ -231,6 +239,7 @@ class Openblas(CMakePackage, MakefilePackage):
 
     # See https://github.com/spack/spack/issues/3036
     conflicts("%intel@16", when="@0.2.15:0.2.19")
+
     conflicts(
         "+consistent_fpcsr",
         when="threads=none",
