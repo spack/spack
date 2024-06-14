@@ -37,8 +37,6 @@ class Elsi(CMakePackage, CudaPackage):
     variant(
         "use_mpi_iallgather", default=True, description="Use non-blocking collective MPI functions"
     )
-    variant("tests", default=False, description="Enable Fortran tests")
-    variant("tests_c", default=False, description="Enable C tests")
     variant(
         "internal_elpa_version",
         default="2024",
@@ -97,8 +95,8 @@ class Elsi(CMakePackage, CudaPackage):
             self.define_from_variant("USE_EXTERNAL_NTPOLY", "use_external_ntpoly"),
             self.define_from_variant("USE_EXTERNAL_SUPERLU", "use_external_superlu"),
             self.define_from_variant("USE_MPI_IALLGATHER", "use_mpi_iallgather"),
-            self.define_from_variant("ENABLE_TESTS", "tests"),
-            self.define_from_variant("ENABLE_C_TESTS", "tests_c"),
+            self.define("ENABLE_TESTS", self.run_tests),
+            self.define("ENABLE_C_TESTS", self.run_tests),
             self.define_from_variant("USE_GPU_CUDA", "cuda"),
             self.define("LIB_PATHS", ";".join(lib_paths)),
             self.define("LIBS", ";".join(libs)),
