@@ -29,7 +29,9 @@ class MlcLlm(CMakePackage, CudaPackage):
     depends_on("cuda@11.8:", when="+cuda")
 
     variant(
-        "flash-infer", default=False, description="Use FlashInfer? (need CUDA w/ compute capability 80;86;89;90)"
+        "flash-infer",
+        default=False,
+        description="Use FlashInfer? (need CUDA w/ compute capability 80;86;89;90)",
     )
     conflicts("~cuda", when="+flash-infer")
     conflicts("cuda_arch=none", when="+flash-infer")
@@ -59,10 +61,10 @@ class MlcLlm(CMakePackage, CudaPackage):
         cmake_config_str += "set(CMAKE_BUILD_TYPE RelWithDebInfo)\n"
 
         if self.spec.satisfies("+cuda"):
-            cmake_config_str += f"set(USE_CUDA ON)\n"
-            cmake_config_str += f"set(USE_THRUST ON)\n"
+            cmake_config_str += "set(USE_CUDA ON)\n"
+            cmake_config_str += "set(USE_THRUST ON)\n"
         else:
-            cmake_config_str += f"set(USE_CUDA OFF)\n"
+            cmake_config_str += "set(USE_CUDA OFF)\n"
 
         # FlashInfer related
         if self.spec.satisfies("+flash-infer"):

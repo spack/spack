@@ -8,7 +8,7 @@ from spack.package import *
 
 
 class ApacheTvm(CMakePackage, CudaPackage):
-    """"Apache TVM is an open source machine learning compiler framework for
+    """ "Apache TVM is an open source machine learning compiler framework for
     CPUs, GPUs, and machine learning accelerators. It aims to enable machine
     learning engineers to optimize and run computations efficiently on any
     hardware backend."""
@@ -30,7 +30,7 @@ class ApacheTvm(CMakePackage, CudaPackage):
         args = []
         define = self.define
         if self.spec.satisfies("+cuda"):
-           args.append(define("USE_CUDA", True))
+            args.append(define("USE_CUDA", True))
         if self.spec.satisfies("+llvm"):
-           args.append(define("USE_LLVM", True))
+            args.append(define("USE_LLVM", True))
         return args
