@@ -39,7 +39,7 @@ class Turbovnc(CMakePackage):
 
     depends_on("openssl")
     depends_on("xkbcomp")
-    depends_on("xkbdata")
+    depends_on("xkeyboard-config")
 
     depends_on("libcap")
     depends_on("krb5")
@@ -70,7 +70,7 @@ class Turbovnc(CMakePackage):
         jpeg = spec["libjpeg-turbo"]
         ssl = spec["openssl"]
         xkbcomp = spec["xkbcomp"]
-        xkbbase = spec["xkbdata"]
+        xkbbase = spec["xkeyboard-config"]
 
         # Required flags for Spack build
         args = [
