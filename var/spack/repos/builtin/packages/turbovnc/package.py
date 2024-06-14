@@ -72,7 +72,7 @@ class Turbovnc(CMakePackage):
         jpeg = spec["libjpeg-turbo"]
         ssl = spec["openssl"]
         xkbcomp = spec["xkbcomp"]
-        xkbbase = spec["xkeyboard_config"]
+        xkbbase = spec["xkeyboard-config"]
         args = [
             f"-DTVNC_INCLUDEJRE=1",
             f"-DTVNC_DLOPENSSL=1",
