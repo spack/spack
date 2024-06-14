@@ -143,6 +143,10 @@ class Wrf(Package):
     variant("netcdf_classic", default=False, description="Use NetCDF without HDF5 compression")
     variant("adios2", default=False, description="Enable IO support through ADIOS2 library")
 
+    elec_versions = ["3.9.1.1"]
+    elec_when = "@{} build_type=dmpar".format(",".join(elec_versions))
+    variant("elec", default=False, description="Enable WRF-ELEC", when=elec_when)
+
     patch("patches/3.9/netcdf_backport.patch", when="@3.9.1.1")
     patch("patches/3.9/tirpc_detect.patch", when="@3.9.1.1")
     patch("patches/3.9/add_aarch64.patch", when="@3.9.1.1")
@@ -231,6 +235,13 @@ class Wrf(Package):
         when="@4.5: %arm",
     )
 
+    # WRF-ELEC 3.9.1.1 patch
+    patch(
+        "https://github.com/zzzoom/wrf3-elec-spack/compare/spack-3.9.1.1...spack-elec-3.9.1.1.patch?full_index=1",
+        sha256="fce84a45b9867386ccd7eba7df74c237383373fdd4a0143daf9fe2f063306c23",
+        when="@3.9.1.1 +elec",
+    )
+
     depends_on("pkgconfig", type=("build"))
     depends_on("libtirpc")
 
@@ -256,6 +267,7 @@ class Wrf(Package):
     depends_on("m4", type="build")
     depends_on("libtool", type="build")
     depends_on("adios2", when="@4.5: +adios2")
+    depends_on("boxmg4wrf", when="+elec")
     phases = ["configure", "build", "install"]
 
     def setup_run_environment(self, env):
@@ -276,6 +288,9 @@ class Wrf(Package):
         # Add WRF-Chem module
         if "+chem" in self.spec:
             env.set("WRF_CHEM", 1)
+        if "+elec" in self.spec:
+            env.set("WRF_ELEC", 1)
+            env.set("BOXMGLIBDIR", self.spec["boxmg4wrf"].prefix)
         if "+netcdf_classic" in self.spec:
             env.set("NETCDF_classic", 1)
         # This gets used via the applied patch files
@@ -458,8 +473,12 @@ class Wrf(Package):
         csh_bin = self.spec["tcsh"].prefix.bin.csh
         csh = Executable(csh_bin)
 
-        # num of compile jobs capped at 20 in wrf
-        num_jobs = str(min(int(make_jobs), 20))
+        if "+elec" in self.spec:
+            # WRF-ELEC 3.9.1.1 fails to build with more than 2 jobs
+            num_jobs = str(2)
+        else:
+            # num of compile jobs capped at 20 in wrf
+            num_jobs = str(min(int(make_jobs), 20))
 
         # Now run the compile script and track the output to check for
         # failure/success We need to do this because upstream use `make -i -k`
