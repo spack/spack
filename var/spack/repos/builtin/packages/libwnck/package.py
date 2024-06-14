@@ -29,6 +29,7 @@ class Libwnck(MesonPackage, AutotoolsPackage):
     version("3.14.1", sha256="bb643c9c423c8aa79c59973ce27ce91d3b180d1e9907902278fb79391f52befa")
     version("3.4.9", sha256="96e6353f2701a1ea565ece54d791a7bebef1832d96126f7377c54bb3516682c4")
 
+    variant("cairo", default=True, description="Build with cairo support")
     variant("install_tools", default=True, description="Install WNCK tools")
     variant("xres", default=True, description="Build with xres support")
     variant("introspection", default=True, description="Build with gobject-introspection support")
@@ -55,6 +56,7 @@ class Libwnck(MesonPackage, AutotoolsPackage):
         depends_on("gdk-pixbuf")
         depends_on("gtkplus@3.22:")
 
+        depends_on("cairo+X+gobject", when="+cairo")
         depends_on("libxres", when="+xres")
         depends_on("gobject-introspection", when="+introspection")
         depends_on("startup-notification", when="+startup_notification")
