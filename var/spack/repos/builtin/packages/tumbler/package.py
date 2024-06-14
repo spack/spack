@@ -41,6 +41,7 @@ class Tumbler(AutotoolsPackage):
         depends_on("gettext")
     depends_on("pkgconfig", type=("build", "link"))
     with default_args(type=("build", "link", "run")):
+        depends_on("libxfce4util")
         depends_on("glib@2:")
         depends_on("dbus-glib")
         depends_on("gdk-pixbuf")
