@@ -40,7 +40,6 @@ class Turbovnc(CMakePackage):
     depends_on("openssl")
     depends_on("xkbcomp")
     depends_on("xkbdata")
-    depends_on("xkeyboard-config")
 
     depends_on("libcap")
     depends_on("krb5")
@@ -63,7 +62,6 @@ class Turbovnc(CMakePackage):
     depends_on("python")
     depends_on("python@3:", when="+novnc")
 
-    depends_on("xkeyboard-config")
     with default_args(type="run"):
         depends_on("xauth")
 
@@ -72,7 +70,7 @@ class Turbovnc(CMakePackage):
         jpeg = spec["libjpeg-turbo"]
         ssl = spec["openssl"]
         xkbcomp = spec["xkbcomp"]
-        xkbbase = spec["xkeyboard-config"]
+        xkbbase = spec["xkbdata"]
 
         # Required flags for Spack build
         args = [
@@ -100,7 +98,7 @@ class Turbovnc(CMakePackage):
         ]
 
         # Misc X configuration
-        rules += [
+        args += [
 #            FONT_ENCODINGS_DIRECTORY = /usr/share/X11/fonts/encodings
 #            f"-DXORG_DRI_DRIVER_PATH={}",  # dir was struggling to build in xorg-server
 #            f"-DXORG_FONT_PATH={}",        # https://github.com/spack/spack/pull/2203?
