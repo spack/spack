@@ -32,8 +32,6 @@ class Muparser(CMakePackage, Package):
     )
     variant("shared", default=True, description="enable shared libs", when="build_system=cmake")
 
-    depends_on("cmake@3.1.0:", when="@2.2.6:", type="build")
-
     # Non-CMake build system is not supported by windows
     conflicts("platform=windows", when="@:2.2.5")
     build_system(conditional("cmake", when="@2.2.6:"), "generic", default="cmake")
