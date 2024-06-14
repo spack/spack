@@ -23,13 +23,13 @@ class Turbovnc(CMakePackage):
 
     generator("ninja")
 
-    variant("novnc", default=True, description="Build with noVNC support")
+    variant("web", default=True, description="Build with noVNC support")
     variant("bundledX", default=True, description="Build with bundled X")
 
     with default_args(type="build"):
         depends_on("ninja")
         depends_on("cmake@2.8.12:")
-        depends_on("cmake@3.12:", when="+novnc")
+        depends_on("cmake@3.12:", when="+web")
         depends_on("gettext")
         depends_on("perl-extutils-makemaker")
     
@@ -60,7 +60,7 @@ class Turbovnc(CMakePackage):
     depends_on("xz")
     depends_on("lua")
     depends_on("python")
-    depends_on("python@3:", when="+novnc")
+    depends_on("python@3:", when="+web")
 
     with default_args(type="run"):
         depends_on("xauth")
@@ -78,6 +78,10 @@ class Turbovnc(CMakePackage):
             f"-DTJPEG_LIBRARY=-L{jpeg.home.lib} -lturbojpeg",
             f"-DTVNC_INCLUDEJRE=1",
         ]
+
+        args.append(
+            self.define_from_variant("TVNC_BUILDWEBSERVER", "web")
+        )
 
         # TODO: Further investigate
         args += [
@@ -104,6 +108,4 @@ class Turbovnc(CMakePackage):
 #            f"-DXORG_FONT_PATH={}",        # https://github.com/spack/spack/pull/2203?
 #            f"-DXORG_REGISTRY_PATH={}",    # This needs protocols.txt from dix?
         ]
-        if self.spec.satisfies("+novnc"):
-            args.append("-DTVNC_BUILDWEBSERVER=1")
         return args
