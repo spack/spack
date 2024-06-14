@@ -2,6 +2,7 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 import re
 import sys
 
@@ -29,11 +30,19 @@ class Hwloc(AutotoolsPackage, CudaPackage, ROCmPackage):
     git = "https://github.com/open-mpi/hwloc.git"
 
     maintainers("bgoglin")
-    executables = ["^hwloc-bind$"]
 
     license("BSD-3-Clause")
 
+    executables = ["^hwloc-bind$"]
+
     version("master", branch="master")
+    version("2.10.0", sha256="c7fd8a1404a9719c76aadc642864b9f77aed1dc1fc8882d6af861a9260ba240d")
+    version(
+        "2.9.3",
+        sha256="5985db3a30bbe51234c2cd26ebe4ae9b4c3352ab788b1a464c40c0483bf4de59",
+        preferred=True,
+    )
+    version("2.9.2", sha256="ffb554d5735e0e0a19d1fd4b2b86e771d3b58b2d97f257eedacae67ade5054b3")
     version("2.9.1", sha256="a440e2299f7451dc10a57ddbfa3f116c2a6c4be1bb97c663edd3b9c7b3b3b4cf")
     version("2.9.0", sha256="9d7d3450e0a5fea4cb80ca07dc8db939abb7ab62e2a7bb27f9376447658738ec")
     version("2.8.0", sha256="20b2bd4df436827d8e50f7afeafb6f967259f2fb374ce7330244f8d0ed2dde6f")
@@ -69,7 +78,7 @@ class Hwloc(AutotoolsPackage, CudaPackage, ROCmPackage):
     variant("nvml", default=False, description="Support NVML device discovery")
     variant("gl", default=False, description="Support GL device discovery")
     variant("libxml2", default=True, description="Build with libxml2")
-    variant("libudev", default=False, description="Build with libudev")
+    variant("libudev", default=False, when="@1.11.0:", description="Build with libudev")
     variant(
         "pci",
         default=(sys.platform != "darwin"),
@@ -85,18 +94,14 @@ class Hwloc(AutotoolsPackage, CudaPackage, ROCmPackage):
     variant(
         "cairo", default=False, description="Enable the Cairo back-end of hwloc's lstopo command"
     )
-    variant("netloc", default=False, description="Enable netloc [requires MPI]")
+    variant(
+        "netloc", default=False, when="@2.0.0:2.9.3", description="Enable netloc [requires MPI]"
+    )
     variant("opencl", default=False, description="Support an OpenCL library at run time")
     variant("rocm", default=False, description="Support ROCm devices")
     variant(
         "oneapi-level-zero", default=False, description="Support Intel OneAPI Level Zero devices"
     )
-
-    # netloc isn't available until version 2.0.0
-    conflicts("+netloc", when="@:1")
-
-    # libudev isn't available until version 1.11.0
-    conflicts("+libudev", when="@:1.10")
 
     depends_on("pkgconfig", type="build")
     depends_on("m4", type="build", when="@master")

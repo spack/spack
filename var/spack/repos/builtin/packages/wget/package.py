@@ -17,6 +17,8 @@ class Wget(AutotoolsPackage, GNUMirrorPackage):
 
     license("GPL-3.0-or-later WITH OpenSSL-Exception")
 
+    version("1.24.5", sha256="fa2dc35bab5184ecbc46a9ef83def2aaaa3f4c9f3c97d4bd19dcb07d4da637de")
+    version("1.21.4", sha256="81542f5cefb8faacc39bbbc6c82ded80e3e4a88505ae72ea51df27525bcde04c")
     version("1.21.3", sha256="5726bb8bc5ca0f6dc7110f6416e4bb7019e2d2ff5bf93d1ca2ffcc6656f220e5")
     version("1.21.2", sha256="e6d4c76be82c676dd7e8c61a29b2ac8510ae108a810b5d1d18fc9a1d2c9a2497")
     version("1.21.1", sha256="59ba0bdade9ad135eda581ae4e59a7a9f25e3a4bde6a5419632b31906120e26e")
