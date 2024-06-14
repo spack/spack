@@ -479,6 +479,9 @@ def test_part(pkg: Pb, test_name: str, purpose: str, work_dir: str = ".", verbos
             "test(s) to methods with names starting 'test_'.".format(pkg.name)
         )
 
+    if test_name in [f.__name__ for _, f in pkg.builder.run_after_callbacks]:
+        raise InvalidTest(f"'{test_name}' is a build-time test. Give it a name not starting with 'test_'.")
+
     title = "test: {}: {}".format(test_name, purpose or "unspecified purpose")
     with fs.working_dir(wdir, create=True):
         try:
@@ -1220,6 +1223,10 @@ def _add_msg_to_file(filename, msg):
     """
     with open(filename, "a+") as f:
         f.write(f"{msg}\n")
+
+
+class InvalidTest(Exception):
+    """Raised when a test method is invalid."""
 
 
 class SkipTest(Exception):
