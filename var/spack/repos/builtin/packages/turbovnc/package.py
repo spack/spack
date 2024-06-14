@@ -73,20 +73,38 @@ class Turbovnc(CMakePackage):
         ssl = spec["openssl"]
         xkbcomp = spec["xkbcomp"]
         xkbbase = spec["xkeyboard-config"]
+
+        # Required flags for Spack build
         args = [
-            f"-DTVNC_INCLUDEJRE=1",
-            f"-DTVNC_DLOPENSSL=1",
-            f"-DTVNC_SYSTEMLIBS=1",
-            f"-DTVNC_SYSTEMX11=0",
-            f"-DTVNC_STATIC_XORG_PATHS=0",
             f"-DTJPEG_INCLUDE_DIR={jpeg.home.include}",
             f"-DTJPEG_LIBRARY=-L{jpeg.home.lib} -lturbojpeg",
+            f"-DTVNC_INCLUDEJRE=1",
+        ]
+
+        # TODO: Further investigate
+        args += [
+            f"-DTVNC_SYSTEMLIBS=1",  # TODO: Investigate
+            f"-DTVNC_DLOPENSSL=1",   # Use SSL, could be variant
+            f"-DTVNC_SYSTEMX11=0",   # Probably needs lots of libpahts
+            f"-DTVNC_STATIC_XORG_PATHS=0",  # TODO: Investigate
+        ]
+
+        # Keyboard configuration (Xvnc wont start if this is wrong)
+        args += [
+            # We need to tell TurboVNC where xkbcomp is
             f"-DXKB_BIN_DIRECTORY={xkbcomp.home.bin}",
+            # We also need to tell it where to find the xkb rules
             f"-DXKB_BASE_DIRECTORY={xkbbase.home.share.X11.xkb}",
-            f"-DDXKB_DFLT_RULES=base",
-#            f"-DXORG_DRI_DRIVER_PATH={}",
-#            f"-DXORG_FONT_PATH={}",
-#            f"-DXORG_REGISTRY_PATH={}",
+            # And where what the default rules should be
+            f"-DXKB_DFLT_RULES=base",
+        ]
+
+        # Misc X configuration
+        rules += [
+#            FONT_ENCODINGS_DIRECTORY = /usr/share/X11/fonts/encodings
+#            f"-DXORG_DRI_DRIVER_PATH={}",  # dir was struggling to build in xorg-server
+#            f"-DXORG_FONT_PATH={}",        # https://github.com/spack/spack/pull/2203?
+#            f"-DXORG_REGISTRY_PATH={}",    # This needs protocols.txt from dix?
         ]
         if self.spec.satisfies("+novnc"):
             args.append("-DTVNC_BUILDWEBSERVER=1")
