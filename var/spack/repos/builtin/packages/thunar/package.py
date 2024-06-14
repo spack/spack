@@ -51,7 +51,6 @@ class Thunar(AutotoolsPackage):
         with when("+introspection"):
             depends_on("libxfce4util+introspection")
             depends_on("libxfce4ui+introspection")
-            depends_on("xfce4-panel+introspection")
             depends_on("gobject-introspection")
         with when("@4.18.0:"):
             depends_on("glib@2.66:")
