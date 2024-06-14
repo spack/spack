@@ -46,8 +46,9 @@ def setup_parser(subparser):
         help="output specs as machine-readable json records",
     )
 
-    install_status_group = subparser.add_mutually_exclusive_group()
-    arguments.add_common_arguments(install_status_group, ["install_status", "no_install_status"])
+    subparser.add_argument(
+        "-I", "--install-status", action="store_true", help="show install status of packages"
+    )
 
     subparser.add_argument(
         "-d", "--deps", action="store_true", help="output dependencies along with found specs"
