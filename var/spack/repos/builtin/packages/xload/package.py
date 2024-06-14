@@ -10,7 +10,7 @@ class Xload(AutotoolsPackage, XorgPackage):
     """xload displays a periodically updating histogram of the
     system load average."""
 
-    homepage = "https://cgit.freedesktop.org/xorg/app/xload"
+    homepage = "https://gitlab.freedesktop.org/xorg/app/xload"
     xorg_mirror_path = "app/xload-1.1.3.tar.gz"
 
     license("MIT")
