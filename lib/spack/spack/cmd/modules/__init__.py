@@ -349,10 +349,13 @@ def refresh(module_type, specs, args):
     spack.modules.common.generate_module_index(
         module_type_root, writers, overwrite=args.delete_tree
     )
+    spack.modules.common.generate_reverse_module_index(
+        module_type_root, writers, overwrite=args.delete_tree
+    )
     errors = []
     for x in writers:
         try:
-            x.write(overwrite=True)
+            x.write(overwrite=True, do_update_index=False)
         except spack.error.SpackError as e:
             msg = f"{x.layout.filename}: {e.message}"
             errors.append(msg)

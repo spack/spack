@@ -26,7 +26,7 @@ pytestmark = [
 ]
 
 
-@pytest.mark.usefixtures("config", "mock_packages", "mock_module_filename")
+@pytest.mark.usefixtures("config", "mock_packages")
 class TestTcl:
     def test_simple_case(self, modulefile_content, module_configuration):
         """Tests the generation of a simple Tcl module file."""
@@ -361,6 +361,115 @@ class TestTcl:
 
         assert len(index) == 1
         assert index[s3.dag_hash()].use_name == w3.layout.use_name
+
+    def test_reverse_module_index(self, module_configuration, factory, tmpdir_factory):
+        module_configuration("suffix")
+
+        w1, s1 = factory("mpileaks")
+        w2, s2 = factory("callpath")
+        w3, s3 = factory("openblas")
+
+        test_root = str(tmpdir_factory.mktemp("module-root"))
+
+        spack.modules.common.generate_reverse_module_index(test_root, [w1, w2])
+
+        index = spack.modules.common.read_reverse_module_index(test_root)
+
+        assert index[w1.layout.filename] == s1.dag_hash()
+        assert index[w2.layout.filename] == s2.dag_hash()
+
+        spack.modules.common.generate_reverse_module_index(test_root, [w3])
+
+        index = spack.modules.common.read_reverse_module_index(test_root)
+
+        assert len(index) == 3
+        assert index[w1.layout.filename] == s1.dag_hash()
+        assert index[w2.layout.filename] == s2.dag_hash()
+
+        spack.modules.common.generate_reverse_module_index(test_root, [w3], overwrite=True)
+
+        index = spack.modules.common.read_reverse_module_index(test_root)
+
+        assert len(index) == 1
+        assert index[w3.layout.filename] == s3.dag_hash()
+
+    def test_module_index_update(self, module_configuration, factory, tmpdir_factory):
+        w1, _ = factory("mpileaks")
+        w2, _ = factory("callpath")
+        w3, _ = factory("openblas")
+        assert w2.layout.dirname() == w1.layout.dirname()
+        assert w3.layout.dirname() == w1.layout.dirname()
+        module_index_root = w1.layout.dirname()
+
+        w1.write()
+        w2.write()
+        assert len(spack.modules.common.read_module_index(module_index_root)) == 2
+
+        w3.write()
+        assert len(spack.modules.common.read_module_index(module_index_root)) == 3
+
+        w3.remove()
+        assert len(spack.modules.common.read_module_index(module_index_root)) == 2
+
+        w2.remove()
+        w1.remove()
+        assert len(spack.modules.common.read_module_index(module_index_root)) == 0
+
+    @pytest.mark.usefixtures("mock_module_filename")
+    def test_clash(self, factory):
+        """Tests that w2 cannot overwrite or delete module owned by w1"""
+        w1, _ = factory("mpileaks")
+        w2, _ = factory("callpath")
+        assert w1.layout.filename == w2.layout.filename  # pytest usefixtures should cause clash
+        clashing_modulefile_path = w1.layout.filename
+
+        w1.write()
+        before_mtime = os.path.getmtime(clashing_modulefile_path)
+        w2.write()
+        after_mtime = os.path.getmtime(clashing_modulefile_path)
+        assert before_mtime == after_mtime  # module was not overwritten
+        w2.remove()
+        assert os.path.isfile(clashing_modulefile_path)  # module was not deleted
+        w1.remove()
+        assert not os.path.isfile(clashing_modulefile_path)  # module was deleted
+
+    @pytest.mark.usefixtures("mock_module_filename")
+    def test_clash2(self, factory):
+        """Tests that w1 is able to delete its module even when w2 would like to use it"""
+        w1, _ = factory("mpileaks")
+        w2, _ = factory("callpath")
+        assert w1.layout.filename == w2.layout.filename  # pytest usefixtures should cause clash
+        clashing_modulefile_path = w1.layout.filename
+
+        w1.write()
+        before_mtime = os.path.getmtime(clashing_modulefile_path)
+        w2.write()
+        after_mtime = os.path.getmtime(clashing_modulefile_path)
+        assert before_mtime == after_mtime  # module was not overwritten
+        w1.remove()
+        assert not os.path.isfile(clashing_modulefile_path)  # module was deleted
+
+    @pytest.mark.usefixtures("mock_module_filename")
+    def test_clash_overwrite(self, factory):
+        """Tests that ownership of module transfers from w1 to w2 when overwrite=True"""
+        w1, _ = factory("mpileaks")
+        w2, _ = factory("callpath")
+        assert w1.layout.filename == w2.layout.filename  # pytest usefixtures should cause clash
+
+        w1.write()
+        w2.write(overwrite=True)
+        assert w2.test_ownership()
+
+    @pytest.mark.usefixtures("mock_module_filename")
+    def test_clash_no_owner_specified(self, factory):
+        """Tests that ownership of module transfers from w1 to w2 when no owner is specified"""
+        w1, _ = factory("mpileaks")
+        w2, _ = factory("callpath")
+        assert w1.layout.filename == w2.layout.filename  # pytest usefixtures should cause clash
+
+        w1.write(do_update_index=False)
+        w2.write()
+        assert w2.test_ownership()
 
     def test_suffixes(self, module_configuration, factory):
         """Tests adding suffixes to module file name."""
