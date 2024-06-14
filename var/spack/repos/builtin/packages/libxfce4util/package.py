@@ -28,7 +28,7 @@ class Libxfce4util(AutotoolsPackage):
     
     with default_args(type="build"):
         depends_on("pkgconfig@0.9.0:")
-        depends_on("intltool@0.35.0:", when="@4.16")
+        depends_on("intltool@0.35.0:", when="@4.16:")
         depends_on("gettext", when="@4.18:")
 
     with default_args(type=("run", "build")):
