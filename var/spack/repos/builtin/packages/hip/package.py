@@ -115,8 +115,8 @@ class Hip(CMakePackage):
         # ref https://github.com/ROCm/HIP/pull/2202
         depends_on("numactl", when="@3.7.0:")
 
-        for ver in ["6.0.0", "6.0.2", "6.1.0", "6.1.1"]:
-            depends_on(f"hipcc@{ver}", when=f"@{ver}")
+    for ver in ["6.0.0", "6.0.2", "6.1.0", "6.1.1"]:
+        depends_on(f"hipcc@{ver}", when=f"@{ver}")
 
     # roc-obj-ls requirements
     depends_on("perl-file-which")
@@ -227,6 +227,23 @@ class Hip(CMakePackage):
             placement="hipcc",
             when=f"@{d_version}",
         )
+    # Add hipother sources thru the below
+    for d_version, d_shasum in [
+        ("6.1.1", "8b975623c8ed1db53feea2cfd5d29f2a615e890aee1157d0d17adeb97200643f"),
+        ("6.1.0", "43a48ccc82f705a15852392ee7419e648d913716bfc04063a53d2d17979b1b46"),
+        ("6.0.2", "0bebb3774debcecc0b29a0cc5aa98e373a3ee7acf161503d0d9c9d0ecc8b8010"),
+        ("6.0.0", "d3bf62cc17c3c44fea52b34bcbf725e7af1afc3542c2884cefcd41f65371f552"),
+    ]:
+        resource(
+            name="hipother",
+            url=f"https://github.com/ROCm/hipother/archive/refs/tags/rocm-{d_version}.tar.gz",
+            sha256=d_shasum,
+            expand=True,
+            destination="",
+            placement="hipother",
+            when=f"@{d_version} +cuda",
+        )
+
     # Add hiptests sources thru the below
     for d_version, d_shasum in [
         ("6.1.1", "10c96ee72adf4580056292ab17cfd858a2fd7bc07abeb41c6780bd147b47f7af"),
@@ -506,8 +523,12 @@ class Hip(CMakePackage):
             )
             args.append(self.define("HIP_RUNTIME", "rocclr"))
             args.append(self.define("HIP_PLATFORM", "amd"))
+            if self.spec.satisfies("@5.6.0:"):
+                args.append(self.define("HIP_LLVM_ROOT", self.spec["llvm-amdgpu"].prefix))
+
         if self.spec.satisfies("+cuda"):
             args.append(self.define("HIP_PLATFORM", "nvidia"))
+            args.append(self.define("HIPNV_DIR", self.stage.source_path + "/hipother/hipnv"))
 
         args.append(self.define("HIP_COMMON_DIR", self.stage.source_path))
         args.append(self.define("HIP_CATCH_TEST", "OFF"))
@@ -521,7 +542,6 @@ class Hip(CMakePackage):
             args.append(self.define("AMD_OPENCL_PATH", self.stage.source_path + "/clr/opencl"))
             args.append(self.define("CLR_BUILD_HIP", True)),
             args.append(self.define("CLR_BUILD_OCL", False)),
-            args.append(self.define("HIP_LLVM_ROOT", self.spec["llvm-amdgpu"].prefix))
         if "@5.6:5.7" in self.spec:
             args.append(self.define("HIPCC_BIN_DIR", self.stage.source_path + "/hipcc/bin")),
         if "@6.0:" in self.spec:
