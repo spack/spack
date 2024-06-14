@@ -104,6 +104,7 @@ class Fms(CMakePackage):
     depends_on("netcdf-fortran")
     depends_on("mpi")
     depends_on("libyaml", when="+yaml")
+    depends_on("llvm-openmp", when="+openmp %apple-clang", type=("build", "run"))
 
     def cmake_args(self):
         args = [
