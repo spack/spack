@@ -22,17 +22,21 @@ class Muparser(CMakePackage, Package):
     # https://github.com/beltoforion/muparser/pull/46
     patch("auto_ptr.patch", when="@2.2.5")
 
-    variant("samples", default=True, description="enable samples")
-    variant("openmp", default=True, description="enable OpenMP support")
+    variant("samples", default=True, description="enable samples", when="build_system=cmake")
+    variant("openmp", default=True, description="enable OpenMP support", when="build_system=cmake")
     variant(
-        "wide_char", default=False, description="enable wide character strings in place of ASCII"
+        "wide_char",
+        default=False,
+        description="enable wide character strings in place of ASCII",
+        when="build_system=cmake",
     )
-    variant("shared", default=True, description="enable shared libs")
+    variant("shared", default=True, description="enable shared libs", when="build_system=cmake")
 
     depends_on("cmake@3.1.0:", when="@2.2.6:", type="build")
 
     # Non-CMake build system is not supported by windows
-    conflicts("platform=windows", when="@2.2.5")
+    conflicts("platform=windows", when="@:2.2.5")
+    build_system(conditional("cmake", when="@2.2.6:"), "generic", default="cmake")
 
     def cmake_args(self):
         return [
@@ -42,7 +46,7 @@ class Muparser(CMakePackage, Package):
             self.define_from_variant("ENABLE_WIDE_CHAR", "wide_char"),
         ]
 
-    @when("@2.2.5")
+    @when("@:2.2.5")
     def install(self, spec, prefix):
         options = [
             "--disable-debug",
