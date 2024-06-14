@@ -226,8 +226,8 @@ class VtkM(CMakePackage, CudaPackage, ROCmPackage):
 
         return options
 
-    # Delegate in the vtk-m built smoke test
     def test_smoke_test(self):
+        """Test vtk-m with +examples"""
         spec = self.spec
 
         if "+examples" not in spec:
