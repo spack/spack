@@ -19,7 +19,7 @@ class Xfce4Core(BundlePackage):
         depends_on("libxfce4util@4.18")
         depends_on("xfconf@4.18")
         depends_on("libxfce4ui@4.18")
-        depends_on("garcon@0.8.0")
+        depends_on("garcon@4.18.0")
         depends_on("exo@4.18")
         depends_on("thunar@4.18")
         depends_on("xfce4-session@4.18")
