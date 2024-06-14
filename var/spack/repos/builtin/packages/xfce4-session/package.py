@@ -40,3 +40,14 @@ class Xfce4Session(AutotoolsPackage):
         args = []
         args += [f"--with-xsession-prefix={self.home}"]
         return args
+
+    def setup_run_enviornment(self, env):
+        self.add_xdg_dirs(env)
+
+    def setup_run_environment(self, env, dep_spec):
+        self.add_xdg_dirs(env)
+
+    def add_xdg_dirs(self, env):
+        # Xfce4-session needs $prefix/etc/xdg in it XDG_CONFIG_DIRS
+        env.append_path("XDG_CONFIG_DIRS", self.home.etc.xdg)
+        env.append_path("XDG_CONFIG_DIRS", self.prefix.etc.xdg)
