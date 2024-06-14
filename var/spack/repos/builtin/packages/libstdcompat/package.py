@@ -110,5 +110,6 @@ class Libstdcompat(CMakePackage):
 
     @run_after("build")
     @on_package_attributes(run_tests=True)
-    def test(self):
+    def test_execute(self):
+        """Test if libstdcompat executes correctly"""
         make("test")
