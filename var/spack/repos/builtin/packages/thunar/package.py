@@ -39,7 +39,6 @@ class Thunar(AutotoolsPackage):
         depends_on("xfconf")
         depends_on("libxfce4ui")
         depends_on("exo")
-        depends_on("xfce4-panel")
         depends_on("libpng")
         depends_on("glib@2:")
         depends_on("gtkplus@3:")
