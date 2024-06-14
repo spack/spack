@@ -44,7 +44,6 @@ class Libxfce4util(AutotoolsPackage):
     def configure_args(self):
         args = []
 
-        args += self.enable_or_disable("glibtop")
         args += self.enable_or_disable("introspection")
         args += self.enable_or_disable("vala")
 
