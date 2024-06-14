@@ -22,11 +22,11 @@ class Tumbler(AutotoolsPackage):
     version("4.18.0", sha256="4087f3af4ef31271d3f315421a2f1fe67e4fda7ad60bbab1f073627914dfcf00")
     version("4.16.0", sha256="9b0b7fed0c64041733d490b1b307297984629d0dd85369749617a8766850af66")
 
-    variant("freetype", default=True, description="Build with font support")
-    variant("libjpeg", default=True, description="Build with jpeg thumbnail support")
-    variant("ffmpeg", default=True, description="Build with ffmpg video support")
+    variant("freetype-thumbnailer", default=True, description="Build with font support")
+    variant("jpeg-thumbnailer", default=True, description="Build with jpeg thumbnail support")
+    variant("ffmpeg-thumbnailer", default=True, description="Build with ffmpg video support")
     # variant("gstreamer", default=True, description="Build with gstreamer video support")
-    variant("poppler", default=True, description="Build with pdf support")
+    variant("poppler-thumbnailer", default=True, description="Build with pdf support")
     # variant("libgsf", default=True, description="Build with odf support")
     # variant("libopenraw-gnome", default=True, description="Build with raw image support")
 
@@ -57,9 +57,9 @@ class Tumbler(AutotoolsPackage):
     def configure_args(self):
         args = []
 
-        args += self.enable_or_disable("freetype")
-        args += self.enable_or_disable("libjpeg")
-        args += self.enable_or_disable("ffmpeg")
-        args += self.enable_or_disable("poppler")
+        args += self.enable_or_disable("freetype-thumbnailer")
+        args += self.enable_or_disable("jpeg-thumbnailer")
+        args += self.enable_or_disable("ffmpeg-thumbnailer")
+        args += self.enable_or_disable("poppler-thumbnailer")
 
         return args
