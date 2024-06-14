@@ -148,6 +148,18 @@ class IntelOneapiMkl(IntelOneApiLibraryPackage):
     # cluster libraries need mpi
     depends_on("mpi", when="+cluster")
 
+    # If a +cluster then mpi_family must be set
+    with when("+cluster"):
+        conflicts("mpi_family=none")
+        requires("mpi_family=mpich", when="^intel-oneapi-mpi")
+        requires("mpi_family=mpich", when="^intel-mpi")
+        requires("mpi_family=mpich", when="^mpich")
+        requires("mpi_family=mpich", when="^mvapich")
+        requires("mpi_family=mpich", when="^mvapich2")
+        requires("mpi_family=mpich", when="^cray-mpich")
+        requires("mpi_family=openmpi", when="^openmpi")
+        requires("mpi_family=openmpi", when="^hpcx-mpi")
+
     provides("fftw-api@3")
     provides("scalapack", when="+cluster")
     provides("mkl")
@@ -226,31 +238,10 @@ class IntelOneapiMkl(IntelOneApiLibraryPackage):
         libs.append("libmkl_core")
 
         if self.spec.satisfies("+cluster"):
-            if any(
-                self.spec.satisfies(m)
-                for m in [
-                    "^intel-oneapi-mpi",
-                    "^intel-mpi",
-                    "^mpich",
-                    "^mvapich",
-                    "^mvapich2",
-                    "^cray-mpich",
-                    "mpi_family=mpich",
-                ]
-            ):
+            if self.spec.satisfies("mpi_family=mpich"):
                 libs.append(self._xlp64_lib("libmkl_blacs_intelmpi"))
-            elif any(
-                self.spec.satisfies(m) for m in ["^openmpi", "^hpcx-mpi", "mpi_family=openmpi"]
-            ):
+            elif self.spec.satisfies("mpi_family=openmpi"):
                 libs.append(self._xlp64_lib("libmkl_blacs_openmpi"))
-            else:
-                raise RuntimeError(
-                    (
-                        "intel-oneapi-mkl +cluster requires one of ^intel-oneapi-mpi, "
-                        "^intel-mpi, ^mpich, ^cray-mpich, mpi_family=mpich, ^openmpi, "
-                        "^hpcx-mpi, or mpi_family=openmpi"
-                    )
-                )
 
         lib_path = (
             self.component_prefix.lib if self.v2_layout else self.component_prefix.lib.intel64
