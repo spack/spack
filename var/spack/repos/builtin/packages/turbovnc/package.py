@@ -82,7 +82,7 @@ class Turbovnc(CMakePackage):
             f"-DTJPEG_INCLUDE_DIR={jpeg.home.include}",
             f"-DTJPEG_LIBRARY=-L{jpeg.home.lib} -lturbojpeg",
             f"-DXKB_BIN_DIRECTORY={xkbcomp.home.bin}",
-            f"-DXKB_BASE_DIRECTORY={xkbdata.home.share.X11.xkb}",
+            f"-DXKB_BASE_DIRECTORY={xkbbase.home.share.X11.xkb}",
             f"-DDXKB_DFLT_RULES=base",
 #            f"-DXORG_DRI_DRIVER_PATH={}",
 #            f"-DXORG_FONT_PATH={}",
