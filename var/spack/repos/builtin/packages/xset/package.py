@@ -9,7 +9,7 @@ from spack.package import *
 class Xset(AutotoolsPackage, XorgPackage):
     """User preference utility for X."""
 
-    homepage = "https://cgit.freedesktop.org/xorg/app/xset"
+    homepage = "https://gitlab.freedesktop.org/xorg/app/xset"
     xorg_mirror_path = "app/xset-1.2.3.tar.gz"
 
     license("MIT")

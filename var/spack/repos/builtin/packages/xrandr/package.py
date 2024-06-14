@@ -10,7 +10,7 @@ class Xrandr(AutotoolsPackage, XorgPackage):
     """xrandr - primitive command line interface to X11 Resize, Rotate, and
     Reflect (RandR) extension."""
 
-    homepage = "https://cgit.freedesktop.org/xorg/app/xrandr"
+    homepage = "https://gitlab.freedesktop.org/xorg/app/xrandr"
     xorg_mirror_path = "app/xrandr-1.5.0.tar.gz"
 
     license("MIT")
