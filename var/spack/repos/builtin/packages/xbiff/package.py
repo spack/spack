@@ -11,7 +11,7 @@ class Xbiff(AutotoolsPackage, XorgPackage):
     It only handles mail stored in a filesystem accessible file,
     not via IMAP, POP or other remote access protocols."""
 
-    homepage = "https://cgit.freedesktop.org/xorg/app/xbiff"
+    homepage = "https://gitlab.freedesktop.org/xorg/app/xbiff"
     xorg_mirror_path = "app/xbiff-1.0.3.tar.gz"
 
     license("X11")

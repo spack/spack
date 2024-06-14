@@ -9,7 +9,7 @@ from spack.package import *
 class Xsetroot(AutotoolsPackage, XorgPackage):
     """xsetroot - root window parameter setting utility for X."""
 
-    homepage = "https://cgit.freedesktop.org/xorg/app/xsetroot"
+    homepage = "https://gitlab.freedesktop.org/xorg/app/xsetroot"
     xorg_mirror_path = "app/xsetroot-1.1.1.tar.gz"
 
     license("MIT")
