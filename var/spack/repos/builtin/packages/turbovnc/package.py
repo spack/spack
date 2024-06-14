@@ -37,9 +37,11 @@ class Turbovnc(CMakePackage):
     depends_on("linux-pam")
     depends_on("openjdk@11:")
 
-    depends_on("libcap")
-
     depends_on("openssl")
+    depends_on("xkbcomp")
+    depends_on("xkbdata")
+
+    depends_on("libcap")
     depends_on("krb5")
 
     depends_on("libx11")
@@ -50,7 +52,6 @@ class Turbovnc(CMakePackage):
     depends_on("libxi")
     depends_on("libxt")
     depends_on("xproto")
-    depends_on("xkbcomp")
 
     depends_on("fontconfig")
     depends_on("libice")
