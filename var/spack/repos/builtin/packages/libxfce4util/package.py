@@ -25,6 +25,11 @@ class Libxfce4util(AutotoolsPackage):
     variant("glibtop", default=True, description="Build with glibtop support")
     variant("introspection", default=True, description="Build with gobject-introspection support")
     variant("vala", default=True, description="Build with vala support")
+    
+    with default_args(type="build"):
+        depends_on("pkgconfig@0.9.0:")
+        depends_on("intltool@0.35.0:", when="@4.16")
+        depends_on("gettext", when="@4.18:")
 
     with default_args(type=("run", "build")):
         depends_on("glib@2")
@@ -32,11 +37,9 @@ class Libxfce4util(AutotoolsPackage):
         depends_on("gobject-introspection", when="+introspection")
         depends_on("vala", when="+vala")
         with when("@4.18:"):
-            depends_on("gettext")
             depends_on("glib@2.66:")
             depends_on("gobject-introspection@1.66:", when="+introspection")
-        with when("@4.16:"):
-            depends_on("intltool@0.35.0:", type="build")
+        with when("@4.16"):
             depends_on("glib@2.50:")
             depends_on("gobject-introspection@1.60:", when="+introspection")
 
