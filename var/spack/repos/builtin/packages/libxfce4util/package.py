@@ -27,11 +27,11 @@ class Libxfce4util(AutotoolsPackage):
     variant("vala", default=True, description="Build with vala support")
     
     with default_args(type="build"):
-        depends_on("pkgconfig@0.9.0:")
         depends_on("intltool@0.35.0:", when="@4.16:")
         depends_on("gettext", when="@4.18:")
 
-    with default_args(type=("run", "build")):
+    with default_args(type=("run", "link", "build")):
+        depends_on("pkgconfig@0.9.0:")
         depends_on("glib@2")
         depends_on("libgtop", when="+glibtop")
         depends_on("gobject-introspection", when="+introspection")
