@@ -56,7 +56,7 @@ class Xfce4Session(AutotoolsPackage):
     def setup_run_enviornment(self, env):
         self.add_xdg_dirs(env)
 
-    def setup_run_environment(self, env, dep_spec):
+    def setup_dependent_run_environment(self, env, dep_spec):
         self.add_xdg_dirs(env)
 
     def add_xdg_dirs(self, env):
