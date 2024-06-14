@@ -29,9 +29,9 @@ class Kentutils(MakefilePackage):
     variant("libs", default=True, description="Install jk*.a libraries")
     variant("force_mysql", default=False, description="Force MySQL over MariaDB")
     variant(
-        "htslib", 
-        default=False, 
-        description="Build and use bundled htslib (Careful: may lead to unexpected failures)", 
+        "htslib",
+        default=False,
+        description="Build and use bundled htslib (Careful: may lead to unexpected failures)",
         sticky=True,
     )
 
