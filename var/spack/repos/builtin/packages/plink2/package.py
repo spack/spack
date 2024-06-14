@@ -16,7 +16,7 @@ class Plink2(MakefilePackage):
 
     maintainers("teaguesterling")
 
-    license("GPLv3", checked_by="teaguesterling")  
+    license("GPLv3", checked_by="teaguesterling")
     # See: https://github.com/chrchang/plink-ng/blob/master/2.0/COPYING
 
     version("2.00a5.11", sha256="8b664baa0b603f374123c32818ea2f053272840ba60e998d06cb864f3a6f1c38")
