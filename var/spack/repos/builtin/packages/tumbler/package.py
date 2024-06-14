@@ -33,8 +33,10 @@ class Tumbler(AutotoolsPackage):
     conflicts("%gcc@13:", when="@:4.18", msg="GCC 13+ fails on implicit pointer casting")
 
     # Base requirements
-    depends_on("intltool@0.35.0:", type="build")
-    depends_on("gettext", type="build")
+    with default_args(type="build"):
+        depends_on("intltool@0.35.0:")
+        depends_on("gettext")
+    depends_on("pkgconfig", type=("build", "link"))
     with default_args(type=("build", "link", "run")):
         depends_on("glib@2:")
         depends_on("dbus-glib")
