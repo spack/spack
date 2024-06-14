@@ -10,7 +10,7 @@ class Xman(AutotoolsPackage, XorgPackage):
     """xman is a graphical manual page browser using the Athena Widgets (Xaw)
     toolkit."""
 
-    homepage = "https://cgit.freedesktop.org/xorg/app/xman"
+    homepage = "https://gitlab.freedesktop.org/xorg/app/xman"
     xorg_mirror_path = "app/xman-1.1.4.tar.gz"
 
     license("X11")

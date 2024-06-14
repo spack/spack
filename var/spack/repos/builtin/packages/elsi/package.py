@@ -12,11 +12,14 @@ class Elsi(CMakePackage):
     codes to a variety of eigenvalue solvers."""
 
     homepage = "https://wordpress.elsi-interchange.org/"
-    url = "https://wordpress.elsi-interchange.org/wp-content/uploads/2019/03/elsi-2.2.1.tar.gz"
+    url = "https://gitlab.com/elsi_project/elsi_interface/-/archive/v2.10.1/elsi_interface-v2.10.1.tar.gz"
+    git = "https://gitlab.com/elsi_project/elsi_interface.git"
 
     license("BSD-3-Clause")
 
+    version("2.10.1", sha256="b3c7526d46a9139a26680787172a3df15bc648715a35bdf384053231e94ab829")
     version("2.2.1", sha256="5b4b2e8fa4b3b68131fe02cc1803a884039b89a1b1138af474af66453bec0b4d")
+    version("master", branch="master")
 
     variant("add_underscore", default=True, description="Suffix C functions with an underscore")
     variant(

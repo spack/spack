@@ -10,7 +10,7 @@ class Xconsole(AutotoolsPackage, XorgPackage):
     """xconsole displays in a X11 window the messages which are usually sent
     to /dev/console."""
 
-    homepage = "https://cgit.freedesktop.org/xorg/app/xconsole"
+    homepage = "https://gitlab.freedesktop.org/xorg/app/xconsole"
     xorg_mirror_path = "app/xconsole-1.0.6.tar.gz"
 
     version("1.1.0", sha256="fe5d2ba99b754909b2a04ce4abf054cd1e3134a830d69aea82e8465cc9f73942")

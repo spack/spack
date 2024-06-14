@@ -187,7 +187,7 @@ default:
 
 .generate-x86_64:
   extends: [ ".generate-base" ]
-  tags: ["spack", "public", "medium", "x86_64"]
+  tags: ["spack", "public", "medium", "x86_64_v3"]
 
 .generate-aarch64:
   extends: [ ".generate-base" ]
@@ -482,28 +482,6 @@ build_systems-build:
   needs:
     - artifacts: True
       job: build_systems-generate
-
-###########################################
-# Build tests for different developer tools
-###########################################
-.developer-tools:
-  extends: [ ".linux_x86_64_v3" ]
-  variables:
-    SPACK_CI_STACK_NAME: developer-tools
-
-developer-tools-generate:
-  extends: [ ".developer-tools", ".generate-x86_64"]
-
-developer-tools-build:
-  extends: [ ".developer-tools", ".build" ]
-  trigger:
-    include:
-      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
-        job: developer-tools-generate
-    strategy: depend
-  needs:
-    - artifacts: True
-      job: developer-tools-generate
 
 ###########################################
 # Build tests for different developer tools
