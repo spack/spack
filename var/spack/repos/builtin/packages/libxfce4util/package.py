@@ -22,7 +22,6 @@ class Libxfce4util(AutotoolsPackage):
     version("4.18.0", sha256="1157ca717fd3dd1da7724a6432a4fb24af9cd922f738e971fd1fd36dfaeac3c9")
     version("4.16.0", sha256="60598d745d1fc81ff5ad3cecc3a8d1b85990dd22023e7743f55abd87d8b55b83")
 
-    variant("glibtop", default=True, description="Build with glibtop support")
     variant("introspection", default=True, description="Build with gobject-introspection support")
     variant("vala", default=True, description="Build with vala support")
     
@@ -33,7 +32,6 @@ class Libxfce4util(AutotoolsPackage):
     with default_args(type=("run", "link", "build")):
         depends_on("pkgconfig@0.9.0:")
         depends_on("glib@2")
-        depends_on("libgtop", when="+glibtop")
         depends_on("gobject-introspection", when="+introspection")
         depends_on("vala", when="+vala")
         with when("@4.18:"):
