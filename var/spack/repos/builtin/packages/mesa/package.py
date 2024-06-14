@@ -91,7 +91,7 @@ class Mesa(MesonPackage):
 
     # TODO: effectively deal with EGL.  The implications of this have not been
     # worked through yet
-    variant('egl', default=False, description="Enable the EGL frontend.")
+    variant("egl", default=False, description="Enable the EGL frontend.")
 
     # TODO: Effectively deal with hardware drivers
     # The implication of this is enabling DRI, among other things, and
@@ -103,7 +103,7 @@ class Mesa(MesonPackage):
 
     # Provides
     provides("libglx", when="+glx")
-    provides('egl@1.5', when='+egl')
+    provides("egl@1.5", when="+egl")
 
     with when("+egl"):
         depends_on("libdrm")
@@ -111,7 +111,6 @@ class Mesa(MesonPackage):
         depends_on("libxshmfence")
         depends_on("dri2proto")
         depends_on("libxxf86vm")
-
 
     # Variant dependencies
     with when("+llvm"):
@@ -249,7 +248,7 @@ class MesonBuilder(spack.build_systems.meson.MesonBuilder):
         if "+egl" in spec:
             num_frontends += 1
             args.extend(["-Degl=enabled", "-Dgbm=enabled", "-Ddri3=enabled"])
-            #args_platforms.append("surfaceless")
+            # args_platforms.append("surfaceless")
         else:
             args.extend(["-Degl=disabled", "-Dgbm=disabled", "-Ddri3=disabled"])
 
