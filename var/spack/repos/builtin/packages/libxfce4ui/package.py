@@ -34,7 +34,6 @@ class Libxfce4ui(AutotoolsPackage):
         depends_on("gtkplus@3:")
         depends_on("libgtop@2", when="+glibtop")
         depends_on("startup-notification", when="+notification")
-        depends_on("libxfce4util+glibtop", when="+glibtop")
         with when("+introspection"):
             depends_on("gobject-introspection")
             depends_on("libxfce4util+introspection")
