@@ -34,6 +34,7 @@ class Tumbler(AutotoolsPackage):
 
     # Base requirements
     depends_on("intltool@0.35.0:", type="build")
+    depends_on("gettext", type="build")
     with default_args(type=("build", "link", "run")):
         depends_on("glib@2:")
         depends_on("dbus-glib")
