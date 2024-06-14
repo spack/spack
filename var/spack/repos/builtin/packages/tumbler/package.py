@@ -22,7 +22,10 @@ class Tumbler(AutotoolsPackage):
     version("4.18.0", sha256="4087f3af4ef31271d3f315421a2f1fe67e4fda7ad60bbab1f073627914dfcf00")
     version("4.16.0", sha256="9b0b7fed0c64041733d490b1b307297984629d0dd85369749617a8766850af66")
 
-    variant("freetype-thumbnailer", default=True, description="Build with font support")
+    variant("desktop-thumbnailer", default=True, description="Build with .desktop file support")
+    variant("cover-thumbnailer", default=True, description="Build with cover support")
+    variant("pixbuf-thumbnailer", default=True, description="Build with pixbuf support")
+    variant("font-thumbnailer", default=True, description="Build with font support")
     variant("jpeg-thumbnailer", default=True, description="Build with jpeg thumbnail support")
     variant("ffmpeg-thumbnailer", default=True, description="Build with ffmpg video support")
     # variant("gstreamer", default=True, description="Build with gstreamer video support")
@@ -43,7 +46,7 @@ class Tumbler(AutotoolsPackage):
         depends_on("gdk-pixbuf")
         depends_on("libpng")
         depends_on("gtkplus@3:")
-        depends_on("freetype", when="+freetype-thumbnailer")
+        depends_on("freetype", when="+font-thumbnailer")
         depends_on("libjpeg", when="+jpeg-thumbnailer")
         depends_on("ffmpeg", when="+ffmpeg-thumbnailer")
         depends_on("poppler+glib", when="+poppler-thumbnailer")
@@ -57,7 +60,10 @@ class Tumbler(AutotoolsPackage):
     def configure_args(self):
         args = []
 
-        args += self.enable_or_disable("freetype-thumbnailer")
+        args += self.enable_or_disable("desktop-thumbnailer")
+        args += self.enable_or_disable("cover-thumbnailer")
+        args += self.enable_or_disable("pixbuf-thumbnailer")
+        args += self.enable_or_disable("font-thumbnailer")
         args += self.enable_or_disable("jpeg-thumbnailer")
         args += self.enable_or_disable("ffmpeg-thumbnailer")
         args += self.enable_or_disable("poppler-thumbnailer")
