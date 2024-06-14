@@ -71,7 +71,7 @@ class Turbovnc(CMakePackage):
         jpeg = spec["libjpeg-turbo"]
         ssl = spec["openssl"]
         xkbcomp = spec["xkbcomp"]
-        xkbdata = spec["xkbdata"]
+        xkbbase = spec["xkeyboard_config"]
         args = [
             f"-DTVNC_INCLUDEJRE=1",
             f"-DTVNC_DLOPENSSL=1",
@@ -82,6 +82,7 @@ class Turbovnc(CMakePackage):
             f"-DTJPEG_LIBRARY=-L{jpeg.home.lib} -lturbojpeg",
             f"-DXKB_BIN_DIRECTORY={xkbcomp.home.bin}",
             f"-DXKB_BASE_DIRECTORY={xkbdata.home.share.X11.xkb}",
+            f"-DDXKB_DFLT_RULES=base",
 #            f"-DXORG_DRI_DRIVER_PATH={}",
 #            f"-DXORG_FONT_PATH={}",
 #            f"-DXORG_REGISTRY_PATH={}",
