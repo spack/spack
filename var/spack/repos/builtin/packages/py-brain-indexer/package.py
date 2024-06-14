@@ -13,6 +13,8 @@ class PyBrainIndexer(PythonPackage):
 
     license("Apache-2.0", checked_by="matz-e")
 
+    maintainers("matz-e")
+
     version("3.0.0", sha256="23947519df5f87c65781d1776f02e8e17798c40c617399b02e6ecae8e09a0a72")
 
     variant("mpi", default=True, description="Enable MPI parallelism")
