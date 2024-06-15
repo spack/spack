@@ -23,7 +23,11 @@ class Turbovnc(CMakePackage):
 
     generator("ninja")
 
-    variant("web", default=True, description="Build with noVNC support")
+    variant("viewer", default=True, description="Build VNC viewer")
+    variant("server", default=True, description="Build VNC server")
+    variant("systemlibs", default=True, description="Build with system libs")
+    variant("systemjava", default=True, description="Build with system java")
+    variant("web", default=True, description="Build with noVNC support", when="+server")
     variant("bundledX", default=True, description="Build with bundled X")
 
     with default_args(type="build"):
@@ -35,7 +39,12 @@ class Turbovnc(CMakePackage):
 
     depends_on("libjpeg-turbo@1.2:")
     depends_on("linux-pam")
-    depends_on("openjdk@11:")
+    depends_on("openjdk@11:", when="+systemjava")
+
+    with when("+systemlibs"):
+        depends_on("zlib-api")
+        depends_on("bzip2")
+        depends_on("freetype")
 
     depends_on("openssl")
     depends_on("xkbcomp")
@@ -56,7 +65,6 @@ class Turbovnc(CMakePackage):
     depends_on("fontconfig")
     depends_on("libice")
     depends_on("libsm")
-    depends_on("zlib-api")
     depends_on("xz")
     depends_on("lua")
     depends_on("python")
