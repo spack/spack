@@ -66,6 +66,7 @@ class Turbovnc(CMakePackage):
 
     depends_on("fontconfig")
     depends_on("font-util")
+    depends_on("libxft")
     depends_on("libxfont2")
     depends_on("pixman")
 
@@ -119,8 +120,8 @@ class Turbovnc(CMakePackage):
 
         # Misc X configuration
         args += [
-            f"-DXORG_FONT_PATH={fontutil.home.share.fonts.X11}",
-            f"-DFONT_ENCODINGS_DIRECTORY={fontutil.home.share.fonts.X11.encodings}",
+            #f"-DXORG_FONT_PATH={fontutil.home.share.fonts.X11}",
+            #f"-DFONT_ENCODINGS_DIRECTORY={fontutil.home.share.fonts.X11.encodings}",
             # Don't know what actually provides these yet
             # f"-DXORG_DRI_DRIVER_PATH={}",  # dri was struggling to build in xorg-server
             # f"-DXORG_REGISTRY_PATH={}",    # This needs protocols.txt from dix?
