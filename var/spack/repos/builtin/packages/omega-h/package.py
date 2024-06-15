@@ -172,9 +172,10 @@ class OmegaH(CMakePackage, CudaPackage):
             raise SkipTest("Package must be installed as version 9.34.1 or later")
         exe = which(join_path(self.prefix.bin, "osh_scale"))
         options = ["box.osh", "100", "box_100.osh"]
-        exe(*options)
+        actual = exe(*options, output=str.split, error=str.split)
+        assert "adapting took" in actual
 
-    def test_vtu(self):
+    def test_osh2vtk(self):
         """testing mesh to vtu conversion"""
         if self.spec.version < Version("9.34.1"):
             raise SkipTest("Package must be installed as version 9.34.1 or later")
