@@ -25,10 +25,11 @@ class Turbovnc(CMakePackage):
 
     variant("viewer", default=True, description="Build VNC viewer")
     variant("server", default=True, description="Build VNC server")
-    variant("systemlibs", default=True, description="Build with system libs")
-    variant("systemjava", default=True, description="Build with system java")
+    variant("libs", default=True, description="Build with spack-provided core libs")
+    variant("openssl", default=True, description="Build with spack-provided openssl")
+    variant("java", default=True, description="Build with spack-provided java")
     variant("web", default=True, description="Build with noVNC support", when="+server")
-    variant("bundledX", default=True, description="Build with bundled X")
+    #    variant("X", default=False, description="Build with spack-provided X")
 
     with default_args(type="build"):
         depends_on("ninja")
@@ -36,17 +37,19 @@ class Turbovnc(CMakePackage):
         depends_on("cmake@3.12:", when="+web")
         depends_on("gettext")
         depends_on("perl-extutils-makemaker")
+        depends_on("pkgconfig")
 
     depends_on("libjpeg-turbo@1.2:")
     depends_on("linux-pam")
-    depends_on("openjdk@11:", when="+systemjava")
 
-    with when("+systemlibs"):
+    depends_on("openjdk@11:", when="+java")
+    depends_on("openssl", when="+openssl")
+
+    with when("+libs"):
         depends_on("zlib-api")
         depends_on("bzip2")
         depends_on("freetype")
 
-    depends_on("openssl")
     depends_on("xkbcomp")
     depends_on("xkeyboard-config")
 
@@ -60,9 +63,12 @@ class Turbovnc(CMakePackage):
     depends_on("libxfixes")
     depends_on("libxi")
     depends_on("libxt")
-    #    depends_on("xproto")
 
     depends_on("fontconfig")
+    depends_on("font-util")
+    depends_on("libxfont2")
+    depends_on("pixman")
+
     depends_on("libice")
     depends_on("libsm")
     depends_on("xz")
@@ -76,23 +82,28 @@ class Turbovnc(CMakePackage):
     def cmake_args(self):
         spec = self.spec
         jpeg = spec["libjpeg-turbo"]
+        fontutil = spec["font-util"]
         xkbcomp = spec["xkbcomp"]
         xkbbase = spec["xkeyboard-config"]
 
         # Required flags for Spack build
         args = [
+            # Turbo JPEG is required
             f"-DTJPEG_INCLUDE_DIR={jpeg.home.include}",
             f"-DTJPEG_LIBRARY=-L{jpeg.home.lib} -lturbojpeg",
-            "-DTVNC_INCLUDEJRE=1",
         ]
 
-        args.append(self.define_from_variant("TVNC_BUILDWEBSERVER", "web"))
-
-        # TODO: Further investigate
         args += [
-            "-DTVNC_SYSTEMLIBS=1",  # TODO: Investigate
-            "-DTVNC_DLOPENSSL=1",  # Use SSL, could be variant
-            "-DTVNC_SYSTEMX11=0",  # Probably needs lots of libpahts
+            # Look for Java
+            self.define_from_variant("TVNC_INCLUDEJRE", "java"),
+            self.define_from_variant("TVNC_SYSTEMLIBS", "libs"),
+            self.define_from_variant("TVNC_DLOPENSSL", "openssl"),
+            self.define_from_variant("TVNC_BUILDWEBSERVER", "web"),
+        ]
+
+        # This is all of the Xorg stuff that needs to be sorted out
+        args += [
+            "-DTVNC_SYSTEMX11=0",  # Not ready to debug this YET
             "-DTVNC_STATIC_XORG_PATHS=0",  # TODO: Investigate
         ]
 
@@ -108,9 +119,10 @@ class Turbovnc(CMakePackage):
 
         # Misc X configuration
         args += [
-            # FONT_ENCODINGS_DIRECTORY = /usr/share/X11/fonts/encodings
+            f"-DXORG_FONT_PATH={fontutil.home.share.fonts.X11}",
+            f"-DFONT_ENCODINGS_DIRECTORY={fontutil.home.share.fonts.X11.encodings}",
+            # Don't know what actually provides these yet
             # f"-DXORG_DRI_DRIVER_PATH={}",  # dri was struggling to build in xorg-server
-            # f"-DXORG_FONT_PATH={}",        # https://github.com/spack/spack/pull/2203?
             # f"-DXORG_REGISTRY_PATH={}",    # This needs protocols.txt from dix?
         ]
         return args
