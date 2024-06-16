@@ -16,6 +16,7 @@ class Sz3(CMakePackage):
     tags = ["e4s"]
 
     version("master")
+    version("3.1.8", commit="e308ebf8528c233286874b920c72c0a6c0218fb2")
     version("3.1.7", commit="c49fd17f2d908835c41000c1286c510046c0480e")
     version("3.1.5.4", commit="4c6ddf628f27d36b28d1bbda02174359cd05573d")
     version("3.1.5.1", commit="5736a63b917e439dd62248b4ff6234e96726af5d")
@@ -42,12 +43,18 @@ class Sz3(CMakePackage):
             self.define_from_variant("BUILD_H5Z_FILTER", "hdf5"),
         ]
 
-    def test(self):
+    def test_sz3_smoke_test(self):
+        """Run sz3 smoke test"""
         if self.spec.satisfies("@:3.1.6"):
-            print("smoke tests are only supported on 3.1.7 and later, skipping")
-            return
+            raise SkipTest("Package must be installed as version 3.1.7 or later")
+        exe = which(self.prefix.bin.sz3_smoke_test)
+        exe()
 
-        self.run_test(self.prefix.bin.sz3_smoke_test, purpose="sz3 works")
-
-        if "+mdz" in self.spec:
-            self.run_test(self.prefix.bin.mdz_smoke_test, purpose="mdz works")
+    def test_mdz_smoke_test(self):
+        """Run mdz smoke test"""
+        if self.spec.satisfies("@:3.1.6"):
+            raise SkipTest("Package must be installed as version 3.1.7 or later")
+        if "+mdz" not in self.spec:
+            raise SkipTest("Package must be installed with '+mdz'")
+        exe = which(self.prefix.bin.mdz_smoke_test)
+        exe()

@@ -10,7 +10,7 @@ class Libxpresent(AutotoolsPackage, XorgPackage):
     """This package contains header files and documentation for the Present
     extension.  Library and server implementations are separate."""
 
-    homepage = "https://cgit.freedesktop.org/xorg/lib/libXpresent/"
+    homepage = "https://gitlab.freedesktop.org/xorg/lib/libXpresent/"
     xorg_mirror_path = "lib/libXpresent-1.0.0.tar.gz"
 
     license("MIT")

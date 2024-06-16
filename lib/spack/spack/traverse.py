@@ -563,10 +563,10 @@ def traverse_tree(
     # identical to DFS, which is much more efficient then.
     if not depth_first and cover == "edges":
         edges, parents = breadth_first_to_tree_edges(specs, deptype, key)
-        return traverse_breadth_first_tree_edges(None, edges, parents)
+        return traverse_breadth_first_tree_edges(None, edges, parents, key)
     elif not depth_first and cover == "nodes":
         edges = breadth_first_to_tree_nodes(specs, deptype, key)
-        return traverse_breadth_first_tree_nodes(None, edges)
+        return traverse_breadth_first_tree_nodes(None, edges, key)
 
     return traverse_edges(specs, order="pre", cover=cover, deptype=deptype, key=key, depth=True)
 

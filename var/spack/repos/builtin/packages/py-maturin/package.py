@@ -14,6 +14,8 @@ class PyMaturin(PythonPackage):
     homepage = "https://github.com/pyo3/maturin"
     pypi = "maturin/maturin-0.13.7.tar.gz"
 
+    maintainers("teaguesterling")
+
     license("Apache-2.0")
 
     version("1.5.1", sha256="3dd834ece80edb866af18cbd4635e0ecac40139c726428d5f1849ae154b26dca")
@@ -22,8 +24,19 @@ class PyMaturin(PythonPackage):
     version("0.14.17", sha256="fb4e3311e8ce707843235fbe8748a05a3ae166c3efd6d2aa335b53dfc2bd3b88")
     version("0.13.7", sha256="c0a77aa0c57f945649ca711c806203a1b6888ad49c2b8b85196ffdcf0421db77")
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-wheel@0.36.2:", type="build")
-    depends_on("py-setuptools-rust@1.4:", type="build")
-    depends_on("py-tomli@1.1:", when="^python@:3.10", type=("build", "run"))
-    depends_on("rust", type=("build", "run"))
+    with default_args(type="build"):
+        depends_on("py-setuptools")
+        depends_on("py-wheel@0.36.2:")
+        depends_on("py-setuptools-rust@1.4:")
+
+    with default_args(type=("build", "run")):
+        depends_on("py-tomli@1.1:", when="^python@:3.10")
+        for rust, maturin in [
+            ("1.70", "1.5.0"),
+            ("1.64", "1.0.0"),
+            ("1.62", "0.14.3"),
+            ("1.59", "0.13.3"),
+        ]:
+            depends_on(f"rust@{rust}:", when=f"@{maturin}:")
+
+    conflicts("python@3.11:")

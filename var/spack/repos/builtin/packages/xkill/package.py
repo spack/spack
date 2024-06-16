@@ -11,7 +11,7 @@ class Xkill(AutotoolsPackage, XorgPackage):
     clients.  This program is very dangerous, but is useful for aborting
     programs that have displayed undesired windows on a user's screen."""
 
-    homepage = "https://cgit.freedesktop.org/xorg/app/xkill"
+    homepage = "https://gitlab.freedesktop.org/xorg/app/xkill"
     xorg_mirror_path = "app/xkill-1.0.4.tar.gz"
 
     license("MIT")

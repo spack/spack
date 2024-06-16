@@ -111,6 +111,8 @@ class IntelOneapiMkl(IntelOneApiLibraryPackage):
         expand=False,
     )
 
+    variant("gfortran", default=False, description="Compatibility with GNU Fortran")
+
     variant("shared", default=True, description="Builds shared library")
     variant("ilp64", default=False, description="Build with ILP64 support")
     variant(
@@ -145,6 +147,18 @@ class IntelOneapiMkl(IntelOneApiLibraryPackage):
     depends_on("tbb")
     # cluster libraries need mpi
     depends_on("mpi", when="+cluster")
+
+    # If a +cluster then mpi_family must be set
+    with when("+cluster"):
+        conflicts("mpi_family=none")
+        requires("mpi_family=mpich", when="^intel-oneapi-mpi")
+        requires("mpi_family=mpich", when="^intel-mpi")
+        requires("mpi_family=mpich", when="^mpich")
+        requires("mpi_family=mpich", when="^mvapich")
+        requires("mpi_family=mpich", when="^mvapich2")
+        requires("mpi_family=mpich", when="^cray-mpich")
+        requires("mpi_family=openmpi", when="^openmpi")
+        requires("mpi_family=openmpi", when="^hpcx-mpi")
 
     provides("fftw-api@3")
     provides("scalapack", when="+cluster")
@@ -200,10 +214,16 @@ class IntelOneapiMkl(IntelOneApiLibraryPackage):
         if self.spec.satisfies("+cluster"):
             libs.extend([self._xlp64_lib("libmkl_scalapack"), "libmkl_cdft_core"])
 
-        if self.spec.satisfies("%oneapi") or self.spec.satisfies("%intel"):
-            libs.append(self._xlp64_lib("libmkl_intel"))
-        else:
+        # Explicit variant for compatibility with gfortran, otherwise
+        # support intel fortran. Be aware that some dependencies may
+        # be using this logic and other dependencies might be using
+        # cmake for the library list and they have to be consistent.
+        # https://github.com/spack/spack/pull/43673 for discussion
+        if self.spec.satisfies("+gfortran"):
+            depends_on("fortran", type="build")
             libs.append(self._xlp64_lib("libmkl_gf"))
+        else:
+            libs.append(self._xlp64_lib("libmkl_intel"))
 
         if self.spec.satisfies("threads=tbb"):
             libs.append("libmkl_tbb_thread")
@@ -218,29 +238,10 @@ class IntelOneapiMkl(IntelOneApiLibraryPackage):
         libs.append("libmkl_core")
 
         if self.spec.satisfies("+cluster"):
-            if any(
-                self.spec.satisfies(m)
-                for m in [
-                    "^intel-oneapi-mpi",
-                    "^intel-mpi",
-                    "^mpich",
-                    "^cray-mpich",
-                    "mpi_family=mpich",
-                ]
-            ):
+            if self.spec.satisfies("mpi_family=mpich"):
                 libs.append(self._xlp64_lib("libmkl_blacs_intelmpi"))
-            elif any(
-                self.spec.satisfies(m) for m in ["^openmpi", "^hpcx-mpi", "mpi_family=openmpi"]
-            ):
+            elif self.spec.satisfies("mpi_family=openmpi"):
                 libs.append(self._xlp64_lib("libmkl_blacs_openmpi"))
-            else:
-                raise RuntimeError(
-                    (
-                        "intel-oneapi-mkl +cluster requires one of ^intel-oneapi-mpi, "
-                        "^intel-mpi, ^mpich, ^cray-mpich, mpi_family=mpich, ^openmpi, "
-                        "^hpcx-mpi, or mpi_family=openmpi"
-                    )
-                )
 
         lib_path = (
             self.component_prefix.lib if self.v2_layout else self.component_prefix.lib.intel64

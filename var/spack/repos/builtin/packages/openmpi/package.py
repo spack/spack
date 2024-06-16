@@ -986,6 +986,11 @@ class Openmpi(AutotoolsPackage, CudaPackage):
         spec = self.spec
         config_args = ["--enable-shared", "--disable-silent-rules", "--disable-sphinx"]
 
+        # Work around incompatibility with new apple-clang linker
+        # https://github.com/open-mpi/ompi/issues/12427
+        if spec.satisfies("@5: %apple-clang@15:"):
+            config_args.append("--with-wrapper-fcflags=-Wl,-ld_classic")
+
         # All rpath flags should be appended with self.compiler.cc_rpath_arg.
         # Later, we might need to update share/openmpi/mpic++-wrapper-data.txt
         # and mpifort-wrapper-data.txt (see filter_rpaths()).
@@ -1024,7 +1029,7 @@ class Openmpi(AutotoolsPackage, CudaPackage):
             config_args.extend(self.with_or_without("fabrics"))
 
         if spec.satisfies("@2.0.0:"):
-            if "fabrics=xpmem platform=cray" in spec:
+            if "fabrics=xpmem" in spec:
                 config_args.append("--with-cray-xpmem")
             else:
                 config_args.append("--without-cray-xpmem")
@@ -1173,6 +1178,23 @@ class Openmpi(AutotoolsPackage, CudaPackage):
 
         #       if spec.satisfies("@5.0.0:") and spec.satisfies("%oneapi"):
         #           config_args.append("--disable-io-romio")
+
+        # https://www.intel.com/content/www/us/en/developer/articles/release-notes/oneapi-c-compiler-release-notes.html :
+        # Key Features in Intel C++ Compiler Classic 2021.7
+        #
+        # The Intel C++ Classic Compiler is deprecated and an additional
+        # diagnostic message will be output with each invocation. This
+        # diagnostic may impact expected output during compilation. For
+        # example, using the compiler to produce preprocessed information
+        # (icpc -E) will produce the additional deprecation diagnostic,
+        # interfering with the expected preprocessed output.
+        #
+        # This output can be disabled by using -diag-disable=10441 on
+        # Linux/macOS or /Qdiag-disable:10441 on Windows. You can add this
+        # option on the command line, configuration file or option setting
+        # environment variables.
+        if spec.satisfies("%intel@2021.7.0:"):
+            config_args.append("CPPFLAGS=-diag-disable=10441")
 
         return config_args
 

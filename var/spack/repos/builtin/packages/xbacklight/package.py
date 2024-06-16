@@ -12,7 +12,7 @@ class Xbacklight(AutotoolsPackage, XorgPackage):
     supporting backlight brightness control and changes them all in the
     same way."""
 
-    homepage = "https://cgit.freedesktop.org/xorg/app/xbacklight"
+    homepage = "https://gitlab.freedesktop.org/xorg/app/xbacklight"
     xorg_mirror_path = "app/xbacklight-1.2.1.tar.gz"
 
     license("MIT")

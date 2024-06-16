@@ -60,8 +60,5 @@ class Kvtree(CMakePackage):
 
         if spec.satisfies("@1.2.0:"):
             args.append(self.define_from_variant("BUILD_SHARED_LIBS", "shared"))
-        else:
-            if spec.satisfies("platform=cray"):
-                args.append(self.define("KVTREE_LINK_STATIC", True))
 
         return args

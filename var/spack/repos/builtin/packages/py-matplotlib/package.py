@@ -66,45 +66,12 @@ class PyMatplotlib(PythonPackage):
     version("3.0.2", sha256="c94b792af431f6adb6859eb218137acd9a35f4f7442cea57e4a59c54751c36af")
     version("3.0.1", sha256="70f8782c50ac2c7617aad0fa5ba59fc49f690a851d6afc0178813c49767644dd")
     version("3.0.0", sha256="b4e2333c98a7c2c1ff6eb930cd2b57d4b818de5437c5048802096b32f66e65f9")
-    version(
-        "2.2.5",
-        sha256="a3037a840cd9dfdc2df9fee8af8f76ca82bfab173c0f9468193ca7a89a2b60ea",
-        deprecated=True,
-    )
-    version(
-        "2.2.4",
-        sha256="029620799e581802961ac1dcff5cb5d3ee2f602e0db9c0f202a90495b37d2126",
-        deprecated=True,
-    )
-    version(
-        "2.2.3",
-        sha256="7355bf757ecacd5f0ac9dd9523c8e1a1103faadf8d33c22664178e17533f8ce5",
-        deprecated=True,
-    )
-    version(
-        "2.2.2",
-        sha256="4dc7ef528aad21f22be85e95725234c5178c0f938e2228ca76640e5e84d8cde8",
-        deprecated=True,
-    )
-    version(
-        "2.0.2",
-        sha256="0ffbc44faa34a8b1704bc108c451ecf87988f900ef7ce757b8e2e84383121ff1",
-        deprecated=True,
-    )
-    version(
-        "2.0.0",
-        sha256="36cf0985829c1ab2b8b1dae5e2272e53ae681bf33ab8bedceed4f0565af5f813",
-        deprecated=True,
-    )
 
     # https://matplotlib.org/stable/users/explain/figure/backends.html
     # matplotlib 3.9+: lib/matplotlib/backends/registry.py
     # matplotlib 3.8-: lib/matplotlib/rcsetup.py
     all_backends = [
         # GTK
-        conditional("gtk", when="@:2"),
-        conditional("gtkagg", when="@:2"),
-        conditional("gtkcairo", when="@:2"),
         "gtk3agg",
         "gtk3cairo",
         conditional("gtk4agg", when="@3.5:"),
@@ -118,9 +85,9 @@ class PyMatplotlib(PythonPackage):
         conditional("qtagg", when="@3.5:"),
         conditional("qtcairo", when="@3.5:"),
         conditional("qt4agg", when="@:3.4"),
-        conditional("qt4cairo", when="@2.2:3.4"),
+        conditional("qt4cairo", when="@:3.4"),
         "qt5agg",
-        conditional("qt5cairo", when="@2.2:"),
+        "qt5cairo",
         # Tk
         "tkagg",
         "tkcairo",
@@ -129,11 +96,10 @@ class PyMatplotlib(PythonPackage):
         # Wx
         "wx",
         "wxagg",
-        conditional("wxcairo", when="@2.2:"),
+        "wxcairo",
         # Headless
         "agg",
         "cairo",
-        conditional("gdk", when="@:2"),
         "pdf",
         "pgf",
         "ps",
@@ -174,7 +140,7 @@ class PyMatplotlib(PythonPackage):
     depends_on("py-cycler@0.10:", type=("build", "run"))
     depends_on("py-fonttools@4.22:", when="@3.5:", type=("build", "run"))
     depends_on("py-kiwisolver@1.3.1:", when="@3.8.1:", type=("build", "run"))
-    depends_on("py-kiwisolver@1.0.1:", when="@2.2:", type=("build", "run"))
+    depends_on("py-kiwisolver@1.0.1:", type=("build", "run"))
     depends_on("py-numpy@1.23:", when="@3.9:", type=("build", "link", "run"))
     depends_on("py-numpy@1.21:", when="@3.8.4", type=("build", "link", "run"))
     depends_on("py-numpy@1.21:1", when="@3.8.0:3.8.3", type=("build", "link", "run"))
@@ -196,10 +162,6 @@ class PyMatplotlib(PythonPackage):
     depends_on("py-python-dateutil@2.1:", type=("build", "run"))
     depends_on("py-importlib-resources@3.2:", when="@3.7: ^python@:3.9", type=("build", "run"))
 
-    # Historical dependencies
-    depends_on("py-pytz", type=("build", "run"), when="@:2")
-    depends_on("py-six@1.10.0:", type=("build", "run"), when="@2")
-
     # Optional dependencies
     # Backends
     # Tk
@@ -220,14 +182,13 @@ class PyMatplotlib(PythonPackage):
         depends_on("py-pyqt6@6.1:", when="backend=" + backend, type="run")
         depends_on("qt-base+gui+widgets", when="backend=" + backend, type="run")
     # GTK
-    for backend in ["gtk", "gtkagg", "gtkcairo", "gtk3agg", "gtk3cairo", "gtk4agg", "gtk4cairo"]:
+    for backend in ["gtk3agg", "gtk3cairo", "gtk4agg", "gtk4cairo"]:
         depends_on("py-pygobject", when="backend=" + backend, type="run")
         depends_on("py-pycairo@1.14:", when="@3.6: backend=" + backend, type="run")
         depends_on("py-pycairo@1.11:", when="@3.3: backend=" + backend, type="run")
         depends_on("py-pycairo", when="backend=" + backend, type="run")
     # Cairo
     for backend in [
-        "gtkcairo",
         "gtk3cairo",
         "gtk4cairo",
         "qtcairo",
@@ -289,15 +250,12 @@ class PyMatplotlib(PythonPackage):
 
     msg = "MacOSX backend requires macOS 10.12+"
     conflicts("platform=linux", when="backend=macosx", msg=msg)
-    conflicts("platform=cray", when="backend=macosx", msg=msg)
     conflicts("platform=windows", when="backend=macosx", msg=msg)
 
     conflicts("^tk@8.6.0:8.6.1")
 
     # https://github.com/matplotlib/matplotlib/pull/21662
     patch("matplotlibrc.patch", when="@3.5.0")
-    # Patch to pick up correct freetype headers
-    patch("freetype-include-path.patch", when="@2.2.2:2.9.9")
 
     @property
     def archive_files(self):
