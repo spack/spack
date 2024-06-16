@@ -80,6 +80,8 @@ class Turbovnc(CMakePackage):
     with default_args(type="run"):
         depends_on("xauth")
 
+    conflicts("%gcc@13:", msg="GCC 13+ does not support implicit declarations")
+
     def cmake_args(self):
         spec = self.spec
         jpeg = spec["libjpeg-turbo"]
