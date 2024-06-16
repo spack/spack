@@ -1647,7 +1647,7 @@ class Database:
         if install_tree in ("all", "local") or self.root == install_tree:
             local_results = set(self.query_local(*args, **kwargs))
 
-        local_results_dict = { y.dag_hash(): y for y in local_results }
+        local_results_dict = {y.dag_hash(): y for y in local_results}
         results = list(local_results) + list(
             spec
             for spec in upstream_results
