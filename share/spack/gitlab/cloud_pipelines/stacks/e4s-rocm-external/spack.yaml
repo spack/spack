@@ -211,8 +211,7 @@ spack:
   specs:
   # ROCM NOARCH
   - hpctoolkit +rocm
-  # --
-  # - tau +mpi +rocm +syscall  # tau: https://github.com/spack/spack/issues/44659
+  - tau +mpi +rocm +syscall
 
   # ROCM 908
   - amrex +rocm amdgpu_target=gfx908
