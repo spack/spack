@@ -28,3 +28,17 @@ class PyWxflow(PythonPackage):
     depends_on("py-numpy@1.21.6:", type=("build", "run"))
     depends_on("py-pyyaml@6:", type=("build", "run"))
     depends_on("py-jinja2@3.1.2:", type=("build", "run"))
+
+    depends_on("py-pytest", type="test")
+
+    @on_package_attributes(run_tests=True)
+    def patch(self):
+        # Disable code coverage generation
+        filter_file(r"\s\-\-cov[^\s]+", "", "setup.cfg")
+
+    @run_after("install")
+    @on_package_attributes(run_tests=True)
+    def check(self):
+        env["PYTHONPATH"] = ":".join((join_path(self.build_directory, "build/lib"), env["PYTHONPATH"]))
+        pytest = which(join_path(self.spec["py-pytest"].prefix.bin, "pytest"))
+        pytest("-v", self.build_directory)
