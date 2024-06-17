@@ -300,7 +300,7 @@ spack:
   ci:
     pipeline-gen:
     - build-job:
-        image: ecpe4s/ubuntu22.04-runner-amd64-gcc-11.4-rocm6.1.1:2024.06.01
+        image: ecpe4s/ubuntu22.04-runner-amd64-gcc-11.4-rocm6.1.1:2024.06.17
 
   cdash:
     build-group: E4S ROCm External
