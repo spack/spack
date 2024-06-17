@@ -44,13 +44,13 @@ class Lcms(AutotoolsPackage, MSBuildPackage):
         return find_libraries("liblcms2", root=self.prefix, recursive=True)
 
 
-class MSBuildBuilder(spack.build_systems.msbuild.MSBuilder):
+class MSBuildBuilder(spack.build_systems.msbuild.MSBuildBuilder):
     @property
     def build_directory(self):
         return pathlib.Path(self.pkg.stage.source_path) / "Projects" / f"VC{self.spec.compiler.visual_studio_version}"
 
     def msbuild_args(self):
         return [
-            "lcms2.sln"
+            "lcms2.sln",
             self.define("OutputPath", self.spec.prefix)
         ]
