@@ -170,9 +170,11 @@ class Cp2k(MakefilePackage, CMakePackage, CudaPackage, ROCmPackage):
 
     with when("smm=libxsmm"):
         depends_on("libxsmm~header-only")
-        depends_on("libxsmm@1.17", when="@9.1:")
         # require libxsmm-1.11+ since 1.10 can leak file descriptors in Fortran
-        depends_on("libxsmm@1.11", when="@:8.9")
+        depends_on("libxsmm@1.11:")
+        depends_on("libxsmm@1.17:", when="@9.1:")
+        # build needs to be fixed for libxsmm@2 once it is released
+        depends_on("libxsmm@:1")
         # use pkg-config (support added in libxsmm-1.10) to link to libxsmm
         depends_on("pkgconfig", type="build")
 
@@ -286,6 +288,8 @@ class Cp2k(MakefilePackage, CMakePackage, CudaPackage, ROCmPackage):
         depends_on("dbcsr+mpi", when="+mpi")
         depends_on("dbcsr+cuda", when="+cuda")
         depends_on("dbcsr+rocm", when="+rocm")
+        depends_on("dbcsr smm=libxsmm", when="smm=libxsmm")
+        depends_on("dbcsr smm=blas", when="smm=blas")
 
     with when("@2022: +rocm"):
         depends_on("hipblas")
