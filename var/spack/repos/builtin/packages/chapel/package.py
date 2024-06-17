@@ -598,6 +598,8 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
 
         if self.spec.satisfies("+zmq"):
             self.prepend_cpath_include(env, self.spec["libzmq"].prefix)
+            # could not compile test/library/packages/ZMQ/hello.chpl without this
+            env.prepend_path("LIBRARY_PATH", self.spec["libzmq"].prefix.lib)
             env.prepend_path("LD_LIBRARY_PATH", self.spec["libzmq"].prefix.lib)
             # could not compile test/library/packages/ZMQ/hello.chpl without this
             env.prepend_path("LIBRARY_PATH", self.spec["libzmq"].prefix.lib)
