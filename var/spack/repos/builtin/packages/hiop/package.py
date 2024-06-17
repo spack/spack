@@ -75,7 +75,7 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
     variant("jsrun", default=False, description="Enable/Disable jsrun command for testing")
     variant("shared", default=False, description="Enable/Disable shared libraries")
     variant("mpi", default=True, description="Enable/Disable MPI")
-    variant("raja", default=False, description="Enable/Disable RAJA")
+    variant("raja", default=False, when="@0.3.99:", description="Enable/Disable RAJA")
     variant("kron", default=False, description="Enable/Disable Kron reduction")
     variant("sparse", default=False, description="Enable/Disable Sparse linear algebra")
     variant(
@@ -124,7 +124,11 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
     # 1.0.2 fixes bug with cuda 12 compatibility
     # hiop@0.6.0 requires cusolver API in cuda@11
     depends_on("cuda@11:11.9", when="@0.6.0:1.0.1+cuda")
-    depends_on("cuda@11:", when="@develop:+cuda")
+    # Version v0.7.0 of HiOp is the earliest version that uses
+    #    cusparseSpGEMMreuse_workEstimation
+    # which appears for the first time in the cuSPARSE version shipped with
+    # CUDA 11.3.1, at least according to the CUDA online documentation.
+    depends_on("cuda@11.3.1:", when="@0.7:+cuda")
     # Before hiop@0.6.0 only cuda requirement was magma
     depends_on("cuda", when="@:0.5.4+cuda")
 
@@ -134,9 +138,11 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
 
     # RAJA > 0.14 and Umpire > 6.0 require c++ std 14
     # We are working on supporting newer Umpire/RAJA versions
-    depends_on("raja@0.14.0:0.14", when="@0.5.0:+raja")
-    depends_on("umpire@6.0.0:6", when="@0.5.0:+raja")
-    depends_on("camp@0.2.3:0.2", when="@0.5.0:+raja")
+    depends_on("raja@0.14", when="@0.5:+raja")
+    depends_on("raja@:0.13", when="@0.3.99:0.4+raja")
+    depends_on("umpire@6", when="@0.5:+raja")
+    depends_on("umpire@:5", when="@0.3.99:0.4+raja")
+    depends_on("camp@0.2.3:0.2", when="@0.3.99:+raja")
 
     # This is no longer a requirement in RAJA > 0.14
     depends_on("umpire+cuda~shared", when="+raja+cuda ^raja@:0.14")
@@ -149,8 +155,10 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
 
     # We rely on RAJA / Umpire utilities when supporting CUDA backend
     conflicts("~raja", when="+cuda", msg="RAJA is required for CUDA support")
+    conflicts("~raja", when="+rocm", msg="RAJA is required for ROCm support")
 
     depends_on("hip", when="+rocm")
+    depends_on("hiprand", when="+rocm")
     depends_on("hipblas", when="+rocm")
     depends_on("hipsparse", when="+rocm")
 
