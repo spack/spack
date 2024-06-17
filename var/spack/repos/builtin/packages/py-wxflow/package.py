@@ -19,6 +19,7 @@ class PyWxflow(PythonPackage):
 
     license("LGPL-3.0-only", checked_by="AlexanderRichert-NOAA")
 
+    version("0.2.0", sha256="a0fa903c6bb65e2cfa9deebcc8ec03d8eced82eac54288e73bd9137fcc0457d4")
     version("0.1.0", sha256="4de120688affd7589bd9df0288139d16e97a93bc37efcfaf09fccc1c6ed43ab1")
 
     depends_on("python@3.6:", type=("build", "run"))
