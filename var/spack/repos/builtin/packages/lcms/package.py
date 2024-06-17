@@ -47,7 +47,7 @@ class Lcms(AutotoolsPackage, MSBuildPackage):
 class MSBuildBuilder(spack.build_systems.msbuild.MSBuildBuilder):
     @property
     def build_directory(self):
-        return pathlib.Path(self.pkg.stage.source_path) / "Projects" / f"VC{self.spec.compiler.visual_studio_version}"
+        return pathlib.Path(self.pkg.stage.source_path) / "Projects" / f"VC{self.pkg.compiler.visual_studio_version}"
 
     def msbuild_args(self):
         return [
