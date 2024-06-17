@@ -215,7 +215,6 @@ spack:
   - cabana +rocm amdgpu_target=gfx908
   - caliper +rocm amdgpu_target=gfx908
   - chai +rocm amdgpu_target=gfx908
-  - ecp-data-vis-sdk +paraview +vtkm +rocm amdgpu_target=gfx908
   - gasnet +rocm amdgpu_target=gfx908
   - ginkgo +rocm amdgpu_target=gfx908
   - heffte +rocm amdgpu_target=gfx908
@@ -240,6 +239,7 @@ spack:
   # - libcatalyst
   - paraview +rocm amdgpu_target=gfx908
   # - vtk-m ~openmp +rocm amdgpu_target=gfx908  # vtk-m: https://github.com/spack/spack/issues/40268
+  # - ecp-data-vis-sdk +paraview +vtkm +rocm amdgpu_target=gfx908 # mesa: https://github.com/spack/spack/issues/44745
   # --
   # - adios2 +kokkos +rocm amdgpu_target=gfx908 # adios2:https://github.com/spack/spack/issues/44594
   # - cp2k +mpi +rocm amdgpu_target=gfx908      # cp2k: Error: KeyError: 'No spec with name rocm in... "-L{}".format(spec["rocm"].libs.directories[0]),
@@ -257,7 +257,6 @@ spack:
   - cabana +rocm amdgpu_target=gfx90a
   - caliper +rocm amdgpu_target=gfx90a
   - chai +rocm amdgpu_target=gfx90a
-  - ecp-data-vis-sdk +paraview +vtkm +rocm amdgpu_target=gfx90a
   - gasnet +rocm amdgpu_target=gfx90a
   - ginkgo +rocm amdgpu_target=gfx90a
   - heffte +rocm amdgpu_target=gfx90a
@@ -282,6 +281,7 @@ spack:
   # - libcatalyst
   - paraview +rocm amdgpu_target=gfx90a
   # - vtk-m ~openmp +rocm amdgpu_target=gfx90a  # vtk-m: https://github.com/spack/spack/issues/40268
+  # - ecp-data-vis-sdk +paraview +vtkm +rocm amdgpu_target=gfx90a  # mesa: https://github.com/spack/spack/issues/44745
   # --
   # - adios2 +kokkos +rocm amdgpu_target=gfx90a # adios2: https://github.com/spack/spack/issues/44594  
   # - cp2k +mpi +rocm amdgpu_target=gfx90a      # cp2k: Error: KeyError: 'No spec with name rocm in... "-L{}".format(spec["rocm"].libs.directories[0]),
