@@ -13,7 +13,7 @@ class PyWxflow(PythonPackage):
     """
 
     homepage = "https://github.com/NOAA-EMC/wxflow"
-    pypi= "wxflow/wxflow-0.1.0.tar.gz"
+    pypi = "wxflow/wxflow-0.1.0.tar.gz"
 
     maintainers("aerorahul", "WalterKolczynski-NOAA", "AlexanderRichert-NOAA")
 
@@ -39,6 +39,8 @@ class PyWxflow(PythonPackage):
     @run_after("install")
     @on_package_attributes(run_tests=True)
     def check(self):
-        env["PYTHONPATH"] = ":".join((join_path(self.build_directory, "build/lib"), env["PYTHONPATH"]))
+        env["PYTHONPATH"] = ":".join(
+            (join_path(self.build_directory, "build/lib"), env["PYTHONPATH"])
+        )
         pytest = which(join_path(self.spec["py-pytest"].prefix.bin, "pytest"))
         pytest("-v", self.build_directory)
