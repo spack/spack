@@ -31,7 +31,7 @@ class Nlcglib(CMakePackage, CudaPackage, ROCmPackage):
         values=("Debug", "Release", "RelWithDebInfo"),
     )
 
-    with when("@1.1:"):
+    with when("@1.1: +cuda"):
         variant(
             "gpu_direct",
             default=False,
