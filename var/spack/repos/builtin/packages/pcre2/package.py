@@ -31,7 +31,7 @@ class Pcre2(AutotoolsPackage, CMakePackage):
 
     variant("multibyte", default=True, description="Enable support for 16 and 32 bit characters.")
     variant("jit", default=False, description="enable Just-In-Time compiling support")
-
+    build_system("autotools", "cmake", default="autotools")
 
     @property
     def libs(self):
