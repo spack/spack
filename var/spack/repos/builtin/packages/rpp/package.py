@@ -64,7 +64,8 @@ class Rpp(CMakePackage):
 
     # adds half.hpp include directory and modifies how the libjpegturbo
     # library is linked for the rpp unit test
-    patch("0003-changes-to-rpp-unit-tests.patch", when="+add_tests")
+    patch("0003-changes-to-rpp-unit-tests.patch", when="@5.7:6.0 +add_tests")
+    patch("0003-changes-to-rpp-unit-tests-6.1.patch", when="@6.1 +add_tests")
 
     def patch(self):
         if self.spec.satisfies("+hip"):
