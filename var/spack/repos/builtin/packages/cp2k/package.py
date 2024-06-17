@@ -169,14 +169,14 @@ class Cp2k(MakefilePackage, CMakePackage, CudaPackage, ROCmPackage):
         depends_on("cray-libsci+openmp", when="^[virtuals=blas] cray-libsci")
 
     with when("smm=libxsmm"):
-        depends_on("libxsmm@1.17:~header-only", when="@9.1:")
+        depends_on("libxsmm~header-only")
         # require libxsmm-1.11+ since 1.10 can leak file descriptors in Fortran
-        depends_on("libxsmm@1.11:~header-only", when="@:8.9")
+        depends_on("libxsmm@1.11:")
+        depends_on("libxsmm@1.17:", when="@9.1:")
+        # build needs to be fixed for libxsmm@2 once it is released
+        depends_on("libxsmm@:1")
         # use pkg-config (support added in libxsmm-1.10) to link to libxsmm
         depends_on("pkgconfig", type="build")
-        # please set variants: smm=blas by configuring packages.yaml or install
-        # cp2k with option smm=blas on aarch64
-        conflicts("target=aarch64:", msg="libxsmm is not available on arm")
 
     with when("+libint"):
         depends_on("pkgconfig", type="build", when="@7.0:")
@@ -288,6 +288,8 @@ class Cp2k(MakefilePackage, CMakePackage, CudaPackage, ROCmPackage):
         depends_on("dbcsr+mpi", when="+mpi")
         depends_on("dbcsr+cuda", when="+cuda")
         depends_on("dbcsr+rocm", when="+rocm")
+        depends_on("dbcsr smm=libxsmm", when="smm=libxsmm")
+        depends_on("dbcsr smm=blas", when="smm=blas")
 
     with when("@2022: +rocm"):
         depends_on("hipblas")
