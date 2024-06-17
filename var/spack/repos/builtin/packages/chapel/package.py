@@ -597,15 +597,21 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
         if self.spec.satisfies("+yaml"):
             env.prepend_path("PKG_CONFIG_PATH", self.spec["libyaml"].prefix.lib.pkgconfig)
             self.prepend_cpath_include(env, self.spec["libyaml"].prefix)
+            # could not compile test/library/packages/Yaml/writeAndParse.chpl without this
+            env.prepend_path("LIBRARY_PATH", self.spec["libyaml"].prefix.lib)
 
         if self.spec.satisfies("+zmq"):
             self.prepend_cpath_include(env, self.spec["libzmq"].prefix)
             env.prepend_path("LD_LIBRARY_PATH", self.spec["libzmq"].prefix.lib)
+            # could not compile test/library/packages/ZMQ/hello.chpl without this
+            env.prepend_path("LIBRARY_PATH", self.spec["libzmq"].prefix.lib)
             env.prepend_path("PKG_CONFIG_PATH", self.spec["libzmq"].prefix.lib.pkgconfig)
             env.prepend_path("PKG_CONFIG_PATH", self.spec["libsodium"].prefix.lib.pkgconfig)
 
         if self.spec.satisfies("+curl"):
             self.prepend_cpath_include(env, self.spec["curl"].prefix)
+            # could not compile test/library/packages/Curl/check-http.chpl without this
+            env.prepend_path("LIBRARY_PATH", self.spec["curl"].prefix.lib)
             env.prepend_path("LD_LIBRARY_PATH", self.spec["curl"].prefix.lib)
             env.prepend_path("PKG_CONFIG_PATH", self.spec["curl"].prefix.lib.pkgconfig)
 
