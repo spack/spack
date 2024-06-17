@@ -222,6 +222,8 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
     depends_on("py-numpy@1.19.2:1.19", type=("build", "run"), when="@2.4:2.6")
     # https://github.com/tensorflow/tensorflow/issues/40688
     depends_on("py-numpy@1.16.0:1.18", type=("build", "run"), when="@:2.3")
+    # https://github.com/tensorflow/tensorflow/issues/67291
+    depends_on("py-numpy@:1", type=("build", "run"))
     depends_on("py-opt-einsum@2.3.2:", type=("build", "run"), when="@:2.3,2.7:")
     depends_on("py-opt-einsum@3.3", type=("build", "run"), when="@2.4:2.6")
     depends_on("py-packaging", type=("build", "run"), when="@2.9:")

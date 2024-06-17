@@ -70,6 +70,8 @@ class Rdkit(CMakePackage):
         depends_on("eigen@3:", when="+descriptors3d")
         depends_on("python@3:", when="+python")
         depends_on("py-numpy", when="+python")
+        # https://github.com/rdkit/rdkit/issues/7477
+        depends_on("py-numpy@:1", when="+python")
 
         extends("python", when="+python")
 
@@ -82,6 +84,8 @@ class Rdkit(CMakePackage):
     with when("@:2021_09_5"):
         depends_on("python@3:")
         depends_on("py-numpy")
+        # https://github.com/rdkit/rdkit/issues/7477
+        depends_on("py-numpy@:1")
         extends("python")
 
     def cmake_args(self):

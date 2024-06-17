@@ -42,6 +42,8 @@ class Gnuradio(CMakePackage):
     # See https://github.com/spack/spack/pull/22303 for reference
     depends_on(Boost.with_default_variants)
     depends_on("py-numpy", type=("build", "run"))
+    # https://github.com/gnuradio/gnuradio/issues/7378
+    depends_on("py-numpy@:1", type=("build", "run"))
     depends_on("py-click", type=("build", "run"))
     depends_on("py-pyyaml", type=("build", "run"))
     depends_on("py-click-plugins", type=("build", "run"))
