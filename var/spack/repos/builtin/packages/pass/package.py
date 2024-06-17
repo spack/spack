@@ -32,7 +32,7 @@ class Pass(MakefilePackage):
 
     def setup_build_environment(self, env):
         env.set("PREFIX", prefix)
-        env.set("WITH_BASHCOMP", "yes")
+        env.set("WITH_ALLCOMP", "yes")
 
     def edit(self, spec, prefix):
         """
