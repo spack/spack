@@ -558,6 +558,8 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
             env.prepend_path("CPATH", prefix.include)
 
     def setup_env_vars(self, env):
+        # variants that appear unused by Spack typically correspond directly to
+        # a CHPL_<variant> variable which will be used by the Chapel build system
         for v in self.spec.variants.keys():
             self.setup_if_not_unset(env, "CHPL_" + v.upper(), self.spec.variants[v].value)
         self.setup_chpl_llvm(env)
