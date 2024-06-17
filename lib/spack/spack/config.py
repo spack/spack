@@ -1539,7 +1539,6 @@ def ensure_latest_format_fn(section: str) -> Callable[[YamlConfigDict], bool]:
     """
     # The line below is based on the fact that every module we need
     # is already imported at the top level
-    # allow for hyphenated section naming
     section_module = getattr(spack.schema, section)
     update_fn = getattr(section_module, "update", lambda x: False)
     return update_fn

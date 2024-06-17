@@ -15,6 +15,8 @@ from llnl.util import tty
 from llnl.util.filesystem import join_path
 from llnl.util.lang import memoized
 
+import spack.bootstrap
+
 from spack.util.executable import Executable, which
 
 
@@ -22,8 +24,6 @@ from spack.util.executable import Executable, which
 def file_command(*args):
     """Creates entry point to `file` system command with provided arguments"""
     if sys.platform == "win32":
-        import spack.bootstrap
-
         with spack.bootstrap.ensure_bootstrap_configuration():
             spack.bootstrap.win_ensure_or_acquire_resource("file")
     file_cmd = which("file", required=True)
