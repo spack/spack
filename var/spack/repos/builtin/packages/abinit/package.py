@@ -325,7 +325,7 @@ class Abinit(AutotoolsPackage):
             "sd_hdf5_libs_extra=%s" % self.spec["hdf5"].libs.ld_flags,
             "configure",
         )
-            
+
     def install(self, spec, prefix):
         make("install")
         if "+install-tests" in spec:
