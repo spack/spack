@@ -18,8 +18,8 @@ class Seacr(Package):
 
     license("GPL-2.0-only", checked_by="A-N-Other")
 
-    version("1.4-b2", tag="v1.4-beta.2")
-    version("1.3", tag="v1.3")
+    version("1.4-b2", tag="v1.4-beta.2", commit="5179a70494eb129fcb1d640177de73f6509654e7")
+    version("1.3", tag="v1.3", commit="5a0efe59f06fb17cf9d34d415bb0c1a1f7a77a3c", preferred=True)
 
     # Dependencies as per the README.md
     depends_on("r", type="run")
