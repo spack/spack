@@ -2,6 +2,7 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import abc
 import collections
 import collections.abc
 import copy
@@ -1017,10 +1018,7 @@ class ConcreteSpecsByHash(collections.abc.Mapping):
         return iter(self.data)
 
 
-import abc
-
-
-class StableFn(abc.ABC):
+class TransformFunction(abc.ABC):
     @property
     def stable_function_id(self):
         components = [self.__class__.__name__]
@@ -1038,20 +1036,18 @@ class StableFn(abc.ABC):
         pass
 
 
-TransformFunction: Callable[["spack.spec.Spec", List[AspFunction]], List[AspFunction]] = StableFn
-
 # types for condition caching in solver setup
 ConditionSpecKey = Tuple[str, Optional[TransformFunction]]
 ConditionIdFunctionPair = Tuple[int, List[AspFunction]]
 ConditionSpecCache = Dict[str, Dict[ConditionSpecKey, ConditionIdFunctionPair]]
 
 
-class track_dependencies(StableFn):
+class track_dependencies(TransformFunction):
     def __call__(self, input_spec: spack.spec.Spec, requirements: List[AspFunction]):
         return requirements + [fn.attr("track_dependencies", input_spec.name)]
 
 
-class dependency_holds(StableFn):
+class dependency_holds(TransformFunction):
     def __init__(self, pkg, depflag):
         self.pkg = pkg
         self.depflag = depflag
@@ -1065,12 +1061,12 @@ class dependency_holds(StableFn):
         ]
 
 
-class rm_node(StableFn):
+class rm_node(TransformFunction):
     def __call__(self, spec: spack.spec.Spec, facts: List[AspFunction]):
         return remove_node(spec, facts)
 
 
-class external_imposition(StableFn):
+class external_imposition(TransformFunction):
     def __init__(self, spec):
         self.spec = spec
         self.elements = (spec,)
@@ -1495,7 +1491,7 @@ class SpackSolverSetup:
         msg: Optional[str] = None,
         transform_required: Optional[TransformFunction] = None,
         transform_imposed: Optional[TransformFunction] = None,
-        id_context: List = None,
+        id_context: Optional[List] = None,
     ):
         """Generate facts for a dependency or virtual provider condition.
 
