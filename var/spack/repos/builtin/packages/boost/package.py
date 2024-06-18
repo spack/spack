@@ -443,7 +443,7 @@ class Boost(Package):
 
     def url_for_version(self, version):
         if version >= Version("1.63.0"):
-            url = "https://boostorg.jfrog.io/artifactory/main/release/{0}/source/boost_{1}.tar.bz2"
+            url = "https://archives.boost.io/release/{0}/source/boost_{1}.tar.bz2"
         else:
             url = "http://downloads.sourceforge.net/project/boost/boost/{0}/boost_{1}.tar.bz2"
 
