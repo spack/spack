@@ -243,7 +243,7 @@ spack:
   # - libcatalyst
   # - paraview +rocm amdgpu_target=gfx908 # mesa: https://github.com/spack/spack/issues/44745
   # - vtk-m ~openmp +rocm amdgpu_target=gfx908  # vtk-m: https://github.com/spack/spack/issues/40268
-  - ecp-data-vis-sdk ~paraview +vtkm +rocm amdgpu_target=gfx908 # +paraview: mesa: https://github.com/spack/spack/issues/44745
+  # - ecp-data-vis-sdk +paraview +vtkm +rocm amdgpu_target=gfx908 # +paraview: mesa: https://github.com/spack/spack/issues/44745; +vtkm has its own issue: https://gitlab.spack.io/spack/spack/-/jobs/11632511
   # --
   # - adios2 +kokkos +rocm amdgpu_target=gfx908 # adios2:https://github.com/spack/spack/issues/44594
   # - cp2k +mpi +rocm amdgpu_target=gfx908      # cp2k: Error: KeyError: 'No spec with name rocm in... "-L{}".format(spec["rocm"].libs.directories[0]),
@@ -285,7 +285,7 @@ spack:
   # - libcatalyst
   # - paraview +rocm amdgpu_target=gfx90a # mesa: https://github.com/spack/spack/issues/44745
   # - vtk-m ~openmp +rocm amdgpu_target=gfx90a  # vtk-m: https://github.com/spack/spack/issues/40268
-  - ecp-data-vis-sdk ~paraview +vtkm +rocm amdgpu_target=gfx90a  # +paraview: mesa: https://github.com/spack/spack/issues/44745
+  # - ecp-data-vis-sdk +paraview +vtkm +rocm amdgpu_target=gfx90a  # +paraview: mesa: https://github.com/spack/spack/issues/44745; +vtkm has its own issue: https://gitlab.spack.io/spack/spack/-/jobs/11632511
   # --
   # - adios2 +kokkos +rocm amdgpu_target=gfx90a # adios2: https://github.com/spack/spack/issues/44594  
   # - cp2k +mpi +rocm amdgpu_target=gfx90a      # cp2k: Error: KeyError: 'No spec with name rocm in... "-L{}".format(spec["rocm"].libs.directories[0]),
