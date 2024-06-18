@@ -44,3 +44,17 @@ class Restic(Package):
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
         install("restic", prefix.bin)
+
+        restic = Executable("./restic")
+
+        mkdirp(self.bash_completion_path)
+        mkdirp(self.fish_completion_path)
+        mkdirp(self.zsh_completion_path)
+
+        restic("generate", "--bash-completion", "restic.bash")
+        restic("generate", "--fish-completion", "restic.fish")
+        restic("generate", "--zsh-completion", "_restic")
+
+        install("restic.bash", self.bash_completion_path)
+        install("restic.fish", self.fish_completion_path)
+        install("_restic", self.zsh_completion_path)
