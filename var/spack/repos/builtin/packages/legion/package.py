@@ -477,7 +477,7 @@ class Legion(CMakePackage, ROCmPackage):
         self.cache_extra_test_sources([join_path("examples", "local_function_tasks")])
 
     def test_run_local_function_tasks(self):
-        """Run local_function_tasks"""
+        """Build and run external application example"""
 
         test_dir = join_path(
             self.test_suite.current_test_cache_dir, "examples", "local_function_tasks"
@@ -493,7 +493,7 @@ class Legion(CMakePackage, ROCmPackage):
         ]
 
         with working_dir(test_dir):
-            cmake = which("cmake")
+            cmake = self.spec["cmake"].command
             cmake(*cmake_args)
 
             make = which("make")
