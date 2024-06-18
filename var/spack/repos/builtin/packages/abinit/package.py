@@ -186,7 +186,7 @@ class Abinit(AutotoolsPackage):
                 oapp(f"F90={spec['mpi'].mpifc}")
 
             # MPI version:
-            # let the confgiure script auto-detect MPI support from mpi_prefix
+            # let the configure script auto-detect MPI support from mpi_prefix
             if "@:8" in spec:
                 oapp("--enable-mpi=yes")
             else:
