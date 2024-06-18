@@ -274,10 +274,10 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
     #
     # export SPACK_USER_CACHE_PATH=/tmp/spack
     # export SPACK_DISABLE_LOCAL_CONFIG=true
+
     def test(self):
         if not self.spec.satisfies("@develop") or not os.path.isdir(self.prefix.bin):
-            tty.info("Skipping: checks not installed in bin for v{0}".format(self.version))
-            return
+            raise SkipTest("Skipping: checks not installed in bin for v{0}".format(self.version))
 
         tests = [
             ["NlpMdsEx1.exe", "400", "100", "0", "-selfcheck"],
@@ -298,13 +298,5 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
             exe = os.path.join(self.prefix.bin, test[0])
             args = test[1:]
             reason = 'test {0}: "{1}"'.format(i, " ".join(test))
-            self.run_test(
-                exe,
-                args,
-                [],
-                0,
-                installed=False,
-                purpose=reason,
-                skip_missing=True,
-                work_dir=self.prefix.bin,
-            )
+            exe = which(exe)
+            exe()
