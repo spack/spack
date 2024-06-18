@@ -1252,7 +1252,7 @@ class SpackSolverSetup:
         """Facts about available compilers."""
 
         self.gen.h2("Available compilers")
-        for compiler_id, compiler in self.possible_compilers:
+        for compiler_weight, (compiler_id, compiler) in enumerate(self.possible_compilers):
             self.gen.fact(fn.compiler_id(compiler_id))
             self.gen.fact(fn.compiler_name(compiler_id, compiler.spec.name))
             self.gen.fact(fn.compiler_version(compiler_id, compiler.spec.version))
@@ -1272,7 +1272,7 @@ class SpackSolverSetup:
             if compiler.available:
                 self.gen.fact(fn.compiler_available(compiler_id))
 
-            self.gen.fact(fn.compiler_weight(compiler_id, compiler_id))
+            self.gen.fact(fn.compiler_weight(compiler_id, compiler_weight))
             self.gen.newline()
 
     def package_requirement_rules(self, pkg):
