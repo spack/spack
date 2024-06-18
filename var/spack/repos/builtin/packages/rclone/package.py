@@ -57,3 +57,17 @@ class Rclone(Package):
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
         install("rclone", prefix.bin)
+
+        rclone = Executable("./rclone")
+
+        mkdirp(self.bash_completion_path)
+        mkdirp(self.fish_completion_path)
+        mkdirp(self.zsh_completion_path)
+
+        rclone("genautocomplete", "bash", "rclone.bash")
+        rclone("genautocomplete", "fish", "rclone.fish")
+        rclone("genautocomplete", "zsh", "_rclone")
+
+        install("rclone.bash", self.bash_completion_path)
+        install("rclone.fish", self.fish_completion_path)
+        install("_rclone", self.zsh_completion_path)
