@@ -33,7 +33,6 @@ import uuid
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
 from llnl.util import tty
-from llnl.util.filesystem import remove_linked_tree
 from llnl.util.lang import GroupedExceptionHandler
 
 import spack.binary_distribution
@@ -494,17 +493,20 @@ class BootstrapResource:
             url=conf["endpoint"], checksum=conf["sha256"]
         )
         stage = spack.stage.Stage(fetcher)
-        resource = spack.resource.Resource(name, fetcher, destination=self.resource_subdir, placement=None)
-        self.stage = spack.stage.ResourceStage(
-            fetcher, stage, resource, keep=False
+        resource = spack.resource.Resource(
+            name, fetcher, destination=self.resource_subdir, placement=None
         )
+        self.stage = spack.stage.ResourceStage(fetcher, stage, resource, keep=False)
 
     def acquire_resource(self):
         "fetches, expands, and 'installs' resource"
         with self.stage as s:
             s.fetch()
             s.expand_archive()
-            shutil.move(os.path.join(s.root_stage.source_path, self.resource_subdir, self._name), windows_resource_root())
+            shutil.move(
+                os.path.join(s.root_stage.source_path, self.resource_subdir, self._name),
+                windows_resource_root(),
+            )
         return True
 
 
@@ -634,7 +636,9 @@ before proceeding with Spack or provide the path to a non standard install with 
 
 
 def ensure_win_resources() -> None:
-    import pdb; pdb.set_trace()
+    import pdb
+
+    pdb.set_trace()
     win_ensure_or_acquire_resource("file")
     win_ensure_or_acquire_resource("gpg")
 
