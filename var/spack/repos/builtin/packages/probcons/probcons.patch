@@ -1,0 +1,72 @@
+diff --git a/CompareToRef.cc b/CompareToRef.cc
+index 142fa4c..a564b5d 100644
+--- a/CompareToRef.cc
++++ b/CompareToRef.cc
+@@ -18,6 +18,7 @@
+ #include <cstdlib>
+ #include <cerrno>
+ #include <iomanip>
++#include <cstring>
+ 
+ const char CORE_BLOCK = 'h';
+ typedef pair<int,int> PII;
+diff --git a/FixRef.cc b/FixRef.cc
+index 7060c79..3544126 100644
+--- a/FixRef.cc
++++ b/FixRef.cc
+@@ -19,6 +19,7 @@
+ #include <cstdlib>
+ #include <cerrno>
+ #include <iomanip>
++#include <cstring>
+ 
+ string matrixFilename = "";
+ string parametersInputFilename = "";
+diff --git a/Main.cc b/Main.cc
+index 399b1a2..de1ad34 100644
+--- a/Main.cc
++++ b/Main.cc
+@@ -23,6 +23,7 @@
+ #include <cstdlib>
+ #include <cerrno>
+ #include <iomanip>
++#include <cstring>
+ 
+ string parametersInputFilename = "";
+ string parametersOutputFilename = "no training";
+diff --git a/ProbabilisticModel.h b/ProbabilisticModel.h
+index 3c72b4f..a1cee7b 100644
+--- a/ProbabilisticModel.h
++++ b/ProbabilisticModel.h
+@@ -16,6 +16,7 @@
+ #include "ScoreType.h"
+ #include "SparseMatrix.h"
+ #include "MultiSequence.h"
++#include <cstring>
+ 
+ using namespace std;
+ 
+diff --git a/ProjectPairwise.cc b/ProjectPairwise.cc
+index 4696ba1..469fbaf 100644
+--- a/ProjectPairwise.cc
++++ b/ProjectPairwise.cc
+@@ -18,6 +18,7 @@
+ #include <cstdlib>
+ #include <cerrno>
+ #include <iomanip>
++#include <cstring>
+ 
+ bool compressGaps = true;
+ 
+diff --git a/SafeVector.h b/SafeVector.h
+index abf4b64..103e894 100644
+--- a/SafeVector.h
++++ b/SafeVector.h
+@@ -10,6 +10,7 @@
+ 
+ #include <cassert>
+ #include <vector>
++#include <cstddef>
+ 
+ /////////////////////////////////////////////////////////////////
+ // SafeVector
