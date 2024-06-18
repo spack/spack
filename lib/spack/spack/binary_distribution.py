@@ -59,7 +59,7 @@ import spack.util.parallel
 import spack.util.path
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
-import spack.util.system as ssys
+import spack.util.spack_filesystem as ssys
 import spack.util.timer as timer
 import spack.util.url as url_util
 import spack.util.web as web_util
