@@ -68,8 +68,6 @@ from .counter import FullDuplicatesCounter, MinimalDuplicatesCounter, NoDuplicat
 
 GitOrStandardVersion = Union[spack.version.GitVersion, spack.version.StandardVersion]
 
-TransformFunction = Callable[["spack.spec.Spec", List[AspFunction]], List[AspFunction]]
-
 #: Enable the addition of a runtime node
 WITH_RUNTIME = sys.platform != "win32"
 
@@ -1019,13 +1017,10 @@ class ConcreteSpecsByHash(collections.abc.Mapping):
         return iter(self.data)
 
 
-# types for condition caching in solver setup
-ConditionSpecKey = Tuple[str, Optional[TransformFunction]]
-ConditionIdFunctionPair = Tuple[int, List[AspFunction]]
-ConditionSpecCache = Dict[str, Dict[ConditionSpecKey, ConditionIdFunctionPair]]
+import abc
 
 
-class StableFn:
+class StableFn(abc.ABC):
     @property
     def stable_function_id(self):
         components = [self.__class__.__name__]
@@ -1038,9 +1033,21 @@ class StableFn:
     def __eq__(self, other):
         return self.stable_function_id == other.stable_function_id
 
+    @abc.abstractmethod
+    def __call__(self, spec: spack.spec.Spec, facts: List[AspFunction]) -> List[AspFunction]:
+        pass
+
+
+TransformFunction: Callable[["spack.spec.Spec", List[AspFunction]], List[AspFunction]] = StableFn
+
+# types for condition caching in solver setup
+ConditionSpecKey = Tuple[str, Optional[TransformFunction]]
+ConditionIdFunctionPair = Tuple[int, List[AspFunction]]
+ConditionSpecCache = Dict[str, Dict[ConditionSpecKey, ConditionIdFunctionPair]]
+
 
 class track_dependencies(StableFn):
-    def __call__(self, input_spec, requirements):
+    def __call__(self, input_spec: spack.spec.Spec, requirements: List[AspFunction]):
         return requirements + [fn.attr("track_dependencies", input_spec.name)]
 
 
@@ -1050,11 +1057,9 @@ class dependency_holds(StableFn):
         self.depflag = depflag
         self.elements = (pkg, depflag)
 
-    def __call__(self, input_spec, requirements):
+    def __call__(self, input_spec: spack.spec.Spec, requirements: List[AspFunction]):
         return remove_node(input_spec, requirements) + [
-            fn.attr(
-                "dependency_holds", self.pkg.name, input_spec.name, dt.flag_to_string(t)
-            )
+            fn.attr("dependency_holds", self.pkg.name, input_spec.name, dt.flag_to_string(t))
             for t in dt.ALL_FLAGS
             if t & self.depflag
         ]
@@ -1070,7 +1075,7 @@ class external_imposition(StableFn):
         self.spec = spec
         self.elements = (spec,)
 
-    def __call__(self, input_spec, requirements):
+    def __call__(self, input_spec: spack.spec.Spec, requirements: List[AspFunction]):
         return requirements + [
             fn.attr("external_conditions_hold", input_spec.name, self.spec.dag_hash()[:8])
         ]
@@ -1121,7 +1126,7 @@ class SpackSolverSetup:
         # list of unique libc specs targeted by compilers (or an educated guess if no compiler)
         self.libcs: List[spack.spec.Spec] = []
 
-        self.generated_ids = set()
+        self.generated_ids: Set[str] = set()
 
     def new_id(self, elements):
         full_str = "-".join(str(x) for x in elements)
@@ -1129,7 +1134,9 @@ class SpackSolverSetup:
         sha.update(full_str.encode())
         uniq_id = sha.hexdigest()[:8]
         if uniq_id in self.generated_ids:
-            import pdb; pdb.set_trace()
+            import pdb
+
+            pdb.set_trace()
             raise ValueError(f"Attempt to generate same ID twice ({uniq_id}): {full_str}")
         self.generated_ids.add(uniq_id)
         return uniq_id
@@ -1217,8 +1224,10 @@ class SpackSolverSetup:
                     spec_for_msg = spack.spec.Spec(pkg.name)
                 conflict_spec_msg = f"conflict is triggered when {str(spec_for_msg)}"
                 conflict_spec_id = self.condition(
-                    conflict_spec, name=conflict_spec.name or pkg.name, msg=conflict_spec_msg,
-                    id_context=[pkg.name, when_spec]
+                    conflict_spec,
+                    name=conflict_spec.name or pkg.name,
+                    msg=conflict_spec_msg,
+                    id_context=[pkg.name, when_spec],
                 )
                 self.gen.fact(
                     fn.pkg_fact(
@@ -1360,7 +1369,9 @@ class SpackSolverSetup:
                     if str(w):
                         msg += " when %s" % w
 
-                    cond_id = self.condition(w, name=pkg.name, msg=msg, id_context=[pkg.name, variant, when])
+                    cond_id = self.condition(
+                        w, name=pkg.name, msg=msg, id_context=[pkg.name, variant, when]
+                    )
                     self.gen.fact(fn.pkg_fact(pkg.name, fn.conditional_variant(cond_id, name)))
 
             single_value = not variant.multi
@@ -1443,7 +1454,7 @@ class SpackSolverSetup:
         cache: ConditionSpecCache,
         body: bool,
         transform: Optional[TransformFunction] = None,
-        id_context: List = None,
+        id_context: Optional[List] = None,
     ) -> int:
         """Get the id for one half of a condition (either a trigger or an imposed constraint).
 
@@ -1512,13 +1523,18 @@ class SpackSolverSetup:
             # In this way, if a condition can't be emitted but the exception is handled in the
             # caller, we won't emit partial facts.
 
-            condition_id = self.new_id(["condition", required_spec, name, imposed_spec] + id_context)
+            condition_id = self.new_id(
+                ["condition", required_spec, name, imposed_spec] + id_context
+            )
             self.gen.fact(fn.pkg_fact(required_spec.name, fn.condition(condition_id)))
             self.gen.fact(fn.condition_reason(condition_id, msg))
 
             trigger_id = self._get_condition_id(
-                required_spec, cache=self._trigger_cache, body=True, transform=transform_required,
-                id_context=id_context
+                required_spec,
+                cache=self._trigger_cache,
+                body=True,
+                transform=transform_required,
+                id_context=id_context,
             )
             self.gen.fact(
                 fn.pkg_fact(required_spec.name, fn.condition_trigger(condition_id, trigger_id))
@@ -1528,8 +1544,11 @@ class SpackSolverSetup:
                 return condition_id
 
             effect_id = self._get_condition_id(
-                imposed_spec, cache=self._effect_cache, body=False, transform=transform_imposed,
-                id_context=id_context
+                imposed_spec,
+                cache=self._effect_cache,
+                body=False,
+                transform=transform_imposed,
+                id_context=id_context,
             )
             self.gen.fact(
                 fn.pkg_fact(required_spec.name, fn.condition_effect(condition_id, effect_id))
@@ -1557,8 +1576,9 @@ class SpackSolverSetup:
                     continue
 
                 msg = f"{pkg.name} provides {vpkg} when {when}"
-                condition_id = self.condition(when, vpkg, pkg.name, msg,
-                    id_context=[pkg.name, when, vpkg])
+                condition_id = self.condition(
+                    when, vpkg, pkg.name, msg, id_context=[pkg.name, when, vpkg]
+                )
                 self.gen.fact(
                     fn.pkg_fact(when.name, fn.provider_condition(condition_id, vpkg.name))
                 )
@@ -1566,11 +1586,15 @@ class SpackSolverSetup:
 
         for when, sets_of_virtuals in pkg.provided_together.items():
             condition_id = self.condition(
-                when, name=pkg.name, msg="Virtuals are provided together",
-                id_context=["provided-together", pkg.name, when]
+                when,
+                name=pkg.name,
+                msg="Virtuals are provided together",
+                id_context=["provided-together", pkg.name, when],
             )
             for virtuals_together in sets_of_virtuals:
-                set_id = self.new_id(["virtuals-together", pkg.name, when, sorted(virtuals_together)])
+                set_id = self.new_id(
+                    ["virtuals-together", pkg.name, when, sorted(virtuals_together)]
+                )
                 for name in virtuals_together:
                     self.gen.fact(
                         fn.pkg_fact(pkg.name, fn.provided_together(condition_id, set_id, name))
