@@ -132,4 +132,4 @@ class Snakemake(PythonPackage):
 
     def test_run(self):
         """Test if snakemake runs correctly"""
-        Executable("snakemake")("--version")
+        Executable(self.prefix.bin.snakemake)("--version")
