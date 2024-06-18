@@ -1130,9 +1130,6 @@ class SpackSolverSetup:
         sha.update(full_str.encode())
         uniq_id = sha.hexdigest()[:8]
         if uniq_id in self.generated_ids:
-            import pdb
-
-            pdb.set_trace()
             raise ValueError(f"Attempt to generate same ID twice ({uniq_id}): {full_str}")
         self.generated_ids.add(uniq_id)
         return uniq_id
@@ -1255,7 +1252,7 @@ class SpackSolverSetup:
         """Facts about available compilers."""
 
         self.gen.h2("Available compilers")
-        for compiler_id, compiler in enumerate(self.possible_compilers):
+        for compiler_id, compiler in self.possible_compilers:
             self.gen.fact(fn.compiler_id(compiler_id))
             self.gen.fact(fn.compiler_name(compiler_id, compiler.spec.name))
             self.gen.fact(fn.compiler_version(compiler_id, compiler.spec.version))
@@ -1392,7 +1389,8 @@ class SpackSolverSetup:
             elif isinstance(values, spack.variant.DisjointSetsOfValues):
                 union = set()
                 # Encode the disjoint sets in the logic program
-                for sid, s in enumerate(values.sets):
+                for s in values.sets:
+                    sid = self.new_id(["disjoint-sets-variant", pkg.name, name] + list(sorted(s)))
                     for value in s:
                         self.gen.fact(
                             fn.pkg_fact(
@@ -1667,7 +1665,10 @@ class SpackSolverSetup:
         Args:
             rules: rules for which we want facts to be emitted
         """
-        for requirement_grp_id, rule in enumerate(rules):
+        for rule in rules:
+            requirement_grp_id = self.new_id(
+                ["requirement-grp-id", rule.pkg_name, rule.policy, rule.kind.name] + list(rule.requirements)
+            )
             virtual = rule.kind == RequirementKind.VIRTUAL
 
             pkg_name, policy, requirement_grp = rule.pkg_name, rule.policy, rule.requirements
@@ -2281,7 +2282,7 @@ class SpackSolverSetup:
                         candidate_targets.append(ancestor)
 
         best_targets = {uarch.family.name}
-        for compiler_id, known_compiler in enumerate(self.possible_compilers):
+        for compiler_id, known_compiler in self.possible_compilers:
             if not known_compiler.available:
                 continue
 
@@ -2389,7 +2390,7 @@ class SpackSolverSetup:
 
     def define_compiler_version_constraints(self):
         for constraint in sorted(self.compiler_version_constraints):
-            for compiler_id, compiler in enumerate(self.possible_compilers):
+            for compiler_id, compiler in self.possible_compilers:
                 if compiler.spec.satisfies(constraint):
                     self.gen.fact(
                         fn.compiler_version_satisfies(
@@ -2562,7 +2563,10 @@ class SpackSolverSetup:
                 self.register_concrete_spec(reusable_spec, self.pkgs)
         self.concrete_specs()
 
-        self.possible_compilers = compiler_parser.possible_compilers()
+        self.possible_compilers = list()
+        for compiler in compiler_parser.possible_compilers():
+            compiler_id = self.new_id(["compiler-id", compiler.spec, compiler.os, compiler.target])
+            self.possible_compilers.append((compiler_id, compiler))
 
         self.gen.h1("Generic statements on possible packages")
         node_counter.possible_packages_facts(self.gen, fn)
@@ -2665,7 +2669,7 @@ class SpackSolverSetup:
         """Define the constraints to be imposed on the runtimes"""
         recorder = RuntimePropertyRecorder(self)
 
-        for compiler in self.possible_compilers:
+        for _, compiler in self.possible_compilers:
             compiler_with_different_cls_names = {
                 "oneapi": "intel-oneapi-compilers",
                 "clang": "llvm",
