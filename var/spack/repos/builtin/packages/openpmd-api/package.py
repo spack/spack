@@ -172,7 +172,7 @@ class OpenpmdApi(CMakePackage):
             # later tests
             ctest("--output-on-failure", "-j1")
 
-    def test_run_openpmd-ls(self):
+    def test_run_openpmd_ls(self):
         """Test if openpmd-ls runs"""
         if self.spec.satisfies("0.11.0"):
             raise SkipTest("Package must be installed as version 0.11.1 or later")
