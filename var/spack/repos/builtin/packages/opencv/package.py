@@ -252,7 +252,7 @@ class Opencv(CMakePackage, CudaPackage):
         depends_on("py-setuptools", type="build")
         depends_on("py-numpy", type=("build", "run"))
         # https://github.com/opencv/opencv-python/issues/943
-        depends_on("py-numpy@:1", type=("build", "run"))
+        depends_on("py-numpy@:1", when="@:4.10.0.83", type=("build", "run"))
         extends("python", when="+python3")
 
     with when("+stitching"):
