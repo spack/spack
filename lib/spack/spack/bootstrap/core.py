@@ -27,6 +27,7 @@ import functools
 import json
 import os
 import os.path
+import shutil
 import sys
 import uuid
 from typing import Any, Callable, Dict, List, Optional, Tuple
@@ -488,13 +489,14 @@ class BootstrapResource:
             conf (dict): Dictionary representing resource endpoint layout
         """
         self._name = name
+        self.resource_subdir = "win-bootstrap-resource"
         fetcher = spack.fetch_strategy.URLFetchStrategy(
             url=conf["endpoint"], checksum=conf["sha256"]
         )
-        stage = spack.stage.Stage(fetcher, path=str(windows_resource_root()))
-        resource = spack.resource.Resource(name, fetcher, destination=stage.path, placement=None)
+        stage = spack.stage.Stage(fetcher)
+        resource = spack.resource.Resource(name, fetcher, destination=self.resource_subdir, placement=None)
         self.stage = spack.stage.ResourceStage(
-            fetcher, stage, resource, path=str(windows_resource_root()), keep=True
+            fetcher, stage, resource, keep=False
         )
 
     def acquire_resource(self):
@@ -502,8 +504,7 @@ class BootstrapResource:
         with self.stage as s:
             s.fetch()
             s.expand_archive()
-            remove_linked_tree(windows_resource_root() / spack.stage._source_path_subdir)
-            os.remove(s.fetcher.archive_file)
+            shutil.move(os.path.join(s.root_stage.source_path, self.resource_subdir, self._name), windows_resource_root())
         return True
 
 
@@ -633,6 +634,7 @@ before proceeding with Spack or provide the path to a non standard install with 
 
 
 def ensure_win_resources() -> None:
+    import pdb; pdb.set_trace()
     win_ensure_or_acquire_resource("file")
     win_ensure_or_acquire_resource("gpg")
 
