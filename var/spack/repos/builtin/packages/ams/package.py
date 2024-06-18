@@ -10,7 +10,7 @@ class Ams(CMakePackage, CudaPackage):
     """AMS Autonomous Multiscale Framework."""
 
     homepage = "https://github.com/LLNL/AMS"
-    git = "git@github.com:LLNL/AMS.git"
+    git = "https://github.com/LLNL/AMS.git"
 
     maintainers("koparasy", "lpottier")
 

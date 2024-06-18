@@ -76,11 +76,12 @@ class ZlibNg(AutotoolsPackage, CMakePackage):
     def flag_handler(self, name, flags):
         if name == "cflags" and self.spec.satisfies("+pic build_system=autotools"):
             flags.append(self.compiler.cc_pic_flag)
+        if name == "ldflags" and self.spec.satisfies("%cce@17"):
+            flags.append("-Wl,--undefined-version")
         return (flags, None, None)
 
 
 class AutotoolsBuilder(autotools.AutotoolsBuilder):
-
     @run_before("configure")
     def pretend_gcc(self):
         # All nice things (PIC flags, symbol versioning) that happen to the compilers that are
