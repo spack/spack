@@ -175,6 +175,8 @@ class PyNumpy(PythonPackage):
     # See https://github.com/numpy/numpy/issues/22011
     conflicts("%intel", when="@1.23.0:1.23.3")
     conflicts("%oneapi", when="@1.23.0:1.23.3")
+    # https://github.com/spack/spack/pull/44735
+    conflicts("%oneapi", when="@2:")
 
     @property
     def archive_files(self):
