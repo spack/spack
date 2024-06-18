@@ -275,7 +275,8 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
     # export SPACK_USER_CACHE_PATH=/tmp/spack
     # export SPACK_DISABLE_LOCAL_CONFIG=true
 
-    def test(self):
+    def test_develop(self):
+    """Various tests for @develop"""
         if not self.spec.satisfies("@develop") or not os.path.isdir(self.prefix.bin):
             raise SkipTest("Skipping: checks not installed in bin for v{0}".format(self.version))
 
