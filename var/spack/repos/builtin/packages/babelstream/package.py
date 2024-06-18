@@ -163,6 +163,20 @@ class Babelstream(CMakePackage, CudaPackage, ROCmPackage):
     # This applies to all
     depends_on("cmake@3.14.0:", type="build")
     depends_on("opencl-c-headers", when="+ocl")
+    def patch(self):
+        if self.spec.satisfies("+rocm+thrust"):
+            filter_file(
+                r"SDK_DIR=$ROCM_PATH",
+                "SDK_DIR={0}".format(self.spec["rocthrust"].prefix),
+                "src/ci-test-compile.sh",
+                string=True,
+            )
+            filter_file(
+                "HIP_PLATFORM_HCC",
+                "HIP_PLATFORM_AMD",
+                "src/thrust/ThrustStream.cu",
+                string=True,
+            )
 
     def cmake_args(self):
         # convert spec to string to work on it
@@ -171,9 +185,8 @@ class Babelstream(CMakePackage, CudaPackage, ROCmPackage):
         # take only the first portion of the spec until space
         spec_string_truncate = spec_string.split(" ", 1)[0]
         model_list = find_model_flag(spec_string_truncate)  # Prints out ['cuda', 'thrust']
-
         if len(model_list) > 1:
-            ignore_list = ["cuda"]  # if +acc is provided ignore the cuda model
+            ignore_list = ["cuda", "rocm"]  # if +acc is provided ignore the cuda model
             model = list(set(model_list) - set(ignore_list))
             # We choose 'thrust' from the list of ['cuda', 'thrust']
             args = ["-DMODEL=" + model[0]]
@@ -181,6 +194,8 @@ class Babelstream(CMakePackage, CudaPackage, ROCmPackage):
             # if it is +stddata,indices etc. we need to pass it
             # as std-data to the CMake compiler
             # do some alterations here
+            if "rocm" in model_list[0]:
+                model_list[0] = "hip"
             if "std" in model_list[0]:
                 args = ["-DMODEL=" + "std-" + model_list[0].split("d", 1)[1]]
             else:
@@ -287,16 +302,22 @@ class Babelstream(CMakePackage, CudaPackage, ROCmPackage):
         # ===================================
 
         if "+rocm" in self.spec:
-            hip_comp = self.spec["rocm"].prefix + "/bin/hipcc"
+            hip_comp = self.spec["hip"].prefix + "/bin/hipcc"
             args.append("-DCMAKE_CXX_COMPILER=" + hip_comp)
-            args.append(
-                "-DCXX_EXTRA_FLAGS= --offload-arch="
-                + self.spec.variants["amdgpu_target"].value
-                + " "
-                + self.spec.variants["flags"].value
-                + " -O3"
-            )
-
+            archs = ",".join(self.spec.variants["amdgpu_target"].value)
+            if self.spec.variants["flags"].value != "none":
+                args.append(
+                    "-DCMAKE_CXX_FLAGS= --offload-arch={0}".format(archs)
+                    + " "
+                    + self.spec.variants["flags"].value
+                    + " -O3"
+                )
+            else:
+                args.append(
+                    "-DCMAKE_CXX_FLAGS= --offload-arch={0}".format(archs)
+                    + " "
+                    + " -O3"
+                )
         # ===================================
         #             TBB
         # ===================================
