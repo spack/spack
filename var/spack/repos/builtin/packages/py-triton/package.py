@@ -20,5 +20,11 @@ class PyTriton(PythonPackage):
     depends_on("cmake@3.18:", type="build")
     depends_on("py-filelock", type=("build", "run"))
     depends_on("zlib-api", type="link")
+    conflicts("^openssl@3.3.0")
+
+    def setup_build_environment(self, env):
+        """Set environment variables used to control the build"""
+        if self.spec.satisfies("%clang"):
+            env.set("TRITON_BUILD_WITH_CLANG_LLD", "True")
 
     build_directory = "python"
