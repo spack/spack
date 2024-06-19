@@ -1304,12 +1304,6 @@ class SpackSolverSetup:
         # dependencies
         self.package_dependencies_rules(pkg)
 
-        # virtual preferences
-        self.virtual_preferences(
-            pkg.name,
-            lambda v, p, i: self.gen.fact(fn.pkg_fact(pkg.name, fn.provider_preference(v, p, i))),
-        )
-
         self.package_requirement_rules(pkg)
 
         # trigger and effect tables
@@ -1638,15 +1632,15 @@ class SpackSolverSetup:
             if vspec not in self.possible_virtuals:
                 continue
 
-            for i, provider in enumerate(providers):
+            for provider_weight, provider in enumerate(providers):
                 provider_name = spack.spec.Spec(provider).name
-                func(vspec, provider_name, i)
+                func(vspec, provider_name, provider_weight)
             self.gen.newline()
 
     def provider_defaults(self):
         self.gen.h2("Default virtual providers")
         self.virtual_preferences(
-            "all", lambda v, p, i: self.gen.fact(fn.default_provider_preference(v, p, i))
+            "all", lambda v, p, w: self.gen.fact(fn.default_provider_preference(v, p, w))
         )
 
     def provider_requirements(self):
