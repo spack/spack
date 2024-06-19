@@ -162,7 +162,7 @@ class Ucx(AutotoolsPackage, CudaPackage):
                 "-L$with_rocm/hip/lib -L$with_rocm/lib", "$ROCM_LDFLAGS", "configure", string=True
             )
 
-            if self.spec.satisfies("^hip@6:"):
+            if self.spec.satisfies("@:1.15 ^hip@6:"):
                 filter_file("HIP_PLATFORM_HCC", "HIP_PLATFORM_AMD", "configure", string=True)
 
     @when("@1.9-dev")
