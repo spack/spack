@@ -25,6 +25,7 @@ class NaluWind(CMakePackage, CudaPackage, ROCmPackage):
 
     homepage = "https://nalu-wind.readthedocs.io"
     git = "https://github.com/exawind/nalu-wind.git"
+    url = "https://github.com/Exawind/nalu-wind/archive/refs/tags/v2.0.0.tar.gz"
 
     maintainers("jrood-nrel", "psakievich")
 
