@@ -1060,7 +1060,7 @@ class SetupContext:
 
     def set_all_package_py_globals(self):
         """Set the globals in modules of package.py files."""
-        for dspec, flag in chain(self.external, self.nonexternal):
+        for dspec, flag in chain(self.nonexternal, self.external):
             pkg = dspec.package
 
             if self.should_set_package_py_globals & flag:
