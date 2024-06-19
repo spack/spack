@@ -139,6 +139,10 @@ class VtkM(CMakePackage, CudaPackage, ROCmPackage):
     # Patch
     patch("diy-include-cstddef.patch", when="@1.5.3:1.8.0")
 
+    # VTK-M PR#3215
+    # https://gitlab.kitware.com/vtk/vtk-m/-/merge_requests/3215
+    patch("vtkm-mr3215-ext-geom-fix.patch", when="@2.1")
+
     # VTK-M PR#2972
     # https://gitlab.kitware.com/vtk/vtk-m/-/merge_requests/2972
     patch("vtkm-cuda-swap-conflict-pr2972.patch", when="@1.9 +cuda ^cuda@12:")
@@ -226,14 +230,12 @@ class VtkM(CMakePackage, CudaPackage, ROCmPackage):
 
         return options
 
-    # Delegate in the vtk-m built smoke test
-    def smoke_test(self):
+    def test_smoke_test(self):
+        """Build and run ctests"""
         spec = self.spec
 
         if "+examples" not in spec:
-            raise RuntimeError(
-                "Examples needed for smoke test missing", "reinstall with `+examples` variant"
-            )
+            raise SkipTest("Package must be installed with +examples")
 
         testdir = "smoke_test_build"
         with working_dir(testdir, create=True):
@@ -248,7 +250,4 @@ class VtkM(CMakePackage, CudaPackage, ROCmPackage):
     @run_after("install")
     @on_package_attributes(run_tests=True)
     def build_test(self):
-        self.smoke_test()
-
-    def test(self):
-        self.smoke_test()
+        self.test_smoke_test()
