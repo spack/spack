@@ -2219,8 +2219,8 @@ class SpackSolverSetup:
         ordered_oses = sorted(all_oses, key=keyfun, reverse=True)
 
         # output the preference order of OS's for the concretizer to choose
-        for i, os_name in enumerate(ordered_oses):
-            self.gen.fact(fn.os(os_name, i))
+        for weight, os_name in enumerate(ordered_oses):
+            self.gen.fact(fn.os(os_name, weight))
 
     def target_defaults(self, specs):
         """Add facts about targets and target compatibility."""
