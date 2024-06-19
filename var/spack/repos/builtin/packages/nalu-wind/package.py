@@ -11,7 +11,8 @@ def _parse_float(val):
         return float(val) > 0.0
     except ValueError:
         return False
-        
+
+
 def submodules(package):
     submodules = []
     if package.spec.satisfies("+wind-utils"):
@@ -19,6 +20,7 @@ def submodules(package):
     if package.spec.satisfies("+tests"):
         submodules.append("reg_tests/mesh")
     return submodules
+
 
 class NaluWind(CMakePackage, CudaPackage, ROCmPackage):
     """Nalu-Wind: Wind energy focused variant of Nalu."""
