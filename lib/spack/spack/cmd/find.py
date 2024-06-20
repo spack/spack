@@ -355,14 +355,18 @@ def find(parser, args):
 
         # print number of installed packages last (as the list may be long)
         if sys.stdout.isatty() and args.groups:
-            installed_suffix = ""
-            concretized_suffix = ""
+            base = ""
+            if env:
+                base = " in the environment"
+            installed_suffix = base
+            concretized_suffix = base
+
             if args.only_roots:
-                installed_suffix = " (not shown)"
-                concretized_suffix = " (not shown)"
+                installed_suffix = base + " (not shown)"
+                concretized_suffix = base + " (not shown)"
             else:
                 if env and not args.show_concretized:
-                    concretized_suffix = " (not shown, display with -c)"
+                    concretized_suffix = base + " (not shown, display with -c)"
 
             pkg_type = "loaded" if args.loaded else "installed"
             spack.cmd.print_how_many_pkgs(
