@@ -7,7 +7,12 @@ from spack.package import *
 
 
 class Kentutils(MakefilePackage):
-    """Jim Kent command line bioinformatic utilities and libraries"""
+    """
+    Jim Kent command line bioinformatic utilities and libraries
+
+    This bundles a custom version of htslib, but can be overridden with ~htslib.
+    Consider adding the ^mysql+client_only dependency to avoid building all mysql/mariadb.
+    """
 
     homepage = "https://genome.cse.ucsc.edu/"
     url = "https://hgdownload.cse.ucsc.edu/admin/exe/userApps.archive/userApps.v453.src.tgz"
@@ -27,11 +32,10 @@ class Kentutils(MakefilePackage):
     )
 
     variant("libs", default=True, description="Install jk*.a libraries")
-    variant("force_mysql", default=False, description="Force MySQL over MariaDB")
     variant(
         "htslib",
-        default=False,
-        description="Build and use bundled htslib (Careful: may lead to unexpected failures)",
+        default=True,
+        description="Build with bundled htslib (using an external htslib may lead to errors)",
         sticky=True,
     )
 
@@ -53,9 +57,6 @@ class Kentutils(MakefilePackage):
 
     # Does not add a link to mysql_config, which is required for compilation
     conflicts("mariadb-c-client")
-
-    # MariaDB can take a very long time to compile if you just need the c client
-    conflicts("mariadb", when="+force_mysql")
 
     # MySQL pointer/integer conversion issue
     patch("fix-mysql-options-gcc13.patch", when="%gcc@13: ^mysql")
