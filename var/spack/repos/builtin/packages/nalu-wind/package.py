@@ -13,18 +13,28 @@ def _parse_float(val):
         return False
 
 
+def submodules(package):
+    submodules = []
+    if package.spec.satisfies("+wind-utils"):
+        submodules.append("wind-utils")
+    if package.spec.satisfies("+tests"):
+        submodules.append("reg_tests/mesh")
+    return submodules
+
+
 class NaluWind(CMakePackage, CudaPackage, ROCmPackage):
     """Nalu-Wind: Wind energy focused variant of Nalu."""
 
     homepage = "https://nalu-wind.readthedocs.io"
     git = "https://github.com/exawind/nalu-wind.git"
+    url = "https://github.com/Exawind/nalu-wind/archive/refs/tags/v2.0.0.tar.gz"
 
     maintainers("jrood-nrel", "psakievich")
 
     tags = ["ecp", "ecp-apps"]
 
-    version("master", branch="master")
-    version("2.0.0", tag="v2.0.0")
+    version("master", branch="master", submodules=submodules)
+    version("2.0.0", tag="v2.0.0", submodules=submodules)
 
     variant("pic", default=True, description="Position independent code")
     variant(
@@ -51,6 +61,9 @@ class NaluWind(CMakePackage, CudaPackage, ROCmPackage):
     variant("gpu-aware-mpi", default=False, description="gpu-aware-mpi")
     variant("wind-utils", default=False, description="Build wind-utils")
     variant("umpire", default=False, description="Enable Umpire")
+    variant(
+        "tests", default=False, description="Enable regression tests and clone the mesh submodule"
+    )
 
     depends_on("mpi")
     depends_on("yaml-cpp@0.5.3:")
@@ -157,6 +170,7 @@ class NaluWind(CMakePackage, CudaPackage, ROCmPackage):
             self.define_from_variant("ENABLE_PARAVIEW_CATALYST", "catalyst"),
             self.define_from_variant("ENABLE_FFTW", "fftw"),
             self.define_from_variant("ENABLE_UMPIRE", "umpire"),
+            self.define_from_variant("ENABLE_TESTS", "tests"),
         ]
 
         if spec.satisfies("+openfast"):
