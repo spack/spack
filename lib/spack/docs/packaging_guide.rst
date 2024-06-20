@@ -5701,7 +5701,7 @@ running ``foo`` and ``bar`` as independent test parts.
 
    The key to copying files for stand-alone testing at build time is use
    of the ``run_after`` directive, which ensures the associated files are
-   copied **after** the provided ``install` build stage when the installation
+   copied **after** the provided ``install`` build stage when the installation
    prefix **and** files are available.
 
    The test method can use the path contained in the package's
