@@ -5,6 +5,7 @@
 
 import sys
 import tempfile
+import os.path
 
 from spack.package import *
 
@@ -727,9 +728,16 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
                 f.write('build --action_env LD_LIBRARY_PATH="' + slibs + '"')
 
         if spec.satisfies("@2.16-rocm-enhanced +rocm"):
-            filter_file(
-                "/usr/lib/llvm-17/bin/clang", spec["llvm-amdgpu"].prefix.bin.clang, ".bazelrc"
-            )
+            if os.path.exists(spec["llvm-amdgpu"].prefix.bin.clang):
+                filter_file(
+                    "/usr/lib/llvm-17/bin/clang", spec["llvm-amdgpu"].prefix.bin.clang, ".bazelrc"
+                )
+            else:
+                filter_file(
+                    "/usr/lib/llvm-17/bin/clang",
+                    spec["llvm-amdgpu"].prefix.llvm.bin.clang,
+                    ".bazelrc",
+                )
 
         filter_file("build:opt --copt=-march=native", "", ".tf_configure.bazelrc")
         filter_file("build:opt --host_copt=-march=native", "", ".tf_configure.bazelrc")
