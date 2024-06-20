@@ -21,6 +21,7 @@ class GccRuntime(Package):
     has_code = False
 
     tags = ["runtime"]
+    libraries = ["libgcc_s"]
 
     # gcc-runtime versions are declared dynamically
     skip_version_audit = ["platform=linux", "platform=darwin", "platform=windows"]
@@ -55,6 +56,17 @@ class GccRuntime(Package):
 
     depends_on("libc", type="link", when="platform=linux")
 
+    @classmethod
+    def determine_version(cls, lib):
+        match = re.search(r"libgcc_s\.so\.(\d+)\.(\d+)\.(\d+)", lib)
+        if match:
+            ver = "{0}.{1}.{2}".format(
+                int(match.group(1)), int(match.group(2)), int(match.group(3))
+            )
+        else:
+            ver = None
+        return ver
+    
     def install(self, spec, prefix):
         if spec.platform in ["linux", "freebsd"]:
             libraries = get_elf_libraries(compiler=self.compiler, libraries=self.LIBRARIES)

@@ -72,9 +72,9 @@ class Zlib(MakefilePackage, Package):
         for library in cls.libraries:
             for ext in library_extensions:
                 if ext == "dylib":
-                    pattern = re.compile(fr"{library}\.(\d+\.\d+\.\d+)\.{ext}")
+                    pattern = re.compile(rf"{library}\.(\d+\.\d+\.\d+)\.{ext}")
                 else:
-                    pattern = re.compile(fr"{library}\.{ext}\.(\d+\.\d+\.\d+)")
+                    pattern = re.compile(rf"{library}\.{ext}\.(\d+\.\d+\.\d+)")
                     match = re.search(pattern, lib)
                     if match:
                         return match.group(1)
