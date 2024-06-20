@@ -69,21 +69,15 @@ class Zlib(MakefilePackage, Package):
 
     @classmethod
     def determine_version(cls, lib):
-for ext in library_extensions:
-    if ext == "dylib":
-        pattern = re.compile(fr"lib\S\.(\d+\.\d+\.\d+)\.{ext}")
-    else:
-        pattern = re.compile(fr"lib\S\.{ext}\.(\d+\.\d+\.\d+)")
-    match = re.search(pattern, lib)
-    if match:
-        return match.group(1)
-        if match:
-            ver = "{0}.{1}.{2}".format(
-                int(match.group(1)), int(match.group(2)), int(match.group(3))
-            )
-        else:
-            ver = None
-        return ver
+        for library in cls.libraries:
+            for ext in library_extensions:
+                if ext == "dylib":
+                    pattern = re.compile(fr"{library}\.(\d+\.\d+\.\d+)\.{ext}")
+                else:
+                    pattern = re.compile(fr"{library}\.{ext}\.(\d+\.\d+\.\d+)")
+                    match = re.search(pattern, lib)
+                    if match:
+                        return match.group(1)
 
     @property
     def libs(self):
