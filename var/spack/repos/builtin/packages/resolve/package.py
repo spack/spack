@@ -25,7 +25,7 @@ class Resolve(CMakePackage, CudaPackage, ROCmPackage):
 
     variant("klu", default=True,
             description="Use KLU, AMD and COLAMD Libraries from SuiteSparse")
-    variant("lusol", default=True,
+    variant("lusol", default=True, when="@develop:",
             description="Build the LUSOL Library. Requires fortran")
 
     depends_on("suite-sparse", when="+klu")
