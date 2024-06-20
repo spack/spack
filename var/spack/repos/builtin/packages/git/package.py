@@ -263,10 +263,10 @@ class Git(AutotoolsPackage):
 
     @run_after("install")
     def install_completions(self):
-        install_tree(
+        install(
             "contrib/completion/git-completion.bash", join_path(self.bash_completion_path, "git")
         )
-        install_tree(
+        install(
             "contrib/completion/git-completion.zsh", join_path(self.zsh_completion_path, "_git")
         )
 
