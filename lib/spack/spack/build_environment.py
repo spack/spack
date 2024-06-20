@@ -72,6 +72,7 @@ import spack.stage
 import spack.store
 import spack.subprocess_context
 import spack.user_environment
+import spack.util.executable
 import spack.util.path
 import spack.util.pattern
 from spack import traverse
@@ -481,10 +482,7 @@ def set_wrapper_variables(pkg, env):
 
     # Find ccache binary and hand it to build environment
     if spack.config.get("config:ccache"):
-        ccache = Executable("ccache")
-        if not ccache:
-            raise RuntimeError("No ccache binary found in PATH")
-        env.set(SPACK_CCACHE_BINARY, ccache)
+        env.set(SPACK_CCACHE_BINARY, spack.util.executable.which_string("ccache", required=True))
 
     # Gather information about various types of dependencies
     link_deps = set(pkg.spec.traverse(root=False, deptype=("link")))
