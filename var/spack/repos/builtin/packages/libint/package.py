@@ -72,6 +72,9 @@ class Libint(AutotoolsPackage):
     depends_on(Boost.with_default_variants, when="@2:")
     depends_on("gmp+cxx", when="@2:")
     depends_on("eigen", when="@2.7.0:")
+    # unicode variable names in @2.9.0:
+    # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=67224
+    conflicts("%gcc@:9", when="@2.9.0:", msg="libint@2.9.0: requires at least gcc 10")
 
     for tvariant in TUNE_VARIANTS[1:]:
         conflicts(
