@@ -130,5 +130,6 @@ class Snakemake(PythonPackage):
     )
     depends_on("py-requests", when="+http", type=("build", "run"))
 
-    def test(self):
-        Executable("snakemake")("--version")
+    def test_run(self):
+        """Test if snakemake runs with the version option"""
+        Executable(self.prefix.bin.snakemake)("--version")
