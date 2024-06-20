@@ -50,10 +50,8 @@ class PyMultiqc(PythonPackage):
     depends_on("py-rich@10:", type=("build", "run"), when="@1.13:")
     depends_on("py-rich-click", type=("build", "run"), when="@1.13:")
     depends_on("py-coloredlogs", type=("build", "run"), when="@1.13:")
-    depends_on("py-tqdm", type=("build", "run"))
     depends_on("py-spectra@0.0.10:", type=("build", "run"), when="@1.4:")
     depends_on("py-spectra", type=("build", "run"), when="@1.18:")
-    depends_on("py-typeguard", type=("build", "run"))
 
     # retired run deps
     depends_on("py-future@0.14.1:", type=("build", "run"), when="@1.13:1.19")
