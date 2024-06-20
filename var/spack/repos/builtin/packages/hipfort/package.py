@@ -73,5 +73,8 @@ class Hipfort(CMakePackage):
                 "-DHIPFORT_RANLIB=" + join_path(self.spec["binutils"].prefix.bin, "ranlib")
             )
             args.append("-DHIPFORT_COMPILER_FLAGS='-ffree -eT'")
+        elif self.spec.satisfies("%gcc"):
+            args.append("-DHIPFORT_COMPILER={}".format(spack_fc))
+            args.append("-DHIPFORT_COMPILER_FLAGS='-ffree-form -cpp -ffree-line-length-none'")
 
         return args
