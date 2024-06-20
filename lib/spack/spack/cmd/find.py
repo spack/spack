@@ -301,9 +301,12 @@ def display_env(env, args, decorator, results):
 def find(parser, args):
     env = ev.active_environment()
 
-    if args.show_concretized:
-        if not env:
-            tty.die("-c / --show-concretized requires an active environment")
+    if not env and args.only_roots:
+        tty.die("-r / --only-roots requires an active environment")
+    if not env and args.show_concretized:
+        tty.die("-c / --show-concretized requires an active environment")
+
+    if env:
         if args.constraint:
             init_specs = spack.cmd.parse_specs(args.constraint)
             results = env.all_matching_specs(*init_specs)
@@ -312,9 +315,6 @@ def find(parser, args):
     else:
         q_args = query_arguments(args)
         results = args.specs(**q_args)
-
-    if not env and args.only_roots:
-        tty.die("-r / --only-roots requires an active environment")
 
     decorator = make_env_decorator(env) if env else lambda s, f: f
 
@@ -357,14 +357,18 @@ def find(parser, args):
 
         # print number of installed packages last (as the list may be long)
         if sys.stdout.isatty() and args.groups:
-            if args.show_concretized:
-                spack.cmd.print_how_many_pkgs(
-                    list(x for x in results if not x.installed),
-                    "concretized-but-not-installed",
-                    suffix=count_suffix,
-                )
-
             pkg_type = "loaded" if args.loaded else "installed"
             spack.cmd.print_how_many_pkgs(
                 list(x for x in results if x.installed), pkg_type, suffix=count_suffix
             )
+
+            if env:
+                not_installed = list(x for x in results if not x.installed)
+                spack.cmd.print_how_many_pkgs(
+                    not_installed,
+                    "concretized (not installed)",
+                    suffix=count_suffix,
+                )
+                if not args.show_concretized:
+                    tty.msg("You can display packages that are not yet "
+                            "installed in the environment with -c")
