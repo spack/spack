@@ -297,18 +297,13 @@ def display_env(env, args, decorator, results):
         )
         print()
 
-    if args.show_concretized and not args.constraint:
-        tty.msg("Concretized roots")
-        cmd.display_specs(env.specs_by_hash.values(), args, decorator=decorator)
-        print()
-
 
 def find(parser, args):
     env = ev.active_environment()
 
     if args.show_concretized:
         if not env:
-            tty.die("-c/specs given but no active environment to search")
+            tty.die("-c / --show-concretized requires an active environment")
         if args.constraint:
             init_specs = spack.cmd.parse_specs(args.constraint)
             results = env.all_matching_specs(*init_specs)
@@ -356,8 +351,13 @@ def find(parser, args):
         count_suffix = " (not shown)"
         if not args.only_roots:
             count_suffix = ""
-            kwargs = {"decorator": decorator, "all_headers": True, "status_fn": status_fn}
-            cmd.display_specs(results, args, **kwargs)
+            cmd.display_specs(
+                results,
+                args,
+                decorator=decorator,
+                all_headers=True,
+                status_fn=status_fn,
+            )
 
         # print number of installed packages last (as the list may be long)
         if sys.stdout.isatty() and args.groups:
