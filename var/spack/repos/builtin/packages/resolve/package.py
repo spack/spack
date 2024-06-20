@@ -23,7 +23,10 @@ class Resolve(CMakePackage, CudaPackage, ROCmPackage):
     )
     version("develop", submodules=False, branch="develop")
 
-    variant("klu", default=True, description="Use KLU, AMD and COLAMD Libraries from SuiteSparse")
+    variant("klu", default=True,
+            description="Use KLU, AMD and COLAMD Libraries from SuiteSparse")
+    variant("lusol", default=True,
+            description="Build the LUSOL Library. Requires fortran")
 
     depends_on("suite-sparse", when="+klu")
 
@@ -44,15 +47,21 @@ class Resolve(CMakePackage, CudaPackage, ROCmPackage):
         spec = self.spec
 
         args.extend(
-            [self.define("RESOLVE_USE_KLU", "klu"), self.define("RESOLVE_TEST_WITH_BSUB", False)]
+            [
+                self.define_from_variant("RESOLVE_USE_KLU", "klu"),
+                self.define_from_variant("RESOLVE_USE_LUSOL", "lusol"),
+                self.define("RESOLVE_TEST_WITH_BSUB", False)
+            ]
         )
 
         if "+cuda" in spec:
             cuda_arch_list = spec.variants["cuda_arch"].value
             if cuda_arch_list[0] != "none":
-                args.append(self.define("CMAKE_CUDA_ARCHITECTURES", cuda_arch_list))
+                args.append(self.define(
+                    "CMAKE_CUDA_ARCHITECTURES", cuda_arch_list))
             else:
-                args.append(self.define("CMAKE_CUDA_ARCHITECTURES", "70;75;80"))
+                args.append(self.define(
+                    "CMAKE_CUDA_ARCHITECTURES", "70;75;80"))
             args.append(self.define("RESOLVE_USE_CUDA", True))
 
         elif "+rocm" in spec:
