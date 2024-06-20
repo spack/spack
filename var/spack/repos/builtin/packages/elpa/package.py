@@ -52,7 +52,7 @@ class Elpa(AutotoolsPackage, CudaPackage, ROCmPackage):
     variant("openmp", default=True, description="Activates OpenMP support")
     variant("mpi", default=True, description="Activates MPI support")
 
-    with when("@2021.11.01:"):
+    with when("@2021.11.001:"):
         variant(
             "autotune", default=False, description="Enables autotuning for matrix restribution"
         )
