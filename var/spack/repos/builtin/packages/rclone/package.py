@@ -58,7 +58,9 @@ class Rclone(Package):
         mkdirp(prefix.bin)
         install("rclone", prefix.bin)
 
-        rclone = Executable("./rclone")
+    @run_after("install")
+    def install_completions(self):
+        rclone = Executable(self.prefix.bin.rclone)
 
         mkdirp(self.bash_completion_path)
         mkdirp(self.fish_completion_path)

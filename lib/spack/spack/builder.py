@@ -521,6 +521,18 @@ class Builder(collections.abc.Sequence, metaclass=BuilderMeta):
     def prefix(self):
         return self.pkg.prefix
 
+    @property
+    def bash_completion_path(self):
+        return self.pkg.bash_completion_path
+
+    @property
+    def zsh_completion_path(self):
+        return self.pkg.zsh_completion_path
+
+    @property
+    def fish_completion_path(self):
+        return self.pkg.fish_completion_path
+
     def test(self):
         # Defer tests to virtual and concrete packages
         pass

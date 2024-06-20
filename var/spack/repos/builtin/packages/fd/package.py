@@ -25,10 +25,9 @@ class Fd(CargoPackage):
 
     depends_on("rust@1.64:", type="build", when="@9:")
 
-    def install(self, spec, prefix):
-        install_tree("out", prefix)
-
-        fd = Executable("out/bin/fd")
+    @run_after("install")
+    def install_completions(self):
+        fd = Executable(self.prefix.bin.fd)
 
         mkdirp(bash_completion_path(self))
         with open(join_path(bash_completion_path(self), "fd"), "w") as file:

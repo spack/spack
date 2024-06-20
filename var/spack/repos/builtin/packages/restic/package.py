@@ -45,7 +45,9 @@ class Restic(Package):
         mkdirp(prefix.bin)
         install("restic", prefix.bin)
 
-        restic = Executable("./restic")
+    @run_after("install")
+    def install_completions(self):
+        restic = Executable(self.prefix.bin.restic)
 
         mkdirp(self.bash_completion_path)
         mkdirp(self.fish_completion_path)

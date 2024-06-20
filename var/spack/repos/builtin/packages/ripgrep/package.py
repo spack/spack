@@ -27,10 +27,9 @@ class Ripgrep(CargoPackage):
 
     depends_on("rust@1.72:", type="build", when="@14:")
 
-    def install(self, spec, prefix):
-        install_tree("out", prefix)
-
-        rg = Executable("out/bin/rg")
+    @run_after("install")
+    def install_completions(self):
+        rg = Executable(self.prefix.bin.rg)
 
         mkdirp(self.bash_completion_path)
         with open(join_path(bash_completion_path(self), "rg"), "w") as file:
