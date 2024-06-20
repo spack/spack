@@ -49,16 +49,16 @@ class Htslib(AutotoolsPackage):
         default=True,
         description="use libdeflate for faster crc and deflate algorithms",
     )
-    variant("gcs", default=False, description="enable gcs url support")
-    variant("s3", default=False, description="enable s3 url support")
+    variant("gcs", default=True, description="enable gcs url support", when="+libcurl@1.5")
+    variant("s3", default=True, description="enable s3 url support", when="+libcurl@1.5")
     variant("plugins", default=False, description="enable support for separately compiled plugins")
-    variant("year2038", default=False, description="enable support for timestamps beyond 2038")
     variant("pic", default=True, description="Compile with PIC support")
 
     depends_on("zlib-api")
     depends_on("bzip2", when="@1.4:")
     depends_on("xz", when="@1.4:")
     depends_on("curl", when="@1.3:+libcurl")
+    depends_on("openssl", when="+s3")
     depends_on("libdeflate", when="@1.8:+libdeflate")
 
     depends_on("m4", when="@1.2")
@@ -100,8 +100,5 @@ class Htslib(AutotoolsPackage):
 
         if spec.satisfies("@1.8:"):
             args.extend(self.enable_or_disable("libdeflate"))
-
-        if spec.satisfies("@1.19:"):
-            args.extend(self.enable_or_disable("year2038"))
 
         return args
