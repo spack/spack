@@ -242,15 +242,13 @@ class Libint(AutotoolsPackage):
 
     @when("@2.6.0:")
     def check(self):
-        with working_dir(os.path.join(self.build_directory, "generated")):
-            with working_dir("build"):
-                make("check")
+        with working_dir(os.path.join(self.build_directory, "generated", "build")):
+            make("check")
 
     @when("@2.6.0:")
     def install(self, spec, prefix):
-        with working_dir(os.path.join(self.build_directory, "generated")):
-            with working_dir("build"):
-                make("install")
+        with working_dir(os.path.join(self.build_directory, "generated", "build")):
+            make("install")
 
     @when("@:2.6.0")
     def patch(self):
