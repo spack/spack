@@ -54,7 +54,7 @@ class Elpa(AutotoolsPackage, CudaPackage, ROCmPackage):
     variant(
         "autotune",
         default=False,
-        when="@2021.11.01",
+        when="@2021.11.01:",
         description="Enables autotuning for matrix restribution",
     )
     variant(
