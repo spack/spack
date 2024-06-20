@@ -1,29 +1,17 @@
-From be4da4f73dfe45ae31640665834568e8a4799765 Mon Sep 17 00:00:00 2001
+From d94cc49d93800b7b50d2582b28a2b6c84fdb166b Mon Sep 17 00:00:00 2001
 From: sreenivasa murthy kolam <sreenivasamurthy.kolam@amd.com>
-Date: Mon, 17 Jun 2024 06:56:08 +0000
-Subject: [PATCH] Changes to the RPP tests CMakeLists.txt. This patch makes
- changes to the CMakeLists.txt for the rpp unit tests.It adds the directory
- which contains half.hpp and also modifies the method the libjpegturbo library
- is linked
+Date: Thu, 20 Jun 2024 10:17:09 +0000
+Subject: [PATCH] changes to cmakelists.txt to include half and turbo-jpeg
 
 ---
- utilities/test_suite/HIP/CMakeLists.txt  | 6 +++---
- utilities/test_suite/HOST/CMakeLists.txt | 7 +++++--
- 2 files changed, 8 insertions(+), 5 deletions(-)
+ utilities/test_suite/HIP/CMakeLists.txt  | 4 ++--
+ utilities/test_suite/HOST/CMakeLists.txt | 5 ++++-
+ 2 files changed, 6 insertions(+), 3 deletions(-)
 
 diff --git a/utilities/test_suite/HIP/CMakeLists.txt b/utilities/test_suite/HIP/CMakeLists.txt
-index b8bf361..bfb7049 100644
+index b8bf361..bfac5ec 100644
 --- a/utilities/test_suite/HIP/CMakeLists.txt
 +++ b/utilities/test_suite/HIP/CMakeLists.txt
-@@ -63,7 +63,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
- if(TurboJpeg_FOUND)
-     message("-- ${Green}${PROJECT_NAME} set to build with rpp and TurboJpeg${ColourReset}")
-     include_directories(${TurboJpeg_INCLUDE_DIRS})
--    set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${TurboJpeg_LIBRARIES_DIR})
-+    set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${TurboJpeg_LIBRARIES})
- else()
-     message("-- ${Red}Error: TurboJpeg must be installed to install ${PROJECT_NAME} successfully!${ColourReset}")
- endif()
 @@ -80,7 +80,7 @@ if (hip_FOUND AND OpenCV_FOUND)
  
      add_executable(Tensor_hip Tensor_hip.cpp)
@@ -41,10 +29,10 @@ index b8bf361..bfb7049 100644
 \ No newline at end of file
 +endif()
 diff --git a/utilities/test_suite/HOST/CMakeLists.txt b/utilities/test_suite/HOST/CMakeLists.txt
-index 43be2b2..91157c8 100644
+index 43be2b2..c119f28 100644
 --- a/utilities/test_suite/HOST/CMakeLists.txt
 +++ b/utilities/test_suite/HOST/CMakeLists.txt
-@@ -69,10 +69,13 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS} -ggdb -O0")
+@@ -69,6 +69,9 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS} -ggdb -O0")
  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
  set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} OpenMP::OpenMP_CXX)
  
@@ -54,11 +42,6 @@ index 43be2b2..91157c8 100644
  if(TurboJpeg_FOUND)
      message("-- ${Green}${PROJECT_NAME} set to build with rpp and TurboJpeg${ColourReset}")
      include_directories(${TurboJpeg_INCLUDE_DIRS})
--    set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${TurboJpeg_LIBRARIES_DIR})
-+    set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${TurboJpeg_LIBRARIES})
- else()
-     message("-- ${Red}Error: TurboJpeg must be installed to install ${PROJECT_NAME} successfully!${ColourReset}")
- endif()
 @@ -85,7 +88,7 @@ if (OpenCV_FOUND)
  
      add_executable(Tensor_host Tensor_host.cpp)
