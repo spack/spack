@@ -41,7 +41,7 @@ class Votca(CMakePackage):
     depends_on("eigen@3.3:")
     depends_on("boost+filesystem+system+regex+timer")
     depends_on("boost@1.71:")
-    depends_on("boost@1.71:1.84", when="@2024")
+    depends_on("boost@1.71:1.84", when="@=2024")
     depends_on("boost@1.71:1.82", when="@:2023")
     depends_on("mkl", when="+mkl")
     depends_on("hdf5+cxx~mpi")
