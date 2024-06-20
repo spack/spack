@@ -348,27 +348,30 @@ def find(parser, args):
             if env:
                 display_env(env, args, decorator, results)
 
-        count_suffix = " (not shown)"
         if not args.only_roots:
-            count_suffix = ""
             cmd.display_specs(
                 results, args, decorator=decorator, all_headers=True, status_fn=status_fn
             )
 
         # print number of installed packages last (as the list may be long)
         if sys.stdout.isatty() and args.groups:
+            installed_suffix = ""
+            concretized_suffix = ""
+            if args.only_roots:
+                installed_suffix = " (not shown)"
+                concretized_suffix = " (not shown)"
+            else:
+                if env and not args.show_concretized:
+                    concretized_suffix = " (not shown, display with -c)"
+
             pkg_type = "loaded" if args.loaded else "installed"
             spack.cmd.print_how_many_pkgs(
-                list(x for x in results if x.installed), pkg_type, suffix=count_suffix
+                list(x for x in results if x.installed), pkg_type, suffix=installed_suffix
             )
 
             if env:
-                not_installed = list(x for x in results if not x.installed)
                 spack.cmd.print_how_many_pkgs(
-                    not_installed,
+                    list(x for x in results if not x.installed),
                     "concretized (not installed)",
-                    suffix=count_suffix,
+                    suffix=concretized_suffix,
                 )
-                if not args.show_concretized:
-                    tty.msg("You can display packages that are not yet "
-                            "installed in the environment with -c")
