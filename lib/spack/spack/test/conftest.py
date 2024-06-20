@@ -843,7 +843,11 @@ def _populate(mock_db):
     """
 
     def _install(spec):
-        s = spack.spec.Spec(spec).concretized()
+        try:
+            s = spack.spec.Spec(spec).concretized()
+        except Exception as e:
+            import pdb; pdb.set_trace()
+            raise
         s.package.do_install(fake=True, explicit=True)
 
     _install("mpileaks ^mpich")

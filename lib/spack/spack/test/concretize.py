@@ -2046,6 +2046,12 @@ class TestConcretize:
             assert s.installed
             assert s.satisfies("~debug"), s
 
+    def test_onlyrunthis(self, mutable_database):
+        raise Exception("hi")
+
+    def test_onlyrunthis2(self, database):
+        raise Exception("hi")
+
     @pytest.mark.regression("32471")
     @pytest.mark.only_clingo("Use case not supported by the original concretizer")
     def test_require_targets_are_allowed(self, mutable_database):
