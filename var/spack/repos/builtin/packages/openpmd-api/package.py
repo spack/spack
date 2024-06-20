@@ -177,4 +177,5 @@ class OpenpmdApi(CMakePackage):
         if self.spec.satisfies("@:0.11.0"):
             raise SkipTest("Package must be installed as version 0.11.1 or later")
         exe = which(join_path(self.prefix.bin, "openpmd-ls"))
-        exe()
+        out = exe(output=str.split,error=str.split)
+        assert str(self.spec.version) in out
