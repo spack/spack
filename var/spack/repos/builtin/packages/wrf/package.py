@@ -256,6 +256,8 @@ class Wrf(Package):
     depends_on("m4", type="build")
     depends_on("libtool", type="build")
     depends_on("adios2", when="@4.5: +adios2")
+
+    conflicts("%oneapi", when="@:4.3", msg="Intel oneapi compiler patch only added for version 4.4")
     phases = ["configure", "build", "install"]
 
     def setup_run_environment(self, env):
