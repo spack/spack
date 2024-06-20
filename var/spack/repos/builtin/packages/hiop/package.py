@@ -278,7 +278,8 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
 
         if not self.spec.satisfies("@0.6.1") or not os.path.isdir(self.prefix.bin):
             raise SkipTest(
-                f"Skipping: checks not installed in bin for v{self.version}. Try any version >= 0.6.1"
+                f"Skipping: checks not installed in bin for v{self.version}."
+                + " Try any version >= 0.6.1"
             )
 
         options = [
@@ -301,7 +302,8 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
 
         if not self.spec.satisfies("@0.6.1") or not os.path.isdir(self.prefix.bin):
             raise SkipTest(
-                f"Skipping: checks not installed in bin for v{self.version}. Try any version >= 0.6.1"
+                f"Skipping: checks not installed in bin for v{self.version}."
+                + " Try any version >= 0.6.1"
             )
 
         if "+raja" not in self.spec:
