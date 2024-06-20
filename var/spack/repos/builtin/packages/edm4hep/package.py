@@ -58,6 +58,9 @@ class Edm4hep(CMakePackage):
     depends_on("heppdt", type="test")
     depends_on("catch2@3.0.1:", type="test")
 
+    # Corresponding changes in EDM4hep landed with https://github.com/key4hep/EDM4hep/pull/314
+    extends("python", when="@0.10.6:")
+
     def cmake_args(self):
         args = []
         # C++ Standard
@@ -67,7 +70,8 @@ class Edm4hep(CMakePackage):
 
     def setup_run_environment(self, env):
         env.prepend_path("LD_LIBRARY_PATH", self.spec["edm4hep"].libs.directories[0])
-        env.prepend_path("PYTHONPATH", self.prefix.python)
+        if self.spec.satisfies("@:0.10.5"):
+            env.prepend_path("PYTHONPATH", self.prefix.python)
 
     def url_for_version(self, version):
         """Translate version numbers to ilcsoft conventions.
