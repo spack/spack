@@ -275,8 +275,11 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
 
     def test_N1pMDsEx1(self):
         """Test N1pMDsEx1"""
-        if not self.spec.satisfies("@develop") or not os.path.isdir(self.prefix.bin):
-            raise SkipTest("Must be installed as @develop")
+
+        if not self.spec.satisfies("@0.6.1") or not os.path.isdir(self.prefix.bin):
+            raise SkipTest(
+                f"Skipping: checks not installed in bin for v{self.version}. Try any version >= 0.6.1"
+            )
 
         options = [
             ["400", "100", "0", "-selfcheck"],
@@ -295,8 +298,11 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
 
     def test_N1pMdsEx1Raja(self):
         """Test N1pMdsEx1Raja"""
-        if not self.spec.satisfies("@develop") or not os.path.isdir(self.prefix.bin):
-            raise SkipTest(f"Skipping: checks not installed in bin for v{self.version}")
+
+        if not self.spec.satisfies("@0.6.1") or not os.path.isdir(self.prefix.bin):
+            raise SkipTest(
+                f"Skipping: checks not installed in bin for v{self.version}. Try any version >= 0.6.1"
+            )
 
         if "+raja" not in self.spec:
             raise SkipTest("Package must be installed with +raja")
