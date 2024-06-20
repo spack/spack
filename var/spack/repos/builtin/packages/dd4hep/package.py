@@ -95,10 +95,13 @@ class Dd4hep(CMakePackage):
     depends_on("boost +iostreams", when="+ddg4")
     depends_on("boost +system +filesystem", when="%gcc@:7")
     depends_on("root @6.08: +gdml +math +python")
+    depends_on("root @6.12.2: +root7", when="@1.26:")  # DDCoreGraphics needs ROOT::ROOTHistDraw
     with when("+ddeve"):
         depends_on("root @6.08: +x +opengl")
         depends_on("root @:6.27", when="@:1.23")
         conflicts("^root ~webgui", when="^root@6.28:")
+        # For DD4hep >= 1.24, DDEve_Interface needs ROOT::ROOTGeomViewer only if ROOT >= 6.27
+        requires("^root +root7 +webgui", when="@1.24: ^root @6.27:")
     depends_on("root @6.08: +gdml +math +python +x +opengl", when="+utilityapps")
 
     extends("python")
