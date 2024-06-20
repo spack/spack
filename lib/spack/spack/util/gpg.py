@@ -14,6 +14,7 @@ import llnl.util.filesystem
 
 import spack.error
 import spack.paths
+import spack.util.binary_resource
 import spack.util.executable
 import spack.version
 
@@ -63,10 +64,10 @@ def init(gnupghome=None, force=False):
     GNUPGHOME = gnupghome or os.getenv("SPACK_GNUPGHOME") or spack.paths.gpg_path
 
     # Set the executable objects for "gpg" and "gpgconf"
-    with spack.bootstrap.ensure_bootstrap_configuration():
-        if sys.platform == "win32":
-            spack.bootstrap.win_ensure_or_acquire_resource("gpg")
-        else:
+    if sys.platform == "win32":
+        spack.util.binary_resource.win_ensure_or_acquire_resource("gpg")
+    else:
+        with spack.bootstrap.ensure_bootstrap_configuration():
             spack.bootstrap.ensure_gpg_in_path_or_raise()
         GPG, GPGCONF = _gpg(), _gpgconf()
 

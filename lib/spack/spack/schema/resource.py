@@ -32,7 +32,7 @@ resource_entry = {
 }
 
 properties: Dict[str, Any] = {
-    "bootstrap-resource" : {
+    "resource": {
         "type": "object",
         "default": {},
         "additionalProperties": False,

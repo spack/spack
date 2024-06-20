@@ -27,7 +27,6 @@ import functools
 import json
 import os
 import os.path
-import shutil
 import sys
 import uuid
 from typing import Any, Callable, Dict, List, Optional, Tuple
@@ -50,6 +49,7 @@ import spack.spec
 import spack.stage
 import spack.store
 import spack.user_environment
+import spack.util.binary_resource
 import spack.util.environment
 import spack.util.executable
 import spack.util.path
@@ -59,7 +59,7 @@ import spack.version
 
 from ._common import _executables_in_store, _python_import, _root_spec, _try_import_from_store
 from .clingo import ClingoBootstrapConcretizer
-from .config import spack_python_interpreter, spec_for_current_python, windows_resource_root
+from .config import spack_python_interpreter, spec_for_current_python
 
 #: Name of the file containing metadata about the bootstrapping source
 METADATA_YAML_FILENAME = "metadata.yaml"
@@ -72,13 +72,6 @@ _bootstrap_methods = {}
 
 
 ConfigDictionary = Dict[str, Any]
-
-
-def win_insert_resource_into_environment(name):
-    resource_root = windows_resource_root() / name
-    env = spack.util.environment.EnvironmentModifications()
-    env.append_path("PATH", str(resource_root / "bin"))
-    env.apply_modifications()
 
 
 def bootstrapper(bootstrapper_type: str):
@@ -471,69 +464,6 @@ def _add_externals_if_missing() -> None:
     )
 
 
-class BootstrapResource:
-    """Represents a resource required by Spack to run, fetched as part
-    of the bootstrapping operation
-
-    More or less identical to package based resources but exposes additional logic related
-    to bootstrapping/ resource visibility.
-
-    Composes a name and a fetch strategy
-    """
-
-    def __init__(self, name, conf):
-        """
-        Args:
-            name (str): Name of resource to be fetched
-            conf (dict): Dictionary representing resource endpoint layout
-        """
-        self._name = name
-        self.resource_subdir = "win-bootstrap-resource"
-        fetcher = spack.fetch_strategy.URLFetchStrategy(
-            url=conf["endpoint"], checksum=conf["sha256"]
-        )
-        stage = spack.stage.Stage(fetcher)
-        resource = spack.resource.Resource(
-            name, fetcher, destination=self.resource_subdir, placement=None
-        )
-        self.stage = spack.stage.ResourceStage(fetcher, stage, resource, keep=False)
-
-    def acquire_resource(self):
-        "fetches, expands, and 'installs' resource"
-        with self.stage as s:
-            s.fetch()
-            s.expand_archive()
-            shutil.move(
-                os.path.join(s.root_stage.source_path, self.resource_subdir, self._name),
-                windows_resource_root(),
-            )
-        return True
-
-
-def win_ensure_or_acquire_resource(name):
-    """Acquires resource from configured sources"""
-    path = os.environ.get("PATH", "")
-    path = os.pathsep.join([str(windows_resource_root() / name / "bin"), path])
-    cmd = spack.util.executable.which(name, path=path)
-    if cmd:
-        tty.debug(f"Resource {name} already available on system path at: {cmd.path}")
-        win_insert_resource_into_environment(name)
-        return
-    if not cmd and not spack.config.get("bootstrap:bootstrap-resource:enable"):
-        raise RuntimeError(
-            f"Cannot fetch bootstrap resource {name} as it is disabled, and \
-{name} is not available on the PATH"
-        )
-    resources = spack.config.get("bootstrap:bootstrap-resource:resources")
-    providers = resources.get(name)["providers"]
-    for provider in providers:
-        if BootstrapResource(name, provider).acquire_resource():
-            win_insert_resource_into_environment(name)
-            return
-    # if we reach this point, and no other error was raised, there must be no providers given
-    raise RuntimeError(f"Failed to fetch bootstrap resource {name} as no provider was specified")
-
-
 def clingo_root_spec() -> str:
     """Return the root spec used to bootstrap clingo"""
     return _root_spec("clingo-bootstrap@spack+python")
@@ -636,11 +566,8 @@ before proceeding with Spack or provide the path to a non standard install with 
 
 
 def ensure_win_resources() -> None:
-    import pdb
-
-    pdb.set_trace()
-    win_ensure_or_acquire_resource("file")
-    win_ensure_or_acquire_resource("gpg")
+    spack.util.binary_resource.win_ensure_or_acquire_resource("file")
+    spack.util.binary_resource.win_ensure_or_acquire_resource("gpg")
 
 
 def ensure_core_dependencies() -> None:

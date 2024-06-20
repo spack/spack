@@ -6,7 +6,6 @@
 
 import contextlib
 import os.path
-import pathlib
 import sys
 from typing import Any, Dict, Generator, MutableSequence, Sequence
 
@@ -58,11 +57,6 @@ def store_path() -> str:
         raise RuntimeError(msg)
 
     return _store_path()
-
-
-def windows_resource_root() -> pathlib.Path:
-    """Returns the root of the Windows resources required for bootstrapping"""
-    return pathlib.Path(root_path()) / "windows-resources"
 
 
 @contextlib.contextmanager

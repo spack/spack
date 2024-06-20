@@ -53,6 +53,7 @@ import spack.schema.mirrors
 import spack.schema.modules
 import spack.schema.packages
 import spack.schema.repos
+import spack.schema.resource
 import spack.schema.upstreams
 
 # Hacked yaml for configuration files preserves line numbers.
@@ -77,6 +78,7 @@ SECTION_SCHEMAS: Dict[str, Any] = {
     "bootstrap": spack.schema.bootstrap.schema,
     "ci": spack.schema.ci.schema,
     "cdash": spack.schema.cdash.schema,
+    "resource": spack.schema.resource.schema,
 }
 
 # Same as above, but including keys for environments
