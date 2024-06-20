@@ -352,11 +352,7 @@ def find(parser, args):
         if not args.only_roots:
             count_suffix = ""
             cmd.display_specs(
-                results,
-                args,
-                decorator=decorator,
-                all_headers=True,
-                status_fn=status_fn,
+                results, args, decorator=decorator, all_headers=True, status_fn=status_fn
             )
 
         # print number of installed packages last (as the list may be long)
