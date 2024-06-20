@@ -1,7 +1,0 @@
-resource:
-  file:
-    sha256:
-    endpoint: https://spack.github.io/windows-bootstrap-resources/resources/file/file.tar.gz
-  gpg:
-    sha256:
-    endpoint: https://spack.github.io/windows-bootstrap-resources/resources/gpg4win/gpg4win.tar.gz

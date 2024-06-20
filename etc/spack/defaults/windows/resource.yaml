@@ -1,8 +1,15 @@
 bootstrap-resource:
-  # If set to false Spack will not fetch bootstrap resources but instead
-  # proceed without fetching said resources
+  # If set to false Spack will not fetch bootstrap resources
   enable: true
   # Trusted sources to acquire bootstrap resources from
-  sources:
-  - name: 'github-actions-v0.1'
-    resource_layout: $spack/share/spack/resource/github-actions-v0.1
+  resources:
+    gpg:
+      providers:
+        - name: Spack Bootstrap Resource Repo
+          endpoint: https://spack.github.io/windows-bootstrap-resources/resources/gpg4win/gpg4win.tar.gz
+          sha256: notasha
+    file:
+      providers:
+        - name: Spack Bootstrap Resource Repo
+          endpoint: https://spack.github.io/windows-bootstrap-resources/resources/file/file.tar.gz
+          sha256: notasha

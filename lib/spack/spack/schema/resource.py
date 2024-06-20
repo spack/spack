@@ -4,21 +4,39 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Schema for resource.yaml configuration file."""
 
-#: Schema of a single source
-_source_schema = {
+from typing import Any, Dict
+
+#: Schema for bootstrap resources
+resource_provider = {
     "type": "object",
-    "properties": {"name": {"type": "string"}, "resource_layout": {"type": "string"}},
     "additionalProperties": False,
-    "required": ["name", "metadata"],
+    "properties": {
+        "name": {"type": "string"},
+        "endpoint": {"type": "string"},
+        "sha256": {"type": "string"},
+    },
 }
 
-properties = {
-    "resource": {
+resource_entry = {
+    "type": "object",
+    "default": {},
+    "additionalProperties": False,
+    "patternProperties": {
+        r"\w[\w]*": {
+            "type": "object",
+            "additionalProperties": False,
+            "anyOf": [{"required": ["providers"]}],
+            "properties": {"providers": {"type": "array", "items": resource_provider}},
+        }
+    },
+}
+
+properties: Dict[str, Any] = {
+    "bootstrap-resource" : {
         "type": "object",
-        "properties": {
-            "enable": {"type": "boolean"},
-            "sources": {"type": "array", "items": _source_schema},
-        },
+        "default": {},
+        "additionalProperties": False,
+        "properties": {"enable": {"type": "boolean"}, "resources": resource_entry},
     }
 }
 
