@@ -116,6 +116,7 @@ class Rpp(CMakePackage):
                 "utilities/test_suite/HIP/CMakeLists.txt",
                 string=True,
             )
+
     depends_on("cmake@3.5:", type="build")
     depends_on("pkgconfig", type="build")
     depends_on(Boost.with_default_variants)
