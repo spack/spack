@@ -338,6 +338,7 @@ class Mapl(CMakePackage):
         # - Intel MPI --> intelmpi
         # - MVAPICH --> mvapich
         # - HPE MPT --> mpt
+        # - Cray MPICH --> cray-mpich
 
         if self.spec.satisfies("^mpich"):
             args.append(self.define("MPI_STACK", "mpich"))
@@ -349,6 +350,8 @@ class Mapl(CMakePackage):
             args.append(self.define("MPI_STACK", "mvapich"))
         elif self.spec.satisfies("^mpt"):
             args.append(self.define("MPI_STACK", "mpt"))
+        elif self.spec.satisfies("^cray-mpich"):
+            args.append(self.define("MPI_STACK", "cray-mpich"))
         else:
             raise InstallError("Unsupported MPI stack")
 
