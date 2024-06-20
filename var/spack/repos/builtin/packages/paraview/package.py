@@ -30,7 +30,9 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
     license("Apache-2.0")
 
     version("master", branch="master", submodules=True)
-    version("5.13.0-RC1", sha256="00aea2bbaf2eacd288a6cc95c1f4ed1a8a4965f27548b53ae473c1ee7caec30e")
+    version(
+        "5.13.0-RC1", sha256="00aea2bbaf2eacd288a6cc95c1f4ed1a8a4965f27548b53ae473c1ee7caec30e"
+    )
     version(
         "5.12.1",
         sha256="927f880c13deb6dde4172f4727d2b66f5576e15237b35778344f5dd1ddec863e",
