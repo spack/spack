@@ -179,13 +179,18 @@ class Qt(Package):
     conflicts("%apple-clang@13:", when="@:5.13")
 
     # Build-only dependencies
-    everywhere_but_windows(depends_on, "pkgconfig", type="build")
+    for plat in ["linux", "darwin", "freebsd"]:
+        with when(f"platform={plat}"):
+            depends_on("pkgconfig", type="build")
+            depends_on("glib", when="@4:")
+    depends_on("libmng")
+    depends_on("icu4c")
+    depends_on("harfbuzz", when="@5:")
+
     depends_on("python", when="@5.7.0:", type="build")
 
     # Dependencies, then variant- and version-specific dependencies
-    depends_on("icu4c")
     depends_on("jpeg")
-    depends_on("libmng")
     depends_on("libtiff")
     depends_on("libxml2")
     depends_on("zlib-api")
@@ -203,13 +208,11 @@ class Qt(Package):
         depends_on("openssl@:1.0", when="@4:5.9")
         depends_on("openssl@1.1.1:", when="@5.15.0:")
 
-    everywhere_but_windows(depends_on, "glib", when="@4:")
     depends_on("libpng", when="@4:")
     depends_on("dbus", when="@4:+dbus")
     depends_on("gl", when="@4:+opengl")
     depends_on("assimp@5.0.0:5", when="@5.5:+opengl")
 
-    depends_on("harfbuzz", when="@5:")
     depends_on("double-conversion", when="@5.7:")
     depends_on("pcre2+multibyte", when="@5.9:")
     depends_on("llvm", when="@5.11: +doc")
@@ -582,10 +585,11 @@ class Qt(Package):
             config_args.append("-no-gui")
 
         if "+ssl" in spec:
-            pkg = spec["openssl"]
             config_args.append("-openssl-linked")
-            config_args.extend(pkg.libs.search_flags.split())
-            config_args.extend(pkg.headers.include_flags.split())
+            if not IS_WINDOWS:
+                pkg = spec["openssl"]
+                config_args.extend(pkg.libs.search_flags.split())
+                config_args.extend(pkg.headers.include_flags.split())
         else:
             config_args.append("-no-openssl")
 
@@ -600,7 +604,7 @@ class Qt(Package):
         else:
             config_args.append("-static")
 
-        if version >= Version("5"):
+        if not IS_WINDOWS and version >= Version("5"):
             use_spack_dep("pcre" if spec.satisfies("@5.0:5.8") else "pcre2", "pcre")
             use_spack_dep("harfbuzz")
 
@@ -778,10 +782,11 @@ class Qt(Package):
             # v5.9: user-selectable internal-vs-external via -assimp
             # v5.14: additional qtquick3d module uses -assimp
             # v5.15: qtquick3d switched to the -quick3d-assimp option
-            if version >= Version("5.9"):
-                use_spack_dep("assimp")
-            elif version >= Version("5.15"):
-                use_spack_dep("assimp", "quick3d-assimp")
+            if not IS_WINDOWS:
+                if version >= Version("5.9"):
+                    use_spack_dep("assimp")
+                elif version >= Version("5.15"):
+                    use_spack_dep("assimp", "quick3d-assimp")
 
         if MACOS_VERSION and "+opengl" in spec:
             # These options are only valid if 'multimedia' is enabled, i.e.
@@ -793,6 +798,8 @@ class Qt(Package):
             # https://www.qt.io/blog/qt-on-apple-silicon
             # Not currently working for qt@5
             config_args.extend(["-device-option", "QMAKE_APPLE_DEVICE_ARCHS=arm64"])
+        if IS_WINDOWS:
+            configure = Executable("configure.bat")
 
         configure(*config_args)
 
