@@ -358,6 +358,16 @@ class CMakeBuilder(BaseBuilder):
             "-G",
             generator,
             define("CMAKE_INSTALL_PREFIX", pathlib.Path(pkg.prefix).as_posix()),
+            define("CMAKE_INSTALL_RPATH_USE_LINK_PATH", True),
+            # only include the install prefix lib dirs; rpaths for deps are added by USE_LINK_PATH
+            define(
+                "CMAKE_INSTALL_RPATH",
+                [
+                    pathlib.Path(pkg.prefix, "lib").as_posix(),
+                    pathlib.Path(pkg.prefix, "lib64").as_posix(),
+                ],
+            ),
+            define("CMAKE_PREFIX_PATH", spack.build_environment.get_cmake_prefix_path(pkg)),
             define("CMAKE_BUILD_TYPE", build_type),
         ]
 
@@ -371,15 +381,6 @@ class CMakeBuilder(BaseBuilder):
 
         _conditional_cmake_defaults(pkg, args)
         _maybe_set_python_hints(pkg, args)
-
-        # Set up CMake rpath
-        args.extend(
-            [
-                define("CMAKE_INSTALL_RPATH_USE_LINK_PATH", True),
-                define("CMAKE_INSTALL_RPATH", spack.build_environment.get_rpaths(pkg)),
-                define("CMAKE_PREFIX_PATH", spack.build_environment.get_cmake_prefix_path(pkg)),
-            ]
-        )
 
         return args
 
