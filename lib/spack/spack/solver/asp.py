@@ -3978,14 +3978,14 @@ class Solver:
         specs = [s.lookup_hash() for s in specs]
         reusable_specs = self._check_input_and_extract_concrete_specs(specs)
         reusable_specs.extend(self.selector.reusable_specs(specs))
-        setup = SpackSolverSetup(tests=tests)
-
-        # Tell clingo that we don't have to solve all the inputs at once
-        setup.concretize_everything = False
 
         input_specs = specs
         output = OutputConfiguration(timers=timers, stats=stats, out=out, setup_only=False)
         while True:
+            setup = SpackSolverSetup(tests=tests)
+            # Tell clingo that we don't have to solve all the inputs at once
+            setup.concretize_everything = False
+
             result, _, _ = self.driver.solve(
                 setup,
                 input_specs,
