@@ -273,13 +273,16 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
     # export SPACK_USER_CACHE_PATH=/tmp/spack
     # export SPACK_DISABLE_LOCAL_CONFIG=true
 
-    #TO DO: MAKE SURE TO REFACTOR (MAIN FUNCTION, TWO TESTS CALLING WITH DIFF INPUTS)
-    def test_N1pMDsEx1(self):
-        """Test N1pMDsEx1"""
+    def run_hiop(self, raja):
 
-        exe = os.path.join(self.prefix.bin, "NlpMdsEx1.exe")
+        if raja == True:
+            exName = "NlpMdsEx1Raja.exe"
+        else:
+            exName = "NlpMdsEx1.exe"
+
+        exe = os.path.join(self.prefix.bin, exName)
         if not os.path.exists(exe):
-            raise SkipTest(f"NlpMdsEx1.exe does not exist in version {self.version}")
+            raise SkipTest(f"{exName} does not exist in version {self.version}")
 
         options = [
             ["400", "100", "0", "-selfcheck"],
@@ -287,36 +290,29 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
             ["400", "100", "0", "-empty_sp_row", "-selfcheck"],
         ]
 
+        if raja == True:
+            options.extend(
+                [
+                    ["400", "100", "0", "-selfcheck"],
+                    ["400", "100", "1", "-selfcheck"],
+                    ["400", "100", "0", "-empty_sp_row", "-selfcheck"],
+                ]
+            )
+
         exe = which(exe)
 
         for i, args in enumerate(options):
             with test_part(
-                self, f"test_N1pMDsEx1_{i+1}", purpose="{0} {1}".format(str(exe), " ".join(args))
+                self, f"test_{exName}_{i+1}", purpose="{0} {1}".format(str(exe), " ".join(args))
             ):
                 exe(*args)
 
-    def test_N1pMdsEx1Raja(self):
-        """Test N1pMdsEx1Raja"""
+    def test_NlpMdsEx1(self):
+        """Test NlpMdsEx1"""
+        self.run_hiop(False)
 
-        exe = os.path.join(self.prefix.bin, "NlpMdsEx1Raja.exe")
-        if not os.path.exists(exe):
-            raise SkipTest(f"NlpMdsEx1Raja.exe does not exist in version {self.version}")
-
-        if "+raja" not in self.spec:
+    def test_NlpMdsEx1Raja(self):
+        """Test NlpMdsEx1 with +raja"""
+        if not "+raja" in self.spec:
             raise SkipTest("Package must be installed with +raja")
-
-        options = [
-            ["400", "100", "0", "-selfcheck"],
-            ["400", "100", "1", "-selfcheck"],
-            ["400", "100", "0", "-empty_sp_row", "-selfcheck"],
-        ]
-
-        exe = which(exe)
-
-        for i, args in enumerate(options):
-            with test_part(
-                self,
-                f"test_N1pMDsEx1Raja_{i+1}",
-                purpose="{0} {1}".format(str(exe), " ".join(args)),
-            ):
-                exe(*args)
+        self.run_hiop(True)
