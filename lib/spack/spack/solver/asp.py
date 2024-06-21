@@ -1127,19 +1127,13 @@ class SpackSolverSetup:
 
         self.generated_ids: Set[str] = set()
 
-    def new_id(self, elements, fail_on_error=True):
+    def new_id(self, elements):
         full_str = "-".join(str(x) for x in elements)
         sha = hashlib.sha256()
         sha.update(full_str.encode())
         uniq_id = sha.hexdigest()[:8]
-        #if uniq_id == "3e93bc4d":
-        #    import pdb; pdb.set_trace()
-        #    print("hi")
         if uniq_id in self.generated_ids:
-            if fail_on_error:
-                raise InternalConcretizerError(f"Attempt to generate same ID twice ({uniq_id}): {full_str}")
-            else:
-                return None
+            raise ValueError(f"Attempt to generate same ID twice ({uniq_id}): {full_str}")
         self.generated_ids.add(uniq_id)
         return uniq_id
 
@@ -1738,9 +1732,6 @@ class SpackSolverSetup:
                 self.gen.newline()
                 requirement_weight += 1
 
-
-    of_interest = []
-
     def external_packages(self):
         """Facts on external packages, from packages.yaml and implicit externals."""
         packages_yaml = _external_config_with_implicit_externals(spack.config.CONFIG)
@@ -1772,9 +1763,7 @@ class SpackSolverSetup:
                 )
 
         self.external_map = dict()
-        outer_idx = 0
         for pkg_name, data in packages_yaml.items():
-            outer_idx += 1
             if pkg_name == "all":
                 continue
 
@@ -1822,17 +1811,9 @@ class SpackSolverSetup:
                 )
 
             # Declare external conditions with a local index into packages.yaml
-            inner_idx = 0
             for spec in external_specs:
-                inner_idx += 1
                 msg = "%s available as external when satisfying %s" % (spec.name, spec)
 
-                if spec.satisfies("externaltool@=1.0%gcc@10.2.1"):
-                    import traceback
-                    SpackSolverSetup.of_interest.append(traceback.format_stack())
-                    #print(''.join(SpackSolverSetup.of_interest[0]))
-                    import pdb; pdb.set_trace()
-                    print("hi")
                 self.condition(spec, spec, msg=msg, transform_imposed=external_imposition(spec))
                 self.possible_versions[spec.name].add(spec.version)
                 self.gen.newline()
@@ -2587,13 +2568,7 @@ class SpackSolverSetup:
 
         self.possible_compilers = list()
         for compiler in compiler_parser.possible_compilers():
-            compiler_id = self.new_id(
-                ["compiler-id", compiler.spec, compiler.os, compiler.target],
-                fail_on_error=False
-            )
-            if not compiler_id:
-                # TODO: in this case we are adding the same compiler twice
-                continue
+            compiler_id = self.new_id(["compiler-id", compiler.spec, compiler.os, compiler.target])
             self.possible_compilers.append((compiler_id, compiler))
 
         self.gen.h1("Generic statements on possible packages")
