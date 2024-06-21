@@ -3480,7 +3480,6 @@ class SpecBuilder:
 
     def external_spec_selected(self, node, external_id):
         """This means that the external spec and index idx has been selected for this package."""
-        packages_yaml = _external_config_with_implicit_externals(spack.config.CONFIG)
         spec_info = self._external_lookup[node.pkg][external_id]
         self._specs[node].external_path = spec_info.get("prefix", None)
         self._specs[node].external_modules = spack.spec.Spec._format_module_list(
