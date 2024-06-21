@@ -1132,9 +1132,6 @@ class SpackSolverSetup:
         sha = hashlib.sha256()
         sha.update(full_str.encode())
         uniq_id = sha.hexdigest()[:8]
-        #if uniq_id == "3e93bc4d":
-        #    import pdb; pdb.set_trace()
-        #    print("hi")
         if uniq_id in self.generated_ids:
             if fail_on_error:
                 raise InternalConcretizerError(f"Attempt to generate same ID twice ({uniq_id}): {full_str}")
@@ -1739,8 +1736,6 @@ class SpackSolverSetup:
                 requirement_weight += 1
 
 
-    of_interest = []
-
     def external_packages(self):
         """Facts on external packages, from packages.yaml and implicit externals."""
         packages_yaml = _external_config_with_implicit_externals(spack.config.CONFIG)
@@ -1772,9 +1767,7 @@ class SpackSolverSetup:
                 )
 
         self.external_map = dict()
-        outer_idx = 0
         for pkg_name, data in packages_yaml.items():
-            outer_idx += 1
             if pkg_name == "all":
                 continue
 
@@ -1822,17 +1815,9 @@ class SpackSolverSetup:
                 )
 
             # Declare external conditions with a local index into packages.yaml
-            inner_idx = 0
             for spec in external_specs:
-                inner_idx += 1
                 msg = "%s available as external when satisfying %s" % (spec.name, spec)
 
-                if spec.satisfies("externaltool@=1.0%gcc@10.2.1"):
-                    import traceback
-                    SpackSolverSetup.of_interest.append(traceback.format_stack())
-                    #print(''.join(SpackSolverSetup.of_interest[0]))
-                    import pdb; pdb.set_trace()
-                    print("hi")
                 self.condition(spec, spec, msg=msg, transform_imposed=external_imposition(spec))
                 self.possible_versions[spec.name].add(spec.version)
                 self.gen.newline()
