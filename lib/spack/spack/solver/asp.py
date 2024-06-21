@@ -1488,7 +1488,7 @@ class SpackSolverSetup:
         name: Optional[str] = None,
         msg: Optional[str] = None,
         transform_required: Optional[TransformFunction] = None,
-        transform_imposed: Optional[TransformFunction] = None,
+        transform_imposed: Optional[TransformFunction] = rm_node(),
         id_context: Optional[List] = None,
     ):
         """Generate facts for a dependency or virtual provider condition.
@@ -1509,7 +1509,6 @@ class SpackSolverSetup:
         if not name:
             raise ValueError(f"Must provide a name for anonymous condition: '{required_spec}'")
 
-        transform_imposed = transform_imposed or rm_node()
         id_context = id_context or []
 
         with spec_with_name(required_spec, name):
