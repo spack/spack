@@ -62,7 +62,7 @@ class Hepmc3(CMakePackage):
             self.define("HEPMC3_ENABLE_TEST", self.run_tests),
         ]
 
-        if "+python" in spec:
+        if spec.satisfies("+python"):
             py_ver = spec["python"].version.up_to(2)
             args.extend(
                 [
@@ -71,7 +71,9 @@ class Hepmc3(CMakePackage):
                 ]
             )
 
-        if "+rootio" in spec:
+        if spec.satisfies("+rootio"):
             args.append(self.define("ROOT_DIR", spec["root"].prefix))
+            if spec.satisfies("@3.2.4:"):
+                args.append(self.define("HEPMC3_CXX_STANDARD", spec["root"].variants["cxxstd"].value))
 
         return args
