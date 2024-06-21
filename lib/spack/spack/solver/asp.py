@@ -892,7 +892,9 @@ class PyclingoDriver:
 
         if result.satisfiable:
             # get the best model
-            builder = SpecBuilder(specs, hash_lookup=setup.reusable_and_possible)
+            builder = SpecBuilder(
+                specs, hash_lookup=setup.reusable_and_possible, external_lookup=setup.external_map
+            )
             min_cost, best_model = min(models)
 
             # first check for errors
@@ -1070,10 +1072,11 @@ class external_imposition(TransformFunction):
     def __init__(self, spec):
         self.spec = spec
         self.elements = (spec,)
+        self.external_id = spec.dag_hash()[:8]
 
     def __call__(self, input_spec: spack.spec.Spec, requirements: List[AspFunction]):
         return requirements + [
-            fn.attr("external_conditions_hold", input_spec.name, self.spec.dag_hash()[:8])
+            fn.attr("external_conditions_hold", input_spec.name, self.external_id)
         ]
 
 
@@ -1759,6 +1762,7 @@ class SpackSolverSetup:
                     )
                 )
 
+        self.external_map = dict()
         for pkg_name, data in packages_yaml.items():
             if pkg_name == "all":
                 continue
@@ -1766,6 +1770,9 @@ class SpackSolverSetup:
             # This package does not appear in any repository
             if pkg_name not in spack.repo.PATH:
                 continue
+
+            pkg_ext_map = dict()
+            self.external_map[pkg_name] = pkg_ext_map
 
             # Check if the external package is buildable. If it is
             # not then "external(<pkg>)" is a fact, unless we can
@@ -1779,6 +1786,12 @@ class SpackSolverSetup:
             candidate_specs = [
                 spack.spec.parse_with_version_concrete(x["spec"]) for x in externals
             ]
+
+            for pkg_ext_data in externals:
+                spec = spack.spec.parse_with_version_concrete(pkg_ext_data["spec"])
+                # TODO: this should refactor to more-identifiably draw from
+                # the ID used by external_imposition
+                pkg_ext_map[spec.dag_hash()[:8]] = pkg_ext_data
 
             external_specs = []
             if spec_filters:
@@ -3378,7 +3391,7 @@ class SpecBuilder:
         """
         return NodeArgument(id="0", pkg=pkg)
 
-    def __init__(self, specs, hash_lookup=None):
+    def __init__(self, specs, hash_lookup=None, external_lookup=None):
         self._specs = {}
         self._result = None
         self._command_line_specs = specs
@@ -3388,6 +3401,7 @@ class SpecBuilder:
         # Pass in as arguments reusable specs and plug them in
         # from this dictionary during reconstruction
         self._hash_lookup = hash_lookup or {}
+        self._external_lookup = external_lookup or {}
 
     def hash(self, node, h):
         if node not in self._specs:
@@ -3451,10 +3465,10 @@ class SpecBuilder:
     def no_flags(self, node, flag_type):
         self._specs[node].compiler_flags[flag_type] = []
 
-    def external_spec_selected(self, node, idx):
+    def external_spec_selected(self, node, external_id):
         """This means that the external spec and index idx has been selected for this package."""
         packages_yaml = _external_config_with_implicit_externals(spack.config.CONFIG)
-        spec_info = packages_yaml[node.pkg]["externals"][int(idx)]
+        spec_info = self._external_lookup[node.pkg][external_id]
         self._specs[node].external_path = spec_info.get("prefix", None)
         self._specs[node].external_modules = spack.spec.Spec._format_module_list(
             spec_info.get("modules", None)
