@@ -376,7 +376,7 @@ e4s-neoverse_v1-build:
 
 e4s-rocm-external-generate:
   extends: [ ".e4s-rocm-external", ".generate-x86_64"]
-  image: ecpe4s/ubuntu22.04-runner-amd64-gcc-11.4-rocm5.7.1:2024.03.01
+  image: ecpe4s/ubuntu22.04-runner-amd64-gcc-11.4-rocm6.1.1:2024.06.17
 
 e4s-rocm-external-build:
   extends: [ ".e4s-rocm-external", ".build" ]
@@ -482,28 +482,6 @@ build_systems-build:
   needs:
     - artifacts: True
       job: build_systems-generate
-
-###########################################
-# Build tests for different developer tools
-###########################################
-.developer-tools:
-  extends: [ ".linux_x86_64_v3" ]
-  variables:
-    SPACK_CI_STACK_NAME: developer-tools
-
-developer-tools-generate:
-  extends: [ ".developer-tools", ".generate-x86_64"]
-
-developer-tools-build:
-  extends: [ ".developer-tools", ".build" ]
-  trigger:
-    include:
-      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
-        job: developer-tools-generate
-    strategy: depend
-  needs:
-    - artifacts: True
-      job: developer-tools-generate
 
 ###########################################
 # Build tests for different developer tools
