@@ -44,7 +44,9 @@ class Hepmc3(CMakePackage):
     )
 
     depends_on("cmake@2.8.9:", type="build")
-    depends_on("root", when="+rootio")
+    with when("+rootio"):
+        depends_on("root")
+        depends_on("root cxxstd=11", when="@:3.2.3")
     depends_on("protobuf", when="+protobuf")
     depends_on("python", when="+python")
 
