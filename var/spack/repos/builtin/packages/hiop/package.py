@@ -275,7 +275,7 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
 
     def run_hiop(self, raja):
 
-        if raja == True:
+        if raja:
             exName = "NlpMdsEx1Raja.exe"
         else:
             exName = "NlpMdsEx1.exe"
@@ -290,7 +290,7 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
             ["400", "100", "0", "-empty_sp_row", "-selfcheck"],
         ]
 
-        if raja == True:
+        if raja:
             options.extend(
                 [
                     ["400", "100", "0", "-selfcheck"],
@@ -313,6 +313,6 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
 
     def test_NlpMdsEx1Raja(self):
         """Test NlpMdsEx1 with +raja"""
-        if not "+raja" in self.spec:
+        if "+raja" not in self.spec:
             raise SkipTest("Package must be installed with +raja")
         self.run_hiop(True)
