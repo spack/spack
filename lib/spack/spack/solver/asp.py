@@ -1069,10 +1069,10 @@ class rm_node(TransformFunction):
 
 
 class external_imposition(TransformFunction):
-    def __init__(self, spec):
+    def __init__(self, spec, external_id):
         self.spec = spec
         self.elements = (spec,)
-        self.external_id = spec.dag_hash()[:8]
+        self.external_id = external_id
 
     def __call__(self, input_spec: spack.spec.Spec, requirements: List[AspFunction]):
         return requirements + [
@@ -1791,11 +1791,14 @@ class SpackSolverSetup:
                 spack.spec.parse_with_version_concrete(x["spec"]) for x in externals
             ]
 
+            parsed_to_id = dict()
             for pkg_ext_data in externals:
-                spec = spack.spec.parse_with_version_concrete(pkg_ext_data["spec"])
+                input_spec = pkg_ext_data["spec"]
+                spec = spack.spec.parse_with_version_concrete(input_spec)
                 # TODO: this should refactor to more-identifiably draw from
                 # the ID used by external_imposition
-                pkg_ext_map[spec.dag_hash()[:8]] = pkg_ext_data
+                pkg_ext_map[str(input_spec)] = pkg_ext_data
+                parsed_to_id[spec] = str(input_spec)
 
             external_specs = []
             if spec_filters:
@@ -1818,7 +1821,8 @@ class SpackSolverSetup:
             for spec in external_specs:
                 msg = "%s available as external when satisfying %s" % (spec.name, spec)
 
-                self.condition(spec, spec, msg=msg, transform_imposed=external_imposition(spec))
+                transform_fn = external_imposition(spec, external_id=parsed_to_id[spec])
+                self.condition(spec, spec, msg=msg, transform_imposed=transform_fn)
                 self.possible_versions[spec.name].add(spec.version)
                 self.gen.newline()
 
