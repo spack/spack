@@ -1134,7 +1134,9 @@ class SpackSolverSetup:
         uniq_id = sha.hexdigest()[:8]
         if uniq_id in self.generated_ids:
             if fail_on_error:
-                raise InternalConcretizerError(f"Attempt to generate same ID twice ({uniq_id}): {full_str}")
+                raise InternalConcretizerError(
+                    f"Attempt to generate same ID twice ({uniq_id}): {full_str}"
+                )
             else:
                 return None
         self.generated_ids.add(uniq_id)
@@ -1733,7 +1735,6 @@ class SpackSolverSetup:
                 self.gen.fact(fn.requirement_has_weight(member_id, requirement_weight))
                 self.gen.newline()
                 requirement_weight += 1
-
 
     def external_packages(self):
         """Facts on external packages, from packages.yaml and implicit externals."""
@@ -2576,8 +2577,7 @@ class SpackSolverSetup:
         self.possible_compilers = list()
         for compiler in compiler_parser.possible_compilers():
             compiler_id = self.new_id(
-                ["compiler-id", compiler.spec, compiler.os, compiler.target],
-                fail_on_error=False
+                ["compiler-id", compiler.spec, compiler.os, compiler.target], fail_on_error=False
             )
             if not compiler_id:
                 # TODO: in this case we are adding the same compiler twice
