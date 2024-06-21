@@ -273,14 +273,13 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
     # export SPACK_USER_CACHE_PATH=/tmp/spack
     # export SPACK_DISABLE_LOCAL_CONFIG=true
 
+    #TO DO: MAKE SURE TO REFACTOR (MAIN FUNCTION, TWO TESTS CALLING WITH DIFF INPUTS)
     def test_N1pMDsEx1(self):
         """Test N1pMDsEx1"""
 
-        if not self.spec.satisfies("@0.6.1") or not os.path.isdir(self.prefix.bin):
-            raise SkipTest(
-                f"Skipping: checks not installed in bin for v{self.version}."
-                + " Try any version >= 0.6.1"
-            )
+        exe = os.path.join(self.prefix.bin, "NlpMdsEx1.exe")
+        if not os.path.exists(exe):
+            raise SkipTest(f"NlpMdsEx1.exe does not exist in version {self.version}")
 
         options = [
             ["400", "100", "0", "-selfcheck"],
@@ -288,7 +287,6 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
             ["400", "100", "0", "-empty_sp_row", "-selfcheck"],
         ]
 
-        exe = os.path.join(self.prefix.bin, "NlpMdsEx1.exe")
         exe = which(exe)
 
         for i, args in enumerate(options):
@@ -300,11 +298,9 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
     def test_N1pMdsEx1Raja(self):
         """Test N1pMdsEx1Raja"""
 
-        if not self.spec.satisfies("@0.6.1") or not os.path.isdir(self.prefix.bin):
-            raise SkipTest(
-                f"Skipping: checks not installed in bin for v{self.version}."
-                + " Try any version >= 0.6.1"
-            )
+        exe = os.path.join(self.prefix.bin, "NlpMdsEx1Raja.exe")
+        if not os.path.exists(exe):
+            raise SkipTest(f"NlpMdsEx1Raja.exe does not exist in version {self.version}")
 
         if "+raja" not in self.spec:
             raise SkipTest("Package must be installed with +raja")
@@ -315,7 +311,6 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
             ["400", "100", "0", "-empty_sp_row", "-selfcheck"],
         ]
 
-        exe = os.path.join(self.prefix.bin, "NlpMdsEx1Raja.exe")
         exe = which(exe)
 
         for i, args in enumerate(options):
