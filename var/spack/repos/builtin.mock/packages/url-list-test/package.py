@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import sys
+
 import spack.paths
 from spack.package import *
 
@@ -15,8 +16,8 @@ class UrlListTest(Package):
 
     drive_escape = "/" if sys.platform == "win32" else ""
     web_data_path = join_path(spack.paths.test_path, "data", "web")
-    url = "file://"+ drive_escape + web_data_path + "/foo-0.0.0.tar.gz"
-    list_url = "file://"+ drive_escape + web_data_path + "/index.html"
+    url = "file://" + drive_escape + web_data_path + "/foo-0.0.0.tar.gz"
+    list_url = "file://" + drive_escape + web_data_path + "/index.html"
     list_depth = 3
 
     version("0.0.0", md5="00000000000000000000000000000000")
