@@ -680,9 +680,7 @@ class Compiler:
     def is_supported_on_platform(cls, plat):
         return type(plat) in cls.supported_platforms
 
-    def try_compiler(
-        self, lang, file=None, cmp_args=[], flags=[], definitions=[]
-    ):
+    def try_compiler(self, lang, file=None, cmp_args=[], flags=[], definitions=[]):
         """Try to use this compiler to compile a test file of specified language.
         File is provided by caller or specified by language denotation.
         Args:
