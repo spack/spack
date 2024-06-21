@@ -76,6 +76,8 @@ class Hepmc3(CMakePackage):
         if spec.satisfies("+rootio"):
             args.append(self.define("ROOT_DIR", spec["root"].prefix))
             if spec.satisfies("@3.2.4:"):
-                args.append(self.define("HEPMC3_CXX_STANDARD", spec["root"].variants["cxxstd"].value))
+                args.append(
+                    self.define("HEPMC3_CXX_STANDARD", spec["root"].variants["cxxstd"].value)
+                )
 
         return args
