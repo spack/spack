@@ -42,15 +42,15 @@ class Htslib(AutotoolsPackage):
         "libcurl",
         default=True,
         description="Enable libcurl-based support for http/https/etc URLs,"
-        " for versions >= 1.3. This also enables S3 and GCS support.",
+        " for versions >= 1.3. This also enables S3 and GCS support by default.",
     )
     variant(
         "libdeflate",
         default=True,
         description="use libdeflate for faster crc and deflate algorithms",
     )
-    variant("gcs", default=True, description="enable gcs url support", when="+libcurl@1.5")
-    variant("s3", default=True, description="enable s3 url support", when="+libcurl@1.5")
+    variant("gcs", default=True, description="enable gcs url support", when="@1.5:+libcurl")
+    variant("s3", default=True, description="enable s3 url support", when="@1.5:+libcurl")
     variant("plugins", default=False, description="enable support for separately compiled plugins")
     variant("pic", default=True, description="Compile with PIC support")
 
@@ -83,7 +83,7 @@ class Htslib(AutotoolsPackage):
 
     def flag_handler(self, name, flags):
         if name == "cflags" and self.spec.satisfies("+pic"):
-            flags.append("-fPIC")
+            flags.append(self.compiler.cc_pic_flag)
         return (flags, None, None)
 
     def configure_args(self):
