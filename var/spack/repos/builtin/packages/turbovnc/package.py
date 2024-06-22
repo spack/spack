@@ -25,11 +25,15 @@ class Turbovnc(CMakePackage):
 
     variant("viewer", default=True, description="Build VNC viewer")
     variant("server", default=True, description="Build VNC server")
-    variant("libs", default=True, description="Build with spack-provided core libs")
-    variant("openssl", default=True, description="Build with spack-provided openssl")
-    variant("java", default=True, description="Build with spack-provided java")
     variant("web", default=True, description="Build with noVNC support", when="+server")
-    #    variant("X", default=False, description="Build with spack-provided X")
+    variant("libs", default=True, description="Build with spack-provided core libs")
+    variant("x11", default=True, description="Build with spack-provided X11")
+    variant("glx", default=False, description="Build with GLX support", when="+x11")
+    variant("tls", default=True, description="Build with TLS encryption")
+
+    # This can be disable to statically link for compatibility
+    variant("dynamicssl", default=True, description="Duynamically link openssl", when="+tls")
+    variant("customjre", default=False, description="Build with a custom JRE", when="+viewer")
 
     with default_args(type="build"):
         depends_on("ninja")
@@ -41,41 +45,53 @@ class Turbovnc(CMakePackage):
 
     depends_on("libjpeg-turbo@1.2:")
     depends_on("linux-pam")
+    depends_on("libcap")
+    depends_on("krb5")
 
-    depends_on("openjdk@11:", when="+java")
-    depends_on("openssl", when="+openssl")
+    depends_on("libice")
+    depends_on("libsm")
+    depends_on("xz")
+    depends_on("lua")
+
+    depends_on("python")
+    with when("+web"):
+        depends_on("python@3:")
+        depends_on("novnc")
+
+    depends_on("openjdk@11:", when="+viewer")
+    depends_on("openssl", when="+tls")
 
     with when("+libs"):
         depends_on("zlib-api")
         depends_on("bzip2")
         depends_on("freetype")
 
-    depends_on("xkbcomp")
-    depends_on("xkeyboard-config")
+    with when("+x11"):
+        # Core TurboVNC dependencies
+        depends_on("libx11")
+        depends_on("libxau")
+        depends_on("libxdmcp")
+        depends_on("libxkbfile")
+        depends_on("libxfont2")
+        depends_on("libfontenc")
+        depends_on("pixman")
+        #depends_on("libxcb")
+        #depends_on("libxfixes")
+        #depends_on("libxi")
+        #depends_on("libxt")
+        #depends_on("libxft")
+        #depends_on("fontconfig")
+        
+        # Dependencies separated out by spack's packaging
+        depends_on("font-util")
+        depends_on("xkbcomp")
+        depends_on("xkeyboard-config")
 
-    depends_on("libcap")
-    depends_on("krb5")
+    with when("+glx"):  # This may need more specific versions but I'm not able to test
+        depends_on("libxext")
+        depends_on("libglx")
+        depends_on("egl")  # For dri_interface.h
 
-    depends_on("libx11")
-    depends_on("libxau")
-    depends_on("libxcb")
-    depends_on("libxext")
-    depends_on("libxfixes")
-    depends_on("libxi")
-    depends_on("libxt")
-
-    depends_on("fontconfig")
-    depends_on("font-util")
-    depends_on("libxft")
-    depends_on("libxfont2")
-    depends_on("pixman")
-
-    depends_on("libice")
-    depends_on("libsm")
-    depends_on("xz")
-    depends_on("lua")
-    depends_on("python")
-    depends_on("python@3:", when="+web")
 
     with default_args(type="run"):
         depends_on("xauth")
@@ -89,43 +105,44 @@ class Turbovnc(CMakePackage):
         xkbcomp = spec["xkbcomp"]
         xkbbase = spec["xkeyboard-config"]
 
-        # Required flags for Spack build
         args = [
-            # Turbo JPEG is required
-            f"-DTJPEG_INCLUDE_DIR={jpeg.home.include}",
-            f"-DTJPEG_LIBRARY=-L{jpeg.home.lib} -lturbojpeg",
-        ]
-
-        args += [
-            # Look for Java
-            self.define_from_variant("TVNC_INCLUDEJRE", "java"),
-            self.define_from_variant("TVNC_SYSTEMLIBS", "libs"),
-            self.define_from_variant("TVNC_DLOPENSSL", "openssl"),
+            # Always need turbojpeg
+            self.define("TJPEG_INCLUDE_DIR", jpeg.home.include),
+            self.define("TJPEG_LIBRARY", f"-L{jpeg.home.lib} -lturbojpeg"),
+            # Major components to build
+            self.define_from_variant("TVNC_BUILDVIEWER", "viewer"),
+            self.define_from_variant("TVNC_BUILDSERVER", "server"),
             self.define_from_variant("TVNC_BUILDWEBSERVER", "web"),
+            self.define_from_variant("TVNC_GLX", "glx"),
+
+            # Build with Spack libraries
+            self.define_from_variant("TVNC_SYSTEMLIBS", "libs"),
+            self.define_from_variant("TVNC_SYSTEMX11", "x11"),
+            # Specialized build options
+            self.define_from_variant("TVNC_DLOPENSSL", "dynamicssl"),
+            self.define_from_variant("TVNC_INCLUDEJRE", "customjre"),
         ]
 
-        # This is all of the Xorg stuff that needs to be sorted out
-        args += [
-            "-DTVNC_SYSTEMX11=0",  # Not ready to debug this YET
-            "-DTVNC_STATIC_XORG_PATHS=0",  # TODO: Investigate
-        ]
+        if spec.satisfies("+x11"):
+            args += [
+                # Keyboard configuration (Xvnc wont start if this is wrong)
+                # We need to tell TurboVNC where xkbcomp is
+                self.define("XKB_BIN_DIRECTORY", xkbcomp.home.bin),
+                # We also need to tell it where to find the xkb rules
+                self.define("XKB_BASE_DIRECTORY", xkbbase.home.share.X11.xkb),
+                # Where what the default rules are. This appears to be the only option from spack.
+                self.define("XKB_DFLT_RULES", "base"),
+                # Font configuration (Xvnc may not start if this is wrong)
+                # Make sure the fonts directory is defined
+                self.define("XORG_FONT_PATH", fontutil.home.share.fonts.X11),
+                # And the font encodings directory
+                self.define("FONT_ENCODINGS_DIRECTORY", fontutil.home.share.fonts.X11.encodings),
+            ]
 
-        # Keyboard configuration (Xvnc wont start if this is wrong)
-        args += [
-            # We need to tell TurboVNC where xkbcomp is
-            f"-DXKB_BIN_DIRECTORY={xkbcomp.home.bin}",
-            # We also need to tell it where to find the xkb rules
-            f"-DXKB_BASE_DIRECTORY={xkbbase.home.share.X11.xkb}",
-            # And where what the default rules should be
-            "-DXKB_DFLT_RULES=base",
-        ]
-
-        # Misc X configuration
-        args += [
-            #f"-DXORG_FONT_PATH={fontutil.home.share.fonts.X11}",
-            #f"-DFONT_ENCODINGS_DIRECTORY={fontutil.home.share.fonts.X11.encodings}",
+        #args += [
+            # "-DTVNC_STATIC_XORG_PATHS=0",  # Can use this if not finding spack paths
             # Don't know what actually provides these yet
             # f"-DXORG_DRI_DRIVER_PATH={}",  # dri was struggling to build in xorg-server
             # f"-DXORG_REGISTRY_PATH={}",    # This needs protocols.txt from dix?
-        ]
+        #]
         return args
