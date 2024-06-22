@@ -1,0 +1,13 @@
+diff --git a/cmake/modules/RootBuildOptions.cmake b/cmake/modules/RootBuildOptions.cmake
+index a3d9852567..8d81e139e3 100644
+--- a/cmake/modules/RootBuildOptions.cmake
++++ b/cmake/modules/RootBuildOptions.cmake
+@@ -457,7 +457,7 @@ if(rpath)
+   if(APPLE)
+     set(CMAKE_MACOSX_RPATH TRUE)
+     set(CMAKE_INSTALL_NAME_DIR "@rpath")
+-    set(CMAKE_INSTALL_RPATH "@loader_path/${BINDIR_TO_LIBDIR}")
++    set(CMAKE_INSTALL_RPATH "@loader_path/${BINDIR_TO_LIBDIR};@loader_path")
+   else()
+     set(CMAKE_INSTALL_RPATH "$ORIGIN;$ORIGIN/${BINDIR_TO_LIBDIR}")
+   endif()

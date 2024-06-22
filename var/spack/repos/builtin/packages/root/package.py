@@ -153,6 +153,8 @@ class Root(CMakePackage):
             sha256="e68be5fe7b1ec873da134bd39c5c72730c4ca06d51b52eb436ae44fe81cd472d",
             when="@:6.30.04 +x",
         )
+        # Fix rpath for loading cppyy
+        patch("loader.patch", when="@6.28: +python")
 
     # ###################### Variants ##########################
     # See README.md for specific notes about what ROOT configuration
