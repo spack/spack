@@ -68,8 +68,9 @@ class Kentutils(MakefilePackage):
     patch("mysql-zlib-workaround.patch", when="%gcc ^mysql")
 
     def flag_handler(self, name, flags):
-        flags.append(self.compiler.cc_pic_flag)
-        if name == "ldflags":
+        if name == "cflags":
+            flags.append(self.compiler.cc_pic_flag)
+        elif name == "ldflags":
             flags.append(f'{self.spec["libiconv"].libs.ld_flags}')
         return (flags, None, None)
 
@@ -94,26 +95,37 @@ class Kentutils(MakefilePackage):
     @property
     def local_libs(self):
         libs = [
-            f"{self.machlib}/jkweb.a",
-            f"{self.machlib}/jkOwnLib.a",
-            f"{self.machlib}/jkhgap.a",
-            f"{self.machlib}/jkhgapcgi.a",
-            f"hg/altSplice/{self.machlib}/libSpliceGraph.a",
+            f"lib/{self.machtype}/jkweb.a",
+            f"lib/{self.machtype}/jkOwnLib.a",
+            f"lib/{self.machtype}/jkhgap.a",
+            f"lib/{self.machtype}/jkhgapcgi.a",
+            f"hg/altSplice/lib/{self.machtype}/libSpliceGraph.a",
         ]
         if self.spec.satisfies("+htslib"):
             libs.append("htslib/libhts.a")
         return LibraryList(libs)
 
     @property
-    def machlib(self):
-        return f"lib/{self.machtype}"
+    def lib_dir(self):
+        return join_path(self.prefix.lib, self.machtype)
 
     @property
-    def lib_dir(self):
-        return join_path(self.prefix, self.machlib)
+    def htslib_include_dir(self):
+        if self.spec.satisfies("~htslib"):
+            # If we're not using the bundled version, just defer to htslib
+            return self.spec["htslib"].prefix.include
+        else:
+            # In the event we're using the bundled htslib, the htslib
+            # headers live in a different part of the installed tree
+            return self.prefix.htslib
 
-    def setup_dependent_package(self, pkg):
-        setattr(pkg, "kent_lib_dir", self.lib_dir)
+    # Packages that link to kentlib (and potential, htslib) often have 
+    # idiosyncratic ways of setting up their includes and linker paths.
+    # Having these paths available will make things cleaner downstream.
+    def setup_dependent_package(self, module, dep_spec):
+        setattr(module, "KENTUTILS_INCLUDE_DIR", self.prefix.inc)
+        setattr(module, "KENTUTILS_LIB_DIR", self.lib_dir)
+        setattr(module, "KENTUTILS_HTSLIB_INCLUDE_DIR", self.htslib_include_dir)
 
     def install_libs_from_stage(self, spec, prefix):
         # Dependent packages expect things in the source tree, but we don't
