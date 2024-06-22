@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from spack.package import *
+
 # ----------------------------------------------------------------------------
 # If you submit this package back to Spack as a pull request,
 # please first remove this boilerplate and all FIXME comments.
@@ -19,8 +21,7 @@
 #
 # See the Spack documentation for more information on packaging.
 # ----------------------------------------------------------------------------
-
-from spack.package import *
+#from spack.package import *
 
 
 class Novnc(Package):
@@ -39,31 +40,22 @@ class Novnc(Package):
     version("1.1.0", sha256="2c63418b624a221a28cac7b9a7efecc092b695fc1b7dd88255b074ab32bc72a7")
     version("1.0.0", sha256="58aced9ec76c9d9685b771ed94472b7cedafa2810584e85afaedbcb0b02b8aae")
 
-    variant("index", default=False, description="Rename vnc.html to index.html")
-    variant("install_root", 
-        default="srv/www",
-        description="Where to place the static novnc files",
-        values=[
-            "srv/www",
-            "var/www",
-            "usr/share",
-            "usr/local/var",
-        ],
-    )
-    variant("nginx", default=False, description="Write nginx configuration files")
-    variant("apache", default=False, description="Write apache configuration files")
+    variant("index-link", default=False, description="Link vnc.html as index.html")
 
     @property
-    def html_dir(self):
-        print(self.spec.variants)
-        install_root = f"{self.spec.variants['install_root'].value}"
-        return join_path(install_root, self.name)
+    def www_root(self):
+        return self.home.share.www
+
+    @property
+    def novnc_dir(self):
+        return join_path(self.www_root, self.name)
 
     def install(self, spec, prefix):
-        base = join_path(prefix, self.html_dir)
+        base = join_path(prefix, self.novnc_dir)
         mkdirp(base)
-        filename = "vnc.html" if spec.satisfies("~index") else "index.html"
-        install("vnc.html", join_path(base, filename))
+        install("vnc.html", join_path(base, "vnc.html"))
+        if self.spec.satisfies("+index-link"):
+            symlink("vnc.html", join_path(base, "index.html"))
         for res in ["app", "core", "vendor"]:
             install_tree(res, join_path(base, res))
 
