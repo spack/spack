@@ -77,15 +77,10 @@ class Turbovnc(CMakePackage):
         depends_on("pixman")
 
         depends_on("xorgproto")
-        #depends_on("libxcb")
         depends_on("libxfixes")
-        #depends_on("libxft")
         depends_on("libxi")
         depends_on("libxrandr")
-        #depends_on("libxt")
 
-        #depends_on("fontconfig")
-        
         # Dependencies separated out by spack's packaging
         depends_on("font-util")
         depends_on("xkbcomp")
@@ -95,7 +90,6 @@ class Turbovnc(CMakePackage):
         depends_on("libxext")
         depends_on("libglx")
         depends_on("egl")  # For dri_interface.h
-
 
     with default_args(type="run"):
         depends_on("xauth")
@@ -118,7 +112,6 @@ class Turbovnc(CMakePackage):
             self.define_from_variant("TVNC_BUILDSERVER", "server"),
             self.define_from_variant("TVNC_BUILDWEBSERVER", "web"),
             self.define_from_variant("TVNC_GLX", "glx"),
-
             # Build with Spack libraries
             self.define_from_variant("TVNC_SYSTEMLIBS", "libs"),
             self.define_from_variant("TVNC_SYSTEMX11", "x11"),
@@ -143,10 +136,8 @@ class Turbovnc(CMakePackage):
                 self.define("FONT_ENCODINGS_DIRECTORY", fontutil.home.share.fonts.X11.encodings),
             ]
 
-        #args += [
-            # "-DTVNC_STATIC_XORG_PATHS=0",  # Can use this if not finding spack paths
-            # Don't know what actually provides these yet
-            # f"-DXORG_DRI_DRIVER_PATH={}",  # dri was struggling to build in xorg-server
-            # f"-DXORG_REGISTRY_PATH={}",    # This needs protocols.txt from dix?
-        #]
+        # Other args for future reference
+        # VNC_STATIC_XORG_PATHS=0 - If need to compile with fixed xorg lib paths
+        # XORG_DRI_DRIVER_PATH    - Don't know how or if we actually need this, maybe for glx
+        # XORG_REGISTRY_PATH      - Nothing provides protocols.txt but build still works
         return args

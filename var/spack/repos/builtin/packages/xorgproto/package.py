@@ -37,4 +37,3 @@ class Xorgproto(MesonPackage):
     provides("xineramaproto")
     provides("xf86driproto")
     provides("xcmiscproto")
-

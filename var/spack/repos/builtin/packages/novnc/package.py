@@ -21,7 +21,7 @@ from spack.package import *
 #
 # See the Spack documentation for more information on packaging.
 # ----------------------------------------------------------------------------
-#from spack.package import *
+# from spack.package import *
 
 
 class Novnc(Package):
@@ -58,4 +58,3 @@ class Novnc(Package):
             symlink("vnc.html", join_path(base, "index.html"))
         for res in ["app", "core", "vendor"]:
             install_tree(res, join_path(base, res))
-
