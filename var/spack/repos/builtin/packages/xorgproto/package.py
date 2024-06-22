@@ -19,5 +19,22 @@ class Xorgproto(MesonPackage):
 
     depends_on("util-macros", type="build")
 
-    built_targets = ["install"]
+    provides("bigreqsproto")
+    provides("compositeproto")
+    provides("damageproto")
+    provides("dmxproto")
+    provides("dri2proto")
+    provides("dri3proto")
+    provides("fixesproto")
+    provides("fontcacheproto")
+    provides("presentproto")
+    provides("randrproto")
+    provides("recordproto")
+    provides("renderproto")
+    provides("resourceproto")
+    provides("scrnsaverproto")
+    provides("videoproto")
+    provides("xineramaproto")
+    provides("xf86driproto")
+    provides("xcmiscproto")
 
