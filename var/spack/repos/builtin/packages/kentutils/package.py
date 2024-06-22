@@ -37,7 +37,7 @@ class Kentutils(MakefilePackage):
     # for some additional details. A built-in version SHOULD work for most things though.
     variant(
         "builtin_htslib",
-        default=True,
+        default=False,
         description="Build with bundled htslib (using an external htslib may lead to errors)",
         sticky=True,
     )
@@ -51,8 +51,6 @@ class Kentutils(MakefilePackage):
         depends_on("freetype")
         depends_on("libiconv")
         depends_on("htslib+pic", when="~builtin_htslib")
-
-    provides("htslib", when="+builtin_htslib")
 
     # The bgzip.c bug present in other packages is present in kent/src/htslib/bgzf.c
     # Conflicting line: assert(compressBound(BGZF_BLOCK_SIZE) < BGZF_MAX_BLOCK_SIZE);

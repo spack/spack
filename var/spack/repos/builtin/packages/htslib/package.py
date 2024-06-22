@@ -42,7 +42,7 @@ class Htslib(AutotoolsPackage):
         "libcurl",
         default=True,
         description="Enable libcurl-based support for http/https/etc URLs,"
-        " for versions >= 1.3. This also enables S3 and GCS support.",
+        " for versions >= 1.3. This also enables S3 and GCS support by default.",
     )
     variant(
         "libdeflate",
