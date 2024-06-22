@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+
 from spack.package import *
 
 
@@ -119,7 +120,7 @@ class Kentutils(MakefilePackage):
             # headers live in a different part of the installed tree
             return self.prefix.htslib
 
-    # Packages that link to kentlib (and potential, htslib) often have 
+    # Packages that link to kentlib (and potential, htslib) often have
     # idiosyncratic ways of setting up their includes and linker paths.
     # Having these paths available will make things cleaner downstream.
     def setup_dependent_package(self, module, dep_spec):
@@ -153,4 +154,3 @@ class Kentutils(MakefilePackage):
     def install(self, spec, prefix):
         install_tree("bin", prefix.bin)
         self.install_libs_from_stage(spec, prefix)
-
