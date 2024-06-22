@@ -76,25 +76,14 @@ class Turbovnc(CMakePackage):
         depends_on("libfontenc")
         depends_on("pixman")
 
-        depends_on("libxfixes")
-        depends_on("libxrandr")
-        # This actually needs to be 
-        #depends_on("xorgproto")
-        depends_on("xineramaproto")
-        depends_on("scrnsaverproto")
-        depends_on("damageproto")
-        depends_on("compositeproto")
-        depends_on("bigreqsproto")
-        depends_on("videoproto")
-        depends_on("resourceproto")
-        depends_on("xf86bigfontproto")
-        depends_on("xcmiscproto")
-        depends_on("presentproto@1.2")
-
+        depends_on("xorgproto")
         #depends_on("libxcb")
-        #depends_on("libxi")
-        #depends_on("libxt")
+        depends_on("libxfixes")
         #depends_on("libxft")
+        depends_on("libxi")
+        depends_on("libxrandr")
+        #depends_on("libxt")
+
         #depends_on("fontconfig")
         
         # Dependencies separated out by spack's packaging
@@ -111,7 +100,7 @@ class Turbovnc(CMakePackage):
     with default_args(type="run"):
         depends_on("xauth")
 
-    conflicts("%gcc@13:", msg="GCC 13+ does not support implicit declarations")
+    conflicts("%gcc@14:", msg="GCC 13+ does not support implicit declarations")
 
     def cmake_args(self):
         spec = self.spec
