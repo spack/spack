@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
 from spack.package import *
 
 
@@ -31,7 +32,9 @@ class Kentutils(MakefilePackage):
         deprecated=True,
     )
 
-    variant("libs", default=True, description="Install jk*.a libraries")
+    # The bundled version of kentlib has some custom changes that are used by parts of
+    # kentlib. See https://github.com/spack/spack/pull/44501#issuecomment-2162789410
+    # for some additional details. A built-in version SHOULD work for most things though.
     variant(
         "htslib",
         default=True,
@@ -47,7 +50,7 @@ class Kentutils(MakefilePackage):
         depends_on("zlib-api")
         depends_on("freetype")
         depends_on("libiconv")
-        depends_on("htslib+pic", when="~htslib+libs")
+        depends_on("htslib+pic", when="~htslib")
 
     # The bgzip.c bug present in other packages is present in kent/src/htslib/bgzf.c
     # Conflicting line: assert(compressBound(BGZF_BLOCK_SIZE) < BGZF_MAX_BLOCK_SIZE);
@@ -58,16 +61,16 @@ class Kentutils(MakefilePackage):
     # Does not add a link to mysql_config, which is required for compilation
     conflicts("mariadb-c-client")
 
-    # MySQL pointer/integer conversion issue
+    # MySQL pointer/integer conversion issue (https://github.com/ucscGenomeBrowser/kent/pull/87)
     patch("fix-mysql-options-gcc13.patch", when="%gcc@13: ^mysql")
-    # MySQL build flags improperly states the zlib-api library
+    # MySQL build flags from `mysql_config` are not compatible with Spack's method of building
+    # and includes zlib when it's not needed/available, leading to a linking failure.
     patch("mysql-zlib-workaround.patch", when="%gcc ^mysql")
 
     def flag_handler(self, name, flags):
+        flags.append(self.compiler.cc_pic_flag)
         if name == "ldflags":
             flags.append(f'{self.spec["libiconv"].libs.ld_flags}')
-        elif name == "cflags" and self.spec.satisfies("+libs"):
-            flags.append("-fPIC")
         return (flags, None, None)
 
     @property
@@ -79,9 +82,8 @@ class Kentutils(MakefilePackage):
     @property
     def headers(self):
         headers = []
-        if self.spec.satisfies("+libs"):
-            headers.extend(find_headers("*", self.prefix.inc, recursive=True))
-        if self.spec.satisfies("+htslib+libs"):
+        headers.extend(find_headers("*", self.prefix.inc, recursive=True))
+        if self.spec.satisfies("+htslib"):
             headers.extend(find_headers("*", self.prefix.htslib, recursive=True))
         return HeaderList(headers)
 
@@ -91,18 +93,14 @@ class Kentutils(MakefilePackage):
 
     @property
     def local_libs(self):
-        libs = []
-        if self.spec.satisfies("+libs"):
-            libs.extend(
-                [
-                    f"{self.machlib}/jkweb.a",
-                    f"{self.machlib}/jkOwnLib.a",
-                    f"{self.machlib}/jkhgap.a",
-                    f"{self.machlib}/jkhgapcgi.a",
-                    f"hg/altSplice/{self.machlib}/libSpliceGraph.a",
-                ]
-            )
-        if self.spec.satisfies("+htslib+libs"):
+        libs = [
+            f"{self.machlib}/jkweb.a",
+            f"{self.machlib}/jkOwnLib.a",
+            f"{self.machlib}/jkhgap.a",
+            f"{self.machlib}/jkhgapcgi.a",
+            f"hg/altSplice/{self.machlib}/libSpliceGraph.a",
+        ]
+        if self.spec.satisfies("+htslib"):
             libs.append("htslib/libhts.a")
         return LibraryList(libs)
 
@@ -114,11 +112,13 @@ class Kentutils(MakefilePackage):
     def lib_dir(self):
         return join_path(self.prefix, self.machlib)
 
+    def setup_dependent_package(self, pkg):
+        setattr(pkg, "kent_lib_dir", self.lib_dir)
+
     def install_libs_from_stage(self, spec, prefix):
         # Dependent packages expect things in the source tree, but we don't
         # want to copy all of the compilation artifacts in so we'll do them
         # manually instead of leaving the build directory around
-        import os
 
         src_prefix = "kent/src"
 
@@ -140,5 +140,5 @@ class Kentutils(MakefilePackage):
 
     def install(self, spec, prefix):
         install_tree("bin", prefix.bin)
-        if spec.satisfies("+libs"):
-            self.install_libs_from_stage(spec, prefix)
+        self.install_libs_from_stage(spec, prefix)
+
