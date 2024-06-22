@@ -36,7 +36,7 @@ class Kentutils(MakefilePackage):
     # kentlib. See https://github.com/spack/spack/pull/44501#issuecomment-2162789410
     # for some additional details. A built-in version SHOULD work for most things though.
     variant(
-        "htslib",
+        "builtin_htslib",
         default=True,
         description="Build with bundled htslib (using an external htslib may lead to errors)",
         sticky=True,
@@ -50,7 +50,9 @@ class Kentutils(MakefilePackage):
         depends_on("zlib-api")
         depends_on("freetype")
         depends_on("libiconv")
-        depends_on("htslib+pic", when="~htslib")
+        depends_on("htslib+pic", when="~builtin_htslib")
+
+    provides("htslib", when="+builtin_htslib")
 
     # The bgzip.c bug present in other packages is present in kent/src/htslib/bgzf.c
     # Conflicting line: assert(compressBound(BGZF_BLOCK_SIZE) < BGZF_MAX_BLOCK_SIZE);
@@ -84,7 +86,7 @@ class Kentutils(MakefilePackage):
     def headers(self):
         headers = []
         headers.extend(find_headers("*", self.prefix.inc, recursive=True))
-        if self.spec.satisfies("+htslib"):
+        if self.spec.satisfies("+builtin_htslib"):
             headers.extend(find_headers("*", self.prefix.htslib, recursive=True))
         return HeaderList(headers)
 
@@ -101,7 +103,7 @@ class Kentutils(MakefilePackage):
             f"lib/{self.machtype}/jkhgapcgi.a",
             f"hg/altSplice/lib/{self.machtype}/libSpliceGraph.a",
         ]
-        if self.spec.satisfies("+htslib"):
+        if self.spec.satisfies("+builtin_htslib"):
             libs.append("htslib/libhts.a")
         return LibraryList(libs)
 
@@ -111,7 +113,7 @@ class Kentutils(MakefilePackage):
 
     @property
     def htslib_include_dir(self):
-        if self.spec.satisfies("~htslib"):
+        if self.spec.satisfies("~builtin_htslib"):
             # If we're not using the bundled version, just defer to htslib
             return self.spec["htslib"].prefix.include
         else:
@@ -144,7 +146,7 @@ class Kentutils(MakefilePackage):
                 install(src, dest)
 
         install_kent("inc", tree=True)
-        if spec.satisfies("+htslib"):
+        if spec.satisfies("+builtin_htslib"):
             install_kent("htslib/htslib", tree=True)
 
         for lib in self.local_libs:
