@@ -40,7 +40,6 @@ class PerlBioDbBigfile(PerlPackage):
         depends_on("perl-io-string")
 
     def build_pl_args(self):
-        print([k for k in dir(self) if k.startswith("kent")])
         # Need to tell the linker exactly where to find these
         # dependencies as the perl build system hasn't been told
         # they are needed. It explicitly searches for kentutils
@@ -49,14 +48,14 @@ class PerlBioDbBigfile(PerlPackage):
         # to run the tests
         incs = [
             # This is usually set by Build.PL from KENT_SRC
-            f"-I{KENTUTILS_INCLUDE_DIR}",
+            f"-I{kentutils_include_dir}",
             # Build system looks for tbx.h instead of htslib/tbx.h
             # so we need to give it some special help for HTSLIB
-            f"-I{KENTUTILS_HTSLIB_INCLUDE_DIR.htslib}",
+            f"-I{kentutils_htslib_include_dir.htslib}",
         ]
         libs = [
             # This is usually set by Build.PL from KENT_SRC
-            join_path(KENTUTILS_LIB_DIR, "jkweb.a"),
+            join_path(kentutils_lib_dir, "jkweb.a"),
             # These are being set in Build.PL so we need to reset here
             "-lz",
             "-lssl",
