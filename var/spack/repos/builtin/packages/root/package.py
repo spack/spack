@@ -283,7 +283,6 @@ class Root(CMakePackage):
     depends_on("pkgconfig", type="build")
 
     # 6.32.00 requires sys/random.h
-    depends_on("libc", when="@6.32.00: platform=linux")
     depends_on("glibc@2.25:", when="^[virtuals=libc] glibc")
     depends_on("musl@1.1.20:", when="^[virtuals=libc] musl")
 
