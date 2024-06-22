@@ -40,33 +40,23 @@ class PerlBioDbBigfile(PerlPackage):
         depends_on("perl-io-string")
 
     def build_pl_args(self):
+        print([k for k in dir(self) if k.startswith("kent")])
         # Need to tell the linker exactly where to find these
         # dependencies as the perl build system hasn't been told
         # they are needed. It explicitly searches for kentutils
         # The includes will be recongized by CFLAGS but not the
         # LIBS, which results in failures only once you try to
         # to run the tests
-
-        spec = self.spec
-        kent = spec["kentutils"]
-
-        if spec.satisfies("^kentutils~htslib"):
-            htslib = spec["htslib"].prefix.include
-        else:
-            # We have to handle the possibility that HTSLIB was bundled
-            # with kentutils, which has a different directory structure
-            htslib = kent.prefix.htslib
-
         incs = [
             # This is usually set by Build.PL from KENT_SRC
-            f"-I{kent.prefix.inc}",
+            f"-I{KENTUTILS_INCLUDE_DIR}",
             # Build system looks for tbx.h instead of htslib/tbx.h
             # so we need to give it some special help for HTSLIB
-            f"-I{htslib.htslib}",
+            f"-I{KENTUTILS_HTSLIB_INCLUDE_DIR.htslib}",
         ]
         libs = [
             # This is usually set by Build.PL from KENT_SRC
-            join_path(kent.package.lib_dir, "jkweb.a"),
+            join_path(KENTUTILS_LIB_DIR, "jkweb.a"),
             # These are being set in Build.PL so we need to reset here
             "-lz",
             "-lssl",
