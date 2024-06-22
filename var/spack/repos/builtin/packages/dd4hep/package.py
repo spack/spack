@@ -121,8 +121,8 @@ class Dd4hep(CMakePackage):
     depends_on("edm4hep", when="+edm4hep")
     depends_on("podio", when="+edm4hep")
     depends_on("podio@:0.16.03", when="@:1.23 +edm4hep")
-    depends_on("podio@0.16:", when="@1.24: +edm4hep")
-    depends_on("podio@0.16.3:", when="@1.26: +edm4hep")
+    depends_on("podio@0.16:0", when="@1.24: +edm4hep")
+    depends_on("podio@0.16.3:0", when="@1.26: +edm4hep")
     depends_on("py-pytest", type=("build", "test"))
 
     # See https://github.com/AIDASoft/DD4hep/pull/771 and https://github.com/AIDASoft/DD4hep/pull/876
