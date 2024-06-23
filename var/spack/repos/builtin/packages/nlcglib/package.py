@@ -18,9 +18,10 @@ class Nlcglib(CMakePackage, CudaPackage, ROCmPackage):
     license("BSD-3-Clause")
 
     version("develop", branch="develop")
-    version("0.9", sha256="8d5bc6b85ee714fb3d6480f767e7f43e5e7d569116cf60e48f533a7f50a37a08")
-    version("1.0b", sha256="086c46f06a117f267cbdf1df4ad42a8512689a9610885763f463469fb15e82dc")
+
     version("1.1.0", sha256="9e7c2eea84a5ce191bd9af08f6c890717f7b6e88be7bd15cfe774eb0e0dabd8a")
+    version("1.0b", sha256="086c46f06a117f267cbdf1df4ad42a8512689a9610885763f463469fb15e82dc")
+    version("0.9", sha256="8d5bc6b85ee714fb3d6480f767e7f43e5e7d569116cf60e48f533a7f50a37a08")
 
     variant("openmp", default=True, description="Use OpenMP")
     variant("tests", default=False, description="Build tests")
