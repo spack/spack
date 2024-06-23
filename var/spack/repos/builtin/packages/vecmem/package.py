@@ -58,15 +58,20 @@ class Vecmem(CMakePackage, CudaPackage):
     depends_on("cmake@3.17:", type="build")
     depends_on("hip", when="+hip")
     depends_on("sycl", when="+sycl")
-    depends_on("googletest", type="test")
+
+    # FIXME: due to #29447, googletest is not available to cmake when building with --test,
+    # and we can choose between always depending on googletest, or using FetchContent
+    # depends_on("googletest", type="test")
 
     def cmake_args(self):
         args = [
+            self.define("FETCHCONTENT_FULLY_DISCONNECTED", False),  # see FIXME above
             self.define_from_variant("VECMEM_BUILD_CUDA_LIBRARY", "cuda"),
             self.define_from_variant("VECMEM_BUILD_HIP_LIBRARY", "hip"),
             self.define_from_variant("VECMEM_BUILD_SYCL_LIBRARY", "sycl"),
+            self.define("BUILD_TESTING", self.run_tests),
             self.define("VECMEM_BUILD_TESTING", self.run_tests),
-            self.define("VECMEM_USE_SYSTEM_GOOGLETEST", True),
+            self.define("VECMEM_USE_SYSTEM_GOOGLETEST", False),  # see FIXME above
         ]
 
         if "+cuda" in self.spec:
