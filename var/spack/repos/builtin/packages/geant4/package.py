@@ -22,6 +22,7 @@ class Geant4(CMakePackage):
 
     maintainers("drbenmorgan", "sethrj")
 
+    version("11.2.2", sha256="3a8d98c63fc52578f6ebf166d7dffaec36256a186d57f2520c39790367700c8d")
     version("11.2.1", sha256="76c9093b01128ee2b45a6f4020a1bcb64d2a8141386dea4674b5ae28bcd23293")
     version("11.2.0", sha256="9ff544739b243a24dac8f29a4e7aab4274fc0124fd4e1c4972018213dc6991ee")
     version("11.1.3", sha256="5d9a05d4ccf8b975649eab1d615fc1b8dce5937e01ab9e795bffd04149240db6")
