@@ -5,7 +5,6 @@
 import os
 import re
 import sys
-import re
 
 import pytest
 
