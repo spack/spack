@@ -16,7 +16,7 @@ class Hipfft(CMakePackage, CudaPackage, ROCmPackage):
 
     homepage = "https://github.com/ROCm/hipFFT"
     git = "https://github.com/ROCm/hipFFT.git"
-    url = "https://github.com/ROCm/hipfft/archive/rocm-6.1.1.tar.gz"
+    url = "https://github.com/ROCm/hipfft/archive/rocm-6.1.0.tar.gz"
     tags = ["rocm"]
 
     maintainers("renjithravindrankannath", "srekolam")
@@ -24,6 +24,7 @@ class Hipfft(CMakePackage, CudaPackage, ROCmPackage):
     license("MIT")
 
     version("master", branch="master")
+    version("6.1.2", sha256="6753e45d9c671d58e68bed2b0c1bfcd40fad9d690dba3fe6011e67e51dbe3cc6")
     version("6.1.1", sha256="df84e488098d457a7411f6b459537fa5c5ee160027efc3a9a076980bbe57c4d3")
     version("6.1.0", sha256="1a9cf598a932192f7f12b8987d96477f09186f9a95c5a28742f9caeb81640c95")
     version("6.0.2", sha256="c0a4bac5fa9a757a19a4995fa9571328b6ee0a71e93c66a880069794d65d284a")
@@ -77,6 +78,7 @@ class Hipfft(CMakePackage, CudaPackage, ROCmPackage):
         "6.0.2",
         "6.1.0",
         "6.1.1",
+        "6.1.2",
     ]:
         depends_on(f"rocm-cmake@{ver}:", type="build", when=f"@{ver}")
         depends_on(f"rocfft@{ver}", when=f"+rocm @{ver}")
