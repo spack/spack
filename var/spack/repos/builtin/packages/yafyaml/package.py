@@ -60,11 +60,8 @@ class Yafyaml(CMakePackage):
         msg="yaFyaml only works with the Fujitsu compiler from 1.3.0 onwards",
     )
 
-    # yafyaml does not seem to build with gcc 13.3 at the moment
-    conflicts(
-        "%gcc@13.3:",
-        msg="yaFyaml does not successfully build with gfortran 13.3",
-    )
+    # yafyaml does not currently build with gcc 13.3
+    conflicts("%gcc@13.3:", msg="yaFyaml does not successfully build with gfortran 13.3")
 
     variant(
         "build_type",
