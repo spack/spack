@@ -30,10 +30,7 @@ class Ntpoly(CMakePackage):
     depends_on("mpi@3")
 
     def cmake_args(self):
-        args = [
-            "-DNOSWIG=Yes",
-            self.define_from_variant("BUILD_SHARED_LIBS", "shared")    
-        ]
+        args = ["-DNOSWIG=Yes", self.define_from_variant("BUILD_SHARED_LIBS", "shared")]
 
         if self.spec.satisfies("%fj"):
             args.append("-DCMAKE_Fortran_MODDIR_FLAG=-M")
@@ -42,4 +39,6 @@ class Ntpoly(CMakePackage):
 
     @property
     def libs(self):
-        return find_libraries(["libNTPoly", "libNTPolyCPP", "libNTPolyWrapper"], root=self.home, recursive=True)
+        return find_libraries(
+            ["libNTPoly", "libNTPolyCPP", "libNTPolyWrapper"], root=self.home, recursive=True
+        )
