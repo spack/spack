@@ -305,12 +305,12 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
         depends_on("cuda@:11.4", when="@2.4:2.7")
         depends_on("cuda@:10.2", when="@:2.3")
 
-        depends_on("cudnn@8.9:", when="@2.15:")
-        depends_on("cudnn@8.7:", when="@2.14:")
-        depends_on("cudnn@8.6:", when="@2.12:")
-        depends_on("cudnn@8.1:", when="@2.5:")
-        depends_on("cudnn@8.0:", when="@2.4:")
-        depends_on("cudnn@7.6:", when="@2.1:")
+        depends_on("cudnn@8.9:8", when="@2.15:")
+        depends_on("cudnn@8.7:8", when="@2.14:")
+        depends_on("cudnn@8.6:8", when="@2.12:")
+        depends_on("cudnn@8.1:8", when="@2.5:")
+        depends_on("cudnn@8.0:8", when="@2.4:")
+        depends_on("cudnn@7.6:8", when="@2.1:")
 
         depends_on("cudnn@:7", when="@:2.2")
     # depends_on('tensorrt', when='+tensorrt')
