@@ -35,12 +35,12 @@ def test_manpath_trailing_colon(
     install("mpileaks")
 
     sh_out = load(shell, "mpileaks")
-    lines = [line.strip('\n') for line in sh_out.split(commandsep)]
+    lines = [line.strip("\n") for line in sh_out.split(commandsep)]
     assert any(re.match(set_command % ("MANPATH", ".*" + os.pathsep), ln) for ln in lines)
     os.environ["MANPATH"] = "/tmp/man" + os.pathsep
 
     sh_out = load(shell, "mpileaks")
-    lines = [line.strip('\n') for line in sh_out.split(commandsep)]
+    lines = [line.strip("\n") for line in sh_out.split(commandsep)]
     assert any(
         re.match(set_command % ("MANPATH", ".*" + os.pathsep + "/tmp/man" + os.pathsep), ln)
         for ln in lines
@@ -56,13 +56,7 @@ def test_manpath_trailing_colon(
     ),
 )
 def test_load_recursive(
-    shell,
-    set_command,
-    install_mockery,
-    mock_fetch,
-    mock_archive,
-    mock_packages,
-    working_env,
+    shell, set_command, install_mockery, mock_fetch, mock_archive, mock_packages, working_env
 ):
     """Test that `spack load` applies prefix inspections of its required runtime deps in
     topo-order"""
@@ -85,7 +79,7 @@ def test_load_recursive(
     )
 
     paths_shell = extract_value(shell_out, "CMAKE_PREFIX_PATH")
-    
+
     # Shouldn't be a difference between loading csh / sh, so check they're the same.
     # assert paths_sh == paths_csh
 
@@ -105,7 +99,8 @@ def test_load_recursive(
         set(s.name for s in mpileaks_spec[pkg].traverse(direction="parents")) in set(pkgs[:i])
 
     # Lastly, do we keep track that mpileaks was loaded?
-    assert (extract_value(shell_out, uenv.spack_loaded_hashes_var)[0] == mpileaks_spec.dag_hash())
+    assert extract_value(shell_out, uenv.spack_loaded_hashes_var)[0] == mpileaks_spec.dag_hash()
+
 
 @pytest.mark.parametrize(
     "shell,set_command",
