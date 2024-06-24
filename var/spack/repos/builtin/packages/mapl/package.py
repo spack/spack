@@ -345,7 +345,7 @@ class Mapl(CMakePackage):
         # - Intel MPI --> intelmpi
         # - MVAPICH --> mvapich
         # - HPE MPT --> mpt
-        # - Cray MPIHC --> mpich
+        # - Cray MPICH --> mpich
 
         if self.spec.satisfies("^mpich"):
             args.append(self.define("MPI_STACK", "mpich"))
