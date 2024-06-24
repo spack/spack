@@ -29,6 +29,8 @@ class Cmake(Package):
     license("BSD-3-Clause")
 
     version("master", branch="master")
+    version("3.29.6", sha256="1391313003b83d48e2ab115a8b525a557f78d8c1544618b48d1d90184a10f0af")
+    version("3.29.5", sha256="dd63da7d763c0db455ca232f2c443f5234fe0b11f8bd6958a81d29cc987dfd6e")
     version("3.29.4", sha256="b1b48d7100bdff0b46e8c8f6a3c86476dbe872c8df39c42b8d104298b3d56a2c")
     version("3.28.6", sha256="c39c733900affc4eb0e9688b4d1a45435a732105d9bf9cc1e75dd2b9b81a36bb")
     version("3.27.9", sha256="609a9b98572a6a5ea477f912cffb973109ed4d0a6a6b3f9e2353d2cdc048708e")
