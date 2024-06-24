@@ -284,6 +284,8 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
     # ==========================================================================
     # Patches
     # ==========================================================================
+    patch("0001-revert-change-to-N_VSpace_Sycl-that-was-missed.patch", when="@7.1.0")
+
     # https://github.com/LLNL/sundials/pull/434
     # https://github.com/LLNL/sundials/pull/437
     patch("sundials-hip-platform.patch", when="@7.0.0 +rocm")
