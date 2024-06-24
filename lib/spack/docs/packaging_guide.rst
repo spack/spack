@@ -2350,7 +2350,7 @@ can use the variable `make_jobs` to extract the number of jobs specified
 by the `--jobs` option:
 
 .. code-block:: python
-   :emphasize-lines: 15, 20
+   :emphasize-lines: 9, 14
    :linenos:
  
    class Xios(Package):
@@ -2360,13 +2360,7 @@ by the `--jobs` option:
          ...
 
          options = [
-            "--full",
-            "--%s" % spec.variants["mode"].value,
-            "--arch",
-            "SPACK",
-            "--netcdf_lib",
-            "netcdf4_par",
-            "--job",
+            ...
             str(make_jobs),
         ]
         ...
