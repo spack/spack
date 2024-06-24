@@ -31,9 +31,9 @@ class Elsi(CMakePackage, CudaPackage):
     )
     variant("enable_pexsi", default=False, description="Enable PEXSI support")
     variant("enable_sips", default=False, description="Enable SLEPc-SIPs support")
-    variant("use_external_elpa", default=False, description="Build ELPA using SPACK")
-    variant("use_external_ntpoly", default=False, description="Build NTPoly using SPACK")
-    variant("use_external_superlu", default=False, description="Use external SuperLU DIST")
+    variant("use_external_elpa", default=True, description="Build ELPA using SPACK")
+    variant("use_external_ntpoly", default=True, description="Build NTPoly using SPACK")
+    variant("use_external_superlu", default=True, description="Use external SuperLU DIST")
     variant(
         "use_mpi_iallgather", default=True, description="Use non-blocking collective MPI functions"
     )
@@ -78,10 +78,8 @@ class Elsi(CMakePackage, CudaPackage):
 
         lib_paths, libs = [], []
         for lib in libs_names:
-            lib_paths.extend(
-                [name.replace("-L", "") for name in self.spec[lib].libs.search_flags.split()]
-            )
-            libs.extend([os.path.basename(name) for name in self.spec[lib].libs.libraries])
+            lib_paths.extend(self.spec[lib].libs.directories)
+            libs.extend(self.spec[lib].libs.names)
 
         args = [
             # Compiler Information (ELSI wants these explicitly set)
