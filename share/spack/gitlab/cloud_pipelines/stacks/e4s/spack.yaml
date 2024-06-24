@@ -363,7 +363,7 @@ spack:
   # # - papi +rocm amdgpu_target=gfx908           # papi: https://github.com/spack/spack/issues/27898
 
   # ROCM 90a
-  - adios2 +kokkos +rocm amdgpu_target=gfx90a
+  - adios2 ~kokkos +rocm amdgpu_target=gfx90a # +kokkos: https://github.com/spack/spack/issues/44832
   - amrex +rocm amdgpu_target=gfx90a
   - arborx +rocm amdgpu_target=gfx90a
   - cabana +rocm amdgpu_target=gfx90a
