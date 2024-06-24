@@ -1,0 +1,10 @@
+--- CMakeLists.txt.ori	2024-06-24 15:48:01.389773228 +0200
++++ CMakeLists.txt	2024-06-24 15:48:42.126485322 +0200
+@@ -540,6 +540,7 @@
+ 
+ # Check if the headers have been installed by kernel-headers
+ find_path(DRM_INCLUDE_DIRS "drm.h" PATH_SUFFIXES "drm")
++find_path(DRM_INCLUDE_DIRS "drm.h" PATH_SUFFIXES "libdrm")
+ 
+ # Alternatively the headers could have been installed by libdrm
+ if (NOT DRM_INCLUDE_DIRS)
