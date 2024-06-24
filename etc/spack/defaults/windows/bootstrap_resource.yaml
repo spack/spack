@@ -1,4 +1,4 @@
-resource:
+bootstrap_resource:
   # If set to false Spack will not fetch bootstrap resources
   enable: true
   # Trusted sources to acquire bootstrap resources from

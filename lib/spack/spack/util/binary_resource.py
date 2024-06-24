@@ -2,7 +2,13 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-"""Interface for acquiring Spack binary resources required for bootstrapping"""
+"""
+Interface for bootstrapping needed resources for running of Spack;
+unlike bootstrap.py (the typical pathway) this does not refer to
+utilities with Specs, but rather by an ID that refers to the needed binary.
+
+This is currently only needed on Windows.
+"""
 
 import os
 import pathlib

@@ -574,11 +574,7 @@ def ensure_core_dependencies() -> None:
     """Ensure the presence of all the core dependencies."""
     if sys.platform.lower() == "linux":
         ensure_patchelf_in_path_or_raise()
-    if IS_WINDOWS:
-        # Windows also requires gpg (as in the check below)
-        # but that is resolved by this call
-        ensure_win_resources()
-    else:
+    if not IS_WINDOWS:
         ensure_gpg_in_path_or_raise()
     ensure_clingo_importable_or_raise()
 

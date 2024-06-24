@@ -4,7 +4,8 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 """
-Utility methods for interfacing with various system utilities
+Utilities for interacting with files,
+like those in llnl.util.filesystem, but which require logic from spack.util
 """
 
 import glob
