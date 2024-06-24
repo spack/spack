@@ -83,6 +83,7 @@ dynamic_mapping_schema = {
     "required": ["dynamic-mapping"],
     "properties": {
         "dynamic-mapping": {
+            "type": "object",
             "required": ["endpoint"],
             "properties": {
                 "endpoint": {"type": "string", "patternProperties": r"http(s)?://[\w\d\-_\.]+"},
