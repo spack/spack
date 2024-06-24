@@ -5,6 +5,7 @@
 import os
 import re
 import sys
+import re
 
 import pytest
 
@@ -47,18 +48,16 @@ def test_manpath_trailing_colon(
 
 
 @pytest.mark.parametrize(
-    "shell,set_command_prefix,set_command_postfix,commandsep",
+    "shell,set_command",
     (
-        [("--bat", 'set "%s=', '%s"', "\n")]
+        [("--bat", r'set "%s=(.*)"')]
         if sys.platform == "win32"
-        else [("--sh", "export %s=", "%s", ";"), ("--csh", "setenv %s ", "%s", ";")]
+        else [("--sh", r"export %s=([^;]*)"), ("--csh", r"setenv %s ([^;]*)")]
     ),
 )
 def test_load_recursive(
     shell,
-    set_command_prefix,
-    set_command_postfix,
-    commandsep,
+    set_command,
     install_mockery,
     mock_fetch,
     mock_archive,
@@ -75,25 +74,23 @@ def test_load_recursive(
 
     shell_out = load(shell, "mpileaks")
 
-    def extract_cmake_prefix_path(output, prefix):
-        return next(cmd for cmd in output.split(commandsep) if cmd.startswith(prefix))[
-            len(prefix) :
-        ].split(os.pathsep)
+    def extract_value(output, variable):
+        match = re.search(set_command % variable, output, flags=re.MULTILINE)
+        value = match.group(1)
+        return value.split(os.pathsep)
 
     # Map a prefix found in CMAKE_PREFIX_PATH back to a package name in mpileaks' DAG.
     prefix_to_pkg = lambda prefix: next(
         s.name for s in mpileaks_spec.traverse() if s.prefix == prefix
     )
 
-    paths_shell = extract_cmake_prefix_path(
-        shell_out, prefix=set_command_prefix % "CMAKE_PREFIX_PATH"
-    )
-
+    paths_shell = extract_value(shell_out, "CMAKE_PREFIX_PATH")
+    
     # Shouldn't be a difference between loading csh / sh, so check they're the same.
     # assert paths_sh == paths_csh
 
     # We should've prepended new paths, and keep old ones.
-    assert paths_shell[-2:] == ["/hello", set_command_postfix % "/world"]
+    assert paths_shell[-2:] == ["/hello", "/world"]
 
     # All but the last two paths are added by spack load; lookup what packages they're from.
     pkgs = [prefix_to_pkg(p) for p in paths_shell[:-2]]
@@ -108,11 +105,7 @@ def test_load_recursive(
         set(s.name for s in mpileaks_spec[pkg].traverse(direction="parents")) in set(pkgs[:i])
 
     # Lastly, do we keep track that mpileaks was loaded?
-    assert (
-        (set_command_prefix + set_command_postfix)
-        % (uenv.spack_loaded_hashes_var, mpileaks_spec.dag_hash())
-    ) in shell_out
-
+    assert (extract_value(shell_out, uenv.spack_loaded_hashes_var)[0] == mpileaks_spec.dag_hash())
 
 @pytest.mark.parametrize(
     "shell,set_command",
