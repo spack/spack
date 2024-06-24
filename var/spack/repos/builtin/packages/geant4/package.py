@@ -94,7 +94,8 @@ class Geant4(CMakePackage):
         "10.7.4",
         "11.0",
         "11.1",
-        "11.2:",
+        "11.2.0:11.2.1",
+        "11.2.2:",
     ]:
         depends_on("geant4-data@" + _vers, type="run", when="@" + _vers)
 
