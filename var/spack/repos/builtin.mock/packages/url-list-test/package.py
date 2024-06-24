@@ -3,8 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import sys
-
 import spack.paths
 from spack.package import *
 from spack.util.url import path_to_file_url
