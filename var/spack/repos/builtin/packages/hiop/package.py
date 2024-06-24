@@ -290,15 +290,6 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
             ["400", "100", "0", "-empty_sp_row", "-selfcheck"],
         ]
 
-        if raja:
-            options.extend(
-                [
-                    ["400", "100", "0", "-selfcheck"],
-                    ["400", "100", "1", "-selfcheck"],
-                    ["400", "100", "0", "-empty_sp_row", "-selfcheck"],
-                ]
-            )
-
         exe = which(exe)
 
         for i, args in enumerate(options):
