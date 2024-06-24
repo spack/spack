@@ -54,11 +54,6 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
     version("2.15.1", sha256="f36416d831f06fe866e149c7cd752da410a11178b01ff5620e9f265511ed57cf")
     version("2.15.0", sha256="9cec5acb0ecf2d47b16891f8bc5bc6fbfdffe1700bdadc0d9ebe27ea34f0c220")
     version("2.14.1", sha256="6b31ed347ed7a03c45b906aa41628ac91c3db7c84cb816971400d470e58ba494")
-    version(
-        "2.14-rocm-enhanced",
-        git="https://github.com/ROCm/tensorflow-upstream.git",
-        branch="r2.14-rocm-enhanced-nohipblaslt-build",
-    )
     version("2.14.0", sha256="ce357fd0728f0d1b0831d1653f475591662ec5bca736a94ff789e6b1944df19f")
     version("2.13.1", sha256="89c07aebd4f41fbe0d08cc88aef00305542134f2f16d3b62918dc3c1182f33e2")
     version("2.13.0", sha256="e58c939079588623e6fa1d054aec2f90f95018266e0a970fd353a5244f5173dc")
@@ -366,9 +361,9 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
     conflicts("target=aarch64:", when="@:2.2")
     conflicts(
         "~rocm",
-        when="@2.7.4-rocm-enhanced,2.11.0-rocm-enhanced,2.14-rocm-enhanced,2.16-rocm-enhanced",
+        when="@2.7.4-rocm-enhanced,2.11.0-rocm-enhanced,2.16-rocm-enhanced",
     )
-    conflicts("+rocm", when="@:2.7.4-a,2.7.4.0:2.11.0-a,2.11.0.0:2.14-a,2.14-z:2.16-a,2.16-z:")
+    conflicts("+rocm", when="@:2.7.4-a,2.7.4.0:2.11.0-a,2.11.0.0:2.16-a,2.16-z:")
     # wheel 0.40 upgrades vendored packaging, trips over tensorflow-io-gcs-filesystem identifier
     conflicts("^py-wheel@0.40:", when="@2.11:2.13")
 
@@ -420,13 +415,12 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
         sha256="82554a84d19d99180a6bec274c6106dd217361e809b446e2e4bc4b6b979bdf7a",
         when="@2.16-rocm-enhanced +rocm",
     )
-    patch("Find_ROCm_Components_Individiually.patch", when="@2.14-rocm-enhanced +rocm")
     patch(
         "https://github.com/ROCm/tensorflow-upstream/commit/f4f4e8698b90755b0b5ea2d9da1933b0b988b111.patch?full_index=1",
         sha256="a4c0fd62a0af3ba113c8933fa531dd17fa6667e507202a144715cd87fbdaf476",
-        when="@2.14-rocm-enhanced: +rocm",
+        when="@2.16-rocm-enhanced: +rocm",
     )
-
+    patch("Add_ROCm_lib_paths.patch", when="@2.16-rocm-enhanced +rocm")
     phases = ["configure", "build", "install"]
 
     # https://www.tensorflow.org/install/source
