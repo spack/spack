@@ -363,7 +363,6 @@ spack:
   # # - papi +rocm amdgpu_target=gfx908           # papi: https://github.com/spack/spack/issues/27898
 
   # ROCM 90a
-  - adios2 ~kokkos +rocm amdgpu_target=gfx90a # +kokkos: https://github.com/spack/spack/issues/44832
   - amrex +rocm amdgpu_target=gfx90a
   - caliper +rocm amdgpu_target=gfx90a
   - chai +rocm amdgpu_target=gfx90a
@@ -394,6 +393,7 @@ spack:
   - paraview +rocm amdgpu_target=gfx90a
   # - vtk-m ~openmp +rocm amdgpu_target=gfx90a  # vtk-m: https://github.com/spack/spack/issues/40268
   # --
+  # - adios2 +kokkos +rocm amdgpu_target=gfx90a # +kokkos: https://github.com/spack/spack/issues/44832
   # - arborx +rocm amdgpu_target=gfx90a         # kokkos: https://github.com/spack/spack/issues/44832
   # - cabana +rocm amdgpu_target=gfx90a         # kokkos: https://github.com/spack/spack/issues/44832
   # - exago +mpi +python +raja +hiop +rocm amdgpu_target=gfx90a ~ipopt cxxflags="-Wno-error=non-pod-varargs" ^hiop@1.0.0 ~sparse +mpi +raja +rocm amdgpu_target=gfx90a # hiop: CMake Error at cmake/FindHiopHipLibraries.cmake:23 (find_package)
