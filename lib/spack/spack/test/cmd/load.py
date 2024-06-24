@@ -47,59 +47,66 @@ def test_manpath_trailing_colon(
     )
 
 
-@pytest.mark.parametrize(
-    "shell,set_command",
-    (
+def test_load_recursive(install_mockery, mock_fetch, mock_archive, mock_packages, working_env):
+    def test_load_shell(shell, set_command):
+        """Test that `spack load` applies prefix inspections of its required runtime deps in
+        topo-order"""
+        install("mpileaks")
+        mpileaks_spec = spack.spec.Spec("mpileaks").concretized()
+
+        # Ensure our reference variable is cleed.
+        os.environ["CMAKE_PREFIX_PATH"] = "/hello" + os.pathsep + "/world"
+
+        shell_out = load(shell, "mpileaks")
+
+        def extract_value(output, variable):
+            match = re.search(set_command % variable, output, flags=re.MULTILINE)
+            value = match.group(1)
+            return value.split(os.pathsep)
+
+        # Map a prefix found in CMAKE_PREFIX_PATH back to a package name in mpileaks' DAG.
+        prefix_to_pkg = lambda prefix: next(
+            s.name for s in mpileaks_spec.traverse() if s.prefix == prefix
+        )
+
+        paths_shell = extract_value(shell_out, "CMAKE_PREFIX_PATH")
+
+        # Shouldn't be a difference between loading csh / sh, so check they're the same.
+        # assert paths_sh == paths_csh
+
+        # We should've prepended new paths, and keep old ones.
+        assert paths_shell[-2:] == ["/hello", "/world"]
+
+        # All but the last two paths are added by spack load; lookup what packages they're from.
+        pkgs = [prefix_to_pkg(p) for p in paths_shell[:-2]]
+
+        # Do we have all the runtime packages?
+        assert set(pkgs) == set(
+            s.name for s in mpileaks_spec.traverse(deptype=("link", "run"), root=True)
+        )
+
+        # Finally, do we list them in topo order?
+        for i, pkg in enumerate(pkgs):
+            set(s.name for s in mpileaks_spec[pkg].traverse(direction="parents")) in set(pkgs[:i])
+
+        # Lastly, do we keep track that mpileaks was loaded?
+        assert (
+            extract_value(shell_out, uenv.spack_loaded_hashes_var)[0] == mpileaks_spec.dag_hash()
+        )
+        return paths_shell
+
+    prev_paths = None
+    for shell, set_command in (
         [("--bat", r'set "%s=(.*)"')]
         if sys.platform == "win32"
         else [("--sh", r"export %s=([^;]*)"), ("--csh", r"setenv %s ([^;]*)")]
-    ),
-)
-def test_load_recursive(
-    shell, set_command, install_mockery, mock_fetch, mock_archive, mock_packages, working_env
-):
-    """Test that `spack load` applies prefix inspections of its required runtime deps in
-    topo-order"""
-    install("mpileaks")
-    mpileaks_spec = spack.spec.Spec("mpileaks").concretized()
-
-    # Ensure our reference variable is cleed.
-    os.environ["CMAKE_PREFIX_PATH"] = "/hello" + os.pathsep + "/world"
-
-    shell_out = load(shell, "mpileaks")
-
-    def extract_value(output, variable):
-        match = re.search(set_command % variable, output, flags=re.MULTILINE)
-        value = match.group(1)
-        return value.split(os.pathsep)
-
-    # Map a prefix found in CMAKE_PREFIX_PATH back to a package name in mpileaks' DAG.
-    prefix_to_pkg = lambda prefix: next(
-        s.name for s in mpileaks_spec.traverse() if s.prefix == prefix
-    )
-
-    paths_shell = extract_value(shell_out, "CMAKE_PREFIX_PATH")
-
-    # Shouldn't be a difference between loading csh / sh, so check they're the same.
-    # assert paths_sh == paths_csh
-
-    # We should've prepended new paths, and keep old ones.
-    assert paths_shell[-2:] == ["/hello", "/world"]
-
-    # All but the last two paths are added by spack load; lookup what packages they're from.
-    pkgs = [prefix_to_pkg(p) for p in paths_shell[:-2]]
-
-    # Do we have all the runtime packages?
-    assert set(pkgs) == set(
-        s.name for s in mpileaks_spec.traverse(deptype=("link", "run"), root=True)
-    )
-
-    # Finally, do we list them in topo order?
-    for i, pkg in enumerate(pkgs):
-        set(s.name for s in mpileaks_spec[pkg].traverse(direction="parents")) in set(pkgs[:i])
-
-    # Lastly, do we keep track that mpileaks was loaded?
-    assert extract_value(shell_out, uenv.spack_loaded_hashes_var)[0] == mpileaks_spec.dag_hash()
+    ):
+        paths = test_load_shell(shell, set_command)
+        if prev_paths:
+            # Shouldn't be a difference between loading csh / sh, so check they're the same.
+            assert prev_paths == paths
+        else:
+            prev_paths = paths
 
 
 @pytest.mark.parametrize(
