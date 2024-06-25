@@ -34,7 +34,7 @@ spack:
     mpi:
       require: mpich
     mpich:
-      require: '~wrapperrpath ~hwloc'
+      require: '~wrapperrpath ~hwloc %gcc target=neoverse_v2'
     tbb:
       require: intel-tbb
     boost:
@@ -43,11 +43,13 @@ spack:
         +regex +serialization +shared +signals +stacktrace +system +test +thread +timer
         cxxstd=17 visibility=global
     libffi:
-      require: "@3.4.4"
+      require: "@3.4.4 %gcc target=neoverse_v2"
     vtk-m:
-      require: "+examples"
+      require: "+examples %gcc target=neoverse_v2"
     cuda:
       version: [11.8.0]
+    paraview:
+      require: "+examples %gcc target=neoverse_v2"
 
   specs:
   # CPU
