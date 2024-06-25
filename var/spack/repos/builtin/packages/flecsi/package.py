@@ -17,7 +17,7 @@ class Flecsi(CMakePackage, CudaPackage, ROCmPackage):
 
     homepage = "http://flecsi.org/"
     git = "https://github.com/flecsi/flecsi.git"
-    maintainers("ktsai7", "rbberger")
+    maintainers("rbberger", "opensdh")
 
     tags = ["e4s"]
 
@@ -27,18 +27,11 @@ class Flecsi(CMakePackage, CudaPackage, ROCmPackage):
     version("2.2.0", tag="v2.2.0", commit="dd531ac16c5df124d76e385c6ebe9b9589c2d3ad")
     version("2.1.0", tag="v2.1.0", commit="533df139c267e2a93c268dfe68f9aec55de11cf0")
     version("2.0.0", tag="v2.0.0", commit="5ceebadf75d1c98999ea9e9446926722d061ec22")
-    version(
-        "1.4.1",
-        tag="v1.4.1",
-        commit="ab974c3164056e6c406917c8ca771ffd43c5a031",
-        submodules=True,
-        deprecated=True,
-    )
 
     variant(
         "backend",
         default="mpi",
-        values=("serial", "mpi", "legion", "hpx", "charmpp"),
+        values=("mpi", "legion", "hpx"),
         description="Backend to use for distributed memory",
         multi=False,
     )
@@ -57,24 +50,9 @@ class Flecsi(CMakePackage, CudaPackage, ROCmPackage):
     variant("kokkos", default=False, description="Enable Kokkos Support")
     variant("openmp", default=False, description="Enable OpenMP Support")
 
-    # legacy variants
-    variant("coverage", default=False, description="Enable coverage build", when="@:1")
-    variant(
-        "debug_backend", default=False, description="Build Backend with Debug Mode", when="@:1"
-    )
-    variant("disable_metis", default=False, description="Disable FindPackageMetis", when="@:1")
-    variant("doxygen", default=False, description="Enable doxygen", when="@:1")
-    variant("tutorial", default=False, description="Build FleCSI Tutorials", when="@:1")
-    variant("flecstan", default=False, description="Build FleCSI Static Analyzer", when="@:1")
-    variant("external_cinch", default=False, description="Enable External Cinch", when="@:1")
-    variant("unit_tests", default=False, description="Build with Unit Tests Enabled", when="@:1")
-
     # All Current FleCSI Releases
     for level in ("low", "medium", "high"):
-        depends_on("caliper@2.0.1~adiak~libdw", when="@:1 caliper_detail=%s" % level)
-        depends_on("caliper", when="@2.0: caliper_detail=%s" % level)
-        conflicts("^caliper@2.6", when="@2.0: caliper_detail=%s" % level)
-        conflicts("^caliper@2.7", when="@2.0: caliper_detail=%s" % level)
+        depends_on("caliper@:2.5,2.8:", when=f"caliper_detail={level}")
 
     depends_on("graphviz", when="+graphviz")
     depends_on("hdf5+hl+mpi", when="+hdf5")
@@ -82,28 +60,6 @@ class Flecsi(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("parmetis@4.0.3:")
     depends_on("boost@1.70.0: cxxstd=17 +program_options +stacktrace")
 
-    # FleCSI@1.x
-    depends_on("cmake@3.12:", when="@:1")
-    # Requires cinch > 1.0 due to cinchlog installation issue
-    depends_on("cinch@1.01:", type="build", when="+external_cinch @:1")
-    depends_on("mpi", when="backend=mpi @:1")
-    depends_on("mpi", when="backend=legion @:1")
-    depends_on("mpi", when="backend=hpx @:1")
-    depends_on("legion+shared", when="backend=legion @:1")
-    depends_on("legion+hdf5", when="backend=legion +hdf5 @:1")
-    depends_on("legion build_type=Debug", when="backend=legion +debug_backend")
-    depends_on("legion@cr-20191217", when="backend=legion @:1")
-    depends_on("hpx@1.4.1 cxxstd=17 malloc=system max_cpu_count=128", when="backend=hpx @:1")
-    depends_on("hpx build_type=Debug", when="backend=hpx +debug_backend")
-    depends_on("googletest@1.8.1+gmock", when="@:1")
-    depends_on("python@3.0:", when="+tutorial @:1")
-    depends_on("doxygen", when="+doxygen @:1")
-    depends_on("llvm", when="+flecstan @:1")
-    depends_on("pfunit@3.0:3", when="@:1")
-    depends_on("py-gcovr", when="+coverage @:1")
-    depends_on("openmpi+legacylaunchers", when="+unit_tests ^[virtuals=mpi] openmpi")
-
-    # FleCSI@2.x
     depends_on("cmake@3.15:", when="@2.0:")
     depends_on("cmake@3.19:", when="@2.2:")
     depends_on("cmake@3.23:", when="@2.3:")
@@ -154,22 +110,8 @@ class Flecsi(CMakePackage, CudaPackage, ROCmPackage):
 
     requires("%gcc@9:", when="@2: %gcc", msg="Version 9 or newer of GNU compilers required!")
 
-    conflicts("+tutorial", when="backend=hpx")
-    # FleCSI@2: no longer supports serial or charmpp backends
-    conflicts("backend=serial", when="@2.0:")
-    conflicts("backend=charmpp", when="@2.0:")
-    # FleCSI@:1.4 releases do not support kokkos, omp, cuda, or rocm
-    conflicts("+kokkos", when="@:1.4")
-    conflicts("+openmp", when="@:1.4")
-    conflicts("+cuda", when="@:1.4")
-    conflicts("+rocm", when="@:1.4")
-    # Unit tests require flog support
-    conflicts("+unit_tests", when="~flog")
     # Disallow conduit=none when using legion as a backend
     conflicts("^legion conduit=none", when="backend=legion")
-    # Due to overhauls of Legion and Gasnet spackages
-    #   flecsi@:1.4 can no longer be built with a usable legion
-    conflicts("backend=legion", when="@:1.4")
     conflicts("+hdf5", when="@2: backend=hpx", msg="HPX backend doesn't support HDF5")
 
     def cmake_args(self):
@@ -206,29 +148,14 @@ class Flecsi(CMakePackage, CudaPackage, ROCmPackage):
                 self.define_from_variant("ENABLE_GRAPHVIZ", "graphviz"),
                 self.define_from_variant("ENABLE_KOKKOS", "kokkos"),
                 self.define_from_variant("ENABLE_OPENMP", "openmp"),
-                self.define_from_variant("ENABLE_DOXYGEN", "doxygen"),
-                self.define_from_variant("ENABLE_COVERAGE_BUILD", "coverage"),
+                self.define_from_variant("ENABLE_DOXYGEN", "doc"),
                 self.define_from_variant("ENABLE_FLOG", "flog"),
-                self.define_from_variant("ENABLE_FLECSIT", "tutorial"),
-                self.define_from_variant("ENABLE_FLECSI_TUTORIAL", "tutorial"),
-                self.define_from_variant("ENABLE_FLECSTAN", "flecstan"),
-                self.define("ENABLE_MPI", spec.variants["backend"].value != "serial"),
-                self.define("ENABLE_UNIT_TESTS", self.run_tests or "+unit_tests" in spec),
+                self.define("ENABLE_MPI", True),
+                self.define("ENABLE_UNIT_TESTS", self.run_tests),
                 self.define_from_variant("ENABLE_HDF5", "hdf5"),
             ]
 
-            if "+external_cinch" in spec:
-                options.append(self.define("CINCH_SOURCE_DIR", spec["cinch"].prefix))
-
             if spec.variants["backend"].value == "hpx":
                 options.append(self.define("HPX_IGNORE_CMAKE_BUILD_TYPE_COMPATIBILITY", True))
-
-            if spec.satisfies("@:1"):
-                options.append(
-                    self.define("ENABLE_CALIPER", spec.variants["caliper_detail"].value != "none")
-                )
-                options.append(
-                    self.define_from_variant("CMAKE_DISABLE_FIND_PACKAGE_METIS", "disable_metis")
-                )
 
         return options
