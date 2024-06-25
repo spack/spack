@@ -3,8 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import platform
-
 from spack.package import *
 
 
@@ -70,7 +68,9 @@ class Oce(CMakePackage):
             self.define("OCE_DISABLE_X11", self.spec.satisfies("~X11")),
             self.define("OCE_DRAW", False),
             self.define("OCE_MODEL", True),
-            self.define("OCE_MULTITHREAD_LIBRARY", ("TBB" if self.spec.satisfies("+tbb") else "NONE")),
+            self.define(
+                "OCE_MULTITHREAD_LIBRARY", ("TBB" if self.spec.satisfies("+tbb") else "NONE")
+            ),
             self.define("OCE_OCAF", True),
             self.define("OCE_USE_TCL_TEST_FRAMEWORK", False),
             self.define("OCE_VISUALISATION", False),
