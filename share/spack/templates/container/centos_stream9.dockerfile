@@ -8,7 +8,7 @@ RUN dnf update -y \
  && dnf update -y \
  && dnf --enablerepo epel groupinstall -y "Development Tools" \
  && dnf --enablerepo epel install -y \
-        curl \
+        curl-minimal \
         findutils \
         gcc-c++ \
         gcc \
