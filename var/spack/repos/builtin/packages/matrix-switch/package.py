@@ -44,6 +44,10 @@ class MatrixSwitch(CMakePackage):
         ]
 
         if self.spec.satisfies("+dbcsr"):
-            args.append(self.define("DBCSR_ROOT", self.spec["dbcsr"]._prefix))
+            args.append(self.define("DBCSR_ROOT", self.spec["dbcsr"].prefix))
 
         return args
+    
+    @property
+    def libs(self):
+        return find_libraries("libmatrixswitch", root=self.home, recursive=True, shared=False)
