@@ -60,30 +60,30 @@ class Flecsi(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("parmetis@4.0.3:")
     depends_on("boost@1.70.0: cxxstd=17 +program_options +stacktrace")
 
-    depends_on("cmake@3.15:", when="@2.0:")
+    depends_on("cmake@3.15:")
     depends_on("cmake@3.19:", when="@2.2:")
     depends_on("cmake@3.23:", when="@2.3:")
-    depends_on("boost +atomic +filesystem +regex +system", when="@2.0:2.2.1")
+    depends_on("boost +atomic +filesystem +regex +system", when="@:2.2.1")
     depends_on("boost@1.79.0:", when="@2.2:")
-    depends_on("kokkos@3.2.00:", when="+kokkos @2.0:")
-    depends_on("kokkos +cuda +cuda_constexpr +cuda_lambda", when="+kokkos +cuda @2.0:")
-    depends_on("kokkos +rocm", when="+kokkos +rocm @2.0:")
-    depends_on("kokkos +openmp", when="+kokkos +openmp @2.0:")
+    depends_on("kokkos@3.2.00:", when="+kokkos")
     depends_on("kokkos@3.7:", when="+kokkos @2.3:")
+    depends_on("kokkos +cuda +cuda_constexpr +cuda_lambda", when="+kokkos +cuda")
+    depends_on("kokkos +rocm", when="+kokkos +rocm")
+    depends_on("kokkos +openmp", when="+kokkos +openmp")
     depends_on("legion@cr-20210122", when="backend=legion @2.0:2.2.1")
     depends_on("legion@cr-20230307", when="backend=legion @2.2.0:2.2.1")
     depends_on("legion@24.03.0:", when="backend=legion @2.2.2:")
-    depends_on("legion+shared", when="backend=legion +shared @2.0:")
-    depends_on("legion+hdf5", when="backend=legion +hdf5 @2.0:")
-    depends_on("legion+kokkos", when="backend=legion +kokkos @2.0:")
-    depends_on("legion+openmp", when="backend=legion +openmp @2.0:")
-    depends_on("legion+cuda", when="backend=legion +cuda @2.0:")
-    depends_on("legion+rocm", when="backend=legion +rocm @2.0:")
-    depends_on("hdf5@1.10.7:", when="backend=legion +hdf5 @2.0:")
-    depends_on("hpx@1.10.0: cxxstd=17 malloc=system", when="backend=hpx @2.0:")
-    depends_on("mpi", when="@2.0:")
-    depends_on("mpich@3.4.1:", when="@2.0: ^[virtuals=mpi] mpich")
-    depends_on("openmpi@4.1.0:", when="@2.0: ^[virtuals=mpi] openmpi")
+    depends_on("legion+shared", when="backend=legion +shared")
+    depends_on("legion+hdf5", when="backend=legion +hdf5")
+    depends_on("legion+kokkos", when="backend=legion +kokkos")
+    depends_on("legion+openmp", when="backend=legion +openmp")
+    depends_on("legion+cuda", when="backend=legion +cuda")
+    depends_on("legion+rocm", when="backend=legion +rocm")
+    depends_on("hdf5@1.10.7:", when="backend=legion +hdf5")
+    depends_on("hpx@1.10.0: cxxstd=17 malloc=system", when="backend=hpx")
+    depends_on("mpi")
+    depends_on("mpich@3.4.1:", when="^[virtuals=mpi] mpich")
+    depends_on("openmpi@4.1.0:", when="^[virtuals=mpi] openmpi")
     depends_on("graphviz@2.49.0:", when="+graphviz @2.3:")
 
     # FleCSI 2.2+ documentation dependencies
@@ -95,24 +95,21 @@ class Flecsi(CMakePackage, CudaPackage, ROCmPackage):
 
     # Propagate cuda_arch requirement to dependencies
     for _flag in CudaPackage.cuda_arch_values:
-        depends_on("kokkos cuda_arch=" + _flag, when="+cuda+kokkos cuda_arch=" + _flag + " @2.0:")
-        depends_on(
-            "legion cuda_arch=" + _flag, when="backend=legion +cuda cuda_arch=" + _flag + " @2.0:"
-        )
+        depends_on(f"kokkos cuda_arch={_flag}", when=f"+cuda+kokkos cuda_arch={_flag}")
+        depends_on(f"legion cuda_arch={_flag}", when=f"backend=legion +cuda cuda_arch={_flag}")
 
     # Propagate amdgpu_target requirement to dependencies
     for _flag in ROCmPackage.amdgpu_targets:
-        depends_on("kokkos amdgpu_target=" + _flag, when="+kokkos +rocm amdgpu_target=" + _flag)
+        depends_on(f"kokkos amdgpu_target={_flag}", when=f"+kokkos +rocm amdgpu_target={_flag}")
         depends_on(
-            "legion amdgpu_target=" + _flag,
-            when="backend=legion +rocm amdgpu_target=" + _flag + " @2.0:",
+            f"legion amdgpu_target={_flag}", when=f"backend=legion +rocm amdgpu_target={_flag}"
         )
 
-    requires("%gcc@9:", when="@2: %gcc", msg="Version 9 or newer of GNU compilers required!")
+    requires("%gcc@9:", when="%gcc", msg="Version 9 or newer of GNU compilers required!")
 
     # Disallow conduit=none when using legion as a backend
     conflicts("^legion conduit=none", when="backend=legion")
-    conflicts("+hdf5", when="@2: backend=hpx", msg="HPX backend doesn't support HDF5")
+    conflicts("+hdf5", when="backend=hpx", msg="HPX backend doesn't support HDF5")
 
     def cmake_args(self):
         spec = self.spec
