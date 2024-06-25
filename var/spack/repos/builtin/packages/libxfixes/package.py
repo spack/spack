@@ -10,7 +10,7 @@ class Libxfixes(AutotoolsPackage, XorgPackage):
     """This package contains header files and documentation for the XFIXES
     extension.  Library and server implementations are separate."""
 
-    homepage = "https://cgit.freedesktop.org/xorg/lib/libXfixes"
+    homepage = "https://gitlab.freedesktop.org/xorg/lib/libXfixes"
     xorg_mirror_path = "lib/libXfixes-5.0.2.tar.gz"
 
     license("MIT")

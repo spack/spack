@@ -316,6 +316,16 @@ class Abinit(AutotoolsPackage):
         if "~mpi" in self.spec:
             make("tests_in")
 
+    # Abinit assumes the *old* behavior of HDF5 where the library flags to link
+    # to the library were stored in the lib/libhdf5.settings file.
+    # Spack already knows how to link to HDF5, disable this check in configure
+    def patch(self):
+        filter_file(
+            r"sd_hdf5_libs_extra=.*",
+            "sd_hdf5_libs_extra=%s" % self.spec["hdf5"].libs.ld_flags,
+            "configure",
+        )
+
     def install(self, spec, prefix):
         make("install")
         if "+install-tests" in spec:

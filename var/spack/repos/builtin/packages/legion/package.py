@@ -129,8 +129,8 @@ class Legion(CMakePackage, ROCmPackage):
     # but this might be helpful for other use cases down the road.  Legion's
     # current development policy is C++11 or greater so we capture that aspect
     # here.
-    cpp_stds = ["11", "14", "17", "20"]
-    variant("cxxstd", default="11", description="C++ standard", values=cpp_stds, multi=False)
+    cpp_stds = (conditional("11", "14", when="@:24.03.0"), "17", "20")
+    variant("cxxstd", default="17", description="C++ standard", values=cpp_stds, multi=False)
 
     # Network transport layer: the underlying data transport API should be used for
     # distributed data movement.  For Legion, gasnet is the currently the most
@@ -476,18 +476,15 @@ class Legion(CMakePackage, ROCmPackage):
         install test subdirectory for use during `spack test run`."""
         self.cache_extra_test_sources([join_path("examples", "local_function_tasks")])
 
-    def run_local_function_tasks_test(self):
-        """Run stand alone test: local_function_tasks"""
+    def test_run_local_function_tasks(self):
+        """Build and run external application example"""
 
         test_dir = join_path(
             self.test_suite.current_test_cache_dir, "examples", "local_function_tasks"
         )
 
         if not os.path.exists(test_dir):
-            print("Skipping local_function_tasks test")
-            return
-
-        exe = "local_function_tasks"
+            raise SkipTest(f"{test_dir} must exist")
 
         cmake_args = [
             f"-DCMAKE_C_COMPILER={self.compiler.cc}",
@@ -495,16 +492,12 @@ class Legion(CMakePackage, ROCmPackage):
             f"-DLegion_DIR={join_path(self.prefix, 'share', 'Legion', 'cmake')}",
         ]
 
-        self.run_test(
-            "cmake",
-            options=cmake_args,
-            purpose=f"test: generate makefile for {exe} example",
-            work_dir=test_dir,
-        )
+        with working_dir(test_dir):
+            cmake = self.spec["cmake"].command
+            cmake(*cmake_args)
 
-        self.run_test("make", purpose=f"test: build {exe} example", work_dir=test_dir)
+            make = which("make")
+            make()
 
-        self.run_test(exe, purpose=f"test: run {exe} example", work_dir=test_dir)
-
-    def test(self):
-        self.run_local_function_tasks_test()
+            exe = which("local_function_tasks")
+            exe()
