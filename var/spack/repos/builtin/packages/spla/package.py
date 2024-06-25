@@ -61,7 +61,7 @@ class Spla(CMakePackage):
     depends_on("hip", when="+rocm")
     depends_on("rocblas", when="+rocm")
     conflicts("^rocblas@6.0.0:", when="@:1.5.5 +rocm")
-    conflicts("^hip@6.0.0:", when="@:1.6.0 +rocm") # v1.6.1 includes fix for hip 6.0
+    conflicts("^hip@6.0.0:", when="@:1.6.0 +rocm")  # v1.6.1 includes fix for hip 6.0
 
     # Propagate openmp to blas
     depends_on("openblas threads=openmp", when="+openmp ^[virtuals=blas] openblas")
