@@ -196,6 +196,9 @@ class VtkM(CMakePackage, CudaPackage, ROCmPackage):
                 # vtk-m detectes tbb via TBB_ROOT env var
                 os.environ["TBB_ROOT"] = spec["tbb"].prefix
 
+            if "+kokkos" in spec and "+rocm" in spec and spec.satisfies("^kokkos@4:"):
+                options.append(f"-DCMAKE_CXX_COMPILER:BOOL={spec['hip'].prefix.bin.hipcc}")
+
             # Support for relocatable code
             if "~shared" in spec and "+fpic" in spec:
                 options.append("-DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=ON")
