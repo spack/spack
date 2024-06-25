@@ -14,7 +14,7 @@ class PyJcb(PythonPackage):
     homepage = "https://github.com/NOAA-EMC/jcb"
     git = "https://github.com/NOAA-EMC/jcb"
 
-    maintainers("aerorahul", "WalterKolczynski-NOAA", "AlexanderRichert-NOAA")
+    maintainers("danholdaway", "CoryMartin-NOAA", "AlexanderRichert-NOAA")
 
     license("GPL-3.0-only", checked_by="AlexanderRichert-NOAA")
 
