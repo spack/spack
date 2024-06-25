@@ -80,7 +80,7 @@
     },
     "centos:stream9": {
       "bootstrap": {
-        "template": "container/centos_stream9.dockerfile",
+        "template": "container/centos_stream.dockerfile",
         "image": "quay.io/centos/centos:stream9"
       },
       "os_package_manager": "dnf_epel",
