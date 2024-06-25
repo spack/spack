@@ -56,17 +56,18 @@ class Fontconfig(AutotoolsPackage):
         if not self.spec["libpng"].satisfies("libs=shared"):
             deps.append("libpng")
         if self.spec["libxml2"].satisfies("~shared"):
-            deps.extend(["zlib", "xz", "iconv"])
+            deps.append("libxml-2.0")
         if deps:
+            pc = which("pkg-config")
             for lib in deps:
-                ldflags.append(self.spec[lib].libs.ld_flags)
-                libs.append(self.spec[lib].libs.link_flags)
+                ldflags.append(pc(lib, "--static", "--libs-only-L", output=str).strip())
+                libs.append(pc(lib, "--static", "--libs-only-l", output=str).strip())
             args.append("LDFLAGS=%s" % " ".join(ldflags))
             args.append("LIBS=%s" % " ".join(libs))
 
         if self.spec.satisfies("+pic"):
-            args.append("CFLAGS=-fPIC")
-            args.append("FFLAGS=-fPIC")
+            args.append(f"CFLAGS={self.compiler.cc_pic_flag}")
+            args.append(f"FFLAGS={self.compiler.f77_pic_flag}")
 
         return args
 
