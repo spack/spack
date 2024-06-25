@@ -2350,7 +2350,7 @@ can use the variable `make_jobs` to extract the number of jobs specified
 by the `--jobs` option:
 
 .. code-block:: python
-   :emphasize-lines: 9, 14
+   :emphasize-lines: 7, 11
    :linenos:
  
    class Xios(Package):
