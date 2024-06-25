@@ -13,10 +13,21 @@ class Vecmem(CMakePackage, CudaPackage):
     url = "https://github.com/acts-project/vecmem/archive/refs/tags/v0.5.0.tar.gz"
     list_url = "https://github.com/acts-project/vecmem/tags"
 
-    maintainers("wdconinc", "HadrienG2")
+    maintainers("wdconinc", "HadrienG2", "stephenswat")
 
     license("MPL-2.0-no-copyleft-exception")
 
+    version("1.6.0", sha256="797b016ac0b79bb39abad059ffa9f4817e519218429c9ab4c115f989616bd5d4")
+    version("1.5.0", sha256="5d7a2d2dd8eb961af12a1ed9e4e427b89881e843064ffa96ad0cf0934ba9b7ae")
+    version("1.4.0", sha256="545dfb4de4f9f3d773eef6a0e3297ebf981bb81950930d0991ad739e31ab16af")
+    version("1.3.1", sha256="09b108b0b48d564bbc1b9893ad9c3f7fa0b7914179f55be4c81f88a93e25f2e2")
+    version("1.3.0", sha256="53367db3084de56891ff885754c8fc2427d9ae69a351dd4d984558edf4162bad")
+    version("1.2.0", sha256="2cca8c1143803f209b58e49e9f2d58ebeeec4c815e7d99b0da9f61a319274aa9")
+    version("1.1.0", sha256="4d1f08a28268708819b68ed547eac912ec46e6707b059f0cc4aa7103a525164e")
+    version("1.0.0", sha256="59f478e036aed384eed1ecee1a99c5c52983534d3007d9f9203b7cb12c6ffa19")
+    version("0.27.0", sha256="f50a32214500767402930d4650243583769684c28fa29fe17f17f393a37ce0f2")
+    version("0.26.0", sha256="0e67acc197c4c1052288957c6419478c243aca718b64d383decd758d3c8f49ee")
+    version("0.25.0", sha256="90a87f00d45216cf4548fbcd6bb255dc15190873dc52936293a8c13f82e907f3")
     version("0.24.0", sha256="b395c013fba4e01f02939fefac14b357dbfd8e572b5c8f4ee5a1414adbd2ea93")
     version("0.22.0", sha256="b8811723bee60b0ea289d4c8b73363883e7c856859baf4cb6276b38816b0b258")
     version("0.21.0", sha256="97df3beb9a59b89b65c51ceb7e7c9b09172b3875b25f2d8fc070e4f9b061b631")
@@ -47,15 +58,20 @@ class Vecmem(CMakePackage, CudaPackage):
     depends_on("cmake@3.17:", type="build")
     depends_on("hip", when="+hip")
     depends_on("sycl", when="+sycl")
-    depends_on("googletest", type="test")
+
+    # FIXME: due to #29447, googletest is not available to cmake when building with --test,
+    # and we can choose between always depending on googletest, or using FetchContent
+    # depends_on("googletest", type="test")
 
     def cmake_args(self):
         args = [
+            self.define("FETCHCONTENT_FULLY_DISCONNECTED", False),  # see FIXME above
             self.define_from_variant("VECMEM_BUILD_CUDA_LIBRARY", "cuda"),
             self.define_from_variant("VECMEM_BUILD_HIP_LIBRARY", "hip"),
             self.define_from_variant("VECMEM_BUILD_SYCL_LIBRARY", "sycl"),
+            self.define("BUILD_TESTING", self.run_tests),
             self.define("VECMEM_BUILD_TESTING", self.run_tests),
-            self.define("VECMEM_USE_SYSTEM_GOOGLETEST", True),
+            self.define("VECMEM_USE_SYSTEM_GOOGLETEST", False),  # see FIXME above
         ]
 
         if "+cuda" in self.spec:
