@@ -34,6 +34,8 @@ class Pixman(AutotoolsPackage):
     variant("shared", default=True, description="Build shared library")
     variant("pic", default=False, description="Enable position-independent code")
 
+    conflicts("+shared ~pic")
+
     # As discussed here:
     # https://bugs.freedesktop.org/show_bug.cgi?id=104886
     # __builtin_shuffle was removed in clang 5.0.
