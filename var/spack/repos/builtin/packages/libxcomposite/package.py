@@ -10,7 +10,7 @@ class Libxcomposite(AutotoolsPackage, XorgPackage):
     """libXcomposite - client library for the Composite extension to the
     X11 protocol."""
 
-    homepage = "https://cgit.freedesktop.org/xorg/lib/libXcomposite"
+    homepage = "https://gitlab.freedesktop.org/xorg/lib/libXcomposite"
     xorg_mirror_path = "lib/libXcomposite-0.4.4.tar.gz"
 
     license("MIT")

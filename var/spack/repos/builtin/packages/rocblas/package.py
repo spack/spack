@@ -33,16 +33,11 @@ class Rocblas(CMakePackage):
     version("5.6.0", sha256="6a70b27eede02c45f46095a6ce8421af9a774a565e39f5e1074783ecf00c1ea7")
     version("5.5.1", sha256="7916a8d238d51cc239949d799f0b61c9d5cd63c6ccaed0e16749489b89ca8ff3")
     version("5.5.0", sha256="b5260517f199e806ae18f2c4495f163884e0d7a0a7c67af0770f7428ea50f898")
-    version("5.4.3", sha256="d82cd334b7a9b40d16ec4f4bb1fb5662382dcbfc86ee5e262413ed63d9e6a701")
-    version("5.4.0", sha256="261e05375024a01e68697c5d175210a07f0f5fc63a756234d996ddedffde78a2")
-    version("5.3.3", sha256="62a3b5f415bd8e0dcd0d68233d379f1a928ec0349977c32b4eea72ae5004e805")
-    version("5.3.0", sha256="8ea7269604cba949a6ea84b78dc92a44fa890427db88334da6358813f6512e34")
     with default_args(deprecated=True):
-        version("5.2.3", sha256="36f74ce53b82331a756c42f95f3138498d6f4a66f2fd370cff9ab18281bb12d5")
-        version("5.2.1", sha256="6be804ba8d9e491a85063c220cd0ddbf3d13e3b481eee31041c35a938723f4c6")
-        version("5.2.0", sha256="b178b7db5f0af55b21b5f744b8825f5e002daec69b4688e50df2bca2fac155bd")
-        version("5.1.3", sha256="915374431db8f0cecdc2bf318a0ad33c3a8eceedc461d7a06b92ccb02b07313c")
-        version("5.1.0", sha256="efa0c424b5ada697314aa8a78c19c93ade15f1612c4bfc8c53d71d1c9719aaa3")
+        version("5.4.3", sha256="d82cd334b7a9b40d16ec4f4bb1fb5662382dcbfc86ee5e262413ed63d9e6a701")
+        version("5.4.0", sha256="261e05375024a01e68697c5d175210a07f0f5fc63a756234d996ddedffde78a2")
+        version("5.3.3", sha256="62a3b5f415bd8e0dcd0d68233d379f1a928ec0349977c32b4eea72ae5004e805")
+        version("5.3.0", sha256="8ea7269604cba949a6ea84b78dc92a44fa890427db88334da6358813f6512e34")
 
     amdgpu_targets = ROCmPackage.amdgpu_targets
 
@@ -71,11 +66,6 @@ class Rocblas(CMakePackage):
     depends_on("rocm-cmake", type="build")
 
     for ver in [
-        "5.1.0",
-        "5.1.3",
-        "5.2.0",
-        "5.2.1",
-        "5.2.3",
         "5.3.0",
         "5.3.3",
         "5.4.0",
@@ -110,11 +100,6 @@ class Rocblas(CMakePackage):
         depends_on("procps", type="build", when="@5.6:")
 
     for t_version, t_commit in [
-        ("@5.1.0", "ea38f8661281a37cd81c96cc07868e3f07d2c4da"),
-        ("@5.1.3", "ea38f8661281a37cd81c96cc07868e3f07d2c4da"),
-        ("@5.2.0", "9ca08f38c4c3bfe6dfa02233637e7e3758c7b6db"),
-        ("@5.2.1", "9ca08f38c4c3bfe6dfa02233637e7e3758c7b6db"),
-        ("@5.2.3", "9ca08f38c4c3bfe6dfa02233637e7e3758c7b6db"),
         ("@5.3.0", "b33ca97af456cda14f7b1ec9bcc8aeab3ed6dd08"),
         ("@5.3.3", "006a5d653ce0d82fecb05d5e215d053749b57c04"),
         ("@5.4.0", "5aec08937473b27865fa969bb38a83bcf9463c2b"),
@@ -145,7 +130,6 @@ class Rocblas(CMakePackage):
             when=f"@{ver} +tensile",
         )
 
-    patch("0003-Fix-rocblas-gentest.patch", when="@:5.1")
     # Finding Python package and set command python as python3
     patch("0004-Find-python.patch", when="@5.2.0:5.4")
     patch("0006-Guard-use-of-OpenMP-to-make-it-optional-5.4.patch", when="@5.4")
