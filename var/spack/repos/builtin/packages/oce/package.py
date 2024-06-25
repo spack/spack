@@ -63,11 +63,6 @@ class Oce(Package):
     # see https://github.com/tpaviot/oce/issues/675
     patch("xlocale.patch", level=0, when="@0.18.1:0.18.2")
 
-    # fix build with Xcode 8 "previous definition of CLOCK_REALTIME"
-    # reported 27 Sep 2016 https://github.com/tpaviot/oce/issues/643
-    if (platform.system() == "Darwin") and (macos_version() == Version("10.12")):
-        patch("sierra.patch", when="@0.17.2:0.18.0")
-
     def install(self, spec, prefix):
         options = []
         options.extend(std_cmake_args)
