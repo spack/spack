@@ -5,6 +5,7 @@
 import os.path
 
 from spack.package import *
+from spack.error import NoHeadersError
 
 
 class Elsi(CMakePackage, CudaPackage):
@@ -34,6 +35,7 @@ class Elsi(CMakePackage, CudaPackage):
     variant("use_external_elpa", default=True, description="Build ELPA using SPACK")
     variant("use_external_ntpoly", default=True, description="Build NTPoly using SPACK")
     variant("use_external_superlu", default=True, description="Use external SuperLU DIST")
+    variant("use_external_omm", default=True, description="Use external libOMM")
     variant(
         "use_mpi_iallgather", default=True, description="Use non-blocking collective MPI functions"
     )
@@ -65,6 +67,10 @@ class Elsi(CMakePackage, CudaPackage):
         depends_on("superlu-dist+cuda", when="+cuda")
         depends_on("superlu-dist~cuda", when="~cuda")
 
+    with when("+use_external_omm"):
+        depends_on("omm")
+        depends_on("matrix-switch")  # Direct dependency
+
     def cmake_args(self):
         libs_names = ["scalapack", "lapack", "blas"]
 
@@ -75,11 +81,26 @@ class Elsi(CMakePackage, CudaPackage):
             libs_names.append("ntpoly")
         if self.spec.satisfies("+use_external_superlu"):
             libs_names.append("superlu-dist")
+        if self.spec.satisfies("+use_external_omm"):
+            libs_names.append("omm")
+            libs_names.append("matrix-switch")
 
-        lib_paths, libs = [], []
+        lib_paths, inc_paths, libs = [], [], []
         for lib in libs_names:
             lib_paths.extend(self.spec[lib].libs.directories)
             libs.extend(self.spec[lib].libs.names)
+
+            try:
+                inc_paths.extend(self.spec[lib].headers.directories)
+
+                # Deal with Fortran modules
+                for path in self.spec[lib].headers:
+                    # Add path to .mod files
+                    # headers.directories only add path up to include/
+                    if path.endswith(".mod"):
+                        inc_paths.append(os.path.dirname(path))
+            except NoHeadersError:
+                pass
 
         args = [
             # Compiler Information (ELSI wants these explicitly set)
@@ -92,21 +113,20 @@ class Elsi(CMakePackage, CudaPackage):
             self.define_from_variant("USE_EXTERNAL_ELPA", "use_external_elpa"),
             self.define_from_variant("USE_EXTERNAL_NTPOLY", "use_external_ntpoly"),
             self.define_from_variant("USE_EXTERNAL_SUPERLU", "use_external_superlu"),
+            self.define_from_variant("USE_EXTERNAL_OMM", "use_external_omm"),
             self.define_from_variant("USE_MPI_IALLGATHER", "use_mpi_iallgather"),
             self.define("ENABLE_TESTS", self.run_tests),
             self.define("ENABLE_C_TESTS", self.run_tests),
             self.define_from_variant("USE_GPU_CUDA", "cuda"),
-            self.define("LIB_PATHS", ";".join(lib_paths)),
-            self.define("LIBS", ";".join(libs)),
+            self.define("LIB_PATHS", ";".join(set(lib_paths))),
+            self.define("LIBS", ";".join(set(libs))),
             self.define(f"USE_ELPA_{self.spec.variants['internal_elpa_version'].value}", True),
         ]
 
         if self.spec.variants["elpa2_kernel"].value != "none":
             args.append(self.define_from_variant("ELPA2_KERNEL", "elpa2_kernel"))
 
-        if self.spec.satisfies("+use_external_elpa"):
-            elpa_module = find(self.spec["elpa"].prefix, "elpa.mod")
-            args.append(self.define("INC_PATHS", os.path.dirname(elpa_module[0])))
+        args.append(self.define("INC_PATHS", ";".join(set(inc_paths))))
 
         # Only when using fujitsu compiler
         if self.spec.satisfies("%fj"):
