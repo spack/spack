@@ -35,6 +35,8 @@ except ImportError:
 
 esc, bell, lbracket, bslash, newline = r"\x1b", r"\x07", r"\[", r"\\", r"\n"
 # Ansi Control Sequence Introducers (CSI) are a well-defined format
+# Standard ECMA-48: Control Functions for Character-Imaging I/O Devices, section 5.4
+# https://www.ecma-international.org/wp-content/uploads/ECMA-48_5th_edition_june_1991.pdf
 csi_pre = f"{esc}{lbracket}"
 csi_param, csi_inter, csi_post = r"[0-?]", r"[ -/]", r"[@-~]"
 ansi_csi = f"{csi_pre}{csi_param}*{csi_inter}*{csi_post}"
