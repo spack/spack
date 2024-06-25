@@ -114,7 +114,7 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Build & Deploy ${{ matrix.dockerfile[0] }}
-        uses: docker/build-push-action@2cdde995de11925a030ce8070c3d77a52ffcf1c0
+        uses: docker/build-push-action@31159d49c0d4756269a0940a750801a1ea5d7003
         with:
           context: dockerfiles/${{ matrix.dockerfile[0] }}
           platforms: ${{ matrix.dockerfile[1] }}
