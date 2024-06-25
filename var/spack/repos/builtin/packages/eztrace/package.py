@@ -63,10 +63,6 @@ class Eztrace(CMakePackage, AutotoolsPackage, CudaPackage):
     def url_for_version(self, version):
         return f"https://gitlab.com/eztrace/eztrace/-/archive/{version}/eztrace-{version}.tar.gz"
 
-    def setup_build_environment(self, env):
-        if self.spec.satisfies("@:1 %fj"):
-            env.set("LDFLAGS", "--linkfortran")
-
     @when("@:1")
     def patch(self):
         filter_file(
@@ -105,6 +101,9 @@ class CMakeBuilder(cmake.CMakeBuilder):
 
 
 class AutotoolsBuilder(autotools.AutotoolsBuilder):
+    def setup_build_environment(self, env):
+        env.set("LDFLAGS", "--linkfortran")
+
     def autoreconf(self, pkg, spec, prefix):
         Executable("/bin/sh")("./bootstrap")
 
