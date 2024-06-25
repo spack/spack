@@ -60,8 +60,23 @@ class Yafyaml(CMakePackage):
         msg="yaFyaml only works with the Fujitsu compiler from 1.3.0 onwards",
     )
 
-    # yafyaml does not currently build with gcc 13.3
+    # yafyaml does not currently build with gcc 13.3. First we can check
+    # if the spec is gcc@13.3...
     conflicts("%gcc@13.3:", msg="yaFyaml does not successfully build with gfortran 13.3")
+
+    # ...but if it is not (say apple-clang with gfortran as a fc), there is
+    # no easy way to check this. So we hijack flag_handler to raise an
+    # exception if we detect gfortran 13.3.
+    # NOTE: This will only error out at install time, so `spack spec` will
+    # not catch this.
+    def flag_handler(self, name, flags):
+        if any(self.compiler.fc.endswith(suffix) for suffix in ["gfortran", "gfortran-13"]):
+            gfortran_version = spack.compiler.get_compiler_version_output(
+                self.compiler.fc, "-dumpfullversion"
+            )
+            if "13.3" in gfortran_version:
+                raise InstallError("yaFyaml does not successfully build with gfortran 13.3")
+        return None, None, None
 
     variant(
         "build_type",
