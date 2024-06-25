@@ -44,7 +44,7 @@ class Oce(Package):
     variant("tbb", default=True, description="Build with Intel Threading Building Blocks")
     variant("X11", default=False, description="Build with X11 enabled")
 
-    depends_on("cmake@2.8:", type="build")
+    depends_on("cmake@3:", type="build")
 
     with when("+tbb"):
         depends_on("tbb")
@@ -87,12 +87,6 @@ class Oce(Package):
 
         if platform.system() == "Darwin":
             options.extend(["-DOCE_OSX_USE_COCOA:BOOL=ON"])
-
-        if platform.system() == "Darwin" and (macos_version() >= Version("10.12")):
-            # use @rpath on Sierra due to limit of dynamic loader
-            options.append("-DCMAKE_MACOSX_RPATH=ON")
-        else:
-            options.append("-DCMAKE_INSTALL_NAME_DIR:PATH=%s/lib" % prefix)
 
         cmake(".", *options)
         make("install/strip")
