@@ -27,7 +27,7 @@ class PyJcb(PythonPackage):
     depends_on("py-jinja2@3.1.2:", type=("build", "run"))
     depends_on("py-click@8:", type=("build", "run"))
 
-    depends_on("py-pytest", type="test")
+    depends_on("py-pytest@7:", type="test")
 
     @run_after("install")
     @on_package_attributes(run_tests=True)
