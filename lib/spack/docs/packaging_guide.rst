@@ -2355,19 +2355,15 @@ by the `--jobs` option:
  
    class Xios(Package):
       ...
-
       def install(self, spec, prefix):
          ...
-
          options = [
             ...
-            str(make_jobs),
+            --jobs, str(make_jobs),
         ]
         ...
-
         make_xios = Executable("./make_xios")
         make_xios(*options)
-        ...
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Install-level build parallelism
