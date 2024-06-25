@@ -94,18 +94,16 @@ def test_load_recursive(install_mockery, mock_fetch, mock_archive, mock_packages
         )
         return paths_shell
 
-    prev_paths = None
-    for shell, set_command in (
-        [("--bat", r'set "%s=(.*)"')]
-        if sys.platform == "win32"
-        else [("--sh", r"export %s=([^;]*)"), ("--csh", r"setenv %s ([^;]*)")]
-    ):
-        paths = test_load_shell(shell, set_command)
-        if prev_paths:
-            # Shouldn't be a difference between loading csh / sh, so check they're the same.
-            assert prev_paths == paths
-        else:
-            prev_paths = paths
+    if sys.platform == "win32":
+        shell, set_command = ("--bat", r'set "%s=(.*)"')
+        test_load_shell(shell, set_command)
+    else:
+        params = [("--sh", r"export %s=([^;]*)"), ("--csh", r"setenv %s ([^;]*)")]
+        shell, set_command = params[0]
+        paths_sh = test_load_shell(shell, set_command)
+        shell, set_command = params[1]
+        paths_csh = test_load_shell(shell, set_command)
+        assert paths_sh == paths_csh
 
 
 @pytest.mark.parametrize(
