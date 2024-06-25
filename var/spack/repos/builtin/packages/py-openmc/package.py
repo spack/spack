@@ -17,12 +17,14 @@ class PyOpenmc(PythonPackage):
     programming model."""
 
     homepage = "https://docs.openmc.org/"
-    url = "https://github.com/openmc-dev/openmc/tarball/v0.13.3"
+    url = "https://github.com/openmc-dev/openmc/tarball/v0.15.0"
     git = "https://github.com/openmc-dev/openmc.git"
     maintainers("paulromano")
 
     version("develop", branch="develop")
     version("master", branch="master")
+    version("0.15.0", commit="55b52b7ef3c9415ce045712132bf31c2a013d8c8", submodules=True)
+    version("0.14.0", commit="fa2330103de61a864c958d1a7250f11e5dd91468", submodules=True)
     version("0.13.3", commit="27cb0dc97960fe6d750eb5a93584a9a0ca532ac8", submodules=True)
     version("0.13.2", commit="030f73a8690ed19e91806e46c8caf338d252e74a", submodules=True)
     version("0.13.1", commit="33bc948f4b855c037975f16d16091fe4ecd12de3", submodules=True)
@@ -38,6 +40,8 @@ class PyOpenmc(PythonPackage):
     for ver in [
         "develop",
         "master",
+        "0.15.0",
+        "0.14.0",
         "0.13.3",
         "0.13.2",
         "0.13.1",
@@ -55,7 +59,8 @@ class PyOpenmc(PythonPackage):
         )
 
     depends_on("git", type="build")
-    depends_on("python@3.7:", type=("build", "run"), when="@0.13.2:")
+    depends_on("python@3.10:", type=("build", "run"), when="@0.15.0:")
+    depends_on("python@3.7:", type=("build", "run"), when="@0.13.2:0.14.0")
     depends_on("python@3.6:", type=("build", "run"), when="@0.13.0:0.13.1")
     depends_on("python@3.5:", type=("build", "run"), when="@:0.12")
     depends_on("py-cython", type="build")
