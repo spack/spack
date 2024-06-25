@@ -7,16 +7,16 @@
 from spack.package import *
 
 
-class Maphyspp(CMakePackage):
+class Composyx(CMakePackage):
     """a Massively Parallel Hybrid Solver in C++"""
 
-    homepage = "https://gitlab.inria.fr/solverstack/maphys/maphyspp"
-    git = "https://gitlab.inria.fr/solverstack/maphys/maphyspp.git"
-    url = "https://gitlab.inria.fr/api/v4/projects/6194/packages/generic/source/v1.1.9/maphyspp-1.1.9.tar.gz"
+    homepage = "https://gitlab.inria.fr/composyx/composyx"
+    git = "https://gitlab.inria.fr/composyx/composyx.git"
+    url = "https://gitlab.inria.fr/api/v4/projects/52455/packages/generic/source/v1.0.1/composyx-1.0.1.tar.gz"
     maintainers("fpruvost")
 
-    version("master", branch="master", submodules=True)
-    version("1.1.9", sha256="472deef05f69c26337a6f8e769cf36cbe0a50e6ec096757389ed10286a0d7e04")
+    version("main", branch="main", submodules=True)
+    version("1.0.1", sha256="d97936e3b297fde435c165cbe29cb39e5d88ae368be451b1c45b8ee51486782c")
 
     # User options
     variant("armadillo", default=False, description="Enable Armadillo interface")
