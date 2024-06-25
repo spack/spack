@@ -52,7 +52,7 @@ spack:
       version: [11.8.0]
     paraview:
       # Don't build GUI support or GLX rendering for HPC/container deployments
-      require: "@5.11 ~qt ^[virtuals=gl] osmesa"
+      require: "@5.11 +examples ~qt ^[virtuals=gl] osmesa"
 
   specs:
   # CPU
@@ -190,7 +190,7 @@ spack:
   - zfp
   # --
   # - geopm                           # geopm: https://github.com/spack/spack/issues/38795
-  # - glvis                           # glvis: https://github.com/spack/spack/issues/42839
+  - glvis                           # glvis: https://github.com/spack/spack/issues/42839
   # - nek5000 +mpi +visit             # nek5000:  Error: AttributeError: 'str' object has no attribute 'propagate': 'VISIT_INSTALL="' + spec["visit"].prefix.bin + '"',
 
   # PYTHON PACKAGES
