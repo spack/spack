@@ -5,11 +5,10 @@
 
 import platform
 
-from spack.operating_systems.mac_os import macos_version
 from spack.package import *
 
 
-class Oce(Package):
+class Oce(CMakePackage):
     """Open CASCADE Community Edition
 
     UNMAINTAINED: see https://github.com/tpaviot/oce/issues/745#issuecomment-992285943
@@ -63,32 +62,23 @@ class Oce(Package):
     # see https://github.com/tpaviot/oce/issues/675
     patch("xlocale.patch", level=0, when="@0.18.1:0.18.2")
 
-    def install(self, spec, prefix):
-        options = []
-        options.extend(std_cmake_args)
-        options.extend(
-            [
-                "-DOCE_INSTALL_PREFIX=%s" % prefix,
-                "-DOCE_BUILD_SHARED_LIB:BOOL=ON",
-                "-DCMAKE_BUILD_TYPE:STRING=Release",
-                "-DOCE_DATAEXCHANGE:BOOL=ON",
-                "-DOCE_DISABLE_X11:BOOL=%s" % ("OFF" if "+X11" in spec else "ON"),
-                "-DOCE_DRAW:BOOL=OFF",
-                "-DOCE_MODEL:BOOL=ON",
-                "-DOCE_MULTITHREAD_LIBRARY:STRING=%s" % ("TBB" if "+tbb" in spec else "NONE"),
-                "-DOCE_OCAF:BOOL=ON",
-                "-DOCE_USE_TCL_TEST_FRAMEWORK:BOOL=OFF",
-                "-DOCE_VISUALISATION:BOOL=OFF",
-                "-DOCE_WITH_FREEIMAGE:BOOL=OFF",
-                "-DOCE_WITH_GL2PS:BOOL=OFF",
-                "-DOCE_WITH_OPENCL:BOOL=OFF",
-            ]
-        )
+    def cmake_args(self):
+        args = [
+            self.define("OCE_INSTALL_PREFIX", self.prefix),
+            self.define("OCE_BUILD_SHARED_LIB", True),
+            self.define("OCE_DATAEXCHANGE", True),
+            self.define("OCE_DISABLE_X11", self.spec.satisfies("~X11")),
+            self.define("OCE_DRAW", False),
+            self.define("OCE_MODEL", True),
+            self.define("OCE_MULTITHREAD_LIBRARY", ("TBB" if self.spec.satisfies("+tbb") else "NONE")),
+            self.define("OCE_OCAF", True),
+            self.define("OCE_USE_TCL_TEST_FRAMEWORK", False),
+            self.define("OCE_VISUALISATION", False),
+            self.define("OCE_WITH_FREEIMAGE", False),
+            self.define("OCE_WITH_GL2PS", False),
+            self.define("OCE_WITH_OPENCL", False),
+        ]
 
-        if platform.system() == "Darwin":
-            options.extend(["-DOCE_OSX_USE_COCOA:BOOL=ON"])
-
-        cmake(".", *options)
-        make("install/strip")
-        if self.run_tests:
-            make("test")
+        if self.spec.satisfies("platform=darwin"):
+            args.append(self.define("OCE_OSX_USE_COCOA", True))
+        return args
