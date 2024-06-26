@@ -38,15 +38,12 @@ import spack.binary_distribution
 import spack.config
 import spack.detection
 import spack.environment
-import spack.fetch_strategy
 import spack.modules
 import spack.paths
 import spack.platforms
 import spack.platforms.linux
 import spack.repo
-import spack.resource
 import spack.spec
-import spack.stage
 import spack.store
 import spack.user_environment
 import spack.util.binary_resource
