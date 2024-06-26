@@ -31,10 +31,31 @@ class Openssl(Package):  # Uses Fake Autotools, should subclass Package
 
     license("Apache-2.0")
 
-    version("3.3.0", sha256="53e66b043322a606abf0087e7699a0e033a37fa13feb9742df35c3a33b18fb02")
-    version("3.2.1", sha256="83c7329fe52c850677d75e5d0b0ca245309b97e8ecbcfdc1dfdc4ab9fac35b39")
-    version("3.1.5", sha256="6ae015467dabf0469b139ada93319327be24b98251ffaeceda0221848dc09262")
-    version("3.0.13", sha256="88525753f79d3bec27d2fa7c66aa0b92b3aa9498dafd93d7cfa4b3780cdae313")
+    version("3.3.1", sha256="777cd596284c883375a2a7a11bf5d2786fc5413255efab20c50d6ffe6d020b7e")
+    version("3.2.2", sha256="197149c18d9e9f292c43f0400acaba12e5f52cacfe050f3d199277ea738ec2e7")
+    version("3.1.6", sha256="5d2be4036b478ef3cb0a854ca9b353072c3a0e26d8a56f8f0ab9fb6ed32d38d7")
+    version("3.0.14", sha256="eeca035d4dd4e84fc25846d952da6297484afa0650a6f84c682e39df3a4123ca")
+
+    version(
+        "3.3.0",
+        sha256="53e66b043322a606abf0087e7699a0e033a37fa13feb9742df35c3a33b18fb02",
+        deprecated=True,
+    )
+    version(
+        "3.2.1",
+        sha256="83c7329fe52c850677d75e5d0b0ca245309b97e8ecbcfdc1dfdc4ab9fac35b39",
+        deprecated=True,
+    )
+    version(
+        "3.1.5",
+        sha256="6ae015467dabf0469b139ada93319327be24b98251ffaeceda0221848dc09262",
+        deprecated=True,
+    )
+    version(
+        "3.0.13",
+        sha256="88525753f79d3bec27d2fa7c66aa0b92b3aa9498dafd93d7cfa4b3780cdae313",
+        deprecated=True,
+    )
 
     version(
         "1.1.1w",

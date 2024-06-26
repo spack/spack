@@ -18,8 +18,9 @@ class PyJaxlib(PythonPackage, CudaPackage):
     buildtmp = ""
 
     license("Apache-2.0")
-    maintainers("adamjstewart")
+    maintainers("adamjstewart", "jonas-eschle")
 
+    version("0.4.29", sha256="3a8005f4f62d35a5aad7e3dbd596890b47c81cc6e34fcfe3dcb93b3ca7cb1246")
     version("0.4.28", sha256="4dd11577d4ba5a095fbc35258ddd4e4c020829ed6e6afd498c9e38ccbcdfe20b")
     version("0.4.27", sha256="c2c82cd9ad3b395d5cbc0affa26a2938e52677a69ca8f0b9ef9922a52cac4f0c")
     version("0.4.26", sha256="ddc14da1eaa34f23430d40ad9b9585088575cac439a2fa1c6833a247e1b221fd")
@@ -46,9 +47,10 @@ class PyJaxlib(PythonPackage, CudaPackage):
         depends_on("cuda@12.1:", when="@0.4.26:")
         depends_on("cuda@11.8:", when="@0.4.11:")
         depends_on("cuda@11.4:", when="@0.4.0:0.4.7")
-        depends_on("cudnn@8.9:8", when="@0.4.26:")
-        depends_on("cudnn@8.8:", when="@0.4.11:")
-        depends_on("cudnn@8.2:", when="@0.4:0.4.7")
+        depends_on("cudnn@9", when="@0.4.29:")
+        depends_on("cudnn@8.9:8", when="@0.4.26:0.4.28")
+        depends_on("cudnn@8.8:8", when="@0.4.11:0.4.25")
+        depends_on("cudnn@8.2:8", when="@0.4:0.4.7")
 
     with when("+nccl"):
         depends_on("nccl@2.18:", when="@0.4.26:")
@@ -80,6 +82,7 @@ class PyJaxlib(PythonPackage, CudaPackage):
         depends_on("py-numpy@1.22:", when="@0.4.14:")
         depends_on("py-numpy@1.21:", when="@0.4.7:")
         depends_on("py-numpy@1.20:", when="@0.3:")
+        depends_on("py-ml-dtypes@0.4:", when="@0.4.29:")
         depends_on("py-ml-dtypes@0.2:", when="@0.4.14:")
         depends_on("py-ml-dtypes@0.1:", when="@0.4.9:")
         depends_on("py-ml-dtypes@0.0.3:", when="@0.4.7:")

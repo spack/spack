@@ -76,6 +76,7 @@ def _retrieve_develop_source(spec, abspath):
         # mirror might store an instance with truncated history.
         package.stage[0].disable_mirrors()
 
+    package.stage[0].fetcher.set_package(package)
     package.stage.steal_source(abspath)
 
 
