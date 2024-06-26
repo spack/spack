@@ -74,6 +74,7 @@ class Mptensor(CMakePackage):
         """test with +mpi"""
         if "+mpi" not in self.spec:
             raise SkipTest("Package must be installed with +mpi")
+
         with working_dir(join_path(self.install_test_root, "tests"), create=False):
             make("clean")
             makefile = FileFilter("Makefile")
