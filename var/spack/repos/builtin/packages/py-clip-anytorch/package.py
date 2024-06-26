@@ -18,7 +18,7 @@ class PyClipAnytorch(PythonPackage):
     vision."""
 
     homepage = "https://github.com/rom1504/CLIP"
-    #PyPI source is missing requirements.txt
+    # PyPI source is missing requirements.txt
     url = "https://github.com/rom1504/CLIP/archive/refs/tags/2.6.0.tar.gz"
 
     license("MIT", checked_by="github_user1")
