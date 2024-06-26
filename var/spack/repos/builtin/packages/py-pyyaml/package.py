@@ -32,7 +32,7 @@ class PyPyyaml(PythonPackage):
     depends_on("python@3.6:", when="@6:", type=("build", "link", "run"))
     depends_on("libyaml", when="+libyaml", type="link")
     depends_on("py-setuptools", type="build")
-    depends_on("py-cython@0.29.8:2", when="@6:+libyaml", type="build")
+    depends_on("py-cython", when="@6:+libyaml", type="build")
 
     # Includes "longintrepr.h" instead of Python.h
     conflicts("^python@3.11:", when="@:5.3")
