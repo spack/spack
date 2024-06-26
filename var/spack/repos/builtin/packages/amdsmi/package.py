@@ -33,7 +33,6 @@ class Amdsmi(CMakePackage):
     depends_on("cmake@3.11:")
     depends_on("python@3.6:")
     depends_on("py-virtualenv")
-    depends_on("llvm@14:")
     depends_on("pkgconfig")
     depends_on("libdrm")
     depends_on("py-pyyaml")
