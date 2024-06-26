@@ -21,15 +21,15 @@ class MatrixSwitch(CMakePackage):
     version("1.2.1", sha256="a3c2bac20435a8217cd1a1abefa8b7f8c52b1c6f55a75b2861565ade5ecfe37f")
     version("master", branch="master")
 
-    variant("lapack", default=True, description="Build libOMM with LAPACK interface.")
-    variant("mpi", default=True, description="Build libOMM with MPI support.")
+    variant("lapack", default=True, description="Build with LAPACK interface.")
+    variant("mpi", default=True, description="Build with MPI support.")
     variant(
         "scalapack",
         default=True,
         when="+mpi",
-        description="Build libOMM with ScaLAPACK interface.",
+        description="Build with ScaLAPACK interface.",
     )
-    variant("dbcsr", default=False, when="+mpi", description="Build libOMM with DBCSR interface.")
+    variant("dbcsr", default=False, when="+mpi", description="Build with DBCSR interface.")
 
     depends_on("cmake@3.22:", type="build")
     generator("ninja")
