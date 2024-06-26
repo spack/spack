@@ -160,7 +160,6 @@ spack:
   - upcxx
   - wannier90
   - xyce +mpi +shared +pymi +pymi_static_tpls
-  # - ecp-data-vis-sdk ~cuda ~rocm +adios2 +ascent +cinema +darshan +faodel +hdf5 ~paraview +pnetcdf +sz +unifyfs +veloc ~visit +vtkm +zfp # +visit: libext, libxkbfile, libxrender, libxt, silo (https://github.com/spack/spack/issues/39538), cairo
   # INCLUDED IN ECP DAV CPU
   - adios2
   - ascent
@@ -177,6 +176,7 @@ spack:
   # - visit                                 # libext, libxkbfile, libxrender, libxt, silo (https://github.com/spack/spack/issues/39538), cairo
   - vtk-m
   - zfp
+  # - ecp-data-vis-sdk ~cuda ~rocm +adios2 +ascent +cinema +darshan +faodel +hdf5 ~paraview +pnetcdf +sz +unifyfs +veloc ~visit +vtkm +zfp # +visit: libext, libxkbfile, libxrender, libxt, silo (https://github.com/spack/spack/issues/39538), cairo
   # --
   # - dealii                                # fltk: https://github.com/spack/spack/issues/38791
   # - geopm                                 # geopm: https://github.com/spack/spack/issues/38798
@@ -212,7 +212,7 @@ spack:
   - flux-core +cuda
   - hpctoolkit +cuda
   - papi +cuda
-  - tau +mpi +cuda                          # tau: has issue with `spack env depfile` build
+  - tau +mpi +cuda
   # --
   # - legion +cuda                          # legion: needs NVIDIA driver
 
@@ -221,7 +221,6 @@ spack:
   - arborx +cuda cuda_arch=70 ^kokkos +wrapper
   - caliper +cuda cuda_arch=70
   - chai +cuda cuda_arch=70 ^umpire ~shared
-  # - cp2k +mpi +cuda cuda_arch=70 # dbcsr
   - ecp-data-vis-sdk ~rocm +adios2 ~ascent +hdf5 +vtkm +zfp ~paraview +cuda cuda_arch=70
   - exago +mpi +python +raja +hiop ~rocm +cuda cuda_arch=70 ~ipopt ^hiop@1.0.0 ~sparse +mpi +raja ~rocm +cuda cuda_arch=70 #^raja@0.14.0
   - flecsi +cuda cuda_arch=70
@@ -254,6 +253,7 @@ spack:
   - zfp +cuda cuda_arch=70
   # --
   # - axom +cuda cuda_arch=70               # axom: https://github.com/spack/spack/issues/29520
+  # - cp2k +mpi +cuda cuda_arch=70          # dbcsr
   # - cusz +cuda cuda_arch=70               # cusz: https://github.com/spack/spack/issues/38787
   # - dealii +cuda cuda_arch=70             # fltk: https://github.com/spack/spack/issues/38791
   # - lammps +cuda cuda_arch=70             # lammps: needs NVIDIA driver
