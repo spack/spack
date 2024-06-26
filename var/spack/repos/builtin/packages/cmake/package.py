@@ -124,6 +124,9 @@ class Cmake(Package):
         when="@3.15.5",
     )
 
+    # Ensure CMAKE_INSTALL_RPATH does not error in projects with statically linked binaries
+    patch("rpath-static.patch", when="@3.22.0:3.30")
+
     depends_on("ninja", when="platform=windows")
     depends_on("gmake", when="platform=linux")
     depends_on("gmake", when="platform=darwin")
