@@ -90,7 +90,7 @@ class Openblas(CMakePackage, MakefilePackage):
         "noavx512",
         default=False,
         description="Disable AVX-512 with NO_AVX512=1 (internal compiler error with AVX512 "
-        + "when using Intel 2021/2022)",
+        + "when using Intel 2021)",
     )
     variant("symbol_suffix", default="none", description="Set a symbol suffix")
 
@@ -266,7 +266,7 @@ class Openblas(CMakePackage, MakefilePackage):
         msg="Visual Studio does not support OpenBLAS dynamic dispatch features",
     )
 
-    requires("+noavx512", when="%intel@2021:2022")
+    requires("+noavx512", when="%intel@2021")
 
     depends_on("perl", type="build")
 
