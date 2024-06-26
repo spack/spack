@@ -26,7 +26,7 @@ class Gromacs(CMakePackage, CudaPackage):
     url = "https://ftp.gromacs.org/gromacs/gromacs-2022.2.tar.gz"
     list_url = "https://ftp.gromacs.org/gromacs"
     git = "https://gitlab.com/gromacs/gromacs.git"
-    maintainers("danielahlin", "eirrgang", "junghans")
+    maintainers("mabraham", "eirrgang", "junghans")
 
     license("GPL-2.0-or-later", when="@:4.5")
     license("LGPL-2.1-or-later", when="@4.6:")
