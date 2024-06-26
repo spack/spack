@@ -846,8 +846,6 @@ class PyclingoDriver:
         parent_dir = os.path.dirname(__file__)
         self.control.load(os.path.join(parent_dir, "concretize.lp"))
         self.control.load(os.path.join(parent_dir, "heuristic.lp"))
-        if spack.config.CONFIG.get("concretizer:duplicates:strategy", "none") != "none":
-            self.control.load(os.path.join(parent_dir, "heuristic_separate.lp"))
         self.control.load(os.path.join(parent_dir, "display.lp"))
         if not setup.concretize_everything:
             self.control.load(os.path.join(parent_dir, "when_possible.lp"))
@@ -1882,11 +1880,8 @@ class SpackSolverSetup:
                             )
 
                 clauses.append(f.variant_value(spec.name, vname, value))
-
                 if variant.propagate:
-                    clauses.append(
-                        f.variant_propagation_candidate(spec.name, vname, value, spec.name)
-                    )
+                    clauses.append(f.propagate(spec.name, fn.variant_value(vname, value)))
 
                 # Tell the concretizer that this is a possible value for the
                 # variant, to account for things like int/str values where we
@@ -2748,7 +2743,7 @@ class _Head:
     node_flag = fn.attr("node_flag_set")
     node_flag_source = fn.attr("node_flag_source")
     node_flag_propagate = fn.attr("node_flag_propagate")
-    variant_propagation_candidate = fn.attr("variant_propagation_candidate")
+    propagate = fn.attr("propagate")
 
 
 class _Body:
@@ -2765,7 +2760,7 @@ class _Body:
     node_flag = fn.attr("node_flag")
     node_flag_source = fn.attr("node_flag_source")
     node_flag_propagate = fn.attr("node_flag_propagate")
-    variant_propagation_candidate = fn.attr("variant_propagation_candidate")
+    propagate = fn.attr("propagate")
 
 
 class ProblemInstanceBuilder:
