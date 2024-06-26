@@ -18,6 +18,7 @@ class PyDatasets(PythonPackage):
 
     license("Apache-2.0")
 
+    version("2.20.0", sha256="3c4dbcd27e0f642b9d41d20ff2efa721a5e04b32b2ca4009e0fc9139e324553f")
     version("2.8.0", sha256="a843b69593914071f921fc1086fde939f30a63415a34cdda5db3c0acdd58aff2")
     version("1.8.0", sha256="d57c32bb29e453ee7f3eb0bbca3660ab4dd2d0e4648efcfa987432624cab29d3")
 
