@@ -398,7 +398,7 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
     @property
     def build_relpath(self):
         """Relative path to the cmake build subdirectory."""
-        return join_path("..", self.build_dirname)
+        return join_path("..", self.builder.build_dirname)
 
     @run_after("install")
     def setup_build_tests(self):
@@ -418,11 +418,11 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
         return join_path(self.install_test_root, self.build_relpath, "bin")
 
     def _test_examples(self):
-        """Perform very basic checks on a subset of copied examples."""
+        """Confirm executable gets the correct output"""
         checks = [
             (
                 "ex5_line-of-sight_solution",
-                [r"RAJA sequential", r"RAJA OpenMP", r"result -- PASS"],
+                [r"RAJA sequential", r"RAJA OpenMP" if self.spec.satisfies("+openmp") else "", r"result -- PASS"],
             ),
             (
                 "ex6_stencil-offset-layout_solution",
@@ -437,17 +437,16 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
             ("tut_batched-matrix-multiply", [r"result -- PASS"]),
             ("wave-eqn", [r"Max Error = 2", r"Evolved solution to time"]),
         ]
+        """Split up into different methods"""
         for exe, expected in checks:
-            reason = "test: checking output of {0} for {1}".format(exe, expected)
-            self.run_test(
-                exe,
-                [],
-                expected,
-                installed=False,
-                purpose=reason,
-                skip_missing=True,
-                work_dir=self._extra_tests_path,
-            )
+            try:
+                with working_dir(self._extra_tests_path):
+                    exe = which(exe)
+                    out = exe(output=str.split,error=str.split)
+                    check_outputs(expected, out)
+            except:
+                print(f"FAILED ON {exe}")
+                raise
 
     def test(self):
         """Perform smoke tests."""

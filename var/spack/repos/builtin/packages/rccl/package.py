@@ -138,7 +138,9 @@ class Rccl(CMakePackage):
             args.append(self.define("BUILD_TESTS", "ON"))
         return args
 
-    def test(self):
+    def test_Unit(self):
+        """Run rccl-UnitTests"""
         test_dir = join_path(self.spec["rccl"].prefix, "bin")
         with working_dir(test_dir, create=True):
-            self.run_test("UnitTests")
+            exe = which("rccl-UnitTests")
+            exe()
