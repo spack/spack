@@ -11,12 +11,13 @@ class Mepo(PythonPackage):
 
     homepage = "https://github.com/GEOS-ESM/mepo"
     git = "https://github.com/GEOS-ESM/mepo.git"
-    pypi = "mepo/mepo-2.0.0rc3.tar.gz"
+    pypi = "mepo/mepo-2.0.0rc4.tar.gz"
 
     maintainers("pchakraborty", "mathomp4")
 
     license("Apache-2.0", checked_by="mathomp4")
 
+    version("2.0.0rc4", sha256="5f6113be565c561c08114355570a259042b25222a9e8e1dc6e6e44448381cd36")
     version("2.0.0rc3", sha256="c0c897a33f5018489e6cc14892961831c8922a3378ac30436496c52bf877aff7")
 
     depends_on("python@3.9:", type=("build", "run"))
