@@ -70,31 +70,31 @@ class Mptensor(CMakePackage):
         install test subdirectory for use during `spack test run`."""
         self.cache_extra_test_sources(".")
 
-    def test(self):
+    def test_mpi(self):
+        """test with +mpi"""
         if "+mpi" not in self.spec:
-            print("Test of mptensor only runs with +mpi option.")
-        else:
-            with working_dir(join_path(self.install_test_root, "tests"), create=False):
-                make("clean")
-                makefile = FileFilter("Makefile")
-                makefile.filter("g++", "{0}".format(spack_cxx), string=True)
+            raise SkipTest("Package must be installed with +mpi")
+        with working_dir(join_path(self.install_test_root, "tests"), create=False):
+            make("clean")
+            makefile = FileFilter("Makefile")
+            makefile.filter("g++", "{0}".format(spack_cxx), string=True)
 
-            with working_dir(join_path(self.install_test_root), create=False):
-                makefile = FileFilter("Makefile.option")
-                makefile.filter("CXX =.*", "CXX ={0}".format(self.spec["mpi"].mpicxx))
-                makefile.filter("CXXFLAGS =.*", "CXXFLAGS ={0}".format(self.compiler.cxx11_flag))
+        with working_dir(join_path(self.install_test_root), create=False):
+            makefile = FileFilter("Makefile.option")
+            makefile.filter("CXX =.*", "CXX ={0}".format(self.spec["mpi"].mpicxx))
+            makefile.filter("CXXFLAGS =.*", "CXXFLAGS ={0}".format(self.compiler.cxx11_flag))
 
-            math_libs = (
-                self.spec["scalapack"].libs + self.spec["lapack"].libs + self.spec["blas"].libs
-            )
+        math_libs = (
+            self.spec["scalapack"].libs + self.spec["lapack"].libs + self.spec["blas"].libs
+        )
 
-            with working_dir(join_path(self.install_test_root, "tests"), create=False):
-                make("LDFLAGS={0}".format(math_libs.ld_flags))
+        with working_dir(join_path(self.install_test_root, "tests"), create=False):
+            make("LDFLAGS={0}".format(math_libs.ld_flags))
 
-                mpirun = self.spec["mpi"].prefix.bin.mpirun
-                mpiexec = Executable(mpirun)
-                mpiexec("-n", "1", "tensor_test.out")
+            mpirun = self.spec["mpi"].prefix.bin.mpirun
+            mpiexec = Executable(mpirun)
+            mpiexec("-n", "1", "tensor_test.out")
 
-                # Test of mptensor has checker
-                # and checker is abort when check detect any errors.
-                print("Test of mptensor PASSED !")
+            # Test of mptensor has checker
+            # and checker is abort when check detect any errors.
+            print("Test of mptensor PASSED !")
