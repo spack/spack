@@ -17,7 +17,7 @@ class Parallel(AutotoolsPackage, GNUMirrorPackage):
 
     license("GPL-3.0-or-later")
 
-    version("20240522", sha256="67ed9fad31bf3e25f09d500e7e8ca7df9e3ac380fe4ebd16c6f014448a346928")
+    version("20240622", sha256="37e210c907bd443c7d5b626071e815dc0d691d0652992b67d0c2acc34cbf38d5")
     version("20220522", sha256="bb6395f8d964e68f3bdb26a764d3c48b69bc5b759a92ac3ab2bd1895c7fa8c1f")
     version("20220422", sha256="96e4b73fff1302fc141a889ae43ab2e93f6c9e86ac60ef62ced02dbe70b73ca7")
     version("20220322", sha256="df93ccf6a9f529ad2126b7042aef0486603e938c77b405939c41702d38a4e6d8")
