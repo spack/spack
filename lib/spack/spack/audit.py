@@ -42,16 +42,19 @@ import glob
 import inspect
 import io
 import itertools
+import os
 import pathlib
 import pickle
 import re
 import warnings
+from typing import Iterable, List, Set, Tuple
 from urllib.request import urlopen
 
 import llnl.util.lang
 
 import spack.config
 import spack.patch
+import spack.paths
 import spack.repo
 import spack.spec
 import spack.util.crypto
@@ -73,7 +76,9 @@ class Error:
         self.details = tuple(details)
 
     def __str__(self):
-        return self.summary + "\n" + "\n".join(["    " + detail for detail in self.details])
+        if self.details:
+            return f"{self.summary}\n" + "\n".join(f"    {detail}" for detail in self.details)
+        return self.summary
 
     def __eq__(self, other):
         if self.summary != other.summary or self.details != other.details:
@@ -667,6 +672,84 @@ def _ensure_env_methods_are_ported_to_builders(pkgs, error_cls):
                     " appropriate builder class".format(pkg_name, method_name)
                 )
                 errors.append(error_cls(msg, []))
+
+    return errors
+
+
+class DeprecatedMagicGlobals(ast.NodeVisitor):
+    def __init__(self, magic_globals: Iterable[str]):
+        super().__init__()
+
+        self.magic_globals: Set[str] = set(magic_globals)
+
+        # State to track whether we're in a class function
+        self.depth: int = 0
+        self.in_function: bool = False
+        self.path = (ast.Module, ast.ClassDef, ast.FunctionDef)
+
+        # Defined locals in the current function (heuristically at least)
+        self.locals: Set[str] = set()
+
+        # List of (name, lineno) tuples for references to magic globals
+        self.references_to_globals: List[Tuple[str, int]] = []
+
+    def descend_in_function_def(self, node: ast.AST) -> None:
+        if not isinstance(node, self.path[self.depth]):
+            return
+        self.depth += 1
+        if self.depth == len(self.path):
+            self.in_function = True
+        super().generic_visit(node)
+        if self.depth == len(self.path):
+            self.in_function = False
+            self.locals.clear()
+        self.depth -= 1
+
+    def generic_visit(self, node: ast.AST) -> None:
+        # Recurse into function definitions
+        if self.depth < len(self.path):
+            return self.descend_in_function_def(node)
+        elif not self.in_function:
+            return
+        elif isinstance(node, ast.Global):
+            for name in node.names:
+                if name in self.magic_globals:
+                    self.references_to_globals.append((name, node.lineno))
+        elif isinstance(node, ast.Assign):
+            # visit the rhs before lhs
+            super().visit(node.value)
+            for target in node.targets:
+                super().visit(target)
+        elif isinstance(node, ast.Name) and node.id in self.magic_globals:
+            if isinstance(node.ctx, ast.Load) and node.id not in self.locals:
+                self.references_to_globals.append((node.id, node.lineno))
+            elif isinstance(node.ctx, ast.Store):
+                self.locals.add(node.id)
+        else:
+            super().generic_visit(node)
+
+
+@package_properties
+def _uses_deprecated_globals(pkgs, error_cls):
+    """Ensure that packages do not use deprecated globals"""
+    errors = []
+
+    for pkg_name in pkgs:
+        file = spack.repo.PATH.filename_for_package_name(pkg_name)
+        relative_path = os.path.relpath(file, spack.paths.spack_root)
+        tree = ast.parse(open(file).read())
+        visitor = DeprecatedMagicGlobals(("std_cmake_args",))
+        visitor.visit(tree)
+        if visitor.references_to_globals:
+            errors.append(
+                error_cls(
+                    f"Package '{pkg_name}' uses deprecated globals",
+                    [
+                        f"{relative_path}:{line} references '{name}'"
+                        for name, line in visitor.references_to_globals
+                    ],
+                )
+            )
 
     return errors
 
