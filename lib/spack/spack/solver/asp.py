@@ -1878,11 +1878,8 @@ class SpackSolverSetup:
                             )
 
                 clauses.append(f.variant_value(spec.name, vname, value))
-
                 if variant.propagate:
-                    clauses.append(
-                        f.variant_propagation_candidate(spec.name, vname, value, spec.name)
-                    )
+                    clauses.append(f.propagate(spec.name, fn.variant_value(vname, value)))
 
                 # Tell the concretizer that this is a possible value for the
                 # variant, to account for things like int/str values where we
@@ -2737,7 +2734,7 @@ class _Head:
     node_flag = fn.attr("node_flag_set")
     node_flag_source = fn.attr("node_flag_source")
     node_flag_propagate = fn.attr("node_flag_propagate")
-    variant_propagation_candidate = fn.attr("variant_propagation_candidate")
+    propagate = fn.attr("propagate")
 
 
 class _Body:
@@ -2754,7 +2751,7 @@ class _Body:
     node_flag = fn.attr("node_flag")
     node_flag_source = fn.attr("node_flag_source")
     node_flag_propagate = fn.attr("node_flag_propagate")
-    variant_propagation_candidate = fn.attr("variant_propagation_candidate")
+    propagate = fn.attr("propagate")
 
 
 class ProblemInstanceBuilder:
