@@ -24,5 +24,12 @@ class Stdexec(CMakePackage):
     conflicts("%gcc@:10")
     conflicts("%clang@:12")
 
+    @when("@:23.03")
     def build(self, spec, prefix):
         pass
+
+    def cmake_args(self):
+        return [
+            self.define("STDEXEC_BUILD_TESTS", self.run_tests),
+            self.define("STDEXEC_BUILD_EXAMPLES", False),
+        ]
