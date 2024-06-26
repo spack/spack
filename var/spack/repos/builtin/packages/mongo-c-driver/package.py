@@ -105,7 +105,6 @@ class CMakeBuilder(cmake.CMakeBuilder):
             self.define("ENABLE_MONGOC", True),
             self.define("MONGO_USE_CCACHE", False),
             self.define("MONGO_USE_LLD", False),
-            self.define_from_variant("ENABLE_SSL", "ssl"),
             self.define_from_variant("ENABLE_SNAPPY", "snappy"),
             self.define_from_variant("ENABLE_ZSTD", "zstd"),
         ]
