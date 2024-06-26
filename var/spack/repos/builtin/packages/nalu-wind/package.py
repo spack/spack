@@ -52,7 +52,7 @@ class NaluWind(CMakePackage, CudaPackage, ROCmPackage):
     variant("openfast", default=False, description="Compile with OpenFAST support")
     variant("tioga", default=False, description="Compile with Tioga support")
     variant("hypre", default=True, description="Compile with Hypre support")
-    variant("trilinos-solvers", default=True, description="Compile with Trilinos Solvers support")
+    variant("trilinos-solvers", default=False, description="Compile with Trilinos Solvers support")
     variant("catalyst", default=False, description="Compile with Catalyst support")
     variant("shared", default=True, description="Build shared libraries")
     variant("fftw", default=False, description="Compile with FFTW support")
@@ -79,11 +79,17 @@ class NaluWind(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("tioga@1.0.0:", when="+tioga")
     depends_on("hypre@2.18.2: ~int64+mpi~superlu-dist", when="+hypre")
     depends_on("trilinos+muelu+belos+amesos2+ifpack2", when="+trilinos-solvers")
-    conflicts(
-        "~hypre~trilinos-solvers",
-        msg="nalu-wind: Must enable at least one of the linear-solvers: hypre or trilinos-solvers",
-    )
     depends_on("kokkos-nvcc-wrapper", type="build", when="+cuda")
+    depends_on("trilinos-catalyst-ioss-adapter", when="+catalyst")
+    depends_on("fftw+mpi", when="+fftw")
+    depends_on("nccmp")
+    depends_on("boost +filesystem +iostreams cxxstd=14", when="+boost")
+    depends_on("hypre+gpu-aware-mpi", when="+gpu-aware-mpi")
+    depends_on("hypre+umpire", when="+umpire")
+    depends_on("trilinos~shared", when="+trilinos-solvers")
+    # indirect dependency needed to make original concretizer work
+    depends_on("netcdf-c+parallel-netcdf")
+
     for _arch in CudaPackage.cuda_arch_values:
         depends_on(
             "trilinos~shared+cuda+cuda_rdc+wrapper cuda_arch={0}".format(_arch),
@@ -103,16 +109,10 @@ class NaluWind(CMakePackage, CudaPackage, ROCmPackage):
             when="+hypre+rocm amdgpu_target={0}".format(_arch),
         )
 
-    depends_on("trilinos-catalyst-ioss-adapter", when="+catalyst")
-    depends_on("fftw+mpi", when="+fftw")
-    depends_on("nccmp")
-    # indirect dependency needed to make original concretizer work
-    depends_on("netcdf-c+parallel-netcdf")
-    depends_on("boost +filesystem +iostreams cxxstd=14", when="+boost")
-    depends_on("hypre+gpu-aware-mpi", when="+gpu-aware-mpi")
-    depends_on("hypre+umpire", when="+umpire")
-    depends_on("trilinos~shared", when="+trilinos-solvers platform=darwin")
-
+    conflicts(
+        "~hypre~trilinos-solvers",
+        msg="nalu-wind: Must enable at least one of the linear-solvers: hypre or trilinos-solvers",
+    )
     conflicts(
         "+shared",
         when="+cuda",
@@ -130,6 +130,7 @@ class NaluWind(CMakePackage, CudaPackage, ROCmPackage):
     conflicts("^hypre+sycl")
     conflicts("^trilinos+cuda", when="~cuda")
     conflicts("^trilinos+rocm", when="~rocm")
+    conflicts("+shared", when="+trilinos-solvers")
 
     def setup_dependent_run_environment(self, env, dependent_spec):
         spec = self.spec
