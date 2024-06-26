@@ -85,9 +85,7 @@ class Mptensor(CMakePackage):
             makefile.filter("CXX =.*", "CXX ={0}".format(self.spec["mpi"].mpicxx))
             makefile.filter("CXXFLAGS =.*", "CXXFLAGS ={0}".format(self.compiler.cxx11_flag))
 
-        math_libs = (
-            self.spec["scalapack"].libs + self.spec["lapack"].libs + self.spec["blas"].libs
-        )
+        math_libs = self.spec["scalapack"].libs + self.spec["lapack"].libs + self.spec["blas"].libs
 
         with working_dir(join_path(self.install_test_root, "tests"), create=False):
             make("LDFLAGS={0}".format(math_libs.ld_flags))
