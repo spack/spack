@@ -4,8 +4,8 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os.path
 
-from spack.package import *
 from spack.error import NoHeadersError
+from spack.package import *
 
 
 class Elsi(CMakePackage, CudaPackage):
@@ -19,10 +19,19 @@ class Elsi(CMakePackage, CudaPackage):
     license("BSD-3-Clause")
 
     version("2.10.1", sha256="b3c7526d46a9139a26680787172a3df15bc648715a35bdf384053231e94ab829")
-    version("2.2.1", sha256="5b4b2e8fa4b3b68131fe02cc1803a884039b89a1b1138af474af66453bec0b4d", deprecated=True)
+    version(
+        "2.2.1",
+        sha256="5b4b2e8fa4b3b68131fe02cc1803a884039b89a1b1138af474af66453bec0b4d",
+        deprecated=True,
+    )
     version("master", branch="master")
 
-    variant("add_underscore", default=True, description="Suffix C functions with an underscore", when="@2.2.1")
+    variant(
+        "add_underscore",
+        default=True,
+        description="Suffix C functions with an underscore",
+        when="@2.2.1",
+    )
     variant(
         "elpa2_kernel",
         default="none",
@@ -34,11 +43,21 @@ class Elsi(CMakePackage, CudaPackage):
     variant("enable_sips", default=False, description="Enable SLEPc-SIPs support")
     variant("use_external_elpa", default=True, description="Build ELPA using SPACK")
     variant("use_external_ntpoly", default=True, description="Build NTPoly using SPACK")
-    variant("use_external_superlu", default=True, description="Use external SuperLU DIST", when="@:2.2")
-    variant("use_external_pexsi", default=True, description="Use external PEXSI", when="@2.3: +enable_pexsi")
+    variant(
+        "use_external_superlu", default=True, description="Use external SuperLU DIST", when="@:2.2"
+    )
+    variant(
+        "use_external_pexsi",
+        default=True,
+        description="Use external PEXSI",
+        when="@2.3: +enable_pexsi",
+    )
     variant("use_external_omm", default=True, description="Use external libOMM")
     variant(
-        "use_mpi_iallgather", default=True, description="Use non-blocking collective MPI functions", when="@:2.5"
+        "use_mpi_iallgather",
+        default=True,
+        description="Use non-blocking collective MPI functions",
+        when="@:2.5",
     )
     variant(
         "internal_elpa_version",
@@ -131,8 +150,9 @@ class Elsi(CMakePackage, CudaPackage):
         ]
 
         if not self.spec.satisfies("+use_external_elpa"):
-            args.append(self.define(f"USE_ELPA_{self.spec.variants['internal_elpa_version'].value}", True))
-
+            args.append(
+                self.define(f"USE_ELPA_{self.spec.variants['internal_elpa_version'].value}", True)
+            )
 
         if self.spec.variants["elpa2_kernel"].value != "none":
             args.append(self.define_from_variant("ELPA2_KERNEL", "elpa2_kernel"))

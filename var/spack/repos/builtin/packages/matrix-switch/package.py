@@ -7,7 +7,7 @@ from spack.package import *
 
 
 class MatrixSwitch(CMakePackage):
-    """Intermediary interface between high-level routines for physics-related algorithms and low-level routines dealing 
+    """Intermediary interface between high-level routines for physics-related algorithms and low-level routines dealing
     with matrix storage and manipulation."""
 
     homepage = "https://gitlab.com/ElectronicStructureLibrary/omm/matrixswitch"
@@ -23,7 +23,12 @@ class MatrixSwitch(CMakePackage):
 
     variant("lapack", default=True, description="Build libOMM with LAPACK interface.")
     variant("mpi", default=True, description="Build libOMM with MPI support.")
-    variant("scalapack", default=True, when="+mpi", description="Build libOMM with ScaLAPACK interface.")
+    variant(
+        "scalapack",
+        default=True,
+        when="+mpi",
+        description="Build libOMM with ScaLAPACK interface.",
+    )
     variant("dbcsr", default=False, when="+mpi", description="Build libOMM with DBCSR interface.")
 
     depends_on("cmake@3.22:", type="build")
@@ -32,7 +37,7 @@ class MatrixSwitch(CMakePackage):
     depends_on("lapack", when="+lapack")
     depends_on("mpi", when="+mpi")
     depends_on("scalapack", when="+scalapack")
-    depends_on("dbcsr~shared", when="+dbcsr") # Expects static library (FindCustomDbcsr)
+    depends_on("dbcsr~shared", when="+dbcsr")  # Expects static library (FindCustomDbcsr)
 
     def cmake_args(self):
         args = [
@@ -40,14 +45,13 @@ class MatrixSwitch(CMakePackage):
             self.define_from_variant("WITH_MPI", "mpi"),
             self.define_from_variant("WITH_SCALAPACK", "scalapack"),
             self.define_from_variant("WITH_DBCSR", "dbcsr"),
-
         ]
 
         if self.spec.satisfies("+dbcsr"):
             args.append(self.define("DBCSR_ROOT", self.spec["dbcsr"].prefix))
 
         return args
-    
+
     @property
     def libs(self):
         return find_libraries("libmatrixswitch", root=self.home, recursive=True, shared=False)

@@ -22,9 +22,13 @@ class Omm(CMakePackage):
 
     variant("lapack", default=True, description="Build libOMM with LAPACK interface.")
     variant("mpi", default=True, description="Build libOMM with MPI support.")
-    variant("scalapack", default=True, when="+mpi", description="Build libOMM with ScaLAPACK interface.")
+    variant(
+        "scalapack",
+        default=True,
+        when="+mpi",
+        description="Build libOMM with ScaLAPACK interface.",
+    )
     variant("dbcsr", default=False, when="+mpi", description="Build libOMM with DBCSR interface.")
-    
 
     depends_on("cmake@3.22:", type="build")
     generator("ninja")
@@ -32,7 +36,7 @@ class Omm(CMakePackage):
     depends_on("lapack", when="+lapack")
     depends_on("mpi", when="+mpi")
     depends_on("scalapack", when="+scalapack")
-    depends_on("dbcsr~shared", when="+dbcsr") # Expects static library (FindCustomDbcsr)
+    depends_on("dbcsr~shared", when="+dbcsr")  # Expects static library (FindCustomDbcsr)
 
     depends_on("matrix-switch")
     depends_on("matrix-switch+lapack", when="+lapack")
