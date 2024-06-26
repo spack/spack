@@ -20,7 +20,7 @@ class PyGlobusCli(PythonPackage):
 
     version("3.16.0", sha256="0ef721060870d9346505e52b9bf30c7bed6ae136cc08762deb2f8893bd25d8c5")
 
-    depends_on("python@3.7:3.10", type=("build", "run"))
+    depends_on("python@3.7:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
     depends_on("py-globus-sdk@3.25.0", type=("build", "run"))
     depends_on("py-click@8", type=("build", "run"))
@@ -31,5 +31,5 @@ class PyGlobusCli(PythonPackage):
     # the underlying lib ever changes"
     depends_on("py-requests@2.19.1:2", type=("build", "run"))
     depends_on("py-pyjwt@2.0.0:2+crypto", type=("build", "run"))
-    depends_on("py-cryptography@3.3.1:", type=("build", "run"))
-    depends_on("py-typing-extensions@4:", type=("build", "run"))
+    depends_on("py-cryptography@3.3.1:3.3", type=("build", "run"))
+    depends_on("py-typing-extensions@4:", type=("build", "run"), when="^python@:3.10")
