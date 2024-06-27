@@ -29,7 +29,6 @@
 :- attr("variant_value", PackageNode, _, _), not attr("node", PackageNode).
 :- attr("node_flag_compiler_default", PackageNode), not attr("node", PackageNode).
 :- attr("node_flag", PackageNode, _, _), not attr("node", PackageNode).
-:- attr("no_flags", PackageNode, _), not attr("node", PackageNode).
 :- attr("external_spec_selected", PackageNode, _), not attr("node", PackageNode).
 :- attr("depends_on", ParentNode, _, _), not attr("node", ParentNode).
 :- attr("depends_on", _, ChildNode, _), not attr("node", ChildNode).
@@ -1327,12 +1326,6 @@ attr("node_flag_compiler_default", PackageNode)
 
 % Flag set to something
 attr("node_flag", PackageNode, FlagType, Flag) :- attr("node_flag_set", PackageNode, FlagType, Flag).
-
-% if no node flags are set for a type, there are no flags.
-attr("no_flags", PackageNode, FlagType)
-  :- not attr("node_flag", PackageNode, FlagType, _),
-     attr("node", PackageNode),
-     flag_type(FlagType).
 
 #defined compiler_flag/3.
 
