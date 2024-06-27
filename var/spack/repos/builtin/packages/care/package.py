@@ -22,6 +22,12 @@ class Care(CMakePackage, CudaPackage, ROCmPackage):
     version("develop", branch="develop", submodules="True")
     version("master", branch="main", submodules="True")
     version(
+        "0.13.1",
+        tag="v0.13.1",
+        commit="0fd0d47aaaa57076f26caad88e667fbc01ff7214",
+        submodules="True",
+    )
+    version(
         "0.13.0",
         tag="v0.13.0",
         commit="2b288e2c557c3b14befeebc8e14a7d48348bd857",
