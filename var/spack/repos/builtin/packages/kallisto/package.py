@@ -56,19 +56,9 @@ class Kallisto(CMakePackage):
     # configure script.
     # See https://github.com/spack/spack/issues/15274 and
     # https://github.com/pachterlab/kallisto/issues/253
-    @property
-    def std_cmake_args(self):
-        """Call the original std_cmake_args and then filter the verbose
-        setting.
-        """
-        a = super().std_cmake_args
-        if self.spec.satisfies("@0.44.0:"):
-            args = [i for i in a if i != "-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON"]
-            if self.spec.satisfies("@0.46.2:"):
-                args.append(self.define_from_variant("USE_HDF5", "hdf5"))
-            if self.spec.satisifes("@0.50.1:"):
-                args.append(self.define_from_variant("USE_BAM", "bam"))
-        else:
-            args = a
-
-        return args
+    def cmake_args(self):
+        return [
+            self.define("CMAKE_VERBOSE_MAKEFILE", False),
+            self.define_from_variant("USE_HDF5", "hdf5"),
+            self.define_from_variant("USE_BAM", "bam"),
+        ]

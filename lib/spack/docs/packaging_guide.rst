@@ -2344,10 +2344,10 @@ you set ``parallel`` to ``False`` at the package level, then each call
 to ``make()`` will be sequential by default, but packagers can call
 ``make(parallel=True)`` to override it.
 
-Note that the `--jobs` option works out of the box for all standard
+Note that the ``--jobs`` option works out of the box for all standard
 build systems. If you are using a non-standard build system instead, you
-can use the variable `make_jobs` to extract the number of jobs specified
-by the `--jobs` option:
+can use the variable ``make_jobs`` to extract the number of jobs specified
+by the ``--jobs`` option:
 
 .. code-block:: python
    :emphasize-lines: 7, 11

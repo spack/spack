@@ -17,7 +17,7 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
 
     homepage = "https://computing.llnl.gov/projects/sundials"
     url = "https://github.com/LLNL/sundials/releases/download/v2.7.0/sundials-2.7.0.tar.gz"
-    git = "https://github.com/llnl/sundials.git"
+    git = "https://github.com/LLNL/sundials.git"
     tags = ["radiuss", "e4s"]
     test_requires_compiler = True
 
@@ -28,6 +28,7 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
     # Versions
     # ==========================================================================
     version("develop", branch="develop")
+    version("7.1.1", tag="v7.1.1", commit="c28eaa3764a03705d61decb6025b409360e9d53f")
     version("7.0.0", sha256="d762a7950ef4097fbe9d289f67a8fb717a0b9f90f87ed82170eb5c36c0a07989")
     version("6.7.0", sha256="5f113a1564a9d2d98ff95249f4871a4c815a05dbb9b8866a82b13ab158c37adb")
     version("6.6.2", sha256="08f8223a5561327e44c072e46faa7f665c0c0bc8cd7e45d23f486c3d24c65009")
@@ -223,8 +224,7 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
     # ==========================================================================
 
     # Build dependencies
-    depends_on("cmake@3.12:", type="build")
-    depends_on("cmake@3.18:", when="+cuda", type="build")
+    depends_on("cmake@3.18:", type="build")
 
     # MPI related dependencies
     depends_on("mpi", when="+mpi")
