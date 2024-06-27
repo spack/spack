@@ -79,12 +79,12 @@ def win_ensure_or_acquire_resource(name):
         tty.debug(f"Resource {name} already available on system path at: {cmd.path}")
         win_insert_resource_into_environment(name)
         return
-    if not cmd and not spack.config.get("resource:enable"):
+    if not cmd and not spack.config.get("bootstrap_resource:enable"):
         raise RuntimeError(
             f"Cannot fetch bootstrap resource {name} as it is disabled, and \
 {name} is not available on the PATH"
         )
-    resources = spack.config.get("resource:resources")
+    resources = spack.config.get("bootstrap_resource:resources")
     providers = resources.get(name)["providers"]
     for provider in providers:
         if BinaryResource(name, provider).acquire_resource():
