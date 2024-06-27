@@ -9,7 +9,7 @@ class Libgudev(MesonPackage):
     """Provides GObject bindings for libudev."""
 
     homepage = "https://gitlab.gnome.org/GNOME/libgudev/"
-    url = "https://download.gnome.org/sources/libgudev/237/libgudev-237.tar.xz"
+    url = "https://download.gnome.org/sources/libgudev/238/libgudev-238.tar.xz"
 
     maintainers("teaguesterling")
 
