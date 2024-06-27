@@ -154,7 +154,11 @@ class Root(CMakePackage):
             when="@:6.30.04 +x",
         )
         # Fix rpath for loading cppyy
-        patch("loader.patch", when="@6.28: +python")
+        patch(
+            "https://github.com/root-project/root/pull/15925.diff?full_index=1",
+            sha256="1937290a4d54cd2e3e8a8d23d93b8dedaca9ed8dcfdcfa2f0d16629ff53fb3b7",
+            when="@6.28: +python"
+        )
 
     # ###################### Variants ##########################
     # See README.md for specific notes about what ROOT configuration
