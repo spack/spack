@@ -18,10 +18,11 @@ from llnl.util import tty
 
 import spack.paths
 
+BINARY_RESOURCE_SUBDIR = "binary-resources"
 
 def binary_resource_root() -> pathlib.Path:
     """Returns the root of the Windows resources required for bootstrapping"""
-    return pathlib.Path(spack.paths.user_cache_path) / "binary-resources"
+    return pathlib.Path(spack.paths.user_cache_path) / BINARY_RESOURCE_SUBDIR
 
 
 def win_insert_resource_into_environment(name):
@@ -48,7 +49,7 @@ class BinaryResource:
             conf (dict): Dictionary representing resource endpoint layout
         """
         self._name = name
-        self.resource_subdir = "binary-resource"
+        self.resource_subdir = BINARY_RESOURCE_SUBDIR
         fetcher = spack.fetch_strategy.URLFetchStrategy(
             url=conf["endpoint"], checksum=conf["sha256"]
         )
@@ -78,17 +79,17 @@ def win_ensure_or_acquire_resource(name):
     if cmd:
         tty.debug(f"Resource {name} already available on system path at: {cmd.path}")
         win_insert_resource_into_environment(name)
-        return
-    if not cmd and not spack.config.get("bootstrap_resource:enable"):
-        raise RuntimeError(
-            f"Cannot fetch bootstrap resource {name} as it is disabled, and \
+    else:
+        if not spack.config.get("bootstrap_resource:enable"):
+            raise RuntimeError(
+                f"Cannot fetch bootstrap resource {name} as it is disabled, and \
 {name} is not available on the PATH"
-        )
-    resources = spack.config.get("bootstrap_resource:resources")
-    providers = resources.get(name)["providers"]
-    for provider in providers:
-        if BinaryResource(name, provider).acquire_resource():
-            win_insert_resource_into_environment(name)
-            return
-    # if we reach this point, and no other error was raised, there must be no providers given
-    raise RuntimeError(f"Failed to fetch bootstrap resource {name} as no provider was specified")
+            )
+        resources = spack.config.get("bootstrap_resource:resources")
+        providers = resources.get(name)["providers"]
+        for provider in providers:
+            if BinaryResource(name, provider).acquire_resource():
+                win_insert_resource_into_environment(name)
+                return
+        # if we reach this point, and no other error was raised, there must be no providers given
+        raise RuntimeError(f"Failed to fetch bootstrap resource {name} as no provider was specified")
