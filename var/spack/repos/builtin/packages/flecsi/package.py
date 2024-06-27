@@ -22,6 +22,7 @@ class Flecsi(CMakePackage, CudaPackage, ROCmPackage):
     tags = ["e4s"]
 
     version("develop", branch="develop", deprecated=True)
+    version("2.3.0", tag="v2.3.0", commit="90bc8267fceb02060e54646f73b45d4252aef491")
     version("2.2.1", tag="v2.2.1", commit="84b5b232aebab40610f57387778db80f6c8c84c5")
     version("2.2.0", tag="v2.2.0", commit="dd531ac16c5df124d76e385c6ebe9b9589c2d3ad")
     version("2.1.0", tag="v2.1.0", commit="533df139c267e2a93c268dfe68f9aec55de11cf0")
@@ -105,12 +106,14 @@ class Flecsi(CMakePackage, CudaPackage, ROCmPackage):
     # FleCSI@2.x
     depends_on("cmake@3.15:", when="@2.0:")
     depends_on("cmake@3.19:", when="@2.2:")
+    depends_on("cmake@3.23:", when="@2.3:")
     depends_on("boost +atomic +filesystem +regex +system", when="@2.0:2.2.1")
     depends_on("boost@1.79.0:", when="@2.2:")
     depends_on("kokkos@3.2.00:", when="+kokkos @2.0:")
     depends_on("kokkos +cuda +cuda_constexpr +cuda_lambda", when="+kokkos +cuda @2.0:")
     depends_on("kokkos +rocm", when="+kokkos +rocm @2.0:")
     depends_on("kokkos +openmp", when="+kokkos +openmp @2.0:")
+    depends_on("kokkos@3.7:", when="+kokkos @2.3:")
     depends_on("legion@cr-20210122", when="backend=legion @2.0:2.2.1")
     depends_on("legion@cr-20230307", when="backend=legion @2.2.0:2.2.1")
     depends_on("legion@24.03.0:", when="backend=legion @2.2.2:")
@@ -125,6 +128,7 @@ class Flecsi(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("mpi", when="@2.0:")
     depends_on("mpich@3.4.1:", when="@2.0: ^[virtuals=mpi] mpich")
     depends_on("openmpi@4.1.0:", when="@2.0: ^[virtuals=mpi] openmpi")
+    depends_on("graphviz@2.49.0:", when="+graphviz @2.3:")
 
     # FleCSI 2.2+ documentation dependencies
     depends_on("py-sphinx", when="+doc")
