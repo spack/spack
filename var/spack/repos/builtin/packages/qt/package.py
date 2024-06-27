@@ -586,8 +586,8 @@ class Qt(Package):
             config_args.append("-no-gui")
 
         if "+ssl" in spec:
-            config_args.append("-openssl-linked")
             if not IS_WINDOWS:
+                config_args.append("-openssl-linked")
                 pkg = spec["openssl"]
                 config_args.extend(pkg.libs.search_flags.split())
                 config_args.extend(pkg.headers.include_flags.split())
@@ -653,7 +653,7 @@ class Qt(Package):
         if qtplat is not None:
             config_args.extend(["-platform", qtplat])
 
-        if IS_WINDOWS:
+        if not IS_WINDOWS:
             config_args.extend(["-mp", "-icu"])
 
         return config_args
@@ -799,8 +799,6 @@ class Qt(Package):
             # https://www.qt.io/blog/qt-on-apple-silicon
             # Not currently working for qt@5
             config_args.extend(["-device-option", "QMAKE_APPLE_DEVICE_ARCHS=arm64"])
-        if IS_WINDOWS:
-            configure = Executable("configure.bat")
 
         configure(*config_args)
 
