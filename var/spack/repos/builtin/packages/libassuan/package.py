@@ -15,6 +15,7 @@ class Libassuan(AutotoolsPackage):
 
     license("LGPL-2.1-or-later")
 
+    version("3.0.0", sha256="0b160cbb898b852c6c04314b9a63e90ca87501305ad72a58a010f808665bbaf6")
     version("2.5.7", sha256="0103081ffc27838a2e50479153ca105e873d3d65d8a9593282e9c94c7e6afb76")
     version("2.5.6", sha256="e9fd27218d5394904e4e39788f9b1742711c3e6b41689a31aa3380bd5aa4f426")
     version("2.5.5", sha256="8e8c2fcc982f9ca67dcbb1d95e2dc746b1739a4668bc20b3a3c5be632edb34e4")
