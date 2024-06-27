@@ -294,7 +294,7 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
 
         for i, args in enumerate(options):
             with test_part(
-                self, f"test_{exName}_{i+1}", purpose="{0} {1}".format(str(exe), " ".join(args))
+                self, f"test_{exName}_{i+1}", purpose=" ".join(args)
             ):
                 exe(*args)
 
