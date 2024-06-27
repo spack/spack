@@ -94,7 +94,7 @@ class Turbovnc(CMakePackage):
     with default_args(type="run"):
         depends_on("xauth")
 
-    conflicts("%gcc@14:", msg="GCC 13+ does not support implicit declarations")
+    conflicts("%gcc@14:", msg="GCC 14+ does not support implicit declarations")
 
     def cmake_args(self):
         spec = self.spec
