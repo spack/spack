@@ -1912,9 +1912,6 @@ class SpackSolverSetup:
 
         # compiler flags
         for flag_type, flags in spec.compiler_flags.items():
-            if not flags:
-                continue
-            clauses.append(f.node_flag_source(spec.name, flag_type, spec.name))
             for flag in flags:
                 clauses.append(f.node_flag(spec.name, flag_type, flag))
                 if not spec.concrete and flag.propagate is True:
@@ -2743,7 +2740,6 @@ class _Head:
     node_compiler = fn.attr("node_compiler_set")
     node_compiler_version = fn.attr("node_compiler_version_set")
     node_flag = fn.attr("node_flag_set")
-    node_flag_source = fn.attr("node_flag_source")
     propagate = fn.attr("propagate")
 
 
@@ -2759,7 +2755,6 @@ class _Body:
     node_compiler = fn.attr("node_compiler")
     node_compiler_version = fn.attr("node_compiler_version")
     node_flag = fn.attr("node_flag")
-    node_flag_source = fn.attr("node_flag_source")
     propagate = fn.attr("propagate")
 
 
@@ -3492,7 +3487,7 @@ class SpecBuilder:
                 ordered_compiler_flags = list(llnl.util.lang.dedupe(from_compiler + from_sources))
                 compiler_flags = spec.compiler_flags.get(flag_type, [])
 
-                msg = "%s does not equal %s" % (set(compiler_flags), set(ordered_compiler_flags))
+                msg = f"{set(compiler_flags)} does not equal {set(ordered_compiler_flags)}"
                 assert set(compiler_flags) == set(ordered_compiler_flags), msg
 
                 spec.compiler_flags.update({flag_type: ordered_compiler_flags})
@@ -3562,9 +3557,8 @@ class SpecBuilder:
                 # do not bother calling actions on it except for node_flag_source,
                 # since node_flag_source is tracking information not in the spec itself
                 spec = self._specs.get(args[0])
-                if spec and spec.concrete:
-                    if name != "node_flag_source":
-                        continue
+                if spec and spec.concrete and name != "node_flag_source":
+                    continue
 
             action(*args)
 

@@ -1303,8 +1303,8 @@ error(100, "Compiler {1}@{2} requested for {0} cannot be found. Set install_miss
 %-----------------------------------------------------------------------------
 
 % remember where flags came from
-attr("node_flag_source", PackageNode, FlagType, PackageNode)
-  :- attr("node_flag_set", PackageNode, FlagType, _).
+attr("node_flag_source", PackageNode, FlagType, PackageNode) :- attr("node_flag_set", PackageNode, FlagType, _).
+attr("node_flag_source", PackageNode, FlagType, PackageNode) :- attr("node_flag", PackageNode, FlagType, _), attr("hash", PackageNode, _).
 
 % compiler flags from compilers.yaml are put on nodes if compiler matches
 attr("node_flag", PackageNode, FlagType, Flag)
