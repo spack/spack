@@ -21,7 +21,7 @@ class Mepo(PythonPackage):
     version("2.0.0rc3", sha256="c0c897a33f5018489e6cc14892961831c8922a3378ac30436496c52bf877aff7")
 
     depends_on("python@3.9:", type=("build", "run"))
-    depends_on("py-colorama", type=("build", "run"))
-    depends_on("py-pyyaml@6:", type=("build", "run"))
+    depends_on("py-colorama@0.4.6:", type=("build", "run"))
+    depends_on("py-pyyaml@6.0.1:", type=("build", "run"))
 
     depends_on("py-hatchling", type="build")
