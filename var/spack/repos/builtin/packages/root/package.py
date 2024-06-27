@@ -157,7 +157,7 @@ class Root(CMakePackage):
         patch(
             "https://github.com/root-project/root/pull/15925.diff?full_index=1",
             sha256="1937290a4d54cd2e3e8a8d23d93b8dedaca9ed8dcfdcfa2f0d16629ff53fb3b7",
-            when="@6.28: +python"
+            when="@6.28: +python",
         )
 
     # ###################### Variants ##########################
