@@ -1365,10 +1365,14 @@ class TestSpecSemantics:
 
     @pytest.mark.parametrize("transitive", [True, False])
     def test_splice_swap_names_mismatch_virtuals(self, default_mock_concretization, transitive):
-        spec = default_mock_concretization("splice-t")
-        dep = default_mock_concretization("splice-vh+foo")
+        t = default_mock_concretization("splice-t")
+        vt = default_mock_concretization("splice-vt")
+        vh = default_mock_concretization("splice-vh+foo")
         with pytest.raises(spack.spec.SpliceError, match="virtual"):
-            spec.splice(dep, transitive)
+            vt.splice(vh, transitive)
+
+        # No error for t which depends on h directly, not the "somethingelse" virtual
+        t.splice(vh, transitive)
 
     def test_spec_override(self):
         init_spec = Spec("pkg-a foo=baz foobar=baz cflags=-O3 cxxflags=-O1")

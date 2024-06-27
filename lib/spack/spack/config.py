@@ -56,6 +56,7 @@ import spack.schema.mirrors
 import spack.schema.modules
 import spack.schema.packages
 import spack.schema.repos
+import spack.schema.splice
 import spack.schema.upstreams
 import spack.schema.view
 
@@ -80,6 +81,7 @@ SECTION_SCHEMAS: Dict[str, Any] = {
     "bootstrap": spack.schema.bootstrap.schema,
     "ci": spack.schema.ci.schema,
     "cdash": spack.schema.cdash.schema,
+    "splice": spack.schema.splice.schema,
 }
 
 # Same as above, but including keys for environments
