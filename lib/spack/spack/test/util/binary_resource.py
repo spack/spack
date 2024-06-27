@@ -50,16 +50,14 @@ def test_ensure_or_acquire_no_acquire(mock_binary_resource_root, config, no_syst
     br.win_ensure_or_acquire_resource("file")
     file = spack.util.executable.which("file")
     assert file
-    with open(file, "r") as f:
-        assert "file-5.4.1 magicfile from /usr/share/bin" in f.read()
+    assert "file-5.4.1 magicfile from /usr/share/bin" in file(output=str)
 
 
 def test_ensure_or_acquire_acquire_resource(mock_binary_resource_root, config, no_system):
     br.win_ensure_or_acquire_resource("file")
     file = spack.util.executable.which("file")
     assert file
-    with open(file, "r") as f:
-        assert "file-5.4.1 magicfile from /usr/share/bin" in f.read()
+    assert "file-5.4.1 magicfile from /usr/share/bin" in file(output=str)
 
 
 def test_ensure_or_acquire_resource_on_system(
