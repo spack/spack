@@ -55,7 +55,7 @@ _source_path_subdir = "spack-src"
 stage_prefix = "spack-stage-"
 
 # The temporary resource name prefix.
-resource_prefix = "resource-"
+resource_prefix = f"{stage_prefix}resource-"
 
 
 def compute_stage_name(spec):
