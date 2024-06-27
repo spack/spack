@@ -85,5 +85,5 @@ jobs:
           source share/spack/setup-env.sh
           spack debug report
           spack -d bootstrap now --dev
-          spack style -t black
+          spack -d style -t black
           spack unit-test -V

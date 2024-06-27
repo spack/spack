@@ -3838,9 +3838,16 @@ class Spec:
             return clr.colorize(f"{color_fmt}{sigil}{clr.cescape(string)}@.", color=color)
 
         def format_attribute(match_object: Match) -> str:
-            (esc, sig, dep, hash, hash_len, attribute, close_brace, unmatched_close_brace) = (
-                match_object.groups()
-            )
+            (
+                esc,
+                sig,
+                dep,
+                hash,
+                hash_len,
+                attribute,
+                close_brace,
+                unmatched_close_brace,
+            ) = match_object.groups()
             if esc:
                 return esc
             elif unmatched_close_brace:
@@ -4175,7 +4182,12 @@ class Spec:
         assert self.concrete
         assert other.concrete
 
-        virtuals_to_replace = [v.name for v in other.package.virtuals_provided if v in self]
+        virtuals_to_replace = [
+            v.name
+            for v in other.package.virtuals_provided
+            if v in self or v in self.package.virtuals_provided
+        ]
+
         if virtuals_to_replace:
             deps_to_replace = dict((self[v], other) for v in virtuals_to_replace)
             # deps_to_replace = [self[v] for v in virtuals_to_replace]
@@ -4184,43 +4196,34 @@ class Spec:
             deps_to_replace = {self[other.name]: other}
             # deps_to_replace = [self[other.name]]
 
-        for d in deps_to_replace:
-            if not all(
-                v in other.package.virtuals_provided or v not in self
-                for v in d.package.virtuals_provided
-            ):
-                # There was something provided by the original that we don't
-                # get from its replacement.
-                raise SpliceError(
-                    ("Splice between {0} and {1} will not provide " "the same virtuals.").format(
-                        self.name, other.name
-                    )
-                )
-            for n in d.traverse(root=False):
-                if not all(
-                    any(
-                        v in other_n.package.virtuals_provided
-                        for other_n in other.traverse(root=False)
-                    )
-                    or v not in self
-                    for v in n.package.virtuals_provided
-                ):
+        for d, od in deps_to_replace.items():
+            virtuals = []
+            for e in d.edges_from_dependents():
+                virtuals.extend(e.virtuals)
+
+            for v in virtuals:
+                if not any(ov.satisfies(v) for ov in od.package.virtuals_provided):
+                    # There was something provided by the original that we don't
+                    # get from its replacement.
                     raise SpliceError(
                         (
-                            "Splice between {0} and {1} will not provide " "the same virtuals."
-                        ).format(self.name, other.name)
+                            f"Splice between {self.name} and {other.name} will not provide "
+                            "the same virtuals."
+                        )
                     )
 
         # For now, check that we don't have DAG with multiple specs from the
         # same package
         def multiple_specs(root):
-            counter = collections.Counter([node.name for node in root.traverse()])
+            counter = collections.Counter(
+                [node.name for node in root.traverse(deptype=("link", "run"))]
+            )
             _, max_number = counter.most_common()[0]
             return max_number > 1
 
         if multiple_specs(self) or multiple_specs(other):
             msg = (
-                'Either "{0}" or "{1}" contain multiple specs from the same '
+                'Either "{0}"\n or "{1}"\n contain multiple specs from the same '
                 "package, which cannot be handled by splicing at the moment"
             )
             raise ValueError(msg.format(self, other))
@@ -4242,7 +4245,7 @@ class Spec:
             else:
                 if name == other.name:
                     return False
-                if any(
+                if any(  # TODO: should this be all
                     v in other.package.virtuals_provided
                     for v in self[name].package.virtuals_provided
                 ):
@@ -4275,17 +4278,30 @@ class Spec:
                     nodes[name].add_dependency_edge(
                         nodes[dep_name], depflag=edge.depflag, virtuals=edge.virtuals
                     )
-                if any(dep not in self_nodes for dep in self[name]._dependencies):
-                    nodes[name].build_spec = self[name].build_spec
+                deps_to_check = []
+                for dep_name, dep_specs in self[name]._dependencies.items():
+                    deps_to_check.append(dep_name)
+                    for dep_spec in dep_specs:
+                        deps_to_check.extend(dep_spec.virtuals)
+
+                if any(dep not in self_nodes for dep in deps_to_check):
+                    nodes[name].build_spec = self[name].build_spec.copy()
             else:
                 for edge in other[name].edges_to_dependencies():
                     nodes[name].add_dependency_edge(
                         nodes[edge.spec.name], depflag=edge.depflag, virtuals=edge.virtuals
                     )
-                if any(dep not in other_nodes for dep in other[name]._dependencies):
-                    nodes[name].build_spec = other[name].build_spec
+                deps_to_check = []
+                for dep_name, dep_specs in other[name]._dependencies.items():
+                    deps_to_check.append(dep_name)
+                    for dep_spec in dep_specs:
+                        deps_to_check.extend(dep_spec.virtuals)
 
-        ret = nodes[self.name]
+                if any(dep not in other_nodes for dep in deps_to_check):
+                    nodes[name].build_spec = other[name].build_spec.copy()
+
+        # If self.name not in nodes then we spliced the root with a different virtual provider
+        ret = nodes[self.name] if self.name in nodes else nodes[other.name]
 
         # Clear cached hashes for all affected nodes
         # Do not touch unaffected nodes
@@ -4297,7 +4313,7 @@ class Spec:
 
                 dep.dag_hash()
 
-        return nodes[self.name]
+        return ret
 
     def clear_cached_hashes(self, ignore=()):
         """
