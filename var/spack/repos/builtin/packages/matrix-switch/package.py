@@ -7,7 +7,7 @@ from spack.package import *
 
 
 class MatrixSwitch(CMakePackage):
-    """Intermediary interface between high-level routines for 
+    """Intermediary interface between high-level routines for
     physics-related algorithms and low-level routines dealing
     with matrix storage and manipulation."""
 
