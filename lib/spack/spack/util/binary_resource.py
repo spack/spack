@@ -20,6 +20,7 @@ import spack.paths
 
 BINARY_RESOURCE_SUBDIR = "binary-resources"
 
+
 def binary_resource_root() -> pathlib.Path:
     """Returns the root of the Windows resources required for bootstrapping"""
     return pathlib.Path(spack.paths.user_cache_path) / BINARY_RESOURCE_SUBDIR
@@ -92,4 +93,6 @@ def win_ensure_or_acquire_resource(name):
                 win_insert_resource_into_environment(name)
                 return
         # if we reach this point, and no other error was raised, there must be no providers given
-        raise RuntimeError(f"Failed to fetch bootstrap resource {name} as no provider was specified")
+        raise RuntimeError(
+            f"Failed to fetch bootstrap resource {name} as no provider was specified"
+        )
