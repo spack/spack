@@ -94,6 +94,11 @@ class Gettext(AutotoolsPackage, GNUMirrorPackage):
             flags.append("-lxml2")
         return (flags, None, None)
 
+    def setup_build_environment(self, env):
+        if "+libxml2" in self.spec:
+            # Fix include not found when libxml2 is external /usr
+            env.set("INCXML2", self.spec["libxml2"].headers.cpp_flags)
+
     @classmethod
     def determine_version(cls, exe):
         gettext = Executable(exe)
