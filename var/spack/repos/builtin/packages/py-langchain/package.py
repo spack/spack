@@ -40,7 +40,7 @@ class PyLangchain(PythonPackage):
     with when("@0.2.5"):
         depends_on("py-langchain-core@0.2.7:0.2", type=("build", "run"))
         depends_on("py-langchain-text-splitters@0.2:", type=("build", "run"))
-        depends_on("py-langsmith@0.1.17:", type=("build", "run")) # Relaxed
+        depends_on("py-langsmith@0.1.17:", type=("build", "run"))  # Relaxed
         depends_on("py-pydantic@1:2", type=("build", "run"))
         depends_on("py-sqlalchemy@1.4:2", type=("build", "run"))
         depends_on("py-requests@2", type=("build", "run"))
