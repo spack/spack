@@ -41,7 +41,7 @@ jobs:
         # 2: Base image (e.g. ubuntu:22.04)
         dockerfile: [[amazon-linux, 'linux/amd64,linux/arm64', 'amazonlinux:2'],
                      [centos7, 'linux/amd64,linux/arm64,linux/ppc64le', 'centos:7'],
-                     [centos-stream, 'linux/amd64,linux/arm64,linux/ppc64le', 'centos:stream'],
+                     [centos-stream9, 'linux/amd64,linux/arm64,linux/ppc64le', 'centos:stream9'],
                      [leap15, 'linux/amd64,linux/arm64,linux/ppc64le', 'opensuse/leap:15'],
                      [ubuntu-focal, 'linux/amd64,linux/arm64,linux/ppc64le', 'ubuntu:20.04'],
                      [ubuntu-jammy, 'linux/amd64,linux/arm64,linux/ppc64le', 'ubuntu:22.04'],
