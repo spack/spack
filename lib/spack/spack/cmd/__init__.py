@@ -444,7 +444,7 @@ def display_specs(specs, args=None, **kwargs):
 def filter_loaded_specs(specs):
     """Filter a list of specs returning only those that are
     currently loaded."""
-    hashes = os.environ.get(uenv.spack_loaded_hashes_var, "").split(":")
+    hashes = os.environ.get(uenv.spack_loaded_hashes_var, "").split(os.pathsep)
     return [x for x in specs if x.dag_hash() in hashes]
 
 

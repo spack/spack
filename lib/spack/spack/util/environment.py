@@ -679,8 +679,8 @@ class EnvironmentModifications:
             for modifier in actions:
                 modifier.execute(new_env)
 
-        if "MANPATH" in new_env and not new_env["MANPATH"].endswith(":"):
-            new_env["MANPATH"] += ":"
+        if "MANPATH" in new_env and not new_env["MANPATH"].endswith(os.pathsep):
+            new_env["MANPATH"] += os.pathsep
 
         cmds = ""
 
