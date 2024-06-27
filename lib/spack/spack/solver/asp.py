@@ -1918,7 +1918,7 @@ class SpackSolverSetup:
             for flag in flags:
                 clauses.append(f.node_flag(spec.name, flag_type, flag))
                 if not spec.concrete and flag.propagate is True:
-                    clauses.append(f.node_flag_propagate(spec.name, flag_type))
+                    clauses.append(f.propagate(spec.name, fn.node_flag(flag_type, flag)))
 
         # dependencies
         if spec.concrete:
@@ -2744,7 +2744,6 @@ class _Head:
     node_compiler_version = fn.attr("node_compiler_version_set")
     node_flag = fn.attr("node_flag_set")
     node_flag_source = fn.attr("node_flag_source")
-    node_flag_propagate = fn.attr("node_flag_propagate")
     propagate = fn.attr("propagate")
 
 
@@ -2761,7 +2760,6 @@ class _Body:
     node_compiler_version = fn.attr("node_compiler_version")
     node_flag = fn.attr("node_flag")
     node_flag_source = fn.attr("node_flag_source")
-    node_flag_propagate = fn.attr("node_flag_propagate")
     propagate = fn.attr("propagate")
 
 
