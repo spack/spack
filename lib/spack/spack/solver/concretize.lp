@@ -995,6 +995,30 @@ variant_is_propagated(PackageNode, Variant) :-
    attr("variant_value", PackageNode, Variant, Value),
    not propagate(PackageNode, variant_value(Variant, Value)).
 
+%----
+% Compiler constraints
+%----
+
+attr("node_compiler_version_satisfies", node(ID, Package), Compiler, Version) :-
+  propagate(node(ID, Package), node_compiler_version_satisfies(Compiler, Version)),
+  node_compiler(node(ID, Package), CompilerID),
+  compiler_name(CompilerID, Compiler),
+  not runtime(Package),
+  not external(Package).
+
+%-----------------------------------------------------------------------------
+% Runtimes
+%-----------------------------------------------------------------------------
+
+% Check whether the DAG has any built package
+has_built_packages() :- build(X), not external(X).
+
+% If we build packages, the runtime nodes must use an available compiler
+1 { node_compiler(PackageNode, CompilerID) : build(PackageNode), not external(PackageNode) } :-
+  has_built_packages(),
+  runtime(RuntimePackage),
+  node_compiler(node(_, RuntimePackage), CompilerID).
+
 %-----------------------------------------------------------------------------
 % Platform semantics
 %-----------------------------------------------------------------------------
@@ -1096,10 +1120,15 @@ attr("node_target", PackageNode, Target)
  :- attr("node", PackageNode), attr("node_target_set", PackageNode, Target).
 
 % each node has the weight of its assigned target
-node_target_weight(node(ID, Package), Weight)
- :- attr("node", node(ID, Package)),
-    attr("node_target", node(ID, Package), Target),
-    target_weight(Target, Weight).
+target_weight(Target, 0)
+ :- attr("node", PackageNode),
+    attr("node_target", PackageNode, Target),
+    attr("node_target_set", PackageNode, Target).
+
+node_target_weight(PackageNode, MinWeight)
+ :- attr("node", PackageNode),
+    attr("node_target", PackageNode, Target),
+    MinWeight = #min { Weight : target_weight(Target, Weight) }.
 
 % compatibility rules for targets among nodes
 node_target_match(ParentNode, DependencyNode)
@@ -1161,12 +1190,12 @@ error(10, "No valid compiler for {0} satisfies '%{1}'", Package, Compiler)
 
 % If the compiler of a node must satisfy a constraint, then its version
 % must be chosen among the ones that satisfy said constraint
-error(100, "No valid version for '{0}' compiler '{1}' satisfies '@{2}'", Package, Compiler, Constraint)
+error(100, "Package {0} cannot satisfy '%{1}@{2}'", Package, Compiler, Constraint)
   :- attr("node", node(X, Package)),
      attr("node_compiler_version_satisfies", node(X, Package), Compiler, Constraint),
-		 not compiler_version_satisfies(Compiler, Constraint, _).
+	 not compiler_version_satisfies(Compiler, Constraint, _).
 
-error(100, "No valid version for '{0}' compiler '{1}' satisfies '@{2}'", Package, Compiler, Constraint)
+error(100, "Package {0} cannot satisfy '%{1}@{2}'", Package, Compiler, Constraint)
   :- attr("node", node(X, Package)),
      attr("node_compiler_version_satisfies", node(X, Package), Compiler, Constraint),
      not compiler_version_satisfies(Compiler, Constraint, ID),

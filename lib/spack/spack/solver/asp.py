@@ -3225,6 +3225,39 @@ class RuntimePropertyRecorder:
         self.runtime_conditions.add((imposed_spec, when_spec))
         self.reset()
 
+    def propagate(self, constraint_str: str, *, when: str):
+        msg = "the 'propagate' method can be called only with pkg('*')"
+        assert self.current_package == "*", msg
+
+        when_spec = spack.spec.Spec(when)
+        assert when_spec.name is None, "only anonymous when specs are accepted"
+
+        placeholder = "XXX"
+        node_variable = "node(ID, Package)"
+        when_spec.name = placeholder
+
+        body_clauses = self._setup.spec_clauses(when_spec, body=True)
+        body_str = (
+            f"  {f',{os.linesep}  '.join(str(x) for x in body_clauses)},\n"
+            f"  not external({node_variable}),\n"
+            f"  not runtime(Package)"
+        ).replace(f'"{placeholder}"', f"{node_variable}")
+
+        constraint_spec = spack.spec.Spec(constraint_str)
+        assert constraint_spec.name is None, "only anonymous constraint specs are accepted"
+
+        constraint_spec.name = placeholder
+        constraint_clauses = self._setup.spec_clauses(constraint_spec, body=False)
+        for clause in constraint_clauses:
+            if clause.args[0] == "node_compiler_version_satisfies":
+                self._setup.compiler_version_constraints.add(constraint_spec.compiler)
+                args = f'"{constraint_spec.compiler.name}", "{constraint_spec.compiler.versions}"'
+                head_str = f"propagate({node_variable}, node_compiler_version_satisfies({args}))"
+                rule = f"{head_str} :-\n{body_str}.\n\n"
+                self.rules.append(rule)
+
+        self.reset()
+
     def consume_facts(self):
         """Consume the facts collected by this object, and emits rules and
         facts for the runtimes.

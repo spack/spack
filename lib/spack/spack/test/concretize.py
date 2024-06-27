@@ -1767,21 +1767,21 @@ class TestConcretize:
             assert s.namespace == "builtin.mock"
 
     @pytest.mark.parametrize(
-        "specs,expected",
+        "specs,expected,libc_offset",
         [
-            (["libelf", "libelf@0.8.10"], 1),
-            (["libdwarf%gcc", "libelf%clang"], 2),
-            (["libdwarf%gcc", "libdwarf%clang"], 3),
-            (["libdwarf^libelf@0.8.12", "libdwarf^libelf@0.8.13"], 4),
-            (["hdf5", "zmpi"], 3),
-            (["hdf5", "mpich"], 2),
-            (["hdf5^zmpi", "mpich"], 4),
-            (["mpi", "zmpi"], 2),
-            (["mpi", "mpich"], 1),
+            (["libelf", "libelf@0.8.10"], 1, 1),
+            (["libdwarf%gcc", "libelf%clang"], 2, 1),
+            (["libdwarf%gcc", "libdwarf%clang"], 3, 2),
+            (["libdwarf^libelf@0.8.12", "libdwarf^libelf@0.8.13"], 4, 1),
+            (["hdf5", "zmpi"], 3, 1),
+            (["hdf5", "mpich"], 2, 1),
+            (["hdf5^zmpi", "mpich"], 4, 1),
+            (["mpi", "zmpi"], 2, 1),
+            (["mpi", "mpich"], 1, 1),
         ],
     )
     @pytest.mark.only_clingo("Original concretizer cannot concretize in rounds")
-    def test_best_effort_coconcretize(self, specs, expected):
+    def test_best_effort_coconcretize(self, specs, expected, libc_offset):
         specs = [Spec(s) for s in specs]
         solver = spack.solver.asp.Solver()
         solver.reuse = False
@@ -1790,7 +1790,9 @@ class TestConcretize:
             for s in result.specs:
                 concrete_specs.update(s.traverse())
 
-        libc_offset = 1 if spack.solver.asp.using_libc_compatibility() else 0
+        if not spack.solver.asp.using_libc_compatibility():
+            libc_offset = 0
+
         assert len(concrete_specs) == expected + libc_offset
 
     @pytest.mark.parametrize(
