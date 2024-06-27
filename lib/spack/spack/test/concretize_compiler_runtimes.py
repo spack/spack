@@ -79,13 +79,13 @@ def test_external_nodes_do_not_have_runtimes(runtime_repo, mutable_config, tmp_p
     [
         # The reused runtime is older than we need, thus we'll add a more recent one for a
         ("a%gcc@10.2.1", "b%gcc@9.4.0", {"a": "gcc-runtime@10.2.1", "b": "gcc-runtime@9.4.0"}, 2),
-        # The root is compiled with an older compiler, thus we'll reuse the runtime from b
-        ("a%gcc@9.4.0", "b%gcc@10.2.1", {"a": "gcc-runtime@10.2.1", "b": "gcc-runtime@10.2.1"}, 1),
+        # The root is compiled with an older compiler, thus we'll NOT reuse the runtime from b
+        ("a%gcc@9.4.0", "b%gcc@10.2.1", {"a": "gcc-runtime@9.4.0", "b": "gcc-runtime@9.4.0"}, 1),
         # Same as before, but tests that we can reuse from a more generic target
         pytest.param(
             "a%gcc@9.4.0",
             "b%gcc@10.2.1 target=x86_64",
-            {"a": "gcc-runtime@10.2.1 target=x86_64", "b": "gcc-runtime@10.2.1 target=x86_64"},
+            {"a": "gcc-runtime@9.4.0", "b": "gcc-runtime@9.4.0"},
             1,
             marks=pytest.mark.skipif(
                 str(archspec.cpu.host().family) != "x86_64", reason="test data is x86_64 specific"
@@ -102,13 +102,15 @@ def test_external_nodes_do_not_have_runtimes(runtime_repo, mutable_config, tmp_p
         ),
     ],
 )
+@pytest.mark.regression("44444")
 def test_reusing_specs_with_gcc_runtime(root_str, reused_str, expected, nruntime, runtime_repo):
     """Tests that we can reuse specs with a "gcc-runtime" leaf node. In particular, checks
     that the semantic for gcc-runtimes versions accounts for reused packages too.
+
+    Reusable runtime versions should be lower, or equal, to that of parent nodes.
     """
     root, reused_spec = _concretize_with_reuse(root_str=root_str, reused_str=reused_str)
 
-    assert f"{expected['b']}" in reused_spec
     runtime_a = root.dependencies("gcc-runtime")[0]
     assert runtime_a.satisfies(expected["a"])
     runtime_b = root["b"].dependencies("gcc-runtime")[0]
@@ -123,8 +125,7 @@ def test_reusing_specs_with_gcc_runtime(root_str, reused_str, expected, nruntime
     [
         # Ensure that, whether we have multiple runtimes in the DAG or not,
         # we always link only the latest version
-        ("a%gcc@10.2.1", "b%gcc@9.4.0", ["gcc-runtime@10.2.1"], ["gcc-runtime@9.4.0"]),
-        ("a%gcc@9.4.0", "b%gcc@10.2.1", ["gcc-runtime@10.2.1"], ["gcc-runtime@9.4.0"]),
+        ("a%gcc@10.2.1", "b%gcc@9.4.0", ["gcc-runtime@10.2.1"], ["gcc-runtime@9.4.0"])
     ],
 )
 def test_views_can_handle_duplicate_runtime_nodes(

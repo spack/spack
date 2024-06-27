@@ -18,9 +18,6 @@ error(100, "Cannot reuse {0} since we cannot determine libc compatibility", Reus
      ReusedPackage != LibcPackage,
      not attr("compatible_libc", node(R, ReusedPackage), LibcPackage, LibcVersion).
 
-% Check whether the DAG has any built package
-has_built_packages() :- build(X), not external(X).
-
 % A libc is needed in the DAG
 :- has_built_packages(), not provider(_, node(0, "libc")).
 
