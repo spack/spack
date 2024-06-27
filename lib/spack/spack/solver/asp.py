@@ -1912,9 +1912,11 @@ class SpackSolverSetup:
 
         # compiler flags
         for flag_type, flags in spec.compiler_flags.items():
+            if not flags:
+                continue
+            clauses.append(f.node_flag_source(spec.name, flag_type, spec.name))
             for flag in flags:
                 clauses.append(f.node_flag(spec.name, flag_type, flag))
-                clauses.append(f.node_flag_source(spec.name, flag_type, spec.name))
                 if not spec.concrete and flag.propagate is True:
                     clauses.append(f.node_flag_propagate(spec.name, flag_type))
 
