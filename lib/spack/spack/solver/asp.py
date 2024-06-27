@@ -1915,7 +1915,7 @@ class SpackSolverSetup:
             for flag in flags:
                 clauses.append(f.node_flag(spec.name, flag_type, flag))
                 if not spec.concrete and flag.propagate is True:
-                    clauses.append(f.propagate(spec.name, fn.node_flag(flag_type, flag)))
+                    clauses.append(f.propagate(spec.name, fn.node_flag(flag_type, flag), "link"))
 
         # dependencies
         if spec.concrete:

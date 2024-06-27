@@ -964,11 +964,17 @@ pkg_fact(Package, variant_single_value("dev_path"))
 
 % Propagation roots have a corresponding attr("propagate", ...)
 propagate(RootNode, PropagatedAttribute) :- attr("propagate", RootNode, PropagatedAttribute).
+propagate(RootNode, PropagatedAttribute, DepType) :- attr("propagate", RootNode, PropagatedAttribute, DepType).
+
 
 % Propagate an attribute along edges to child nodes
 propagate(ChildNode, PropagatedAttribute) :-
   propagate(ParentNode, PropagatedAttribute),
   depends_on(ParentNode, ChildNode).
+
+propagate(ChildNode, PropagatedAttribute, DepType) :-
+  propagate(ParentNode, PropagatedAttribute, DepType),
+  attr("depends_on", ParentNode, ChildNode, DepType).
 
 %-----------------------------------------------------------------------------
 % Activation of propagated values
@@ -1004,12 +1010,12 @@ variant_is_propagated(PackageNode, Variant) :-
 % 2. This node has the same compiler as the propagation source
 
 propagated_flag(PackageNode, node_flag(FlagType, Flag), SourceNode) :-
-  propagate(PackageNode, node_flag(FlagType, Flag)),
+  propagate(PackageNode, node_flag(FlagType, Flag), _),
   not attr("node_flag_set", PackageNode, FlagType, _),
   % Same compiler as propagation source
   node_compiler(PackageNode, CompilerID),
   node_compiler(SourceNode, CompilerID),
-  attr("propagate", SourceNode, node_flag(FlagType, Flag)),
+  attr("propagate", SourceNode, node_flag(FlagType, Flag), _),
   PackageNode != SourceNode.
 
 attr("node_flag", PackageNode, FlagType, Flag) :- propagated_flag(PackageNode, node_flag(FlagType, Flag), _).
