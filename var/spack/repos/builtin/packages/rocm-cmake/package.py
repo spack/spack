@@ -61,14 +61,9 @@ class RocmCmake(CMakePackage):
     def cache_test_sources(self):
         """Copy the tests source files after the package is installed to an
         install test subdirectory for use during `spack test run`."""
-        if self.spec.satisfies("@:5.1.0"):
-            return
         self.cache_extra_test_sources([self.test_src_dir])
 
     def test(self):
-        if self.spec.satisfies("@:5.1.0"):
-            print("Skipping: stand-alone tests")
-            return
         test_dir = join_path(self.test_suite.current_test_cache_dir, self.test_src_dir)
         with working_dir(test_dir, create=True):
             cmake_bin = join_path(self.spec["cmake"].prefix.bin, "cmake")
