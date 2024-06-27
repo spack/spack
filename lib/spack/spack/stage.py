@@ -955,12 +955,7 @@ def purge():
     root = get_stage_root()
     if os.path.isdir(root):
         for stage_dir in os.listdir(root):
-            is_staged = (
-                stage_dir.startswith(stage_prefix)
-                or stage_dir.startswith(resource_prefix)
-                or stage_dir == ".lock"
-            )
-            if is_staged:
+            if stage_dir.startswith(stage_prefix) or stage_dir == ".lock":
                 stage_path = os.path.join(root, stage_dir)
                 if os.path.isdir(stage_path):
                     remove_linked_tree(stage_path)
