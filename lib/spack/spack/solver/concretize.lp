@@ -1009,14 +1009,15 @@ variant_is_propagated(PackageNode, Variant) :-
 % 1. The same flag type is not set on this node
 % 2. This node has the same compiler as the propagation source
 
-propagated_flag(PackageNode, node_flag(FlagType, Flag), SourceNode) :-
-  propagate(PackageNode, node_flag(FlagType, Flag), _),
-  not attr("node_flag_set", PackageNode, FlagType, _),
+propagated_flag(node(PackageID, Package), node_flag(FlagType, Flag), SourceNode) :-
+  propagate(node(PackageID, Package), node_flag(FlagType, Flag), _),
+  not attr("node_flag_set", node(PackageID, Package), FlagType, _),
   % Same compiler as propagation source
-  node_compiler(PackageNode, CompilerID),
+  node_compiler(node(PackageID, Package), CompilerID),
   node_compiler(SourceNode, CompilerID),
   attr("propagate", SourceNode, node_flag(FlagType, Flag), _),
-  PackageNode != SourceNode.
+  node(PackageID, Package) != SourceNode,
+  not runtime(Package).
 
 attr("node_flag", PackageNode, FlagType, Flag) :- propagated_flag(PackageNode, node_flag(FlagType, Flag), _).
 attr("node_flag_source", PackageNode, FlagType, SourceNode) :- propagated_flag(PackageNode, node_flag(FlagType, _), SourceNode).
