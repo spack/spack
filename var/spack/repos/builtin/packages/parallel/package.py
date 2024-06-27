@@ -35,7 +35,6 @@ class Parallel(AutotoolsPackage, GNUMirrorPackage):
         # The Makefile has a 'test' target, but it does not work
         make("check")
 
-    depends_on("gmake", type="build")
     depends_on("perl", type=("build", "run"))
 
     @run_before("install")
