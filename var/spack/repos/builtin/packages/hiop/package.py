@@ -274,7 +274,6 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
     # export SPACK_DISABLE_LOCAL_CONFIG=true
 
     def run_hiop(self, raja):
-
         if raja:
             exName = "NlpMdsEx1Raja.exe"
         else:
@@ -293,9 +292,7 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
         exe = which(exe)
 
         for i, args in enumerate(options):
-            with test_part(
-                self, f"test_{exName}_{i+1}", purpose=" ".join(args)
-            ):
+            with test_part(self, f"test_{exName}_{i+1}", purpose=" ".join(args)):
                 exe(*args)
 
     def test_NlpMdsEx1(self):
