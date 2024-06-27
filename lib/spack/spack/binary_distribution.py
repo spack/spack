@@ -714,8 +714,9 @@ def get_buildfile_manifest(spec):
 
 def hashes_to_prefixes(spec):
     """Return a dictionary of hashes to prefixes for a spec and its deps, excluding externals"""
+    # TODO: Get this to return a tuple value (name, prefix) and modify all callers.
     return {
-        s.dag_hash(): str(s.prefix)
+        s.dag_hash(): (s.name, str(s.prefix))
         for s in itertools.chain(
             spec.traverse(root=True, deptype="link"), spec.dependencies(deptype="run")
         )
@@ -736,7 +737,7 @@ def get_buildinfo_dict(spec):
         "relocate_binaries": manifest["binary_to_relocate"],
         "relocate_links": manifest["link_to_relocate"],
         "hardlinks_deduped": manifest["hardlinks_deduped"],
-        "hash_to_prefix": hashes_to_prefixes(spec),
+        "hash_to_prefix": {h: info[1] for h, info in hashes_to_prefixes(spec).items()},
     }
 
 
@@ -2199,9 +2200,26 @@ def relocate_package(spec):
     # First match specific prefix paths. Possibly the *local* install prefix
     # of some dependency is in an upstream, so we cannot assume the original
     # spack store root can be mapped uniformly to the new spack store root.
-    for dag_hash, new_dep_prefix in hashes_to_prefixes(spec).items():
-        if dag_hash in hash_to_old_prefix:
-            old_dep_prefix = hash_to_old_prefix[dag_hash]
+    for dag_hash, prefix_info in hashes_to_prefixes(spec).items():
+        name, new_dep_prefix = prefix_info
+        try:
+            lookup_dag_hash = spec.build_spec[name].dag_hash()
+        except KeyError:
+            dependent_edges = spec[name].edges_from_dependents()
+            virtuals = set()
+            for edge in dependent_edges:
+                virtuals.update(edge.virtuals)
+            for virtual in virtuals:
+                try:
+                    lookup_dag_hash = spec.build_spec[virtual].dag_hash()
+                    break
+                except KeyError:
+                    pass
+            else:
+                raise KeyError(f"{spec} does not depend on {name}")
+
+        if lookup_dag_hash in hash_to_old_prefix:
+            old_dep_prefix = hash_to_old_prefix[lookup_dag_hash]
             prefix_to_prefix_bin[old_dep_prefix] = new_dep_prefix
             prefix_to_prefix_text[old_dep_prefix] = new_dep_prefix
 
@@ -2519,6 +2537,10 @@ def _ensure_common_prefix(tar: tarfile.TarFile) -> str:
 
 
 def install_root_node(spec, unsigned=False, force=False, sha256=None):
+    # TODO?: Go through this and determine where it needs to be the deploy_spec vs. the spec.
+    # TODO?: Modify dependency lookup s.t. if it's not there, figure out what virtual it provided
+    # and find out what is now providing that virtual. Else raise an error that it didn't exist.
+    # Inverts the logic where you would call the build_spec as spec and the spec as deploy_spec
     """Install the root node of a concrete spec from a buildcache.
 
     Checking the sha256 sum of a node before installation is usually needed only
@@ -2541,10 +2563,10 @@ def install_root_node(spec, unsigned=False, force=False, sha256=None):
         warnings.warn("Package for spec {0} already installed.".format(spec.format()))
         return
 
-    download_result = download_tarball(spec, unsigned)
+    download_result = download_tarball(spec.build_spec, unsigned)
     if not download_result:
         msg = 'download of binary cache file for spec "{0}" failed'
-        raise RuntimeError(msg.format(spec.format()))
+        raise RuntimeError(msg.format(spec.build_spec.format()))
 
     if sha256:
         checker = spack.util.crypto.Checker(sha256)
@@ -2563,6 +2585,11 @@ def install_root_node(spec, unsigned=False, force=False, sha256=None):
     with spack.util.path.filter_padding():
         tty.msg('Installing "{0}" from a buildcache'.format(spec.format()))
         extract_tarball(spec, download_result, force)
+        spec.package.windows_establish_runtime_linkage()
+        if spec.spliced:  # overwrite old metadata with new
+            spack.store.STORE.layout.write_spec(
+                spec, spack.store.STORE.layout.spec_file_path(spec)
+            )
         spack.hooks.post_install(spec, False)
         spack.store.STORE.db.add(spec)
 
