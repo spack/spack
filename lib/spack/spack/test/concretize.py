@@ -32,7 +32,6 @@ from spack.spec import CompilerSpec, Spec
 from spack.version import GitVersion, Version, VersionList, ver
 
 
-
 def check_spec(abstract, concrete):
     if abstract.versions.concrete:
         assert abstract.versions == concrete.versions
@@ -3062,7 +3061,28 @@ def test_branch_based_versions_pin_to_commits(
     # last main commit was 3'rd in the list (see mock_git_version_info)
     assert spec.format("{version}") == f"git.{commits[2]}=main"
 
-    
+
+@pytest.mark.only_clingo("Feature not implemented in the original concretizer")
+def test_versions_with_custom_git_branch_based_versions_pin_to_commits(
+    mock_git_version_info, database, mock_packages, monkeypatch, do_not_check_runtimes_on_reuse
+):
+    import spack.pkg.builtin.mock.version_test_pkg as vtp
+    repo_path, filename, commits = mock_git_version_info
+
+    version = Version("develop")
+    versions = vtp.VersionTestPkg.versions
+
+    vtp.VersionTestPkg.versions[version]["git"] = pathlib.Path(repo_path).as_uri()
+    vtp.VersionTestPkg.versions[version]["branch"] = "main"
+
+    spec = Spec(f"version-test-pkg@{str(version)}").concretized()
+    # assure it is not a StandardVersion post solve
+    assert isinstance(spec.versions.concrete, GitVersion)
+    # last main commit was 3'rd in the list (see mock_git_version_info)
+    assert spec.format("{version}") == f"git.{commits[2]}=main"
+
+
+@pytest.mark.only_clingo("clingo only reuse feature being tested")
 @pytest.mark.only_clingo("clingo only reuse feature being tested")
 @pytest.mark.regression("38484")
 def test_git_ref_version_can_be_reused(

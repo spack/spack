@@ -3353,17 +3353,20 @@ class SpecBuilder:
         self._specs[node].update_variant_validate(name, value)
 
     def _associated_branch(self, version_string, package_class):
-        if hasattr(package_class, "git"):
-            version = vn.Version(version_string)
-            version_dict = package_class.versions.get(version, {})
-            return version_dict.get("branch", None)
-        else:
-            return None
+        version = vn.Version(version_string)
+        version_dict = package_class.versions.get(version, {})
 
-    def _retrieve_latest_git_hash(self, branch_name, package_class):
+        git_address = version_dict.get("git", None) or getattr(package_class, "git", None)
+
+        if git_address:
+            return git_address, version_dict.get("branch", None)
+        else:
+            return None, None
+
+    def _retrieve_latest_git_hash(self, branch_name, git_address):
         # remote git operations can sometimes have banners so we must parse the output for a sha
         query = spack.util.git.git(required=True)(
-            "ls-remote", "-h", package_class.git, branch_name, output=str, error=os.devnull
+            "ls-remote", "-h", git_address, branch_name, output=str, error=os.devnull
         )
         sha, ref = query.strip().split()
         assert COMMIT_VERSION.match(sha)
@@ -3371,10 +3374,10 @@ class SpecBuilder:
 
     def version(self, node, version):
         pkg_cls = self._specs[node].package_class
-        branch = self._associated_branch(version, pkg_cls)
+        git_address, branch = self._associated_branch(version, pkg_cls)
         if branch:
             try:
-                hash = self._retrieve_latest_git_hash(branch, pkg_cls)
+                hash = self._retrieve_latest_git_hash(branch, git_address)
             except (ProcessError, ValueError, AssertionError):
                 raise InternalConcretizerError(
                     (
