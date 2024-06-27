@@ -23,12 +23,7 @@ class MatrixSwitch(CMakePackage):
 
     variant("lapack", default=True, description="Build with LAPACK interface.")
     variant("mpi", default=True, description="Build with MPI support.")
-    variant(
-        "scalapack",
-        default=True,
-        when="+mpi",
-        description="Build with ScaLAPACK interface.",
-    )
+    variant("scalapack", default=True, when="+mpi", description="Build with ScaLAPACK interface.")
     variant("dbcsr", default=False, when="+mpi", description="Build with DBCSR interface.")
 
     depends_on("cmake@3.22:", type="build")
