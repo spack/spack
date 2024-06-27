@@ -1134,6 +1134,10 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage, CompilerPackage):
         # The version of gcc-runtime is the same as the %gcc used to "compile" it
         pkg("gcc-runtime").requires(f"@={str(spec.version)}", when=f"%{str(spec)}")
 
+        # If a node used %gcc@X.Y its dependencies must use gcc-runtime@:X.Y
+        # (technically @:X is broader than ... <= @=X but this should work in practice)
+        pkg("*").propagate(f"%gcc@:{str(spec.version)}", when=f"%{str(spec)}")
+
     def _post_buildcache_install_hook(self):
         if not self.spec.satisfies("platform=linux"):
             return
