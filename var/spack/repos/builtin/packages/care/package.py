@@ -17,6 +17,8 @@ class Care(CMakePackage, CudaPackage, ROCmPackage):
 
     license("GPL-2.0-or-later")
 
+    maintainers("adayton1")
+
     version("develop", branch="develop", submodules="True")
     version("master", branch="main", submodules="True")
     version(
