@@ -525,13 +525,10 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
 
         # Undo spack compiler wrappers:
         # the C/C++ compilers must work post-install
-        if self.spec.satisfies("+cuda") or self.spec.satisfies("+rocm"):
+        if self.spec.satisfies("llvm=spack"):
             env.set("CHPL_TARGET_COMPILER", "llvm")
             real_cc = join_path(self.spec["llvm"].prefix, "bin", "clang")
             real_cxx = join_path(self.spec["llvm"].prefix, "bin", "clang++")
-        elif is_CrayEX() and os.environ.get("CRAYPE_DIR"):
-            real_cc = join_path(os.environ["CRAYPE_DIR"], "bin", "cc")
-            real_cxx = join_path(os.environ["CRAYPE_DIR"], "bin", "CC")
         else:
             real_cc = self.compiler.cc
             real_cxx = self.compiler.cxx
