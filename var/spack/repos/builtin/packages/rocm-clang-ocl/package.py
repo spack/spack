@@ -80,12 +80,14 @@ class RocmClangOcl(CMakePackage):
         install test subdirectory for use during `spack test run`."""
         self.cache_extra_test_sources([self.test_src_dir])
 
-    def test(self):
+    def test_make(self):
+        """Test make and cmake"""
         test_dir = join_path(self.test_suite.current_test_cache_dir, self.test_src_dir)
         with working_dir(test_dir, create=True):
-            cmake_bin = join_path(self.spec["cmake"].prefix.bin, "cmake")
             prefixes = ";".join([self.spec["rocm-clang-ocl"].prefix])
             cc_options = ["-DCMAKE_PREFIX_PATH=" + prefixes, "."]
-            self.run_test(cmake_bin, cc_options)
+            exe = which(self.spec["cmake"].prefix.bin.cmake)
+            exe(*cc_options)
+            make = which("make")
             make()
             make("clean")
