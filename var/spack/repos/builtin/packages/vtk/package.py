@@ -171,8 +171,9 @@ class Vtk(CMakePackage):
     depends_on("utf8cpp", when="@9:")
     depends_on("gl2ps", when="@8.1:")
     depends_on("gl2ps@1.4.1:", when="@9:")
-    depends_on("proj@4", when="@8.2.0")
-    depends_on("proj@4:", when="@9:")
+    # "8.2.1a" uses an internal proj so this special cases 8.2.1a
+    depends_on("proj@4:7", when="@:8.2.0, 9:9.1")
+    depends_on("proj@8:", when="@9.2:")
     depends_on("cgns@4.1.1:+mpi", when="@9.1: +mpi")
     depends_on("cgns@4.1.1:~mpi", when="@9.1: ~mpi")
     with when("@9.1:"):
