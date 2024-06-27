@@ -54,6 +54,7 @@ class Lcov(MakefilePackage):
     depends_on("perl-specio", type=("run"))
     depends_on("perl-sub-identify", type=("run"))
     depends_on("perl-time-hires", type=("run"))
+    depends_on("perl-timedate", type=("run"))
 
     def install(self, spec, prefix):
         make(
