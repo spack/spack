@@ -26,19 +26,17 @@ def mock_binary_resource_root(monkeypatch, tmpdir):
 
 
 @pytest.fixture
-def no_system(monkeypatch):
-    def _which_none(name, path=None):
-        return None
-
-    monkeypatch.setattr(spack.util.executable, "which", _which_none)
+def no_system(working_env):
+    """Fixture preventing system binaries from being detected"""
+    os.environ["PATH"] = ""
 
 
 @pytest.fixture
-def on_system(monkeypatch):
-    def _which_premade(name, path=None):
-        return spack.util.executable.Executable(os.path.join(datadir, "file.bat"))
-
-    monkeypatch.setattr(spack.util.executable, "which", _which_premade)
+def on_system(working_env):
+    """Fixture explicityly adding binary resource to PATH"""
+    env = spack.util.environment.EnvironmentModifications()
+    env.append_path("PATH", datadir)
+    env.apply_modifications()
 
 
 def test_ensure_or_acquire_no_acquire(mock_binary_resource_root, config, no_system, monkeypatch):
@@ -50,7 +48,7 @@ def test_ensure_or_acquire_no_acquire(mock_binary_resource_root, config, no_syst
         spack.util.binary_resource.BinaryResource, "acquire_resource", _fake_acquire
     )
     br.win_ensure_or_acquire_resource("file")
-    file = spack.util.executable.which_string("file")
+    file = spack.util.executable.which("file")
     assert file
     with open(file, "r") as f:
         assert "file-5.4.1 magicfile from /usr/share/bin" in f.read()
@@ -58,7 +56,7 @@ def test_ensure_or_acquire_no_acquire(mock_binary_resource_root, config, no_syst
 
 def test_ensure_or_acquire_acquire_resource(mock_binary_resource_root, config, no_system):
     br.win_ensure_or_acquire_resource("file")
-    file = spack.util.executable.which_string("file")
+    file = spack.util.executable.which("file")
     assert file
     with open(file, "r") as f:
         assert "file-5.4.1 magicfile from /usr/share/bin" in f.read()
