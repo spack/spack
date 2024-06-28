@@ -84,7 +84,6 @@ class Vasp(MakefilePackage, CudaPackage):
     depends_on("scalapack", when="+scalapack")
     # wiki (and makefiles) suggest scalapack is expected in 6:
     depends_on("scalapack", when="@6:")
-    depends_on("cuda", when="+cuda")
     depends_on("nccl", when="@6.3: +cuda")
     depends_on("hdf5+fortran+mpi", when="+hdf5")
     # at the very least the nvhpc mpi seems required
