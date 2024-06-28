@@ -964,7 +964,7 @@ pkg_fact(Package, variant_single_value("dev_path"))
 
 % Propagation roots have a corresponding attr("propagate", ...)
 propagate(RootNode, PropagatedAttribute) :- attr("propagate", RootNode, PropagatedAttribute).
-propagate(RootNode, PropagatedAttribute, DepType) :- attr("propagate", RootNode, PropagatedAttribute, DepType).
+propagate(RootNode, PropagatedAttribute, EdgeTypes) :- attr("propagate", RootNode, PropagatedAttribute, EdgeTypes).
 
 
 % Propagate an attribute along edges to child nodes
@@ -972,9 +972,10 @@ propagate(ChildNode, PropagatedAttribute) :-
   propagate(ParentNode, PropagatedAttribute),
   depends_on(ParentNode, ChildNode).
 
-propagate(ChildNode, PropagatedAttribute, DepType) :-
-  propagate(ParentNode, PropagatedAttribute, DepType),
-  attr("depends_on", ParentNode, ChildNode, DepType).
+propagate(ChildNode, PropagatedAttribute, edge_types(DepType1, DepType2)) :-
+  propagate(ParentNode, PropagatedAttribute, edge_types(DepType1, DepType2)),
+  depends_on(ParentNode, ChildNode),
+  1 { attr("depends_on", ParentNode, ChildNode, DepType1);  attr("depends_on", ParentNode, ChildNode, DepType2) }.
 
 %-----------------------------------------------------------------------------
 % Activation of propagated values
