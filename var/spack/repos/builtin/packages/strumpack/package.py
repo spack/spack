@@ -246,10 +246,9 @@ class Strumpack(CMakePackage, CudaPackage, ROCmPackage):
             try:
                 self._test_example(test_exe_mpi, exe, test_args)
                 return
-            except:
-                continue
+            except Exception:
+                pass
         assert False, "No MPI executable was found"
-    
     def check(self):
         """Skip the builtin testsuite, use the stand-alone tests instead."""
         pass
