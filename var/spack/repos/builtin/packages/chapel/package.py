@@ -562,6 +562,13 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
         if not is_system_path(prefix):
             env.prepend_path("CPATH", prefix.include)
 
+    def set_lib_path(self, env, prefix):
+        if not is_system_path(prefix):
+            env.prepend_path("LD_LIBRARY_PATH", prefix.lib)
+            env.prepend_path("LIBRARY_PATH", prefix.lib)
+            if prefix.lib.pkgconfig is not None:
+                env.prepend_path("PKG_CONFIG_PATH", prefix.lib.pkgconfig)
+
     def setup_env_vars(self, env):
         # variants that appear unused by Spack typically correspond directly to
         # a CHPL_<variant> variable which will be used by the Chapel build system
@@ -582,14 +589,11 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
             # TODO: why must we add to CPATH to find gmp.h
             # TODO: why must we add to LIBRARY_PATH to find lgmp
             self.prepend_cpath_include(env, self.spec["gmp"].prefix)
-            env.prepend_path("LIBRARY_PATH", self.spec["gmp"].prefix.lib)
-            # Need this for the test env, where it does not appear automatic:
-            env.prepend_path("PKG_CONFIG_PATH", self.spec["gmp"].prefix.lib.pkgconfig)
+            self.set_lib_path(env, self.spec["gmp"].prefix)
 
         if self.spec.variants["hwloc"].value == "spack":
-            env.prepend_path("LD_LIBRARY_PATH", self.spec["hwloc"].prefix.lib)
+            self.set_lib_path(env, self.spec["hwloc"].prefix)
             # Need this for the test env, where it does not appear automatic:
-            env.prepend_path("PKG_CONFIG_PATH", self.spec["hwloc"].prefix.lib.pkgconfig)
             env.prepend_path("PKG_CONFIG_PATH", self.spec["libpciaccess"].prefix.lib.pkgconfig)
 
         if self.spec.variants["unwind"].value == "spack":
@@ -598,25 +602,20 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
             env.prepend_path("LD_LIBRARY_PATH", self.spec["libunwind"].prefix.lib)
 
         if self.spec.satisfies("+yaml"):
-            env.prepend_path("PKG_CONFIG_PATH", self.spec["libyaml"].prefix.lib.pkgconfig)
             self.prepend_cpath_include(env, self.spec["libyaml"].prefix)
             # could not compile test/library/packages/Yaml/writeAndParse.chpl without this
-            env.prepend_path("LIBRARY_PATH", self.spec["libyaml"].prefix.lib)
+            self.set_lib_path(env, self.spec["libyaml"].prefix)
 
         if self.spec.satisfies("+zmq"):
             self.prepend_cpath_include(env, self.spec["libzmq"].prefix)
             # could not compile test/library/packages/ZMQ/hello.chpl without this
-            env.prepend_path("LIBRARY_PATH", self.spec["libzmq"].prefix.lib)
-            env.prepend_path("LD_LIBRARY_PATH", self.spec["libzmq"].prefix.lib)
-            env.prepend_path("PKG_CONFIG_PATH", self.spec["libzmq"].prefix.lib.pkgconfig)
+            self.set_lib_path(env, self.spec["libzmq"].prefix)
             env.prepend_path("PKG_CONFIG_PATH", self.spec["libsodium"].prefix.lib.pkgconfig)
 
         if self.spec.satisfies("+curl"):
             self.prepend_cpath_include(env, self.spec["curl"].prefix)
             # could not compile test/library/packages/Curl/check-http.chpl without this
-            env.prepend_path("LIBRARY_PATH", self.spec["curl"].prefix.lib)
-            env.prepend_path("LD_LIBRARY_PATH", self.spec["curl"].prefix.lib)
-            env.prepend_path("PKG_CONFIG_PATH", self.spec["curl"].prefix.lib.pkgconfig)
+            self.set_lib_path(env, self.spec["curl"].prefix)
 
         if self.spec.satisfies("+cuda"):
             # TODO: why must we add to LD_LIBRARY_PATH to find libcudart?
@@ -635,10 +634,8 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
             )
             self.prepend_cpath_include(env, self.spec["hip"].prefix)
             env.set("CHPL_ROCM_PATH", self.spec["llvm-amdgpu"].prefix)
-            env.prepend_path("LIBRARY_PATH", self.spec["hip"].prefix.lib)
-            env.prepend_path("LIBRARY_PATH", self.spec["hsa-rocr-dev"].prefix.lib)
-            env.prepend_path("LD_LIBRARY_PATH", self.spec["hip"].prefix.lib)
-            env.prepend_path("LD_LIBRARY_PATH", self.spec["hsa-rocr-dev"].prefix.lib)
+            self.set_lib_path(env, self.spec["hip"].prefix)
+            self.set_lib_path(env, self.spec["hsa-rocr-dev"].prefix)
         self.setup_chpl_comm(env, self.spec)
 
     def setup_build_environment(self, env):
