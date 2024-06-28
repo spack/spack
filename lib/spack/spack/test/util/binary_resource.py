@@ -19,8 +19,9 @@ file_file = os.path.join(datadir, "file.bat")
 
 @pytest.fixture
 def mock_binary_resource_root(monkeypatch, tmpdir):
+    resource_root = tmpdir.mkdir("binary-resources")
     def _binary_resource_root():
-        return tmpdir.mkdir("binary-resources")
+        return resource_root
 
     monkeypatch.setattr(spack.util.binary_resource, "binary_resource_root", _binary_resource_root)
 
@@ -29,6 +30,11 @@ def mock_binary_resource_root(monkeypatch, tmpdir):
 def no_system(working_env):
     """Fixture preventing system binaries from being detected"""
     os.environ["PATH"] = ""
+
+
+@pytest.fixture
+def tar_dir():
+    return os.path.dirname(spack.util.executable.which("tar").path)
 
 
 @pytest.fixture
@@ -41,8 +47,9 @@ def on_system(working_env):
 
 def test_ensure_or_acquire_no_acquire(mock_binary_resource_root, config, no_system, monkeypatch):
     def _fake_acquire(self):
-        os.makedirs(br.binary_resource_root() / "bin")
-        shutil.copy(file_file, br.binary_resource_root() / "bin")
+        os.makedirs(br.binary_resource_root() / "file" / "bin")
+        shutil.copy(file_file, br.binary_resource_root() / "file" / "bin")
+        return True
 
     monkeypatch.setattr(
         spack.util.binary_resource.BinaryResource, "acquire_resource", _fake_acquire
@@ -53,7 +60,9 @@ def test_ensure_or_acquire_no_acquire(mock_binary_resource_root, config, no_syst
     assert "file-5.4.1 magicfile from /usr/share/bin" in file(output=str)
 
 
-def test_ensure_or_acquire_acquire_resource(mock_binary_resource_root, config, no_system):
+@pytest.mark.skipif(not spack.util.executable.which("tar"), reason="tar required; not available")
+def test_ensure_or_acquire_acquire_resource(mock_binary_resource_root, config, tar_dir, no_system):
+    os.environ["PATH"] = tar_dir
     br.win_ensure_or_acquire_resource("file")
     file = spack.util.executable.which("file")
     assert file
@@ -73,6 +82,6 @@ def test_ensure_or_acquire_disabled_no_system(
 ):
     mutable_config.set("bootstrap_resource:enable", False)
     with pytest.raises(
-        RuntimeError, match=r"Cannot fetch bootstrap resource \w as it is disabled"
+        RuntimeError, match=r"Cannot fetch bootstrap resource .* as it is disabled"
     ):
         br.win_ensure_or_acquire_resource("file")

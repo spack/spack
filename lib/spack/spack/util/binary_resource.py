@@ -17,6 +17,7 @@ import shutil
 from llnl.util import tty
 
 import spack.paths
+import spack.util.path as sup
 
 BINARY_RESOURCE_SUBDIR = "binary-resources"
 
@@ -52,7 +53,7 @@ class BinaryResource:
         self._name = name
         self.resource_subdir = BINARY_RESOURCE_SUBDIR
         fetcher = spack.fetch_strategy.URLFetchStrategy(
-            url=conf["endpoint"], checksum=conf["sha256"]
+            url=sup.substitute_path_variables(conf["endpoint"]), checksum=conf["sha256"]
         )
         stage = spack.stage.Stage(fetcher)
         resource = spack.resource.Resource(
@@ -69,6 +70,7 @@ class BinaryResource:
                 os.path.join(s.root_stage.source_path, self.resource_subdir, self._name),
                 binary_resource_root() / self._name,
             )
+        self.stage.root_stage.destroy()
         return True
 
 
