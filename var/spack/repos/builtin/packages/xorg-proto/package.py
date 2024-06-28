@@ -23,6 +23,9 @@ class XorgProto(MesonPackage, AutotoolsPackage, XorgPackage):
 
     build_system("autotools", "meson", default="meson")
 
+    version("2024.1", sha256="4f6b9b4faf91e5df8265b71843a91fc73dc895be6210c84117a996545df296ce")
+    version("2023.2", sha256="c791aad9b5847781175388ebe2de85cb5f024f8dabf526d5d699c4f942660cc3")
+    version("2023.1", sha256="c9225c6887b1cb16a762f2e14e7fb56328f53bc5d804e760dcddefc97cc52f35")
     version("2022.2", sha256="da351a403d07a7006d7bdc8dcfc14ddc1b588b38fb81adab9989a8eef605757b")
     version("2022.1", sha256="2a399e77d98fe53e9056726a1934b62cbaa6c41d7b1f41a354911b0925363343")
     version("2021.5", sha256="be6ddd6590881452fdfa170c1c9ff87209a98d36155332cbf2ccbc431add86ff")
