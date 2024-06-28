@@ -52,6 +52,7 @@ class Pinentry(AutotoolsPackage):
 
     depends_on("libgpg-error@1.16:")
     depends_on("libassuan@2.1.0:")
+    depends_on("libassuan@:2", when="@:1.2")
 
     # Optional GUI dependencies
     depends_on("ncurses", when="gui=curses")

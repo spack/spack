@@ -39,12 +39,17 @@ class Gnupg(AutotoolsPackage):
 
     depends_on("libgpg-error@1.24:", when="@2:")
     depends_on("libgpg-error@1.41:", when="@2.3:")
+    depends_on("libgpg-error@1.46:", when="@2.4:")
 
     depends_on("libgcrypt@1.7.0:", when="@2:")
     depends_on("libgcrypt@1.9.1:", when="@2.3:")
 
-    depends_on("libksba@1.3.4:", when="@2.0.0:")
+    depends_on("libksba@1.3.4:", when="@2:")
+    depends_on("libksba@1.6.3:", when="@2.4:")
+
     depends_on("libassuan@2.5:", when="@2.2.15:")
+    depends_on("libassuan@:2", when="@:2.4.3")
+
     depends_on("pinentry", type="run", when="@2:")
     depends_on("iconv", when="@2:")
     depends_on("zlib-api")
