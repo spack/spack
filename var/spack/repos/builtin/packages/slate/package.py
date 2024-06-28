@@ -165,25 +165,31 @@ class Slate(CMakePackage, CudaPackage, ROCmPackage):
         commands = ["srun", "mpirun", "mpiexec"]
         return which(*commands, path=searchpath) or which(*commands)
 
-    def test(self):
-        if self.spec.satisfies("@2020.10.00") or "+mpi" not in self.spec:
-            print("Skipping: stand-alone tests")
-            return
+    def test_slate(self):
+        """Test slate with +mpi and other options"""
+        if self.spec.satisfies("@2020.10.00"):
+            raise SkipTest("Package must be installed as version @2021.05.01 or later")
+
+        if "+mpi" not in self.spec:
+            raise SkipTest("package must be installed with +mpi")
 
         test_dir = join_path(self.test_suite.current_test_cache_dir, "examples", "build")
         with working_dir(test_dir, create=True):
-            cmake_bin = join_path(self.spec["cmake"].prefix.bin, "cmake")
+            cmake = join_path(self.spec["cmake"].prefix.bin, "cmake")
             # This package must directly depend on all packages listed here.
             # Otherwise, it will not work when some packages are external to spack.
             deps = "slate blaspp lapackpp mpi"
             if self.spec.satisfies("+rocm"):
                 deps += " rocblas hip llvm-amdgpu comgr hsa-rocr-dev rocsolver "
             prefixes = ";".join([self.spec[x].prefix for x in deps.split()])
-            self.run_test(cmake_bin, ["-DCMAKE_PREFIX_PATH=" + prefixes, ".."])
+            options = ["-DCMAKE_PREFIX_PATH=" + prefixes, ".."]
+            exe = which(cmake)
+            exe(*options)
             make()
             test_args = ["-n", "4", "./ex05_blas"]
             launcher = self.mpi_launcher()
             if not launcher:
                 raise RuntimeError("Cannot run tests due to absence of MPI launcher")
-            self.run_test(launcher.command, test_args, purpose="SLATE smoke test")
+            exe2 = which(launcher.command)
+            exe2(*test_args)
             make("clean")
