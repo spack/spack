@@ -27,8 +27,17 @@ class Libassuan(AutotoolsPackage):
     depends_on("libgpg-error@1.17:")
 
     def configure_args(self):
-        return [
-            "--enable-static",
-            "--enable-shared",
-            f"--with-libgpg-error-prefix={self.spec['libgpg-error'].prefix}",
-        ]
+        config_args = []
+
+        if self.spec.satisfies("@3 %apple-clang platform=darwin"):
+            # This is to avoid duplicate symbols errors on linking
+            config_args.append("CFLAGS=-fgnu89-inline")
+
+        config_args.extend(
+            [
+                "--enable-static",
+                "--enable-shared",
+                f"--with-libgpg-error-prefix={self.spec['libgpg-error'].prefix}",
+            ]
+        )
+        return config_args
