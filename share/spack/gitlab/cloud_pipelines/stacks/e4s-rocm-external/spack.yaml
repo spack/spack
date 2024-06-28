@@ -252,7 +252,7 @@ spack:
   # - papi +rocm amdgpu_target=gfx908           # papi: https://github.com/spack/spack/issues/27898
   # - petsc +rocm amdgpu_target=gfx908          # petsc: https://github.com/spack/spack/issues/44600
   # - slate +rocm amdgpu_target=gfx908          # slate: hip/device_gescale_row_col.hip.cc:58:49: error: use of overloaded operator '*' is ambiguous (with operand types 'HIP_vector_type<double, 2>' and 'const HIP_vector_type<double, 2>')
-  # - slepc +rocm amdgpu_target=gfx908 ^petsc +rocm amdgpu_target=gfx908   # - slepc +rocm amdgpu_target=gfx90a ^petsc +rocm amdgpu_target=gfx90a # petsc: https://github.com/spack/spack/issues/44600
+  # - slepc +rocm amdgpu_target=gfx908 ^petsc +rocm amdgpu_target=gfx908 # petsc: https://github.com/spack/spack/issues/44600
   # - sundials +rocm amdgpu_target=gfx908       # sundials: https://github.com/spack/spack/issues/44601
 
   # ROCM 90a
