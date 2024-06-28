@@ -457,21 +457,21 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
 
     def cmake_args(self):
         return []
-    
+
     def run_umpire(self, exe, expected):
-       """Perform stand-alone checks on the installed package."""
-       if self.spec.satisfies("@:1"):
-           raise SkipTest("Package must be installed as version @1.0.1 or later")
+        """Perform stand-alone checks on the installed package."""
+        if self.spec.satisfies("@:1"):
+            raise SkipTest("Package must be installed as version @1.0.1 or later")
 
-       if os.path.isdir(self.prefix.bin):
-           raise SkipTest(f"{self.prefix.bin} does not eixst")
+        if os.path.isdir(self.prefix.bin):
+            raise SkipTest(f"{self.prefix.bin} does not eixst")
 
-       reason = "test: checking output from {0}".format(exe)
-       exe_run = which(join_path(self.prefix.bin, exe))
-       if exe_run is None:
-           raise SkipTest("Executable not present within directory")
-       out = exe_run(output=str.split, error=str.split)
-       check_outputs(expected, out)
+        reason = "test: checking output from {0}".format(exe)
+        exe_run = which(join_path(self.prefix.bin, exe))
+        if exe_run is None:
+            raise SkipTest("Executable not present within directory")
+        out = exe_run(output=str.split, error=str.split)
+        check_outputs(expected, out)
 
     def test_malloc(self):
         """Malloc Test"""
@@ -495,9 +495,7 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
 
     def test_tut_introspection(self):
         """Keep track of pointer allocation test"""
-        self.run_umpire(
-            "tut_introspection", ["Allocator used is HOST", "size of the allocation"]
-        )
+        self.run_umpire("tut_introspection", ["Allocator used is HOST", "size of the allocation"])
 
     def test_tut_memset(self):
         """Set entire block of memory to one value test"""
