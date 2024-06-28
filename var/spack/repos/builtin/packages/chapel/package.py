@@ -178,6 +178,14 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
         values=("ibv", "ofi", "udp", "smp", "unset"),
         multi=False,
         sticky=True,  # never allow the concretizer to choose this
+        when="comm=gasnet",
+    )
+
+    variant(
+        "pshm",
+        default=False,
+        description="Build Chapel with fast shared-memory comms between co-locales",
+        when="comm=gasnet",
     )
 
     # Chapel depends on GASNet whenever comm=gasnet.
@@ -190,6 +198,7 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
         default="bundled",
         values=("bundled", "spack"),
         multi=False,
+        when="comm=gasnet",
     )
 
     variant(
@@ -199,6 +208,7 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
         "supplied CHPL_GASNET_SEGMENT",
         values=("everything", "fast", "large", "unset"),
         multi=False,
+        when="comm=gasnet",
     )
 
     variant(
@@ -421,6 +431,19 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
     )
 
     conflicts(
+        "gasnet_segment=everything",
+        when="+pshm",
+        msg="gasnet_segment=everything does not support +pshm",
+    )
+
+    # comm_substrate=udp gasnet_segment=unset defaults to everything,
+    # which is incompatible with +pshm
+    requires(
+        "gasnet_segment=fast",
+        when="+pshm comm_substrate=udp",
+    )
+
+    conflicts(
         "^python@3.12:",
         when="@:2.0.99",
         msg="Chapel versions prior to 2.1.0 may produce SyntaxWarnings with Python >= 3.12",
@@ -537,6 +560,9 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
 
     def setup_chpl_comm(self, env, spec):
         env.set("CHPL_COMM", spec.variants["comm"].value)
+
+        if self.spec.satisfies("+pshm"):
+            env.set("CHPL_GASNET_MORE_CFG_OPTIONS", "--enable-pshm")
 
     @run_before("configure", when="gasnet=spack")
     def setup_gasnet(self):
