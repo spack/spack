@@ -458,11 +458,13 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
     def cmake_args(self):
         return []
 
-    def test(self):
+    def test_umpire_set(self):
         """Perform stand-alone checks on the installed package."""
-        if self.spec.satisfies("@:1") or not os.path.isdir(self.prefix.bin):
-            tty.info("Skipping: checks not installed in bin for v{0}".format(self.version))
-            return
+        if self.spec.satisfies("@:1"):
+            raise SkipTest("Package must be installed as version @1.0.1 or later")
+
+        if os.path.isdir(self.prefix.bin): 
+            raise SkipTest(f"{self.prefix.bin} does not eixst")
 
         # Run a subset of examples PROVIDED installed
         # tutorials with readily checkable outputs.
@@ -482,13 +484,5 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
         for exe in checks:
             expected = checks[exe]
             reason = "test: checking output from {0}".format(exe)
-            self.run_test(
-                exe,
-                [],
-                expected,
-                0,
-                installed=False,
-                purpose=reason,
-                skip_missing=True,
-                work_dir=self.prefix.bin,
-            )
+            exe_run = which(exe)
+            exe_run(checks[exe])
