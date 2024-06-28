@@ -1141,10 +1141,9 @@ class PackageBase(WindowsRPath, PackageViewMixin, RedistributionMixin, metaclass
             if not link_format:
                 link_format = "build-{arch}-{hash:7}"
             stage_link = self.spec.format_path(link_format)
-            return DevelopStage(compute_stage_name(self.spec), dev_path, stage_link)
-
-        # To fetch the current version
-        source_stage = self._make_root_stage(self.fetcher)
+            source_stage = DevelopStage(compute_stage_name(self.spec), dev_path, stage_link)
+        else:
+            source_stage = self._make_root_stage(self.fetcher)
 
         # all_stages is source + resources + patches
         all_stages = StageComposite()
@@ -1473,10 +1472,8 @@ class PackageBase(WindowsRPath, PackageViewMixin, RedistributionMixin, metaclass
             return
 
         checksum = spack.config.get("config:checksum")
-        fetch = self.stage.needs_fetching
         if (
             checksum
-            and fetch
             and (self.version not in self.versions)
             and (not isinstance(self.version, GitVersion))
         ):
