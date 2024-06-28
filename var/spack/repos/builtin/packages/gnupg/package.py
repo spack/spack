@@ -45,6 +45,7 @@ class Gnupg(AutotoolsPackage):
 
     depends_on("libksba@1.3.4:", when="@2.0.0:")
     depends_on("libassuan@2.5:", when="@2.2.15:")
+    depends_on("libassuan@:2", when="@:2.4.3")
     depends_on("pinentry", type="run", when="@2:")
     depends_on("iconv", when="@2:")
     depends_on("zlib-api")
