@@ -6,8 +6,6 @@
 import os
 import socket
 
-import llnl.util.tty as tty
-
 from spack.package import *
 
 from .blt import llnl_link_helpers
@@ -466,7 +464,6 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
         if os.path.isdir(self.prefix.bin):
             raise SkipTest(f"{self.prefix.bin} does not eixst")
 
-        reason = "test: checking output from {0}".format(exe)
         exe_run = which(join_path(self.prefix.bin, exe))
         if exe_run is None:
             raise SkipTest("Executable not present within directory")
