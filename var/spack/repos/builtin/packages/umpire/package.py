@@ -458,31 +458,62 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
     def cmake_args(self):
         return []
 
-    def test_umpire_set(self):
+    def run_umpire(self,exe,expected):
         """Perform stand-alone checks on the installed package."""
+        """
+        if self.spec.satisfies("@:1") or not os.path.isdir(self.prefix.bin):
+            tty.info("Skipping: checks not installed in bin for v{0}".format(self.version))
+            return
+        """
         if self.spec.satisfies("@:1"):
             raise SkipTest("Package must be installed as version @1.0.1 or later")
 
         if os.path.isdir(self.prefix.bin): 
             raise SkipTest(f"{self.prefix.bin} does not eixst")
+        
+        reason = "test: checking output from {0}".format(exe)
+        exe_run = which(join_path(self.prefix.bin,exe))
+        if exe_run is None:
+           raise SkipTest("Executable not present within directory") 
+        out = exe_run(output=str.split,error=str.split)
+        check_outputs(expected, out)
 
-        # Run a subset of examples PROVIDED installed
-        # tutorials with readily checkable outputs.
-        checks = {
-            "malloc": ["99 should be 99"],
-            "recipe_dynamic_pool_heuristic": ["in the pool", "releas"],
-            "recipe_no_introspection": ["has allocated", "used"],
-            "strategy_example": ["Available allocators", "HOST"],
-            "tut_copy": ["Copied source data"],
-            "tut_introspection": ["Allocator used is HOST", "size of the allocation"],
-            "tut_memset": ["Set data from HOST"],
-            "tut_move": ["Moved source data", "HOST"],
-            "tut_reallocate": ["Reallocated data"],
-            "vector_allocator": [""],
-        }
+        def test_malloc(self):
+            """Malloc Test"""
+            self.run_umpire("malloc",["99 should be 99"])
 
-        for exe in checks:
-            expected = checks[exe]
-            reason = "test: checking output from {0}".format(exe)
-            exe_run = which(exe)
-            exe_run(checks[exe])
+        def test_recipe_dynamic_pool_heuristic(self):
+            """Test heurisitc that uses an allocator for more than just initial allocation"""
+            self.run_umpire("recipe_dynamic_pool_heuristic", ["in the pool", "releas"])
+
+        def test_recipe_no_introspection(self):
+            """Test without introspection"""
+            self.run_umpire("recipe_no_introspection", ["has allocated", "used"])
+
+        def test_strategy_example(self):
+            """Memory allocation strategy test"""
+            self.run_umpire("strategy_example", ["Available allocators", "HOST"])
+
+        def test_tut_copy(self):
+            """Copy data test"""
+            self.run_umpire("tut_copy", ["Copied source data"])
+
+        def test_tut_introspection(self):
+            """Keep track of pointer allocation test"""
+            self.run_umpire("tut_introspection", ["Allocator used is HOST", "size of the allocation"])
+
+        def test_tut_memset(self):
+            """Set entire block of memory to one value test"""
+            self.run_umpire("tut_memset", ["Set data from HOST"])
+
+        def test_tut_move(self):
+            """Move memory test"""
+            self.run_umpire("tut_move", ["Moved source data", "HOST"])
+
+        def test_tut_reallocate(self):
+            """Reallocate memory test"""
+            self.run_umpire("tut_reallocate", ["Reallocated data"])
+
+        def test_vector_allocator(self):
+            """Allocate vector memory test"""
+            self.run_umpire("vector_allocator", [""])
