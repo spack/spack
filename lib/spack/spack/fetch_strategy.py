@@ -1564,7 +1564,18 @@ def for_package_version(pkg, version=None):
 
     # if it's a commit, we must use a GitFetchStrategy
     if isinstance(version, spack.version.GitVersion):
-        if not hasattr(pkg, "git"):
+        effective_version = version._ref_version
+        git_attr = None
+        if hasattr(pkg, "git"):
+            git_attr = pkg.git
+
+        if effective_version:
+            # we know the version [git]=effective_version so check if it has a custom
+            # git attribute attached. This takes precedent over a git package attr
+            version_properties = pkg.versions[effective_version]
+            git_attr = version_properties.get("git", None)
+
+        if not git_attr:
             raise spack.error.FetchError(
                 f"Cannot fetch git version for {pkg.name}. Package has no 'git' attribute"
             )
@@ -1578,7 +1589,7 @@ def for_package_version(pkg, version=None):
         # performance hit for branches on older versions of git.
         # Branches cannot be cached, so we tell the fetcher not to cache tags/branches
         ref_type = "commit" if version.is_commit else "tag"
-        kwargs = {"git": pkg.git, ref_type: version.ref, "no_cache": True}
+        kwargs = {"git": git_attr, ref_type: version.ref, "no_cache": True}
 
         kwargs["submodules"] = getattr(pkg, "submodules", False)
 

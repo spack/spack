@@ -3067,6 +3067,7 @@ def test_versions_with_custom_git_branch_based_versions_pin_to_commits(
     mock_git_version_info, database, mock_packages, monkeypatch, do_not_check_runtimes_on_reuse
 ):
     import spack.pkg.builtin.mock.version_test_pkg as vtp
+
     repo_path, filename, commits = mock_git_version_info
 
     version = Version("develop")
@@ -3079,10 +3080,11 @@ def test_versions_with_custom_git_branch_based_versions_pin_to_commits(
     # assure it is not a StandardVersion post solve
     assert isinstance(spec.versions.concrete, GitVersion)
     # last main commit was 3'rd in the list (see mock_git_version_info)
-    assert spec.format("{version}") == f"git.{commits[2]}=main"
+    sha = spec.format("{version}").split("=")[0].split(".")[1]
+    assert sha in commits
+    assert spec.format("{version}") == f"git.{commits[2]}={str(version)}"
 
 
-@pytest.mark.only_clingo("clingo only reuse feature being tested")
 @pytest.mark.only_clingo("clingo only reuse feature being tested")
 @pytest.mark.regression("38484")
 def test_git_ref_version_can_be_reused(
