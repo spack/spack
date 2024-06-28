@@ -410,7 +410,9 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
     conflicts("platform=windows")  # Support for windows is through WSL only
 
     conflicts("+rocm", when="+cuda", msg="Chapel must be built with either CUDA or ROCm, not both")
-    conflicts("+rocm", when="@:2.0.0", msg="ROCm support in spack requires Chapel 2.0.0 or later")
+    conflicts(
+        "+rocm", when="@:1.99.99", msg="ROCm support in spack requires Chapel 2.0.0 or later"
+    )
 
     conflicts(
         "comm_substrate=unset",
@@ -420,7 +422,7 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
 
     conflicts(
         "^python@3.12:",
-        when="@:2.1.0",
+        when="@:2.0.99",
         msg="Chapel versions prior to 2.1.0 may produce SyntaxWarnings with Python >= 3.12",
     )
 
