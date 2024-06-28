@@ -36,6 +36,13 @@ class LibgpgError(AutotoolsPackage):
     depends_on("awk", type="build")
     # Patch for using gawk@5, c.f. https://dev.gnupg.org/T4459
     patch("awk-5.patch", when="@1.36^gawk@5:")
+    # See https://github.com/macports/macports-ports/pull/24601 and https://dev.gnupg.org/T7169
+    patch(
+        "https://raw.githubusercontent.com/ryandesign/macports-ports/290e77cca6ce054768ddefee2b51222d72780ac9/devel/libgpg-error/files/patch-src-spawn-posix.c.diff",
+        sha256="0b2a0ffab81b2b0b40d6ab59016c92fcebbe80710a3e0adba570f73f7a931d16",
+        level=0,
+        when="@1.50",
+    )
 
     def configure_args(self):
         args = [
