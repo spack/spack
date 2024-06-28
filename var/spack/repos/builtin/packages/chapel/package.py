@@ -608,8 +608,6 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
             # could not compile test/library/packages/ZMQ/hello.chpl without this
             env.prepend_path("LIBRARY_PATH", self.spec["libzmq"].prefix.lib)
             env.prepend_path("LD_LIBRARY_PATH", self.spec["libzmq"].prefix.lib)
-            # could not compile test/library/packages/ZMQ/hello.chpl without this
-            env.prepend_path("LIBRARY_PATH", self.spec["libzmq"].prefix.lib)
             env.prepend_path("PKG_CONFIG_PATH", self.spec["libzmq"].prefix.lib.pkgconfig)
             env.prepend_path("PKG_CONFIG_PATH", self.spec["libsodium"].prefix.lib.pkgconfig)
 
