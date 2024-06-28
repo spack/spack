@@ -40,6 +40,7 @@ class CMakeBuilder(cmake.CMakeBuilder):
 
 
 class MakefileBuilder(makefile.MakefileBuilder):
+
     def build(self, pkg, spec, prefix):
         make("RM=rm -f", "AR=ar cr", f"CC={spack_cc}", f"CCC={spack_cxx}", parallel=False)
 
