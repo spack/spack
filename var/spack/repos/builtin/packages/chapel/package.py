@@ -596,6 +596,7 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
             # Need this for the test env, where it does not appear automatic:
             env.prepend_path("PKG_CONFIG_PATH", self.spec["libpciaccess"].prefix.lib.pkgconfig)
 
+        # TODO: unwind builds but resulting binaries fail to run, producing linker errors
         if self.spec.variants["unwind"].value == "spack":
             # chapel package would not build without cpath, missing libunwind.h
             self.prepend_cpath_include(env, self.spec["libunwind"].prefix)
