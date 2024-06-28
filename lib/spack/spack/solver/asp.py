@@ -51,6 +51,7 @@ import spack.variant
 import spack.version as vn
 import spack.version.git_ref_lookup
 from spack import traverse
+from spack.util.executable import ProcessError
 from spack.version.common import COMMIT_VERSION
 
 from .core import (
@@ -3414,9 +3415,10 @@ class SpecBuilder:
             except (ProcessError, ValueError, AssertionError):
                 raise InternalConcretizerError(
                     (
-                        f"Failure to fetch git sha when running `git ls-remote {pkg_cls.git} {branch}`\n"
+                        "Failure to fetch git sha when running"
+                        f" `git ls-remote {git_address} {branch}`\n"
                         "Confirm network connectivty by running this command followed by:\n"
-                        f"\t`spack fetch {pkg_cls.name}@{str(version)}`"
+                        f"\t`spack fetch {git_address}@{str(version)}`"
                         "Post a bug report if both of these operations succeed."
                     )
                 )
