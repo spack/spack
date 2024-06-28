@@ -57,7 +57,7 @@ class Vasp(MakefilePackage, CudaPackage):
     variant("scalapack", default=False, when="@:5", description="Enables build with SCALAPACK")
 
     variant("cuda", default=False, description="Enables running on Nvidia GPUs")
-    variant("fftlib", default=True, when="@6: +openmp", description="Enables fftlib build")
+    variant("fftlib", default=True, when="@6.2: +openmp", description="Enables fftlib build")
 
     variant(
         "vaspsol",
