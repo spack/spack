@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
+
 import llnl.util.tty as tty
 
 from spack.package import *
@@ -244,6 +246,7 @@ class Strumpack(CMakePackage, CudaPackage, ROCmPackage):
         mpi_bin = self.spec["mpi"].prefix.bin
         mpiexe_list = ["srun", mpi_bin.mpirun, mpi_bin.mpiexec]
         for exe in mpiexe_list:
+            tty.info(f"Attempting to build and launch with {os.path.basename(exe)}")
             try:
                 args = ["--immediate=30"] + mpi_args if exe == "srun" else mpi_args
                 self._test_example(test_exe_mpi, exe, args)
