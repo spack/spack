@@ -3071,10 +3071,14 @@ def test_versions_with_custom_git_branch_based_versions_pin_to_commits(
     repo_path, filename, commits = mock_git_version_info
 
     version = Version("develop")
-    versions = vtp.VersionTestPkg.versions
+    new_version_attrs = vtp.VersionTestPkg.versions[version]
 
-    vtp.VersionTestPkg.versions[version]["git"] = pathlib.Path(repo_path).as_uri()
-    vtp.VersionTestPkg.versions[version]["branch"] = "main"
+    new_version_attrs["git"] = pathlib.Path(repo_path).as_uri()
+    new_version_attrs["branch"] = "main"
+
+    patch_versions = {version: new_version_attrs}
+
+    monkeypatch.setattr(vtp.VersionTestPkg, "versions", patch_versions)
 
     spec = Spec(f"version-test-pkg@{str(version)}").concretized()
     # assure it is not a StandardVersion post solve

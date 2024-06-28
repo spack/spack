@@ -125,7 +125,6 @@ class RocmOpencl(CMakePackage):
         "6.1.0",
         "6.1.1",
     ]:
-
         depends_on(f"rocm-core@{ver}", when=f"@{ver}")
 
     @classmethod
