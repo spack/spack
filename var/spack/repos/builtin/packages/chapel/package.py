@@ -291,9 +291,10 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
     variant(
         "libfabric",
         default="unset",
-        description="When building with ofi support, specify libfabric option",
+        description="Control the libfabric version used for multi-locale communication",
         values=("bundled", "spack", "unset"),
         multi=False,
+        when="comm=ofi",
     )
 
     variant(
