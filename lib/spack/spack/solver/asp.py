@@ -1683,7 +1683,10 @@ class SpackSolverSetup:
                 msg = f"condition to activate requirement {requirement_grp_id}"
                 try:
                     main_condition_id = self.condition(
-                        rule.condition, name=pkg_name, msg=msg, id_context=[pkg_name, requirement_grp_id]
+                        rule.condition,
+                        name=pkg_name,
+                        msg=msg,
+                        id_context=[pkg_name, requirement_grp_id],
                     )
                 except Exception as e:
                     if rule.kind != RequirementKind.DEFAULT:
