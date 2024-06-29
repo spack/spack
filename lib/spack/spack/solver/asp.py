@@ -1209,7 +1209,9 @@ class SpackSolverSetup:
     def conflict_rules(self, pkg):
         for when_spec, conflict_specs in pkg.conflicts.items():
             when_spec_msg = "conflict constraint %s" % str(when_spec)
-            when_spec_id = self.condition(when_spec, name=pkg.name, msg=when_spec_msg)
+            when_spec_id = self.condition(
+                when_spec, name=pkg.name, msg=when_spec_msg, id_context=[pkg.name, "conflict"]
+            )
 
             for conflict_spec, conflict_msg in conflict_specs:
                 conflict_spec = spack.spec.Spec(conflict_spec)
@@ -1680,7 +1682,9 @@ class SpackSolverSetup:
             if rule.condition != spack.spec.Spec():
                 msg = f"condition to activate requirement {requirement_grp_id}"
                 try:
-                    main_condition_id = self.condition(rule.condition, name=pkg_name, msg=msg)
+                    main_condition_id = self.condition(
+                        rule.condition, name=pkg_name, msg=msg, id_context=[pkg_name, requirement_grp_id]
+                    )
                 except Exception as e:
                     if rule.kind != RequirementKind.DEFAULT:
                         raise RuntimeError(
@@ -1720,6 +1724,7 @@ class SpackSolverSetup:
                         name=pkg_name,
                         transform_imposed=transform,
                         msg=f"{input_spec} is a requirement for package {pkg_name}",
+                        id_context=[pkg_name, requirement_grp_id],
                     )
                 except Exception as e:
                     # Do not raise if the rule comes from the 'all' subsection, since usability
