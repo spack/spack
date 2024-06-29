@@ -71,7 +71,7 @@ class Rdkit(CMakePackage):
         depends_on("python@3:", when="+python")
         depends_on("py-numpy", when="+python")
         # https://github.com/rdkit/rdkit/issues/7477
-        depends_on("py-numpy@:1", when="+python")
+        depends_on("py-numpy@:1", when="@:2024.03.3+python")
 
         extends("python", when="+python")
 
