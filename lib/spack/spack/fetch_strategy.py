@@ -1566,14 +1566,15 @@ def for_package_version(pkg, version=None):
     if isinstance(version, spack.version.GitVersion):
         effective_version = version._ref_version
         git_attr = None
-        if hasattr(pkg, "git"):
-            git_attr = pkg.git
 
         if effective_version:
             # we know the version [git]=effective_version so check if it has a custom
             # git attribute attached. This takes precedent over a git package attr
             version_properties = pkg.versions[effective_version]
             git_attr = version_properties.get("git", None)
+
+        if not git_attr and hasattr(pkg, "git"):
+            git_attr = pkg.git
 
         if not git_attr:
             raise spack.error.FetchError(
