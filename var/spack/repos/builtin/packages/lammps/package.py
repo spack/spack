@@ -897,6 +897,14 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage, PythonExtension):
             else:
                 env.prepend_path("LD_LIBRARY_PATH", self.prefix.lib)
                 env.prepend_path("LD_LIBRARY_PATH", self.prefix.lib64)
+        if "+plugin" in self.spec:
+            env.prepend_path("LAMMPS_PLUGIN_PATH", self.prefix.lib.lammps.plugins)
+            env.prepend_path("LAMMPS_PLUGIN_PATH", self.prefix.lib64.lammps.plugins)
+
+    @run_after("install")
+    def make_plugins_directories(self):
+        os.makedirs(self.prefix.lib.lammps.plugins, exist_ok=True)
+        os.makedirs(self.prefix.lib64.lammps.plugins, exist_ok=True)
 
     @run_after("install")
     def install_python(self):
