@@ -226,7 +226,9 @@ class Acts(CMakePackage, CudaPackage):
         description="Build the auto-differentiation plugin",
         when="@1.2:32",
     )
+    variant("covfie", default=False, description="Build Covfie plugin", when="@35.1:")
     variant("dd4hep", default=False, description="Build the DD4hep plugin", when="+tgeo")
+    variant("detray", default=False, description="Build Detray plugin", when="@35.1:")
     variant(
         "digitization",
         default=False,
@@ -269,6 +271,7 @@ class Acts(CMakePackage, CudaPackage):
         "tgeo", default=False, description="Build the TGeo plugin", when="@:34 +identification"
     )
     variant("tgeo", default=False, description="Build the TGeo plugin", when="@35:")
+    variant("traccc", default=False, description="Build Traccc plugin", when="@35.1:")
 
     # Variants that only affect Acts examples for now
     variant(
