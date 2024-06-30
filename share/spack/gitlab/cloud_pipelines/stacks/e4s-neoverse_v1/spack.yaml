@@ -167,7 +167,7 @@ spack:
   - libcatalyst
   - parallel-netcdf
   - paraview
-  - py-cinemasci
+  # - py-cinemasci
   - sz
   - unifyfs
   - veloc
