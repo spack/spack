@@ -1671,7 +1671,7 @@ class SpackSolverSetup:
         for rule in rules:
             requirement_grp_id = self.new_id(
                 ["requirement-grp-id", rule.pkg_name, rule.policy, rule.kind.name]
-                + list(rule.requirements)
+                + list(rule.requirements) + [rule.condition]
             )
             virtual = rule.kind == RequirementKind.VIRTUAL
 
