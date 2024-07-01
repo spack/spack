@@ -151,6 +151,13 @@ class VtkM(CMakePackage, CudaPackage, ROCmPackage):
     # https://gitlab.kitware.com/vtk/vtk-m/-/merge_requests/3160
     patch("mr3160-rocthrust-fix.patch", when="@2.1:")
 
+    # Disable Thrust patch that is no longer needed in modern Thrust
+    patch(
+        "https://github.com/Kitware/VTK-m/commit/4a4466e7c8cd44d2be2bd3fe6f359faa8e9547aa.patch?full_index=1",
+        sha256="58dc104ba05ec99c359eeec3ac094cdb071053a4250f4ad9d72ef6a356c4346e",
+        when="@1.6.0: +cuda ^cuda@12.5:",
+    )
+
     def cmake_args(self):
         spec = self.spec
         options = []
