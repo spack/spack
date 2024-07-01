@@ -24,6 +24,7 @@ class PyScikitImage(PythonPackage):
         "skimage.future.graph",
     ]
 
+    version("0.24.0", sha256="5d16efe95da8edbeb363e0c4157b99becbd650a60b77f6e3af5768b66cf007ab")
     version("0.23.2", sha256="c9da4b2c3117e3e30364a3d14496ee5c72b09eb1a4ab1292b302416faa360590")
     version("0.23.1", sha256="4ff756161821568ed56523f1c4ab9094962ba79e817a9a8e818d9f51d223d669")
     version("0.23.0", sha256="f412b79c6cdf4371a7332cfc769bd62440a7e1375e8e7da171d67965d0156d48")
@@ -45,7 +46,7 @@ class PyScikitImage(PythonPackage):
     # @:0.13      from requirements.txt, DEPENDS.txt
 
     with default_args(type=("build", "run")):
-        depends_on("python@3.10:", when="@0.23:")
+        depends_on("python@3.10:", when="@0.23")
         depends_on("python@3.9:", when="@0.22:")
 
     with default_args(type=("build", "link", "run")):
@@ -99,6 +100,7 @@ class PyScikitImage(PythonPackage):
         depends_on("py-setuptools@:59.4", when="@0.19.1:0.19")
         depends_on("py-setuptools@51:", when="@0.18:")
         depends_on("py-setuptools")
+        depends_on("ninja", when="@0.20:")
         depends_on("py-cython@3.0.4:", when="@0.23:")
         depends_on("py-cython@0.29.32:", when="@0.21:")
         depends_on("py-cython@0.29.24:", when="@0.20:")
