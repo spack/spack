@@ -1228,7 +1228,7 @@ class SpackSolverSetup:
                     conflict_spec,
                     name=conflict_spec.name or pkg.name,
                     msg=conflict_spec_msg,
-                    id_context=[pkg.name, when_spec],
+                    id_context=["conflict", pkg.name, when_spec],
                 )
                 self.gen.fact(
                     fn.pkg_fact(
@@ -1242,7 +1242,9 @@ class SpackSolverSetup:
             condition_msg = f"{pkg.name} needs the {', '.join(sorted(languages))} language"
             if when_spec != spack.spec.Spec():
                 condition_msg += f" when {when_spec}"
-            condition_id = self.condition(when_spec, name=pkg.name, msg=condition_msg)
+            condition_id = self.condition(
+                when_spec, name=pkg.name, msg=condition_msg, id_context=["lang"]
+            )
             for language in sorted(languages):
                 self.gen.fact(fn.pkg_fact(pkg.name, fn.language(condition_id, language)))
         self.gen.newline()
@@ -1365,7 +1367,7 @@ class SpackSolverSetup:
                         msg += " when %s" % w
 
                     cond_id = self.condition(
-                        w, name=pkg.name, msg=msg, id_context=[pkg.name, variant, when]
+                        w, name=pkg.name, msg=msg, id_context=["variant", pkg.name, variant, when]
                     )
                     self.gen.fact(fn.pkg_fact(pkg.name, fn.conditional_variant(cond_id, name)))
 
@@ -1417,11 +1419,13 @@ class SpackSolverSetup:
                             condition_spec,
                             name=pkg.name,
                             msg="invalid variant value {0}={1}".format(name, value),
+                            id_context=["invalid-variant"],
                         )
                         constraint_id = self.condition(
                             spack.spec.Spec(),
                             name=pkg.name,
                             msg="empty (total) conflict constraint",
+                            id_context=["variant-conflict"],
                         )
                         msg = "variant {0}={1} is conditionally disabled".format(name, value)
                         self.gen.fact(
@@ -1436,6 +1440,7 @@ class SpackSolverSetup:
                             imposed_spec=imposed,
                             name=pkg.name,
                             msg="%s variant %s value %s when %s" % (pkg.name, name, value, when),
+                            id_context=["variant"],
                         )
                 self.gen.fact(fn.pkg_fact(pkg.name, fn.variant_possible_value(name, value)))
 
@@ -1572,7 +1577,7 @@ class SpackSolverSetup:
 
                 msg = f"{pkg.name} provides {vpkg} when {when}"
                 condition_id = self.condition(
-                    when, vpkg, pkg.name, msg, id_context=[pkg.name, when, vpkg]
+                    when, vpkg, pkg.name, msg, id_context=["provided-when", pkg.name, when, vpkg]
                 )
                 self.gen.fact(
                     fn.pkg_fact(when.name, fn.provider_condition(condition_id, vpkg.name))
@@ -1627,6 +1632,7 @@ class SpackSolverSetup:
                     msg=msg,
                     transform_required=track_dependencies(),
                     transform_imposed=dependency_holds(pkg, depflag),
+                    id_context=["dep-rule"],
                 )
 
                 self.gen.newline()
@@ -1685,7 +1691,7 @@ class SpackSolverSetup:
                         rule.condition,
                         name=pkg_name,
                         msg=msg,
-                        id_context=[pkg_name, requirement_grp_id],
+                        id_context=["requirement-grp-cnd", pkg_name, requirement_grp_id],
                     )
                 except Exception as e:
                     if rule.kind != RequirementKind.DEFAULT:
@@ -1726,7 +1732,7 @@ class SpackSolverSetup:
                         name=pkg_name,
                         transform_imposed=transform,
                         msg=f"{input_spec} is a requirement for package {pkg_name}",
-                        id_context=[pkg_name, requirement_grp_id],
+                        id_context=["requirement-grp-member", pkg_name, requirement_grp_id],
                     )
                 except Exception as e:
                     # Do not raise if the rule comes from the 'all' subsection, since usability
@@ -1829,7 +1835,9 @@ class SpackSolverSetup:
                 msg = "%s available as external when satisfying %s" % (spec.name, spec)
 
                 transform_fn = external_imposition(spec, external_id=parsed_to_id[spec])
-                self.condition(spec, spec, msg=msg, transform_imposed=transform_fn)
+                self.condition(
+                    spec, spec, msg=msg, transform_imposed=transform_fn, id_context=["external"]
+                )
                 self.possible_versions[spec.name].add(spec.version)
                 self.gen.newline()
 
@@ -2641,7 +2649,12 @@ class SpackSolverSetup:
         self.gen.h1("Develop specs")
         # Inject dev_path from environment
         for ds in dev_specs:
-            self.condition(spack.spec.Spec(ds.name), ds, msg="%s is a develop spec" % ds.name)
+            self.condition(
+                spack.spec.Spec(ds.name),
+                ds,
+                msg="%s is a develop spec" % ds.name,
+                id_context=["dev-spec"],
+            )
             self.trigger_rules()
             self.effect_rules()
 
