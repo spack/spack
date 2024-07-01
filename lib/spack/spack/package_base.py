@@ -1583,13 +1583,11 @@ class PackageBase(WindowsRPath, PackageViewMixin, RedistributionMixin, metaclass
                 tty.debug("Patching failed last time. Restaging.")
                 self.stage.restage()
             else:
-                # develop specs/ DIYStages may have patch failures but
-                # should never be restaged
-                msg = (
-                    "A patch failure was detected in %s." % self.name
-                    + " Build errors may occur due to this."
+                # develop specs may have patch failures but should never be restaged
+                tty.warn(
+                    f"A patch failure was detected in {self.name}."
+                    " Build errors may occur due to this."
                 )
-                tty.warn(msg)
                 return
 
         # If this file exists, then we already applied all the patches.
