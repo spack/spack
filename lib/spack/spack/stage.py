@@ -346,7 +346,7 @@ class Stage(LockableStagingDir):
     similar, and are intended to persist for only one run of spack.
     """
 
-    #: Most staging is managed by Spack. DIYStage is one exception.
+    #: Most staging is managed by Spack. DevelopStage is one exception.
     needs_fetching = True
     requires_patch_success = True
 
@@ -820,62 +820,6 @@ class StageComposite(pattern.Composite):
     def keep(self, value):
         for item in self:
             item.keep = value
-
-
-class DIYStage:
-    """
-    Simple class that allows any directory to be a spack stage.  Consequently,
-    it does not expect or require that the source path adhere to the standard
-    directory naming convention.
-    """
-
-    needs_fetching = False
-    requires_patch_success = False
-
-    def __init__(self, path):
-        if path is None:
-            raise ValueError("Cannot construct DIYStage without a path.")
-        elif not os.path.isdir(path):
-            raise StagePathError("The stage path directory does not exist:", path)
-
-        self.archive_file = None
-        self.path = path
-        self.source_path = path
-        self.created = True
-
-    # DIY stages do nothing as context managers.
-    def __enter__(self):
-        pass
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        pass
-
-    def fetch(self, *args, **kwargs):
-        tty.debug("No need to fetch for DIY.")
-
-    def check(self):
-        tty.debug("No checksum needed for DIY.")
-
-    def expand_archive(self):
-        tty.debug("Using source directory: {0}".format(self.source_path))
-
-    @property
-    def expanded(self):
-        """Returns True since the source_path must exist."""
-        return True
-
-    def restage(self):
-        raise RestageError("Cannot restage a DIY stage.")
-
-    def create(self):
-        self.created = True
-
-    def destroy(self):
-        # No need to destroy DIY stage.
-        pass
-
-    def cache_local(self):
-        tty.debug("Sources for DIY stages are not cached")
 
 
 class DevelopStage(LockableStagingDir):
