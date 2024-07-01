@@ -58,7 +58,7 @@ class Libffi(AutotoolsPackage):
         return (flags, None, None)
 
     def configure_args(self):
-        args = []
+        args = ["--with-pic"]
         if self.spec.version >= Version("3.3"):
             # Spack adds its own target flags, so tell libffi not to
             # second-guess us
@@ -68,5 +68,4 @@ class Libffi(AutotoolsPackage):
         # See: https://github.com/libffi/libffi/issues/571
         if self.spec.satisfies("platform=darwin target=aarch64:"):
             args.append("--build=aarch64-apple-darwin")
-        args.append("CFLAGS=-fPIC")
         return args
