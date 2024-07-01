@@ -45,7 +45,7 @@ class GobjectIntrospection(MesonPackage, AutotoolsPackage):
     depends_on("cairo+gobject")
     depends_on("glib@2.78:", when="@1.78")
     depends_on("glib@2.76:", when="@1.76")
-    depends_on("glib@2.58:", when="@1.72")
+    depends_on("glib@2.58:", when="@1.60:1.72")
     depends_on("glib@2.56:", when="@1.56")
     depends_on("glib@2.49.2:", when="@1.49.2")
     depends_on("glib@2.48.1", when="@1.48.0")
@@ -75,7 +75,10 @@ class GobjectIntrospection(MesonPackage, AutotoolsPackage):
     #   extra sed expression in its TOOL_SUBSTITUTION that results in
     #   an `#!/bin/bash /path/to/spack/bin/sbang` unconditionally being
     #   inserted into the scripts as they're generated.
-    patch("sbang.patch", when="@:1.60")
+    patch("sbang.patch", when="@:1.56")
+    # The TOOL_SUBSITUTION line changed after 1.58 to include /usr/bin/env in
+    # the Python substituion more explicitly. The Makefile.am was removed in 1.61.
+    patch("sbang-1.60.2.patch", when="@1.58:1.60")
 
     # Drop deprecated xml.etree.ElementTree.Element.getchildren() which leads
     # to compilation issues with Python 3.9.
@@ -85,6 +88,12 @@ class GobjectIntrospection(MesonPackage, AutotoolsPackage):
         "1f9284228092b2a7200e8a78bc0ea6702231c6db.diff",
         sha256="dcb9e7c956dff49c3a73535829382e8662fa6bd13bdfb416e8eac47b2604fa0a",
         when="@:1.63.1",
+    )
+
+    conflicts(
+        "^python@3.11:",
+        when="@:1.60",
+        msg="giscannermodule.c in <=v1.60 uses syntax incompatible with Python >=3.11",
     )
 
     def url_for_version(self, version):
