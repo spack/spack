@@ -421,30 +421,38 @@ class TestConcretize:
     @pytest.mark.only_clingo(
         "Optional compiler propagation isn't deprecated for original concretizer"
     )
-    def test_concretize_compiler_flag_propagate(self):
-        spec = Spec("hypre cflags=='-g' ^openblas")
-        spec.concretize()
-
-        assert spec.satisfies("^openblas cflags='-g'")
-
-    @pytest.mark.only_clingo(
-        "Optional compiler propagation isn't deprecated for original concretizer"
+    @pytest.mark.parametrize(
+        "spec_str,expected,not_expected",
+        [
+            # Simple flag propagation from the root
+            ("hypre cflags=='-g' ^openblas", ["hypre cflags='-g'", "^openblas cflags='-g'"], []),
+            (
+                "hypre cflags='-g' ^openblas",
+                ["hypre cflags='-g'", "^openblas"],
+                ["^openblas cflags='-g'"],
+            ),
+            # Setting a flag overrides propagation
+            (
+                "hypre cflags=='-g' ^openblas cflags='-O3'",
+                ["hypre cflags='-g'", "^openblas cflags='-O3'"],
+                ["^openblas cflags='-g'"],
+            ),
+            # Propagation doesn't go across build dependencies
+            (
+                "cmake-client cflags=='-O2 -g'",
+                ["cmake-client cflags=='-O2 -g'", "^cmake"],
+                ["cmake cflags=='-O2 -g'"],
+            ),
+        ],
     )
-    def test_concretize_compiler_flag_does_not_propagate(self):
-        spec = Spec("hypre cflags='-g' ^openblas")
-        spec.concretize()
+    def test_compiler_flag_propagation(self, spec_str, expected, not_expected):
+        root = Spec(spec_str).concretized()
 
-        assert not spec.satisfies("^openblas cflags='-g'")
+        for constraint in expected:
+            assert root.satisfies(constraint)
 
-    @pytest.mark.only_clingo(
-        "Optional compiler propagation isn't deprecated for original concretizer"
-    )
-    def test_concretize_propagate_compiler_flag_not_passed_to_dependent(self):
-        spec = Spec("hypre cflags=='-g' ^openblas cflags='-O3'")
-        spec.concretize()
-
-        assert set(spec.compiler_flags["cflags"]) == set(["-g"])
-        assert spec.satisfies("^openblas cflags='-O3'")
+        for constraint in not_expected:
+            assert not root.satisfies(constraint)
 
     def test_mixing_compilers_only_affects_subdag(self):
         spack.config.set("packages:all:compiler", ["clang", "gcc"])
