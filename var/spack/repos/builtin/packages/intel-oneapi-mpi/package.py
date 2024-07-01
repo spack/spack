@@ -129,6 +129,7 @@ class IntelOneapiMpi(IntelOneApiLibraryPackage):
     depends_on("libfabric", when="+external-libfabric", type=("link", "run"))
 
     provides("mpi@:3.1")
+    conflicts("+generic-names +classic-names")
 
     @property
     def mpiexec(self):
