@@ -58,22 +58,42 @@ class Care(CMakePackage, CudaPackage, ROCmPackage):
     variant("tests", default=False, description="Build tests")
     variant("loop_fuser", default=False, description="Enable loop fusion capability")
 
+    depends_on("cmake@3.8:", type="build")
+    depends_on("cmake@3.9:", type="build", when="+cuda")
+    depends_on("cmake@3.18:", type="build", when="@0.12.0:")
+    depends_on("cmake@3.21:", type="build", when="@0.12.0:+rocm")
+
+    depends_on("blt")
+    depends_on("blt@0.6.2:", type="build", when="@0.13.0:")
+    depends_on("blt@0.6.1:", type="build", when="@0.12.0:")
     depends_on("blt@0.4.0:", type="build", when="@0.3.1:")
     depends_on("blt@:0.3.6", type="build", when="@:0.3.0")
     conflicts("^blt@:0.3.6", when="+rocm")
 
-    depends_on("camp")
-    depends_on("umpire@develop")
-    depends_on("raja@develop")
-    depends_on("chai@develop+enable_pick")
+    depends_on("camp", when="@:0.11.1")
 
+    depends_on("umpire")
+    depends_on("umpire@2024.02.1:", when="@0.13.0:")
+    depends_on("umpire@2024.02.0:", when="@0.12.0:")
+
+    depends_on("raja")
+    depends_on("raja@2024.02.2:", when="@0.13.1:")
+    depends_on("raja@2024.02.1:", when="@0.13.0:")
+    depends_on("raja@2024.02.0:", when="@0.12.0:")
+
+    depends_on("chai+enable_pick+raja")
+    depends_on("chai@2024.02.2:", when="@0.13.1:")
+    depends_on("chai@2024.02.1:", when="@0.13.0:")
+    depends_on("chai@2024.02.0:", when="@0.12.0:")
+
+    # pass on +cuda variants
     # WARNING: this package currently only supports an internal cub
     # package. This will cause a race condition if compiled with another
     # package that uses cub. TODO: have all packages point to the same external
     # cub package.
+    depends_on("cub", when="+cuda")
     depends_on("camp+cuda", when="+cuda")
     depends_on("umpire+cuda~shared", when="+cuda")
-    depends_on("cub", when="+cuda")
     depends_on("raja+cuda~openmp", when="+cuda")
     depends_on("chai+cuda~shared", when="+cuda")
 
@@ -91,6 +111,7 @@ class Care(CMakePackage, CudaPackage, ROCmPackage):
 
     conflicts("+openmp", when="+rocm")
     conflicts("+openmp", when="+cuda")
+
 
     def cmake_args(self):
         spec = self.spec
