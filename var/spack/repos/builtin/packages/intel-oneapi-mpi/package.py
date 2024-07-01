@@ -116,7 +116,12 @@ class IntelOneapiMpi(IntelOneApiLibraryPackage):
     variant(
         "generic-names",
         default=False,
-        description="Use generic names, e.g mpicc instead of mpiicc",
+        description="Use generic names, e.g mpicc instead of mpiicx",
+    )
+    variant(
+        "classic-names",
+        default=False,
+        description="Use classic compiler names, e.g mpiicc instead of mpiicx",
     )
     variant(
         "external-libfabric", default=False, description="Enable external libfabric dependency"
@@ -144,17 +149,24 @@ class IntelOneapiMpi(IntelOneApiLibraryPackage):
         else:
             return ()
 
-    def setup_dependent_package(self, module, dep_spec):
+    def wrapper_names(self):
         if "+generic-names" in self.spec:
-            self.spec.mpicc = join_path(self.component_prefix.bin, "mpicc")
-            self.spec.mpicxx = join_path(self.component_prefix.bin, "mpicxx")
-            self.spec.mpif77 = join_path(self.component_prefix.bin, "mpif77")
-            self.spec.mpifc = join_path(self.component_prefix.bin, "mpifc")
+            return ["mpicc", "mpicxx", "mpif77", "mpif90", "mpifc"]
+        elif "+classic-names" in self.spec:
+            return ["mpiicc", "mpiicpc", "mpiifort", "mpiifort", "mpiifort"]
         else:
-            self.spec.mpicc = join_path(self.component_prefix.bin, "mpiicx")
-            self.spec.mpicxx = join_path(self.component_prefix.bin, "mpiicpx")
-            self.spec.mpif77 = join_path(self.component_prefix.bin, "mpiifx")
-            self.spec.mpifc = join_path(self.component_prefix.bin, "mpiifx")
+            return ["mpiicx", "mpiicpx", "mpiifx", "mpiifx", "mpiifx"]
+
+    def wrapper_paths(self):
+        return [self.component_prefix.bin.join(name) for name in self.wrapper_names()]
+    
+    def setup_dependent_package(self, module, dep_spec):
+        wrappers = self.wrapper_paths()
+        self.spec.mpicc = wrappers[0]
+        self.spec.mpicxx = wrappers[1]
+        self.spec.mpif77 = wrappers[2]
+        # no self.spec.mpif90
+        self.spec.mpifc = wrappers[4]
 
     def setup_dependent_build_environment(self, env, dependent_spec):
         dependent_module = dependent_spec.package.module
@@ -165,18 +177,12 @@ class IntelOneapiMpi(IntelOneApiLibraryPackage):
         env.set("I_MPI_FC", dependent_module.spack_fc)
 
         # Set compiler wrappers for dependent build stage
-        if "+generic-names" in self.spec:
-            env.set("MPICC", join_path(self.component_prefix.bin, "mpicc"))
-            env.set("MPICXX", join_path(self.component_prefix.bin, "mpicxx"))
-            env.set("MPIF77", join_path(self.component_prefix.bin, "mpif77"))
-            env.set("MPIF90", join_path(self.component_prefix.bin, "mpif90"))
-            env.set("MPIFC", join_path(self.component_prefix.bin, "mpifc"))
-        else:
-            env.set("MPICC", join_path(self.component_prefix.bin, "mpiicx"))
-            env.set("MPICXX", join_path(self.component_prefix.bin, "mpiicpx"))
-            env.set("MPIF77", join_path(self.component_prefix.bin, "mpiifx"))
-            env.set("MPIF90", join_path(self.component_prefix.bin, "mpiifx"))
-            env.set("MPIFC", join_path(self.component_prefix.bin, "mpiifx"))
+        wrappers = self.wrapper_paths()
+        env.set("MPICC", wrappers[0])
+        env.set("MPICXX", wrappers[1])
+        env.set("MPIF77", wrappers[2])
+        env.set("MPIF90", wrappers[3])
+        env.set("MPIFC", wrappers[4])
 
         env.set("I_MPI_ROOT", self.component_prefix)
 
