@@ -105,6 +105,7 @@ class Slate(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("rocsolver", when="+rocm")
 
     requires("%oneapi", when="+sycl", msg="slate+sycl must be compiled with %oneapi")
+    requires("+mpi", msg="MPI is required")
 
     cpp_17_msg = "Requires C++17 compiler support"
     conflicts("%gcc@:5", msg=cpp_17_msg)
