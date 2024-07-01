@@ -800,6 +800,8 @@ class Qt(Package):
             # Not currently working for qt@5
             config_args.extend(["-device-option", "QMAKE_APPLE_DEVICE_ARCHS=arm64"])
 
+        if IS_WINDOWS:
+            configure = Executable("configure.bat")
         configure(*config_args)
 
     def build(self, spec, prefix):
