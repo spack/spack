@@ -159,7 +159,7 @@ class IntelOneapiMpi(IntelOneApiLibraryPackage):
 
     def wrapper_paths(self):
         return [self.component_prefix.bin.join(name) for name in self.wrapper_names()]
-    
+
     def setup_dependent_package(self, module, dep_spec):
         wrappers = self.wrapper_paths()
         self.spec.mpicc = wrappers[0]
