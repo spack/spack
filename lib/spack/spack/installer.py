@@ -1611,9 +1611,7 @@ class PackageInstaller:
 
     def _add_compiler_package_to_config(self, pkg: "spack.package_base.PackageBase") -> None:
         compiler_search_prefix = getattr(pkg, "compiler_search_prefix", pkg.spec.prefix)
-        spack.compilers.add_compilers_to_config(
-            spack.compilers.find_compilers([compiler_search_prefix])
-        )
+        spack.compilers.find_compilers([compiler_search_prefix])
 
     def _install_task(self, task: BuildTask, install_status: InstallStatus) -> None:
         """

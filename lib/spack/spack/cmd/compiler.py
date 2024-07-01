@@ -35,13 +35,13 @@ def setup_parser(subparser):
         "--mixed-toolchain",
         action="store_true",
         default=sys.platform == "darwin",
-        help="(DEPRECATED) Allow mixed toolchains (for example: clang, clang++, gfortran)",
+        help="Allow mixed toolchains (for example: clang, clang++, gfortran)",
     )
     mixed_toolchain_group.add_argument(
         "--no-mixed-toolchain",
         action="store_false",
         dest="mixed_toolchain",
-        help="(DEPRECATED) Do not allow mixed toolchains (for example: clang, clang++, gfortran)",
+        help="Do not allow mixed toolchains (for example: clang, clang++, gfortran)",
     )
     find_parser.add_argument("add_paths", nargs=argparse.REMAINDER)
     find_parser.add_argument(
@@ -81,7 +81,9 @@ def compiler_find(args):
     add them to Spack's configuration.
     """
     paths = args.add_paths or None
-    new_compilers = spack.compilers.find_compilers(path_hints=paths, scope=args.scope)
+    new_compilers = spack.compilers.find_compilers(
+        path_hints=paths, scope=args.scope, mixed_toolchain=args.mixed_toolchain
+    )
     if new_compilers:
         n = len(new_compilers)
         s = "s" if n > 1 else ""
