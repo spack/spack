@@ -1800,14 +1800,20 @@ class SpackSolverSetup:
 
             # Read a list of all the specs for this package
             externals = data.get("externals", [])
-            candidate_specs = [
-                spack.spec.parse_with_version_concrete(x["spec"]) for x in externals
-            ]
-
+            candidate_specs = list()
+            seen = set()
             parsed_to_id = dict()
             for pkg_ext_data in externals:
                 input_spec = pkg_ext_data["spec"]
                 spec = spack.spec.parse_with_version_concrete(input_spec)
+                if spec in seen:
+                    # There may be duplicate external entries: skip them
+                    # for now, (but it might be worth warning about them).
+                    # This favors whatever entry comes first according to
+                    # the merged config, which is assumed to be stable.
+                    continue
+                candidate_specs.append(spec)
+                seen.add(spec)
                 # TODO: this should refactor to more-identifiably draw from
                 # the ID used by external_imposition
                 pkg_ext_map[str(input_spec)] = pkg_ext_data
@@ -1820,10 +1826,6 @@ class SpackSolverSetup:
                     external_specs.extend(current_filter.selected_specs())
             else:
                 external_specs.extend(candidate_specs)
-
-            # There may be duplicate external entries: skip them
-            # for now, (but it might be worth warning about them)
-            external_specs = list(llnl.util.lang.dedupe(external_specs))
 
             # Order the external versions to prefer more recent versions
             # even if specs in packages.yaml are not ordered that way
