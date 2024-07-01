@@ -1821,6 +1821,10 @@ class SpackSolverSetup:
             else:
                 external_specs.extend(candidate_specs)
 
+            # There may be duplicate external entries: skip them
+            # for now, (but it might be worth warning about them)
+            external_specs = list(llnl.util.lang.dedupe(external_specs))
+
             # Order the external versions to prefer more recent versions
             # even if specs in packages.yaml are not ordered that way
             external_versions = [x.version for x in external_specs]
