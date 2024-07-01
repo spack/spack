@@ -195,7 +195,7 @@ class Wrf(Package):
     patch("patches/4.5/configure.patch", when="@4.5:")
     # Fix WRF to remove deprecated ADIOS2 functions
     # https://github.com/wrf-model/WRF/pull/1860
-    patch("patches/4.5/adios2-remove-deprecated-functions.patch", when="@4.5: ^adios2@2.9:")
+    patch("patches/4.5/adios2-remove-deprecated-functions.patch", when="@=4.5.0 ^adios2@2.9:")
 
     # Various syntax fixes found by FPT tool
     patch(

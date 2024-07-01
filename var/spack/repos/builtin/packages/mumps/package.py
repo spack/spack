@@ -13,11 +13,12 @@ from spack.package import *
 class Mumps(Package):
     """MUMPS: a MUltifrontal Massively Parallel sparse direct Solver"""
 
-    homepage = "https://graal.ens-lyon.fr/MUMPS/index.php"
-    url = "https://graal.ens-lyon.fr/MUMPS/MUMPS_5.5.1.tar.gz"
+    homepage = "https://mumps-solver.org/index.php"
+    url = "https://mumps-solver.org/MUMPS_5.5.1.tar.gz"
 
     maintainers("jcortial-safran")
 
+    version("5.7.2", sha256="1362d377ce7422fc886c55212b4a4d2c381918b5ca4478f682a22d0627a8fbf8")
     version("5.6.2", sha256="13a2c1aff2bd1aa92fe84b7b35d88f43434019963ca09ef7e8c90821a8f1d59a")
     version("5.6.1", sha256="1920426d543e34d377604070fde93b8d102aa38ebdf53300cbce9e15f92e2896")
     version("5.6.0", sha256="3e08c1bdea7aaaba303d3cf03059f3b4336fa49bef93f4260f478f067f518289")
