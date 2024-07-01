@@ -112,7 +112,6 @@ class Care(CMakePackage, CudaPackage, ROCmPackage):
     conflicts("+openmp", when="+rocm")
     conflicts("+openmp", when="+cuda")
 
-
     def cmake_args(self):
         spec = self.spec
         from_variant = self.define_from_variant
