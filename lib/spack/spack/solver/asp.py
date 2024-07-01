@@ -95,7 +95,7 @@ def default_clingo_control():
     control = clingo().Control()
     control.configuration.configuration = "tweety"
     control.configuration.solver.heuristic = "Domain"
-    control.configuration.solver.opt_strategy = "usc,one"
+    control.configuration.solver.opt_strategy = "usc,one,1"
     return control
 
 
@@ -846,8 +846,6 @@ class PyclingoDriver:
         parent_dir = os.path.dirname(__file__)
         self.control.load(os.path.join(parent_dir, "concretize.lp"))
         self.control.load(os.path.join(parent_dir, "heuristic.lp"))
-        if spack.config.CONFIG.get("concretizer:duplicates:strategy", "none") != "none":
-            self.control.load(os.path.join(parent_dir, "heuristic_separate.lp"))
         self.control.load(os.path.join(parent_dir, "display.lp"))
         if not setup.concretize_everything:
             self.control.load(os.path.join(parent_dir, "when_possible.lp"))
@@ -1987,11 +1985,8 @@ class SpackSolverSetup:
                             )
 
                 clauses.append(f.variant_value(spec.name, vname, value))
-
                 if variant.propagate:
-                    clauses.append(
-                        f.variant_propagation_candidate(spec.name, vname, value, spec.name)
-                    )
+                    clauses.append(f.propagate(spec.name, fn.variant_value(vname, value)))
 
                 # Tell the concretizer that this is a possible value for the
                 # variant, to account for things like int/str values where we
@@ -2024,9 +2019,12 @@ class SpackSolverSetup:
         for flag_type, flags in spec.compiler_flags.items():
             for flag in flags:
                 clauses.append(f.node_flag(spec.name, flag_type, flag))
-                clauses.append(f.node_flag_source(spec.name, flag_type, spec.name))
                 if not spec.concrete and flag.propagate is True:
-                    clauses.append(f.node_flag_propagate(spec.name, flag_type))
+                    clauses.append(
+                        f.propagate(
+                            spec.name, fn.node_flag(flag_type, flag), fn.edge_types("link", "run")
+                        )
+                    )
 
         # dependencies
         if spec.concrete:
@@ -2859,9 +2857,7 @@ class _Head:
     node_compiler = fn.attr("node_compiler_set")
     node_compiler_version = fn.attr("node_compiler_version_set")
     node_flag = fn.attr("node_flag_set")
-    node_flag_source = fn.attr("node_flag_source")
-    node_flag_propagate = fn.attr("node_flag_propagate")
-    variant_propagation_candidate = fn.attr("variant_propagation_candidate")
+    propagate = fn.attr("propagate")
 
 
 class _Body:
@@ -2876,9 +2872,7 @@ class _Body:
     node_compiler = fn.attr("node_compiler")
     node_compiler_version = fn.attr("node_compiler_version")
     node_flag = fn.attr("node_flag")
-    node_flag_source = fn.attr("node_flag_source")
-    node_flag_propagate = fn.attr("node_flag_propagate")
-    variant_propagation_candidate = fn.attr("variant_propagation_candidate")
+    propagate = fn.attr("propagate")
 
 
 class ProblemInstanceBuilder:
@@ -3352,6 +3346,39 @@ class RuntimePropertyRecorder:
         self.runtime_conditions.add((imposed_spec, when_spec))
         self.reset()
 
+    def propagate(self, constraint_str: str, *, when: str):
+        msg = "the 'propagate' method can be called only with pkg('*')"
+        assert self.current_package == "*", msg
+
+        when_spec = spack.spec.Spec(when)
+        assert when_spec.name is None, "only anonymous when specs are accepted"
+
+        placeholder = "XXX"
+        node_variable = "node(ID, Package)"
+        when_spec.name = placeholder
+
+        body_clauses = self._setup.spec_clauses(when_spec, body=True)
+        body_str = (
+            f"  {f',{os.linesep}  '.join(str(x) for x in body_clauses)},\n"
+            f"  not external({node_variable}),\n"
+            f"  not runtime(Package)"
+        ).replace(f'"{placeholder}"', f"{node_variable}")
+
+        constraint_spec = spack.spec.Spec(constraint_str)
+        assert constraint_spec.name is None, "only anonymous constraint specs are accepted"
+
+        constraint_spec.name = placeholder
+        constraint_clauses = self._setup.spec_clauses(constraint_spec, body=False)
+        for clause in constraint_clauses:
+            if clause.args[0] == "node_compiler_version_satisfies":
+                self._setup.compiler_version_constraints.add(constraint_spec.compiler)
+                args = f'"{constraint_spec.compiler.name}", "{constraint_spec.compiler.versions}"'
+                head_str = f"propagate({node_variable}, node_compiler_version_satisfies({args}))"
+                rule = f"{head_str} :-\n{body_str}.\n\n"
+                self.rules.append(rule)
+
+        self.reset()
+
     def consume_facts(self):
         """Consume the facts collected by this object, and emits rules and
         facts for the runtimes.
@@ -3432,6 +3459,8 @@ class SpecBuilder:
     def node(self, node):
         if node not in self._specs:
             self._specs[node] = spack.spec.Spec(node.pkg)
+            for flag_type in spack.spec.FlagMap.valid_compiler_flags():
+                self._specs[node].compiler_flags[flag_type] = []
 
     def _arch(self, node):
         arch = self._specs[node].architecture
@@ -3483,9 +3512,6 @@ class SpecBuilder:
 
     def node_flag_source(self, node, flag_type, source):
         self._flag_sources[(node, flag_type)].add(source)
-
-    def no_flags(self, node, flag_type):
-        self._specs[node].compiler_flags[flag_type] = []
 
     def external_spec_selected(self, node, external_id):
         """This means that the external spec and index idx has been selected for this package."""
@@ -3578,7 +3604,7 @@ class SpecBuilder:
                 ordered_compiler_flags = list(llnl.util.lang.dedupe(from_compiler + from_sources))
                 compiler_flags = spec.compiler_flags.get(flag_type, [])
 
-                msg = "%s does not equal %s" % (set(compiler_flags), set(ordered_compiler_flags))
+                msg = f"{set(compiler_flags)} does not equal {set(ordered_compiler_flags)}"
                 assert set(compiler_flags) == set(ordered_compiler_flags), msg
 
                 spec.compiler_flags.update({flag_type: ordered_compiler_flags})
@@ -3648,9 +3674,8 @@ class SpecBuilder:
                 # do not bother calling actions on it except for node_flag_source,
                 # since node_flag_source is tracking information not in the spec itself
                 spec = self._specs.get(args[0])
-                if spec and spec.concrete:
-                    if name != "node_flag_source":
-                        continue
+                if spec and spec.concrete and name != "node_flag_source":
+                    continue
 
             action(*args)
 
