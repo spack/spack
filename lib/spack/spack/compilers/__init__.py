@@ -266,7 +266,6 @@ def find_compilers(
     path_hints: Optional[List[str]] = None,
     *,
     scope: Optional[str] = None,
-    mixed_toolchain: bool = False,
     max_workers: Optional[int] = None,
 ) -> List["spack.compiler.Compiler"]:
     """Searches for compiler in the paths given as argument. If any new compiler is found, the
@@ -276,8 +275,6 @@ def find_compilers(
         path_hints: list of path hints where to look for. A sensible default based on the ``PATH``
             environment variable will be used if the value is None
         scope: configuration scope to modify
-        mixed_toolchain: allow mixing compilers from different toolchains if otherwise missing for
-            a certain language
         max_workers: number of processes used to search for compilers
     """
     if path_hints is None:
@@ -303,22 +300,6 @@ def find_compilers(
             return False
 
         return "fortran" in x.spec.extra_attributes["compilers"]
-
-    if mixed_toolchain:
-        gccs = [x for x in valid_compilers.get("gcc", []) if _has_fortran_compilers(x)]
-        if gccs:
-            best_gcc = sorted(
-                gccs, key=lambda x: spack.spec.parse_with_version_concrete(x.spec).version
-            )[-1]
-            gfortran = best_gcc.spec.extra_attributes["compilers"]["fortran"]
-            for name in ("llvm", "apple-clang"):
-                if name not in valid_compilers:
-                    continue
-                candidates = valid_compilers[name]
-                for candidate in candidates:
-                    if _has_fortran_compilers(candidate):
-                        continue
-                    candidate.spec.extra_attributes["compilers"]["fortran"] = gfortran
 
     new_compilers = spack.detection.update_configuration(
         valid_compilers, buildable=True, scope=scope

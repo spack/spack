@@ -5,6 +5,7 @@
 
 import argparse
 import sys
+import warnings
 
 import llnl.util.tty as tty
 from llnl.util.lang import index_by
@@ -35,13 +36,13 @@ def setup_parser(subparser):
         "--mixed-toolchain",
         action="store_true",
         default=sys.platform == "darwin",
-        help="Allow mixed toolchains (for example: clang, clang++, gfortran)",
+        help="(DEPRECATED) This option has no effect anymore",
     )
     mixed_toolchain_group.add_argument(
         "--no-mixed-toolchain",
         action="store_false",
         dest="mixed_toolchain",
-        help="Do not allow mixed toolchains (for example: clang, clang++, gfortran)",
+        help="(DEPRECATED) This option has no effect anymore",
     )
     find_parser.add_argument("add_paths", nargs=argparse.REMAINDER)
     find_parser.add_argument(
@@ -81,9 +82,12 @@ def compiler_find(args):
     add them to Spack's configuration.
     """
     paths = args.add_paths or None
-    new_compilers = spack.compilers.find_compilers(
-        path_hints=paths, scope=args.scope, mixed_toolchain=args.mixed_toolchain
-    )
+    if args.mixed_toolchain:
+        warnings.warn(
+            "The --mixed-toolchain option has been deprecated, and will be removed in Spack v0.25"
+        )
+
+    new_compilers = spack.compilers.find_compilers(path_hints=paths, scope=args.scope)
     if new_compilers:
         n = len(new_compilers)
         s = "s" if n > 1 else ""
