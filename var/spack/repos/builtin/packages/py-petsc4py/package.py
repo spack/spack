@@ -74,6 +74,7 @@ class PyPetsc4py(PythonPackage):
 
     patch("ldshared.patch", when="@:3.18")
 
+    depends_on("py-cython@3:", when="@3.20:", type="build")
     depends_on("py-cython@0.29.32:", when="^python@3.11:", type="build")
     depends_on("py-cython@0.24:", type="build")
     depends_on("python@2.6:2.8,3.3:", type=("build", "run"))
