@@ -89,6 +89,7 @@ spack:
   - gasnet
   - ginkgo
   - globalarrays
+  - glvis
   - gmp
   - gotcha
   - gptune ~mpispawn
@@ -172,48 +173,47 @@ spack:
   - wannier90
   - xyce +mpi +shared +pymi +pymi_static_tpls
   # INCLUDED IN ECP DAV CPU
-  - adios2
-  - ascent
-  - darshan-runtime
-  - darshan-util
-  - faodel
-  - hdf5
-  - libcatalyst
-  - parallel-netcdf
-  - paraview
-  - py-cinemasci
-  - sz
-  - unifyfs
-  - veloc
+  # - adios2
+  # - ascent
+  # - darshan-runtime
+  # - darshan-util
+  # - faodel
+  # - hdf5
+  # - libcatalyst
+  # - parallel-netcdf
+  # - paraview
+  # - py-cinemasci
+  # - sz
+  # - unifyfs
+  # - veloc
   # - visit                           # silo: https://github.com/spack/spack/issues/39538
-  - vtk-m
-  - zfp
+  # - vtk-m
+  # - zfp
   # --
   # - geopm                           # geopm: https://github.com/spack/spack/issues/38795
-  - glvis                           # glvis: https://github.com/spack/spack/issues/42839
   # - nek5000 +mpi +visit             # nek5000:  Error: AttributeError: 'str' object has no attribute 'propagate': 'VISIT_INSTALL="' + spec["visit"].prefix.bin + '"',
 
   # PYTHON PACKAGES
-  - opencv +python3
-  - py-horovod
-  - py-jax
-  - py-jupyterlab
-  - py-matplotlib
-  - py-mpi4py
-  - py-notebook
-  - py-numba
-  - py-numpy
-  - py-openai
-  - py-pandas
-  - py-plotly
-  - py-pooch
-  - py-pytest
-  - py-scikit-learn
-  - py-scipy
-  - py-seaborn
-  - py-tensorflow
-  - py-torch
-  - py-deephyper
+  # - opencv +python3
+  # - py-horovod
+  # - py-jax
+  # - py-jupyterlab
+  # - py-matplotlib
+  # - py-mpi4py
+  # - py-notebook
+  # - py-numba
+  # - py-numpy
+  # - py-openai
+  # - py-pandas
+  # - py-plotly
+  # - py-pooch
+  # - py-pytest
+  # - py-scikit-learn
+  # - py-scipy
+  # - py-seaborn
+  # - py-tensorflow
+  # - py-torch
+  # - py-deephyper
 
   # CUDA NOARCH
   - bricks +cuda
@@ -302,20 +302,20 @@ spack:
   # - umpire ~shared +cuda cuda_arch=90
   # # INCLUDED IN ECP DAV CUDA
   # - adios2 +cuda cuda_arch=90
-  # # - ascent +cuda cuda_arch=90       # ascent: https://github.com/spack/spack/issues/38045
-  # # - paraview +cuda cuda_arch=90     # paraview: InstallError: Incompatible cuda_arch=90
+  # - ascent +cuda cuda_arch=90       # ascent: https://github.com/spack/spack/issues/38045
+  # - paraview +cuda cuda_arch=90     # paraview: InstallError: Incompatible cuda_arch=90
   # - vtk-m +cuda cuda_arch=90
   # - zfp +cuda cuda_arch=90
-  # # --
-  # # - axom +cuda cuda_arch=90         # axom: https://github.com/spack/spack/issues/29520
-  # # - dealii +cuda cuda_arch=90       # dealii: https://github.com/spack/spack/issues/39532
-  # # - ecp-data-vis-sdk ~rocm +adios2 +ascent +hdf5 +vtkm +zfp +paraview +cuda cuda_arch=90 # paraview: incompatible cuda_arch; vtk-m: CMake Error at CMake/VTKmWrappers.cmake:413 (message): vtkm_cont needs to be built STATIC as CUDA doesn't support virtual methods across dynamic library boundaries.  You need to set the CMake opt ion BUILD_SHARED_LIBS to `OFF` or (better) turn VTKm_NO_DEPRECATED_VIRTUAL to `ON`.
-  # # - hypre +cuda cuda_arch=90        # concretizer: hypre +cuda requires cuda@:11, but cuda_arch=90 requires cuda@12:
-  # # - lammps +cuda cuda_arch=90       # lammps: needs NVIDIA driver
-  # # - lbann +cuda cuda_arch=90        # concretizer: Cannot select a single "version" for package "lbann"
-  # # - omega-h +cuda cuda_arch=90      # omega-h: https://github.com/spack/spack/issues/39535
-  # # - tasmanian +cuda cuda_arch=90    # tasmanian: conflicts with cuda@12
-  # # - upcxx +cuda cuda_arch=90        # upcxx: needs NVIDIA driver
+  # --
+  # - axom +cuda cuda_arch=90         # axom: https://github.com/spack/spack/issues/29520
+  # - dealii +cuda cuda_arch=90       # dealii: https://github.com/spack/spack/issues/39532
+  # - ecp-data-vis-sdk ~rocm +adios2 +ascent +hdf5 +vtkm +zfp +paraview +cuda cuda_arch=90 # paraview: incompatible cuda_arch; vtk-m: CMake Error at CMake/VTKmWrappers.cmake:413 (message): vtkm_cont needs to be built STATIC as CUDA doesn't support virtual methods across dynamic library boundaries.  You need to set the CMake opt ion BUILD_SHARED_LIBS to `OFF` or (better) turn VTKm_NO_DEPRECATED_VIRTUAL to `ON`.
+  # - hypre +cuda cuda_arch=90        # concretizer: hypre +cuda requires cuda@:11, but cuda_arch=90 requires cuda@12:
+  # - lammps +cuda cuda_arch=90       # lammps: needs NVIDIA driver
+  # - lbann +cuda cuda_arch=90        # concretizer: Cannot select a single "version" for package "lbann"
+  # - omega-h +cuda cuda_arch=90      # omega-h: https://github.com/spack/spack/issues/39535
+  # - tasmanian +cuda cuda_arch=90    # tasmanian: conflicts with cuda@12
+  # - upcxx +cuda cuda_arch=90        # upcxx: needs NVIDIA driver
 
   # ROCM NOARCH
   - hpctoolkit +rocm
@@ -349,18 +349,18 @@ spack:
   # - trilinos +amesos +amesos2 +anasazi +aztec +belos +boost +epetra +epetraext +ifpack ~ifpack2 +intrepid +intrepid2 +isorropia +kokkos +ml +minitensor +muelu +nox +piro +phalanx +rol +rythmos +sacado +stk +shards +shylu ~stokhos +stratimikos +teko +tempus +tpetra +trilinoscouplings +zoltan +zoltan2 +superlu-dist gotype=long_long +rocm amdgpu_target=gfx908
   # - umpire +rocm amdgpu_target=gfx908
   # - upcxx +rocm amdgpu_target=gfx908
-  # # INCLUDED IN ECP DAV ROCM
-  # # - hdf5
-  # # - hdf5-vol-async
-  # # - hdf5-vol-cache
-  # # - hdf5-vol-log
-  # # - libcatalyst
+  # INCLUDED IN ECP DAV ROCM
+  # - hdf5
+  # - hdf5-vol-async
+  # - hdf5-vol-cache
+  # - hdf5-vol-log
+  # - libcatalyst
   # - paraview +rocm amdgpu_target=gfx908
-  # # - vtk-m ~openmp +rocm amdgpu_target=gfx908  # vtk-m: https://github.com/spack/spack/issues/40268
-  # # --
-  # # - exago +mpi +python +raja +hiop +rocm amdgpu_target=gfx908 ~ipopt cxxflags="-Wno-error=non-pod-varargs" ^hiop@1.0.0 ~sparse +mpi +raja +rocm amdgpu_target=gfx908 # hiop: CMake Error at cmake/FindHiopHipLibraries.cmake:23 (find_package)
-  # # - lbann ~cuda +rocm amdgpu_target=gfx908    # aluminum: https://github.com/spack/spack/issues/38807
-  # # - papi +rocm amdgpu_target=gfx908           # papi: https://github.com/spack/spack/issues/27898
+  # - vtk-m ~openmp +rocm amdgpu_target=gfx908  # vtk-m: https://github.com/spack/spack/issues/40268
+  # --
+  # - exago +mpi +python +raja +hiop +rocm amdgpu_target=gfx908 ~ipopt cxxflags="-Wno-error=non-pod-varargs" ^hiop@1.0.0 ~sparse +mpi +raja +rocm amdgpu_target=gfx908 # hiop: CMake Error at cmake/FindHiopHipLibraries.cmake:23 (find_package)
+  # - lbann ~cuda +rocm amdgpu_target=gfx908    # aluminum: https://github.com/spack/spack/issues/38807
+  # - papi +rocm amdgpu_target=gfx908           # papi: https://github.com/spack/spack/issues/27898
 
   # ROCM 90a
   - amrex +rocm amdgpu_target=gfx90a
@@ -389,7 +389,7 @@ spack:
   # - hdf5-vol-cache
   # - hdf5-vol-log
   # - libcatalyst
-  - paraview +rocm amdgpu_target=gfx90a
+  # - paraview +rocm amdgpu_target=gfx90a
   # - vtk-m ~openmp +rocm amdgpu_target=gfx90a  # vtk-m: https://github.com/spack/spack/issues/40268
   # --
   # - adios2 +kokkos +rocm amdgpu_target=gfx90a # +kokkos: https://github.com/spack/spack/issues/44832
