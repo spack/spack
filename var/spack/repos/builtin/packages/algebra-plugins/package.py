@@ -13,7 +13,7 @@ class AlgebraPlugins(CMakePackage, CudaPackage):
     homepage = "https://github.com/acts-project/algebra-plugins"
     url = "https://github.com/acts-project/algebra-plugins/archive/refs/tags/v0.24.0.tar.gz"
 
-    maintainers("HadrienG2" ,"stephenswat", "wdconinc")
+    maintainers("HadrienG2", "stephenswat", "wdconinc")
 
     license("MPL-2.0", checked_by="wdconinc")
 
@@ -40,9 +40,11 @@ class AlgebraPlugins(CMakePackage, CudaPackage):
         def plugin_arg(argtype, plugin, variant):
             arg = f"ALGEBRA_PLUGINS_{argtype}_{plugin.upper()}"
             return self.define_from_variant(arg, variant if variant is not None else plugin)
-        def plugin_include(plugin, variant = None):
+
+        def plugin_include(plugin, variant=None):
             return plugin_arg("INCLUDE", plugin, variant)
-        def plugin_setup(plugin, variant = None):
+
+        def plugin_setup(plugin, variant=None):
             return plugin_arg("SETUP", plugin, variant)
 
         args = [
@@ -51,7 +53,7 @@ class AlgebraPlugins(CMakePackage, CudaPackage):
             self.define("ALGEBRA_PLUGINS_BUILD_TESTING", self.run_tests),
             self.define("BUILD_TESTING", self.run_tests),
             self.define("ALGEBRA_PLUGINS_SETUP_BENCHMARK", False),
-            self.define("ALGEBRA_PLUGINS_USE_SYSTEM_GOOGLETEST", False), # see FIXME above
+            self.define("ALGEBRA_PLUGINS_USE_SYSTEM_GOOGLETEST", False),  # see FIXME above
         ]
 
         for plugin in ["eigen", "fastor", "smatrix", "vc", "vecmem"]:

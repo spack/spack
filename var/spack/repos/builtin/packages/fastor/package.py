@@ -22,7 +22,5 @@ class Fastor(CMakePackage):
     depends_on("cmake@3.20:", type="build")
 
     def cmake_args(self):
-        args = [
-            self.define("BUILD_TESTING", self.run_tests),
-        ]
+        args = [self.define("BUILD_TESTING", self.run_tests)]
         return args
