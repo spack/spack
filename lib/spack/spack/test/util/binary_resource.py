@@ -20,6 +20,7 @@ file_file = os.path.join(datadir, "file.bat")
 @pytest.fixture
 def mock_binary_resource_root(monkeypatch, tmpdir):
     resource_root = tmpdir.mkdir("binary-resources")
+
     def _binary_resource_root():
         return resource_root
 
