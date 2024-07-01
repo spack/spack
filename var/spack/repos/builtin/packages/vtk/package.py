@@ -20,7 +20,7 @@ class Vtk(CMakePackage):
     url = "https://www.vtk.org/files/release/9.0/VTK-9.0.0.tar.gz"
     list_url = "https://www.vtk.org/download/"
 
-    maintainers("chuckatkins", "danlipsa")
+    maintainers("danlipsa", "vicentebolea")
 
     license("BSD-3-Clause")
 
