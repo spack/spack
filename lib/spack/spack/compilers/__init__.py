@@ -161,24 +161,19 @@ def compiler_config_files():
     return config_files
 
 
-def add_compilers_to_config(compilers, scope=None):
-    """Add compilers to the config for the specified architecture.
+def add_compiler_to_config(compiler, scope=None):
+    """Add a Compiler object to the configuration, at the required scope."""
+    if not compiler.cc:
+        tty.debug(f"{compiler.spec} does not have a C compiler")
+    if not compiler.cxx:
+        tty.debug(f"{compiler.spec} does not have a C++ compiler")
+    if not compiler.f77:
+        tty.debug(f"{compiler.spec} does not have a Fortran77 compiler")
+    if not compiler.fc:
+        tty.debug(f"{compiler.spec} does not have a Fortran compiler")
 
-    Arguments:
-        compilers: a list of Compiler objects.
-        scope: configuration scope to modify.
-    """
     compiler_config = get_compiler_config(configuration=spack.config.CONFIG, scope=scope)
-    for compiler in compilers:
-        if not compiler.cc:
-            tty.debug(f"{compiler.spec} does not have a C compiler")
-        if not compiler.cxx:
-            tty.debug(f"{compiler.spec} does not have a C++ compiler")
-        if not compiler.f77:
-            tty.debug(f"{compiler.spec} does not have a Fortran77 compiler")
-        if not compiler.fc:
-            tty.debug(f"{compiler.spec} does not have a Fortran compiler")
-        compiler_config.append(_to_dict(compiler))
+    compiler_config.append(_to_dict(compiler))
     spack.config.set("compilers", compiler_config, scope=scope)
 
 
@@ -303,6 +298,28 @@ def find_compilers(
             continue
         valid_compilers[name] = compilers
 
+    def _has_fortran_compilers(x):
+        if "compilers" not in x.spec.extra_attributes:
+            return False
+
+        return "fortran" in x.spec.extra_attributes["compilers"]
+
+    if mixed_toolchain:
+        gccs = [x for x in valid_compilers.get("gcc", []) if _has_fortran_compilers(x)]
+        if gccs:
+            best_gcc = sorted(
+                gccs, key=lambda x: spack.spec.parse_with_version_concrete(x.spec).version
+            )[-1]
+            gfortran = best_gcc.spec.extra_attributes["compilers"]["fortran"]
+            for name in ("llvm", "apple-clang"):
+                if name not in valid_compilers:
+                    continue
+                candidates = valid_compilers[name]
+                for candidate in candidates:
+                    if _has_fortran_compilers(candidate):
+                        continue
+                    candidate.spec.extra_attributes["compilers"]["fortran"] = gfortran
+
     new_compilers = spack.detection.update_configuration(
         valid_compilers, buildable=True, scope=scope
     )
@@ -319,7 +336,9 @@ def select_new_compilers(compilers, scope=None):
     compilers_not_in_config = []
     for c in compilers:
         arch_spec = spack.spec.ArchSpec((None, c.operating_system, c.target))
-        same_specs = compilers_for_spec(c.spec, arch_spec, scope=scope, init_config=False)
+        same_specs = compilers_for_spec(
+            c.spec, arch_spec=arch_spec, scope=scope, init_config=False
+        )
         if not same_specs:
             compilers_not_in_config.append(c)
 
@@ -388,7 +407,12 @@ def find(compiler_spec, scope=None, init_config=True):
 def find_specs_by_arch(compiler_spec, arch_spec, scope=None, init_config=True):
     """Return specs of available compilers that match the supplied
     compiler spec.  Return an empty list if nothing found."""
-    return [c.spec for c in compilers_for_spec(compiler_spec, arch_spec, scope, True, init_config)]
+    return [
+        c.spec
+        for c in compilers_for_spec(
+            compiler_spec, arch_spec=arch_spec, scope=scope, init_config=init_config
+        )
+    ]
 
 
 def all_compilers(scope=None, init_config=True):
@@ -410,14 +434,11 @@ def all_compilers_from(configuration, scope=None, init_config=True):
 
 
 @_auto_compiler_spec
-def compilers_for_spec(
-    compiler_spec, arch_spec=None, scope=None, use_cache=True, init_config=True
-):
+def compilers_for_spec(compiler_spec, *, arch_spec=None, scope=None, init_config=True):
     """This gets all compilers that satisfy the supplied CompilerSpec.
     Returns an empty list if none are found.
     """
     config = all_compilers_config(spack.config.CONFIG, scope=scope, init_config=init_config)
-
     matches = set(find(compiler_spec, scope, init_config))
     compilers = []
     for cspec in matches:

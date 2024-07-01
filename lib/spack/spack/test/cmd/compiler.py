@@ -162,6 +162,44 @@ done
 
 @pytest.mark.not_on_windows("Cannot execute bash script on Windows")
 @pytest.mark.regression("17590")
+@pytest.mark.parametrize("mixed_toolchain", [True, False])
+def test_compiler_find_mixed_suffixes(
+    mixed_toolchain, no_compilers_yaml, working_env, compilers_dir
+):
+    """Ensure that we'll mix compilers with different suffixes when necessary."""
+    os.environ["PATH"] = str(compilers_dir)
+    output = compiler(
+        "find", "--scope=site", "--mixed-toolchain" if mixed_toolchain else "--no-mixed-toolchain"
+    )
+
+    assert "clang@=11.0.0" in output
+    assert "gcc@=8.4.0" in output
+
+    config = spack.compilers.all_compilers_config(
+        no_compilers_yaml, scope="site", init_config=False
+    )
+    clang = next(c["compiler"] for c in config if c["compiler"]["spec"] == "clang@=11.0.0")
+    gcc = next(c["compiler"] for c in config if c["compiler"]["spec"] == "gcc@=8.4.0")
+
+    gfortran_path = str(compilers_dir / "gfortran-8")
+
+    assert clang["paths"] == {
+        "cc": str(compilers_dir / "clang"),
+        "cxx": str(compilers_dir / "clang++"),
+        "f77": gfortran_path if mixed_toolchain else None,
+        "fc": gfortran_path if mixed_toolchain else None,
+    }
+
+    assert gcc["paths"] == {
+        "cc": str(compilers_dir / "gcc-8"),
+        "cxx": str(compilers_dir / "g++-8"),
+        "f77": gfortran_path,
+        "fc": gfortran_path,
+    }
+
+
+@pytest.mark.not_on_windows("Cannot execute bash script on Windows")
+@pytest.mark.regression("17590")
 def test_compiler_find_prefer_no_suffix(no_compilers_yaml, working_env, compilers_dir):
     """Ensure that we'll pick 'clang' over 'clang-gpu' when there is a choice."""
     clang_path = compilers_dir / "clang"
