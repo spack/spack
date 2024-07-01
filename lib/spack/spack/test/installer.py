@@ -752,29 +752,6 @@ def test_install_task_use_cache(install_mockery, monkeypatch):
     assert request.pkg_id in installer.installed
 
 
-def test_install_task_add_compiler(install_mockery, monkeypatch, capfd):
-    config_msg = "mock add_compilers_to_config"
-
-    def _add(_compilers):
-        tty.msg(config_msg)
-
-    installer = create_installer(["a"], {})
-    task = create_build_task(installer.build_requests[0].pkg)
-    task.compiler = True
-
-    # Preclude any meaningful side-effects
-    monkeypatch.setattr(spack.package_base.PackageBase, "unit_test_check", _true)
-    monkeypatch.setattr(inst.PackageInstaller, "_setup_install_dir", _noop)
-    monkeypatch.setattr(spack.build_environment, "start_build_process", _noop)
-    monkeypatch.setattr(spack.database.Database, "add", _noop)
-    monkeypatch.setattr(spack.compilers, "add_compilers_to_config", _add)
-
-    installer._install_task(task, None)
-
-    out = capfd.readouterr()[0]
-    assert config_msg in out
-
-
 def test_release_lock_write_n_exception(install_mockery, tmpdir, capsys):
     """Test _release_lock for supposed write lock with exception."""
     installer = create_installer(["trivial-install-test-package"], {})
