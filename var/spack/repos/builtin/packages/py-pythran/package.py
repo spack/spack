@@ -39,8 +39,8 @@ class PyPythran(PythonPackage):
     version("0.9.3", sha256="217427a8225a331fdc8f3efe57871aed775cdf2c6e847a0a83df0aaae4b02493")
 
     # https://github.com/serge-sans-paille/pythran/pull/2196
-    depends_on("py-setuptools@62:", when="@0.15:", type="build")
-    depends_on("py-setuptools", type="build")
+    depends_on("py-setuptools@62:", when="@0.15:", type=("build", "run"))
+    depends_on("py-setuptools", type=("build", "run"))
     depends_on("py-ply@3.4:", type=("build", "run"))
     depends_on("py-gast@0.5", when="@0.15:", type=("build", "run"))
     # upper bound due to https://github.com/scipy/scipy/issues/18390
