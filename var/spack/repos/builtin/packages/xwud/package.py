@@ -10,7 +10,7 @@ class Xwud(AutotoolsPackage, XorgPackage):
     """xwud allows X users to display in a window an image saved in a
     specially formatted dump file, such as produced by xwd."""
 
-    homepage = "https://cgit.freedesktop.org/xorg/app/xwud"
+    homepage = "https://gitlab.freedesktop.org/xorg/app/xwud"
     xorg_mirror_path = "app/xwud-1.0.4.tar.gz"
 
     version("1.0.6", sha256="262171b0c434966ddbbe8a54afb9615567ad74d4cc2e823e14e51e099ec3ab0d")
