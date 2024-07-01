@@ -167,29 +167,30 @@ class Slate(CMakePackage, CudaPackage, ROCmPackage):
 
     def test_slate(self):
         """Test slate with +mpi and other options"""
-        if self.spec.satisfies("@2020.10.00"):
-            raise SkipTest("Package must be installed as version @2021.05.01 or later")
 
-        if "+mpi" not in self.spec:
-            raise SkipTest("package must be installed with +mpi")
+        if self.spec.satisfies("@2020.10.00") and "+mpi" not in self.spec:
+            raise SkipTest(
+                "Package must be installed with +mpi and as version @2021.05.01 or later"
+            )
+        elif self.spec.satisfies("@2020.10.00"):
+            raise SkipTest("Package must be installed as version @2021.05.01 or later")
+        elif "+mpi" not in self.spec:
+            raise SkipTest("Package must be installed with +mpi")
 
         test_dir = join_path(self.test_suite.current_test_cache_dir, "examples", "build")
         with working_dir(test_dir, create=True):
-            cmake = join_path(self.spec["cmake"].prefix.bin, "cmake")
+            cmake = self.spec["cmake"].command
             # This package must directly depend on all packages listed here.
             # Otherwise, it will not work when some packages are external to spack.
             deps = "slate blaspp lapackpp mpi"
             if self.spec.satisfies("+rocm"):
                 deps += " rocblas hip llvm-amdgpu comgr hsa-rocr-dev rocsolver "
             prefixes = ";".join([self.spec[x].prefix for x in deps.split()])
-            options = ["-DCMAKE_PREFIX_PATH=" + prefixes, ".."]
-            exe = which(cmake)
-            exe(*options)
+            cmake("-DCMAKE_PREFIX_PATH=" + prefixes, "..")
+            make = which("make")
             make()
-            test_args = ["-n", "4", "./ex05_blas"]
             launcher = self.mpi_launcher()
             if not launcher:
                 raise RuntimeError("Cannot run tests due to absence of MPI launcher")
-            exe2 = which(launcher.command)
-            exe2(*test_args)
+            launcher("-n", "4", "./ex05_blas")
             make("clean")
