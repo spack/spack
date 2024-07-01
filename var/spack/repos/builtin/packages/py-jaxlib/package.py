@@ -20,6 +20,7 @@ class PyJaxlib(PythonPackage, CudaPackage):
     license("Apache-2.0")
     maintainers("adamjstewart", "jonas-eschle")
 
+    version("0.4.30", sha256="0ef9635c734d9bbb44fcc87df4f1c3ccce1cfcfd243572c80d36fcdf826fe1e6")
     version("0.4.29", sha256="3a8005f4f62d35a5aad7e3dbd596890b47c81cc6e34fcfe3dcb93b3ca7cb1246")
     version("0.4.28", sha256="4dd11577d4ba5a095fbc35258ddd4e4c020829ed6e6afd498c9e38ccbcdfe20b")
     version("0.4.27", sha256="c2c82cd9ad3b395d5cbc0affa26a2938e52677a69ca8f0b9ef9922a52cac4f0c")
@@ -42,7 +43,6 @@ class PyJaxlib(PythonPackage, CudaPackage):
     variant("nccl", default=True, description="Build with NCCL enabled", when="+cuda")
 
     # docs/installation.md
-    # jaxlib/setup.py
     with when("+cuda"):
         depends_on("cuda@12.1:", when="@0.4.26:")
         depends_on("cuda@11.8:", when="@0.4.11:")
@@ -82,7 +82,7 @@ class PyJaxlib(PythonPackage, CudaPackage):
         depends_on("py-numpy@1.22:", when="@0.4.14:")
         depends_on("py-numpy@1.21:", when="@0.4.7:")
         depends_on("py-numpy@1.20:", when="@0.3:")
-        depends_on("py-ml-dtypes@0.4:", when="@0.4.29:")
+        depends_on("py-ml-dtypes@0.4:", when="@0.4.29")
         depends_on("py-ml-dtypes@0.2:", when="@0.4.14:")
         depends_on("py-ml-dtypes@0.1:", when="@0.4.9:")
         depends_on("py-ml-dtypes@0.0.3:", when="@0.4.7:")
