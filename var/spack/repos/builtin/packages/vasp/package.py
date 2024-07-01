@@ -106,7 +106,6 @@ class Vasp(MakefilePackage, CudaPackage):
             "-DMPI",
             "-DMPI_BLOCK=8000",
             "-Duse_collective",
-            "-DscaLAPACK",
             "-DCACHE_SIZE=4000",
             "-Davoidalloc",
             "-Duse_bse_te",
@@ -242,6 +241,7 @@ class Vasp(MakefilePackage, CudaPackage):
             llibs.append(spec["fftw-api"].libs.ld_flags)
 
         if spec.satisfies("^scalapack"):
+            cpp_options.append("-DscaLAPACK")
             if spec.satisfies("%nvhpc"):
                 llibs.append("-Mscalapack")
             else:
