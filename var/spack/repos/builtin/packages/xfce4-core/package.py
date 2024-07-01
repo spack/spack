@@ -14,6 +14,7 @@ class Xfce4Core(BundlePackage):
     maintainers("teaguesterling")
 
     version("4.18")
+    version("4.16")
 
     with when("@4.18"):
         depends_on("libxfce4util@4.18")
