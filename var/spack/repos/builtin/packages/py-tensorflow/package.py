@@ -44,6 +44,7 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
 
     license("Apache-2.0")
 
+    version("2.16.2", sha256="023849bf253080cb1e4f09386f5eb900492da2288274086ed6cfecd6d99da9eb")
     version("2.16.1", sha256="c729e56efc945c6df08efe5c9f5b8b89329c7c91b8f40ad2bb3e13900bd4876d")
     version(
         "2.16-rocm-enhanced",
@@ -222,6 +223,8 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
     depends_on("py-numpy@1.19.2:1.19", type=("build", "run"), when="@2.4:2.6")
     # https://github.com/tensorflow/tensorflow/issues/40688
     depends_on("py-numpy@1.16.0:1.18", type=("build", "run"), when="@:2.3")
+    # https://github.com/tensorflow/tensorflow/issues/67291
+    depends_on("py-numpy@:1", type=("build", "run"))
     depends_on("py-opt-einsum@2.3.2:", type=("build", "run"), when="@:2.3,2.7:")
     depends_on("py-opt-einsum@3.3", type=("build", "run"), when="@2.4:2.6")
     depends_on("py-packaging", type=("build", "run"), when="@2.9:")
