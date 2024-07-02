@@ -551,10 +551,10 @@ def generate_gitlab_ci_yaml(
     env,
     print_summary,
     output_file,
+    *,
     prune_dag=False,
     check_index_only=False,
     run_optimizer=False,
-    use_dependencies=False,
     artifacts_root=None,
     remote_mirror_override=None,
 ):
@@ -578,9 +578,6 @@ def generate_gitlab_ci_yaml(
         run_optimizer (bool): If True, post-process the generated yaml to try
             try to reduce the size (attempts to collect repeated configuration
             and replace with definitions).)
-        use_dependencies (bool): If true, use "dependencies" rather than "needs"
-            ("needs" allows DAG scheduling).  Useful if gitlab instance cannot
-            be configured to handle more than a few "needs" per job.
         artifacts_root (str): Path where artifacts like logs, environment
             files (spack.yaml, spack.lock), etc should be written.  GitLab
             requires this to be within the project directory.
@@ -1277,11 +1274,6 @@ def generate_gitlab_ci_yaml(
 
             output_object = ci_opt.optimizer(output_object)
 
-        # TODO(opadron): remove this or refactor
-        if use_dependencies:
-            import spack.ci_needs_workaround as cinw
-
-            output_object = cinw.needs_to_dependencies(output_object)
     else:
         # No jobs were generated
         noop_job = spack_ci_ir["jobs"]["noop"]["attributes"]
