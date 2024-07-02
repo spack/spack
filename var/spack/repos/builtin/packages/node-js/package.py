@@ -84,9 +84,7 @@ class NodeJs(Package):
     )
 
     conflicts(
-        "%gcc@14:",
-        when="@:19",
-        msg="fails to build with gcc 14+ due to implicit conversions",
+        "%gcc@14:", when="@:19", msg="fails to build with gcc 14+ due to implicit conversions"
     )
 
     def setup_build_environment(self, env):
