@@ -422,17 +422,11 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
         if not cmake_bin:
             assert False, "cmake_bin_path.txt not found"
 
-        try:
-            exe = which(cmake_bin)
-            exe(cmake_path, "-DEXECUTABLE_OUTPUT_PATH=" + cmake_path)
-        except:
-            assert False, "Failed to generate the MakeFile"
+        exe = which(cmake_bin)
+        exe(cmake_path, "-DEXECUTABLE_OUTPUT_PATH=" + cmake_path)
 
-        try:
-            make = which("make")
-            make()
-        except:
-            assert False, "Failed to build test"
+        make = which("make")
+        make()
 
     def test_run(self):
         """Test if kokkos runs"""
@@ -444,9 +438,5 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
         if not os.path.exists(cmake_path):
             raise SkipTest(f"{cmake_path} is missing")
 
-        """Run test."""
-        try:
-            exe = which("make")
-            exe(cmake_path, "test")
-        except:
-            assert False, "Failed to run kokkos test"
+        exe = which("make")
+        exe(cmake_path, "test")
