@@ -408,39 +408,45 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
         self.cache_extra_test_sources(cmake_out_path)
         self.cmake_bin(set=True)
 
-    def build_tests(self, cmake_path):
+    def test_build(self):
         """Build test."""
-        cmake_bin = self.cmake_bin(set=False)
-
-        if not cmake_bin:
-            tty.msg("Skipping kokkos test: cmake_bin_path.txt not found")
-            return
-
-        cmake_args = [cmake_path, "-DEXECUTABLE_OUTPUT_PATH=" + cmake_path]
-
-        if not self.run_test(cmake_bin, options=cmake_args, purpose="Generate the Makefile"):
-            tty.warn("Skipping kokkos test: failed to generate Makefile")
-            return
-
-        if not self.run_test("make", purpose="Build test software"):
-            tty.warn("Skipping kokkos test: failed to build test")
-
-    def run_tests(self, cmake_path):
-        """Run test."""
-        if not self.run_test(
-            "make", options=[cmake_path, "test"], purpose="Checking ability to execute."
-        ):
-            tty.warn("Failed to run kokkos test")
-
-    def test(self):
         # Skip if unsupported version
         cmake_path = join_path(
             self.test_suite.current_test_cache_dir, self.test_script_relative_path, "out"
         )
 
         if not os.path.exists(cmake_path):
-            tty.warn("Skipping smoke tests: {0} is missing".format(cmake_path))
-            return
+            raise SkipTest(f"{cmake_path} is missing")
 
-        self.build_tests(cmake_path)
-        self.run_tests(cmake_path)
+        cmake_bin = self.cmake_bin(set=False)
+        if not cmake_bin:
+            assert False, "cmake_bin_path.txt not found"
+
+        try:
+            exe = which(cmake_bin)
+            exe(cmake_path, "-DEXECUTABLE_OUTPUT_PATH=" + cmake_path)
+        except:
+            assert False, "Failed to generate the MakeFile"
+
+        try:
+            make = which("make")
+            make()
+        except:
+            assert False, "Failed to build test"
+
+    def test_run(self):
+        """Test if kokkos runs"""
+        # Skip if unsupported version
+        cmake_path = join_path(
+            self.test_suite.current_test_cache_dir, self.test_script_relative_path, "out"
+        )
+
+        if not os.path.exists(cmake_path):
+            raise SkipTest(f"{cmake_path} is missing")
+
+        """Run test."""
+        try:
+            exe = which("make")
+            exe(cmake_path, "test")
+        except:
+            assert False, "Failed to run kokkos test"
