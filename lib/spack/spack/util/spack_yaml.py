@@ -20,7 +20,7 @@ import enum
 import functools
 import io
 import re
-from typing import IO, List, Optional
+from typing import IO, Any, Callable, Dict, List, Optional, Union
 
 import ruamel.yaml
 from ruamel.yaml import comments, constructor, emitter, error, representer
@@ -491,6 +491,30 @@ def set_comments(data, *, data_comments):
 def name_mark(name):
     """Returns a mark with just a name"""
     return error.StringMark(name, None, None, None, None, None)
+
+
+def anchorify(data: Union[dict, list], identifier: Callable[[Any], str] = repr) -> None:
+    """Modify a dict/list tree structure in-place, replacing identical branches with references to
+    earlier instances. The YAML serializer generate anchors then, resulting in small yaml files."""
+    anchors: Dict[str, Any] = {}
+    queue: List[Union[dict, list]] = [data]
+
+    while queue:
+        item = queue.pop()
+
+        for key, value in item.items() if isinstance(item, dict) else enumerate(item):
+            id = identifier(value)
+            anchor = anchors.get(id)
+
+            # Replace value with back reference if seen before
+            if anchor is not None:
+                item[key] = anchor
+                continue
+
+            anchors[id] = value
+
+            if isinstance(value, (dict, list)):
+                queue.append(value)
 
 
 class SpackYAMLError(spack.error.SpackError):
