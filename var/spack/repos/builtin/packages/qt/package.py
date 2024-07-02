@@ -579,7 +579,7 @@ class Qt(Package):
 
         if "+gui" in spec:
             use_spack_dep("freetype")
-            if not MACOS_VERSION:
+            if LINUX_VERSION:
                 config_args.append("-fontconfig")
         else:
             config_args.append("-no-freetype")
