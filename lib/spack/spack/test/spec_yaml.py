@@ -534,11 +534,12 @@ b: *id001
 
 
 def test_anchorify_2():
-    before = {"a": {"b": {"c": True}}, "d": {"c": True}, "e": {"c": True}}
-    after = {"a": {"b": {"c": True}}, "d": {"c": True}, "e": {"c": True}}
+    before = {"a": {"b": {"c": True}}, "d": {"b": {"c": True}}, "e": {"c": True}}
+    after = {"a": {"b": {"c": True}}, "d": {"b": {"c": True}}, "e": {"c": True}}
     syaml.anchorify(after)
     assert before == after
-    assert after["a"]["b"] is after["d"] is after["e"]
+    assert after["a"] is after["d"]
+    assert after["a"]["b"] is after["e"]
 
     # Check if anchors are used
     out = io.StringIO()
@@ -546,10 +547,10 @@ def test_anchorify_2():
     assert (
         out.getvalue()
         == """\
-a:
-  b: &id001
+a: &id001
+  b: &id002
     c: true
 d: *id001
-e: *id001
+e: *id002
 """
     )

@@ -494,8 +494,8 @@ def name_mark(name):
 
 
 def anchorify(data: Union[dict, list], identifier: Callable[[Any], str] = repr) -> None:
-    """Modify a dict/list tree structure in-place, replacing identical branches with references to
-    earlier instances. The YAML serializer generate anchors then, resulting in small yaml files."""
+    """Replace identical branches in tree structure with references to earlier instances. The YAML
+    serializer generate anchors for them, resulting in small yaml files."""
     anchors: Dict[str, Any] = {}
     queue: List[Union[dict, list]] = [data]
 
@@ -503,17 +503,16 @@ def anchorify(data: Union[dict, list], identifier: Callable[[Any], str] = repr) 
         item = queue.pop()
 
         for key, value in item.items() if isinstance(item, dict) else enumerate(item):
+            if not isinstance(value, (dict, list)):
+                continue
+
             id = identifier(value)
             anchor = anchors.get(id)
 
-            # Replace value with back reference if seen before
             if anchor is not None:
                 item[key] = anchor
-                continue
-
-            anchors[id] = value
-
-            if isinstance(value, (dict, list)):
+            else:
+                anchors[id] = value
                 queue.append(value)
 
 
