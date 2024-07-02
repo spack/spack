@@ -1332,6 +1332,8 @@ def tree(
     if color is None:
         color = clr.get_color_when()
 
+    specs = unique_roots(specs)
+
     for d, dep_spec in traverse.traverse_tree(
         sorted(specs), cover=cover, deptype=deptypes, depth_first=depth_first, key=key
     ):
@@ -1381,6 +1383,20 @@ def tree(
             break
 
     return out
+
+
+def unique_roots(specs: List["spack.spec.Spec"]):
+    """For a list of specs, filter out any that appear as a dependency
+    of any of the others.
+    """
+    unique = list()
+
+    for i, root in enumerate(specs):
+        others = specs[:i] + specs[i + 1 :]
+        if not any(root in x for x in others):
+            unique.append(specs[i])
+
+    return unique
 
 
 @lang.lazy_lexicographic_ordering(set_hash=False)
