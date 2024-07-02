@@ -12,12 +12,13 @@ class RocmGdb(AutotoolsPackage):
     based on GDB, the GNU source-level debugger."""
 
     homepage = "https://github.com/ROCm/ROCgdb"
-    url = "https://github.com/ROCm/ROCgdb/archive/rocm-6.1.1.tar.gz"
+    url = "https://github.com/ROCm/ROCgdb/archive/rocm-6.1.2.tar.gz"
     tags = ["rocm"]
 
     license("LGPL-2.0-or-later")
 
     maintainers("srekolam", "renjithravindrankannath")
+    version("6.1.2", sha256="19208de18d503e1da79dc0c9085221072a68e299f110dc836204364fa1b532cc")
     version("6.1.1", sha256="3d982abc130a286d227948aca5783f2e4507ef4275be21dad0914e37217ba19e")
     version("6.1.0", sha256="e90d855ca4c1478acf143d45ff0811e7ecd068711db155de6d5f3593cdef6230")
     version("6.0.2", sha256="69b7c3d63435e7d99088980498c68422e52b69244d10a3a62541633e733286e0")
@@ -61,6 +62,7 @@ class RocmGdb(AutotoolsPackage):
         "6.0.2",
         "6.1.0",
         "6.1.1",
+        "6.1.2",
     ]:
         depends_on(f"rocm-dbgapi@{ver}", type="link", when=f"@{ver}")
         depends_on(f"comgr@{ver}", type="link", when=f"@{ver}")
@@ -76,6 +78,7 @@ class RocmGdb(AutotoolsPackage):
         "6.0.2",
         "6.1.0",
         "6.1.1",
+        "6.1.2",
     ]:
         depends_on(f"rocm-core@{ver}", when=f"@{ver}")
 

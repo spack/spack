@@ -17,13 +17,14 @@ class RocmSmiLib(CMakePackage):
 
     homepage = "https://github.com/ROCm/rocm_smi_lib"
     git = "https://github.com/ROCm/rocm_smi_lib.git"
-    url = "https://github.com/ROCm/rocm_smi_lib/archive/rocm-6.1.1.tar.gz"
+    url = "https://github.com/ROCm/rocm_smi_lib/archive/rocm-6.1.2.tar.gz"
     tags = ["rocm"]
 
     maintainers("srekolam", "renjithravindrankannath")
     libraries = ["librocm_smi64"]
 
     version("master", branch="master")
+    version("6.1.2", sha256="01f46fb1cb8c7a16a4c4db61871ee710ed37c0f8bd3a2dbe3415d3de2dffb4ef")
     version("6.1.1", sha256="7fd2234b05eb6b9397c5508bb37e81fb16ce2cadc2c97298b2124b46c3687880")
     version("6.1.0", sha256="d1a1b372489b27cb7eb8c91d74a71370ad9668dd5aaf89c0267172534e417e41")
     version("6.0.2", sha256="61e755d710ff38425df3d262d1ad4c510d52d3c64e3fe15140c2575eba316949")
@@ -57,6 +58,7 @@ class RocmSmiLib(CMakePackage):
         "6.0.2",
         "6.1.0",
         "6.1.1",
+        "6.1.2",
     ]:
         depends_on(f"rocm-core@{ver}", when=f"@{ver}")
 

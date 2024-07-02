@@ -22,6 +22,7 @@ class RocmValidationSuite(CMakePackage):
     license("MIT")
 
     maintainers("srekolam", "renjithravindrankannath")
+    version("6.1.2", sha256="8ff0c4ec538841d6b8d008d3849a99173cc5a02df5cf4a11dc1d52f630e079c5")
     version("6.1.1", sha256="72d1a40bce5b68f7d5959e10c07576234640b9c9fcb24d6301a76336629d9962")
     version("6.1.0", sha256="712f49bfe3a62c9f9cc6f9dc1c593b57e0b45158bb270d685d1141c9a9e90387")
     version("6.0.2", sha256="8286d00ce290eeace3697138da9d7a9669f54152e5febcd9e5c5156ae79f0c0c")
@@ -79,6 +80,7 @@ class RocmValidationSuite(CMakePackage):
         "6.0.2",
         "6.1.0",
         "6.1.1",
+        "6.1.2",
     ]:
         depends_on(f"hip@{ver}", when=f"@{ver}")
         depends_on(f"rocminfo@{ver}", when=f"@{ver}")

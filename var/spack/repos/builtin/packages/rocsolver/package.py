@@ -15,7 +15,7 @@ class Rocsolver(CMakePackage):
 
     homepage = "https://github.com/ROCm/rocSOLVER"
     git = "https://github.com/ROCm/rocSOLVER.git"
-    url = "https://github.com/ROCm/rocSOLVER/archive/rocm-6.1.1.tar.gz"
+    url = "https://github.com/ROCm/rocSOLVER/archive/rocm-6.1.2.tar.gz"
     tags = ["rocm"]
 
     maintainers("cgmb", "srekolam", "renjithravindrankannath", "haampie")
@@ -41,6 +41,7 @@ class Rocsolver(CMakePackage):
 
     version("develop", branch="develop")
     version("master", branch="master")
+    version("6.1.2", sha256="8cb45b6a4ed819b8e952c0bfdd8bf7dd941478ac656bea42a6d6751f459e66ea")
     version("6.1.1", sha256="3bbba30fa7f187676caf858f66c2345e4dcc81b9546eca4a726c0b159dad22bd")
     version("6.1.0", sha256="f1d7a4edf14ed0b2e2f74aa5cbc9db0c3b0dd31e50bbada1586cb353a28fe015")
     version("6.0.2", sha256="781d5df2886ab0d5087a215a33ac390dd27653b2a9b4a620c7d51b0ae56f63d2")
@@ -92,6 +93,7 @@ class Rocsolver(CMakePackage):
         "6.0.2",
         "6.1.0",
         "6.1.1",
+        "6.1.2",
     ]:
         depends_on(f"hip@{ver}", when=f"@{ver}")
         depends_on(f"rocblas@{ver}", when=f"@{ver}")

@@ -13,13 +13,14 @@ class Migraphx(CMakePackage):
 
     homepage = "https://github.com/ROCm/AMDMIGraphX"
     git = "https://github.com/ROCm/AMDMIGraphX.git"
-    url = "https://github.com/ROCm/AMDMIGraphX/archive/rocm-6.1.1.tar.gz"
+    url = "https://github.com/ROCm/AMDMIGraphX/archive/rocm-6.1.2.tar.gz"
     tags = ["rocm"]
 
     maintainers("srekolam", "renjithravindrankannath")
     libraries = ["libmigraphx"]
 
     license("MIT")
+    version("6.1.2", sha256="829f4a2bd9fe3dee130dfcca103ddc7691da18382f5b683aaca8f3ceceaef355")
     version("6.1.1", sha256="e14a62678e97356236b45921e24f28ff430d670fb70456c3e5ebfeeb22160811")
     version("6.1.0", sha256="2ba44146397624845c64f3898bb1b08837ad7a49f133329e58eb04c05d1f36ac")
     version("6.0.2", sha256="13f393f8fdf25275994dda07091a93eec867233cd2f99f9cb0df16fbabd53483")
@@ -83,6 +84,7 @@ class Migraphx(CMakePackage):
         "6.0.2",
         "6.1.0",
         "6.1.1",
+        "6.1.2",
     ]:
         depends_on(f"rocm-cmake@{ver}:", type="build", when=f"@{ver}")
         depends_on(f"hip@{ver}", when=f"@{ver}")
@@ -90,7 +92,7 @@ class Migraphx(CMakePackage):
         depends_on(f"rocblas@{ver}", when=f"@{ver}")
         depends_on(f"miopen-hip@{ver}", when=f"@{ver}")
 
-    for ver in ["6.0.0", "6.0.2", "6.1.0", "6.1.1"]:
+    for ver in ["6.0.0", "6.0.2", "6.1.0", "6.1.1", "6.1.2"]:
         depends_on(f"rocmlir@{ver}", when=f"@{ver}")
 
     @property
