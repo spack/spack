@@ -6,6 +6,7 @@
 import json
 import os
 import shutil
+import warnings
 from urllib.parse import urlparse, urlunparse
 
 import llnl.util.filesystem as fs
@@ -73,7 +74,7 @@ def setup_parser(subparser):
         "--optimize",
         action="store_true",
         default=False,
-        help="(experimental) optimize the gitlab yaml file for size\n\n"
+        help="(DEPRECATED) optimize the gitlab yaml file for size\n\n"
         "run the generated document through a series of optimization passes "
         "designed to reduce the size of the generated file",
     )
@@ -81,7 +82,7 @@ def setup_parser(subparser):
         "--dependencies",
         action="store_true",
         default=False,
-        help="(experimental) disable DAG scheduling (use 'plain' dependencies)",
+        help="(DEPRECATED) disable DAG scheduling (use 'plain' dependencies)",
     )
     generate.add_argument(
         "--buildcache-destination",
@@ -200,6 +201,18 @@ def ci_generate(args):
     before invoking this command. the value must be the CDash authorization token needed to create
     a build group and register all generated jobs under it
     """
+    if args.optimize:
+        warnings.warn(
+            "The --optimize option has been deprecated, and currently has no effect. "
+            "It will be removed in Spack v0.24."
+        )
+
+    if args.dependencies:
+        warnings.warn(
+            "The --dependencies option has been deprecated, and currently has no effect. "
+            "It will be removed in Spack v0.24."
+        )
+
     env = spack.cmd.require_active_env(cmd_name="ci generate")
 
     if args.copy_to:
@@ -212,8 +225,6 @@ def ci_generate(args):
 
     output_file = args.output_file
     copy_yaml_to = args.copy_to
-    run_optimizer = args.optimize
-    use_dependencies = args.dependencies
     prune_dag = args.prune_dag
     index_only = args.index_only
     artifacts_root = args.artifacts_root
@@ -234,8 +245,6 @@ def ci_generate(args):
         output_file,
         prune_dag=prune_dag,
         check_index_only=index_only,
-        run_optimizer=run_optimizer,
-        use_dependencies=use_dependencies,
         artifacts_root=artifacts_root,
         remote_mirror_override=buildcache_destination,
     )
