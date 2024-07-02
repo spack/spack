@@ -77,7 +77,7 @@ class AutotoolsBuilder(autotools.AutotoolsBuilder):
             filter_file(r"^gcc=0$", "gcc=1", join_path(self.configure_directory, "configure"))
 
     def configure_args(self):
-        args = ["--with-please-remove-me"]
+        args = []
         if self.spec.satisfies("+compat"):
             args.append("--zlib-compat")
         if self.spec.satisfies("~opt"):
