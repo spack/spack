@@ -32,9 +32,11 @@ class Zip(MakefilePackage):
     patch("08-hardening-build-fix-1.patch")
     patch("09-hardening-build-fix-2.patch")
     patch("10-remove-build-date.patch")
+    patch("11-typo-it-is-ambiguities-not-amgibuities.patch")
 
     # Configure and header changes needed for comatibility with strict gcc14+
-    patch("gcc14-11-no-implicit-imports-fix.patch")
+    # these are not from the debian branch
+    patch("12-gcc14-no-implicit-declarations-fix.patch")
 
     executables = ["^zip$"]
 
