@@ -80,13 +80,13 @@ class NodeJs(Package):
     # https://github.com/spack/spack/issues/19310
     conflicts(
         "%gcc@:4.8",
-        msg="fails to build with gcc 4.8 (see https://github.com/spack/spack/issues/19310",
+        msg="fails to build with gcc 4.8 (see https://github.com/spack/spack/issues/19310)",
     )
 
     conflicts(
         "%gcc@14:",
-        when="@:18",
-        msg="fails to build with gcc 14+",
+        when="@:19",
+        msg="fails to build with gcc 14+ due to implicit conversions",
     )
 
     def setup_build_environment(self, env):
