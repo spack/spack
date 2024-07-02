@@ -75,7 +75,6 @@ properties: Dict[str, Any] = {
             "verify_ssl": {"type": "boolean"},
             "ssl_certs": {"type": "string"},
             "suppress_gpg_warnings": {"type": "boolean"},
-            "install_missing_compilers": {"type": "boolean"},
             "debug": {"type": "boolean"},
             "checksum": {"type": "boolean"},
             "deprecated": {"type": "boolean"},
@@ -98,9 +97,9 @@ properties: Dict[str, Any] = {
             "aliases": {"type": "object", "patternProperties": {r"\w[\w-]*": {"type": "string"}}},
         },
         "deprecatedProperties": {
-            "properties": ["terminal_title"],
-            "message": "config:terminal_title has been replaced by "
-            "install_status and is ignored",
+            "properties": ["install_missing_compilers"],
+            "message": "config:install_missing_compilers has been deprecated and is now ignored. "
+            "This option will be removed from configuration in Spack v0.25",
             "error": False,
         },
     }

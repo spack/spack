@@ -1299,7 +1299,7 @@ node_compiler_weight(node(ID, Package), 100)
     not compiler_weight(CompilerID, _).
 
 % For the time being, be strict and reuse only if the compiler match one we have on the system
-error(100, "Compiler {1}@{2} requested for {0} cannot be found. Set install_missing_compilers:true if intended.", Package, Compiler, Version)
+error(100, "Compiler {1}@{2} requested for {0} cannot be found.", Package, Compiler, Version)
  :- attr("node_compiler_version", node(ID, Package), Compiler, Version),
     not node_compiler(node(ID, Package), _).
 

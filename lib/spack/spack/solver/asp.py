@@ -2597,8 +2597,7 @@ class SpackSolverSetup:
                 continue
 
             current_libc = compiler.compiler_obj.default_libc
-            # If this is a compiler yet to be built (config:install_missing_compilers:true)
-            # infer libc from the Python process
+            # If this is a compiler yet to be built infer libc from the Python process
             if not current_libc and compiler.compiler_obj.cc is None:
                 current_libc = spack.util.libc.libc_from_current_python_process()
 
@@ -3018,37 +3017,16 @@ class CompilerParser:
         Args:
             input_specs: specs to be concretized
         """
-        strict = spack.concretize.Concretizer().check_for_compiler_existence
-        default_os = str(spack.platforms.host().default_os)
-        default_target = str(archspec.cpu.host().family)
         for s in traverse.traverse_nodes(input_specs):
             # we don't need to validate compilers for already-built specs
             if s.concrete or not s.compiler:
                 continue
 
             version = s.compiler.versions.concrete
-
             if not version or any(item.spec.satisfies(s.compiler) for item in self.compilers):
                 continue
 
-            # Error when a compiler is not found and strict mode is enabled
-            if strict:
-                raise spack.concretize.UnavailableCompilerVersionError(s.compiler)
-
-            # Make up a compiler matching the input spec. This is for bootstrapping.
-            compiler_cls = spack.compilers.class_for_compiler_name(s.compiler.name)
-            compiler_obj = compiler_cls(
-                s.compiler, operating_system=default_os, target=default_target, paths=[None] * 4
-            )
-            self.compilers.add(
-                KnownCompiler(
-                    spec=s.compiler,
-                    os=default_os,
-                    target=default_target,
-                    available=True,
-                    compiler_obj=compiler_obj,
-                )
-            )
+            raise spack.concretize.UnavailableCompilerVersionError(s.compiler)
 
         return self
 

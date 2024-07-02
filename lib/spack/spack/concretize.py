@@ -80,9 +80,7 @@ class Concretizer:
 
     def __init__(self, abstract_spec=None):
         if Concretizer.check_for_compiler_existence is None:
-            Concretizer.check_for_compiler_existence = not spack.config.get(
-                "config:install_missing_compilers", False
-            )
+            Concretizer.check_for_compiler_existence = True
         self.abstract_spec = abstract_spec
         self._adjust_target_answer_generator = None
 

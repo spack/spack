@@ -1542,42 +1542,7 @@ class PackageInstaller:
             tty.warn(f"Installation request refused: {str(err)}")
             return
 
-        install_compilers = spack.config.get("config:install_missing_compilers", False)
-
         install_deps = request.install_args.get("install_deps")
-        # Bootstrap compilers first
-        if install_deps and install_compilers:
-            packages_per_compiler: Dict[
-                "spack.spec.CompilerSpec",
-                Dict["spack.spec.ArchSpec", List["spack.package_base.PackageBase"]],
-            ] = {}
-
-            for dep in request.traverse_dependencies():
-                dep_pkg = dep.package
-                compiler = dep_pkg.spec.compiler
-                arch = dep_pkg.spec.architecture
-                if compiler not in packages_per_compiler:
-                    packages_per_compiler[compiler] = {}
-
-                if arch not in packages_per_compiler[compiler]:
-                    packages_per_compiler[compiler][arch] = []
-
-                packages_per_compiler[compiler][arch].append(dep_pkg)
-
-            compiler = request.pkg.spec.compiler
-            arch = request.pkg.spec.architecture
-
-            if compiler not in packages_per_compiler:
-                packages_per_compiler[compiler] = {}
-
-            if arch not in packages_per_compiler[compiler]:
-                packages_per_compiler[compiler][arch] = []
-
-            packages_per_compiler[compiler][arch].append(request.pkg)
-
-            for compiler, archs in packages_per_compiler.items():
-                for arch, packages in archs.items():
-                    self._add_bootstrap_compilers(compiler, arch, packages, request, all_deps)
 
         if install_deps:
             for dep in request.traverse_dependencies():

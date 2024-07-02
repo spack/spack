@@ -12,8 +12,6 @@ from typing import List, Optional, Union
 import py
 import pytest
 
-import archspec.cpu
-
 import llnl.util.filesystem as fs
 import llnl.util.lock as ulk
 import llnl.util.tty as tty
@@ -487,23 +485,24 @@ def test_update_tasks_for_compiler_packages_as_compiler(mock_packages, config, m
     assert installer.build_pq[0][1].compiler
 
 
-@pytest.mark.skipif(
-    str(archspec.cpu.host().family) != "x86_64",
-    reason="OneAPI compiler is not supported on other architectures",
-)
-def test_bootstrapping_compilers_with_different_names_from_spec(
-    install_mockery, mutable_config, mock_fetch, archspec_host_is_spack_test_host
-):
-    """Tests that, when we bootstrap '%oneapi' we can translate it to the
-    'intel-oneapi-compilers' package.
-    """
-    with spack.config.override("config:install_missing_compilers", True):
-        with spack.concretize.disable_compiler_existence_check():
-            spec = spack.spec.Spec("trivial-install-test-package%oneapi@=22.2.0").concretized()
-            spec.package.do_install()
-            assert (
-                spack.spec.CompilerSpec("oneapi@=22.2.0") in spack.compilers.all_compiler_specs()
-            )
+# FIXME: Revisit this test
+# @pytest.mark.skipif(
+#     str(archspec.cpu.host().family) != "x86_64",
+#     reason="OneAPI compiler is not supported on other architectures",
+# )
+# def test_bootstrapping_compilers_with_different_names_from_spec(
+#     install_mockery, mutable_config, mock_fetch, archspec_host_is_spack_test_host
+# ):
+#     """Tests that, when we bootstrap '%oneapi' we can translate it to the
+#     'intel-oneapi-compilers' package.
+#     """
+#     with spack.config.override("config:install_missing_compilers", True):
+#         with spack.concretize.disable_compiler_existence_check():
+#             spec = spack.spec.Spec("trivial-install-test-package%oneapi@=22.2.0").concretized()
+#             spec.package.do_install()
+#             assert (
+#                 spack.spec.CompilerSpec("oneapi@=22.2.0") in spack.compilers.all_compiler_specs()
+#             )
 
 
 def test_dump_packages_deps_ok(install_mockery, tmpdir, mock_packages):
@@ -728,18 +727,6 @@ def test_prepare_for_install_on_installed(install_mockery, monkeypatch):
 
     monkeypatch.setattr(inst.PackageInstaller, "_ensure_install_ready", _noop)
     installer._prepare_for_install(task)
-
-
-def test_installer_init_requests(install_mockery):
-    """Test of installer initial requests."""
-    spec_name = "dependent-install"
-    with spack.config.override("config:install_missing_compilers", True):
-        installer = create_installer([spec_name], {})
-
-        # There is only one explicit request in this case
-        assert len(installer.build_requests) == 1
-        request = installer.build_requests[0]
-        assert request.pkg.name == spec_name
 
 
 def test_install_task_use_cache(install_mockery, monkeypatch):
