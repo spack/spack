@@ -51,15 +51,10 @@ class BinaryResource:
             conf (dict): Dictionary representing resource endpoint layout
         """
         self._name = name
-        self.resource_subdir = BINARY_RESOURCE_SUBDIR
         fetcher = spack.fetch_strategy.URLFetchStrategy(
             url=sup.substitute_path_variables(conf["endpoint"]), checksum=conf["sha256"]
         )
-        stage = spack.stage.Stage(fetcher)
-        resource = spack.resource.Resource(
-            name, fetcher, destination=self.resource_subdir, placement=None
-        )
-        self.stage = spack.stage.ResourceStage(fetcher, stage, resource, keep=False)
+        self.stage = spack.stage.Stage(fetcher)
 
     def acquire_resource(self):
         "fetches, expands, and 'installs' resource"
@@ -67,10 +62,9 @@ class BinaryResource:
             s.fetch()
             s.expand_archive()
             shutil.move(
-                os.path.join(s.root_stage.source_path, self.resource_subdir, self._name),
+                s.source_path,
                 binary_resource_root() / self._name,
             )
-        self.stage.root_stage.destroy()
         return True
 
 

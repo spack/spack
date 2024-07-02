@@ -15,6 +15,7 @@ from spack.paths import spack_root
 
 datadir = os.path.join(spack_root, "lib", "spack", "spack", "test", "data", "binary_resource")
 file_file = os.path.join(datadir, "file.bat")
+tar = spack.util.executable.which("tar")
 
 
 @pytest.fixture
@@ -34,55 +35,38 @@ def no_system(working_env):
 
 
 @pytest.fixture
-def tar_dir():
-    return os.path.dirname(spack.util.executable.which("tar").path)
+def add_tar_to_path(no_system):
+    os.environ["PATH"] = os.path.dirname(tar.path)
 
 
 @pytest.fixture
-def on_system(working_env):
-    """Fixture explicityly adding binary resource to PATH"""
-    env = spack.util.environment.EnvironmentModifications()
-    env.append_path("PATH", datadir)
-    env.apply_modifications()
+def add_resource_to_system(working_env):
+    """Fixture explicitly adding binary resource to PATH"""
+    def _add_file():
+        env = spack.util.environment.EnvironmentModifications()
+        env.append_path("PATH", datadir)
+        env.apply_modifications()
+    return _add_file
 
 
-def test_ensure_or_acquire_no_acquire(mock_binary_resource_root, config, no_system, monkeypatch):
-    def _fake_acquire(self):
-        os.makedirs(br.binary_resource_root() / "file" / "bin")
-        shutil.copy(file_file, br.binary_resource_root() / "file" / "bin")
-        return True
-
-    monkeypatch.setattr(
-        spack.util.binary_resource.BinaryResource, "acquire_resource", _fake_acquire
-    )
+@pytest.mark.skipif(not tar, reason="tar required; not available")
+def test_ensure_or_acquire_acquire_resource(mock_binary_resource_root, config, add_tar_to_path):
+    # establish that file is unavailable prior to resource acquisition
+    file = spack.util.executable.which("file")
+    assert not file
     br.win_ensure_or_acquire_resource("file")
     file = spack.util.executable.which("file")
     assert file
     assert "file-5.4.1 magicfile from /usr/share/bin" in file(output=str)
-
-
-@pytest.mark.skipif(not spack.util.executable.which("tar"), reason="tar required; not available")
-def test_ensure_or_acquire_acquire_resource(mock_binary_resource_root, config, tar_dir, no_system):
-    os.environ["PATH"] = tar_dir
-    br.win_ensure_or_acquire_resource("file")
-    file = spack.util.executable.which("file")
-    assert file
-    assert "file-5.4.1 magicfile from /usr/share/bin" in file(output=str)
-
-
-def test_ensure_or_acquire_resource_on_system(
-    mock_binary_resource_root, mutable_config, on_system
-):
-    # if resource not on system, ensure the resource acquisition fails with an exception
-    mutable_config.set("bootstrap_resource:enable", False)
-    br.win_ensure_or_acquire_resource("file")
 
 
 def test_ensure_or_acquire_disabled_no_system(
-    mock_binary_resource_root, mutable_config, no_system
+    mock_binary_resource_root, mutable_config, no_system, add_resource_to_system
 ):
     mutable_config.set("bootstrap_resource:enable", False)
     with pytest.raises(
         RuntimeError, match=r"Cannot fetch bootstrap resource .* as it is disabled"
     ):
         br.win_ensure_or_acquire_resource("file")
+    add_resource_to_system()
+    br.win_ensure_or_acquire_resource("file")
