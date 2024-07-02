@@ -611,6 +611,19 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
         if self.spec.satisfies("+developer"):
             env.set("CHPL_DEVELOPER", "true")
 
+        if not self.spec.satisfies("llvm=none"):
+            # workaround Spack issue #44746:
+            # Chapel does not directly utilize lua, but many of its
+            # launchers depend on system installs of batch schedulers
+            # (notably Slurm on Cray EX) which depend on a system Lua.
+            # LLVM includes lua as a dependency, but a barebones lua
+            # install lacks many packages provided by a system Lua,
+            # which are often required by system services like Slurm.
+            # Disable the incomplete Spack lua package directory to
+            # allow the system one to function.
+            env.unset("LUA_PATH")
+            env.unset("LUA_CPATH")
+
         if self.spec.variants["gmp"].value == "spack":
             # TODO: why must we add to CPATH to find gmp.h
             # TODO: why must we add to LIBRARY_PATH to find lgmp
