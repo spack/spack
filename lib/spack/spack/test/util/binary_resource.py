@@ -42,10 +42,12 @@ def add_tar_to_path(no_system):
 @pytest.fixture
 def add_resource_to_system(working_env):
     """Fixture explicitly adding binary resource to PATH"""
+
     def _add_file():
         env = spack.util.environment.EnvironmentModifications()
         env.append_path("PATH", datadir)
         env.apply_modifications()
+
     return _add_file
 
 

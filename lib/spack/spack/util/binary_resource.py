@@ -61,10 +61,7 @@ class BinaryResource:
         with self.stage as s:
             s.fetch()
             s.expand_archive()
-            shutil.move(
-                s.source_path,
-                binary_resource_root() / self._name,
-            )
+            shutil.move(s.source_path, binary_resource_root() / self._name)
         return True
 
 
