@@ -71,14 +71,16 @@ class Qt(Package):
     variant("gui", default=True, description="Build the Qt GUI module and dependencies")
     # Windows does not have support for opengl support at the moment
     # TODO (johnwparent): port angle and llvmmesapipe so we can enable opengl
-    everywhere_but_windows(variant, "opengl", default=False, description="Build with OpenGL support.")
-    variant("location", default=False, when="+opengl", description="Build the Qt Location module.")
+    for plat in ["linux", "darwin", "freebsd"]:
+        with when(f"platform={plat}"):
+            variant("opengl", default=False, description="Build with OpenGL support")
+            variant("webkit", default=False, description="Build the Webkit extension")
+    variant("location", default=False, description="Build the Qt Location module.")
     variant("phonon", default=False, description="Build with phonon support.")
     variant("shared", default=True, description="Build shared libraries.")
     variant("sql", default=True, description="Build with SQL support.")
     variant("ssl", default=True, description="Build with OpenSSL support.")
     variant("tools", default=True, description="Build tools, including Qt Designer.")
-    everywhere_but_windows(variant, "webkit", default=False, description="Build the Webkit extension")
 
     provides("qmake")
 
