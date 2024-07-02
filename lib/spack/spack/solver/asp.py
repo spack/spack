@@ -1130,6 +1130,8 @@ class SpackSolverSetup:
         sha = hashlib.sha256()
         sha.update(full_str.encode())
         uniq_id = sha.hexdigest()[:8]
+        #if uniq_id == "fe2921b9":
+        #    import pdb; pdb.set_trace()
         if uniq_id in self.generated_ids:
             if fail_on_error:
                 raise InternalConcretizerError(
@@ -1208,7 +1210,8 @@ class SpackSolverSetup:
         for when_spec, conflict_specs in pkg.conflicts.items():
             when_spec_msg = "conflict constraint %s" % str(when_spec)
             when_spec_id = self.condition(
-                when_spec, name=pkg.name, msg=when_spec_msg, id_context=[pkg.name, "conflict"]
+                when_spec, name=pkg.name, msg=when_spec_msg,
+                id_context=["conflict-when", pkg.name] + list(conflict_specs)
             )
 
             for conflict_spec, conflict_msg in conflict_specs:
@@ -1228,7 +1231,7 @@ class SpackSolverSetup:
                     conflict_spec,
                     name=conflict_spec.name or pkg.name,
                     msg=conflict_spec_msg,
-                    id_context=["conflict", pkg.name, when_spec],
+                    id_context=["conflict", pkg.name, when_spec, conflict_spec],
                 )
                 self.gen.fact(
                     fn.pkg_fact(
