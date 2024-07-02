@@ -112,7 +112,6 @@ install_compilers() {
                 && curl -sL https://github.com/spack/spack/pull/40557.patch | patch -p1 \
                 && curl -sL https://github.com/spack/spack/pull/40561.patch | patch -p1 \
                 && cp "${CURRENT_SPACK_ROOT}/etc/spack/config.yaml" etc/spack/ \
-                && cp "${CURRENT_SPACK_ROOT}/etc/spack/compilers.yaml" etc/spack/ \
                 && cp "${CURRENT_SPACK_ROOT}/etc/spack/packages.yaml" etc/spack/ \
                 && . share/spack/setup-env.sh \
                 && spack install intel-oneapi-compilers-classic
