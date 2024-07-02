@@ -768,6 +768,9 @@ class Qt(Package):
             if version >= Version("5.15"):
                 config_args.extend(["-skip", "qtlocation"])
 
+        if IS_WINDOWS:
+            config_args.extend(["-skip", "qtspeech"])
+
         if "~opengl" in spec:
             config_args.extend(["-skip", "multimedia"])
             config_args.extend(["-skip", "qt3d"])
