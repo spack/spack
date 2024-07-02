@@ -497,10 +497,10 @@ def anchorify(data: Union[dict, list], identifier: Callable[[Any], str] = repr) 
     """Replace identical dict/list branches in tree with references to earlier instances. The YAML
     serializer generate anchors for them, resulting in small yaml files."""
     anchors: Dict[str, Union[dict, list]] = {}
-    queue: List[Union[dict, list]] = [data]
+    stack: List[Union[dict, list]] = [data]
 
-    while queue:
-        item = queue.pop()
+    while stack:
+        item = stack.pop()
 
         for key, value in item.items() if isinstance(item, dict) else enumerate(item):
             if not isinstance(value, (dict, list)):
@@ -511,7 +511,7 @@ def anchorify(data: Union[dict, list], identifier: Callable[[Any], str] = repr) 
 
             if anchor is None:
                 anchors[id] = value
-                queue.append(value)
+                stack.append(value)
             else:
                 item[key] = anchor  # replace with reference
 
