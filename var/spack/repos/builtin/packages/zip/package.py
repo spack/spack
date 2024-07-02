@@ -33,6 +33,9 @@ class Zip(MakefilePackage):
     patch("09-hardening-build-fix-2.patch")
     patch("10-remove-build-date.patch")
 
+    # Configure and header changes needed for comatibility with strict gcc14+
+    patch("gcc14-11-no-implicit-imports-fix.patch")
+
     executables = ["^zip$"]
 
     @classmethod
