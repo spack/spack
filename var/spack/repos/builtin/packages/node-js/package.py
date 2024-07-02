@@ -85,7 +85,7 @@ class NodeJs(Package):
 
     conflicts(
         "%gcc@14:",
-        when="@:19",
+        when="@:18",
         msg="fails to build with gcc 14+",
     )
 
