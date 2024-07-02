@@ -2750,6 +2750,7 @@ class SpackSolverSetup:
         recorder.consume_facts()
 
     def literal_specs(self, specs):
+        specs = list(llnl.util.lang.dedupe(specs))
         for spec in specs:
             self.gen.h2("Spec: %s" % str(spec))
             condition_id = self.new_id(["condition", spec])
