@@ -233,8 +233,8 @@ def return_string_when_no_stream(func):
 @return_string_when_no_stream
 def dump(data, stream=None, default_flow_style=False):
     handler = ConfigYAML(yaml_type=YAMLType.GENERIC_YAML)
-    handler.default_flow_style = default_flow_style
-    handler.width = maxint
+    handler.yaml.default_flow_style = default_flow_style
+    handler.yaml.width = maxint
     return handler.dump(data, stream=stream)
 
 
