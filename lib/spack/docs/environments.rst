@@ -931,16 +931,31 @@ This allows for a much-needed reduction in redundancy between packages
 and constraints.
 
 
-----------------
-Filesystem Views
-----------------
+-----------------
+Environment Views
+-----------------
 
-Spack Environments can define filesystem views, which provide a direct access point
-for software similar to the directory hierarchy that might exist under ``/usr/local``.
-Filesystem views are updated every time the environment is written out to the lock
-file ``spack.lock``, so the concrete environment and the view are always compatible.
-The files of the view's installed packages are brought into the view by symbolic or
-hard links, referencing the original Spack installation, or by copy.
+Spack Environments can have an associated filesystem view, which is a directory
+with a more traditional structure ``<view>/bin``, ``<view>/lib``, ``<view>/include``
+in which all files of the installed packages are linked.
+
+By default a view is created for each environment, thanks to the ``view: true``
+option in the manifest file:
+
+.. code-block:: yaml
+
+   spack:
+     specs: [perl, python]
+     view: true
+
+The view is created in a hidden directory ``.spack-env/view`` relative to the environment.
+If you've used ``spack env activate``, you may have already interacted with this view. Spack
+prepends its ``<view>/bin`` dir to ``PATH`` when the environment is activated, so that
+you can directly run executables from all installed packages in the environment.
+
+Views are highly customizable: you can control where they are put, modify their structure,
+include and exclude specs, change how files are linked, and you can even generate multiple
+views for a single environment. The following sections describe advanced view configuration.
 
 .. _configuring_environment_views:
 
@@ -948,15 +963,42 @@ hard links, referencing the original Spack installation, or by copy.
 Configuration in ``spack.yaml``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The Spack Environment manifest file has a top-level keyword
-``view``. Each entry under that heading is a **view descriptor**, headed
-by a name. Any number of views may be defined under the ``view`` heading.
-The view descriptor contains the root of the view, and
-optionally the projections for the view, ``select`` and
-``exclude`` lists for the view and link information via ``link`` and
-``link_type``.
+The minimal configuration
 
-For example, in the following manifest
+.. code-block:: yaml
+
+   spack:
+     # ...
+     view: true
+
+lets Spack generate a single view with default settings under the
+``.spack-env/view`` directory of the environment.
+
+Another short way to configure a view is to specify just where to put it:
+
+.. code-block:: yaml
+
+   spack:
+     # ...
+     view: /path/to/view
+
+For more advanced configuration, one ore more **view descriptors** can be defined 
+under the ``view`` key, each with a name. The short configuration we have seen
+so far is equivalent to the following:
+
+.. code-block:: yaml
+
+   spack:
+     # ...
+     view:
+       default:  # name of the view
+         root: /path/to/view  # view descriptor
+
+The view descriptor contains the root of the view, and optionally the projections
+for the view, ``select`` and ``exclude`` lists for the view and link information via
+``link`` and ``link_type``.
+
+As a more advanced example, in the following manifest
 file snippet we define a view named ``mpis``, rooted at
 ``/path/to/view`` in which all projections use the package name,
 version, and compiler name to determine the path for a given
@@ -1001,59 +1043,10 @@ of ``hardlink`` or ``copy``.
    when the environment is not activated, and linked libraries will be located
    *outside* of the view thanks to rpaths.
 
-
-There are two shorthands for environments with a single view. If the
-environment at ``/path/to/env`` has a single view, with a root at
-``/path/to/env/.spack-env/view``, with default selection and exclusion
-and the default projection, we can put ``view: True`` in the
-environment manifest. Similarly, if the environment has a view with a
-different root, but default selection, exclusion, and projections, the
-manifest can say ``view: /path/to/view``. These views are
-automatically named ``default``, so that
-
-.. code-block:: yaml
-
-   spack:
-     # ...
-     view: True
-
-is equivalent to
-
-.. code-block:: yaml
-
-   spack:
-     # ...
-     view:
-       default:
-         root: .spack-env/view
-
-and
-
-.. code-block:: yaml
-
-   spack:
-     # ...
-     view: /path/to/view
-
-is equivalent to
-
-.. code-block:: yaml
-
-   spack:
-     # ...
-     view:
-       default:
-         root: /path/to/view
-
-By default, Spack environments are configured with ``view: True`` in
-the manifest. Environments can be configured without views using
-``view: False``. For backwards compatibility reasons, environments
-with no ``view`` key are treated the same as ``view: True``.
-
 From the command line, the ``spack env create`` command takes an
 argument ``--with-view [PATH]`` that sets the path for a single, default
 view. If no path is specified, the default path is used (``view:
-True``). The argument ``--without-view`` can be used to create an
+true``). The argument ``--without-view`` can be used to create an
 environment without any view configured.
 
 The ``spack env view`` command can be used to change the manage views
