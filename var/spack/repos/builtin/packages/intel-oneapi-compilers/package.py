@@ -342,7 +342,7 @@ class IntelOneapiCompilers(IntelOneApiPackage, CompilerPackage):
         # 2024.2 no longer needs patching
         if self.spec.satisfies("@2024.2:"):
             return
-        
+
         # 2024 fixed all but these 2
         patchelf = which("patchelf")
         if self.spec.satisfies("@2024:"):
