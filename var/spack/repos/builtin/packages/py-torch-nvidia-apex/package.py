@@ -58,12 +58,14 @@ class PyTorchNvidiaApex(PythonPackage, CudaPackage):
     requires("^cudnn@8.4:", when="+fused_conv_bias_relu")
     requires("^nccl@2.10:", when="+nccl_p2p_cuda")
 
-    depends_on("python@3:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
-    depends_on("py-packaging", type="build")
-    depends_on("py-torch@0.4:", type=("build", "run"))
-    depends_on("py-torch@0.4+cuda:", type=("build", "run"), when="+cuda")
-    depends_on("cuda@9:", when="+cuda")
+    with default_args(type=("build")):
+        depends_on("py-setuptools")
+        depends_on("py-packaging")
+    with default_args(type=("build", "run")):
+        depends_on("python@3:")
+        depends_on("py-torch@0.4:")
+        depends_on("py-torch@0.4:+cuda", when="+cuda")
+
     depends_on("py-pybind11", type=("build", "link", "run"))
     depends_on("cuda@9:", when="+cuda")
 
