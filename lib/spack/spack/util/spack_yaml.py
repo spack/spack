@@ -494,9 +494,9 @@ def name_mark(name):
 
 
 def anchorify(data: Union[dict, list], identifier: Callable[[Any], str] = repr) -> None:
-    """Replace identical branches in tree structure with references to earlier instances. The YAML
+    """Replace identical dict/list branches in tree with references to earlier instances. The YAML
     serializer generate anchors for them, resulting in small yaml files."""
-    anchors: Dict[str, Any] = {}
+    anchors: Dict[str, Union[dict, list]] = {}
     queue: List[Union[dict, list]] = [data]
 
     while queue:
@@ -509,11 +509,11 @@ def anchorify(data: Union[dict, list], identifier: Callable[[Any], str] = repr) 
             id = identifier(value)
             anchor = anchors.get(id)
 
-            if anchor is not None:
-                item[key] = anchor
-            else:
+            if anchor is None:
                 anchors[id] = value
                 queue.append(value)
+            else:
+                item[key] = anchor  # replace with reference
 
 
 class SpackYAMLError(spack.error.SpackError):
