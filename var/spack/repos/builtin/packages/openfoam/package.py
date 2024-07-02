@@ -369,8 +369,9 @@ class Openfoam(Package):
     # See https://github.com/spack/spack/pull/22303 for reference
     depends_on(Boost.with_default_variants)
 
-    # OpenFOAM does not play nice with CGAL 5.X
-    depends_on("cgal@:4")
+    # Earlier versions of OpenFOAM did not play nice with CGAL 5.X
+    depends_on("cgal")
+
     # The flex restriction is ONLY to deal with a spec resolution clash
     # introduced by the restriction within scotch!
     depends_on("flex@:2.6.1,2.6.4:")
