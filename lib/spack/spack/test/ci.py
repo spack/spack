@@ -10,7 +10,6 @@ import pytest
 import llnl.util.filesystem as fs
 
 import spack.ci as ci
-import spack.ci_optimization as ci_opt
 import spack.config
 import spack.environment as ev
 import spack.error
@@ -198,21 +197,6 @@ def test_setup_spack_repro_version(tmpdir, capfd, last_two_git_commits, monkeypa
 
     assert not ret
     assert "Unable to merge {0}".format(c1) in err
-
-
-@pytest.mark.parametrize("obj, proto", [({}, [])])
-def test_ci_opt_argument_checking(obj, proto):
-    """Check that matches() and subkeys() return False when `proto` is not a dict."""
-    assert not ci_opt.matches(obj, proto)
-    assert not ci_opt.subkeys(obj, proto)
-
-
-@pytest.mark.parametrize("yaml", [{"extends": 1}])
-def test_ci_opt_add_extends_non_sequence(yaml):
-    """Check that add_extends() exits if 'extends' is not a sequence."""
-    yaml_copy = yaml.copy()
-    ci_opt.add_extends(yaml, None)
-    assert yaml == yaml_copy
 
 
 def test_get_spec_filter_list(mutable_mock_env_path, config, mutable_mock_repo):

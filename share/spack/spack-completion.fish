@@ -962,9 +962,9 @@ complete -c spack -n '__fish_spack_using_command ci generate' -l output-file -r 
 complete -c spack -n '__fish_spack_using_command ci generate' -l copy-to -r -f -a copy_to
 complete -c spack -n '__fish_spack_using_command ci generate' -l copy-to -r -d 'path to additional directory for job files'
 complete -c spack -n '__fish_spack_using_command ci generate' -l optimize -f -a optimize
-complete -c spack -n '__fish_spack_using_command ci generate' -l optimize -d '(experimental) optimize the gitlab yaml file for size'
+complete -c spack -n '__fish_spack_using_command ci generate' -l optimize -d '(DEPRECATED) optimize the gitlab yaml file for size'
 complete -c spack -n '__fish_spack_using_command ci generate' -l dependencies -f -a dependencies
-complete -c spack -n '__fish_spack_using_command ci generate' -l dependencies -d '(deprecated) disable DAG scheduling (use \'plain\' dependencies)'
+complete -c spack -n '__fish_spack_using_command ci generate' -l dependencies -d '(DEPRECATED) disable DAG scheduling (use \'plain\' dependencies)'
 complete -c spack -n '__fish_spack_using_command ci generate' -l buildcache-destination -r -f -a buildcache_destination
 complete -c spack -n '__fish_spack_using_command ci generate' -l buildcache-destination -r -d 'override the mirror configured in the environment'
 complete -c spack -n '__fish_spack_using_command ci generate' -l prune-dag -f -a prune_dag

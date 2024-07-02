@@ -554,7 +554,6 @@ def generate_gitlab_ci_yaml(
     *,
     prune_dag=False,
     check_index_only=False,
-    run_optimizer=False,
     artifacts_root=None,
     remote_mirror_override=None,
 ):
@@ -575,9 +574,6 @@ def generate_gitlab_ci_yaml(
             this mode results in faster yaml generation time). Otherwise, also
             check each spec directly by url (useful if there is no index or it
             might be out of date).
-        run_optimizer (bool): If True, post-process the generated yaml to try
-            try to reduce the size (attempts to collect repeated configuration
-            and replace with definitions).)
         artifacts_root (str): Path where artifacts like logs, environment
             files (spack.yaml, spack.lock), etc should be written.  GitLab
             requires this to be within the project directory.
@@ -1267,12 +1263,6 @@ def generate_gitlab_ci_yaml(
 
             with open(copy_specs_file, "w") as fd:
                 fd.write(json.dumps(buildcache_copies))
-
-        # TODO(opadron): remove this or refactor
-        if run_optimizer:
-            import spack.ci_optimization as ci_opt
-
-            output_object = ci_opt.optimizer(output_object)
 
     else:
         # No jobs were generated
