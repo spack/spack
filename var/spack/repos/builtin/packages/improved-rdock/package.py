@@ -100,4 +100,4 @@ class ImprovedRdock(MakefilePackage):
         opts = [self.spec.prefix.bin.sdrmsd, "1sj0_ligand.sd", "1sj0_docking_out_sorted.sd"]
         out = exe(*opts, output=str.split, error=str.split)
         expected = ["1\t0.55", "100\t7.91"]
-        check_outputs(expected,out)
+        check_outputs(expected, out)
