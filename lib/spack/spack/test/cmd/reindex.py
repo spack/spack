@@ -13,8 +13,6 @@ install = SpackCommand("install")
 deprecate = SpackCommand("deprecate")
 reindex = SpackCommand("reindex")
 
-pytestmark = pytest.mark.not_on_windows("does not run on windows")
-
 
 def test_reindex_basic(mock_packages, mock_archive, mock_fetch, install_mockery):
     install("libelf@0.8.13")

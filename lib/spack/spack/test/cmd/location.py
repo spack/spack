@@ -18,7 +18,6 @@ from spack.main import SpackCommand, SpackCommandError
 # Everything here uses (or can use) the mock config and database.
 pytestmark = [
     pytest.mark.usefixtures("config", "database"),
-    pytest.mark.not_on_windows("does not run on windows"),
 ]
 # location prints out "locations of packages and spack directories"
 location = SpackCommand("location")
@@ -65,7 +64,7 @@ def test_location_source_dir_missing():
     prefix = "==> Error: "
     expected = (
         "%sSource directory does not exist yet. Run this to create it:"
-        "%s  spack stage %s" % (prefix, os.linesep, spec)
+        "%s  spack stage %s" % (prefix, "\n", spec)
     )
     out = location("--source-dir", spec, fail_on_error=False).strip()
     assert out == expected

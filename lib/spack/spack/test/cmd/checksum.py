@@ -83,7 +83,6 @@ def test_checksum_args(arguments, expected):
     assert check == expected
 
 
-@pytest.mark.not_on_windows("Not supported on Windows (yet)")
 @pytest.mark.parametrize(
     "arguments,expected",
     [
