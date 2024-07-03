@@ -29,7 +29,6 @@
 :- attr("variant_value", PackageNode, _, _), not attr("node", PackageNode).
 :- attr("node_flag_compiler_default", PackageNode), not attr("node", PackageNode).
 :- attr("node_flag", PackageNode, _, _), not attr("node", PackageNode).
-:- attr("no_flags", PackageNode, _), not attr("node", PackageNode).
 :- attr("external_spec_selected", PackageNode, _), not attr("node", PackageNode).
 :- attr("depends_on", ParentNode, _, _), not attr("node", ParentNode).
 :- attr("depends_on", _, ChildNode, _), not attr("node", ChildNode).
@@ -965,11 +964,18 @@ pkg_fact(Package, variant_single_value("dev_path"))
 
 % Propagation roots have a corresponding attr("propagate", ...)
 propagate(RootNode, PropagatedAttribute) :- attr("propagate", RootNode, PropagatedAttribute).
+propagate(RootNode, PropagatedAttribute, EdgeTypes) :- attr("propagate", RootNode, PropagatedAttribute, EdgeTypes).
+
 
 % Propagate an attribute along edges to child nodes
 propagate(ChildNode, PropagatedAttribute) :-
   propagate(ParentNode, PropagatedAttribute),
   depends_on(ParentNode, ChildNode).
+
+propagate(ChildNode, PropagatedAttribute, edge_types(DepType1, DepType2)) :-
+  propagate(ParentNode, PropagatedAttribute, edge_types(DepType1, DepType2)),
+  depends_on(ParentNode, ChildNode),
+  1 { attr("depends_on", ParentNode, ChildNode, DepType1);  attr("depends_on", ParentNode, ChildNode, DepType2) }.
 
 %-----------------------------------------------------------------------------
 % Activation of propagated values
@@ -995,6 +1001,33 @@ variant_is_propagated(PackageNode, Variant) :-
 :- variant_is_propagated(PackageNode, Variant),
    attr("variant_value", PackageNode, Variant, Value),
    not propagate(PackageNode, variant_value(Variant, Value)).
+
+%----
+% Flags
+%----
+
+% A propagated flag implies:
+% 1. The same flag type is not set on this node
+% 2. This node has the same compiler as the propagation source
+
+propagated_flag(node(PackageID, Package), node_flag(FlagType, Flag), SourceNode) :-
+  propagate(node(PackageID, Package), node_flag(FlagType, Flag), _),
+  not attr("node_flag_set", node(PackageID, Package), FlagType, _),
+  % Same compiler as propagation source
+  node_compiler(node(PackageID, Package), CompilerID),
+  node_compiler(SourceNode, CompilerID),
+  attr("propagate", SourceNode, node_flag(FlagType, Flag), _),
+  node(PackageID, Package) != SourceNode,
+  not runtime(Package).
+
+attr("node_flag", PackageNode, FlagType, Flag) :- propagated_flag(PackageNode, node_flag(FlagType, Flag), _).
+attr("node_flag_source", PackageNode, FlagType, SourceNode) :- propagated_flag(PackageNode, node_flag(FlagType, _), SourceNode).
+
+% Cannot propagate the same flag from two distinct sources
+error(100, "{0} and {1} cannot both propagate compiler flags '{2}' to {3}", Source1, Source2, Package, FlagType) :-
+  propagated_flag(node(ID, Package), node_flag(FlagType, _), node(_, Source1)),
+  propagated_flag(node(ID, Package), node_flag(FlagType, _), node(_, Source2)),
+  Source1 < Source2.
 
 %----
 % Compiler constraints
@@ -1277,45 +1310,9 @@ error(100, "Compiler {1}@{2} requested for {0} cannot be found. Set install_miss
 % Compiler flags
 %-----------------------------------------------------------------------------
 
-% propagate flags when compiler match
-can_inherit_flags(PackageNode, DependencyNode, FlagType)
-  :- same_compiler(PackageNode, DependencyNode),
-     not attr("node_flag_set", DependencyNode, FlagType, _),
-     flag_type(FlagType).
-
-same_compiler(PackageNode, DependencyNode)
-  :- depends_on(PackageNode, DependencyNode),
-     node_compiler(PackageNode, CompilerID),
-     node_compiler(DependencyNode, CompilerID),
-     compiler_id(CompilerID).
-
-node_flag_inherited(DependencyNode, FlagType, Flag)
-  :- attr("node_flag_set", PackageNode, FlagType, Flag),
-     can_inherit_flags(PackageNode, DependencyNode, FlagType),
-     attr("node_flag_propagate", PackageNode, FlagType).
-
-% Ensure propagation
-:- node_flag_inherited(PackageNode, FlagType, Flag),
-   can_inherit_flags(PackageNode, DependencyNode, FlagType),
-   attr("node_flag_propagate", PackageNode, FlagType).
-
-error(100, "{0} and {1} cannot both propagate compiler flags '{2}' to {3}", Source1, Source2, Package, FlagType) :-
-  depends_on(Source1, Package),
-  depends_on(Source2, Package),
-  attr("node_flag_propagate", Source1, FlagType),
-  attr("node_flag_propagate", Source2, FlagType),
-  can_inherit_flags(Source1, Package, FlagType),
-  can_inherit_flags(Source2, Package, FlagType),
-  Source1 < Source2.
-
 % remember where flags came from
-attr("node_flag_source", PackageNode, FlagType, PackageNode)
-  :- attr("node_flag_set", PackageNode, FlagType, _).
-
-attr("node_flag_source", DependencyNode, FlagType, Q)
-  :- attr("node_flag_source", PackageNode, FlagType, Q),
-     node_flag_inherited(DependencyNode, FlagType, _),
-     attr("node_flag_propagate", PackageNode, FlagType).
+attr("node_flag_source", PackageNode, FlagType, PackageNode) :- attr("node_flag_set", PackageNode, FlagType, _).
+attr("node_flag_source", PackageNode, FlagType, PackageNode) :- attr("node_flag", PackageNode, FlagType, _), attr("hash", PackageNode, _).
 
 % compiler flags from compilers.yaml are put on nodes if compiler matches
 attr("node_flag", PackageNode, FlagType, Flag)
@@ -1335,15 +1332,8 @@ attr("node_flag_compiler_default", PackageNode)
      compiler_name(CompilerID, CompilerName),
      compiler_version(CompilerID, Version).
 
-% if a flag is set to something or inherited, it's included
+% Flag set to something
 attr("node_flag", PackageNode, FlagType, Flag) :- attr("node_flag_set", PackageNode, FlagType, Flag).
-attr("node_flag", PackageNode, FlagType, Flag) :- node_flag_inherited(PackageNode, FlagType, Flag).
-
-% if no node flags are set for a type, there are no flags.
-attr("no_flags", PackageNode, FlagType)
-  :- not attr("node_flag", PackageNode, FlagType, _),
-     attr("node", PackageNode),
-     flag_type(FlagType).
 
 #defined compiler_flag/3.
 
