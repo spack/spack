@@ -799,8 +799,12 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
         if "~nccl" in spec:
             args.append("--config=nonccl")
 
-        if "+numa" in spec:
-            args.append("--config=numa")
+        # https://github.com/tensorflow/tensorflow/issues/63080
+        if self.spec.satisfies("@2.14:"):
+            args.append(f"--define=with_numa_support={'+numa' in spec}")
+        else:
+            if "+numa" in spec:
+                args.append("--config=numa")
 
         args.append("--config=v2")
 
