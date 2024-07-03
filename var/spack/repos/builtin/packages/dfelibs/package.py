@@ -7,7 +7,7 @@ from spack.package import *
 
 
 class Dfelibs(CMakePackage):
-    """Acts fork of dfelibs, a header-only untility library for C++."""
+    """Acts fork of dfelibs, a header-only utility library for C++."""
 
     homepage = "https://github.com/acts-project/dfelibs"
     url = "https://github.com/acts-project/dfelibs/archive/refs/tags/v20211029.tar.gz"
