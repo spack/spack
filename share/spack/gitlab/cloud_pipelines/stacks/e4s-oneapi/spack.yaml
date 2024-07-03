@@ -124,6 +124,7 @@ spack:
   - netlib-scalapack
   - nrm
   - omega-h
+  - openfoam
   - openmpi
   - papi
   - papyrus
@@ -189,7 +190,6 @@ spack:
   # - glvis ^llvm                                             # glvis: https://github.com/spack/spack/issues/42839
   # - hpctoolkit                                              # dyninst@12.3.0%gcc: /usr/bin/ld: libiberty/./d-demangle.c:142: undefined reference to `_intel_fast_memcpy'; can't mix intel-tbb@%oneapi with dyninst%gcc
   # - mgard +serial +openmp +timing +unstructured ~cuda       # mgard: mgard.tpp:63:48: error: non-constant-expression cannot be narrowed from type 'int' to 'unsigned long' in initializer list [-Wc++11-narrowing]
-  # - openfoam                                                # cgal: https://github.com/spack/spack/issues/39481
   # - openpmd-api                                             # mgard:  mgard.tpp:63:48: error: non-constant-expression cannot be narrowed from type 'int' to 'unsigned long' in initializer list [-Wc++11-narrowing]
   # - pdt                                                     # pdt: pdbType.cc:193:21: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
   # - quantum-espresso                                        # quantum-espresso@7.2 /i3fqdx5: warning: <unknown>:0:0: loop not unroll-and-jammed: the optimizer was unable to perform the requested transformation; the transformation might be disabled or specified as part of an unsupported transformation ordering
