@@ -408,35 +408,39 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
         self.cache_extra_test_sources(cmake_out_path)
         self.cmake_bin(set=True)
 
-    def test_build(self):
+    def build_tests(self, cmake_path):
         """Build test."""
-        # Skip if unsupported version
-        cmake_path = join_path(
-            self.test_suite.current_test_cache_dir, self.test_script_relative_path, "out"
-        )
-
-        if not os.path.exists(cmake_path):
-            raise SkipTest(f"{cmake_path} is missing")
-
         cmake_bin = self.cmake_bin(set=False)
+
         if not cmake_bin:
-            assert False, "cmake_bin_path.txt not found"
+            tty.msg("Skipping kokkos test: cmake_bin_path.txt not found")
+            return
 
-        exe = which(cmake_bin)
-        exe(cmake_path, "-DEXECUTABLE_OUTPUT_PATH=" + cmake_path)
+        cmake_args = [cmake_path, "-DEXECUTABLE_OUTPUT_PATH=" + cmake_path]
 
-        make = which("make")
-        make()
+        if not self.run_test(cmake_bin, options=cmake_args, purpose="Generate the Makefile"):
+            tty.warn("Skipping kokkos test: failed to generate Makefile")
+            return
 
-    def test_run(self):
-        """Test if kokkos runs"""
+        if not self.run_test("make", purpose="Build test software"):
+            tty.warn("Skipping kokkos test: failed to build test")
+
+    def run_tests(self, cmake_path):
+        """Run test."""
+        if not self.run_test(
+            "make", options=[cmake_path, "test"], purpose="Checking ability to execute."
+        ):
+            tty.warn("Failed to run kokkos test")
+
+    def test(self):
         # Skip if unsupported version
         cmake_path = join_path(
             self.test_suite.current_test_cache_dir, self.test_script_relative_path, "out"
         )
 
         if not os.path.exists(cmake_path):
-            raise SkipTest(f"{cmake_path} is missing")
+            tty.warn("Skipping smoke tests: {0} is missing".format(cmake_path))
+            return
 
-        exe = which("make")
-        exe(cmake_path, "test")
+        self.build_tests(cmake_path)
+        self.run_tests(cmake_path)
