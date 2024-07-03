@@ -3049,23 +3049,29 @@ def test_spec_filters(specs, include, exclude, expected):
 
 
 @pytest.mark.only_clingo("Feature not implemented in the original concretizer")
-def test_branch_based_versions_pin_to_commits(
-    mock_git_version_info, database, mock_packages, monkeypatch, do_not_check_runtimes_on_reuse
+@pytest.mark.parametrize("git_ref,commit_index", [("main", 2), ("1.2", 0)])
+def test_git_ref_based_versions_pin_to_commits(
+    git_ref,
+    commit_index,
+    mock_git_version_info,
+    database,
+    mock_packages,
+    monkeypatch,
+    do_not_check_runtimes_on_reuse,
 ):
     repo_path, filename, commits = mock_git_version_info
     monkeypatch.setattr(
         spack.package_base.PackageBase, "git", pathlib.Path(repo_path).as_uri(), raising=False
     )
 
-    spec = Spec("git-test-commit@main").concretized()
-    # assure it is not a StandardVersion post solve
+    spec = Spec(f"git-test-commit@{git_ref}").concretized()
+
     assert isinstance(spec.versions.concrete, GitVersion)
-    # last main commit was 3'rd in the list (see mock_git_version_info)
-    assert spec.format("{version}") == f"git.{commits[2]}=main"
+    assert spec.format("{version}") == f"git.{commits[commit_index]}={git_ref}"
 
 
 @pytest.mark.only_clingo("Feature not implemented in the original concretizer")
-def test_versions_with_custom_git_branch_based_versions_pin_to_commits(
+def test_versions_with_custom_git_ref_based_versions_pin_to_commits(
     mock_git_version_info, database, mock_packages, monkeypatch, do_not_check_runtimes_on_reuse
 ):
     repo_path, filename, commits = mock_git_version_info

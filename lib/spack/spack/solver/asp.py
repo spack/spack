@@ -93,6 +93,20 @@ DEFAULT_OUTPUT_CONFIGURATION = OutputConfiguration(
 )
 
 
+class GitBranch:
+    def __init__(self, git_address, name):
+        self.address = git_address
+        self.name = name
+        self.flag = "-h"
+
+
+class GitTag:
+    def __init__(self, git_address, name):
+        self.address = git_address
+        self.name = name
+        self.flag = "-t"
+
+
 def default_clingo_control():
     """Return a control object with the default settings used in Spack"""
     control = clingo().Control()
@@ -3386,21 +3400,25 @@ class SpecBuilder:
 
         self._specs[node].update_variant_validate(name, value)
 
-    def _associated_branch(self, version_string, package_class):
+    def _associated_git_ref(self, version_string, package_class):
         version = vn.Version(version_string)
         version_dict = package_class.versions.get(version, {})
 
         git_address = version_dict.get("git", None) or getattr(package_class, "git", None)
 
         if git_address:
-            return git_address, version_dict.get("branch", None)
-        else:
-            return None, None
+            branch = version_dict.get("branch", None)
+            tag = version_dict.get("tag", None)
+            if branch:
+                return GitBranch(git_address, branch)
+            elif tag:
+                return GitTag(git_address, tag)
+        return None
 
-    def _retrieve_latest_git_hash(self, branch_name, git_address):
+    def _retrieve_latest_git_hash(self, git_ref):
         # remote git operations can sometimes have banners so we must parse the output for a sha
         query = spack.util.git.git(required=True)(
-            "ls-remote", "-h", git_address, branch_name, output=str, error=os.devnull
+            "ls-remote", git_ref.flag, git_ref.address, git_ref.name, output=str, error=os.devnull
         )
         sha, ref = query.strip().split()
         assert COMMIT_VERSION.match(sha)
@@ -3408,17 +3426,17 @@ class SpecBuilder:
 
     def version(self, node, version):
         pkg_cls = self._specs[node].package_class
-        git_address, branch = self._associated_branch(version, pkg_cls)
-        if branch:
+        git_ref = self._associated_git_ref(version, pkg_cls)
+        if git_ref:
             try:
-                hash = self._retrieve_latest_git_hash(branch, git_address)
+                hash = self._retrieve_latest_git_hash(git_ref)
             except (ProcessError, ValueError, AssertionError):
                 raise InternalConcretizerError(
                     (
                         "Failure to fetch git sha when running"
-                        f" `git ls-remote {git_address} {branch}`\n"
+                        f" `git ls-remote {git_ref.address} {git_ref.name}`\n"
                         "Confirm network connectivty by running this command followed by:\n"
-                        f"\t`spack fetch {git_address}@{str(version)}`"
+                        f"\t`spack fetch {git_ref.address}@{str(version)}`"
                         "Post a bug report if both of these operations succeed."
                     )
                 )
