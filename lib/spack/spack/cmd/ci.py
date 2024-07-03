@@ -6,6 +6,7 @@
 import json
 import os
 import shutil
+import warnings
 from urllib.parse import urlparse, urlunparse
 
 import llnl.util.filesystem as fs
@@ -31,13 +32,18 @@ section = "build"
 level = "long"
 
 SPACK_COMMAND = "spack"
-MAKE_COMMAND = "make"
 INSTALL_FAIL_CODE = 1
 FAILED_CREATE_BUILDCACHE_CODE = 100
 
 
 def deindent(desc):
     return desc.replace("    ", "")
+
+
+def unicode_escape(path: str) -> str:
+    """Returns transformed path with any unicode
+    characters replaced with their corresponding escapes"""
+    return path.encode("unicode-escape").decode("utf-8")
 
 
 def setup_parser(subparser):
@@ -68,7 +74,7 @@ def setup_parser(subparser):
         "--optimize",
         action="store_true",
         default=False,
-        help="(experimental) optimize the gitlab yaml file for size\n\n"
+        help="(DEPRECATED) optimize the gitlab yaml file for size\n\n"
         "run the generated document through a series of optimization passes "
         "designed to reduce the size of the generated file",
     )
@@ -76,7 +82,7 @@ def setup_parser(subparser):
         "--dependencies",
         action="store_true",
         default=False,
-        help="(experimental) disable DAG scheduling (use 'plain' dependencies)",
+        help="(DEPRECATED) disable DAG scheduling (use 'plain' dependencies)",
     )
     generate.add_argument(
         "--buildcache-destination",
@@ -195,6 +201,18 @@ def ci_generate(args):
     before invoking this command. the value must be the CDash authorization token needed to create
     a build group and register all generated jobs under it
     """
+    if args.optimize:
+        warnings.warn(
+            "The --optimize option has been deprecated, and currently has no effect. "
+            "It will be removed in Spack v0.24."
+        )
+
+    if args.dependencies:
+        warnings.warn(
+            "The --dependencies option has been deprecated, and currently has no effect. "
+            "It will be removed in Spack v0.24."
+        )
+
     env = spack.cmd.require_active_env(cmd_name="ci generate")
 
     if args.copy_to:
@@ -207,8 +225,6 @@ def ci_generate(args):
 
     output_file = args.output_file
     copy_yaml_to = args.copy_to
-    run_optimizer = args.optimize
-    use_dependencies = args.dependencies
     prune_dag = args.prune_dag
     index_only = args.index_only
     artifacts_root = args.artifacts_root
@@ -229,8 +245,6 @@ def ci_generate(args):
         output_file,
         prune_dag=prune_dag,
         check_index_only=index_only,
-        run_optimizer=run_optimizer,
-        use_dependencies=use_dependencies,
         artifacts_root=artifacts_root,
         remote_mirror_override=buildcache_destination,
     )
@@ -551,75 +565,35 @@ def ci_rebuild(args):
     # No hash match anywhere means we need to rebuild spec
 
     # Start with spack arguments
-    spack_cmd = [SPACK_COMMAND, "--color=always", "--backtrace", "--verbose"]
+    spack_cmd = [SPACK_COMMAND, "--color=always", "--backtrace", "--verbose", "install"]
 
     config = cfg.get("config")
     if not config["verify_ssl"]:
         spack_cmd.append("-k")
 
-    install_args = []
+    install_args = [f'--use-buildcache={spack_ci.win_quote("package:never,dependencies:only")}']
 
     can_verify = spack_ci.can_verify_binaries()
     verify_binaries = can_verify and spack_is_pr_pipeline is False
     if not verify_binaries:
         install_args.append("--no-check-signature")
 
-    slash_hash = "/{}".format(job_spec.dag_hash())
-
-    # Arguments when installing dependencies from cache
-    deps_install_args = install_args
+    slash_hash = spack_ci.win_quote("/" + job_spec.dag_hash())
 
     # Arguments when installing the root from sources
-    root_install_args = install_args + [
-        "--keep-stage",
-        "--only=package",
-        "--use-buildcache=package:never,dependencies:only",
-    ]
+    deps_install_args = install_args + ["--only=dependencies"]
+    root_install_args = install_args + ["--keep-stage", "--only=package"]
+
     if cdash_handler:
         # Add additional arguments to `spack install` for CDash reporting.
         root_install_args.extend(cdash_handler.args())
-    root_install_args.append(slash_hash)
-
-    # ["x", "y"] -> "'x' 'y'"
-    args_to_string = lambda args: " ".join("'{}'".format(arg) for arg in args)
 
     commands = [
         # apparently there's a race when spack bootstraps? do it up front once
-        [SPACK_COMMAND, "-e", env.path, "bootstrap", "now"],
-        [
-            SPACK_COMMAND,
-            "-e",
-            env.path,
-            "env",
-            "depfile",
-            "-o",
-            "Makefile",
-            "--use-buildcache=package:never,dependencies:only",
-            slash_hash,  # limit to spec we're building
-        ],
-        [
-            # --output-sync requires GNU make 4.x.
-            # Old make errors when you pass it a flag it doesn't recognize,
-            # but it doesn't error or warn when you set unrecognized flags in
-            # this variable.
-            "export",
-            "GNUMAKEFLAGS=--output-sync=recurse",
-        ],
-        [
-            MAKE_COMMAND,
-            "SPACK={}".format(args_to_string(spack_cmd)),
-            "SPACK_COLOR=always",
-            "SPACK_INSTALL_FLAGS={}".format(args_to_string(deps_install_args)),
-            "-j$(nproc)",
-            "install-deps/{}".format(
-                spack.environment.depfile.MakefileSpec(job_spec).safe_format(
-                    "{name}-{version}-{hash}"
-                )
-            ),
-        ],
-        spack_cmd + ["install"] + root_install_args,
+        [SPACK_COMMAND, "-e", unicode_escape(env.path), "bootstrap", "now"],
+        spack_cmd + deps_install_args + [slash_hash],
+        spack_cmd + root_install_args + [slash_hash],
     ]
-
     tty.debug("Installing {0} from source".format(job_spec.name))
     install_exit_code = spack_ci.process_command("install", commands, repro_dir)
 

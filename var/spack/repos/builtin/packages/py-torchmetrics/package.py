@@ -16,6 +16,7 @@ class PyTorchmetrics(PythonPackage):
 
     license("Apache-2.0")
 
+    version("1.4.0", sha256="0b1e5acdcc9beb05bfe369d3d56cfa5b143f060ebfd6079d19ccc59ba46465b3")
     version("1.3.2", sha256="0a67694a4c4265eeb54cda741eaf5cb1f3a71da74b7e7e6215ad156c9f2379f6")
     version("1.3.1", sha256="8d371f7597a1a5eb02d5f2ed59642d6fef09093926997ce91e18b1147cc8defa")
     version("1.3.0", sha256="e8ac3adcc61e7a847d0504b0a0e0a3b7f57796178b239c6fafb5d20c0c9460ac")
@@ -47,17 +48,19 @@ class PyTorchmetrics(PythonPackage):
     depends_on("py-setuptools", type="build")
 
     # requirements/base.txt (upper bound is removed during processing)
-    depends_on("py-numpy@1.20.1:", when="@1:", type=("build", "run"))
-    depends_on("py-numpy@1.17.2:", when="@0.4:", type=("build", "run"))
-    depends_on("py-numpy", when="@0.3:", type=("build", "run"))
-    depends_on("py-packaging@17.2:", when="@1.2.1:", type=("build", "run"))
-    depends_on("py-packaging", when="@0.3:1.1.0", type=("build", "run"))
-    depends_on("py-torch@1.10:", when="@1.3:", type=("build", "run"))
-    depends_on("py-torch@1.8.1:", when="@0.11:", type=("build", "run"))
-    depends_on("py-torch@1.3.1:", type=("build", "run"))
-    depends_on("py-typing-extensions", when="@0.9: ^python@:3.8", type=("build", "run"))
-    depends_on("py-lightning-utilities@0.8:", when="@1.1:", type=("build", "run"))
-    depends_on("py-lightning-utilities@0.7:", when="@1:", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("py-numpy@1.20.1:", when="@1:")
+        depends_on("py-numpy@1.17.2:", when="@0.4:")
+        depends_on("py-numpy", when="@0.3:")
+        depends_on("py-packaging@17.2:", when="@1.2.1:")
+        depends_on("py-packaging", when="@0.3:1.1.0")
+        depends_on("py-torch@1.10:", when="@1.3:")
+        depends_on("py-torch@1.8.1:", when="@0.11:")
+        depends_on("py-torch@1.3.1:")
+        depends_on("py-typing-extensions", when="@0.9: ^python@:3.8")
+        depends_on("py-lightning-utilities@0.8:", when="@1.1:")
+        depends_on("py-lightning-utilities@0.7:", when="@1:")
+        depends_on("py-pretty-errors@1.2.25", when="@1.4:")
 
-    # Historical dependencies
-    depends_on("py-pydeprecate@0.3", when="@0.7:0.8", type=("build", "run"))
+        # Historical dependencies
+        depends_on("py-pydeprecate@0.3", when="@0.7:0.8")

@@ -17,6 +17,7 @@ class Masurca(Package):
 
     license("GPL-3.0-only")
 
+    version("4.1.1", sha256="8758f6196bf7f57e24e08bda84abddfff08feb4cea204c0eb5e1cb9fe8198573")
     version("4.1.0", sha256="15078e24c79fe5aabe42748d64f95d15f3fbd7708e84d88fc07c4b7f2e4b0902")
     version("4.0.9", sha256="a31c2f786452f207c0b0b20e646b6c85b7357dcfd522b697c1009d902d3ed4cf")
     version("4.0.5", sha256="db525c26f2b09d6b359a2830fcbd4a3fdc65068e9a116c91076240fd1f5924ed")
@@ -39,11 +40,11 @@ class Masurca(Package):
                 filter_file("-minline-all-stringops", "", m)
 
     def setup_build_environment(self, env):
-        if "@4:" in self.spec:
+        if self.spec.satisfies("@4:"):
             env.set("DEST", self.prefix)
 
     def install(self, spec, prefix):
         installer = Executable("./install.sh")
         installer()
-        if "@:4" in self.spec:
+        if self.spec.satisfies("@:4"):
             install_tree(".", prefix)

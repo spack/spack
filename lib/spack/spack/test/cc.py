@@ -127,7 +127,7 @@ spack_cppflags = ["-g", "-O1", "-DVAR=VALUE"]
 spack_cflags = ["-Wall"]
 spack_cxxflags = ["-Werror"]
 spack_fflags = ["-w"]
-spack_ldflags = ["-L", "foo"]
+spack_ldflags = ["-Wl,--gc-sections", "-L", "foo"]
 spack_ldlibs = ["-lfoo"]
 
 lheaderpad = ["-Wl,-headerpad_max_install_names"]
@@ -279,7 +279,6 @@ def test_ld_flags(wrapper_environment, wrapper_flags):
         test_args,
         ["ld"]
         + test_include_paths
-        + [spack_ldflags[i] + spack_ldflags[i + 1] for i in range(0, len(spack_ldflags), 2)]
         + test_library_paths
         + ["--disable-new-dtags"]
         + test_rpaths
@@ -307,13 +306,14 @@ def test_cc_flags(wrapper_environment, wrapper_flags):
         [real_cc]
         + target_args
         + test_include_paths
-        + [spack_ldflags[i] + spack_ldflags[i + 1] for i in range(0, len(spack_ldflags), 2)]
+        + ["-Lfoo"]
         + test_library_paths
         + ["-Wl,--disable-new-dtags"]
         + test_wl_rpaths
         + test_args_without_paths
         + spack_cppflags
         + spack_cflags
+        + ["-Wl,--gc-sections"]
         + spack_ldlibs,
     )
 
@@ -325,12 +325,13 @@ def test_cxx_flags(wrapper_environment, wrapper_flags):
         [real_cc]
         + target_args
         + test_include_paths
-        + [spack_ldflags[i] + spack_ldflags[i + 1] for i in range(0, len(spack_ldflags), 2)]
+        + ["-Lfoo"]
         + test_library_paths
         + ["-Wl,--disable-new-dtags"]
         + test_wl_rpaths
         + test_args_without_paths
         + spack_cppflags
+        + ["-Wl,--gc-sections"]
         + spack_ldlibs,
     )
 
@@ -342,13 +343,14 @@ def test_fc_flags(wrapper_environment, wrapper_flags):
         [real_cc]
         + target_args
         + test_include_paths
-        + [spack_ldflags[i] + spack_ldflags[i + 1] for i in range(0, len(spack_ldflags), 2)]
+        + ["-Lfoo"]
         + test_library_paths
         + ["-Wl,--disable-new-dtags"]
         + test_wl_rpaths
         + test_args_without_paths
         + spack_fflags
         + spack_cppflags
+        + ["-Wl,--gc-sections"]
         + spack_ldlibs,
     )
 
@@ -826,14 +828,14 @@ def test_keep_and_replace(wrapper_environment):
         ),
         (
             "config:flags:keep_werror:specific",
-            ["-Werror", "-Werror=specific", "-bah"],
-            ["-Werror=specific", "-bah"],
+            ["-Werror", "-Werror=specific", "-Werror-specific2", "-bah"],
+            ["-Wno-error", "-Werror=specific", "-Werror-specific2", "-bah"],
             ["-Werror"],
         ),
         (
             "config:flags:keep_werror:none",
             ["-Werror", "-Werror=specific", "-bah"],
-            ["-bah", "-Wno-error", "-Wno-error=specific"],
+            ["-Wno-error", "-Wno-error=specific", "-bah"],
             ["-Werror", "-Werror=specific"],
         ),
         # check non-standard -Werror opts like -Werror-implicit-function-declaration
@@ -846,13 +848,13 @@ def test_keep_and_replace(wrapper_environment):
         (
             "config:flags:keep_werror:specific",
             ["-Werror", "-Werror-implicit-function-declaration", "-bah"],
-            ["-Werror-implicit-function-declaration", "-bah", "-Wno-error"],
+            ["-Wno-error", "-Werror-implicit-function-declaration", "-bah"],
             ["-Werror"],
         ),
         (
             "config:flags:keep_werror:none",
             ["-Werror", "-Werror-implicit-function-declaration", "-bah"],
-            ["-bah", "-Wno-error=implicit-function-declaration"],
+            ["-Wno-error", "-bah", "-Wno-error=implicit-function-declaration"],
             ["-Werror", "-Werror-implicit-function-declaration"],
         ),
     ],

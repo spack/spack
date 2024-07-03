@@ -28,7 +28,7 @@ class PyNetket(PythonPackage):
 
     # build only deps
     depends_on("py-setuptools", type="build")
-    depends_on("py-cmake@3.12:", type="build")
+    depends_on("cmake@3.12:", type="build")
 
     depends_on("blas")
     depends_on("mpi")

@@ -22,6 +22,8 @@ from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode
 from urllib.request import HTTPHandler, Request, build_opener
 
+import ruamel.yaml
+
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
 from llnl.util.lang import memoized
@@ -44,6 +46,7 @@ import spack.util.web as web_util
 from spack import traverse
 from spack.error import SpackError
 from spack.reporters import CDash, CDashConfiguration
+from spack.reporters.cdash import SPACK_CDASH_TIMEOUT
 from spack.reporters.cdash import build_stamp as cdash_build_stamp
 
 # See https://docs.gitlab.com/ee/ci/yaml/#retry for descriptions of conditions
@@ -550,10 +553,9 @@ def generate_gitlab_ci_yaml(
     env,
     print_summary,
     output_file,
+    *,
     prune_dag=False,
     check_index_only=False,
-    run_optimizer=False,
-    use_dependencies=False,
     artifacts_root=None,
     remote_mirror_override=None,
 ):
@@ -574,12 +576,6 @@ def generate_gitlab_ci_yaml(
             this mode results in faster yaml generation time). Otherwise, also
             check each spec directly by url (useful if there is no index or it
             might be out of date).
-        run_optimizer (bool): If True, post-process the generated yaml to try
-            try to reduce the size (attempts to collect repeated configuration
-            and replace with definitions).)
-        use_dependencies (bool): If true, use "dependencies" rather than "needs"
-            ("needs" allows DAG scheduling).  Useful if gitlab instance cannot
-            be configured to handle more than a few "needs" per job.
         artifacts_root (str): Path where artifacts like logs, environment
             files (spack.yaml, spack.lock), etc should be written.  GitLab
             requires this to be within the project directory.
@@ -682,6 +678,22 @@ def generate_gitlab_ci_yaml(
             "deprecated ci configuration, a no-op pipeline will be generated\n",
             "instead.",
         )
+
+    def ensure_expected_target_path(path):
+        """Returns passed paths with all Windows path separators exchanged
+        for posix separators only if copy_only_pipeline is enabled
+
+        This is required as copy_only_pipelines are a unique scenario where
+        the generate job and child pipelines are run on different platforms.
+        To make this compatible w/ Windows, we cannot write Windows style path separators
+        that will be consumed on by the Posix copy job runner.
+
+        TODO (johnwparent): Refactor config + cli read/write to deal only in posix
+        style paths
+        """
+        if copy_only_pipeline and path:
+            path = path.replace("\\", "/")
+        return path
 
     pipeline_mirrors = spack.mirror.MirrorCollection(binary=True)
     deprecated_mirror_config = False
@@ -806,7 +818,7 @@ def generate_gitlab_ci_yaml(
             if scope not in include_scopes and scope not in env_includes:
                 include_scopes.insert(0, scope)
         env_includes.extend(include_scopes)
-        env_yaml_root["spack"]["include"] = env_includes
+        env_yaml_root["spack"]["include"] = [ensure_expected_target_path(i) for i in env_includes]
 
         if "gitlab-ci" in env_yaml_root["spack"] and "ci" not in env_yaml_root["spack"]:
             env_yaml_root["spack"]["ci"] = env_yaml_root["spack"].pop("gitlab-ci")
@@ -1227,6 +1239,9 @@ def generate_gitlab_ci_yaml(
             "SPACK_REBUILD_EVERYTHING": str(rebuild_everything),
             "SPACK_REQUIRE_SIGNING": os.environ.get("SPACK_REQUIRE_SIGNING", "False"),
         }
+        output_vars = output_object["variables"]
+        for item, val in output_vars.items():
+            output_vars[item] = ensure_expected_target_path(val)
 
         # TODO: Remove this block in Spack 0.23
         if deprecated_mirror_config and remote_mirror_override:
@@ -1251,17 +1266,6 @@ def generate_gitlab_ci_yaml(
             with open(copy_specs_file, "w") as fd:
                 fd.write(json.dumps(buildcache_copies))
 
-        # TODO(opadron): remove this or refactor
-        if run_optimizer:
-            import spack.ci_optimization as ci_opt
-
-            output_object = ci_opt.optimizer(output_object)
-
-        # TODO(opadron): remove this or refactor
-        if use_dependencies:
-            import spack.ci_needs_workaround as cinw
-
-            output_object = cinw.needs_to_dependencies(output_object)
     else:
         # No jobs were generated
         noop_job = spack_ci_ir["jobs"]["noop"]["attributes"]
@@ -1283,7 +1287,6 @@ def generate_gitlab_ci_yaml(
     sorted_output = {}
     for output_key, output_value in sorted(output_object.items()):
         sorted_output[output_key] = output_value
-
     if known_broken_specs_encountered:
         tty.error("This pipeline generated hashes known to be broken on develop:")
         display_broken_spec_messages(broken_specs_url, known_broken_specs_encountered)
@@ -1291,8 +1294,11 @@ def generate_gitlab_ci_yaml(
         if not rebuild_everything:
             sys.exit(1)
 
-    with open(output_file, "w") as outf:
-        outf.write(syaml.dump(sorted_output, default_flow_style=True))
+    # Minimize yaml output size through use of anchors
+    syaml.anchorify(sorted_output)
+
+    with open(output_file, "w") as f:
+        ruamel.yaml.YAML().dump(sorted_output, f)
 
 
 def _url_encode_string(input_string):
@@ -1478,6 +1484,12 @@ def copy_test_logs_to_artifacts(test_stage, job_test_dir):
     copy_files_to_artifacts(os.path.join(test_stage, "*", "*.txt"), job_test_dir)
 
 
+def win_quote(quote_str: str) -> str:
+    if IS_WINDOWS:
+        quote_str = f'"{quote_str}"'
+    return quote_str
+
+
 def download_and_extract_artifacts(url, work_dir):
     """Look for gitlab artifacts.zip at the given url, and attempt to download
         and extract the contents into the given work_dir
@@ -1500,7 +1512,7 @@ def download_and_extract_artifacts(url, work_dir):
     request = Request(url, headers=headers)
     request.get_method = lambda: "GET"
 
-    response = opener.open(request)
+    response = opener.open(request, timeout=SPACK_CDASH_TIMEOUT)
     response_code = response.getcode()
 
     if response_code != 200:
@@ -1942,9 +1954,9 @@ def process_command(name, commands, repro_dir, run=True, exit_on_failure=True):
         # but we need to handle EXEs (git, etc) ourselves
         catch_exe_failure = (
             """
-if ($LASTEXITCODE -ne 0){
-    throw "Command {} has failed"
-}
+if ($LASTEXITCODE -ne 0){{
+    throw 'Command {} has failed'
+}}
 """
             if IS_WINDOWS
             else ""
@@ -2176,13 +2188,13 @@ class CDashHandler:
     def args(self):
         return [
             "--cdash-upload-url",
-            self.upload_url,
+            win_quote(self.upload_url),
             "--cdash-build",
-            self.build_name,
+            win_quote(self.build_name),
             "--cdash-site",
-            self.site,
+            win_quote(self.site),
             "--cdash-buildstamp",
-            self.build_stamp,
+            win_quote(self.build_stamp),
         ]
 
     @property  # type: ignore
@@ -2248,7 +2260,7 @@ hash={spec.dag_hash()} arch={spec.architecture} ({self.build_group})"
 
         request = Request(url, data=enc_data, headers=headers)
 
-        response = opener.open(request)
+        response = opener.open(request, timeout=SPACK_CDASH_TIMEOUT)
         response_code = response.getcode()
 
         if response_code not in [200, 201]:
@@ -2294,7 +2306,7 @@ hash={spec.dag_hash()} arch={spec.architecture} ({self.build_group})"
         request = Request(url, data=enc_data, headers=headers)
         request.get_method = lambda: "PUT"
 
-        response = opener.open(request)
+        response = opener.open(request, timeout=SPACK_CDASH_TIMEOUT)
         response_code = response.getcode()
 
         if response_code != 200:

@@ -114,9 +114,6 @@ class TestTcl:
 
         assert len([x for x in content if "prereq" in x]) == 5
 
-    @pytest.mark.skipif(
-        str(archspec.cpu.host().family) != "x86_64", reason="test data is specific for x86_64"
-    )
     def test_alter_environment(self, modulefile_content, module_configuration):
         """Tests modifications to run-time environment."""
 

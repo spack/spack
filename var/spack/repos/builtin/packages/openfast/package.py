@@ -13,12 +13,12 @@ class Openfast(CMakePackage):
     git = "https://github.com/OpenFAST/openfast.git"
 
     maintainers("jrood-nrel")
-    patch("hub_seg_fault.patch", when="@2.7:3.2")
 
     license("Apache-2.0")
 
     version("develop", branch="dev")
     version("master", branch="main")
+    version("3.5.3", tag="v3.5.3", commit="6a7a543790f3cad4a65b87242a619ac5b34b4c0f")
     version("3.4.1", tag="v3.4.1", commit="18704086dad861ab13daf804825da7c4b8d59428")
     version("3.4.0", tag="v3.4.0", commit="e8ec53f9c7f9d3f6a13bfb61dba12a0ca04d8a2f")
     version("3.3.0", tag="v3.3.0", commit="5f3fb6ef74f48e75ca94000090737a41866fb264")
@@ -35,6 +35,8 @@ class Openfast(CMakePackage):
     version("2.0.0", tag="v2.0.0", commit="0769598a17e19b3ccd00a85cde389995f55024a8")
     version("1.0.0", tag="v1.0.0", commit="e788b9b18bd5ed96ea59d4bc0812d461bc430cfe")
 
+    patch("hub_seg_fault.patch", when="@2.7:3.2")
+
     variant("shared", default=True, description="Build shared libraries")
     variant("double-precision", default=True, description="Treat REAL as double precision")
     variant("dll-interface", default=True, description="Enable dynamic library loading interface")
@@ -42,18 +44,19 @@ class Openfast(CMakePackage):
     variant("pic", default=True, description="Position independent code")
     variant("openmp", default=False, description="Enable OpenMP support")
     variant("netcdf", default=False, description="Enable NetCDF support")
+    variant("rosco", default=False, description="Build ROSCO controller")
 
-    # Dependencies for OpenFAST Fortran
     depends_on("blas")
     depends_on("lapack")
-
-    # Additional dependencies when compiling C++ library
     depends_on("mpi", when="+cxx")
-    depends_on("yaml-cpp", when="+cxx")
+    depends_on("yaml-cpp@0.6.0:0.6.3", when="+cxx")
     depends_on("hdf5+mpi+cxx+hl", when="+cxx")
     depends_on("zlib-api", when="+cxx")
     depends_on("libxml2", when="+cxx")
     depends_on("netcdf-c", when="+cxx+netcdf")
+    depends_on("rosco", when="+rosco")
+
+    conflicts("~cxx", when="+netcdf")
 
     def cmake_args(self):
         spec = self.spec

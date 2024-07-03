@@ -21,6 +21,8 @@ class Openjpeg(CMakePackage):
 
     license("BSD-2-Clause-NetBSD")
 
+    version("2.5.2", sha256="90e3896fed910c376aaf79cdd98bdfdaf98c6472efd8e1debf0a854938cbda6a")
+    version("2.5.1", sha256="c0b92dadd65e33b1cf94f39dd9157d5469846744c2e0afb8ca10961f51f61da6")
     version("2.5.0", sha256="0333806d6adecc6f7a91243b2b839ff4d2053823634d4f6ed7a59bc87409122a")
     version("2.4.0", sha256="8702ba68b442657f11aaeb2b338443ca8d5fb95b0d845757968a7be31ef7f16d")
     version("2.3.1", sha256="63f5a4713ecafc86de51bfad89cc07bb788e9bba24ebbf0c4ca637621aadb6a9")
@@ -36,6 +38,7 @@ class Openjpeg(CMakePackage):
 
     variant("codec", default=False, description="Build the CODEC executables")
 
+    depends_on("cmake@3.5:", when="@2.5.1:", type="build")
     depends_on("zlib-api", when="+codec")
     depends_on("libpng", when="+codec")
     depends_on("libtiff", when="+codec")

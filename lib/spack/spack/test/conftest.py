@@ -12,6 +12,7 @@ import itertools
 import json
 import os
 import os.path
+import pathlib
 import re
 import shutil
 import stat
@@ -32,6 +33,7 @@ import llnl.util.tty as tty
 from llnl.util.filesystem import copy_tree, mkdirp, remove_linked_tree, touchp, working_dir
 
 import spack.binary_distribution
+import spack.bootstrap.core
 import spack.caches
 import spack.cmd.buildcache
 import spack.compiler
@@ -682,36 +684,34 @@ def configuration_dir(tmpdir_factory, linux_os):
     directory path.
     """
     tmpdir = tmpdir_factory.mktemp("configurations")
+    install_tree_root = tmpdir_factory.mktemp("opt")
+    modules_root = tmpdir_factory.mktemp("share")
+    tcl_root = modules_root.ensure("modules", dir=True)
+    lmod_root = modules_root.ensure("lmod", dir=True)
 
     # <test_path>/data/config has mock config yaml files in it
     # copy these to the site config.
-    test_config = py.path.local(spack.paths.test_path).join("data", "config")
-    test_config.copy(tmpdir.join("site"))
+    test_config = pathlib.Path(spack.paths.test_path) / "data" / "config"
+    shutil.copytree(test_config, tmpdir.join("site"))
 
     # Create temporary 'defaults', 'site' and 'user' folders
     tmpdir.ensure("user", dir=True)
 
-    # Slightly modify config.yaml and compilers.yaml
-    if sys.platform == "win32":
-        locks = False
-    else:
-        locks = True
-
+    # Fill out config.yaml, compilers.yaml and modules.yaml templates.
     solver = os.environ.get("SPACK_TEST_SOLVER", "clingo")
-    config_yaml = test_config.join("config.yaml")
-    modules_root = tmpdir_factory.mktemp("share")
-    tcl_root = modules_root.ensure("modules", dir=True)
-    lmod_root = modules_root.ensure("lmod", dir=True)
-    content = "".join(config_yaml.read()).format(solver, locks, str(tcl_root), str(lmod_root))
-    t = tmpdir.join("site", "config.yaml")
-    t.write(content)
+    locks = sys.platform != "win32"
+    config = tmpdir.join("site", "config.yaml")
+    config_template = test_config / "config.yaml"
+    config.write(config_template.read_text().format(install_tree_root, solver, locks))
 
-    compilers_yaml = test_config.join("compilers.yaml")
-    content = "".join(compilers_yaml.read()).format(
-        linux_os=linux_os, target=str(archspec.cpu.host().family)
-    )
-    t = tmpdir.join("site", "compilers.yaml")
-    t.write(content)
+    target = str(archspec.cpu.host().family)
+    compilers = tmpdir.join("site", "compilers.yaml")
+    compilers_template = test_config / "compilers.yaml"
+    compilers.write(compilers_template.read_text().format(linux_os=linux_os, target=target))
+
+    modules = tmpdir.join("site", "modules.yaml")
+    modules_template = test_config / "modules.yaml"
+    modules.write(modules_template.read_text().format(tcl_root, lmod_root))
     yield tmpdir
 
 
@@ -761,6 +761,28 @@ def mutable_empty_config(tmpdir_factory, configuration_dir):
 
     with spack.config.use_configuration(*scopes) as cfg:
         yield cfg
+
+
+# From  https://github.com/pytest-dev/pytest/issues/363#issuecomment-1335631998
+# Current suggested implementation from issue compatible with pytest >= 6.2
+# this may be subject to change as new versions of Pytest are released
+# and update the suggested solution
+@pytest.fixture(scope="session")
+def monkeypatch_session():
+    with pytest.MonkeyPatch.context() as monkeypatch:
+        yield monkeypatch
+
+
+@pytest.fixture(scope="session", autouse=True)
+def mock_wsdk_externals(monkeypatch_session):
+    """Skip check for required external packages on Windows during testing
+    Note: In general this should cover this behavior for all tests,
+    however any session scoped fixture involving concretization should
+    include this fixture
+    """
+    monkeypatch_session.setattr(
+        spack.bootstrap.core, "ensure_winsdk_external_or_raise", _return_none
+    )
 
 
 @pytest.fixture(scope="function")
@@ -842,7 +864,13 @@ def _store_dir_and_cache(tmpdir_factory):
 
 
 @pytest.fixture(scope="session")
-def mock_store(tmpdir_factory, mock_repo_path, mock_configuration_scopes, _store_dir_and_cache):
+def mock_store(
+    tmpdir_factory,
+    mock_wsdk_externals,
+    mock_repo_path,
+    mock_configuration_scopes,
+    _store_dir_and_cache,
+):
     """Creates a read-only mock database with some packages installed note
     that the ref count for dyninst here will be 3, as it's recycled
     across each install.
@@ -1666,7 +1694,7 @@ def mock_executable(tmp_path):
     """Factory to create a mock executable in a temporary directory that
     output a custom string when run.
     """
-    shebang = "#!/bin/sh\n" if sys.platform != "win32" else "@ECHO OFF"
+    shebang = "#!/bin/sh\n" if sys.platform != "win32" else "@ECHO OFF\n"
 
     def _factory(name, output, subdir=("bin",)):
         executable_dir = tmp_path.joinpath(*subdir)
@@ -1674,7 +1702,7 @@ def mock_executable(tmp_path):
         executable_path = executable_dir / name
         if sys.platform == "win32":
             executable_path = executable_dir / (name + ".bat")
-        executable_path.write_text(f"{ shebang }{ output }\n")
+        executable_path.write_text(f"{shebang}{output}\n")
         executable_path.chmod(0o755)
         return executable_path
 
@@ -1966,16 +1994,23 @@ def mock_modules_root(tmp_path, monkeypatch):
     monkeypatch.setattr(spack.modules.common, "root_path", fn)
 
 
+_repo_name_id = 0
+
+
 def create_test_repo(tmpdir, pkg_name_content_tuples):
+    global _repo_name_id
+
     repo_path = str(tmpdir)
     repo_yaml = tmpdir.join("repo.yaml")
     with open(str(repo_yaml), "w") as f:
         f.write(
-            """\
+            f"""\
 repo:
-  namespace: testcfgrequirements
+  namespace: testrepo{str(_repo_name_id)}
 """
         )
+
+    _repo_name_id += 1
 
     packages_dir = tmpdir.join("packages")
     for pkg_name, pkg_str in pkg_name_content_tuples:
@@ -2018,3 +2053,11 @@ def _true(x):
 @pytest.fixture()
 def do_not_check_runtimes_on_reuse(monkeypatch):
     monkeypatch.setattr(spack.solver.asp, "_has_runtime_dependencies", _true)
+
+
+@pytest.fixture(autouse=True, scope="session")
+def _c_compiler_always_exists():
+    fn = spack.solver.asp.c_compiler_runs
+    spack.solver.asp.c_compiler_runs = _true
+    yield
+    spack.solver.asp.c_compiler_runs = fn

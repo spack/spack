@@ -270,10 +270,6 @@ class SourceBootstrapper(Bootstrapper):
         with spack_python_interpreter():
             # Add hint to use frontend operating system on Cray
             concrete_spec = spack.spec.Spec(abstract_spec_str + " ^" + spec_for_current_python())
-            # This is needed to help the old concretizer taking the `setuptools` dependency
-            # only when bootstrapping from sources on Python 3.12
-            if spec_for_current_python() == "python@3.12":
-                concrete_spec.constrain("+force_setuptools")
 
             if module == "clingo":
                 # TODO: remove when the old concretizer is deprecated  # pylint: disable=fixme
@@ -562,9 +558,9 @@ def ensure_winsdk_external_or_raise() -> None:
             missing_packages_lst.append("win-sdk")
         missing_packages = " & ".join(missing_packages_lst)
         raise RuntimeError(
-            f"Unable to find the {missing_packages}, please install these packages\
-via the Visual Studio installer\
-before proceeding with Spack or provide the path to a non standard install via\
+            f"Unable to find the {missing_packages}, please install these packages \
+via the Visual Studio installer \
+before proceeding with Spack or provide the path to a non standard install with \
 'spack external find --path'"
         )
     # wgl/sdk are not required for bootstrapping Spack, but
@@ -579,8 +575,6 @@ def ensure_core_dependencies() -> None:
         ensure_patchelf_in_path_or_raise()
     if not IS_WINDOWS:
         ensure_gpg_in_path_or_raise()
-    else:
-        ensure_winsdk_external_or_raise()
     ensure_clingo_importable_or_raise()
 
 

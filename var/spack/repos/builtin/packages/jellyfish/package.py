@@ -15,6 +15,7 @@ class Jellyfish(AutotoolsPackage):
 
     license("GPL-3.0-only")
 
+    version("2.3.1", sha256="ee032b57257948ca0f0610883099267572c91a635eecbd88ae5d8974c2430fcd")
     version("2.3.0", sha256="e195b7cf7ba42a90e5e112c0ed27894cd7ac864476dc5fb45ab169f5b930ea5a")
     version(
         "2.2.7",

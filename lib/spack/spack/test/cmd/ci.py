@@ -760,7 +760,6 @@ def test_ci_rebuild_mock_success(
     rebuild_env = create_rebuild_env(tmpdir, pkg_name, broken_tests)
 
     monkeypatch.setattr(spack.cmd.ci, "SPACK_COMMAND", "echo")
-    monkeypatch.setattr(spack.cmd.ci, "MAKE_COMMAND", "echo")
 
     with rebuild_env.env_dir.as_cwd():
         activate_rebuild_env(tmpdir, pkg_name, rebuild_env)
@@ -843,7 +842,6 @@ def test_ci_rebuild(
         ci_cmd("rebuild", "--tests", fail_on_error=False)
 
     monkeypatch.setattr(spack.cmd.ci, "SPACK_COMMAND", "notcommand")
-    monkeypatch.setattr(spack.cmd.ci, "MAKE_COMMAND", "notcommand")
     monkeypatch.setattr(spack.cmd.ci, "INSTALL_FAIL_CODE", 127)
 
     with rebuild_env.env_dir.as_cwd():
@@ -1432,55 +1430,6 @@ spack:
                     assert the_elt["script"][0] == "main step"
                     assert len(the_elt["after_script"]) == 1
                     assert the_elt["after_script"][0] == "post step one"
-
-
-def test_ci_generate_with_workarounds(
-    tmpdir, mutable_mock_env_path, install_mockery, mock_packages, monkeypatch, ci_base_environment
-):
-    """Make sure the post-processing cli workarounds do what they should"""
-    filename = str(tmpdir.join("spack.yaml"))
-    with open(filename, "w") as f:
-        f.write(
-            """\
-spack:
-  specs:
-    - callpath%gcc@=9.5
-  mirrors:
-    some-mirror: https://my.fake.mirror
-  ci:
-    pipeline-gen:
-    - submapping:
-      - match: ['%gcc@9.5']
-        build-job:
-          tags:
-            - donotcare
-          image: donotcare
-    enable-artifacts-buildcache: true
-"""
-        )
-
-    with tmpdir.as_cwd():
-        env_cmd("create", "test", "./spack.yaml")
-        outputfile = str(tmpdir.join(".gitlab-ci.yml"))
-
-        with ev.read("test"):
-            ci_cmd("generate", "--output-file", outputfile, "--dependencies")
-
-            with open(outputfile) as f:
-                contents = f.read()
-                yaml_contents = syaml.load(contents)
-
-                found_one = False
-                non_rebuild_keys = ["workflow", "stages", "variables", "rebuild-index"]
-
-                for ci_key in yaml_contents.keys():
-                    if ci_key not in non_rebuild_keys:
-                        found_one = True
-                        job_obj = yaml_contents[ci_key]
-                        assert "needs" not in job_obj
-                        assert "dependencies" in job_obj
-
-                assert found_one is True
 
 
 @pytest.mark.disable_clean_stage_check

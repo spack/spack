@@ -59,7 +59,7 @@ class PyChainer(PythonPackage):
 
         mnist_file = join_path(self.install_test_root.examples.chainermn.mnist, "train_mnist.py")
         mpirun = which(self.spec["mpi"].prefix.bin.mpirun)
-        opts = ["-n", "4", self.spec["python"].command.path, mnist_file, "-o", "."]
+        opts = ["-n", "4", python.path, mnist_file, "-o", "."]
         env["OMP_NUM_THREADS"] = "4"
 
         mpirun(*opts)

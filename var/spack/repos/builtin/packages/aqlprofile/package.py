@@ -8,6 +8,48 @@ import os
 from spack.package import *
 
 _versions = {
+    "6.1.2": {
+        "apt": (
+            "93faa8a0d702bc1623d2346e07a9a1c9134d99c0d3f9de62903e7394e0eedf47",
+            "https://repo.radeon.com/rocm/apt/6.1.2/pool/main/h/hsa-amd-aqlprofile/hsa-amd-aqlprofile_1.0.0.60102.60102-119~20.04_amd64.deb",
+        ),
+        "yum": (
+            "b8c6a8c8fad6b07c87f99a95126b982aeb39a3e4943d05df090d2221f4aef779",
+            "https://repo.radeon.com/rocm/yum/6.1.2/main/hsa-amd-aqlprofile-1.0.0.60102.60102-119.el7.x86_64.rpm",
+        ),
+        "zyp": (
+            "132dde13aa550376ac39d57a51b42b803574cd0c57d2bd1346f36bf8d7efa4c4",
+            "https://repo.radeon.com/rocm/zyp/6.1.2/main/hsa-amd-aqlprofile-1.0.0.60102.60102-sles154.119.x86_64.rpm",
+        ),
+    },
+    "6.1.1": {
+        "apt": (
+            "faa5dae914fc63f0c8d0c2be28b7ec502db487004bdff0fe88dd15432efc5401",
+            "https://repo.radeon.com/rocm/apt/6.1.1/pool/main/h/hsa-amd-aqlprofile/hsa-amd-aqlprofile_1.0.0.60101.60101-90~20.04_amd64.deb",
+        ),
+        "yum": (
+            "cc247e15ceff625c94d6c7104ffea3990a4acbcd2f9114914ab7ab829fae4aeb",
+            "https://repo.radeon.com/rocm/yum/6.1.1/main/hsa-amd-aqlprofile-1.0.0.60101.60101-90.el7.x86_64.rpm",
+        ),
+        "zyp": (
+            "9af82841be1765d6334b06a463583570653b6a36d0de29cfc00c5c4b6560b956",
+            "https://repo.radeon.com/rocm/zyp/6.1.1/main/hsa-amd-aqlprofile-1.0.0.60101.60101-sles154.90.x86_64.rpm",
+        ),
+    },
+    "6.1.0": {
+        "apt": (
+            "0ef862503245f12721384443f8347528f3d5c2c7762289c770521f3235ba36c9",
+            "https://repo.radeon.com/rocm/apt/6.1/pool/main/h/hsa-amd-aqlprofile/hsa-amd-aqlprofile_1.0.0.60100.60100-82~20.04_amd64.deb",
+        ),
+        "yum": (
+            "bb08ec49987ef821278e24b9669ccea613a1475af4aedfcc3ac77146e6fbf229",
+            "https://repo.radeon.com/rocm/yum/6.1/main/hsa-amd-aqlprofile-1.0.0.60100.60100-82.el7.x86_64.rpm",
+        ),
+        "zyp": (
+            "6a20c8933a878dc3476fa5a45936d3d230d5c2c417e914a6460c2f576a3d6e35",
+            "https://repo.radeon.com/rocm/zyp/6.1/main/hsa-amd-aqlprofile-1.0.0.60100.60100-sles154.82.x86_64.rpm",
+        ),
+    },
     "6.0.2": {
         "apt": (
             "57efc4e8380d941fc9e3ba8353bc724913cd5b5be2c53fed016e92da63e31b2f",

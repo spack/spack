@@ -16,6 +16,7 @@ class UtilLinuxUuid(AutotoolsPackage):
 
     license("GPL-2.0-or-later")
 
+    version("2.40.1", sha256="8e396eececae2b3b68db232c33b8810faa7c31f6df19f98f512739293d5829b7")
     version("2.38.1", sha256="0820eb8eea90408047e3715424bc6be771417047f683950fecb4bdd2e2cbbc6e")
     version("2.37.4", sha256="c8b7b4fa541f974cc32c1c6559d9bfca33651020a456ad6ee5fc9b0cacd00151")
     version("2.36.2", sha256="f5dbe79057e7d68e1a46fc04083fc558b26a49499b1b3f50e4f4893150970463")

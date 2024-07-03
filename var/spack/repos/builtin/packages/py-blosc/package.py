@@ -20,6 +20,6 @@ class PyBlosc(PythonPackage):
     depends_on("python@3.6:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
     depends_on("py-scikit-build", type="build")
-    depends_on("py-cmake@3.11:", type="build")
-    depends_on("py-ninja", type="build")
+    depends_on("cmake@3.11:", type="build")
+    depends_on("ninja", type="build")
     # depends_on('c-blosc')  # shipped internally

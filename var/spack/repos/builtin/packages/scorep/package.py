@@ -153,9 +153,6 @@ class Scorep(AutotoolsPackage):
             return None
         return libs.directories[0]
 
-    def with_or_without(self, arg):
-        return super.with_or_without(arg).remove_suffix("=yes")
-
     def configure_args(self):
         spec = self.spec
 
@@ -166,8 +163,7 @@ class Scorep(AutotoolsPackage):
         ]
 
         cname = spec.compiler.name
-        if not spec.satisfies("platform=cray"):
-            config_args.append("--with-nocross-compiler-suite={0}".format(cname))
+        config_args.append("--with-nocross-compiler-suite={0}".format(cname))
 
         if self.version >= Version("4.0"):
             config_args.append("--with-cubew=%s" % spec["cubew"].prefix.bin)
@@ -192,8 +188,7 @@ class Scorep(AutotoolsPackage):
             config_args.append("--with-rocm=%s" % spec["hip"].prefix)
 
         config_args += self.with_or_without("shmem")
-        if not spec.satisfies("platform=cray"):
-            config_args += self.with_or_without("mpi")
+        config_args += self.with_or_without("mpi")
 
         if spec.satisfies("^intel-mpi"):
             config_args.append("--with-mpi=intel3")
@@ -203,7 +198,7 @@ class Scorep(AutotoolsPackage):
             or spec.satisfies("^cray-mpich")
         ):
             config_args.append("--with-mpi=mpich3")
-        elif spec.satisfies("^openmpi"):
+        elif spec.satisfies("^openmpi") or spec.satisfies("^hpcx-mpi"):
             config_args.append("--with-mpi=openmpi")
 
         if spec.satisfies("^binutils"):

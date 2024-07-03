@@ -12,6 +12,10 @@ import spack.mirror
 def post_install(spec, explicit):
     # Push package to all buildcaches with autopush==True
 
+    # Do nothing if spec is an external package
+    if spec.external:
+        return
+
     # Do nothing if package was not installed from source
     pkg = spec.package
     if pkg.installed_from_binary_cache:

@@ -384,9 +384,18 @@ def test_clang_flags():
     unsupported_flag_test("cxx17_flag", "clang@3.4")
     supported_flag_test("cxx17_flag", "-std=c++1z", "clang@3.5")
     supported_flag_test("cxx17_flag", "-std=c++17", "clang@5.0")
+    unsupported_flag_test("cxx20_flag", "clang@4.0")
+    supported_flag_test("cxx20_flag", "-std=c++2a", "clang@5.0")
+    supported_flag_test("cxx20_flag", "-std=c++20", "clang@11.0")
+    unsupported_flag_test("cxx23_flag", "clang@11.0")
+    supported_flag_test("cxx23_flag", "-std=c++2b", "clang@12.0")
+    supported_flag_test("cxx23_flag", "-std=c++23", "clang@17.0")
     supported_flag_test("c99_flag", "-std=c99", "clang@3.3")
     unsupported_flag_test("c11_flag", "clang@2.0")
     supported_flag_test("c11_flag", "-std=c11", "clang@6.1.0")
+    unsupported_flag_test("c23_flag", "clang@8.0")
+    supported_flag_test("c23_flag", "-std=c2x", "clang@9.0")
+    supported_flag_test("c23_flag", "-std=c23", "clang@18.0")
     supported_flag_test("cc_pic_flag", "-fPIC", "clang@3.3")
     supported_flag_test("cxx_pic_flag", "-fPIC", "clang@3.3")
     supported_flag_test("f77_pic_flag", "-fPIC", "clang@3.3")
@@ -894,3 +903,66 @@ def test_compiler_executable_verification_success(tmpdir):
     # Test that null entries don't fail
     compiler.cc = None
     compiler.verify_executables()
+
+
+@pytest.mark.parametrize(
+    "detected_versions,expected_length",
+    [
+        # If we detect a C compiler we expect the result to be valid
+        (
+            [
+                spack.compilers.DetectVersionArgs(
+                    id=spack.compilers.CompilerID(
+                        os="ubuntu20.04", compiler_name="clang", version="12.0.0"
+                    ),
+                    variation=spack.compilers.NameVariation(prefix="", suffix="-12"),
+                    language="cc",
+                    path="/usr/bin/clang-12",
+                ),
+                spack.compilers.DetectVersionArgs(
+                    id=spack.compilers.CompilerID(
+                        os="ubuntu20.04", compiler_name="clang", version="12.0.0"
+                    ),
+                    variation=spack.compilers.NameVariation(prefix="", suffix="-12"),
+                    language="cxx",
+                    path="/usr/bin/clang++-12",
+                ),
+            ],
+            1,
+        ),
+        # If we detect only a C++ compiler we expect the result to be discarded
+        (
+            [
+                spack.compilers.DetectVersionArgs(
+                    id=spack.compilers.CompilerID(
+                        os="ubuntu20.04", compiler_name="clang", version="12.0.0"
+                    ),
+                    variation=spack.compilers.NameVariation(prefix="", suffix="-12"),
+                    language="cxx",
+                    path="/usr/bin/clang++-12",
+                )
+            ],
+            0,
+        ),
+    ],
+)
+def test_detection_requires_c_compiler(detected_versions, expected_length):
+    """Tests that compilers automatically added to the configuration have
+    at least a C compiler.
+    """
+    result = spack.compilers.make_compiler_list(detected_versions)
+    assert len(result) == expected_length
+
+
+def test_compiler_environment(working_env):
+    """Test whether environment modifications from compilers are applied in compiler_environment"""
+    os.environ.pop("TEST", None)
+    compiler = Compiler(
+        "gcc@=13.2.0",
+        operating_system="ubuntu20.04",
+        target="x86_64",
+        paths=["/test/bin/gcc", "/test/bin/g++"],
+        environment={"set": {"TEST": "yes"}},
+    )
+    with compiler.compiler_environment():
+        assert os.environ["TEST"] == "yes"

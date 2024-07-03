@@ -10,7 +10,7 @@ class Xpr(AutotoolsPackage, XorgPackage):
     """xpr takes as input a window dump file produced by xwd
     and formats it for output on various types of printers."""
 
-    homepage = "https://cgit.freedesktop.org/xorg/app/xpr"
+    homepage = "https://gitlab.freedesktop.org/xorg/app/xpr"
     xorg_mirror_path = "app/xpr-1.0.4.tar.gz"
 
     version("1.1.0", sha256="fabd02fb1a52358d521f1be7422738bc8c9b511a8d82a163888f628db6f6cb18")

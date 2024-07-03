@@ -9,13 +9,40 @@
 """
 from typing import Any, Dict
 
+LIST_OF_SPECS = {"type": "array", "items": {"type": "string"}}
+
 properties: Dict[str, Any] = {
     "concretizer": {
         "type": "object",
         "additionalProperties": False,
         "properties": {
             "reuse": {
-                "oneOf": [{"type": "boolean"}, {"type": "string", "enum": ["dependencies"]}]
+                "oneOf": [
+                    {"type": "boolean"},
+                    {"type": "string", "enum": ["dependencies"]},
+                    {
+                        "type": "object",
+                        "properties": {
+                            "roots": {"type": "boolean"},
+                            "include": LIST_OF_SPECS,
+                            "exclude": LIST_OF_SPECS,
+                            "from": {
+                                "type": "array",
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "type": {
+                                            "type": "string",
+                                            "enum": ["local", "buildcache", "external"],
+                                        },
+                                        "include": LIST_OF_SPECS,
+                                        "exclude": LIST_OF_SPECS,
+                                    },
+                                },
+                            },
+                        },
+                    },
+                ]
             },
             "enable_node_namespace": {"type": "boolean"},
             "targets": {
