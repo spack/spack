@@ -1122,11 +1122,18 @@ the projection under ``all`` before reaching those entries.
 Activating environment views
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The ``spack env activate`` command will put the default view for the
-environment into the user's path, in addition to activating the
-environment for Spack commands. The arguments ``-v,--with-view`` and
-``-V,--without-view`` can be used to tune this behavior. The default
-behavior is to activate with the environment view if there is one.
+The ``spack env activate <env>`` has two effects:
+
+1. It activates the environment so that further Spack commands such
+   as ``spack install`` will run in the context of the environment.
+2. It activates the view so that environment variables such as
+   ``PATH`` are updated to include the view.
+
+Without further arguments, the ``default`` view of the environment is
+activated. If a view with a different name has to be activated,
+``spack env activate --with-view <name> <env>`` can be
+used instead. You can also activate the environment without modifying
+further environment variables using ``--without-view``.
 
 The environment variables affected by the ``spack env activate``
 command and the paths that are used to update them are determined by
@@ -1149,8 +1156,8 @@ relevant variable if the path exists. For this reason, it is not
 recommended to use non-default projections with the default view of an
 environment.
 
-The ``spack env deactivate`` command will remove the default view of
-the environment from the user's path.
+The ``spack env deactivate`` command will remove the active view of
+the Spack environment from the user's environment variables.
 
 
 .. _env-generate-depfile:
