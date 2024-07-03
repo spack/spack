@@ -682,7 +682,8 @@ class TestConcretize:
         with pytest.raises(spack.error.SpecError):
             spec.concretize()
 
-    def test_external_and_virtual(self):
+    def test_external_and_virtual(self, mutable_config):
+        mutable_config.set("packages:stuff", {"buildable": False})
         spec = Spec("externaltest")
         spec.concretize()
         assert spec["externaltool"].external_path == os.path.sep + os.path.join(
@@ -1164,16 +1165,14 @@ class TestConcretize:
         assert s.external
         assert "stuff" not in s
 
-    def test_transitive_conditional_virtual_dependency(self):
+    def test_transitive_conditional_virtual_dependency(self, mutable_config):
+        """Test that an external is used as provider if the virtual is non-buildable"""
+        mutable_config.set("packages:stuff", {"buildable": False})
         s = Spec("transitive-conditional-virtual-dependency").concretized()
 
-        # The default for conditional-virtual-dependency is to have
-        # +stuff~mpi, so check that these defaults are respected
-        assert "+stuff" in s["conditional-virtual-dependency"]
-        assert "~mpi" in s["conditional-virtual-dependency"]
-
-        # 'stuff' is provided by an external package, so check it's present
-        assert "externalvirtual" in s
+        # Test that the default +stuff~mpi is maintained, and the right provider is selected
+        assert s.satisfies("^conditional-virtual-dependency +stuff~mpi")
+        assert s.satisfies("^[virtuals=stuff] externalvirtual")
 
     @pytest.mark.regression("20040")
     @pytest.mark.only_clingo("Use case not supported by the original concretizer")
@@ -1779,7 +1778,7 @@ class TestConcretize:
         [
             (["libelf", "libelf@0.8.10"], 1, 1),
             (["libdwarf%gcc", "libelf%clang"], 2, 1),
-            (["libdwarf%gcc", "libdwarf%clang"], 3, 2),
+            (["libdwarf%gcc", "libdwarf%clang"], 3, 1),
             (["libdwarf^libelf@0.8.12", "libdwarf^libelf@0.8.13"], 4, 1),
             (["hdf5", "zmpi"], 3, 1),
             (["hdf5", "mpich"], 2, 1),
