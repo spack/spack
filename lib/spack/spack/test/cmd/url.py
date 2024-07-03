@@ -3,7 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import re
-import sys
 
 import pytest
 
