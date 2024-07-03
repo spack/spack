@@ -20,6 +20,10 @@ class T8code(AutotoolsPackage):
 
     license("GPL-2.0-or-later")
 
+    version("2.0.0", sha256="b83f6c204cdb663cec7e0c1059406afc4c06df236b71d7b190fb698bec44c1e0")
+    version("1.6.1", sha256="dc96effa7c1ad1d50437fefdd0963f6ef7c943eb10a372a4e8546a5f2970a412")
+    version("1.6.0", sha256="94fb8dd9d9401130867ff18e8f71249cbb0fc34995fd04412a983eb2c93db3d5")
+    version("1.5.0", sha256="22ce6492c0f808c6859a42921352d857639fddd48ecdc9935e419db95c466f28")
     version("1.4.1", sha256="b0ec0c9b4a182f8ac7e930ba80cd20e6dc5baefc328630e4a9dac8c688749e9a")
 
     variant("mpi", default=True, description="Enable MPI parallel code")

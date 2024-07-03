@@ -1038,6 +1038,9 @@ class Openmpi(AutotoolsPackage, CudaPackage):
         if "schedulers=auto" not in spec:
             config_args.extend(self.with_or_without("schedulers"))
 
+        if spec.satisfies("schedulers=lsf"):
+            config_args.append("--with-lsf-libdir={0}".format(spec["lsf"].libs.directories[0]))
+
         config_args.extend(self.enable_or_disable("memchecker"))
         if spec.satisfies("+memchecker"):
             config_args.extend(["--enable-debug"])
@@ -1178,6 +1181,23 @@ class Openmpi(AutotoolsPackage, CudaPackage):
 
         #       if spec.satisfies("@5.0.0:") and spec.satisfies("%oneapi"):
         #           config_args.append("--disable-io-romio")
+
+        # https://www.intel.com/content/www/us/en/developer/articles/release-notes/oneapi-c-compiler-release-notes.html :
+        # Key Features in Intel C++ Compiler Classic 2021.7
+        #
+        # The Intel C++ Classic Compiler is deprecated and an additional
+        # diagnostic message will be output with each invocation. This
+        # diagnostic may impact expected output during compilation. For
+        # example, using the compiler to produce preprocessed information
+        # (icpc -E) will produce the additional deprecation diagnostic,
+        # interfering with the expected preprocessed output.
+        #
+        # This output can be disabled by using -diag-disable=10441 on
+        # Linux/macOS or /Qdiag-disable:10441 on Windows. You can add this
+        # option on the command line, configuration file or option setting
+        # environment variables.
+        if spec.satisfies("%intel@2021.7.0:"):
+            config_args.append("CPPFLAGS=-diag-disable=10441")
 
         return config_args
 
