@@ -2234,8 +2234,8 @@ class SpackSolverSetup:
                 spec.attach_git_version_lookup()
 
                 when_spec = spec
-                if virtual:
-                    when_spec = spack.spec.Spec(pkg_name)
+                if virtual and spec.name != pkg_name:
+                    when_spec = spack.spec.Spec(f"^[virtuals={pkg_name}] {spec.name}")
 
                 try:
                     context = ConditionContext()

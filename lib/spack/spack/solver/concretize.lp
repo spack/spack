@@ -597,6 +597,13 @@ attr("virtual_on_edge", PackageNode, ProviderNode, Virtual)
 attr("virtual_on_incoming_edges", ProviderNode, Virtual)
   :- attr("virtual_on_edge", _, ProviderNode, Virtual).
 
+% This is needed to allow requirement on virtuals,
+% when a virtual root is requested
+attr("virtual_on_incoming_edges", ProviderNode, Virtual)
+  :- attr("virtual_root", node(min_dupe_id, Virtual)),
+     attr("root", ProviderNode),
+     provider(ProviderNode, node(min_dupe_id, Virtual)).
+
 % dependencies on virtuals also imply that the virtual is a virtual node
 1 { attr("virtual_node", node(0..X-1, Virtual)) : max_dupes(Virtual, X) }
   :- node_depends_on_virtual(PackageNode, Virtual).
