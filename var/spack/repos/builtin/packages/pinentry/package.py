@@ -91,17 +91,24 @@ class Pinentry(AutotoolsPackage):
                 args.append("--enable-pinentry-" + gui)
             else:
                 args.append("--disable-pinentry-" + gui)
-
         return args
 
-    def test(self):
-        kwargs = {
-            "exe": self.prefix.bin.pinentry,
-            "options": ["--version"],
-            "expected": [str(self.version)],
-        }
-        self.run_test(**kwargs)
+    def check_version(self, gui):
+        if "gui=" + gui not in self.spec:
+            raise SkipTest(f"Package must be installed with {gui}")
+
+        exe = which(self.prefix.bin.pinentry + "-" + gui)
+        out = exe("--version", output=str.split, error=str.split)
+        assert str(self.version) in out
+
+    def test_pinentry(self):
+        """Confirm pinentry version"""
+        exe = which(self.prefix.bin.pinentry)
+        out = exe("--version", output=str.split, error=str.split)
+        assert str(self.version) in out
+
+    def test_guis(self):
+        """Check gui versions"""
         for gui in self.supported_guis:
-            if "gui=" + gui in self.spec:
-                kwargs["exe"] = self.prefix.bin.pinentry + "-" + gui
-                self.run_test(**kwargs)
+            with test_part(self, "test_guis_" + gui, purpose="Check " + gui):
+                self.check_version(gui)
