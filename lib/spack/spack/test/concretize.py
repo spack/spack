@@ -3068,21 +3068,34 @@ def test_branch_based_versions_pin_to_commits(
 def test_versions_with_custom_git_branch_based_versions_pin_to_commits(
     mock_git_version_info, database, mock_packages, monkeypatch, do_not_check_runtimes_on_reuse
 ):
-    import spack.pkg.builtin.mock.version_test_pkg as vtp
-
     repo_path, filename, commits = mock_git_version_info
 
-    version = Version("develop")
-    new_version_attrs = vtp.VersionTestPkg.versions[version]
+    # get a package class instance we can modify and then patch into the
+    # concretizer
+    pkg_cls = spack.repo.PATH.get_pkg_class("version-test-pkg")
 
+    version = Version("develop")
+
+    new_version_attrs = pkg_cls.versions[version]
     new_version_attrs["git"] = pathlib.Path(repo_path).as_uri()
     new_version_attrs["branch"] = "main"
 
     patch_versions = {version: new_version_attrs}
 
-    monkeypatch.setattr(vtp.VersionTestPkg, "versions", patch_versions)
+    pkg_cls.versions = patch_versions
+
+    def patch_pkg_class(self, pkg_name):
+        if pkg_name == "version-test-pkg":
+            return pkg_cls
+        else:
+            return self.repo_for_pkg(pkg_name).get_pkg_class(pkg_name)
+
+    # not ideal to patch an internal method, but only way found to ensure the
+    # git property is propagated inside the solver
+    monkeypatch.setattr(spack.repo.RepoPath, "get_pkg_class", patch_pkg_class)
 
     spec = Spec(f"version-test-pkg@{str(version)}").concretized()
+
     # assure it is not a StandardVersion post solve
     assert isinstance(spec.versions.concrete, GitVersion)
     # last main commit was 3'rd in the list (see mock_git_version_info)
