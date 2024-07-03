@@ -22,7 +22,6 @@ env = SpackCommand("env")
 pytestmark = pytest.mark.usefixtures("install_mockery", "mock_packages")
 
 
-@pytest.mark.not_on_windows("not implemented on windows")
 @pytest.mark.disable_clean_stage_check
 def test_stage_spec(monkeypatch):
     """Verify that staging specs works."""
@@ -63,7 +62,6 @@ def test_stage_path_errors_multiple_specs(check_stage_path):
         stage(f"--path={check_stage_path}", "trivial-install-test-package", "mpileaks")
 
 
-@pytest.mark.not_on_windows("not implemented on windows")
 @pytest.mark.disable_clean_stage_check
 def test_stage_with_env_outside_env(mutable_mock_env_path, monkeypatch):
     """Verify that stage concretizes specs not in environment instead of erroring."""
@@ -82,7 +80,6 @@ def test_stage_with_env_outside_env(mutable_mock_env_path, monkeypatch):
         stage("trivial-install-test-package")
 
 
-@pytest.mark.not_on_windows("not implemented on windows")
 @pytest.mark.disable_clean_stage_check
 def test_stage_with_env_inside_env(mutable_mock_env_path, monkeypatch):
     """Verify that stage filters specs in environment instead of reconcretizing."""
@@ -101,7 +98,6 @@ def test_stage_with_env_inside_env(mutable_mock_env_path, monkeypatch):
         stage("mpileaks")
 
 
-@pytest.mark.not_on_windows("not implemented on windows")
 @pytest.mark.disable_clean_stage_check
 def test_stage_full_env(mutable_mock_env_path, monkeypatch):
     """Verify that stage filters specs in environment."""
