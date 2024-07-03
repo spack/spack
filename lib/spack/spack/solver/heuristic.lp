@@ -8,9 +8,9 @@
 %=============================================================================
 
 % No duplicates by default (most of them will be true)
-#heuristic attr("node",         node(1..X-1, Package)) : max_dupes(Package, X), not virtual(Package). [100, init]
-#heuristic attr("node",         node(1..X-1, Package)) : max_dupes(Package, X), not virtual(Package). [2, factor]
-#heuristic attr("virtual_node", node(1..X-1, Package)) : max_dupes(Package, X), virtual(Package)    . [100, init]
+#heuristic attr("node",         node(PackageID, Package)). [100, init]
+#heuristic attr("node",         node(PackageID, Package)). [  2, factor]
+#heuristic attr("virtual_node", node(VirtualID, Virtual)). [100, init]
 #heuristic attr("node",         node(1..X-1, Package)) : max_dupes(Package, X), not virtual(Package), X > 1. [-1, sign]
 #heuristic attr("virtual_node", node(1..X-1, Package)) : max_dupes(Package, X), virtual(Package)    , X > 1. [-1, sign]
 
