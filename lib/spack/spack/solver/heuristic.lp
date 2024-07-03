@@ -29,10 +29,10 @@
 #heuristic attr("node_platform", node(PackageID, Package), Platform) : allowed_platform(Platform), attr("root", node(PackageID, Package)). [40, true]
 
 % Use default targets
-#heuristic attr("node_target", node(PackageID, Package), Target) : target_weight(Target, 0), attr("node", node(PackageID, Package)). [30, true]
-#heuristic attr("node_target", node(PackageID, Package), Target) : target_weight(Target, Weight), attr("node", node(PackageID, Package)), Weight > 0. [30, false]
-#heuristic node_target_weight(node(PackageID, Package), 0) : attr("node", node(PackageID, Package)). [30, true]
+#heuristic attr("node_target", node(PackageID, Package), Target) : target_weight(Target, Weight), attr("node", node(PackageID, Package)). [30, init]
+#heuristic attr("node_target", node(PackageID, Package), Target) : target_weight(Target, Weight), attr("node", node(PackageID, Package)). [ 2, factor]
+#heuristic attr("node_target", node(PackageID, Package), Target) : target_weight(Target,      0), attr("node", node(PackageID, Package)). [ 1, sign]
+#heuristic attr("node_target", node(PackageID, Package), Target) : target_weight(Target, Weight), attr("node", node(PackageID, Package)), Weight > 0. [-1, sign]
 
 % Use the default compilers
-#heuristic node_compiler(node(0, Package), ID) : compiler_weight(ID, 0)     , compiler_id(ID), attr("node", node(0, Package)). [30, true]
-#heuristic node_compiler(node(0, Package), ID) : compiler_weight(ID, Weight), compiler_id(ID), attr("node", node(0, Package)), Weight > 0. [30, false]
+#heuristic node_compiler(node(PackageID, Package), ID) : compiler_weight(ID, 0), compiler_id(ID), attr("node", node(PackageID, Package)). [30, init]
