@@ -940,7 +940,7 @@ with a more traditional structure ``<view>/bin``, ``<view>/lib``, ``<view>/inclu
 in which all files of the installed packages are linked.
 
 By default a view is created for each environment, thanks to the ``view: true``
-option in the manifest file:
+option in the ``spack.yaml`` manifest file:
 
 .. code-block:: yaml
 
@@ -955,13 +955,13 @@ you can directly run executables from all installed packages in the environment.
 
 Views are highly customizable: you can control where they are put, modify their structure,
 include and exclude specs, change how files are linked, and you can even generate multiple
-views for a single environment. The following sections describe advanced view configuration.
+views for a single environment.
 
 .. _configuring_environment_views:
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Configuration in ``spack.yaml``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+Minimal view configuration
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The minimal configuration
 
@@ -982,9 +982,15 @@ Another short way to configure a view is to specify just where to put it:
      # ...
      view: /path/to/view
 
-For more advanced configuration, one ore more **view descriptors** can be defined 
-under the ``view`` key, each with a name. The short configuration we have seen
-so far is equivalent to the following:
+Views can also be disabled by setting ``view: false``.
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Advanced view configuration
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+One or more **view descriptors** can be defined under ``view``, keyed by a name.
+The example from the previous section with ``view: /path/to/view`` is equivalent
+to defining a view descriptor named ``default`` with a ``root`` attribute:
 
 .. code-block:: yaml
 
@@ -992,11 +998,15 @@ so far is equivalent to the following:
      # ...
      view:
        default:  # name of the view
-         root: /path/to/view  # view descriptor
+         root: /path/to/view  # view descriptor attribute
 
-The view descriptor contains the root of the view, and optionally the projections
-for the view, ``select`` and ``exclude`` lists for the view and link information via
-``link`` and ``link_type``.
+The ``default`` view descriptor name is special: when you ``spack env activate`` your
+environment, this view will be used to update (among other things) your ``PATH``
+variable.
+
+View descriptors must contain the root of the view, and optionally projections,
+``select`` and ``exclude`` lists and link information via ``link`` and
+``link_type``.
 
 As a more advanced example, in the following manifest
 file snippet we define a view named ``mpis``, rooted at
