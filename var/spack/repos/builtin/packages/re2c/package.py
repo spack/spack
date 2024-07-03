@@ -35,6 +35,7 @@ class Re2c(Package):
     depends_on("gmake", when="platform=linux")
     depends_on("gmake", when="platform=darwin")
     depends_on("gmake", when="platform=freebsd")
+    depends_on("python@3.7:", when="@3.1:", type="build")
 
     @property
     def make_tool(self):
