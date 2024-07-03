@@ -17,7 +17,7 @@ class UcscBedgraphtobigwig(Package):
     version("445", sha256="c7abb5db6a5e16a79aefcee849d2b59dbc71ee112ca1e41fea0afb25229cf56c")
 
     depends_on("libpng")
-    depends_on("libuuid")
+    depends_on("uuid")
     depends_on("gmake")
     depends_on("openssl")
     depends_on("zlib-api")

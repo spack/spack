@@ -20,6 +20,8 @@ class Doxygen(CMakePackage):
 
     license("GPL-2.0-or-later")
 
+    version("1.11.0", sha256="1fea49c69e51fec3dd2599947f6d48d9b1268bd5115b1bb08dffefc1fd5d19ee")
+    version("1.10.0", sha256="795692a53136ca9bb9a6cd72656968af7858a78be7d6d011e12ab1dce6b9533c")
     version("1.9.8", sha256="77371e8a58d22d5e03c52729844d1043e9cbf8d0005ec5112ffa4c8f509ddde8")
     version("1.9.7", sha256="691777992a7240ed1f822a5c2ff2c4273b57c1cf9fc143553d87f91a0c5970ee")
     version("1.9.6", sha256="2a3ee47f7276b759f74bac7614c05a1296a5b028d3f6a79a88e4c213db78e7dc")
@@ -76,6 +78,11 @@ class Doxygen(CMakePackage):
         return variants
 
     depends_on("cmake@2.8.12:", type="build")
+    depends_on("cmake@3.2:", type="build", when="@1.8.16:")
+    depends_on("cmake@3.3:", type="build", when="@1.8.18:")
+    depends_on("cmake@3.12:", type="build", when="@1.9.8:")
+    depends_on("cmake@3.14:", type="build", when="@1.10:")
+
     depends_on("python", type="build")  # 2 or 3 OK; used in CMake build
     depends_on("iconv")
     depends_on("flex", type="build")
@@ -84,6 +91,10 @@ class Doxygen(CMakePackage):
     # but does not recognize 2.6.x as newer...could be patched if needed
     depends_on("flex@2.5.39", type="build", when="@1.8.10")
     depends_on("bison@2.7:", type="build", when="@1.8.10:")
+
+    # originally bundled dependencies
+    depends_on("spdlog", when="@1.9.8:")
+    depends_on("sqlite", when="@1.10:")
 
     # optional dependencies
     depends_on("graphviz", when="+graphviz", type="run")
@@ -108,6 +119,13 @@ class Doxygen(CMakePackage):
         when="@1.9.4 %gcc@12:",
     )
 
+    # https://github.com/doxygen/doxygen/pull/10896: use correct option name with system sqlite3
+    patch(
+        "https://github.com/doxygen/doxygen/commit/83de58c5f4f685a129127c2501f4fccd9557f6c4.patch?full_index=1",
+        sha256="8b46b763b3f0a2726f765141cbfa3eb6efd746531a4d689531e42ff56fc334e2",
+        when="@1.10:1.11.0",
+    )
+
     # Some GCC 7.x get stuck in an infinite loop
     conflicts("%gcc@7.0:7.9", when="@1.9:")
 
@@ -124,3 +142,9 @@ class Doxygen(CMakePackage):
             join_path("cmake", "FindIconv.cmake"),
             string=True,
         )
+
+    def cmake_args(self):
+        return [
+            self.define("use_sys_spdlog", self.spec.satisfies("@1.9.8:")),
+            self.define("use_sys_sqlite3", self.spec.satisfies("@1.10:")),
+        ]
