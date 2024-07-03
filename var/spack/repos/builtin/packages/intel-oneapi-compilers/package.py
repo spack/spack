@@ -250,7 +250,7 @@ class IntelOneapiCompilers(IntelOneApiPackage, CompilerPackage):
     )
 
     # See https://github.com/spack/spack/issues/39252
-    depends_on("patchelf@:0.17", type="build")
+    depends_on("patchelf@:0.17", type="build", when="@:2024.1")
 
     # TODO: effectively gcc is a direct dependency of intel-oneapi-compilers, but we
     # cannot express that properly. For now, add conflicts for non-gcc compilers
@@ -338,6 +338,12 @@ class IntelOneapiCompilers(IntelOneApiPackage, CompilerPackage):
         # issues. I am using the 2024 release as a milestone to stop
         # patching everything and just patching the binaries that have
         # a problem.
+
+        # 2024.2 no longer needs patching
+        if self.spec.satisfies("@2024.2:"):
+            return
+
+        # 2024 fixed all but these 2
         patchelf = which("patchelf")
         if self.spec.satisfies("@2024:"):
             patchelf.add_default_arg("--set-rpath", self.component_prefix.lib)
