@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os.path
 
+from spack.error import NoHeadersError
 from spack.package import *
 
 
@@ -18,10 +19,19 @@ class Elsi(CMakePackage, CudaPackage):
     license("BSD-3-Clause")
 
     version("2.10.1", sha256="b3c7526d46a9139a26680787172a3df15bc648715a35bdf384053231e94ab829")
-    version("2.2.1", sha256="5b4b2e8fa4b3b68131fe02cc1803a884039b89a1b1138af474af66453bec0b4d")
+    version(
+        "2.2.1",
+        sha256="5b4b2e8fa4b3b68131fe02cc1803a884039b89a1b1138af474af66453bec0b4d",
+        deprecated=True,
+    )
     version("master", branch="master")
 
-    variant("add_underscore", default=True, description="Suffix C functions with an underscore")
+    variant(
+        "add_underscore",
+        default=True,
+        description="Suffix C functions with an underscore",
+        when="@2.2.1",
+    )
     variant(
         "elpa2_kernel",
         default="none",
@@ -33,9 +43,21 @@ class Elsi(CMakePackage, CudaPackage):
     variant("enable_sips", default=False, description="Enable SLEPc-SIPs support")
     variant("use_external_elpa", default=True, description="Build ELPA using SPACK")
     variant("use_external_ntpoly", default=True, description="Build NTPoly using SPACK")
-    variant("use_external_superlu", default=True, description="Use external SuperLU DIST")
     variant(
-        "use_mpi_iallgather", default=True, description="Use non-blocking collective MPI functions"
+        "use_external_superlu", default=True, description="Use external SuperLU DIST", when="@:2.2"
+    )
+    variant(
+        "use_external_pexsi",
+        default=True,
+        description="Use external PEXSI",
+        when="@2.3: +enable_pexsi",
+    )
+    variant("use_external_omm", default=True, description="Use external libOMM")
+    variant(
+        "use_mpi_iallgather",
+        default=True,
+        description="Use non-blocking collective MPI functions",
+        when="@:2.5",
     )
     variant(
         "internal_elpa_version",
@@ -52,10 +74,10 @@ class Elsi(CMakePackage, CudaPackage):
     depends_on("mpi")
 
     # Library dependencies
+    depends_on("ntpoly", when="+use_external_ntpoly")
     with when("+use_external_elpa"):
         depends_on("elpa+cuda", when="+cuda")
         depends_on("elpa~cuda", when="~cuda")
-    depends_on("ntpoly", when="+use_external_ntpoly")
     with when("+enable_sips"):
         depends_on("slepc+cuda", when="+cuda")
         depends_on("slepc~cuda", when="~cuda")
@@ -64,6 +86,13 @@ class Elsi(CMakePackage, CudaPackage):
     with when("+use_external_superlu"):
         depends_on("superlu-dist+cuda", when="+cuda")
         depends_on("superlu-dist~cuda", when="~cuda")
+    with when("+enable_pexsi +use_external_pexsi"):
+        depends_on("pexsi+fortran")
+        depends_on("superlu-dist+cuda", when="+cuda")
+        depends_on("superlu-dist~cuda", when="~cuda")
+    with when("+use_external_omm"):
+        depends_on("omm")
+        depends_on("matrix-switch")  # Direct dependency
 
     def cmake_args(self):
         libs_names = ["scalapack", "lapack", "blas"]
@@ -75,11 +104,29 @@ class Elsi(CMakePackage, CudaPackage):
             libs_names.append("ntpoly")
         if self.spec.satisfies("+use_external_superlu"):
             libs_names.append("superlu-dist")
+        if self.spec.satisfies("+use_external_pexsi"):
+            libs_names.append("superlu-dist")
+            libs_names.append("pexsi")
+        if self.spec.satisfies("+use_external_omm"):
+            libs_names.append("omm")
+            libs_names.append("matrix-switch")
 
-        lib_paths, libs = [], []
+        lib_paths, inc_paths, libs = [], [], []
         for lib in libs_names:
             lib_paths.extend(self.spec[lib].libs.directories)
             libs.extend(self.spec[lib].libs.names)
+
+            try:
+                inc_paths.extend(self.spec[lib].headers.directories)
+
+                # Deal with Fortran modules
+                for path in self.spec[lib].headers:
+                    # Add path to .mod files
+                    # headers.directories only add path up to include/
+                    if path.endswith(".mod"):
+                        inc_paths.append(os.path.dirname(path))
+            except NoHeadersError:
+                pass
 
         args = [
             # Compiler Information (ELSI wants these explicitly set)
@@ -91,22 +138,26 @@ class Elsi(CMakePackage, CudaPackage):
             self.define_from_variant("ENABLE_SIPS", "enable_sips"),
             self.define_from_variant("USE_EXTERNAL_ELPA", "use_external_elpa"),
             self.define_from_variant("USE_EXTERNAL_NTPOLY", "use_external_ntpoly"),
+            self.define_from_variant("USE_EXTERNAL_OMM", "use_external_omm"),
             self.define_from_variant("USE_EXTERNAL_SUPERLU", "use_external_superlu"),
+            self.define_from_variant("USE_EXTERNAL_PEXSI", "use_external_pexsi"),
             self.define_from_variant("USE_MPI_IALLGATHER", "use_mpi_iallgather"),
             self.define("ENABLE_TESTS", self.run_tests),
             self.define("ENABLE_C_TESTS", self.run_tests),
             self.define_from_variant("USE_GPU_CUDA", "cuda"),
-            self.define("LIB_PATHS", ";".join(lib_paths)),
-            self.define("LIBS", ";".join(libs)),
-            self.define(f"USE_ELPA_{self.spec.variants['internal_elpa_version'].value}", True),
+            self.define("LIB_PATHS", ";".join(set(lib_paths))),
+            self.define("LIBS", ";".join(set(libs))),
         ]
+
+        if not self.spec.satisfies("+use_external_elpa"):
+            args.append(
+                self.define(f"USE_ELPA_{self.spec.variants['internal_elpa_version'].value}", True)
+            )
 
         if self.spec.variants["elpa2_kernel"].value != "none":
             args.append(self.define_from_variant("ELPA2_KERNEL", "elpa2_kernel"))
 
-        if self.spec.satisfies("+use_external_elpa"):
-            elpa_module = find(self.spec["elpa"].prefix, "elpa.mod")
-            args.append(self.define("INC_PATHS", os.path.dirname(elpa_module[0])))
+        args.append(self.define("INC_PATHS", ";".join(set(inc_paths))))
 
         # Only when using fujitsu compiler
         if self.spec.satisfies("%fj"):
