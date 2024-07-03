@@ -3106,19 +3106,28 @@ def test_versions_with_custom_git_branch_based_versions_pin_to_commits(
 
 @pytest.mark.only_clingo("clingo only reuse feature being tested")
 @pytest.mark.regression("38484")
+@pytest.mark.parametrize("input_version", ("git.2.1.5=2.1.5", "main"))
 def test_git_ref_version_can_be_reused(
-    install_mockery_mutable_config, do_not_check_runtimes_on_reuse
+    input_version,
+    mock_git_version_info,
+    install_mockery_mutable_config,
+    do_not_check_runtimes_on_reuse,
+    monkeypatch,
 ):
-    first_spec = spack.spec.Spec("git-ref-package@git.2.1.5=2.1.5~opt").concretized()
+    repo_path, filename, commits = mock_git_version_info
+    monkeypatch.setattr(
+        spack.package_base.PackageBase, "git", pathlib.Path(repo_path).as_uri(), raising=False
+    )
+    first_spec = spack.spec.Spec(f"git-ref-package@{input_version}~opt").concretized()
     first_spec.package.do_install(fake=True, explicit=True)
 
     with spack.config.override("concretizer:reuse", True):
         # reproducer of the issue is that spack will solve when there is a change to the base spec
-        second_spec = spack.spec.Spec("git-ref-package@git.2.1.5=2.1.5+opt").concretized()
+        second_spec = spack.spec.Spec(f"git-ref-package@{input_version}+opt").concretized()
         assert second_spec.dag_hash() != first_spec.dag_hash()
         # we also want to confirm that reuse actually works so leave variant off to
         # let solver reuse
-        third_spec = spack.spec.Spec("git-ref-package@git.2.1.5=2.1.5")
+        third_spec = spack.spec.Spec(f"git-ref-package@{input_version}")
         assert first_spec.satisfies(third_spec)
         third_spec.concretize()
         assert third_spec.dag_hash() == first_spec.dag_hash()
@@ -3127,13 +3136,16 @@ def test_git_ref_version_can_be_reused(
 @pytest.mark.only_clingo("clingo only reuse feature being tested")
 @pytest.mark.parametrize("standard_version", ["2.0.0", "2.1.5", "2.1.6"])
 def test_reuse_prefers_standard_over_git_versions(
-    standard_version, install_mockery_mutable_config, do_not_check_runtimes_on_reuse
+    standard_version, install_mockery_mutable_config, do_not_check_runtimes_on_reuse, monkeypatch
 ):
     """
     order matters in this test. typically reuse would pick the highest versioned installed match
     but we want to prefer the standard version over git ref based versions
     so install git ref last and ensure it is not picked up by reuse
     """
+    monkeypatch.setattr(
+        spack.package_base.PackageBase, "git", "https://github.com/dummy/dummy", raising=False
+    )
     standard_spec = spack.spec.Spec(f"git-ref-package@{standard_version}").concretized()
     standard_spec.package.do_install(fake=True, explicit=True)
 
