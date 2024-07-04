@@ -26,6 +26,7 @@ class Hipsycl(CMakePackage):
     license("BSD-2-Clause")
 
     version("stable", branch="stable", submodules=True)
+    version("24.02.0", commit="974adc33ea5a35dd8b5be68c7a744b37482b8b64", submodules=True)
     version("23.10.0", commit="3952b468c9da89edad9dff953cdcab0a3c3bf78c", submodules=True)
     version("0.9.4", commit="99d9e24d462b35e815e0e59c1b611936c70464ae", submodules=True)
     version("0.9.4", commit="99d9e24d462b35e815e0e59c1b611936c70464ae", submodules=True)
@@ -46,8 +47,10 @@ class Hipsycl(CMakePackage):
     # hipSYCL 0.8.0 supported only LLVM 8-10:
     # (https://github.com/AdaptiveCpp/AdaptiveCpp/blob/v0.8.0/CMakeLists.txt#L29-L37)
     depends_on("llvm@8:10", when="@0.8.0")
+    # https://github.com/spack/spack/issues/45029 and https://github.com/spack/spack/issues/43142
+    conflicts("^gcc@12", when="@23.10.0")
     # https://github.com/OpenSYCL/OpenSYCL/pull/918 was introduced after 0.9.4
-    conflicts("^llvm@16:", when="@:0.9.4")
+    conflicts("^gcc@12.2.0", when="@:0.9.4")
     # LLVM PTX backend requires cuda7:10.1 (https://tinyurl.com/v82k5qq)
     depends_on("cuda@9:10.1", when="@0.8.1: +cuda ^llvm@9")
     depends_on("cuda@9:", when="@0.8.1: +cuda ^llvm@10:")
