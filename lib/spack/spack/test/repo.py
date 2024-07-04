@@ -12,21 +12,28 @@ import spack.repo
 
 
 @pytest.fixture(params=["packages", "", "foo"])
-def extra_repo(tmpdir_factory, request):
+def extra_repo(tmp_path_factory, request):
     repo_namespace = "extra_test_repo"
-    repo_dir = tmpdir_factory.mktemp(repo_namespace)
-    repo_dir.ensure(request.param, dir=True)
-
-    with open(str(repo_dir.join("repo.yaml")), "w") as f:
-        f.write(
+    repo_dir = tmp_path_factory.mktemp(repo_namespace)
+    cache_dir = tmp_path_factory.mktemp("cache")
+    (repo_dir / request.param).mkdir(parents=True, exist_ok=True)
+    if request.param == "packages":
+        (repo_dir / "repo.yaml").write_text(
             """
 repo:
   namespace: extra_test_repo
 """
         )
-        if request.param != "packages":
-            f.write(f"  subdirectory: '{request.param}'")
-    return (spack.repo.Repo(str(repo_dir)), request.param)
+    else:
+        (repo_dir / "repo.yaml").write_text(
+            f"""
+repo:
+  namespace: extra_test_repo
+  subdirectory: '{request.param}'
+"""
+        )
+    repo_cache = spack.util.file_cache.FileCache(str(cache_dir))
+    return spack.repo.Repo(str(repo_dir), cache=repo_cache), request.param
 
 
 def test_repo_getpkg(mutable_mock_repo):
@@ -177,8 +184,11 @@ def test_repo_dump_virtuals(tmpdir, mutable_mock_repo, mock_packages, ensure_deb
         ([spack.paths.mock_packages_path, spack.paths.packages_path], ["builtin.mock", "builtin"]),
     ],
 )
-def test_repository_construction_doesnt_use_globals(nullify_globals, repo_paths, namespaces):
-    repo_path = spack.repo.RepoPath(*repo_paths)
+def test_repository_construction_doesnt_use_globals(
+    nullify_globals, tmp_path, repo_paths, namespaces
+):
+    repo_cache = spack.util.file_cache.FileCache(str(tmp_path / "cache"))
+    repo_path = spack.repo.RepoPath(*repo_paths, cache=repo_cache)
     assert len(repo_path.repos) == len(namespaces)
     assert [x.namespace for x in repo_path.repos] == namespaces
 
@@ -188,7 +198,7 @@ def test_path_computation_with_names(method_name, mock_repo_path):
     """Tests that repositories can compute the correct paths when using both fully qualified
     names and unqualified names.
     """
-    repo_path = spack.repo.RepoPath(mock_repo_path)
+    repo_path = spack.repo.RepoPath(mock_repo_path, cache=None)
     method = getattr(repo_path, method_name)
     unqualified = method("mpileaks")
     qualified = method("builtin.mock.mpileaks")

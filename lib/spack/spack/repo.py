@@ -648,8 +648,7 @@ class RepoPath:
         repos (list): list Repo objects or paths to put in this RepoPath
     """
 
-    def __init__(self, *repos, **kwargs):
-        cache = kwargs.get("cache", spack.caches.MISC_CACHE)
+    def __init__(self, *repos, cache):
         self.repos = []
         self.by_namespace = nm.NamespaceTrie()
 
@@ -922,7 +921,7 @@ class Repo:
 
     """
 
-    def __init__(self, root, cache=None):
+    def __init__(self, root, cache):
         """Instantiate a package repository from a filesystem path.
 
         Args:
@@ -939,20 +938,20 @@ class Repo:
 
         # Validate repository layout.
         self.config_file = os.path.join(self.root, repo_config_name)
-        check(os.path.isfile(self.config_file), "No %s found in '%s'" % (repo_config_name, root))
+        check(os.path.isfile(self.config_file), f"No {repo_config_name} found in '{root}'")
 
         # Read configuration and validate namespace
         config = self._read_config()
         check(
             "namespace" in config,
-            "%s must define a namespace." % os.path.join(root, repo_config_name),
+            f"{os.path.join(root, repo_config_name)} must define a namespace.",
         )
 
         self.namespace = config["namespace"]
         check(
             re.match(r"[a-zA-Z][a-zA-Z0-9_.]+", self.namespace),
-            ("Invalid namespace '%s' in repo '%s'. " % (self.namespace, self.root))
-            + "Namespaces must be valid python identifiers separated by '.'",
+            f"Invalid namespace '{self.namespace}' in repo '{self.root}'. "
+            "Namespaces must be valid python identifiers separated by '.'",
         )
 
         # Set up 'full_namespace' to include the super-namespace
@@ -978,7 +977,7 @@ class Repo:
 
         # Indexes for this repository, computed lazily
         self._repo_index = None
-        self._cache = cache or spack.caches.MISC_CACHE
+        self._cache = cache
 
     def real_name(self, import_name):
         """Allow users to import Spack packages using Python identifiers.
@@ -1049,13 +1048,10 @@ class Repo:
             # pass these through as their error messages will be fine.
             raise
         except Exception as e:
-            tty.debug(e)
-
             # Make sure other errors in constructors hit the error
             # handler by wrapping them
-            if spack.config.get("config:debug"):
-                sys.excepthook(*sys.exc_info())
-            raise FailedConstructorError(spec.fullname, *sys.exc_info())
+            tty.debug(e)
+            raise FailedConstructorError(spec.fullname, *sys.exc_info()) from e
 
     @autospec
     def dump_provenance(self, spec, path):
@@ -1373,12 +1369,17 @@ def create_repo(root, namespace=None, subdir=packages_dir_name):
     return full_path, namespace
 
 
+def from_path(path: str) -> "Repo":
+    """Returns a repository from the path passed as input. Injects the global misc cache."""
+    return Repo(path, cache=spack.caches.MISC_CACHE)
+
+
 def create_or_construct(path, namespace=None):
     """Create a repository, or just return a Repo if it already exists."""
     if not os.path.exists(path):
         fs.mkdirp(path)
         create_repo(path, namespace)
-    return Repo(path)
+    return from_path(path)
 
 
 def _path(configuration=None):
@@ -1396,7 +1397,7 @@ def create(configuration):
     repo_dirs = configuration.get("repos")
     if not repo_dirs:
         raise NoRepoConfiguredError("Spack configuration contains no package repositories.")
-    return RepoPath(*repo_dirs)
+    return RepoPath(*repo_dirs, cache=spack.caches.MISC_CACHE)
 
 
 #: Singleton repo path instance
