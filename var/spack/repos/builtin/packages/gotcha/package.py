@@ -17,6 +17,7 @@ class Gotcha(CMakePackage):
 
     version("develop", branch="develop")
     version("master", branch="master")
+    version("1.0.7", tag="1.0.7", commit="ae053b77e6b2800188e2c4ddd17057c9b15f4adb")
     version("1.0.6", tag="1.0.6", commit="81401b939c23562728a27d7678505090463e5c03")
     version("1.0.5", tag="1.0.5", commit="e28f10c45a0cda0e1ec225eaea6abfe72c8353aa")
     version("1.0.4", tag="1.0.4", commit="46f2aaedc885f140a3f31a17b9b9a9d171f3d6f0")
