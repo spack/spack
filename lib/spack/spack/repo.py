@@ -26,7 +26,7 @@ import traceback
 import types
 import uuid
 import warnings
-from typing import Any, Dict, List, Set, Tuple, Union
+from typing import Any, Dict, Generator, List, Optional, Set, Tuple, Type, Union
 
 import llnl.path
 import llnl.util.filesystem as fs
@@ -561,7 +561,7 @@ class RepoIndex:
         self,
         package_checker: FastPackageChecker,
         namespace: str,
-        cache: spack.util.file_cache.FileCache,
+        cache: spack.caches.FileCacheType,
     ):
         self.checker = package_checker
         self.packages_path = self.checker.packages_path
@@ -914,19 +914,28 @@ class Repo:
     Each package repository must have a top-level configuration file
     called `repo.yaml`.
 
-    Currently, `repo.yaml` this must define:
+    Currently, `repo.yaml` must define:
 
     `namespace`:
         A Python namespace where the repository's packages should live.
 
+    `subdirectory`:
+        An optional subdirectory name where packages are placed
     """
 
-    def __init__(self, root: str, *, cache, overrides=None) -> None:
+    def __init__(
+        self,
+        root: str,
+        *,
+        cache: spack.caches.FileCacheType,
+        overrides: Optional[Dict[str, Any]] = None,
+    ) -> None:
         """Instantiate a package repository from a filesystem path.
 
         Args:
             root: the root directory of the repository
             cache: file cache associated with this repository
+            overrides: dict mapping package name to class attribute overrides for that package
         """
         # Root directory, containing _repo.yaml and package dirs
         # Allow roots to by spack-relative by starting with '$spack'
@@ -971,13 +980,13 @@ class Repo:
         self.overrides = overrides or {}
 
         # Maps that goes from package name to corresponding file stat
-        self._fast_package_checker = None
+        self._fast_package_checker: Optional[FastPackageChecker] = None
 
         # Indexes for this repository, computed lazily
-        self._repo_index = None
+        self._repo_index: Optional[RepoIndex] = None
         self._cache = cache
 
-    def real_name(self, import_name):
+    def real_name(self, import_name: str) -> Optional[str]:
         """Allow users to import Spack packages using Python identifiers.
 
         A python identifier might map to many different Spack package
@@ -1002,12 +1011,12 @@ class Repo:
                 return name
         return None
 
-    def is_prefix(self, fullname):
+    def is_prefix(self, fullname: str) -> bool:
         """True if fullname is a prefix of this Repo's namespace."""
         parts = fullname.split(".")
         return self._names[: len(parts)] == parts
 
-    def _read_config(self):
+    def _read_config(self) -> Dict[str, str]:
         """Check for a YAML config file in this db's root directory."""
         try:
             with open(self.config_file) as reponame_file:
@@ -1025,7 +1034,7 @@ class Repo:
         except IOError:
             tty.die(f"Error reading {self.config_file} when opening {self.root}")
 
-    def get(self, spec):
+    def get(self, spec: "spack.spec.Spec") -> "spack.package_base.PackageBase":
         """Returns the package associated with the supplied spec."""
         msg = "Repo.get can only be called on concrete specs"
         assert isinstance(spec, spack.spec.Spec) and spec.concrete, msg
@@ -1052,7 +1061,7 @@ class Repo:
             raise FailedConstructorError(spec.fullname, *sys.exc_info()) from e
 
     @autospec
-    def dump_provenance(self, spec, path):
+    def dump_provenance(self, spec: "spack.spec.Spec", path: str) -> None:
         """Dump provenance information for a spec to a particular path.
 
         This dumps the package file and any associated patch files.
@@ -1083,7 +1092,7 @@ class Repo:
         fs.install(self.filename_for_package_name(spec.name), path)
 
     @property
-    def index(self):
+    def index(self) -> RepoIndex:
         """Construct the index for this repo lazily."""
         if self._repo_index is None:
             self._repo_index = RepoIndex(self._pkg_checker, self.namespace, cache=self._cache)
@@ -1093,42 +1102,40 @@ class Repo:
         return self._repo_index
 
     @property
-    def provider_index(self):
+    def provider_index(self) -> spack.provider_index.ProviderIndex:
         """A provider index with names *specific* to this repo."""
         return self.index["providers"]
 
     @property
-    def tag_index(self):
+    def tag_index(self) -> spack.tag.TagIndex:
         """Index of tags and which packages they're defined on."""
         return self.index["tags"]
 
     @property
-    def patch_index(self):
+    def patch_index(self) -> spack.patch.PatchCache:
         """Index of patches and packages they're defined on."""
         return self.index["patches"]
 
     @autospec
-    def providers_for(self, vpkg_spec):
+    def providers_for(self, vpkg_spec: "spack.spec.Spec") -> List["spack.spec.Spec"]:
         providers = self.provider_index.providers_for(vpkg_spec)
         if not providers:
             raise UnknownPackageError(vpkg_spec.fullname)
         return providers
 
     @autospec
-    def extensions_for(self, extendee_spec):
-        return [
-            pkg_cls(spack.spec.Spec(pkg_cls.name))
-            for pkg_cls in self.all_package_classes()
-            if pkg_cls(spack.spec.Spec(pkg_cls.name)).extends(extendee_spec)
-        ]
+    def extensions_for(
+        self, extendee_spec: "spack.spec.Spec"
+    ) -> List["spack.package_base.PackageBase"]:
+        result = [pkg_cls(spack.spec.Spec(pkg_cls.name)) for pkg_cls in self.all_package_classes()]
+        return [x for x in result if x.extends(extendee_spec)]
 
-    def dirname_for_package_name(self, pkg_name):
-        """Get the directory name for a particular package.  This is the
-        directory that contains its package.py file."""
+    def dirname_for_package_name(self, pkg_name: str) -> str:
+        """Given a package name, get the directory containing its package.py file."""
         _, unqualified_name = self.partition_package_name(pkg_name)
         return os.path.join(self.packages_path, unqualified_name)
 
-    def filename_for_package_name(self, pkg_name):
+    def filename_for_package_name(self, pkg_name: str) -> str:
         """Get the filename for the module we should load for a particular
         package.  Packages for a Repo live in
         ``$root/<package_name>/package.py``
@@ -1141,23 +1148,23 @@ class Repo:
         return os.path.join(pkg_dir, package_file_name)
 
     @property
-    def _pkg_checker(self):
+    def _pkg_checker(self) -> FastPackageChecker:
         if self._fast_package_checker is None:
             self._fast_package_checker = FastPackageChecker(self.packages_path)
         return self._fast_package_checker
 
-    def all_package_names(self, include_virtuals=False):
+    def all_package_names(self, include_virtuals: bool = False) -> List[str]:
         """Returns a sorted list of all package names in the Repo."""
         names = sorted(self._pkg_checker.keys())
         if include_virtuals:
             return names
         return [x for x in names if not self.is_virtual(x)]
 
-    def package_path(self, name):
+    def package_path(self, name: str) -> str:
         """Get path to package.py file for this repo."""
         return os.path.join(self.packages_path, name, package_file_name)
 
-    def all_package_paths(self):
+    def all_package_paths(self) -> Generator[str, None, None]:
         for name in self.all_package_names():
             yield self.package_path(name)
 
@@ -1166,7 +1173,7 @@ class Repo:
         v.intersection_update(*(self.tag_index[tag.lower()] for tag in tags))
         return v
 
-    def all_package_classes(self):
+    def all_package_classes(self) -> Generator[Type["spack.package_base.PackageBase"], None, None]:
         """Iterator over all package *classes* in the repository.
 
         Use this with care, because loading packages is slow.
@@ -1174,7 +1181,7 @@ class Repo:
         for name in self.all_package_names():
             yield self.get_pkg_class(name)
 
-    def exists(self, pkg_name):
+    def exists(self, pkg_name: str) -> bool:
         """Whether a package with the supplied name exists."""
         if pkg_name is None:
             return False
@@ -1191,28 +1198,22 @@ class Repo:
         """Time a package file in this repo was last updated."""
         return self._pkg_checker.last_mtime()
 
-    def is_virtual(self, pkg_name):
+    def is_virtual(self, pkg_name: str) -> bool:
         """Return True if the package with this name is virtual, False otherwise.
 
         This function use the provider index. If calling from a code block that
         is used to construct the provider index use the ``is_virtual_safe`` function.
-
-        Args:
-            pkg_name (str): name of the package we want to check
         """
         return pkg_name in self.provider_index
 
-    def is_virtual_safe(self, pkg_name):
+    def is_virtual_safe(self, pkg_name: str) -> bool:
         """Return True if the package with this name is virtual, False otherwise.
 
         This function doesn't use the provider index.
-
-        Args:
-            pkg_name (str): name of the package we want to check
         """
         return not self.exists(pkg_name) or self.get_pkg_class(pkg_name).virtual
 
-    def get_pkg_class(self, pkg_name):
+    def get_pkg_class(self, pkg_name: str) -> Type["spack.package_base.PackageBase"]:
         """Get the class for the package out of its module.
 
         First loads (or fetches from cache) a module for the
@@ -1276,13 +1277,13 @@ class Repo:
 
         return namespace, pkg_name
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"[Repo '{self.namespace}' at '{self.root}']"
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return self.__str__()
 
-    def __contains__(self, pkg_name):
+    def __contains__(self, pkg_name: str) -> bool:
         return self.exists(pkg_name)
 
 
