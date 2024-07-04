@@ -22,6 +22,7 @@ class PyNumpy(PythonPackage):
     license("BSD-3-Clause")
 
     version("main", branch="main")
+    version("2.0.0", sha256="cf5d1c9e6837f8af9f92b6bd3e86d513cdc11f60fd62185cc49ec7d1aba34864")
     version("1.26.4", sha256="2a02aba9ed12e4ac4eb3ea9421c420301a0c6460d9830d74a9df87efa4912010")
     version("1.26.3", sha256="697df43e2b6310ecc9d95f05d5ef20eacc09c7c4ecc9da3f235d39e71b7da1e4")
     version("1.26.2", sha256="f65738447676ab5777f11e6bbbdb8ce11b785e105f690bc45966574816b6d3ea")
@@ -86,6 +87,7 @@ class PyNumpy(PythonPackage):
     depends_on("py-pip@23.1:", when="@1.26:", type="build")
 
     # Build dependencies (do not include upper bound unless known issues)
+    depends_on("py-cython@3.0.6:", when="@2:", type="build")
     depends_on("py-cython@0.29.34:", when="@1.26:", type="build")
     depends_on("py-cython@0.29.34:2", when="@1.25", type="build")
     depends_on("py-cython@0.29.30:2", when="@1.22.4:1.24", type="build")
