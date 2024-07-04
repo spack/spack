@@ -448,19 +448,21 @@ class Configuration:
         return scope
 
     @property
-    def file_scopes(self) -> List[ConfigScope]:
-        """List of writable scopes with an associated file."""
-        return [s for s in self.scopes.values() if s.writable]
+    def file_scopes(self) -> Generator[ConfigScope, None, None]:
+        """Generator of writable scopes with an associated file."""
+        return (s for s in self.scopes.values() if s.writable)
 
     def highest_precedence_scope(self) -> ConfigScope:
-        """Non-internal scope with highest precedence."""
-        return next(reversed(self.file_scopes))
+        """Writable scope with highest precedence."""
+        return next(s for s in reversed(self.scopes.values()) if s.writable)  # type: ignore
 
     def highest_precedence_non_platform_scope(self) -> ConfigScope:
-        """Non-internal non-platform scope with highest precedence
-
-        Platform-specific scopes are of the form scope/platform"""
-        return next(s for s in reversed(self.file_scopes) if not s.is_platform_dependent)
+        """Writable non-platform scope with highest precedence"""
+        return next(
+            s
+            for s in reversed(self.scopes.values())  # type: ignore
+            if s.writable and not s.is_platform_dependent
+        )
 
     def matching_scopes(self, reg_expr) -> List[ConfigScope]:
         """
