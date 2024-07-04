@@ -25,6 +25,7 @@ import sys
 import traceback
 import types
 import uuid
+import warnings
 from typing import Any, Dict, List, Set, Tuple, Union
 
 import llnl.path
@@ -963,8 +964,7 @@ class Repo:
         packages_dir = config.get("subdirectory", packages_dir_name)
         self.packages_path = os.path.join(self.root, packages_dir)
         check(
-            os.path.isdir(self.packages_path),
-            "No directory '%s' found in '%s'" % (packages_dir, root),
+            os.path.isdir(self.packages_path), f"No directory '{packages_dir}' found in '{root}'"
         )
 
         # Maps that goes from package name to corresponding file stat
@@ -1015,12 +1015,12 @@ class Repo:
                     or "repo" not in yaml_data
                     or not isinstance(yaml_data["repo"], dict)
                 ):
-                    tty.die("Invalid %s in repository %s" % (repo_config_name, self.root))
+                    tty.die(f"Invalid {repo_config_name} in repository {self.root}")
 
                 return yaml_data["repo"]
 
         except IOError:
-            tty.die("Error reading %s when opening %s" % (self.config_file, self.root))
+            tty.die(f"Error reading {self.config_file} when opening {self.root}")
 
     def get(self, spec):
         """Returns the package associated with the supplied spec."""
@@ -1074,7 +1074,7 @@ class Repo:
                     if os.path.exists(patch.path):
                         fs.install(patch.path, path)
                     else:
-                        tty.warn("Patch file did not exist: %s" % patch.path)
+                        warnings.warn(f"Patch file did not exist: {patch.path}")
 
         # Install the package.py file itself.
         fs.install(self.filename_for_package_name(spec.name), path)
@@ -1279,7 +1279,7 @@ class Repo:
         return namespace, pkg_name
 
     def __str__(self):
-        return "[Repo '%s' at '%s']" % (self.namespace, self.root)
+        return f"[Repo '{self.namespace}' at '{self.root}']"
 
     def __repr__(self):
         return self.__str__()
