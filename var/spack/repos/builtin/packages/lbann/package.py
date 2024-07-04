@@ -357,10 +357,6 @@ class Lbann(CachedCMakePackage, CudaPackage, ROCmPackage):
                     cmake_cache_string("CMAKE_CUDA_FLAGS", "-allow-unsupported-compiler")
                 )
 
-        if "+rocm" in spec:
-            if "platform=cray" in spec:
-                entries.append(cmake_cache_option("MPI_ASSUME_NO_BUILTIN_MPI", True))
-
         return entries
 
     def initconfig_package_entries(self):

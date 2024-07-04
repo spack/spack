@@ -41,7 +41,7 @@ jobs:
         # 2: Base image (e.g. ubuntu:22.04)
         dockerfile: [[amazon-linux, 'linux/amd64,linux/arm64', 'amazonlinux:2'],
                      [centos7, 'linux/amd64,linux/arm64,linux/ppc64le', 'centos:7'],
-                     [centos-stream, 'linux/amd64,linux/arm64,linux/ppc64le', 'centos:stream'],
+                     [centos-stream9, 'linux/amd64,linux/arm64,linux/ppc64le', 'centos:stream9'],
                      [leap15, 'linux/amd64,linux/arm64,linux/ppc64le', 'opensuse/leap:15'],
                      [ubuntu-focal, 'linux/amd64,linux/arm64,linux/ppc64le', 'ubuntu:20.04'],
                      [ubuntu-jammy, 'linux/amd64,linux/arm64,linux/ppc64le', 'ubuntu:22.04'],
@@ -56,7 +56,7 @@ jobs:
     if: github.repository == 'spack/spack'
     steps:
       - name: Checkout
-        uses: actions/checkout@44c2b7a8a4ea60a981eaca3cf939b5f4305c123b
+        uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29
 
       - uses: docker/metadata-action@8e5442c4ef9f78752691e2d8f8d19755c6f78e81
         id: docker_meta
@@ -114,7 +114,7 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Build & Deploy ${{ matrix.dockerfile[0] }}
-        uses: docker/build-push-action@2cdde995de11925a030ce8070c3d77a52ffcf1c0
+        uses: docker/build-push-action@15560696de535e4014efeff63c48f16952e52dd1
         with:
           context: dockerfiles/${{ matrix.dockerfile[0] }}
           platforms: ${{ matrix.dockerfile[1] }}
