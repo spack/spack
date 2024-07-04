@@ -649,7 +649,7 @@ class RepoPath:
         repos (list): list Repo objects or paths to put in this RepoPath
     """
 
-    def __init__(self, *repos, cache):
+    def __init__(self, *repos, cache, overrides=None):
         self.repos = []
         self.by_namespace = nm.NamespaceTrie()
         self._provider_index = None
@@ -660,7 +660,7 @@ class RepoPath:
         for repo in repos:
             try:
                 if isinstance(repo, str):
-                    repo = Repo(repo, cache=cache)
+                    repo = Repo(repo, cache=cache, overrides=overrides)
                 self.put_last(repo)
             except RepoError as e:
                 tty.warn(
@@ -921,7 +921,7 @@ class Repo:
 
     """
 
-    def __init__(self, root: str, *, cache) -> None:
+    def __init__(self, root: str, *, cache, overrides=None) -> None:
         """Instantiate a package repository from a filesystem path.
 
         Args:
@@ -966,6 +966,9 @@ class Repo:
         check(
             os.path.isdir(self.packages_path), f"No directory '{packages_dir}' found in '{root}'"
         )
+
+        # Class attribute overrides by package name
+        self.overrides = overrides or {}
 
         # Maps that goes from package name to corresponding file stat
         self._fast_package_checker = None
@@ -1232,26 +1235,21 @@ class Repo:
         if not inspect.isclass(cls):
             tty.die(f"{pkg_name}.{class_name} is not a class")
 
-        new_cfg_settings = (
-            spack.config.get("packages").get(pkg_name, {}).get("package_attributes", {})
-        )
-
+        # Clear any prior changes to class attributes in case the class was loaded from the
+        # same repo, but with different overrides
         overridden_attrs = getattr(cls, "overridden_attrs", {})
         attrs_exclusively_from_config = getattr(cls, "attrs_exclusively_from_config", [])
-        # Clear any prior changes to class attributes in case the config has
-        # since changed
         for key, val in overridden_attrs.items():
             setattr(cls, key, val)
         for key in attrs_exclusively_from_config:
             delattr(cls, key)
 
-        # Keep track of every class attribute that is overridden by the config:
-        # if the config changes between calls to this method, we make sure to
-        # restore the original config values (in case the new config no longer
-        # sets attributes that it used to)
+        # Keep track of every class attribute that is overridden: if different overrides
+        # dictionaries are used on the same physical repo, we make sure to restore the original
+        # config values
         new_overridden_attrs = {}
         new_attrs_exclusively_from_config = set()
-        for key, val in new_cfg_settings.items():
+        for key, val in self.overrides.get(pkg_name, {}).items():
             if hasattr(cls, key):
                 new_overridden_attrs[key] = getattr(cls, key)
             else:
@@ -1388,7 +1386,17 @@ def create(configuration):
     repo_dirs = configuration.get("repos")
     if not repo_dirs:
         raise NoRepoConfiguredError("Spack configuration contains no package repositories.")
-    return RepoPath(*repo_dirs, cache=spack.caches.MISC_CACHE)
+
+    overrides = {}
+    for pkg_name, data in configuration.get("packages").items():
+        if pkg_name == "all":
+            continue
+        value = data.get("package_attributes", {})
+        if not value:
+            continue
+        overrides[pkg_name] = value
+
+    return RepoPath(*repo_dirs, cache=spack.caches.MISC_CACHE, overrides=overrides)
 
 
 #: Singleton repo path instance
