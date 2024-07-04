@@ -45,15 +45,6 @@ class FluxSched(CMakePackage, AutotoolsPackage):
     version("0.19.0", sha256="8dffa8eaec95a81286f621639ef851c52dc4c562d365971233bbd91100c31ed2")
     version("0.18.0", sha256="a4d8a6444fdb7b857b26f47fdea57992b486c9522f4ff92d5a6f547d95b586ae")
     version("0.17.0", sha256="5acfcb757e2294a92eaa91be58ba9b42736b88b42d2937de4a78f4642b1c4933")
-    version("0.16.0", sha256="08313976161c141b9b34e2d44d5a08d1b11302e22d60aeaf878eef84d4bd2884")
-    version("0.15.0", sha256="ff24d26997f91af415f98734b8117291f5a5001e86dac865b56b3d72980c80c8")
-    version("0.14.0", sha256="2808f42032b917823d69cd26103c9238694416e2f30c6d39c11c670927ed232a")
-    version("0.13.0", sha256="ba17fc0451239fe31a1524b6a270741873f59a5057514d2524fd3e9215c47a82")
-    version("0.12.0", sha256="b41ecaebba254abfb5a7995fd9100bd45a59d4ad0a79bdca8b3db02785d97b1d")
-    version("0.11.0", sha256="6a0e3c0678f85da8724e5399b02be9686311c835617f6036235ef54b489cc336")
-    version("0.10.0", sha256="5944927774709b5f52ddf64a0e825d9b0f24c9dea890b5504b87a8576d217cf6")
-    version("0.9.0", sha256="0e1eb408a937c2843bdaaed915d4d7e2ea763b98c31e7b849a96a74758d66a21")
-    version("0.8.0", sha256="45bc3cefb453d19c0cb289f03692fba600a39045846568d258e4b896ca19ca0d")
 
     # Avoid the infinite symlink issue
     # This workaround is documented in PR #3543
@@ -80,11 +71,6 @@ class FluxSched(CMakePackage, AutotoolsPackage):
 
     depends_on("flux-core", type=("build", "link", "run"))
     depends_on("flux-core+cuda", when="+cuda", type=("build", "run", "link"))
-    depends_on("flux-core@0.16.0:0.16", when="@0.8.0", type=("build", "run", "link"))
-    depends_on("flux-core@0.22.0", when="@0.14.0", type=("build", "run", "link"))
-    depends_on("flux-core@0.23.0:0.25", when="@0.15.0", type=("build", "run", "link"))
-    depends_on("flux-core@0.26.0:", when="@0.16.0", type=("build", "run", "link"))
-    depends_on("flux-core@0.28.0:", when="@0.17.0", type=("build", "run", "link"))
     depends_on("flux-core@0.29.0:", when="@0.18.0", type=("build", "run", "link"))
     depends_on("flux-core@0.30.0:", when="@0.19.0", type=("build", "run", "link"))
     depends_on("flux-core@0.31.0:", when="@0.19.0", type=("build", "run", "link"))
