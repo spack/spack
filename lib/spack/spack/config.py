@@ -448,7 +448,7 @@ class Configuration:
         return scope
 
     @property
-    def file_scopes(self) -> Generator[ConfigScope, None, None]:
+    def writable_scopes(self) -> Generator[ConfigScope, None, None]:
         """Generator of writable scopes with an associated file."""
         return (s for s in self.scopes.values() if s.writable)
 

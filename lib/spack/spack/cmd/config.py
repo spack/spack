@@ -446,7 +446,7 @@ def _can_revert_update(scope_dir, cfg_file, bkp_file):
 
 
 def config_revert(args):
-    scopes = [args.scope] if args.scope else [x.name for x in spack.config.CONFIG.file_scopes]
+    scopes = [args.scope] if args.scope else [x.name for x in spack.config.CONFIG.writable_scopes]
 
     # Search for backup files in the configuration scopes
     Entry = collections.namedtuple("Entry", ["scope", "cfg", "bkp"])
