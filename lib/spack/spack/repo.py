@@ -651,7 +651,6 @@ class RepoPath:
     def __init__(self, *repos, cache):
         self.repos = []
         self.by_namespace = nm.NamespaceTrie()
-
         self._provider_index = None
         self._patch_index = None
         self._tag_index = None
@@ -921,11 +920,12 @@ class Repo:
 
     """
 
-    def __init__(self, root, cache):
+    def __init__(self, root: str, *, cache) -> None:
         """Instantiate a package repository from a filesystem path.
 
         Args:
             root: the root directory of the repository
+            cache: file cache associated with this repository
         """
         # Root directory, containing _repo.yaml and package dirs
         # Allow roots to by spack-relative by starting with '$spack'
@@ -966,11 +966,6 @@ class Repo:
             os.path.isdir(self.packages_path),
             "No directory '%s' found in '%s'" % (packages_dir, root),
         )
-
-        # These are internal cache variables.
-        self._modules = {}
-        self._classes = {}
-        self._instances = {}
 
         # Maps that goes from package name to corresponding file stat
         self._fast_package_checker = None
@@ -1083,10 +1078,6 @@ class Repo:
 
         # Install the package.py file itself.
         fs.install(self.filename_for_package_name(spec.name), path)
-
-    def purge(self):
-        """Clear entire package instance cache."""
-        self._instances.clear()
 
     @property
     def index(self):
