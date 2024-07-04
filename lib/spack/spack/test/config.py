@@ -774,7 +774,7 @@ def test_keys_are_ordered(configuration_dir):
         "./",
     )
 
-    config_scope = spack.config.ConfigScope("modules", configuration_dir.join("site"))
+    config_scope = spack.config.DirectoryConfigScope("modules", configuration_dir.join("site"))
 
     data = config_scope.get_section("modules")
 
@@ -956,7 +956,7 @@ config:
       root: dummy_tree_value
 """
         )
-    scope = spack.config.ImmutableConfigScope("test", str(tmpdir))
+    scope = spack.config.DirectoryConfigScope("test", str(tmpdir), writable=False)
 
     data = scope.get_section("config")
     assert data["config"]["install_tree"] == {"root": "dummy_tree_value"}
