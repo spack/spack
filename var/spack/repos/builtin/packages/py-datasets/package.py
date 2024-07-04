@@ -44,6 +44,7 @@ class PyDatasets(PythonPackage):
         with when("@2.8.0:"):
             depends_on("py-aiohttp")
             depends_on("py-pyyaml@5.1:")
+            depends_on("python@3.7:")
         with when("@2.8.0"):
             depends_on("py-dill@:0.3.6")
             depends_on("py-fsspec@2021.11.1:+http")
@@ -59,3 +60,4 @@ class PyDatasets(PythonPackage):
             depends_on("py-pyarrow@15:+parquet")
             depends_on("py-requests@2.32.2:")
             depends_on("py-tqdm@4.66.3:")
+            depends_on("python@3.8:")
