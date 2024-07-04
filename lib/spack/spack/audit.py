@@ -791,7 +791,7 @@ def _issues_in_depends_on_directive(pkgs, error_cls):
                         return
                     error = error_cls(
                         f"{pkg_name}: {msg}",
-                        f"remove variants from '{spec}' in depends_on directive in {filename}",
+                        [f"remove variants from '{spec}' in depends_on directive in {filename}"],
                     )
                     errors.append(error)
 
