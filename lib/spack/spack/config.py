@@ -188,7 +188,7 @@ class DirectoryConfigScope(ConfigScope):
     @property
     def is_platform_dependent(self) -> bool:
         """Returns true if the scope name is platform specific"""
-        return os.sep in self.name
+        return "/" in self.name
 
 
 class SingleFileScope(ConfigScope):
@@ -761,9 +761,8 @@ def _add_platform_scope(
 ) -> None:
     """Add a platform-specific subdirectory for the current platform."""
     platform = spack.platforms.host().name
-    plat_name = os.path.join(name, platform)
-    plat_path = os.path.join(path, platform)
-    cfg.push_scope(DirectoryConfigScope(plat_name, plat_path, writable))
+    scope = DirectoryConfigScope(f"{name}/{platform}", os.path.join(path, platform), writable)
+    cfg.push_scope(scope)
 
 
 def config_paths_from_entry_points() -> List[Tuple[str, str]]:
