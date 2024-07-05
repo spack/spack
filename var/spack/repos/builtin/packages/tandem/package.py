@@ -42,6 +42,7 @@ class Tandem(CMakePackage, CudaPackage, ROCmPackage):
         description="Minimum order of quadrature rule, 0 = automatic",
     )
     variant("libxsmm", default=False, description="Install libxsmm-generator")
+    variant("python", default=False, description="installs python and numpy")
 
     depends_on("mpi")
 
@@ -58,10 +59,13 @@ class Tandem(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("eigen@3.4.0")
 
     depends_on("zlib-api")
-    depends_on("petsc@3.14.6:3.18.5 +int64 +mumps +scalapack memalign=32")
-    depends_on("petsc@3.14.6:3.18.5 +int64 +mumps +scalapack +knl", when="target=skylake:")
-    depends_on("petsc@3.14.6:3.18.5 +int64 +mumps +scalapack memalign=32 +cuda", when="+cuda")
-    depends_on("petsc@3.14.6:3.18.5 +int64 +mumps +scalapack memalign=32 +rocm", when="+rocm")
+    depends_on("petsc@3.14.6:3.21.2 +int64 +mumps +scalapack memalign=32")
+    depends_on("petsc@3.14.6:3.21.2 +int64 +mumps +scalapack +knl", when="target=skylake:")
+    depends_on("petsc@3.14.6:3.21.2 +int64 +mumps +scalapack memalign=32 +cuda", when="+cuda")
+    depends_on("petsc@3.14.6:3.21.2 +int64 +mumps +scalapack memalign=32 +rocm", when="+rocm")
+
+    depends_on("python@3", type="build", when="+python")
+    depends_on("py-numpy", type="build", when="+python")
 
     # see https://github.com/TEAR-ERC/tandem/issues/45
     conflicts("%intel")
