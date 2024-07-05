@@ -262,3 +262,20 @@ class TestRepo:
         repo = spack.repo.Repo(spack.paths.mock_packages_path, cache=mock_test_cache)
         provider_names = {x.name for x in repo.extensions_for(extended)}
         assert provider_names.issuperset(expected)
+
+    def test_all_package_names(self, mock_test_cache):
+        repo = spack.repo.Repo(spack.paths.mock_packages_path, cache=mock_test_cache)
+        all_names = repo.all_package_names(include_virtuals=True)
+        real_names = repo.all_package_names(include_virtuals=False)
+        assert set(all_names).issuperset(real_names)
+        for name in set(all_names) - set(real_names):
+            assert repo.is_virtual(name)
+            assert repo.is_virtual_safe(name)
+
+    def test_packages_with_tags(self, mock_test_cache):
+        repo = spack.repo.Repo(spack.paths.mock_packages_path, cache=mock_test_cache)
+        r1 = repo.packages_with_tags("tag1")
+        r2 = repo.packages_with_tags("tag1", "tag2")
+        assert "mpich" in r1 and "mpich" in r2
+        assert "mpich2" in r1 and "mpich2" not in r2
+        assert set(r2).issubset(r1)
