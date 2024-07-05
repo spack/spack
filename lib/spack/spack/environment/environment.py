@@ -24,6 +24,7 @@ import llnl.util.tty.color as clr
 from llnl.util.link_tree import ConflictingSpecsError
 from llnl.util.symlink import readlink, symlink
 
+import spack.caches
 import spack.cmd
 import spack.compilers
 import spack.concretize
@@ -2542,7 +2543,7 @@ def _concretize_task(packed_arguments) -> Tuple[int, Spec, float]:
 
 def make_repo_path(root):
     """Make a RepoPath from the repo subdirectories in an environment."""
-    path = spack.repo.RepoPath()
+    path = spack.repo.RepoPath(cache=spack.caches.MISC_CACHE)
 
     if os.path.isdir(root):
         for repo_root in os.listdir(root):
@@ -2551,7 +2552,7 @@ def make_repo_path(root):
             if not os.path.isdir(repo_root):
                 continue
 
-            repo = spack.repo.Repo(repo_root)
+            repo = spack.repo.from_path(repo_root)
             path.put_last(repo)
 
     return path
