@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+# dlaf-no-license-check
 from spack.package import *
 
 
@@ -29,7 +30,8 @@ class DlaFutureFortran(CMakePackage):
     generator("ninja")
     depends_on("cmake@3.22:", type="build")
 
-    depends_on("dla-future@0.4.1: +scalapack")
+    depends_on("dla-future@0.4.1:0.5 +scalapack", when="@0.1.0")
+    depends_on("dla-future@0.6.0: +scalapack", when="@0.2.0:")
     depends_on("dla-future +shared", when="+shared")
 
     depends_on("mpi", when="+test")
