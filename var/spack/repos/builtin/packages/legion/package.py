@@ -121,6 +121,7 @@ class Legion(CMakePackage, ROCmPackage):
     depends_on("py-cffi", when="+python")
     depends_on("py-numpy", when="+python")
     depends_on("py-pip", when="+python", type="build")
+    depends_on("py-setuptools", when="+python", type="build")
 
     depends_on("papi", when="+papi")
     depends_on("zlib-api", when="+zlib")
@@ -266,6 +267,12 @@ class Legion(CMakePackage, ROCmPackage):
 
     variant(
         "redop_complex", default=False, description="Use reduction operators for complex types."
+    )
+    requires("+redop_complex", when="+bindings")
+    variant(
+        "redop_half",
+        default=False,
+        description="Use reduction operators for half precision types.",
     )
 
     variant(
@@ -415,9 +422,13 @@ class Legion(CMakePackage, ROCmPackage):
             # default is off.
             options.append("-DLegion_BUILD_BINDINGS=ON")
 
-        if spec.satisfies("+redop_complex") or spec.satisfies("+bindings"):
-            # default is off; required for bindings.
+        if spec.satisfies("+redop_complex"):
+            # default is off
             options.append("-DLegion_REDOP_COMPLEX=ON")
+
+        if spec.satisfies("+redop_half"):
+            # default is off
+            options.append("-DLegion_REDOP_HALF=ON")
 
         maxdims = int(spec.variants["max_dims"].value)
         # TODO: sanity check if maxdims < 0 || > 9???
@@ -476,18 +487,15 @@ class Legion(CMakePackage, ROCmPackage):
         install test subdirectory for use during `spack test run`."""
         self.cache_extra_test_sources([join_path("examples", "local_function_tasks")])
 
-    def run_local_function_tasks_test(self):
-        """Run stand alone test: local_function_tasks"""
+    def test_run_local_function_tasks(self):
+        """Build and run external application example"""
 
         test_dir = join_path(
             self.test_suite.current_test_cache_dir, "examples", "local_function_tasks"
         )
 
         if not os.path.exists(test_dir):
-            print("Skipping local_function_tasks test")
-            return
-
-        exe = "local_function_tasks"
+            raise SkipTest(f"{test_dir} must exist")
 
         cmake_args = [
             f"-DCMAKE_C_COMPILER={self.compiler.cc}",
@@ -495,16 +503,12 @@ class Legion(CMakePackage, ROCmPackage):
             f"-DLegion_DIR={join_path(self.prefix, 'share', 'Legion', 'cmake')}",
         ]
 
-        self.run_test(
-            "cmake",
-            options=cmake_args,
-            purpose=f"test: generate makefile for {exe} example",
-            work_dir=test_dir,
-        )
+        with working_dir(test_dir):
+            cmake = self.spec["cmake"].command
+            cmake(*cmake_args)
 
-        self.run_test("make", purpose=f"test: build {exe} example", work_dir=test_dir)
+            make = which("make")
+            make()
 
-        self.run_test(exe, purpose=f"test: run {exe} example", work_dir=test_dir)
-
-    def test(self):
-        self.run_local_function_tasks_test()
+            exe = which("local_function_tasks")
+            exe()

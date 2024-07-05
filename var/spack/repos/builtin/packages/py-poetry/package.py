@@ -71,7 +71,7 @@ class PyPoetry(PythonPackage):
     depends_on("py-virtualenv@20.4.3:20.4.4,20.4.7:", when="@1.2", type=("build", "run"))
     depends_on("py-virtualenv@20.0.26:20", when="@:1.1", type=("build", "run"))
     depends_on("py-xattr@0.10", when="platform=darwin @1.6.1", type=("build", "run"))
-    depends_on("py-xattr@0.9.7:0.9", when="platform=darwin @1.2:")
+    depends_on("py-xattr@0.9.7:0.9", when="platform=darwin @1.2")
     depends_on("py-urllib3@1.26.0:1", when="@1.2")
     depends_on("py-dulwich@0.21.2:0.21", when="@1.6.1", type=("build", "run"))
     depends_on("py-dulwich@0.20.46:0.20", when="@1.2.1")
