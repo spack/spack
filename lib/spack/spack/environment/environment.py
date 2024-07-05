@@ -3028,7 +3028,7 @@ class EnvironmentManifestFile(collections.abc.Mapping):
             SpackEnvironmentError: if the manifest includes a remote file but
                 no configuration stage directory has been identified
         """
-        scopes = []
+        scopes: List[spack.config.ConfigScope] = []
 
         # load config scopes added via 'include:', in reverse so that
         # highest-precedence scopes are last.
@@ -3097,22 +3097,20 @@ class EnvironmentManifestFile(collections.abc.Mapping):
             if os.path.isdir(config_path):
                 # directories are treated as regular ConfigScopes
                 config_name = "env:%s:%s" % (env_name, os.path.basename(config_path))
-                tty.debug("Creating ConfigScope {0} for '{1}'".format(config_name, config_path))
-                scope = spack.config.ConfigScope(config_name, config_path)
+                tty.debug(f"Creating DirectoryConfigScope {config_name} for '{config_path}'")
+                scopes.append(spack.config.DirectoryConfigScope(config_name, config_path))
             elif os.path.exists(config_path):
                 # files are assumed to be SingleFileScopes
                 config_name = "env:%s:%s" % (env_name, config_path)
-                tty.debug(
-                    "Creating SingleFileScope {0} for '{1}'".format(config_name, config_path)
-                )
-                scope = spack.config.SingleFileScope(
-                    config_name, config_path, spack.schema.merged.schema
+                tty.debug(f"Creating SingleFileScope {config_name} for '{config_path}'")
+                scopes.append(
+                    spack.config.SingleFileScope(
+                        config_name, config_path, spack.schema.merged.schema
+                    )
                 )
             else:
                 missing.append(config_path)
                 continue
-
-            scopes.append(scope)
 
         if missing:
             msg = "Detected {0} missing include path(s):".format(len(missing))
@@ -3130,7 +3128,10 @@ class EnvironmentManifestFile(collections.abc.Mapping):
         scopes: List[spack.config.ConfigScope] = [
             *self.included_config_scopes,
             spack.config.SingleFileScope(
-                self.scope_name, str(self.manifest_file), spack.schema.env.schema, [TOP_LEVEL_KEY]
+                self.scope_name,
+                str(self.manifest_file),
+                spack.schema.env.schema,
+                yaml_path=[TOP_LEVEL_KEY],
             ),
         ]
         ensure_no_disallowed_env_config_mods(scopes)

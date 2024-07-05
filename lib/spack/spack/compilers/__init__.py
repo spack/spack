@@ -260,7 +260,7 @@ def _init_compiler_config(
 def compiler_config_files():
     config_files = list()
     config = spack.config.CONFIG
-    for scope in config.file_scopes:
+    for scope in config.writable_scopes:
         name = scope.name
         compiler_config = config.get("compilers", scope=name)
         if compiler_config:

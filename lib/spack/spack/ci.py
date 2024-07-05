@@ -809,7 +809,8 @@ def generate_gitlab_ci_yaml(
         cli_scopes = [
             os.path.relpath(s.path, concrete_env_dir)
             for s in cfg.scopes().values()
-            if isinstance(s, cfg.ImmutableConfigScope)
+            if not s.writable
+            and isinstance(s, (cfg.DirectoryConfigScope))
             and s.path not in env_includes
             and os.path.exists(s.path)
         ]
