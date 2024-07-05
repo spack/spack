@@ -50,8 +50,6 @@ class Hpctoolkit(AutotoolsPackage, MesonPackage):
     version("2020.03.01", commit="94ede4e6fa1e05e6f080be8dc388240ea027f769", deprecated=True)
     version("2019.12.28", commit="b4e1877ff96069fd8ed0fdf0e36283a5b4b62240", deprecated=True)
     version("2019.08.14", commit="6ea44ed3f93ede2d0a48937f288a2d41188a277c", deprecated=True)
-    version("2018.12.28", commit="8dbf0d543171ffa9885344f32f23cc6f7f6e39bc", deprecated=True)
-    version("2018.11.05", commit="d0c43e39020e67095b1f1d8bb89b75f22b12aee9", deprecated=True)
 
     # Options for MPI and hpcprof-mpi.  We always support profiling
     # MPI applications.  These options add hpcprof-mpi, the MPI
