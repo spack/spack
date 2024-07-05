@@ -1411,7 +1411,9 @@ def _path(configuration=None):
     return create(configuration=configuration)
 
 
-def create(configuration):
+def create(
+    configuration: Union["spack.config.Configuration", llnl.util.lang.Singleton]
+) -> RepoPath:
     """Create a RepoPath from a configuration object.
 
     Args:
@@ -1447,20 +1449,20 @@ def all_package_names(include_virtuals=False):
 
 
 @contextlib.contextmanager
-def use_repositories(*paths_and_repos, **kwargs):
+def use_repositories(
+    *paths_and_repos: Union[str, Repo], override: bool = True
+) -> Generator[RepoPath, None, None]:
     """Use the repositories passed as arguments within the context manager.
 
     Args:
         *paths_and_repos: paths to the repositories to be used, or
             already constructed Repo objects
-        override (bool): if True use only the repositories passed as input,
+        override: if True use only the repositories passed as input,
             if False add them to the top of the list of current repositories.
     Returns:
         Corresponding RepoPath object
     """
     global PATH
-    # TODO (Python 2.7): remove this kwargs on deprecation of Python 2.7 support
-    override = kwargs.get("override", True)
     paths = [getattr(x, "root", x) for x in paths_and_repos]
     scope_name = "use-repo-{}".format(uuid.uuid4())
     repos_key = "repos:" if override else "repos"
@@ -1469,7 +1471,7 @@ def use_repositories(*paths_and_repos, **kwargs):
     )
     PATH, saved = create(configuration=spack.config.CONFIG), PATH
     try:
-        with REPOS_FINDER.switch_repo(PATH):
+        with REPOS_FINDER.switch_repo(PATH):  # type: ignore
             yield PATH
     finally:
         spack.config.CONFIG.remove_scope(scope_name=scope_name)
