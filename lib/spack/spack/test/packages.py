@@ -32,12 +32,12 @@ class TestPackage:
         assert pkg_cls.name == "mpich"
 
     def test_package_filename(self):
-        repo = spack.repo.Repo(mock_packages_path)
+        repo = spack.repo.from_path(mock_packages_path)
         filename = repo.filename_for_package_name("mpich")
         assert filename == os.path.join(mock_packages_path, "packages", "mpich", "package.py")
 
     def test_nonexisting_package_filename(self):
-        repo = spack.repo.Repo(mock_packages_path)
+        repo = spack.repo.from_path(mock_packages_path)
         filename = repo.filename_for_package_name("some-nonexisting-package")
         assert filename == os.path.join(
             mock_packages_path, "packages", "some-nonexisting-package", "package.py"
