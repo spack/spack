@@ -1108,7 +1108,7 @@ class Repo:
         """
         if spec.namespace and spec.namespace != self.namespace:
             raise UnknownPackageError(
-                "Repository %s does not contain package %s." % (self.namespace, spec.fullname)
+                f"Repository {self.namespace} does not contain package {spec.fullname}."
             )
 
         package_path = self.filename_for_package_name(spec.name)

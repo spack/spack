@@ -234,5 +234,22 @@ class TestRepo:
         ],
     )
     def test_real_name(self, module_name, expected, mock_test_cache):
+        """Test that we can correctly compute the 'real' name of a package, from the one
+        used to import the Python module.
+        """
         repo = spack.repo.Repo(spack.paths.mock_packages_path, cache=mock_test_cache)
         assert repo.real_name(module_name) == expected
+
+    @pytest.mark.parametrize("name", ["mpileaks", "7zip", "dla-future"])
+    def test_get(self, name, mock_test_cache):
+        repo = spack.repo.Repo(spack.paths.mock_packages_path, cache=mock_test_cache)
+        mock_spec = spack.spec.Spec(name)
+        mock_spec._mark_concrete()
+        pkg = repo.get(mock_spec)
+        assert pkg.__class__ == repo.get_pkg_class(name)
+
+    @pytest.mark.parametrize("virtual_name,expected", [("mpi", ["mpich", "zmpi"])])
+    def test_providers(self, virtual_name, expected, mock_test_cache):
+        repo = spack.repo.Repo(spack.paths.mock_packages_path, cache=mock_test_cache)
+        provider_names = {x.name for x in repo.providers_for(virtual_name)}
+        assert provider_names.issuperset(expected)
