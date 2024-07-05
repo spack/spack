@@ -19,6 +19,9 @@ class Alpaka(CMakePackage, CudaPackage):
     license("MPL-2.0-no-copyleft-exception")
 
     version("develop", branch="develop")
+    version("1.1.0", sha256="95a8f1b706105d8a213116b6ba00e27bd904855c377f5a22a04aa0b86054dc35")
+    version("1.0.0", sha256="38223dc1ca5bcf3916ff91f8825fb8caab7047430877222847e0ceb93bffecc9")
+    version("0.9.0", sha256="3b2a5631366619fab5f3ceaf860219362f35db6c1148a601a3779a836cf29363")
     version("0.8.0", sha256="e01bc377a7657d9a3e0c5f8d3f83dffbd7d0b830283c59efcbc1fb98cf88de43")
     version("0.7.0", sha256="4b61119a7b3b073f281ba15b63430db98b77dbd9420bc290a114f80121fbdd97")
     version("0.6.0", sha256="7424ecaee3af15e587b327e983998410fa379c61d987bfe923c7e95d65db11a3")
@@ -41,6 +44,9 @@ class Alpaka(CMakePackage, CudaPackage):
             "cuda_only",
             "hip",
             "hip_only",
+            "sycl_cpu",
+            "sycl_gpu",
+            "sycl_fpga",
         ),
         description="Backends to enable",
         default="serial",
@@ -64,12 +70,22 @@ class Alpaka(CMakePackage, CudaPackage):
         "omp5",
         "cuda",
         "hip",
+        "sycl_cpu",
+        "sycl_gpu",
+        "sycl_fpga",
     ):
         conflicts("backend=cuda_only,%s" % v)
         conflicts("backend=hip_only,%s" % v)
     conflicts("backend=cuda_only,hip_only")
     for v in ("omp2_blockthread", "omp2_blockthread", "omp5"):
         conflicts("backend=oacc,%s" % v)
+
+    for v in (
+        "sycl_cpu",
+        "sycl_gpu",
+        "sycl_fpga",
+    ):
+        conflicts("backend=%s" % v, when="@0.9.0:")
 
     # todo: add conflict between cuda 11.3 and gcc 10.3.0
     # see https://github.com/alpaka-group/alpaka/issues/1297
@@ -103,6 +119,12 @@ class Alpaka(CMakePackage, CudaPackage):
         if "backend=hip_only" in spec:
             args.append(self.define("ALPAKA_ACC_GPU_HIP_ENABLE", True))
             args.append(self.define("ALPAKA_ACC_GPU_HIP_ONLY_MODE", True))
+        if "backend=sycl_cpu" in spec:
+            args.append(self.define("ALPAKA_SYCL_ONEAPI_CPU", True))
+        if "backend=sycl_gpu" in spec:
+            args.append(self.define("ALPAKA_SYCL_ONEAPI_CPU", True))
+        if "backend=sycl_fpga" in spec:
+            args.append(self.define("alpaka_SYCL_ONEAPI_FPGA", True))
 
         args.append(self.define_from_variant("alpaka_BUILD_EXAMPLES", "examples"))
         # need to define, as it is explicitly declared as an option by alpaka:
