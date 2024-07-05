@@ -774,7 +774,7 @@ def test_keys_are_ordered(configuration_dir):
         "./",
     )
 
-    config_scope = spack.config.ConfigScope("modules", configuration_dir.join("site"))
+    config_scope = spack.config.DirectoryConfigScope("modules", configuration_dir.join("site"))
 
     data = config_scope.get_section("modules")
 
@@ -956,7 +956,7 @@ config:
       root: dummy_tree_value
 """
         )
-    scope = spack.config.ImmutableConfigScope("test", str(tmpdir))
+    scope = spack.config.DirectoryConfigScope("test", str(tmpdir), writable=False)
 
     data = scope.get_section("config")
     assert data["config"]["install_tree"] == {"root": "dummy_tree_value"}
@@ -966,7 +966,9 @@ config:
 
 
 def test_single_file_scope(config, env_yaml):
-    scope = spack.config.SingleFileScope("env", env_yaml, spack.schema.env.schema, ["spack"])
+    scope = spack.config.SingleFileScope(
+        "env", env_yaml, spack.schema.env.schema, yaml_path=["spack"]
+    )
 
     with spack.config.override(scope):
         # from the single-file config
@@ -1002,7 +1004,9 @@ spack:
 """
         )
 
-    scope = spack.config.SingleFileScope("env", env_yaml, spack.schema.env.schema, ["spack"])
+    scope = spack.config.SingleFileScope(
+        "env", env_yaml, spack.schema.env.schema, yaml_path=["spack"]
+    )
 
     with spack.config.override(scope):
         # from the single-file config
@@ -1018,7 +1022,7 @@ spack:
 def test_write_empty_single_file_scope(tmpdir):
     env_schema = spack.schema.env.schema
     scope = spack.config.SingleFileScope(
-        "test", str(tmpdir.ensure("config.yaml")), env_schema, ["spack"]
+        "test", str(tmpdir.ensure("config.yaml")), env_schema, yaml_path=["spack"]
     )
     scope._write_section("config")
     # confirm we can write empty config
@@ -1217,7 +1221,9 @@ def test_license_dir_config(mutable_config, mock_packages):
 
 @pytest.mark.regression("22547")
 def test_single_file_scope_cache_clearing(env_yaml):
-    scope = spack.config.SingleFileScope("env", env_yaml, spack.schema.env.schema, ["spack"])
+    scope = spack.config.SingleFileScope(
+        "env", env_yaml, spack.schema.env.schema, yaml_path=["spack"]
+    )
     # Check that we can retrieve data from the single file scope
     before = scope.get_section("config")
     assert before

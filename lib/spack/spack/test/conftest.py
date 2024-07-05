@@ -719,9 +719,9 @@ def _create_mock_configuration_scopes(configuration_dir):
     """Create the configuration scopes used in `config` and `mutable_config`."""
     return [
         spack.config.InternalConfigScope("_builtin", spack.config.CONFIG_DEFAULTS),
-        spack.config.ConfigScope("site", str(configuration_dir.join("site"))),
-        spack.config.ConfigScope("system", str(configuration_dir.join("system"))),
-        spack.config.ConfigScope("user", str(configuration_dir.join("user"))),
+        spack.config.DirectoryConfigScope("site", str(configuration_dir.join("site"))),
+        spack.config.DirectoryConfigScope("system", str(configuration_dir.join("system"))),
+        spack.config.DirectoryConfigScope("user", str(configuration_dir.join("user"))),
         spack.config.InternalConfigScope("command_line"),
     ]
 
@@ -755,7 +755,7 @@ def mutable_empty_config(tmpdir_factory, configuration_dir):
     """Empty configuration that can be modified by the tests."""
     mutable_dir = tmpdir_factory.mktemp("mutable_config").join("tmp")
     scopes = [
-        spack.config.ConfigScope(name, str(mutable_dir.join(name)))
+        spack.config.DirectoryConfigScope(name, str(mutable_dir.join(name)))
         for name in ["site", "system", "user"]
     ]
 
@@ -790,7 +790,7 @@ def concretize_scope(mutable_config, tmpdir):
     """Adds a scope for concretization preferences"""
     tmpdir.ensure_dir("concretize")
     mutable_config.push_scope(
-        spack.config.ConfigScope("concretize", str(tmpdir.join("concretize")))
+        spack.config.DirectoryConfigScope("concretize", str(tmpdir.join("concretize")))
     )
 
     yield str(tmpdir.join("concretize"))
@@ -802,10 +802,10 @@ def concretize_scope(mutable_config, tmpdir):
 @pytest.fixture
 def no_compilers_yaml(mutable_config):
     """Creates a temporary configuration without compilers.yaml"""
-    for scope, local_config in mutable_config.scopes.items():
-        if not local_config.path:  # skip internal scopes
+    for local_config in mutable_config.scopes.values():
+        if not isinstance(local_config, spack.config.DirectoryConfigScope):
             continue
-        compilers_yaml = os.path.join(local_config.path, "compilers.yaml")
+        compilers_yaml = local_config.get_section_filename("compilers")
         if os.path.exists(compilers_yaml):
             os.remove(compilers_yaml)
     return mutable_config
@@ -814,7 +814,9 @@ def no_compilers_yaml(mutable_config):
 @pytest.fixture()
 def mock_low_high_config(tmpdir):
     """Mocks two configuration scopes: 'low' and 'high'."""
-    scopes = [spack.config.ConfigScope(name, str(tmpdir.join(name))) for name in ["low", "high"]]
+    scopes = [
+        spack.config.DirectoryConfigScope(name, str(tmpdir.join(name))) for name in ["low", "high"]
+    ]
 
     with spack.config.use_configuration(*scopes) as config:
         yield config
