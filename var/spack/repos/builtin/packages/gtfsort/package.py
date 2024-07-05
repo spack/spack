@@ -15,4 +15,3 @@ class Gtfsort(CargoPackage):
     license("MIT", checked_by="A_N_Other")
 
     version("0.2.2", sha256="d22a8ef32e30111ad2dd08d1da0e0914ac62a728483b8e39a4ef8ea4e6133b4f")
-
