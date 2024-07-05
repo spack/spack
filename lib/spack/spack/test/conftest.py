@@ -561,7 +561,7 @@ def _use_test_platform(test_platform):
 #
 @pytest.fixture(scope="session")
 def mock_repo_path():
-    yield spack.repo.Repo(spack.paths.mock_packages_path)
+    yield spack.repo.from_path(spack.paths.mock_packages_path)
 
 
 def _pkg_install_fn(pkg, spec, prefix):
@@ -588,7 +588,7 @@ def mock_packages(mock_repo_path, mock_pkg_install, request):
 def mutable_mock_repo(mock_repo_path, request):
     """Function-scoped mock packages, for tests that need to modify them."""
     ensure_configuration_fixture_run_before(request)
-    mock_repo = spack.repo.Repo(spack.paths.mock_packages_path)
+    mock_repo = spack.repo.from_path(spack.paths.mock_packages_path)
     with spack.repo.use_repositories(mock_repo) as mock_repo_path:
         yield mock_repo_path
 
@@ -2019,7 +2019,8 @@ repo:
         with open(str(pkg_file), "w") as f:
             f.write(pkg_str)
 
-    return spack.repo.Repo(repo_path)
+    repo_cache = spack.util.file_cache.FileCache(str(tmpdir.join("cache")))
+    return spack.repo.Repo(repo_path, cache=repo_cache)
 
 
 @pytest.fixture()
@@ -2061,3 +2062,9 @@ def _c_compiler_always_exists():
     spack.solver.asp.c_compiler_runs = _true
     yield
     spack.solver.asp.c_compiler_runs = fn
+
+
+@pytest.fixture(scope="session")
+def mock_test_cache(tmp_path_factory):
+    cache_dir = tmp_path_factory.mktemp("cache")
+    return spack.util.file_cache.FileCache(str(cache_dir))

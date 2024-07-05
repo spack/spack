@@ -2,7 +2,6 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
 import os
 import re
 import sys
@@ -934,7 +933,7 @@ def get_repository(args, name):
     # Figure out where the new package should live
     repo_path = args.repo
     if repo_path is not None:
-        repo = spack.repo.Repo(repo_path)
+        repo = spack.repo.from_path(repo_path)
         if spec.namespace and spec.namespace != repo.namespace:
             tty.die(
                 "Can't create package with namespace {0} in repo with "

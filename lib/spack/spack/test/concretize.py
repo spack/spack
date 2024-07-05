@@ -24,6 +24,7 @@ import spack.hash_types as ht
 import spack.platforms
 import spack.repo
 import spack.solver.asp
+import spack.util.file_cache
 import spack.util.libc
 import spack.variant as vt
 from spack.concretize import find_spec
@@ -168,19 +169,18 @@ def fuzz_dep_order(request, monkeypatch):
 
 
 @pytest.fixture()
-def repo_with_changing_recipe(tmpdir_factory, mutable_mock_repo):
+def repo_with_changing_recipe(tmp_path_factory, mutable_mock_repo):
     repo_namespace = "changing"
-    repo_dir = tmpdir_factory.mktemp(repo_namespace)
+    repo_dir = tmp_path_factory.mktemp(repo_namespace)
 
-    repo_dir.join("repo.yaml").write(
+    (repo_dir / "repo.yaml").write_text(
         """
 repo:
   namespace: changing
-""",
-        ensure=True,
+"""
     )
 
-    packages_dir = repo_dir.ensure("packages", dir=True)
+    packages_dir = repo_dir / "packages"
     root_pkg_str = """
 class Root(Package):
     homepage = "http://www.example.com"
@@ -191,7 +191,9 @@ class Root(Package):
 
     conflicts("^changing~foo")
 """
-    packages_dir.join("root", "package.py").write(root_pkg_str, ensure=True)
+    package_py = packages_dir / "root" / "package.py"
+    package_py.parent.mkdir(parents=True)
+    package_py.write_text(root_pkg_str)
 
     changing_template = """
 class Changing(Package):
@@ -225,7 +227,9 @@ class Changing(Package):
 
             def __init__(self, repo_directory):
                 self.repo_dir = repo_directory
-                self.repo = spack.repo.Repo(str(repo_directory))
+                cache_dir = tmp_path_factory.mktemp("cache")
+                self.repo_cache = spack.util.file_cache.FileCache(str(cache_dir))
+                self.repo = spack.repo.Repo(str(repo_directory), cache=self.repo_cache)
 
             def change(self, changes=None):
                 changes = changes or {}
@@ -246,10 +250,12 @@ class Changing(Package):
                 # Change the recipe
                 t = jinja2.Template(changing_template)
                 changing_pkg_str = t.render(**context)
-                packages_dir.join("changing", "package.py").write(changing_pkg_str, ensure=True)
+                package_py = packages_dir / "changing" / "package.py"
+                package_py.parent.mkdir(parents=True, exist_ok=True)
+                package_py.write_text(changing_pkg_str)
 
                 # Re-add the repository
-                self.repo = spack.repo.Repo(str(self.repo_dir))
+                self.repo = spack.repo.Repo(str(self.repo_dir), cache=self.repo_cache)
                 repository.put_first(self.repo)
 
         _changing_pkg = _ChangingPackage(repo_dir)
