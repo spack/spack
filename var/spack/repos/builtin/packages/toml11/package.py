@@ -39,7 +39,7 @@ class Toml11(CMakePackage):
         "cxx_std", default="11", description="C++ standard", values=("11", "14", "17"), multi=False
     )
 
-    @when("@3.8.0:3.8.1")
+    @when("@3.8.0:")
     def cmake_args(self):
         args = [self.define_from_variant("CMAKE_CXX_STANDARD", "cxx_std")]
         return args
