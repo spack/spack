@@ -253,3 +253,12 @@ class TestRepo:
         repo = spack.repo.Repo(spack.paths.mock_packages_path, cache=mock_test_cache)
         provider_names = {x.name for x in repo.providers_for(virtual_name)}
         assert provider_names.issuperset(expected)
+
+    @pytest.mark.parametrize(
+        "extended,expected",
+        [("python", ["py-extension1", "python-venv"]), ("perl", ["perl-extension"])],
+    )
+    def test_extensions(self, extended, expected, mock_test_cache):
+        repo = spack.repo.Repo(spack.paths.mock_packages_path, cache=mock_test_cache)
+        provider_names = {x.name for x in repo.extensions_for(extended)}
+        assert provider_names.issuperset(expected)
