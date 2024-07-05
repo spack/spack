@@ -768,7 +768,7 @@ class Root(CMakePackage):
             add_include_path("xproto")
         if "+opengl" in spec and "platform=darwin" not in spec:
             add_include_path("glew")
-            add_include_path("mesa-glu")
+            add_include_path("glu")
         if "platform=darwin" in spec:
             # Newer deployment targets cause fatal errors in rootcling, so
             # override with an empty value even though it may lead to link
