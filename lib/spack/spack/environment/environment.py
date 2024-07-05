@@ -3127,7 +3127,10 @@ class EnvironmentManifestFile(collections.abc.Mapping):
         scopes: List[spack.config.ConfigScope] = [
             *self.included_config_scopes,
             spack.config.SingleFileScope(
-                self.scope_name, str(self.manifest_file), spack.schema.env.schema, [TOP_LEVEL_KEY]
+                self.scope_name,
+                str(self.manifest_file),
+                spack.schema.env.schema,
+                yaml_path=[TOP_LEVEL_KEY],
             ),
         ]
         ensure_no_disallowed_env_config_mods(scopes)

@@ -146,7 +146,7 @@ class ConfigScope:
 class DirectoryConfigScope(ConfigScope):
     """Config scope backed by a directory containing one file per section."""
 
-    def __init__(self, name: str, path: str, writable: bool = True) -> None:
+    def __init__(self, name: str, path: str, *, writable: bool = True) -> None:
         super().__init__(name)
         self.path = path
         self.writable = writable
@@ -199,6 +199,7 @@ class SingleFileScope(ConfigScope):
         name: str,
         path: str,
         schema: YamlConfigDict,
+        *,
         yaml_path: Optional[List[str]] = None,
         writable: bool = True,
     ) -> None:
@@ -761,7 +762,9 @@ def _add_platform_scope(
 ) -> None:
     """Add a platform-specific subdirectory for the current platform."""
     platform = spack.platforms.host().name
-    scope = DirectoryConfigScope(f"{name}/{platform}", os.path.join(path, platform), writable)
+    scope = DirectoryConfigScope(
+        f"{name}/{platform}", os.path.join(path, platform), writable=writable
+    )
     cfg.push_scope(scope)
 
 
