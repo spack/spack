@@ -11,12 +11,15 @@ class PyFlashAttn(PythonPackage):
     This package provides the official implementation of FlashAttention.
     """
 
+    homepage = "https://github.com/Dao-AILab/flash-attention.git"
     pypi = "flash-attn/flash_attn-0.0.0.tar.gz"
+    git = "https://github.com/Dao-AILab/flash-attention.git"
 
     maintainers("aurianer")
 
     license("BSD")
 
+    version("main", branch="main")
     version(
         "2.5.9.post1", sha256="a92db1683a5b141a0f4371d251ae9f73e9aef629b3a58a50d0ef430266c68782"
     )
