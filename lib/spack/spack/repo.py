@@ -127,10 +127,34 @@ class SpackNamespaceLoader:
 
 
 class ReposFinder:
-    """MetaPathFinder class that loads a Python module corresponding to a Spack package
+    """MetaPathFinder class that loads a Python module corresponding to a Spack package.
 
-    Return a loader based on the inspection of the current global repository list.
+    Returns a loader based on the inspection of the current repository list.
     """
+
+    def __init__(self):
+        self._repo_init = _path
+        self._repo = None
+
+    @property
+    def current_repository(self):
+        if self._repo is None:
+            self._repo = self._repo_init()
+        return self._repo
+
+    @current_repository.setter
+    def current_repository(self, value):
+        self._repo = value
+
+    @contextlib.contextmanager
+    def switch_repo(self, substitute: "RepoType"):
+        """Switch the current repository list for the duration of the context manager."""
+        old = self.current_repository
+        try:
+            self.current_repository = substitute
+            yield
+        finally:
+            self.current_repository = old
 
     def find_spec(self, fullname, python_path, target=None):
         # "target" is not None only when calling importlib.reload()
@@ -150,9 +174,14 @@ class ReposFinder:
         # namespaces are added to repo, and package modules are leaves.
         namespace, dot, module_name = fullname.rpartition(".")
 
-        # If it's a module in some repo, or if it is the repo's
-        # namespace, let the repo handle it.
-        for repo in PATH.repos:
+        # If it's a module in some repo, or if it is the repo's namespace, let the repo handle it.
+        is_repo_path = isinstance(self.current_repository, RepoPath)
+        if is_repo_path:
+            repos = self.current_repository.repos
+        else:
+            repos = [self.current_repository]
+
+        for repo in repos:
             # We are using the namespace of the repo and the repo contains the package
             if namespace == repo.full_namespace:
                 # With 2 nested conditionals we can call "repo.real_name" only once
@@ -166,7 +195,7 @@ class ReposFinder:
 
         # No repo provides the namespace, but it is a valid prefix of
         # something in the RepoPath.
-        if PATH.by_namespace.is_prefix(fullname):
+        if is_repo_path and self.current_repository.by_namespace.is_prefix(fullname):
             return SpackNamespaceLoader()
 
         return None
@@ -661,6 +690,7 @@ class RepoPath:
             try:
                 if isinstance(repo, str):
                     repo = Repo(repo, cache=cache, overrides=overrides)
+                repo.finder(self)
                 self.put_last(repo)
             except RepoError as e:
                 tty.warn(
@@ -979,12 +1009,18 @@ class Repo:
         # Class attribute overrides by package name
         self.overrides = overrides or {}
 
+        # Optional reference to a RepoPath to influence module import from spack.pkg
+        self._finder: Optional[RepoPath] = None
+
         # Maps that goes from package name to corresponding file stat
         self._fast_package_checker: Optional[FastPackageChecker] = None
 
         # Indexes for this repository, computed lazily
         self._repo_index: Optional[RepoIndex] = None
         self._cache = cache
+
+    def finder(self, value: RepoPath) -> None:
+        self._finder = value
 
     def real_name(self, import_name: str) -> Optional[str]:
         """Allow users to import Spack packages using Python identifiers.
@@ -1225,7 +1261,8 @@ class Repo:
         fullname = f"{self.full_namespace}.{pkg_name}"
 
         try:
-            module = importlib.import_module(fullname)
+            with REPOS_FINDER.switch_repo(self._finder or self):
+                module = importlib.import_module(fullname)
         except ImportError:
             raise UnknownPackageError(fullname)
         except Exception as e:
@@ -1278,7 +1315,7 @@ class Repo:
         return namespace, pkg_name
 
     def __str__(self) -> str:
-        return f"[Repo '{self.namespace}' at '{self.root}']"
+        return f"Repo '{self.namespace}' at {self.root}"
 
     def __repr__(self) -> str:
         return self.__str__()

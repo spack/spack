@@ -2062,3 +2062,9 @@ def _c_compiler_always_exists():
     spack.solver.asp.c_compiler_runs = _true
     yield
     spack.solver.asp.c_compiler_runs = fn
+
+
+@pytest.fixture(scope="session")
+def mock_test_cache(tmp_path_factory):
+    cache_dir = tmp_path_factory.mktemp("cache")
+    return spack.util.file_cache.FileCache(str(cache_dir))

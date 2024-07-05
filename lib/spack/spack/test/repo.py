@@ -203,3 +203,23 @@ def test_path_computation_with_names(method_name, mock_repo_path):
     unqualified = method("mpileaks")
     qualified = method("builtin.mock.mpileaks")
     assert qualified == unqualified
+
+
+@pytest.mark.usefixtures("nullify_globals")
+class TestRepo:
+    """Test that the Repo class work correctly, and does not depend on globals,
+    except the REPOS_FINDER.
+    """
+
+    def test_creation(self, mock_test_cache):
+        repo = spack.repo.Repo(spack.paths.mock_packages_path, cache=mock_test_cache)
+        assert repo.config_file.endswith("repo.yaml")
+        assert repo.namespace == "builtin.mock"
+
+    @pytest.mark.parametrize(
+        "name,expected", [("mpi", True), ("mpich", False), ("mpileaks", False)]
+    )
+    def test_is_virtual(self, name, expected, mock_test_cache):
+        repo = spack.repo.Repo(spack.paths.mock_packages_path, cache=mock_test_cache)
+        assert repo.is_virtual(name) is expected
+        assert repo.is_virtual_safe(name) is expected
