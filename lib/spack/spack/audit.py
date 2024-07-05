@@ -42,7 +42,6 @@ import glob
 import inspect
 import io
 import itertools
-import os
 import pathlib
 import pickle
 import re
@@ -735,8 +734,12 @@ def _uses_deprecated_globals(pkgs, error_cls):
     errors = []
 
     for pkg_name in pkgs:
+        # some packages scheduled to be removed in v0.23 are not worth fixing.
+        pkg_cls = spack.repo.PATH.get_pkg_class(pkg_name)
+        if all(v.get("deprecated", False) for v in pkg_cls.versions.values()):
+            continue
+
         file = spack.repo.PATH.filename_for_package_name(pkg_name)
-        relative_path = os.path.relpath(file, spack.paths.spack_root)
         tree = ast.parse(open(file).read())
         visitor = DeprecatedMagicGlobals(("std_cmake_args",))
         visitor.visit(tree)
@@ -745,7 +748,7 @@ def _uses_deprecated_globals(pkgs, error_cls):
                 error_cls(
                     f"Package '{pkg_name}' uses deprecated globals",
                     [
-                        f"{relative_path}:{line} references '{name}'"
+                        f"{file}:{line} references '{name}'"
                         for name, line in visitor.references_to_globals
                     ],
                 )
