@@ -1041,7 +1041,10 @@ class Repo:
             return import_name
 
         options = nm.possible_spack_module_names(import_name)
-        options.remove(import_name)
+        try:
+            options.remove(import_name)
+        except ValueError:
+            pass
         for name in options:
             if name in self:
                 return name

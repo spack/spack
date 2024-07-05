@@ -223,3 +223,16 @@ class TestRepo:
         repo = spack.repo.Repo(spack.paths.mock_packages_path, cache=mock_test_cache)
         assert repo.is_virtual(name) is expected
         assert repo.is_virtual_safe(name) is expected
+
+    @pytest.mark.parametrize(
+        "module_name,expected",
+        [
+            ("dla_future", "dla-future"),
+            ("num7zip", "7zip"),
+            # If no package is there, None is returned
+            ("unknown", None),
+        ],
+    )
+    def test_real_name(self, module_name, expected, mock_test_cache):
+        repo = spack.repo.Repo(spack.paths.mock_packages_path, cache=mock_test_cache)
+        assert repo.real_name(module_name) == expected
