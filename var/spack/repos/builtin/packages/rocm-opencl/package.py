@@ -163,11 +163,16 @@ class RocmOpencl(CMakePackage):
 
     test_src_dir = "tests/ocltst"
 
-    def test(self):
+    def test_rocm_opencl(self):
+        """Run rocm-opencl tests"""
         test_dir = join_path(self.spec["rocm-opencl"].prefix, self.test_src_dir)
         with working_dir(test_dir, create=True):
             os.environ["LD_LIBRARY_PATH"] += os.pathsep + test_dir
-            args = ["-m", "liboclruntime.so", "-A", "oclruntime.exclude"]
-            self.run_test("ocltst", args)
-            args = ["-m", "liboclperf.so", "-A", "oclperf.exclude"]
-            self.run_test("ocltst", args)
+
+            with test_part(self, "test_rocm_opencl_runtime", purpose="Test runtime"):
+                exe = which("ocltst")
+                exe("-m", "liboclruntime.so", "-A", "oclruntime.exclude")
+
+            with test_part(self, "test_rocm_opencl_perf", purpose="Test perf"):
+                exe = which("ocltst")
+                exe("-m", "liboclperf.so", "-A", "oclperf.exclude")
