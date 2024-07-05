@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
+import pathlib
 
 import pytest
 
@@ -203,6 +204,18 @@ def test_path_computation_with_names(method_name, mock_repo_path):
     unqualified = method("mpileaks")
     qualified = method("builtin.mock.mpileaks")
     assert qualified == unqualified
+
+
+def test_use_repositories_and_import():
+    """Tests that use_repositories changes the import search too"""
+    import spack.paths
+
+    repo_dir = pathlib.Path(spack.paths.repos_path)
+    with spack.repo.use_repositories(str(repo_dir / "compiler_runtime.test")):
+        import spack.pkg.compiler_runtime.test.gcc_runtime
+
+    with spack.repo.use_repositories(str(repo_dir / "builtin.mock")):
+        import spack.pkg.builtin.mock.cmake
 
 
 @pytest.mark.usefixtures("nullify_globals")

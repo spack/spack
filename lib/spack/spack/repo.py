@@ -1469,7 +1469,8 @@ def use_repositories(*paths_and_repos, **kwargs):
     )
     PATH, saved = create(configuration=spack.config.CONFIG), PATH
     try:
-        yield PATH
+        with REPOS_FINDER.switch_repo(PATH):
+            yield PATH
     finally:
         spack.config.CONFIG.remove_scope(scope_name=scope_name)
         PATH = saved
