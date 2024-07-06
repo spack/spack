@@ -22,9 +22,6 @@
 
 from spack.package import *
 from spack.util.prefix import Prefix
-from textwrap import dedent
-
-
 
 
 class Firefox(Package):
@@ -51,7 +48,7 @@ class Firefox(Package):
     depends_on("pulseaudio")
     depends_on("shared-mime-info")
 
-    # Needed for mach build/configure
+    # Also needed for mach configure to succeeed
     depends_on("libx11")
     depends_on("libxcb")
     depends_on("libxext")
@@ -61,12 +58,18 @@ class Firefox(Package):
     depends_on("libxcomposite")
     depends_on("libxkbcommon")
 
+    # Needed for build to succeed after configuration
+    depends_on("libnotify")
+
     with default_args(type="build"):
         depends_on("binutils")
         depends_on("diffutils")
         depends_on("git")
+        depends_on("gmake")
         depends_on("imake")
         depends_on("llvm")
+        depends_on("m4")
+        depends_on("mawk")
         depends_on("mesa")
         depends_on("nasm")
         depends_on("node-js")
@@ -81,9 +84,10 @@ class Firefox(Package):
         depends_on("zip")
 
         depends_on("cbindgen")
-        depends_on("generate-ninja")
+        depends_on("generate-ninja")  # Maybe this should be a buid_system option
 
-        with when("@127.0"):
+        # Python requirements for mach
+        with when("@127.0"):  # These may apply more generally backwards/forwards
             depends_on("py-semver@2.13.0:")
             depends_on("py-appdirs@1.4:")
             depends_on("py-click@7:")
@@ -102,8 +106,10 @@ class Firefox(Package):
             depends_on("py-glean-sdk@60.0.1")
             depends_on("py-glean-parser@14.0")
 
-    # Noted in mach requirements
-    conflicts("py-pyrsistent@0.17.0:0.17.2")
+    conflicts("py-pyrsistent@0.17.0:0.17.2", msg="Noted in mach requirements file")
+
+    patch("gcc14-implicit-include-fix.patch", when="@127%gcc@14:")
+    patch("gcc14-implicit-pointer-cast-fix.patch", when="@127%gcc@14:")
 
     def mach(self, command, *args):
         mach = which("./mach")
@@ -119,6 +125,7 @@ class Firefox(Package):
         return self.build_cache_dir.join("mozconfig-firefox")
 
     def setup_build_enviroment(self, env):
+        # Adapted from: https://www.talospace.com/2021/12/firefox-95-on-power.html
         env.set("MOZBUILD_STATE_PATH", self.build_cache_dir)
         env.set("MOZCONFIG", self.build_config)
         env.set("GN", self.spec["generate-ninja"].home.bin.gn)
@@ -126,6 +133,8 @@ class Firefox(Package):
 
     def patch(self):
         # Make the wasi clib available without re-downloading
+        # Adapted from LibreWolf insatller:
+        # https://codeberg.org/librewolf/source/src/branch/main/scripts/setup-wasi-linux.sh
         mozbuild = self.build_cache_dir
         mkdirp(mozbuild.wrlb)
         symlink(self.spec["wasi-sdk"].home, mozbuild.wrlb.join("wasi-sysroot"))
@@ -137,11 +146,14 @@ class Firefox(Package):
 
     def configure_args(self):
         args = []
+
+        # Adapted from: https://www.talospace.com/2021/12/firefox-95-on-power.html
         args += [
             "--without-wasm-sandboxed-libraries",  # Required to use wasi-sdk
             "--enable-application=browser",        # Build the desktop browser (not android)
             "--enable-release",
-            "--enable-lto=full",
+            "--with-branding=browser/branding/official",
+            #"--enable-lto=full",  # Should this be a varaint?
             "MOZ_PGO=1",
         ]
         return args
@@ -153,9 +165,12 @@ class Firefox(Package):
         self.mach("build", *self.build_args())
 
     def install(self, spec, prefix):
-        # install
-        pass
-
-
-
+        arch = spec.architecture.target.microarchitecture.family.name
+        platform = spec.architecture.platform
+        found = find(".", f"obj-{arch}-*-{platform}-*")
+        package_dir = found[0]
+        self.mach("package")
+        install_tree(f"{package_dir}/dist/firefox", prefix.opt.firefox)
+        mkdir(prefix.bin)
+        symlink(prefix.opt.firefox.firefox, prefix.bin.firefox)
 
