@@ -60,7 +60,7 @@ packages:
       szip: [libaec, libszip]
       tbb: [intel-tbb]
       unwind: [libunwind]
-      uuid: [util-linux-uuid, libuuid]
+      uuid: [util-linux-uuid, util-linux+uuid, libuuid]
       xxd: [xxd-standalone, vim]
       yacc: [bison, byacc]
       ziglang: [zig]

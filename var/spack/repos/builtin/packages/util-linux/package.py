@@ -45,19 +45,39 @@ class UtilLinux(AutotoolsPackage):
     depends_on("libxcrypt", type="link")  # sbin/sulogin
 
     variant("bash", default=False, description="Install bash completion scripts")
+    variant("uuid", default=False, description="Build libuuid and uuid utilities")
 
     depends_on("bash", when="+bash", type="run")
+    depends_on("pkgconfig", when="+uuid", type="build")
+
+    # TODO likely applies regardless of uuid
+    conflicts("%gcc@:4", when="@2.37: +uuid")
+
+    provides("uuid", when="+uuid")
 
     def url_for_version(self, version):
         url = "https://www.kernel.org/pub/linux/utils/util-linux/v{0}/util-linux-{1}.tar.gz"
         return url.format(version.up_to(2), version)
+
+    # TODO does not appear used by builtin packages
+    # TODO does when=[virtual=uuid] work?
+    @property
+    @when("[virtual=uuid]")
+    def libs(self):
+        return find_libraries("libuuid", self.prefix, recursive=True)
+
+    # TODO does not appear used by builtin packages
+    # TODO does when=[virtual=uuid] work?
+    @property
+    @when("[virtual=uuid]")
+    def headers(self):
+        return find_headers("uuid", self.prefix, recursive=True)
 
     def configure_args(self):
         config_args = [
             "--disable-use-tty-group",
             "--disable-makeinstall-chown",
             "--without-systemd",
-            "--disable-libuuid",
         ]
         if "+bash" in self.spec:
             config_args.extend(
@@ -72,6 +92,11 @@ class UtilLinux(AutotoolsPackage):
         else:
             config_args.append("--disable-bash-completion")
 
+        if self.spec.satisfied("+uuid"):
+            config_args.append("--enable-libuuid")
+        else:
+            config.args.append("--disable-libuuid")
+
         if self.spec.satisfies("platform=darwin"):
             # Does not build on macOS
             config_args.extend(
@@ -81,6 +106,10 @@ class UtilLinux(AutotoolsPackage):
         if self.spec.satisfies("@2.40:"):
             # Disable liblastlog2, which depends on sqlite
             config_args.append("--disable-liblastlog2")
+
+        # Fixes #31123
+        if self.spec.satisfies("+uuid %intel"):
+            config_args.append("CFLAGS=-restrict")
 
         return config_args
 
