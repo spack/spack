@@ -20,6 +20,7 @@ class Xrootd(CMakePackage):
 
     license("LGPL-3.0-only")
 
+    version("5.7.0", sha256="214599bba98bc69875b82ac74f2d4b9ac8a554a1024119d8a9802b3d8b9986f8")
     version("5.6.9", sha256="44196167fbcf030d113e3749dfdecab934c43ec15e38e77481e29aac191ca3a8")
     version("5.6.8", sha256="19268fd9f0307d936da3598a5eb8471328e059c58f60d91d1ce7305ca0d57528")
     version("5.6.7", sha256="4089ce3a69fcf6566d320ef1f4a73a1d6332e6835b7566e17548569bdea78a8d")
@@ -93,7 +94,16 @@ class Xrootd(CMakePackage):
         values=("98", "11", "14", "17", "20"),
         multi=False,
         description="Use the specified C++ standard when building",
-        when="@5.2.0:",
+        when="@5.2.0:5.6.99",
+    )
+
+    variant(
+        "cxxstd",
+        default="17",
+        values=("98", "11", "14", "17", "20"),
+        multi=False,
+        description="Use the specified C++ standard when building",
+        when="@5.7.0:",
     )
 
     variant(
