@@ -18,7 +18,7 @@ class UtilLinux(AutotoolsPackage):
 
     license("GPL-2.0-only", checked_by="wdconinc")
 
-    version("2.40.2", sha256="7bec316b713a14c6be1a5721aa0e56a3b6170277329e6e1f1a56013cc91eece0") 
+    version("2.40.2", sha256="7bec316b713a14c6be1a5721aa0e56a3b6170277329e6e1f1a56013cc91eece0")
     version("2.40", sha256="2a51d08cb71fd8e491e0cf633032c928f9a2848417f8441cb8cf7ef9971de916")
     version("2.39.3", sha256="40ea07584d56c310455471afa92c119ec259776a561af7159cc802344c2c370d")
     version("2.39.1", sha256="d7c8a58eb2c7248a32754eb3a3b6772e368b984d9907ada834c2cf3e13024270")
