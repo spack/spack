@@ -25,8 +25,6 @@ class Verrou(AutotoolsPackage):
     url = "https://github.com/edf-hpc/verrou/archive/v2.0.0.tar.gz"
     git = "https://github.com/edf-hpc/verrou.git"
 
-    maintainers("HadrienG2")
-
     license("GPL-2.0-only")
 
     version("develop", branch="master")

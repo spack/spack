@@ -13,7 +13,7 @@ class Vecmem(CMakePackage, CudaPackage):
     url = "https://github.com/acts-project/vecmem/archive/refs/tags/v0.5.0.tar.gz"
     list_url = "https://github.com/acts-project/vecmem/tags"
 
-    maintainers("wdconinc", "HadrienG2", "stephenswat")
+    maintainers("wdconinc", "stephenswat")
 
     license("MPL-2.0-no-copyleft-exception")
 
