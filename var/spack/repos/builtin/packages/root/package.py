@@ -23,7 +23,7 @@ class Root(CMakePackage):
     tags = ["hep"]
 
     maintainers(
-        "drbenmorgan", "gartung", "greenc-FNAL", "HadrienG2", "marcmengel", "vitodb", "vvolkl"
+        "drbenmorgan", "gartung", "greenc-FNAL", "marcmengel", "vitodb", "vvolkl"
     )
 
     # ###################### Versions ##########################
