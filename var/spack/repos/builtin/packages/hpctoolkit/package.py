@@ -188,7 +188,6 @@ class Hpctoolkit(AutotoolsPackage, MesonPackage):
     depends_on("intel-gtpin", when="+gtpin")
     depends_on("opencl-c-headers", when="+opencl")
 
-    depends_on("intel-xed+pic", when="target=x86_64:")
     depends_on("memkind", type=("build", "run"), when="@2021.05.01:2023.08")
     depends_on("papi", when="+papi")
     depends_on("libpfm4", when="~papi")
@@ -197,6 +196,18 @@ class Hpctoolkit(AutotoolsPackage, MesonPackage):
     depends_on("hpcviewer@2022.10:", type="run", when="@2022.10: +viewer")
     depends_on("hpcviewer", type="run", when="+viewer")
     depends_on("python@3.10:", type=("build", "run"), when="+python")
+
+    with when("target=x86_64:"):
+        depends_on("intel-xed+pic")
+
+        # The intel-xed recipe used to use a different install layout than upstream Xed. This has
+        # since been fixed, but many versions of hpctoolkit expect the older install layout and
+        # will not build if the upstream install layout is used.
+        # These patches backport support for the upstream Xed install layout to affected versions.
+        # See https://github.com/spack/spack/pull/45084 for details.
+        patch("modern-xed-2024.01.1.patch", when="@2024.01.1")
+        patch("modern-xed-2023.patch", when="@2022.05.15:2023.08")
+        patch("modern-xed-2022.patch", when="@:2022.04.15")
 
     # Avoid 'link' dep, we don't actually link, and that adds rpath
     # that conflicts with app.

@@ -1,0 +1,58 @@
+diff --git a/configure b/configure
+index 3a5894b6a..c7d786665 100755
+--- a/configure
++++ b/configure
+@@ -22290,13 +22290,13 @@ $as_echo_n "checking for xed2... " >&6; }
+ xed2_avail=no
+ case "$XED2" in
+   /* )
+-    if test ! -f "${XED2}/include/xed-interface.h" ; then
++    if test ! -f "${XED2}/include/xed/xed-interface.h" ; then
+       as_fn_error $? "invalid xed2 directory: $XED2" "$LINENO" 5
+     fi
+     if test ! -f "${XED2}/lib/libxed.so" && test ! -f "${XED2}/lib/libxed.a" ; then
+       as_fn_error $? "invalid xed2 directory: $XED2" "$LINENO" 5
+     fi
+-    XED2_INC="${XED2}/include"
++    XED2_INC="${XED2}/include/xed"
+     XED2_LIB_DIR="${XED2}/lib"
+     XED2_COPY=yes
+     xed2_avail=yes
+@@ -22327,7 +22327,7 @@ if test "$xed2_avail" = yes ; then
+   if test -f "${XED2}/lib/libxed.a" ; then
+     ORIG_CFLAGS="$CFLAGS"
+     ORIG_LIBS="$LIBS"
+-    CFLAGS="-shared -fPIC -I${XED2}/include"
++    CFLAGS="-shared -fPIC -I${XED2_INC}"
+     LIBS="${XED2}/lib/libxed.a"
+     ac_ext=c
+ ac_cpp='$CPP $CPPFLAGS'
+diff --git a/configure.ac b/configure.ac
+index a455ff1da..a7c7d000e 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -3556,13 +3556,13 @@ AC_MSG_CHECKING([for xed2])
+ xed2_avail=no
+ case "$XED2" in
+   /* )
+-    if test ! -f "${XED2}/include/xed-interface.h" ; then
++    if test ! -f "${XED2}/include/xed/xed-interface.h" ; then
+       AC_MSG_ERROR([invalid xed2 directory: $XED2])
+     fi
+     if test ! -f "${XED2}/lib/libxed.so" && test ! -f "${XED2}/lib/libxed.a" ; then
+       AC_MSG_ERROR([invalid xed2 directory: $XED2])
+     fi
+-    XED2_INC="${XED2}/include"
++    XED2_INC="${XED2}/include/xed"
+     XED2_LIB_DIR="${XED2}/lib"
+     XED2_COPY=yes
+     xed2_avail=yes
+@@ -3591,7 +3591,7 @@ if test "$xed2_avail" = yes ; then
+   if test -f "${XED2}/lib/libxed.a" ; then
+     ORIG_CFLAGS="$CFLAGS"
+     ORIG_LIBS="$LIBS"
+-    CFLAGS="-shared -fPIC -I${XED2}/include"
++    CFLAGS="-shared -fPIC -I${XED2_INC}"
+     LIBS="${XED2}/lib/libxed.a"
+     AC_LANG_PUSH([C])
+     AC_MSG_CHECKING([if libxed.a was compiled with -fPIC])

@@ -1,0 +1,123 @@
+From c1b2dbe85f5b5734e519bbdf772558562d1aca3c Mon Sep 17 00:00:00 2001
+From: Jonathon Anderson <anderson.jonathonm@gmail.com>
+Date: Mon, 8 Jul 2024 13:22:43 -0500
+Subject: [PATCH] build: Add support for "new-style" Xed includes
+
+Backported from https://gitlab.com/hpctoolkit/hpctoolkit/-/merge_requests/1144
+
+Our code includes the Intel Xed headers as `<xed-*.h>`, this is how the
+current Spack recipe installs it. Upstream Xed installs the headers to
+be included as `<xed/xed-*.h>` instead. Support an upstream Xed install
+configuration by lightly adjusting the build script to match.
+---
+ configure.ac                | 15 +++++++++------
+ src/lib/banal/Makefile.am   |  4 ++--
+ src/tool/hpcrun/Makefile.am |  4 ++--
+ 3 files changed, 13 insertions(+), 10 deletions(-)
+
+diff --git a/configure.ac b/configure.ac
+index 34b261362..02fd96003 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -3101,7 +3101,7 @@ AC_SUBST([TBB_LIB_DIR])
+ # Now require static (.a) archive + fPIC for all cases in order to
+ # hide the xed symbols.
+ 
+-XED2_INC=
++XED2_IFLAGS=
+ XED2_LIB_DIR=no
+ XED2_LIB_FLAGS=
+ XED2_HPCRUN_LIBS=
+@@ -3124,13 +3124,16 @@ AC_MSG_CHECKING([for xed2])
+ xed2_avail=no
+ case "$XED2" in
+   /* )
+-    if test ! -f "${XED2}/include/xed-interface.h" ; then
++    if test -f "${XED2}/include/xed-interface.h" ; then
++      XED2_IFLAGS="-I${XED2}/include"
++    elif test -f "${XED2}/include/xed/xed-interface.h" ; then
++      XED2_IFLAGS="-I${XED2}/include -I${XED2}/include/xed"
++    else
+       AC_MSG_ERROR([invalid xed2 directory: $XED2])
+     fi
+     if test ! -f "${XED2}/lib/libxed.a" ; then
+       AC_MSG_ERROR([invalid xed2 directory: $XED2])
+     fi
+-    XED2_INC="${XED2}/include"
+     XED2_LIB_DIR="${XED2}/lib"
+     xed2_avail=yes
+     num_pkgs=`expr 1 + $num_pkgs`
+@@ -3157,7 +3160,7 @@ if test "$xed2_avail" = yes ; then
+   if test -f "${XED2}/lib/libxed.a" ; then
+     ORIG_CFLAGS="$CFLAGS"
+     ORIG_LIBS="$LIBS"
+-    CFLAGS="-shared -fPIC -I${XED2}/include"
++    CFLAGS="-shared -fPIC ${XED2_IFLAGS}"
+     LIBS="${XED2}/lib/libxed.a"
+     AC_LANG_PUSH([C])
+     AC_MSG_CHECKING([if libxed.a was compiled with -fPIC])
+@@ -3178,7 +3181,7 @@ int my_xed_init(void)
+     # Test for xed_operand_values_get_branch_displacement_int64().
+     # XED <= 2023.07.09 uses _int32, and >= 2023.08.21 uses _int64.
+     #
+-    CFLAGS="-I${XED2}/include"
++    CFLAGS="${XED2_IFLAGS}"
+     AC_MSG_CHECKING([if xed uses xed_operand_values_get_branch_displacement_int64])
+     AC_LINK_IFELSE([
+     AC_LANG_SOURCE([[
+@@ -3216,7 +3219,7 @@ if test "$xed_displacement_int64" = yes ; then
+       [xed uses xed_operand_values_get_branch_displacement_int64])
+ fi
+ 
+-AC_SUBST([XED2_INC])
++AC_SUBST([XED2_IFLAGS])
+ AC_SUBST([XED2_LIB_DIR])
+ AC_SUBST([XED2_LIB_FLAGS])
+ AC_SUBST([XED2_HPCRUN_LIBS])
+diff --git a/src/lib/banal/Makefile.am b/src/lib/banal/Makefile.am
+index 419a23ef8..817eda066 100644
+--- a/src/lib/banal/Makefile.am
++++ b/src/lib/banal/Makefile.am
+@@ -54,7 +54,7 @@ BOOST_IFLAGS = @BOOST_IFLAGS@
+ DYNINST_IFLAGS = @DYNINST_IFLAGS@
+ LIBELF_INC = @LIBELF_INC@
+ TBB_IFLAGS = @TBB_IFLAGS@
+-XED2_INC = @XED2_INC@
++XED2_IFLAGS = @XED2_IFLAGS@
+ 
+ if OPT_ENABLE_IGC
+ IGC_IFLAGS = @OPT_IGC_IFLAGS@
+@@ -94,7 +94,7 @@ MYCXXFLAGS = \
+ 	-fvisibility=hidden
+ 
+ if HOST_CPU_X86_FAMILY
+-MYCXXFLAGS += -I$(XED2_INC)
++MYCXXFLAGS += $(XED2_IFLAGS)
+ endif
+ 
+ MYLIBADD = @HOST_LIBTREPOSITORY@
+diff --git a/src/tool/hpcrun/Makefile.am b/src/tool/hpcrun/Makefile.am
+index 32b39f96c..512fbbf79 100644
+--- a/src/tool/hpcrun/Makefile.am
++++ b/src/tool/hpcrun/Makefile.am
+@@ -146,7 +146,7 @@ LIBMONITOR_INC = @LIBMONITOR_INC@
+ LIBMONITOR_LIB = @LIBMONITOR_LIB@
+ PAPI_INC_FLGS =  @OPT_PAPI_IFLAGS@
+ PAPI_LD_FLGS =   @OPT_PAPI_LDFLAGS@
+-XED2_INC = @XED2_INC@
++XED2_IFLAGS = @XED2_IFLAGS@
+ XED2_HPCRUN_LIBS =  @XED2_HPCRUN_LIBS@
+ CUPTI_INC_FLGS = @OPT_CUPTI_IFLAGS@
+ 
+@@ -207,7 +207,7 @@ UNW_X86_FILES = \
+ 
+ UNW_X86_INCLUDE_DIRS = \
+ 	-I$(srcdir)/unwind/x86-family	\
+-	-I$(XED2_INC)
++	$(XED2_IFLAGS)
+ 
+ UNW_PPC64_FILES = \
+ 	$(UNW_COMMON_FILES) \
+-- 
+2.45.2
+
