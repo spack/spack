@@ -66,7 +66,8 @@ class Vecmem(CMakePackage, CudaPackage):
     def setup_build_environment(self, env):
         if self.spec.satisfies("+sycl"):
             env.set("SYCLCXX", self.compiler.cxx)
-            env.set("SYCLFLAGS", "-fsycl")
+            if self.spec.satisfies("%oneapi"):
+                env.set("SYCLFLAGS", "-fsycl")
 
     def cmake_args(self):
         args = [
