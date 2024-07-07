@@ -87,6 +87,9 @@ class NodeJs(Package):
         "%gcc@14:", when="@:19", msg="fails to build with gcc 14+ due to implicit conversions"
     )
 
+    # See https://github.com/nodejs/node/issues/52223
+    patch("fix-old-glibc-random-headers.patch", when="^glibc@:2.24")
+
     def setup_build_environment(self, env):
         # Force use of experimental Python 3 support
         env.set("PYTHON", self.spec["python"].command.path)
