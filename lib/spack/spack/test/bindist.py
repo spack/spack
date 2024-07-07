@@ -115,8 +115,8 @@ def default_config(tmpdir, config_directory, monkeypatch, install_mockery_mutabl
 
     cfg = spack.config.Configuration(
         *[
-            spack.config.ConfigScope(name, str(mutable_dir))
-            for name in ["site/%s" % platform.system().lower(), "site", "user"]
+            spack.config.DirectoryConfigScope(name, str(mutable_dir))
+            for name in [f"site/{platform.system().lower()}", "site", "user"]
         ]
     )
 

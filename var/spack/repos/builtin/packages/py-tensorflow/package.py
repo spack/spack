@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
 import sys
 import tempfile
 
@@ -417,10 +418,17 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
     # and https://github.com/abseil/abseil-cpp/issues/1665
     patch("absl_neon.patch", when="@2.16.1: target=aarch64:")
 
-    patch("Find_ROCm_Components_Individiually.2.16.patch", when="@2.16-rocm-enhanced +rocm")
-    patch("Find_ROCm_Components_Individiually.patch", when="@2.14-rocm-enhanced +rocm")
-    patch("set_jit_trueLT_false.patch", when="@2.14-rocm-enhanced: +rocm")
-
+    patch(
+        "https://github.com/ROCm/tensorflow-upstream/commit/c467913bf4411ce2681391f37a9adf6031d23c2c.patch?full_index=1",
+        sha256="82554a84d19d99180a6bec274c6106dd217361e809b446e2e4bc4b6b979bdf7a",
+        when="@2.16-rocm-enhanced +rocm",
+    )
+    patch(
+        "https://github.com/ROCm/tensorflow-upstream/commit/f4f4e8698b90755b0b5ea2d9da1933b0b988b111.patch?full_index=1",
+        sha256="a4c0fd62a0af3ba113c8933fa531dd17fa6667e507202a144715cd87fbdaf476",
+        when="@2.16-rocm-enhanced: +rocm",
+    )
+    patch("Add_ROCm_lib_paths.patch", when="@2.16-rocm-enhanced +rocm")
     phases = ["configure", "build", "install"]
 
     # https://www.tensorflow.org/install/source
@@ -730,9 +738,16 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
                 f.write('build --action_env LD_LIBRARY_PATH="' + slibs + '"')
 
         if spec.satisfies("@2.16-rocm-enhanced +rocm"):
-            filter_file(
-                "/usr/lib/llvm-17/bin/clang", spec["llvm-amdgpu"].prefix.bin.clang, ".bazelrc"
-            )
+            if os.path.exists(spec["llvm-amdgpu"].prefix.bin.clang):
+                filter_file(
+                    "/usr/lib/llvm-17/bin/clang", spec["llvm-amdgpu"].prefix.bin.clang, ".bazelrc"
+                )
+            else:
+                filter_file(
+                    "/usr/lib/llvm-17/bin/clang",
+                    spec["llvm-amdgpu"].prefix.llvm.bin.clang,
+                    ".bazelrc",
+                )
 
         filter_file("build:opt --copt=-march=native", "", ".tf_configure.bazelrc")
         filter_file("build:opt --host_copt=-march=native", "", ".tf_configure.bazelrc")
@@ -799,8 +814,12 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
         if "~nccl" in spec:
             args.append("--config=nonccl")
 
-        if "+numa" in spec:
-            args.append("--config=numa")
+        # https://github.com/tensorflow/tensorflow/issues/63080
+        if self.spec.satisfies("@2.14:"):
+            args.append(f"--define=with_numa_support={'+numa' in spec}")
+        else:
+            if "+numa" in spec:
+                args.append("--config=numa")
 
         args.append("--config=v2")
 
