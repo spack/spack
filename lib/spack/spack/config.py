@@ -796,22 +796,27 @@ def config_paths_from_entry_points() -> List[Tuple[str, str]]:
 def _add_command_line_scopes(
     cfg: Union[Configuration, lang.Singleton], command_line_scopes: List[str]
 ) -> None:
-    """Add additional scopes from the --config-scope argument.
+    """Add additional scopes from the --config-scope argument, either envs or dirs."""
+    import spack.environment.environment as env  # circular import
 
-    Command line scopes are named after their position in the arg list.
-    """
     for i, path in enumerate(command_line_scopes):
-        # We ensure that these scopes exist and are readable, as they are
-        # provided on the command line by the user.
-        if not os.path.isdir(path):
-            raise ConfigError(f"config scope is not a directory: '{path}'")
-        elif not os.access(path, os.R_OK):
-            raise ConfigError(f"config scope is not readable: '{path}'")
+        name = f"cmd_scope_{i}"
 
-        # name based on order on the command line
-        name = f"cmd_scope_{i:d}"
-        cfg.push_scope(DirectoryConfigScope(name, path, writable=False))
-        _add_platform_scope(cfg, name, path, writable=False)
+        if env.exists(path):  # managed environment
+            manifest = env.EnvironmentManifestFile(env.root(path))
+        elif env.is_env_dir(path):  # anonymous environment
+            manifest = env.EnvironmentManifestFile(path)
+        elif os.path.isdir(path):  # directory with config files
+            cfg.push_scope(DirectoryConfigScope(name, path, writable=False))
+            _add_platform_scope(cfg, name, path, writable=False)
+            continue
+        else:
+            raise ConfigError(f"Invalid configuration scope: {path}")
+
+        for scope in manifest.env_config_scopes:
+            scope.name = f"{name}:{scope.name}"
+            scope.writable = False
+            cfg.push_scope(scope)
 
 
 def create() -> Configuration:
