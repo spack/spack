@@ -1061,11 +1061,12 @@ propagate(ChildNode, PropagatedAttribute, edge_types(DepType1, DepType2)) :-
 %----
 
 % If a variant is propagated, and can be accepted, set its value
-attr("variant_selected", node(ID, Package), Variant, Value, VariantID) :-
-  propagate(node(ID, Package), variant_value(Variant, Value)),
-  node_has_variant(node(ID, Package), Variant, VariantID),
-  pkg_fact(Package, variant_possible_value(Variant, Value)),
-  not attr("variant_set", node(ID, Package), Variant).
+attr("variant_selected", PackageNode, Variant, Value, VariantType, VariantID) :-
+  propagate(PackageNode, variant_value(Variant, Value)),
+  node_has_variant(PackageNode, Variant, VariantID),
+  variant_type(VariantID, VariantType),
+  variant_possible_value(PackageNode, Variant, Value),
+  not attr("variant_set", PackageNode, Variant).
 
 % If a variant is propagated, we cannot have extraneous values
 variant_is_propagated(PackageNode, Variant) :-
@@ -1074,7 +1075,7 @@ variant_is_propagated(PackageNode, Variant) :-
   not attr("variant_set", PackageNode, Variant).
 
 :- variant_is_propagated(PackageNode, Variant),
-   attr("variant_selected", PackageNode, Variant, Value, _),
+   attr("variant_selected", PackageNode, Variant, Value, _, _),
    not propagate(PackageNode, variant_value(Variant, Value)).
 
 %----
