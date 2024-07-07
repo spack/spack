@@ -438,7 +438,7 @@ complete -c spack -n '__fish_spack_using_command ' -l color -r -d 'when to color
 complete -c spack -n '__fish_spack_using_command ' -s c -l config -r -f -a config_vars
 complete -c spack -n '__fish_spack_using_command ' -s c -l config -r -d 'add one or more custom, one off config settings'
 complete -c spack -n '__fish_spack_using_command ' -s C -l config-scope -r -f -a config_scopes
-complete -c spack -n '__fish_spack_using_command ' -s C -l config-scope -r -d 'add a custom configuration scope'
+complete -c spack -n '__fish_spack_using_command ' -s C -l config-scope -r -d 'add directory or environment as read-only configuration scope, without activating the environment.'
 complete -c spack -n '__fish_spack_using_command ' -s d -l debug -f -a debug
 complete -c spack -n '__fish_spack_using_command ' -s d -l debug -d 'write out debug messages'
 complete -c spack -n '__fish_spack_using_command ' -l timestamp -f -a timestamp
