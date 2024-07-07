@@ -6,7 +6,9 @@ from spack.package import *
 
 
 class WasiSdkPrebuilt(Package):
-    """A group of standard API specifications for software compiled to the W3C WebAssembly standard"""
+    """
+    A group of standard API specifications for software compiled to the W3C WebAssembly standard
+    """
 
     homepage = "https://wasi.dev/"
     url = "https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-14/wasi-sdk-14.0-linux.tar.gz"
@@ -34,4 +36,3 @@ class WasiSdkPrebuilt(Package):
 
     def install(self, spec, prefix):
         install_tree("share/wasi-sysroot", prefix)
-

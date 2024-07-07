@@ -18,7 +18,6 @@ class PyGleanParser(PythonPackage):
     version("14.0.0", sha256="94a54b638a3eaff43a37b2ff05fb61c5df4e79899a1dbbcfbc708996eb69199d")
     version("13.0.1", sha256="feead4cbec6930ed38a48df5bae9eb4ee486bb4026ddf2f3206b85f80279d1e7")
 
-
     depends_on("py-semver@2.13.0:")
     depends_on("py-appdirs@1.4:")
     depends_on("py-click@7:")

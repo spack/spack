@@ -7,7 +7,7 @@ from spack.package import *
 
 class GenerateNinja(Package):
     """
-    A meta-build system that generates build files for Ninja. 
+    A meta-build system that generates build files for Ninja.
     This is a fork of the Google GN package with some minor features and bug fixes
     """
 
@@ -36,7 +36,7 @@ class GenerateNinja(Package):
         env.set("CXX", self.spec["llvm"].home.bin.join("clang++"))
 
     phases = ["configure", "build", "install"]
-#    build_targets = ["bootstrap", "gn"]
+    #    build_targets = ["bootstrap", "gn"]
     out_dir = "out"
 
     def configure(self, spec, prefix):
@@ -48,4 +48,3 @@ class GenerateNinja(Package):
     def install(self, spec, prefix):
         mkdir(prefix.bin)
         install(join_path(self.out_dir, "gn"), prefix.bin.gn)
-

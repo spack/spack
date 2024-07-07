@@ -19,4 +19,3 @@ class PyGleanSdk(PythonPackage):
     depends_on("py-semver@2.13.0:")
     depends_on("py-glean-parser@14.0")
     depends_on("py-maturin")
-

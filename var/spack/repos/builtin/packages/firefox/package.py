@@ -2,24 +2,6 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-# ----------------------------------------------------------------------------
-# If you submit this package back to Spack as a pull request,
-# please first remove this boilerplate and all FIXME comments.
-#
-# This is a template package file for Spack.  We've put "FIXME"
-# next to all the things you'll want to change. Once you've handled
-# them, you can save this file and test your package like this:
-#
-#     spack install firefox
-#
-# You can edit this file again by typing:
-#
-#     spack edit firefox
-#
-# See the Spack documentation for more information on packaging.
-# ----------------------------------------------------------------------------
-
 from spack.package import *
 from spack.util.prefix import Prefix
 
@@ -28,7 +10,9 @@ class Firefox(Package):
     """The FireFox web browser by Mozilla"""
 
     homepage = "https://www.firefox.com"
-    url = "https://archive.mozilla.org/pub/firefox/releases/127.0/source/firefox-127.0.source.tar.xz"
+    url = (
+        "https://archive.mozilla.org/pub/firefox/releases/127.0/source/firefox-127.0.source.tar.xz"
+    )
 
     maintainers("teaguesterling")
 
@@ -150,10 +134,10 @@ class Firefox(Package):
         # Adapted from: https://www.talospace.com/2021/12/firefox-95-on-power.html
         args += [
             "--without-wasm-sandboxed-libraries",  # Required to use wasi-sdk
-            "--enable-application=browser",        # Build the desktop browser (not android)
+            "--enable-application=browser",  # Build the desktop browser (not android)
             "--enable-release",
             "--with-branding=browser/branding/official",
-            #"--enable-lto=full",  # Should this be a varaint?
+            # "--enable-lto=full",  # Should this be a varaint?
             "MOZ_PGO=1",
         ]
         return args
@@ -173,4 +157,3 @@ class Firefox(Package):
         install_tree(f"{package_dir}/dist/firefox", prefix.opt.firefox)
         mkdir(prefix.bin)
         symlink(prefix.opt.firefox.firefox, prefix.bin.firefox)
-

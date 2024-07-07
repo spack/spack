@@ -83,11 +83,7 @@ class NodeJs(Package):
         msg="fails to build with gcc 4.8 (see https://github.com/spack/spack/issues/19310",
     )
 
-    conflicts(
-        "%gcc@14:",
-        when="@:19",
-        msg="fails to build with gcc 14+",
-    )
+    conflicts("%gcc@14:", when="@:19", msg="fails to build with gcc 14+")
 
     def setup_build_environment(self, env):
         # Force use of experimental Python 3 support

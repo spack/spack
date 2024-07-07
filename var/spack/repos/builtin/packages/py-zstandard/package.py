@@ -20,4 +20,3 @@ class PyZstandard(PythonPackage):
     depends_on("py-maturin", type="build")
 
     depends_on("zstd")
-

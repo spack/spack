@@ -26,6 +26,7 @@ class Cbindgen(CargoPackage):
 
     depends_on("rust@1.70:")
 
+
 #    depends_on("rust-indexmap@2.1.0:")
 #    depends_on("rust-log@0.4:")
 #    depends_on("rust-serde@1.0.103+derive")
@@ -37,5 +38,3 @@ class Cbindgen(CargoPackage):
 #    depends_on("rust-heck@0.4:")
 #
 #    depends_on("rust-clap@4.3:")
-
-

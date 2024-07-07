@@ -13,7 +13,6 @@ class RustBindgen(CargoPackage):
 
     license("BSD-3-Clause")
 
-
     version("0.69.4", sha256="c02ce18b95c4e5021b95b8b461e5dbe6178edffc52a5f555cbca35b910559b5e")
     version("0.69.3", sha256="5cdaa156403841e7b286ccbb7b31398c8b49b99f89ebf329457101819aa5eaf0")
     version("0.69.2", sha256="78fbb8bd100e145d1effc982eaab21b555ccc3fc1cbe6e734f17cdfe5c33af32")
@@ -28,4 +27,3 @@ class RustBindgen(CargoPackage):
         # The carogopackage installer doesn't allow for an option to install from a subdir
         # see: https://github.com/rust-lang/cargo/issues/7599
         cargo("install", "--root", "out", "bindgen-cli")
-
