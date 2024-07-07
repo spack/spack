@@ -264,7 +264,9 @@ def config_remove(args):
 def _can_update_config_file(scope: spack.config.ConfigScope, cfg_file):
     if isinstance(scope, spack.config.SingleFileScope):
         return fs.can_access(cfg_file)
-    return fs.can_write_to_dir(scope.path) and fs.can_access(cfg_file)
+    elif isinstance(scope, spack.config.DirectoryConfigScope):
+        return fs.can_write_to_dir(scope.path) and fs.can_access(cfg_file)
+    return False
 
 
 def _config_change_requires_scope(path, spec, scope, match_spec=None):
@@ -362,14 +364,11 @@ def config_change(args):
 def config_update(args):
     # Read the configuration files
     spack.config.CONFIG.get_config(args.section, scope=args.scope)
-    updates: List[spack.config.ConfigScope] = list(
-        filter(
-            lambda s: not isinstance(
-                s, (spack.config.InternalConfigScope, spack.config.ImmutableConfigScope)
-            ),
-            spack.config.CONFIG.format_updates[args.section],
-        )
-    )
+    updates: List[spack.config.ConfigScope] = [
+        x
+        for x in spack.config.CONFIG.format_updates[args.section]
+        if not isinstance(x, spack.config.InternalConfigScope) and x.writable
+    ]
 
     cannot_overwrite, skip_system_scope = [], False
     for scope in updates:
@@ -447,7 +446,7 @@ def _can_revert_update(scope_dir, cfg_file, bkp_file):
 
 
 def config_revert(args):
-    scopes = [args.scope] if args.scope else [x.name for x in spack.config.CONFIG.file_scopes]
+    scopes = [args.scope] if args.scope else [x.name for x in spack.config.CONFIG.writable_scopes]
 
     # Search for backup files in the configuration scopes
     Entry = collections.namedtuple("Entry", ["scope", "cfg", "bkp"])

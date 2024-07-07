@@ -31,10 +31,11 @@ class NodeJs(Package):
 
     # LTS (recommended for most users) - even major number
     version(
-        "22.3.0",
-        sha256="6326484853093ab6b8f361a267445f4a5bff469042cda11a3585497b13136b55",
+        "22.4.0",
+        sha256="b62cd83c9a57a11349883f89b1727a16e66c02eb6255a4bf32714ff5d93165f5",
         preferred=True,
     )
+    version("22.3.0", sha256="6326484853093ab6b8f361a267445f4a5bff469042cda11a3585497b13136b55")
     version("20.15.0", sha256="01e2c034467a324a33e778c81f2808dff13d289eaa9307d3e9b06c171e4d932d")
     version("18.12.1", sha256="ba8174dda00d5b90943f37c6a180a1d37c861d91e04a4cb38dc1c0c74981c186")
     version("16.18.1", sha256="3d24c9c3a953afee43edc44569045eda56cd45cd58b0539922d17da62736189c")
@@ -80,10 +81,15 @@ class NodeJs(Package):
     # https://github.com/spack/spack/issues/19310
     conflicts(
         "%gcc@:4.8",
-        msg="fails to build with gcc 4.8 (see https://github.com/spack/spack/issues/19310",
+        msg="fails to build with gcc 4.8 (see https://github.com/spack/spack/issues/19310)",
     )
 
-    conflicts("%gcc@14:", when="@:19", msg="fails to build with gcc 14+")
+    conflicts(
+        "%gcc@14:", when="@:19", msg="fails to build with gcc 14+ due to implicit conversions"
+    )
+
+    # See https://github.com/nodejs/node/issues/52223
+    patch("fix-old-glibc-random-headers.patch", when="^glibc@:2.24")
 
     def setup_build_environment(self, env):
         # Force use of experimental Python 3 support
