@@ -20,3 +20,4 @@ class StartupNotification(AutotoolsPackage):
     depends_on("libx11")
     depends_on("libxcb")
     depends_on("xcb-util")
+    depends_on("pkgconfig", type="build")

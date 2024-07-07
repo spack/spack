@@ -9,7 +9,7 @@ from spack.package import *
 class Libxpm(AutotoolsPackage, XorgPackage):
     """libXpm - X Pixmap (XPM) image file format library."""
 
-    homepage = "https://cgit.freedesktop.org/xorg/lib/libXpm"
+    homepage = "https://gitlab.freedesktop.org/xorg/lib/libXpm"
     xorg_mirror_path = "lib/libXpm-3.5.12.tar.gz"
 
     license("X11")
