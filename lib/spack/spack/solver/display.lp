@@ -50,5 +50,6 @@
 #show condition_nodes/3.
 #show trigger_node/3.
 #show imposed_nodes/3.
+#show variant_single_value/2.
 
 % debug
