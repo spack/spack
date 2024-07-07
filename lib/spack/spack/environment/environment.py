@@ -269,9 +269,7 @@ def root(name):
 
 def exists(name):
     """Whether an environment with this name exists or not."""
-    if not valid_env_name(name):
-        return False
-    return os.path.isdir(root(name))
+    return valid_env_name(name) and os.path.isdir(_root(name))
 
 
 def active(name):
@@ -922,7 +920,7 @@ class Environment:
     def _load_manifest_file(self):
         """Instantiate and load the manifest file contents into memory."""
         with lk.ReadTransaction(self.txlock):
-            self.manifest = EnvironmentManifestFile(self.path)
+            self.manifest = EnvironmentManifestFile(self.path, self.name)
             with self.manifest.use_config():
                 self._read()
 
@@ -2753,10 +2751,11 @@ class EnvironmentManifestFile(collections.abc.Mapping):
         manifest.flush()
         return manifest
 
-    def __init__(self, manifest_dir: Union[pathlib.Path, str]) -> None:
+    def __init__(self, manifest_dir: Union[pathlib.Path, str], name: Optional[str] = None) -> None:
         self.manifest_dir = pathlib.Path(manifest_dir)
+        self.name = name or str(manifest_dir)
         self.manifest_file = self.manifest_dir / manifest_name
-        self.scope_name = f"env:{environment_name(self.manifest_dir)}"
+        self.scope_name = f"env:{self.name}"
         self.config_stage_dir = os.path.join(env_subdir_path(manifest_dir), "config")
 
         #: Configuration scopes associated with this environment. Note that these are not
@@ -3033,7 +3032,6 @@ class EnvironmentManifestFile(collections.abc.Mapping):
         # load config scopes added via 'include:', in reverse so that
         # highest-precedence scopes are last.
         includes = self[TOP_LEVEL_KEY].get("include", [])
-        env_name = environment_name(self.manifest_dir)
         missing = []
         for i, config_path in enumerate(reversed(includes)):
             # allow paths to contain spack config/environment variables, etc.
@@ -3096,12 +3094,12 @@ class EnvironmentManifestFile(collections.abc.Mapping):
 
             if os.path.isdir(config_path):
                 # directories are treated as regular ConfigScopes
-                config_name = "env:%s:%s" % (env_name, os.path.basename(config_path))
+                config_name = f"env:{self.name}:{os.path.basename(config_path)}"
                 tty.debug(f"Creating DirectoryConfigScope {config_name} for '{config_path}'")
                 scopes.append(spack.config.DirectoryConfigScope(config_name, config_path))
             elif os.path.exists(config_path):
                 # files are assumed to be SingleFileScopes
-                config_name = "env:%s:%s" % (env_name, config_path)
+                config_name = f"env:{self.name}:{config_path}"
                 tty.debug(f"Creating SingleFileScope {config_name} for '{config_path}'")
                 scopes.append(
                     spack.config.SingleFileScope(
