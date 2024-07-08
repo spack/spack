@@ -41,13 +41,6 @@ class ZlibNg(AutotoolsPackage, CMakePackage):
     # reused.
     build_system("autotools", "cmake", default="autotools")
 
-    # support lld 17+, can be removed after 2.1.7 release.
-    patch(
-        "https://github.com/zlib-ng/zlib-ng/commit/39dcc5aae7ad059b0d0c3a11e37e5ba7b7430c61.patch?full_index=1",
-        sha256="6614666f50e90ab23e658902dafe74243ab1f216a20aeab17d1705fddee8741d",
-        when="@2.1:2.1.6",
-    )
-
     # fix building with NVHPC, see https://github.com/zlib-ng/zlib-ng/pull/1698
     patch("pr-1698.patch", when="@2.1.4:%nvhpc+opt")
 
