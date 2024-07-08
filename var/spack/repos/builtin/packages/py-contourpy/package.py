@@ -22,5 +22,7 @@ class PyContourpy(PythonPackage):
     depends_on("py-pybind11@2.6:", type=("build", "link"))
     depends_on("py-setuptools@42:", type="build")
     depends_on("py-numpy@1.16:", type=("build", "run"))
+    # https://github.com/numpy/numpy/issues/26191
+    depends_on("py-numpy@:1", when="@:1.2.0", type=("build", "run"))
 
     depends_on("py-build", when="@:1.0.5", type="build")
