@@ -96,7 +96,7 @@ spack:
 """
 
 
-def test_env_change_spec_in_definition(tmp_path, mock_packages, config, mutable_mock_env_path):
+def test_env_change_spec_in_definition(tmp_path, mock_packages, mutable_mock_env_path):
     manifest_file = tmp_path / ev.manifest_name
     manifest_file.write_text(_test_matrix_yaml)
     e = ev.create("test", manifest_file)
@@ -118,9 +118,7 @@ def test_env_change_spec_in_definition(tmp_path, mock_packages, config, mutable_
     assert not any(x.intersects("mpileaks@2.1%gcc") for x in e.user_specs)
 
 
-def test_env_change_spec_in_matrix_raises_error(
-    tmp_path, mock_packages, config, mutable_mock_env_path
-):
+def test_env_change_spec_in_matrix_raises_error(tmp_path, mock_packages, mutable_mock_env_path):
     manifest_file = tmp_path / ev.manifest_name
     manifest_file.write_text(_test_matrix_yaml)
     e = ev.create("test", manifest_file)
