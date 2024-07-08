@@ -33,6 +33,12 @@ class RocmClangOcl(CMakePackage):
 
     depends_on("cmake@3.5:", type="build")
 
+    for ver in ["master"]:
+        depends_on(f"rocm-cmake@{ver}:", type="build", when=f"@{ver}")
+        depends_on(f"llvm-amdgpu@{ver}", when=f"@{ver}")
+        # support both builtin and standalone device libs
+        depends_on(f"rocm-device-libs@{ver}", when=f"@{ver} ^llvm-amdgpu ~rocm-device-libs")
+
     for ver in [
         "5.5.0",
         "5.5.1",
@@ -45,7 +51,6 @@ class RocmClangOcl(CMakePackage):
         "6.1.0",
         "6.1.1",
         "6.1.2",
-        "master",
     ]:
         depends_on(f"rocm-cmake@{ver}:", type="build", when=f"@{ver}")
         depends_on(f"llvm-amdgpu@{ver}", when=f"@{ver}")

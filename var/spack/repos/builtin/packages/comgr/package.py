@@ -57,6 +57,13 @@ class Comgr(CMakePackage):
 
     depends_on("rocm-cmake@3.5.0:", type="build")
 
+    for ver in ["master"]:
+        # llvm libs are linked statically, so this *could* be a build dep
+        depends_on(f"llvm-amdgpu@{ver}", when=f"@{ver}")
+        # aomp may not build rocm-device-libs as part of llvm-amdgpu, so make
+        # that a conditional dependency
+        depends_on(f"rocm-device-libs@{ver}", when=f"@{ver} ^llvm-amdgpu ~rocm-device-libs")
+
     for ver in [
         "5.5.0",
         "5.5.1",
@@ -69,7 +76,6 @@ class Comgr(CMakePackage):
         "6.1.0",
         "6.1.1",
         "6.1.2",
-        "master",
     ]:
         # llvm libs are linked statically, so this *could* be a build dep
         depends_on(f"llvm-amdgpu@{ver}", when=f"@{ver}")

@@ -41,6 +41,10 @@ class RocmDbgapi(CMakePackage):
     depends_on("cmake@3:", type="build")
     depends_on("hwdata", when="@5.5.0:")
 
+    for ver in ["master"]:
+        depends_on(f"hsa-rocr-dev@{ver}", type="build", when=f"@{ver}")
+        depends_on(f"comgr@{ver}", type=("build", "link"), when=f"@{ver}")
+
     for ver in [
         "5.5.0",
         "5.5.1",
@@ -53,7 +57,6 @@ class RocmDbgapi(CMakePackage):
         "6.1.0",
         "6.1.1",
         "6.1.2",
-        "master",
     ]:
         depends_on(f"hsa-rocr-dev@{ver}", type="build", when=f"@{ver}")
         depends_on(f"comgr@{ver}", type=("build", "link"), when=f"@{ver}")

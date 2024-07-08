@@ -51,6 +51,12 @@ class HsaRocrDev(CMakePackage):
     depends_on("numactl")
     depends_on("pkgconfig")
 
+    for ver in ["master"]:
+        depends_on(f"hsakmt-roct@{ver}", when=f"@{ver}")
+        depends_on(f"llvm-amdgpu@{ver}", when=f"@{ver}")
+        # allow standalone rocm-device-libs (useful for aomp)
+        depends_on(f"rocm-device-libs@{ver}", when=f"@{ver} ^llvm-amdgpu ~rocm-device-libs")
+
     for ver in [
         "5.5.0",
         "5.5.1",
@@ -63,7 +69,6 @@ class HsaRocrDev(CMakePackage):
         "6.1.0",
         "6.1.1",
         "6.1.2",
-        "master",
     ]:
         depends_on(f"hsakmt-roct@{ver}", when=f"@{ver}")
         depends_on(f"llvm-amdgpu@{ver}", when=f"@{ver}")
