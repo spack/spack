@@ -115,8 +115,7 @@ class Curl(NMakePackage, AutotoolsPackage):
     depends_on("gnutls", when="tls=gnutls")
     with when("tls=mbedtls"):
         depends_on("mbedtls +pic")
-        depends_on("mbedtls@:2", when="@:7.78")
-        depends_on("mbedtls@2:3.5", when="@7.79:")
+        depends_on("mbedtls@2:", when="@7.79:")
         depends_on("mbedtls@3.6.0:", when="@8.8.0:")
     depends_on("nss", when="tls=nss")
 
