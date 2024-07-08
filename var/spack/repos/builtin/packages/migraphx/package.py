@@ -27,20 +27,15 @@ class Migraphx(CMakePackage):
     version("6.0.0", sha256="7bb3f5011da9b1f3b79707b06118c523c1259215f650c2ffa5622a7e1d88868f")
     version("5.7.1", sha256="3e58c043a5a7d1357ee05725fd6cd41e190b070f1ba57f61300128429902089c")
     version("5.7.0", sha256="14f13554367d2d6490d66f8b5b739203225e7acce25085559e7c4acf29e2a4d5")
-    version("5.6.1", sha256="b108c33f07572ffd880b20f6de06f1934ab2a1b41ae69095612322ac412fa91c")
-    version("5.6.0", sha256="eaec90535d62002fd5bb264677ad4a7e30c55f18d2a287680d0495c7e60432b2")
-    version("5.5.1", sha256="e71c4744f8ef6a1a99c179bbad94b8fe9bd7686eaa9397f376b70988c3341f0c")
-    version("5.5.0", sha256="6084eb596b170f5e38f22b5fa37e66aa43a8cbc626712c9f03cde48c8fecfc8f")
     with default_args(deprecated=True):
-        version("5.4.3", sha256="f83e7bbe5d6d0951fb2cf0abf7e8b3530e9a5e45f7cec6d760da055d6905d568")
-        version("5.4.0", sha256="b6e7f4a1bf445ea0dae644ed5722369cde66fbee82a5917722f5d3f8c48b0a8c")
-        version("5.3.3", sha256="91d91902bbedd5e1951a231e8e5c9a328360b128c731912ed17c8059df38e02a")
-        version("5.3.0", sha256="d0b7283f42e03fb38b612868b8c94f46f27a6e0b019ae95fde5b9086582a1c69")
+        version("5.6.1", sha256="b108c33f07572ffd880b20f6de06f1934ab2a1b41ae69095612322ac412fa91c")
+        version("5.6.0", sha256="eaec90535d62002fd5bb264677ad4a7e30c55f18d2a287680d0495c7e60432b2")
+        version("5.5.1", sha256="e71c4744f8ef6a1a99c179bbad94b8fe9bd7686eaa9397f376b70988c3341f0c")
+        version("5.5.0", sha256="6084eb596b170f5e38f22b5fa37e66aa43a8cbc626712c9f03cde48c8fecfc8f")
 
     patch("0001-Adding-nlohmann-json-include-directory.patch", when="@:5.5")
     # Restrict Python 2.7 usage to fix the issue below
     # https://github.com/spack/spack/issues/24429
-    patch("0003-restrict-python-2.7-usage.patch", when="@5.2.0:5.4")
     patch("0004-restrict-python2.7-usage-for-5.5.0.patch", when="@5.5.0")
     patch("0005-Adding-half-include-directory-path-migraphx.patch", when="@5.6.0:5.7")
     patch("0006-add-option-to-turn-off-ck.patch", when="@5.7")
@@ -70,10 +65,6 @@ class Migraphx(CMakePackage):
     depends_on("abseil-cpp")
 
     for ver in [
-        "5.3.0",
-        "5.3.3",
-        "5.4.0",
-        "5.4.3",
         "5.5.0",
         "5.5.1",
         "5.6.0",

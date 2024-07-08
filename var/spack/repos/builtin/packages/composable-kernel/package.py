@@ -26,13 +26,11 @@ class ComposableKernel(CMakePackage):
     version("6.0.0", sha256="a8f736f2f2a8afa4cddd06301205be27774d85f545429049b4a2bbbe6fcd67df")
     version("5.7.1", sha256="75f66e023c2e31948e91fa26366eaeac72d871fc2e5188361d4465179f13876e")
     version("5.7.0", sha256="d9624dbaef04e0138f9f73596c49b4fe9ded69974bae7236354baa32649bf21a")
-    version("5.6.1", commit="f5ec04f091fa5c48c67d7bacec36a414d0be06a5")
-    version("5.6.0", commit="f5ec04f091fa5c48c67d7bacec36a414d0be06a5")
-    version("5.5.1", commit="ac9e01e2cc3721be24619807adc444e1f59a9d25")
-    version("5.5.0", commit="8b76b832420a3d69708401de6607a033163edcce")
     with default_args(deprecated=True):
-        version("5.4.3", commit="bb3d9546f186e39cefedc3e7f01d88924ba20168")
-        version("5.4.0", commit="236bd148b98c7f1ec61ee850fcc0c5d433576305")
+        version("5.6.1", commit="f5ec04f091fa5c48c67d7bacec36a414d0be06a5")
+        version("5.6.0", commit="f5ec04f091fa5c48c67d7bacec36a414d0be06a5")
+        version("5.5.1", commit="ac9e01e2cc3721be24619807adc444e1f59a9d25")
+        version("5.5.0", commit="8b76b832420a3d69708401de6607a033163edcce")
 
     amdgpu_targets = ROCmPackage.amdgpu_targets
     variant(
@@ -65,8 +63,6 @@ class ComposableKernel(CMakePackage):
         "5.6.0",
         "5.5.1",
         "5.5.0",
-        "5.4.3",
-        "5.4.0",
     ]:
         depends_on("hip@" + ver, when="@" + ver)
         depends_on("llvm-amdgpu@" + ver, when="@" + ver)

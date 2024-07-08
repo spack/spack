@@ -25,15 +25,11 @@ class Rocthrust(CMakePackage):
     version("6.0.0", sha256="a3fdafe4b6124118e07f23a3b0270d91740da324f61aaa3e8c034da08d9312b1")
     version("5.7.1", sha256="b7cb9ea6c42b2c6b610c34d2c438443e0f99245bd391aff18591949bf1cd53ee")
     version("5.7.0", sha256="64e10f071acfc5b8e3c168b9178289cf1afc7b168bf1962793fc256b25074d3a")
-    version("5.6.1", sha256="63df61d5ab46d4cfda6066d748274bacecc77151692e372e6f7df5e91852bdc2")
-    version("5.6.0", sha256="e52a27bcb4add38a5f0f3a5c7e409c230bf4ba9afae19bd2e06c2be00d39db59")
-    version("5.5.1", sha256="66f126e5ea46ca761533411f81e83402773f95d3184cb7645ca73df227413023")
-    version("5.5.0", sha256="c031f71cd4b6eaf98664fd2ad50fc18f7ccbfa67be415dca425169d2d1c81e9e")
     with default_args(deprecated=True):
-        version("5.4.3", sha256="d133e14ea6d27d358d1bd4d31b79fb1562d1aea7c400e5a2d28d0f159cb6c8a8")
-        version("5.4.0", sha256="a4799fb1086da3f70c9b95effb1f5f9033c861685e960a8759278463cc55a971")
-        version("5.3.3", sha256="0c2fc8d437efaf5c4c859d97adb049d4025025d0be0e0908f59a8112508234e5")
-        version("5.3.0", sha256="0e11b12f208d2751e3e507e3a32403c9bd45da4e191671d765d33abd727d9b96")
+        version("5.6.1", sha256="63df61d5ab46d4cfda6066d748274bacecc77151692e372e6f7df5e91852bdc2")
+        version("5.6.0", sha256="e52a27bcb4add38a5f0f3a5c7e409c230bf4ba9afae19bd2e06c2be00d39db59")
+        version("5.5.1", sha256="66f126e5ea46ca761533411f81e83402773f95d3184cb7645ca73df227413023")
+        version("5.5.0", sha256="c031f71cd4b6eaf98664fd2ad50fc18f7ccbfa67be415dca425169d2d1c81e9e")
 
     amdgpu_targets = ROCmPackage.amdgpu_targets
 
@@ -50,10 +46,6 @@ class Rocthrust(CMakePackage):
     depends_on("googletest@1.10.0:", type="test")
 
     for ver in [
-        "5.3.0",
-        "5.3.3",
-        "5.4.0",
-        "5.4.3",
         "5.5.0",
         "5.5.1",
         "5.6.0",

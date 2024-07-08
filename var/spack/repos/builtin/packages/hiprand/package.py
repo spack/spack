@@ -31,15 +31,11 @@ class Hiprand(CMakePackage, CudaPackage, ROCmPackage):
     version("6.0.0", sha256="7e06c98f9da7c0b20b55b2106cf3a48b9ef6577a79549a455667ae97bd15b61d")
     version("5.7.1", sha256="81a9f5f0960dce125ce1ab1c7eb58bb07c8756346f9e46a1cc65aa61d5a114f8")
     version("5.7.0", sha256="4dee76719839503b02ce7d38e1c61bbdb2da18da7f63a7ef7012c84c71aa0a9d")
-    version("5.6.1", sha256="a73d5578bc7f8dff0b8960e4bff97bc4fc28f508a19ed6acd1cfd4d3e76b47ee")
-    version("5.6.0", sha256="8c214e2f90337a5317a69950026bf337b1e567d43bb9ae64f2a802af2228c313")
-    version("5.5.1", sha256="5df9d78eae0991be5ec9f60e8d3530fabc23793d9f9cf274b075d689675db04e")
-    version("5.5.0", sha256="7c7dde7b989d5da9c0b0251233245f955b477c090462c7d34e3e0284c5fca761")
     with default_args(deprecated=True):
-        version("5.4.3", sha256="7d3d04476880ec90c088dff81f69aac8699eaef972476000e5c4726584ffa98f")
-        version("5.4.0", sha256="9456d4b4d5fd5c0b728f4aa4f8c224f829fe6fbf08e397848475293f71029a22")
-        version("5.3.3", sha256="f72626b00d61ed2925b3124b7f094ccfaf7750f02bee6bac6b79317e1c5576ef")
-        version("5.3.0", sha256="6fd9b3a719bf4c228657cb2a0ff283eb7d777ba31bfffe5a26589d588f89a279")
+        version("5.6.1", sha256="a73d5578bc7f8dff0b8960e4bff97bc4fc28f508a19ed6acd1cfd4d3e76b47ee")
+        version("5.6.0", sha256="8c214e2f90337a5317a69950026bf337b1e567d43bb9ae64f2a802af2228c313")
+        version("5.5.1", sha256="5df9d78eae0991be5ec9f60e8d3530fabc23793d9f9cf274b075d689675db04e")
+        version("5.5.0", sha256="7c7dde7b989d5da9c0b0251233245f955b477c090462c7d34e3e0284c5fca761")
 
     # default to an 'auto' variant until amdgpu_targets can be given a better default than 'none'
     amdgpu_targets = ROCmPackage.amdgpu_targets
@@ -75,10 +71,6 @@ class Hiprand(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("googletest@1.10.0:", type="test")
 
     for ver in [
-        "5.3.0",
-        "5.3.3",
-        "5.4.0",
-        "5.4.3",
         "5.5.0",
         "5.5.1",
         "5.6.0",

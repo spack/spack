@@ -28,15 +28,11 @@ class MiopenHip(CMakePackage):
     version("6.0.0", sha256="a0718a48353be30ff98118ade511f0c1b454e394d8f934aefe7dd6946562b2e9")
     version("5.7.1", sha256="912a658fe21ce6f1982b0f2ff251c3f7bb618f2e7e9876d983bcb54e3cd7129e")
     version("5.7.0", sha256="5cd0b62254469e1c246d5890d2b78f8aedcf42cf8a327eabc1a391b83bcd14e1")
-    version("5.6.1", sha256="ff627d68ed9e52433a3c808b5d3ff179a398b77ce81b00cfea7b2c4da5162c6c")
-    version("5.6.0", sha256="d620ddab5b488bdf81242654fefa337c6b71dc410c2ff26d30a4ee86a8d22d11")
-    version("5.5.1", sha256="2cd75071b8ee876c69a94f028b6c8a9346d6d2fde7d4b64e6d635f3b6c994262")
-    version("5.5.0", sha256="791087242551669e546225e36123c21663f0dad14dbcfd6d0ce0e7bad0ab0de1")
     with default_args(deprecated=True):
-        version("5.4.3", sha256="37ffe2ed3d7942da8ea2f6bdb85c7a2f58e3ccd31767db158a322769d3604efd")
-        version("5.4.0", sha256="b4153791f9eeee4cbc5534bc6ad8b32c0947bcd38e08b77ebe144065a4fa5456")
-        version("5.3.3", sha256="7efc98215d23a2caaf212378c37e9a6484f54a4ed3e9660719286e4f287d3715")
-        version("5.3.0", sha256="c5819f593d71beeda2eb24b89182912240cc40f83b2b8f9de695a8e230aa4ea6")
+        version("5.6.1", sha256="ff627d68ed9e52433a3c808b5d3ff179a398b77ce81b00cfea7b2c4da5162c6c")
+        version("5.6.0", sha256="d620ddab5b488bdf81242654fefa337c6b71dc410c2ff26d30a4ee86a8d22d11")
+        version("5.5.1", sha256="2cd75071b8ee876c69a94f028b6c8a9346d6d2fde7d4b64e6d635f3b6c994262")
+        version("5.5.0", sha256="791087242551669e546225e36123c21663f0dad14dbcfd6d0ce0e7bad0ab0de1")
 
     depends_on("cmake@3.5:", type="build")
     depends_on("pkgconfig", type="build")
@@ -61,10 +57,6 @@ class MiopenHip(CMakePackage):
     )
 
     for ver in [
-        "5.3.0",
-        "5.3.3",
-        "5.4.0",
-        "5.4.3",
         "5.5.0",
         "5.5.1",
         "5.6.0",
@@ -82,10 +74,8 @@ class MiopenHip(CMakePackage):
         depends_on(f"rocm-clang-ocl@{ver}", when=f"@{ver}")
         depends_on(f"rocblas@{ver}", when=f"@{ver}")
 
-    for ver in ["5.3.0", "5.3.3"]:
-        depends_on(f"mlirmiopen@{ver}", when=f"@{ver}")
-
     for ver in [
+        "5.5.0",
         "5.5.1",
         "5.6.0",
         "5.6.1",
@@ -99,8 +89,7 @@ class MiopenHip(CMakePackage):
     ]:
         depends_on("nlohmann-json", type="link")
         depends_on(f"composable-kernel@{ver}", when=f"@{ver}")
-    for ver in ["5.4.0", "5.4.3", "5.5.0"]:
-        depends_on("nlohmann-json", type="link")
+    for ver in ["5.5.0"]:
         depends_on(f"rocmlir@{ver}", when=f"@{ver}")
     for ver in ["6.0.0", "6.0.2", "6.1.0", "6.1.1", "6.1.2"]:
         depends_on("roctracer-dev@" + ver, when="@" + ver)
@@ -140,9 +129,6 @@ class MiopenHip(CMakePackage):
             self.define("HIP_PREFIX_PATH", spec["hip"].prefix),
             self.define("DEVICELIBS_PREFIX_PATH", self.get_bitcode_dir()),
         ]
-        if self.spec.satisfies("@5.1.0:5.3"):
-            mlir_inc = spec["mlirmiopen"].prefix.include
-            args.append(self.define("CMAKE_CXX_FLAGS", "-I{0}".format(mlir_inc)))
         if self.spec.satisfies("@5.4.0:"):
             args.append(
                 "-DNLOHMANN_JSON_INCLUDE={0}".format(self.spec["nlohmann-json"].prefix.include)
