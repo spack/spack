@@ -27,6 +27,15 @@ class Mbedtls(MakefilePackage):
     # version 2.x
     version("2.28.8", sha256="241c68402cef653e586be3ce28d57da24598eb0df13fcdea9d99bfce58717132")
     version("2.28.2", sha256="1db6d4196178fa9f8264bef5940611cd9febcd5d54ec05f52f1e8400f792b5a4")
+    version("2.7.19", sha256="3da12b1cebe1a25da8365d5349f67db514aefcaa75e26082d7cb2fa3ce9608aa")
+
+    # deprecated versions
+    # required by julia@1.6:1.7
+    version(
+        "2.24.0",
+        sha256="b5a779b5f36d5fc4cba55faa410685f89128702423ad07b36c5665441a06a5f3",
+        deprecated=True,
+    )
 
     depends_on("c", type="build")  # generated
 
@@ -68,7 +77,7 @@ class Mbedtls(MakefilePackage):
     # conflicts('libs=shared', msg='Makefile build cannot build shared libs only now')
 
     def url_for_version(self, version):
-        if self.spec.satisfies("@:2.28.7"):
+        if self.spec.satisfies("@:2.28.7,3:3.5"):
             return f"https://github.com/Mbed-TLS/mbedtls/archive/refs/tags/v{version}.tar.gz"
         return f"https://github.com/Mbed-TLS/mbedtls/releases/download/v{version}/mbedtls-{version}.tar.bz2"
 
