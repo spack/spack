@@ -455,7 +455,7 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
     def cmake_args(self):
         return []
 
-    def run_test(self, exe, expected):
+    def run_example(self, exe, expected):
         """Perform stand-alone checks on the installed package."""
 
         exe_run = which(join_path(self.prefix.bin, exe))
