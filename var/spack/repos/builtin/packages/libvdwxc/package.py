@@ -51,3 +51,7 @@ class Libvdwxc(AutotoolsPackage):
             args += ["--without-mpi"]
 
         return args
+
+    # misuse of fftw_plan in m4 for fftw detection
+    # fails with gcc 14 (and presumably newer)
+    patch("fftw-detection.patch", when="%gcc@14:")
