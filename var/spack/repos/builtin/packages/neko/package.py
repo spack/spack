@@ -32,9 +32,7 @@ class Neko(AutotoolsPackage, CudaPackage, ROCmPackage):
     version("develop", branch="develop")
     variant("parmetis", default=False, description="Build with support for parmetis")
     variant("xsmm", default=False, description="Build with support for libxsmm")
-    variant(
-        "gslib", default=False, when="@0.7.0:", description="Build with support for gslib"
-    )
+    variant("gslib", default=False, when="@0.7.0:", description="Build with support for gslib")
     variant("hdf5", default=False, when="@develop", description="Build with support for HDF5")
 
     # Requires cuda or rocm enabled MPI
