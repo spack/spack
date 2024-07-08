@@ -33,6 +33,10 @@ class Rocminfo(CMakePackage):
 
     depends_on("cmake@3:", type="build")
 
+    for ver in ["master"]:
+        depends_on(f"hsakmt-roct@{ver}", when=f"@{ver}")
+        depends_on(f"hsa-rocr-dev@{ver}", when=f"@{ver}")
+
     for ver in [
         "5.5.0",
         "5.5.1",
@@ -45,7 +49,6 @@ class Rocminfo(CMakePackage):
         "6.1.0",
         "6.1.1",
         "6.1.2",
-        "master",
     ]:
         depends_on(f"hsakmt-roct@{ver}", when=f"@{ver}")
         depends_on(f"hsa-rocr-dev@{ver}", when=f"@{ver}")
