@@ -41,7 +41,7 @@ class Cairo(AutotoolsPackage):
     variant("ft", default=False, description="Enable cairo's FreeType font backend feature")
     variant("fc", default=False, description="Enable cairo's Fontconfig font backend feature")
     variant("png", default=False, description="Enable cairo's PNG functions feature")
-    variant("svg", default=False, description="Enable cairo's SVN functions feature")
+    variant("svg", default=False, description="Enable cairo's SVG functions feature")
     variant("shared", default=True, description="Build shared libraries")
     variant("pic", default=True, description="Enable position-independent code (PIC)")
 
@@ -51,7 +51,6 @@ class Cairo(AutotoolsPackage):
     depends_on("libxcb", when="+X")
     depends_on("python", when="+X", type="build")
     depends_on("libpng", when="+png")
-    depends_on("librsvg", when="+svg")
     depends_on("glib")
     depends_on("pixman@0.36.0:", when="@1.17.2:")
     depends_on("pixman")
