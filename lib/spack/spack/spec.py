@@ -4258,29 +4258,21 @@ class Spec:
             csv = query_parameters.pop().strip()
             query_parameters = re.split(r"\s*,\s*", csv)
 
-        # In some cases a package appears multiple times in the same DAG for *distinct*
-        # specs. For example, a build-type dependency may itself depend on a package
-        # the current spec depends on, but their specs may differ. Therefore we iterate
-        # in an order here that prioritizes the build, test and runtime dependencies;
-        # only when we don't find the package do we consider the full DAG.
         order = lambda: itertools.chain(
-            self.traverse(deptype="link"),
-            self.dependencies(deptype=dt.BUILD | dt.RUN | dt.TEST),
-            self.traverse(),  # fall back to a full search
+            self.traverse_edges(deptype=dt.LINK, order="breadth", cover="edges"),
+            self.edges_to_dependencies(depflag=dt.BUILD | dt.RUN | dt.TEST),
+            self.traverse_edges(deptype=dt.ALL, order="breadth", cover="edges"),
         )
 
+        # Consider runtime dependencies and direct build/test deps before transitive dependencies,
+        # and prefer matches closest to the root.
         try:
             child: Spec = next(
-                itertools.chain(
-                    # Regular specs
-                    (x for x in order() if x.name == name),
-                    (
-                        x
-                        for x in order()
-                        if (not x.virtual)
-                        and any(name in edge.virtuals for edge in x.edges_from_dependents())
-                    ),
-                    (x for x in order() if (not x.virtual) and x.package.provides(name)),
+                e.spec
+                for e in itertools.chain(
+                    (e for e in order() if e.spec.name == name or name in e.virtuals),
+                    # for historical reasons
+                    (e for e in order() if e.spec.concrete and e.spec.package.provides(name)),
                 )
             )
         except StopIteration:
