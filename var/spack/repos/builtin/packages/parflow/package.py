@@ -65,7 +65,7 @@ class Parflow(CMakePackage):
 
     examples_dir = "examples"
 
-    def test_smoke(self):
+    def test_parflow(self):
         """Perform smoke test on installed ParFlow package."""
         # Run the single phase flow test
         run_path = join_path(self.spec.prefix, self.examples_dir)
@@ -79,4 +79,5 @@ class Parflow(CMakePackage):
             exes = [join_path(self.prefix.bin, "parflow")]
             for exe in exes:
                 exe = which(exe)
-                exe("-v")
+                out = exe("-v", output=str.split, error=str.split)
+                assert self.spec.version in out
