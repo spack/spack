@@ -21,3 +21,5 @@ class PyLaspy(PythonPackage):
     depends_on("python@3.6:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
     depends_on("py-numpy", type=("build", "run"))
+    # https://github.com/laspy/laspy/pull/313
+    depends_on("py-numpy@:1", when="@:2.5.3", type=("build", "run"))

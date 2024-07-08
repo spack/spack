@@ -62,12 +62,13 @@ class PyCartopy(PythonPackage):
         depends_on("py-setuptools-scm", when="@0.19:")
 
     with default_args(type=("build", "link", "run")):
-        depends_on("py-numpy@1.21:", when="@0.23:")
-        depends_on("py-numpy@1.21:1", when="@0.22")
-        depends_on("py-numpy@1.18:1", when="@0.20:21")
-        depends_on("py-numpy@1.13.3:1", when="@0.19")
-        depends_on("py-numpy@1.10:1", when="@0.17:0.18")
-        depends_on("py-numpy@1.6:1", when="@0.16")
+        depends_on("py-numpy@1.21:", when="@0.22:")
+        depends_on("py-numpy@1.18:", when="@0.20:21")
+        depends_on("py-numpy@1.13.3:", when="@0.19")
+        depends_on("py-numpy@1.10:", when="@0.17:0.18")
+        depends_on("py-numpy@1.6:", when="@0.16")
+        # https://github.com/SciTools/cartopy/issues/2339
+        depends_on("py-numpy@:1", when="@:0.22")
 
     with default_args(type=("build", "run")):
         depends_on("py-matplotlib@3.5:", when="@0.23:")

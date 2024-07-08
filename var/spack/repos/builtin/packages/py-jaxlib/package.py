@@ -82,6 +82,8 @@ class PyJaxlib(PythonPackage, CudaPackage):
         depends_on("py-numpy@1.22:", when="@0.4.14:")
         depends_on("py-numpy@1.21:", when="@0.4.7:")
         depends_on("py-numpy@1.20:", when="@0.3:")
+        # https://github.com/google/jax/issues/19246
+        depends_on("py-numpy@:1", when="@:0.4.25")
         depends_on("py-ml-dtypes@0.4:", when="@0.4.29")
         depends_on("py-ml-dtypes@0.2:", when="@0.4.14:")
         depends_on("py-ml-dtypes@0.1:", when="@0.4.9:")

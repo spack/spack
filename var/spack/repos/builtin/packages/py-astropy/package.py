@@ -51,6 +51,8 @@ class PyAstropy(PythonPackage):
     depends_on("py-numpy@1.9:", when="@2.0:", type=("build", "run"))
     depends_on("py-numpy@1.7:", when="@1.2:", type=("build", "run"))
     depends_on("py-numpy", type=("build", "run"))
+    # https://github.com/astropy/astropy/issues/16200
+    depends_on("py-numpy@:1", when="@:6.0")
     depends_on("py-packaging@19.0:", when="@5.1:", type=("build", "run"))
     depends_on("py-pyyaml@3.13:", when="@5.1:", type=("build", "run"))
     depends_on("py-pyerfa@2.0:", when="@5.1:", type=("build", "run"))

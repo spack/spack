@@ -43,6 +43,7 @@ class PyShapely(PythonPackage):
     depends_on("py-setuptools@61:", when="@2:", type="build")
     depends_on("py-setuptools@:63", when="@:1", type="build")
     depends_on("py-numpy@1.14:2", when="@2.0.4:", type=("build", "link", "run"))
+    # https://github.com/shapely/shapely/issues/1972
     depends_on("py-numpy@1.14:1", when="@2.0.0:2.0.3", type=("build", "link", "run"))
     depends_on("py-numpy@:1", when="@1", type=("build", "link", "run"))
     depends_on("py-pytest", type="test")

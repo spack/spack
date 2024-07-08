@@ -49,6 +49,8 @@ class PyLightly(PythonPackage):
     depends_on("py-hydra-core@1:", type=("build", "run"))
     depends_on("py-lightly-utils@0.0", type=("build", "run"))
     depends_on("py-numpy@1.18.1:", type=("build", "run"))
+    # https://github.com/lightly-ai/lightly/issues/1558
+    depends_on("py-numpy@:1", type=("build", "run"))
     depends_on("py-python-dateutil@2.5.3:", type=("build", "run"))
     depends_on("py-requests@2.23:", type=("build", "run"))
     depends_on("py-six@1.10:", type=("build", "run"))

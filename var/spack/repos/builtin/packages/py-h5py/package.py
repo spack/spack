@@ -58,12 +58,13 @@ class PyH5py(PythonPackage):
     depends_on("py-setuptools", type="build")
 
     # Build and runtime dependencies
-    depends_on("py-numpy@1.17.3:", type=("build", "run"), when="@3.11:")
-    depends_on("py-numpy@1.17.3:1", type=("build", "run"), when="@3.9:3.10")
-    depends_on("py-numpy@1.19.3:1", type=("build", "run"), when="@3:3.5 ^python@3.9.0:")
-    depends_on("py-numpy@1.17.5:1", type=("build", "run"), when="@3:3.5 ^python@3.8.0:3.8")
-    depends_on("py-numpy@1.14.5:1", type=("build", "run"), when="@3:")
-    depends_on("py-numpy@1.7:1", type=("build", "run"), when="@:2")
+    depends_on("py-numpy@1.17.3:", type=("build", "run"), when="@3.9:")
+    depends_on("py-numpy@1.19.3:", type=("build", "run"), when="@3:3.5 ^python@3.9.0:")
+    depends_on("py-numpy@1.17.5:", type=("build", "run"), when="@3:3.5 ^python@3.8.0:3.8")
+    depends_on("py-numpy@1.14.5:", type=("build", "run"), when="@3:")
+    depends_on("py-numpy@1.7:", type=("build", "run"), when="@:2")
+    # https://github.com/h5py/h5py/issues/2353
+    depends_on("py-numpy@:1", when="@:3.10", type=("build", "run"))
 
     # Link dependencies (py-h5py v2 cannot build against HDF5 1.12 regardless
     # of API setting)

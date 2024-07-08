@@ -165,6 +165,8 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
         depends_on("py-setuptools")
         depends_on("py-astunparse", when="@1.13:")
         depends_on("py-numpy@1.16.6:")
+        # https://github.com/pytorch/pytorch/issues/107302
+        depends_on("py-numpy@:1", when="@:2.2")
         depends_on("py-pyyaml")
         depends_on("py-requests", when="@1.13:")
 

@@ -24,6 +24,9 @@ class PyLightgbm(PythonPackage):
     depends_on("py-pip@:23.0", when="+mpi", type="build")
     depends_on("py-wheel", type=("build", "run"))
     depends_on("py-numpy", type=("build", "run"))
+    # https://github.com/microsoft/LightGBM/issues/6454
+    # https://github.com/microsoft/LightGBM/pull/6439
+    depends_on("py-numpy@:1", when="@:4.3", type=("build", "run"))
     depends_on("py-scipy", type=("build", "run"))
     depends_on("py-scikit-learn@:0.21,0.22.1:", type=("build", "run"))
 

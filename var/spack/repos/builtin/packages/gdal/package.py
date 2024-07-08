@@ -409,6 +409,8 @@ class Gdal(CMakePackage, AutotoolsPackage, PythonExtension):
     depends_on("py-setuptools@:57", type="build", when="@:3.2+python")  # needs 2to3
     depends_on("py-setuptools", type="build", when="+python")
     depends_on("py-numpy@1.0.0:", type=("build", "run"), when="+python")
+    # https://github.com/OSGeo/gdal/issues/9751
+    depends_on("py-numpy@:1", when="@:3.8+python", type=("build", "run"))
     depends_on("swig", type="build", when="+python")
     depends_on("java@7:", type=("build", "link", "run"), when="@3.2:+java")
     depends_on("java@6:", type=("build", "link", "run"), when="@2.4:+java")

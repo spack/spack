@@ -105,6 +105,8 @@ class PyTorchvision(PythonPackage):
     # setup.py
     depends_on("py-setuptools", type="build")
     depends_on("py-numpy", type=("build", "run"))
+    # https://github.com/pytorch/vision/issues/8460
+    depends_on("py-numpy@:1", when="@:0.18", type=("build", "run"))
     depends_on("pil@5.3:", when="@0.10:", type=("build", "run"))
     depends_on("pil@4.1.1:", type=("build", "run"))
 

@@ -67,12 +67,13 @@ class PyScikitLearn(PythonPackage):
         depends_on("py-cython@0.28.5:2", when="@0.21:1.0.1")
 
     with default_args(type=("build", "link", "run")):
-        depends_on("py-numpy@1.19.5:", when="@1.4.2:")
-        depends_on("py-numpy@1.19.5:1", when="@1.4.0:1.4.1")
-        depends_on("py-numpy@1.17.3:1", when="@1.1:1.3")
-        depends_on("py-numpy@1.14.6:1", when="@1.0")
-        depends_on("py-numpy@1.13.3:1", when="@0.23:0.24")
-        depends_on("py-numpy@1.11.0:1", when="@0.21:0.22")
+        depends_on("py-numpy@1.19.5:", when="@1.4:")
+        depends_on("py-numpy@1.17.3:", when="@1.1:1.3")
+        depends_on("py-numpy@1.14.6:", when="@1.0")
+        depends_on("py-numpy@1.13.3:", when="@0.23:0.24")
+        depends_on("py-numpy@1.11.0:", when="@0.21:0.22")
+        # https://github.com/scikit-learn/scikit-learn/issues/27075
+        depends_on("py-numpy@:1", when="@:1.4.1")
 
     with default_args(type=("build", "run")):
         depends_on("py-scipy@1.6:", when="@1.4:")

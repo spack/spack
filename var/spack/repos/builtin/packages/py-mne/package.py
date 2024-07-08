@@ -41,6 +41,7 @@ class PyMne(PythonPackage):
     depends_on("py-numpy@1.18.1:", when="@1:", type=("build", "run"))  # *
     depends_on("py-numpy@1.15.4:", when="@0.23:", type=("build", "run"))
     depends_on("py-numpy@1.11.3:", type=("build", "run"))
+    depends_on("py-numpy@:1", when="@:1.6", type=("build", "run"))
     depends_on("py-scipy@1.7.1:", when="@1.6.1:", type=("build", "run"))
     depends_on("py-scipy@1.6.3:", when="@1.4:", type=("build", "run"))
     depends_on("py-scipy@1.4.1:", when="@1:", type=("build", "run"))  # *

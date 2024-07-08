@@ -29,3 +29,5 @@ class PyPywavelets(PythonPackage):
     depends_on("py-numpy@1.17.3:", when="@1.2:", type=("build", "run"))
     depends_on("py-numpy@1.13.3:", when="@1.1.1:", type=("build", "run"))
     depends_on("py-numpy@1.9.1:", type=("build", "run"))
+    # https://github.com/PyWavelets/pywt/pull/731
+    depends_on("py-numpy@:1", when="@:1.5", type=("build", "run"))

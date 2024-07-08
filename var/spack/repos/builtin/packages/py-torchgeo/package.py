@@ -64,6 +64,8 @@ class PyTorchgeo(PythonPackage):
     depends_on("py-matplotlib@3.3:", type=("build", "run"))
     depends_on("py-numpy@1.19.3:", when="@0.5:", type=("build", "run"))
     depends_on("py-numpy@1.17.2:", type=("build", "run"))
+    # https://github.com/microsoft/torchgeo/pull/2151
+    depends_on("py-numpy@:1", when="@:0.5", type=("build", "run"))
     depends_on("py-pandas@1.1.3:", when="@0.5:", type=("build", "run"))
     depends_on("pil@8:", when="@0.5:", type=("build", "run"))
     depends_on("pil@6.2:", type=("build", "run"))

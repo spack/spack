@@ -50,6 +50,8 @@ class PyPythran(PythonPackage):
     depends_on("py-gast@0.3:", when="@0.9.4:0.9.5", type=("build", "run"))
     depends_on("py-gast", when="@:0.9.3", type=("build", "run"))
     depends_on("py-numpy", type=("build", "run"))
+    # https://github.com/serge-sans-paille/pythran/issues/2189
+    depends_on("py-numpy@:1", when="@:0.15", type=("build", "run"))
     depends_on("py-beniget@0.4", when="@0.9.12:", type=("build", "run"))
     depends_on("py-beniget@0.3", when="@0.9.7:0.9.11", type=("build", "run"))
     depends_on("py-beniget@0.2.1:0.2", when="@0.9.6", type=("build", "run"))
