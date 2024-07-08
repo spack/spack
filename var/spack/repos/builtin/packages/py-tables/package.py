@@ -45,6 +45,8 @@ class PyTables(PythonPackage):
     # requirements.txt
     depends_on("py-numpy@1.19:", when="@3.8:", type=("build", "run"))
     depends_on("py-numpy@1.9.3:", type=("build", "run"))
+    # https://github.com/PyTables/PyTables/issues/1083
+    depends_on("py-numpy@:1", type=("build", "run"))
     depends_on("py-numexpr@2.6.2:", type=("build", "run"))
     depends_on("py-packaging", when="@3.7:", type=("build", "run"))
     depends_on("py-py-cpuinfo", when="@3.8:", type=("build", "run"))

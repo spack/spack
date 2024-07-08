@@ -26,6 +26,8 @@ class Treelite(CMakePackage):
     depends_on("py-wheel", when="+python", type="build")
     depends_on("py-setuptools", when="+python", type="build")
     depends_on("py-numpy", when="+python", type=("build", "run"))
+    # https://github.com/dmlc/treelite/issues/560
+    depends_on("py-numpy@:1", when="@:4.2.0+python", type=("build", "run"))
     depends_on("py-scipy", when="+python", type=("build", "run"))
 
     build_directory = "build"

@@ -394,6 +394,11 @@ class Legion(CMakePackage, ROCmPackage):
             # default is off.
             options.append("-DLegion_USE_Kokkos=ON")
             os.environ["KOKKOS_CXX_COMPILER"] = spec["kokkos"].kokkos_cxx
+            if spec.satisfies("+cuda+cuda_unsupported_compiler ^kokkos%clang +cuda"):
+                # Keep CMake CUDA compiler detection happy
+                options.append(
+                    self.define("CMAKE_CUDA_FLAGS", "--allow-unsupported-compiler -std=c++17")
+                )
 
         if spec.satisfies("+libdl"):
             # default is on.

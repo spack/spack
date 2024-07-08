@@ -124,6 +124,10 @@ class Cmake(Package):
         when="@3.15.5",
     )
 
+    # Statically linked binaries error on install when CMAKE_INSTALL_RPATH is set
+    # https://gitlab.kitware.com/cmake/cmake/-/merge_requests/9623
+    patch("mr-9623.patch", when="@3.22.0:3.30")
+
     depends_on("ninja", when="platform=windows")
     depends_on("gmake", when="platform=linux")
     depends_on("gmake", when="platform=darwin")
