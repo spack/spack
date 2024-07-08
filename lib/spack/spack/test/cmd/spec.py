@@ -97,7 +97,7 @@ def test_spec_json():
     assert "mpich" in mpileaks
 
 
-def test_spec_format(database, config):
+def test_spec_format(mutable_database):
     output = spec("--format", "{name}-{^mpi.name}", "mpileaks^mpich")
     assert output.rstrip("\n") == "mpileaks-mpich"
 
