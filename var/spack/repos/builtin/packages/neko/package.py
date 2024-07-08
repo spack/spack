@@ -33,7 +33,7 @@ class Neko(AutotoolsPackage, CudaPackage, ROCmPackage):
     variant("parmetis", default=False, description="Build with support for parmetis")
     variant("xsmm", default=False, description="Build with support for libxsmm")
     variant(
-        "gslib", default=False, when="@0.7.0:develop", description="Build with support for gslib"
+        "gslib", default=False, when="@0.7.0:", description="Build with support for gslib"
     )
     variant("hdf5", default=False, when="@develop", description="Build with support for HDF5")
 
