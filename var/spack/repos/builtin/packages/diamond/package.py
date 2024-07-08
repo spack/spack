@@ -16,6 +16,8 @@ class Diamond(CMakePackage):
 
     license("GPL-3.0-only")
 
+    version("2.1.9", sha256="4cde9df78c63e8aef9df1e3265cd06a93ce1b047d6dba513a1437719b70e9d88")
+    version("2.1.8", sha256="b6088259f2bc92d1f9dc4add44590cff68321bcbf91eefbc295a3525118b9415")
     version("2.1.7", sha256="2dcaba0e79ecb02c3d2a6816d317e714767118a9a056721643abff4c586ca95b")
     version("2.1.6", sha256="852d27c7535d53f1ce59db0625ff23ac3bf17e57f7a3b1c46c08718f77e19c54")
     version("2.0.15", sha256="cc8e1f3fd357d286cf6585b21321bd25af69aae16ae1a8f605ea603c1886ffa4")
