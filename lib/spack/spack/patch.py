@@ -363,9 +363,9 @@ def from_dict(
         ValueError: If *owner* or *url*/*relative_path* are missing in the dictionary.
     """
     repository = repository or spack.repo.PATH
-    if "owner" not in dictionary:
-        raise ValueError(f"Invalid patch dictionary: {dictionary}")
     owner = dictionary.get("owner")
+    if owner is None:
+        raise ValueError(f"Invalid patch dictionary: {dictionary}")
     assert isinstance(owner, str)
     pkg_cls = repository.get_pkg_class(owner)
 
