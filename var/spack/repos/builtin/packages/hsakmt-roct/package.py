@@ -66,7 +66,7 @@ class HsakmtRoct(CMakePackage):
     def cmake_args(self):
         args = [
             self.define("BUILD_SHARED_LIBS", False),
-            self.define("CMAKE_INSTALL_LIBDIR", "lib")
+            self.define("CMAKE_INSTALL_LIBDIR", "lib"),
         ]
         if self.spec.satisfies("@5.7.0:"):
             args.append(self.define_from_variant("ADDRESS_SANITIZER", "asan"))
