@@ -19,6 +19,7 @@ class PyScikitLearn(PythonPackage):
 
     version("main", branch="main")
     version("master", branch="main", deprecated=True)
+    version("1.5.1", sha256="0ea5d40c0e3951df445721927448755d3fe1d80833b0b7308ebff5d2a45e6414")
     version("1.5.0", sha256="789e3db01c750ed6d496fa2db7d50637857b451e57bcae863bff707c1247bef7")
     version("1.4.2", sha256="daa1c471d95bad080c6e44b4946c9390a4842adc3082572c20e4f8884e39e959")
     version("1.4.0", sha256="d4373c984eba20e393216edd51a3e3eede56cbe93d4247516d205643c3b93121")
@@ -58,6 +59,7 @@ class PyScikitLearn(PythonPackage):
         depends_on("python@:3.8", when="@0.22:0.23")
 
     with default_args(type="build"):
+        depends_on("py-meson-python@0.16:", when="@1.5.1:")
         depends_on("py-meson-python@0.15:", when="@1.5:")
         depends_on("py-cython@3.0.10:", when="@1.5:")
         depends_on("py-cython@3.0.8:", when="@1.4.2:")
