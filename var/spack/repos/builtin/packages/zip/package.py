@@ -36,7 +36,7 @@ class Zip(MakefilePackage):
 
     # Configure and header changes needed for comatibility with strict gcc14+
     # these are not from the debian branch
-    patch("12-gcc14-no-implicit-declarations-fix.patch")
+    patch("12-gcc14-no-implicit-declarations-fix.patch", when="%gcc@14:")
 
     executables = ["^zip$"]
 
