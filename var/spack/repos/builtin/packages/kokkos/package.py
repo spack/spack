@@ -4,6 +4,8 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os.path
 
+import llnl.util.lang as lang
+
 from spack.package import *
 
 
@@ -372,20 +374,6 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
 
     test_script_relative_path = join_path("scripts", "spack_test")
 
-    # TODO: Replace this method and its 'get' use for cmake path with
-    #   join_path(self.spec['cmake'].prefix.bin, 'cmake') once stand-alone
-    #   tests can access build dependencies through self.spec['cmake'].
-    def cmake_bin(self, set=True):
-        """(Hack) Set/get cmake dependency path."""
-        filepath = join_path(self.install_test_root, "cmake_bin_path.txt")
-        if set:
-            with open(filepath, "w") as out_file:
-                cmake_bin = join_path(self.spec["cmake"].prefix.bin, "cmake")
-                out_file.write("{0}\n".format(cmake_bin))
-        elif os.path.isfile(filepath):
-            with open(filepath, "r") as in_file:
-                return in_file.read().strip()
-
     @run_after("install")
     def setup_build_tests(self):
         # Skip if unsupported version
@@ -404,11 +392,9 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
         ]
         cmake(*cmake_args)
         self.cache_extra_test_sources(cmake_out_path)
-        self.cmake_bin(set=True)
 
-    def test_build(self):
-        """Build test."""
-        # Skip if unsupported version
+    def test_run(self):
+        """Test if kokkos builds and runs"""
         cmake_path = join_path(
             self.test_suite.current_test_cache_dir, self.test_script_relative_path, "out"
         )
@@ -416,25 +402,16 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
         if not os.path.exists(cmake_path):
             raise SkipTest(f"{cmake_path} is missing")
 
-        cmake_bin = self.cmake_bin(set=False)
-        if not cmake_bin:
-            assert False, "cmake_bin_path.txt not found"
-
-        exe = which(cmake_bin)
-        exe(cmake_path, "-DEXECUTABLE_OUTPUT_PATH=" + cmake_path)
+        cmake = self.spec["cmake"].command
+        cmake(cmake_path, "-DEXECUTABLE_OUTPUT_PATH=" + cmake_path)
 
         make = which("make")
         make()
 
-    def test_run(self):
-        """Test if kokkos runs"""
-        # Skip if unsupported version
-        cmake_path = join_path(
-            self.test_suite.current_test_cache_dir, self.test_script_relative_path, "out"
-        )
-
-        if not os.path.exists(cmake_path):
-            raise SkipTest(f"{cmake_path} is missing")
-
-        exe = which("make")
-        exe(cmake_path, "test")
+        with working_dir(cmake_path):
+            for program in ["dual_view", "hello_world", "simple_reduce"]:
+                with test_part(self, "test_run_" + program, purpose=f"Run {program}"):
+                    exe = which(program)
+                    if exe is None:
+                        raise SkipTest(f"Test {program} not found")
+                    exe()
