@@ -65,7 +65,12 @@ class Xrootd(CMakePackage):
     version("4.3.0", sha256="d34865772d975b5d58ad80bb05312bf49aaf124d5431e54dc8618c05a0870e3c")
 
     variant("davix", default=True, description="Build with Davix")
-    variant("ec", default=True, description="Build with erasure coding component support", when="@5.7.0:")
+    variant(
+        "ec",
+        default=True,
+        description="Build with erasure coding component support",
+        when="@5.7.0:",
+    )
     variant("http", default=True, description="Build with HTTP support")
     variant("krb5", default=False, description="Build with KRB5 support")
     variant("python", default=False, description="Build pyxroot Python extension")
