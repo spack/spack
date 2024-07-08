@@ -1,4 +1,4 @@
-diff --git a/deps/cares/config/linux/ares_config.h~ b/deps/cares/config/linux/ares_config.h
+diff --git a/deps/cares/config/linux/ares_config.h b/deps/cares/config/linux/ares_config.h
 index 3cb135a..88934ad 100644
 --- a/deps/cares/config/linux/ares_config.h
 +++ b/deps/cares/config/linux/ares_config.h
