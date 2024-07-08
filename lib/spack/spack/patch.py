@@ -9,7 +9,7 @@ import os
 import os.path
 import pathlib
 import sys
-from typing import Any, Dict, Optional, Tuple, Type
+from typing import Any, Dict, Optional, Tuple, Type, Union
 
 import llnl.util.filesystem
 from llnl.url import allowed_archive
@@ -65,6 +65,9 @@ def apply_patch(
         patch(*args)
 
 
+PatchPackageType = Union["spack.package_base.PackageBase", Type["spack.package_base.PackageBase"]]
+
+
 class Patch:
     """Base class for patches.
 
@@ -77,7 +80,7 @@ class Patch:
 
     def __init__(
         self,
-        pkg: "spack.package_base.PackageBase",
+        pkg: PatchPackageType,
         path_or_url: str,
         level: int,
         working_dir: str,
@@ -159,7 +162,7 @@ class FilePatch(Patch):
 
     def __init__(
         self,
-        pkg: "spack.package_base.PackageBase",
+        pkg: PatchPackageType,
         relative_path: str,
         level: int,
         working_dir: str,
@@ -183,7 +186,7 @@ class FilePatch(Patch):
         abs_path: Optional[str] = None
         # At different times we call FilePatch on instances and classes
         pkg_cls = pkg if inspect.isclass(pkg) else pkg.__class__
-        for cls in inspect.getmro(pkg_cls):
+        for cls in inspect.getmro(pkg_cls):  # type: ignore
             if not hasattr(cls, "module"):
                 # We've gone too far up the MRO
                 break
@@ -242,7 +245,7 @@ class UrlPatch(Patch):
 
     def __init__(
         self,
-        pkg: "spack.package_base.PackageBase",
+        pkg: PatchPackageType,
         url: str,
         level: int = 1,
         *,
@@ -361,8 +364,9 @@ def from_dict(
     """
     repository = repository or spack.repo.PATH
     owner = dictionary.get("owner")
-    if "owner" not in dictionary:
-        raise ValueError("Invalid patch dictionary: %s" % dictionary)
+    if owner is None:
+        raise ValueError(f"Invalid patch dictionary: {dictionary}")
+    assert isinstance(owner, str)
     pkg_cls = repository.get_pkg_class(owner)
 
     if "url" in dictionary:
