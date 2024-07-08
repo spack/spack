@@ -337,7 +337,7 @@ def test_find_command_basic_usage(database):
 @pytest.mark.not_on_windows("envirnment is not yet supported on windows")
 @pytest.mark.regression("9875")
 def test_find_prefix_in_env(
-    mutable_mock_env_path, install_mockery, mock_fetch, mock_packages, mock_archive, config
+    mutable_mock_env_path, install_mockery, mock_fetch, mock_packages, mock_archive
 ):
     """Test `find` formats requiring concrete specs work in environments."""
     env("create", "test")
