@@ -14,7 +14,7 @@ import spack.spec
 import spack.store
 from spack.main import SpackCommand, SpackCommandError
 
-pytestmark = pytest.mark.usefixtures("config", "mutable_mock_repo")
+pytestmark = pytest.mark.usefixtures("mutable_config", "mutable_mock_repo")
 
 spec = SpackCommand("spec")
 
@@ -31,7 +31,7 @@ def test_spec():
 
 
 @pytest.mark.only_clingo("Known failure of the original concretizer")
-def test_spec_concretizer_args(mutable_config, mutable_database, do_not_check_runtimes_on_reuse):
+def test_spec_concretizer_args(mutable_database, do_not_check_runtimes_on_reuse):
     """End-to-end test of CLI concretizer prefs.
 
     It's here to make sure that everything works from CLI
