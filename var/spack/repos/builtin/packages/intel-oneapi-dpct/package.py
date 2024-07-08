@@ -22,7 +22,7 @@ class IntelOneapiDpct(IntelOneApiPackage):
     version(
         "2024.2.0",
         url="https://registrationcenter-download.intel.com/akdlm/IRC_NAS/6b83dabd-75cf-4371-b4cd-91160175d5ff/l_dpcpp-ct_p_2024.2.0.424_offline.sh",
-        sha256="84e4dfba142c3c629424012ad5e8e5f78d2a05983bf03cdc7e3ec6b530142d0e",
+        sha256="43a6c5fa646291ea4f8ee94e2e711ee42bbd6aff7901bda1694e1ea99e6852e2",
         expand=False,
     )
     version(
