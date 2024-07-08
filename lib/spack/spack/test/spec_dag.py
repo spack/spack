@@ -1105,3 +1105,15 @@ def test_indexing_prefers_direct_or_transitive_link_deps():
 
     # Ensure that the full DAG is still searched
     assert root["a2"]
+
+
+def test_getitem_sticks_to_subdag():
+    """Test that indexing on Spec by virtual does not traverse outside the dag, which happens in
+    the unlikely case someone would rewrite __getitem__ in terms of edges_from_dependents instead
+    of edges_to_dependencies."""
+    x, y, z = Spec("x"), Spec("y"), Spec("z")
+    x.add_dependency_edge(z, depflag=dt.LINK, virtuals=("virtual",))
+    y.add_dependency_edge(z, depflag=dt.LINK, virtuals=())
+    assert x["virtual"].name == "z"
+    with pytest.raises(KeyError):
+        y["virtual"]
