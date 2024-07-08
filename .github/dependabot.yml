@@ -12,6 +12,6 @@ updates:
       interval: "daily"
   # Requirements to run style checks
   - package-ecosystem: "pip"
-    directory: "/.github/workflows/style"
+    directory: "/.github/workflows/requirements/*"
     schedule:
       interval: "daily"
