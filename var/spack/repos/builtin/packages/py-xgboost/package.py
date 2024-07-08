@@ -42,6 +42,8 @@ class PyXgboost(PythonPackage):
     depends_on("py-pip@:23.0", type="build")
 
     depends_on("py-numpy", type=("build", "run"))
+    # https://github.com/dmlc/xgboost/issues/10221
+    depends_on("py-numpy@:1", when="@:2.0", type=("build", "run"))
     depends_on("py-scipy", type=("build", "run"))
 
     depends_on("py-pandas", when="+pandas", type=("build", "run"))
