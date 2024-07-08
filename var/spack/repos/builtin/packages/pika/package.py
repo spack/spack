@@ -53,6 +53,9 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
 
     generator("ninja")
 
+    variant("shared", default=True, description="Build shared libraries")
+    conflicts("~shared", when="@:0.25")
+
     cxxstds = ("17", "20", "23")
     variant(
         "cxxstd",
@@ -191,6 +194,7 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
         spec, args = self.spec, []
 
         args += [
+            self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
             self.define("PIKA_WITH_CXX_STANDARD", spec.variants["cxxstd"].value),
             self.define_from_variant("PIKA_WITH_EXAMPLES", "examples"),
             self.define_from_variant("PIKA_WITH_MALLOC", "malloc"),
