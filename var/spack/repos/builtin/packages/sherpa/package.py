@@ -6,7 +6,7 @@
 from spack.package import *
 
 
-class Sherpa(AutotoolsPackage):
+class Sherpa(AutotoolsPackage, CMakePackage):
     """Sherpa is a Monte Carlo event generator for the Simulation of
     High-Energy Reactions of PArticles in lepton-lepton, lepton-photon,
     photon-photon, lepton-hadron and hadron-hadron collisions."""
@@ -22,11 +22,15 @@ class Sherpa(AutotoolsPackage):
 
     license("GPL-3.0-only")
 
+    version("3.0.0", sha256="e460d8798b323c4ef663293a2c918b1463e9641b35703a54d70d25c852c67d36")
     version("2.2.15", sha256="0300fd719bf6a089b7dc5441f720e669ac1cb030045d87034a4733bee98e7bbc")
     version("2.2.14", sha256="f17d88d7f3bc4234a9db3872e8a3c1f3ef99e1e2dc881ada5ddf848715dc82da")
     version("2.2.13", sha256="ed1fd1372923c191ca44897802d950702b810382260e7464d36ac3234c5c8a64")
     version("2.2.12", sha256="4ba78098e45aaac0bc303d1b5abdc15809f30b407abf9457d99b55e63384c83d")
     version("2.2.11", sha256="5e12761988b41429f1d104f84fdf352775d233cde7a165eb64e14dcc20c3e1bd")
+
+    build_system(
+        conditional("cmake", when="@3:"), conditional("autotools", when="@:2"), default="cmake"
     )
 
     depends_on("c", type="build")  # generated
@@ -59,7 +63,7 @@ class Sherpa(AutotoolsPackage):
     variant("pythia", default=True, description="Enable fragmentation/decay interface to Pythia")
     variant("blackhat", default=False, description="Enable BLACKHAT support")
     variant("ufo", default=False, description="Enable UFO support")
-    variant("hztool", default=False, description="Enable HZTOOL support")
+    variant("hztool", default=False, when="@:2", description="Enable HZTOOL support")
     variant(
         "libs",
         default="shared,static",
@@ -103,6 +107,7 @@ class Sherpa(AutotoolsPackage):
     depends_on("blackhat", when="+blackhat")
     depends_on("hztool", when="+hztool")
     # depends_on('cernlib',   when='+cernlib')
+    depends_on("libzip", when="@3:")
 
     filter_compiler_wrappers("share/SHERPA-MC/makelibs")
 
@@ -123,6 +128,26 @@ class Sherpa(AutotoolsPackage):
                 "AddOns/Recola/Recola_Interface.H",
                 string=True,
             )
+
+    def cmake_args(self):
+        args = [
+            self.define_from_variant("SHERPA_ENABLE_ANALYSIS", "analysis"),
+            self.define_from_variant("SHERPA_ENABLE_BLACKHAT", "blackhat"),
+            self.define_from_variant("SHERPA_ENABLE_GZIP", "gzip"),
+            self.define_from_variant("SHERPA_ENABLE_HEPMC3", "hepmc3"),
+            self.define_from_variant("SHERPA_ENABLE_HEPMC3_ROOT", "hepmc3root"),
+            self.define_from_variant("SHERPA_ENABLE_LHAPDF", "lhapdf"),
+            self.define_from_variant("SHERPA_ENABLE_LHOLE", "lhole"),
+            self.define_from_variant("SHERPA_ENABLE_MPI", "mpi"),
+            self.define_from_variant("SHERPA_ENABLE_OPENLOOPS", "openloops"),
+            self.define_from_variant("SHERPA_ENABLE_PYTHIA8", "pythia"),
+            self.define_from_variant("SHERPA_ENABLE_PYTHON", "python"),
+            self.define_from_variant("SHERPA_ENABLE_RECOLA", "recola"),
+            self.define_from_variant("SHERPA_ENABLE_RIVET", "rivet"),
+            self.define_from_variant("SHERPA_ENABLE_ROOT", "root"),
+            self.define_from_variant("SHERPA_ENABLE_UFO", "ufo"),
+        ]
+        return args
 
     def configure_args(self):
         args = []
@@ -183,6 +208,7 @@ class Sherpa(AutotoolsPackage):
 
     # This may not be needed when this package is changed to be a CMake package
     # since it's specific to makelibs
+    @when("@:2")
     def install(self, spec, prefix):
         # Make sure the path to the provided libtool is used instead of the system one
         filter_file(
