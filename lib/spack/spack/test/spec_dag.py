@@ -1117,3 +1117,11 @@ def test_getitem_sticks_to_subdag():
     assert x["virtual"].name == "z"
     with pytest.raises(KeyError):
         y["virtual"]
+
+
+def test_getitem_finds_transitive_virtual():
+    x, y, z = Spec("x"), Spec("y"), Spec("z")
+    x.add_dependency_edge(z, depflag=dt.LINK, virtuals=())
+    x.add_dependency_edge(y, depflag=dt.LINK, virtuals=())
+    y.add_dependency_edge(z, depflag=dt.LINK, virtuals=("virtual",))
+    assert x["virtual"].name == "z"

@@ -4259,9 +4259,9 @@ class Spec:
             query_parameters = re.split(r"\s*,\s*", csv)
 
         order = lambda: itertools.chain(
-            self.traverse_edges(deptype=dt.LINK, order="breadth"),
+            self.traverse_edges(deptype=dt.LINK, order="breadth", cover="edges"),
             self.edges_to_dependencies(depflag=dt.BUILD | dt.RUN | dt.TEST),
-            self.traverse_edges(deptype=dt.ALL, order="breadth"),
+            self.traverse_edges(deptype=dt.ALL, order="breadth", cover="edges"),
         )
 
         # Consider runtime dependencies and direct build/test deps before transitive dependencies,
