@@ -372,7 +372,7 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
             ),
             default=True,
         )
-        depends_on(dep, when="+{0}".format(variant_name))
+        depends_on(dep, when="+{0}".format(variant_name), type=("build", "link", "run", "test"))
 
     # TODO: for CHPL_X_CC and CHPL_X_CXX, can we capture an arbitrary path, possibly
     # with arguments?
@@ -485,8 +485,6 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
         when="llvm=spack +cuda",
     )
 
-    depends_on("cuda@11:", when="+cuda", type=("build", "link", "run", "test"))
-
     # This is because certain systems have binutils installed as a system package
     # but do not include the headers. Spack incorrectly supplies those external
     # packages as proper dependencies for LLVM, but then LLVM will fail to build
@@ -495,11 +493,17 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
 
     depends_on("m4")
 
-    depends_on("gmp", when="gmp=spack", type=("build", "link", "run", "test"))
-    depends_on("hwloc", when="hwloc=spack", type=("build", "link", "run", "test"))
-    depends_on("libfabric", when="libfabric=spack", type=("build", "link", "run", "test"))
-    depends_on("libunwind", when="unwind=spack", type=("build", "link", "run", "test"))
-    depends_on("jemalloc", when="host_jemalloc=spack", type=("build", "link", "run", "test"))
+    # Runtime dependencies:
+    # Note here "run" is run of the Chapel compiler built by this package,
+    # but many of these are ALSO run-time dependencies of the executable
+    # application built by that Chapel compiler from user-provided sources.
+    with default_args(type=("build", "link", "run", "test")):
+        depends_on("cuda@11:", when="+cuda")
+        depends_on("gmp", when="gmp=spack")
+        depends_on("hwloc", when="hwloc=spack")
+        depends_on("libfabric", when="libfabric=spack")
+        depends_on("libunwind", when="unwind=spack")
+        depends_on("jemalloc", when="host_jemalloc=spack")
 
     depends_on("gasnet conduits=none", when="gasnet=spack")
     depends_on("gasnet@2024.5.0: conduits=none", when="@2.1.0: gasnet=spack")
