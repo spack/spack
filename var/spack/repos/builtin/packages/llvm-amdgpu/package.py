@@ -30,15 +30,11 @@ class LlvmAmdgpu(CMakePackage, CompilerPackage):
     version("6.0.0", sha256="c673708d413d60ca8606ee75c77e9871b6953c59029c987b92f2f6e85f683626")
     version("5.7.1", sha256="6b54c422e45ad19c9bf5ab090ec21753e7f7d854ca78132c30eb146657b168eb")
     version("5.7.0", sha256="4abdf00b297a77c5886cedb37e63acda2ba11cb9f4c0a64e133b05800aadfcf0")
-    version("5.6.1", sha256="045e43c0c4a3f4f2f1db9fb603a4f1ea3d56e128147e19ba17909eb57d7f08e5")
-    version("5.6.0", sha256="e922bd492b54d99e56ed88c81e2009ed6472059a180b10cc56ce1f9bd2d7b6ed")
-    version("5.5.1", sha256="7d7181f20f89cb0715191aa32914186c67a34258c13457055570d47e15296553")
-    version("5.5.0", sha256="5dc6c99f612b69ff73145bee17524e3712990100e16445b71634106acf7927cf")
     with default_args(deprecated=True):
-        version("5.4.3", sha256="a844d3cc01613f6284a75d44db67c495ac1e9b600eacbb1eb13d2649f5d5404d")
-        version("5.4.0", sha256="ff54f45a17723892cd775c1eaff9e5860527fcfd33d98759223c70e3362335bf")
-        version("5.3.3", sha256="5296d5e474811c7d1e456cb6d5011db248b79b8d0512155e8a6c2aa5b5f12d38")
-        version("5.3.0", sha256="4e3fcddb5b8ea8dcaa4417e0e31a9c2bbdc9e7d4ac3401635a636df32905c93e")
+        version("5.6.1", sha256="045e43c0c4a3f4f2f1db9fb603a4f1ea3d56e128147e19ba17909eb57d7f08e5")
+        version("5.6.0", sha256="e922bd492b54d99e56ed88c81e2009ed6472059a180b10cc56ce1f9bd2d7b6ed")
+        version("5.5.1", sha256="7d7181f20f89cb0715191aa32914186c67a34258c13457055570d47e15296553")
+        version("5.5.0", sha256="5dc6c99f612b69ff73145bee17524e3712990100e16445b71634106acf7927cf")
 
     variant(
         "rocm-device-libs",
@@ -60,7 +56,6 @@ class LlvmAmdgpu(CMakePackage, CompilerPackage):
         description="Link LLVM tools against the LLVM shared library",
     )
 
-    provides("libllvm@15", when="@5.3:5.4")
     provides("libllvm@16", when="@5.5:5.6")
     provides("libllvm@17", when="@5.7:")
 
@@ -111,10 +106,6 @@ class LlvmAmdgpu(CMakePackage, CompilerPackage):
         ("5.6.0", "efb5dcdca9b3a9fbe408d494fb4a23e0b78417eb5fa8eebd4a5d226088f28921"),
         ("5.5.1", "3b5f6dd85f0e3371f6078da7b59bf77d5b210e30f1cc66ef1e2de6bbcb775833"),
         ("5.5.0", "5ab95aeb9c8bed0514f96f7847e21e165ed901ed826cdc9382c14d199cbadbd3"),
-        ("5.4.3", "f4f7281f2cea6d268fcc3662b37410957d4f0bc23e0df9f60b12eb0fcdf9e26e"),
-        ("5.4.0", "d68813ded47179c39914c8d1b76af3dad8c714b10229d1e2246af67609473951"),
-        ("5.3.3", "963c9a0561111788b55a8c3b492e2a5737047914752376226c97a28122a4d768"),
-        ("5.3.0", "f7e1665a1650d3d0481bec68252e8a5e68adc2c867c63c570f6190a1d2fe735c"),
     ]:
         resource(
             name="rocm-device-libs",
@@ -225,9 +216,8 @@ class LlvmAmdgpu(CMakePackage, CompilerPackage):
         # Get the GCC prefix for LLVM.
         if self.compiler.name == "gcc":
             args.append(self.define("GCC_INSTALL_PREFIX", self.compiler.prefix))
-        if self.spec.satisfies("@5.4.3:"):
-            args.append("-DCMAKE_INSTALL_LIBDIR=lib")
         if self.spec.satisfies("@5.5.0:"):
+            args.append("-DCMAKE_INSTALL_LIBDIR=lib")
             args.append("-DCLANG_DEFAULT_RTLIB=compiler-rt")
             args.append("-DCLANG_DEFAULT_UNWINDLIB=libgcc")
         if self.spec.satisfies("@5.6.0:6.0"):

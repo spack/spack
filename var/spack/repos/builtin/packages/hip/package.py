@@ -34,15 +34,11 @@ class Hip(CMakePackage):
     version("6.0.0", sha256="0d575788e0b731124a8489a36652014a165b9ebab92d5456ec3c976e062f3a82")
     version("5.7.1", sha256="eaa0e14a9ae45c58ed37863797b683a7778b3cbbf92f5b6529ec65fd61d61f3e")
     version("5.7.0", sha256="cb61234eec7879fb7e20937659ad535b93a6e66fc8de0a543da8b7702474f2fc")
-    version("5.6.1", sha256="4b3c4dfcf8595da0e1b8c3e8067b1ccebeaac337762ff098db14375fa8dd4487")
-    version("5.6.0", sha256="a8237768c1ae70029d972376f8d279f4de18a1e6106fff6215d1e16847bc375e")
-    version("5.5.1", sha256="1f5f6bb72d8d64335ccc8242ef2e2ea8efeb380cce2997f475b1ee77528d9fb4")
-    version("5.5.0", sha256="5b0d0253e62f85cc21d043513f7c11c64e4a4ec416159668f0b160d732d09a3c")
     with default_args(deprecated=True):
-        version("5.4.3", sha256="23e51d3af517cd63019f8d199e46b84d5a18251d148e727f3985e8d99ccb0e58")
-        version("5.4.0", sha256="e290f835d69ef23e8b5833a7e616b0a989ff89ada4412d9742430819546efc6c")
-        version("5.3.3", sha256="51d4049dc37d261afb9e1270e60e112708ff06b470721ff21023e16e040e4403")
-        version("5.3.0", sha256="05225832fb5a4d24f49a773ac27e315239943a6f24291a50d184e2913f2cdbe0")
+        version("5.6.1", sha256="4b3c4dfcf8595da0e1b8c3e8067b1ccebeaac337762ff098db14375fa8dd4487")
+        version("5.6.0", sha256="a8237768c1ae70029d972376f8d279f4de18a1e6106fff6215d1e16847bc375e")
+        version("5.5.1", sha256="1f5f6bb72d8d64335ccc8242ef2e2ea8efeb380cce2997f475b1ee77528d9fb4")
+        version("5.5.0", sha256="5b0d0253e62f85cc21d043513f7c11c64e4a4ec416159668f0b160d732d09a3c")
 
     variant("rocm", default=True, description="Enable ROCm support")
     variant("cuda", default=False, description="Build with CUDA")
@@ -61,10 +57,6 @@ class Hip(CMakePackage):
         depends_on("gl@4.5:")
         depends_on("py-cppheaderparser", type="build", when="@5.3.3:")
         for ver in [
-            "5.3.0",
-            "5.3.3",
-            "5.4.0",
-            "5.4.3",
             "5.5.0",
             "5.5.1",
             "5.6.0",
@@ -83,38 +75,9 @@ class Hip(CMakePackage):
             depends_on(f"llvm-amdgpu@{ver} +rocm-device-libs", when=f"@{ver}")
             depends_on(f"rocminfo@{ver}", when=f"@{ver}")
             depends_on(f"roctracer-dev-api@{ver}", when=f"@{ver}")
-
-        for ver in [
-            "5.4.0",
-            "5.4.3",
-            "5.5.0",
-            "5.5.1",
-            "5.6.0",
-            "5.6.1",
-            "5.7.0",
-            "5.7.1",
-            "6.0.0",
-            "6.0.2",
-            "6.1.0",
-            "6.1.1",
-            "6.1.2",
-        ]:
+            depends_on(f"rocm-core@{ver}", when=f"@{ver}")
             depends_on(f"hipify-clang@{ver}", when=f"@{ver}")
 
-        for ver in [
-            "5.5.0",
-            "5.5.1",
-            "5.6.0",
-            "5.6.1",
-            "5.7.0",
-            "5.7.1",
-            "6.0.0",
-            "6.0.2",
-            "6.1.0",
-            "6.1.1",
-            "6.1.2",
-        ]:
-            depends_on(f"rocm-core@{ver}", when=f"@{ver}")
         # hipcc likes to add `-lnuma` by default :(
         # ref https://github.com/ROCm/HIP/pull/2202
         depends_on("numactl", when="@3.7.0:")
@@ -130,10 +93,6 @@ class Hip(CMakePackage):
     for d_version, d_shasum in [
         ("5.5.1", "9c8cb7611b3a496a0e9db92269143ee33b608eb69a8384957ace04e135ac90e9"),
         ("5.5.0", "bf87ed3919987c1a3a3f293418d26b65b3f02b97464e48f0cfcdd8f35763a0b7"),
-        ("5.4.3", "475edce0f29c4ccd82e5ee21d4cce4836f2b1e3b13cbc891475e423d38a0ebb9"),
-        ("5.4.0", "c4b79738eb6e669160382b6c47d738ac59bd493fc681ca400ff012a2e8212955"),
-        ("5.3.3", "36acce92af39b0fa06002e164f5a7f5a9c7daa19bf96645361325775a325499d"),
-        ("5.3.0", "81e9bd5209a7b400c986f9bf1d7079bcf7169bbcb06fc4fe843644559a4d612e"),
     ]:
         resource(
             name="hipamd",
@@ -148,10 +107,6 @@ class Hip(CMakePackage):
     for d_version, d_shasum in [
         ("5.5.1", "a8a62a7c6fc5398406d2203b8cb75621a24944688e545d917033d87de2724498"),
         ("5.5.0", "0df9fa0b8aa0c8e6711d34eec0fdf1ed356adcd9625bc8f1ce9b3e72090f3e4f"),
-        ("5.4.3", "b0f8339c844a2e62773bd85cd1e7c5ecddfe71d7c8e8d604e1a1d60900c30873"),
-        ("5.4.0", "a294639478e76c75dac0e094b418f9bd309309b07faf6af126cdfad9aab3c5c7"),
-        ("5.3.3", "cab394e6ef16c35bab8de29a66b96a7dc0e7d1297aaacba3718fa1d369233c9f"),
-        ("5.3.0", "d251e2efe95dc12f536ce119b2587bed64bbda013969fa72be58062788044a9e"),
     ]:
         resource(
             name="opencl",
@@ -165,10 +120,6 @@ class Hip(CMakePackage):
     for d_version, d_shasum in [
         ("5.5.1", "1375fc7723cfaa0ae22a78682186d4804188b0a54990bfd9c0b8eb421b85e37e"),
         ("5.5.0", "efbae9a1ef2ab3de5ca44091e9bb78522e76759c43524c1349114f9596cc61d1"),
-        ("5.4.3", "71d9668619ab57ec8a4564d11860438c5aad5bd161a3e58fbc49555fbd59182d"),
-        ("5.4.0", "46a1579310b3ab9dc8948d0fb5bed4c6b312f158ca76967af7ab69e328d43138"),
-        ("5.3.3", "f8133a5934f9c53b253d324876d74f08a19e2f5b073bc94a62fe64b0d2183a18"),
-        ("5.3.0", "2bf14116b5e2270928265f5d417b3d0f0f2e13cbc8ec5eb8c80d4d4a58ff7e94"),
     ]:
         resource(
             name="rocclr",
@@ -275,7 +226,6 @@ class Hip(CMakePackage):
     # Improve compilation without git repo and remove compiler rt linkage
     # for host and correction in CMake target path variable and
     # correcting the CMake path variable.
-    patch("0013-remove-compiler-rt-linkage-for-host.5.3.0.patch", when="@5.3.0:5.4")
     patch("0014-hip-test-file-reorg-5.4.0.patch", when="@5.4.0:5.5")
     patch("0016-hip-sample-fix-hipMalloc-call.patch", when="@5.4.3:5.5")
     patch("0014-remove-compiler-rt-linkage-for-host.5.5.0.patch", when="@5.5")
@@ -467,13 +417,6 @@ class Hip(CMakePackage):
         self.spec.hipcc = join_path(self.prefix.bin, "hipcc")
 
     def patch(self):
-        if self.spec.satisfies("@5.2:5.4 +rocm"):
-            filter_file(
-                '"${ROCM_PATH}/llvm"',
-                self.spec["llvm-amdgpu"].prefix,
-                "hipamd/hip-config.cmake.in",
-                string=True,
-            )
         if self.spec.satisfies("@5.6.0:5.6 +rocm"):
             filter_file(
                 '"${ROCM_PATH}/llvm"',
@@ -532,10 +475,10 @@ class Hip(CMakePackage):
             args.append(self.define("HIP_PLATFORM", "amd"))
             if self.spec.satisfies("@5.6.0:"):
                 args.append(self.define("HIP_LLVM_ROOT", self.spec["llvm-amdgpu"].prefix))
-
         if self.spec.satisfies("+cuda"):
             args.append(self.define("HIP_PLATFORM", "nvidia"))
-            args.append(self.define("HIPNV_DIR", self.stage.source_path + "/hipother/hipnv"))
+            if self.spec.satisfies("@6.0:"):
+                args.append(self.define("HIPNV_DIR", self.stage.source_path + "/hipother/hipnv"))
 
         args.append(self.define("HIP_COMMON_DIR", self.stage.source_path))
         args.append(self.define("HIP_CATCH_TEST", "OFF"))
