@@ -94,9 +94,9 @@ class ImprovedRdock(MakefilePackage):
         ]
         self.run_rdock_test(str(self.spec["mpi"].prefix.bin.mpirun), opts)
 
-    def test_pythonexe(self):
-        """Check pythonexe with output"""
-        exe = self.spec["python"].command.path
+    def test_sdrmsd(self):
+        """Check sdrmsd with output"""
+        exe = self.spec["python"].command
         opts = [self.spec.prefix.bin.sdrmsd, "1sj0_ligand.sd", "1sj0_docking_out_sorted.sd"]
         out = exe(*opts, output=str.split, error=str.split)
         expected = ["1\t0.55", "100\t7.91"]
