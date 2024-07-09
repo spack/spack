@@ -72,7 +72,7 @@ class RocmCmake(CMakePackage):
         with working_dir(test_dir, create=True):
             prefixes = ";".join([self.spec["rocm-cmake"].prefix])
             cc_options = ["-DCMAKE_PREFIX_PATH=" + prefixes, "."]
-            exe = which(self.spec["cmake"].prefix.bin.cmake)
-            exe(*cc_options)
+            cmake = which(self.spec["cmake"].prefix.bin.cmake)
+            cmake(*cc_options)
             make()
             make("clean")
