@@ -4650,7 +4650,7 @@ class Spec:
         spec_str = " ^".join(root_str + sorted_dependencies)
         return spec_str.strip()
 
-    def install_status(self):
+    def install_status(self) -> InstallStatus:
         """Helper for tree to print DB install status."""
         if not self.concrete:
             return InstallStatus.absent

@@ -47,6 +47,10 @@ def setup_parser(subparser):
     )
 
     subparser.add_argument(
+        "-I", "--install-status", action="store_true", help="show install status of packages"
+    )
+
+    subparser.add_argument(
         "-d", "--deps", action="store_true", help="output dependencies along with found specs"
     )
 
@@ -293,25 +297,24 @@ def display_env(env, args, decorator, results):
         )
         print()
 
-    if args.show_concretized:
-        tty.msg("Concretized roots")
-        cmd.display_specs(env.specs_by_hash.values(), args, decorator=decorator)
-        print()
-
-    # Display a header for the installed packages section IF there are installed
-    # packages. If there aren't any, we'll just end up printing "0 installed packages"
-    # later.
-    if results and not args.only_roots:
-        tty.msg("Installed packages")
-
 
 def find(parser, args):
-    q_args = query_arguments(args)
-    results = args.specs(**q_args)
-
     env = ev.active_environment()
+
     if not env and args.only_roots:
         tty.die("-r / --only-roots requires an active environment")
+    if not env and args.show_concretized:
+        tty.die("-c / --show-concretized requires an active environment")
+
+    if env:
+        if args.constraint:
+            init_specs = spack.cmd.parse_specs(args.constraint)
+            results = env.all_matching_specs(*init_specs)
+        else:
+            results = env.all_specs()
+    else:
+        q_args = query_arguments(args)
+        results = args.specs(**q_args)
 
     decorator = make_env_decorator(env) if env else lambda s, f: f
 
@@ -332,6 +335,11 @@ def find(parser, args):
     if args.loaded:
         results = spack.cmd.filter_loaded_specs(results)
 
+    if args.install_status or args.show_concretized:
+        status_fn = spack.spec.Spec.install_status
+    else:
+        status_fn = None
+
     # Display the result
     if args.json:
         cmd.display_specs_as_json(results, deps=args.deps)
@@ -340,12 +348,34 @@ def find(parser, args):
             if env:
                 display_env(env, args, decorator, results)
 
-        count_suffix = " (not shown)"
         if not args.only_roots:
-            cmd.display_specs(results, args, decorator=decorator, all_headers=True)
-            count_suffix = ""
+            display_results = results
+            if not args.show_concretized:
+                display_results = list(x for x in results if x.installed)
+            cmd.display_specs(
+                display_results, args, decorator=decorator, all_headers=True, status_fn=status_fn
+            )
 
         # print number of installed packages last (as the list may be long)
         if sys.stdout.isatty() and args.groups:
+            installed_suffix = ""
+            concretized_suffix = " to be installed"
+
+            if args.only_roots:
+                installed_suffix += " (not shown)"
+                concretized_suffix += " (not shown)"
+            else:
+                if env and not args.show_concretized:
+                    concretized_suffix += " (show with `spack find -c`)"
+
             pkg_type = "loaded" if args.loaded else "installed"
-            spack.cmd.print_how_many_pkgs(results, pkg_type, suffix=count_suffix)
+            spack.cmd.print_how_many_pkgs(
+                list(x for x in results if x.installed), pkg_type, suffix=installed_suffix
+            )
+
+            if env:
+                spack.cmd.print_how_many_pkgs(
+                    list(x for x in results if not x.installed),
+                    "concretized",
+                    suffix=concretized_suffix,
+                )
