@@ -4,8 +4,8 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+import os
 import sys
-from pathlib import Path
 
 from spack.operating_systems.mac_os import macos_version
 from spack.package import *
@@ -817,7 +817,6 @@ class Root(CMakePackage):
         # automatically prepending dependent package library paths to
         # ROOT_LIBRARY_PATH (for @6.26:) or LD_LIBRARY_PATH (for older
         # versions).
-        for suffix in ("lib", "lib64"):
-            lib_path = Path(dependent_spec.prefix) / suffix
-            if lib_path.exists():
-                env.prepend_path(self.root_library_path, str(lib_path))
+        for lib_path in (dependent_spec.prefix.lib, dependent_spec.prefix.lib64):
+            if os.path.exists(lib_path):
+                env.prepend_path(self.root_library_path, lib_path)
