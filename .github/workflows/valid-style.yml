@@ -26,7 +26,7 @@ jobs:
     - name: Install Python Packages
       run: |
         pip install --upgrade pip setuptools
-        pip install -r .github/workflows/style/requirements.txt
+        pip install -r .github/workflows/requirements/style/requirements.txt
     - name: vermin (Spack's Core)
       run: vermin --backport importlib --backport argparse --violations --backport typing -t=3.6- -vvv lib/spack/spack/ lib/spack/llnl/ bin/
     - name: vermin (Repositories)
@@ -45,12 +45,12 @@ jobs:
     - name: Install Python packages
       run: |
         pip install --upgrade pip setuptools
-        pip install -r .github/workflows/style/requirements.txt
+        pip install -r .github/workflows/requirements/style/requirements.txt
     - name: Setup git configuration
       run: |
         # Need this for the git tests to succeed.
         git --version
-        . .github/workflows/setup_git.sh
+        . .github/workflows/bin/setup_git.sh
     - name: Run style tests
       run: |
           share/spack/qa/run-style-tests
@@ -76,7 +76,7 @@ jobs:
           git --version
           git config --global --add safe.directory /__w/spack/spack
           git fetch --unshallow
-          . .github/workflows/setup_git.sh
+          . .github/workflows/bin/setup_git.sh
           useradd spack-test
           chown -R spack-test .
       - name: Bootstrap Spack development environment
