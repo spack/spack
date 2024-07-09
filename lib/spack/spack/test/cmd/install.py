@@ -923,12 +923,7 @@ def test_cdash_configure_warning(tmpdir, mock_fetch, install_mockery, capfd):
 
 @pytest.mark.not_on_windows("ArchSpec gives test platform debian rather than windows")
 def test_compiler_bootstrap(
-    install_mockery_mutable_config,
-    mock_packages,
-    mock_fetch,
-    mock_archive,
-    mutable_config,
-    monkeypatch,
+    install_mockery, mock_packages, mock_fetch, mock_archive, mutable_config, monkeypatch
 ):
     monkeypatch.setattr(spack.concretize.Concretizer, "check_for_compiler_existence", False)
     spack.config.set("config:install_missing_compilers", True)
@@ -940,13 +935,7 @@ def test_compiler_bootstrap(
 
 @pytest.mark.not_on_windows("Binary mirrors not supported on windows")
 def test_compiler_bootstrap_from_binary_mirror(
-    install_mockery_mutable_config,
-    mock_packages,
-    mock_fetch,
-    mock_archive,
-    mutable_config,
-    monkeypatch,
-    tmpdir,
+    install_mockery, mock_packages, mock_fetch, mock_archive, mutable_config, monkeypatch, tmpdir
 ):
     """
     Make sure installing compiler from buildcache registers compiler
@@ -982,12 +971,7 @@ def test_compiler_bootstrap_from_binary_mirror(
 @pytest.mark.not_on_windows("ArchSpec gives test platform debian rather than windows")
 @pytest.mark.regression("16221")
 def test_compiler_bootstrap_already_installed(
-    install_mockery_mutable_config,
-    mock_packages,
-    mock_fetch,
-    mock_archive,
-    mutable_config,
-    monkeypatch,
+    install_mockery, mock_packages, mock_fetch, mock_archive, mutable_config, monkeypatch
 ):
     monkeypatch.setattr(spack.concretize.Concretizer, "check_for_compiler_existence", False)
     spack.config.set("config:install_missing_compilers", True)
@@ -1087,13 +1071,7 @@ def test_installation_fail_tests(install_mockery, mock_fetch, name, method):
 
 @pytest.mark.not_on_windows("Buildcache not supported on windows")
 def test_install_use_buildcache(
-    capsys,
-    mock_packages,
-    mock_fetch,
-    mock_archive,
-    mock_binary_index,
-    tmpdir,
-    install_mockery_mutable_config,
+    capsys, mock_packages, mock_fetch, mock_archive, mock_binary_index, tmpdir, install_mockery
 ):
     """
     Make sure installing with use-buildcache behaves correctly.
@@ -1166,14 +1144,14 @@ def test_install_use_buildcache(
 @pytest.mark.not_on_windows("Windows logger I/O operation on closed file when install fails")
 @pytest.mark.regression("34006")
 @pytest.mark.disable_clean_stage_check
-def test_padded_install_runtests_root(install_mockery_mutable_config, mock_fetch):
+def test_padded_install_runtests_root(install_mockery, mock_fetch):
     spack.config.set("config:install_tree:padded_length", 255)
     output = install("--test=root", "--no-cache", "test-build-callbacks", fail_on_error=False)
     assert output.count("method not implemented") == 1
 
 
 @pytest.mark.regression("35337")
-def test_report_filename_for_cdash(install_mockery_mutable_config, mock_fetch):
+def test_report_filename_for_cdash(install_mockery, mock_fetch):
     """Test that the temporary file used to write the XML for CDash is not the upload URL"""
     parser = argparse.ArgumentParser()
     spack.cmd.install.setup_parser(parser)

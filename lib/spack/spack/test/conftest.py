@@ -998,19 +998,6 @@ def temporary_store(tmpdir, request):
     temporary_store_path.remove()
 
 
-@pytest.fixture(scope="function")
-def install_mockery_mutable_config(temporary_store, mutable_config, mock_packages):
-    """Hooks a fake install directory, DB, and stage directory into Spack.
-
-    This is specifically for tests which want to use 'install_mockery' but
-    also need to modify configuration (and hence would want to use
-    'mutable config'): 'install_mockery' does not support this.
-    """
-    # We use a fake package, so temporarily disable checksumming
-    with spack.config.override("config:checksum", False):
-        yield
-
-
 @pytest.fixture()
 def mock_fetch(mock_archive, monkeypatch):
     """Fake the URL for a package so it downloads from a file."""
