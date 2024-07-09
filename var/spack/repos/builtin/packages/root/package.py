@@ -774,6 +774,15 @@ class Root(CMakePackage):
             # warnings when building against ROOT
             env.unset("MACOSX_DEPLOYMENT_TARGET")
 
+    @property
+    def root_library_path(self):
+        # Where possible, we do not use LD_LIBRARY_PATH as that is non-portable
+        # and pollutes the standard library-loading mechanisms on Linux systems.
+        # The ROOT_LIBRARY_PATH environment variable was added to ROOT 6.26.
+        if self.spec.satisfies("@:6.25"):
+            return "LD_LIBRARY_PATH"
+        return "ROOT_LIBRARY_PATH"
+
     def setup_run_environment(self, env):
         env.set("ROOTSYS", self.prefix)
         env.set("ROOT_VERSION", "v{0}".format(self.version.up_to(1)))
@@ -782,7 +791,7 @@ class Root(CMakePackage):
         env.set("CLING_STANDARD_PCH", "none")
         env.set("CPPYY_API_PATH", "none")
         if "+rpath" not in self.spec:
-            env.prepend_path("ROOT_LIBRARY_PATH", self.prefix.lib.root)
+            env.prepend_path(self.root_library_path, self.prefix.lib.root)
 
     def setup_dependent_build_environment(
         self, env: spack.util.environment.EnvironmentModifications, dependent_spec
@@ -794,7 +803,7 @@ class Root(CMakePackage):
         env.append_path("CMAKE_MODULE_PATH", self.prefix.cmake)
         env.prepend_path("ROOT_INCLUDE_PATH", dependent_spec.prefix.include)
         if "+rpath" not in self.spec:
-            env.prepend_path("ROOT_LIBRARY_PATH", self.prefix.lib.root)
+            env.prepend_path(self.root_library_path, self.prefix.lib.root)
         if "platform=darwin" in self.spec:
             # Newer deployment targets cause fatal errors in rootcling
             env.unset("MACOSX_DEPLOYMENT_TARGET")
@@ -806,9 +815,9 @@ class Root(CMakePackage):
         # For dependents that build dictionaries, ROOT needs to know where the
         # dictionaries have been installed.  This can be facilitated by
         # automatically prepending dependent package library paths to
-        # ROOT_LIBRARY_PATH.  We do not adjust LD_LIBRARY_PATH as that would
-        # pollute the standard library-loading mechanisms.
+        # ROOT_LIBRARY_PATH (for @6.26:) or LD_LIBRARY_PATH (for older
+        # versions).
         for suffix in ("lib", "lib64"):
             lib_path = Path(dependent_spec.prefix) / suffix
             if lib_path.exists():
-                env.prepend_path("ROOT_LIBRARY_PATH", str(lib_path))
+                env.prepend_path(self.root_library_path, str(lib_path))
