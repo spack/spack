@@ -19,6 +19,7 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
 
     license("BSL-1.0")
 
+    version("0.26.0", sha256="bbec5472c71006c1f55e7946c8dc517dae76c41cacb36fa98195312c74a1bb9a")
     version("0.25.0", sha256="6646e12f88049116d84ce0caeedaa039a13caaa0431964caea4660b739767b2e")
     version("0.24.0", sha256="3b97c684107f892a633f598d94bcbd1e238d940e88e1c336f205e81b99326cc3")
     version("0.23.0", sha256="d1981e198ac4f8443770cebbeff7a132b8f6c1a42e32b0b06fea02cc9df99595")
@@ -51,6 +52,9 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
     version("main", branch="main")
 
     generator("ninja")
+
+    variant("shared", default=True, description="Build shared libraries")
+    conflicts("~shared", when="@:0.25")
 
     cxxstds = ("17", "20", "23")
     variant(
@@ -190,6 +194,7 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
         spec, args = self.spec, []
 
         args += [
+            self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
             self.define("PIKA_WITH_CXX_STANDARD", spec.variants["cxxstd"].value),
             self.define_from_variant("PIKA_WITH_EXAMPLES", "examples"),
             self.define_from_variant("PIKA_WITH_MALLOC", "malloc"),
