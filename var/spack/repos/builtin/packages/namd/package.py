@@ -25,14 +25,33 @@ class Namd(MakefilePackage, CudaPackage):
     maintainers("jcphill")
 
     version("master", branch="master")
-    version("3.0b7", sha256="b18ff43b0f55ec59e137c62eba1812589dd88b2122c3a05ea652781667f438b4")
-    version("3.0b6", sha256="8b5fb1dc8d5b5666c6a45d20ee7e8c9d1f5c186578e2cf148b68ba421d43b850")
-    version("3.0b3", sha256="20c32b6161f9c376536e3cb97c3bfe5367e1baaaace3c716ff79831fc2eb8199")
-    version("2.15a2", sha256="8748cbaa93fc480f92fc263d9323e55bce6623fc693dbfd4a40f59b92669713e")
-    version("2.15a1", branch="master", tag="release-2-15-alpha-1")
+    version("3.0", sha256="301c64f0f1db860f7336efdb26223ccf66b5ab42bfc9141df8d81ec1e20bf472")
+    version(
+        "3.0b7",
+        sha256="b18ff43b0f55ec59e137c62eba1812589dd88b2122c3a05ea652781667f438b4",
+        deprecated=True,
+    )
+    version(
+        "3.0b6",
+        sha256="8b5fb1dc8d5b5666c6a45d20ee7e8c9d1f5c186578e2cf148b68ba421d43b850",
+        deprecated=True,
+    )
+    version(
+        "3.0b3",
+        sha256="20c32b6161f9c376536e3cb97c3bfe5367e1baaaace3c716ff79831fc2eb8199",
+        deprecated=True,
+    )
+    version(
+        "2.15a2",
+        sha256="8748cbaa93fc480f92fc263d9323e55bce6623fc693dbfd4a40f59b92669713e",
+        deprecated=True,
+    )
+    version("2.15a1", branch="master", tag="release-2-15-alpha-1", deprecated=True)
     # Same as above, but lets you use a local file instead of git
     version(
-        "2.15a1.manual", sha256="474006e98e32dddae59616b3b75f13a2bb149deaf7a0d617ce7fb9fd5a56a33a"
+        "2.15a1.manual",
+        sha256="474006e98e32dddae59616b3b75f13a2bb149deaf7a0d617ce7fb9fd5a56a33a",
+        deprecated=True,
     )
     version(
         "2.14",
