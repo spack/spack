@@ -26,6 +26,11 @@ class Charmpp(Package):
 
     version("main", branch="main")
 
+    version(
+        "8.0.0",
+        sha256="e30fc1e921e5cbf3406e792d5b0ca5f211c5d8ffbfc56e56d5501d8118abcaf6",
+        url="https://github.com/charmplusplus/charm/archive/refs/tags/v8.0.0.tar.gz",
+    )
     version("7.0.0", sha256="9c247b421bb157bdf9bc0ced3e25738c7a1dc1f7ec57b7943a7faf97f7e4fb2e")
     version("6.10.2", sha256="7abb4cace8aebdfbb8006eac03eb766897c009cfb919da0d0a33f74c3b4e6deb")
     version("6.10.1", sha256="ab96198105daabbb8c8bdf370f87b0523521ce502c656cb6cd5b89f69a2c70a8")
