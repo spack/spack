@@ -81,6 +81,12 @@ def setup_parser(subparser):
         help="don't show full list of installed specs in an environment",
     )
     subparser.add_argument(
+        "-c",
+        "--show-concretized",
+        action="store_true",
+        help="show concretized specs in an environment",
+    )
+    subparser.add_argument(
         "-f",
         "--show-flags",
         action="store_true",
@@ -297,6 +303,8 @@ def find(parser, args):
 
     if not env and args.only_roots:
         tty.die("-r / --only-roots requires an active environment")
+    if not env and args.show_concretized:
+        tty.die("-c / --show-concretized requires an active environment")
 
     if env:
         if args.constraint:
@@ -327,7 +335,7 @@ def find(parser, args):
     if args.loaded:
         results = spack.cmd.filter_loaded_specs(results)
 
-    if args.install_status or env:
+    if args.install_status or args.show_concretized:
         status_fn = spack.spec.Spec.install_status
     else:
         status_fn = None
@@ -353,6 +361,9 @@ def find(parser, args):
             if args.only_roots:
                 installed_suffix += " (not shown)"
                 concretized_suffix += " (not shown)"
+            else:
+                if env and not args.show_concretized:
+                    concretized_suffix += " (show with `spack find -c`)"
 
             pkg_type = "loaded" if args.loaded else "installed"
             spack.cmd.print_how_many_pkgs(

@@ -847,10 +847,13 @@ def test_install_no_add_in_env(tmpdir, mock_fetch, install_mockery, mutable_mock
         # but is not added to the environment.
         install("dyninst")
 
+        find_output = find("-l", output=str)
+        assert "dyninst" in find_output
+        assert "libdwarf" in find_output
+        assert "libelf" in find_output
+        assert "callpath" not in find_output
+
         post_install_specs = e.all_specs()
-        installed_names = set(x.name for x in post_install_specs if x.installed)
-        assert set(["dyninst", "libdwarf", "libelf"]) <= installed_names
-        assert "callpath" not in installed_names
         assert all([s in env_specs for s in post_install_specs])
 
         # Make sure we can install a concrete dependency spec from a spec.json
@@ -862,9 +865,8 @@ def test_install_no_add_in_env(tmpdir, mock_fetch, install_mockery, mutable_mock
         install("-f", mpi_spec_json_path.strpath)
         assert mpi_spec not in e.roots()
 
-        post_install_specs = e.all_specs()
-        installed_names = set(x.name for x in post_install_specs if x.installed)
-        assert mpi_spec.name in installed_names
+        find_output = find("-l", output=str)
+        assert mpi_spec.name in find_output
 
         # Install an unambiguous depependency spec (that already exists as a
         # dep in the environment) with --add and make sure it is added as a
