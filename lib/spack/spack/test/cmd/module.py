@@ -139,7 +139,7 @@ def test_find_recursive():
 
 
 @pytest.mark.db
-def test_find_recursive_excluded(database, module_configuration):
+def test_find_recursive_excluded(mutable_database, module_configuration):
     module_configuration("exclude")
 
     module("lmod", "refresh", "-y", "--delete-tree")
@@ -147,7 +147,7 @@ def test_find_recursive_excluded(database, module_configuration):
 
 
 @pytest.mark.db
-def test_loads_recursive_excluded(database, module_configuration):
+def test_loads_recursive_excluded(mutable_database, module_configuration):
     module_configuration("exclude")
 
     module("lmod", "refresh", "-y", "--delete-tree")
