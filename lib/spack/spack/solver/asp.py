@@ -1051,7 +1051,11 @@ class dependency_holds(TransformFunction):
     def __init__(self, pkg, depflag):
         self.pkg = pkg
         self.depflag = depflag
-        self.elements = (pkg, depflag)
+        str_flagtypes = list(sorted(
+            dt.flag_to_string(t) for t in dt.ALL_FLAGS
+            if t & self.depflag
+        ))
+        self.elements = (pkg.name, ":".join(str_flagtypes))
 
     def __call__(self, input_spec: spack.spec.Spec, requirements: List[AspFunction]):
         return remove_node(input_spec, requirements) + [
@@ -1130,8 +1134,6 @@ class SpackSolverSetup:
         sha = hashlib.sha256()
         sha.update(full_str.encode())
         uniq_id = sha.hexdigest()[:8]
-        #if uniq_id == "fe2921b9":
-        #    import pdb; pdb.set_trace()
         if uniq_id in self.generated_ids:
             if fail_on_error:
                 raise InternalConcretizerError(
