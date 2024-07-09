@@ -16,12 +16,12 @@ spack:
     mpi:
       require: mpich
     mpich:
-      require: '~wrapperrpath ~hwloc'
+      require: '~wrapperrpath ~hwloc %gcc target=x86_64_v3'
     openblas:
       variants: threads=openmp
     paraview:
       # Don't build GUI support or GLX rendering for HPC/container deployments
-      require: "@5.11 ~qt ^[virtuals=gl] osmesa"
+      require: "@5.11 +examples ~qt ^[virtuals=gl] osmesa %gcc target=x86_64_v3"
 
     # ROCm
     comgr:
@@ -245,14 +245,14 @@ spack:
   # - paraview +rocm amdgpu_target=gfx908 # mesa: https://github.com/spack/spack/issues/44745
   # - vtk-m ~openmp +rocm amdgpu_target=gfx908  # vtk-m: https://github.com/spack/spack/issues/40268
   # --
-  # - adios2 +kokkos +rocm amdgpu_target=gfx908 # adios2:https://github.com/spack/spack/issues/44594
+  - adios2 +kokkos +rocm amdgpu_target=gfx908 # adios2:https://github.com/spack/spack/issues/44594
   # - cp2k +mpi +rocm amdgpu_target=gfx908      # cp2k: Error: KeyError: 'No spec with name rocm in... "-L{}".format(spec["rocm"].libs.directories[0]),
   # - exago +mpi +python +raja +hiop +rocm amdgpu_target=gfx908 ~ipopt cxxflags="-Wno-error=non-pod-varargs" ^hiop@1.0.0 ~sparse +mpi +raja +rocm amdgpu_target=gfx908 # raja: https://github.com/spack/spack/issues/44593
   # - lbann ~cuda +rocm amdgpu_target=gfx908    # aluminum: https://github.com/spack/spack/issues/38807
   # - papi +rocm amdgpu_target=gfx908           # papi: https://github.com/spack/spack/issues/27898
   # - petsc +rocm amdgpu_target=gfx908          # petsc: https://github.com/spack/spack/issues/44600
   # - slate +rocm amdgpu_target=gfx908          # slate: hip/device_gescale_row_col.hip.cc:58:49: error: use of overloaded operator '*' is ambiguous (with operand types 'HIP_vector_type<double, 2>' and 'const HIP_vector_type<double, 2>')
-  # - slepc +rocm amdgpu_target=gfx908 ^petsc +rocm amdgpu_target=gfx908   # - slepc +rocm amdgpu_target=gfx90a ^petsc +rocm amdgpu_target=gfx90a # petsc: https://github.com/spack/spack/issues/44600
+  # - slepc +rocm amdgpu_target=gfx908 ^petsc +rocm amdgpu_target=gfx908 # petsc: https://github.com/spack/spack/issues/44600
   # - sundials +rocm amdgpu_target=gfx908       # sundials: https://github.com/spack/spack/issues/44601
 
   # ROCM 90a
@@ -287,7 +287,7 @@ spack:
   # - paraview +rocm amdgpu_target=gfx90a # mesa: https://github.com/spack/spack/issues/44745
   # - vtk-m ~openmp +rocm amdgpu_target=gfx90a  # vtk-m: https://github.com/spack/spack/issues/40268
   # --
-  # - adios2 +kokkos +rocm amdgpu_target=gfx90a # adios2: https://github.com/spack/spack/issues/44594  
+  - adios2 +kokkos +rocm amdgpu_target=gfx90a # adios2: https://github.com/spack/spack/issues/44594
   # - cp2k +mpi +rocm amdgpu_target=gfx90a      # cp2k: Error: KeyError: 'No spec with name rocm in... "-L{}".format(spec["rocm"].libs.directories[0]),
   # - exago +mpi +python +raja +hiop +rocm amdgpu_target=gfx90a ~ipopt cxxflags="-Wno-error=non-pod-varargs" ^hiop@1.0.0 ~sparse +mpi +raja +rocm amdgpu_target=gfx90a # raja: https://github.com/spack/spack/issues/44593
   # - lbann ~cuda +rocm amdgpu_target=gfx90a    # aluminum: https://github.com/spack/spack/issues/38807

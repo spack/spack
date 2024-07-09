@@ -29,6 +29,7 @@ class Legion(CMakePackage, ROCmPackage):
 
     maintainers("pmccormick", "streichler", "elliottslaughter")
     tags = ["e4s"]
+    version("24.06.0", tag="legion-24.06.0", commit="3f27977943626ef23038ef0049b7ad1b389caad1")
     version("24.03.0", tag="legion-24.03.0", commit="c61071541218747e35767317f6f89b83f374f264")
     version("23.12.0", tag="legion-23.12.0", commit="8fea67ee694a5d9fb27232a7976af189d6c98456")
     version("23.09.0", tag="legion-23.09.0", commit="7304dfcf9b69005dd3e65e9ef7d5bd49122f9b49")
@@ -121,6 +122,7 @@ class Legion(CMakePackage, ROCmPackage):
     depends_on("py-cffi", when="+python")
     depends_on("py-numpy", when="+python")
     depends_on("py-pip", when="+python", type="build")
+    depends_on("py-setuptools", when="+python", type="build")
 
     depends_on("papi", when="+papi")
     depends_on("zlib-api", when="+zlib")
@@ -267,6 +269,12 @@ class Legion(CMakePackage, ROCmPackage):
     variant(
         "redop_complex", default=False, description="Use reduction operators for complex types."
     )
+    requires("+redop_complex", when="+bindings")
+    variant(
+        "redop_half",
+        default=False,
+        description="Use reduction operators for half precision types.",
+    )
 
     variant(
         "max_dims",
@@ -386,6 +394,11 @@ class Legion(CMakePackage, ROCmPackage):
             # default is off.
             options.append("-DLegion_USE_Kokkos=ON")
             os.environ["KOKKOS_CXX_COMPILER"] = spec["kokkos"].kokkos_cxx
+            if spec.satisfies("+cuda+cuda_unsupported_compiler ^kokkos%clang +cuda"):
+                # Keep CMake CUDA compiler detection happy
+                options.append(
+                    self.define("CMAKE_CUDA_FLAGS", "--allow-unsupported-compiler -std=c++17")
+                )
 
         if spec.satisfies("+libdl"):
             # default is on.
@@ -415,9 +428,13 @@ class Legion(CMakePackage, ROCmPackage):
             # default is off.
             options.append("-DLegion_BUILD_BINDINGS=ON")
 
-        if spec.satisfies("+redop_complex") or spec.satisfies("+bindings"):
-            # default is off; required for bindings.
+        if spec.satisfies("+redop_complex"):
+            # default is off
             options.append("-DLegion_REDOP_COMPLEX=ON")
+
+        if spec.satisfies("+redop_half"):
+            # default is off
+            options.append("-DLegion_REDOP_HALF=ON")
 
         maxdims = int(spec.variants["max_dims"].value)
         # TODO: sanity check if maxdims < 0 || > 9???

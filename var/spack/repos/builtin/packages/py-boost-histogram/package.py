@@ -22,4 +22,6 @@ class PyBoostHistogram(PythonPackage):
     depends_on("py-setuptools@45:", type="build")
     depends_on("py-setuptools-scm@4.1.2:+toml", type="build")
     depends_on("py-numpy@1.13.3:", type=("build", "run"))
+    # https://github.com/numpy/numpy/issues/26191#issuecomment-2179127999
+    depends_on("py-numpy@:1", when="@:1.4.0", type=("build", "run"))
     depends_on("py-typing-extensions", when="^python@:3.7", type=("build", "run"))
