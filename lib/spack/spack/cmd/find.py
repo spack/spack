@@ -349,8 +349,11 @@ def find(parser, args):
                 display_env(env, args, decorator, results)
 
         if not args.only_roots:
+            display_results = results
+            if not args.show_concretized:
+                display_results = list(x for x in results if x.installed)
             cmd.display_specs(
-                results, args, decorator=decorator, all_headers=True, status_fn=status_fn
+                display_results, args, decorator=decorator, all_headers=True, status_fn=status_fn
             )
 
         # print number of installed packages last (as the list may be long)
