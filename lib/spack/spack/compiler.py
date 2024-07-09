@@ -723,7 +723,7 @@ class Compiler:
         except Exception as e:
             error = f"Experienced error attempting to execute compiler: {str(e)}"
             err = e
-        raise TryCompilerError(self.__name__, test_file, lang, error) from err
+        raise TryCompilerError(type(self).__name__, test_file, lang, error) from err
 
     def setup_custom_environment(self, pkg, env):
         """Set any environment variables necessary to use the compiler."""
