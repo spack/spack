@@ -2110,7 +2110,7 @@ def relocate_package(spec):
             dependent_edges = spec[name].edges_from_dependents()
             virtuals = set()
             for edge in dependent_edges:
-                virtuals.update(edge.parameters["virtuals"])
+                virtuals.update(edge.virtuals)
             for virtual in virtuals:
                 try:
                     lookup_dag_hash = spec.build_spec[virtual].dag_hash()

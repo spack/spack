@@ -62,18 +62,6 @@ properties: Dict[str, Any] = {
                 },
             },
             "os_compatible": {"type": "object", "additionalProperties": {"type": "array"}},
-            "explicit_splices": {
-                "type": "array",
-                "default": [],
-                "items": {
-                    "type": "object",
-                    "properties": {
-                        "target": {"type": "string"},
-                        "replacement": {"type": "string"},
-                        "transitive": {"type": "boolean", "default": False},
-                    },
-                },
-            },
         },
     }
 }
