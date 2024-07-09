@@ -851,12 +851,12 @@ def test_multiple_specs_with_hash(database, config):
 
 
 @pytest.mark.db
-def test_ambiguous_hash(mutable_database, default_mock_concretization, config):
+def test_ambiguous_hash(mutable_database):
     """Test that abstract hash ambiguity is delayed until concretization.
     In the past this ambiguity error would happen during parse time."""
 
     # This is a very sketchy as manually setting hashes easily breaks invariants
-    x1 = default_mock_concretization("a")
+    x1 = spack.spec.Spec("a").concretized()
     x2 = x1.copy()
     x1._hash = "xyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy"
     x1._process_hash = "xyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy"
