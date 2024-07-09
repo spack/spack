@@ -22,6 +22,8 @@ class PyKeras(PythonPackage):
     maintainers("adamjstewart")
     license("Apache-2.0")
 
+    version("3.4.1", sha256="34cd9aeaa008914715149234c215657ca758e1b473bd2aab2e211ac967d1f8fe")
+    version("3.4.0", sha256="c4b05b150b1c4df27b4a17efd137b2d5e20f385f146fd48636791d675e75059d")
     version("3.3.3", sha256="f2fdffc8434fd77045cf8fb21816dbaa2308d5f76974ca924b2f60b40433b1a0")
     version("3.3.2", sha256="e7e2ccba2dfe2cf10b82e3c75ea971b82a4c62560dc562c43b33f7790127c92f")
     version("3.3.1", sha256="03531beb01b108b867683762ceaacd0f28efc40cb92eee3c8c988b80cf718bbe")
@@ -77,12 +79,15 @@ class PyKeras(PythonPackage):
         depends_on("python@3.8:", when="@2.12:")
         depends_on("py-absl-py", when="@2.6:")
         depends_on("py-numpy")
+        # https://github.com/keras-team/keras/issues/19691
+        depends_on("py-numpy@:1")
         depends_on("py-rich", when="@3:")
         depends_on("py-namex@0.0.8:", when="@3.3.3:")
         depends_on("py-namex", when="@3:")
         depends_on("py-h5py")
         depends_on("py-optree", when="@3.1:")
         depends_on("py-ml-dtypes", when="@3.0.5:")
+        depends_on("py-packaging", when="@3.4:")
 
         # requirements-common.txt
         depends_on("py-scipy")

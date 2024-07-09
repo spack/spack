@@ -56,7 +56,7 @@ class Elbencho(MakefilePackage):
     depends_on("curl", when="+s3")
     depends_on("libarchive", when="+s3")
     depends_on("openssl", when="+s3")
-    depends_on("libuuid", when="+s3")
+    depends_on("uuid", when="+s3")
     depends_on("zlib", when="+s3")
     depends_on("cmake", when="+s3")
 

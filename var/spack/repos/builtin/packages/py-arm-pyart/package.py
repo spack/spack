@@ -39,6 +39,8 @@ class PyArmPyart(PythonPackage):
 
     depends_on("py-cython", type="build")
     depends_on("py-numpy", type=("build", "run"))
+    # https://github.com/ARM-DOE/pyart/issues/1550
+    depends_on("py-numpy@:1", when="@:1.18.1", type=("build", "run"))
     depends_on("py-scipy", type=("build", "run"))
     depends_on("py-netcdf4", type=("build", "run"))
     depends_on("py-matplotlib", type=("build", "run"))

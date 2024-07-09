@@ -293,7 +293,7 @@ def test_package_test_no_compilers(mock_packages, monkeypatch, capfd):
     ],
 )
 def test_package_run_test_install(
-    install_mockery_mutable_config, mock_fetch, capfd, msg, installed, purpose, expected
+    install_mockery, mock_fetch, capfd, msg, installed, purpose, expected
 ):
     """Confirm expected outputs from run_test for installed/not installed exe."""
     s = spack.spec.Spec("trivial-smoke-test").concretized()
@@ -314,9 +314,7 @@ def test_package_run_test_install(
         (False, 1, str(spack.install_test.TestStatus.FAILED)),
     ],
 )
-def test_package_run_test_missing(
-    install_mockery_mutable_config, mock_fetch, capfd, skip, failures, status
-):
+def test_package_run_test_missing(install_mockery, mock_fetch, capfd, skip, failures, status):
     """Confirm expected results from run_test for missing exe when skip or not."""
     s = spack.spec.Spec("trivial-smoke-test").concretized()
     pkg = s.package
@@ -328,7 +326,7 @@ def test_package_run_test_missing(
 
 
 # TODO (post-34236): Remove when remove deprecated run_test(), etc.
-def test_package_run_test_fail_fast(install_mockery_mutable_config, mock_fetch):
+def test_package_run_test_fail_fast(install_mockery, mock_fetch):
     """Confirm expected exception when run_test with fail_fast enabled."""
     s = spack.spec.Spec("trivial-smoke-test").concretized()
     pkg = s.package

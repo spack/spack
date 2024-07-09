@@ -53,10 +53,10 @@ jobs:
     runs-on: ${{ matrix.runner }}
     strategy:
       matrix:
-        runner: ['macos-13', 'macos-14', "ubuntu-latest"]
+        runner: ['macos-13', 'macos-14', "ubuntu-latest", "windows-latest"]
     steps:
       - name: Setup macOS
-        if: ${{ matrix.runner != 'ubuntu-latest' }}
+        if: ${{ matrix.runner != 'ubuntu-latest' && matrix.runner != 'windows-latest' }}
         run: |
           brew install cmake bison tree
       - name: Checkout
@@ -67,13 +67,17 @@ jobs:
         with:
           python-version: "3.12"
       - name: Bootstrap clingo
+        env:
+          SETUP_SCRIPT_EXT: ${{ matrix.runner == 'windows-latest' && 'ps1' || 'sh' }}
+          SETUP_SCRIPT_SOURCE: ${{ matrix.runner == 'windows-latest' && './' || 'source ' }}
+          USER_SCOPE_PARENT_DIR: ${{ matrix.runner == 'windows-latest' && '$env:userprofile' || '$HOME' }}
         run: |
-          source share/spack/setup-env.sh
+          ${{ env.SETUP_SCRIPT_SOURCE }}share/spack/setup-env.${{ env.SETUP_SCRIPT_EXT }}
           spack bootstrap disable github-actions-v0.5
           spack bootstrap disable github-actions-v0.4
           spack external find --not-buildable cmake bison
           spack -d solve zlib
-          tree ~/.spack/bootstrap/store/
+          tree ${{ env.USER_SCOPE_PARENT_DIR }}/.spack/bootstrap/store/
 
   gnupg-sources:
     runs-on: ${{ matrix.runner }}
@@ -148,7 +152,7 @@ jobs:
                 not_found=0
                 old_path="$PATH"
                 export PATH="$ver_dir:$PATH"
-                ./bin/spack-tmpconfig -b ./.github/workflows/bootstrap-test.sh
+                ./bin/spack-tmpconfig -b ./.github/workflows/bin/bootstrap-test.sh
                 export PATH="$old_path"
               fi
             fi
@@ -162,4 +166,3 @@ jobs:
           source share/spack/setup-env.sh
           spack -d gpg list
           tree ~/.spack/bootstrap/store/
-

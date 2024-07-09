@@ -17,7 +17,7 @@ class UcscBedclip(Package):
     version("449", sha256="b5a86863d6cfe2120f6c796a13b1572ad05b22622f6534b95c9d26ccbede09b7")
 
     depends_on("libpng")
-    depends_on("libuuid")
+    depends_on("uuid")
     depends_on("gmake")
     depends_on("mysql-connector-c")
     depends_on("openssl")

@@ -18,6 +18,7 @@ class Rdkit(CMakePackage):
 
     license("BSD-3-Clause")
 
+    version("2024_03_3", sha256="52f79c6bf1d446cdb5c86a35de655d96bad0c52a5f4ecbe15f08eaf334e6f76a")
     version("2023_03_1", sha256="db346afbd0ba52c843926a2a62f8a38c7b774ffab37eaf382d789a824f21996c")
     version("2022_09_5", sha256="2efe7ce3b527df529ed3e355e2aaaf14623e51876be460fa4ad2b7f7ad54c9b1")
     version("2021_09_5", sha256="f720b3f6292c4cd0a412a073d848ffac01a43960082e33ee54b68798de0cbfa1")
@@ -69,6 +70,8 @@ class Rdkit(CMakePackage):
         depends_on("eigen@3:", when="+descriptors3d")
         depends_on("python@3:", when="+python")
         depends_on("py-numpy", when="+python")
+        # https://github.com/rdkit/rdkit/issues/7477
+        depends_on("py-numpy@:1", when="@:2024.03.3+python")
 
         extends("python", when="+python")
 
@@ -81,6 +84,8 @@ class Rdkit(CMakePackage):
     with when("@:2021_09_5"):
         depends_on("python@3:")
         depends_on("py-numpy")
+        # https://github.com/rdkit/rdkit/issues/7477
+        depends_on("py-numpy@:1")
         extends("python")
 
     def cmake_args(self):

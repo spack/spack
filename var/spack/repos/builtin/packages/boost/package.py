@@ -245,6 +245,8 @@ class Boost(Package):
     depends_on("zstd", when="+iostreams")
     depends_on("xz", when="+iostreams")
     depends_on("py-numpy", when="+numpy", type=("build", "run"))
+    # https://github.com/boostorg/python/issues/431
+    depends_on("py-numpy@:1", when="@:1.85+numpy", type=("build", "run"))
 
     # Improve the error message when the context-impl variant is conflicting
     conflicts("context-impl=fcontext", when="@:1.65.0")
@@ -443,7 +445,7 @@ class Boost(Package):
 
     def url_for_version(self, version):
         if version >= Version("1.63.0"):
-            url = "https://boostorg.jfrog.io/artifactory/main/release/{0}/source/boost_{1}.tar.bz2"
+            url = "https://archives.boost.io/release/{0}/source/boost_{1}.tar.bz2"
         else:
             url = "http://downloads.sourceforge.net/project/boost/boost/{0}/boost_{1}.tar.bz2"
 
