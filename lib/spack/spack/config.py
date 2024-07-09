@@ -174,9 +174,7 @@ class DirectoryConfigScope(ConfigScope):
         if data is None:
             return
 
-        # We copy data here to avoid adding defaults at write time
-        validate_data = copy.deepcopy(data)
-        validate(validate_data, SECTION_SCHEMAS[section])
+        validate(data, SECTION_SCHEMAS[section])
 
         try:
             filesystem.mkdirp(self.path)
