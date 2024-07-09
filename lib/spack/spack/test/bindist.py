@@ -105,11 +105,11 @@ def config_directory(tmpdir_factory):
 
 
 @pytest.fixture(scope="function")
-def default_config(tmpdir, config_directory, monkeypatch, install_mockery_mutable_config):
-    # This fixture depends on install_mockery_mutable_config to ensure
+def default_config(tmpdir, config_directory, monkeypatch, install_mockery):
+    # This fixture depends on install_mockery to ensure
     # there is a clear order of initialization. The substitution of the
     # config scopes here is done on top of the substitution that comes with
-    # install_mockery_mutable_config
+    # install_mockery
     mutable_dir = tmpdir.mkdir("mutable_config").join("tmp")
     config_directory.copy(mutable_dir)
 
@@ -398,9 +398,7 @@ def fake_dag_hash(spec, length=None):
     return "tal4c7h4z0gqmixb1eqa92mjoybxn5l6"[:length]
 
 
-@pytest.mark.usefixtures(
-    "install_mockery_mutable_config", "mock_packages", "mock_fetch", "test_mirror"
-)
+@pytest.mark.usefixtures("install_mockery", "mock_packages", "mock_fetch", "test_mirror")
 def test_spec_needs_rebuild(monkeypatch, tmpdir):
     """Make sure needs_rebuild properly compares remote hash
     against locally computed one, avoiding unnecessary rebuilds"""
@@ -429,7 +427,7 @@ def test_spec_needs_rebuild(monkeypatch, tmpdir):
     assert rebuild
 
 
-@pytest.mark.usefixtures("install_mockery_mutable_config", "mock_packages", "mock_fetch")
+@pytest.mark.usefixtures("install_mockery", "mock_packages", "mock_fetch")
 def test_generate_index_missing(monkeypatch, tmpdir, mutable_config):
     """Ensure spack buildcache index only reports available packages"""
 
@@ -587,9 +585,7 @@ def test_update_sbang(tmpdir, test_mirror):
     str(archspec.cpu.host().family) != "x86_64",
     reason="test data uses gcc 4.5.0 which does not support aarch64",
 )
-def test_install_legacy_buildcache_layout(
-    mutable_config, compiler_factory, install_mockery_mutable_config
-):
+def test_install_legacy_buildcache_layout(mutable_config, compiler_factory, install_mockery):
     """Legacy buildcache layout involved a nested archive structure
     where the .spack file contained a repeated spec.json and another
     compressed archive file containing the install tree.  This test

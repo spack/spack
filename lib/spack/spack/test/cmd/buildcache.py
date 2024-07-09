@@ -189,12 +189,7 @@ def test_buildcache_autopush(tmp_path, install_mockery, mock_fetch):
 
 
 def test_buildcache_sync(
-    mutable_mock_env_path,
-    install_mockery_mutable_config,
-    mock_packages,
-    mock_fetch,
-    mock_stage,
-    tmpdir,
+    mutable_mock_env_path, install_mockery, mock_packages, mock_fetch, mock_stage, tmpdir
 ):
     """
     Make sure buildcache sync works in an environment-aware manner, ignoring
@@ -323,7 +318,7 @@ def test_buildcache_sync(
 
 def test_buildcache_create_install(
     mutable_mock_env_path,
-    install_mockery_mutable_config,
+    install_mockery,
     mock_packages,
     mock_fetch,
     mock_stage,

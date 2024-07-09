@@ -232,13 +232,7 @@ def test_mirror_name_collision(mutable_config):
 
 
 def test_mirror_destroy(
-    install_mockery_mutable_config,
-    mock_packages,
-    mock_fetch,
-    mock_archive,
-    mutable_config,
-    monkeypatch,
-    tmpdir,
+    install_mockery, mock_packages, mock_fetch, mock_archive, mutable_config, monkeypatch, tmpdir
 ):
     # Create a temp mirror directory for buildcache usage
     mirror_dir = tmpdir.join("mirror_dir")
