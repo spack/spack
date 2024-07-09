@@ -25,13 +25,7 @@ pytestmark = pytest.mark.not_on_windows("does not run on windows")
 
 
 def test_test_package_not_installed(
-    tmpdir,
-    mock_packages,
-    mock_archive,
-    mock_fetch,
-    config,
-    install_mockery_mutable_config,
-    mock_test_stage,
+    tmpdir, mock_packages, mock_archive, mock_fetch, install_mockery, mock_test_stage
 ):
     output = spack_test("run", "libdwarf")
 
