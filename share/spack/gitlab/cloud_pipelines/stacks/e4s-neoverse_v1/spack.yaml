@@ -341,7 +341,7 @@ spack:
   - axom +cuda cuda_arch=90         # axom: https://github.com/spack/spack/issues/29520
   # - cp2k +mpi +cuda cuda_arch=90    # cp2k: cp2k only supports cuda_arch ('35', '37', '60', '70', '80')
   - cusz +cuda cuda_arch=90         # cusz: https://github.com/spack/spack/issues/38787
-  - dealii +cuda cuda_arch=90       # dealii: https://github.com/spack/spack/issues/39532
+  # - dealii +cuda cuda_arch=90       # dealii: concretize conflict + https://github.com/spack/spack/issues/39532
   - ecp-data-vis-sdk +adios2 +hdf5 +vtkm +zfp +paraview +cuda cuda_arch=90 # embree: https://github.com/spack/spack/issues/39534
   - hypre +cuda cuda_arch=90        # concretizer: hypre +cuda requires cuda@:11, but cuda_arch=90 requires cuda@12:
   - lammps +cuda cuda_arch=90       # lammps: needs NVIDIA driver
