@@ -54,7 +54,7 @@ class OpenpmdApi(CMakePackage):
     depends_on("mpi@2.3:", when="+mpi")  # might become MPI 3.0+
     depends_on("nlohmann-json@3.9.1:")
     depends_on("mpark-variant@1.4.0:", when="@:0.14")  # pre C++17 releases
-    depends_on("toml11@3.7.1:3.8.1", when="@0.15.0:")
+    depends_on("toml11@4.0.3:", when="@0.16.0:")
     with when("+hdf5"):
         depends_on("hdf5@1.8.13:")
         depends_on("hdf5@1.8.13: ~mpi", when="~mpi")
@@ -129,7 +129,10 @@ class OpenpmdApi(CMakePackage):
         if spec.satisfies("@:0.14"):  # pre C++17 releases
             args.append(self.define("openPMD_USE_INTERNAL_VARIANT", False))
         if spec.satisfies("@0.15:"):
-            args.append(self.define("openPMD_USE_INTERNAL_TOML11", False))
+            # Need https://github.com/openPMD/openPMD-api/pull/1645
+            # for compatibility with toml11 4.0+.
+            use_internal_toml = not spec.satisfies("@0.16:")
+            args.append(self.define("openPMD_USE_INTERNAL_TOML11", use_internal_toml))
 
         if self.run_tests:
             args.append(self.define("openPMD_USE_INTERNAL_CATCH", False))
