@@ -708,7 +708,7 @@ class Compiler:
             "fail_on_error": True,
         }
         compiler_args = [self.compile_only_arg] if not cmp_args else cmp_args
-        compiler_args = [*compiler_args, test_file, *flags, *definitions]
+        compiler_args = [*compiler_args, str(test_file), *flags, *definitions]
         try:
             with temp_cwd():
                 with self.compiler_environment():
@@ -789,7 +789,7 @@ class TryCompilerError(spack.error.SpackError):
     def __init__(self, compiler_name, file=None, lang=None, err=None):
         lang = lang if lang else "unknown"
         file = file if file else "unknown"
-        error_stmt = f"Unable to compile even a simple test file ({file})\
+        error_stmt = f"Unable to compile even a simple test file ({file}) \
 with {compiler_name} for {lang} language"
         file_content = ""
         if file:
