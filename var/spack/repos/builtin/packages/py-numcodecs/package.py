@@ -37,6 +37,8 @@ class PyNumcodecs(PythonPackage):
     depends_on("py-setuptools-scm@1.5.5: +toml", type="build")
     depends_on("py-cython", type="build")
     depends_on("py-numpy@1.7:", type=("build", "run"))
+    # https://github.com/zarr-developers/numcodecs/issues/521
+    depends_on("py-numpy@:1", when="@:0.12.0", type=("build", "run"))
     depends_on("py-py-cpuinfo", when="@0.11:", type="build")
     depends_on("py-entrypoints", when="@0.10.1:0.11", type=("build", "run"))
     depends_on("py-msgpack", type=("build", "run"), when="+msgpack")

@@ -748,11 +748,6 @@ class PackageBase(WindowsRPath, PackageViewMixin, RedistributionMixin, metaclass
         self._fetch_time = 0.0
 
         self.win_rpath = fsys.WindowsSimulatedRPath(self)
-
-        if self.is_extension:
-            pkg_cls = spack.repo.PATH.get_pkg_class(self.extendee_spec.name)
-            pkg_cls(self.extendee_spec)._check_extendable()
-
         super().__init__()
 
     @classmethod
@@ -1141,10 +1136,9 @@ class PackageBase(WindowsRPath, PackageViewMixin, RedistributionMixin, metaclass
             if not link_format:
                 link_format = "build-{arch}-{hash:7}"
             stage_link = self.spec.format_path(link_format)
-            return DevelopStage(compute_stage_name(self.spec), dev_path, stage_link)
-
-        # To fetch the current version
-        source_stage = self._make_root_stage(self.fetcher)
+            source_stage = DevelopStage(compute_stage_name(self.spec), dev_path, stage_link)
+        else:
+            source_stage = self._make_root_stage(self.fetcher)
 
         # all_stages is source + resources + patches
         all_stages = StageComposite()
@@ -1473,10 +1467,8 @@ class PackageBase(WindowsRPath, PackageViewMixin, RedistributionMixin, metaclass
             return
 
         checksum = spack.config.get("config:checksum")
-        fetch = self.stage.needs_fetching
         if (
             checksum
-            and fetch
             and (self.version not in self.versions)
             and (not isinstance(self.version, GitVersion))
         ):
@@ -1583,13 +1575,11 @@ class PackageBase(WindowsRPath, PackageViewMixin, RedistributionMixin, metaclass
                 tty.debug("Patching failed last time. Restaging.")
                 self.stage.restage()
             else:
-                # develop specs/ DIYStages may have patch failures but
-                # should never be restaged
-                msg = (
-                    "A patch failure was detected in %s." % self.name
-                    + " Build errors may occur due to this."
+                # develop specs may have patch failures but should never be restaged
+                tty.warn(
+                    f"A patch failure was detected in {self.name}."
+                    " Build errors may occur due to this."
                 )
-                tty.warn(msg)
                 return
 
         # If this file exists, then we already applied all the patches.
@@ -2392,10 +2382,6 @@ class PackageBase(WindowsRPath, PackageViewMixin, RedistributionMixin, metaclass
         # Now that we've handled metadata, uninstall and replace with link
         PackageBase.uninstall_by_spec(spec, force=True, deprecator=deprecator)
         link_fn(deprecator.prefix, spec.prefix)
-
-    def _check_extendable(self):
-        if not self.extendable:
-            raise ValueError("Package %s is not extendable!" % self.name)
 
     def view(self):
         """Create a view with the prefix of this package as the root.

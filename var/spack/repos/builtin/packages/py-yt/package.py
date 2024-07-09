@@ -56,6 +56,8 @@ class PyYt(PythonPackage):
     depends_on("py-more-itertools@8.4:", when="@4.1.2:")
     depends_on("py-numpy@1.10.4:", type=("build", "run"))
     depends_on("py-numpy@1.14.5:", type=("build", "run"), when="@4.1.2:")
+    # https://github.com/yt-project/yt/pull/4859
+    depends_on("py-numpy@:1", when="@:4.3.0", type=("build", "run"))
     depends_on("py-packaging@20.9:", type=("build", "run"), when="@4.1.2:")
     # PIL/pillow and pyparsing dependency is handled by matplotlib
     depends_on("py-tomli-w@0.4:", type=("build", "run"), when="@4.1.2:")

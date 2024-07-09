@@ -21,12 +21,13 @@ class Rocwmma(CMakePackage):
 
     homepage = "https://github.com/ROCm/rocWMMA"
     git = "https://github.com/ROCm/rocWMMA.git"
-    url = "https://github.com/ROCm/rocWMMA/archive/refs/tags/rocm-6.0.2.tar.gz"
+    url = "https://github.com/ROCm/rocWMMA/archive/refs/tags/rocm-6.1.2.tar.gz"
     tags = ["rocm"]
 
     license("MIT")
 
     maintainers("srekolam", "renjithravindrankannath")
+    version("6.1.2", sha256="7f6171bea5c8b7cdaf5c64dbfb76eecf606f2d34e8409153a74b56027c5e92a7")
     version("6.1.1", sha256="6e0c15c78feb8fb475ed028ed9b0337feeb45bfce1e206fe5f236a55e33f6135")
     version("6.1.0", sha256="ca29f33cfe6894909159ad68d786eacd469febab33883886a202f13ae061f691")
     version("6.0.2", sha256="61c6cc095b4ac555f4be4b55f6a7e3194c8c54bffc57bfeb0c02191119ac5dc8")
@@ -81,6 +82,7 @@ class Rocwmma(CMakePackage):
         "6.0.2",
         "6.1.0",
         "6.1.1",
+        "6.1.2",
     ]:
         depends_on("rocm-cmake@%s:" % ver, type="build", when="@" + ver)
         depends_on("llvm-amdgpu@" + ver, type="build", when="@" + ver)
@@ -88,7 +90,7 @@ class Rocwmma(CMakePackage):
         depends_on("rocblas@" + ver, type="build", when="@" + ver)
         depends_on("rocm-openmp-extras@" + ver, type="build", when="@" + ver)
 
-    for ver in ["5.6.0", "5.6.1", "5.7.0", "5.7.1", "6.0.0", "6.0.2", "6.1.0", "6.1.1"]:
+    for ver in ["5.6.0", "5.6.1", "5.7.0", "5.7.1", "6.0.0", "6.0.2", "6.1.0", "6.1.1", "6.1.2"]:
         depends_on("rocm-smi-lib@" + ver, when="@" + ver)
 
     for tgt in itertools.chain(["auto"], amdgpu_targets):

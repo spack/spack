@@ -20,10 +20,15 @@ class Vtk(CMakePackage):
     url = "https://www.vtk.org/files/release/9.0/VTK-9.0.0.tar.gz"
     list_url = "https://www.vtk.org/download/"
 
-    maintainers("chuckatkins", "danlipsa")
+    maintainers("danlipsa", "vicentebolea")
 
     license("BSD-3-Clause")
 
+    version(
+        "9.3.1",
+        sha256="8354ec084ea0d2dc3d23dbe4243823c4bfc270382d0ce8d658939fd50061cab8",
+        preferred=True,
+    )
     version("9.2.6", sha256="06fc8d49c4e56f498c40fcb38a563ed8d4ec31358d0101e8988f0bb4d539dd12")
     version("9.2.2", sha256="1c5b0a2be71fac96ff4831af69e350f7a0ea3168981f790c000709dcf9121075")
     version("9.1.0", sha256="8fed42f4f8f1eb8083107b68eaa9ad71da07110161a3116ad807f43e5ca5ce96")
@@ -171,8 +176,9 @@ class Vtk(CMakePackage):
     depends_on("utf8cpp", when="@9:")
     depends_on("gl2ps", when="@8.1:")
     depends_on("gl2ps@1.4.1:", when="@9:")
-    depends_on("proj@4", when="@8.2.0")
-    depends_on("proj@4:", when="@9:")
+    # "8.2.1a" uses an internal proj so this special cases 8.2.1a
+    depends_on("proj@4:7", when="@:8.2.0, 9:9.1")
+    depends_on("proj@8:", when="@9.2:")
     depends_on("cgns@4.1.1:+mpi", when="@9.1: +mpi")
     depends_on("cgns@4.1.1:~mpi", when="@9.1: ~mpi")
     with when("@9.1:"):
@@ -278,6 +284,7 @@ class Vtk(CMakePackage):
             cmake_args.extend(
                 [
                     "-DVTK_USE_EXTERNAL:BOOL=ON",
+                    "-DVTK_MODULE_USE_EXTERNAL_VTK_fast_float:BOOL=OFF",
                     "-DVTK_MODULE_USE_EXTERNAL_VTK_libharu:BOOL=OFF",
                     "-DVTK_MODULE_USE_EXTERNAL_VTK_pegtl:BOOL=OFF",
                     "-DHDF5_ROOT={0}".format(spec["hdf5"].prefix),
