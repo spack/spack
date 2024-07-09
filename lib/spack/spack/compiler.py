@@ -694,11 +694,11 @@ class Compiler:
         determinable_file = file or lang
         if not determinable_file:
             err = "No file or language provided."
-            raise TryCompilerError(self.__name__, file, lang, err)
+            raise TryCompilerError(type(self).__name__, file, lang, err)
         compiler_path = getattr(self, lang)
         if not compiler_path:
             err = f"No compiler for language: {lang}"
-            raise TryCompilerError(self.__name__, file, lang, err)
+            raise TryCompilerError(type(self).__name__, file, lang, err)
         test_file = file if file else default_try_file_for_lang(lang)
         compiler = spack.util.executable.Executable(compiler_path)
         compiler_invocation_args = {
