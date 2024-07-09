@@ -188,19 +188,33 @@ class Magma(CMakePackage, CudaPackage, ROCmPackage):
         install test subdirectory for use during `spack test run`."""
         self.cache_extra_test_sources([self.test_src_dir])
 
-    def test(self):
+    def test_magma(self):
+        """Run benchmark tests"""
         test_dir = join_path(self.test_suite.current_test_cache_dir, self.test_src_dir)
         with working_dir(test_dir, create=False):
             pkg_config_path = "{0}/lib/pkgconfig".format(self.prefix)
             with spack.util.environment.set_env(PKG_CONFIG_PATH=pkg_config_path):
+
                 make("c")
-                self.run_test("./example_sparse", purpose="MAGMA smoke test - sparse solver")
-                self.run_test(
-                    "./example_sparse_operator", purpose="MAGMA smoke test - sparse operator"
-                )
-                self.run_test("./example_v1", purpose="MAGMA smoke test - legacy v1 interface")
-                self.run_test("./example_v2", purpose="MAGMA smoke test - v2 interface")
+                tests = [
+                    ("example_sparse", "sparse solver"),
+                    ("example_sparse_operator", "sparse operator"),
+                    ("example_v1", "legacy v1 interface"),
+                    ("example_v2", "v2 interface"),
+                ]
+
+                for test in tests:
+                    with test_part(
+                        self, f"test_magma_{test[0]}", purpose=f"MAGMA smoke test - {test[1]}"
+                    ):
+                        exe = which("./" + test[0])
+                        exe()
+
                 if "+fortran" in self.spec:
-                    make("fortran")
-                    self.run_test("./example_f", purpose="MAGMA smoke test - Fortran interface")
+                    with test_part(
+                        self, "test_magma_fortran", purpose="MAGMA smoke test - Fortran interface"
+                    ):
+                        make("fortran")
+                        exe_fortran = which("./example_f")
+                        exe_fortran()
                 make("clean")
