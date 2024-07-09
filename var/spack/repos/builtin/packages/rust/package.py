@@ -68,8 +68,7 @@ class Rust(Package):
     depends_on("cmake@3.4.3:", type="build", when="@:1.51")
     depends_on("cmake@3.13.4:", type="build", when="@1.52:1.72")
     depends_on("cmake@3.20.0:", type="build", when="@1.73:")
-    
-    
+
     # Compiling Rust requires a previous version of Rust.
     # The easiest way to bootstrap a Rust environment is to
     # download the binary distribution of the compiler and build with that.
