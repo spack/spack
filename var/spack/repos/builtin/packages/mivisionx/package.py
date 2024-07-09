@@ -44,7 +44,6 @@ class Mivisionx(CMakePackage):
     # when tested with HIP as true for versions before 5.1.0, build errors were encountered
     # this was corrected with 5.2.0. Hence it was made as default starting with 5.2.0 onwards
 
-    variant("opencl", default=False, description="Use OPENCL as the backend")
     variant("hip", default=True, description="Use HIP as backend")
     variant("add_tests", default=False, description="add tests and samples folder")
 
@@ -59,20 +58,11 @@ class Mivisionx(CMakePackage):
         when="@5.6",
     )
 
-    conflicts("+opencl", when="@5.6.0:")
-
     def patch(self):
         if self.spec.satisfies("@5.1.3: + hip"):
             filter_file(
                 r"${ROCM_PATH}/include/miopen/config.h",
                 "{0}/include/miopen/config.h".format(self.spec["miopen-hip"].prefix),
-                "amd_openvx_extensions/CMakeLists.txt",
-                string=True,
-            )
-        if self.spec.satisfies("@5.1.3: + opencl"):
-            filter_file(
-                r"${ROCM_PATH}/include/miopen/config.h",
-                "{0}/include/miopen/config.h".format(self.spec["miopen-opencl"].prefix),
                 "amd_openvx_extensions/CMakeLists.txt",
                 string=True,
             )
@@ -209,16 +199,6 @@ class Mivisionx(CMakePackage):
     depends_on("py-pytz", when="+add_tests")
     depends_on("rapidjson", when="@5.7:")
 
-    # need to choose atleast one backend and both cannot be set
-    # HIP as backend did not build for older releases 5.1.0 where
-    # OPENCL was default backend.
-    conflicts("+opencl+hip")
-
-    with when("+opencl"):
-        for ver in ["5.5.0", "5.5.1"]:
-            depends_on(f"rocm-opencl@{ver}", when=f"@{ver}")
-            depends_on(f"miopengemm@{ver}", when=f"@{ver}")
-            depends_on(f"miopen-opencl@{ver}", when=f"@{ver}")
     with when("+hip"):
         for ver in [
             "5.5.0",
@@ -271,14 +251,11 @@ class Mivisionx(CMakePackage):
         spec = self.spec
         protobuf = spec["protobuf"].prefix.include
         args = [self.define("CMAKE_CXX_FLAGS", "-I{0}".format(protobuf))]
-        if self.spec.satisfies("+opencl"):
-            args.append(self.define("BACKEND", "OPENCL"))
-            args.append(self.define("HSA_PATH", spec["hsa-rocr-dev"].prefix))
         if self.spec.satisfies("+hip"):
             args.append(self.define("BACKEND", "HIP"))
             args.append(self.define("HSA_PATH", spec["hsa-rocr-dev"].prefix))
             args.append(self.define("HIP_PATH", spec["hip"].prefix))
-        if self.spec.satisfies("~hip~opencl"):
+        if self.spec.satisfies("~hip"):
             args.append(self.define("BACKEND", "CPU"))
         if self.spec.satisfies("@5.5:"):
             args.append(
