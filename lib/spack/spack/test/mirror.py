@@ -200,13 +200,13 @@ def test_invalid_json_mirror_collection(invalid_json, error_message):
     assert error_message in exc_msg
 
 
-def test_mirror_archive_paths_no_version(mock_packages, config, mock_archive):
+def test_mirror_archive_paths_no_version(mock_packages, mock_archive):
     spec = Spec("trivial-install-test-package@=nonexistingversion").concretized()
     fetcher = spack.fetch_strategy.URLFetchStrategy(mock_archive.url)
     spack.mirror.mirror_archive_paths(fetcher, "per-package-ref", spec)
 
 
-def test_mirror_with_url_patches(mock_packages, config, monkeypatch):
+def test_mirror_with_url_patches(mock_packages, monkeypatch):
     spec = Spec("patch-several-dependencies")
     spec.concretize()
 

@@ -24,7 +24,7 @@ def python_database(mock_packages, mutable_database):
 
 @pytest.mark.not_on_windows("All Fetchers Failed")
 @pytest.mark.db
-def test_extensions(mock_packages, python_database, config, capsys):
+def test_extensions(mock_packages, python_database, capsys):
     ext2 = Spec("py-extension2").concretized()
 
     def check_output(ni):

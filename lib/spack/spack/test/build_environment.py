@@ -177,7 +177,7 @@ def test_cc_not_changed_by_modules(monkeypatch, working_env):
 
 
 def test_setup_dependent_package_inherited_modules(
-    config, working_env, mock_packages, install_mockery, mock_fetch
+    working_env, mock_packages, install_mockery, mock_fetch
 ):
     # This will raise on regression
     s = spack.spec.Spec("cmake-client-inheritor").concretized()

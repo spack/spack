@@ -49,7 +49,7 @@ def noop_install(monkeypatch):
 
 
 def test_install_package_and_dependency(
-    tmpdir, mock_packages, mock_archive, mock_fetch, config, install_mockery
+    tmpdir, mock_packages, mock_archive, mock_fetch, install_mockery
 ):
     log = "test"
     with tmpdir.as_cwd():
@@ -93,7 +93,7 @@ def test_install_runtests_all(monkeypatch, mock_packages, install_mockery):
 
 
 def test_install_package_already_installed(
-    tmpdir, mock_packages, mock_archive, mock_fetch, config, install_mockery
+    tmpdir, mock_packages, mock_archive, mock_fetch, install_mockery
 ):
     with tmpdir.as_cwd():
         install("libdwarf")
@@ -149,7 +149,7 @@ def test_package_output(tmpdir, capsys, install_mockery, mock_fetch):
 
 @pytest.mark.disable_clean_stage_check
 def test_install_output_on_build_error(
-    mock_packages, mock_archive, mock_fetch, config, install_mockery, capfd
+    mock_packages, mock_archive, mock_fetch, install_mockery, capfd
 ):
     """
     This test used to assume receiving full output, but since we've updated
@@ -163,9 +163,7 @@ def test_install_output_on_build_error(
 
 
 @pytest.mark.disable_clean_stage_check
-def test_install_output_on_python_error(
-    mock_packages, mock_archive, mock_fetch, config, install_mockery
-):
+def test_install_output_on_python_error(mock_packages, mock_archive, mock_fetch, install_mockery):
     out = install("failing-build", fail_on_error=False)
     assert isinstance(install.error, spack.build_environment.ChildError)
     assert install.error.name == "InstallError"
@@ -173,7 +171,7 @@ def test_install_output_on_python_error(
 
 
 @pytest.mark.disable_clean_stage_check
-def test_install_with_source(mock_packages, mock_archive, mock_fetch, config, install_mockery):
+def test_install_with_source(mock_packages, mock_archive, mock_fetch, install_mockery):
     """Verify that source has been copied into place."""
     install("--source", "--keep-stage", "trivial-install-test-package")
     spec = Spec("trivial-install-test-package").concretized()
@@ -183,7 +181,7 @@ def test_install_with_source(mock_packages, mock_archive, mock_fetch, config, in
     )
 
 
-def test_install_env_variables(mock_packages, mock_archive, mock_fetch, config, install_mockery):
+def test_install_env_variables(mock_packages, mock_archive, mock_fetch, install_mockery):
     spec = Spec("libdwarf")
     spec.concretize()
     install("libdwarf")
@@ -191,9 +189,7 @@ def test_install_env_variables(mock_packages, mock_archive, mock_fetch, config, 
 
 
 @pytest.mark.disable_clean_stage_check
-def test_show_log_on_error(
-    mock_packages, mock_archive, mock_fetch, config, install_mockery, capfd
-):
+def test_show_log_on_error(mock_packages, mock_archive, mock_fetch, install_mockery, capfd):
     """
     Make sure --show-log-on-error works.
     """
@@ -206,7 +202,7 @@ def test_show_log_on_error(
     assert "See build log for details:" in out
 
 
-def test_install_overwrite(mock_packages, mock_archive, mock_fetch, config, install_mockery):
+def test_install_overwrite(mock_packages, mock_archive, mock_fetch, install_mockery):
     # Try to install a spec and then to reinstall it.
     spec = Spec("libdwarf")
     spec.concretize()
@@ -240,9 +236,7 @@ def test_install_overwrite(mock_packages, mock_archive, mock_fetch, config, inst
     assert fs.hash_directory(spec.prefix, ignore=ignores) != bad_md5
 
 
-def test_install_overwrite_not_installed(
-    mock_packages, mock_archive, mock_fetch, config, install_mockery
-):
+def test_install_overwrite_not_installed(mock_packages, mock_archive, mock_fetch, install_mockery):
     # Try to install a spec and then to reinstall it.
     spec = Spec("libdwarf")
     spec.concretize()
@@ -277,9 +271,7 @@ def test_install_commit(mock_git_version_info, install_mockery, mock_packages, m
     assert content == "[0]"  # contents are weird for another test
 
 
-def test_install_overwrite_multiple(
-    mock_packages, mock_archive, mock_fetch, config, install_mockery
-):
+def test_install_overwrite_multiple(mock_packages, mock_archive, mock_fetch, install_mockery):
     # Try to install a spec and then to reinstall it.
     libdwarf = Spec("libdwarf")
     libdwarf.concretize()
@@ -337,18 +329,14 @@ def test_install_overwrite_multiple(
     assert cm_hash != bad_cmake_md5
 
 
-@pytest.mark.usefixtures(
-    "mock_packages", "mock_archive", "mock_fetch", "config", "install_mockery"
-)
+@pytest.mark.usefixtures("mock_packages", "mock_archive", "mock_fetch", "install_mockery")
 def test_install_conflicts(conflict_spec):
     # Make sure that spec with conflicts raises a SpackError
     with pytest.raises(SpackError):
         install(conflict_spec)
 
 
-@pytest.mark.usefixtures(
-    "mock_packages", "mock_archive", "mock_fetch", "config", "install_mockery"
-)
+@pytest.mark.usefixtures("mock_packages", "mock_archive", "mock_fetch", "install_mockery")
 def test_install_invalid_spec(invalid_spec):
     # Make sure that invalid specs raise a SpackError
     with pytest.raises(SpecSyntaxError, match="unexpected tokens"):
@@ -390,9 +378,7 @@ def test_install_from_file(spec, concretize, error_code, tmpdir):
 
 
 @pytest.mark.disable_clean_stage_check
-@pytest.mark.usefixtures(
-    "mock_packages", "mock_archive", "mock_fetch", "config", "install_mockery"
-)
+@pytest.mark.usefixtures("mock_packages", "mock_archive", "mock_fetch", "install_mockery")
 @pytest.mark.parametrize(
     "exc_typename,msg",
     [("RuntimeError", "something weird happened"), ("ValueError", "spec is not concrete")],
@@ -448,7 +434,6 @@ def test_junit_output_with_errors(
     mock_archive,
     mock_fetch,
     install_mockery,
-    config,
     tmpdir,
     monkeypatch,
 ):
@@ -509,9 +494,7 @@ def test_install_mix_cli_and_files(clispecs, filespecs, tmpdir):
     assert install.returncode == 0
 
 
-def test_extra_files_are_archived(
-    mock_packages, mock_archive, mock_fetch, config, install_mockery
-):
+def test_extra_files_are_archived(mock_packages, mock_archive, mock_fetch, install_mockery):
     s = Spec("archive-files")
     s.concretize()
 
@@ -629,7 +612,7 @@ def test_cdash_buildstamp_param(tmpdir, mock_fetch, install_mockery, capfd):
 
 @pytest.mark.disable_clean_stage_check
 def test_cdash_install_from_spec_json(
-    tmpdir, mock_fetch, install_mockery, capfd, mock_packages, mock_archive, config
+    tmpdir, mock_fetch, install_mockery, capfd, mock_packages, mock_archive
 ):
     # capfd interferes with Spack's capturing
     with capfd.disabled():

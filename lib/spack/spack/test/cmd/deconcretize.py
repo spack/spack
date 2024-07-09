@@ -12,7 +12,7 @@ deconcretize = SpackCommand("deconcretize")
 
 
 @pytest.fixture(scope="function")
-def test_env(mutable_mock_env_path, config, mock_packages):
+def test_env(mutable_mock_env_path, mock_packages):
     ev.create("test")
     with ev.read("test") as e:
         e.add("a@2.0 foobar=bar ^b@1.0")

@@ -63,6 +63,12 @@ from spack.fetch_strategy import URLFetchStrategy
 from spack.util.pattern import Bunch
 
 
+@pytest.fixture(autouse=True)
+def check_config_fixture(request):
+    if "config" in request.fixturenames and "mutable_config" in request.fixturenames:
+        raise RuntimeError("'config' and 'mutable_config' are both requested")
+
+
 def ensure_configuration_fixture_run_before(request):
     """Ensure that fixture mutating the configuration run before the one where
     the function is called.
