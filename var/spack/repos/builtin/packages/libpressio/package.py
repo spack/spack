@@ -407,17 +407,18 @@ class Libpressio(CMakePackage, CudaPackage):
 
     @run_after("install")
     def copy_test_sources(self):
-        if self.version < Version("0.88.3"):
-            return
+        if self.spec.satisfies("@0.88.2"):
+            raise SkipTest("Package must be installed as version @0.88.3 or later")
         srcs = [
             join_path("test", "smoke_test", "smoke_test.cc"),
             join_path("test", "smoke_test", "CMakeLists.txt"),
         ]
         self.cache_extra_test_sources(srcs)
 
-    def test(self):
-        if self.version < Version("0.88.3"):
-            return
+    def test_cmake(self):
+        """Test cmake config"""
+        if self.spec.satisfies("@0.88.2"):
+            raise SkipTest("Package must be installed as version @0.88.3 or later")
 
         args = self.cmake_args()
         args.append(
@@ -427,10 +428,22 @@ class Libpressio(CMakePackage, CudaPackage):
             "-DCMAKE_PREFIX_PATH={};{}".format(self.spec["libstdcompat"].prefix, self.prefix)
         )
 
-        self.run_test("cmake", args, purpose="cmake configuration works")
+        cmake = which("cmake")
+        cmake(*args)
 
+    def test_build(self):
+        """Cmake build test"""
         # this works for cmake@3.14: which is required for this package
-        args = ["--build", "."]
-        self.run_test("cmake", args, purpose="cmake builds works")
+        if self.spec.satisfies("@0.88.2"):
+            raise SkipTest("Package must be installed as version @0.88.3 or later")
+        exe = which("cmake")
+        exe("--build", ".")
 
-        self.run_test("./pressio_smoke_tests", expected="all passed")
+    def test_smoke(self):
+        """Run smoke test"""
+        if self.spec.satisfies("@0.88.2"):
+            raise SkipTest("Package must be installed as version @0.88.3 or later")
+        exe = which("./pressio_smoke_tests")
+        out = exe()
+        expected = "all passed"
+        assert out in expected
