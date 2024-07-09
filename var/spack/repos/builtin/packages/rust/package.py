@@ -63,6 +63,8 @@ class Rust(Package):
     depends_on("python", type="build")
     depends_on("zlib-api")
 
+    # cmake dependency comes from LLVM. Rust has their own fork of LLVM, with tags corresponding
+    # to each Rust release, so it's easy to loop through tags and grep for "cmake_minimum_required"
     depends_on("cmake@3.4.3:", type="build", when="@:1.51")
     depends_on("cmake@3.13.4:", type="build", when="@1.52:1.72")
     depends_on("cmake@3.20.0:", type="build", when="@1.73:")
