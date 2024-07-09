@@ -1051,10 +1051,9 @@ class dependency_holds(TransformFunction):
     def __init__(self, pkg, depflag):
         self.pkg = pkg
         self.depflag = depflag
-        str_flagtypes = list(sorted(
-            dt.flag_to_string(t) for t in dt.ALL_FLAGS
-            if t & self.depflag
-        ))
+        str_flagtypes = list(
+            sorted(dt.flag_to_string(t) for t in dt.ALL_FLAGS if t & self.depflag)
+        )
         self.elements = (pkg.name, ":".join(str_flagtypes))
 
     def __call__(self, input_spec: spack.spec.Spec, requirements: List[AspFunction]):
@@ -1212,8 +1211,10 @@ class SpackSolverSetup:
         for when_spec, conflict_specs in pkg.conflicts.items():
             when_spec_msg = "conflict constraint %s" % str(when_spec)
             when_spec_id = self.condition(
-                when_spec, name=pkg.name, msg=when_spec_msg,
-                id_context=["conflict-when", pkg.name] + list(conflict_specs)
+                when_spec,
+                name=pkg.name,
+                msg=when_spec_msg,
+                id_context=["conflict-when", pkg.name] + list(conflict_specs),
             )
 
             for conflict_spec, conflict_msg in conflict_specs:
