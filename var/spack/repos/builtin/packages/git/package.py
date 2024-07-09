@@ -30,19 +30,49 @@ class Git(AutotoolsPackage):
     # https://www.kernel.org/pub/software/scm/git/git-manpages-{version}.tar.gz
     # https://mirrors.edge.kernel.org/pub/software/scm/git/sha256sums.asc
     version("2.45.2", sha256="98b26090ed667099a3691b93698d1e213e1ded73d36a2fde7e9125fce28ba234")
-    version("2.45.1", sha256="10acb581993061e616be9c5674469335922025a666318e0748cb8306079fef24")
     version("2.44.2", sha256="f0655e81c5ecfeef7440aa4fcffa1c1a77eaccf764d6fe29579e9a06eac2cd04")
-    version("2.44.1", sha256="118214bb8d7ba971a62741416e757562b8f5451cefc087a407e91857897c92cc")
     version("2.43.5", sha256="324c3b85d668e6afe571b3502035848e4b349dead35188e2b8ab1b96c0cd45ff")
-    version("2.43.4", sha256="bfd717dc31922f718232a25a929d199e26146df5e876fdf0ff90a7cc95fa06e2")
     version("2.42.3", sha256="f42a8e8f6c0add4516f9e4607554c8ad698161b7d721b82073fe315a59621961")
-    version("2.42.2", sha256="3b24b712fa6e9a3da5b7d3e68b1854466905aadb93a43088a38816bcc3b9d043")
     version("2.41.2", sha256="481aa0a15aa37802880a6245b96c1570d7337c44700d5d888344cd6d43d85306")
-    version("2.41.1", sha256="06d2a681aa7f1bdb6e7f7101631407e7412faa534e1fa0eb6fdcb9975d867d31")
     version("2.40.3", sha256="b3dc96b20edcdbe6bea7736ea55bb80babf683d126cc7f353ed4e3bc304cd7da")
-    version("2.40.2", sha256="1dcdfbb4eeb3ef2c2d9154f888d4a6f0cf19f19acad76f0d32e725e7bc147753")
     version("2.39.5", sha256="ca0ec03fb2696f552f37135a56a0242fa062bd350cb243dc4a15c86f1cafbc99")
-    version("2.39.4", sha256="b895ed2b5d98fd3dcfde5807f16d5fb17c4f83044e7d08e597ae13de222f0d26")
+
+    # Deprecated versions (https://groups.google.com/g/git-packagers/c/x6-nKLV20aE)
+    version(
+        "2.45.1",
+        sha256="10acb581993061e616be9c5674469335922025a666318e0748cb8306079fef24",
+        deprecated=True,
+    )
+    version(
+        "2.44.1",
+        sha256="118214bb8d7ba971a62741416e757562b8f5451cefc087a407e91857897c92cc",
+        deprecated=True,
+    )
+    version(
+        "2.43.4",
+        sha256="bfd717dc31922f718232a25a929d199e26146df5e876fdf0ff90a7cc95fa06e2",
+        deprecated=True,
+    )
+    version(
+        "2.42.2",
+        sha256="3b24b712fa6e9a3da5b7d3e68b1854466905aadb93a43088a38816bcc3b9d043",
+        deprecated=True,
+    )
+    version(
+        "2.41.1",
+        sha256="06d2a681aa7f1bdb6e7f7101631407e7412faa534e1fa0eb6fdcb9975d867d31",
+        deprecated=True,
+    )
+    version(
+        "2.40.2",
+        sha256="1dcdfbb4eeb3ef2c2d9154f888d4a6f0cf19f19acad76f0d32e725e7bc147753",
+        deprecated=True,
+    )
+    version(
+        "2.39.4",
+        sha256="b895ed2b5d98fd3dcfde5807f16d5fb17c4f83044e7d08e597ae13de222f0d26",
+        deprecated=True,
+    )
 
     # Deprecated versions (see https://github.blog/2024-05-14-securing-git-addressing-5-new-vulnerabilities/).
     version(
