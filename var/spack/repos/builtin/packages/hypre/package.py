@@ -399,7 +399,7 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
                 exe("HYPRE_DIR={0}".format(self.prefix), "bigint")
 
         for exeName in ["ex5big", "ex15big"]:
-            with test_part(self, f"test_hypre_" + exeName, purpose=f"Ensuring {exeName} runs"):
+            with test_part(self, f"test_hypre_{exeName}", purpose=f"Ensuring {exeName} runs"):
                 with working_dir(self._cached_tests_work_dir):
                     exe = which(exeName)
                     if not os.path.exists("./" + exeName):
