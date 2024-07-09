@@ -16,7 +16,7 @@ class Hpx(CMakePackage, CudaPackage, ROCmPackage):
     homepage = "https://hpx.stellar-group.org/"
     url = "https://github.com/STEllAR-GROUP/hpx/archive/v0.0.0.tar.gz"
     git = "https://github.com/STEllAR-GROUP/hpx.git"
-    maintainers("msimberg", "albestro", "teonnik", "hkaiser")
+    maintainers("msimberg", "albestro", "teonnik", "hkaiser","diehlpk")
 
     license("BSL-1.0")
 
@@ -225,6 +225,11 @@ class Hpx(CMakePackage, CudaPackage, ROCmPackage):
     def cmake_args(self):
         spec, args = self.spec, []
 
+        if "networking=mpi" in spec:
+            args.append(self.define("CMAKE_C_COMPILER", spec["mpi"].mpicc))
+            args.append(self.define("CMAKE_CXX_COMPILER", spec["mpi"].mpicxx))
+            args.append(self.define("CMAKE_Fortran_COMPILER", spec["mpi"].mpifc))
+        
         format_max_cpu_count = lambda max_cpu_count: (
             "" if max_cpu_count == "auto" else max_cpu_count
         )
