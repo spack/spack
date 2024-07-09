@@ -424,6 +424,11 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
     conflicts(
         "+rocm", when="@:1.99.99", msg="ROCm support in spack requires Chapel 2.0.0 or later"
     )
+    # Chapel restricts the allowable ROCm versions
+    with when("+rocm"):
+        depends_on("hsa-rocr-dev@4:5.4")
+        depends_on("hip@4:5.4")
+        depends_on("llvm-amdgpu@4:5.4")
 
     conflicts(
         "comm_substrate=unset",
@@ -473,12 +478,12 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
     depends_on("doxygen@1.8.17:", when="+chpldoc")
 
     # TODO: keep up to date with util/chplenv/chpl_llvm.py
-    with when("llvm=spack"):
+    with when("llvm=spack ~rocm"):
         depends_on("llvm@11:17", when="@:2.0.1")
         depends_on("llvm@11:18", when="@2.1.0:")
 
     # Based on docs https://chapel-lang.org/docs/technotes/gpu.html#requirements
-    depends_on("llvm@16:", when="llvm=spack ^cuda@12:")
+    depends_on("llvm@16:", when="llvm=spack +cuda ^cuda@12:")
     requires(
         "^llvm targets=all",
         msg="llvm=spack +cuda requires LLVM support the nvptx target",
@@ -553,8 +558,26 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
 
         # Undo spack compiler wrappers:
         # the C/C++ compilers must work post-install
-        if self.spec.satisfies("llvm=spack"):
+        if self.spec.satisfies("+rocm"):
             env.set("CHPL_TARGET_COMPILER", "llvm")
+            env.set(
+                "CHPL_LLVM_CONFIG",
+                join_path(self.spec["llvm-amdgpu"].prefix, "bin", "llvm-config")
+            )
+            real_cc = join_path(self.spec["llvm-amdgpu"].prefix, "bin", "clang")
+            real_cxx = join_path(self.spec["llvm-amdgpu"].prefix, "bin", "clang++")
+
+            # +rocm appears to also require a matching LLVM host compiler to guarantee linkage
+            env.set("CHPL_HOST_COMPILER", "llvm")
+            env.set("CHPL_HOST_CC", real_cc)
+            env.set("CHPL_HOST_CXX", real_cxx)
+
+        elif self.spec.satisfies("llvm=spack"):
+            env.set("CHPL_TARGET_COMPILER", "llvm")
+            env.set(
+                "CHPL_LLVM_CONFIG",
+                join_path(self.spec["llvm"].prefix, "bin", "llvm-config")
+            )
             real_cc = join_path(self.spec["llvm"].prefix, "bin", "clang")
             real_cxx = join_path(self.spec["llvm"].prefix, "bin", "clang++")
         else:
@@ -575,12 +598,6 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
         remove_directory_contents(dst)
         os.rmdir(dst)
         symlink(self.spec["gasnet"].prefix.src, dst)
-
-    def setup_chpl_llvm(self, env):
-        if self.spec.variants["llvm"].value == "spack":
-            env.set(
-                "CHPL_LLVM_CONFIG", "{0}/{1}".format(self.spec["llvm"].prefix, "bin/llvm-config")
-            )
 
     def setup_if_not_unset(self, env, var, value):
         if value != "unset":
@@ -604,7 +621,6 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
         # a CHPL_<variant> variable which will be used by the Chapel build system
         for v in self.spec.variants.keys():
             self.setup_if_not_unset(env, "CHPL_" + v.upper(), self.spec.variants[v].value)
-        self.setup_chpl_llvm(env)
         self.setup_chpl_compilers(env)
         self.setup_chpl_platform(env)
 
@@ -670,12 +686,7 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
         if self.spec.satisfies("+rocm"):
             env.set("CHPL_LOCALE_MODEL", "gpu")
             env.set("CHPL_GPU", "amd")
-            env.set("CHPL_HOST_COMPILER", "llvm")
             env.set("CHPL_GPU_ARCH", self.spec.variants["amdgpu_target"].value[0])
-            env.set(
-                "CHPL_LLVM_CONFIG",
-                "{0}/{1}".format(self.spec["llvm-amdgpu"].prefix, "bin/llvm-config"),
-            )
             self.prepend_cpath_include(env, self.spec["hip"].prefix)
             env.set("CHPL_ROCM_PATH", self.spec["llvm-amdgpu"].prefix)
             self.set_lib_path(env, self.spec["hip"].prefix)
