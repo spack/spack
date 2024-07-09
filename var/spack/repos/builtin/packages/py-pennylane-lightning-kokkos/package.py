@@ -32,8 +32,8 @@ class PyPennylaneLightningKokkos(CMakePackage, PythonExtension, CudaPackage, ROC
 
     depends_on("kokkos@:3.7.2", when="@:0.30", type=("run", "build"))
     depends_on("kokkos@4:4.1", when="@0.31", type=("run", "build"))
-    depends_on("kokkos@4:4.2", when="@0.32:", type=("run", "build"))
-    depends_on("kokkos@4:4.3", when="@0.37:", type=("run", "build"))
+    depends_on("kokkos@4:4.2", when="@0.32:0.36", type=("run", "build"))
+    depends_on("kokkos@4.3:", when="@0.37:", type=("run", "build"))
 
     # kokkos backends
     backends = {
