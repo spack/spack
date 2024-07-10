@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import sys
+
 from spack.package import *
 
 
@@ -32,12 +34,16 @@ class Cpuinfo(CMakePackage):
     depends_on("cmake@3.5:", type="build")
 
     def cmake_args(self):
+        # cpuinfo cannot produce a shared build with MSVC because it does not export
+        # any symbols
+        # cpuinfo CI builds "default" on Windows platform
+        build_type = "default" if sys.platform == "win32" else "shared"
         # https://salsa.debian.org/deeplearning-team/cpuinfo/-/blob/master/debian/rules
         return [
             self.define("CPUINFO_BUILD_UNIT_TESTS", False),
             self.define("CPUINFO_BUILD_MOCK_TESTS", False),
             self.define("CPUINFO_BUILD_BENCHMARKS", False),
-            self.define("CPUINFO_LIBRARY_TYPE", "shared"),
+            self.define("CPUINFO_LIBRARY_TYPE", build_type),
             self.define("CPUINFO_LOG_LEVEL", "error"),
             self.define("CMAKE_SKIP_RPATH", True),
         ]
