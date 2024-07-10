@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import warnings
+
 from spack.package import *
 
 
@@ -114,22 +116,35 @@ class Pumi(CMakePackage):
     def test(self):
         if self.spec.version <= Version("2.2.6"):
             return
-        exe = "uniform"
-        options = ["../testdata/pipe.dmg", "../testdata/pipe.smb", "pipe_unif.smb"]
-        expected = "mesh pipe_unif.smb written"
+        data_dir = self.prefix.share.testdata
+        exe = self.prefix.bin.uniform
+        options = [
+            join_path(data_dir, "pipe.dmg"),
+            join_path(data_dir, "pipe.smb"),
+            join_path(self.prefix.bin, "pipe_unif.smb"),
+        ]
+        expected = "pipe_unif.smb written"
         description = "testing pumi uniform mesh refinement"
-        self.run_test(exe, options, expected, purpose=description, work_dir=self.prefix.bin)
+        self.run_test(exe, options, expected, purpose=description)
 
-        mpiexec = Executable(join_path(self.spec["mpi"].prefix.bin, "mpiexec")).command
-        mpiopt = ["-n", "2"]
-        exe = ["split"]
-        options = ["../testdata/pipe.dmg", "../testdata/pipe.smb", "pipe_2_.smb", "2"]
-        expected = "mesh pipe_2_.smb written"
+        mpiexec = ""
+        mpiexe_list = ["mpirun", "mpiexec", "srun"]
+        for mpiexe in mpiexe_list:
+            if which(mpiexe) is not None:
+                mpiexec = Executable(mpiexe).command
+                break
+        if mpiexec == "":
+            warnings.warn("MPI exec not found")
+        data_dir = self.prefix.share.testdata
+        options = [
+            "-n",
+            "2",
+            join_path(self.prefix.bin, "split"),
+            join_path(data_dir, "pipe.dmg"),
+            join_path(data_dir, "pipe.smb"),
+            join_path(self.prefix.bin, "pipe_2_.smb"),
+            "2",
+        ]
+        expected = "pipe_2_.smb written"
         description = "testing pumi mesh partitioning"
-        self.run_test(
-            mpiexec,
-            mpiopt + exe + options,
-            expected,
-            purpose=description,
-            work_dir=self.prefix.bin,
-        )
+        self.run_test(mpiexec, options, expected, purpose=description)
