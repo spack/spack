@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
-from os.path import dirname
+from os.path import dirname, join
 
 from llnl.util import tty
 
@@ -135,8 +135,12 @@ class Oneapi(Compiler):
         # It is located in the same directory as the driver. Error message:
         #   clang++: error: unable to execute command:
         #   Executable "sycl-post-link" doesn't exist!
-        if self.cxx:
+        # also ensures that shared objects and libraries required by the compiler,
+        # e.g. libonnx, can be found succesfully
+        # due to a fix, this is no longer required for OneAPI versions >= 2024.2
+        if self.cxx and pkg.spec.satisfies("%oneapi@:2024.1"):
             env.prepend_path("PATH", dirname(self.cxx))
+            env.prepend_path("LD_LIBRARY_PATH", join(dirname(dirname(self.cxx)), "lib"))
 
         # 2024 release bumped the libsycl version because of an ABI
         # change, 2024 compilers are required.  You will see this
