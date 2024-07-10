@@ -65,9 +65,6 @@ class RocmCmake(CMakePackage):
 
     def test_cmake(self):
         """Test cmake"""
-        if self.spec.satisfies("@:5.1.0"):
-            raise SkipTest("Package must be installed as version @5.5.1 or later")
-
         test_dir = join_path(self.test_suite.current_test_cache_dir, self.test_src_dir)
         with working_dir(test_dir, create=True):
             prefixes = ";".join([self.spec["rocm-cmake"].prefix])
