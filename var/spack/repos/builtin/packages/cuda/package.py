@@ -691,6 +691,11 @@ class Cuda(Package):
         env.set("CUDA_HOME", self.prefix)
         env.set("NVHPC_CUDA_HOME", self.prefix)
 
+        # Ensure that libraries such as CCCL (e.g. Thrust, CUB, and libcudacxx)
+        # are available via CMake when the CUDA spec is loaded.
+        for prefix in self.cmake_prefix_paths:
+            env.prepend_path("CMAKE_PREFIX_PATH", prefix)
+
     def install(self, spec, prefix):
         if os.path.exists("/tmp/cuda-installer.log"):
             try:
