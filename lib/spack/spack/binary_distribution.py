@@ -2116,9 +2116,9 @@ def relocate_package(spec):
                     lookup_dag_hash = spec.build_spec[virtual].dag_hash()
                     break
                 except KeyError:
-                    pass
-            else:
-                raise KeyError(f"{spec} does not depend on {name}")
+                    # This is a new dependency
+                    tty.debug(f"{spec} does not have relocation for {name}")
+
 
         if lookup_dag_hash in hash_to_old_prefix:
             old_dep_prefix = hash_to_old_prefix[lookup_dag_hash]
