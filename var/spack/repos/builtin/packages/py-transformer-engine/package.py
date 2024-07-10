@@ -19,7 +19,10 @@ class PyTransformerEngine(PythonPackage):
 
     license("Apache-2.0")
 
+    version("1.7", tag="v1.7", submodules=True)
     version("1.4", tag="v1.4", submodules=True)
+    version("1.3", tag="v1.3", submodules=True)
+    version("1.1", tag="v1.1", submodules=True)
     version("main", branch="main", submodules=True)
 
     variant("userbuffers", default=True, description="Enable userbuffers, this option needs MPI.")
@@ -28,6 +31,7 @@ class PyTransformerEngine(PythonPackage):
     depends_on("cmake@3.18:")
     depends_on("py-pydantic")
     depends_on("py-importlib-metadata")
+    depends_on("gdrcopy")
 
     with default_args(type=("build", "run")):
         depends_on("py-accelerate")
