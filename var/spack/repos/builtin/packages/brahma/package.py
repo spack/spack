@@ -38,7 +38,5 @@ class Brahma(CMakePackage):
     depends_on("mpi", when="+mpi")
 
     def cmake_args(self):
-        if self.spec.satisfies("@0.0.4:"):
-            return [self.define_from_variant("BRAHMA_BUILD_WITH_MPI", "mpi")]
-        else:
-            return [self.define_from_variant("BUILD_WITH_MPI", "mpi")]
+        prefix = "BRAHMA_" if self.spec.satisfies("@0.0.4:") else ""
+        return [self.define_from_variant(f"{prefix}BUILD_WITH_MPI", "mpi")]
