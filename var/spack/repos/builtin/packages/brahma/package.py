@@ -31,8 +31,7 @@ class Brahma(CMakePackage):
     depends_on("gotcha@1.0.4", when="@:0.0.1")
     depends_on("gotcha@1.0.5", when="@0.0.2:0.0.3")
     depends_on("gotcha@1.0.6", when="@0.0.4")
-    depends_on("gotcha@1.0.7", when="@0.0.5")
-    depends_on("gotcha@1.0.7", when="@develop")
+    depends_on("gotcha@1.0.7", when="@0.0.5:")
     depends_on("catch2@3.0.1:")
 
     depends_on("mpi", when="+mpi")
