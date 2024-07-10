@@ -849,6 +849,7 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
             "util/test",
             "util/chplenv",
             "util/config",
+            "util/printchplenv",
             #   "test/library/packages/Curl",
             #   "test/library/packages/URL/",
             #   "test/library/packages/ProtobufProtocolSupport/",
