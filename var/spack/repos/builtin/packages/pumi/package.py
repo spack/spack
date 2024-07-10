@@ -131,7 +131,7 @@ class Pumi(CMakePackage):
 
     def test_refine(self):
         """Testing pumi uniform mesh refinement"""
-        if self.spec.satisfies("@2.2.6"):
+        if self.spec.satisfies("@:2.2.6"):
             raise SkipTest("Package must be installed as version @2.2.7 or later")
 
         options = [
