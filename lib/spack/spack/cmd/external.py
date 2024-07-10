@@ -18,7 +18,6 @@ import spack.cmd.common.arguments
 import spack.cray_manifest as cray_manifest
 import spack.detection
 import spack.error
-import spack.util.editor
 import spack.util.environment
 
 description = "manage external packages in Spack configuration"
@@ -103,15 +102,6 @@ def setup_parser(subparser):
         "--fail-on-error",
         action="store_true",
         help=("if a manifest file cannot be parsed, fail and report the " "full stack trace"),
-    )
-
-    edit_parser = sp.add_parser("edit", help="open packages.yaml in $EDITOR")
-    edit_parser.add_argument(
-        "--scope",
-        choices=scopes,
-        metavar=scopes_metavar,
-        default=spack.config.default_modify_scope("packages"),
-        help="configuration scope to modify",
     )
 
     remove_parser = sp.add_parser("remove", help="remove external packages from packages.yaml")
@@ -285,11 +275,6 @@ def external_list(args):
             colify.colify(pkgs, indent=4, output=sys.stdout)
 
 
-def external_edit(args):
-    ext_packages_yaml_path = spack.config.config.get_config_filename(args.scope, "packages")
-    spack.util.editor.editor(ext_packages_yaml_path)
-
-
 def _report_removed(path, specs):
     tty.msg("The following packages have been removed from {}:".format(path))
     spack.cmd.display_specs(specs, display_args)
@@ -324,7 +309,6 @@ def external(parser, args):
         "find": external_find,
         "list": external_list,
         "read-cray-manifest": external_read_cray_manifest,
-        "edit": external_edit,
         "remove": external_remove,
     }
     action[args.external_command](args)

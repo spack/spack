@@ -54,10 +54,6 @@ if defined py_exe (
     "%py_exe%" "%SPACK_ROOT%\bin\haspywin.py"
 )
 
-if not defined EDITOR (
-    set "EDITOR=notepad"
-)
-
 DOSKEY spacktivate=spack env activate $*
 
 @echo **********************************************************************
