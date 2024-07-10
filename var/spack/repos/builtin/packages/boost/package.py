@@ -504,9 +504,9 @@ class Boost(Package):
 
         return "using python : {0} : {1} : {2} : {3} ;\n".format(
             spec["python"].version.up_to(2),
-            spec["python"].command.path.replace("\\", "/"),
-            spec["python"].prefix.include.replace("\\", "/"),
-            spec["python"].prefix.libs.replace("\\", "/"),
+            spec["python"].command.path.as_posix(),
+            spec["python"].prefix.include.as_posix(),
+            spec["python"].prefix.libs.as_posix(),
         )
 
     def determine_bootstrap_options(self, spec, with_libs, options):
