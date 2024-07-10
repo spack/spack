@@ -111,25 +111,34 @@ class Pumi(CMakePackage):
                 args.append("-DSIM_DISCRETE=ON")
         return args
 
-    def test(self):
-        if self.spec.version <= Version("2.2.6"):
-            return
-        exe = "uniform"
-        options = ["../testdata/pipe.dmg", "../testdata/pipe.smb", "pipe_unif.smb"]
-        expected = "mesh pipe_unif.smb written"
-        description = "testing pumi uniform mesh refinement"
-        self.run_test(exe, options, expected, purpose=description, work_dir=self.prefix.bin)
+    def test_partition(self):
+        """Testing pumi mesh partitioning"""
+        if self.spec.satisfies("@:2.2.6"):
+            raise SkipTest("Package must be installed as version @2.2.7 or later")
 
-        mpiexec = Executable(join_path(self.spec["mpi"].prefix.bin, "mpiexec")).command
-        mpiopt = ["-n", "2"]
-        exe = ["split"]
-        options = ["../testdata/pipe.dmg", "../testdata/pipe.smb", "pipe_2_.smb", "2"]
-        expected = "mesh pipe_2_.smb written"
-        description = "testing pumi mesh partitioning"
-        self.run_test(
-            mpiexec,
-            mpiopt + exe + options,
-            expected,
-            purpose=description,
-            work_dir=self.prefix.bin,
-        )
+        options = [
+            "-n",
+            "2",
+            join_path(self.prefix.bin, "split"),
+            join_path(self.prefix.share.testdata, "pipe.dmg"),
+            join_path(self.prefix.share.testdata, "pipe.smb"),
+            "pipe_2_.smb",
+            "2",
+        ]
+        exe = which(self.spec["mpi"].prefix.bin.mpiexec)
+        out = exe(*options, output=str.split, error=str.split)
+        assert "mesh pipe_2_.smb written" in out
+
+    def test_refine(self):
+        """Testing pumi uniform mesh refinement"""
+        if self.spec.satisfies("@:2.2.6"):
+            raise SkipTest("Package must be installed as version @2.2.7 or later")
+
+        options = [
+            join_path(self.prefix.share.testdata, "pipe.dmg"),
+            join_path(self.prefix.share.testdata, "pipe.smb"),
+            "pipe_unif.smb",
+        ]
+        exe = which(self.prefix.bin.uniform)
+        out = exe(*options, output=str.split, error=str.split)
+        assert "mesh pipe_unif.smb written" in out
