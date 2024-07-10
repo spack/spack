@@ -637,6 +637,9 @@ class Boost(Package):
                 if f"+{lib}" not in spec:
                     options.append(f"--without-{lib}")
 
+            # Since icu is a conflict on Windows, explicitly add it to options not to build.
+            options.append("--without-icu")
+
         if not spec.satisfies("@:1.75 %intel") and not spec.satisfies("platform=windows"):
             # When building any version >= 1.76, the toolset must be specified.
             # Earlier versions could not specify Intel as the toolset
