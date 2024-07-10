@@ -149,11 +149,10 @@ class Povray(AutotoolsPackage):
         return extra_args
 
     def test(self):
+        "Render sample file"
         povs = find(self.prefix.share, "biscuit.pov")[0]
         copy(povs, ".")
-        self.run_test(
-            "povray",
-            options=["biscuit.pov"],
-            purpose="test: render sample file",
-            expected=["POV-Ray finished"],
-        )
+        exe = which("povray")
+        out = exe("biscuit.pov")
+        expected = "POV-Ray finished"
+        assert out in expected
