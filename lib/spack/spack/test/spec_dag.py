@@ -978,6 +978,31 @@ class TestSpecDag:
         assert "version-test-pkg" not in out
 
 
+def test_tree_cover_nodes_reduce_deptype():
+    """Test that tree output with deptypes sticks to the sub-dag of interest, instead of looking
+    at in-edges from nodes not reachable from the root."""
+    a, b, c, d = Spec("a"), Spec("b"), Spec("c"), Spec("d")
+    a.add_dependency_edge(d, depflag=dt.BUILD, virtuals=())
+    a.add_dependency_edge(b, depflag=dt.LINK, virtuals=())
+    b.add_dependency_edge(d, depflag=dt.LINK, virtuals=())
+    c.add_dependency_edge(d, depflag=dt.RUN | dt.TEST, virtuals=())
+    assert (
+        a.tree(cover="nodes", show_types=True)
+        == """\
+[    ]  a
+[ l  ]      ^b
+[bl  ]      ^d
+"""
+    )
+    assert (
+        c.tree(cover="nodes", show_types=True)
+        == """\
+[    ]  c
+[  rt]      ^d
+"""
+    )
+
+
 def test_synthetic_construction_of_split_dependencies_from_same_package(mock_packages, config):
     # Construct in a synthetic way (i.e. without using the solver)
     # the following spec:
