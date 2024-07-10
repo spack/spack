@@ -1267,12 +1267,14 @@ class RewireTask(Task):
                 install_args = self.request.install_args
                 unsigned = install_args.get("unsigned")
                 binary_distribution.install_root_node(self.pkg.spec, unsigned=unsigned)
+                _print_installed_pkg(self.pkg.prefix)
                 return ExecuteResult.SUCCESS
             except BaseException as e:
                 tty.debug(f"Failed to rewire {self.pkg.spec} from binary. {e}")
                 self.status = oldstatus
                 return ExecuteResult.MISSING_BUILD_SPEC
         spack.rewiring.rewire_node(self.pkg.spec, self.explicit)
+        _print_installed_pkg(self.pkg.prefix)
         return ExecuteResult.SUCCESS
 
 
