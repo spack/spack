@@ -125,11 +125,8 @@ class Pumi(CMakePackage):
             "pipe_2_.smb",
             "2",
         ]
-        print(f"{options}")
         exe = which(self.spec["mpi"].prefix.bin.mpiexec)
-        print(f"{exe}")
         out = exe(*options, output=str.split, error=str.split)
-        print(f"{out}")
         assert "mesh pipe_2_.smb written" in out
 
     def test_refine(self):
