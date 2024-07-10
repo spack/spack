@@ -293,6 +293,11 @@ class Boost(Package):
     # (https://github.com/spack/spack/pull/32879#issuecomment-1265933265)
     conflicts("%oneapi", when="@1.80")
 
+    # On Windows, the signals variant is required when building any of
+    # the all_libs variants.
+    for lib in filter(lambda lib: lib != "signals", all_libs):
+        conflicts("~signals", when=f"+{lib} platform=windows")
+
     # Boost 1.85.0 stacktrace added a hard compilation error that has to
     # explicitly be suppressed on some platforms:
     # https://github.com/boostorg/stacktrace/pull/150. This conflict could be
@@ -629,11 +634,7 @@ class Boost(Package):
             else:
                 options.append("runtime-link=static")
             for lib in self.all_libs:
-                # Without explicitly adding or removing specific libs, all would be built,
-                # so instead, explicitly exclude libs that aren't requested.
-                # Some items in all_libs cannot be excluded.
-                required_libs = ("signals",)
-                if f"+{lib}" not in spec and lib not in required_libs:
+                if f"+{lib}" not in spec:
                     options.append(f"--without-{lib}")
 
         if not spec.satisfies("@:1.75 %intel") and not spec.satisfies("platform=windows"):
