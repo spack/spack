@@ -113,7 +113,7 @@ class Pumi(CMakePackage):
 
     def test_partition(self):
         """Testing pumi mesh partitioning"""
-        if self.spec.satisfies("@2.2.6"):
+        if self.spec.satisfies("@:2.2.6"):
             raise SkipTest("Package must be installed as version @2.2.7 or later")
 
         options = [
