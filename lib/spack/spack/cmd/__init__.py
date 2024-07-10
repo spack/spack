@@ -336,6 +336,7 @@ def display_specs(specs, args=None, **kwargs):
         groups (bool): display specs grouped by arch/compiler (default True)
         decorator (typing.Callable): function to call to decorate specs
         all_headers (bool): show headers even when arch/compiler aren't defined
+        status_fn (typing.Callable): if provided, prepend install-status info
         output (typing.IO): A file object to write to. Default is ``sys.stdout``
 
     """
@@ -359,6 +360,7 @@ def display_specs(specs, args=None, **kwargs):
     groups = get_arg("groups", True)
     all_headers = get_arg("all_headers", False)
     output = get_arg("output", sys.stdout)
+    status_fn = get_arg("status_fn", None)
 
     decorator = get_arg("decorator", None)
     if decorator is None:
@@ -386,6 +388,13 @@ def display_specs(specs, args=None, **kwargs):
     def fmt(s, depth=0):
         """Formatter function for all output specs"""
         string = ""
+
+        if status_fn:
+            # This was copied from spec.tree's colorization logic
+            # then shortened because it seems like status_fn should
+            # always return an InstallStatus
+            string += colorize(status_fn(s).value)
+
         if hashes:
             string += gray_hash(s, hlen) + " "
         string += depth * "    "
