@@ -335,13 +335,9 @@ class ExecutablesFinder(Finder):
 
     def candidate_files(self, *, patterns: List[str], paths: List[str]) -> List[str]:
         executables_by_path = executables_in_path(path_hints=paths)
-        patterns = [re.compile(x) for x in patterns]
-        result = []
-        for compiled_re in patterns:
-            for path, exe in executables_by_path.items():
-                if compiled_re.search(exe):
-                    result.append(path)
-        return list(sorted(set(result)))
+        joined_pattern = re.compile(r"|".join(patterns))
+        result = [path for path, exe in executables_by_path.items() if joined_pattern.search(exe)]
+        return sorted(set(result))
 
     def prefix_from_path(self, *, path: str) -> str:
         result = executable_prefix(path)
