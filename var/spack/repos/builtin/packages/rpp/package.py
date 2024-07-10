@@ -65,7 +65,8 @@ class Rpp(CMakePackage):
 
     # adds half.hpp include directory and modifies how the libjpegturbo
     # library is linked for the rpp unit test
-    patch("0003-changes-to-rpp-unit-tests.patch", when="+add_tests")
+    patch("0003-changes-to-rpp-unit-tests.patch", when="@5.7:6.0 +add_tests")
+    patch("0003-changes-to-rpp-unit-tests-6.1.patch", when="@6.1 +add_tests")
 
     def patch(self):
         if self.spec.satisfies("+hip"):
@@ -104,6 +105,18 @@ class Rpp(CMakePackage):
                 "utilities/test_suite/HIP/CMakeLists.txt",
                 string=True,
             )
+            filter_file(
+                "${ROCM_PATH}/share/rpp/test/cmake",
+                self.spec.prefix.share.rpp.test.cmake,
+                "utilities/test_suite/HOST/CMakeLists.txt",
+                string=True,
+            )
+            filter_file(
+                "${ROCM_PATH}/share/rpp/test/cmake",
+                self.spec.prefix.share.rpp.test.cmake,
+                "utilities/test_suite/HIP/CMakeLists.txt",
+                string=True,
+            )
 
     depends_on("cmake@3.5:", type="build")
     depends_on("pkgconfig", type="build")
@@ -135,6 +148,8 @@ class Rpp(CMakePackage):
     def setup_run_environment(self, env):
         if self.spec.satisfies("+add_tests"):
             env.set("TURBO_JPEG_PATH", self.spec["libjpeg-turbo"].prefix)
+        if self.spec.satisfies("@6.1:"):
+            env.prepend_path("LD_LIBRARY_PATH", self.spec["hsa-rocr-dev"].prefix.lib)
 
     def cmake_args(self):
         spec = self.spec
@@ -153,9 +168,3 @@ class Rpp(CMakePackage):
                 )
             )
         return args
-
-    @run_after("install")
-    def add_tests(self):
-        if self.spec.satisfies("+add_tests"):
-            install_tree("utilities", self.spec.prefix.utilities)
-            install_tree("cmake", self.spec.prefix.cmake)
