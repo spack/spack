@@ -23,6 +23,9 @@ class IntelXed(Package):
 
     # Current versions now have actual releases and tags.
     version("main", branch="main")
+    version("2024.05.20", tag="v2024.05.20", commit="7e88c3e00274a10daa6b9d053decc057f65aa0ec")
+    version("2024.04.01", tag="v2024.04.01", commit="6d87b5481aa53b5ab1fc2b5a5622759c46746bf9")
+    version("2024.02.22", tag="v2024.02.22", commit="d08a6f66f780a685f26322960cd3ae297dbad931")
     version("2023.10.11", tag="v2023.10.11", commit="d7d46c73fb04a1742e99c9382a4acb4ed07ae272")
     version("2023.08.21", tag="v2023.08.21", commit="01a6da8090af84cd52f6c1070377ae6e885b078f")
     version("2023.07.09", tag="v2023.07.09", commit="539a6a349cf7538a182ed3ee1f48bb9317eb185f")
