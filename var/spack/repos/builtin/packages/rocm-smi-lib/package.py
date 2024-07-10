@@ -62,6 +62,12 @@ class RocmSmiLib(CMakePackage):
     ]:
         depends_on(f"rocm-core@{ver}", when=f"@{ver}")
 
+    patch(
+        "https://github.com/ROCm/rocm_smi_lib/commit/11f12b86517d0e9868f4d16d74d4e8504c3ba7da.patch?full_index=1",
+        sha256="62be7262f6e1e71bf82a03f500a424a536638f04e913d0f4b477f60e8e1190fd",
+        when="@6.1.1:",
+    )
+
     patch("disable_pdf_generation_with_doxygen_and_latex.patch", when="@:5.6")
 
     def cmake_args(self):
