@@ -113,7 +113,7 @@ class PyAmrex(PythonPackage, CudaPackage, ROCmPackage):
         install test subdirectory for use during `spack test run`."""
         cache_extra_test_sources(self, [self.tests_src_dir])
 
-    def test(self):
+    def test_pytest(self):
         """Perform smoke tests on the installed package."""
         pytest = which("pytest")
         pytest(join_path(install_test_root(self), self.tests_src_dir))
