@@ -253,7 +253,7 @@ def test_update_default_view(init_view, update_value, tmp_path, mock_packages, c
     if isinstance(init_view, str) and update_value is True:
         expected_value = init_view
 
-    assert env.manifest.pristine_yaml_content["spack"]["view"] == expected_value
+    assert env.manifest.yaml_content["spack"]["view"] == expected_value
 
 
 @pytest.mark.parametrize(
@@ -384,7 +384,7 @@ spack:
     env.add("a")
 
     assert len(env.user_specs) == 1
-    assert env.manifest.pristine_yaml_content["spack"]["specs"] == ["a"]
+    assert env.manifest.yaml_content["spack"]["specs"] == ["a"]
 
 
 @pytest.mark.parametrize(
