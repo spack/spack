@@ -417,7 +417,7 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
         # TODO: using the installed libraries.
         return join_path(self.install_test_root, self.build_relpath, "bin")
 
-    def _test_examples(self):
+    def test_examples(self):
         """Perform very basic checks on a subset of copied examples."""
         checks = [
             (
@@ -438,17 +438,13 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
             ("wave-eqn", [r"Max Error = 2", r"Evolved solution to time"]),
         ]
         for exe, expected in checks:
-            reason = "test: checking output of {0} for {1}".format(exe, expected)
-            self.run_test(
-                exe,
-                [],
-                expected,
-                installed=False,
-                purpose=reason,
-                skip_missing=True,
-                work_dir=self._extra_tests_path,
-            )
-
-    def test(self):
-        """Perform smoke tests."""
-        self._test_examples()
+            with test_part(
+                self,
+                "test_examples_" + exe,
+                purpose=f"test: checking output of {exe} for {expected}",
+            ):
+                with working_dir(self._extra_tests_path):
+                    reason = "test: checking output of {0} for {1}".format(exe, expected)
+                    example_exe = which(exe)
+                    out = example_exe([], output=str.split, error=str.split)
+                    check_outputs(expected, out)
