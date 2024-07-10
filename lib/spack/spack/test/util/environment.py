@@ -179,3 +179,17 @@ def test_escape_double_quotes_in_shell_modifications():
         cmds = to_validate.shell_modifications()
         assert 'export VAR="$PATH:$ANOTHER_PATH"' in cmds
         assert r'export QUOTED_VAR="\"MY_VAL\""' in cmds
+
+
+@pytest.mark.skipif(sys.platform != "win32", reason="Test is only relevant on Windows")
+def test_windows_safe_env_paths(monkeypatch, tmp_path):
+    monkeypatch.setenv("PATH", "")
+    safe_env_mods = envutil.EnvironmentModifications()
+    too_big_str = "a" * 150  # 1 char over Windows cmd cli length limit
+    too_big_dir = tmp_path / too_big_str
+    too_big_dir.mkdir()
+    safe_env_mods.append_path("PATH", too_big_dir)
+    safe_env_mods.apply_modifications()
+    path = os.environ["PATH"]
+    assert len(path) < 300
+    assert envutil.win_env_view_manager._store[too_big_dir] == path

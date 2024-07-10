@@ -9,14 +9,17 @@ import inspect
 import json
 import os
 import os.path
+import pathlib
 import pickle
 import re
+import shutil
 import sys
+import weakref
 from functools import wraps
 from typing import Any, Callable, Dict, List, MutableMapping, Optional, Tuple, Union
 
 from llnl.path import path_to_os_path, system_path_filter
-from llnl.util import tty
+from llnl.util import filesystem, symlink, tty
 from llnl.util.lang import dedupe
 
 from .executable import Executable, which
@@ -103,6 +106,31 @@ def system_env_normalize(func):
         return func(self, name, *args, **kwargs)
 
     return case_insensitive_modification
+
+
+def env_var_length_check(name: str, value: str) -> bool:
+    diff = 8192 - len(value)
+    if diff <= 0:
+        fail_on_long_env_var(name)
+    elif diff < 100:
+        warn_on_long_env_vars(name, value)
+        return True
+    return False
+
+
+def fail_on_long_env_var(name: str) -> None:
+    tty.die(
+        f"Attempting to add to env variable: {name}\n\
+This operation will exceed the safe env variable length limit of 8192 characters\n\
+Spack will not be amending {name}"
+    )
+
+
+def warn_on_long_env_vars(name: str, value: str) -> None:
+    tty.warn(
+        f"Attempting to add to env variable: {name}\n\
+{name} is {len(value)} characters. Safe limit is 8191"
+    )
 
 
 def is_system_path(path: Path) -> bool:
@@ -424,7 +452,9 @@ class EnvironmentModifications:
     """Keeps track of requests to modify the current environment."""
 
     def __init__(
-        self, other: Optional["EnvironmentModifications"] = None, traced: Union[None, bool] = None
+        self,
+        other: Optional["EnvironmentModifications"] = None,
+        traced: Union[None, bool] = None,
     ):
         """Initializes a new instance, copying commands from 'other'
         if it is not None.
@@ -528,7 +558,12 @@ class EnvironmentModifications:
             elements: ordered list paths
             separator: separator for the paths (default: os.pathsep)
         """
-        item = SetPath(name, elements, separator=separator, trace=self._trace())
+        item = SetPath(
+            name,
+            elements,
+            separator=separator,
+            trace=self._trace(),
+        )
         self.env_modifications.append(item)
 
     @system_env_normalize
@@ -540,7 +575,9 @@ class EnvironmentModifications:
             path: path to be appended
             separator: separator for the paths (default: os.pathsep)
         """
-        item = AppendPath(name, path, separator=separator, trace=self._trace())
+        item = AppendPath(
+            name, path, separator=separator, trace=self._trace()
+        )
         self.env_modifications.append(item)
 
     @system_env_normalize
@@ -552,7 +589,9 @@ class EnvironmentModifications:
             path: path to be prepended
             separator: separator for the paths (default: os.pathsep)
         """
-        item = PrependPath(name, path, separator=separator, trace=self._trace())
+        item = PrependPath(
+            name, path, separator=separator, trace=self._trace()
+        )
         self.env_modifications.append(item)
 
     @system_env_normalize
@@ -1132,3 +1171,87 @@ def sanitize(
         environment.pop(k, None)
 
     return environment
+
+
+class ShortLinkManager:
+    def __init__(self, root: str = None):
+        self.root = pathlib.Path(root) if root else self._establish_shortest_root()
+        self.current = "a"
+        self._store = collections.defaultdict(str)
+        self._finalizer = weakref.finalize(self, self.cleanup)
+
+    def _establish_shortest_root(self) -> pathlib.Path:
+        user = os.environ["USERPROFILE"]
+        drive = filesystem.windows_drive()
+        candidates = [f"{drive}\\", f"{drive}\\ProgramData"]
+        for candidate in candidates:
+            if os.access(candidate, os.W_OK):
+                self.root = pathlib.Path(candidate) / ".spack"
+                return self.root
+        self.root = pathlib.Path(user) / ".spack"
+        return self.root
+
+    def get_next_view(self, value) -> str:
+        def inc(c):
+            curr = ord(c[-1])
+            over = curr // 122
+            if over:
+                return (inc(c[:-1]) if len(c[:-1]) else "a") + "a"
+            return c[:-1] + chr(curr + 1)
+
+        current_value = self._store[value]
+        if current_value:
+            return current_value
+        next = str(self.root / self.current)
+        self._store[value] = next
+        self.current = inc(self.current)
+        return next
+
+    def cleanup(self):
+        shutil.rmtree(str(self.root))
+
+
+win_env_view_manager = ShortLinkManager()
+
+
+class ShortLink:
+    def __init__(self, name, root, *path_additions):
+        """
+        Args:
+            name (str): the env variable whose value is to be abtracted
+            root (str): root at which to create env view
+            path_additions (List[str]): directories that would
+                normally be added to an env path variable.
+                Entires in list should be directories that
+                would typically be added to a path env var
+                Contents of root of the directory will be added
+                to a "view" into that directory with a shortened
+                path to reduce length of env variables
+            enabled (bool): default is True, toggled whether or not
+                this class is a no-op
+        """
+        self.name = name
+        self.root = pathlib.Path(root)
+        self._paths = path_additions
+
+    def _create_root(self):
+        if not self.root.exists():
+            self.root.mkdir(parents=True)
+
+    def _generate_link(self, path):
+        symlink.symlink(path, str(self.root / path.name))
+
+    def create_filesystem_view(self):
+        """Generate symlink view of path mods
+        One subdirectory from root is created per path mod
+        operation."""
+        self._create_root()
+        for entry in self._paths:
+            self._generate_link(pathlib.Path(entry))
+
+    def get_env_view(self) -> EnvironmentModifications:
+        """Generate env mods corresonding to view structure"""
+        env_mods = EnvironmentModifications()
+        for pth in self.root.iterdir():
+            env_mods.append_path(self.name, str(pth))
+        return env_mods

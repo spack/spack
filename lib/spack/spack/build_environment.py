@@ -89,6 +89,8 @@ from spack.util.environment import (
     get_path,
     is_system_path,
     validate,
+    ShortLink,
+    ShortLinkManager
 )
 from spack.util.executable import Executable
 from spack.util.log_parse import make_log_context, parse_log_events
@@ -146,6 +148,24 @@ def get_effective_jobs(jobs, parallel=True, supports_jobserver=False):
     if supports_jobserver and jobserver_enabled():
         return None
     return jobs
+
+
+def translate_paths(name: str, env_val: str) -> str:
+    """Decompose env list separated list of paths into components and generate
+    a shortened symlink for each path and recompose list
+
+    Args:
+        name    (str): Name of env variable being shortened
+        env_val (str): List of paths separated by platform env list separator
+                        that are to be added to the environment
+    Return:
+        list of shortened paths representing the paths passed into the method
+    """
+
+    spack_paths = env_val.split(os.pathsep)
+    root = ShortLinkManager.get_next_view(env_val)
+    ShortLink(name, root, spack_paths).create_filesystem_view()
+    return root
 
 
 class MakeExecutable(Executable):
@@ -446,8 +466,7 @@ def set_wrapper_variables(pkg, env):
             env_paths.append(ci)
 
     tty.debug("Adding compiler bin/ paths: " + " ".join(env_paths))
-    for item in env_paths:
-        env.prepend_path("PATH", item)
+    env.prepend_path("PATH", translate_paths("PATH", os.pathsep.join(env_paths)))
     env.set_path(SPACK_ENV_PATH, env_paths)
 
     # Working directory for the spack command itself, for debug logs.
@@ -1083,7 +1102,7 @@ class SetupContext:
         for d in ("bin", "bin64"):
             bin_dir = os.path.join(dep.prefix, d)
             if os.path.isdir(bin_dir):
-                env.prepend_path("PATH", bin_dir)
+                env.prepend_path("PATH", translate_paths("PATH", bin_dir))
 
 
 def get_cmake_prefix_path(pkg):

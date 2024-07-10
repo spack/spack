@@ -248,6 +248,16 @@ def path_contains_subdirectory(path, root):
     return norm_path.startswith(norm_root)
 
 
+def windows_drive() -> str:
+    """Return Windows drive string extracted from the PROGRAMFILES environment variable,
+    which is guaranteed to be defined for all logins.
+    """
+    match = re.match(r"([a-zA-Z]:)", os.environ["PROGRAMFILES"])
+    if match is None:
+        raise RuntimeError("cannot read the PROGRAMFILES environment variable")
+    return match.group(1)
+
+
 @memoized
 def file_command(*args):
     """Creates entry point to `file` system command with provided arguments"""
@@ -1841,6 +1851,13 @@ def _find_non_recursive(root, search_files):
     return answer
 
 
+@system_path_filter
+def find_and_filter(root, search_files, filter, recursive=False):
+    """Search root for files. A filter returning a boolean is applied
+    to each file and if true, the
+    """
+
+
 # Utilities for libraries and headers
 
 
@@ -2335,7 +2352,7 @@ def find_libraries(libraries, root, shared=True, recursive=False, runtime=True):
         suffixes = [static_ext]
 
     # List of libraries we are searching with suffixes
-    libraries = ["{0}.{1}".format(lib, suffix) for lib in libraries for suffix in suffixes]
+    libraries = [f"{lib}.{suffix}" for lib in libraries for suffix in suffixes]
 
     if not recursive:
         # If not recursive, look for the libraries directly in root
@@ -2390,6 +2407,35 @@ def find_all_libraries(root, recursive=False):
     return find_all_shared_libraries(root, recursive=recursive) + find_all_static_libraries(
         root, recursive=recursive
     )
+
+
+def find_executables(name: str, root: str, recursive: bool = False) -> Optional[List[str]]:
+    """Search root for executable with name
+
+    Args:
+        name (str): name of executable to be search for
+        root (str|pathlib.Path):  path to root of search
+        recursive (bool): toggle recursive search behavior
+
+    Return:
+        List[pathlib.Path]|None: a list of pathlib.Path objects indicating the path to the executable with `name`
+        if one was found
+    """
+    if sys.platfrom == "win32":
+        suffixes = list(map(str.lower, os.environ["PATHEXT"].split(";")))
+    search_space = [f"{name}.{suf}" for suf in suffixes]
+    return list(
+        filter(
+            lambda x: True if sys.platform == "win32" else True if is_exe(x) else False,
+            find(root, search_space, recursive),
+        )
+    )
+
+
+def find_all_executables(root: str, recursive: bool = False) -> Optional[List[str]]:
+    """Convenience function to detect all executables under a given root
+    Same as find_executables with a glob for all names"""
+    return find_executables("*", root, recursive)
 
 
 class WindowsSimulatedRPath:
