@@ -52,7 +52,7 @@ def rewire_node(spec, explicit):
     its subgraph. Binaries, text, and links are all changed in accordance with
     the splice. The resulting package is then 'installed.'"""
     tempdir = tempfile.mkdtemp()
-    print("rewire called")
+
     # copy anything installed to a temporary directory
     shutil.copytree(spec.build_spec.prefix, os.path.join(tempdir, spec.dag_hash()))
 
