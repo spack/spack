@@ -12,7 +12,7 @@ import os.path
 import re
 import sys
 import warnings
-from typing import Dict, List, Optional, Set, Tuple
+from typing import Dict, List, Optional, Set, Tuple, Type
 
 import llnl.util.filesystem
 import llnl.util.lang
@@ -200,7 +200,7 @@ class Finder:
     def default_path_hints(self) -> List[str]:
         return []
 
-    def search_patterns(self, *, pkg: "spack.package_base.PackageBase") -> List[str]:
+    def search_patterns(self, *, pkg: Type["spack.package_base.PackageBase"]) -> List[str]:
         """Returns the list of patterns used to match candidate files.
 
         Args:
@@ -226,7 +226,7 @@ class Finder:
         raise NotImplementedError("must be implemented by derived classes")
 
     def detect_specs(
-        self, *, pkg: "spack.package_base.PackageBase", paths: List[str]
+        self, *, pkg: Type["spack.package_base.PackageBase"], paths: List[str]
     ) -> List[DetectedPackage]:
         """Given a list of files matching the search patterns, returns a list of detected specs.
 
@@ -327,7 +327,7 @@ class ExecutablesFinder(Finder):
     def default_path_hints(self) -> List[str]:
         return spack.util.environment.get_path("PATH")
 
-    def search_patterns(self, *, pkg: "spack.package_base.PackageBase") -> List[str]:
+    def search_patterns(self, *, pkg: Type["spack.package_base.PackageBase"]) -> List[str]:
         result = []
         if hasattr(pkg, "executables") and hasattr(pkg, "platform_executables"):
             result = pkg.platform_executables()
@@ -356,7 +356,7 @@ class LibrariesFinder(Finder):
     DYLD_LIBRARY_PATH, DYLD_FALLBACK_LIBRARY_PATH, and standard system library paths
     """
 
-    def search_patterns(self, *, pkg: "spack.package_base.PackageBase") -> List[str]:
+    def search_patterns(self, *, pkg: Type["spack.package_base.PackageBase"]) -> List[str]:
         result = []
         if hasattr(pkg, "libraries"):
             result = pkg.libraries

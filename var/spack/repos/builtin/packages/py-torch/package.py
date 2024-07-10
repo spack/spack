@@ -165,6 +165,8 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
         depends_on("py-setuptools")
         depends_on("py-astunparse", when="@1.13:")
         depends_on("py-numpy@1.16.6:")
+        # https://github.com/pytorch/pytorch/issues/107302
+        depends_on("py-numpy@:1", when="@:2.2")
         depends_on("py-pyyaml")
         depends_on("py-requests", when="@1.13:")
 
@@ -247,8 +249,9 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
         depends_on("cuda@9.2:11.4", when="@1.6:1.9+cuda")
         depends_on("cuda@9:11.4", when="@:1.5+cuda")
     # https://github.com/pytorch/pytorch#prerequisites
-    depends_on("cudnn@8.5:", when="@2.3:+cudnn")
-    depends_on("cudnn@7:", when="@1.6:+cudnn")
+    # https://github.com/pytorch/pytorch/issues/119400
+    depends_on("cudnn@8.5:9.0", when="@2.3:+cudnn")
+    depends_on("cudnn@7:8", when="@1.6:2.2+cudnn")
     depends_on("cudnn@7", when="@:1.5+cudnn")
     depends_on("magma+cuda", when="+magma+cuda")
     depends_on("magma+rocm", when="+magma+rocm")

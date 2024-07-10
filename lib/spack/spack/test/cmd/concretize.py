@@ -10,7 +10,7 @@ import spack.environment as ev
 from spack import spack_version
 from spack.main import SpackCommand
 
-pytestmark = pytest.mark.usefixtures("config", "mutable_mock_repo")
+pytestmark = pytest.mark.usefixtures("mutable_config", "mutable_mock_repo")
 
 env = SpackCommand("env")
 add = SpackCommand("add")

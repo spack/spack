@@ -22,9 +22,7 @@ class Root(CMakePackage):
 
     tags = ["hep"]
 
-    maintainers(
-        "drbenmorgan", "gartung", "greenc-FNAL", "HadrienG2", "marcmengel", "vitodb", "vvolkl"
-    )
+    maintainers("drbenmorgan", "gartung", "greenc-FNAL", "marcmengel", "vitodb", "vvolkl")
 
     # ###################### Versions ##########################
 
@@ -35,7 +33,9 @@ class Root(CMakePackage):
     version("develop", branch="master")
 
     # Production version
+    version("6.32.02", sha256="3d0f76bf05857e1807ccfb2c9e014f525bcb625f94a2370b455f4b164961602d")
     version("6.32.00", sha256="12f203681a59041c474ce9523761e6f0e8861b3bee78df5f799a8db55189e5d2")
+    version("6.30.08", sha256="8bb8594867b9ded20a65e59f2cb6da965aa30851b8960f8cbf76293aec046b69")
     version("6.30.06", sha256="300db7ed1b678ed2fb9635ca675921a1945c7c2103da840033b493091f55700c")
     version("6.30.04", sha256="2b4180b698f39cc65d91084d833a884515b325bc5f673c8e39abe818b025d8cc")
     version("6.30.02", sha256="7965a456d1ad1ee0d5fe4769bf5a8fec291af684ed93db0f3080a9c362435183")
@@ -283,9 +283,9 @@ class Root(CMakePackage):
     depends_on("pkgconfig", type="build")
 
     # 6.32.00 requires sys/random.h
-    depends_on("libc", when="@6.32.00:")
-    depends_on("glibc@2.25:", when="^[virtuals=libc] glibc")
-    depends_on("musl@1.1.20:", when="^[virtuals=libc] musl")
+    with when("@6.32.00:"):
+        depends_on("glibc@2.25:", when="^[virtuals=libc] glibc")
+        depends_on("musl@1.1.20:", when="^[virtuals=libc] musl")
 
     depends_on("freetype")
     depends_on("jpeg")
@@ -375,7 +375,8 @@ class Root(CMakePackage):
     depends_on("vc@1.3.0:", when="@6.09.02: +vc")
     depends_on("vc@1.4.4:", when="@6.29.02: +vc")
     depends_on("vdt", when="+vdt")
-    depends_on("veccore", when="+veccore")
+    depends_on("veccore@0.4.0:", when="@6.09.04: +veccore")
+    depends_on("veccore@0.4.2:", when="@6.11.02: +veccore")
     depends_on("libxml2", when="+xml")
     depends_on("xrootd", when="+xrootd")
     depends_on("xrootd@:4", when="@:6.22.03 +xrootd")
