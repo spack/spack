@@ -155,7 +155,8 @@ class ParallelNetcdf(AutotoolsPackage):
         install test subdirectory for use during `spack test run`."""
         self.cache_extra_test_sources([self.examples_src_dir])
 
-    def test(self):
+    def test_pnetcdf(self):
+        """Test pnetcdf"""
         test_dir = join_path(self.test_suite.current_test_cache_dir, self.examples_src_dir)
         # pnetcdf has many examples to serve as a suitable smoke check.
         # column_wise was chosen based on the E4S test suite. Other
@@ -169,30 +170,31 @@ class ParallelNetcdf(AutotoolsPackage):
             "-L{0}".format(self.prefix.lib),
             "-I{0}".format(self.prefix.include),
         ]
-        reason = "test: compiling and linking pnetcdf example"
-        self.run_test(
-            self.spec["mpi"].mpicxx,
-            options,
-            [],
-            installed=False,
-            purpose=reason,
-            work_dir=test_dir,
-        )
+
+        with test_part(
+            self, f"test_pnetcdf_comp_link", purpose="compiling and linking pnetcdf example"
+        ):
+            with working_dir(test_dir):
+                exe = which(self.spec["mpi"].prefix.bin.mpicxx)
+                exe(*options)
+
         mpiexe_list = [
             self.spec["mpi"].prefix.bin.srun,
             self.spec["mpi"].prefix.bin.mpirun,
             self.spec["mpi"].prefix.bin.mpiexec,
         ]
+
         for mpiexe in mpiexe_list:
             if os.path.isfile(mpiexe):
-                self.run_test(
-                    mpiexe,
-                    ["-n", "1", test_exe],
-                    [],
-                    installed=False,
-                    purpose="test: pnetcdf smoke test",
-                    skip_missing=True,
-                    work_dir=test_dir,
-                )
+                with test_part(self, f"test_pnetcdf_{mpiexe}", purpose="pnetcdf smoke test"):
+                    with working_dir(test_dir):
+                        exe = which(mpiexe)
+                        exe("-n", "1", test_exe)
                 break
-        self.run_test("rm", ["-f", test_exe], work_dir=test_dir)
+
+    def test_rm(self):
+        """Test rm"""
+        test_dir = join_path(self.test_suite.current_test_cache_dir, self.examples_src_dir)
+        with working_dir(test_dir):
+            exe = which("rm")
+            exe("-f", "column_wise")
