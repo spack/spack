@@ -51,9 +51,25 @@ class Libuv(AutotoolsPackage, CMakePackage):
         depends_on("libtool", type="build", when="@:1.43.0")
         depends_on("m4", type="build", when="@:1.43.0")
 
+    # CMake is Windows only for now due to the constraints
+    # placed by the libuv-dist source distribution.
+    # The '-dist' source distribution does not have CMake files.
+    # To build with CMake we need to use the standard distribution,
+    # however this has a different hash per version and the version
+    # directive does not support spec conditions (when).
+    # This means we need a version directive for each build system but as
+    # conditions over specs are not an option, we are limited to python
+    # conditionals, so we vary over platform.
+    # Allowing multiple platforms to use CMake would result in either autotools
+    # being forced to use the non dist source distribution or in a hash conflict
+
+    # new libuv versions should only use CMake to prevent the scenario
+    # described above
+
     build_system(
-        conditional("cmake", when="@1.25:"),
-        "autotools",
+        conditional("cmake+ownlibs", when="@1.48: platform=windows"),
+        conditional("cmake+ownlibs", when="@1.49:"),
+        conditional("autotools", when="@:1.48"),
         default="autotools"
     )
 
