@@ -47,6 +47,7 @@ class Gloo(CMakePackage, CudaPackage):
 
     generator("ninja")
     depends_on("cmake@2.8.12:", type="build")
+    depends_on("libuv", when="platform=windows")
 
     def cmake_args(self):
         return [self.define_from_variant("USE_CUDA", "cuda")]

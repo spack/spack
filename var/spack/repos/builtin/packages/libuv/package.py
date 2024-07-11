@@ -2,10 +2,14 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import sys
+
+import spack.build_systems
+import spack.build_systems
 from spack.package import *
 
 
-class Libuv(AutotoolsPackage):
+class Libuv(AutotoolsPackage, CMakePackage):
     """Multi-platform library with a focus on asynchronous IO"""
 
     homepage = "https://libuv.org"
@@ -33,17 +37,25 @@ class Libuv(AutotoolsPackage):
     version("1.9.0", sha256="d595b2725abcce851c76239aab038adc126c58714cfb572b2ebb2d21b3593842")
 
     def url_for_version(self, version):
-        if self.spec.satisfies("@:1.43"):
+        if self.spec.satisfies("@:1.43") or self.spec.satisfies("build_system=cmake"):
+            # '-dist' does not include CMake files
             url = "https://dist.libuv.org/dist/v{0}/libuv-v{0}.tar.gz"
         else:
             # From 1.44 on, the `-dist` download includes a configure script
             url = "https://dist.libuv.org/dist/v{0}/libuv-v{0}-dist.tar.gz"
         return url.format(version, version)
 
-    depends_on("automake", type="build", when="@:1.43.0")
-    depends_on("autoconf", type="build", when="@:1.43.0")
-    depends_on("libtool", type="build", when="@:1.43.0")
-    depends_on("m4", type="build", when="@:1.43.0")
+    with when("build_system=autotools"):
+        depends_on("automake", type="build", when="@:1.43.0")
+        depends_on("autoconf", type="build", when="@:1.43.0")
+        depends_on("libtool", type="build", when="@:1.43.0")
+        depends_on("m4", type="build", when="@:1.43.0")
+
+    build_system(
+        conditional("cmake", when="@1.25:"),
+        "autotools",
+        default="autotools"
+    )
 
     conflicts(
         "%gcc@:4.8",
@@ -61,7 +73,14 @@ class Libuv(AutotoolsPackage):
         msg="libuv does not compile with GCC on macOS yet, use clang. "
         "See: https://github.com/libuv/libuv/issues/2805",
     )
+    conflicts(
+        "platform=windows",
+        when="@:1.20",
+        msg="Build system for Windows in versions older than 1.21 is"
+        "broken for versions of MSVC supported by Spack"
+    )
 
+class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
     @when("@:1.43")
     def autoreconf(self, spec, prefix):
         # This is needed because autogen.sh generates on-the-fly
