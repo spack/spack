@@ -51,7 +51,7 @@ jobs:
           on_develop: false
 
     steps:
-    - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29
+    - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332
       with:
         fetch-depth: 0
     - uses: actions/setup-python@39cd14951b08e74b54015e9e001cdefcf80e669f
@@ -100,7 +100,7 @@ jobs:
   shell:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29
+    - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332
       with:
         fetch-depth: 0
     - uses: actions/setup-python@39cd14951b08e74b54015e9e001cdefcf80e669f
@@ -141,7 +141,7 @@ jobs:
           dnf install -y \
               bzip2 curl file gcc-c++ gcc gcc-gfortran git gnupg2 gzip \
               make patch tcl unzip which xz
-    - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29
+    - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332
     - name: Setup repo and non-root user
       run: |
           git --version
@@ -160,7 +160,7 @@ jobs:
   clingo-cffi:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29
+    - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332
       with:
         fetch-depth: 0
     - uses: actions/setup-python@39cd14951b08e74b54015e9e001cdefcf80e669f
@@ -198,7 +198,7 @@ jobs:
         os: [macos-13, macos-14]
         python-version: ["3.11"]
     steps:
-    - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29
+    - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332
       with:
         fetch-depth: 0
     - uses: actions/setup-python@39cd14951b08e74b54015e9e001cdefcf80e669f
@@ -236,7 +236,7 @@ jobs:
           powershell Invoke-Expression -Command "./share/spack/qa/windows_test_setup.ps1"; {0}
     runs-on: windows-latest
     steps:
-    - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29
+    - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332
       with:
         fetch-depth: 0
     - uses: actions/setup-python@39cd14951b08e74b54015e9e001cdefcf80e669f
