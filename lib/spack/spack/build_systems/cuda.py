@@ -44,6 +44,7 @@ class CudaPackage(PackageBase):
         "87",
         "89",
         "90",
+        "90a",
     )
 
     # FIXME: keep cuda and cuda_arch separate to make usage easier until
