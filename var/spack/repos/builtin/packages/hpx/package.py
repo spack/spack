@@ -66,7 +66,7 @@ class Hpx(CMakePackage, CudaPackage, ROCmPackage):
         values=lambda x: isinstance(x, str) and (x.isdigit() or x == "auto"),
     )
 
-    instrumentation_values = ("apex", "google_perftools", "papi", "valgrind")
+    instrumentation_values = ("apex", "google_perftools", "papi", "valgrind","thread_debug")
     variant(
         "instrumentation",
         values=any_combination_of(*instrumentation_values),
@@ -225,11 +225,6 @@ class Hpx(CMakePackage, CudaPackage, ROCmPackage):
     def cmake_args(self):
         spec, args = self.spec, []
 
-        if "networking=mpi" in spec:
-            args.append(self.define("CMAKE_C_COMPILER", spec["mpi"].mpicc))
-            args.append(self.define("CMAKE_CXX_COMPILER", spec["mpi"].mpicxx))
-            args.append(self.define("CMAKE_Fortran_COMPILER", spec["mpi"].mpifc))
-
         format_max_cpu_count = lambda max_cpu_count: (
             "" if max_cpu_count == "auto" else max_cpu_count
         )
@@ -271,6 +266,12 @@ class Hpx(CMakePackage, CudaPackage, ROCmPackage):
         # Instrumentation
         args += self.instrumentation_args()
 
+        if "instrumentation=thread_debug" in spec:
+            args += [
+                self.define("HPX_WITH_THREAD+DEBUG_INFO",True),
+                self.define("HPX_WITH_LOGGING",True)
+            ]
+        
         if "instrumentation=apex" in spec:
             args += [
                 self.define("APEX_WITH_OTF2", True),
