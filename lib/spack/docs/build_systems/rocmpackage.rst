@@ -14,7 +14,7 @@ it provides standard variants, dependencies, and conflicts to facilitate buildin
 packages using GPUs though for AMD in this case.
 
 You can find the source for this package (and suggestions for setting up your
-``compilers.yaml`` and ``packages.yaml`` files) at
+configuration files) at
 `<https://github.com/spack/spack/blob/develop/lib/spack/spack/build_systems/rocm.py>`__.
 
 ^^^^^^^^

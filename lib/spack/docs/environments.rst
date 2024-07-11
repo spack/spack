@@ -641,7 +641,7 @@ them to the Environment.
    spack:
      include:
      - relative/path/to/config.yaml
-     - https://github.com/path/to/raw/config/compilers.yaml
+     - https://github.com/path/to/raw/config/mirrors.yaml
      - /absolute/path/to/packages.yaml
 
 Environments can include files or URLs. File paths can be relative or

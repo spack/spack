@@ -51,7 +51,7 @@ Install the oneAPI compilers::
 
   spack install intel-oneapi-compilers
 
-Add the compilers to your ``compilers.yaml`` so spack can use them::
+Add the compilers to your ``packages.yaml`` so spack can use them::
 
   spack compiler add `spack location -i intel-oneapi-compilers`/compiler/latest/bin
 
@@ -93,7 +93,7 @@ Install the oneAPI compilers::
 
   spack install intel-oneapi-compilers
 
-Add the compilers to your ``compilers.yaml`` so Spack can use them::
+Add the compilers to your ``packages.yaml`` so Spack can use them::
 
   spack compiler add `spack location -i intel-oneapi-compilers`/compiler/latest/bin
   spack compiler add `spack location -i intel-oneapi-compilers`/compiler/latest/bin
@@ -150,7 +150,7 @@ Compilers
 ---------
 
 To use the compilers, add some information about the installation to
-``compilers.yaml``. For most users, it is sufficient to do::
+``packages.yaml``. For most users, it is sufficient to do::
 
   spack compiler add /opt/intel/oneapi/compiler/latest/bin
 
@@ -158,7 +158,7 @@ Adapt the paths above if you did not install the tools in the default
 location. After adding the compilers, using them is the same
 as if you had installed the ``intel-oneapi-compilers`` package.
 Another option is to manually add the configuration to
-``compilers.yaml`` as described in :ref:`Compiler configuration
+``packages.yaml`` as described in :ref:`Compiler configuration
 <compiler-config>`.
 
 Before 2024, the directory structure was different::

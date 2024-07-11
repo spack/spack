@@ -71,16 +71,16 @@ This is in combination with the following compiler definition:
 
 .. code-block:: yaml
 
-   compilers:
-   - compiler:
-       spec: rocmcc@=5.3.0
-       paths:
-         cc: /opt/rocm-5.3.0/bin/amdclang
-         cxx: /opt/rocm-5.3.0/bin/amdclang++
-         f77: null
-         fc: /opt/rocm-5.3.0/bin/amdflang
-       operating_system: rhel8
-       target: x86_64
+   packages:
+     llvm-amdgpu:
+       externals:
+       - spec: llvm-amdgpu@=5.3.0
+         prefix: /opt
+         extra_attributes:
+           compilers:
+             c: /opt/rocm-5.3.0/bin/amdclang
+             cxx: /opt/rocm-5.3.0/bin/amdclang++
+             fortran: /opt/rocm-5.3.0/bin/amdflang
 
 This includes the following considerations:
 

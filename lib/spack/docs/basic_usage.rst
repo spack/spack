@@ -1395,14 +1395,16 @@ that executables will run without the need to set ``LD_LIBRARY_PATH``.
 
 .. code-block:: yaml
 
-  compilers:
-    - compiler:
-        spec: gcc@4.9.3
-        paths:
-          cc: /opt/gcc/bin/gcc
-          c++: /opt/gcc/bin/g++
-          f77: /opt/gcc/bin/gfortran
-          fc: /opt/gcc/bin/gfortran
+  packages:
+    gcc:
+    externals:
+    - spec: gcc@9.4.0 languages='c,c++,fortran'
+      prefix: /usr
+      extra_attributes:
+        compilers:
+          c: /usr/bin/gcc
+          cxx: /usr/bin/g++
+          fortran: /usr/bin/gfortran
         environment:
           unset:
             - BAD_VARIABLE

@@ -12,7 +12,6 @@ Configuration Files
 Spack has many configuration files.  Here is a quick list of them, in
 case you want to skip directly to specific docs:
 
-* :ref:`compilers.yaml <compiler-config>`
 * :ref:`concretizer.yaml <concretizer-options>`
 * :ref:`config.yaml <config-yaml>`
 * :ref:`mirrors.yaml <mirrors>`
@@ -95,7 +94,7 @@ are six configuration scopes. From lowest to highest:
    precedence over all other scopes.
 
 Each configuration directory may contain several configuration files,
-such as ``config.yaml``, ``compilers.yaml``, or ``mirrors.yaml``.  When
+such as ``config.yaml``, ``packages.yaml``, or ``mirrors.yaml``.  When
 configurations conflict, settings from higher-precedence scopes override
 lower-precedence settings.
 

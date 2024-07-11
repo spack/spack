@@ -248,12 +248,21 @@ directory.
 Compiler configuration
 ----------------------
 
-Spack has the ability to build packages with multiple compilers and
-compiler versions. Compilers can be made available to Spack by
-specifying them manually in ``compilers.yaml`` or ``packages.yaml``,
-or automatically by running ``spack compiler find``, but for
-convenience Spack will automatically detect compilers the first time
-it needs them.
+Spack can build packages with many different compiler toolchains. Compilers are defined
+in the ``packages.yaml`` configuration file, and they can be detected automatically running
+
+.. code-block:: console
+
+   % spack compiler find
+
+For convenience Spack automatically detects compilers the first time it needs them.
+
+.. warning::
+
+   Until Spack v0.22, compilers were defined in the ``compilers.yaml`` section of the
+   configuration. This section is deprecated as of Spack v0.23. For backward compatibility,
+   compilers defined in ``compilers.yaml`` can still be used by Spack, but we advise users
+   to move their compiler definitions to ``packages.yaml`` at their earliest convenience.
 
 .. _cmd-spack-compilers:
 
@@ -261,8 +270,7 @@ it needs them.
 ``spack compilers``
 ^^^^^^^^^^^^^^^^^^^
 
-You can see which compilers are available to Spack by running ``spack
-compilers`` or ``spack compiler list``:
+You can see which compilers are available to Spack by running:
 
 .. code-block:: console
 
@@ -308,7 +316,7 @@ compiler is installed.  For example:
 .. code-block:: console
 
    $ spack compiler find /usr/local/tools/ic-13.0.079
-   ==> Added 1 new compiler to ~/.spack/linux/compilers.yaml
+   ==> Added 1 new compiler to ~/.spack/linux/packages.yaml
        intel@13.0.079
 
 Or you can run ``spack compiler find`` with no arguments to force
@@ -320,7 +328,7 @@ installed, but you know that new compilers have been added to your
 
    $ module load gcc/4.9.0
    $ spack compiler find
-   ==> Added 1 new compiler to ~/.spack/linux/compilers.yaml
+   ==> Added 1 new compiler to ~/.spack/linux/packages.yaml
        gcc@4.9.0
 
 This loads the environment module for gcc-4.9.0 to add it to
@@ -328,10 +336,9 @@ This loads the environment module for gcc-4.9.0 to add it to
 
 .. note::
 
-   By default, spack does not fill in the ``modules:`` field in the
-   ``compilers.yaml`` file.  If you are using a compiler from a
-   module, then you should add this field manually.
-   See the section on :ref:`compilers-requiring-modules`.
+   By default, spack does not fill in the ``modules:`` field in the corresponding ``packages.yaml``
+   external entry. If you are using a compiler from a module, then you should add this
+   field manually. See the section on :ref:`sec-external-packages`.
 
 .. _cmd-spack-compiler-info:
 
@@ -364,41 +371,43 @@ matching Intel compiler was displayed.
 Manual compiler configuration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-If auto-detection fails, you can manually configure a compiler by
-editing your ``~/.spack/<platform>/compilers.yaml`` file.  You can do this by running
-``spack config edit compilers``, which will open the file in
-:ref:`your favorite editor <controlling-the-editor>`.
+If need be, you can manually configure a compiler by editing your ``packages.yaml``
+configuration. You can do this by running:
+
+.. code-block::
+
+   % spack config edit packages
+
+which will open the file in :ref:`your favorite editor <controlling-the-editor>`.
 
 Each compiler configuration in the file looks like this:
 
 .. code-block:: yaml
 
-   compilers:
-   - compiler:
-       modules: []
-       operating_system: centos6
-       paths:
-         cc: /usr/local/bin/icc-15.0.024-beta
-         cxx: /usr/local/bin/icpc-15.0.024-beta
-         f77: /usr/local/bin/ifort-15.0.024-beta
-         fc: /usr/local/bin/ifort-15.0.024-beta
-       spec: intel@15.0.0
+   packages:
+     gcc:
+       externals:
+       - spec: gcc@9.4.0 languages='c,c++,fortran'
+         prefix: /usr
+         extra_attributes:
+           compilers:
+             c: /usr/bin/gcc
+             cxx: /usr/bin/g++
+             fortran: /usr/bin/gfortran
 
-For compilers that do not support Fortran (like ``clang``), put
-``None`` for ``f77`` and ``fc``:
+Compilers that don't support Fortran will not have a corresponding entry under
+``extra_attributes:compilers```:
 
 .. code-block:: yaml
 
-   compilers:
-   - compiler:
-       modules: []
-       operating_system: centos6
-       paths:
-         cc: /usr/bin/clang
-         cxx: /usr/bin/clang++
-         f77: None
-         fc: None
-       spec: clang@3.3svn
+   llvm:
+    externals:
+    - spec: llvm@12.0.0+clang+lld~lldb
+      prefix: /usr
+      extra_attributes:
+        compilers:
+          c: /usr/bin/clang-12
+          cxx: /usr/bin/clang++-12
 
 Once you save the file, the configured compilers will show up in the
 list displayed by ``spack compilers``.
@@ -410,20 +419,20 @@ specification. The valid flags are ``cflags``, ``cxxflags``, ``fflags``,
 
 .. code-block:: yaml
 
-   compilers:
-   - compiler:
-       modules: []
-       operating_system: centos6
-       paths:
-         cc: /usr/bin/gcc
-         cxx: /usr/bin/g++
-         f77: /usr/bin/gfortran
-         fc: /usr/bin/gfortran
-       flags:
-         cflags: -O3 -fPIC
-         cxxflags: -O3 -fPIC
-         cppflags: -O3 -fPIC
-       spec: gcc@4.7.2
+   packages:
+     gcc:
+       externals:
+       - spec: gcc@9.4.0 languages='c,c++,fortran'
+         prefix: /usr
+         extra_attributes:
+           compilers:
+             c: /usr/bin/gcc
+             cxx: /usr/bin/g++
+             fortran: /usr/bin/gfortran
+           flags:
+             cflags: -O3 -fPIC
+             cxxflags: -O3 -fPIC
+             cppflags: -O3 -fPIC
 
 These flags will be treated by spack as if they were entered from
 the command line each time this compiler is used. The compiler wrappers
@@ -440,72 +449,25 @@ specification. The operations available to modify the environment are ``set``, `
 
 .. code-block:: yaml
 
-   compilers:
-   - compiler:
-       modules: []
-       operating_system: centos6
-       paths:
-         cc: /opt/intel/oneapi/compiler/latest/linux/bin/icx
-         cxx: /opt/intel/oneapi/compiler/latest/linux/bin/icpx
-         f77: /opt/intel/oneapi/compiler/latest/linux/bin/ifx
-         fc: /opt/intel/oneapi/compiler/latest/linux/bin/ifx
-       spec: oneapi@latest
-       environment:
-         set:
-           MKL_ROOT: "/path/to/mkl/root"
-         unset: # A list of environment variables to unset
-           - CC
-         prepend_path: # Similar for append|remove_path
-           LD_LIBRARY_PATH: /ld/paths/added/by/setvars/sh
+   intel-oneapi-compilers:
+     externals:
+     - spec: intel-oneapi-compilers@2024.2.0
+       prefix: /opt/intel/oneapi/compiler/2024.2
+       extra_attributes:
+         compilers:
+           c: /opt/intel/oneapi/compiler/2024.2/bin/icx
+           cxx: /opt/intel/oneapi/compiler/2024.2/bin/icpx
+           fortran: /opt/intel/oneapi/compiler/2024.2/bin/ifx
+         environment:
+           set:
+             MKL_ROOT: "/path/to/mkl/root"
+           unset: # A list of environment variables to unset
+             - CC
+           prepend_path: # Similar for append|remove_path
+             LD_LIBRARY_PATH: /ld/paths/added/by/setvars/sh
 
-.. note::
-
-   Spack is in the process of moving compilers from a separate
-   attribute to be handled like all other packages. As part of this
-   process, the ``compilers.yaml`` section will eventually be replaced
-   by configuration in the ``packages.yaml`` section. This new
-   configuration is now available, although it is not yet the default
-   behavior.
-
-Compilers can also be configured as external packages in the
-``packages.yaml`` config file. Any external package for a compiler
-(e.g. ``gcc`` or ``llvm``) will be treated as a configured compiler
-assuming the paths to the compiler executables are determinable from
-the prefix.
-
-If the paths to the compiler executable are not determinable from the
-prefix, you can add them to the ``extra_attributes`` field. Similarly,
-all other fields from the compilers config can be added to the
-``extra_attributes`` field for an external representing a compiler.
-
-Note that the format for the ``paths`` field in the
-``extra_attributes`` section is different than in the ``compilers``
-config. For compilers configured as external packages, the section is
-named ``compilers`` and the dictionary maps language names (``c``,
-``cxx``, ``fortran``) to paths, rather than using the names ``cc``,
-``fc``, and ``f77``.
-
-.. code-block:: yaml
-
-   packages:
-     gcc:
-       external:
-       - spec: gcc@12.2.0 arch=linux-rhel8-skylake
-         prefix: /usr
-         extra_attributes:
-           environment:
-             set:
-               GCC_ROOT: /usr
-       external:
-       - spec: llvm+clang@15.0.0 arch=linux-rhel8-skylake
-         prefix: /usr
-         extra_attributes:
-           compilers:
-             c: /usr/bin/clang-with-suffix
-             cxx: /usr/bin/clang++-with-extra-info
-             fortran: /usr/bin/gfortran
-           extra_rpaths:
-           - /usr/lib/llvm/
+If a compiler is made available by loading a module file, you might want to tell
+Spack about that, see :ref:`sec-external-packages`.
 
 ^^^^^^^^^^^^^^^^^^^^^^^
 Build Your Own Compiler
@@ -518,58 +480,15 @@ wish to have Spack build it for you.  For example:
 
    $ spack install gcc@4.9.3
 
-Once that has finished, you will need to add it to your
-``compilers.yaml`` file.  You can then set Spack to use it by default
-by adding the following to your ``packages.yaml`` file:
+Once that has finished, you will need to add it to your configuration.
+You can then set Spack to use it by default by adding the following to
+your ``packages.yaml`` file:
 
 .. code-block:: yaml
 
    packages:
      all:
        compiler: [gcc@4.9.3]
-
-.. _compilers-requiring-modules:
-
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Compilers Requiring Modules
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Many installed compilers will work regardless of the environment they
-are called with.  However, some installed compilers require
-``$LD_LIBRARY_PATH`` or other environment variables to be set in order
-to run; this is typical for Intel and other proprietary compilers.
-
-In such a case, you should tell Spack which module(s) to load in order
-to run the chosen compiler (If the compiler does not come with a
-module file, you might consider making one by hand).  Spack will load
-this module into the environment ONLY when the compiler is run, and
-NOT in general for a package's ``install()`` method.  See, for
-example, this ``compilers.yaml`` file:
-
-.. code-block:: yaml
-
-   compilers:
-   - compiler:
-       modules: [other/comp/gcc-5.3-sp3]
-       operating_system: SuSE11
-       paths:
-         cc: /usr/local/other/SLES11.3/gcc/5.3.0/bin/gcc
-         cxx: /usr/local/other/SLES11.3/gcc/5.3.0/bin/g++
-         f77: /usr/local/other/SLES11.3/gcc/5.3.0/bin/gfortran
-         fc: /usr/local/other/SLES11.3/gcc/5.3.0/bin/gfortran
-       spec: gcc@5.3.0
-
-Some compilers require special environment settings to be loaded not just
-to run, but also to execute the code they build, breaking packages that
-need to execute code they just compiled.  If it's not possible or
-practical to use a better compiler, you'll need to ensure that
-environment settings are preserved for compilers like this (i.e., you'll
-need to load the module or source the compiler's shell script).
-
-By default, Spack tries to ensure that builds are reproducible by
-cleaning the environment before building.  If this interferes with your
-compiler settings, you CAN use ``spack install --dirty`` as a workaround.
-Note that this MAY interfere with package builds.
 
 .. _licensed-compilers:
 
@@ -588,7 +507,7 @@ build your own, plus modules:
    using Spack to load the module it just created, and running simple
    builds (eg: ``cc helloWorld.c && ./a.out``)
 
-#. Add the newly-installed compiler to ``compilers.yaml`` as shown
+#. Add the newly-installed compiler to ``packages.yaml`` as shown
    above.
 
 .. _mixed-toolchains:
@@ -665,21 +584,19 @@ Fortran.
    gcc``), or from a `DMG installer
    <https://github.com/fxcoudert/gfortran-for-macOS/releases>`_.
 
-#. The only thing left to do is to edit ``~/.spack/darwin/compilers.yaml`` to provide
+#. The only thing left to do is to edit ``~/.spack/darwin/packages.yaml`` to provide
    the path to ``gfortran``:
 
    .. code-block:: yaml
 
-      compilers:
-      - compiler:
-        # ...
-        paths:
-          cc: /usr/bin/clang
-          cxx: /usr/bin/clang++
-          f77: /path/to/bin/gfortran
-          fc: /path/to/bin/gfortran
-        spec: apple-clang@11.0.0
-
+      packages:
+        apple-clang
+          externals:
+          -  # ...
+             compilers:
+               c: /usr/bin/clang
+               cxx: /usr/bin/clang++
+               fortran: /path/to/bin/gfortran
 
    If you used Spack to install GCC, you can get the installation prefix by
    ``spack location -i gcc`` (this will only work if you have a single version
@@ -744,28 +661,24 @@ Configuration with Modules
 
 One can control which GCC is seen by the Intel compiler with modules.
 A module must be loaded both for the Intel Compiler (so it will run)
-and GCC (so the compiler can find the intended GCC).  The following
-configuration in ``compilers.yaml`` illustrates this technique:
+and GCC (so the compiler can find the intended GCC). The following
+configuration illustrates this technique:
 
 .. code-block:: yaml
 
-   compilers:
-   - compiler:
-       modules: [gcc-4.9.3, intel-15.0.24]
-       operating_system: centos7
-       paths:
-         cc: /opt/intel-15.0.24/bin/icc-15.0.24-beta
-         cxx: /opt/intel-15.0.24/bin/icpc-15.0.24-beta
-         f77: /opt/intel-15.0.24/bin/ifort-15.0.24-beta
-         fc: /opt/intel-15.0.24/bin/ifort-15.0.24-beta
-       spec: intel@15.0.24.4.9.3
-
-
-.. note::
-
-   The version number on the Intel compiler is a combination of
-   the "native" Intel version number and the GNU compiler it is
-   targeting.
+    packages:
+      intel-oneapi-compilers:
+        externals:
+        - spec: intel-oneapi-compilers@2024.2.0
+          prefix: /opt/intel/oneapi/compiler/2024.2
+          modules:
+          - gcc/13.2.0
+          - oneapi/2024.2
+          extra_attributes:
+            compilers:
+              c: /opt/intel/oneapi/compiler/2024.2/bin/icx
+              cxx: /opt/intel/oneapi/compiler/2024.2/bin/icpx
+              fortran: /opt/intel/oneapi/compiler/2024.2/bin/ifx
 
 """"""""""""""""""""""""""
 Command Line Configuration
@@ -779,85 +692,26 @@ flags to the ``icc`` command:
    .. code-block:: console
 
        $ spack location --install-dir gcc
-       ~/spack/opt/spack/linux-centos7-x86_64/gcc-4.9.3-iy4rw...
+       <gcc prefix>
 
-#. Set up ``compilers.yaml``, for example:
+#. Set up ``packages.yaml``, for example:
 
    .. code-block:: yaml
 
-       compilers:
-       - compiler:
-           modules: [intel-15.0.24]
-           operating_system: centos7
-           paths:
-             cc: /opt/intel-15.0.24/bin/icc-15.0.24-beta
-             cxx: /opt/intel-15.0.24/bin/icpc-15.0.24-beta
-             f77: /opt/intel-15.0.24/bin/ifort-15.0.24-beta
-             fc: /opt/intel-15.0.24/bin/ifort-15.0.24-beta
-           flags:
-             cflags: -gcc-name ~/spack/opt/spack/linux-centos7-x86_64/gcc-4.9.3-iy4rw.../bin/gcc
-             cxxflags: -gxx-name ~/spack/opt/spack/linux-centos7-x86_64/gcc-4.9.3-iy4rw.../bin/g++
-             fflags: -gcc-name ~/spack/opt/spack/linux-centos7-x86_64/gcc-4.9.3-iy4rw.../bin/gcc
-           spec: intel@15.0.24.4.9.3
-
-
-^^^
-PGI
-^^^
-
-PGI comes with two sets of compilers for C++ and Fortran,
-distinguishable by their names.  "Old" compilers:
-
-.. code-block:: yaml
-
-    cc:  /soft/pgi/15.10/linux86-64/15.10/bin/pgcc
-    cxx: /soft/pgi/15.10/linux86-64/15.10/bin/pgCC
-    f77: /soft/pgi/15.10/linux86-64/15.10/bin/pgf77
-    fc:  /soft/pgi/15.10/linux86-64/15.10/bin/pgf90
-
-"New" compilers:
-
-.. code-block:: yaml
-
-    cc:  /soft/pgi/15.10/linux86-64/15.10/bin/pgcc
-    cxx: /soft/pgi/15.10/linux86-64/15.10/bin/pgc++
-    f77: /soft/pgi/15.10/linux86-64/15.10/bin/pgfortran
-    fc:  /soft/pgi/15.10/linux86-64/15.10/bin/pgfortran
-
-Older installations of PGI contains just the old compilers; whereas
-newer installations contain the old and the new.  The new compiler is
-considered preferable, as some packages
-(``hdf``) will not build with the old compiler.
-
-When auto-detecting a PGI compiler, there are cases where Spack will
-find the old compilers, when you really want it to find the new
-compilers.  It is best to check this ``compilers.yaml``; and if the old
-compilers are being used, change ``pgf77`` and ``pgf90`` to
-``pgfortran``.
-
-Other issues:
-
-* There are reports that some packages will not build with PGI,
-  including ``libpciaccess`` and ``openssl``.  A workaround is to
-  build these packages with another compiler and then use them as
-  dependencies for PGI-build packages.  For example:
-
-  .. code-block:: console
-
-     $ spack install openmpi%pgi ^libpciaccess%gcc
-
-
-* PGI requires a license to use; see :ref:`licensed-compilers` for more
-  information on installation.
-
-.. note::
-
-   It is believed the problem with HDF 4 is that everything is
-   compiled with the ``F77`` compiler, but at some point some Fortran
-   90 code slipped in there. So compilers that can handle both FORTRAN
-   77 and Fortran 90 (``gfortran``, ``pgfortran``, etc) are fine.  But
-   compilers specific to one or the other (``pgf77``, ``pgf90``) won't
-   work.
+      packages:
+        intel-oneapi-compilers:
+          externals:
+          - spec: intel-oneapi-compilers@2024.2.0
+            prefix: /opt/intel/oneapi/compiler/2024.2
+            extra_attributes:
+              compilers:
+                c: /opt/intel/oneapi/compiler/2024.2/bin/icx
+                cxx: /opt/intel/oneapi/compiler/2024.2/bin/icpx
+                fortran: /opt/intel/oneapi/compiler/2024.2/bin/ifx
+            flags:
+              cflags: --gcc-toolchain=<gcc prefix>
+              cxxflags: --gcc-toolchain=<gcc prefix>
+              fflags: --gcc-toolchain=<gcc prefix>
 
 
 ^^^
@@ -883,21 +737,7 @@ the command line:
 
    $ spack install openmpi fflags="-mismatch"
 
-Or it can be set permanently in your ``compilers.yaml``:
-
-.. code-block:: yaml
-
-   - compiler:
-    modules: []
-    operating_system: centos6
-    paths:
-      cc: /soft/spack/opt/spack/linux-x86_64/gcc-5.3.0/gcc-6.1.0-q2zosj3igepi3pjnqt74bwazmptr5gpj/bin/gcc
-      cxx: /soft/spack/opt/spack/linux-x86_64/gcc-5.3.0/gcc-6.1.0-q2zosj3igepi3pjnqt74bwazmptr5gpj/bin/g++
-      f77: /soft/spack/opt/spack/linux-x86_64/gcc-4.4.7/nag-6.1-jt3h5hwt5myezgqguhfsan52zcskqene/bin/nagfor
-      fc: /soft/spack/opt/spack/linux-x86_64/gcc-4.4.7/nag-6.1-jt3h5hwt5myezgqguhfsan52zcskqene/bin/nagfor
-    flags:
-      fflags: -mismatch
-    spec: nag@6.1
+Or it can be set permanently in your ``packages.yaml`` using flags.
 
 
 ---------------
@@ -933,8 +773,7 @@ you are unlikely to get a working MPI from Spack.  Instead, use an
 appropriate pre-installed MPI.
 
 If you choose a pre-installed MPI, you should consider using the
-pre-installed compiler used to build that MPI; see above on
-``compilers.yaml``.
+pre-installed compiler used to build that MPI.
 
 ^^^^^^^
 OpenSSL
@@ -1492,9 +1331,9 @@ To configure Spack, first run the following command inside the Spack console:
    spack compiler find
 
 This creates a ``.staging`` directory in our Spack prefix, along with a ``windows`` subdirectory
-containing a ``compilers.yaml`` file. On a fresh Windows install with the above packages
+containing a ``packages.yaml`` file. On a fresh Windows install with the above packages
 installed, this command should only detect Microsoft Visual Studio and the Intel Fortran
-compiler will be integrated within the first version of MSVC present in the ``compilers.yaml``
+compiler will be integrated within the first version of MSVC present in the ``packages.yaml``
 output.
 
 Spack provides a default ``config.yaml`` file for Windows that it will use unless overridden.
