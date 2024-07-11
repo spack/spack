@@ -11,6 +11,7 @@ import pytest
 from llnl.util.filesystem import getuid, touch
 
 import spack
+import spack.cmd.external
 import spack.detection
 import spack.detection.path
 from spack.main import SpackCommand
@@ -311,3 +312,29 @@ def test_failures_in_scanning_do_not_result_in_an_error(
     assert "cmake" in output
     assert "3.23.3" in output
     assert "3.19.1" not in output
+
+
+def test_detect_virtuals(mock_executable, mutable_config, monkeypatch):
+    """Test whether external find --not-buildable sets virtuals as non-buildable (unless user
+    config sets them to buildable)"""
+    mpich = mock_executable("mpichversion", output="echo MPICH Version:    4.0.2")
+    prefix = os.path.dirname(mpich)
+    external("find", "--path", prefix, "--not-buildable", "mpich")
+
+    # Check that mpich was correctly detected
+    mpich = mutable_config.get("packages:mpich")
+    assert mpich["buildable"] is False
+    assert Spec(mpich["externals"][0]["spec"]).satisfies("mpich@4.0.2")
+
+    # Check that the virtual package mpi was marked as non-buildable
+    assert mutable_config.get("packages:mpi:buildable") is False
+
+    # Delete the mpich entry, and set mpi explicitly to buildable
+    mutable_config.set("packages:mpich", {})
+    mutable_config.set("packages:mpi:buildable", True)
+
+    # Run the detection again
+    external("find", "--path", prefix, "--not-buildable", "mpich")
+
+    # Check that the mpi:buildable entry was not overwritten
+    assert mutable_config.get("packages:mpi:buildable") is True
