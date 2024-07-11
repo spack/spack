@@ -80,7 +80,7 @@ class Rpp(CMakePackage):
                     "CMAKE_CXX_COMPILER clang++",
                     "CMAKE_CXX_COMPILER {0}/bin/clang++".format(self.spec["llvm-amdgpu"].prefix),
                     "CMakeLists.txt",
-                    string=True
+                    string=True,
                 )
         if self.spec.satisfies("+opencl"):
             filter_file(

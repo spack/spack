@@ -540,14 +540,15 @@ class Hip(CMakePackage):
                 )
                 args.append(
                     self.define(
-                        "CMAKE_CXX_COMPILER",
-                        self.spec["llvm-amdgpu"].prefix.bin + "/clang++",
+                        "CMAKE_CXX_COMPILER", self.spec["llvm-amdgpu"].prefix.bin + "/clang++"
                     )
                 )
                 args.append(
                     self.define(
                         "CMAKE_CXX_FLAGS",
-                        f"-I{self.spec['libx11'].prefix.include} -I{self.spec['mesa'].prefix.include} -I{self.spec['xproto'].prefix.include}",
+                        f"-I{self.spec['libx11'].prefix.include} "
+                        f"-I{self.spec['mesa'].prefix.include} "
+                        f"-I{self.spec['xproto'].prefix.include}",
                     )
                 )
 

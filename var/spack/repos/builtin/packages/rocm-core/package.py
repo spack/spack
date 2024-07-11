@@ -36,11 +36,7 @@ class RocmCore(CMakePackage):
 
     variant("asan", default=False, description="Build with address-sanitizer enabled or disabled")
 
-    for ver in [
-            "6.1.0",
-            "6.1.1",
-            "6.1.2",
-    ]:
+    for ver in ["6.1.0", "6.1.1", "6.1.2"]:
         depends_on("llvm-amdgpu", when=f"@{ver}+asan")
 
     def setup_build_environment(self, env):
