@@ -1332,6 +1332,12 @@ def tree(
     if color is None:
         color = clr.get_color_when()
 
+    # reduce deptypes over all in-edges when covering nodes
+    if show_types and cover == "nodes":
+        deptype_lookup: Dict[str, dt.DepFlag] = collections.defaultdict(dt.DepFlag)
+        for edge in traverse.traverse_edges(specs, cover="edges", deptype=deptypes, root=False):
+            deptype_lookup[edge.spec.dag_hash()] |= edge.depflag
+
     for d, dep_spec in traverse.traverse_tree(
         sorted(specs), cover=cover, deptype=deptypes, depth_first=depth_first, key=key
     ):
@@ -1358,11 +1364,7 @@ def tree(
 
         if show_types:
             if cover == "nodes":
-                # when only covering nodes, we merge dependency types
-                # from all dependents before showing them.
-                depflag = 0
-                for ds in node.edges_from_dependents():
-                    depflag |= ds.depflag
+                depflag = deptype_lookup[dep_spec.spec.dag_hash()]
             else:
                 # when covering edges or paths, we show dependency
                 # types only for the edge through which we visited
@@ -4258,29 +4260,21 @@ class Spec:
             csv = query_parameters.pop().strip()
             query_parameters = re.split(r"\s*,\s*", csv)
 
-        # In some cases a package appears multiple times in the same DAG for *distinct*
-        # specs. For example, a build-type dependency may itself depend on a package
-        # the current spec depends on, but their specs may differ. Therefore we iterate
-        # in an order here that prioritizes the build, test and runtime dependencies;
-        # only when we don't find the package do we consider the full DAG.
         order = lambda: itertools.chain(
-            self.traverse(deptype="link"),
-            self.dependencies(deptype=dt.BUILD | dt.RUN | dt.TEST),
-            self.traverse(),  # fall back to a full search
+            self.traverse_edges(deptype=dt.LINK, order="breadth", cover="edges"),
+            self.edges_to_dependencies(depflag=dt.BUILD | dt.RUN | dt.TEST),
+            self.traverse_edges(deptype=dt.ALL, order="breadth", cover="edges"),
         )
 
+        # Consider runtime dependencies and direct build/test deps before transitive dependencies,
+        # and prefer matches closest to the root.
         try:
             child: Spec = next(
-                itertools.chain(
-                    # Regular specs
-                    (x for x in order() if x.name == name),
-                    (
-                        x
-                        for x in order()
-                        if (not x.virtual)
-                        and any(name in edge.virtuals for edge in x.edges_from_dependents())
-                    ),
-                    (x for x in order() if (not x.virtual) and x.package.provides(name)),
+                e.spec
+                for e in itertools.chain(
+                    (e for e in order() if e.spec.name == name or name in e.virtuals),
+                    # for historical reasons
+                    (e for e in order() if e.spec.concrete and e.spec.package.provides(name)),
                 )
             )
         except StopIteration:
@@ -4656,7 +4650,7 @@ class Spec:
         spec_str = " ^".join(root_str + sorted_dependencies)
         return spec_str.strip()
 
-    def install_status(self):
+    def install_status(self) -> InstallStatus:
         """Helper for tree to print DB install status."""
         if not self.concrete:
             return InstallStatus.absent

@@ -19,6 +19,7 @@ class RocmTensile(CMakePackage):
     license("MIT")
 
     maintainers("srekolam", "renjithravindrankannath", "haampie")
+    version("6.1.2", sha256="6a08190f6d9c8cc76764a68e2dd3e7af4759d4146ddc1c4b3370c7762a6f6d83")
     version("6.1.1", sha256="04fd76e6a0e9b7528e61df0721b03c0e977c145a2a1ea331d515c9167d7ac35f")
     version("6.1.0", sha256="69bfdc711d3a86e6651b1dcfb2c461c7d3ae574e6d884833d4e07d3e7ad06491")
     version("6.0.2", sha256="1d8a92422560c1e908fa25fd97a4aa07a96659528a543f77618408ffcfe1f307")
@@ -74,6 +75,7 @@ class RocmTensile(CMakePackage):
         "6.0.2",
         "6.1.0",
         "6.1.1",
+        "6.1.2",
     ]:
         depends_on(f"rocm-cmake@{ver}", type="build", when=f"@{ver}")
         depends_on(f"hip@{ver}", when=f"@{ver}")

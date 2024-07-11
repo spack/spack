@@ -34,6 +34,8 @@ class PyNumexpr(PythonPackage):
     depends_on("py-numpy@1.13.3:1.25", type=("build", "run"), when="@2.8.3:")
     # https://github.com/pydata/numexpr/issues/397
     depends_on("py-numpy@1.7:1.22", type=("build", "run"), when="@:2.7")
+    # https://github.com/pydata/numexpr/pull/478
+    depends_on("py-numpy@:1", when="@:2.9", type=("build", "run"))
 
     # Historical dependencies
     depends_on("py-packaging", type=("build", "run"), when="@2.8.3")

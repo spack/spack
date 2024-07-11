@@ -232,6 +232,10 @@ class Adios2(CMakePackage, CudaPackage, ROCmPackage):
     # https://github.com/ornladios/ADIOS2/pull/3893
     patch("2.9.2-cmake-find-threads-package-first.patch", when="@2.9")
 
+    # ROCM: enable support for rocm >= 6
+    # https://github.com/ornladios/ADIOS2/pull/4214
+    patch("2.10-enable-rocm6.patch", when="@2.9.1:")
+
     @when("%fj")
     def patch(self):
         """add fujitsu mpi commands #16864"""
