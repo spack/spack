@@ -18,7 +18,6 @@ import llnl.util.lang
 import llnl.util.tty as tty
 from llnl.util.filesystem import path_contains_subdirectory, paths_containing_libs
 
-import spack.compilers
 import spack.error
 import spack.schema.environment
 import spack.spec

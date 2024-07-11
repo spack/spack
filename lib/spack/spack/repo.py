@@ -590,7 +590,7 @@ class RepoIndex:
         self,
         package_checker: FastPackageChecker,
         namespace: str,
-        cache: spack.caches.FileCacheType,
+        cache: "spack.caches.FileCacheType",
     ):
         self.checker = package_checker
         self.packages_path = self.checker.packages_path
@@ -683,7 +683,7 @@ class RepoPath:
     def __init__(
         self,
         *repos: Union[str, "Repo"],
-        cache: spack.caches.FileCacheType,
+        cache: "spack.caches.FileCacheType",
         overrides: Optional[Dict[str, Any]] = None,
     ) -> None:
         self.repos: List[Repo] = []
@@ -950,7 +950,7 @@ class Repo:
         self,
         root: str,
         *,
-        cache: spack.caches.FileCacheType,
+        cache: "spack.caches.FileCacheType",
         overrides: Optional[Dict[str, Any]] = None,
     ) -> None:
         """Instantiate a package repository from a filesystem path.
