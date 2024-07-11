@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
 import re
 
 from spack.package import *
@@ -36,6 +37,8 @@ class Migraphx(CMakePackage):
         version("5.4.0", sha256="b6e7f4a1bf445ea0dae644ed5722369cde66fbee82a5917722f5d3f8c48b0a8c")
         version("5.3.3", sha256="91d91902bbedd5e1951a231e8e5c9a328360b128c731912ed17c8059df38e02a")
         version("5.3.0", sha256="d0b7283f42e03fb38b612868b8c94f46f27a6e0b019ae95fde5b9086582a1c69")
+
+    variant("asan", default=False, description="Build with address-sanitizer enabled or disabled")
 
     patch("0001-Adding-nlohmann-json-include-directory.patch", when="@:5.5")
     # Restrict Python 2.7 usage to fix the issue below
@@ -114,6 +117,20 @@ class Migraphx(CMakePackage):
             ver = None
         return ver
 
+    def setup_build_environment(self, env):
+        if self.spec.satisfies("+asan"):
+            env.set("CC", self.spec["llvm-amdgpu"].prefix.bin + "/clang")
+            env.set("CXX", self.spec["llvm-amdgpu"].prefix.bin + "/clang++")
+            env.set("ASAN_OPTIONS", "detect_leaks=0")
+
+            for root, _, files in os.walk(self.spec["llvm-amdgpu"].prefix):
+                if "libclang_rt.asan-x86_64.so" in files:
+                    asan_lib_path = root
+            env.prepend_path("LD_LIBRARY_PATH", asan_lib_path)
+            env.set("CFLAGS", "-fsanitize=address -shared-libasan")
+            env.set("CXXFLAGS", "-fsanitize=address -shared-libasan")
+            env.set("LDFLAGS", "-fuse-ld=lld")
+
     def cmake_args(self):
         spec = self.spec
         abspath = spec["abseil-cpp"].prefix.include
@@ -130,6 +147,12 @@ class Migraphx(CMakePackage):
             args.append(self.define("MIGRAPHX_USE_COMPOSABLEKERNEL", "OFF"))
             args.append(
                 self.define("GPU_TARGETS", "gfx906;gfx908;gfx90a;gfx1030;gfx1100;gfx1101;gfx1102")
+            )
+        if self.spec.satisfies("@6.1:") and self.spec.satisfies("+asan"):
+            args.append(
+                self.define(
+                    "CMAKE_CXX_FLAGS", "-fsanitize=address -shared-libasan -I{0}".format(abspath)
+                )
             )
         return args
 

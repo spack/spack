@@ -4,6 +4,8 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+import os
+
 from spack.package import *
 
 
@@ -31,6 +33,29 @@ class RocmCore(CMakePackage):
     version("5.6.0", sha256="3c3d47c8b774968d768d42810a3fed42d058b7d6da248d5295df2a7ffb262568")
     version("5.5.1", sha256="bc73060432ffdc2e210394835d383890b9652476074ef4708d447473f273ce76")
     version("5.5.0", sha256="684d3312bb14f05dc280cf136f5eddff38ba340cd85c383d6a217d8e27d3d57d")
+
+    variant("asan", default=False, description="Build with address-sanitizer enabled or disabled")
+
+    for ver in [
+            "6.1.0",
+            "6.1.1",
+            "6.1.2",
+    ]:
+        depends_on("llvm-amdgpu", when=f"@{ver}+asan")
+
+    def setup_build_environment(self, env):
+        if self.spec.satisfies("+asan"):
+            env.set("CC", self.spec["llvm-amdgpu"].prefix + "/bin/clang")
+            env.set("CXX", self.spec["llvm-amdgpu"].prefix + "/bin/clang++")
+            env.set("ASAN_OPTIONS", "detect_leaks=0")
+
+            for root, _, files in os.walk(self.spec["llvm-amdgpu"].prefix):
+                if "libclang_rt.asan-x86_64.so" in files:
+                    asan_lib_path = root
+            env.prepend_path("LD_LIBRARY_PATH", asan_lib_path)
+            env.set("CFLAGS", "-fsanitize=address -shared-libasan")
+            env.set("CXXFLAGS", "-fsanitize=address -shared-libasan")
+            env.set("LDFLAGS", "-fuse-ld=lld")
 
     def cmake_args(self):
         args = [self.define("ROCM_VERSION", self.spec.version)]

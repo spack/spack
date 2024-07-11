@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import re
+import os
 
 from spack.package import *
 
@@ -32,6 +33,7 @@ class Rocsparse(CMakePackage):
         sticky=True,
     )
     variant("test", default=False, description="Build rocsparse-test client")
+    variant("asan", default=False, description="Build with address-sanitizer enabled or disabled")
 
     license("MIT")
     version("6.1.2", sha256="e8989c28085275e7c044b19fd2bc86d8493ce6a1b8545126f787722c535fe6eb")
@@ -240,6 +242,18 @@ class Rocsparse(CMakePackage):
 
     def setup_build_environment(self, env):
         env.set("CXX", self.spec["hip"].hipcc)
+        if self.spec.satisfies("+asan"):
+            env.set("CC", self.spec["llvm-amdgpu"].prefix + "/bin/clang")
+            env.set("CXX", self.spec["llvm-amdgpu"].prefix + "/bin/clang++")
+            env.set("ASAN_OPTIONS", "detect_leaks=0")
+
+            for root, _, files in os.walk(self.spec["llvm-amdgpu"].prefix):
+                if "libclang_rt.asan-x86_64.so" in files:
+                    asan_lib_path = root
+            env.prepend_path("LD_LIBRARY_PATH", asan_lib_path)
+            env.set("CFLAGS", "-fsanitize=address -shared-libasan")
+            env.set("CXXFLAGS", "-fsanitize=address -shared-libasan")
+            env.set("LDFLAGS", "-fuse-ld=lld")
 
     @classmethod
     def determine_version(cls, lib):

@@ -46,6 +46,7 @@ class Hip(CMakePackage):
 
     variant("rocm", default=True, description="Enable ROCm support")
     variant("cuda", default=False, description="Build with CUDA")
+    variant("asan", default=False, description="Build with address-sanitizer enabled or disabled")
     conflicts("+cuda +rocm", msg="CUDA and ROCm support are mutually exclusive")
     conflicts("~cuda ~rocm", msg="CUDA or ROCm support is required")
 
@@ -532,6 +533,23 @@ class Hip(CMakePackage):
             args.append(self.define("HIP_PLATFORM", "amd"))
             if self.spec.satisfies("@5.6.0:"):
                 args.append(self.define("HIP_LLVM_ROOT", self.spec["llvm-amdgpu"].prefix))
+            if self.spec.satisfies("@6.1.0:") and self.spec.satisfies("+asan"):
+                args.append(self.define("ADDRESS_SANITIZER", "ON"))
+                args.append(
+                    self.define("CMAKE_C_COMPILER", self.spec["llvm-amdgpu"].prefix.bin + "/clang")
+                )
+                args.append(
+                    self.define(
+                        "CMAKE_CXX_COMPILER",
+                        self.spec["llvm-amdgpu"].prefix.bin + "/clang++",
+                    )
+                )
+                args.append(
+                    self.define(
+                        "CMAKE_CXX_FLAGS",
+                        f"-I{self.spec['libx11'].prefix.include} -I{self.spec['mesa'].prefix.include} -I{self.spec['xproto'].prefix.include}",
+                    )
+                )
 
         if self.spec.satisfies("+cuda"):
             args.append(self.define("HIP_PLATFORM", "nvidia"))

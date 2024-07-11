@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
+
 from spack.package import *
 
 
@@ -42,6 +44,7 @@ class Rocprim(CMakePackage):
         values=auto_or_any_combination_of(*amdgpu_targets),
         sticky=True,
     )
+    variant("asan", default=False, description="Build with address-sanitizer enabled or disabled")
 
     depends_on("cmake@3.10.2:", type="build")
     depends_on("numactl", type="link")
@@ -75,6 +78,18 @@ class Rocprim(CMakePackage):
 
     def setup_build_environment(self, env):
         env.set("CXX", self.spec["hip"].hipcc)
+        if self.spec.satisfies("+asan"):
+            env.set("CC", self.spec["llvm-amdgpu"].prefix + "/bin/clang")
+            env.set("CXX", self.spec["llvm-amdgpu"].prefix + "/bin/clang++")
+            env.set("ASAN_OPTIONS", "detect_leaks=0")
+
+            for root, _, files in os.walk(self.spec["llvm-amdgpu"].prefix):
+                if "libclang_rt.asan-x86_64.so" in files:
+                    asan_lib_path = root
+            env.prepend_path("LD_LIBRARY_PATH", asan_lib_path)
+            env.set("CFLAGS", "-fsanitize=address -shared-libasan")
+            env.set("CXXFLAGS", "-fsanitize=address -shared-libasan")
+            env.set("LDFLAGS", "-fuse-ld=lld")
 
     def cmake_args(self):
         args = [

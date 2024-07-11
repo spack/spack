@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
 import itertools
 import re
 
@@ -36,6 +37,7 @@ class Rocsolver(CMakePackage):
             size and compile time by adding specialized kernels \
             for small matrix sizes",
     )
+    variant("asan", default=False, description="Build with address-sanitizer enabled or disabled")
 
     license("BSD-2-Clause")
 
@@ -135,6 +137,18 @@ class Rocsolver(CMakePackage):
 
     def setup_build_environment(self, env):
         env.set("CXX", self.spec["hip"].hipcc)
+        if self.spec.satisfies("+asan"):
+            env.set("CC", self.spec["llvm-amdgpu"].prefix + "/bin/clang")
+            env.set("CXX", self.spec["llvm-amdgpu"].prefix + "/bin/clang++")
+            env.set("ASAN_OPTIONS", "detect_leaks=0")
+
+            for root, _, files in os.walk(self.spec["llvm-amdgpu"].prefix):
+                if "libclang_rt.asan-x86_64.so" in files:
+                    asan_lib_path = root
+            env.prepend_path("LD_LIBRARY_PATH", asan_lib_path)
+            env.set("CFLAGS", "-fsanitize=address -shared-libasan")
+            env.set("CXXFLAGS", "-fsanitize=address -shared-libasan")
+            env.set("LDFLAGS", "-fuse-ld=lld")
 
     @run_after("build")
     @on_package_attributes(run_tests=True)

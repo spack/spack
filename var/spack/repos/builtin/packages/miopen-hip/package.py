@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
 import re
 
 from spack.package import *
@@ -37,6 +38,8 @@ class MiopenHip(CMakePackage):
         version("5.4.0", sha256="b4153791f9eeee4cbc5534bc6ad8b32c0947bcd38e08b77ebe144065a4fa5456")
         version("5.3.3", sha256="7efc98215d23a2caaf212378c37e9a6484f54a4ed3e9660719286e4f287d3715")
         version("5.3.0", sha256="c5819f593d71beeda2eb24b89182912240cc40f83b2b8f9de695a8e230aa4ea6")
+
+    variant("asan", default=False, description="Build with address-sanitizer enabled or disabled")
 
     depends_on("cmake@3.5:", type="build")
     depends_on("pkgconfig", type="build")
@@ -110,6 +113,18 @@ class MiopenHip(CMakePackage):
     def setup_build_environment(self, env):
         lib_dir = self.spec["zlib-api"].libs.directories[0]
         env.prepend_path("LIBRARY_PATH", lib_dir)
+        if self.spec.satisfies("+asan"):
+            env.set("CC", self.spec["llvm-amdgpu"].prefix + "/bin/clang")
+            env.set("CXX", self.spec["llvm-amdgpu"].prefix + "/bin/clang++")
+            env.set("ASAN_OPTIONS", "detect_leaks=0")
+
+            for root, _, files in os.walk(self.spec["llvm-amdgpu"].prefix):
+                if "libclang_rt.asan-x86_64.so" in files:
+                    asan_lib_path = root
+            env.prepend_path("LD_LIBRARY_PATH", asan_lib_path)
+            env.set("CFLAGS", "-fsanitize=address -shared-libasan")
+            env.set("CXXFLAGS", "-fsanitize=address -shared-libasan")
+            env.set("LDFLAGS", "-fuse-ld=lld")
 
     def get_bitcode_dir(self):
         return self.spec["llvm-amdgpu"].prefix.amdgcn.bitcode
