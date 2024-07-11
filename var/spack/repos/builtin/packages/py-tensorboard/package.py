@@ -58,6 +58,10 @@ class PyTensorboard(PythonPackage):
     depends_on("py-grpcio@1.23.3:", type=("build", "run"), when="@2.2")
     depends_on("py-markdown@2.6.8:", type=("build", "run"))
     depends_on("py-numpy@1.12.0:", type=("build", "run"))
+    # https://github.com/tensorflow/tensorboard/pull/6871
+    depends_on("py-numpy@:1", type=("build", "run"))
+    # https://github.com/tensorflow/tensorboard/pull/5138
+    depends_on("py-numpy@:1.23", when="@:2.5", type=("build", "run"))
     depends_on("py-protobuf@3.19.6:4.23,4.24.1:", type=("build", "run"), when="@2.15.2:")
     depends_on("py-protobuf@3.19.6:4.23", type=("build", "run"), when="@2.12:2.15.1")
     depends_on("py-protobuf@3.9.2:3", type=("build", "run"), when="@2.11")

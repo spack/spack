@@ -857,7 +857,7 @@ def _populate(mock_db):
     _install("mpileaks ^mpich")
     _install("mpileaks ^mpich2")
     _install("mpileaks ^zmpi")
-    _install("externaltest")
+    _install("externaltest ^externalvirtual")
     _install("trivial-smoke-test")
 
 
