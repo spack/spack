@@ -611,25 +611,18 @@ do_not_impose(EffectID, node(X, Package))
 % Virtual dependency weights
 %-----------------------------------------------------------------------------
 
-% A provider may have different possible weights depending on whether it's an external
-% or not, or on preferences expressed in packages.yaml etc. This rule ensures that
+% A provider has different possible weights depending on its preference. This rule ensures that
 % we select the weight, among the possible ones, that minimizes the overall objective function.
 1 { provider_weight(DependencyNode, VirtualNode, Weight) :
     possible_provider_weight(DependencyNode, VirtualNode, Weight, _) } 1
  :- provider(DependencyNode, VirtualNode), internal_error("Package provider weights must be unique").
 
-% A provider that is an external can use a weight of 0
-possible_provider_weight(DependencyNode, VirtualNode, 0, "external")
-  :- provider(DependencyNode, VirtualNode),
-     external(DependencyNode).
-
-% A provider mentioned in the default configuration can use a weight
-% according to its priority in the list of providers
+% Any configured provider has a weight based on index in the preference list
 possible_provider_weight(node(ProviderID, Provider), node(VirtualID, Virtual), Weight, "default")
   :- provider(node(ProviderID, Provider), node(VirtualID, Virtual)),
      default_provider_preference(Virtual, Provider, Weight).
 
-% Any provider can use 100 as a weight, which is very high and discourage its use
+% Any non-configured provider has a default weight of 100
 possible_provider_weight(node(ProviderID, Provider), VirtualNode, 100, "fallback")
   :- provider(node(ProviderID, Provider), VirtualNode).
 
