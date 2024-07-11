@@ -199,10 +199,10 @@ class DetectablePackageMeta(type):
         # assumed to be detectable
         if hasattr(cls, "executables") or hasattr(cls, "libraries"):
             # Append a tag to each detectable package, so that finding them is faster
-            if hasattr(cls, "tags"):
-                getattr(cls, "tags").append(DetectablePackageMeta.TAG)
-            else:
+            if not hasattr(cls, "tags"):
                 setattr(cls, "tags", [DetectablePackageMeta.TAG])
+            elif DetectablePackageMeta.TAG not in cls.tags:
+                cls.tags.append(DetectablePackageMeta.TAG)
 
             @classmethod
             def platform_executables(cls):
@@ -748,11 +748,6 @@ class PackageBase(WindowsRPath, PackageViewMixin, RedistributionMixin, metaclass
         self._fetch_time = 0.0
 
         self.win_rpath = fsys.WindowsSimulatedRPath(self)
-
-        if self.is_extension:
-            pkg_cls = spack.repo.PATH.get_pkg_class(self.extendee_spec.name)
-            pkg_cls(self.extendee_spec)._check_extendable()
-
         super().__init__()
 
     @classmethod
@@ -2387,10 +2382,6 @@ class PackageBase(WindowsRPath, PackageViewMixin, RedistributionMixin, metaclass
         # Now that we've handled metadata, uninstall and replace with link
         PackageBase.uninstall_by_spec(spec, force=True, deprecator=deprecator)
         link_fn(deprecator.prefix, spec.prefix)
-
-    def _check_extendable(self):
-        if not self.extendable:
-            raise ValueError("Package %s is not extendable!" % self.name)
 
     def view(self):
         """Create a view with the prefix of this package as the root.

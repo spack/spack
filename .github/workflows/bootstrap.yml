@@ -63,7 +63,7 @@ jobs:
         uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29
         with:
           fetch-depth: 0
-      - uses: actions/setup-python@82c7e631bb3cdc910f68e0081d67478d79c6982d
+      - uses: actions/setup-python@39cd14951b08e74b54015e9e001cdefcf80e669f
         with:
           python-version: "3.12"
       - name: Bootstrap clingo
@@ -126,7 +126,7 @@ jobs:
         uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29
         with:
           fetch-depth: 0
-      - uses: actions/setup-python@82c7e631bb3cdc910f68e0081d67478d79c6982d
+      - uses: actions/setup-python@39cd14951b08e74b54015e9e001cdefcf80e669f
         with:
           python-version: |
             3.8
@@ -152,7 +152,7 @@ jobs:
                 not_found=0
                 old_path="$PATH"
                 export PATH="$ver_dir:$PATH"
-                ./bin/spack-tmpconfig -b ./.github/workflows/bootstrap-test.sh
+                ./bin/spack-tmpconfig -b ./.github/workflows/bin/bootstrap-test.sh
                 export PATH="$old_path"
               fi
             fi
@@ -166,4 +166,3 @@ jobs:
           source share/spack/setup-env.sh
           spack -d gpg list
           tree ~/.spack/bootstrap/store/
-

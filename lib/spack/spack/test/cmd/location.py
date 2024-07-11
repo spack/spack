@@ -15,7 +15,8 @@ import spack.stage
 from spack.main import SpackCommand, SpackCommandError
 
 # Everything here uses (or can use) the mock config and database.
-pytestmark = [pytest.mark.usefixtures("config", "database")]
+pytestmark = [pytest.mark.usefixtures("mutable_config", "mutable_database")]
+
 # location prints out "locations of packages and spack directories"
 location = SpackCommand("location")
 env = SpackCommand("env")

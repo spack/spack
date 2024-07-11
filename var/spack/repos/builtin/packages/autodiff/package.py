@@ -14,7 +14,7 @@ class Autodiff(CMakePackage):
     list_url = "https://github.com/autodiff/autodiff/tags"
     git = "https://github.com/autodiff/autodiff.git"
 
-    maintainers("wdconinc", "HadrienG2")
+    maintainers("wdconinc")
 
     license("MIT")
 

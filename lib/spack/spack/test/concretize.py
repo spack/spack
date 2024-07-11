@@ -24,6 +24,7 @@ import spack.hash_types as ht
 import spack.platforms
 import spack.repo
 import spack.solver.asp
+import spack.util.file_cache
 import spack.util.libc
 import spack.variant as vt
 from spack.concretize import find_spec
@@ -168,19 +169,18 @@ def fuzz_dep_order(request, monkeypatch):
 
 
 @pytest.fixture()
-def repo_with_changing_recipe(tmpdir_factory, mutable_mock_repo):
+def repo_with_changing_recipe(tmp_path_factory, mutable_mock_repo):
     repo_namespace = "changing"
-    repo_dir = tmpdir_factory.mktemp(repo_namespace)
+    repo_dir = tmp_path_factory.mktemp(repo_namespace)
 
-    repo_dir.join("repo.yaml").write(
+    (repo_dir / "repo.yaml").write_text(
         """
 repo:
   namespace: changing
-""",
-        ensure=True,
+"""
     )
 
-    packages_dir = repo_dir.ensure("packages", dir=True)
+    packages_dir = repo_dir / "packages"
     root_pkg_str = """
 class Root(Package):
     homepage = "http://www.example.com"
@@ -191,7 +191,9 @@ class Root(Package):
 
     conflicts("^changing~foo")
 """
-    packages_dir.join("root", "package.py").write(root_pkg_str, ensure=True)
+    package_py = packages_dir / "root" / "package.py"
+    package_py.parent.mkdir(parents=True)
+    package_py.write_text(root_pkg_str)
 
     changing_template = """
 class Changing(Package):
@@ -225,7 +227,9 @@ class Changing(Package):
 
             def __init__(self, repo_directory):
                 self.repo_dir = repo_directory
-                self.repo = spack.repo.Repo(str(repo_directory))
+                cache_dir = tmp_path_factory.mktemp("cache")
+                self.repo_cache = spack.util.file_cache.FileCache(str(cache_dir))
+                self.repo = spack.repo.Repo(str(repo_directory), cache=self.repo_cache)
 
             def change(self, changes=None):
                 changes = changes or {}
@@ -246,10 +250,12 @@ class Changing(Package):
                 # Change the recipe
                 t = jinja2.Template(changing_template)
                 changing_pkg_str = t.render(**context)
-                packages_dir.join("changing", "package.py").write(changing_pkg_str, ensure=True)
+                package_py = packages_dir / "changing" / "package.py"
+                package_py.parent.mkdir(parents=True, exist_ok=True)
+                package_py.write_text(changing_pkg_str)
 
                 # Re-add the repository
-                self.repo = spack.repo.Repo(str(self.repo_dir))
+                self.repo = spack.repo.Repo(str(self.repo_dir), cache=self.repo_cache)
                 repository.put_first(self.repo)
 
         _changing_pkg = _ChangingPackage(repo_dir)
@@ -1587,7 +1593,7 @@ class TestConcretize:
     )
     @pytest.mark.only_clingo("Use case not supported by the original concretizer")
     def test_concrete_specs_are_not_modified_on_reuse(
-        self, mutable_database, spec_str, expect_installed, config
+        self, mutable_database, spec_str, expect_installed
     ):
         # Test the internal consistency of solve + DAG reconstruction
         # when reused specs are added to the mix. This prevents things
@@ -1850,7 +1856,7 @@ class TestConcretize:
         assert counter == occurances, concrete_specs
 
     @pytest.mark.only_clingo("Original concretizer cannot concretize in rounds")
-    def test_solve_in_rounds_all_unsolved(self, monkeypatch, mock_packages, config):
+    def test_solve_in_rounds_all_unsolved(self, monkeypatch, mock_packages):
         specs = [Spec(x) for x in ["libdwarf%gcc", "libdwarf%clang"]]
         solver = spack.solver.asp.Solver()
         solver.reuse = False
@@ -2213,7 +2219,7 @@ class TestConcretize:
         assert result.specs
 
     @pytest.mark.regression("38664")
-    def test_unsolved_specs_raises_error(self, monkeypatch, mock_packages, config):
+    def test_unsolved_specs_raises_error(self, monkeypatch, mock_packages):
         """Check that the solver raises an exception when input specs are not
         satisfied.
         """
@@ -2233,7 +2239,7 @@ class TestConcretize:
 
     @pytest.mark.regression("43141")
     @pytest.mark.only_clingo("Use case not supported by the original concretizer")
-    def test_clear_error_when_unknown_compiler_requested(self, mock_packages, config):
+    def test_clear_error_when_unknown_compiler_requested(self, mock_packages):
         """Tests that the solver can report a case where the compiler cannot be set"""
         with pytest.raises(
             spack.error.UnsatisfiableSpecError, match="Cannot set the required compiler: a%foo"
@@ -2325,9 +2331,9 @@ class TestConcretize:
         assert s.satisfies("%gcc@12.1.0")
 
     @pytest.mark.parametrize("spec_str", ["mpileaks", "mpileaks ^mpich"])
-    def test_virtuals_are_annotated_on_edges(self, spec_str, default_mock_concretization):
+    def test_virtuals_are_annotated_on_edges(self, spec_str):
         """Tests that information on virtuals is annotated on DAG edges"""
-        spec = default_mock_concretization(spec_str)
+        spec = Spec(spec_str).concretized()
         mpi_provider = spec["mpi"].name
 
         edges = spec.edges_to_dependencies(name=mpi_provider)
@@ -2341,7 +2347,7 @@ class TestConcretize:
         "spec_str,mpi_name",
         [("mpileaks", "mpich"), ("mpileaks ^mpich2", "mpich2"), ("mpileaks ^zmpi", "zmpi")],
     )
-    def test_virtuals_are_reconstructed_on_reuse(self, spec_str, mpi_name, database):
+    def test_virtuals_are_reconstructed_on_reuse(self, spec_str, mpi_name, mutable_database):
         """Tests that when we reuse a spec, virtual on edges are reconstructed correctly"""
         with spack.config.override("concretizer:reuse", True):
             spec = Spec(spec_str).concretized()
@@ -3000,7 +3006,7 @@ def test_concretization_version_order():
         ),
     ],
 )
-@pytest.mark.usefixtures("database", "mock_store")
+@pytest.mark.usefixtures("mutable_database", "mock_store")
 @pytest.mark.not_on_windows("Expected length is different on Windows")
 def test_filtering_reused_specs(
     roots, reuse_yaml, expected, not_expected, expected_length, mutable_config, monkeypatch
@@ -3021,7 +3027,7 @@ def test_filtering_reused_specs(
         assert all(not x.satisfies(constraint) for x in specs)
 
 
-@pytest.mark.usefixtures("database", "mock_store")
+@pytest.mark.usefixtures("mutable_database", "mock_store")
 @pytest.mark.parametrize(
     "reuse_yaml,expected_length",
     [({"from": [{"type": "local"}]}, 17), ({"from": [{"type": "buildcache"}]}, 0)],
@@ -3057,9 +3063,7 @@ def test_spec_filters(specs, include, exclude, expected):
 
 @pytest.mark.only_clingo("clingo only reuse feature being tested")
 @pytest.mark.regression("38484")
-def test_git_ref_version_can_be_reused(
-    install_mockery_mutable_config, do_not_check_runtimes_on_reuse
-):
+def test_git_ref_version_can_be_reused(install_mockery, do_not_check_runtimes_on_reuse):
     first_spec = spack.spec.Spec("git-ref-package@git.2.1.5=2.1.5~opt").concretized()
     first_spec.package.do_install(fake=True, explicit=True)
 
@@ -3078,7 +3082,7 @@ def test_git_ref_version_can_be_reused(
 @pytest.mark.only_clingo("clingo only reuse feature being tested")
 @pytest.mark.parametrize("standard_version", ["2.0.0", "2.1.5", "2.1.6"])
 def test_reuse_prefers_standard_over_git_versions(
-    standard_version, install_mockery_mutable_config, do_not_check_runtimes_on_reuse
+    standard_version, install_mockery, do_not_check_runtimes_on_reuse
 ):
     """
     order matters in this test. typically reuse would pick the highest versioned installed match

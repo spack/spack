@@ -18,6 +18,8 @@ class ZlibNg(AutotoolsPackage, CMakePackage):
 
     license("Zlib")
 
+    version("2.2.1", sha256="ec6a76169d4214e2e8b737e0850ba4acb806c69eeace6240ed4481b9f5c57cdf")
+    version("2.1.7", sha256="59e68f67cbb16999842daeb517cdd86fc25b177b4affd335cd72b76ddc2a46d8")
     version("2.1.6", sha256="a5d504c0d52e2e2721e7e7d86988dec2e290d723ced2307145dedd06aeb6fef2")
     version("2.1.5", sha256="3f6576971397b379d4205ae5451ff5a68edf6c103b2f03c4188ed7075fbb5f04")
     version("2.1.4", sha256="a0293475e6a44a3f6c045229fe50f69dc0eebc62a42405a51f19d46a5541e77a")
@@ -38,13 +40,6 @@ class ZlibNg(AutotoolsPackage, CMakePackage):
     # Default to autotools, since cmake would result in circular dependencies if it's not
     # reused.
     build_system("autotools", "cmake", default="autotools")
-
-    # support lld 17+, can be removed after 2.1.7 release.
-    patch(
-        "https://github.com/zlib-ng/zlib-ng/commit/39dcc5aae7ad059b0d0c3a11e37e5ba7b7430c61.patch?full_index=1",
-        sha256="6614666f50e90ab23e658902dafe74243ab1f216a20aeab17d1705fddee8741d",
-        when="@2.1:2.1.6",
-    )
 
     # fix building with NVHPC, see https://github.com/zlib-ng/zlib-ng/pull/1698
     patch("pr-1698.patch", when="@2.1.4:%nvhpc+opt")

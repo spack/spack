@@ -54,7 +54,7 @@ jobs:
     - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29
       with:
         fetch-depth: 0
-    - uses: actions/setup-python@82c7e631bb3cdc910f68e0081d67478d79c6982d
+    - uses: actions/setup-python@39cd14951b08e74b54015e9e001cdefcf80e669f
       with:
         python-version: ${{ matrix.python-version }}
     - name: Install System packages
@@ -72,7 +72,7 @@ jobs:
       run: |
           # Need this for the git tests to succeed.
           git --version
-          . .github/workflows/setup_git.sh
+          . .github/workflows/bin/setup_git.sh
     - name: Bootstrap clingo
       if: ${{ matrix.concretizer == 'clingo' }}
       env:
@@ -103,7 +103,7 @@ jobs:
     - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29
       with:
         fetch-depth: 0
-    - uses: actions/setup-python@82c7e631bb3cdc910f68e0081d67478d79c6982d
+    - uses: actions/setup-python@39cd14951b08e74b54015e9e001cdefcf80e669f
       with:
         python-version: '3.11'
     - name: Install System packages
@@ -118,7 +118,7 @@ jobs:
       run: |
           # Need this for the git tests to succeed.
           git --version
-          . .github/workflows/setup_git.sh
+          . .github/workflows/bin/setup_git.sh
     - name: Run shell tests
       env:
           COVERAGE: true
@@ -147,7 +147,7 @@ jobs:
           git --version
           git config --global --add safe.directory /__w/spack/spack
           git fetch --unshallow
-          . .github/workflows/setup_git.sh
+          . .github/workflows/bin/setup_git.sh
           useradd spack-test
           chown -R spack-test .
     - name: Run unit tests
@@ -163,7 +163,7 @@ jobs:
     - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29
       with:
         fetch-depth: 0
-    - uses: actions/setup-python@82c7e631bb3cdc910f68e0081d67478d79c6982d
+    - uses: actions/setup-python@39cd14951b08e74b54015e9e001cdefcf80e669f
       with:
         python-version: '3.11'
     - name: Install System packages
@@ -178,7 +178,7 @@ jobs:
       run: |
           # Need this for the git tests to succeed.
           git --version
-          . .github/workflows/setup_git.sh
+          . .github/workflows/bin/setup_git.sh
     - name: Run unit tests (full suite with coverage)
       env:
           COVERAGE: true
@@ -201,7 +201,7 @@ jobs:
     - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29
       with:
         fetch-depth: 0
-    - uses: actions/setup-python@82c7e631bb3cdc910f68e0081d67478d79c6982d
+    - uses: actions/setup-python@39cd14951b08e74b54015e9e001cdefcf80e669f
       with:
         python-version: ${{ matrix.python-version }}
     - name: Install Python packages
@@ -217,7 +217,7 @@ jobs:
         SPACK_TEST_PARALLEL: 4
       run: |
         git --version
-        . .github/workflows/setup_git.sh
+        . .github/workflows/bin/setup_git.sh
         . share/spack/setup-env.sh
         $(which spack) bootstrap disable spack-install
         $(which spack) solve zlib
@@ -239,7 +239,7 @@ jobs:
     - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29
       with:
         fetch-depth: 0
-    - uses: actions/setup-python@82c7e631bb3cdc910f68e0081d67478d79c6982d
+    - uses: actions/setup-python@39cd14951b08e74b54015e9e001cdefcf80e669f
       with:
         python-version: 3.9
     - name: Install Python packages
@@ -247,7 +247,7 @@ jobs:
           python -m pip install --upgrade pip pywin32 setuptools pytest-cov clingo
     - name: Create local develop
       run: |
-        ./.github/workflows/setup_git.ps1
+        ./.github/workflows/bin/setup_git.ps1
     - name: Unit Test
       run: |
         spack unit-test -x --verbose --cov --cov-config=pyproject.toml

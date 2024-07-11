@@ -33,4 +33,6 @@ class PyBiopython(PythonPackage):
     depends_on("python@2.7,3.5:3.9", type=("build", "run"), when="@1.75:1.76")
     depends_on("python@3.6:", type=("build", "run"), when="@1.77:")
     depends_on("py-numpy", type=("build", "run"))
+    # https://github.com/biopython/biopython/issues/4676
+    depends_on("py-numpy@:1", when="@:1.83", type=("build", "run"))
     depends_on("py-setuptools", type="build")
