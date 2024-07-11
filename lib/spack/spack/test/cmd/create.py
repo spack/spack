@@ -62,7 +62,7 @@ create = SpackCommand("create")
         (
             ["-t", "intel", "/test-intel"],
             "test-intel",
-            [r"TestIntel(IntelPackage)", r"setup_environment"],
+            [r"TestIntel(IntelOneApiPackage)", r"setup_environment"],
         ),
         (
             ["-t", "makefile", "/test-makefile"],
