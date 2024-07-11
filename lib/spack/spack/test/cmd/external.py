@@ -115,10 +115,10 @@ def test_find_external_cmd_not_buildable(mutable_config, working_env, mock_execu
     "names,tags,exclude,expected",
     [
         # find --all
-        (None, ["detectable"], [], ["builtin.mock.find-externals1", "builtin.mock.mpich"]),
+        (None, ["detectable"], [], ["builtin.mock.find-externals1"]),
         # find --all --exclude find-externals1
-        (None, ["detectable"], ["builtin.mock.find-externals1"], ["builtin.mock.mpich"]),
-        (None, ["detectable"], ["find-externals1"], ["builtin.mock.mpich"]),
+        (None, ["detectable"], ["builtin.mock.find-externals1"], []),
+        (None, ["detectable"], ["find-externals1"], []),
         # find cmake (and cmake is not detectable)
         (["cmake"], ["detectable"], [], []),
     ],
@@ -314,8 +314,9 @@ def test_failures_in_scanning_do_not_result_in_an_error(
     assert "3.19.1" not in output
 
 
-def test_detect_virtuals(mock_executable, mutable_config, mock_packages, monkeypatch):
-    # Prepare an environment to detect a fake cmake
+def test_detect_virtuals(mock_executable, mutable_config, monkeypatch):
+    """Test whether external find --not-buildable sets virtuals as non-buildable (unless user
+    config sets them to buildable)"""
     mpich = mock_executable("mpichversion", output="echo MPICH Version:    4.0.2")
     prefix = os.path.dirname(mpich)
     external("find", "--path", prefix, "--not-buildable", "mpich")
@@ -323,7 +324,7 @@ def test_detect_virtuals(mock_executable, mutable_config, mock_packages, monkeyp
     # Check that mpich was correctly detected
     mpich = mutable_config.get("packages:mpich")
     assert mpich["buildable"] is False
-    assert mpich["externals"][0]["spec"] == "mpich@4.0.2"
+    assert Spec(mpich["externals"][0]["spec"]).satisfies("mpich@4.0.2")
 
     # Check that the virtual package mpi was marked as non-buildable
     assert mutable_config.get("packages:mpi:buildable") is False
