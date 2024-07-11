@@ -268,7 +268,7 @@ class Hpx(CMakePackage, CudaPackage, ROCmPackage):
 
         if "instrumentation=thread_debug" in spec:
             args += [
-                self.define("HPX_WITH_THREAD+DEBUG_INFO", True),
+                self.define("HPX_WITH_THREAD_DEBUG_INFO", True),
                 self.define("HPX_WITH_LOGGING", True),
             ]
 
