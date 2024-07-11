@@ -5,7 +5,6 @@
 
 import os
 import sys
-import tempfile
 
 from spack.package import *
 
@@ -667,18 +666,6 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
         else:
             env.set("TF_CONFIGURE_IOS", "0")
 
-        # set tmpdir to a non-NFS filesystem
-        # (because bazel uses ~/.cache/bazel)
-        # TODO: This should be checked for non-nfsy filesystem, but the current
-        #       best idea for it is to check
-        #           subprocess.call([
-        #               'stat', '--file-system', '--format=%T', tmp_path
-        #       ])
-        #       to not be nfs. This is only valid for Linux and we'd like to
-        #       stay at least also OSX compatible
-        tmp_path = tempfile.mkdtemp(prefix="spack")
-        env.set("TEST_TMPDIR", tmp_path)
-
     def configure(self, spec, prefix):
         # NOTE: configure script is interactive. If you set the appropriate
         # environment variables, this interactivity is skipped. If you don't,
@@ -755,15 +742,14 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
     def build(self, spec, prefix):
         # Bazel needs the directory to exist on install
         mkdirp(python_platlib)
-        tmp_path = env["TEST_TMPDIR"]
 
         # https://docs.bazel.build/versions/master/command-line-reference.html
         args = [
             # Don't allow user or system .bazelrc to override build settings
             "--nohome_rc",
             "--nosystem_rc",
-            # Bazel does not work properly on NFS, switch to /tmp
-            "--output_user_root=" + tmp_path,
+            # Bazel needs to be told to use the stage path
+            "--output_user_root=" + self.stage.source_path,
             "build",
             # Spack logs don't handle colored output well
             "--color=no",
@@ -832,9 +818,7 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
         build_pip_package("--src", buildpath)
 
     def install(self, spec, prefix):
-        tmp_path = env["TEST_TMPDIR"]
         buildpath = join_path(self.stage.source_path, "spack-build")
         with working_dir(buildpath):
             args = std_pip_args + ["--prefix=" + prefix, "."]
             pip(*args)
-        remove_linked_tree(tmp_path)

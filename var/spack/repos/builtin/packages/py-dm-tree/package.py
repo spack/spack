@@ -3,8 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import tempfile
-
 from spack.package import *
 
 
@@ -31,23 +29,13 @@ class PyDmTree(PythonPackage):
     depends_on("bazel@:5", when="@:0.1.6", type="build")
     depends_on("py-six@1.12.0:", when="@:0.1.6", type=("build", "run"))
 
-    # This is set later
-    tmp_path = None
-
-    @run_after("install")
-    def clean(self):
-        remove_linked_tree(PyDmTree.tmp_path)
-
     def patch(self):
-        PyDmTree.tmp_path = tempfile.mkdtemp(prefix="spack")
-        env["TEST_TMPDIR"] = PyDmTree.tmp_path
-        env["HOME"] = PyDmTree.tmp_path
         args = [
             # Don't allow user or system .bazelrc to override build settings
             "'--nohome_rc',\n",
             "'--nosystem_rc',\n",
-            # Bazel does not work properly on NFS, switch to /tmp
-            "'--output_user_root={0}',\n".format(PyDmTree.tmp_path),
+            # Bazel needs to be told to use the stage path
+            "'--output_user_root={0}',\n".format(self.stage.source_path),
             "'build',\n",
             # Spack logs don't handle colored output well
             "'--color=no',\n",

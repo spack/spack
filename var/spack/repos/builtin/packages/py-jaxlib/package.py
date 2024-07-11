@@ -101,7 +101,6 @@ class PyJaxlib(PythonPackage, CudaPackage):
 
     def patch(self):
         self.tmp_path = tempfile.mkdtemp(prefix="spack")
-        self.buildtmp = tempfile.mkdtemp(prefix="spack")
         filter_file(
             "build --spawn_strategy=standalone",
             f"""
@@ -144,12 +143,10 @@ build --local_cpu_resources={make_jobs}
             )
             args.append("--cuda_compute_capabilities={0}".format(capabilities))
         args.append(
-            "--bazel_startup_options="
-            "--output_user_root={0}".format(self.wrapped_package_object.buildtmp)
+            "--bazel_startup_options=" "--output_user_root={0}".format(self.stage.source_path)
         )
         python(*args)
         with working_dir(self.wrapped_package_object.tmp_path):
             args = std_pip_args + ["--prefix=" + self.prefix, "."]
             pip(*args)
         remove_linked_tree(self.wrapped_package_object.tmp_path)
-        remove_linked_tree(self.wrapped_package_object.buildtmp)

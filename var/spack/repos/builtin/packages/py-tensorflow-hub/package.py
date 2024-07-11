@@ -37,15 +37,12 @@ class PyTensorflowHub(Package):
     patch("0001-zlib-bump-over-CVE-use-fossils-url-which-is-more-sta.patch", when="@:0.12")
 
     def install(self, spec, prefix):
-        tmp_path = tempfile.mkdtemp(prefix="spack")
-        env["TEST_TMPDIR"] = tmp_path
-        env["HOME"] = tmp_path
         args = [
             # Don't allow user or system .bazelrc to override build settings
             "--nohome_rc",
             "--nosystem_rc",
-            # Bazel does not work properly on NFS, switch to /tmp
-            "--output_user_root=" + tmp_path,
+            # Bazel needs to be told to use the stage path
+            "--output_user_root=" + self.stage.source_path,
             "build",
             # Spack logs don't handle colored output well
             "--color=no",
@@ -81,5 +78,4 @@ class PyTensorflowHub(Package):
             args = std_pip_args + ["--prefix=" + prefix, "."]
             pip(*args)
 
-        remove_linked_tree(tmp_path)
         remove_linked_tree(insttmp_path)
