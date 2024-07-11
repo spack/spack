@@ -376,6 +376,32 @@ def which(*args, **kwargs):
     return Executable(exe) if exe else None
 
 
+class CompilerLang:
+    CC = "cc"
+    CXX = "cxx"
+    FC = "fc"
+    F77 = "f77"
+    ext_for_lang = {CC: "c", CXX: "cxx", FC: "f", F77: "f77"}
+
+
+class TryCompiler:
+    def __init__(self, compiler):
+        self._compiler = compiler
+
+    def add_compiler_arg(self, *args):
+        """Add default compiler arguments to compiler invocation for all languages"""
+
+    def add_environment_default(self, *args):
+        """Add default environment settings to compiler invocation"""
+
+    def __call__(self, *args, lang=CompilerLang.CC, **kwargs):
+        """Invoke compiler for given language with compilation only flag
+
+        Args:
+            *args:
+        """
+
+
 class ProcessError(spack.error.SpackError):
     """ProcessErrors are raised when Executables exit with an error code."""
 
