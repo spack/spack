@@ -66,7 +66,7 @@ class Hpx(CMakePackage, CudaPackage, ROCmPackage):
         values=lambda x: isinstance(x, str) and (x.isdigit() or x == "auto"),
     )
 
-    instrumentation_values = ("apex", "google_perftools", "papi", "valgrind","thread_debug")
+    instrumentation_values = ("apex", "google_perftools", "papi", "valgrind", "thread_debug")
     variant(
         "instrumentation",
         values=any_combination_of(*instrumentation_values),
@@ -268,10 +268,10 @@ class Hpx(CMakePackage, CudaPackage, ROCmPackage):
 
         if "instrumentation=thread_debug" in spec:
             args += [
-                self.define("HPX_WITH_THREAD+DEBUG_INFO",True),
-                self.define("HPX_WITH_LOGGING",True)
+                self.define("HPX_WITH_THREAD+DEBUG_INFO", True),
+                self.define("HPX_WITH_LOGGING", True),
             ]
-        
+
         if "instrumentation=apex" in spec:
             args += [
                 self.define("APEX_WITH_OTF2", True),
