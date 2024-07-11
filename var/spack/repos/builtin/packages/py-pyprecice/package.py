@@ -19,7 +19,7 @@ class PyPyprecice(PythonPackage):
 
     # Always prefer final version of release candidate
     version("develop", branch="develop")
-    version("3.1.1", sha256="50a0f1cbdb8fc362c22d316151c0e757958ff136a094e63b9b82d045d01d19c7")
+    version("3.1.1", sha256="112fccfbb223eb8df341221531f89943a14f75ee1e44dfb3276ebb38f21047de")
     version("3.1.0", sha256="8d9bd9e28859001ab503a1e2f90e54b3c000079f04c14dc7c0c04c61c5666641")
     version("3.0.0.0", sha256="7e2c4b106a231b0df2a430d86d4a7b295f85adbe3478c425f863d1a4bebee9f7")
     version("2.5.0.4", sha256="7f9449573eb52ce48ca3f0ab35529ea0064942487842515ae0a2c9299aa0f0db")
