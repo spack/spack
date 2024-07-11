@@ -20,6 +20,7 @@ class Xrootd(CMakePackage):
 
     license("LGPL-3.0-only")
 
+    version("5.7.0", sha256="214599bba98bc69875b82ac74f2d4b9ac8a554a1024119d8a9802b3d8b9986f8")
     version("5.6.9", sha256="44196167fbcf030d113e3749dfdecab934c43ec15e38e77481e29aac191ca3a8")
     version("5.6.8", sha256="19268fd9f0307d936da3598a5eb8471328e059c58f60d91d1ce7305ca0d57528")
     version("5.6.7", sha256="4089ce3a69fcf6566d320ef1f4a73a1d6332e6835b7566e17548569bdea78a8d")
@@ -64,6 +65,12 @@ class Xrootd(CMakePackage):
     version("4.3.0", sha256="d34865772d975b5d58ad80bb05312bf49aaf124d5431e54dc8618c05a0870e3c")
 
     variant("davix", default=True, description="Build with Davix")
+    variant(
+        "ec",
+        default=True,
+        description="Build with erasure coding component support",
+        when="@5.7.0:",
+    )
     variant("http", default=True, description="Build with HTTP support")
     variant("krb5", default=False, description="Build with KRB5 support")
     variant("python", default=False, description="Build pyxroot Python extension")
@@ -93,7 +100,16 @@ class Xrootd(CMakePackage):
         values=("98", "11", "14", "17", "20"),
         multi=False,
         description="Use the specified C++ standard when building",
-        when="@5.2.0:",
+        when="@5.2.0:5.6.99",
+    )
+
+    variant(
+        "cxxstd",
+        default="17",
+        values=("98", "11", "14", "17", "20"),
+        multi=False,
+        description="Use the specified C++ standard when building",
+        when="@5.7.0:",
     )
 
     variant(
@@ -121,6 +137,7 @@ class Xrootd(CMakePackage):
     conflicts("^cmake@:3.0", when="@5.0.0")
     conflicts("^cmake@:3.15.99", when="@5.5.4:5.5")
     depends_on("davix", when="+davix")
+    depends_on("isa-l", when="+ec")
     depends_on("pkgconfig", type="build", when="+davix")
     depends_on("libxml2", when="+http")
     depends_on("uuid", when="@4.11.0:")
@@ -203,6 +220,7 @@ class Xrootd(CMakePackage):
             define_from_variant("ENABLE_READLINE", "readline"),
             define_from_variant("ENABLE_KRB5", "krb5"),
             define_from_variant("ENABLE_SCITOKENS", "scitokens-cpp"),
+            define_from_variant("ENABLE_XRDEC", "ec"),
             define_from_variant("XRDCL_ONLY", "client_only"),
             define("ENABLE_CEPH", False),
             define("ENABLE_CRYPTO", True),
@@ -210,6 +228,7 @@ class Xrootd(CMakePackage):
             define("ENABLE_MACAROONS", False),
             define("ENABLE_VOMS", False),
             define("FORCE_ENABLED", True),
+            define("USE_SYSTEM_ISAL", True),
         ]
         # see https://github.com/spack/spack/pull/11581
         if "+python" in self.spec:
