@@ -31,3 +31,5 @@ class PyTifffile(PythonPackage):
     depends_on("py-numpy@1.19.2:", when="@2022.2.2:", type=("build", "run"))
     depends_on("py-numpy@1.15.1:", when="@2020.10.1:", type=("build", "run"))
     depends_on("py-numpy@1.8.2:", type=("build", "run"))
+    # https://github.com/cgohlke/tifffile/issues/252
+    depends_on("py-numpy@:1", when="@:2024.4.23", type=("build", "run"))

@@ -245,6 +245,8 @@ class Boost(Package):
     depends_on("zstd", when="+iostreams")
     depends_on("xz", when="+iostreams")
     depends_on("py-numpy", when="+numpy", type=("build", "run"))
+    # https://github.com/boostorg/python/issues/431
+    depends_on("py-numpy@:1", when="@:1.85+numpy", type=("build", "run"))
 
     # Improve the error message when the context-impl variant is conflicting
     conflicts("context-impl=fcontext", when="@:1.65.0")
@@ -341,9 +343,6 @@ class Boost(Package):
     # See: https://github.com/boostorg/process/issues/116
     # Patch: https://github.com/boostorg/process/commit/6a4d2ff72114ef47c7afaf92e1042aca3dfa41b0.patch
     patch("1.72_boost_process.patch", level=2, when="@1.72.0")
-
-    # Fix the bootstrap/bjam build for Cray
-    patch("bootstrap-path.patch", when="@1.39.0: platform=cray")
 
     # Patch fix for warnings from commits 2d37749, af1dc84, c705bab, and
     # 0134441 on https://github.com/boostorg/system.
@@ -446,7 +445,7 @@ class Boost(Package):
 
     def url_for_version(self, version):
         if version >= Version("1.63.0"):
-            url = "https://boostorg.jfrog.io/artifactory/main/release/{0}/source/boost_{1}.tar.bz2"
+            url = "https://archives.boost.io/release/{0}/source/boost_{1}.tar.bz2"
         else:
             url = "http://downloads.sourceforge.net/project/boost/boost/{0}/boost_{1}.tar.bz2"
 
@@ -528,10 +527,6 @@ class Boost(Package):
                 # wrappers.  Since Boost doesn't use the MPI C++ bindings,
                 # that can be used as a compiler option instead.
                 mpi_line = "using mpi : %s" % spec["mpi"].mpicxx
-
-                if "platform=cray" in spec:
-                    mpi_line += " : <define>MPICH_SKIP_MPICXX"
-
                 f.write(mpi_line + " ;\n")
 
             if "+python" in spec:

@@ -24,7 +24,6 @@ class NMakePackage(spack.package_base.PackageBase):
     build_system("nmake")
     conflicts("platform=linux", when="build_system=nmake")
     conflicts("platform=darwin", when="build_system=nmake")
-    conflicts("platform=cray", when="build_system=nmake")
 
 
 @spack.builder.builder("nmake")

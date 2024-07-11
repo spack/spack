@@ -73,8 +73,7 @@ class Postgresql(AutotoolsPackage):
         spec = self.spec
         args = ["--with-openssl"]
 
-        if spec.satisfies("+threadsafe"):
-            args.append(self.enable_or_disable("thread-safety"))
+        args.extend(self.enable_or_disable("thread-safety", variant="threadsafe"))
 
         if spec.variants["lineedit"].value == "libedit":
             args.append("--with-libedit-preferred")

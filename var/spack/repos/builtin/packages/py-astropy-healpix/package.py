@@ -25,3 +25,5 @@ class PyAstropyHealpix(PythonPackage):
     depends_on("python@3.6:", type=("build", "run"))
     depends_on("py-astropy@2.0:", type=("build", "run"))
     depends_on("py-numpy@1.11:", type=("build", "run"))
+    # https://github.com/astropy/astropy-healpix/pull/214
+    depends_on("py-numpy@:1", when="@:1.0.2", type=("build", "run"))

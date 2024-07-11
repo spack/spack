@@ -136,18 +136,26 @@ class Ncl(Package):
         # Make configure scripts use Spack's tcsh
         files = ["Configure"] + glob.glob("config/*")
 
-        filter_file("^#!/bin/csh -f", "#!/usr/bin/env csh", *files)
-
-    @run_before("install")
-    def filter_sbang(self):
         # Filter sbang before install so Spack's sbang hook can fix it up
-        files = glob.glob("ncarg2d/src/bin/scripts/*")
+        files += glob.glob("ncarg2d/src/bin/scripts/*")
         files += glob.glob("ncarview/src/bin/scripts/*")
         files += glob.glob("ni/src/scripts/*")
 
         csh = join_path(self.spec["tcsh"].prefix.bin, "csh")
 
-        filter_file("^#!/bin/csh", "#!{0}".format(csh), *files)
+        filter_file("^#!/bin/csh.*", "#!{0}".format(csh), *files)
+
+        if self.spec.satisfies("+grib"):
+            # Newer versions of libjasper do not provide the inmem property
+            if self.spec.satisfies("^jasper@2"):
+                filter_file("image.inmem_=1;", "", "external/g2clib-1.6.0/enc_jpeg2000.c")
+
+            filter_file("SUBDIRS = ", "SUBDIRS = g2clib-1.6.0 ", "external/yMakefile")
+            filter_file(
+                "INC=.*",
+                "INC=%s" % self.spec["jasper"].prefix.include,
+                "external/g2clib-1.6.0/makefile",
+            )
 
     def install(self, spec, prefix):
         if (self.compiler.fc is None) or (self.compiler.cc is None):
@@ -398,16 +406,3 @@ class Ncl(Package):
                     os.remove(filename)
                 except OSError as e:
                     raise InstallError("Failed to delete file %s: %s" % (e.filename, e.strerror))
-
-    @when("+grib")
-    def patch(self):
-        # Newer versions of libjasper do not provide the inmem property
-        if self.spec.satisfies("^jasper@2"):
-            filter_file("image.inmem_=1;", "", "external/g2clib-1.6.0/enc_jpeg2000.c")
-
-        filter_file("SUBDIRS = ", "SUBDIRS = g2clib-1.6.0 ", "external/yMakefile")
-        filter_file(
-            "INC=.*",
-            "INC=%s" % self.spec["jasper"].prefix.include,
-            "external/g2clib-1.6.0/makefile",
-        )

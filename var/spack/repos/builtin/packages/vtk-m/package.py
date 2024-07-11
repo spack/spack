@@ -29,6 +29,7 @@ class VtkM(CMakePackage, CudaPackage, ROCmPackage):
 
     version("master", branch="master")
     version("release", branch="release")
+    version("2.2.0-rc1", sha256="32643cf3564fa77f8e2a2a5456a574b6b2355bb68918eb62ccde493993ade1a3")
     version(
         "2.1.0",
         sha256="9cf3522b6dc0675281a1a16839464ebd1cc5f9c08c20eabee1719b3bcfdcf41f",
@@ -143,6 +144,10 @@ class VtkM(CMakePackage, CudaPackage, ROCmPackage):
     # Patch
     patch("diy-include-cstddef.patch", when="@1.5.3:1.8.0")
 
+    # VTK-M PR#3215
+    # https://gitlab.kitware.com/vtk/vtk-m/-/merge_requests/3215
+    patch("vtkm-mr3215-ext-geom-fix.patch", when="@2.1")
+
     # VTK-M PR#2972
     # https://gitlab.kitware.com/vtk/vtk-m/-/merge_requests/2972
     patch("vtkm-cuda-swap-conflict-pr2972.patch", when="@1.9 +cuda ^cuda@12:")
@@ -150,6 +155,13 @@ class VtkM(CMakePackage, CudaPackage, ROCmPackage):
     # VTK-M PR#3160
     # https://gitlab.kitware.com/vtk/vtk-m/-/merge_requests/3160
     patch("mr3160-rocthrust-fix.patch", when="@2.1:")
+
+    # Disable Thrust patch that is no longer needed in modern Thrust
+    patch(
+        "https://github.com/Kitware/VTK-m/commit/4a4466e7c8cd44d2be2bd3fe6f359faa8e9547aa.patch?full_index=1",
+        sha256="58dc104ba05ec99c359eeec3ac094cdb071053a4250f4ad9d72ef6a356c4346e",
+        when="@1.6.0: +cuda ^cuda@12.5:",
+    )
 
     def cmake_args(self):
         spec = self.spec
@@ -196,6 +208,9 @@ class VtkM(CMakePackage, CudaPackage, ROCmPackage):
                 # vtk-m detectes tbb via TBB_ROOT env var
                 os.environ["TBB_ROOT"] = spec["tbb"].prefix
 
+            if "+kokkos" in spec and "+rocm" in spec and spec.satisfies("^kokkos@4:"):
+                options.append(f"-DCMAKE_CXX_COMPILER:BOOL={spec['hip'].prefix.bin.hipcc}")
+
             # Support for relocatable code
             if "~shared" in spec and "+fpic" in spec:
                 options.append("-DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=ON")
@@ -230,14 +245,12 @@ class VtkM(CMakePackage, CudaPackage, ROCmPackage):
 
         return options
 
-    # Delegate in the vtk-m built smoke test
-    def smoke_test(self):
+    def test_smoke_test(self):
+        """Build and run ctests"""
         spec = self.spec
 
         if "+examples" not in spec:
-            raise RuntimeError(
-                "Examples needed for smoke test missing", "reinstall with `+examples` variant"
-            )
+            raise SkipTest("Package must be installed with +examples")
 
         testdir = "smoke_test_build"
         with working_dir(testdir, create=True):
@@ -252,7 +265,4 @@ class VtkM(CMakePackage, CudaPackage, ROCmPackage):
     @run_after("install")
     @on_package_attributes(run_tests=True)
     def build_test(self):
-        self.smoke_test()
-
-    def test(self):
-        self.smoke_test()
+        self.test_smoke_test()

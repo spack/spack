@@ -32,6 +32,7 @@ class Gdal(CMakePackage, AutotoolsPackage, PythonExtension):
 
     license("MIT")
 
+    version("3.9.1", sha256="aff3086fee75f5773e33a5598df98d8a4d10be411f777d3ce23584b21d8171ca")
     version("3.9.0", sha256="577f80e9d14ff7c90b6bfbc34201652b4546700c01543efb4f4c3050e0b3fda2")
     version("3.8.5", sha256="e8b4df2a8a7d25272f867455c0c230459545972f81f0eff2ddbf6a6f60dcb1e4")
     version("3.8.4", sha256="0c53ced95d29474236487202709b49015854f8e02e35e44ed0f4f4e12a7966ce")
@@ -408,6 +409,8 @@ class Gdal(CMakePackage, AutotoolsPackage, PythonExtension):
     depends_on("py-setuptools@:57", type="build", when="@:3.2+python")  # needs 2to3
     depends_on("py-setuptools", type="build", when="+python")
     depends_on("py-numpy@1.0.0:", type=("build", "run"), when="+python")
+    # https://github.com/OSGeo/gdal/issues/9751
+    depends_on("py-numpy@:1", when="@:3.8+python", type=("build", "run"))
     depends_on("swig", type="build", when="+python")
     depends_on("java@7:", type=("build", "link", "run"), when="@3.2:+java")
     depends_on("java@6:", type=("build", "link", "run"), when="@2.4:+java")

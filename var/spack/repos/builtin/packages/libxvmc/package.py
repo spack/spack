@@ -9,13 +9,14 @@ from spack.package import *
 class Libxvmc(AutotoolsPackage, XorgPackage):
     """X.org libXvMC library."""
 
-    homepage = "https://cgit.freedesktop.org/xorg/lib/libXvMC"
+    homepage = "https://gitlab.freedesktop.org/xorg/lib/libXvMC"
     xorg_mirror_path = "lib/libXvMC-1.0.9.tar.gz"
 
     license("MIT")
 
     maintainers("wdconinc")
 
+    version("1.0.14", sha256="3ad5d2b991219e2bf9b2f85d40b12c16f1afec038715e462f6058af73a9b5ef8")
     version("1.0.13", sha256="e630b4373af8c67a7c8f07ebe626a1269a613d262d1f737b57231a06f7c34b4e")
     version("1.0.12", sha256="024c9ec4f001f037eeca501ee724c7e51cf287eb69ced8c6126e16e7fa9864b5")
     version("1.0.11", sha256="0b931d216b23b95df87cc65f7bb7acef4120d9263adb0a4d90856ba1f7a390da")

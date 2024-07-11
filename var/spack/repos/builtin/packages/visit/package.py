@@ -75,7 +75,6 @@ class Visit(CMakePackage):
     generator("ninja")
 
     variant("gui", default=True, description="Enable VisIt's GUI")
-    variant("osmesa", default=False, description="Use OSMesa for off-screen CPU rendering")
     variant("adios2", default=True, description="Enable ADIOS2 file format")
     variant("hdf5", default=True, description="Enable HDF5 file format")
     variant("netcdf", default=True, description="Enable NetCDF file format")
@@ -105,13 +104,12 @@ class Visit(CMakePackage):
     # Fix const-correctness in VTK interface
     patch("vtk-8.2-constcorrect.patch", when="@3.3.3 ^vtk@8.2.1a")
 
-    # Exactly one of 'gui' or 'osmesa' has to be enabled
-    conflicts("+gui", when="+osmesa")
+    conflicts(
+        "+gui", when="^[virtuals=gl] osmesa", msg="GUI cannot be activated with OSMesa front-end"
+    )
 
     depends_on("cmake@3.14.7:", type="build")
     depends_on("mpi", when="+mpi")
-
-    requires("^[virtuals=gl] osmesa", when="+osmesa")
 
     # VTK flavors
     depends_on("vtk@8.1:8 +opengl2")
@@ -125,7 +123,7 @@ class Visit(CMakePackage):
     depends_on(
         "vtk",
         patches=[patch("vtk_rendering_opengl2_x11.patch")],
-        when="~osmesa platform=linux ^vtk@8",
+        when="platform=linux ^[virtuals=gl] glx ^vtk@8",
     )
     depends_on("vtk", patches=[patch("vtk_wrapping_python_x11.patch")], when="+python ^vtk@8")
 
@@ -296,7 +294,7 @@ class Visit(CMakePackage):
                 self.define("OPENGL_glu_LIBRARY", spec["glu"].libs[0]),
             ]
         )
-        if "+osmesa" in spec:
+        if spec.satisfies("^[virtuals=gl] osmesa"):
             args.extend(
                 [
                     self.define("HAVE_OSMESA", True),
