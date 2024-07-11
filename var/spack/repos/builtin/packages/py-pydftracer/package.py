@@ -6,7 +6,7 @@
 from spack.package import *
 
 
-class PyPyDFTracer(PythonPackage):
+class PyPydftracer(PythonPackage):
     """A low-level profiler for capture I/O calls from deep learning applications."""
 
     homepage = "https://github.com/hariharan-devarajan/dlio-profiler.git"
