@@ -748,7 +748,7 @@ def test_ci_rebuild_mock_success(
     tmpdir,
     working_env,
     mutable_mock_env_path,
-    install_mockery_mutable_config,
+    install_mockery,
     mock_gnupghome,
     mock_stage,
     mock_fetch,
@@ -782,7 +782,7 @@ def test_ci_rebuild_mock_failure_to_push(
     tmpdir,
     working_env,
     mutable_mock_env_path,
-    install_mockery_mutable_config,
+    install_mockery,
     mock_gnupghome,
     mock_stage,
     mock_fetch,
@@ -820,7 +820,7 @@ def test_ci_rebuild(
     tmpdir,
     working_env,
     mutable_mock_env_path,
-    install_mockery_mutable_config,
+    install_mockery,
     mock_packages,
     monkeypatch,
     mock_gnupghome,
@@ -1019,7 +1019,7 @@ spack:
 def test_ci_generate_mirror_override(
     tmpdir,
     mutable_mock_env_path,
-    install_mockery_mutable_config,
+    install_mockery,
     mock_packages,
     mock_fetch,
     mock_stage,
@@ -1104,7 +1104,7 @@ spack:
 def test_push_to_build_cache(
     tmpdir,
     mutable_mock_env_path,
-    install_mockery_mutable_config,
+    install_mockery,
     mock_packages,
     mock_fetch,
     mock_stage,
@@ -1430,55 +1430,6 @@ spack:
                     assert the_elt["script"][0] == "main step"
                     assert len(the_elt["after_script"]) == 1
                     assert the_elt["after_script"][0] == "post step one"
-
-
-def test_ci_generate_with_workarounds(
-    tmpdir, mutable_mock_env_path, install_mockery, mock_packages, monkeypatch, ci_base_environment
-):
-    """Make sure the post-processing cli workarounds do what they should"""
-    filename = str(tmpdir.join("spack.yaml"))
-    with open(filename, "w") as f:
-        f.write(
-            """\
-spack:
-  specs:
-    - callpath%gcc@=9.5
-  mirrors:
-    some-mirror: https://my.fake.mirror
-  ci:
-    pipeline-gen:
-    - submapping:
-      - match: ['%gcc@9.5']
-        build-job:
-          tags:
-            - donotcare
-          image: donotcare
-    enable-artifacts-buildcache: true
-"""
-        )
-
-    with tmpdir.as_cwd():
-        env_cmd("create", "test", "./spack.yaml")
-        outputfile = str(tmpdir.join(".gitlab-ci.yml"))
-
-        with ev.read("test"):
-            ci_cmd("generate", "--output-file", outputfile, "--dependencies")
-
-            with open(outputfile) as f:
-                contents = f.read()
-                yaml_contents = syaml.load(contents)
-
-                found_one = False
-                non_rebuild_keys = ["workflow", "stages", "variables", "rebuild-index"]
-
-                for ci_key in yaml_contents.keys():
-                    if ci_key not in non_rebuild_keys:
-                        found_one = True
-                        job_obj = yaml_contents[ci_key]
-                        assert "needs" not in job_obj
-                        assert "dependencies" in job_obj
-
-                assert found_one is True
 
 
 @pytest.mark.disable_clean_stage_check

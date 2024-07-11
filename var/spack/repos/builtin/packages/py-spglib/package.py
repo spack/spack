@@ -22,3 +22,5 @@ class PySpglib(PythonPackage):
 
     depends_on("py-setuptools@18.0:", type="build")
     depends_on("py-numpy", type=("build", "run"))
+    # https://github.com/spglib/spglib/issues/407
+    depends_on("py-numpy@:1", type=("build", "run"))

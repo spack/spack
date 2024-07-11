@@ -21,6 +21,7 @@ class PyRios(PythonPackage):
 
     license("GPL-3.0-only")
 
+    version("2.0.2", sha256="c5949f581fd6657e3257c69b382971ce5831a403a2edc8971b61197bdc78e5a4")
     version("2.0.1", sha256="8b8bcbf11a45af46d25b95d9d4a402ec0466ed117b3464f4226a6a466d9687b5")
     version("1.4.17", sha256="81007af2d0bcf2a3bf064dc2445087f8b2264c941fa66441b2b1b503168e677d")
     version("1.4.16", sha256="2f553d85ff4ff26bfda2a8c6bd3d9dcce5ace847f7d9bd2f072c8943f3758ded")
@@ -30,6 +31,9 @@ class PyRios(PythonPackage):
     version("1.4.12", sha256="6d897488ce1ca77e470483472998afcb2eb3bb3307f392a924b85f88a16d73eb")
     version("1.4.11", sha256="b7ae5311f987b32f1afe1fabc16f25586de8d15c17a69405d1950aeada7b748e")
     version("1.4.10", sha256="6324acccc6018f9e06c40370bc366dc459890e8c09d26e0ebd245f6fd46dad71")
+
+    # https://github.com/ubarsc/rios/pull/90
+    conflicts("^py-numpy@2:", when="@:2.0.1")
 
     # In 1.4.x, parallel processing was an extra add-on
     variant(

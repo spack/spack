@@ -165,7 +165,7 @@ def _reset(args):
         if not ok_to_continue:
             raise RuntimeError("Aborting")
 
-    for scope in spack.config.CONFIG.file_scopes:
+    for scope in spack.config.CONFIG.writable_scopes:
         # The default scope should stay untouched
         if scope.name == "defaults":
             continue

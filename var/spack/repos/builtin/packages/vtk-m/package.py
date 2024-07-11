@@ -29,6 +29,7 @@ class VtkM(CMakePackage, CudaPackage, ROCmPackage):
 
     version("master", branch="master")
     version("release", branch="release")
+    version("2.2.0-rc1", sha256="32643cf3564fa77f8e2a2a5456a574b6b2355bb68918eb62ccde493993ade1a3")
     version(
         "2.1.0",
         sha256="9cf3522b6dc0675281a1a16839464ebd1cc5f9c08c20eabee1719b3bcfdcf41f",
@@ -151,6 +152,13 @@ class VtkM(CMakePackage, CudaPackage, ROCmPackage):
     # https://gitlab.kitware.com/vtk/vtk-m/-/merge_requests/3160
     patch("mr3160-rocthrust-fix.patch", when="@2.1:")
 
+    # Disable Thrust patch that is no longer needed in modern Thrust
+    patch(
+        "https://github.com/Kitware/VTK-m/commit/4a4466e7c8cd44d2be2bd3fe6f359faa8e9547aa.patch?full_index=1",
+        sha256="58dc104ba05ec99c359eeec3ac094cdb071053a4250f4ad9d72ef6a356c4346e",
+        when="@1.6.0: +cuda ^cuda@12.5:",
+    )
+
     def cmake_args(self):
         spec = self.spec
         options = []
@@ -195,6 +203,9 @@ class VtkM(CMakePackage, CudaPackage, ROCmPackage):
             if "+tbb" in spec:
                 # vtk-m detectes tbb via TBB_ROOT env var
                 os.environ["TBB_ROOT"] = spec["tbb"].prefix
+
+            if "+kokkos" in spec and "+rocm" in spec and spec.satisfies("^kokkos@4:"):
+                options.append(f"-DCMAKE_CXX_COMPILER:BOOL={spec['hip'].prefix.bin.hipcc}")
 
             # Support for relocatable code
             if "~shared" in spec and "+fpic" in spec:
