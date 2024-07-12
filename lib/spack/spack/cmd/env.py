@@ -467,7 +467,7 @@ def env_add(args):
     dst_path = ev.environment_dir_from_name(name, exists_ok=False)
 
     try:
-        symlink(src_path, dst_path, allow_broken_symlinks=False)
+        symlink(src_path, dst_path)
     except SymlinkError as exc:
         msg = f"cannot add the environment {src_path} does not exist"
         raise ev.SpackEnvironmentError(msg) from exc
