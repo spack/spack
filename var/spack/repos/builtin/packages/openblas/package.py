@@ -86,12 +86,6 @@ class Openblas(CMakePackage, MakefilePackage):
         default=False,
         description="Enable experimental support for up to 1024 CPUs/Cores and 128 numa nodes",
     )
-    variant(
-        "noavx512",
-        default=False,
-        description="Disable AVX-512 with NO_AVX512=1 (internal compiler error with AVX512 "
-        + "when using Intel 2021)",
-    )
     variant("symbol_suffix", default="none", description="Set a symbol suffix")
 
     variant("locking", default=True, description="Build with thread safety")
@@ -266,7 +260,7 @@ class Openblas(CMakePackage, MakefilePackage):
         msg="Visual Studio does not support OpenBLAS dynamic dispatch features",
     )
 
-    requires("+noavx512", when="%intel@2021")
+    conflicts("target=avx512", when="%intel@2021")
 
     depends_on("perl", type="build")
 
@@ -547,7 +541,7 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
         if self.spec.satisfies("+bignuma"):
             make_defs.append("BIGNUMA=1")
 
-        if self.spec.satisfies("+noavx512"):
+        if not self.spec.satisfies("target=avx512"):
             make_defs.append("NO_AVX512=1")
 
         # Avoid that NUM_THREADS gets initialized with the host's number of CPUs.
