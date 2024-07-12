@@ -825,7 +825,11 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
 
         args.append("--config=v2")
 
-        args.append("//tensorflow/tools/pip_package:build_pip_package")
+        # https://github.com/tensorflow/tensorflow/issues/63298
+        if self.spec.satisfies("@2.17:"):
+            args.append("//tensorflow/tools/pip_package:wheel")
+        else:
+            args.append("//tensorflow/tools/pip_package:build_pip_package")
 
         bazel(*args)
 
