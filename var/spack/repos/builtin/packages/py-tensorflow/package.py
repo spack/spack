@@ -418,8 +418,13 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
     # and https://github.com/abseil/abseil-cpp/issues/1665
     patch("absl_neon.patch", when="@2.16.1: target=aarch64:")
 
-    # reverting change otherwise the commit patches won't apply
-    patch("revert_fd6b0a4.patch", when="@2.16-rocm-enhanced +rocm")
+    # reverting change otherwise the c467913 commit patch won't apply
+    patch(
+        "https://github.com/ROCm/tensorflow-upstream/commit/fd6b0a4356c66f5f30cedbc62b24f18d9e32806f.patch?full_index=1",
+        sha256="43f1519dfc618b4fb568f760d559c063234248fa12c47a35c1cf3b7114756424",
+        when="@2.16-rocm-enhanced +rocm",
+        reverse=True,
+    )
     patch(
         "https://github.com/ROCm/tensorflow-upstream/commit/c467913bf4411ce2681391f37a9adf6031d23c2c.patch?full_index=1",
         sha256="82554a84d19d99180a6bec274c6106dd217361e809b446e2e4bc4b6b979bdf7a",
