@@ -81,14 +81,17 @@ class Arborx(CMakePackage, CudaPackage, ROCmPackage):
         depends_on("kokkos+%s" % backend.lower(), when="~trilinos+%s" % backend.lower())
 
     for arch in CudaPackage.cuda_arch_values:
-        cuda_dep = "+cuda cuda_arch={0}".format(arch)
-        depends_on("kokkos {0}".format(cuda_dep), when=cuda_dep)
+        cuda_dep = f"+cuda cuda_arch={arch}"
+        depends_on(f"kokkos {cuda_dep}", when=f"~trilinos {cuda_dep}")
+        depends_on(f"trilinos {cuda_dep}", when=f"+trilinos {cuda_dep}")
 
     for arch in ROCmPackage.amdgpu_targets:
-        rocm_dep = "+rocm amdgpu_target={0}".format(arch)
-        depends_on("kokkos {0}".format(rocm_dep), when=rocm_dep)
+        rocm_dep = f"+rocm amdgpu_target={arch}"
+        depends_on(f"kokkos {rocm_dep}", when=f"~trilinos {rocm_dep}")
+        depends_on(f"trilinos {rocm_dep}", when=f"+trilinos {rocm_dep}")
 
     conflicts("+cuda", when="cuda_arch=none")
+    conflicts("^kokkos", when="+trilinos")
     depends_on("kokkos+cuda_lambda", when="~trilinos+cuda")
 
     # Trilinos/Kokkos
@@ -104,20 +107,22 @@ class Arborx(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("trilinos@14.4.0:", when="@1.6:+trilinos")
     patch("trilinos14.0-kokkos-major-version.patch", when="@1.4+trilinos ^trilinos@14.0.0")
     conflicts("~serial", when="+trilinos")
-    conflicts("+cuda", when="+trilinos")
 
     def cmake_args(self):
         spec = self.spec
 
+        if "~trilinos" in spec:
+            kokkos_spec = spec["kokkos"]
+        else:
+            kokkos_spec = spec["trilinos"]
+
         options = [
-            "-DKokkos_ROOT=%s"
-            % (spec["kokkos"].prefix if "~trilinos" in spec else spec["trilinos"].prefix),
+            f"-DKokkos_ROOT={kokkos_spec.prefix}",
             self.define_from_variant("ARBORX_ENABLE_MPI", "mpi"),
         ]
 
         if spec.satisfies("+cuda"):
-            # Only Kokkos allows '+cuda' for now
-            options.append("-DCMAKE_CXX_COMPILER=%s" % spec["kokkos"].kokkos_cxx)
+            options.append(f"-DCMAKE_CXX_COMPILER={kokkos_spec.kokkos_cxx}")
         if spec.satisfies("+rocm"):
             options.append("-DCMAKE_CXX_COMPILER=%s" % spec["hip"].hipcc)
 
