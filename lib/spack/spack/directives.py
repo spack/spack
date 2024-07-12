@@ -97,7 +97,7 @@ Patcher = Callable[[Union["spack.package_base.PackageBase", Dependency]], None]
 PatchesType = Optional[Union[Patcher, str, List[Union[Patcher, str]]]]
 
 
-SUPPORTED_LANGUAGES = ("fortran", "cxx")
+SUPPORTED_LANGUAGES = ("fortran", "cxx", "c")
 
 
 def _make_when_spec(value: WhenType) -> Optional["spack.spec.Spec"]:
