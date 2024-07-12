@@ -34,19 +34,30 @@ class ClingoBootstrapConcretizer:
         self.host_architecture.target = str(self.host_target)
         self.host_compiler = self._valid_compiler_or_raise()
         self.host_python = self.python_external_spec()
-        self.host_libc = self.libc_external_spec()
+        if str(self.host_platform) == "linux":
+            self.host_libc = self.libc_external_spec()
 
         self.external_cmake, self.external_bison = self._externals_from_yaml(configuration)
 
     def _valid_compiler_or_raise(self) -> "spack.compiler.Compiler":
-        # TODO: Add validation for host compiler
-        return spack.compilers.compilers_for_spec("gcc", arch_spec=self.host_architecture)[0]
+        if str(self.host_platform) == "linux":
+            compiler_name = "gcc"
+        elif str(self.host_platform) == "darwin":
+            compiler_name = "apple-clang"
+        elif str(self.host_platform) == "windows":
+            compiler_name = "msvc"
+        else:
+            raise RuntimeError(f"Cannot bootstrap clingo from sources on {self.host_platform}")
+        candidates = spack.compilers.compilers_for_spec(
+            compiler_name, arch_spec=self.host_architecture
+        )
+        return candidates[0]
 
     def _externals_from_yaml(
         self, configuration: "spack.config.Configuration"
     ) -> Tuple[Optional["spack.spec.Spec"], Optional["spack.spec.Spec"]]:
         packages_yaml = configuration.get("packages")
-        requirements = {"cmake": "@3.16:", "bison": "@2.5:"}
+        requirements = {"cmake": "@3.20:", "bison": "@2.5:"}
         selected: Dict[str, Optional["spack.spec.Spec"]] = {"cmake": None, "bison": None}
         for pkg_name in ["cmake", "bison"]:
             if pkg_name not in packages_yaml:
@@ -71,15 +82,15 @@ class ClingoBootstrapConcretizer:
     def prototype_path(self) -> pathlib.Path:
         """Path to a prototype concrete specfile for clingo"""
         parent_dir = pathlib.Path(__file__).parent
+        result = parent_dir / "prototypes" / f"clingo-{self.host_platform}-{self.host_target}.json"
         if str(self.host_platform) == "linux":
-            result = (
-                parent_dir / "prototypes" / f"clingo-{self.host_platform}-{self.host_target}.json"
-            )
             # Using aarch64 as a fallback, since it has gnuconfig (x86_64 doesn't have it)
             if not result.exists():
                 result = parent_dir / "prototypes" / f"clingo-{self.host_platform}-aarch64.json"
-        else:
+
+        if not result.exists():
             raise RuntimeError(f"Cannot bootstrap clingo from sources on {self.host_platform}")
+
         return result
 
     def concretize(self) -> "spack.spec.Spec":
