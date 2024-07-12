@@ -302,14 +302,7 @@ class SourceBootstrapper(Bootstrapper):
         # might reduce compilation time by a fair amount
         _add_externals_if_missing()
 
-        concrete_spec = spack.spec.Spec(abstract_spec_str)
-        if concrete_spec.name == "patchelf":
-            concrete_spec._old_concretize(  # pylint: disable=protected-access
-                deprecation_warning=False
-            )
-        else:
-            concrete_spec.concretize()
-
+        concrete_spec = spack.spec.Spec(abstract_spec_str).concretized()
         msg = "[BOOTSTRAP] Try installing '{0}' from sources"
         tty.debug(msg.format(abstract_spec_str))
         with spack.config.override(self.mirror_scope):
