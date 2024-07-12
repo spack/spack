@@ -74,7 +74,12 @@ class Fckit(CMakePackage):
             # See comment above (conflicts for finalize_ddts)
             args.append("-DENABLE_FINAL=OFF")
 
-        if self.spec.satisfies("%intel") or self.spec.satisfies("%gcc"):
+        if (
+            self.spec.satisfies("%intel")
+            or self.spec.satisfies("%oneapi")
+            or self.spec.satisfies("%gcc")
+            or self.spec.satisfies("%nvhpc")
+        ):
             cxxlib = "stdc++"
         elif self.spec.satisfies("%clang") or self.spec.satisfies("%apple-clang"):
             cxxlib = "c++"
