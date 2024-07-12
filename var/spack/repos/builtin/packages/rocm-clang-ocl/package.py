@@ -14,6 +14,8 @@ class RocmClangOcl(CMakePackage):
     url = "https://github.com/ROCm/clang-ocl/archive/rocm-6.1.1.tar.gz"
     tags = ["rocm"]
 
+    test_requires_compiler = True
+
     license("MIT")
 
     maintainers("srekolam", "renjithravindrankannath")
@@ -81,13 +83,10 @@ class RocmClangOcl(CMakePackage):
         self.cache_extra_test_sources([self.test_src_dir])
 
     def test_make(self):
-        """Test make and cmake"""
+        """Test make"""
         test_dir = join_path(self.test_suite.current_test_cache_dir, self.test_src_dir)
-        with working_dir(test_dir, create=True):
-            prefixes = ";".join([self.spec["rocm-clang-ocl"].prefix])
-            cc_options = ["-DCMAKE_PREFIX_PATH=" + prefixes, "."]
-            exe = which(self.spec["cmake"].prefix.bin.cmake)
-            exe(*cc_options)
+        with working_dir(test_dir):
+            cmake = self.spec["cmake"].command
+            cmake("-DCMAKE_PREFIX_PATH=" + self.spec["rocm-clang-ocl"].prefix, ".")
             make = which("make")
             make()
-            make("clean")
