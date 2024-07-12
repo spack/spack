@@ -289,8 +289,8 @@ def test_mirror_cache_symlinks(tmpdir):
 @pytest.mark.parametrize(
     "specs,expected_specs",
     [
-        (["a"], ["a@=1.0", "a@=2.0"]),
-        (["a", "brillig"], ["a@=1.0", "a@=2.0", "brillig@=1.0.0", "brillig@=2.0.0"]),
+        (["pkg-a"], ["pkg-a@=1.0", "pkg-a@=2.0"]),
+        (["pkg-a", "brillig"], ["pkg-a@=1.0", "pkg-a@=2.0", "brillig@=1.0.0", "brillig@=2.0.0"]),
     ],
 )
 def test_get_all_versions(specs, expected_specs):

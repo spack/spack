@@ -437,14 +437,14 @@ def test_parallel_false_is_not_propagating(default_mock_concretization):
     # a foobar=bar (parallel = False)
     # |
     # b (parallel =True)
-    s = default_mock_concretization("a foobar=bar")
+    s = default_mock_concretization("pkg-a foobar=bar")
 
     spack.build_environment.set_package_py_globals(s.package)
-    assert s["a"].package.module.make_jobs == 1
+    assert s["pkg-a"].package.module.make_jobs == 1
 
-    spack.build_environment.set_package_py_globals(s["b"].package)
-    assert s["b"].package.module.make_jobs == spack.build_environment.determine_number_of_jobs(
-        parallel=s["b"].package.parallel
+    spack.build_environment.set_package_py_globals(s["pkg-b"].package)
+    assert s["pkg-b"].package.module.make_jobs == spack.build_environment.determine_number_of_jobs(
+        parallel=s["pkg-b"].package.parallel
     )
 
 
@@ -540,7 +540,7 @@ def test_dirty_disable_module_unload(config, mock_packages, working_env, mock_mo
     """Test that on CRAY platform 'module unload' is not called if the 'dirty'
     option is on.
     """
-    s = spack.spec.Spec("a").concretized()
+    s = spack.spec.Spec("pkg-a").concretized()
 
     # If called with "dirty" we don't unload modules, so no calls to the
     # `module` function on Cray
