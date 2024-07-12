@@ -613,7 +613,7 @@ class Cuda(Package):
 
     homepage = "https://developer.nvidia.com/cuda-zone"
 
-    maintainers("ax3l", "Rombur")
+    maintainers("ax3l", "Rombur", "pauleonix")
     executables = ["^nvcc$"]
 
     skip_version_audit = ["platform=darwin", "platform=windows"]
