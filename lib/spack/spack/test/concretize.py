@@ -632,11 +632,6 @@ class TestConcretize:
         assert all(not d.dependencies(name="mpi") for d in spec.traverse())
         assert all(x in spec for x in ("zmpi", "mpi"))
 
-    def test_my_dep_depends_on_provider_of_my_virtual_dep(self):
-        spec = Spec("indirect-mpich")
-        spec.normalize()
-        spec.concretize()
-
     @pytest.mark.parametrize("compiler_str", ["clang", "gcc", "gcc@10.2.1", "clang@:15.0.0"])
     def test_compiler_inheritance(self, compiler_str):
         spec_str = "mpileaks %{0}".format(compiler_str)

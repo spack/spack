@@ -575,20 +575,6 @@ class TestSpecDag:
         copy_ids = set(id(s) for s in copy.traverse())
         assert not orig_ids.intersection(copy_ids)
 
-    def test_copy_normalized(self):
-        orig = Spec("mpileaks")
-        orig.normalize()
-        copy = orig.copy()
-        check_links(copy)
-
-        assert orig == copy
-        assert orig.eq_dag(copy)
-
-        # ensure no shared nodes bt/w orig and copy.
-        orig_ids = set(id(s) for s in orig.traverse())
-        copy_ids = set(id(s) for s in copy.traverse())
-        assert not orig_ids.intersection(copy_ids)
-
     def test_copy_concretized(self):
         orig = Spec("mpileaks")
         orig.concretize()

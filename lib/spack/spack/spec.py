@@ -2615,62 +2615,6 @@ class Spec:
         validate_fn = getattr(pkg_cls, "validate_detected_spec", lambda x, y: None)
         validate_fn(self, self.extra_attributes)
 
-    def _concretize_helper(self, concretizer, presets=None, visited=None):
-        """Recursive helper function for concretize().
-        This concretizes everything bottom-up.  As things are
-        concretized, they're added to the presets, and ancestors
-        will prefer the settings of their children.
-        """
-        if presets is None:
-            presets = {}
-        if visited is None:
-            visited = set()
-
-        if self.name in visited:
-            return False
-
-        if self.concrete:
-            visited.add(self.name)
-            return False
-
-        changed = False
-
-        # Concretize deps first -- this is a bottom-up process.
-        for name in sorted(self._dependencies):
-            # WARNING: This function is an implementation detail of the
-            # WARNING: original concretizer. Since with that greedy
-            # WARNING: algorithm we don't allow multiple nodes from
-            # WARNING: the same package in a DAG, here we hard-code
-            # WARNING: using index 0 i.e. we assume that we have only
-            # WARNING: one edge from package "name"
-            changed |= self._dependencies[name][0].spec._concretize_helper(
-                concretizer, presets, visited
-            )
-
-        if self.name in presets:
-            changed |= self.constrain(presets[self.name])
-        else:
-            # Concretize virtual dependencies last.  Because they're added
-            # to presets below, their constraints will all be merged, but we'll
-            # still need to select a concrete package later.
-            if not self.virtual:
-                changed |= any(
-                    (
-                        concretizer.concretize_develop(self),  # special variant
-                        concretizer.concretize_architecture(self),
-                        concretizer.concretize_compiler(self),
-                        concretizer.adjust_target(self),
-                        # flags must be concretized after compiler
-                        concretizer.concretize_compiler_flags(self),
-                        concretizer.concretize_version(self),
-                        concretizer.concretize_variants(self),
-                    )
-                )
-            presets[self.name] = self
-
-        visited.add(self.name)
-        return changed
-
     def _replace_with(self, concrete):
         """Replace this virtual spec with a concrete spec."""
         assert self.virtual
@@ -2690,110 +2634,6 @@ class Spec:
                 dependent.edges_to_dependencies(name=concrete.name)[0].update_virtuals(
                     virtuals=virtuals
                 )
-
-    def _expand_virtual_packages(self, concretizer):
-        """Find virtual packages in this spec, replace them with providers,
-        and normalize again to include the provider's (potentially virtual)
-        dependencies.  Repeat until there are no virtual deps.
-
-        Precondition: spec is normalized.
-
-        .. todo::
-
-           If a provider depends on something that conflicts with
-           other dependencies in the spec being expanded, this can
-           produce a conflicting spec.  For example, if mpich depends
-           on hwloc@:1.3 but something in the spec needs hwloc1.4:,
-           then we should choose an MPI other than mpich.  Cases like
-           this are infrequent, but should implement this before it is
-           a problem.
-        """
-        # Make an index of stuff this spec already provides
-        self_index = spack.provider_index.ProviderIndex(
-            repository=spack.repo.PATH, specs=self.traverse(), restrict=True
-        )
-        changed = False
-        done = False
-
-        while not done:
-            done = True
-            for spec in list(self.traverse()):
-                replacement = None
-                if spec.external:
-                    continue
-                if spec.virtual:
-                    replacement = self._find_provider(spec, self_index)
-                    if replacement:
-                        # TODO: may break if in-place on self but
-                        # shouldn't happen if root is traversed first.
-                        spec._replace_with(replacement)
-                        done = False
-                        break
-
-                if not replacement:
-                    # Get a list of possible replacements in order of
-                    # preference.
-                    candidates = concretizer.choose_virtual_or_external(spec)
-
-                    # Try the replacements in order, skipping any that cause
-                    # satisfiability problems.
-                    for replacement in candidates:
-                        if replacement is spec:
-                            break
-
-                        # Replace spec with the candidate and normalize
-                        copy = self.copy()
-                        copy[spec.name]._dup(replacement, deps=False)
-
-                        try:
-                            # If there are duplicate providers or duplicate
-                            # provider deps, consolidate them and merge
-                            # constraints.
-                            copy.normalize(force=True)
-                            break
-                        except spack.error.SpecError:
-                            # On error, we'll try the next replacement.
-                            continue
-
-                # If replacement is external then trim the dependencies
-                if replacement.external:
-                    if spec._dependencies:
-                        for dep in spec.dependencies():
-                            del dep._dependents.edges[spec.name]
-                        changed = True
-                        spec.clear_dependencies()
-                    replacement.clear_dependencies()
-                    replacement.architecture = self.architecture
-
-                # TODO: could this and the stuff in _dup be cleaned up?
-                def feq(cfield, sfield):
-                    return (not cfield) or (cfield == sfield)
-
-                if replacement is spec or (
-                    feq(replacement.name, spec.name)
-                    and feq(replacement.versions, spec.versions)
-                    and feq(replacement.compiler, spec.compiler)
-                    and feq(replacement.architecture, spec.architecture)
-                    and feq(replacement._dependencies, spec._dependencies)
-                    and feq(replacement.variants, spec.variants)
-                    and feq(replacement.external_path, spec.external_path)
-                    and feq(replacement.external_modules, spec.external_modules)
-                ):
-                    continue
-                # Refine this spec to the candidate. This uses
-                # replace_with AND dup so that it can work in
-                # place. TODO: make this more efficient.
-                if spec.virtual:
-                    spec._replace_with(replacement)
-                    changed = True
-                if spec._dup(replacement, deps=False, cleardeps=False):
-                    changed = True
-
-                self_index.update(spec)
-                done = False
-                break
-
-        return changed
 
     def _patches_assigned(self):
         """Whether patches have been assigned to this spec by the concretizer."""
@@ -3401,14 +3241,6 @@ class Spec:
         # Mark the spec as normal once done.
         self._normal = True
         return any_change
-
-    def normalized(self):
-        """
-        Return a normalized copy of this spec without modifying this spec.
-        """
-        clone = self.copy()
-        clone.normalize()
-        return clone
 
     def validate_or_raise(self):
         """Checks that names and values in this spec are real. If they're not,
