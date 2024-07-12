@@ -16,7 +16,6 @@ TODO: make this customizable and allow users to configure
 """
 import functools
 import platform
-import tempfile
 from contextlib import contextmanager
 from itertools import chain
 from typing import Union
@@ -744,12 +743,6 @@ def concretize_specs_together(*abstract_specs, **kwargs):
     Returns:
         List of concretized specs
     """
-    if spack.config.get("config:concretizer", "clingo") == "original":
-        return _concretize_specs_together_original(*abstract_specs, **kwargs)
-    return _concretize_specs_together_new(*abstract_specs, **kwargs)
-
-
-def _concretize_specs_together_new(*abstract_specs, **kwargs):
     import spack.solver.asp
 
     allow_deprecated = spack.config.get("config:deprecated", False)
@@ -758,30 +751,6 @@ def _concretize_specs_together_new(*abstract_specs, **kwargs):
         abstract_specs, tests=kwargs.get("tests", False), allow_deprecated=allow_deprecated
     )
     return [s.copy() for s in result.specs]
-
-
-def _concretize_specs_together_original(*abstract_specs, **kwargs):
-    abstract_specs = [spack.spec.Spec(s) for s in abstract_specs]
-    tmpdir = tempfile.mkdtemp()
-    builder = spack.repo.MockRepositoryBuilder(tmpdir)
-    # Split recursive specs, as it seems the concretizer has issue
-    # respecting conditions on dependents expressed like
-    # depends_on('foo ^bar@1.0'), see issue #11160
-    split_specs = [
-        dep.copy(deps=False) for spec1 in abstract_specs for dep in spec1.traverse(root=True)
-    ]
-    builder.add_package(
-        "concretizationroot", dependencies=[(str(x), None, None) for x in split_specs]
-    )
-
-    with spack.repo.use_repositories(builder.root, override=False):
-        # Spec from a helper package that depends on all the abstract_specs
-        concretization_root = spack.spec.Spec("concretizationroot")
-        concretization_root.concretize(tests=kwargs.get("tests", False))
-        # Retrieve the direct dependencies
-        concrete_specs = [concretization_root[spec.name].copy() for spec in abstract_specs]
-
-    return concrete_specs
 
 
 class NoCompilersForArchError(spack.error.SpackError):

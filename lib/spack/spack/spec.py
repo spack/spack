@@ -2795,114 +2795,6 @@ class Spec:
 
         return changed
 
-    def _old_concretize(self, tests=False, deprecation_warning=True):
-        """A spec is concrete if it describes one build of a package uniquely.
-        This will ensure that this spec is concrete.
-
-        Args:
-            tests (list or bool): list of packages that will need test
-                dependencies, or True/False for test all/none
-            deprecation_warning (bool): enable or disable the deprecation
-                warning for the old concretizer
-
-        If this spec could describe more than one version, variant, or build
-        of a package, this will add constraints to make it concrete.
-
-        Some rigorous validation and checks are also performed on the spec.
-        Concretizing ensures that it is self-consistent and that it's
-        consistent with requirements of its packages. See flatten() and
-        normalize() for more details on this.
-        """
-        import spack.concretize
-
-        # Add a warning message to inform users that the original concretizer
-        # will be removed
-        if deprecation_warning:
-            msg = (
-                "the original concretizer is currently being used.\n\tUpgrade to "
-                '"clingo" at your earliest convenience. The original concretizer '
-                "will be removed from Spack in a future version."
-            )
-            warnings.warn(msg)
-
-        self.replace_hash()
-
-        if not self.name:
-            raise spack.error.SpecError("Attempting to concretize anonymous spec")
-
-        if self._concrete:
-            return
-
-        # take the spec apart once before starting the main concretization loop and resolving
-        # deps, but don't break dependencies during concretization as the spec is built.
-        user_spec_deps = self.flat_dependencies(disconnect=True)
-
-        changed = True
-        force = False
-        concretizer = spack.concretize.Concretizer(self.copy())
-        while changed:
-            changes = (
-                self.normalize(force, tests, user_spec_deps, disconnect=False),
-                self._expand_virtual_packages(concretizer),
-                self._concretize_helper(concretizer),
-            )
-            changed = any(changes)
-            force = True
-
-        visited_user_specs = set()
-        for dep in self.traverse():
-            visited_user_specs.add(dep.name)
-            pkg_cls = spack.repo.PATH.get_pkg_class(dep.name)
-            visited_user_specs.update(pkg_cls(dep).provided_virtual_names())
-
-        extra = set(user_spec_deps.keys()).difference(visited_user_specs)
-        if extra:
-            raise InvalidDependencyError(self.name, extra)
-
-        Spec.inject_patches_variant(self)
-
-        for s in self.traverse():
-            # TODO: Refactor this into a common method to build external specs
-            # TODO: or turn external_path into a lazy property
-            Spec.ensure_external_path_if_external(s)
-
-        # assign hashes and mark concrete
-        self._finalize_concretization()
-
-        # If any spec in the DAG is deprecated, throw an error
-        Spec.ensure_no_deprecated(self)
-
-        # Update externals as needed
-        for dep in self.traverse():
-            if dep.external:
-                dep.package.update_external_dependencies()
-
-        # Now that the spec is concrete we should check if
-        # there are declared conflicts
-        #
-        # TODO: this needs rethinking, as currently we can only express
-        # TODO: internal configuration conflicts within one package.
-        matches = []
-        for x in self.traverse():
-            if x.external:
-                # external specs are already built, don't worry about whether
-                # it's possible to build that configuration with Spack
-                continue
-
-            for when_spec, conflict_list in x.package_class.conflicts.items():
-                if x.satisfies(when_spec):
-                    for conflict_spec, msg in conflict_list:
-                        if x.satisfies(conflict_spec):
-                            when = when_spec.copy()
-                            when.name = x.name
-                            matches.append((x, conflict_spec, when, msg))
-        if matches:
-            raise ConflictsInSpecError(self, matches)
-
-        # Check if we can produce an optimized binary (will throw if
-        # there are declared inconsistencies)
-        self.architecture.target.optimization_flags(self.compiler)
-
     def _patches_assigned(self):
         """Whether patches have been assigned to this spec by the concretizer."""
         # FIXME: _patches_in_order_of_appearance is attached after concretization
@@ -3032,7 +2924,13 @@ class Spec:
             msg += "    For each package listed, choose another spec\n"
             raise SpecDeprecatedError(msg)
 
-    def _new_concretize(self, tests=False):
+    def concretize(self, tests: Union[bool, List[str]] = False) -> None:
+        """Concretize the current spec.
+
+        Args:
+            tests: if False disregard 'test' dependencies, if a list of names activate them for
+                the packages in the list, if True activate 'test' dependencies for all packages.
+        """
         import spack.solver.asp
 
         self.replace_hash()
@@ -3065,19 +2963,6 @@ class Spec:
 
         concretized = answer[node]
         self._dup(concretized)
-
-    def concretize(self, tests=False):
-        """Concretize the current spec.
-
-        Args:
-            tests (bool or list): if False disregard 'test' dependencies,
-                if a list of names activate them for the packages in the list,
-                if True activate 'test' dependencies for all packages.
-        """
-        if spack.config.get("config:concretizer", "clingo") == "clingo":
-            self._new_concretize(tests)
-        else:
-            self._old_concretize(tests)
 
     def _mark_root_concrete(self, value=True):
         """Mark just this spec (not dependencies) concrete."""

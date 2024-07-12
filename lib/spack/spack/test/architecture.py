@@ -208,7 +208,6 @@ def test_satisfy_strict_constraint_when_not_concrete(architecture_tuple, constra
     ],
 )
 @pytest.mark.usefixtures("mock_packages", "config")
-@pytest.mark.only_clingo("Fixing the parser broke this test for the original concretizer.")
 @pytest.mark.skipif(
     str(archspec.cpu.host().family) != "x86_64", reason="tests are for x86_64 uarch ranges"
 )

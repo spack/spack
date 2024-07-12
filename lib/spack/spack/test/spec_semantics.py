@@ -1123,9 +1123,6 @@ class TestSpecSemantics:
         ],
     )
     def test_virtual_deps_bindings(self, default_mock_concretization, spec_str, specs_in_dag):
-        if spack.config.get("config:concretizer") == "original":
-            pytest.skip("Use case not supported by the original concretizer")
-
         s = default_mock_concretization(spec_str)
         for label, expected in specs_in_dag:
             assert label in s
@@ -1141,9 +1138,6 @@ class TestSpecSemantics:
         ],
     )
     def test_unsatisfiable_virtual_deps_bindings(self, spec_str):
-        if spack.config.get("config:concretizer") == "original":
-            pytest.skip("Use case not supported by the original concretizer")
-
         with pytest.raises(spack.solver.asp.UnsatisfiableSpecError):
             Spec(spec_str).concretized()
 

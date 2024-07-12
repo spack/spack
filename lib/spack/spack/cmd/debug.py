@@ -90,7 +90,6 @@ def report(args):
     print("* **Spack:**", get_version())
     print("* **Python:**", platform.python_version())
     print("* **Platform:**", architecture)
-    print("* **Concretizer:**", spack.config.get("config:concretizer"))
 
 
 def debug(parser, args):

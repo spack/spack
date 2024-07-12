@@ -213,7 +213,6 @@ def test_from_list_url(mock_packages, config, spec, url, digest, _fetch_method):
         ("=2.0.0", "foo-2.0.0.tar.gz", None),
     ],
 )
-@pytest.mark.only_clingo("Original concretizer doesn't resolve concrete versions to known ones")
 def test_new_version_from_list_url(
     mock_packages, config, _fetch_method, requested_version, tarball, digest
 ):

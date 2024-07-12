@@ -12,7 +12,7 @@ JSON file for a similar platform.
 """
 import pathlib
 import sys
-from typing import Tuple
+from typing import Dict, Optional, Tuple
 
 import archspec.cpu
 
@@ -43,11 +43,11 @@ class ClingoBootstrapConcretizer:
         return spack.compilers.compilers_for_spec("gcc", arch_spec=self.host_architecture)[0]
 
     def _externals_from_yaml(
-        self, configuration: "spack.configConfiguration"
-    ) -> Tuple["spack.spec.Spec", "spack.spec.Spec"]:
+        self, configuration: "spack.config.Configuration"
+    ) -> Tuple[Optional["spack.spec.Spec"], Optional["spack.spec.Spec"]]:
         packages_yaml = configuration.get("packages")
         requirements = {"cmake": "@3.16:", "bison": "@2.5:"}
-        selected = {"cmake": None, "bison": None}
+        selected: Dict[str, Optional["spack.spec.Spec"]] = {"cmake": None, "bison": None}
         for pkg_name in ["cmake", "bison"]:
             if pkg_name not in packages_yaml:
                 continue
@@ -72,7 +72,9 @@ class ClingoBootstrapConcretizer:
         """Path to a prototype concrete specfile for clingo"""
         parent_dir = pathlib.Path(__file__).parent
         if str(self.host_platform) == "linux":
-            result = parent_dir / "prototypes" / f"clingo-{self.host_platform}-{self.host_target}.json"
+            result = (
+                parent_dir / "prototypes" / f"clingo-{self.host_platform}-{self.host_target}.json"
+            )
             # Using aarch64 as a fallback, since it has gnuconfig (x86_64 doesn't have it)
             if not result.exists():
                 result = parent_dir / "prototypes" / f"clingo-{self.host_platform}-aarch64.json"

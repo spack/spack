@@ -19,10 +19,7 @@ from spack.spec import Spec
 from spack.test.conftest import create_test_repo
 from spack.util.url import path_to_file_url
 
-pytestmark = [
-    pytest.mark.not_on_windows("Windows uses old concretizer"),
-    pytest.mark.only_clingo("Original concretizer does not support configuration requirements"),
-]
+pytestmark = [pytest.mark.not_on_windows("Windows uses old concretizer")]
 
 
 def update_packages_config(conf_str):
