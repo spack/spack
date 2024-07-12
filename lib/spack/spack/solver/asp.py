@@ -43,7 +43,6 @@ import spack.spec
 import spack.store
 import spack.util.crypto
 import spack.util.elf
-import spack.util.git
 import spack.util.libc
 import spack.util.path
 import spack.util.timer
@@ -51,8 +50,6 @@ import spack.variant
 import spack.version as vn
 import spack.version.git_ref_lookup
 from spack import traverse
-from spack.util.executable import ProcessError
-from spack.version.common import COMMIT_VERSION
 
 from .core import (
     AspFunction,
@@ -91,20 +88,6 @@ OutputConfiguration = collections.namedtuple(
 DEFAULT_OUTPUT_CONFIGURATION = OutputConfiguration(
     timers=False, stats=False, out=None, setup_only=False
 )
-
-
-class GitBranch:
-    def __init__(self, git_address, name):
-        self.address = git_address
-        self.name = name
-        self.flag = "-h"
-
-
-class GitTag:
-    def __init__(self, git_address, name):
-        self.address = git_address
-        self.name = name
-        self.flag = "-t"
 
 
 def default_clingo_control():
@@ -3401,49 +3384,11 @@ class SpecBuilder:
 
         self._specs[node].update_variant_validate(name, value)
 
-    def _associated_git_ref(self, version_string, package_class):
-        version = vn.Version(version_string)
-        version_dict = package_class.versions.get(version, {})
-
-        git_address = version_dict.get("git", None) or getattr(package_class, "git", None)
-
-        if git_address:
-            branch = version_dict.get("branch", None)
-            tag = version_dict.get("tag", None)
-            if branch:
-                return GitBranch(git_address, branch)
-            elif tag:
-                return GitTag(git_address, tag)
-        return None
-
-    def _retrieve_latest_git_hash(self, git_ref):
-        # remote git operations can sometimes have banners so we must parse the output for a sha
-        query = spack.util.git.git(required=True)(
-            "ls-remote", git_ref.flag, git_ref.address, git_ref.name, output=str, error=os.devnull
-        )
-        sha, ref = query.strip().split()
-        assert COMMIT_VERSION.match(sha)
-        return sha
-
     def version(self, node, version):
-        pkg_cls = self._specs[node].package_class
-        git_ref = self._associated_git_ref(version, pkg_cls)
-        if git_ref:
-            try:
-                hash = self._retrieve_latest_git_hash(git_ref)
-            except (ProcessError, ValueError, AssertionError):
-                raise InternalConcretizerError(
-                    (
-                        "Failure to fetch git sha when running"
-                        f" `git ls-remote {git_ref.address} {git_ref.name}`\n"
-                        "Confirm network connectivty by running this command followed by:\n"
-                        f"\t`spack fetch {git_ref.address}@{str(version)}`"
-                        "Post a bug report if both of these operations succeed."
-                    )
-                )
-
-            version = f"git.{hash}={version}"
-        self._specs[node].versions = vn.VersionList([vn.Version(version)])
+        pkg_name = self._specs[node].name
+        self._specs[node].versions = vn.VersionList(
+            [vn.maximally_resolved_version(version, pkg_name)]
+        )
 
     def node_compiler_version(self, node, compiler, version):
         self._specs[node].compiler = spack.spec.CompilerSpec(compiler)
@@ -3655,7 +3600,7 @@ class SpecBuilder:
         # concretization process)
         for root in self._specs.values():
             for spec in root.traverse():
-                if isinstance(spec.version, vn.GitVersion):
+                if isinstance(spec.version, vn.GitVersion) and spec.version._ref_version is None:
                     spec.version.attach_lookup(
                         spack.version.git_ref_lookup.GitRefLookup(spec.fullname)
                     )

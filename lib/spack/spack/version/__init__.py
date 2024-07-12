@@ -23,6 +23,7 @@ from .common import (
     infinity_versions,
     is_git_version,
 )
+from .version_conversions import convert_standard_to_git_version, maximally_resolved_version
 from .version_types import (
     ClosedOpenRange,
     GitVersion,
@@ -57,4 +58,6 @@ __all__ = [
     "VersionLookupError",
     "EmptyRangeError",
     "any_version",
+    "convert_standard_to_git_version",
+    "maximally_resolved_version",
 ]

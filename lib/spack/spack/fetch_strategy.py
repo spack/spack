@@ -1583,7 +1583,8 @@ def for_package_version(pkg, version=None):
                 f"Cannot fetch git version for {pkg.name}. Package has no 'git' attribute"
             )
         # Populate the version with comparisons to other commits
-        version.attach_lookup(spack.version.git_ref_lookup.GitRefLookup(pkg.name))
+        if effective_version is None:
+            version.attach_lookup(spack.version.git_ref_lookup.GitRefLookup(pkg.name))
 
         # For GitVersion, we have no way to determine whether a ref is a branch or tag
         # Fortunately, we handle branches and tags identically, except tags are
