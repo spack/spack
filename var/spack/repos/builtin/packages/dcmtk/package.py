@@ -50,6 +50,8 @@ class Dcmtk(CMakePackage):
 
     conflicts("platform=darwin target=aarch64:", when="@:3.6.6")
 
+    patch("tiff-3.6.7.patch", when="@3.6.7")
+
     def patch(self):
         # Backport 3.6.4
         if self.spec.satisfies("@:3.6.3 %fj"):
