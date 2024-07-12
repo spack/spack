@@ -927,9 +927,9 @@ def test_default_requirements_semantic(packages_yaml, concretize_scope, mock_pac
         Spec("zlib ~shared").concretized()
 
     # A spec without the shared variant still concretize
-    s = Spec("a").concretized()
-    assert not s.satisfies("a +shared")
-    assert not s.satisfies("a ~shared")
+    s = Spec("pkg-a").concretized()
+    assert not s.satisfies("pkg-a +shared")
+    assert not s.satisfies("pkg-a ~shared")
 
 
 @pytest.mark.parametrize(

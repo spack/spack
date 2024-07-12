@@ -10,10 +10,14 @@ import pytest
 
 from llnl.util.filesystem import copy_tree
 
+import spack.cmd.common.arguments
 import spack.cmd.install
+import spack.cmd.test
 import spack.config
+import spack.install_test
 import spack.package_base
 import spack.paths
+import spack.spec
 import spack.store
 from spack.install_test import TestStatus
 from spack.main import SpackCommand

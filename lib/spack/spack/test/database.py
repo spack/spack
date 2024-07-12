@@ -58,16 +58,22 @@ def upstream_and_downstream_db(tmpdir, gen_mock_layout):
 
 @pytest.mark.parametrize(
     "install_tree,result",
-    [("all", ["b", "c"]), ("upstream", ["c"]), ("local", ["b"]), ("{u}", ["c"]), ("{d}", ["b"])],
+    [
+        ("all", ["pkg-b", "pkg-c"]),
+        ("upstream", ["pkg-c"]),
+        ("local", ["pkg-b"]),
+        ("{u}", ["pkg-c"]),
+        ("{d}", ["pkg-b"]),
+    ],
 )
 def test_query_by_install_tree(
     install_tree, result, upstream_and_downstream_db, mock_packages, monkeypatch, config
 ):
     up_write_db, up_db, up_layout, down_db, down_layout = upstream_and_downstream_db
 
-    # Set the upstream DB to contain "c" and downstream to contain "b")
-    b = spack.spec.Spec("b").concretized()
-    c = spack.spec.Spec("c").concretized()
+    # Set the upstream DB to contain "pkg-c" and downstream to contain "pkg-b")
+    b = spack.spec.Spec("pkg-b").concretized()
+    c = spack.spec.Spec("pkg-c").concretized()
     up_write_db.add(c, up_layout)
     up_db._read()
     down_db.add(b, down_layout)
@@ -86,7 +92,7 @@ def test_spec_installed_upstream(
 
     # a known installed spec should say that it's installed
     with spack.repo.use_repositories(mock_custom_repository):
-        spec = spack.spec.Spec("c").concretized()
+        spec = spack.spec.Spec("pkg-c").concretized()
         assert not spec.installed
         assert not spec.installed_upstream
 
@@ -848,7 +854,7 @@ def test_query_virtual_spec(database):
 
 def test_failed_spec_path_error(database):
     """Ensure spec not concrete check is covered."""
-    s = spack.spec.Spec("a")
+    s = spack.spec.Spec("pkg-a")
     with pytest.raises(AssertionError, match="concrete spec required"):
         spack.store.STORE.failure_tracker.mark(s)
 
@@ -863,7 +869,7 @@ def test_clear_failure_keep(mutable_database, monkeypatch, capfd):
     # Pretend the spec has been failure locked
     monkeypatch.setattr(spack.database.FailureTracker, "lock_taken", _is)
 
-    s = spack.spec.Spec("a").concretized()
+    s = spack.spec.Spec("pkg-a").concretized()
     spack.store.STORE.failure_tracker.clear(s)
     out = capfd.readouterr()[0]
     assert "Retaining failure marking" in out
@@ -881,7 +887,7 @@ def test_clear_failure_forced(mutable_database, monkeypatch, capfd):
     # Ensure raise OSError when try to remove the non-existent marking
     monkeypatch.setattr(spack.database.FailureTracker, "persistent_mark", _is)
 
-    s = spack.spec.Spec("a").concretized()
+    s = spack.spec.Spec("pkg-a").concretized()
     spack.store.STORE.failure_tracker.clear(s, force=True)
     out = capfd.readouterr()[1]
     assert "Removing failure marking despite lock" in out
@@ -896,14 +902,14 @@ def test_mark_failed(mutable_database, monkeypatch, tmpdir, capsys):
         raise lk.LockTimeoutError("write", "/mock-lock", 1.234, 10)
 
     with tmpdir.as_cwd():
-        s = spack.spec.Spec("a").concretized()
+        s = spack.spec.Spec("pkg-a").concretized()
 
         # Ensure attempt to acquire write lock on the mark raises the exception
         monkeypatch.setattr(lk.Lock, "acquire_write", _raise_exc)
 
         spack.store.STORE.failure_tracker.mark(s)
         out = str(capsys.readouterr()[1])
-        assert "Unable to mark a as failed" in out
+        assert "Unable to mark pkg-a as failed" in out
 
     spack.store.STORE.failure_tracker.clear_all()
 
@@ -912,7 +918,7 @@ def test_mark_failed(mutable_database, monkeypatch, tmpdir, capsys):
 def test_prefix_failed(mutable_database, monkeypatch):
     """Add coverage to failed operation."""
 
-    s = spack.spec.Spec("a").concretized()
+    s = spack.spec.Spec("pkg-a").concretized()
 
     # Confirm the spec is not already marked as failed
     assert not spack.store.STORE.failure_tracker.has_failed(s)
@@ -936,7 +942,7 @@ def test_prefix_write_lock_error(mutable_database, monkeypatch):
     def _raise(db, spec):
         raise lk.LockError("Mock lock error")
 
-    s = spack.spec.Spec("a").concretized()
+    s = spack.spec.Spec("pkg-a").concretized()
 
     # Ensure subsequent lock operations fail
     monkeypatch.setattr(lk.Lock, "acquire_write", _raise)
@@ -1112,7 +1118,7 @@ def test_database_read_works_with_trailing_data(tmp_path, default_mock_concretiz
     # Populate a database
     root = str(tmp_path)
     db = spack.database.Database(root)
-    spec = default_mock_concretization("a")
+    spec = default_mock_concretization("pkg-a")
     db.add(spec, directory_layout=None)
     specs_in_db = db.query_local()
     assert spec in specs_in_db

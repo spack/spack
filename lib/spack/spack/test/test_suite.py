@@ -513,7 +513,7 @@ def test_find_required_file(tmpdir):
 def test_packagetest_fails(mock_packages):
     MyPackage = collections.namedtuple("MyPackage", ["spec"])
 
-    s = spack.spec.Spec("a")
+    s = spack.spec.Spec("pkg-a")
     pkg = MyPackage(s)
     with pytest.raises(ValueError, match="require a concrete package"):
         spack.install_test.PackageTest(pkg)

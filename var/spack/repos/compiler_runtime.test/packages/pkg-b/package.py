@@ -5,7 +5,7 @@
 from spack.package import *
 
 
-class B(Package):
+class PkgB(Package):
     homepage = "http://www.example.com"
     has_code = False
 

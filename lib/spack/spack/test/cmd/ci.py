@@ -106,24 +106,24 @@ and then 'd', 'b', and 'a' to be put in the next three stages, respectively.
 
 """
     builder = repo.MockRepositoryBuilder(tmpdir)
-    builder.add_package("g")
-    builder.add_package("f")
-    builder.add_package("e")
-    builder.add_package("d", dependencies=[("f", None, None), ("g", None, None)])
-    builder.add_package("c")
-    builder.add_package("b", dependencies=[("d", None, None), ("e", None, None)])
-    builder.add_package("a", dependencies=[("b", None, None), ("c", None, None)])
+    builder.add_package("pkg-g")
+    builder.add_package("pkg-f")
+    builder.add_package("pkg-e")
+    builder.add_package("pkg-d", dependencies=[("pkg-f", None, None), ("pkg-g", None, None)])
+    builder.add_package("pkg-c")
+    builder.add_package("pkg-b", dependencies=[("pkg-d", None, None), ("pkg-e", None, None)])
+    builder.add_package("pkg-a", dependencies=[("pkg-b", None, None), ("pkg-c", None, None)])
 
     with repo.use_repositories(builder.root):
-        spec_a = Spec("a").concretized()
+        spec_a = Spec("pkg-a").concretized()
 
         spec_a_label = ci._spec_ci_label(spec_a)
-        spec_b_label = ci._spec_ci_label(spec_a["b"])
-        spec_c_label = ci._spec_ci_label(spec_a["c"])
-        spec_d_label = ci._spec_ci_label(spec_a["d"])
-        spec_e_label = ci._spec_ci_label(spec_a["e"])
-        spec_f_label = ci._spec_ci_label(spec_a["f"])
-        spec_g_label = ci._spec_ci_label(spec_a["g"])
+        spec_b_label = ci._spec_ci_label(spec_a["pkg-b"])
+        spec_c_label = ci._spec_ci_label(spec_a["pkg-c"])
+        spec_d_label = ci._spec_ci_label(spec_a["pkg-d"])
+        spec_e_label = ci._spec_ci_label(spec_a["pkg-e"])
+        spec_f_label = ci._spec_ci_label(spec_a["pkg-f"])
+        spec_g_label = ci._spec_ci_label(spec_a["pkg-g"])
 
         spec_labels, dependencies, stages = ci.stage_spec_jobs([spec_a])
 
@@ -1290,7 +1290,7 @@ def test_ci_generate_override_runner_attrs(
 spack:
   specs:
     - flatten-deps
-    - a
+    - pkg-a
   mirrors:
     some-mirror: https://my.fake.mirror
   ci:
@@ -1307,12 +1307,12 @@ spack:
         - match:
             - dependency-install
         - match:
-            - a
+            - pkg-a
           build-job:
             tags:
               - specific-a-2
         - match:
-            - a
+            - pkg-a
           build-job-remove:
             tags:
               - toplevel2
@@ -1372,8 +1372,8 @@ spack:
             assert global_vars["SPACK_CHECKOUT_VERSION"] == git_version or "v0.20.0.test0"
 
             for ci_key in yaml_contents.keys():
-                if ci_key.startswith("a"):
-                    # Make sure a's attributes override variables, and all the
+                if ci_key.startswith("pkg-a"):
+                    # Make sure pkg-a's attributes override variables, and all the
                     # scripts.  Also, make sure the 'toplevel' tag doesn't
                     # appear twice, but that a's specific extra tag does appear
                     the_elt = yaml_contents[ci_key]
@@ -1781,7 +1781,7 @@ def test_ci_generate_read_broken_specs_url(
     tmpdir, mutable_mock_env_path, install_mockery, mock_packages, monkeypatch, ci_base_environment
 ):
     """Verify that `broken-specs-url` works as intended"""
-    spec_a = Spec("a")
+    spec_a = Spec("pkg-a")
     spec_a.concretize()
     a_dag_hash = spec_a.dag_hash()
 
@@ -1807,7 +1807,7 @@ def test_ci_generate_read_broken_specs_url(
 spack:
   specs:
     - flatten-deps
-    - a
+    - pkg-a
   mirrors:
     some-mirror: https://my.fake.mirror
   ci:
@@ -1815,9 +1815,9 @@ spack:
     pipeline-gen:
     - submapping:
       - match:
-          - a
+          - pkg-a
           - flatten-deps
-          - b
+          - pkg-b
           - dependency-install
         build-job:
           tags:

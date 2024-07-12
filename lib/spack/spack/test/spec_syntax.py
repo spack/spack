@@ -759,7 +759,7 @@ def test_spec_by_hash_tokens(text, tokens):
 @pytest.mark.db
 def test_spec_by_hash(database, monkeypatch, config):
     mpileaks = database.query_one("mpileaks ^zmpi")
-    b = spack.spec.Spec("b").concretized()
+    b = spack.spec.Spec("pkg-b").concretized()
     monkeypatch.setattr(spack.binary_distribution, "update_cache_and_get_specs", lambda: [b])
 
     hash_str = f"/{mpileaks.dag_hash()}"
@@ -856,7 +856,7 @@ def test_ambiguous_hash(mutable_database):
     In the past this ambiguity error would happen during parse time."""
 
     # This is a very sketchy as manually setting hashes easily breaks invariants
-    x1 = spack.spec.Spec("a").concretized()
+    x1 = spack.spec.Spec("pkg-a").concretized()
     x2 = x1.copy()
     x1._hash = "xyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy"
     x1._process_hash = "xyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy"
@@ -874,7 +874,7 @@ def test_ambiguous_hash(mutable_database):
         s1.lookup_hash()
 
     # ambiguity in first hash character AND spec name
-    s2 = SpecParser("a/x").next_spec()
+    s2 = SpecParser("pkg-a/x").next_spec()
     with pytest.raises(spack.spec.AmbiguousHashError):
         s2.lookup_hash()
 
