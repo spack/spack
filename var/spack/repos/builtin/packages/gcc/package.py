@@ -561,9 +561,6 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage, CompilerPackage):
             ]
             if any(x in basename for x in substring_to_be_filtered):
                 continue
-            # Filter out links in favor of real executables
-            if os.path.islink(exe):
-                continue
 
             result.append(exe)
 
